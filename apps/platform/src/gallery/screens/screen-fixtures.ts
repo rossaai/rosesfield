@@ -164,8 +164,8 @@ export function settingsOf(
 export const liveSettings: GatewaySettings = {
   mode: "owner",
   engine: {
-    target: "comfy-deployment",
-    address: "https://studio.run.comfy.app",
+    target: "comfy-cloud",
+    address: "https://cloud.comfy.org",
     key: "set",
     origin: "live",
   },
@@ -179,8 +179,8 @@ export function publicSettingsOf(hasKeys: boolean): GatewaySettings {
   return {
     mode: "public",
     engine: {
-      target: "comfy-deployment",
-      address: "https://studio.run.comfy.app",
+      target: "comfy-cloud",
+      address: "https://cloud.comfy.org",
       key: hasKeys ? "set" : "missing",
       origin: hasKeys ? "live" : "demo",
     },

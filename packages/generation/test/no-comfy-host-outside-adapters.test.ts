@@ -27,6 +27,21 @@ const codeFile = /\.(ts|tsx|js|mjs|cjs|py|sh)$/
 
 const comfyHost = /\b(api|cloud)\.comfy\.org\b/
 
+const hostCall =
+  /\b(fetch|spawn|spawnSync|exec|execFile|execSync|request|axios)\s*\(|new\s+(Request|XMLHttpRequest|WebSocket)\b|\b(curl|wget)\s/
+
+type DisplayOnly = { path: string; reason: string }
+
+const displayOnly: readonly DisplayOnly[] = [
+  {
+    path: "apps/platform/src/gallery/screens/screen-fixtures.ts",
+    reason:
+      "a gallery fixture of the Settings screen: the engine address the screen shows as text, with no request",
+  },
+]
+
+type Found = { calling: string[]; naming: string[] }
+
 const skipped = new Set([
   "node_modules",
   "dist",
@@ -47,12 +62,22 @@ function filesUnder(root: string, folder = root): string[] {
   })
 }
 
-function filesNamingComfyHosts(root: string): string[] {
-  return filesUnder(root)
+function comfyHostFiles(root: string): Found {
+  const named = filesUnder(root)
     .filter((path) => scanned.some((pattern) => pattern.test(path)))
     .filter((path) => codeFile.test(path) && !adapters.test(path))
-    .filter((path) => comfyHost.test(readFileSync(join(root, path), "utf8")))
-    .sort()
+    .map((path) => ({ path, text: readFileSync(join(root, path), "utf8") }))
+    .filter((file) => comfyHost.test(file.text))
+  return {
+    calling: named
+      .filter((file) => hostCall.test(file.text))
+      .map((file) => file.path)
+      .sort(),
+    naming: named
+      .filter((file) => !hostCall.test(file.text))
+      .map((file) => file.path)
+      .sort(),
+  }
 }
 
 const planted = mkdtempSync(join(tmpdir(), "rosesfield-hosts-"))
@@ -67,30 +92,50 @@ function plant(path: string, text: string): void {
 }
 
 describe("no paid Comfy route outside the engine adapters", () => {
-  it("finds no file outside the adapters that names a Comfy API host", () => {
-    expect(filesNamingComfyHosts(repositoryRoot)).toEqual([])
+  it("finds no code outside the adapters that names a Comfy API host and calls a host", () => {
+    expect(comfyHostFiles(repositoryRoot).calling).toEqual([])
   })
 
-  it("catches a planted script and a planted screen that name a Comfy API host, and passes an adapter", () => {
+  it("lets a file name a Comfy API host only as a display-only row with its reason", () => {
+    const allowed = displayOnly.map((row) => row.path).sort()
+    expect(comfyHostFiles(repositoryRoot).naming).toEqual(allowed)
+    for (const row of displayOnly) {
+      expect(row.reason.length).toBeGreaterThan(20)
+    }
+  })
+
+  it("catches a planted script and a planted screen that call a Comfy API host, and passes an adapter and a display-only file", () => {
     plant(
       "scripts/probe/run-model.ts",
       'await fetch("https://api.comfy.org/v2/models/maker/model")'
     )
     plant(
       "apps/platform/src/screens/run.tsx",
-      'const base = "https://cloud.comfy.org"'
+      'const base = "https://cloud.comfy.org"\nawait fetch(base + "/api/v2/jobs")'
+    )
+    plant(
+      "scripts/probe/curl.sh",
+      "curl https://api.comfy.org/customers/balance"
+    )
+    plant(
+      "apps/platform/src/gallery/address.ts",
+      'export const address = "https://cloud.comfy.org"'
     )
     plant(
       "packages/generation/src/infrastructure/engine.ts",
-      'const url = "https://api.comfy.org"'
+      'await fetch("https://api.comfy.org")'
     )
     plant(
       "packages/generation/test/recording.ts",
-      'const url = "https://api.comfy.org"'
+      'await fetch("https://api.comfy.org")'
     )
-    expect(filesNamingComfyHosts(planted)).toEqual([
-      "apps/platform/src/screens/run.tsx",
-      "scripts/probe/run-model.ts",
-    ])
+    expect(comfyHostFiles(planted)).toEqual({
+      calling: [
+        "apps/platform/src/screens/run.tsx",
+        "scripts/probe/curl.sh",
+        "scripts/probe/run-model.ts",
+      ],
+      naming: ["apps/platform/src/gallery/address.ts"],
+    })
   })
 })
