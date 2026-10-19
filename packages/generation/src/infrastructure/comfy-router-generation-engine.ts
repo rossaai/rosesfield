@@ -68,6 +68,10 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     })
   }
 
+  warmCatalog(): void {
+    this.catalog.models(this.http).catch(() => undefined)
+  }
+
   override checksKey(): boolean {
     return false
   }

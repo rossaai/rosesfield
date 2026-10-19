@@ -17,6 +17,7 @@ export type EngineOptions = {
   clock: Clock
   fetch?: Fetch
   catalog?: RouterCatalog
+  warmCatalog?: boolean
 }
 
 function fetchOf(options: EngineOptions): { fetch?: Fetch } {
@@ -27,11 +28,15 @@ function routerOf(
   apiKey: string | null,
   options: EngineOptions
 ): GenerationEngine {
-  return new ComfyRouterGenerationEngine({
+  const router = new ComfyRouterGenerationEngine({
     apiKey,
     catalog: options.catalog ?? sharedRouterCatalog(options.clock),
     ...fetchOf(options),
   })
+  if (options.warmCatalog === true) {
+    router.warmCatalog()
+  }
+  return router
 }
 
 export function liveEngineOf(

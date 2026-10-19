@@ -74,6 +74,9 @@ describe("RouterCatalog", () => {
       schemaSame(pictureModel),
       schemaRead(clipModel, clipSchema),
     ])
+    const stale = await catalog.models(httpWith(later))
+    expect(stale.map((one) => one.facts.model)).toEqual([pictureModel])
+    await catalog.idle()
     const models = await catalog.models(httpWith(later))
     expect(models.map((one) => one.facts.model)).toEqual([
       pictureModel,
@@ -141,6 +144,9 @@ describe("RouterCatalog", () => {
       catalogPage([pictureModel]),
       schemaRead(pictureModel, pictureSchema),
     ])
+    const first = await catalog.models(httpWith(keyed))
+    expect(first.map((one) => one.source)).toEqual(["public"])
+    await catalog.idle()
     const models = await catalog.models(httpWith(keyed))
     expect(models.map((one) => one.source)).toEqual(["keyed"])
   })

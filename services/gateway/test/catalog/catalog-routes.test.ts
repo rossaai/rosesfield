@@ -162,15 +162,18 @@ describe("the model list of an app", () => {
           })
           return answer
         })
-    let shared: RouterCatalog | null = null
+    const held: { catalog: RouterCatalog | null } = { catalog: null }
     const gateway = gatewayWith(fetch, (clock) => {
-      shared ??= new RouterCatalog({ clock })
-      return shared
+      held.catalog ??= new RouterCatalog({ clock })
+      return held.catalog
     })
     const before = await modelsOf(gateway, "pictures")
     schemas = [pictureModel, clipModel, newPictureModel]
     gateway.clock.advance(oneHourMs)
+    const stale = await modelsOf(gateway, "pictures")
+    await held.catalog?.idle()
     const after = await modelsOf(gateway, "pictures")
+    expect(stale.models.map((one) => one.id)).not.toContain("studio/sketch-1")
     expect(before.models.map((one) => one.id)).not.toContain("studio/sketch-1")
     expect(after.models.map((one) => one.id)).toContain("studio/sketch-1")
     expect(

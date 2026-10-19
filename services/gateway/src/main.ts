@@ -37,7 +37,11 @@ async function purge(gateway: LocalGateway): Promise<void> {
 
 async function serve(): Promise<void> {
   const env = readServerEnv(Bun.env)
-  const gateway = composeLocalGateway({ env, apps: listApps() })
+  const gateway = composeLocalGateway({
+    env,
+    apps: listApps(),
+    warmCatalog: true,
+  })
   const server = Bun.serve({
     hostname: env.host,
     port: env.port,

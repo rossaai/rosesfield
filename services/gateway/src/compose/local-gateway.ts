@@ -48,6 +48,7 @@ type LocalGatewayOptions = {
   clock?: Clock
   platformRoot?: string | null
   fetch?: Fetch
+  warmCatalog?: boolean
 }
 
 type Parts = {
@@ -87,8 +88,11 @@ export function composeLocalGateway(
     clock,
     db,
     store: new FilesystemAssetStore({ root: join(env.dataDir, "assets") }),
-    engineOptions:
-      options.fetch === undefined ? { clock } : { clock, fetch: options.fetch },
+    engineOptions: {
+      clock,
+      ...(options.fetch === undefined ? {} : { fetch: options.fetch }),
+      ...(options.warmCatalog === true ? { warmCatalog: true } : {}),
+    },
   }
   const root =
     options.platformRoot === undefined ? platformDist : options.platformRoot

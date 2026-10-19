@@ -60,11 +60,10 @@ export class RouterCatalog {
   }
 
   async models(http: RouterHttp): Promise<CatalogEntry[]> {
-    if (this.needsLoad(http)) {
-      this.loading ??= this.load(http).finally(() => {
-        this.loading = null
-      })
-      await this.loading
+    if (this.listing === null) {
+      await this.loadOnce(http)
+    } else if (this.needsLoad(http)) {
+      this.loadOnce(http).catch(() => undefined)
     }
     return (this.listing?.ids ?? []).flatMap((id) => {
       const entry = this.entries.get(id)
@@ -73,12 +72,19 @@ export class RouterCatalog {
   }
 
   async entry(http: RouterHttp, model: string): Promise<CatalogEntry | null> {
-    const held = this.entries.get(model)
-    if (held !== undefined && !this.isStale(held, http)) {
-      return held
-    }
     await this.models(http)
     return this.entries.get(model) ?? null
+  }
+
+  async idle(): Promise<void> {
+    await this.loading?.catch(() => undefined)
+  }
+
+  private loadOnce(http: RouterHttp): Promise<void> {
+    this.loading ??= this.load(http).finally(() => {
+      this.loading = null
+    })
+    return this.loading
   }
 
   async rateRows(http: RouterHttp): Promise<readonly RateRow[]> {
