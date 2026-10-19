@@ -7,6 +7,8 @@ export const imageCopy = {
   "image.input.model.label": "Model",
   "image.input.resolution.label": "Resolution",
   "image.input.seed.label": "Seed",
+  "image.bar.pick": "Pick the {field} for this model, then press Generate.",
+  "image.bar.problem": "{field}: {problem}",
   "image.choice.resolution.r1k": "1K",
   "image.choice.resolution.r2k": "2K",
   "image.model.zImageTurbo": "Z-Image Turbo",

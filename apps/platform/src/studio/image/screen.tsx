@@ -13,6 +13,7 @@ import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { type AppScreenState, useAppScreen } from "@/screens/app/use-app-screen"
+import { barMessageOf } from "@/studio/image/bar-message"
 import {
   GraphSettingChips,
   HostedSettingChips,
@@ -107,13 +108,72 @@ function Settings({
   )
 }
 
+function BarMessage({ text }: { text: string | null }): ReactElement | null {
+  return text === null ? null : (
+    <p
+      role="status"
+      className="w-full max-w-prompt-max px-s3 text-label text-bug-text"
+    >
+      {text}
+    </p>
+  )
+}
+
+type BarProps = {
+  app: AppListing
+  state: AppScreenState
+  fields: ImageFields | null
+  tray: ReferenceTray
+  onOpenSheet: () => void
+}
+
+function ImageBar({
+  app,
+  state,
+  fields,
+  tray,
+  onOpenSheet,
+}: BarProps): ReactElement {
+  const prompt = promptInputOf(app)
+  return (
+    <PromptBar
+      value={
+        prompt === null ? "" : textOf(state.form.values.inputs[prompt.name])
+      }
+      onValueChange={(value) => {
+        if (prompt !== null) {
+          state.form.setInput(prompt.name, value)
+        }
+      }}
+      onSubmit={state.start.generate}
+      label={t("home.prompt.label")}
+      placeholder={prompt === null ? "" : (inputPlaceholder(app, prompt) ?? "")}
+      submitLabel={t("run.generate")}
+      removeLabel={t("bar.attachment.remove")}
+      attachments={tray.attachments}
+      onRemoveAttachment={tray.remove}
+      leading={<Attach tray={tray} />}
+      chips={
+        <BarChips
+          chips={<Chips app={app} state={state} fields={fields} />}
+          onOpenSheet={onOpenSheet}
+        />
+      }
+      price={state.start.price === "" ? undefined : state.start.price}
+      submitValue={state.start.priceValue}
+      submitName={state.start.priceName ?? undefined}
+      busy={state.start.isPending || tray.isUploading}
+    />
+  )
+}
+
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const state = useAppScreen(app, seeds)
   const sheet = useState(false)
-  const prompt = promptInputOf(app)
   const fields = useImageFields(state.hosted)
   const tray = useReferenceTray(fields?.references ?? null, state.form)
   useGraphRules(app, state.form, fields === null)
+  const problems = state.form.problems
   return (
     <BarFrame
       app={app}
@@ -125,45 +185,18 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       bar={
         <>
           <StartProblem start={state.start} />
-          {tray.message === null ? null : (
-            <p
-              role="status"
-              className="w-full max-w-prompt-max px-s3 text-label text-bug-text"
-            >
-              {tray.message}
-            </p>
-          )}
-          <PromptBar
-            value={
-              prompt === null
-                ? ""
-                : textOf(state.form.values.inputs[prompt.name])
+          <BarMessage
+            text={
+              tray.message ??
+              barMessageOf(problems, app, state.hosted?.fields ?? null)
             }
-            onValueChange={(value) => {
-              if (prompt !== null) {
-                state.form.setInput(prompt.name, value)
-              }
-            }}
-            onSubmit={state.start.generate}
-            label={t("home.prompt.label")}
-            placeholder={
-              prompt === null ? "" : (inputPlaceholder(app, prompt) ?? "")
-            }
-            submitLabel={t("run.generate")}
-            removeLabel={t("bar.attachment.remove")}
-            attachments={tray.attachments}
-            onRemoveAttachment={tray.remove}
-            leading={<Attach tray={tray} />}
-            chips={
-              <BarChips
-                chips={<Chips app={app} state={state} fields={fields} />}
-                onOpenSheet={() => sheet[1](true)}
-              />
-            }
-            price={state.start.price === "" ? undefined : state.start.price}
-            submitValue={state.start.priceValue}
-            submitName={state.start.priceName ?? undefined}
-            busy={state.start.isPending || tray.isUploading}
+          />
+          <ImageBar
+            app={app}
+            state={state}
+            fields={fields}
+            tray={tray}
+            onOpenSheet={() => sheet[1](true)}
           />
         </>
       }
