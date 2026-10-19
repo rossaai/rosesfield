@@ -1,0 +1,117 @@
+import type { AppListing } from "@rosesfield/contract"
+import type { ReactElement } from "react"
+import { t } from "@/copy/t"
+import { NumberStepper } from "@/pieces/number-stepper"
+import { FieldFrame } from "@/screens/app/fields/field-frame"
+import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
+import { HostedFields } from "@/screens/app/hosted/hosted-fields"
+import { withoutModelInput } from "@/screens/app/hosted/task-panel"
+import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
+import type { AppForm } from "@/screens/app/use-app-form"
+import type { AppScreenState } from "@/screens/app/use-app-screen"
+import { PopoverChip } from "@/studio/image/image-chips"
+import { countBoundsOf, type ImageFields } from "@/studio/image/image-fields"
+import {
+  graphChips,
+  ImageModelSettings,
+} from "@/studio/image/image-model-settings"
+
+function HostedCountField({
+  fields,
+  form,
+}: {
+  fields: ImageFields
+  form: AppForm
+}): ReactElement | null {
+  const { count } = fields
+  if (count === null) {
+    return null
+  }
+  const bounds = countBoundsOf(count, form.values.inputs[count.name])
+  return (
+    <FieldFrame
+      caption={t("field.count.label")}
+      isOptional={false}
+      note={null}
+      problem={form.problems.get(count.name)}
+    >
+      <NumberStepper
+        {...bounds}
+        label={t("field.count.label")}
+        step={1}
+        unit=""
+        onChange={(value) => form.setInput(count.name, value)}
+      />
+    </FieldFrame>
+  )
+}
+
+export function HostedPanel({
+  hosted,
+  fields,
+  form,
+}: {
+  hosted: HostedState
+  fields: ImageFields
+  form: AppForm
+}): ReactElement {
+  const settings = [fields.aspect, fields.size].flatMap((field) =>
+    field === null ? [] : [field]
+  )
+  return (
+    <div className="flex flex-col gap-s4">
+      <CatalogPicker hosted={hosted} />
+      <HostedFields fields={settings} form={form} />
+      <HostedCountField fields={fields} form={form} />
+      <HostedFields fields={fields.rest} form={form} />
+    </div>
+  )
+}
+
+export function GraphPanel({
+  app,
+  state,
+  hosted,
+}: {
+  app: AppListing
+  state: AppScreenState
+  hosted: HostedState
+}): ReactElement {
+  return (
+    <div className="flex flex-col gap-s4">
+      <CatalogPicker hosted={hosted} />
+      <ImageModelSettings
+        app={withoutModelInput(app)}
+        state={state}
+        chips={[]}
+      />
+    </div>
+  )
+}
+
+export function InputsChip({
+  app,
+  state,
+  fields,
+}: {
+  app: AppListing
+  state: AppScreenState
+  fields: ImageFields | null
+}): ReactElement | null {
+  if (fields !== null && fields.rest.length === 0) {
+    return null
+  }
+  return (
+    <PopoverChip label={t("app.inputs.open")} shown="">
+      {fields === null ? (
+        <ImageModelSettings
+          app={withoutModelInput(app)}
+          state={state}
+          chips={graphChips}
+        />
+      ) : (
+        <HostedFields fields={fields.rest} form={state.form} />
+      )}
+    </PopoverChip>
+  )
+}

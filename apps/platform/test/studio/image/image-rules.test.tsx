@@ -11,7 +11,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { bodyOf, defaultsOf, type FieldValue } from "@/screens/app/app-form"
 import type { AppForm } from "@/screens/app/use-app-form"
-import { useInputRules } from "@/studio/image/image-model-settings"
+import { useGraphRules } from "@/studio/image/image-model-settings"
 import { correctionsOf, shownInputOf } from "@/studio/image/image-rules"
 
 function imageListing(): AppListing {
@@ -55,7 +55,7 @@ function shownValues(model: string): string[] | null {
     : []
 }
 
-function useForm(start: Record<string, FieldValue>) {
+function useForm(start: Record<string, FieldValue>, isGraph = true) {
   const [inputs, setInputs] = useState<Record<string, FieldValue>>(start)
   const setInput = useCallback((name: string, value: FieldValue) => {
     setInputs((current) => ({ ...current, [name]: value }))
@@ -70,7 +70,7 @@ function useForm(start: Record<string, FieldValue>) {
     validate: () => true,
     register: () => undefined,
   }
-  useInputRules(listing, form)
+  useGraphRules(listing, form, isGraph)
   return { form, setInput }
 }
 
@@ -123,5 +123,20 @@ describe("the Image model settings follow the contract's rules", () => {
       },
     }
     expect(body.safeParse(bodyOf(listing, values)).success).toBe(false)
+  })
+
+  it("leaves a hosted model's own resolution alone", () => {
+    const { result } = renderHook(() =>
+      useForm(
+        {
+          ...defaultsOf(listing).inputs,
+          prompt: "a field of roses",
+          model: "bfl/flux-3-image",
+          resolution: "4k",
+        },
+        false
+      )
+    )
+    expect(result.current.form.values.inputs.resolution).toBe("4k")
   })
 })
