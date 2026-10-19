@@ -18,9 +18,11 @@ import { listOf } from "@/screens/app/fields/field-props"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { type AppScreenState, useAppScreen } from "@/screens/app/use-app-screen"
 import type { StartRun } from "@/screens/app/use-start-run"
+import { EffectAgain } from "@/studio/effects/effect-again"
 import { autoAspect, EffectsPanel } from "@/studio/effects/effects-panel"
 import { nearestRatio } from "@/studio/effects/nearest-ratio"
 import { useCheckedStart } from "@/studio/effects/use-checked-start"
+import { useEffectAgain } from "@/studio/effects/use-effect-again"
 import {
   type PhotoSize,
   usePhotoChecks,
@@ -40,6 +42,7 @@ type EffectsState = {
     onPhotoMessage: (message: string | null) => void
   }
   onUseInputs: (run: Run) => void
+  onNewPhoto: () => void
   onShortcut: (event: KeyboardEvent<HTMLElement>) => void
 }
 
@@ -123,6 +126,7 @@ function useEffectsState(
       fillForm(run)
       aspect.setChoice(run.aspectRatio ?? autoAspect)
     },
+    onNewPhoto: () => aspect.setChoice(autoAspect),
     onShortcut: (event) => {
       if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault()
@@ -147,6 +151,16 @@ export function AppScreen(props: StudioScreenProps): ReactElement {
   const { screen } = state
   const sheet = useSheetOpen(screen.hasRuns)
   sheetOpen.current = sheet[1]
+  const again = useEffectAgain({
+    form: screen.form,
+    fill: state.onUseInputs,
+    openInputs: () => {
+      if (!isRegular) {
+        sheet[1](true)
+      }
+    },
+    onNewPhoto: state.onNewPhoto,
+  })
   return (
     <ColumnFrame
       app={app}
@@ -156,7 +170,7 @@ export function AppScreen(props: StudioScreenProps): ReactElement {
       panel={
         <EffectsPanel
           app={app}
-          form={screen.form}
+          form={again.form}
           lastSeed={screen.lastSeed}
           {...state.panel}
         />
@@ -167,6 +181,13 @@ export function AppScreen(props: StudioScreenProps): ReactElement {
           order="newest-first"
           onUseInputs={state.onUseInputs}
           emptyAction={<AddInputsButton onClick={openInputs} />}
+          afterRun={(run) => (
+            <EffectAgain
+              run={run}
+              onAnotherPhoto={again.onAnotherPhoto}
+              onAnotherEffect={again.onAnotherEffect}
+            />
+          )}
         />
       )}
     />

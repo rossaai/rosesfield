@@ -5,11 +5,12 @@ import { t, tCatalog } from "@/copy/t"
 import { CollapsibleSection } from "@/pieces/collapsible-section"
 import { ChoiceField } from "@/screens/app/fields/choice-field"
 import { textOf } from "@/screens/app/fields/field-props"
-import { inputCaption, inputNote } from "@/screens/app/fields/input-copy"
+import { inputCaption } from "@/screens/app/fields/input-copy"
 import { InputField } from "@/screens/app/fields/input-field"
 import { SeedField } from "@/screens/app/fields/seed-field"
 import { randomSeed } from "@/screens/app/inputs-panel"
 import type { AppForm } from "@/screens/app/use-app-form"
+import { EffectTiles } from "@/studio/effects/effect-tiles"
 import { PhotoField } from "@/studio/effects/photo-field"
 
 export const autoAspect = "auto"
@@ -93,28 +94,21 @@ function ChoiceInputField(
   )
 }
 
-function sortedEffects(input: ChoiceInput): { value: string; label: string }[] {
-  return input.options
-    .map((option) => ({
-      value: option.value,
-      label: tCatalog(option.labelKey),
-    }))
-    .sort((left, right) => left.label.localeCompare(right.label))
-}
-
-function EffectField(props: EffectsPanelProps): ReactElement | null {
+function EffectPart(props: EffectsPanelProps): ReactElement | null {
   const { app, form } = props
   const effect = choiceOf(app, "effect")
+  const resolution = choiceOf(app, "resolution")
   if (effect === null) {
     return null
   }
   return (
-    <ChoiceField
-      label={inputCaption(effect)}
-      items={sortedEffects(effect)}
+    <EffectTiles
+      app={app}
       value={textOf(form.values.inputs[effect.name]) || effect.default}
+      resolution={
+        textOf(form.values.inputs.resolution) || (resolution?.default ?? "")
+      }
       onChange={(value) => form.setInput(effect.name, value)}
-      note={inputNote(app, effect)}
       register={(focus) => form.register(effect.name, focus)}
     />
   )
@@ -155,6 +149,7 @@ export function EffectsPanel(props: EffectsPanelProps): ReactElement {
   const columnInputs = app.inputs.filter((input) => input.name === "prompt")
   return (
     <div className="flex flex-col gap-s4">
+      <EffectPart {...props} />
       {photo !== undefined && isAssetInput(photo) ? (
         <PhotoField
           {...fieldProps(props, photo)}
@@ -163,7 +158,6 @@ export function EffectsPanel(props: EffectsPanelProps): ReactElement {
           onMessage={props.onPhotoMessage}
         />
       ) : null}
-      <EffectField {...props} />
       {columnInputs.map((input) => (
         <InputField
           key={input.name}

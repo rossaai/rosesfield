@@ -16,6 +16,7 @@ type AppCanvasProps = {
   order: "newest-first" | "newest-last"
   onUseInputs: (run: Run) => void
   emptyAction?: ReactNode
+  afterRun?: (run: Run) => ReactNode
 }
 
 type AppRuns = {
@@ -39,15 +40,18 @@ function RunBlock({
   run,
   list,
   onUseInputs,
+  afterRun,
 }: {
   run: Run
   list: readonly string[]
   onUseInputs: (run: Run) => void
+  afterRun?: ((run: Run) => ReactNode) | undefined
 }): ReactElement {
   return (
     <article className="flex flex-col gap-s2">
       <RunLine run={run} onUseInputs={onUseInputs} />
       <RunOutputs run={run} list={list} />
+      {afterRun?.(run)}
     </article>
   )
 }
@@ -95,6 +99,7 @@ function RunStack({
   runs,
   order,
   onUseInputs,
+  afterRun,
 }: AppCanvasProps & { runs: readonly Run[] }): ReactElement {
   const list = runs.flatMap((run) => run.outputs)
   if (order === "newest-last") {
@@ -106,6 +111,7 @@ function RunStack({
             run={run}
             list={list}
             onUseInputs={onUseInputs}
+            afterRun={afterRun}
           />
         ))}
       </div>
@@ -115,7 +121,12 @@ function RunStack({
   return (
     <div className="flex flex-col gap-s6">
       {latest === undefined ? null : (
-        <RunBlock run={latest} list={list} onUseInputs={onUseInputs} />
+        <RunBlock
+          run={latest}
+          list={list}
+          onUseInputs={onUseInputs}
+          afterRun={afterRun}
+        />
       )}
       {earlier.length === 0 ? null : (
         <h2 className="text-body font-medium text-ink-muted">
@@ -128,6 +139,7 @@ function RunStack({
           run={run}
           list={list}
           onUseInputs={onUseInputs}
+          afterRun={afterRun}
         />
       ))}
     </div>

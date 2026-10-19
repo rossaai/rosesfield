@@ -1,3 +1,4 @@
+import { appId } from "@rosesfield/contract"
 import type { GalleryKey } from "@/gallery/copy.en"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
 import { conversationEntries } from "@/gallery/screens/conversation-entries"
@@ -315,6 +316,11 @@ export const screenEntries: GalleryEntry[] = [
   apps,
   appEntry("image", "entry.screen.appBar", image),
   appEntry("upscale", "entry.screen.appColumn", upscale),
+  appEntry("effects", "entry.screen.appEffects", {
+    ...video,
+    appId: appId.parse("effects"),
+    inputs: { effect: "grow-wings", image: [upload.id], resolution: "480p" },
+  }),
   library,
   viewer,
   characters,

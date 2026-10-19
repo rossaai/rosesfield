@@ -15,6 +15,7 @@ import { shellEntries } from "@/gallery/entries/shell"
 import type { GalleryEntry, GalleryState } from "@/gallery/gallery-entry"
 import { type Scheme, SchemePair, schemes } from "@/gallery/scheme-pair"
 import { screenEntries } from "@/gallery/screens/screen-entries"
+import { effectTilesEntry } from "@/studio/effects/effect-tiles-gallery"
 
 export const galleryEntries: GalleryEntry[] = [
   ...controlEntries,
@@ -23,6 +24,7 @@ export const galleryEntries: GalleryEntry[] = [
   ...pieceEntries,
   ...mediaEntries,
   ...catalogEntries,
+  effectTilesEntry,
   ...shellEntries,
   ...layerEntries,
   ...platformEntries,
