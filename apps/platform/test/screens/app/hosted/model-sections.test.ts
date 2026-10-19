@@ -17,19 +17,20 @@ function model(
     nameKey: null,
     task: "text-to-image",
     tags: [{ kind: "hosted" }],
-    proven: false,
     form: [],
     ...change,
   }
 }
 
 const models = [
-  model("open-picture", "Comfy Cloud", {
+  model("open-picture", "comfy-cloud", {
     kind: "graph",
     tags: [{ kind: "open-weights" }],
     form: null,
   }),
-  model("alpha/one", "Alpha"),
+  model("alpha/one", "Alpha", {
+    tags: [{ kind: "hosted" }, { kind: "proven" }],
+  }),
   model("beta/two", "Beta"),
   model("beta/three", "Beta", {
     task: "text-to-video",
@@ -55,7 +56,7 @@ describe("the sections of the model picker", () => {
       ])
     ).toEqual([
       [null, ["beta/two", "alpha/one"]],
-      ["Comfy Cloud", ["open-picture"]],
+      ["comfy-cloud", ["open-picture"]],
       ["Alpha", ["alpha/one"]],
       ["Beta", ["beta/two", "beta/three"]],
     ])
@@ -78,12 +79,15 @@ describe("the sections of the model picker", () => {
     const image = rows.find((row) => row.id === "alpha/one")
     const video = rows.find((row) => row.id === "beta/three")
     const graph = rows.find((row) => row.id === "open-picture")
-    expect(image).toMatchObject({
-      line: "Makes an image from your words",
-      tags: [],
-    })
+    expect(image).toMatchObject({ line: "Makes an image from your words" })
+    expect(image?.tags.map((tag) => tag.label)).toEqual(["Ran in Rosesfield"])
     expect(video?.tags.map((tag) => tag.label)).toEqual(["1080p", "5 to 10 s"])
     expect(graph?.tags.map((tag) => tag.label)).toEqual(["Open weights"])
-    expect(pickerSections(hosted)[0]?.label).toBe("Your models")
+    expect(pickerSections(hosted).map((section) => section.label)).toEqual([
+      "Your models",
+      "Open weights on Comfy Cloud",
+      "Alpha",
+      "Beta",
+    ])
   })
 })

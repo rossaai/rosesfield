@@ -19,6 +19,7 @@ const rowTags: readonly ModelTag["kind"][] = [
   "length",
   "sound",
   "open-weights",
+  "proven",
 ]
 
 export function rowOf(model: CatalogModel, name: string): SectionRow {

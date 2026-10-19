@@ -8,7 +8,6 @@ const fieldBase = {
     .regex(/^[a-z][a-zA-Z0-9]*$/)
     .max(40),
   path: z.string().min(1).max(200),
-  label: z.string().min(1).max(120),
   required: z.boolean(),
 }
 
@@ -60,6 +59,7 @@ export const modelTag = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("open-weights") }),
   z.object({ kind: z.literal("hosted") }),
   z.object({ kind: z.literal("references"), max: z.number().int().min(1) }),
+  z.object({ kind: z.literal("proven") }),
 ])
 
 export const catalogModel = z.object({
@@ -70,7 +70,6 @@ export const catalogModel = z.object({
   nameKey: z.string().max(120).nullable(),
   task: z.string().min(1).max(40),
   tags: z.array(modelTag).max(8),
-  proven: z.boolean(),
   form: z.array(modelField).max(64).nullable(),
 })
 

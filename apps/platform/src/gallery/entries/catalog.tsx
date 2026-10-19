@@ -29,20 +29,22 @@ function hostedModel(
     nameKey: null,
     task: "text-to-image",
     tags: [{ kind: "hosted" }],
-    proven: false,
     form: [],
     ...change,
   }
 }
 
 export const galleryModels: CatalogModel[] = [
-  hostedModel("open-picture", "Comfy Cloud", {
+  hostedModel("open-picture", "comfy-cloud", {
     kind: "graph",
     name: "Open picture",
     tags: [{ kind: "open-weights" }],
     form: null,
   }),
-  hostedModel("maker/picture-2", "Maker", { name: "Picture 2" }),
+  hostedModel("maker/picture-2", "Maker", {
+    name: "Picture 2",
+    tags: [{ kind: "hosted" }, { kind: "proven" }],
+  }),
   hostedModel("maker/picture-2-fast", "Maker", { name: "Picture 2 Fast" }),
   hostedModel("studio/clip-3", "Studio", {
     name: "Clip 3",

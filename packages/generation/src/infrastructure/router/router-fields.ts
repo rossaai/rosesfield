@@ -1,7 +1,6 @@
 import type { ModelField } from "#domain/model-form"
 import {
   depthOf,
-  labelOf,
   mediaAt,
   promptAt,
   rankOf,
@@ -211,7 +210,6 @@ function leafOf(walk: Walk, schema: Schema, spot: Spot): ModelField | null {
   const base = {
     name: spot.key,
     path: spot.path,
-    label: labelOf(spot.path),
     required: spot.required,
   }
   const options = (arrayOf(fieldOf(schema, "enum")) ?? []).filter(

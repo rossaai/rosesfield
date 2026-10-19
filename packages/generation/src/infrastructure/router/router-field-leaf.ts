@@ -17,7 +17,7 @@ const promptKeys: readonly string[] = [
 ]
 
 export function scalarOf(
-  base: { name: string; path: string; label: string; required: boolean },
+  base: { name: string; path: string; required: boolean },
   schema: Schema,
   type: string | null,
   key: string
@@ -56,7 +56,6 @@ export function promptAt(path: string, required: boolean): ModelField {
   return {
     name: "prompt",
     path,
-    label: "Prompt",
     required,
     kind: "prompt",
     maxLength: null,
@@ -74,7 +73,6 @@ export function mediaAt(
   return {
     name: media === "image" ? "images" : media,
     path,
-    label: labelOf(path),
     required: false,
     kind: "media",
     media,
@@ -115,41 +113,6 @@ export function camelOf(text: string): string | null {
     )
     .join("")
   return /^[a-z][a-zA-Z0-9]{0,39}$/.test(joined) ? joined : null
-}
-
-const genericKeys: readonly string[] = [
-  "url",
-  "uri",
-  "weight",
-  "images",
-  "data",
-  "text",
-  "value",
-  "id",
-  "bytesBase64Encoded",
-  "mimeType",
-]
-
-export function labelOf(path: string): string {
-  const segments = path
-    .split(".")
-    .filter((one) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(one))
-  const last = segments.at(-1) ?? path
-  const parent = segments.at(-2)
-  return wordsOf(
-    parent !== undefined && genericKeys.includes(last)
-      ? `${parent} ${last}`
-      : last
-  )
-}
-
-function wordsOf(key: string): string {
-  const spaced = key
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/[_.-]+/g, " ")
-    .trim()
-    .toLowerCase()
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1)
 }
 
 export function depthOf(field: ModelField): number {

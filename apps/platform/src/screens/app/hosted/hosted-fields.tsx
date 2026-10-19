@@ -9,6 +9,7 @@ import type { FieldValue } from "@/screens/app/app-form"
 import { ChoiceControl } from "@/screens/app/fields/choice-field"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { listOf, textOf } from "@/screens/app/fields/field-props"
+import { wordsOfPath } from "@/screens/app/hosted/field-words"
 import type { AppForm } from "@/screens/app/use-app-form"
 
 type HostedFieldsProps = {
@@ -25,7 +26,9 @@ type FieldProps = {
 
 export function fieldCaption(field: ModelField): string {
   const key = `model.field.${field.name}`
-  return hasCatalogText(key) ? tCatalog(key) : field.label
+  return hasCatalogText(key)
+    ? tCatalog(key)
+    : t("model.field.other", { name: wordsOfPath(field.path) })
 }
 
 export function isShownField(field: ModelField): boolean {

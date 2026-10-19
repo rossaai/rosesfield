@@ -5,7 +5,13 @@ import {
   type ModelPickerSection,
   type ModelPickerTag,
 } from "@rosesfield/ui/components/model-picker"
-import { ClockIcon, LockOpenIcon, ScanIcon, Volume2Icon } from "lucide-react"
+import {
+  CircleCheckIcon,
+  ClockIcon,
+  LockOpenIcon,
+  ScanIcon,
+  Volume2Icon,
+} from "lucide-react"
 import type { ReactElement } from "react"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
@@ -28,6 +34,10 @@ const lineKeys: Readonly<Record<string, string>> = {
   "try-on": "model.line.tryOn",
   expand: "model.line.expand",
   chat: "model.line.chat",
+}
+
+export function makerNameOf(model: CatalogModel): string {
+  return model.kind === "graph" ? t("model.maker.graphs") : model.maker
 }
 
 export function modelNameOf(model: CatalogModel): string {
@@ -64,6 +74,11 @@ export function tagOf(tag: ModelTag): ModelPickerTag {
       return { label: t("model.tag.hosted") }
     case "references":
       return { label: t("model.tag.references", { max: tag.max }) }
+    case "proven":
+      return {
+        label: t("model.tag.proven"),
+        icon: <CircleCheckIcon aria-hidden="true" />,
+      }
   }
 }
 
@@ -72,7 +87,11 @@ export function pickerSections(hosted: HostedState): ModelPickerSection[] {
     ...(hosted.defaultModel === null ? [] : [hosted.defaultModel]),
     ...hosted.ranBefore,
   ]
-  return modelSections(hosted.models, first, modelNameOf).map((section) => ({
+  const models = hosted.models.map((model) => ({
+    ...model,
+    maker: makerNameOf(model),
+  }))
+  return modelSections(models, first, modelNameOf).map((section) => ({
     id: section.id,
     label: section.label ?? t("model.picker.first"),
     rows: section.rows.map((row) => ({

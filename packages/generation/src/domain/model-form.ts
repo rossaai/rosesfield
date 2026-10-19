@@ -4,7 +4,6 @@ import { assetIdFormat } from "@rosesfield/kernel"
 type FieldBase = {
   name: string
   path: string
-  label: string
   required: boolean
 }
 

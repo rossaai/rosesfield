@@ -12,7 +12,7 @@ import { hostedTagsOf } from "#comfy/model-tags"
 import { tasksOfModel } from "#comfy/model-tasks"
 import { isProvenFamily } from "#comfy/proven-families"
 
-export const graphMaker = "Comfy Cloud"
+export const graphMaker = "comfy-cloud"
 
 const modelInputName = "model"
 
@@ -56,8 +56,9 @@ function hostedEntry(model: HostedModel, task: string): CatalogModel {
     name: nameOf(model.id),
     nameKey: null,
     task,
-    tags: hostedTagsOf(model),
-    proven: isProvenFamily(model.provider),
+    tags: isProvenFamily(model.provider)
+      ? [...hostedTagsOf(model), { kind: "proven" }]
+      : hostedTagsOf(model),
     form: model.form === null ? null : [...model.form.fields],
   }
 }
@@ -77,7 +78,6 @@ function graphsOf(app: AppDefinition, task: string): CatalogModel[] {
       nameKey: option.labelKey,
       task,
       tags: [{ kind: "open-weights" }],
-      proven: false,
       form: null,
     }))
 }
