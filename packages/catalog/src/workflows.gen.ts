@@ -89,14 +89,6 @@ import wVideoLtx25StartFrameApi from "../../../workflows/video-ltx-2-5-start-fra
 import wVideoLtx25StartFrameEntry from "../../../workflows/video-ltx-2-5-start-frame/entry.json"
 import wVideoLtx25TextApi from "../../../workflows/video-ltx-2-5-text/video-ltx-2-5-text.api.json"
 import wVideoLtx25TextEntry from "../../../workflows/video-ltx-2-5-text/entry.json"
-import wVideoWan22FunCameraApi from "../../../workflows/video-wan-2-2-fun-camera/video-wan-2-2-fun-camera.api.json"
-import wVideoWan22FunCameraEntry from "../../../workflows/video-wan-2-2-fun-camera/entry.json"
-import wVideoWan22FunControlApi from "../../../workflows/video-wan-2-2-fun-control/video-wan-2-2-fun-control.api.json"
-import wVideoWan22FunControlEntry from "../../../workflows/video-wan-2-2-fun-control/entry.json"
-import wVideoWan22StartFrameApi from "../../../workflows/video-wan-2-2-start-frame/video-wan-2-2-start-frame.api.json"
-import wVideoWan22StartFrameEntry from "../../../workflows/video-wan-2-2-start-frame/entry.json"
-import wVideoWan22TextApi from "../../../workflows/video-wan-2-2-text/video-wan-2-2-text.api.json"
-import wVideoWan22TextEntry from "../../../workflows/video-wan-2-2-text/entry.json"
 import wVoiceChatterboxApi from "../../../workflows/voice-chatterbox/voice-chatterbox.api.json"
 import wVoiceChatterboxEntry from "../../../workflows/voice-chatterbox/entry.json"
 
@@ -146,9 +138,5 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "video-edit-reframe-wan-vace", entry: wVideoEditReframeWanVaceEntry, graph: wVideoEditReframeWanVaceApi },
   { folder: "video-ltx-2-5-start-frame", entry: wVideoLtx25StartFrameEntry, graph: wVideoLtx25StartFrameApi },
   { folder: "video-ltx-2-5-text", entry: wVideoLtx25TextEntry, graph: wVideoLtx25TextApi },
-  { folder: "video-wan-2-2-fun-camera", entry: wVideoWan22FunCameraEntry, graph: wVideoWan22FunCameraApi },
-  { folder: "video-wan-2-2-fun-control", entry: wVideoWan22FunControlEntry, graph: wVideoWan22FunControlApi },
-  { folder: "video-wan-2-2-start-frame", entry: wVideoWan22StartFrameEntry, graph: wVideoWan22StartFrameApi },
-  { folder: "video-wan-2-2-text", entry: wVideoWan22TextEntry, graph: wVideoWan22TextApi },
   { folder: "voice-chatterbox", entry: wVoiceChatterboxEntry, graph: wVoiceChatterboxApi },
 ]

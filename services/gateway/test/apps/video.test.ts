@@ -84,7 +84,7 @@ describe("the video app through the gateway on the demo engine", () => {
     }
   }
 
-  it("makes 4 MP4 videos from one start frame at the format the run asked for", async () => {
+  it("makes an MP4 on the LTX 2.5 graph from a start frame at the format the run asked for", async () => {
     const gateway = openGateway()
     const frame = await upload(gateway, "image/png", pngBytes)
     const run = await finished(
@@ -92,30 +92,30 @@ describe("the video app through the gateway on the demo engine", () => {
       await start(gateway, {
         inputs: {
           prompt: "a paper boat drifts across a pond",
+          model: "ltx-2-5",
           startFrame: [frame],
           cameraMove: "push-in",
           length: 3,
         },
-        count: 4,
         aspectRatio: "9:16",
       })
     )
     expect(run).toMatchObject({
       status: "done",
       origin: "demo",
-      count: 4,
+      count: 1,
       aspectRatio: "9:16",
       inputs: {
         startFrame: [frame],
-        model: "auto",
+        model: "ltx-2-5",
         cameraMove: "push-in",
         length: 3,
-        resolution: "720p",
-        sound: "off",
+        resolution: "480p",
+        sound: "on",
       },
     })
     expect(run.seed).toEqual(expect.any(Number))
-    expect(new Set(run.outputs).size).toBe(4)
+    expect(run.outputs).toHaveLength(1)
     for (const outputId of run.outputs) {
       const { asset, brand } = await assetOf(gateway, outputId)
       expect(asset).toMatchObject({
@@ -128,39 +128,20 @@ describe("the video app through the gateway on the demo engine", () => {
     }
   })
 
-  it("runs a clip on Wan 2.2 and keeps no camera move", async () => {
-    const gateway = openGateway()
-    const clip = await upload(gateway, "video/mp4", clipBytes)
-    const run = await finished(
-      gateway,
-      await start(gateway, {
-        inputs: { prompt: "the same street under snow", clip: [clip] },
-      })
-    )
-    expect(run.status).toBe("done")
-    expect(run.inputs).toMatchObject({
-      clip: [clip],
-      model: "wan-2-2",
-      resolution: "480p",
-    })
-    expect(run.inputs).not.toHaveProperty("cameraMove")
-    expect(run.inputs).not.toHaveProperty("sound")
-    expect(run.outputs).toHaveLength(1)
-  })
-
   it.each([
-    { name: "a clip and a start frame", model: undefined },
-    { name: "a clip on LTX 2.5", model: "ltx-2-5" },
-  ])("refuses $name and starts nothing", async ({ model }) => {
+    { name: "a Wan model", inputs: { model: "wan-2-2" } },
+    { name: "a clip", inputs: { model: "ltx-2-5", clip: "clip" } },
+    { name: "a count of 2", inputs: { model: "ltx-2-5" }, count: 2 },
+  ])("refuses $name and starts nothing", async ({ inputs, count }) => {
     const gateway = openGateway()
-    const frame = await upload(gateway, "image/png", pngBytes)
     const clip = await upload(gateway, "video/mp4", clipBytes)
     const response = await start(gateway, {
       inputs: {
         prompt: "a red kite",
-        clip: [clip],
-        ...(model === undefined ? { startFrame: [frame] } : { model }),
+        ...inputs,
+        ...("clip" in inputs ? { clip: [clip] } : {}),
       },
+      ...(count === undefined ? {} : { count }),
     })
     expect(response.status).toBe(400)
     const { error } = errorEnvelope.parse(await response.json())

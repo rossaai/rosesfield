@@ -226,11 +226,11 @@ describe("the engine requests Remake sends to Comfy for each shot", () => {
     }
   )
 
-  it("control: a rebuilt shot with sound on at Draft breaks Video's contract", () => {
+  it("control: a rebuilt shot on a Wan model breaks Video's contract", () => {
     const rebuilt = shotAt(1, "draft", "16:9")
     const parsed = bodyOf({
       ...rebuilt,
-      inputs: { ...rebuilt.inputs, sound: "on" },
+      inputs: { ...rebuilt.inputs, model: "wan-2-2" },
     })
     expect(parsed.success).toBe(false)
   })
@@ -296,10 +296,10 @@ describe("the engine requests Remake sends to Comfy for each shot", () => {
     expect(workflow["370"]?.inputs).not.toHaveProperty("audio")
   })
 
-  it("rebuilds a shot of 1.5 seconds as 2 seconds with Wan 2.2 at Draft", async () => {
+  it("rebuilds a shot of 1.5 seconds as 2 seconds with LTX 2.5 at Draft, at 480p with no sound", async () => {
     const several = shotAt(2, "draft", "16:9")
     const { submission, workflow } = await submit(several, [submittedJob])
-    expectWorkflow("video-wan-2-2-text", workflow, submission.models)
+    expectWorkflow("video-ltx-2-5-text", workflow, submission.models)
     expect(workflow).toMatchObject({
       "900": {
         inputs: {
@@ -307,22 +307,19 @@ describe("the engine requests Remake sends to Comfy for each shot", () => {
           string_b: "",
         },
       },
-      "74": { inputs: { width: 848, height: 480, length: 33 } },
-      "81": { inputs: { noise_seed: 43 } },
+      "356": { inputs: { width: 448, height: 256, length: 49 } },
+      "339": { inputs: { noise_seed: 43 } },
     })
+    expect(workflow["370"]?.inputs).not.toHaveProperty("audio")
   })
 
-  it("control: the Final shot's inputs with Draft's model reach Wan 2.2 and not LTX 2.5", async () => {
+  it("control: the Final shot's inputs at Draft's resolution ask for the Draft size", async () => {
     const rebuilt = shotAt(1, "final", "16:9")
-    const { submission, workflow } = await submit(
-      {
-        ...rebuilt,
-        inputs: { ...rebuilt.inputs, model: "wan-2-2", resolution: "480p" },
-      },
+    const { workflow } = await submit(
+      { ...rebuilt, inputs: { ...rebuilt.inputs, resolution: "480p" } },
       [submittedJob]
     )
-    expectWorkflow("video-wan-2-2-text", workflow, submission.models)
-    expect(workflow).not.toHaveProperty("356")
+    expect(workflow["356"]?.inputs).toMatchObject({ width: 448, height: 256 })
   })
 
   it("sends nothing for shots kept as they are", () => {

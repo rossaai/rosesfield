@@ -6,7 +6,7 @@ import {
   remakeLimits,
   shotSecondsOf,
 } from "#remake/shot-plan"
-import { videoEngine } from "#video/comfy/video-engine"
+import { app as videoApp } from "#video/app"
 
 export type RemakeQuality = "draft" | "final"
 
@@ -49,13 +49,13 @@ export const remakeAspectRatios: readonly string[] = [...recastAspectRatios]
 const seedSpan = 2_147_483_648
 
 const rebuildVideo: Readonly<Record<RemakeQuality, RunInputs>> = {
-  draft: { model: "wan-2-2", resolution: "480p" },
+  draft: { model: "ltx-2-5", resolution: "480p", sound: "off" },
   final: { model: "ltx-2-5", resolution: "720p", sound: "off" },
 }
 
 export const remakeEngine: EngineBinding = {
   adapter: remakeShotsAdapter,
-  config: { replace: recastEngine, rebuild: videoEngine },
+  config: { replace: recastEngine, rebuild: videoApp.engine },
 }
 
 export function shotKeyOf(
@@ -103,7 +103,7 @@ function replaced(input: ShotRequestInput): Routed | null {
 function rebuilt(input: ShotRequestInput): Routed {
   return {
     app: "video",
-    binding: videoEngine,
+    binding: videoApp.engine,
     inputs: {
       prompt: wordsOf(input.shot, input.instructions),
       length: rebuildLengthOf(input.shot),

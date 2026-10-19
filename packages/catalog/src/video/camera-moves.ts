@@ -8,8 +8,6 @@ export type CameraMove =
   | "crane-up"
   | "crane-down"
 
-export type MovingCameraMove = Exclude<CameraMove, "auto">
-
 type CameraMoveRow = {
   value: CameraMove
   labelKey: string
@@ -26,22 +24,8 @@ export const cameraMoves: readonly CameraMoveRow[] = [
   { value: "crane-down", labelKey: "video.choice.cameraMove.craneDown" },
 ]
 
-export const cameraSentences: Readonly<Record<MovingCameraMove, string>> = {
-  static: "The camera holds still for the whole shot.",
-  "push-in": "The camera moves slowly forward, toward the subject.",
-  "pull-out": "The camera moves slowly backward, away from the subject.",
-  "track-left": "The camera travels sideways to the left.",
-  "track-right": "The camera travels sideways to the right.",
-  "crane-up": "The camera rises slowly straight up.",
-  "crane-down": "The camera lowers slowly straight down.",
-}
+export const cameraWordsSeparator = "\n"
 
-export const funCameraPoses: Readonly<Record<MovingCameraMove, string>> = {
-  static: "Static",
-  "push-in": "Zoom In",
-  "pull-out": "Zoom Out",
-  "track-left": "Pan Left",
-  "track-right": "Pan Right",
-  "crane-up": "Pan Up",
-  "crane-down": "Pan Down",
+export function cameraWordsKeyOf(move: string): string {
+  return `video.cameraMove.${move}.words`
 }

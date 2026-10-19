@@ -48,4 +48,13 @@ export function tCatalog(key: string, values?: CopyValues): string {
   return fill(text, values)
 }
 
+export function tCatalogCount(
+  base: string,
+  count: number,
+  values?: CopyValues
+): string {
+  const form = plurals.select(count) === "one" ? "one" : "other"
+  return tCatalog(`${base}.${form}`, { count, ...values })
+}
+
 export const copyLocale = locale

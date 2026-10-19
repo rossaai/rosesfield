@@ -1,0 +1,546 @@
+{
+  "minimaxH3": [
+    {
+      "name": "prompt",
+      "path": "content.[].text",
+      "required": true,
+      "kind": "prompt",
+      "maxLength": null,
+      "default": null
+    },
+    {
+      "name": "audio",
+      "path": "content.[].audio_url",
+      "required": false,
+      "kind": "media",
+      "media": "audio",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "name": "images",
+      "path": "content.[].image_url",
+      "required": false,
+      "kind": "media",
+      "media": "image",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "name": "video",
+      "path": "content.[].video_url",
+      "required": false,
+      "kind": "media",
+      "media": "video",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "name": "resolution",
+      "path": "resolution",
+      "required": true,
+      "kind": "choice",
+      "options": ["2K", "2k", "768P", "768p"],
+      "default": null
+    },
+    {
+      "name": "duration",
+      "path": "duration",
+      "required": true,
+      "kind": "number",
+      "min": 4,
+      "max": 15,
+      "integer": true,
+      "default": null
+    },
+    {
+      "name": "seed",
+      "path": "seed",
+      "required": false,
+      "kind": "number",
+      "min": null,
+      "max": null,
+      "integer": true,
+      "default": null
+    },
+    {
+      "name": "aigcWatermark",
+      "path": "aigc_watermark",
+      "required": false,
+      "kind": "toggle",
+      "default": null
+    },
+    {
+      "name": "ratio",
+      "path": "ratio",
+      "required": false,
+      "kind": "text",
+      "maxLength": null,
+      "default": null
+    }
+  ],
+  "h3MaxTurbo": [
+    {
+      "name": "prompt",
+      "path": "prompt",
+      "required": true,
+      "kind": "prompt",
+      "maxLength": null,
+      "default": null
+    },
+    {
+      "name": "duration",
+      "path": "duration",
+      "required": false,
+      "kind": "number",
+      "min": null,
+      "max": null,
+      "integer": true,
+      "default": 5
+    },
+    {
+      "name": "seed",
+      "path": "seed",
+      "required": false,
+      "kind": "number",
+      "min": null,
+      "max": null,
+      "integer": true,
+      "default": null
+    },
+    {
+      "name": "enableSafetyChecker",
+      "path": "enable_safety_checker",
+      "required": false,
+      "kind": "toggle",
+      "default": true
+    },
+    {
+      "name": "syncMode",
+      "path": "sync_mode",
+      "required": false,
+      "kind": "toggle",
+      "default": null
+    },
+    {
+      "name": "aspectRatio",
+      "path": "aspect_ratio",
+      "required": false,
+      "kind": "text",
+      "maxLength": null,
+      "default": "16:9"
+    },
+    {
+      "name": "promptExpansionMode",
+      "path": "prompt_expansion_mode",
+      "required": true,
+      "kind": "text",
+      "maxLength": null,
+      "default": null
+    },
+    {
+      "name": "resolution",
+      "path": "resolution",
+      "required": false,
+      "kind": "text",
+      "maxLength": null,
+      "default": "768P"
+    }
+  ],
+  "veoLite": [
+    {
+      "name": "prompt",
+      "path": "instances.0.prompt",
+      "required": false,
+      "kind": "prompt",
+      "maxLength": null,
+      "default": null
+    },
+    {
+      "name": "images",
+      "path": "instances.0.image.bytesBase64Encoded",
+      "required": false,
+      "kind": "media",
+      "media": "image",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "name": "instancesLastFrameBytesBase64Encoded",
+      "path": "instances.0.lastFrame.bytesBase64Encoded",
+      "required": false,
+      "kind": "media",
+      "media": "image",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "name": "instancesMaskBytesBase64Encoded",
+      "path": "instances.0.mask.bytesBase64Encoded",
+      "required": false,
+      "kind": "media",
+      "media": "image",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "name": "video",
+      "path": "instances.0.video.bytesBase64Encoded",
+      "required": false,
+      "kind": "media",
+      "media": "video",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "name": "imageBytesBase64Encoded",
+      "path": "instances.0.referenceImages.0.image.bytesBase64Encoded",
+      "required": false,
+      "kind": "media",
+      "media": "image",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "name": "aspectRatio",
+      "path": "parameters.aspectRatio",
+      "required": false,
+      "kind": "choice",
+      "options": ["16:9", "9:16"],
+      "default": null
+    },
+    {
+      "name": "resolution",
+      "path": "parameters.resolution",
+      "required": false,
+      "kind": "choice",
+      "options": ["720p", "1080p", "4k"],
+      "default": null
+    },
+    {
+      "name": "durationSeconds",
+      "path": "parameters.durationSeconds",
+      "required": false,
+      "kind": "number",
+      "min": null,
+      "max": null,
+      "integer": false,
+      "default": null
+    },
+    {
+      "name": "seed",
+      "path": "parameters.seed",
+      "required": false,
+      "kind": "number",
+      "min": null,
+      "max": null,
+      "integer": true,
+      "default": null
+    },
+    {
+      "name": "generateAudio",
+      "path": "parameters.generateAudio",
+      "required": false,
+      "kind": "toggle",
+      "default": null
+    },
+    {
+      "name": "negativePrompt",
+      "path": "parameters.negativePrompt",
+      "required": false,
+      "kind": "text",
+      "maxLength": null,
+      "default": null
+    }
+  ],
+  "pVideo": [
+    {
+      "name": "prompt",
+      "path": "input.prompt",
+      "required": true,
+      "kind": "prompt",
+      "maxLength": null,
+      "default": null
+    },
+    {
+      "name": "audio",
+      "path": "input.audio",
+      "required": false,
+      "kind": "media",
+      "media": "audio",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "name": "images",
+      "path": "input.image",
+      "required": false,
+      "kind": "media",
+      "media": "image",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "name": "inputLastFrameImage",
+      "path": "input.last_frame_image",
+      "required": false,
+      "kind": "media",
+      "media": "image",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "name": "duration",
+      "path": "input.duration",
+      "required": false,
+      "kind": "number",
+      "min": 1,
+      "max": 20,
+      "integer": true,
+      "default": null
+    },
+    {
+      "name": "fps",
+      "path": "input.fps",
+      "required": false,
+      "kind": "number",
+      "min": null,
+      "max": null,
+      "integer": true,
+      "default": 24
+    },
+    {
+      "name": "seed",
+      "path": "input.seed",
+      "required": false,
+      "kind": "number",
+      "min": null,
+      "max": null,
+      "integer": true,
+      "default": null
+    },
+    {
+      "name": "draft",
+      "path": "input.draft",
+      "required": false,
+      "kind": "toggle",
+      "default": false
+    },
+    {
+      "name": "promptUpsampling",
+      "path": "input.prompt_upsampling",
+      "required": false,
+      "kind": "toggle",
+      "default": true
+    },
+    {
+      "name": "saveAudio",
+      "path": "input.save_audio",
+      "required": false,
+      "kind": "toggle",
+      "default": true
+    },
+    {
+      "name": "aspectRatio",
+      "path": "input.aspect_ratio",
+      "required": false,
+      "kind": "text",
+      "maxLength": null,
+      "default": "16:9"
+    },
+    {
+      "name": "resolution",
+      "path": "input.resolution",
+      "required": false,
+      "kind": "text",
+      "maxLength": null,
+      "default": "720p"
+    }
+  ],
+  "seedanceFast": [
+    {
+      "name": "prompt",
+      "path": "content.[].{type=text}.text",
+      "required": true,
+      "kind": "prompt",
+      "maxLength": null,
+      "default": null
+    },
+    {
+      "name": "images",
+      "path": "content.[].{type=image_url}.image_url.url",
+      "required": false,
+      "kind": "media",
+      "media": "image",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "name": "video",
+      "path": "content.[].{type=video_url}.video_url.url",
+      "required": false,
+      "kind": "media",
+      "media": "video",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "name": "audio",
+      "path": "content.[].{type=audio_url}.audio_url.url",
+      "required": false,
+      "kind": "media",
+      "media": "audio",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "name": "outputFormat",
+      "path": "output_format",
+      "required": false,
+      "kind": "choice",
+      "options": ["mp4", "mov"],
+      "default": "mp4"
+    },
+    {
+      "name": "ratio",
+      "path": "ratio",
+      "required": false,
+      "kind": "choice",
+      "options": [
+        "16:9",
+        "4:3",
+        "1:1",
+        "3:4",
+        "9:16",
+        "21:9",
+        "9:21",
+        "adaptive"
+      ],
+      "default": null
+    },
+    {
+      "name": "resolution",
+      "path": "resolution",
+      "required": false,
+      "kind": "choice",
+      "options": ["480p", "720p", "1080p", "4k"],
+      "default": null
+    },
+    {
+      "name": "serviceTier",
+      "path": "service_tier",
+      "required": false,
+      "kind": "choice",
+      "options": ["default", "flex"],
+      "default": null
+    },
+    {
+      "name": "duration",
+      "path": "duration",
+      "required": false,
+      "kind": "number",
+      "min": null,
+      "max": null,
+      "integer": true,
+      "default": null
+    },
+    {
+      "name": "executionExpiresAfter",
+      "path": "execution_expires_after",
+      "required": false,
+      "kind": "number",
+      "min": 3600,
+      "max": 259200,
+      "integer": true,
+      "default": null
+    },
+    {
+      "name": "seed",
+      "path": "seed",
+      "required": false,
+      "kind": "number",
+      "min": -1,
+      "max": 4294967295,
+      "integer": true,
+      "default": null
+    },
+    {
+      "name": "draft",
+      "path": "draft",
+      "required": false,
+      "kind": "toggle",
+      "default": false
+    },
+    {
+      "name": "generateAudio",
+      "path": "generate_audio",
+      "required": false,
+      "kind": "toggle",
+      "default": true
+    },
+    {
+      "name": "returnLastFrame",
+      "path": "return_last_frame",
+      "required": false,
+      "kind": "toggle",
+      "default": false
+    },
+    {
+      "name": "watermark",
+      "path": "watermark",
+      "required": false,
+      "kind": "toggle",
+      "default": false
+    }
+  ],
+  "ltxFast": [
+    {
+      "name": "prompt",
+      "path": "prompt",
+      "required": true,
+      "kind": "prompt",
+      "maxLength": 10000,
+      "default": null
+    },
+    {
+      "name": "duration",
+      "path": "duration",
+      "required": true,
+      "kind": "choice",
+      "options": [2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20],
+      "default": null
+    },
+    {
+      "name": "fps",
+      "path": "fps",
+      "required": false,
+      "kind": "choice",
+      "options": [24, 25, 48, 50],
+      "default": 25
+    },
+    {
+      "name": "resolution",
+      "path": "resolution",
+      "required": true,
+      "kind": "choice",
+      "options": [
+        "1280x720",
+        "720x1280",
+        "1920x1080",
+        "1080x1920",
+        "2560x1440",
+        "1440x2560",
+        "3840x2160",
+        "2160x3840"
+      ],
+      "default": null
+    },
+    {
+      "name": "generateAudio",
+      "path": "generate_audio",
+      "required": false,
+      "kind": "toggle",
+      "default": true
+    }
+  ]
+}
