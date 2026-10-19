@@ -133,7 +133,7 @@ export function PresetCard({
             </Button>
           }
         />
-        <PopoverContent className="w-dialog max-w-[min(var(--spacing-dialog),calc(100vw-2*var(--spacing-s4)))]">
+        <PopoverContent className="w-popover-max">
           <PopoverTitle>{tCatalog("video.preset.pick")}</PopoverTitle>
           <PresetGrid
             presets={presets}
