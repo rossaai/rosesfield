@@ -1,5 +1,5 @@
 import { type ReactElement, useState } from "react"
-import { tCatalog } from "@/copy/t"
+import { tCatalog, tCatalogCount } from "@/copy/t"
 import { DropWell } from "@/pieces/drop-well"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { listOf } from "@/screens/app/fields/field-props"
@@ -12,6 +12,7 @@ type WellCopy = {
   captionKey: string
   noteKey: string
   isOptional: boolean
+  isCounted?: boolean
 }
 
 function Well({
@@ -28,7 +29,11 @@ function Well({
     <FieldFrame
       caption={tCatalog(copy.captionKey)}
       isOptional={copy.isOptional}
-      note={tCatalog(copy.noteKey, { max: slot.max })}
+      note={
+        copy.isCounted === true
+          ? tCatalogCount(copy.noteKey, slot.max)
+          : tCatalog(copy.noteKey)
+      }
       problem={form.problems.get(slot.name)}
       message={message}
     >
@@ -78,6 +83,7 @@ export function VideoWells({
             captionKey: "video.well.references",
             noteKey: "video.well.references.note",
             isOptional: false,
+            isCounted: true,
           }}
         />
       )}
