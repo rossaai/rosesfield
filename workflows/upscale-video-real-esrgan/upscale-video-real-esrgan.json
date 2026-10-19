@@ -1,0 +1,321 @@
+{
+  "id": "42b828e9-e8ed-5363-afde-9784cebf56c4",
+  "revision": 0,
+  "last_node_id": 13,
+  "last_link_id": 8,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadVideo",
+      "pos": [1250, 100],
+      "size": [380, 92],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [4]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["", "image"]
+    },
+    {
+      "id": 2,
+      "type": "UpscaleModelLoader",
+      "pos": [730, 100],
+      "size": [380, 92],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "UPSCALE_MODEL",
+          "type": "UPSCALE_MODEL",
+          "links": [1]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UpscaleModelLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0",
+        "models": [
+          {
+            "name": "RealESRGAN_x4plus.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Real-ESRGAN_repackaged/resolve/main/RealESRGAN_x4plus.safetensors",
+            "directory": "upscale_models",
+            "hash": "37f9a931c215f040aa6d50f711f2cb115f713c46df1d0d6469a8bd7bfe9a60bb",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": ["RealESRGAN_x4plus.safetensors"]
+    },
+    {
+      "id": 3,
+      "type": "ImageUpscaleWithModel",
+      "pos": [2210, 100],
+      "size": [380, 84],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "upscale_model",
+          "type": "UPSCALE_MODEL",
+          "link": 1
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [3]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageUpscaleWithModel",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 4,
+      "type": "ImageScaleBy",
+      "pos": [2650, 100],
+      "size": [380, 122],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [5]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScaleBy",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["lanczos", 1]
+    },
+    {
+      "id": 10,
+      "type": "GetVideoComponents",
+      "pos": [1770, 100],
+      "size": [380, 150],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [2]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [7]
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": [6]
+        },
+        {
+          "name": "bit_depth",
+          "type": "COMBO",
+          "links": null
+        },
+        {
+          "name": "color_space",
+          "type": "COMBO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetVideoComponents",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 11,
+      "type": "CreateVideo",
+      "pos": [3170, 100],
+      "size": [380, 226],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 5
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "link": 6,
+          "widget": {
+            "name": "fps"
+          }
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 7,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [8]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [["10", 2], "auto", "sRGB", "none"]
+    },
+    {
+      "id": 12,
+      "type": "SaveVideo",
+      "pos": [3610, 100],
+      "size": [380, 182],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["upscale/video", "mp4", "h264", null]
+    },
+    {
+      "id": 13,
+      "type": "MarkdownNote",
+      "pos": [60, 100],
+      "size": [560, 760],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Upscale a video 2 or 4 times with Real-ESRGAN",
+      "properties": {},
+      "widgets_values": [
+        "# Upscale a video 2 or 4 times with Real-ESRGAN\n\nRaises the resolution of every frame of one clip with Real-ESRGAN x4plus and keeps its frame rate and sound. A 2 times run makes the 4 times frames and scales them down by half. Built from Comfy's template video_upscale_gan_x4.\n\n## Models\n\n- [RealESRGAN_x4plus.safetensors](https://huggingface.co/Comfy-Org/Real-ESRGAN_repackaged/resolve/main/RealESRGAN_x4plus.safetensors): Real-ESRGAN x4plus, [BSD-3-Clause](https://github.com/xinntao/Real-ESRGAN).\n\nRosesfield ships no weights. Each loader lists its file with a download link.\n\nPart of [Rosesfield](https://github.com/rossaai/rosesfield), MIT. Built from Comfy-Org/workflow_templates, MIT, per NOTICE."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [1, 2, 0, 3, 0, "UPSCALE_MODEL"],
+    [2, 10, 0, 3, 1, "IMAGE"],
+    [3, 3, 0, 4, 0, "IMAGE"],
+    [4, 1, 0, 10, 0, "VIDEO"],
+    [5, 4, 0, 11, 0, "IMAGE"],
+    [6, 10, 2, 11, 1, "FLOAT"],
+    [7, 10, 1, 11, 2, "AUDIO"],
+    [8, 11, 0, 12, 0, "VIDEO"]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Models",
+      "bounding": [700, 20, 440, 252],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Inputs",
+      "bounding": [1220, 20, 440, 252],
+      "color": "#b06634",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Generate",
+      "bounding": [1740, 20, 1320, 310],
+      "color": "#444444",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Output",
+      "bounding": [3140, 20, 880, 386],
+      "color": "#3f8a5c",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.55,
+      "offset": [0, 0]
+    },
+    "linearData": {
+      "inputs": [[1, "file"], [4, "scale_by"]],
+      "outputs": [12]
+    }
+  },
+  "version": 0.4
+}

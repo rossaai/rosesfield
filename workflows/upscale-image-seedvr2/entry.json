@@ -1,0 +1,42 @@
+{
+  "name": "upscale-image-seedvr2",
+  "title": "Upscale an image 2 or 4 times with SeedVR2",
+  "description": "Raises the resolution of one image by 2 or 4 times with SeedVR2, a one-step diffusion restorer. The model file is an input, so the same graph runs the 3B and the 7B model. Built from Comfy's template utility_seedvr2_3b_int8_upscale_image.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "seedvr2_3b_int8_convrot.safetensors",
+    "seedvr2_ema_vae_fp16.safetensors",
+    "seedvr2_7b_int8_convrot.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "image": {
+      "nodeId": "1",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "scale": {
+      "nodeId": "57",
+      "inputName": "resize_type.multiplier",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "54",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "model": {
+      "nodeId": "52",
+      "inputName": "unet_name",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "9",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

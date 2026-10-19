@@ -1,0 +1,48 @@
+import type { Asset } from "@rosesfield/contract"
+import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
+import { FileAudioIcon, FileTextIcon } from "lucide-react"
+import type { ReactElement } from "react"
+import { joinParts } from "@/copy/format"
+import { t } from "@/copy/t"
+import { assetLabel, assetLength, useAssetName } from "@/pieces/asset-name"
+import { useViewer } from "@/viewer/viewer-context"
+
+type AssetThumbProps = {
+  asset: Asset
+  list: readonly string[]
+  isDemo: boolean
+  isStatic: boolean
+}
+
+const captionClass =
+  "max-w-full truncate whitespace-nowrap text-caption text-ink-muted"
+
+export function AssetThumb(props: AssetThumbProps): ReactElement {
+  const viewer = useViewer()
+  const Icon = props.asset.kind === "audio" ? FileAudioIcon : FileTextIcon
+  const label = useAssetName(props.asset) ?? assetLabel(props.asset)
+  const caption = joinParts([
+    props.isDemo ? t("run.demoCaption") : null,
+    props.isStatic ? null : (assetLength(props.asset) ?? null),
+  ])
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      disabled={props.isStatic}
+      onClick={(event) =>
+        viewer.open(props.asset.id, event.currentTarget, props.list)
+      }
+      className={cn(
+        "flex aspect-square w-full min-w-0 flex-col items-center justify-center gap-s1 rounded-cell bg-(--well) p-s2",
+        motion.press
+      )}
+    >
+      <span className="flex size-icon items-center justify-center rounded-full bg-(--ground) [&_svg]:glyph">
+        <Icon aria-hidden="true" />
+      </span>
+      {caption === "" ? null : <span className={captionClass}>{caption}</span>}
+    </button>
+  )
+}

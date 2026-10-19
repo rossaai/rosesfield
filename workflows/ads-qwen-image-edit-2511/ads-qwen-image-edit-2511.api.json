@@ -1,0 +1,232 @@
+{
+  "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": ["158", 0],
+      "filename_prefix": "rosesfield-ads"
+    }
+  },
+  "41": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "product-photo.png"
+    }
+  },
+  "83": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "product-photo.png"
+    }
+  },
+  "145": {
+    "class_type": "ModelSamplingAuraFlow",
+    "inputs": {
+      "model": ["161", 0],
+      "shift": 3.1
+    }
+  },
+  "146": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    }
+  },
+  "147": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["149", 0],
+      "reference_latents_method": "index_timestep_zero"
+    }
+  },
+  "148": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["151", 0],
+      "reference_latents_method": "index_timestep_zero"
+    }
+  },
+  "149": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["162", 0],
+      "prompt": "",
+      "vae": ["146", 0],
+      "image1": ["160", 0],
+      "image2": ["83", 0],
+      "image3": ["191", 0]
+    }
+  },
+  "151": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["162", 0],
+      "prompt": ["511", 0],
+      "vae": ["146", 0],
+      "image1": ["160", 0],
+      "image2": ["83", 0],
+      "image3": ["191", 0]
+    }
+  },
+  "152": {
+    "class_type": "CFGNorm",
+    "inputs": {
+      "model": ["145", 0],
+      "strength": 1
+    }
+  },
+  "158": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["169", 0],
+      "vae": ["146", 0]
+    }
+  },
+  "160": {
+    "class_type": "FluxKontextImageScale",
+    "inputs": {
+      "image": ["41", 0]
+    }
+  },
+  "161": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "qwen_image_edit_2511_fp8mixed.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "162": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    }
+  },
+  "169": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["152", 0],
+      "positive": ["148", 0],
+      "negative": ["147", 0],
+      "latent_image": ["192", 0],
+      "seed": 0,
+      "steps": 40,
+      "cfg": 3,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "191": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "product-photo.png"
+    }
+  },
+  "192": {
+    "class_type": "EmptySD3LatentImage",
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    }
+  },
+  "501": {
+    "class_type": "RegexReplace",
+    "inputs": {
+      "string": "",
+      "regex_pattern": "https?://\\S+",
+      "replace": "",
+      "case_insensitive": true,
+      "multiline": false,
+      "dotall": false,
+      "count": 0
+    }
+  },
+  "502": {
+    "class_type": "StringTrim",
+    "inputs": {
+      "string": ["501", 0],
+      "mode": "Both"
+    }
+  },
+  "503": {
+    "class_type": "RegexReplace",
+    "inputs": {
+      "string": ["502", 0],
+      "regex_pattern": "\\s*\\n\\s*",
+      "replace": " ",
+      "case_insensitive": true,
+      "multiline": false,
+      "dotall": false,
+      "count": 0
+    }
+  },
+  "504": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": "",
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "505": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["504", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "506": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["505", 0],
+      "string_b": ["503", 0],
+      "delimiter": ""
+    }
+  },
+  "507": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["506", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "508": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["507", 0],
+      "string_b": "Keep the product's shape, color and label exactly as in the product pictures. If the last picture shows a person, that person presents the product.",
+      "delimiter": ""
+    }
+  },
+  "509": {
+    "class_type": "RegexReplace",
+    "inputs": {
+      "string": ["508", 0],
+      "regex_pattern": "(?!)",
+      "replace": ".",
+      "case_insensitive": true,
+      "multiline": false,
+      "dotall": false,
+      "count": 0
+    }
+  },
+  "510": {
+    "class_type": "StringReplace",
+    "inputs": {
+      "string": ["509", 0],
+      "find": "  ",
+      "replace": " "
+    }
+  },
+  "511": {
+    "class_type": "StringTrim",
+    "inputs": {
+      "string": ["510", 0],
+      "mode": "Both"
+    }
+  }
+}

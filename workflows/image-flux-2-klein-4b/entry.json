@@ -1,0 +1,57 @@
+{
+  "name": "image-flux-2-klein-4b",
+  "title": "Image: text to image with FLUX.2 Klein 4B",
+  "description": "Makes up to 4 images from a prompt with FLUX.2 Klein 4B in 4 steps. Built from Comfy's template image_flux2_klein_text_to_image.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "flux-2-klein-4b.safetensors",
+    "qwen_3_4b.safetensors",
+    "flux2-vae.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "prompt": {
+      "nodeId": "74",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "73",
+      "inputName": "noise_seed",
+      "type": "scalar"
+    },
+    "count": {
+      "nodeId": "66",
+      "inputName": "batch_size",
+      "type": "scalar"
+    },
+    "schedulerWidth": {
+      "nodeId": "62",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "schedulerHeight": {
+      "nodeId": "62",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "66",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "66",
+      "inputName": "height",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "9",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "rosesfield",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // The migration modules of packages/generation, packages/library and this
+  // gateway read import.meta.url when they load. Workers gives a module no file
+  // URL, so the bundle defines one. The migrations themselves run through
+  // wrangler d1.
+  "define": { "import.meta.url": "\"file:///bundle/worker.js\"" },
+  "assets": {
+    "directory": "../../apps/platform/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/mcp"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "rosesfield",
+      "migrations_dir": "../..",
+      "migrations_pattern": "../../*/*/drizzle/*.sql"
+    }
+  ],
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "rosesfield-assets" }],
+  "durable_objects": {
+    "bindings": [
+      { "name": "WATCHERS", "class_name": "RunWatcher" },
+      { "name": "AGENTS", "class_name": "AgentHost" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["RunWatcher"] },
+    { "tag": "v2", "new_sqlite_classes": ["AgentHost"] }
+  ],
+  // Public mode deletes expired runs, assets and characters once an hour.
+  "triggers": { "crons": ["17 * * * *"] },
+  "observability": { "enabled": true }
+}

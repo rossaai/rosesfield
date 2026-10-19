@@ -1,0 +1,36 @@
+{
+  "name": "@rosesfield/gateway",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#*": "./src/*.ts"
+  },
+  "scripts": {
+    "dev": "COMFY_API_KEY= COMFY_BASE_URL= RUNPOD_API_KEY= RUNPOD_ENDPOINT_ID= bun --env-file=../../.env --watch src/main.ts",
+    "start": "bun --env-file=../../.env src/main.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun --bun vitest run --passWithNoTests",
+    "test:worker": "vitest run --config vitest.worker.config.ts"
+  },
+  "dependencies": {
+    "@comfyorg/sdk": "0.5.0",
+    "@modelcontextprotocol/hono": "2.0.2",
+    "@modelcontextprotocol/server": "2.3.1",
+    "@rosesfield/agent": "workspace:*",
+    "@rosesfield/catalog": "workspace:*",
+    "@rosesfield/contract": "workspace:*",
+    "@rosesfield/generation": "workspace:*",
+    "@rosesfield/kernel": "workspace:*",
+    "@rosesfield/library": "workspace:*",
+    "drizzle-orm": "0.45.4",
+    "hono": "4.13.13",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261016.1",
+    "@types/bun": "1.4.3",
+    "drizzle-kit": "0.31.11",
+    "wrangler": "4.151.1"
+  }
+}

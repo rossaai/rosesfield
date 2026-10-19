@@ -1,0 +1,497 @@
+{
+  "id": "b310ffdf-b7a8-518a-b824-5120a80611fd",
+  "revision": 0,
+  "last_node_id": 77,
+  "last_link_id": 13,
+  "nodes": [
+    {
+      "id": 9,
+      "type": "SaveImage",
+      "pos": [4050, 100],
+      "size": [380, 92],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["rosesfield-image"]
+    },
+    {
+      "id": 61,
+      "type": "KSamplerSelect",
+      "pos": [1770, 100],
+      "size": [380, 92],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [7]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["euler"]
+    },
+    {
+      "id": 62,
+      "type": "Flux2Scheduler",
+      "pos": [1770, 252],
+      "size": [380, 152],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [8]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Flux2Scheduler",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [4, 1024, 1024]
+    },
+    {
+      "id": 63,
+      "type": "CFGGuider",
+      "pos": [2650, 100],
+      "size": [380, 136],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 2
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 3
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": [6]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CFGGuider",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [1]
+    },
+    {
+      "id": 64,
+      "type": "SamplerCustomAdvanced",
+      "pos": [3090, 100],
+      "size": [380, 150],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise",
+          "type": "NOISE",
+          "link": 5
+        },
+        {
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 6
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 7
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 8
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [10]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustomAdvanced",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 65,
+      "type": "VAEDecode",
+      "pos": [3530, 100],
+      "size": [380, 84],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 10
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [1]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 66,
+      "type": "EmptyFlux2LatentImage",
+      "pos": [1770, 464],
+      "size": [380, 152],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [9]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyFlux2LatentImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [1024, 1024, 1]
+    },
+    {
+      "id": 70,
+      "type": "UNETLoader",
+      "pos": [730, 100],
+      "size": [380, 122],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [2]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0",
+        "models": [
+          {
+            "name": "flux-2-klein-4b.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/flux2-klein/resolve/main/split_files/diffusion_models/flux-2-klein-4b.safetensors",
+            "directory": "diffusion_models",
+            "hash": "ec3d4e733a771f61c052fb4856c48b336c55eaf2c65487c2a1faeb9bbda7a343",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": ["flux-2-klein-4b.safetensors", "default"]
+    },
+    {
+      "id": 71,
+      "type": "CLIPLoader",
+      "pos": [730, 282],
+      "size": [380, 152],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [12]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0",
+        "models": [
+          {
+            "name": "qwen_3_4b.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
+            "directory": "text_encoders",
+            "hash": "6c671498573ac2f7a5501502ccce8d2b08ea6ca2f661c458e708f36b36edfc5a",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": ["qwen_3_4b.safetensors", "flux2", "default"]
+    },
+    {
+      "id": 72,
+      "type": "VAELoader",
+      "pos": [730, 494],
+      "size": [380, 92],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [11]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0",
+        "models": [
+          {
+            "name": "flux2-vae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors",
+            "directory": "vae",
+            "hash": "d64f3a68e1cc4f9f4e29b6e0da38a0204fe9a49f2d4053f0ec1fa1ca02f9c4b5",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": ["flux2-vae.safetensors"]
+    },
+    {
+      "id": 73,
+      "type": "RandomNoise",
+      "pos": [1770, 676],
+      "size": [380, 92],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [5]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomNoise",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0, "fixed"]
+    },
+    {
+      "id": 74,
+      "type": "CLIPTextEncode",
+      "pos": [1250, 100],
+      "size": [380, 92],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [3, 13]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [""]
+    },
+    {
+      "id": 76,
+      "type": "ConditioningZeroOut",
+      "pos": [2210, 100],
+      "size": [380, 62],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [4]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 77,
+      "type": "MarkdownNote",
+      "pos": [60, 100],
+      "size": [560, 760],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Image: text to image with FLUX.2 Klein 4B",
+      "properties": {},
+      "widgets_values": [
+        "# Image: text to image with FLUX.2 Klein 4B\n\nMakes up to 4 images from a prompt with FLUX.2 Klein 4B in 4 steps. Built from Comfy's template image_flux2_klein_text_to_image.\n\n## Models\n\n- [flux-2-klein-4b.safetensors](https://huggingface.co/Comfy-Org/flux2-klein/resolve/main/split_files/diffusion_models/flux-2-klein-4b.safetensors): FLUX.2 Klein 4B, [Apache-2.0](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B).\n- [qwen_3_4b.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors): Qwen3 4B text encoder, [Apache-2.0](https://huggingface.co/Qwen/Qwen3-4B).\n- [flux2-vae.safetensors](https://huggingface.co/Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors): FLUX.2 VAE, [Apache-2.0](https://huggingface.co/Comfy-Org/flux2-dev).\n\nRosesfield ships no weights. Each loader lists its file with a download link.\n\nPart of [Rosesfield](https://github.com/rossaai/rosesfield), MIT. Built from Comfy-Org/workflow_templates, MIT, per NOTICE."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [1, 65, 0, 9, 0, "IMAGE"],
+    [2, 70, 0, 63, 0, "MODEL"],
+    [3, 74, 0, 63, 1, "CONDITIONING"],
+    [4, 76, 0, 63, 2, "CONDITIONING"],
+    [5, 73, 0, 64, 0, "NOISE"],
+    [6, 63, 0, 64, 1, "GUIDER"],
+    [7, 61, 0, 64, 2, "SAMPLER"],
+    [8, 62, 0, 64, 3, "SIGMAS"],
+    [9, 66, 0, 64, 4, "LATENT"],
+    [10, 64, 0, 65, 0, "LATENT"],
+    [11, 72, 0, 65, 1, "VAE"],
+    [12, 71, 0, 74, 0, "CLIP"],
+    [13, 74, 0, 76, 0, "CONDITIONING"]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Models",
+      "bounding": [700, 20, 440, 646],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Prompt",
+      "bounding": [1220, 20, 440, 252],
+      "color": "#8a8a3f",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Generate",
+      "bounding": [1740, 20, 2200, 828],
+      "color": "#444444",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Output",
+      "bounding": [4020, 20, 440, 252],
+      "color": "#3f8a5c",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.55,
+      "offset": [0, 0]
+    },
+    "linearData": {
+      "inputs": [
+        [74, "text"],
+        [73, "noise_seed"],
+        [66, "batch_size"],
+        [62, "width"],
+        [62, "height"],
+        [66, "width"],
+        [66, "height"]
+      ],
+      "outputs": [9]
+    }
+  },
+  "version": 0.4
+}

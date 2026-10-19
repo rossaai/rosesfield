@@ -1,0 +1,33 @@
+{
+  "name": "background-removal-solid-color",
+  "title": "Remove background: the subject on one flat color with BiRefNet",
+  "description": "Finds the subject of your image with a BiRefNet model and places it over one flat color, such as white or black. The model file and the color are inputs. Built from Comfy's template utility_birefnet_remove_background.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": ["birefnet.safetensors", "lucida.safetensors"],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "image": {
+      "nodeId": "1",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "model": {
+      "nodeId": "2",
+      "inputName": "bg_removal_name",
+      "type": "scalar"
+    },
+    "color": {
+      "nodeId": "7",
+      "inputName": "color",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "9",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

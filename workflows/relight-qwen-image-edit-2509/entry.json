@@ -1,0 +1,64 @@
+{
+  "name": "relight-qwen-image-edit-2509",
+  "title": "Relight a photo with Qwen Image Edit 2509 and the Relight LoRA",
+  "description": "Relights one photo from a direction, a softness, a color and a brightness written into one instruction, with the Relight LoRA and its trigger word. This file holds the 4-step row with the Lightning LoRA. The 40-step row leaves the Lightning LoRA out.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+    "Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+    "Qwen-Image-Edit-2509-Relight.safetensors",
+    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "qwen_image_vae.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "image": {
+      "nodeId": "1",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "direction": {
+      "nodeId": "20",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "softness": {
+      "nodeId": "21",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "color": {
+      "nodeId": "22",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "brightness": {
+      "nodeId": "23",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "detail": {
+      "nodeId": "24",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "count": {
+      "nodeId": "13",
+      "inputName": "amount",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "14",
+      "inputName": "seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "16",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

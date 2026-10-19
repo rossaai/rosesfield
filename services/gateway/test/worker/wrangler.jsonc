@@ -1,0 +1,27 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "rosesfield-test",
+  "main": "../../src/worker.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "define": { "import.meta.url": "\"file:///bundle/worker.js\"" },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "rosesfield-test",
+      "migrations_dir": "../../../..",
+      "migrations_pattern": "../../../../*/*/drizzle/*.sql"
+    }
+  ],
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "rosesfield-test" }],
+  "durable_objects": {
+    "bindings": [
+      { "name": "WATCHERS", "class_name": "RunWatcher" },
+      { "name": "AGENTS", "class_name": "AgentHost" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["RunWatcher"] },
+    { "tag": "v2", "new_sqlite_classes": ["AgentHost"] }
+  ]
+}

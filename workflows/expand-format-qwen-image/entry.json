@@ -1,0 +1,59 @@
+{
+  "name": "expand-format-qwen-image",
+  "title": "Expand: a photo to a new format with Qwen Image and the InstantX inpainting ControlNet",
+  "description": "Computes the canvas of the new format around your photo with math nodes, pads the photo, and fills the new area with Qwen Image, the InstantX inpainting ControlNet and the Lightning LoRA in 4 steps. The photo keeps its pixels.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "qwen_image_fp8_e4m3fn.safetensors",
+    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "qwen_image_vae.safetensors",
+    "Qwen-Image-InstantX-ControlNet-Inpainting.safetensors",
+    "Qwen-Image-Lightning-4steps-V1.0.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "photo": {
+      "nodeId": "1",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "scene": {
+      "nodeId": "37",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "41",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "count": {
+      "nodeId": "30",
+      "inputName": "amount",
+      "type": "scalar"
+    },
+    "outputCount": {
+      "nodeId": "47",
+      "inputName": "amount",
+      "type": "scalar"
+    },
+    "ratioWidth": {
+      "nodeId": "7",
+      "inputName": "value",
+      "type": "scalar"
+    },
+    "ratioHeight": {
+      "nodeId": "8",
+      "inputName": "value",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "49",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

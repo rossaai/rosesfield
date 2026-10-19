@@ -1,0 +1,617 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "qwen_image_edit_2511_fp8mixed.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    }
+  },
+  "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    }
+  },
+  "4": {
+    "class_type": "ModelSamplingAuraFlow",
+    "inputs": {
+      "model": ["1", 0],
+      "shift": 3.1
+    }
+  },
+  "5": {
+    "class_type": "CFGNorm",
+    "inputs": {
+      "model": ["4", 0],
+      "strength": 1,
+      "pre_cfg": false
+    }
+  },
+  "6": {
+    "class_type": "PrimitiveInt",
+    "inputs": {
+      "value": 0
+    }
+  },
+  "7": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "storyboard-anchor.png"
+    }
+  },
+  "8": {
+    "class_type": "FluxKontextImageScale",
+    "inputs": {
+      "image": ["7", 0]
+    }
+  },
+  "9": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["2", 0],
+      "prompt": "",
+      "vae": ["3", 0],
+      "image1": ["8", 0]
+    }
+  },
+  "10": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["9", 0],
+      "reference_latents_method": "index_timestep_zero"
+    }
+  },
+  "11": {
+    "class_type": "EmptySD3LatentImage",
+    "inputs": {
+      "width": 1360,
+      "height": 768,
+      "batch_size": 1
+    }
+  },
+  "99": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": ["106", 0],
+      "filename_prefix": "rosesfield-storyboard"
+    }
+  },
+  "100": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": "Keep the same subject and the same look as in the image, and change only what the following scene describes.",
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "101": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["100", 0],
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "103": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["2", 0],
+      "prompt": ["101", 0],
+      "vae": ["3", 0],
+      "image1": ["8", 0]
+    }
+  },
+  "104": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["103", 0],
+      "reference_latents_method": "index_timestep_zero"
+    }
+  },
+  "105": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["5", 0],
+      "positive": ["104", 0],
+      "negative": ["10", 0],
+      "latent_image": ["11", 0],
+      "seed": ["6", 0],
+      "steps": 40,
+      "cfg": 4,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "106": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["105", 0],
+      "vae": ["3", 0]
+    }
+  },
+  "200": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": "Keep the same subject and the same look as in the image, and change only what the following scene describes.",
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "201": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["200", 0],
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "202": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "expression": "a + 1",
+      "values.a": ["6", 0]
+    }
+  },
+  "203": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["2", 0],
+      "prompt": ["201", 0],
+      "vae": ["3", 0],
+      "image1": ["8", 0]
+    }
+  },
+  "204": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["203", 0],
+      "reference_latents_method": "index_timestep_zero"
+    }
+  },
+  "205": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["5", 0],
+      "positive": ["204", 0],
+      "negative": ["10", 0],
+      "latent_image": ["11", 0],
+      "seed": ["202", 1],
+      "steps": 40,
+      "cfg": 4,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "206": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["205", 0],
+      "vae": ["3", 0]
+    }
+  },
+  "300": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": "Keep the same subject and the same look as in the image, and change only what the following scene describes.",
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "301": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["300", 0],
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "302": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "expression": "a + 2",
+      "values.a": ["6", 0]
+    }
+  },
+  "303": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["2", 0],
+      "prompt": ["301", 0],
+      "vae": ["3", 0],
+      "image1": ["8", 0]
+    }
+  },
+  "304": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["303", 0],
+      "reference_latents_method": "index_timestep_zero"
+    }
+  },
+  "305": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["5", 0],
+      "positive": ["304", 0],
+      "negative": ["10", 0],
+      "latent_image": ["11", 0],
+      "seed": ["302", 1],
+      "steps": 40,
+      "cfg": 4,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "306": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["305", 0],
+      "vae": ["3", 0]
+    }
+  },
+  "400": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": "Keep the same subject and the same look as in the image, and change only what the following scene describes.",
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "401": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["400", 0],
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "402": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "expression": "a + 3",
+      "values.a": ["6", 0]
+    }
+  },
+  "403": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["2", 0],
+      "prompt": ["401", 0],
+      "vae": ["3", 0],
+      "image1": ["8", 0]
+    }
+  },
+  "404": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["403", 0],
+      "reference_latents_method": "index_timestep_zero"
+    }
+  },
+  "405": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["5", 0],
+      "positive": ["404", 0],
+      "negative": ["10", 0],
+      "latent_image": ["11", 0],
+      "seed": ["402", 1],
+      "steps": 40,
+      "cfg": 4,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "406": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["405", 0],
+      "vae": ["3", 0]
+    }
+  },
+  "500": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": "Keep the same subject and the same look as in the image, and change only what the following scene describes.",
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "501": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["500", 0],
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "502": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "expression": "a + 4",
+      "values.a": ["6", 0]
+    }
+  },
+  "503": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["2", 0],
+      "prompt": ["501", 0],
+      "vae": ["3", 0],
+      "image1": ["8", 0]
+    }
+  },
+  "504": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["503", 0],
+      "reference_latents_method": "index_timestep_zero"
+    }
+  },
+  "505": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["5", 0],
+      "positive": ["504", 0],
+      "negative": ["10", 0],
+      "latent_image": ["11", 0],
+      "seed": ["502", 1],
+      "steps": 40,
+      "cfg": 4,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "506": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["505", 0],
+      "vae": ["3", 0]
+    }
+  },
+  "600": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": "Keep the same subject and the same look as in the image, and change only what the following scene describes.",
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "601": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["600", 0],
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "602": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "expression": "a + 5",
+      "values.a": ["6", 0]
+    }
+  },
+  "603": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["2", 0],
+      "prompt": ["601", 0],
+      "vae": ["3", 0],
+      "image1": ["8", 0]
+    }
+  },
+  "604": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["603", 0],
+      "reference_latents_method": "index_timestep_zero"
+    }
+  },
+  "605": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["5", 0],
+      "positive": ["604", 0],
+      "negative": ["10", 0],
+      "latent_image": ["11", 0],
+      "seed": ["602", 1],
+      "steps": 40,
+      "cfg": 4,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "606": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["605", 0],
+      "vae": ["3", 0]
+    }
+  },
+  "700": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": "Keep the same subject and the same look as in the image, and change only what the following scene describes.",
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "701": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["700", 0],
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "702": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "expression": "a + 6",
+      "values.a": ["6", 0]
+    }
+  },
+  "703": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["2", 0],
+      "prompt": ["701", 0],
+      "vae": ["3", 0],
+      "image1": ["8", 0]
+    }
+  },
+  "704": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["703", 0],
+      "reference_latents_method": "index_timestep_zero"
+    }
+  },
+  "705": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["5", 0],
+      "positive": ["704", 0],
+      "negative": ["10", 0],
+      "latent_image": ["11", 0],
+      "seed": ["702", 1],
+      "steps": 40,
+      "cfg": 4,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "706": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["705", 0],
+      "vae": ["3", 0]
+    }
+  },
+  "800": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": "Keep the same subject and the same look as in the image, and change only what the following scene describes.",
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "801": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["800", 0],
+      "string_b": "",
+      "delimiter": " "
+    }
+  },
+  "802": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "expression": "a + 7",
+      "values.a": ["6", 0]
+    }
+  },
+  "803": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["2", 0],
+      "prompt": ["801", 0],
+      "vae": ["3", 0],
+      "image1": ["8", 0]
+    }
+  },
+  "804": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["803", 0],
+      "reference_latents_method": "index_timestep_zero"
+    }
+  },
+  "805": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["5", 0],
+      "positive": ["804", 0],
+      "negative": ["10", 0],
+      "latent_image": ["11", 0],
+      "seed": ["802", 1],
+      "steps": 40,
+      "cfg": 4,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "806": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["805", 0],
+      "vae": ["3", 0]
+    }
+  },
+  "902": {
+    "class_type": "ImageBatch",
+    "inputs": {
+      "image1": ["106", 0],
+      "image2": ["206", 0]
+    }
+  },
+  "903": {
+    "class_type": "ImageBatch",
+    "inputs": {
+      "image1": ["902", 0],
+      "image2": ["306", 0]
+    }
+  },
+  "904": {
+    "class_type": "ImageBatch",
+    "inputs": {
+      "image1": ["903", 0],
+      "image2": ["406", 0]
+    }
+  },
+  "905": {
+    "class_type": "ImageBatch",
+    "inputs": {
+      "image1": ["904", 0],
+      "image2": ["506", 0]
+    }
+  },
+  "906": {
+    "class_type": "ImageBatch",
+    "inputs": {
+      "image1": ["905", 0],
+      "image2": ["606", 0]
+    }
+  },
+  "907": {
+    "class_type": "ImageBatch",
+    "inputs": {
+      "image1": ["906", 0],
+      "image2": ["706", 0]
+    }
+  },
+  "908": {
+    "class_type": "ImageBatch",
+    "inputs": {
+      "image1": ["907", 0],
+      "image2": ["806", 0]
+    }
+  }
+}

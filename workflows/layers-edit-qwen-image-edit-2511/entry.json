@@ -1,0 +1,53 @@
+{
+  "name": "layers-edit-qwen-image-edit-2511",
+  "title": "Layers: edit or relight one layer with Qwen Image Edit 2511",
+  "description": "Places one transparent layer on mid grey, edits it with Qwen Image Edit 2511 and puts its alpha back. This file holds the relight form, where node 23 writes the light and tone sentences into the edit prompt, at 4 steps with the Lightning LoRA. The edit form takes your words at node 13, and the final run samples 40 steps.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "qwen_image_edit_2511_bf16.safetensors",
+    "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "qwen_image_vae.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "layer": {
+      "nodeId": "1",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "count": {
+      "nodeId": "3",
+      "inputName": "batch_size",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "18",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "change": {
+      "nodeId": "13",
+      "inputName": "prompt",
+      "type": "scalar"
+    },
+    "light": {
+      "nodeId": "23",
+      "inputName": "string_a",
+      "type": "scalar"
+    },
+    "tone": {
+      "nodeId": "23",
+      "inputName": "string_b",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "22",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

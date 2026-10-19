@@ -1,0 +1,48 @@
+{
+  "name": "video-wan-2-2-text",
+  "title": "Video: text to video on Wan 2.2 14B",
+  "description": "Makes a clip of 2 to 5 seconds at 480p from a prompt and an optional camera sentence with Wan 2.2 T2V A14B, the high-noise and the low-noise model in turn. It makes no sound. Built from Comfy's template video_wan2_2_14B_t2v.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": ["Wan-AI/Wan2.2-T2V-A14B"],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "prompt": {
+      "nodeId": "900",
+      "inputName": "string_a",
+      "type": "scalar"
+    },
+    "cameraMove": {
+      "nodeId": "900",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "74",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "74",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "frames": {
+      "nodeId": "74",
+      "inputName": "length",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "81",
+      "inputName": "noise_seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "80",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}

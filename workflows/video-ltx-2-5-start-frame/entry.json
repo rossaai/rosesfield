@@ -1,0 +1,58 @@
+{
+  "name": "video-ltx-2-5-start-frame",
+  "title": "Video: image to video with sound on LTX 2.5",
+  "description": "Makes a clip of 2 to 5 seconds that starts from your image, with LTX 2.5 in two stages and its sound. A run with sound off drops the audio track. Built from Comfy's template video_ltx2_5_i2v.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": ["Lightricks/LTX-2.5"],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "prompt": {
+      "nodeId": "900",
+      "inputName": "string_a",
+      "type": "scalar"
+    },
+    "cameraMove": {
+      "nodeId": "900",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "356",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "356",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "frames": {
+      "nodeId": "356",
+      "inputName": "length",
+      "type": "scalar"
+    },
+    "audioFrames": {
+      "nodeId": "366",
+      "inputName": "frames_number",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "339",
+      "inputName": "noise_seed",
+      "type": "scalar"
+    },
+    "startFrame": {
+      "nodeId": "401",
+      "inputName": "image",
+      "type": "cloud-asset"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "75",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}

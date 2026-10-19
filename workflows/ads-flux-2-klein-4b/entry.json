@@ -1,0 +1,97 @@
+{
+  "name": "ads-flux-2-klein-4b",
+  "title": "Ads: product shots from your product photos with FLUX.2 Klein 4B",
+  "description": "Writes one instruction from the kind of ad, the style and your words, and edits up to 2 reference images, your product photos and a character, into product shots with FLUX.2 Klein 4B. Built from Comfy's template image_flux2_klein_image_edit_4b_distilled.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "flux-2-klein-4b-fp8.safetensors",
+    "qwen_3_4b.safetensors",
+    "flux2-vae.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "prompt": {
+      "nodeId": "501",
+      "inputName": "string",
+      "type": "scalar"
+    },
+    "lineBreak": {
+      "nodeId": "503",
+      "inputName": "replace",
+      "type": "scalar"
+    },
+    "kindLead": {
+      "nodeId": "504",
+      "inputName": "string_a",
+      "type": "scalar"
+    },
+    "style": {
+      "nodeId": "504",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "wordsLead": {
+      "nodeId": "505",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "wordsEnd": {
+      "nodeId": "507",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "doubledStop": {
+      "nodeId": "509",
+      "inputName": "regex_pattern",
+      "type": "scalar"
+    },
+    "reference1": {
+      "nodeId": "76",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "reference2": {
+      "nodeId": "81",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "seed": {
+      "nodeId": "73",
+      "inputName": "noise_seed",
+      "type": "scalar"
+    },
+    "count": {
+      "nodeId": "66",
+      "inputName": "batch_size",
+      "type": "scalar"
+    },
+    "schedulerWidth": {
+      "nodeId": "62",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "schedulerHeight": {
+      "nodeId": "62",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "66",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "66",
+      "inputName": "height",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "9",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

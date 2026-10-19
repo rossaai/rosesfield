@@ -1,0 +1,382 @@
+/*
+  Every value Rosesfield's interface uses. docs/design.md holds the rules,
+  this file holds the numbers, and no other file holds either.
+
+  Two schemes. A token that differs between them reads
+  `var(--if-light, <light>) var(--if-dark, <dark>)`. Each scheme block sets
+  one switch to `initial`, which picks its fallback, and the other to empty.
+  The scheme follows prefers-color-scheme until an element carries
+  data-theme="light" or data-theme="dark". A subtree can carry its own.
+*/
+
+@theme static {
+  --font-*: initial;
+  --font-sans: "Montserrat", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --font-weight-*: initial;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+
+  --text-*: initial;
+  --text-display: 26px;
+  --text-display--line-height: 33px;
+  --text-display--letter-spacing: -0.07em;
+  --text-display--font-weight: 400;
+  --text-title: 20px;
+  --text-title--line-height: 25px;
+  --text-title--letter-spacing: -0.05em;
+  --text-title--font-weight: 500;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-body--letter-spacing: -0.03em;
+  --text-label: 12px;
+  --text-label--line-height: 16px;
+  --text-label--letter-spacing: 0;
+  --text-legal: 11px;
+  --text-legal--line-height: 16px;
+  --text-legal--letter-spacing: 0;
+  --text-caption: 11px;
+  --text-caption--line-height: 15px;
+  --text-caption--letter-spacing: 0;
+  --text-code: 14px;
+  --text-code--line-height: 20px;
+  --text-code--letter-spacing: 0;
+
+  --radius-*: initial;
+  --radius-dense: 7px;
+  --radius-cell: 13px;
+  --radius-item: 18px;
+  --radius-field: 20px;
+  --radius-card: 20px;
+  --radius-vessel: 26px;
+  --radius-full: 9999px;
+
+  --spacing-s1: 3px;
+  --spacing-s1_5: 5px;
+  --spacing-s2: 7px;
+  --spacing-s2_5: 8px;
+  --spacing-s3: 10px;
+  --spacing-s4: 13px;
+  --spacing-s5: 16px;
+  --spacing-s6: 20px;
+  --spacing-s8: 26px;
+  --spacing-s12: 40px;
+
+  --spacing-field: 40px;
+  --spacing-button: 36px;
+  --spacing-button-dense: 33px;
+  --spacing-button-small: 26px;
+  --spacing-icon: 36px;
+  --spacing-icon-dense: 33px;
+  --spacing-icon-small: 26px;
+  --spacing-glyph: 16px;
+  --spacing-glyph-small: 13px;
+  --spacing-checkbox: 20px;
+  --spacing-radio-dot: 7px;
+  --spacing-switch-width: 53px;
+  --spacing-switch-height: 24px;
+  --spacing-knob-width: 31px;
+  --spacing-knob-height: 20px;
+  --spacing-control-inset: 2px;
+  --spacing-track: 5px;
+  --spacing-tab: 30px;
+  --spacing-thumb: 59px;
+  --spacing-remove-badge: 23px;
+  --spacing-tile: 99px;
+  --spacing-grabber-width: 60px;
+  --spacing-grabber-height: 4px;
+  --spacing-sidebar: 272px;
+  --spacing-rail: 49px;
+  --spacing-header: 53px;
+  --spacing-info-panel: 362px;
+  --spacing-prompt-max: 629px;
+  --spacing-prose-max: 408px;
+  --spacing-field-max: 362px;
+  --spacing-button-max: 264px;
+  --spacing-popover-min: 165px;
+  --spacing-popover-max: 264px;
+  --spacing-toast-max: 346px;
+  --spacing-alert: 237px;
+  --spacing-dialog: 430px;
+  --spacing-hairline: 1px;
+  --spacing-focus-ring: 2px;
+  --spacing-rise: 16px;
+
+  --breakpoint-*: initial;
+  --container-*: initial;
+  --container-regular: 768px;
+
+  --shadow-*: initial;
+  --shadow-seam: 0 2px 8px rgb(0 0 0 / 0.0625);
+  --shadow-float: 0 4px 16px rgb(0 0 0 / 0.125);
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+
+  --stroke-icon: 1.4;
+  --scale-press-capsule: 0.96;
+  --scale-press-round: 0.94;
+  --scale-enter: 0.94;
+  --opacity-pulse: 0.8125;
+  --opacity-disabled: 0.375;
+  --opacity-material: 75%;
+  --material-filter: saturate(1.8) blur(16px);
+
+  --ease-*: initial;
+  --ease-bloom: cubic-bezier(0, 0.55, 0.45, 1);
+  --ease-fold: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-glide: cubic-bezier(0.85, 0, 0.15, 1);
+  --ease-snap: linear(
+    0 0%,
+    0.0088 1.33%,
+    0.0307 2.67%,
+    0.0622 4%,
+    0.1007 5.33%,
+    0.1901 8%,
+    0.3808 13.33%,
+    0.4697 16%,
+    0.5504 18.67%,
+    0.5874 20%,
+    0.6543 22.67%,
+    0.7122 25.33%,
+    0.7379 26.67%,
+    0.7835 29.33%,
+    0.8219 32%,
+    0.868 36%,
+    0.9028 40%,
+    0.921 42.67%,
+    0.9359 45.33%,
+    0.9581 50.67%,
+    0.9756 57.33%,
+    0.9859 64%,
+    0.9935 73.33%,
+    1 100%
+  );
+  --ease-settle: linear(
+    0 0%,
+    0.0035 0.85%,
+    0.0127 1.69%,
+    0.0267 2.54%,
+    0.0446 3.39%,
+    0.0894 5.08%,
+    0.171 7.63%,
+    0.35 12.71%,
+    0.4628 16.1%,
+    0.5148 17.8%,
+    0.5632 19.49%,
+    0.6081 21.19%,
+    0.6493 22.88%,
+    0.687 24.58%,
+    0.7213 26.27%,
+    0.7523 27.97%,
+    0.7803 29.66%,
+    0.828 33.05%,
+    0.8662 36.44%,
+    0.9028 40.68%,
+    0.9344 45.76%,
+    0.9589 51.69%,
+    0.9745 57.63%,
+    0.9853 64.41%,
+    0.9927 72.88%,
+    1 100%
+  );
+  --ease-pop: linear(
+    0 0%,
+    0.009 1.22%,
+    0.0321 2.44%,
+    0.0666 3.66%,
+    0.11 4.88%,
+    0.1601 6.1%,
+    0.215 7.32%,
+    0.5104 13.41%,
+    0.6198 15.85%,
+    0.6702 17.07%,
+    0.7173 18.29%,
+    0.7608 19.51%,
+    0.8008 20.73%,
+    0.8372 21.95%,
+    0.87 23.17%,
+    0.8993 24.39%,
+    0.9252 25.61%,
+    0.9479 26.83%,
+    0.9676 28.05%,
+    0.9988 30.49%,
+    1.0204 32.93%,
+    1.0341 35.37%,
+    1.0417 37.8%,
+    1.0445 41.46%,
+    1.0388 46.34%,
+    1.0118 59.76%,
+    1.002 68.29%,
+    0.9981 79.27%,
+    1 100%
+  );
+
+  --duration-press: 120ms;
+  --duration-control: 200ms;
+  --duration-heavy-exit: 280ms;
+  --duration-surface: 320ms;
+  --duration-heavy-entrance: 400ms;
+  --duration-snap: 312.5ms;
+  --duration-settle: 491.67ms;
+  --duration-pop: 341.67ms;
+  --duration-stagger: 40ms;
+  --duration-stagger-max: 320ms;
+  --duration-pulse: 1280ms;
+  --duration-reduced: 120ms;
+  --duration-toast: 4000ms;
+  --duration-waiting: 10000ms;
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-layer: var(--layer);
+  --color-layer-well: var(--layer-well);
+  --color-layer-tint: var(--layer-tint);
+  --color-layer-line: var(--layer-line);
+  --color-nop: var(--nop);
+  --color-hor: var(--hor);
+  --color-bug: var(--bug);
+  --color-cem: var(--cem);
+  --color-nop-text: var(--nop-text);
+  --color-hor-text: var(--hor-text);
+  --color-bug-text: var(--bug-text);
+  --color-cem-text: var(--cem-text);
+  --color-nop-tint: var(--nop-tint);
+  --color-hor-tint: var(--hor-tint);
+  --color-bug-tint: var(--bug-tint);
+  --color-cem-tint: var(--cem-tint);
+  --color-selection: var(--selection);
+  --color-track: var(--track);
+  --color-track-on: var(--track-on);
+  --color-scrim: var(--scrim);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --shadow-lift: var(--lift);
+}
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --if-light: initial;
+  --if-dark: ;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --if-light: ;
+    --if-dark: initial;
+  }
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --if-light: ;
+  --if-dark: initial;
+}
+
+:root,
+[data-theme] {
+  --nop: #049a4e;
+  --hor: #0045c6;
+  --bug: #d1024e;
+  --cem: #eaab04;
+
+  --canvas: var(--if-light, #fcfcfc) var(--if-dark, #0b0b0b);
+  --surface: var(--if-light, #f1f1f1) var(--if-dark, #191919);
+  --surface-2: var(--if-light, #e7e7e7) var(--if-dark, #242424);
+  --ink: var(--if-light, #0c0a07) var(--if-dark, #f7f4ed);
+  --ink-muted: var(--if-light, #6c675e) var(--if-dark, #999285);
+
+  --layer: var(--if-light, var(--canvas)) var(--if-dark, var(--surface-2));
+  --layer-well: var(--surface);
+  --layer-tint: var(--surface);
+  --layer-line: var(--if-light, var(--surface-2)) var(--if-dark, var(--surface));
+
+  --bug-text: var(--if-light, #b50042) var(--if-dark, #ff5076);
+  --cem-text: var(--if-light, #815d02) var(--if-dark, #eaab04);
+  --nop-text: var(--if-light, #016e36) var(--if-dark, #00b45c);
+  --hor-text: var(--if-light, #0045c6) var(--if-dark, #6199ff);
+
+  --nop-tint: var(--if-light, #049a4e20) var(--if-dark, #049a4e30);
+  --hor-tint: var(--if-light, #0045c620) var(--if-dark, #0045c630);
+  --bug-tint: var(--if-light, #d1024e20) var(--if-dark, #d1024e30);
+  --cem-tint: var(--if-light, #eaab0420) var(--if-dark, #eaab0430);
+
+  --selection: var(--if-light, #0c0a0720) var(--if-dark, #f7f4ed20);
+  --track: var(--if-light, #0c0a0730) var(--if-dark, #f7f4ed30);
+  --track-on: var(--ink);
+  --scrim: var(--if-light, #00000030) var(--if-dark, #00000090);
+
+  --lift: var(--if-light, 0 0 48px rgb(0 0 0 / 0.1875)) var(--if-dark, none);
+
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--layer);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--canvas);
+  --secondary: var(--surface);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--surface);
+  --accent-foreground: var(--ink);
+  --destructive: var(--bug-text);
+  --border: var(--surface-2);
+  --input: var(--surface);
+  --ring: var(--hor-text);
+}
+
+/*
+  A region declares its ground once. Every control inside takes its fill, the
+  well, its hover tint and its hairline from that ground.
+*/
+:root,
+[data-theme],
+[data-ground="canvas"] {
+  --ground: var(--canvas);
+  --well: var(--surface);
+  --tint: var(--surface);
+  --line: var(--surface-2);
+}
+
+[data-ground="surface"] {
+  --ground: var(--surface);
+  --well: var(--canvas);
+  --tint: var(--surface-2);
+  --line: var(--surface-2);
+}
+
+[data-ground="layer"] {
+  --ground: var(--layer);
+  --well: var(--layer-well);
+  --tint: var(--layer-tint);
+  --line: var(--layer-line);
+}

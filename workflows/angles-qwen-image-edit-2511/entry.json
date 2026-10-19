@@ -1,0 +1,49 @@
+{
+  "name": "angles-qwen-image-edit-2511",
+  "title": "Angles: one new view of a subject with Qwen Image Edit 2511",
+  "description": "Draws your subject from one new side, height and distance with Qwen Image Edit 2511, the Multiple Angles LoRA and the Lightning LoRA in 4 steps. The view is written as the LoRA's camera words. Built from Comfy's template image_qwen_image_edit_2511.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "qwen_image_edit_2511_bf16.safetensors",
+    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "qwen_image_vae.safetensors",
+    "qwen-image-edit-2511-multiple-angles-lora.safetensors",
+    "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "image": {
+      "nodeId": "41",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "side": {
+      "nodeId": "120",
+      "inputName": "string_a",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "120",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "distance": {
+      "nodeId": "121",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "106",
+      "inputName": "seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "9",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "@rosesfield/agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#*": "./src/*.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./local": "./src/infrastructure/sqlite-file-storage.ts",
+    "./cloudflare": "./src/infrastructure/durable-object-storage.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun --bun vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@earendil-works/pi-ai": "1.3.0",
+    "@earendil-works/pi-durable": "1.3.0",
+    "@rosesfield/catalog": "workspace:*",
+    "@rosesfield/contract": "workspace:*",
+    "@rosesfield/generation": "workspace:*",
+    "@rosesfield/kernel": "workspace:*",
+    "@rosesfield/library": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261016.1",
+    "@types/bun": "1.4.3"
+  }
+}

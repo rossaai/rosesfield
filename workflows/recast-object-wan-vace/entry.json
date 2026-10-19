@@ -1,0 +1,61 @@
+{
+  "name": "recast-object-wan-vace",
+  "title": "Recast: swap one object in a clip with Wan VACE",
+  "description": "Finds the object you name in your clip with SAM 3.1 and renders the object you describe in its place with Wan 2.1 VACE 14B, keeping the rest of the clip. Built from Comfy's template video_wan_vace_inpainting.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": [
+    "wan2.1_vace_14B_fp16.safetensors",
+    "sam3.1_multiplex_fp16.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "source": {
+      "nodeId": "1",
+      "inputName": "file",
+      "type": "cloud-asset"
+    },
+    "target": {
+      "nodeId": "13",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "prompt": {
+      "nodeId": "25",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "35",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "secondSeed": {
+      "nodeId": "65",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "keepSound": {
+      "nodeId": "82",
+      "inputName": "value",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "3",
+      "inputName": "resize_type.width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "3",
+      "inputName": "resize_type.height",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "85",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}

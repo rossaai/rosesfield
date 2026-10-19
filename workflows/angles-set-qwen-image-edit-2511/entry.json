@@ -1,0 +1,109 @@
+{
+  "name": "angles-set-qwen-image-edit-2511",
+  "title": "Angles: a set of 4 views of a subject with Qwen Image Edit 2511",
+  "description": "Draws your subject from 4 views in one run, one branch of Qwen Image Edit 2511 with the Multiple Angles LoRA and the Lightning LoRA per view, and saves the 4 images as one batch. Each branch sets its side, height, distance and seed.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "qwen_image_edit_2511_bf16.safetensors",
+    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "qwen_image_vae.safetensors",
+    "qwen-image-edit-2511-multiple-angles-lora.safetensors",
+    "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "image": {
+      "nodeId": "41",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "side1": {
+      "nodeId": "1120",
+      "inputName": "string_a",
+      "type": "scalar"
+    },
+    "height1": {
+      "nodeId": "1120",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "distance1": {
+      "nodeId": "1121",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "seed1": {
+      "nodeId": "1106",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "side2": {
+      "nodeId": "2120",
+      "inputName": "string_a",
+      "type": "scalar"
+    },
+    "height2": {
+      "nodeId": "2120",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "distance2": {
+      "nodeId": "2121",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "seed2": {
+      "nodeId": "2106",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "side3": {
+      "nodeId": "3120",
+      "inputName": "string_a",
+      "type": "scalar"
+    },
+    "height3": {
+      "nodeId": "3120",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "distance3": {
+      "nodeId": "3121",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "seed3": {
+      "nodeId": "3106",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "side4": {
+      "nodeId": "4120",
+      "inputName": "string_a",
+      "type": "scalar"
+    },
+    "height4": {
+      "nodeId": "4120",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "distance4": {
+      "nodeId": "4121",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "seed4": {
+      "nodeId": "4106",
+      "inputName": "seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "9",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

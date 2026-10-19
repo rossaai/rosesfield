@@ -1,0 +1,119 @@
+import { mkdirSync, readdirSync, rmSync, statSync } from "node:fs"
+import { join } from "node:path"
+import {
+  type AgentModel,
+  agentTools,
+  openPiModels,
+  PiAgentHarness,
+} from "@rosesfield/agent"
+import { openSqliteFileStorage } from "@rosesfield/agent/local"
+import type { AppDefinition } from "@rosesfield/contract"
+import type { Clock } from "@rosesfield/kernel"
+import { AgentAccess, type AgentRequest } from "#agent/agent-access"
+import { isSessionId } from "#session/session-cookie"
+import type { SessionId } from "#session/session-scope"
+
+type SessionAgentsOptions = {
+  folder: string
+  model: AgentModel
+  apps: readonly AppDefinition[]
+  clock: Clock
+}
+
+type OpenAgent = {
+  agent: PiAgentHarness
+  access: AgentAccess
+  idle: ReturnType<typeof setTimeout> | null
+}
+
+export class SessionAgents {
+  static readonly idleMs = 60_000
+  static readonly fileSuffix = ".db"
+
+  private readonly folder: string
+  private readonly model: AgentModel
+  private readonly apps: readonly AppDefinition[]
+  private readonly clock: Clock
+  private readonly open = new Map<SessionId, OpenAgent>()
+
+  constructor(options: SessionAgentsOptions) {
+    this.folder = options.folder
+    this.model = options.model
+    this.apps = options.apps
+    this.clock = options.clock
+    mkdirSync(this.folder, { recursive: true })
+  }
+
+  agentOf(sessionId: SessionId): PiAgentHarness {
+    return this.entryOf(sessionId).agent
+  }
+
+  hold(sessionId: SessionId, request: AgentRequest): () => void {
+    const entry = this.entryOf(sessionId)
+    const release = entry.access.enter(request)
+    return () => {
+      release()
+      if (!entry.access.isHeld()) {
+        entry.idle = setTimeout(() => {
+          this.close(sessionId).catch((error: unknown) => console.error(error))
+        }, SessionAgents.idleMs)
+      }
+    }
+  }
+
+  purge(cutoff: number): number {
+    let removed = 0
+    for (const name of readdirSync(this.folder)) {
+      const sessionId = name.split(".")[0] ?? ""
+      const file = join(this.folder, name)
+      if (
+        isSessionId(sessionId) &&
+        !this.open.has(sessionId) &&
+        statSync(file).mtimeMs < cutoff
+      ) {
+        rmSync(file, { force: true })
+        removed += name.endsWith(SessionAgents.fileSuffix) ? 1 : 0
+      }
+    }
+    return removed
+  }
+
+  async closeAll(): Promise<void> {
+    await Promise.all([...this.open.keys()].map((id) => this.close(id)))
+  }
+
+  private entryOf(sessionId: SessionId): OpenAgent {
+    const found = this.open.get(sessionId)
+    if (found !== undefined) {
+      if (found.idle !== null) {
+        clearTimeout(found.idle)
+        found.idle = null
+      }
+      return found
+    }
+    const access = new AgentAccess()
+    const model = this.model
+    const file = join(this.folder, `${sessionId}${SessionAgents.fileSuffix}`)
+    const agent = new PiAgentHarness({
+      models: () => openPiModels(model, { keyOf: () => access.modelKey() }),
+      storage: () => openSqliteFileStorage(file),
+      tools: agentTools({ apps: this.apps, handlers: () => access.handlers() }),
+      clock: this.clock,
+    })
+    const entry: OpenAgent = { agent, access, idle: null }
+    this.open.set(sessionId, entry)
+    return entry
+  }
+
+  private async close(sessionId: SessionId): Promise<void> {
+    const entry = this.open.get(sessionId)
+    if (entry === undefined || entry.access.isHeld()) {
+      return
+    }
+    this.open.delete(sessionId)
+    if (entry.idle !== null) {
+      clearTimeout(entry.idle)
+    }
+    await entry.agent.close()
+  }
+}

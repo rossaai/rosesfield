@@ -1,0 +1,28 @@
+{
+  "name": "@rosesfield/generation",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#*": "./src/*.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./bindings": "./src/bindings.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun --bun vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@comfyorg/sdk": "0.5.0",
+    "@rosesfield/contract": "workspace:*",
+    "@rosesfield/kernel": "workspace:*",
+    "drizzle-orm": "0.45.4",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261016.1",
+    "@types/bun": "1.4.3"
+  }
+}

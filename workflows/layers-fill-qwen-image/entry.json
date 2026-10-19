@@ -1,0 +1,48 @@
+{
+  "name": "layers-fill-qwen-image",
+  "title": "Layers: fill a masked area of one layer with Qwen Image and the DiffSynth inpaint patch",
+  "description": "Fills the area your mask marks on one layer with Qwen Image and the DiffSynth inpaint model patch, then pastes the result back into the layer with its alpha. This file holds the draft run at 20 steps. The final run samples 50.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "qwen_image_fp8_e4m3fn.safetensors",
+    "qwen_image_inpaint_diffsynth_controlnet.safetensors",
+    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "qwen_image_vae.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "layer": {
+      "nodeId": "1",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "count": {
+      "nodeId": "3",
+      "inputName": "batch_size",
+      "type": "scalar"
+    },
+    "mask": {
+      "nodeId": "30",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "content": {
+      "nodeId": "40",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "45",
+      "inputName": "seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "52",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

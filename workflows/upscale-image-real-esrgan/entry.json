@@ -1,0 +1,28 @@
+{
+  "name": "upscale-image-real-esrgan",
+  "title": "Upscale an image 2 or 4 times with Real-ESRGAN",
+  "description": "Raises the resolution of one image with Real-ESRGAN x4plus, a model with no random step. A 2 times run makes the 4 times image and scales it down by half.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": ["RealESRGAN_x4plus.safetensors"],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "image": {
+      "nodeId": "1",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "scale": {
+      "nodeId": "4",
+      "inputName": "scale_by",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "9",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

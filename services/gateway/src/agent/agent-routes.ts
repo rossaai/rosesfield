@@ -1,0 +1,125 @@
+import { conversationRoutes } from "@rosesfield/agent"
+import { streamSSE } from "hono/streaming"
+import type { GatewayApp } from "#gateway-env"
+import {
+  jsonBodyMaxBytes,
+  limitBody,
+  parseWith,
+  type ResponseOf,
+  readJson,
+  readOptionalJson,
+} from "#routes/read-request"
+
+export function agentRoutes(app: GatewayApp): void {
+  conversationListRoutes(app)
+  conversationItemRoutes(app)
+  proposalRoutes(app)
+}
+
+function conversationListRoutes(app: GatewayApp): void {
+  const { startConversation, listConversations } = conversationRoutes
+  app.post(startConversation.path, limitBody(jsonBodyMaxBytes), async (c) => {
+    const body = parseWith(
+      startConversation.body,
+      (await readOptionalJson(c)) ?? {},
+      "body"
+    )
+    const started = await c.var.scope.agent.startConversation.execute({
+      runApproval: body.runApproval ?? null,
+    })
+    return c.json(
+      started satisfies ResponseOf<typeof startConversation>,
+      startConversation.status
+    )
+  })
+  app.get(listConversations.path, async (c) => {
+    const listed = await c.var.scope.agent.listConversations.execute()
+    return c.json(
+      listed satisfies ResponseOf<typeof listConversations>,
+      listConversations.status
+    )
+  })
+}
+
+function conversationItemRoutes(app: GatewayApp): void {
+  const routes = conversationRoutes
+  app.get(routes.readConversation.path, async (c) => {
+    const read = await c.var.scope.agent.readConversation.execute({
+      conversationId: c.req.param("conversationId"),
+    })
+    return c.json(
+      read satisfies ResponseOf<typeof routes.readConversation>,
+      routes.readConversation.status
+    )
+  })
+  app.patch(
+    routes.updateConversation.path,
+    limitBody(jsonBodyMaxBytes),
+    async (c) => {
+      const changes = parseWith(
+        routes.updateConversation.body,
+        await readJson(c),
+        "body"
+      )
+      const updated = await c.var.scope.agent.updateConversation.execute({
+        conversationId: c.req.param("conversationId"),
+        changes,
+      })
+      return c.json(
+        updated satisfies ResponseOf<typeof routes.updateConversation>,
+        routes.updateConversation.status
+      )
+    }
+  )
+  app.delete(routes.deleteConversation.path, async (c) => {
+    await c.var.scope.agent.deleteConversation.execute({
+      conversationId: c.req.param("conversationId"),
+    })
+    return c.body(null, routes.deleteConversation.status)
+  })
+  app.post(routes.sendMessage.path, limitBody(jsonBodyMaxBytes), async (c) => {
+    const body = parseWith(routes.sendMessage.body, await readJson(c), "body")
+    const { answer } = await c.var.scope.agent.sendMessage.execute({
+      conversationId: c.req.param("conversationId"),
+      text: body.text,
+    })
+    const release = c.var.scope.hold()
+    return streamSSE(c, async (stream) => {
+      stream.onAbort(() => answer.stop())
+      try {
+        for await (const event of answer) {
+          await stream.writeSSE({
+            event: event.type,
+            data: JSON.stringify(event),
+          })
+        }
+      } finally {
+        release()
+      }
+    })
+  })
+}
+
+function proposalRoutes(app: GatewayApp): void {
+  const { acceptProposal, skipProposal } = conversationRoutes
+  app.post(acceptProposal.path, async (c) => {
+    const accepted = await c.var.scope.agent.acceptProposal.execute({
+      conversationId: c.req.param("conversationId"),
+      proposalId: c.req.param("proposalId"),
+    })
+    return c.json(
+      accepted satisfies ResponseOf<typeof acceptProposal>,
+      acceptProposal.status
+    )
+  })
+  app.post(skipProposal.path, async (c) => {
+    const skipped = await c.var.scope.agent.skipProposal.execute({
+      conversationId: c.req.param("conversationId"),
+      proposalId: c.req.param("proposalId"),
+    })
+    return c.json(
+      skipped satisfies ResponseOf<typeof skipProposal>,
+      skipProposal.status
+    )
+  })
+}

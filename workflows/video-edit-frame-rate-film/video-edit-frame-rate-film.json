@@ -1,0 +1,603 @@
+{
+  "id": "bdf2c3b6-b812-5d6b-9cbd-5a85ff562957",
+  "revision": 0,
+  "last_node_id": 15,
+  "last_link_id": 17,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadVideo",
+      "pos": [1250, 100],
+      "size": [380, 92],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [1]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["clip.mp4", "image"]
+    },
+    {
+      "id": 2,
+      "type": "GetVideoComponents",
+      "pos": [1770, 100],
+      "size": [380, 150],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [2, 5]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [13]
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": [11]
+        },
+        {
+          "name": "bit_depth",
+          "type": "COMBO",
+          "links": null
+        },
+        {
+          "name": "color_space",
+          "type": "COMBO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetVideoComponents",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 3,
+      "type": "GetImageSize",
+      "pos": [2210, 100],
+      "size": [380, 106],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [3]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [4]
+        },
+        {
+          "name": "batch_size",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetImageSize",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 4,
+      "type": "ComfyMathExpression",
+      "pos": [2650, 100],
+      "size": [380, 136],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "values.a",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 3,
+          "shape": 7
+        },
+        {
+          "name": "values.b",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 4,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [6]
+        },
+        {
+          "name": "BOOL",
+          "type": "BOOLEAN",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfyMathExpression",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["min(1080, min(a, b))"]
+    },
+    {
+      "id": 5,
+      "type": "ResizeImageMaskNode",
+      "pos": [3090, 100],
+      "size": [380, 174],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "input",
+          "type": "IMAGE,MASK",
+          "link": 5
+        },
+        {
+          "name": "resize_type.shorter_size",
+          "type": "INT",
+          "link": 6,
+          "widget": {
+            "name": "resize_type.shorter_size"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "resized",
+          "type": "IMAGE,MASK",
+          "links": [7]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ResizeImageMaskNode",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["scale shorter dimension", ["4", 1], "area"]
+    },
+    {
+      "id": 6,
+      "type": "ResizeImageMaskNode",
+      "pos": [3530, 100],
+      "size": [380, 152],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "input",
+          "type": "IMAGE,MASK",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "resized",
+          "type": "IMAGE,MASK",
+          "links": [8, 10]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ResizeImageMaskNode",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["scale to multiple", 2, "area"]
+    },
+    {
+      "id": 7,
+      "type": "GetImageSize",
+      "pos": [3970, 100],
+      "size": [380, 106],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "batch_size",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetImageSize",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 8,
+      "type": "FrameInterpolationModelLoader",
+      "pos": [730, 100],
+      "size": [380, 92],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "INTERP_MODEL",
+          "type": "INTERP_MODEL",
+          "links": [9]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FrameInterpolationModelLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0",
+        "models": [
+          {
+            "name": "film_net_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/frame_interpolation/resolve/main/frame_interpolation/film_net_fp16.safetensors",
+            "directory": "frame_interpolation",
+            "hash": "f226e51375dc839d4b40e5c3d63da560dd1ea1c962364ec78f5adf2d05db05c0",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": ["film_net_fp16.safetensors"]
+    },
+    {
+      "id": 9,
+      "type": "FrameInterpolate",
+      "pos": [3970, 266],
+      "size": [380, 114],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "interp_model",
+          "type": "INTERP_MODEL",
+          "link": 9
+        },
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [14]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FrameInterpolate",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [2]
+    },
+    {
+      "id": 10,
+      "type": "ComfyMathExpression",
+      "pos": [2210, 266],
+      "size": [380, 136],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "values.a",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 11,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": [15]
+        },
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "BOOL",
+          "type": "BOOLEAN",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfyMathExpression",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["a * 2"]
+    },
+    {
+      "id": 11,
+      "type": "PrimitiveBoolean",
+      "pos": [1250, 252],
+      "size": [380, 92],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "BOOLEAN",
+          "type": "BOOLEAN",
+          "links": [12]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveBoolean",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [true]
+    },
+    {
+      "id": 12,
+      "type": "ComfySwitchNode",
+      "pos": [2210, 462],
+      "size": [380, 136],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "switch",
+          "type": "BOOLEAN",
+          "link": 12,
+          "widget": {
+            "name": "switch"
+          }
+        },
+        {
+          "name": "on_false",
+          "type": "*",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "on_true",
+          "type": "*",
+          "link": 13,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "*",
+          "links": [16]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [["11", 0]]
+    },
+    {
+      "id": 13,
+      "type": "CreateVideo",
+      "pos": [4490, 100],
+      "size": [380, 226],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 14
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "link": 15,
+          "widget": {
+            "name": "fps"
+          }
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 16,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [17]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [["10", 0], "auto", "sRGB", "none"]
+    },
+    {
+      "id": 14,
+      "type": "SaveVideo",
+      "pos": [4930, 100],
+      "size": [380, 182],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["video-edit/frame-rate", "mp4", "h264", null]
+    },
+    {
+      "id": 15,
+      "type": "MarkdownNote",
+      "pos": [60, 100],
+      "size": [560, 760],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Video edit: raise the frame rate of a clip 2 or 4 times with FILM",
+      "properties": {},
+      "widgets_values": [
+        "# Video edit: raise the frame rate of a clip 2 or 4 times with FILM\n\nMakes new frames between the frames of your clip with FILM and raises its frame rate 2 or 4 times, with the sound kept or left out. Built from Comfy's template utility-frame_interpolation-film.\n\n## Models\n\n- [film_net_fp16.safetensors](https://huggingface.co/Comfy-Org/frame_interpolation/resolve/main/frame_interpolation/film_net_fp16.safetensors): FILM frame interpolation, [Apache-2.0](https://github.com/google-research/frame-interpolation).\n\nRosesfield ships no weights. Each loader lists its file with a download link.\n\nPart of [Rosesfield](https://github.com/rossaai/rosesfield), MIT. Built from Comfy-Org/workflow_templates, MIT, per NOTICE."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [1, 1, 0, 2, 0, "VIDEO"],
+    [2, 2, 0, 3, 0, "IMAGE"],
+    [3, 3, 0, 4, 0, "INT"],
+    [4, 3, 1, 4, 1, "INT"],
+    [5, 2, 0, 5, 0, "IMAGE"],
+    [6, 4, 1, 5, 1, "INT"],
+    [7, 5, 0, 6, 0, "IMAGE"],
+    [8, 6, 0, 7, 0, "IMAGE"],
+    [9, 8, 0, 9, 0, "INTERP_MODEL"],
+    [10, 6, 0, 9, 1, "IMAGE"],
+    [11, 2, 2, 10, 0, "FLOAT"],
+    [12, 11, 0, 12, 0, "BOOLEAN"],
+    [13, 2, 1, 12, 2, "AUDIO"],
+    [14, 9, 0, 13, 0, "IMAGE"],
+    [15, 10, 0, 13, 1, "FLOAT"],
+    [16, 12, 0, 13, 2, "AUDIO"],
+    [17, 13, 0, 14, 0, "VIDEO"]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Models",
+      "bounding": [700, 20, 440, 252],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Inputs",
+      "bounding": [1220, 20, 440, 404],
+      "color": "#b06634",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Generate",
+      "bounding": [1740, 20, 2640, 658],
+      "color": "#444444",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Output",
+      "bounding": [4460, 20, 880, 386],
+      "color": "#3f8a5c",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.55,
+      "offset": [0, 0]
+    },
+    "linearData": {
+      "inputs": [
+        [1, "file"],
+        [11, "value"],
+        [9, "multiplier"],
+        [10, "expression"]
+      ],
+      "outputs": [14]
+    }
+  },
+  "version": 0.4
+}

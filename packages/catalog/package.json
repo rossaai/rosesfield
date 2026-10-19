@@ -1,0 +1,24 @@
+{
+  "name": "@rosesfield/catalog",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#*": "./src/*.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./workflows": "./src/workflow-registry.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun --bun vitest run --passWithNoTests",
+    "catalog:sync": "bun scripts/catalog-sync.ts"
+  },
+  "dependencies": {
+    "@rosesfield/contract": "workspace:*",
+    "@rosesfield/generation": "workspace:*",
+    "@rosesfield/kernel": "workspace:*",
+    "zod": "4.6.7"
+  }
+}

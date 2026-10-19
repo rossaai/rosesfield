@@ -1,0 +1,1053 @@
+{
+  "id": "6e9f5e58-87ea-5fd7-88e5-5d4b1aeb4d4a",
+  "revision": 0,
+  "last_node_id": 903,
+  "last_link_id": 25,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadVideo",
+      "pos": [1690, 100],
+      "size": [380, 92],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [1]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["", "image"]
+    },
+    {
+      "id": 2,
+      "type": "LoadAudio",
+      "pos": [1690, 252],
+      "size": [380, 92],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [7, 24]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["", null, null]
+    },
+    {
+      "id": 3,
+      "type": "GetVideoComponents",
+      "pos": [2650, 100],
+      "size": [380, 150],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [2]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "bit_depth",
+          "type": "COMBO",
+          "links": null
+        },
+        {
+          "name": "color_space",
+          "type": "COMBO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetVideoComponents",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 4,
+      "type": "ImageScale",
+      "pos": [3090, 100],
+      "size": [380, 182],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [3, 14]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScale",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["lanczos", 480, 480, "center"]
+    },
+    {
+      "id": 5,
+      "type": "ImageFromBatch",
+      "pos": [3530, 100],
+      "size": [380, 122],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [9, 11]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageFromBatch",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0, 1]
+    },
+    {
+      "id": 10,
+      "type": "MultiTalkModelLoader",
+      "pos": [730, 100],
+      "size": [380, 92],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MULTITALKMODEL",
+          "links": [5]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MultiTalkModelLoader",
+        "models": [
+          {
+            "name": "Wan2_1-InfiniTetalk-Single_fp16.safetensors",
+            "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/InfiniteTalk/Wan2_1-InfiniTetalk-Single_fp16.safetensors",
+            "directory": "diffusion_models",
+            "hash": "bf212c5c647eaf1c019b2158d2edf4a360d97e38b746c4bac994fee485e09fc3",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": ["Wan2_1-InfiniTetalk-Single_fp16.safetensors"]
+    },
+    {
+      "id": 11,
+      "type": "WanVideoLoraSelect",
+      "pos": [730, 252],
+      "size": [380, 294],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prev_lora",
+          "type": "WANVIDLORA",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "blocks",
+          "type": "SELECTEDBLOCKS",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "lora",
+          "type": "WANVIDLORA",
+          "links": [4]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WanVideoLoraSelect",
+        "models": [
+          {
+            "name": "lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+            "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Lightx2v/lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+            "directory": "loras",
+            "hash": "85c4a61c30e0497aa44b91d93a893b624708461a56fe5485183b28fa07e2dfb3",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": [
+        "lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+        1,
+        false,
+        true
+      ]
+    },
+    {
+      "id": 12,
+      "type": "WanVideoModelLoader",
+      "pos": [1170, 100],
+      "size": [380, 396],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "compile_args",
+          "type": "WANCOMPILEARGS",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "block_swap_args",
+          "type": "BLOCKSWAPARGS",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "lora",
+          "type": "WANVIDLORA",
+          "link": 4,
+          "shape": 7
+        },
+        {
+          "name": "vram_management_args",
+          "type": "VRAM_MANAGEMENTARGS",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "extra_model",
+          "type": "VACEPATH",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "fantasytalking_model",
+          "type": "FANTASYTALKINGMODEL",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "multitalk_model",
+          "type": "MULTITALKMODEL",
+          "link": 5,
+          "shape": 7
+        },
+        {
+          "name": "fantasyportrait_model",
+          "type": "FANTASYPORTRAITMODEL",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "WANVIDEOMODEL",
+          "links": [15]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WanVideoModelLoader",
+        "models": [
+          {
+            "name": "Wan2_1-I2V-14B-480p_fp8_e4m3fn_scaled_KJ.safetensors",
+            "url": "https://huggingface.co/Kijai/WanVideo_comfy_fp8_scaled/resolve/main/I2V/Wan2_1-I2V-14B-480p_fp8_e4m3fn_scaled_KJ.safetensors",
+            "directory": "diffusion_models",
+            "hash": "2ff922282cd84589702e6e8c26e083d1160bfc2b217dd44e1ae2688441dc495d",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": [
+        "Wan2_1-I2V-14B-480p_fp8_e4m3fn_scaled_KJ.safetensors",
+        "bf16",
+        "fp8_e4m3fn_scaled",
+        "offload_device",
+        "sdpa",
+        "default"
+      ]
+    },
+    {
+      "id": 13,
+      "type": "WanVideoVAELoader",
+      "pos": [730, 606],
+      "size": [380, 182],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "compile_args",
+          "type": "WANCOMPILEARGS",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vae",
+          "type": "WANVAE",
+          "links": [10, 13, 20]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WanVideoVAELoader",
+        "models": [
+          {
+            "name": "Wan2_1_VAE_bf16.safetensors",
+            "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Wan2_1_VAE_bf16.safetensors",
+            "directory": "vae",
+            "hash": "1ab9a32cc2c740f6e39d80d367ce5dcc28db8c71b79b28670546b8973e9d75f9",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": ["Wan2_1_VAE_bf16.safetensors", "bf16", false, false]
+    },
+    {
+      "id": 14,
+      "type": "Wav2VecModelLoader",
+      "pos": [730, 848],
+      "size": [380, 152],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "wav2vec_model",
+          "type": "WAV2VECMODEL",
+          "links": [6]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Wav2VecModelLoader",
+        "models": [
+          {
+            "name": "wav2vec2-chinese-base_fp16.safetensors",
+            "url": "https://huggingface.co/Kijai/wav2vec2_safetensors/resolve/main/wav2vec2-chinese-base_fp16.safetensors",
+            "directory": "audio_encoders",
+            "hash": "000813e441020f18cff844c969d2d5d4adc2a5ce46b2db1f23950b05d88805b4",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": [
+        "wav2vec2-chinese-base_fp16.safetensors",
+        "fp16",
+        "main_device"
+      ]
+    },
+    {
+      "id": 15,
+      "type": "MultiTalkWav2VecEmbeds",
+      "pos": [2650, 310],
+      "size": [380, 412],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "wav2vec_model",
+          "type": "WAV2VECMODEL",
+          "link": 6
+        },
+        {
+          "name": "audio_1",
+          "type": "AUDIO",
+          "link": 7
+        },
+        {
+          "name": "audio_2",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "audio_3",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "audio_4",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "ref_target_masks",
+          "type": "MASK",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "multitalk_embeds",
+          "type": "MULTITALK_EMBEDS",
+          "links": [19]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "num_frames",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MultiTalkWav2VecEmbeds"
+      },
+      "widgets_values": [true, 250, 25, 1, 1, "para", false, false]
+    },
+    {
+      "id": 16,
+      "type": "CLIPVisionLoader",
+      "pos": [730, 1060],
+      "size": [380, 92],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP_VISION",
+          "type": "CLIP_VISION",
+          "links": [8]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPVisionLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0",
+        "models": [
+          {
+            "name": "clip_vision_h.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan-Animate-2/resolve/main/clip_vision/clip_vision_h.safetensors",
+            "directory": "clip_vision",
+            "hash": "64a7ef761bfccbadbaa3da77366aac4185a6c58fa5de5f589b42a65bcc21f161",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": ["clip_vision_h.safetensors"]
+    },
+    {
+      "id": 17,
+      "type": "WanVideoClipVisionEncode",
+      "pos": [3970, 100],
+      "size": [380, 338],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip_vision",
+          "type": "CLIP_VISION",
+          "link": 8
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": 9
+        },
+        {
+          "name": "image_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "negative_image",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image_embeds",
+          "type": "WANVIDIMAGE_CLIPEMBEDS",
+          "links": [12]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WanVideoClipVisionEncode"
+      },
+      "widgets_values": [1, 1, "center", "average", true, 0, 0.5]
+    },
+    {
+      "id": 18,
+      "type": "WanVideoTextEncodeCached",
+      "pos": [2210, 100],
+      "size": [380, 316],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "extender_args",
+          "type": "WANVIDEOPROMPTEXTENDER_ARGS",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text_embeds",
+          "type": "WANVIDEOTEXTEMBEDS",
+          "links": [17]
+        },
+        {
+          "name": "negative_text_embeds",
+          "type": "WANVIDEOTEXTEMBEDS",
+          "links": null
+        },
+        {
+          "name": "positive_prompt",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WanVideoTextEncodeCached",
+        "models": [
+          {
+            "name": "umt5-xxl-enc-bf16.safetensors",
+            "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/umt5-xxl-enc-bf16.safetensors",
+            "directory": "text_encoders",
+            "hash": "4fa971faf306cad919033d5bbe192e571dc08452f800cbf2ec3c73977c01b2cc",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": [
+        "umt5-xxl-enc-bf16.safetensors",
+        "bf16",
+        "One person talks. The scene stays as it is.",
+        "",
+        "disabled",
+        false,
+        "gpu"
+      ]
+    },
+    {
+      "id": 19,
+      "type": "WanVideoImageToVideoMultiTalk",
+      "pos": [4410, 100],
+      "size": [380, 376],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "vae",
+          "type": "WANVAE",
+          "link": 10
+        },
+        {
+          "name": "start_image",
+          "type": "IMAGE",
+          "link": 11,
+          "shape": 7
+        },
+        {
+          "name": "clip_embeds",
+          "type": "WANVIDIMAGE_CLIPEMBEDS",
+          "link": 12,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image_embeds",
+          "type": "WANVIDIMAGE_EMBEDS",
+          "links": [16]
+        },
+        {
+          "name": "output_path",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WanVideoImageToVideoMultiTalk"
+      },
+      "widgets_values": [
+        480,
+        480,
+        81,
+        9,
+        false,
+        "disabled",
+        false,
+        "infinitetalk",
+        ""
+      ]
+    },
+    {
+      "id": 20,
+      "type": "WanVideoEncode",
+      "pos": [3530, 282],
+      "size": [380, 316],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "vae",
+          "type": "WANVAE",
+          "link": 13
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 14
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "links": [18]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WanVideoEncode"
+      },
+      "widgets_values": [false, 272, 272, 144, 128, 0, 1]
+    },
+    {
+      "id": 21,
+      "type": "WanVideoSampler",
+      "pos": [4850, 100],
+      "size": [380, 804],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "WANVIDEOMODEL",
+          "link": 15
+        },
+        {
+          "name": "image_embeds",
+          "type": "WANVIDIMAGE_EMBEDS",
+          "link": 16
+        },
+        {
+          "name": "text_embeds",
+          "type": "WANVIDEOTEXTEMBEDS",
+          "link": 17,
+          "shape": 7
+        },
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 18,
+          "shape": 7
+        },
+        {
+          "name": "feta_args",
+          "type": "FETAARGS",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "context_options",
+          "type": "WANVIDCONTEXT",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "cache_args",
+          "type": "CACHEARGS",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "flowedit_args",
+          "type": "FLOWEDITARGS",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "slg_args",
+          "type": "SLGARGS",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "loop_args",
+          "type": "LOOPARGS",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "experimental_args",
+          "type": "EXPERIMENTALARGS",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "unianimate_poses",
+          "type": "UNIANIMATE_POSE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "fantasytalking_embeds",
+          "type": "FANTASYTALKING_EMBEDS",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "uni3c_embeds",
+          "type": "UNI3C_EMBEDS",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "multitalk_embeds",
+          "type": "MULTITALK_EMBEDS",
+          "link": 19,
+          "shape": 7
+        },
+        {
+          "name": "freeinit_args",
+          "type": "FREEINITARGS",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "links": [21]
+        },
+        {
+          "name": "denoised_samples",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WanVideoSampler"
+      },
+      "widgets_values": [
+        4,
+        1,
+        11,
+        0,
+        "fixed",
+        true,
+        "dpm++_sde",
+        0,
+        1,
+        false,
+        "comfy",
+        2,
+        -1,
+        true
+      ]
+    },
+    {
+      "id": 22,
+      "type": "WanVideoDecode",
+      "pos": [5290, 100],
+      "size": [380, 264],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "vae",
+          "type": "WANVAE",
+          "link": 20
+        },
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [22]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WanVideoDecode"
+      },
+      "widgets_values": [false, 272, 272, 144, 128, "default"]
+    },
+    {
+      "id": 900,
+      "type": "ImageFromBatch",
+      "pos": [5730, 100],
+      "size": [380, 122],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [23]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageFromBatch",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0, 250]
+    },
+    {
+      "id": 901,
+      "type": "CreateVideo",
+      "pos": [6250, 100],
+      "size": [380, 204],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 23
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 24,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [25]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [25, "auto", "sRGB", "none"]
+    },
+    {
+      "id": 902,
+      "type": "SaveVideo",
+      "pos": [6690, 100],
+      "size": [380, 152],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["video/rosesfield-lipsync", "mp4", "auto"]
+    },
+    {
+      "id": 903,
+      "type": "MarkdownNote",
+      "pos": [60, 100],
+      "size": [560, 760],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Lip sync: a clip redubbed to new audio with InfiniteTalk",
+      "properties": {},
+      "widgets_values": [
+        "# Lip sync: a clip redubbed to new audio with InfiniteTalk\n\nMakes the person in your clip speak your audio with InfiniteTalk through the ComfyUI-WanVideoWrapper nodes on Wan 2.1 I2V 14B, keeping the clip's motion, then trims the video to the length of the audio. Built from the wrapper's example wanvideo_2_1_14B_V2V_InfiniteTalk_example_02.\n\n## Models\n\n- [Wan2_1-InfiniTetalk-Single_fp16.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/InfiniteTalk/Wan2_1-InfiniTetalk-Single_fp16.safetensors): InfiniteTalk single-speaker patch, Kijai's build, [Apache-2.0](https://huggingface.co/MeiGen-AI/InfiniteTalk).\n- [lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Lightx2v/lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors): lightx2v Wan 2.1 I2V 480P step-distill LoRA, [Apache-2.0](https://huggingface.co/lightx2v/Wan2.1-I2V-14B-480P-StepDistill-CfgDistill-Lightx2v).\n- [Wan2_1-I2V-14B-480p_fp8_e4m3fn_scaled_KJ.safetensors](https://huggingface.co/Kijai/WanVideo_comfy_fp8_scaled/resolve/main/I2V/Wan2_1-I2V-14B-480p_fp8_e4m3fn_scaled_KJ.safetensors): Wan 2.1 I2V 14B 480P, fp8, Kijai's build, [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.1-I2V-14B-480P).\n- [Wan2_1_VAE_bf16.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Wan2_1_VAE_bf16.safetensors): Wan 2.1 VAE, Kijai's build, [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.1-I2V-14B-480P).\n- [wav2vec2-chinese-base_fp16.safetensors](https://huggingface.co/Kijai/wav2vec2_safetensors/resolve/main/wav2vec2-chinese-base_fp16.safetensors): chinese-wav2vec2-base audio encoder, [MIT](https://huggingface.co/TencentGameMate/chinese-wav2vec2-base).\n- [clip_vision_h.safetensors](https://huggingface.co/Comfy-Org/Wan-Animate-2/resolve/main/clip_vision/clip_vision_h.safetensors): CLIP ViT-H vision encoder, [MIT](https://huggingface.co/laion/CLIP-ViT-H-14-laion2B-s32B-b79K).\n- [umt5-xxl-enc-bf16.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/umt5-xxl-enc-bf16.safetensors): umt5-xxl encoder, Kijai's build, [Apache-2.0](https://huggingface.co/google/umt5-xxl).\n\n## Custom nodes\n\n- [ComfyUI-WanVideoWrapper](https://github.com/kijai/ComfyUI-WanVideoWrapper) at commit `088128b224242e110d3906c6750e9a3a348a659b`, Apache-2.0.\n\nRosesfield ships no weights. Each loader lists its file with a download link.\n\nPart of [Rosesfield](https://github.com/rossaai/rosesfield), MIT. Built from Comfy-Org/workflow_templates, MIT, per NOTICE."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [1, 1, 0, 3, 0, "VIDEO"],
+    [2, 3, 0, 4, 0, "IMAGE"],
+    [3, 4, 0, 5, 0, "IMAGE"],
+    [4, 11, 0, 12, 2, "WANVIDLORA"],
+    [5, 10, 0, 12, 6, "MULTITALKMODEL"],
+    [6, 14, 0, 15, 0, "WAV2VECMODEL"],
+    [7, 2, 0, 15, 1, "AUDIO"],
+    [8, 16, 0, 17, 0, "CLIP_VISION"],
+    [9, 5, 0, 17, 1, "IMAGE"],
+    [10, 13, 0, 19, 0, "WANVAE"],
+    [11, 5, 0, 19, 1, "IMAGE"],
+    [12, 17, 0, 19, 2, "WANVIDIMAGE_CLIPEMBEDS"],
+    [13, 13, 0, 20, 0, "WANVAE"],
+    [14, 4, 0, 20, 1, "IMAGE"],
+    [15, 12, 0, 21, 0, "WANVIDEOMODEL"],
+    [16, 19, 0, 21, 1, "WANVIDIMAGE_EMBEDS"],
+    [17, 18, 0, 21, 2, "WANVIDEOTEXTEMBEDS"],
+    [18, 20, 0, 21, 3, "LATENT"],
+    [19, 15, 0, 21, 15, "MULTITALK_EMBEDS"],
+    [20, 13, 0, 22, 0, "WANVAE"],
+    [21, 21, 0, 22, 1, "LATENT"],
+    [22, 22, 0, 900, 0, "IMAGE"],
+    [23, 900, 0, 901, 0, "IMAGE"],
+    [24, 2, 0, 901, 1, "AUDIO"],
+    [25, 901, 0, 902, 0, "VIDEO"]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Models",
+      "bounding": [700, 20, 880, 1212],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Inputs",
+      "bounding": [1660, 20, 440, 404],
+      "color": "#b06634",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Generate",
+      "bounding": [2180, 20, 3960, 964],
+      "color": "#444444",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Output",
+      "bounding": [6220, 20, 880, 364],
+      "color": "#3f8a5c",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.55,
+      "offset": [0, 0]
+    },
+    "linearData": {
+      "inputs": [
+        [1, "file"],
+        [2, "audio"],
+        [21, "seed"],
+        [4, "width"],
+        [4, "height"],
+        [19, "width"],
+        [19, "height"],
+        [15, "num_frames"],
+        [900, "length"]
+      ],
+      "outputs": [902]
+    }
+  },
+  "version": 0.4
+}

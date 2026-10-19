@@ -1,0 +1,33 @@
+{
+  "name": "video-edit-background-birefnet",
+  "title": "Video edit: replace the background of a clip with one color",
+  "description": "Finds the subject of every frame of your clip with BiRefNet and places it over one flat color, with the sound kept or left out. Built from Comfy's template utility_birefnet_remove_background.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": ["ZhengPeng7/BiRefNet"],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "source": {
+      "nodeId": "1",
+      "inputName": "file",
+      "type": "cloud-asset"
+    },
+    "keepSound": {
+      "nodeId": "12",
+      "inputName": "value",
+      "type": "scalar"
+    },
+    "color": {
+      "nodeId": "10",
+      "inputName": "color",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "15",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}

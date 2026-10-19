@@ -1,0 +1,42 @@
+{
+  "name": "upscale-video-seedvr2",
+  "title": "Upscale a video 2 or 4 times with SeedVR2",
+  "description": "Raises the resolution of one clip by 2 or 4 times with SeedVR2 and keeps its frame rate and sound. The model file is an input, so the same graph runs the 3B and the 7B model. Built from Comfy's template upscale_video_seedvr2_3b_int8.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": [
+    "seedvr2_3b_int8_convrot.safetensors",
+    "seedvr2_ema_vae_fp16.safetensors",
+    "seedvr2_7b_int8_convrot.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "video": {
+      "nodeId": "1",
+      "inputName": "file",
+      "type": "cloud-asset"
+    },
+    "scale": {
+      "nodeId": "111",
+      "inputName": "resize_type.multiplier",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "109",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "model": {
+      "nodeId": "108",
+      "inputName": "unet_name",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "130",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}

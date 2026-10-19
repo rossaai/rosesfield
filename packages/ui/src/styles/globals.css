@@ -1,0 +1,116 @@
+@import "tailwindcss";
+@import "shadcn/tailwind.css";
+@import "../tokens.css";
+@import "./motion.css";
+
+@source "../../../../apps/platform/src";
+@source "..";
+
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:where(:not([data-theme="light"], [data-theme="light"] *)) {
+      @slot;
+    }
+  }
+}
+
+@utility material {
+  background-color: var(--layer);
+
+  @supports (backdrop-filter: blur(1px)) {
+    background-color: color-mix(
+      in srgb,
+      var(--layer) var(--opacity-material),
+      transparent
+    );
+    backdrop-filter: var(--material-filter);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--layer);
+    backdrop-filter: none;
+  }
+}
+
+@utility glyph {
+  width: var(--spacing-glyph);
+  height: var(--spacing-glyph);
+  flex-shrink: 0;
+  stroke-width: var(--stroke-icon);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+
+  & * {
+    vector-effect: non-scaling-stroke;
+  }
+}
+
+@utility glyph-small {
+  width: var(--spacing-glyph-small);
+  height: var(--spacing-glyph-small);
+  flex-shrink: 0;
+  stroke-width: var(--stroke-icon);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+
+  & * {
+    vector-effect: non-scaling-stroke;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--surface-2);
+  }
+
+  html {
+    font-synthesis: none;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-body text-ink;
+    -webkit-tap-highlight-color: transparent;
+    overflow-wrap: break-word;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: var(--spacing-focus-ring) solid var(--hor-text);
+    outline-offset: var(--spacing-focus-ring);
+  }
+
+  input:focus-visible,
+  textarea:focus-visible,
+  [contenteditable]:focus-visible {
+    outline: none;
+  }
+
+  ::selection {
+    background-color: var(--selection);
+  }
+
+  ::placeholder {
+    color: var(--ink-muted);
+  }
+}

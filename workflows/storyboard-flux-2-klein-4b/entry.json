@@ -1,0 +1,137 @@
+{
+  "name": "storyboard-flux-2-klein-4b",
+  "title": "Storyboard: up to 8 matching keyframes from one image with FLUX.2 Klein 4B",
+  "description": "Edits one anchor image, a reference or a character's photo, into one keyframe per scene with FLUX.2 Klein 4B in 4 steps, each scene with its own sentence, the shared look and its own seed, and saves the keyframes as one batch.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "flux-2-klein-4b-fp8.safetensors",
+    "qwen_3_4b.safetensors",
+    "flux2-vae.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "seed": {
+      "nodeId": "6",
+      "inputName": "value",
+      "type": "scalar"
+    },
+    "count": {
+      "nodeId": "99",
+      "inputName": "images",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "11",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "11",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "schedulerWidth": {
+      "nodeId": "5",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "schedulerHeight": {
+      "nodeId": "5",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "anchor": {
+      "nodeId": "7",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "scene1": {
+      "nodeId": "100",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "look1": {
+      "nodeId": "101",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "scene2": {
+      "nodeId": "200",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "look2": {
+      "nodeId": "201",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "scene3": {
+      "nodeId": "300",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "look3": {
+      "nodeId": "301",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "scene4": {
+      "nodeId": "400",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "look4": {
+      "nodeId": "401",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "scene5": {
+      "nodeId": "500",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "look5": {
+      "nodeId": "501",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "scene6": {
+      "nodeId": "600",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "look6": {
+      "nodeId": "601",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "scene7": {
+      "nodeId": "700",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "look7": {
+      "nodeId": "701",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "scene8": {
+      "nodeId": "800",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "look8": {
+      "nodeId": "801",
+      "inputName": "string_b",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "99",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

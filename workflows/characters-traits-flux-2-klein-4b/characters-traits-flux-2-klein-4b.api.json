@@ -1,0 +1,193 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "flux-2-klein-4b.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen_3_4b.safetensors",
+      "type": "flux2",
+      "device": "default"
+    }
+  },
+  "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "flux2-vae.safetensors"
+    }
+  },
+  "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": ["112", 0],
+      "clip": ["2", 0]
+    }
+  },
+  "5": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": ["4", 0]
+    }
+  },
+  "6": {
+    "class_type": "EmptyFlux2LatentImage",
+    "inputs": {
+      "width": 1056,
+      "height": 1408,
+      "batch_size": 2
+    }
+  },
+  "7": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": ["9", 0],
+      "guider": ["10", 0],
+      "sampler": ["11", 0],
+      "sigmas": ["12", 0],
+      "latent_image": ["6", 0]
+    }
+  },
+  "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["7", 0],
+      "vae": ["3", 0]
+    }
+  },
+  "9": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": 0
+    }
+  },
+  "10": {
+    "class_type": "CFGGuider",
+    "inputs": {
+      "model": ["1", 0],
+      "positive": ["4", 0],
+      "negative": ["5", 0],
+      "cfg": 1
+    }
+  },
+  "11": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+      "sampler_name": "euler"
+    }
+  },
+  "12": {
+    "class_type": "Flux2Scheduler",
+    "inputs": {
+      "steps": 4,
+      "width": 1056,
+      "height": 1408
+    }
+  },
+  "13": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": ["8", 0],
+      "filename_prefix": "rosesfield-characters"
+    }
+  },
+  "101": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": "Half-body photograph of one person, framed from the waist up",
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "102": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["101", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "103": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["102", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "104": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["103", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "105": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["104", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "106": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["105", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "107": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["106", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "108": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["107", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "109": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["108", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "110": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["109", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "111": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["110", 0],
+      "string_b": ", neutral expression, looking straight at the camera, front view, soft even light, sharp focus",
+      "delimiter": ""
+    }
+  },
+  "112": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["111", 0],
+      "string_b": "",
+      "delimiter": ". "
+    }
+  }
+}

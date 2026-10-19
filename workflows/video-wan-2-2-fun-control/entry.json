@@ -1,0 +1,48 @@
+{
+  "name": "video-wan-2-2-fun-control",
+  "title": "Video: a new clip on the edges of your clip with Wan 2.2 Fun Control",
+  "description": "Draws the edges of every frame of your clip with Canny and renders a new clip on them with Wan 2.2 Fun Control A14B, so the motion of your clip holds. Built from Comfy's template video_wan2_2_14B_fun_control.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": ["alibaba-pai/Wan2.2-Fun-A14B-Control"],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "prompt": {
+      "nodeId": "99",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "clip": {
+      "nodeId": "158",
+      "inputName": "file",
+      "type": "cloud-asset"
+    },
+    "width": {
+      "nodeId": "160",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "160",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "frames": {
+      "nodeId": "160",
+      "inputName": "length",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "96",
+      "inputName": "noise_seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "98",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}

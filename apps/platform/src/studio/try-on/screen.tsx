@@ -1,0 +1,34 @@
+import { type ReactElement, useRef } from "react"
+import { AppCanvas } from "@/screens/app/app-canvas"
+import {
+  AddInputsButton,
+  ColumnFrame,
+  useSheetOpen,
+} from "@/screens/app/column-frame"
+import type { StudioScreenProps } from "@/screens/app/studio-screens"
+import { TryOnPanel } from "@/studio/try-on/try-on-panel"
+import { useTryOnScreen } from "@/studio/try-on/use-try-on-screen"
+
+export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
+  const sheetClose = useRef<() => void>(() => undefined)
+  const state = useTryOnScreen(app, seeds, () => sheetClose.current())
+  const sheet = useSheetOpen(state.hasRuns)
+  sheetClose.current = () => sheet[1](false)
+  return (
+    <ColumnFrame
+      app={app}
+      start={state.start}
+      onShortcut={state.onShortcut}
+      sheet={sheet}
+      panel={<TryOnPanel state={state} />}
+      canvas={(openInputs) => (
+        <AppCanvas
+          app={app}
+          order="newest-first"
+          onUseInputs={state.useInputs}
+          emptyAction={<AddInputsButton onClick={openInputs} />}
+        />
+      )}
+    />
+  )
+}

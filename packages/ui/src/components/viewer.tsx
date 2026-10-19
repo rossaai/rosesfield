@@ -1,0 +1,229 @@
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
+import { IconButton } from "@rosesfield/ui/components/button"
+import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
+import { useGrowFrom } from "@rosesfield/ui/hooks/use-grow-from"
+import { cn } from "@rosesfield/ui/lib/cn"
+import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "lucide-react"
+import {
+  type KeyboardEvent,
+  type ReactElement,
+  type ReactNode,
+  type RefCallback,
+  useEffect,
+  useRef,
+} from "react"
+
+type ViewerStep = {
+  label: string
+  onSelect: () => void
+}
+
+type ViewerProps = {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  origin: HTMLElement | null
+  aspect: MediaAspect
+  title: string
+  closeLabel: string
+  children: ReactNode
+  aside?: ReactNode
+  bar?: ReactNode
+  previous?: ViewerStep
+  next?: ViewerStep
+}
+
+function StepButton({
+  step,
+  side,
+}: {
+  step: ViewerStep | undefined
+  side: "left" | "right"
+}): ReactNode {
+  if (step === undefined) {
+    return null
+  }
+  return (
+    <IconButton
+      label={step.label}
+      onClick={step.onSelect}
+      className={cn(
+        "absolute top-1/2 -translate-y-1/2",
+        side === "left" ? "left-s2" : "right-s2"
+      )}
+    >
+      {side === "left" ? (
+        <ChevronLeftIcon aria-hidden="true" />
+      ) : (
+        <ChevronRightIcon aria-hidden="true" />
+      )}
+    </IconButton>
+  )
+}
+
+function useStepKeys(
+  previous: ViewerStep | undefined,
+  next: ViewerStep | undefined
+): (event: KeyboardEvent<HTMLElement>) => void {
+  return (event) => {
+    if (event.key === "ArrowLeft") {
+      previous?.onSelect()
+    } else if (event.key === "ArrowRight") {
+      next?.onSelect()
+    }
+  }
+}
+
+type ViewerStageProps = Pick<
+  ViewerProps,
+  "aspect" | "children" | "previous" | "next"
+> & {
+  frameRef: RefCallback<HTMLElement>
+  fadeRef: RefCallback<HTMLElement>
+  onClose: () => void
+}
+
+function ViewerStage(props: ViewerStageProps): ReactElement {
+  const { width, height } = props.aspect
+  return (
+    <div
+      data-slot="viewer-stage"
+      className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center px-0 py-s12 @regular:p-s12"
+      style={{ containerType: "size" }}
+    >
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        onClick={props.onClose}
+        className="absolute inset-0 cursor-default"
+      />
+      <div
+        ref={props.frameRef}
+        data-slot="viewer-frame"
+        className="relative origin-top-left overflow-hidden @regular:rounded-cell"
+        style={{
+          aspectRatio: `${width} / ${height}`,
+          width: `min(100cqw, 100cqh * ${width} / ${height})`,
+        }}
+      >
+        {props.children}
+      </div>
+      <div
+        ref={props.fadeRef}
+        className="pointer-events-none absolute inset-0 *:pointer-events-auto"
+      >
+        <StepButton step={props.previous} side="left" />
+        <StepButton step={props.next} side="right" />
+      </div>
+    </div>
+  )
+}
+
+function ViewerAside({
+  fadeRef,
+  children,
+  hasBar,
+}: {
+  fadeRef: RefCallback<HTMLElement>
+  children: ReactNode
+  hasBar: boolean
+}): ReactNode {
+  if (children === undefined) {
+    return null
+  }
+  return (
+    <aside
+      ref={fadeRef}
+      data-ground="layer"
+      className={cn(
+        "max-h-[50dvh] w-full shrink-0 flex-col gap-s4 overflow-y-auto bg-layer p-s6 text-ink @regular:flex @regular:max-h-none @regular:w-info-panel @regular:pt-s12",
+        hasBar ? "hidden" : "flex"
+      )}
+    >
+      {children}
+    </aside>
+  )
+}
+
+function ViewerBar({
+  fadeRef,
+  children,
+}: {
+  fadeRef: RefCallback<HTMLElement>
+  children: ReactNode
+}): ReactNode {
+  if (children === undefined) {
+    return null
+  }
+  return (
+    <div
+      ref={fadeRef}
+      data-slot="viewer-bar"
+      data-ground="layer"
+      className="flex shrink-0 items-center gap-s2 px-s5 pt-s3 pb-s5 @regular:hidden"
+    >
+      {children}
+    </div>
+  )
+}
+
+function Viewer(props: ViewerProps): ReactElement {
+  const origin = useRef<HTMLElement | null>(props.origin)
+  const popup = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    origin.current = props.origin
+  }, [props.origin])
+  const { isMounted, frameRef, fadeRef } = useGrowFrom(props.open, origin)
+  const onKeyDown = useStepKeys(props.previous, props.next)
+  const close = (): void => props.onOpenChange(false)
+  const onOpenChange = (next: boolean): void => {
+    if (!next) {
+      close()
+    }
+  }
+  return (
+    <DialogPrimitive.Root open={isMounted} onOpenChange={onOpenChange}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Backdrop
+          ref={fadeRef}
+          className="fixed inset-0 z-50 bg-scrim"
+        />
+        <DialogPrimitive.Popup
+          ref={popup}
+          aria-label={props.title}
+          initialFocus={popup}
+          finalFocus={origin}
+          onKeyDown={onKeyDown}
+          className="@container fixed inset-0 z-50 outline-none"
+        >
+          <div
+            ref={fadeRef}
+            aria-hidden="true"
+            data-ground="layer"
+            className="absolute inset-0 bg-layer @regular:hidden"
+          />
+          <div className="relative flex size-full flex-col @regular:flex-row">
+            <ViewerStage
+              {...props}
+              frameRef={frameRef}
+              fadeRef={fadeRef}
+              onClose={close}
+            />
+            <ViewerAside fadeRef={fadeRef} hasBar={props.bar !== undefined}>
+              {props.aside}
+            </ViewerAside>
+            <ViewerBar fadeRef={fadeRef}>{props.bar}</ViewerBar>
+          </div>
+          <span ref={fadeRef} className="absolute top-s4 right-s4">
+            <IconButton label={props.closeLabel} onClick={close}>
+              <XIcon aria-hidden="true" />
+            </IconButton>
+          </span>
+        </DialogPrimitive.Popup>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  )
+}
+
+export type { ViewerProps, ViewerStep }
+export { Viewer }

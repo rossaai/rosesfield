@@ -1,0 +1,185 @@
+/*
+  The motion presets. A screen names a preset, never a number.
+  Each preset reads its timing from the variables below, and motion.ts reads
+  the same variables, so a transition in CSS and an animation in script run
+  on one timing. Reduced motion lands springs at once and fades in 120ms.
+*/
+
+:root {
+  --press-down: var(--duration-press) var(--ease-bloom);
+  --press-up: var(--duration-pop) var(--ease-pop);
+  --tint-change: var(--duration-press) var(--ease-bloom);
+  --popover-in-transform: var(--duration-pop) var(--ease-pop);
+  --popover-in-opacity: var(--duration-control) var(--ease-bloom);
+  --popover-out-transform: var(--duration-press) var(--ease-fold);
+  --popover-out-opacity: var(--duration-press) var(--ease-fold);
+  --layer-in-transform: var(--duration-settle) var(--ease-settle);
+  --layer-in-opacity: var(--duration-heavy-entrance) var(--ease-bloom);
+  --layer-out-transform: var(--duration-settle) var(--ease-settle);
+  --layer-out-opacity: var(--duration-heavy-exit) var(--ease-bloom);
+  --enter-in-transform: var(--duration-pop) var(--ease-pop);
+  --enter-in-opacity: var(--duration-control) var(--ease-bloom);
+  --enter-out-transform: var(--duration-press) var(--ease-fold);
+  --enter-out-opacity: var(--duration-press) var(--ease-fold);
+  --control-change: var(--duration-snap) var(--ease-snap);
+  --pane-change: var(--duration-settle) var(--ease-settle);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --press-down: 0s linear;
+    --press-up: 0s linear;
+    --tint-change: var(--duration-reduced) var(--ease-bloom);
+    --popover-in-transform: 0s linear;
+    --popover-in-opacity: var(--duration-reduced) var(--ease-bloom);
+    --popover-out-transform: 0s linear;
+    --popover-out-opacity: var(--duration-reduced) var(--ease-bloom);
+    --layer-in-transform: 0s linear;
+    --layer-in-opacity: var(--duration-reduced) var(--ease-bloom);
+    --layer-out-transform: 0s linear;
+    --layer-out-opacity: var(--duration-reduced) var(--ease-bloom);
+    --enter-in-transform: 0s linear;
+    --enter-in-opacity: var(--duration-reduced) var(--ease-bloom);
+    --enter-out-transform: 0s linear;
+    --enter-out-opacity: var(--duration-reduced) var(--ease-bloom);
+    --control-change: 0s linear;
+    --pane-change: 0s linear;
+  }
+}
+
+@utility motion-press {
+  --press-scale: var(--scale-press-capsule);
+  transition:
+    transform var(--press-up),
+    background-color var(--tint-change),
+    color var(--tint-change);
+
+  &:active:not(:disabled, [data-disabled]) {
+    transform: scale(var(--press-scale));
+    transition:
+      transform var(--press-down),
+      background-color var(--tint-change),
+      color var(--tint-change);
+  }
+}
+
+@utility motion-press-round {
+  --press-scale: var(--scale-press-round);
+}
+
+@utility motion-tint {
+  transition:
+    background-color var(--tint-change),
+    color var(--tint-change);
+}
+
+@utility motion-popover {
+  transform-origin: var(--transform-origin);
+  transition:
+    transform var(--popover-in-transform),
+    opacity var(--popover-in-opacity);
+
+  &[data-starting-style] {
+    opacity: 0;
+    transform: scale(var(--scale-enter));
+  }
+
+  &[data-ending-style] {
+    opacity: 0;
+    transform: scale(var(--scale-enter));
+    transition:
+      transform var(--popover-out-transform),
+      opacity var(--popover-out-opacity);
+  }
+
+  &[data-instant] {
+    transition: none;
+  }
+}
+
+@utility motion-layer {
+  transition:
+    transform var(--layer-in-transform),
+    opacity var(--layer-in-opacity);
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 0;
+    transform: translateY(var(--spacing-rise));
+  }
+
+  &[data-side="bottom"][data-starting-style],
+  &[data-side="bottom"][data-ending-style] {
+    transform: translateY(100%);
+  }
+
+  &[data-side="left"][data-starting-style],
+  &[data-side="left"][data-ending-style] {
+    transform: translateX(-100%);
+  }
+
+  &[data-ending-style] {
+    transition:
+      transform var(--layer-out-transform),
+      opacity var(--layer-out-opacity);
+  }
+}
+
+@utility motion-scrim {
+  transition: opacity var(--layer-in-opacity);
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 0;
+  }
+
+  &[data-ending-style] {
+    transition: opacity var(--layer-out-opacity);
+  }
+}
+
+@utility motion-enter {
+  transition:
+    transform var(--enter-in-transform),
+    opacity var(--enter-in-opacity);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(var(--scale-enter));
+  }
+
+  &[data-ending-style] {
+    opacity: 0;
+    transform: scale(var(--scale-enter));
+    transition:
+      transform var(--enter-out-transform),
+      opacity var(--enter-out-opacity);
+  }
+}
+
+@utility motion-control {
+  transition: transform var(--control-change);
+}
+
+@utility motion-pane {
+  transition: transform var(--pane-change);
+}
+
+@utility motion-pulse {
+  animation: motion-breathe var(--duration-pulse) var(--ease-glide) infinite
+    alternate;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes motion-breathe {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: var(--opacity-pulse);
+  }
+}

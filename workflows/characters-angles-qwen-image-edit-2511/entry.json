@@ -1,0 +1,69 @@
+{
+  "name": "characters-angles-qwen-image-edit-2511",
+  "title": "Characters: 4 views of a character with Qwen Image Edit 2511",
+  "description": "Draws your character from 4 views of one angle set in one run, one branch of Qwen Image Edit 2511 with the Multiple Angles LoRA at 0.9 and the Lightning LoRA per view, and saves the 4 images as one batch.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "qwen_image_edit_2511_fp8mixed.safetensors",
+    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "qwen_image_vae.safetensors",
+    "qwen-image-edit-2511-multiple-angles-lora.safetensors",
+    "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "character": {
+      "nodeId": "40",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "view1": {
+      "nodeId": "20",
+      "inputName": "prompt",
+      "type": "scalar"
+    },
+    "seed1": {
+      "nodeId": "22",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "view2": {
+      "nodeId": "24",
+      "inputName": "prompt",
+      "type": "scalar"
+    },
+    "seed2": {
+      "nodeId": "26",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "view3": {
+      "nodeId": "28",
+      "inputName": "prompt",
+      "type": "scalar"
+    },
+    "seed3": {
+      "nodeId": "30",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "view4": {
+      "nodeId": "32",
+      "inputName": "prompt",
+      "type": "scalar"
+    },
+    "seed4": {
+      "nodeId": "34",
+      "inputName": "seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "50",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

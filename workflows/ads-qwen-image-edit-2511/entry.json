@@ -1,0 +1,92 @@
+{
+  "name": "ads-qwen-image-edit-2511",
+  "title": "Ads: product shots from your product photos with Qwen Image Edit 2511",
+  "description": "Writes one instruction from the kind of ad, the style and your words, and edits up to 3 reference images, your product photos and a character, into product shots with Qwen Image Edit 2511. Built from Comfy's template image_qwen_image_edit_2511.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "qwen_image_edit_2511_fp8mixed.safetensors",
+    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "qwen_image_vae.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "prompt": {
+      "nodeId": "501",
+      "inputName": "string",
+      "type": "scalar"
+    },
+    "lineBreak": {
+      "nodeId": "503",
+      "inputName": "replace",
+      "type": "scalar"
+    },
+    "kindLead": {
+      "nodeId": "504",
+      "inputName": "string_a",
+      "type": "scalar"
+    },
+    "style": {
+      "nodeId": "504",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "wordsLead": {
+      "nodeId": "505",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "wordsEnd": {
+      "nodeId": "507",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "doubledStop": {
+      "nodeId": "509",
+      "inputName": "regex_pattern",
+      "type": "scalar"
+    },
+    "reference1": {
+      "nodeId": "41",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "reference2": {
+      "nodeId": "83",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "reference3": {
+      "nodeId": "191",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "seed": {
+      "nodeId": "169",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "count": {
+      "nodeId": "192",
+      "inputName": "batch_size",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "192",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "192",
+      "inputName": "height",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "9",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

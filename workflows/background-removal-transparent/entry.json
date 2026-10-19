@@ -1,0 +1,28 @@
+{
+  "name": "background-removal-transparent",
+  "title": "Remove background: a transparent PNG with BiRefNet",
+  "description": "Finds the subject of your image with a BiRefNet model and saves the image with everything behind the subject made transparent. The model file is an input, so the same graph runs BiRefNet and Lucida. Built from Comfy's template utility_birefnet_remove_background.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": ["birefnet.safetensors", "lucida.safetensors"],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "image": {
+      "nodeId": "1",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "model": {
+      "nodeId": "2",
+      "inputName": "bg_removal_name",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "9",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "upscale-video-real-esrgan",
+  "title": "Upscale a video 2 or 4 times with Real-ESRGAN",
+  "description": "Raises the resolution of every frame of one clip with Real-ESRGAN x4plus and keeps its frame rate and sound. A 2 times run makes the 4 times frames and scales them down by half. Built from Comfy's template video_upscale_gan_x4.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": ["RealESRGAN_x4plus.safetensors"],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "video": {
+      "nodeId": "1",
+      "inputName": "file",
+      "type": "cloud-asset"
+    },
+    "scale": {
+      "nodeId": "4",
+      "inputName": "scale_by",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "12",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}

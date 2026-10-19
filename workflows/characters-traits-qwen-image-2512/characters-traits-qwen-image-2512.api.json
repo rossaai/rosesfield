@@ -1,0 +1,177 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "qwen_image_2512_fp8_e4m3fn.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    }
+  },
+  "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    }
+  },
+  "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": ["112", 0],
+      "clip": ["2", 0]
+    }
+  },
+  "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "low resolution, low quality, deformed hands, deformed limbs, extra fingers, oversaturated, waxy skin, blurred face, text, watermark",
+      "clip": ["2", 0]
+    }
+  },
+  "6": {
+    "class_type": "EmptySD3LatentImage",
+    "inputs": {
+      "width": 1056,
+      "height": 1408,
+      "batch_size": 2
+    }
+  },
+  "7": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["9", 0],
+      "positive": ["4", 0],
+      "negative": ["5", 0],
+      "latent_image": ["6", 0],
+      "seed": 0,
+      "steps": 50,
+      "cfg": 4,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    }
+  },
+  "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["7", 0],
+      "vae": ["3", 0]
+    }
+  },
+  "9": {
+    "class_type": "ModelSamplingAuraFlow",
+    "inputs": {
+      "model": ["1", 0],
+      "shift": 3.1
+    }
+  },
+  "13": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": ["8", 0],
+      "filename_prefix": "rosesfield-characters"
+    }
+  },
+  "101": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": "Half-body photograph of one person, framed from the waist up",
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "102": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["101", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "103": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["102", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "104": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["103", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "105": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["104", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "106": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["105", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "107": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["106", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "108": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["107", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "109": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["108", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "110": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["109", 0],
+      "string_b": "",
+      "delimiter": ""
+    }
+  },
+  "111": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["110", 0],
+      "string_b": ", neutral expression, looking straight at the camera, front view, soft even light, sharp focus",
+      "delimiter": ""
+    }
+  },
+  "112": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["111", 0],
+      "string_b": "",
+      "delimiter": ". "
+    }
+  }
+}

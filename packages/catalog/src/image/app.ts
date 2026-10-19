@@ -1,0 +1,60 @@
+import { defineApp } from "#define-app"
+import { imageBinding } from "#image/comfy/image-binding"
+import {
+  defaultModel,
+  defaultResolution,
+  imageModels,
+  resolutionKeyOf,
+  resolutionsOf,
+  resolutionValues,
+} from "#image/image-models"
+
+export const app = defineApp({
+  id: "image",
+  nameKey: "image.name",
+  category: "image",
+  inputs: [
+    {
+      type: "prompt",
+      name: "prompt",
+      labelKey: "image.input.prompt.label",
+      presence: "required",
+      maxLength: 2000,
+    },
+    {
+      type: "choice",
+      name: "model",
+      labelKey: "image.input.model.label",
+      options: imageModels.map((model) => ({
+        value: model.value,
+        labelKey: model.labelKey,
+      })),
+      default: defaultModel,
+    },
+    {
+      type: "choice",
+      name: "resolution",
+      labelKey: "image.input.resolution.label",
+      options: resolutionValues.map((value) => ({
+        value,
+        labelKey: resolutionKeyOf(value),
+      })),
+      default: defaultResolution,
+      bounds: imageModels.map((model) => ({
+        when: [{ input: "model", is: [model.value] }],
+        values: resolutionsOf(model),
+      })),
+    },
+    { type: "seed", name: "seed", labelKey: "image.input.seed.label" },
+  ],
+  output: {
+    kind: "image",
+    count: { default: 1, max: 4 },
+    aspectRatios: {
+      options: ["1:1", "4:3", "3:4", "16:9", "9:16"],
+      default: "1:1",
+    },
+  },
+  engine: imageBinding,
+  limits: { timeoutSeconds: 600, maxRetries: 2 },
+})

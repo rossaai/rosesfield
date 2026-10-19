@@ -1,0 +1,125 @@
+import { describe, expect, it } from "vitest"
+import { t } from "@/copy/t"
+import {
+  clipProblem,
+  type MediaFacts,
+  nearestRatio,
+  photoProblem,
+} from "@/studio/motion/motion-checks"
+
+const clip = (change: Partial<MediaFacts>): MediaFacts => ({
+  mime: "video/mp4",
+  bytes: 8_000_000,
+  width: 720,
+  height: 1280,
+  seconds: 5,
+  ...change,
+})
+
+const photo = (change: Partial<MediaFacts>): MediaFacts => ({
+  mime: "image/jpeg",
+  bytes: 3_000_000,
+  width: 3024,
+  height: 4032,
+  seconds: null,
+  ...change,
+})
+
+function words(problem: ReturnType<typeof clipProblem>): string | null {
+  return problem === null ? null : t(problem.key, problem.values)
+}
+
+describe("the motion checks", () => {
+  it.each([
+    { width: 1080, height: 1920, ratio: "9:16" },
+    { width: 3024, height: 4032, ratio: "3:4" },
+    { width: 1000, height: 1100, ratio: "1:1" },
+    { width: 4032, height: 3024, ratio: "4:3" },
+    { width: 1920, height: 1080, ratio: "16:9" },
+    { width: 3000, height: 1000, ratio: "16:9" },
+    { width: 650, height: 1000, ratio: "3:4" },
+    { width: 649, height: 1000, ratio: "9:16" },
+  ])(
+    "picks $ratio for a photo of $width by $height",
+    ({ width, height, ratio }) => {
+      expect(nearestRatio(width, height)).toBe(ratio)
+    }
+  )
+
+  it("passes a clip of 5 seconds and names a clip of 14 seconds in the app's words", () => {
+    expect(clipProblem(clip({}))).toBeNull()
+    expect(words(clipProblem(clip({ seconds: 14 })))).toBe(
+      "This clip runs 14 seconds. Pick one of 10 seconds or less."
+    )
+    expect(words(clipProblem(clip({ seconds: 1.5 })))).toBe(
+      "This clip runs 1.5 seconds. Pick one of 2 seconds or more."
+    )
+    expect(clipProblem(clip({ seconds: 10 }))).toBeNull()
+  })
+
+  it("refuses a clip past 100 MB and a clip in a format the app does not take", () => {
+    expect(clipProblem(clip({ bytes: 120_000_000 }))?.key).toBe(
+      "field.asset.tooLarge"
+    )
+    expect(clipProblem(clip({ mime: "video/x-matroska" }))).toEqual({
+      name: "clip",
+      key: "field.asset.wrongKind",
+      values: { kinds: "MP4, MOV or WebM" },
+    })
+    expect(clipProblem(clip({ mime: "video/quicktime" }))).toBeNull()
+  })
+
+  it("refuses a photo past 20 MB or in GIF, and passes a JPEG of a phone", () => {
+    expect(photoProblem(photo({}))).toBeNull()
+    expect(photoProblem(photo({ bytes: 21_000_000 }))?.key).toBe(
+      "field.asset.tooLarge"
+    )
+    expect(words(photoProblem(photo({ mime: "image/gif" })))).toBe(
+      "This input takes PNG, JPEG or WebP. Pick another file."
+    )
+  })
+
+  it.each([
+    { seconds: 10.04, said: null },
+    { seconds: 1.96, said: null },
+    {
+      seconds: 10.06,
+      said: "This clip runs 10.1 seconds. Pick one of 10 seconds or less.",
+    },
+    {
+      seconds: 1.94,
+      said: "This clip runs 1.9 seconds. Pick one of 2 seconds or more.",
+    },
+  ])(
+    "judges a clip of $seconds seconds by the length it shows",
+    ({ seconds, said }) => {
+      expect(words(clipProblem(clip({ seconds })))).toBe(said)
+    }
+  )
+
+  it("refuses a clip the browser cannot read, so no run starts on an unknown length", () => {
+    const said =
+      "This input takes an MP4, MOV or WebM clip this browser can open. Pick another file."
+    expect(words(clipProblem(clip({ seconds: null })))).toBe(said)
+    expect(words(clipProblem(clip({ width: null, height: null })))).toBe(said)
+    expect(
+      words(clipProblem(clip({ seconds: null, width: null, height: null })))
+    ).toBe(said)
+  })
+
+  it("refuses a photo the browser cannot read, so the ratio never stays at its default", () => {
+    expect(words(photoProblem(photo({ width: null, height: null })))).toBe(
+      "This input takes a PNG, JPEG or WebP photo this browser can open. Pick another file."
+    )
+    expect(photoProblem(photo({ height: null }))?.name).toBe("photo")
+  })
+
+  it("names the format or size first when a file is both wrong and unreadable", () => {
+    expect(
+      clipProblem(clip({ mime: "video/x-matroska", seconds: null }))?.values
+    ).toEqual({ kinds: "MP4, MOV or WebM" })
+    expect(
+      photoProblem(photo({ bytes: 21_000_000, width: null, height: null }))?.key
+    ).toBe("field.asset.tooLarge")
+  })
+})

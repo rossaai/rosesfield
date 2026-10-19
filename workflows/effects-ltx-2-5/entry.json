@@ -1,0 +1,46 @@
+{
+  "name": "effects-ltx-2-5",
+  "title": "Effects: one photo to a short effect video on LTX 2.5",
+  "description": "Locks your photo at frame 0, makes a matte of its subject, builds an end frame for the effect and renders one continuous shot in two stages. This file holds the rain recipe: an end frame from the Water-Simulation IC-LoRA and the photo held at the last frame through the subject matte. The other 7 recipes change it in the catalog.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": [
+    "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
+    "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+    "ltx-2.5-video-vae-bf16.safetensors",
+    "ltx-2.5-audio-vae-bf16.safetensors",
+    "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
+    "ltx-2.5-22b-ic-lora-water-simulation-0.9.safetensors",
+    "birefnet.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "photo": { "nodeId": "395", "inputName": "image", "type": "cloud-asset" },
+    "detail": { "nodeId": "502", "inputName": "string_b", "type": "scalar" },
+    "seed": { "nodeId": "339", "inputName": "noise_seed", "type": "scalar" },
+    "frames": { "nodeId": "356", "inputName": "length", "type": "scalar" },
+    "audioFrames": {
+      "nodeId": "366",
+      "inputName": "frames_number",
+      "type": "scalar"
+    },
+    "width": { "nodeId": "356", "inputName": "width", "type": "scalar" },
+    "height": { "nodeId": "356", "inputName": "height", "type": "scalar" },
+    "endFrameSeed": {
+      "nodeId": "439",
+      "inputName": "noise_seed",
+      "type": "scalar"
+    },
+    "endFrameWidth": {
+      "nodeId": "433",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "endFrameHeight": {
+      "nodeId": "433",
+      "inputName": "height",
+      "type": "scalar"
+    }
+  },
+  "outputs": [{ "nodeId": "75", "key": "images", "kind": "video" }]
+}

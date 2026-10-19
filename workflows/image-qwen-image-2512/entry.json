@@ -1,0 +1,47 @@
+{
+  "name": "image-qwen-image-2512",
+  "title": "Image: text to image with Qwen Image 2512",
+  "description": "Makes up to 4 images from a prompt with Qwen Image 2512 in 50 steps. Built from Comfy's template image_qwen_Image_2512.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "qwen_image_2512_fp8_e4m3fn.safetensors",
+    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "qwen_image_vae.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "prompt": {
+      "nodeId": "227",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "230",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "count": {
+      "nodeId": "232",
+      "inputName": "batch_size",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "232",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "232",
+      "inputName": "height",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "9",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

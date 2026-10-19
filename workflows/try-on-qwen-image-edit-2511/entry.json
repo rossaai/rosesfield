@@ -1,0 +1,42 @@
+{
+  "name": "try-on-qwen-image-edit-2511",
+  "title": "Try on: dress a person in clothes from a second image with Qwen Image Edit 2511",
+  "description": "Takes a photo of a person and a photo of clothes, and edits the first photo so the person wears those clothes. The prompt names which part to change. Built from Comfy's template image_qwen_image_edit_2511.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "qwen_image_edit_2511_fp8mixed.safetensors",
+    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "qwen_image_vae.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "person": {
+      "nodeId": "41",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "clothes": {
+      "nodeId": "83",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "prompt": {
+      "nodeId": "151",
+      "inputName": "prompt",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "169",
+      "inputName": "seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "9",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

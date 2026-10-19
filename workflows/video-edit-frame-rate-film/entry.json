@@ -1,0 +1,38 @@
+{
+  "name": "video-edit-frame-rate-film",
+  "title": "Video edit: raise the frame rate of a clip 2 or 4 times with FILM",
+  "description": "Makes new frames between the frames of your clip with FILM and raises its frame rate 2 or 4 times, with the sound kept or left out. Built from Comfy's template utility-frame_interpolation-film.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": ["google-research/frame-interpolation"],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "source": {
+      "nodeId": "1",
+      "inputName": "file",
+      "type": "cloud-asset"
+    },
+    "keepSound": {
+      "nodeId": "11",
+      "inputName": "value",
+      "type": "scalar"
+    },
+    "multiplier": {
+      "nodeId": "9",
+      "inputName": "multiplier",
+      "type": "scalar"
+    },
+    "frameRateExpression": {
+      "nodeId": "10",
+      "inputName": "expression",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "14",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}

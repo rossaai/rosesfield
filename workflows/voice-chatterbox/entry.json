@@ -1,0 +1,21 @@
+{
+  "name": "voice-chatterbox",
+  "title": "Voice: speech in 23 languages with Chatterbox",
+  "description": "Reads your script aloud in one of 23 languages. With a recording, it speaks in the voice of that recording. Without one, the voice node runs with no audio_prompt and uses the model's own voice. Built from Comfy's template audio-chatterbox_tts_multilingual.",
+  "mediaType": "audio",
+  "openSource": true,
+  "models": ["t3_mtl23ls_v2.safetensors", "s3gen.pt", "ve.pt", "conds.pt"],
+  "requiresCustomNodes": ["comfyui_fill-chatterbox"],
+  "inputBindings": {
+    "script": { "nodeId": "1", "inputName": "text", "type": "scalar" },
+    "language": { "nodeId": "1", "inputName": "language", "type": "scalar" },
+    "expression": {
+      "nodeId": "1",
+      "inputName": "exaggeration",
+      "type": "scalar"
+    },
+    "seed": { "nodeId": "1", "inputName": "seed", "type": "scalar" },
+    "voice": { "nodeId": "2", "inputName": "audio", "type": "cloud-asset" }
+  },
+  "outputs": [{ "nodeId": "3", "key": "audio", "kind": "audio" }]
+}

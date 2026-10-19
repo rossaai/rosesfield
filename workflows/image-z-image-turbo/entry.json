@@ -1,0 +1,47 @@
+{
+  "name": "image-z-image-turbo",
+  "title": "Image: text to image with Z-Image Turbo",
+  "description": "Makes up to 4 images from a prompt with Z-Image Turbo in 8 steps. Built from Comfy's template image_z_image_turbo.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "z_image_turbo_bf16.safetensors",
+    "qwen_3_4b.safetensors",
+    "ae.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "prompt": {
+      "nodeId": "27",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "3",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "count": {
+      "nodeId": "13",
+      "inputName": "batch_size",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "13",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "13",
+      "inputName": "height",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "9",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

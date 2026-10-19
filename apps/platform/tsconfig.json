@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["es2024", "dom", "dom.iterable"],
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@rosesfield/ui/*": ["../../packages/ui/src/*"]
+    }
+  },
+  "include": ["src", "test", "e2e", "*.config.ts"]
+}
