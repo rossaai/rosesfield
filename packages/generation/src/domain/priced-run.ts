@@ -46,17 +46,12 @@ function formSettingOf(
   inputs: RunInputs
 ): [string, Setting][] {
   const value = inputs[field.name]
-  switch (field.kind) {
-    case "prompt":
-    case "text":
-      return []
-    case "media":
-      return [[field.name, Array.isArray(value) ? value.length : 0]]
-    default:
-      return /seed/i.test(field.name)
-        ? []
-        : [[field.name, settingOf(value) ?? field.default]]
+  if (field.kind === "prompt" || /seed/i.test(field.name)) {
+    return []
   }
+  return field.kind === "media"
+    ? [[field.name, Array.isArray(value) ? value.length : 0]]
+    : [[field.name, settingOf(value) ?? field.default]]
 }
 
 function appSettingOf(
