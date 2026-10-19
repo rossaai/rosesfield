@@ -74,7 +74,7 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     this.meter = options.meter ?? null
     this.http = new RouterHttp({
       apiKey: options.apiKey,
-      fetch: options.fetch ?? fetch,
+      fetch: options.fetch ?? ((input, init) => fetch(input, init)),
       timeoutMs:
         options.requestTimeoutMs ??
         ComfyRouterGenerationEngine.requestTimeoutMs,
