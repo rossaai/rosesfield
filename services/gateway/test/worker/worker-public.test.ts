@@ -10,10 +10,15 @@ import {
   routes,
   runPageResponse,
 } from "@rosesfield/contract"
+import { generateSignedCookie } from "hono/cookie"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { createTestHarness } from "wrangler"
 import { gatewayRoutes, settingsResponse } from "#gateway.contract"
-import { sessionCookie } from "#session/session-cookie"
+import {
+  accountSessionOf,
+  keyTagOf,
+  sessionCookie,
+} from "#session/session-cookie"
 import { keyHeaders } from "#session/visitor-keys"
 import { pngBytes, sessionSecret } from "../sample-apps"
 import { gatewayRoot, testConfig } from "./platform-proxy"
@@ -36,6 +41,16 @@ const worker = createTestHarness({
 
 const cookiePattern = new RegExp(`${sessionCookie.name}=([^;]+)`)
 
+async function accountCookie(key: string, accountId: string): Promise<string> {
+  const value = `${await accountSessionOf(accountId)}${sessionCookie.tagMark}${await keyTagOf(sessionSecret, key)}`
+  const signed = await generateSignedCookie(
+    sessionCookie.name,
+    value,
+    sessionSecret
+  )
+  return cookiePattern.exec(signed)?.[1] ?? ""
+}
+
 beforeAll(async () => {
   await worker.listen()
   await worker.getWorker().applyD1Migrations("DB")
@@ -52,7 +67,7 @@ type CallInit = {
 type WorkerResponse = Awaited<ReturnType<typeof worker.fetch>>
 
 class WorkerVisitor {
-  private cookie: string | null = null
+  cookie: string | null = null
 
   async call(path: string, init: CallInit = {}): Promise<WorkerResponse> {
     const response = await worker.fetch(`https://demo.rosesfield.test${path}`, {
@@ -79,6 +94,7 @@ async function codeOf(response: WorkerResponse): Promise<string> {
 describe("the Workers entry in public mode", () => {
   it("serves a visitor without an owner token and keeps their session in a signed cookie", async () => {
     const visitor = new WorkerVisitor()
+    visitor.cookie = await accountCookie("comfyui-visitor-key", "uid-visitor")
 
     const response = await visitor.call(gatewayRoutes.getSettings.path, {
       headers: { [keyHeaders.engine]: "comfyui-visitor-key" },

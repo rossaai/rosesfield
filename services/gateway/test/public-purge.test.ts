@@ -126,7 +126,7 @@ describe("public mode's retention", () => {
       body: JSON.stringify({ name: "Bea", references: [asset.id], notes: "" }),
     })
     const { character } = characterResponse.parse(await created.json())
-    clock.advance(2 * dayMs)
+    clock.advance(8 * dayMs)
 
     await gateway?.purge()
 
@@ -134,6 +134,27 @@ describe("public mode's retention", () => {
       buildPath(routes.getCharacter.path, { characterId: character.id })
     )
     expect(read.status).toBe(404)
+  })
+
+  it("keeps a visitor's older work while the visitor comes back inside the retention", async () => {
+    const clock = new FixedClock({ now: start })
+    const { visitor } = openPublic(clock)
+    const one = visitor()
+    const old = await fill(one)
+    for (let day = 0; day < 4; day += 1) {
+      clock.advance(5 * dayMs)
+      await one.call(routes.listRuns.path)
+    }
+
+    const purged = await gateway?.purge()
+
+    expect(purged).toMatchObject({ runs: 0, assets: 0, characters: 0 })
+    const runs = runPageResponse.parse(
+      await (await one.call(routes.listRuns.path)).json()
+    )
+    expect(runs.runs.map((run) => run.id)).toEqual([old.run.id])
+    clock.advance(8 * dayMs)
+    expect(await gateway?.purge()).toMatchObject({ runs: 1, assets: 1 })
   })
 
   it("keeps each visitor's conversations apart, and deletes a session's conversations after the retention", async () => {

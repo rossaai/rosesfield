@@ -10,7 +10,13 @@ import { characterRoutes } from "#routes/character-routes"
 import { errorResponse, routeNotFound } from "#routes/error-response"
 import { appRoutes, runRoutes } from "#routes/run-routes"
 import { settingsRoutes } from "#routes/settings-routes"
+import { type AccountReader, accountRoute } from "#session/account-routes"
 import { type SessionGuardOptions, sessionGuard } from "#session/session-cookie"
+import {
+  type ShareMount,
+  shareApiRoute,
+  sharePublicRoutes,
+} from "#share/share-routes"
 
 export type GatewayContext = Context<GatewayEnv>
 
@@ -27,8 +33,18 @@ export type GatewayOptions = {
   guard: GatewayGuard
   scopeFor: (c: GatewayContext) => Promise<RequestScope>
   agent: AgentMount
+  account?: AccountReader
+  shares?: ShareMount
+  beforeRun?: MiddlewareHandler
   platform: readonly MiddlewareHandler[]
 }
+
+const runStartPaths: readonly string[] = [
+  "/api/apps/:appId/runs",
+  "/api/runs/:runId/repeat",
+  "/api/agent/*",
+  mcpPath,
+]
 
 function guardOf(guard: GatewayGuard): MiddlewareHandler<GatewayEnv> {
   if (guard.mode === "public") {
@@ -63,6 +79,15 @@ export function createGateway(options: GatewayOptions): GatewayApp {
   const guard = guardOf(options.guard)
   app.use("/api/*", guard)
   app.use(mcpPath, guard)
+  const { beforeRun, shares, account } = options
+  if (beforeRun !== undefined) {
+    for (const path of runStartPaths) {
+      app.use(path, beforeRun)
+    }
+  }
+  if (shares !== undefined) {
+    sharePublicRoutes(app, shares)
+  }
   if (options.agent.mode === "forward") {
     app.all("/api/agent/*", options.agent.forward)
   }
@@ -75,6 +100,12 @@ export function createGateway(options: GatewayOptions): GatewayApp {
   assetRoutes(app)
   characterRoutes(app)
   settingsRoutes(app)
+  if (account !== undefined) {
+    accountRoute(app, account)
+  }
+  if (shares !== undefined) {
+    shareApiRoute(app, shares)
+  }
   if (options.agent.mode === "routes") {
     agentRoutes(app)
   }

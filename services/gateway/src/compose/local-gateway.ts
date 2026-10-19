@@ -1,4 +1,5 @@
 import { mkdirSync } from "node:fs"
+import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import type { PiAgentHarness } from "@rosesfield/agent"
@@ -32,15 +33,23 @@ import type { OwnerLock, PublicAccess, ServerEnv } from "#env"
 import { createGateway, type GatewayContext, type GatewayGuard } from "#gateway"
 import type { GatewayApp, RequestScope } from "#gateway-env"
 import { TokenTries } from "#lock/token-tries"
+import { ownerAccount, visitorAccount } from "#session/account-routes"
 import { migrateSessionTables } from "#session/bun-sqlite-session-migration"
+import { ComfyAccount } from "#session/comfy-account"
+import { KeyProbe } from "#session/key-probe"
 import { SessionLimiter } from "#session/session-limiter"
 import { type PurgeCount, SessionPurge } from "#session/session-purge"
+import { SessionVisits } from "#session/session-visits"
+import { SharePurge } from "#share/share-purge"
+import type { ShareMount } from "#share/share-routes"
+import { SqliteShareRepository } from "#share/sqlite-share-repository"
+import { SpendCap } from "#spend/spend-cap"
 
 export type LocalGateway = {
   app: GatewayApp
   handlers: Handlers
   jobs: TimerJobRunner
-  purge: () => Promise<PurgeCount & { conversations: number }>
+  purge: () => Promise<PurgeCount & { conversations: number; shares: number }>
   close: () => Promise<void>
 }
 
@@ -60,6 +69,8 @@ type Parts = {
   db: BunSQLiteDatabase
   store: FilesystemAssetStore
   engineOptions: EngineOptions
+  account: ComfyAccount
+  shares: ShareMount
 }
 
 const platformDist = fileURLToPath(
@@ -84,20 +95,30 @@ export function composeLocalGateway(
   migrateRunTable(db)
   migrateLibraryTables(db)
   migrateSessionTables(db)
+  const root =
+    options.platformRoot === undefined ? platformDist : options.platformRoot
+  const store = new FilesystemAssetStore({ root: join(env.dataDir, "assets") })
+  const fetchPart = options.fetch === undefined ? {} : { fetch: options.fetch }
   const parts: Parts = {
     env,
     apps: options.apps,
     clock,
     db,
-    store: new FilesystemAssetStore({ root: join(env.dataDir, "assets") }),
+    store,
     engineOptions: {
       clock,
-      ...(options.fetch === undefined ? {} : { fetch: options.fetch }),
+      meter: sharedCreditMeter(clock),
+      ...fetchPart,
       ...(options.warmCatalog === true ? { warmCatalog: true } : {}),
     },
+    account: new ComfyAccount(fetchPart),
+    shares: {
+      shares: new SqliteShareRepository({ db }),
+      store,
+      clock,
+      page: root === null ? null : () => pageOf(root),
+    },
   }
-  const root =
-    options.platformRoot === undefined ? platformDist : options.platformRoot
   const platform = root === null ? [] : platformFiles(root)
   return env.access.mode === "public"
     ? composePublic(parts, env.access, platform)
@@ -114,10 +135,7 @@ function ownerHandlers(parts: Parts): Built<TimerJobRunner> {
       assets: new DrizzleAssetRepository({ db }),
       characters: new DrizzleCharacterRepository({ db }),
       store: parts.store,
-      engines: pickEngines(parts.env.engine, {
-        ...parts.engineOptions,
-        meter: sharedCreditMeter(parts.clock),
-      }),
+      engines: pickEngines(parts.env.engine, parts.engineOptions),
       clock: parts.clock,
       prices: new DrizzlePriceBook({ db }),
     },
@@ -146,11 +164,28 @@ function composeOwner(
     tries: new TokenTries({ clock: parts.clock }),
     clientOf,
   }
+  const key = env.engine.target === "demo" ? null : env.engine.apiKey
+  const cap =
+    key === null || env.spendCapCredits === undefined
+      ? null
+      : new SpendCap({
+          db: parts.db,
+          clock: parts.clock,
+          capCredits: env.spendCapCredits,
+          creditsNow: () => parts.account.creditsOf(key),
+        })
   const app = createGateway({
     apps: parts.apps,
     guard,
     scopeFor: async () => scope,
     agent: { mode: "routes" },
+    account: ownerAccount({
+      probe: new KeyProbe({ account: parts.account }),
+      key,
+      cap,
+    }),
+    shares: parts.shares,
+    ...(cap === null ? {} : { beforeRun: cap.guard() }),
     platform,
   })
   return {
@@ -162,11 +197,29 @@ function composeOwner(
       assets: 0,
       characters: 0,
       conversations: 0,
+      shares: await sharePurgeOf(parts).run(),
     }),
     close: async () => {
       jobs.stop()
       await agent?.close()
     },
+  }
+}
+
+function publicGuard(parts: Parts, access: PublicAccess): GatewayGuard {
+  const { db, clock } = parts
+  const limiter = new SessionLimiter({
+    db,
+    clock,
+    requestsPerMinute: access.requestsPerMinute,
+  })
+  return {
+    mode: "public",
+    secret: access.sessionSecret,
+    retentionDays: access.retentionDays,
+    take: (sessionId) => limiter.take(sessionId),
+    accountOf: (key) => parts.account.idOf(key),
+    visits: new SessionVisits({ db, clock }),
   }
 }
 
@@ -186,11 +239,6 @@ function composePublic(
           apps: parts.apps,
           clock,
         })
-  const limiter = new SessionLimiter({
-    db,
-    clock,
-    requestsPerMinute: access.requestsPerMinute,
-  })
   const sessionPurge = new SessionPurge({
     db,
     store: parts.store,
@@ -209,14 +257,14 @@ function composePublic(
     })
   const app = createGateway({
     apps: parts.apps,
-    guard: {
-      mode: "public",
-      secret: access.sessionSecret,
-      retentionDays: access.retentionDays,
-      take: (sessionId) => limiter.take(sessionId),
-    },
+    guard: publicGuard(parts, access),
     scopeFor,
     agent: { mode: "routes" },
+    account: visitorAccount({
+      probe: new KeyProbe({ account: parts.account }),
+      retentionDays: access.retentionDays,
+    }),
+    shares: parts.shares,
     platform,
   })
   return {
@@ -226,11 +274,28 @@ function composePublic(
     purge: async () => ({
       ...(await sessionPurge.run()),
       conversations: agents?.purge(sessionPurge.cutoff()) ?? 0,
+      shares: await sharePurgeOf(parts).run(),
     }),
     close: async () => {
       jobs.stop()
       await agents?.closeAll()
     },
+  }
+}
+
+function sharePurgeOf(parts: Parts): SharePurge {
+  return new SharePurge({
+    shares: parts.shares.shares,
+    store: parts.store,
+    clock: parts.clock,
+  })
+}
+
+async function pageOf(root: string): Promise<string | null> {
+  try {
+    return await readFile(join(root, "index.html"), "utf8")
+  } catch {
+    return null
   }
 }
 

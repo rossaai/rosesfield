@@ -18,7 +18,13 @@ import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
 import { readServerEnv } from "#env"
 import { gatewayRoutes, settingsResponse } from "#gateway.contract"
 import { keyHeaders } from "#session/visitor-keys"
-import { fakeComfy } from "./fixtures/comfy-fetch"
+import {
+  accountPath,
+  balancePath,
+  type ComfyCall,
+  type FakeComfy,
+  fakeComfy,
+} from "./fixtures/comfy-fetch"
 import { type Seen, Visitor } from "./fixtures/visitor"
 import { imageApp, pngBytes, sessionSecret, start } from "./sample-apps"
 
@@ -66,6 +72,12 @@ function openPublic(options: PublicOptions = {}) {
   const visitor = (keys: Record<string, string> = {}) =>
     new Visitor({ app: gateway?.app ?? fail(), keys, seen })
   return { dataDir, comfy, clock, seen, visitor, gateway }
+}
+
+function engineCalls(comfy: FakeComfy): ComfyCall[] {
+  return comfy.calls.filter(
+    (call) => call.path !== accountPath && call.path !== balancePath
+  )
 }
 
 function fail(): never {
@@ -222,14 +234,16 @@ describe("a public deployment", () => {
     expect(first.status).toBe("queued")
     expect(second.status).toBe("done")
     expect(second.outputs).toHaveLength(1)
-    expect(comfy.calls.map((call) => `${call.method} ${call.path}`)).toEqual([
+    expect(
+      engineCalls(comfy).map((call) => `${call.method} ${call.path}`)
+    ).toEqual([
       "POST /api/v2/jobs",
       "GET /api/v2/jobs/7f3d2c1b-9a8e-4d6f-b012-3c4d5e6f7a8b",
       "GET /api/v2/jobs/7f3d2c1b-9a8e-4d6f-b012-3c4d5e6f7a8b",
       "GET /api/v2/assets/2b3e4f56-8a7b-4c2d-9e4f-5a6b9f8a1c0d/content",
     ])
     expect(
-      comfy.calls.every(
+      engineCalls(comfy).every(
         (call) => call.authorization === "Bearer comfyui-visitor-key"
       )
     ).toBe(true)
@@ -246,7 +260,7 @@ describe("a public deployment", () => {
     )
 
     expect(runResponse.parse(await read.json()).run.status).toBe("queued")
-    expect(comfy.calls).toEqual([])
+    expect(engineCalls(comfy)).toEqual([])
   })
 
   it("checks the visitor's key with the engine, and refuses a key header no key can hold", async () => {
@@ -271,7 +285,7 @@ describe("a public deployment", () => {
         { engine: "demo", target: "demo", origin: "demo", check: "valid" },
       ],
     })
-    expect(comfy.calls.map((call) => call.authorization)).toEqual([
+    expect(engineCalls(comfy).map((call) => call.authorization)).toEqual([
       "Bearer comfyui-visitor-key",
     ])
     expect(bad.status).toBe(400)

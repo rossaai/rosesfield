@@ -8,8 +8,16 @@ import { checkEngineSettings } from "#engine/engine-target"
 import { type AgentMount, createGateway } from "#gateway"
 import type { GatewayApp } from "#gateway-env"
 import { TokenTries } from "#lock/token-tries"
+import { ownerAccount, visitorAccount } from "#session/account-routes"
+import { ComfyAccount } from "#session/comfy-account"
+import { KeyProbe } from "#session/key-probe"
 import { SessionLimiter } from "#session/session-limiter"
 import { SessionPurge } from "#session/session-purge"
+import { SessionVisits } from "#session/session-visits"
+import { SharePurge } from "#share/share-purge"
+import type { ShareMount } from "#share/share-routes"
+import { SqliteShareRepository } from "#share/sqlite-share-repository"
+import { SpendCap } from "#spend/spend-cap"
 import { forwardToAgentHost } from "#worker/agent-forward"
 import { AgentHost } from "#worker/agent-host"
 import { AlarmJobRunner } from "#worker/alarm-job-runner"
@@ -25,32 +33,81 @@ export { AgentHost, RunWatcher }
 
 let gateway: GatewayApp | null = null
 
-function composeWorkerGateway(env: WorkerBindings): GatewayApp {
-  const parts = workerParts(env)
-  const { vars } = parts
-  checkEngineSettings(vars.engine)
-  const agent: AgentMount = {
-    mode: "forward",
-    forward: forwardToAgentHost(env.AGENTS),
+const pageUrl = "https://rosesfield.assets/"
+
+function shareMount(env: WorkerBindings, parts: WorkerParts): ShareMount {
+  return {
+    shares: new SqliteShareRepository({ db: parts.db }),
+    store: parts.store,
+    clock: parts.clock,
+    page: async () => {
+      const response = await env.ASSETS.fetch(new Request(pageUrl))
+      return response.ok ? response.text() : null
+    },
   }
-  if (vars.access.mode === "public") {
-    const limiter = new SessionLimiter({
-      db: parts.db,
-      clock: parts.clock,
-      requestsPerMinute: vars.access.requestsPerMinute,
-    })
-    return createGateway({
-      apps: parts.apps,
-      guard: {
-        mode: "public",
-        secret: vars.access.sessionSecret,
-        retentionDays: vars.access.retentionDays,
-        take: (sessionId) => limiter.take(sessionId),
-      },
-      scopeFor: (c) => visitorScopeFor(c, { ...parts, agents: null }),
-      agent,
-      platform: [],
-    })
+}
+
+function composePublic(
+  env: WorkerBindings,
+  parts: WorkerParts,
+  agent: AgentMount
+): GatewayApp {
+  const { access } = parts.vars
+  if (access.mode !== "public") {
+    throw new TypeError("composePublic needs public mode")
+  }
+  const account = new ComfyAccount()
+  const limiter = new SessionLimiter({
+    db: parts.db,
+    clock: parts.clock,
+    requestsPerMinute: access.requestsPerMinute,
+  })
+  return createGateway({
+    apps: parts.apps,
+    guard: {
+      mode: "public",
+      secret: access.sessionSecret,
+      retentionDays: access.retentionDays,
+      take: (sessionId) => limiter.take(sessionId),
+      accountOf: (key) => account.idOf(key),
+      visits: new SessionVisits({ db: parts.db, clock: parts.clock }),
+    },
+    scopeFor: (c) => visitorScopeFor(c, { ...parts, agents: null }),
+    agent,
+    account: visitorAccount({
+      probe: new KeyProbe({ account }),
+      retentionDays: access.retentionDays,
+    }),
+    shares: shareMount(env, parts),
+    platform: [],
+  })
+}
+
+function spendCapOf(
+  parts: WorkerParts,
+  account: ComfyAccount
+): SpendCap | null {
+  const { engine, spendCapCredits } = parts.vars
+  const key = engine.target === "demo" ? null : engine.apiKey
+  if (spendCapCredits === undefined || key === null) {
+    return null
+  }
+  return new SpendCap({
+    db: parts.db,
+    clock: parts.clock,
+    capCredits: spendCapCredits,
+    creditsNow: () => account.creditsOf(key),
+  })
+}
+
+function composeOwner(
+  env: WorkerBindings,
+  parts: WorkerParts,
+  agent: AgentMount
+): GatewayApp {
+  const { vars } = parts
+  if (vars.access.mode !== "owner") {
+    throw new TypeError("composeOwner needs owner mode")
   }
   const { handlers } = buildHandlers(
     ownerPorts(parts),
@@ -61,6 +118,8 @@ function composeWorkerGateway(env: WorkerBindings): GatewayApp {
     agent: null,
     settings: ownerSettings(vars),
   })
+  const account = new ComfyAccount()
+  const cap = spendCapOf(parts, account)
   return createGateway({
     apps: parts.apps,
     guard: {
@@ -71,8 +130,27 @@ function composeWorkerGateway(env: WorkerBindings): GatewayApp {
     },
     scopeFor: async () => scope,
     agent,
+    account: ownerAccount({
+      probe: new KeyProbe({ account }),
+      key: vars.engine.target === "demo" ? null : vars.engine.apiKey,
+      cap,
+    }),
+    shares: shareMount(env, parts),
+    ...(cap === null ? {} : { beforeRun: cap.guard() }),
     platform: [],
   })
+}
+
+function composeWorkerGateway(env: WorkerBindings): GatewayApp {
+  const parts = workerParts(env)
+  checkEngineSettings(parts.vars.engine)
+  const agent: AgentMount = {
+    mode: "forward",
+    forward: forwardToAgentHost(env.AGENTS),
+  }
+  return parts.vars.access.mode === "public"
+    ? composePublic(env, parts, agent)
+    : composeOwner(env, parts, agent)
 }
 
 function settingsFailure(error: unknown): Response {
@@ -85,6 +163,11 @@ function settingsFailure(error: unknown): Response {
 
 async function purgeExpired(parts: WorkerParts): Promise<void> {
   const { access } = parts.vars
+  await new SharePurge({
+    shares: new SqliteShareRepository({ db: parts.db }),
+    store: parts.store,
+    clock: parts.clock,
+  }).run()
   if (access.mode !== "public") {
     return
   }
