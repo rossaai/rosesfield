@@ -1,5 +1,8 @@
 import type { EngineBinding } from "@rosesfield/contract"
-import { comfyWorkflowAdapter } from "@rosesfield/generation/bindings"
+import {
+  comfyWorkflowAdapter,
+  selectAdapter,
+} from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import { listApps } from "#list-apps"
 
@@ -27,7 +30,9 @@ function leavesOf(binding: EngineBinding): EngineBinding[] {
     return [binding]
   }
   const nested = nestedBindings(binding.config)
-  return nested.length === 0 ? [binding] : nested.flatMap(leavesOf)
+  return nested.length === 0 && binding.adapter !== selectAdapter
+    ? [binding]
+    : nested.flatMap(leavesOf)
 }
 
 function nodeClassesOf(binding: EngineBinding): string[] {

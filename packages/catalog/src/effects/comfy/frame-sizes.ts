@@ -1,22 +1,12 @@
+import type { ResolutionValue } from "#effects/effect-recipe.contract"
+
 export const effectRatios = ["1:1", "4:3", "3:4", "16:9", "9:16"] as const
 
 export type EffectRatio = (typeof effectRatios)[number]
 
-export const resolutionValues = ["480p", "720p"] as const
-
-export type ResolutionValue = (typeof resolutionValues)[number]
-
-export const lengthValues = [3, 4, 5] as const
-
 export type FrameSize = { width: number; height: number }
 
 type SizeTable = Readonly<Record<EffectRatio, FrameSize>>
-
-export type ModelFrames = {
-  fps: number
-  frames: Readonly<Record<string, number>>
-  sizes: Readonly<Record<ResolutionValue, SizeTable>>
-}
 
 function table(short: number, wide: number, fourThree: number): SizeTable {
   return {
@@ -28,10 +18,16 @@ function table(short: number, wide: number, fourThree: number): SizeTable {
   }
 }
 
-export const ltxFrames: ModelFrames = {
+export const ltxFrames = {
   fps: 24,
-  frames: { "3": 73, "4": 97, "5": 121 },
-  sizes: { "480p": table(512, 896, 704), "720p": table(704, 1280, 960) },
+  sizes: {
+    "480p": table(512, 896, 704),
+    "720p": table(704, 1280, 960),
+  } satisfies Readonly<Record<ResolutionValue, SizeTable>>,
+}
+
+export function framesOf(seconds: number): number {
+  return seconds * ltxFrames.fps + 1
 }
 
 export function sizeMap(

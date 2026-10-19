@@ -45,6 +45,7 @@ export {
   type StartRunOutput,
 } from "#application/start-run/start-run.handler"
 export { AppCatalog } from "#domain/app-catalog.port"
+export { AppClosedError } from "#domain/error/app-closed.error"
 export { AppNotFoundError } from "#domain/error/app-not-found.error"
 export { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.error"
 export { EngineKeyInvalidError } from "#domain/error/engine-key-invalid.error"

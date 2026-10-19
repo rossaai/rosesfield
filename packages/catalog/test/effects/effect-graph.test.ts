@@ -2,13 +2,17 @@ import type { EngineBinding } from "@rosesfield/contract"
 import { selectAdapter } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import {
-  computedEndFrame,
-  computedEndFrameNodes,
+  adapterNode,
   effectGraph,
-  motionNode,
+  referenceNodes,
 } from "#effects/comfy/effect-graph"
-import { adapters, promptOnly, recipeOf } from "#effects/comfy/effect-recipes"
-import { effectsBinding } from "#effects/comfy/effects-binding"
+import {
+  effectBinding,
+  effectsBinding,
+  loadedModels,
+} from "#effects/comfy/effects-binding"
+import { resolutionValues } from "#effects/effect-recipe.contract"
+import { effectRecipes, recipeOf } from "#effects/effect-recipes"
 import { findWorkflow } from "#list-workflows"
 import { brokenLinks, isLink, type Workflow } from "./effects-replay"
 
@@ -75,13 +79,11 @@ function guidesOnAudio(workflow: Workflow): string[] {
     .map(([id]) => id)
 }
 
-const recipeNodes = [motionNode, ...Object.keys(computedEndFrameNodes())]
-
 describe("the effect recipes", () => {
-  it("sends from every leaf a whole graph of file and recipe nodes, guides on the video latent only", () => {
+  it("sends from every leaf a whole graph of file nodes, guides on the video latent only", () => {
     const fileIds = Object.keys(fileGraph())
-    const leaves = leavesOf(effectsBinding)
-    expect(leaves).toHaveLength(30)
+    const leaves = leavesOf(effectsBinding(effectRecipes))
+    expect(leaves).toHaveLength(effectRecipes.length * resolutionValues.length)
     for (const [path, workflow] of leaves) {
       expect({ path, broken: brokenLinks(workflow) }).toEqual({
         path,
@@ -92,81 +94,81 @@ describe("the effect recipes", () => {
         guides: [],
       })
       const foreign = Object.keys(workflow).filter(
-        (id) => !fileIds.includes(id) && !recipeNodes.includes(id)
+        (id) => !fileIds.includes(id)
       )
       expect({ path, foreign }).toEqual({ path, foreign: [] })
     }
   })
 
-  it("builds the ink bloom end frame from the photo with core image nodes", () => {
-    const workflow = workflowOf(
-      effectGraph(fileGraph(), "ink-bloom", recipeOf("ink-bloom"), "off")
+  it("removes only the reference nodes when it draws the end frame from its prompt", () => {
+    const drawn = workflowOf(
+      effectGraph(fileGraph(), recipeOf("push-into-eye"))
     )
-    expect(workflow[computedEndFrame]).toMatchObject({
-      class_type: "ImageBlend",
+    const edited = workflowOf(effectGraph(fileGraph(), recipeOf("grow-wings")))
+    const removed = Object.keys(edited).filter((id) => drawn[id] === undefined)
+    expect(removed.sort()).toEqual([...referenceNodes].sort())
+    expect(drawn["534"]?.inputs).toMatchObject({
+      positive: ["523", 0],
+      negative: ["524", 0],
+    })
+    expect(edited["534"]?.inputs).toMatchObject({
+      positive: ["528", 0],
+      negative: ["529", 0],
+    })
+  })
+
+  it("places a recipe's adapter between the model and both guiders", () => {
+    const recipe = {
+      ...recipeOf("freeze-and-circle"),
+      adapter: { file: "an-adapter.safetensors", strength: 0.8 },
+    }
+    const workflow = workflowOf(effectGraph(fileGraph(), recipe))
+    expect(workflow[adapterNode]).toEqual({
+      class_type: "LoraLoaderModelOnly",
       inputs: {
-        image1: ["453", 0],
-        image2: ["454", 0],
-        blend_mode: "multiply",
+        model: ["384", 0],
+        lora_name: "an-adapter.safetensors",
+        strength_model: 0.8,
       },
     })
-    expect(workflow["450"]?.inputs.image).toEqual(["351", 0])
-    expect(workflow["460"]?.inputs).toMatchObject({
-      image: [computedEndFrame, 0],
-      strength: 0.8,
-    })
-    expect(workflow["463"]?.inputs.image).toEqual([computedEndFrame, 0])
-    for (const id of ["430", "447", "461", "464", "410", "412"]) {
-      expect(workflow[id]).toBeUndefined()
+    expect(workflow["388"]?.inputs.model).toEqual([adapterNode, 0])
+    expect(workflow["391"]?.inputs.model).toEqual([adapterNode, 0])
+    expect(brokenLinks(workflow)).toEqual([])
+  })
+
+  it("sets the length of both latents from the recipe's seconds", () => {
+    const workflow = workflowOf(
+      effectGraph(fileGraph(), { ...recipeOf("grow-giant"), seconds: 3 })
+    )
+    expect(workflow["356"]?.inputs.length).toBe(73)
+    expect(workflow["366"]?.inputs.frames_number).toBe(73)
+  })
+
+  it("records first the video model the graph's guiders read, through an adapter", () => {
+    const graph = fileGraph()
+    const videoFile = (graph["384"] as { inputs: { unet_name: string } }).inputs
+      .unet_name
+    const recipe = {
+      ...recipeOf("freeze-and-circle"),
+      adapter: { file: "an-adapter.safetensors", strength: 0.8 },
     }
-    expect(workflow["377"]?.inputs.video_latent).toEqual(["460", 2])
-    expect(brokenLinks(workflow)).toEqual([])
+    const models = effectBinding(recipe, "480p").config.models
+    expect(Array.isArray(models) ? models[0] : null).toBe(videoFile)
+    expect(models).toContain("an-adapter.safetensors")
   })
 
-  it("takes the day to night end frame from its IC-LoRA and holds no subject", () => {
-    const workflow = workflowOf(
-      effectGraph(fileGraph(), "day-to-night", recipeOf("day-to-night"), "on")
-    )
-    expect(workflow["430"]?.inputs).toMatchObject({
-      lora_name: adapters.dayToNight.file,
-      strength_model: 1,
-    })
-    expect(workflow["435"]?.inputs.text).toMatch(/^The same shot at night/)
-    expect(workflow["460"]?.inputs.strength).toBe(0.8)
-    expect(workflow["411"]).toBeUndefined()
-    expect(workflow["388"]?.inputs.positive).toEqual(["460", 0])
-    expect(workflow["465"]?.inputs.positive).toEqual(["463", 0])
-  })
-
-  it("runs weightless on the Slow-Motion-Control adapter in both stages", () => {
-    const workflow = workflowOf(
-      effectGraph(fileGraph(), "weightless", recipeOf("weightless"), "on")
-    )
-    expect(workflow[motionNode]?.inputs.lora_name).toBe(
-      adapters.slowMotion.file
-    )
-    expect(workflow["388"]?.inputs.model).toEqual([motionNode, 0])
-    expect(workflow["391"]?.inputs.model).toEqual([motionNode, 0])
-    expect(workflow["442"]).toBeUndefined()
-  })
-
-  it("keeps only the frame 0 lock and the two-stage render in the prompt-only fallback", () => {
-    const workflow = workflowOf(
-      effectGraph(fileGraph(), "frost-over", promptOnly, "on")
-    )
-    const mechanism = Object.keys(workflow).filter(
-      (id) => Number(id) >= 410 && Number(id) <= 465
-    )
-    expect(mechanism).toEqual([])
-    expect(workflow).toMatchObject({
-      "357": { inputs: { latent: ["356", 0], strength: 1 } },
-      "377": { inputs: { video_latent: ["357", 0] } },
-      "388": { inputs: { model: ["384", 0], positive: ["365", 0] } },
-      "348": { inputs: { samples: ["367", 0] } },
-      "340": { inputs: { video_latent: ["349", 0] } },
-      "374": { inputs: { samples: ["369", 0] } },
-      "370": { inputs: { audio: ["358", 0] } },
-    })
-    expect(brokenLinks(workflow)).toEqual([])
+  it("names the video model the graph loads, not a file named in code", () => {
+    const graph = fileGraph()
+    const renamed = {
+      ...graph,
+      "384": {
+        ...(graph["384"] as object),
+        inputs: {
+          weight_dtype: "default",
+          unet_name: "another-video.safetensors",
+        },
+      },
+    }
+    expect(loadedModels(renamed)[0]).toBe("another-video.safetensors")
   })
 })

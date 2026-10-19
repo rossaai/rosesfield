@@ -49,8 +49,11 @@ export {
 } from "#error.contract"
 export { appId, assetId, characterId, runId } from "#id.contract"
 export {
+  type ImageAccept,
   type InputDefinition,
   type InputValue,
+  imageAccept,
+  imageFormats,
   inputDefinition,
   inputValue,
   type RunInputs,

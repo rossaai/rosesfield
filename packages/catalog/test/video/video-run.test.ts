@@ -11,24 +11,26 @@ function hasMp4Header(bytes: Uint8Array): boolean {
   return new TextDecoder().decode(bytes.slice(4, 8)) === "ftyp"
 }
 
-describe("a Video run on the demo engine", () => {
+const limitSeconds = 1500 + 300
+
+describe("a Video run of the LTX 2.5 graph on the demo engine", () => {
   it("starts from a prompt, ends done and keeps one MP4 output", async () => {
     const gateway = demoGateway()
-    const { run } = await gateway.startVideo({ prompt: "a fox in deep snow" })
+    const { run } = await gateway.startVideo({
+      prompt: "a fox in deep snow",
+      model: "ltx-2-5",
+    })
     expect(run.status).toBe("queued")
     expect(run.origin).toBe("demo")
     expect(run.aspectRatio).toBe("16:9")
     expect(run.inputs).toMatchObject({
-      model: "auto",
+      model: "ltx-2-5",
       length: 5,
       cameraMove: "auto",
-      resolution: "720p",
-      sound: "off",
+      resolution: "480p",
+      sound: "on",
     })
-    expect(gateway.jobs.queued).toEqual([run.id])
-
     await gateway.drive(run.id)
-
     const done = gateway.runs.stored.get(run.id)?.toRecord()
     expect(done?.status).toBe("done")
     expect(done?.outputs).toHaveLength(1)
@@ -39,12 +41,14 @@ describe("a Video run on the demo engine", () => {
     expect(output?.width).toBeGreaterThan(output?.height ?? Infinity)
   })
 
-  it("keeps the choices a person made in the run record", async () => {
+  it("keeps the start frame, the move and the seed in the run record", async () => {
     const gateway = demoGateway()
+    const frame = assetIdFormat.parse(crypto.randomUUID())
     const { run } = await gateway.startVideo({
       prompt: "a lighthouse at dusk",
-      model: "wan-2-2",
-      resolution: "480p",
+      model: "ltx-2-5",
+      startFrame: [frame],
+      resolution: "720p",
       length: 3,
       cameraMove: "push-in",
       seed: 77,
@@ -53,93 +57,41 @@ describe("a Video run on the demo engine", () => {
     const done = gateway.runs.stored.get(run.id)?.toRecord()
     expect(done?.status).toBe("done")
     expect(done?.seed).toBe(77)
-    expect(done?.inputs).toMatchObject({ model: "wan-2-2", length: 3 })
-  })
-
-  it("makes 4 videos from one start frame at Count 4", async () => {
-    const gateway = demoGateway()
-    const frame = assetIdFormat.parse(crypto.randomUUID())
-    const { run } = await gateway.startVideo(
-      { prompt: "a paper boat on a pond", startFrame: [frame] },
-      4
-    )
-    expect(run.count).toBe(4)
-    await gateway.drive(run.id)
-    const done = gateway.runs.stored.get(run.id)?.toRecord()
-    expect(done?.status).toBe("done")
-    expect(done?.outputs).toHaveLength(4)
-    expect(done?.inputs.startFrame).toEqual([frame])
-  })
-
-  it("gives 4 queued outputs of 600 seconds each and a 300 second queue the time to finish", async () => {
-    const gateway = demoGateway()
-    const { run } = await gateway.startVideo(
-      { prompt: "a kite over a field" },
-      4
-    )
-    await gateway.step(run.id)
-    gateway.clock.advance((4 * 600 + 300) * 1000)
-    await gateway.drive(run.id)
-    const done = gateway.runs.stored.get(run.id)?.toRecord()
-    expect(done?.status).toBe("done")
-    expect(done?.outputs).toHaveLength(4)
-  })
-
-  it("ends a run at Count 4 that passes its limit with RUN_TIMED_OUT", async () => {
-    const gateway = demoGateway()
-    const { run } = await gateway.startVideo(
-      { prompt: "a kite over a field" },
-      4
-    )
-    await gateway.step(run.id)
-    gateway.clock.advance((4 * 600 + 300 + 1) * 1000)
-    await gateway.drive(run.id)
-    const done = gateway.runs.stored.get(run.id)?.toRecord()
-    expect(done?.status).toBe("failed")
-    expect(done?.failure?.code).toBe("RUN_TIMED_OUT")
-  })
-
-  it("runs a clip on Wan 2.2 with no camera move", async () => {
-    const gateway = demoGateway()
-    const clip = assetIdFormat.parse(crypto.randomUUID())
-    const { run } = await gateway.startVideo({
-      prompt: "the same street in deep snow",
-      clip: [clip],
-      length: 4,
+    expect(done?.inputs).toMatchObject({
+      model: "ltx-2-5",
+      length: 3,
+      cameraMove: "push-in",
+      startFrame: [frame],
     })
-    expect(run.inputs).toMatchObject({
-      clip: [clip],
-      model: "wan-2-2",
-      resolution: "480p",
-      length: 4,
+  })
+
+  it("gives a run its full limit and ends it after with RUN_TIMED_OUT", async () => {
+    const inTime = demoGateway()
+    const first = await inTime.startVideo({
+      prompt: "a kite",
+      model: "ltx-2-5",
     })
-    expect(run.inputs).not.toHaveProperty("cameraMove")
-    await gateway.drive(run.id)
-    expect(gateway.runs.stored.get(run.id)?.toRecord().status).toBe("done")
+    await inTime.step(first.run.id)
+    inTime.clock.advance(limitSeconds * 1000)
+    await inTime.drive(first.run.id)
+    expect(inTime.runs.stored.get(first.run.id)?.toRecord().status).toBe("done")
+
+    const late = demoGateway()
+    const second = await late.startVideo({ prompt: "a kite", model: "ltx-2-5" })
+    await late.step(second.run.id)
+    late.clock.advance((limitSeconds + 1) * 1000)
+    await late.drive(second.run.id)
+    const ended = late.runs.stored.get(second.run.id)?.toRecord()
+    expect(ended?.status).toBe("failed")
+    expect(ended?.failure?.code).toBe("RUN_TIMED_OUT")
   })
 
   it.each([
-    { model: "wan-2-2", resolution: "720p" },
-    { model: "wan-2-2", sound: "on" },
-    { model: "ltx-2-5", clip: ["2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e"] },
-    {
-      clip: ["2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e"],
-      startFrame: ["1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"],
-    },
-  ])("starts no run for the inputs %j that no model takes", async (choice) => {
-    const gateway = demoGateway()
-    await expect(
-      gateway.startVideo({ prompt: "a red kite", ...choice })
-    ).rejects.toMatchObject({ code: "RUN_INPUT_INVALID" })
-    expect(gateway.runs.stored.size).toBe(0)
-    expect(gateway.jobs.queued).toEqual([])
-  })
-
-  it.each([
-    { prompt: "   " },
-    { prompt: "a cat", length: 6 },
-    { prompt: "a cat", cameraMove: "orbit" },
-    { prompt: "x".repeat(1001) },
+    { prompt: "   ", model: "ltx-2-5" },
+    { prompt: "a cat", model: "ltx-2-5", length: 6 },
+    { prompt: "a cat", model: "ltx-2-5", cameraMove: "orbit" },
+    { prompt: "a cat", model: "wan-2-2" },
+    { prompt: "x".repeat(1001), model: "ltx-2-5" },
   ])("refuses the inputs %j before a run starts", async (inputs) => {
     const gateway = demoGateway()
     await expect(gateway.startVideo(inputs)).rejects.toMatchObject({
