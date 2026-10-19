@@ -163,6 +163,7 @@ function exploreMarkup(views: readonly ShareView[]): string {
 function inject(html: string, head: string, body: string): string {
   return html
     .replace(/<title>[^<]*<\/title>/, "")
+    .replace(/<meta name="description"[^>]*>/, "")
     .replace("</head>", `${head}</head>`)
     .replace('<div id="root"></div>', `<div id="root">${body}</div>`)
 }
