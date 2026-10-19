@@ -68,6 +68,7 @@ const galleryCopy = {
   "entry.screen.apps": "Apps screen",
   "entry.screen.appBar": "App screen, bar layout",
   "entry.screen.appColumn": "App screen, column layout",
+  "entry.screen.video": "Video screen",
   "entry.screen.library": "Library screen",
   "entry.screen.viewer": "Viewer",
   "entry.screen.characters": "Characters screen",

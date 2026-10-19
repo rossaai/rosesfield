@@ -315,6 +315,7 @@ export const screenEntries: GalleryEntry[] = [
   apps,
   appEntry("image", "entry.screen.appBar", image),
   appEntry("upscale", "entry.screen.appColumn", upscale),
+  appEntry("video", "entry.screen.video", video),
   library,
   viewer,
   characters,
