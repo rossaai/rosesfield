@@ -2,6 +2,7 @@ export type {
   HostedModel,
   ModelField,
 } from "@rosesfield/generation/bindings"
+export { CatalogModelPolicy } from "#comfy/catalog-model-policy"
 export {
   appTasksOf,
   defaultModelOf,

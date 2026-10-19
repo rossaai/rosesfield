@@ -1,5 +1,6 @@
 export type { HostedModel } from "#domain/generation-engine.port"
 export type { MediaKind, ModelField, ModelForm } from "#domain/model-form"
+export { ModelPolicy } from "#domain/model-policy.port"
 export { selectAdapter, selectBinding } from "#domain/select-binding"
 export {
   chosenModelOf,

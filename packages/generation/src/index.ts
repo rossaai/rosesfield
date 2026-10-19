@@ -56,6 +56,7 @@ export { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 export { IdempotencyKeyInvalidError } from "#domain/error/idempotency-key-invalid.error"
 export { IdempotencyKeyReusedError } from "#domain/error/idempotency-key-reused.error"
 export { ModelNotFoundError } from "#domain/error/model-not-found.error"
+export { ModelNotOfferedError } from "#domain/error/model-not-offered.error"
 export { RunConflictError } from "#domain/error/run-conflict.error"
 export { RunCursorInvalidError } from "#domain/error/run-cursor-invalid.error"
 export { RunFailedError } from "#domain/error/run-failed.error"
@@ -86,6 +87,7 @@ export {
   type ModelField,
   type ModelForm,
 } from "#domain/model-form"
+export { ModelPolicy } from "#domain/model-policy.port"
 export { Run, type RunJob, type RunJobStatus, type RunState } from "#domain/run"
 export {
   type RunCursor,

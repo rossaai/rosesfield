@@ -1,3 +1,4 @@
+import { CatalogModelPolicy } from "@rosesfield/catalog/comfy"
 import type { AppDefinition } from "@rosesfield/contract"
 import {
   AdvanceRunHandler,
@@ -110,7 +111,14 @@ export function buildAdvance(
 function buildRuns(ports: HandlerPorts, jobs: JobRunner): RunHandlers {
   const { runs, engines, clock } = ports
   const apps = new ListedAppCatalog({ apps: ports.apps })
-  const startRun = new StartRunHandler({ apps, runs, engines, jobs, clock })
+  const startRun = new StartRunHandler({
+    apps,
+    runs,
+    engines,
+    jobs,
+    clock,
+    policy: new CatalogModelPolicy(),
+  })
   return {
     startRun,
     getRun: new GetRunHandler({ runs }),

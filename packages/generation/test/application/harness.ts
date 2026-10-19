@@ -7,6 +7,7 @@ import { ListRunsHandler } from "#application/list-runs/list-runs.handler"
 import { RepeatRunHandler } from "#application/repeat-run/repeat-run.handler"
 import { StartRunHandler } from "#application/start-run/start-run.handler"
 import type { GenerationEngine } from "#domain/generation-engine.port"
+import type { ModelPolicy } from "#domain/model-policy.port"
 import { FakeAppCatalog } from "../fake/fake-app-catalog"
 import { FakeGenerationEngine } from "../fake/fake-generation-engine"
 import { FakeJobRunner } from "../fake/fake-job-runner"
@@ -17,6 +18,7 @@ import { imageApp, start } from "../sample"
 type HarnessOptions = {
   apps?: AppDefinition[]
   engines?: GenerationEngine[]
+  policy?: ModelPolicy
 }
 
 export type Harness = ReturnType<typeof harnessFor>
@@ -28,7 +30,14 @@ export function harnessFor(options: HarnessOptions = {}) {
   const assets = new FakeRunAssets()
   const apps = new FakeAppCatalog(options.apps ?? [imageApp()])
   const engines = options.engines ?? [new FakeGenerationEngine()]
-  const startRun = new StartRunHandler({ apps, runs, engines, jobs, clock })
+  const startRun = new StartRunHandler({
+    apps,
+    runs,
+    engines,
+    jobs,
+    clock,
+    ...(options.policy === undefined ? {} : { policy: options.policy }),
+  })
   return {
     clock,
     runs,

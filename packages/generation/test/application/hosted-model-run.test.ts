@@ -5,6 +5,7 @@ import type { ModelForm } from "#domain/model-form"
 import { selectBinding } from "#domain/select-binding"
 import { taskBinding } from "#domain/task-binding"
 import { FakeGenerationEngine } from "../fake/fake-generation-engine"
+import { FakeModelPolicy } from "../fake/fake-model-policy"
 import { fakeBinding, imageApp, pngBytes, referenceId } from "../sample"
 import { harnessFor } from "./harness"
 
@@ -66,7 +67,14 @@ function harnessWithHosted() {
     ],
     steps: [{ state: "succeeded", cost: { amount: 0.1, currency: "USD" } }],
   })
-  return { engine, harness: harnessFor({ apps: [taskApp], engines: [engine] }) }
+  return {
+    engine,
+    harness: harnessFor({
+      apps: [taskApp],
+      engines: [engine],
+      policy: new FakeModelPolicy(["maker/picture-2"]),
+    }),
+  }
 }
 
 function startHosted(
@@ -209,5 +217,20 @@ describe("a run of a hosted model", () => {
       seed: null,
     })
     expect(run.inputs).toMatchObject({ model: "open", quality: "draft" })
+  })
+
+  it("refuses a hosted model the app's tasks do not offer, and any model with no policy", async () => {
+    const engine = new FakeGenerationEngine({ forms: [hostedForm] })
+    const refusing = harnessFor({
+      apps: [taskApp],
+      engines: [engine],
+      policy: new FakeModelPolicy([]),
+    })
+    const open = harnessFor({ apps: [taskApp], engines: [engine] })
+    for (const harness of [refusing, open]) {
+      await expect(
+        startHosted(harness, { prompt: "a door" })
+      ).rejects.toMatchObject({ code: "MODEL_NOT_OFFERED", status: 400 })
+    }
   })
 })

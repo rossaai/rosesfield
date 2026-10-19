@@ -13,11 +13,13 @@ import { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.
 import { IdempotencyKeyInvalidError } from "#domain/error/idempotency-key-invalid.error"
 import { IdempotencyKeyReusedError } from "#domain/error/idempotency-key-reused.error"
 import { ModelNotFoundError } from "#domain/error/model-not-found.error"
+import { ModelNotOfferedError } from "#domain/error/model-not-offered.error"
 import { RunInputInvalidError } from "#domain/error/run-input-invalid.error"
 import type { GenerationEngine } from "#domain/generation-engine.port"
 import { isRecord } from "#domain/is-record"
 import type { JobRunner } from "#domain/job-runner.port"
 import { checkModelInputs } from "#domain/model-form"
+import type { ModelPolicy } from "#domain/model-policy.port"
 import { Run } from "#domain/run"
 import type { RunRepository } from "#domain/run.repository"
 import { resolveBinding } from "#domain/select-binding"
@@ -27,6 +29,7 @@ import {
   hostedModelOf,
   isHostedModelId,
   taskAdapter,
+  tasksOf,
 } from "#domain/task-binding"
 
 export type StartRunInput = {
@@ -55,6 +58,7 @@ type StartRunHandlerOptions = {
   engines: readonly GenerationEngine[]
   jobs: JobRunner
   clock: Clock
+  policy?: ModelPolicy
 }
 
 export class StartRunHandler {
@@ -67,6 +71,7 @@ export class StartRunHandler {
   private readonly engines: readonly GenerationEngine[]
   private readonly jobs: JobRunner
   private readonly clock: Clock
+  private readonly policy: ModelPolicy | null
 
   constructor(options: StartRunHandlerOptions) {
     this.apps = options.apps
@@ -74,6 +79,7 @@ export class StartRunHandler {
     this.engines = options.engines
     this.jobs = options.jobs
     this.clock = options.clock
+    this.policy = options.policy ?? null
   }
 
   async execute(input: StartRunInput): Promise<StartRunOutput> {
@@ -149,6 +155,7 @@ export class StartRunHandler {
     if (engine === undefined || form === null) {
       throw new ModelNotFoundError({ model })
     }
+    await this.checkOffered(app, engine, model)
     const checked = checkModelInputs(form, given)
     const issues = checked.kind === "invalid" ? [...checked.issues] : []
     if (body.count !== undefined && body.count !== 1) {
@@ -166,6 +173,22 @@ export class StartRunHandler {
       engine,
       binding,
       request: { inputs: checked.inputs, count: 1, aspectRatio: null },
+    }
+  }
+
+  private async checkOffered(
+    app: AppDefinition,
+    engine: GenerationEngine,
+    model: string
+  ): Promise<void> {
+    const listed = (await engine.listModels()).find((one) => one.id === model)
+    const tasks = tasksOf(app.engine)
+    if (
+      listed === undefined ||
+      this.policy === null ||
+      !this.policy.allows(tasks, listed)
+    ) {
+      throw new ModelNotOfferedError({ appId: app.id, model })
     }
   }
 
