@@ -103,9 +103,6 @@ describe("the real credits of a run", () => {
       fetch: replay.fetch,
     })
     const submission = await engine.submit(request(workflowBinding))
-    expect(await engine.read(submission.ref)).toEqual({
-      state: "succeeded",
-      cost: null,
-    })
+    expect(await engine.read(submission.ref)).toEqual({ state: "succeeded" })
   })
 })

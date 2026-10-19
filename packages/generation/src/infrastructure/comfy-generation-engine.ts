@@ -160,7 +160,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
           retryAfterSeconds: null,
         }
       case "succeeded":
-        return { state: "succeeded", cost: this.costOf(job) }
+        return this.succeeded(job)
       case "canceled":
         return { state: "cancelled" }
       case "failed":
@@ -199,14 +199,17 @@ export class ComfyGenerationEngine extends GenerationEngine {
     }
   }
 
-  private costOf(job: Job): Cost | null {
+  private succeeded(job: Job): EngineStatus {
     const executionMs = job.metrics?.execution_ms ?? null
     if (!this.isCloud || executionMs === null) {
-      return null
+      return { state: "succeeded" }
     }
     const credits =
       (executionMs / 1000) * ComfyGenerationEngine.gpuCreditsPerSecond
-    return costOfCredits(Math.round(credits * 1_000_000) / 1_000_000)
+    return {
+      state: "succeeded",
+      cost: costOfCredits(Math.round(credits * 1_000_000) / 1_000_000),
+    }
   }
 
   private async post(
