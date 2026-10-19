@@ -1,6 +1,6 @@
 import type { ModelField } from "@rosesfield/catalog/comfy"
 import type { PromptAttachment } from "@rosesfield/ui/components/prompt-bar"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { t } from "@/copy/t"
 import { useDevice } from "@/device/device-context"
 import { useAssetThumbs } from "@/pieces/attachment-thumbs"
@@ -36,26 +36,41 @@ export function keptReferences(
   }
 }
 
+type Note = {
+  fieldKey: string
+  text: string
+}
+
+function tooMany(refused: number, max: number): string | null {
+  return refused > 0 ? t("field.asset.tooMany", { max }) : null
+}
+
 export function useReferenceTray(
   field: MediaField | null,
   form: AppForm
 ): ReferenceTray {
   const uploads = useUploads()
   const device = useDevice()
-  const [message, setMessage] = useState<string | null>(null)
+  const fieldKey = field === null ? "" : `${field.name}:${field.max}`
+  const [note, setNote] = useState<Note | null>(null)
+  if (note !== null && note.fieldKey !== fieldKey) {
+    setNote(null)
+  }
+  const message = note?.fieldKey === fieldKey ? note.text : null
+  const say = (text: string | null): void =>
+    setNote(text === null ? null : { fieldKey, text })
   const held = field === null ? [] : listOf(form.values.inputs[field.name])
+  const latest = useRef(held)
+  latest.current = held
   const caption = field === null ? undefined : fieldCaption(field)
   const attachments = useAssetThumbs(held, () => caption)
-  const tell = (refused: number, max: number): void => {
-    setMessage(refused > 0 ? t("field.asset.tooMany", { max }) : null)
-  }
-  const addAssets = (ids: readonly string[]): void => {
+  const place = (ids: readonly string[], refusedBefore: number): void => {
     if (field === null) {
       return
     }
-    const kept = keptReferences(held, ids, field.max)
+    const kept = keptReferences(latest.current, ids, field.max)
     form.setInput(field.name, kept.ids)
-    tell(kept.refused, field.max)
+    say(tooMany(refusedBefore + kept.refused, field.max))
   }
   return {
     field,
@@ -69,28 +84,23 @@ export function useReferenceTray(
       }
       void device
         .pickFiles({ accept: ["image/*"], multiple: field.max > 1 })
-        .then((files) => {
-          const room = roomFor(field, held.length)
-          tell(Math.max(0, files.length - room), field.max)
-          return uploads.start(files.slice(0, room))
-        })
-        .then((added) => {
-          const kept = keptReferences(
-            held,
+        .then(async (files) => {
+          const room = roomFor(field, latest.current.length)
+          const added = await uploads.start(files.slice(0, room))
+          place(
             added.map((asset) => asset.id),
-            field.max
+            Math.max(0, files.length - room)
           )
-          form.setInput(field.name, kept.ids)
         })
     },
-    addAssets,
+    addAssets: (ids) => place(ids, 0),
     remove: (id) => {
       if (field !== null) {
         form.setInput(
           field.name,
-          held.filter((one) => one !== id)
+          latest.current.filter((one) => one !== id)
         )
-        setMessage(null)
+        say(null)
       }
     },
   }
