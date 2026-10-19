@@ -71,6 +71,30 @@ describe("a shared result", () => {
     expect(html).toContain(`href="/apps/sample-image?share=${view.share.id}"`)
   })
 
+  it("shows its preview on the page and in the link's card when the share carries one", async () => {
+    opened = openGateway()
+    const owner = opened.visitor({ [keyHeaders.engine]: key })
+    const run = await finishedRun(owner, "a red door")
+    const made = await owner.call(
+      buildPath(shareRoutes.shareRun.path, { runId: run.id }),
+      {
+        method: "POST",
+        headers: { "content-type": "image/webp" },
+        body: Uint8Array.of(82, 73, 70, 70),
+      }
+    )
+    const { share } = shareResponse.parse(await made.json())
+    const html = await (await opened.visitor().call(share.path)).text()
+    const poster = await opened.visitor().call(`${share.path}/poster`)
+
+    expect(share.poster).toBe(`${share.path}/poster`)
+    expect(html).toContain(`<img src="${share.path}/poster"`)
+    expect(html).toContain(
+      `<meta property="og:image" content="https://demo.rosesfield.test${share.path}/poster" />`
+    )
+    expect(poster.headers.get("content-type")).toBe("image/webp")
+  })
+
   it("answers a byte range, so a phone can play a shared video", async () => {
     opened = openGateway()
     const { view } = await sharedRun(opened)

@@ -45,3 +45,12 @@ describe("the clip for a post", () => {
     expect(covered.x).toBeLessThan(0)
   })
 })
+
+describe("the preview of a shared result", () => {
+  it("is at most 1280 pixels on its long side, and never larger than the result", async () => {
+    const { posterSize } = await import("@/screens/explore/share-sources")
+    expect(posterSize(2048, 1024)).toEqual({ width: 1280, height: 640 })
+    expect(posterSize(1024, 1536)).toEqual({ width: 853, height: 1280 })
+    expect(posterSize(800, 600)).toEqual({ width: 800, height: 600 })
+  })
+})

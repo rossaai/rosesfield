@@ -56,6 +56,7 @@
       "vars": {
         "MODE": "owner",
         "RETENTION_DAYS": "30",
+        "SESSION_REQUESTS_PER_MINUTE": "600",
         "SPEND_CAP_CREDITS": "800"
       },
       "d1_databases": [

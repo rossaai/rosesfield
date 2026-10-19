@@ -43,7 +43,7 @@ export function sharedEntries(shares: readonly ShareView[]): ExploreEntry[] {
         source: {
           kind: "share",
           shareId: share.id,
-          src: first.src,
+          src: first.kind === "image" ? (share.poster ?? first.src) : first.src,
           poster: share.poster,
         },
       },

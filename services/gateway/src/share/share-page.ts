@@ -121,7 +121,8 @@ function mediaMarkup(view: ShareView, eager: boolean): string {
     return `<audio src="${escapeHtml(src)}" controls preload="metadata" style="width:100%"></audio>`
   }
   const loading = eager ? ` fetchpriority="high"` : ` loading="lazy"`
-  return `<img src="${escapeHtml(src)}" alt=""${loading} decoding="async" style="${style}" />`
+  const shown = view.poster ?? src
+  return `<img src="${escapeHtml(shown)}" alt=""${loading} decoding="async" style="${style}" />`
 }
 
 function lockupMarkup(): string {

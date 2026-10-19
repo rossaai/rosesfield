@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process"
+import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 type Plan = {
@@ -40,7 +41,7 @@ function planOf(args: readonly string[]): Plan {
       plan.port = value
       index += 1
     } else if (arg === "--env-file" && value !== undefined) {
-      plan.envFiles.push(value)
+      plan.envFiles.push(resolve(value))
       index += 1
     } else {
       throw new Error(`${arg} is not an option.\n\n${usage}`)

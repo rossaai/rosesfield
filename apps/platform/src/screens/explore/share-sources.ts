@@ -89,16 +89,13 @@ export function clipColors(): ClipColors {
   }
 }
 
-export async function posterOf(
-  run: Run,
-  outputId: string
-): Promise<Blob | null> {
-  const app = findCatalogApp(run.appId)
-  if (app?.output.kind !== "video") {
-    return null
-  }
-  const { url } = await blobUrl(outputId)
-  try {
+export const posterEdge = 1280
+
+async function frameOf(
+  url: string,
+  kind: string
+): Promise<HTMLImageElement | HTMLVideoElement> {
+  if (kind === "video") {
     const video = document.createElement("video")
     video.muted = true
     video.src = url
@@ -106,12 +103,46 @@ export async function posterOf(
       video.onloadeddata = () => resolve()
       video.onerror = () => reject(new Error("The video did not load"))
     })
+    return video
+  }
+  const image = new Image()
+  image.src = url
+  await image.decode()
+  return image
+}
+
+export function posterSize(
+  width: number,
+  height: number
+): { width: number; height: number } {
+  const scale = Math.min(1, posterEdge / Math.max(width, height))
+  return {
+    width: Math.round(width * scale),
+    height: Math.round(height * scale),
+  }
+}
+
+export async function posterOf(
+  run: Run,
+  outputId: string
+): Promise<Blob | null> {
+  const kind = findCatalogApp(run.appId)?.output.kind
+  if (kind !== "video" && kind !== "image") {
+    return null
+  }
+  const { url } = await blobUrl(outputId)
+  try {
+    const frame = await frameOf(url, kind)
+    const size =
+      frame instanceof HTMLVideoElement
+        ? posterSize(frame.videoWidth, frame.videoHeight)
+        : posterSize(frame.naturalWidth, frame.naturalHeight)
     const canvas = document.createElement("canvas")
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    canvas.getContext("2d")?.drawImage(video, 0, 0)
+    canvas.width = size.width
+    canvas.height = size.height
+    canvas.getContext("2d")?.drawImage(frame, 0, 0, size.width, size.height)
     return await new Promise((resolve) =>
-      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.86)
+      canvas.toBlob((blob) => resolve(blob), "image/webp", 0.86)
     )
   } finally {
     URL.revokeObjectURL(url)
