@@ -60,7 +60,7 @@ export function useStartRun(
   const client = useQueryClient()
   const settings = useQuery(settingsQuery)
   const hostedRun = hostedBodyOf(form, hosted)
-  const isDemo = settings.data?.engine.origin === "demo" && hostedRun === null
+  const isDemo = settings.data?.engine.origin === "demo"
   const credits = usePrice(
     app,
     isDemo ? null : (hostedRun ?? bodyOf(app, form.values)),

@@ -51,9 +51,14 @@ const app = imageApp(
 function harnessWith(forms: readonly ModelForm[]) {
   const clock = new FixedClock({ now: start })
   const demo = new DemoGenerationEngine({ clock })
+  const router = new KeylessRouter({
+    key: "comfy-router",
+    forms,
+    price: { source: "rates", credits: 135.78 },
+  })
   const harness = harnessFor({
     apps: [app],
-    engines: [new KeylessRouter({ key: "comfy-router", forms }), demo],
+    engines: [router, demo],
     policy: new FakeModelPolicy([model]),
   })
   return { harness, clock }
@@ -78,6 +83,15 @@ describe("a task app's default with no engine key", () => {
     clock.advance(DemoGenerationEngine.delayMs)
     await harness.advance.execute({ runId })
     expect((await harness.runs.get(runId))?.status).toBe("done")
+  })
+
+  it("prices the run as the demo engine prices it, not at the rate of an engine that cannot run it", async () => {
+    const { harness } = harnessWith([form])
+    const { price } = await harness.price.execute({
+      appId: "sample-image",
+      inputs: { prompt: "a lighthouse", model },
+    })
+    expect(price).toEqual({ source: "unknown", credits: null })
   })
 
   it("runs on the demo engine with the app's own inputs when no engine describes the model", async () => {

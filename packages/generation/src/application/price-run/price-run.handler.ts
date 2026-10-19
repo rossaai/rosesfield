@@ -51,6 +51,12 @@ export class PriceRunHandler {
     }
     const binding = resolveBinding(app.engine, input.inputs)
     const count = input.count ?? 1
+    const runner = this.engines.find((engine) => engine.canRun(binding))
+    if (runner?.origin === "demo") {
+      return {
+        price: await runner.priceOf(binding, { inputs: input.inputs, count }),
+      }
+    }
     for (const engine of this.engines) {
       const form = await engine.formOf(binding)
       if (form !== null || engine.canRun(binding)) {
