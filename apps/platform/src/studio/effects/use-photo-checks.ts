@@ -1,5 +1,9 @@
 import { routes } from "@rosesfield/contract"
-import { type QueryClient, useQueryClient } from "@tanstack/react-query"
+import {
+  isCancelledError,
+  type QueryClient,
+  useQueryClient,
+} from "@tanstack/react-query"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { callRoute } from "@/api/call-route"
 import { assetQuery } from "@/api/queries"
@@ -33,6 +37,7 @@ const photoFormats: readonly string[] = [
 ]
 const maxPhotoBytes = 20_000_000
 const minPhotoSide = 480
+const maxCancelledChecks = 3
 
 async function measure(assetId: string): Promise<PhotoSize | null> {
   const blob = await callRoute(routes.readAssetContent, {
@@ -79,12 +84,16 @@ export async function checkPhoto(
 async function settle(
   check: CheckPhoto,
   client: QueryClient,
-  assetId: string
+  assetId: string,
+  tries = 1
 ): Promise<Checked> {
   try {
     const found = await check(client, assetId)
     return "size" in found ? found : { refusal: found.refusal, again: false }
-  } catch {
+  } catch (error) {
+    if (isCancelledError(error) && tries < maxCancelledChecks) {
+      return settle(check, client, assetId, tries + 1)
+    }
     return { refusal: tCatalog("effects.input.image.unread"), again: true }
   }
 }

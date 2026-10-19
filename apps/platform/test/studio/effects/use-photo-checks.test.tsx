@@ -1,4 +1,8 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import {
+  CancelledError,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query"
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react"
 import { type ReactNode, useCallback, useState } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -118,6 +122,23 @@ describe("the effects photo checks behind Generate", () => {
     await waitFor(() => expect(pending).toHaveLength(2))
     act(() => pending[1]?.answer(passed))
     await waitFor(() => expect(result.current.checks.isClear).toBe(true))
+    expect(result.current.checks.message).toBeNull()
+  })
+
+  it("checks again when another reader cancels the photo's shared fetch, and keeps the photo", async () => {
+    let calls = 0
+    const check: CheckPhoto = async () => {
+      calls += 1
+      if (calls === 1) {
+        throw new CancelledError()
+      }
+      return passed
+    }
+    const spies = { generate: vi.fn(), refused: vi.fn() }
+    const { result } = renderScreen(check, ["asset-uploaded"], spies)
+    await waitFor(() => expect(result.current.checks.isClear).toBe(true))
+    expect(calls).toBe(2)
+    expect(result.current.inputs.image).toEqual(["asset-uploaded"])
     expect(result.current.checks.message).toBeNull()
   })
 })
