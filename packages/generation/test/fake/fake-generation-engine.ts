@@ -30,6 +30,7 @@ type FakeGenerationEngineOptions = {
   onRead?: () => Promise<void>
   forms?: readonly ModelForm[]
   price?: RunPrice
+  refByKey?: boolean
 }
 
 export class FakeGenerationEngine extends GenerationEngine {
@@ -49,6 +50,7 @@ export class FakeGenerationEngine extends GenerationEngine {
   private readonly onRead: () => Promise<void>
   private readonly forms: readonly ModelForm[]
   private readonly price: RunPrice
+  private readonly refByKey: boolean
   readonly priced: PriceRequest[] = []
 
   constructor(options: FakeGenerationEngineOptions = {}) {
@@ -65,6 +67,7 @@ export class FakeGenerationEngine extends GenerationEngine {
     this.onRead = options.onRead ?? (async () => undefined)
     this.forms = options.forms ?? []
     this.price = options.price ?? unknownPrice
+    this.refByKey = options.refByKey ?? false
   }
 
   override canRun(binding: EngineBinding): boolean {
@@ -108,7 +111,9 @@ export class FakeGenerationEngine extends GenerationEngine {
     }
     this.submitted.push(request)
     return {
-      ref: `fake-${this.submitted.length}`,
+      ref: this.refByKey
+        ? `fake-${request.idempotencyKey}`
+        : `fake-${this.submitted.length}`,
       models: ["fake-model"],
       workflowHash: null,
     }

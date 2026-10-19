@@ -134,7 +134,7 @@ export class AdvanceRunHandler {
     try {
       return await this.runs.save(current)
     } catch (error) {
-      if (error instanceof RunConflictError) {
+      if (error instanceof RunConflictError && engine.idempotency === "none") {
         await engine.cancel(submission.ref)
       }
       throw error
