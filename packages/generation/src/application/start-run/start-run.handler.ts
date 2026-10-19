@@ -21,7 +21,13 @@ import { checkModelInputs } from "#domain/model-form"
 import { Run } from "#domain/run"
 import type { RunRepository } from "#domain/run.repository"
 import { resolveBinding } from "#domain/select-binding"
-import { hostedModelOf, taskAdapter } from "#domain/task-binding"
+import {
+  chosenModelOf,
+  hostedModelBinding,
+  hostedModelOf,
+  isHostedModelId,
+  taskAdapter,
+} from "#domain/task-binding"
 
 export type StartRunInput = {
   appId: string
@@ -133,11 +139,11 @@ export class StartRunHandler {
       return null
     }
     const given = isRecord(body.inputs) ? body.inputs : {}
-    const binding = resolveBinding(app.engine, textInputsOf(given))
-    const model = hostedModelOf(binding)
-    if (model === null) {
+    const model = chosenModelOf(app.engine, textInputsOf(given))
+    if (model === null || !isHostedModelId(model)) {
       return null
     }
+    const binding = hostedModelBinding(model)
     const engine = this.engines.find((candidate) => candidate.canRun(binding))
     const form = engine === undefined ? null : await engine.formOf(binding)
     if (engine === undefined || form === null) {

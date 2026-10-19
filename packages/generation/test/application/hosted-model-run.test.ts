@@ -2,6 +2,7 @@ import { run as runSchema } from "@rosesfield/contract"
 import { runIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import type { ModelForm } from "#domain/model-form"
+import { selectBinding } from "#domain/select-binding"
 import { taskBinding } from "#domain/task-binding"
 import { FakeGenerationEngine } from "../fake/fake-generation-engine"
 import { fakeBinding, imageApp, pngBytes, referenceId } from "../sample"
@@ -166,5 +167,50 @@ describe("a run of a hosted model", () => {
     const done = (await harness.get.execute({ runId })).run
     expect(done.status).toBe("done")
     expect(done.cost).toEqual({ amount: 0.1, currency: "USD" })
+  })
+
+  it("starts a graph whose binding reads an input the app fills with its default", async () => {
+    const byModel = selectBinding({
+      input: "model",
+      options: {
+        open: selectBinding({
+          input: "quality",
+          options: { draft: fakeBinding },
+        }),
+        hosted: fakeBinding,
+      },
+    })
+    const graphApp = imageApp(
+      taskBinding({
+        tasks: ["text-to-image"],
+        input: "model",
+        default: "open",
+        fallback: byModel,
+      })
+    )
+    const withQuality = {
+      ...graphApp,
+      inputs: [
+        ...graphApp.inputs,
+        {
+          type: "choice" as const,
+          name: "quality",
+          labelKey: "inputs.quality",
+          options: [
+            { value: "draft", labelKey: "quality.draft" },
+            { value: "final", labelKey: "quality.final" },
+          ],
+          default: "draft",
+        },
+      ],
+    }
+    const harness = harnessFor({ apps: [withQuality] })
+    const { run } = await harness.start.execute({
+      appId: "sample-image",
+      body: { inputs: { prompt: "a door" } },
+      idempotencyKey: null,
+      seed: null,
+    })
+    expect(run.inputs).toMatchObject({ model: "open", quality: "draft" })
   })
 })
