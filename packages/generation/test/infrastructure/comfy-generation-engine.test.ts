@@ -9,6 +9,7 @@ import {
   comfyV2At,
   failedJob,
   jobId,
+  outputId,
   proxyUrl,
   queuedJob,
   refusedJob,
@@ -193,6 +194,28 @@ describe("ComfyGenerationEngine", () => {
     expect(outputs).toHaveLength(1)
     expect(outputs[0]).toMatchObject({ kind: "image", mime: "image/png" })
     expect(outputs[0]?.bytes).toEqual(pngBytes())
+  })
+
+  it("lists a video that Comfy types as an image by its content type", async () => {
+    const video = {
+      node_id: "75",
+      name: "video/rosesfield-effects_00001_.mp4",
+      type: "image",
+      content_type: "video/mp4",
+      size_bytes: 3033478,
+      id: outputId,
+      hash: null,
+      url: `https://storage.comfy.org/signed/${outputId}`,
+      url_expires_at: "2026-10-19T13:16:19Z",
+      job_id: jobId,
+    }
+    const { engine } = engineFor([
+      comfyV2.read({ ...succeededJob, outputs: [video] }),
+      comfyV2.content(),
+    ])
+    const outputs = await engine.listOutputs(jobId)
+    expect(outputs).toHaveLength(1)
+    expect(outputs[0]).toMatchObject({ kind: "video", mime: "video/mp4" })
   })
 
   it("refuses a job answer that breaks the published shape", async () => {
