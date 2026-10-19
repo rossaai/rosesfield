@@ -24,9 +24,8 @@ function KeptKey(): ReactElement {
         <p className="text-body">{t("key.kept")}</p>
         <Button
           onClick={() => {
-            void forgetAccount()
-              .catch(() => undefined)
-              .then(() => forgetVisitorKey("engine"))
+            void forgetVisitorKey("engine")
+              .then(() => forgetAccount().catch(() => undefined))
               .then(() => client.invalidateQueries())
           }}
         >
