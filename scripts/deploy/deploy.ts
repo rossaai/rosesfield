@@ -5,8 +5,16 @@ import { fileURLToPath } from "node:url"
 type Plan = {
   isJudge: boolean
   isLocal: boolean
+  isDryRun: boolean
   port: string
   envFiles: string[]
+}
+
+type Step = {
+  command: string
+  args: string[]
+  cwd: string
+  orElse?: Step
 }
 
 const root = fileURLToPath(new URL("../..", import.meta.url))
@@ -15,10 +23,11 @@ const gateway = fileURLToPath(
 )
 
 const usage = [
-  "bun run deploy [--judge] [--local [--port <port>] [--env-file <file>]...]",
+  "bun run deploy [--judge] [--dry-run] [--local [--port <port>] [--env-file <file>]...]",
   "",
   "  --judge     a private owner link: owner mode on one Comfy key, with the spend cap of its environment",
   "  --local     builds and runs the deployment in wrangler's local runtime instead of Cloudflare",
+  "  --dry-run   prints each step in order and runs none",
   "  --port      the local port, 8788 by default",
   "  --env-file  a file of settings for the local runtime, such as SESSION_SECRET, OWNER_TOKEN or COMFY_API_KEY",
 ].join("\n")
@@ -27,6 +36,7 @@ function planOf(args: readonly string[]): Plan {
   const plan: Plan = {
     isJudge: false,
     isLocal: false,
+    isDryRun: false,
     port: "8788",
     envFiles: [],
   }
@@ -37,6 +47,8 @@ function planOf(args: readonly string[]): Plan {
       plan.isJudge = true
     } else if (arg === "--local") {
       plan.isLocal = true
+    } else if (arg === "--dry-run") {
+      plan.isDryRun = true
     } else if (arg === "--port" && value !== undefined) {
       plan.port = value
       index += 1
@@ -50,38 +62,70 @@ function planOf(args: readonly string[]): Plan {
   return plan
 }
 
-function run(command: string, args: readonly string[], cwd: string): void {
-  const done = spawnSync(command, args, {
-    cwd,
+function wrangler(args: readonly string[]): Step {
+  return { command: "bunx", args: ["wrangler", ...args], cwd: gateway }
+}
+
+function stepsOf(plan: Plan): Step[] {
+  const env = `--env=${plan.isJudge ? "judge" : ""}`
+  const database = plan.isJudge ? "rosesfield-judge" : "rosesfield"
+  const build: Step = { command: "bun", args: ["run", "build"], cwd: root }
+  if (plan.isLocal) {
+    return [
+      build,
+      wrangler(["d1", "migrations", "apply", database, "--local", env]),
+      wrangler([
+        "dev",
+        env,
+        "--port",
+        plan.port,
+        ...plan.envFiles.flatMap((file) => ["--env-file", file]),
+      ]),
+    ]
+  }
+  return [
+    build,
+    {
+      ...wrangler(["d1", "info", database, env]),
+      orElse: wrangler(["d1", "create", database, env]),
+    },
+    wrangler(["d1", "migrations", "apply", database, "--remote", env]),
+    wrangler(["deploy", env]),
+  ]
+}
+
+function textOf(step: Step): string {
+  return [step.command, ...step.args].join(" ")
+}
+
+function run(step: Step): void {
+  const done = spawnSync(step.command, step.args, {
+    cwd: step.cwd,
     stdio: "inherit",
     env: { ...process.env, CI: "true" },
   })
-  if (done.status !== 0) {
-    throw new Error(`${command} ${args[0] ?? ""} stopped with ${done.status}`)
+  if (done.status === 0) {
+    return
   }
-}
-
-function wrangler(args: readonly string[]): void {
-  run("bunx", ["wrangler", ...args], gateway)
+  if (step.orElse !== undefined) {
+    run(step.orElse)
+    return
+  }
+  throw new Error(`${textOf(step)} stopped with ${done.status}`)
 }
 
 function deploy(plan: Plan): void {
-  const env = plan.isJudge ? "judge" : ""
-  const database = plan.isJudge ? "rosesfield-judge" : "rosesfield"
-  run("bun", ["run", "build"], root)
-  if (plan.isLocal) {
-    wrangler(["d1", "migrations", "apply", database, "--local", `--env=${env}`])
-    wrangler([
-      "dev",
-      `--env=${env}`,
-      "--port",
-      plan.port,
-      ...plan.envFiles.flatMap((file) => ["--env-file", file]),
-    ])
-    return
+  for (const step of stepsOf(plan)) {
+    if (plan.isDryRun) {
+      console.log(
+        step.orElse === undefined
+          ? textOf(step)
+          : `${textOf(step)}, or else ${textOf(step.orElse)}`
+      )
+    } else {
+      run(step)
+    }
   }
-  wrangler(["deploy", `--env=${env}`])
-  wrangler(["d1", "migrations", "apply", database, "--remote", `--env=${env}`])
 }
 
 try {
