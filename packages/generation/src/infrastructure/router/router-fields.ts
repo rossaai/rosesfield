@@ -1,8 +1,11 @@
 import type { ModelField } from "#domain/model-form"
+import { optionNamed, optionsOf } from "#infrastructure/router/router-choices"
 import {
   depthOf,
   mediaAt,
+  mediaKindOf,
   promptAt,
+  promptKeys,
   rankOf,
   scalarOf,
   withFreeName,
@@ -19,7 +22,6 @@ import {
   propertiesOf,
   resolve,
   type SchemaFacts,
-  stringsOf,
 } from "#infrastructure/router/router-schema"
 
 type Walk = {
@@ -31,6 +33,13 @@ type Spot = {
   path: string
   key: string
   required: boolean
+  isInItem: boolean
+}
+
+type ImageRole = {
+  value: string
+  name: string
+  max: number
 }
 
 const maxDepth = 4
@@ -67,12 +76,18 @@ const notMediaKey =
 
 const mediaNote = /(url|uri|base64|data:)/i
 
+const imageRoles: readonly ImageRole[] = [
+  { value: "first_frame", name: "firstFrame", max: 1 },
+  { value: "last_frame", name: "lastFrame", max: 1 },
+  { value: "reference_image", name: "references", max: 4 },
+]
+
 export function fieldsOf(facts: SchemaFacts): ModelField[] {
   if (facts.request === null) {
     return []
   }
   const walk: Walk = { components: facts.components, fields: [] }
-  walkObject(walk, facts.request, "", 0, true)
+  walkObject(walk, facts.request, "", 0, true, false)
   const seen = new Set<string>()
   return [...walk.fields]
     .sort((a, b) => depthOf(a) - depthOf(b))
@@ -85,7 +100,8 @@ function walkObject(
   schema: Schema,
   prefix: string,
   depth: number,
-  isRequired: boolean
+  isRequired: boolean,
+  isInItem: boolean
 ): void {
   const { properties, required } = propertiesOf(schema, walk.components)
   for (const [key, raw] of Object.entries(properties)) {
@@ -93,6 +109,7 @@ function walkObject(
       path: `${prefix}${key}`,
       key,
       required: isRequired && required.includes(key),
+      isInItem,
     }
     walkProperty(walk, resolve(raw, walk.components), spot, depth)
   }
@@ -116,7 +133,14 @@ function walkProperty(
     return
   }
   if (isObject(fieldOf(schema, "properties")) || hasParts(schema)) {
-    walkObject(walk, schema, `${spot.path}.`, depth + 1, spot.required)
+    walkObject(
+      walk,
+      schema,
+      `${spot.path}.`,
+      depth + 1,
+      spot.required,
+      spot.isInItem
+    )
     return
   }
   const item = itemOf(schema, walk.components)
@@ -127,25 +151,34 @@ function walkProperty(
 
 function walkList(walk: Walk, item: Schema, spot: Spot, depth: number): void {
   const { properties } = propertiesOf(item, walk.components)
-  const role = stringsOf(
-    fieldOf(resolve(properties.role, walk.components), "enum")
-  )
-  if (role.includes("user")) {
+  const roles = textOptionsOf(resolve(properties.role, walk.components))
+  if (roles.includes("user")) {
     walkMessage(walk, properties, spot, depth)
     return
   }
-  const tags = stringsOf(
-    fieldOf(resolve(properties.type, walk.components), "enum")
-  )
+  const tags = textOptionsOf(resolve(properties.type, walk.components))
   if (tags.length > 0 && tags.some((tag) => tag in properties)) {
-    walkTagged(walk, properties, tags, spot)
+    walkTagged(walk, properties, tags, { ...spot, roles })
     return
   }
   if ("text" in properties) {
     walkParts(walk, properties, spot)
     return
   }
-  walkObject(walk, item, `${spot.path}.0.`, depth + 1, spot.required)
+  walkObject(
+    walk,
+    item,
+    `${spot.path}.0.`,
+    depth + 1,
+    spot.required,
+    spot.isInItem || !spot.required
+  )
+}
+
+function textOptionsOf(schema: Schema): string[] {
+  return optionsOf(schema).filter(
+    (one): one is string => typeof one === "string"
+  )
 }
 
 function walkMessage(
@@ -172,7 +205,7 @@ function walkTagged(
   walk: Walk,
   properties: Schema,
   tags: readonly string[],
-  spot: Spot
+  spot: Spot & { roles: readonly string[] }
 ): void {
   for (const tag of tags) {
     const holder = resolve(properties[tag], walk.components)
@@ -184,11 +217,24 @@ function walkTagged(
       isObject(fieldOf(holder, "properties")) &&
       "url" in propertiesOf(holder, walk.components).properties
     ) {
-      walk.fields.push(
-        mediaAt(`${spot.path}.[].{type=${tag}}.${tag}.url`, tag, 1, 4)
-      )
+      walk.fields.push(...taggedMedia(spot, tag))
     }
   }
+}
+
+function taggedMedia(
+  spot: Spot & { roles: readonly string[] },
+  tag: string
+): ModelField[] {
+  const item = `${spot.path}.[].{type=${tag}}`
+  const roles = imageRoles.filter((role) => spot.roles.includes(role.value))
+  if (mediaKindOf(tag) !== "image" || roles.length === 0) {
+    return [mediaAt(`${item}.${tag}.url`, tag, 1, 4)]
+  }
+  return roles.map((role) => ({
+    ...mediaAt(`${item}.{role=${role.value}}.${tag}.url`, tag, 1, role.max),
+    name: role.name,
+  }))
 }
 
 function walkParts(walk: Walk, properties: Schema, spot: Spot): void {
@@ -212,27 +258,47 @@ function leafOf(walk: Walk, schema: Schema, spot: Spot): ModelField | null {
     path: spot.path,
     required: spot.required,
   }
-  const options = (arrayOf(fieldOf(schema, "enum")) ?? []).filter(
-    (one): one is string | number =>
-      typeof one === "string" || typeof one === "number"
-  )
-  if (options.length > 0) {
-    const fallback = fieldOf(schema, "default")
-    return {
-      ...base,
-      kind: "choice",
-      options,
-      default:
-        typeof fallback === "string" || typeof fallback === "number"
-          ? fallback
-          : null,
-    }
+  const field =
+    choiceOf(walk, schema, spot, false) ??
+    mediaOf(walk, schema, spot) ??
+    choiceOf(walk, schema, spot, true) ??
+    scalarOf(base, schema, typeOf(schema, walk.components), spot.key)
+  return field !== null && spot.isInItem ? withoutDefault(field) : field
+}
+
+function choiceOf(
+  walk: Walk,
+  schema: Schema,
+  spot: Spot,
+  isListed: boolean
+): ModelField | null {
+  if (isListed !== (arrayOf(fieldOf(schema, "enum")) === null)) {
+    return null
   }
-  const media = mediaOf(walk, schema, spot)
-  if (media !== null) {
-    return media
+  if (isListed && typeOf(schema, walk.components) !== "string") {
+    return null
   }
-  return scalarOf(base, schema, typeOf(schema, walk.components), spot.key)
+  const options = optionsOf(isListed ? { ...schema, type: "string" } : schema)
+  if (options.length === 0 || (isListed && promptKeys.includes(spot.key))) {
+    return null
+  }
+  const fallback = fieldOf(schema, "default")
+  const named = optionNamed(options, fallback)
+  if (isListed && fallback !== undefined && named === null) {
+    return null
+  }
+  return {
+    name: spot.key,
+    path: spot.path,
+    required: spot.required,
+    kind: "choice",
+    options,
+    default: named,
+  }
+}
+
+function withoutDefault(field: ModelField): ModelField {
+  return field.kind === "media" ? field : { ...field, default: null }
 }
 
 function mediaOf(walk: Walk, schema: Schema, spot: Spot): ModelField | null {

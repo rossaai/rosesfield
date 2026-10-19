@@ -1,3 +1,9 @@
+export {
+  type FieldRole,
+  fieldOfRole,
+  fieldRoleOf,
+  fieldRoles,
+} from "#domain/field-role"
 export type { HostedModel } from "#domain/generation-engine.port"
 export type { MediaKind, ModelField, ModelForm } from "#domain/model-form"
 export { ModelPolicy } from "#domain/model-policy.port"

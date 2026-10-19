@@ -66,6 +66,12 @@ export { RunInputRefusedError } from "#domain/error/run-input-refused.error"
 export { RunNotFoundError } from "#domain/error/run-not-found.error"
 export { RunTimedOutError } from "#domain/error/run-timed-out.error"
 export {
+  type FieldRole,
+  fieldOfRole,
+  fieldRoleOf,
+  fieldRoles,
+} from "#domain/field-role"
+export {
   type EngineFile,
   type EngineOutput,
   type EngineRequest,
