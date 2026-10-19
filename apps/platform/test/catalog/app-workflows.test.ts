@@ -19,14 +19,9 @@ describe("workflowFor", () => {
     expect(video?.id).toMatch(/^upscale-video-/)
   })
 
-  it("finds the Effects graph under each effect's recipe patch", () => {
-    for (const effect of [
-      "pull-back-to-space",
-      "melt-away",
-      "freeze-and-circle",
-    ]) {
-      expect(workflowFor("effects", { effect })?.id).toBe("effects-ltx-2-5")
-    }
+  it("finds no Effects graph while Effects offers no passed effect", () => {
+    expect(findCatalogApp("effects")?.closedKey).toBe("effects.closed")
+    expect(workflowFor("effects", { effect: "melt-away" })).toBeNull()
   })
 
   it("names no workflow for an app the catalog does not hold", () => {
