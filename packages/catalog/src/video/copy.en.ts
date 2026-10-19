@@ -15,10 +15,7 @@ export const videoCopy: Readonly<Record<string, string>> = {
   "video.input.sound.label": "Sound",
   "video.input.seed.label": "Seed",
   "video.model.minimaxH3": "MiniMax H3",
-  "video.model.minimaxH3.line": "Runs through Comfy on its maker's service.",
   "video.model.ltx25": "LTX 2.5",
-  "video.model.ltx25.line":
-    "Open weights on Comfy Cloud. Picture and sound, 2 to 5 seconds.",
   "video.choice.resolution.p480": "480p",
   "video.choice.resolution.p720": "720p",
   "video.choice.cameraMove.static": "Hold",
@@ -58,7 +55,6 @@ export const videoCopy: Readonly<Record<string, string>> = {
   "video.preset.title": "Camera move",
   "video.preset.change": "Change",
   "video.preset.none": "None",
-  "video.preset.noneLine": "The model reads your prompt alone.",
   "video.preset.pick": "Pick a camera move",
   "video.preset.words": "Added to your prompt: {words}",
   "video.sound.always": "This model always makes sound.",

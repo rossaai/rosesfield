@@ -141,9 +141,6 @@ describe("the Video app", () => {
               .map((option) => option.labelKey)
               .filter((key) => key !== "choice.auto")
           : []),
-        ...(input.name === "model" && input.type === "choice"
-          ? input.options.map((option) => `${option.labelKey}.line`)
-          : []),
         ...(input.name === "cameraMove" && input.type === "choice"
           ? input.options
               .filter((option) => option.value !== "auto")
