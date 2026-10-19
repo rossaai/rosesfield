@@ -2,6 +2,7 @@ import type { AppDefinition, InputDefinition } from "@rosesfield/contract"
 import {
   chosenModelOf,
   type HostedModel,
+  isHostedModelId,
   taskAdapter,
   tasksOf,
 } from "@rosesfield/generation/bindings"
@@ -69,6 +70,7 @@ function graphsOf(app: AppDefinition, task: string): CatalogModel[] {
       one.name === modelInputName && one.type === "choice"
   )
   return (input?.options ?? [])
+    .filter((option) => !isHostedModelId(option.value))
     .filter((option) => !isDeniedModel(`graph/${option.value}`))
     .map((option) => ({
       id: option.value,

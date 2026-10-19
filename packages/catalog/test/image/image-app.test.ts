@@ -11,6 +11,7 @@ import {
 } from "@rosesfield/generation"
 import { AspectRatio } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
+import { z } from "zod"
 import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
 import { app } from "#image/app"
 import { imageCopy } from "#image/copy.en"
@@ -33,6 +34,16 @@ function workflowOf(binding: EngineBinding): unknown {
   return binding.config.workflow
 }
 
+function fieldAt(value: unknown, path: readonly string[]): unknown {
+  return path.reduce<unknown>(
+    (current, key) =>
+      typeof current === "object" && current !== null && key in current
+        ? Object.entries(current).find(([name]) => name === key)?.[1]
+        : undefined,
+    value
+  )
+}
+
 function resolutionsAllowed(model: string): readonly string[] {
   const rule = inputRulesOf(definition, { model }).find(
     (one) => one.input.name === "resolution"
@@ -52,6 +63,24 @@ describe("the Image app", () => {
       resolution: "1k",
     })
     expect(graph.adapter).toBe(comfyWorkflowAdapter)
+  })
+
+  it("publishes as its default the model a run with no model runs", () => {
+    const published = fieldAt(z.toJSONSchema(body, { io: "input" }), [
+      "properties",
+      "inputs",
+      "properties",
+      "model",
+      "default",
+    ])
+    const approved = body.parse({ inputs: { prompt: "a" } }).inputs.model
+    const ran = hostedModelOf(
+      resolveBinding(definition.engine, { prompt: "a" })
+    )
+    expect(published).toBe("bfl/flux-3-image")
+    expect(approved).toBe(published)
+    expect(ran).toBe(published)
+    expect(defaultModelOf(definition)).toBe(published)
   })
 
   it("keeps two open-weights graphs and no FLUX.2 Klein 4B graph", () => {

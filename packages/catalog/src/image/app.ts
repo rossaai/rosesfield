@@ -3,7 +3,6 @@ import { defineApp } from "#define-app"
 import { imageBinding } from "#image/comfy/image-binding"
 import {
   defaultResolution,
-  firstGraph,
   firstModel,
   imageModels,
   resolutionKeyOf,
@@ -27,11 +26,14 @@ export const app = defineApp({
       type: "choice",
       name: "model",
       labelKey: "image.input.model.label",
-      options: imageModels.map((model) => ({
-        value: model.value,
-        labelKey: model.labelKey,
-      })),
-      default: firstGraph,
+      options: [
+        { value: firstModel, labelKey: "image.model.flux3Image" },
+        ...imageModels.map((model) => ({
+          value: model.value,
+          labelKey: model.labelKey,
+        })),
+      ],
+      default: firstModel,
     },
     {
       type: "choice",

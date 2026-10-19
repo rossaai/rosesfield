@@ -144,7 +144,9 @@ describe("the engine request the Image binding produces", () => {
       fetch: replay.fetch,
     })
     await expect(
-      engine.submit(requestFor({ inputs: { prompt: "a door" } }, 1))
+      engine.submit(
+        requestFor({ inputs: { prompt: "a door", model: "z-image-turbo" } }, 1)
+      )
     ).rejects.toThrow()
     expect(replay.sent).toEqual([])
   })

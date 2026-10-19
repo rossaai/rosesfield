@@ -35,8 +35,6 @@ export const imageModels: readonly ImageModel[] = [
 
 export const firstModel = "bfl/flux-3-image"
 
-export const firstGraph = "z-image-turbo"
-
 export const defaultResolution: ResolutionValue = "1k"
 
 export function resolutionsOf(model: ImageModel): ResolutionValue[] {
