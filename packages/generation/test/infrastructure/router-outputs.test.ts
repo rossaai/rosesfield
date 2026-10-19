@@ -1,6 +1,7 @@
 import { FixedClock } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { ComfyRouterGenerationEngine } from "#infrastructure/comfy-router-generation-engine"
+import { writeFlatPng } from "#infrastructure/demo/flat-png"
 import { RouterCatalog } from "#infrastructure/router/router-catalog"
 import { pngBytes, start } from "../sample"
 import {
@@ -92,6 +93,18 @@ describe("the outputs of a Router result", () => {
     const outputs = await engine.listOutputs(ref, { prompt: "a door" })
     expect(outputs.map((one) => one.mime)).toEqual(["image/png"])
     expect(replay.unused().map((one) => one.url)).toEqual(inside)
+  })
+
+  it("carry the width and height the downloaded file declares", async () => {
+    const { engine } = engineWith([
+      resultWith({ result: { sample: outputUrl } }),
+      {
+        ...png(outputUrl),
+        bytes: await writeFlatPng({ width: 48, height: 27, gray: 128 }),
+      },
+    ])
+    const [output] = await engine.listOutputs(ref, { prompt: "a door" })
+    expect(output).toMatchObject({ width: 48, height: 27 })
   })
 
   it("never fetch an address the visitor wrote into the run", async () => {
