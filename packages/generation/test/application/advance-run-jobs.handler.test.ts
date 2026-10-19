@@ -5,7 +5,7 @@ import { RunInputRefusedError } from "#domain/error/run-input-refused.error"
 import type { EngineOutput, EngineStatus } from "#domain/generation-engine.port"
 import { Run } from "#domain/run"
 import { FakeGenerationEngine } from "../fake/fake-generation-engine"
-import { pngBytes } from "../sample"
+import { pngBytes, start } from "../sample"
 import { type Harness, harnessFor, startImage } from "./harness"
 
 const image: EngineOutput = {
@@ -183,7 +183,7 @@ describe("AdvanceRunHandler, an engine that takes no idempotency key", () => {
     if (run === null) {
       throw new Error("the run was not stored")
     }
-    run.submitting(0)
+    run.submitting({ index: 0, now: start })
     await harness.runs.save(run)
 
     expect(await harness.advance.execute({ runId })).toEqual({

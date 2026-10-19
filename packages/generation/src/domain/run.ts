@@ -26,6 +26,7 @@ export type RunJob = {
   progress: number | null
   outputs: AssetId[]
   collectingSince?: string
+  submittingSince?: string
 }
 
 export type RunState = {
@@ -69,6 +70,11 @@ type KeepJobOptions = {
 }
 
 type CollectingOptions = {
+  index: number
+  now: Date
+}
+
+type SubmittingOptions = {
   index: number
   now: Date
 }
@@ -197,14 +203,36 @@ export class Run {
     )
   }
 
-  submitting(index: number): void {
+  submittingSince(): Date | null {
+    const since = this.state.jobs.flatMap((job) =>
+      job.status === "submitting" && job.submittingSince !== undefined
+        ? [Date.parse(job.submittingSince)]
+        : []
+    )
+    return since.length === 0 ? null : new Date(Math.min(...since))
+  }
+
+  submitting(options: SubmittingOptions): void {
     this.refuseWhenFinished()
-    this.jobAt(index).status = "submitting"
+    const job = this.jobAt(options.index)
+    job.status = "submitting"
+    job.submittingSince = options.now.toISOString()
+  }
+
+  release(): void {
+    this.refuseWhenFinished()
+    for (const job of this.state.jobs) {
+      if (job.status === "submitting") {
+        job.status = "pending"
+        delete job.submittingSince
+      }
+    }
   }
 
   submitted(options: SubmittedOptions): void {
     this.refuseWhenFinished()
     const job = this.jobAt(options.index)
+    delete job.submittingSince
     job.ref = options.ref
     job.status = "queued"
     this.state.attempts = 0

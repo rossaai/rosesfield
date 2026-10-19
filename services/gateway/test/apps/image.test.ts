@@ -55,6 +55,7 @@ describe("an Image run through the local gateway on the demo engine", () => {
       apps: [appDefinition.parse(app)],
       clock,
       platformRoot: null,
+      fetch: async () => new Response(null, { status: 503 }),
     })
   }
 
@@ -212,17 +213,23 @@ describe("an Image run through the local gateway on the demo engine", () => {
     expect(JSON.stringify(await runs.json())).not.toContain("a door")
   })
 
-  it("asks for FLUX 3 Image when a run names no model, which the demo engine does not run", async () => {
+  it("runs its default model on the demo engine when a run names no model and the server holds no key", async () => {
     open()
     const response = await call(
       startPath,
       postJson({ inputs: { prompt: "a paper boat" } })
     )
-    expect(response.status).toBe(404)
-    expect(errorEnvelope.parse(await response.json()).error.code).toBe(
-      "MODEL_NOT_FOUND"
-    )
-    const runs = await call(routes.listRuns.path)
-    expect(JSON.stringify(await runs.json())).not.toContain("a paper boat")
+    expect(response.status).toBe(202)
+    const { run } = runResponse.parse(await response.json())
+    expect(run).toMatchObject({
+      origin: "demo",
+      engine: { adapter: "demo" },
+      inputs: { prompt: "a paper boat", model: "bfl/flux-3-image" },
+    })
+    await drive(run.id)
+    const done = await call(buildPath(routes.getRun.path, { runId: run.id }))
+    const finished = runResponse.parse(await done.json()).run
+    expect(finished.status).toBe("done")
+    expect(finished.outputs).toHaveLength(1)
   })
 })

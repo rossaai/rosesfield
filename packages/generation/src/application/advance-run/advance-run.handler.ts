@@ -6,13 +6,16 @@ import {
   RateLimitedError,
   type RunId,
 } from "@rosesfield/kernel"
+import { jobInputsOf } from "#application/advance-run/job-inputs"
 import { keepOutputs } from "#application/advance-run/keep-outputs"
 import { recordPrice } from "#application/advance-run/record-price"
 import { runRequestOf } from "#application/advance-run/run-request"
 import {
   backoffMs,
+  isClaimHeld,
   isPastLimit,
   isPastResultKept,
+  isSubmitDue,
   pollMs,
   wakeMs,
 } from "#application/advance-run/run-timing"
@@ -112,10 +115,16 @@ export class AdvanceRunHandler {
       return this.failWith(run, new RunFailedError({ cause: "no job" }))
     }
     if (run.jobs.some((job) => job.status === "submitting")) {
-      return this.failWith(run, new RunFailedError({ cause: "lost submit" }))
+      if (engine.idempotency === "none") {
+        return this.failWith(run, new RunFailedError({ cause: "lost submit" }))
+      }
+      if (isClaimHeld(run, this.now())) {
+        return { nextWakeMs: pollMs }
+      }
+      run.release()
     }
     try {
-      return run.jobs.some((job) => job.status === "pending")
+      return isSubmitDue(run, engine)
         ? await this.submitPending(run, watch)
         : await this.poll(run, watch)
     } catch (error) {
@@ -128,10 +137,13 @@ export class AdvanceRunHandler {
     watch: Watch
   ): Promise<AdvanceRunOutput> {
     const base = await runRequestOf(run, watch.app, this.assets)
+    const pending = run.jobs.filter((one) => one.status === "pending")
+    const sending = watch.engine.submitsAlone() ? pending.slice(0, 1) : pending
     let current = run
-    for (const job of run.jobs.filter((one) => one.status === "pending")) {
+    for (const job of sending) {
       current = await this.submitJob(current, watch, job.index, {
         ...base,
+        inputs: jobInputsOf(base, job, current.jobs.length),
         idempotencyKey: current.idempotencyKeyOf(job.index),
         seed: job.seed,
         count: current.jobs.length === 1 ? base.count : 1,
@@ -150,11 +162,8 @@ export class AdvanceRunHandler {
     request: EngineRequest
   ): Promise<Run> {
     const { engine } = watch
-    let current = run
-    if (engine.idempotency === "none") {
-      current.submitting(index)
-      current = await this.runs.save(current)
-    }
+    run.submitting({ index, now: this.now() })
+    const current = await this.runs.save(run)
     const submission = await engine.submit(request)
     current.submitted({
       index,
@@ -244,8 +253,11 @@ export class AdvanceRunHandler {
       return this.failWith(run, new RunFailedError({ cause: "result gone" }))
     }
     await this.runs.save(run)
-    return run.isFinished()
-      ? stop
+    if (run.isFinished()) {
+      return stop
+    }
+    return run.jobs.some((job) => job.status === "pending")
+      ? { nextWakeMs: pollMs }
       : { nextWakeMs: wakeMs(polled.map((one) => one.status)) }
   }
 
@@ -352,6 +364,9 @@ export class AdvanceRunHandler {
       error instanceof ProjectError
         ? error
         : new RunFailedError({ cause: error })
+    if (watch.engine.idempotency === "keyed") {
+      run.release()
+    }
     const isSending = run.jobs.some((job) => job.status === "submitting")
     if (
       !isSending &&

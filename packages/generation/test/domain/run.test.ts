@@ -146,7 +146,7 @@ describe("Run", () => {
     (run: Run) =>
       run.submitted({ index: 0, ref: "x", models: [], workflowHash: null }),
     (run: Run) => run.keepJob({ index: 0, outputs: [], now: later }),
-    (run: Run) => run.submitting(0),
+    (run: Run) => run.submitting({ index: 0, now: later }),
     (run: Run) => run.retried(),
   ])("refuses a step after it was cancelled", (step) => {
     const run = queued()

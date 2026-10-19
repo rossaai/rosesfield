@@ -83,7 +83,7 @@ describe.each(subjects)("RunRepository contract: $name", ({ create }) => {
       now: start,
       outputsPerJob: "one",
     })
-    run.submitting(1)
+    run.submitting({ index: 1, now: start })
     run.submitted({ index: 2, ref: "job-3", models: [], workflowHash: null })
     run.keepJob({ index: 2, outputs: [portraitId], now: start })
     const stored = await runs.add(run)

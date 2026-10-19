@@ -115,7 +115,7 @@ describe("a run of a hosted model", () => {
         appId: "sample-image",
         body: {
           inputs: { model: "maker/picture-2", prompt: "a" },
-          count: 3,
+          count: 9,
         },
         idempotencyKey: null,
         seed: null,

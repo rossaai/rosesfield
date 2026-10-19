@@ -107,6 +107,11 @@ export abstract class GenerationEngine {
   /** Asks the engine to stop a submitted run. */
   abstract cancel(ref: string): Promise<void>
 
+  /** Says whether a run's jobs go to this engine one after another, so each job's cost is read on its own. */
+  submitsAlone(): boolean {
+    return false
+  }
+
   /** Checks the engine's key with a call that starts no paid run. */
   abstract checkKey(): Promise<KeyCheck>
 

@@ -15,10 +15,14 @@ import { IdempotencyKeyReusedError } from "#domain/error/idempotency-key-reused.
 import { ModelNotFoundError } from "#domain/error/model-not-found.error"
 import { ModelNotOfferedError } from "#domain/error/model-not-offered.error"
 import { RunInputInvalidError } from "#domain/error/run-input-invalid.error"
-import type { GenerationEngine } from "#domain/generation-engine.port"
+import { fieldOfRole } from "#domain/field-role"
+import type {
+  GenerationEngine,
+  OutputsPerJob,
+} from "#domain/generation-engine.port"
 import { isRecord } from "#domain/is-record"
 import type { JobRunner } from "#domain/job-runner.port"
-import { checkModelInputs } from "#domain/model-form"
+import { checkModelInputs, type ModelForm } from "#domain/model-form"
 import type { ModelPolicy } from "#domain/model-policy.port"
 import { Run } from "#domain/run"
 import type { RunRepository } from "#domain/run.repository"
@@ -50,6 +54,12 @@ type Picked = {
 
 type Prepared = Picked & {
   request: RunRequest
+  outputsPerJob?: OutputsPerJob
+}
+
+type Described = {
+  engine: GenerationEngine
+  form: ModelForm
 }
 
 type StartRunHandlerOptions = {
@@ -91,7 +101,8 @@ export class StartRunHandler {
     if (existing !== null) {
       return { run: existing.toRecord() }
     }
-    const { engine, binding, request } = await this.prepare(app, input)
+    const prepared = await this.prepare(app, input)
+    const { engine, binding, request } = prepared
     const run = Run.queue({
       id: runIdFormat.parse(crypto.randomUUID()),
       appId: app.id,
@@ -101,7 +112,7 @@ export class StartRunHandler {
       origin: engine.origin,
       idempotencyKey: input.idempotencyKey,
       now: this.clock.now(),
-      outputsPerJob: engine.outputsPerJob(binding),
+      outputsPerJob: prepared.outputsPerJob ?? engine.outputsPerJob(binding),
     })
     const stored = await this.runs.add(run)
     await this.jobs.enqueue(stored.id)
@@ -151,16 +162,17 @@ export class StartRunHandler {
     }
     const binding = hostedModelBinding(model)
     const engine = this.engines.find((candidate) => candidate.canRun(binding))
-    const form = engine === undefined ? null : await engine.formOf(binding)
-    if (engine === undefined || form === null) {
+    const described = await this.describe(binding, engine)
+    if (engine?.origin === "demo" && described === null) {
+      return null
+    }
+    if (engine === undefined || described === null) {
       throw new ModelNotFoundError({ model })
     }
-    await this.checkOffered(app, engine, model)
-    const checked = checkModelInputs(form, given)
+    await this.checkOffered(app, described.engine, model)
+    const checked = checkModelInputs(described.form, given)
     const issues = checked.kind === "invalid" ? [...checked.issues] : []
-    if (body.count !== undefined && body.count !== 1) {
-      issues.push("count: a hosted model sets its own count in its inputs")
-    }
+    const count = countOf(app, described.form, body.count, issues)
     if (body.aspectRatio !== undefined && body.aspectRatio !== null) {
       issues.push(
         "aspectRatio: a hosted model sets its own aspect in its inputs"
@@ -172,8 +184,26 @@ export class StartRunHandler {
     return {
       engine,
       binding,
-      request: { inputs: checked.inputs, count: 1, aspectRatio: null },
+      request: { inputs: checked.inputs, count, aspectRatio: null },
+      outputsPerJob: count > 1 ? "one" : "all",
     }
+  }
+
+  private async describe(
+    binding: EngineBinding,
+    runner: GenerationEngine | undefined
+  ): Promise<Described | null> {
+    const own = runner === undefined ? null : await runner.formOf(binding)
+    if (runner !== undefined && own !== null) {
+      return { engine: runner, form: own }
+    }
+    for (const engine of this.engines.filter((one) => one !== runner)) {
+      const form = await engine.formOf(binding).catch(() => null)
+      if (form !== null) {
+        return { engine, form }
+      }
+    }
+    return null
   }
 
   private async checkOffered(
@@ -244,6 +274,32 @@ export class StartRunHandler {
     const random = crypto.getRandomValues(new Uint32Array(1))[0] ?? 0
     return random % (StartRunHandler.maxSeed + 1)
   }
+}
+
+function countOf(
+  app: AppDefinition,
+  form: ModelForm,
+  given: unknown,
+  issues: string[]
+): number {
+  if (given === undefined || given === 1) {
+    return 1
+  }
+  const max = app.output.count.max
+  if (fieldOfRole(form.fields, "count", app.output.kind) !== null) {
+    issues.push("count: this model sets its own count in its inputs")
+    return 1
+  }
+  if (
+    typeof given !== "number" ||
+    !Number.isInteger(given) ||
+    given < 1 ||
+    given > max
+  ) {
+    issues.push(`count: a whole number from 1 to ${max}`)
+    return 1
+  }
+  return given
 }
 
 function textInputsOf(given: Record<string, unknown>): RunInputs {
