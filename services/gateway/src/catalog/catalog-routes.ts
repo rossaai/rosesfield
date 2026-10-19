@@ -41,10 +41,16 @@ export function modelRoutes(
     limitBody(jsonBodyMaxBytes),
     async (c) => {
       const appId = appOf(apps, c.req.param("appId")).id
-      const { inputs } = parseWith(priceBody, await readJson(c), "body")
+      const { inputs, count, aspectRatio } = parseWith(
+        priceBody,
+        await readJson(c),
+        "body"
+      )
       const { price } = await c.var.scope.handlers.priceRun.execute({
         appId,
         inputs,
+        count,
+        aspectRatio,
       })
       const body: ResponseOf<typeof catalogRoutes.priceRun> = { price }
       return c.json(body, catalogRoutes.priceRun.status)

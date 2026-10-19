@@ -1,4 +1,10 @@
-import { appId, defineRoute, runInputs } from "@rosesfield/contract"
+import {
+  appId,
+  aspectRatio,
+  defineRoute,
+  runCount,
+  runInputs,
+} from "@rosesfield/contract"
 import type { ModelField } from "@rosesfield/generation/bindings"
 import { z } from "zod"
 
@@ -78,11 +84,18 @@ export const modelListResponse = z.object({
   defaultModel: z.string().nullable(),
 })
 
-export const priceBody = z.object({ inputs: runInputs })
+export const priceBody = z.object({
+  inputs: runInputs,
+  count: runCount.default(1),
+  aspectRatio: aspectRatio.nullable().default(null),
+})
 
 export const priceResponse = z.object({
   price: z.discriminatedUnion("source", [
-    z.object({ source: z.enum(["estimate", "rates"]), credits: z.number() }),
+    z.object({
+      source: z.enum(["measured", "estimate", "rates"]),
+      credits: z.number(),
+    }),
     z.object({ source: z.literal("unknown"), credits: z.null() }),
   ]),
 })

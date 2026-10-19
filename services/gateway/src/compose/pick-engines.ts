@@ -1,6 +1,7 @@
 import {
   ComfyGenerationEngine,
   ComfyRouterGenerationEngine,
+  type CreditMeter,
   DemoGenerationEngine,
   type Fetch,
   type GenerationEngine,
@@ -20,7 +21,12 @@ export type EngineOptions = {
   clock: Clock
   fetch?: Fetch
   catalog?: RouterCatalog
+  meter?: CreditMeter
   warmCatalog?: boolean
+}
+
+function meterOf(options: EngineOptions): { meter?: CreditMeter } {
+  return options.meter === undefined ? {} : { meter: options.meter }
 }
 
 function fetchOf(options: EngineOptions): { fetch?: Fetch } {
@@ -34,6 +40,7 @@ function routerOf(
   const router = new ComfyRouterGenerationEngine({
     apiKey,
     catalog: options.catalog ?? sharedRouterCatalog(options.clock),
+    ...meterOf(options),
     ...fetchOf(options),
   })
   if (options.warmCatalog === true) {
@@ -55,6 +62,7 @@ export function liveEngineOf(
       return new ComfyGenerationEngine({
         apiKey: engine.apiKey,
         baseUrl: engine.baseUrl,
+        ...meterOf(options),
         ...fetchOf(options),
       })
   }

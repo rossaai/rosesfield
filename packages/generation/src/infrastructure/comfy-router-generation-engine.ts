@@ -22,6 +22,12 @@ import {
 import type { ModelForm } from "#domain/model-form"
 import { hostedModelOf } from "#domain/task-binding"
 import type { Fetch } from "#infrastructure/comfy/comfy-low"
+import {
+  CreditMeter,
+  costOfCredits,
+  creditsOfCost,
+  type MeterTicket,
+} from "#infrastructure/credit-meter"
 import { bodyOf } from "#infrastructure/router/router-body"
 import type {
   CatalogEntry,
@@ -40,6 +46,7 @@ import { priceFromRates } from "#infrastructure/router/router-rates"
 type ComfyRouterGenerationEngineOptions = {
   apiKey: string | null
   catalog: RouterCatalog
+  meter?: CreditMeter
   fetch?: Fetch
   requestTimeoutMs?: number
   downloadTimeoutMs?: number
@@ -49,7 +56,7 @@ type Ref = { model: string; requestId: string; isNow: boolean }
 
 export class ComfyRouterGenerationEngine extends GenerationEngine {
   static readonly routerUrl = RouterHttp.routerUrl
-  static readonly creditsPerUsd = 211
+  static readonly creditsPerUsd = CreditMeter.creditsPerUsd
   static readonly requestTimeoutMs = 30_000
   static readonly downloadTimeoutMs = 300_000
 
@@ -59,10 +66,12 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
 
   private readonly http: RouterHttp
   private readonly catalog: RouterCatalog
+  private readonly meter: CreditMeter | null
 
   constructor(options: ComfyRouterGenerationEngineOptions) {
     super()
     this.catalog = options.catalog
+    this.meter = options.meter ?? null
     this.http = new RouterHttp({
       apiKey: options.apiKey,
       fetch: options.fetch ?? fetch,
@@ -130,38 +139,20 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
 
   override async submit(request: EngineRequest): Promise<EngineSubmission> {
     const entry = await this.entryOf(request.binding)
-    const model = entry.facts.model
     const body = bodyOf(entry.form, request.inputs, request.files)
-    if (entry.facts.answersBytes) {
-      const response = await this.http.runNow(
-        model,
-        body,
-        request.idempotencyKey
-      )
-      const ref = refText({
-        model,
-        requestId: request.idempotencyKey,
-        isNow: true,
-      })
-      const cost = costOf(creditsOf(response))
-      const outputs = await outputsOf(response, this.readOf(entry, request))
-      return {
-        ref,
-        models: [model],
-        workflowHash: null,
-        finished: { outputs, cost },
-      }
+    const ticket = (await this.meter?.start(this.http)) ?? null
+    try {
+      return entry.facts.answersBytes
+        ? await this.runNow(entry, request, body, ticket)
+        : await this.queue(entry, request, body, ticket)
+    } catch (error) {
+      this.meter?.drop(ticket)
+      throw error
     }
-    const requestId = await this.http.submit(
-      model,
-      body,
-      request.idempotencyKey
-    )
-    return {
-      ref: refText({ model, requestId, isNow: false }),
-      models: [model],
-      workflowHash: null,
-    }
+  }
+
+  override creditsOf(cost: Cost): number {
+    return creditsOfCost(cost)
   }
 
   override async read(ref: string): Promise<EngineStatus> {
@@ -177,13 +168,17 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
         retryAfterSeconds: state.retryAfterSeconds,
       }
     }
+    if (state.errorType !== null) {
+      this.meter?.dropRef(ref)
+    }
     if (state.errorType === "cancelled") {
       return { state: "cancelled" }
     }
     if (state.errorType !== null) {
       return { state: "failed", error: failureOf(state.errorType, 200, state) }
     }
-    return { state: "succeeded" }
+    const credits = (await this.meter?.finishRef(this.http, ref)) ?? null
+    return { state: "succeeded", cost: costOfCredits(credits) }
   }
 
   override async listOutputs(
@@ -208,6 +203,7 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
   }
 
   override async cancel(ref: string): Promise<void> {
+    this.meter?.dropRef(ref)
     const parsed = parseRef(ref)
     if (!parsed.isNow) {
       await this.http.cancel(parsed.model, parsed.requestId)
@@ -224,6 +220,44 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     } catch {
       return "unreachable"
     }
+  }
+
+  private async runNow(
+    entry: CatalogEntry,
+    request: EngineRequest,
+    body: unknown,
+    ticket: MeterTicket | null
+  ): Promise<EngineSubmission> {
+    const model = entry.facts.model
+    const response = await this.http.runNow(model, body, request.idempotencyKey)
+    const outputs = await outputsOf(response, this.readOf(entry, request))
+    const metered = (await this.meter?.finish(this.http, ticket)) ?? null
+    return {
+      ref: refText({ model, requestId: request.idempotencyKey, isNow: true }),
+      models: [model],
+      workflowHash: null,
+      finished: {
+        outputs,
+        cost: costOfCredits(metered ?? creditsOf(response)),
+      },
+    }
+  }
+
+  private async queue(
+    entry: CatalogEntry,
+    request: EngineRequest,
+    body: unknown,
+    ticket: MeterTicket | null
+  ): Promise<EngineSubmission> {
+    const model = entry.facts.model
+    const requestId = await this.http.submit(
+      model,
+      body,
+      request.idempotencyKey
+    )
+    const ref = refText({ model, requestId, isNow: false })
+    this.meter?.bind(ticket, ref)
+    return { ref, models: [model], workflowHash: null }
   }
 
   private readOf(
@@ -274,15 +308,6 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
 function creditsOf(response: Response): number | null {
   const credits = Number(response.headers.get("x-comfy-credits-used"))
   return Number.isFinite(credits) && credits > 0 ? credits : null
-}
-
-function costOf(credits: number | null): Cost | null {
-  return credits === null
-    ? null
-    : {
-        amount: credits / ComfyRouterGenerationEngine.creditsPerUsd,
-        currency: "USD",
-      }
 }
 
 function refText(ref: Ref): string {

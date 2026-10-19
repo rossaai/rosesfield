@@ -1,5 +1,6 @@
 import { listApps } from "@rosesfield/catalog"
 import type { AppDefinition } from "@rosesfield/contract"
+import { DrizzlePriceBook } from "@rosesfield/generation"
 import { type Clock, SystemClock } from "@rosesfield/kernel"
 import { drizzle } from "drizzle-orm/d1"
 import type { HandlerPorts } from "#build-handlers"
@@ -62,5 +63,6 @@ export function ownerPorts(parts: WorkerParts): HandlerPorts {
     store: parts.store,
     engines: pickEngines(parts.vars.engine, parts.engineOptions),
     clock: parts.clock,
+    prices: new DrizzlePriceBook({ db }),
   }
 }

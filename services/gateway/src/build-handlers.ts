@@ -9,6 +9,7 @@ import {
   type JobRunner,
   ListModelsHandler,
   ListRunsHandler,
+  type PriceBook,
   PriceRunHandler,
   RepeatRunHandler,
   type RunRepository,
@@ -41,6 +42,11 @@ export type HandlerPorts = {
   store: AssetStore
   engines: readonly GenerationEngine[]
   clock: Clock
+  prices?: PriceBook
+}
+
+function pricesOf(ports: HandlerPorts): { prices?: PriceBook } {
+  return ports.prices === undefined ? {} : { prices: ports.prices }
 }
 
 export type LibraryHandlers = {
@@ -105,6 +111,7 @@ export function buildAdvance(
       upload: library.uploadAsset,
     }),
     clock: ports.clock,
+    ...pricesOf(ports),
   })
 }
 
@@ -127,7 +134,7 @@ function buildRuns(ports: HandlerPorts, jobs: JobRunner): RunHandlers {
     repeatRun: new RepeatRunHandler({ runs, start: startRun }),
     checkEngineKey: new CheckEngineKeyHandler({ engines }),
     listModels: new ListModelsHandler({ engines }),
-    priceRun: new PriceRunHandler({ apps, engines }),
+    priceRun: new PriceRunHandler({ apps, engines, ...pricesOf(ports) }),
   }
 }
 

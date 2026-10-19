@@ -1,4 +1,9 @@
-import type { EngineBinding, KeyCheck, RunOrigin } from "@rosesfield/contract"
+import type {
+  Cost,
+  EngineBinding,
+  KeyCheck,
+  RunOrigin,
+} from "@rosesfield/contract"
 import {
   type EngineFinished,
   type EngineOutput,
@@ -34,6 +39,7 @@ type FakeGenerationEngineOptions = {
   refByKey?: boolean
   outputErrors?: Error[]
   finished?: EngineFinished
+  creditsPerUsd?: number
 }
 
 export class FakeGenerationEngine extends GenerationEngine {
@@ -56,6 +62,7 @@ export class FakeGenerationEngine extends GenerationEngine {
   private readonly refByKey: boolean
   private readonly outputErrors: Error[]
   private readonly finished: EngineFinished | null
+  private readonly creditsPerUsd: number | null
   readonly priced: PriceRequest[] = []
 
   constructor(options: FakeGenerationEngineOptions = {}) {
@@ -75,6 +82,11 @@ export class FakeGenerationEngine extends GenerationEngine {
     this.refByKey = options.refByKey ?? false
     this.outputErrors = options.outputErrors ?? []
     this.finished = options.finished ?? null
+    this.creditsPerUsd = options.creditsPerUsd ?? null
+  }
+
+  override creditsOf(cost: Cost): number | null {
+    return this.creditsPerUsd === null ? null : cost.amount * this.creditsPerUsd
   }
 
   override canRun(binding: EngineBinding): boolean {

@@ -88,6 +88,8 @@ export {
   type ModelForm,
 } from "#domain/model-form"
 export { ModelPolicy } from "#domain/model-policy.port"
+export { type MeasuredPrice, PriceBook } from "#domain/price-book.port"
+export { type PricedRun, pricedRunOf } from "#domain/priced-run"
 export { Run, type RunJob, type RunJobStatus, type RunState } from "#domain/run"
 export {
   type RunCursor,
@@ -123,7 +125,9 @@ export {
 } from "#infrastructure/comfy/comfy-workflow-binding"
 export { ComfyGenerationEngine } from "#infrastructure/comfy-generation-engine"
 export { ComfyRouterGenerationEngine } from "#infrastructure/comfy-router-generation-engine"
+export { CreditMeter } from "#infrastructure/credit-meter"
 export { DemoGenerationEngine } from "#infrastructure/demo-generation-engine"
+export { DrizzlePriceBook } from "#infrastructure/drizzle-price-book"
 export { DrizzleRunRepository } from "#infrastructure/drizzle-run-repository"
 export {
   fromRunRow,

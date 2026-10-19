@@ -113,6 +113,15 @@ export class RouterHttp {
     return JSON.parse(text)
   }
 
+  async balance(): Promise<number> {
+    const body = await this.json("GET", "/customers/balance", "balance")
+    const cents = numberOf(fieldOf(body, "amount_cents"))
+    if (cents === null) {
+      throw new EngineUnavailableError({ cause: "a balance with no cents" })
+    }
+    return cents
+  }
+
   async readRates(): Promise<unknown> {
     return JSON.parse(await this.publicText(RouterHttp.ratesUrl))
   }

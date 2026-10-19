@@ -224,3 +224,12 @@ export function cancelled(): Recording {
     json: { status: "ALREADY_COMPLETED" },
   }
 }
+
+export function balance(cents: number): Recording {
+  return {
+    method: "GET",
+    url: `${routerUrl}/customers/balance`,
+    status: 200,
+    json: { amount_cents: cents, currency: "usd" },
+  }
+}

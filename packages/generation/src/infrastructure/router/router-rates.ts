@@ -103,11 +103,10 @@ function scoreOf(
     if (part === "") {
       continue
     }
-    const fits = fitOf(part, values, inputs)
-    if (fits === false) {
+    if (fitOf(part, values, inputs) !== true) {
       return null
     }
-    score += fits === true ? 1 : 0
+    score += 1
   }
   return score
 }

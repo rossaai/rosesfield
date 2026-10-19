@@ -4,10 +4,12 @@ import { AdvanceRunHandler } from "#application/advance-run/advance-run.handler"
 import { CancelRunHandler } from "#application/cancel-run/cancel-run.handler"
 import { GetRunHandler } from "#application/get-run/get-run.handler"
 import { ListRunsHandler } from "#application/list-runs/list-runs.handler"
+import { PriceRunHandler } from "#application/price-run/price-run.handler"
 import { RepeatRunHandler } from "#application/repeat-run/repeat-run.handler"
 import { StartRunHandler } from "#application/start-run/start-run.handler"
 import type { GenerationEngine } from "#domain/generation-engine.port"
 import type { ModelPolicy } from "#domain/model-policy.port"
+import type { PriceBook } from "#domain/price-book.port"
 import { FakeAppCatalog } from "../fake/fake-app-catalog"
 import { FakeGenerationEngine } from "../fake/fake-generation-engine"
 import { FakeJobRunner } from "../fake/fake-job-runner"
@@ -19,6 +21,7 @@ type HarnessOptions = {
   apps?: AppDefinition[]
   engines?: GenerationEngine[]
   policy?: ModelPolicy
+  prices?: PriceBook
 }
 
 export type Harness = ReturnType<typeof harnessFor>
@@ -44,7 +47,19 @@ export function harnessFor(options: HarnessOptions = {}) {
     jobs,
     assets,
     start: startRun,
-    advance: new AdvanceRunHandler({ apps, runs, engines, assets, clock }),
+    advance: new AdvanceRunHandler({
+      apps,
+      runs,
+      engines,
+      assets,
+      clock,
+      ...(options.prices === undefined ? {} : { prices: options.prices }),
+    }),
+    price: new PriceRunHandler({
+      apps,
+      engines,
+      ...(options.prices === undefined ? {} : { prices: options.prices }),
+    }),
     cancel: new CancelRunHandler({ runs, engines, clock }),
     get: new GetRunHandler({ runs }),
     list: new ListRunsHandler({ runs }),

@@ -7,6 +7,7 @@ import {
   type Expected,
   type OutputKind,
 } from "./file-checks"
+import { ledgerRowsOf } from "./ledger-rows"
 import { writePlanted } from "./planted-files"
 
 type LibraryFile = { assetId: string; runId: string | null; expected: Expected }
@@ -121,14 +122,25 @@ async function runLibrary(base: string): Promise<number> {
   return failed === 0 ? 0 : 1
 }
 
-const [mode, base] = Bun.argv.slice(2)
+async function runLedger(base: string, since: string): Promise<number> {
+  const body = rowOf(await (await fetch(`${base}/api/runs`)).json())
+  const runs = Array.isArray(body.runs) ? body.runs : []
+  for (const line of ledgerRowsOf(runs, new Date(since))) {
+    console.log(line)
+  }
+  return 0
+}
+
+const [mode, base, since] = Bun.argv.slice(2)
 if (mode === "--controls") {
   process.exit(await runControls())
 } else if (mode === "--library" && base !== undefined) {
   process.exit(await runLibrary(base.replace(/\/$/, "")))
+} else if (mode === "--ledger" && base !== undefined && since !== undefined) {
+  process.exit(await runLedger(base.replace(/\/$/, ""), since))
 } else {
   console.log(
-    "Usage: bun scripts/checks/output-files/check-output-files.ts --controls | --library http://127.0.0.1:8787"
+    "Usage: bun scripts/checks/output-files/check-output-files.ts --controls | --library http://127.0.0.1:8787 | --ledger http://127.0.0.1:8787 2026-10-19T00:00:00Z"
   )
   process.exit(2)
 }

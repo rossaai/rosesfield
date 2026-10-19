@@ -75,7 +75,7 @@ export type PriceRequest = {
 }
 
 export type RunPrice =
-  | { source: "estimate" | "rates"; credits: number }
+  | { source: "measured" | "estimate" | "rates"; credits: number }
   | { source: "unknown"; credits: null }
 
 export const unknownPrice: RunPrice = { source: "unknown", credits: null }
@@ -128,5 +128,10 @@ export abstract class GenerationEngine {
   /** Prices one run before it starts, in the engine's credits. */
   priceOf(_binding: EngineBinding, _request: PriceRequest): Promise<RunPrice> {
     return Promise.resolve(unknownPrice)
+  }
+
+  /** Says what a cost this engine measured comes to in its credits, or null when it has no credits. */
+  creditsOf(_cost: Cost): number | null {
+    return null
   }
 }

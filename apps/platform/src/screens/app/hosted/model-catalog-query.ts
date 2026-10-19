@@ -12,19 +12,22 @@ export function modelCatalogQuery(appId: string, keyState: string) {
   })
 }
 
-export function priceQuery(
-  appId: string,
-  inputs: Readonly<Record<string, string | number | string[]>>,
-  keyState: string
-) {
+export type PriceAsk = {
+  inputs: Readonly<Record<string, string | number | string[]>>
+  count?: number | undefined
+  aspectRatio?: string | null | undefined
+}
+
+export function priceQuery(appId: string, ask: PriceAsk, keyState: string) {
+  const body = {
+    inputs: ask.inputs,
+    ...(ask.count === undefined ? {} : { count: ask.count }),
+    ...(ask.aspectRatio === undefined ? {} : { aspectRatio: ask.aspectRatio }),
+  }
   return queryOptions({
-    queryKey: ["price", appId, keyState, inputs],
+    queryKey: ["price", appId, keyState, body],
     queryFn: ({ signal }) =>
-      callRoute(catalogRoutes.priceRun, {
-        params: { appId },
-        body: { inputs },
-        signal,
-      }),
+      callRoute(catalogRoutes.priceRun, { params: { appId }, body, signal }),
     staleTime: 60_000,
     retry: false,
   })

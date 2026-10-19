@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url"
 import type { PiAgentHarness } from "@rosesfield/agent"
 import type { AppDefinition } from "@rosesfield/contract"
 import {
+  DrizzlePriceBook,
   DrizzleRunRepository,
   type Fetch,
   migrateRunTable,
@@ -22,6 +23,7 @@ import { getConnInfo, serveStatic } from "hono/bun"
 import { localAgent } from "#agent/local-agent"
 import { SessionAgents } from "#agent/session-agents"
 import { type Built, buildHandlers, type Handlers } from "#build-handlers"
+import { sharedCreditMeter } from "#catalog/shared-credit-meter"
 import { type EngineOptions, pickEngines } from "#compose/pick-engines"
 import { ownerScope } from "#compose/request-scope"
 import { ownerSettings } from "#compose/settings"
@@ -112,8 +114,12 @@ function ownerHandlers(parts: Parts): Built<TimerJobRunner> {
       assets: new DrizzleAssetRepository({ db }),
       characters: new DrizzleCharacterRepository({ db }),
       store: parts.store,
-      engines: pickEngines(parts.env.engine, parts.engineOptions),
+      engines: pickEngines(parts.env.engine, {
+        ...parts.engineOptions,
+        meter: sharedCreditMeter(parts.clock),
+      }),
       clock: parts.clock,
+      prices: new DrizzlePriceBook({ db }),
     },
     (advance) => new TimerJobRunner({ advance, runs })
   )

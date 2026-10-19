@@ -40,10 +40,10 @@ function usePrice(
   body: StartRunBodyInput | null,
   keyState: string
 ): number | null {
-  const inputs = useDebounced(body?.inputs ?? null, priceDelayMs)
+  const ask = useDebounced(body, priceDelayMs)
   const query = useQuery({
-    ...priceQuery(app.id, inputs ?? {}, keyState),
-    enabled: inputs !== null,
+    ...priceQuery(app.id, ask ?? { inputs: {} }, keyState),
+    enabled: ask !== null,
   })
   const price = query.data?.price
   return price === undefined || price.source === "unknown"
@@ -60,7 +60,12 @@ export function useStartRun(
   const client = useQueryClient()
   const settings = useQuery(settingsQuery)
   const hostedRun = hostedBodyOf(form, hosted)
-  const credits = usePrice(app, hostedRun, hosted?.keyState ?? "unknown")
+  const isDemo = settings.data?.engine.origin === "demo" && hostedRun === null
+  const credits = usePrice(
+    app,
+    isDemo ? null : (hostedRun ?? bodyOf(app, form.values)),
+    hosted?.keyState ?? settings.data?.engine.key ?? "unknown"
+  )
   const start = useMutation({
     mutationFn: async (key: string) => {
       const answer = await callRoute(routes.startRun, {
@@ -81,7 +86,6 @@ export function useStartRun(
     }
     start.mutate(crypto.randomUUID())
   }
-  const isDemo = settings.data?.engine.origin === "demo" && hostedRun === null
   const amount = credits === null ? null : formatNumber(credits)
   return {
     generate,

@@ -1,12 +1,21 @@
-import type { AppDefinition } from "@rosesfield/contract"
+import type { AppDefinition, Cost } from "@rosesfield/contract"
 import {
+  type AssetId,
   type Clock,
   ProjectError,
   RateLimitedError,
   type RunId,
 } from "@rosesfield/kernel"
 import { keepOutputs } from "#application/advance-run/keep-outputs"
+import { recordPrice } from "#application/advance-run/record-price"
 import { runRequestOf } from "#application/advance-run/run-request"
+import {
+  backoffMs,
+  isPastLimit,
+  isPastResultKept,
+  pollMs,
+  wakeMs,
+} from "#application/advance-run/run-timing"
 import type { AppCatalog } from "#domain/app-catalog.port"
 import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import { RunConflictError } from "#domain/error/run-conflict.error"
@@ -19,6 +28,7 @@ import type {
   EngineStatus,
   GenerationEngine,
 } from "#domain/generation-engine.port"
+import type { PriceBook } from "#domain/price-book.port"
 import type { Run, RunJob } from "#domain/run"
 import type { RunRepository } from "#domain/run.repository"
 import type { RunAssets } from "#domain/run-assets.port"
@@ -37,6 +47,7 @@ type AdvanceRunHandlerOptions = {
   engines: readonly GenerationEngine[]
   assets: RunAssets
   clock: Clock
+  prices?: PriceBook
 }
 
 type Polled = {
@@ -65,16 +76,12 @@ function noOutput(): RunFailedError {
 }
 
 export class AdvanceRunHandler {
-  static readonly pollMs = 2000
-  static readonly maxBackoffMs = 60_000
-  static readonly collectRetryMs = 30_000
-  static readonly resultKeptMs = 86_400_000
-
   private readonly apps: AppCatalog
   private readonly runs: RunRepository
   private readonly engines: readonly GenerationEngine[]
   private readonly assets: RunAssets
   private readonly clock: Clock
+  private readonly prices: PriceBook | null
 
   constructor(options: AdvanceRunHandlerOptions) {
     this.apps = options.apps
@@ -82,6 +89,7 @@ export class AdvanceRunHandler {
     this.engines = options.engines
     this.assets = options.assets
     this.clock = options.clock
+    this.prices = options.prices ?? null
   }
 
   async execute(input: AdvanceRunInput): Promise<AdvanceRunOutput> {
@@ -97,7 +105,7 @@ export class AdvanceRunHandler {
       return this.failWith(run, new EngineUnavailableError({}))
     }
     const watch: Watch = { app, engine }
-    if (this.isPastLimit(run, app) && run.collectingSince() === null) {
+    if (isPastLimit(run, app, this.now()) && run.collectingSince() === null) {
       return this.timeOut(run, watch)
     }
     if (run.jobs.length === 0) {
@@ -132,7 +140,7 @@ export class AdvanceRunHandler {
         return stop
       }
     }
-    return { nextWakeMs: AdvanceRunHandler.pollMs }
+    return { nextWakeMs: pollMs }
   }
 
   private async submitJob(
@@ -183,7 +191,24 @@ export class AdvanceRunHandler {
       run.fail({ error: noOutput(), now: this.now() })
       return
     }
-    run.keepJob({ index, outputs: kept, cost: finished.cost, now: this.now() })
+    await this.keepJob(run, watch, index, kept, finished.cost)
+  }
+
+  private async keepJob(
+    run: Run,
+    watch: Watch,
+    index: number,
+    outputs: readonly AssetId[],
+    cost: Cost | null
+  ): Promise<void> {
+    run.keepJob({ index, outputs, cost, now: this.now() })
+    await recordPrice(this.prices, {
+      run,
+      app: watch.app,
+      engine: watch.engine,
+      cost,
+      now: this.now(),
+    }).catch(() => undefined)
   }
 
   private async poll(run: Run, watch: Watch): Promise<AdvanceRunOutput> {
@@ -215,11 +240,13 @@ export class AdvanceRunHandler {
         run.observe({ index: job.index, ...status })
       }
     }
-    if (isCollecting && this.isPastResultKept(run)) {
+    if (isCollecting && isPastResultKept(run, this.now())) {
       return this.failWith(run, new RunFailedError({ cause: "result gone" }))
     }
     await this.runs.save(run)
-    return run.isFinished() ? stop : { nextWakeMs: this.wakeMs(polled) }
+    return run.isFinished()
+      ? stop
+      : { nextWakeMs: wakeMs(polled.map((one) => one.status)) }
   }
 
   private async collect(
@@ -244,15 +271,9 @@ export class AdvanceRunHandler {
     if (kept === null) {
       return "empty"
     }
-    run.keepJob({
-      index: polled.job.index,
-      outputs: kept,
-      cost:
-        polled.status.state === "succeeded"
-          ? (polled.status.cost ?? null)
-          : null,
-      now: this.now(),
-    })
+    const { status } = polled
+    const cost = status.state === "succeeded" ? (status.cost ?? null) : null
+    await this.keepJob(run, watch, polled.job.index, kept, cost)
     return "kept"
   }
 
@@ -321,7 +342,7 @@ export class AdvanceRunHandler {
     error: unknown
   ): Promise<AdvanceRunOutput> {
     if (error instanceof RunConflictError) {
-      return { nextWakeMs: AdvanceRunHandler.pollMs }
+      return { nextWakeMs: pollMs }
     }
     const run = await this.runs.get(runId)
     if (run === null || run.isFinished()) {
@@ -339,7 +360,7 @@ export class AdvanceRunHandler {
     ) {
       run.retried()
       await this.runs.save(run)
-      return { nextWakeMs: this.backoffMs(run.attempts, failure) }
+      return { nextWakeMs: backoffMs(run.attempts, failure) }
     }
     return this.failWith(run, failure)
   }
@@ -351,42 +372,6 @@ export class AdvanceRunHandler {
     run.fail({ error, now: this.now() })
     await this.runs.save(run)
     return stop
-  }
-
-  private backoffMs(attempts: number, error: ProjectError): number {
-    if (error instanceof RateLimitedError && error.retryAfterSeconds !== null) {
-      return error.retryAfterSeconds * 1000
-    }
-    return Math.min(AdvanceRunHandler.maxBackoffMs, 1000 * 2 ** attempts)
-  }
-
-  private wakeMs(polled: readonly Polled[]): number {
-    const working = polled.filter(
-      (one) => one.status.state === "queued" || one.status.state === "running"
-    )
-    if (working.length === 0) {
-      return AdvanceRunHandler.collectRetryMs
-    }
-    const waits = working.flatMap((one) =>
-      (one.status.state === "queued" || one.status.state === "running") &&
-      one.status.retryAfterSeconds !== null
-        ? [one.status.retryAfterSeconds * 1000]
-        : []
-    )
-    return waits.length === 0 ? AdvanceRunHandler.pollMs : Math.min(...waits)
-  }
-
-  private isPastResultKept(run: Run): boolean {
-    const since = run.collectingSince()
-    return (
-      since !== null &&
-      this.now().getTime() - since.getTime() > AdvanceRunHandler.resultKeptMs
-    )
-  }
-
-  private isPastLimit(run: Run, app: AppDefinition): boolean {
-    const elapsed = this.now().getTime() - run.createdAt.getTime()
-    return elapsed > app.limits.timeoutSeconds * 1000
   }
 
   private now(): Date {
