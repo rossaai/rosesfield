@@ -109,4 +109,23 @@ describe("ModelPicker", () => {
     fireEvent.click(screen.getByRole("option", { name: /Sketch 1/ }))
     expect(onChoose).toHaveBeenCalledWith("studio/sketch-1")
   })
+
+  it("shows only the notice when the catalog was refused", () => {
+    render(
+      <ModelPicker
+        trigger={<Chip>Model</Chip>}
+        title="Model"
+        searchLabel="Search models"
+        searchPlaceholder="Search by name or maker"
+        emptyLabel="No model matches"
+        sections={[]}
+        chosen={null}
+        onChoose={() => undefined}
+        notice={<p>Your key belongs to no workspace</p>}
+        open
+      />
+    )
+    expect(screen.getByText("Your key belongs to no workspace")).toBeTruthy()
+    expect(screen.queryByText("No model matches")).toBeNull()
+  })
 })

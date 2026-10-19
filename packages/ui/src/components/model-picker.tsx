@@ -147,7 +147,8 @@ function ModelList(
   }
   const sections = filterSections(props.sections, props.query)
   if (sections.length === 0) {
-    return (
+    const isRefused = props.notice !== undefined && props.notice !== null
+    return isRefused && props.query === "" ? null : (
       <p className="px-s4 py-s3 text-body text-ink-muted">{props.emptyLabel}</p>
     )
   }
