@@ -9,7 +9,6 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@rosesfield/ui/components/popover"
-import { ProportionsIcon, ScanIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { t, tCatalog, tCount } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
@@ -32,12 +31,10 @@ type StepperChipProps = {
 export function PopoverChip({
   label,
   shown,
-  icon,
   children,
 }: {
   label: string
   shown: string
-  icon?: ReactNode
   children: ReactNode
 }): ReactElement {
   return (
@@ -46,12 +43,7 @@ export function PopoverChip({
         render={<Chip caption={label}>{shown === "" ? label : shown}</Chip>}
       />
       <PopoverContent className="max-w-dialog">
-        <PopoverTitle>
-          <span className="flex items-center gap-s1_5 [&_svg]:glyph-small">
-            {icon}
-            {label}
-          </span>
-        </PopoverTitle>
+        <PopoverTitle>{label}</PopoverTitle>
         {children}
       </PopoverContent>
     </Popover>
@@ -80,11 +72,9 @@ export function CountChip(props: StepperChipProps): ReactElement {
 function SettingFieldChip({
   field,
   form,
-  icon,
 }: {
   field: ModelField
   form: AppForm
-  icon?: ReactNode
 }): ReactElement | null {
   const value = form.values.inputs[field.name]
   if (field.kind === "choice") {
@@ -93,7 +83,6 @@ function SettingFieldChip({
     return (
       <ChipSelect
         label={fieldCaption(field)}
-        icon={icon}
         value={chosen}
         display={chosen === "" ? fieldCaption(field) : chosen}
         onValueChange={(next) =>
@@ -113,7 +102,7 @@ function SettingFieldChip({
     return null
   }
   return (
-    <PopoverChip label={fieldCaption(field)} shown={textOf(value)} icon={icon}>
+    <PopoverChip label={fieldCaption(field)} shown={textOf(value)}>
       <Input
         aria-label={fieldCaption(field)}
         value={textOf(value)}
@@ -149,22 +138,10 @@ export function HostedSettingChips({
   return (
     <>
       {fields.aspect === null ? null : (
-        <SettingFieldChip
-          field={fields.aspect}
-          form={form}
-          icon={<ProportionsIcon aria-hidden="true" />}
-        />
+        <SettingFieldChip field={fields.aspect} form={form} />
       )}
       {fields.size === null ? null : (
-        <SettingFieldChip
-          field={fields.size}
-          form={form}
-          icon={
-            /quality/i.test(fields.size.path) ? undefined : (
-              <ScanIcon aria-hidden="true" />
-            )
-          }
-        />
+        <SettingFieldChip field={fields.size} form={form} />
       )}
       {fields.count === null ? null : (
         <HostedCountChip field={fields.count} form={form} />
@@ -198,7 +175,6 @@ function GraphResolutionChip({
   return (
     <ChipSelect
       label={tCatalog(shown.labelKey)}
-      icon={<ScanIcon aria-hidden="true" />}
       value={value}
       display={choiceText(shown, value)}
       onValueChange={(next) => form.setInput(shown.name, next)}
@@ -223,7 +199,6 @@ export function GraphSettingChips({
       {aspects.length < 2 ? null : (
         <ChipSelect
           label={t("field.aspect.label")}
-          icon={<ProportionsIcon aria-hidden="true" />}
           value={form.values.aspectRatio ?? aspects[0]?.value ?? ""}
           onValueChange={(aspectRatio) => form.setForm({ aspectRatio })}
           options={aspects}
