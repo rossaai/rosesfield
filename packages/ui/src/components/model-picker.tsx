@@ -141,7 +141,7 @@ function LoadingRows(): ReactElement {
 
 function ModelList(
   props: ModelPickerProps & { query: string; onChosen: () => void }
-): ReactElement {
+): ReactNode {
   if (props.isLoading === true) {
     return <LoadingRows />
   }
