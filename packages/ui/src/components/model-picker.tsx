@@ -205,10 +205,10 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
       <PopoverContent
         data-slot="model-picker"
         initialFocus={search}
-        className="w-dialog max-w-[min(var(--spacing-dialog),calc(100vw-2*var(--spacing-s4)))] gap-s2 p-s2_5"
+        className="max-h-(--available-height) w-dialog max-w-[min(var(--spacing-dialog),calc(100vw-2*var(--spacing-s4)))] gap-s2 p-s2_5"
       >
         <PopoverTitle className="sr-only">{props.title}</PopoverTitle>
-        <label className="flex h-field items-center gap-s2 rounded-full bg-(--well) px-s5">
+        <label className="flex h-field shrink-0 items-center gap-s2 rounded-full bg-(--well) px-s5">
           <SearchIcon aria-hidden="true" className="glyph text-ink-muted" />
           <input
             ref={search}
@@ -221,13 +221,13 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
           />
         </label>
         {props.notice}
-        <div className="max-h-list-max overflow-y-auto">
+        <div className="max-h-list-max min-h-0 overflow-y-auto">
           <ModelList {...props} query={query} onChosen={() => setOpen(false)} />
         </div>
         {props.settings === undefined || props.settings === null ? null : (
           <div
             data-slot="model-settings"
-            className="flex max-h-list-max flex-col gap-s4 overflow-y-auto px-s4 pt-s3 pb-s2"
+            className="flex max-h-list-max min-h-0 flex-col gap-s4 overflow-y-auto px-s4 pt-s3 pb-s2"
           >
             {props.settings}
           </div>

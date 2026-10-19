@@ -120,6 +120,14 @@ describe("ModelPicker", () => {
     ).toBeTruthy()
   })
 
+  it("keeps the search in view on a short screen by holding the picker to the space the screen has", () => {
+    open()
+    const picker = document.querySelector('[data-slot="model-picker"]')
+    const search = screen.getByRole("searchbox", { name: "Search models" })
+    expect(picker?.className).toContain("max-h-(--available-height)")
+    expect(search.closest("label")?.className).toContain("shrink-0")
+  })
+
   it("filters the rows by name and by maker", () => {
     open()
     const search = screen.getByRole("searchbox", { name: "Search models" })
