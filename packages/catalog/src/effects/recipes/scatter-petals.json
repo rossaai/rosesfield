@@ -11,7 +11,10 @@
   "adapter": null,
   "seconds": 5,
   "credits": {
-    "480p": null,
+    "480p": {
+      "credits": 7.1,
+      "runId": "596da530-6770-426a-af47-9e07b26b7f15"
+    },
     "720p": null
   },
   "preview": null

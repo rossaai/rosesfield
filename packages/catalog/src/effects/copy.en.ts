@@ -5,7 +5,7 @@ export const effectsCopy = {
     "effect, photo to video, space, eye, giant, wings, petals, liquid metal, copies, fish",
   "effects.empty.title": "Your effect videos show here",
   "effects.input.effect.label": "Effect",
-  "effects.input.effect.note": "Each effect plays a real run of it.",
+  "effects.input.effect.note": "Pick one effect for your photo.",
   "effects.input.image.label": "Photo",
   "effects.input.image.note":
     "PNG, JPEG or WebP, up to 20 MB, at least 480 pixels on its short side.",
@@ -52,6 +52,26 @@ export const effectsCopy = {
   "effects.photo.pushIntoEye": "A close photo of one face",
   "effects.photo.scatterPetals": "A person, head to toe",
   "effects.photo.stillInTheStreet": "A person on a busy street",
+  "effects.choice.effect.pullBackToSpacePromptOnly":
+    "Pull back to space, prompt only",
+  "effects.photo.pullBackToSpacePromptOnly": "A person outdoors",
+  "effects.choice.effect.pushIntoEyePromptOnly":
+    "Push into the eye, prompt only",
+  "effects.photo.pushIntoEyePromptOnly": "A close photo of one face",
+  "effects.choice.effect.meltAwayPromptOnly": "Melt away, prompt only",
+  "effects.photo.meltAwayPromptOnly": "A person, head to toe",
+  "effects.choice.effect.growGiantPromptOnly": "Grow into a giant, prompt only",
+  "effects.photo.growGiantPromptOnly": "A person on a street",
+  "effects.choice.effect.manyCopiesPromptOnly": "Fill with copies, prompt only",
+  "effects.photo.manyCopiesPromptOnly": "One person with space around them",
+  "effects.choice.effect.liquidMetalPromptOnly":
+    "Turn to liquid metal, prompt only",
+  "effects.photo.liquidMetalPromptOnly": "A person, head to waist",
+  "effects.choice.effect.growWingsPromptOnly": "Grow wings, prompt only",
+  "effects.photo.growWingsPromptOnly": "A person, head to waist",
+  "effects.choice.effect.stillInTheStreetPromptOnly":
+    "Still in a busy street, prompt only",
+  "effects.photo.stillInTheStreetPromptOnly": "A person on a busy street",
   "effects.choice.resolution.p480": "480p",
   "effects.choice.resolution.p720": "720p",
 } satisfies Record<string, string>

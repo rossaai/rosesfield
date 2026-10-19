@@ -8,14 +8,22 @@ import controlNoPrompt from "./recipes/control-no-prompt.json"
 import fishInTheAir from "./recipes/fish-in-the-air.json"
 import freezeAndCircle from "./recipes/freeze-and-circle.json"
 import growGiant from "./recipes/grow-giant.json"
+import growGiantPromptOnly from "./recipes/grow-giant-prompt-only.json"
 import growWings from "./recipes/grow-wings.json"
+import growWingsPromptOnly from "./recipes/grow-wings-prompt-only.json"
 import liquidMetal from "./recipes/liquid-metal.json"
+import liquidMetalPromptOnly from "./recipes/liquid-metal-prompt-only.json"
 import manyCopies from "./recipes/many-copies.json"
+import manyCopiesPromptOnly from "./recipes/many-copies-prompt-only.json"
 import meltAway from "./recipes/melt-away.json"
+import meltAwayPromptOnly from "./recipes/melt-away-prompt-only.json"
 import pullBackToSpace from "./recipes/pull-back-to-space.json"
+import pullBackToSpacePromptOnly from "./recipes/pull-back-to-space-prompt-only.json"
 import pushIntoEye from "./recipes/push-into-eye.json"
+import pushIntoEyePromptOnly from "./recipes/push-into-eye-prompt-only.json"
 import scatterPetals from "./recipes/scatter-petals.json"
 import stillInTheStreet from "./recipes/still-in-the-street.json"
+import stillInTheStreetPromptOnly from "./recipes/still-in-the-street-prompt-only.json"
 
 const files: Readonly<Record<string, unknown>> = {
   "buildings-ripple": buildingsRipple,
@@ -31,6 +39,14 @@ const files: Readonly<Record<string, unknown>> = {
   "push-into-eye": pushIntoEye,
   "scatter-petals": scatterPetals,
   "still-in-the-street": stillInTheStreet,
+  "pull-back-to-space-prompt-only": pullBackToSpacePromptOnly,
+  "push-into-eye-prompt-only": pushIntoEyePromptOnly,
+  "melt-away-prompt-only": meltAwayPromptOnly,
+  "grow-giant-prompt-only": growGiantPromptOnly,
+  "many-copies-prompt-only": manyCopiesPromptOnly,
+  "liquid-metal-prompt-only": liquidMetalPromptOnly,
+  "grow-wings-prompt-only": growWingsPromptOnly,
+  "still-in-the-street-prompt-only": stillInTheStreetPromptOnly,
 }
 
 export function readRecipes(

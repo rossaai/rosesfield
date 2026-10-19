@@ -31,6 +31,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
+export const videoModel =
+  "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors"
+
 export function loadedModels(graph: unknown): string[] {
   const files = new Set<string>()
   for (const node of Object.values(isRecord(graph) ? graph : {})) {
@@ -41,7 +44,8 @@ export function loadedModels(graph: unknown): string[] {
       }
     }
   }
-  return [...files].sort()
+  files.delete(videoModel)
+  return [videoModel, ...[...files].sort()]
 }
 
 export function effectBinding(
