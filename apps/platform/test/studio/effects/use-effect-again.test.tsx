@@ -1,5 +1,5 @@
 import { type Run, run } from "@rosesfield/contract"
-import { act, cleanup, renderHook } from "@testing-library/react"
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react"
 import { useCallback, useEffect, useState } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { FieldValue } from "@/screens/app/app-form"
@@ -33,10 +33,16 @@ type Spies = {
   onNewPhoto: () => void
 }
 
+function focusable(): () => void {
+  const target = document.createElement("button")
+  document.body.append(target)
+  return vi.fn(() => target.focus())
+}
+
 function spies(): Spies {
   return {
-    photoFocus: vi.fn(),
-    effectFocus: vi.fn(),
+    photoFocus: focusable(),
+    effectFocus: focusable(),
     openInputs: vi.fn(),
     onNewPhoto: vi.fn(),
   }
@@ -75,6 +81,7 @@ function useScreen(given: Spies) {
 
 afterEach(() => {
   cleanup()
+  document.body.replaceChildren()
 })
 
 describe("running an effect again from a result", () => {
@@ -104,5 +111,16 @@ describe("running an effect again from a result", () => {
     expect(given.onNewPhoto).not.toHaveBeenCalled()
     expect(given.effectFocus).toHaveBeenCalledOnce()
     expect(given.photoFocus).not.toHaveBeenCalled()
+  })
+
+  it("focuses the photo once its field registers after the press, as when the input sheet opens", async () => {
+    const given = spies()
+    const late = focusable()
+    const { result } = renderHook(() => useScreen(given))
+    const { register } = result.current.again.form
+    act(() => register("image", () => undefined))
+    act(() => result.current.again.onAnotherPhoto(done))
+    act(() => register("image", late))
+    await waitFor(() => expect(late).toHaveBeenCalled())
   })
 })

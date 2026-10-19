@@ -4,6 +4,7 @@ import type { AppForm } from "@/screens/app/use-app-form"
 
 const effectInput = "effect"
 const photoInput = "image"
+const focusWindowMs = 2000
 
 type EffectAgainOptions = {
   form: AppForm
@@ -18,29 +19,62 @@ export type EffectAgain = {
   onAnotherEffect: (run: Run) => void
 }
 
-export function useEffectAgain(options: EffectAgainOptions): EffectAgain {
-  const { form, fill, openInputs, onNewPhoto } = options
+type PendingFocus = { name: string; askedAt: number }
+
+function useDeferredFocus(register: AppForm["register"]): {
+  capture: AppForm["register"]
+  ask: (name: string) => void
+} {
   const focusers = useRef(new Map<string, () => void>())
-  const [pending, setPending] = useState<string | null>(null)
-  const { register } = form
+  const pending = useRef<PendingFocus | null>(null)
+  const [asked, setAsked] = useState(0)
+  const focusPending = useCallback(() => {
+    const found = pending.current
+    if (found === null) {
+      return
+    }
+    if (performance.now() - found.askedAt > focusWindowMs) {
+      pending.current = null
+      return
+    }
+    const before = document.activeElement
+    focusers.current.get(found.name)?.()
+    if (document.activeElement !== before) {
+      pending.current = null
+    }
+  }, [])
   const capture = useCallback(
     (name: string, focus: () => void) => {
       focusers.current.set(name, focus)
       register(name, focus)
+      if (pending.current?.name === name) {
+        requestAnimationFrame(focusPending)
+      }
     },
-    [register]
+    [register, focusPending]
   )
+  useEffect(() => {
+    if (asked > 0) {
+      focusPending()
+    }
+  }, [asked, focusPending])
+  return {
+    capture,
+    ask: (name) => {
+      pending.current = { name, askedAt: performance.now() }
+      setAsked((count) => count + 1)
+    },
+  }
+}
+
+export function useEffectAgain(options: EffectAgainOptions): EffectAgain {
+  const { form, fill, openInputs, onNewPhoto } = options
+  const focus = useDeferredFocus(form.register)
+  const { capture } = focus
   const wrapped = useMemo(
     () => ({ ...form, register: capture }),
     [form, capture]
   )
-  useEffect(() => {
-    if (pending === null) {
-      return
-    }
-    setPending(null)
-    focusers.current.get(pending)?.()
-  }, [pending])
   return {
     form: wrapped,
     onAnotherPhoto: (run) => {
@@ -49,13 +83,13 @@ export function useEffectAgain(options: EffectAgainOptions): EffectAgain {
       form.setInput(photoInput, [])
       onNewPhoto()
       openInputs()
-      setPending(photoInput)
+      focus.ask(photoInput)
     },
     onAnotherEffect: (run) => {
       fill(run)
       form.setForm({ seedMode: "random" })
       openInputs()
-      setPending(effectInput)
+      focus.ask(effectInput)
     },
   }
 }
