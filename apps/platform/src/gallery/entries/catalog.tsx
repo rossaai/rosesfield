@@ -8,12 +8,13 @@ import { PromptBar } from "@rosesfield/ui/components/prompt-bar"
 import { ClockIcon, LockOpenIcon, ScanIcon, Volume2Icon } from "lucide-react"
 import type { ReactElement } from "react"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
-import { t } from "@/gallery/copy.en"
+import { type GalleryKey, t } from "@/gallery/copy.en"
 import demoSquare from "@/gallery/fixtures/demo-image-1-1.png"
 import demoTall from "@/gallery/fixtures/demo-image-9-16.png"
 import demoWide from "@/gallery/fixtures/demo-image-16-9.png"
-import type { GalleryEntry } from "@/gallery/gallery-entry"
+import type { GalleryEntry, GalleryState } from "@/gallery/gallery-entry"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
+import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 
 function hostedModel(
@@ -272,8 +273,35 @@ const masonry: GalleryEntry = {
   ],
 }
 
+function refusedState(
+  id: string,
+  label: GalleryKey,
+  code: string
+): GalleryState {
+  return {
+    id,
+    label,
+    render: () => <ModelNotice error={refused(code)} />,
+  }
+}
+
+const generateRefused: GalleryEntry = {
+  id: "generate-refused",
+  title: "entry.generateRefused",
+  states: [
+    refusedState(
+      "workspace",
+      "state.keyOutsideWorkspace",
+      "ENGINE_KEY_OUTSIDE_WORKSPACE"
+    ),
+    refusedState("account", "state.notEnabled", "ENGINE_NOT_ENABLED"),
+    refusedState("credits", "state.noCredits", "ENGINE_NO_CREDITS"),
+  ],
+}
+
 export const catalogEntries: GalleryEntry[] = [
   modelPicker,
+  generateRefused,
   generatePrice,
   factualTags,
   masonry,
