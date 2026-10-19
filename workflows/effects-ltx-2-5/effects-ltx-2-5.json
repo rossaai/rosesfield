@@ -413,7 +413,7 @@
         "cnr_id": "comfy-core",
         "ver": "0.41.0"
       },
-      "widgets_values": [1.0, false],
+      "widgets_values": [0.7, false],
       "title": "Frame 0 lock"
     },
     {

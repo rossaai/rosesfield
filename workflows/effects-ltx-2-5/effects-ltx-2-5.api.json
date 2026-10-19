@@ -110,7 +110,7 @@
       "vae": ["385", 0],
       "image": ["350", 0],
       "latent": ["356", 0],
-      "strength": 1.0,
+      "strength": 0.7,
       "bypass": false
     },
     "_meta": {

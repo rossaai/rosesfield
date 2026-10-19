@@ -112,7 +112,7 @@ describe("every effects engine request against the recorded v2 routes", () => {
         },
       },
       "366": { inputs: { frames_number: frames } },
-      "357": { inputs: { strength: 1 } },
+      "357": { inputs: { strength: 0.7 } },
       "349": { inputs: { strength: 1 } },
     })
     expect(promptText(workflow, "364").trim()).toBe(expectedPrompt(recipe))

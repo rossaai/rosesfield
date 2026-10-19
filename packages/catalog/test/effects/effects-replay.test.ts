@@ -60,7 +60,7 @@ describe("the effects engine request", () => {
       "532": { inputs: { noise_seed: 42 } },
       "356": { inputs: { width: 352, height: 640, length: 121 } },
       "366": { inputs: { frames_number: 121, frame_rate: 24 } },
-      "357": { inputs: { image: ["350", 0], strength: 1 } },
+      "357": { inputs: { image: ["350", 0], strength: 0.7 } },
       "349": { inputs: { image: ["350", 0], strength: 1 } },
       "525": { inputs: { image: ["395", 0], megapixels: 1 } },
       "530": { inputs: { width: ["526", 0], height: ["526", 1] } },
