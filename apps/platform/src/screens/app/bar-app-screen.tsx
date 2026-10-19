@@ -15,7 +15,7 @@ import { BarChips, BarFrame } from "@/screens/app/bar-frame"
 import { textOf } from "@/screens/app/fields/field-props"
 import { inputPlaceholder } from "@/screens/app/fields/input-copy"
 import { StartProblem } from "@/screens/app/generate-foot"
-import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
+import { HostedChips } from "@/screens/app/hosted/hosted-chips"
 import { TaskPanel } from "@/screens/app/hosted/task-panel"
 import {
   type AppScreenState,
@@ -88,7 +88,7 @@ function BarModelChips({
   return (
     <>
       {hosted?.isTaskApp === true ? (
-        <CatalogPicker hosted={hosted} />
+        <HostedChips hosted={hosted} form={state.form} />
       ) : (
         <ModelChip app={app} state={state} chips={chips} />
       )}

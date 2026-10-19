@@ -71,11 +71,10 @@ export function mediaAt(
   max: number
 ): ModelField {
   const media = mediaKindOf(hint)
-  const key = hint.split(".").at(-1) ?? hint
   return {
     name: media === "image" ? "images" : media,
     path,
-    label: labelOf(key),
+    label: labelOf(path),
     required: false,
     kind: "media",
     media,
@@ -118,7 +117,33 @@ export function camelOf(text: string): string | null {
   return /^[a-z][a-zA-Z0-9]{0,39}$/.test(joined) ? joined : null
 }
 
-export function labelOf(key: string): string {
+const genericKeys: readonly string[] = [
+  "url",
+  "uri",
+  "weight",
+  "images",
+  "data",
+  "text",
+  "value",
+  "id",
+  "bytesBase64Encoded",
+  "mimeType",
+]
+
+export function labelOf(path: string): string {
+  const segments = path
+    .split(".")
+    .filter((one) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(one))
+  const last = segments.at(-1) ?? path
+  const parent = segments.at(-2)
+  return wordsOf(
+    parent !== undefined && genericKeys.includes(last)
+      ? `${parent} ${last}`
+      : last
+  )
+}
+
+function wordsOf(key: string): string {
   const spaced = key
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[_.-]+/g, " ")

@@ -9,7 +9,7 @@ import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { CheckIcon, SearchIcon } from "lucide-react"
-import { type ReactElement, type ReactNode, useState } from "react"
+import { type ReactElement, type ReactNode, useRef, useState } from "react"
 
 type ModelPickerTag = {
   label: string
@@ -181,6 +181,7 @@ function ModelList(
 
 function ModelPicker(props: ModelPickerProps): ReactElement {
   const [query, setQuery] = useState("")
+  const search = useRef<HTMLInputElement>(null)
   const [isOpenHere, setOpenHere] = useState(props.defaultOpen === true)
   const isOpen = props.open ?? isOpenHere
   const setOpen = (open: boolean): void => {
@@ -195,12 +196,14 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
       <PopoverTrigger render={props.trigger} />
       <PopoverContent
         data-slot="model-picker"
+        initialFocus={search}
         className="w-dialog max-w-[min(var(--spacing-dialog),calc(100vw-2*var(--spacing-s4)))] gap-s2 p-s2_5"
       >
         <PopoverTitle className="sr-only">{props.title}</PopoverTitle>
         <label className="flex h-field items-center gap-s2 rounded-full bg-(--well) px-s5">
           <SearchIcon aria-hidden="true" className="glyph text-ink-muted" />
           <input
+            ref={search}
             type="search"
             aria-label={props.searchLabel}
             placeholder={props.searchPlaceholder}
