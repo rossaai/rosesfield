@@ -1,3 +1,4 @@
+import { ProjectError } from "@rosesfield/kernel"
 import type {
   GenerationEngine,
   HostedModel,
@@ -7,6 +8,7 @@ export type ListModelsInput = Record<string, never>
 
 export type ListModelsOutput = {
   models: HostedModel[]
+  refusal: ProjectError | null
 }
 
 type ListModelsHandlerOptions = {
@@ -21,17 +23,27 @@ export class ListModelsHandler {
   }
 
   async execute(_input: ListModelsInput): Promise<ListModelsOutput> {
-    const lists = await Promise.all(
+    const lists = await Promise.allSettled(
       this.engines.map((engine) => engine.listModels())
     )
+    let refusal: ProjectError | null = null
     const seen = new Set<string>()
-    const models = lists.flat().filter((model) => {
-      if (seen.has(model.id)) {
-        return false
+    const models: HostedModel[] = []
+    for (const list of lists) {
+      if (list.status === "rejected") {
+        if (!(list.reason instanceof ProjectError)) {
+          throw list.reason
+        }
+        refusal ??= list.reason
+        continue
       }
-      seen.add(model.id)
-      return true
-    })
-    return { models }
+      for (const model of list.value) {
+        if (!seen.has(model.id)) {
+          seen.add(model.id)
+          models.push(model)
+        }
+      }
+    }
+    return { models, refusal }
   }
 }

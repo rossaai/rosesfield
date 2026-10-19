@@ -2,6 +2,7 @@ import {
   appId,
   aspectRatio,
   defineRoute,
+  errorBody,
   runCount,
   runInputs,
 } from "@rosesfield/contract"
@@ -82,6 +83,7 @@ export const catalogModel = z.object({
 export const modelListResponse = z.object({
   models: z.array(catalogModel),
   defaultModel: z.string().nullable(),
+  refusal: errorBody.nullable(),
 })
 
 export const priceBody = z.object({

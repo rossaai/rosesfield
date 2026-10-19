@@ -40,6 +40,7 @@ type FakeGenerationEngineOptions = {
   outputErrors?: Error[]
   finished?: EngineFinished
   creditsPerUsd?: number
+  listError?: Error
 }
 
 export class FakeGenerationEngine extends GenerationEngine {
@@ -63,6 +64,7 @@ export class FakeGenerationEngine extends GenerationEngine {
   private readonly outputErrors: Error[]
   private readonly finished: EngineFinished | null
   private readonly creditsPerUsd: number | null
+  private readonly listError: Error | null
   readonly priced: PriceRequest[] = []
 
   constructor(options: FakeGenerationEngineOptions = {}) {
@@ -83,6 +85,7 @@ export class FakeGenerationEngine extends GenerationEngine {
     this.outputErrors = options.outputErrors ?? []
     this.finished = options.finished ?? null
     this.creditsPerUsd = options.creditsPerUsd ?? null
+    this.listError = options.listError ?? null
   }
 
   override creditsOf(cost: Cost): number | null {
@@ -102,6 +105,9 @@ export class FakeGenerationEngine extends GenerationEngine {
   }
 
   override async listModels(): Promise<readonly HostedModel[]> {
+    if (this.listError !== null) {
+      throw this.listError
+    }
     return this.forms.map((form) => ({
       id: form.model,
       provider: form.model.split("/")[0] ?? "",

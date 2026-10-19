@@ -193,7 +193,7 @@ describe("the model list of an app", () => {
     expect(ids.filter((id) => /wan/.test(id))).toEqual([])
   })
 
-  it("names the fix when the Router refuses the catalog for the key", async () => {
+  it("names the fix when the Router refuses the catalog for the key, and keeps the graphs", async () => {
     const router = fakeRouter({
       schemas: [pictureModel],
       refuseCatalog: "Comfy Router is not enabled for this account yet.",
@@ -202,13 +202,12 @@ describe("the model list of an app", () => {
       router.fetch,
       (clock) => new RouterCatalog({ clock })
     )
-    const response = await gateway.call(
-      buildPath(catalogRoutes.listModels.path, { appId: "pictures" })
-    )
-    expect(response.status).toBe(412)
-    expect(await response.json()).toEqual({
-      error: { code: "ENGINE_NOT_ENABLED", status: 412 },
-    })
+    const listed = await modelsOf(gateway, "pictures")
+    expect(listed.refusal).toEqual({ code: "ENGINE_NOT_ENABLED", status: 412 })
+    expect(listed.models.map((one) => [one.id, one.kind])).toEqual([
+      ["open-picture", "graph"],
+      ["open-sketch", "graph"],
+    ])
   })
   it("names the fix when the Router refuses the key's reload of a warm list", async () => {
     let refuse: string | undefined
@@ -222,16 +221,12 @@ describe("the model list of an app", () => {
       held.catalog ??= new RouterCatalog({ clock })
       return held.catalog
     })
-    await modelsOf(gateway, "pictures")
+    expect((await modelsOf(gateway, "pictures")).refusal).toBeNull()
     refuse = "Comfy Router is not enabled for this account yet."
     gateway.clock.advance(oneHourMs)
-    const response = await gateway.call(
-      buildPath(catalogRoutes.listModels.path, { appId: "pictures" })
-    )
-    expect(response.status).toBe(412)
-    expect(await response.json()).toEqual({
-      error: { code: "ENGINE_NOT_ENABLED", status: 412 },
-    })
+    const listed = await modelsOf(gateway, "pictures")
+    expect(listed.refusal).toEqual({ code: "ENGINE_NOT_ENABLED", status: 412 })
+    expect(listed.models.every((one) => one.kind === "graph")).toBe(true)
   })
 })
 

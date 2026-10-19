@@ -4,7 +4,7 @@ import {
   modelsForApp,
   priceBody,
 } from "@rosesfield/catalog/comfy"
-import type { AppDefinition } from "@rosesfield/contract"
+import { type AppDefinition, errorEnvelopeOf } from "@rosesfield/contract"
 import { AppNotFoundError } from "@rosesfield/generation"
 import type { GatewayApp } from "#gateway-env"
 import {
@@ -29,10 +29,13 @@ export function modelRoutes(
 ): void {
   app.get(catalogRoutes.listModels.path, async (c) => {
     const listed = appOf(apps, c.req.param("appId"))
-    const { models } = await c.var.scope.handlers.listModels.execute({})
+    const { models, refusal } = await c.var.scope.handlers.listModels.execute(
+      {}
+    )
     const body: ResponseOf<typeof catalogRoutes.listModels> = {
       models: modelsForApp(listed, models),
       defaultModel: defaultModelOf(listed),
+      refusal: refusal === null ? null : errorEnvelopeOf(refusal).error,
     }
     return c.json(body, catalogRoutes.listModels.status)
   })

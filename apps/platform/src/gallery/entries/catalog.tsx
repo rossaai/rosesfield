@@ -122,7 +122,7 @@ const modelPicker: GalleryEntry = {
       render: () => (
         <OpenPicker
           hosted={hostedState({
-            models: [],
+            models: galleryModels.filter((one) => one.kind === "graph"),
             error: refused("ENGINE_KEY_OUTSIDE_WORKSPACE"),
           })}
         />
@@ -135,7 +135,7 @@ const modelPicker: GalleryEntry = {
       render: () => (
         <OpenPicker
           hosted={hostedState({
-            models: [],
+            models: galleryModels.filter((one) => one.kind === "graph"),
             error: refused("ENGINE_NOT_ENABLED"),
           })}
         />

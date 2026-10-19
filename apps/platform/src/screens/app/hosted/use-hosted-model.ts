@@ -2,6 +2,7 @@ import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
 import type { AppListing, Run } from "@rosesfield/contract"
 import { useQuery } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef } from "react"
+import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { settingsQuery } from "@/api/queries"
 import { defaultsOf } from "@/screens/app/app-form"
 import { textOf } from "@/screens/app/fields/field-props"
@@ -61,11 +62,16 @@ export function useHostedModel(
     [app, models, values.inputs, setForm]
   )
   useOpenOnDefault(app, form, defaultModel, models, choose)
+  const refusal = query.data?.refusal ?? null
   return {
     isTaskApp: taskApp !== null,
     models,
     isLoading: taskApp !== null && query.isPending,
-    error: query.error,
+    error:
+      query.error ??
+      (refusal === null
+        ? null
+        : new GatewayRefusedError({ ...refusal, retryAfterSeconds: null })),
     keyState,
     defaultModel,
     chosen,
