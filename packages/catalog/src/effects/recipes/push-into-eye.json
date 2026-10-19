@@ -1,6 +1,6 @@
 {
   "effect": "push-into-eye",
-  "review": "candidate",
+  "passed": false,
   "prompt": "The camera pushes straight in toward one of the person's eyes in a smooth, fast zoom. The face fills the frame, then only the eye, then the iris with its fine coloured fibres. The camera keeps moving forward into the black pupil, where a glowing spiral galaxy of stars opens up. One continuous push-in with no cuts.",
   "endFrame": {
     "source": "draw",
@@ -10,15 +10,5 @@
   "hold": null,
   "adapter": null,
   "seconds": 5,
-  "credits": {
-    "480p": {
-      "credits": 6.69,
-      "runId": "d26b2fa0-5301-4e72-b452-22d663dbcc5c"
-    },
-    "720p": {
-      "credits": 6.02,
-      "runId": "7aa74551-49bc-4a11-bfc5-e398d6c5cfab"
-    }
-  },
   "preview": null
 }

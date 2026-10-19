@@ -7,6 +7,8 @@ import {
   useState,
 } from "react"
 import { defaultAspectOf } from "@/catalog/app-facts"
+import { tCatalog } from "@/copy/t"
+import { ScreenState } from "@/pieces/screen-state"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { AppCanvas } from "@/screens/app/app-canvas"
 import {
@@ -18,13 +20,16 @@ import { listOf } from "@/screens/app/fields/field-props"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { type AppScreenState, useAppScreen } from "@/screens/app/use-app-screen"
 import type { StartRun } from "@/screens/app/use-start-run"
+import { ScreenHeader } from "@/shell/screen-header"
 import { EffectAgain } from "@/studio/effects/effect-again"
 import { autoAspect, EffectsPanel } from "@/studio/effects/effects-panel"
 import { nearestRatio } from "@/studio/effects/nearest-ratio"
 import { useCheckedStart } from "@/studio/effects/use-checked-start"
 import { useEffectAgain } from "@/studio/effects/use-effect-again"
 import {
+  acceptOf,
   type PhotoSize,
+  photoCheckOf,
   usePhotoChecks,
 } from "@/studio/effects/use-photo-checks"
 
@@ -98,7 +103,8 @@ function useEffectsState(
   events: EffectsEvents
 ): EffectsState {
   const screen = useAppScreen(app, props.seeds, events.onStarted)
-  const photos = usePhotoChecks(screen.form, photoInput)
+  const [check] = useState(() => photoCheckOf(acceptOf(app, photoInput)))
+  const photos = usePhotoChecks(screen.form, photoInput, check)
   const aspect = useAspectChoice(
     app,
     screen,
@@ -136,7 +142,24 @@ function useEffectsState(
   }
 }
 
+function ClosedScreen({ app }: { app: AppListing }): ReactElement {
+  return (
+    <>
+      <ScreenHeader title={tCatalog(app.nameKey)} />
+      <ScreenState kind="empty" title={tCatalog(app.closedKey ?? "")} />
+    </>
+  )
+}
+
 export function AppScreen(props: StudioScreenProps): ReactElement {
+  return props.app.closedKey === null ? (
+    <OpenScreen {...props} />
+  ) : (
+    <ClosedScreen app={props.app} />
+  )
+}
+
+function OpenScreen(props: StudioScreenProps): ReactElement {
   const { app } = props
   const sheetOpen = useRef<(open: boolean) => void>(() => undefined)
   const isRegular = useIsRegularWindow()

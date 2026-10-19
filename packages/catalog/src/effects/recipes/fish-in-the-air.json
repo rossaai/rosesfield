@@ -1,6 +1,6 @@
 {
   "effect": "fish-in-the-air",
-  "review": "candidate",
+  "passed": false,
   "prompt": "Bright tropical fish and a few glowing jellyfish swim slowly through the air around the person, as if the whole scene were underwater. Rays of light ripple across everything, and small bubbles rise. The person looks around calmly. The camera stays still.",
   "endFrame": {
     "source": "none"
@@ -8,12 +8,5 @@
   "hold": 0.6,
   "adapter": null,
   "seconds": 5,
-  "credits": {
-    "480p": {
-      "credits": 5.84,
-      "runId": "073cd5c1-a6b2-405c-9bc4-d4d34deaa740"
-    },
-    "720p": null
-  },
   "preview": null
 }

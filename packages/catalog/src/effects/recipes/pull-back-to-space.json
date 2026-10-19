@@ -1,6 +1,6 @@
 {
   "effect": "pull-back-to-space",
-  "review": "candidate",
+  "passed": false,
   "prompt": "The camera starts close on the person and pulls straight back and up in one fast, continuous move. The person shrinks below as the camera rises over the rooftops, then the whole city, then the coastline and the clouds. The camera keeps rising through the thin blue edge of the sky until the whole planet Earth hangs in black space. One unbroken aerial shot with no cuts.",
   "endFrame": {
     "source": "draw",
@@ -10,15 +10,5 @@
   "hold": null,
   "adapter": null,
   "seconds": 5,
-  "credits": {
-    "480p": {
-      "credits": 7.18,
-      "runId": "55e2cf63-1daf-4255-b3b5-3f62822520aa"
-    },
-    "720p": {
-      "credits": 9.07,
-      "runId": "16b8c393-0661-4f64-bc1f-8775cbc8608d"
-    }
-  },
   "preview": null
 }

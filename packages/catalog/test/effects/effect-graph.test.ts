@@ -6,8 +6,13 @@ import {
   effectGraph,
   referenceNodes,
 } from "#effects/comfy/effect-graph"
-import { effectsBinding } from "#effects/comfy/effects-binding"
-import { recipeOf } from "#effects/effect-recipes"
+import {
+  effectBinding,
+  effectsBinding,
+  loadedModels,
+} from "#effects/comfy/effects-binding"
+import { resolutionValues } from "#effects/effect-recipe.contract"
+import { effectRecipes, recipeOf } from "#effects/effect-recipes"
 import { findWorkflow } from "#list-workflows"
 import { brokenLinks, isLink, type Workflow } from "./effects-replay"
 
@@ -77,8 +82,8 @@ function guidesOnAudio(workflow: Workflow): string[] {
 describe("the effect recipes", () => {
   it("sends from every leaf a whole graph of file nodes, guides on the video latent only", () => {
     const fileIds = Object.keys(fileGraph())
-    const leaves = leavesOf(effectsBinding)
-    expect(leaves.length).toBeGreaterThanOrEqual(26)
+    const leaves = leavesOf(effectsBinding(effectRecipes))
+    expect(leaves).toHaveLength(effectRecipes.length * resolutionValues.length)
     for (const [path, workflow] of leaves) {
       expect({ path, broken: brokenLinks(workflow) }).toEqual({
         path,
@@ -137,5 +142,33 @@ describe("the effect recipes", () => {
     )
     expect(workflow["356"]?.inputs.length).toBe(73)
     expect(workflow["366"]?.inputs.frames_number).toBe(73)
+  })
+
+  it("records first the video model the graph's guiders read, through an adapter", () => {
+    const graph = fileGraph()
+    const videoFile = (graph["384"] as { inputs: { unet_name: string } }).inputs
+      .unet_name
+    const recipe = {
+      ...recipeOf("freeze-and-circle"),
+      adapter: { file: "an-adapter.safetensors", strength: 0.8 },
+    }
+    const models = effectBinding(recipe, "480p").config.models
+    expect(Array.isArray(models) ? models[0] : null).toBe(videoFile)
+    expect(models).toContain("an-adapter.safetensors")
+  })
+
+  it("names the video model the graph loads, not a file named in code", () => {
+    const graph = fileGraph()
+    const renamed = {
+      ...graph,
+      "384": {
+        ...(graph["384"] as object),
+        inputs: {
+          weight_dtype: "default",
+          unet_name: "another-video.safetensors",
+        },
+      },
+    }
+    expect(loadedModels(renamed)[0]).toBe("another-video.safetensors")
   })
 })

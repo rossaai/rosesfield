@@ -1,6 +1,6 @@
 {
   "effect": "grow-wings",
-  "review": "candidate",
+  "passed": false,
   "prompt": "Two large white feathered wings unfold from behind the person's back. They grow and spread wide to each side, the feathers fanning out, and beat once slowly. A few loose feathers drift down through the air. The camera stays still.",
   "endFrame": {
     "source": "edit",
@@ -10,15 +10,5 @@
   "hold": null,
   "adapter": null,
   "seconds": 5,
-  "credits": {
-    "480p": {
-      "credits": 7.07,
-      "runId": "428c87ac-6335-435b-a5be-9edcb9e94115"
-    },
-    "720p": {
-      "credits": 9.01,
-      "runId": "5c1be09e-4ab9-40fc-8a87-0423531144fe"
-    }
-  },
   "preview": null
 }

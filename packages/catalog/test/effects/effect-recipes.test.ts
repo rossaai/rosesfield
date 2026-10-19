@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { effectRecipes, readRecipes, recipeOf } from "#effects/effect-recipes"
+import {
+  effectRecipes,
+  passedRecipes,
+  readRecipes,
+  recipeOf,
+} from "#effects/effect-recipes"
 
 const preview = {
   file: "grow-wings.mp4",
@@ -16,35 +21,54 @@ function variant(change: Record<string, unknown>): Record<string, unknown> {
 }
 
 describe("the effect recipes kept as data", () => {
-  it("reads every recipe file, each named for its effect, with no adapter", () => {
-    expect(effectRecipes.length).toBeGreaterThanOrEqual(13)
-    for (const recipe of effectRecipes) {
-      expect({ effect: recipe.effect, adapter: recipe.adapter }).toEqual({
-        effect: recipe.effect,
-        adapter: null,
-      })
-    }
+  it("reads the 12 candidate files, none passed and none with an adapter", () => {
+    expect(
+      effectRecipes.map(({ effect, passed, adapter }) => ({
+        effect,
+        passed,
+        adapter,
+      }))
+    ).toEqual(
+      [
+        "buildings-ripple",
+        "fish-in-the-air",
+        "freeze-and-circle",
+        "grow-giant",
+        "grow-wings",
+        "liquid-metal",
+        "many-copies",
+        "melt-away",
+        "pull-back-to-space",
+        "push-into-eye",
+        "scatter-petals",
+        "still-in-the-street",
+      ].map((effect) => ({ effect, passed: false, adapter: null }))
+    )
+    expect(passedRecipes).toEqual([])
   })
 
   it("reads a passed recipe that carries the run it passed with", () => {
     const [read] = readRecipes({
-      "grow-wings": variant({ review: "passed", preview }),
+      "grow-wings": variant({ passed: true, preview }),
     })
-    expect(read?.preview?.runId).toBe(preview.runId)
+    expect(read).toMatchObject({
+      passed: true,
+      preview: { runId: preview.runId },
+    })
   })
 
-  it("refuses an effect prompt left empty outside a control", () => {
+  it("refuses an empty effect prompt", () => {
     expect(() =>
       readRecipes({ "grow-wings": variant({ prompt: "" }) })
     ).toThrow(/grow-wings\.json is invalid: prompt/)
   })
 
-  it("refuses a passed recipe with no run, and a run on a recipe in review", () => {
+  it("refuses a passed recipe with no run, and a run on a recipe not passed", () => {
     expect(() =>
-      readRecipes({ "grow-wings": variant({ review: "passed" }) })
-    ).toThrow(/preview/)
+      readRecipes({ "grow-wings": variant({ passed: true }) })
+    ).toThrow(/grow-wings\.json is invalid: preview/)
     expect(() => readRecipes({ "grow-wings": variant({ preview }) })).toThrow(
-      /preview/
+      /grow-wings\.json is invalid: preview/
     )
   })
 

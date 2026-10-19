@@ -7,7 +7,6 @@ import {
   type ResolutionValue,
   resolutionValues,
 } from "#effects/effect-recipe.contract"
-import { effectRecipes } from "#effects/effect-recipes"
 import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 
 function runBindings(
@@ -31,21 +30,53 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-export const videoModel =
-  "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors"
+const videoGuider = "LTXVDualCFGGuider"
+const maxModelLinks = 8
+
+function inputsOf(node: unknown): Record<string, unknown> {
+  return isRecord(node) && isRecord(node.inputs) ? node.inputs : {}
+}
+
+function linkedNode(
+  graph: Record<string, unknown>,
+  value: unknown
+): unknown | undefined {
+  return Array.isArray(value) && typeof value[0] === "string"
+    ? graph[value[0]]
+    : undefined
+}
+
+function videoModelOf(graph: Record<string, unknown>): string | null {
+  const guider = Object.values(graph).find(
+    (node) => isRecord(node) && node.class_type === videoGuider
+  )
+  let node = linkedNode(graph, inputsOf(guider).model)
+  for (let step = 0; step < maxModelLinks && node !== undefined; step += 1) {
+    const { unet_name: file, model } = inputsOf(node)
+    if (typeof file === "string") {
+      return file
+    }
+    node = linkedNode(graph, model)
+  }
+  return null
+}
 
 export function loadedModels(graph: unknown): string[] {
+  const nodes = isRecord(graph) ? graph : {}
   const files = new Set<string>()
-  for (const node of Object.values(isRecord(graph) ? graph : {})) {
-    const inputs = isRecord(node) && isRecord(node.inputs) ? node.inputs : {}
-    for (const value of Object.values(inputs)) {
+  for (const node of Object.values(nodes)) {
+    for (const value of Object.values(inputsOf(node))) {
       if (typeof value === "string" && value.endsWith(".safetensors")) {
         files.add(value)
       }
     }
   }
-  files.delete(videoModel)
-  return [videoModel, ...[...files].sort()]
+  const video = videoModelOf(nodes)
+  if (video === null) {
+    return [...files].sort()
+  }
+  files.delete(video)
+  return [video, ...[...files].sort()]
 }
 
 export function effectBinding(
@@ -78,9 +109,13 @@ function byResolution(recipe: EffectRecipe): EngineBinding {
   })
 }
 
-export const effectsBinding: EngineBinding = selectBinding({
-  input: "effect",
-  options: Object.fromEntries(
-    effectRecipes.map((recipe) => [recipe.effect, byResolution(recipe)])
-  ),
-})
+export function effectsBinding(
+  offered: readonly EffectRecipe[]
+): EngineBinding {
+  return selectBinding({
+    input: "effect",
+    options: Object.fromEntries(
+      offered.map((recipe) => [recipe.effect, byResolution(recipe)])
+    ),
+  })
+}

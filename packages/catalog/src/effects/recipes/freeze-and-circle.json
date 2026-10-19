@@ -1,6 +1,6 @@
 {
   "effect": "freeze-and-circle",
-  "review": "candidate",
+  "passed": false,
   "prompt": "Time stops. The person and everything around them freeze in place, with hair, dust and drops hanging still in the air. The camera glides in a smooth half circle around the frozen person, showing them from one side and then from the other side, while nothing in the scene moves. One continuous orbit shot.",
   "endFrame": {
     "source": "none"
@@ -8,15 +8,5 @@
   "hold": null,
   "adapter": null,
   "seconds": 5,
-  "credits": {
-    "480p": {
-      "credits": 2.87,
-      "runId": "4e27f37f-0975-4f25-8978-63586bab3b14"
-    },
-    "720p": {
-      "credits": 7.81,
-      "runId": "dffd3f07-3b29-42d2-bdb9-f4eaf349f4d9"
-    }
-  },
   "preview": null
 }

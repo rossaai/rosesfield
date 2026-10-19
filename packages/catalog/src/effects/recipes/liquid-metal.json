@@ -1,6 +1,6 @@
 {
   "effect": "liquid-metal",
-  "review": "candidate",
+  "passed": false,
   "prompt": "A wave of shiny liquid chrome rises over the person from their chest outward. Skin, hair and clothes turn into flowing mirror-like metal that reflects the light around them. Ripples run across the chrome surface as the person turns their head slightly. The camera stays still.",
   "endFrame": {
     "source": "edit",
@@ -10,15 +10,5 @@
   "hold": null,
   "adapter": null,
   "seconds": 5,
-  "credits": {
-    "480p": {
-      "credits": 6.03,
-      "runId": "1dd4e9f1-3faf-4b37-a119-fe33b6698a5a"
-    },
-    "720p": {
-      "credits": 9.17,
-      "runId": "3f0d480b-e60e-4ef0-bd88-a494d3866df0"
-    }
-  },
   "preview": null
 }

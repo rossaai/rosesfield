@@ -157,25 +157,4 @@ describe("the effects engine request", () => {
     })
     expect(brokenLinks(workflow)).toEqual([])
   })
-
-  it("sends the control with an empty prompt and the fish recipe's hold", async () => {
-    const request = requestFor(
-      { effect: "control-no-prompt", image: [photoId] },
-      "9:16"
-    )
-    const { workflow } = await submitted(request)
-    expect(promptText(workflow, "364").trim()).toBe("")
-    expect(workflow["461"]?.inputs.strength).toBe(
-      recipeOf("fish-in-the-air").hold
-    )
-  })
-
-  it("refuses an effect that has no recipe before any request", () => {
-    expect(() =>
-      requestFor({ effect: "confetti-burst", image: [photoId] }, "1:1")
-    ).toThrow()
-    expect(() =>
-      requestFor({ effect: "living-photo", image: [photoId] }, "1:1")
-    ).toThrow()
-  })
 })

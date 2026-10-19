@@ -4,15 +4,16 @@ export const effectsCopy = {
   "effects.keywords":
     "effect, photo to video, space, eye, giant, wings, petals, liquid metal, copies, fish",
   "effects.empty.title": "Your effect videos show here",
+  "effects.closed": "The effects are in review and open here once they pass.",
   "effects.input.effect.label": "Effect",
   "effects.input.effect.note": "Pick one effect for your photo.",
   "effects.input.image.label": "Photo",
   "effects.input.image.note":
-    "PNG, JPEG or WebP, up to 20 MB, at least 480 pixels on its short side.",
+    "PNG, JPEG or WebP, up to {size}, at least {min} pixels on its short side.",
   "effects.input.image.wrongFormat":
     "This input takes a PNG, JPEG or WebP photo. Pick another file.",
   "effects.input.image.tooSmall":
-    "This photo is {side} pixels on its short side. Pick one of 480 pixels or more.",
+    "This photo is {side} pixels on its short side. Pick one of {min} pixels or more.",
   "effects.input.image.unread": "This photo did not load. Add it again.",
   "effects.input.prompt.label": "Detail",
   "effects.input.prompt.placeholder": "Add one detail to the effect",
@@ -21,13 +22,9 @@ export const effectsCopy = {
   "effects.input.aspect.note": "Auto keeps the shape of your photo.",
   "effects.input.resolution.label": "Resolution",
   "effects.input.seed.label": "Seed",
-  "effects.inReview.title": "In review",
-  "effects.inReview.note":
-    "These effects have runs that wait for a blind review. An effect that passes plays its run here.",
   "effects.again.photo": "Another photo",
   "effects.again.effect": "Another effect",
   "effects.choice.effect.buildingsRipple": "Buildings ripple",
-  "effects.choice.effect.controlNoPrompt": "Control with no effect prompt",
   "effects.choice.effect.fishInTheAir": "Fish in the air",
   "effects.choice.effect.freezeAndCircle": "Freeze and circle",
   "effects.choice.effect.growGiant": "Grow into a giant",
@@ -40,7 +37,6 @@ export const effectsCopy = {
   "effects.choice.effect.scatterPetals": "Scatter into petals",
   "effects.choice.effect.stillInTheStreet": "Still in a busy street",
   "effects.photo.buildingsRipple": "A person in front of buildings",
-  "effects.photo.controlNoPrompt": "Any photo",
   "effects.photo.fishInTheAir": "A person, or a room",
   "effects.photo.freezeAndCircle": "A person in motion",
   "effects.photo.growGiant": "A person on a street",
@@ -52,26 +48,6 @@ export const effectsCopy = {
   "effects.photo.pushIntoEye": "A close photo of one face",
   "effects.photo.scatterPetals": "A person, head to toe",
   "effects.photo.stillInTheStreet": "A person on a busy street",
-  "effects.choice.effect.pullBackToSpacePromptOnly":
-    "Pull back to space, prompt only",
-  "effects.photo.pullBackToSpacePromptOnly": "A person outdoors",
-  "effects.choice.effect.pushIntoEyePromptOnly":
-    "Push into the eye, prompt only",
-  "effects.photo.pushIntoEyePromptOnly": "A close photo of one face",
-  "effects.choice.effect.meltAwayPromptOnly": "Melt away, prompt only",
-  "effects.photo.meltAwayPromptOnly": "A person, head to toe",
-  "effects.choice.effect.growGiantPromptOnly": "Grow into a giant, prompt only",
-  "effects.photo.growGiantPromptOnly": "A person on a street",
-  "effects.choice.effect.manyCopiesPromptOnly": "Fill with copies, prompt only",
-  "effects.photo.manyCopiesPromptOnly": "One person with space around them",
-  "effects.choice.effect.liquidMetalPromptOnly":
-    "Turn to liquid metal, prompt only",
-  "effects.photo.liquidMetalPromptOnly": "A person, head to waist",
-  "effects.choice.effect.growWingsPromptOnly": "Grow wings, prompt only",
-  "effects.photo.growWingsPromptOnly": "A person, head to waist",
-  "effects.choice.effect.stillInTheStreetPromptOnly":
-    "Still in a busy street, prompt only",
-  "effects.photo.stillInTheStreetPromptOnly": "A person on a busy street",
   "effects.choice.resolution.p480": "480p",
   "effects.choice.resolution.p720": "720p",
 } satisfies Record<string, string>

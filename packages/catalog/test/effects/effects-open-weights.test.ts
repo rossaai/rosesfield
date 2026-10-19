@@ -2,6 +2,8 @@ import type { EngineBinding } from "@rosesfield/contract"
 import { selectAdapter } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import { effectsBinding } from "#effects/comfy/effects-binding"
+import { resolutionValues } from "#effects/effect-recipe.contract"
+import { effectRecipes } from "#effects/effect-recipes"
 import { findWorkflow } from "#list-workflows"
 import uiFile from "../../../../workflows/effects-ltx-2-5/effects-ltx-2-5.json"
 
@@ -126,8 +128,9 @@ const partnerNode = "KlingImage2VideoNode"
 
 describe("Effects holds only ComfyUI core nodes", () => {
   it("sends from every leaf only core node classes", () => {
-    const leaves = leavesOf(effectsBinding)
-    expect(leaves.length).toBeGreaterThanOrEqual(26)
+    const leaves = leavesOf(effectsBinding(effectRecipes))
+    expect(leaves).toHaveLength(effectRecipes.length * resolutionValues.length)
+    expect(effectRecipes).toHaveLength(12)
     for (const [path, graph] of leaves) {
       expect({ path, notCore: notCore(classesOf(graph)) }).toEqual({
         path,
@@ -144,7 +147,7 @@ describe("Effects holds only ComfyUI core nodes", () => {
   })
 
   it("names a partner node planted in a leaf or in the UI file", () => {
-    for (const [path, graph] of leavesOf(effectsBinding)) {
+    for (const [path, graph] of leavesOf(effectsBinding(effectRecipes))) {
       const planted = {
         ...graph,
         "75": { ...graph["75"], class_type: partnerNode },

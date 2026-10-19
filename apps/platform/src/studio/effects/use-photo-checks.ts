@@ -1,4 +1,4 @@
-import { routes } from "@rosesfield/contract"
+import { type AppListing, type ImageAccept, routes } from "@rosesfield/contract"
 import {
   isCancelledError,
   type QueryClient,
@@ -30,13 +30,6 @@ export type PhotoChecks = {
 
 type Checked = { size: PhotoSize } | { refusal: string; again: boolean }
 
-const photoFormats: readonly string[] = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]
-const maxPhotoBytes = 20_000_000
-const minPhotoSide = 480
 const maxCancelledChecks = 3
 
 async function measure(assetId: string): Promise<PhotoSize | null> {
@@ -53,32 +46,44 @@ async function measure(assetId: string): Promise<PhotoSize | null> {
   }
 }
 
-export async function checkPhoto(
-  client: QueryClient,
-  assetId: string
-): Promise<PhotoCheck> {
-  const { asset } = await client.fetchQuery(assetQuery(assetId))
-  const wrongFormat = { refusal: tCatalog("effects.input.image.wrongFormat") }
-  if (!photoFormats.includes(asset.mime)) {
-    return wrongFormat
-  }
-  if (asset.bytes > maxPhotoBytes) {
-    return {
-      refusal: t("field.asset.tooLarge", {
-        size: formatBytes(asset.bytes),
-        limit: formatBytes(maxPhotoBytes),
-      }),
+export function acceptOf(app: AppListing, name: string): ImageAccept | null {
+  const input = app.inputs.find((one) => one.name === name)
+  return input?.type === "image" ? (input.accept ?? null) : null
+}
+
+export function photoCheckOf(accept: ImageAccept | null): CheckPhoto {
+  return async (client, assetId) => {
+    const { asset } = await client.fetchQuery(assetQuery(assetId))
+    const wrongFormat = {
+      refusal: tCatalog("effects.input.image.wrongFormat"),
     }
+    const formats: readonly string[] = accept?.formats ?? []
+    if (accept !== null && !formats.includes(asset.mime)) {
+      return wrongFormat
+    }
+    if (accept !== null && asset.bytes > accept.maxBytes) {
+      return {
+        refusal: t("field.asset.tooLarge", {
+          size: formatBytes(asset.bytes),
+          limit: formatBytes(accept.maxBytes),
+        }),
+      }
+    }
+    const size = await measure(assetId)
+    if (size === null) {
+      return wrongFormat
+    }
+    const side = Math.min(size.width, size.height)
+    if (accept !== null && side < accept.minShortSide) {
+      return {
+        refusal: tCatalog("effects.input.image.tooSmall", {
+          side,
+          min: accept.minShortSide,
+        }),
+      }
+    }
+    return { size }
   }
-  const size = await measure(assetId)
-  if (size === null) {
-    return wrongFormat
-  }
-  const side = Math.min(size.width, size.height)
-  if (side < minPhotoSide) {
-    return { refusal: tCatalog("effects.input.image.tooSmall", { side }) }
-  }
-  return { size }
 }
 
 async function settle(
@@ -111,7 +116,7 @@ function refusedIn(
 export function usePhotoChecks(
   form: AppForm,
   name: string,
-  check: CheckPhoto = checkPhoto
+  check: CheckPhoto
 ): PhotoChecks {
   const client = useQueryClient()
   const [results, setResults] = useState<ReadonlyMap<string, Checked>>(

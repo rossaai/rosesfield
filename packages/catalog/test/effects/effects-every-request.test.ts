@@ -34,6 +34,21 @@ const endFrameModels = [
 
 const detail = "a red scarf"
 
+const effects = [
+  "buildings-ripple",
+  "fish-in-the-air",
+  "freeze-and-circle",
+  "grow-giant",
+  "grow-wings",
+  "liquid-metal",
+  "many-copies",
+  "melt-away",
+  "pull-back-to-space",
+  "push-into-eye",
+  "scatter-petals",
+  "still-in-the-street",
+]
+
 type Case = {
   recipe: EffectRecipe
   resolution: (typeof resolutionValues)[number]
@@ -71,9 +86,10 @@ function expectedPrompt(recipe: EffectRecipe): string {
 describe("every effects engine request against the recorded v2 routes", () => {
   const all = cases()
 
-  it("covers each effect at each resolution", () => {
-    expect(all).toHaveLength(effectRecipes.length * 2)
-    expect(effectRecipes.length).toBeGreaterThanOrEqual(13)
+  it("covers each of the 12 effects at each resolution", () => {
+    expect(all.map((one) => `${one.recipe.effect} ${one.resolution}`)).toEqual(
+      effects.flatMap((effect) => [`${effect} 480p`, `${effect} 720p`])
+    )
   })
 
   it.each(

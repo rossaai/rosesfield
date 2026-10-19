@@ -10,8 +10,9 @@ import { InputField } from "@/screens/app/fields/input-field"
 import { SeedField } from "@/screens/app/fields/seed-field"
 import { randomSeed } from "@/screens/app/inputs-panel"
 import type { AppForm } from "@/screens/app/use-app-form"
-import { EffectTiles } from "@/studio/effects/effect-tiles"
+import { EffectTiles, effectOptionsOf } from "@/studio/effects/effect-tiles"
 import { PhotoField } from "@/studio/effects/photo-field"
+import { useEffectPrices } from "@/studio/effects/use-effect-prices"
 
 export const autoAspect = "auto"
 
@@ -97,7 +98,7 @@ function ChoiceInputField(
 function EffectPart(props: EffectsPanelProps): ReactElement | null {
   const { app, form } = props
   const effect = choiceOf(app, "effect")
-  const resolution = choiceOf(app, "resolution")
+  const prices = useEffectPrices(app, effectOptionsOf(app), form.values)
   if (effect === null) {
     return null
   }
@@ -105,9 +106,7 @@ function EffectPart(props: EffectsPanelProps): ReactElement | null {
     <EffectTiles
       app={app}
       value={textOf(form.values.inputs[effect.name]) || effect.default}
-      resolution={
-        textOf(form.values.inputs.resolution) || (resolution?.default ?? "")
-      }
+      prices={prices}
       onChange={(value) => form.setInput(effect.name, value)}
       register={(focus) => form.register(effect.name, focus)}
     />

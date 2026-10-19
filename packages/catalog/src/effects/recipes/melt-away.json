@@ -1,6 +1,6 @@
 {
   "effect": "melt-away",
-  "review": "candidate",
+  "passed": false,
   "prompt": "The person starts to melt from the head down like warm wax. Their face, hair and clothes soften, sag and run downward in thick glossy streams. The body slumps lower and lower until only a shiny puddle in the colours of their clothes spreads across the ground. The camera stays still.",
   "endFrame": {
     "source": "edit",
@@ -10,15 +10,5 @@
   "hold": null,
   "adapter": null,
   "seconds": 5,
-  "credits": {
-    "480p": {
-      "credits": 6.02,
-      "runId": "5aac75d1-ce9e-4a48-8677-f7addff99485"
-    },
-    "720p": {
-      "credits": 6.16,
-      "runId": "f1c81fe8-d18f-45e1-af8f-549b28d3cf6f"
-    }
-  },
   "preview": null
 }
