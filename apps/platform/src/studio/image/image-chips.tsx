@@ -1,0 +1,115 @@
+import type { ModelField } from "@rosesfield/catalog/comfy"
+import type { AppListing } from "@rosesfield/contract"
+import { ChipSelect } from "@rosesfield/ui/components/chip-select"
+import type { ReactElement } from "react"
+import { t, tCount } from "@/copy/t"
+import { aspectField, countField } from "@/screens/app/app-form"
+import { SettingChip, StepperChip } from "@/screens/app/bar/setting-chip"
+import { fieldCaption } from "@/screens/app/hosted/hosted-fields"
+import type { AppForm } from "@/screens/app/use-app-form"
+import { countBoundsOf, type ImageFields } from "@/studio/image/image-fields"
+import { shownInputOf } from "@/studio/image/image-rules"
+
+type ChoiceField = Extract<ModelField, { kind: "choice" }>
+type NumberField = Extract<ModelField, { kind: "number" }>
+
+export function FieldChoiceChip({
+  field,
+  form,
+}: {
+  field: ChoiceField
+  form: AppForm
+}): ReactElement {
+  const value = form.values.inputs[field.name]
+  const chosen =
+    value === undefined ? String(field.default ?? "") : String(value)
+  return (
+    <ChipSelect
+      label={fieldCaption(field)}
+      value={chosen}
+      display={chosen === "" ? fieldCaption(field) : chosen}
+      onValueChange={(next) =>
+        form.setInput(
+          field.name,
+          field.options.find((one) => String(one) === next)
+        )
+      }
+      options={field.options.map((option) => ({
+        value: String(option),
+        label: String(option),
+      }))}
+    />
+  )
+}
+
+function FieldCountChip({
+  field,
+  form,
+}: {
+  field: NumberField
+  form: AppForm
+}): ReactElement {
+  const bounds = countBoundsOf(field, form.values.inputs[field.name])
+  return (
+    <StepperChip
+      {...bounds}
+      label={t("field.count.label")}
+      shown={tCount("bar.count.image", bounds.value)}
+      step={1}
+      unit=""
+      onChange={(count) => form.setInput(field.name, count)}
+    />
+  )
+}
+
+export function HostedSettingChips({
+  fields,
+  form,
+}: {
+  fields: ImageFields
+  form: AppForm
+}): ReactElement {
+  return (
+    <>
+      {fields.aspect === null ? null : (
+        <FieldChoiceChip field={fields.aspect} form={form} />
+      )}
+      {fields.size === null ? null : (
+        <FieldChoiceChip field={fields.size} form={form} />
+      )}
+      {fields.count === null ? null : (
+        <FieldCountChip field={fields.count} form={form} />
+      )}
+    </>
+  )
+}
+
+function withShownResolution(app: AppListing, form: AppForm): AppListing {
+  return {
+    ...app,
+    inputs: app.inputs.flatMap((input) => {
+      if (input.name !== "resolution") {
+        return [input]
+      }
+      const shown = shownInputOf(app, form.values.inputs, input)
+      return shown === null ? [] : [shown]
+    }),
+  }
+}
+
+export function GraphSettingChips({
+  app,
+  form,
+}: {
+  app: AppListing
+  form: AppForm
+}): ReactElement {
+  const shown = withShownResolution(app, form)
+  return (
+    <>
+      {[aspectField, "resolution", countField].map((name) => (
+        <SettingChip key={name} app={shown} form={form} name={name} />
+      ))}
+    </>
+  )
+}

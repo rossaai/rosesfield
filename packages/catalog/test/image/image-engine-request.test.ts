@@ -66,50 +66,6 @@ function danglingLinks(workflow: Workflow): string[] {
 }
 
 describe("the engine request the Image binding produces", () => {
-  it("sends FLUX.2 Klein 4B its 4-step workflow at the 1k size of 16:9, with the count and the seed", async () => {
-    const replay = new ReplayFetch([submitJob])
-    const engine = new ComfyGenerationEngine({
-      apiKey: "comfyui-test",
-      fetch: replay.fetch,
-    })
-    const submission = await engine.submit(
-      requestFor(
-        {
-          inputs: { prompt: "a lighthouse at dawn" },
-          count: 4,
-          aspectRatio: "16:9",
-        },
-        42
-      )
-    )
-    expect(submission.models).toEqual([
-      "flux-2-klein-4b.safetensors",
-      "qwen_3_4b.safetensors",
-      "flux2-vae.safetensors",
-    ])
-    expect(submission.workflowHash).toMatch(/^[0-9a-f]{64}$/)
-    const workflow = workflowOf(replay)
-    expect(danglingLinks(workflow)).toEqual([])
-    expect(workflow).toMatchObject({
-      "62": {
-        class_type: "Flux2Scheduler",
-        inputs: { steps: 4, width: 1360, height: 768 },
-      },
-      "63": { class_type: "CFGGuider", inputs: { cfg: 1 } },
-      "66": {
-        class_type: "EmptyFlux2LatentImage",
-        inputs: { width: 1360, height: 768, batch_size: 4 },
-      },
-      "73": { class_type: "RandomNoise", inputs: { noise_seed: 42 } },
-      "74": {
-        class_type: "CLIPTextEncode",
-        inputs: { text: "a lighthouse at dawn" },
-      },
-      "9": { class_type: "SaveImage", inputs: { images: ["65", 0] } },
-    })
-    expect(replay.unused()).toEqual([])
-  })
-
   it("sends Qwen Image 2512 its listed 9:16 size and 50 steps", async () => {
     const replay = new ReplayFetch([submitJob])
     const engine = new ComfyGenerationEngine({
@@ -188,7 +144,9 @@ describe("the engine request the Image binding produces", () => {
       fetch: replay.fetch,
     })
     await expect(
-      engine.submit(requestFor({ inputs: { prompt: "a door" } }, 1))
+      engine.submit(
+        requestFor({ inputs: { prompt: "a door", model: "z-image-turbo" } }, 1)
+      )
     ).rejects.toThrow()
     expect(replay.sent).toEqual([])
   })

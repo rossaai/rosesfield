@@ -11,7 +11,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { bodyOf, defaultsOf, type FieldValue } from "@/screens/app/app-form"
 import type { AppForm } from "@/screens/app/use-app-form"
-import { useInputRules } from "@/studio/image/image-model-settings"
+import { useGraphRules } from "@/studio/image/image-model-settings"
 import { correctionsOf, shownInputOf } from "@/studio/image/image-rules"
 
 function imageListing(): AppListing {
@@ -70,7 +70,7 @@ function useForm(start: Record<string, FieldValue>) {
     validate: () => true,
     register: () => undefined,
   }
-  useInputRules(listing, form)
+  useGraphRules(listing, form)
   return { form, setInput }
 }
 
@@ -79,13 +79,12 @@ afterEach(cleanup)
 describe("the Image model settings follow the contract's rules", () => {
   it("shows the resolution only for a model that runs more than one", () => {
     expect(shownValues("z-image-turbo")).toEqual(["1k", "2k"])
-    expect(shownValues("flux-2-klein-4b")).toBeNull()
     expect(shownValues("qwen-image-2512")).toBeNull()
   })
 
   it("moves 2K back to 1K when you pick a model that runs 1K only", () => {
     expect(
-      correctionsOf(listing, { model: "flux-2-klein-4b", resolution: "2k" })
+      correctionsOf(listing, { model: "qwen-image-2512", resolution: "2k" })
     ).toEqual({ resolution: "1k" })
     expect(
       correctionsOf(listing, { model: "z-image-turbo", resolution: "2k" })
@@ -104,10 +103,10 @@ describe("the Image model settings follow the contract's rules", () => {
     expect(
       body.safeParse(bodyOf(listing, result.current.form.values)).success
     ).toBe(true)
-    act(() => result.current.setInput("model", "flux-2-klein-4b"))
+    act(() => result.current.setInput("model", "qwen-image-2512"))
     const sent = bodyOf(listing, result.current.form.values)
     expect(sent.inputs).toMatchObject({
-      model: "flux-2-klein-4b",
+      model: "qwen-image-2512",
       resolution: "1k",
     })
     expect(body.safeParse(sent).success).toBe(true)
@@ -119,10 +118,22 @@ describe("the Image model settings follow the contract's rules", () => {
       inputs: {
         ...defaultsOf(listing).inputs,
         prompt: "a field of roses",
-        model: "flux-2-klein-4b",
+        model: "qwen-image-2512",
         resolution: "2k",
       },
     }
     expect(body.safeParse(bodyOf(listing, values)).success).toBe(false)
+  })
+
+  it("leaves a hosted model's own resolution alone, whether or not its form has loaded", () => {
+    const { result } = renderHook(() =>
+      useForm({
+        ...defaultsOf(listing).inputs,
+        prompt: "a field of roses",
+        model: "bfl/flux-3-image",
+        resolution: "4k",
+      })
+    )
+    expect(result.current.form.values.inputs.resolution).toBe("4k")
   })
 })

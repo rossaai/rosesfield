@@ -46,7 +46,7 @@ describe("the open-weights list", () => {
   it("reaches the workflows an app runs through its bindings", () => {
     const ids = appWorkflows("image").map((workflow) => workflow.id)
     expect(ids).toEqual(
-      expect.arrayContaining(["image-flux-2-klein-4b", "image-z-image-turbo"])
+      expect.arrayContaining(["image-qwen-image-2512", "image-z-image-turbo"])
     )
     const nested = appWorkflows("video").map((workflow) => workflow.id)
     expect(nested).toEqual(

@@ -5,11 +5,7 @@ import {
   sizesAt1k,
   sizesAt2k,
 } from "#image/comfy/image-sizes"
-import {
-  flux2Klein4b,
-  qwenImage2512,
-  zImageTurbo,
-} from "#image/comfy/open-weights"
+import { qwenImage2512, zImageTurbo } from "#image/comfy/open-weights"
 
 export const resolutionValues = ["1k", "2k"] as const
 
@@ -24,12 +20,6 @@ export type ImageModel = {
 
 export const imageModels: readonly ImageModel[] = [
   {
-    value: "flux-2-klein-4b",
-    labelKey: "image.model.flux2Klein4b",
-    sizes: { "1k": sizesAt1k },
-    bind: flux2Klein4b,
-  },
-  {
     value: "z-image-turbo",
     labelKey: "image.model.zImageTurbo",
     sizes: { "1k": sizesAt1k, "2k": sizesAt2k },
@@ -43,7 +33,7 @@ export const imageModels: readonly ImageModel[] = [
   },
 ]
 
-export const defaultModel = "flux-2-klein-4b"
+export const firstModel = "bfl/flux-3-image"
 
 export const defaultResolution: ResolutionValue = "1k"
 

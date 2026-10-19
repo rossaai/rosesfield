@@ -81,6 +81,19 @@ describe("choice input", () => {
     expect(issuePaths(withInputs([choice]))).toEqual(["inputs.0.default"])
   })
 
+  it("takes a hosted model's provider and name as a value, and refuses other marks", () => {
+    const choice = (value: string): InputInput => ({
+      type: "choice",
+      name: "model",
+      labelKey: "inputs.model",
+      options: [{ value, labelKey: "model.first" }, options[0]!],
+      default: value,
+    })
+    expect(issuePaths(withInputs([choice("bfl/flux-3-image")]))).toEqual([])
+    expect(issuePaths(withInputs([choice("bfl/flux/3")]))).not.toEqual([])
+    expect(issuePaths(withInputs([choice("Bfl/flux")]))).not.toEqual([])
+  })
+
   it("refuses two options with the same value", () => {
     const choice: InputInput = {
       type: "choice",

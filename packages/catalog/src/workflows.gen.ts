@@ -27,8 +27,6 @@ import wExpandSidesQwenImageApi from "../../../workflows/expand-sides-qwen-image
 import wExpandSidesQwenImageEntry from "../../../workflows/expand-sides-qwen-image/entry.json"
 import wHeadshotsQwenImageEdit2511Api from "../../../workflows/headshots-qwen-image-edit-2511/headshots-qwen-image-edit-2511.api.json"
 import wHeadshotsQwenImageEdit2511Entry from "../../../workflows/headshots-qwen-image-edit-2511/entry.json"
-import wImageFlux2Klein4bApi from "../../../workflows/image-flux-2-klein-4b/image-flux-2-klein-4b.api.json"
-import wImageFlux2Klein4bEntry from "../../../workflows/image-flux-2-klein-4b/entry.json"
 import wImageQwenImage2512Api from "../../../workflows/image-qwen-image-2512/image-qwen-image-2512.api.json"
 import wImageQwenImage2512Entry from "../../../workflows/image-qwen-image-2512/entry.json"
 import wImageZImageTurboApi from "../../../workflows/image-z-image-turbo/image-z-image-turbo.api.json"
@@ -117,7 +115,6 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "expand-format-qwen-image", entry: wExpandFormatQwenImageEntry, graph: wExpandFormatQwenImageApi },
   { folder: "expand-sides-qwen-image", entry: wExpandSidesQwenImageEntry, graph: wExpandSidesQwenImageApi },
   { folder: "headshots-qwen-image-edit-2511", entry: wHeadshotsQwenImageEdit2511Entry, graph: wHeadshotsQwenImageEdit2511Api },
-  { folder: "image-flux-2-klein-4b", entry: wImageFlux2Klein4bEntry, graph: wImageFlux2Klein4bApi },
   { folder: "image-qwen-image-2512", entry: wImageQwenImage2512Entry, graph: wImageQwenImage2512Api },
   { folder: "image-z-image-turbo", entry: wImageZImageTurboEntry, graph: wImageZImageTurboApi },
   { folder: "layers-edit-qwen-image-edit-2511", entry: wLayersEditQwenImageEdit2511Entry, graph: wLayersEditQwenImageEdit2511Api },
