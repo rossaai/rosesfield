@@ -1,3 +1,4 @@
+import { creditsOfCost } from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { appName, aspectOf, isAssetInput } from "@/catalog/app-facts"
@@ -215,22 +216,29 @@ export function runSeconds(run: Run): number | null {
     : secondsBetween(run.createdAt, run.finishedAt)
 }
 
-export function runPrice(run: Run): string {
+export function runPrice(run: Run, estimate: number | null = null): string {
   if (run.origin === "demo") {
     return t("run.price.demo")
   }
-  return run.cost === null
-    ? t("run.price.unknown")
-    : t("run.price.known", { amount: formatAmount(run.cost.amount) })
+  return priceOf(run, estimate) ?? t("run.price.unknown")
 }
 
-function captionPrice(run: Run): string {
+function captionPrice(run: Run, estimate: number | null): string {
   if (run.origin === "demo") {
     return t("run.caption.price.demo")
   }
-  return run.cost === null
-    ? t("run.caption.price.unknown")
-    : t("run.price.known", { amount: formatAmount(run.cost.amount) })
+  return priceOf(run, estimate) ?? t("run.caption.price.unknown")
+}
+
+function priceOf(run: Run, estimate: number | null): string | null {
+  if (run.cost !== null) {
+    return t("run.price.credits", {
+      amount: formatAmount(creditsOfCost(run.cost)),
+    })
+  }
+  return estimate === null
+    ? null
+    : t("run.price.estimated", { amount: formatAmount(estimate) })
 }
 
 function madeCaption(run: Run, lead: string | null): string | null {
@@ -244,7 +252,7 @@ function madeCaption(run: Run, lead: string | null): string | null {
     : t("run.caption.made", { duration })
 }
 
-export function runCaption(run: Run): string {
+export function runCaption(run: Run, estimate: number | null = null): string {
   const model = runModel(run, findCatalogApp(run.appId))
   if (run.status === "failed" || run.status === "cancelled") {
     return model ?? ""
@@ -253,7 +261,7 @@ export function runCaption(run: Run): string {
   if (run.status !== "done") {
     return lead ?? ""
   }
-  return joinParts([lead, madeCaption(run, lead), captionPrice(run)])
+  return joinParts([lead, madeCaption(run, lead), captionPrice(run, estimate)])
 }
 
 export function runAspect(run: Run): MediaAspect {

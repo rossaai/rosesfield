@@ -11,16 +11,25 @@ const jobRows = z.array(
     index: z.number().int().min(0).max(15),
     seed: z.number().int().min(0).nullable(),
     ref: z.string().min(1).nullable(),
-    status: z.enum(["pending", "submitting", "queued", "running", "done"]),
+    status: z.enum([
+      "pending",
+      "submitting",
+      "queued",
+      "running",
+      "collecting",
+      "done",
+    ]),
     progress: z.number().min(0).max(1).nullable(),
     outputs: z.array(assetId),
+    collectingSince: z.iso.datetime().optional(),
   })
 )
 
 function jobsOf(value: unknown): RunJob[] {
-  return jobRows.parse(value).map((job) => ({
+  return jobRows.parse(value).map(({ collectingSince, ...job }) => ({
     ...job,
     outputs: job.outputs.map((id) => assetIdFormat.parse(id)),
+    ...(collectingSince === undefined ? {} : { collectingSince }),
   }))
 }
 

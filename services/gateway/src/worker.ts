@@ -4,6 +4,7 @@ import { buildHandlers } from "#build-handlers"
 import { ownerScope } from "#compose/request-scope"
 import { ownerSettings } from "#compose/settings"
 import { visitorScopeFor } from "#compose/visitor-ports"
+import { checkEngineSettings } from "#engine/engine-target"
 import { type AgentMount, createGateway } from "#gateway"
 import type { GatewayApp } from "#gateway-env"
 import { TokenTries } from "#lock/token-tries"
@@ -27,6 +28,7 @@ let gateway: GatewayApp | null = null
 function composeWorkerGateway(env: WorkerBindings): GatewayApp {
   const parts = workerParts(env)
   const { vars } = parts
+  checkEngineSettings(vars.engine)
   const agent: AgentMount = {
     mode: "forward",
     forward: forwardToAgentHost(env.AGENTS),

@@ -3,6 +3,10 @@ import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement, ReactNode } from "react"
 import { wordsForError } from "@/copy/error-words"
 import { t } from "@/copy/t"
+import {
+  isModelNoticeCode,
+  ModelNotice,
+} from "@/screens/app/hosted/model-notice"
 import type { StartRun } from "@/screens/app/use-start-run"
 
 type GenerateFootProps = {
@@ -14,6 +18,9 @@ type GenerateFootProps = {
 export function StartProblem({ start }: { start: StartRun }): ReactNode {
   if (start.error === null) {
     return null
+  }
+  if (isModelNoticeCode(start.error)) {
+    return <ModelNotice error={start.error} />
   }
   const words = wordsForError(start.error, { thing: "app" })
   return (
@@ -36,8 +43,14 @@ export function GenerateFoot({
         <p className="min-w-0 flex-1 truncate text-caption text-ink-muted">
           {start.price}
         </p>
-        <Button tone="primary" busy={start.isPending} onClick={start.generate}>
+        <Button
+          tone="primary"
+          busy={start.isPending}
+          onClick={start.generate}
+          aria-label={start.priceName ?? undefined}
+        >
           {t("run.generate")}
+          {start.priceValue}
         </Button>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useRouterState } from "@tanstack/react-router"
 import {
   type Dispatch,
+  type RefObject,
   type SetStateAction,
   useCallback,
   useEffect,
@@ -68,7 +69,13 @@ function useSeededValues(
   return [values, setValues]
 }
 
-export function useAppForm(app: AppListing, seeds: FormSeeds): AppForm {
+export type FormCheck = (values: FormValues) => FieldProblem[]
+
+export function useAppForm(
+  app: AppListing,
+  seeds: FormSeeds,
+  check?: RefObject<FormCheck | null>
+): AppForm {
   const [values, setValues] = useSeededValues(app, seeds)
   const [problems, setProblems] = useState<ReadonlyMap<string, FieldProblem>>(
     new Map()
@@ -92,14 +99,14 @@ export function useAppForm(app: AppListing, seeds: FormSeeds): AppForm {
     [setValues]
   )
   const validate = useCallback((): boolean => {
-    const found = problemsOf(app, values)
+    const found = check?.current?.(values) ?? problemsOf(app, values)
     setProblems(new Map(found.map((problem) => [problem.name, problem])))
     const first = found[0]
     if (first !== undefined) {
       focusers.current.get(first.name)?.()
     }
     return found.length === 0
-  }, [app, values])
+  }, [app, values, check])
   return {
     values,
     problems,

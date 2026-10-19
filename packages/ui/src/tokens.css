@@ -99,6 +99,7 @@
   --spacing-toast-max: 346px;
   --spacing-alert: 237px;
   --spacing-dialog: 430px;
+  --spacing-list-max: min(60dvh, var(--spacing-dialog));
   --spacing-hairline: 1px;
   --spacing-focus-ring: 2px;
   --spacing-rise: 16px;

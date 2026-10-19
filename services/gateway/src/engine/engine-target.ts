@@ -1,4 +1,6 @@
+import { ComfyGenerationEngine } from "@rosesfield/generation"
 import { z } from "zod"
+import { EnvInvalidError } from "#error/env-invalid.error"
 
 export const engineTarget = z.enum([
   "comfy-cloud",
@@ -35,7 +37,7 @@ export const engineTargets: Record<EngineTarget, readonly TargetSetting[]> = {
   demo: [],
 }
 
-export const comfyCloudUrl = "https://cloud.comfy.org"
+export const comfyCloudUrl = ComfyGenerationEngine.cloudUrl
 
 const hostSuffixes: readonly { suffix: string; target: ComfyTarget }[] = [
   { suffix: ".run.comfy.app", target: "comfy-deployment" },
@@ -69,4 +71,14 @@ export function withEngineKey(
   apiKey: string | null
 ): EngineSettings {
   return engine.target === "demo" ? engine : { ...engine, apiKey }
+}
+
+export function checkEngineSettings(engine: EngineSettings): void {
+  if (engine.target === "runpod-serverless") {
+    throw new EnvInvalidError({
+      problems: [
+        "RUNPOD_ENDPOINT_ID is set, and Rosesfield no longer runs on RunPod Serverless. Run ComfyUI behind comfy-api-proxy in a RunPod pod and set COMFY_BASE_URL to its address.",
+      ],
+    })
+  }
 }

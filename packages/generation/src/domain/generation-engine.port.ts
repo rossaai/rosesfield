@@ -1,11 +1,13 @@
 import type {
   AssetKind,
+  Cost,
   EngineBinding,
   KeyCheck,
   RunInputs,
   RunOrigin,
 } from "@rosesfield/contract"
 import type { AssetId, ProjectError } from "@rosesfield/kernel"
+import type { ModelForm } from "#domain/model-form"
 
 export type EngineFile = {
   assetId: AssetId
@@ -26,10 +28,16 @@ export type EngineRequest = {
   timeoutSeconds?: number
 }
 
+export type EngineFinished = {
+  outputs: readonly EngineOutput[]
+  cost: Cost | null
+}
+
 export type EngineSubmission = {
   ref: string
   models: readonly string[]
   workflowHash: string | null
+  finished?: EngineFinished
 }
 
 export type EngineStatus =
@@ -38,7 +46,7 @@ export type EngineStatus =
       progress: number | null
       retryAfterSeconds: number | null
     }
-  | { state: "succeeded" }
+  | { state: "succeeded"; cost?: Cost | null }
   | { state: "failed"; error: ProjectError }
   | { state: "cancelled" }
 
@@ -52,6 +60,25 @@ export type EngineOutput = {
 }
 
 export type OutputsPerJob = "all" | "one"
+
+export type HostedModel = {
+  id: string
+  provider: string
+  takes: readonly string[]
+  makes: readonly string[]
+  form: ModelForm | null
+}
+
+export type PriceRequest = {
+  inputs: RunInputs
+  count: number
+}
+
+export type RunPrice =
+  | { source: "measured" | "estimate" | "rates"; credits: number }
+  | { source: "unknown"; credits: null }
+
+export const unknownPrice: RunPrice = { source: "unknown", credits: null }
 
 export type Idempotency = "keyed" | "none"
 
@@ -74,12 +101,37 @@ export abstract class GenerationEngine {
   /** Reads the status of a submitted run once. */
   abstract read(ref: string): Promise<EngineStatus>
 
-  /** Lists the outputs of a run that succeeded, with their bytes. */
-  abstract listOutputs(ref: string): Promise<EngineOutput[]>
+  /** Lists the outputs of a run that succeeded, with their bytes, and never fetches an address the run's inputs name. */
+  abstract listOutputs(ref: string, inputs: RunInputs): Promise<EngineOutput[]>
 
   /** Asks the engine to stop a submitted run. */
   abstract cancel(ref: string): Promise<void>
 
   /** Checks the engine's key with a call that starts no paid run. */
   abstract checkKey(): Promise<KeyCheck>
+
+  /** Says whether a key check asks this engine, or another engine checks the same key. */
+  checksKey(): boolean {
+    return true
+  }
+
+  /** Describes the inputs a hosted model takes, or null when the app's own inputs apply. */
+  formOf(_binding: EngineBinding): Promise<ModelForm | null> {
+    return Promise.resolve(null)
+  }
+
+  /** Lists the hosted models this engine runs, with the media each takes and makes. */
+  listModels(): Promise<readonly HostedModel[]> {
+    return Promise.resolve([])
+  }
+
+  /** Prices one run before it starts, in the engine's credits. */
+  priceOf(_binding: EngineBinding, _request: PriceRequest): Promise<RunPrice> {
+    return Promise.resolve(unknownPrice)
+  }
+
+  /** Says what a cost this engine measured comes to in its credits, or null when it has no credits. */
+  creditsOf(_cost: Cost): number | null {
+    return null
+  }
 }

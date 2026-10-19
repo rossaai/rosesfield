@@ -20,7 +20,8 @@ workflows/
 - 51 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
 - Every graph runs open weights only. It holds no partner node and no Comfy Router call. The catalog test `open-weights.test.ts` checks every app's bindings.
 - `bun run catalog:sync` lists every folder in `packages/catalog/src/workflows.gen.ts`. It refuses a folder without `entry.json`, `<id>.json` and `<id>.api.json`.
-- `bun run first-light` runs each workflow once against the engine you name and writes one report per workflow, per `scripts/first-light/README.md`.
+- A workflow is proven by one Generate in the running app on its app's screen, on a real input. No script runs a paid model. `bun scripts/checks/output-files/check-output-files.ts --library <gateway>` then checks each output in the library.
+- An app binds a task with `taskBinding`. Its model choice runs a hosted model from the Comfy Router catalog, or one of these workflows as the task's open-weights graphs, through the same engine port.
 
 ## One workflow
 
@@ -33,7 +34,7 @@ workflows/
 The file every engine runs.
 
 - ComfyUI's API format. Each node keeps its id, its `class_type`, its inputs and its `_meta.title`.
-- The Comfy API takes only this format. `POST /api/v2/jobs` takes the graph verbatim and refuses a UI file with `workflow_format_ui`. `@comfyorg/sdk` 0.5.0 throws `WorkflowFormatUi` before it sends one. RunPod Serverless takes the same file as `input.workflow`, per `docs/stack.md` §RunPod Serverless.
+- The Comfy API takes only this format. `POST /api/v2/jobs` takes the graph verbatim and refuses a UI file with `workflow_format_ui`. `@comfyorg/sdk` 0.5.0 throws `WorkflowFormatUi` before it sends one. A ComfyUI behind comfy-api-proxy takes the same file.
 - The catalog imports it through `workflows.gen.ts`. An app's binding names the workflow by its id and binds each input by its name in `entry.json`.
 - An app may patch a copy of the graph per run variant, as Video's `withoutSound` and the Effects recipes do. A patch may set values, remove nodes and add unbound nodes. Every node a binding sets is in the API file.
 

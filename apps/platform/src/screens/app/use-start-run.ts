@@ -1,10 +1,17 @@
 import { type AppListing, type Run, routes } from "@rosesfield/contract"
+import { CreditPrice } from "@rosesfield/ui/components/credit-price"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createElement, type ReactNode } from "react"
 import { callRoute } from "@/api/call-route"
 import { settingsQuery } from "@/api/queries"
+import { formatNumber } from "@/copy/format"
 import { t } from "@/copy/t"
 import { storeRun } from "@/pieces/run/run-actions"
-import { bodyOf } from "@/screens/app/app-form"
+import { bodyOf, type StartRunBodyInput } from "@/screens/app/app-form"
+import { hostedBody } from "@/screens/app/hosted/hosted-form"
+import { priceQuery } from "@/screens/app/hosted/model-catalog-query"
+import { useDebounced } from "@/screens/app/hosted/use-debounced"
+import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
 
 export type StartRun = {
@@ -12,20 +19,58 @@ export type StartRun = {
   isPending: boolean
   error: Error | null
   price: string
+  priceValue?: ReactNode
+  priceName?: string | null
+}
+
+const priceDelayMs = 300
+
+function hostedBodyOf(
+  form: AppForm,
+  hosted: HostedState | undefined
+): StartRunBodyInput | null {
+  const chosen = hosted?.chosen
+  return chosen === null || chosen === undefined || chosen.form === null
+    ? null
+    : hostedBody(chosen.id, chosen.form, form.values)
+}
+
+function usePrice(
+  app: AppListing,
+  body: StartRunBodyInput | null,
+  keyState: string
+): number | null {
+  const ask = useDebounced(body, priceDelayMs)
+  const query = useQuery({
+    ...priceQuery(app.id, ask ?? { inputs: {} }, keyState),
+    enabled: ask !== null,
+  })
+  const price = query.data?.price
+  return price === undefined || price.source === "unknown"
+    ? null
+    : price.credits
 }
 
 export function useStartRun(
   app: AppListing,
   form: AppForm,
-  onStarted?: (run: Run) => void
+  onStarted?: (run: Run) => void,
+  hosted?: HostedState
 ): StartRun {
   const client = useQueryClient()
   const settings = useQuery(settingsQuery)
+  const hostedRun = hostedBodyOf(form, hosted)
+  const isDemo = settings.data?.engine.origin === "demo" && hostedRun === null
+  const credits = usePrice(
+    app,
+    isDemo ? null : (hostedRun ?? bodyOf(app, form.values)),
+    hosted?.keyState ?? settings.data?.engine.key ?? "unknown"
+  )
   const start = useMutation({
     mutationFn: async (key: string) => {
       const answer = await callRoute(routes.startRun, {
         params: { appId: app.id },
-        body: bodyOf(app, form.values),
+        body: hostedRun ?? bodyOf(app, form.values),
         idempotencyKey: key,
       })
       return answer.run
@@ -41,11 +86,17 @@ export function useStartRun(
     }
     start.mutate(crypto.randomUUID())
   }
-  const isDemo = settings.data?.engine.origin === "demo"
+  const amount = credits === null ? null : formatNumber(credits)
   return {
     generate,
     isPending: start.isPending,
     error: start.error,
-    price: isDemo ? t("run.price.demo") : t("run.price.unknown"),
+    price: isDemo
+      ? t("run.price.demo")
+      : amount === null
+        ? t("run.price.unknown")
+        : "",
+    priceValue: amount === null ? null : createElement(CreditPrice, { amount }),
+    priceName: amount === null ? null : t("run.generate.priced", { amount }),
   }
 }

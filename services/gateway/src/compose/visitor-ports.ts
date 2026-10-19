@@ -1,5 +1,6 @@
 import type { AgentHarness } from "@rosesfield/agent"
 import type { AppDefinition } from "@rosesfield/contract"
+import { DrizzlePriceBook } from "@rosesfield/generation"
 import type { Clock } from "@rosesfield/kernel"
 import type { AssetStore } from "@rosesfield/library"
 import type { AgentRequest } from "#agent/agent-access"
@@ -59,6 +60,7 @@ export async function visitorScopeFor(
       store: deps.store,
       engines,
       clock: deps.clock,
+      prices: new DrizzlePriceBook({ db }),
     },
     () => new PolledJobRunner()
   )

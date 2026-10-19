@@ -247,4 +247,21 @@ describe("AdvanceRunHandler", () => {
       "ENGINE_UNAVAILABLE"
     )
   })
+
+  it("leaves the run alone when a second submit with the same key loses the save", async () => {
+    const engine = new FakeGenerationEngine({ refByKey: true })
+    const harness = harnessFor({ engines: [engine] })
+    const runId = await startImage(harness)
+    const results = await Promise.allSettled([
+      harness.advance.execute({ runId }),
+      harness.advance.execute({ runId }),
+    ])
+    expect(results.map((result) => result.status)).toEqual([
+      "fulfilled",
+      "fulfilled",
+    ])
+    expect(engine.submitted).toHaveLength(2)
+    expect(engine.cancelled).toEqual([])
+    expect((await statusOf(harness, runId)).status).toBe("queued")
+  })
 })

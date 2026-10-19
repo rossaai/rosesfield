@@ -55,3 +55,26 @@ describe("PromptBar", () => {
     expect(submit).toHaveBeenCalledTimes(1)
   })
 })
+
+describe("PromptBar's Generate", () => {
+  it("holds its label, then the price, and names both", () => {
+    render(
+      <PromptBar
+        value=""
+        onValueChange={() => undefined}
+        onSubmit={() => undefined}
+        label="Prompt"
+        placeholder="Describe the image"
+        submitLabel="Generate"
+        submitValue={<span data-testid="price">14.48</span>}
+        submitName="Generate, 14.48 Comfy credits"
+        removeLabel="Remove"
+      />
+    )
+    const generate = screen.getByRole("button", {
+      name: "Generate, 14.48 Comfy credits",
+    })
+    expect(generate.textContent).toBe("Generate14.48")
+    expect(generate.lastElementChild?.getAttribute("data-testid")).toBe("price")
+  })
+})

@@ -125,6 +125,42 @@ describe("runCaption", () => {
     expect(caption).toBe("ltx-2.5-dev, made in 3 seconds, price unknown")
   })
 
+  it("prints the real credits of a run in Comfy credits, never in USD", () => {
+    const caption = runCaption(
+      runOf({
+        appId: "video",
+        origin: "live",
+        inputs: { model: "auto" },
+        cost: { amount: 1.188768 / 211, currency: "USD" },
+        engine: {
+          adapter: "comfy",
+          models: ["video/ltx-2.5-dev.safetensors"],
+          workflowHash: "abc",
+        },
+      })
+    )
+    expect(caption).toBe("ltx-2.5-dev, made in 3 seconds, 1.1888 Comfy credits")
+  })
+
+  it("marks the price of a run with no measured credits as estimated", () => {
+    const caption = runCaption(
+      runOf({
+        appId: "video",
+        origin: "live",
+        inputs: { model: "auto" },
+        engine: {
+          adapter: "comfy",
+          models: ["video/ltx-2.5-dev.safetensors"],
+          workflowHash: "abc",
+        },
+      }),
+      0.57
+    )
+    expect(caption).toBe(
+      "ltx-2.5-dev, made in 3 seconds, 0.57 Comfy credits, estimated"
+    )
+  })
+
   it("prints whole seconds", () => {
     const caption = runCaption(
       runOf({ finishedAt: "2026-10-17T09:00:04.100Z" })

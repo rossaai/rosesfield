@@ -1,13 +1,25 @@
-import type { EngineBinding, KeyCheck, RunOrigin } from "@rosesfield/contract"
+import type {
+  Cost,
+  EngineBinding,
+  KeyCheck,
+  RunOrigin,
+} from "@rosesfield/contract"
 import {
+  type EngineFinished,
   type EngineOutput,
   type EngineRequest,
   type EngineStatus,
   type EngineSubmission,
   GenerationEngine,
+  type HostedModel,
   type Idempotency,
   type OutputsPerJob,
+  type PriceRequest,
+  type RunPrice,
+  unknownPrice,
 } from "#domain/generation-engine.port"
+import type { ModelForm } from "#domain/model-form"
+import { hostedModelAdapter, hostedModelOf } from "#domain/task-binding"
 
 type Step = EngineStatus | Error
 
@@ -22,6 +34,13 @@ type FakeGenerationEngineOptions = {
   outputs?: EngineOutput[]
   submitErrors?: Error[]
   onRead?: () => Promise<void>
+  forms?: readonly ModelForm[]
+  price?: RunPrice
+  refByKey?: boolean
+  outputErrors?: Error[]
+  finished?: EngineFinished
+  creditsPerUsd?: number
+  listError?: Error
 }
 
 export class FakeGenerationEngine extends GenerationEngine {
@@ -39,6 +58,14 @@ export class FakeGenerationEngine extends GenerationEngine {
   private readonly outputs: EngineOutput[]
   private readonly submitErrors: Error[]
   private readonly onRead: () => Promise<void>
+  private readonly forms: readonly ModelForm[]
+  private readonly price: RunPrice
+  private readonly refByKey: boolean
+  private readonly outputErrors: Error[]
+  private readonly finished: EngineFinished | null
+  private readonly creditsPerUsd: number | null
+  private readonly listError: Error | null
+  readonly priced: PriceRequest[] = []
 
   constructor(options: FakeGenerationEngineOptions = {}) {
     super()
@@ -52,10 +79,50 @@ export class FakeGenerationEngine extends GenerationEngine {
     this.outputs = options.outputs ?? []
     this.submitErrors = options.submitErrors ?? []
     this.onRead = options.onRead ?? (async () => undefined)
+    this.forms = options.forms ?? []
+    this.price = options.price ?? unknownPrice
+    this.refByKey = options.refByKey ?? false
+    this.outputErrors = options.outputErrors ?? []
+    this.finished = options.finished ?? null
+    this.creditsPerUsd = options.creditsPerUsd ?? null
+    this.listError = options.listError ?? null
+  }
+
+  override creditsOf(cost: Cost): number | null {
+    return this.creditsPerUsd === null ? null : cost.amount * this.creditsPerUsd
   }
 
   override canRun(binding: EngineBinding): boolean {
-    return binding.adapter === this.key
+    return (
+      binding.adapter === this.key ||
+      (binding.adapter === hostedModelAdapter && this.forms.length > 0)
+    )
+  }
+
+  override async formOf(binding: EngineBinding): Promise<ModelForm | null> {
+    const model = hostedModelOf(binding)
+    return this.forms.find((form) => form.model === model) ?? null
+  }
+
+  override async listModels(): Promise<readonly HostedModel[]> {
+    if (this.listError !== null) {
+      throw this.listError
+    }
+    return this.forms.map((form) => ({
+      id: form.model,
+      provider: form.model.split("/")[0] ?? "",
+      takes: ["text"],
+      makes: ["image"],
+      form,
+    }))
+  }
+
+  override async priceOf(
+    _binding: EngineBinding,
+    request: PriceRequest
+  ): Promise<RunPrice> {
+    this.priced.push(request)
+    return this.price
   }
 
   override outputsPerJob(_binding: EngineBinding): OutputsPerJob {
@@ -69,9 +136,12 @@ export class FakeGenerationEngine extends GenerationEngine {
     }
     this.submitted.push(request)
     return {
-      ref: `fake-${this.submitted.length}`,
+      ref: this.refByKey
+        ? `fake-${request.idempotencyKey}`
+        : `fake-${this.submitted.length}`,
       models: ["fake-model"],
       workflowHash: null,
+      ...(this.finished === null ? {} : { finished: this.finished }),
     }
   }
 
@@ -90,6 +160,10 @@ export class FakeGenerationEngine extends GenerationEngine {
   }
 
   override async listOutputs(_ref: string): Promise<EngineOutput[]> {
+    const error = this.outputErrors.shift()
+    if (error !== undefined) {
+      throw error
+    }
     return this.outputs.map((output) => ({
       ...output,
       bytes: new Uint8Array(output.bytes),

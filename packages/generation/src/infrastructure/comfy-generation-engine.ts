@@ -1,5 +1,10 @@
 import type { ComfyLow } from "@comfyorg/sdk/low"
-import type { AssetKind, EngineBinding, KeyCheck } from "@rosesfield/contract"
+import type {
+  AssetKind,
+  Cost,
+  EngineBinding,
+  KeyCheck,
+} from "@rosesfield/contract"
 import { z } from "zod"
 import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import { RunFailedError } from "#domain/error/run-failed.error"
@@ -28,10 +33,17 @@ import {
   parseComfyWorkflow,
   workflowHashOf,
 } from "#infrastructure/comfy/comfy-workflow-binding"
+import {
+  type CreditMeter,
+  costOfCredits,
+  creditsOfCost,
+} from "#infrastructure/credit-meter"
+import { RouterHttp } from "#infrastructure/router/router-http"
 
 type ComfyGenerationEngineOptions = {
   apiKey: string | null
   baseUrl?: string
+  meter?: CreditMeter
   fetch?: Fetch
   requestTimeoutMs?: number
   downloadTimeoutMs?: number
@@ -87,11 +99,24 @@ export class ComfyGenerationEngine extends GenerationEngine {
 
   private readonly low: ComfyLow
   private readonly downloadTimeoutMs: number
+  private readonly meter: CreditMeter | null
+  private readonly balance: RouterHttp
 
   constructor(options: ComfyGenerationEngineOptions) {
     super()
+    const baseUrl = options.baseUrl ?? ComfyGenerationEngine.cloudUrl
+    const isCloud = baseUrl === ComfyGenerationEngine.cloudUrl
+    this.meter = isCloud ? (options.meter ?? null) : null
+    this.balance = new RouterHttp({
+      apiKey: options.apiKey,
+      fetch: options.fetch ?? fetch,
+      timeoutMs:
+        options.requestTimeoutMs ?? ComfyGenerationEngine.requestTimeoutMs,
+      downloadTimeoutMs:
+        options.requestTimeoutMs ?? ComfyGenerationEngine.requestTimeoutMs,
+    })
     this.low = createComfyLow({
-      baseUrl: options.baseUrl ?? ComfyGenerationEngine.cloudUrl,
+      baseUrl,
       apiKey: options.apiKey,
       fetch: options.fetch ?? fetch,
       timeoutMs:
@@ -124,18 +149,23 @@ export class ComfyGenerationEngine extends GenerationEngine {
         return { __type: "core/ASSET", info: { id } }
       },
     })
-    const job = parseJob(
-      await callComfy(() =>
-        this.low.postJobs(workflow, {
-          idempotencyKey: request.idempotencyKey,
-        })
-      )
+    const ticket = (await this.meter?.start(this.balance)) ?? null
+    const job = await this.post(workflow, request.idempotencyKey).catch(
+      (error: unknown) => {
+        this.meter?.drop(ticket)
+        throw error
+      }
     )
+    this.meter?.bind(ticket, job.id)
     return {
       ref: job.id,
       models: config.models ?? [],
       workflowHash: await workflowHashOf(config.workflow),
     }
+  }
+
+  override creditsOf(cost: Cost): number {
+    return creditsOfCost(cost)
   }
 
   override async read(ref: string): Promise<EngineStatus> {
@@ -151,11 +181,13 @@ export class ComfyGenerationEngine extends GenerationEngine {
           retryAfterSeconds: null,
         }
       case "succeeded":
-        return { state: "succeeded" }
+        return this.succeeded(ref)
       case "canceled":
+        this.meter?.dropRef(ref)
         return { state: "cancelled" }
       case "failed":
       case "expired":
+        this.meter?.dropRef(ref)
         return {
           state: "failed",
           error: jobFailureOf(
@@ -178,6 +210,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
   }
 
   override async cancel(ref: string): Promise<void> {
+    this.meter?.dropRef(ref)
     await callComfy(() => this.low.cancelJob(ref))
   }
 
@@ -188,6 +221,23 @@ export class ComfyGenerationEngine extends GenerationEngine {
     } catch (error) {
       return keyCheckOf(error)
     }
+  }
+
+  private async succeeded(ref: string): Promise<EngineStatus> {
+    if (this.meter === null) {
+      return { state: "succeeded" }
+    }
+    const credits = await this.meter.finishRef(this.balance, ref)
+    return { state: "succeeded", cost: costOfCredits(credits) }
+  }
+
+  private async post(
+    workflow: Record<string, unknown>,
+    idempotencyKey: string
+  ): Promise<Job> {
+    return parseJob(
+      await callComfy(() => this.low.postJobs(workflow, { idempotencyKey }))
+    )
   }
 
   private async download(

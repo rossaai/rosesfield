@@ -6,7 +6,7 @@ import { t, tCatalog, tCount } from "@/copy/t"
 
 describe("t", () => {
   it("fills each value and formats numbers", () => {
-    expect(t("run.price.known", { amount: 0.02 })).toBe("0.02 USD")
+    expect(t("run.price.credits", { amount: 0.02 })).toBe("0.02 Comfy credits")
     expect(t("toast.runFailed", { app: "Image" })).toBe("Your Image run failed")
   })
 

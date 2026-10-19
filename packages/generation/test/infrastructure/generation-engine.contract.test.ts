@@ -5,11 +5,24 @@ import type {
   EngineRequest,
   GenerationEngine,
 } from "#domain/generation-engine.port"
+import { hostedModelBinding } from "#domain/task-binding"
 import { ComfyGenerationEngine } from "#infrastructure/comfy-generation-engine"
+import { ComfyRouterGenerationEngine } from "#infrastructure/comfy-router-generation-engine"
 import { DemoGenerationEngine } from "#infrastructure/demo-generation-engine"
-import { RunPodServerlessGenerationEngine } from "#infrastructure/runpod-serverless-generation-engine"
+import { RouterCatalog } from "#infrastructure/router/router-catalog"
 import { FakeGenerationEngine } from "../fake/fake-generation-engine"
 import { fakeBinding, pngBytes, start } from "../sample"
+import {
+  cancelled,
+  catalogPage,
+  outputFile,
+  pictureModel,
+  pictureSchema,
+  queueStatus,
+  result,
+  schemaRead,
+  submitted,
+} from "./fixtures/comfy-router"
 import {
   cloudUrl,
   comfyV2At,
@@ -19,7 +32,6 @@ import {
   succeededJob,
   workflowBinding,
 } from "./fixtures/comfy-v2"
-import { endpointId, runPod } from "./fixtures/runpod-serverless"
 import { type Recording, ReplayFetch } from "./replay-fetch"
 
 type Setup = {
@@ -99,16 +111,16 @@ const comfyRun = (v2: ReturnType<typeof comfyV2At>): Recording[] => [
   v2.cancel(),
 ]
 
-function runPodSetup(recordings: Recording[]): () => Setup {
+function routerSetup(recordings: Recording[]): () => Setup {
   return () => {
     const replay = new ReplayFetch(recordings)
     return {
-      engine: new RunPodServerlessGenerationEngine({
-        apiKey: "rpa_test",
-        endpointId,
+      engine: new ComfyRouterGenerationEngine({
+        apiKey: "comfyui-test",
+        catalog: new RouterCatalog({ clock: new FixedClock({ now: start }) }),
         fetch: replay.fetch,
       }),
-      binding: workflowBinding,
+      binding: hostedModelBinding(pictureModel),
       tick: () => undefined,
       replay,
     }
@@ -129,16 +141,26 @@ const subjects: Subject[] = [
     forKeyCheck: comfySetup(proxyUrl, null, (v2) => [v2.keyCheck()]),
   },
   {
-    name: "RunPod Serverless through worker-comfyui",
-    create: runPodSetup([
-      runPod.run(),
-      runPod.status("IN_QUEUE"),
-      runPod.status("IN_PROGRESS"),
-      runPod.completed(),
-      runPod.completed(),
-      runPod.cancel(),
+    name: "a hosted model through Comfy Router",
+    create: routerSetup([
+      catalogPage([pictureModel]),
+      schemaRead(pictureModel, pictureSchema),
+      submitted(),
+      queueStatus("IN_QUEUE"),
+      queueStatus("IN_PROGRESS"),
+      queueStatus("COMPLETED"),
+      result(),
+      outputFile(pngBytes()),
+      cancelled(),
     ]),
-    forKeyCheck: runPodSetup([runPod.health()]),
+    forKeyCheck: routerSetup([
+      {
+        method: "GET",
+        url: `${ComfyRouterGenerationEngine.routerUrl}/v2/models?limit=1`,
+        status: 200,
+        json: { data: [], has_more: false },
+      },
+    ]),
   },
 ]
 
@@ -178,7 +200,10 @@ describe.each(subjects)("GenerationEngine contract: $name", (subject) => {
         ["queued", "running", "succeeded"].includes(state)
       )
     ).toBe(true)
-    const outputs = await engine.listOutputs(submission.ref)
+    const outputs = await engine.listOutputs(
+      submission.ref,
+      requestFor(binding).inputs
+    )
     expect(outputs.length).toBeGreaterThan(0)
     for (const output of outputs) {
       expect(output.kind).toBe("image")

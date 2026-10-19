@@ -2,6 +2,7 @@ import { Toaster, ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { type ReactElement, useEffect } from "react"
 import { t } from "@/gallery/copy.en"
+import { catalogEntries } from "@/gallery/entries/catalog"
 import { controlEntries } from "@/gallery/entries/controls"
 import { displayEntries } from "@/gallery/entries/display"
 import { fieldEntries } from "@/gallery/entries/fields"
@@ -21,6 +22,7 @@ export const galleryEntries: GalleryEntry[] = [
   ...displayEntries,
   ...pieceEntries,
   ...mediaEntries,
+  ...catalogEntries,
   ...shellEntries,
   ...layerEntries,
   ...platformEntries,

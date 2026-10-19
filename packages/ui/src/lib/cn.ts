@@ -53,6 +53,7 @@ const tokenNames = {
     "toast-max",
     "alert",
     "dialog",
+    "list-max",
     "hairline",
     "focus-ring",
     "rise",

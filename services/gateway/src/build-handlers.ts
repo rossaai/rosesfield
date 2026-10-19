@@ -1,3 +1,4 @@
+import { CatalogModelPolicy } from "@rosesfield/catalog/comfy"
 import type { AppDefinition } from "@rosesfield/contract"
 import {
   AdvanceRunHandler,
@@ -6,7 +7,10 @@ import {
   type GenerationEngine,
   GetRunHandler,
   type JobRunner,
+  ListModelsHandler,
   ListRunsHandler,
+  type PriceBook,
+  PriceRunHandler,
   RepeatRunHandler,
   type RunRepository,
   StartRunHandler,
@@ -38,6 +42,11 @@ export type HandlerPorts = {
   store: AssetStore
   engines: readonly GenerationEngine[]
   clock: Clock
+  prices?: PriceBook
+}
+
+function pricesOf(ports: HandlerPorts): { prices?: PriceBook } {
+  return ports.prices === undefined ? {} : { prices: ports.prices }
 }
 
 export type LibraryHandlers = {
@@ -60,6 +69,8 @@ export type RunHandlers = {
   cancelRun: CancelRunHandler
   repeatRun: RepeatRunHandler
   checkEngineKey: CheckEngineKeyHandler
+  listModels: ListModelsHandler
+  priceRun: PriceRunHandler
 }
 
 export type Handlers = LibraryHandlers &
@@ -100,13 +111,21 @@ export function buildAdvance(
       upload: library.uploadAsset,
     }),
     clock: ports.clock,
+    ...pricesOf(ports),
   })
 }
 
 function buildRuns(ports: HandlerPorts, jobs: JobRunner): RunHandlers {
   const { runs, engines, clock } = ports
   const apps = new ListedAppCatalog({ apps: ports.apps })
-  const startRun = new StartRunHandler({ apps, runs, engines, jobs, clock })
+  const startRun = new StartRunHandler({
+    apps,
+    runs,
+    engines,
+    jobs,
+    clock,
+    policy: new CatalogModelPolicy(),
+  })
   return {
     startRun,
     getRun: new GetRunHandler({ runs }),
@@ -114,6 +133,8 @@ function buildRuns(ports: HandlerPorts, jobs: JobRunner): RunHandlers {
     cancelRun: new CancelRunHandler({ runs, engines, clock }),
     repeatRun: new RepeatRunHandler({ runs, start: startRun }),
     checkEngineKey: new CheckEngineKeyHandler({ engines }),
+    listModels: new ListModelsHandler({ engines }),
+    priceRun: new PriceRunHandler({ apps, engines, ...pricesOf(ports) }),
   }
 }
 

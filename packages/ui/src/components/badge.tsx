@@ -10,6 +10,7 @@ const badgeVariants = cva(
         info: "bg-hor-tint text-hor-text",
         warning: "bg-cem-tint text-cem-text",
         danger: "bg-bug-tint text-bug-text",
+        neutral: "bg-surface-2 font-normal text-ink-muted",
       },
     },
     defaultVariants: { tone: "info" },

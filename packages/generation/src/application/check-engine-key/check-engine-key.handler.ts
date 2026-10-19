@@ -26,11 +26,13 @@ export class CheckEngineKeyHandler {
 
   async execute(_input: CheckEngineKeyInput): Promise<CheckEngineKeyOutput> {
     const checks = await Promise.all(
-      this.engines.map(async (engine) => ({
-        engine: engine.key,
-        origin: engine.origin,
-        check: await engine.checkKey(),
-      }))
+      this.engines
+        .filter((engine) => engine.checksKey())
+        .map(async (engine) => ({
+          engine: engine.key,
+          origin: engine.origin,
+          check: await engine.checkKey(),
+        }))
     )
     return { checks }
   }
