@@ -6,6 +6,7 @@ import {
 import { FixedClock } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { pickEngines, visitorEngines } from "#compose/pick-engines"
+import type { EngineSettings } from "#engine/engine-target"
 import { readServerEnv } from "#env"
 import { harnessFor, jsonInit, type PortsFor } from "./harness"
 import { localPorts } from "./local-ports"
@@ -75,13 +76,16 @@ describe("the engine target the settings select", () => {
     )
   })
 
-  it("refuses RunPod Serverless, which left Rosesfield, and runs the demo engine for no target", () => {
-    expect(() =>
-      pickEngines(
-        { target: "runpod-serverless", endpointId: "abc123", apiKey: "rp" },
-        { clock }
-      )
-    ).toThrow(/comfy-api-proxy/)
+  it("refuses RunPod Serverless, which left Rosesfield, once at startup and never per request", () => {
+    const runpod: EngineSettings = {
+      target: "runpod-serverless",
+      endpointId: "abc123",
+      apiKey: null,
+    }
+    expect(() => pickEngines(runpod, { clock })).toThrow(/comfy-api-proxy/)
+    expect(
+      visitorEngines(runpod, "comfyui-visitor", { clock }).map((one) => one.key)
+    ).toEqual(["comfy-router", "demo"])
     expect(
       pickEngines({ target: "demo" }, { clock }).map((one) => one.origin)
     ).toEqual(["live", "demo"])

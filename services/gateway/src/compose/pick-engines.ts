@@ -8,8 +8,11 @@ import {
 } from "@rosesfield/generation"
 import type { Clock } from "@rosesfield/kernel"
 import { sharedRouterCatalog } from "#catalog/shared-router-catalog"
-import { type EngineSettings, withEngineKey } from "#engine/engine-target"
-import { EnvInvalidError } from "#error/env-invalid.error"
+import {
+  checkEngineSettings,
+  type EngineSettings,
+  withEngineKey,
+} from "#engine/engine-target"
 
 const comfyKeyPrefix = "comfyui-"
 
@@ -47,11 +50,7 @@ export function liveEngineOf(
     case "demo":
       return null
     case "runpod-serverless":
-      throw new EnvInvalidError({
-        problems: [
-          "RUNPOD_ENDPOINT_ID is set, and Rosesfield no longer runs on RunPod Serverless. Run ComfyUI behind comfy-api-proxy in a RunPod pod and set COMFY_BASE_URL to its address.",
-        ],
-      })
+      return null
     default:
       return new ComfyGenerationEngine({
         apiKey: engine.apiKey,
@@ -73,6 +72,7 @@ export function pickEngines(
   engine: EngineSettings,
   options: EngineOptions
 ): readonly GenerationEngine[] {
+  checkEngineSettings(engine)
   const live = liveEngineOf(engine, options)
   const router = routerOf(hostedKeyOf(engine), options)
   return live === null
