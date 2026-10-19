@@ -2,6 +2,7 @@ import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { GatewayUnreachableError } from "@/api/gateway-unreachable.error"
 import { type CopyValues, t, tCatalog } from "@/copy/t"
 import { type CopyKey, copy } from "@/copy.en"
+import { readSpendCap } from "@/shell/spend-cap"
 
 export type ErrorAct = "retry" | "settings" | "none"
 
@@ -58,6 +59,7 @@ export function wordsForCode(
     minutes: context.minutes ?? 0,
     seconds: context.seconds ?? 0,
     thing: t(`noun.${context.thing ?? "app"}`),
+    cap: readSpendCap() ?? 0,
   }
   const base = code.endsWith("_NOT_FOUND")
     ? "error.notFound"

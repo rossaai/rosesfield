@@ -8,8 +8,8 @@ import type { ReactElement } from "react"
 import { checkEngineKey, liveCheckOf } from "@/api/engine-checks"
 import type { EngineTarget, GatewaySettings } from "@/api/gateway-settings"
 import { t } from "@/copy/t"
+import { OwnerBalance, PublicKey } from "@/screens/settings/public-key"
 import { ServerPart } from "@/screens/settings/server-part"
-import { VisitorKeyField } from "@/screens/settings/visitor-key-field"
 
 export function targetName(target: EngineTarget): string {
   return t(`settings.target.${target}`)
@@ -108,17 +108,16 @@ function EngineParts({
 }: {
   settings: GatewaySettings
 }): ReactElement {
-  const isPublic = settings.mode === "public"
+  if (settings.mode === "public") {
+    return <PublicKey />
+  }
   return (
     <>
       {settings.engine.origin === "demo" ? <DemoNotice /> : null}
       <TargetFacts settings={settings} />
       <KeyStatus settings={settings} />
-      {isPublic ? (
-        <VisitorKeyField kind="engine" />
-      ) : (
-        <p className="text-body text-ink-muted">{t("settings.engine.howTo")}</p>
-      )}
+      <OwnerBalance />
+      <p className="text-body text-ink-muted">{t("settings.engine.howTo")}</p>
     </>
   )
 }

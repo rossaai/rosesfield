@@ -3,8 +3,10 @@ import { appCopy } from "@/copy/app.en"
 import { charactersCopy } from "@/copy/characters.en"
 import { connectCopy } from "@/copy/connect.en"
 import { errorCopy } from "@/copy/error.en"
+import { exploreCopy } from "@/copy/explore.en"
 import { fieldCopy } from "@/copy/field.en"
 import { homeCopy } from "@/copy/home.en"
+import { keyCopy } from "@/copy/key.en"
 import { libraryCopy } from "@/copy/library.en"
 import { settingsCopy } from "@/copy/settings.en"
 import { shellCopy } from "@/copy/shell.en"
@@ -22,6 +24,8 @@ export const copy = {
   ...settingsCopy,
   ...welcomeCopy,
   ...errorCopy,
+  ...exploreCopy,
+  ...keyCopy,
 }
 
 export type CopyKey = keyof typeof copy

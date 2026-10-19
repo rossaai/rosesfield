@@ -66,6 +66,7 @@ const pageCopy: Plugin = {
 }
 
 const gateway = process.env.ROSESFIELD_GATEWAY ?? "http://127.0.0.1:8787"
+const sharedFiles = /^\/share(\/[^/]+\/(data|media|poster)(\/.*)?)?$/
 const icon = (size: number, purpose: "any" | "maskable") => ({
   src: `/icons/icon-${purpose}-${size}.png`,
   sizes: `${size}x${size}`,
@@ -91,7 +92,12 @@ export default defineConfig({
       injectRegister: false,
       registerType: "autoUpdate",
       filename: "sw.js",
-      includeAssets: ["icons/favicon-32.png", "icons/apple-touch-icon.png"],
+      includeAssets: [
+        "icons/favicon.svg",
+        "icons/favicon-16.png",
+        "icons/favicon-32.png",
+        "icons/apple-touch-icon.png",
+      ],
       manifest: {
         id: "/",
         name: shellCopy["shell.name"],
@@ -107,7 +113,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,woff2,png,webmanifest}"],
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/api\//, /^\/mcp/],
+        navigateFallbackDenylist: [/^\/api\//, /^\/mcp/, sharedFiles],
         runtimeCaching: [],
       },
     }),
@@ -120,6 +126,7 @@ export default defineConfig({
     proxy: {
       "/api": { target: gateway },
       "/mcp": { target: gateway },
+      [sharedFiles.source]: { target: gateway },
     },
   },
 })

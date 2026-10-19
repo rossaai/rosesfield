@@ -10,7 +10,7 @@ import { PreviewSlot } from "@rosesfield/ui/components/preview-slot"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { Link } from "@tanstack/react-router"
 import { MenuIcon } from "lucide-react"
-import { type ReactElement, useEffect } from "react"
+import type { ReactElement } from "react"
 import {
   appLine,
   appName,
@@ -30,7 +30,7 @@ import {
   sponsorAddress,
 } from "@/screens/welcome/welcome-links"
 import { sections, WelcomeSection } from "@/screens/welcome/welcome-sections"
-import { markWelcomeSeen } from "@/screens/welcome/welcome-seen"
+import { Lockup } from "@/shell/brand-mark"
 import { useScrolledPast } from "@/shell/screen-header"
 
 const navLinks: ReadonlyArray<{ id: string; label: CopyKey }> = [
@@ -74,7 +74,7 @@ function WelcomeHeader({ isHeroPast }: { isHeroPast: boolean }): ReactElement {
           isScrolled ? "shadow-seam" : ""
         )}
       >
-        <span className="text-body font-medium">{t("shell.name")}</span>
+        <Lockup className="shrink-0" />
         <nav className="hidden flex-1 items-center gap-s2 @regular:flex">
           {navLinks.map((link) => (
             <Button
@@ -213,7 +213,6 @@ function Questions(): ReactElement {
 }
 
 export function WelcomeScreen(): ReactElement {
-  useEffect(markWelcomeSeen, [])
   const [heroAction, isHeroPast] = useScrolledPast()
   return (
     <div className="@container min-h-dvh bg-canvas text-ink">

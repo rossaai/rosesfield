@@ -6,7 +6,8 @@ import type { ReactElement } from "react"
 import type { GatewaySettings } from "@/api/gateway-settings"
 import { forgetOwnerToken, readOwnerToken } from "@/api/owner-token"
 import { settingsQuery } from "@/api/queries"
-import { t, tCount } from "@/copy/t"
+import { t } from "@/copy/t"
+import { RetentionLine } from "@/screens/settings/key-dialog"
 import { ServerPart } from "@/screens/settings/server-part"
 import { VisitorKeyField } from "@/screens/settings/visitor-key-field"
 
@@ -74,15 +75,12 @@ function OwnerLock({ settings }: { settings: GatewaySettings }): ReactElement {
   )
 }
 
-function PublicDemo({ settings }: { settings: GatewaySettings }): ReactElement {
-  const days = settings.retentionDays
+function PublicDemo(): ReactElement {
   return (
     <>
       <p className="text-body">{t("settings.public.body")}</p>
-      <p className="text-body text-ink-muted">
-        {t("settings.public.session")}
-        {days === null ? null : ` ${tCount("settings.public.retention", days)}`}
-      </p>
+      <p className="text-body text-ink-muted">{t("settings.public.session")}</p>
+      <RetentionLine />
     </>
   )
 }
@@ -97,7 +95,7 @@ export function LockCard(): ReactElement {
       <ServerPart>
         {(settings) =>
           settings.mode === "public" ? (
-            <PublicDemo settings={settings} />
+            <PublicDemo />
           ) : (
             <OwnerLock settings={settings} />
           )

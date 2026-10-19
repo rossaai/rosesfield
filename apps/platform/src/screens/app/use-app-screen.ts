@@ -1,15 +1,9 @@
 import type { AppListing, Run } from "@rosesfield/contract"
 import { type KeyboardEvent, useRef } from "react"
 import { useAppRuns } from "@/screens/app/app-canvas"
-import {
-  defaultsOf,
-  type FormValues,
-  valuesFromRun,
-} from "@/screens/app/app-form"
-import {
-  hostedProblems,
-  modelInputName,
-} from "@/screens/app/hosted/hosted-form"
+import { valuesFromRun } from "@/screens/app/app-form"
+import { hostedValuesOf } from "@/screens/app/form-fill"
+import { hostedProblems } from "@/screens/app/hosted/hosted-form"
 import {
   type HostedState,
   useHostedModel,
@@ -35,17 +29,10 @@ export type AppScreenState = {
 export type AppSeeds = {
   use: string | undefined
   from: string | undefined
+  share?: string | undefined
 }
 
 export const noSeeds: AppSeeds = { use: undefined, from: undefined }
-
-function hostedValuesFromRun(app: AppListing, run: Run): FormValues | null {
-  const model = run.inputs[modelInputName]
-  if (typeof model !== "string" || !model.includes("/")) {
-    return null
-  }
-  return { ...defaultsOf(app), inputs: { ...run.inputs } }
-}
 
 export function useAppScreen(
   app: AppListing,
@@ -69,7 +56,7 @@ export function useAppScreen(
     lastSeed,
     hasRuns: runs.isPending ? null : runs.runs.length > 0,
     useInputs: (run) =>
-      form.fill(hostedValuesFromRun(app, run) ?? valuesFromRun(app, run)),
+      form.fill(hostedValuesOf(app, run) ?? valuesFromRun(app, run)),
     onShortcut: (event) => {
       if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault()

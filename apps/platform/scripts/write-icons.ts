@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs"
+import { copyFileSync, readFileSync } from "node:fs"
 import { chromium } from "@playwright/test"
 
 type IconSpec = {
@@ -7,13 +7,25 @@ type IconSpec = {
 }
 
 const platformRoot = new URL("..", import.meta.url)
+const brand = new URL("../../brand/", platformRoot)
+const icons = new URL("public/icons/", platformRoot)
 const tokens = readFileSync(
   new URL("../../packages/ui/src/tokens.css", platformRoot),
   "utf8"
 )
-const logo = readFileSync(
-  new URL("../../brand/rosesfield-icon-light.svg", platformRoot)
-).toString("base64")
+const logo = readFileSync(new URL("rosesfield-icon-light.svg", brand)).toString(
+  "base64"
+)
+
+const copied: readonly string[] = [
+  "favicon.svg",
+  "favicon-16.png",
+  "favicon-32.png",
+  "rosesfield-lockup-light.svg",
+  "rosesfield-lockup-dark.svg",
+  "rosesfield-icon-light.svg",
+  "rosesfield-icon-dark.svg",
+]
 
 function lightValue(token: string): string {
   const match = new RegExp(
@@ -30,7 +42,6 @@ const specs: readonly IconSpec[] = [
   { file: "icon-any-512.png", size: 512 },
   { file: "icon-maskable-512.png", size: 512 },
   { file: "apple-touch-icon.png", size: 180 },
-  { file: "favicon-32.png", size: 32 },
 ]
 
 function pageOf(spec: IconSpec): string {
@@ -41,6 +52,9 @@ function pageOf(spec: IconSpec): string {
   </style></head><body><img alt="" src="data:image/svg+xml;base64,${logo}"></body></html>`
 }
 
+for (const file of copied) {
+  copyFileSync(new URL(file, brand), new URL(file, icons))
+}
 const browser = await chromium.launch()
 for (const spec of specs) {
   const page = await browser.newPage({
@@ -50,9 +64,7 @@ for (const spec of specs) {
   await page
     .locator("img")
     .evaluate((img) => (img as HTMLImageElement).decode())
-  await page.screenshot({
-    path: new URL(`public/icons/${spec.file}`, platformRoot).pathname,
-  })
+  await page.screenshot({ path: new URL(spec.file, icons).pathname })
   await page.close()
 }
 await browser.close()

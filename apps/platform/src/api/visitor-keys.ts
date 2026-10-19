@@ -7,8 +7,10 @@ export type VisitorKeyProblem = "required" | "invalid" | null
 
 export const visitorKeyKinds: readonly VisitorKeyKind[] = ["engine", "agent"]
 
+export const engineKeyHeader = "X-Engine-Key"
+
 const headerNames: Readonly<Record<VisitorKeyKind, string>> = {
-  engine: "X-Engine-Key",
+  engine: engineKeyHeader,
   agent: "X-Agent-Key",
 }
 

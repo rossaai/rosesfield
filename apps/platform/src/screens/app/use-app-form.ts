@@ -17,7 +17,12 @@ import {
   type FormValues,
   problemsOf,
 } from "@/screens/app/app-form"
-import { fillFromDraft, fillFromRun, placeAll } from "@/screens/app/form-fill"
+import {
+  fillFromDraft,
+  fillFromRun,
+  fillFromShare,
+  placeAll,
+} from "@/screens/app/form-fill"
 
 export type AppForm = {
   values: FormValues
@@ -32,6 +37,7 @@ export type AppForm = {
 type FormSeeds = {
   use: string | undefined
   from: string | undefined
+  share?: string | undefined
 }
 
 function useSeededValues(
@@ -53,7 +59,9 @@ function useSeededValues(
     const fill = async (): Promise<void> => {
       const fromRun =
         seeds.from === undefined
-          ? null
+          ? seeds.share === undefined
+            ? null
+            : await fillFromShare(client, app, seeds.share)
           : await fillFromRun(client, app, seeds.from)
       let next = fromRun ?? base
       if (draft !== undefined) {
@@ -65,7 +73,7 @@ function useSeededValues(
       setValues(next)
     }
     void fill()
-  }, [app, client, draft, seeds.from, seeds.use])
+  }, [app, client, draft, seeds.from, seeds.use, seeds.share])
   return [values, setValues]
 }
 

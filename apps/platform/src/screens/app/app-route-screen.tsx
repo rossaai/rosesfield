@@ -59,9 +59,9 @@ export function AppRouteScreen(): ReactElement {
   }
   return (
     <AppScreenFor
-      key={`${app.id}:${search.from ?? ""}:${search.use ?? ""}`}
+      key={`${app.id}:${search.from ?? ""}:${search.use ?? ""}:${search.share ?? ""}`}
       app={app}
-      seeds={{ use: search.use, from: search.from }}
+      seeds={{ use: search.use, from: search.from, share: search.share }}
     />
   )
 }

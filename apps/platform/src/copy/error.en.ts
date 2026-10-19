@@ -52,6 +52,11 @@ export const errorCopy = {
   "error.ASSET_IN_USE.title": "A character uses this asset",
   "error.ASSET_IN_USE.body":
     "Remove the photo from its character first, then delete it.",
+  "error.SPEND_CAP_REACHED.title": "This link has spent its {cap} credits",
+  "error.SPEND_CAP_REACHED.body":
+    "Its owner set the cap. Every run it made stays in History.",
+  "error.SHARE_NOT_READY.title": "This result is not finished yet",
+  "error.SHARE_NOT_READY.body": "Share it once its run is done.",
   "error.notFound.title": "This {thing} does not exist",
   "error.notFound.body": "It may have been deleted.",
   "error.NETWORK.title": "Rosesfield cannot reach its server",

@@ -1,13 +1,12 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
-import { HomeScreen } from "@/screens/home/home-screen"
+import { ExploreScreen } from "@/screens/explore/explore-screen"
 import { isLandingPage } from "@/screens/welcome/landing-page"
-import { hasSeenWelcome } from "@/screens/welcome/welcome-seen"
 
 export const Route = createFileRoute("/_shell/")({
   beforeLoad: () => {
-    if (isLandingPage() || !hasSeenWelcome()) {
+    if (isLandingPage()) {
       throw redirect({ to: "/welcome" })
     }
   },
-  component: HomeScreen,
+  component: ExploreScreen,
 })

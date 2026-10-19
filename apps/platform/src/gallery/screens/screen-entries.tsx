@@ -1,6 +1,7 @@
 import type { GalleryKey } from "@/gallery/copy.en"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
 import { conversationEntries } from "@/gallery/screens/conversation-entries"
+import { exploreEntries } from "@/gallery/screens/explore-entries"
 import {
   failedWith,
   missingId,
@@ -12,50 +13,11 @@ import {
 } from "@/gallery/screens/screen-fixtures"
 import { screenEntry } from "@/gallery/screens/screen-frame"
 import { settingsEntries } from "@/gallery/screens/settings-entries"
-import { markWelcomeSeen } from "@/screens/welcome/welcome-seen"
 
 const { image, video, upscale, working, failed } = screenRuns
 const { first, second, clip, upload, larger } = screenAssets
 const base: readonly Seed[] = [seeds.settings(), seeds.media()]
 const allAssets = [first, second, clip, upload, larger]
-
-const home = screenEntry("home", "entry.screen.home", [
-  {
-    id: "empty",
-    label: "state.empty",
-    path: "/",
-    seeds: [...base, seeds.assets([]), seeds.runs([])],
-    before: markWelcomeSeen,
-  },
-  {
-    id: "loading",
-    label: "state.loading",
-    path: "/",
-    seeds: [seeds.settings()],
-    before: markWelcomeSeen,
-  },
-  {
-    id: "working",
-    label: "state.working",
-    path: "/",
-    seeds: [...base, seeds.assets([first, second]), seeds.runs([working])],
-    before: markWelcomeSeen,
-  },
-  {
-    id: "done",
-    label: "state.done",
-    path: "/",
-    seeds: [...base, seeds.assets(allAssets), seeds.runs([image, video])],
-    before: markWelcomeSeen,
-  },
-  {
-    id: "failed",
-    label: "state.failed",
-    path: "/",
-    seeds: [...base, seeds.failed(["assets", { kind: null }]), seeds.runs([])],
-    before: markWelcomeSeen,
-  },
-])
 
 const apps = screenEntry("apps", "entry.screen.apps", [
   {
@@ -349,7 +311,7 @@ const outside = [
 ]
 
 export const screenEntries: GalleryEntry[] = [
-  home,
+  ...exploreEntries,
   apps,
   appEntry("image", "entry.screen.appBar", image),
   appEntry("upscale", "entry.screen.appColumn", upscale),

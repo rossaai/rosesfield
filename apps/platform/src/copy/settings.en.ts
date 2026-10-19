@@ -37,14 +37,11 @@ export const settingsCopy = {
     "This server listens only on this computer, so it asks for no token.",
   "settings.lock.on": "This server asks for the owner token on every request.",
   "settings.lock.action": "Lock this browser",
-  "settings.public.title": "Public demo",
+  "settings.public.title": "Your work",
   "settings.public.body":
-    "This demo holds no key of its own. Each visitor runs the apps on their own key.",
+    "This site holds no key of its own. Each person runs the apps on their own Comfy key.",
   "settings.public.session":
-    "Your runs and outputs belong to an anonymous session in this browser.",
-  "settings.public.retention.one": "The demo deletes them after {count} day.",
-  "settings.public.retention.other":
-    "The demo deletes them after {count} days.",
+    "Your work is kept under your Comfy account. The same key on another device opens it.",
   "settings.visitor.engine.label": "Your engine key",
   "settings.visitor.agent.label": "Your model key",
   "settings.visitor.note":

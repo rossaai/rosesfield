@@ -1,13 +1,16 @@
-import type { AppListing, AssetKind } from "@rosesfield/contract"
+import type { AppListing, AssetKind, Run } from "@rosesfield/contract"
 import type { QueryClient } from "@tanstack/react-query"
 import { assetQuery, characterQuery, runQuery } from "@/api/queries"
 import { isAssetInput } from "@/catalog/app-facts"
 import type { Draft } from "@/router-context"
 import {
+  defaultsOf,
   type FieldValue,
   type FormValues,
   valuesFromRun,
 } from "@/screens/app/app-form"
+import { modelInputName } from "@/screens/app/hosted/hosted-form"
+import { shareQuery } from "@/screens/explore/share-api"
 
 type Placement = { kind: AssetKind | "character"; id: string }
 
@@ -97,6 +100,29 @@ export async function fillFromDraft(
     (current, id) => withPlaced(app, current, { kind: "character", id }),
     placed
   )
+}
+
+export function hostedValuesOf(app: AppListing, run: Run): FormValues | null {
+  const model = run.inputs[modelInputName]
+  if (typeof model !== "string" || !model.includes("/")) {
+    return null
+  }
+  return { ...defaultsOf(app), inputs: { ...run.inputs } }
+}
+
+export async function fillFromShare(
+  client: QueryClient,
+  app: AppListing,
+  shareId: string
+): Promise<FormValues | null> {
+  try {
+    const share = await client.fetchQuery(shareQuery(shareId))
+    return share.run.appId === app.id
+      ? (hostedValuesOf(app, share.run) ?? valuesFromRun(app, share.run))
+      : null
+  } catch {
+    return null
+  }
 }
 
 export async function fillFromRun(
