@@ -214,7 +214,7 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
           />
         </label>
         {props.notice}
-        <div className="max-h-[min(60dvh,var(--spacing-dialog))] overflow-y-auto">
+        <div className="max-h-list-max overflow-y-auto">
           <ModelList {...props} query={query} onChosen={() => setOpen(false)} />
         </div>
       </PopoverContent>

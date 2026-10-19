@@ -63,7 +63,7 @@ function CommandList({
   empty: ReactNode
 }): ReactElement {
   return (
-    <div className="flex max-h-[min(60dvh,var(--spacing-dialog))] flex-col overflow-y-auto">
+    <div className="flex max-h-list-max flex-col overflow-y-auto">
       <Autocomplete.Empty className="px-s4 py-s3 text-body text-ink-muted empty:hidden">
         {empty}
       </Autocomplete.Empty>
