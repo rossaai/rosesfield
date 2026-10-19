@@ -2,14 +2,14 @@ import type { AppListing } from "@rosesfield/contract"
 import type { ReactElement } from "react"
 import { t } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
+import { ModelPopoverChip } from "@/screens/app/bar/model-settings"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
-import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
+import { CatalogPicker, modelNameOf } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import { withoutModelInput } from "@/screens/app/hosted/task-panel"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
 import type { AppScreenState } from "@/screens/app/use-app-screen"
-import { PopoverChip } from "@/studio/image/image-chips"
 import { countBoundsOf, type ImageFields } from "@/studio/image/image-fields"
 import {
   graphChips,
@@ -52,9 +52,12 @@ export function HostedPanel({
   form,
 }: {
   hosted: HostedState
-  fields: ImageFields
+  fields: ImageFields | null
   form: AppForm
 }): ReactElement {
+  if (fields === null) {
+    return <CatalogPicker hosted={hosted} />
+  }
   const settings = [fields.aspect, fields.size].flatMap((field) =>
     field === null ? [] : [field]
   )
@@ -89,29 +92,35 @@ export function GraphPanel({
   )
 }
 
-export function InputsChip({
+export function ModelPopover({
   app,
   state,
+  hosted,
   fields,
+  isGraph,
 }: {
   app: AppListing
   state: AppScreenState
+  hosted: HostedState
   fields: ImageFields | null
-}): ReactElement | null {
-  if (fields !== null && fields.rest.length === 0) {
-    return null
-  }
+  isGraph: boolean
+}): ReactElement {
+  const name =
+    hosted.chosen === null ? t("bar.model") : modelNameOf(hosted.chosen)
   return (
-    <PopoverChip label={t("app.inputs.open")} shown="">
-      {fields === null ? (
-        <ImageModelSettings
-          app={withoutModelInput(app)}
-          state={state}
-          chips={graphChips}
-        />
-      ) : (
-        <HostedFields fields={fields.rest} form={state.form} />
-      )}
-    </PopoverChip>
+    <ModelPopoverChip text={name}>
+      <div className="flex flex-col gap-s4">
+        <CatalogPicker hosted={hosted} />
+        {isGraph ? (
+          <ImageModelSettings
+            app={withoutModelInput(app)}
+            state={state}
+            chips={graphChips}
+          />
+        ) : (
+          <HostedFields fields={fields?.rest ?? []} form={state.form} />
+        )}
+      </div>
+    </ModelPopoverChip>
   )
 }

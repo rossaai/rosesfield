@@ -5,11 +5,13 @@ import {
   modelInputName,
   settingsInputs,
 } from "@/screens/app/bar/model-settings"
+import { textOf } from "@/screens/app/fields/field-props"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
 import type { AppForm } from "@/screens/app/use-app-form"
 import type { AppScreenState } from "@/screens/app/use-app-screen"
+import { isGraphModel } from "@/studio/image/image-fields"
 import { correctionsOf, shownInputOf } from "@/studio/image/image-rules"
 
 type ImageSettingsProps = {
@@ -24,13 +26,10 @@ export const graphChips: readonly string[] = [
   "resolution",
 ]
 
-export function useGraphRules(
-  app: AppListing,
-  form: AppForm,
-  isGraph: boolean
-): void {
+export function useGraphRules(app: AppListing, form: AppForm): void {
   const { inputs } = form.values
   const { setInput } = form
+  const isGraph = isGraphModel(textOf(inputs[modelInputName]))
   useEffect(() => {
     if (!isGraph) {
       return

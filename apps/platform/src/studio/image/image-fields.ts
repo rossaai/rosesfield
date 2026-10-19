@@ -1,12 +1,14 @@
 import type { ModelField } from "@rosesfield/catalog/comfy"
+import { isShownField } from "@/screens/app/hosted/hosted-fields"
 
+type ChoiceField = Extract<ModelField, { kind: "choice" }>
 type MediaField = Extract<ModelField, { kind: "media" }>
 type NumberField = Extract<ModelField, { kind: "number" }>
 
 export type ImageFields = {
   references: MediaField | null
-  aspect: ModelField | null
-  size: ModelField | null
+  aspect: ChoiceField | null
+  size: ChoiceField | null
   count: NumberField | null
   rest: ModelField[]
 }
@@ -19,47 +21,29 @@ export type CountBounds = {
 
 const maxCount = 4
 
-const aspectNames: readonly string[] = ["aspectratio", "aspect", "ratio"]
+const aspectNames = /^(aspect_ratio|aspectratio|aspect|ratio)$/i
 
-const sizeNames: readonly string[] = [
-  "resolution",
-  "outputresolution",
-  "quality",
-]
+const sizeNames = /^(resolution|output_resolution|size|quality)$/
 
-const countNames: readonly string[] = [
-  "n",
-  "numimages",
-  "samplecount",
-  "count",
-  "numoutputs",
-  "numberofimages",
-]
+const countNames =
+  /^(n|num_images|sample_count|count|num_outputs|number_of_images)$/
 
-function keyOf(field: ModelField): string {
-  const last = field.path.split(".").at(-1) ?? field.path
-  return last.replace(/[_-]/g, "").toLowerCase()
+function lastOf(field: ModelField): string {
+  return field.path.split(".").at(-1) ?? field.path
 }
 
-function isSetting(field: ModelField): boolean {
-  return field.kind === "choice"
-    ? field.options.length > 1
-    : field.kind === "text"
-}
-
-function firstNamed(
+function choiceNamed(
   fields: readonly ModelField[],
-  names: readonly string[]
-): ModelField | null {
-  for (const name of names) {
-    const found = fields.find(
-      (field) => keyOf(field) === name && isSetting(field)
-    )
-    if (found !== undefined) {
-      return found
-    }
-  }
-  return null
+  names: RegExp
+): ChoiceField | null {
+  return (
+    fields.find(
+      (field): field is ChoiceField =>
+        field.kind === "choice" &&
+        field.options.length > 1 &&
+        names.test(lastOf(field))
+    ) ?? null
+  )
 }
 
 function referencesOf(fields: readonly ModelField[]): MediaField | null {
@@ -76,20 +60,20 @@ function countOf(fields: readonly ModelField[]): NumberField | null {
       (field): field is NumberField =>
         field.kind === "number" &&
         field.integer &&
-        countNames.includes(keyOf(field)) &&
+        countNames.test(lastOf(field)) &&
         (field.max === null || field.max >= 2)
     ) ?? null
   )
 }
 
-function isShown(field: ModelField): boolean {
-  return !(field.kind === "choice" && field.options.length === 1)
+export function isGraphModel(model: string): boolean {
+  return model !== "" && !model.includes("/")
 }
 
 export function imageFieldsOf(fields: readonly ModelField[]): ImageFields {
   const references = referencesOf(fields)
-  const aspect = firstNamed(fields, aspectNames)
-  const size = firstNamed(fields, sizeNames)
+  const aspect = choiceNamed(fields, aspectNames)
+  const size = choiceNamed(fields, sizeNames)
   const count = countOf(fields)
   const placed = new Set(
     [references, aspect, size, count].flatMap((field) =>
@@ -103,7 +87,9 @@ export function imageFieldsOf(fields: readonly ModelField[]): ImageFields {
     count,
     rest: fields.filter(
       (field) =>
-        field.kind !== "prompt" && !placed.has(field.name) && isShown(field)
+        field.kind !== "prompt" &&
+        !placed.has(field.name) &&
+        isShownField(field)
     ),
   }
 }

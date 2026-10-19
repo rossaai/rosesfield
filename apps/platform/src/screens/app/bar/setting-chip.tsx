@@ -35,7 +35,7 @@ type StepperChipProps = {
   onChange: (value: number) => void
 }
 
-function StepperChip(props: StepperChipProps): ReactElement {
+export function StepperChip(props: StepperChipProps): ReactElement {
   return (
     <Popover>
       <PopoverTrigger

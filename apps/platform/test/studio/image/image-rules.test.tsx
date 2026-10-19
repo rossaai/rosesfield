@@ -55,7 +55,7 @@ function shownValues(model: string): string[] | null {
     : []
 }
 
-function useForm(start: Record<string, FieldValue>, isGraph = true) {
+function useForm(start: Record<string, FieldValue>) {
   const [inputs, setInputs] = useState<Record<string, FieldValue>>(start)
   const setInput = useCallback((name: string, value: FieldValue) => {
     setInputs((current) => ({ ...current, [name]: value }))
@@ -70,7 +70,7 @@ function useForm(start: Record<string, FieldValue>, isGraph = true) {
     validate: () => true,
     register: () => undefined,
   }
-  useGraphRules(listing, form, isGraph)
+  useGraphRules(listing, form)
   return { form, setInput }
 }
 
@@ -125,17 +125,14 @@ describe("the Image model settings follow the contract's rules", () => {
     expect(body.safeParse(bodyOf(listing, values)).success).toBe(false)
   })
 
-  it("leaves a hosted model's own resolution alone", () => {
+  it("leaves a hosted model's own resolution alone, whether or not its form has loaded", () => {
     const { result } = renderHook(() =>
-      useForm(
-        {
-          ...defaultsOf(listing).inputs,
-          prompt: "a field of roses",
-          model: "bfl/flux-3-image",
-          resolution: "4k",
-        },
-        false
-      )
+      useForm({
+        ...defaultsOf(listing).inputs,
+        prompt: "a field of roses",
+        model: "bfl/flux-3-image",
+        resolution: "4k",
+      })
     )
     expect(result.current.form.values.inputs.resolution).toBe("4k")
   })

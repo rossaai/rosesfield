@@ -1,6 +1,10 @@
 import type { ModelField } from "@rosesfield/catalog/comfy"
 import { describe, expect, it } from "vitest"
-import { countBoundsOf, imageFieldsOf } from "@/studio/image/image-fields"
+import {
+  countBoundsOf,
+  imageFieldsOf,
+  isGraphModel,
+} from "@/studio/image/image-fields"
 import { keptReferences } from "@/studio/image/use-reference-tray"
 
 const fluxThree: readonly ModelField[] = [
@@ -113,24 +117,45 @@ function names(fields: readonly ModelField[]): string[] {
   return fields.map((field) => field.name)
 }
 
+const sizedChoice: ModelField = {
+  name: "size",
+  path: "size",
+  required: false,
+  kind: "choice",
+  options: ["1024x1024", "1536x1024"],
+  default: null,
+}
+
 describe("the Image bar places each field its model's schema declares", () => {
-  it("puts FLUX 3 Image's references on attach and its aspect and resolution on chips", () => {
+  it("puts FLUX 3 Image's references on attach and its free-text settings under the model", () => {
     const placed = imageFieldsOf(fluxThree)
     expect(placed.references?.name).toBe("images")
     expect(placed.references?.max).toBe(10)
-    expect(placed.aspect?.name).toBe("aspectRatio")
-    expect(placed.size?.name).toBe("resolution")
+    expect(placed.aspect).toBeNull()
+    expect(placed.size).toBeNull()
     expect(placed.count).toBeNull()
-    expect(names(placed.rest)).toEqual(["safetyTolerance", "grounding"])
+    expect(names(placed.rest)).toEqual([
+      "safetyTolerance",
+      "grounding",
+      "aspectRatio",
+      "resolution",
+    ])
   })
 
-  it("prefers the resolution to the quality, and binds the count to the schema's count", () => {
+  it("takes the first choice the catalog's resolution rule names, as model-tags does, and binds the count", () => {
     const placed = imageFieldsOf(grok)
     expect(placed.references).toBeNull()
-    expect(placed.aspect?.kind).toBe("choice")
-    expect(placed.size?.name).toBe("resolution")
+    expect(placed.aspect?.name).toBe("aspectRatio")
+    expect(placed.size?.name).toBe("quality")
     expect(placed.count?.name).toBe("n")
-    expect(names(placed.rest)).toEqual(["quality", "size"])
+    expect(names(placed.rest)).toEqual(["resolution", "size"])
+    expect(imageFieldsOf([sizedChoice]).size?.name).toBe("size")
+  })
+
+  it("tells a graph from a hosted model by its id", () => {
+    expect(isGraphModel("z-image-turbo")).toBe(true)
+    expect(isGraphModel("bfl/flux-3-image")).toBe(false)
+    expect(isGraphModel("")).toBe(false)
   })
 
   it("holds a count from 1 to 4 however many the model allows", () => {

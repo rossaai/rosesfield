@@ -9,7 +9,6 @@ import { BarChips, BarFrame } from "@/screens/app/bar-frame"
 import { textOf } from "@/screens/app/fields/field-props"
 import { inputPlaceholder } from "@/screens/app/fields/input-copy"
 import { StartProblem } from "@/screens/app/generate-foot"
-import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { type AppScreenState, useAppScreen } from "@/screens/app/use-app-screen"
@@ -18,13 +17,18 @@ import {
   GraphSettingChips,
   HostedSettingChips,
 } from "@/studio/image/image-chips"
-import { type ImageFields, imageFieldsOf } from "@/studio/image/image-fields"
+import {
+  type ImageFields,
+  imageFieldsOf,
+  isGraphModel,
+} from "@/studio/image/image-fields"
 import { useGraphRules } from "@/studio/image/image-model-settings"
 import {
   GraphPanel,
   HostedPanel,
-  InputsChip,
+  ModelPopover,
 } from "@/studio/image/image-settings"
+import { useHostedDefaults } from "@/studio/image/use-hosted-defaults"
 import {
   type ReferenceTray,
   useReferenceTray,
@@ -62,28 +66,37 @@ function Attach({ tray }: { tray: ReferenceTray }): ReactElement | null {
   )
 }
 
+type ViewProps = {
+  app: AppListing
+  state: AppScreenState
+  fields: ImageFields | null
+  isGraph: boolean
+}
+
 function Chips({
   app,
   state,
   fields,
-}: {
-  app: AppListing
-  state: AppScreenState
-  fields: ImageFields | null
-}): ReactElement | null {
+  isGraph,
+}: ViewProps): ReactElement | null {
   const { hosted } = state
   if (hosted === undefined) {
     return null
   }
   return (
     <span className="flex min-w-0 flex-wrap items-center gap-s2">
-      <CatalogPicker hosted={hosted} />
-      {fields === null ? (
+      <ModelPopover
+        app={app}
+        state={state}
+        hosted={hosted}
+        fields={fields}
+        isGraph={isGraph}
+      />
+      {isGraph ? (
         <GraphSettingChips app={app} form={state.form} />
-      ) : (
+      ) : fields === null ? null : (
         <HostedSettingChips fields={fields} form={state.form} />
       )}
-      <InputsChip app={app} state={state} fields={fields} />
     </span>
   )
 }
@@ -92,16 +105,13 @@ function Settings({
   app,
   state,
   fields,
-}: {
-  app: AppListing
-  state: AppScreenState
-  fields: ImageFields | null
-}): ReactElement | null {
+  isGraph,
+}: ViewProps): ReactElement | null {
   const { hosted } = state
   if (hosted === undefined) {
     return null
   }
-  return fields === null ? (
+  return isGraph ? (
     <GraphPanel app={app} state={state} hosted={hosted} />
   ) : (
     <HostedPanel hosted={hosted} fields={fields} form={state.form} />
@@ -119,10 +129,7 @@ function BarMessage({ text }: { text: string | null }): ReactElement | null {
   )
 }
 
-type BarProps = {
-  app: AppListing
-  state: AppScreenState
-  fields: ImageFields | null
+type BarProps = ViewProps & {
   tray: ReferenceTray
   onOpenSheet: () => void
 }
@@ -131,6 +138,7 @@ function ImageBar({
   app,
   state,
   fields,
+  isGraph,
   tray,
   onOpenSheet,
 }: BarProps): ReactElement {
@@ -155,7 +163,9 @@ function ImageBar({
       leading={<Attach tray={tray} />}
       chips={
         <BarChips
-          chips={<Chips app={app} state={state} fields={fields} />}
+          chips={
+            <Chips app={app} state={state} fields={fields} isGraph={isGraph} />
+          }
           onOpenSheet={onOpenSheet}
         />
       }
@@ -171,9 +181,12 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const state = useAppScreen(app, seeds)
   const sheet = useState(false)
   const fields = useImageFields(state.hosted)
+  const isGraph = isGraphModel(textOf(state.form.values.inputs.model))
   const tray = useReferenceTray(fields?.references ?? null, state.form)
-  useGraphRules(app, state.form, fields === null)
+  useGraphRules(app, state.form)
+  useHostedDefaults(state.form, state.hosted?.fields ?? null)
   const problems = state.form.problems
+  const view = { app, state, fields, isGraph }
   return (
     <BarFrame
       app={app}
@@ -181,7 +194,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       onUseInputs={state.useInputs}
       sheet={sheet}
       price={state.start.price}
-      settings={<Settings app={app} state={state} fields={fields} />}
+      settings={<Settings {...view} />}
       bar={
         <>
           <StartProblem start={state.start} />
@@ -191,13 +204,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
               barMessageOf(problems, app, state.hosted?.fields ?? null)
             }
           />
-          <ImageBar
-            app={app}
-            state={state}
-            fields={fields}
-            tray={tray}
-            onOpenSheet={() => sheet[1](true)}
-          />
+          <ImageBar {...view} tray={tray} onOpenSheet={() => sheet[1](true)} />
         </>
       }
     />
