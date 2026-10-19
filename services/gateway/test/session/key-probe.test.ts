@@ -1,6 +1,6 @@
 import type { Fetch } from "@rosesfield/generation"
+import { ComfyAccount } from "@rosesfield/generation"
 import { describe, expect, it } from "vitest"
-import { ComfyAccount } from "#session/comfy-account"
 import { KeyProbe } from "#session/key-probe"
 
 type Answers = Partial<Record<keyof typeof urls, () => Response>>

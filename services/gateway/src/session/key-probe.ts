@@ -1,9 +1,9 @@
-import type { KeyStatus } from "#session/account.contract"
 import type {
   AccountAnswer,
   ComfyAccount,
   ProbeAnswer,
-} from "#session/comfy-account"
+} from "@rosesfield/generation"
+import type { KeyStatus } from "#session/account.contract"
 
 export type KeyReading = {
   key: KeyStatus

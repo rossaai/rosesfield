@@ -1,5 +1,5 @@
+import type { AccountAnswer } from "@rosesfield/generation"
 import type { Clock } from "@rosesfield/kernel"
-import type { AccountAnswer } from "#session/comfy-account"
 
 type Held = {
   answer: Promise<AccountAnswer>

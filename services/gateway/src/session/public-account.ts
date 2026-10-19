@@ -1,6 +1,6 @@
+import type { ComfyAccount } from "@rosesfield/generation"
 import type { Clock } from "@rosesfield/kernel"
 import { AccountLookups } from "#session/account-lookups"
-import type { ComfyAccount } from "#session/comfy-account"
 import { KeyProbe } from "#session/key-probe"
 import { KeyReadings } from "#session/key-readings"
 

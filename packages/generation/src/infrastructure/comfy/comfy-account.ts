@@ -1,4 +1,5 @@
-import { CreditMeter, type Fetch } from "@rosesfield/generation"
+import type { Fetch } from "#infrastructure/comfy/comfy-low"
+import { CreditMeter } from "#infrastructure/credit-meter"
 
 export type AccountAnswer =
   | { state: "found"; id: string }

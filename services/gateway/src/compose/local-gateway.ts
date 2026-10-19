@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url"
 import type { PiAgentHarness } from "@rosesfield/agent"
 import type { AppDefinition } from "@rosesfield/contract"
 import {
+  ComfyAccount,
   DrizzlePriceBook,
   DrizzleRunRepository,
   type Fetch,
@@ -35,7 +36,6 @@ import type { GatewayApp, RequestScope } from "#gateway-env"
 import { TokenTries } from "#lock/token-tries"
 import { ownerAccount, visitorAccount } from "#session/account-routes"
 import { migrateSessionTables } from "#session/bun-sqlite-session-migration"
-import { ComfyAccount } from "#session/comfy-account"
 import { KeyProbe } from "#session/key-probe"
 import {
   type PublicAccountParts,

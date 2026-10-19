@@ -113,6 +113,11 @@ export {
   tasksOf,
 } from "#domain/task-binding"
 export { migrateRunTable } from "#infrastructure/bun-sqlite-run-migration"
+export {
+  type AccountAnswer,
+  ComfyAccount,
+  type ProbeAnswer,
+} from "#infrastructure/comfy/comfy-account"
 export type { Fetch } from "#infrastructure/comfy/comfy-low"
 export type { ComfyValueBinding } from "#infrastructure/comfy/comfy-value-binding"
 export {
