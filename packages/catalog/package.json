@@ -9,7 +9,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./workflows": "./src/workflow-registry.ts",
-    "./comfy": "./src/comfy/index.ts"
+    "./comfy": "./src/comfy/index.ts",
+    "./video": "./src/video/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

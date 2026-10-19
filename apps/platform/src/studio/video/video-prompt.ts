@@ -1,7 +1,9 @@
 import { findApp } from "@rosesfield/catalog"
+import {
+  cameraWordsKeyOf,
+  cameraWordsSeparator,
+} from "@rosesfield/catalog/video"
 import { tCatalog } from "@/copy/t"
-
-export const wordsSeparator = "\n"
 
 export type Preset = {
   value: string
@@ -10,10 +12,6 @@ export type Preset = {
 }
 
 const autoMove = "auto"
-
-function wordsKeyOf(value: string): string {
-  return `video.cameraMove.${value}.words`
-}
 
 export function presetsOf(appId: string): Preset[] {
   const input = findApp(appId)?.inputs.find(
@@ -27,7 +25,7 @@ export function presetsOf(appId: string): Preset[] {
     .map((option) => ({
       value: option.value,
       labelKey: option.labelKey,
-      words: tCatalog(wordsKeyOf(option.value)),
+      words: tCatalog(cameraWordsKeyOf(option.value)),
     }))
 }
 
@@ -44,7 +42,7 @@ export function composePrompt(
   const preset = presets.find((one) => one.value === move)
   return preset === undefined
     ? typed
-    : `${typed}${wordsSeparator}${preset.words}`
+    : `${typed}${cameraWordsSeparator}${preset.words}`
 }
 
 export function splitPrompt(
@@ -52,14 +50,14 @@ export function splitPrompt(
   presets: readonly Preset[]
 ): SplitPrompt {
   const preset = presets.find((one) =>
-    prompt.endsWith(`${wordsSeparator}${one.words}`)
+    prompt.endsWith(`${cameraWordsSeparator}${one.words}`)
   )
   return preset === undefined
     ? { typed: prompt, move: null }
     : {
         typed: prompt.slice(
           0,
-          prompt.length - preset.words.length - wordsSeparator.length
+          prompt.length - preset.words.length - cameraWordsSeparator.length
         ),
         move: preset.value,
       }

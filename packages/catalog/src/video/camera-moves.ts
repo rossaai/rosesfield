@@ -8,8 +8,6 @@ export type CameraMove =
   | "crane-up"
   | "crane-down"
 
-export type MovingCameraMove = Exclude<CameraMove, "auto">
-
 type CameraMoveRow = {
   value: CameraMove
   labelKey: string
@@ -26,10 +24,8 @@ export const cameraMoves: readonly CameraMoveRow[] = [
   { value: "crane-down", labelKey: "video.choice.cameraMove.craneDown" },
 ]
 
-export function cameraWordsKeyOf(move: MovingCameraMove): string {
-  return `video.cameraMove.${move}.words`
-}
+export const cameraWordsSeparator = "\n"
 
-export function isMovingCameraMove(value: string): value is MovingCameraMove {
-  return value !== "auto" && cameraMoves.some((move) => move.value === value)
+export function cameraWordsKeyOf(move: string): string {
+  return `video.cameraMove.${move}.words`
 }

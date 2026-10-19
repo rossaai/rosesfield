@@ -1,6 +1,10 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectBinding } from "@rosesfield/generation/bindings"
-import { cameraMoves, cameraWordsKeyOf } from "#video/camera-moves"
+import {
+  cameraMoves,
+  cameraWordsKeyOf,
+  cameraWordsSeparator,
+} from "#video/camera-moves"
 import {
   type FrameSize,
   framesFor,
@@ -17,8 +21,6 @@ import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 type Sound = "on" | "off"
 type Side = keyof FrameSize
 type ValueMap = Record<string, string | number>
-
-export const cameraWordsSeparator = "\n"
 
 const outputsPerJob = "one"
 
