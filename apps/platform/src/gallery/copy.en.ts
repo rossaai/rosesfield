@@ -120,6 +120,8 @@ const galleryCopy = {
   "state.loading": "Loading",
   "state.keyOutsideWorkspace": "Failed, the key belongs to no workspace",
   "state.notEnabled": "Failed, hosted models are off for the account",
+  "state.realCredits": "Done, real credits",
+  "state.estimatedCredits": "Done, credits estimated",
   "state.priced": "Priced",
   "state.priceUnknown": "Price unknown",
   "state.mixed": "Mixed",

@@ -1,4 +1,5 @@
 import type { Run } from "@rosesfield/contract"
+import { useQueryClient } from "@tanstack/react-query"
 import { type ReactElement, type ReactNode, useState } from "react"
 import { t } from "@/gallery/copy.en"
 import {
@@ -21,16 +22,60 @@ import {
   type FieldValue,
 } from "@/screens/app/app-form"
 import { InputField } from "@/screens/app/fields/input-field"
+import { priceQuery } from "@/screens/app/hosted/model-catalog-query"
 
-function RunBlock({ run }: { run: Run }): ReactElement {
+function RunBlock({
+  run,
+  estimate = null,
+}: {
+  run: Run
+  estimate?: number | null
+}): ReactElement {
   return (
     <GalleryData>
-      <article className="flex flex-col gap-s2">
-        <RunLine run={run} onUseInputs={() => undefined} />
-        <RunOutputs run={run} />
-      </article>
+      <PriceSeed run={run} estimate={estimate}>
+        <article className="flex flex-col gap-s2">
+          <RunLine run={run} onUseInputs={() => undefined} />
+          <RunOutputs run={run} />
+        </article>
+      </PriceSeed>
     </GalleryData>
   )
+}
+
+function PriceSeed({
+  run,
+  estimate,
+  children,
+}: {
+  run: Run
+  estimate: number | null
+  children: ReactNode
+}): ReactNode {
+  const client = useQueryClient()
+  useState(() => {
+    if (estimate !== null) {
+      const ask = {
+        inputs: run.inputs,
+        count: run.count,
+        aspectRatio: run.aspectRatio,
+      }
+      client.setQueryData(priceQuery(run.appId, ask, "missing").queryKey, {
+        price: { source: "rates", credits: estimate },
+      })
+    }
+    return null
+  })
+  return children
+}
+
+const liveRun: Partial<Run> = {
+  origin: "live",
+  engine: {
+    adapter: "comfy-router",
+    models: ["luma/photon-flash-1"],
+    workflowHash: null,
+  },
 }
 
 const runStates: GalleryState[] = [
@@ -67,6 +112,23 @@ const runStates: GalleryState[] = [
     id: "done",
     label: "state.done",
     render: () => <RunBlock run={galleryRun({})} />,
+  },
+  {
+    id: "real-credits",
+    label: "state.realCredits",
+    render: () => (
+      <RunBlock
+        run={galleryRun({
+          ...liveRun,
+          cost: { amount: 1.188768 / 211, currency: "USD" },
+        })}
+      />
+    ),
+  },
+  {
+    id: "estimated-credits",
+    label: "state.estimatedCredits",
+    render: () => <RunBlock run={galleryRun(liveRun)} estimate={0.57} />,
   },
   {
     id: "failed",

@@ -21,6 +21,7 @@ import { useDevice } from "@/device/device-context"
 import { ContentEndMark, Dock, useContentEnd } from "@/pieces/dock"
 import { useOpenInComfy } from "@/pieces/run/open-in-comfy"
 import { useCancelRun } from "@/pieces/run/run-actions"
+import { useRunEstimate } from "@/pieces/run/run-estimate"
 import {
   runAppName,
   runModel,
@@ -97,7 +98,10 @@ function Row({
   )
 }
 
-function recordRows(run: Run): Array<[string, string]> {
+function recordRows(
+  run: Run,
+  estimate: number | null
+): Array<[string, string]> {
   const model =
     run.origin === "demo"
       ? t("history.run.model.demo")
@@ -118,7 +122,7 @@ function recordRows(run: Run): Array<[string, string]> {
       run.finishedAt === null ? null : formatDateTime(run.finishedAt),
     ],
     [t("history.run.taken"), seconds === null ? null : formatDuration(seconds)],
-    [t("viewer.label.price"), runPrice(run)],
+    [t("viewer.label.price"), runPrice(run, estimate)],
   ]
   return rows.flatMap(([label, value]) =>
     value === null ? [] : [[label, value]]
@@ -126,9 +130,10 @@ function recordRows(run: Run): Array<[string, string]> {
 }
 
 function RunRecord({ run }: { run: Run }): ReactElement {
+  const estimate = useRunEstimate(run)
   return (
     <dl className="grid gap-s3 @regular:grid-cols-2">
-      {recordRows(run).map(([label, value]) => (
+      {recordRows(run, estimate).map(([label, value]) => (
         <Row key={label} label={label}>
           {value}
         </Row>
