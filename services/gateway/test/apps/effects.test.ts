@@ -57,12 +57,7 @@ describe("the effects app through the gateway on the demo engine", () => {
     const gateway = openGateway()
     const photo = await uploadPhoto(gateway)
     const started = await start(gateway, {
-      inputs: {
-        effect: "frost-over",
-        image: [photo],
-        prompt: "a red scarf",
-        length: 3,
-      },
+      inputs: { effect: "grow-wings", image: [photo], prompt: "a red scarf" },
       aspectRatio: "9:16",
     })
     expect(started.status).toBe(202)
@@ -72,12 +67,10 @@ describe("the effects app through the gateway on the demo engine", () => {
       origin: "demo",
       aspectRatio: "9:16",
       inputs: {
-        effect: "frost-over",
+        effect: "grow-wings",
         image: [photo],
         prompt: "a red scarf",
-        length: 3,
         resolution: "720p",
-        sound: "off",
       },
     })
     expect(run.seed).toEqual(expect.any(Number))
@@ -106,44 +99,28 @@ describe("the effects app through the gateway on the demo engine", () => {
     expect(new TextDecoder().decode(bytes.slice(4, 8))).toBe("ftyp")
   })
 
-  it("runs an effect with no sound line and records no sound for it", async () => {
+  it("refuses a length, a sound and an effect with no recipe, and starts nothing", async () => {
     const gateway = openGateway()
     const photo = await uploadPhoto(gateway)
-    const started = await start(gateway, {
-      inputs: { effect: "living-photo", image: [photo], resolution: "480p" },
-      aspectRatio: "1:1",
-    })
-    expect(started.status).toBe(202)
-    const { run } = runResponse.parse(await started.json())
-    expect(run.inputs).toEqual({
-      effect: "living-photo",
-      image: [photo],
-      length: 5,
-      resolution: "480p",
-    })
-    await gateway.drive(run.id)
-    const read = await gateway.call(
-      buildPath(routes.getRun.path, { runId: run.id })
-    )
-    expect(runResponse.parse(await read.json()).run.status).toBe("done")
-  })
-
-  it("refuses sound for an effect with no sound line and starts nothing", async () => {
-    const gateway = openGateway()
-    const photo = await uploadPhoto(gateway)
-    const response = await start(gateway, {
-      inputs: { effect: "living-photo", image: [photo], sound: "off" },
-      aspectRatio: "1:1",
-    })
-    expect(response.status).toBe(400)
-    const { error } = errorEnvelope.parse(await response.json())
-    expect(error.code).toBe("RUN_INPUT_INVALID")
+    for (const inputs of [
+      { effect: "grow-wings", image: [photo], length: 5 },
+      { effect: "grow-wings", image: [photo], sound: "off" },
+      { effect: "living-photo", image: [photo] },
+    ]) {
+      const response = await start(gateway, { inputs, aspectRatio: "1:1" })
+      expect({ inputs, status: response.status }).toEqual({
+        inputs,
+        status: 400,
+      })
+      const { error } = errorEnvelope.parse(await response.json())
+      expect(error.code).toBe("RUN_INPUT_INVALID")
+    }
     expect(gateway.jobs.enqueued).toEqual([])
   })
 
   it("refuses a run with no photo and starts nothing", async () => {
     const gateway = openGateway()
-    const response = await start(gateway, { inputs: { effect: "frost-over" } })
+    const response = await start(gateway, { inputs: { effect: "grow-wings" } })
     expect(response.status).toBe(400)
     const { error } = errorEnvelope.parse(await response.json())
     expect(error.code).toBe("RUN_INPUT_INVALID")

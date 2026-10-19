@@ -1,47 +1,29 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectBinding } from "@rosesfield/generation/bindings"
+import { effectGraph, effectsWorkflow } from "#effects/comfy/effect-graph"
+import { ltxFrames, sizeMap } from "#effects/comfy/frame-sizes"
 import {
-  effectGraph,
-  effectsWorkflow,
-  type Sound,
-} from "#effects/comfy/effect-graph"
-import { type EffectValue, effectValues } from "#effects/comfy/effect-prompts"
-import { effectsWithSound, recipeOf } from "#effects/comfy/effect-recipes"
-import {
-  ltxFrames,
+  type EffectRecipe,
   type ResolutionValue,
   resolutionValues,
-  sizeMap,
-} from "#effects/comfy/frame-sizes"
+} from "#effects/effect-recipe.contract"
+import { effectRecipes } from "#effects/effect-recipes"
 import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 
-function runBindings(resolution: ResolutionValue): WorkflowValueBinding[] {
+function runBindings(
+  recipe: EffectRecipe,
+  resolution: ResolutionValue
+): WorkflowValueBinding[] {
   const sizes = ltxFrames.sizes[resolution]
   return [
     { from: "input", name: "image", index: 0, to: "photo" },
     { from: "input", name: "prompt", to: "detail" },
     { from: "seed", to: "seed" },
-    { from: "input", name: "length", map: ltxFrames.frames, to: "frames" },
-    { from: "input", name: "length", map: ltxFrames.frames, to: "audioFrames" },
     { from: "aspectRatio", map: sizeMap(sizes, "width", 2), to: "width" },
     { from: "aspectRatio", map: sizeMap(sizes, "height", 2), to: "height" },
-  ]
-}
-
-function endFrameBindings(resolution: ResolutionValue): WorkflowValueBinding[] {
-  const sizes = ltxFrames.sizes[resolution]
-  return [
-    { from: "seed", to: "endFrameSeed" },
-    {
-      from: "aspectRatio",
-      map: sizeMap(sizes, "width", 1),
-      to: "endFrameWidth",
-    },
-    {
-      from: "aspectRatio",
-      map: sizeMap(sizes, "height", 1),
-      to: "endFrameHeight",
-    },
+    ...(recipe.endFrame.source === "none"
+      ? []
+      : [{ from: "seed", to: "endFrameSeed" } as const]),
   ]
 }
 
@@ -63,19 +45,13 @@ export function loadedModels(graph: unknown): string[] {
 }
 
 export function effectBinding(
-  effect: EffectValue,
-  sound: Sound,
+  recipe: EffectRecipe,
   resolution: ResolutionValue
 ): EngineBinding {
-  const recipe = recipeOf(effect)
-  const usesEndFrame = recipe.endFrame.source === "ic-lora"
   const binding = workflowBinding({
     workflow: effectsWorkflow,
-    bindings: [
-      ...runBindings(resolution),
-      ...(usesEndFrame ? endFrameBindings(resolution) : []),
-    ],
-    patch: (graph) => effectGraph(graph, effect, recipe, sound),
+    bindings: runBindings(recipe, resolution),
+    patch: (graph) => effectGraph(graph, recipe),
   })
   return {
     ...binding,
@@ -86,34 +62,21 @@ export function effectBinding(
   }
 }
 
-function byResolution(effect: EffectValue, sound: Sound): EngineBinding {
+function byResolution(recipe: EffectRecipe): EngineBinding {
   return selectBinding({
     input: "resolution",
     options: Object.fromEntries(
       resolutionValues.map((resolution) => [
         resolution,
-        effectBinding(effect, sound, resolution),
+        effectBinding(recipe, resolution),
       ])
     ),
-  })
-}
-
-function bindingOf(effect: EffectValue): EngineBinding {
-  if (!effectsWithSound.includes(effect)) {
-    return byResolution(effect, "off")
-  }
-  return selectBinding({
-    input: "sound",
-    options: {
-      on: byResolution(effect, "on"),
-      off: byResolution(effect, "off"),
-    },
   })
 }
 
 export const effectsBinding: EngineBinding = selectBinding({
   input: "effect",
   options: Object.fromEntries(
-    effectValues.map((effect) => [effect, bindingOf(effect)])
+    effectRecipes.map((recipe) => [recipe.effect, byResolution(recipe)])
   ),
 })

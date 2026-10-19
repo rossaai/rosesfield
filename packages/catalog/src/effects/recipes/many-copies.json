@@ -1,0 +1,18 @@
+{
+  "effect": "many-copies",
+  "review": "candidate",
+  "prompt": "Copies of the person step out from behind them one after another, then more and more, until identical copies in the same clothes fill the whole scene at every distance. Each copy moves the same way as the original. The camera stays fixed.",
+  "endFrame": {
+    "source": "edit",
+    "prompt": "The same scene filled with many identical copies of the same person in the same clothes, standing at different distances from near to far.",
+    "strength": 0.9
+  },
+  "hold": null,
+  "adapter": null,
+  "seconds": 5,
+  "credits": {
+    "480p": null,
+    "720p": null
+  },
+  "preview": null
+}

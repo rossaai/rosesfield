@@ -20,7 +20,11 @@ describe("workflowFor", () => {
   })
 
   it("finds the Effects graph under each effect's recipe patch", () => {
-    for (const effect of ["confetti-burst", "day-to-night", "rain"]) {
+    for (const effect of [
+      "pull-back-to-space",
+      "melt-away",
+      "freeze-and-circle",
+    ]) {
       expect(workflowFor("effects", { effect })?.id).toBe("effects-ltx-2-5")
     }
   })

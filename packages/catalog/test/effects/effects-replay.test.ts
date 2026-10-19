@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-  closingRule,
-  effectPrompts,
-  openingRule,
-} from "#effects/comfy/effect-prompts"
-import { adapters, effectRecipes } from "#effects/comfy/effect-recipes"
+import { recipeOf } from "#effects/effect-recipes"
 import { findWorkflow } from "#list-workflows"
 import {
   brokenLinks,
@@ -19,14 +14,6 @@ import {
   type Workflow,
 } from "./effects-replay"
 
-function classesOf(workflow: Readonly<Record<string, unknown>>): string[] {
-  return Object.entries(workflow).map(([id, node]) =>
-    typeof node === "object" && node !== null && "class_type" in node
-      ? `${id}:${String(node.class_type)}`
-      : `${id}:?`
-  )
-}
-
 function fileGraph(): Record<string, unknown> {
   const workflow = findWorkflow("effects-ltx-2-5")
   if (workflow === null) {
@@ -35,21 +22,28 @@ function fileGraph(): Record<string, unknown> {
   return workflow.graph
 }
 
+function idsOf(workflow: Readonly<Record<string, unknown>>): string[] {
+  return Object.keys(workflow).sort()
+}
+
 function nodesOf(workflow: Workflow, from: number, to: number): string[] {
   return Object.keys(workflow).filter(
     (id) => Number(id) >= from && Number(id) <= to
   )
 }
 
+function endPrompt(effect: string): string {
+  const end = recipeOf(effect).endFrame
+  return end.source === "none" ? "" : end.prompt
+}
+
 describe("the effects engine request", () => {
-  it("sends the rain workflow of workflows/ with every mechanism bound to the run", async () => {
+  it("draws the pull back end frame from its prompt alone and binds the run to it", async () => {
     const request = requestFor(
       {
-        effect: "rain",
+        effect: "pull-back-to-space",
         image: [photoId],
         prompt: "a red scarf",
-        length: 3,
-        sound: "on",
       },
       "9:16"
     )
@@ -60,98 +54,128 @@ describe("the effects engine request", () => {
       `${cloudUrl}/api/v2/jobs`,
     ])
     expect(replay.sent[1]?.headers.get("Idempotency-Key")).toBe(idempotencyKey)
-    expect(classesOf(workflow)).toEqual(classesOf(fileGraph()))
     expect(workflow).toMatchObject({
       "395": { inputs: { image: loadedPhoto } },
       "339": { inputs: { noise_seed: 42 } },
-      "439": { inputs: { noise_seed: 42 } },
-      "356": { inputs: { width: 352, height: 640, length: 73 } },
-      "366": { inputs: { frames_number: 73, frame_rate: 24 } },
-      "433": { inputs: { width: 704, height: 1280, length: 9 } },
+      "532": { inputs: { noise_seed: 42 } },
+      "356": { inputs: { width: 352, height: 640, length: 121 } },
+      "366": { inputs: { frames_number: 121, frame_rate: 24 } },
       "357": { inputs: { image: ["350", 0], strength: 1 } },
       "349": { inputs: { image: ["350", 0], strength: 1 } },
-      "430": { inputs: { lora_name: adapters.waterSimulation.file } },
-      "432": { inputs: { image: ["350", 0], amount: 9 } },
-      "434": { inputs: { image: ["432", 0], iclora_parameters: ["431", 0] } },
-      "460": { inputs: { image: ["447", 0], frame_idx: -1, strength: 0.7 } },
-      "461": {
-        inputs: { image: ["350", 0], frame_idx: -1, strength: 0.5 },
+      "525": { inputs: { image: ["395", 0], megapixels: 1 } },
+      "530": { inputs: { width: ["526", 0], height: ["526", 1] } },
+      "534": {
+        inputs: { model: ["520", 0], positive: ["523", 0], cfg: 1 },
       },
-      "464": { inputs: { attention_mask: ["412", 0], strength: 0.5 } },
-      "370": { inputs: { audio: ["358", 0], fps: 24 } },
+      "460": { inputs: { image: ["536", 0], frame_idx: -1, strength: 0.9 } },
+      "463": { inputs: { image: ["536", 0], frame_idx: -1, strength: 0.9 } },
+      "388": { inputs: { positive: ["460", 0] } },
     })
-    expect(workflow["461"]?.inputs.attention_mask).toEqual(["412", 0])
-    expect(promptText(workflow, "364")).toBe(
-      `${openingRule} ${effectPrompts.rain} a red scarf ${effectRecipes.rain.soundLine} ${closingRule}`
+    expect(workflow["534"]?.inputs.negative).toEqual(["524", 0])
+    for (const id of ["527", "528", "529", "410", "461", "464", "358"]) {
+      expect({ id, node: workflow[id] }).toEqual({ id, node: undefined })
+    }
+    expect(workflow["523"]?.inputs.text).toBe(endPrompt("pull-back-to-space"))
+    expect(promptText(workflow, "364").trim()).toBe(
+      `${recipeOf("pull-back-to-space").prompt} a red scarf`
     )
-    expect(workflow["435"]?.inputs.text).toMatch(/^ADD WATER\. Heavy rain/)
     expect(workflow["373"]?.inputs.text).toBe("")
+    expect(workflow["370"]?.inputs).not.toHaveProperty("audio")
     expect(brokenLinks(workflow)).toEqual([])
   })
 
-  it("holds the subject through the matte for confetti, with no end frame and no sound", async () => {
+  it("edits the photo into the melt end frame through its reference latent", async () => {
+    const request = requestFor({ effect: "melt-away", image: [photoId] }, "3:4")
+    const { workflow } = await submitted(request)
+    const file = idsOf(fileGraph())
+    const gone = ["358", "410", "411", "412", "461", "464"]
+    expect(idsOf(workflow)).toEqual(file.filter((id) => !gone.includes(id)))
+    expect(workflow).toMatchObject({
+      "527": { inputs: { pixels: ["525", 0], vae: ["522", 0] } },
+      "528": { inputs: { conditioning: ["523", 0], latent: ["527", 0] } },
+      "529": { inputs: { conditioning: ["524", 0], latent: ["527", 0] } },
+      "534": { inputs: { positive: ["528", 0], negative: ["529", 0] } },
+      "462": { inputs: { positive: ["460", 0], latent: ["367", 0] } },
+      "465": { inputs: { positive: ["463", 0] } },
+      "356": { inputs: { width: 352, height: 480 } },
+    })
+    expect(workflow["523"]?.inputs.text).toBe(endPrompt("melt-away"))
+    expect(promptText(workflow, "364").trim()).toBe(
+      recipeOf("melt-away").prompt
+    )
+    expect(brokenLinks(workflow)).toEqual([])
+  })
+
+  it("holds the subject through the matte in a busy street, with no end frame", async () => {
     const request = requestFor(
-      { effect: "confetti-burst", image: [photoId] },
+      { effect: "still-in-the-street", image: [photoId], resolution: "480p" },
       "16:9"
     )
     const { workflow } = await submitted(request)
-    expect(nodesOf(workflow, 430, 447)).toEqual([])
+    expect(nodesOf(workflow, 520, 536)).toEqual([])
     expect(workflow["460"]).toBeUndefined()
     expect(workflow["463"]).toBeUndefined()
     expect(workflow).toMatchObject({
-      "356": { inputs: { width: 640, height: 352, length: 121 } },
+      "356": { inputs: { width: 448, height: 256, length: 121 } },
       "461": {
         inputs: {
           positive: ["365", 0],
           latent: ["357", 0],
+          image: ["350", 0],
           attention_mask: ["412", 0],
-          strength: 0.6,
+          strength: 0.9,
         },
       },
-      "464": { inputs: { positive: ["462", 0], latent: ["349", 0] } },
+      "464": {
+        inputs: {
+          positive: ["462", 0],
+          latent: ["349", 0],
+          attention_mask: ["412", 0],
+          strength: 0.9,
+        },
+      },
       "411": { inputs: { image: ["351", 0] } },
     })
-    expect(workflow["358"]).toBeUndefined()
-    expect(workflow["370"]?.inputs).not.toHaveProperty("audio")
-    expect(promptText(workflow, "364")).toBe(
-      `${openingRule} ${effectPrompts["confetti-burst"]} ${closingRule}`
-    )
     expect(brokenLinks(workflow)).toEqual([])
   })
 
-  it("runs a living photo on the Cinemagraph adapter and refuses sound for it", async () => {
-    expect(() =>
-      requestFor(
-        { effect: "living-photo", image: [photoId], sound: "on" },
-        "1:1"
-      )
-    ).toThrow(/sound applies only when effect is/)
+  it("keeps only the frame 0 lock and the two-stage render for a prompt-only effect", async () => {
     const request = requestFor(
-      { effect: "living-photo", image: [photoId], resolution: "480p" },
+      { effect: "freeze-and-circle", image: [photoId] },
       "1:1"
     )
     const { workflow } = await submitted(request)
+    expect(nodesOf(workflow, 410, 465)).toEqual([])
+    expect(nodesOf(workflow, 520, 536)).toEqual([])
     expect(workflow).toMatchObject({
-      "420": {
-        class_type: "LoraLoaderModelOnly",
-        inputs: { model: ["384", 0], lora_name: adapters.cinemagraph.file },
-      },
-      "388": { inputs: { model: ["420", 0], positive: ["365", 0] } },
-      "391": { inputs: { model: ["420", 0] } },
+      "377": { inputs: { video_latent: ["357", 0] } },
+      "388": { inputs: { model: ["384", 0], positive: ["365", 0] } },
       "348": { inputs: { samples: ["367", 0] } },
+      "340": { inputs: { video_latent: ["349", 0] } },
       "374": { inputs: { samples: ["369", 0] } },
-      "356": { inputs: { width: 256, height: 256 } },
+      "356": { inputs: { width: 352, height: 352 } },
     })
-    expect(nodesOf(workflow, 410, 465).sort()).toEqual(["420"])
     expect(brokenLinks(workflow)).toEqual([])
   })
 
-  it("refuses an effect that moved to the reserve list before any request", () => {
+  it("sends the control with an empty prompt and the fish recipe's hold", async () => {
+    const request = requestFor(
+      { effect: "control-no-prompt", image: [photoId] },
+      "9:16"
+    )
+    const { workflow } = await submitted(request)
+    expect(promptText(workflow, "364").trim()).toBe("")
+    expect(workflow["461"]?.inputs.strength).toBe(
+      recipeOf("fish-in-the-air").hold
+    )
+  })
+
+  it("refuses an effect that has no recipe before any request", () => {
     expect(() =>
-      requestFor({ effect: "light-sweep", image: [photoId] }, "1:1")
+      requestFor({ effect: "confetti-burst", image: [photoId] }, "1:1")
     ).toThrow()
     expect(() =>
-      requestFor({ effect: "water-ripple", image: [photoId] }, "1:1")
+      requestFor({ effect: "living-photo", image: [photoId] }, "1:1")
     ).toThrow()
   })
 })

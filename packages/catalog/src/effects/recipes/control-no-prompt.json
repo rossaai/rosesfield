@@ -1,0 +1,16 @@
+{
+  "effect": "control-no-prompt",
+  "review": "control",
+  "prompt": "",
+  "endFrame": {
+    "source": "none"
+  },
+  "hold": 0.6,
+  "adapter": null,
+  "seconds": 5,
+  "credits": {
+    "480p": null,
+    "720p": null
+  },
+  "preview": null
+}

@@ -1,0 +1,16 @@
+{
+  "effect": "buildings-ripple",
+  "review": "candidate",
+  "prompt": "The buildings behind the person start to ripple and bend like a flag in the wind. Waves roll through the walls, windows and rooftops, curving them up and down like liquid. The person stays solid and still in front of the moving city. The camera stays fixed.",
+  "endFrame": {
+    "source": "none"
+  },
+  "hold": 0.7,
+  "adapter": null,
+  "seconds": 5,
+  "credits": {
+    "480p": null,
+    "720p": null
+  },
+  "preview": null
+}

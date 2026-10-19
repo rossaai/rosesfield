@@ -25,7 +25,6 @@ import {
   type PhotoSize,
   usePhotoChecks,
 } from "@/studio/effects/use-photo-checks"
-import { useSoundRule } from "@/studio/effects/use-sound-rule"
 
 const followRun = ""
 const photoInput = "image"
@@ -36,7 +35,6 @@ type EffectsState = {
   panel: {
     aspect: string
     aspects: readonly string[]
-    hasSound: boolean
     onAspect: (aspect: string) => void
     photoMessage: string | null
     onPhotoMessage: (message: string | null) => void
@@ -111,14 +109,12 @@ function useEffectsState(
     events.onRefused
   )
   const { useInputs: fillForm } = screen
-  const hasSound = useSoundRule(app, screen.form)
   return {
     screen,
     start,
     panel: {
       aspect: aspect.aspect,
       aspects: aspectsOf(app),
-      hasSound,
       onAspect: aspect.setChoice,
       photoMessage: photos.message,
       onPhotoMessage: photos.setMessage,

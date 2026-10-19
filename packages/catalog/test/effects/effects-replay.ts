@@ -143,6 +143,8 @@ function textAt(workflow: Workflow, value: unknown): string {
       return [read("string_a"), read("string_b")].join(read("delimiter"))
     case "StringReplace":
       return read("string").replaceAll(read("find"), read("replace"))
+    case "StringTrim":
+      return read("string").trim()
     default:
       throw new Error(`Cannot read text from ${node.class_type}`)
   }

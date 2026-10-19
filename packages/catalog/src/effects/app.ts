@@ -1,12 +1,9 @@
 import { defineApp } from "#define-app"
-import {
-  defaultEffect,
-  effectKeyOf,
-  effectValues,
-} from "#effects/comfy/effect-prompts"
-import { effectsWithSound } from "#effects/comfy/effect-recipes"
 import { effectsBinding } from "#effects/comfy/effects-binding"
 import { effectRatios } from "#effects/comfy/frame-sizes"
+import { effectKeyOf, effectValues } from "#effects/effect-recipes"
+
+const [firstEffect = ""] = effectValues
 
 export const app = defineApp({
   id: "effects",
@@ -21,7 +18,7 @@ export const app = defineApp({
         value,
         labelKey: `effects.choice.effect.${effectKeyOf(value)}`,
       })),
-      default: defaultEffect,
+      default: firstEffect,
     },
     {
       type: "image",
@@ -38,15 +35,6 @@ export const app = defineApp({
       maxLength: 300,
     },
     {
-      type: "number",
-      name: "length",
-      labelKey: "effects.input.length.label",
-      min: 3,
-      max: 5,
-      step: 1,
-      default: 5,
-    },
-    {
       type: "choice",
       name: "resolution",
       labelKey: "effects.input.resolution.label",
@@ -55,13 +43,6 @@ export const app = defineApp({
         { value: "720p", labelKey: "effects.choice.resolution.p720" },
       ],
       default: "720p",
-    },
-    {
-      type: "toggle",
-      name: "sound",
-      labelKey: "effects.input.sound.label",
-      default: "off",
-      when: [{ input: "effect", is: [...effectsWithSound] }],
     },
     { type: "seed", name: "seed", labelKey: "effects.input.seed.label" },
   ],

@@ -1,0 +1,18 @@
+{
+  "effect": "scatter-petals",
+  "review": "candidate",
+  "prompt": "The person begins to break apart into red rose petals, starting at their fingertips and hair. The petals peel away and blow off in a soft wind, more and more of them, until the whole body has scattered into a swirl of petals that drifts out of the frame. The empty place remains. The camera stays still.",
+  "endFrame": {
+    "source": "edit",
+    "prompt": "The same place with no person in it, and a few red rose petals drifting in the air where the person stood.",
+    "strength": 0.9
+  },
+  "hold": null,
+  "adapter": null,
+  "seconds": 5,
+  "credits": {
+    "480p": null,
+    "720p": null
+  },
+  "preview": null
+}

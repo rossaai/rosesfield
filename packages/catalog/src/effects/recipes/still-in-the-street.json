@@ -1,0 +1,16 @@
+{
+  "effect": "still-in-the-street",
+  "review": "candidate",
+  "prompt": "The person stands perfectly still, frozen like a statue, without blinking or breathing. Around them the street keeps moving fast: people walk past in both directions, cars drive by, and pigeons take off. The camera stays fixed.",
+  "endFrame": {
+    "source": "none"
+  },
+  "hold": 0.9,
+  "adapter": null,
+  "seconds": 5,
+  "credits": {
+    "480p": null,
+    "720p": null
+  },
+  "preview": null
+}
