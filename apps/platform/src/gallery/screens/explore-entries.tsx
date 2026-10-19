@@ -263,6 +263,7 @@ const keyEntry: GalleryEntry = {
     keyState("workspace", "state.keyOutsideWorkspace", () =>
       form("outside-workspace")
     ),
+    keyState("comfy-busy", "state.comfyBusy", () => form("busy")),
     keyState("unreachable", "state.unreachable", () => form("unreachable")),
   ],
 }
