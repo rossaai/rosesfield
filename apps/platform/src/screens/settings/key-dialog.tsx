@@ -13,6 +13,7 @@ import {
   type FormEvent,
   type ReactElement,
   type ReactNode,
+  useEffect,
   useState,
 } from "react"
 import { keepVisitorKey, problemOfKey } from "@/api/visitor-keys"
@@ -138,22 +139,34 @@ export function KeyAccepted({
   )
 }
 
-function useKeyCheck(onAccepted: () => void) {
+type Checked = {
+  key: string
+  account: Account
+}
+
+function useKeepAccepted(checked: Checked | null): void {
   const client = useQueryClient()
+  useEffect(() => {
+    if (checked === null || checked.account.key !== "valid") {
+      return
+    }
+    const { key, account } = checked
+    void keepVisitorKey("engine", key).then(() => {
+      client.setQueryData(accountQuery.queryKey, account)
+      return client.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey[0] !== "settings" || query.queryKey.length === 1,
+      })
+    })
+  }, [checked, client])
+}
+
+function useKeyCheck() {
   return useMutation({
-    mutationFn: async (key: string) => {
-      const account = await checkKey(key)
-      if (account.key === "valid") {
-        await keepVisitorKey("engine", key)
-        client.setQueryData(accountQuery.queryKey, account)
-        await client.invalidateQueries({
-          predicate: (query) => query.queryKey[0] !== "settings",
-        })
-        await client.invalidateQueries({ queryKey: ["settings"], exact: true })
-        onAccepted()
-      }
-      return account
-    },
+    mutationFn: async (key: string): Promise<Checked> => ({
+      key,
+      account: await checkKey(key),
+    }),
   })
 }
 
@@ -253,8 +266,9 @@ function refusalOf(account: Account | null, isError: boolean): Refusal | null {
 export function KeyForm({ onDone }: { onDone: () => void }): ReactElement {
   const [value, setValue] = useState("")
   const [problem, setProblem] = useState<CopyKey | null>(null)
-  const check = useKeyCheck(() => setValue(""))
-  const account = check.data ?? null
+  const check = useKeyCheck()
+  useKeepAccepted(check.data ?? null)
+  const account = check.data?.account ?? null
   if (account?.key === "valid") {
     return <KeyAccepted credits={account.credits} onDone={onDone} />
   }
