@@ -14,6 +14,7 @@ import {
   type HostedState,
   useHostedModel,
 } from "@/screens/app/hosted/use-hosted-model"
+import { usePriceRefresh } from "@/screens/app/hosted/use-price-refresh"
 import {
   type AppForm,
   type FormCheck,
@@ -55,6 +56,7 @@ export function useAppScreen(
   const form = useAppForm(app, seeds, check)
   const runs = useAppRuns(app)
   const hosted = useHostedModel(app, form, runs.runs)
+  usePriceRefresh(app.id, runs.runs)
   const fields = hosted.fields
   check.current =
     fields === null ? null : (values) => hostedProblems(fields, values)
