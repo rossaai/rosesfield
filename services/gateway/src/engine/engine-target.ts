@@ -1,3 +1,4 @@
+import { ComfyGenerationEngine } from "@rosesfield/generation"
 import { z } from "zod"
 
 export const engineTarget = z.enum([
@@ -35,7 +36,7 @@ export const engineTargets: Record<EngineTarget, readonly TargetSetting[]> = {
   demo: [],
 }
 
-export const comfyCloudUrl = "https://cloud.comfy.org"
+export const comfyCloudUrl = ComfyGenerationEngine.cloudUrl
 
 const hostSuffixes: readonly { suffix: string; target: ComfyTarget }[] = [
   { suffix: ".run.comfy.app", target: "comfy-deployment" },

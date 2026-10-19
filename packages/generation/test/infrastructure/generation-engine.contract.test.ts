@@ -10,7 +10,6 @@ import { ComfyGenerationEngine } from "#infrastructure/comfy-generation-engine"
 import { ComfyRouterGenerationEngine } from "#infrastructure/comfy-router-generation-engine"
 import { DemoGenerationEngine } from "#infrastructure/demo-generation-engine"
 import { RouterCatalog } from "#infrastructure/router/router-catalog"
-import { RunPodServerlessGenerationEngine } from "#infrastructure/runpod-serverless-generation-engine"
 import { FakeGenerationEngine } from "../fake/fake-generation-engine"
 import { fakeBinding, pngBytes, start } from "../sample"
 import {
@@ -33,7 +32,6 @@ import {
   succeededJob,
   workflowBinding,
 } from "./fixtures/comfy-v2"
-import { endpointId, runPod } from "./fixtures/runpod-serverless"
 import { type Recording, ReplayFetch } from "./replay-fetch"
 
 type Setup = {
@@ -113,22 +111,6 @@ const comfyRun = (v2: ReturnType<typeof comfyV2At>): Recording[] => [
   v2.cancel(),
 ]
 
-function runPodSetup(recordings: Recording[]): () => Setup {
-  return () => {
-    const replay = new ReplayFetch(recordings)
-    return {
-      engine: new RunPodServerlessGenerationEngine({
-        apiKey: "rpa_test",
-        endpointId,
-        fetch: replay.fetch,
-      }),
-      binding: workflowBinding,
-      tick: () => undefined,
-      replay,
-    }
-  }
-}
-
 function routerSetup(recordings: Recording[]): () => Setup {
   return () => {
     const replay = new ReplayFetch(recordings)
@@ -157,18 +139,6 @@ const subjects: Subject[] = [
     name: "your ComfyUI through comfy-api-proxy, with no key",
     create: comfySetup(proxyUrl, null, comfyRun),
     forKeyCheck: comfySetup(proxyUrl, null, (v2) => [v2.keyCheck()]),
-  },
-  {
-    name: "RunPod Serverless through worker-comfyui",
-    create: runPodSetup([
-      runPod.run(),
-      runPod.status("IN_QUEUE"),
-      runPod.status("IN_PROGRESS"),
-      runPod.completed(),
-      runPod.completed(),
-      runPod.cancel(),
-    ]),
-    forKeyCheck: runPodSetup([runPod.health()]),
   },
   {
     name: "a hosted model through Comfy Router",

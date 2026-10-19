@@ -104,6 +104,11 @@ export abstract class GenerationEngine {
   /** Checks the engine's key with a call that starts no paid run. */
   abstract checkKey(): Promise<KeyCheck>
 
+  /** Says whether a key check asks this engine, or another engine checks the same key. */
+  checksKey(): boolean {
+    return true
+  }
+
   /** Describes the inputs a hosted model takes, or null when the app's own inputs apply. */
   formOf(_binding: EngineBinding): Promise<ModelForm | null> {
     return Promise.resolve(null)

@@ -68,6 +68,10 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     })
   }
 
+  override checksKey(): boolean {
+    return false
+  }
+
   override canRun(binding: EngineBinding): boolean {
     return this.http.hasKey && hostedModelOf(binding) !== null
   }

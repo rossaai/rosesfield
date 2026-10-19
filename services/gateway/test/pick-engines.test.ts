@@ -1,5 +1,8 @@
 import { buildPath, routes, runResponse } from "@rosesfield/contract"
-import { comfyWorkflowAdapter } from "@rosesfield/generation"
+import {
+  comfyWorkflowAdapter,
+  hostedModelBinding,
+} from "@rosesfield/generation"
 import { FixedClock } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { pickEngines, visitorEngines } from "#compose/pick-engines"
@@ -55,7 +58,9 @@ describe("the engine target the settings select", () => {
     const engines = pickEngines(env.engine, { clock })
     expect(engines.map((engine) => [engine.key, engine.origin])).toEqual([
       [comfyWorkflowAdapter, "live"],
+      ["comfy-router", "live"],
     ])
+    expect(engines[1]?.canRun(hostedModelBinding("maker/model"))).toBe(false)
   })
 
   it("refuses two targets at once and a RunPod key without its endpoint", () => {
@@ -70,25 +75,41 @@ describe("the engine target the settings select", () => {
     )
   })
 
-  it("picks RunPod Serverless for its endpoint and the demo engine for no target", () => {
-    const runpod = pickEngines(
-      { target: "runpod-serverless", endpointId: "abc123", apiKey: "rp" },
-      { clock }
-    )
-    expect(runpod.map((engine) => engine.key)).toEqual(["runpod-serverless"])
+  it("refuses RunPod Serverless, which left Rosesfield, and runs the demo engine for no target", () => {
+    expect(() =>
+      pickEngines(
+        { target: "runpod-serverless", endpointId: "abc123", apiKey: "rp" },
+        { clock }
+      )
+    ).toThrow(/comfy-api-proxy/)
     expect(
       pickEngines({ target: "demo" }, { clock }).map((one) => one.origin)
-    ).toEqual(["demo"])
+    ).toEqual(["live", "demo"])
+  })
+
+  it("runs hosted models with a Comfy key and never with a proxy token", () => {
+    const hosted = hostedModelBinding("maker/model")
+    const [, cloudRouter] = pickEngines(comfyCloud("comfyui-k"), { clock })
+    const [, proxyRouter] = pickEngines(
+      {
+        target: "runpod-pod",
+        baseUrl: "https://a-8189.proxy.runpod.net",
+        apiKey: "token",
+      },
+      { clock }
+    )
+    expect(cloudRouter?.canRun(hosted)).toBe(true)
+    expect(proxyRouter?.canRun(hosted)).toBe(false)
   })
 
   it("gives a visitor the live engine only with their key, and the demo engine always", () => {
     const target = comfyCloud("ignored")
     expect(
       visitorEngines(target, null, { clock }).map((one) => one.key)
-    ).toEqual(["demo"])
+    ).toEqual(["comfy-router", "demo"])
     expect(
       visitorEngines(target, "comfyui-visitor", { clock }).map((one) => one.key)
-    ).toEqual([comfyWorkflowAdapter, "demo"])
+    ).toEqual([comfyWorkflowAdapter, "comfy-router", "demo"])
   })
 
   it("starts a run on the Comfy adapter its app binds when a key is set", async () => {

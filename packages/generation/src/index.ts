@@ -123,5 +123,4 @@ export {
   type CatalogEntry,
   RouterCatalog,
 } from "#infrastructure/router/router-catalog"
-export { RunPodServerlessGenerationEngine } from "#infrastructure/runpod-serverless-generation-engine"
 export { type Timer, TimerJobRunner } from "#infrastructure/timer-job-runner"
