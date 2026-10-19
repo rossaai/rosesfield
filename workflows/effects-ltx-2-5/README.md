@@ -46,13 +46,20 @@ Rosesfield ships no weights. Each file goes into the model folder its row names.
 | `birefnet.safetensors` | BiRefNet, by ZhengPeng7 | [MIT](https://huggingface.co/ZhengPeng7/BiRefNet) | `models/background_removal` | [Hugging Face](https://huggingface.co/Comfy-Org/BiRefNet/resolve/main/background_removal/birefnet.safetensors) |
 | `flux-2-klein-4b.safetensors` | FLUX.2 Klein 4B, for the end frame | [Apache-2.0](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B) | `models/diffusion_models` | [Hugging Face](https://huggingface.co/Comfy-Org/flux2-klein/resolve/main/split_files/diffusion_models/flux-2-klein-4b.safetensors) |
 | `qwen_3_4b.safetensors` | Qwen3 4B text encoder, for the end frame | [Apache-2.0](https://huggingface.co/Qwen/Qwen3-4B) | `models/text_encoders` | [Hugging Face](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors) |
-| `flux2-vae.safetensors` | FLUX.2 VAE, for the end frame | [Apache-2.0](https://huggingface.co/Comfy-Org/flux2-dev) | `models/vae` | [Hugging Face](https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/vae/flux2-vae.safetensors) |
+| `flux2-vae.safetensors` | FLUX.2 VAE, for the end frame | Not settled. See below | `models/vae` | [Hugging Face](https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-4b/resolve/main/split_files/vae/flux2-vae.safetensors) |
 
 Lightricks' LTX 2.5 files are gated on Hugging Face, so their SHA256 digests are not in the UI file. Accept the LTX 2.5 licence on Hugging Face before you download them.
 
+The licence of `flux2-vae.safetensors` is not settled. Two files carry that name, and the graph names the file only:
+
+- [Comfy-Org/vae-text-encorder-for-flux-klein-4b](https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-4b), where the download link points, tags its repository `apache-2.0`. Its file has the SHA256 `868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3`.
+- [Comfy-Org/flux2-dev](https://huggingface.co/Comfy-Org/flux2-dev) tags its repository `flux-1-dev-non-commercial-license`. Its file has the SHA256 `d64f3a68e1cc4f9f4e29b6e0da38a0204fe9a49f2d4053f0ec1fa1ca02f9c4b5`.
+
+Black Forest Labs' own [FLUX.2-klein-4B](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B) repository is tagged `apache-2.0` and holds its VAE in the diffusers format, not as this file. Which of the two files Comfy Cloud loads under this name is not known. The tags and digests were read from the Hugging Face API on 2026-10-19.
+
 ## The effects
 
-Each effect is a recipe kept as data in [`packages/catalog/src/effects/recipes/`](../../packages/catalog/src/effects/recipes/): its prompt, its end-frame source and prompt, its end-frame strength, its hold strength, its adapter, which is always none, and its length. The recipes come from the effects lab, which runs each one from the Effects screen and keeps only the ones a blind review passes.
+Each effect is a recipe kept as data in [`packages/catalog/src/effects/recipes/`](../../packages/catalog/src/effects/recipes/): its prompt, its end-frame source and prompt, its end-frame strength, its hold strength, its adapter, which is always none, its length and whether it passed. A recipe passes when a blind review scores its runs, and a passed recipe names the run it passed with. Effects offers only the passed recipes. While none has passed, Effects takes no run.
 
 | End-frame source | What the graph does |
 |---|---|
@@ -62,7 +69,7 @@ Each effect is a recipe kept as data in [`packages/catalog/src/effects/recipes/`
 
 ## What every run does
 
-1. It locks your photo at frame 0 with `LTXVImgToVideoInplace` at strength 1.0, in both stages, nodes 357 and 349.
+1. It locks your photo at frame 0 with `LTXVImgToVideoInplace`: at strength 0.7 in the first stage, node 357, and at 1.0 in the second, node 349. The second lock keeps frame 0 your photo.
 2. It makes a matte of the photo's subject with the core BiRefNet nodes `LoadBackgroundRemovalModel` and `RemoveBackground`, nodes 410 to 412, when the recipe holds the subject.
 3. It makes the effect's end frame with FLUX.2 Klein 4B in 4 steps, nodes 520 to 536, when the recipe has one. Node 525 scales the photo to one megapixel, and the end frame keeps that size.
 4. It renders one continuous shot in two stages. The end frame is an `LTXVAddGuide` guide at the last frame, nodes 460 and 463. The photo is a second guide at the last frame with the subject matte as its `attention_mask`, nodes 461 and 464, so the subject holds while the scene changes. `LTXVCropGuides` removes the guide frames after each stage, nodes 462 and 465.
@@ -93,8 +100,8 @@ The LTX-2.x Community License asks Rosesfield to pass its use restrictions to yo
 
 ## Source
 
-Written for Rosesfield from ComfyUI core nodes. Its two-stage render follows Comfy's template `video_ltx2_5_i2v`, and its end-frame pass follows the wiring of Comfy's FLUX.2 Klein edit template, both in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT, read on 2026-10-17. Lightricks' own example workflows carry the LTX-2 Community License and were not used.
+Written for Rosesfield from ComfyUI core nodes. Its two-stage render starts from Comfy's template `video_ltx2_5_i2v` and keeps its node ids, and its end-frame pass starts from the wiring of Comfy's FLUX.2 Klein edit template, both in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT, read on 2026-10-17. Rosesfield adds the end-frame and hold guides, the crop guides and the recipe's length, and removes the sound. Lightricks' own example workflows carry the LTX-2 Community License and were not used.
 
 ## Checked
 
-Every node class this file holds is listed by Comfy Cloud's `object_info`, read on 2026-10-19, and each one comes from ComfyUI's `nodes` or `comfy_extras` modules. Every model file it loads is in Comfy Cloud's model folders, per the same reading. The runs from the Effects screen are the proof that it runs, and the effects lab records them.
+Every node class this file holds is listed by Comfy Cloud's `object_info`, read on 2026-10-19, and each one comes from ComfyUI's `nodes` or `comfy_extras` modules. Every model file it loads is in Comfy Cloud's model folders, per the same reading. The runs from the Effects screen are the proof that it runs, and the effects lab records them. Some runs start black: their first 57 frames, or every frame, decode to black. The lab's runs with the first-stage lock at 0.7 cleared the cases it measured, and one run of `workflows/video-ltx-2-5-start-frame` with the same lock still started black, so the cause is not settled.
