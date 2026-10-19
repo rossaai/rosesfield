@@ -1,5 +1,5 @@
 import { appId, defineRoute, runInputs } from "@rosesfield/contract"
-import type { ModelField } from "@rosesfield/generation"
+import type { ModelField } from "@rosesfield/generation/bindings"
 import { z } from "zod"
 
 const fieldBase = {

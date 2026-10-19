@@ -4,7 +4,7 @@ import {
   type HostedModel,
   taskAdapter,
   tasksOf,
-} from "@rosesfield/generation"
+} from "@rosesfield/generation/bindings"
 import type { CatalogModel } from "#comfy/model-catalog.contract"
 import { isDeniedModel } from "#comfy/model-deny"
 import { makerOf, nameOf } from "#comfy/model-names"

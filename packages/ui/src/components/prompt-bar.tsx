@@ -30,6 +30,8 @@ type PromptBarProps = {
   leading?: ReactNode
   chips?: ReactNode
   price?: ReactNode
+  submitValue?: ReactNode
+  submitName?: string | undefined
   busy?: boolean
   className?: string
 }
@@ -88,6 +90,8 @@ function PromptControls({
   busy,
   onSubmit,
   submitLabel,
+  submitValue,
+  submitName,
 }: PromptBarProps): ReactElement {
   return (
     <div className="flex min-w-0 items-center gap-s2">
@@ -98,8 +102,10 @@ function PromptControls({
         size="dense"
         busy={busy === true}
         onClick={onSubmit}
+        aria-label={submitName}
       >
         {submitLabel}
+        {submitValue}
       </Button>
     </div>
   )

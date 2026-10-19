@@ -1,3 +1,7 @@
+export type {
+  HostedModel,
+  ModelField,
+} from "@rosesfield/generation/bindings"
 export {
   appTasksOf,
   defaultModelOf,

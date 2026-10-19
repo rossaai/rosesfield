@@ -1,4 +1,4 @@
-import type { HostedModel, ModelField } from "@rosesfield/generation"
+import type { HostedModel, ModelField } from "@rosesfield/generation/bindings"
 import type { ModelTag } from "#comfy/model-catalog.contract"
 
 const resolutionNames = /^(resolution|output_resolution|size|quality)$/

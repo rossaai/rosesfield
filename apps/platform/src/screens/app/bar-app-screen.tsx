@@ -15,6 +15,8 @@ import { BarChips, BarFrame } from "@/screens/app/bar-frame"
 import { textOf } from "@/screens/app/fields/field-props"
 import { inputPlaceholder } from "@/screens/app/fields/input-copy"
 import { StartProblem } from "@/screens/app/generate-foot"
+import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
+import { TaskPanel } from "@/screens/app/hosted/task-panel"
 import {
   type AppScreenState,
   type AppSeeds,
@@ -73,6 +75,56 @@ function BarLeading({
   )
 }
 
+function BarModelChips({
+  app,
+  state,
+  chips,
+}: {
+  app: AppListing
+  state: AppScreenState
+  chips: readonly string[]
+}): ReactElement {
+  const { hosted } = state
+  return (
+    <>
+      {hosted?.isTaskApp === true ? (
+        <CatalogPicker hosted={hosted} />
+      ) : (
+        <ModelChip app={app} state={state} chips={chips} />
+      )}
+      {hosted?.fields === null || hosted?.fields === undefined
+        ? chips.map((name) => (
+            <SettingChip key={name} app={app} form={state.form} name={name} />
+          ))
+        : null}
+    </>
+  )
+}
+
+function BarSettings({
+  app,
+  state,
+}: {
+  app: AppListing
+  state: AppScreenState
+}): ReactElement {
+  const { hosted } = state
+  if (hosted?.isTaskApp !== true) {
+    return <ModelSettings app={app} state={state} chips={[]} />
+  }
+  return (
+    <TaskPanel
+      app={app}
+      form={state.form}
+      hosted={hosted}
+      skipPrompt
+      graphPanel={(graphApp) => (
+        <ModelSettings app={graphApp} state={state} chips={[]} />
+      )}
+    />
+  )
+}
+
 export function BarAppScreen({
   app,
   chips,
@@ -89,7 +141,7 @@ export function BarAppScreen({
       onUseInputs={state.useInputs}
       sheet={sheet}
       price={state.start.price}
-      settings={<ModelSettings app={app} state={state} chips={[]} />}
+      settings={<BarSettings app={app} state={state} />}
       bar={
         <>
           <StartProblem start={state.start} />
@@ -116,23 +168,13 @@ export function BarAppScreen({
             leading={<BarLeading app={app} state={state} tray={tray} />}
             chips={
               <BarChips
-                chips={
-                  <>
-                    <ModelChip app={app} state={state} chips={chips} />
-                    {chips.map((name) => (
-                      <SettingChip
-                        key={name}
-                        app={app}
-                        form={state.form}
-                        name={name}
-                      />
-                    ))}
-                  </>
-                }
+                chips={<BarModelChips app={app} state={state} chips={chips} />}
                 onOpenSheet={() => sheet[1](true)}
               />
             }
-            price={state.start.price}
+            price={state.start.price === "" ? undefined : state.start.price}
+            submitValue={state.start.priceValue}
+            submitName={state.start.priceName ?? undefined}
             busy={state.start.isPending || tray.isUploading}
           />
         </>

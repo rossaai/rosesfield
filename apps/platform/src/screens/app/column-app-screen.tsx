@@ -6,6 +6,7 @@ import {
   ColumnFrame,
   useSheetOpen,
 } from "@/screens/app/column-frame"
+import { TaskPanel } from "@/screens/app/hosted/task-panel"
 import { InputsPanel } from "@/screens/app/inputs-panel"
 import {
   type AppSeeds,
@@ -34,7 +35,22 @@ export function ColumnAppScreen({
       sheet={sheet}
       hasHeader={hasHeader}
       panel={
-        <InputsPanel app={app} form={state.form} lastSeed={state.lastSeed} />
+        state.hosted?.isTaskApp === true ? (
+          <TaskPanel
+            app={app}
+            form={state.form}
+            hosted={state.hosted}
+            graphPanel={(graphApp) => (
+              <InputsPanel
+                app={graphApp}
+                form={state.form}
+                lastSeed={state.lastSeed}
+              />
+            )}
+          />
+        ) : (
+          <InputsPanel app={app} form={state.form} lastSeed={state.lastSeed} />
+        )
       }
       canvas={(openInputs) => (
         <AppCanvas
