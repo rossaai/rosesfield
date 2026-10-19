@@ -1,0 +1,14 @@
+{
+  "effect": "melt-away",
+  "passed": false,
+  "prompt": "The person starts to melt from the head down like warm wax. Their face, hair and clothes soften, sag and run downward in thick glossy streams. The body slumps lower and lower until only a shiny puddle in the colours of their clothes spreads across the ground. The camera stays still.",
+  "endFrame": {
+    "source": "edit",
+    "prompt": "The same place with no person standing in it. On the ground where the person stood lies a wide shiny puddle of thick liquid in the colours of their clothes.",
+    "strength": 0.9
+  },
+  "hold": null,
+  "adapter": null,
+  "seconds": 5,
+  "preview": null
+}

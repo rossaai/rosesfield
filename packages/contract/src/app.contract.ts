@@ -75,6 +75,7 @@ const appFields = z.strictObject({
   engine: engineBinding,
   limits: appLimits,
   preview: appPreview.nullable().default(null),
+  closedKey: copyKey.nullable().default(null),
 })
 
 type AppFields = z.infer<typeof appFields>

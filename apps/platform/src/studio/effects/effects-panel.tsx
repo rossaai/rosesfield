@@ -5,13 +5,14 @@ import { t, tCatalog } from "@/copy/t"
 import { CollapsibleSection } from "@/pieces/collapsible-section"
 import { ChoiceField } from "@/screens/app/fields/choice-field"
 import { textOf } from "@/screens/app/fields/field-props"
-import { inputCaption, inputNote } from "@/screens/app/fields/input-copy"
+import { inputCaption } from "@/screens/app/fields/input-copy"
 import { InputField } from "@/screens/app/fields/input-field"
 import { SeedField } from "@/screens/app/fields/seed-field"
-import { ToggleField } from "@/screens/app/fields/toggle-field"
 import { randomSeed } from "@/screens/app/inputs-panel"
 import type { AppForm } from "@/screens/app/use-app-form"
+import { EffectTiles, effectOptionsOf } from "@/studio/effects/effect-tiles"
 import { PhotoField } from "@/studio/effects/photo-field"
+import { useEffectPrices } from "@/studio/effects/use-effect-prices"
 
 export const autoAspect = "auto"
 
@@ -21,7 +22,6 @@ type EffectsPanelProps = {
   lastSeed: number | null
   aspect: string
   aspects: readonly string[]
-  hasSound: boolean
   onAspect: (aspect: string) => void
   photoMessage: string | null
   onPhotoMessage: (message: string | null) => void
@@ -95,28 +95,19 @@ function ChoiceInputField(
   )
 }
 
-function sortedEffects(input: ChoiceInput): { value: string; label: string }[] {
-  return input.options
-    .map((option) => ({
-      value: option.value,
-      label: tCatalog(option.labelKey),
-    }))
-    .sort((left, right) => left.label.localeCompare(right.label))
-}
-
-function EffectField(props: EffectsPanelProps): ReactElement | null {
+function EffectPart(props: EffectsPanelProps): ReactElement | null {
   const { app, form } = props
   const effect = choiceOf(app, "effect")
+  const prices = useEffectPrices(app, effectOptionsOf(app), form.values)
   if (effect === null) {
     return null
   }
   return (
-    <ChoiceField
-      label={inputCaption(effect)}
-      items={sortedEffects(effect)}
+    <EffectTiles
+      app={app}
       value={textOf(form.values.inputs[effect.name]) || effect.default}
+      prices={prices}
       onChange={(value) => form.setInput(effect.name, value)}
-      note={inputNote(app, effect)}
       register={(focus) => form.register(effect.name, focus)}
     />
   )
@@ -124,8 +115,6 @@ function EffectField(props: EffectsPanelProps): ReactElement | null {
 
 function AdvancedPart(props: EffectsPanelProps): ReactElement {
   const { form } = props
-  const soundInput = findInput(props.app, "sound")
-  const sound = soundInput?.type === "toggle" ? soundInput : null
   const seedInput = findInput(props.app, "seed")
   const seed = seedInput?.type === "seed" ? seedInput : null
   const seedValue = seed === null ? undefined : form.values.inputs[seed.name]
@@ -136,9 +125,6 @@ function AdvancedPart(props: EffectsPanelProps): ReactElement {
         name="resolution"
         labelOf={(value) => tCatalog(`choice.resolution.${value}`)}
       />
-      {props.hasSound && sound !== null ? (
-        <ToggleField {...fieldProps(props, sound)} input={sound} />
-      ) : null}
       {seed === null ? null : (
         <SeedField
           mode={form.values.seedMode}
@@ -159,11 +145,10 @@ function AdvancedPart(props: EffectsPanelProps): ReactElement {
 export function EffectsPanel(props: EffectsPanelProps): ReactElement {
   const { app } = props
   const photo = app.inputs.find((input) => input.name === "image")
-  const columnInputs = app.inputs.filter(
-    (input) => input.name === "prompt" || input.name === "length"
-  )
+  const columnInputs = app.inputs.filter((input) => input.name === "prompt")
   return (
     <div className="flex flex-col gap-s4">
+      <EffectPart {...props} />
       {photo !== undefined && isAssetInput(photo) ? (
         <PhotoField
           {...fieldProps(props, photo)}
@@ -172,7 +157,6 @@ export function EffectsPanel(props: EffectsPanelProps): ReactElement {
           onMessage={props.onPhotoMessage}
         />
       ) : null}
-      <EffectField {...props} />
       {columnInputs.map((input) => (
         <InputField
           key={input.name}

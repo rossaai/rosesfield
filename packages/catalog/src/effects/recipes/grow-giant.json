@@ -1,0 +1,14 @@
+{
+  "effect": "grow-giant",
+  "passed": false,
+  "prompt": "The person grows taller and taller in one steady motion. They rise past the street lamps, then past the windows, until they stand as a giant as tall as the buildings. Cars and people look tiny around their feet. The camera tilts up to follow them as they grow.",
+  "endFrame": {
+    "source": "edit",
+    "prompt": "The same person as a giant as tall as the buildings, standing in the middle of the city street, with tiny cars and people around their feet, seen from street level looking up.",
+    "strength": 0.9
+  },
+  "hold": null,
+  "adapter": null,
+  "seconds": 5,
+  "preview": null
+}

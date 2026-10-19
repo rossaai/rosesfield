@@ -2,22 +2,23 @@ import type { EngineBinding } from "@rosesfield/contract"
 import { selectAdapter } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import { effectsBinding } from "#effects/comfy/effects-binding"
+import { resolutionValues } from "#effects/effect-recipe.contract"
+import { effectRecipes } from "#effects/effect-recipes"
 import { findWorkflow } from "#list-workflows"
 import uiFile from "../../../../workflows/effects-ltx-2-5/effects-ltx-2-5.json"
 
 const coreNodeClasses: readonly string[] = [
+  "CFGGuider",
   "CLIPLoader",
   "CLIPTextEncode",
+  "ConditioningZeroOut",
   "CreateVideo",
-  "EmptyImage",
+  "EmptyFlux2LatentImage",
   "EmptyLTXVLatentVideo",
-  "GetICLoRAParameters",
+  "Flux2Scheduler",
+  "GetImageSize",
   "GrowMask",
-  "ImageBlend",
-  "ImageBlur",
-  "ImageFromBatch",
-  "ImageQuantize",
-  "ImageToMask",
+  "ImageScaleToTotalPixels",
   "KSamplerSelect",
   "LTXVAddGuide",
   "LTXVAudioVAEDecode",
@@ -36,19 +37,20 @@ const coreNodeClasses: readonly string[] = [
   "LoraLoaderModelOnly",
   "ManualSigmas",
   "MaskPreview",
-  "MaskToImage",
   "PreviewImage",
   "RandomNoise",
+  "ReferenceLatent",
   "RemoveBackground",
-  "RepeatImageBatch",
   "ResizeImageMaskNode",
   "SamplerCustomAdvanced",
   "SaveVideo",
   "StringConcatenate",
   "StringReplace",
+  "StringTrim",
   "UNETLoader",
   "VAEDecode",
   "VAEDecodeTiled",
+  "VAEEncode",
   "VAELoader",
 ]
 
@@ -125,9 +127,10 @@ function fileGraph(): ApiGraph {
 const partnerNode = "KlingImage2VideoNode"
 
 describe("Effects holds only ComfyUI core nodes", () => {
-  it("sends from every one of the 30 leaves only core node classes", () => {
-    const leaves = leavesOf(effectsBinding)
-    expect(leaves).toHaveLength(30)
+  it("sends from every leaf only core node classes", () => {
+    const leaves = leavesOf(effectsBinding(effectRecipes))
+    expect(leaves).toHaveLength(effectRecipes.length * resolutionValues.length)
+    expect(effectRecipes).toHaveLength(12)
     for (const [path, graph] of leaves) {
       expect({ path, notCore: notCore(classesOf(graph)) }).toEqual({
         path,
@@ -144,7 +147,7 @@ describe("Effects holds only ComfyUI core nodes", () => {
   })
 
   it("names a partner node planted in a leaf or in the UI file", () => {
-    for (const [path, graph] of leavesOf(effectsBinding)) {
+    for (const [path, graph] of leavesOf(effectsBinding(effectRecipes))) {
       const planted = {
         ...graph,
         "75": { ...graph["75"], class_type: partnerNode },

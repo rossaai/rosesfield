@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { z } from "zod"
 import { appDefinition, appListing } from "#app.contract"
 import { assetKind } from "#asset.contract"
+import type { imageAccept } from "#input.contract"
 import { sampleApp } from "./sample"
 
 type AppInput = z.input<typeof appDefinition>
@@ -94,6 +95,20 @@ describe("choice input", () => {
     expect(issuePaths(withInputs([choice("Bfl/flux")]))).not.toEqual([])
   })
 
+  it("takes a choice of one option, as a catalog that opens its options one by one", () => {
+    const choice: InputInput = {
+      type: "choice",
+      name: "quality",
+      labelKey: "inputs.quality",
+      options: [options[0]!],
+      default: "draft",
+    }
+    expect(issuePaths(withInputs([choice]))).toEqual([])
+    expect(issuePaths(withInputs([{ ...choice, options: [] }]))).toContain(
+      "inputs.0.options"
+    )
+  })
+
   it("refuses two options with the same value", () => {
     const choice: InputInput = {
       type: "choice",
@@ -170,5 +185,63 @@ describe("appListing", () => {
     const listing = appListing.parse(appDefinition.parse(sampleApp()))
     expect(listing.id).toBe("sample")
     expect("engine" in listing).toBe(false)
+  })
+})
+
+describe("image input", () => {
+  const photo: Extract<InputInput, { type: "image" }> = {
+    type: "image",
+    name: "image",
+    labelKey: "inputs.image",
+    presence: "required",
+    max: 1,
+  }
+  const accept: z.input<typeof imageAccept> = {
+    formats: ["image/png", "image/jpeg", "image/webp"],
+    maxBytes: 20_000_000,
+    minShortSide: 480,
+  }
+
+  it("declares the formats, the bytes and the short side it accepts", () => {
+    const app = appDefinition.parse(withInputs([{ ...photo, accept }]))
+    expect(app.inputs[0]).toMatchObject({ accept })
+    expect(appListing.parse(app).inputs[0]).toMatchObject({ accept })
+  })
+
+  it("refuses a format that is not an image format, a format twice and a size of 0", () => {
+    expect(
+      issuePaths(
+        withInputs([
+          {
+            ...photo,
+            accept: { ...accept, formats: ["image/gif" as "image/png"] },
+          },
+        ])
+      )
+    ).toEqual(["inputs.0.accept.formats.0"])
+    expect(
+      issuePaths(
+        withInputs([
+          {
+            ...photo,
+            accept: { ...accept, formats: ["image/png", "image/png"] },
+          },
+        ])
+      )
+    ).toEqual(["inputs.0.accept.formats"])
+    expect(
+      issuePaths(withInputs([{ ...photo, accept: { ...accept, maxBytes: 0 } }]))
+    ).toEqual(["inputs.0.accept.maxBytes"])
+  })
+})
+
+describe("a closed app", () => {
+  it("is open with no note by default, and lists the note of a closed one", () => {
+    expect(appDefinition.parse(sampleApp()).closedKey).toBeNull()
+    const closed = appDefinition.parse({ ...sampleApp(), closedKey: "closed" })
+    expect(appListing.parse(closed).closedKey).toBe("closed")
+    expect(issuePaths({ ...sampleApp(), closedKey: "In review" })).toEqual([
+      "closedKey",
+    ])
   })
 })

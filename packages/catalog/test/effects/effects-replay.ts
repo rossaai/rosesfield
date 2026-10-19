@@ -6,7 +6,8 @@ import {
 } from "@rosesfield/generation"
 import { assetIdFormat } from "@rosesfield/kernel"
 import { z } from "zod"
-import { app } from "#effects/app"
+import { effectsApp } from "#effects/app"
+import { effectRecipes } from "#effects/effect-recipes"
 
 type Recording = {
   method: "GET" | "POST"
@@ -143,6 +144,8 @@ function textAt(workflow: Workflow, value: unknown): string {
       return [read("string_a"), read("string_b")].join(read("delimiter"))
     case "StringReplace":
       return read("string").replaceAll(read("find"), read("replace"))
+    case "StringTrim":
+      return read("string").trim()
     default:
       throw new Error(`Cannot read text from ${node.class_type}`)
   }
@@ -152,7 +155,7 @@ export function promptText(workflow: Workflow, encoderId: string): string {
   return textAt(workflow, workflow[encoderId]?.inputs.text)
 }
 
-export const definition = appDefinition.parse(app)
+export const definition = appDefinition.parse(effectsApp(effectRecipes))
 export const photoId = assetIdFormat.parse(
   "4d2c1b0a-9e8f-4a6b-8c5d-3e2f1a0b9c8d"
 )

@@ -36,7 +36,7 @@ export function catalogMcpServer(options: CatalogServerOptions): McpServer {
     { name: "rosesfield", version: gatewayPackage.version },
     { instructions: gatewayCopy.mcp.instructions }
   )
-  for (const app of options.apps) {
+  for (const app of options.apps.filter((one) => one.closedKey === null)) {
     server.registerTool(
       app.id,
       {

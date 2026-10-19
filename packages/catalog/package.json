@@ -10,7 +10,8 @@
     ".": "./src/index.ts",
     "./workflows": "./src/workflow-registry.ts",
     "./comfy": "./src/comfy/index.ts",
-    "./video": "./src/video/index.ts"
+    "./video": "./src/video/index.ts",
+    "./effects": "./src/effects/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

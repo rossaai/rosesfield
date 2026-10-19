@@ -1,15 +1,25 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import type { AppListing } from "@rosesfield/contract"
+import {
+  CancelledError,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query"
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react"
 import { type ReactNode, useCallback, useState } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { tCatalog } from "@/copy/t"
+import { assetQuery } from "@/api/queries"
+import { findCatalogApp } from "@/catalog/catalog-apps"
+import { formatBytes } from "@/copy/format"
+import { t, tCatalog } from "@/copy/t"
 import type { FieldValue } from "@/screens/app/app-form"
 import type { AppForm } from "@/screens/app/use-app-form"
 import type { StartRun } from "@/screens/app/use-start-run"
 import { useCheckedStart } from "@/studio/effects/use-checked-start"
 import {
+  acceptOf,
   type CheckPhoto,
   type PhotoCheck,
+  photoCheckOf,
   usePhotoChecks,
 } from "@/studio/effects/use-photo-checks"
 
@@ -119,5 +129,48 @@ describe("the effects photo checks behind Generate", () => {
     act(() => pending[1]?.answer(passed))
     await waitFor(() => expect(result.current.checks.isClear).toBe(true))
     expect(result.current.checks.message).toBeNull()
+  })
+
+  it("checks again when another reader cancels the photo's shared fetch, and keeps the photo", async () => {
+    let calls = 0
+    const check: CheckPhoto = async () => {
+      calls += 1
+      if (calls === 1) {
+        throw new CancelledError()
+      }
+      return passed
+    }
+    const spies = { generate: vi.fn(), refused: vi.fn() }
+    const { result } = renderScreen(check, ["asset-uploaded"], spies)
+    await waitFor(() => expect(result.current.checks.isClear).toBe(true))
+    expect(calls).toBe(2)
+    expect(result.current.inputs.image).toEqual(["asset-uploaded"])
+    expect(result.current.checks.message).toBeNull()
+  })
+
+  it("refuses by the formats and the bytes the app's photo input declares", async () => {
+    const accept = acceptOf(findCatalogApp("effects") as AppListing, "image")
+    expect(accept).toEqual({
+      formats: ["image/png", "image/jpeg", "image/webp"],
+      maxBytes: 20_000_000,
+      minShortSide: 480,
+    })
+    const client = new QueryClient()
+    client.setQueryData(assetQuery("asset-gif").queryKey, {
+      asset: { mime: "image/gif", bytes: 1000 },
+    } as never)
+    client.setQueryData(assetQuery("asset-big").queryKey, {
+      asset: { mime: "image/png", bytes: 20_000_001 },
+    } as never)
+    const check = photoCheckOf(accept)
+    expect(await check(client, "asset-gif")).toEqual({
+      refusal: tCatalog("effects.input.image.wrongFormat"),
+    })
+    expect(await check(client, "asset-big")).toEqual({
+      refusal: t("field.asset.tooLarge", {
+        size: formatBytes(20_000_001),
+        limit: formatBytes(20_000_000),
+      }),
+    })
   })
 })

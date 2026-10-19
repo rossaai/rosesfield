@@ -316,6 +316,14 @@ export const screenEntries: GalleryEntry[] = [
   appEntry("image", "entry.screen.appBar", image),
   appEntry("upscale", "entry.screen.appColumn", upscale),
   appEntry("video", "entry.screen.video", video),
+  screenEntry("effects", "entry.screen.appEffects", [
+    {
+      id: "closed",
+      label: "state.effectsClosed",
+      path: "/apps/effects",
+      seeds: base,
+    },
+  ]),
   library,
   viewer,
   characters,
