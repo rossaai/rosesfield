@@ -187,11 +187,17 @@ export function afterLoad(html: string): string {
   return html.replace(moduleScript, boot).replace(modulePreload, "")
 }
 
+export const shareDataId = "rosesfield-share"
+
+function dataTag(view: ShareView): string {
+  const json = JSON.stringify({ share: view }).replace(/</g, "\\u003c")
+  return `<script id="${shareDataId}" type="application/json">${json}</script>`
+}
+
 export function sharePage(html: string, view: ShareView, url: string): string {
   const origin = new URL(url).origin
-  return afterLoad(
-    inject(html, headTags(headOf(view, origin), url), shareMarkup(view))
-  )
+  const head = `${headTags(headOf(view, origin), url)}${dataTag(view)}`
+  return afterLoad(inject(html, head, shareMarkup(view)))
 }
 
 export function explorePage(

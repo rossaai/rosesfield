@@ -110,11 +110,27 @@ export function shareRun(
   })
 }
 
+const pageDataId = "rosesfield-share"
+
+export function shareInPage(shareId: string): ShareView | undefined {
+  const text = document.getElementById(pageDataId)?.textContent
+  if (text === undefined || text === null) {
+    return undefined
+  }
+  try {
+    const share = readShare(fieldOf(JSON.parse(text), "share"))
+    return share?.id === shareId ? share : undefined
+  } catch {
+    return undefined
+  }
+}
+
 export function shareQuery(shareId: string) {
   return queryOptions({
     queryKey: ["share", shareId],
     queryFn: ({ signal }) =>
       shareOf(`/share/${encodeURIComponent(shareId)}/data`, { signal }),
+    initialData: () => shareInPage(shareId),
     staleTime: Number.POSITIVE_INFINITY,
     retry: false,
   })
