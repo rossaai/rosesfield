@@ -24,8 +24,11 @@ import {
   placeAll,
 } from "@/screens/app/form-fill"
 
+export type FormSource = "defaults" | "seed"
+
 export type AppForm = {
   values: FormValues
+  source?: FormSource
   problems: ReadonlyMap<string, FieldProblem>
   setInput: (name: string, value: FieldValue) => void
   setForm: (change: Partial<FormValues>) => void
@@ -43,8 +46,9 @@ type FormSeeds = {
 function useSeededValues(
   app: AppListing,
   seeds: FormSeeds
-): [FormValues, Dispatch<SetStateAction<FormValues>>] {
+): [FormValues, Dispatch<SetStateAction<FormValues>>, FormSource] {
   const [values, setValues] = useState<FormValues>(() => defaultsOf(app))
+  const [source, setSource] = useState<FormSource>("defaults")
   const client = useQueryClient()
   const draft = useRouterState({
     select: (state) => state.location.state.draft,
@@ -71,10 +75,13 @@ function useSeededValues(
         next = await placeAll(client, app, next, [seeds.use])
       }
       setValues(next)
+      if (fromRun !== null || draft !== undefined || seeds.use !== undefined) {
+        setSource("seed")
+      }
     }
     void fill()
   }, [app, client, draft, seeds.from, seeds.use, seeds.share])
-  return [values, setValues]
+  return [values, setValues, source]
 }
 
 export type FormCheck = (values: FormValues) => FieldProblem[]
@@ -84,7 +91,7 @@ export function useAppForm(
   seeds: FormSeeds,
   check?: RefObject<FormCheck | null>
 ): AppForm {
-  const [values, setValues] = useSeededValues(app, seeds)
+  const [values, setValues, source] = useSeededValues(app, seeds)
   const [problems, setProblems] = useState<ReadonlyMap<string, FieldProblem>>(
     new Map()
   )
@@ -117,6 +124,7 @@ export function useAppForm(
   }, [app, values, check])
   return {
     values,
+    source,
     problems,
     setInput,
     setForm: (change) => setValues((current) => ({ ...current, ...change })),

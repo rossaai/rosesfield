@@ -96,13 +96,18 @@ function useOpenOnDefault(
   const opened = useRef(false)
   const value = textOf(form.values.inputs[modelInputName])
   const appDefault = textOf(defaultsOf(app).inputs[modelInputName])
+  const source = form.source ?? "defaults"
   useEffect(() => {
     if (opened.current || defaultModel === null || models.length === 0) {
       return
     }
     opened.current = true
-    if (value === appDefault && value !== defaultModel) {
+    if (
+      source === "defaults" &&
+      value === appDefault &&
+      value !== defaultModel
+    ) {
       choose(defaultModel)
     }
-  }, [defaultModel, models, value, appDefault, choose])
+  }, [defaultModel, models, value, appDefault, choose, source])
 }

@@ -57,8 +57,18 @@ export function defaultsOf(app: AppListing): FormValues {
   }
 }
 
+const modelInput = "model"
+
+export function isHostedRun(run: Run): boolean {
+  const model = run.inputs[modelInput]
+  return typeof model === "string" && model.includes("/")
+}
+
 export function valuesFromRun(app: AppListing, run: Run): FormValues {
   const base = defaultsOf(app)
+  if (isHostedRun(run)) {
+    return { ...base, inputs: { ...run.inputs }, count: run.count }
+  }
   const inputs: Record<string, FieldValue> = { ...base.inputs }
   for (const input of app.inputs) {
     const value = run.inputs[input.name]

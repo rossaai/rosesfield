@@ -2,7 +2,6 @@ import type { AppListing, Run } from "@rosesfield/contract"
 import { type KeyboardEvent, useRef } from "react"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import { valuesFromRun } from "@/screens/app/app-form"
-import { hostedValuesOf } from "@/screens/app/form-fill"
 import { hostedProblems } from "@/screens/app/hosted/hosted-form"
 import {
   type HostedState,
@@ -55,8 +54,7 @@ export function useAppScreen(
     hosted,
     lastSeed,
     hasRuns: runs.isPending ? null : runs.runs.length > 0,
-    useInputs: (run) =>
-      form.fill(hostedValuesOf(app, run) ?? valuesFromRun(app, run)),
+    useInputs: (run) => form.fill(valuesFromRun(app, run)),
     onShortcut: (event) => {
       if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault()
