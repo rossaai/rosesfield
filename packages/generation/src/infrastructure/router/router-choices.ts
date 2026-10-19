@@ -9,11 +9,9 @@ type Option = string | number
 
 const item = String.raw`(?:"[^"]+"|'[^']+'|[A-Za-z0-9][A-Za-z0-9:._x*+/-]*)(?: \([^)]*\))?`
 
-const joined = new RegExp(
-  String.raw`^${item}(?:, ${item})*(?:,? (?:or|and) ${item})$`
-)
+const joined = new RegExp(`^${item}(?:, ${item})*(?:,? (?:or|and) ${item})$`)
 
-const listed = new RegExp(String.raw`^${item}(?:, ${item})+$`)
+const listed = new RegExp(`^${item}(?:, ${item})+$`)
 
 const leads: readonly RegExp[] = [
   /\b(?:options|supported values|optional values|possible values)(?: are|:)\s+/gi,
