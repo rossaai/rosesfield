@@ -48,7 +48,10 @@ export class RouterHttp {
     "https://raw.githubusercontent.com/Comfy-Org/docs/main/router-pricing/metronome-rates.json"
   static readonly pageSize = 100
 
+  static readonly publicTag = "public"
+
   private readonly options: RouterHttpOptions
+  private tag: Promise<string> | null = null
 
   constructor(options: RouterHttpOptions) {
     this.options = options
@@ -56,6 +59,11 @@ export class RouterHttp {
 
   get hasKey(): boolean {
     return this.options.apiKey !== null
+  }
+
+  keyTag(): Promise<string> {
+    this.tag ??= tagOf(this.options.apiKey)
+    return this.tag
   }
 
   async listPage(cursor: string | null): Promise<CatalogPage> {
@@ -270,6 +278,19 @@ type SendInit = {
   body?: string
   headers?: Record<string, string> | undefined
   timeoutMs?: number
+}
+
+async function tagOf(apiKey: string | null): Promise<string> {
+  if (apiKey === null) {
+    return RouterHttp.publicTag
+  }
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(apiKey)
+  )
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
 }
 
 function modelPath(model: string): string {

@@ -1,4 +1,5 @@
 import type { Clock } from "@rosesfield/kernel"
+import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import type { ModelForm } from "#domain/model-form"
 import { fieldsOf } from "#infrastructure/router/router-fields"
 import type { RouterHttp } from "#infrastructure/router/router-http"
@@ -18,7 +19,6 @@ export type CatalogEntry = {
 type Listing = {
   ids: readonly string[]
   checkedAt: number
-  source: CatalogSource
 }
 
 type Stored = {
@@ -40,18 +40,21 @@ type RouterCatalogOptions = {
 
 export class RouterCatalog {
   static readonly maxAgeMs = 3_600_000
+  static readonly retryMs = 300_000
   static readonly concurrency = 32
   static readonly maxPages = 20
+  static readonly maxKeys = 1000
 
   private readonly clock: Clock
   private readonly maxAgeMs: number
   private readonly concurrency: number
   private readonly entries = new Map<string, CatalogEntry>()
-  private listing: Listing | null = null
-  private rates: Stored | null = null
-  private loading: Promise<void> | null = null
-  private readonly offEstimates = new Set<string>()
+  private readonly misses = new Map<string, number>()
+  private readonly listings = new Map<string, Listing>()
+  private readonly loads = new Map<string, Promise<void>>()
+  private readonly offEstimates = new Map<string, number>()
   private readonly kept = new Map<string, KeptResult & { at: number }>()
+  private rates: Stored | null = null
 
   constructor(options: RouterCatalogOptions) {
     this.clock = options.clock
@@ -60,12 +63,11 @@ export class RouterCatalog {
   }
 
   async models(http: RouterHttp): Promise<CatalogEntry[]> {
-    if (this.listing === null) {
-      await this.loadOnce(http)
-    } else if (this.needsLoad(http)) {
-      this.loadOnce(http).catch(() => undefined)
+    const tag = await http.keyTag()
+    if (this.needsLoad(tag)) {
+      await this.loadOnce(http, tag)
     }
-    return (this.listing?.ids ?? []).flatMap((id) => {
+    return this.listedIds(tag).flatMap((id) => {
       const entry = this.entries.get(id)
       return entry === undefined || entry.facts.aliasOf !== null ? [] : [entry]
     })
@@ -73,23 +75,23 @@ export class RouterCatalog {
 
   async entry(http: RouterHttp, model: string): Promise<CatalogEntry | null> {
     await this.models(http)
+    if (!this.listedIds(await http.keyTag()).includes(model)) {
+      return null
+    }
+    const held = this.entries.get(model)
+    if (held?.source === "public" && http.hasKey) {
+      await this.refresh(http, model).catch(() => undefined)
+    }
     return this.entries.get(model) ?? null
   }
 
   async idle(): Promise<void> {
-    await this.loading?.catch(() => undefined)
-  }
-
-  private loadOnce(http: RouterHttp): Promise<void> {
-    this.loading ??= this.load(http).finally(() => {
-      this.loading = null
-    })
-    return this.loading
+    await Promise.allSettled([...this.loads.values()])
   }
 
   async rateRows(http: RouterHttp): Promise<readonly RateRow[]> {
     const held = this.rates
-    if (held !== null && this.ageOf(held.checkedAt) < this.maxAgeMs) {
+    if (held !== null && this.isFresh(held.checkedAt)) {
       return held.rows
     }
     const rows = rateRowsOf(await http.readRates())
@@ -99,7 +101,7 @@ export class RouterCatalog {
 
   keepResult(ref: string, result: KeptResult): void {
     for (const [held, one] of this.kept) {
-      if (this.ageOf(one.at) >= this.maxAgeMs) {
+      if (!this.isFresh(one.at)) {
         this.kept.delete(held)
       }
     }
@@ -111,58 +113,92 @@ export class RouterCatalog {
   }
 
   hasEstimates(keyTag: string): boolean {
-    return !this.offEstimates.has(keyTag)
+    const off = this.offEstimates.get(keyTag)
+    return off === undefined || !this.isFresh(off)
   }
 
   markEstimatesOff(keyTag: string): void {
-    this.offEstimates.add(keyTag)
+    this.remember(this.offEstimates, keyTag, this.now(), (at) => at)
   }
 
-  private needsLoad(http: RouterHttp): boolean {
-    const { listing } = this
-    if (listing === null || this.ageOf(listing.checkedAt) >= this.maxAgeMs) {
+  private listedIds(tag: string): readonly string[] {
+    return this.listings.get(tag)?.ids ?? []
+  }
+
+  private needsLoad(tag: string): boolean {
+    const listing = this.listings.get(tag)
+    if (listing === undefined || !this.isFresh(listing.checkedAt)) {
       return true
     }
-    if (http.hasKey && listing.source === "public") {
-      return true
+    return listing.ids.some((id) => this.isDue(id))
+  }
+
+  private isDue(id: string): boolean {
+    const entry = this.entries.get(id)
+    if (entry !== undefined && this.isFresh(entry.checkedAt)) {
+      return false
     }
-    return listing.ids.some((id) => {
-      const entry = this.entries.get(id)
-      return entry === undefined || this.isStale(entry, http)
-    })
+    const missed = this.misses.get(id)
+    return missed === undefined || this.now() - missed >= RouterCatalog.retryMs
   }
 
-  private isStale(entry: CatalogEntry, http: RouterHttp): boolean {
-    return (
-      this.ageOf(entry.checkedAt) >= this.maxAgeMs ||
-      (http.hasKey && entry.source === "public")
-    )
+  private loadOnce(http: RouterHttp, tag: string): Promise<void> {
+    const running = this.loads.get(tag)
+    if (running !== undefined) {
+      return running
+    }
+    const earlier = [...this.loads.values()]
+    const load = this.load(http, tag, earlier).finally(() => {
+      this.loads.delete(tag)
+    })
+    this.loads.set(tag, load)
+    return load
   }
 
-  private async load(http: RouterHttp): Promise<void> {
-    const source: CatalogSource = http.hasKey ? "keyed" : "public"
-    const listing = this.listing
-    const ids =
-      listing === null ||
-      this.ageOf(listing.checkedAt) >= this.maxAgeMs ||
-      listing.source !== source
-        ? await this.readIds(http)
-        : listing.ids
-    this.listing = { ids, checkedAt: this.now(), source }
-    const due = ids.filter((id) => {
-      const entry = this.entries.get(id)
-      return entry === undefined || this.isStale(entry, http)
-    })
+  private async load(
+    http: RouterHttp,
+    tag: string,
+    earlier: readonly Promise<void>[]
+  ): Promise<void> {
+    const ids = await this.listingOf(http, tag)
+    await Promise.allSettled(earlier)
+    const due = ids.filter((id) => this.isDue(id))
     const failures: unknown[] = []
     await this.inBatches(due, (id) =>
       this.refresh(http, id).catch((error: unknown) => {
         failures.push(error)
+        this.misses.set(id, this.now())
       })
     )
     const [first] = failures
     if (first !== undefined && ids.every((id) => !this.entries.has(id))) {
-      this.listing = null
+      for (const id of due) {
+        this.misses.delete(id)
+      }
       throw first
+    }
+  }
+
+  private async listingOf(
+    http: RouterHttp,
+    tag: string
+  ): Promise<readonly string[]> {
+    const held = this.listings.get(tag)
+    if (held !== undefined && this.isFresh(held.checkedAt)) {
+      return held.ids
+    }
+    try {
+      const ids = await this.readIds(http)
+      this.remember(this.listings, tag, { ids, checkedAt: this.now() }, at)
+      return ids
+    } catch (error) {
+      if (held === undefined || !(error instanceof EngineUnavailableError)) {
+        this.listings.delete(tag)
+        throw error
+      }
+      const retryAt = this.now() - this.maxAgeMs + RouterCatalog.retryMs
+      this.listings.set(tag, { ids: held.ids, checkedAt: retryAt })
+      return held.ids
     }
   }
 
@@ -184,15 +220,16 @@ export class RouterCatalog {
   }
 
   private async refresh(http: RouterHttp, id: string): Promise<void> {
-    const held = this.entries.get(id)
     if (!http.hasKey) {
       this.store(id, await http.readPublicSchema(id), null, "public")
       return
     }
+    const held = this.entries.get(id)
     const etag = held?.source === "keyed" ? held.etag : null
     const read = await http.readSchema(id, etag)
     if (read.state === "same" && held !== undefined) {
       this.entries.set(id, { ...held, checkedAt: this.now() })
+      this.misses.delete(id)
     } else if (read.state === "fresh") {
       this.store(id, read.document, read.etag, "keyed")
     }
@@ -206,8 +243,10 @@ export class RouterCatalog {
   ): void {
     const facts = factsOf(document)
     if (facts === null || facts.model !== id) {
+      this.misses.set(id, this.now())
       return
     }
+    this.misses.delete(id)
     this.entries.set(id, {
       facts,
       form: { model: id, fields: fieldsOf(facts) },
@@ -215,6 +254,27 @@ export class RouterCatalog {
       checkedAt: this.now(),
       source,
     })
+  }
+
+  private remember<T>(
+    map: Map<string, T>,
+    tag: string,
+    value: T,
+    atOf: (value: T) => number
+  ): void {
+    for (const [held, one] of map) {
+      if (!this.isFresh(atOf(one))) {
+        map.delete(held)
+      }
+    }
+    map.delete(tag)
+    map.set(tag, value)
+    for (const held of map.keys()) {
+      if (map.size <= RouterCatalog.maxKeys) {
+        break
+      }
+      map.delete(held)
+    }
   }
 
   private async inBatches(
@@ -233,11 +293,15 @@ export class RouterCatalog {
     await Promise.all(workers)
   }
 
-  private ageOf(checkedAt: number): number {
-    return this.now() - checkedAt
+  private isFresh(checkedAt: number): boolean {
+    return this.now() - checkedAt < this.maxAgeMs
   }
 
   private now(): number {
     return this.clock.now().getTime()
   }
+}
+
+function at(listing: Listing): number {
+  return listing.checkedAt
 }

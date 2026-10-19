@@ -43,7 +43,7 @@ function catalogAt(clock: FixedClock): RouterCatalog {
 }
 
 describe("RouterCatalog", () => {
-  it("serves a second visitor from the cache with no request", async () => {
+  it("serves a second key the cached schemas after one listing read of its own", async () => {
     const clock = new FixedClock({ now: start })
     const catalog = catalogAt(clock)
     const first = new ReplayFetch([
@@ -51,13 +51,18 @@ describe("RouterCatalog", () => {
       schemaRead(pictureModel, pictureSchema),
     ])
     await catalog.models(httpWith(first, "first-key"))
-    const second = new ReplayFetch([])
+    const second = new ReplayFetch([catalogPage([pictureModel])])
     const models = await catalog.models(httpWith(second, "second-key"))
     expect(models.map((one) => one.facts.model)).toEqual([pictureModel])
-    expect(second.sent).toEqual([])
+    expect(second.sent.map((sent) => sent.url)).toEqual([
+      `${routerUrl}/v2/models?limit=100`,
+    ])
+    const again = new ReplayFetch([])
+    await catalog.models(httpWith(again, "second-key"))
+    expect(again.sent).toEqual([])
   })
 
-  it("revalidates each schema by ETag after an hour and lists a model Comfy added", async () => {
+  it("revalidates each schema by ETag inside the request after an hour and lists a model Comfy added", async () => {
     const clock = new FixedClock({ now: start })
     const catalog = catalogAt(clock)
     await catalog.models(
@@ -74,10 +79,8 @@ describe("RouterCatalog", () => {
       schemaSame(pictureModel),
       schemaRead(clipModel, clipSchema),
     ])
-    const stale = await catalog.models(httpWith(later))
-    expect(stale.map((one) => one.facts.model)).toEqual([pictureModel])
-    await catalog.idle()
     const models = await catalog.models(httpWith(later))
+    expect(later.unused()).toEqual([])
     expect(models.map((one) => one.facts.model)).toEqual([
       pictureModel,
       clipModel,
@@ -86,7 +89,9 @@ describe("RouterCatalog", () => {
       sent.url.includes(pictureModel)
     )
     expect(revalidated?.headers.get("if-none-match")).toBe('"v1"')
-    expect(later.unused()).toEqual([])
+    const sentBefore = later.sent.length
+    await catalog.idle()
+    expect(later.sent.length).toBe(sentBefore)
   })
 
   it("lists the public schemas before any key connects", async () => {
@@ -116,7 +121,7 @@ describe("RouterCatalog", () => {
     )
   })
 
-  it("reads the keyed schemas once a key connects after a public listing", async () => {
+  it("reads a model's schema with the key when a keyed visitor opens it after a public listing", async () => {
     const clock = new FixedClock({ now: start })
     const catalog = catalogAt(clock)
     await catalog.models(
@@ -140,15 +145,14 @@ describe("RouterCatalog", () => {
         null
       )
     )
-    const keyed = new ReplayFetch([
-      catalogPage([pictureModel]),
-      schemaRead(pictureModel, pictureSchema),
-    ])
-    const first = await catalog.models(httpWith(keyed))
-    expect(first.map((one) => one.source)).toEqual(["public"])
-    await catalog.idle()
-    const models = await catalog.models(httpWith(keyed))
-    expect(models.map((one) => one.source)).toEqual(["keyed"])
+    const listed = await catalog.models(
+      httpWith(new ReplayFetch([catalogPage([pictureModel])]))
+    )
+    expect(listed.map((one) => one.source)).toEqual(["public"])
+    const keyed = new ReplayFetch([schemaRead(pictureModel, pictureSchema)])
+    const entry = await catalog.entry(httpWith(keyed), pictureModel)
+    expect(entry?.source).toBe("keyed")
+    expect(keyed.unused()).toEqual([])
   })
 
   it("passes on a catalog the Router refuses for the key", async () => {
@@ -165,6 +169,76 @@ describe("RouterCatalog", () => {
     await expect(catalog.models(httpWith(replay))).rejects.toMatchObject({
       code: "ENGINE_NOT_ENABLED",
     })
+  })
+
+  it("refuses a key Comfy has not enabled while the cache is warm", async () => {
+    const catalog = catalogAt(new FixedClock({ now: start }))
+    await catalog.models(
+      httpWith(
+        new ReplayFetch([
+          catalogPage([pictureModel]),
+          schemaRead(pictureModel, pictureSchema),
+        ]),
+        "enabled-key"
+      )
+    )
+    const refusedKey = new ReplayFetch([
+      refused(
+        "GET",
+        "/v2/models?limit=100",
+        403,
+        "not_enabled",
+        "Comfy Router is not enabled for this account yet."
+      ),
+    ])
+    await expect(
+      catalog.models(httpWith(refusedKey, "other-key"))
+    ).rejects.toMatchObject({ code: "ENGINE_NOT_ENABLED" })
+    await expect(
+      catalog.entry(httpWith(new ReplayFetch([]), "enabled-key"), pictureModel)
+    ).resolves.toMatchObject({ source: "keyed" })
+  })
+
+  it("gives each visitor only the answer to its own key while two loads run", async () => {
+    const catalog = catalogAt(new FixedClock({ now: start }))
+    const refusing = httpWith(
+      new ReplayFetch([
+        refused(
+          "GET",
+          "/v2/models?limit=100",
+          403,
+          "not_enabled",
+          "Comfy Router is not enabled for this account yet."
+        ),
+      ]),
+      "refused-key"
+    )
+    const enabled = httpWith(
+      new ReplayFetch([
+        catalogPage([pictureModel]),
+        schemaRead(pictureModel, pictureSchema),
+      ]),
+      "enabled-key"
+    )
+    const [first, second] = await Promise.allSettled([
+      catalog.models(refusing),
+      catalog.models(enabled),
+    ])
+    expect(first).toMatchObject({
+      status: "rejected",
+      reason: { code: "ENGINE_NOT_ENABLED" },
+    })
+    expect(second.status).toBe("fulfilled")
+  })
+
+  it("asks for estimates again an hour after Comfy refused them for a key", () => {
+    const clock = new FixedClock({ now: start })
+    const catalog = catalogAt(clock)
+    catalog.markEstimatesOff("tag")
+    expect(catalog.hasEstimates("tag")).toBe(false)
+    expect(catalog.hasEstimates("other")).toBe(true)
+    clock.advance(oneHourMs)
+    expect(catalog.hasEstimates("tag")).toBe(true)
   })
 
   it("leaves out the aliases that run a model on another provider", async () => {

@@ -49,13 +49,11 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
 
   private readonly http: RouterHttp
   private readonly catalog: RouterCatalog
-  private readonly keyTag: string
   private readonly results = new Map<string, KeptResult>()
 
   constructor(options: ComfyRouterGenerationEngineOptions) {
     super()
     this.catalog = options.catalog
-    this.keyTag = tagOf(options.apiKey)
     this.http = new RouterHttp({
       apiKey: options.apiKey,
       fetch: options.fetch ?? fetch,
@@ -231,14 +229,15 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     entry: CatalogEntry,
     request: PriceRequest
   ): Promise<RunPrice | null> {
-    if (!this.http.hasKey || !this.catalog.hasEstimates(this.keyTag)) {
+    const keyTag = await this.http.keyTag()
+    if (!this.http.hasKey || !this.catalog.hasEstimates(keyTag)) {
       return null
     }
     try {
       const body = bodyOf(entry.form, request.inputs, [])
       const answer = await this.http.estimate(entry.facts.model, body)
       if (answer.state === "not-enabled") {
-        this.catalog.markEstimatesOff(this.keyTag)
+        this.catalog.markEstimatesOff(keyTag)
         return null
       }
       return answer.credits === null
@@ -285,15 +284,4 @@ function parseRef(ref: string): Ref {
     throw new EngineUnavailableError({ cause: `a ref with no model: ${ref}` })
   }
   return { model, requestId, isNow: mode === "now" }
-}
-
-function tagOf(apiKey: string | null): string {
-  if (apiKey === null) {
-    return "none"
-  }
-  let hash = 0
-  for (const char of apiKey) {
-    hash = (hash * 31 + (char.codePointAt(0) ?? 0)) >>> 0
-  }
-  return hash.toString(36)
 }

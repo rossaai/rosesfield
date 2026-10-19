@@ -170,10 +170,7 @@ describe("the model list of an app", () => {
     const before = await modelsOf(gateway, "pictures")
     schemas = [pictureModel, clipModel, newPictureModel]
     gateway.clock.advance(oneHourMs)
-    const stale = await modelsOf(gateway, "pictures")
-    await held.catalog?.idle()
     const after = await modelsOf(gateway, "pictures")
-    expect(stale.models.map((one) => one.id)).not.toContain("studio/sketch-1")
     expect(before.models.map((one) => one.id)).not.toContain("studio/sketch-1")
     expect(after.models.map((one) => one.id)).toContain("studio/sketch-1")
     expect(
@@ -205,6 +202,29 @@ describe("the model list of an app", () => {
       router.fetch,
       (clock) => new RouterCatalog({ clock })
     )
+    const response = await gateway.call(
+      buildPath(catalogRoutes.listModels.path, { appId: "pictures" })
+    )
+    expect(response.status).toBe(412)
+    expect(await response.json()).toEqual({
+      error: { code: "ENGINE_NOT_ENABLED", status: 412 },
+    })
+  })
+  it("names the fix when the Router refuses the key's reload of a warm list", async () => {
+    let refuse: string | undefined
+    const fetch: Fetch = (input, init) =>
+      fakeRouter({
+        schemas: [pictureModel],
+        ...(refuse === undefined ? {} : { refuseCatalog: refuse }),
+      }).fetch(input, init)
+    const held: { catalog: RouterCatalog | null } = { catalog: null }
+    const gateway = gatewayWith(fetch, (clock) => {
+      held.catalog ??= new RouterCatalog({ clock })
+      return held.catalog
+    })
+    await modelsOf(gateway, "pictures")
+    refuse = "Comfy Router is not enabled for this account yet."
+    gateway.clock.advance(oneHourMs)
     const response = await gateway.call(
       buildPath(catalogRoutes.listModels.path, { appId: "pictures" })
     )
