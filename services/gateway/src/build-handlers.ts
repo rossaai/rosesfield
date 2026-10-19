@@ -6,7 +6,9 @@ import {
   type GenerationEngine,
   GetRunHandler,
   type JobRunner,
+  ListModelsHandler,
   ListRunsHandler,
+  PriceRunHandler,
   RepeatRunHandler,
   type RunRepository,
   StartRunHandler,
@@ -60,6 +62,8 @@ export type RunHandlers = {
   cancelRun: CancelRunHandler
   repeatRun: RepeatRunHandler
   checkEngineKey: CheckEngineKeyHandler
+  listModels: ListModelsHandler
+  priceRun: PriceRunHandler
 }
 
 export type Handlers = LibraryHandlers &
@@ -114,6 +118,8 @@ function buildRuns(ports: HandlerPorts, jobs: JobRunner): RunHandlers {
     cancelRun: new CancelRunHandler({ runs, engines, clock }),
     repeatRun: new RepeatRunHandler({ runs, start: startRun }),
     checkEngineKey: new CheckEngineKeyHandler({ engines }),
+    listModels: new ListModelsHandler({ engines }),
+    priceRun: new PriceRunHandler({ apps, engines }),
   }
 }
 

@@ -8,7 +8,8 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./workflows": "./src/workflow-registry.ts"
+    "./workflows": "./src/workflow-registry.ts",
+    "./comfy": "./src/comfy/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

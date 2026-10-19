@@ -1,6 +1,7 @@
 import type { AppDefinition } from "@rosesfield/contract"
 import { type Context, Hono, type MiddlewareHandler } from "hono"
 import { agentRoutes } from "#agent/agent-routes"
+import { modelRoutes } from "#catalog/catalog-routes"
 import type { GatewayApp, GatewayEnv, RequestScope } from "#gateway-env"
 import { type OwnerLockOptions, ownerLock } from "#lock/owner-lock"
 import { mcpPath, mcpRoute } from "#mcp/mcp-route"
@@ -69,6 +70,7 @@ export function createGateway(options: GatewayOptions): GatewayApp {
   app.use("/api/*", scope)
   app.use(mcpPath, scope)
   appRoutes(app, options.apps)
+  modelRoutes(app, options.apps)
   runRoutes(app)
   assetRoutes(app)
   characterRoutes(app)

@@ -20,10 +20,20 @@ export {
   type GetRunOutput,
 } from "#application/get-run/get-run.handler"
 export {
+  ListModelsHandler,
+  type ListModelsInput,
+  type ListModelsOutput,
+} from "#application/list-models/list-models.handler"
+export {
   ListRunsHandler,
   type ListRunsInput,
   type ListRunsOutput,
 } from "#application/list-runs/list-runs.handler"
+export {
+  PriceRunHandler,
+  type PriceRunInput,
+  type PriceRunOutput,
+} from "#application/price-run/price-run.handler"
 export {
   RepeatRunHandler,
   type RepeatRunInput,

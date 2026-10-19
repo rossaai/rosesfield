@@ -16,6 +16,8 @@ import {
 } from "./fixtures/comfy-router"
 import { ReplayFetch } from "./replay-fetch"
 
+const oneHourMs = 3_600_000
+
 const clipModel = "maker/clip-3"
 const clipSchema = routerSchema({
   model: clipModel,
@@ -66,7 +68,7 @@ describe("RouterCatalog", () => {
         ])
       )
     )
-    clock.advance(RouterCatalog.maxAgeMs)
+    clock.advance(oneHourMs)
     const later = new ReplayFetch([
       catalogPage([pictureModel, clipModel]),
       schemaSame(pictureModel),
