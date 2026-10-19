@@ -19,7 +19,9 @@ type AgentToolsOptions = {
 export function agentTools(options: AgentToolsOptions): ToolRegistration[] {
   const { handlers } = options
   return [
-    ...options.apps.map((app) => appTool(app, () => handlers().startRun)),
+    ...options.apps
+      .filter((app) => app.closedKey === null)
+      .map((app) => appTool(app, () => handlers().startRun)),
     ...libraryTools(handlers),
   ]
 }

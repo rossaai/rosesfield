@@ -97,6 +97,14 @@ export function buildLibrary(ports: HandlerPorts): LibraryHandlers {
   }
 }
 
+function runAssetsOf(library: LibraryHandlers): LibraryRunAssets {
+  return new LibraryRunAssets({
+    readContent: library.readAssetContent,
+    getCharacter: library.getCharacter,
+    upload: library.uploadAsset,
+  })
+}
+
 export function buildAdvance(
   ports: HandlerPorts,
   library: LibraryHandlers
@@ -105,17 +113,17 @@ export function buildAdvance(
     apps: new ListedAppCatalog({ apps: ports.apps }),
     runs: ports.runs,
     engines: ports.engines,
-    assets: new LibraryRunAssets({
-      readContent: library.readAssetContent,
-      getCharacter: library.getCharacter,
-      upload: library.uploadAsset,
-    }),
+    assets: runAssetsOf(library),
     clock: ports.clock,
     ...pricesOf(ports),
   })
 }
 
-function buildRuns(ports: HandlerPorts, jobs: JobRunner): RunHandlers {
+function buildRuns(
+  ports: HandlerPorts,
+  library: LibraryHandlers,
+  jobs: JobRunner
+): RunHandlers {
   const { runs, engines, clock } = ports
   const apps = new ListedAppCatalog({ apps: ports.apps })
   const startRun = new StartRunHandler({
@@ -125,6 +133,7 @@ function buildRuns(ports: HandlerPorts, jobs: JobRunner): RunHandlers {
     jobs,
     clock,
     policy: new CatalogModelPolicy(),
+    assets: runAssetsOf(library),
   })
   return {
     startRun,
@@ -146,7 +155,7 @@ export function buildHandlers<Jobs extends JobRunner>(
   const advanceRun = buildAdvance(ports, library)
   const jobs = jobsFor(advanceRun)
   return {
-    handlers: { ...library, ...buildRuns(ports, jobs), advanceRun },
+    handlers: { ...library, ...buildRuns(ports, library, jobs), advanceRun },
     jobs,
   }
 }

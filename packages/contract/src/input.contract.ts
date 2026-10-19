@@ -32,6 +32,23 @@ function referenceInput<Type extends string>(type: Type) {
   })
 }
 
+export const imageFormats = ["image/png", "image/jpeg", "image/webp"] as const
+
+export const imageAccept = z
+  .strictObject({
+    formats: z.array(z.enum(imageFormats)).min(1).max(3),
+    maxBytes: z.number().int().min(1),
+    minShortSide: z.number().int().min(1).max(8192),
+  })
+  .refine((accept) => new Set(accept.formats).size === accept.formats.length, {
+    message: "Each format appears once",
+    path: ["formats"],
+  })
+
+const imageInput = referenceInput("image").extend({
+  accept: imageAccept.optional(),
+})
+
 const choiceOption = z.strictObject({
   value: choiceValue,
   labelKey: copyKey,
@@ -42,7 +59,7 @@ const choiceInput = z
   .strictObject({
     type: z.literal("choice"),
     ...named,
-    options: z.array(choiceOption).min(2).max(64),
+    options: z.array(choiceOption).min(1).max(64),
     default: choiceValue,
     bounds: z.array(choiceBound).min(1).max(16).optional(),
   })
@@ -125,7 +142,7 @@ const seedInput = z.strictObject({
 
 export const inputDefinition = z.discriminatedUnion("type", [
   promptInput,
-  referenceInput("image"),
+  imageInput,
   referenceInput("video"),
   referenceInput("audio"),
   referenceInput("character"),
@@ -144,5 +161,6 @@ export const inputValue = z.union([
 export const runInputs = z.record(inputName, inputValue)
 
 export type InputDefinition = z.infer<typeof inputDefinition>
+export type ImageAccept = z.infer<typeof imageAccept>
 export type InputValue = z.infer<typeof inputValue>
 export type RunInputs = z.infer<typeof runInputs>

@@ -6,8 +6,9 @@ import {
   type RunRequest,
   startRunBodyFor,
 } from "@rosesfield/contract"
-import { type Clock, runIdFormat } from "@rosesfield/kernel"
+import { assetIdFormat, type Clock, runIdFormat } from "@rosesfield/kernel"
 import type { AppCatalog } from "#domain/app-catalog.port"
+import { AppClosedError } from "#domain/error/app-closed.error"
 import { AppNotFoundError } from "#domain/error/app-not-found.error"
 import { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.error"
 import { IdempotencyKeyInvalidError } from "#domain/error/idempotency-key-invalid.error"
@@ -16,12 +17,14 @@ import { ModelNotFoundError } from "#domain/error/model-not-found.error"
 import { ModelNotOfferedError } from "#domain/error/model-not-offered.error"
 import { RunInputInvalidError } from "#domain/error/run-input-invalid.error"
 import type { GenerationEngine } from "#domain/generation-engine.port"
+import { acceptedInputsOf, imageProblemsOf } from "#domain/image-accept"
 import { isRecord } from "#domain/is-record"
 import type { JobRunner } from "#domain/job-runner.port"
 import { checkModelInputs } from "#domain/model-form"
 import type { ModelPolicy } from "#domain/model-policy.port"
 import { Run } from "#domain/run"
 import type { RunRepository } from "#domain/run.repository"
+import type { RunAssets } from "#domain/run-assets.port"
 import { resolveBinding } from "#domain/select-binding"
 import {
   chosenModelOf,
@@ -59,6 +62,7 @@ type StartRunHandlerOptions = {
   jobs: JobRunner
   clock: Clock
   policy?: ModelPolicy
+  assets?: RunAssets
 }
 
 export class StartRunHandler {
@@ -72,6 +76,7 @@ export class StartRunHandler {
   private readonly jobs: JobRunner
   private readonly clock: Clock
   private readonly policy: ModelPolicy | null
+  private readonly assets: RunAssets | null
 
   constructor(options: StartRunHandlerOptions) {
     this.apps = options.apps
@@ -80,6 +85,7 @@ export class StartRunHandler {
     this.jobs = options.jobs
     this.clock = options.clock
     this.policy = options.policy ?? null
+    this.assets = options.assets ?? null
   }
 
   async execute(input: StartRunInput): Promise<StartRunOutput> {
@@ -87,11 +93,15 @@ export class StartRunHandler {
     if (app === null) {
       throw new AppNotFoundError({ appId: input.appId })
     }
+    if (app.closedKey !== null) {
+      throw new AppClosedError({ appId: app.id })
+    }
     const existing = await this.findExisting(app, input.idempotencyKey)
     if (existing !== null) {
       return { run: existing.toRecord() }
     }
     const { engine, binding, request } = await this.prepare(app, input)
+    await this.checkImages(app, request.inputs)
     const run = Run.queue({
       id: runIdFormat.parse(crypto.randomUUID()),
       appId: app.id,
@@ -189,6 +199,26 @@ export class StartRunHandler {
       !this.policy.allows(tasks, listed)
     ) {
       throw new ModelNotOfferedError({ appId: app.id, model })
+    }
+  }
+
+  private async checkImages(
+    app: AppDefinition,
+    inputs: RunInputs
+  ): Promise<void> {
+    if (acceptedInputsOf(app).length === 0) {
+      return
+    }
+    const assets = this.assets
+    const problems =
+      assets === null
+        ? ["the server reads no input file, so it cannot check one"]
+        : await imageProblemsOf(app, inputs, async (assetId) => {
+            const file = await assets.read(assetIdFormat.parse(assetId))
+            return { mime: file.mime, bytes: file.bytes }
+          })
+    if (problems.length > 0) {
+      throw new RunInputInvalidError({ appId: app.id, issues: problems })
     }
   }
 

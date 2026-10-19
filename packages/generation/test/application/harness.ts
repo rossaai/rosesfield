@@ -39,6 +39,7 @@ export function harnessFor(options: HarnessOptions = {}) {
     engines,
     jobs,
     clock,
+    assets,
     ...(options.policy === undefined ? {} : { policy: options.policy }),
   })
   return {
