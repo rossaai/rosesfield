@@ -1,6 +1,10 @@
-export type {
-  HostedModel,
-  ModelField,
+export {
+  type FieldRole,
+  fieldOfRole,
+  fieldRoleOf,
+  fieldRoles,
+  type HostedModel,
+  type ModelField,
 } from "@rosesfield/generation/bindings"
 export { CatalogModelPolicy } from "#comfy/catalog-model-policy"
 export { comfyCreditsPerUsd, creditsOfCost } from "#comfy/comfy-credits"
@@ -38,3 +42,4 @@ export {
   type ProvenFamily,
   provenFamilies,
 } from "#comfy/proven-families"
+export { publishedInputOf } from "#comfy/published-input"

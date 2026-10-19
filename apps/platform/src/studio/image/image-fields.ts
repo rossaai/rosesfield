@@ -1,4 +1,8 @@
-import type { ModelField } from "@rosesfield/catalog/comfy"
+import {
+  type FieldRole,
+  fieldRoleOf,
+  type ModelField,
+} from "@rosesfield/catalog/comfy"
 import { isShownField } from "@/screens/app/hosted/hosted-fields"
 
 type ChoiceField = Extract<ModelField, { kind: "choice" }>
@@ -21,27 +25,22 @@ export type CountBounds = {
 
 const maxCount = 4
 
-const aspectNames = /^(aspect_ratio|aspectratio|aspect|ratio)$/i
+const output = "image"
 
-const sizeNames = /^(resolution|output_resolution|size|quality)$/
-
-const countNames =
-  /^(n|num_images|sample_count|count|num_outputs|number_of_images)$/
-
-function lastOf(field: ModelField): string {
-  return field.path.split(".").at(-1) ?? field.path
+function hasRole(field: ModelField, role: FieldRole): boolean {
+  return fieldRoleOf(field, output) === role
 }
 
-function choiceNamed(
+function choiceOf(
   fields: readonly ModelField[],
-  names: RegExp
+  roles: readonly FieldRole[]
 ): ChoiceField | null {
   return (
     fields.find(
       (field): field is ChoiceField =>
         field.kind === "choice" &&
         field.options.length > 1 &&
-        names.test(lastOf(field))
+        roles.some((role) => hasRole(field, role))
     ) ?? null
   )
 }
@@ -49,7 +48,7 @@ function choiceNamed(
 function referencesOf(fields: readonly ModelField[]): MediaField | null {
   const images = fields.filter(
     (field): field is MediaField =>
-      field.kind === "media" && field.media === "image"
+      field.kind === "media" && hasRole(field, "reference")
   )
   return images.find((field) => field.name === "images") ?? images[0] ?? null
 }
@@ -60,7 +59,7 @@ function countOf(fields: readonly ModelField[]): NumberField | null {
       (field): field is NumberField =>
         field.kind === "number" &&
         field.integer &&
-        countNames.test(lastOf(field)) &&
+        hasRole(field, "count") &&
         (field.max === null || field.max >= 2)
     ) ?? null
   )
@@ -72,8 +71,8 @@ export function isGraphModel(model: string): boolean {
 
 export function imageFieldsOf(fields: readonly ModelField[]): ImageFields {
   const references = referencesOf(fields)
-  const aspect = choiceNamed(fields, aspectNames)
-  const size = choiceNamed(fields, sizeNames)
+  const aspect = choiceOf(fields, ["aspect"])
+  const size = choiceOf(fields, ["resolution", "quality"])
   const count = countOf(fields)
   const placed = new Set(
     [references, aspect, size, count].flatMap((field) =>
