@@ -7,15 +7,20 @@ import {
   conversationResponse,
   conversationRoutes,
 } from "@rosesfield/agent"
-import { buildPath, routes, runResponse } from "@rosesfield/contract"
+import {
+  accountRoutes,
+  buildPath,
+  routes,
+  runResponse,
+  shareResponse,
+  shareRoutes,
+} from "@rosesfield/contract"
 import { FixedClock } from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
 import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
 import { readServerEnv } from "#env"
 import { gatewayRoutes } from "#gateway.contract"
-import { accountRoutes } from "#session/account.contract"
 import { keyHeaders } from "#session/visitor-keys"
-import { shareResponse, shareRoutes } from "#share/share.contract"
 import {
   type FakeEndpoint,
   serveChatStreams,

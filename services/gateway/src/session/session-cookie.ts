@@ -1,5 +1,9 @@
 import type { Context, MiddlewareHandler } from "hono"
-import { generateSignedCookie, getSignedCookie } from "hono/cookie"
+import {
+  deleteCookie,
+  generateSignedCookie,
+  getSignedCookie,
+} from "hono/cookie"
 import type { GatewayEnv } from "#gateway-env"
 import type { AccountLookups } from "#session/account-lookups"
 import type { SessionId } from "#session/session-scope"
@@ -22,6 +26,7 @@ type HeldSession = {
 
 type Visit = HeldSession & {
   isNew: boolean
+  passing?: true
 }
 
 const uuidPattern =
@@ -90,6 +95,15 @@ function heldOf(value: unknown): HeldSession | null {
   return tag === undefined ? { sessionId, tag: null } : null
 }
 
+function anonymousVisit(held: HeldSession | null): Visit {
+  if (held === null) {
+    return { sessionId: crypto.randomUUID(), tag: null, isNew: true }
+  }
+  return isAccountSession(held.sessionId)
+    ? { sessionId: crypto.randomUUID(), tag: null, isNew: false, passing: true }
+    : { ...held, isNew: false }
+}
+
 async function visitWithKey(
   options: SessionGuardOptions,
   c: Context,
@@ -103,9 +117,7 @@ async function visitWithKey(
   options.early?.(c.req.raw, key)
   const answer = await options.accounts.answerFor(key)
   if (answer.state !== "found") {
-    return held === null
-      ? { sessionId: crypto.randomUUID(), tag: null, isNew: true }
-      : { ...held, isNew: false }
+    return anonymousVisit(held)
   }
   const sessionId = await accountSessionOf(answer.id)
   if (held !== null && !isAccountSession(held.sessionId)) {
@@ -124,9 +136,15 @@ async function visitOf(
   if (key !== null) {
     return visitWithKey(options, c, held, key)
   }
-  return held === null
-    ? { sessionId: crypto.randomUUID(), tag: null, isNew: true }
-    : { ...held, isNew: false }
+  return anonymousVisit(held)
+}
+
+export async function forgetSession(c: Context): Promise<Response> {
+  deleteCookie(c, sessionCookie.name, {
+    path: "/",
+    secure: new URL(c.req.url).protocol === "https:",
+  })
+  return c.body(null, 204)
 }
 
 function cookieValue(visit: Visit): string {
@@ -141,11 +159,12 @@ export function sessionGuard(
   return async (c, next) => {
     const visit = await visitOf(options, c)
     const isFresh =
-      isAccountSession(visit.sessionId) || !visit.isNew
+      visit.passing !== true &&
+      (isAccountSession(visit.sessionId) || !visit.isNew)
         ? await options.visits.touch(visit.sessionId)
         : false
     const cookie =
-      visit.isNew || isFresh
+      visit.passing !== true && (visit.isNew || isFresh)
         ? await generateSignedCookie(
             sessionCookie.name,
             cookieValue(visit),

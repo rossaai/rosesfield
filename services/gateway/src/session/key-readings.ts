@@ -1,4 +1,4 @@
-import { accountRoutes } from "#session/account.contract"
+import { accountRoutes } from "@rosesfield/contract"
 import type { KeyProbe, KeyReading } from "#session/key-probe"
 
 export class KeyReadings {

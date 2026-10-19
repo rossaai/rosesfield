@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "89efebf2-cbb8-475d-af64-45826be91bf2",
+  "id": "757f5d14-715c-42a9-9161-1e83687d7542",
   "prevId": "f946b04d-c539-490c-bc55-40d1ec1d9b31",
   "tables": {
     "session_limits": {
@@ -157,20 +157,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "poster_key": {
-          "name": "poster_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "poster_mime": {
-          "name": "poster_mime",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "placement": {
           "name": "placement",
           "type": "text",
@@ -215,11 +201,11 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "spend_start": {
-      "name": "spend_start",
+    "spend_holds": {
+      "name": "spend_holds",
       "columns": {
-        "id": {
-          "name": "id",
+        "run_id": {
+          "name": "run_id",
           "type": "text",
           "primaryKey": true,
           "notNull": true,
@@ -232,8 +218,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "started_at": {
-          "name": "started_at",
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,

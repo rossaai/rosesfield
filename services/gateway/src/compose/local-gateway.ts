@@ -44,10 +44,12 @@ import {
 import { SessionLimiter } from "#session/session-limiter"
 import { type PurgeCount, SessionPurge } from "#session/session-purge"
 import { SessionVisits } from "#session/session-visits"
+import { filesystemShareFiles } from "#share/filesystem-share-files"
+import { shareLimit } from "#share/share-limit"
 import { SharePurge } from "#share/share-purge"
 import type { ShareMount } from "#share/share-routes"
 import { SqliteShareRepository } from "#share/sqlite-share-repository"
-import { SpendCap } from "#spend/spend-cap"
+import { ownerSpend } from "#spend/owner-spend"
 
 export type LocalGateway = {
   app: GatewayApp
@@ -124,6 +126,9 @@ export function composeLocalGateway(
       store,
       clock,
       page: root === null ? null : () => pageOf(root),
+      files: filesystemShareFiles(join(env.dataDir, "assets")),
+      limit: shareLimit({ db, clock, clientOf }),
+      needsKey: env.access.mode === "public",
     },
   }
   const platform = root === null ? [] : platformFiles(root)
@@ -172,15 +177,12 @@ function composeOwner(
     clientOf,
   }
   const key = env.engine.target === "demo" ? null : env.engine.apiKey
-  const cap =
-    key === null || env.spendCapCredits === undefined
-      ? null
-      : new SpendCap({
-          db: parts.db,
-          clock: parts.clock,
-          capCredits: env.spendCapCredits,
-          creditsNow: () => parts.account.creditsOf(key),
-        })
+  const spend = ownerSpend({
+    settings: env.spend,
+    db: parts.db,
+    clock: parts.clock,
+    handlers,
+  })
   const app = createGateway({
     apps: parts.apps,
     guard,
@@ -189,10 +191,10 @@ function composeOwner(
     account: ownerAccount({
       probe: new KeyProbe({ account: parts.account }),
       key,
-      cap,
+      cap: spend?.cap ?? null,
     }),
     shares: parts.shares,
-    ...(cap === null ? {} : { beforeRun: cap.guard() }),
+    ...(spend === null ? {} : { spendGuard: spend.guard }),
     platform,
   })
   return {

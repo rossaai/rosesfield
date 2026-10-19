@@ -1,6 +1,6 @@
+import { accountResponse, accountRoutes } from "@rosesfield/contract"
 import type { Fetch } from "@rosesfield/generation"
 import { afterEach, describe, expect, it } from "vitest"
-import { accountResponse, accountRoutes } from "#session/account.contract"
 import { keyHeaders } from "#session/visitor-keys"
 import { accountPath, balancePath, fakeComfy } from "../fixtures/comfy-fetch"
 import { type OpenedGateway, openGateway } from "../fixtures/public-gateway"

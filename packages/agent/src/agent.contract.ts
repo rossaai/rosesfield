@@ -108,6 +108,7 @@ export const conversationRoutes = {
     body: startConversationBody,
     response: conversationResponse,
     status: 201,
+    spends: true,
   }),
   listConversations: defineRoute({
     method: "GET",
@@ -153,6 +154,7 @@ export const conversationRoutes = {
     body: sendMessageBody,
     response: "bytes",
     status: 200,
+    spends: true,
   }),
   acceptProposal: defineRoute({
     method: "POST",
@@ -162,6 +164,7 @@ export const conversationRoutes = {
     body: null,
     response: acceptedProposalResponse,
     status: 202,
+    spends: true,
   }),
   skipProposal: defineRoute({
     method: "POST",

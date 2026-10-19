@@ -21,7 +21,7 @@ import { ShareDialog } from "@/screens/explore/share-dialog"
 export type ExploreKind = "image" | "video" | "audio"
 
 export type ExploreSource =
-  | { kind: "share"; shareId: string; src: string; poster: string | null }
+  | { kind: "share"; shareId: string; src: string }
   | { kind: "own"; assetId: string }
 
 export type ExploreEntry = {
@@ -90,11 +90,9 @@ function ShareButton({ entry }: { entry: ExploreEntry }): ReactNode {
 function TileMedia({
   entry,
   src,
-  poster,
 }: {
   entry: ExploreEntry
   src: string
-  poster: string | null
 }): ReactElement {
   const label = t("explore.tile.label", { app: runAppName(entry.run) })
   if (entry.kind === "audio") {
@@ -105,7 +103,6 @@ function TileMedia({
       kind={entry.kind}
       src={src}
       alt={label}
-      {...(poster === null ? {} : { poster })}
       {...(entry.aspect === undefined ? {} : { aspect: entry.aspect })}
     />
   )
@@ -129,7 +126,7 @@ function OwnMedia({
       />
     )
   }
-  return <TileMedia entry={entry} src={source.src} poster={null} />
+  return <TileMedia entry={entry} src={source.src} />
 }
 
 export function ExploreTile({ entry }: { entry: ExploreEntry }): ReactElement {
@@ -141,7 +138,7 @@ export function ExploreTile({ entry }: { entry: ExploreEntry }): ReactElement {
         {source.kind === "own" ? (
           <OwnMedia entry={entry} assetId={source.assetId} />
         ) : (
-          <TileMedia entry={entry} src={source.src} poster={source.poster} />
+          <TileMedia entry={entry} src={source.src} />
         )}
         <div
           className={cn(

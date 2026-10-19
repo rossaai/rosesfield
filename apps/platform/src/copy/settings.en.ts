@@ -41,7 +41,7 @@ export const settingsCopy = {
   "settings.public.body":
     "This site holds no key of its own. Each person runs the apps on their own Comfy key.",
   "settings.public.session":
-    "Your work is kept under your Comfy account. The same key on another device opens it.",
+    "Your work is kept on Rosesfield's server under your Comfy account. The same key on another device opens it.",
   "settings.visitor.engine.label": "Your engine key",
   "settings.visitor.agent.label": "Your model key",
   "settings.visitor.note":

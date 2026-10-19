@@ -1,7 +1,7 @@
+import { type AccountStatus, accountRoutes } from "@rosesfield/contract"
 import type { Context } from "hono"
 import type { GatewayApp } from "#gateway-env"
 import type { ResponseOf } from "#routes/read-request"
-import { type AccountStatus, accountRoutes } from "#session/account.contract"
 import type { KeyProbe } from "#session/key-probe"
 import type { KeyReadings } from "#session/key-readings"
 import { readVisitorKeys } from "#session/visitor-keys"
@@ -36,7 +36,7 @@ export function ownerAccount(options: {
     const [reading, capped] = await Promise.all([
       key === null
         ? { key: "missing" as const, credits: null }
-        : options.probe.read(key),
+        : options.probe.read(key, cap === null ? "with-credits" : "no-credits"),
       cap === null ? null : cap.read(),
     ])
     return { ...reading, retentionDays: null, cap: capped }

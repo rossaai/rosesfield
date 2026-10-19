@@ -4,13 +4,9 @@ import { type ReactElement, useEffect, useRef, useState } from "react"
 import { t } from "@/copy/t"
 import { useDevice } from "@/device/device-context"
 import { DialogOrSheet } from "@/pieces/responsive-layer"
-import { type ShareView, shareRun } from "@/screens/explore/share-api"
+import { type SharedOutput, shareRun } from "@/screens/explore/share-api"
 import { type Clip, makeClip } from "@/screens/explore/share-clip"
-import {
-  clipColors,
-  clipSourcesOf,
-  posterOf,
-} from "@/screens/explore/share-sources"
+import { clipColors, clipSourcesOf } from "@/screens/explore/share-sources"
 import {
   ClipHeading,
   ClipIdle,
@@ -27,7 +23,7 @@ type ShareDialogProps = {
   onOpenChange: (open: boolean) => void
 }
 
-export function shareUrlOf(share: ShareView): string {
+export function shareUrlOf(share: SharedOutput): string {
   return new URL(share.path, window.location.origin).href
 }
 
@@ -93,8 +89,7 @@ function ShareBody({
   outputId: string
 }): ReactElement {
   const share = useMutation({
-    mutationFn: async () =>
-      shareRun(run.id, await posterOf(run, outputId).catch(() => null)),
+    mutationFn: () => shareRun(run.id),
   })
   const { mutate } = share
   const started = useRef(false)

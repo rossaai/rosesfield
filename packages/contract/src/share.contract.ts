@@ -1,5 +1,6 @@
-import { defineRoute, run } from "@rosesfield/contract"
 import { z } from "zod"
+import { defineRoute } from "#route.contract"
+import { run } from "#run.contract"
 
 export const sharedMedia = z.object({
   index: z.number().int().min(0),
@@ -15,7 +16,6 @@ export const shareView = z.object({
   path: z.string(),
   run,
   media: z.array(sharedMedia),
-  poster: z.string().nullable(),
   createdAt: z.string(),
   expiresAt: z.string().nullable(),
 })
@@ -25,14 +25,14 @@ export const shareResponse = z.object({ share: shareView })
 export const shareListResponse = z.object({ shares: z.array(shareView) })
 
 export type ShareView = z.infer<typeof shareView>
+export type SharedMediaView = z.infer<typeof sharedMedia>
 
 export const sharePaths = {
   list: "/share",
   page: "/share/:shareId",
   data: "/share/:shareId/data",
   media: "/share/:shareId/media/:index",
-  poster: "/share/:shareId/poster",
-}
+} as const
 
 export const shareRoutes = {
   shareRun: defineRoute({
@@ -40,7 +40,7 @@ export const shareRoutes = {
     path: "/api/runs/:runId/share",
     params: z.object({ runId: z.string() }),
     query: null,
-    body: "bytes",
+    body: null,
     response: shareResponse,
     status: 201,
   }),

@@ -23,6 +23,9 @@ export const keyCopy = {
   "key.outside-workspace.title": "This key belongs to no Comfy workspace",
   "key.outside-workspace.body":
     "Make a key inside your Comfy workspace, then paste it here.",
+  "key.busy.title": "Comfy is busy",
+  "key.busy.body":
+    "Comfy asked for fewer requests. Your key is not kept yet. Try again in a minute.",
   "key.unreachable.title": "Comfy did not answer",
   "key.unreachable.body": "Your key is not kept yet. Try again.",
   "key.credits": "{amount} credits",

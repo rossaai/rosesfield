@@ -2,6 +2,8 @@ import { PreconditionFailedError } from "@rosesfield/kernel"
 
 type SpendCapReachedErrorOptions = {
   capCredits: number
+  needed: number
+  left: number
 }
 
 export class SpendCapReachedError extends PreconditionFailedError {
@@ -9,7 +11,7 @@ export class SpendCapReachedError extends PreconditionFailedError {
 
   constructor(options: SpendCapReachedErrorOptions) {
     super({
-      message: `This deployment has spent its cap of ${options.capCredits} credits`,
+      message: `This run needs up to ${options.needed} credits and ${options.left} are left of this deployment's cap of ${options.capCredits}`,
     })
   }
 }

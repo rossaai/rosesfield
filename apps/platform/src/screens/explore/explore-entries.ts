@@ -5,7 +5,7 @@ import { runsOf, runsQuery } from "@/api/queries"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { runAspect } from "@/pieces/run/run-facts"
 import type { ExploreEntry, ExploreKind } from "@/screens/explore/explore-tile"
-import { publishedQuery, type ShareView } from "@/screens/explore/share-api"
+import { publishedQuery, type SharedOutput } from "@/screens/explore/share-api"
 
 export type ExploreFilter = "all" | ExploreKind
 
@@ -28,10 +28,11 @@ function aspectOf(
   return width !== null && height !== null ? { width, height } : runAspect(run)
 }
 
-export function sharedEntries(shares: readonly ShareView[]): ExploreEntry[] {
+export function sharedEntries(shares: readonly SharedOutput[]): ExploreEntry[] {
   return shares.flatMap((share) => {
     const first = share.media[0]
-    if (first === undefined) {
+    const src = share.sources[0]
+    if (first === undefined || src === undefined) {
       return []
     }
     return [
@@ -40,12 +41,7 @@ export function sharedEntries(shares: readonly ShareView[]): ExploreEntry[] {
         run: share.run,
         kind: first.kind,
         aspect: aspectOf(first.width, first.height, share.run),
-        source: {
-          kind: "share",
-          shareId: share.id,
-          src: first.kind === "image" ? (share.poster ?? first.src) : first.src,
-          poster: share.poster,
-        },
+        source: { kind: "share", shareId: share.id, src },
       },
     ]
   })

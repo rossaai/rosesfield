@@ -20,8 +20,6 @@ export const shareTable = sqliteTable(
     sessionId: text("session_id"),
     run: text("run", { mode: "json" }).$type<Run>().notNull(),
     media: text("media", { mode: "json" }).$type<SharedMedia[]>().notNull(),
-    posterKey: text("poster_key"),
-    posterMime: text("poster_mime"),
     placement: text("placement").$type<SharePlacement>().notNull(),
     createdAt: integer("created_at").notNull(),
     expiresAt: integer("expires_at"),

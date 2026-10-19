@@ -13,7 +13,7 @@ import {
   seeds,
 } from "@/gallery/screens/screen-fixtures"
 import { type StateSpec, screenEntry } from "@/gallery/screens/screen-frame"
-import type { ShareView } from "@/screens/explore/share-api"
+import type { SharedOutput } from "@/screens/explore/share-api"
 import {
   ClipHeading,
   ClipIdle,
@@ -53,7 +53,7 @@ const liveVideo: Run = {
   cost: { amount: 0.021, currency: "USD" },
 }
 
-const sharedView: ShareView = {
+const sharedView: SharedOutput = {
   id: shareId,
   path: `/share/${shareId}`,
   run: run.parse({
@@ -65,14 +65,16 @@ const sharedView: ShareView = {
   media: [
     {
       index: 0,
-      src: demoTall,
       kind: "image",
       mime: "image/png",
       width: 900,
       height: 1600,
+      durationSeconds: null,
     },
   ],
-  poster: null,
+  sources: [demoTall],
+  createdAt: "2026-10-19T12:00:00.000Z",
+  expiresAt: "2027-01-17T12:00:00.000Z",
 }
 
 function accountOf(change: Partial<Account>): Account {

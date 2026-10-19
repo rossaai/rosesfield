@@ -1,5 +1,5 @@
 import { creditsOfCost, nameOf } from "@rosesfield/catalog/comfy"
-import type { ShareView } from "#share/share.contract"
+import type { ShareView } from "@rosesfield/contract"
 import { shareCopy } from "#share/share.en"
 
 export type PageSource = () => Promise<string | null>
@@ -8,7 +8,7 @@ type Head = {
   title: string
   description: string
   image: string | null
-  video: string | null
+  video: { url: string; mime: string } | null
   width: number | null
   height: number | null
 }
@@ -48,8 +48,7 @@ function absolute(origin: string, path: string): string {
 function headOf(view: ShareView, origin: string): Head {
   const first = view.media[0]
   const mediaPath = `${view.path}/media/0`
-  const isVideo = first?.kind === "video"
-  const image = view.poster ?? (first?.kind === "image" ? mediaPath : null)
+  const image = first?.kind === "image" ? mediaPath : null
   const facts = [modelNameOf(view), creditsLine(view)].filter(
     (part): part is string => part !== null
   )
@@ -57,7 +56,10 @@ function headOf(view: ShareView, origin: string): Head {
     title: shareCopy.title,
     description: facts.join(", "),
     image: image === null ? null : absolute(origin, image),
-    video: isVideo ? absolute(origin, mediaPath) : null,
+    video:
+      first?.kind === "video"
+        ? { url: absolute(origin, mediaPath), mime: first.mime }
+        : null,
     width: first?.width ?? null,
     height: first?.height ?? null,
   }
@@ -83,9 +85,9 @@ function headTags(head: Head, url: string): string {
     meta("og:image", head.image),
     meta("og:image:width", head.video === null ? head.width : null),
     meta("og:image:height", head.video === null ? head.height : null),
-    meta("og:video", head.video),
-    meta("og:video:secure_url", head.video),
-    meta("og:video:type", head.video === null ? null : "video/mp4"),
+    meta("og:video", head.video?.url ?? null),
+    meta("og:video:secure_url", head.video?.url ?? null),
+    meta("og:video:type", head.video?.mime ?? null),
     meta("og:video:width", head.video === null ? null : head.width),
     meta("og:video:height", head.video === null ? null : head.height),
     meta(
@@ -121,13 +123,10 @@ function mediaMarkup(view: ShareView, eager: boolean): string {
   const frame = `margin:0;position:relative;display:block;overflow:hidden;width:100%;aspect-ratio:${ratioOf(view)};border-radius:var(--radius-cell);background:var(--surface)`
   const fill = "display:block;width:100%;height:100%;object-fit:contain"
   if (first.kind === "video") {
-    const poster =
-      view.poster === null ? "" : ` poster="${escapeHtml(view.poster)}"`
-    return `<figure style="${frame}"><video src="${escapeHtml(src)}"${poster} muted loop playsinline autoplay preload="metadata" style="${fill}"></video></figure>`
+    return `<figure style="${frame}"><video src="${escapeHtml(src)}" muted loop playsinline autoplay preload="metadata" style="${fill}"></video></figure>`
   }
   const loading = eager ? ` fetchpriority="high"` : ` loading="lazy"`
-  const shown = view.poster ?? src
-  return `<figure style="${frame}"><img src="${escapeHtml(shown)}" alt=""${loading} decoding="async" style="${fill}" /></figure>`
+  return `<figure style="${frame}"><img src="${escapeHtml(src)}" alt=""${loading} decoding="async" style="${fill}" /></figure>`
 }
 
 function lockupMarkup(): string {
@@ -168,10 +167,10 @@ function exploreMarkup(views: readonly ShareView[]): string {
 
 function inject(html: string, head: string, body: string): string {
   return html
-    .replace(/<title>[^<]*<\/title>/, "")
-    .replace(/<meta name="description"[^>]*>/, "")
-    .replace("</head>", `${head}</head>`)
-    .replace('<div id="root"></div>', `<div id="root">${body}</div>`)
+    .replace(/<title>[^<]*<\/title>/, () => "")
+    .replace(/<meta name="description"[^>]*>/, () => "")
+    .replace("</head>", () => `${head}</head>`)
+    .replace('<div id="root"></div>', () => `<div id="root">${body}</div>`)
 }
 
 const moduleScript =
@@ -184,7 +183,7 @@ export function afterLoad(html: string): string {
     return html
   }
   const boot = `<script>addEventListener("load",()=>{const s=document.createElement("script");s.type="module";s.src=${JSON.stringify(entry)};document.head.append(s)})</script>`
-  return html.replace(moduleScript, boot).replace(modulePreload, "")
+  return html.replace(moduleScript, () => boot).replace(modulePreload, () => "")
 }
 
 export const shareDataId = "rosesfield-share"

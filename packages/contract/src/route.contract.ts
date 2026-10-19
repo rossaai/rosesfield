@@ -11,6 +11,16 @@ export type RouteDefinition = {
   body: RoutePayload
   response: RoutePayload
   status: 200 | 201 | 202 | 204
+  /** Marks a route that can start a paid run or call a paid model. */
+  spends?: true
+}
+
+export function spendingRoutes(
+  ...groups: ReadonlyArray<Readonly<Record<string, RouteDefinition>>>
+): RouteDefinition[] {
+  return groups
+    .flatMap((group) => Object.values(group))
+    .filter((route) => route.spends === true)
 }
 
 export type PathParamName<Path extends string> =

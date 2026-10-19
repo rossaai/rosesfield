@@ -31,7 +31,6 @@ const share = {
       durationSeconds: null,
     },
   ],
-  poster: "/share/abc/poster",
   createdAt: "2026-10-19T12:00:00.000Z",
   expiresAt: null,
 }
@@ -48,10 +47,10 @@ afterEach(() => {
   document.getElementById("rosesfield-share")?.remove()
 })
 
-describe("a shared result's page data", () => {
+describe("a shared output's page data", () => {
   it("gives the app the share the page was served with", () => {
     pageWith({ share })
-    expect(shareInPage("abc")?.media[0]?.src).toBe("/share/abc/media/0")
+    expect(shareInPage("abc")?.sources[0]).toBe("/share/abc/media/0")
   })
 
   it("gives nothing for another share, or with no data in the page", () => {

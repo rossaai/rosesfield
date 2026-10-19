@@ -1,5 +1,5 @@
-import { defineRoute } from "@rosesfield/contract"
 import { z } from "zod"
+import { defineRoute } from "#route.contract"
 
 export const keyStatus = z.enum([
   "missing",
@@ -7,6 +7,7 @@ export const keyStatus = z.enum([
   "wrong",
   "no-plan",
   "outside-workspace",
+  "busy",
   "unreachable",
 ])
 
@@ -37,5 +38,14 @@ export const accountRoutes = {
     body: null,
     response: accountResponse,
     status: 200,
+  }),
+  forgetAccount: defineRoute({
+    method: "DELETE",
+    path: "/api/account",
+    params: null,
+    query: null,
+    body: null,
+    response: null,
+    status: 204,
   }),
 }

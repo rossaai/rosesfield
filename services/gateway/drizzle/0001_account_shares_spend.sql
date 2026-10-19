@@ -10,8 +10,6 @@ CREATE TABLE `shares` (
 	`session_id` text,
 	`run` text NOT NULL,
 	`media` text NOT NULL,
-	`poster_key` text,
-	`poster_mime` text,
 	`placement` text NOT NULL,
 	`created_at` integer NOT NULL,
 	`expires_at` integer
@@ -20,8 +18,8 @@ CREATE TABLE `shares` (
 CREATE INDEX `shares_run_id` ON `shares` (`run_id`);--> statement-breakpoint
 CREATE INDEX `shares_placement_created_at` ON `shares` (`placement`,`created_at`);--> statement-breakpoint
 CREATE INDEX `shares_expires_at` ON `shares` (`expires_at`);--> statement-breakpoint
-CREATE TABLE `spend_start` (
-	`id` text PRIMARY KEY NOT NULL,
+CREATE TABLE `spend_holds` (
+	`run_id` text PRIMARY KEY NOT NULL,
 	`credits` real NOT NULL,
-	`started_at` integer NOT NULL
+	`created_at` integer NOT NULL
 );

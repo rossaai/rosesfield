@@ -32,10 +32,7 @@ export class SharePurge {
         return removed
       }
       for (const record of expired) {
-        const keys = [
-          ...record.media.map((media) => media.key),
-          ...(record.posterKey === null ? [] : [record.posterKey]),
-        ]
+        const keys = record.media.map((media) => media.key)
         await Promise.all(
           keys.map((key) => this.store.delete(assetIdFormat.parse(key)))
         )

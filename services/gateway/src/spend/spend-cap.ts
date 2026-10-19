@@ -1,74 +1,89 @@
-import { EngineUnavailableError } from "@rosesfield/generation"
+import { runTable } from "@rosesfield/generation"
 import type { Clock } from "@rosesfield/kernel"
-import type { MiddlewareHandler } from "hono"
+import { eq } from "drizzle-orm"
 import type { SqliteDatabase } from "#infrastructure/sqlite-database"
-import type { SpendCapStatus } from "#session/account.contract"
-import { SpendCapReachedError } from "#spend/spend-cap-reached.error"
-import { spendStartTable } from "#spend/spend-tables"
+import { SpendCapUnreadableError } from "#spend/spend-cap-unreadable.error"
+import { spendHoldTable } from "#spend/spend-tables"
+
+export type CapStatus = {
+  credits: number
+  left: number
+}
 
 type SpendCapOptions = {
   db: SqliteDatabase
   clock: Clock
   capCredits: number
-  creditsNow: () => Promise<number | null>
+  unknownRunCredits: number
+  creditsOfCost: (usd: number) => number
+}
+
+type RunRow = {
+  id: string
+  count: number
+  origin: string
+  costAmount: number | null
 }
 
 export class SpendCap {
-  static readonly startId = "start"
+  readonly capCredits: number
+  readonly unknownRunCredits: number
 
   private readonly db: SqliteDatabase
   private readonly clock: Clock
-  private readonly capCredits: number
-  private readonly creditsNow: () => Promise<number | null>
+  private readonly creditsOfCost: (usd: number) => number
 
   constructor(options: SpendCapOptions) {
     this.db = options.db
     this.clock = options.clock
     this.capCredits = options.capCredits
-    this.creditsNow = options.creditsNow
+    this.unknownRunCredits = options.unknownRunCredits
+    this.creditsOfCost = options.creditsOfCost
   }
 
-  async read(): Promise<SpendCapStatus | null> {
-    const now = await this.creditsNow()
-    if (now === null) {
-      return null
-    }
-    const start = await this.startOf(now)
-    const spent = Math.max(0, start - now)
+  async read(): Promise<CapStatus> {
+    const spent = await this.spent()
     const left = Math.max(0, this.capCredits - spent)
-    return {
-      credits: this.capCredits,
-      left: Math.round(left * 100) / 100,
-    }
+    return { credits: this.capCredits, left: Math.round(left * 100) / 100 }
   }
 
-  guard(): MiddlewareHandler {
-    return async (c, next) => {
-      if (c.req.method === "POST") {
-        const status = await this.read()
-        if (status === null) {
-          throw new EngineUnavailableError({ cause: "no balance" })
-        }
-        if (status.left <= 0) {
-          throw new SpendCapReachedError({ capCredits: this.capCredits })
-        }
-      }
-      await next()
-    }
-  }
-
-  private async startOf(now: number): Promise<number> {
+  async hold(runId: string, credits: number): Promise<void> {
     await this.db
-      .insert(spendStartTable)
-      .values({
-        id: SpendCap.startId,
-        credits: now,
-        startedAt: this.clock.now().getTime(),
-      })
+      .insert(spendHoldTable)
+      .values({ runId, credits, createdAt: this.clock.now().getTime() })
       .onConflictDoNothing()
-    const rows = await this.db
-      .select({ credits: spendStartTable.credits })
-      .from(spendStartTable)
-    return rows[0]?.credits ?? now
+  }
+
+  private async spent(): Promise<number> {
+    try {
+      const [runs, holds] = await Promise.all([
+        this.db
+          .select({
+            id: runTable.id,
+            count: runTable.count,
+            origin: runTable.origin,
+            costAmount: runTable.costAmount,
+          })
+          .from(runTable)
+          .where(eq(runTable.origin, "live")),
+        this.db
+          .select({
+            runId: spendHoldTable.runId,
+            credits: spendHoldTable.credits,
+          })
+          .from(spendHoldTable),
+      ])
+      const held = new Map(holds.map((one) => [one.runId, one.credits]))
+      return runs.reduce((sum, run) => sum + this.creditsOfRun(run, held), 0)
+    } catch (error) {
+      throw new SpendCapUnreadableError({ cause: error })
+    }
+  }
+
+  private creditsOfRun(run: RunRow, held: ReadonlyMap<string, number>): number {
+    if (run.costAmount !== null) {
+      return this.creditsOfCost(run.costAmount)
+    }
+    return held.get(run.id) ?? this.unknownRunCredits * run.count
   }
 }

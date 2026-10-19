@@ -249,7 +249,7 @@ describe("a public deployment", () => {
     ).toBe(true)
   })
 
-  it("leaves a live run waiting while its visitor reads it without the key", async () => {
+  it("leaves a live run waiting and closed while its visitor reads it without the key", async () => {
     const { visitor, comfy } = openPublic()
     const keyed = visitor({ [keyHeaders.engine]: "comfyui-visitor-key" })
     const live = runResponse.parse(await (await startImage(keyed)).json()).run
@@ -259,7 +259,8 @@ describe("a public deployment", () => {
       buildPath(routes.getRun.path, { runId: live.id })
     )
 
-    expect(runResponse.parse(await read.json()).run.status).toBe("queued")
+    expect(read.status).toBe(404)
+    expect(await codeOf(read)).toBe("RUN_NOT_FOUND")
     expect(engineCalls(comfy)).toEqual([])
   })
 

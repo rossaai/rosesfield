@@ -10,7 +10,7 @@ import { t } from "@/copy/t"
 import { AudioRow } from "@/pieces/audio-row"
 import { sharedEntries } from "@/screens/explore/explore-entries"
 import { exploreCaption } from "@/screens/explore/explore-tile"
-import { type ShareView, shareQuery } from "@/screens/explore/share-api"
+import { type SharedOutput, shareQuery } from "@/screens/explore/share-api"
 import { Lockup } from "@/shell/brand-mark"
 
 function Frame({ children }: { children: ReactNode }): ReactElement {
@@ -28,7 +28,7 @@ function Frame({ children }: { children: ReactNode }): ReactElement {
   )
 }
 
-function SharedResult({ share }: { share: ShareView }): ReactElement {
+function SharedOutputView({ share }: { share: SharedOutput }): ReactElement {
   const [entry] = sharedEntries([share])
   if (entry === undefined || entry.source.kind !== "share") {
     return <Gone />
@@ -44,9 +44,6 @@ function SharedResult({ share }: { share: ShareView }): ReactElement {
           src={entry.source.src}
           alt={label}
           fit="contain"
-          {...(entry.source.poster === null
-            ? {}
-            : { poster: entry.source.poster })}
           {...(entry.aspect === undefined ? {} : { aspect: entry.aspect })}
         />
       )}
@@ -123,7 +120,7 @@ export function ShareScreen({ shareId }: { shareId: string }): ReactElement {
   }
   return (
     <Frame>
-      <SharedResult share={share.data} />
+      <SharedOutputView share={share.data} />
     </Frame>
   )
 }

@@ -1,11 +1,11 @@
-import { type Run, run } from "@rosesfield/contract"
+import { type Run, run, shareView } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import {
   filterEntries,
   ownEntries,
   sharedEntries,
 } from "@/screens/explore/explore-entries"
-import { readShare } from "@/screens/explore/share-api"
+import { sharedOutputOf } from "@/screens/explore/share-api"
 
 const outputId = "3d4e5f6a-7b8c-4d9e-8f0a-2b3c4d5e6f01"
 
@@ -30,7 +30,7 @@ function runOf(change: Partial<Record<keyof Run, unknown>>): Run {
   })
 }
 
-describe("Explore's results", () => {
+describe("Explore's outputs", () => {
   it("show only real, finished runs that made an output", () => {
     const real = runOf({})
     const entries = ownEntries([
@@ -44,8 +44,8 @@ describe("Explore's results", () => {
     expect(entries[0]?.source).toEqual({ kind: "own", assetId: outputId })
   })
 
-  it("read a shared result from the gateway, with the address of its media", () => {
-    const share = readShare({
+  it("read a shared output from the gateway, with the address of its media", () => {
+    const share = shareView.safeParse({
       id: "abc",
       path: "/share/abc",
       run: runOf({ outputs: [] }),
@@ -59,21 +59,23 @@ describe("Explore's results", () => {
           durationSeconds: 5,
         },
       ],
-      poster: "/share/abc/poster",
       createdAt: "2026-10-19T12:00:00.000Z",
       expiresAt: null,
     })
-    const [entry] = sharedEntries(share === null ? [] : [share])
+    const [entry] = sharedEntries(
+      share.success ? [sharedOutputOf(share.data)] : []
+    )
 
     expect(entry?.kind).toBe("video")
     expect(entry?.source).toEqual({
       kind: "share",
       shareId: "abc",
       src: "/share/abc/media/0",
-      poster: "/share/abc/poster",
     })
     expect(entry?.aspect).toEqual({ width: 1280, height: 720 })
-    expect(readShare({ id: "abc", path: "/share/abc" })).toBeNull()
+    expect(shareView.safeParse({ id: "abc", path: "/share/abc" }).success).toBe(
+      false
+    )
   })
 
   it("filter by the kind of output", () => {

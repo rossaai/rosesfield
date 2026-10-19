@@ -60,8 +60,19 @@ describe("the key probe", () => {
 
   it("names a key with no paid plan", async () => {
     expect(
-      await probe({ jobs: () => new Response(null, { status: 429 }) })
+      await probe({
+        jobs: refusal(402, "insufficient_credits", "no paid plan"),
+      })
     ).toEqual({ key: "no-plan", credits: null })
+  })
+
+  it("says Comfy is busy when it asks to slow down, and blames no plan", async () => {
+    expect(
+      await probe({ jobs: () => new Response(null, { status: 429 }) })
+    ).toEqual({ key: "busy", credits: null })
+    expect(
+      await probe({ catalog: () => new Response(null, { status: 429 }) })
+    ).toEqual({ key: "busy", credits: null })
   })
 
   it("names a key made outside a workspace", async () => {

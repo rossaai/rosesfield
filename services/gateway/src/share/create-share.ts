@@ -9,11 +9,6 @@ import type {
   SqliteShareRepository,
 } from "#share/sqlite-share-repository"
 
-export type SharePoster = {
-  bytes: Uint8Array
-  mime: string
-}
-
 export type ShareParts = {
   shares: SqliteShareRepository
   store: AssetStore
@@ -23,7 +18,6 @@ export type ShareParts = {
 type ShareRequest = {
   runId: string
   sessionId: string | null
-  poster: SharePoster | null
 }
 
 export const shareDays = 90
@@ -74,18 +68,6 @@ async function copyOutput(
   }
 }
 
-async function keepPoster(
-  parts: ShareParts,
-  poster: SharePoster | null
-): Promise<{ posterKey: string | null; posterMime: string | null }> {
-  if (poster === null) {
-    return { posterKey: null, posterMime: null }
-  }
-  const key = assetIdFormat.parse(crypto.randomUUID())
-  await parts.store.put(key, poster.bytes, poster.mime)
-  return { posterKey: key, posterMime: poster.mime }
-}
-
 export async function createShare(
   handlers: Handlers,
   parts: ShareParts,
@@ -100,10 +82,13 @@ export async function createShare(
   if (held !== null) {
     return held
   }
-  const copied = await Promise.all(
-    run.outputs.map((assetId) => copyOutput(handlers, parts, assetId))
-  )
-  const media = copied.filter((one): one is SharedMedia => one !== null)
+  const media: SharedMedia[] = []
+  for (const assetId of run.outputs) {
+    const copied = await copyOutput(handlers, parts, assetId)
+    if (copied !== null) {
+      media.push(copied)
+    }
+  }
   if (media.length === 0) {
     throw new ShareNotReadyError({ runId: run.id })
   }
@@ -113,7 +98,6 @@ export async function createShare(
     sessionId: request.sessionId,
     run: publicRunOf(run),
     media,
-    ...(await keepPoster(parts, request.poster)),
     placement: "link",
     createdAt: now,
     expiresAt: now + shareDays * dayMs,

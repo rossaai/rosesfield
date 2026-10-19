@@ -7,11 +7,7 @@ import { CopyButton } from "@/pieces/copy-button"
 
 export function ShareMaking(): ReactElement {
   return (
-    <div
-      role="status"
-      aria-label={t("share.making")}
-      className="flex flex-col gap-s2"
-    >
+    <div aria-busy="true" className="flex flex-col gap-s2">
       <Skeleton className="h-s5 w-1/3" />
       <Skeleton className="h-field w-full rounded-full" />
     </div>

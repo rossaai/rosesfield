@@ -1,8 +1,8 @@
 import { buildPath, routes } from "@rosesfield/contract"
 import { useQuery } from "@tanstack/react-query"
 import { callRoute } from "@/api/call-route"
-import { readOwnerToken } from "@/api/owner-token"
 import { assetBlobKey } from "@/api/query-client"
+import { sendsCredentials } from "@/api/visitor-keys"
 
 export type AssetSource =
   | { state: "loading" }
@@ -14,7 +14,7 @@ export function assetContentPath(assetId: string): string {
 }
 
 export function useAssetSource(assetId: string): AssetSource {
-  const needsToken = readOwnerToken() !== null
+  const needsToken = sendsCredentials()
   const blob = useQuery({
     queryKey: [assetBlobKey, assetId],
     queryFn: async ({ signal }) => {

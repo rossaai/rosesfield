@@ -15,10 +15,12 @@ import { publicAccountParts } from "#session/public-account"
 import { SessionLimiter } from "#session/session-limiter"
 import { SessionPurge } from "#session/session-purge"
 import { SessionVisits } from "#session/session-visits"
+import { r2ShareFiles } from "#share/r2-share-files"
+import { shareLimit } from "#share/share-limit"
 import { SharePurge } from "#share/share-purge"
 import type { ShareMount } from "#share/share-routes"
 import { SqliteShareRepository } from "#share/sqlite-share-repository"
-import { SpendCap } from "#spend/spend-cap"
+import { ownerSpend } from "#spend/owner-spend"
 import { forwardToAgentHost } from "#worker/agent-forward"
 import { AgentHost } from "#worker/agent-host"
 import { AlarmJobRunner } from "#worker/alarm-job-runner"
@@ -36,11 +38,22 @@ let gateway: GatewayApp | null = null
 
 const pageUrl = "https://rosesfield.assets/"
 
-function shareMount(env: WorkerBindings, parts: WorkerParts): ShareMount {
+function shareMount(
+  env: WorkerBindings,
+  parts: WorkerParts,
+  needsKey: boolean
+): ShareMount {
   return {
     shares: new SqliteShareRepository({ db: parts.db }),
     store: parts.store,
     clock: parts.clock,
+    files: r2ShareFiles(env.BUCKET),
+    limit: shareLimit({
+      db: parts.db,
+      clock: parts.clock,
+      clientOf: (c) => c.req.header("cf-connecting-ip") ?? null,
+    }),
+    needsKey,
     page: async () => {
       const response = await env.ASSETS.fetch(new Request(pageUrl))
       return response.ok ? response.text() : null
@@ -80,25 +93,8 @@ function composePublic(
       readings: account.readings,
       retentionDays: access.retentionDays,
     }),
-    shares: shareMount(env, parts),
+    shares: shareMount(env, parts, true),
     platform: [],
-  })
-}
-
-function spendCapOf(
-  parts: WorkerParts,
-  account: ComfyAccount
-): SpendCap | null {
-  const { engine, spendCapCredits } = parts.vars
-  const key = engine.target === "demo" ? null : engine.apiKey
-  if (spendCapCredits === undefined || key === null) {
-    return null
-  }
-  return new SpendCap({
-    db: parts.db,
-    clock: parts.clock,
-    capCredits: spendCapCredits,
-    creditsNow: () => account.creditsOf(key),
   })
 }
 
@@ -121,7 +117,12 @@ function composeOwner(
     settings: ownerSettings(vars),
   })
   const account = new ComfyAccount()
-  const cap = spendCapOf(parts, account)
+  const spend = ownerSpend({
+    settings: vars.spend,
+    db: parts.db,
+    clock: parts.clock,
+    handlers,
+  })
   return createGateway({
     apps: parts.apps,
     guard: {
@@ -135,10 +136,10 @@ function composeOwner(
     account: ownerAccount({
       probe: new KeyProbe({ account }),
       key: vars.engine.target === "demo" ? null : vars.engine.apiKey,
-      cap,
+      cap: spend?.cap ?? null,
     }),
-    shares: shareMount(env, parts),
-    ...(cap === null ? {} : { beforeRun: cap.guard() }),
+    shares: shareMount(env, parts, false),
+    ...(spend === null ? {} : { spendGuard: spend.guard }),
     platform: [],
   })
 }

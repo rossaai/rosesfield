@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs"
+import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import {
   assetResponse,
@@ -6,10 +6,12 @@ import {
   errorEnvelope,
   routes,
   runResponse,
+  shareResponse,
+  shareRoutes,
 } from "@rosesfield/contract"
 import { afterEach, describe, expect, it } from "vitest"
 import { keyHeaders } from "#session/visitor-keys"
-import { shareResponse, shareRoutes } from "#share/share.contract"
+import { shareRequestsPerMinute } from "#share/share-limit"
 import {
   finishedRun,
   type OpenedGateway,
@@ -41,11 +43,15 @@ async function sharedRun(gateway: OpenedGateway) {
   return { owner, run, made, view: shareResponse.parse(await made.json()) }
 }
 
+function filesOn(gateway: OpenedGateway): string[] {
+  return readdirSync(join(gateway.dataDir, "assets"))
+}
+
 async function codeOf(response: Response): Promise<string> {
   return errorEnvelope.parse(await response.json()).error.code
 }
 
-describe("a shared result", () => {
+describe("a shared output", () => {
   it("gets a public link whose data, bytes and page a stranger reads without a cookie", async () => {
     opened = openGateway()
     const { made, view, run } = await sharedRun(opened)
@@ -71,28 +77,69 @@ describe("a shared result", () => {
     expect(html).toContain(`href="/apps/sample-image?share=${view.share.id}"`)
   })
 
-  it("shows its preview on the page and in the link's card when the share carries one", async () => {
+  it("turns no byte a visitor sends into a public file", async () => {
     opened = openGateway()
     const owner = opened.visitor({ [keyHeaders.engine]: key })
     const run = await finishedRun(owner, "a red door")
+    const sent = new TextEncoder().encode("visitor-bytes-never-public")
+    const filesBefore = filesOn(opened)
     const made = await owner.call(
       buildPath(shareRoutes.shareRun.path, { runId: run.id }),
       {
         method: "POST",
         headers: { "content-type": "image/webp" },
-        body: Uint8Array.of(82, 73, 70, 70),
+        body: sent,
       }
     )
     const { share } = shareResponse.parse(await made.json())
     const html = await (await opened.visitor().call(share.path)).text()
-    const poster = await opened.visitor().call(`${share.path}/poster`)
+    const added = filesOn(opened).filter((file) => !filesBefore.includes(file))
+    const marker = new TextDecoder().decode(sent)
 
-    expect(share.poster).toBe(`${share.path}/poster`)
-    expect(html).toContain(`<img src="${share.path}/poster"`)
+    expect(made.status).toBe(201)
+    expect(added).toHaveLength(share.media.length)
+    expect(
+      added.some((file) =>
+        readFileSync(
+          join(opened?.dataDir ?? "", "assets", file),
+          "latin1"
+        ).includes(marker)
+      )
+    ).toBe(false)
     expect(html).toContain(
-      `<meta property="og:image" content="https://demo.rosesfield.test${share.path}/poster" />`
+      `<meta property="og:image" content="https://demo.rosesfield.test${share.path}/media/0" />`
     )
-    expect(poster.headers.get("content-type")).toBe("image/webp")
+    expect(html).not.toContain("/poster")
+  })
+
+  it("needs the key to share, even with the account's cookie", async () => {
+    opened = openGateway()
+    const owner = opened.visitor({ [keyHeaders.engine]: key })
+    const run = await finishedRun(owner, "a red door")
+    const cookieOnly = owner.withoutKeys()
+
+    const refused = await share(cookieOnly, run.id)
+    const made = await share(owner, run.id)
+
+    expect(refused.status).toBe(412)
+    expect(await codeOf(refused)).toBe("SHARE_KEY_REQUIRED")
+    expect(made.status).toBe(201)
+  })
+
+  it("slows a visitor who floods the public links", async () => {
+    opened = openGateway()
+    const { view } = await sharedRun(opened)
+    const stranger = opened.visitor()
+    const statuses: number[] = []
+
+    for (let call = 0; call <= shareRequestsPerMinute; call += 1) {
+      statuses.push((await stranger.call(`${view.share.path}/data`)).status)
+    }
+
+    expect(
+      statuses.slice(0, shareRequestsPerMinute).every((s) => s === 200)
+    ).toBe(true)
+    expect(statuses.at(-1)).toBe(429)
   })
 
   it("answers a byte range, so a phone can play a shared video", async () => {

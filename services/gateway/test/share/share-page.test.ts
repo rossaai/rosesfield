@@ -1,13 +1,12 @@
-import { run } from "@rosesfield/contract"
+import { run, type ShareView } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
-import type { ShareView } from "#share/share.contract"
 import { afterLoad, escapeHtml, sharePage } from "#share/share-page"
 
 const built =
   '<head><script type="module" crossorigin src="/assets/index-a1.js"></script><link rel="modulepreload" crossorigin href="/assets/b2.js"></head><body><div id="root"></div></body>'
 
-describe("a shared result's page", () => {
-  it("loads the app only after the page has painted, so the result paints first", () => {
+describe("a shared output's page", () => {
+  it("loads the app only after the page has painted, so the output paints first", () => {
     const page = afterLoad(built)
 
     expect(page).not.toContain('<script type="module" crossorigin src=')
@@ -53,7 +52,6 @@ const view: ShareView = {
       durationSeconds: null,
     },
   ],
-  poster: null,
   createdAt: "2026-10-19T12:00:00.000Z",
   expiresAt: null,
 }
@@ -67,5 +65,40 @@ describe("the share's data in its page", () => {
     )
     expect(page).not.toContain("</script><script>alert(1)")
     expect(page).toContain("\\u003c/script>\\u003cscript>alert(1)")
+  })
+})
+
+describe("what the page writes as it is", () => {
+  it("keeps a dollar sign in the prompt as typed", () => {
+    const priced: ShareView = {
+      ...view,
+      run: { ...view.run, inputs: { prompt: "cost $& and $' and $$ more" } },
+    }
+
+    const page = sharePage(built, priced, "https://rosesfield.com/share/abc")
+
+    expect(page).toContain(`"prompt":"cost $& and $' and $$ more"`)
+  })
+
+  it("names the video's own type in the link's card", () => {
+    const webm: ShareView = {
+      ...view,
+      media: [
+        {
+          index: 0,
+          kind: "video",
+          mime: "video/webm",
+          width: 640,
+          height: 360,
+          durationSeconds: 4,
+        },
+      ],
+    }
+
+    const page = sharePage(built, webm, "https://rosesfield.com/share/abc")
+
+    expect(page).toContain(
+      '<meta property="og:video:type" content="video/webm" />'
+    )
   })
 })

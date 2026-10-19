@@ -3,6 +3,7 @@ import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { GatewayUnreachableError } from "@/api/gateway-unreachable.error"
 import { wordsForCode, wordsForError } from "@/copy/error-words"
 import { t, tCatalog, tCount } from "@/copy/t"
+import { noteSpendCap } from "@/shell/spend-cap"
 
 describe("t", () => {
   it("fills each value and formats numbers", () => {
@@ -69,5 +70,21 @@ describe("wordsForError", () => {
     expect(
       wordsForError(new GatewayUnreachableError({ cause: null })).title
     ).toBe("Rosesfield cannot reach its server")
+  })
+})
+
+describe("the cap's refusal", () => {
+  it("names the cap it knows, and never a cap of 0 it does not", () => {
+    noteSpendCap(null)
+    const unknown = wordsForCode("SPEND_CAP_REACHED").title
+    noteSpendCap(800)
+    const known = wordsForCode("SPEND_CAP_REACHED").title
+    noteSpendCap(null)
+
+    expect(unknown).toBe("This run needs more credits than this link has left")
+    expect(unknown).not.toContain("0")
+    expect(known).toBe(
+      "This run needs more than is left of this link's 800 credits"
+    )
   })
 })

@@ -1,5 +1,6 @@
-import { routes, runPageResponse } from "@rosesfield/contract"
+import { accountRoutes, routes, runPageResponse } from "@rosesfield/contract"
 import { afterEach, describe, expect, it } from "vitest"
+import { sessionCookie } from "#session/session-cookie"
 import { keyHeaders } from "#session/visitor-keys"
 import { accountPath } from "../fixtures/comfy-fetch"
 import {
@@ -42,17 +43,49 @@ describe("your Comfy key as your login", () => {
     expect(await runIds(stranger)).toEqual([])
   })
 
-  it("asks Comfy for the account once per key, and reads the library with the cookie alone", async () => {
+  it("asks Comfy for the account once per key, and opens nothing with the cookie alone", async () => {
     opened = openGateway()
     const laptop = opened.visitor({ [keyHeaders.engine]: firstKey })
     const run = await finishedRun(laptop, "a red door")
-    await laptop.call(routes.listRuns.path)
+    const cookieOnly = laptop.withoutKeys()
+
+    const withoutKey = await runIds(cookieOnly)
+    laptop.cookie = cookieOnly.cookie
+    const withKey = await runIds(laptop)
 
     const lookups = opened.comfy.calls.filter(
       (call) => call.path === accountPath
     )
+    expect(withoutKey).toEqual([])
+    expect(withKey).toEqual([run.id])
     expect(lookups).toHaveLength(1)
-    expect(await runIds(laptop.withoutKeys())).toEqual([run.id])
+  })
+
+  it("opens nothing for the account's cookie with a key that Comfy refuses", async () => {
+    opened = openGateway()
+    const laptop = opened.visitor({ [keyHeaders.engine]: firstKey })
+    await finishedRun(laptop, "a red door")
+    const refused = opened.visitor({
+      [keyHeaders.engine]: "comfyui-refused-sameaccount",
+    })
+    refused.cookie = laptop.cookie
+
+    expect(await runIds(refused)).toEqual([])
+  })
+
+  it("forgets the key: its route clears the cookie", async () => {
+    opened = openGateway()
+    const laptop = opened.visitor({ [keyHeaders.engine]: firstKey })
+    await finishedRun(laptop, "a red door")
+
+    const forgot = await laptop.call(accountRoutes.forgetAccount.path, {
+      method: accountRoutes.forgetAccount.method,
+    })
+    const cleared = forgot.headers.get("set-cookie") ?? ""
+
+    expect(forgot.status).toBe(204)
+    expect(cleared).toContain(`${sessionCookie.name}=;`)
+    expect(cleared).toContain("Max-Age=0")
   })
 
   it("keeps the work made before the key under the account the key opens", async () => {

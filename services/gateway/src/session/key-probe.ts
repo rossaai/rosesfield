@@ -1,9 +1,9 @@
+import type { KeyStatus } from "@rosesfield/contract"
 import type {
   AccountAnswer,
   ComfyAccount,
   ProbeAnswer,
 } from "@rosesfield/generation"
-import type { KeyStatus } from "#session/account.contract"
 
 export type KeyReading = {
   key: KeyStatus
@@ -23,11 +23,11 @@ function isRefused(answer: ProbeAnswer | null): boolean {
 }
 
 function hasNoPlan(answer: ProbeAnswer | null): boolean {
-  return (
-    answer?.status === 402 ||
-    answer?.status === 429 ||
-    answer?.errorType === "insufficient_credits"
-  )
+  return answer?.status === 402 || answer?.errorType === "insufficient_credits"
+}
+
+function isBusy(answer: ProbeAnswer | null): boolean {
+  return answer?.status === 429 || answer?.status === 503
 }
 
 function isOutsideWorkspace(answer: ProbeAnswer | null): boolean {
@@ -49,6 +49,9 @@ export function keyStatusOf(signals: Signals): KeyStatus {
   if (isOutsideWorkspace(catalog)) {
     return "outside-workspace"
   }
+  if (isBusy(jobs) || isBusy(catalog)) {
+    return "busy"
+  }
   if (account.state === "found" || jobs?.status === 404) {
     return "valid"
   }
@@ -69,14 +72,17 @@ export class KeyProbe {
     this.accountOf = options.accountOf ?? ((key) => this.account.idOf(key))
   }
 
-  async read(key: string): Promise<KeyReading> {
-    const [account, jobs, catalog, credits] = await Promise.all([
+  async read(
+    key: string,
+    credits: "with-credits" | "no-credits" = "with-credits"
+  ): Promise<KeyReading> {
+    const [account, jobs, catalog, balance] = await Promise.all([
       this.accountOf(key),
       this.account.probeJobs(key),
       this.account.probeCatalog(key),
-      this.account.creditsOf(key),
+      credits === "with-credits" ? this.account.creditsOf(key) : null,
     ])
     const status = keyStatusOf({ account, jobs, catalog })
-    return { key: status, credits: status === "valid" ? credits : null }
+    return { key: status, credits: status === "valid" ? balance : null }
   }
 }

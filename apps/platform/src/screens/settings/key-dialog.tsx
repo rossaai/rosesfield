@@ -56,6 +56,11 @@ const refusals: Readonly<Record<Refusal, RefusalWords>> = {
     body: "key.outside-workspace.body",
     link: { href: comfyKeyPage, label: "key.page" },
   },
+  busy: {
+    title: "key.busy.title",
+    body: "key.busy.body",
+    link: null,
+  },
   unreachable: {
     title: "key.unreachable.title",
     body: "key.unreachable.body",

@@ -1,4 +1,10 @@
-import type { AppDefinition } from "@rosesfield/contract"
+import { conversationRoutes } from "@rosesfield/agent"
+import {
+  type AppDefinition,
+  accountRoutes,
+  routes,
+  spendingRoutes,
+} from "@rosesfield/contract"
 import { type Context, Hono, type MiddlewareHandler } from "hono"
 import { agentRoutes } from "#agent/agent-routes"
 import { modelRoutes } from "#catalog/catalog-routes"
@@ -11,12 +17,17 @@ import { errorResponse, routeNotFound } from "#routes/error-response"
 import { appRoutes, runRoutes } from "#routes/run-routes"
 import { settingsRoutes } from "#routes/settings-routes"
 import { type AccountReader, accountRoute } from "#session/account-routes"
-import { type SessionGuardOptions, sessionGuard } from "#session/session-cookie"
+import {
+  forgetSession,
+  type SessionGuardOptions,
+  sessionGuard,
+} from "#session/session-cookie"
 import {
   type ShareMount,
   shareApiRoute,
   sharePublicRoutes,
 } from "#share/share-routes"
+import type { SpendGuard } from "#spend/spend-guard"
 
 export type GatewayContext = Context<GatewayEnv>
 
@@ -35,16 +46,18 @@ export type GatewayOptions = {
   agent: AgentMount
   account?: AccountReader
   shares?: ShareMount
-  beforeRun?: MiddlewareHandler
+  spendGuard?: SpendGuard
   platform: readonly MiddlewareHandler[]
 }
 
-const runStartPaths: readonly string[] = [
-  "/api/apps/:appId/runs",
-  "/api/runs/:runId/repeat",
-  "/api/agent/*",
-  mcpPath,
-]
+export const spending = spendingRoutes(routes, conversationRoutes)
+
+function guardSpending(app: GatewayApp, guard: SpendGuard): void {
+  for (const route of spending) {
+    app.on(route.method, route.path, guard.forRoute(route))
+  }
+  app.on("POST", mcpPath, guard.forRoute(null))
+}
 
 function guardOf(guard: GatewayGuard): MiddlewareHandler<GatewayEnv> {
   if (guard.mode === "public") {
@@ -77,13 +90,12 @@ export function createGateway(options: GatewayOptions): GatewayApp {
   app.onError(errorResponse)
   app.notFound(routeNotFound)
   const guard = guardOf(options.guard)
+  app.delete(accountRoutes.forgetAccount.path, forgetSession)
   app.use("/api/*", guard)
   app.use(mcpPath, guard)
-  const { beforeRun, shares, account } = options
-  if (beforeRun !== undefined) {
-    for (const path of runStartPaths) {
-      app.use(path, beforeRun)
-    }
+  const { spendGuard, shares, account } = options
+  if (spendGuard !== undefined) {
+    guardSpending(app, spendGuard)
   }
   if (shares !== undefined) {
     sharePublicRoutes(app, shares)

@@ -1,82 +1,38 @@
+import {
+  type AccountStatus,
+  accountResponse,
+  accountRoutes,
+  type KeyStatus,
+  type SpendCapStatus,
+} from "@rosesfield/contract"
 import { queryOptions } from "@tanstack/react-query"
-import { fieldOf, invalidResponse, oneOf } from "@/api/call-path"
+import { invalidResponse } from "@/api/call-path"
 import { credentialHeaders, refusalOf } from "@/api/call-route"
 import { GatewayUnreachableError } from "@/api/gateway-unreachable.error"
 import { engineKeyHeader } from "@/api/visitor-keys"
 
-export type KeyStatus =
-  | "missing"
-  | "valid"
-  | "wrong"
-  | "no-plan"
-  | "outside-workspace"
-  | "unreachable"
+export type { KeyStatus }
 
-export type SpendCap = {
-  credits: number
-  left: number
-}
+export type SpendCap = SpendCapStatus
 
-export type Account = {
-  key: KeyStatus
-  credits: number | null
-  retentionDays: number | null
-  cap: SpendCap | null
-}
+export type Account = AccountStatus
 
-export const keyStatuses: readonly KeyStatus[] = [
-  "missing",
-  "valid",
-  "wrong",
-  "no-plan",
-  "outside-workspace",
-  "unreachable",
-]
-
-export const accountPath = "/api/account"
-
-function numberOrNull(value: unknown): number | null | undefined {
-  if (value === null) {
-    return null
-  }
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined
-}
-
-function capOf(value: unknown): SpendCap | null | undefined {
-  if (value === null) {
-    return null
-  }
-  const credits = numberOrNull(fieldOf(value, "credits"))
-  const left = numberOrNull(fieldOf(value, "left"))
-  return typeof credits === "number" && typeof left === "number"
-    ? { credits, left }
-    : undefined
-}
+export const accountPath = accountRoutes.getAccount.path
 
 export function readAccount(body: unknown): Account | null {
-  const account = fieldOf(body, "account")
-  const key = oneOf(fieldOf(account, "key"), keyStatuses)
-  const credits = numberOrNull(fieldOf(account, "credits"))
-  const retentionDays = numberOrNull(fieldOf(account, "retentionDays"))
-  const cap = capOf(fieldOf(account, "cap"))
-  if (
-    key === null ||
-    credits === undefined ||
-    retentionDays === undefined ||
-    cap === undefined
-  ) {
-    return null
-  }
-  return { key, credits, retentionDays, cap }
+  const parsed = accountResponse.safeParse(body)
+  return parsed.success ? parsed.data.account : null
 }
 
-async function fetchAccount(
+async function call(
+  method: string,
   headers: Record<string, string>,
   signal: AbortSignal | undefined
-): Promise<Account> {
+): Promise<Response> {
   let response: Response
   try {
     response = await fetch(accountPath, {
+      method,
       headers: { Accept: "application/json", ...headers },
       ...(signal === undefined ? {} : { signal }),
     })
@@ -86,6 +42,14 @@ async function fetchAccount(
   if (!response.ok) {
     throw await refusalOf(response)
   }
+  return response
+}
+
+async function fetchAccount(
+  headers: Record<string, string>,
+  signal: AbortSignal | undefined
+): Promise<Account> {
+  const response = await call(accountRoutes.getAccount.method, headers, signal)
   const account = readAccount(await response.json().catch(() => null))
   if (account === null) {
     throw invalidResponse(response.status)
@@ -104,4 +68,8 @@ export function checkKey(key: string): Promise<Account> {
     { ...credentialHeaders(), [engineKeyHeader]: key },
     undefined
   )
+}
+
+export async function forgetAccount(): Promise<void> {
+  await call(accountRoutes.forgetAccount.method, credentialHeaders(), undefined)
 }
