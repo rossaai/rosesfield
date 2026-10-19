@@ -10,6 +10,7 @@ import { agentRouteHandlers } from "#agent/agent-handlers"
 import type { Handlers } from "#build-handlers"
 import type { Settings } from "#gateway.contract"
 import type { RequestScope } from "#gateway-env"
+import { pollOnce } from "#session/run-polls"
 import type { SessionId } from "#session/session-scope"
 
 type OwnerScopeOptions = {
@@ -89,7 +90,7 @@ export function visitorScope(options: VisitorScopeOptions): RequestScope {
     }),
     settings: options.settings,
     keyFor: (key) => sessionKey(sessionId, key),
-    pollRun: (runId) => pollRun(options, runId),
+    pollRun: (runId) => pollOnce(runId, () => pollRun(options, runId)),
     hold: options.hold,
   }
 }

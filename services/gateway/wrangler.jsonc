@@ -17,7 +17,11 @@
   },
   // Public mode: each visitor brings their own Comfy key. The deployment holds
   // no key. SESSION_SECRET is a secret, set with wrangler secret put.
-  "vars": { "MODE": "public", "RETENTION_DAYS": "30" },
+  "vars": {
+    "MODE": "public",
+    "RETENTION_DAYS": "30",
+    "SESSION_REQUESTS_PER_MINUTE": "600"
+  },
   "d1_databases": [
     {
       "binding": "DB",

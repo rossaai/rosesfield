@@ -8,6 +8,7 @@ import { checkEngineSettings } from "#engine/engine-target"
 import { type AgentMount, createGateway } from "#gateway"
 import type { GatewayApp } from "#gateway-env"
 import { TokenTries } from "#lock/token-tries"
+import { AccountLookups } from "#session/account-lookups"
 import { ownerAccount, visitorAccount } from "#session/account-routes"
 import { ComfyAccount } from "#session/comfy-account"
 import { KeyProbe } from "#session/key-probe"
@@ -69,7 +70,10 @@ function composePublic(
       secret: access.sessionSecret,
       retentionDays: access.retentionDays,
       take: (sessionId) => limiter.take(sessionId),
-      accountOf: (key) => account.idOf(key),
+      accounts: new AccountLookups({
+        lookup: (key) => account.idOf(key),
+        clock: parts.clock,
+      }),
       visits: new SessionVisits({ db: parts.db, clock: parts.clock }),
     },
     scopeFor: (c) => visitorScopeFor(c, { ...parts, agents: null }),

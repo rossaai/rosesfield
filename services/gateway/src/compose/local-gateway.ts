@@ -33,6 +33,7 @@ import type { OwnerLock, PublicAccess, ServerEnv } from "#env"
 import { createGateway, type GatewayContext, type GatewayGuard } from "#gateway"
 import type { GatewayApp, RequestScope } from "#gateway-env"
 import { TokenTries } from "#lock/token-tries"
+import { AccountLookups } from "#session/account-lookups"
 import { ownerAccount, visitorAccount } from "#session/account-routes"
 import { migrateSessionTables } from "#session/bun-sqlite-session-migration"
 import { ComfyAccount } from "#session/comfy-account"
@@ -218,7 +219,10 @@ function publicGuard(parts: Parts, access: PublicAccess): GatewayGuard {
     secret: access.sessionSecret,
     retentionDays: access.retentionDays,
     take: (sessionId) => limiter.take(sessionId),
-    accountOf: (key) => parts.account.idOf(key),
+    accounts: new AccountLookups({
+      lookup: (key) => parts.account.idOf(key),
+      clock,
+    }),
     visits: new SessionVisits({ db, clock }),
   }
 }

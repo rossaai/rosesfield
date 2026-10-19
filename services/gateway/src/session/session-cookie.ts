@@ -1,7 +1,7 @@
 import type { Context, MiddlewareHandler } from "hono"
 import { generateSignedCookie, getSignedCookie } from "hono/cookie"
 import type { GatewayEnv } from "#gateway-env"
-import type { AccountAnswer } from "#session/comfy-account"
+import type { AccountLookups } from "#session/account-lookups"
 import type { SessionId } from "#session/session-scope"
 import type { SessionVisits } from "#session/session-visits"
 import { readVisitorKeys } from "#session/visitor-keys"
@@ -10,7 +10,7 @@ export type SessionGuardOptions = {
   secret: string
   retentionDays: number
   take: (sessionId: SessionId) => Promise<void>
-  accountOf: (key: string) => Promise<AccountAnswer>
+  accounts: AccountLookups
   visits: SessionVisits
 }
 
@@ -98,7 +98,7 @@ async function visitWithKey(
   if (held !== null && held.tag === tag) {
     return { ...held, isNew: false }
   }
-  const answer = await options.accountOf(key)
+  const answer = await options.accounts.answerFor(tag, key)
   if (answer.state !== "found") {
     return held === null
       ? { sessionId: crypto.randomUUID(), tag: null, isNew: true }
@@ -137,7 +137,10 @@ export function sessionGuard(
 ): MiddlewareHandler<GatewayEnv> {
   return async (c, next) => {
     const visit = await visitOf(options, c)
-    const isFresh = await options.visits.touch(visit.sessionId)
+    const isFresh =
+      isAccountSession(visit.sessionId) || !visit.isNew
+        ? await options.visits.touch(visit.sessionId)
+        : false
     const cookie =
       visit.isNew || isFresh
         ? await generateSignedCookie(

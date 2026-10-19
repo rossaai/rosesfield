@@ -48,7 +48,7 @@ export const gatewayCopy = {
     lockToken:
       "The server asks for the owner token on every API and MCP request.",
     publicMode: (days: number): string =>
-      `Public mode: each visitor gets their own session, and their runs, assets, characters and conversations are deleted after ${days} ${plural.select(days) === "one" ? "day" : "days"}.`,
+      `Public mode: each visitor's Comfy key opens their own work, and their runs, assets, characters and conversations are deleted ${days} ${plural.select(days) === "one" ? "day" : "days"} after their last visit.`,
     agentOn: (model: string): string => `The agent answers with ${model}.`,
     agentOff:
       "The agent is off, because no agent model is set. Set AGENT_BASE_URL and AGENT_MODEL.",
