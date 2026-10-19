@@ -23,7 +23,8 @@ export class AccountLookups {
     this.clock = options.clock
   }
 
-  answerFor(tag: string, key: string): Promise<AccountAnswer> {
+  async answerFor(key: string): Promise<AccountAnswer> {
+    const tag = await digestOf(key)
     const now = this.clock.now().getTime()
     for (const [one, held] of this.held) {
       if (now - held.at >= AccountLookups.keepMs) {
@@ -43,4 +44,14 @@ export class AccountLookups {
     this.held.set(tag, { answer, at: now })
     return answer
   }
+}
+
+async function digestOf(key: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(key)
+  )
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
 }

@@ -3,6 +3,7 @@ import type { GatewayApp } from "#gateway-env"
 import type { ResponseOf } from "#routes/read-request"
 import { type AccountStatus, accountRoutes } from "#session/account.contract"
 import type { KeyProbe } from "#session/key-probe"
+import type { KeyReadings } from "#session/key-readings"
 import { readVisitorKeys } from "#session/visitor-keys"
 
 export type AccountReader = (c: Context) => Promise<AccountStatus>
@@ -12,7 +13,7 @@ export type CapReader = {
 }
 
 export function visitorAccount(options: {
-  probe: KeyProbe
+  readings: KeyReadings
   retentionDays: number
 }): AccountReader {
   return async (c) => {
@@ -20,7 +21,7 @@ export function visitorAccount(options: {
     const reading =
       key === null
         ? { key: "missing" as const, credits: null }
-        : await options.probe.read(key)
+        : await options.readings.take(c.req.raw, key)
     return { ...reading, retentionDays: options.retentionDays, cap: null }
   }
 }

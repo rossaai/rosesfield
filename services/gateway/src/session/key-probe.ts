@@ -55,16 +55,23 @@ export function keyStatusOf(signals: Signals): KeyStatus {
   return "unreachable"
 }
 
+type KeyProbeOptions = {
+  account: ComfyAccount
+  accountOf?: (key: string) => Promise<AccountAnswer>
+}
+
 export class KeyProbe {
   private readonly account: ComfyAccount
+  private readonly accountOf: (key: string) => Promise<AccountAnswer>
 
-  constructor(options: { account: ComfyAccount }) {
+  constructor(options: KeyProbeOptions) {
     this.account = options.account
+    this.accountOf = options.accountOf ?? ((key) => this.account.idOf(key))
   }
 
   async read(key: string): Promise<KeyReading> {
     const [account, jobs, catalog, credits] = await Promise.all([
-      this.account.idOf(key),
+      this.accountOf(key),
       this.account.probeJobs(key),
       this.account.probeCatalog(key),
       this.account.creditsOf(key),

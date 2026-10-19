@@ -12,6 +12,7 @@ export type SessionGuardOptions = {
   take: (sessionId: SessionId) => Promise<void>
   accounts: AccountLookups
   visits: SessionVisits
+  early?: (request: Request, key: string) => void
 }
 
 type HeldSession = {
@@ -91,6 +92,7 @@ function heldOf(value: unknown): HeldSession | null {
 
 async function visitWithKey(
   options: SessionGuardOptions,
+  c: Context,
   held: HeldSession | null,
   key: string
 ): Promise<Visit> {
@@ -98,7 +100,8 @@ async function visitWithKey(
   if (held !== null && held.tag === tag) {
     return { ...held, isNew: false }
   }
-  const answer = await options.accounts.answerFor(tag, key)
+  options.early?.(c.req.raw, key)
+  const answer = await options.accounts.answerFor(key)
   if (answer.state !== "found") {
     return held === null
       ? { sessionId: crypto.randomUUID(), tag: null, isNew: true }
@@ -119,7 +122,7 @@ async function visitOf(
   const held = heldOf(signed)
   const key = readVisitorKeys(c).engine
   if (key !== null) {
-    return visitWithKey(options, held, key)
+    return visitWithKey(options, c, held, key)
   }
   return held === null
     ? { sessionId: crypto.randomUUID(), tag: null, isNew: true }

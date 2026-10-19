@@ -8,10 +8,10 @@ import { checkEngineSettings } from "#engine/engine-target"
 import { type AgentMount, createGateway } from "#gateway"
 import type { GatewayApp } from "#gateway-env"
 import { TokenTries } from "#lock/token-tries"
-import { AccountLookups } from "#session/account-lookups"
 import { ownerAccount, visitorAccount } from "#session/account-routes"
 import { ComfyAccount } from "#session/comfy-account"
 import { KeyProbe } from "#session/key-probe"
+import { publicAccountParts } from "#session/public-account"
 import { SessionLimiter } from "#session/session-limiter"
 import { SessionPurge } from "#session/session-purge"
 import { SessionVisits } from "#session/session-visits"
@@ -57,7 +57,7 @@ function composePublic(
   if (access.mode !== "public") {
     throw new TypeError("composePublic needs public mode")
   }
-  const account = new ComfyAccount()
+  const account = publicAccountParts(new ComfyAccount(), parts.clock)
   const limiter = new SessionLimiter({
     db: parts.db,
     clock: parts.clock,
@@ -70,16 +70,14 @@ function composePublic(
       secret: access.sessionSecret,
       retentionDays: access.retentionDays,
       take: (sessionId) => limiter.take(sessionId),
-      accounts: new AccountLookups({
-        lookup: (key) => account.idOf(key),
-        clock: parts.clock,
-      }),
+      accounts: account.accounts,
+      early: account.early,
       visits: new SessionVisits({ db: parts.db, clock: parts.clock }),
     },
     scopeFor: (c) => visitorScopeFor(c, { ...parts, agents: null }),
     agent,
     account: visitorAccount({
-      probe: new KeyProbe({ account }),
+      readings: account.readings,
       retentionDays: access.retentionDays,
     }),
     shares: shareMount(env, parts),

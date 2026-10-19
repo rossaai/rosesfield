@@ -33,11 +33,14 @@ import type { OwnerLock, PublicAccess, ServerEnv } from "#env"
 import { createGateway, type GatewayContext, type GatewayGuard } from "#gateway"
 import type { GatewayApp, RequestScope } from "#gateway-env"
 import { TokenTries } from "#lock/token-tries"
-import { AccountLookups } from "#session/account-lookups"
 import { ownerAccount, visitorAccount } from "#session/account-routes"
 import { migrateSessionTables } from "#session/bun-sqlite-session-migration"
 import { ComfyAccount } from "#session/comfy-account"
 import { KeyProbe } from "#session/key-probe"
+import {
+  type PublicAccountParts,
+  publicAccountParts,
+} from "#session/public-account"
 import { SessionLimiter } from "#session/session-limiter"
 import { type PurgeCount, SessionPurge } from "#session/session-purge"
 import { SessionVisits } from "#session/session-visits"
@@ -71,6 +74,7 @@ type Parts = {
   store: FilesystemAssetStore
   engineOptions: EngineOptions
   account: ComfyAccount
+  publicAccount: PublicAccountParts
   shares: ShareMount
 }
 
@@ -100,6 +104,7 @@ export function composeLocalGateway(
     options.platformRoot === undefined ? platformDist : options.platformRoot
   const store = new FilesystemAssetStore({ root: join(env.dataDir, "assets") })
   const fetchPart = options.fetch === undefined ? {} : { fetch: options.fetch }
+  const account = new ComfyAccount(fetchPart)
   const parts: Parts = {
     env,
     apps: options.apps,
@@ -112,7 +117,8 @@ export function composeLocalGateway(
       ...fetchPart,
       ...(options.warmCatalog === true ? { warmCatalog: true } : {}),
     },
-    account: new ComfyAccount(fetchPart),
+    account,
+    publicAccount: publicAccountParts(account, clock),
     shares: {
       shares: new SqliteShareRepository({ db }),
       store,
@@ -219,10 +225,8 @@ function publicGuard(parts: Parts, access: PublicAccess): GatewayGuard {
     secret: access.sessionSecret,
     retentionDays: access.retentionDays,
     take: (sessionId) => limiter.take(sessionId),
-    accounts: new AccountLookups({
-      lookup: (key) => parts.account.idOf(key),
-      clock,
-    }),
+    accounts: parts.publicAccount.accounts,
+    early: parts.publicAccount.early,
     visits: new SessionVisits({ db, clock }),
   }
 }
@@ -265,7 +269,7 @@ function composePublic(
     scopeFor,
     agent: { mode: "routes" },
     account: visitorAccount({
-      probe: new KeyProbe({ account: parts.account }),
+      readings: parts.publicAccount.readings,
       retentionDays: access.retentionDays,
     }),
     shares: parts.shares,
