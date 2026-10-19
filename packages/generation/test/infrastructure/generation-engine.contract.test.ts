@@ -5,11 +5,25 @@ import type {
   EngineRequest,
   GenerationEngine,
 } from "#domain/generation-engine.port"
+import { hostedModelBinding } from "#domain/task-binding"
 import { ComfyGenerationEngine } from "#infrastructure/comfy-generation-engine"
+import { ComfyRouterGenerationEngine } from "#infrastructure/comfy-router-generation-engine"
 import { DemoGenerationEngine } from "#infrastructure/demo-generation-engine"
+import { RouterCatalog } from "#infrastructure/router/router-catalog"
 import { RunPodServerlessGenerationEngine } from "#infrastructure/runpod-serverless-generation-engine"
 import { FakeGenerationEngine } from "../fake/fake-generation-engine"
 import { fakeBinding, pngBytes, start } from "../sample"
+import {
+  cancelled,
+  catalogPage,
+  outputFile,
+  pictureModel,
+  pictureSchema,
+  queueStatus,
+  result,
+  schemaRead,
+  submitted,
+} from "./fixtures/comfy-router"
 import {
   cloudUrl,
   comfyV2At,
@@ -115,6 +129,22 @@ function runPodSetup(recordings: Recording[]): () => Setup {
   }
 }
 
+function routerSetup(recordings: Recording[]): () => Setup {
+  return () => {
+    const replay = new ReplayFetch(recordings)
+    return {
+      engine: new ComfyRouterGenerationEngine({
+        apiKey: "comfyui-test",
+        catalog: new RouterCatalog({ clock: new FixedClock({ now: start }) }),
+        fetch: replay.fetch,
+      }),
+      binding: hostedModelBinding(pictureModel),
+      tick: () => undefined,
+      replay,
+    }
+  }
+}
+
 const subjects: Subject[] = [
   { name: "the fake engine", create: fakeSetup, forKeyCheck: fakeSetup },
   { name: "the demo engine", create: demoSetup, forKeyCheck: demoSetup },
@@ -139,6 +169,28 @@ const subjects: Subject[] = [
       runPod.cancel(),
     ]),
     forKeyCheck: runPodSetup([runPod.health()]),
+  },
+  {
+    name: "a hosted model through Comfy Router",
+    create: routerSetup([
+      catalogPage([pictureModel]),
+      schemaRead(pictureModel, pictureSchema),
+      submitted(),
+      queueStatus("IN_QUEUE"),
+      queueStatus("IN_PROGRESS"),
+      queueStatus("COMPLETED"),
+      result(),
+      outputFile(pngBytes()),
+      cancelled(),
+    ]),
+    forKeyCheck: routerSetup([
+      {
+        method: "GET",
+        url: `${ComfyRouterGenerationEngine.routerUrl}/v2/models?limit=1`,
+        status: 200,
+        json: { data: [], has_more: false },
+      },
+    ]),
   },
 ]
 

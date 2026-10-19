@@ -110,6 +110,7 @@ export {
   parseComfyWorkflow,
 } from "#infrastructure/comfy/comfy-workflow-binding"
 export { ComfyGenerationEngine } from "#infrastructure/comfy-generation-engine"
+export { ComfyRouterGenerationEngine } from "#infrastructure/comfy-router-generation-engine"
 export { DemoGenerationEngine } from "#infrastructure/demo-generation-engine"
 export { DrizzleRunRepository } from "#infrastructure/drizzle-run-repository"
 export {
@@ -118,5 +119,9 @@ export {
   toRunRow,
 } from "#infrastructure/drizzle-run-row"
 export { runTable } from "#infrastructure/drizzle-run-table"
+export {
+  type CatalogEntry,
+  RouterCatalog,
+} from "#infrastructure/router/router-catalog"
 export { RunPodServerlessGenerationEngine } from "#infrastructure/runpod-serverless-generation-engine"
 export { type Timer, TimerJobRunner } from "#infrastructure/timer-job-runner"
