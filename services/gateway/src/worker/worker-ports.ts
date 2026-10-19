@@ -52,7 +52,11 @@ export function workerParts(env: WorkerBindings): WorkerParts {
     db: drizzle(env.DB),
     store: new R2AssetStore({ bucket: env.BUCKET }),
     clock,
-    engineOptions: { clock, meter: sharedCreditMeter(clock) },
+    engineOptions: {
+      clock,
+      meter: sharedCreditMeter(clock),
+      fetch: (input, init) => fetch(input, init),
+    },
   }
 }
 

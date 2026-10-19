@@ -37,7 +37,7 @@ export class ComfyAccount {
   private readonly timeoutMs: number
 
   constructor(options: ComfyAccountOptions = {}) {
-    this.fetch = options.fetch ?? fetch
+    this.fetch = options.fetch ?? ((input, init) => fetch(input, init))
     this.timeoutMs = options.timeoutMs ?? ComfyAccount.timeoutMs
   }
 
