@@ -17,7 +17,7 @@ workflows/
     <id>-1.webp           a thumbnail from a real run, absent until one exists
 ```
 
-- 51 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
+- 46 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
 - Every graph runs open weights only. It holds no partner node and no Comfy Router call. The catalog test `open-weights.test.ts` checks every app's bindings.
 - `bun run catalog:sync` lists every folder in `packages/catalog/src/workflows.gen.ts`. It refuses a folder without `entry.json`, `<id>.json` and `<id>.api.json`.
 - A workflow is proven by one Generate in the running app on its app's screen, on a real input. No script runs a paid model. `bun scripts/checks/output-files/check-output-files.ts --library <gateway>` then checks each output in the library.
@@ -82,7 +82,7 @@ One file for the whole folder that a sync writes from the entries, with the apps
 | Core model | Workflows |
 |---|---|
 | LTX 2.5 | `effects-ltx-2-5`, `video-ltx-2-5-text`, `video-ltx-2-5-start-frame`, `shot-ltx-2-5` |
-| Wan 2.2 14B | `video-wan-2-2-text`, `video-wan-2-2-start-frame`, `video-wan-2-2-fun-camera`, `video-wan-2-2-fun-control`, `shot-wan-2-2-fun-camera`, `video-edit-extend-wan-2-2` |
+| Wan 2.2 14B | `shot-wan-2-2-fun-camera`, `video-edit-extend-wan-2-2` |
 | Wan 2.1 VACE 14B | `recast-object-wan-vace`, `video-edit-reframe-wan-vace` |
 | SCAIL-2 | `recast-character-scail-2` |
 | Wan Animate 2 | `motion-wan-animate-2` |

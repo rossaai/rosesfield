@@ -1,81 +1,91 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectBinding } from "@rosesfield/generation/bindings"
-import { cameraSentences, funCameraPoses } from "#video/camera-moves"
+import { cameraMoves, cameraWordsKeyOf } from "#video/camera-moves"
 import {
+  type FrameSize,
   framesFor,
-  sizesFor,
-  type VideoModel,
+  ltxSizes,
+  type VideoAspect,
   type VideoResolution,
   videoAspects,
   videoLengths,
 } from "#video/comfy/video-sizes"
 import { videoWorkflows, withoutSound } from "#video/comfy/video-workflows"
+import { videoCopy } from "#video/copy.en"
 import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 
 type Sound = "on" | "off"
-type Side = "width" | "height"
+type Side = keyof FrameSize
 type ValueMap = Record<string, string | number>
 
 export const cameraWordsSeparator = "\n"
 
 const outputsPerJob = "one"
 
+const audioNode = "370"
+
 const sides: readonly Side[] = ["width", "height"]
 
-function lengthMap(model: VideoModel): ValueMap {
+const firstPassDivisor = 2
+
+function lengthMap(): ValueMap {
   return Object.fromEntries(
-    videoLengths.map((seconds) => [String(seconds), framesFor(model, seconds)])
+    videoLengths.map((seconds) => [String(seconds), framesFor(seconds)])
   )
 }
 
-function sizeMap(
-  model: VideoModel,
-  resolution: VideoResolution,
-  side: Side,
-  divisor: number
-): ValueMap {
-  const sizes = sizesFor(model, resolution)
-  if (sizes === null) {
-    return {}
-  }
+function sizeMap(resolution: VideoResolution, side: Side): ValueMap {
+  const sizes: Record<VideoAspect, FrameSize> = ltxSizes[resolution]
   return Object.fromEntries(
-    videoAspects.map((aspect) => [aspect, sizes[aspect][side] / divisor])
+    videoAspects.map((aspect) => [
+      aspect,
+      sizes[aspect][side] / firstPassDivisor,
+    ])
   )
+}
+
+export function cameraWordsOf(move: string): string {
+  if (move === "auto") {
+    return ""
+  }
+  const row = cameraMoves.find((one) => one.value === move)
+  const words =
+    row === undefined || row.value === "auto"
+      ? undefined
+      : videoCopy[cameraWordsKeyOf(row.value)]
+  return words === undefined ? "" : words
 }
 
 function sentenceMap(): ValueMap {
-  const words: ValueMap = { auto: "" }
-  for (const [move, sentence] of Object.entries(cameraSentences)) {
-    words[move] = `${cameraWordsSeparator}${sentence}`
-  }
-  return words
+  return Object.fromEntries(
+    cameraMoves.map((move) => {
+      const words = cameraWordsOf(move.value)
+      return [move.value, words === "" ? "" : `${cameraWordsSeparator}${words}`]
+    })
+  )
 }
 
-function sizeBindings(
-  model: VideoModel,
-  resolution: VideoResolution,
-  divisor = 1
-): WorkflowValueBinding[] {
-  return sides.map((side) => ({
-    from: "aspectRatio",
-    map: sizeMap(model, resolution, side, divisor),
-    to: side,
-  }))
+function ltxBindings(resolution: VideoResolution): WorkflowValueBinding[] {
+  return [
+    { from: "input", name: "prompt", to: "prompt" },
+    {
+      from: "input",
+      name: "cameraMove",
+      map: sentenceMap(),
+      to: "cameraMove",
+    },
+    ...sides.map(
+      (side): WorkflowValueBinding => ({
+        from: "aspectRatio",
+        map: sizeMap(resolution, side),
+        to: side,
+      })
+    ),
+    { from: "input", name: "length", map: lengthMap(), to: "frames" },
+    { from: "input", name: "length", map: lengthMap(), to: "audioFrames" },
+    { from: "seed", to: "seed" },
+  ]
 }
-
-function lengthBinding(to: string, model: VideoModel): WorkflowValueBinding {
-  return { from: "input", name: "length", map: lengthMap(model), to }
-}
-
-const promptWithMove: readonly WorkflowValueBinding[] = [
-  { from: "input", name: "prompt", to: "prompt" },
-  {
-    from: "input",
-    name: "cameraMove",
-    map: sentenceMap(),
-    to: "cameraMove",
-  },
-]
 
 const startFrame: WorkflowValueBinding = {
   from: "input",
@@ -88,23 +98,16 @@ function ltxWorkflow(
   workflow: string,
   resolution: VideoResolution,
   sound: Sound,
-  extra: WorkflowValueBinding[]
+  extra: readonly WorkflowValueBinding[]
 ): EngineBinding {
-  const bindings: WorkflowValueBinding[] = [
-    ...promptWithMove,
-    ...sizeBindings("ltx-2-5", resolution, 2),
-    lengthBinding("frames", "ltx-2-5"),
-    lengthBinding("audioFrames", "ltx-2-5"),
-    { from: "seed", to: "seed" },
-    ...extra,
-  ]
+  const bindings = [...ltxBindings(resolution), ...extra]
   return sound === "on"
     ? workflowBinding({ workflow, bindings, outputsPerJob })
     : workflowBinding({
         workflow,
         bindings,
         outputsPerJob,
-        patch: (graph) => withoutSound(graph, "370"),
+        patch: (graph) => withoutSound(graph, audioNode),
       })
 }
 
@@ -124,116 +127,25 @@ export function ltxStartFrameBinding(
   ])
 }
 
-export function wanTextBinding(): EngineBinding {
-  return workflowBinding({
-    workflow: videoWorkflows["wan-2-2-text"],
-    bindings: [
-      ...promptWithMove,
-      ...sizeBindings("wan-2-2", "480p"),
-      lengthBinding("frames", "wan-2-2"),
-      { from: "seed", to: "seed" },
-    ],
-    outputsPerJob,
-  })
-}
-
-export function wanStartFrameBinding(): EngineBinding {
-  return workflowBinding({
-    workflow: videoWorkflows["wan-2-2-start-frame"],
-    bindings: [
-      { from: "input", name: "prompt", to: "prompt" },
-      startFrame,
-      ...sizeBindings("wan-2-2", "480p"),
-      lengthBinding("frames", "wan-2-2"),
-      { from: "seed", to: "seed" },
-    ],
-    outputsPerJob,
-  })
-}
-
-export function wanCameraBinding(): EngineBinding {
-  return workflowBinding({
-    workflow: videoWorkflows["wan-2-2-camera"],
-    bindings: [
-      { from: "input", name: "prompt", to: "prompt" },
-      startFrame,
-      {
-        from: "input",
-        name: "cameraMove",
-        map: { ...funCameraPoses },
-        to: "cameraPose",
-      },
-      ...sizeBindings("wan-2-2", "480p"),
-      lengthBinding("frames", "wan-2-2"),
-      { from: "seed", to: "seed" },
-    ],
-    outputsPerJob,
-  })
-}
-
-export function wanClipBinding(): EngineBinding {
-  return workflowBinding({
-    workflow: videoWorkflows["wan-2-2-clip"],
-    bindings: [
-      { from: "input", name: "prompt", to: "prompt" },
-      { from: "input", name: "clip", index: 0, to: "clip" },
-      ...sizeBindings("wan-2-2", "480p"),
-      lengthBinding("frames", "wan-2-2"),
-      { from: "seed", to: "seed" },
-    ],
-    outputsPerJob,
-  })
-}
-
-function bySound(options: Record<string, EngineBinding>): EngineBinding {
-  return selectBinding({ input: "sound", options })
-}
-
 function byResolution(
   bind: (resolution: VideoResolution, sound: Sound) => EngineBinding
 ): EngineBinding {
+  const bySound = (resolution: VideoResolution): EngineBinding =>
+    selectBinding({
+      input: "sound",
+      options: { on: bind(resolution, "on"), off: bind(resolution, "off") },
+    })
   return selectBinding({
     input: "resolution",
-    options: {
-      "480p": bySound({ on: bind("480p", "on"), off: bind("480p", "off") }),
-      "720p": bySound({ on: bind("720p", "on"), off: bind("720p", "off") }),
-    },
+    options: { "480p": bySound("480p"), "720p": bySound("720p") },
   })
 }
 
-function byFilled(
-  input: string,
-  filled: EngineBinding,
-  empty: EngineBinding
-): EngineBinding {
-  return selectBinding({ input, by: "filled", options: { filled, empty } })
-}
-
-const ltx = byFilled(
-  "startFrame",
-  byResolution(ltxStartFrameBinding),
-  byResolution(ltxTextBinding)
-)
-
-const camera = wanCameraBinding()
-
-const wanFromStartFrame = selectBinding({
-  input: "cameraMove",
-  options: {
-    auto: wanStartFrameBinding(),
-    ...Object.fromEntries(
-      Object.keys(funCameraPoses).map((move) => [move, camera])
-    ),
-  },
-})
-
-const wan = byFilled(
-  "clip",
-  wanClipBinding(),
-  byFilled("startFrame", wanFromStartFrame, wanTextBinding())
-)
-
 export const videoEngine: EngineBinding = selectBinding({
-  input: "model",
-  options: { auto: ltx, "ltx-2-5": ltx, "wan-2-2": wan },
+  input: "startFrame",
+  by: "filled",
+  options: {
+    filled: byResolution(ltxStartFrameBinding),
+    empty: byResolution(ltxTextBinding),
+  },
 })

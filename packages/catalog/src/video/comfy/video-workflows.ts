@@ -1,20 +1,10 @@
 import { apiGraph } from "#workflow-entry.contract"
 
-export type VideoWorkflowName =
-  | "ltx-2-5-text"
-  | "ltx-2-5-start-frame"
-  | "wan-2-2-text"
-  | "wan-2-2-start-frame"
-  | "wan-2-2-camera"
-  | "wan-2-2-clip"
+export type VideoWorkflowName = "ltx-2-5-text" | "ltx-2-5-start-frame"
 
 export const videoWorkflows: Readonly<Record<VideoWorkflowName, string>> = {
   "ltx-2-5-text": "video-ltx-2-5-text",
   "ltx-2-5-start-frame": "video-ltx-2-5-start-frame",
-  "wan-2-2-text": "video-wan-2-2-text",
-  "wan-2-2-start-frame": "video-wan-2-2-start-frame",
-  "wan-2-2-camera": "video-wan-2-2-fun-camera",
-  "wan-2-2-clip": "video-wan-2-2-fun-control",
 }
 
 export function withoutSound(

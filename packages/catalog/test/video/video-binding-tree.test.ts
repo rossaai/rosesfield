@@ -1,67 +1,95 @@
-import { resolveBinding } from "@rosesfield/generation"
+import { startRunBodyFor } from "@rosesfield/contract"
+import { hostedModelOf, resolveBinding } from "@rosesfield/generation"
 import { describe, expect, it } from "vitest"
+import { z } from "zod"
+import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
+import { listWorkflows } from "#list-workflows"
 import { app } from "#video/app"
+import { ltxStartFrameBinding, ltxTextBinding } from "#video/comfy/video-engine"
+import { videoCopy } from "#video/copy.en"
 import {
-  ltxStartFrameBinding,
-  ltxTextBinding,
-  wanCameraBinding,
-  wanClipBinding,
-  wanStartFrameBinding,
-  wanTextBinding,
-} from "#video/comfy/video-engine"
-import { checked, clipId, prompt, startFrameId } from "./video-recordings"
+  checked,
+  prompt,
+  startFrameId,
+  videoDefinition,
+} from "./video-recordings"
 
-describe("the Video binding tree, read through the contract", () => {
+const definition = videoDefinition()
+const body = startRunBodyFor(definition)
+
+function fieldAt(value: unknown, path: readonly string[]): unknown {
+  return path.reduce<unknown>(
+    (current, key) =>
+      typeof current === "object" && current !== null && key in current
+        ? Object.entries(current).find(([name]) => name === key)?.[1]
+        : undefined,
+    value
+  )
+}
+
+describe("the Video app", () => {
+  it("lists the models that make a video from text or an image and opens on MiniMax H3", () => {
+    expect(appTasksOf(definition)).toEqual(["text-to-video", "image-to-video"])
+    expect(defaultModelOf(definition)).toBe("minimax/minimax-h3")
+  })
+
+  it("publishes as its default the model a run with no model runs", () => {
+    const published = fieldAt(z.toJSONSchema(body, { io: "input" }), [
+      "properties",
+      "inputs",
+      "properties",
+      "model",
+      "default",
+    ])
+    const approved = body.parse({ inputs: { prompt: "a" } }).inputs.model
+    const ran = hostedModelOf(
+      resolveBinding(definition.engine, { prompt: "a" })
+    )
+    expect(published).toBe("minimax/minimax-h3")
+    expect(approved).toBe(published)
+    expect(ran).toBe(published)
+    expect(defaultModelOf(definition)).toBe(published)
+  })
+
+  it("keeps the LTX 2.5 graph and no Wan model or workflow", () => {
+    const graphs = modelsForApp(definition, []).map((model) => model.id)
+    expect(graphs).toEqual(["ltx-2-5"])
+    const ids = listWorkflows().map((workflow) => workflow.id)
+    expect(ids).toEqual(
+      expect.arrayContaining([
+        "video-ltx-2-5-text",
+        "video-ltx-2-5-start-frame",
+      ])
+    )
+    expect(ids.filter((id) => id.startsWith("video-wan"))).toEqual([])
+    const values = JSON.stringify(definition.inputs)
+    expect(values).not.toMatch(/wan/i)
+  })
+
   it.each([
-    { name: "a prompt", inputs: {}, expected: ltxTextBinding("720p", "off") },
     {
-      name: "a start frame",
-      inputs: { startFrame: [startFrameId] },
-      expected: ltxStartFrameBinding("720p", "off"),
-    },
-    {
-      name: "LTX 2.5 at 480p with sound",
-      inputs: { model: "ltx-2-5", resolution: "480p", sound: "on" },
+      name: "LTX 2.5 from text",
+      inputs: { model: "ltx-2-5" },
       expected: ltxTextBinding("480p", "on"),
     },
     {
-      name: "LTX 2.5 with a start frame at 480p with sound",
-      inputs: {
-        model: "ltx-2-5",
-        startFrame: [startFrameId],
-        resolution: "480p",
-        sound: "on",
-      },
+      name: "LTX 2.5 from a start frame",
+      inputs: { model: "ltx-2-5", startFrame: [startFrameId] },
       expected: ltxStartFrameBinding("480p", "on"),
     },
     {
-      name: "Wan 2.2 from text",
-      inputs: { model: "wan-2-2", cameraMove: "track-left" },
-      expected: wanTextBinding(),
+      name: "LTX 2.5 at 720p with no sound",
+      inputs: { model: "ltx-2-5", resolution: "720p", sound: "off" },
+      expected: ltxTextBinding("720p", "off"),
     },
     {
-      name: "Wan 2.2 from a start frame with no move",
-      inputs: { model: "wan-2-2", startFrame: [startFrameId] },
-      expected: wanStartFrameBinding(),
-    },
-    {
-      name: "Wan 2.2 from a start frame with a move",
+      name: "LTX 2.5 from a start frame at 720p",
       inputs: {
-        model: "wan-2-2",
+        model: "ltx-2-5",
         startFrame: [startFrameId],
-        cameraMove: "crane-down",
+        resolution: "720p",
       },
-      expected: wanCameraBinding(),
-    },
-    {
-      name: "a clip with no model named",
-      inputs: { clip: [clipId] },
-      expected: wanClipBinding(),
-    },
-    {
-      name: "a clip on Wan 2.2",
-      inputs: { clip: [clipId], model: "wan-2-2", length: 4 },
-      expected: wanClipBinding(),
+      expected: ltxStartFrameBinding("720p", "on"),
     },
   ])("resolves $name to its workflow", ({ inputs, expected }) => {
     const result = checked({ prompt, ...inputs })
@@ -71,64 +99,60 @@ describe("the Video binding tree, read through the contract", () => {
     expect(binding.config.outputsPerJob).toBe("one")
   })
 
-  it("fills the Wan 2.2 values a caller leaves out", () => {
-    const result = checked({ prompt, clip: [clipId] })
-    expect(result.data?.inputs).toMatchObject({
-      model: "wan-2-2",
-      resolution: "480p",
-      length: 5,
-    })
-    expect(result.data?.inputs).not.toHaveProperty("sound")
-    expect(result.data?.inputs).not.toHaveProperty("cameraMove")
-  })
-
   it.each([
-    {
-      name: "a clip and a start frame",
-      inputs: { clip: [clipId], startFrame: [startFrameId] },
-      path: "clip",
-    },
-    {
-      name: "a clip on LTX 2.5",
-      inputs: { clip: [clipId], model: "ltx-2-5" },
-      path: "model",
-    },
-    {
-      name: "a clip on Auto",
-      inputs: { clip: [clipId], model: "auto" },
-      path: "model",
-    },
-    {
-      name: "a clip with a camera move",
-      inputs: { clip: [clipId], cameraMove: "push-in" },
-      path: "cameraMove",
-    },
-    {
-      name: "Wan 2.2 at 720p",
-      inputs: { model: "wan-2-2", resolution: "720p" },
-      path: "resolution",
-    },
-    {
-      name: "Wan 2.2 with sound",
-      inputs: { model: "wan-2-2", sound: "off" },
-      path: "sound",
-    },
+    { name: "a Wan model", inputs: { model: "wan-2-2" }, path: "model" },
+    { name: "Auto", inputs: { model: "auto" }, path: "model" },
+    { name: "a clip", inputs: { clip: [startFrameId] }, path: "" },
     {
       name: "two start frames",
-      inputs: { startFrame: [startFrameId, clipId] },
+      inputs: { startFrame: [startFrameId, startFrameId] },
       path: "startFrame",
     },
     { name: "a length of 6", inputs: { length: 6 }, path: "length" },
+    { name: "1080p", inputs: { resolution: "1080p" }, path: "resolution" },
+    {
+      name: "an unknown move",
+      inputs: { cameraMove: "orbit" },
+      path: "cameraMove",
+    },
   ])("refuses $name before a binding is read", ({ inputs, path }) => {
     const result = checked({ prompt, ...inputs })
     expect(result.success).toBe(false)
     expect(result.error?.issues.map((issue) => issue.path.join("."))).toEqual([
-      `inputs.${path}`,
+      path === "" ? "inputs" : `inputs.${path}`,
     ])
   })
 
-  it("takes a count of 4 and refuses 5", () => {
-    expect(checked({ prompt }, 4).success).toBe(true)
-    expect(checked({ prompt }, 5).success).toBe(false)
+  it("makes one video a run and refuses a count of 2", () => {
+    expect(checked({ prompt }, 1).success).toBe(true)
+    expect(checked({ prompt }, 2).success).toBe(false)
+  })
+
+  it("has a string for every key it names, and words for every camera move", () => {
+    const keys = [
+      definition.nameKey,
+      "video.line",
+      "video.keywords",
+      "video.input.prompt.placeholder",
+      ...definition.inputs.flatMap((input) => [
+        input.labelKey,
+        ...(input.type === "choice"
+          ? input.options
+              .map((option) => option.labelKey)
+              .filter((key) => key !== "choice.auto")
+          : []),
+        ...(input.name === "model" && input.type === "choice"
+          ? input.options.map((option) => `${option.labelKey}.line`)
+          : []),
+        ...(input.name === "cameraMove" && input.type === "choice"
+          ? input.options
+              .filter((option) => option.value !== "auto")
+              .map((option) => `video.cameraMove.${option.value}.words`)
+          : []),
+      ]),
+    ]
+    for (const key of keys) {
+      expect(videoCopy[key], key).toBeTypeOf("string")
+    }
   })
 })

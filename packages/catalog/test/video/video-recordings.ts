@@ -93,6 +93,4 @@ export function checked(inputs: Record<string, unknown>, count = 1) {
   return startRunBodyFor(videoApp()).safeParse({ inputs, count })
 }
 
-export const clipId = assetIdFormat.parse(
-  "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e"
-)
+export const videoDefinition = videoApp
