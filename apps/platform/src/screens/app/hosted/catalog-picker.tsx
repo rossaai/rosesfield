@@ -23,6 +23,8 @@ const lineKeys: Readonly<Record<string, string>> = {
   "image-edit": "model.line.imageEdit",
   "text-to-video": "model.line.textToVideo",
   "image-to-video": "model.line.imageToVideo",
+  "reference-to-video": "model.line.referenceToVideo",
+  "first-last-frame": "model.line.firstLastFrame",
   "video-edit": "model.line.videoEdit",
   "lip-sync": "model.line.lipSync",
   speech: "model.line.speech",

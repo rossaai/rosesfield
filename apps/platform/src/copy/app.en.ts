@@ -84,6 +84,8 @@ export const appCopy = {
   "model.line.imageEdit": "Changes an image you give it",
   "model.line.textToVideo": "Makes a clip from your words",
   "model.line.imageToVideo": "Makes a clip from an image",
+  "model.line.referenceToVideo": "Makes a clip from your references",
+  "model.line.firstLastFrame": "Makes a clip from a first and a last frame",
   "model.line.videoEdit": "Changes a clip you give it",
   "model.line.lipSync": "Moves a face to a voice",
   "model.line.speech": "Speaks your words",

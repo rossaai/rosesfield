@@ -2,33 +2,15 @@
   "minimaxH3": [
     {
       "name": "prompt",
-      "path": "content.[].text",
+      "path": "content.[].{type=text}.text",
       "required": true,
       "kind": "prompt",
       "maxLength": null,
       "default": null
     },
     {
-      "name": "audio",
-      "path": "content.[].audio_url",
-      "required": false,
-      "kind": "media",
-      "media": "audio",
-      "min": 1,
-      "max": 4
-    },
-    {
-      "name": "images",
-      "path": "content.[].image_url",
-      "required": false,
-      "kind": "media",
-      "media": "image",
-      "min": 1,
-      "max": 4
-    },
-    {
       "name": "video",
-      "path": "content.[].video_url",
+      "path": "content.[].{type=video_url}.video_url.url",
       "required": false,
       "kind": "media",
       "media": "video",
@@ -36,11 +18,55 @@
       "max": 4
     },
     {
+      "name": "audio",
+      "path": "content.[].{type=audio_url}.audio_url.url",
+      "required": false,
+      "kind": "media",
+      "media": "audio",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "name": "firstFrame",
+      "path": "content.[].{type=image_url}.{role=first_frame}.image_url.url",
+      "required": false,
+      "kind": "media",
+      "media": "image",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "name": "lastFrame",
+      "path": "content.[].{type=image_url}.{role=last_frame}.image_url.url",
+      "required": false,
+      "kind": "media",
+      "media": "image",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "name": "references",
+      "path": "content.[].{type=image_url}.{role=reference_image}.image_url.url",
+      "required": false,
+      "kind": "media",
+      "media": "image",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "name": "ratio",
+      "path": "ratio",
+      "required": false,
+      "kind": "choice",
+      "options": ["adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16"],
+      "default": null
+    },
+    {
       "name": "resolution",
       "path": "resolution",
       "required": true,
       "kind": "choice",
-      "options": ["2K", "2k", "768P", "768p"],
+      "options": ["2K", "768P"],
       "default": null
     },
     {
@@ -69,14 +95,6 @@
       "required": false,
       "kind": "toggle",
       "default": null
-    },
-    {
-      "name": "ratio",
-      "path": "ratio",
-      "required": false,
-      "kind": "text",
-      "maxLength": null,
-      "default": null
     }
   ],
   "h3MaxTurbo": [
@@ -87,6 +105,30 @@
       "kind": "prompt",
       "maxLength": null,
       "default": null
+    },
+    {
+      "name": "aspectRatio",
+      "path": "aspect_ratio",
+      "required": false,
+      "kind": "choice",
+      "options": ["21:9", "16:9", "4:3", "1:1", "3:4", "9:16"],
+      "default": "16:9"
+    },
+    {
+      "name": "promptExpansionMode",
+      "path": "prompt_expansion_mode",
+      "required": true,
+      "kind": "choice",
+      "options": ["balanced", "quality"],
+      "default": null
+    },
+    {
+      "name": "resolution",
+      "path": "resolution",
+      "required": false,
+      "kind": "choice",
+      "options": ["480P", "768P"],
+      "default": "768P"
     },
     {
       "name": "duration",
@@ -121,30 +163,6 @@
       "required": false,
       "kind": "toggle",
       "default": null
-    },
-    {
-      "name": "aspectRatio",
-      "path": "aspect_ratio",
-      "required": false,
-      "kind": "text",
-      "maxLength": null,
-      "default": "16:9"
-    },
-    {
-      "name": "promptExpansionMode",
-      "path": "prompt_expansion_mode",
-      "required": true,
-      "kind": "text",
-      "maxLength": null,
-      "default": null
-    },
-    {
-      "name": "resolution",
-      "path": "resolution",
-      "required": false,
-      "kind": "text",
-      "maxLength": null,
-      "default": "768P"
     }
   ],
   "veoLite": [
@@ -290,6 +308,22 @@
       "max": 1
     },
     {
+      "name": "aspectRatio",
+      "path": "input.aspect_ratio",
+      "required": false,
+      "kind": "choice",
+      "options": ["16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "1:1"],
+      "default": "16:9"
+    },
+    {
+      "name": "resolution",
+      "path": "input.resolution",
+      "required": false,
+      "kind": "choice",
+      "options": ["720p", "1080p"],
+      "default": "720p"
+    },
+    {
       "name": "duration",
       "path": "input.duration",
       "required": false,
@@ -339,22 +373,6 @@
       "required": false,
       "kind": "toggle",
       "default": true
-    },
-    {
-      "name": "aspectRatio",
-      "path": "input.aspect_ratio",
-      "required": false,
-      "kind": "text",
-      "maxLength": null,
-      "default": "16:9"
-    },
-    {
-      "name": "resolution",
-      "path": "input.resolution",
-      "required": false,
-      "kind": "text",
-      "maxLength": null,
-      "default": "720p"
     }
   ],
   "seedanceFast": [
@@ -365,15 +383,6 @@
       "kind": "prompt",
       "maxLength": null,
       "default": null
-    },
-    {
-      "name": "images",
-      "path": "content.[].{type=image_url}.image_url.url",
-      "required": false,
-      "kind": "media",
-      "media": "image",
-      "min": 1,
-      "max": 4
     },
     {
       "name": "video",
@@ -390,6 +399,33 @@
       "required": false,
       "kind": "media",
       "media": "audio",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "name": "firstFrame",
+      "path": "content.[].{type=image_url}.{role=first_frame}.image_url.url",
+      "required": false,
+      "kind": "media",
+      "media": "image",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "name": "lastFrame",
+      "path": "content.[].{type=image_url}.{role=last_frame}.image_url.url",
+      "required": false,
+      "kind": "media",
+      "media": "image",
+      "min": 1,
+      "max": 1
+    },
+    {
+      "name": "references",
+      "path": "content.[].{type=image_url}.{role=reference_image}.image_url.url",
+      "required": false,
+      "kind": "media",
+      "media": "image",
       "min": 1,
       "max": 4
     },

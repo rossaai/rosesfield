@@ -1,5 +1,6 @@
 import { startRunBodyFor } from "@rosesfield/contract"
 import { hostedModelOf, resolveBinding } from "@rosesfield/generation"
+import type { HostedModel, ModelField } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
 import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
@@ -17,6 +18,41 @@ import {
 const definition = videoDefinition()
 const body = startRunBodyFor(definition)
 
+function imageField(name: string, path: string, max: number): ModelField {
+  return {
+    kind: "media",
+    name,
+    path,
+    required: true,
+    media: "image",
+    min: 1,
+    max,
+  }
+}
+
+function onlyFrom(id: string, images: readonly ModelField[]): HostedModel {
+  return {
+    id,
+    provider: "maker",
+    takes: ["text", "image"],
+    makes: ["video"],
+    form: {
+      model: id,
+      fields: [
+        {
+          kind: "prompt",
+          name: "prompt",
+          path: "prompt",
+          required: true,
+          maxLength: null,
+          default: null,
+        },
+        ...images,
+      ],
+    },
+  }
+}
+
 function fieldAt(value: unknown, path: readonly string[]): unknown {
   return path.reduce<unknown>(
     (current, key) =>
@@ -28,9 +64,34 @@ function fieldAt(value: unknown, path: readonly string[]): unknown {
 }
 
 describe("the Video app", () => {
-  it("lists the models that make a video from text or an image and opens on MiniMax H3", () => {
-    expect(appTasksOf(definition)).toEqual(["text-to-video", "image-to-video"])
+  it("lists the models that make a video from text, an image, references or two frames and opens on MiniMax H3", () => {
+    expect(appTasksOf(definition)).toEqual([
+      "text-to-video",
+      "image-to-video",
+      "reference-to-video",
+      "first-last-frame",
+    ])
     expect(defaultModelOf(definition)).toBe("minimax/minimax-h3")
+  })
+
+  it("lists a model that runs only from references or only from two frames", () => {
+    const listed = modelsForApp(definition, [
+      onlyFrom("maker/clip-from-references", [
+        imageField("referenceImages", "reference_images", 4),
+      ]),
+      onlyFrom("maker/clip-between-frames", [
+        imageField("firstFrame", "first_frame_image", 1),
+        imageField("lastFrame", "last_frame_image", 1),
+      ]),
+    ])
+    expect(
+      listed
+        .map((model) => [model.id, model.task])
+        .filter(([, task]) => task !== "text-to-video")
+    ).toEqual([
+      ["maker/clip-between-frames", "first-last-frame"],
+      ["maker/clip-from-references", "reference-to-video"],
+    ])
   })
 
   it("publishes as its default the model a run with no model runs", () => {

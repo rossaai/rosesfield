@@ -70,6 +70,7 @@ describe("the Video tabs", () => {
       "veo/veo-3.1-lite-generate-001",
     ])
     expect(modelsOfTab(models, "first-last").map((one) => one.id)).toEqual([
+      "minimax/minimax-h3",
       "veo/veo-3.1-lite-generate-001",
       "pruna/p-video-2",
     ])
@@ -83,7 +84,10 @@ describe("the Video tabs", () => {
     ).toBe("pruna/p-video-2")
     expect(
       modelForTab(firstLast, "fal/h3-max-turbo", "minimax/minimax-h3")
-    ).toBe("veo/veo-3.1-lite-generate-001")
+    ).toBe("minimax/minimax-h3")
+    expect(modelForTab(firstLast, "fal/h3-max-turbo", "ltx-2-5")).toBe(
+      "minimax/minimax-h3"
+    )
     const references = modelsOfTab(models, "references")
     expect(
       modelForTab(references, "fal/h3-max-turbo", "minimax/minimax-h3")
@@ -100,13 +104,18 @@ describe("the Video tabs", () => {
   it("gives each tab its image slots and limits", () => {
     const fields = fieldsOfModel(minimax)
     expect(slotsOf(fields, "text-image")).toEqual({
-      start: { name: "images", max: 1 },
+      start: { name: "firstFrame", max: 1 },
       references: null,
       last: null,
     })
     expect(slotsOf(fields, "references").references).toEqual({
-      name: "images",
+      name: "references",
       max: 4,
+    })
+    expect(slotsOf(fields, "first-last")).toEqual({
+      start: { name: "firstFrame", max: 1 },
+      references: null,
+      last: { name: "lastFrame", max: 1 },
     })
     expect(slotsOf(fieldsOfModel(veo), "first-last")).toEqual({
       start: { name: "images", max: 1 },
@@ -131,10 +140,12 @@ describe("the Video tabs", () => {
       imageBytesBase64Encoded: [],
     })
     expect(
-      imagesForTab(fieldsOfModel(minimax), "text-image", {
-        images: ["a", "b", "c"],
+      imagesForTab(fieldsOfModel(minimax), "first-last", {
+        firstFrame: ["a"],
+        lastFrame: ["b"],
+        references: ["c", "d"],
       })
-    ).toEqual({ images: ["a"] })
+    ).toEqual({ references: [] })
   })
 
   it("reads a run's tab from the images it holds", () => {
@@ -147,8 +158,11 @@ describe("the Video tabs", () => {
     expect(tabOfRun(runOf({ imageBytesBase64Encoded: 1 }), veo)).toBe(
       "references"
     )
-    expect(tabOfRun(runOf({ images: 2 }), minimax)).toBe("references")
-    expect(tabOfRun(runOf({ images: 1 }), minimax)).toBe("text-image")
+    expect(tabOfRun(runOf({ references: 2 }), minimax)).toBe("references")
+    expect(tabOfRun(runOf({ firstFrame: 1, lastFrame: 1 }), minimax)).toBe(
+      "first-last"
+    )
+    expect(tabOfRun(runOf({ firstFrame: 1 }), minimax)).toBe("text-image")
     expect(tabOfRun(runOf({ startFrame: 1 }), graph)).toBe("text-image")
   })
 })

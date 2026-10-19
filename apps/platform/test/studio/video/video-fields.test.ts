@@ -28,11 +28,11 @@ describe("the roles Video reads from a model's schema", () => {
       model: "MiniMax H3",
       form: minimaxH3,
       expected: {
-        start: "images",
-        last: null,
-        references: "images",
+        start: "firstFrame",
+        last: "lastFrame",
+        references: "references",
         length: "duration",
-        aspect: null,
+        aspect: "ratio",
         resolution: "resolution",
         sound: null,
       },
@@ -58,8 +58,8 @@ describe("the roles Video reads from a model's schema", () => {
         last: "inputLastFrameImage",
         references: null,
         length: "duration",
-        aspect: null,
-        resolution: null,
+        aspect: "aspectRatio",
+        resolution: "resolution",
         sound: "saveAudio",
       },
     },
@@ -71,8 +71,8 @@ describe("the roles Video reads from a model's schema", () => {
         last: null,
         references: null,
         length: null,
-        aspect: null,
-        resolution: null,
+        aspect: "aspectRatio",
+        resolution: "resolution",
         sound: null,
       },
     },
@@ -93,6 +93,31 @@ describe("the roles Video reads from a model's schema", () => {
     expect(names(form)).toEqual(expected)
   })
 
+  it("reads each field's role from the catalog's one rule, so a size list is the resolution and a list of frames is the first frame", () => {
+    const fields = videoFieldsOf([
+      {
+        kind: "choice",
+        name: "size",
+        path: "size",
+        required: false,
+        options: ["1280x720", "720x1280"],
+        default: null,
+      },
+      {
+        kind: "media",
+        name: "keyframes",
+        path: "keyframes",
+        required: false,
+        media: "image",
+        min: 1,
+        max: 10,
+      },
+    ])
+    expect(fields.resolution?.name).toBe("size")
+    expect(fields.start?.name).toBe("keyframes")
+    expect(fields.references).toBeNull()
+  })
+
   it("keeps every placed field out of the settings, and the required ones apart", () => {
     const fields = videoFieldsOf(h3MaxTurbo)
     expect(fields.required.map((one) => one.name)).toEqual([
@@ -103,14 +128,14 @@ describe("the roles Video reads from a model's schema", () => {
       "seed",
       "enableSafetyChecker",
       "syncMode",
-      "aspectRatio",
-      "resolution",
     ])
     const seedance = videoFieldsOf(seedanceFast)
     const shown = [...seedance.required, ...seedance.rest].map(
       (one) => one.name
     )
-    expect(shown).not.toContain("images")
+    expect(shown).not.toContain("firstFrame")
+    expect(shown).not.toContain("lastFrame")
+    expect(shown).not.toContain("references")
     expect(shown).not.toContain("video")
     expect(shown).not.toContain("ratio")
   })
@@ -121,6 +146,7 @@ describe("the values Video sets on the chips it shows", () => {
     expect(chipDefaultsOf(videoFieldsOf(minimaxH3), {})).toEqual({
       duration: 5,
       resolution: "768P",
+      ratio: "16:9",
     })
     expect(chipDefaultsOf(videoFieldsOf(veoLite), {})).toEqual({
       aspectRatio: "16:9",
@@ -135,11 +161,11 @@ describe("the values Video sets on the chips it shows", () => {
 
   it("replaces a value the model does not take and keeps one it does", () => {
     const fields = videoFieldsOf(minimaxH3)
-    expect(chipDefaultsOf(fields, { duration: 4, resolution: "480p" })).toEqual(
-      { resolution: "768P" }
-    )
-    expect(chipDefaultsOf(fields, { duration: 20, resolution: "2K" })).toEqual({
-      duration: 5,
-    })
+    expect(
+      chipDefaultsOf(fields, { duration: 4, resolution: "480p", ratio: "16:9" })
+    ).toEqual({ resolution: "768P" })
+    expect(
+      chipDefaultsOf(fields, { duration: 20, resolution: "2K", ratio: "1:1" })
+    ).toEqual({ duration: 5 })
   })
 })
