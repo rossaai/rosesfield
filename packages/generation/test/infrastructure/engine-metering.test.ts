@@ -65,6 +65,7 @@ describe("the real credits of a run", () => {
       submitted(),
       queueStatus("COMPLETED"),
       balance(999.5),
+      balance(999.5),
     ])
     const submission = await engine.submit(
       request(hostedModelBinding(pictureModel))
@@ -77,23 +78,18 @@ describe("the real credits of a run", () => {
     expect(replay.unused()).toEqual([])
   })
 
-  it("come from the balance route before and after a graph on Comfy Cloud", async () => {
+  it("come from the execution_ms Comfy reports at the GPU rate for a graph on Comfy Cloud", async () => {
     const v2 = comfyV2At(cloudUrl)
-    const replay = new ReplayFetch([
-      balance(1000),
-      v2.submit(),
-      v2.read(succeededJob),
-      balance(999),
-    ])
+    const replay = new ReplayFetch([v2.submit(), v2.read(succeededJob)])
     const engine = new ComfyGenerationEngine({
       apiKey: "comfyui-key",
-      meter: meter(),
       fetch: replay.fetch,
     })
     const submission = await engine.submit(request(workflowBinding))
-    expect(await engine.read(submission.ref)).toEqual({
+    const status = await engine.read(submission.ref)
+    expect(status).toEqual({
       state: "succeeded",
-      cost: { amount: 2.11 / 211, currency: "USD" },
+      cost: { amount: 11.172 / 211, currency: "USD" },
     })
     expect(replay.unused()).toEqual([])
   })
@@ -104,10 +100,12 @@ describe("the real credits of a run", () => {
     const engine = new ComfyGenerationEngine({
       apiKey: null,
       baseUrl: proxyUrl,
-      meter: meter(),
       fetch: replay.fetch,
     })
     const submission = await engine.submit(request(workflowBinding))
-    expect(await engine.read(submission.ref)).toEqual({ state: "succeeded" })
+    expect(await engine.read(submission.ref)).toEqual({
+      state: "succeeded",
+      cost: null,
+    })
   })
 })

@@ -28,7 +28,7 @@ export class CreditMeter {
   static readonly creditsPerUsd = 211
   static readonly creditsPerCent = CreditMeter.creditsPerUsd / 100
   static readonly settleMs = 2000
-  static readonly settleTries = 5
+  static readonly settleTries = 8
   static readonly staleMs = 7_200_000
 
   private readonly clock: Clock
@@ -116,6 +116,7 @@ export class CreditMeter {
     ticket: MeterTicket
   ): Promise<number | null> {
     const { before } = ticket
+    let last: number | null = null
     for (let tries = 0; tries < CreditMeter.settleTries; tries += 1) {
       if (ticket.isShared || before === null) {
         return null
@@ -127,12 +128,14 @@ export class CreditMeter {
       if (after === null || ticket.isShared) {
         return null
       }
-      const credits = (before - after) * CreditMeter.creditsPerCent
-      if (credits > 0) {
-        return Math.round(credits * 1_000_000) / 1_000_000
+      if (after < before && after === last) {
+        return creditsBetween(before, after)
       }
+      last = after
     }
-    return null
+    return last !== null && before !== null && last < before
+      ? creditsBetween(before, last)
+      : null
   }
 
   private async balanceOf(reader: BalanceReader): Promise<number | null> {
@@ -170,6 +173,11 @@ export class CreditMeter {
   private now(): number {
     return this.clock.now().getTime()
   }
+}
+
+function creditsBetween(before: number, after: number): number {
+  const credits = (before - after) * CreditMeter.creditsPerCent
+  return Math.round(credits * 1_000_000) / 1_000_000
 }
 
 export function costOfCredits(credits: number | null): Cost | null {
