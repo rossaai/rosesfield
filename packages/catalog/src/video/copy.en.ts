@@ -45,7 +45,7 @@ export const videoCopy: Readonly<Record<string, string>> = {
   "video.tab.firstLast": "First and last frame",
   "video.tabs.label": "What the video starts from",
   "video.well.start": "Start image",
-  "video.well.start.note": "Optional. The video opens on this image.",
+  "video.well.start.note": "The video opens on this image.",
   "video.well.references": "References",
   "video.well.references.note":
     "Up to {max} images. The video keeps what they show.",
@@ -60,8 +60,7 @@ export const videoCopy: Readonly<Record<string, string>> = {
   "video.preset.none": "None",
   "video.preset.noneLine": "The model reads your prompt alone.",
   "video.preset.pick": "Pick a camera move",
-  "video.preset.words": "Added to your prompt",
-  "video.sound.on": "On",
-  "video.sound.off": "Off",
+  "video.preset.words": "Added to your prompt: {words}",
+  "video.sound.always": "This model always makes sound.",
   "video.settings.more": "More settings",
 }
