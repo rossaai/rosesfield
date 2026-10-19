@@ -26,7 +26,7 @@ import {
   type Fetch,
   uploadComfyInputs,
 } from "#infrastructure/comfy/comfy-low"
-import { mimeOf } from "#infrastructure/comfy/comfy-media"
+import { mediaKindOf, mimeOf } from "#infrastructure/comfy/comfy-media"
 import { applyBindings } from "#infrastructure/comfy/comfy-value-binding"
 import {
   comfyWorkflowAdapter,
@@ -248,7 +248,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
     )
     const bytes = new Uint8Array(await callComfy(() => response.arrayBuffer()))
     return {
-      kind: kindOf(output.type),
+      kind: kindOf(output.type, output.content_type),
       mime: mimeOf(output.content_type),
       bytes,
       width: null,
@@ -266,8 +266,8 @@ function parseJob(value: unknown): Job {
   return result.data
 }
 
-function kindOf(type: string): AssetKind {
+function kindOf(type: string, contentType: string): AssetKind {
   return type === "video" || type === "audio" || type === "text"
     ? type
-    : "image"
+    : (mediaKindOf(mimeOf(contentType)) ?? "image")
 }
