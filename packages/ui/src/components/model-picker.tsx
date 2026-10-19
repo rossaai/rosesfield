@@ -41,6 +41,7 @@ type ModelPickerProps = {
   onChoose: (id: string) => void
   isLoading?: boolean
   notice?: ReactNode
+  settings?: ReactNode
   open?: boolean
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
@@ -109,20 +110,26 @@ function ModelRow({
 }
 
 function RowFacts({ row }: { row: ModelPickerRow }): ReactNode {
-  if (row.tags.length > 0) {
-    return (
-      <span className="flex flex-wrap gap-s1">
-        {row.tags.map((tag) => (
-          <Badge key={tag.label} tone="neutral" className="[&_svg]:glyph-small">
-            {tag.icon}
-            {tag.label}
-          </Badge>
-        ))}
-      </span>
-    )
-  }
-  return row.line === null ? null : (
-    <span className="truncate text-caption text-ink-muted">{row.line}</span>
+  return (
+    <>
+      {row.line === null ? null : (
+        <span className="truncate text-caption text-ink-muted">{row.line}</span>
+      )}
+      {row.tags.length === 0 ? null : (
+        <span className="flex flex-wrap gap-s1">
+          {row.tags.map((tag) => (
+            <Badge
+              key={tag.label}
+              tone="neutral"
+              className="[&_svg]:glyph-small"
+            >
+              {tag.icon}
+              {tag.label}
+            </Badge>
+          ))}
+        </span>
+      )}
+    </>
   )
 }
 
@@ -217,6 +224,14 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
         <div className="max-h-list-max overflow-y-auto">
           <ModelList {...props} query={query} onChosen={() => setOpen(false)} />
         </div>
+        {props.settings === undefined || props.settings === null ? null : (
+          <div
+            data-slot="model-settings"
+            className="flex max-h-list-max flex-col gap-s4 overflow-y-auto border-(--line) border-t px-s4 pt-s3 pb-s2"
+          >
+            {props.settings}
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   )

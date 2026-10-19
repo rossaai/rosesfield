@@ -12,7 +12,7 @@ import {
   ScanIcon,
   Volume2Icon,
 } from "lucide-react"
-import type { ReactElement } from "react"
+import type { ReactElement, ReactNode } from "react"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import { modelSections } from "@/screens/app/hosted/model-sections"
@@ -107,9 +107,11 @@ export function pickerSections(hosted: HostedState): ModelPickerSection[] {
 export function CatalogPicker({
   hosted,
   defaultOpen = false,
+  settings,
 }: {
   hosted: HostedState
   defaultOpen?: boolean
+  settings?: ReactNode
 }): ReactElement {
   const name =
     hosted.chosen === null
@@ -126,6 +128,7 @@ export function CatalogPicker({
       chosen={hosted.chosen?.id ?? null}
       onChoose={hosted.choose}
       defaultOpen={defaultOpen}
+      settings={settings}
       isLoading={hosted.isLoading}
       notice={
         hosted.error === null ? null : <ModelNotice error={hosted.error} />

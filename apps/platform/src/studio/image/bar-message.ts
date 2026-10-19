@@ -10,6 +10,8 @@ const promptName = "prompt"
 const missingKeys: readonly string[] = [
   "field.prompt.required",
   "field.asset.required",
+  "field.choice.required",
+  "field.number.required",
 ]
 
 function captionOf(

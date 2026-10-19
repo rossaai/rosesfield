@@ -100,4 +100,40 @@ describe("a hosted model's form", () => {
       ["images", "field.asset.tooMany"],
     ])
   })
+
+  it("names a choice you have not set as missing, in words for a choice", () => {
+    const mode: ModelField = {
+      kind: "choice",
+      name: "promptExpansionMode",
+      path: "prompt_expansion_mode",
+      required: true,
+      options: ["balanced", "quality"],
+      default: null,
+    }
+    const problems = hostedProblems(
+      [mode],
+      valuesWith({ promptExpansionMode: undefined })
+    )
+    expect(problems.map((problem) => [problem.name, problem.key])).toEqual([
+      ["promptExpansionMode", "field.choice.required"],
+    ])
+  })
+
+  it("sends a count of several only for a model that makes one at a time", () => {
+    const counted: ModelField = {
+      kind: "number",
+      name: "n",
+      path: "n",
+      required: false,
+      min: 1,
+      max: 4,
+      integer: true,
+      default: 1,
+    }
+    const values = { ...valuesWith({ prompt: "a door" }), count: 3 }
+    expect(hostedBody("maker/clip-3", fields, values).count).toBe(3)
+    expect(
+      hostedBody("maker/clip-3", [...fields, counted], values).count
+    ).toBeUndefined()
+  })
 })

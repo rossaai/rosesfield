@@ -1,3 +1,4 @@
+import type { FieldRole } from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Chip } from "@rosesfield/ui/components/chip"
@@ -8,7 +9,14 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@rosesfield/ui/components/popover"
-import type { ReactElement } from "react"
+import {
+  ClockIcon,
+  HashIcon,
+  MoveIcon,
+  ProportionsIcon,
+  ScanIcon,
+} from "lucide-react"
+import type { ReactElement, ReactNode } from "react"
 import { withUnit } from "@/copy/format"
 import { t, tCatalog, tCount } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
@@ -27,6 +35,7 @@ type SettingChipProps = {
 type StepperChipProps = {
   label: string
   shown: string
+  icon?: ReactNode
   value: number
   min: number
   max: number
@@ -35,11 +44,45 @@ type StepperChipProps = {
   onChange: (value: number) => void
 }
 
+const inputRoles: Readonly<Record<string, FieldRole>> = {
+  resolution: "resolution",
+  length: "length",
+  duration: "length",
+  quality: "quality",
+}
+
+export function chipIconOf(role: FieldRole | null): ReactNode {
+  switch (role) {
+    case "aspect":
+      return <ProportionsIcon />
+    case "resolution":
+      return <ScanIcon />
+    case "length":
+      return <ClockIcon />
+    case "count":
+      return <HashIcon />
+    default:
+      return undefined
+  }
+}
+
+function inputIconOf(input: InputDefinition): ReactNode {
+  return input.name === "cameraMove" ? (
+    <MoveIcon />
+  ) : (
+    chipIconOf(inputRoles[input.name] ?? null)
+  )
+}
+
 export function StepperChip(props: StepperChipProps): ReactElement {
   return (
     <Popover>
       <PopoverTrigger
-        render={<Chip caption={props.label}>{props.shown}</Chip>}
+        render={
+          <Chip caption={props.label} icon={props.icon}>
+            {props.shown}
+          </Chip>
+        }
       />
       <PopoverContent>
         <PopoverTitle>{props.label}</PopoverTitle>
@@ -80,6 +123,7 @@ function InputChip({
       return (
         <ChipSelect
           label={inputCaption(input)}
+          icon={inputIconOf(input)}
           display={chipChoiceText(input, textOf(value) || input.default)}
           value={textOf(value) || input.default}
           onValueChange={set}
@@ -93,6 +137,7 @@ function InputChip({
       return (
         <StepperChip
           label={inputCaption(input)}
+          icon={inputIconOf(input)}
           shown={numberText(app, input, numberOf(value, input.default))}
           value={numberOf(value, input.default)}
           min={input.min}
@@ -128,6 +173,7 @@ export function SettingChip({
     return items.length < 2 ? null : (
       <ChipSelect
         label={t("field.aspect.label")}
+        icon={chipIconOf("aspect")}
         value={form.values.aspectRatio ?? items[0]?.value ?? ""}
         onValueChange={(aspectRatio) => form.setForm({ aspectRatio })}
         options={items}
@@ -139,6 +185,7 @@ export function SettingChip({
     return max < 2 ? null : (
       <StepperChip
         label={t("field.count.label")}
+        icon={chipIconOf("count")}
         shown={tCount(`bar.count.${app.output.kind}`, form.values.count)}
         value={form.values.count}
         min={1}

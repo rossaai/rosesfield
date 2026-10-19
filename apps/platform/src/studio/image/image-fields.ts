@@ -14,6 +14,7 @@ export type ImageFields = {
   aspect: ChoiceField | null
   size: ChoiceField | null
   count: NumberField | null
+  isOneAtATime: boolean
   rest: ModelField[]
 }
 
@@ -84,6 +85,7 @@ export function imageFieldsOf(fields: readonly ModelField[]): ImageFields {
     aspect,
     size,
     count,
+    isOneAtATime: !fields.some((field) => hasRole(field, "count")),
     rest: fields.filter(
       (field) =>
         field.kind !== "prompt" &&
