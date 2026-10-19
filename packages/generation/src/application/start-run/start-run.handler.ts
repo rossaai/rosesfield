@@ -223,7 +223,12 @@ export class StartRunHandler {
   ): number | null {
     if (hostedModelOf(binding) !== null) {
       const chosen = inputs[StartRunHandler.hostedSeedInput]
-      return typeof chosen === "number" ? chosen : null
+      return typeof chosen === "number" &&
+        Number.isInteger(chosen) &&
+        chosen >= 0 &&
+        chosen <= StartRunHandler.maxSeed
+        ? chosen
+        : null
     }
     const seedInput = app.inputs.find((input) => input.type === "seed")
     if (seedInput === undefined) {
