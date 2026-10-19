@@ -101,28 +101,33 @@ function headTags(head: Head, url: string): string {
   ].join("")
 }
 
+function ratioOf(view: ShareView): string {
+  const first = view.media[0]
+  if (first?.width != null && first.height != null) {
+    return `${first.width}/${first.height}`
+  }
+  return view.run.aspectRatio?.replace(":", "/") ?? "auto"
+}
+
 function mediaMarkup(view: ShareView, eager: boolean): string {
   const first = view.media[0]
   if (first === undefined) {
     return ""
   }
   const src = `${view.path}/media/0`
-  const ratio =
-    first.width !== null && first.height !== null
-      ? `aspect-ratio:${first.width}/${first.height};`
-      : ""
-  const style = `${ratio}width:100%;height:auto;display:block;border-radius:var(--radius-cell);background:var(--surface)`
-  if (first.kind === "video") {
-    const poster =
-      view.poster === null ? "" : ` poster="${escapeHtml(view.poster)}"`
-    return `<video src="${escapeHtml(src)}"${poster} muted loop playsinline autoplay preload="metadata" style="${style}"></video>`
-  }
   if (first.kind === "audio") {
     return `<audio src="${escapeHtml(src)}" controls preload="metadata" style="width:100%"></audio>`
   }
+  const frame = `margin:0;position:relative;display:block;overflow:hidden;width:100%;aspect-ratio:${ratioOf(view)};border-radius:var(--radius-cell);background:var(--surface)`
+  const fill = "display:block;width:100%;height:100%;object-fit:contain"
+  if (first.kind === "video") {
+    const poster =
+      view.poster === null ? "" : ` poster="${escapeHtml(view.poster)}"`
+    return `<figure style="${frame}"><video src="${escapeHtml(src)}"${poster} muted loop playsinline autoplay preload="metadata" style="${fill}"></video></figure>`
+  }
   const loading = eager ? ` fetchpriority="high"` : ` loading="lazy"`
   const shown = view.poster ?? src
-  return `<img src="${escapeHtml(shown)}" alt=""${loading} decoding="async" style="${style}" />`
+  return `<figure style="${frame}"><img src="${escapeHtml(shown)}" alt=""${loading} decoding="async" style="${fill}" /></figure>`
 }
 
 function lockupMarkup(): string {
@@ -136,12 +141,12 @@ function shareMarkup(view: ShareView): string {
     .join(", ")
   const recreate = `/apps/${encodeURIComponent(view.run.appId)}?share=${encodeURIComponent(view.id)}`
   return [
-    `<div style="min-height:100dvh;background:var(--canvas);color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:var(--spacing-s6);padding:var(--spacing-s5)">`,
+    `<div style="min-height:100dvh;background:var(--canvas);color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:var(--spacing-s6);padding:var(--spacing-s5) var(--spacing-s4)">`,
     `<header style="width:100%;max-width:var(--spacing-prompt-max)">${lockupMarkup()}</header>`,
     `<main style="width:100%;max-width:var(--spacing-prompt-max);display:flex;flex-direction:column;gap:var(--spacing-s3)">`,
     mediaMarkup(view, true),
     `<p style="color:var(--ink-muted)">${facts}</p>`,
-    `<a href="${escapeHtml(recreate)}">${escapeHtml(shareCopy.recreate)}</a>`,
+    `<p><a href="${escapeHtml(recreate)}" style="display:inline-flex;align-items:center;height:var(--spacing-button);padding:0 var(--spacing-s5);border-radius:var(--radius-full);background:var(--ink);color:var(--canvas);font-weight:500;text-decoration:none">${escapeHtml(shareCopy.recreate)}</a></p>`,
     "</main></div>",
   ].join("")
 }
@@ -169,9 +174,24 @@ function inject(html: string, head: string, body: string): string {
     .replace('<div id="root"></div>', `<div id="root">${body}</div>`)
 }
 
+const moduleScript =
+  /<script type="module" crossorigin src="([^"]+)"><\/script>/
+const modulePreload = /<link rel="modulepreload"[^>]*>/g
+
+export function afterLoad(html: string): string {
+  const entry = moduleScript.exec(html)?.[1]
+  if (entry === undefined) {
+    return html
+  }
+  const boot = `<script>addEventListener("load",()=>{const s=document.createElement("script");s.type="module";s.src=${JSON.stringify(entry)};document.head.append(s)})</script>`
+  return html.replace(moduleScript, boot).replace(modulePreload, "")
+}
+
 export function sharePage(html: string, view: ShareView, url: string): string {
   const origin = new URL(url).origin
-  return inject(html, headTags(headOf(view, origin), url), shareMarkup(view))
+  return afterLoad(
+    inject(html, headTags(headOf(view, origin), url), shareMarkup(view))
+  )
 }
 
 export function explorePage(
