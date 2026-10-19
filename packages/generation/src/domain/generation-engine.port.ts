@@ -95,8 +95,8 @@ export abstract class GenerationEngine {
   /** Reads the status of a submitted run once. */
   abstract read(ref: string): Promise<EngineStatus>
 
-  /** Lists the outputs of a run that succeeded, with their bytes. */
-  abstract listOutputs(ref: string): Promise<EngineOutput[]>
+  /** Lists the outputs of a run that succeeded, with their bytes, and never fetches an address the run's inputs name. */
+  abstract listOutputs(ref: string, inputs: RunInputs): Promise<EngineOutput[]>
 
   /** Asks the engine to stop a submitted run. */
   abstract cancel(ref: string): Promise<void>

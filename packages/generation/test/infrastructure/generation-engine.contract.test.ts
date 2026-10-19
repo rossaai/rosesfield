@@ -200,7 +200,10 @@ describe.each(subjects)("GenerationEngine contract: $name", (subject) => {
         ["queued", "running", "succeeded"].includes(state)
       )
     ).toBe(true)
-    const outputs = await engine.listOutputs(submission.ref)
+    const outputs = await engine.listOutputs(
+      submission.ref,
+      requestFor(binding).inputs
+    )
     expect(outputs.length).toBeGreaterThan(0)
     for (const output of outputs) {
       expect(output.kind).toBe("image")

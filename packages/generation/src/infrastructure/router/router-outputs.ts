@@ -1,7 +1,11 @@
-import type { AssetKind } from "@rosesfield/contract"
+import type { AssetKind, RunInputs } from "@rosesfield/contract"
 import type { EngineOutput } from "#domain/generation-engine.port"
 import { mediaKindOf, mimeOf } from "#infrastructure/comfy/comfy-media"
 import { isObject } from "#infrastructure/router/router-json"
+import type {
+  OutputLeaf,
+  OutputPath,
+} from "#infrastructure/router/router-output-paths"
 
 export type Found =
   | { kind: "url"; url: string }
@@ -13,16 +17,21 @@ export type Found =
 
 type Download = (url: string) => Promise<Response>
 
-const base64Keys =
-  /^(b64_json|bytesBase64Encoded|base64|data|image_base64|audio_base64|video_base64)$/
+export type OutputRead = {
+  paths: readonly OutputPath[]
+  written: ReadonlySet<string>
+  download: Download
+}
 
 const maxOutputs = 16
 
 const maxDepth = 12
 
+const writtenUrl = /https?:\/\/[^\s"'<>]+/g
+
 export async function outputsOf(
   response: Response,
-  download: Download
+  read: OutputRead
 ): Promise<EngineOutput[]> {
   const mime = mimeOf(response.headers.get("content-type"))
   if (!mime.includes("json")) {
@@ -30,14 +39,26 @@ export async function outputsOf(
     return [outputOf(sniffed(bytes, mime), bytes)]
   }
   const document: unknown = await response.json()
-  const found = findMedia(document)
+  const found = findMedia(document, read.paths, read.written)
   const outputs = (
     await Promise.all(
-      found.slice(0, maxOutputs).map((one) => fetchFound(one, download))
+      found.slice(0, maxOutputs).map((one) => fetchFound(one, read.download))
     )
   ).filter((output): output is EngineOutput => output !== null)
   const text = outputs.length === 0 ? textOutputOf(document) : null
   return text === null ? outputs : [text]
+}
+
+export function urlsWritten(inputs: RunInputs): Set<string> {
+  const urls = new Set<string>()
+  for (const value of Object.values(inputs)) {
+    for (const text of Array.isArray(value) ? value : [value]) {
+      for (const match of String(text).matchAll(writtenUrl)) {
+        urls.add(match[0])
+      }
+    }
+  }
+  return urls
 }
 
 export function textOutputOf(document: unknown): EngineOutput | null {
@@ -47,52 +68,60 @@ export function textOutputOf(document: unknown): EngineOutput | null {
     : outputOf("text/plain", new TextEncoder().encode(text))
 }
 
-export function findMedia(document: unknown): Found[] {
+export function findMedia(
+  document: unknown,
+  paths: readonly OutputPath[],
+  written: ReadonlySet<string>
+): Found[] {
   const found: Found[] = []
   const seen = new Set<string>()
-  walk(document, null, 0, (one) => {
-    const key = one.kind === "url" ? one.url : `${one.bytes.length}:${one.mime}`
-    if (!seen.has(key)) {
-      seen.add(key)
-      found.push(one)
+  for (const path of paths) {
+    for (const value of stringsAt(document, path.segments, 0)) {
+      const one = foundOf(value, path.leaf, written)
+      const key =
+        one === null
+          ? null
+          : one.kind === "url"
+            ? one.url
+            : `${one.bytes.length}:${one.mime}`
+      if (one !== null && key !== null && !seen.has(key)) {
+        seen.add(key)
+        found.push(one)
+      }
     }
-  })
+  }
   return found
 }
 
-function walk(
+function stringsAt(
   value: unknown,
-  key: string | null,
-  depth: number,
-  add: (found: Found) => void
-): void {
-  if (depth > maxDepth) {
-    return
+  segments: readonly string[],
+  index: number
+): string[] {
+  if (index === segments.length) {
+    return typeof value === "string" ? [value] : []
   }
-  if (typeof value === "string") {
-    const one = foundOf(value, key)
-    if (one !== null) {
-      add(one)
-    }
-    return
+  const segment = segments[index]
+  if (segment === "[]") {
+    return Array.isArray(value)
+      ? value.flatMap((item) => stringsAt(item, segments, index + 1))
+      : []
   }
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      walk(item, key, depth + 1, add)
-    }
-    return
+  if (!isObject(value) || segment === undefined) {
+    return []
   }
-  if (isObject(value)) {
-    for (const [child, item] of Object.entries(value)) {
-      walk(item, child, depth + 1, add)
-    }
-  }
+  return stringsAt(
+    Object.getOwnPropertyDescriptor(value, segment)?.value,
+    segments,
+    index + 1
+  )
 }
 
-function foundOf(value: string, key: string | null): Found | null {
-  if (/^https?:\/\/\S+$/.test(value)) {
-    return { kind: "url", url: value }
-  }
+function foundOf(
+  value: string,
+  leaf: OutputLeaf,
+  written: ReadonlySet<string>
+): Found | null {
   const inline = /^data:([a-z]+\/[a-z0-9.+-]+);base64,(.+)$/i.exec(value)
   if (inline !== null) {
     const bytes = bytesOf(inline[2] ?? "")
@@ -100,13 +129,18 @@ function foundOf(value: string, key: string | null): Found | null {
       ? null
       : { kind: "bytes", bytes, mime: inline[1] ?? "" }
   }
-  if (key !== null && base64Keys.test(key) && value.length > 64) {
-    const bytes = bytesOf(value)
-    return bytes === null
-      ? null
-      : { kind: "bytes", bytes, mime: sniffed(bytes, "") }
+  if (leaf === "url") {
+    return /^https:\/\/\S+$/.test(value) && !written.has(value)
+      ? { kind: "url", url: value }
+      : null
   }
-  return null
+  if (value.length <= 64) {
+    return null
+  }
+  const bytes = bytesOf(value)
+  return bytes === null
+    ? null
+    : { kind: "bytes", bytes, mime: sniffed(bytes, "") }
 }
 
 async function fetchFound(
@@ -116,14 +150,10 @@ async function fetchFound(
   if (found.kind === "bytes") {
     return isMedia(found.mime) ? outputOf(found.mime, found.bytes) : null
   }
-  try {
-    const response = await download(found.url)
-    const bytes = new Uint8Array(await response.arrayBuffer())
-    const mime = sniffed(bytes, mimeOf(response.headers.get("content-type")))
-    return isMedia(mime) ? outputOf(mime, bytes) : null
-  } catch {
-    return null
-  }
+  const response = await download(found.url)
+  const bytes = new Uint8Array(await response.arrayBuffer())
+  const mime = sniffed(bytes, mimeOf(response.headers.get("content-type")))
+  return isMedia(mime) ? outputOf(mime, bytes) : null
 }
 
 function outputOf(mime: string, bytes: Uint8Array): EngineOutput {

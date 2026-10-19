@@ -191,7 +191,7 @@ describe("ComfyRouterGenerationEngine", () => {
       state: "succeeded",
       cost: { amount: 3 / 211, currency: "USD" },
     })
-    const [output] = await engine.listOutputs(submission.ref)
+    const [output] = await engine.listOutputs(submission.ref, { text: "hello" })
     expect(output).toMatchObject({ kind: "audio", mime: "audio/mpeg" })
     expect(replay.unused()).toEqual([])
   })

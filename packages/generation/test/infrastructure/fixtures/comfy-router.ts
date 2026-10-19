@@ -17,6 +17,27 @@ type SchemaOptions = {
   required?: string[]
   answers?: string
   aliasOf?: string
+  response?: Record<string, unknown>
+}
+
+export const sampleProperties: Record<string, unknown> = {
+  id: { type: "string" },
+  status: { type: "string" },
+  result: {
+    type: "object",
+    properties: {
+      sample: {
+        type: "string",
+        format: "uri",
+        description: "Signed URL for the generated asset.",
+      },
+    },
+  },
+}
+
+export const sampleResponse: Record<string, unknown> = {
+  type: "object",
+  properties: sampleProperties,
 }
 
 export function routerSchema(options: SchemaOptions): Record<string, unknown> {
@@ -48,7 +69,12 @@ export function routerSchema(options: SchemaOptions): Record<string, unknown> {
           },
           responses: {
             "200": {
-              content: { [options.answers ?? "application/json"]: {} },
+              content: {
+                [options.answers ?? "application/json"]:
+                  options.answers === undefined
+                    ? { schema: options.response ?? sampleResponse }
+                    : {},
+              },
             },
           },
         },

@@ -14,6 +14,7 @@ export type SchemaFacts = {
   isAuthored: boolean
   answersBytes: boolean
   request: Schema | null
+  response: Schema | null
   components: Schema
 }
 
@@ -40,6 +41,7 @@ export function factsOf(document: unknown): SchemaFacts | null {
     isAuthored,
     answersBytes: answersBytes(operation),
     request: isAuthored && isObject(request) ? request : null,
+    response: responseOf(operation),
     components: isObject(components) ? components : {},
   }
 }
@@ -113,6 +115,17 @@ function operationOf(document: unknown): unknown {
   const paths = fieldOf(document, "paths")
   const first = isObject(paths) ? Object.values(paths)[0] : undefined
   return fieldOf(first, "post")
+}
+
+function responseOf(operation: unknown): Schema | null {
+  const schema = fieldOf(
+    fieldOf(
+      fieldOf(fieldOf(fieldOf(operation, "responses"), "200"), "content"),
+      "application/json"
+    ),
+    "schema"
+  )
+  return isObject(schema) ? schema : null
 }
 
 function answersBytes(operation: unknown): boolean {

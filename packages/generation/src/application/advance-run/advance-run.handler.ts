@@ -191,7 +191,11 @@ export class AdvanceRunHandler {
     polled: Polled,
     watch: Watch
   ): Promise<AssetId[] | null> {
-    const outputs = (await watch.engine.listOutputs(polled.ref)).filter(
+    const listed = await watch.engine.listOutputs(
+      polled.ref,
+      run.toRecord().inputs
+    )
+    const outputs = listed.filter(
       (output) => output.kind === watch.app.output.kind
     )
     if (outputs.length === 0) {

@@ -197,9 +197,13 @@ export class RouterHttp {
   }
 
   async download(url: string): Promise<Response> {
-    const response = await this.options.fetch(url, {
-      signal: AbortSignal.timeout(this.options.downloadTimeoutMs),
-    })
+    const response = await this.options
+      .fetch(url, {
+        signal: AbortSignal.timeout(this.options.downloadTimeoutMs),
+      })
+      .catch((error: unknown) => {
+        throw new EngineUnavailableError({ cause: error })
+      })
     if (!response.ok) {
       throw new EngineUnavailableError({ cause: `download ${response.status}` })
     }

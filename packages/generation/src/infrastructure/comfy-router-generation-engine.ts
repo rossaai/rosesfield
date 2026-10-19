@@ -1,4 +1,9 @@
-import type { Cost, EngineBinding, KeyCheck } from "@rosesfield/contract"
+import type {
+  Cost,
+  EngineBinding,
+  KeyCheck,
+  RunInputs,
+} from "@rosesfield/contract"
 import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import { ModelNotFoundError } from "#domain/error/model-not-found.error"
 import {
@@ -24,7 +29,7 @@ import type {
 } from "#infrastructure/router/router-catalog"
 import { failureOf } from "#infrastructure/router/router-errors"
 import { RouterHttp } from "#infrastructure/router/router-http"
-import { outputsOf } from "#infrastructure/router/router-outputs"
+import { outputsOf, urlsWritten } from "#infrastructure/router/router-outputs"
 import { priceFromRates } from "#infrastructure/router/router-rates"
 
 type ComfyRouterGenerationEngineOptions = {
@@ -175,16 +180,28 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     return this.collect(ref, parsed)
   }
 
-  override async listOutputs(ref: string): Promise<EngineOutput[]> {
+  override async listOutputs(
+    ref: string,
+    inputs: RunInputs
+  ): Promise<EngineOutput[]> {
+    const parsed = parseRef(ref)
     const kept = this.results.get(ref) ?? this.catalog.keptResult(ref)
     const response =
       kept === null || kept === undefined
-        ? await this.http.result(parseRef(ref).model, parseRef(ref).requestId)
+        ? await this.http.result(parsed.model, parsed.requestId)
         : responseOf(kept)
     if (response === null) {
       throw new EngineUnavailableError({ cause: "the result is not ready" })
     }
-    return outputsOf(response, (url) => this.http.download(url))
+    const entry = await this.catalog.entry(this.http, parsed.model)
+    if (entry === null) {
+      throw new ModelNotFoundError({ model: parsed.model })
+    }
+    return outputsOf(response, {
+      paths: entry.outputs,
+      written: urlsWritten(inputs),
+      download: (url) => this.http.download(url),
+    })
   }
 
   override async cancel(ref: string): Promise<void> {

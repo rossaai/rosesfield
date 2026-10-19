@@ -3,6 +3,10 @@ import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import type { ModelForm } from "#domain/model-form"
 import { fieldsOf } from "#infrastructure/router/router-fields"
 import type { RouterHttp } from "#infrastructure/router/router-http"
+import {
+  type OutputPath,
+  outputPathsOf,
+} from "#infrastructure/router/router-output-paths"
 import { type RateRow, rateRowsOf } from "#infrastructure/router/router-rates"
 import { factsOf, type SchemaFacts } from "#infrastructure/router/router-schema"
 
@@ -11,6 +15,7 @@ export type CatalogSource = "keyed" | "public"
 export type CatalogEntry = {
   facts: SchemaFacts
   form: ModelForm
+  outputs: readonly OutputPath[]
   etag: string | null
   checkedAt: number
   source: CatalogSource
@@ -250,6 +255,7 @@ export class RouterCatalog {
     this.entries.set(id, {
       facts,
       form: { model: id, fields: fieldsOf(facts) },
+      outputs: outputPathsOf(facts.response, facts.components),
       etag,
       checkedAt: this.now(),
       source,
