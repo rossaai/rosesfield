@@ -4,7 +4,14 @@ const tokenPattern = /^#token=([\x21-\x7e]{32,1024})$/
 
 export function tokenOfHash(hash: string): string | null {
   const token = tokenPattern.exec(hash)?.[1]
-  return token === undefined ? null : decodeURIComponent(token)
+  if (token === undefined) {
+    return null
+  }
+  try {
+    return decodeURIComponent(token)
+  } catch {
+    return null
+  }
 }
 
 export async function keepTokenFromLink(): Promise<void> {
