@@ -3,6 +3,7 @@ import { isDeniedModel } from "#comfy/model-deny"
 import { makerOf, nameOf } from "#comfy/model-names"
 import { hostedTagsOf, topResolutionOf } from "#comfy/model-tags"
 import { tasksOfModel } from "#comfy/model-tasks"
+import { isProvenFamily } from "#comfy/proven-families"
 
 describe("the task of a model", () => {
   it("comes from the media it takes and makes", () => {
@@ -114,5 +115,12 @@ describe("the factual tags of a video model", () => {
         },
       ])
     ).toBe("4K")
+  })
+})
+
+describe("a proven family", () => {
+  it("marks every model of the provider whose model ran", () => {
+    expect(isProvenFamily("luma")).toBe(true)
+    expect(isProvenFamily("bfl")).toBe(false)
   })
 })
