@@ -7,6 +7,7 @@ import {
   transcriptResponse,
 } from "@rosesfield/agent"
 import { listApps } from "@rosesfield/catalog"
+import { appTasksOf } from "@rosesfield/catalog/comfy"
 import {
   type AppDefinition,
   appListResponse,
@@ -71,16 +72,18 @@ async function codeOf(response: {
 }
 
 function promptOnlyApp(): AppDefinition {
-  const found = listApps().find((one) =>
-    one.inputs.every((input) =>
-      input.type === "prompt" ||
-      input.type === "choice" ||
-      input.type === "number" ||
-      input.type === "toggle" ||
-      input.type === "seed"
-        ? true
-        : input.presence === "optional"
-    )
+  const found = listApps().find(
+    (one) =>
+      appTasksOf(one).length === 0 &&
+      one.inputs.every((input) =>
+        input.type === "prompt" ||
+        input.type === "choice" ||
+        input.type === "number" ||
+        input.type === "toggle" ||
+        input.type === "seed"
+          ? true
+          : input.presence === "optional"
+      )
   )
   if (found === undefined) {
     throw new Error("The catalog holds no app that runs on a prompt alone")

@@ -95,7 +95,7 @@ describe("an Image run through the local gateway on the demo engine", () => {
       startPath,
       postJson(
         {
-          inputs: { prompt: "a lighthouse at dawn" },
+          inputs: { prompt: "a lighthouse at dawn", model: "z-image-turbo" },
           count: 4,
           aspectRatio: "16:9",
         },
@@ -120,7 +120,7 @@ describe("an Image run through the local gateway on the demo engine", () => {
     expect(done.outputs).toHaveLength(4)
     expect(done.inputs).toEqual({
       prompt: "a lighthouse at dawn",
-      model: "flux-2-klein-4b",
+      model: "z-image-turbo",
       resolution: "1k",
     })
     expect(done.seed).toBe(run.seed)
@@ -176,7 +176,7 @@ describe("an Image run through the local gateway on the demo engine", () => {
       postJson({
         inputs: {
           prompt: "a quiet harbour",
-          model: "flux-2-klein-4b",
+          model: "qwen-image-2512",
           resolution: "2k",
         },
       })
@@ -190,12 +190,18 @@ describe("an Image run through the local gateway on the demo engine", () => {
     expect(JSON.stringify(await runs.json())).not.toContain("a quiet harbour")
   })
 
-  it("refuses a reference before a run starts, because no bound model takes one", async () => {
+  it("refuses a reference on a graph before a run starts, because no graph takes one", async () => {
     open()
     const reference = await upload()
     const response = await call(
       startPath,
-      postJson({ inputs: { prompt: "a door", references: [reference] } })
+      postJson({
+        inputs: {
+          prompt: "a door",
+          model: "z-image-turbo",
+          references: [reference],
+        },
+      })
     )
     expect(response.status).toBe(400)
     expect(errorEnvelope.parse(await response.json()).error.code).toBe(
@@ -204,5 +210,19 @@ describe("an Image run through the local gateway on the demo engine", () => {
     const runs = await call(routes.listRuns.path)
     expect(runs.status).toBe(200)
     expect(JSON.stringify(await runs.json())).not.toContain("a door")
+  })
+
+  it("asks for FLUX 3 Image when a run names no model, which the demo engine does not run", async () => {
+    open()
+    const response = await call(
+      startPath,
+      postJson({ inputs: { prompt: "a paper boat" } })
+    )
+    expect(response.status).toBe(404)
+    expect(errorEnvelope.parse(await response.json()).error.code).toBe(
+      "MODEL_NOT_FOUND"
+    )
+    const runs = await call(routes.listRuns.path)
+    expect(JSON.stringify(await runs.json())).not.toContain("a paper boat")
   })
 })

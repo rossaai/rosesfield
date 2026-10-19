@@ -1,8 +1,10 @@
+import { taskBinding } from "@rosesfield/generation/bindings"
 import { defineApp } from "#define-app"
 import { imageBinding } from "#image/comfy/image-binding"
 import {
-  defaultModel,
   defaultResolution,
+  firstGraph,
+  firstModel,
   imageModels,
   resolutionKeyOf,
   resolutionsOf,
@@ -29,7 +31,7 @@ export const app = defineApp({
         value: model.value,
         labelKey: model.labelKey,
       })),
-      default: defaultModel,
+      default: firstGraph,
     },
     {
       type: "choice",
@@ -55,6 +57,11 @@ export const app = defineApp({
       default: "1:1",
     },
   },
-  engine: imageBinding,
+  engine: taskBinding({
+    tasks: ["text-to-image"],
+    input: "model",
+    default: firstModel,
+    fallback: imageBinding,
+  }),
   limits: { timeoutSeconds: 600, maxRetries: 2 },
 })

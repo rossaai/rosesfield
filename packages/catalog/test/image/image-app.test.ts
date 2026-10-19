@@ -4,13 +4,19 @@ import {
   inputRulesOf,
   startRunBodyFor,
 } from "@rosesfield/contract"
-import { comfyWorkflowAdapter, resolveBinding } from "@rosesfield/generation"
+import {
+  comfyWorkflowAdapter,
+  hostedModelOf,
+  resolveBinding,
+} from "@rosesfield/generation"
 import { AspectRatio } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
+import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
 import { app } from "#image/app"
 import { imageCopy } from "#image/copy.en"
 import { imageModels, resolutionsOf } from "#image/image-models"
 import { readApps } from "#list-apps"
+import { listWorkflows } from "#list-workflows"
 
 function readImage(): AppDefinition {
   const [read] = readApps([{ folder: "image", app }])
@@ -35,6 +41,29 @@ function resolutionsAllowed(model: string): readonly string[] {
 }
 
 describe("the Image app", () => {
+  it("lists the models that make an image from text and opens on FLUX 3 Image", () => {
+    expect(appTasksOf(definition)).toEqual(["text-to-image"])
+    expect(defaultModelOf(definition)).toBe("bfl/flux-3-image")
+    const named = resolveBinding(definition.engine, { prompt: "a" })
+    expect(hostedModelOf(named)).toBe("bfl/flux-3-image")
+    const graph = resolveBinding(definition.engine, {
+      prompt: "a",
+      model: "z-image-turbo",
+      resolution: "1k",
+    })
+    expect(graph.adapter).toBe(comfyWorkflowAdapter)
+  })
+
+  it("keeps two open-weights graphs and no FLUX.2 Klein 4B graph", () => {
+    const graphs = modelsForApp(definition, []).map((model) => model.id)
+    expect(graphs).toEqual(["z-image-turbo", "qwen-image-2512"])
+    const ids = listWorkflows().map((workflow) => workflow.id)
+    expect(ids).toEqual(
+      expect.arrayContaining(["image-z-image-turbo", "image-qwen-image-2512"])
+    )
+    expect(ids).not.toContain("image-flux-2-klein-4b")
+  })
+
   it("is read by the catalog with its id as its folder", () => {
     expect(definition.id).toBe("image")
     expect(definition.inputs.map((input) => input.name)).toEqual([
@@ -60,6 +89,7 @@ describe("the Image app", () => {
       { inputs: { prompt: "a" }, count: 5 },
       { inputs: { prompt: "a" }, aspectRatio: "2:1" },
       { inputs: { prompt: "a", model: "a-model-not-bound" } },
+      { inputs: { prompt: "a", model: "flux-2-klein-4b" } },
       { inputs: { prompt: "a", model: "nano-banana-2" } },
       { inputs: { prompt: "a", model: "gpt-image-2" } },
       { inputs: { prompt: "a", resolution: "4k" } },
@@ -73,13 +103,11 @@ describe("the Image app", () => {
   })
 
   it("lets each model take only the resolutions it runs", () => {
-    expect(resolutionsAllowed("flux-2-klein-4b")).toEqual(["1k"])
     expect(resolutionsAllowed("z-image-turbo")).toEqual(["1k", "2k"])
     expect(resolutionsAllowed("qwen-image-2512")).toEqual(["1k"])
     const ask = (model: string, resolution: string) =>
       body.safeParse({ inputs: { prompt: "a", model, resolution } }).success
     expect(ask("z-image-turbo", "2k")).toBe(true)
-    expect(ask("flux-2-klein-4b", "2k")).toBe(false)
     expect(ask("qwen-image-2512", "2k")).toBe(false)
   })
 
@@ -107,7 +135,7 @@ describe("the Image app", () => {
         workflows.add(JSON.stringify(workflowOf(binding)))
       }
     }
-    expect(workflows.size).toBe(3)
+    expect(workflows.size).toBe(2)
   })
 
   it("asks for a size within 2% of each format, in steps of 16, within each model's pixel area", () => {

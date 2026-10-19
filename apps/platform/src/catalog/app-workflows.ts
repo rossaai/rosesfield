@@ -13,6 +13,7 @@ type OutputKind = AppListing["output"]["kind"]
 type GraphNodes = ReadonlySet<string>
 
 const selectAdapter = "select"
+const taskAdapter = "task"
 const workflowAdapter = "comfy-workflow"
 const maxDepth = 4
 const maxWalk = 32
@@ -66,11 +67,19 @@ function resolved(
   inputs: Inputs
 ): EngineBinding | null {
   let current: EngineBinding | null = binding
-  for (let depth = 0; current?.adapter === selectAdapter; depth += 1) {
+  for (
+    let depth = 0;
+    current?.adapter === selectAdapter || current?.adapter === taskAdapter;
+    depth += 1
+  ) {
     if (depth >= maxDepth) {
       return null
     }
-    current = chosen(current, inputs)
+    const next: unknown =
+      current.adapter === taskAdapter
+        ? fieldOf(current.config, "fallback")
+        : chosen(current, inputs)
+    current = isBinding(next) ? next : null
   }
   return current
 }

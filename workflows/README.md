@@ -92,7 +92,7 @@ One file for the whole folder that a sync writes from the entries, with the apps
 | Qwen Image 2512 | `image-qwen-image-2512`, `characters-traits-qwen-image-2512` |
 | Qwen Image | `expand-format-qwen-image`, `expand-sides-qwen-image`, `layers-fill-qwen-image` |
 | Qwen Image Layered | `layers-split-qwen-image-layered` |
-| FLUX.2 Klein 4B | `image-flux-2-klein-4b`, `characters-traits-flux-2-klein-4b`, `ads-flux-2-klein-4b`, `storyboard-flux-2-klein-4b`, `storyboard-flux-2-klein-4b-from-text`, `try-on-flux-2-klein-4b` |
+| FLUX.2 Klein 4B | `characters-traits-flux-2-klein-4b`, `ads-flux-2-klein-4b`, `storyboard-flux-2-klein-4b`, `storyboard-flux-2-klein-4b-from-text`, `try-on-flux-2-klein-4b` |
 | Z-Image Turbo | `image-z-image-turbo`, `characters-traits-z-image-turbo` |
 | SeedVR2 | `upscale-image-seedvr2`, `upscale-video-seedvr2` |
 | Real-ESRGAN | `upscale-image-real-esrgan`, `upscale-video-real-esrgan` |

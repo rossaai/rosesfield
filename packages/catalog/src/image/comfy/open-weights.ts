@@ -29,20 +29,6 @@ const shared: readonly WorkflowValueBinding[] = [
   { from: "count", to: "count" },
 ]
 
-export function flux2Klein4b(table: SizeTable): EngineBinding {
-  return workflowBinding({
-    workflow: "image-flux-2-klein-4b",
-    bindings: [
-      ...shared,
-      ...sizeBindings(
-        table,
-        ["schedulerWidth", "width"],
-        ["schedulerHeight", "height"]
-      ),
-    ],
-  })
-}
-
 export function zImageTurbo(table: SizeTable): EngineBinding {
   return workflowBinding({
     workflow: "image-z-image-turbo",
