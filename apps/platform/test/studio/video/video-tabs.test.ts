@@ -88,6 +88,13 @@ describe("the Video tabs", () => {
     expect(
       modelForTab(references, "fal/h3-max-turbo", "minimax/minimax-h3")
     ).toBe("minimax/minimax-h3")
+    expect(
+      modelForTab(
+        references,
+        "fal/h3-max-turbo",
+        "veo/veo-3.1-lite-generate-001"
+      )
+    ).toBe("veo/veo-3.1-lite-generate-001")
   })
 
   it("gives each tab its image slots and limits", () => {
