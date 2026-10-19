@@ -1,4 +1,14 @@
 export {
+  type AccountStatus,
+  accountResponse,
+  accountRoutes,
+  accountStatus,
+  type KeyStatus,
+  keyStatus,
+  type SpendCapStatus,
+  spendCap,
+} from "#account.contract"
+export {
   type AppCategory,
   type AppDefinition,
   type AppLimits,
@@ -74,6 +84,7 @@ export {
   type PathParamName,
   type RouteDefinition,
   type RoutePayload,
+  spendingRoutes,
 } from "#route.contract"
 export {
   appListResponse,
@@ -100,6 +111,16 @@ export {
   runRequest,
   runStatus,
 } from "#run.contract"
+export {
+  type SharedMediaView,
+  type ShareView,
+  sharedMedia,
+  shareListResponse,
+  sharePaths,
+  shareResponse,
+  shareRoutes,
+  shareView,
+} from "#share.contract"
 export {
   fixedCountOf,
   type StartRunBody,

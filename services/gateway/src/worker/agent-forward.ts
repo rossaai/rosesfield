@@ -15,3 +15,17 @@ export function forwardToAgentHost(
     return host.fetch(new Request(c.req.raw, { headers }))
   }
 }
+
+export async function moveAgentHost(
+  agents: DurableObjectNamespace,
+  from: string,
+  to: string
+): Promise<void> {
+  const moved = await agents
+    .getByName(from)
+    .fetch(`${AgentHost.origin}${AgentHost.movePath}`, {
+      method: "POST",
+      headers: { [AgentHost.sessionHeader]: to },
+    })
+  await moved.body?.cancel()
+}

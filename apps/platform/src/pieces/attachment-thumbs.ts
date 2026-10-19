@@ -2,17 +2,17 @@ import { type Asset, type Character, routes } from "@rosesfield/contract"
 import type { PromptAttachment } from "@rosesfield/ui/components/prompt-bar"
 import { useQueries } from "@tanstack/react-query"
 import { callRoute } from "@/api/call-route"
-import { readOwnerToken } from "@/api/owner-token"
 import { assetQuery, characterQuery } from "@/api/queries"
 import { assetBlobKey } from "@/api/query-client"
 import { assetContentPath } from "@/api/use-asset-source"
+import { sendsCredentials } from "@/api/visitor-keys"
 import { assetLabel } from "@/pieces/asset-name"
 
 const blankPixel =
   "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 
 function useSources(assetIds: readonly string[]): Array<string | null> {
-  const needsToken = readOwnerToken() !== null
+  const needsToken = sendsCredentials()
   const blobs = useQueries({
     queries: assetIds.map((assetId) => ({
       queryKey: [assetBlobKey, assetId],

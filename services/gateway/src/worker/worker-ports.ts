@@ -4,6 +4,7 @@ import { DrizzlePriceBook } from "@rosesfield/generation"
 import { type Clock, SystemClock } from "@rosesfield/kernel"
 import { drizzle } from "drizzle-orm/d1"
 import type { HandlerPorts } from "#build-handlers"
+import { sharedCreditMeter } from "#catalog/shared-credit-meter"
 import { type EngineOptions, pickEngines } from "#compose/pick-engines"
 import { readWorkerEnv, type WorkerVars } from "#env"
 import { R2AssetStore } from "#infrastructure/r2-asset-store"
@@ -15,6 +16,7 @@ import { SqliteRunRepository } from "#infrastructure/sqlite-run-repository"
 export type WorkerBindings = {
   DB: D1Database
   BUCKET: R2Bucket
+  ASSETS: Fetcher
   WATCHERS: DurableObjectNamespace
   AGENTS: DurableObjectNamespace
   MODE?: string
@@ -26,6 +28,7 @@ export type WorkerBindings = {
   SESSION_SECRET?: string
   RETENTION_DAYS?: string
   SESSION_REQUESTS_PER_MINUTE?: string
+  SPEND_CAP_CREDITS?: string
   AGENT_PROVIDER?: string
   AGENT_MODEL?: string
   AGENT_API_KEY?: string
@@ -49,7 +52,11 @@ export function workerParts(env: WorkerBindings): WorkerParts {
     db: drizzle(env.DB),
     store: new R2AssetStore({ bucket: env.BUCKET }),
     clock,
-    engineOptions: { clock },
+    engineOptions: {
+      clock,
+      meter: sharedCreditMeter(clock),
+      fetch: (input, init) => fetch(input, init),
+    },
   }
 }
 

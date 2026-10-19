@@ -1,0 +1,52 @@
+import { type AccountStatus, accountRoutes } from "@rosesfield/contract"
+import type { Context } from "hono"
+import type { GatewayApp } from "#gateway-env"
+import type { ResponseOf } from "#routes/read-request"
+import type { KeyProbe } from "#session/key-probe"
+import type { KeyReadings } from "#session/key-readings"
+import { readVisitorKeys } from "#session/visitor-keys"
+
+export type AccountReader = (c: Context) => Promise<AccountStatus>
+
+export type CapReader = {
+  read: () => Promise<{ credits: number; left: number } | null>
+}
+
+export function visitorAccount(options: {
+  readings: KeyReadings
+  retentionDays: number
+}): AccountReader {
+  return async (c) => {
+    const key = readVisitorKeys(c).engine
+    const reading =
+      key === null
+        ? { key: "missing" as const, credits: null }
+        : await options.readings.take(c.req.raw, key)
+    return { ...reading, retentionDays: options.retentionDays, cap: null }
+  }
+}
+
+export function ownerAccount(options: {
+  probe: KeyProbe
+  key: string | null
+  cap: CapReader | null
+}): AccountReader {
+  return async () => {
+    const { key, cap } = options
+    const [reading, capped] = await Promise.all([
+      key === null
+        ? { key: "missing" as const, credits: null }
+        : options.probe.read(key, cap === null ? "with-credits" : "no-credits"),
+      cap === null ? null : cap.read(),
+    ])
+    return { ...reading, retentionDays: null, cap: capped }
+  }
+}
+
+export function accountRoute(app: GatewayApp, read: AccountReader): void {
+  const route = accountRoutes.getAccount
+  app.get(route.path, async (c) => {
+    const body: ResponseOf<typeof route> = { account: await read(c) }
+    return c.json(body, route.status)
+  })
+}

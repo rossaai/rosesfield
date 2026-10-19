@@ -1,9 +1,14 @@
 import type { Run } from "@rosesfield/contract"
 import { useToast } from "@rosesfield/ui/components/toast"
-import { type QueryClient, useQueryClient } from "@tanstack/react-query"
+import {
+  type QueryClient,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import { useNavigate, useRouterState } from "@tanstack/react-router"
 import { useEffect, useRef } from "react"
-import { isWorking } from "@/api/queries"
+import { isWorking, runQuery, settingsQuery } from "@/api/queries"
 import { appName } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
@@ -53,8 +58,22 @@ function refresh(client: QueryClient, run: Run): void {
   }
 }
 
+const publicPollMs = 2000
+
+function usePublicPolls(runs: readonly Run[]): void {
+  const isPublic = useQuery(settingsQuery).data?.mode === "public"
+  const working = isPublic ? runs.filter(isWorking) : []
+  useQueries({
+    queries: working.map((run) => ({
+      ...runQuery(run.id),
+      refetchInterval: publicPollMs,
+    })),
+  })
+}
+
 export function RunWatcher(): null {
   const runs = useRecentRuns()
+  usePublicPolls(runs)
   const seen = useRef(new Map<string, Run["status"]>())
   const client = useQueryClient()
   const toast = useToast()

@@ -13,10 +13,12 @@ import { DeviceProvider } from "@/device/device-context"
 import { WebDevice } from "@/device/web-device"
 import { registerOfflineShell } from "@/offline-shell"
 import { createAppRouter } from "@/router"
+import { keepTokenFromLink } from "@/shell/token-link"
 import { applyThemeChoice, readThemeChoice } from "@/theme/theme-choice"
 
 async function start(): Promise<void> {
   applyThemeChoice(readThemeChoice())
+  await keepTokenFromLink()
   await Promise.all([loadOwnerToken(), loadVisitorKeys()])
   const queryClient = createQueryClient({
     onLocked: () => {

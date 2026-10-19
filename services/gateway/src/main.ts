@@ -29,7 +29,11 @@ function describe(env: ServerEnv): string[] {
 async function purge(gateway: LocalGateway): Promise<void> {
   const count = await gateway.purge()
   const total =
-    count.runs + count.assets + count.characters + count.conversations
+    count.runs +
+    count.assets +
+    count.characters +
+    count.conversations +
+    count.shares
   if (total > 0) {
     console.log(gatewayCopy.server.purged(total))
   }

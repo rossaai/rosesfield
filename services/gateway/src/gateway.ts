@@ -1,4 +1,10 @@
-import type { AppDefinition } from "@rosesfield/contract"
+import { conversationRoutes } from "@rosesfield/agent"
+import {
+  type AppDefinition,
+  accountRoutes,
+  routes,
+  spendingRoutes,
+} from "@rosesfield/contract"
 import { type Context, Hono, type MiddlewareHandler } from "hono"
 import { agentRoutes } from "#agent/agent-routes"
 import { modelRoutes } from "#catalog/catalog-routes"
@@ -10,7 +16,18 @@ import { characterRoutes } from "#routes/character-routes"
 import { errorResponse, routeNotFound } from "#routes/error-response"
 import { appRoutes, runRoutes } from "#routes/run-routes"
 import { settingsRoutes } from "#routes/settings-routes"
-import { type SessionGuardOptions, sessionGuard } from "#session/session-cookie"
+import { type AccountReader, accountRoute } from "#session/account-routes"
+import {
+  forgetSession,
+  type SessionGuardOptions,
+  sessionGuard,
+} from "#session/session-cookie"
+import {
+  type ShareMount,
+  shareApiRoute,
+  sharePublicRoutes,
+} from "#share/share-routes"
+import type { SpendGuard } from "#spend/spend-guard"
 
 export type GatewayContext = Context<GatewayEnv>
 
@@ -27,7 +44,19 @@ export type GatewayOptions = {
   guard: GatewayGuard
   scopeFor: (c: GatewayContext) => Promise<RequestScope>
   agent: AgentMount
+  account?: AccountReader
+  shares?: ShareMount
+  spendGuard?: SpendGuard
   platform: readonly MiddlewareHandler[]
+}
+
+export const spending = spendingRoutes(routes, conversationRoutes)
+
+function guardSpending(app: GatewayApp, guard: SpendGuard): void {
+  for (const route of spending) {
+    app.on(route.method, route.path, guard.forRoute(route))
+  }
+  app.on("POST", mcpPath, guard.forRoute(null))
 }
 
 function guardOf(guard: GatewayGuard): MiddlewareHandler<GatewayEnv> {
@@ -61,8 +90,16 @@ export function createGateway(options: GatewayOptions): GatewayApp {
   app.onError(errorResponse)
   app.notFound(routeNotFound)
   const guard = guardOf(options.guard)
+  app.delete(accountRoutes.forgetAccount.path, forgetSession)
   app.use("/api/*", guard)
   app.use(mcpPath, guard)
+  const { spendGuard, shares, account } = options
+  if (spendGuard !== undefined) {
+    guardSpending(app, spendGuard)
+  }
+  if (shares !== undefined) {
+    sharePublicRoutes(app, shares)
+  }
   if (options.agent.mode === "forward") {
     app.all("/api/agent/*", options.agent.forward)
   }
@@ -75,6 +112,12 @@ export function createGateway(options: GatewayOptions): GatewayApp {
   assetRoutes(app)
   characterRoutes(app)
   settingsRoutes(app)
+  if (account !== undefined) {
+    accountRoute(app, account)
+  }
+  if (shares !== undefined) {
+    shareApiRoute(app, shares)
+  }
   if (options.agent.mode === "routes") {
     agentRoutes(app)
   }

@@ -17,6 +17,7 @@ import { Route as ShellIndexRouteImport } from './routes/_shell/index'
 import { Route as ShellConnectRouteImport } from './routes/_shell/connect'
 import { Route as ShellLibraryRouteImport } from './routes/_shell/library'
 import { Route as ShellSettingsRouteImport } from './routes/_shell/settings'
+import { Route as ShareShareIdRouteImport } from './routes/share.$shareId'
 import { Route as ShellAgentIndexRouteImport } from './routes/_shell/agent/index'
 import { Route as ShellAgentConversationIdRouteImport } from './routes/_shell/agent/$conversationId'
 import { Route as ShellAppsIndexRouteImport } from './routes/_shell/apps/index'
@@ -65,6 +66,11 @@ const ShellSettingsRoute = ShellSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => ShellRoute,
+} as any)
+const ShareShareIdRoute = ShareShareIdRouteImport.update({
+  id: '/share/$shareId',
+  path: '/share/$shareId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ShellAgentIndexRoute = ShellAgentIndexRouteImport.update({
   id: '/agent/',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/connect': typeof ShellConnectRoute
   '/library': typeof ShellLibraryRoute
   '/settings': typeof ShellSettingsRoute
+  '/share/$shareId': typeof ShareShareIdRoute
   '/agent/$conversationId': typeof ShellAgentConversationIdRoute
   '/apps/$appId': typeof ShellAppsAppIdRoute
   '/characters/$characterId': typeof ShellCharactersCharacterIdRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/connect': typeof ShellConnectRoute
   '/library': typeof ShellLibraryRoute
   '/settings': typeof ShellSettingsRoute
+  '/share/$shareId': typeof ShareShareIdRoute
   '/': typeof ShellIndexRoute
   '/agent/$conversationId': typeof ShellAgentConversationIdRoute
   '/apps/$appId': typeof ShellAppsAppIdRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/_shell/connect': typeof ShellConnectRoute
   '/_shell/library': typeof ShellLibraryRoute
   '/_shell/settings': typeof ShellSettingsRoute
+  '/share/$shareId': typeof ShareShareIdRoute
   '/_shell/': typeof ShellIndexRoute
   '/_shell/agent/$conversationId': typeof ShellAgentConversationIdRoute
   '/_shell/apps/$appId': typeof ShellAppsAppIdRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/connect'
     | '/library'
     | '/settings'
+    | '/share/$shareId'
     | '/agent/$conversationId'
     | '/apps/$appId'
     | '/characters/$characterId'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/connect'
     | '/library'
     | '/settings'
+    | '/share/$shareId'
     | '/'
     | '/agent/$conversationId'
     | '/apps/$appId'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/_shell/connect'
     | '/_shell/library'
     | '/_shell/settings'
+    | '/share/$shareId'
     | '/_shell/'
     | '/_shell/agent/$conversationId'
     | '/_shell/apps/$appId'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   GalleryRoute: typeof GalleryRoute
   UnlockRoute: typeof UnlockRoute
   WelcomeRoute: typeof WelcomeRoute
+  ShareShareIdRoute: typeof ShareShareIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings'
       preLoaderRoute: typeof ShellSettingsRouteImport
       parentRoute: typeof ShellRoute
+    }
+    '/share/$shareId': {
+      id: '/share/$shareId'
+      path: '/share/$shareId'
+      fullPath: '/share/$shareId'
+      preLoaderRoute: typeof ShareShareIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_shell/agent/': {
       id: '/_shell/agent/'
@@ -398,6 +418,7 @@ const rootRouteChildren: RootRouteChildren = {
   GalleryRoute: GalleryRoute,
   UnlockRoute: UnlockRoute,
   WelcomeRoute: WelcomeRoute,
+  ShareShareIdRoute: ShareShareIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

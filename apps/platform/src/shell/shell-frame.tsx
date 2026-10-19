@@ -6,7 +6,9 @@ import type { ReactElement, ReactNode } from "react"
 import { GatewayUnreachableError } from "@/api/gateway-unreachable.error"
 import { settingsQuery } from "@/api/queries"
 import { t } from "@/copy/t"
+import { BottomBar } from "@/shell/bottom-bar"
 import { HeaderSlotsProvider, useHeaderSlotTargets } from "@/shell/header-slots"
+import { KeyDialogProvider } from "@/shell/key-dialog-context"
 import { NavSidebar } from "@/shell/nav-sidebar"
 import { RunWatcher } from "@/shell/run-watcher"
 import { ScreenHeader } from "@/shell/screen-header"
@@ -53,20 +55,25 @@ export function ShellFrame({
   return (
     <ViewerProvider>
       <HeaderSlotsProvider slots={header.slots}>
-        <div className="h-dvh">
-          <ShellLayout
-            sidebar={<NavSidebar />}
-            title={header.titleTarget}
-            action={header.actionTarget}
-            menuLabel={t("shell.menu.open")}
-            closeMenuLabel={t("shell.menu.close")}
-            storageKey="rosesfield.sidebar"
-          >
-            <ShellContent>{children}</ShellContent>
-          </ShellLayout>
-        </div>
-        <RunWatcher />
-        <AssetViewer />
+        <KeyDialogProvider>
+          <div className="@container flex h-dvh flex-col">
+            <div className="min-h-0 flex-1">
+              <ShellLayout
+                sidebar={<NavSidebar />}
+                title={header.titleTarget}
+                action={header.actionTarget}
+                menuLabel={t("shell.menu.open")}
+                closeMenuLabel={t("shell.menu.close")}
+                storageKey="rosesfield.sidebar"
+              >
+                <ShellContent>{children}</ShellContent>
+              </ShellLayout>
+            </div>
+            <BottomBar />
+          </div>
+          <RunWatcher />
+          <AssetViewer />
+        </KeyDialogProvider>
       </HeaderSlotsProvider>
     </ViewerProvider>
   )

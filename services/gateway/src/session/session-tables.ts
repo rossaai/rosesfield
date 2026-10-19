@@ -28,3 +28,12 @@ export const sessionLimitTable = sqliteTable("session_limits", {
   windowStart: integer("window_start").notNull(),
   count: integer("count").notNull(),
 })
+
+export const sessionVisitTable = sqliteTable(
+  "session_visits",
+  {
+    sessionId: text("session_id").primaryKey(),
+    visitedAt: integer("visited_at").notNull(),
+  },
+  (table) => [index("session_visits_visited_at").on(table.visitedAt)]
+)

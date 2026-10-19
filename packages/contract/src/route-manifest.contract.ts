@@ -58,6 +58,7 @@ export const routes = {
     body: startRunBody,
     response: runResponse,
     status: 202,
+    spends: true,
   }),
   listRuns: defineRoute({
     method: "GET",
@@ -94,6 +95,7 @@ export const routes = {
     body: null,
     response: runResponse,
     status: 202,
+    spends: true,
   }),
   listAssets: defineRoute({
     method: "GET",

@@ -23,6 +23,12 @@ export type WorkerVars = {
   engine: EngineSettings
   access: Access
   agent: AgentModel | null
+  spend?: SpendSettings
+}
+
+export type SpendSettings = {
+  capCredits: number
+  unknownRunCredits: number
 }
 
 export type ServerEnv = WorkerVars & {
@@ -88,6 +94,14 @@ const sharedFields = {
   SESSION_SECRET: secret,
   RETENTION_DAYS: whole(1, 365, 7),
   SESSION_REQUESTS_PER_MINUTE: whole(1, 10_000, 120),
+  SPEND_UNKNOWN_RUN_CREDITS: whole(1, 100_000, 100),
+  SPEND_CAP_CREDITS: z.preprocess(
+    blankAsMissing,
+    z.coerce
+      .number({ error: "needs a number" })
+      .positive("needs a number above 0")
+      .optional()
+  ),
 }
 
 const serverSchema = z.object({
@@ -205,6 +219,14 @@ function varsOf(
     engine: engineOf(env),
     access,
     agent: readAgentEnv(source, access.mode),
+    ...(access.mode === "owner" && env.SPEND_CAP_CREDITS !== undefined
+      ? {
+          spend: {
+            capCredits: env.SPEND_CAP_CREDITS,
+            unknownRunCredits: env.SPEND_UNKNOWN_RUN_CREDITS,
+          },
+        }
+      : {}),
   }
 }
 

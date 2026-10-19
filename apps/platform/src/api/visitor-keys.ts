@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react"
 import { KeptValues } from "@/api/kept-values"
+import { readOwnerToken } from "@/api/owner-token"
 
 export type VisitorKeyKind = "engine" | "agent"
 
@@ -7,8 +8,10 @@ export type VisitorKeyProblem = "required" | "invalid" | null
 
 export const visitorKeyKinds: readonly VisitorKeyKind[] = ["engine", "agent"]
 
+export const engineKeyHeader = "X-Engine-Key"
+
 const headerNames: Readonly<Record<VisitorKeyKind, string>> = {
-  engine: "X-Engine-Key",
+  engine: engineKeyHeader,
   agent: "X-Agent-Key",
 }
 
@@ -80,6 +83,10 @@ export async function keepVisitorKey(
 export async function forgetVisitorKey(kind: VisitorKeyKind): Promise<void> {
   holdVisitorKey(kind, null)
   await kept.remove(kind)
+}
+
+export function sendsCredentials(): boolean {
+  return readOwnerToken() !== null || current.engine !== null
 }
 
 export function useHasVisitorKey(kind: VisitorKeyKind): boolean {

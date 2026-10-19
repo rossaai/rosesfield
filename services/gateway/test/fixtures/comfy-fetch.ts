@@ -15,6 +15,7 @@ export type FakeComfy = {
 
 const jobId = "7f3d2c1b-9a8e-4d6f-b012-3c4d5e6f7a8b"
 const outputId = "2b3e4f56-8a7b-4c2d-9e4f-5a6b9f8a1c0d"
+const inputId = "5c6d7e8f-1a2b-4c3d-8e9f-0a1b2c3d4e5f"
 
 function job(status: "queued" | "succeeded"): Record<string, unknown> {
   return {
@@ -52,9 +53,23 @@ function refused(): Response {
   )
 }
 
+export const accountPath = "/api/user"
+
+export const balancePath = "/customers/balance"
+
+export function accountIdOf(key: string): string {
+  return `account-${key.replace(/^Bearer comfyui-/, "").slice(-12)}`
+}
+
 function answer(method: string, path: string, key: string | null): Response {
   if (key?.includes("refused") === true) {
     return refused()
+  }
+  if (method === "GET" && path === accountPath && key !== null) {
+    return Response.json({ id: accountIdOf(key), status: "active" })
+  }
+  if (method === "POST" && path === "/api/v2/assets") {
+    return Response.json({ id: inputId }, { status: 201 })
   }
   if (method === "POST" && path === "/api/v2/jobs") {
     return Response.json(job("queued"), { status: 201 })
@@ -82,7 +97,11 @@ export function fakeComfy(): FakeComfy {
       authorization: request.headers.get("authorization"),
       idempotencyKey: request.headers.get("idempotency-key"),
     })
-    return answer(request.method, path, request.headers.get("authorization"))
+    return answer(
+      request.method,
+      path,
+      request.headers.get("authorization") ?? request.headers.get("x-api-key")
+    )
   }
   return { fetch, calls }
 }

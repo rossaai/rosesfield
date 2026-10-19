@@ -17,6 +17,12 @@ import type { GatewayApp, GatewayEnv, RequestScope } from "#gateway-env"
 import { errorResponse, routeNotFound } from "#routes/error-response"
 import { isSessionId } from "#session/session-cookie"
 import { SessionPurge } from "#session/session-purge"
+import {
+  agentDump,
+  conversationCount,
+  dumpAgent,
+  loadAgent,
+} from "#worker/agent-move"
 import { AlarmJobRunner } from "#worker/alarm-job-runner"
 import {
   ownerPorts,
@@ -34,6 +40,9 @@ type Composed = {
 export class AgentHost implements DurableObject {
   static readonly ownerName = "owner"
   static readonly sessionHeader = "x-rosesfield-session"
+  static readonly movePath = "/internal/move"
+  static readonly takePath = "/internal/take"
+  static readonly origin = "https://agent-host"
 
   private readonly state: DurableObjectState
   private readonly env: WorkerBindings
@@ -46,6 +55,13 @@ export class AgentHost implements DurableObject {
   }
 
   async fetch(request: Request): Promise<Response> {
+    const { pathname } = new URL(request.url)
+    if (pathname === AgentHost.movePath) {
+      return this.moveTo(request.headers.get(AgentHost.sessionHeader))
+    }
+    if (pathname === AgentHost.takePath) {
+      return this.take(request)
+    }
     this.composed ??= this.compose()
     const { access } = this.composed.parts.vars
     if (access.mode === "public") {
@@ -64,6 +80,47 @@ export class AgentHost implements DurableObject {
     this.composed = null
     await composed?.agent?.close()
     await this.state.storage.deleteAll()
+  }
+
+  private async moveTo(target: string | null): Promise<Response> {
+    const { sql } = this.state.storage
+    if (!isSessionId(target) || this.access.isHeld()) {
+      return new Response(null, { status: 409 })
+    }
+    if (conversationCount(sql) === 0) {
+      return new Response(null, { status: 204 })
+    }
+    const dump = dumpAgent(sql)
+    if (dump === null) {
+      return new Response(null, { status: 409 })
+    }
+    const taken = await this.env.AGENTS.getByName(target).fetch(
+      `${AgentHost.origin}${AgentHost.takePath}`,
+      { method: "POST", body: JSON.stringify(dump) }
+    )
+    await taken.body?.cancel()
+    if (taken.status !== 204) {
+      return new Response(null, { status: 409 })
+    }
+    await this.release()
+    await this.state.storage.deleteAll()
+    return new Response(null, { status: 204 })
+  }
+
+  private async take(request: Request): Promise<Response> {
+    if (this.access.isHeld() || conversationCount(this.state.storage.sql) > 0) {
+      return new Response(null, { status: 409 })
+    }
+    const dump = agentDump.parse(await request.json())
+    await this.release()
+    loadAgent(this.state.storage, dump)
+    return new Response(null, { status: 204 })
+  }
+
+  private async release(): Promise<void> {
+    const composed = this.composed
+    this.composed = null
+    await composed?.agent?.close()
   }
 
   private compose(): Composed {

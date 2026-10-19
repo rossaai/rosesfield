@@ -2,6 +2,7 @@ import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { GatewayUnreachableError } from "@/api/gateway-unreachable.error"
 import { type CopyValues, t, tCatalog } from "@/copy/t"
 import { type CopyKey, copy } from "@/copy.en"
+import { readSpendCap } from "@/shell/spend-cap"
 
 export type ErrorAct = "retry" | "settings" | "none"
 
@@ -24,7 +25,10 @@ const settingsCodes: readonly string[] = [
   "ENGINE_KEY_INVALID",
   "ENGINE_BINDING_INVALID",
   "KEY_HEADER_INVALID",
+  "SHARE_KEY_REQUIRED",
 ]
+
+const capCode = "SPEND_CAP_REACHED"
 
 export function codeOf(error: unknown): string {
   if (error instanceof GatewayRefusedError) {
@@ -54,10 +58,12 @@ export function wordsForCode(
   code: string,
   context: ErrorContext & { seconds?: number } = {}
 ): ErrorWords {
+  const cap = readSpendCap()
   const values: CopyValues = {
     minutes: context.minutes ?? 0,
     seconds: context.seconds ?? 0,
     thing: t(`noun.${context.thing ?? "app"}`),
+    ...(cap === null ? {} : { cap }),
   }
   const base = code.endsWith("_NOT_FOUND")
     ? "error.notFound"
@@ -66,8 +72,10 @@ export function wordsForCode(
       : "error.unknown"
   const actionKey = `${base}.action`
   const hasNoWait = code === rateLimitedCode && (context.seconds ?? 0) <= 0
+  const titleKey =
+    code === capCode && cap === null ? `${base}.titleNoCap` : `${base}.title`
   return {
-    title: tCatalog(`${base}.title`, values),
+    title: tCatalog(titleKey, values),
     body: hasNoWait
       ? t("error.ENGINE_RATE_LIMITED.bodyNoWait")
       : tCatalog(`${base}.body`, values),

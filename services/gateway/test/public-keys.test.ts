@@ -7,7 +7,14 @@ import {
   conversationResponse,
   conversationRoutes,
 } from "@rosesfield/agent"
-import { buildPath, routes, runResponse } from "@rosesfield/contract"
+import {
+  accountRoutes,
+  buildPath,
+  routes,
+  runResponse,
+  shareResponse,
+  shareRoutes,
+} from "@rosesfield/contract"
 import { FixedClock } from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
 import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
@@ -22,6 +29,7 @@ import {
 } from "../../../packages/agent/test/fixtures/openai-chat-stream"
 import { fakeComfy } from "./fixtures/comfy-fetch"
 import { captureLogs, filesHolding, seenHolding } from "./fixtures/leak-scan"
+import { pageHtml } from "./fixtures/public-gateway"
 import { type Seen, Visitor } from "./fixtures/visitor"
 import { imageApp, sessionSecret, start } from "./sample-apps"
 
@@ -47,6 +55,12 @@ afterEach(async () => {
 function folder(): string {
   const made = mkdtempSync(join(tmpdir(), "rosesfield-keys-"))
   folders.push(made)
+  return made
+}
+
+function platformFolder(): string {
+  const made = folder()
+  writeFileSync(join(made, "index.html"), pageHtml)
   return made
 }
 
@@ -92,6 +106,15 @@ async function driveVisitor(visitor: Visitor, refused: Visitor): Promise<void> {
   await visitor.call(runPath)
   const done = runResponse.parse(await (await visitor.call(runPath)).json())
   expect(done.run.status).toBe("done")
+  const shared = await visitor.call(
+    buildPath(shareRoutes.shareRun.path, { runId: done.run.id }),
+    { method: "POST" }
+  )
+  expect(shared.status).toBe(201)
+  const { share } = shareResponse.parse(await shared.json())
+  await visitor.withoutKeys().call(share.path)
+  await visitor.withoutKeys().call(`${share.path}/media/0`)
+  await visitor.call(accountRoutes.getAccount.path)
   await visitor.call(
     buildPath(conversationRoutes.sendMessage.path, ids),
     json({ text: "Thanks" })
@@ -117,6 +140,7 @@ async function driveVisitor(visitor: Visitor, refused: Visitor): Promise<void> {
   )
   expect(read.run.failure?.code).toBe("ENGINE_KEY_INVALID")
   await refused.call(gatewayRoutes.checkEngineKey.path, { method: "POST" })
+  await refused.call(accountRoutes.getAccount.path)
 }
 
 describe("a visitor's keys in public mode", () => {
@@ -142,7 +166,7 @@ describe("a visitor's keys in public mode", () => {
       }),
       apps: [imageApp()],
       clock: new FixedClock({ now: start }),
-      platformRoot: null,
+      platformRoot: platformFolder(),
       fetch: comfy.fetch,
     })
     const seen: Seen[] = []
