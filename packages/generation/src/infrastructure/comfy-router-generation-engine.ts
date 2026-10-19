@@ -34,6 +34,7 @@ import {
   outputsOf,
   urlsWritten,
 } from "#infrastructure/router/router-outputs"
+import { placeholdersOf } from "#infrastructure/router/router-placeholders"
 import { priceFromRates } from "#infrastructure/router/router-rates"
 
 type ComfyRouterGenerationEngineOptions = {
@@ -254,7 +255,8 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
       return null
     }
     try {
-      const body = bodyOf(entry.form, request.inputs, [])
+      const placed = await placeholdersOf(entry.form, request.inputs)
+      const body = bodyOf(entry.form, placed.inputs, placed.files)
       const answer = await this.http.estimate(entry.facts.model, body)
       if (answer.state === "not-enabled") {
         this.catalog.markEstimatesOff(keyTag)

@@ -242,6 +242,29 @@ describe("ComfyRouterGenerationEngine", () => {
     ])
   })
 
+  it("asks Comfy's estimate for a model that takes media, with small stand-in files", async () => {
+    const { engine, replay } = engineWith([
+      ...catalogRead,
+      {
+        method: "POST",
+        url: `${routerUrl}/v2/models/${pictureModel}/estimate`,
+        status: 200,
+        json: { source: "exact", credits: "4.2" },
+      },
+    ])
+    const price = await engine.priceOf(binding, {
+      inputs: { prompt: "a", images: [referenceId] },
+      count: 1,
+    })
+    expect(price).toEqual({ source: "estimate", credits: 4.2 })
+    const body = JSON.parse(replay.sent.at(-1)?.body ?? "{}")
+    expect(body.images).toHaveLength(1)
+    expect(body.images[0]).toMatch(/^data:image\/png;base64,/)
+    expect(body.images[0]).not.toBe(
+      `data:image/png;base64,${btoa(String.fromCharCode(...pngBytes()))}`
+    )
+  })
+
   it("answers price unknown for a model the rates do not price", async () => {
     const { engine } = engineWith([
       ...catalogRead,
