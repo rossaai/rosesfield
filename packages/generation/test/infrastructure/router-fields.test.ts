@@ -115,6 +115,37 @@ describe("the choices a schema lists in words", () => {
 })
 
 describe("the defaults of a form", () => {
+  it("gives no default to a field inside an optional object, and keeps one inside a required object", () => {
+    const fields = fieldsFor(
+      {
+        optimize_prompt_options: {
+          type: "object",
+          properties: {
+            mode: {
+              type: "string",
+              enum: ["standard", "fast"],
+              default: "standard",
+            },
+          },
+        },
+        options: {
+          type: "object",
+          required: ["quality"],
+          properties: {
+            quality: { type: "string", enum: ["low", "high"], default: "low" },
+          },
+        },
+      },
+      { required: ["options"] }
+    )
+    expect(
+      fields.find((field) => field.path === "optimize_prompt_options.mode")
+    ).toMatchObject({ kind: "choice", default: null })
+    expect(
+      fields.find((field) => field.path === "options.quality")
+    ).toMatchObject({ kind: "choice", default: "low" })
+  })
+
   it("gives no default to a field inside an optional list item, and keeps a top-level one", () => {
     const fields = fieldsFor(
       {

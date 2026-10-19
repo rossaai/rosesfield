@@ -33,7 +33,7 @@ type Spot = {
   path: string
   key: string
   required: boolean
-  isInItem: boolean
+  isInOptional: boolean
 }
 
 type ImageRole = {
@@ -101,7 +101,7 @@ function walkObject(
   prefix: string,
   depth: number,
   isRequired: boolean,
-  isInItem: boolean
+  isInOptional: boolean
 ): void {
   const { properties, required } = propertiesOf(schema, walk.components)
   for (const [key, raw] of Object.entries(properties)) {
@@ -109,7 +109,7 @@ function walkObject(
       path: `${prefix}${key}`,
       key,
       required: isRequired && required.includes(key),
-      isInItem,
+      isInOptional,
     }
     walkProperty(walk, resolve(raw, walk.components), spot, depth)
   }
@@ -139,7 +139,7 @@ function walkProperty(
       `${spot.path}.`,
       depth + 1,
       spot.required,
-      spot.isInItem
+      spot.isInOptional || !spot.required
     )
     return
   }
@@ -171,7 +171,7 @@ function walkList(walk: Walk, item: Schema, spot: Spot, depth: number): void {
     `${spot.path}.0.`,
     depth + 1,
     spot.required,
-    spot.isInItem || !spot.required
+    spot.isInOptional || !spot.required
   )
 }
 
@@ -263,7 +263,7 @@ function leafOf(walk: Walk, schema: Schema, spot: Spot): ModelField | null {
     mediaOf(walk, schema, spot) ??
     choiceOf(walk, schema, spot, true) ??
     scalarOf(base, schema, typeOf(schema, walk.components), spot.key)
-  return field !== null && spot.isInItem ? withoutDefault(field) : field
+  return field !== null && spot.isInOptional ? withoutDefault(field) : field
 }
 
 function choiceOf(
