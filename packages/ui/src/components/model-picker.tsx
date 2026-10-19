@@ -227,7 +227,7 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
         {props.settings === undefined || props.settings === null ? null : (
           <div
             data-slot="model-settings"
-            className="flex max-h-list-max flex-col gap-s4 overflow-y-auto border-(--line) border-t px-s4 pt-s3 pb-s2"
+            className="flex max-h-list-max flex-col gap-s4 overflow-y-auto px-s4 pt-s3 pb-s2"
           >
             {props.settings}
           </div>
