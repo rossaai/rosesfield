@@ -155,7 +155,12 @@ export class AdvanceRunHandler {
         if (kept === null) {
           return this.end(run, watch.engine, polled, new RunFailedError({}))
         }
-        run.keepJob({ index: one.job.index, outputs: kept, now: this.now() })
+        run.keepJob({
+          index: one.job.index,
+          outputs: kept,
+          cost: one.status.cost ?? null,
+          now: this.now(),
+        })
       }
     }
     for (const { status } of polled) {
@@ -318,14 +323,14 @@ export class AdvanceRunHandler {
     const record = run.toRecord()
     const inputs: Record<string, InputValue> = { ...record.inputs }
     const assetIds: AssetId[] = []
-    for (const definition of app.inputs) {
-      const value = record.inputs[definition.name]
+    for (const [name, value] of Object.entries(record.inputs)) {
       if (!Array.isArray(value)) {
         continue
       }
-      if (definition.type === "character") {
+      const definition = app.inputs.find((one) => one.name === name)
+      if (definition?.type === "character") {
         const references = await this.referencesOf(value)
-        inputs[definition.name] = references
+        inputs[name] = references
         assetIds.push(...references)
       } else {
         assetIds.push(...value.map((id) => assetIdFormat.parse(id)))

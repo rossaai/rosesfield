@@ -1,4 +1,5 @@
 import {
+  type Cost,
   errorEnvelopeOf,
   type RunOrigin,
   type Run as RunRecord,
@@ -61,6 +62,7 @@ type ObserveOptions = {
 type KeepJobOptions = {
   index: number
   outputs: readonly AssetId[]
+  cost?: Cost | null
   now: Date
 }
 
@@ -213,6 +215,7 @@ export class Run {
     job.progress = 1
     job.outputs = [...options.outputs]
     this.state.attempts = 0
+    this.addCost(options.cost ?? null)
     this.refresh()
     if (this.state.jobs.every((one) => one.status === "done")) {
       this.state.record.status = "done"
@@ -249,6 +252,14 @@ export class Run {
 
   toState(): RunState {
     return structuredClone(this.state)
+  }
+
+  private addCost(cost: Cost | null): void {
+    if (cost === null) {
+      return
+    }
+    const held = this.state.record.cost?.amount ?? 0
+    this.state.record.cost = { amount: held + cost.amount, currency: "USD" }
   }
 
   private jobAt(index: number): RunJob {

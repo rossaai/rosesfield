@@ -5,9 +5,15 @@ import {
   type EngineStatus,
   type EngineSubmission,
   GenerationEngine,
+  type HostedModel,
   type Idempotency,
   type OutputsPerJob,
+  type PriceRequest,
+  type RunPrice,
+  unknownPrice,
 } from "#domain/generation-engine.port"
+import type { ModelForm } from "#domain/model-form"
+import { hostedModelAdapter, hostedModelOf } from "#domain/task-binding"
 
 type Step = EngineStatus | Error
 
@@ -22,6 +28,8 @@ type FakeGenerationEngineOptions = {
   outputs?: EngineOutput[]
   submitErrors?: Error[]
   onRead?: () => Promise<void>
+  forms?: readonly ModelForm[]
+  price?: RunPrice
 }
 
 export class FakeGenerationEngine extends GenerationEngine {
@@ -39,6 +47,9 @@ export class FakeGenerationEngine extends GenerationEngine {
   private readonly outputs: EngineOutput[]
   private readonly submitErrors: Error[]
   private readonly onRead: () => Promise<void>
+  private readonly forms: readonly ModelForm[]
+  private readonly price: RunPrice
+  readonly priced: PriceRequest[] = []
 
   constructor(options: FakeGenerationEngineOptions = {}) {
     super()
@@ -52,10 +63,38 @@ export class FakeGenerationEngine extends GenerationEngine {
     this.outputs = options.outputs ?? []
     this.submitErrors = options.submitErrors ?? []
     this.onRead = options.onRead ?? (async () => undefined)
+    this.forms = options.forms ?? []
+    this.price = options.price ?? unknownPrice
   }
 
   override canRun(binding: EngineBinding): boolean {
-    return binding.adapter === this.key
+    return (
+      binding.adapter === this.key ||
+      (binding.adapter === hostedModelAdapter && this.forms.length > 0)
+    )
+  }
+
+  override async formOf(binding: EngineBinding): Promise<ModelForm | null> {
+    const model = hostedModelOf(binding)
+    return this.forms.find((form) => form.model === model) ?? null
+  }
+
+  override async listModels(): Promise<readonly HostedModel[]> {
+    return this.forms.map((form) => ({
+      id: form.model,
+      provider: form.model.split("/")[0] ?? "",
+      takes: ["text"],
+      makes: ["image"],
+      form,
+    }))
+  }
+
+  override async priceOf(
+    _binding: EngineBinding,
+    request: PriceRequest
+  ): Promise<RunPrice> {
+    this.priced.push(request)
+    return this.price
   }
 
   override outputsPerJob(_binding: EngineBinding): OutputsPerJob {

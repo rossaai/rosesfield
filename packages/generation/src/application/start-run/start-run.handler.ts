@@ -12,12 +12,16 @@ import { AppNotFoundError } from "#domain/error/app-not-found.error"
 import { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.error"
 import { IdempotencyKeyInvalidError } from "#domain/error/idempotency-key-invalid.error"
 import { IdempotencyKeyReusedError } from "#domain/error/idempotency-key-reused.error"
+import { ModelNotFoundError } from "#domain/error/model-not-found.error"
 import { RunInputInvalidError } from "#domain/error/run-input-invalid.error"
 import type { GenerationEngine } from "#domain/generation-engine.port"
+import { isRecord } from "#domain/is-record"
 import type { JobRunner } from "#domain/job-runner.port"
+import { checkModelInputs } from "#domain/model-form"
 import { Run } from "#domain/run"
 import type { RunRepository } from "#domain/run.repository"
 import { resolveBinding } from "#domain/select-binding"
+import { hostedModelOf, taskAdapter } from "#domain/task-binding"
 
 export type StartRunInput = {
   appId: string
@@ -35,6 +39,10 @@ type Picked = {
   binding: EngineBinding
 }
 
+type Prepared = Picked & {
+  request: RunRequest
+}
+
 type StartRunHandlerOptions = {
   apps: AppCatalog
   runs: RunRepository
@@ -46,6 +54,7 @@ type StartRunHandlerOptions = {
 export class StartRunHandler {
   static readonly maxSeed = Run.maxSeed
   static readonly keyPattern: RegExp = /^[\x21-\x7e]{1,255}$/
+  static readonly hostedSeedInput = "seed"
 
   private readonly apps: AppCatalog
   private readonly runs: RunRepository
@@ -70,13 +79,12 @@ export class StartRunHandler {
     if (existing !== null) {
       return { run: existing.toRecord() }
     }
-    const request = this.parseRequest(app, input.body)
-    const { engine, binding } = this.pickEngine(app, request)
+    const { engine, binding, request } = await this.prepare(app, input)
     const run = Run.queue({
       id: runIdFormat.parse(crypto.randomUUID()),
       appId: app.id,
       request,
-      seed: this.seedFor(app, request.inputs, input.seed),
+      seed: this.seedFor(app, binding, request.inputs, input.seed),
       adapter: engine.key,
       origin: engine.origin,
       idempotencyKey: input.idempotencyKey,
@@ -105,6 +113,56 @@ export class StartRunHandler {
     return existing
   }
 
+  private async prepare(
+    app: AppDefinition,
+    input: StartRunInput
+  ): Promise<Prepared> {
+    const hosted = await this.prepareHosted(app, input.body)
+    if (hosted !== null) {
+      return hosted
+    }
+    const request = this.parseRequest(app, input.body)
+    return { ...this.pickEngine(app, request), request }
+  }
+
+  private async prepareHosted(
+    app: AppDefinition,
+    body: unknown
+  ): Promise<Prepared | null> {
+    if (app.engine.adapter !== taskAdapter || !isRecord(body)) {
+      return null
+    }
+    const given = isRecord(body.inputs) ? body.inputs : {}
+    const binding = resolveBinding(app.engine, textInputsOf(given))
+    const model = hostedModelOf(binding)
+    if (model === null) {
+      return null
+    }
+    const engine = this.engines.find((candidate) => candidate.canRun(binding))
+    const form = engine === undefined ? null : await engine.formOf(binding)
+    if (engine === undefined || form === null) {
+      throw new ModelNotFoundError({ model })
+    }
+    const checked = checkModelInputs(form, given)
+    const issues = checked.kind === "invalid" ? [...checked.issues] : []
+    if (body.count !== undefined && body.count !== 1) {
+      issues.push("count: a hosted model sets its own count in its inputs")
+    }
+    if (body.aspectRatio !== undefined && body.aspectRatio !== null) {
+      issues.push(
+        "aspectRatio: a hosted model sets its own aspect in its inputs"
+      )
+    }
+    if (checked.kind === "invalid" || issues.length > 0) {
+      throw new RunInputInvalidError({ appId: app.id, issues })
+    }
+    return {
+      engine,
+      binding,
+      request: { inputs: checked.inputs, count: 1, aspectRatio: null },
+    }
+  }
+
   private parseRequest(app: AppDefinition, body: unknown): RunRequest {
     const result = startRunBodyFor(app).safeParse(body)
     if (result.success) {
@@ -130,9 +188,14 @@ export class StartRunHandler {
 
   private seedFor(
     app: AppDefinition,
+    binding: EngineBinding,
     inputs: RunInputs,
     given: number | null
   ): number | null {
+    if (hostedModelOf(binding) !== null) {
+      const chosen = inputs[StartRunHandler.hostedSeedInput]
+      return typeof chosen === "number" ? chosen : null
+    }
     const seedInput = app.inputs.find((input) => input.type === "seed")
     if (seedInput === undefined) {
       return null
@@ -147,4 +210,12 @@ export class StartRunHandler {
     const random = crypto.getRandomValues(new Uint32Array(1))[0] ?? 0
     return random % (StartRunHandler.maxSeed + 1)
   }
+}
+
+function textInputsOf(given: Record<string, unknown>): RunInputs {
+  return Object.fromEntries(
+    Object.entries(given).filter(
+      (entry): entry is [string, string] => typeof entry[1] === "string"
+    )
+  )
 }

@@ -1,6 +1,7 @@
 import type { EngineBinding, RunInputs } from "@rosesfield/contract"
 import { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.error"
 import { isRecord } from "#domain/is-record"
+import { pickTask, taskAdapter } from "#domain/task-binding"
 
 type SelectBy = "value" | "filled" | "count"
 
@@ -23,13 +24,24 @@ export function resolveBinding(
   inputs: RunInputs
 ): EngineBinding {
   let current = binding
-  for (let depth = 0; current.adapter === selectAdapter; depth += 1) {
+  let chosen = inputs
+  for (let depth = 0; isChoosing(current); depth += 1) {
     if (depth >= maxDepth) {
       throw invalid("a select holds selects too deep")
     }
-    current = pick(current.config, inputs)
+    if (current.adapter === taskAdapter) {
+      const picked = pickTask(current, chosen)
+      current = picked.binding
+      chosen = picked.inputs
+    } else {
+      current = pick(current.config, chosen)
+    }
   }
   return current
+}
+
+function isChoosing(binding: EngineBinding): boolean {
+  return binding.adapter === selectAdapter || binding.adapter === taskAdapter
 }
 
 function pick(

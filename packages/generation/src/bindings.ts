@@ -1,4 +1,5 @@
 export { selectAdapter, selectBinding } from "#domain/select-binding"
+export { taskBinding } from "#domain/task-binding"
 export type { ComfyValueBinding } from "#infrastructure/comfy/comfy-value-binding"
 export {
   type ComfyWorkflowConfigInput,

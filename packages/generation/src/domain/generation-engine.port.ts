@@ -1,11 +1,13 @@
 import type {
   AssetKind,
+  Cost,
   EngineBinding,
   KeyCheck,
   RunInputs,
   RunOrigin,
 } from "@rosesfield/contract"
 import type { AssetId, ProjectError } from "@rosesfield/kernel"
+import type { ModelForm } from "#domain/model-form"
 
 export type EngineFile = {
   assetId: AssetId
@@ -38,7 +40,7 @@ export type EngineStatus =
       progress: number | null
       retryAfterSeconds: number | null
     }
-  | { state: "succeeded" }
+  | { state: "succeeded"; cost?: Cost | null }
   | { state: "failed"; error: ProjectError }
   | { state: "cancelled" }
 
@@ -52,6 +54,25 @@ export type EngineOutput = {
 }
 
 export type OutputsPerJob = "all" | "one"
+
+export type HostedModel = {
+  id: string
+  provider: string
+  takes: readonly string[]
+  makes: readonly string[]
+  form: ModelForm | null
+}
+
+export type PriceRequest = {
+  inputs: RunInputs
+  count: number
+}
+
+export type RunPrice =
+  | { source: "estimate" | "rates"; credits: number }
+  | { source: "unknown"; credits: null }
+
+export const unknownPrice: RunPrice = { source: "unknown", credits: null }
 
 export type Idempotency = "keyed" | "none"
 
@@ -82,4 +103,19 @@ export abstract class GenerationEngine {
 
   /** Checks the engine's key with a call that starts no paid run. */
   abstract checkKey(): Promise<KeyCheck>
+
+  /** Describes the inputs a hosted model takes, or null when the app's own inputs apply. */
+  formOf(_binding: EngineBinding): Promise<ModelForm | null> {
+    return Promise.resolve(null)
+  }
+
+  /** Lists the hosted models this engine runs, with the media each takes and makes. */
+  listModels(): Promise<readonly HostedModel[]> {
+    return Promise.resolve([])
+  }
+
+  /** Prices one run before it starts, in the engine's credits. */
+  priceOf(_binding: EngineBinding, _request: PriceRequest): Promise<RunPrice> {
+    return Promise.resolve(unknownPrice)
+  }
 }
