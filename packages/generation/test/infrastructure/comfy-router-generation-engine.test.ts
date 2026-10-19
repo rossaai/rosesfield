@@ -160,7 +160,7 @@ describe("ComfyRouterGenerationEngine", () => {
     })
   })
 
-  it("runs a model that answers bytes on the synchronous route and keeps them", async () => {
+  it("runs a model that answers bytes on the synchronous route and hands its outputs back at submit", async () => {
     const voice = routerSchema({
       model: "maker/voice-1",
       takes: ["text"],
@@ -187,12 +187,11 @@ describe("ComfyRouterGenerationEngine", () => {
       inputs: { model: "maker/voice-1", text: "hello" },
       files: [],
     })
-    expect(await engine.read(submission.ref)).toEqual({
-      state: "succeeded",
+    expect(submission.finished).toMatchObject({
       cost: { amount: 3 / 211, currency: "USD" },
+      outputs: [{ kind: "audio", mime: "audio/mpeg" }],
     })
-    const [output] = await engine.listOutputs(submission.ref, { text: "hello" })
-    expect(output).toMatchObject({ kind: "audio", mime: "audio/mpeg" })
+    expect(await engine.read(submission.ref)).toEqual({ state: "succeeded" })
     expect(replay.unused()).toEqual([])
   })
 

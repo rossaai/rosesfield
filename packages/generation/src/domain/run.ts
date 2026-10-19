@@ -15,6 +15,7 @@ export type RunJobStatus =
   | "submitting"
   | "queued"
   | "running"
+  | "collecting"
   | "done"
 
 export type RunJob = {
@@ -24,6 +25,7 @@ export type RunJob = {
   status: RunJobStatus
   progress: number | null
   outputs: AssetId[]
+  collectingSince?: string
 }
 
 export type RunState = {
@@ -63,6 +65,11 @@ type KeepJobOptions = {
   index: number
   outputs: readonly AssetId[]
   cost?: Cost | null
+  now: Date
+}
+
+type CollectingOptions = {
+  index: number
   now: Date
 }
 
@@ -171,6 +178,15 @@ export class Run {
     return Run.finishedStatuses.includes(this.state.record.status)
   }
 
+  collectingSince(): Date | null {
+    const since = this.state.jobs.flatMap((job) =>
+      job.status === "collecting" && job.collectingSince !== undefined
+        ? [Date.parse(job.collectingSince)]
+        : []
+    )
+    return since.length === 0 ? null : new Date(Math.min(...since))
+  }
+
   idempotencyKeyOf(index: number): string {
     return this.state.jobs.length === 1 ? this.id : `${this.id}-${index}`
   }
@@ -208,9 +224,18 @@ export class Run {
     this.refresh()
   }
 
+  collecting(options: CollectingOptions): void {
+    this.refuseWhenFinished()
+    const job = this.jobAt(options.index)
+    job.status = "collecting"
+    job.collectingSince ??= options.now.toISOString()
+    this.refresh()
+  }
+
   keepJob(options: KeepJobOptions): void {
     this.refuseWhenFinished()
     const job = this.jobAt(options.index)
+    delete job.collectingSince
     job.status = "done"
     job.progress = 1
     job.outputs = [...options.outputs]
@@ -273,7 +298,10 @@ export class Run {
   private refresh(): void {
     const { jobs, record } = this.state
     const hasStarted = jobs.some(
-      (job) => job.status === "running" || job.status === "done"
+      (job) =>
+        job.status === "running" ||
+        job.status === "collecting" ||
+        job.status === "done"
     )
     record.status = hasStarted ? "running" : "queued"
     record.outputs = jobs.flatMap((job) => job.outputs)

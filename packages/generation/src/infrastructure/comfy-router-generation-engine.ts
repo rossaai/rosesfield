@@ -6,6 +6,7 @@ import type {
 } from "@rosesfield/contract"
 import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import { ModelNotFoundError } from "#domain/error/model-not-found.error"
+import { RunFailedError } from "#domain/error/run-failed.error"
 import {
   type EngineOutput,
   type EngineRequest,
@@ -24,12 +25,15 @@ import type { Fetch } from "#infrastructure/comfy/comfy-low"
 import { bodyOf } from "#infrastructure/router/router-body"
 import type {
   CatalogEntry,
-  KeptResult,
   RouterCatalog,
 } from "#infrastructure/router/router-catalog"
 import { failureOf } from "#infrastructure/router/router-errors"
 import { RouterHttp } from "#infrastructure/router/router-http"
-import { outputsOf, urlsWritten } from "#infrastructure/router/router-outputs"
+import {
+  type OutputRead,
+  outputsOf,
+  urlsWritten,
+} from "#infrastructure/router/router-outputs"
 import { priceFromRates } from "#infrastructure/router/router-rates"
 
 type ComfyRouterGenerationEngineOptions = {
@@ -54,7 +58,6 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
 
   private readonly http: RouterHttp
   private readonly catalog: RouterCatalog
-  private readonly results = new Map<string, KeptResult>()
 
   constructor(options: ComfyRouterGenerationEngineOptions) {
     super()
@@ -139,8 +142,14 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
         requestId: request.idempotencyKey,
         isNow: true,
       })
-      this.catalog.keepResult(ref, await keptOf(response))
-      return { ref, models: [model], workflowHash: null }
+      const cost = costOf(creditsOf(response))
+      const outputs = await outputsOf(response, this.readOf(entry, request))
+      return {
+        ref,
+        models: [model],
+        workflowHash: null,
+        finished: { outputs, cost },
+      }
     }
     const requestId = await this.http.submit(
       model,
@@ -157,11 +166,7 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
   override async read(ref: string): Promise<EngineStatus> {
     const parsed = parseRef(ref)
     if (parsed.isNow) {
-      const kept = this.catalog.keptResult(ref)
-      if (kept === null) {
-        throw new EngineUnavailableError({ cause: "the result left the cache" })
-      }
-      return { state: "succeeded", cost: costOf(kept.credits) }
+      return { state: "succeeded" }
     }
     const state = await this.http.status(parsed.model, parsed.requestId)
     if (state.status !== "COMPLETED") {
@@ -177,7 +182,7 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     if (state.errorType !== null) {
       return { state: "failed", error: failureOf(state.errorType, 200, state) }
     }
-    return this.collect(ref, parsed)
+    return { state: "succeeded" }
   }
 
   override async listOutputs(
@@ -185,11 +190,12 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     inputs: RunInputs
   ): Promise<EngineOutput[]> {
     const parsed = parseRef(ref)
-    const kept = this.results.get(ref) ?? this.catalog.keptResult(ref)
-    const response =
-      kept === null || kept === undefined
-        ? await this.http.result(parsed.model, parsed.requestId)
-        : responseOf(kept)
+    if (parsed.isNow) {
+      throw new RunFailedError({
+        cause: "a synchronous run keeps its outputs at submit",
+      })
+    }
+    const response = await this.http.result(parsed.model, parsed.requestId)
     if (response === null) {
       throw new EngineUnavailableError({ cause: "the result is not ready" })
     }
@@ -197,11 +203,7 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     if (entry === null) {
       throw new ModelNotFoundError({ model: parsed.model })
     }
-    return outputsOf(response, {
-      paths: entry.outputs,
-      written: urlsWritten(inputs),
-      download: (url) => this.http.download(url),
-    })
+    return outputsOf(response, this.readOf(entry, { inputs }))
   }
 
   override async cancel(ref: string): Promise<void> {
@@ -223,14 +225,15 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     }
   }
 
-  private async collect(ref: string, parsed: Ref): Promise<EngineStatus> {
-    const response = await this.http.result(parsed.model, parsed.requestId)
-    if (response === null) {
-      return { state: "running", progress: null, retryAfterSeconds: null }
+  private readOf(
+    entry: CatalogEntry,
+    request: { inputs: RunInputs }
+  ): OutputRead {
+    return {
+      paths: entry.outputs,
+      written: urlsWritten(request.inputs),
+      download: (url) => this.http.download(url),
     }
-    const kept = await keptOf(response)
-    this.results.set(ref, kept)
-    return { state: "succeeded", cost: costOf(kept.credits) }
   }
 
   private async entryOf(binding: EngineBinding): Promise<CatalogEntry> {
@@ -266,20 +269,9 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
   }
 }
 
-async function keptOf(response: Response): Promise<KeptResult> {
+function creditsOf(response: Response): number | null {
   const credits = Number(response.headers.get("x-comfy-credits-used"))
-  return {
-    bytes: new Uint8Array(await response.arrayBuffer()),
-    contentType: response.headers.get("content-type"),
-    credits: Number.isFinite(credits) && credits > 0 ? credits : null,
-  }
-}
-
-function responseOf(kept: KeptResult): Response {
-  return new Response(new Uint8Array(kept.bytes), {
-    headers:
-      kept.contentType === null ? {} : { "content-type": kept.contentType },
-  })
+  return Number.isFinite(credits) && credits > 0 ? credits : null
 }
 
 function costOf(credits: number | null): Cost | null {

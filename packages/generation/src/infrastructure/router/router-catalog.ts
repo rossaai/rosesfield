@@ -31,12 +31,6 @@ type Stored = {
   checkedAt: number
 }
 
-export type KeptResult = {
-  bytes: Uint8Array
-  contentType: string | null
-  credits: number | null
-}
-
 type RouterCatalogOptions = {
   clock: Clock
   maxAgeMs?: number
@@ -58,7 +52,6 @@ export class RouterCatalog {
   private readonly listings = new Map<string, Listing>()
   private readonly loads = new Map<string, Promise<void>>()
   private readonly offEstimates = new Map<string, number>()
-  private readonly kept = new Map<string, KeptResult & { at: number }>()
   private rates: Stored | null = null
 
   constructor(options: RouterCatalogOptions) {
@@ -102,19 +95,6 @@ export class RouterCatalog {
     const rows = rateRowsOf(await http.readRates())
     this.rates = { rows, checkedAt: this.now() }
     return rows
-  }
-
-  keepResult(ref: string, result: KeptResult): void {
-    for (const [held, one] of this.kept) {
-      if (!this.isFresh(one.at)) {
-        this.kept.delete(held)
-      }
-    }
-    this.kept.set(ref, { ...result, at: this.now() })
-  }
-
-  keptResult(ref: string): KeptResult | null {
-    return this.kept.get(ref) ?? null
   }
 
   hasEstimates(keyTag: string): boolean {

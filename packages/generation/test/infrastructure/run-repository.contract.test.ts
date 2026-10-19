@@ -58,6 +58,18 @@ describe.each(subjects)("RunRepository contract: $name", ({ create }) => {
     expect(read?.toState()).toEqual(stored.toState())
   })
 
+  it("keeps the time a job began collecting its result", async () => {
+    const runs = create()
+    const run = runAt(0)
+    run.submitted({ index: 0, ref: "job-1", models: [], workflowHash: null })
+    run.collecting({ index: 0, now: start })
+    const stored = await runs.add(run)
+    const read = await runs.get(run.id)
+    expect(read?.toState()).toEqual(stored.toState())
+    expect(read?.collectingSince()).toEqual(start)
+    expect(read?.toRecord().status).toBe("running")
+  })
+
   it("keeps every job of a run with one job per output", async () => {
     const runs = create()
     const run = Run.queue({

@@ -28,10 +28,16 @@ export type EngineRequest = {
   timeoutSeconds?: number
 }
 
+export type EngineFinished = {
+  outputs: readonly EngineOutput[]
+  cost: Cost | null
+}
+
 export type EngineSubmission = {
   ref: string
   models: readonly string[]
   workflowHash: string | null
+  finished?: EngineFinished
 }
 
 export type EngineStatus =

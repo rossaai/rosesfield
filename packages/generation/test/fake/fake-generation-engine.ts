@@ -1,5 +1,6 @@
 import type { EngineBinding, KeyCheck, RunOrigin } from "@rosesfield/contract"
 import {
+  type EngineFinished,
   type EngineOutput,
   type EngineRequest,
   type EngineStatus,
@@ -31,6 +32,8 @@ type FakeGenerationEngineOptions = {
   forms?: readonly ModelForm[]
   price?: RunPrice
   refByKey?: boolean
+  outputErrors?: Error[]
+  finished?: EngineFinished
 }
 
 export class FakeGenerationEngine extends GenerationEngine {
@@ -51,6 +54,8 @@ export class FakeGenerationEngine extends GenerationEngine {
   private readonly forms: readonly ModelForm[]
   private readonly price: RunPrice
   private readonly refByKey: boolean
+  private readonly outputErrors: Error[]
+  private readonly finished: EngineFinished | null
   readonly priced: PriceRequest[] = []
 
   constructor(options: FakeGenerationEngineOptions = {}) {
@@ -68,6 +73,8 @@ export class FakeGenerationEngine extends GenerationEngine {
     this.forms = options.forms ?? []
     this.price = options.price ?? unknownPrice
     this.refByKey = options.refByKey ?? false
+    this.outputErrors = options.outputErrors ?? []
+    this.finished = options.finished ?? null
   }
 
   override canRun(binding: EngineBinding): boolean {
@@ -116,6 +123,7 @@ export class FakeGenerationEngine extends GenerationEngine {
         : `fake-${this.submitted.length}`,
       models: ["fake-model"],
       workflowHash: null,
+      ...(this.finished === null ? {} : { finished: this.finished }),
     }
   }
 
@@ -134,6 +142,10 @@ export class FakeGenerationEngine extends GenerationEngine {
   }
 
   override async listOutputs(_ref: string): Promise<EngineOutput[]> {
+    const error = this.outputErrors.shift()
+    if (error !== undefined) {
+      throw error
+    }
     return this.outputs.map((output) => ({
       ...output,
       bytes: new Uint8Array(output.bytes),
