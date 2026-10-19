@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, renderHook } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import type { GatewaySettings } from "@/api/gateway-settings"
 import { settingsQuery } from "@/api/queries"
 import { t } from "@/copy/t"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
@@ -58,6 +59,7 @@ const form: AppForm = {
 }
 
 const hosted: HostedState = {
+  isTaskApp: true,
   models: [flux],
   isLoading: false,
   error: null,
@@ -72,12 +74,15 @@ const hosted: HostedState = {
 describe("the price on Generate for a hosted model", () => {
   it("says the demo engine charges nothing when the server runs on the demo engine", () => {
     const client = new QueryClient()
-    client.setQueryData(settingsQuery.queryKey, {
+    const settings: GatewaySettings = {
       mode: "owner",
       engine: { target: "demo", address: null, key: "missing", origin: "demo" },
       lock: "local",
-      agent: { model: "missing", models: [] },
-    })
+      agent: "missing",
+      agentModel: null,
+      retentionDays: null,
+    }
+    client.setQueryData(settingsQuery.queryKey, settings)
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     )
