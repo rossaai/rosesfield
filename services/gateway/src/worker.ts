@@ -21,7 +21,7 @@ import { SharePurge } from "#share/share-purge"
 import type { ShareMount } from "#share/share-routes"
 import { SqliteShareRepository } from "#share/sqlite-share-repository"
 import { ownerSpend } from "#spend/owner-spend"
-import { forwardToAgentHost } from "#worker/agent-forward"
+import { forwardToAgentHost, moveAgentHost } from "#worker/agent-forward"
 import { AgentHost } from "#worker/agent-host"
 import { AlarmJobRunner } from "#worker/alarm-job-runner"
 import { RunWatcher } from "#worker/run-watcher"
@@ -86,6 +86,7 @@ function composePublic(
       accounts: account.accounts,
       early: account.early,
       visits: new SessionVisits({ db: parts.db, clock: parts.clock }),
+      moveAgent: (from, to) => moveAgentHost(env.AGENTS, from, to),
     },
     scopeFor: (c) => visitorScopeFor(c, { ...parts, agents: null }),
     agent,

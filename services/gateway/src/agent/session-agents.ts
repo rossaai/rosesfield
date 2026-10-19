@@ -1,4 +1,11 @@
-import { mkdirSync, readdirSync, rmSync, statSync } from "node:fs"
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  rmSync,
+  statSync,
+} from "node:fs"
 import { join } from "node:path"
 import {
   type AgentModel,
@@ -29,6 +36,8 @@ type OpenAgent = {
 export class SessionAgents {
   static readonly idleMs = 60_000
   static readonly fileSuffix = ".db"
+  static readonly fileParts = ["", "-wal", "-shm"]
+  static readonly copiedParts = ["", "-wal"]
 
   private readonly folder: string
   private readonly model: AgentModel
@@ -59,6 +68,29 @@ export class SessionAgents {
         }, SessionAgents.idleMs)
       }
     }
+  }
+
+  async move(from: SessionId, to: SessionId): Promise<boolean> {
+    const source = this.fileOf(from)
+    const target = this.fileOf(to)
+    if (
+      !existsSync(source) ||
+      existsSync(target) ||
+      this.open.has(to) ||
+      this.open.get(from)?.access.isHeld() === true
+    ) {
+      return false
+    }
+    await this.close(from)
+    for (const suffix of SessionAgents.copiedParts) {
+      if (existsSync(`${source}${suffix}`)) {
+        copyFileSync(`${source}${suffix}`, `${target}${suffix}`)
+      }
+    }
+    for (const suffix of SessionAgents.fileParts) {
+      rmSync(`${source}${suffix}`, { force: true })
+    }
+    return true
   }
 
   purge(cutoff: number): number {
@@ -93,7 +125,7 @@ export class SessionAgents {
     }
     const access = new AgentAccess()
     const model = this.model
-    const file = join(this.folder, `${sessionId}${SessionAgents.fileSuffix}`)
+    const file = this.fileOf(sessionId)
     const agent = new PiAgentHarness({
       models: () => openPiModels(model, { keyOf: () => access.modelKey() }),
       storage: () => openSqliteFileStorage(file),
@@ -103,6 +135,10 @@ export class SessionAgents {
     const entry: OpenAgent = { agent, access, idle: null }
     this.open.set(sessionId, entry)
     return entry
+  }
+
+  private fileOf(sessionId: SessionId): string {
+    return join(this.folder, `${sessionId}${SessionAgents.fileSuffix}`)
   }
 
   private async close(sessionId: SessionId): Promise<void> {

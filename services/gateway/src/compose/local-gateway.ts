@@ -215,7 +215,11 @@ function composeOwner(
   }
 }
 
-function publicGuard(parts: Parts, access: PublicAccess): GatewayGuard {
+function publicGuard(
+  parts: Parts,
+  access: PublicAccess,
+  agents: SessionAgents | null
+): GatewayGuard {
   const { db, clock } = parts
   const limiter = new SessionLimiter({
     db,
@@ -230,6 +234,9 @@ function publicGuard(parts: Parts, access: PublicAccess): GatewayGuard {
     accounts: parts.publicAccount.accounts,
     early: parts.publicAccount.early,
     visits: new SessionVisits({ db, clock }),
+    moveAgent: async (from, to) => {
+      await agents?.move(from, to)
+    },
   }
 }
 
@@ -267,7 +274,7 @@ function composePublic(
     })
   const app = createGateway({
     apps: parts.apps,
-    guard: publicGuard(parts, access),
+    guard: publicGuard(parts, access, agents),
     scopeFor,
     agent: { mode: "routes" },
     account: visitorAccount({

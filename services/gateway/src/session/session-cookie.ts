@@ -17,6 +17,7 @@ export type SessionGuardOptions = {
   accounts: AccountLookups
   visits: SessionVisits
   early?: (request: Request, key: string) => void
+  moveAgent?: (from: SessionId, to: SessionId) => Promise<void>
 }
 
 type HeldSession = {
@@ -122,6 +123,7 @@ async function visitWithKey(
   const sessionId = await accountSessionOf(answer.id)
   if (held !== null && !isAccountSession(held.sessionId)) {
     await options.visits.move(held.sessionId, sessionId)
+    await options.moveAgent?.(held.sessionId, sessionId)
   }
   return { sessionId, tag, isNew: true }
 }

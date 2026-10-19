@@ -20,6 +20,7 @@ import {
   sessionCookie,
 } from "#session/session-cookie"
 import { keyHeaders } from "#session/visitor-keys"
+import { moveAgentHost } from "#worker/agent-forward"
 import { pngBytes, sessionSecret } from "../sample-apps"
 import { gatewayRoot, testConfig } from "./platform-proxy"
 
@@ -166,6 +167,42 @@ describe("the Workers entry in public mode", () => {
     expect(strangerRuns.runs).toEqual([])
     expect(strangerRead.status).toBe(404)
     expect(await codeOf(withoutModelKey)).toBe("AGENT_MODEL_MISSING")
+  })
+
+  it("moves a visitor's conversations to the account's agent host when the key is added", async () => {
+    const before = new WorkerVisitor()
+    const started = await before.call(
+      conversationRoutes.startConversation.path,
+      { method: "POST" }
+    )
+    const { conversation } = conversationResponse.parse(await started.json())
+    const anonymous =
+      decodeURIComponent(before.cookie ?? "").split(".")[0] ?? ""
+    const env = await worker.getWorker().getEnv()
+    const accountKey = "comfyui-mover-key"
+
+    await moveAgentHost(
+      env.AGENTS,
+      anonymous,
+      await accountSessionOf("uid-mover")
+    )
+    const keyed = new WorkerVisitor()
+    keyed.cookie = await accountCookie(accountKey, "uid-mover")
+    const moved = conversationListResponse.parse(
+      await (
+        await keyed.call(conversationRoutes.listConversations.path, {
+          headers: { [keyHeaders.engine]: accountKey },
+        })
+      ).json()
+    )
+    const left = conversationListResponse.parse(
+      await (
+        await before.call(conversationRoutes.listConversations.path)
+      ).json()
+    )
+
+    expect(moved.conversations.map((one) => one.id)).toEqual([conversation.id])
+    expect(left.conversations).toEqual([])
   })
 
   it("deletes expired records on its hourly schedule", async () => {

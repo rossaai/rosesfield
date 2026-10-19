@@ -1,3 +1,8 @@
+import {
+  conversationListResponse,
+  conversationResponse,
+  conversationRoutes,
+} from "@rosesfield/agent"
 import { accountRoutes, routes, runPageResponse } from "@rosesfield/contract"
 import { afterEach, describe, expect, it } from "vitest"
 import { sessionCookie } from "#session/session-cookie"
@@ -20,6 +25,18 @@ afterEach(async () => {
   await opened?.close()
   opened = null
 })
+
+const agentSettings = {
+  AGENT_BASE_URL: "http://127.0.0.1:9/v1",
+  AGENT_MODEL: "qwen3.8:27b",
+}
+
+async function conversationIds(visitor: Visitor): Promise<string[]> {
+  const list = conversationListResponse.parse(
+    await (await visitor.call(conversationRoutes.listConversations.path)).json()
+  )
+  return list.conversations.map((one) => one.id)
+}
 
 async function runIds(visitor: Visitor): Promise<string[]> {
   const page = runPageResponse.parse(
@@ -100,6 +117,26 @@ describe("your Comfy key as your login", () => {
     expect(
       await runIds(opened.visitor({ [keyHeaders.engine]: secondKey }))
     ).toEqual([made.id])
+  })
+
+  it("moves the conversations made before the key to the account the key opens", async () => {
+    opened = openGateway({ settings: agentSettings })
+    const before = opened.visitor()
+    const started = await before.call(
+      conversationRoutes.startConversation.path,
+      { method: "POST" }
+    )
+    const { conversation } = conversationResponse.parse(await started.json())
+    const keyed = opened.visitor({ [keyHeaders.engine]: firstKey })
+    keyed.cookie = before.cookie
+
+    const moved = await conversationIds(keyed)
+    const phone = await conversationIds(
+      opened.visitor({ [keyHeaders.engine]: secondKey })
+    )
+
+    expect(moved).toEqual([conversation.id])
+    expect(phone).toEqual([conversation.id])
   })
 
   it("keeps a refused key out of every account", async () => {
