@@ -167,7 +167,7 @@ function SoundControls({
       </IconButton>
       <Slider
         className="w-20 shrink-0"
-        aria-label={t("model.tag.sound")}
+        aria-label={t("explore.video.volume")}
         min={0}
         max={1}
         step={0.05}
