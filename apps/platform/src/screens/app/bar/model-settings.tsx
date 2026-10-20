@@ -1,19 +1,20 @@
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
-import { Chip } from "@rosesfield/ui/components/chip"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTitle,
-  PopoverTrigger,
-} from "@rosesfield/ui/components/popover"
+  ModelPicker,
+  type ModelPickerRow,
+  type ModelPickerSection,
+} from "@rosesfield/ui/components/model-picker"
+import { ModelChip } from "@rosesfield/ui/components/model-trigger"
 import type { ReactElement, ReactNode } from "react"
 import { isAssetInput } from "@/catalog/app-facts"
-import { t } from "@/copy/t"
+import { hasCatalogText, t, tCatalog } from "@/copy/t"
+import { LabMark } from "@/pieces/lab-mark"
 import { aspectField, countField } from "@/screens/app/app-form"
 import { chipChoiceText } from "@/screens/app/bar/setting-chip"
 import { textOf } from "@/screens/app/fields/field-props"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
+import { weightsLinkOf } from "@/screens/app/hosted/catalog-picker"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
 import type { AppScreenState } from "@/screens/app/use-app-screen"
 
@@ -93,32 +94,96 @@ export function modelChipText(
   return chipChoiceText(model, value || model.default) || t("bar.model")
 }
 
-export function ModelPopoverChip({
-  text,
-  children,
-}: {
-  text: string
-  children: ReactNode
-}): ReactElement {
+const huggingFace = "https://huggingface.co/"
+
+export function choiceMakerOf(value: string, name: string): string {
+  const link = weightsLinkOf(value)
+  const lab = link?.slice(huggingFace.length).split("/")[0]
+  return lab === undefined || lab === "" ? name : lab
+}
+
+function choiceRow(option: ChoiceInput["options"][number]): ModelPickerRow {
+  const name = tCatalog(option.labelKey)
+  const maker = choiceMakerOf(option.value, name)
+  const lineKey = `${option.labelKey}.line`
+  const href = weightsLinkOf(option.value)
+  return {
+    id: option.value,
+    name,
+    maker,
+    line: hasCatalogText(lineKey) ? tCatalog(lineKey) : null,
+    tags: [],
+    mark: <LabMark maker={maker} />,
+    badges:
+      href === null
+        ? []
+        : [{ kind: "openWeights", label: t("model.tag.openWeights"), href }],
+  }
+}
+
+export function choiceSections(
+  model: ChoiceInput | null
+): ModelPickerSection[] {
+  if (model === null) {
+    return []
+  }
+  const rows = model.options.map(choiceRow)
+  const featured = rows.filter((row) => row.id === model.default)
+  return [
+    { id: "featured", label: t("model.picker.featured"), rows: featured },
+    { id: "all", label: t("model.picker.all"), rows },
+  ].filter((section) => section.rows.length > 0)
+}
+
+type ChoiceModelPickerProps = {
+  model: ChoiceInput | null
+  value: string
+  onChoose: (value: string) => void
+  settings: ReactNode
+}
+
+export function ChoiceModelPicker({
+  model,
+  value,
+  onChoose,
+  settings,
+}: ChoiceModelPickerProps): ReactElement {
+  const chosen = model === null ? null : value || model.default
+  const name = modelChipText(model, value)
+  const maker = chosen === null ? null : choiceMakerOf(chosen, name)
   return (
-    <Popover>
-      <PopoverTrigger render={<Chip caption={t("bar.model")}>{text}</Chip>} />
-      <PopoverContent className="max-w-dialog">
-        <PopoverTitle>{t("bar.model")}</PopoverTitle>
-        {children}
-      </PopoverContent>
-    </Popover>
+    <ModelPicker
+      trigger={
+        <ModelChip
+          name={name}
+          aria-label={`${t("model.picker.title")} ${name}`}
+          {...(maker === null ? {} : { mark: <LabMark maker={maker} /> })}
+        />
+      }
+      title={t("model.picker.title")}
+      searchLabel={t("model.picker.search")}
+      searchPlaceholder={t("model.picker.searchPlaceholder")}
+      emptyLabel={t("model.picker.empty")}
+      sections={choiceSections(model)}
+      chosen={chosen}
+      onChoose={onChoose}
+      settings={settings}
+      side="top"
+    />
   )
 }
 
-export function ModelChip(props: ModelSettingsProps): ReactElement {
-  const value = textOf(props.state.form.values.inputs[modelInputName])
-  const model = props.app.inputs.find((input) => input.name === modelInputName)
+export function BarModelChip(props: ModelSettingsProps): ReactElement {
+  const input = props.app.inputs.find((one) => one.name === modelInputName)
+  const model = input?.type === "choice" ? input : null
   return (
-    <ModelPopoverChip
-      text={modelChipText(model?.type === "choice" ? model : null, value)}
-    >
-      <ModelSettings {...props} />
-    </ModelPopoverChip>
+    <ChoiceModelPicker
+      model={model}
+      value={textOf(props.state.form.values.inputs[modelInputName])}
+      onChoose={(next) => props.state.form.setInput(modelInputName, next)}
+      settings={
+        <ModelSettings {...props} chips={[...props.chips, modelInputName]} />
+      }
+    />
   )
 }

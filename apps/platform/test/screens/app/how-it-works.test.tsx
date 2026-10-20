@@ -15,7 +15,7 @@ function share(
     id,
     path: `/share/${id}`,
     run: run.parse({
-      id: `93e9078d-0000-4000-8000-0000000000${id.charCodeAt(0)}`,
+      id: `93e9078d-0000-4000-8000-${id.charCodeAt(0).toString(16).padStart(12, "0")}`,
       appId,
       status: "done",
       inputs: {},

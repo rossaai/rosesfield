@@ -8,7 +8,7 @@ import { t } from "@/copy/t"
 import { AttachMenu } from "@/pieces/attach-menu"
 import { CharacterPicker } from "@/pieces/character-picker"
 import { LibraryPicker } from "@/pieces/library-picker"
-import { ModelChip, ModelSettings } from "@/screens/app/bar/model-settings"
+import { BarModelChip, ModelSettings } from "@/screens/app/bar/model-settings"
 import { SettingChip } from "@/screens/app/bar/setting-chip"
 import { type BarTray, useBarTray } from "@/screens/app/bar/use-bar-tray"
 import { BarChips, BarFrame } from "@/screens/app/bar-frame"
@@ -90,7 +90,7 @@ function BarModelChips({
       {hosted?.isTaskApp === true ? (
         <HostedChips hosted={hosted} form={state.form} />
       ) : (
-        <ModelChip app={app} state={state} chips={chips} />
+        <BarModelChip app={app} state={state} chips={chips} />
       )}
       {hosted?.fields === null || hosted?.fields === undefined
         ? chips.map((name) => (

@@ -106,7 +106,11 @@ export function stepsOf(
     const isPlaying = index > 0
     const media: ReactNode =
       sample === undefined ? null : (
-        <SampleMedia sample={sample} isPlaying={isPlaying} />
+        <SampleMedia
+          key={sample.shareId}
+          sample={sample}
+          isPlaying={isPlaying}
+        />
       )
     return {
       id,

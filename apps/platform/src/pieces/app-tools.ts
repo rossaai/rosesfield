@@ -30,10 +30,9 @@ function hasKey(): boolean {
 }
 
 export function openAppTools(): boolean {
-  for (const open of tools.openers) {
-    open()
-  }
-  return tools.openers.size > 0
+  const latest = [...tools.openers].at(-1)
+  latest?.()
+  return latest !== undefined
 }
 
 export function useAppToolsOpener(open: () => void): void {

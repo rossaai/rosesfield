@@ -33,6 +33,22 @@ describe("the app's tools behind the Generate key", () => {
     expect(opened).toEqual(["video"])
   })
 
+  it("opens one sheet, the latest frame's, while two frames are mounted", () => {
+    const opened: string[] = []
+    const leaving = renderHook(() =>
+      useAppToolsOpener(() => opened.push("image"))
+    )
+    const arriving = renderHook(() =>
+      useAppToolsOpener(() => opened.push("video"))
+    )
+    expect(openAppTools()).toBe(true)
+    expect(opened).toEqual(["video"])
+    arriving.unmount()
+    openAppTools()
+    expect(opened).toEqual(["video", "image"])
+    leaving.unmount()
+  })
+
   it("knows a Generate key is on screen while one is mounted", () => {
     const seen = renderHook(() => useHasAppToolsKey())
     expect(seen.result.current).toBe(false)
