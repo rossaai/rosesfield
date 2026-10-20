@@ -132,12 +132,26 @@ describe("priceFromRates", () => {
         credits: 46.42,
       },
     ]
-    expect(priceFromRates(rows, picture, { quality: "low" })).toBe(2.11)
-    expect(priceFromRates(rows, picture, { quality: "high" })).toBe(46.42)
+    expect(
+      priceFromRates(rows, picture, { quality: "low", size: "1024x1024" })
+    ).toBe(2.11)
+    expect(
+      priceFromRates(rows, picture, { quality: "high", size: "1024x1024" })
+    ).toBe(46.42)
     expect(
       priceFromRates(rows, picture, { quality: "low", size: "2048x2048" })
     ).toBe(4.22)
     expect(priceFromRates(rows, picture, {})).toBe(12.66)
+    const sized: ModelForm = {
+      ...picture,
+      fields: picture.fields.map((field) =>
+        field.kind === "text" ? { ...field, default: "2048x2048" } : field
+      ),
+    }
+    expect(priceFromRates(rows, sized, { quality: "low" })).toBe(4.22)
+    expect(
+      priceFromRates(rows.slice(1), picture, { quality: "low" })
+    ).toBeNull()
   })
 
   it("prices one job per output on a model that makes one at a time", () => {

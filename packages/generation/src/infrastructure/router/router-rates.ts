@@ -55,7 +55,7 @@ export function priceFromRates(
   const own = rows.filter(
     (row) => row.model === form.model && isPriced(row.unit)
   )
-  const values = valuesOf(form, inputs, own)
+  const values = valuesOf(form, inputs)
   const scored = own
     .map((row) => ({ row, score: scoreOf(row.conditions, values, inputs) }))
     .filter((one) => one.score !== null)
@@ -147,11 +147,7 @@ function fitOf(part: string, values: Values, inputs: RunInputs): Fit {
   return null
 }
 
-function valuesOf(
-  form: ModelForm,
-  inputs: RunInputs,
-  rows: readonly RateRow[]
-): Values {
+function valuesOf(form: ModelForm, inputs: RunInputs): Values {
   const values: Values = new Map()
   for (const field of form.fields) {
     const chosen = chosenOf(field.name, inputs, field)
@@ -164,7 +160,7 @@ function valuesOf(
       values.set(key, keyOf(String(value)))
     }
   }
-  const size = outputSizeOf(form, inputs, rows)
+  const size = outputSizeOf(form, inputs)
   if (size !== null && !values.has(outputSizeKey)) {
     values.set(outputSizeKey, size)
   }
@@ -183,22 +179,10 @@ function chosenOf(
   return "default" in field ? field.default : null
 }
 
-function outputSizeOf(
-  form: ModelForm,
-  inputs: RunInputs,
-  rows: readonly RateRow[]
-): string | null {
+function outputSizeOf(form: ModelForm, inputs: RunInputs): string | null {
   const field = fieldOfRole(form.fields, "resolution", "image")
   const value = field === null ? null : chosenOf(field.name, inputs, field)
-  const named = value === null ? null : sizeClassOf(String(value))
-  if (named !== null) {
-    return named
-  }
-  const listed = rows.flatMap((row) => {
-    const found = /output size=([^;]+)/i.exec(row.conditions)
-    return found === null ? [] : [keyOf(found[1] ?? "")]
-  })
-  return [...listed].sort((a, b) => sizeOrder(a) - sizeOrder(b))[0] ?? null
+  return value === null ? null : sizeClassOf(String(value))
 }
 
 function sizeClassOf(value: string): string | null {
@@ -215,10 +199,6 @@ function sizeClassOf(value: string): string | null {
     return "1k"
   }
   return long <= 2560 ? "2k" : "4k"
-}
-
-function sizeOrder(size: string): number {
-  return Number.parseFloat(size) || Number.POSITIVE_INFINITY
 }
 
 function roleNumber(
