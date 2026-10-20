@@ -56,4 +56,12 @@ export const libraryCopy = {
   "library.delete.body": "You cannot undo this.",
   "library.delete.cancel": "Cancel",
   "library.delete.confirm": "Delete",
+  "library.view.label": "Layout",
+  "library.view.list": "List",
+  "library.view.grid": "Grid",
+  "library.view.size": "Tile size",
+  "library.filter": "Filter",
+  "library.tile.open": "Open {name}",
+  "library.tile.expand": "Expand",
+  "library.tile.recreateName": "Recreate {name}",
 } satisfies Record<string, string>
