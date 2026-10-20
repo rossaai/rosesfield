@@ -53,7 +53,11 @@ type PromptBlockProps = {
   chips?: ReactNode
 }
 
-function PromptBlock({ label, children, chips }: PromptBlockProps): ReactElement {
+function PromptBlock({
+  label,
+  children,
+  chips,
+}: PromptBlockProps): ReactElement {
   return (
     <div data-slot="composer-prompt-block" className="flex w-full flex-col">
       <div className="relative flex h-31.5 flex-col rounded-t-cell bg-(--well) px-3 pt-9 pb-2">

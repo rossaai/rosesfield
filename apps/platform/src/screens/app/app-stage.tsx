@@ -27,9 +27,11 @@ export function shownTab(
   return chosen ?? (hasRuns === false ? "how" : "history")
 }
 
-export function useStageTab(
-  app: AppListing
-): { tab: StageTab; hasRuns: boolean | null; choose: (tab: StageTab) => void } {
+export function useStageTab(app: AppListing): {
+  tab: StageTab
+  hasRuns: boolean | null
+  choose: (tab: StageTab) => void
+} {
   const runs = useAppRuns(app)
   const count = runs.runs.length
   const hasRuns = runs.isPending ? null : count > 0

@@ -49,7 +49,10 @@ function Areas({ open }: { open?: boolean }): ReactElement {
       <AreaMenu apps={apps} {...(open === true ? { defaultOpen: true } : {})}>
         {t("sample.nav.image")}
       </AreaMenu>
-      <NavLink href="?area=video" badge={<Badge kind="new">{t("sample.badge.new")}</Badge>}>
+      <NavLink
+        href="?area=video"
+        badge={<Badge kind="new">{t("sample.badge.new")}</Badge>}
+      >
         {t("sample.nav.video")}
       </NavLink>
       <NavLink href="?area=audio">{t("sample.nav.audio")}</NavLink>
@@ -72,15 +75,23 @@ function Bar({
       <AppBar
         label={t("sample.name")}
         density={density}
-        mark={<img alt={t("sample.name")} src="/icons/rosesfield-icon-dark.svg" />}
-        lockup={<img alt={t("sample.name")} src="/lockup-dark.svg" className="h-8" />}
+        mark={
+          <img alt={t("sample.name")} src="/icons/rosesfield-icon-dark.svg" />
+        }
+        lockup={
+          <img alt={t("sample.name")} src="/lockup-dark.svg" className="h-8" />
+        }
         areas={<Areas {...(open === true ? { open } : {})} />}
         areaMenu={
           <Button size="bar" tone="quiet" aria-label={t("sample.nav.areas")}>
             <MenuIcon aria-hidden="true" />
           </Button>
         }
-        balance={<span className="px-2 text-body text-ink-muted">{t("sample.nav.balance")}</span>}
+        balance={
+          <span className="px-2 text-body text-ink-muted">
+            {t("sample.nav.balance")}
+          </span>
+        }
         connect={
           <Button size="bar" tone="primary">
             {t("sample.nav.connect")}
@@ -124,22 +135,38 @@ function FooterDemo(): ReactElement {
             id: "project",
             heading: t("sample.footer.project"),
             links: [
-              { id: "code", label: t("sample.footer.code"), href: "https://github.com/" },
-              { id: "challenge", label: t("sample.footer.challenge"), href: "?challenge" },
+              {
+                id: "code",
+                label: t("sample.footer.code"),
+                href: "https://github.com/",
+              },
+              {
+                id: "challenge",
+                label: t("sample.footer.challenge"),
+                href: "?challenge",
+              },
             ],
           },
           {
             id: "legal",
             heading: t("sample.footer.legal"),
             links: [
-              { id: "privacy", label: t("sample.footer.privacy"), href: "?privacy" },
+              {
+                id: "privacy",
+                label: t("sample.footer.privacy"),
+                href: "?privacy",
+              },
               { id: "terms", label: t("sample.footer.terms"), href: "?terms" },
             ],
           },
         ]}
         notice={t("sample.footer.notice")}
         legal={[
-          { id: "privacy", label: t("sample.footer.privacy"), href: "?privacy" },
+          {
+            id: "privacy",
+            label: t("sample.footer.privacy"),
+            href: "?privacy",
+          },
           { id: "terms", label: t("sample.footer.terms"), href: "?terms" },
         ]}
       />
@@ -158,10 +185,12 @@ function Hero(): ReactElement {
         action={t("sample.banner.action")}
       />
       <HeroFan
-        pictures={[demoTall, demoSquare, demoWide, demoTall].map((src, index) => ({
-          id: String(index),
-          src,
-        }))}
+        pictures={[demoTall, demoSquare, demoWide, demoTall].map(
+          (src, index) => ({
+            id: String(index),
+            src,
+          })
+        )}
         headline={t("sample.fan.headline")}
         model={t("sample.model")}
         line={t("sample.fan.line")}
@@ -207,8 +236,28 @@ export const referenceShellEntries: GalleryEntry[] = [
       frameState("open", "state.open", () => <Bar density="full" open />),
     ],
   },
-  { id: "ref-phone-tab-bar", unit: "phone-tab-bar", title: "ref.tabBar", states: interactionStates(() => <Tabs />) },
-  { id: "ref-footer", unit: "footer", title: "ref.footer", states: interactionStates(() => <FooterDemo />) },
-  { id: "ref-hero", unit: "hero", title: "ref.hero", states: interactionStates(() => <Hero />) },
-  { id: "ref-section-header", unit: "section-header", title: "ref.sectionHeader", states: interactionStates(() => <Header />) },
+  {
+    id: "ref-phone-tab-bar",
+    unit: "phone-tab-bar",
+    title: "ref.tabBar",
+    states: interactionStates(() => <Tabs />),
+  },
+  {
+    id: "ref-footer",
+    unit: "footer",
+    title: "ref.footer",
+    states: interactionStates(() => <FooterDemo />),
+  },
+  {
+    id: "ref-hero",
+    unit: "hero",
+    title: "ref.hero",
+    states: interactionStates(() => <Hero />),
+  },
+  {
+    id: "ref-section-header",
+    unit: "section-header",
+    title: "ref.sectionHeader",
+    states: interactionStates(() => <Header />),
+  },
 ]

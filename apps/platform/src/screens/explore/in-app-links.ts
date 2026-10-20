@@ -40,9 +40,9 @@ export function inAppPathOf(click: LinkClick, origin: string): string | null {
     : null
 }
 
-export function useInAppLinks<Root extends HTMLElement>(): RefObject<
-  Root | null
-> {
+export function useInAppLinks<
+  Root extends HTMLElement,
+>(): RefObject<Root | null> {
   const router = useRouter()
   const root = useRef<Root>(null)
   useEffect(() => {

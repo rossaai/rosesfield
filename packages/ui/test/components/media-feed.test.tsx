@@ -22,8 +22,9 @@ function renderFeed(layout: "masonry" | "row") {
 
 function classesOf(feed: HTMLElement, slot: string): string[] {
   return (
-    feed.querySelector(`[data-slot='media-feed-${slot}']`)?.className.split(" ") ??
-    []
+    feed
+      .querySelector(`[data-slot='media-feed-${slot}']`)
+      ?.className.split(" ") ?? []
   )
 }
 
@@ -31,14 +32,21 @@ describe("MediaFeed", () => {
   it("holds its contract's header, items and View all", () => {
     const feed = renderFeed("masonry")
     for (const slot of MEDIA_FEED.slots) {
-      expect(feed.querySelector(`[data-slot='media-feed-${slot}']`)).not.toBeNull()
+      expect(
+        feed.querySelector(`[data-slot='media-feed-${slot}']`)
+      ).not.toBeNull()
     }
   })
 
   it("lays a masonry of 6 columns, 1 on a phone, 8 px apart in a 1024 px window", () => {
     const feed = renderFeed("masonry")
     expect(classesOf(feed, "items")).toEqual(
-      expect.arrayContaining(["columns-1", "@regular:columns-6", "gap-2", "*:mb-2"])
+      expect.arrayContaining([
+        "columns-1",
+        "@regular:columns-6",
+        "gap-2",
+        "*:mb-2",
+      ])
     )
     expect(classesOf(feed, "window")).toContain("max-h-256")
   })

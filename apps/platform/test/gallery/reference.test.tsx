@@ -68,13 +68,14 @@ describe("the reference gallery", () => {
     }
   })
 
-  it.each(entries.flatMap((entry) => entry.states.map((state) => [entry.id, state.id, state] as const)))(
-    "renders %s in its %s state",
-    (_entry, _state, state) => {
-      const { container } = render(<>{state.render()}</>)
-      expect(container.firstElementChild).not.toBeNull()
-    }
-  )
+  it.each(
+    entries.flatMap((entry) =>
+      entry.states.map((state) => [entry.id, state.id, state] as const)
+    )
+  )("renders %s in its %s state", (_entry, _state, state) => {
+    const { container } = render(<>{state.render()}</>)
+    expect(container.firstElementChild).not.toBeNull()
+  })
 
   it("places a frame at 1440 by 900 and one at 390 px, and names the capture it waits for", () => {
     const entry = referenceControlEntries[1]
@@ -82,7 +83,9 @@ describe("the reference gallery", () => {
     if (entry === undefined || state === undefined) {
       throw new Error("no button entry")
     }
-    render(<ReferenceFrames entry={entry} state={state} src="?entry=ref-button" />)
+    render(
+      <ReferenceFrames entry={entry} state={state} src="?entry=ref-button" />
+    )
     const frames = document.querySelectorAll("iframe")
     expect([...frames].map((frame) => frame.className.split(" ")[0])).toEqual([
       "h-225",

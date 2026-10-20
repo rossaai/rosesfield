@@ -72,7 +72,14 @@ function Buttons(): ReactElement {
 }
 
 function GlyphButtons(): ReactElement {
-  const places = ["barCompact", "bar", "close", "card", "cardWide", "clip"] as const
+  const places = [
+    "barCompact",
+    "bar",
+    "close",
+    "card",
+    "cardWide",
+    "clip",
+  ] as const
   return (
     <div className="flex flex-wrap items-center gap-3">
       {places.map((place) => (
@@ -143,7 +150,11 @@ function Chips({ open }: { open: boolean }): ReactElement {
               <span key={key} className="h-26 rounded-dense bg-(--well)" />
             ))}
           </SettingGroup>
-          <SettingGroup name={t("sample.group.light")} count={8} icon={<SunIcon />}>
+          <SettingGroup
+            name={t("sample.group.light")}
+            count={8}
+            icon={<SunIcon />}
+          >
             <span />
           </SettingGroup>
         </SettingGroups>

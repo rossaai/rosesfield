@@ -39,9 +39,7 @@ export function isAreaCurrent(area: MediaArea, pathname: string): boolean {
 function ScreenNav({ link }: { link: ScreenLink }): ReactElement {
   return (
     <NavLink
-      render={
-        <Link to={link.to} activeOptions={{ exact: link.to === "/" }} />
-      }
+      render={<Link to={link.to} activeOptions={{ exact: link.to === "/" }} />}
     >
       {t(link.label)}
     </NavLink>
@@ -121,9 +119,7 @@ function AreaLinks({
 function MenuLink({ link }: { link: ScreenLink }): ReactElement {
   return (
     <DropdownMenuItem
-      render={
-        <Link to={link.to} activeOptions={{ exact: link.to === "/" }} />
-      }
+      render={<Link to={link.to} activeOptions={{ exact: link.to === "/" }} />}
     >
       {link.icon}
       {t(link.label)}

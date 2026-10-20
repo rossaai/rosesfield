@@ -52,7 +52,10 @@ function SectionHeader({
         className
       )}
     >
-      <div data-slot="section-heading-lead" className="flex min-w-0 flex-col gap-1">
+      <div
+        data-slot="section-heading-lead"
+        className="flex min-w-0 flex-col gap-1"
+      >
         <h2 className="font-medium text-title text-ink">
           <Title
             title={title}
@@ -65,7 +68,10 @@ function SectionHeader({
         )}
       </div>
       {actions === undefined ? null : (
-        <div data-slot="section-heading-actions" className="flex shrink-0 gap-2">
+        <div
+          data-slot="section-heading-actions"
+          className="flex shrink-0 gap-2"
+        >
           {actions}
         </div>
       )}

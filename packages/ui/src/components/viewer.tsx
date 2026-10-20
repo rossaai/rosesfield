@@ -232,7 +232,11 @@ function Viewer(props: ViewerProps): ReactElement {
             </ViewerAside>
             <ViewerBar fadeRef={fadeRef}>{props.bar}</ViewerBar>
           </div>
-          <ViewerClose fadeRef={fadeRef} label={props.closeLabel} onClose={close} />
+          <ViewerClose
+            fadeRef={fadeRef}
+            label={props.closeLabel}
+            onClose={close}
+          />
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

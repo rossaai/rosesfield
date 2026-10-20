@@ -31,7 +31,10 @@ describe("HeroFan", () => {
   it("fans four pictures over a two-line headline that names the model", () => {
     const { container } = render(
       <HeroFan
-        pictures={["a", "b", "c", "d", "e"].map((id) => ({ id, src: `${id}.png` }))}
+        pictures={["a", "b", "c", "d", "e"].map((id) => ({
+          id,
+          src: `${id}.png`,
+        }))}
         headline="Make an image with"
         model="Picture 2"
         line="Type a prompt below"

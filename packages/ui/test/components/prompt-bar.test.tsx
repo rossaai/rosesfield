@@ -141,7 +141,9 @@ describe("PromptBar's composer slots", () => {
     )
     const order = [
       ...document.querySelectorAll("[data-slot^='composer-']"),
-    ].map((element) => element.getAttribute("data-slot")?.replace("composer-", ""))
+    ].map((element) =>
+      element.getAttribute("data-slot")?.replace("composer-", "")
+    )
     expect(order).toEqual([...COMPOSER.slots])
   })
 })

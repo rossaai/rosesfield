@@ -20,7 +20,9 @@ describe("PresetTile", () => {
     )
     const tile = document.querySelector("[data-slot='preset-tile']")
     for (const slot of PRESET_TILE.slots) {
-      expect(tile?.querySelector(`[data-slot='preset-tile-${slot}']`)).not.toBeNull()
+      expect(
+        tile?.querySelector(`[data-slot='preset-tile-${slot}']`)
+      ).not.toBeNull()
     }
     expect(
       screen.getByRole("link", { name: "View Melt" }).getAttribute("href")

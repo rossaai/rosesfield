@@ -40,9 +40,7 @@ function InputAssets({ run }: { run: Run }): ReactNode {
   }
   return (
     <section data-slot="viewer-inputs" className="flex flex-col gap-2">
-      <h3 className="text-label text-ink-muted">
-        {t("viewer.label.inputs")}
-      </h3>
+      <h3 className="text-label text-ink-muted">{t("viewer.label.inputs")}</h3>
       <div className="flex gap-1 overflow-x-auto">
         {ids.map((assetId) => (
           <span key={assetId} className="size-18 shrink-0">
@@ -85,9 +83,7 @@ function Details({ entry }: { entry: VisualEntry }): ReactElement {
       {model === null ? null : (
         <Detail label={t("viewer.label.model")}>{model}</Detail>
       )}
-      <Detail label={t("explore.viewer.credits")}>
-        {runPrice(entry.run)}
-      </Detail>
+      <Detail label={t("explore.viewer.credits")}>{runPrice(entry.run)}</Detail>
     </dl>
   )
 }

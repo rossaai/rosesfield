@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
-import {
-  badgesOf,
-  weightsLinkOf,
-} from "@/screens/app/hosted/catalog-picker"
+import { badgesOf, weightsLinkOf } from "@/screens/app/hosted/catalog-picker"
 
 const openWeights = [{ kind: "open-weights" as const }]
 

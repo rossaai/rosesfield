@@ -16,7 +16,8 @@ const tones = {
   surface: "bg-(--well) text-ink",
   primary: "bg-ink text-canvas",
   accent: "bg-ink text-canvas",
-  quiet: "bg-transparent text-ink aria-expanded:bg-(--tint) data-popup-open:bg-(--tint)",
+  quiet:
+    "bg-transparent text-ink aria-expanded:bg-(--tint) data-popup-open:bg-(--tint)",
   muted: "bg-transparent text-ink-muted",
   canvas: "bg-canvas text-ink",
   danger: "bg-bug-tint text-bug-text",

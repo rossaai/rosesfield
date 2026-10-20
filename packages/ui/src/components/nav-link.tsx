@@ -119,4 +119,4 @@ function AreaMenu({
 }
 
 export type { AreaApp, AreaMenuProps, NavLinkProps }
-export { AreaMenu, NavLink, navLinkClass, NavSeparator }
+export { AreaMenu, NavLink, NavSeparator, navLinkClass }

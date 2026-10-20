@@ -5,14 +5,17 @@ import { afterEach, describe, expect, it } from "vitest"
 afterEach(cleanup)
 
 describe("Badge", () => {
-  it.each(badgeKinds)("rides 4 px after its host's label, 16 px tall, as %s", (kind) => {
-    render(<Badge kind={kind}>Word</Badge>)
-    const badge = screen.getByText("Word").closest("[data-slot='badge']")
-    expect(badge?.getAttribute("data-kind")).toBe(kind)
-    expect(badge?.className.split(" ")).toEqual(
-      expect.arrayContaining(["ms-1", "h-4"])
-    )
-  })
+  it.each(badgeKinds)(
+    "rides 4 px after its host's label, 16 px tall, as %s",
+    (kind) => {
+      render(<Badge kind={kind}>Word</Badge>)
+      const badge = screen.getByText("Word").closest("[data-slot='badge']")
+      expect(badge?.getAttribute("data-kind")).toBe(kind)
+      expect(badge?.className.split(" ")).toEqual(
+        expect.arrayContaining(["ms-1", "h-4"])
+      )
+    }
+  )
 
   it("opens the weights page from Open weights in a new tab", () => {
     render(

@@ -37,7 +37,10 @@ function Price({
         form === "tile" ? "text-label" : "text-body"
       )}
     >
-      <SparkleIcon aria-hidden="true" className={cn("shrink-0", glyphs[form])} />
+      <SparkleIcon
+        aria-hidden="true"
+        className={cn("shrink-0", glyphs[form])}
+      />
       {price}
     </span>
   )

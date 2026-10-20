@@ -4,7 +4,12 @@ import type { ReactElement, ReactNode } from "react"
 
 type BadgeKind = "new" | "top" | "premium" | "openWeights"
 
-const badgeKinds: readonly BadgeKind[] = ["new", "top", "premium", "openWeights"]
+const badgeKinds: readonly BadgeKind[] = [
+  "new",
+  "top",
+  "premium",
+  "openWeights",
+]
 
 const kinds = {
   new: "bg-hor-tint text-hor-text",

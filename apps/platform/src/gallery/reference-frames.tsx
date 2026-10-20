@@ -116,9 +116,7 @@ export function frameState(
   }
 }
 
-export function interactionStates(
-  render: () => ReactNode
-): GalleryState[] {
+export function interactionStates(render: () => ReactNode): GalleryState[] {
   return [
     frameState("rest", "state.rest", render),
     frameState("hover", "state.hover", render, "hover"),

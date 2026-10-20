@@ -77,9 +77,7 @@ function Tab({ link }: { link: ScreenLink }): ReactElement {
   return (
     <TabBarLink
       icon={link.icon}
-      render={
-        <Link to={link.to} activeOptions={{ exact: link.to === "/" }} />
-      }
+      render={<Link to={link.to} activeOptions={{ exact: link.to === "/" }} />}
     >
       {t(link.label)}
     </TabBarLink>

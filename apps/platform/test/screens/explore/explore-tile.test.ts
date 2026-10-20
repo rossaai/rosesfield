@@ -1,8 +1,8 @@
 import { run } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import {
-  entryModel,
   type ExploreEntry,
+  entryModel,
   recreateSearchOf,
 } from "@/screens/explore/explore-tile"
 

@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest"
 import {
   columnCount,
   packColumns,
-  tileSteps,
   tileStepOf,
+  tileSteps,
 } from "@/screens/library/tile-columns"
 
 const wide = { width: 16, height: 9 }

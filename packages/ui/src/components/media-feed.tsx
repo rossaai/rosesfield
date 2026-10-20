@@ -20,7 +20,12 @@ type ViewAllProps = Omit<ComponentProps<"a">, "children"> & {
   render?: ReactElement
 }
 
-function ViewAll({ children, render, className, ...props }: ViewAllProps): ReactElement {
+function ViewAll({
+  children,
+  render,
+  className,
+  ...props
+}: ViewAllProps): ReactElement {
   return useRender({
     defaultTagName: "a",
     render,
@@ -78,10 +83,7 @@ function MediaFeed({
       >
         <div
           data-slot="media-feed-items"
-          className={cn(
-            "gap-2 *:mb-2 *:break-inside-avoid",
-            columns[layout]
-          )}
+          className={cn("gap-2 *:mb-2 *:break-inside-avoid", columns[layout])}
         >
           {children}
         </div>

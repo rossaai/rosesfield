@@ -106,7 +106,10 @@ function SegmentedTabs({
     <TabsPrimitive.List
       data-slot="tabs-strip"
       data-form="segmented"
-      className={cn("relative inline-flex shrink-0 items-center gap-1", className)}
+      className={cn(
+        "relative inline-flex shrink-0 items-center gap-1",
+        className
+      )}
       {...props}
     >
       <TabsPrimitive.Indicator

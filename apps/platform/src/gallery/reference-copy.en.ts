@@ -132,7 +132,8 @@ export const referenceCopy = {
   "sample.footer.legal": "Legal",
   "sample.footer.privacy": "Privacy",
   "sample.footer.terms": "Terms",
-  "sample.footer.notice": "MIT for the code. The name and the logo are trademarks of ROSSA AI, LLC.",
+  "sample.footer.notice":
+    "MIT for the code. The name and the logo are trademarks of ROSSA AI, LLC.",
   "sample.foundations.step": "4 px spacing step",
   "sample.foundations.gutter": "16 px page gutter",
   "sample.foundations.switch": "One width switch at 768 px",

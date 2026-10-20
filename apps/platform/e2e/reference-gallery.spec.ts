@@ -110,7 +110,9 @@ test("a filter chip is 32 px tall and the chips wrap or scroll by width", async 
   await open(page, "ref-filter-chips")
   const chip = page.getByRole("link", { name: "Melt" })
   expect((await boxOf(chip)).height).toBe(32)
-  const line = page.getByRole("navigation", { name: "Presets" }).locator(":scope > div")
+  const line = page
+    .getByRole("navigation", { name: "Presets" })
+    .locator(":scope > div")
   if (info.project.name === "phone") {
     expect((await boxOf(line)).height).toBe(48)
     expect(await style(line, "overflow-x")).toBe("auto")

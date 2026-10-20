@@ -7,7 +7,10 @@ import {
   ModelPicker,
   type ModelPickerSection,
 } from "@rosesfield/ui/components/model-picker"
-import { ModelChip, ModelRowTrigger } from "@rosesfield/ui/components/model-trigger"
+import {
+  ModelChip,
+  ModelRowTrigger,
+} from "@rosesfield/ui/components/model-trigger"
 import { PromptBar } from "@rosesfield/ui/components/prompt-bar"
 import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import {
@@ -107,7 +110,11 @@ function Column(): ReactElement {
           </Tabs>
         }
         footer={
-          <GenerateButton form="bar" label={t("sample.generate")} price={t("sample.price")} />
+          <GenerateButton
+            form="bar"
+            label={t("sample.generate")}
+            price={t("sample.price")}
+          />
         }
       >
         <SegmentedControl
@@ -123,7 +130,11 @@ function Column(): ReactElement {
         <DropZone
           title={t("sample.drop.title")}
           line={t("sample.drop.line")}
-          kinds={[<ImageIcon key="image" />, <VideoIcon key="video" />, <MusicIcon key="music" />]}
+          kinds={[
+            <ImageIcon key="image" />,
+            <VideoIcon key="video" />,
+            <MusicIcon key="music" />,
+          ]}
         />
         <PromptBlock label={t("sample.prompt.caption")}>
           <textarea
@@ -132,7 +143,11 @@ function Column(): ReactElement {
             className="min-h-0 flex-1 resize-none bg-transparent text-body text-ink outline-none placeholder:text-ink-muted"
           />
         </PromptBlock>
-        <ModelRowTrigger caption={t("sample.model.caption")} name={t("sample.model")} mark={mark} />
+        <ModelRowTrigger
+          caption={t("sample.model.caption")}
+          name={t("sample.model")}
+          mark={mark}
+        />
       </InputPanel>
     </div>
   )
@@ -240,8 +255,18 @@ function CanvasDemo({ hasRuns }: { hasRuns: boolean }): ReactElement {
 }
 
 export const referenceCreateEntries: GalleryEntry[] = [
-  { id: "ref-prompt-bar", unit: "prompt-bar", title: "ref.promptBar", states: interactionStates(() => <Bar />) },
-  { id: "ref-input-panel", unit: "input-panel", title: "ref.inputPanel", states: interactionStates(() => <Column />) },
+  {
+    id: "ref-prompt-bar",
+    unit: "prompt-bar",
+    title: "ref.promptBar",
+    states: interactionStates(() => <Bar />),
+  },
+  {
+    id: "ref-input-panel",
+    unit: "input-panel",
+    title: "ref.inputPanel",
+    states: interactionStates(() => <Column />),
+  },
   {
     id: "ref-model-picker",
     unit: "model-picker",
@@ -251,7 +276,12 @@ export const referenceCreateEntries: GalleryEntry[] = [
       frameState("open", "state.open", () => <Picker open />),
     ],
   },
-  { id: "ref-setting-chips", unit: "setting-chips", title: "ref.settingChips", states: interactionStates(() => <SettingChips />) },
+  {
+    id: "ref-setting-chips",
+    unit: "setting-chips",
+    title: "ref.settingChips",
+    states: interactionStates(() => <SettingChips />),
+  },
   {
     id: "ref-generate-button",
     unit: "generate-button",
@@ -284,7 +314,11 @@ export const referenceCreateEntries: GalleryEntry[] = [
         <DropZone
           title={t("sample.drop.title")}
           line={t("sample.drop.line")}
-          kinds={[<ImageIcon key="image" />, <VideoIcon key="video" />, <MusicIcon key="music" />]}
+          kinds={[
+            <ImageIcon key="image" />,
+            <VideoIcon key="video" />,
+            <MusicIcon key="music" />,
+          ]}
         />
       </div>
     )),

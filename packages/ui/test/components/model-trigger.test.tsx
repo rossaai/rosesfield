@@ -14,9 +14,13 @@ describe("ModelChip", () => {
     expect(chip.className.split(" ")).toEqual(
       expect.arrayContaining(["h-8", "px-3"])
     )
-    const parts = [...chip.children].map((child) => child.getAttribute("data-slot"))
+    const parts = [...chip.children].map((child) =>
+      child.getAttribute("data-slot")
+    )
     expect(parts.slice(0, 2)).toEqual(["model-row-mark", "model-row-name"])
-    expect(chip.lastElementChild?.getAttribute("class")).toContain("lucide-chevron-right")
+    expect(chip.lastElementChild?.getAttribute("class")).toContain(
+      "lucide-chevron-right"
+    )
   })
 })
 

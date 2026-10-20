@@ -92,9 +92,7 @@ test("an Image link opens a menu of its apps and reads as hovered", async ({
   await expect(menu).toBeVisible()
   await expect(menu.getByRole("menuitem").first()).toBeVisible()
   await page.mouse.move(1400, 700)
-  await expect
-    .poll(() => style(image, "background-color"))
-    .not.toBe(rest)
+  await expect.poll(() => style(image, "background-color")).not.toBe(rest)
 })
 
 test("on a phone the bar holds the wordmark, a menu and no area link", async ({

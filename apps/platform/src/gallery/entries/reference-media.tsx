@@ -72,12 +72,16 @@ function Feed({ layout }: { layout: "masonry" | "row" }): ReactElement {
       layout={layout}
       header={
         <SectionHeader
-          title={layout === "row" ? t("sample.model") : t("sample.section.title")}
+          title={
+            layout === "row" ? t("sample.model") : t("sample.section.title")
+          }
           line={t("sample.section.line")}
           href="?entry=ref-media-row"
         />
       }
-      viewAll={<ViewAll href="?entry=ref-gallery-grid">{t("sample.viewAll")}</ViewAll>}
+      viewAll={
+        <ViewAll href="?entry=ref-gallery-grid">{t("sample.viewAll")}</ViewAll>
+      }
     >
       {twelve.map((index) => (
         <Result key={index} index={index} narrow={layout === "masonry"} />
@@ -97,8 +101,16 @@ function Presets(): ReactElement {
           viewLabel={t("sample.preset.dolly")}
           line={t("sample.preset.line")}
           action={{ label: t("sample.tryIt"), href: "?apps=video" }}
-          clip={{ src: demoVideo, poster: demoWide, alt: t("sample.preset.dolly") }}
-          aspect={index % 2 === 0 ? { width: 9, height: 16 } : { width: 16, height: 9 }}
+          clip={{
+            src: demoVideo,
+            poster: demoWide,
+            alt: t("sample.preset.dolly"),
+          }}
+          aspect={
+            index % 2 === 0
+              ? { width: 9, height: 16 }
+              : { width: 16, height: 9 }
+          }
         />
       ))}
     </PresetGrid>
@@ -109,16 +121,20 @@ function Apps(): ReactElement {
   return (
     <div className="w-full @regular:w-186.75">
       <AppTileGrid label={t("sample.nav.apps")}>
-        {["image", "video", "audio", "recast", "motion", "effects"].map((id) => (
-          <AppTile
-            key={id}
-            href={`?app=${id}`}
-            name={t("sample.nav.image")}
-            line={t("sample.appTile.line")}
-            icon={<ImageIcon />}
-            {...(id === "image" ? { badge: <Badge kind="new">{t("sample.badge.new")}</Badge> } : {})}
-          />
-        ))}
+        {["image", "video", "audio", "recast", "motion", "effects"].map(
+          (id) => (
+            <AppTile
+              key={id}
+              href={`?app=${id}`}
+              name={t("sample.nav.image")}
+              line={t("sample.appTile.line")}
+              icon={<ImageIcon />}
+              {...(id === "image"
+                ? { badge: <Badge kind="new">{t("sample.badge.new")}</Badge> }
+                : {})}
+            />
+          )
+        )}
       </AppTileGrid>
     </div>
   )
@@ -164,7 +180,14 @@ function ViewerOpen(): ReactElement {
         </div>
       }
     >
-      <video src={demoVideo} poster={demoWide} muted loop playsInline className="size-full" />
+      <video
+        src={demoVideo}
+        poster={demoWide}
+        muted
+        loop
+        playsInline
+        className="size-full"
+      />
     </Viewer>
   )
 }
@@ -190,11 +213,36 @@ export const referenceMediaEntries: GalleryEntry[] = [
       </div>
     )),
   },
-  { id: "ref-effect-tile", unit: "effect-tile", title: "ref.effectTile", states: interactionStates(() => <Presets />) },
-  { id: "ref-app-tile", unit: "app-tile", title: "ref.appTile", states: interactionStates(() => <Apps />) },
-  { id: "ref-promo-card", unit: "promo-card", title: "ref.promoCard", states: interactionStates(() => <Promos />) },
-  { id: "ref-gallery-grid", unit: "gallery-grid", title: "ref.galleryGrid", states: interactionStates(() => <Feed layout="masonry" />) },
-  { id: "ref-media-row", unit: "media-row", title: "ref.mediaRow", states: interactionStates(() => <Feed layout="row" />) },
+  {
+    id: "ref-effect-tile",
+    unit: "effect-tile",
+    title: "ref.effectTile",
+    states: interactionStates(() => <Presets />),
+  },
+  {
+    id: "ref-app-tile",
+    unit: "app-tile",
+    title: "ref.appTile",
+    states: interactionStates(() => <Apps />),
+  },
+  {
+    id: "ref-promo-card",
+    unit: "promo-card",
+    title: "ref.promoCard",
+    states: interactionStates(() => <Promos />),
+  },
+  {
+    id: "ref-gallery-grid",
+    unit: "gallery-grid",
+    title: "ref.galleryGrid",
+    states: interactionStates(() => <Feed layout="masonry" />),
+  },
+  {
+    id: "ref-media-row",
+    unit: "media-row",
+    title: "ref.mediaRow",
+    states: interactionStates(() => <Feed layout="row" />),
+  },
   {
     id: "ref-media-viewer",
     unit: "media-viewer",

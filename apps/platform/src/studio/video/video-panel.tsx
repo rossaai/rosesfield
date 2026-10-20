@@ -5,10 +5,7 @@ import { ModeStrip, ModeTab, Tabs } from "@rosesfield/ui/components/tabs"
 import { type ReactElement, useMemo } from "react"
 import { t, tCatalog } from "@/copy/t"
 import { CollapsibleSection } from "@/pieces/collapsible-section"
-import {
-  CatalogPicker,
-  modelNameOf,
-} from "@/screens/app/hosted/catalog-picker"
+import { CatalogPicker, modelNameOf } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import { AdvancedFields } from "@/screens/app/inputs-panel"

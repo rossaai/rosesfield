@@ -31,7 +31,9 @@ test("Explore opens with one banner link over app tiles in three columns", async
   expect(await banner.evaluate((element) => element.tagName)).toBe("A")
   expect(await banner.locator("a, button").count()).toBe(0)
 
-  const tiles = page.locator("[data-slot=app-tile-grid] [data-slot=preset-tile]")
+  const tiles = page.locator(
+    "[data-slot=app-tile-grid] [data-slot=preset-tile]"
+  )
   expect(await tiles.count()).toBe(6)
   const [first, second, fourth] = await Promise.all([
     boxOf(tiles.nth(0)),
@@ -47,10 +49,15 @@ test("Explore opens with one banner link over app tiles in three columns", async
 test("on a phone Explore drops the banner and stands the tiles in two columns", async ({
   page,
 }, info) => {
-  test.skip(info.project.name !== "phone", "the phone layout shows under 768 px")
+  test.skip(
+    info.project.name !== "phone",
+    "the phone layout shows under 768 px"
+  )
   await openExplore(page)
   await expect(page.locator("[data-slot=hero]")).toBeHidden()
-  const tiles = page.locator("[data-slot=app-tile-grid] [data-slot=preset-tile]")
+  const tiles = page.locator(
+    "[data-slot=app-tile-grid] [data-slot=preset-tile]"
+  )
   const [first, second] = await Promise.all([
     boxOf(tiles.nth(0)),
     boxOf(tiles.nth(1)),
@@ -73,9 +80,9 @@ test("an app tile opens its app without reloading the page", async ({
   const href = await tile.getAttribute("href")
   await tile.click()
   await expect(page).toHaveURL(new RegExp(`${href ?? "/apps/"}$`))
-  expect(
-    await page.evaluate(() => Reflect.get(window, "exploreMark"))
-  ).toBe("kept")
+  expect(await page.evaluate(() => Reflect.get(window, "exploreMark"))).toBe(
+    "kept"
+  )
 })
 
 test("Explore with no result says so and offers the next step", async ({

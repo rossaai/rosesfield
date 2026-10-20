@@ -77,7 +77,10 @@ function ModelRowTrigger({
           </span>
         </span>
       </span>
-      <ChevronRightIcon aria-hidden="true" className="shrink-0 text-ink-muted" />
+      <ChevronRightIcon
+        aria-hidden="true"
+        className="shrink-0 text-ink-muted"
+      />
     </ButtonPrimitive>
   )
 }

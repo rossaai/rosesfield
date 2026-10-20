@@ -54,7 +54,10 @@ function PresetTile({
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex h-1/2 items-end bg-linear-to-t from-scrim to-transparent p-3 @regular:hidden"
       >
-        <span data-slot="preset-tile-name" className="truncate font-medium text-body text-ink">
+        <span
+          data-slot="preset-tile-name"
+          className="truncate font-medium text-body text-ink"
+        >
           {name}
         </span>
       </span>
@@ -97,7 +100,13 @@ function PresetReveal({
   )
 }
 
-function PresetAction({ label, href }: { label: string; href: string }): ReactElement {
+function PresetAction({
+  label,
+  href,
+}: {
+  label: string
+  href: string
+}): ReactElement {
   return (
     <a
       data-slot="preset-tile-action"

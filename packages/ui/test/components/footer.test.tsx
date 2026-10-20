@@ -33,9 +33,9 @@ describe("Footer", () => {
       expect(link.querySelector("svg, img")).toBeNull()
       expect(link.className.split(" ")).toContain("h-6")
     }
-    expect(screen.getByRole("link", { name: "Code" }).closest("ul")?.className).toContain(
-      "gap-3"
-    )
+    expect(
+      screen.getByRole("link", { name: "Code" }).closest("ul")?.className
+    ).toContain("gap-3")
     expect(footer.querySelector("form, button")).toBeNull()
   })
 })

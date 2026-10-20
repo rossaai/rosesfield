@@ -34,7 +34,9 @@ describe("ModeStrip", () => {
     fireEvent.click(edit)
     expect(edit.getAttribute("aria-selected")).toBe("true")
     expect(
-      screen.getByRole("tab", { name: "Create video" }).getAttribute("aria-selected")
+      screen
+        .getByRole("tab", { name: "Create video" })
+        .getAttribute("aria-selected")
     ).toBe("false")
   })
 })
@@ -60,7 +62,9 @@ describe("SegmentedTabs", () => {
     const plate = list.querySelector("[data-slot='segmented-control-thumb']")
     expect(plate?.className.split(" ")).toContain("transition-none")
     expect(
-      screen.getByRole("tab", { name: "How it works" }).getAttribute("aria-selected")
+      screen
+        .getByRole("tab", { name: "How it works" })
+        .getAttribute("aria-selected")
     ).toBe("true")
   })
 })

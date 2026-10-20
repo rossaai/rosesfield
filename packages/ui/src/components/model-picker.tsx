@@ -191,7 +191,9 @@ function ModelRow({
           <RowLine row={row} />
         </span>
         <span data-slot="model-row-check" className="flex size-5 shrink-0">
-          {isChosen ? <CheckIcon aria-hidden="true" className="size-5" /> : null}
+          {isChosen ? (
+            <CheckIcon aria-hidden="true" className="size-5" />
+          ) : null}
         </span>
       </span>
     </div>
@@ -215,7 +217,11 @@ function SectionRows(
   }
 ): ReactElement {
   return (
-    <div role="group" aria-label={props.section.label} className="flex flex-col gap-1">
+    <div
+      role="group"
+      aria-label={props.section.label}
+      className="flex flex-col gap-1"
+    >
       <p className="flex h-8.5 items-center gap-1.5 px-3 font-medium text-label text-ink-muted">
         <SparkleIcon aria-hidden="true" className="size-3.5" />
         {props.section.label}
@@ -279,7 +285,11 @@ function ScrollRegion({ children }: { children: ReactNode }): ReactElement {
       <span
         data-slot="model-list-fade"
         data-end="top"
-        className={cn(fadeClass, "top-0 bg-linear-to-b", ends.top ? "opacity-100" : "opacity-0")}
+        className={cn(
+          fadeClass,
+          "top-0 bg-linear-to-b",
+          ends.top ? "opacity-100" : "opacity-0"
+        )}
       />
       <div
         onScroll={onScroll}
@@ -290,7 +300,11 @@ function ScrollRegion({ children }: { children: ReactNode }): ReactElement {
       <span
         data-slot="model-list-fade"
         data-end="bottom"
-        className={cn(fadeClass, "bottom-0 bg-linear-to-t", ends.bottom ? "opacity-100" : "opacity-0")}
+        className={cn(
+          fadeClass,
+          "bottom-0 bg-linear-to-t",
+          ends.bottom ? "opacity-100" : "opacity-0"
+        )}
       />
     </div>
   )

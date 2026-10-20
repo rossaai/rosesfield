@@ -127,7 +127,10 @@ function AppBar({
       >
         {mark}
       </span>
-      <span data-slot="app-bar-mark" className="flex h-8 shrink-0 @regular:hidden">
+      <span
+        data-slot="app-bar-mark"
+        className="flex h-8 shrink-0 @regular:hidden"
+      >
         {lockup}
       </span>
       <nav aria-label={label} className="contents">

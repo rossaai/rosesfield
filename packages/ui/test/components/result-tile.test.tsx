@@ -43,7 +43,8 @@ describe("ResultTile", () => {
     const groups = [
       document.querySelector("[data-slot='media-veil']"),
       document.querySelector("[data-slot='result-tile-actions']"),
-      screen.getByRole("button", { name: "Recreate this result" }).parentElement,
+      screen.getByRole("button", { name: "Recreate this result" })
+        .parentElement,
     ]
     for (const group of groups) {
       expect(group?.className.split(" ")).toEqual(
@@ -68,7 +69,9 @@ describe("ResultTile", () => {
     const calls = renderTile()
     fireEvent.click(screen.getByRole("button", { name: "Open this result" }))
     fireEvent.click(screen.getByRole("button", { name: "Expand this result" }))
-    fireEvent.click(screen.getByRole("button", { name: "Recreate this result" }))
+    fireEvent.click(
+      screen.getByRole("button", { name: "Recreate this result" })
+    )
     expect(calls.open).toHaveBeenCalledTimes(2)
     expect(calls.recreate).toHaveBeenCalledTimes(1)
   })

@@ -7,7 +7,11 @@ afterEach(cleanup)
 describe("SectionHeader", () => {
   it("puts a title link over one line, 4 px apart, in a row that wraps", () => {
     render(
-      <SectionHeader title="Picture 2" line="Results made with Picture 2" href="/models/picture-2" />
+      <SectionHeader
+        title="Picture 2"
+        line="Results made with Picture 2"
+        href="/models/picture-2"
+      />
     )
     const link = screen.getByRole("link", { name: "Picture 2" })
     expect(link.getAttribute("href")).toBe("/models/picture-2")

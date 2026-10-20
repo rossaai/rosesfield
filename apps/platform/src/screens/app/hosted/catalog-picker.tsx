@@ -143,9 +143,7 @@ export function pickerSections(hosted: HostedState): ModelPickerSection[] {
       name: row.name,
       maker: row.maker,
       line: lineOf(row.task),
-      tags: row.tags
-        .filter((tag) => tag.kind !== "open-weights")
-        .map(tagOf),
+      tags: row.tags.filter((tag) => tag.kind !== "open-weights").map(tagOf),
       mark: <LabMark maker={row.maker} />,
       badges: badgesOf(row.id, row.tags),
     })),

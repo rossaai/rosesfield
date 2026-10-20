@@ -50,10 +50,7 @@ describe("the sections of the model picker", () => {
       (one) => one.name
     )
     expect(
-      sections.map((section) => [
-        section.id,
-        section.rows.map((row) => row.id),
-      ])
+      sections.map((section) => [section.id, section.rows.map((row) => row.id)])
     ).toEqual([
       ["featured", ["beta/two", "alpha/one"]],
       ["all", ["open-picture", "alpha/one", "beta/two", "beta/three"]],

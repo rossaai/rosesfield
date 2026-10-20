@@ -38,7 +38,14 @@ describe("AppBar", () => {
   it("sits sticky across the top, 52 px tall, in one row with 16 px sides and 12 px between groups", () => {
     const bar = renderBar("full")
     expect(bar.className.split(" ")).toEqual(
-      expect.arrayContaining(["sticky", "top-0", "w-full", "h-13", "px-4", "gap-3"])
+      expect.arrayContaining([
+        "sticky",
+        "top-0",
+        "w-full",
+        "h-13",
+        "px-4",
+        "gap-3",
+      ])
     )
   })
 
@@ -66,7 +73,12 @@ describe("AppBar", () => {
     const overflow = bar.querySelector("[data-slot='app-bar-overflow']")
     expect(overflow?.hasAttribute("data-scroll-start")).toBe(true)
     expect(overflow?.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-7", "overflow-x-auto", "hidden", "@regular:flex"])
+      expect.arrayContaining([
+        "h-7",
+        "overflow-x-auto",
+        "hidden",
+        "@regular:flex",
+      ])
     )
   })
 })

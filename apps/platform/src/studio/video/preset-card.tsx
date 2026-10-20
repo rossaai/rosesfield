@@ -96,9 +96,7 @@ export function PresetCard({
     return null
   }
   const title =
-    chosen === null
-      ? tCatalog("video.preset.title")
-      : tCatalog(chosen.labelKey)
+    chosen === null ? tCatalog("video.preset.title") : tCatalog(chosen.labelKey)
   return (
     <>
       <StartFrame

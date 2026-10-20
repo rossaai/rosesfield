@@ -111,8 +111,12 @@ describe("ModelPicker", () => {
     expect(groups).toEqual(["Your models", "Studio"])
     const chosen = screen.getByRole("option", { selected: true })
     expect(chosen.getAttribute("aria-label")).toBe("Picture 2")
-    expect(rowOf("Picture 2").querySelector("[data-slot='model-row-check'] svg")).not.toBeNull()
-    expect(rowOf("Clip 3").querySelector("[data-slot='model-row-check'] svg")).toBeNull()
+    expect(
+      rowOf("Picture 2").querySelector("[data-slot='model-row-check'] svg")
+    ).not.toBeNull()
+    expect(
+      rowOf("Clip 3").querySelector("[data-slot='model-row-check'] svg")
+    ).toBeNull()
     expect(screen.getAllByRole("option", { selected: false })).toHaveLength(2)
   })
 
@@ -155,7 +159,9 @@ describe("ModelPicker", () => {
     const list = screen.getByRole("listbox", { name: "Model" })
     expect(list.querySelectorAll("img, video")).toHaveLength(0)
     expect(
-      rowOf("Model 4").querySelector("[data-slot='model-row-mark'] [data-testid='mark']")
+      rowOf("Model 4").querySelector(
+        "[data-slot='model-row-mark'] [data-testid='mark']"
+      )
     ).not.toBeNull()
   })
 

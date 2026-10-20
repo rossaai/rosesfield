@@ -29,8 +29,9 @@ describe("FilterChip", () => {
         <FilterChip href="/a">A</FilterChip>
       </FilterChipRow>
     )
-    const line = screen.getByRole("navigation", { name: "Presets" })
-      .firstElementChild
+    const line = screen.getByRole("navigation", {
+      name: "Presets",
+    }).firstElementChild
     expect(line?.className.split(" ")).toEqual(
       expect.arrayContaining([
         "h-12",

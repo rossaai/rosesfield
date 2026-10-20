@@ -23,7 +23,8 @@ type SegmentedControlProps<T extends string> = {
 }
 
 const tracks = {
-  chrome: "h-field w-full max-w-field-max rounded-full bg-(--well) p-control-inset",
+  chrome:
+    "h-field w-full max-w-field-max rounded-full bg-(--well) p-control-inset",
   composer: "h-12 w-full rounded-cell bg-(--well) p-1",
   row: "h-8 gap-1",
 } satisfies Record<SegmentedControlDensity, string>

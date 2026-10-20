@@ -7,7 +7,12 @@ afterEach(cleanup)
 describe("Canvas", () => {
   it("keeps the space of its cluster but hides it until you have runs", () => {
     render(
-      <Canvas label="Output" tabs={<span>Tabs</span>} cluster={<span>View</span>} hasRuns={false}>
+      <Canvas
+        label="Output"
+        tabs={<span>Tabs</span>}
+        cluster={<span>View</span>}
+        hasRuns={false}
+      >
         <p>Empty</p>
       </Canvas>
     )
@@ -23,7 +28,12 @@ describe("Canvas", () => {
 
   it("shows the cluster once you have runs", () => {
     render(
-      <Canvas label="Output" tabs={<span>Tabs</span>} cluster={<span>View</span>} hasRuns>
+      <Canvas
+        label="Output"
+        tabs={<span>Tabs</span>}
+        cluster={<span>View</span>}
+        hasRuns
+      >
         <p>Runs</p>
       </Canvas>
     )
