@@ -1,0 +1,140 @@
+{
+  "files": [
+    {
+      "path": "apps/platform/public/icons/apple-touch-icon.png",
+      "sha256": "f78ebea6913caaec19666386067218e38dc6f0fd1996dcfe27d0f6b145af5c21"
+    },
+    {
+      "path": "apps/platform/public/icons/favicon-16.png",
+      "sha256": "4e0b9c2cff9f05ca8649da34d140854236c88abd51347c937dc6c93b8030a52d"
+    },
+    {
+      "path": "apps/platform/public/icons/favicon-32.png",
+      "sha256": "b92af0ec8e78942c7c7cf994a0b539873a5c0e1a1a1485e88f24d5ce50c77e2d"
+    },
+    {
+      "path": "apps/platform/public/icons/favicon.svg",
+      "sha256": "cdd81304743b29054115205c9776126b86512a6be38bd9e1596e3b9d1066459a"
+    },
+    {
+      "path": "apps/platform/public/icons/icon-any-192.png",
+      "sha256": "ec694d1a1ed65e075abd68e3b1b7a444d7c0488df8b8ac95e71d576d4b371143"
+    },
+    {
+      "path": "apps/platform/public/icons/icon-any-512.png",
+      "sha256": "5992a266f67001d8fb205916fd24bd5e86dcf219d501a1e7bba44b995b7c2ade"
+    },
+    {
+      "path": "apps/platform/public/icons/icon-maskable-512.png",
+      "sha256": "5992a266f67001d8fb205916fd24bd5e86dcf219d501a1e7bba44b995b7c2ade"
+    },
+    {
+      "path": "apps/platform/public/icons/rosesfield-icon-dark.svg",
+      "sha256": "6e59dc468e2d10f08b1f512ccd69c973259520376339d85f9d560c2be17e9e93"
+    },
+    {
+      "path": "apps/platform/public/icons/rosesfield-icon-light.svg",
+      "sha256": "87d2524f43acecba832c5881502c95fb2a2cd0240e75f47914507a79154dc040"
+    },
+    {
+      "path": "apps/platform/public/lockup-dark.svg",
+      "sha256": "e068d8ab0c4262a80134ab94cde7003ddcc926e14eebf3bcc5427351b720337f"
+    },
+    {
+      "path": "apps/platform/public/lockup-light.svg",
+      "sha256": "9564a5ec0bd1d9e34c5d4e76644125bd42b325c6b0b97b9f9475c3abd0e80c4b"
+    },
+    {
+      "path": "packages/ui/src/contracts/button.generated.ts",
+      "sha256": "25876c02d9ab3db1e7e2ffd61eeabf73af9d0d9f7786e345cc60ca8933eccf18"
+    },
+    {
+      "path": "packages/ui/src/contracts/composer-attachments.generated.ts",
+      "sha256": "677bc53246246cd7de7585dc638f2a9bdb3cc1e6b3d385be134c869674efd3d5"
+    },
+    {
+      "path": "packages/ui/src/contracts/composer.generated.ts",
+      "sha256": "932ac2b183be325c0d487c24ce59f759d4da3c990a099f1554c78b68fae8ffc9"
+    },
+    {
+      "path": "packages/ui/src/contracts/count-badge.generated.ts",
+      "sha256": "ee576db8d416e47434c183a1adcaf307e9a47434265dd5719015e743ba7d363c"
+    },
+    {
+      "path": "packages/ui/src/contracts/icon-button.generated.ts",
+      "sha256": "922cd98d20428d8729d75c31dc0d0bfed2b89b4c59dcf2af8e6a4eea52ad228f"
+    },
+    {
+      "path": "packages/ui/src/contracts/inline-chip.generated.ts",
+      "sha256": "fc1c0bbe528f3e7077c794b802dd068ed101975e19cc0522a03762ed12689a53"
+    },
+    {
+      "path": "packages/ui/src/contracts/material-surface.generated.ts",
+      "sha256": "96275827933c1390693c4386682fe5820e1493b660d25d83b013ac3fdf122c29"
+    },
+    {
+      "path": "packages/ui/src/contracts/media-player.generated.ts",
+      "sha256": "30118997304e9c9ce90ae72eab59d40a86c53fceb1d0389ee001691bbcc0c3bc"
+    },
+    {
+      "path": "packages/ui/src/contracts/media.generated.ts",
+      "sha256": "d843aebeeb257147fa101976b6f3c9860ffb69d4988f3519d75f1cae071ba661"
+    },
+    {
+      "path": "packages/ui/src/contracts/menu.generated.ts",
+      "sha256": "2e1e568a4efa8b561ea94297df4af07100d7d8b0707ef8e40633cfaf9cdc88f9"
+    },
+    {
+      "path": "packages/ui/src/contracts/modal.generated.ts",
+      "sha256": "281c941fdeca02f0a3c5dfaab806935d5280ad26c974d0026644b60c1fc67a3b"
+    },
+    {
+      "path": "packages/ui/src/contracts/section-heading.generated.ts",
+      "sha256": "5b20aa01e868c986a4409c29b769e74b4581b1be16953ede8669d6c6018aaa8c"
+    },
+    {
+      "path": "packages/ui/src/contracts/segmented-control.generated.ts",
+      "sha256": "e798fece54b7d25441a81da76116d5a7db24c781e9d80131ffc78e49ca213bb0"
+    },
+    {
+      "path": "packages/ui/src/contracts/select.generated.ts",
+      "sha256": "2cb76bac1c045125f4246ecab5a76d260defa8665003ab0cf640624b7446fcd2"
+    },
+    {
+      "path": "packages/ui/src/contracts/sheet.generated.ts",
+      "sha256": "cc860e42c37cdd98693d7859f3c4f6a1b1115ce83d46f1c59a2852270f443f53"
+    },
+    {
+      "path": "packages/ui/src/contracts/skeleton.generated.ts",
+      "sha256": "4b62c35f1a81b0480b315d896af5ad1ea04545811c1bb7e00bfd0810ef65d6dc"
+    },
+    {
+      "path": "packages/ui/src/contracts/slider.generated.ts",
+      "sha256": "f52119ad0fe7c654038f452ed01bf8e4c56d246d920dcb829caf7b73b660e290"
+    },
+    {
+      "path": "packages/ui/src/contracts/state-view.generated.ts",
+      "sha256": "e1722d853b01d68ac8b65799c7b8004b78c77447048028a639bbab3cd9f6eb2e"
+    },
+    {
+      "path": "packages/ui/src/contracts/switch.generated.ts",
+      "sha256": "35a690b3e443b5428a47ee7fedda189027f6bbea73e330120d6f5d3035971261"
+    },
+    {
+      "path": "packages/ui/src/contracts/tabs.generated.ts",
+      "sha256": "a897981d8e7ead6777c61b908e1de72d8c2874adab6549328733be8e0d686d38"
+    },
+    {
+      "path": "packages/ui/src/contracts/toast.generated.ts",
+      "sha256": "0562388b1a13c2cf9dad0a14282ac72e96283c3a97025332e4bb63535973eb0d"
+    },
+    {
+      "path": "packages/ui/src/contracts/tooltip.generated.ts",
+      "sha256": "b5dc23d0bffd1bd33dcd775bc484a535e9c832185fb0984946a8967ff4dc0cb1"
+    },
+    {
+      "path": "packages/ui/src/tokens.css",
+      "sha256": "7941e52db5f4626dc4d6e708caf2b7652ba27e385d987a8d39db2eb25ad53a2e"
+    }
+  ]
+}

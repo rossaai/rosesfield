@@ -1,3 +1,5 @@
+/* Generated. Do not edit. */
+
 /*
   Every value Rosesfield's interface uses. docs/design.md holds the rules,
   this file holds the numbers, and no other file holds either.
@@ -122,6 +124,10 @@
   --opacity-disabled: 0.375;
   --opacity-material: 75%;
   --material-filter: saturate(1.8) blur(16px);
+  --opacity-material-thin: 62.5%;
+  --material-filter-thin: saturate(1.8) blur(8px);
+  --opacity-material-thick: 87.5%;
+  --material-filter-thick: saturate(1.8) blur(32px);
 
   --ease-*: initial;
   --ease-bloom: cubic-bezier(0, 0.55, 0.45, 1);
@@ -321,7 +327,7 @@
   --bug-text: var(--if-light, #b50042) var(--if-dark, #ff5076);
   --cem-text: var(--if-light, #815d02) var(--if-dark, #eaab04);
   --nop-text: var(--if-light, #016e36) var(--if-dark, #00b45c);
-  --hor-text: var(--if-light, #0045c6) var(--if-dark, #6199ff);
+  --hor-text: var(--if-light, #0045c6) var(--if-dark, #518dff);
 
   --nop-tint: var(--if-light, #049a4e20) var(--if-dark, #049a4e30);
   --hor-tint: var(--if-light, #0045c620) var(--if-dark, #0045c630);
@@ -330,7 +336,7 @@
 
   --selection: var(--if-light, #0c0a0720) var(--if-dark, #f7f4ed20);
   --track: var(--if-light, #0c0a0730) var(--if-dark, #f7f4ed30);
-  --track-on: var(--ink);
+  --track-on: var(--if-light, #0c0a0780) var(--if-dark, #f7f4ed80);
   --scrim: var(--if-light, #00000030) var(--if-dark, #00000090);
 
   --lift: var(--if-light, 0 0 48px rgb(0 0 0 / 0.1875)) var(--if-dark, none);
