@@ -68,6 +68,49 @@ test("on a desktop the mark, the area links and Connect sit in one row", async (
   })
 })
 
+test("the area links start 12 px after the mark, at the list's start", async ({
+  page,
+}) => {
+  test.skip(isPhone(page), "the desktop row")
+  const bar = await open(page, "/")
+  const mark = await boxOf(bar.locator("[data-slot='app-bar-mark']").first())
+  const explore = await boxOf(
+    bar.locator("[data-slot='app-bar-areas']").first()
+  )
+  expect(explore.x).toBe(mark.x + mark.width + 12)
+})
+
+test("a focused control draws its ring 2 px outside its edge, unclipped", async ({
+  page,
+}) => {
+  test.skip(isPhone(page), "the desktop row")
+  const bar = await open(page, "/")
+  const explore = bar.locator("[data-slot='app-bar-areas']").first()
+  await explore.focus()
+  await page.keyboard.press("Shift+Tab")
+  await page.keyboard.press("Tab")
+  await expect(explore).toBeFocused()
+  expect(await style(explore, "outline-offset")).toBe("2px")
+  expect(await style(explore, "outline-width")).toBe("2px")
+  const clip = await boxOf(bar.locator("[data-slot='app-bar-overflow']"))
+  const link = await boxOf(explore)
+  expect(link.x - 4).toBeGreaterThanOrEqual(clip.x)
+  expect(link.y - 4).toBeGreaterThanOrEqual(clip.y)
+  expect(link.y + link.height + 4).toBeLessThanOrEqual(clip.y + clip.height)
+})
+
+test("on a short page the footer sits at the window's foot", async ({
+  page,
+}) => {
+  test.skip(isPhone(page), "a page shorter than the desktop window")
+  await open(page, "/history")
+  const footer = page.locator("footer[data-slot='footer']")
+  await expect(footer).toBeVisible()
+  const main = await boxOf(page.locator("main"))
+  const box = await boxOf(footer)
+  expect(box.y + box.height).toBe(main.y + main.height)
+})
+
 test("an app page shrinks the bar to 36 px and the mark to 20 px", async ({
   page,
 }) => {
@@ -203,6 +246,12 @@ test("the footer closes Explore with its links and leaves an app page", async ({
   )
   const noticeBox = await boxOf(notice)
   if (isPhone(page)) {
+    const groups = await footer.locator("section").all()
+    const columns = await Promise.all(groups.map(boxOf))
+    expect(columns.map((column) => [column.x, column.width])).toEqual([
+      [16, 142],
+      [206, 142],
+    ])
     expect(noticeBox.y).toBeGreaterThan(trademarks.y)
     expect(await style(notice, "text-align")).toBe("center")
   } else {

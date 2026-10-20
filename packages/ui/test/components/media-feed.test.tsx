@@ -57,7 +57,13 @@ describe("MediaFeed", () => {
         "*:mb-2",
       ])
     )
-    expect(classesOf(feed, "window")).toContain("max-h-256")
+    expect(classesOf(feed, "window")).toEqual(
+      expect.arrayContaining([
+        "max-h-[calc(--spacing(256)+var(--spacing-focus-ring)*4)]",
+        "-m-[calc(var(--spacing-focus-ring)*2)]",
+        "p-[calc(var(--spacing-focus-ring)*2)]",
+      ])
+    )
   })
 
   it("stands a model's row in 4 column stacks of 352 px, each tile 8 px inside its column, 2 columns on a phone, in an 896 px window", () => {
@@ -78,7 +84,9 @@ describe("MediaFeed", () => {
     expect(stacks[0]?.className.split(" ")).toEqual(
       expect.arrayContaining(["contents", "@regular:flex", "@regular:pe-2"])
     )
-    expect(classesOf(feed, "window")).toContain("max-h-224")
+    expect(classesOf(feed, "window")).toContain(
+      "max-h-[calc(--spacing(224)+var(--spacing-focus-ring)*4)]"
+    )
   })
 
   it("draws a row's clip at 125 percent from the foot, and a masonry's at its own size", () => {

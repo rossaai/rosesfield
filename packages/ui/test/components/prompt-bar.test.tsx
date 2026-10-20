@@ -201,6 +201,12 @@ describe("PromptBar's chip row", () => {
     )
     const row = document.querySelector("[data-slot='chip-row']")
     expect(row?.className).toContain("overflow-x-auto")
+    expect(row?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "-m-[calc(var(--spacing-focus-ring)*2)]",
+        "p-[calc(var(--spacing-focus-ring)*2)]",
+      ])
+    )
     expect(row?.textContent).toBe("Aspect")
     const arrows = [
       ...document.querySelectorAll("[data-slot='chip-row-arrow']"),

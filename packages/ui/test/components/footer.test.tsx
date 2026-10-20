@@ -54,6 +54,25 @@ describe("Footer", () => {
     expect(grid?.className).not.toContain("grid-flow-col")
   })
 
+  it("holds a phone's two group columns at 142 px with 48 px between them, as the reference's 332 px grid does", () => {
+    renderFooter()
+    const grid = screen
+      .getByRole("heading", { name: "Project" })
+      .closest("section")?.parentElement
+    expect(grid?.className.split(" ")).toEqual(
+      expect.arrayContaining(["max-w-83", "gap-12", "@regular:max-w-none"])
+    )
+  })
+
+  it("keeps 40 px clear at the heading's end, as the reference's heading does at both widths", () => {
+    renderFooter()
+    const heading = screen.getByRole("heading", {
+      level: 2,
+      name: "One place to make images, video and sound",
+    })
+    expect(heading.className.split(" ")).toContain("pe-10")
+  })
+
   it("puts the notice last and centred on a phone, first and at the start from the width switch", () => {
     renderFooter()
     const notice = screen.getByText("MIT licence")

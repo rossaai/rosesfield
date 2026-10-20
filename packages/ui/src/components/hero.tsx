@@ -18,7 +18,6 @@ function HeroBanner(props: HeroBannerProps): ReactElement {
       href={props.href}
       className={cn(
         "group/hero relative mt-6 hidden h-100 w-full overflow-hidden rounded-vessel bg-surface @regular:flex",
-        "in-data-[gallery=focus]:outline-offset-4 focus-visible:outline-offset-4",
         interaction.ring
       )}
     >
@@ -47,9 +46,11 @@ function HeroBanner(props: HeroBannerProps): ReactElement {
         </span>
         <span className="mt-1 text-body text-ink-muted">{props.lead}</span>
         <span
+          data-slot="hero-action"
           className={cn(
-            "relative mt-6 inline-flex h-10 items-center rounded-full bg-ink px-4.5 pt-2 pb-2.5 font-medium text-body text-canvas group-hover/hero:after:opacity-10 group-active/hero:after:opacity-15",
-            interaction.light
+            "relative mt-6 inline-flex h-10 items-center rounded-full bg-ink px-4.5 pt-2 pb-2.5 font-medium text-body text-canvas",
+            interaction.lightPress,
+            "group-hover/hero:after:opacity-10 group-active/hero:after:opacity-20"
           )}
         >
           {props.action}

@@ -198,21 +198,16 @@ async function pixelsAt(
   )
 }
 
-test("a control without the ring class draws its focus ring 2 px inside its edge, where a tile that hides its overflow keeps it whole", async ({
+test("a control without the ring class draws its focus ring 2 px outside its edge, with a gap of its own width", async ({
   page,
 }) => {
   const bare = await page.evaluate(() => {
-    const tile = document.createElement("div")
-    tile.id = "bare-tile"
-    tile.style.cssText =
-      "position: fixed; top: 40px; left: 40px; width: 120px; height: 80px; overflow: hidden; z-index: 99"
     const button = document.createElement("button")
     button.id = "bare-control"
     button.textContent = "Bare"
     button.style.cssText =
-      "display: block; width: 100%; height: 100%; background: rgb(255, 255, 255)"
-    tile.append(button)
-    document.body.append(tile)
+      "position: fixed; top: 40px; left: 40px; width: 120px; height: 80px; z-index: 99; background: rgb(255, 255, 255)"
+    document.body.append(button)
     button.focus()
     const style = getComputedStyle(button)
     return {
@@ -224,12 +219,17 @@ test("a control without the ring class draws its focus ring 2 px inside its edge
   })
   expect(bare.isFocusVisible).toBe(true)
   expect(bare.width).toBe(token("--spacing-focus-ring"))
-  expect(bare.offset).toBe(`-${token("--spacing-focus-ring")}`)
-  const edges = await pixelsAt(page, { x: 40, y: 40, width: 120, height: 80 }, [
-    [0, 40],
-    [119, 40],
-    [60, 0],
-    [60, 79],
+  expect(bare.offset).toBe(token("--spacing-focus-ring"))
+  const ring = await pixelsAt(page, { x: 34, y: 34, width: 132, height: 92 }, [
+    [3, 46],
+    [129, 46],
+    [66, 3],
+    [66, 89],
   ])
-  expect(edges).toEqual([bare.color, bare.color, bare.color, bare.color])
+  expect(ring).toEqual([bare.color, bare.color, bare.color, bare.color])
+  const gap = await pixelsAt(page, { x: 34, y: 34, width: 132, height: 92 }, [
+    [5, 46],
+    [127, 46],
+  ])
+  expect(gap).not.toContain(bare.color)
 })

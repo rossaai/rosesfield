@@ -76,6 +76,25 @@ describe("SegmentedControl", () => {
     expect(row.transform).toContain("+ var(--spacing)")
   })
 
+  it("sets every cell at the same medium weight, so choosing one never changes a label's weight", () => {
+    for (const density of ["chrome", "composer", "row"] as const) {
+      render(<Format onChange={() => undefined} density={density} />)
+      for (const cell of screen.getAllByRole("radio")) {
+        const classes = cell.className.split(" ")
+        expect(classes).toContain("font-medium")
+        expect(classes).not.toContain("data-checked:font-medium")
+      }
+      cleanup()
+    }
+  })
+
+  it("draws the composer's plate one tone above its well on every ground, so the sheet's plate shows", () => {
+    render(<Format onChange={() => undefined} density="composer" />)
+    const classes = thumb().className.split(" ")
+    expect(classes).toContain("bg-surface-2")
+    expect(classes).not.toContain("bg-(--tint)")
+  })
+
   it("paints its track with the well of its ground, never the progress track", () => {
     render(<Format onChange={() => undefined} />)
     const classes = screen

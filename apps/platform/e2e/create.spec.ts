@@ -138,7 +138,9 @@ test.describe("the parts of Video's column", () => {
     const frame = column.locator('[data-slot="composer-attachments-tiles"]')
     const frameBox = await boxOf(frame)
     expect([frameBox.width, frameBox.height]).toEqual([302, 130])
-    const change = await boxOf(frame.getByRole("button", { name: "Change" }))
+    const change = await boxOf(
+      frame.locator('[data-slot="start-frame-change"]')
+    )
     expect(frameBox.x + frameBox.width - (change.x + change.width)).toBe(6)
     expect(change.y - frameBox.y).toBe(6)
     const prompt = await boxOf(

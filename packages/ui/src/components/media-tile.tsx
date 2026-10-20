@@ -80,7 +80,7 @@ function TileVideo({
 }
 
 const pillClass =
-  "material absolute bottom-s2 left-s2 max-w-[calc(100%-2*var(--spacing-s2))] truncate whitespace-nowrap rounded-full px-s2 py-hairline text-caption text-ink"
+  "material absolute bottom-s2 left-s2 max-w-[calc(100%-2*var(--spacing-s2))] truncate whitespace-nowrap rounded-full px-s1_5 py-hairline text-caption text-ink"
 
 function TileCaption({
   caption,

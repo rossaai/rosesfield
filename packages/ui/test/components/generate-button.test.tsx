@@ -17,6 +17,20 @@ describe("GenerateButton", () => {
     expect(button.textContent).toBe("Generate6.5")
   })
 
+  it("lights a press one step more than a hover and moves nothing", () => {
+    render(<GenerateButton label="Generate" price="6.5" form="tile" />)
+    const classes = screen.getByRole("button").className.split(" ")
+    expect(classes).toEqual(
+      expect.arrayContaining([
+        "hover:after:opacity-10",
+        "active:after:opacity-20",
+        "in-data-[gallery=press]:after:opacity-20",
+      ])
+    )
+    expect(classes).not.toContain("active:after:opacity-10")
+    expect(classes.filter((name) => /scale|translate/.test(name))).toEqual([])
+  })
+
   it("stands 120 by 80 as a tile and 48 px across its column as a bar", () => {
     render(
       <>

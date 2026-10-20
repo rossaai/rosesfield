@@ -30,6 +30,7 @@ import demoTall from "@/gallery/fixtures/demo-image-9-16.png"
 import demoWide from "@/gallery/fixtures/demo-image-16-9.png"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
 import { frameState, interactionStates } from "@/gallery/reference-frames"
+import { FieldMark, Lockup } from "@/shell/brand-mark"
 
 const apps = [
   {
@@ -76,12 +77,8 @@ function Bar({
       <AppBar
         label={t("sample.name")}
         density={density}
-        mark={
-          <img alt={t("sample.name")} src="/icons/rosesfield-icon-dark.svg" />
-        }
-        lockup={
-          <img alt={t("sample.name")} src="/lockup-dark.svg" className="h-8" />
-        }
+        mark={<FieldMark className="size-full" />}
+        lockup={<Lockup className="h-8" />}
         areas={<Areas {...(open === true ? { open } : {})} />}
         areaMenu={
           <IconButton label={t("sample.nav.areas")} tone="quiet" place="bar">

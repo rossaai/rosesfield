@@ -31,7 +31,7 @@ const tracks = {
 
 const plates = {
   chrome: "rounded-full bg-ink",
-  composer: "rounded-dense bg-(--tint)",
+  composer: "rounded-dense bg-surface-2",
   row: "rounded-dense bg-(--well)",
 } satisfies Record<SegmentedControlDensity, string>
 
@@ -108,7 +108,7 @@ function SegmentedCell<T extends string>({
       value={item.value}
       data-slot="segmented-control-cells"
       className={cn(
-        "relative flex min-w-0 items-center justify-center gap-1 text-ink-muted data-checked:font-medium [&_svg]:size-4",
+        "relative flex min-w-0 items-center justify-center gap-1 font-medium text-ink-muted [&_svg]:size-4",
         cells[density],
         motion.tint,
         interaction.ring

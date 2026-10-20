@@ -34,7 +34,10 @@ function PresetTile({
     <div
       data-slot="preset-tile"
       data-form={form}
-      className="group/reveal relative w-full overflow-hidden rounded-cell bg-(--well)"
+      className={cn(
+        "group/reveal relative w-full overflow-hidden rounded-cell bg-(--well)",
+        interaction.ringHost
+      )}
       style={{ aspectRatio: `${aspect.width} / ${aspect.height}` }}
     >
       <span data-slot="preset-tile-clip" className="absolute inset-0">
@@ -48,12 +51,14 @@ function PresetTile({
       </span>
       <a
         href={href}
-        className={cn("absolute inset-0 z-10 rounded-cell", interaction.ring)}
+        data-cover=""
+        className={cn("absolute inset-0 z-10 rounded-cell", interaction.cover)}
       >
         <span className="sr-only">{viewLabel}</span>
       </a>
       <span
         aria-hidden="true"
+        data-theme="dark"
         className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex h-1/2 items-end bg-linear-to-t from-scrim to-transparent p-3 @regular:hidden"
       >
         <span
@@ -83,6 +88,7 @@ function PresetReveal({
 }): ReactElement {
   return (
     <span
+      data-theme="dark"
       className={cn(
         "pointer-events-none absolute inset-0 z-20 hidden flex-col items-center justify-center gap-3 bg-scrim p-3 text-center @regular:flex",
         interaction.reveal

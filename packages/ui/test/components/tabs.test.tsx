@@ -25,7 +25,13 @@ describe("ModeStrip", () => {
       </Tabs>
     )
     const strip = screen.getByRole("tablist", { name: "Mode" })
-    expect(classesOf(strip)).toContain("gap-3")
+    expect(classesOf(strip)).toEqual(
+      expect.arrayContaining([
+        "gap-3",
+        "-m-[calc(var(--spacing-focus-ring)*2)]",
+        "p-[calc(var(--spacing-focus-ring)*2)]",
+      ])
+    )
     const edit = screen.getByRole("tab", { name: "Edit video" })
     expect(classesOf(edit)).toEqual(
       expect.arrayContaining(["h-9", "border-b-2", "transition-none"])
