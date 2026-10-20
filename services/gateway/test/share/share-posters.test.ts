@@ -2,7 +2,10 @@ import type { AssetId } from "@rosesfield/kernel"
 import { AssetStore } from "@rosesfield/library"
 import { describe, expect, it } from "vitest"
 import { withPoster } from "#share/create-share"
-import { mediaSharePosters } from "#share/media-share-posters"
+import {
+  mediaSharePosters,
+  sharePostersOf,
+} from "#share/media-share-posters"
 import {
   type Poster,
   posterSizeOf,
@@ -161,5 +164,24 @@ describe("the poster drawn by Cloudflare's media binding", () => {
     )
 
     expect(await posters.frameOf(video, "video/mp4")).toBeNull()
+  })
+})
+
+describe("the posters a deployment gets", () => {
+  it("draws with the media binding when the deployment has one, and draws nothing without it", async () => {
+    const asked: Asked[] = []
+    const posters = sharePostersOf(
+      mediaBinding(
+        async () => new Response(frame).body ?? new ReadableStream(),
+        asked
+      )
+    )
+
+    expect(await posters?.frameOf(video, "video/mp4")).toEqual({
+      bytes: frame,
+      mime: "image/jpeg",
+    })
+    expect(asked).toHaveLength(1)
+    expect(sharePostersOf(undefined)).toBeUndefined()
   })
 })

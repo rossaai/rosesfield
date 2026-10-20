@@ -28,3 +28,9 @@ export function mediaSharePosters(media: MediaBinding): SharePosters {
     },
   }
 }
+
+export function sharePostersOf(
+  media: MediaBinding | undefined
+): SharePosters | undefined {
+  return media === undefined ? undefined : mediaSharePosters(media)
+}
