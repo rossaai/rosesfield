@@ -4,7 +4,7 @@ import { interaction } from "@rosesfield/ui/components/interaction"
 import type { SegmentedControlDensity } from "@rosesfield/ui/contracts/segmented-control.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
-import type { ReactElement, ReactNode } from "react"
+import type { CSSProperties, ReactElement, ReactNode } from "react"
 
 type SegmentedItem<T extends string> = {
   value: T
@@ -29,17 +29,47 @@ const tracks = {
   row: "h-8 gap-1",
 } satisfies Record<SegmentedControlDensity, string>
 
-const thumbs = {
-  chrome: "inset-y-control-inset left-control-inset rounded-full bg-ink",
-  composer: "inset-y-1 left-1 rounded-dense bg-(--tint)",
-  row: "inset-y-0 left-0 rounded-dense bg-(--well)",
+const plates = {
+  chrome: "rounded-full bg-ink",
+  composer: "rounded-dense bg-(--tint)",
+  row: "rounded-dense bg-(--well)",
 } satisfies Record<SegmentedControlDensity, string>
 
-const insets = {
-  chrome: "2 * var(--spacing-control-inset)",
-  composer: "2 * var(--spacing)",
-  row: "0%",
-} satisfies Record<SegmentedControlDensity, string>
+type PlateGeometry = {
+  pad: string
+  gap: string
+  inset: string
+}
+
+const geometry = {
+  chrome: {
+    pad: "var(--spacing-control-inset)",
+    gap: "0%",
+    inset: "0%",
+  },
+  composer: {
+    pad: "var(--spacing)",
+    gap: "0%",
+    inset: "var(--spacing-control-inset)",
+  },
+  row: { pad: "0%", gap: "var(--spacing)", inset: "0%" },
+} satisfies Record<SegmentedControlDensity, PlateGeometry>
+
+function plateBox(
+  { pad, gap, inset }: PlateGeometry,
+  index: number,
+  count: number
+): CSSProperties {
+  const edge = `calc(${pad} + ${inset})`
+  const cell = `((100% - 2 * ${pad} - ${count - 1} * ${gap}) / ${count})`
+  return {
+    top: edge,
+    bottom: edge,
+    left: edge,
+    width: `calc(${cell} - 2 * ${inset})`,
+    transform: `translateX(calc(${index} * (100% + 2 * ${inset} + ${gap})))`,
+  }
+}
 
 const cells = {
   chrome: "rounded-full px-s3 text-legal data-checked:text-canvas",
@@ -60,11 +90,8 @@ function SegmentedThumb({
     <span
       aria-hidden="true"
       data-slot="segmented-control-thumb"
-      className={cn("absolute transition-none", thumbs[density])}
-      style={{
-        width: `calc((100% - ${insets[density]}) / ${count})`,
-        transform: `translateX(${index * 100}%)`,
-      }}
+      className={cn("absolute transition-none", plates[density])}
+      style={plateBox(geometry[density], index, count)}
     />
   )
 }

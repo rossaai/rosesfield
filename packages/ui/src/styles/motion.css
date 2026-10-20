@@ -158,7 +158,9 @@
 }
 
 @utility motion-control {
-  transition: transform var(--control-change);
+  transition:
+    transform var(--control-change),
+    rotate var(--control-change);
 }
 
 @utility motion-pane {
