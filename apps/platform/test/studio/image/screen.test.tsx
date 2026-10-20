@@ -297,6 +297,45 @@ describe("a run of 4 on the Image canvas", () => {
       ).toEqual([true, true, true, true])
     )
   })
+
+  it("puts each image in its own tile as it lands while the run still works", async () => {
+    const landed = [
+      "7b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d01",
+      "7b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d02",
+    ]
+    openImage(
+      [
+        runOf({
+          status: "running",
+          inputs: { model: flux.id, prompt: "a paper boat" },
+          count: 4,
+          aspectRatio: "16:9",
+          outputs: landed,
+          finishedAt: null,
+        }),
+      ],
+      []
+    )
+    await waitFor(() =>
+      expect(
+        [1, 2, 3, 4].map(
+          (index) =>
+            screen.queryByRole("status", {
+              name: t("run.working", { index, count: 4 }),
+            }) !== null
+        )
+      ).toEqual([false, false, true, true])
+    )
+    const row = document.querySelector('[data-slot="output-row"]')
+    expect(row?.children.length).toBe(4)
+    await waitFor(() =>
+      expect(
+        landed.map((assetId) =>
+          calls.some((call) => call.url.endsWith(`/api/assets/${assetId}`))
+        )
+      ).toEqual([true, true])
+    )
+  })
 })
 
 describe("Recreate on a run in History", () => {
