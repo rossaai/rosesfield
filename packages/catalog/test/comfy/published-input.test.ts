@@ -1,5 +1,10 @@
 import { appDefinition } from "@rosesfield/contract"
-import { type HostedModel, taskBinding } from "@rosesfield/generation/bindings"
+import {
+  checkModelInputs,
+  type HostedModel,
+  type ModelForm,
+  taskBinding,
+} from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import { publishedInputOf } from "#comfy/published-input"
 
@@ -85,6 +90,53 @@ describe("publishedInputOf", () => {
     expect(
       schema.safeParse({ inputs: { prompt: "a fox" }, count: 3 }).success
     ).toBe(true)
+  })
+
+  it("accepts exactly the inputs the run's own check accepts", () => {
+    const form: ModelForm = {
+      model: "maker/clip-1",
+      fields: [
+        ...(clip.form?.fields ?? []),
+        {
+          kind: "choice",
+          name: "duration",
+          path: "duration",
+          required: false,
+          options: [5, 10],
+          default: 5,
+        },
+        {
+          kind: "number",
+          name: "steps",
+          path: "steps",
+          required: false,
+          min: 1,
+          max: 50,
+          integer: true,
+          default: null,
+        },
+      ],
+    }
+    const schema = publishedInputOf(appWith("maker/clip-1"), [
+      { ...clip, form },
+    ])
+    const cases: [Record<string, unknown>, boolean][] = [
+      [{ prompt: "a fox", resolution: "480P" }, true],
+      [{ prompt: "a fox", resolution: "480p" }, false],
+      [{ prompt: "a fox", duration: "10" }, true],
+      [{ prompt: "a fox", duration: 10 }, true],
+      [{ prompt: "a fox", steps: "3" }, false],
+      [{ prompt: "a fox", steps: 3 }, true],
+      [{ prompt: "a fox", resolution: "" }, true],
+      [{ prompt: "a fox", steps: "" }, true],
+      [{ prompt: "" }, false],
+    ]
+    for (const [inputs, accepted] of cases) {
+      const published = schema.safeParse({ inputs }).success
+      const checked = checkModelInputs(form, inputs).kind === "valid"
+      expect([inputs, published]).toEqual([inputs, accepted])
+      expect([inputs, checked]).toEqual([inputs, accepted])
+    }
   })
 
   it("publishes the app's own inputs while the default model has no form", () => {

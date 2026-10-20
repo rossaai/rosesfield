@@ -5,6 +5,7 @@ import {
   startRunBodyFor,
 } from "@rosesfield/contract"
 import {
+  checkModelInputs,
   type HostedModel,
   isHostedModelId,
   isOneAtATime,
@@ -16,7 +17,23 @@ import { defaultModelOf } from "#comfy/list-models"
 
 const modelInput = "model"
 
+function choicesOf(options: readonly (string | number)[]): (string | number)[] {
+  const values = options.flatMap((option) => {
+    const text = String(option)
+    const number = Number(text)
+    return Number.isFinite(number) && String(number) === text
+      ? [option, text, number]
+      : [option, text]
+  })
+  return [...new Set(values)]
+}
+
 function fieldSchemaOf(field: ModelField): z.ZodType {
+  const value = valueSchemaOf(field)
+  return field.required ? value : z.union([value, z.literal("")]).optional()
+}
+
+function valueSchemaOf(field: ModelField): z.ZodType {
   switch (field.kind) {
     case "prompt":
     case "text":
@@ -24,7 +41,7 @@ function fieldSchemaOf(field: ModelField): z.ZodType {
         ? z.string()
         : z.string().max(field.maxLength)
     case "choice":
-      return z.literal([...field.options])
+      return z.literal(choicesOf(field.options))
     case "number": {
       const base = field.integer ? z.number().int() : z.number()
       const low = field.min === null ? base : base.min(field.min)
@@ -45,10 +62,16 @@ function inputsOf(form: ModelForm): z.ZodType {
     [modelInput]: z.literal(form.model).optional(),
   }
   for (const field of form.fields) {
-    const value = fieldSchemaOf(field)
-    shape[field.name] = field.required ? value : value.optional()
+    shape[field.name] = fieldSchemaOf(field)
   }
-  return z.strictObject(shape)
+  return z.strictObject(shape).superRefine((given, context) => {
+    const checked = checkModelInputs(form, given)
+    if (checked.kind === "invalid") {
+      for (const issue of checked.issues) {
+        context.addIssue({ code: "custom", message: issue })
+      }
+    }
+  })
 }
 
 function formBody(app: AppDefinition, form: ModelForm): z.ZodType {
