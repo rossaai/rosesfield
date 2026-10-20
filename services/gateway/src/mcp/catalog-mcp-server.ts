@@ -1,4 +1,5 @@
 import { type CallToolResult, McpServer } from "@modelcontextprotocol/server"
+import type { ModelForm } from "@rosesfield/catalog/comfy"
 import {
   type AppDefinition,
   buildPath,
@@ -6,7 +7,6 @@ import {
   routes,
   runResponse,
 } from "@rosesfield/contract"
-import type { ModelForm } from "@rosesfield/catalog/comfy"
 import { ProjectError } from "@rosesfield/kernel"
 import { z } from "zod"
 import { gatewayCopy } from "#copy.en"

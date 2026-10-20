@@ -65,10 +65,9 @@ async function sourceOf(seeds: Seeds): Promise<AppForm["source"]> {
     throw new Error("no video app")
   }
   const seen: AppForm[] = []
+  const opened = app
   function Probe(): ReactElement | null {
-    if (app !== null) {
-      seen.push(useAppForm(app, seeds))
-    }
+    seen.push(useAppForm(opened, seeds))
     return null
   }
   const router = createRouter({

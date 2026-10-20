@@ -59,7 +59,10 @@ export function chipIconOf(role: FieldRole | null): ReactNode {
   }
 }
 
-export function inputIconOf(app: AppListing, input: InputDefinition): ReactNode {
+export function inputIconOf(
+  app: AppListing,
+  input: InputDefinition
+): ReactNode {
   return input.name === "cameraMove" ? (
     <MoveIcon />
   ) : (
