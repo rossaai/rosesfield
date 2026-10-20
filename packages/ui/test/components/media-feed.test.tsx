@@ -1,4 +1,8 @@
-import { MediaFeed, ViewAll } from "@rosesfield/ui/components/media-feed"
+import {
+  MediaFeed,
+  PresetRow,
+  ViewAll,
+} from "@rosesfield/ui/components/media-feed"
 import { MEDIA_FEED } from "@rosesfield/ui/contracts/media-feed.generated"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -69,5 +73,36 @@ describe("MediaFeed", () => {
       expect.arrayContaining(["h-12", "px-3", "gap-2"])
     )
     expect(classesOf(feed, "header")).toContain("mb-5")
+  })
+})
+
+describe("PresetRow", () => {
+  it("lays presets in 5 columns, 2 on a phone, under a 208 px fade with View all", () => {
+    render(
+      <PresetRow
+        label="Presets"
+        viewAll={<ViewAll href="/presets">View all</ViewAll>}
+      >
+        <span>one</span>
+      </PresetRow>
+    )
+    const feed = screen.getByRole("region", { name: "Presets" })
+    expect(classesOf(feed, "items")).toEqual(
+      expect.arrayContaining(["columns-2", "@regular:columns-5"])
+    )
+    expect(classesOf(feed, "fade")).toEqual(
+      expect.arrayContaining(["h-52", "pointer-events-none", "justify-center"])
+    )
+    expect(classesOf(feed, "window")).toContain("max-h-224")
+    expect(
+      screen.getByRole("link", { name: "View all" }).getAttribute("href")
+    ).toBe("/presets")
+  })
+
+  it("leaves the media rows at their own columns", () => {
+    const feed = renderFeed("row")
+    expect(classesOf(feed, "items")).toEqual(
+      expect.arrayContaining(["columns-2", "@regular:columns-4"])
+    )
   })
 })
