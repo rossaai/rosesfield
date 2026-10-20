@@ -33,7 +33,7 @@ describe("the app stage's cluster", () => {
     expect(cluster?.className.split(" ")).not.toContain("invisible")
     expect(cluster?.querySelector("[data-slot='view-pill']")).not.toBeNull()
     expect(
-      screen.getByRole("radio", { name: t("library.view.grid") })
+      screen.getByRole("tab", { name: t("library.view.grid") })
     ).toBeDefined()
     expect(
       screen.getByRole("button", { name: t("library.filter") })
