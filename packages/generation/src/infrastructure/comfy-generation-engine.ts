@@ -81,6 +81,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
   static readonly requestTimeoutMs = 30_000
   static readonly downloadTimeoutMs = 300_000
   static readonly unknownJobId = "00000000-0000-0000-0000-000000000000"
+  // docs/stack.md §Prices: an RTX PRO 6000 on Comfy Cloud at 4.54 USD per hour and 211 credits per USD.
   static readonly gpuCreditsPerSecond = 0.266
   static readonly outputKinds: readonly string[] = [
     "image",
