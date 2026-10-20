@@ -29,6 +29,14 @@ const form: ModelForm = {
       default: "1k",
     },
     {
+      kind: "text",
+      name: "negative_prompt",
+      path: "negative_prompt",
+      required: false,
+      maxLength: null,
+      default: null,
+    },
+    {
       kind: "choice",
       name: "aspectRatio",
       path: "aspect_ratio",
@@ -127,6 +135,13 @@ describe("a measured price is kept per model and setting", () => {
     expect(keyOf({ resolution: "1k", aspectRatio: "16:9" })).not.toEqual(
       keyOf({ resolution: "1k", aspectRatio: "1:1" })
     )
+  })
+
+  it("keys two runs that differ only in their negative prompt together, and holds none of its text", () => {
+    const blurry = keyOf({ negative_prompt: "blurry hands" })
+    expect(blurry).toEqual(keyOf({ negative_prompt: "a dark sky" }))
+    expect(blurry.settings).not.toContain("blurry")
+    expect(blurry.settings).not.toContain("negative_prompt")
   })
 
   it("leaves the prompt out of the key", () => {

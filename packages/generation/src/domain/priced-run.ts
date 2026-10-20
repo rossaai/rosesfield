@@ -4,6 +4,7 @@ import type {
   InputValue,
   RunInputs,
 } from "@rosesfield/contract"
+import { type FieldRole, fieldRoleOf } from "#domain/field-role"
 import type { ModelField, ModelForm } from "#domain/model-form"
 import { resolveBinding } from "#domain/select-binding"
 import { chosenModelOf, hostedModelOf } from "#domain/task-binding"
@@ -23,6 +24,15 @@ export type PricedRunOptions = {
 
 type Setting = string | number | boolean | null
 
+const settingRoles: readonly FieldRole[] = [
+  "aspect",
+  "resolution",
+  "quality",
+  "count",
+  "length",
+  "sound",
+]
+
 export function pricedRunOf(options: PricedRunOptions): PricedRun {
   const { app, inputs, form } = options
   const chosen = chosenModelOf(app.engine, inputs)
@@ -35,18 +45,29 @@ export function pricedRunOf(options: PricedRunOptions): PricedRun {
     ["aspectRatio", options.aspectRatio],
     ...(form === null
       ? app.inputs.flatMap((input) => appSettingOf(input, inputs))
-      : form.fields.flatMap((field) => formSettingOf(field, inputs))),
+      : form.fields.flatMap((field) =>
+          formSettingOf(field, inputs, app.output.kind)
+        )),
   ]
   settings.sort(([one], [other]) => one.localeCompare(other))
   return { model, settings: JSON.stringify(settings) }
 }
 
+function isSettingText(field: ModelField, output: string): boolean {
+  const role = fieldRoleOf(field, output)
+  return role !== null && settingRoles.includes(role)
+}
+
 function formSettingOf(
   field: ModelField,
-  inputs: RunInputs
+  inputs: RunInputs,
+  output: string
 ): [string, Setting][] {
   const value = inputs[field.name]
   if (field.kind === "prompt" || /seed/i.test(field.name)) {
+    return []
+  }
+  if (field.kind === "text" && !isSettingText(field, output)) {
     return []
   }
   return field.kind === "media"
