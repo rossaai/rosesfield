@@ -1,4 +1,3 @@
-import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement } from "react"
 
 type FooterLink = {
@@ -63,20 +62,17 @@ function Footer({
           <h2 className="text-title text-ink @regular:w-96 @regular:shrink-0 @regular:text-display">
             {heading}
           </h2>
-          <div
-            className={cn(
-              "grid min-w-0 flex-1 grid-cols-2 gap-12",
-              "@regular:auto-cols-fr @regular:grid-flow-col @regular:grid-cols-none"
-            )}
-          >
+          <div className="grid min-w-0 flex-1 grid-cols-2 gap-12 @regular:grid-cols-5">
             {groups.map((group) => (
               <Group key={group.id} group={group} />
             ))}
           </div>
         </div>
       </div>
-      <div className="flex w-full flex-col items-center gap-5 bg-canvas p-6 text-body @regular:h-17 @regular:flex-row @regular:justify-between @regular:py-0">
-        <p className="text-ink-muted">{notice}</p>
+      <div className="flex w-full flex-col-reverse items-center gap-5 bg-canvas p-6 text-body @regular:h-17 @regular:flex-row @regular:justify-between @regular:py-0">
+        <p className="text-center text-ink-muted @regular:text-start">
+          {notice}
+        </p>
         <ul className="flex flex-wrap justify-center gap-6">
           {legal.map((link) => (
             <li key={link.id}>
