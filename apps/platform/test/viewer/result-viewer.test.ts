@@ -2,7 +2,7 @@ import { type Run, run } from "@rosesfield/contract"
 import { describe, expect, it, vi } from "vitest"
 import type { VisualEntry } from "@/screens/explore/explore-tile"
 import { stepsOf } from "@/viewer/result-viewer"
-import { clockOf, stageAspectOf } from "@/viewer/viewer-video"
+import { clockOf, pictureWidthOf, stageAspectOf } from "@/viewer/viewer-video"
 
 function entryOf(index: number): VisualEntry {
   const id = `2c3d4e5f-6a7b-4c8d-9e0f-00000000000${index}`
@@ -48,14 +48,42 @@ describe("the result viewer", () => {
     expect(stepsOf(list, entryOf(3), onStep).next).toBeUndefined()
   })
 
-  it("gives a video frame room for its controls under the media", () => {
+  it("gives a wide video frame room for a control row above and below the picture", () => {
+    const wide = { width: 16, height: 9 }
+    const frameWidth = 1000
+    const rowHeight = 40
+
+    expect(stageAspectOf(wide, "image", true)).toEqual(wide)
+    const video = stageAspectOf(wide, "video", true)
+    const room = ((video.height - wide.height) / video.width) * frameWidth
+    expect(video.width).toBe(16)
+    expect(Math.round(room)).toBeGreaterThanOrEqual(2 * rowHeight)
+    expect(room).toBeLessThan(3 * rowHeight)
+  })
+
+  it("gives a phone video frame room for one control row and its gutters", () => {
+    const wide = { width: 16, height: 9 }
+    const phoneWidth = 320
+    const gutter = 16
+    const rowHeight = 40
+    const video = stageAspectOf(wide, "video", false)
+    const frameHeight = (video.height / video.width) * phoneWidth
+    const picture = phoneWidth - 2 * gutter
+
+    expect(frameHeight - rowHeight).toBeGreaterThanOrEqual(
+      (picture * wide.height) / wide.width
+    )
+  })
+
+  it("sizes the picture alone, with the control rows taken out of the frame", () => {
     const wide = { width: 16, height: 9 }
 
-    expect(stageAspectOf(wide, "image")).toEqual(wide)
-    const video = stageAspectOf(wide, "video")
-    expect(video.width).toBe(16)
-    expect(video.height).toBeGreaterThan(9)
-    expect(video.height).toBeLessThan(10)
+    expect(pictureWidthOf(wide, true)).toBe(
+      "min(100cqw, (100cqh - 2 * var(--spacing-s12)) * 16 / 9)"
+    )
+    expect(pictureWidthOf(wide, false)).toBe(
+      "min(100cqw - 2 * var(--spacing-s5), (100cqh - var(--spacing-s12)) * 16 / 9)"
+    )
   })
 
   it("reads a video's time as minutes and seconds", () => {

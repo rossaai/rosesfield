@@ -1,6 +1,7 @@
 import { IconButton } from "@rosesfield/ui/components/button"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { Slider } from "@rosesfield/ui/components/slider"
+import { cn } from "@rosesfield/ui/lib/cn"
 import { prefersReducedMotion } from "@rosesfield/ui/motion"
 import {
   MaximizeIcon,
@@ -17,14 +18,16 @@ import {
   useState,
 } from "react"
 import { t } from "@/copy/t"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 
-const controlShare = 0.04
+const controlRoomShare = { regular: 0.08, compact: 0.125 } as const
 
 type Playback = {
   isPlaying: boolean
   time: number
   length: number
   isMuted: boolean
+  volume: number
 }
 
 type VideoRef = RefObject<HTMLVideoElement | null>
@@ -34,6 +37,7 @@ const startPlayback: Playback = {
   time: 0,
   length: 0,
   isMuted: true,
+  volume: 1,
 }
 
 export function clockOf(seconds: number): string {
@@ -45,14 +49,28 @@ export function clockOf(seconds: number): string {
 
 export function stageAspectOf(
   aspect: MediaAspect,
-  kind: "image" | "video"
+  kind: "image" | "video",
+  isRegular: boolean
 ): MediaAspect {
-  return kind === "video"
-    ? {
-        width: aspect.width,
-        height: aspect.height + aspect.width * controlShare,
-      }
-    : aspect
+  if (kind === "image") {
+    return aspect
+  }
+  const share = isRegular ? controlRoomShare.regular : controlRoomShare.compact
+  return { width: aspect.width, height: aspect.height + aspect.width * share }
+}
+
+export function pictureWidthOf(
+  aspect: MediaAspect,
+  isRegular: boolean
+): string {
+  const ratio = `${aspect.width} / ${aspect.height}`
+  return isRegular
+    ? `min(100cqw, (100cqh - 2 * var(--spacing-s12)) * ${ratio})`
+    : `min(100cqw - 2 * var(--spacing-s5), (100cqh - var(--spacing-s12)) * ${ratio})`
+}
+
+export function shownVolumeOf(playback: Playback): number {
+  return playback.isMuted ? 0 : playback.volume
 }
 
 function readPlayback(video: HTMLVideoElement): Playback {
@@ -61,6 +79,7 @@ function readPlayback(video: HTMLVideoElement): Playback {
     time: video.currentTime,
     length: Number.isFinite(video.duration) ? video.duration : 0,
     isMuted: video.muted,
+    volume: video.volume,
   }
 }
 
@@ -86,20 +105,77 @@ function togglePlay(video: VideoRef): void {
 }
 
 function toggleSound(video: VideoRef): void {
-  if (video.current !== null) {
-    video.current.muted = !video.current.muted
+  const element = video.current
+  if (element === null) {
+    return
   }
+  if (element.muted && element.volume === 0) {
+    element.volume = 1
+  }
+  element.muted = !element.muted
+}
+
+function firstOf(value: number | readonly number[]): number | undefined {
+  return typeof value === "number" ? value : value[0]
 }
 
 function seek(video: VideoRef, value: number | readonly number[]): void {
-  const next = typeof value === "number" ? value : value[0]
+  const next = firstOf(value)
   if (video.current !== null && next !== undefined) {
     video.current.currentTime = next
   }
 }
 
+function changeVolume(
+  video: VideoRef,
+  value: number | readonly number[]
+): void {
+  const next = firstOf(value)
+  if (video.current !== null && next !== undefined) {
+    video.current.volume = next
+    video.current.muted = next === 0
+  }
+}
+
 function showFullScreen(video: VideoRef): void {
   void video.current?.requestFullscreen().catch(() => undefined)
+}
+
+function SoundControls({
+  video,
+  playback,
+}: {
+  video: VideoRef
+  playback: Playback
+}): ReactElement {
+  const soundLabel = playback.isMuted
+    ? t("explore.video.soundOn")
+    : t("explore.video.soundOff")
+  return (
+    <>
+      <IconButton
+        label={soundLabel}
+        place="cardWide"
+        tone="quiet"
+        onClick={() => toggleSound(video)}
+      >
+        {playback.isMuted ? (
+          <VolumeXIcon aria-hidden="true" />
+        ) : (
+          <Volume2Icon aria-hidden="true" />
+        )}
+      </IconButton>
+      <Slider
+        className="w-20 shrink-0"
+        aria-label={t("model.tag.sound")}
+        min={0}
+        max={1}
+        step={0.05}
+        value={shownVolumeOf(playback)}
+        onValueChange={(value) => changeVolume(video, value)}
+      />
+    </>
+  )
 }
 
 function Controls({
@@ -112,13 +188,10 @@ function Controls({
   const playLabel = playback.isPlaying
     ? t("explore.video.pause")
     : t("explore.video.play")
-  const soundLabel = playback.isMuted
-    ? t("explore.video.soundOn")
-    : t("explore.video.soundOff")
   return (
     <div
       data-slot="viewer-controls"
-      className="flex h-10 shrink-0 items-center gap-2"
+      className="flex h-s12 shrink-0 items-center gap-2"
     >
       <IconButton
         label={playLabel}
@@ -144,18 +217,7 @@ function Controls({
         value={playback.time}
         onValueChange={(value) => seek(video, value)}
       />
-      <IconButton
-        label={soundLabel}
-        place="cardWide"
-        tone="quiet"
-        onClick={() => toggleSound(video)}
-      >
-        {playback.isMuted ? (
-          <VolumeXIcon aria-hidden="true" />
-        ) : (
-          <Volume2Icon aria-hidden="true" />
-        )}
-      </IconButton>
+      <SoundControls video={video} playback={playback} />
       <IconButton
         label={t("explore.video.fullScreen")}
         place="cardWide"
@@ -171,14 +233,17 @@ function Controls({
 export function ViewerVideo({
   src,
   label,
+  aspect,
   onMeasure,
 }: {
   src: string
   label: string
+  aspect: MediaAspect
   onMeasure?: (aspect: MediaAspect) => void
 }): ReactElement {
   const video = useRef<HTMLVideoElement>(null)
   const [playback, setPlayback] = useState<Playback>(startPlayback)
+  const isRegular = useIsRegularWindow()
   useAutoPlay(video)
   const read = (): void => {
     if (video.current !== null) {
@@ -186,28 +251,39 @@ export function ViewerVideo({
     }
   }
   return (
-    <div className="flex size-full flex-col">
-      <video
-        ref={video}
-        src={src}
-        aria-label={label}
-        muted
-        loop
-        playsInline
-        className="min-h-0 w-full flex-1 object-contain"
-        onPlay={read}
-        onPause={read}
-        onTimeUpdate={read}
-        onLoadedMetadata={(event) => {
-          read()
-          onMeasure?.({
-            width: event.currentTarget.videoWidth,
-            height: event.currentTarget.videoHeight,
-          })
-        }}
-        onVolumeChange={read}
-      />
-      <Controls video={video} playback={playback} />
+    <div
+      data-slot="viewer-video"
+      className="flex size-full flex-col items-center justify-center"
+      style={{ containerType: "size" }}
+    >
+      <div
+        data-slot="viewer-picture"
+        className={cn("flex flex-col", isRegular ? "pt-s12" : "")}
+        style={{ width: pictureWidthOf(aspect, isRegular) }}
+      >
+        <video
+          ref={video}
+          src={src}
+          aria-label={label}
+          muted
+          loop
+          playsInline
+          className="w-full object-contain"
+          style={{ aspectRatio: `${aspect.width} / ${aspect.height}` }}
+          onPlay={read}
+          onPause={read}
+          onTimeUpdate={read}
+          onLoadedMetadata={(event) => {
+            read()
+            onMeasure?.({
+              width: event.currentTarget.videoWidth,
+              height: event.currentTarget.videoHeight,
+            })
+          }}
+          onVolumeChange={read}
+        />
+        <Controls video={video} playback={playback} />
+      </div>
     </div>
   )
 }

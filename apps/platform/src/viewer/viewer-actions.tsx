@@ -84,42 +84,23 @@ function DeleteAsset({
 
 const wide = "w-full max-w-none"
 
-export function ViewerActions({
+export function ViewerManage({
   asset,
   run,
   onDeleted,
 }: ViewerActionsProps): ReactElement {
-  const download = useDownloadAsset()
-  const useInputs = useUseInputs(run)
   const openInComfy = useOpenInComfy(run)
   const [isConfirming, setConfirming] = useState(false)
   return (
-    <div data-slot="viewer-foot" className="flex flex-col gap-2.5">
-      {useInputs === null ? null : (
-        <Button tone="accent" width="full" onClick={useInputs}>
-          <CopyIcon aria-hidden="true" />
-          {t("run.useInputs")}
+    <div data-slot="viewer-manage" className="flex flex-wrap gap-2">
+      {openInComfy === null ? null : (
+        <Button tone="quiet" onClick={openInComfy}>
+          {t("run.openInComfy")}
         </Button>
       )}
-      <div className="grid grid-cols-2 gap-2">
-        <Button className={wide} onClick={() => void download(asset)}>
-          <DownloadIcon aria-hidden="true" />
-          {t("output.download")}
-        </Button>
-        <UseInButton asset={asset} className={wide} />
-        {openInComfy === null ? null : (
-          <Button className={wide} onClick={openInComfy}>
-            {t("run.openInComfy")}
-          </Button>
-        )}
-        <Button
-          tone="danger"
-          className={wide}
-          onClick={() => setConfirming(true)}
-        >
-          {t("output.delete")}
-        </Button>
-      </div>
+      <Button tone="quiet" onClick={() => setConfirming(true)}>
+        {t("output.delete")}
+      </Button>
       <DeleteAsset
         asset={asset}
         open={isConfirming}
@@ -130,7 +111,57 @@ export function ViewerActions({
   )
 }
 
+export function ViewerActions({
+  asset,
+  run,
+}: Omit<ViewerActionsProps, "onDeleted">): ReactElement {
+  const download = useDownloadAsset()
+  const useInputs = useUseInputs(run)
+  return (
+    <div data-slot="viewer-foot" className="flex flex-col gap-2.5">
+      {useInputs === null ? null : (
+        <Button tone="accent" width="full" onClick={useInputs}>
+          <CopyIcon aria-hidden="true" />
+          {t("run.useInputs")}
+        </Button>
+      )}
+      <div data-slot="viewer-foot-pair" className="grid grid-cols-2 gap-2">
+        <Button className={wide} onClick={() => void download(asset)}>
+          <DownloadIcon aria-hidden="true" />
+          {t("output.download")}
+        </Button>
+        <UseInButton asset={asset} className={wide} />
+      </div>
+    </div>
+  )
+}
+
 type ViewerBarProps = ViewerActionsProps & { details: ReactNode }
+
+function BarDownload({
+  asset,
+  isLead,
+}: {
+  asset: Asset
+  isLead: boolean
+}): ReactElement {
+  const download = useDownloadAsset()
+  if (isLead) {
+    return (
+      <Button className="min-w-0 flex-1" onClick={() => void download(asset)}>
+        {t("output.download")}
+      </Button>
+    )
+  }
+  return (
+    <IconButton
+      label={t("output.download")}
+      onClick={() => void download(asset)}
+    >
+      <DownloadIcon aria-hidden="true" />
+    </IconButton>
+  )
+}
 
 export function ViewerBar({
   asset,
@@ -138,7 +169,6 @@ export function ViewerBar({
   onDeleted,
   details,
 }: ViewerBarProps): ReactElement {
-  const download = useDownloadAsset()
   const useInputs = useUseInputs(run)
   const openInComfy = useOpenInComfy(run)
   const [isInfoOpen, setInfoOpen] = useState(false)
@@ -146,13 +176,13 @@ export function ViewerBar({
   return (
     <>
       <Button onClick={() => setInfoOpen(true)}>{t("viewer.info")}</Button>
-      <Button
-        tone="primary"
-        className="min-w-0 flex-1"
-        onClick={() => void download(asset)}
-      >
-        {t("output.download")}
-      </Button>
+      {useInputs === null ? null : (
+        <Button tone="accent" className="min-w-0 flex-1" onClick={useInputs}>
+          <CopyIcon aria-hidden="true" />
+          {t("run.useInputs")}
+        </Button>
+      )}
+      <BarDownload asset={asset} isLead={useInputs === null} />
       <UseInButton asset={asset} className="" />
       <DropdownMenu>
         <DropdownMenuTrigger
@@ -163,11 +193,6 @@ export function ViewerBar({
           }
         />
         <DropdownMenuContent align="end">
-          {useInputs === null ? null : (
-            <DropdownMenuItem onClick={useInputs}>
-              {t("run.useInputs")}
-            </DropdownMenuItem>
-          )}
           {openInComfy === null ? null : (
             <DropdownMenuItem onClick={openInComfy}>
               {t("run.openInComfy")}
