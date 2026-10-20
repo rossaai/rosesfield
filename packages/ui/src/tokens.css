@@ -1,8 +1,8 @@
 /* Generated. Do not edit. */
 
 /*
-  Every value Rosesfield's interface uses. docs/design.md holds the rules,
-  this file holds the numbers, and no other file holds either.
+  Every value Rosesfield's interface uses. This file is generated, and no
+  other file holds a value.
 
   Two schemes. A token that differs between them reads
   `var(--if-light, <light>) var(--if-dark, <dark>)`. Each scheme block sets
