@@ -23,7 +23,7 @@ function ModelChip({
       data-slot="model-row"
       data-place={place}
       className={cn(
-        "group/model relative inline-flex h-8 shrink-0 items-center rounded-dense bg-(--well) px-3 font-medium text-body whitespace-nowrap text-ink select-none [&_svg]:size-4",
+        "group/model relative inline-flex h-8 shrink-0 items-center rounded-dense border border-transparent bg-(--well) px-3 font-medium text-body whitespace-nowrap text-ink select-none [&_svg]:size-4",
         interaction.light,
         interaction.ring,
         className
@@ -33,12 +33,12 @@ function ModelChip({
       <span data-slot="model-row-mark" aria-hidden="true" className="flex">
         {mark}
       </span>
-      <span data-slot="model-row-name" className="ms-2 truncate">
+      <span data-slot="model-row-name" className="ms-2 truncate px-1">
         {name}
       </span>
       <ChevronRightIcon
         aria-hidden="true"
-        className="ms-1 shrink-0 text-ink-muted group-hover/model:text-ink"
+        className="shrink-0 text-ink-muted group-hover/model:text-ink"
       />
     </ButtonPrimitive>
   )
@@ -65,15 +65,19 @@ function ModelRowTrigger({
     >
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="text-caption text-ink-muted">{caption}</span>
-        <span className="flex min-w-0 items-center gap-1.5">
-          <span data-slot="model-row-mark" aria-hidden="true" className="flex">
-            {mark}
-          </span>
+        <span className="flex min-w-0 items-center gap-1">
           <span
             data-slot="model-row-name"
             className="truncate font-medium text-body text-ink"
           >
             {name}
+          </span>
+          <span
+            data-slot="model-row-mark"
+            aria-hidden="true"
+            className="flex shrink-0"
+          >
+            {mark}
           </span>
         </span>
       </span>

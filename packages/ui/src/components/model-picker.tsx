@@ -179,7 +179,7 @@ function ModelRow({
         )}
         onClick={() => onChoose(row.id)}
       />
-      <span className="pointer-events-none relative flex h-full items-center pe-2">
+      <span className="pointer-events-none relative flex h-full items-center ps-1.5 pe-3">
         <span
           data-slot="model-row-mark"
           aria-hidden="true"
@@ -355,7 +355,8 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
         side={side}
         align={side === "top" ? "start" : "end"}
         sideOffset={side === "top" ? 4 : 8}
-        className="max-h-[min(var(--available-height),calc(var(--spacing)*160.5))] w-100.5 max-w-[calc(100vw-2*var(--spacing-s4))] gap-0 overflow-hidden p-0 data-ending-style:transform-none data-starting-style:transform-none data-starting-style:translate-y-1 data-ending-style:translate-y-1"
+        motion="rise"
+        className="max-h-[min(var(--available-height),calc(var(--spacing)*160.5))] w-100.5 max-w-[calc(100vw-2*var(--spacing-s4))] gap-0 overflow-hidden p-px"
       >
         <PopoverTitle className="sr-only">{props.title}</PopoverTitle>
         <SearchRow
