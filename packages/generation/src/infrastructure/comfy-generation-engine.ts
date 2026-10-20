@@ -33,11 +33,18 @@ import {
   parseComfyWorkflow,
   workflowHashOf,
 } from "#infrastructure/comfy/comfy-workflow-binding"
-import { costOfCredits, creditsOfCost } from "#infrastructure/credit-meter"
+import {
+  type BalanceReader,
+  type CreditMeter,
+  costOfCredits,
+  creditsOfCost,
+} from "#infrastructure/credit-meter"
+import { RouterHttp } from "#infrastructure/router/router-http"
 
 type ComfyGenerationEngineOptions = {
   apiKey: string | null
   baseUrl?: string
+  meter?: CreditMeter
   fetch?: Fetch
   requestTimeoutMs?: number
   downloadTimeoutMs?: number
@@ -97,21 +104,31 @@ export class ComfyGenerationEngine extends GenerationEngine {
   private readonly requestTimeoutMs: number
   private readonly downloadTimeoutMs: number
   private readonly isCloud: boolean
+  private readonly meter: CreditMeter | null
+  private readonly balance: BalanceReader
 
   constructor(options: ComfyGenerationEngineOptions) {
     super()
     const baseUrl = options.baseUrl ?? ComfyGenerationEngine.cloudUrl
+    const send = options.fetch ?? ((input, init) => fetch(input, init))
     this.isCloud = baseUrl === ComfyGenerationEngine.cloudUrl
     this.requestTimeoutMs =
       options.requestTimeoutMs ?? ComfyGenerationEngine.requestTimeoutMs
     this.low = createComfyLow({
       baseUrl,
       apiKey: options.apiKey,
-      fetch: options.fetch ?? ((input, init) => fetch(input, init)),
+      fetch: send,
       timeoutMs: this.requestTimeoutMs,
     })
     this.downloadTimeoutMs =
       options.downloadTimeoutMs ?? ComfyGenerationEngine.downloadTimeoutMs
+    this.meter = this.isCloud ? (options.meter ?? null) : null
+    this.balance = new RouterHttp({
+      apiKey: options.apiKey,
+      fetch: send,
+      timeoutMs: this.requestTimeoutMs,
+      downloadTimeoutMs: this.downloadTimeoutMs,
+    })
   }
 
   override canRun(binding: EngineBinding): boolean {
@@ -137,7 +154,15 @@ export class ComfyGenerationEngine extends GenerationEngine {
         return { __type: "core/ASSET", info: { id } }
       },
     })
-    const job = await this.post(workflow, request.idempotencyKey)
+    const ticket = (await this.meter?.start(this.balance)) ?? null
+    let job: Job
+    try {
+      job = await this.post(workflow, request.idempotencyKey)
+    } catch (error) {
+      this.meter?.drop(ticket)
+      throw error
+    }
+    this.meter?.bind(ticket, job.id)
     return {
       ref: job.id,
       models: config.models ?? [],
@@ -146,7 +171,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
   }
 
   override submitLimitMs(): number {
-    return 2 * this.requestTimeoutMs
+    return (this.meter === null ? 2 : 3) * this.requestTimeoutMs
   }
 
   override creditsOf(cost: Cost): number {
@@ -168,9 +193,11 @@ export class ComfyGenerationEngine extends GenerationEngine {
       case "succeeded":
         return this.succeeded(job)
       case "canceled":
+        this.meter?.dropRef(ref)
         return { state: "cancelled" }
       case "failed":
       case "expired":
+        this.meter?.dropRef(ref)
         return {
           state: "failed",
           error: jobFailureOf(
@@ -193,6 +220,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
   }
 
   override async cancel(ref: string): Promise<void> {
+    this.meter?.dropRef(ref)
     await callComfy(() => this.low.cancelJob(ref))
   }
 
@@ -205,17 +233,12 @@ export class ComfyGenerationEngine extends GenerationEngine {
     }
   }
 
-  private succeeded(job: Job): EngineStatus {
-    const executionMs = job.metrics?.execution_ms ?? null
-    if (!this.isCloud || executionMs === null) {
-      return { state: "succeeded" }
-    }
-    const credits =
-      (executionMs / 1000) * ComfyGenerationEngine.gpuCreditsPerSecond
-    return {
-      state: "succeeded",
-      cost: costOfCredits(Math.round(credits * 1_000_000) / 1_000_000),
-    }
+  private async succeeded(job: Job): Promise<EngineStatus> {
+    const metered = (await this.meter?.finishRef(this.balance, job.id)) ?? null
+    const credits = metered ?? gpuCreditsOf(this.isCloud, job)
+    return credits === null
+      ? { state: "succeeded" }
+      : { state: "succeeded", cost: costOfCredits(credits) }
   }
 
   private async post(
@@ -243,6 +266,16 @@ export class ComfyGenerationEngine extends GenerationEngine {
       durationSeconds: null,
     }
   }
+}
+
+function gpuCreditsOf(isCloud: boolean, job: Job): number | null {
+  const executionMs = job.metrics?.execution_ms ?? null
+  if (!isCloud || executionMs === null) {
+    return null
+  }
+  const credits =
+    (executionMs / 1000) * ComfyGenerationEngine.gpuCreditsPerSecond
+  return Math.round(credits * 1_000_000) / 1_000_000
 }
 
 function parseJob(value: unknown): Job {
