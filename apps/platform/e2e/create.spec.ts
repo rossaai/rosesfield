@@ -16,7 +16,7 @@ const modelRow =
 test.describe("a prompt app on a desktop", () => {
   test.skip(({ isMobile }) => isMobile, "the bar shows from 768 px")
 
-  test("docks the prompt bar 16 px above the bottom, 880 by 124, with Generate as its 120 by 80 tile", async ({
+  test("docks the prompt bar 16 px above the bottom, 880 by 124, with Generate as its 120 by 80 tile and no References tile on a text only default", async ({
     page,
   }) => {
     await page.goto("/apps/image")
@@ -36,11 +36,9 @@ test.describe("a prompt app on a desktop", () => {
     const row = await boxOf(bar.locator('[data-slot="composer-toolbar"]'))
     expect(row.height).toBe(32)
     expect(generate.y + generate.height).toBe(row.y + row.height)
-    const tile = await boxOf(
+    await expect(
       bar.locator('[data-slot="composer-attachments-edge"]')
-    )
-    expect([tile.width, tile.height]).toEqual([65, 32])
-    expect(tile.x).toBe(row.x)
+    ).toHaveCount(0)
   })
 
   test("keeps the bar in place while the page scrolls", async ({ page }) => {
@@ -167,6 +165,21 @@ test.describe("the tray and rhythm of Video's column", () => {
     expect(last.x + last.width).toBeLessThanOrEqual(tray.x + tray.width - 16)
   })
 
+  test("fits every part above the footer at rest on LTX 2.5, with an Elements chip in the prompt", async ({
+    page,
+  }) => {
+    await page.goto("/apps/video")
+    const column = page.locator('[data-slot="composer"]')
+    await expect(column.locator(modelRow)).toContainText("LTX 2.5")
+    await expect(column.getByRole("button", { name: "Elements" })).toBeVisible()
+    const parts = column.locator('[data-slot="composer-prompt"]')
+    await expect
+      .poll(() =>
+        parts.evaluate((node) => node.scrollHeight <= node.clientHeight)
+      )
+      .toBe(true)
+  })
+
   test("opens the model list 8 px to the right of the model row", async ({
     page,
   }) => {
@@ -199,16 +212,18 @@ test.describe("Video's model picker and its settings", () => {
     await column.locator(modelRow).click()
     const list = page.locator('[data-slot="model-picker"]')
     await expect(list).toBeVisible()
-    const ltx = list.getByRole("option", { name: "LTX 2.5" }).first()
+    const ltx = list
+      .locator('[data-slot="model-row"]:has([data-model="ltx-2-5"])')
+      .first()
     await expect(ltx).toContainText("720p")
     await expect(ltx).toContainText("2 to 5 s")
   })
 
-  test("turns the More settings chevron over the control timing instead of jumping", async ({
+  test("turns the Advanced chevron over the control timing instead of jumping", async ({
     page,
   }) => {
     await page.goto("/apps/video")
-    const trigger = page.getByRole("button", { name: "More settings" })
+    const trigger = page.getByRole("button", { name: "Advanced" })
     await expect(trigger).toBeVisible()
     const chevron = trigger.locator("svg")
     const names = await chevron.evaluate(
@@ -237,8 +252,11 @@ test.describe("an app on a phone", () => {
       await expect(region).toBeVisible()
       await expect(page.locator('[data-slot="prompt-bar"]')).toHaveCount(0)
       await expect(page.locator('[data-slot="composer"]')).toHaveCount(0)
-      const canvas = await boxOf(region)
-      expect(canvas.x).toBe(16)
+      const edge =
+        appId === "image"
+          ? await boxOf(region.getByRole("tablist").first())
+          : await boxOf(region)
+      expect(edge.x).toBe(16)
       const key = page.locator('[data-slot="app-bar-tabGenerate"]')
       await expect(key).toHaveAccessibleName("Generate")
       const box = await boxOf(key)
