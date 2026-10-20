@@ -1,10 +1,6 @@
 import { type Run, run, shareView } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
-import {
-  filterEntries,
-  ownEntries,
-  sharedEntries,
-} from "@/screens/explore/explore-entries"
+import { ownEntries, sharedEntries } from "@/screens/explore/explore-entries"
 import { sharedOutputOf } from "@/screens/explore/share-api"
 
 const outputId = "3d4e5f6a-7b8c-4d9e-8f0a-2b3c4d5e6f01"
@@ -76,12 +72,5 @@ describe("Explore's outputs", () => {
     expect(shareView.safeParse({ id: "abc", path: "/share/abc" }).success).toBe(
       false
     )
-  })
-
-  it("filter by the kind of output", () => {
-    const entries = ownEntries([runOf({})])
-    expect(filterEntries(entries, "image")).toHaveLength(1)
-    expect(filterEntries(entries, "video")).toEqual([])
-    expect(filterEntries(entries, "all")).toHaveLength(1)
   })
 })

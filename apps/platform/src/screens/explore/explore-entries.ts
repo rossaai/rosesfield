@@ -7,8 +7,6 @@ import { runAspect } from "@/pieces/run/run-facts"
 import type { ExploreEntry, ExploreKind } from "@/screens/explore/explore-tile"
 import { publishedQuery, type SharedOutput } from "@/screens/explore/share-api"
 
-export type ExploreFilter = "all" | ExploreKind
-
 export type ExploreEntries =
   | { state: "loading" }
   | { state: "failed"; retry: () => void }
@@ -69,15 +67,6 @@ export function ownEntries(runs: readonly Run[]): ExploreEntry[] {
       },
     ]
   })
-}
-
-export function filterEntries(
-  entries: readonly ExploreEntry[],
-  filter: ExploreFilter
-): ExploreEntry[] {
-  return filter === "all"
-    ? [...entries]
-    : entries.filter((entry) => entry.kind === filter)
 }
 
 export function useExploreEntries(): ExploreEntries {
