@@ -8,18 +8,31 @@ type Row = { path: string; sha256: string }
 
 const root = fileURLToPath(new URL("../../../", import.meta.url))
 
+function rowOf(file: unknown): Row {
+  if (
+    typeof file === "object" &&
+    file !== null &&
+    "path" in file &&
+    typeof file.path === "string" &&
+    "sha256" in file &&
+    typeof file.sha256 === "string"
+  ) {
+    return { path: file.path, sha256: file.sha256 }
+  }
+  throw new Error("generated.json holds a row with no path or sha256")
+}
+
 function rowsOf(text: string): readonly Row[] {
   const parsed: unknown = JSON.parse(text)
-  const files = (parsed as { files?: unknown }).files
-  if (!Array.isArray(files)) {
+  if (
+    typeof parsed !== "object" ||
+    parsed === null ||
+    !("files" in parsed) ||
+    !Array.isArray(parsed.files)
+  ) {
     throw new Error("generated.json holds no files list")
   }
-  return files.map((file: Partial<Row>) => {
-    if (typeof file.path !== "string" || typeof file.sha256 !== "string") {
-      throw new Error("generated.json holds a row with no path or sha256")
-    }
-    return { path: file.path, sha256: file.sha256 }
-  })
+  return parsed.files.map(rowOf)
 }
 
 async function shaOf(file: string): Promise<string | null> {
