@@ -29,35 +29,78 @@ function outputKindOf(run: Run): string {
   return findCatalogApp(run.appId)?.output.kind ?? "image"
 }
 
-function WorkingTiles({ run }: { run: Run }): ReactElement {
+function LandedTile({
+  run,
+  assetId,
+  aspect,
+  list,
+}: {
+  run: Run
+  assetId: string
+  aspect?: MediaAspect
+  list: readonly string[]
+}): ReactElement {
+  return (
+    <AssetTile
+      assetId={assetId}
+      isDemo={run.origin === "demo"}
+      list={list}
+      className={motion.enter}
+      {...(aspect === undefined ? {} : { aspectHint: aspect })}
+    />
+  )
+}
+
+function WorkingTiles({ run, list }: RunOutputsProps): ReactElement {
   const kind = outputKindOf(run)
   const aspect = runAspect(run)
   const count = run.count
+  const shown = list ?? run.outputs
   if (kind === "audio" || kind === "text") {
     return (
       <div className="flex w-full flex-col gap-s2">
-        {Array.from({ length: count }, (_, index) => (
-          <Skeleton
-            // biome-ignore lint/suspicious/noArrayIndexKey: a working tile's place is its identity
-            key={index}
-            className={
-              kind === "audio"
-                ? "h-s12 w-full"
-                : "h-tile w-full max-w-prose-max"
-            }
-          />
-        ))}
+        {Array.from({ length: count }, (_, index) => {
+          const assetId = run.outputs[index]
+          return assetId === undefined ? (
+            <Skeleton
+              // biome-ignore lint/suspicious/noArrayIndexKey: a working tile's place is its identity
+              key={index}
+              className={
+                kind === "audio"
+                  ? "h-s12 w-full"
+                  : "h-tile w-full max-w-prose-max"
+              }
+            />
+          ) : (
+            <LandedTile
+              key={assetId}
+              run={run}
+              assetId={assetId}
+              list={shown}
+            />
+          )
+        })}
       </div>
     )
   }
   return (
     <OutputRow aspects={Array.from({ length: count }, () => aspect)}>
-      {(index) => (
-        <WorkingPulse
-          aspect={aspect}
-          label={t("run.working", { index: index + 1, count })}
-        />
-      )}
+      {(index) => {
+        const assetId = run.outputs[index]
+        return assetId === undefined ? (
+          <WorkingPulse
+            aspect={aspect}
+            label={t("run.working", { index: index + 1, count })}
+          />
+        ) : (
+          <LandedTile
+            run={run}
+            assetId={assetId}
+            aspect={aspect}
+            list={shown}
+          />
+        )
+      }}
     </OutputRow>
   )
 }
@@ -88,10 +131,10 @@ export function WaitingLine({ run }: { run: Run }): ReactNode {
   )
 }
 
-function WorkingRun({ run }: { run: Run }): ReactElement {
+function WorkingRun({ run, list }: RunOutputsProps): ReactElement {
   return (
     <div className="flex flex-col gap-s2">
-      <WorkingTiles run={run} />
+      <WorkingTiles run={run} {...(list === undefined ? {} : { list })} />
       {run.progress === null ? null : (
         <Progress value={run.progress * 100} aria-label={t("state.working")} />
       )}
@@ -186,7 +229,7 @@ export function RunOutputs({ run, list }: RunOutputsProps): ReactElement {
   switch (run.status) {
     case "queued":
     case "running":
-      return <WorkingRun run={run} />
+      return <WorkingRun run={run} {...(list === undefined ? {} : { list })} />
     case "done":
       return <DoneRun run={run} {...(list === undefined ? {} : { list })} />
     case "failed":
