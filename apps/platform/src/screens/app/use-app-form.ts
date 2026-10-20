@@ -75,7 +75,7 @@ function useSeededValues(
         next = await placeAll(client, app, next, [seeds.use])
       }
       setValues(next)
-      if (fromRun !== null || draft !== undefined || seeds.use !== undefined) {
+      if (fromRun !== null) {
         setSource("seed")
       }
     }
