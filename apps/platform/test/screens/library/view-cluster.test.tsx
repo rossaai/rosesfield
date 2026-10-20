@@ -44,8 +44,10 @@ const kindGroup = (onChoose: (value: string) => void): FilterGroup => ({
 describe("the head row's cluster", () => {
   it("holds a size slider, List and Grid as two cells, and Filter after them", () => {
     const { onLayout } = renderCluster([kindGroup(() => undefined)])
-    const size = screen.getByRole("group", { name: "Tile size" })
-    expect(size.querySelector("[role='slider']")).not.toBeNull()
+    const pill = document.querySelector("[data-slot='view-pill']")
+    const slider = screen.getByRole("slider", { hidden: true })
+    expect(screen.getByLabelText("Tile size")).toBe(slider)
+    expect(pill?.firstElementChild?.contains(slider)).toBe(true)
     const cells = screen.getAllByRole("radio")
     expect(cells.map((cell) => cell.textContent)).toEqual(["List", "Grid"])
     const list = screen.getByRole("radio", { name: "List" })
@@ -53,7 +55,6 @@ describe("the head row's cluster", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Grid" }))
     expect(onLayout).toHaveBeenCalledWith("grid")
     const filter = screen.getByRole("button", { name: "Filter" })
-    const pill = document.querySelector("[data-slot='view-pill']")
     expect(pill?.nextElementSibling?.contains(filter)).toBe(true)
   })
 
