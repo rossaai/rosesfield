@@ -47,11 +47,11 @@ const buttonVariants = cva(
         "icon-badge": "size-remove-badge [&_svg]:glyph-small",
         "icon-barCompact": "size-6 [&_svg]:size-4",
         "icon-bar": "size-9 [&_svg]:size-4",
-        "icon-close": "size-9.5 [&_svg]:size-6",
+        "icon-close": "size-9.5 [&_svg]:size-6!",
         "icon-card": "size-7 [&_svg]:size-4",
         "icon-cardWide": "size-8 [&_svg]:size-4",
         "icon-clip": "size-10 [&_svg]:size-4",
-        "icon-carousel": "size-15 [&_svg]:size-9",
+        "icon-carousel": "size-15 [&_svg]:size-9!",
       },
       width: {
         content: "",

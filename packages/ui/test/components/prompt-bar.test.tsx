@@ -75,6 +75,49 @@ describe("PromptBar's Generate", () => {
       name: "Generate, 14.48 Comfy credits",
     })
     expect(generate.textContent).toBe("Generate14.48")
-    expect(generate.lastElementChild?.getAttribute("data-testid")).toBe("price")
+    const price = generate.querySelector("[data-slot='generate-button-price']")
+    expect(price?.querySelector("[data-testid='price']")).not.toBeNull()
+  })
+
+  it("stands as the tile at the bar's trailing end", () => {
+    renderBar()
+    const bar = document.querySelector("[data-slot='prompt-bar']")
+    const generate = screen.getByRole("button", { name: "Generate" })
+    expect(generate.getAttribute("data-form")).toBe("tile")
+    const controls = bar?.querySelectorAll("button, textarea") ?? []
+    expect(controls[controls.length - 1]).toBe(generate)
+  })
+})
+
+describe("PromptBar's placement", () => {
+  it("docks to the viewport foot only when asked", () => {
+    const { rerender } = render(
+      <PromptBar
+        value=""
+        onValueChange={() => undefined}
+        onSubmit={() => undefined}
+        label="Prompt"
+        placeholder="Describe the image"
+        submitLabel="Generate"
+        removeLabel="Remove"
+        placement="dock"
+      />
+    )
+    const bar = document.querySelector<HTMLElement>("[data-slot='prompt-bar']")
+    expect(bar?.className.split(" ")).toEqual(
+      expect.arrayContaining(["fixed", "bottom-4", "max-w-220"])
+    )
+    rerender(
+      <PromptBar
+        value=""
+        onValueChange={() => undefined}
+        onSubmit={() => undefined}
+        label="Prompt"
+        placeholder="Describe the image"
+        submitLabel="Generate"
+        removeLabel="Remove"
+      />
+    )
+    expect(bar?.className.split(" ")).not.toContain("fixed")
   })
 })

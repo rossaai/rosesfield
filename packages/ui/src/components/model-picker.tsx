@@ -85,26 +85,41 @@ function filterSections(
     .filter((section) => section.rows.length > 0)
 }
 
+function RowBadge({ badge }: { badge: ModelBadge }): ReactElement {
+  return (
+    <Badge
+      kind={badge.kind}
+      {...(badge.href === undefined ? {} : { href: badge.href })}
+      {...(badge.mark === undefined ? {} : { mark: badge.mark })}
+    >
+      {badge.label}
+    </Badge>
+  )
+}
+
 function RowName({ row }: { row: ModelPickerRow }): ReactElement {
+  const badges = row.badges ?? []
+  const facts = badges.filter((badge) => badge.kind !== "openWeights")
+  const weights = badges.filter((badge) => badge.kind === "openWeights")
   return (
     <span className="flex min-w-0 items-center">
       <span data-slot="model-row-name" className="truncate text-body text-ink">
         {row.name}
       </span>
-      {row.badges === undefined || row.badges.length === 0 ? null : (
+      {facts.length === 0 ? null : (
+        <span data-slot="model-row-badges" className="flex shrink-0">
+          {facts.map((badge) => (
+            <RowBadge key={badge.kind} badge={badge} />
+          ))}
+        </span>
+      )}
+      {weights.length === 0 ? null : (
         <span
-          data-slot="model-row-badges"
+          data-slot="model-row-weights"
           className="pointer-events-auto flex shrink-0"
         >
-          {row.badges.map((badge) => (
-            <Badge
-              key={badge.kind}
-              kind={badge.kind}
-              {...(badge.href === undefined ? {} : { href: badge.href })}
-              {...(badge.mark === undefined ? {} : { mark: badge.mark })}
-            >
-              {badge.label}
-            </Badge>
+          {weights.map((badge) => (
+            <RowBadge key={badge.kind} badge={badge} />
           ))}
         </span>
       )}
