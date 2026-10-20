@@ -3,9 +3,8 @@ import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { PresetTile } from "@rosesfield/ui/components/preset-tile"
 import { ResultTile } from "@rosesfield/ui/components/result-tile"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
-import { cn } from "@rosesfield/ui/lib/cn"
 import { useNavigate, useRouter } from "@tanstack/react-router"
-import type { ReactElement, ReactNode } from "react"
+import type { ReactElement } from "react"
 import { useAssetSource } from "@/api/use-asset-source"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { joinParts } from "@/copy/format"
@@ -101,33 +100,6 @@ function EntrySkeleton({ aspect }: { aspect: MediaAspect }): ReactElement {
   )
 }
 
-const machineMadePlace = {
-  bottom: "bottom-2 left-2",
-  top: "top-2 left-2",
-} as const
-
-export function MachineMade({
-  place,
-  children,
-}: {
-  place: keyof typeof machineMadePlace
-  children: ReactNode
-}): ReactElement {
-  return (
-    <div data-slot="machine-made" className="relative w-full">
-      {children}
-      <span
-        className={cn(
-          "pointer-events-none absolute z-20 rounded-dense bg-scrim px-2 font-medium text-caption text-ink",
-          machineMadePlace[place]
-        )}
-      >
-        {t("explore.tile.machineMade")}
-      </span>
-    </div>
-  )
-}
-
 type ResultCardProps = {
   entry: VisualEntry
   narrow: boolean
@@ -148,25 +120,23 @@ export function ResultCard({
   }
   const app = runAppName(entry.run)
   return (
-    <MachineMade place="bottom">
-      <ResultTile
-        kind={entry.kind}
-        src={src}
-        alt={t("explore.tile.label", { app })}
-        aspect={entry.aspect}
-        app={app}
-        model={entryModel(entry) ?? t("explore.tile.noModel")}
-        openLabel={t("explore.tile.open", { app })}
-        expandLabel={t("explore.tile.expand", { app })}
-        moreLabel={t("explore.tile.more", { app })}
-        recreateLabel={t("explore.tile.recreate")}
-        recreateName={t("explore.tile.recreateName")}
-        onOpen={(origin) => onOpen(entry, origin)}
-        onRecreate={() => recreate(entry)}
-        onMore={() => onMore(entry)}
-        narrow={narrow}
-      />
-    </MachineMade>
+    <ResultTile
+      kind={entry.kind}
+      src={src}
+      alt={t("explore.tile.label", { app })}
+      aspect={entry.aspect}
+      app={app}
+      model={entryModel(entry) ?? t("explore.tile.noModel")}
+      openLabel={t("explore.tile.open", { app })}
+      expandLabel={t("explore.tile.expand", { app })}
+      moreLabel={t("explore.tile.more", { app })}
+      recreateLabel={t("explore.tile.recreate")}
+      recreateName={t("explore.tile.recreateName")}
+      onOpen={(origin) => onOpen(entry, origin)}
+      onRecreate={() => recreate(entry)}
+      onMore={() => onMore(entry)}
+      narrow={narrow}
+    />
   )
 }
 
@@ -184,15 +154,13 @@ export function ExplorePresetTile({
     return <EntrySkeleton aspect={entry.aspect} />
   }
   return (
-    <MachineMade place="top">
-      <PresetTile
-        name={name}
-        href={viewHref}
-        viewLabel={t("explore.preset.view", { name })}
-        action={{ label: t("explore.tile.recreate"), href: actionHref }}
-        clip={{ src, alt: name }}
-        aspect={entry.aspect}
-      />
-    </MachineMade>
+    <PresetTile
+      name={name}
+      href={viewHref}
+      viewLabel={t("explore.preset.view", { name })}
+      action={{ label: t("explore.tile.recreate"), href: actionHref }}
+      clip={{ src, alt: name }}
+      aspect={entry.aspect}
+    />
   )
 }

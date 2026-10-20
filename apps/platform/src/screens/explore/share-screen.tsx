@@ -50,9 +50,6 @@ function SharedOutputView({ share }: { share: SharedOutput }): ReactElement {
       <p className="text-body text-ink-muted">
         {exploreCaption(share.run, null)}
       </p>
-      <p data-slot="share-machine-made" className="text-label text-ink-muted">
-        {t("explore.tile.machineMade")}
-      </p>
       <div className="flex flex-wrap items-center gap-s2">
         <Button
           tone="primary"
