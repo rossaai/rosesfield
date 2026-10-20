@@ -4,6 +4,9 @@
   "main": "src/worker.ts",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
+  // The workers.dev address keeps answering when bun run deploy --domain puts
+  // the deployment on a domain of the account, such as rosesfield.com.
+  "workers_dev": true,
   // The migration modules of packages/generation, packages/library and this
   // gateway read import.meta.url when they load. Workers gives a module no file
   // URL, so the bundle defines one. The migrations themselves run through
