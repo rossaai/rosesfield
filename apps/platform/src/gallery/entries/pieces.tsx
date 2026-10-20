@@ -6,7 +6,7 @@ import {
   type PromptAttachment,
   PromptBar,
 } from "@rosesfield/ui/components/prompt-bar"
-import { AtSignIcon, MoveIcon, PaperclipIcon } from "lucide-react"
+import { AtSignIcon, PaperclipIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useState } from "react"
 import { catalogApps } from "@/catalog/catalog-apps"
 import { withUnit } from "@/copy/format"
@@ -15,7 +15,7 @@ import { type GalleryKey, t } from "@/gallery/copy.en"
 import demoSquare from "@/gallery/fixtures/demo-image-1-1.png"
 import demoWide from "@/gallery/fixtures/demo-image-16-9.png"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
-import { chipIconOf } from "@/screens/app/bar/setting-chip"
+import { chipIconOf, inputIconOf } from "@/screens/app/bar/setting-chip"
 import { inputCaption, inputUnit } from "@/screens/app/fields/input-copy"
 import { aspectItems } from "@/screens/app/fields/output-fields"
 
@@ -203,17 +203,10 @@ function chipOf(
       }
     case "input": {
       const chip = inputChip(app, spec.name)
-      return chip === null
-        ? null
-        : {
-            ...chip,
-            icon:
-              spec.name === "length" ? (
-                chipIconOf("length")
-              ) : spec.name === "cameraMove" ? (
-                <MoveIcon />
-              ) : undefined,
-          }
+      const input = app.inputs.find((one) => one.name === spec.name)
+      return chip === null || input === undefined
+        ? chip
+        : { ...chip, icon: inputIconOf(app, input) }
     }
   }
 }
