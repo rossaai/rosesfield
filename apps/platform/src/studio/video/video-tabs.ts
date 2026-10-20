@@ -1,5 +1,4 @@
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
-import type { Run } from "@rosesfield/contract"
 import type { FieldValue } from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
 import { type VideoFields, videoFieldsOf } from "@/studio/video/video-fields"
@@ -132,13 +131,16 @@ export function imagesForTab(
   return next
 }
 
-export function tabOfRun(run: Run, model: CatalogModel | null): VideoTab {
+export function tabOfInputs(
+  inputs: Inputs,
+  model: CatalogModel | null
+): VideoTab {
   const fields = fieldsOfModel(model)
   if (fields === null) {
     return "text-image"
   }
   const count = (name: string | undefined): number =>
-    name === undefined ? 0 : listOf(run.inputs[name]).length
+    name === undefined ? 0 : listOf(inputs[name]).length
   if (fields.last !== null && count(fields.last.name) > 0) {
     return "first-last"
   }
