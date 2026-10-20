@@ -1,8 +1,21 @@
 import { findApp } from "@rosesfield/catalog"
 import { appListing, run } from "@rosesfield/contract"
-import { describe, expect, it } from "vitest"
-import { samplesOf, stepsOf } from "@/screens/app/how-it-works"
-import type { SharedOutput } from "@/screens/explore/share-api"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from "@tanstack/react-router"
+import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { afterEach, describe, expect, it, vi } from "vitest"
+import { HowItWorks, samplesOf, stepsOf } from "@/screens/app/how-it-works"
+import { publishedQuery, type SharedOutput } from "@/screens/explore/share-api"
+
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
 
 const video = appListing.parse(findApp("video"))
 
@@ -84,5 +97,40 @@ describe("How it works", () => {
     const steps = stepsOf(video, [])
     expect(steps.map((step) => step.media)).toEqual([null, null, null])
     expect(steps.some((step) => step.action !== undefined)).toBe(false)
+  })
+})
+
+describe("How it works on Video's canvas", () => {
+  it("shows a published still and two published clips in the three step frames", async () => {
+    vi.stubGlobal("fetch", () => new Promise(() => undefined))
+    const client = new QueryClient({
+      defaultOptions: { queries: { staleTime: Number.POSITIVE_INFINITY } },
+    })
+    client.setQueryData(publishedQuery.queryKey, [
+      share("a", "video", "image"),
+      share("b", "video", "video"),
+      share("c", "video", "video"),
+    ])
+    const router = createRouter({
+      routeTree: createRootRoute({
+        component: () => <HowItWorks app={video} kind="column" />,
+      }),
+      history: createMemoryHistory(),
+    })
+    render(
+      <QueryClientProvider client={client}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    )
+    const steps = await waitFor(() => {
+      const found = screen.getAllByRole("listitem")
+      expect(found).toHaveLength(3)
+      return found
+    })
+    expect(
+      steps.map((step) => step.querySelector("img, video")?.tagName ?? null)
+    ).toEqual(["IMG", "VIDEO", "VIDEO"])
+    expect(steps[1]?.querySelector("video")?.muted).toBe(true)
+    expect(steps[1]?.querySelector("video")?.loop).toBe(true)
   })
 })
