@@ -8,6 +8,9 @@ export const uploadedId = "8e7d6c5b-4a39-4281-b0c9-d8e7f6a5b4c3"
 export const startFrameId = assetIdFormat.parse(
   "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
 )
+export const lastFrameId = assetIdFormat.parse(
+  "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a"
+)
 
 export type Recording = {
   method: string

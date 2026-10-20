@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import { videoGateway } from "./video-gateway"
 import {
   asset,
+  lastFrameId,
   prompt,
   recorded,
   replayFetch,
@@ -11,10 +12,11 @@ import {
 } from "./video-recordings"
 
 async function submittedRun(inputs: Record<string, unknown>) {
-  const withFile = Object.values(inputs).some(Array.isArray)
-  const replay = replayFetch(
-    withFile ? [recorded.upload, recorded.submit] : [recorded.submit]
-  )
+  const files = Object.values(inputs).filter(Array.isArray).flat()
+  const replay = replayFetch([
+    ...files.map(() => recorded.upload),
+    recorded.submit,
+  ])
   const gateway = videoGateway(
     () =>
       new ComfyGenerationEngine({ apiKey: "comfyui-test", fetch: replay.fetch })
@@ -58,5 +60,30 @@ describe("a Video run on the LTX 2.5 graph, replayed", () => {
       "\nThe camera moves slowly backward, away from the subject."
     )
     expect(workflows[0]?.["339"]?.inputs.noise_seed).toBe(9)
+  })
+
+  it("uploads a first and a last frame and guides the end of the clip with the last", async () => {
+    const { workflows } = await submittedRun({
+      prompt,
+      model: "ltx-2-5",
+      startFrame: [startFrameId],
+      lastFrame: [lastFrameId],
+      seed: 5,
+    })
+    expect(workflows).toHaveLength(1)
+    expect(workflows[0]?.["401"]?.inputs.image).toEqual(asset)
+    expect(workflows[0]?.["402"]?.inputs.image).toEqual(asset)
+    expect(workflows[0]?.["460"]?.inputs.frame_idx).toBe(-1)
+    expect(workflows[0]?.["463"]?.inputs.frame_idx).toBe(-1)
+  })
+
+  it("sends no last-frame node for a run from a start frame alone", async () => {
+    const { workflows } = await submittedRun({
+      prompt,
+      model: "ltx-2-5",
+      startFrame: [startFrameId],
+    })
+    expect(Object.keys(workflows[0] ?? {})).not.toContain("402")
+    expect(Object.keys(workflows[0] ?? {})).not.toContain("460")
   })
 })

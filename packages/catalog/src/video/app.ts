@@ -3,7 +3,12 @@ import { type AppInput, defineApp } from "#define-app"
 import { cameraMoves } from "#video/camera-moves"
 import { videoEngine } from "#video/comfy/video-engine"
 import { videoAspects } from "#video/comfy/video-sizes"
-import { defaultModel, graphModel, videoTasks } from "#video/video-models"
+import {
+  defaultModel,
+  graphModel,
+  hostedModel,
+  videoTasks,
+} from "#video/video-models"
 
 const runSeconds = 1500
 const queueSeconds = 300
@@ -28,12 +33,20 @@ export const app: AppInput = defineApp({
       max: 1,
     },
     {
+      type: "image",
+      name: "lastFrame",
+      labelKey: "video.well.last",
+      presence: "optional",
+      max: 1,
+      when: [{ input: "startFrame", state: "filled" }],
+    },
+    {
       type: "choice",
       name: "model",
       labelKey: "video.input.model.label",
       options: [
-        { value: defaultModel, labelKey: "video.model.minimaxH3" },
         { value: graphModel, labelKey: "video.model.ltx25" },
+        { value: hostedModel, labelKey: "video.model.minimaxH3" },
       ],
       default: defaultModel,
     },
