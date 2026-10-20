@@ -17,7 +17,7 @@ import { PlugIcon } from "lucide-react"
 import { type ReactElement, useState } from "react"
 import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
-import { useOpenTools } from "@/shell/generate-key"
+import { useAppToolsKey } from "@/pieces/app-tools"
 import {
   appIcon,
   exploreLink,
@@ -88,7 +88,7 @@ function Tab({ link }: { link: ScreenLink }): ReactElement {
 
 export function BottomBar(): ReactElement {
   const [isAppsOpen, setAppsOpen] = useState(false)
-  const openTools = useOpenTools()
+  const openTools = useAppToolsKey()
   return (
     <>
       <TabBar label={t("shell.bar.label")}>

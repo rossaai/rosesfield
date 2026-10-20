@@ -7,7 +7,6 @@ import { GatewayUnreachableError } from "@/api/gateway-unreachable.error"
 import { settingsQuery } from "@/api/queries"
 import { t } from "@/copy/t"
 import { BottomBar } from "@/shell/bottom-bar"
-import { GenerateKeyProvider } from "@/shell/generate-key"
 import { KeyDialogProvider } from "@/shell/key-dialog-context"
 import { hasFooter } from "@/shell/page-kind"
 import { RunWatcher } from "@/shell/run-watcher"
@@ -58,23 +57,21 @@ export function ShellFrame({
   })
   return (
     <ViewerProvider>
-      <GenerateKeyProvider>
-        <KeyDialogProvider>
-          <div
-            data-slot="shell"
-            className="@container flex h-dvh flex-col bg-canvas"
-          >
-            <TopBar />
-            <main className="min-h-0 flex-1 overflow-y-auto">
-              <ShellContent>{children}</ShellContent>
-              {hasFooter(pathname) ? <ShellFooter /> : null}
-            </main>
-            <BottomBar />
-          </div>
-          <RunWatcher />
-          <AssetViewer />
-        </KeyDialogProvider>
-      </GenerateKeyProvider>
+      <KeyDialogProvider>
+        <div
+          data-slot="shell"
+          className="@container flex h-dvh flex-col bg-canvas"
+        >
+          <TopBar />
+          <main className="min-h-0 flex-1 overflow-y-auto">
+            <ShellContent>{children}</ShellContent>
+            {hasFooter(pathname) ? <ShellFooter /> : null}
+          </main>
+          <BottomBar />
+        </div>
+        <RunWatcher />
+        <AssetViewer />
+      </KeyDialogProvider>
     </ViewerProvider>
   )
 }

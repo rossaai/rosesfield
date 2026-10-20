@@ -1,25 +1,20 @@
 import { cleanup, fireEvent, screen, within } from "@testing-library/react"
 import type { ReactElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { ToolsKey } from "@/screens/app/tools-key"
 import { BottomBar } from "@/shell/bottom-bar"
-import { GenerateKeyProvider, useGenerateKey } from "@/shell/generate-key"
 import { renderAt } from "./shell-router"
 
 afterEach(cleanup)
 
 const openTools = vi.fn()
 
-function AppTools(): null {
-  useGenerateKey(openTools)
-  return null
-}
-
 function barWith(tools: boolean): () => ReactElement {
   return () => (
-    <GenerateKeyProvider>
+    <>
       <BottomBar />
-      {tools ? <AppTools /> : null}
-    </GenerateKeyProvider>
+      {tools ? <ToolsKey onOpen={openTools} /> : null}
+    </>
   )
 }
 
@@ -69,6 +64,12 @@ describe("the bottom bar", () => {
     fireEvent.click(within(bar).getByRole("button", { name: "Generate" }))
     expect(openTools).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole("dialog")).toBeNull()
+  })
+
+  it("stands in for the app screen's own tools key", async () => {
+    const bar = await barAt("/apps/image", true)
+    expect(bar).toBeTruthy()
+    expect(document.querySelector("[data-slot='app-tools-key']")).toBeNull()
   })
 
   it("opens the list of apps from Generate where no app is open", async () => {
