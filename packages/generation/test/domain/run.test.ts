@@ -119,6 +119,23 @@ describe("Run", () => {
     })
   })
 
+  it("shows no total cost while one of its jobs has no known cost", () => {
+    const run = queued("one")
+    const each = { amount: 0.01, currency: "USD" as const }
+    run.keepJob({ index: 0, outputs: [portraitId], cost: each, now: later })
+    run.keepJob({ index: 1, outputs: [referenceId], cost: null, now: later })
+    expect(run.toRecord()).toMatchObject({ status: "done", cost: null })
+  })
+
+  it("totals the cost of every job once each one is known", () => {
+    const run = queued("one")
+    const each = { amount: 0.01, currency: "USD" as const }
+    run.keepJob({ index: 0, outputs: [portraitId], cost: each, now: later })
+    expect(run.toRecord().cost).toBeNull()
+    run.keepJob({ index: 1, outputs: [referenceId], cost: each, now: later })
+    expect(run.toRecord().cost).toEqual({ amount: 0.02, currency: "USD" })
+  })
+
   it("finishes done with its outputs, full progress and the end time", () => {
     const run = queued()
     run.keepJob({ index: 0, outputs: [portraitId], now: later })
@@ -146,7 +163,7 @@ describe("Run", () => {
     (run: Run) =>
       run.submitted({ index: 0, ref: "x", models: [], workflowHash: null }),
     (run: Run) => run.keepJob({ index: 0, outputs: [], now: later }),
-    (run: Run) => run.submitting(0),
+    (run: Run) => run.submitting({ index: 0, now: later }),
     (run: Run) => run.retried(),
   ])("refuses a step after it was cancelled", (step) => {
     const run = queued()

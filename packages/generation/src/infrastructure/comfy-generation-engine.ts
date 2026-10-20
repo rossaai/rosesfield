@@ -33,17 +33,11 @@ import {
   parseComfyWorkflow,
   workflowHashOf,
 } from "#infrastructure/comfy/comfy-workflow-binding"
-import {
-  type CreditMeter,
-  costOfCredits,
-  creditsOfCost,
-} from "#infrastructure/credit-meter"
-import { RouterHttp } from "#infrastructure/router/router-http"
+import { costOfCredits, creditsOfCost } from "#infrastructure/credit-meter"
 
 type ComfyGenerationEngineOptions = {
   apiKey: string | null
   baseUrl?: string
-  meter?: CreditMeter
   fetch?: Fetch
   requestTimeoutMs?: number
   downloadTimeoutMs?: number
@@ -61,6 +55,7 @@ const jobSchema = z.object({
     "expired",
   ]),
   progress: z.object({ value: z.number().min(0).max(1) }).nullish(),
+  metrics: z.object({ execution_ms: z.number().min(0).nullish() }).nullish(),
   outputs: z
     .array(
       z.object({
@@ -86,6 +81,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
   static readonly requestTimeoutMs = 30_000
   static readonly downloadTimeoutMs = 300_000
   static readonly unknownJobId = "00000000-0000-0000-0000-000000000000"
+  static readonly gpuCreditsPerSecond = 0.266
   static readonly outputKinds: readonly string[] = [
     "image",
     "video",
@@ -98,29 +94,21 @@ export class ComfyGenerationEngine extends GenerationEngine {
   override readonly idempotency = "keyed"
 
   private readonly low: ComfyLow
+  private readonly requestTimeoutMs: number
   private readonly downloadTimeoutMs: number
-  private readonly meter: CreditMeter | null
-  private readonly balance: RouterHttp
+  private readonly isCloud: boolean
 
   constructor(options: ComfyGenerationEngineOptions) {
     super()
     const baseUrl = options.baseUrl ?? ComfyGenerationEngine.cloudUrl
-    const isCloud = baseUrl === ComfyGenerationEngine.cloudUrl
-    this.meter = isCloud ? (options.meter ?? null) : null
-    this.balance = new RouterHttp({
-      apiKey: options.apiKey,
-      fetch: options.fetch ?? fetch,
-      timeoutMs:
-        options.requestTimeoutMs ?? ComfyGenerationEngine.requestTimeoutMs,
-      downloadTimeoutMs:
-        options.requestTimeoutMs ?? ComfyGenerationEngine.requestTimeoutMs,
-    })
+    this.isCloud = baseUrl === ComfyGenerationEngine.cloudUrl
+    this.requestTimeoutMs =
+      options.requestTimeoutMs ?? ComfyGenerationEngine.requestTimeoutMs
     this.low = createComfyLow({
       baseUrl,
       apiKey: options.apiKey,
-      fetch: options.fetch ?? fetch,
-      timeoutMs:
-        options.requestTimeoutMs ?? ComfyGenerationEngine.requestTimeoutMs,
+      fetch: options.fetch ?? ((input, init) => fetch(input, init)),
+      timeoutMs: this.requestTimeoutMs,
     })
     this.downloadTimeoutMs =
       options.downloadTimeoutMs ?? ComfyGenerationEngine.downloadTimeoutMs
@@ -149,19 +137,16 @@ export class ComfyGenerationEngine extends GenerationEngine {
         return { __type: "core/ASSET", info: { id } }
       },
     })
-    const ticket = (await this.meter?.start(this.balance)) ?? null
-    const job = await this.post(workflow, request.idempotencyKey).catch(
-      (error: unknown) => {
-        this.meter?.drop(ticket)
-        throw error
-      }
-    )
-    this.meter?.bind(ticket, job.id)
+    const job = await this.post(workflow, request.idempotencyKey)
     return {
       ref: job.id,
       models: config.models ?? [],
       workflowHash: await workflowHashOf(config.workflow),
     }
+  }
+
+  override submitLimitMs(): number {
+    return 2 * this.requestTimeoutMs
   }
 
   override creditsOf(cost: Cost): number {
@@ -181,13 +166,11 @@ export class ComfyGenerationEngine extends GenerationEngine {
           retryAfterSeconds: null,
         }
       case "succeeded":
-        return this.succeeded(ref)
+        return this.succeeded(job)
       case "canceled":
-        this.meter?.dropRef(ref)
         return { state: "cancelled" }
       case "failed":
       case "expired":
-        this.meter?.dropRef(ref)
         return {
           state: "failed",
           error: jobFailureOf(
@@ -210,7 +193,6 @@ export class ComfyGenerationEngine extends GenerationEngine {
   }
 
   override async cancel(ref: string): Promise<void> {
-    this.meter?.dropRef(ref)
     await callComfy(() => this.low.cancelJob(ref))
   }
 
@@ -223,12 +205,17 @@ export class ComfyGenerationEngine extends GenerationEngine {
     }
   }
 
-  private async succeeded(ref: string): Promise<EngineStatus> {
-    if (this.meter === null) {
+  private succeeded(job: Job): EngineStatus {
+    const executionMs = job.metrics?.execution_ms ?? null
+    if (!this.isCloud || executionMs === null) {
       return { state: "succeeded" }
     }
-    const credits = await this.meter.finishRef(this.balance, ref)
-    return { state: "succeeded", cost: costOfCredits(credits) }
+    const credits =
+      (executionMs / 1000) * ComfyGenerationEngine.gpuCreditsPerSecond
+    return {
+      state: "succeeded",
+      cost: costOfCredits(Math.round(credits * 1_000_000) / 1_000_000),
+    }
   }
 
   private async post(

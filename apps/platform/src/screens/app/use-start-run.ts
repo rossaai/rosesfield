@@ -26,13 +26,14 @@ export type StartRun = {
 const priceDelayMs = 300
 
 function hostedBodyOf(
+  app: AppListing,
   form: AppForm,
   hosted: HostedState | undefined
 ): StartRunBodyInput | null {
   const chosen = hosted?.chosen
   return chosen === null || chosen === undefined || chosen.form === null
     ? null
-    : hostedBody(chosen.id, chosen.form, form.values)
+    : hostedBody(chosen.id, chosen.form, form.values, app.output.kind)
 }
 
 function usePrice(
@@ -59,8 +60,8 @@ export function useStartRun(
 ): StartRun {
   const client = useQueryClient()
   const settings = useQuery(settingsQuery)
-  const hostedRun = hostedBodyOf(form, hosted)
-  const isDemo = settings.data?.engine.origin === "demo" && hostedRun === null
+  const hostedRun = hostedBodyOf(app, form, hosted)
+  const isDemo = settings.data?.engine.origin === "demo"
   const credits = usePrice(
     app,
     isDemo ? null : (hostedRun ?? bodyOf(app, form.values)),

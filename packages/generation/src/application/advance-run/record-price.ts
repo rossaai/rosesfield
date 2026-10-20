@@ -18,10 +18,11 @@ export async function recordPrice(
   record: PriceRecord
 ): Promise<void> {
   const { run, app, engine, cost } = record
-  if (prices === null || cost === null || run.jobs.length !== 1) {
+  if (prices === null || cost === null) {
     return
   }
-  const { inputs, count, aspectRatio } = run.toRecord()
+  const { inputs, aspectRatio } = run.toRecord()
+  const count = run.jobs.length > 1 ? 1 : run.toRecord().count
   const form = await engine.formOf(resolveBinding(app.engine, inputs))
   await prices.keep({
     ...pricedRunOf({ app, inputs, form, count, aspectRatio }),

@@ -1,5 +1,18 @@
+export {
+  type FieldRole,
+  fieldOfRole,
+  fieldRoleOf,
+  fieldRoles,
+  inputRoleOf,
+  isOneAtATime,
+} from "#domain/field-role"
 export type { HostedModel } from "#domain/generation-engine.port"
-export type { MediaKind, ModelField, ModelForm } from "#domain/model-form"
+export {
+  checkModelInputs,
+  type MediaKind,
+  type ModelField,
+  type ModelForm,
+} from "#domain/model-form"
 export { ModelPolicy } from "#domain/model-policy.port"
 export { selectAdapter, selectBinding } from "#domain/select-binding"
 export {

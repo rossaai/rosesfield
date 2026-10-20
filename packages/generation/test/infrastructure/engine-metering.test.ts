@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { FixedClock } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import type { EngineRequest } from "#domain/generation-engine.port"
@@ -57,6 +58,14 @@ function routerWith(recordings: Recording[]) {
 }
 
 describe("the real credits of a run", () => {
+  it("are read inside the time a Router submit claims", () => {
+    const { engine } = routerWith([])
+    const longest =
+      ComfyRouterGenerationEngine.downloadTimeoutMs +
+      (CreditMeter.settleTries - 1) * CreditMeter.settleMs
+    expect(engine.submitLimitMs()).toBeGreaterThan(longest)
+  })
+
   it("come from the balance route before and after a Router run", async () => {
     const { engine, replay } = routerWith([
       catalogPage([pictureModel]),
@@ -64,6 +73,7 @@ describe("the real credits of a run", () => {
       balance(1000),
       submitted(),
       queueStatus("COMPLETED"),
+      balance(999.5),
       balance(999.5),
     ])
     const submission = await engine.submit(
@@ -77,23 +87,31 @@ describe("the real credits of a run", () => {
     expect(replay.unused()).toEqual([])
   })
 
-  it("come from the balance route before and after a graph on Comfy Cloud", async () => {
+  it("price a graph second at the RTX PRO 6000 rate docs/stack.md lists for Comfy Cloud", () => {
+    const stack = readFileSync(
+      new URL("../../../../docs/stack.md", import.meta.url),
+      "utf8"
+    )
+    const usdPerHour = Number(/RTX PRO 6000 ([\d.]+) USD/.exec(stack)?.[1])
+    const creditsPerUsd = Number(/at (\d+) credits per USD/.exec(stack)?.[1])
+    const perSecond = (usdPerHour * creditsPerUsd) / 3600
+    expect(Math.round(perSecond * 1000) / 1000).toBe(
+      ComfyGenerationEngine.gpuCreditsPerSecond
+    )
+  })
+
+  it("come from the execution_ms Comfy reports at the GPU rate for a graph on Comfy Cloud", async () => {
     const v2 = comfyV2At(cloudUrl)
-    const replay = new ReplayFetch([
-      balance(1000),
-      v2.submit(),
-      v2.read(succeededJob),
-      balance(999),
-    ])
+    const replay = new ReplayFetch([v2.submit(), v2.read(succeededJob)])
     const engine = new ComfyGenerationEngine({
       apiKey: "comfyui-key",
-      meter: meter(),
       fetch: replay.fetch,
     })
     const submission = await engine.submit(request(workflowBinding))
-    expect(await engine.read(submission.ref)).toEqual({
+    const status = await engine.read(submission.ref)
+    expect(status).toEqual({
       state: "succeeded",
-      cost: { amount: 2.11 / 211, currency: "USD" },
+      cost: { amount: 11.172 / 211, currency: "USD" },
     })
     expect(replay.unused()).toEqual([])
   })
@@ -104,7 +122,6 @@ describe("the real credits of a run", () => {
     const engine = new ComfyGenerationEngine({
       apiKey: null,
       baseUrl: proxyUrl,
-      meter: meter(),
       fetch: replay.fetch,
     })
     const submission = await engine.submit(request(workflowBinding))

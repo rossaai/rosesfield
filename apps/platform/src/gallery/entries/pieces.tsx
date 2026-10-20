@@ -7,7 +7,7 @@ import {
   PromptBar,
 } from "@rosesfield/ui/components/prompt-bar"
 import { AtSignIcon, PaperclipIcon } from "lucide-react"
-import { type ReactElement, useState } from "react"
+import { type ReactElement, type ReactNode, useState } from "react"
 import { catalogApps } from "@/catalog/catalog-apps"
 import { withUnit } from "@/copy/format"
 import { tCatalog, tCount, t as tPlatform } from "@/copy/t"
@@ -15,6 +15,7 @@ import { type GalleryKey, t } from "@/gallery/copy.en"
 import demoSquare from "@/gallery/fixtures/demo-image-1-1.png"
 import demoWide from "@/gallery/fixtures/demo-image-16-9.png"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
+import { chipIconOf, inputIconOf } from "@/screens/app/bar/setting-chip"
 import { inputCaption, inputUnit } from "@/screens/app/fields/input-copy"
 import { aspectItems } from "@/screens/app/fields/output-fields"
 
@@ -55,12 +56,14 @@ function Chips(): ReactElement {
     <>
       <ChipSelect
         label={t("sample.format")}
+        icon={chipIconOf("aspect")}
         value={format}
         onValueChange={setFormat}
         options={formats}
       />
       <ChipSelect
         label={t("sample.count")}
+        icon={chipIconOf("count")}
         value={count}
         onValueChange={setCount}
         options={counts}
@@ -179,7 +182,7 @@ function inputChip(
 function chipOf(
   app: AppListing,
   spec: ChipSpec
-): { caption: string; text: string } | null {
+): { caption: string; text: string; icon?: ReactNode } | null {
   switch (spec.kind) {
     case "model":
       return inputChip(app, "model")
@@ -187,6 +190,7 @@ function chipOf(
       return {
         caption: tPlatform("field.aspect.label"),
         text: longest(aspectItems(app).map((item) => item.label)),
+        icon: chipIconOf("aspect"),
       }
     case "count":
       return {
@@ -195,9 +199,15 @@ function chipOf(
           app.output.kind === "video" ? "bar.count.video" : "bar.count.image",
           app.output.count.max
         ),
+        icon: chipIconOf("count"),
       }
-    case "input":
-      return inputChip(app, spec.name)
+    case "input": {
+      const chip = inputChip(app, spec.name)
+      const input = app.inputs.find((one) => one.name === spec.name)
+      return chip === null || input === undefined
+        ? chip
+        : { ...chip, icon: inputIconOf(app, input) }
+    }
   }
 }
 
@@ -227,7 +237,7 @@ function LongestChipsBar({
         const chip = chipOf(app, spec)
         return chip === null ? null : (
           // biome-ignore lint/suspicious/noArrayIndexKey: the specs are a fixed list
-          <Chip key={index} caption={chip.caption}>
+          <Chip key={index} caption={chip.caption} icon={chip.icon}>
             {chip.text}
           </Chip>
         )
@@ -286,6 +296,25 @@ const chipSelect: GalleryEntry = {
           className="flex gap-s2 rounded-vessel bg-surface p-s3"
         >
           <Chips />
+        </div>
+      ),
+    },
+    {
+      id: "not-set",
+      label: "state.notSet",
+      render: () => (
+        <div
+          data-ground="surface"
+          className="flex gap-s2 rounded-vessel bg-surface p-s3"
+        >
+          <ChipSelect
+            label={t("sample.resolution")}
+            icon={chipIconOf("resolution")}
+            value=""
+            display={tPlatform("bar.notSet", { field: t("sample.resolution") })}
+            onValueChange={() => undefined}
+            options={formats}
+          />
         </div>
       ),
     },

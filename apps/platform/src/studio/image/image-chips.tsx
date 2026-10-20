@@ -1,10 +1,14 @@
-import type { ModelField } from "@rosesfield/catalog/comfy"
+import { fieldRoleOf, type ModelField } from "@rosesfield/catalog/comfy"
 import type { AppListing } from "@rosesfield/contract"
 import { ChipSelect } from "@rosesfield/ui/components/chip-select"
 import type { ReactElement } from "react"
 import { t, tCount } from "@/copy/t"
 import { aspectField, countField } from "@/screens/app/app-form"
-import { SettingChip, StepperChip } from "@/screens/app/bar/setting-chip"
+import {
+  chipIconOf,
+  SettingChip,
+  StepperChip,
+} from "@/screens/app/bar/setting-chip"
 import { fieldCaption } from "@/screens/app/hosted/hosted-fields"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { countBoundsOf, type ImageFields } from "@/studio/image/image-fields"
@@ -26,8 +30,11 @@ export function FieldChoiceChip({
   return (
     <ChipSelect
       label={fieldCaption(field)}
+      icon={chipIconOf(fieldRoleOf(field, "image"))}
       value={chosen}
-      display={chosen === "" ? fieldCaption(field) : chosen}
+      display={
+        chosen === "" ? t("bar.notSet", { field: fieldCaption(field) }) : chosen
+      }
       onValueChange={(next) =>
         form.setInput(
           field.name,
@@ -54,6 +61,7 @@ function FieldCountChip({
     <StepperChip
       {...bounds}
       label={t("field.count.label")}
+      icon={chipIconOf("count")}
       shown={tCount("bar.count.image", bounds.value)}
       step={1}
       unit=""
@@ -63,9 +71,11 @@ function FieldCountChip({
 }
 
 export function HostedSettingChips({
+  app,
   fields,
   form,
 }: {
+  app: AppListing
   fields: ImageFields
   form: AppForm
 }): ReactElement {
@@ -80,6 +90,9 @@ export function HostedSettingChips({
       {fields.count === null ? null : (
         <FieldCountChip field={fields.count} form={form} />
       )}
+      {fields.isOneAtATime ? (
+        <SettingChip app={app} form={form} name={countField} />
+      ) : null}
     </>
   )
 }

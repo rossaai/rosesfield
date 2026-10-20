@@ -1,4 +1,5 @@
 import { type CallToolResult, McpServer } from "@modelcontextprotocol/server"
+import type { ModelForm } from "@rosesfield/catalog/comfy"
 import {
   type AppDefinition,
   buildPath,
@@ -15,6 +16,7 @@ import gatewayPackage from "../../package.json" with { type: "json" }
 
 export type CatalogServerOptions = {
   apps: readonly AppDefinition[]
+  forms: readonly ModelForm[]
   scope: RequestScope
 }
 
@@ -41,7 +43,7 @@ export function catalogMcpServer(options: CatalogServerOptions): McpServer {
       app.id,
       {
         description: gatewayCopy.mcp.toolDescription(app.id, app.output.kind),
-        inputSchema: startRunInputOf(app),
+        inputSchema: startRunInputOf(app, options.forms),
         outputSchema: runResponse,
         annotations: {
           readOnlyHint: false,

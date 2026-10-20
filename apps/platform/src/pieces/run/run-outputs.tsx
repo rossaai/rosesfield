@@ -1,13 +1,15 @@
 import type { Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
+import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { Progress } from "@rosesfield/ui/components/progress"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { WorkingPulse } from "@rosesfield/ui/components/working-pulse"
 import { motion } from "@rosesfield/ui/motion"
+import { useQueries } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import type { ReactElement, ReactNode } from "react"
-import { isWorking } from "@/api/queries"
+import { assetQuery, isWorking } from "@/api/queries"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { wordsForCode } from "@/copy/error-words"
 import { formatDuration } from "@/copy/format"
@@ -98,8 +100,22 @@ function WorkingRun({ run }: { run: Run }): ReactElement {
   )
 }
 
+function useOutputAspects(run: Run): MediaAspect[] {
+  const fallback = runAspect(run)
+  const assets = useQueries({
+    queries: run.outputs.map((assetId) => assetQuery(assetId)),
+  })
+  return assets.map((one) => {
+    const asset = one.data?.asset
+    return asset === undefined || asset.width === null || asset.height === null
+      ? fallback
+      : { width: asset.width, height: asset.height }
+  })
+}
+
 function DoneRun({ run, list }: RunOutputsProps): ReactElement {
   const aspect = runAspect(run)
+  const aspects = useOutputAspects(run)
   const kind = outputKindOf(run)
   if (kind === "audio" || kind === "text") {
     return (
@@ -115,13 +131,13 @@ function DoneRun({ run, list }: RunOutputsProps): ReactElement {
     )
   }
   return (
-    <OutputRow aspects={run.outputs.map(() => aspect)}>
+    <OutputRow aspects={aspects}>
       {(index) => {
         const assetId = run.outputs[index]
         return assetId === undefined ? null : (
           <AssetTile
             assetId={assetId}
-            aspectHint={aspect}
+            aspectHint={aspects[index] ?? aspect}
             isDemo={run.origin === "demo"}
             list={list ?? run.outputs}
             className={motion.enter}

@@ -54,6 +54,10 @@ export class DemoGenerationEngine extends GenerationEngine {
     return "all"
   }
 
+  override submitLimitMs(): number {
+    return 0
+  }
+
   override async submit(request: EngineRequest): Promise<EngineSubmission> {
     const side =
       request.outputKind === "video"

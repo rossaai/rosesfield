@@ -1,3 +1,4 @@
+import { isHostedModelId } from "@rosesfield/catalog/comfy"
 import type {
   AppListing,
   InputDefinition,
@@ -7,6 +8,7 @@ import type {
 import type { SchemaInput } from "@/api/call-route"
 import { defaultAspectOf } from "@/catalog/app-facts"
 import type { CopyKey } from "@/copy.en"
+import { modelInputName } from "@/pieces/run/run-facts"
 
 export type FieldValue = string | number | string[] | undefined
 
@@ -57,8 +59,16 @@ export function defaultsOf(app: AppListing): FormValues {
   }
 }
 
+export function isHostedRun(run: Run): boolean {
+  const model = run.inputs[modelInputName]
+  return typeof model === "string" && isHostedModelId(model)
+}
+
 export function valuesFromRun(app: AppListing, run: Run): FormValues {
   const base = defaultsOf(app)
+  if (isHostedRun(run)) {
+    return { ...base, inputs: { ...run.inputs }, count: run.count }
+  }
   const inputs: Record<string, FieldValue> = { ...base.inputs }
   for (const input of app.inputs) {
     const value = run.inputs[input.name]

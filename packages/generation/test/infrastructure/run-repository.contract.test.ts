@@ -58,6 +58,27 @@ describe.each(subjects)("RunRepository contract: $name", ({ create }) => {
     expect(read?.toState()).toEqual(stored.toState())
   })
 
+  it("keeps the cost of each job that finished", async () => {
+    const runs = create()
+    const run = Run.queue({
+      id: runIdFormat.parse(crypto.randomUUID()),
+      appId: appIdFormat.parse("sample-image"),
+      request: { inputs: { prompt: "a door" }, count: 2, aspectRatio: null },
+      seed: 7,
+      adapter: "fake-engine",
+      origin: "live",
+      idempotencyKey: null,
+      now: start,
+      outputsPerJob: "one",
+    })
+    const each = { amount: 0.01, currency: "USD" as const }
+    run.keepJob({ index: 0, outputs: [portraitId], cost: each, now: start })
+    await runs.add(run)
+    const read = await runs.get(run.id)
+    read?.keepJob({ index: 1, outputs: [portraitId], cost: each, now: start })
+    expect(read?.toRecord().cost).toEqual({ amount: 0.02, currency: "USD" })
+  })
+
   it("keeps the time a job began collecting its result", async () => {
     const runs = create()
     const run = runAt(0)
@@ -83,7 +104,7 @@ describe.each(subjects)("RunRepository contract: $name", ({ create }) => {
       now: start,
       outputsPerJob: "one",
     })
-    run.submitting(1)
+    run.submitting({ index: 1, now: start })
     run.submitted({ index: 2, ref: "job-3", models: [], workflowHash: null })
     run.keepJob({ index: 2, outputs: [portraitId], now: start })
     const stored = await runs.add(run)

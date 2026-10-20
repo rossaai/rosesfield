@@ -1,3 +1,4 @@
+import { fieldRoleOf } from "@rosesfield/catalog/comfy"
 import type { AppListing } from "@rosesfield/contract"
 import { ChipSelect } from "@rosesfield/ui/components/chip-select"
 import { Switch } from "@rosesfield/ui/components/switch"
@@ -6,7 +7,11 @@ import { type ReactElement, useId } from "react"
 import { withUnit } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { aspectField } from "@/screens/app/app-form"
-import { SettingChip, StepperChip } from "@/screens/app/bar/setting-chip"
+import {
+  chipIconOf,
+  SettingChip,
+  StepperChip,
+} from "@/screens/app/bar/setting-chip"
 import { numberOf, textOf } from "@/screens/app/fields/field-props"
 import type { AppForm } from "@/screens/app/use-app-form"
 import type { ChipField, VideoFields } from "@/studio/video/video-fields"
@@ -34,6 +39,7 @@ function FieldChip({
   shown: (value: string | number) => string
 }): ReactElement {
   const value = form.values.inputs[field.name]
+  const icon = chipIconOf(fieldRoleOf(field, "video"))
   if (field.kind === "number") {
     const min = field.min ?? 0
     const chosen = numberOf(value, field.default ?? min)
@@ -41,6 +47,7 @@ function FieldChip({
       <StepperChip
         label={label}
         shown={shown(chosen)}
+        icon={icon}
         value={chosen}
         min={min}
         max={field.max ?? min}
@@ -54,8 +61,11 @@ function FieldChip({
   return (
     <ChipSelect
       label={label}
+      icon={icon}
       value={current}
-      display={current === "" ? label : shown(current)}
+      display={
+        current === "" ? t("bar.notSet", { field: label }) : shown(current)
+      }
       onValueChange={(next) =>
         form.setInput(
           field.name,

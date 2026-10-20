@@ -1,4 +1,4 @@
-import type { ModelField } from "@rosesfield/catalog/comfy"
+import { isOneAtATime, type ModelField } from "@rosesfield/catalog/comfy"
 import type {
   FieldProblem,
   FieldValue,
@@ -52,7 +52,8 @@ function isEmpty(value: FieldValue): boolean {
 export function hostedBody(
   model: string,
   fields: readonly ModelField[],
-  values: FormValues
+  values: FormValues,
+  output: string
 ): StartRunBodyInput {
   const inputs: Record<string, string | number | string[]> = {
     [modelInputName]: model,
@@ -63,15 +64,29 @@ export function hostedBody(
       inputs[field.name] = value
     }
   }
-  return { inputs }
+  return isOneAtATime(fields, output) && values.count > 1
+    ? { inputs, count: values.count }
+    : { inputs }
+}
+
+function missingKeyOf(field: ModelField): FieldProblem["key"] {
+  switch (field.kind) {
+    case "media":
+      return "field.asset.required"
+    case "prompt":
+    case "text":
+      return "field.prompt.required"
+    case "number":
+      return "field.number.required"
+    default:
+      return "field.choice.required"
+  }
 }
 
 function problemOf(field: ModelField, value: FieldValue): FieldProblem | null {
   const name = field.name
   if (field.required && isEmpty(value)) {
-    return field.kind === "media"
-      ? { name, key: "field.asset.required", values: {} }
-      : { name, key: "field.prompt.required", values: {} }
+    return { name, key: missingKeyOf(field), values: {} }
   }
   if (
     field.kind === "media" &&

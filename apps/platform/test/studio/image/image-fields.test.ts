@@ -152,6 +152,22 @@ describe("the Image bar places each field its model's schema declares", () => {
     expect(imageFieldsOf([sizedChoice]).size?.name).toBe("size")
   })
 
+  it("shows the count chip for a model whose count field takes at most 1", () => {
+    const single: ModelField = {
+      name: "n",
+      path: "n",
+      required: false,
+      kind: "number",
+      min: 1,
+      max: 1,
+      integer: true,
+      default: 1,
+    }
+    const placed = imageFieldsOf([...fluxThree, single])
+    expect(placed.count).toBeNull()
+    expect(placed.isOneAtATime).toBe(true)
+  })
+
   it("tells a graph from a hosted model by its id", () => {
     expect(isGraphModel("z-image-turbo")).toBe(true)
     expect(isGraphModel("bfl/flux-3-image")).toBe(false)

@@ -5,7 +5,9 @@ import { tCatalog } from "@/copy/t"
 import {
   headlineSource,
   inputValueText,
+  runAspect,
   runCaption,
+  runModel,
 } from "@/pieces/run/run-facts"
 
 const assetId = "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c01"
@@ -202,5 +204,35 @@ describe("inputValueText", () => {
       return
     }
     expect(inputValueText(expand, top, 25)).toBe("25%")
+  })
+})
+
+describe("a Router run's facts", () => {
+  const hosted = (inputs: Record<string, unknown>) =>
+    runOf({
+      appId: "image",
+      origin: "live",
+      aspectRatio: null,
+      engine: {
+        adapter: "comfy-router",
+        models: ["bfl/flux-3-image"],
+        workflowHash: null,
+      },
+      inputs: { model: "bfl/flux-3-image", prompt: "a fox", ...inputs },
+    })
+
+  it("names the model as the catalog does on the run line", () => {
+    expect(runModel(hosted({}), findCatalogApp("image"))).toBe("FLUX 3 Image")
+  })
+
+  it("takes the aspect from the model's own aspect input", () => {
+    expect(runAspect(hosted({ aspectRatio: "16:9" }))).toEqual({
+      width: 16,
+      height: 9,
+    })
+    expect(runAspect(hosted({ ratio: "9:16" }))).toEqual({
+      width: 9,
+      height: 16,
+    })
   })
 })

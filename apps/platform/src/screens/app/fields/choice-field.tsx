@@ -24,6 +24,7 @@ type ChoiceControlProps = {
   value: string
   onChange: (value: string) => void
   register?: (focus: () => void) => void
+  notSet?: string
 }
 
 export const segmentLimit = 4
@@ -102,7 +103,8 @@ function SegmentsOrSelect(props: ChoiceControlProps): ReactElement {
 }
 
 export function ChoiceControl(props: ChoiceControlProps): ReactElement {
-  if (props.items.length <= segmentLimit) {
+  const isUnset = props.notSet !== undefined && props.value === ""
+  if (props.items.length <= segmentLimit && !isUnset) {
     return <SegmentsOrSelect {...props} />
   }
   return <ChoiceSelect {...props} />
@@ -130,7 +132,13 @@ function ChoiceSelect(props: ChoiceControlProps): ReactElement {
         aria-label={props.label}
         className="max-w-none"
       >
-        <SelectValue />
+        <SelectValue>
+          {(value: unknown) =>
+            props.items.find((item) => item.value === value)?.label ??
+            props.notSet ??
+            ""
+          }
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {props.items.map((item) => (

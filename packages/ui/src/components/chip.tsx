@@ -7,16 +7,18 @@ import {
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { ChevronDownIcon } from "lucide-react"
-import type { ReactElement } from "react"
+import type { ReactElement, ReactNode } from "react"
 
 type ChipProps = Omit<ButtonProps, "size" | "children"> & {
   children: string
   caption?: string
+  icon?: ReactNode
 }
 
 function Chip({
   children,
   caption,
+  icon,
   className,
   ...props
 }: ChipProps): ReactElement {
@@ -29,6 +31,15 @@ function Chip({
     >
       {caption === undefined ? null : (
         <span className="sr-only">{`${caption} `}</span>
+      )}
+      {icon === undefined ? null : (
+        <span
+          aria-hidden="true"
+          data-slot="chip-icon"
+          className="flex shrink-0 text-ink-muted [&_svg]:glyph-small"
+        >
+          {icon}
+        </span>
       )}
       <span className="min-w-0 truncate">{children}</span>
       <ChevronDownIcon

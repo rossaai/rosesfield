@@ -1,15 +1,16 @@
-import type { HostedModel, ModelField } from "@rosesfield/generation/bindings"
+import {
+  fieldOfRole,
+  fieldRoleOf,
+  type HostedModel,
+  type ModelField,
+} from "@rosesfield/generation/bindings"
 import type { ModelTag } from "#comfy/model-catalog.contract"
-
-const resolutionNames = /^(resolution|output_resolution|size|quality)$/
-
-const lengthNames =
-  /^(duration|duration_seconds|durationseconds|seconds|length)$/i
 
 export function hostedTagsOf(model: HostedModel): ModelTag[] {
   const fields = model.form?.fields ?? []
+  const output = model.makes.includes("video") ? "video" : "image"
   const tags: ModelTag[] = [{ kind: "hosted" }]
-  if (model.makes.includes("video")) {
+  if (output === "video") {
     const resolution = topResolutionOf(fields)
     const length = lengthOf(fields)
     if (resolution !== null) {
@@ -18,12 +19,15 @@ export function hostedTagsOf(model: HostedModel): ModelTag[] {
     if (length !== null) {
       tags.push({ kind: "length", ...length })
     }
-    if (model.makes.includes("audio") || hasSoundToggle(fields)) {
+    if (
+      model.makes.includes("audio") ||
+      fieldOfRole(fields, "sound", output) !== null
+    ) {
       tags.push({ kind: "sound" })
     }
   }
   const references = fields.find(
-    (field) => field.kind === "media" && field.media === "image"
+    (field) => fieldRoleOf(field, output) === "reference"
   )
   if (references?.kind === "media" && references.max > 1) {
     tags.push({ kind: "references", max: references.max })
@@ -32,9 +36,9 @@ export function hostedTagsOf(model: HostedModel): ModelTag[] {
 }
 
 export function topResolutionOf(fields: readonly ModelField[]): string | null {
-  const field = fields.find(
-    (one) => one.kind === "choice" && resolutionNames.test(lastOf(one.path))
-  )
+  const field =
+    fieldOfRole(fields, "resolution", "video") ??
+    fieldOfRole(fields, "quality", "video")
   if (field?.kind !== "choice") {
     return null
   }
@@ -52,7 +56,7 @@ export function topResolutionOf(fields: readonly ModelField[]): string | null {
 export function lengthOf(
   fields: readonly ModelField[]
 ): { min: number; max: number } | null {
-  const field = fields.find((one) => lengthNames.test(lastOf(one.path)))
+  const field = fieldOfRole(fields, "length", "video")
   if (field?.kind === "number" && field.min !== null && field.max !== null) {
     return { min: field.min, max: field.max }
   }
@@ -65,13 +69,6 @@ export function lengthOf(
       : { min: Math.min(...values), max: Math.max(...values) }
   }
   return null
-}
-
-function hasSoundToggle(fields: readonly ModelField[]): boolean {
-  return fields.some(
-    (field) =>
-      field.kind === "toggle" && /audio|sound/i.test(lastOf(field.path))
-  )
 }
 
 function heightOf(value: string): number | null {
@@ -88,8 +85,4 @@ function heightOf(value: string): number | null {
   }
   const sized = /^(\d{3,4})[x*](\d{3,4})$/.exec(lower)
   return sized === null ? null : Math.min(Number(sized[1]), Number(sized[2]))
-}
-
-function lastOf(path: string): string {
-  return path.split(".").at(-1) ?? path
 }

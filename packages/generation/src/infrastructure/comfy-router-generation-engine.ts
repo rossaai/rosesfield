@@ -7,6 +7,7 @@ import type {
 import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import { ModelNotFoundError } from "#domain/error/model-not-found.error"
 import { RunFailedError } from "#domain/error/run-failed.error"
+import { isOneAtATime } from "#domain/field-role"
 import {
   type EngineOutput,
   type EngineRequest,
@@ -74,7 +75,7 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     this.meter = options.meter ?? null
     this.http = new RouterHttp({
       apiKey: options.apiKey,
-      fetch: options.fetch ?? fetch,
+      fetch: options.fetch ?? ((input, init) => fetch(input, init)),
       timeoutMs:
         options.requestTimeoutMs ??
         ComfyRouterGenerationEngine.requestTimeoutMs,
@@ -90,6 +91,10 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
 
   override checksKey(): boolean {
     return false
+  }
+
+  override submitsAlone(): boolean {
+    return this.meter !== null
   }
 
   override canRun(binding: EngineBinding): boolean {
@@ -130,7 +135,13 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     }
     try {
       const rows = await this.catalog.rateRows(this.http)
-      const credits = priceFromRates(rows, entry.form, request.inputs)
+      const credits = priceFromRates(
+        rows,
+        entry.form,
+        request.inputs,
+        outputOf(entry),
+        request.count
+      )
       return credits === null ? unknownPrice : { source: "rates", credits }
     } catch {
       return unknownPrice
@@ -149,6 +160,13 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
       this.meter?.drop(ticket)
       throw error
     }
+  }
+
+  override submitLimitMs(): number {
+    const { requestTimeoutMs, downloadTimeoutMs } = this.http
+    const metered =
+      this.meter === null ? 0 : CreditMeter.longestMs(requestTimeoutMs)
+    return requestTimeoutMs + 2 * downloadTimeoutMs + metered
   }
 
   override creditsOf(cost: Cost): number {
@@ -296,13 +314,20 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
         this.catalog.markEstimatesOff(keyTag)
         return null
       }
+      const each = isOneAtATime(entry.form.fields, outputOf(entry))
+        ? request.count
+        : 1
       return answer.credits === null
         ? null
-        : { source: "estimate", credits: answer.credits }
+        : { source: "estimate", credits: answer.credits * each }
     } catch {
       return null
     }
   }
+}
+
+function outputOf(entry: CatalogEntry): string {
+  return entry.facts.makes[0] ?? ""
 }
 
 function creditsOf(response: Response): number | null {

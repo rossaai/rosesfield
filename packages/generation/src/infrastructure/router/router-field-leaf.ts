@@ -6,7 +6,7 @@ import {
   stringOf,
 } from "#infrastructure/router/router-json"
 
-const promptKeys: readonly string[] = [
+export const promptKeys: readonly string[] = [
   "prompt",
   "promptText",
   "prompt_text",

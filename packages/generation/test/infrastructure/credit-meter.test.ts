@@ -34,6 +34,7 @@ describe("CreditMeter", () => {
     const { http, replay } = readerOf([
       balance(1990.054531034),
       balance(1989.491133914),
+      balance(1989.491133914),
     ])
     const ticket = await meter.start(http)
     meter.bind(ticket, "run-1")
@@ -56,28 +57,66 @@ describe("CreditMeter", () => {
 
   it("keeps runs of two accounts apart", async () => {
     const { meter } = meterAt()
-    const one = readerOf([balance(1000), balance(999)], "first-key")
-    const two = readerOf([balance(500), balance(498)], "second-key")
+    const one = readerOf(
+      [balance(1000), balance(999), balance(999)],
+      "first-key"
+    )
+    const two = readerOf(
+      [balance(500), balance(498), balance(498)],
+      "second-key"
+    )
     const first = await meter.start(one.http)
     const second = await meter.start(two.http)
     expect(await meter.finish(one.http, first)).toBe(2.11)
     expect(await meter.finish(two.http, second)).toBe(4.22)
   })
 
-  it("waits for the charge to post, then reads it", async () => {
+  it("waits for the charge to post, then reads it once it holds still", async () => {
     const { meter, waits } = meterAt()
-    const { http } = readerOf([balance(1000), balance(1000), balance(999)])
+    const { http } = readerOf([
+      balance(1000),
+      balance(1000),
+      balance(999),
+      balance(999),
+    ])
     const ticket = await meter.start(http)
     expect(await meter.finish(http, ticket)).toBe(2.11)
-    expect(waits).toEqual([2000])
+    expect(waits).toEqual([2000, 2000])
+  })
+
+  it("keeps the whole charge when it reaches the balance in two steps", async () => {
+    const { meter } = meterAt()
+    const { http } = readerOf([
+      balance(1000),
+      balance(999),
+      balance(996),
+      balance(996),
+    ])
+    const ticket = await meter.start(http)
+    meter.bind(ticket, "run-1")
+    expect(await meter.finishRef(http, "run-1")).toBe(
+      4 * CreditMeter.creditsPerCent
+    )
+  })
+
+  it("keeps the whole charge when it reaches the balance in one step", async () => {
+    const { meter } = meterAt()
+    const { http } = readerOf([balance(1000), balance(996), balance(996)])
+    const ticket = await meter.start(http)
+    meter.bind(ticket, "run-1")
+    expect(await meter.finishRef(http, "run-1")).toBe(
+      4 * CreditMeter.creditsPerCent
+    )
   })
 
   it("measures nothing for a run that charged nothing it could see", async () => {
     const { meter, waits } = meterAt()
-    const { http } = readerOf(Array.from({ length: 6 }, () => balance(1000)))
+    const { http } = readerOf(
+      Array.from({ length: CreditMeter.settleTries + 1 }, () => balance(1000))
+    )
     const ticket = await meter.start(http)
     expect(await meter.finish(http, ticket)).toBeNull()
-    expect(waits).toHaveLength(4)
+    expect(waits).toHaveLength(CreditMeter.settleTries - 1)
   })
 
   it("measures nothing without a key", async () => {
