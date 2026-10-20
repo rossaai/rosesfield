@@ -21,7 +21,7 @@ const buttonVariants = cva(
         danger: "bg-bug-tint text-bug-text",
       },
       size: {
-        default: "h-button max-w-button-max px-s4",
+        default: "h-field max-w-button-max px-s4",
         dense: "h-button-dense max-w-button-max px-s4",
         small: "h-button-small max-w-button-max px-s3",
         icon: "size-icon",
