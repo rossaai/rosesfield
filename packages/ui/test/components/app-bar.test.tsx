@@ -1,4 +1,4 @@
-import { AppBar } from "@rosesfield/ui/components/app-bar"
+import { AppBar, AppBarAction } from "@rosesfield/ui/components/app-bar"
 import { NavLink } from "@rosesfield/ui/components/nav-link"
 import { act, cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -80,6 +80,78 @@ describe("AppBar", () => {
         "@regular:flex",
       ])
     )
+  })
+})
+
+function renderActions(density: "full" | "compact") {
+  render(
+    <AppBar
+      label="Rosesfield"
+      density={density}
+      mark={<svg />}
+      lockup={<svg />}
+      areas={null}
+      balance={
+        <AppBarAction icon={<svg data-testid="coins" />}>
+          12.5 credits
+        </AppBarAction>
+      }
+      connect={
+        <AppBarAction tone="primary" render={<a href="/connect" />}>
+          Connect
+        </AppBarAction>
+      }
+    />
+  )
+  return {
+    balance: screen.getByRole("button", { name: "12.5 credits" }),
+    connect: screen.getByRole("link", { name: "Connect" }),
+  }
+}
+
+describe("AppBarAction", () => {
+  it("holds a 16 px icon, then its label, 8 px apart, on a 36 px control", () => {
+    const { balance } = renderActions("full")
+    expect(balance.firstElementChild).toBe(screen.getByTestId("coins"))
+    expect(balance.lastElementChild?.textContent).toBe("12.5 credits")
+    expect(balance.className.split(" ")).toEqual(
+      expect.arrayContaining(["h-9", "px-3", "gap-2", "[&_svg]:glyph"])
+    )
+    expect(balance.className).not.toContain("@regular:h-6")
+  })
+
+  it("shrinks to 24 px with 10 px sides and a 6 px gap with the compact bar", () => {
+    const { balance, connect } = renderActions("compact")
+    for (const action of [balance, connect]) {
+      expect(action.className.split(" ")).toEqual(
+        expect.arrayContaining([
+          "h-9",
+          "@regular:h-6",
+          "@regular:px-2.5",
+          "@regular:gap-1.5",
+        ])
+      )
+    }
+  })
+
+  it("moves its height, padding and gap with the bar over the surface duration", () => {
+    const { balance, connect } = renderActions("compact")
+    for (const action of [balance, connect]) {
+      expect(action.className.split(" ")).toEqual(
+        expect.arrayContaining([
+          "transition-[height,padding,gap]",
+          "duration-(--duration-surface)",
+        ])
+      )
+    }
+  })
+
+  it("renders the element the caller gives, such as a link", () => {
+    const { balance, connect } = renderActions("full")
+    expect(balance.getAttribute("type")).toBe("button")
+    expect(connect.tagName).toBe("A")
+    expect(connect.getAttribute("href")).toBe("/connect")
+    expect(connect.hasAttribute("type")).toBe(false)
   })
 })
 
