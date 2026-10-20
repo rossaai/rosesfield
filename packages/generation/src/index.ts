@@ -70,6 +70,7 @@ export {
   type FieldRole,
   fieldOfRole,
   fieldRoleOf,
+  isOneAtATime,
   fieldRoles,
 } from "#domain/field-role"
 export {

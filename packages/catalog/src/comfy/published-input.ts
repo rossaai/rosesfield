@@ -5,7 +5,7 @@ import {
   startRunBodyFor,
 } from "@rosesfield/contract"
 import {
-  fieldOfRole,
+  isOneAtATime,
   type HostedModel,
   isHostedModelId,
   type ModelField,
@@ -53,11 +53,12 @@ function inputsOf(form: ModelForm): z.ZodType {
 
 function formBody(app: AppDefinition, form: ModelForm): z.ZodType {
   const output = app.output.kind
-  const isOneAtATime = fieldOfRole(form.fields, "count", output) === null
   const count = runCount.max(app.output.count.max).optional()
   return z.strictObject({
     inputs: inputsOf(form),
-    ...(isOneAtATime && app.output.count.max > 1 ? { count } : {}),
+    ...(isOneAtATime(form.fields, output) && app.output.count.max > 1
+      ? { count }
+      : {}),
   })
 }
 

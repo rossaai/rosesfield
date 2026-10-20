@@ -120,6 +120,18 @@ export function fieldRoleOf(
   return rule?.role ?? null
 }
 
+/** Says whether a model makes one output per job, because its form holds no count field that asks for more than one. */
+export function isOneAtATime(
+  fields: readonly ModelField[],
+  output: string
+): boolean {
+  const field = fieldOfRole(fields, "count", output)
+  return (
+    field === null ||
+    (field.kind === "number" && field.max !== null && field.max < 2)
+  )
+}
+
 /** Finds the first field of a form that holds the given role. */
 export function fieldOfRole(
   fields: readonly ModelField[],

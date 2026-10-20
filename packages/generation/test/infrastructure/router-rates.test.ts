@@ -61,7 +61,7 @@ describe("priceFromRates", () => {
     const rows = [
       { ...row(flash.model, "Layer decomposition"), credits: 0.5733 },
     ]
-    expect(priceFromRates(rows, flash, { prompt: "a" })).toBeNull()
+    expect(priceFromRates(rows, flash, { prompt: "a" }, "image")).toBeNull()
   })
 
   it("reads a row whose condition names the output", () => {
@@ -69,7 +69,8 @@ describe("priceFromRates", () => {
       priceFromRates(
         [{ ...row(flash.model, "Image generation"), credits: 0.5733 }],
         flash,
-        { prompt: "a" }
+        { prompt: "a" },
+        "image"
       )
     ).toBe(0.57)
     const rows = [
@@ -79,8 +80,10 @@ describe("priceFromRates", () => {
         credits: 4,
       },
     ]
-    expect(priceFromRates(rows, clip, { resolution: "1080p" })).toBe(20)
-    expect(priceFromRates(rows, clip, { resolution: "720p" })).toBe(10)
+    expect(priceFromRates(rows, clip, { resolution: "1080p" }, "video")).toBe(
+      20
+    )
+    expect(priceFromRates(rows, clip, { resolution: "720p" }, "video")).toBe(10)
   })
 
   it("changes the price with quality and output size", () => {
@@ -133,30 +136,45 @@ describe("priceFromRates", () => {
       },
     ]
     expect(
-      priceFromRates(rows, picture, { quality: "low", size: "1024x1024" })
+      priceFromRates(
+        rows,
+        picture,
+        { quality: "low", size: "1024x1024" },
+        "image"
+      )
     ).toBe(2.11)
     expect(
-      priceFromRates(rows, picture, { quality: "high", size: "1024x1024" })
+      priceFromRates(
+        rows,
+        picture,
+        { quality: "high", size: "1024x1024" },
+        "image"
+      )
     ).toBe(46.42)
     expect(
-      priceFromRates(rows, picture, { quality: "low", size: "2048x2048" })
+      priceFromRates(
+        rows,
+        picture,
+        { quality: "low", size: "2048x2048" },
+        "image"
+      )
     ).toBe(4.22)
-    expect(priceFromRates(rows, picture, {})).toBe(12.66)
+    expect(priceFromRates(rows, picture, {}, "image")).toBe(12.66)
     const sized: ModelForm = {
       ...picture,
       fields: picture.fields.map((field) =>
         field.kind === "text" ? { ...field, default: "2048x2048" } : field
       ),
     }
-    expect(priceFromRates(rows, sized, { quality: "low" })).toBe(4.22)
+    expect(priceFromRates(rows, sized, { quality: "low" }, "image")).toBe(4.22)
     expect(
-      priceFromRates(rows.slice(1), picture, { quality: "low" })
+      priceFromRates(rows.slice(1), picture, { quality: "low" }, "image")
     ).toBeNull()
   })
 
   it("prices one job per output on a model that makes one at a time", () => {
     const rows = [{ ...row(flash.model, ""), credits: 0.57 }]
-    expect(priceFromRates(rows, flash, { prompt: "a" }, 3)).toBe(1.71)
+    expect(priceFromRates(rows, flash, { prompt: "a" }, "image", 3)).toBe(1.71)
   })
 
   it("prices a row when it reads every condition and each one holds", () => {
@@ -164,16 +182,16 @@ describe("priceFromRates", () => {
       row(clip.model, "720p; 5s", "per second"),
       row(clip.model, "1080p; 5s", "per second"),
     ]
-    expect(priceFromRates(rows, clip, { duration: 5 })).toBe(10)
+    expect(priceFromRates(rows, clip, { duration: 5 }, "video")).toBe(10)
   })
 
   it("answers unknown when the run leaves a condition's setting unset", () => {
     const rows = [row(flash.model, "1080p")]
-    expect(priceFromRates(rows, flash, { prompt: "a" })).toBeNull()
+    expect(priceFromRates(rows, flash, { prompt: "a" }, "image")).toBeNull()
   })
 
   it("prices a row with no condition", () => {
     const rows = [{ ...row(flash.model, ""), credits: 6.33 }]
-    expect(priceFromRates(rows, flash, { prompt: "a" })).toBe(6.33)
+    expect(priceFromRates(rows, flash, { prompt: "a" }, "image")).toBe(6.33)
   })
 })

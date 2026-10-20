@@ -3,6 +3,7 @@ export {
   fieldOfRole,
   fieldRoleOf,
   fieldRoles,
+  isOneAtATime,
 } from "#domain/field-role"
 export type { HostedModel } from "#domain/generation-engine.port"
 export type { MediaKind, ModelField, ModelForm } from "#domain/model-form"

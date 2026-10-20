@@ -7,7 +7,7 @@ import type {
 import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import { ModelNotFoundError } from "#domain/error/model-not-found.error"
 import { RunFailedError } from "#domain/error/run-failed.error"
-import { fieldOfRole } from "#domain/field-role"
+import { isOneAtATime } from "#domain/field-role"
 import {
   type EngineOutput,
   type EngineRequest,
@@ -139,6 +139,7 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
         rows,
         entry.form,
         request.inputs,
+        outputOf(entry),
         request.count
       )
       return credits === null ? unknownPrice : { source: "rates", credits }
@@ -313,10 +314,9 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
         this.catalog.markEstimatesOff(keyTag)
         return null
       }
-      const each =
-        fieldOfRole(entry.form.fields, "count", "image") === null
-          ? request.count
-          : 1
+      const each = isOneAtATime(entry.form.fields, outputOf(entry))
+        ? request.count
+        : 1
       return answer.credits === null
         ? null
         : { source: "estimate", credits: answer.credits * each }
@@ -324,6 +324,10 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
       return null
     }
   }
+}
+
+function outputOf(entry: CatalogEntry): string {
+  return entry.facts.makes[0] ?? ""
 }
 
 function creditsOf(response: Response): number | null {

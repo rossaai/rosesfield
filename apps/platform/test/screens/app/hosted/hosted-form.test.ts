@@ -77,7 +77,8 @@ describe("a hosted model's form", () => {
         images: [],
         duration: undefined,
         generateAudio: "on",
-      })
+      }),
+      "video"
     )
     expect(body).toEqual({
       inputs: {
@@ -131,9 +132,9 @@ describe("a hosted model's form", () => {
       default: 1,
     }
     const values = { ...valuesWith({ prompt: "a door" }), count: 3 }
-    expect(hostedBody("maker/clip-3", fields, values).count).toBe(3)
+    expect(hostedBody("maker/clip-3", fields, values, "video").count).toBe(3)
     expect(
-      hostedBody("maker/clip-3", [...fields, counted], values).count
+      hostedBody("maker/clip-3", [...fields, counted], values, "video").count
     ).toBeUndefined()
   })
 })

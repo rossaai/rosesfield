@@ -1,4 +1,4 @@
-import { fieldOfRole, type ModelField } from "@rosesfield/catalog/comfy"
+import { isOneAtATime, type ModelField } from "@rosesfield/catalog/comfy"
 import type {
   FieldProblem,
   FieldValue,
@@ -52,7 +52,8 @@ function isEmpty(value: FieldValue): boolean {
 export function hostedBody(
   model: string,
   fields: readonly ModelField[],
-  values: FormValues
+  values: FormValues,
+  output: string
 ): StartRunBodyInput {
   const inputs: Record<string, string | number | string[]> = {
     [modelInputName]: model,
@@ -63,13 +64,9 @@ export function hostedBody(
       inputs[field.name] = value
     }
   }
-  return isOneAtATime(fields) && values.count > 1
+  return isOneAtATime(fields, output) && values.count > 1
     ? { inputs, count: values.count }
     : { inputs }
-}
-
-export function isOneAtATime(fields: readonly ModelField[]): boolean {
-  return fieldOfRole(fields, "count", "image") === null
 }
 
 function missingKeyOf(field: ModelField): FieldProblem["key"] {

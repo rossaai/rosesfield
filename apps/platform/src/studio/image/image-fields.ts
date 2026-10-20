@@ -1,6 +1,7 @@
 import {
   type FieldRole,
   fieldRoleOf,
+  isOneAtATime,
   type ModelField,
 } from "@rosesfield/catalog/comfy"
 import { isShownField } from "@/screens/app/hosted/hosted-fields"
@@ -85,7 +86,7 @@ export function imageFieldsOf(fields: readonly ModelField[]): ImageFields {
     aspect,
     size,
     count,
-    isOneAtATime: !fields.some((field) => hasRole(field, "count")),
+    isOneAtATime: isOneAtATime(fields, output),
     rest: fields.filter(
       (field) =>
         field.kind !== "prompt" &&

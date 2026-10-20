@@ -16,7 +16,7 @@ import { IdempotencyKeyReusedError } from "#domain/error/idempotency-key-reused.
 import { ModelNotFoundError } from "#domain/error/model-not-found.error"
 import { ModelNotOfferedError } from "#domain/error/model-not-offered.error"
 import { RunInputInvalidError } from "#domain/error/run-input-invalid.error"
-import { fieldOfRole } from "#domain/field-role"
+import { isOneAtATime } from "#domain/field-role"
 import type {
   GenerationEngine,
   OutputsPerJob,
@@ -316,7 +316,7 @@ function countOf(
     return 1
   }
   const max = app.output.count.max
-  if (fieldOfRole(form.fields, "count", app.output.kind) !== null) {
+  if (!isOneAtATime(form.fields, app.output.kind)) {
     issues.push("count: this model sets its own count in its inputs")
     return 1
   }

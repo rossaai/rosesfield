@@ -1,5 +1,5 @@
 import type { RunInputs } from "@rosesfield/contract"
-import { type FieldRole, fieldOfRole } from "#domain/field-role"
+import { type FieldRole, fieldOfRole, isOneAtATime } from "#domain/field-role"
 import type { ModelForm } from "#domain/model-form"
 import {
   arrayOf,
@@ -50,6 +50,7 @@ export function priceFromRates(
   rows: readonly RateRow[],
   form: ModelForm,
   inputs: RunInputs,
+  output: string,
   count = 1
 ): number | null {
   const own = rows.filter(
@@ -61,7 +62,7 @@ export function priceFromRates(
     .filter((one) => one.score !== null)
   const best = Math.max(...scored.map((one) => one.score ?? 0))
   const top = scored.filter((one) => one.score === best)
-  const each = fieldOfRole(form.fields, "count", "image") === null ? count : 1
+  const each = isOneAtATime(form.fields, output) ? count : 1
   const prices = new Set(
     top.map((one) => amountOf(one.row, form, inputs, values))
   )

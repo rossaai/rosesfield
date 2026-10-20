@@ -49,6 +49,23 @@ const severalAtOnce: ModelForm = {
   ],
 }
 
+const onlyOne: ModelForm = {
+  model,
+  fields: [
+    prompt,
+    {
+      kind: "number",
+      name: "n",
+      path: "n",
+      required: false,
+      min: 1,
+      max: 1,
+      integer: true,
+      default: 1,
+    },
+  ],
+}
+
 class MeteredAlone extends FakeGenerationEngine {
   override submitsAlone(): boolean {
     return true
@@ -141,6 +158,18 @@ describe("a count of 3 on a model that makes one image at a time", () => {
       count: 3,
     })
     expect(price).toEqual({ price: { source: "measured", credits: 3 } })
+  })
+
+  it("runs 3 jobs on a model whose count field takes at most 1", async () => {
+    const { harness, engine } = harnessWith(onlyOne)
+    const { run } = await startWithCount(harness, 3)
+    expect(run.count).toBe(3)
+    const runId = runIdFormat.parse(run.id)
+    for (let step = 0; step < 7; step += 1) {
+      await harness.advance.execute({ runId })
+    }
+    expect(engine.submitted).toHaveLength(3)
+    expect((await harness.runs.get(runId))?.toRecord().outputs).toHaveLength(3)
   })
 
   it("refuses a count on a model that sets its own count in its inputs", async () => {

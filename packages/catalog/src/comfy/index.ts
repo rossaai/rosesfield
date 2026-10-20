@@ -4,6 +4,7 @@ export {
   fieldRoleOf,
   fieldRoles,
   type HostedModel,
+  isOneAtATime,
   type ModelField,
 } from "@rosesfield/generation/bindings"
 export { CatalogModelPolicy } from "#comfy/catalog-model-policy"

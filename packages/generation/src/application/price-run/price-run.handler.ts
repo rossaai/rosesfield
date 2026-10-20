@@ -5,7 +5,7 @@ import type {
 } from "@rosesfield/contract"
 import type { AppCatalog } from "#domain/app-catalog.port"
 import { AppNotFoundError } from "#domain/error/app-not-found.error"
-import { fieldOfRole } from "#domain/field-role"
+import { isOneAtATime } from "#domain/field-role"
 import {
   type GenerationEngine,
   type RunPrice,
@@ -109,7 +109,7 @@ function isJobPerOutput(
 ): boolean {
   return form === null
     ? engine.outputsPerJob(binding) === "one"
-    : fieldOfRole(form.fields, "count", app.output.kind) === null
+    : isOneAtATime(form.fields, app.output.kind)
 }
 
 function timesOf(price: RunPrice, times: number): RunPrice {
