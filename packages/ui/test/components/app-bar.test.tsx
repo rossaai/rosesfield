@@ -1,7 +1,7 @@
 import { AppBar } from "@rosesfield/ui/components/app-bar"
 import { NavLink } from "@rosesfield/ui/components/nav-link"
-import { cleanup, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { act, cleanup, render, screen } from "@testing-library/react"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 afterEach(cleanup)
 
@@ -80,5 +80,35 @@ describe("AppBar", () => {
         "@regular:flex",
       ])
     )
+  })
+})
+
+describe("AppBar's area links on resize", () => {
+  it("measures their overflow again when the bar's width changes", () => {
+    let resized: () => void = () => undefined
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: () => void) {
+          resized = callback
+        }
+        observe = vi.fn()
+        unobserve = vi.fn()
+        disconnect = vi.fn()
+      }
+    )
+    const bar = renderBar("full")
+    const overflow = bar.querySelector<HTMLElement>(
+      "[data-slot='app-bar-overflow']"
+    )
+    if (overflow === null) {
+      throw new Error("no overflow")
+    }
+    expect(overflow.style.maskImage).not.toContain("transparent")
+    Object.defineProperty(overflow, "clientWidth", { value: 300 })
+    Object.defineProperty(overflow, "scrollWidth", { value: 900 })
+    act(() => resized())
+    expect(overflow.style.maskImage).toContain("transparent")
+    vi.unstubAllGlobals()
   })
 })

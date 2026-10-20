@@ -225,3 +225,20 @@ describe("ModelPicker", () => {
     expect(screen.queryByText("No model matches")).toBeNull()
   })
 })
+
+describe("ModelPicker's Open weights link", () => {
+  it("sits outside the option, so a click on it never chooses the row", () => {
+    const onChoose = open(vi.fn(), badged)
+    const option = screen.getByRole("option", { name: "Model 4" })
+    const weights = within(rowOf("Model 4")).getByRole("link", {
+      name: "Open weights",
+    })
+    expect(option.contains(weights)).toBe(false)
+    expect(weights.closest("[role='option']")).toBeNull()
+    expect(option.querySelector("a, button")).toBeNull()
+    fireEvent.click(weights)
+    expect(onChoose).not.toHaveBeenCalled()
+    fireEvent.click(option)
+    expect(onChoose).toHaveBeenCalledWith(option.dataset.model)
+  })
+})

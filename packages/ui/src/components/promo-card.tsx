@@ -47,11 +47,9 @@ function PromoCard({
           {line}
         </p>
       </div>
-      <a
-        href={href}
-        aria-label={openLabel}
-        className="absolute inset-0 z-10 rounded-cell"
-      />
+      <a href={href} className="absolute inset-0 z-10 rounded-cell">
+        <span className="sr-only">{openLabel}</span>
+      </a>
     </article>
   )
 }

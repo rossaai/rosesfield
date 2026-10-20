@@ -49,7 +49,12 @@ function Footer({
   legal,
 }: FooterProps): ReactElement {
   return (
-    <footer aria-label={label} data-slot="footer" className="@container w-full">
+    <footer
+      role="contentinfo"
+      aria-label={label}
+      data-slot="footer"
+      className="@container w-full"
+    >
       <div
         data-ground="surface"
         className="w-full bg-surface p-4 @regular:px-4 @regular:py-9"

@@ -161,6 +161,7 @@ function ModelRow({
 }): ReactElement {
   return (
     <div
+      role="none"
       data-slot="model-row"
       data-chosen={isChosen ? "yes" : "no"}
       className="group/row relative mx-3 h-13 rounded-cell data-[chosen=yes]:bg-(--tint)"
@@ -217,10 +218,9 @@ function SectionRows(
   }
 ): ReactElement {
   return (
-    <div
-      role="group"
+    <fieldset
       aria-label={props.section.label}
-      className="flex flex-col gap-1"
+      className="m-0 flex min-w-0 flex-col gap-1 border-0 p-0"
     >
       <p className="flex h-8.5 items-center gap-1.5 px-3 font-medium text-label text-ink-muted">
         <SparkleIcon aria-hidden="true" className="size-3.5" />
@@ -237,7 +237,7 @@ function SectionRows(
           }}
         />
       ))}
-    </div>
+    </fieldset>
   )
 }
 

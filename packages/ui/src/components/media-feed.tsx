@@ -10,6 +10,10 @@ const columns = {
   row: "columns-2 @regular:columns-4",
 } satisfies Record<MediaFeedLayout, string>
 
+const presetColumns = "columns-2 @regular:columns-5"
+
+type MediaFeedContent = "media" | "presets"
+
 const windows = {
   masonry: "max-h-256",
   row: "max-h-224",
@@ -53,6 +57,7 @@ type MediaFeedProps = {
   layout?: MediaFeedLayout
   header?: ReactNode
   viewAll?: ReactNode
+  content?: MediaFeedContent
   children: ReactNode
   className?: string
 }
@@ -60,6 +65,7 @@ type MediaFeedProps = {
 function MediaFeed({
   label,
   layout = "masonry",
+  content = "media",
   header,
   viewAll,
   children,
@@ -70,6 +76,7 @@ function MediaFeed({
       aria-label={label}
       data-slot="media-feed"
       data-layout={layout}
+      data-content={content}
       className={cn("@container flex w-full flex-col", className)}
     >
       {header === undefined ? null : (
@@ -83,7 +90,10 @@ function MediaFeed({
       >
         <div
           data-slot="media-feed-items"
-          className={cn("gap-2 *:mb-2 *:break-inside-avoid", columns[layout])}
+          className={cn(
+            "gap-2 *:mb-2 *:break-inside-avoid",
+            content === "presets" ? presetColumns : columns[layout]
+          )}
         >
           {children}
         </div>
@@ -100,5 +110,11 @@ function MediaFeed({
   )
 }
 
-export type { MediaFeedProps, ViewAllProps }
-export { MediaFeed, ViewAll }
+type PresetRowProps = Omit<MediaFeedProps, "layout" | "content">
+
+function PresetRow(props: PresetRowProps): ReactElement {
+  return <MediaFeed {...props} layout="row" content="presets" />
+}
+
+export type { MediaFeedContent, MediaFeedProps, PresetRowProps, ViewAllProps }
+export { MediaFeed, PresetRow, ViewAll }

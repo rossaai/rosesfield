@@ -13,6 +13,10 @@ import {
   seeds,
 } from "@/gallery/screens/screen-fixtures"
 import { type StateSpec, screenEntry } from "@/gallery/screens/screen-frame"
+import {
+  type ExploreAdmission,
+  exploreListQuery,
+} from "@/screens/explore/explore-list"
 import type { SharedOutput } from "@/screens/explore/share-api"
 import {
   ClipHeading,
@@ -103,14 +107,30 @@ const publicKey = [
   ),
 ]
 
+function admissionOf(target: Run): ExploreAdmission {
+  return {
+    runId: target.id,
+    source: "own-open-weights",
+    yes: "2026-10-19",
+    people: "none",
+    brand: false,
+  }
+}
+
+const exploreList = seeds.data(exploreListQuery.queryKey, [
+  admissionOf(liveImage),
+  admissionOf(liveVideo),
+])
+
 const doneSeeds = [
   ...publicKey,
+  exploreList,
   seeds.media(),
   seeds.data(["shares", "published"], [sharedView]),
   seeds.runs([liveImage, liveVideo]),
 ]
 
-const exploreStates: StateSpec[] = [
+export const exploreStates: StateSpec[] = [
   {
     id: "empty",
     label: "state.noKey",
@@ -172,6 +192,7 @@ const exploreStates: StateSpec[] = [
         })
       ),
       seeds.media(),
+      exploreList,
       seeds.data(["shares", "published"], []),
       seeds.runs([liveImage]),
     ],

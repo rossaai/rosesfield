@@ -72,6 +72,7 @@ type AreaMenuProps = {
   current?: boolean
   defaultOpen?: boolean
   onOpen?: (app: AreaApp) => void
+  renderLink?: (app: AreaApp) => ReactElement
 }
 
 function AreaMenu({
@@ -80,6 +81,7 @@ function AreaMenu({
   current = false,
   defaultOpen = false,
   onOpen,
+  renderLink,
 }: AreaMenuProps): ReactElement {
   return (
     <DropdownMenu defaultOpen={defaultOpen}>
@@ -98,7 +100,9 @@ function AreaMenu({
         {apps.map((app) => (
           <DropdownMenuItem
             key={app.id}
-            render={<a href={app.href} />}
+            render={
+              renderLink?.(app) ?? ((props) => <a {...props} href={app.href} />)
+            }
             onClick={() => onOpen?.(app)}
             className="items-start"
           >

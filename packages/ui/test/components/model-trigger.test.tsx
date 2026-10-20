@@ -34,3 +34,27 @@ describe("ModelRowTrigger", () => {
     expect(row.textContent).toBe("ModelClip 3")
   })
 })
+
+describe("ModelRowTrigger order", () => {
+  it("puts the lab's mark first, then the name, then the chevron", () => {
+    render(
+      <ModelRowTrigger
+        caption="Model"
+        name="Clip 3"
+        mark={<svg data-testid="mark" />}
+      />
+    )
+    const row = screen.getByRole("button", { name: /Clip 3/ })
+    const order = [
+      ...row.querySelectorAll(
+        "[data-slot='model-row-mark'], [data-slot='model-row-name'], .lucide-chevron-right"
+      ),
+    ].map(
+      (part) =>
+        part.getAttribute("data-slot") ?? String(part.getAttribute("class"))
+    )
+    expect(order[0]).toBe("model-row-mark")
+    expect(order[1]).toBe("model-row-name")
+    expect(order[2]).toContain("lucide-chevron-right")
+  })
+})

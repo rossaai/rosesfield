@@ -102,8 +102,8 @@ describe("ResultTile", () => {
       "ResizeObserver",
       class {
         observe = observe
-        disconnect(): void {}
-        unobserve(): void {}
+        disconnect = vi.fn()
+        unobserve = vi.fn()
       }
     )
     renderTile("card", false)
@@ -153,5 +153,53 @@ describe("ResultTile", () => {
         .getByRole("button", { name: "Recreate this result" })
         .parentElement?.className.split(" ")
     ).toEqual(expect.arrayContaining(["right-3", "bottom-3"]))
+  })
+})
+
+describe("ResultTile without a model", () => {
+  it("shows its app alone and never a dangling separator", () => {
+    for (const model of [undefined, ""]) {
+      render(
+        <ResultTile
+          kind="image"
+          src="result.png"
+          alt="A red bicycle"
+          aspect={{ width: 1, height: 1 }}
+          app="Image"
+          {...(model === undefined ? {} : { model })}
+          openLabel="Open this result"
+          expandLabel="Expand this result"
+          moreLabel="More actions"
+          recreateLabel="Recreate"
+          recreateName="Recreate this result"
+          onOpen={vi.fn()}
+          onRecreate={vi.fn()}
+        />
+      )
+      expect(
+        document.querySelector("[data-slot='media-veil']")?.textContent
+      ).toBe("Image")
+      cleanup()
+    }
+  })
+
+  it("takes no pointer events on the veil, Expand and More, or Recreate while they are hidden at rest", () => {
+    renderTile()
+    const veil = document.querySelector("[data-slot='media-veil']")
+    expect(veil?.className.split(" ")).toContain("pointer-events-none")
+    const hidden = [
+      document.querySelector("[data-slot='result-tile-actions']"),
+      screen.getByRole("button", { name: "Recreate this result" })
+        .parentElement,
+    ]
+    for (const group of hidden) {
+      expect(group?.className.split(" ")).toEqual(
+        expect.arrayContaining([
+          "pointer-events-none",
+          "group-hover/reveal:pointer-events-auto",
+          "group-focus-within/reveal:pointer-events-auto",
+        ])
+      )
+    }
   })
 })

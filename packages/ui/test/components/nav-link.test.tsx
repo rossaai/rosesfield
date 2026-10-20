@@ -1,5 +1,10 @@
-import { NavLink, NavSeparator } from "@rosesfield/ui/components/nav-link"
+import {
+  AreaMenu,
+  NavLink,
+  NavSeparator,
+} from "@rosesfield/ui/components/nav-link"
 import { cleanup, render, screen } from "@testing-library/react"
+import type { ComponentProps, ReactElement } from "react"
 import { afterEach, describe, expect, it } from "vitest"
 
 afterEach(cleanup)
@@ -37,5 +42,48 @@ describe("NavLink", () => {
     expect(container.firstElementChild?.className.split(" ")).toEqual(
       expect.arrayContaining(["h-3", "w-px", "mx-1"])
     )
+  })
+})
+
+function RouterLink(props: ComponentProps<"a">): ReactElement {
+  return <a {...props} data-router="yes" />
+}
+
+describe("AreaMenu", () => {
+  const apps = [
+    {
+      id: "image",
+      name: "Image",
+      line: "Words to a picture",
+      icon: <svg />,
+      href: "/apps/image",
+    },
+  ]
+
+  it("renders each app with the link the caller gives, such as the router's", () => {
+    render(
+      <AreaMenu
+        apps={apps}
+        defaultOpen
+        renderLink={(app) => <RouterLink href={app.href} />}
+      >
+        Image
+      </AreaMenu>
+    )
+    const item = screen.getByRole("menuitem", { name: /Words to a picture/ })
+    expect(item.getAttribute("data-router")).toBe("yes")
+    expect(item.getAttribute("href")).toBe("/apps/image")
+  })
+
+  it("keeps a plain link by default", () => {
+    render(
+      <AreaMenu apps={apps} defaultOpen>
+        Image
+      </AreaMenu>
+    )
+    const item = screen.getByRole("menuitem", { name: /Words to a picture/ })
+    expect(item.tagName).toBe("A")
+    expect(item.getAttribute("href")).toBe("/apps/image")
+    expect(item.hasAttribute("data-router")).toBe(false)
   })
 })

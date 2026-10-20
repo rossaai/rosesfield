@@ -36,7 +36,7 @@ type ResultTileProps = {
   poster?: string
   aspect: MediaAspect
   app: string
-  model: string
+  model?: string
   openLabel: string
   expandLabel: string
   moreLabel: string
@@ -68,7 +68,8 @@ function Actions(props: ResultTileProps & { corners: Corners }): ReactElement {
         "absolute z-20 hidden flex-col @regular:flex",
         props.corners.topRight,
         compact ? "gap-3" : "gap-2",
-        interaction.reveal
+        interaction.reveal,
+        interaction.revealPointer
       )}
     >
       <IconButton
@@ -104,7 +105,8 @@ function Recreate(props: ResultTileProps & { corners: Corners }): ReactElement {
         props.sound === undefined
           ? props.corners.bottomRight
           : props.corners.besideSound,
-        interaction.reveal
+        interaction.reveal,
+        interaction.revealPointer
       )}
     >
       <Button
@@ -150,7 +152,9 @@ function ResultTile(props: ResultTileProps): ReactElement {
         data-slot="media-veil"
         className={cn(veilClass, corners.topLeft, interaction.reveal)}
       >
-        {`${props.app} · ${props.model}`}
+        {props.model === undefined || props.model === ""
+          ? props.app
+          : `${props.app} · ${props.model}`}
       </span>
       <Actions {...props} corners={corners} />
       {props.sound === undefined ? null : (

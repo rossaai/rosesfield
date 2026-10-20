@@ -10,4 +10,13 @@ const ring =
 const reveal =
   "opacity-0 transition-opacity duration-(--duration-control) group-hover/reveal:opacity-100 group-focus-within/reveal:opacity-100 in-data-[gallery=hover]:opacity-100 in-data-[gallery=focus]:opacity-100"
 
-export const interaction = { light, fill, ring, reveal } as const
+const revealPointer =
+  "pointer-events-none group-hover/reveal:pointer-events-auto group-focus-within/reveal:pointer-events-auto in-data-[gallery=hover]:pointer-events-auto in-data-[gallery=focus]:pointer-events-auto"
+
+export const interaction = {
+  light,
+  fill,
+  ring,
+  reveal,
+  revealPointer,
+} as const

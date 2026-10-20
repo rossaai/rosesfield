@@ -5,6 +5,8 @@ import {
   type ReactElement,
   type ReactNode,
   type UIEvent,
+  useEffect,
+  useRef,
   useState,
 } from "react"
 
@@ -40,20 +42,36 @@ function readEnds(element: HTMLElement): Ends {
 
 function AreaLinks({ children }: { children: ReactNode }): ReactElement {
   const [ends, setEnds] = useState<Ends>({ start: false, end: false })
-  const measure = (element: HTMLElement | null): void => {
-    if (element !== null) {
+  const box = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const element = box.current
+    if (element === null) {
+      return
+    }
+    const measure = (): void => {
       setEnds((was) => {
         const next = readEnds(element)
         return was.start === next.start && was.end === next.end ? was : next
       })
     }
-  }
+    measure()
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure)
+      return () => window.removeEventListener("resize", measure)
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    if (element.firstElementChild !== null) {
+      observer.observe(element.firstElementChild)
+    }
+    return () => observer.disconnect()
+  }, [])
   const onScroll = (event: UIEvent<HTMLDivElement>): void => {
     setEnds(readEnds(event.currentTarget))
   }
   return (
     <div
-      ref={measure}
+      ref={box}
       onScroll={onScroll}
       data-scroll-start={ends.start ? undefined : ""}
       data-slot="app-bar-overflow"
@@ -107,6 +125,7 @@ function AppBar({
   className,
 }: AppBarProps): ReactElement {
   return (
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: a header outside any section is the banner landmark, which ARIA lets aria-label name
     <header
       aria-label={label}
       data-slot="app-bar"

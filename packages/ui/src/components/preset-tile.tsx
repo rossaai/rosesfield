@@ -47,9 +47,10 @@ function PresetTile({
       </span>
       <a
         href={href}
-        aria-label={viewLabel}
         className={cn("absolute inset-0 z-10 rounded-cell", interaction.ring)}
-      />
+      >
+        <span className="sr-only">{viewLabel}</span>
+      </a>
       <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex h-1/2 items-end bg-linear-to-t from-scrim to-transparent p-3 @regular:hidden"
