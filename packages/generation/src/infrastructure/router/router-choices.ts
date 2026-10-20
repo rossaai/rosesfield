@@ -20,6 +20,9 @@ const leads: readonly RegExp[] = [
 
 const labelled = /:\s+/g
 
+const example =
+  /\b(?:for example|for instance|e\.g\.?|such as|like|including|examples?)\s*$/i
+
 const sentenceEnd = /\.(?:\s|$)|\n|;/
 
 function itemsOf(segment: string, needsJoin: boolean): string[] | null {
@@ -42,6 +45,9 @@ function itemsOf(segment: string, needsJoin: boolean): string[] | null {
 function segmentsAfter(text: string, lead: RegExp): string[] {
   const segments: string[] = []
   for (const match of text.matchAll(lead)) {
+    if (example.test(text.slice(0, match.index ?? 0))) {
+      continue
+    }
     const rest = text.slice((match.index ?? 0) + match[0].length)
     segments.push(rest.split(sentenceEnd)[0] ?? "")
   }

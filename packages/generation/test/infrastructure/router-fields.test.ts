@@ -103,6 +103,28 @@ describe("the choices a schema lists in words", () => {
     expect(named(fields, "size").kind).toBe("text")
   })
 
+  it("reads a list the words state as the values, and keeps an example list as free text", () => {
+    const fields = fieldsFor({
+      style: {
+        type: "string",
+        description:
+          "The look of the picture, for example: anime, photo or sketch.",
+      },
+      mode: {
+        type: "string",
+        description: "Render mode: anime, photo or sketch.",
+      },
+    })
+    expect(named(fields, "style").kind).toBe("text")
+    expect(named(fields, "mode")).toMatchObject({
+      kind: "choice",
+      options: ["anime", "photo", "sketch"],
+    })
+    expect(
+      listedOptions("A short tag such as: city, forest, or sea.")
+    ).toBeNull()
+  })
+
   it("shows a value the schema lists twice in different case once", () => {
     const fields = fieldsFor({
       resolution: { type: "string", enum: ["2K", "2k", "768P", "768p"] },
