@@ -1,5 +1,10 @@
+import { type FieldRole, fieldRoleOf } from "#domain/field-role"
 import type { ModelField } from "#domain/model-form"
-import { optionNamed, optionsOf } from "#infrastructure/router/router-choices"
+import {
+  namedOptions,
+  optionNamed,
+  optionsOf,
+} from "#infrastructure/router/router-choices"
 import {
   depthOf,
   mediaAt,
@@ -43,6 +48,13 @@ type ImageRole = {
 }
 
 const maxDepth = 4
+
+const settingRoles: readonly FieldRole[] = [
+  "aspect",
+  "resolution",
+  "quality",
+  "length",
+]
 
 const internalKeys: readonly string[] = [
   "model",
@@ -262,7 +274,13 @@ function leafOf(walk: Walk, schema: Schema, spot: Spot): ModelField | null {
     choiceOf(walk, schema, spot, false) ??
     mediaOf(walk, schema, spot) ??
     choiceOf(walk, schema, spot, true) ??
-    scalarOf(base, schema, typeOf(schema, walk.components), spot.key)
+    namedChoiceOf(walk, schema, spot) ??
+    scalarOf(
+      base,
+      withVariantBounds(schema, walk.components),
+      typeOf(schema, walk.components),
+      spot.key
+    )
   return field !== null && spot.isInOptional ? withoutDefault(field) : field
 }
 
@@ -295,6 +313,55 @@ function choiceOf(
     options,
     default: named,
   }
+}
+
+function namedChoiceOf(
+  walk: Walk,
+  schema: Schema,
+  spot: Spot
+): ModelField | null {
+  if (
+    typeOf(schema, walk.components) !== "string" ||
+    promptKeys.includes(spot.key)
+  ) {
+    return null
+  }
+  const options = namedOptions(schema)
+  const field: ModelField = {
+    name: spot.key,
+    path: spot.path,
+    required: spot.required,
+    kind: "choice",
+    options,
+    default: optionNamed(options, fieldOf(schema, "default")),
+  }
+  const role = fieldRoleOf(field, "image")
+  return options.length < 2 || role === null || !settingRoles.includes(role)
+    ? null
+    : field
+}
+
+function withVariantBounds(schema: Schema, components: Schema): Schema {
+  if (
+    fieldOf(schema, "minimum") !== undefined ||
+    fieldOf(schema, "maximum") !== undefined
+  ) {
+    return schema
+  }
+  const bounded = variantsOf(schema)
+    .map((one) => resolve(one, components))
+    .find(
+      (one) =>
+        numberOf(fieldOf(one, "minimum")) !== null &&
+        numberOf(fieldOf(one, "maximum")) !== null
+    )
+  return bounded === undefined
+    ? schema
+    : {
+        ...schema,
+        minimum: fieldOf(bounded, "minimum"),
+        maximum: fieldOf(bounded, "maximum"),
+      }
 }
 
 function withoutDefault(field: ModelField): ModelField {
