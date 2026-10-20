@@ -137,13 +137,14 @@ export class AdvanceRunHandler {
     watch: Watch
   ): Promise<AdvanceRunOutput> {
     const base = await runRequestOf(run, watch.app, this.assets)
+    const form = await watch.engine.formOf(base.binding)
     const pending = run.jobs.filter((one) => one.status === "pending")
     const sending = watch.engine.submitsAlone() ? pending.slice(0, 1) : pending
     let current = run
     for (const job of sending) {
       current = await this.submitJob(current, watch, job.index, {
         ...base,
-        inputs: jobInputsOf(base, job, current.jobs.length),
+        inputs: jobInputsOf(base, job, current.jobs.length, form),
         idempotencyKey: current.idempotencyKeyOf(job.index),
         seed: job.seed,
         count: current.jobs.length === 1 ? base.count : 1,

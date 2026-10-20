@@ -172,6 +172,32 @@ describe("a count of 3 on a model that makes one image at a time", () => {
     expect((await harness.runs.get(runId))?.toRecord().outputs).toHaveLength(3)
   })
 
+  it("wraps each job's seed within the form's own seed range", async () => {
+    const { harness, engine } = harnessWith(oneAtATime)
+    const { run } = await startWithCount(harness, 3, { seed: 100 })
+    const runId = runIdFormat.parse(run.id)
+    for (let step = 0; step < 7; step += 1) {
+      await harness.advance.execute({ runId })
+    }
+    expect(engine.submitted.map((one) => one.inputs.seed)).toEqual([100, 0, 1])
+  })
+
+  it("gives each job its own seed above the run's own seed range when the form allows it", async () => {
+    const wide: ModelForm = {
+      model,
+      fields: [prompt, { ...seed, max: 4_294_967_295 }],
+    }
+    const { harness, engine } = harnessWith(wide)
+    const { run } = await startWithCount(harness, 3, { seed: 3_000_000_000 })
+    const runId = runIdFormat.parse(run.id)
+    for (let step = 0; step < 7; step += 1) {
+      await harness.advance.execute({ runId })
+    }
+    expect(engine.submitted.map((one) => one.inputs.seed)).toEqual([
+      3_000_000_000, 3_000_000_001, 3_000_000_002,
+    ])
+  })
+
   it("refuses a count on a model that sets its own count in its inputs", async () => {
     const { harness } = harnessWith(severalAtOnce)
     await expect(startWithCount(harness, 3)).rejects.toMatchObject({
