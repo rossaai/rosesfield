@@ -25,6 +25,19 @@ describe("NavLink", () => {
     expect(link.getAttribute("aria-current")).toBeNull()
   })
 
+  it("brightens a link's text to ink on hover, beside the fill", () => {
+    render(<NavLink href="/library">Library</NavLink>)
+    const link = screen.getByRole("link", { name: "Library" })
+    expect(link.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "text-ink-muted",
+        "hover:text-ink",
+        "in-data-[gallery=hover]:text-ink",
+        "hover:bg-(--tint)",
+      ])
+    )
+  })
+
   it("marks the current link by its text only", () => {
     render(
       <NavLink href="/" current>

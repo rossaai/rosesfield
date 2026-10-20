@@ -76,8 +76,46 @@ test("an app page shrinks the bar to 36 px and the mark to 20 px", async ({
   await expect.poll(async () => (await boxOf(bar)).height).toBe(36)
   const mark = bar.locator("[data-slot='app-bar-mark']").first()
   await expect.poll(async () => (await boxOf(mark)).width).toBe(20)
-  const connect = await boxOf(bar.getByRole("link", { name: "Connect" }))
-  expect(connect.x + connect.width).toBe(1440 - 16)
+  const connect = bar.getByRole("link", { name: "Connect" })
+  await expect.poll(async () => (await boxOf(connect)).height).toBe(24)
+  const end = await boxOf(connect)
+  expect(end.x + end.width).toBe(1440 - 16)
+  expect(await style(connect, "padding-left")).toBe("10px")
+  expect(await style(connect, "transition-property")).toContain("height")
+  expect(await style(connect, "transition-property")).toContain("padding")
+})
+
+test("the balance holds a 16 px icon 8 px before its label, 6 px on an app page", async ({
+  page,
+}) => {
+  test.skip(isPhone(page), "the compact gap is a desktop size")
+  for (const [path, gap] of [
+    ["/", 8],
+    ["/apps/image", 6],
+  ] as const) {
+    const bar = await open(page, path)
+    const balance = bar.locator("[data-slot='app-bar-balance'] > *")
+    await expect(balance).toBeVisible()
+    await expect.poll(() => style(balance, "gap")).toBe(`${gap}px`)
+    const icon = await boxOf(balance.locator("svg"))
+    const label = await boxOf(balance.locator("[data-slot='button-label']"))
+    expect({ width: icon.width, height: icon.height }).toEqual({
+      width: 16,
+      height: 16,
+    })
+    expect(Math.round(label.x - (icon.x + icon.width))).toBe(gap)
+  }
+})
+
+test("a link at rest brightens its text on hover", async ({ page }) => {
+  test.skip(isPhone(page), "the area links are a desktop row")
+  const bar = await open(page, "/")
+  const library = bar.getByRole("link", { name: "Library" })
+  const explore = bar.getByRole("link", { name: "Explore" })
+  const ink = await style(explore, "color")
+  expect(await style(library, "color")).not.toBe(ink)
+  await library.hover()
+  await expect.poll(() => style(library, "color")).toBe(ink)
 })
 
 test("an Image link opens a menu of its apps and reads as hovered", async ({
@@ -129,6 +167,15 @@ test("on a phone the bottom bar holds five places with Generate centred", async 
     height: 44,
   })
   expect(generate.x + generate.width / 2).toBeCloseTo(195, 0)
+  const glow = await boxOf(tabs.locator("[data-slot='app-bar-glow']"))
+  expect({ y: glow.y, width: glow.width }).toEqual({
+    y: bar.y - 35,
+    width: 390,
+  })
+  expect(await style(tabs, "background-color")).toBe("rgba(0, 0, 0, 0)")
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
+    390
+  )
   const library = tabs.getByRole("link", { name: "Library" })
   await library.click()
   await expect(library).toHaveAttribute("aria-current", "page")
@@ -145,6 +192,23 @@ test("the footer closes Explore with its links and leaves an app page", async ({
   expect(await style(field, "padding-top")).toBe(padding)
   if (!isPhone(page)) {
     expect((await boxOf(footer.locator("h2"))).width).toBe(384)
+    const grid = footer.locator("section").first().locator("..")
+    const columns = (await style(grid, "grid-template-columns")).split(" ")
+    expect(columns).toHaveLength(5)
+    expect(new Set(columns).size).toBe(1)
+  }
+  const notice = footer.locator("p").last()
+  const trademarks = await boxOf(
+    footer.getByRole("link", { name: "Trademarks" })
+  )
+  const noticeBox = await boxOf(notice)
+  if (isPhone(page)) {
+    expect(noticeBox.y).toBeGreaterThan(trademarks.y)
+    expect(await style(notice, "text-align")).toBe("center")
+  } else {
+    expect(noticeBox.x).toBe(24)
+    const middle = (box: Box): number => box.y + box.height / 2
+    expect(Math.abs(middle(noticeBox) - middle(trademarks))).toBeLessThan(1)
   }
   for (const name of ["Code on GitHub", "The challenge", "Privacy", "Terms"]) {
     await expect(footer.getByRole("link", { name })).toBeVisible()

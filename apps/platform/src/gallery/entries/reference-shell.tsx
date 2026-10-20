@@ -1,6 +1,6 @@
-import { AppBar } from "@rosesfield/ui/components/app-bar"
+import { AppBar, AppBarAction } from "@rosesfield/ui/components/app-bar"
 import { Badge } from "@rosesfield/ui/components/badge"
-import { Button } from "@rosesfield/ui/components/button"
+import { Button, IconButton } from "@rosesfield/ui/components/button"
 import { Footer } from "@rosesfield/ui/components/footer"
 import { HeroBanner, HeroFan } from "@rosesfield/ui/components/hero"
 import {
@@ -15,6 +15,7 @@ import {
   TabBarLink,
 } from "@rosesfield/ui/components/tab-bar"
 import {
+  CoinsIcon,
   CompassIcon,
   HistoryIcon,
   ImageIcon,
@@ -83,19 +84,22 @@ function Bar({
         }
         areas={<Areas {...(open === true ? { open } : {})} />}
         areaMenu={
-          <Button size="bar" tone="quiet" aria-label={t("sample.nav.areas")}>
+          <IconButton label={t("sample.nav.areas")} tone="quiet" place="bar">
             <MenuIcon aria-hidden="true" />
-          </Button>
+          </IconButton>
         }
         balance={
-          <span className="px-2 text-body text-ink-muted">
+          <AppBarAction
+            icon={<CoinsIcon aria-hidden="true" />}
+            render={<a href="?settings" />}
+          >
             {t("sample.nav.balance")}
-          </span>
+          </AppBarAction>
         }
         connect={
-          <Button size="bar" tone="primary">
+          <AppBarAction tone="primary" render={<a href="?connect" />}>
             {t("sample.nav.connect")}
-          </Button>
+          </AppBarAction>
         }
       />
     </div>
