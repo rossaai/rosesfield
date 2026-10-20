@@ -2,6 +2,8 @@ import { ComfyRouterGenerationEngine, type Fetch } from "@rosesfield/generation"
 
 export const routerUrl = ComfyRouterGenerationEngine.routerUrl
 
+const docsUrl = "https://docs.comfy.org"
+
 export type RouterCall = { method: string; url: string; key: string | null }
 
 type Schema = {
@@ -113,6 +115,19 @@ export function fakeRouter(options: FakeRouterOptions): {
             { detail: options.refuseCatalog, error_type: "not_enabled" },
             { status: 403, headers: { "X-Comfy-Error-Type": "not_enabled" } }
           )
+    }
+    if (url === `${docsUrl}/llms.txt`) {
+      return new Response(
+        ids.map((id) => `${docsUrl}/router-schemas/${id}.json`).join("\n")
+      )
+    }
+    const published = options.schemas.find(
+      (one) =>
+        url ===
+        `${docsUrl}/router-schemas/${String(one["x-comfy-router-model-id"])}.json`
+    )
+    if (published !== undefined) {
+      return Response.json(published)
     }
     if (url.endsWith("/estimate")) {
       return Response.json(
