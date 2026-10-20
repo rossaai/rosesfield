@@ -81,4 +81,13 @@ describe("the bottom bar", () => {
     const image = within(sheet).getByRole("link", { name: "Image" })
     expect(image.getAttribute("href")).toBe("/apps/image")
   })
+
+  it("tints an app of the list on press and never scales it", async () => {
+    const bar = await barAt("/")
+    fireEvent.click(within(bar).getByRole("button", { name: "Generate" }))
+    const sheet = await screen.findByRole("dialog")
+    const image = within(sheet).getByRole("link", { name: "Image" })
+    expect(image.className.split(" ")).toContain("active:after:opacity-15")
+    expect(image.className).not.toMatch(/scale|translate/)
+  })
 })
