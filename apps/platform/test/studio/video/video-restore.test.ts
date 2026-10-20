@@ -1,10 +1,14 @@
+import { findApp } from "@rosesfield/catalog"
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
+import { appListing } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import { presetsOf } from "@/studio/video/video-prompt"
 import { restoredOf } from "@/studio/video/video-restore"
 import { minimaxH3 } from "./video-forms"
 
 const presets = presetsOf("video")
+
+const video = appListing.parse(findApp("video"))
 const pushIn = "The camera moves slowly forward, toward the subject."
 
 const graph: CatalogModel = {
@@ -31,7 +35,8 @@ describe("Use these inputs on Video", () => {
       restoredOf(
         { model: "ltx-2-5", prompt: "A kite", cameraMove: "push-in" },
         graph,
-        presets
+        presets,
+        video
       )
     ).toEqual({
       tab: "text-image",
@@ -44,7 +49,8 @@ describe("Use these inputs on Video", () => {
       restoredOf(
         { model: "minimax/minimax-h3", prompt: `A kite\n${pushIn}` },
         minimax,
-        presets
+        presets,
+        video
       ).inputs
     ).toEqual({})
   })
@@ -59,7 +65,8 @@ describe("Use these inputs on Video", () => {
           lastFrame: ["b"],
         },
         minimax,
-        presets
+        presets,
+        video
       ).tab
     ).toBe("first-last")
     expect(
@@ -70,8 +77,25 @@ describe("Use these inputs on Video", () => {
           references: ["a", "b"],
         },
         minimax,
-        presets
+        presets,
+        video
       ).tab
     ).toBe("references")
+  })
+
+  it("opens Two frames for a graph run that holds a first and a last frame", () => {
+    expect(
+      restoredOf(
+        {
+          model: "ltx-2-5",
+          prompt: "A kite",
+          startFrame: ["a"],
+          lastFrame: ["b"],
+        },
+        graph,
+        presets,
+        video
+      ).tab
+    ).toBe("first-last")
   })
 })

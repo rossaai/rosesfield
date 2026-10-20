@@ -199,19 +199,20 @@ export function HostedFields({
   fields,
   form,
   skip = [],
-}: HostedFieldsProps): ReactElement {
-  return (
+}: HostedFieldsProps): ReactElement | null {
+  const shown = fields.filter(
+    (field) => isShownField(field) && !skip.includes(field.kind)
+  )
+  return shown.length === 0 ? null : (
     <div className="flex flex-col gap-s4">
-      {fields
-        .filter((field) => isShownField(field) && !skip.includes(field.kind))
-        .map((field) => (
-          <HostedField
-            key={field.name}
-            field={field}
-            value={form.values.inputs[field.name]}
-            form={form}
-          />
-        ))}
+      {shown.map((field) => (
+        <HostedField
+          key={field.name}
+          field={field}
+          value={form.values.inputs[field.name]}
+          form={form}
+        />
+      ))}
     </div>
   )
 }

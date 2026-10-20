@@ -23,6 +23,12 @@ import {
   resolve,
   type SchemaFacts,
 } from "#infrastructure/router/router-schema"
+import {
+  namedChoiceOf,
+  typeOf,
+  variantsOf,
+  withVariantBounds,
+} from "#infrastructure/router/router-variants"
 
 type Walk = {
   components: Schema
@@ -262,7 +268,13 @@ function leafOf(walk: Walk, schema: Schema, spot: Spot): ModelField | null {
     choiceOf(walk, schema, spot, false) ??
     mediaOf(walk, schema, spot) ??
     choiceOf(walk, schema, spot, true) ??
-    scalarOf(base, schema, typeOf(schema, walk.components), spot.key)
+    namedChoiceOf(schema, spot, walk.components) ??
+    scalarOf(
+      base,
+      withVariantBounds(schema, walk.components),
+      typeOf(schema, walk.components),
+      spot.key
+    )
   return field !== null && spot.isInOptional ? withoutDefault(field) : field
 }
 
@@ -339,27 +351,6 @@ function itemOf(schema: Schema, components: Schema): Schema | null {
 
 function hasParts(schema: Schema): boolean {
   return arrayOf(fieldOf(schema, "allOf")) !== null
-}
-
-function variantsOf(schema: Schema): unknown[] {
-  return [
-    ...(arrayOf(fieldOf(schema, "anyOf")) ?? []),
-    ...(arrayOf(fieldOf(schema, "oneOf")) ?? []),
-  ]
-}
-
-function typeOf(schema: Schema, components: Schema): string | null {
-  const type = fieldOf(schema, "type")
-  if (typeof type === "string") {
-    return type
-  }
-  const types = variantsOf(schema)
-    .map((one) => fieldOf(resolve(one, components), "type"))
-    .filter((one): one is string => typeof one === "string" && one !== "null")
-  if (types.includes("string")) {
-    return "string"
-  }
-  return types.length === 1 ? (types[0] ?? null) : null
 }
 
 function isInternal(key: string, schema: Schema): boolean {

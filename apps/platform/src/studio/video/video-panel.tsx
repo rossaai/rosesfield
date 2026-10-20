@@ -18,7 +18,7 @@ import {
   type VideoTab,
   videoTabs,
 } from "@/studio/video/video-tabs"
-import { VideoWells } from "@/studio/video/video-wells"
+import { ElementsChip, VideoWells } from "@/studio/video/video-wells"
 
 function isVideoTab(value: unknown): value is VideoTab {
   return videoTabs.some((tab) => tab === value)
@@ -46,7 +46,7 @@ export function ModeTabs({ screen }: { screen: VideoScreen }): ReactElement {
 }
 
 function PromptPart({ screen }: { screen: VideoScreen }): ReactElement {
-  const { prompt, presets, hosted, fields, state } = screen
+  const { prompt, presets, hosted, fields, state, tab } = screen
   const words = presets.find((preset) => preset.value === prompt.move)?.words
   const problem = state.form.problems.get(prompt.name)
   const label = tCatalog("video.input.prompt.label")
@@ -55,14 +55,19 @@ function PromptPart({ screen }: { screen: VideoScreen }): ReactElement {
       <PromptBlock
         label={label}
         chips={
-          <SoundChip
-            form={state.form}
-            fields={fields}
-            isGraph={screen.isGraph}
-            makesSound={
-              hosted.chosen?.tags.some((one) => one.kind === "sound") === true
-            }
-          />
+          <>
+            {hosted.chosen === null ? null : (
+              <ElementsChip slots={slotsOf(fields, tab)} form={state.form} />
+            )}
+            <SoundChip
+              form={state.form}
+              fields={fields}
+              isGraph={screen.isGraph}
+              makesSound={
+                hosted.chosen?.tags.some((one) => one.kind === "sound") === true
+              }
+            />
+          </>
         }
       >
         <textarea

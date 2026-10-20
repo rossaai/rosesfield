@@ -96,12 +96,12 @@ export function BarFrame(props: BarFrameProps): ReactElement {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <h1 className="sr-only">{appName(props.app)}</h1>
-      <div className="flex min-h-0 flex-1 px-4 pt-2 pb-4">
+      <div data-slot="bar-stage" className="flex min-h-0 flex-1 pb-4">
         <AppStage
           app={props.app}
           kind="bar"
           scrollRef={scrollRef}
-          scrollClassName="pb-4 @regular:px-4 @regular:pb-36"
+          scrollClassName="px-4 pb-4 @regular:pb-36"
         >
           <AppCanvas
             app={props.app}

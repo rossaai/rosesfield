@@ -1,6 +1,11 @@
 import type { ShareView } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
-import { afterLoad, escapeHtml, sharePage } from "#share/share-page"
+import {
+  afterLoad,
+  escapeHtml,
+  explorePage,
+  sharePage,
+} from "#share/share-page"
 import { sharedRun } from "./shared-run"
 
 const built =
@@ -146,5 +151,35 @@ describe("a shared video's card", () => {
     expect(page).not.toContain("og:image")
     expect(page).not.toContain(" poster=")
     expect(page).toContain('<meta name="twitter:card" content="summary" />')
+  })
+})
+
+describe("the Explore page", () => {
+  const tile = (id: string): ShareView => ({
+    ...view,
+    id,
+    path: `/share/${id}`,
+  })
+
+  it("loads its first tile at once with a high priority, the rest lazily, and the app after the page paints", () => {
+    const page = explorePage(
+      built,
+      [
+        { view: tile("one"), poster: null },
+        { view: tile("two"), poster: null },
+        { view: tile("three"), poster: null },
+      ],
+      "https://rosesfield.com/"
+    )
+    const images = page.match(/<img src="\/share\/[^"]+"[^>]*>/g) ?? []
+    expect(images).toHaveLength(3)
+    expect(images[0]).toContain('fetchpriority="high"')
+    expect(images[0]).not.toContain('loading="lazy"')
+    expect(images.slice(1).every((one) => one.includes('loading="lazy"'))).toBe(
+      true
+    )
+    expect(page).not.toContain('<script type="module" crossorigin src=')
+    expect(page).not.toContain("modulepreload")
+    expect(page).toContain('addEventListener("load"')
   })
 })

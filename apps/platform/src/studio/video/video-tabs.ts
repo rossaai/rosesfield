@@ -1,6 +1,8 @@
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
+import type { AppListing } from "@rosesfield/contract"
 import type { FieldValue } from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
+import { graphFormOf } from "@/studio/video/graph-form"
 import { type VideoFields, videoFieldsOf } from "@/studio/video/video-fields"
 
 export type VideoTab = "text-image" | "references" | "first-last"
@@ -21,8 +23,6 @@ export const startFrameInput = "startFrame"
 
 export const lastFrameInput = "lastFrame"
 
-const graphTabs: readonly VideoTab[] = ["text-image", "first-last"]
-
 type Inputs = Readonly<Record<string, FieldValue>>
 
 export function fieldsOfModel(model: CatalogModel | null): VideoFields | null {
@@ -31,10 +31,19 @@ export function fieldsOfModel(model: CatalogModel | null): VideoFields | null {
     : videoFieldsOf(model.form)
 }
 
-export function tabsOfModel(model: CatalogModel): VideoTab[] {
-  const fields = fieldsOfModel(model)
+function inputFieldsOf(
+  model: CatalogModel | null,
+  app: AppListing
+): VideoFields | null {
+  return model?.kind === "graph" && model.form === null
+    ? videoFieldsOf(graphFormOf(app))
+    : fieldsOfModel(model)
+}
+
+export function tabsOfModel(model: CatalogModel, app: AppListing): VideoTab[] {
+  const fields = inputFieldsOf(model, app)
   if (fields === null) {
-    return model.kind === "graph" ? [...graphTabs] : ["text-image"]
+    return ["text-image"]
   }
   const has: Readonly<Record<VideoTab, boolean>> = {
     "text-image": true,
@@ -46,9 +55,10 @@ export function tabsOfModel(model: CatalogModel): VideoTab[] {
 
 export function modelsOfTab(
   models: readonly CatalogModel[],
-  tab: VideoTab
+  tab: VideoTab,
+  app: AppListing
 ): CatalogModel[] {
-  return models.filter((model) => tabsOfModel(model).includes(tab))
+  return models.filter((model) => tabsOfModel(model, app).includes(tab))
 }
 
 export function modelForTab(
@@ -137,9 +147,10 @@ export function imagesForTab(
 
 export function tabOfInputs(
   inputs: Inputs,
-  model: CatalogModel | null
+  model: CatalogModel | null,
+  app: AppListing
 ): VideoTab {
-  const fields = fieldsOfModel(model)
+  const fields = inputFieldsOf(model, app)
   if (fields === null) {
     return "text-image"
   }

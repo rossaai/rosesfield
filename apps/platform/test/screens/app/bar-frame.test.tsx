@@ -43,3 +43,31 @@ describe("the bar frame on a phone", () => {
     expect(places.every((place) => place === "sheet")).toBe(true)
   })
 })
+
+describe("the bar frame's canvas", () => {
+  it("reaches the page's edges, so its head row and its feed share the 16 px gutter at every width", () => {
+    render(
+      withClient(
+        <BarFrame
+          app={image}
+          hasRuns={false}
+          onUseInputs={() => undefined}
+          sheet={[false, () => undefined]}
+          settings={null}
+          bar={() => null}
+        />,
+        image,
+        []
+      )
+    )
+    const stage = document.querySelector('[data-slot="bar-stage"]')
+    const feed = document.querySelector('[data-slot="app-stage-scroll"]')
+    const classes = (node: Element | null): string[] =>
+      node?.className.split(" ") ?? []
+    expect(classes(stage).filter((one) => /^(px|pt|pl|pr)-/.test(one))).toEqual(
+      []
+    )
+    expect(classes(feed)).toContain("px-4")
+    expect(classes(feed).some((one) => one.includes(":px-"))).toBe(false)
+  })
+})

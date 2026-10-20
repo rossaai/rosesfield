@@ -1,4 +1,5 @@
 import { Slider as SliderPrimitive } from "@base-ui/react/slider"
+import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement } from "react"
 
 type SettingSliderProps = {
@@ -11,7 +12,19 @@ type SettingSliderProps = {
   onChange: (value: number) => void
 }
 
+const middle = 0.5
+
+export function valueSideOf(
+  value: number,
+  min: number,
+  max: number
+): "start" | "end" {
+  const share = max > min ? (value - min) / (max - min) : 0
+  return share < middle ? "end" : "start"
+}
+
 export function SettingSlider(props: SettingSliderProps): ReactElement {
+  const side = valueSideOf(props.value, props.min, props.max)
   return (
     <SliderPrimitive.Root
       data-slot="setting-slider"
@@ -31,7 +44,11 @@ export function SettingSlider(props: SettingSliderProps): ReactElement {
           <span
             aria-hidden="true"
             data-slot="setting-slider-value"
-            className="pointer-events-none absolute inset-y-0 left-3 flex items-center font-medium text-body text-ink"
+            data-side={side}
+            className={cn(
+              "pointer-events-none absolute inset-y-0 flex items-center font-medium text-body text-ink",
+              side === "start" ? "left-3" : "right-3"
+            )}
           >
             {props.shown}
           </span>

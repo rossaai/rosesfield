@@ -159,7 +159,7 @@ export function useVideoScreen(
     setTabState(next)
     const chosen = textOf(form.values.inputs[modelInputName]) || null
     const id = modelForTab(
-      modelsOfTab(hosted.models, next),
+      modelsOfTab(hosted.models, next, app),
       chosen ?? hosted.defaultModel,
       hosted.defaultModel
     )
@@ -173,7 +173,7 @@ export function useVideoScreen(
     }
   }
   const restore: Restore = (inputs, model) => {
-    const restored = restoredOf(inputs, model, presets)
+    const restored = restoredOf(inputs, model, presets, app)
     for (const [name, value] of Object.entries(restored.inputs)) {
       form.setInput(name, value)
     }
