@@ -116,7 +116,7 @@ test.describe("an app with many inputs on a desktop", () => {
     const footer = await boxOf(column.locator('[data-slot="composer-toolbar"]'))
     expect(footer.height).toBe(60)
     const canvas = await boxOf(
-      page.getByRole("region", { name: "Your outputs" })
+      page.getByRole("region", { name: "Your results" })
     )
     expect(canvas.x).toBe(box.x + box.width + 8)
     expect(box.height).toBe(780)
@@ -206,7 +206,7 @@ test.describe("an app on a phone", () => {
       page,
     }) => {
       await page.goto(`/apps/${appId}`)
-      const region = page.getByRole("region", { name: "Your outputs" })
+      const region = page.getByRole("region", { name: "Your results" })
       await expect(region).toBeVisible()
       await expect(page.locator('[data-slot="prompt-bar"]')).toHaveCount(0)
       await expect(page.locator('[data-slot="composer"]')).toHaveCount(0)

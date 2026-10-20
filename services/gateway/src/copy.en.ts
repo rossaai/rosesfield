@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 import type { AssetKind } from "@rosesfield/contract"
 import type { EngineTarget } from "#engine/engine-target"
 
@@ -13,23 +15,33 @@ const targetWords: Record<EngineTarget, string> = {
   "comfy-deployment": "a Comfy deployment",
   comfyui: "your ComfyUI through comfy-api-proxy",
   "runpod-pod": "a ComfyUI in a RunPod pod",
-  modal: "a ComfyUI in a Modal Server",
+  modal: "a ComfyUI on a Modal server",
   "runpod-serverless": "RunPod Serverless",
   demo: "the demo engine",
+}
+
+const toolNames = {
+  readRun: "read_run",
+  listAssets: "list_assets",
+  listCharacters: "list_characters",
+}
+
+const envNames = {
+  baseUrl: "AGENT_BASE_URL",
+  model: "AGENT_MODEL",
 }
 
 const plural = new Intl.PluralRules("en")
 
 export const gatewayCopy = {
   mcp: {
-    instructions:
-      "Each app tool starts one run of a Rosesfield app on this server and returns the run at once. The run keeps working on the server. Read it with read_run until its status is done, failed or cancelled. Each output is an asset, and read_run gives the address of its bytes. list_assets and list_characters read the library. Pass the same idempotencyKey when you send a start again, so it starts no second run.",
+    instructions: `Each app tool starts one run of a Rosesfield app on this server and returns the run at once. The run keeps working on the server. Read it with ${toolNames.readRun} until its status is done, failed or cancelled. Each result is an asset, and ${toolNames.readRun} gives the address of its bytes. ${toolNames.listAssets} and ${toolNames.listCharacters} read the library. Pass the same idempotencyKey when you send a start again, so it starts no second run.`,
     toolDescription: (appId: string, kind: AssetKind): string =>
       `Starts a run of the ${appId} app, which makes ${outputWords[kind]}. The reply holds the run with its id and its status. Pass idempotencyKey to make a retry start no second run.`,
     idempotencyKey:
       "A key you choose for this start. A second start with the same key returns the first run.",
     readRun:
-      "Reads one run by its id: its status, its progress from 0 to 1, and its outputs with the address of each one's bytes.",
+      "Reads one run by its id: its status, its progress from 0 to 1, and its results with the address of each one's bytes.",
     listAssets:
       "Lists the assets in the library, newest first, 60 at a time, each with the address of its bytes. Pass kind to keep one kind. Pass the reply's next as cursor to read the next page.",
     catalogUnread:
@@ -40,7 +52,7 @@ export const gatewayCopy = {
   server: {
     listening: (url: string): string => `Rosesfield listens on ${url}`,
     engineDemo:
-      "Runs use the demo engine, because no engine target is set. Its outputs are flat test files, not model output.",
+      "Runs use the demo engine, because no engine target is set. Its results are flat test files that no model made.",
     engineLive: (target: EngineTarget): string =>
       `Runs use ${targetWords[target]}.`,
     enginePublic: (target: EngineTarget): string =>
@@ -50,10 +62,11 @@ export const gatewayCopy = {
     lockToken:
       "The server asks for the owner token on every API and MCP request.",
     publicMode: (days: number): string =>
-      `Public mode: each visitor's Comfy key opens their own work, and their runs, assets, characters and conversations are deleted ${days} ${plural.select(days) === "one" ? "day" : "days"} after their last visit.`,
+      plural.select(days) === "one"
+        ? `Public mode: each visitor's Comfy key opens their own work, and their runs, assets, characters and conversations are deleted ${days} day after their last visit.`
+        : `Public mode: each visitor's Comfy key opens their own work, and their runs, assets, characters and conversations are deleted ${days} days after their last visit.`,
     agentOn: (model: string): string => `The agent answers with ${model}.`,
-    agentOff:
-      "The agent is off, because no agent model is set. Set AGENT_BASE_URL and AGENT_MODEL.",
+    agentOff: `The agent is off, because no agent model is set. Set ${envNames.baseUrl} and ${envNames.model}.`,
     resumed: (count: number): string =>
       plural.select(count) === "one"
         ? `${count} unfinished run is watched again.`

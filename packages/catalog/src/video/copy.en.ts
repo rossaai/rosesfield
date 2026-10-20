@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const videoCopy: Readonly<Record<string, string>> = {
   "video.name": "Video",
   "video.line": "Turn a prompt or your images into a video.",

@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const layersCopy: Readonly<Record<string, string>> = {
   "layers.name": "Layers",
   "layers.line": "Split an image into layers, then edit one layer.",

@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const lipsyncCopy = {
   "lipsync.name": "Lip sync",
   "lipsync.line": "Add a face and a voice track, and get a talking video.",

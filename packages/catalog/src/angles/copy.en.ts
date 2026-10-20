@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const anglesCopy = {
   "angles.name": "Angles",
   "angles.line": "See one person or product from other sides.",

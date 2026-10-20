@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const motionCopy = {
   "motion.name": "Motion",
   "motion.line": "Move a photo with the motion of a clip.",

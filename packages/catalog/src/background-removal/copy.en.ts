@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const backgroundRemovalCopy: Readonly<Record<string, string>> = {
   "backgroundRemoval.name": "Background removal",
   "background-removal.line": "Cut the subject out of its background.",

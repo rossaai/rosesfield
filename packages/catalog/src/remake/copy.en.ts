@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const remakeCopy: Readonly<Record<string, string>> = {
   "remake.name": "Remake",
   "remake.line": "Rebuild an edit with your character and the same cuts.",
@@ -30,7 +32,7 @@ export const remakeCopy: Readonly<Record<string, string>> = {
   "remake.route.rebuild": "Rebuilt",
   "remake.route.keep": "Kept",
   "remake.compare.yours": "Your reference",
-  "remake.compare.output": "Output",
+  "remake.compare.output": "Result",
   "remake.compare.play": "Play both",
   "remake.compare.pause": "Pause both",
   "remake.error.shotCount.title.one": "This edit has {count} shot",

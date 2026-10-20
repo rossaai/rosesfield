@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const expandCopy: Readonly<Record<string, string>> = {
   "expand.name": "Expand",
   "expand.line": "Extend a photo past its edges.",
@@ -38,10 +40,10 @@ export const expandCopy: Readonly<Record<string, string>> = {
   "expand.input.right.label": "Right",
   "expand.input.bottom.label": "Bottom",
   "expand.input.left.label": "Left",
-  "expand.input.top.unit": "%",
-  "expand.input.right.unit": "%",
-  "expand.input.bottom.unit": "%",
-  "expand.input.left.unit": "%",
+  "expand.input.top.unit": "percent",
+  "expand.input.right.unit": "percent",
+  "expand.input.bottom.unit": "percent",
+  "expand.input.left.unit": "percent",
   "expand.input.left.noteEmpty":
     "Each value adds space as a share of your photo's width or height.",
   "expand.input.left.note": "Makes {width} by {height} pixels.",
