@@ -56,28 +56,56 @@ describe("Button's measures", () => {
     expect(classes.some((name) => name.startsWith("max-w-"))).toBe(false)
   })
 
-  it("stands Recreate 32 px tall with its 16 px glyph 6 px before the label, and 28 px when small", () => {
+  it("stands Recreate 32 px tall and 28 px when small, its 16 px glyph against a label with 6 px of its own padding", () => {
     render(
       <>
-        <Button size="recreate">Recreate</Button>
-        <Button size="recreateSmall">Copy</Button>
+        <Button size="recreate">
+          <svg aria-hidden="true" />
+          Recreate
+        </Button>
+        <Button size="recreateSmall">
+          <svg aria-hidden="true" />
+          Copy
+        </Button>
       </>
     )
+    const pad = "[&_[data-slot=button-label]]:px-1.5"
     expect(classesOf("Recreate")).toEqual(
-      expect.arrayContaining(["h-8", "gap-1.5", "[&_svg]:size-4"])
+      expect.arrayContaining(["h-8", "px-3", "gap-0", "[&_svg]:size-4", pad])
     )
     expect(classesOf("Copy")).toEqual(
-      expect.arrayContaining(["h-7", "gap-1.5", "[&_svg]:size-4"])
+      expect.arrayContaining(["h-7", "px-2", "gap-0", "[&_svg]:size-4", pad])
     )
+    const label = screen
+      .getByRole("button", { name: "Recreate" })
+      .querySelector("[data-slot='button-label']")
+    expect(label?.textContent).toBe("Recreate")
+    expect(label?.previousElementSibling?.tagName.toLowerCase()).toBe("svg")
   })
 
-  it("changes light on hover and press and never its size", () => {
+  it("draws the same light on press as on hover and never changes its size", () => {
     render(<Button tone="primary">Generate</Button>)
     const classes = classesOf("Generate")
     expect(classes).toContain("hover:after:opacity-10")
-    expect(classes).toContain("active:after:opacity-15")
+    expect(classes).toContain("active:after:opacity-10")
+    expect(classes).toContain("in-data-[gallery=press]:after:opacity-10")
+    expect(classes.filter((name) => name.includes("opacity-15"))).toEqual([])
     expect(classes.filter((name) => /scale|motion-press/.test(name))).toEqual(
       []
+    )
+  })
+
+  it("draws its focus ring inside its own edge, so no overflow clips it", () => {
+    render(
+      <IconButton label="Close" place="close">
+        <svg aria-hidden="true" />
+      </IconButton>
+    )
+    expect(classesOf("Close")).toEqual(
+      expect.arrayContaining([
+        "focus-visible:outline-offset-[calc(var(--spacing-focus-ring)*-1)]",
+        "in-data-[gallery=focus]:outline-offset-[calc(var(--spacing-focus-ring)*-1)]",
+      ])
     )
   })
 })

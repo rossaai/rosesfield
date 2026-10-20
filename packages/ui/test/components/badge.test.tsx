@@ -6,14 +6,15 @@ afterEach(cleanup)
 
 describe("Badge", () => {
   it.each(badgeKinds)(
-    "rides 4 px after its host's label, 16 px tall, as %s",
+    "rides 4 px after its host's label, 16 px tall, on the one accent's tint, as %s",
     (kind) => {
       render(<Badge kind={kind}>Word</Badge>)
       const badge = screen.getByText("Word").closest("[data-slot='badge']")
       expect(badge?.getAttribute("data-kind")).toBe(kind)
       expect(badge?.className.split(" ")).toEqual(
-        expect.arrayContaining(["ms-1", "h-4"])
+        expect.arrayContaining(["ms-1", "h-4", "bg-(--tint)", "text-ink"])
       )
+      expect(badge?.className).not.toMatch(/hor-|nop-|cem-/)
     }
   )
 

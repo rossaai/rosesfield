@@ -68,3 +68,33 @@ describe("SegmentedTabs", () => {
     ).toBe("true")
   })
 })
+
+describe("SegmentedTabs on a well", () => {
+  it("sits on a 36 px well with 2 px padding and puts the current cell on a 30 px plate inset 1 px", () => {
+    render(
+      <Tabs defaultValue="list">
+        <SegmentedTabs form="well" aria-label="View">
+          <SegmentedTab value="list">List</SegmentedTab>
+          <SegmentedTab value="grid">Grid</SegmentedTab>
+        </SegmentedTabs>
+      </Tabs>
+    )
+    const list = screen.getByRole("tablist", { name: "View" })
+    expect(list.getAttribute("data-form")).toBe("well")
+    expect(classesOf(list)).toEqual(
+      expect.arrayContaining(["h-9", "p-0.5", "gap-1", "rounded-dense"])
+    )
+    const plate = list.querySelector("[data-slot='segmented-control-thumb']")
+    expect(plate?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "h-tab",
+        "top-[calc(var(--active-tab-top)+var(--spacing-hairline))]",
+        "transition-none",
+      ])
+    )
+    const grid = screen.getByRole("tab", { name: "Grid" })
+    expect(grid.getAttribute("tabindex")).toBe("-1")
+    fireEvent.click(grid)
+    expect(grid.getAttribute("aria-selected")).toBe("true")
+  })
+})

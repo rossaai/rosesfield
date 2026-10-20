@@ -172,7 +172,7 @@ function RunDetail({ run }: { run: Run }): ReactElement {
         }
         phoneAction={<MoreMenu run={run} />}
       />
-      <div className="flex flex-1 flex-col gap-s8 px-s5 pb-s12 @regular:px-s4">
+      <div className="flex flex-1 flex-col gap-s8 px-s5 pb-s12">
         <Section title={t("history.run.outputs")}>
           <RunOutputs run={run} />
         </Section>
@@ -243,7 +243,7 @@ export function RunScreen(): ReactElement {
   return (
     <>
       <ScreenHeader title={<Skeleton className="h-s5 w-tile" />} />
-      <div className="flex flex-col gap-s4 px-s5 @regular:px-s4">
+      <div className="flex flex-col gap-s4 px-s5">
         <Skeleton className="aspect-video w-1/2" />
         <Skeleton className="h-s12 w-full" />
         <Skeleton className="h-s12 w-full" />

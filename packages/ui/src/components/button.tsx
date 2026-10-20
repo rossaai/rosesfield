@@ -9,7 +9,7 @@ import type { ButtonTone } from "@rosesfield/ui/contracts/button.generated"
 import type { IconButtonTone } from "@rosesfield/ui/contracts/icon-button.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { cva, type VariantProps } from "class-variance-authority"
-import type { ReactElement, ReactNode } from "react"
+import { Children, type ReactElement, type ReactNode } from "react"
 
 const tones = {
   default: "bg-(--well) text-ink",
@@ -40,8 +40,10 @@ const buttonVariants = cva(
         hero: "h-12 gap-1.5 p-4",
         bar: "h-9 px-3",
         barCompact: "h-6 px-2.5",
-        recreate: "h-8 gap-1.5 px-3 py-1.5 [&_svg]:size-4",
-        recreateSmall: "h-7 gap-1.5 px-2 [&_svg]:size-4",
+        recreate:
+          "h-8 gap-0 px-3 py-1.5 [&_svg]:size-4 [&_[data-slot=button-label]]:px-1.5",
+        recreateSmall:
+          "h-7 gap-0 px-2 [&_svg]:size-4 [&_[data-slot=button-label]]:px-1.5",
         icon: "size-icon",
         "icon-dense": "size-icon-dense",
         "icon-small": "size-icon-small [&_svg]:glyph-small",
@@ -90,14 +92,15 @@ function Spinner(): ReactElement {
 }
 
 function Label({ children }: { children: ReactNode }): ReactNode {
-  if (typeof children === "string") {
-    return (
+  return Children.map(children, (child) =>
+    typeof child === "string" ? (
       <span data-slot="button-label" className="min-w-0 truncate">
-        {children}
+        {child}
       </span>
+    ) : (
+      child
     )
-  }
-  return children
+  )
 }
 
 function Button({

@@ -7,7 +7,12 @@ import type { ReactElement } from "react"
 import { appName, type OutputKind, outputKinds } from "@/catalog/app-facts"
 import { catalogApps } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
-import type { FilterChoice, FilterGroup } from "@/screens/library/view-cluster"
+import {
+  type FilterChoice,
+  type FilterGroup,
+  kindPictures,
+} from "@/screens/library/view-cluster"
+import { appIcon } from "@/shell/nav-rows"
 
 export type StateChoice = "all" | "working" | "failed"
 
@@ -20,13 +25,25 @@ const stateItems: SegmentedItem<StateChoice>[] = [
 ]
 
 const appChoices: readonly FilterChoice[] = [
-  { value: every, label: t("history.filter.allApps") },
-  ...catalogApps.map((app) => ({ value: app.id, label: appName(app) })),
+  {
+    value: every,
+    label: t("history.filter.allApps"),
+    picture: <LayoutGridIcon />,
+  },
+  ...catalogApps.map((app) => ({
+    value: app.id,
+    label: appName(app),
+    picture: appIcon(app),
+  })),
 ]
 
 const kindChoices: readonly FilterChoice[] = [
-  { value: every, label: t("kind.all") },
-  ...outputKinds.map((kind) => ({ value: kind, label: t(`kind.${kind}`) })),
+  { value: every, label: t("kind.all"), picture: kindPictures.all },
+  ...outputKinds.map((kind) => ({
+    value: kind,
+    label: t(`kind.${kind}`),
+    picture: kindPictures[kind],
+  })),
 ]
 
 export type HistoryFilterProps = {

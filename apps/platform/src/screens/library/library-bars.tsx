@@ -7,16 +7,21 @@ import { type ReactElement, useState } from "react"
 import { t, tCount } from "@/copy/t"
 import { useDownloadAsset } from "@/pieces/asset-actions"
 import { DeleteAssetDialog } from "@/pieces/delete-asset-dialog"
-import type { FilterChoice, FilterGroup } from "@/screens/library/view-cluster"
+import {
+  type FilterChoice,
+  type FilterGroup,
+  kindPictures,
+} from "@/screens/library/view-cluster"
 
 export type LibraryKind = "all" | "image" | "video" | "audio"
 
-const kindChoices: readonly FilterChoice[] = [
-  { value: "all", label: t("kind.all") },
-  { value: "image", label: t("kind.image") },
-  { value: "video", label: t("kind.video") },
-  { value: "audio", label: t("kind.audio") },
-]
+const kindChoices: readonly FilterChoice[] = (
+  ["all", "image", "video", "audio"] as const
+).map((kind) => ({
+  value: kind,
+  label: t(`kind.${kind}`),
+  picture: kindPictures[kind],
+}))
 
 function kindOf(value: string): LibraryKind {
   return value === "image" || value === "video" || value === "audio"
