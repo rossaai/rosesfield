@@ -75,6 +75,10 @@
       "sha256": "0ebfcfa9908db6be77318ef86188739220c5cc78669bf6ab69a8814b458fbfde"
     },
     {
+      "path": "packages/ui/src/contracts/app-bar.generated.ts",
+      "sha256": "b0d91ffe14a53c1d1c5dcf6501c275b3f75f7ccae2817c7a2805bbcc98652d6e"
+    },
+    {
       "path": "packages/ui/src/contracts/avatar.generated.ts",
       "sha256": "b4a666df4158aac1009f70618fd09cb820f1ffa7d8b5534b1c430497e45d0fa0"
     },
@@ -107,6 +111,10 @@
       "sha256": "5c304659fef22cf3c55284695b5a901f0537166bb585b619ec45fe8f50cad695"
     },
     {
+      "path": "packages/ui/src/contracts/generate-button.generated.ts",
+      "sha256": "bca401181d8806ff034a7d315780c084c4e16715ec9697d445890e8c1d705ce2"
+    },
+    {
       "path": "packages/ui/src/contracts/icon-button.generated.ts",
       "sha256": "acbacdf89ab54f7863345b4891bdf43f47e0613714d0bc89fe94525482105a73"
     },
@@ -117,6 +125,10 @@
     {
       "path": "packages/ui/src/contracts/material-surface.generated.ts",
       "sha256": "90ad4f85b8c660ee32c9926b7d13cae98114b56deccb86728223b83b36e2dc05"
+    },
+    {
+      "path": "packages/ui/src/contracts/media-feed.generated.ts",
+      "sha256": "44a650be984a5571665b65a443c0c5b761c13589940311ac1ae31ab5f08d31c9"
     },
     {
       "path": "packages/ui/src/contracts/media-player.generated.ts",
@@ -135,8 +147,16 @@
       "sha256": "ca25729645f254ad0aad105d4e447ed3dd0d8ad9910dbb9e1715a7d1b7cd27e6"
     },
     {
+      "path": "packages/ui/src/contracts/model-row.generated.ts",
+      "sha256": "a45deec297fa73351bded1b061fb90171c7c2640b60542b18fc4cbf209d1f3ce"
+    },
+    {
       "path": "packages/ui/src/contracts/popover.generated.ts",
       "sha256": "0fe67d441499e40c907317bf3263d5565878f60dde98f1d2f20fe3f5a62e576b"
+    },
+    {
+      "path": "packages/ui/src/contracts/preset-tile.generated.ts",
+      "sha256": "2629e5b7ba62c9396e03d29e47ffeb5786109e0ed29e895e40535b96a1419fac"
     },
     {
       "path": "packages/ui/src/contracts/radio-group.generated.ts",
