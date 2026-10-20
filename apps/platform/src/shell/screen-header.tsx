@@ -39,7 +39,7 @@ function PhoneHeader({
     return null
   }
   return (
-    <header className="flex h-header shrink-0 items-center gap-s3 px-s4 @regular:hidden">
+    <header className="flex h-header shrink-0 items-center gap-s3 px-s5 @regular:hidden">
       {title === null ? null : (
         <h1 className="min-w-0 flex-1 truncate text-body font-medium">
           {title}
@@ -66,7 +66,7 @@ export function ScreenHeader(props: ScreenHeaderProps): ReactElement {
       />
       <header
         className={cn(
-          "sticky top-0 z-10 hidden h-header shrink-0 items-center gap-s3 bg-canvas px-s4 @regular:flex",
+          "sticky top-0 z-10 hidden h-header shrink-0 items-center gap-s3 bg-canvas px-s5 @regular:flex",
           isScrolled ? "shadow-seam" : ""
         )}
       >

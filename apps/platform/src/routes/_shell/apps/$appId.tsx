@@ -1,11 +1,13 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 import { AppRouteScreen } from "@/screens/app/app-route-screen"
-import { readText } from "@/shell/search"
+import { type StageTab, stageTabs } from "@/screens/app/app-stage"
+import { readOneOf, readText } from "@/shell/search"
 
 type AppSearch = {
   use?: string
   from?: string
   share?: string
+  tab?: StageTab
 }
 
 export const Route = createFileRoute("/_shell/apps/$appId")({
@@ -13,10 +15,12 @@ export const Route = createFileRoute("/_shell/apps/$appId")({
     const use = readText(search.use)
     const from = readText(search.from)
     const share = readText(search.share)
+    const tab = readOneOf(search.tab, stageTabs)
     return {
       ...(use === undefined ? {} : { use }),
       ...(from === undefined ? {} : { from }),
       ...(share === undefined ? {} : { share }),
+      ...(tab === undefined ? {} : { tab }),
     }
   },
   beforeLoad: ({ params, search }) => {

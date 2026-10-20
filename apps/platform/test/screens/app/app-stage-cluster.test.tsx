@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
-import { AppStage } from "@/screens/app/app-stage"
+import { AppStage, AskedTab } from "@/screens/app/app-stage"
 import {
   doneRun,
   image,
@@ -51,11 +51,45 @@ describe("the app stage's cluster", () => {
       )
     )
     const view = document.querySelector("[data-slot='canvas-view']")
-    expect(view?.textContent).toBe(t("library.view.label"))
+    expect(view?.textContent).toBe(t("app.canvas.view"))
     expect(view?.querySelector(".lucide-layout-grid")).not.toBeNull()
     expect(view?.className.split(" ")).toEqual(
       expect.arrayContaining(["h-8", "rounded-dense", "border"])
     )
     expect(document.querySelector("[data-slot='view-pill']")).toBeNull()
+  })
+
+  it("opens on the tab the link asks for, even once you have a run", () => {
+    render(
+      withClient(
+        <AskedTab tab="how">
+          <AppStage app={video} kind="column">
+            <div />
+          </AppStage>
+        </AskedTab>,
+        video,
+        [doneRun(video.id)]
+      )
+    )
+    expect(
+      screen
+        .getByRole("tab", { name: t("app.tab.how") })
+        .getAttribute("aria-selected")
+    ).toBe("true")
+    cleanup()
+    render(
+      withClient(
+        <AppStage app={video} kind="column">
+          <div />
+        </AppStage>,
+        video,
+        [doneRun(video.id)]
+      )
+    )
+    expect(
+      screen
+        .getByRole("tab", { name: t("app.tab.history") })
+        .getAttribute("aria-selected")
+    ).toBe("true")
   })
 })

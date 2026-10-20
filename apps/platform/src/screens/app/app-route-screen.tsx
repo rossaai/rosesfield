@@ -6,6 +6,7 @@ import { type ReactElement, Suspense } from "react"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import { ScreenState } from "@/pieces/screen-state"
+import { AskedTab } from "@/screens/app/app-stage"
 import { ColumnAppScreen } from "@/screens/app/column-app-screen"
 import { studioScreenFor } from "@/screens/app/studio-screens"
 import type { AppSeeds } from "@/screens/app/use-app-screen"
@@ -58,10 +59,12 @@ export function AppRouteScreen(): ReactElement {
     return <MissingApp appId={appId} />
   }
   return (
-    <AppScreenFor
-      key={`${app.id}:${search.from ?? ""}:${search.use ?? ""}:${search.share ?? ""}`}
-      app={app}
-      seeds={{ use: search.use, from: search.from, share: search.share }}
-    />
+    <AskedTab tab={search.tab ?? null}>
+      <AppScreenFor
+        key={`${app.id}:${search.from ?? ""}:${search.use ?? ""}:${search.share ?? ""}:${search.tab ?? ""}`}
+        app={app}
+        seeds={{ use: search.use, from: search.from, share: search.share }}
+      />
+    </AskedTab>
   )
 }

@@ -105,7 +105,7 @@ export function AgentStartScreen(): ReactElement {
         actions={listFor(isRegular)}
         phoneAction={listFor(!isRegular)}
       />
-      <div className="flex flex-1 flex-col items-center gap-s6 px-s5 pb-s5 @regular:px-s4 @regular:pt-[calc(100dvh/6)]">
+      <div className="flex flex-1 flex-col items-center gap-s6 px-s5 pb-s5 @regular:pt-[calc(100dvh/6)]">
         <div className="flex max-w-prompt-max flex-col items-center gap-s2 pt-s12 text-center @regular:pt-0">
           <h2 className="text-display">{t("agent.start.title")}</h2>
           <p className="text-body text-ink-muted">{t("agent.empty.body")}</p>

@@ -140,7 +140,7 @@ export function CanvasCluster({
             className="rounded-dense border border-(--line) px-2"
           >
             <LayoutGridIcon aria-hidden="true" />
-            {t("library.view.label")}
+            {t("app.canvas.view")}
           </Button>
         }
       />

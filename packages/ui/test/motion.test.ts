@@ -42,6 +42,13 @@ describe("motion presets", () => {
     }
   })
 
+  it("turns a control's rotate on the same timing as its transform", () => {
+    const rule =
+      /@utility motion-control \{([^}]*)\}/.exec(motionCss)?.[1] ?? ""
+    expect(rule).toMatch(/\btransform var\(--control-change\)/)
+    expect(rule).toMatch(/\brotate var\(--control-change\)/)
+  })
+
   it("reads a spring timing in milliseconds with its curve", () => {
     document.documentElement.style.setProperty(
       "--layer-in-transform",

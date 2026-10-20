@@ -140,7 +140,7 @@ export function ConversationScreen(): ReactElement {
     return (
       <>
         <PlainHeader />
-        <div className="flex justify-center px-s5 py-s12 @regular:px-s4">
+        <div className="flex justify-center px-s5 py-s12">
           <NoModel />
         </div>
       </>
@@ -204,7 +204,7 @@ function KnownConversation({
       ) : (
         <ConversationHeader transcript={data} />
       )}
-      <div className="min-h-0 flex-1 overflow-y-auto px-s5 @regular:px-s4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-s5">
         <div className="mx-auto flex w-full max-w-prompt-max flex-col gap-s6 py-s4">
           {data === undefined ? <MessageSkeletons /> : null}
           <TranscriptItems conversationId={conversationId} items={items} />
@@ -224,7 +224,7 @@ function KnownConversation({
           ) : null}
         </div>
       </div>
-      <div className="flex justify-center px-s5 pb-s4 @regular:px-s4">
+      <div className="flex justify-center px-s5 pb-s4">
         <ComposerSlot model={model}>
           <AgentComposer
             state={state}

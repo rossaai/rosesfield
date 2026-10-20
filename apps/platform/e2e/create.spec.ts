@@ -198,6 +198,49 @@ test.describe("the tray and rhythm of Video's column", () => {
   })
 })
 
+test.describe("Video's mode switch and its settings", () => {
+  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
+
+  test("insets the chosen mode's plate 2 px inside its 147 by 40 cell, 143 by 36", async ({
+    page,
+  }) => {
+    await page.goto("/apps/video")
+    const modes = page
+      .locator('[data-slot="composer"]')
+      .locator('[data-slot="segmented-control"]')
+    await expect(modes).toBeVisible()
+    const chosen = modes.locator('[role="radio"][aria-checked="true"]')
+    const cell = await boxOf(chosen)
+    const plate = await boxOf(
+      modes.locator('[data-slot="segmented-control-thumb"]')
+    )
+    expect([cell.width, cell.height]).toEqual([147, 40])
+    expect([plate.width, plate.height]).toEqual([143, 36])
+    expect(plate.x - cell.x).toBe(2)
+    expect(plate.y - cell.y).toBe(2)
+  })
+
+  test("turns the More settings chevron over the control timing instead of jumping", async ({
+    page,
+  }) => {
+    await page.goto("/apps/video")
+    const trigger = page.getByRole("button", { name: "More settings" })
+    await expect(trigger).toBeVisible()
+    const chevron = trigger.locator("svg")
+    const names = await chevron.evaluate(
+      (element) => getComputedStyle(element).transitionProperty
+    )
+    expect(names.split(", ")).toContain("rotate")
+    await trigger.click()
+    await page.waitForTimeout(60)
+    const turning = await chevron.evaluate(
+      (element) => getComputedStyle(element).rotate
+    )
+    expect(turning).not.toBe("180deg")
+    await expect(chevron).toHaveCSS("rotate", "180deg")
+  })
+})
+
 test.describe("an app on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "the sheet is the phone's")
 
