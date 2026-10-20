@@ -1,7 +1,5 @@
 import { cn } from "@rosesfield/ui/lib/cn"
 import { type ReactElement, type ReactNode, useEffect, useState } from "react"
-import { createPortal } from "react-dom"
-import { useHeaderSlots } from "@/shell/header-slots"
 
 type ScreenHeaderProps = {
   title: ReactNode
@@ -33,18 +31,26 @@ export function useScrolledPast(): [
   return [setNode, isPast]
 }
 
-function PhoneParts({
+function PhoneHeader({
   title,
   phoneAction,
 }: Pick<ScreenHeaderProps, "title" | "phoneAction">): ReactNode {
-  const slots = useHeaderSlots()
+  if (title === null && phoneAction === undefined) {
+    return null
+  }
   return (
-    <>
-      {slots.title === null ? null : createPortal(title, slots.title)}
-      {slots.action === null || phoneAction === undefined
-        ? null
-        : createPortal(phoneAction, slots.action)}
-    </>
+    <header className="flex h-header shrink-0 items-center gap-s3 px-s4 @regular:hidden">
+      {title === null ? null : (
+        <h1 className="min-w-0 flex-1 truncate text-body font-medium">
+          {title}
+        </h1>
+      )}
+      {phoneAction === undefined ? null : (
+        <div className="ml-auto flex shrink-0 items-center gap-s2">
+          {phoneAction}
+        </div>
+      )}
+    </header>
   )
 }
 
@@ -54,11 +60,10 @@ export function ScreenHeader(props: ScreenHeaderProps): ReactElement {
   return (
     <>
       <span ref={sentinel} aria-hidden="true" className="block h-0" />
-      {props.title === null ? null : (
-        <h1 className="sr-only @regular:hidden">
-          {props.phoneTitle ?? props.title}
-        </h1>
-      )}
+      <PhoneHeader
+        title={props.phoneTitle ?? props.title}
+        phoneAction={props.phoneAction}
+      />
       <header
         className={cn(
           "sticky top-0 z-10 hidden h-header shrink-0 items-center gap-s3 bg-canvas px-s4 @regular:flex",
@@ -79,10 +84,6 @@ export function ScreenHeader(props: ScreenHeaderProps): ReactElement {
           {props.actions}
         </div>
       </header>
-      <PhoneParts
-        title={props.phoneTitle ?? props.title}
-        phoneAction={props.phoneAction}
-      />
     </>
   )
 }

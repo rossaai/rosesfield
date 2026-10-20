@@ -1,54 +1,64 @@
 import type { Asset } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Input } from "@rosesfield/ui/components/input"
-import {
-  SegmentedControl,
-  type SegmentedItem,
-} from "@rosesfield/ui/components/segmented-control"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { ShapesIcon } from "lucide-react"
 import { type ReactElement, useState } from "react"
 import { t, tCount } from "@/copy/t"
 import { useDownloadAsset } from "@/pieces/asset-actions"
 import { DeleteAssetDialog } from "@/pieces/delete-asset-dialog"
+import type { FilterChoice, FilterGroup } from "@/screens/library/view-cluster"
 
 export type LibraryKind = "all" | "image" | "video" | "audio"
 
-const kindItems: SegmentedItem<LibraryKind>[] = [
+const kindChoices: readonly FilterChoice[] = [
   { value: "all", label: t("kind.all") },
   { value: "image", label: t("kind.image") },
   { value: "video", label: t("kind.video") },
   { value: "audio", label: t("kind.audio") },
 ]
 
-type FiltersProps = {
-  kind: LibraryKind
+function kindOf(value: string): LibraryKind {
+  return value === "image" || value === "video" || value === "audio"
+    ? value
+    : "all"
+}
+
+export function libraryFilterGroups(
+  kind: LibraryKind,
+  onKind: (kind: LibraryKind) => void
+): FilterGroup[] {
+  return [
+    {
+      id: "kind",
+      name: t("library.kind.label"),
+      icon: <ShapesIcon />,
+      choices: kindChoices,
+      value: kind,
+      onChoose: (value) => onKind(kindOf(value)),
+    },
+  ]
+}
+
+type SearchProps = {
   query: string
   isSearchOpen: boolean
-  onKind: (kind: LibraryKind) => void
   onQuery: (query: string) => void
 }
 
-export function LibraryFilters(props: FiltersProps): ReactElement {
+export function LibrarySearch(props: SearchProps): ReactElement {
   return (
-    <div className="flex flex-col gap-s3 @regular:flex-row @regular:items-center">
-      <SegmentedControl
-        items={kindItems}
-        value={props.kind}
-        onValueChange={props.onKind}
-        label={t("library.kind.label")}
-      />
-      <Input
-        type="search"
-        aria-label={t("library.search.label")}
-        placeholder={t("library.search.placeholder")}
-        value={props.query}
-        onChange={(event) => props.onQuery(event.target.value)}
-        className={cn(
-          "max-w-none @regular:flex @regular:max-w-field-max",
-          props.isSearchOpen ? "" : "hidden"
-        )}
-      />
-    </div>
+    <Input
+      type="search"
+      aria-label={t("library.search.label")}
+      placeholder={t("library.search.placeholder")}
+      value={props.query}
+      onChange={(event) => props.onQuery(event.target.value)}
+      className={cn(
+        "max-w-none @regular:flex @regular:max-w-field-max",
+        props.isSearchOpen ? "" : "hidden"
+      )}
+    />
   )
 }
 

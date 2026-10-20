@@ -1,4 +1,5 @@
 import { Button, IconButton } from "@rosesfield/ui/components/button"
+import { Canvas } from "@rosesfield/ui/components/canvas"
 import { MediaGrid } from "@rosesfield/ui/components/media-grid"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
@@ -16,12 +17,23 @@ import { useGridColumns } from "@/pieces/use-columns"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { type Uploads, useUploads } from "@/pieces/use-uploads"
 import {
-  LibraryFilters,
   type LibraryKind,
+  LibrarySearch,
+  libraryFilterGroups,
   SelectionBar,
 } from "@/screens/library/library-bars"
-import { LibraryGrid } from "@/screens/library/library-grid"
-import { type LibraryData, useLibrary } from "@/screens/library/use-library"
+import { LibraryGrid, PendingTiles } from "@/screens/library/library-grid"
+import { ResultGrid } from "@/screens/library/result-grid"
+import {
+  type LibraryData,
+  libraryGridItems,
+  useLibrary,
+} from "@/screens/library/use-library"
+import {
+  tileSizes,
+  ViewCluster,
+  type ViewLayout,
+} from "@/screens/library/view-cluster"
 import { ScreenHeader } from "@/shell/screen-header"
 import { useWorkingRuns } from "@/shell/use-working-runs"
 
@@ -72,6 +84,8 @@ type BodyProps = {
   onClear: () => void
   isFiltered: boolean
   isRegular: boolean
+  layout: ViewLayout
+  size: number
 }
 
 function toggled(list: readonly string[], id: string): string[] {
@@ -127,6 +141,48 @@ function LibraryBody(props: BodyProps): ReactNode {
   }
   return (
     <>
+      {props.selected === null ? null : (
+        <SelectionBar
+          selected={props.selected}
+          assets={data.assets}
+          onCancel={() => props.setSelected(null)}
+        />
+      )}
+      <LibraryResults {...props} working={working} />
+    </>
+  )
+}
+
+function LibraryResults(
+  props: BodyProps & { working: ReturnType<typeof useWorkingRuns> }
+): ReactElement {
+  const { data, uploads, working } = props
+  const uploadActions = {
+    stop: uploads.stop,
+    retry: (key: string) => void uploads.retry(key),
+    remove: uploads.remove,
+  }
+  const sentinel = (
+    <span ref={data.sentinel} aria-hidden="true" className="block h-s1" />
+  )
+  if (props.layout === "grid" && props.selected === null) {
+    return (
+      <div className="flex flex-col gap-s6">
+        <PendingTiles
+          uploads={uploads.uploads}
+          working={working}
+          uploadActions={uploadActions}
+        />
+        <ResultGrid
+          items={libraryGridItems(data)}
+          size={props.size}
+          after={sentinel}
+        />
+      </div>
+    )
+  }
+  return (
+    <>
       <LibraryGrid
         assets={data.shown}
         runsById={data.runsById}
@@ -136,13 +192,9 @@ function LibraryBody(props: BodyProps): ReactNode {
         onToggle={(id) => props.setSelected(toggled(props.selected ?? [], id))}
         onStartSelect={(id) => props.setSelected([id])}
         isTouch={!props.isRegular}
-        uploadActions={{
-          stop: uploads.stop,
-          retry: (key) => void uploads.retry(key),
-          remove: uploads.remove,
-        }}
+        uploadActions={uploadActions}
       />
-      <span ref={data.sentinel} aria-hidden="true" className="block h-s1" />
+      {sentinel}
     </>
   )
 }
@@ -234,15 +286,72 @@ function LibraryHeader({
   )
 }
 
+type LibraryView = {
+  layout: ViewLayout
+  setLayout: (layout: ViewLayout) => void
+  size: number
+  setSize: (size: number) => void
+}
+
+function useLibraryView(): LibraryView {
+  const [layout, setLayout] = useState<ViewLayout>("list")
+  const [size, setSize] = useState<number>(tileSizes.initial)
+  return { layout, setLayout, size, setSize }
+}
+
+type LibraryCanvasProps = {
+  search: ReturnType<typeof useLibrarySearch>
+  data: LibraryData
+  view: LibraryView
+  isSearchOpen: boolean
+  isFiltered: boolean
+  children: ReactNode
+}
+
+function LibraryCanvas(props: LibraryCanvasProps): ReactElement {
+  const { search, view } = props
+  return (
+    <Canvas
+      label={t("library.title")}
+      tabs={
+        <div className="min-w-0 flex-1">
+          <LibrarySearch
+            query={search.query}
+            isSearchOpen={props.isSearchOpen || search.query !== ""}
+            onQuery={(next) => search.setSearch({ query: next })}
+          />
+        </div>
+      }
+      cluster={
+        <ViewCluster
+          layout={view.layout}
+          onLayout={view.setLayout}
+          size={view.size}
+          onSize={view.setSize}
+          groups={libraryFilterGroups(search.kind, (next) =>
+            search.setSearch({ kind: next })
+          )}
+        />
+      }
+      hasRuns={props.data.assets.length > 0 || props.isFiltered}
+    >
+      {props.children}
+    </Canvas>
+  )
+}
+
 export function LibraryScreen(): ReactElement {
-  const { kind, query, setSearch } = useLibrarySearch()
+  const search = useLibrarySearch()
+  const { kind, query, setSearch } = search
   const data = useLibrary(kind, query)
   const uploads = useUploads()
   const device = useDevice()
+  const view = useLibraryView()
   const [selected, setSelected] = useState<string[] | null>(null)
   const [isSearchOpen, setSearchOpen] = useState(query !== "")
   const isRegular = useIsRegularWindow()
   const drop = useDropUpload(uploads.start)
+  const isFiltered = kind !== "all" || query !== ""
   const upload = (): void => {
     void device.pickFiles({ accept, multiple: true }).then(uploads.start)
   }
@@ -254,31 +363,26 @@ export function LibraryScreen(): ReactElement {
         onSearch={() => setSearchOpen(!isSearchOpen)}
       />
       <div className="flex flex-1 flex-col gap-s6 px-s5 pb-s12 @regular:px-s4">
-        {selected === null ? (
-          <LibraryFilters
-            kind={kind}
-            query={query}
-            isSearchOpen={isSearchOpen || query !== ""}
-            onKind={(next) => setSearch({ kind: next })}
-            onQuery={(next) => setSearch({ query: next })}
-          />
-        ) : (
-          <SelectionBar
-            selected={selected}
-            assets={data.assets}
-            onCancel={() => setSelected(null)}
-          />
-        )}
-        <LibraryBody
+        <LibraryCanvas
+          search={search}
           data={data}
-          uploads={uploads}
-          selected={selected}
-          setSelected={setSelected}
-          onUpload={upload}
-          onClear={() => setSearch({ kind: "all", query: "" })}
-          isFiltered={kind !== "all" || query !== ""}
-          isRegular={isRegular}
-        />
+          view={view}
+          isSearchOpen={isSearchOpen}
+          isFiltered={isFiltered}
+        >
+          <LibraryBody
+            data={data}
+            uploads={uploads}
+            selected={selected}
+            setSelected={setSelected}
+            onUpload={upload}
+            onClear={() => setSearch({ kind: "all", query: "" })}
+            isFiltered={isFiltered}
+            isRegular={isRegular}
+            layout={view.layout}
+            size={view.size}
+          />
+        </LibraryCanvas>
       </div>
       <DropLayer isShown={drop.isDragging} />
     </div>

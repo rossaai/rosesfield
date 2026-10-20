@@ -1,10 +1,10 @@
 import type { Character } from "@rosesfield/contract"
 import { Button, IconButton } from "@rosesfield/ui/components/button"
 import { Card } from "@rosesfield/ui/components/card"
+import { interaction } from "@rosesfield/ui/components/interaction"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { motion } from "@rosesfield/ui/motion"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
@@ -20,7 +20,11 @@ function CharacterCard({ character }: { character: Character }): ReactElement {
     <Link
       to="/characters/$characterId"
       params={{ characterId: character.id }}
-      className={cn("block rounded-card", motion.press)}
+      className={cn(
+        "relative block rounded-card",
+        interaction.light,
+        interaction.ring
+      )}
     >
       <Card className="gap-s3 p-s4">
         {first === undefined ? null : (

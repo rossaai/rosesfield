@@ -1,4 +1,7 @@
+import { referenceCopy } from "@/gallery/reference-copy.en"
+
 const galleryCopy = {
+  ...referenceCopy,
   "gallery.title": "Gallery",
   "gallery.body":
     "Every component and piece in each of its states, in the light and the dark scheme. Every screen and layer in each of its states, in the scheme of this browser.",
@@ -126,7 +129,6 @@ const galleryCopy = {
   "state.fractions": "Fractions",
   "state.image": "Image",
   "state.initials": "Initials",
-  "state.runningFailed": "Running and failed",
   "state.rows": "Rows",
   "state.overflow": "Overflow",
   "state.keys": "Keys",
@@ -232,9 +234,6 @@ const galleryCopy = {
   "sample.progress": "Uploading portrait.png",
   "sample.avatar": "Ana",
   "sample.avatar.initials": "AN",
-  "sample.badge.working": "Working",
-  "sample.badge.failed": "Failed",
-  "sample.badge.waiting": "Waiting",
   "sample.row.image": "Image",
   "sample.row.video": "Video",
   "sample.row.voice": "Voice",

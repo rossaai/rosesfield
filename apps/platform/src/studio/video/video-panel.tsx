@@ -1,17 +1,25 @@
 import type { AppListing } from "@rosesfield/contract"
-import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
-import { Textarea } from "@rosesfield/ui/components/textarea"
-import { type ReactElement, useId, useMemo } from "react"
-import { tCatalog } from "@/copy/t"
+import { PromptBlock } from "@rosesfield/ui/components/input-panel"
+import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
+import { ModeStrip, ModeTab, Tabs } from "@rosesfield/ui/components/tabs"
+import { type ReactElement, useMemo } from "react"
+import { t, tCatalog } from "@/copy/t"
 import { CollapsibleSection } from "@/pieces/collapsible-section"
-import { FieldFrame } from "@/screens/app/fields/field-frame"
+import { CatalogPicker, modelNameOf } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
+import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
-import { ModelRow } from "@/studio/video/model-row"
 import { PresetCard } from "@/studio/video/preset-card"
 import { shownPresets } from "@/studio/video/preset-samples"
 import type { VideoScreen } from "@/studio/video/use-video-screen"
-import { SoundSwitch, VideoChips } from "@/studio/video/video-chips"
+import { SoundChip, VideoChips } from "@/studio/video/video-chips"
+import {
+  kindsOf,
+  type ModelKind,
+  modelForKind,
+  modelsOfKind,
+  shownKindOf,
+} from "@/studio/video/video-kind"
 import {
   modelsOfTab,
   slotsOf,
@@ -21,31 +29,103 @@ import {
 } from "@/studio/video/video-tabs"
 import { VideoWells } from "@/studio/video/video-wells"
 
+const kindKeys = {
+  graph: "model.kind.graph",
+  hosted: "model.kind.hosted",
+} as const
+
 function isVideoTab(value: unknown): value is VideoTab {
   return videoTabs.some((tab) => tab === value)
 }
 
-function PromptWell({ screen }: { screen: VideoScreen }): ReactElement {
-  const id = useId()
-  const { prompt, presets } = screen
-  const words = presets.find((preset) => preset.value === prompt.move)?.words
+function ModeTabs({ screen }: { screen: VideoScreen }): ReactElement {
   return (
-    <FieldFrame
-      caption={tCatalog("video.input.prompt.label")}
-      isOptional={false}
-      note={
-        words === undefined ? null : tCatalog("video.preset.words", { words })
-      }
-      problem={screen.state.form.problems.get(prompt.name)}
+    <Tabs
+      value={screen.tab}
+      onValueChange={(next) => {
+        if (isVideoTab(next)) {
+          screen.setTab(next)
+        }
+      }}
     >
-      <Textarea
-        id={id}
-        aria-label={tCatalog("video.input.prompt.label")}
-        placeholder={tCatalog("video.input.prompt.placeholder")}
-        value={prompt.typed}
-        onChange={(event) => prompt.setTyped(event.target.value)}
-      />
-    </FieldFrame>
+      <ModeStrip aria-label={tCatalog("video.tabs.label")}>
+        {videoTabs.map((one) => (
+          <ModeTab key={one} value={one}>
+            {tCatalog(tabKeys[one])}
+          </ModeTab>
+        ))}
+      </ModeStrip>
+    </Tabs>
+  )
+}
+
+function KindSwitch({
+  hosted,
+  kind,
+}: {
+  hosted: HostedState
+  kind: ModelKind | null
+}): ReactElement | null {
+  const kinds = kindsOf(hosted.models)
+  if (kind === null || kinds.length < 2) {
+    return null
+  }
+  return (
+    <SegmentedControl
+      density="composer"
+      label={t("model.kind.label")}
+      value={kind}
+      items={kinds.map((one) => ({ value: one, label: t(kindKeys[one]) }))}
+      onValueChange={(next) => {
+        const id = modelForKind(hosted.models, hosted.chosen, next)
+        if (id !== null) {
+          hosted.choose(id)
+        }
+      }}
+    />
+  )
+}
+
+function PromptPart({ screen }: { screen: VideoScreen }): ReactElement {
+  const { prompt, presets, hosted, fields, state } = screen
+  const words = presets.find((preset) => preset.value === prompt.move)?.words
+  const problem = state.form.problems.get(prompt.name)
+  const label = tCatalog("video.input.prompt.label")
+  return (
+    <div className="flex flex-col gap-1">
+      <PromptBlock
+        label={label}
+        chips={
+          <SoundChip
+            form={state.form}
+            fields={fields}
+            isGraph={screen.isGraph}
+            makesSound={
+              hosted.chosen?.tags.some((one) => one.kind === "sound") === true
+            }
+          />
+        }
+      >
+        <textarea
+          aria-label={label}
+          aria-invalid={problem === undefined ? undefined : true}
+          placeholder={tCatalog("video.input.prompt.placeholder")}
+          value={prompt.typed}
+          onChange={(event) => prompt.setTyped(event.target.value)}
+          className="min-h-0 w-full flex-1 resize-none bg-transparent text-body text-ink outline-none placeholder:text-ink-muted"
+        />
+      </PromptBlock>
+      {words === undefined ? null : (
+        <p className="px-1 text-label text-ink-muted">
+          {tCatalog("video.preset.words", { words })}
+        </p>
+      )}
+      {problem === undefined ? null : (
+        <p role="alert" className="px-1 text-label text-bug-text">
+          {t(problem.key, problem.values)}
+        </p>
+      )}
+    </div>
   )
 }
 
@@ -86,49 +166,30 @@ export function VideoPanel({
     () => ({ ...hosted, models: modelsOfTab(hosted.models, tab) }),
     [hosted, tab]
   )
+  const kind = shownKindOf(tabHosted.models, hosted.chosen)
+  const kindHosted = useMemo(
+    () => ({ ...tabHosted, models: modelsOfKind(tabHosted.models, kind) }),
+    [tabHosted, kind]
+  )
   const presets = useMemo(() => shownPresets(screen.presets), [screen.presets])
   return (
-    <div className="flex flex-col gap-s4">
-      <Tabs
-        value={tab}
-        onValueChange={(next) => {
-          if (isVideoTab(next)) {
-            screen.setTab(next)
-          }
-        }}
-      >
-        <TabsList
-          aria-label={tCatalog("video.tabs.label")}
-          className="flex-wrap overflow-visible"
-        >
-          {videoTabs.map((one) => (
-            <TabsTrigger key={one} value={one}>
-              {tCatalog(tabKeys[one])}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+    <div className="flex flex-col gap-2">
+      <ModeTabs screen={screen} />
       <PresetCard
         presets={presets}
         move={prompt.move}
         onMove={prompt.setMove}
+        line={hosted.chosen === null ? "" : modelNameOf(hosted.chosen)}
       />
+      <KindSwitch hosted={tabHosted} kind={kind} />
       {hosted.chosen === null ? null : (
         <VideoWells slots={slotsOf(fields, tab)} form={state.form} />
       )}
-      <PromptWell screen={screen} />
-      <ModelRow hosted={tabHosted} />
+      <PromptPart screen={screen} />
+      <CatalogPicker hosted={kindHosted} place="row" />
       {hosted.chosen === null ? null : (
         <>
           <VideoChips app={app} form={state.form} fields={fields} />
-          <SoundSwitch
-            form={state.form}
-            fields={fields}
-            isGraph={screen.isGraph}
-            makesSound={
-              hosted.chosen?.tags.some((one) => one.kind === "sound") === true
-            }
-          />
           <Settings app={app} screen={screen} />
         </>
       )}

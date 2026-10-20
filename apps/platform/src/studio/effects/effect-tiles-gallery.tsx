@@ -55,7 +55,7 @@ const prices: EffectPrices = {
 function Tiles({ width }: { width: number }): ReactElement {
   const [value, setValue] = useState(shown[0]?.effect ?? "")
   return (
-    <div style={{ width }} className="bg-canvas p-s4">
+    <div style={{ width }} className="max-w-full bg-canvas p-s4">
       <EffectTiles
         app={openApp}
         value={value}

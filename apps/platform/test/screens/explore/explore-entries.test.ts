@@ -1,10 +1,11 @@
 import { type Run, run, shareView } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import {
-  filterEntries,
+  admittedEntries,
   ownEntries,
   sharedEntries,
 } from "@/screens/explore/explore-entries"
+import type { ExploreAdmission } from "@/screens/explore/explore-list"
 import { sharedOutputOf } from "@/screens/explore/share-api"
 
 const outputId = "3d4e5f6a-7b8c-4d9e-8f0a-2b3c4d5e6f01"
@@ -78,10 +79,103 @@ describe("Explore's outputs", () => {
     )
   })
 
-  it("filter by the kind of output", () => {
-    const entries = ownEntries([runOf({})])
-    expect(filterEntries(entries, "image")).toHaveLength(1)
-    expect(filterEntries(entries, "video")).toEqual([])
-    expect(filterEntries(entries, "all")).toHaveLength(1)
+  it("show a result only when the Explore list admits its run with a yes", () => {
+    const admitted = runOf({})
+    const unlisted = runOf({ id: "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e09" })
+    const entries = admittedEntries(ownEntries([admitted, unlisted]), [
+      admissionOf(admitted.id),
+    ])
+
+    expect(entries.map((entry) => entry.run.id)).toEqual([admitted.id])
+    expect(admittedEntries(ownEntries([admitted]), [])).toEqual([])
+  })
+
+  it("keep out a run whose input shows a person without consent, or a brand", () => {
+    const made = ownEntries([runOf({})])
+    const id = made[0]?.run.id
+    const other = admissionOf(id, { people: "other" })
+    const brand = admissionOf(id, { brand: true })
+    const operator = admissionOf(id, { people: "operator" })
+
+    expect(admittedEntries(made, [other])).toEqual([])
+    expect(admittedEntries(made, [brand])).toEqual([])
+    expect(admittedEntries(made, [operator])).toHaveLength(1)
+  })
+
+  it("keep out MiniMax H3 and Wan from open weights, and keep H3 from the API", () => {
+    const weights = runOf({
+      engine: {
+        adapter: "comfy-workflow",
+        models: ["minimax_h3_bf16.safetensors"],
+        workflowHash: null,
+      },
+    })
+    const wan = runOf({
+      engine: {
+        adapter: "comfy-workflow",
+        models: ["wan2.1_i2v_480p.safetensors"],
+        workflowHash: null,
+      },
+    })
+    const hosted = runOf({
+      engine: {
+        adapter: "hosted-model",
+        models: ["minimax/h3"],
+        workflowHash: null,
+      },
+    })
+
+    expect(
+      admittedEntries(ownEntries([weights]), [admissionOf(weights.id)])
+    ).toEqual([])
+    expect(admittedEntries(ownEntries([wan]), [admissionOf(wan.id)])).toEqual(
+      []
+    )
+    expect(
+      admittedEntries(ownEntries([hosted]), [
+        admissionOf(hosted.id, { source: "own-minimax-api" }),
+      ])
+    ).toHaveLength(1)
+  })
+
+  it("show an admitted run once when it is both shared and your own", () => {
+    const made = runOf({})
+    const share = shareView.parse({
+      id: "abc",
+      path: "/share/abc",
+      run: made,
+      media: [
+        {
+          index: 0,
+          kind: "image",
+          mime: "image/png",
+          width: 1,
+          height: 1,
+          durationSeconds: null,
+        },
+      ],
+      createdAt: "2026-10-19T12:00:00.000Z",
+      expiresAt: null,
+    })
+    const entries = admittedEntries(
+      [...sharedEntries([sharedOutputOf(share)]), ...ownEntries([made])],
+      [admissionOf(made.id)]
+    )
+
+    expect(entries.map((entry) => entry.source.kind)).toEqual(["share"])
   })
 })
+
+function admissionOf(
+  runId: string | undefined,
+  change: Partial<ExploreAdmission> = {}
+): ExploreAdmission {
+  return {
+    runId: runId ?? "",
+    source: "own-open-weights",
+    yes: "2026-10-20",
+    people: "none",
+    brand: false,
+    ...change,
+  }
+}

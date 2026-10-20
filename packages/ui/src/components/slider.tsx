@@ -4,6 +4,8 @@ import type { ReactElement } from "react"
 
 function Slider({
   className,
+  "aria-label": label,
+  "aria-labelledby": labelledBy,
   ...props
 }: SliderPrimitive.Root.Props): ReactElement {
   return (
@@ -20,7 +22,13 @@ function Slider({
         <SliderPrimitive.Track className="relative h-track w-full rounded-full bg-track">
           <SliderPrimitive.Indicator className="h-full rounded-full bg-ink" />
         </SliderPrimitive.Track>
-        <SliderPrimitive.Thumb className="block h-knob-height w-knob-width rounded-full bg-ink" />
+        <SliderPrimitive.Thumb
+          {...(label === undefined ? {} : { "aria-label": label })}
+          {...(labelledBy === undefined
+            ? {}
+            : { "aria-labelledby": labelledBy })}
+          className="block h-knob-height w-knob-width rounded-full bg-ink"
+        />
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>
   )

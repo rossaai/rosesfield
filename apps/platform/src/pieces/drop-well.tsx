@@ -5,8 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@rosesfield/ui/components/dropdown-menu"
-import { cn } from "@rosesfield/ui/lib/cn"
-import { motion } from "@rosesfield/ui/motion"
+import { DropZone } from "@rosesfield/ui/components/upload-zone"
 import {
   FileAudioIcon,
   ImageIcon,
@@ -107,21 +106,11 @@ function AddMenu({
               <PlusIcon aria-hidden="true" />
             </IconButton>
           ) : (
-            <button
-              type="button"
-              className={cn(
-                "flex w-full flex-col items-center gap-s2 rounded-card bg-(--well) p-s6 text-body text-ink hover:bg-(--tint)",
-                motion.tint
-              )}
-            >
-              <span className="flex size-icon items-center justify-center rounded-full bg-(--ground) [&_svg]:glyph">
-                <Icon aria-hidden="true" />
-              </span>
-              {label}
-              {limits === undefined ? null : (
-                <span className="text-caption text-ink-muted">{limits}</span>
-              )}
-            </button>
+            <DropZone
+              title={label}
+              line={limits ?? ""}
+              kinds={[<Icon key={kind} aria-hidden="true" />]}
+            />
           )
         }
       />

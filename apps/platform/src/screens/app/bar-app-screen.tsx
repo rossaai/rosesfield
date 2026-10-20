@@ -8,13 +8,13 @@ import { t } from "@/copy/t"
 import { AttachMenu } from "@/pieces/attach-menu"
 import { CharacterPicker } from "@/pieces/character-picker"
 import { LibraryPicker } from "@/pieces/library-picker"
-import { ModelChip, ModelSettings } from "@/screens/app/bar/model-settings"
+import { BarModelChip, ModelSettings } from "@/screens/app/bar/model-settings"
 import { SettingChip } from "@/screens/app/bar/setting-chip"
 import { type BarTray, useBarTray } from "@/screens/app/bar/use-bar-tray"
 import { BarChips, BarFrame } from "@/screens/app/bar-frame"
 import { textOf } from "@/screens/app/fields/field-props"
 import { inputPlaceholder } from "@/screens/app/fields/input-copy"
-import { StartProblem } from "@/screens/app/generate-foot"
+import { StartProblem, submitPriceOf } from "@/screens/app/generate-foot"
 import { HostedChips } from "@/screens/app/hosted/hosted-chips"
 import { TaskPanel } from "@/screens/app/hosted/task-panel"
 import {
@@ -90,7 +90,7 @@ function BarModelChips({
       {hosted?.isTaskApp === true ? (
         <HostedChips hosted={hosted} form={state.form} />
       ) : (
-        <ModelChip app={app} state={state} chips={chips} />
+        <BarModelChip app={app} state={state} chips={chips} />
       )}
       {hosted?.fields === null || hosted?.fields === undefined
         ? chips.map((name) => (
@@ -172,9 +172,7 @@ export function BarAppScreen({
                 onOpenSheet={() => sheet[1](true)}
               />
             }
-            price={state.start.price === "" ? undefined : state.start.price}
-            submitValue={state.start.priceValue}
-            submitName={state.start.priceName ?? undefined}
+            {...submitPriceOf(state.start)}
             busy={state.start.isPending || tray.isUploading}
           />
         </>

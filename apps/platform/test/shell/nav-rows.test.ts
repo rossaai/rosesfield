@@ -1,99 +1,64 @@
 import { describe, expect, it } from "vitest"
-import { hasInputs } from "@/shell/bottom-bar"
-import { createRows, navGroups } from "@/shell/nav-rows"
-import { tokenOfHash } from "@/shell/token-link"
+import { catalogApps } from "@/catalog/catalog-apps"
+import { navGroups } from "@/shell/nav-rows"
+import { appIdOfPath, hasFooter, hasInputs } from "@/shell/page-kind"
 
-const everyApp = (): boolean => true
-
-function idsOf(hasApp: (appId: string) => boolean): string[] {
-  const groups = navGroups(hasApp)
-  return [
-    groups.explore.id,
-    ...groups.areas.map((row) => row.id),
-    ...groups.chains.map((row) => row.id),
-    ...groups.work.map((row) => row.id),
-  ]
-}
-
-describe("the sidebar rows", () => {
-  it("list Explore, the areas, the chains, then your work, in the card's order", () => {
-    expect(idsOf(everyApp)).toEqual([
-      "explore",
+describe("the top bar's links", () => {
+  it("list Explore, then the media areas, then the rest", () => {
+    const groups = navGroups()
+    expect(groups.explore.to).toBe("/")
+    expect(groups.areas.map((area) => area.id)).toEqual([
       "image",
       "video",
-      "video-edit",
-      "effects",
-      "edit",
       "audio",
-      "lipsync",
-      "upscale",
-      "three-d",
-      "motion",
-      "characters",
-      "shot",
-      "storyboard",
-      "layers",
-      "ads",
-      "remake",
-      "agent",
-      "library",
-      "history",
-      "connect",
+    ])
+    expect(groups.rest.map((link) => link.to)).toEqual([
+      "/characters",
+      "/agent",
+      "/library",
+      "/history",
+      "/settings",
     ])
   })
 
-  it("open Voice from the Audio row until an Audio app exists, and leave out an area with no app", () => {
-    const has = (appId: string): boolean =>
-      !["audio", "edit", "three-d", "remake"].includes(appId)
-    const audio = navGroups(has).areas.find((row) => row.id === "audio")
-
-    expect(audio?.target).toEqual({ kind: "app", appId: "voice" })
-    expect(idsOf(has)).not.toContain("edit")
-    expect(idsOf(has)).not.toContain("three-d")
-    expect(idsOf(has)).not.toContain("remake")
+  it("put each app under the area of its category, in the catalog's order", () => {
+    const groups = navGroups()
+    for (const area of groups.areas) {
+      expect(area.apps.map((app) => app.id)).toEqual(
+        catalogApps
+          .filter((app) => app.category === area.id)
+          .map((app) => app.id)
+      )
+    }
+    const listed = groups.areas.flatMap((area) => area.apps)
+    expect(listed.some((app) => app.category === "character")).toBe(false)
   })
 
-  it("offer the areas and the chains in the phone's Create sheet", () => {
-    expect(createRows(navGroups(everyApp)).map((row) => row.id)).toEqual([
+  it("leave out an area with no app", () => {
+    const noAudio = catalogApps.filter((app) => app.category !== "audio")
+    expect(navGroups(noAudio).areas.map((area) => area.id)).toEqual([
       "image",
       "video",
-      "video-edit",
-      "effects",
-      "edit",
-      "audio",
-      "lipsync",
-      "upscale",
-      "three-d",
-      "motion",
-      "characters",
-      "shot",
-      "storyboard",
-      "layers",
-      "ads",
-      "remake",
     ])
   })
 })
 
-describe("the phone's bottom bar", () => {
-  it("shows on screens without inputs and leaves screens with inputs their Generate bar", () => {
-    expect(hasInputs("/")).toBe(false)
-    expect(hasInputs("/apps")).toBe(false)
-    expect(hasInputs("/library")).toBe(false)
-    expect(hasInputs("/history/2c3d4e5f")).toBe(false)
-    expect(hasInputs("/characters")).toBe(false)
-    expect(hasInputs("/apps/image")).toBe(true)
-    expect(hasInputs("/agent")).toBe(true)
-    expect(hasInputs("/agent/2c3d4e5f")).toBe(true)
-    expect(hasInputs("/characters/new")).toBe(true)
+describe("the kind of page", () => {
+  it("reads the app of an app page", () => {
+    expect(appIdOfPath("/apps/image")).toBe("image")
+    expect(appIdOfPath("/apps/video-edit/")).toBe("video-edit")
+    expect(appIdOfPath("/apps")).toBeNull()
+    expect(appIdOfPath("/")).toBeNull()
   })
-})
 
-describe("the judge link", () => {
-  it("reads the owner token from the link's fragment", () => {
-    const token = "a".repeat(40)
-    expect(tokenOfHash(`#token=${token}`)).toBe(token)
-    expect(tokenOfHash("#token=short")).toBeNull()
-    expect(tokenOfHash("")).toBeNull()
+  it("closes every page without inputs with the footer", () => {
+    for (const path of ["/", "/apps", "/library", "/history", "/characters"]) {
+      expect(hasInputs(path)).toBe(false)
+      expect(hasFooter(path)).toBe(true)
+    }
+    for (const path of ["/apps/image", "/agent", "/characters/new"]) {
+      expect(hasInputs(path)).toBe(true)
+      expect(hasFooter(path)).toBe(false)
+    }
   })
 })

@@ -1,35 +1,35 @@
 import { Button } from "@rosesfield/ui/components/button"
-import { MediaGrid } from "@rosesfield/ui/components/media-grid"
-import {
-  SegmentedControl,
-  type SegmentedItem,
-} from "@rosesfield/ui/components/segmented-control"
+import { MediaFeed } from "@rosesfield/ui/components/media-feed"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { useQuery } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
+import { useNavigate, useRouter } from "@tanstack/react-router"
 import { type ReactElement, type ReactNode, useState } from "react"
 import { settingsQuery } from "@/api/queries"
 import { useHasVisitorKey } from "@/api/visitor-keys"
 import { t } from "@/copy/t"
 import {
-  type ExploreFilter,
-  filterEntries,
+  type ExploreEntries,
   useExploreEntries,
 } from "@/screens/explore/explore-entries"
-import { ExploreTile } from "@/screens/explore/explore-tile"
-import { HomeComposer } from "@/screens/home/home-composer"
+import { exploreRows, visualEntries } from "@/screens/explore/explore-rows"
+import {
+  AppTiles,
+  bannerAppId,
+  ExploreBanner,
+  ExploreRowView,
+  PromoCards,
+  type ResultActions,
+  SharedFeed,
+} from "@/screens/explore/explore-sections"
+import { useRecreate, type VisualEntry } from "@/screens/explore/explore-tile"
+import { useInAppLinks } from "@/screens/explore/in-app-links"
+import { ShareDialog } from "@/screens/explore/share-dialog"
 import { useOpenKeyDialog } from "@/shell/key-dialog-context"
-import { ScreenHeader } from "@/shell/screen-header"
+import { ResultViewer, useShownResult } from "@/viewer/result-viewer"
 
-const filters: SegmentedItem<ExploreFilter>[] = [
-  { value: "all", label: t("kind.all") },
-  { value: "image", label: t("kind.image") },
-  { value: "video", label: t("kind.video") },
-  { value: "audio", label: t("kind.audio") },
-]
-
-const skeletonRatios: readonly string[] = ["1 / 1", "9 / 16", "16 / 9", "4 / 5"]
+const skeletonRatios: readonly string[] = ["9 / 16", "16 / 9", "4 / 5"]
+const skeletonCount = 12
 
 function useNeedsKey(): boolean {
   const settings = useQuery(settingsQuery).data
@@ -37,23 +37,10 @@ function useNeedsKey(): boolean {
   return settings?.mode === "public" && !hasKey
 }
 
-function AddKey(): ReactNode {
-  const needsKey = useNeedsKey()
-  const openKey = useOpenKeyDialog()
-  if (!needsKey) {
-    return null
-  }
+function LoadingFeed(): ReactElement {
   return (
-    <Button tone="primary" onClick={openKey}>
-      {t("key.add")}
-    </Button>
-  )
-}
-
-function LoadingGrid(): ReactElement {
-  return (
-    <MediaGrid layout="masonry">
-      {Array.from({ length: 8 }, (_, index) => (
+    <MediaFeed label={t("explore.shared.title")}>
+      {Array.from({ length: skeletonCount }, (_, index) => (
         <Skeleton
           // biome-ignore lint/suspicious/noArrayIndexKey: a skeleton's place is its identity
           key={index}
@@ -61,39 +48,47 @@ function LoadingGrid(): ReactElement {
           style={{ aspectRatio: skeletonRatios[index % skeletonRatios.length] }}
         />
       ))}
-    </MediaGrid>
+    </MediaFeed>
   )
 }
 
 function EmptyExplore(): ReactElement {
   const needsKey = useNeedsKey()
+  const openKey = useOpenKeyDialog()
+  const navigate = useNavigate()
+  const openImage = (): void =>
+    void navigate({ to: "/apps/$appId", params: { appId: bannerAppId } })
   return (
     <StateView
       kind="empty"
       density="compact"
       title={t("explore.empty.title")}
       body={t("explore.empty.body")}
-      {...(needsKey
-        ? {}
-        : {
-            actions: (
-              <Button
-                tone="primary"
-                nativeButton={false}
-                render={<Link to="/apps/$appId" params={{ appId: "image" }} />}
-              >
-                {t("explore.empty.action")}
-              </Button>
-            ),
-          })}
+      actions={
+        needsKey ? (
+          <Button tone="primary" onClick={openKey}>
+            {t("key.add")}
+          </Button>
+        ) : (
+          <Button tone="primary" onClick={openImage}>
+            {t("explore.empty.action")}
+          </Button>
+        )
+      }
     />
   )
 }
 
-function ExploreGrid({ filter }: { filter: ExploreFilter }): ReactElement {
-  const results = useExploreEntries()
+function ExploreFeeds({
+  results,
+  entries,
+  ...actions
+}: ResultActions & {
+  results: ExploreEntries
+  entries: readonly VisualEntry[]
+}): ReactNode {
   if (results.state === "loading") {
-    return <LoadingGrid />
+    return <LoadingFeed />
   }
   if (results.state === "failed") {
     return (
@@ -105,43 +100,93 @@ function ExploreGrid({ filter }: { filter: ExploreFilter }): ReactElement {
       />
     )
   }
-  const entries = filterEntries(results.entries, filter)
   if (entries.length === 0) {
     return <EmptyExplore />
   }
   return (
-    <MediaGrid layout="masonry">
-      {entries.map((entry) => (
-        <ExploreTile key={entry.key} entry={entry} />
+    <>
+      {exploreRows(entries).map((row) => (
+        <ExploreRowView key={row.key} row={row} {...actions} />
       ))}
-    </MediaGrid>
+      <SharedFeed entries={entries} {...actions} />
+    </>
   )
 }
 
-export function ExploreScreen(): ReactElement {
-  const [filter, setFilter] = useState<ExploreFilter>("all")
+function ShareLayer({
+  entry,
+  onClose,
+}: {
+  entry: VisualEntry | null
+  onClose: () => void
+}): ReactNode {
+  if (entry === null || entry.source.kind !== "own") {
+    return null
+  }
   return (
-    <div className="flex min-h-full flex-col">
-      <ScreenHeader
-        title={t("explore.title")}
-        phoneTitle={t("shell.name")}
-        actions={<AddKey />}
-        phoneAction={<AddKey />}
-      />
-      <div className="flex flex-col gap-s4 px-s5 pb-s12 @regular:px-s4">
-        <div className="flex justify-center pt-s3 @regular:pt-s8">
-          <HomeComposer className="w-full max-w-prompt-max" />
-        </div>
-        <div className="overflow-x-auto">
-          <SegmentedControl
-            items={filters}
-            value={filter}
-            onValueChange={setFilter}
-            label={t("explore.kind.label")}
-          />
-        </div>
-        <ExploreGrid filter={filter} />
+    <ShareDialog
+      run={entry.run}
+      outputId={entry.source.assetId}
+      open={true}
+      onOpenChange={(open) => {
+        if (!open) {
+          onClose()
+        }
+      }}
+    />
+  )
+}
+
+function useMore(
+  share: (entry: VisualEntry) => void
+): (entry: VisualEntry) => void {
+  const router = useRouter()
+  return (entry) => {
+    const { source } = entry
+    if (source.kind === "own") {
+      share(entry)
+      return
+    }
+    router.history.push(
+      router.buildLocation({
+        to: "/share/$shareId",
+        params: { shareId: source.shareId },
+      }).href
+    )
+  }
+}
+
+export function ExploreScreen(): ReactElement {
+  const root = useInAppLinks<HTMLDivElement>()
+  const results = useExploreEntries()
+  const entries =
+    results.state === "ready" ? visualEntries(results.entries) : []
+  const viewer = useShownResult()
+  const recreate = useRecreate()
+  const [sharing, setSharing] = useState<VisualEntry | null>(null)
+  const onMore = useMore(setSharing)
+  return (
+    <div ref={root} className="flex min-h-full flex-col px-4 pb-12">
+      <ExploreBanner />
+      <PromoCards entries={entries} />
+      <AppTiles />
+      <div className="mt-6 flex flex-col gap-12 @regular:mt-10 @regular:gap-35">
+        <ExploreFeeds
+          results={results}
+          entries={entries}
+          onOpen={viewer.show}
+          onMore={onMore}
+        />
       </div>
+      <ResultViewer
+        shown={viewer.shown}
+        open={viewer.isOpen}
+        list={entries}
+        onClose={viewer.close}
+        onStep={viewer.step}
+        onRecreate={recreate}
+      />
+      <ShareLayer entry={sharing} onClose={() => setSharing(null)} />
     </div>
   )
 }

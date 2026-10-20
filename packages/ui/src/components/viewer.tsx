@@ -86,7 +86,7 @@ function ViewerStage(props: ViewerStageProps): ReactElement {
   const { width, height } = props.aspect
   return (
     <div
-      data-slot="viewer-stage"
+      data-slot="media-player-picture"
       className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center px-0 py-s12 @regular:p-s12"
       style={{ containerType: "size" }}
     >
@@ -136,7 +136,7 @@ function ViewerAside({
       ref={fadeRef}
       data-ground="layer"
       className={cn(
-        "max-h-[50dvh] w-full shrink-0 flex-col gap-s4 overflow-y-auto bg-layer p-s6 text-ink @regular:flex @regular:max-h-none @regular:w-info-panel @regular:pt-s12",
+        "max-h-[50dvh] w-full shrink-0 flex-col gap-s4 overflow-y-auto bg-layer p-s6 text-ink @regular:my-2 @regular:me-2 @regular:flex @regular:max-h-none @regular:w-88 @regular:rounded-card @regular:p-4 @regular:pt-14",
         hasBar ? "hidden" : "flex"
       )}
     >
@@ -164,6 +164,24 @@ function ViewerBar({
     >
       {children}
     </div>
+  )
+}
+
+function ViewerClose({
+  fadeRef,
+  label,
+  onClose,
+}: {
+  fadeRef: RefCallback<HTMLElement>
+  label: string
+  onClose: () => void
+}): ReactElement {
+  return (
+    <span ref={fadeRef} className="absolute top-4 right-4">
+      <IconButton label={label} place="cardWide" onClick={onClose}>
+        <XIcon aria-hidden="true" />
+      </IconButton>
+    </span>
   )
 }
 
@@ -214,11 +232,11 @@ function Viewer(props: ViewerProps): ReactElement {
             </ViewerAside>
             <ViewerBar fadeRef={fadeRef}>{props.bar}</ViewerBar>
           </div>
-          <span ref={fadeRef} className="absolute top-s4 right-s4">
-            <IconButton label={props.closeLabel} onClick={close}>
-              <XIcon aria-hidden="true" />
-            </IconButton>
-          </span>
+          <ViewerClose
+            fadeRef={fadeRef}
+            label={props.closeLabel}
+            onClose={close}
+          />
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

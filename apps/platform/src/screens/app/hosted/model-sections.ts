@@ -9,8 +9,7 @@ export type SectionRow = {
 }
 
 export type ModelSection = {
-  id: string
-  label: string | null
+  id: "featured" | "all"
   rows: readonly SectionRow[]
 }
 
@@ -49,22 +48,14 @@ export function modelSections(
   nameOf: (model: CatalogModel) => string
 ): ModelSection[] {
   const byId = new Map(models.map((model) => [model.id, model]))
-  const first = ranBeforeOf([...firstIds]).flatMap((id) => {
+  const featured = ranBeforeOf([...firstIds]).flatMap((id) => {
     const model = byId.get(id)
     return model === undefined ? [] : [rowOf(model, nameOf(model))]
   })
-  const makers = new Map<string, SectionRow[]>()
-  for (const model of models) {
-    const rows = makers.get(model.maker) ?? []
-    rows.push(rowOf(model, nameOf(model)))
-    makers.set(model.maker, rows)
-  }
-  const grouped = [...makers.entries()].map(([maker, rows]) => ({
-    id: maker,
-    label: maker,
-    rows,
-  }))
-  return first.length === 0
-    ? grouped
-    : [{ id: "first", label: null, rows: first }, ...grouped]
+  const all = models.map((model) => rowOf(model, nameOf(model)))
+  const sections: ModelSection[] = [
+    { id: "featured", rows: featured },
+    { id: "all", rows: all },
+  ]
+  return sections.filter((section) => section.rows.length > 0)
 }

@@ -25,7 +25,7 @@ export function TaskPanel(props: TaskPanelProps): ReactElement {
   const { hosted } = props
   return (
     <div className="flex flex-col gap-s4">
-      <CatalogPicker hosted={hosted} />
+      <CatalogPicker hosted={hosted} place="row" />
       {hosted.fields === null ? (
         props.graphPanel(withoutModelInput(props.app))
       ) : (

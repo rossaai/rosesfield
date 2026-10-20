@@ -1,7 +1,8 @@
+import { interaction } from "@rosesfield/ui/components/interaction"
 import { useInView } from "@rosesfield/ui/hooks/use-in-view"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { mergeRefs } from "@rosesfield/ui/lib/merge-refs"
-import { motion, prefersReducedMotion } from "@rosesfield/ui/motion"
+import { prefersReducedMotion } from "@rosesfield/ui/motion"
 import {
   type CSSProperties,
   type ReactElement,
@@ -72,7 +73,7 @@ function TileVideo({
       muted
       loop
       playsInline
-      preload="metadata"
+      preload="none"
       className={fitClass}
     />
   )
@@ -157,7 +158,7 @@ function MediaTile(props: MediaTileProps): ReactElement {
       data-slot="media-tile"
       aria-label={props.alt}
       onClick={(event) => onOpen(event.currentTarget)}
-      className={cn(tileClass, motion.press)}
+      className={cn(tileClass, interaction.light, interaction.ring)}
       style={aspectStyle(aspect)}
     >
       <TileBody {...props} />

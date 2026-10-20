@@ -11,14 +11,23 @@ import { materialEntry } from "@/gallery/entries/materials"
 import { mediaEntries } from "@/gallery/entries/media"
 import { pieceEntries } from "@/gallery/entries/pieces"
 import { platformEntries } from "@/gallery/entries/platform"
+import { referenceControlEntries } from "@/gallery/entries/reference-controls"
+import { referenceCreateEntries } from "@/gallery/entries/reference-create"
+import { referenceMediaEntries } from "@/gallery/entries/reference-media"
+import { referenceShellEntries } from "@/gallery/entries/reference-shell"
 import { screenStateEntries } from "@/gallery/entries/screen-states"
 import { shellEntries } from "@/gallery/entries/shell"
 import type { GalleryEntry, GalleryState } from "@/gallery/gallery-entry"
+import { ReferenceFrames } from "@/gallery/reference-frames"
 import { type Scheme, SchemePair, schemes } from "@/gallery/scheme-pair"
 import { screenEntries } from "@/gallery/screens/screen-entries"
 import { effectTilesEntry } from "@/studio/effects/effect-tiles-gallery"
 
 export const galleryEntries: GalleryEntry[] = [
+  ...referenceControlEntries,
+  ...referenceCreateEntries,
+  ...referenceMediaEntries,
+  ...referenceShellEntries,
   ...controlEntries,
   ...fieldEntries,
   ...displayEntries,
@@ -115,7 +124,13 @@ function EntrySection({ entry }: { entry: GalleryEntry }): ReactElement {
       {entry.states.map((state) => (
         <div key={state.id} className="flex flex-col gap-s2">
           <h3 className="text-label text-ink-muted">{t(state.label)}</h3>
-          {state.placement === "layer" || state.placement === "screen" ? (
+          {state.placement === "frame" ? (
+            <ReferenceFrames
+              entry={entry}
+              state={state}
+              src={focusHref(entry, state)}
+            />
+          ) : state.placement === "layer" || state.placement === "screen" ? (
             <StateFrame entry={entry} state={state} />
           ) : (
             <SchemePair width={state.width ?? "pair"}>
@@ -170,6 +185,16 @@ function GalleryFocus({ search }: { search: GallerySearch }): ReactElement {
   const state = entry?.states.find((candidate) => candidate.id === search.state)
   if (state?.placement === "screen") {
     return <div className="bg-canvas text-ink">{state.render()}</div>
+  }
+  if (state?.placement === "frame") {
+    return (
+      <div
+        data-gallery={state.force}
+        className="@container min-h-dvh bg-canvas text-ink"
+      >
+        {state.render()}
+      </div>
+    )
   }
   return (
     <div className="flex min-h-dvh flex-col gap-s6 bg-canvas p-s6 text-ink">
