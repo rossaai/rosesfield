@@ -124,10 +124,12 @@ describe("DropZone", () => {
         kinds={[<svg key="image" />, <svg key="video" />, <svg key="audio" />]}
       />
     )
-    const zone = screen.getByRole("button", { name: /Drop your files/ })
+    const zone = screen.getByRole("button", {
+      name: "Drop your files Image, video or audio",
+    })
     expect(zone.className.split(" ")).toEqual(
       expect.arrayContaining(["min-h-30", "border-dashed", "p-4"])
     )
-    expect(zone.textContent).toBe("Drop your filesImage, video or audio")
+    expect(zone.textContent).toBe("Drop your files Image, video or audio")
   })
 })

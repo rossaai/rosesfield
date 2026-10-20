@@ -171,7 +171,7 @@ function DropZone({
         ))}
       </span>
       <span className="flex flex-col">
-        <span className="font-medium text-body text-ink-muted">{title}</span>
+        <span className="font-medium text-body text-ink-muted">{title}</span>{" "}
         <span className="font-medium text-caption text-ink-muted">{line}</span>
       </span>
     </button>

@@ -68,6 +68,7 @@ function ChipSelect<T extends string>({
           render={
             <SelectTrigger
               variant="chip"
+              aria-label={label}
               data-slot="chip-select"
               className="min-w-0 shrink"
             >
