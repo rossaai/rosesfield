@@ -27,7 +27,6 @@ import {
   type OpenResult,
   ResultCard,
   useEntrySrc,
-  useRecreateHref,
   type VisualEntry,
 } from "@/screens/explore/explore-tile"
 import { appIcon, navGroups } from "@/shell/nav-rows"
@@ -144,16 +143,15 @@ export function AppTiles(): ReactElement {
   )
 }
 
-function RowActions({
-  appId,
-  entry,
-}: {
-  appId: string
-  entry: VisualEntry
-}): ReactElement {
+function RowActions({ appId }: { appId: string }): ReactElement {
   const appHref = useAppHref()
-  const recreateHref = useRecreateHref(entry)
+  const router = useRouter()
   const app = findCatalogApp(appId)
+  const howHref = router.buildLocation({
+    to: "/apps/$appId",
+    params: { appId },
+    search: { tab: "how" },
+  }).href
   return (
     <>
       <a
@@ -166,11 +164,11 @@ function RowActions({
         })}
       </a>
       <a
-        href={recreateHref}
+        href={howHref}
         data-slot="button"
         className={buttonVariants({ size: "hero" })}
       >
-        {t("explore.tile.recreate")}
+        {t("explore.row.learnMore")}
       </a>
     </>
   )
@@ -255,24 +253,14 @@ function PresetFeed({
   )
 }
 
-export function leadOf(
-  row: ExploreRow
-): { appId: string; entry: VisualEntry } | null {
+export function leadOf(row: ExploreRow): string | null {
   switch (row.kind) {
-    case "presets": {
-      const [first] = row.presets
-      return first === undefined
-        ? null
-        : { appId: row.app.id, entry: first.entry }
-    }
-    case "model": {
-      const [first] = row.entries
-      return first === undefined ? null : { appId: row.appId, entry: first }
-    }
-    case "app": {
-      const [first] = row.entries
-      return first === undefined ? null : { appId: row.app.id, entry: first }
-    }
+    case "presets":
+      return row.presets.length === 0 ? null : row.app.id
+    case "model":
+      return row.entries.length === 0 ? null : row.appId
+    case "app":
+      return row.entries.length === 0 ? null : row.app.id
   }
 }
 
@@ -283,10 +271,7 @@ export function ExploreRowView({
 }: ResultActions & { row: ExploreRow; isLead: boolean }): ReactElement {
   const appHref = useAppHref()
   const lead = isLead ? leadOf(row) : null
-  const buttons =
-    lead === null ? undefined : (
-      <RowActions appId={lead.appId} entry={lead.entry} />
-    )
+  const buttons = lead === null ? undefined : <RowActions appId={lead} />
   switch (row.kind) {
     case "presets":
       return (
@@ -342,7 +327,7 @@ export function SharedFeed({
       entries={entries}
       {...(isLead && first !== undefined
         ? {
-            actions: <RowActions appId={first.run.appId} entry={first} />,
+            actions: <RowActions appId={first.run.appId} />,
           }
         : {})}
     />

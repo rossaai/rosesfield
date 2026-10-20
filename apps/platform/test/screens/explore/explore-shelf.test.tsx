@@ -68,7 +68,7 @@ function renderRow(isLead: boolean): void {
 }
 
 describe("Explore's row headers", () => {
-  it("carry two buttons on the lead row, the app first, then Recreate", async () => {
+  it("carry two buttons on the lead row, the app first, then Learn more on its How it works", async () => {
     renderRow(true)
     const header = (
       await screen.findByRole("region", { name: "model-a" })
@@ -77,10 +77,10 @@ describe("Explore's row headers", () => {
     const links = within(header as HTMLElement).getAllByRole("link")
     expect(links.map((link) => link.textContent)).toEqual([
       t("explore.promo.open", { app: "Image" }),
-      t("explore.tile.recreate"),
+      t("explore.row.learnMore"),
     ])
     expect(links[0]?.getAttribute("href")).toBe("/apps/image")
-    expect(links[1]?.getAttribute("href")).toContain("share=share-01")
+    expect(links[1]?.getAttribute("href")).toBe("/apps/image?tab=how")
     expect(links[0]?.className.split(" ")).toContain("h-12")
   })
 
