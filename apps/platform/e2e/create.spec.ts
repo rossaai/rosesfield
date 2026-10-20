@@ -82,6 +82,9 @@ test.describe("an app with many inputs on a desktop", () => {
   })
 })
 
+const modelRow =
+  '[data-slot="popover-trigger"]:has([data-slot="model-row-name"])'
+
 test.describe("the parts of Video's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
@@ -103,7 +106,7 @@ test.describe("the parts of Video's column", () => {
       column.locator('[data-slot="composer-prompt-block"]')
     )
     expect(prompt.width).toBe(302)
-    const row = await boxOf(column.locator('[data-slot="model-row"]'))
+    const row = await boxOf(column.locator(modelRow))
     expect([row.width, row.height]).toEqual([302, 48])
     const modes = column.locator('[data-slot="segmented-control"]')
     if ((await modes.count()) > 0) {
@@ -118,7 +121,7 @@ test.describe("the parts of Video's column", () => {
     page,
   }) => {
     await page.goto("/apps/video")
-    const row = page.locator('[data-slot="composer"] [data-slot="model-row"]')
+    const row = page.locator('[data-slot="composer"]').locator(modelRow)
     await row.click()
     const list = page.locator('[data-slot="model-picker"]')
     await expect(list).toBeVisible()
