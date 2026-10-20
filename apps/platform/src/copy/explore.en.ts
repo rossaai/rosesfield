@@ -1,7 +1,7 @@
 export const exploreCopy = {
   "explore.empty.title": "No output is here yet",
   "explore.empty.body":
-    "An output shows here with its app, its model and its credits once it is made.",
+    "An output shows here with its app, its model and its credits once it is in the Explore list.",
   "explore.empty.action": "Open Image",
   "explore.failed.title": "Explore did not load",
   "explore.tile.recreate": "Recreate",
@@ -11,6 +11,7 @@ export const exploreCopy = {
   "explore.tile.more": "More for this {app} result",
   "explore.tile.recreateName": "Recreate this result",
   "explore.tile.noModel": "Model not recorded",
+  "explore.tile.machineMade": "AI generated",
   "explore.banner.kicker": "Rosesfield",
   "explore.banner.headline": "Make images and video on your own key",
   "explore.banner.lead": "Every app shares one library and one history",

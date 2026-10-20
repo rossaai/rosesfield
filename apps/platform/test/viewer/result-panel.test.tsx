@@ -107,6 +107,13 @@ describe("the result viewer's panel", () => {
     ).toBeNull()
   })
 
+  it("says in its head that the result is machine generated", () => {
+    const { container } = renderPanel(entryOf(runOf({})))
+    const head = container.querySelector("[data-slot=viewer-head]")
+
+    expect(head?.textContent).toContain(t("explore.tile.machineMade"))
+  })
+
   it("puts Recreate above Download, each calling its own act", () => {
     const { onRecreate, onDownload } = renderPanel(entryOf(runOf({})))
     const recreate = screen.getByRole("button", {

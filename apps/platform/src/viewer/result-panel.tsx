@@ -115,6 +115,12 @@ export function ResultPanel({
         <p className="truncate font-medium text-body text-ink">
           {t("viewer.made", { app, date: formatDate(entry.run.createdAt) })}
         </p>
+        <p
+          data-slot="viewer-machine-made"
+          className="text-label text-ink-muted"
+        >
+          {t("explore.tile.machineMade")}
+        </p>
       </header>
       <InputAssets run={entry.run} />
       <Details entry={entry} />
