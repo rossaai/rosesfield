@@ -4,7 +4,7 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 
 ## What this project is
 
-- Its look and its rules are its own.
+- Its tokens, typefaces, marks and component contracts are generated files, each listed in `generated.json`.
 - MIT for the code, the docs and the design tokens. The name and the logo are trademarks of ROSSA AI, LLC, and the logo files in `apps/platform/public/` are all rights reserved, per `TRADEMARKS.md`.
 - You bring your own key and run it on your machine or your own host. No accounts, no payments, no credits.
 
