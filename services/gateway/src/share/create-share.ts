@@ -3,7 +3,8 @@ import { assetIdFormat, type Clock } from "@rosesfield/kernel"
 import type { AssetStore } from "@rosesfield/library"
 import type { Handlers } from "#build-handlers"
 import { ShareNotReadyError } from "#share/share-not-ready.error"
-import type { SharedMedia } from "#share/share-tables"
+import type { SharePosters } from "#share/share-posters"
+import type { SharedMedia, SharedPoster } from "#share/share-tables"
 import type {
   ShareRecord,
   SqliteShareRepository,
@@ -13,6 +14,7 @@ export type ShareParts = {
   shares: SqliteShareRepository
   store: AssetStore
   clock: Clock
+  posters?: SharePosters
 }
 
 type ShareRequest = {
@@ -57,8 +59,9 @@ async function copyOutput(
     return null
   }
   const key = assetIdFormat.parse(crypto.randomUUID())
-  await parts.store.put(key, new Uint8Array(bytes), asset.mime)
-  return {
+  const output = new Uint8Array(bytes)
+  await parts.store.put(key, output, asset.mime)
+  const media: SharedMedia = {
     key,
     kind: asset.kind,
     mime: asset.mime,
@@ -66,6 +69,25 @@ async function copyOutput(
     height: asset.height,
     durationSeconds: asset.durationSeconds,
   }
+  return withPoster(parts, media, output)
+}
+
+export async function withPoster(
+  parts: Pick<ShareParts, "store" | "posters">,
+  media: SharedMedia,
+  bytes: Uint8Array
+): Promise<SharedMedia> {
+  if (media.kind !== "video" || parts.posters === undefined) {
+    return media
+  }
+  const drawn = await parts.posters.frameOf(bytes, media.mime)
+  if (drawn === null) {
+    return media
+  }
+  const key = assetIdFormat.parse(crypto.randomUUID())
+  await parts.store.put(key, drawn.bytes, drawn.mime)
+  const poster: SharedPoster = { key, mime: drawn.mime }
+  return { ...media, poster }
 }
 
 export async function createShare(
