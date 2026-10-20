@@ -19,11 +19,34 @@ describe("Canvas", () => {
     const canvas = screen.getByRole("region", { name: "Output" })
     const head = canvas.querySelector("[data-slot='canvas-head']")
     expect(head?.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-14", "pt-2", "px-4"])
+      expect.arrayContaining(["min-h-14", "pt-2", "pb-3", "px-4"])
     )
     const cluster = canvas.querySelector("[data-slot='canvas-cluster']")
-    expect(cluster?.className.split(" ")).toContain("invisible")
+    expect(cluster?.className.split(" ")).toEqual(
+      expect.arrayContaining(["invisible", "@max-regular:hidden"])
+    )
     expect(cluster?.getAttribute("aria-hidden")).toBe("true")
+  })
+
+  it("puts the cluster on its own right-aligned row on a phone", () => {
+    render(
+      <Canvas
+        label="Output"
+        tabs={<span>Tabs</span>}
+        cluster={<span>View</span>}
+        hasRuns
+      >
+        <p>Runs</p>
+      </Canvas>
+    )
+    const cluster = document.querySelector("[data-slot='canvas-cluster']")
+    expect(cluster?.parentElement?.className.split(" ")).toContain("flex-wrap")
+    expect(cluster?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "@max-regular:w-full",
+        "@max-regular:justify-end",
+      ])
+    )
   })
 
   it("shows the cluster once you have runs", () => {
@@ -61,5 +84,21 @@ describe("StepCards", () => {
       expect.arrayContaining(["grid-cols-3", "gap-10"])
     )
     expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(3)
+  })
+
+  it("frames each step at 1.316 to 1, 48 px from the canvas's sides once the stage's 16 px inset is counted", () => {
+    render(
+      <StepCards
+        title="How it works"
+        line="Three steps"
+        steps={[{ id: "one", title: "Step", line: "Do", media: null }]}
+      />
+    )
+    const lead = document.querySelector("[data-slot='state-view-lead']")
+    expect(lead?.className.split(" ")).toEqual(
+      expect.arrayContaining(["px-12", "@regular:px-8", "py-24"])
+    )
+    const frame = screen.getByRole("listitem").firstElementChild
+    expect(frame?.className.split(" ")).toContain("aspect-[25/19]")
   })
 })

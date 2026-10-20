@@ -109,7 +109,7 @@ function LipsyncPanel({ state }: { state: LipsyncState }): ReactElement {
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const sheetClose = useRef<() => void>(() => undefined)
   const state = useLipsyncScreen(app, seeds, () => sheetClose.current())
-  const sheet = useSheetOpen(state.hasRuns)
+  const sheet = useSheetOpen()
   sheetClose.current = () => sheet[1](false)
   return (
     <ColumnFrame

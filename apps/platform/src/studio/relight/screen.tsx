@@ -28,7 +28,7 @@ function useRelightScreen({ app, seeds }: StudioScreenProps) {
   const sheetClose = useRef<() => void>(() => undefined)
   const screen = useAppScreen(app, seeds, () => sheetClose.current())
   const photo = useRelightPhoto(app, screen.form)
-  const sheet = useSheetOpen(screen.hasRuns)
+  const sheet = useSheetOpen()
   const setSheetOpen = sheet[1]
   const isRegular = useIsRegularWindow()
   sheetClose.current = () => setSheetOpen(false)

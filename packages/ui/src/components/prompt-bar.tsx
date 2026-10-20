@@ -1,13 +1,17 @@
 import { IconButton } from "@rosesfield/ui/components/button"
 import { GenerateButton } from "@rosesfield/ui/components/generate-button"
-import { useAutoGrow } from "@rosesfield/ui/hooks/use-auto-grow"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { XIcon } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "lucide-react"
 import {
   type KeyboardEvent,
   type ReactElement,
   type ReactNode,
+  type RefObject,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
   useRef,
+  useState,
 } from "react"
 
 type PromptAttachment = {
@@ -40,7 +44,7 @@ type PromptBarProps = {
 }
 
 const fieldClass =
-  "block max-h-[20dvh] min-h-10 w-full resize-none field-sizing-content overflow-y-auto bg-transparent px-1 py-2.5 text-body text-ink outline-none placeholder:text-ink-muted"
+  "block max-h-[20dvh] min-h-10 w-full resize-none overflow-y-auto bg-transparent px-1 py-2.5 text-body text-ink outline-none [transition:height_var(--control-change)] placeholder:text-ink-muted"
 
 const placements = {
   inline: "w-full max-w-220",
@@ -114,6 +118,98 @@ function PromptTray({
   )
 }
 
+type Ends = { back: boolean; forward: boolean }
+
+function readEnds(element: HTMLElement): Ends {
+  return {
+    back: element.scrollLeft > 0,
+    forward: element.scrollLeft + element.clientWidth < element.scrollWidth - 1,
+  }
+}
+
+function useScrollEnds(row: RefObject<HTMLDivElement | null>): {
+  ends: Ends
+  update: () => void
+} {
+  const [ends, setEnds] = useState<Ends>({ back: false, forward: false })
+  const update = useCallback(() => {
+    if (row.current !== null) {
+      setEnds(readEnds(row.current))
+    }
+  }, [row])
+  useEffect(() => {
+    const element = row.current
+    if (element === null || typeof ResizeObserver === "undefined") {
+      return
+    }
+    const sizes = new ResizeObserver(update)
+    sizes.observe(element)
+    for (const child of element.children) {
+      sizes.observe(child)
+    }
+    return () => sizes.disconnect()
+  }, [row, update])
+  return { ends, update }
+}
+
+function ScrollArrow({
+  end,
+  isShown,
+  onPress,
+}: {
+  end: keyof Ends
+  isShown: boolean
+  onPress: () => void
+}): ReactElement {
+  return (
+    <button
+      type="button"
+      tabIndex={-1}
+      aria-hidden="true"
+      data-slot="chip-row-arrow"
+      data-end={end}
+      onClick={onPress}
+      className={cn(
+        "absolute top-0.5 z-10 flex size-7 items-center justify-center rounded-dense bg-surface text-ink-muted transition-opacity duration-(--duration-control) hover:text-ink [&_svg]:size-4",
+        end === "back" ? "left-0" : "right-0",
+        isShown ? "opacity-100" : "pointer-events-none opacity-0"
+      )}
+    >
+      {end === "back" ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+    </button>
+  )
+}
+
+function ChipScroller({ chips }: { chips: ReactNode }): ReactElement {
+  const row = useRef<HTMLDivElement>(null)
+  const { ends, update } = useScrollEnds(row)
+  const move = (direction: 1 | -1): void => {
+    const element = row.current
+    element?.scrollBy({
+      left: direction * element.clientWidth,
+      behavior: "smooth",
+    })
+  }
+  return (
+    <div className="relative flex min-w-0 flex-1">
+      <ScrollArrow end="back" isShown={ends.back} onPress={() => move(-1)} />
+      <div
+        ref={row}
+        data-slot="chip-row"
+        onScroll={update}
+        className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none]"
+      >
+        {chips}
+      </div>
+      <ScrollArrow
+        end="forward"
+        isShown={ends.forward}
+        onPress={() => move(1)}
+      />
+    </div>
+  )
+}
+
 function ChipRow({ leading, chips }: PromptBarProps): ReactElement {
   return (
     <div
@@ -121,11 +217,29 @@ function ChipRow({ leading, chips }: PromptBarProps): ReactElement {
       className="flex h-8 min-w-0 items-center gap-1"
     >
       {leading}
-      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none]">
-        {chips}
-      </div>
+      {chips === undefined ? null : <ChipScroller chips={chips} />}
     </div>
   )
+}
+
+function useGrowingField(
+  field: RefObject<HTMLTextAreaElement | null>,
+  value: string
+): void {
+  useLayoutEffect(() => {
+    const element = field.current
+    if (element === null || element.value !== value) {
+      return
+    }
+    const from = element.style.height
+    element.style.height = "auto"
+    const to = `${element.scrollHeight}px`
+    element.style.height = from === "" ? to : from
+    if (from !== "" && from !== to) {
+      void element.offsetHeight
+      element.style.height = to
+    }
+  }, [field, value])
 }
 
 function PromptField({
@@ -136,7 +250,7 @@ function PromptField({
   onSubmit: () => void
 }): ReactElement {
   const field = useRef<HTMLTextAreaElement>(null)
-  useAutoGrow(field)
+  useGrowingField(field, props.value)
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
     if (isSubmitKey(event)) {
       event.preventDefault()

@@ -80,7 +80,7 @@ function StartFrame(props: StartFrameProps): ReactElement {
   return (
     <figure
       data-slot="composer-attachments-tiles"
-      className="relative m-0 h-32.5 w-full shrink-0 overflow-hidden rounded-cell bg-(--well)"
+      className="relative m-0 h-32.5 w-full shrink-0 overflow-hidden rounded-cell bg-(--well) outline-hor-text has-focus-visible:outline-(length:--spacing-focus-ring) has-focus-visible:outline-solid in-data-[gallery=focus]:outline-(length:--spacing-focus-ring) in-data-[gallery=focus]:outline-solid"
     >
       <video
         src={props.src}
@@ -95,7 +95,8 @@ function StartFrame(props: StartFrameProps): ReactElement {
       />
       <span
         aria-hidden="true"
-        className="absolute inset-0 bg-linear-to-b from-transparent to-scrim"
+        data-slot="start-frame-scrim"
+        className="absolute inset-0 bg-linear-to-b from-transparent to-scrim to-50%"
       />
       <figcaption className="absolute inset-x-3 bottom-3 flex min-w-0 flex-col">
         <span className="truncate font-medium text-title text-ink">

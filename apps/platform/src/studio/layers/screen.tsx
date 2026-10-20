@@ -9,7 +9,7 @@ import { useLayersScreen } from "@/studio/layers/use-layers-screen"
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const sheetClose = useRef<() => void>(() => undefined)
   const state = useLayersScreen(app, seeds, () => sheetClose.current())
-  const sheet = useSheetOpen(state.hasRuns)
+  const sheet = useSheetOpen()
   const isRegular = useIsRegularWindow()
   sheetClose.current = () => sheet[1](false)
   const addImage = (): void => {

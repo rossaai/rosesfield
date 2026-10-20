@@ -1,7 +1,9 @@
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@rosesfield/ui/components/select"
@@ -15,6 +17,7 @@ import type { ReactElement, ReactNode } from "react"
 type ChipOption<T extends string> = {
   value: T
   label: string
+  icon?: ReactNode
 }
 
 type ChipSelectProps<T extends string> = {
@@ -76,12 +79,27 @@ function ChipSelect<T extends string>({
         />
         <TooltipContent>{label}</TooltipContent>
       </Tooltip>
-      <SelectContent side="top" align="start" sideOffset={4}>
-        {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
+      <SelectContent
+        side="top"
+        align="start"
+        sideOffset={4}
+        className="w-50 min-w-0 p-2"
+      >
+        <SelectGroup className="flex flex-col gap-0.5">
+          <SelectLabel className="flex h-8 items-center px-2 py-0">
+            {label}
+          </SelectLabel>
+          {options.map((option) => (
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              icon={option.icon}
+              className="h-9 min-h-9 gap-2 px-2 py-0 data-selected:bg-(--tint)"
+            >
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
       </SelectContent>
     </Select>
   )

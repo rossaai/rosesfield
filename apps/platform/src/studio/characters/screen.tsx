@@ -133,7 +133,7 @@ type FrameProps = {
 
 function ModeFrame(props: FrameProps): ReactElement {
   const { mode, screen } = props
-  const sheet = useSheetOpen(screen.state.hasRuns)
+  const sheet = useSheetOpen()
   props.sheetClose.current = () => sheet[1](false)
   const panelProps = {
     app: screen.listing,

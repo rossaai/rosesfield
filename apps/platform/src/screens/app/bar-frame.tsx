@@ -23,13 +23,14 @@ import { AppStage } from "@/screens/app/app-stage"
 import type { SheetControl } from "@/screens/app/column-frame"
 import { ToolsKey } from "@/screens/app/tools-key"
 
+export type BarPlace = "dock" | "sheet"
+
 type BarFrameProps = {
   app: AppListing
   hasRuns: boolean | null
   onUseInputs: (run: Run) => void
-  bar: ReactNode
+  bar: (place: BarPlace) => ReactNode
   settings: ReactNode
-  price: string
   sheet: SheetControl
 }
 
@@ -114,7 +115,7 @@ export function BarFrame(props: BarFrameProps): ReactElement {
           data-slot="prompt-dock"
           className="fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-220 flex-col items-center gap-2"
         >
-          {props.bar}
+          {props.bar("dock")}
         </div>
       ) : null}
       <ToolsKey onOpen={() => setOpen(true)} />
@@ -124,19 +125,14 @@ export function BarFrame(props: BarFrameProps): ReactElement {
             <SheetTitle>{appName(props.app)}</SheetTitle>
           </SheetHeader>
           <SheetBody>{props.settings}</SheetBody>
-          <SheetFooter>{isRegular ? null : props.bar}</SheetFooter>
+          <SheetFooter>{isRegular ? null : props.bar("sheet")}</SheetFooter>
         </SheetContent>
       </Sheet>
     </div>
   )
 }
 
-export function BarChips({
-  chips,
-}: {
-  chips: ReactNode
-  onOpenSheet: () => void
-}): ReactElement {
+export function BarChips({ chips }: { chips: ReactNode }): ReactElement {
   return (
     <span
       data-slot="bar-chips"

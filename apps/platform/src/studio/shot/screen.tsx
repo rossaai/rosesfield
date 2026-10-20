@@ -21,7 +21,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       }
     },
   })
-  const sheet = useSheetOpen(state.hasRuns)
+  const sheet = useSheetOpen()
   sheetOpen.current = sheet[1]
   return (
     <ColumnFrame

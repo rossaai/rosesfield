@@ -12,7 +12,7 @@ import { useUpscaleScreen } from "@/studio/upscale/use-upscale-screen"
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const sheetClose = useRef<() => void>(() => undefined)
   const state = useUpscaleScreen(app, seeds, () => sheetClose.current())
-  const sheet = useSheetOpen(state.hasRuns)
+  const sheet = useSheetOpen()
   sheetClose.current = () => sheet[1](false)
   return (
     <ColumnFrame

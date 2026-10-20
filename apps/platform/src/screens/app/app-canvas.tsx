@@ -10,6 +10,10 @@ import { t } from "@/copy/t"
 import { aspectStyle } from "@/pieces/asset-tile"
 import { RunLine } from "@/pieces/run/run-line"
 import { RunOutputs } from "@/pieces/run/run-outputs"
+import { useCanvasView } from "@/screens/app/canvas-view"
+import { historyGridItems } from "@/screens/history/history-grid-items"
+import { keepsRun } from "@/screens/history/history-screen"
+import { ResultGrid } from "@/screens/library/result-grid"
 
 type AppCanvasProps = {
   app: AppListing
@@ -92,7 +96,31 @@ export function AppCanvas(props: AppCanvasProps): ReactElement {
       />
     )
   }
-  return <RunStack {...props} runs={runs.runs} />
+  return <ViewedRuns {...props} runs={runs.runs} />
+}
+
+function ViewedRuns(
+  props: AppCanvasProps & { runs: readonly Run[] }
+): ReactElement {
+  const view = useCanvasView()
+  const runs = props.runs.filter((run) => keepsRun(run, view.state, undefined))
+  if (runs.length === 0) {
+    return (
+      <StateView
+        kind="empty"
+        title={t("history.filterEmpty.title")}
+        actions={
+          <Button onClick={view.clear}>
+            {t("history.filterEmpty.action")}
+          </Button>
+        }
+      />
+    )
+  }
+  if (view.layout === "grid") {
+    return <ResultGrid items={historyGridItems(runs)} size={view.size} />
+  }
+  return <RunStack {...props} runs={runs} />
 }
 
 function RunStack({

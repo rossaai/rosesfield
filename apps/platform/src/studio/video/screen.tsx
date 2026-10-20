@@ -7,13 +7,13 @@ import {
 } from "@/screens/app/column-frame"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { useVideoScreen } from "@/studio/video/use-video-screen"
-import { VideoPanel } from "@/studio/video/video-panel"
+import { ModeTabs, VideoPanel } from "@/studio/video/video-panel"
 
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const sheetClose = useRef<() => void>(() => undefined)
   const screen = useVideoScreen(app, seeds, () => sheetClose.current())
   const { state } = screen
-  const sheet = useSheetOpen(state.hasRuns)
+  const sheet = useSheetOpen()
   sheetClose.current = () => sheet[1](false)
   return (
     <ColumnFrame
@@ -21,6 +21,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       start={state.start}
       onShortcut={state.onShortcut}
       sheet={sheet}
+      tabs={<ModeTabs screen={screen} />}
       panel={<VideoPanel app={app} screen={screen} />}
       canvas={(openInputs) => (
         <AppCanvas

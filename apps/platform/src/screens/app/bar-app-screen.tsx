@@ -140,9 +140,8 @@ export function BarAppScreen({
       hasRuns={state.hasRuns}
       onUseInputs={state.useInputs}
       sheet={sheet}
-      price={state.start.price}
       settings={<BarSettings app={app} state={state} />}
-      bar={
+      bar={(place) => (
         <>
           <StartProblem start={state.start} />
           <PromptBar
@@ -167,16 +166,19 @@ export function BarAppScreen({
             onRemoveAttachment={tray.remove}
             leading={<BarLeading app={app} state={state} tray={tray} />}
             chips={
-              <BarChips
-                chips={<BarModelChips app={app} state={state} chips={chips} />}
-                onOpenSheet={() => sheet[1](true)}
-              />
+              place === "sheet" ? undefined : (
+                <BarChips
+                  chips={
+                    <BarModelChips app={app} state={state} chips={chips} />
+                  }
+                />
+              )
             }
             {...submitPriceOf(state.start)}
             busy={state.start.isPending || tray.isUploading}
           />
         </>
-      }
+      )}
     />
   )
 }

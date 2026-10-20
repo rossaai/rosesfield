@@ -8,16 +8,22 @@ import type {
 
 export const modelInputName = "model"
 
+const automatic = "auto"
+
+function choiceDefaultOf(options: readonly (string | number)[]): FieldValue {
+  if (options.length === 1) {
+    return options[0]
+  }
+  return options.includes(automatic) ? automatic : undefined
+}
+
 function defaultOf(field: ModelField): FieldValue {
   switch (field.kind) {
     case "prompt":
     case "text":
       return field.default ?? ""
     case "choice":
-      return (
-        field.default ??
-        (field.options.length === 1 ? field.options[0] : undefined)
-      )
+      return field.default ?? choiceDefaultOf(field.options)
     case "number":
       return field.default ?? undefined
     case "toggle":
