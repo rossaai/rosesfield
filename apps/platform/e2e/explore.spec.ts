@@ -89,7 +89,7 @@ test("Explore with no result says so and offers the next step", async ({
   page,
 }) => {
   await openExplore(page)
-  await expect(page.getByText("No output is here yet")).toBeVisible()
+  await expect(page.getByText("No result is here yet")).toBeVisible()
   await expect(page.locator("[data-slot=media-feed]")).toHaveCount(0)
 })
 
