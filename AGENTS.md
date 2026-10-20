@@ -4,8 +4,8 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 
 ## What this project is
 
-- Its look and its rules are its own.
-- MIT for the code, the docs and the design tokens. The name and the logo are trademarks of ROSSA AI, LLC, and `brand/` is all rights reserved, per `TRADEMARKS.md`.
+- Its tokens, typefaces, marks and component contracts are generated files, each listed in `generated.json`.
+- MIT for the code, the docs and the design tokens. The name and the logo are trademarks of ROSSA AI, LLC, and the logo files in `apps/platform/public/` are all rights reserved, per `TRADEMARKS.md`.
 - You bring your own key and run it on your machine or your own host. No accounts, no payments, no credits.
 
 ## Hard lines
@@ -26,8 +26,7 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 | `packages/` | code two consumers share: `kernel`, `contract`, `ui`, `catalog`, `generation`, `library` and `agent`, per `docs/architecture.md` §The shape |
 | `workflows/` | every ComfyUI workflow, a UI file and an API file each, per `workflows/README.md` |
 | `docs/` | one doc per subject, routed in §Doc routing |
-| `brand/` | the Rosesfield logo, all rights reserved, per `TRADEMARKS.md` |
-| `scripts/` | the dependency-cruiser aliases, and `first-light`, which runs each workflow once against the engine you name, per `scripts/first-light/README.md` |
+| `scripts/` | the dependency-cruiser aliases, the checks the gate runs in `scripts/checks/`, such as the generated-file check, and `first-light`, which runs each workflow once against the engine you name, per `scripts/first-light/README.md` |
 
 ## Doc routing
 
@@ -58,7 +57,8 @@ Run every command from the repository root with bun 1.4.3. Node 22 or 24 must al
 | `bun run test:dom` | Runs vitest on node with jsdom for `ui` and `platform`. |
 | `bun run catalog:sync` | Writes `packages/catalog/src/apps.gen.ts` from the app folders. Each `<app-id>/app.ts` exports `app`. It refuses an `app.ts` without `copy.en.ts` and a name that is not a kebab-case id. |
 | `bun run ui:add <component>` | Adds a shadcn component to `packages/ui/src/components`. Run `bun run format` after it. |
-| `bun run gate` | Runs `catalog:sync`, `typecheck`, `lint` and `test`. It must pass before every commit. |
+| `bun run generated:check` | Refuses a file listed in `generated.json` whose bytes differ from its sha256. Those files are generated, and none is edited by hand. |
+| `bun run gate` | Runs `catalog:sync`, `generated:check`, `typecheck`, `lint` and `test`. It must pass before every commit. |
 
 For one workspace: `bun run --filter @rosesfield/<workspace> typecheck` and `bun run --filter @rosesfield/<workspace> test`.
 

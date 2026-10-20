@@ -5,14 +5,11 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig, type Plugin } from "vite"
 import { VitePWA } from "vite-plugin-pwa"
+import { canvasColor } from "./src/canvas-color.generated"
 import { shellCopy } from "./src/copy/shell.en"
 
 const platformPackage: unknown = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8")
-)
-const tokens = readFileSync(
-  new URL("../../packages/ui/src/tokens.css", import.meta.url),
-  "utf8"
 )
 
 const unreleased = "0.0.0"
@@ -39,16 +36,9 @@ function commitOf(): string {
   }
 }
 
-function schemeValue(token: string, scheme: "light" | "dark"): string {
-  const match = new RegExp(
-    `--${token}: var\\(--if-light, (#[0-9a-f]+)\\) var\\(--if-dark, (#[0-9a-f]+)\\)`
-  ).exec(tokens)
-  return (scheme === "light" ? match?.[1] : match?.[2]) ?? "#ffffff"
-}
-
 const pageValues: Readonly<Record<string, string>> = {
-  "canvas-light": schemeValue("canvas", "light"),
-  "canvas-dark": schemeValue("canvas", "dark"),
+  "canvas-light": canvasColor.light,
+  "canvas-dark": canvasColor.dark,
   "shell-name": shellCopy["shell.name"],
   "shell-description": shellCopy["shell.description"],
 }
@@ -106,8 +96,8 @@ export default defineConfig({
         start_url: "/",
         scope: "/",
         display: "standalone",
-        background_color: schemeValue("canvas", "light"),
-        theme_color: schemeValue("canvas", "light"),
+        background_color: canvasColor.light,
+        theme_color: canvasColor.light,
         icons: [icon(192, "any"), icon(512, "any"), icon(512, "maskable")],
       },
       workbox: {

@@ -3,8 +3,8 @@ import type { ReactElement } from "react"
 import { t } from "@/copy/t"
 
 const lockups = {
-  light: "/icons/rosesfield-lockup-light.svg",
-  dark: "/icons/rosesfield-lockup-dark.svg",
+  light: "/lockup-light.svg",
+  dark: "/lockup-dark.svg",
 }
 
 const fields = {

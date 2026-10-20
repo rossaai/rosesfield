@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "shadcn/tailwind.css";
+@import "../fonts.css";
 @import "../tokens.css";
 @import "./motion.css";
 
@@ -18,6 +19,24 @@
   }
 }
 
+@utility material-thin {
+  background-color: var(--layer);
+
+  @supports (backdrop-filter: blur(1px)) {
+    background-color: color-mix(
+      in srgb,
+      var(--layer) var(--opacity-material-thin),
+      transparent
+    );
+    backdrop-filter: var(--material-filter-thin);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--layer);
+    backdrop-filter: none;
+  }
+}
+
 @utility material {
   background-color: var(--layer);
 
@@ -28,6 +47,24 @@
       transparent
     );
     backdrop-filter: var(--material-filter);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--layer);
+    backdrop-filter: none;
+  }
+}
+
+@utility material-thick {
+  background-color: var(--layer);
+
+  @supports (backdrop-filter: blur(1px)) {
+    background-color: color-mix(
+      in srgb,
+      var(--layer) var(--opacity-material-thick),
+      transparent
+    );
+    backdrop-filter: var(--material-filter-thick);
   }
 
   @media (prefers-reduced-transparency: reduce) {

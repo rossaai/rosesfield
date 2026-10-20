@@ -27,7 +27,6 @@ packages/                 code two consumers share
   agent/                  the agent: the harness, its tools built from the catalog
 workflows/                every ComfyUI workflow, a UI file and an API file each, per workflows/README.md
 docs/
-brand/                    the Rosesfield logo, all rights reserved, per TRADEMARKS.md
 bugs/                     one file per proven defect
 ```
 

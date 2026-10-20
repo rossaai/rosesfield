@@ -130,7 +130,7 @@ function mediaMarkup(view: ShareView, eager: boolean): string {
 }
 
 function lockupMarkup(): string {
-  return `<picture><source srcset="/icons/rosesfield-lockup-dark.svg" media="(prefers-color-scheme: dark)" /><img src="/icons/rosesfield-lockup-light.svg" alt="${escapeHtml(shareCopy.lockup)}" width="122" height="32" /></picture>`
+  return `<picture><source srcset="/lockup-dark.svg" media="(prefers-color-scheme: dark)" /><img src="/lockup-light.svg" alt="${escapeHtml(shareCopy.lockup)}" width="122" height="32" /></picture>`
 }
 
 function shareMarkup(view: ShareView): string {
