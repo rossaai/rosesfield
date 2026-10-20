@@ -86,6 +86,11 @@ const galleryCopy = {
   "entry.screen.unlock": "Unlock screen",
   "entry.screen.welcome": "Welcome screen",
   "entry.screen.notFound": "Not found screen",
+  "entry.material": "Material",
+  "state.thicknesses": "Thin, regular and thick",
+  "sample.material.thin": "Thin",
+  "sample.material.regular": "Regular",
+  "sample.material.thick": "Thick",
 
   "state.tones": "Tones",
   "state.sizes": "Sizes",

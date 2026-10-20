@@ -14,7 +14,7 @@
 | routing | @tanstack/react-router, @tanstack/router-plugin | 1.170.45, 1.168.47 | MIT |
 | server state | @tanstack/react-query | 5.104.3 | MIT |
 | installable app | vite-plugin-pwa | 2.0.0 | MIT |
-| fonts | @fontsource/montserrat, @fontsource/jetbrains-mono | read at install | OFL 1.1 |
+| fonts | Montserrat and JetBrains Mono, generated woff2 files in `apps/platform/public/fonts/` | listed in `generated.json` | OFL 1.1 |
 | icons | lucide-react | read at install | ISC |
 | HTTP | hono | 4.13.13 | MIT |
 | database | drizzle-orm, drizzle-kit over `bun:sqlite` and D1 | 0.45.4, 0.31.11 | Apache-2.0, MIT |

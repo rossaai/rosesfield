@@ -7,6 +7,7 @@ import { controlEntries } from "@/gallery/entries/controls"
 import { displayEntries } from "@/gallery/entries/display"
 import { fieldEntries } from "@/gallery/entries/fields"
 import { layerEntries } from "@/gallery/entries/layers"
+import { materialEntry } from "@/gallery/entries/materials"
 import { mediaEntries } from "@/gallery/entries/media"
 import { pieceEntries } from "@/gallery/entries/pieces"
 import { platformEntries } from "@/gallery/entries/platform"
@@ -21,6 +22,7 @@ export const galleryEntries: GalleryEntry[] = [
   ...controlEntries,
   ...fieldEntries,
   ...displayEntries,
+  materialEntry,
   ...pieceEntries,
   ...mediaEntries,
   ...catalogEntries,
