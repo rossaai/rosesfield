@@ -39,7 +39,7 @@ export const videoCopy: Readonly<Record<string, string>> = {
     "The camera lowers slowly straight down.",
   "video.tab.textImage": "Text and image",
   "video.tab.references": "References",
-  "video.tab.firstLast": "First and last frame",
+  "video.tab.firstLast": "Two frames",
   "video.tabs.label": "What the video starts from",
   "video.well.start": "Start image",
   "video.well.start.note": "The video opens on this image.",

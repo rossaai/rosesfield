@@ -12,6 +12,7 @@ import {
   chipIconOf,
   SettingChip,
   StepperChip,
+  withShapes,
 } from "@/screens/app/bar/setting-chip"
 import { numberOf, textOf } from "@/screens/app/fields/field-props"
 import type { AppForm } from "@/screens/app/use-app-form"
@@ -53,30 +54,30 @@ function FieldChip({
         min={min}
         max={field.max ?? min}
         step={1}
-        unit={tCatalog("video.input.length.unit")}
         onChange={(next) => form.setInput(field.name, next)}
       />
     )
   }
   const current = value === undefined ? "" : String(value)
+  const options = field.options.map((option) => ({
+    value: String(option),
+    label: shown(option),
+  }))
   return (
     <ChipSelect
       label={label}
       icon={icon}
       value={current}
-      display={
-        current === "" ? t("bar.notSet", { field: label }) : shown(current)
-      }
+      display={current === "" ? t("field.choice.notSet") : shown(current)}
       onValueChange={(next) =>
         form.setInput(
           field.name,
           field.options.find((one) => String(one) === next)
         )
       }
-      options={field.options.map((option) => ({
-        value: String(option),
-        label: shown(option),
-      }))}
+      options={
+        fieldRoleOf(field, "video") === "aspect" ? withShapes(options) : options
+      }
     />
   )
 }
@@ -149,6 +150,7 @@ export function SoundChip({
   const Icon = isOn ? Volume2Icon : VolumeOffIcon
   return (
     <Chip
+      size="inline"
       aria-pressed={isOn}
       disabled={name === null}
       {...(name === null ? { caption: tCatalog("video.sound.always") } : {})}

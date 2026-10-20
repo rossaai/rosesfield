@@ -14,7 +14,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const state = useBackgroundRemovalScreen(app, seeds, () =>
     sheetClose.current()
   )
-  const sheet = useSheetOpen(state.hasRuns)
+  const sheet = useSheetOpen()
   sheetClose.current = () => sheet[1](false)
   return (
     <ColumnFrame

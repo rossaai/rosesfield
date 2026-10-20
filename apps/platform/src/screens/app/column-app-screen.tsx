@@ -25,7 +25,7 @@ export function ColumnAppScreen({
 }): ReactElement {
   const sheetClose = useRef<() => void>(() => undefined)
   const state = useAppScreen(app, seeds, () => sheetClose.current())
-  const sheet = useSheetOpen(state.hasRuns)
+  const sheet = useSheetOpen()
   sheetClose.current = () => sheet[1](false)
   return (
     <ColumnFrame
