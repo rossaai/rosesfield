@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query"
 import { type ReactElement, type ReactNode, useState } from "react"
 import { t } from "@/copy/t"
 import { runAppName } from "@/pieces/run/run-facts"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { useEntrySrc, type VisualEntry } from "@/screens/explore/explore-tile"
 import { useDownloadEntry } from "@/viewer/result-download"
 import { ResultPanel } from "@/viewer/result-panel"
@@ -76,7 +77,7 @@ function ResultStage({ entry }: { entry: VisualEntry }): ReactElement {
     return <Skeleton className="size-full" />
   }
   if (entry.kind === "video") {
-    return <ViewerVideo src={src} label={label} />
+    return <ViewerVideo src={src} label={label} aspect={entry.aspect} />
   }
   return <img src={src} alt={label} className="size-full object-contain" />
 }
@@ -92,6 +93,7 @@ function ResultLayer({
   const { entry } = shown
   const download = useDownloadEntry()
   const saving = useMutation({ mutationFn: download })
+  const isRegular = useIsRegularWindow()
   return (
     <Viewer
       open={open}
@@ -101,7 +103,7 @@ function ResultLayer({
         }
       }}
       origin={shown.origin}
-      aspect={stageAspectOf(entry.aspect, entry.kind)}
+      aspect={stageAspectOf(entry.aspect, entry.kind, isRegular)}
       title={t("explore.viewer.title", { app: runAppName(entry.run) })}
       closeLabel={t("viewer.close")}
       aside={

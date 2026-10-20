@@ -30,11 +30,13 @@ function Failed({ retry }: { retry: () => void }): ReactElement {
 
 type ViewerMediaProps = {
   asset: Asset
+  aspect: MediaAspect
   onMeasure: (aspect: MediaAspect) => void
 }
 
 export function ViewerMedia({
   asset,
+  aspect,
   onMeasure,
 }: ViewerMediaProps): ReactElement {
   const source = useAssetSource(asset.id)
@@ -62,7 +64,14 @@ export function ViewerMedia({
         />
       )
     case "video":
-      return <ViewerVideo src={source.src} label={name} onMeasure={onMeasure} />
+      return (
+        <ViewerVideo
+          src={source.src}
+          label={name}
+          aspect={aspect}
+          onMeasure={onMeasure}
+        />
+      )
     case "audio":
       return (
         <div className="grid size-full place-items-center p-s4">
