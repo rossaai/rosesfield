@@ -12,8 +12,14 @@ import { roomFor } from "@/studio/image/image-fields"
 
 type MediaField = Extract<ModelField, { kind: "media" }>
 
+export type ReferenceSwitch = {
+  field: MediaField
+  choose: () => void
+}
+
 export type ReferenceTray = {
   field: MediaField | null
+  target: MediaField | null
   attachments: PromptAttachment[]
   room: number
   message: string | null
@@ -45,47 +51,61 @@ function tooMany(refused: number, max: number): string | null {
   return refused > 0 ? t("field.asset.tooMany", { max }) : null
 }
 
-export function useReferenceTray(
-  field: MediaField | null,
-  form: AppForm
-): ReferenceTray {
-  const uploads = useUploads()
-  const device = useDevice()
+function useTrayNote(field: MediaField | null): {
+  message: string | null
+  say: (text: string | null) => void
+} {
   const fieldKey = field === null ? "" : `${field.name}:${field.max}`
   const [note, setNote] = useState<Note | null>(null)
   if (note !== null && note.fieldKey !== fieldKey) {
     setNote(null)
   }
-  const message = note?.fieldKey === fieldKey ? note.text : null
-  const say = (text: string | null): void =>
-    setNote(text === null ? null : { fieldKey, text })
+  return {
+    message: note?.fieldKey === fieldKey ? note.text : null,
+    say: (text) => setNote(text === null ? null : { fieldKey, text }),
+  }
+}
+
+export function useReferenceTray(
+  field: MediaField | null,
+  form: AppForm,
+  fallback: ReferenceSwitch | null = null
+): ReferenceTray {
+  const uploads = useUploads()
+  const device = useDevice()
+  const { message, say } = useTrayNote(field)
   const held = field === null ? [] : listOf(form.values.inputs[field.name])
   const latest = useRef(held)
   latest.current = held
   const caption = field === null ? undefined : fieldCaption(field)
   const attachments = useAssetThumbs(held, () => caption)
+  const target = field ?? fallback?.field ?? null
   const place = (ids: readonly string[], refusedBefore: number): void => {
-    if (field === null) {
+    if (target === null || ids.length === 0) {
       return
     }
-    const kept = keptReferences(latest.current, ids, field.max)
-    form.setInput(field.name, kept.ids)
-    say(tooMany(refusedBefore + kept.refused, field.max))
+    if (field === null) {
+      fallback?.choose()
+    }
+    const kept = keptReferences(latest.current, ids, target.max)
+    form.setInput(target.name, kept.ids)
+    say(tooMany(refusedBefore + kept.refused, target.max))
   }
   return {
     field,
+    target,
     attachments: field === null ? [] : attachments,
-    room: field === null ? 0 : roomFor(field, held.length),
+    room: target === null ? 0 : roomFor(target, held.length),
     message,
     isUploading: uploads.uploads.some((one) => one.status === "uploading"),
     upload: () => {
-      if (field === null) {
+      if (target === null) {
         return
       }
       void device
-        .pickFiles({ accept: ["image/*"], multiple: field.max > 1 })
+        .pickFiles({ accept: ["image/*"], multiple: target.max > 1 })
         .then(async (files) => {
-          const room = roomFor(field, latest.current.length)
+          const room = roomFor(target, latest.current.length)
           const added = await uploads.start(files.slice(0, room))
           place(
             added.map((asset) => asset.id),

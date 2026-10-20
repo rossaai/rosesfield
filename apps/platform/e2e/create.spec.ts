@@ -16,7 +16,7 @@ const modelRow =
 test.describe("a prompt app on a desktop", () => {
   test.skip(({ isMobile }) => isMobile, "the bar shows from 768 px")
 
-  test("docks the prompt bar 16 px above the bottom, 880 by 124, with Generate as its 120 by 80 tile and no References tile on a text only default", async ({
+  test("docks the prompt bar 16 px above the bottom, 880 by 124, with Generate as its 120 by 80 tile and the 65 by 32 References tile first on a text only default", async ({
     page,
   }) => {
     await page.goto("/apps/image")
@@ -36,9 +36,11 @@ test.describe("a prompt app on a desktop", () => {
     const row = await boxOf(bar.locator('[data-slot="composer-toolbar"]'))
     expect(row.height).toBe(32)
     expect(generate.y + generate.height).toBe(row.y + row.height)
-    await expect(
-      bar.locator('[data-slot="composer-attachments-edge"]')
-    ).toHaveCount(0)
+    const tile = bar.locator('[data-slot="composer-attachments-edge"]')
+    await expect(tile).toHaveCount(1)
+    const tileBox = await boxOf(tile)
+    expect([tileBox.width, tileBox.height]).toEqual([65, 32])
+    expect(tileBox.x).toBe(row.x)
   })
 
   test("keeps the bar in place while the page scrolls", async ({ page }) => {
@@ -55,6 +57,30 @@ test.describe("a prompt app on a desktop", () => {
     await expect(how).toHaveAttribute("aria-selected", "true")
     const history = await boxOf(page.getByRole("tab", { name: "History" }))
     expect(history.height).toBe(32)
+  })
+})
+
+test.describe("Image's References and Elements tile", () => {
+  test.skip(({ isMobile }) => isMobile, "the bar shows from 768 px")
+
+  test("moves a text only model to Qwen Image Edit 2511 when you add a reference, and shows the change on the model chip", async ({
+    page,
+  }) => {
+    await page.goto("/apps/image")
+    const bar = page.locator('[data-slot="prompt-bar"]')
+    const chip = bar.locator(modelRow).first()
+    await expect(chip).toContainText("Z-Image Turbo")
+    const chooser = page.waitForEvent("filechooser")
+    await bar.getByRole("button", { name: "References" }).click()
+    await (await chooser).setFiles(
+      new URL("../src/gallery/fixtures/demo-image-1-1.png", import.meta.url)
+        .pathname
+    )
+    await expect(chip).toContainText("Qwen Image Edit 2511")
+    await expect(bar.locator("img")).toHaveCount(1)
+    await expect(
+      bar.locator('[data-slot="composer-attachments-edge"]')
+    ).toHaveCount(1)
   })
 })
 
@@ -80,7 +106,7 @@ test.describe("the prompt bar's field and model chip", () => {
     expect(grown.height).toBeGreaterThan(rest.height)
   })
 
-  test("hugs the model chip around its name, the name plus 66 px", async ({
+  test("hugs the model chip around its name's text, the text plus 66 px, the mark 12 px in and the text 8 px after it", async ({
     page,
   }) => {
     await page.goto("/apps/image")
@@ -89,9 +115,20 @@ test.describe("the prompt bar's field and model chip", () => {
       .locator(modelRow)
       .first()
     await expect(chip).toBeVisible()
-    const name = await boxOf(chip.locator('[data-slot="model-row-name"]'))
+    const text = await chip
+      .locator('[data-slot="model-row-name"]')
+      .evaluate((node) => {
+        const range = document.createRange()
+        range.selectNodeContents(node)
+        const box = range.getBoundingClientRect()
+        return { x: box.x, width: box.width }
+      })
+    const mark = await boxOf(chip.locator('[data-slot="model-row-mark"]'))
     const box = await boxOf(chip)
-    expect(Math.round(box.width - name.width)).toBe(66)
+    expect(Math.round(box.width - text.width)).toBe(66)
+    expect(Math.round(mark.x - box.x)).toBe(12)
+    expect(Math.round(text.x - (mark.x + mark.width))).toBe(8)
+    await expect(chip).toHaveCSS("border-left-width", "0px")
   })
 })
 
@@ -199,6 +236,48 @@ test.describe("the tray and rhythm of Video's column", () => {
   })
 })
 
+test.describe("Video's mode switch and column fit", () => {
+  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
+
+  test("puts the 302 by 48 mode switch 8 px under the start frame and 16 px over the drop zone, and ends the last row 8 px above Generate in every tab", async ({
+    page,
+  }) => {
+    await page.goto("/apps/video")
+    const column = page.locator('[data-slot="composer"]')
+    await expect(column.locator(modelRow)).toContainText("LTX 2.5")
+    const frame = await boxOf(
+      column.locator('[data-slot="composer-attachments-tiles"]')
+    )
+    const toggle = await boxOf(column.getByRole("radiogroup"))
+    expect([toggle.width, toggle.height]).toEqual([302, 48])
+    expect(toggle.y).toBe(frame.y + frame.height + 8)
+    const wells = await boxOf(column.locator('[data-slot="video-wells"]'))
+    expect(wells.y).toBe(toggle.y + toggle.height + 16)
+    const parts = column.locator('[data-slot="video-parts"]')
+    const footer = column.locator('[data-slot="composer-toolbar"]')
+    for (const [tab, model] of [
+      ["Text and image", "LTX 2.5"],
+      ["References", "Seedance 2.5"],
+      ["Two frames", "Seedance 2.5"],
+    ] as const) {
+      await column.getByRole("tab", { name: tab, exact: true }).click()
+      await expect(column.locator(modelRow)).toContainText(model)
+      await expect
+        .poll(async () => {
+          const bottom = await parts.evaluate((node) =>
+            Math.max(
+              ...[...node.children].map(
+                (child) => child.getBoundingClientRect().bottom
+              )
+            )
+          )
+          return Math.round((await boxOf(footer)).y - bottom)
+        })
+        .toBe(8)
+    }
+  })
+})
+
 test.describe("Video's model picker and its settings", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
@@ -208,9 +287,9 @@ test.describe("Video's model picker and its settings", () => {
     await page.goto("/apps/video")
     const column = page.locator('[data-slot="composer"]')
     await expect(column).toBeVisible()
-    await expect(column.locator('[data-slot="segmented-control"]')).toHaveCount(
-      0
-    )
+    const switches = column.getByRole("radiogroup")
+    await expect(switches).toHaveCount(1)
+    await expect(switches.getByRole("radio")).toHaveText(["Video", "Extend"])
     await column.locator(modelRow).click()
     const list = page.locator('[data-slot="model-picker"]')
     await expect(list).toBeVisible()
@@ -254,10 +333,7 @@ test.describe("an app on a phone", () => {
       await expect(region).toBeVisible()
       await expect(page.locator('[data-slot="prompt-bar"]')).toHaveCount(0)
       await expect(page.locator('[data-slot="composer"]')).toHaveCount(0)
-      const edge =
-        appId === "image"
-          ? await boxOf(region.getByRole("tablist").first())
-          : await boxOf(region)
+      const edge = await boxOf(region.getByRole("tablist").first())
       expect(edge.x).toBe(16)
       const key = page.locator('[data-slot="app-bar-tabGenerate"]')
       await expect(key).toHaveAccessibleName("Generate")
@@ -270,4 +346,31 @@ test.describe("an app on a phone", () => {
       await expect(sheet.locator('[data-slot="chip-row"]')).toHaveCount(0)
     })
   }
+})
+
+test.describe("Video's runs on a phone", () => {
+  test.skip(({ isMobile }) => !isMobile, "the phone's inset")
+
+  test("starts the run's title and its tile on the line of the tabs, 16 px in", async ({
+    page,
+  }) => {
+    const started = await fetch("http://127.0.0.1:8797/api/apps/video/runs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        inputs: { model: "ltx-2-5", prompt: "a paper boat on a pond" },
+      }),
+    })
+    expect(started.ok).toBe(true)
+    await page.goto("/apps/video")
+    const region = page.getByRole("region", { name: "Your results" })
+    const tabs = await boxOf(region.getByRole("tablist").first())
+    const run = region.locator('[data-slot="app-stage-scroll"] article').first()
+    await expect(run).toBeVisible({ timeout: 20_000 })
+    const tile = run.locator("video, img").first()
+    await expect(tile).toBeVisible({ timeout: 20_000 })
+    expect(tabs.x).toBe(16)
+    expect((await boxOf(run)).x).toBe(tabs.x)
+    expect((await boxOf(tile)).x).toBeCloseTo(tabs.x, 0)
+  })
 })
