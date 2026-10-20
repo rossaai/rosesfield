@@ -19,6 +19,12 @@ type Values = Map<string, string>
 
 type Fit = "holds" | "names-output" | null
 
+type RunFacts = {
+  values: Values
+  inputs: RunInputs
+  seconds: number | null
+}
+
 const outputSizeKey = "outputsize"
 
 const output =
@@ -57,8 +63,14 @@ export function priceFromRates(
     (row) => row.model === form.model && isPriced(row.unit)
   )
   const values = valuesOf(form, inputs)
+  const run: RunFacts = {
+    values,
+    inputs,
+    seconds:
+      roleNumber(form, inputs, "length") ?? numberIn(values, ["duration"]),
+  }
   const scored = own
-    .map((row) => ({ row, score: scoreOf(row.conditions, values, inputs) }))
+    .map((row) => ({ row, score: scoreOf(row.conditions, run) }))
     .filter((one) => one.score !== null)
   const best = Math.max(...scored.map((one) => one.score ?? 0))
   const top = scored.filter((one) => one.score === best)
@@ -99,18 +111,14 @@ function amountOf(
   return row.credits * units * count
 }
 
-function scoreOf(
-  conditions: string,
-  values: Values,
-  inputs: RunInputs
-): number | null {
+function scoreOf(conditions: string, run: RunFacts): number | null {
   let score = 0
   for (const raw of conditions.split(";")) {
     const part = raw.trim()
     if (part === "") {
       continue
     }
-    const fit = fitOf(part, values, inputs)
+    const fit = fitOf(part, run)
     if (fit === null) {
       return null
     }
@@ -119,7 +127,8 @@ function scoreOf(
   return score
 }
 
-function fitOf(part: string, values: Values, inputs: RunInputs): Fit {
+function fitOf(part: string, run: RunFacts): Fit {
+  const { values, inputs } = run
   if (output.test(part)) {
     return "names-output"
   }
@@ -130,8 +139,7 @@ function fitOf(part: string, values: Values, inputs: RunInputs): Fit {
   }
   const seconds = /^(\d+)s$/.exec(part)
   if (seconds !== null) {
-    const held = numberIn(values, ["duration"])
-    return held !== null && held === Number(seconds[1]) ? "holds" : null
+    return run.seconds === Number(seconds[1]) ? "holds" : null
   }
   if (/^\d+p$/.test(part)) {
     return values.get("resolution") === keyOf(part) ? "holds" : null

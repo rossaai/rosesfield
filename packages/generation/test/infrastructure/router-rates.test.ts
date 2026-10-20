@@ -185,6 +185,23 @@ describe("priceFromRates", () => {
     expect(priceFromRates(rows, clip, { duration: 5 }, "video")).toBe(10)
   })
 
+  it.each(["seconds", "duration_seconds"])(
+    "reads a seconds condition from a length field named %s",
+    (name) => {
+      const named: ModelForm = {
+        ...clip,
+        fields: clip.fields.map((field) =>
+          field.name === "duration" ? { ...field, name, path: name } : field
+        ),
+      }
+      const rows = [
+        row(clip.model, "720p; 5s", "per second"),
+        row(clip.model, "720p; 10s", "per second"),
+      ]
+      expect(priceFromRates(rows, named, { [name]: 10 }, "video")).toBe(20)
+    }
+  )
+
   it("answers unknown when the run leaves a condition's setting unset", () => {
     const rows = [row(flash.model, "1080p")]
     expect(priceFromRates(rows, flash, { prompt: "a" }, "image")).toBeNull()
