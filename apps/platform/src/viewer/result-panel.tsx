@@ -96,7 +96,10 @@ function InputAssets({ ids }: { ids: readonly string[] }): ReactNode {
         <ImagesIcon aria-hidden="true" />
         {t("viewer.label.inputs")}
       </h3>
-      <div className="flex gap-1 overflow-x-auto px-3 py-4.5">
+      <div
+        data-slot="viewer-input-strip"
+        className="-me-2 flex gap-1 overflow-x-auto ps-3 pe-5 py-4.5"
+      >
         {ids.map((assetId) => (
           <span
             key={assetId}
