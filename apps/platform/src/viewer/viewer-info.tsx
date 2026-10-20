@@ -24,7 +24,7 @@ import {
   promptOf,
   RunSection,
 } from "@/viewer/result-panel"
-import { ViewerActions } from "@/viewer/viewer-actions"
+import { ViewerActions, ViewerManage } from "@/viewer/viewer-actions"
 
 export type ViewerCompare = {
   inputId: string | null
@@ -114,7 +114,7 @@ function MadeInfo({
     <>
       <PanelHead run={run} line={formatDate(run.createdAt)} />
       {run.origin === "demo" ? (
-        <p className="px-1 text-caption text-cem-text">
+        <p className="px-1 text-caption text-ink-muted">
           {t("run.demoCaption")}
         </p>
       ) : null}
@@ -211,8 +211,9 @@ export function ViewerInfo({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <ViewerDetails asset={asset} compare={compare} measured={measured} />
+      <ViewerManage asset={asset} run={run} onDeleted={onDeleted} />
       <span aria-hidden="true" className="flex-1" />
-      <ViewerActions asset={asset} run={run} onDeleted={onDeleted} />
+      <ViewerActions asset={asset} run={run} />
     </div>
   )
 }
