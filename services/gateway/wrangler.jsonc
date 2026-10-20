@@ -34,6 +34,8 @@
     }
   ],
   "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "rosesfield-assets" }],
+  // A shared video's poster is its first frame, drawn by Media Transformations.
+  "media": { "binding": "MEDIA" },
   "durable_objects": {
     "bindings": [
       { "name": "WATCHERS", "class_name": "RunWatcher" },
@@ -73,6 +75,7 @@
       "r2_buckets": [
         { "binding": "BUCKET", "bucket_name": "rosesfield-judge-assets" }
       ],
+      "media": { "binding": "MEDIA" },
       "durable_objects": {
         "bindings": [
           { "name": "WATCHERS", "class_name": "RunWatcher" },
