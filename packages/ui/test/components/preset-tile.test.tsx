@@ -1,4 +1,4 @@
-import { PresetTile } from "@rosesfield/ui/components/preset-tile"
+import { PresetGrid, PresetTile } from "@rosesfield/ui/components/preset-tile"
 import { PRESET_TILE } from "@rosesfield/ui/contracts/preset-tile.generated"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -30,5 +30,53 @@ describe("PresetTile", () => {
     expect(
       screen.getByRole("link", { name: "Try it" }).getAttribute("href")
     ).toBe("/apps/effects?preset=melt")
+  })
+})
+
+describe("the preset name", () => {
+  it("is sized to its card: the display size on a tall card, the title size on a wide one", () => {
+    const names = (["tall", "wide"] as const).map((shape) => {
+      render(
+        <PresetTile
+          name="Melt"
+          href="/explore/melt"
+          viewLabel="View Melt"
+          action={{ label: "Recreate", href: "/apps/effects?preset=melt" }}
+          clip={{ src: "melt.mp4", alt: "Melt" }}
+          aspect={
+            shape === "tall"
+              ? { width: 9, height: 16 }
+              : { width: 16, height: 9 }
+          }
+        />
+      )
+      const reveal = document.querySelectorAll("[data-slot='preset-tile-name']")
+      const name = reveal[reveal.length - 1]?.className.split(" ") ?? []
+      cleanup()
+      return name
+    })
+    expect(names[0]).toContain("text-display")
+    expect(names[0]).not.toContain("text-title")
+    expect(names[1]).toContain("text-title")
+  })
+})
+
+describe("PresetGrid", () => {
+  it("stands its tiles in 5 column stacks, so 12 tiles fill every column", () => {
+    render(
+      <PresetGrid label="Presets">
+        {Array.from({ length: 12 }, (_, index) => `preset ${index}`).map(
+          (name) => (
+            <span key={name}>{name}</span>
+          )
+        )}
+      </PresetGrid>
+    )
+    const stacks = screen
+      .getByRole("region", { name: "Presets" })
+      .querySelectorAll("[data-slot='media-feed-stack']")
+    expect([...stacks].map((stack) => stack.childElementCount)).toEqual([
+      3, 3, 2, 2, 2,
+    ])
   })
 })

@@ -3,16 +3,68 @@ import { interaction } from "@rosesfield/ui/components/interaction"
 import type { MediaFeedLayout } from "@rosesfield/ui/contracts/media-feed.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { ArrowUpRightIcon } from "lucide-react"
-import type { ComponentProps, ReactElement, ReactNode } from "react"
-
-const columns = {
-  masonry: "columns-1 @regular:columns-6",
-  row: "columns-2 @regular:columns-4",
-} satisfies Record<MediaFeedLayout, string>
-
-const presetColumns = "columns-2 @regular:columns-5"
+import {
+  Children,
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+} from "react"
 
 type MediaFeedContent = "media" | "presets"
+
+type StackForm = "row" | "presets"
+
+const stackForms = {
+  row: {
+    count: 4,
+    grid: "@regular:grid-cols-4 @regular:gap-0",
+    stack:
+      "@regular:pe-2 [&_[data-slot=media]>[data-slot=media-tile]]:origin-bottom [&_[data-slot=media]>[data-slot=media-tile]]:scale-125",
+  },
+  presets: {
+    count: 5,
+    grid: "@regular:grid-cols-[repeat(5,minmax(0,--spacing(68.5)))] @regular:justify-center @regular:gap-x-2",
+    stack: "",
+  },
+} satisfies Record<StackForm, { count: number; grid: string; stack: string }>
+
+function stacksOf(children: ReactNode, count: number): ReactNode[][] {
+  const items = Children.toArray(children)
+  return Array.from({ length: count }, (_, column) =>
+    items.filter((_, index) => index % count === column)
+  )
+}
+
+function FeedStacks({
+  form,
+  children,
+}: {
+  form: StackForm
+  children: ReactNode
+}): ReactElement {
+  const { count, grid, stack } = stackForms[form]
+  return (
+    <div
+      data-slot="media-feed-items"
+      data-stacks={form}
+      className={cn("columns-2 gap-2 @regular:grid @regular:items-start", grid)}
+    >
+      {stacksOf(children, count).map((items, column) => (
+        <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: a column's place is its identity
+          key={column}
+          data-slot="media-feed-stack"
+          className={cn(
+            "contents *:mb-2 *:break-inside-avoid @regular:flex @regular:flex-col @regular:gap-2 @regular:*:mb-0",
+            stack
+          )}
+        >
+          {items}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 const windows = {
   masonry: "max-h-256",
@@ -88,15 +140,18 @@ function MediaFeed({
         data-slot="media-feed-window"
         className={cn("relative overflow-hidden", windows[layout])}
       >
-        <div
-          data-slot="media-feed-items"
-          className={cn(
-            "gap-2 *:mb-2 *:break-inside-avoid",
-            content === "presets" ? presetColumns : columns[layout]
-          )}
-        >
-          {children}
-        </div>
+        {content === "presets" || layout === "row" ? (
+          <FeedStacks form={content === "presets" ? "presets" : "row"}>
+            {children}
+          </FeedStacks>
+        ) : (
+          <div
+            data-slot="media-feed-items"
+            className="columns-1 gap-2 *:mb-2 *:break-inside-avoid @regular:columns-6"
+          >
+            {children}
+          </div>
+        )}
         {viewAll === undefined ? null : (
           <div
             data-slot="media-feed-fade"
@@ -110,11 +165,5 @@ function MediaFeed({
   )
 }
 
-type PresetRowProps = Omit<MediaFeedProps, "layout" | "content">
-
-function PresetRow(props: PresetRowProps): ReactElement {
-  return <MediaFeed {...props} layout="row" content="presets" />
-}
-
-export type { MediaFeedContent, MediaFeedProps, PresetRowProps, ViewAllProps }
-export { MediaFeed, PresetRow, ViewAll }
+export type { MediaFeedContent, MediaFeedProps, ViewAllProps }
+export { FeedStacks, MediaFeed, ViewAll }

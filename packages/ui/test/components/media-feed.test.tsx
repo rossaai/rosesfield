@@ -1,24 +1,29 @@
-import {
-  MediaFeed,
-  PresetRow,
-  ViewAll,
-} from "@rosesfield/ui/components/media-feed"
+import { MediaFeed, ViewAll } from "@rosesfield/ui/components/media-feed"
+import { ResultTile } from "@rosesfield/ui/components/result-tile"
 import { MEDIA_FEED } from "@rosesfield/ui/contracts/media-feed.generated"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 afterEach(cleanup)
 
-function renderFeed(layout: "masonry" | "row") {
+function renderFeed(
+  layout: "masonry" | "row",
+  content: "media" | "presets" = "media",
+  count = 2
+) {
   render(
     <MediaFeed
       label="Shared results"
       layout={layout}
+      content={content}
       header={<h2>Shared results</h2>}
       viewAll={<ViewAll href="/explore/all">View all</ViewAll>}
     >
-      <span>one</span>
-      <span>two</span>
+      {Array.from({ length: count }, (_, index) => `item ${index}`).map(
+        (name) => (
+          <span key={name}>{name}</span>
+        )
+      )}
     </MediaFeed>
   )
   return screen.getByRole("region", { name: "Shared results" })
@@ -55,12 +60,86 @@ describe("MediaFeed", () => {
     expect(classesOf(feed, "window")).toContain("max-h-256")
   })
 
-  it("lays a model's row in 4 columns, 2 on a phone, in an 896 px window", () => {
-    const feed = renderFeed("row")
+  it("stands a model's row in 4 column stacks of 352 px, each tile 8 px inside its column, 2 columns on a phone, in an 896 px window", () => {
+    const feed = renderFeed("row", "media", 6)
     expect(classesOf(feed, "items")).toEqual(
-      expect.arrayContaining(["columns-2", "@regular:columns-4"])
+      expect.arrayContaining([
+        "columns-2",
+        "gap-2",
+        "@regular:grid",
+        "@regular:grid-cols-4",
+        "@regular:gap-0",
+      ])
+    )
+    const stacks = feed.querySelectorAll("[data-slot='media-feed-stack']")
+    expect(stacks).toHaveLength(4)
+    expect(stacks[0]?.textContent).toBe("item 0item 4")
+    expect(stacks[1]?.textContent).toBe("item 1item 5")
+    expect(stacks[0]?.className.split(" ")).toEqual(
+      expect.arrayContaining(["contents", "@regular:flex", "@regular:pe-2"])
     )
     expect(classesOf(feed, "window")).toContain("max-h-224")
+  })
+
+  it("draws a row's clip at 125 percent from the foot, and a masonry's at its own size", () => {
+    const tile = (
+      <ResultTile
+        kind="image"
+        src="a.png"
+        alt="A rose"
+        aspect={{ width: 9, height: 16 }}
+        app="Image"
+        openLabel="Open"
+        expandLabel="Expand"
+        moreLabel="More"
+        recreateLabel="Recreate"
+        recreateName="Recreate this result"
+        onOpen={() => undefined}
+        onRecreate={() => undefined}
+      />
+    )
+    render(
+      <MediaFeed label="Row" layout="row">
+        {tile}
+      </MediaFeed>
+    )
+    const stack = screen
+      .getByRole("region", { name: "Row" })
+      .querySelector("[data-slot='media-feed-stack']")
+    expect(stack?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "[&_[data-slot=media]>[data-slot=media-tile]]:origin-bottom",
+        "[&_[data-slot=media]>[data-slot=media-tile]]:scale-125",
+      ])
+    )
+    expect(
+      stack?.querySelector("[data-slot=media]>[data-slot=media-tile]")
+    ).not.toBeNull()
+    cleanup()
+    render(
+      <MediaFeed label="Masonry" layout="masonry">
+        {tile}
+      </MediaFeed>
+    )
+    const masonry = screen.getByRole("region", { name: "Masonry" })
+    expect(masonry.innerHTML).not.toContain("scale-125")
+  })
+
+  it("stands presets in 5 column stacks of 274 px, 8 px apart and centred, 2 on a phone", () => {
+    const feed = renderFeed("row", "presets", 12)
+    expect(classesOf(feed, "items")).toEqual(
+      expect.arrayContaining([
+        "columns-2",
+        "@regular:grid-cols-[repeat(5,minmax(0,--spacing(68.5)))]",
+        "@regular:justify-center",
+        "@regular:gap-x-2",
+      ])
+    )
+    const stacks = feed.querySelectorAll("[data-slot='media-feed-stack']")
+    expect(stacks).toHaveLength(5)
+    expect([...stacks].map((stack) => stack.childElementCount)).toEqual([
+      3, 3, 2, 2, 2,
+    ])
   })
 
   it("ends in a 208 px fade with View all 48 px tall, 36 px above its foot", () => {
@@ -73,36 +152,5 @@ describe("MediaFeed", () => {
       expect.arrayContaining(["h-12", "px-3", "gap-2"])
     )
     expect(classesOf(feed, "header")).toContain("mb-5")
-  })
-})
-
-describe("PresetRow", () => {
-  it("lays presets in 5 columns, 2 on a phone, under a 208 px fade with View all", () => {
-    render(
-      <PresetRow
-        label="Presets"
-        viewAll={<ViewAll href="/presets">View all</ViewAll>}
-      >
-        <span>one</span>
-      </PresetRow>
-    )
-    const feed = screen.getByRole("region", { name: "Presets" })
-    expect(classesOf(feed, "items")).toEqual(
-      expect.arrayContaining(["columns-2", "@regular:columns-5"])
-    )
-    expect(classesOf(feed, "fade")).toEqual(
-      expect.arrayContaining(["h-52", "pointer-events-none", "justify-center"])
-    )
-    expect(classesOf(feed, "window")).toContain("max-h-224")
-    expect(
-      screen.getByRole("link", { name: "View all" }).getAttribute("href")
-    ).toBe("/presets")
-  })
-
-  it("leaves the media rows at their own columns", () => {
-    const feed = renderFeed("row")
-    expect(classesOf(feed, "items")).toEqual(
-      expect.arrayContaining(["columns-2", "@regular:columns-4"])
-    )
   })
 })

@@ -1,14 +1,20 @@
+import { run } from "@rosesfield/contract"
 import { AppTile, AppTileGrid } from "@rosesfield/ui/components/app-tile"
 import { Badge } from "@rosesfield/ui/components/badge"
 import { Button, IconButton } from "@rosesfield/ui/components/button"
 import { MediaFeed, ViewAll } from "@rosesfield/ui/components/media-feed"
 import { PresetGrid, PresetTile } from "@rosesfield/ui/components/preset-tile"
-import { PromoCard, PromoRow } from "@rosesfield/ui/components/promo-card"
+import {
+  PromoCard,
+  PromoRow,
+  PromoSkeleton,
+} from "@rosesfield/ui/components/promo-card"
 import { ResultTile } from "@rosesfield/ui/components/result-tile"
 import { SectionHeader } from "@rosesfield/ui/components/section-header"
-import { Viewer } from "@rosesfield/ui/components/viewer"
-import { ImageIcon, Volume2Icon } from "lucide-react"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { ImageIcon, VideoIcon, Volume2Icon } from "lucide-react"
 import { type ReactElement, useState } from "react"
+import { t as tLive } from "@/copy/t"
 import { t } from "@/gallery/copy.en"
 import demoSquare from "@/gallery/fixtures/demo-image-1-1.png"
 import demoTall from "@/gallery/fixtures/demo-image-9-16.png"
@@ -16,6 +22,13 @@ import demoWide from "@/gallery/fixtures/demo-image-16-9.png"
 import demoVideo from "@/gallery/fixtures/demo-video-16-9.mp4"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
 import { frameState, interactionStates } from "@/gallery/reference-frames"
+import {
+  screenAssets,
+  screenRuns,
+  seeds,
+} from "@/gallery/screens/screen-fixtures"
+import type { VisualEntry } from "@/screens/explore/explore-tile"
+import { ResultViewer } from "@/viewer/result-viewer"
 
 const shapes = [
   { src: demoTall, aspect: { width: 9, height: 16 } },
@@ -65,6 +78,17 @@ function Result({
 
 const twelve = Array.from({ length: 12 }, (_, index) => index)
 
+function HeaderActions(): ReactElement {
+  return (
+    <>
+      <Button size="hero" tone="primary">
+        {t("sample.start")}
+      </Button>
+      <Button size="hero">{t("sample.learnMore")}</Button>
+    </>
+  )
+}
+
 function Feed({ layout }: { layout: "masonry" | "row" }): ReactElement {
   return (
     <MediaFeed
@@ -77,10 +101,16 @@ function Feed({ layout }: { layout: "masonry" | "row" }): ReactElement {
           }
           line={t("sample.section.line")}
           href="?entry=ref-media-row"
+          {...(layout === "masonry" ? { actions: <HeaderActions /> } : {})}
         />
       }
       viewAll={
-        <ViewAll href="?entry=ref-gallery-grid">{t("sample.viewAll")}</ViewAll>
+        <ViewAll href="?entry=ref-gallery-grid">
+          {tLive("explore.viewAll", {
+            name:
+              layout === "row" ? t("sample.model") : t("sample.section.title"),
+          })}
+        </ViewAll>
       }
     >
       {twelve.map((index) => (
@@ -100,7 +130,7 @@ function Presets(): ReactElement {
           href="?preset=dolly"
           viewLabel={t("sample.preset.dolly")}
           line={t("sample.preset.line")}
-          action={{ label: t("sample.tryIt"), href: "?apps=video" }}
+          action={{ label: t("sample.recreate"), href: "?apps=video" }}
           clip={{
             src: demoVideo,
             poster: demoWide,
@@ -132,6 +162,14 @@ function Apps(): ReactElement {
               {...(id === "image"
                 ? { badge: <Badge kind="new">{t("sample.badge.new")}</Badge> }
                 : {})}
+              {...(id === "video"
+                ? {
+                    mode: {
+                      label: t("sample.kind.video"),
+                      icon: <VideoIcon />,
+                    },
+                  }
+                : {})}
             />
           )
         )}
@@ -140,10 +178,17 @@ function Apps(): ReactElement {
   )
 }
 
-function Promos(): ReactElement {
+function Promos({ isLoading = false }: { isLoading?: boolean }): ReactElement {
   return (
-    <PromoRow label={t("sample.promo.title")} className="-mx-4">
-      {[0, 1, 2, 3].map((index) => (
+    <PromoRow
+      label={t("sample.promo.title")}
+      nextLabel={t("sample.viewer.next")}
+      className="-mx-4"
+    >
+      {isLoading
+        ? [0, 1, 2, 3].map((index) => <PromoSkeleton key={index} />)
+        : null}
+      {(isLoading ? [] : [0, 1, 2, 3]).map((index) => (
         <PromoCard
           key={index}
           name={t("sample.promo.title")}
@@ -157,38 +202,52 @@ function Promos(): ReactElement {
   )
 }
 
+const viewerEntry: VisualEntry = {
+  key: "gallery-viewer",
+  run: run.parse({
+    ...screenRuns.video,
+    appId: "recast",
+    origin: "live",
+    inputs: {
+      mode: "object",
+      source: [screenAssets.clip.id],
+      target: "the boat",
+      prompt: "A paper boat drifts on a pond",
+    },
+    engine: {
+      adapter: "comfy-workflow",
+      models: [
+        "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
+      ],
+      workflowHash: null,
+    },
+    cost: { amount: 0.021, currency: "USD" },
+  }),
+  kind: "video",
+  aspect: { width: 16, height: 9 },
+  source: { kind: "share", shareId: "gallery-viewer", src: demoVideo },
+}
+
 function ViewerOpen(): ReactElement {
+  const [client] = useState(() => {
+    const seeded = new QueryClient({
+      defaultOptions: { queries: { enabled: false } },
+    })
+    seeds.media()(seeded)
+    return seeded
+  })
   const [open, setOpen] = useState(true)
   return (
-    <Viewer
-      open={open}
-      onOpenChange={setOpen}
-      origin={null}
-      aspect={{ width: 16, height: 9 }}
-      title={t("sample.viewer.title")}
-      closeLabel={t("sample.close")}
-      aside={
-        <div className="flex h-full flex-col gap-4">
-          <p className="text-body">{t("sample.model")}</p>
-          <span className="flex-1" />
-          <Button tone="accent" width="full" className="rounded-cell">
-            {t("sample.recreate")}
-          </Button>
-          <Button width="full" className="rounded-cell">
-            {t("sample.viewer.download")}
-          </Button>
-        </div>
-      }
-    >
-      <video
-        src={demoVideo}
-        poster={demoWide}
-        muted
-        loop
-        playsInline
-        className="size-full"
+    <QueryClientProvider client={client}>
+      <ResultViewer
+        shown={{ entry: viewerEntry, origin: null }}
+        open={open}
+        list={[viewerEntry]}
+        onClose={() => setOpen(false)}
+        onStep={() => undefined}
+        onRecreate={() => undefined}
       />
-    </Viewer>
+    </QueryClientProvider>
   )
 }
 
@@ -229,7 +288,10 @@ export const referenceMediaEntries: GalleryEntry[] = [
     id: "ref-promo-card",
     unit: "promo-card",
     title: "ref.promoCard",
-    states: interactionStates(() => <Promos />),
+    states: [
+      ...interactionStates(() => <Promos />),
+      frameState("loading", "state.loading", () => <Promos isLoading />),
+    ],
   },
   {
     id: "ref-gallery-grid",
