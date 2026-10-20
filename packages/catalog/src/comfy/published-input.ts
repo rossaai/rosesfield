@@ -5,9 +5,9 @@ import {
   startRunBodyFor,
 } from "@rosesfield/contract"
 import {
-  isOneAtATime,
   type HostedModel,
   isHostedModelId,
+  isOneAtATime,
   type ModelField,
   type ModelForm,
 } from "@rosesfield/generation/bindings"

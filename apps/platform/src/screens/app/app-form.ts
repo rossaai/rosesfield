@@ -1,14 +1,14 @@
+import { isHostedModelId } from "@rosesfield/catalog/comfy"
 import type {
   AppListing,
   InputDefinition,
   Run,
   startRunBody,
 } from "@rosesfield/contract"
-import { isHostedModelId } from "@rosesfield/catalog/comfy"
 import type { SchemaInput } from "@/api/call-route"
 import { defaultAspectOf } from "@/catalog/app-facts"
 import type { CopyKey } from "@/copy.en"
-import { modelInputName } from "@/screens/app/hosted/hosted-form"
+import { modelInputName } from "@/pieces/run/run-facts"
 
 export type FieldValue = string | number | string[] | undefined
 

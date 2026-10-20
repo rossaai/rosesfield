@@ -70,9 +70,9 @@ export {
   type FieldRole,
   fieldOfRole,
   fieldRoleOf,
+  fieldRoles,
   inputRoleOf,
   isOneAtATime,
-  fieldRoles,
 } from "#domain/field-role"
 export {
   type EngineFile,
