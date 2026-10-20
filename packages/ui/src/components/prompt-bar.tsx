@@ -29,6 +29,8 @@ type PromptBarProps = {
   onRemoveAttachment?: (id: string) => void
   leading?: ReactNode
   chips?: ReactNode
+  tray?: ReactNode
+  notices?: ReactNode
   price?: ReactNode
   submitValue?: ReactNode
   submitName?: string | undefined
@@ -174,6 +176,11 @@ function PromptBar(props: PromptBarProps): ReactElement {
         props.className
       )}
     >
+      {props.tray === undefined ? null : (
+        <div data-slot="composer-tray" className="px-3 pt-2 pb-3">
+          {props.tray}
+        </div>
+      )}
       <div
         data-ground="surface"
         className="flex items-end gap-3 rounded-card bg-surface p-3"
@@ -181,6 +188,9 @@ function PromptBar(props: PromptBarProps): ReactElement {
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <PromptTray {...props} />
           <PromptField props={props} onSubmit={submit} />
+          {props.notices === undefined ? null : (
+            <div data-slot="composer-notices">{props.notices}</div>
+          )}
           <ChipRow {...props} />
         </div>
         <GenerateButton

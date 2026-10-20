@@ -1,4 +1,5 @@
 import { PromptBar } from "@rosesfield/ui/components/prompt-bar"
+import { COMPOSER } from "@rosesfield/ui/contracts/composer.generated"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -119,5 +120,28 @@ describe("PromptBar's placement", () => {
       />
     )
     expect(bar?.className.split(" ")).not.toContain("fixed")
+  })
+})
+
+describe("PromptBar's composer slots", () => {
+  it("orders its contract's tray, attachments, prompt, notices and toolbar", () => {
+    render(
+      <PromptBar
+        value=""
+        onValueChange={() => undefined}
+        onSubmit={() => undefined}
+        label="Prompt"
+        placeholder="Describe the image"
+        submitLabel="Generate"
+        removeLabel="Remove"
+        tray={<span>Reply</span>}
+        notices={<span>Your key is missing</span>}
+        attachments={[{ id: "one", src: "one.png", alt: "A reference" }]}
+      />
+    )
+    const order = [
+      ...document.querySelectorAll("[data-slot^='composer-']"),
+    ].map((element) => element.getAttribute("data-slot")?.replace("composer-", ""))
+    expect(order).toEqual([...COMPOSER.slots])
   })
 })
