@@ -11,6 +11,7 @@ export const appCopy = {
   "app.notFound.title": "There is no app called {id}",
   "app.notFound.action": "Open apps",
   "app.canvas.label": "Your results",
+  "app.canvas.view": "View",
   "app.tab.history": "History",
   "app.tab.how": "How it works",
   "app.how.inputs.title": "Add your inputs",

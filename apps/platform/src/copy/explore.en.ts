@@ -60,4 +60,5 @@ export const exploreCopy = {
   "share.page.gone.body": "A shared result stays public for 90 days.",
   "share.page.failed.title": "This page did not load",
   "share.page.label": "Shared result",
+  "explore.row.learnMore": "Learn more",
 } satisfies Record<string, string>
