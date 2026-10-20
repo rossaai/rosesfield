@@ -87,7 +87,7 @@ describe("the bottom bar", () => {
     fireEvent.click(within(bar).getByRole("button", { name: "Generate" }))
     const sheet = await screen.findByRole("dialog")
     const image = within(sheet).getByRole("link", { name: "Image" })
-    expect(image.className.split(" ")).toContain("active:after:opacity-15")
+    expect(image.className.split(" ")).toContain("active:after:opacity-10")
     expect(image.className).not.toMatch(/scale|translate/)
   })
 })

@@ -4,7 +4,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@rosesfield/ui/components/popover"
-import { ActivityIcon, LayoutGridIcon } from "lucide-react"
+import {
+  ActivityIcon,
+  CircleAlertIcon,
+  LayoutGridIcon,
+  LoaderIcon,
+} from "lucide-react"
 import {
   createContext,
   type ReactElement,
@@ -53,6 +58,12 @@ const stateKeys = {
   failed: "history.filter.failed",
 } as const satisfies Record<StateChoice, string>
 
+const statePictures = {
+  all: <LayoutGridIcon />,
+  working: <LoaderIcon />,
+  failed: <CircleAlertIcon />,
+} satisfies Record<StateChoice, ReactNode>
+
 function isStateChoice(value: string): value is StateChoice {
   return stateChoices.some((choice) => choice === value)
 }
@@ -85,6 +96,7 @@ export function stateGroup(control: CanvasViewControl): FilterGroup {
     choices: stateChoices.map((choice) => ({
       value: choice,
       label: t(stateKeys[choice]),
+      picture: statePictures[choice],
     })),
     value: control.state,
     onChoose: (value) => {
