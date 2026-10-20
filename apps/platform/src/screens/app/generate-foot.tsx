@@ -1,4 +1,4 @@
-import { Button } from "@rosesfield/ui/components/button"
+import { GenerateButton } from "@rosesfield/ui/components/generate-button"
 import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement, ReactNode } from "react"
 import { wordsForError } from "@/copy/error-words"
@@ -36,23 +36,17 @@ export function GenerateFoot({
   className,
 }: GenerateFootProps): ReactElement {
   return (
-    <div className={cn("flex flex-col gap-s2", className)}>
-      <StartProblem start={start} />
-      <div className="flex items-center gap-s3">
-        {leading}
-        <p className="min-w-0 flex-1 truncate text-caption text-ink-muted">
-          {start.price}
-        </p>
-        <Button
-          tone="primary"
-          busy={start.isPending}
-          onClick={start.generate}
-          aria-label={start.priceName ?? undefined}
-        >
-          {t("run.generate")}
-          {start.priceValue}
-        </Button>
-      </div>
+    <div className={cn("flex w-full items-center gap-2", className)}>
+      {leading}
+      <GenerateButton
+        form="bar"
+        label={t("run.generate")}
+        price={start.priceValue ?? undefined}
+        busy={start.isPending}
+        onClick={start.generate}
+        aria-label={start.priceName ?? undefined}
+        className="min-w-0 flex-1"
+      />
     </div>
   )
 }

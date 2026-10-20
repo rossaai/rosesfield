@@ -1,10 +1,14 @@
 import type { CatalogModel, ModelTag } from "@rosesfield/catalog/comfy"
-import { Chip } from "@rosesfield/ui/components/chip"
 import {
+  type ModelBadge,
   ModelPicker,
   type ModelPickerSection,
   type ModelPickerTag,
 } from "@rosesfield/ui/components/model-picker"
+import {
+  ModelChip,
+  ModelRowTrigger,
+} from "@rosesfield/ui/components/model-trigger"
 import {
   CircleCheckIcon,
   ClockIcon,
@@ -14,6 +18,7 @@ import {
 } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
+import { LabMark } from "@/pieces/lab-mark"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import { modelSections } from "@/screens/app/hosted/model-sections"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
@@ -84,6 +89,17 @@ export function tagOf(tag: ModelTag): ModelPickerTag {
   }
 }
 
+const sectionLabels = {
+  featured: "model.picker.featured",
+  all: "model.picker.all",
+} as const
+
+export function badgesOf(tags: readonly ModelTag[]): ModelBadge[] {
+  return tags.some((tag) => tag.kind === "open-weights")
+    ? [{ kind: "openWeights", label: t("model.tag.openWeights") }]
+    : []
+}
+
 export function pickerSections(hosted: HostedState): ModelPickerSection[] {
   const first = [
     ...(hosted.defaultModel === null ? [] : [hosted.defaultModel]),
@@ -95,33 +111,62 @@ export function pickerSections(hosted: HostedState): ModelPickerSection[] {
   }))
   return modelSections(models, first, modelNameOf).map((section) => ({
     id: section.id,
-    label: section.label ?? t("model.picker.first"),
+    label: t(sectionLabels[section.id]),
     rows: section.rows.map((row) => ({
       id: row.id,
       name: row.name,
       maker: row.maker,
       line: lineOf(row.task),
-      tags: row.tags.map(tagOf),
+      tags: row.tags
+        .filter((tag) => tag.kind !== "open-weights")
+        .map(tagOf),
+      mark: <LabMark maker={row.maker} />,
+      badges: badgesOf(row.tags),
     })),
   }))
+}
+
+type CatalogPickerProps = {
+  hosted: HostedState
+  defaultOpen?: boolean
+  settings?: ReactNode
+  place?: "chip" | "row"
+}
+
+export function pickerTrigger(
+  hosted: HostedState,
+  place: "chip" | "row"
+): ReactElement {
+  const chosen = hosted.chosen
+  const name = chosen === null ? t("model.picker.title") : modelNameOf(chosen)
+  const mark =
+    chosen === null ? undefined : <LabMark maker={makerNameOf(chosen)} />
+  const markProp = mark === undefined ? {} : { mark }
+  return place === "row" ? (
+    <ModelRowTrigger
+      caption={t("model.picker.title")}
+      name={name}
+      aria-label={`${t("model.picker.title")} ${name}`}
+      {...markProp}
+    />
+  ) : (
+    <ModelChip
+      name={name}
+      aria-label={`${t("model.picker.title")} ${name}`}
+      {...markProp}
+    />
+  )
 }
 
 export function CatalogPicker({
   hosted,
   defaultOpen = false,
   settings,
-}: {
-  hosted: HostedState
-  defaultOpen?: boolean
-  settings?: ReactNode
-}): ReactElement {
-  const name =
-    hosted.chosen === null
-      ? t("model.picker.title")
-      : modelNameOf(hosted.chosen)
+  place = "chip",
+}: CatalogPickerProps): ReactElement {
   return (
     <ModelPicker
-      trigger={<Chip caption={t("model.picker.title")}>{name}</Chip>}
+      trigger={pickerTrigger(hosted, place)}
       title={t("model.picker.title")}
       searchLabel={t("model.picker.search")}
       searchPlaceholder={t("model.picker.searchPlaceholder")}
@@ -131,6 +176,7 @@ export function CatalogPicker({
       onChoose={hosted.choose}
       defaultOpen={defaultOpen}
       settings={settings}
+      side={place === "row" ? "right" : "top"}
       isLoading={hosted.isLoading}
       notice={
         hosted.error === null ? null : <ModelNotice error={hosted.error} />

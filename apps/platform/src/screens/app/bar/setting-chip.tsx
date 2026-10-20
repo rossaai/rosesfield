@@ -3,6 +3,7 @@ import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Chip } from "@rosesfield/ui/components/chip"
 import { ChipSelect } from "@rosesfield/ui/components/chip-select"
+import { CountStepper } from "@rosesfield/ui/components/count-stepper"
 import {
   Popover,
   PopoverContent,
@@ -18,7 +19,7 @@ import {
 } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { withUnit } from "@/copy/format"
-import { t, tCatalog, tCount } from "@/copy/t"
+import { t, tCatalog } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
 import { aspectField, countField } from "@/screens/app/app-form"
 import { numberOf, textOf } from "@/screens/app/fields/field-props"
@@ -70,7 +71,41 @@ export function inputIconOf(
   )
 }
 
+export function CountChip({
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  value: number
+  min: number
+  max: number
+  onChange: (value: number) => void
+}): ReactElement {
+  return (
+    <CountStepper
+      value={value}
+      min={min}
+      max={max}
+      onValueChange={onChange}
+      label={t("field.count.label")}
+      lessLabel={t("bar.count.less")}
+      moreLabel={t("bar.count.more")}
+    />
+  )
+}
+
 export function StepperChip(props: StepperChipProps): ReactElement {
+  if (props.label === t("field.count.label") && props.step === 1) {
+    return (
+      <CountChip
+        value={props.value}
+        min={props.min}
+        max={props.max}
+        onChange={props.onChange}
+      />
+    )
+  }
   return (
     <Popover>
       <PopoverTrigger
@@ -80,7 +115,7 @@ export function StepperChip(props: StepperChipProps): ReactElement {
           </Chip>
         }
       />
-      <PopoverContent>
+      <PopoverContent side="top" align="start" sideOffset={4}>
         <PopoverTitle>{props.label}</PopoverTitle>
         <NumberStepper {...props} />
       </PopoverContent>
@@ -179,15 +214,10 @@ export function SettingChip({
   if (name === countField) {
     const max = app.output.count.max
     return max < 2 ? null : (
-      <StepperChip
-        label={t("field.count.label")}
-        icon={chipIconOf("count")}
-        shown={tCount(`bar.count.${app.output.kind}`, form.values.count)}
+      <CountChip
         value={form.values.count}
         min={1}
         max={max}
-        step={1}
-        unit=""
         onChange={(count) => form.setForm({ count })}
       />
     )

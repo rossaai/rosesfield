@@ -1,7 +1,5 @@
 import { type AppListing, type Run, routes } from "@rosesfield/contract"
-import { CreditPrice } from "@rosesfield/ui/components/credit-price"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createElement, type ReactNode } from "react"
 import { callRoute } from "@/api/call-route"
 import { settingsQuery } from "@/api/queries"
 import { formatNumber } from "@/copy/format"
@@ -19,7 +17,7 @@ export type StartRun = {
   isPending: boolean
   error: Error | null
   price: string
-  priceValue?: ReactNode
+  priceValue?: string | null
   priceName?: string | null
 }
 
@@ -97,7 +95,7 @@ export function useStartRun(
       : amount === null
         ? t("run.price.unknown")
         : "",
-    priceValue: amount === null ? null : createElement(CreditPrice, { amount }),
+    priceValue: amount,
     priceName: amount === null ? null : t("run.generate.priced", { amount }),
   }
 }
