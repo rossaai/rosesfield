@@ -3,6 +3,7 @@ import { Button, IconButton } from "@rosesfield/ui/components/button"
 import {
   FilterChip,
   FilterChipRow,
+  SettingChoice,
   SettingGroup,
   SettingGroups,
 } from "@rosesfield/ui/components/filter-chip"
@@ -17,8 +18,14 @@ import {
   BookOpenIcon,
   CameraIcon,
   ChevronLeftIcon,
+  CloudRainIcon,
   CopyIcon,
+  DropletIcon,
   FolderIcon,
+  LayoutGridIcon,
+  ListIcon,
+  MoveRightIcon,
+  Rotate3dIcon,
   SunIcon,
   Volume2Icon,
   XIcon,
@@ -50,7 +57,10 @@ function Foundations(): ReactElement {
 function Buttons(): ReactElement {
   return (
     <div className="flex flex-col items-start gap-4">
-      <div className="flex gap-2">
+      <div
+        data-slot="hero-pair"
+        className="flex gap-2 self-stretch @regular:justify-end"
+      >
         <Button size="hero" tone="primary">
           {t("sample.start")}
         </Button>
@@ -117,6 +127,16 @@ function TabsDemo(): ReactElement {
           </SegmentedTab>
         </SegmentedTabs>
       </Tabs>
+      <Tabs defaultValue="list">
+        <SegmentedTabs form="well" aria-label={t("sample.canvas.label")}>
+          <SegmentedTab value="list" icon={<ListIcon />}>
+            {t("sample.view.list")}
+          </SegmentedTab>
+          <SegmentedTab value="grid" icon={<LayoutGridIcon />}>
+            {t("sample.view.grid")}
+          </SegmentedTab>
+        </SegmentedTabs>
+      </Tabs>
     </div>
   )
 }
@@ -128,17 +148,30 @@ const presetKeys = [
   "sample.preset.rain",
 ] as const
 
+const presetPictures = [
+  <DropletIcon key="melt" />,
+  <MoveRightIcon key="dolly" />,
+  <Rotate3dIcon key="orbit" />,
+  <CloudRainIcon key="rain" />,
+]
+
 function Chips({ open }: { open: boolean }): ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <FilterChipRow label={t("sample.presets")}>
         {presetKeys.map((key) => (
-          <FilterChip key={key} href={`?preset=${key}`}>
+          <FilterChip
+            key={key}
+            href={`?preset=${key}`}
+            {...(key === "sample.preset.orbit"
+              ? { tag: t("sample.badge.new") }
+              : {})}
+          >
             {t(key)}
           </FilterChip>
         ))}
       </FilterChipRow>
-      <div className="w-75.5">
+      <div className="w-76">
         <SettingGroups>
           <SettingGroup
             name={t("sample.group.camera")}
@@ -146,8 +179,14 @@ function Chips({ open }: { open: boolean }): ReactElement {
             icon={<CameraIcon />}
             defaultOpen={open}
           >
-            {presetKeys.map((key) => (
-              <span key={key} className="h-26 rounded-dense bg-(--well)" />
+            {presetKeys.map((key, index) => (
+              <SettingChoice
+                key={key}
+                label={t(key)}
+                picture={presetPictures[index]}
+                isCurrent={index === 0}
+                onChoose={() => undefined}
+              />
             ))}
           </SettingGroup>
           <SettingGroup
