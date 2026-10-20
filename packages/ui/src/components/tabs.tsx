@@ -97,24 +97,47 @@ function ModeTab({
   )
 }
 
+type SegmentedForm = "canvas" | "well"
+
+const segmentedLists = {
+  canvas: "",
+  well: "h-9 rounded-dense bg-canvas p-0.5",
+} satisfies Record<SegmentedForm, string>
+
+const segmentedPlates = {
+  canvas:
+    "top-(--active-tab-top) left-(--active-tab-left) h-(--active-tab-height) w-(--active-tab-width)",
+  well: "top-[calc(var(--active-tab-top)+var(--spacing-hairline))] left-[calc(var(--active-tab-left)+var(--spacing-hairline))] h-tab w-[calc(var(--active-tab-width)-2*var(--spacing-hairline))]",
+} satisfies Record<SegmentedForm, string>
+
+type SegmentedTabsProps = TabsPrimitive.List.Props & {
+  children: ReactNode
+  form?: SegmentedForm
+}
+
 function SegmentedTabs({
   className,
   children,
+  form = "canvas",
   ...props
-}: TabsPrimitive.List.Props & { children: ReactNode }): ReactElement {
+}: SegmentedTabsProps): ReactElement {
   return (
     <TabsPrimitive.List
       data-slot="tabs-strip"
-      data-form="segmented"
+      data-form={form === "canvas" ? "segmented" : form}
       className={cn(
         "relative inline-flex shrink-0 items-center gap-1",
+        segmentedLists[form],
         className
       )}
       {...props}
     >
       <TabsPrimitive.Indicator
         data-slot="segmented-control-thumb"
-        className="absolute top-(--active-tab-top) left-(--active-tab-left) z-0 h-(--active-tab-height) w-(--active-tab-width) rounded-dense bg-(--well) transition-none"
+        className={cn(
+          "absolute z-0 rounded-dense bg-(--well) transition-none",
+          segmentedPlates[form]
+        )}
       />
       {children}
     </TabsPrimitive.List>
@@ -151,7 +174,7 @@ function SegmentedTab({
   )
 }
 
-export type { SegmentedTabProps }
+export type { SegmentedForm, SegmentedTabProps, SegmentedTabsProps }
 export {
   ModeStrip,
   ModeTab,

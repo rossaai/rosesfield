@@ -33,26 +33,30 @@ const kindGroup = (onChoose: (value: string) => void): FilterGroup => ({
   name: "Kind",
   icon: null,
   choices: [
-    { value: "all", label: "All" },
-    { value: "image", label: "Images" },
-    { value: "video", label: "Video" },
+    { value: "all", label: "All", picture: <svg data-testid="all" /> },
+    { value: "image", label: "Images", picture: <svg /> },
+    { value: "video", label: "Video", picture: <svg /> },
   ],
   value: "all",
   onChoose,
 })
 
 describe("the head row's cluster", () => {
-  it("holds a size slider, List and Grid as two cells, and Filter after them", () => {
+  it("holds a size slider, List and Grid as two tabs on a well, and Filter after them", () => {
     const { onLayout } = renderCluster([kindGroup(() => undefined)])
     const pill = document.querySelector("[data-slot='view-pill']")
     const slider = screen.getByRole("slider", { hidden: true })
     expect(screen.getByLabelText("Tile size")).toBe(slider)
     expect(pill?.firstElementChild?.contains(slider)).toBe(true)
-    const cells = screen.getAllByRole("radio")
+    const switcher = screen.getByRole("tablist", { name: "Layout" })
+    expect(switcher.getAttribute("data-form")).toBe("well")
+    const cells = screen.getAllByRole("tab")
     expect(cells.map((cell) => cell.textContent)).toEqual(["List", "Grid"])
-    const list = screen.getByRole("radio", { name: "List" })
-    expect(list.getAttribute("aria-checked")).toBe("true")
-    fireEvent.click(screen.getByRole("radio", { name: "Grid" }))
+    const list = screen.getByRole("tab", { name: "List" })
+    expect(list.getAttribute("aria-selected")).toBe("true")
+    expect(list.getAttribute("tabindex")).toBe("0")
+    expect(screen.queryAllByRole("radio")).toEqual([])
+    fireEvent.click(screen.getByRole("tab", { name: "Grid" }))
     expect(onLayout).toHaveBeenCalledWith("grid")
     const filter = screen.getByRole("button", { name: "Filter" })
     expect(pill?.nextElementSibling?.contains(filter)).toBe(true)
@@ -71,7 +75,13 @@ describe("the head row's cluster", () => {
     await act(async () => {
       fireEvent.click(trigger)
     })
-    fireEvent.click(await screen.findByRole("button", { name: "Images" }))
+    const images = await screen.findByRole("button", { name: "Images" })
+    expect(images.getAttribute("data-slot")).toBe("setting-choice")
+    expect(images.getAttribute("aria-pressed")).toBe("false")
+    const all = screen.getByRole("button", { name: "All" })
+    expect(all.getAttribute("aria-pressed")).toBe("true")
+    expect(all.contains(screen.getByTestId("all"))).toBe(true)
+    fireEvent.click(images)
     expect(onChoose).toHaveBeenCalledWith("image")
   })
 })

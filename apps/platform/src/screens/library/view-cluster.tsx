@@ -1,5 +1,6 @@
 import { Button } from "@rosesfield/ui/components/button"
 import {
+  SettingChoice,
   SettingGroup,
   SettingGroups,
 } from "@rosesfield/ui/components/filter-chip"
@@ -8,23 +9,29 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@rosesfield/ui/components/popover"
-import {
-  SegmentedControl,
-  type SegmentedItem,
-} from "@rosesfield/ui/components/segmented-control"
 import { Slider } from "@rosesfield/ui/components/slider"
 import {
+  SegmentedTab,
+  SegmentedTabs,
+  Tabs,
+} from "@rosesfield/ui/components/tabs"
+import {
+  AudioLinesIcon,
   ImageIcon,
   LayoutGridIcon,
   ListFilterIcon,
   ListIcon,
+  ShapesIcon,
+  TypeIcon,
+  VideoIcon,
 } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
+import type { OutputKind } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 
 export type ViewLayout = "list" | "grid"
 
-export type FilterChoice = { value: string; label: string }
+export type FilterChoice = { value: string; label: string; picture: ReactNode }
 
 export type FilterGroup = {
   id: string
@@ -41,10 +48,55 @@ export const tileSizes = {
   initial: 2,
 } as const
 
-const layoutItems: SegmentedItem<ViewLayout>[] = [
+export const kindPictures = {
+  all: <ShapesIcon />,
+  image: <ImageIcon />,
+  video: <VideoIcon />,
+  audio: <AudioLinesIcon />,
+  text: <TypeIcon />,
+} as const satisfies Record<OutputKind | "all", ReactNode>
+
+const layouts = [
   { value: "list", label: t("library.view.list"), icon: <ListIcon /> },
   { value: "grid", label: t("library.view.grid"), icon: <LayoutGridIcon /> },
-]
+] as const satisfies ReadonlyArray<{
+  value: ViewLayout
+  label: string
+  icon: ReactNode
+}>
+
+function layoutOf(value: unknown): ViewLayout | undefined {
+  return layouts.find((layout) => layout.value === value)?.value
+}
+
+function LayoutSwitch({
+  layout,
+  onLayout,
+}: {
+  layout: ViewLayout
+  onLayout: (layout: ViewLayout) => void
+}): ReactElement {
+  return (
+    <Tabs
+      value={layout}
+      onValueChange={(next) => {
+        const chosen = layoutOf(next)
+        if (chosen !== undefined) {
+          onLayout(chosen)
+        }
+      }}
+      className="contents"
+    >
+      <SegmentedTabs form="well" aria-label={t("library.view.label")}>
+        {layouts.map((one) => (
+          <SegmentedTab key={one.value} value={one.value} icon={one.icon}>
+            {one.label}
+          </SegmentedTab>
+        ))}
+      </SegmentedTabs>
+    </Tabs>
+  )
+}
 
 function SizeSlider({
   size,
@@ -84,15 +136,13 @@ function FilterChoices({ group }: { group: FilterGroup }): ReactElement {
   return (
     <>
       {group.choices.map((choice) => (
-        <Button
+        <SettingChoice
           key={choice.value}
-          size="small"
-          tone={choice.value === group.value ? "primary" : "quiet"}
-          aria-pressed={choice.value === group.value}
-          onClick={() => group.onChoose(choice.value)}
-        >
-          {choice.label}
-        </Button>
+          label={choice.label}
+          picture={choice.picture}
+          isCurrent={choice.value === group.value}
+          onChoose={() => group.onChoose(choice.value)}
+        />
       ))}
     </>
   )
@@ -113,7 +163,7 @@ export function FilterMenu({
           </Button>
         }
       />
-      <PopoverContent align="end">
+      <PopoverContent align="end" className="max-w-none">
         <SettingGroups>
           {groups.map((group) => (
             <SettingGroup
@@ -147,18 +197,7 @@ export function ViewCluster(props: ViewClusterProps): ReactElement {
         className="flex h-9 items-center gap-3 rounded-cell bg-(--well)"
       >
         <SizeSlider size={props.size} onSize={props.onSize} />
-        <div
-          data-slot="view-well"
-          className="flex h-9 items-center rounded-dense bg-canvas p-0.5"
-        >
-          <SegmentedControl
-            items={layoutItems}
-            value={props.layout}
-            onValueChange={props.onLayout}
-            label={t("library.view.label")}
-            density="row"
-          />
-        </div>
+        <LayoutSwitch layout={props.layout} onLayout={props.onLayout} />
       </div>
       <FilterMenu groups={props.groups} />
     </>
