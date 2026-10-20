@@ -4,7 +4,7 @@ import { SettingSlider, valueSideOf } from "@/pieces/setting-slider"
 
 afterEach(cleanup)
 
-function valueOf(value: number): HTMLElement | null {
+function sliderValueAt(value: number): HTMLElement | null {
   render(
     <SettingSlider
       label="Length"
@@ -23,13 +23,13 @@ function valueOf(value: number): HTMLElement | null {
 
 describe("the setting slider's value", () => {
   it("stands at the track's end while the thumb is in its first half, so the thumb never crosses it", () => {
-    const value = valueOf(5)
+    const value = sliderValueAt(5)
     expect(value?.dataset.side).toBe("end")
     expect(value?.className.split(" ")).toContain("right-3")
   })
 
   it("stands at the track's start once the thumb is past the middle", () => {
-    const value = valueOf(25)
+    const value = sliderValueAt(25)
     expect(value?.dataset.side).toBe("start")
     expect(value?.className.split(" ")).toContain("left-3")
   })

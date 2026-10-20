@@ -1,10 +1,5 @@
-import { type FieldRole, fieldRoleOf } from "#domain/field-role"
 import type { ModelField } from "#domain/model-form"
-import {
-  namedOptions,
-  optionNamed,
-  optionsOf,
-} from "#infrastructure/router/router-choices"
+import { optionNamed, optionsOf } from "#infrastructure/router/router-choices"
 import {
   depthOf,
   mediaAt,
@@ -28,6 +23,12 @@ import {
   resolve,
   type SchemaFacts,
 } from "#infrastructure/router/router-schema"
+import {
+  namedChoiceOf,
+  typeOf,
+  variantsOf,
+  withVariantBounds,
+} from "#infrastructure/router/router-variants"
 
 type Walk = {
   components: Schema
@@ -48,13 +49,6 @@ type ImageRole = {
 }
 
 const maxDepth = 4
-
-const settingRoles: readonly FieldRole[] = [
-  "aspect",
-  "resolution",
-  "quality",
-  "length",
-]
 
 const internalKeys: readonly string[] = [
   "model",
@@ -274,7 +268,7 @@ function leafOf(walk: Walk, schema: Schema, spot: Spot): ModelField | null {
     choiceOf(walk, schema, spot, false) ??
     mediaOf(walk, schema, spot) ??
     choiceOf(walk, schema, spot, true) ??
-    namedChoiceOf(walk, schema, spot) ??
+    namedChoiceOf(schema, spot, walk.components) ??
     scalarOf(
       base,
       withVariantBounds(schema, walk.components),
@@ -313,55 +307,6 @@ function choiceOf(
     options,
     default: named,
   }
-}
-
-function namedChoiceOf(
-  walk: Walk,
-  schema: Schema,
-  spot: Spot
-): ModelField | null {
-  if (
-    typeOf(schema, walk.components) !== "string" ||
-    promptKeys.includes(spot.key)
-  ) {
-    return null
-  }
-  const options = namedOptions(schema)
-  const field: ModelField = {
-    name: spot.key,
-    path: spot.path,
-    required: spot.required,
-    kind: "choice",
-    options,
-    default: optionNamed(options, fieldOf(schema, "default")),
-  }
-  const role = fieldRoleOf(field, "image")
-  return options.length < 2 || role === null || !settingRoles.includes(role)
-    ? null
-    : field
-}
-
-function withVariantBounds(schema: Schema, components: Schema): Schema {
-  if (
-    fieldOf(schema, "minimum") !== undefined ||
-    fieldOf(schema, "maximum") !== undefined
-  ) {
-    return schema
-  }
-  const bounded = variantsOf(schema)
-    .map((one) => resolve(one, components))
-    .find(
-      (one) =>
-        numberOf(fieldOf(one, "minimum")) !== null &&
-        numberOf(fieldOf(one, "maximum")) !== null
-    )
-  return bounded === undefined
-    ? schema
-    : {
-        ...schema,
-        minimum: fieldOf(bounded, "minimum"),
-        maximum: fieldOf(bounded, "maximum"),
-      }
 }
 
 function withoutDefault(field: ModelField): ModelField {
@@ -406,27 +351,6 @@ function itemOf(schema: Schema, components: Schema): Schema | null {
 
 function hasParts(schema: Schema): boolean {
   return arrayOf(fieldOf(schema, "allOf")) !== null
-}
-
-function variantsOf(schema: Schema): unknown[] {
-  return [
-    ...(arrayOf(fieldOf(schema, "anyOf")) ?? []),
-    ...(arrayOf(fieldOf(schema, "oneOf")) ?? []),
-  ]
-}
-
-function typeOf(schema: Schema, components: Schema): string | null {
-  const type = fieldOf(schema, "type")
-  if (typeof type === "string") {
-    return type
-  }
-  const types = variantsOf(schema)
-    .map((one) => fieldOf(resolve(one, components), "type"))
-    .filter((one): one is string => typeof one === "string" && one !== "null")
-  if (types.includes("string")) {
-    return "string"
-  }
-  return types.length === 1 ? (types[0] ?? null) : null
 }
 
 function isInternal(key: string, schema: Schema): boolean {
