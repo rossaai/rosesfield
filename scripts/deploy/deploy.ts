@@ -8,6 +8,7 @@ type Plan = {
   isDryRun: boolean
   port: string
   envFiles: string[]
+  domain: string | null
 }
 
 type Step = {
@@ -22,10 +23,14 @@ const gateway = fileURLToPath(
   new URL("../../services/gateway", import.meta.url)
 )
 
+const hostnamePattern =
+  /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/
+
 const usage = [
-  "bun run deploy [--judge] [--dry-run] [--local [--port <port>] [--env-file <file>]...]",
+  "bun run deploy [--judge] [--dry-run] [--domain <host>] [--local [--port <port>] [--env-file <file>]...]",
   "",
   "  --judge     a private owner link: owner mode on one Comfy key, with the spend cap of its environment",
+  "  --domain    a domain of your Cloudflare account the deployment also answers on, such as rosesfield.com. Its workers.dev address keeps answering",
   "  --local     builds and runs the deployment in wrangler's local runtime instead of Cloudflare",
   "  --dry-run   prints each step in order and runs none",
   "  --port      the local port, 8788 by default",
@@ -39,6 +44,7 @@ function planOf(args: readonly string[]): Plan {
     isDryRun: false,
     port: "8788",
     envFiles: [],
+    domain: null,
   }
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index]
@@ -55,11 +61,27 @@ function planOf(args: readonly string[]): Plan {
     } else if (arg === "--env-file" && value !== undefined) {
       plan.envFiles.push(resolve(value))
       index += 1
+    } else if (arg === "--domain" && value !== undefined) {
+      plan.domain = domainOf(value)
+      index += 1
     } else {
       throw new Error(`${arg} is not an option.\n\n${usage}`)
     }
   }
+  if (plan.isLocal && plan.domain !== null) {
+    throw new Error(
+      `--domain puts a Cloudflare deployment on a domain, and --local runs none.\n\n${usage}`
+    )
+  }
   return plan
+}
+
+function domainOf(value: string): string {
+  const domain = value.toLowerCase()
+  if (!hostnamePattern.test(domain)) {
+    throw new Error(`${value} is not a domain.\n\n${usage}`)
+  }
+  return domain
 }
 
 function wrangler(args: readonly string[]): Step {
@@ -90,7 +112,11 @@ function stepsOf(plan: Plan): Step[] {
       orElse: wrangler(["d1", "create", database, env]),
     },
     wrangler(["d1", "migrations", "apply", database, "--remote", env]),
-    wrangler(["deploy", env]),
+    wrangler([
+      "deploy",
+      env,
+      ...(plan.domain === null ? [] : ["--domain", plan.domain]),
+    ]),
   ]
 }
 
