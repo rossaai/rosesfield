@@ -1,6 +1,6 @@
-# Video: image to video with sound on LTX 2.5
+# Video: image to video with sound on LTX 2.5, with an optional last frame
 
-Makes a clip of 2 to 5 seconds that starts from your image, with LTX 2.5 in two stages and its sound. A run with sound off drops the audio track. Built from Comfy's template video_ltx2_5_i2v.
+Makes a clip of 2 to 5 seconds that starts from your image, with LTX 2.5 in two stages and its sound. A last frame, when you add one, guides the end of the clip in both stages. A run with no last frame drops its guides, and a run with sound off drops the audio track. Built from Comfy's templates video_ltx2_5_i2v and video_ltx2_5_flf2v.
 
 | | |
 |---|---|
@@ -24,12 +24,20 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 | `audioFrames` | 366 `LTXVEmptyLatentAudio` | `frames_number` | a value |
 | `seed` | 339 `RandomNoise` | `noise_seed` | a value |
 | `startFrame` | 401 `LoadImage`, Start frame | `image` | an uploaded image |
+| `lastFrame` | 402 `LoadImage`, Last frame | `image` | an uploaded image |
 
 ## Outputs
 
 | Node | Key | Kind |
 |---|---|---|
 | 75 `SaveVideo` | `images` | video |
+
+## The last frame
+
+- The start frame is locked at frame 0 with `LTXVImgToVideoInplace`, at strength 0.7 in the first stage, node 357, and at 1.0 in the second, node 349.
+- The last frame is an `LTXVAddGuide` guide at the last frame, `frame_idx` -1: at strength 0.7 in the first stage, node 460, as in Comfy's template video_ltx2_5_flf2v, and at 1.0 in the second, node 463, so the clip ends on your image. Nodes 403 and 404 scale and prepare it the way nodes 351 and 350 prepare the start frame.
+- `LTXVCropGuides` removes the guide frames after each stage, nodes 462 and 465.
+- A run with no last frame removes nodes 402 to 404 and the guides 460, 462, 463 and 465, and links each next node to what the guide read. The graph it sends is then the image to video graph of video_ltx2_5_i2v. The catalog's [`video-workflows.ts`](../../packages/catalog/src/video/comfy/video-workflows.ts) does it.
 
 ## Models
 
@@ -53,7 +61,7 @@ Lightricks' LTX 2.5 files are gated on Hugging Face, so their SHA256 digests are
 
 ## Source
 
-Its nodes follow Comfy's template `video_ltx2_5_i2v` in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT, read on 2026-10-17, with the subgraphs opened. The prompt enhancer is left out, so the model reads your words.
+Its nodes follow Comfy's template `video_ltx2_5_i2v` in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT, read on 2026-10-17, with the subgraphs opened. The last-frame guide and the crop guides follow `video_ltx2_5_flf2v` in the same repository, read on 2026-10-20: a guide at `frame_idx` -1 at strength 0.7, and `LTXVCropGuides` after sampling. That template renders one stage, so the guide repeats in the second stage here. The prompt enhancer is left out, so the model reads your words.
 
 ## Not checked
 

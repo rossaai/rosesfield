@@ -1,6 +1,8 @@
+import type { EngineBinding } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.error"
 import { resolveBinding, selectBinding } from "#domain/select-binding"
+import { taskBinding } from "#domain/task-binding"
 import { portraitId, referenceId } from "../sample"
 
 const open = { adapter: "engine-a", config: { graph: "a" } }
@@ -102,6 +104,27 @@ describe("resolveBinding", () => {
     expect(resolveBinding(video, { startFrame: [referenceId] })).toEqual(frame)
     expect(resolveBinding(video, { clip: [portraitId] })).toEqual(clip)
     expect(resolveBinding(video, {})).toEqual(text)
+  })
+
+  it("follows a task and four selects, and refuses a fifth select", () => {
+    const leaf = { adapter: "engine-a", config: { graph: "two-frames" } }
+    const chain = (names: readonly string[]): EngineBinding =>
+      names.reduceRight<EngineBinding>(
+        (inner, name) => selectBinding({ input: name, options: { on: inner } }),
+        leaf
+      )
+    const task = (names: readonly string[]): EngineBinding =>
+      taskBinding({
+        tasks: ["text-to-video"],
+        input: "model",
+        default: "graph",
+        fallback: chain(names),
+      })
+    const inputs = { a: "on", b: "on", c: "on", d: "on", e: "on" }
+    expect(resolveBinding(task(["a", "b", "c", "d"]), inputs)).toEqual(leaf)
+    expect(() =>
+      resolveBinding(task(["a", "b", "c", "d", "e"]), inputs)
+    ).toThrow("a select holds selects too deep")
   })
 
   it("refuses a select that picks by anything else", () => {

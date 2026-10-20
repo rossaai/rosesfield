@@ -23,7 +23,7 @@
   "340": {
     "class_type": "LTXVConcatAVLatent",
     "inputs": {
-      "video_latent": ["349", 0],
+      "video_latent": ["463", 2],
       "audio_latent": ["367", 1]
     }
   },
@@ -46,7 +46,7 @@
   "348": {
     "class_type": "LTXVLatentUpsampler",
     "inputs": {
-      "samples": ["367", 0],
+      "samples": ["462", 2],
       "upscale_model": ["371", 0],
       "vae": ["385", 0]
     }
@@ -180,7 +180,7 @@
   "374": {
     "class_type": "VAEDecodeTiled",
     "inputs": {
-      "samples": ["369", 0],
+      "samples": ["465", 2],
       "vae": ["385", 0],
       "tile_size": 512,
       "overlap": 64,
@@ -191,7 +191,7 @@
   "377": {
     "class_type": "LTXVConcatAVLatent",
     "inputs": {
-      "video_latent": ["357", 0],
+      "video_latent": ["460", 2],
       "audio_latent": ["366", 0]
     }
   },
@@ -226,8 +226,8 @@
     "class_type": "LTXVDualCFGGuider",
     "inputs": {
       "model": ["384", 0],
-      "positive": ["365", 0],
-      "negative": ["365", 1],
+      "positive": ["460", 0],
+      "negative": ["460", 1],
       "video_cfg": 1,
       "audio_cfg": 1
     }
@@ -236,8 +236,8 @@
     "class_type": "LTXVDualCFGGuider",
     "inputs": {
       "model": ["384", 0],
-      "positive": ["365", 0],
-      "negative": ["365", 1],
+      "positive": ["463", 0],
+      "negative": ["463", 1],
       "video_cfg": 1,
       "audio_cfg": 1
     }
@@ -261,6 +261,77 @@
     },
     "_meta": {
       "title": "Start frame"
+    }
+  },
+  "402": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "last-frame.png"
+    },
+    "_meta": {
+      "title": "Last frame"
+    }
+  },
+  "403": {
+    "class_type": "ResizeImageMaskNode",
+    "inputs": {
+      "input": ["402", 0],
+      "resize_type": "scale longer dimension",
+      "resize_type.longer_size": 1536,
+      "scale_method": "lanczos"
+    }
+  },
+  "404": {
+    "class_type": "LTXVPreprocess",
+    "inputs": {
+      "image": ["403", 0],
+      "img_compression": 18
+    }
+  },
+  "460": {
+    "class_type": "LTXVAddGuide",
+    "inputs": {
+      "positive": ["365", 0],
+      "negative": ["365", 1],
+      "vae": ["385", 0],
+      "latent": ["357", 0],
+      "image": ["404", 0],
+      "frame_idx": -1,
+      "strength": 0.7
+    },
+    "_meta": {
+      "title": "Last-frame guide"
+    }
+  },
+  "462": {
+    "class_type": "LTXVCropGuides",
+    "inputs": {
+      "positive": ["460", 0],
+      "negative": ["460", 1],
+      "latent": ["367", 0]
+    }
+  },
+  "463": {
+    "class_type": "LTXVAddGuide",
+    "inputs": {
+      "positive": ["462", 0],
+      "negative": ["462", 1],
+      "vae": ["385", 0],
+      "latent": ["349", 0],
+      "image": ["404", 0],
+      "frame_idx": -1,
+      "strength": 1.0
+    },
+    "_meta": {
+      "title": "Last-frame guide at full size"
+    }
+  },
+  "465": {
+    "class_type": "LTXVCropGuides",
+    "inputs": {
+      "positive": ["463", 0],
+      "negative": ["463", 1],
+      "latent": ["369", 0]
     }
   },
   "900": {

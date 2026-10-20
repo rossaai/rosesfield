@@ -1,7 +1,7 @@
 {
   "name": "video-ltx-2-5-start-frame",
-  "title": "Video: image to video with sound on LTX 2.5",
-  "description": "Makes a clip of 2 to 5 seconds that starts from your image, with LTX 2.5 in two stages and its sound. A run with sound off drops the audio track. Built from Comfy's template video_ltx2_5_i2v.",
+  "title": "Video: image to video with sound on LTX 2.5, with an optional last frame",
+  "description": "Makes a clip of 2 to 5 seconds that starts from your image, with LTX 2.5 in two stages and its sound. A last frame, when you add one, guides the end of the clip in both stages. A run with no last frame drops its guides, and a run with sound off drops the audio track. Built from Comfy's templates video_ltx2_5_i2v and video_ltx2_5_flf2v.",
   "mediaType": "video",
   "openSource": true,
   "models": ["Lightricks/LTX-2.5"],
@@ -44,6 +44,11 @@
     },
     "startFrame": {
       "nodeId": "401",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "lastFrame": {
+      "nodeId": "402",
       "inputName": "image",
       "type": "cloud-asset"
     }
