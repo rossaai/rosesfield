@@ -1,8 +1,8 @@
 import type { AppListing, Run } from "@rosesfield/contract"
 import { Card } from "@rosesfield/ui/components/card"
+import { interaction } from "@rosesfield/ui/components/interaction"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { motion } from "@rosesfield/ui/motion"
 import { Link } from "@tanstack/react-router"
 import type { ReactElement } from "react"
 import { appLine, appName, takesText } from "@/catalog/app-facts"
@@ -23,7 +23,11 @@ export function AppCard({ app, newest, working }: AppCardProps): ReactElement {
     <Link
       to="/apps/$appId"
       params={{ appId: app.id }}
-      className={cn("block rounded-card", motion.press)}
+      className={cn(
+        "relative block rounded-card",
+        interaction.light,
+        interaction.ring
+      )}
     >
       <Card className="h-full gap-s3 p-s4">
         {media === undefined || newest === null ? null : (

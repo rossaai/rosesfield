@@ -22,7 +22,8 @@ type Refusal = { file: string; line: number; rule: string; text: string }
 const lineRules: ReadonlyArray<{ rule: string; pattern: RegExp }> = [
   {
     rule: "a colour written as hex",
-    pattern: /(?<![A-Za-z0-9&/])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![A-Za-z0-9])/,
+    pattern:
+      /(?<![A-Za-z0-9&/])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![A-Za-z0-9])/,
   },
   {
     rule: "a colour written as a function",
@@ -37,6 +38,8 @@ const lineRules: ReadonlyArray<{ rule: string; pattern: RegExp }> = [
     pattern: new RegExp(`\\[[^\\]\\s]*${edge}${amount}s${end}[^\\]\\s]*\\]`),
   },
 ]
+
+const canvasData = /\.(?:fillStyle|strokeStyle)\s*=\s*(["'`])[^"'`]*\1/g
 
 const styleKeys =
   /\b(?:width|height|minWidth|maxWidth|minHeight|maxHeight|padding\w*|margin\w*|gap|rowGap|columnGap|top|left|right|bottom|inset|borderRadius|borderWidth|fontSize|lineHeight|letterSpacing|outlineWidth|outlineOffset|transitionDuration|animationDuration)\s*:\s*-?(?:[1-9]\d*|\d*\.\d+)\b/
@@ -61,7 +64,8 @@ function styleRefusals(file: string, text: string): Refusal[] {
 
 function refusalsIn(file: string, text: string): Refusal[] {
   const refusals: Refusal[] = []
-  for (const [index, line] of text.split("\n").entries()) {
+  for (const [index, written] of text.split("\n").entries()) {
+    const line = written.replace(canvasData, "")
     for (const { rule, pattern } of lineRules) {
       const found = pattern.exec(line)
       if (found !== null) {
@@ -74,7 +78,11 @@ function refusalsIn(file: string, text: string): Refusal[] {
 
 const planted: ReadonlyArray<[string, string]> = [
   ["a hex fill", `<span className="bg-[#d1fe17]" />`],
-  ["a hex in script", `context.strokeStyle = "#ffffff"`],
+  ["a hex in script", `const ring = "#ffffff"`],
+  [
+    "a hex class beside a mask colour",
+    `context.fillStyle = "#000000"; <span className="bg-[#fff]" />`,
+  ],
   [
     "a colour function",
     `<span className="shadow-[0_2px_4px_rgba(0,0,0,.1)]" />`,
@@ -113,6 +121,8 @@ const allowed: ReadonlyArray<[string, string]> = [
   ["a share of the viewport", `<span className="max-h-[20dvh]" />`],
   ["an aspect from data", `<span style={{ aspectRatio: "16 / 9" }} />`],
   ["a link to a fragment", `<a href="/explore#add" />`],
+  ["a mask colour a canvas paints", `context.strokeStyle = "#ffffff"`],
+  ["a mask colour a canvas fills", `context.fillStyle = "#000000"`],
   [
     "a token timing in an arbitrary property",
     `<span className="[transition:height_var(--control-change)]" />`,
