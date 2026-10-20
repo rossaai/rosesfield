@@ -1,17 +1,19 @@
 import { Button } from "@rosesfield/ui/components/button"
-import { ShellLayout } from "@rosesfield/ui/components/shell-layout"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useRouterState } from "@tanstack/react-router"
 import type { ReactElement, ReactNode } from "react"
 import { GatewayUnreachableError } from "@/api/gateway-unreachable.error"
 import { settingsQuery } from "@/api/queries"
 import { t } from "@/copy/t"
 import { BottomBar } from "@/shell/bottom-bar"
-import { HeaderSlotsProvider, useHeaderSlotTargets } from "@/shell/header-slots"
+import { GenerateKeyProvider } from "@/shell/generate-key"
 import { KeyDialogProvider } from "@/shell/key-dialog-context"
-import { NavSidebar } from "@/shell/nav-sidebar"
+import { hasFooter } from "@/shell/page-kind"
 import { RunWatcher } from "@/shell/run-watcher"
 import { ScreenHeader } from "@/shell/screen-header"
+import { ShellFooter } from "@/shell/shell-footer"
+import { TopBar } from "@/shell/top-bar"
 import { AssetViewer } from "@/viewer/asset-viewer"
 import { ViewerProvider } from "@/viewer/viewer-context"
 
@@ -51,30 +53,28 @@ export function ShellFrame({
 }: {
   children: ReactNode
 }): ReactElement {
-  const header = useHeaderSlotTargets()
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  })
   return (
     <ViewerProvider>
-      <HeaderSlotsProvider slots={header.slots}>
+      <GenerateKeyProvider>
         <KeyDialogProvider>
-          <div className="@container flex h-dvh flex-col">
-            <div className="min-h-0 flex-1">
-              <ShellLayout
-                sidebar={<NavSidebar />}
-                title={header.titleTarget}
-                action={header.actionTarget}
-                menuLabel={t("shell.menu.open")}
-                closeMenuLabel={t("shell.menu.close")}
-                storageKey="rosesfield.sidebar"
-              >
-                <ShellContent>{children}</ShellContent>
-              </ShellLayout>
-            </div>
+          <div
+            data-slot="shell"
+            className="@container flex h-dvh flex-col bg-canvas"
+          >
+            <TopBar />
+            <main className="min-h-0 flex-1 overflow-y-auto">
+              <ShellContent>{children}</ShellContent>
+              {hasFooter(pathname) ? <ShellFooter /> : null}
+            </main>
             <BottomBar />
           </div>
           <RunWatcher />
           <AssetViewer />
         </KeyDialogProvider>
-      </HeaderSlotsProvider>
+      </GenerateKeyProvider>
     </ViewerProvider>
   )
 }

@@ -1,9 +1,11 @@
+import type { AppListing } from "@rosesfield/contract"
 import {
   AudioLinesIcon,
   BotIcon,
-  BoxIcon,
   ClapperboardIcon,
   CompassIcon,
+  EraserIcon,
+  ExpandIcon,
   FilmIcon,
   GalleryHorizontalEndIcon,
   HistoryIcon,
@@ -12,17 +14,20 @@ import {
   ImageUpscaleIcon,
   LayersIcon,
   MegaphoneIcon,
-  PenLineIcon,
   PersonStandingIcon,
-  PlugIcon,
   ReplaceIcon,
+  Rotate3dIcon,
+  SettingsIcon,
+  ShirtIcon,
   SpeechIcon,
+  SquareUserIcon,
+  SunIcon,
   UsersIcon,
   VideoIcon,
   WandIcon,
 } from "lucide-react"
 import type { ReactElement } from "react"
-import { findCatalogApp } from "@/catalog/catalog-apps"
+import { catalogApps } from "@/catalog/catalog-apps"
 import type { CopyKey } from "@/copy.en"
 
 export type ScreenPath =
@@ -34,180 +39,118 @@ export type ScreenPath =
   | "/connect"
   | "/settings"
 
-export type NavTarget =
-  | { kind: "screen"; to: ScreenPath }
-  | { kind: "app"; appId: string }
-
-export type NavRow = {
+export type ScreenLink = {
   id: string
   label: CopyKey
   icon: ReactElement
-  target: NavTarget
-}
-
-type AreaSpec = {
-  id: string
-  label: CopyKey
-  icon: ReactElement
-  appIds: readonly string[]
-}
-
-const glyph = (Icon: typeof ImageIcon): ReactElement => (
-  <Icon aria-hidden="true" />
-)
-
-const areaSpecs: readonly AreaSpec[] = [
-  {
-    id: "image",
-    label: "shell.area.image",
-    icon: glyph(ImageIcon),
-    appIds: ["image"],
-  },
-  {
-    id: "video",
-    label: "shell.area.video",
-    icon: glyph(VideoIcon),
-    appIds: ["video"],
-  },
-  {
-    id: "video-edit",
-    label: "shell.area.video-edit",
-    icon: glyph(FilmIcon),
-    appIds: ["video-edit"],
-  },
-  {
-    id: "effects",
-    label: "shell.area.effects",
-    icon: glyph(WandIcon),
-    appIds: ["effects"],
-  },
-  {
-    id: "edit",
-    label: "shell.area.edit",
-    icon: glyph(PenLineIcon),
-    appIds: ["edit"],
-  },
-  {
-    id: "audio",
-    label: "shell.area.audio",
-    icon: glyph(AudioLinesIcon),
-    appIds: ["audio", "voice"],
-  },
-  {
-    id: "lipsync",
-    label: "shell.area.lipsync",
-    icon: glyph(SpeechIcon),
-    appIds: ["lipsync"],
-  },
-  {
-    id: "upscale",
-    label: "shell.area.upscale",
-    icon: glyph(ImageUpscaleIcon),
-    appIds: ["upscale"],
-  },
-  {
-    id: "three-d",
-    label: "shell.area.three-d",
-    icon: glyph(BoxIcon),
-    appIds: ["three-d"],
-  },
-  {
-    id: "motion",
-    label: "shell.area.motion",
-    icon: glyph(PersonStandingIcon),
-    appIds: ["motion"],
-  },
-]
-
-const chainSpecs: readonly AreaSpec[] = [
-  {
-    id: "shot",
-    label: "shell.area.shot",
-    icon: glyph(ClapperboardIcon),
-    appIds: ["shot"],
-  },
-  {
-    id: "storyboard",
-    label: "shell.area.storyboard",
-    icon: glyph(GalleryHorizontalEndIcon),
-    appIds: ["storyboard"],
-  },
-  {
-    id: "layers",
-    label: "shell.area.layers",
-    icon: glyph(LayersIcon),
-    appIds: ["layers"],
-  },
-  {
-    id: "ads",
-    label: "shell.area.ads",
-    icon: glyph(MegaphoneIcon),
-    appIds: ["ads"],
-  },
-  {
-    id: "remake",
-    label: "shell.area.remake",
-    icon: glyph(ReplaceIcon),
-    appIds: ["remake"],
-  },
-]
-
-function rowOf(spec: AreaSpec, hasApp: (appId: string) => boolean): NavRow[] {
-  const appId = spec.appIds.find(hasApp)
-  return appId === undefined
-    ? []
-    : [
-        {
-          id: spec.id,
-          label: spec.label,
-          icon: spec.icon,
-          target: { kind: "app", appId },
-        },
-      ]
-}
-
-function screenRow(
-  id: string,
-  label: CopyKey,
-  icon: ReactElement,
   to: ScreenPath
-): NavRow {
-  return { id, label, icon, target: { kind: "screen", to } }
+}
+
+type MediaKind = "image" | "video" | "audio"
+
+export type MediaArea = {
+  id: MediaKind
+  label: CopyKey
+  apps: AppListing[]
 }
 
 export type NavGroups = {
-  explore: NavRow
-  areas: NavRow[]
-  chains: NavRow[]
-  work: NavRow[]
+  explore: ScreenLink
+  areas: MediaArea[]
+  rest: ScreenLink[]
 }
 
-const hasCatalogApp = (appId: string): boolean => findCatalogApp(appId) !== null
+type Glyph = typeof ImageIcon
+
+const areaLabels = {
+  image: "shell.area.image",
+  video: "shell.area.video",
+  audio: "shell.area.audio",
+} satisfies Record<MediaKind, CopyKey>
+
+const kindGlyphs = {
+  image: ImageIcon,
+  video: VideoIcon,
+  audio: AudioLinesIcon,
+  character: UsersIcon,
+} satisfies Record<AppListing["category"], Glyph>
+
+const appGlyphs: Readonly<Record<string, Glyph>> = {
+  ads: MegaphoneIcon,
+  angles: Rotate3dIcon,
+  "background-removal": EraserIcon,
+  effects: WandIcon,
+  expand: ExpandIcon,
+  headshots: SquareUserIcon,
+  layers: LayersIcon,
+  lipsync: SpeechIcon,
+  motion: PersonStandingIcon,
+  recast: ReplaceIcon,
+  relight: SunIcon,
+  shot: ClapperboardIcon,
+  storyboard: GalleryHorizontalEndIcon,
+  "try-on": ShirtIcon,
+  upscale: ImageUpscaleIcon,
+  "video-edit": FilmIcon,
+}
+
+const glyph = (Icon: Glyph): ReactElement => <Icon aria-hidden="true" />
+
+export function appIcon(app: AppListing): ReactElement {
+  return glyph(appGlyphs[app.id] ?? kindGlyphs[app.category])
+}
+
+function screenLink(
+  id: string,
+  label: CopyKey,
+  icon: Glyph,
+  to: ScreenPath
+): ScreenLink {
+  return { id, label, icon: glyph(icon), to }
+}
+
+export const exploreLink = screenLink(
+  "explore",
+  "shell.nav.explore",
+  CompassIcon,
+  "/"
+)
+export const libraryLink = screenLink(
+  "library",
+  "shell.nav.library",
+  ImagesIcon,
+  "/library"
+)
+export const historyLink = screenLink(
+  "history",
+  "shell.nav.history",
+  HistoryIcon,
+  "/history"
+)
 
 export function navGroups(
-  hasApp: (appId: string) => boolean = hasCatalogApp
+  apps: readonly AppListing[] = catalogApps
 ): NavGroups {
+  const kinds: readonly MediaKind[] = ["image", "video", "audio"]
   return {
-    explore: screenRow("explore", "shell.nav.explore", glyph(CompassIcon), "/"),
-    areas: areaSpecs.flatMap((spec) => rowOf(spec, hasApp)),
-    chains: [
-      screenRow(
+    explore: exploreLink,
+    areas: kinds.flatMap((kind) => {
+      const inArea = apps.filter((app) => app.category === kind)
+      return inArea.length === 0
+        ? []
+        : [{ id: kind, label: areaLabels[kind], apps: inArea }]
+    }),
+    rest: [
+      screenLink(
         "characters",
         "shell.nav.characters",
-        glyph(UsersIcon),
+        UsersIcon,
         "/characters"
       ),
-      ...chainSpecs.flatMap((spec) => rowOf(spec, hasApp)),
-    ],
-    work: [
-      screenRow("agent", "shell.nav.agent", glyph(BotIcon), "/agent"),
-      screenRow("library", "shell.nav.library", glyph(ImagesIcon), "/library"),
-      screenRow("history", "shell.nav.history", glyph(HistoryIcon), "/history"),
-      screenRow("connect", "shell.nav.connect", glyph(PlugIcon), "/connect"),
+      screenLink("agent", "shell.nav.agent", BotIcon, "/agent"),
+      libraryLink,
+      historyLink,
+      screenLink("settings", "shell.nav.settings", SettingsIcon, "/settings"),
     ],
   }
-}
-
-export function createRows(groups: NavGroups): NavRow[] {
-  return [...groups.areas, ...groups.chains]
 }

@@ -1,0 +1,125 @@
+import { cleanup, fireEvent, screen, within } from "@testing-library/react"
+import { afterEach, describe, expect, it } from "vitest"
+import { catalogApps } from "@/catalog/catalog-apps"
+import { TopBar } from "@/shell/top-bar"
+import { ownerSettings, renderAt } from "./shell-router"
+
+afterEach(cleanup)
+
+async function barAt(path: string): Promise<HTMLElement> {
+  renderAt(path, () => <TopBar />)
+  return screen.findByRole("banner", { name: "Rosesfield" })
+}
+
+function areaLabels(bar: HTMLElement): string[] {
+  return [...bar.querySelectorAll("[data-slot='app-bar-areas']")].map(
+    (element) => element.textContent ?? ""
+  )
+}
+
+function currentOf(
+  bar: HTMLElement,
+  role: "link" | "button",
+  name: string
+): string | null {
+  return within(bar).getByRole(role, { name }).getAttribute("aria-current")
+}
+
+function classesOf(bar: HTMLElement, name: string): string[] {
+  return within(bar).getByRole("link", { name }).className.split(" ")
+}
+
+describe("the top bar", () => {
+  it("spans the page in full density with no sidebar", async () => {
+    const bar = await barAt("/")
+    expect(bar.getAttribute("data-density")).toBe("full")
+    expect(document.querySelector("[data-slot='sidebar']")).toBeNull()
+  })
+
+  it("lists Explore, the media areas, a separator, then the rest", async () => {
+    const bar = await barAt("/")
+    expect(areaLabels(bar)).toEqual([
+      "Explore",
+      "Image",
+      "Video",
+      "Audio",
+      "Characters",
+      "Agent",
+      "Library",
+      "History",
+      "Settings",
+    ])
+    const separator = bar.querySelector("[data-slot='nav-separator']")
+    expect(separator?.previousElementSibling?.textContent).toBe("Audio")
+    expect(separator?.nextElementSibling?.textContent).toBe("Characters")
+  })
+
+  it("marks Explore current on Explore", async () => {
+    const bar = await barAt("/")
+    expect(currentOf(bar, "link", "Explore")).toBe("page")
+    expect(currentOf(bar, "link", "Library")).toBeNull()
+  })
+
+  it("turns compact on an app page and marks the area of the open app", async () => {
+    const bar = await barAt("/apps/image")
+    expect(bar.getAttribute("data-density")).toBe("compact")
+    expect(currentOf(bar, "link", "Explore")).toBeNull()
+    expect(currentOf(bar, "button", "Image")).toBe("page")
+    expect(currentOf(bar, "button", "Video")).toBeNull()
+  })
+
+  it("ends with your balance, then Connect", async () => {
+    const bar = await barAt("/")
+    const balance = within(bar).getByRole("link", { name: "12.5 credits" })
+    const connect = within(bar).getByRole("link", { name: "Connect" })
+    expect(balance.getAttribute("href")).toBe("/settings")
+    expect(connect.getAttribute("href")).toBe("/connect")
+    const order = balance.compareDocumentPosition(connect)
+    expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(classesOf(bar, "Connect")).toContain("h-9")
+    expect(classesOf(bar, "12.5 credits")).toContain("h-9")
+  })
+
+  it("shrinks the balance and Connect together on an app page", async () => {
+    const bar = await barAt("/apps/image")
+    expect(classesOf(bar, "Connect")).toContain("h-6")
+    expect(classesOf(bar, "12.5 credits")).toContain("h-6")
+  })
+
+  it("offers to add your key in place of a balance in public mode", async () => {
+    renderAt("/", () => <TopBar />, {
+      settings: { ...ownerSettings, mode: "public" },
+    })
+    const bar = await screen.findByRole("banner", { name: "Rosesfield" })
+    const add = within(bar).getByRole("button", { name: "Add your Comfy key" })
+    expect(add).toBeTruthy()
+    expect(within(bar).queryByRole("link", { name: /credits/ })).toBeNull()
+  })
+
+  it("opens the Image menu with each image app, its icon and one line", async () => {
+    const bar = await barAt("/")
+    fireEvent.mouseDown(within(bar).getByRole("button", { name: "Image" }))
+    const items = await screen.findAllByRole("menuitem")
+    const imageApps = catalogApps.filter((app) => app.category === "image")
+    expect(items.map((item) => item.getAttribute("href"))).toEqual(
+      imageApps.map((app) => `/apps/${app.id}`)
+    )
+    for (const item of items) {
+      expect(item.querySelector("svg")).not.toBeNull()
+      expect(item.querySelectorAll("span > span")).toHaveLength(2)
+    }
+  })
+
+  it("holds the wordmark and a menu of every area for a phone", async () => {
+    const bar = await barAt("/")
+    const names = within(bar).getAllByRole("img", { name: "Rosesfield" })
+    expect(names).toHaveLength(2)
+    const menu = within(bar).getByRole("button", { name: "Open the menu" })
+    fireEvent.mouseDown(menu)
+    const items = await screen.findAllByRole("menuitem")
+    const media = catalogApps.filter((app) => app.category !== "character")
+    expect(items[0]?.textContent).toBe("Explore")
+    expect(items.map((item) => item.textContent)).toContain("Library")
+    expect(items).toHaveLength(media.length + 6)
+  })
+})

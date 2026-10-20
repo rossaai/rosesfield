@@ -5,60 +5,36 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@rosesfield/ui/components/sheet"
-import { SidebarProvider } from "@rosesfield/ui/components/sidebar"
+import {
+  TabBar,
+  TabBarGenerate,
+  TabBarLink,
+} from "@rosesfield/ui/components/tab-bar"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
-import { Link, useRouterState } from "@tanstack/react-router"
-import { CompassIcon, ImagesIcon, MenuIcon, PlusIcon } from "lucide-react"
-import { type ReactElement, type ReactNode, useState } from "react"
+import { Link } from "@tanstack/react-router"
+import { PlugIcon } from "lucide-react"
+import { type ReactElement, useState } from "react"
+import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
-import { createRows, navGroups } from "@/shell/nav-rows"
-import { NavSidebar } from "@/shell/nav-sidebar"
+import { useOpenTools } from "@/shell/generate-key"
+import {
+  appIcon,
+  exploreLink,
+  historyLink,
+  libraryLink,
+  navGroups,
+  type ScreenLink,
+} from "@/shell/nav-rows"
 
-const inputScreens: readonly RegExp[] = [
-  /^\/apps\/[^/]+/,
-  /^\/agent(\/|$)/,
-  /^\/characters\/new(\/|$)/,
-]
-
-export function hasInputs(pathname: string): boolean {
-  return inputScreens.some((pattern) => pattern.test(pathname))
-}
-
-const itemClass =
-  "flex min-w-0 flex-1 flex-col items-center justify-center gap-s1 text-label text-ink-muted aria-[current=page]:text-ink [&_svg]:glyph"
-
-function BarItem({
-  icon,
-  label,
-  ...props
-}: {
-  icon: ReactNode
-  label: string
-  onClick?: () => void
-  current?: boolean
-}): ReactElement {
-  return (
-    <button
-      type="button"
-      className={cn(itemClass, motion.press)}
-      aria-current={props.current === true ? "page" : undefined}
-      onClick={props.onClick}
-    >
-      {icon}
-      <span className="truncate">{label}</span>
-    </button>
-  )
-}
-
-function CreateSheet({
+function AppsSheet({
   open,
   onOpenChange,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
 }): ReactElement {
-  const rows = createRows(navGroups())
+  const { areas } = navGroups()
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" closeLabel={t("shell.menu.close")}>
@@ -66,117 +42,75 @@ function CreateSheet({
           <SheetTitle>{t("shell.create.title")}</SheetTitle>
         </SheetHeader>
         <SheetBody>
-          <ul className="grid grid-cols-2 gap-s2 pb-s5">
-            {rows.map((row) => (
-              <li key={row.id}>
-                <Link
-                  to={
-                    row.target.kind === "app" ? "/apps/$appId" : row.target.to
-                  }
-                  params={
-                    row.target.kind === "app" ? { appId: row.target.appId } : {}
-                  }
-                  onClick={() => onOpenChange(false)}
-                  className={cn(
-                    "flex h-button items-center gap-s2 rounded-full bg-(--well) px-s4 text-body [&_svg]:glyph",
-                    motion.press
-                  )}
-                >
-                  {row.icon}
-                  <span className="truncate">{t(row.label)}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {areas.map((area) => (
+            <section key={area.id} className="flex flex-col gap-s2 pb-s5">
+              <h3 className="text-label font-medium text-ink-muted">
+                {t(area.label)}
+              </h3>
+              <ul className="grid grid-cols-2 gap-s2">
+                {area.apps.map((app) => (
+                  <li key={app.id}>
+                    <Link
+                      to="/apps/$appId"
+                      params={{ appId: app.id }}
+                      onClick={() => onOpenChange(false)}
+                      className={cn(
+                        "flex h-button items-center gap-s2 rounded-full bg-(--well) px-s4 text-body [&_svg]:glyph",
+                        motion.press
+                      )}
+                    >
+                      {appIcon(app)}
+                      <span className="truncate">{appName(app)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
         </SheetBody>
       </SheetContent>
     </Sheet>
   )
 }
 
-function MenuSheet({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}): ReactElement {
+function Tab({ link }: { link: ScreenLink }): ReactElement {
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" aria-label={t("shell.menu.open")}>
-        <SheetTitle className="sr-only">{t("shell.menu.open")}</SheetTitle>
-        <SidebarProvider
-          width="full"
-          mode="sheet"
-          closeLabel={t("shell.menu.close")}
-          onNavigate={() => onOpenChange(false)}
-        >
-          <NavSidebar />
-        </SidebarProvider>
-      </SheetContent>
-    </Sheet>
+    <TabBarLink
+      icon={link.icon}
+      render={
+        <Link to={link.to} activeOptions={{ exact: link.to === "/" }} />
+      }
+    >
+      {t(link.label)}
+    </TabBarLink>
   )
 }
 
-export function BottomBar(): ReactNode {
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname,
-  })
-  const [layer, setLayer] = useState<"create" | "menu" | null>(null)
-  if (hasInputs(pathname)) {
-    return null
-  }
-  const close = (open: boolean): void => {
-    if (!open) {
-      setLayer(null)
-    }
-  }
+export function BottomBar(): ReactElement {
+  const [isAppsOpen, setAppsOpen] = useState(false)
+  const openTools = useOpenTools()
   return (
     <>
-      <nav
-        aria-label={t("shell.bar.label")}
-        data-ground="surface"
-        className="flex h-header shrink-0 items-stretch gap-s2 bg-surface px-s5 pb-[env(safe-area-inset-bottom)] @regular:hidden"
-      >
-        <Link
-          to="/"
-          className={itemClass}
-          activeOptions={{ exact: true }}
-          activeProps={{ "aria-current": "page" }}
-        >
-          <CompassIcon aria-hidden="true" />
-          <span className="truncate">{t("shell.nav.explore")}</span>
-        </Link>
-        <div className="flex flex-1 items-center justify-center">
-          <button
-            type="button"
-            aria-label={t("shell.bar.create")}
-            onClick={() => setLayer("create")}
-            className={cn(
-              "flex h-button items-center gap-s1_5 rounded-full bg-ink px-s5 text-label text-canvas [&_svg]:glyph",
-              motion.press
-            )}
-          >
-            <PlusIcon aria-hidden="true" />
-            {t("shell.bar.create")}
-          </button>
-        </div>
-        <Link
-          to="/library"
-          className={itemClass}
-          activeProps={{ "aria-current": "page" }}
-        >
-          <ImagesIcon aria-hidden="true" />
-          <span className="truncate">{t("shell.nav.library")}</span>
-        </Link>
-        <BarItem
-          icon={<MenuIcon aria-hidden="true" />}
-          label={t("shell.bar.menu")}
-          onClick={() => setLayer("menu")}
+      <TabBar label={t("shell.bar.label")}>
+        <Tab link={exploreLink} />
+        <Tab link={libraryLink} />
+        <TabBarGenerate
+          label={t("run.generate")}
+          onClick={() => {
+            if (!openTools()) {
+              setAppsOpen(true)
+            }
+          }}
         />
-      </nav>
-      <CreateSheet open={layer === "create"} onOpenChange={close} />
-      <MenuSheet open={layer === "menu"} onOpenChange={close} />
+        <Tab link={historyLink} />
+        <TabBarLink
+          icon={<PlugIcon aria-hidden="true" />}
+          render={<Link to="/connect" />}
+        >
+          {t("shell.nav.connect")}
+        </TabBarLink>
+      </TabBar>
+      <AppsSheet open={isAppsOpen} onOpenChange={setAppsOpen} />
     </>
   )
 }
