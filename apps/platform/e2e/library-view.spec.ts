@@ -67,6 +67,11 @@ test("the head row's cluster holds the view switch and Filter once you have runs
   expect(Math.round(filterBox.x - (pillBox.x + pillBox.width))).toBe(8)
 
   await filter.click()
+  const popup = page.locator("[data-slot='popover-content']")
+  await expect(popup).toBeVisible()
+  await popup.evaluate((element) =>
+    Promise.all(element.getAnimations().map((animation) => animation.finished))
+  )
   const groups = page.locator("[data-slot='setting-group']")
   await expect(groups).toHaveCount(2)
   const first = await boxOf(groups.nth(0))
