@@ -5,7 +5,7 @@ import { promptInputOf } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { AttachMenu } from "@/pieces/attach-menu"
 import { LibraryPicker } from "@/pieces/library-picker"
-import { BarChips, BarFrame } from "@/screens/app/bar-frame"
+import { BarChips, BarFrame, type BarPlace } from "@/screens/app/bar-frame"
 import { textOf } from "@/screens/app/fields/field-props"
 import { inputPlaceholder } from "@/screens/app/fields/input-copy"
 import { StartProblem, submitPriceOf } from "@/screens/app/generate-foot"
@@ -131,7 +131,7 @@ function BarMessage({ text }: { text: string | null }): ReactElement | null {
 
 type BarProps = ViewProps & {
   tray: ReferenceTray
-  onOpenSheet: () => void
+  place: BarPlace
 }
 
 function ImageBar({
@@ -140,7 +140,7 @@ function ImageBar({
   fields,
   isGraph,
   tray,
-  onOpenSheet,
+  place,
 }: BarProps): ReactElement {
   const prompt = promptInputOf(app)
   return (
@@ -162,12 +162,18 @@ function ImageBar({
       onRemoveAttachment={tray.remove}
       leading={<Attach tray={tray} />}
       chips={
-        <BarChips
-          chips={
-            <Chips app={app} state={state} fields={fields} isGraph={isGraph} />
-          }
-          onOpenSheet={onOpenSheet}
-        />
+        place === "sheet" ? undefined : (
+          <BarChips
+            chips={
+              <Chips
+                app={app}
+                state={state}
+                fields={fields}
+                isGraph={isGraph}
+              />
+            }
+          />
+        )
       }
       {...submitPriceOf(state.start)}
       busy={state.start.isPending || tray.isUploading}
@@ -191,9 +197,8 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       hasRuns={state.hasRuns}
       onUseInputs={state.useInputs}
       sheet={sheet}
-      price={state.start.price}
       settings={<Settings {...view} />}
-      bar={
+      bar={(place) => (
         <>
           <StartProblem start={state.start} />
           <BarMessage
@@ -202,9 +207,9 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
               barMessageOf(problems, app, state.hosted?.fields ?? null)
             }
           />
-          <ImageBar {...view} tray={tray} onOpenSheet={() => sheet[1](true)} />
+          <ImageBar {...view} tray={tray} place={place} />
         </>
-      }
+      )}
     />
   )
 }
