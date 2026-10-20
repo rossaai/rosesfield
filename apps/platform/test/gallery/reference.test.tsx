@@ -73,7 +73,7 @@ describe("the reference gallery", () => {
       entry.states.map((state) => [entry.id, state.id, state] as const)
     )
   )("renders %s in its %s state", (_entry, _state, state) => {
-    const { container } = render(<>{state.render()}</>)
+    const { container } = render(state.render())
     expect(container.firstElementChild).not.toBeNull()
   })
 
