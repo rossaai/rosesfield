@@ -32,6 +32,8 @@ export const gatewayCopy = {
       "Reads one run by its id: its status, its progress from 0 to 1, and its outputs with the address of each one's bytes.",
     listAssets:
       "Lists the assets in the library, newest first, 60 at a time, each with the address of its bytes. Pass kind to keep one kind. Pass the reply's next as cursor to read the next page.",
+    catalogUnread:
+      "The model catalog could not be read, so the app tools are not offered. Check the engine key in Settings and try again.",
     listCharacters:
       "Lists the characters, newest first, each with its name, its reference asset ids and its notes.",
   },

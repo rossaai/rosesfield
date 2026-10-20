@@ -8,6 +8,7 @@ import {
   GetRunHandler,
   type JobRunner,
   ListModelsHandler,
+  ReadModelFormsHandler,
   ListRunsHandler,
   type PriceBook,
   PriceRunHandler,
@@ -70,6 +71,7 @@ export type RunHandlers = {
   repeatRun: RepeatRunHandler
   checkEngineKey: CheckEngineKeyHandler
   listModels: ListModelsHandler
+  readModelForms: ReadModelFormsHandler
   priceRun: PriceRunHandler
 }
 
@@ -143,6 +145,7 @@ function buildRuns(
     repeatRun: new RepeatRunHandler({ runs, start: startRun }),
     checkEngineKey: new CheckEngineKeyHandler({ engines }),
     listModels: new ListModelsHandler({ engines }),
+    readModelForms: new ReadModelFormsHandler({ engines }),
     priceRun: new PriceRunHandler({ apps, engines, ...pricesOf(ports) }),
   }
 }

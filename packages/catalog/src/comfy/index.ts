@@ -8,6 +8,7 @@ export {
   isHostedModelId,
   isOneAtATime,
   type ModelField,
+  type ModelForm,
 } from "@rosesfield/generation/bindings"
 export { CatalogModelPolicy } from "#comfy/catalog-model-policy"
 export { comfyCreditsPerUsd, creditsOfCost } from "#comfy/comfy-credits"
@@ -45,4 +46,4 @@ export {
   type ProvenFamily,
   provenFamilies,
 } from "#comfy/proven-families"
-export { publishedInputOf } from "#comfy/published-input"
+export { publishedInputOf, publishedModelOf } from "#comfy/published-input"

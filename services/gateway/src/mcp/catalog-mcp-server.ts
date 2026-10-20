@@ -6,7 +6,7 @@ import {
   routes,
   runResponse,
 } from "@rosesfield/contract"
-import type { HostedModel } from "@rosesfield/generation"
+import type { ModelForm } from "@rosesfield/catalog/comfy"
 import { ProjectError } from "@rosesfield/kernel"
 import { z } from "zod"
 import { gatewayCopy } from "#copy.en"
@@ -16,7 +16,7 @@ import gatewayPackage from "../../package.json" with { type: "json" }
 
 export type CatalogServerOptions = {
   apps: readonly AppDefinition[]
-  models: readonly HostedModel[]
+  forms: readonly ModelForm[]
   scope: RequestScope
 }
 
@@ -43,7 +43,7 @@ export function catalogMcpServer(options: CatalogServerOptions): McpServer {
       app.id,
       {
         description: gatewayCopy.mcp.toolDescription(app.id, app.output.kind),
-        inputSchema: startRunInputOf(app, options.models),
+        inputSchema: startRunInputOf(app, options.forms),
         outputSchema: runResponse,
         annotations: {
           readOnlyHint: false,

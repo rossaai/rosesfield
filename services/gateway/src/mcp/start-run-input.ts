@@ -1,5 +1,5 @@
 import type { StandardSchemaWithJSON } from "@modelcontextprotocol/server"
-import { type HostedModel, publishedInputOf } from "@rosesfield/catalog/comfy"
+import { type ModelForm, publishedInputOf } from "@rosesfield/catalog/comfy"
 import type { AppDefinition } from "@rosesfield/contract"
 import { StartRunHandler } from "@rosesfield/generation"
 import { gatewayCopy } from "#copy.en"
@@ -37,9 +37,9 @@ function withKey(schema: Record<string, unknown>): Record<string, unknown> {
 
 export function startRunInputOf(
   app: AppDefinition,
-  models: readonly HostedModel[]
+  forms: readonly ModelForm[]
 ): StandardSchemaWithJSON<unknown> {
-  const standard = publishedInputOf(app, models)["~standard"]
+  const standard = publishedInputOf(app, forms)["~standard"]
   return {
     "~standard": {
       version: 1,

@@ -6,7 +6,6 @@ import {
 } from "@rosesfield/contract"
 import {
   checkModelInputs,
-  type HostedModel,
   isHostedModelId,
   isOneAtATime,
   type ModelField,
@@ -85,15 +84,19 @@ function formBody(app: AppDefinition, form: ModelForm): z.ZodType {
   })
 }
 
+/** Names the hosted model whose form an app publishes, or null when it publishes its own inputs. */
+export function publishedModelOf(app: AppDefinition): string | null {
+  const chosen = defaultModelOf(app)
+  return chosen !== null && isHostedModelId(chosen) ? chosen : null
+}
+
 /** Gives the body an app publishes to MCP and to the agent: its default model's form when it declares a task, its own inputs otherwise. */
 export function publishedInputOf(
   app: AppDefinition,
-  models: readonly HostedModel[]
+  forms: readonly ModelForm[]
 ): z.ZodType<unknown> {
-  const chosen = defaultModelOf(app)
+  const chosen = publishedModelOf(app)
   const form =
-    chosen === null || !isHostedModelId(chosen)
-      ? null
-      : (models.find((model) => model.id === chosen)?.form ?? null)
+    chosen === null ? null : (forms.find((one) => one.model === chosen) ?? null)
   return form === null ? startRunBodyFor(app) : formBody(app, form)
 }

@@ -74,9 +74,11 @@ const clip: HostedModel = {
   },
 }
 
+const clipForm: ModelForm = clip.form ?? { model: clip.id, fields: [] }
+
 describe("publishedInputOf", () => {
   it("publishes the default model's form for an app that declares a task", () => {
-    const schema = publishedInputOf(appWith("maker/clip-1"), [clip])
+    const schema = publishedInputOf(appWith("maker/clip-1"), [clipForm])
     expect(
       schema.safeParse({ inputs: { prompt: "a fox", resolution: "480P" } })
         .success
@@ -96,7 +98,7 @@ describe("publishedInputOf", () => {
     const form: ModelForm = {
       model: "maker/clip-1",
       fields: [
-        ...(clip.form?.fields ?? []),
+        ...clipForm.fields,
         {
           kind: "choice",
           name: "duration",
@@ -117,9 +119,7 @@ describe("publishedInputOf", () => {
         },
       ],
     }
-    const schema = publishedInputOf(appWith("maker/clip-1"), [
-      { ...clip, form },
-    ])
+    const schema = publishedInputOf(appWith("maker/clip-1"), [form])
     const cases: [Record<string, unknown>, boolean][] = [
       [{ prompt: "a fox", resolution: "480P" }, true],
       [{ prompt: "a fox", resolution: "480p" }, false],

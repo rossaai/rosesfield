@@ -1,15 +1,25 @@
+import type { ModelForm } from "@rosesfield/catalog/comfy"
 import {
+  appDefinition,
   assetResponse,
   characterListResponse,
+  type EngineBinding,
   routes,
   runResponse,
 } from "@rosesfield/contract"
-import { DemoGenerationEngine, type HostedModel } from "@rosesfield/generation"
+import {
+  DemoGenerationEngine,
+  EngineUnavailableError,
+  type HostedModel,
+  taskBinding,
+} from "@rosesfield/generation"
+import { FixedClock } from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
 import { z } from "zod"
-import { type Harness, harnessFor, jsonInit, type PortsFor } from "./harness"
+import { gatewayCopy } from "#copy.en"
+import { type Harness, harnessFor, jsonInit } from "./harness"
 import { localPorts } from "./local-ports"
-import { pngBytes } from "./sample-apps"
+import { audioApp, pngBytes, start } from "./sample-apps"
 
 const legacyVersion = "2025-06-18"
 
@@ -64,37 +74,101 @@ async function rpc(method: string, params: Record<string, unknown>) {
   return rpcReply.parse(JSON.parse(data ?? text))
 }
 
+const pictureForm: ModelForm = {
+  model: "maker/picture-2",
+  fields: [
+    {
+      kind: "prompt",
+      name: "prompt",
+      path: "prompt",
+      required: true,
+      maxLength: null,
+      default: null,
+    },
+  ],
+}
+
+const pictures = appDefinition.parse({
+  id: "pictures",
+  nameKey: "name",
+  category: "image",
+  inputs: [
+    {
+      type: "prompt",
+      name: "prompt",
+      labelKey: "inputs.prompt",
+      presence: "required",
+      maxLength: 2000,
+    },
+  ],
+  output: {
+    kind: "image",
+    count: { default: 1, max: 4 },
+    aspectRatios: { options: ["1:1"], default: "1:1" },
+  },
+  engine: taskBinding({
+    tasks: ["text-to-image"],
+    input: "model",
+    default: pictureForm.model,
+    fallback: { adapter: "demo", config: {} },
+  }),
+  limits: { timeoutSeconds: 600, maxRetries: 2 },
+})
+
 class CountedCatalog extends DemoGenerationEngine {
-  reads = 0
+  lists = 0
+  readonly forms: string[] = []
+  isRefused = false
 
   override listModels(): Promise<readonly HostedModel[]> {
-    this.reads += 1
+    this.lists += 1
     return Promise.resolve([])
+  }
+
+  override async formOf(binding: EngineBinding): Promise<ModelForm | null> {
+    this.forms.push(JSON.stringify(binding.config))
+    if (this.isRefused) {
+      throw new EngineUnavailableError({ cause: "the catalog is down" })
+    }
+    return pictureForm
   }
 }
 
+function countedGateway(): CountedCatalog {
+  const engine = new CountedCatalog({ clock: new FixedClock({ now: start }) })
+  gateway = harnessFor({
+    portsFor: (clock, folder) => ({
+      ...localPorts(clock, folder),
+      apps: [audioApp(), pictures],
+      engines: [engine],
+    }),
+  })
+  return engine
+}
+
 describe("the /mcp route", () => {
-  it("reads the model catalog for tools/list and tools/call only", async () => {
-    let engine: CountedCatalog | null = null
-    const counted: PortsFor = (clock, folder) => {
-      engine = new CountedCatalog({ clock })
-      return { ...localPorts(clock, folder), engines: [engine] }
-    }
-    gateway = harnessFor({ portsFor: counted })
-    const readsOf = () => engine?.reads ?? -1
+  it("reads only the forms of the apps' default models, and only for tools/list and tools/call", async () => {
+    const engine = countedGateway()
     await rpc("initialize", {
       protocolVersion: legacyVersion,
       capabilities: {},
       clientInfo: { name: "test-client", version: "1.0.0" },
     })
-    expect(readsOf()).toBe(0)
-    await rpc("tools/list", {})
-    expect(readsOf()).toBe(1)
-    await rpc("tools/call", {
-      name: "sample-audio",
-      arguments: { inputs: { script: "Good morning" } },
-    })
-    expect(readsOf()).toBe(2)
+    expect(engine.forms).toHaveLength(0)
+    const listed = toolList.parse((await rpc("tools/list", {})).result)
+    const picture = listed.tools.find((tool) => tool.name === "pictures")
+    expect(JSON.stringify(picture?.inputSchema)).not.toContain('"length"')
+    expect(engine.forms).toHaveLength(1)
+    expect(engine.forms[0]).toContain(pictureForm.model)
+    expect(engine.lists).toBe(0)
+  })
+
+  it("answers an error that says the catalog could not be read, and publishes no schema", async () => {
+    const engine = countedGateway()
+    engine.isRefused = true
+    const reply = await rpc("tools/list", {})
+    expect(reply.result).toBeUndefined()
+    expect(reply.error?.message).toBe(gatewayCopy.mcp.catalogUnread)
   })
 
   it("answers the handshake with the server's name", async () => {
