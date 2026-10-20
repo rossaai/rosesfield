@@ -20,6 +20,10 @@ export const tabKeys: Readonly<Record<VideoTab, string>> = {
 
 export const startFrameInput = "startFrame"
 
+export const lastFrameInput = "lastFrame"
+
+const graphTabs: readonly VideoTab[] = ["text-image", "first-last"]
+
 type Inputs = Readonly<Record<string, FieldValue>>
 
 export function fieldsOfModel(model: CatalogModel | null): VideoFields | null {
@@ -31,7 +35,7 @@ export function fieldsOfModel(model: CatalogModel | null): VideoFields | null {
 export function tabsOfModel(model: CatalogModel): VideoTab[] {
   const fields = fieldsOfModel(model)
   if (fields === null) {
-    return ["text-image"]
+    return model.kind === "graph" ? [...graphTabs] : ["text-image"]
   }
   const has: Readonly<Record<VideoTab, boolean>> = {
     "text-image": true,
@@ -71,9 +75,9 @@ export type ImageSlots = {
 export function slotsOf(fields: VideoFields | null, tab: VideoTab): ImageSlots {
   if (fields === null) {
     return {
-      start: tab === "text-image" ? { name: startFrameInput, max: 1 } : null,
+      start: tab === "references" ? null : { name: startFrameInput, max: 1 },
       references: null,
-      last: null,
+      last: tab === "first-last" ? { name: lastFrameInput, max: 1 } : null,
     }
   }
   const slot = (

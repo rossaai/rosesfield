@@ -70,11 +70,13 @@ describe("the Video tabs", () => {
       "veo/veo-3.1-lite-generate-001",
     ])
     expect(modelsOfTab(models, "first-last").map((one) => one.id)).toEqual([
+      "ltx-2-5",
       "minimax/minimax-h3",
       "veo/veo-3.1-lite-generate-001",
       "pruna/p-video-2",
     ])
-    expect(tabsOfModel(graph)).toEqual(["text-image"])
+    expect(tabsOfModel(graph)).toEqual(["text-image", "first-last"])
+    expect(tabsOfModel({ ...graph, kind: "hosted" })).toEqual(["text-image"])
   })
 
   it("keeps the chosen model, then the default, then the first of a tab", () => {
@@ -86,7 +88,7 @@ describe("the Video tabs", () => {
       modelForTab(firstLast, "fal/h3-max-turbo", "minimax/minimax-h3")
     ).toBe("minimax/minimax-h3")
     expect(modelForTab(firstLast, "fal/h3-max-turbo", "ltx-2-5")).toBe(
-      "minimax/minimax-h3"
+      "ltx-2-5"
     )
     const references = modelsOfTab(models, "references")
     expect(
@@ -122,9 +124,30 @@ describe("the Video tabs", () => {
       references: null,
       last: { name: "instancesLastFrameBytesBase64Encoded", max: 1 },
     })
-    expect(slotsOf(null, "text-image").start).toEqual({
-      name: "startFrame",
-      max: 1,
+    expect(slotsOf(null, "text-image")).toEqual({
+      start: { name: "startFrame", max: 1 },
+      references: null,
+      last: null,
+    })
+    expect(slotsOf(null, "first-last")).toEqual({
+      start: { name: "startFrame", max: 1 },
+      references: null,
+      last: { name: "lastFrame", max: 1 },
+    })
+    expect(slotsOf(null, "references")).toEqual({
+      start: null,
+      references: null,
+      last: null,
+    })
+  })
+
+  it("drops the graph's last frame when you leave First and last frame", () => {
+    const inputs = { startFrame: ["a"], lastFrame: ["b"] }
+    expect(imagesForTab(null, "first-last", inputs)).toEqual({})
+    expect(imagesForTab(null, "text-image", inputs)).toEqual({ lastFrame: [] })
+    expect(imagesForTab(null, "references", inputs)).toEqual({
+      startFrame: [],
+      lastFrame: [],
     })
   })
 
