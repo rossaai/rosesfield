@@ -168,6 +168,45 @@ test("Library and History keep a 16 px gutter on each side, and a focus ring sit
   await expect(filter).toHaveCSS("outline-offset", "-2px")
 })
 
+test("the screen header's title starts on the same 16 px gutter as the canvas on Library and History", async ({
+  page,
+}) => {
+  for (const path of ["/library", "/history"]) {
+    await open(page, path)
+    const canvas = await boxOf(page.locator("[data-slot='state-view']").first())
+    const title = await boxOf(
+      page.locator("header h1").filter({ visible: true }).first()
+    )
+    expect(Math.round(title.x), path).toBe(Math.round(canvas.x))
+    expect(Math.round(canvas.x), path).toBe(16)
+  }
+})
+
+test("History's state tabs show every label whole, with the plate on the chosen cell", async ({
+  page,
+}) => {
+  await open(page, "/history")
+  const tabs = page.getByRole("radiogroup", { name: "State" })
+  await expect(tabs).toBeVisible()
+  const cut = await tabs
+    .locator("[data-slot='segment-label']")
+    .evaluateAll((labels) =>
+      labels
+        .filter((label) => label.scrollWidth > label.clientWidth)
+        .map((label) => label.textContent)
+    )
+  expect(cut).toEqual([])
+  const failed = tabs.getByRole("radio", { name: "Failed" })
+  await failed.click()
+  const plate = await boxOf(
+    tabs.locator("[data-slot='segmented-control-thumb']")
+  )
+  const cell = await boxOf(failed)
+  expect(Math.round(plate.x)).toBe(Math.round(cell.x))
+  expect(Math.round(plate.width)).toBe(Math.round(cell.width))
+  expect(plate.height).toBe(cell.height)
+})
+
 test("in Grid, items stand at their own shape in columns of their width", async ({
   page,
 }, testInfo) => {

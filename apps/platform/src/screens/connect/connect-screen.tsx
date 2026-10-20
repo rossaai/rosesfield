@@ -100,7 +100,7 @@ export function ConnectScreen(): ReactElement {
   return (
     <>
       <ScreenHeader title={t("connect.title")} />
-      <div className="flex flex-col gap-s8 px-s5 pb-s12 @regular:px-s4">
+      <div className="flex flex-col gap-s8 px-s5 pb-s12">
         <SegmentedControl
           items={clientItems}
           value={client}

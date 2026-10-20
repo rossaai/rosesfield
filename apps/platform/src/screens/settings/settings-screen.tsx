@@ -102,7 +102,7 @@ export function SettingsScreen(): ReactElement {
   return (
     <>
       <ScreenHeader title={t("settings.title")} />
-      <div className="flex w-full max-w-[calc(var(--spacing-prompt-max)+2*var(--spacing-s5))] flex-col gap-s4 px-s5 pb-s12 @regular:max-w-[calc(var(--spacing-prompt-max)+2*var(--spacing-s4))] @regular:px-s4">
+      <div className="flex w-full max-w-[calc(var(--spacing-prompt-max)+2*var(--spacing-s5))] flex-col gap-s4 px-s5 pb-s12">
         <EngineCard />
         <AgentCard />
         <LockCard />

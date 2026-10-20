@@ -138,7 +138,7 @@ export function NewCharacterScreen(): ReactElement {
           : {})}
       />
       {traitsApp === null ? null : (
-        <div className="px-s5 pb-s4 @regular:px-s4">
+        <div className="px-s5 pb-s4">
           <SegmentedControl
             items={modes}
             value={mode}
@@ -154,7 +154,7 @@ export function NewCharacterScreen(): ReactElement {
           <ModeView app={traitsApp} mode="traits" seeds={noSeeds} />
         </div>
       ) : (
-        <div className="px-s5 pb-s12 @regular:px-s4">
+        <div className="px-s5 pb-s12">
           <FromPhotos />
         </div>
       )}
