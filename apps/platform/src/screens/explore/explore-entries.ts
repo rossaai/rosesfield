@@ -1,7 +1,7 @@
 import type { Run } from "@rosesfield/contract"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
-import { runsOf, runsQuery } from "@/api/queries"
+import { useQueries, useQuery } from "@tanstack/react-query"
+import { runQuery } from "@/api/queries"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { runAspect } from "@/pieces/run/run-facts"
 import {
@@ -11,7 +11,7 @@ import {
   isAdmitted,
 } from "@/screens/explore/explore-list"
 import type { ExploreEntry, ExploreKind } from "@/screens/explore/explore-tile"
-import { publishedQuery, type SharedOutput } from "@/screens/explore/share-api"
+import { type SharedOutput, shareQuery } from "@/screens/explore/share-api"
 
 export type ExploreEntries =
   | { state: "loading" }
@@ -93,28 +93,49 @@ export function admittedEntries(
   })
 }
 
+export type ExploreReads = { runIds: string[]; shareIds: string[] }
+
+export function exploreReads(list: readonly ExploreAdmission[]): ExploreReads {
+  const runIds = [...new Set(list.map((admission) => admission.runId))]
+  const shareIds = [
+    ...new Set(
+      list.flatMap((admission) =>
+        admission.shareId === undefined ? [] : [admission.shareId]
+      )
+    ),
+  ]
+  return { runIds, shareIds }
+}
+
 export function useExploreEntries(): ExploreEntries {
   const list = useQuery(exploreListQuery)
-  const published = useQuery(publishedQuery)
-  const runs = useInfiniteQuery(runsQuery(null))
-  if (published.isError && runs.isError) {
+  const reads = exploreReads(list.data)
+  const shares = useQueries({
+    queries: reads.shareIds.map((shareId) => shareQuery(shareId)),
+  })
+  const runs = useQueries({
+    queries: reads.runIds.map((runId) => runQuery(runId)),
+  })
+  const all = [...shares, ...runs]
+  if (all.length > 0 && all.every((read) => read.isError)) {
     return {
       state: "failed",
       retry: () => {
-        void published.refetch()
-        void runs.refetch()
+        for (const read of all) {
+          void read.refetch()
+        }
       },
     }
   }
-  if (published.isPending || runs.isPending) {
+  if (all.some((read) => read.isPending)) {
     return { state: "loading" }
   }
   return {
     state: "ready",
     entries: admittedEntries(
       [
-        ...sharedEntries(published.data ?? []),
-        ...ownEntries(runsOf(runs.data)),
+        ...sharedEntries(shares.flatMap((read) => read.data ?? [])),
+        ...ownEntries(runs.flatMap((read) => read.data?.run ?? [])),
       ],
       list.data
     ),
