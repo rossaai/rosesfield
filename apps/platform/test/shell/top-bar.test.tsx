@@ -78,12 +78,26 @@ describe("the top bar", () => {
     expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(classesOf(bar, "Connect")).toContain("h-9")
     expect(classesOf(bar, "12.5 credits")).toContain("h-9")
+    expect(classesOf(bar, "12.5 credits")).not.toContain("@regular:h-6")
   })
 
-  it("shrinks the balance and Connect together on an app page", async () => {
+  it("draws the balance with its icon before the label", async () => {
+    const bar = await barAt("/")
+    const balance = within(bar).getByRole("link", { name: "12.5 credits" })
+    expect(balance.firstElementChild?.tagName.toLowerCase()).toBe("svg")
+    expect(balance.lastElementChild?.textContent).toBe("12.5 credits")
+  })
+
+  it("shrinks the balance and Connect with the bar on an app page", async () => {
     const bar = await barAt("/apps/image")
-    expect(classesOf(bar, "Connect")).toContain("h-6")
-    expect(classesOf(bar, "12.5 credits")).toContain("h-6")
+    for (const name of ["Connect", "12.5 credits"]) {
+      expect(classesOf(bar, name)).toEqual(
+        expect.arrayContaining([
+          "@regular:h-6",
+          "transition-[height,padding,gap]",
+        ])
+      )
+    }
   })
 
   it("offers to add your key in place of a balance in public mode", async () => {
@@ -92,7 +106,7 @@ describe("the top bar", () => {
     })
     const bar = await screen.findByRole("banner", { name: "Rosesfield" })
     const add = within(bar).getByRole("button", { name: "Add your Comfy key" })
-    expect(add).toBeTruthy()
+    expect(add.firstElementChild?.tagName.toLowerCase()).toBe("svg")
     expect(within(bar).queryByRole("link", { name: /credits/ })).toBeNull()
   })
 

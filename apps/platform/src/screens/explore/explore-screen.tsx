@@ -103,12 +103,18 @@ function ExploreFeeds({
   if (entries.length === 0) {
     return <EmptyExplore />
   }
+  const rows = exploreRows(entries)
   return (
     <>
-      {exploreRows(entries).map((row) => (
-        <ExploreRowView key={row.key} row={row} {...actions} />
+      {rows.map((row, index) => (
+        <ExploreRowView
+          key={row.key}
+          row={row}
+          isLead={index === 0}
+          {...actions}
+        />
       ))}
-      <SharedFeed entries={entries} {...actions} />
+      <SharedFeed entries={entries} isLead={rows.length === 0} {...actions} />
     </>
   )
 }
@@ -168,7 +174,7 @@ export function ExploreScreen(): ReactElement {
   return (
     <div ref={root} className="flex min-h-full flex-col px-4 pb-12">
       <ExploreBanner />
-      <PromoCards entries={entries} />
+      <PromoCards entries={entries} isLoading={results.state === "loading"} />
       <AppTiles />
       <div className="mt-6 flex flex-col gap-12 @regular:mt-10 @regular:gap-35">
         <ExploreFeeds

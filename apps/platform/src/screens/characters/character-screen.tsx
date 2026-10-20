@@ -212,7 +212,7 @@ function Loading(): ReactElement {
   return (
     <>
       <ScreenHeader title={<Skeleton className="h-s5 w-tile" />} />
-      <div className="px-s5 @regular:px-s4">
+      <div className="px-s5">
         <MediaGrid>
           {[0, 1, 2, 3].map((index) => (
             <Skeleton key={index} />
@@ -283,7 +283,7 @@ function CharacterDetail({
         }
         phoneAction={<MoreMenu character={found} />}
       />
-      <div className="flex flex-1 flex-col gap-s8 px-s5 pb-s12 @regular:px-s4">
+      <div className="flex flex-1 flex-col gap-s8 px-s5 pb-s12">
         <Photos character={found} />
         <CharacterRuns characterId={found.id} />
       </div>

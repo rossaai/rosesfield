@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const effectsCopy = {
   "effects.name": "Effects",
   "effects.line": "Pick an effect, add a photo, and get a short clip.",

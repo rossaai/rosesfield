@@ -15,14 +15,28 @@ function PopoverClose(props: PopoverPrimitive.Close.Props): ReactElement {
   return <PopoverPrimitive.Close data-slot="popover-close" {...props} />
 }
 
+type PopoverMotion = "pop" | "rise" | "none"
+
+const rise =
+  "[transition:opacity_var(--popover-in-opacity),translate_var(--popover-in-transform)] data-starting-style:opacity-0 data-starting-style:translate-y-1 data-[side=right]:data-starting-style:translate-y-0 data-[side=right]:data-starting-style:-translate-x-1 data-ending-style:opacity-0"
+
+const motions = {
+  pop: motion.popover,
+  rise,
+  none: "",
+} satisfies Record<PopoverMotion, string>
+
 type PopoverContentProps = PopoverPrimitive.Popup.Props &
-  Pick<PopoverPrimitive.Positioner.Props, "align" | "side" | "sideOffset">
+  Pick<PopoverPrimitive.Positioner.Props, "align" | "side" | "sideOffset"> & {
+    motion?: PopoverMotion
+  }
 
 function PopoverContent({
   className,
   align = "start",
   side = "bottom",
   sideOffset = 7,
+  motion: moves = "pop",
   ...props
 }: PopoverContentProps): ReactElement {
   return (
@@ -38,7 +52,7 @@ function PopoverContent({
           data-ground="layer"
           className={cn(
             "material z-50 flex min-w-popover-min max-w-popover-max flex-col gap-s3 rounded-vessel p-s4 text-ink shadow-float outline-none",
-            motion.popover,
+            motions[moves],
             className
           )}
           {...props}
@@ -87,6 +101,7 @@ function PopoverHeader({
   )
 }
 
+export type { PopoverMotion }
 export {
   Popover,
   PopoverClose,

@@ -7,16 +7,25 @@ import {
 import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement, ReactNode } from "react"
 
+type ChipSize = "bar" | "inline"
+
+const sizes = {
+  bar: "",
+  inline: "h-6.5 px-2",
+} satisfies Record<ChipSize, string>
+
 type ChipProps = Omit<ButtonProps, "size" | "children"> & {
   children: string
   caption?: string
   icon?: ReactNode
+  size?: ChipSize
 }
 
 function Chip({
   children,
   caption,
   icon,
+  size = "bar",
   className,
   ...props
 }: ChipProps): ReactElement {
@@ -26,6 +35,7 @@ function Chip({
       size="recreate"
       className={cn(
         "group/chip min-w-0 shrink gap-1 rounded-dense data-popup-open:bg-(--tint)",
+        sizes[size],
         className
       )}
       {...props}
@@ -56,5 +66,5 @@ function Chip({
   )
 }
 
-export type { ChipProps }
+export type { ChipProps, ChipSize }
 export { Chip }

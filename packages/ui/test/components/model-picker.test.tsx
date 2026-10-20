@@ -242,3 +242,31 @@ describe("ModelPicker's Open weights link", () => {
     expect(onChoose).toHaveBeenCalledWith(option.dataset.model)
   })
 })
+
+describe("ModelPicker's rows and motion", () => {
+  it("insets each row's tile 6 px and its check slot 12 px inside a 1 px edge", () => {
+    open()
+    const list = document.querySelector("[data-slot='model-picker']")
+    expect(list?.className.split(" ")).toContain("p-px")
+    const inner = rowOf("Clip 3").querySelector(
+      "[data-slot='model-row-mark']"
+    )?.parentElement
+    expect(inner?.className.split(" ")).toEqual(
+      expect.arrayContaining(["ps-1.5", "pe-3"])
+    )
+  })
+
+  it("fades in while it rises 4 px, on the popover's timing and with no scale", () => {
+    open()
+    const list = document.querySelector("[data-slot='model-picker']")
+    const classes = list?.className.split(" ") ?? []
+    expect(classes).toEqual(
+      expect.arrayContaining([
+        "[transition:opacity_var(--popover-in-opacity),translate_var(--popover-in-transform)]",
+        "data-starting-style:opacity-0",
+        "data-starting-style:translate-y-1",
+      ])
+    )
+    expect(classes).not.toContain("motion-popover")
+  })
+})

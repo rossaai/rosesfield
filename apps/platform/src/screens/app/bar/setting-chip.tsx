@@ -10,17 +10,12 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@rosesfield/ui/components/popover"
-import {
-  ClockIcon,
-  HashIcon,
-  MoveIcon,
-  ProportionsIcon,
-  ScanIcon,
-} from "lucide-react"
+import { ClockIcon, GemIcon, HashIcon, MoveIcon, ScanIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { withUnit } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
-import { NumberStepper } from "@/pieces/number-stepper"
+import { AspectShape } from "@/pieces/aspect-shape"
+import { SettingSlider } from "@/pieces/setting-slider"
 import { aspectField, countField } from "@/screens/app/app-form"
 import { numberOf, textOf } from "@/screens/app/fields/field-props"
 import { inputCaption, inputUnit } from "@/screens/app/fields/input-copy"
@@ -41,16 +36,16 @@ type StepperChipProps = {
   min: number
   max: number
   step: number
-  unit: string
   onChange: (value: number) => void
 }
 
 export function chipIconOf(role: FieldRole | null): ReactNode {
   switch (role) {
     case "aspect":
-      return <ProportionsIcon />
-    case "resolution":
       return <ScanIcon />
+    case "resolution":
+    case "quality":
+      return <GemIcon />
     case "length":
       return <ClockIcon />
     case "count":
@@ -115,12 +110,35 @@ export function StepperChip(props: StepperChipProps): ReactElement {
           </Chip>
         }
       />
-      <PopoverContent side="top" align="start" sideOffset={4}>
-        <PopoverTitle>{props.label}</PopoverTitle>
-        <NumberStepper {...props} />
+      <PopoverContent
+        side="top"
+        align="start"
+        sideOffset={8}
+        motion="none"
+        className="w-83.5 max-w-none gap-3 px-4.25 py-4"
+      >
+        <PopoverTitle className="text-label">{props.label}</PopoverTitle>
+        <SettingSlider
+          label={props.label}
+          shown={props.shown}
+          value={props.value}
+          min={props.min}
+          max={props.max}
+          step={props.step}
+          onChange={props.onChange}
+        />
       </PopoverContent>
     </Popover>
   )
+}
+
+export function withShapes<T extends { value: string; label: string }>(
+  items: readonly T[]
+): (T & { icon: ReactNode })[] {
+  return items.map((item) => ({
+    ...item,
+    icon: <AspectShape ratio={item.value} />,
+  }))
 }
 
 export function chipChoiceText(
@@ -174,7 +192,6 @@ function InputChip({
           min={input.min}
           max={input.max}
           step={input.step}
-          unit={inputUnit(app, input)}
           onChange={set}
         />
       )
@@ -207,7 +224,7 @@ export function SettingChip({
         icon={chipIconOf("aspect")}
         value={form.values.aspectRatio ?? items[0]?.value ?? ""}
         onValueChange={(aspectRatio) => form.setForm({ aspectRatio })}
-        options={items}
+        options={withShapes(items)}
       />
     )
   }

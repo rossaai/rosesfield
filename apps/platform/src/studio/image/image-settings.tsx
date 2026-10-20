@@ -66,14 +66,14 @@ export function HostedPanel({
   form: AppForm
 }): ReactElement {
   if (fields === null) {
-    return <CatalogPicker hosted={hosted} />
+    return <CatalogPicker hosted={hosted} place="row" />
   }
-  const settings = [fields.aspect, fields.size].flatMap((field) =>
-    field === null ? [] : [field]
+  const settings = [fields.aspect, fields.quality, fields.resolution].flatMap(
+    (field) => (field === null ? [] : [field])
   )
   return (
     <div className="flex flex-col gap-s4">
-      <CatalogPicker hosted={hosted} />
+      <CatalogPicker hosted={hosted} place="row" />
       <HostedFields fields={settings} form={form} />
       <HostedCountField app={app} fields={fields} form={form} />
       <HostedFields fields={fields.rest} form={form} />
@@ -92,7 +92,7 @@ export function GraphPanel({
 }): ReactElement {
   return (
     <div className="flex flex-col gap-s4">
-      <CatalogPicker hosted={hosted} />
+      <CatalogPicker hosted={hosted} place="row" />
       <ImageModelSettings
         app={withoutModelInput(app)}
         state={state}

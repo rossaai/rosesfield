@@ -1,5 +1,9 @@
 const sources = import.meta.glob<string>(
-  ["../src/tokens.css", "../src/styles/motion.css"],
+  [
+    "../src/tokens.css",
+    "../src/styles/motion.css",
+    "../src/styles/globals.css",
+  ],
   { query: "?raw", import: "default", eager: true }
 )
 

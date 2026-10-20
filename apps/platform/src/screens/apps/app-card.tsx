@@ -4,12 +4,20 @@ import { interaction } from "@rosesfield/ui/components/interaction"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { Link } from "@tanstack/react-router"
+import { PlayIcon } from "lucide-react"
 import type { ReactElement } from "react"
-import { appLine, appName, takesText } from "@/catalog/app-facts"
+import { appLine, appName } from "@/catalog/app-facts"
 import { tCount } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
+import { appIcon } from "@/shell/nav-rows"
 
-const frame: MediaAspect = { width: 4, height: 3 }
+const frame: MediaAspect = { width: 203, height: 196 }
+
+const hovered =
+  "group-hover/card:border-(--line) group-hover/card:bg-(--tint) in-data-[gallery=hover]:border-(--line) in-data-[gallery=hover]:bg-(--tint)"
+
+const playShown =
+  "group-hover/card:translate-y-0 group-hover/card:opacity-100 group-focus-visible/card:translate-y-0 group-focus-visible/card:opacity-100 in-data-[gallery=hover]:translate-y-0 in-data-[gallery=hover]:opacity-100"
 
 type AppCardProps = {
   app: AppListing
@@ -17,32 +25,69 @@ type AppCardProps = {
   working: number
 }
 
-export function AppCard({ app, newest, working }: AppCardProps): ReactElement {
+function CardMedia({
+  app,
+  newest,
+}: Pick<AppCardProps, "app" | "newest">): ReactElement {
   const media = newest?.outputs[0]
+  return (
+    <span
+      data-slot="app-card-media"
+      className="relative block overflow-hidden rounded-cell"
+    >
+      {media === undefined || newest === null ? (
+        <span
+          className="flex w-full items-center justify-center bg-(--well) text-ink-muted [&_svg]:size-6"
+          style={{ aspectRatio: `${frame.width} / ${frame.height}` }}
+        >
+          {appIcon(app)}
+        </span>
+      ) : (
+        <AssetTile
+          assetId={media}
+          shape="frame"
+          aspectHint={frame}
+          isDemo={newest.origin === "demo"}
+          isStatic={true}
+        />
+      )}
+      <span
+        aria-hidden="true"
+        data-slot="app-card-play"
+        className={cn(
+          "absolute right-2 bottom-2 flex size-8 translate-y-2 items-center justify-center rounded-full bg-ink text-canvas opacity-0 transition-[opacity,translate] duration-(--duration-control) [&_svg]:size-3 [&_svg]:fill-current",
+          playShown
+        )}
+      >
+        <PlayIcon />
+      </span>
+    </span>
+  )
+}
+
+export function AppCard({ app, newest, working }: AppCardProps): ReactElement {
   return (
     <Link
       to="/apps/$appId"
       params={{ appId: app.id }}
+      data-slot="app-card"
       className={cn(
-        "relative block rounded-card",
-        interaction.light,
+        "group/card relative block w-62 shrink-0 snap-start rounded-card @regular:w-59.25",
         interaction.ring
       )}
     >
-      <Card className="h-full gap-s3 p-s4">
-        {media === undefined || newest === null ? null : (
-          <AssetTile
-            assetId={media}
-            shape="frame"
-            aspectHint={frame}
-            isDemo={newest.origin === "demo"}
-            isStatic={true}
-          />
+      <Card
+        className={cn(
+          "h-full gap-0 border border-transparent p-4 transition-colors duration-(--duration-control)",
+          hovered
         )}
-        <div className="flex flex-col gap-s1">
-          <h3 className="text-body font-medium">{appName(app)}</h3>
-          <p className="text-body text-ink-muted">{appLine(app)}</p>
-          <p className="text-caption text-ink-muted">{takesText(app)}</p>
+      >
+        <CardMedia app={app} newest={newest} />
+        <div className="flex flex-col gap-1 py-4">
+          <h3 className="font-medium text-body">{appName(app)}</h3>
+          <p className="line-clamp-2 text-body text-ink-muted">
+            {appLine(app)}
+          </p>
           {working === 0 ? null : (
             <p className="text-caption text-ink">
               {tCount("apps.card.working", working)}

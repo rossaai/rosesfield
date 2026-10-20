@@ -83,7 +83,10 @@ export function pickEngines(
   const live = liveEngineOf(engine, options)
   const router = routerOf(hostedKeyOf(engine), options)
   return live === null
-    ? [router, new DemoGenerationEngine(options)]
+    ? [
+        router,
+        new DemoGenerationEngine({ clock: options.clock, rates: router }),
+      ]
     : [live, router]
 }
 
@@ -92,9 +95,9 @@ export function visitorEngines(
   key: string | null,
   options: EngineOptions
 ): readonly GenerationEngine[] {
-  const demo = new DemoGenerationEngine(options)
   const keyed = key === null ? engine : withEngineKey(engine, key)
   const live = key === null ? null : liveEngineOf(keyed, options)
   const router = routerOf(key === null ? null : hostedKeyOf(keyed), options)
+  const demo = new DemoGenerationEngine({ clock: options.clock, rates: router })
   return live === null ? [router, demo] : [live, router, demo]
 }

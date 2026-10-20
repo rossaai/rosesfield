@@ -8,9 +8,10 @@ import { type Fetch, RouterCatalog, taskBinding } from "@rosesfield/generation"
 import type { FixedClock } from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
 import { pickEngines } from "#compose/pick-engines"
+import type { EngineSettings } from "#engine/engine-target"
 import { type Harness, harnessFor, jsonInit, type PortsFor } from "../harness"
 import { localPorts } from "../local-ports"
-import { comfyCloud } from "../server-env"
+import { comfyCloud, demoEngine } from "../server-env"
 import {
   clipModel,
   fakeRouter,
@@ -71,12 +72,13 @@ const apps = [
 
 function portsWith(
   fetch: Fetch,
-  catalog: (clock: FixedClock) => RouterCatalog
+  catalog: (clock: FixedClock) => RouterCatalog,
+  engine: EngineSettings
 ): PortsFor {
   return (clock, folder) => ({
     ...localPorts(clock, folder),
     apps,
-    engines: pickEngines(comfyCloud("comfyui-owner"), {
+    engines: pickEngines(engine, {
       clock,
       fetch,
       catalog: catalog(clock),
@@ -95,9 +97,10 @@ afterEach(() => {
 
 function gatewayWith(
   fetch: Fetch,
-  catalog: (clock: FixedClock) => RouterCatalog
+  catalog: (clock: FixedClock) => RouterCatalog,
+  engine: EngineSettings = comfyCloud("comfyui-owner")
 ): Harness {
-  const gateway = harnessFor({ portsFor: portsWith(fetch, catalog) })
+  const gateway = harnessFor({ portsFor: portsWith(fetch, catalog, engine) })
   open.push(gateway)
   return gateway
 }
@@ -258,6 +261,37 @@ describe("the price of a run", () => {
     })
     expect(router.calls.some((call) => call.url.endsWith("/estimate"))).toBe(
       true
+    )
+  })
+
+  it("comes from the published rates on the demo engine, with no estimate asked", async () => {
+    const router = fakeRouter({
+      schemas: [pictureModel],
+      rates: {
+        rates: [
+          {
+            model_id: "maker/picture-2",
+            credits: "6.33",
+            unit: "per generation",
+            conditions: "",
+          },
+        ],
+      },
+    })
+    const gateway = gatewayWith(
+      router.fetch,
+      (clock) => new RouterCatalog({ clock }),
+      demoEngine
+    )
+    const response = await gateway.call(
+      buildPath(catalogRoutes.priceRun.path, { appId: "pictures" }),
+      jsonInit({ inputs: { model: "maker/picture-2", prompt: "a door" } })
+    )
+    expect(await response.json()).toEqual({
+      price: { source: "rates", credits: 6.33 },
+    })
+    expect(router.calls.some((call) => call.url.endsWith("/estimate"))).toBe(
+      false
     )
   })
 

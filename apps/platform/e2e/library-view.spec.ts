@@ -49,24 +49,33 @@ test.beforeAll(async () => {
   await startDemoRun()
 })
 
-test("the head row's cluster holds the view switch and Filter once you have runs", async ({
-  page,
-}) => {
-  await open(page, "/history")
-  const cluster = page.locator("[data-slot='canvas-cluster']")
-  await expect(cluster).toBeVisible()
-  expect((await boxOf(cluster)).height).toBe(36)
-  const well = cluster.locator("[data-slot='view-well']")
-  expect((await boxOf(well)).height).toBe(36)
-  await expect(well.getByRole("radio")).toHaveCount(2)
+async function expectLayoutWell(cluster: Locator): Promise<void> {
+  const well = cluster.getByRole("tablist", { name: "Layout" })
+  const wellBox = await boxOf(well)
+  expect(wellBox.height).toBe(36)
+  await expect(well.getByRole("tab")).toHaveCount(2)
+  await expect(well.getByRole("radio")).toHaveCount(0)
+  const current = well.getByRole("tab", { name: "List" })
+  await expect(current).toHaveAttribute("aria-selected", "true")
+  const plate = well.locator("[data-slot='segmented-control-thumb']")
+  const plateBox = await boxOf(plate)
+  const currentBox = await boxOf(current)
+  expect(plateBox.height).toBe(30)
+  expect(Math.round(plateBox.y - currentBox.y)).toBe(1)
+  expect(Math.round(plateBox.x - currentBox.x)).toBe(1)
   const pill = cluster.locator("[data-slot='view-pill']")
   const filter = cluster.getByRole("button", { name: "Filter" })
   const pillBox = await boxOf(pill)
   const filterBox = await boxOf(filter)
   expect(filterBox.height).toBe(36)
   expect(Math.round(filterBox.x - (pillBox.x + pillBox.width))).toBe(8)
+}
 
-  await filter.click()
+async function openFilterGroups(
+  page: Page,
+  cluster: Locator
+): Promise<Locator> {
+  await cluster.getByRole("button", { name: "Filter" }).click()
   const popup = page.locator("[data-slot='popover-content']")
   await expect(popup).toBeVisible()
   await popup.evaluate((element) =>
@@ -81,13 +90,128 @@ test("the head row's cluster holds the view switch and Filter once you have runs
   await expect(
     groups.nth(0).locator("[data-slot='setting-group-count']")
   ).toHaveText(/\d+/)
+  return groups
+}
+
+async function expectChoiceCard(page: Page, group: Locator): Promise<void> {
+  const trigger = group.locator("[data-slot='setting-group-trigger']")
+  const chevron = trigger.locator("svg").last()
+  await trigger.click()
+  await page.waitForTimeout(60)
+  const turning = await chevron.evaluate(
+    (element) => getComputedStyle(element).rotate
+  )
+  expect(turning).not.toBe("180deg")
+  const card = group.locator("[data-slot='setting-choice']").first()
+  await expect(card).toBeVisible()
+  await expect(chevron).toHaveCSS("rotate", "180deg")
+  await page.waitForTimeout(400)
+  const cardBox = await boxOf(card)
+  expect(cardBox.width).toBe(88)
+  expect(cardBox.height).toBe(104)
+  const picture = await boxOf(
+    card.locator("[data-slot='setting-choice-picture']")
+  )
+  expect(picture.width).toBe(68)
+  expect(Math.round(picture.y - cardBox.y)).toBe(12)
+  await expect(card).toHaveAttribute("aria-pressed", "true")
+  const look = (element: Element): string => {
+    const style = getComputedStyle(element)
+    return [style.backgroundColor, style.boxShadow, style.color].join(" | ")
+  }
+  await page.mouse.move(0, 0)
+  const rest = await card.evaluate(look)
+  await card.hover()
+  const hovered = await card.evaluate(look)
+  expect(hovered).toBe(rest)
+}
+
+test("the head row's cluster holds the view switch and Filter once you have runs", async ({
+  page,
+}) => {
+  await open(page, "/history")
+  const cluster = page.locator("[data-slot='canvas-cluster']")
+  await expect(cluster).toBeVisible()
+  expect((await boxOf(cluster)).height).toBe(36)
+  await expectLayoutWell(cluster)
+  const groups = await openFilterGroups(page, cluster)
+  await expectChoiceCard(page, groups.nth(1))
+})
+
+test("Library and History keep a 16 px gutter on each side, and a focus ring sits inside its control", async ({
+  page,
+}) => {
+  for (const path of ["/library", "/history"]) {
+    await open(page, path)
+    const gutter = await page
+      .locator("[data-slot='state-view']")
+      .first()
+      .evaluate((element) => {
+        const main = element.closest("main")
+        if (main === null) {
+          return null
+        }
+        const outer = main.getBoundingClientRect()
+        const inner = element.getBoundingClientRect()
+        return {
+          left: Math.round(inner.left - outer.left),
+          right: Math.round(outer.left + main.clientWidth - inner.right),
+        }
+      })
+    expect(gutter, path).toEqual({ left: 16, right: 16 })
+  }
+  const filter = page.getByRole("button", { name: "Filter" })
+  await filter.focus()
+  await page.keyboard.press("Shift+Tab")
+  await page.keyboard.press("Tab")
+  await expect(filter).toBeFocused()
+  await expect(filter).toHaveCSS("outline-offset", "-2px")
+})
+
+test("the screen header's title starts on the same 16 px gutter as the canvas on Library and History", async ({
+  page,
+}) => {
+  for (const path of ["/library", "/history"]) {
+    await open(page, path)
+    const canvas = await boxOf(page.locator("[data-slot='state-view']").first())
+    const title = await boxOf(
+      page.locator("header h1").filter({ visible: true }).first()
+    )
+    expect(Math.round(title.x), path).toBe(Math.round(canvas.x))
+    expect(Math.round(canvas.x), path).toBe(16)
+  }
+})
+
+test("History's state tabs show every label whole, with the plate on the chosen cell", async ({
+  page,
+}) => {
+  await open(page, "/history")
+  const tabs = page.getByRole("radiogroup", { name: "State" })
+  await expect(tabs).toBeVisible()
+  const cut = await tabs
+    .locator("[data-slot='segment-label']")
+    .evaluateAll((labels) =>
+      labels
+        .filter((label) => label.scrollWidth > label.clientWidth)
+        .map((label) => label.textContent)
+    )
+  expect(cut).toEqual([])
+  const failed = tabs.getByRole("radio", { name: "Failed" })
+  await failed.click()
+  const plate = await boxOf(
+    tabs.locator("[data-slot='segmented-control-thumb']")
+  )
+  const cell = await boxOf(failed)
+  expect(Math.round(plate.x)).toBe(Math.round(cell.x))
+  expect(Math.round(plate.width)).toBe(Math.round(cell.width))
+  expect(plate.height).toBe(cell.height)
 })
 
 test("in Grid, items stand at their own shape in columns of their width", async ({
   page,
 }, testInfo) => {
   await open(page, "/library")
-  await page.getByRole("radio", { name: "Grid" }).click()
+  await page.getByRole("tab", { name: "Grid" }).click()
   const column = page.locator("[data-slot='result-column']").first()
   await expect(column).toBeVisible()
   const isPhone = testInfo.project.name === "phone"

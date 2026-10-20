@@ -147,3 +147,119 @@ describe("PromptBar's composer slots", () => {
     expect(order).toEqual([...COMPOSER.slots])
   })
 })
+
+describe("PromptBar's prompt height", () => {
+  it("sets the field's height from its text and moves it on the control timing", () => {
+    const { rerender } = render(
+      <PromptBar
+        value="one line"
+        onValueChange={() => undefined}
+        onSubmit={() => undefined}
+        label="Prompt"
+        placeholder="Describe the image"
+        submitLabel="Generate"
+        removeLabel="Remove"
+      />
+    )
+    const field = screen.getByRole("textbox", { name: "Prompt" })
+    expect(field.className).toContain(
+      "[transition:height_var(--control-change)]"
+    )
+    expect(field.className).not.toContain("field-sizing-content")
+    Object.defineProperty(field, "scrollHeight", {
+      configurable: true,
+      get: () => 120,
+    })
+    rerender(
+      <PromptBar
+        value={"one line\ntwo\nthree\nfour"}
+        onValueChange={() => undefined}
+        onSubmit={() => undefined}
+        label="Prompt"
+        placeholder="Describe the image"
+        submitLabel="Generate"
+        removeLabel="Remove"
+      />
+    )
+    expect(field.style.height).toBe("120px")
+  })
+})
+
+describe("PromptBar's chip row", () => {
+  it("holds the chips in a sideways row with a hidden 28 px arrow at each end while nothing overflows", () => {
+    render(
+      <PromptBar
+        value=""
+        onValueChange={() => undefined}
+        onSubmit={() => undefined}
+        label="Prompt"
+        placeholder="Describe the image"
+        submitLabel="Generate"
+        removeLabel="Remove"
+        chips={<button type="button">Aspect</button>}
+      />
+    )
+    const row = document.querySelector("[data-slot='chip-row']")
+    expect(row?.className).toContain("overflow-x-auto")
+    expect(row?.textContent).toBe("Aspect")
+    const arrows = [
+      ...document.querySelectorAll("[data-slot='chip-row-arrow']"),
+    ]
+    expect(arrows.map((arrow) => arrow.getAttribute("data-end"))).toEqual([
+      "back",
+      "forward",
+    ])
+    for (const arrow of arrows) {
+      expect(arrow.className.split(" ")).toEqual(
+        expect.arrayContaining(["size-7", "opacity-0"])
+      )
+    }
+  })
+
+  it("draws no chip row or arrows when it is given no chips, as in the phone's sheet", () => {
+    renderBar()
+    expect(document.querySelector("[data-slot='chip-row']")).toBeNull()
+    expect(document.querySelector("[data-slot='chip-row-arrow']")).toBeNull()
+    expect(
+      document.querySelector("[data-slot='composer-toolbar']")
+    ).not.toBeNull()
+  })
+
+  it("shows the forward arrow once the chips overflow, and scrolls when pressed", () => {
+    render(
+      <PromptBar
+        value=""
+        onValueChange={() => undefined}
+        onSubmit={() => undefined}
+        label="Prompt"
+        placeholder="Describe the image"
+        submitLabel="Generate"
+        removeLabel="Remove"
+        chips={<button type="button">Aspect</button>}
+      />
+    )
+    const row = document.querySelector<HTMLElement>("[data-slot='chip-row']")
+    if (row === null) {
+      throw new Error("no chip row")
+    }
+    Object.defineProperty(row, "scrollWidth", {
+      configurable: true,
+      get: () => 400,
+    })
+    Object.defineProperty(row, "clientWidth", {
+      configurable: true,
+      get: () => 200,
+    })
+    const scrollBy = vi.fn()
+    row.scrollBy = scrollBy
+    fireEvent.scroll(row)
+    const forward = document.querySelector<HTMLElement>(
+      "[data-slot='chip-row-arrow'][data-end='forward']"
+    )
+    expect(forward?.className).toContain("opacity-100")
+    if (forward !== null) {
+      fireEvent.click(forward)
+    }
+    expect(scrollBy).toHaveBeenCalledWith({ left: 200, behavior: "smooth" })
+  })
+})

@@ -22,6 +22,12 @@ describe("History's filter groups", () => {
     const [apps, kinds] = groups
     expect(apps?.choices).toHaveLength(catalogApps.length + 1)
     expect(apps?.choices[0]?.value).toBe("all")
+    for (const choice of [
+      ...(apps?.choices ?? []),
+      ...(kinds?.choices ?? []),
+    ]) {
+      expect(choice.picture, choice.value).toBeTruthy()
+    }
     expect(kinds?.choices.map((choice) => choice.value)).toEqual([
       "all",
       "image",

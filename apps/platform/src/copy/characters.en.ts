@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const charactersCopy = {
   "characters.title": "Characters",
   "characters.add": "Add a character",
@@ -57,12 +59,12 @@ export const charactersCopy = {
   "history.filter.failed": "Failed",
   "history.filters": "Filters",
   "history.empty.title": "Your runs show here",
-  "history.empty.body": "Every run keeps its inputs, outputs, seed and model.",
+  "history.empty.body": "Every run keeps its inputs, results, seed and model.",
   "history.empty.action": "Open apps",
   "history.filterEmpty.title": "No run matches these filters",
   "history.filterEmpty.action": "Clear filters",
   "history.failed.title": "Your history did not load",
-  "history.run.outputs": "Outputs",
+  "history.run.outputs": "Results",
   "history.run.inputs": "Inputs",
   "history.run.record": "Record",
   "history.run.engine": "Engine",

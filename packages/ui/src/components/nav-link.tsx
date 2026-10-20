@@ -10,7 +10,7 @@ import { cn } from "@rosesfield/ui/lib/cn"
 import type { ComponentProps, ReactElement, ReactNode } from "react"
 
 const navLinkClass = cn(
-  "inline-flex h-7 shrink-0 items-center rounded-dense px-2 py-1 font-medium text-body whitespace-nowrap text-ink-muted no-underline select-none aria-[current=page]:text-ink data-popup-open:bg-(--tint) data-popup-open:text-ink",
+  "inline-flex h-7 shrink-0 items-center rounded-dense px-2 py-1 font-medium text-body whitespace-nowrap text-ink-muted no-underline select-none hover:text-ink in-data-[gallery=hover]:text-ink in-data-[gallery=press]:text-ink aria-[current=page]:text-ink data-popup-open:bg-(--tint) data-popup-open:text-ink",
   interaction.fill,
   interaction.ring
 )
@@ -71,7 +71,6 @@ type AreaMenuProps = {
   apps: ReadonlyArray<AreaApp>
   current?: boolean
   defaultOpen?: boolean
-  onOpen?: (app: AreaApp) => void
   renderLink?: (app: AreaApp) => ReactElement
 }
 
@@ -80,7 +79,6 @@ function AreaMenu({
   apps,
   current = false,
   defaultOpen = false,
-  onOpen,
   renderLink,
 }: AreaMenuProps): ReactElement {
   return (
@@ -103,7 +101,6 @@ function AreaMenu({
             render={
               renderLink?.(app) ?? ((props) => <a {...props} href={app.href} />)
             }
-            onClick={() => onOpen?.(app)}
             className="items-start"
           >
             <span aria-hidden="true" className="mt-0.5 flex [&_svg]:size-5">
@@ -123,4 +120,4 @@ function AreaMenu({
 }
 
 export type { AreaApp, AreaMenuProps, NavLinkProps }
-export { AreaMenu, NavLink, NavSeparator, navLinkClass }
+export { AreaMenu, NavLink, NavSeparator }

@@ -8,6 +8,7 @@ import {
   chipIconOf,
   SettingChip,
   StepperChip,
+  withShapes,
 } from "@/screens/app/bar/setting-chip"
 import { fieldCaption } from "@/screens/app/hosted/hosted-fields"
 import type { AppForm } from "@/screens/app/use-app-form"
@@ -27,24 +28,24 @@ export function FieldChoiceChip({
   const value = form.values.inputs[field.name]
   const chosen =
     value === undefined ? String(field.default ?? "") : String(value)
+  const role = fieldRoleOf(field, "image")
+  const options = field.options.map((option) => ({
+    value: String(option),
+    label: String(option),
+  }))
   return (
     <ChipSelect
       label={fieldCaption(field)}
-      icon={chipIconOf(fieldRoleOf(field, "image"))}
+      icon={chipIconOf(role)}
       value={chosen}
-      display={
-        chosen === "" ? t("bar.notSet", { field: fieldCaption(field) }) : chosen
-      }
+      display={chosen === "" ? t("field.choice.notSet") : chosen}
       onValueChange={(next) =>
         form.setInput(
           field.name,
           field.options.find((one) => String(one) === next)
         )
       }
-      options={field.options.map((option) => ({
-        value: String(option),
-        label: String(option),
-      }))}
+      options={role === "aspect" ? withShapes(options) : options}
     />
   )
 }
@@ -64,7 +65,6 @@ function FieldCountChip({
       icon={chipIconOf("count")}
       shown={tCount("bar.count.image", bounds.value)}
       step={1}
-      unit=""
       onChange={(count) => form.setInput(field.name, count)}
     />
   )
@@ -84,8 +84,11 @@ export function HostedSettingChips({
       {fields.aspect === null ? null : (
         <FieldChoiceChip field={fields.aspect} form={form} />
       )}
-      {fields.size === null ? null : (
-        <FieldChoiceChip field={fields.size} form={form} />
+      {fields.quality === null ? null : (
+        <FieldChoiceChip field={fields.quality} form={form} />
+      )}
+      {fields.resolution === null ? null : (
+        <FieldChoiceChip field={fields.resolution} form={form} />
       )}
       {fields.count === null ? null : (
         <FieldCountChip field={fields.count} form={form} />

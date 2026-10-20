@@ -38,7 +38,7 @@ function isVideoTab(value: unknown): value is VideoTab {
   return videoTabs.some((tab) => tab === value)
 }
 
-function ModeTabs({ screen }: { screen: VideoScreen }): ReactElement {
+export function ModeTabs({ screen }: { screen: VideoScreen }): ReactElement {
   return (
     <Tabs
       value={screen.tab}
@@ -59,7 +59,7 @@ function ModeTabs({ screen }: { screen: VideoScreen }): ReactElement {
   )
 }
 
-function KindSwitch({
+export function KindSwitch({
   hosted,
   kind,
 }: {
@@ -71,18 +71,20 @@ function KindSwitch({
     return null
   }
   return (
-    <SegmentedControl
-      density="composer"
-      label={t("model.kind.label")}
-      value={kind}
-      items={kinds.map((one) => ({ value: one, label: t(kindKeys[one]) }))}
-      onValueChange={(next) => {
-        const id = modelForKind(hosted.models, hosted.chosen, next)
-        if (id !== null) {
-          hosted.choose(id)
-        }
-      }}
-    />
+    <div className="mb-2">
+      <SegmentedControl
+        density="composer"
+        label={t("model.kind.label")}
+        value={kind}
+        items={kinds.map((one) => ({ value: one, label: t(kindKeys[one]) }))}
+        onValueChange={(next) => {
+          const id = modelForKind(hosted.models, hosted.chosen, next)
+          if (id !== null) {
+            hosted.choose(id)
+          }
+        }}
+      />
+    </div>
   )
 }
 
@@ -174,7 +176,6 @@ export function VideoPanel({
   const presets = useMemo(() => shownPresets(screen.presets), [screen.presets])
   return (
     <div className="flex flex-col gap-2">
-      <ModeTabs screen={screen} />
       <PresetCard
         presets={presets}
         move={prompt.move}

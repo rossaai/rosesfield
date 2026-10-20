@@ -89,6 +89,48 @@ test("Explore with no result says so and offers the next step", async ({
   page,
 }) => {
   await openExplore(page)
-  await expect(page.getByText("No output is here yet")).toBeVisible()
+  await expect(page.getByText("No result is here yet")).toBeVisible()
   await expect(page.locator("[data-slot=media-feed]")).toHaveCount(0)
+})
+
+test("the Apps page stands 237 px cards 16 px apart, and a rail of 248 px cards on a phone", async ({
+  page,
+}, info) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("rosesfield.welcome", "seen")
+  })
+  await page.goto("/apps")
+  const cards = page.locator("[data-slot=app-cards]").first().locator("a")
+  await expect(cards.first()).toBeVisible()
+  const [first, second] = await Promise.all([
+    boxOf(cards.nth(0)),
+    boxOf(cards.nth(1)),
+  ])
+  if (info.project.name === "desktop") {
+    expect(Math.round(first.width)).toBe(237)
+    expect(Math.round(second.x - first.x)).toBe(253)
+    expect(Math.round(first.x)).toBeGreaterThanOrEqual(16)
+  } else {
+    expect(Math.round(first.width)).toBe(248)
+    expect(Math.round(first.x)).toBe(16)
+    expect(Math.round(second.x - first.x)).toBe(264)
+  }
+  const pageWidth = await page.evaluate(
+    () => document.documentElement.scrollWidth
+  )
+  expect(pageWidth).toBeLessThanOrEqual(
+    info.project.name === "phone" ? 390 : 1440
+  )
+})
+
+test("on a phone the fanned pictures stay inside the page", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "phone", "the fan narrows under 768 px")
+  await page.goto("/gallery?entry=ref-hero&state=rest")
+  await expect(page.locator("[data-slot=hero-fan]").first()).toBeVisible()
+  const pageWidth = await page.evaluate(
+    () => document.documentElement.scrollWidth
+  )
+  expect(pageWidth).toBeLessThanOrEqual(390)
 })

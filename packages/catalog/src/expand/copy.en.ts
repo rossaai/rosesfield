@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const expandCopy: Readonly<Record<string, string>> = {
   "expand.name": "Expand",
   "expand.line": "Extend a photo past its edges.",

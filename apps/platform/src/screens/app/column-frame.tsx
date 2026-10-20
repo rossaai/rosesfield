@@ -26,7 +26,7 @@ import type { StartRun } from "@/screens/app/use-start-run"
 
 export type SheetControl = readonly [boolean, (open: boolean) => void]
 
-export function useSheetOpen(_hasRuns: boolean | null): SheetControl {
+export function useSheetOpen(): SheetControl {
   return useState(false)
 }
 
@@ -35,6 +35,7 @@ type ColumnFrameProps = {
   start: StartRun
   onShortcut: (event: KeyboardEvent<HTMLElement>) => void
   sheet: SheetControl
+  tabs?: ReactNode
   panel: ReactNode
   canvas: (openInputs: () => void) => ReactNode
   footLeading?: ReactNode
@@ -61,6 +62,7 @@ function ColumnPanel(props: ColumnFrameProps): ReactElement {
     >
       <InputPanel
         label={appName(props.app)}
+        tabs={props.tabs}
         footer={
           <GenerateFoot start={props.start} leading={props.footLeading} />
         }
@@ -87,7 +89,12 @@ function ColumnSheet(
           <SheetTitle>{appName(props.app)}</SheetTitle>
         </SheetHeader>
         <SheetBody>
-          {props.isRegular ? null : props.panel}
+          {props.isRegular ? null : (
+            <>
+              {props.tabs}
+              {props.panel}
+            </>
+          )}
           <StartProblem start={props.start} />
         </SheetBody>
         <SheetFooter>
@@ -108,7 +115,7 @@ export function ColumnFrame(props: ColumnFrameProps): ReactElement {
       {props.hasHeader === false ? null : (
         <h1 className="sr-only">{appName(props.app)}</h1>
       )}
-      <div className="flex min-h-0 flex-1 gap-2 px-4 pt-2 pb-4">
+      <div className="flex min-h-0 flex-1 gap-2 px-4 pt-2 pb-4 @regular:pb-19">
         {isRegular ? <ColumnPanel {...props} /> : null}
         <AppStage
           app={props.app}

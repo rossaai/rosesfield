@@ -58,6 +58,34 @@ describe("StartFrame", () => {
   })
 })
 
+describe("StartFrame's scrim and focus", () => {
+  it("darkens from clear at the top to the scrim by mid-height, and rings the whole frame while Change has keyboard focus", () => {
+    render(
+      <StartFrame
+        src="start.mp4"
+        alt="The start frame"
+        title="Dolly in"
+        line="Model 4"
+        changeLabel="Change"
+        onChange={() => undefined}
+      />
+    )
+    const frame = document.querySelector(
+      "[data-slot='composer-attachments-tiles']"
+    )
+    const scrim = frame?.querySelector("[data-slot='start-frame-scrim']")
+    expect(scrim?.className.split(" ")).toEqual(
+      expect.arrayContaining(["from-transparent", "to-scrim", "to-50%"])
+    )
+    expect(frame?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "has-focus-visible:outline-(length:--spacing-focus-ring)",
+        "has-focus-visible:outline-solid",
+      ])
+    )
+  })
+})
+
 describe("DropZone", () => {
   it("is at least 120 px tall with a dashed edge and names what it takes", () => {
     render(

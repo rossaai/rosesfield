@@ -21,7 +21,7 @@ type TooltipContentProps = TooltipPrimitive.Popup.Props &
 function TooltipContent({
   className,
   side = "top",
-  sideOffset = 7,
+  sideOffset = 9,
   align = "center",
   ...props
 }: TooltipContentProps): ReactElement {
@@ -37,7 +37,7 @@ function TooltipContent({
           data-slot="tooltip-content"
           data-ground="layer"
           className={cn(
-            "material inline-flex w-fit max-w-popover-max items-center gap-s2 rounded-cell px-s4 py-s1_5 text-label text-ink shadow-float",
+            "material inline-flex h-6 w-fit max-w-popover-max items-center gap-s2 rounded-cell px-s4 text-label whitespace-nowrap text-ink shadow-float",
             motion.popover,
             className
           )}

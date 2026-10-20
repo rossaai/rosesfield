@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const tryOnCopy: Readonly<Record<string, string>> = {
   "tryOn.name": "Try-on",
   "try-on.line": "Put the clothes from one photo on the person in another.",

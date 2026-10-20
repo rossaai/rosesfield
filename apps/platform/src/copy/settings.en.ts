@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const settingsCopy = {
   "settings.title": "Settings",
   "settings.engine.title": "Engine",
@@ -18,12 +20,12 @@ export const settingsCopy = {
   "settings.target.comfy-deployment": "A Comfy deployment",
   "settings.target.comfyui": "Your ComfyUI",
   "settings.target.runpod-pod": "A RunPod pod",
-  "settings.target.modal": "A Modal Server",
+  "settings.target.modal": "A Modal server",
   "settings.target.runpod-serverless": "RunPod Serverless",
   "settings.target.demo": "Demo engine",
   "settings.demo.title": "Runs use the demo engine",
   "settings.demo.body":
-    "The demo engine runs every app without a key. It makes no model output, and each output it returns is marked Demo engine. Add your engine key to run the real models.",
+    "The demo engine runs every app without a key. It runs no model, and each result it returns is marked Demo engine. Add your engine key to run the real models.",
   "settings.agent.title": "Agent",
   "settings.agent.model": "Model",
   "settings.agent.status.missing": "No model is set for the agent",

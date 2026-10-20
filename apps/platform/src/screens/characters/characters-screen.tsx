@@ -120,7 +120,7 @@ export function CharactersScreen(): ReactElement {
           </IconButton>
         }
       />
-      <div className="px-s5 pb-s12 @regular:px-s4">
+      <div className="px-s5 pb-s12">
         <CharacterList />
       </div>
     </>

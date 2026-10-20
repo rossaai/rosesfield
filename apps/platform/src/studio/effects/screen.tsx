@@ -172,7 +172,7 @@ function OpenScreen(props: StudioScreenProps): ReactElement {
     },
   })
   const { screen } = state
-  const sheet = useSheetOpen(screen.hasRuns)
+  const sheet = useSheetOpen()
   sheetOpen.current = sheet[1]
   const again = useEffectAgain({
     form: screen.form,

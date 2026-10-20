@@ -29,16 +29,16 @@ function Canvas({
     >
       <header
         data-slot="canvas-head"
-        className="flex h-14 shrink-0 items-start px-4 pt-2"
+        className="flex min-h-14 shrink-0 items-start px-4 pt-2 pb-3"
       >
-        <div className="flex h-9 w-full items-center justify-between gap-3">
+        <div className="flex min-h-9 w-full flex-wrap items-center justify-between gap-x-3 gap-y-2">
           {tabs}
           <div
             data-slot="canvas-cluster"
             aria-hidden={hasRuns ? undefined : true}
             className={cn(
-              "flex h-9 items-center gap-2",
-              hasRuns ? "" : "invisible"
+              "flex h-9 items-center gap-2 @max-regular:w-full @max-regular:justify-end",
+              hasRuns ? "" : "invisible @max-regular:hidden"
             )}
           >
             {cluster}
@@ -70,7 +70,7 @@ function StepCards({
   return (
     <div
       data-slot="state-view-lead"
-      className="flex flex-col px-8 py-24 text-center"
+      className="flex flex-col px-12 py-24 text-center @regular:px-8"
     >
       <h2 data-slot="state-view-title" className="text-display text-ink">
         {title}
@@ -84,7 +84,7 @@ function StepCards({
       <ol className="mt-8 grid grid-cols-3 gap-10 text-left">
         {steps.map((step) => (
           <li key={step.id} className="flex min-w-0 flex-col">
-            <div className="relative aspect-4/3 w-full overflow-hidden rounded-card bg-(--well)">
+            <div className="relative aspect-[25/19] w-full overflow-hidden rounded-card bg-(--well)">
               <div className="size-full *:size-full *:object-cover">
                 {step.media}
               </div>

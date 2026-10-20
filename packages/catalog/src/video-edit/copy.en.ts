@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const videoEditCopy: Readonly<Record<string, string>> = {
   "videoEdit.name": "Video edit",
   "video-edit.line":
@@ -51,9 +53,9 @@ export const videoEditCopy: Readonly<Record<string, string>> = {
   "videoEdit.input.seed.label": "Seed",
   "videoEdit.compare.open": "Compare with the input",
   "videoEdit.compare.close": "Close the comparison",
-  "videoEdit.compare.divider": "Divider between your clip and the output",
+  "videoEdit.compare.divider": "Divider between your clip and the result",
   "videoEdit.compare.yours": "Your clip",
-  "videoEdit.compare.output": "Output",
+  "videoEdit.compare.output": "Result",
   "videoEdit.compare.play": "Play both",
   "videoEdit.compare.pause": "Pause both",
 }

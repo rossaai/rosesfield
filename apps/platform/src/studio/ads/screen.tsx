@@ -13,7 +13,7 @@ import { useUploads } from "@/pieces/use-uploads"
 import { aspectField, countField } from "@/screens/app/app-form"
 import { SettingChip } from "@/screens/app/bar/setting-chip"
 import { type BarTray, useBarTray } from "@/screens/app/bar/use-bar-tray"
-import { BarChips, BarFrame } from "@/screens/app/bar-frame"
+import { BarChips, BarFrame, type BarPlace } from "@/screens/app/bar-frame"
 import {
   inputCaption,
   inputNote,
@@ -101,11 +101,9 @@ function Leading(props: BarProps): ReactElement {
 function Chips({
   app,
   state,
-  onOpenSheet,
 }: {
   app: AppListing
   state: AdsScreenState
-  onOpenSheet: () => void
 }): ReactElement {
   return (
     <BarChips
@@ -117,7 +115,6 @@ function Chips({
           ))}
         </>
       }
-      onOpenSheet={onOpenSheet}
     />
   )
 }
@@ -125,11 +122,11 @@ function Chips({
 function Bar({
   app,
   state,
-  onOpenSheet,
+  place,
 }: {
   app: AppListing
   state: AdsScreenState
-  onOpenSheet: () => void
+  place: BarPlace
 }): ReactElement {
   const tray = useBarTray(app, state.form)
   const [photoMessage, setPhotoMessage] = useState<string | null>(null)
@@ -171,7 +168,9 @@ function Bar({
             onMessage={setPhotoMessage}
           />
         }
-        chips={<Chips app={app} state={state} onOpenSheet={onOpenSheet} />}
+        chips={
+          place === "sheet" ? undefined : <Chips app={app} state={state} />
+        }
         price={state.start.price}
         busy={state.start.isPending || tray.isUploading}
       />
@@ -201,9 +200,8 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       hasRuns={state.hasRuns}
       onUseInputs={state.useInputs}
       sheet={sheet}
-      price={state.start.price}
       settings={<AdsModelSettings app={app} state={state} chips={[]} />}
-      bar={<Bar app={app} state={state} onOpenSheet={() => sheet[1](true)} />}
+      bar={(place) => <Bar app={app} state={state} place={place} />}
     />
   )
 }

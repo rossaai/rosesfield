@@ -12,7 +12,7 @@ import { useExpandScreen } from "@/studio/expand/use-expand-screen"
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const sheetClose = useRef<() => void>(() => undefined)
   const state = useExpandScreen(app, seeds, () => sheetClose.current())
-  const sheet = useSheetOpen(state.hasRuns)
+  const sheet = useSheetOpen()
   sheetClose.current = () => sheet[1](false)
   return (
     <ColumnFrame

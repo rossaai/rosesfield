@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const welcomeCopy = {
   "welcome.nav.apps": "Apps",
   "welcome.nav.terms": "Your key",
@@ -22,7 +24,7 @@ export const welcomeCopy = {
   "welcome.library.media.1.label":
     "Your library and your history in Rosesfield",
   "welcome.agent.title": "Ask the agent to run apps for you",
-  "welcome.agent.subtitle": "It can use one run's output in the next",
+  "welcome.agent.subtitle": "It can use one run's result in the next",
   "welcome.agent.body.1":
     "The agent asks before each run and shows its price. You can turn that off.",
   "welcome.agent.body.2":
@@ -32,19 +34,19 @@ export const welcomeCopy = {
   "welcome.connect.title": "Use every app from Claude or ChatGPT",
   "welcome.connect.subtitle": "Each app is an MCP tool and an API route",
   "welcome.connect.body.1":
-    "Add your server's /mcp address to Claude, ChatGPT or any MCP client.",
+    "Add your server's MCP address to Claude, ChatGPT or any MCP client.",
   "welcome.connect.body.2":
-    "Or call POST /api/apps/<app-id>/runs from your own code.",
+    "Or start a run from your own code with one HTTP request.",
   "welcome.connect.body.3":
     "ChatGPT needs an address on the internet, so host Rosesfield on Cloudflare to use it there.",
   "welcome.terms.title": "Run it on your machine with your key",
   "welcome.terms.subtitle": "Comfy charges your own account for each run",
   "welcome.terms.body.1":
-    "No account, no payments and no credits. Every app works fully with your key.",
+    "No account and no payments to Rosesfield. Every app works fully with your key.",
   "welcome.terms.body.2":
     "Run it on your computer, or on your own Cloudflare account.",
   "welcome.terms.body.3":
-    "Each app shows the run's price in USD beside Generate when Comfy reports it.",
+    "Each app shows the run's price in Comfy credits beside Generate when Comfy reports it.",
   "welcome.terms.steps":
     "These commands start Rosesfield on your computer with the demo engine.",
   "welcome.terms.open":
@@ -57,10 +59,10 @@ export const welcomeCopy = {
   "welcome.built.body.2":
     "Comfy sits behind one engine port. Another engine needs one adapter and no change to the apps.",
   "welcome.built.body.3":
-    "Outputs copy to your own storage when a run ends, because Comfy deletes hosted model results after 24 hours.",
+    "Results copy to your own storage when a run ends, because Comfy deletes hosted model results after 24 hours.",
   "welcome.built.action": "Read the architecture",
   "welcome.models.title": "The models each app uses",
-  "welcome.models.subtitle": "Each licence sets what you may do with outputs",
+  "welcome.models.subtitle": "Each licence sets what you may do with results",
   "welcome.models.column.app": "App",
   "welcome.models.column.model": "Model",
   "welcome.models.column.kind": "Kind",
@@ -113,7 +115,7 @@ export const welcomeCopy = {
     "A Comfy key, and a computer with bun or a Cloudflare account. The README has the steps.",
   "welcome.question.2.title": "What does a run cost?",
   "welcome.question.2.body":
-    "Comfy charges your account for each run. The price shows beside Generate in USD when Comfy reports it. When it does not, the screen says the price is unknown.",
+    "Comfy charges your account for each run. The price shows beside Generate in Comfy credits when Comfy reports it. When it does not, the screen says the price is unknown.",
   "welcome.question.3.title": "Where do my files go?",
   "welcome.question.3.body":
     "Your files stay in your own storage: a folder on your computer, or your own Cloudflare account. A run sends its inputs to the engine that runs the app.",
@@ -123,7 +125,7 @@ export const welcomeCopy = {
   "welcome.question.5.title": "Does a character train a model on my photos?",
   "welcome.question.5.body":
     "No. A character is a set of your reference photos. Each run uses them as references.",
-  "welcome.question.6.title": "Can I use the outputs in my work?",
+  "welcome.question.6.title": "Can I use the results in my work?",
   "welcome.question.6.body":
     "That depends on the licence of the model that made them. Each model's licence is linked in the models section.",
   "welcome.question.7.title": "Is there a paid version?",

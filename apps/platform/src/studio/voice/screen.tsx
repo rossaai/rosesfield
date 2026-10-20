@@ -142,7 +142,7 @@ function VoicePanel({ state }: { state: VoiceState }): ReactElement {
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const sheetClose = useRef<() => void>(() => undefined)
   const state = useVoiceScreen(app, seeds, () => sheetClose.current())
-  const sheet = useSheetOpen(state.hasRuns)
+  const sheet = useSheetOpen()
   sheetClose.current = () => sheet[1](false)
   return (
     <ColumnFrame

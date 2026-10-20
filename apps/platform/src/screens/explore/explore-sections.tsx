@@ -1,15 +1,20 @@
 import type { AppListing } from "@rosesfield/contract"
 import { AppTile, AppTileGrid } from "@rosesfield/ui/components/app-tile"
+import { buttonVariants } from "@rosesfield/ui/components/button"
 import { HeroBanner } from "@rosesfield/ui/components/hero"
 import { MediaFeed, ViewAll } from "@rosesfield/ui/components/media-feed"
 import { MediaTile } from "@rosesfield/ui/components/media-tile"
-import { PresetGrid } from "@rosesfield/ui/components/preset-tile"
-import { PromoCard, PromoRow } from "@rosesfield/ui/components/promo-card"
+import {
+  PromoCard,
+  PromoRow,
+  PromoSkeleton,
+} from "@rosesfield/ui/components/promo-card"
 import { SectionHeader } from "@rosesfield/ui/components/section-header"
 import { useRouter } from "@tanstack/react-router"
+import { VideoIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { appLine, appName } from "@/catalog/app-facts"
-import { catalogApps } from "@/catalog/catalog-apps"
+import { catalogApps, findCatalogApp } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import {
   type ExploreRow,
@@ -63,21 +68,32 @@ function PromoClip({ promo }: { promo: PromoEntry }): ReactNode {
   )
 }
 
+export const promoSkeletonCount = 4
+
 export function PromoCards({
   entries,
+  isLoading,
 }: {
   entries: readonly VisualEntry[]
+  isLoading: boolean
 }): ReactNode {
   const appHref = useAppHref()
   const promos = promoEntries(entries)
-  if (promos.length === 0) {
+  if (promos.length === 0 && !isLoading) {
     return null
   }
   return (
     <PromoRow
       label={t("explore.promo.label")}
+      nextLabel={t("viewer.next")}
       className="-mx-4 mt-2 @regular:mt-6"
     >
+      {isLoading
+        ? Array.from({ length: promoSkeletonCount }, (_, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: a skeleton's place is its identity
+            <PromoSkeleton key={index} />
+          ))
+        : null}
       {promos.map((promo) => (
         <PromoCard
           key={promo.app.id}
@@ -117,10 +133,44 @@ export function AppTiles(): ReactElement {
             name={appName(app)}
             line={appLine(app)}
             icon={icon}
+            {...(app.output.kind === "video"
+              ? { mode: { label: t("kind.video"), icon: <VideoIcon /> } }
+              : {})}
           />
         ))}
       </AppTileGrid>
     </div>
+  )
+}
+
+function RowActions({ appId }: { appId: string }): ReactElement {
+  const appHref = useAppHref()
+  const router = useRouter()
+  const app = findCatalogApp(appId)
+  const howHref = router.buildLocation({
+    to: "/apps/$appId",
+    params: { appId },
+    search: { tab: "how" },
+  }).href
+  return (
+    <>
+      <a
+        href={appHref(appId)}
+        data-slot="button"
+        className={buttonVariants({ tone: "primary", size: "hero" })}
+      >
+        {t("explore.promo.open", {
+          app: app === null ? appId : appName(app),
+        })}
+      </a>
+      <a
+        href={howHref}
+        data-slot="button"
+        className={buttonVariants({ size: "hero" })}
+      >
+        {t("explore.row.learnMore")}
+      </a>
+    </>
   )
 }
 
@@ -131,6 +181,7 @@ type FeedProps = ResultActions & {
   name: string
   layout: "masonry" | "row"
   entries: readonly VisualEntry[]
+  actions?: ReactNode
 }
 
 export function ResultFeed(props: FeedProps): ReactElement {
@@ -143,6 +194,7 @@ export function ResultFeed(props: FeedProps): ReactElement {
           title={props.title}
           line={props.line}
           href={props.href}
+          {...(props.actions === undefined ? {} : { actions: props.actions })}
         />
       }
       viewAll={
@@ -167,47 +219,64 @@ export function ResultFeed(props: FeedProps): ReactElement {
 function PresetFeed({
   app,
   presets,
+  actions,
 }: {
   app: AppListing
   presets: readonly PresetEntry[]
+  actions: ReactNode
 }): ReactElement {
   const href = useAppHref()(app.id)
   const name = appName(app)
   return (
-    <section
-      aria-label={name}
-      data-slot="preset-feed"
-      className="flex w-full flex-col"
+    <MediaFeed
+      label={name}
+      layout="row"
+      content="presets"
+      header={
+        <SectionHeader
+          title={name}
+          line={appLine(app)}
+          href={href}
+          {...(actions === undefined ? {} : { actions })}
+        />
+      }
+      viewAll={<ViewAll href={href}>{t("explore.viewAll", { name })}</ViewAll>}
     >
-      <div className="mb-5">
-        <SectionHeader title={name} line={appLine(app)} href={href} />
-      </div>
-      <div className="relative max-h-224 overflow-hidden">
-        <PresetGrid label={name}>
-          {presets.map((preset) => (
-            <ExplorePresetTile
-              key={preset.key}
-              name={preset.name}
-              entry={preset.entry}
-            />
-          ))}
-        </PresetGrid>
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-52 items-end justify-center bg-linear-to-t from-(--ground) to-transparent pb-9">
-          <ViewAll href={href}>{t("explore.viewAll", { name })}</ViewAll>
-        </div>
-      </div>
-    </section>
+      {presets.map((preset) => (
+        <ExplorePresetTile
+          key={preset.key}
+          name={preset.name}
+          entry={preset.entry}
+        />
+      ))}
+    </MediaFeed>
   )
+}
+
+export function leadOf(row: ExploreRow): string | null {
+  switch (row.kind) {
+    case "presets":
+      return row.presets.length === 0 ? null : row.app.id
+    case "model":
+      return row.entries.length === 0 ? null : row.appId
+    case "app":
+      return row.entries.length === 0 ? null : row.app.id
+  }
 }
 
 export function ExploreRowView({
   row,
+  isLead,
   ...actions
-}: ResultActions & { row: ExploreRow }): ReactElement {
+}: ResultActions & { row: ExploreRow; isLead: boolean }): ReactElement {
   const appHref = useAppHref()
+  const lead = isLead ? leadOf(row) : null
+  const buttons = lead === null ? undefined : <RowActions appId={lead} />
   switch (row.kind) {
     case "presets":
-      return <PresetFeed app={row.app} presets={row.presets} />
+      return (
+        <PresetFeed app={row.app} presets={row.presets} actions={buttons} />
+      )
     case "model":
       return (
         <ResultFeed
@@ -218,6 +287,7 @@ export function ExploreRowView({
           name={row.model}
           layout="row"
           entries={row.entries}
+          {...(buttons === undefined ? {} : { actions: buttons })}
         />
       )
     case "app":
@@ -230,6 +300,7 @@ export function ExploreRowView({
           name={appName(row.app)}
           layout="row"
           entries={row.entries}
+          {...(buttons === undefined ? {} : { actions: buttons })}
         />
       )
   }
@@ -237,9 +308,14 @@ export function ExploreRowView({
 
 export function SharedFeed({
   entries,
+  isLead,
   ...actions
-}: ResultActions & { entries: readonly VisualEntry[] }): ReactElement {
+}: ResultActions & {
+  entries: readonly VisualEntry[]
+  isLead: boolean
+}): ReactElement {
   const router = useRouter()
+  const [first] = entries
   return (
     <ResultFeed
       {...actions}
@@ -249,6 +325,11 @@ export function SharedFeed({
       name={t("explore.shared.name")}
       layout="masonry"
       entries={entries}
+      {...(isLead && first !== undefined
+        ? {
+            actions: <RowActions appId={first.run.appId} />,
+          }
+        : {})}
     />
   )
 }

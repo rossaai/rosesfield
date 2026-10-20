@@ -11,7 +11,7 @@ import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { cva, type VariantProps } from "class-variance-authority"
 import { CheckIcon, ChevronDownIcon } from "lucide-react"
-import type { ReactElement } from "react"
+import type { ReactElement, ReactNode } from "react"
 
 const Select = SelectPrimitive.Root
 
@@ -110,14 +110,24 @@ function SelectContent({
 function SelectItem({
   className,
   children,
+  icon,
   ...props
-}: SelectPrimitive.Item.Props): ReactElement {
+}: SelectPrimitive.Item.Props & { icon?: ReactNode }): ReactElement {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(menuItemClass, "pr-s12", className)}
       {...props}
     >
+      {icon === undefined ? null : (
+        <span
+          aria-hidden="true"
+          data-slot="select-item-icon"
+          className="flex shrink-0 [&_svg]:size-5!"
+        >
+          {icon}
+        </span>
+      )}
       <SelectPrimitive.ItemText className="min-w-0 flex-1 truncate">
         {children}
       </SelectPrimitive.ItemText>

@@ -204,7 +204,7 @@ export function HistoryScreen(): ReactElement {
   return (
     <>
       <ScreenHeader title={t("history.title")} />
-      <div className="flex w-full flex-1 flex-col px-s5 pb-s12 @regular:px-s4">
+      <div className="flex w-full flex-1 flex-col px-s5 pb-s12">
         <Canvas
           label={t("history.title")}
           tabs={

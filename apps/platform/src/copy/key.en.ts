@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const keyCopy = {
   "key.add": "Add your Comfy key",
   "key.title": "Add your Comfy key",

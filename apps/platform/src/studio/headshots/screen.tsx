@@ -19,7 +19,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
     () => sheetClose.current(),
     () => sheetOpen.current()
   )
-  const sheet = useSheetOpen(state.hasRuns)
+  const sheet = useSheetOpen()
   const setSheetOpen = sheet[1]
   const isRegular = useIsRegularWindow()
   sheetClose.current = () => setSheetOpen(false)

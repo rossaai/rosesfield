@@ -7,17 +7,43 @@ import {
 } from "@rosesfield/ui/components/tabs"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { BookOpenIcon, FolderIcon } from "lucide-react"
-import { type ReactElement, type ReactNode, useEffect, useState } from "react"
+import {
+  createContext,
+  type ReactElement,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react"
 import { t } from "@/copy/t"
 import { useAppRuns } from "@/screens/app/app-canvas"
+import {
+  CanvasCluster,
+  CanvasViewProvider,
+  useCanvasViewControl,
+} from "@/screens/app/canvas-view"
 import { HowItWorks, type StageKind } from "@/screens/app/how-it-works"
 
 export type StageTab = "history" | "how"
 
-const stageTabs: readonly StageTab[] = ["history", "how"]
+export const stageTabs: readonly StageTab[] = ["history", "how"]
 
 function isStageTab(value: unknown): value is StageTab {
   return stageTabs.some((tab) => tab === value)
+}
+
+const AskedTabContext = createContext<StageTab | null>(null)
+
+export function AskedTab({
+  tab,
+  children,
+}: {
+  tab: StageTab | null
+  children: ReactNode
+}): ReactElement {
+  return (
+    <AskedTabContext.Provider value={tab}>{children}</AskedTabContext.Provider>
+  )
 }
 
 export function shownTab(
@@ -35,7 +61,8 @@ export function useStageTab(app: AppListing): {
   const runs = useAppRuns(app)
   const count = runs.runs.length
   const hasRuns = runs.isPending ? null : count > 0
-  const [chosen, setChosen] = useState<StageTab | null>(null)
+  const asked = useContext(AskedTabContext)
+  const [chosen, setChosen] = useState<StageTab | null>(asked)
   const [seen, setSeen] = useState(count)
   useEffect(() => {
     if (count > seen) {
@@ -57,10 +84,17 @@ type AppStageProps = {
 
 export function AppStage(props: AppStageProps): ReactElement {
   const stage = useStageTab(props.app)
+  const view = useCanvasViewControl()
   return (
     <Canvas
       label={t("app.canvas.label")}
-      hasRuns={stage.hasRuns === true}
+      hasRuns={stage.hasRuns === true && stage.tab === "history"}
+      cluster={
+        <CanvasCluster
+          control={view}
+          form={props.kind === "bar" ? "menu" : "cluster"}
+        />
+      }
       {...(props.className === undefined ? {} : { className: props.className })}
       tabs={
         <Tabs
@@ -96,7 +130,9 @@ export function AppStage(props: AppStageProps): ReactElement {
         {stage.tab === "how" ? (
           <HowItWorks app={props.app} kind={props.kind} />
         ) : (
-          props.children
+          <CanvasViewProvider control={view}>
+            {props.children}
+          </CanvasViewProvider>
         )}
       </div>
     </Canvas>

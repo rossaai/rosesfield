@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const storyboardCopy = {
   "storyboard.name": "Storyboard",
   "storyboard.line": "Write up to 8 scenes and get one keyframe for each.",

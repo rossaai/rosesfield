@@ -65,4 +65,30 @@ describe("Viewer", () => {
     fireEvent.keyDown(screen.getByRole("dialog"), { key: "ArrowRight" })
     expect(next).toHaveBeenCalledTimes(1)
   })
+
+  it("hides the page behind a solid cover at every width, with no see-through scrim", () => {
+    renderViewer()
+    const cover = document.querySelector("[data-slot='viewer-cover']")
+    expect(cover?.className.split(" ")).toEqual(
+      expect.arrayContaining(["inset-0", "bg-layer", "@regular:bg-surface"])
+    )
+    expect(cover?.className).not.toContain("hidden")
+    expect(document.querySelector(".bg-scrim")).toBeNull()
+  })
+
+  it("pads the stage 16 px on a wide screen, so a 16:9 video is 1048 px wide beside the panel", () => {
+    renderViewer()
+    const stage = document.querySelector("[data-slot='media-player-picture']")
+    expect(stage?.className.split(" ")).toContain("@regular:p-4")
+    expect(stage?.className).not.toContain("p-s12 ")
+  })
+
+  it("sets its 32 px close 12 px from the panel's right and 16 px from its top", () => {
+    renderViewer()
+    const close = screen.getByRole("button", { name: "Close" })
+    expect(close.parentElement?.className.split(" ")).toEqual(
+      expect.arrayContaining(["top-6", "right-5"])
+    )
+    expect(close.className).toContain("size-8")
+  })
 })

@@ -8,6 +8,9 @@ import {
   type EngineSubmission,
   GenerationEngine,
   type OutputsPerJob,
+  type PriceRequest,
+  type RunPrice,
+  unknownPrice,
 } from "#domain/generation-engine.port"
 import { writeFlatMp4 } from "#infrastructure/demo/flat-mp4"
 import { writeFlatPng } from "#infrastructure/demo/flat-png"
@@ -15,6 +18,7 @@ import { writeSilentWav } from "#infrastructure/demo/silent-wav"
 
 type DemoGenerationEngineOptions = {
   clock: Clock
+  rates?: GenerationEngine
 }
 
 type DemoRun = {
@@ -40,10 +44,12 @@ export class DemoGenerationEngine extends GenerationEngine {
   override readonly idempotency = "keyed"
 
   private readonly clock: Clock
+  private readonly rates: GenerationEngine | null
 
   constructor(options: DemoGenerationEngineOptions) {
     super()
     this.clock = options.clock
+    this.rates = options.rates ?? null
   }
 
   override canRun(_binding: EngineBinding): boolean {
@@ -52,6 +58,16 @@ export class DemoGenerationEngine extends GenerationEngine {
 
   override outputsPerJob(_binding: EngineBinding): OutputsPerJob {
     return "all"
+  }
+
+  override async priceOf(
+    binding: EngineBinding,
+    request: PriceRequest
+  ): Promise<RunPrice> {
+    if (this.rates === null || (await this.rates.formOf(binding)) === null) {
+      return unknownPrice
+    }
+    return this.rates.priceOf(binding, request)
   }
 
   override submitLimitMs(): number {

@@ -134,7 +134,7 @@
 
   :focus-visible {
     outline: var(--spacing-focus-ring) solid var(--hor-text);
-    outline-offset: var(--spacing-focus-ring);
+    outline-offset: calc(var(--spacing-focus-ring) * -1);
   }
 
   input:focus-visible,

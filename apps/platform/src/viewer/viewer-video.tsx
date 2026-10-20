@@ -171,9 +171,11 @@ function Controls({
 export function ViewerVideo({
   src,
   label,
+  onMeasure,
 }: {
   src: string
   label: string
+  onMeasure?: (aspect: MediaAspect) => void
 }): ReactElement {
   const video = useRef<HTMLVideoElement>(null)
   const [playback, setPlayback] = useState<Playback>(startPlayback)
@@ -196,7 +198,13 @@ export function ViewerVideo({
         onPlay={read}
         onPause={read}
         onTimeUpdate={read}
-        onLoadedMetadata={read}
+        onLoadedMetadata={(event) => {
+          read()
+          onMeasure?.({
+            width: event.currentTarget.videoWidth,
+            height: event.currentTarget.videoHeight,
+          })
+        }}
         onVolumeChange={read}
       />
       <Controls video={video} playback={playback} />

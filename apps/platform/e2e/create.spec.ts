@@ -10,6 +10,9 @@ async function boxOf(locator: Locator): Promise<Box> {
   return box
 }
 
+const modelRow =
+  '[data-slot="popover-trigger"]:has([data-slot="model-row-name"])'
+
 test.describe("a prompt app on a desktop", () => {
   test.skip(({ isMobile }) => isMobile, "the bar shows from 768 px")
 
@@ -57,6 +60,43 @@ test.describe("a prompt app on a desktop", () => {
   })
 })
 
+test.describe("the prompt bar's field and model chip", () => {
+  test.skip(({ isMobile }) => isMobile, "the bar shows from 768 px")
+
+  test("grows the prompt with its text over the control timing, up to a fifth of the viewport", async ({
+    page,
+  }) => {
+    await page.goto("/apps/image")
+    const field = page.getByRole("textbox", { name: "Prompt" })
+    await expect(field).toBeVisible()
+    const rest = await boxOf(field)
+    await field.fill(["one", "two", "three", "four", "five", "six"].join("\n"))
+    const early = await boxOf(field)
+    await expect
+      .poll(async () => (await boxOf(field)).height)
+      .toBeGreaterThan(early.height)
+    await page.waitForTimeout(500)
+    const grown = await boxOf(field)
+    expect(rest.height).toBe(40)
+    expect(grown.height).toBeLessThanOrEqual(180)
+    expect(grown.height).toBeGreaterThan(rest.height)
+  })
+
+  test("hugs the model chip around its name, the name plus 66 px", async ({
+    page,
+  }) => {
+    await page.goto("/apps/image")
+    const chip = page
+      .locator('[data-slot="prompt-bar"]')
+      .locator(modelRow)
+      .first()
+    await expect(chip).toBeVisible()
+    const name = await boxOf(chip.locator('[data-slot="model-row-name"]'))
+    const box = await boxOf(chip)
+    expect(Math.round(box.width - name.width)).toBe(66)
+  })
+})
+
 test.describe("an app with many inputs on a desktop", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
@@ -76,14 +116,13 @@ test.describe("an app with many inputs on a desktop", () => {
     const footer = await boxOf(column.locator('[data-slot="composer-toolbar"]'))
     expect(footer.height).toBe(60)
     const canvas = await boxOf(
-      page.getByRole("region", { name: "Your outputs" })
+      page.getByRole("region", { name: "Your results" })
     )
     expect(canvas.x).toBe(box.x + box.width + 8)
+    expect(box.height).toBe(780)
+    expect(canvas.height).toBe(780)
   })
 })
-
-const modelRow =
-  '[data-slot="popover-trigger"]:has([data-slot="model-row-name"])'
 
 test.describe("the parts of Video's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
@@ -116,6 +155,31 @@ test.describe("the parts of Video's column", () => {
     }
     expect(frameBox.y).toBe(tab.y + tab.height + 8)
   })
+})
+
+test.describe("the tray and rhythm of Video's column", () => {
+  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
+
+  test("holds the mode tabs 16 px in from the tray's edge, all inside it, and leaves 16 px under the mode switch", async ({
+    page,
+  }) => {
+    await page.goto("/apps/video")
+    const column = page.locator('[data-slot="composer"]')
+    await expect(column).toBeVisible()
+    const tab = await boxOf(column.getByRole("tab").first())
+    const modes = column.locator('[data-slot="segmented-control"]')
+    const tray = await boxOf(column.locator('[data-slot="composer-tray"]'))
+    expect(tab.x).toBe(tray.x + 16)
+    const last = await boxOf(column.getByRole("tab").last())
+    expect(last.x + last.width).toBeLessThanOrEqual(tray.x + tray.width - 16)
+    if ((await modes.count()) > 0) {
+      const mode = await boxOf(modes)
+      const next = await boxOf(
+        modes.locator("xpath=../following-sibling::*[1]")
+      )
+      expect(next.y).toBe(mode.y + mode.height + 16)
+    }
+  })
 
   test("opens the model list 8 px to the right of the model row", async ({
     page,
@@ -126,9 +190,54 @@ test.describe("the parts of Video's column", () => {
     const list = page.locator('[data-slot="model-picker"]')
     await expect(list).toBeVisible()
     const rowBox = await boxOf(row)
+    await expect
+      .poll(async () => (await boxOf(list)).x)
+      .toBe(rowBox.x + rowBox.width + 8)
     const listBox = await boxOf(list)
-    expect(listBox.x).toBe(rowBox.x + rowBox.width + 8)
     expect(listBox.width).toBe(402)
+  })
+})
+
+test.describe("Video's mode switch and its settings", () => {
+  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
+
+  test("insets the chosen mode's plate 2 px inside its 147 by 40 cell, 143 by 36", async ({
+    page,
+  }) => {
+    await page.goto("/apps/video")
+    const modes = page
+      .locator('[data-slot="composer"]')
+      .locator('[data-slot="segmented-control"]')
+    await expect(modes).toBeVisible()
+    const chosen = modes.locator('[role="radio"][aria-checked="true"]')
+    const cell = await boxOf(chosen)
+    const plate = await boxOf(
+      modes.locator('[data-slot="segmented-control-thumb"]')
+    )
+    expect([cell.width, cell.height]).toEqual([147, 40])
+    expect([plate.width, plate.height]).toEqual([143, 36])
+    expect(plate.x - cell.x).toBe(2)
+    expect(plate.y - cell.y).toBe(2)
+  })
+
+  test("turns the More settings chevron over the control timing instead of jumping", async ({
+    page,
+  }) => {
+    await page.goto("/apps/video")
+    const trigger = page.getByRole("button", { name: "More settings" })
+    await expect(trigger).toBeVisible()
+    const chevron = trigger.locator("svg")
+    const names = await chevron.evaluate(
+      (element) => getComputedStyle(element).transitionProperty
+    )
+    expect(names.split(", ")).toContain("rotate")
+    await trigger.click()
+    await page.waitForTimeout(60)
+    const turning = await chevron.evaluate(
+      (element) => getComputedStyle(element).rotate
+    )
+    expect(turning).not.toBe("180deg")
+    await expect(chevron).toHaveCSS("rotate", "180deg")
   })
 })
 
@@ -140,7 +249,7 @@ test.describe("an app on a phone", () => {
       page,
     }) => {
       await page.goto(`/apps/${appId}`)
-      const region = page.getByRole("region", { name: "Your outputs" })
+      const region = page.getByRole("region", { name: "Your results" })
       await expect(region).toBeVisible()
       await expect(page.locator('[data-slot="prompt-bar"]')).toHaveCount(0)
       await expect(page.locator('[data-slot="composer"]')).toHaveCount(0)
@@ -154,6 +263,7 @@ test.describe("an app on a phone", () => {
       const sheet = page.getByRole("dialog")
       await expect(sheet).toBeVisible()
       await expect(sheet.locator('[data-slot="generate-button"]')).toBeVisible()
+      await expect(sheet.locator('[data-slot="chip-row"]')).toHaveCount(0)
     })
   }
 })

@@ -1,14 +1,13 @@
 import { Collapsible } from "@base-ui/react/collapsible"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { motion } from "@rosesfield/ui/motion"
 import { ChevronDownIcon } from "lucide-react"
 import type { ComponentProps, ReactElement, ReactNode } from "react"
 
 type FilterChipProps = Omit<ComponentProps<"a">, "children"> & {
   href: string
   children: string
-  tag?: ReactNode
+  tag?: string
 }
 
 function FilterChip({
@@ -34,7 +33,10 @@ function FilterChip({
         {children}
       </span>
       {tag === undefined ? null : (
-        <span data-slot="inline-chip-lead" className="flex">
+        <span
+          data-slot="inline-chip-tag"
+          className="self-start pt-0.75 text-legal font-medium"
+        >
           {tag}
         </span>
       )}
@@ -104,10 +106,7 @@ function SettingGroup({
         </span>
         <ChevronDownIcon
           aria-hidden="true"
-          className={cn(
-            "shrink-0 group-data-panel-open/trigger:rotate-180",
-            motion.control
-          )}
+          className="shrink-0 [transition:rotate_var(--control-change)] group-data-panel-open/trigger:rotate-180"
         />
       </Collapsible.Trigger>
       <Collapsible.Panel
@@ -116,12 +115,53 @@ function SettingGroup({
       >
         <div
           data-slot="setting-group-choices"
-          className="mt-1 grid grid-cols-3 gap-2 rounded-cell bg-(--ground) p-2"
+          className="mt-1 grid grid-cols-[repeat(3,--spacing(22))] gap-2 rounded-cell bg-(--ground) p-2"
         >
           {children}
         </div>
       </Collapsible.Panel>
     </Collapsible.Root>
+  )
+}
+
+type SettingChoiceProps = {
+  label: string
+  picture: ReactNode
+  isCurrent: boolean
+  onChoose: () => void
+}
+
+function SettingChoice({
+  label,
+  picture,
+  isCurrent,
+  onChoose,
+}: SettingChoiceProps): ReactElement {
+  return (
+    <button
+      type="button"
+      data-slot="setting-choice"
+      aria-pressed={isCurrent}
+      onClick={onChoose}
+      className={cn(
+        "relative flex h-26 items-end justify-center overflow-hidden rounded-dense bg-(--well) p-1 text-ink aria-pressed:inset-ring-4 aria-pressed:inset-ring-ink",
+        interaction.ring
+      )}
+    >
+      <span
+        aria-hidden="true"
+        data-slot="setting-choice-picture"
+        className="absolute top-3 left-1/2 flex size-17 -translate-x-1/2 items-center justify-center [&_svg]:size-8"
+      >
+        {picture}
+      </span>
+      <span
+        data-slot="setting-choice-label"
+        className="block h-5 w-full truncate text-center text-label leading-5 font-medium"
+      >
+        {label}
+      </span>
+    </button>
   )
 }
 
@@ -133,5 +173,5 @@ function SettingGroups({ children }: { children: ReactNode }): ReactElement {
   )
 }
 
-export type { FilterChipProps, SettingGroupProps }
-export { FilterChip, FilterChipRow, SettingGroup, SettingGroups }
+export type { FilterChipProps, SettingChoiceProps, SettingGroupProps }
+export { FilterChip, FilterChipRow, SettingChoice, SettingGroup, SettingGroups }

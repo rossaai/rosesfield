@@ -362,7 +362,7 @@ export function LibraryScreen(): ReactElement {
         onUpload={upload}
         onSearch={() => setSearchOpen(!isSearchOpen)}
       />
-      <div className="flex flex-1 flex-col gap-s6 px-s5 pb-s12 @regular:px-s4">
+      <div className="flex flex-1 flex-col gap-s6 px-s5 pb-s12">
         <LibraryCanvas
           search={search}
           data={data}

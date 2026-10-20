@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const upscaleCopy: Readonly<Record<string, string>> = {
   "upscale.name": "Upscale",
   "upscale.line": "Make your image or video 2 or 4 times larger.",
@@ -31,7 +33,7 @@ export const upscaleCopy: Readonly<Record<string, string>> = {
   "upscale.choice.scale.x4": "4x",
   "upscale.input.scale.note": "Makes {width} by {height} pixels.",
   "upscale.input.scale.noteEmpty":
-    "The output is {scale} as wide and as tall as your file.",
+    "The result is {scale} as wide and as tall as your file.",
   "upscale.input.scale.tooBig":
     "{scale} would make {width} by {height} pixels. The limit is {max} pixels on the long side. Pick a smaller scale or a smaller file.",
   "upscale.input.model.label": "Model",

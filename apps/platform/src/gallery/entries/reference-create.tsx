@@ -32,8 +32,9 @@ import {
   GemIcon,
   ImageIcon,
   MusicIcon,
-  ProportionsIcon,
+  ScanIcon,
   VideoIcon,
+  Volume2Icon,
 } from "lucide-react"
 import type { ReactElement } from "react"
 import { t } from "@/gallery/copy.en"
@@ -41,13 +42,14 @@ import demoSquare from "@/gallery/fixtures/demo-image-1-1.png"
 import demoVideo from "@/gallery/fixtures/demo-video-16-9.mp4"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
 import { frameState, interactionStates } from "@/gallery/reference-frames"
+import { tileSizes, ViewCluster } from "@/screens/library/view-cluster"
 
 const mark = <FlaskConicalIcon aria-hidden="true" />
 
 function SettingChips(): ReactElement {
   return (
     <div className="flex h-8 items-center gap-1">
-      <Chip caption={t("sample.setting.aspect")} icon={<ProportionsIcon />}>
+      <Chip caption={t("sample.setting.aspect")} icon={<ScanIcon />}>
         {t("sample.setting.aspect.auto")}
       </Chip>
       <Chip caption={t("sample.setting.quality")} icon={<GemIcon />}>
@@ -117,16 +119,18 @@ function Column(): ReactElement {
           />
         }
       >
-        <SegmentedControl
-          label={t("sample.source")}
-          density="composer"
-          value="upload"
-          onValueChange={() => undefined}
-          items={[
-            { value: "upload", label: t("sample.source.upload") },
-            { value: "library", label: t("sample.source.library") },
-          ]}
-        />
+        <div className="mb-2">
+          <SegmentedControl
+            label={t("sample.source")}
+            density="composer"
+            value="upload"
+            onValueChange={() => undefined}
+            items={[
+              { value: "upload", label: t("sample.source.upload") },
+              { value: "library", label: t("sample.source.library") },
+            ]}
+          />
+        </div>
         <DropZone
           title={t("sample.drop.title")}
           line={t("sample.drop.line")}
@@ -136,7 +140,14 @@ function Column(): ReactElement {
             <MusicIcon key="music" />,
           ]}
         />
-        <PromptBlock label={t("sample.prompt.caption")}>
+        <PromptBlock
+          label={t("sample.prompt.caption")}
+          chips={
+            <Chip size="inline" icon={<Volume2Icon />}>
+              {t("sample.sound")}
+            </Chip>
+          }
+        >
           <textarea
             aria-label={t("sample.prompt.caption")}
             placeholder={t("sample.prompt.placeholder")}
@@ -215,7 +226,7 @@ function CanvasDemo({ hasRuns }: { hasRuns: boolean }): ReactElement {
     ["get", "sample.how.get", "sample.how.get.line"],
   ] as const
   return (
-    <div className="h-195 w-270">
+    <div className="h-195 w-full max-w-270">
       <Canvas
         label={t("sample.canvas.label")}
         hasRuns={hasRuns}
@@ -232,23 +243,33 @@ function CanvasDemo({ hasRuns }: { hasRuns: boolean }): ReactElement {
             </SegmentedTabs>
           </Tabs>
         }
-        cluster={<span className="text-body">{t("sample.filter")}</span>}
+        cluster={
+          <ViewCluster
+            layout="list"
+            onLayout={() => undefined}
+            size={tileSizes.initial}
+            onSize={() => undefined}
+            groups={[]}
+          />
+        }
       >
-        <StepCards
-          title={t("sample.how.title")}
-          line={t("sample.how.line")}
-          steps={steps.map(([id, title, line], index) => ({
-            id,
-            title: t(title),
-            line: t(line),
-            media:
-              index === 0 ? (
-                <img alt="" src={demoSquare} />
-              ) : (
-                <video src={demoVideo} muted loop playsInline autoPlay />
-              ),
-          }))}
-        />
+        <div className="@regular:px-4">
+          <StepCards
+            title={t("sample.how.title")}
+            line={t("sample.how.line")}
+            steps={steps.map(([id, title, line], index) => ({
+              id,
+              title: t(title),
+              line: t(line),
+              media:
+                index === 0 ? (
+                  <img alt="" src={demoSquare} />
+                ) : (
+                  <video src={demoVideo} muted loop playsInline autoPlay />
+                ),
+            }))}
+          />
+        </div>
       </Canvas>
     </div>
   )

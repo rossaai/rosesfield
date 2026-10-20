@@ -25,6 +25,43 @@ describe("HeroBanner", () => {
       expect.arrayContaining(["w-146", "py-8"])
     )
   })
+
+  it("lays a glow over the banner and a 736 by 270 ellipse behind the text", () => {
+    render(
+      <HeroBanner
+        href="/apps/video"
+        kicker="Video"
+        headline="Make a clip from a photo"
+        lead="Pick a model and a preset"
+        action="Open Video"
+      />
+    )
+    const glow = document.querySelector("[data-slot='hero-glow']")
+    expect(glow?.className.split(" ")).toContain("inset-0")
+    const ellipse = document.querySelector("[data-slot='hero-glow-ellipse']")
+    expect(ellipse?.className.split(" ")).toEqual(
+      expect.arrayContaining(["w-184", "h-67.5", "rounded-full"])
+    )
+  })
+
+  it("answers a press anywhere on the banner on its action", () => {
+    render(
+      <HeroBanner
+        href="/apps/video"
+        kicker="Video"
+        headline="Make a clip from a photo"
+        lead="Pick a model and a preset"
+        action="Open Video"
+      />
+    )
+    const action = screen.getByText("Open Video")
+    expect(action.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "group-hover/hero:after:opacity-10",
+        "group-active/hero:after:opacity-15",
+      ])
+    )
+  })
 })
 
 describe("HeroFan", () => {
@@ -44,5 +81,21 @@ describe("HeroFan", () => {
     const heading = screen.getByRole("heading", { level: 2 })
     expect(heading.children).toHaveLength(2)
     expect(heading.lastElementChild?.textContent).toBe("Picture 2")
+  })
+
+  it("narrows its pictures on a phone so the fan stays inside the page", () => {
+    const { container } = render(
+      <HeroFan
+        pictures={["a", "b", "c", "d"].map((id) => ({ id, src: `${id}.png` }))}
+        headline="Make an image with"
+        model="Picture 2"
+        line="Type a prompt below"
+      />
+    )
+    for (const picture of container.querySelectorAll("img")) {
+      expect(picture.className.split(" ")).toEqual(
+        expect.arrayContaining(["w-22", "-mx-2", "@regular:w-35"])
+      )
+    }
   })
 })

@@ -1,10 +1,15 @@
+import { useRender } from "@base-ui/react/use-render"
+import { buttonVariants } from "@rosesfield/ui/components/button"
 import type { AppBarDensity } from "@rosesfield/ui/contracts/app-bar.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import {
+  type ComponentProps,
   type CSSProperties,
+  createContext,
   type ReactElement,
   type ReactNode,
   type UIEvent,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -93,6 +98,54 @@ const marks = {
   compact: "size-8 @regular:size-5",
 } satisfies Record<AppBarDensity, string>
 
+const actions = {
+  full: "gap-2",
+  compact: "gap-2 @regular:h-6 @regular:gap-1.5 @regular:px-2.5",
+} satisfies Record<AppBarDensity, string>
+
+const DensityContext = createContext<AppBarDensity>("full")
+
+type AppBarActionProps = Omit<ComponentProps<"button">, "children"> & {
+  children: string
+  tone?: "default" | "primary"
+  icon?: ReactNode
+  render?: ReactElement
+}
+
+function AppBarAction({
+  children,
+  tone = "default",
+  icon,
+  render,
+  className,
+  ...props
+}: AppBarActionProps): ReactElement {
+  const density = useContext(DensityContext)
+  return useRender({
+    defaultTagName: "button",
+    render,
+    props: {
+      ...(render === undefined ? { type: "button" as const } : {}),
+      ...props,
+      "data-slot": "button",
+      className: cn(
+        buttonVariants({ tone, size: "bar" }),
+        actions[density],
+        "transition-[height,padding,gap] duration-(--duration-surface)",
+        className
+      ),
+      children: (
+        <>
+          {icon}
+          <span data-slot="button-label" className="min-w-0 truncate">
+            {children}
+          </span>
+        </>
+      ),
+    },
+  })
+}
+
 function BarEnd({
   balance,
   connect,
@@ -159,10 +212,12 @@ function AppBar({
       {areaMenu === undefined ? null : (
         <span className="flex shrink-0 @regular:hidden">{areaMenu}</span>
       )}
-      <BarEnd balance={balance} connect={connect} />
+      <DensityContext value={density}>
+        <BarEnd balance={balance} connect={connect} />
+      </DensityContext>
     </header>
   )
 }
 
-export type { AppBarProps }
-export { AppBar }
+export type { AppBarActionProps, AppBarProps }
+export { AppBar, AppBarAction }

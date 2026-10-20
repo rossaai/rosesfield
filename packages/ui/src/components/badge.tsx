@@ -11,15 +11,8 @@ const badgeKinds: readonly BadgeKind[] = [
   "openWeights",
 ]
 
-const kinds = {
-  new: "bg-hor-tint text-hor-text",
-  top: "bg-nop-tint text-nop-text",
-  premium: "bg-cem-tint text-cem-text",
-  openWeights: "bg-(--tint) text-ink",
-} satisfies Record<BadgeKind, string>
-
 const badgeClass =
-  "relative ms-1 inline-flex h-4 shrink-0 items-center gap-0.5 rounded-dense px-1.5 py-0.5 font-medium text-legal whitespace-nowrap [&_svg]:size-3"
+  "relative ms-1 inline-flex h-4 shrink-0 items-center gap-0.5 rounded-dense bg-(--tint) px-1.5 py-0.5 font-medium text-legal whitespace-nowrap text-ink [&_svg]:size-3"
 
 type BadgeProps = {
   kind: BadgeKind
@@ -36,7 +29,7 @@ function Badge({
   href,
   className,
 }: BadgeProps): ReactElement {
-  const classes = cn(badgeClass, kinds[kind], className)
+  const classes = cn(badgeClass, className)
   const content = (
     <>
       {mark === undefined ? null : (

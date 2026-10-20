@@ -106,3 +106,43 @@ describe("the reference gallery", () => {
     }
   })
 })
+
+function stateOf(id: string, state: string) {
+  const found = referenceControlEntries
+    .find((entry) => entry.id === id)
+    ?.states.find((one) => one.id === state)
+  if (found === undefined) {
+    throw new Error(`no ${id} ${state}`)
+  }
+  return found
+}
+
+describe("the controls gallery", () => {
+  it("sets the hero pair 8 px apart at the gutter on a phone and at the row's right end on a desktop", () => {
+    const { container } = render(stateOf("ref-button", "rest").render())
+    const pair = container.querySelector("[data-slot='hero-pair']")
+    expect(pair?.className.split(" ")).toEqual(
+      expect.arrayContaining(["gap-2", "self-stretch", "@regular:justify-end"])
+    )
+    expect(pair?.querySelectorAll("button")).toHaveLength(2)
+  })
+
+  it("shows a chip with its tag and an open group of picture cards with one current", () => {
+    const { container } = render(stateOf("ref-filter-chips", "open").render())
+    expect(
+      container.querySelectorAll("[data-slot='inline-chip-tag']")
+    ).toHaveLength(1)
+    const cards = [
+      ...container.querySelectorAll("[data-slot='setting-choice']"),
+    ]
+    expect(cards).toHaveLength(4)
+    expect(
+      cards.filter((card) => card.getAttribute("aria-pressed") === "true")
+    ).toHaveLength(1)
+    for (const card of cards) {
+      expect(
+        card.querySelector("[data-slot='setting-choice-picture'] svg")
+      ).not.toBeNull()
+    }
+  })
+})

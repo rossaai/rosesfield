@@ -4,13 +4,13 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 
 ## What this project is
 
-- Its tokens, typefaces, marks and component contracts are generated files, each listed in `generated.json`.
+- Its tokens, typefaces, marks and component contracts are generated files, each listed in `generated.json`. Its rules are its own, one doc per subject under `docs/`.
 - MIT for the code, the docs and the design tokens. The name and the logo are trademarks of ROSSA AI, LLC, and the logo files in `apps/platform/public/` are all rights reserved, per `TRADEMARKS.md`.
 - You bring your own key and run it on your machine or your own host. No accounts, no payments, no credits.
 
 ## Hard lines
 
-1. **The look is its own.** Tokens are values and can be reused.
+1. **Generated files stay generated.** The tokens, typefaces, marks and component contracts are the generated files `generated.json` lists, and none is edited by hand.
 2. **The engine stays behind a port.** No engine name appears in `domain` or `application` code. Comfy is an adapter.
 3. **Proof is real or absent.** No mock output, no invented timing, no placeholder demo in the README or the UI.
 4. **A paid call carries a bound.** Every engine call has a timeout, a retry maximum and an idempotency key. An engine that takes no idempotency key gets one submit and no retry, per `docs/stack.md` §RunPod Serverless.
@@ -26,7 +26,7 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 | `packages/` | code two consumers share: `kernel`, `contract`, `ui`, `catalog`, `generation`, `library` and `agent`, per `docs/architecture.md` §The shape |
 | `workflows/` | every ComfyUI workflow, a UI file and an API file each, per `workflows/README.md` |
 | `docs/` | one doc per subject, routed in §Doc routing |
-| `scripts/` | the dependency-cruiser aliases, the checks the gate runs in `scripts/checks/`, such as the generated-file check, and `first-light`, which runs each workflow once against the engine you name, per `scripts/first-light/README.md` |
+| `scripts/` | the dependency-cruiser aliases, the checks the gate runs in `scripts/checks/`, such as the generated-file check and the typed-copy check, and `first-light`, which runs each workflow once against the engine you name, per `scripts/first-light/README.md` |
 
 ## Doc routing
 
@@ -58,7 +58,8 @@ Run every command from the repository root with bun 1.4.3. Node 22 or 24 must al
 | `bun run catalog:sync` | Writes `packages/catalog/src/apps.gen.ts` from the app folders. Each `<app-id>/app.ts` exports `app`. It refuses an `app.ts` without `copy.en.ts` and a name that is not a kebab-case id. |
 | `bun run ui:add <component>` | Adds a shadcn component to `packages/ui/src/components`. Run `bun run format` after it. |
 | `bun run generated:check` | Refuses a file listed in `generated.json` whose bytes differ from its sha256. Those files are generated, and none is edited by hand. |
-| `bun run gate` | Runs `catalog:sync`, `generated:check`, `typecheck`, `lint` and `test`. It must pass before every commit. |
+| `bun run copy:check` | Refuses a string a person reads that is typed in a screen or a component instead of a generated copy file. Text inside `code`, `kbd`, `pre` or `samp`, a copy key, a class name and a test file pass. |
+| `bun run gate` | Runs `catalog:sync`, `generated:check`, `copy:check`, `typecheck`, `lint` and `test`. It must pass before every commit. |
 
 For one workspace: `bun run --filter @rosesfield/<workspace> typecheck` and `bun run --filter @rosesfield/<workspace> test`.
 

@@ -62,7 +62,7 @@ export function useStartRun(
   const isDemo = settings.data?.engine.origin === "demo"
   const credits = usePrice(
     app,
-    isDemo ? null : (hostedRun ?? bodyOf(app, form.values)),
+    hostedRun ?? bodyOf(app, form.values),
     hosted?.keyState ?? settings.data?.engine.key ?? "unknown"
   )
   const start = useMutation({

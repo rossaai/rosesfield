@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const connectCopy = {
   "connect.title": "Connect",
   "connect.client.label": "Client",
@@ -24,7 +26,7 @@ export const connectCopy = {
   "connect.failed.title": "The server address did not load",
   "connect.claude.step.1": "In Claude Code, add the server with this command.",
   "connect.claude.step.2":
-    "Run /mcp in Claude Code and check that it lists rosesfield.",
+    "In Claude Code, run the mcp command and check that it lists rosesfield.",
   "connect.claude.step.3": "Ask Claude to run an app by its name.",
   "connect.chatgpt.step.1":
     "In ChatGPT, open Settings, then Apps and connectors, and turn on developer mode.",
@@ -39,7 +41,7 @@ export const connectCopy = {
   "connect.api.step.1":
     "Start a run with POST and the inputs as JSON, as in this example.",
   "connect.api.step.2":
-    "Read the run with GET /api/runs/<run id> until its status is done, failed or cancelled.",
+    "Read the run by its id from its runs route until its status is done, failed or cancelled.",
   "connect.api.step.3":
-    "Read each output with GET /api/assets/<asset id>/content.",
+    "Read each result by its asset id from the assets route.",
 } satisfies Record<string, string>

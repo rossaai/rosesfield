@@ -110,6 +110,8 @@ function sidewaysOverflow(page: Page): Promise<number> {
   })
 }
 
+const secondsPerRoute = 5
+
 let seeded: Seeded = { assetId: missingId, characterId: missingId, appIds: [] }
 
 test.beforeAll(async () => {
@@ -120,7 +122,9 @@ test("every route renders without console errors", async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem("rosesfield.welcome", "seen")
   })
-  for (const path of routesOf(seeded)) {
+  const routes = routesOf(seeded)
+  test.setTimeout(routes.length * secondsPerRoute * 1000)
+  for (const path of routes) {
     const errors = watchErrors(page)
     await page.goto(path)
     await expect(page.locator("#root")).not.toBeEmpty()

@@ -1,10 +1,11 @@
+// Generated. Do not edit.
+
 export const referenceCopy = {
   "gallery.reference.missing":
     "No reference capture yet. Put it in the gallery's reference folder as",
   "gallery.reference.alt": "Reference capture",
   "gallery.reference.desktop": "1440 by 900",
   "gallery.reference.phone": "390 by 844",
-
   "ref.foundations": "Foundations",
   "ref.topBar": "Top bar",
   "ref.navLink": "Area link",
@@ -32,7 +33,6 @@ export const referenceCopy = {
   "ref.mediaViewer": "Viewer",
   "ref.hero": "Banner and fan",
   "ref.sectionHeader": "Section header",
-
   "state.rest": "At rest",
   "state.hover": "Hover",
   "state.press": "Press",
@@ -41,10 +41,9 @@ export const referenceCopy = {
   "state.unpriced": "No price yet",
   "state.minimum": "At its minimum",
   "state.withRuns": "With runs",
-  "state.badgeKinds": "New, Top, Premium and Open weights",
+  "state.badgeKinds": "The new, top, premium and open weights badges",
   "state.tile": "A tile on the bar",
   "state.bar": "A bar in a column",
-
   "sample.start": "Start",
   "sample.learnMore": "Learn more",
   "sample.recreate": "Recreate",
@@ -96,7 +95,7 @@ export const referenceCopy = {
   "sample.change": "Change",
   "sample.drop.title": "Add your files",
   "sample.drop.line": "An image, a video or a sound",
-  "sample.canvas.label": "Output",
+  "sample.canvas.label": "Result",
   "sample.how.title": "Make a clip from one photo",
   "sample.how.line": "Three steps, each with your own photo",
   "sample.how.add": "Add a photo",
