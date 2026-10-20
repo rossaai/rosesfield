@@ -37,9 +37,12 @@ type DropWellProps = {
   onMessage: (message: string | null) => void
   triggerRef?: Ref<HTMLButtonElement>
   limits?: string
+  title?: string
 }
 
 const icons = { image: ImageIcon, video: VideoIcon, audio: FileAudioIcon }
+
+const mostDiscs = 3
 
 function fits(file: File, kind: WellKind): boolean {
   return file.type.startsWith(`${kind}/`)
@@ -82,6 +85,7 @@ function AddMenu({
   kind,
   label,
   limits,
+  max,
   onUpload,
   onLibrary,
   triggerRef,
@@ -90,12 +94,14 @@ function AddMenu({
   kind: WellKind
   label: string
   limits: string | undefined
+  max: number
   onUpload: () => void
   onLibrary: () => void
   triggerRef?: Ref<HTMLButtonElement> | undefined
   isTile: boolean
 }): ReactElement {
   const Icon = icons[kind]
+  const kindGlyph = <Icon aria-hidden="true" />
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -108,8 +114,11 @@ function AddMenu({
           ) : (
             <DropZone
               title={label}
-              line={limits ?? ""}
-              kinds={[<Icon key={kind} aria-hidden="true" />]}
+              line={limits ?? t(`kind.${kind}`)}
+              kinds={Array.from(
+                { length: Math.min(mostDiscs, Math.max(1, max)) },
+                () => kindGlyph
+              )}
             />
           )
         }
@@ -164,8 +173,13 @@ function WellFoot(
       {props.isFull ? null : (
         <AddMenu
           kind={props.kind}
-          label={t(`field.asset.add.${props.kind}`)}
+          label={
+            props.ids.length === 0 && props.title !== undefined
+              ? props.title
+              : t(`field.asset.add.${props.kind}`)
+          }
           limits={props.limits}
+          max={props.max}
           onUpload={props.onUpload}
           onLibrary={props.onLibrary}
           triggerRef={props.triggerRef}
