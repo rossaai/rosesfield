@@ -58,6 +58,16 @@ export const TOAST = {
       desktop: "motion.dwell.toast",
     },
   },
+  variables: {
+    "component.toast.maxWidth": ["--spacing-toast-max"],
+    "control.hitRailDense": ["--spacing-button-small", "--spacing-icon-small"],
+    "icon.smSize": ["--spacing-glyph-small"],
+    "motion.dwell.toast": ["--duration-toast"],
+    "radius.r6": ["--radius-field", "--radius-card"],
+    "space.s2": ["--spacing-s2"],
+    "type.subheadLine": ["--text-label--line-height"],
+    "type.subheadSize": ["--text-label"],
+  },
   material: {
     material: "material.regular",
     ground: "color.layer",

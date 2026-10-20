@@ -43,6 +43,14 @@ export const SWITCH = {
       desktop: "alpha.disabled",
     },
   },
+  variables: {
+    "alpha.disabled": ["--opacity-disabled"],
+    "control.hitFloor": [],
+    "control.knob.height": ["--spacing-switch-height", "--spacing-knob-height"],
+    "control.knob.width": ["--spacing-knob-width"],
+    "control.switchTrack.width": ["--spacing-switch-width"],
+    "space.s2": ["--spacing-s2"],
+  },
   material: {
     material: "none",
     ground: "color.track",

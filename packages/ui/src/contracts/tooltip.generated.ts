@@ -68,6 +68,18 @@ export const TOOLTIP = {
       desktop: "space.s3",
     },
   },
+  variables: {
+    "component.drawer.width": ["--spacing-sidebar"],
+    "component.popover.maxWidth": ["--spacing-popover-max"],
+    "control.hitRailDense": ["--spacing-button-small", "--spacing-icon-small"],
+    "radius.r4": ["--radius-cell"],
+    "space.s1": ["--spacing-s1"],
+    "space.s2": ["--spacing-s2"],
+    "space.s3": ["--spacing-s3"],
+    "space.s4": ["--spacing-s4"],
+    "type.subheadLine": ["--text-label--line-height"],
+    "type.subheadSize": ["--text-label"],
+  },
   material: {
     material: "none",
     ground: "color.layer",

@@ -79,6 +79,16 @@ export const ICON_BUTTON = {
       desktop: "alpha.disabled",
     },
   },
+  variables: {
+    "alpha.disabled": ["--opacity-disabled"],
+    "control.hitDense": ["--spacing-button-dense", "--spacing-icon-dense"],
+    "control.hitFloor": [],
+    "control.hitRailDense": ["--spacing-button-small", "--spacing-icon-small"],
+    "control.hitTouch": ["--spacing-button", "--spacing-icon"],
+    "icon.smSize": ["--spacing-glyph-small"],
+    "icon.uiSize": ["--spacing-glyph"],
+    "radius.full": ["--radius-full"],
+  },
   material: {
     material: "none",
     ground: "region",

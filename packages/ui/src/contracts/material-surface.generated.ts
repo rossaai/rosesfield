@@ -68,6 +68,17 @@ export const MATERIAL_SURFACE = {
       desktop: "color.layerLine",
     },
   },
+  variables: {
+    "color.layer": ["--layer"],
+    "color.layerLine": ["--layer-line"],
+    "material.regular.blur": [],
+    "material.regular.saturate": ["--material-filter"],
+    "material.regular.tint": ["--opacity-material"],
+    "material.thick.blur": [],
+    "material.thick.tint": ["--opacity-material-thick"],
+    "material.thin.blur": [],
+    "material.thin.tint": ["--opacity-material-thin"],
+  },
   material: {
     material: "none",
     ground: "color.layer",

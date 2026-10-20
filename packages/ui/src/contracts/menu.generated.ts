@@ -79,6 +79,16 @@ export const MENU = {
       desktop: "space.s1_5",
     },
   },
+  variables: {
+    "component.popover.maxWidth": ["--spacing-popover-max"],
+    "component.popover.minWidth": ["--spacing-popover-min"],
+    "icon.smSize": ["--spacing-glyph-small"],
+    "icon.uiSize": ["--spacing-glyph"],
+    "radius.r8": ["--radius-vessel"],
+    "space.s1_5": ["--spacing-s1_5"],
+    "space.s2": ["--spacing-s2"],
+    "space.s4": ["--spacing-s4"],
+  },
   material: {
     material: "material.regular",
     ground: "color.layer",

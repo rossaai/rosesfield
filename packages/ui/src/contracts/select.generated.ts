@@ -80,6 +80,18 @@ export const SELECT = {
       desktop: "alpha.disabled",
     },
   },
+  variables: {
+    "alpha.disabled": ["--opacity-disabled"],
+    "component.button.maxWidth": ["--spacing-button-max"],
+    "component.popover.maxWidth": ["--spacing-popover-max"],
+    "component.popover.minWidth": ["--spacing-popover-min"],
+    "control.hitRailDense": ["--spacing-button-small", "--spacing-icon-small"],
+    "control.hitTouch": ["--spacing-button", "--spacing-icon"],
+    "icon.smSize": ["--spacing-glyph-small"],
+    "radius.full": ["--radius-full"],
+    "space.s2": ["--spacing-s2"],
+    "space.s2_5": ["--spacing-s2_5"],
+  },
   material: {
     material: "material.regular",
     ground: "region",

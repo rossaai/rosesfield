@@ -94,6 +94,18 @@ export const SECTION_HEADING = {
       desktop: "control.hitRail",
     },
   },
+  variables: {
+    "control.hitRail": ["--spacing-tab"],
+    "control.hitRailDense": ["--spacing-button-small", "--spacing-icon-small"],
+    "icon.smSize": ["--spacing-glyph-small"],
+    "icon.uiSize": ["--spacing-glyph"],
+    "space.s1": ["--spacing-s1"],
+    "space.s2": ["--spacing-s2"],
+    "type.bodyLine": ["--text-body--line-height", "--text-code--line-height"],
+    "type.bodySize": ["--text-body", "--text-code"],
+    "type.subheadLine": ["--text-label--line-height"],
+    "type.subheadSize": ["--text-label"],
+  },
   material: {
     material: "none",
     ground: "region",

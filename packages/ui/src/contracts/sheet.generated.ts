@@ -51,6 +51,14 @@ export const SHEET = {
       desktop: "component.sheet.bleed",
     },
   },
+  variables: {
+    "component.sheet.bleed": [],
+    "component.sheet.grabber.height": ["--spacing-grabber-height"],
+    "component.sheet.grabber.width": ["--spacing-grabber-width"],
+    "component.sheet.panelMaxW": ["--spacing-dialog"],
+    "component.sheet.statusZone": [],
+    "radius.r8": ["--radius-vessel"],
+  },
   material: {
     material: "material.thick",
     ground: "color.layer",

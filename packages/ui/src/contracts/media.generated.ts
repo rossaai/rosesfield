@@ -70,6 +70,16 @@ export const MEDIA = {
       desktop: "component.mediaGrid.tileMaxScale",
     },
   },
+  variables: {
+    "component.mediaGrid.tileMaxScale": [],
+    "component.mediaGrid.tileUser": ["--spacing-tile"],
+    "component.mediaGrid.tileWide": [],
+    "icon.smSize": ["--spacing-glyph-small"],
+    "icon.uiSize": ["--spacing-glyph"],
+    "radius.r4": ["--radius-cell"],
+    "radius.r6": ["--radius-field", "--radius-card"],
+    "space.s2": ["--spacing-s2"],
+  },
   material: {
     material: "none",
     ground: "color.surface",

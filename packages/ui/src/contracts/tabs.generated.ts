@@ -95,6 +95,18 @@ export const TABS = {
       desktop: "space.s8",
     },
   },
+  variables: {
+    "component.button.maxWidth": ["--spacing-button-max"],
+    "control.hitRail": ["--spacing-tab"],
+    "control.hitRailDense": ["--spacing-button-small", "--spacing-icon-small"],
+    "icon.smSize": ["--spacing-glyph-small"],
+    "radius.full": ["--radius-full"],
+    "space.s1": ["--spacing-s1"],
+    "space.s3": ["--spacing-s3"],
+    "space.s8": ["--spacing-s8"],
+    "type.bodyLine": ["--text-body--line-height", "--text-code--line-height"],
+    "type.bodySize": ["--text-body", "--text-code"],
+  },
   material: {
     material: "none",
     ground: "region",

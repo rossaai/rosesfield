@@ -41,6 +41,11 @@ export const COMPOSER_ATTACHMENTS = {
       desktop: "space.s2",
     },
   },
+  variables: {
+    "component.composer.thumb": ["--spacing-thumb"],
+    "control.hitBadge": ["--spacing-remove-badge"],
+    "space.s2": ["--spacing-s2"],
+  },
   material: {
     material: "none",
     ground: "color.surface",

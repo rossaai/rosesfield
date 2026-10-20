@@ -28,6 +28,12 @@ export const COUNT_BADGE = {
       desktop: "type.subheadLine",
     },
   },
+  variables: {
+    "radius.full": ["--radius-full"],
+    "type.bodyLine": ["--text-body--line-height", "--text-code--line-height"],
+    "type.subheadLine": ["--text-label--line-height"],
+    "type.subheadSize": ["--text-label"],
+  },
   material: {
     material: "none",
     ground: "region",

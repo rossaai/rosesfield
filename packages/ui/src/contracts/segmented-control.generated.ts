@@ -73,6 +73,17 @@ export const SEGMENTED_CONTROL = {
       desktop: "alpha.disabled",
     },
   },
+  variables: {
+    "alpha.disabled": ["--opacity-disabled"],
+    "control.btn": ["--spacing-field"],
+    "control.hitRailDense": ["--spacing-button-small", "--spacing-icon-small"],
+    "icon.smSize": ["--spacing-glyph-small"],
+    "radius.full": ["--radius-full"],
+    "space.s1_5": ["--spacing-s1_5"],
+    "space.s2_5": ["--spacing-s2_5"],
+    "type.legalLine": ["--text-legal--line-height"],
+    "type.legalSize": ["--text-legal"],
+  },
   material: {
     material: "none",
     ground: "color.track",

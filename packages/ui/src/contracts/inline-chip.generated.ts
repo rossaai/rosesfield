@@ -50,6 +50,13 @@ export const INLINE_CHIP = {
       desktop: "space.s1_5",
     },
   },
+  variables: {
+    "icon.smSize": ["--spacing-glyph-small"],
+    "radius.full": ["--radius-full"],
+    "space.s1_5": ["--spacing-s1_5"],
+    "type.bodyLine": ["--text-body--line-height", "--text-code--line-height"],
+    "type.bodySize": ["--text-body", "--text-code"],
+  },
   material: {
     material: "none",
     ground: "region",
