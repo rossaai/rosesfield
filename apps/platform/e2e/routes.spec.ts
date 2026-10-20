@@ -133,9 +133,26 @@ test("every route renders without console errors", async ({ page }) => {
   }
 })
 
-test("the first visit opens Welcome", async ({ page }) => {
+test("the first visit opens Explore at / with its banner", async ({
+  page,
+}, info) => {
   const errors = watchErrors(page)
   await page.goto("/")
+  await expect(page.locator("[data-slot=app-tile-grid]")).toBeVisible()
+  expect(new URL(page.url()).pathname).toBe("/")
+  const banner = page.locator("[data-slot=hero]")
+  if (info.project.name === "phone") {
+    await expect(banner).toBeHidden()
+  } else {
+    await expect(banner).toBeVisible()
+    await expect(banner).toContainText("Make images and video on your own key")
+  }
+  expect(errors).toEqual([])
+})
+
+test("Welcome stays reachable at /welcome", async ({ page }) => {
+  const errors = watchErrors(page)
+  await page.goto("/welcome")
   await expect(page).toHaveURL(/\/welcome$/)
   await expect(page.getByRole("heading", { level: 2 }).first()).toBeVisible()
   expect(errors).toEqual([])
