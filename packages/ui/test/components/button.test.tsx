@@ -41,3 +41,64 @@ describe("IconButton", () => {
     expect(classes).not.toContain("bg-transparent")
   })
 })
+
+function classesOf(name: string): string[] {
+  return screen.getByRole("button", { name }).className.split(" ")
+}
+
+describe("Button's measures", () => {
+  it("stands a hero 48 px tall with 16 px padding, hugging its one-line label", () => {
+    render(<Button size="hero">Start</Button>)
+    const classes = classesOf("Start")
+    expect(classes).toEqual(
+      expect.arrayContaining(["h-12", "p-4", "whitespace-nowrap"])
+    )
+    expect(classes.some((name) => name.startsWith("max-w-"))).toBe(false)
+  })
+
+  it("stands Recreate 32 px tall with its 16 px glyph 6 px before the label, and 28 px when small", () => {
+    render(
+      <>
+        <Button size="recreate">Recreate</Button>
+        <Button size="recreateSmall">Copy</Button>
+      </>
+    )
+    expect(classesOf("Recreate")).toEqual(
+      expect.arrayContaining(["h-8", "gap-1.5", "[&_svg]:size-4"])
+    )
+    expect(classesOf("Copy")).toEqual(
+      expect.arrayContaining(["h-7", "gap-1.5", "[&_svg]:size-4"])
+    )
+  })
+
+  it("changes light on hover and press and never its size", () => {
+    render(<Button tone="primary">Generate</Button>)
+    const classes = classesOf("Generate")
+    expect(classes).toContain("hover:after:opacity-10")
+    expect(classes).toContain("active:after:opacity-15")
+    expect(classes.filter((name) => /scale|motion-press/.test(name))).toEqual(
+      []
+    )
+  })
+})
+
+describe("IconButton's roles", () => {
+  it.each([
+    ["barCompact", "size-6"],
+    ["bar", "size-9"],
+    ["close", "size-9.5"],
+    ["card", "size-7"],
+    ["cardWide", "size-8"],
+    ["clip", "size-10"],
+    ["carousel", "size-15"],
+  ] as const)("sizes the %s glyph button with %s", (place, size) => {
+    render(
+      <IconButton label="Close" place={place}>
+        <svg aria-hidden="true" />
+      </IconButton>
+    )
+    const button = screen.getByRole("button", { name: "Close" })
+    expect(button.className.split(" ")).toContain(size)
+    expect(button.textContent).toBe("")
+  })
+})

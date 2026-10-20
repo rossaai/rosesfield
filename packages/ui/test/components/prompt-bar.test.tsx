@@ -1,4 +1,5 @@
 import { PromptBar } from "@rosesfield/ui/components/prompt-bar"
+import { COMPOSER } from "@rosesfield/ui/contracts/composer.generated"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -75,6 +76,72 @@ describe("PromptBar's Generate", () => {
       name: "Generate, 14.48 Comfy credits",
     })
     expect(generate.textContent).toBe("Generate14.48")
-    expect(generate.lastElementChild?.getAttribute("data-testid")).toBe("price")
+    const price = generate.querySelector("[data-slot='generate-button-price']")
+    expect(price?.querySelector("[data-testid='price']")).not.toBeNull()
+  })
+
+  it("stands as the tile at the bar's trailing end", () => {
+    renderBar()
+    const bar = document.querySelector("[data-slot='prompt-bar']")
+    const generate = screen.getByRole("button", { name: "Generate" })
+    expect(generate.getAttribute("data-form")).toBe("tile")
+    const controls = bar?.querySelectorAll("button, textarea") ?? []
+    expect(controls[controls.length - 1]).toBe(generate)
+  })
+})
+
+describe("PromptBar's placement", () => {
+  it("docks to the viewport foot only when asked", () => {
+    const { rerender } = render(
+      <PromptBar
+        value=""
+        onValueChange={() => undefined}
+        onSubmit={() => undefined}
+        label="Prompt"
+        placeholder="Describe the image"
+        submitLabel="Generate"
+        removeLabel="Remove"
+        placement="dock"
+      />
+    )
+    const bar = document.querySelector<HTMLElement>("[data-slot='prompt-bar']")
+    expect(bar?.className.split(" ")).toEqual(
+      expect.arrayContaining(["fixed", "bottom-4", "max-w-220"])
+    )
+    rerender(
+      <PromptBar
+        value=""
+        onValueChange={() => undefined}
+        onSubmit={() => undefined}
+        label="Prompt"
+        placeholder="Describe the image"
+        submitLabel="Generate"
+        removeLabel="Remove"
+      />
+    )
+    expect(bar?.className.split(" ")).not.toContain("fixed")
+  })
+})
+
+describe("PromptBar's composer slots", () => {
+  it("orders its contract's tray, attachments, prompt, notices and toolbar", () => {
+    render(
+      <PromptBar
+        value=""
+        onValueChange={() => undefined}
+        onSubmit={() => undefined}
+        label="Prompt"
+        placeholder="Describe the image"
+        submitLabel="Generate"
+        removeLabel="Remove"
+        tray={<span>Reply</span>}
+        notices={<span>Your key is missing</span>}
+        attachments={[{ id: "one", src: "one.png", alt: "A reference" }]}
+      />
+    )
+    const order = [
+      ...document.querySelectorAll("[data-slot^='composer-']"),
+    ].map((element) => element.getAttribute("data-slot")?.replace("composer-", ""))
+    expect(order).toEqual([...COMPOSER.slots])
   })
 })

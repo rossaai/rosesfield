@@ -1,11 +1,9 @@
 import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
-import { Badge } from "@rosesfield/ui/components/badge"
 import { Button } from "@rosesfield/ui/components/button"
 import { CreditPrice } from "@rosesfield/ui/components/credit-price"
 import { MediaGrid } from "@rosesfield/ui/components/media-grid"
 import { MediaTile } from "@rosesfield/ui/components/media-tile"
 import { PromptBar } from "@rosesfield/ui/components/prompt-bar"
-import { ClockIcon, LockOpenIcon, ScanIcon, Volume2Icon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { type GalleryKey, t } from "@/gallery/copy.en"
@@ -248,37 +246,6 @@ const generatePrice: GalleryEntry = {
   ],
 }
 
-const factualTags: GalleryEntry = {
-  id: "factual-tags",
-  title: "entry.factualTags",
-  states: [
-    {
-      id: "tags",
-      label: "state.tones",
-      render: () => (
-        <div className="flex flex-wrap gap-s1 [&_svg]:glyph-small">
-          <Badge tone="neutral">
-            <ScanIcon aria-hidden="true" />
-            1080p
-          </Badge>
-          <Badge tone="neutral">
-            <ClockIcon aria-hidden="true" />
-            {t("sample.tagLength")}
-          </Badge>
-          <Badge tone="neutral">
-            <Volume2Icon aria-hidden="true" />
-            {t("sample.tagSound")}
-          </Badge>
-          <Badge tone="neutral">
-            <LockOpenIcon aria-hidden="true" />
-            {t("sample.tagOpenWeights")}
-          </Badge>
-        </div>
-      ),
-    },
-  ],
-}
-
 const masonry: GalleryEntry = {
   id: "masonry-grid",
   title: "entry.masonryGrid",
@@ -361,6 +328,5 @@ export const catalogEntries: GalleryEntry[] = [
   modelPicker,
   generateRefused,
   generatePrice,
-  factualTags,
   masonry,
 ]

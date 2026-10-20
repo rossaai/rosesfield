@@ -1,4 +1,5 @@
-import { Badge } from "@rosesfield/ui/components/badge"
+import { Badge, type BadgeKind } from "@rosesfield/ui/components/badge"
+import { interaction } from "@rosesfield/ui/components/interaction"
 import {
   Popover,
   PopoverContent,
@@ -7,13 +8,26 @@ import {
 } from "@rosesfield/ui/components/popover"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { motion } from "@rosesfield/ui/motion"
-import { CheckIcon, SearchIcon } from "lucide-react"
-import { type ReactElement, type ReactNode, useRef, useState } from "react"
+import { CheckIcon, SearchIcon, SparkleIcon } from "lucide-react"
+import {
+  type ReactElement,
+  type ReactNode,
+  type RefObject,
+  type UIEvent,
+  useRef,
+  useState,
+} from "react"
 
 type ModelPickerTag = {
   label: string
   icon?: ReactNode
+}
+
+type ModelBadge = {
+  kind: BadgeKind
+  label: string
+  href?: string
+  mark?: ReactNode
 }
 
 type ModelPickerRow = {
@@ -22,6 +36,8 @@ type ModelPickerRow = {
   maker: string
   line: string | null
   tags: readonly ModelPickerTag[]
+  mark?: ReactNode
+  badges?: readonly ModelBadge[]
 }
 
 type ModelPickerSection = {
@@ -42,15 +58,11 @@ type ModelPickerProps = {
   isLoading?: boolean
   notice?: ReactNode
   settings?: ReactNode
+  side?: "top" | "right"
   open?: boolean
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
 }
-
-const rowClass = cn(
-  "flex w-full cursor-default items-start gap-s3 rounded-item px-s4 py-s2 text-left outline-none hover:bg-(--tint) focus-visible:bg-(--tint)",
-  motion.tint
-)
 
 function matches(row: ModelPickerRow, query: string): boolean {
   const needle = query.trim().toLowerCase()
@@ -73,6 +85,71 @@ function filterSections(
     .filter((section) => section.rows.length > 0)
 }
 
+function RowBadge({ badge }: { badge: ModelBadge }): ReactElement {
+  return (
+    <Badge
+      kind={badge.kind}
+      {...(badge.href === undefined ? {} : { href: badge.href })}
+      {...(badge.mark === undefined ? {} : { mark: badge.mark })}
+    >
+      {badge.label}
+    </Badge>
+  )
+}
+
+function RowName({ row }: { row: ModelPickerRow }): ReactElement {
+  const badges = row.badges ?? []
+  const facts = badges.filter((badge) => badge.kind !== "openWeights")
+  const weights = badges.filter((badge) => badge.kind === "openWeights")
+  return (
+    <span className="flex min-w-0 items-center">
+      <span data-slot="model-row-name" className="truncate text-body text-ink">
+        {row.name}
+      </span>
+      {facts.length === 0 ? null : (
+        <span data-slot="model-row-badges" className="flex shrink-0">
+          {facts.map((badge) => (
+            <RowBadge key={badge.kind} badge={badge} />
+          ))}
+        </span>
+      )}
+      {weights.length === 0 ? null : (
+        <span
+          data-slot="model-row-weights"
+          className="pointer-events-auto flex shrink-0"
+        >
+          {weights.map((badge) => (
+            <RowBadge key={badge.kind} badge={badge} />
+          ))}
+        </span>
+      )}
+    </span>
+  )
+}
+
+function RowLine({ row }: { row: ModelPickerRow }): ReactNode {
+  if (row.line === null && row.tags.length === 0) {
+    return null
+  }
+  return (
+    <span
+      data-slot="model-row-line"
+      className="flex min-w-0 items-center gap-1 truncate text-caption text-ink-muted"
+    >
+      {row.line === null ? null : <span className="truncate">{row.line}</span>}
+      {row.tags.map((tag) => (
+        <span
+          key={tag.label}
+          className="inline-flex shrink-0 items-center gap-0.5 rounded-dense bg-(--tint) px-1 [&_svg]:size-3"
+        >
+          {tag.icon}
+          {tag.label}
+        </span>
+      ))}
+    </span>
+  )
+}
+
 function ModelRow({
   row,
   isChosen,
@@ -83,64 +160,76 @@ function ModelRow({
   onChoose: (id: string) => void
 }): ReactElement {
   return (
-    <button
-      type="button"
-      role="option"
-      aria-selected={isChosen}
-      data-model={row.id}
-      className={rowClass}
-      onClick={() => onChoose(row.id)}
+    <div
+      data-slot="model-row"
+      data-chosen={isChosen ? "yes" : "no"}
+      className="group/row relative mx-3 h-13 rounded-cell data-[chosen=yes]:bg-(--tint)"
     >
-      <span className="flex min-w-0 flex-1 flex-col gap-s1">
-        <span className="flex min-w-0 items-baseline gap-s1_5">
-          <span className="truncate font-medium text-body text-ink">
-            {row.name}
-          </span>
-          <span className="shrink-0 text-caption text-ink-muted">
-            {row.maker}
-          </span>
+      <button
+        type="button"
+        role="option"
+        aria-selected={isChosen}
+        aria-label={row.name}
+        data-model={row.id}
+        className={cn(
+          "absolute inset-0 rounded-cell outline-none",
+          interaction.light,
+          interaction.ring
+        )}
+        onClick={() => onChoose(row.id)}
+      />
+      <span className="pointer-events-none relative flex h-full items-center pe-2">
+        <span
+          data-slot="model-row-mark"
+          aria-hidden="true"
+          className="flex size-10 shrink-0 items-center justify-center rounded-dense bg-(--tint) text-ink-muted group-data-[chosen=yes]/row:text-ink [&_svg]:size-4"
+        >
+          {row.mark}
         </span>
-        <RowFacts row={row} />
+        <span className="ms-2 flex min-w-0 flex-1 flex-col">
+          <RowName row={row} />
+          <RowLine row={row} />
+        </span>
+        <span data-slot="model-row-check" className="flex size-5 shrink-0">
+          {isChosen ? <CheckIcon aria-hidden="true" className="size-5" /> : null}
+        </span>
       </span>
-      {isChosen ? (
-        <CheckIcon aria-hidden="true" className="glyph mt-s1 text-ink" />
-      ) : null}
-    </button>
-  )
-}
-
-function RowFacts({ row }: { row: ModelPickerRow }): ReactNode {
-  return (
-    <>
-      {row.line === null ? null : (
-        <span className="truncate text-caption text-ink-muted">{row.line}</span>
-      )}
-      {row.tags.length === 0 ? null : (
-        <span className="flex flex-wrap gap-s1">
-          {row.tags.map((tag) => (
-            <Badge
-              key={tag.label}
-              tone="neutral"
-              className="[&_svg]:glyph-small"
-            >
-              {tag.icon}
-              {tag.label}
-            </Badge>
-          ))}
-        </span>
-      )}
-    </>
+    </div>
   )
 }
 
 function LoadingRows(): ReactElement {
   return (
-    <div className="flex flex-col gap-s3 px-s4 py-s2">
+    <div className="flex flex-col gap-1 px-3 py-2">
       {["first", "second", "third", "fourth"].map((key) => (
-        <div key={key} className="flex flex-col gap-s1">
-          <Skeleton className="h-s4 w-1/2" />
-          <Skeleton className="h-s3 w-3/4" />
-        </div>
+        <Skeleton key={key} className="h-13 w-full rounded-cell" />
+      ))}
+    </div>
+  )
+}
+
+function SectionRows(
+  props: ModelPickerProps & {
+    section: ModelPickerSection
+    onChosen: () => void
+  }
+): ReactElement {
+  return (
+    <div role="group" aria-label={props.section.label} className="flex flex-col gap-1">
+      <p className="flex h-8.5 items-center gap-1.5 px-3 font-medium text-label text-ink-muted">
+        <SparkleIcon aria-hidden="true" className="size-3.5" />
+        {props.section.label}
+      </p>
+      {props.section.rows.map((row) => (
+        <ModelRow
+          key={`${props.section.id}:${row.id}`}
+          row={row}
+          isChosen={row.id === props.chosen}
+          onChoose={(id) => {
+            props.onChoose(id)
+            props.onChosen()
+          }}
+        />
       ))}
     </div>
   )
@@ -156,34 +245,77 @@ function ModelList(
   if (sections.length === 0) {
     const isRefused = props.notice !== undefined && props.notice !== null
     return isRefused && props.query === "" ? null : (
-      <p className="px-s4 py-s3 text-body text-ink-muted">{props.emptyLabel}</p>
+      <p className="px-3 py-2 text-body text-ink-muted">{props.emptyLabel}</p>
     )
   }
   return (
-    <div
-      role="listbox"
-      aria-label={props.title}
-      className="flex flex-col gap-s2"
-    >
+    <div role="listbox" aria-label={props.title} className="flex flex-col pb-1">
       {sections.map((section) => (
-        <fieldset key={section.id} className="m-0 min-w-0 border-0 p-0">
-          <legend className="px-s4 py-s1_5 font-medium text-label text-ink-muted">
-            {section.label}
-          </legend>
-          {section.rows.map((row) => (
-            <ModelRow
-              key={`${section.id}:${row.id}`}
-              row={row}
-              isChosen={row.id === props.chosen}
-              onChoose={(id) => {
-                props.onChoose(id)
-                props.onChosen()
-              }}
-            />
-          ))}
-        </fieldset>
+        <SectionRows key={section.id} {...props} section={section} />
       ))}
     </div>
+  )
+}
+
+type Ends = { top: boolean; bottom: boolean }
+
+function readEnds(element: HTMLElement): Ends {
+  return {
+    top: element.scrollTop > 0,
+    bottom: element.scrollTop + element.clientHeight < element.scrollHeight,
+  }
+}
+
+const fadeClass =
+  "pointer-events-none absolute inset-x-0 z-10 h-9.5 from-(--ground) to-transparent transition-opacity duration-(--duration-control)"
+
+function ScrollRegion({ children }: { children: ReactNode }): ReactElement {
+  const [ends, setEnds] = useState<Ends>({ top: false, bottom: true })
+  const onScroll = (event: UIEvent<HTMLDivElement>): void => {
+    setEnds(readEnds(event.currentTarget))
+  }
+  return (
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <span
+        data-slot="model-list-fade"
+        data-end="top"
+        className={cn(fadeClass, "top-0 bg-linear-to-b", ends.top ? "opacity-100" : "opacity-0")}
+      />
+      <div
+        onScroll={onScroll}
+        className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none]"
+      >
+        {children}
+      </div>
+      <span
+        data-slot="model-list-fade"
+        data-end="bottom"
+        className={cn(fadeClass, "bottom-0 bg-linear-to-t", ends.bottom ? "opacity-100" : "opacity-0")}
+      />
+    </div>
+  )
+}
+
+function SearchRow(props: {
+  search: RefObject<HTMLInputElement | null>
+  label: string
+  placeholder: string
+  query: string
+  onQuery: (query: string) => void
+}): ReactElement {
+  return (
+    <label className="flex h-10.5 shrink-0 items-center gap-2 border-b border-(--line) px-3">
+      <SearchIcon aria-hidden="true" className="size-6 text-ink-muted" />
+      <input
+        ref={props.search}
+        type="search"
+        aria-label={props.label}
+        placeholder={props.placeholder}
+        value={props.query}
+        onChange={(event) => props.onQuery(event.target.value)}
+        className="h-full min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-muted"
+      />
+    </label>
   )
 }
 
@@ -192,6 +324,7 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
   const search = useRef<HTMLInputElement>(null)
   const [isOpenHere, setOpenHere] = useState(props.defaultOpen === true)
   const isOpen = props.open ?? isOpenHere
+  const side = props.side ?? "top"
   const setOpen = (open: boolean): void => {
     setOpenHere(open)
     props.onOpenChange?.(open)
@@ -205,29 +338,27 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
       <PopoverContent
         data-slot="model-picker"
         initialFocus={search}
-        className="max-h-(--available-height) w-dialog max-w-[min(var(--spacing-dialog),calc(100vw-2*var(--spacing-s4)))] gap-s2 p-s2_5"
+        side={side}
+        align={side === "top" ? "start" : "end"}
+        sideOffset={side === "top" ? 4 : 8}
+        className="max-h-[min(var(--available-height),calc(var(--spacing)*160.5))] w-100.5 max-w-[calc(100vw-2*var(--spacing-s4))] gap-0 overflow-hidden p-0 data-ending-style:transform-none data-starting-style:transform-none data-starting-style:translate-y-1 data-ending-style:translate-y-1"
       >
         <PopoverTitle className="sr-only">{props.title}</PopoverTitle>
-        <label className="flex h-field shrink-0 items-center gap-s2 rounded-full bg-(--well) px-s5">
-          <SearchIcon aria-hidden="true" className="glyph text-ink-muted" />
-          <input
-            ref={search}
-            type="search"
-            aria-label={props.searchLabel}
-            placeholder={props.searchPlaceholder}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            className="h-full min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-muted"
-          />
-        </label>
+        <SearchRow
+          search={search}
+          label={props.searchLabel}
+          placeholder={props.searchPlaceholder}
+          query={query}
+          onQuery={setQuery}
+        />
         {props.notice}
-        <div className="max-h-list-max min-h-0 overflow-y-auto">
+        <ScrollRegion>
           <ModelList {...props} query={query} onChosen={() => setOpen(false)} />
-        </div>
+        </ScrollRegion>
         {props.settings === undefined || props.settings === null ? null : (
           <div
             data-slot="model-settings"
-            className="flex max-h-list-max min-h-0 flex-col gap-s4 overflow-y-auto px-s4 pt-s3 pb-s2"
+            className="flex max-h-list-max min-h-0 flex-col gap-s4 overflow-y-auto border-t border-(--line) px-3 pt-3 pb-2"
           >
             {props.settings}
           </div>
@@ -238,6 +369,7 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
 }
 
 export type {
+  ModelBadge,
   ModelPickerProps,
   ModelPickerRow,
   ModelPickerSection,
