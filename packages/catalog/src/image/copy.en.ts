@@ -6,6 +6,7 @@ export const imageCopy = {
   "image.keywords": "picture, photo, prompt, text to image",
   "image.input.prompt.label": "Prompt",
   "image.input.prompt.placeholder": "Describe the image",
+  "image.input.references.label": "References",
   "image.input.model.label": "Model",
   "image.input.resolution.label": "Resolution",
   "image.input.seed.label": "Seed",
@@ -20,4 +21,6 @@ export const imageCopy = {
   "image.model.qwenImage2512": "Qwen Image 2512",
   "image.model.qwenImage2512.line":
     "Runs 50 steps, at one size for each format.",
+  "image.model.qwenImageEdit2511": "Qwen Image Edit 2511",
+  "image.model.qwenImageEdit2511.line": "Takes up to 3 photos. Runs 40 steps.",
 } satisfies Record<string, string>
