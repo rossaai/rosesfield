@@ -6,6 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@rosesfield/ui/components/dropdown-menu"
 import { DropZone } from "@rosesfield/ui/components/upload-zone"
+import { cn } from "@rosesfield/ui/lib/cn"
 import {
   FileAudioIcon,
   ImageIcon,
@@ -38,6 +39,7 @@ type DropWellProps = {
   triggerRef?: Ref<HTMLButtonElement>
   limits?: string
   title?: string
+  fill?: boolean
 }
 
 const icons = { image: ImageIcon, video: VideoIcon, audio: FileAudioIcon }
@@ -169,7 +171,12 @@ function WellFoot(
   }
 ): ReactElement {
   return (
-    <div className="flex items-center justify-between gap-s2">
+    <div
+      className={cn(
+        "flex justify-between gap-s2",
+        props.fill === true ? "flex-1 items-stretch" : "items-center"
+      )}
+    >
       {props.isFull ? null : (
         <AddMenu
           kind={props.kind}
@@ -195,6 +202,15 @@ function WellFoot(
   )
 }
 
+function wellClass(isEmpty: boolean, isFilling: boolean): string {
+  return cn(
+    isEmpty
+      ? "flex flex-col"
+      : "flex flex-col gap-s3 rounded-card bg-(--well) p-s3",
+    isFilling ? "flex-1" : ""
+  )
+}
+
 export function DropWell(props: DropWellProps): ReactElement {
   const files = useWellFiles(props)
   const [isLibraryOpen, setLibraryOpen] = useState(false)
@@ -217,11 +233,7 @@ export function DropWell(props: DropWellProps): ReactElement {
       onDragOver={(event) => event.preventDefault()}
       onDrop={onDrop}
       onPaste={onPaste}
-      className={
-        isEmpty
-          ? "flex flex-col"
-          : "flex flex-col gap-s3 rounded-card bg-(--well) p-s3"
-      }
+      className={wellClass(isEmpty, props.fill === true)}
     >
       {props.ids.length === 0 ? null : (
         <FilledTiles

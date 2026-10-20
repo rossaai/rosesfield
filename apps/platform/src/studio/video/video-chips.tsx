@@ -90,7 +90,7 @@ export function VideoChips({
   app: AppListing
   form: AppForm
   fields: VideoFields | null
-}): ReactElement {
+}): ReactElement | null {
   if (fields === null) {
     return (
       <SettingTiles>
@@ -99,6 +99,13 @@ export function VideoChips({
         ))}
       </SettingTiles>
     )
+  }
+  if (
+    fields.length === null &&
+    fields.aspect === null &&
+    fields.resolution === null
+  ) {
+    return null
   }
   const plain = (value: string | number): string => String(value)
   return (

@@ -1,6 +1,9 @@
+import { extendApp } from "@rosesfield/catalog/video"
 import type { AppListing } from "@rosesfield/contract"
 import { PromptBlock } from "@rosesfield/ui/components/input-panel"
+import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import { ModeStrip, ModeTab, Tabs } from "@rosesfield/ui/components/tabs"
+import { useNavigate } from "@tanstack/react-router"
 import { type ReactElement, useMemo } from "react"
 import { t, tCatalog } from "@/copy/t"
 import { CollapsibleSection } from "@/pieces/collapsible-section"
@@ -42,6 +45,33 @@ export function ModeTabs({ screen }: { screen: VideoScreen }): ReactElement {
         ))}
       </ModeStrip>
     </Tabs>
+  )
+}
+
+type MakeChoice = "video" | "extend"
+
+export function MakeSwitch({
+  onExtend,
+}: {
+  onExtend: () => void
+}): ReactElement {
+  return (
+    <div data-slot="make-switch" className="mb-2">
+      <SegmentedControl<MakeChoice>
+        density="composer"
+        label={tCatalog("videoEdit.input.mode.label")}
+        value="video"
+        items={[
+          { value: "video", label: t("kind.video") },
+          { value: "extend", label: tCatalog("videoEdit.choice.mode.extend") },
+        ]}
+        onValueChange={(next) => {
+          if (next === "extend") {
+            onExtend()
+          }
+        }}
+      />
+    </div>
   )
 }
 
@@ -131,13 +161,19 @@ export function VideoPanel({
     [hosted, tab, app]
   )
   const presets = useMemo(() => shownPresets(screen.presets), [screen.presets])
+  const navigate = useNavigate()
   return (
-    <div className="flex flex-col gap-2">
+    <div data-slot="video-parts" className="flex flex-1 flex-col gap-2">
       <PresetCard
         presets={presets}
         move={prompt.move}
         onMove={prompt.setMove}
         line={hosted.chosen === null ? "" : modelNameOf(hosted.chosen)}
+      />
+      <MakeSwitch
+        onExtend={() =>
+          void navigate({ to: "/apps/$appId", params: { appId: extendApp } })
+        }
       />
       {hosted.chosen === null ? null : (
         <VideoWells slots={slotsOf(fields, tab)} form={state.form} />

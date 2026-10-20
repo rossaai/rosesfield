@@ -1,4 +1,5 @@
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
+import { taskDefaults } from "@rosesfield/catalog/video"
 import type { AppListing } from "@rosesfield/contract"
 import type { FieldValue } from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
@@ -17,6 +18,16 @@ export const tabKeys: Readonly<Record<VideoTab, string>> = {
   "text-image": "video.tab.textImage",
   references: "video.tab.references",
   "first-last": "video.tab.firstLast",
+}
+
+const tabTasks: Readonly<Record<VideoTab, string>> = {
+  "text-image": "text-to-video",
+  references: "reference-to-video",
+  "first-last": "first-last-frame",
+}
+
+export function defaultsOfTab(tab: VideoTab): readonly string[] {
+  return taskDefaults[tabTasks[tab]] ?? []
 }
 
 export const startFrameInput = "startFrame"
@@ -64,13 +75,12 @@ export function modelsOfTab(
 export function modelForTab(
   models: readonly CatalogModel[],
   chosen: string | null,
-  fallback: string | null
+  defaults: readonly (string | null)[]
 ): string | null {
-  if (models.some((model) => model.id === chosen)) {
-    return chosen
-  }
-  if (models.some((model) => model.id === fallback)) {
-    return fallback
+  for (const id of [chosen, ...defaults]) {
+    if (id !== null && models.some((model) => model.id === id)) {
+      return id
+    }
   }
   return models[0]?.id ?? null
 }
