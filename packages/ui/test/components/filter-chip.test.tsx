@@ -58,4 +58,27 @@ describe("SettingGroup", () => {
     expect(trigger.getAttribute("aria-expanded")).toBe("true")
     expect(screen.getByRole("button", { name: "Dolly" })).toBeTruthy()
   })
+
+  it("clips its card and moves its panel's height on the chevron's timing", () => {
+    const { container } = render(
+      <SettingGroup name="Camera" count={12} icon={<svg />} defaultOpen>
+        <button type="button">Dolly</button>
+      </SettingGroup>
+    )
+    const card = container.querySelector('[data-slot="setting-group"]')
+    const panel = container.querySelector('[data-slot="setting-group-panel"]')
+    expect(card?.className.split(" ")).toContain("overflow-hidden")
+    expect(panel?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "h-(--collapsible-panel-height)",
+        "overflow-hidden",
+        "[transition:height_var(--control-change)]",
+        "data-starting-style:h-0",
+        "data-ending-style:h-0",
+      ])
+    )
+    expect(
+      panel?.querySelector('[data-slot="setting-group-choices"]')?.className
+    ).toContain("grid-cols-3")
+  })
 })

@@ -6,17 +6,7 @@ import {
 } from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { CopyIcon, EllipsisIcon, MaximizeIcon } from "lucide-react"
-import {
-  type CSSProperties,
-  type ReactElement,
-  type ReactNode,
-  type RefObject,
-  useEffect,
-  useRef,
-  useState,
-} from "react"
-
-const narrowMax = 320
+import type { CSSProperties, ReactElement, ReactNode } from "react"
 
 type Corners = { topLeft: string; topRight: string; bottomRight: string }
 
@@ -50,48 +40,33 @@ type ResultTileProps = {
   onMore?: () => void
   sound?: ReactNode
   form?: "card" | "library"
+  narrow?: boolean
   className?: string
-}
-
-function useIsNarrow(ref: RefObject<HTMLElement | null>): boolean {
-  const [isNarrow, setNarrow] = useState(true)
-  useEffect(() => {
-    const element = ref.current
-    if (element === null || typeof ResizeObserver === "undefined") {
-      return
-    }
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setNarrow(entry.contentRect.width <= narrowMax)
-      }
-    })
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [ref])
-  return isNarrow
 }
 
 function aspectStyle(aspect: MediaAspect): CSSProperties {
   return { aspectRatio: `${aspect.width} / ${aspect.height}` }
 }
 
-function Actions(
-  props: ResultTileProps & { isNarrow: boolean; corners: Corners }
-): ReactElement {
-  const isCompact = props.isNarrow && props.form !== "library"
+function isCompact(props: ResultTileProps): boolean {
+  return props.form !== "library" && props.narrow !== false
+}
+
+function Actions(props: ResultTileProps & { corners: Corners }): ReactElement {
+  const compact = isCompact(props)
   return (
     <span
       data-slot="result-tile-actions"
       className={cn(
         "absolute z-20 hidden flex-col @regular:flex",
         props.corners.topRight,
-        isCompact ? "gap-3" : "gap-2",
+        compact ? "gap-3" : "gap-2",
         interaction.reveal
       )}
     >
       <IconButton
         label={props.expandLabel}
-        place={isCompact ? "card" : "cardWide"}
+        place={compact ? "card" : "cardWide"}
         tone="glass"
         onClick={(event) => props.onOpen(event.currentTarget)}
       >
@@ -100,7 +75,7 @@ function Actions(
       <IconButton
         label={props.moreLabel}
         aria-haspopup="menu"
-        place={isCompact ? "card" : "cardWide"}
+        place={compact ? "card" : "cardWide"}
         tone="glass"
         onClick={() => props.onMore?.()}
       >
@@ -113,10 +88,8 @@ function Actions(
 const veilClass =
   "pointer-events-none absolute z-20 hidden max-w-[calc(100%-var(--spacing)*24)] items-center gap-1 truncate font-medium text-caption text-ink @regular:flex"
 
-function Recreate(
-  props: ResultTileProps & { isNarrow: boolean; corners: Corners }
-): ReactElement {
-  const isCompact = props.isNarrow && props.form !== "library"
+function Recreate(props: ResultTileProps & { corners: Corners }): ReactElement {
+  const compact = isCompact(props)
   return (
     <span
       className={cn(
@@ -127,7 +100,7 @@ function Recreate(
     >
       <Button
         tone="accent"
-        size={isCompact ? "recreateSmall" : "recreate"}
+        size={compact ? "recreateSmall" : "recreate"}
         aria-label={props.recreateName}
         onClick={props.onRecreate}
         className="rounded-dense"
@@ -140,12 +113,9 @@ function Recreate(
 }
 
 function ResultTile(props: ResultTileProps): ReactElement {
-  const frame = useRef<HTMLElement>(null)
-  const isNarrow = useIsNarrow(frame)
   const corners = props.form === "library" ? libraryCorners : cardCorners
   return (
     <figure
-      ref={frame}
       data-slot="media"
       data-form={props.form ?? "card"}
       className={cn(
@@ -173,11 +143,11 @@ function ResultTile(props: ResultTileProps): ReactElement {
       >
         {`${props.app} · ${props.model}`}
       </span>
-      <Actions {...props} isNarrow={isNarrow} corners={corners} />
+      <Actions {...props} corners={corners} />
       {props.sound === undefined ? null : (
         <span className="absolute right-2 bottom-2 z-20 flex">{props.sound}</span>
       )}
-      <Recreate {...props} isNarrow={isNarrow} corners={corners} />
+      <Recreate {...props} corners={corners} />
     </figure>
   )
 }

@@ -26,9 +26,11 @@ const shapes = [
 function Result({
   index,
   form = "card",
+  narrow = true,
 }: {
   index: number
   form?: "card" | "library"
+  narrow?: boolean
 }): ReactElement {
   const shape = shapes[index % shapes.length] ?? shapes[0]
   return (
@@ -47,6 +49,7 @@ function Result({
       onOpen={() => undefined}
       onRecreate={() => undefined}
       form={form}
+      narrow={narrow}
       {...(form === "library"
         ? {
             sound: (
@@ -77,7 +80,7 @@ function Feed({ layout }: { layout: "masonry" | "row" }): ReactElement {
       viewAll={<ViewAll href="?entry=ref-gallery-grid">{t("sample.viewAll")}</ViewAll>}
     >
       {twelve.map((index) => (
-        <Result key={index} index={index} />
+        <Result key={index} index={index} narrow={layout === "masonry"} />
       ))}
     </MediaFeed>
   )
@@ -127,11 +130,11 @@ function Promos(): ReactElement {
       {[0, 1, 2, 3].map((index) => (
         <PromoCard
           key={index}
-          title={t("sample.promo.title")}
+          name={t("sample.promo.title")}
           line={t("sample.promo.line")}
           href="?promo"
           openLabel={t("sample.promo.open")}
-          media={<img alt="" src={demoWide} />}
+          clip={<img alt="" src={demoWide} />}
         />
       ))}
     </PromoRow>

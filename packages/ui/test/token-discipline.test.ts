@@ -2,16 +2,27 @@ import { describe, expect, it } from "vitest"
 import { readSource } from "./read-source"
 
 const sources = import.meta.glob<string>(
-  ["../src/components/**/*.tsx", "../../../apps/platform/src/**/*.tsx"],
+  [
+    "../src/components/**/*.{ts,tsx}",
+    "../../../apps/platform/src/**/*.{ts,tsx}",
+    "!**/*.generated.ts",
+    "!**/*.gen.ts",
+    "!**/*.d.ts",
+    "!**/*.test.{ts,tsx}",
+  ],
   { query: "?raw", import: "default", eager: true }
 )
+
+const edge = "(?<![A-Za-z0-9.])"
+const end = "(?![A-Za-z0-9])"
+const amount = "(?:[1-9]\\d*|\\d*\\.\\d+)"
 
 type Refusal = { file: string; line: number; rule: string; text: string }
 
 const lineRules: ReadonlyArray<{ rule: string; pattern: RegExp }> = [
   {
     rule: "a colour written as hex",
-    pattern: /(?<![\w&/])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})\b/,
+    pattern: /(?<![A-Za-z0-9&/])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![A-Za-z0-9])/,
   },
   {
     rule: "a colour written as a function",
@@ -19,11 +30,11 @@ const lineRules: ReadonlyArray<{ rule: string; pattern: RegExp }> = [
   },
   {
     rule: "a size, radius, shadow or duration written in px, rem, em or ms",
-    pattern: /\b(?:[1-9]\d*|\d*\.\d+)(?:px|rem|em|ms)\b/,
+    pattern: new RegExp(`${edge}${amount}(?:px|rem|em|ms)${end}`),
   },
   {
     rule: "a duration written in seconds inside an arbitrary value",
-    pattern: /\[[^\]\s]*\b(?:[1-9]\d*|\d*\.\d+)s\b[^\]\s]*\]/,
+    pattern: new RegExp(`\\[[^\\]\\s]*${edge}${amount}s${end}[^\\]\\s]*\\]`),
   },
 ]
 
@@ -64,11 +75,32 @@ function refusalsIn(file: string, text: string): Refusal[] {
 const planted: ReadonlyArray<[string, string]> = [
   ["a hex fill", `<span className="bg-[#d1fe17]" />`],
   ["a hex in script", `context.strokeStyle = "#ffffff"`],
-  ["a colour function", `<span className="shadow-[0_2px_4px_rgba(0,0,0,.1)]" />`],
+  [
+    "a colour function",
+    `<span className="shadow-[0_2px_4px_rgba(0,0,0,.1)]" />`,
+  ],
   ["an arbitrary height", `<span className="h-[48px]" />`],
   ["an arbitrary radius", `<span className="rounded-[10px]" />`],
   ["an arbitrary duration", `<span className="duration-[200ms]" />`],
   ["a duration in seconds", `<span className="[transition:opacity_0.2s]" />`],
+  ["a hex after an underscore", `<span className="shadow-[0_0_0_1px_#fff]" />`],
+  [
+    "a length after an underscore",
+    `<span className="shadow-[0_2px_4px_var(--x)]" />`,
+  ],
+  [
+    "a duration after an underscore",
+    `<span className="[transition:opacity_200ms]" />`,
+  ],
+  [
+    "whole seconds after an underscore",
+    `<span className="[transition:opacity_2s]" />`,
+  ],
+  [
+    "an inset after an underscore",
+    `<span className="inset-[auto_12px_8px_auto]" />`,
+  ],
+  ["a length in script", `const fallback = "768px"`],
   ["an inline size", `<span style={{ borderRadius: 12 }} />`],
   ["an inline length", `<span style={{ width: "120px" }} />`],
 ]
@@ -81,6 +113,14 @@ const allowed: ReadonlyArray<[string, string]> = [
   ["a share of the viewport", `<span className="max-h-[20dvh]" />`],
   ["an aspect from data", `<span style={{ aspectRatio: "16 / 9" }} />`],
   ["a link to a fragment", `<a href="/explore#add" />`],
+  [
+    "a token timing in an arbitrary property",
+    `<span className="[transition:height_var(--control-change)]" />`,
+  ],
+  [
+    "a token shadow in an arbitrary value",
+    `<span className="shadow-[0_0_0_var(--ring-width)_var(--ring)]" />`,
+  ],
 ]
 
 describe("token discipline", () => {
@@ -98,6 +138,8 @@ describe("token discipline", () => {
       true
     )
     expect(files.some((file) => file.includes("/screens/"))).toBe(true)
+    expect(files.some((file) => file.endsWith(".ts"))).toBe(true)
+    expect(files.some((file) => file.endsWith(".generated.ts"))).toBe(false)
   })
 
   it("keeps one width switch, at 768 px, and the 4 px spacing step", () => {
@@ -108,9 +150,8 @@ describe("token discipline", () => {
     expect(tokens).not.toMatch(/--spacing:\s/)
   })
 
-  it("lets no component scale on hover or press", () => {
+  it("lets no component or screen scale on hover or press", () => {
     const scaling = Object.entries(sources)
-      .filter(([file]) => file.startsWith("../src/components/"))
       .filter(([, text]) =>
         /motion\.press|motion\.pressRound|(?:hover|active):scale-/.test(text)
       )

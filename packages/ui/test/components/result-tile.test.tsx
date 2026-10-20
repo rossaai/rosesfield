@@ -2,9 +2,12 @@ import { ResultTile } from "@rosesfield/ui/components/result-tile"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
 
-function renderTile(form: "card" | "library" = "card") {
+function renderTile(form: "card" | "library" = "card", narrow?: boolean) {
   const calls = { open: vi.fn(), recreate: vi.fn() }
   render(
     <ResultTile
@@ -22,6 +25,7 @@ function renderTile(form: "card" | "library" = "card") {
       onOpen={calls.open}
       onRecreate={calls.recreate}
       form={form}
+      {...(narrow === undefined ? {} : { narrow })}
     />
   )
   return calls
@@ -81,5 +85,36 @@ describe("ResultTile", () => {
     expect(
       screen.getByRole("button", { name: "Expand this result" }).className
     ).toContain("size-8")
+  })
+
+  it("takes its width form from its grid, a 352 px row card wide and a 228 px masonry card narrow, with no observer", () => {
+    const observe = vi.fn()
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe = observe
+        disconnect(): void {}
+        unobserve(): void {}
+      }
+    )
+    renderTile("card", false)
+    const wide = document.querySelector("[data-slot='result-tile-actions']")
+    expect(wide?.className.split(" ")).toContain("gap-2")
+    expect(
+      screen.getByRole("button", { name: "Expand this result" }).className
+    ).toContain("size-8")
+    expect(
+      screen
+        .getByRole("button", { name: "Recreate this result" })
+        .className.split(" ")
+    ).toContain("h-8")
+    cleanup()
+    renderTile("card", true)
+    expect(
+      screen
+        .getByRole("button", { name: "Recreate this result" })
+        .className.split(" ")
+    ).toContain("h-7")
+    expect(observe).not.toHaveBeenCalled()
   })
 })

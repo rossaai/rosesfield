@@ -84,7 +84,7 @@ function SettingGroup({
   return (
     <Collapsible.Root
       data-slot="setting-group"
-      className="flex flex-col rounded-card bg-(--well) p-1"
+      className="flex flex-col overflow-hidden rounded-card bg-(--well) p-1"
       {...state}
     >
       <Collapsible.Trigger
@@ -112,9 +112,14 @@ function SettingGroup({
       </Collapsible.Trigger>
       <Collapsible.Panel
         data-slot="setting-group-panel"
-        className="mt-1 grid grid-cols-3 gap-2 rounded-cell bg-(--ground) p-2"
+        className="h-(--collapsible-panel-height) overflow-hidden [transition:height_var(--control-change)] data-ending-style:h-0 data-starting-style:h-0"
       >
-        {children}
+        <div
+          data-slot="setting-group-choices"
+          className="mt-1 grid grid-cols-3 gap-2 rounded-cell bg-(--ground) p-2"
+        >
+          {children}
+        </div>
       </Collapsible.Panel>
     </Collapsible.Root>
   )
