@@ -46,7 +46,9 @@ type LibraryGridProps = {
   }
 }
 
-function PendingTiles(props: LibraryGridProps): ReactNode {
+export function PendingTiles(
+  props: Pick<LibraryGridProps, "uploads" | "working" | "uploadActions">
+): ReactNode {
   const pending = props.uploads.filter((upload) => upload.status !== "done")
   if (pending.length === 0 && props.working.length === 0) {
     return null

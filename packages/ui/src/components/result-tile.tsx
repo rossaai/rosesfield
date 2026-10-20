@@ -8,18 +8,25 @@ import { cn } from "@rosesfield/ui/lib/cn"
 import { CopyIcon, EllipsisIcon, MaximizeIcon } from "lucide-react"
 import type { CSSProperties, ReactElement, ReactNode } from "react"
 
-type Corners = { topLeft: string; topRight: string; bottomRight: string }
+type Corners = {
+  topLeft: string
+  topRight: string
+  bottomRight: string
+  besideSound: string
+}
 
 const cardCorners: Corners = {
   topLeft: "top-2 left-2",
   topRight: "top-2 right-2",
   bottomRight: "right-2 bottom-2",
+  besideSound: "right-14 bottom-2",
 }
 
 const libraryCorners: Corners = {
   topLeft: "top-3 left-3",
   topRight: "top-3 right-3",
   bottomRight: "right-3 bottom-3",
+  besideSound: "right-14 bottom-3",
 }
 
 type ResultTileProps = {
@@ -94,7 +101,9 @@ function Recreate(props: ResultTileProps & { corners: Corners }): ReactElement {
     <span
       className={cn(
         "absolute z-30 hidden @regular:flex",
-        props.corners.bottomRight,
+        props.sound === undefined
+          ? props.corners.bottomRight
+          : props.corners.besideSound,
         interaction.reveal
       )}
     >
@@ -145,7 +154,12 @@ function ResultTile(props: ResultTileProps): ReactElement {
       </span>
       <Actions {...props} corners={corners} />
       {props.sound === undefined ? null : (
-        <span className="absolute right-2 bottom-2 z-20 flex">{props.sound}</span>
+        <span
+          data-slot="result-tile-sound"
+          className="absolute right-2 bottom-2 z-20 flex"
+        >
+          {props.sound}
+        </span>
       )}
       <Recreate {...props} corners={corners} />
     </figure>

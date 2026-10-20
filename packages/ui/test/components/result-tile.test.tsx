@@ -1,5 +1,6 @@
 import { ResultTile } from "@rosesfield/ui/components/result-tile"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import type { ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 afterEach(() => {
@@ -7,7 +8,11 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-function renderTile(form: "card" | "library" = "card", narrow?: boolean) {
+function renderTile(
+  form: "card" | "library" = "card",
+  narrow?: boolean,
+  sound?: ReactNode
+) {
   const calls = { open: vi.fn(), recreate: vi.fn() }
   render(
     <ResultTile
@@ -26,6 +31,7 @@ function renderTile(form: "card" | "library" = "card", narrow?: boolean) {
       onRecreate={calls.recreate}
       form={form}
       {...(narrow === undefined ? {} : { narrow })}
+      {...(sound === undefined ? {} : { sound })}
     />
   )
   return calls
@@ -116,5 +122,33 @@ describe("ResultTile", () => {
         .className.split(" ")
     ).toContain("h-7")
     expect(observe).not.toHaveBeenCalled()
+  })
+
+  it("keeps the 40 px sound button 8 px from the clip's corner and sets Recreate 8 px to its left, so neither covers the other", () => {
+    const sound = <button type="button">Sound on</button>
+    for (const form of ["library", "card"] as const) {
+      renderTile(form, false, sound)
+      const place = document
+        .querySelector("[data-slot='result-tile-sound']")
+        ?.className.split(" ")
+      expect(place).toEqual(expect.arrayContaining(["right-2", "bottom-2"]))
+      const recreate = screen
+        .getByRole("button", { name: "Recreate this result" })
+        .parentElement?.className.split(" ")
+      expect(recreate).toEqual(
+        expect.arrayContaining([
+          "right-14",
+          form === "library" ? "bottom-3" : "bottom-2",
+        ])
+      )
+      expect(recreate).not.toContain(form === "library" ? "right-3" : "right-2")
+      cleanup()
+    }
+    renderTile("library")
+    expect(
+      screen
+        .getByRole("button", { name: "Recreate this result" })
+        .parentElement?.className.split(" ")
+    ).toEqual(expect.arrayContaining(["right-3", "bottom-3"]))
   })
 })
