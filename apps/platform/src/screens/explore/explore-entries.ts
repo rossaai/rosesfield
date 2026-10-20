@@ -4,10 +4,14 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { runsOf, runsQuery } from "@/api/queries"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { runAspect } from "@/pieces/run/run-facts"
+import {
+  admissionsByRun,
+  type ExploreAdmission,
+  exploreListQuery,
+  isAdmitted,
+} from "@/screens/explore/explore-list"
 import type { ExploreEntry, ExploreKind } from "@/screens/explore/explore-tile"
 import { publishedQuery, type SharedOutput } from "@/screens/explore/share-api"
-
-export type ExploreFilter = "all" | ExploreKind
 
 export type ExploreEntries =
   | { state: "loading" }
@@ -71,16 +75,26 @@ export function ownEntries(runs: readonly Run[]): ExploreEntry[] {
   })
 }
 
-export function filterEntries(
+export function admittedEntries(
   entries: readonly ExploreEntry[],
-  filter: ExploreFilter
+  list: readonly ExploreAdmission[]
 ): ExploreEntry[] {
-  return filter === "all"
-    ? [...entries]
-    : entries.filter((entry) => entry.kind === filter)
+  const admissions = admissionsByRun(list)
+  const shown = new Set<string>()
+  return entries.filter((entry) => {
+    if (
+      shown.has(entry.run.id) ||
+      !isAdmitted(admissions.get(entry.run.id), entry.run)
+    ) {
+      return false
+    }
+    shown.add(entry.run.id)
+    return true
+  })
 }
 
 export function useExploreEntries(): ExploreEntries {
+  const list = useQuery(exploreListQuery)
   const published = useQuery(publishedQuery)
   const runs = useInfiniteQuery(runsQuery(null))
   if (published.isError && runs.isError) {
@@ -97,9 +111,12 @@ export function useExploreEntries(): ExploreEntries {
   }
   return {
     state: "ready",
-    entries: [
-      ...sharedEntries(published.data ?? []),
-      ...ownEntries(runsOf(runs.data)),
-    ],
+    entries: admittedEntries(
+      [
+        ...sharedEntries(published.data ?? []),
+        ...ownEntries(runsOf(runs.data)),
+      ],
+      list.data
+    ),
   }
 }
