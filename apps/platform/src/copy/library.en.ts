@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const libraryCopy = {
   "viewer.close": "Close",
   "viewer.previous": "Previous",
@@ -15,8 +17,8 @@ export const libraryCopy = {
   "viewer.label.size": "Size",
   "viewer.compare": "Compare with the input",
   "viewer.compare.yours": "Your input",
-  "viewer.compare.output": "Output",
-  "viewer.compare.divider": "Divider between your input and the output",
+  "viewer.compare.output": "Result",
+  "viewer.compare.divider": "Divider between your input and the result",
   "viewer.missing.title": "This asset was deleted",
   "viewer.failed.title": "This file did not load",
   "viewer.delete.title": "Delete this asset?",
@@ -40,7 +42,7 @@ export const libraryCopy = {
   "library.drop": "Drop files to upload them",
   "library.day.today": "Today",
   "library.day.yesterday": "Yesterday",
-  "library.empty.title": "Your uploads and outputs show here",
+  "library.empty.title": "Your uploads and results show here",
   "library.empty.body": "Upload the files you want to use in apps.",
   "library.empty.action": "Upload",
   "library.filterEmpty.title": "Nothing here matches",

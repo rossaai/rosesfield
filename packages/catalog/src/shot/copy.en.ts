@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const shotCopy = {
   "shot.name": "Shot",
   "shot.line": "Write a scene and choose how the camera shoots it.",

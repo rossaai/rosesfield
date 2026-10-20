@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const charactersCopy = {
   "characters.name": "Characters",
   "characters.line":

@@ -71,6 +71,154 @@
       "sha256": "1e1edfb05bd18c3d5ec7f2c8f2a4a7d19b2c1b6fa4e218c228d0512e29631ab4"
     },
     {
+      "path": "apps/platform/src/copy/agent.en.ts",
+      "sha256": "4a48c10b08d7cb86121a778e3b208745437862dc19cc81f4a9c1eacf936797ca"
+    },
+    {
+      "path": "apps/platform/src/copy/app.en.ts",
+      "sha256": "a2f6abf5387a26de4009996de6c4d8e3bca5f2b56cfd37339b1bd619d90bb59b"
+    },
+    {
+      "path": "apps/platform/src/copy/characters.en.ts",
+      "sha256": "0be29d5bf919489cbf33532c8b330d76deeee9b078553c480064067a87395f54"
+    },
+    {
+      "path": "apps/platform/src/copy/connect.en.ts",
+      "sha256": "4cb52ea2a1c0760cc0b9eabcc0b1ef10f4809fec535700ff1e82873dd734183e"
+    },
+    {
+      "path": "apps/platform/src/copy/error.en.ts",
+      "sha256": "e7d179004e0bb44c34dad2ee939bdc06b5af4f9fa992c9db5045044f3ffcf581"
+    },
+    {
+      "path": "apps/platform/src/copy/explore.en.ts",
+      "sha256": "565a11003820f2649233e988ff4f76f709fc9d3a5fb590f7bf180690c0d44cb1"
+    },
+    {
+      "path": "apps/platform/src/copy/field.en.ts",
+      "sha256": "b09483e8e2e2c8c9553bfc2d4ff667f8737aa47fd09b72d45209a182ab2f34dd"
+    },
+    {
+      "path": "apps/platform/src/copy/home.en.ts",
+      "sha256": "8e1b9e1c46477597411994190a720734766413e1aac846c470d3a99f90faa1d1"
+    },
+    {
+      "path": "apps/platform/src/copy/key.en.ts",
+      "sha256": "84544f2c4bba218eee83afead1d061590982179896fad582880c33cc99f33ab6"
+    },
+    {
+      "path": "apps/platform/src/copy/library.en.ts",
+      "sha256": "3414bcc555957b7be814c5af2e38a144dbe4d3fa9203263b6945997e3d771081"
+    },
+    {
+      "path": "apps/platform/src/copy/settings.en.ts",
+      "sha256": "23432d4ecbc350c8726d271212d2243a8d7f394d4b76806a0fb46d409e8b4efe"
+    },
+    {
+      "path": "apps/platform/src/copy/shell.en.ts",
+      "sha256": "e9cda465786673a1d0170868f99e5d4a87ba64f48644eacfd7ca1808e5fb69fe"
+    },
+    {
+      "path": "apps/platform/src/copy/welcome.en.ts",
+      "sha256": "6faa875ada3ec60175b100b1b0fd1285efaab5fe6c8592b7dc8a36e8d58cfd11"
+    },
+    {
+      "path": "apps/platform/src/gallery/copy.en.ts",
+      "sha256": "5f8815ab5b915c299d51a55c1832d086cea931e8af99f63dae5979292633eeab"
+    },
+    {
+      "path": "apps/platform/src/gallery/reference-copy.en.ts",
+      "sha256": "8106279c3fa119b2f1463bc2cf365f05e3316d2602fff00f9e68a4245aaf9b07"
+    },
+    {
+      "path": "packages/agent/src/copy.en.ts",
+      "sha256": "f7599fb6a4daa832b81b12487252f1015e5fa484e61b64757c9715ca5da93610"
+    },
+    {
+      "path": "packages/catalog/src/ads/copy.en.ts",
+      "sha256": "f37f56eaccfee4887678476ab4a4df7bd1c21744973dd82b9fd47b7c9e4f3b56"
+    },
+    {
+      "path": "packages/catalog/src/angles/copy.en.ts",
+      "sha256": "f83b980929d20ea1f591784b2c7adffed794cabfcd8bc212c064924ab0f75c96"
+    },
+    {
+      "path": "packages/catalog/src/background-removal/copy.en.ts",
+      "sha256": "9d5772ce758b589ad6733f7c533b81f52d322a70ec50c3e6acfb2c6e82b87683"
+    },
+    {
+      "path": "packages/catalog/src/characters/copy.en.ts",
+      "sha256": "39e2b362b64d2322c05cbf5afa4d9268ef3fd2852c1f725d8ebb7df870edcab9"
+    },
+    {
+      "path": "packages/catalog/src/effects/copy.en.ts",
+      "sha256": "e809f8c8d2c131f70e83c118cb42f3dd29c69a0478c070386617f5da623759ed"
+    },
+    {
+      "path": "packages/catalog/src/expand/copy.en.ts",
+      "sha256": "7846d57f01db2269b4d9b4a2b79134b5fe0082fd3e5b5671f907ce17840dd221"
+    },
+    {
+      "path": "packages/catalog/src/headshots/copy.en.ts",
+      "sha256": "b85de9115e8bff88d66d6eb52ad2bc0893568c8a2f559bc8b03c5003f82a51c8"
+    },
+    {
+      "path": "packages/catalog/src/image/copy.en.ts",
+      "sha256": "4bec0528500d5e9b88d5db809c0f98dc3e2383e6b39f17395afe38521b96069c"
+    },
+    {
+      "path": "packages/catalog/src/layers/copy.en.ts",
+      "sha256": "feb2bf7eb8e31b916d0006a828f121d815ee492982637ea8bc35a2a5cd9400a7"
+    },
+    {
+      "path": "packages/catalog/src/lipsync/copy.en.ts",
+      "sha256": "7660c72f9cbf2b688553a3b95e898f5de1d3730a4b7976889fd88bc3758f8713"
+    },
+    {
+      "path": "packages/catalog/src/motion/copy.en.ts",
+      "sha256": "95ab97e2767bcbc9284eab642807472f79d34299ef824fda76a690600dd9a363"
+    },
+    {
+      "path": "packages/catalog/src/recast/copy.en.ts",
+      "sha256": "6c71e712adac99e5b8b8f60ff25f7574625f5764668d8aafd7c649ce3000d2f3"
+    },
+    {
+      "path": "packages/catalog/src/relight/copy.en.ts",
+      "sha256": "63bbcbc3022979a5c7ecfeca4778c49eeec39528eeeac21ae3eda2ac23b45d70"
+    },
+    {
+      "path": "packages/catalog/src/remake/copy.en.ts",
+      "sha256": "cedfc90102f8bb79685b2366006eef0010a92329266086d4a32336e0967244fd"
+    },
+    {
+      "path": "packages/catalog/src/shot/copy.en.ts",
+      "sha256": "5e4b87fe028d4854f5c8b3e50dca5e593c3348a04d9022c5337e5d75c72c999d"
+    },
+    {
+      "path": "packages/catalog/src/storyboard/copy.en.ts",
+      "sha256": "c3f6e54bf14d979eecb74aa74aa2fda68dfffeaf0d75327bf9ee1ba2f06da4fc"
+    },
+    {
+      "path": "packages/catalog/src/try-on/copy.en.ts",
+      "sha256": "0ee200dd716c0fe45d78e0a639679249ff129a85c7c0ccd8dd176263f0d8d5bc"
+    },
+    {
+      "path": "packages/catalog/src/upscale/copy.en.ts",
+      "sha256": "54254029c21bdb3ee8c6df68633fbc0b4380a211d4521a3ae19939a9cee61dc1"
+    },
+    {
+      "path": "packages/catalog/src/video-edit/copy.en.ts",
+      "sha256": "312633b7c0f278e22f44dc0c589dab651bf6644e59dbf47ca9884205cefdec5b"
+    },
+    {
+      "path": "packages/catalog/src/video/copy.en.ts",
+      "sha256": "dbbfd474c2d61f87abcd528e1a87b0738aa092767e03b0d8ae29cab6308e89bc"
+    },
+    {
+      "path": "packages/catalog/src/voice/copy.en.ts",
+      "sha256": "eebe453e5eb90e8e8c794229b11f7766895f2c16c434b6c06cb24804ce228d84"
+    },
+    {
       "path": "packages/ui/src/contracts/alert-dialog.generated.ts",
       "sha256": "0ebfcfa9908db6be77318ef86188739220c5cc78669bf6ab69a8814b458fbfde"
     },
@@ -217,6 +365,10 @@
     {
       "path": "packages/ui/src/tokens.css",
       "sha256": "bbc04ae78b77084be778a3caf47fd1e554093350f5257c350d4685a9a4aa7b10"
+    },
+    {
+      "path": "services/gateway/src/copy.en.ts",
+      "sha256": "01d2daa109e039bf433170cd9e5460e5cdf4d511d063bd3a2e5566e7af01a8b6"
     }
   ]
 }

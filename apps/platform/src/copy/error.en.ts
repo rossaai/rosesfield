@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const errorCopy = {
   "error.ENGINE_KEY_INVALID.title": "Comfy refused your key",
   "error.ENGINE_KEY_INVALID.body":
@@ -35,7 +37,7 @@ export const errorCopy = {
   "error.RUN_WATCHER_UNAVAILABLE.body": "Your inputs are kept.",
   "error.RUN_WATCHER_UNAVAILABLE.action": "Try again",
   "error.RUN_FINISHED.title": "This run has already ended",
-  "error.RUN_FINISHED.body": "Its outputs and its record stay in History.",
+  "error.RUN_FINISHED.body": "Its results and its record stay in History.",
   "error.ENGINE_BINDING_INVALID.title":
     "No engine on this server runs this app",
   "error.ENGINE_BINDING_INVALID.body":
@@ -58,7 +60,7 @@ export const errorCopy = {
     "This run needs more credits than this link has left",
   "error.SPEND_CAP_REACHED.body":
     "Its owner set the cap. Every run it made stays in History.",
-  "error.SHARE_NOT_READY.title": "This output is not finished yet",
+  "error.SHARE_NOT_READY.title": "This result is not finished yet",
   "error.SHARE_NOT_READY.body": "Share it once its run is done.",
   "error.SHARE_KEY_REQUIRED.title": "A link needs your Comfy key",
   "error.SHARE_KEY_REQUIRED.body": "Add your key, then share again.",

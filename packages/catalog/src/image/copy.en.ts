@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const imageCopy = {
   "image.name": "Image",
   "image.line": "Describe an image and get up to 4.",

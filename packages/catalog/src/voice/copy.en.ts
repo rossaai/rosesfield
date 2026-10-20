@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const voiceCopy = {
   "voice.name": "Voice",
   "voice.line": "Hear your script read in the voice you choose.",

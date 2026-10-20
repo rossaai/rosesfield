@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const headshotsCopy = {
   "headshots.name": "Headshots",
   "headshots.line": "Turn a photo of a person into a headshot.",

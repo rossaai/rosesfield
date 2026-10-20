@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const relightCopy: Readonly<Record<string, string>> = {
   "relight.name": "Relight",
   "relight.line": "Change the light on a photo.",
@@ -19,7 +21,7 @@ export const relightCopy: Readonly<Record<string, string>> = {
   "relight.input.image.kinds": "PNG, JPEG or WebP images",
   "relight.input.image.note": "Makes {width} by {height} pixels.",
   "relight.input.image.noteEmpty":
-    "The output has your photo's ratio and about 1 megapixel.",
+    "The result has your photo's ratio and about 1 megapixel.",
   "relight.input.image.required": "Add a photo",
   "relight.input.image.ratio":
     "This photo is {width} by {height} pixels. Relight takes a ratio from 3:7 to 7:3. Pick another photo.",

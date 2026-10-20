@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const shellCopy = {
   "shell.name": "Rosesfield",
   "shell.nav.home": "Home",
@@ -30,9 +32,9 @@ export const shellCopy = {
   "shell.history.working.other": "{count} runs working",
   "shell.demoEngine.row": "Demo engine",
   "shell.demoEngine.tooltip":
-    "Runs make no model output until the server has your engine key",
+    "Runs use no model until the server has your engine key",
   "shell.demoEngine.tooltipPublic":
-    "Runs make no model output until you add your engine key in Settings",
+    "Runs use no model until you add your engine key in Settings",
   "shell.offline.title": "Rosesfield cannot reach its server",
   "shell.offline.body": "Check that the server runs, then try again.",
   "shell.offline.action": "Try again",

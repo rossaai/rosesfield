@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 import { referenceCopy } from "@/gallery/reference-copy.en"
 
 const galleryCopy = {
@@ -11,7 +13,6 @@ const galleryCopy = {
   "gallery.scheme.dark": "Dark",
   "gallery.layerNote": "Open each state in one scheme:",
   "gallery.screenNote": "Open the screen in this state, in one scheme:",
-
   "entry.button": "Button",
   "entry.iconButton": "Icon button",
   "entry.input": "Input",
@@ -54,7 +55,7 @@ const galleryCopy = {
   "entry.toast": "Toast",
   "entry.command": "Command",
   "entry.viewer": "Viewer",
-  "entry.runOutputs": "Run line and outputs",
+  "entry.runOutputs": "Run line and results",
   "entry.inputFields": "Input fields",
   "entry.dropWell": "Drop well",
   "entry.audioRow": "Audio row",
@@ -65,9 +66,9 @@ const galleryCopy = {
   "entry.assetField": "Asset input",
   "entry.agentComposer": "Agent composer",
   "entry.screen.explore": "Explore screen",
-  "entry.screen.share": "Shared output page",
+  "entry.screen.share": "Shared result page",
   "entry.layer.key": "Add your Comfy key",
-  "entry.layer.share": "Share an output",
+  "entry.layer.share": "Share a result",
   "entry.screen.apps": "Apps screen",
   "entry.screen.appBar": "App screen, bar layout",
   "entry.screen.appColumn": "App screen, column layout",
@@ -94,7 +95,6 @@ const galleryCopy = {
   "sample.material.thin": "Thin",
   "sample.material.regular": "Regular",
   "sample.material.thick": "Thick",
-
   "state.tones": "Tones",
   "state.sizes": "Sizes",
   "state.disabled": "Disabled",
@@ -170,7 +170,7 @@ const galleryCopy = {
   "state.uploading": "Uploading",
   "state.unsupported": "Unsupported file",
   "state.noModel": "No agent model",
-  "state.compare": "An output with an input to compare",
+  "state.compare": "A result with an input to compare",
   "state.upload": "An upload",
   "state.fromTraits": "From traits",
   "state.noKey": "No key from the visitor",
@@ -179,7 +179,6 @@ const galleryCopy = {
   "state.apiTab": "The HTTP API",
   "state.publicMode": "Public mode",
   "state.loadFailed": "The conversation did not load",
-
   "sample.generate": "Generate",
   "sample.cancel": "Cancel",
   "sample.save": "Save",
@@ -253,10 +252,10 @@ const galleryCopy = {
   "sample.output": "A red bicycle against a white wall",
   "sample.script": "Welcome to the library, where every run keeps its inputs",
   "sample.demoCaption": "Demo engine",
-  "sample.previewSlot": "Space for an output",
+  "sample.previewSlot": "Space for a result",
   "sample.working": "Working",
   "sample.waiting": "Waiting for Comfy to start your run",
-  "sample.empty.title": "Your outputs show here",
+  "sample.empty.title": "Your results show here",
   "sample.empty.body": "Type a prompt above, or open an app.",
   "sample.failed.title": "Comfy did not answer",
   "sample.failed.body": "Your inputs are kept.",
@@ -290,7 +289,7 @@ const galleryCopy = {
   "sample.sheet.title": "Inputs",
   "sample.popover.title": "Model",
   "sample.popover.body":
-    "The demo engine makes flat gray outputs without a key.",
+    "The demo engine makes flat gray results without a key.",
   "sample.menu.label": "Run options",
   "sample.menu.useInputs": "Recreate",
   "sample.prompt.label": "Prompt",

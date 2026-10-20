@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const fieldCopy = {
   "field.optional": "Optional",
   "field.advanced": "Advanced",

@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const recastCopy: Readonly<Record<string, string>> = {
   "recast.name": "Recast",
   "recast.line": "Put your character or a new object in your clip.",
@@ -25,7 +27,7 @@ export const recastCopy: Readonly<Record<string, string>> = {
   "recast.input.quality.label": "Quality",
   "recast.input.seed.label": "Seed",
   "recast.compare.yours": "Your clip",
-  "recast.compare.output": "Output",
+  "recast.compare.output": "Result",
   "recast.compare.play": "Play both",
   "recast.compare.pause": "Pause both",
 }

@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const agentCopy = {
   "agent.title": "Agent",
   "agent.start.title": "What should the agent make?",
@@ -20,7 +22,7 @@ export const agentCopy = {
   "agent.delete": "Delete",
   "agent.delete.title": "Delete this conversation?",
   "agent.delete.body":
-    "Its runs and outputs stay in History and in your library.",
+    "Its runs and results stay in History and in your library.",
   "agent.delete.cancel": "Cancel",
   "agent.delete.confirm": "Delete",
   "agent.proposal.skip": "Skip",
@@ -31,7 +33,7 @@ export const agentCopy = {
   "agent.attached.characters": "Characters from my library: {ids}",
   "agent.untitled": "A conversation",
   "agent.empty.body":
-    "The agent can run every app, read your library and use one run's output in the next.",
+    "The agent can run every app, read your library and use one run's result in the next.",
   "agent.noModel.title": "The agent has no model",
   "agent.noModel.body":
     "Set the agent's model and its key on the server, as .env.example shows.",

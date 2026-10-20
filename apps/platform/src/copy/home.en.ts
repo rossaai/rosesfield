@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const homeCopy = {
   "home.prompt.label": "Prompt",
   "home.prompt.placeholder": "Describe what you want",
@@ -7,7 +9,7 @@ export const homeCopy = {
   "apps.title": "Apps",
   "apps.search.label": "Search apps",
   "apps.search.placeholder": "Search apps",
-  "apps.kind.label": "Output kind",
+  "apps.kind.label": "Result kind",
   "kind.all": "All",
   "kind.image": "Images",
   "kind.video": "Video",

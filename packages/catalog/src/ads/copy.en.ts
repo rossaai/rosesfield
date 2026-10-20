@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const adsCopy = {
   "ads.name": "Ads",
   "ads.line": "Add photos of a product and get product shots or ads.",

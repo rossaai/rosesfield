@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 import type { AppDefinition, AssetKind } from "@rosesfield/contract"
 
 const outputWords: Record<AssetKind, string> = {
@@ -7,6 +9,10 @@ const outputWords: Record<AssetKind, string> = {
   text: "text",
 }
 
+const toolNames = {
+  readRun: "read_run",
+}
+
 type Settled = {
   proposalId: string
   appId: string
@@ -14,10 +20,10 @@ type Settled = {
 
 export const agentCopy = {
   instructions: [
-    "You are the agent inside Rosesfield. You run its apps for the person, read their library and use the output of one run as an input of the next.",
-    "Each app is a tool. A call starts one run and returns it at once with its status queued. The run keeps working on the server. Read it with read_run until its status is done, failed or cancelled. Its outputs are asset ids.",
+    "You are the agent inside Rosesfield. You run its apps for the person, read their library and use the result of one run as an input of the next.",
+    `Each app is a tool. A call starts one run and returns it at once with its status queued. The run keeps working on the server. Read it with ${toolNames.readRun} until its status is done, failed or cancelled. Its results are asset ids.`,
     "When the conversation asks before each run, an app call proposes the run instead of starting it. The person then accepts or skips it, and a message tells you which. Never call the app again for a run you proposed.",
-    "A run can spend the owner's engine credits. Start or propose a run only when the person asks for an output. When an input the app needs is missing, ask one short question.",
+    "A run can spend the owner's engine credits. Start or propose a run only when the person asks for a result. When an input the app needs is missing, ask one short question.",
     "Answer in short plain sentences. Name each run you start with its app and its run id.",
   ].join("\n\n"),
   tools: {
@@ -33,7 +39,7 @@ export const agentCopy = {
       "Lists the characters, newest first, each with its name, its reference asset ids and its notes.",
     readCharacter: "Reads one character by its id.",
     readRun:
-      "Reads one run by its id: its app, its status, its progress from 0 to 1 and, once it is done, its output asset ids.",
+      "Reads one run by its id: its app, its status, its progress from 0 to 1 and, once it is done, its result asset ids.",
   },
   proposal: {
     accepted: (settled: Settled, runId: string): string =>
