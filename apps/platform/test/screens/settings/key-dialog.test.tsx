@@ -148,24 +148,22 @@ describe("the form that adds your Comfy key", () => {
       body: "key.outside-workspace.body",
       link: { href: comfyKeyPage, label: "key.page" },
     },
-  ])("says why Comfy refused $key, with the link that fixes it, and keeps no key", async ({
-    key,
-    title,
-    body,
-    link,
-  }) => {
-    answerAccounts()
-    renderForm()
-    paste(key)
-    const alert = await screen.findByRole("alert")
-    expect(alert.textContent).toContain(t(title))
-    expect(alert.textContent).toContain(t(body))
-    const fix = alert.querySelector("a")
-    expect(fix?.getAttribute("href")).toBe(link.href)
-    expect(fix?.textContent).toBe(t(link.label))
-    expect(readVisitorKey("engine")).toBeNull()
-    expect(screen.queryByText(t("key.valid"))).toBeNull()
-  })
+  ])(
+    "says why Comfy refused $key, with the link that fixes it, and keeps no key",
+    async ({ key, title, body, link }) => {
+      answerAccounts()
+      renderForm()
+      paste(key)
+      const alert = await screen.findByRole("alert")
+      expect(alert.textContent).toContain(t(title))
+      expect(alert.textContent).toContain(t(body))
+      const fix = alert.querySelector("a")
+      expect(fix?.getAttribute("href")).toBe(link.href)
+      expect(fix?.textContent).toBe(t(link.label))
+      expect(readVisitorKey("engine")).toBeNull()
+      expect(screen.queryByText(t("key.valid"))).toBeNull()
+    }
+  )
 
   it("says Comfy did not answer when the check fails, and keeps no key", async () => {
     answerAccounts()

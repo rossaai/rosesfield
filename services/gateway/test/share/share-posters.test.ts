@@ -2,10 +2,7 @@ import type { AssetId } from "@rosesfield/kernel"
 import { AssetStore } from "@rosesfield/library"
 import { describe, expect, it } from "vitest"
 import { withPoster } from "#share/create-share"
-import {
-  mediaSharePosters,
-  sharePostersOf,
-} from "#share/media-share-posters"
+import { mediaSharePosters, sharePostersOf } from "#share/media-share-posters"
 import {
   type Poster,
   posterSizeOf,

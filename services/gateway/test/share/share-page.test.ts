@@ -43,7 +43,11 @@ const view: ShareView = {
 
 describe("the share's data in its page", () => {
   it("rides in the page for the app, and a prompt cannot close its script", () => {
-    const page = sharePage(built, { view, poster: null }, "https://rosesfield.com/share/abc")
+    const page = sharePage(
+      built,
+      { view, poster: null },
+      "https://rosesfield.com/share/abc"
+    )
 
     expect(page).toContain(
       '<script id="rosesfield-share" type="application/json">'
@@ -60,7 +64,11 @@ describe("what the page writes as it is", () => {
       run: { ...view.run, inputs: { prompt: "cost $& and $' and $$ more" } },
     }
 
-    const page = sharePage(built, { view: priced, poster: null }, "https://rosesfield.com/share/abc")
+    const page = sharePage(
+      built,
+      { view: priced, poster: null },
+      "https://rosesfield.com/share/abc"
+    )
 
     expect(page).toContain(`"prompt":"cost $& and $' and $$ more"`)
   })
@@ -80,7 +88,11 @@ describe("what the page writes as it is", () => {
       ],
     }
 
-    const page = sharePage(built, { view: webm, poster: null }, "https://rosesfield.com/share/abc")
+    const page = sharePage(
+      built,
+      { view: webm, poster: null },
+      "https://rosesfield.com/share/abc"
+    )
 
     expect(page).toContain(
       '<meta property="og:video:type" content="video/webm" />'

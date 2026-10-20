@@ -185,8 +185,7 @@ export function useVideoScreen(
     fillForm(run)
     restore(
       run.inputs,
-      hosted.models.find((one) => one.id === run.inputs[modelInputName]) ??
-        null
+      hosted.models.find((one) => one.id === run.inputs[modelInputName]) ?? null
     )
   }
   return {

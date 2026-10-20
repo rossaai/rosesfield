@@ -193,9 +193,9 @@ test.describe("Video's model picker and its settings", () => {
     await page.goto("/apps/video")
     const column = page.locator('[data-slot="composer"]')
     await expect(column).toBeVisible()
-    await expect(
-      column.locator('[data-slot="segmented-control"]')
-    ).toHaveCount(0)
+    await expect(column.locator('[data-slot="segmented-control"]')).toHaveCount(
+      0
+    )
     await column.locator(modelRow).click()
     const list = page.locator('[data-slot="model-picker"]')
     await expect(list).toBeVisible()

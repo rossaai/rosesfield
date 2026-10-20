@@ -1,7 +1,7 @@
 import { creditsOfCost, nameOf } from "@rosesfield/catalog/comfy"
 import type { ShareView } from "@rosesfield/contract"
-import { posterSizeOf } from "#share/share-posters"
 import { shareCopy } from "#share/share.en"
+import { posterSizeOf } from "#share/share-posters"
 
 export type PageSource = () => Promise<string | null>
 
