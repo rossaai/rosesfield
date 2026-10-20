@@ -36,7 +36,7 @@ test("a click on a row that carries Open weights chooses its model", async ({
   if (name === null) {
     throw new Error("the row has no name")
   }
-  await page.getByRole("option", { name }).click({ timeout: 5000 })
+  await rows.first().getByRole("option").click({ timeout: 5000 })
   await expect(trigger).toContainText(name)
 })
 

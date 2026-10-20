@@ -57,7 +57,10 @@ async function openPublic(page: Page): Promise<string[]> {
 }
 
 async function pasteKey(page: Page, key: string): Promise<void> {
-  await page.getByRole("button", { name: "Add your Comfy key" }).click()
+  await page
+    .locator("[data-slot='app-bar']")
+    .getByRole("button", { name: "Add your Comfy key" })
+    .click()
   const dialog = page.getByRole("dialog")
   await expect(dialog.getByRole("link")).toHaveAttribute(
     "href",
