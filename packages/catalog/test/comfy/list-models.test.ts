@@ -68,3 +68,24 @@ describe("modelsForApp", () => {
     expect(graphMaker).toBe("comfy-cloud")
   })
 })
+
+describe("the reference platform's own models", () => {
+  it("are left out of the listing, by provider and by name", () => {
+    const hosted = (id: string) => ({
+      id,
+      provider: id.split("/")[0] ?? "",
+      takes: ["text"],
+      makes: ["image"],
+      form: null,
+    })
+    const models = modelsForApp(app, [
+      hosted("higgsfield/higgsfield-kling-3-pro"),
+      hosted("higgsfield/higgsfield-kling-3-4k"),
+      hosted("fal/higgsfield-soul"),
+      hosted("kling/kling-3.0-turbo"),
+    ])
+    expect(
+      models.filter((one) => one.kind === "hosted").map((one) => one.id)
+    ).toEqual(["kling/kling-3.0-turbo"])
+  })
+})

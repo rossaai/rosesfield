@@ -9,7 +9,6 @@ export const makerNames: Readonly<Record<string, string>> = {
   freepik: "Freepik",
   "gemini-interactions": "Google",
   heygen: "HeyGen",
-  higgsfield: "Higgsfield",
   ideogram: "Ideogram",
   kling: "Kling",
   krea: "Krea",
