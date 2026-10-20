@@ -11,6 +11,7 @@ export type ExplorePeople = "none" | "operator" | "consented" | "other"
 
 export type ExploreAdmission = {
   runId: string
+  shareId?: string
   source: ExploreSourceKind
   yes: `${number}-${number}-${number}`
   people: ExplorePeople

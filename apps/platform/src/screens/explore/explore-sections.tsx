@@ -9,7 +9,7 @@ import { SectionHeader } from "@rosesfield/ui/components/section-header"
 import { useRouter } from "@tanstack/react-router"
 import type { ReactElement, ReactNode } from "react"
 import { appLine, appName } from "@/catalog/app-facts"
-import { findCatalogApp } from "@/catalog/catalog-apps"
+import { catalogApps } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import {
   type ExploreRow,
@@ -24,7 +24,7 @@ import {
   useEntrySrc,
   type VisualEntry,
 } from "@/screens/explore/explore-tile"
-import { navGroups } from "@/shell/nav-rows"
+import { appIcon, navGroups } from "@/shell/nav-rows"
 
 export const bannerAppId = "image"
 export const appTileCount = 6
@@ -92,14 +92,17 @@ export function PromoCards({
   )
 }
 
-export function tileApps(): Array<{ app: AppListing; icon: ReactElement }> {
-  return navGroups()
-    .areas.flatMap((area) => {
-      const app =
-        area.target.kind === "app" ? findCatalogApp(area.target.appId) : null
-      return app === null ? [] : [{ app, icon: area.icon }]
-    })
+export function tileApps(
+  apps: readonly AppListing[] = catalogApps
+): Array<{ app: AppListing; icon: ReactElement }> {
+  const areas = navGroups(apps).areas
+  const depth = Math.max(0, ...areas.map((area) => area.apps.length))
+  return Array.from({ length: depth }, (_, index) =>
+    areas.flatMap((area) => area.apps.slice(index, index + 1))
+  )
+    .flat()
     .slice(0, appTileCount)
+    .map((app) => ({ app, icon: appIcon(app) }))
 }
 
 export function AppTiles(): ReactElement {

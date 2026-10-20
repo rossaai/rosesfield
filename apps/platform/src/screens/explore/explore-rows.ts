@@ -102,7 +102,7 @@ export function presetsOf(
   if (input === null) {
     return []
   }
-  const valueOf = (entry: VisualEntry): string | null => {
+  const presetValue = (entry: VisualEntry): string | null => {
     const value = entry.run.inputs[input.name]
     return entry.kind === "video" &&
       typeof value === "string" &&
@@ -110,13 +110,15 @@ export function presetsOf(
       ? value
       : null
   }
-  return [...groupBy(entries, valueOf).entries()].flatMap(([value, items]) => {
-    const [entry] = items
-    const name = inputValueText(app, input, value)
-    return entry === undefined || name === null
-      ? []
-      : [{ key: `${app.id}-${value}`, name, entry }]
-  })
+  return [...groupBy(entries, presetValue).entries()].flatMap(
+    ([value, items]) => {
+      const [entry] = items
+      const name = inputValueText(app, input, value)
+      return entry === undefined || name === null
+        ? []
+        : [{ key: `${app.id}-${value}`, name, entry }]
+    }
+  )
 }
 
 function appRowOf(app: AppListing, entries: VisualEntry[]): ExploreRow | null {
