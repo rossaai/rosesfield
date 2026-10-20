@@ -78,6 +78,15 @@ describe("Recreate from History on the Image app", () => {
     expect(values?.count).toBe(3)
   })
 
+  it("reopens a run whose model is not a hosted model id on the app's own inputs", () => {
+    const record = runOf("93e9078d-0000-4000-8000-000000000003", {
+      ...graphInputs,
+      model: "../models/z-image-turbo",
+      stray: "kept out",
+    })
+    expect(valuesFromRun(app, record).inputs).not.toHaveProperty("stray")
+  })
+
   it("keeps every input of a graph run", async () => {
     const record = runOf("93e9078d-0000-4000-8000-000000000002", graphInputs)
     expect(valuesFromRun(app, record).inputs).toMatchObject(graphInputs)

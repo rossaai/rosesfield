@@ -3,6 +3,7 @@ export {
   fieldOfRole,
   fieldRoleOf,
   fieldRoles,
+  inputRoleOf,
   isOneAtATime,
 } from "#domain/field-role"
 export type { HostedModel } from "#domain/generation-engine.port"

@@ -38,6 +38,14 @@ const form: ModelForm = {
     },
     {
       kind: "choice",
+      name: "seedance_version",
+      path: "seedance_version",
+      required: false,
+      options: ["1.0", "2.0"],
+      default: "1.0",
+    },
+    {
+      kind: "choice",
       name: "aspectRatio",
       path: "aspect_ratio",
       required: false,
@@ -142,6 +150,12 @@ describe("a measured price is kept per model and setting", () => {
     expect(blurry).toEqual(keyOf({ negative_prompt: "a dark sky" }))
     expect(blurry.settings).not.toContain("blurry")
     expect(blurry.settings).not.toContain("negative_prompt")
+  })
+
+  it("keys a setting whose name holds seed but is not the seed", () => {
+    expect(keyOf({ seedance_version: "2.0" })).not.toEqual(
+      keyOf({ seedance_version: "1.0" })
+    )
   })
 
   it("leaves the prompt out of the key", () => {

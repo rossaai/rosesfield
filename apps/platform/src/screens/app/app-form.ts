@@ -4,9 +4,11 @@ import type {
   Run,
   startRunBody,
 } from "@rosesfield/contract"
+import { isHostedModelId } from "@rosesfield/catalog/comfy"
 import type { SchemaInput } from "@/api/call-route"
 import { defaultAspectOf } from "@/catalog/app-facts"
 import type { CopyKey } from "@/copy.en"
+import { modelInputName } from "@/screens/app/hosted/hosted-form"
 
 export type FieldValue = string | number | string[] | undefined
 
@@ -57,11 +59,9 @@ export function defaultsOf(app: AppListing): FormValues {
   }
 }
 
-const modelInput = "model"
-
 export function isHostedRun(run: Run): boolean {
-  const model = run.inputs[modelInput]
-  return typeof model === "string" && model.includes("/")
+  const model = run.inputs[modelInputName]
+  return typeof model === "string" && isHostedModelId(model)
 }
 
 export function valuesFromRun(app: AppListing, run: Run): FormValues {

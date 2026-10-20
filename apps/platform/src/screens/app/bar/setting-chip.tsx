@@ -1,4 +1,4 @@
-import type { FieldRole } from "@rosesfield/catalog/comfy"
+import { type FieldRole, inputRoleOf } from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Chip } from "@rosesfield/ui/components/chip"
@@ -44,13 +44,6 @@ type StepperChipProps = {
   onChange: (value: number) => void
 }
 
-const inputRoles: Readonly<Record<string, FieldRole>> = {
-  resolution: "resolution",
-  length: "length",
-  duration: "length",
-  quality: "quality",
-}
-
 export function chipIconOf(role: FieldRole | null): ReactNode {
   switch (role) {
     case "aspect":
@@ -66,11 +59,11 @@ export function chipIconOf(role: FieldRole | null): ReactNode {
   }
 }
 
-function inputIconOf(input: InputDefinition): ReactNode {
+function inputIconOf(app: AppListing, input: InputDefinition): ReactNode {
   return input.name === "cameraMove" ? (
     <MoveIcon />
   ) : (
-    chipIconOf(inputRoles[input.name] ?? null)
+    chipIconOf(inputRoleOf(input.name, app.output.kind))
   )
 }
 
@@ -123,7 +116,7 @@ function InputChip({
       return (
         <ChipSelect
           label={inputCaption(input)}
-          icon={inputIconOf(input)}
+          icon={inputIconOf(app, input)}
           display={chipChoiceText(input, textOf(value) || input.default)}
           value={textOf(value) || input.default}
           onValueChange={set}
@@ -137,7 +130,7 @@ function InputChip({
       return (
         <StepperChip
           label={inputCaption(input)}
-          icon={inputIconOf(input)}
+          icon={inputIconOf(app, input)}
           shown={numberText(app, input, numberOf(value, input.default))}
           value={numberOf(value, input.default)}
           min={input.min}

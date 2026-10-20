@@ -64,7 +64,8 @@ function formSettingOf(
   output: string
 ): [string, Setting][] {
   const value = inputs[field.name]
-  if (field.kind === "prompt" || /seed/i.test(field.name)) {
+  const role = fieldRoleOf(field, output)
+  if (role === "prompt" || role === "seed") {
     return []
   }
   if (field.kind === "text" && !isSettingText(field, output)) {

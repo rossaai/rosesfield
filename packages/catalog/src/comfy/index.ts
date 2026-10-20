@@ -4,6 +4,8 @@ export {
   fieldRoleOf,
   fieldRoles,
   type HostedModel,
+  inputRoleOf,
+  isHostedModelId,
   isOneAtATime,
   type ModelField,
 } from "@rosesfield/generation/bindings"

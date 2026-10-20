@@ -1,4 +1,9 @@
-import { creditsOfCost, fieldRoleOf, nameOf } from "@rosesfield/catalog/comfy"
+import {
+  creditsOfCost,
+  inputRoleOf,
+  isHostedModelId,
+  nameOf,
+} from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { appName, aspectOf, isAssetInput } from "@/catalog/app-facts"
@@ -196,7 +201,7 @@ export function runModel(run: Run, app: AppListing | null): string | null {
   }
   const input = app?.inputs.find((one) => one.name === modelInputName)
   const chosen = run.inputs[modelInputName]
-  if (typeof chosen === "string" && isHostedModel(chosen)) {
+  if (typeof chosen === "string" && isHostedModelId(chosen)) {
     return nameOf(chosen)
   }
   if (
@@ -267,28 +272,14 @@ export function runCaption(run: Run, estimate: number | null = null): string {
   return joinParts([lead, madeCaption(run, lead), captionPrice(run, estimate)])
 }
 
-function isHostedModel(model: string): boolean {
-  return model.includes("/")
-}
-
 function inputAspectOf(run: Run): string | null {
   const model = run.inputs[modelInputName]
-  if (typeof model !== "string" || !isHostedModel(model)) {
+  if (typeof model !== "string" || !isHostedModelId(model)) {
     return null
   }
+  const output = findCatalogApp(run.appId)?.output.kind ?? "image"
   for (const [name, value] of Object.entries(run.inputs)) {
-    const role = fieldRoleOf(
-      {
-        kind: "choice",
-        name,
-        path: name,
-        required: false,
-        options: [],
-        default: null,
-      },
-      "image"
-    )
-    if (role === "aspect" && typeof value === "string") {
+    if (inputRoleOf(name, output) === "aspect" && typeof value === "string") {
       return value
     }
   }

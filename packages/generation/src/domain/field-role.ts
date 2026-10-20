@@ -120,6 +120,21 @@ export function fieldRoleOf(
   return rule?.role ?? null
 }
 
+/** Names what an input of the given name does, read as a choice of a model that makes the given output. */
+export function inputRoleOf(name: string, output: string): FieldRole | null {
+  return fieldRoleOf(
+    {
+      kind: "choice",
+      name,
+      path: name,
+      required: false,
+      options: [],
+      default: null,
+    },
+    output
+  )
+}
+
 /** Says whether a model makes one output per job, because its form holds no count field that asks for more than one. */
 export function isOneAtATime(
   fields: readonly ModelField[],
