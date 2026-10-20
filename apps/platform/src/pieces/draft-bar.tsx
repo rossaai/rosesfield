@@ -62,6 +62,7 @@ function DraftLeading({
   return (
     <>
       <AttachMenu
+        form="menu"
         label={t("bar.attach")}
         onUpload={() => void state.upload()}
         onFromLibrary={openLibrary}

@@ -1,17 +1,16 @@
-import { Button } from "@rosesfield/ui/components/button"
-import { MediaTile } from "@rosesfield/ui/components/media-tile"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTitle,
-  PopoverTrigger,
-} from "@rosesfield/ui/components/popover"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@rosesfield/ui/components/dialog"
+import { MediaTile } from "@rosesfield/ui/components/media-tile"
 import { PreviewSlot } from "@rosesfield/ui/components/preview-slot"
+import { StartFrame } from "@rosesfield/ui/components/upload-zone"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
-import { MoveIcon } from "lucide-react"
 import { type ReactElement, useState } from "react"
-import { tCatalog } from "@/copy/t"
+import { t, tCatalog } from "@/copy/t"
 import type { ShownPreset } from "@/studio/video/preset-samples"
 
 const tileAspect = { width: 16, height: 9 }
@@ -20,6 +19,7 @@ type PresetCardProps = {
   presets: readonly ShownPreset[]
   move: string | null
   onMove: (move: string | null) => void
+  line: string
 }
 
 function PresetTile({
@@ -87,54 +87,33 @@ export function PresetCard({
   presets,
   move,
   onMove,
+  line,
 }: PresetCardProps): ReactElement | null {
   const [isOpen, setOpen] = useState(false)
-  if (presets.length === 0) {
+  const chosen = presets.find((preset) => preset.value === move) ?? null
+  const shown = chosen ?? presets[0] ?? null
+  if (shown === null) {
     return null
   }
-  const chosen = presets.find((preset) => preset.value === move) ?? null
+  const title =
+    chosen === null
+      ? tCatalog("video.preset.title")
+      : tCatalog(chosen.labelKey)
   return (
-    <section
-      aria-label={tCatalog("video.preset.title")}
-      className="flex items-center gap-s3 rounded-card bg-(--well) p-s2"
-    >
-      <div className="w-tile shrink-0">
-        {chosen === null ? (
-          <PreviewSlot
-            aspect={tileAspect}
-            label={tCatalog("video.preset.none")}
-            className="bg-(--tint)"
-          />
-        ) : (
-          <MediaTile
-            kind="video"
-            src={chosen.sample}
-            alt={tCatalog(chosen.labelKey)}
-            aspect={tileAspect}
-          />
-        )}
-      </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-s1">
-        <span className="text-label text-ink-muted">
-          {tCatalog("video.preset.title")}
-        </span>
-        <span className="truncate font-medium text-body text-ink">
-          {chosen === null
-            ? tCatalog("video.preset.none")
-            : tCatalog(chosen.labelKey)}
-        </span>
-      </div>
-      <Popover open={isOpen} onOpenChange={setOpen}>
-        <PopoverTrigger
-          render={
-            <Button size="small">
-              <MoveIcon aria-hidden="true" />
-              {tCatalog("video.preset.change")}
-            </Button>
-          }
-        />
-        <PopoverContent className="w-popover-max">
-          <PopoverTitle>{tCatalog("video.preset.pick")}</PopoverTitle>
+    <>
+      <StartFrame
+        src={shown.sample}
+        alt={tCatalog(shown.labelKey)}
+        title={title}
+        line={line}
+        changeLabel={tCatalog("video.preset.change")}
+        onChange={() => setOpen(true)}
+      />
+      <Dialog open={isOpen} onOpenChange={setOpen}>
+        <DialogContent closeLabel={t("viewer.close")}>
+          <DialogHeader>
+            <DialogTitle>{tCatalog("video.preset.pick")}</DialogTitle>
+          </DialogHeader>
           <PresetGrid
             presets={presets}
             move={move}
@@ -143,8 +122,8 @@ export function PresetCard({
               setOpen(false)
             }}
           />
-        </PopoverContent>
-      </Popover>
-    </section>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

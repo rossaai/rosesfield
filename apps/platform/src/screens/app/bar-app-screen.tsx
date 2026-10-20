@@ -14,7 +14,7 @@ import { type BarTray, useBarTray } from "@/screens/app/bar/use-bar-tray"
 import { BarChips, BarFrame } from "@/screens/app/bar-frame"
 import { textOf } from "@/screens/app/fields/field-props"
 import { inputPlaceholder } from "@/screens/app/fields/input-copy"
-import { StartProblem } from "@/screens/app/generate-foot"
+import { StartProblem, submitPriceOf } from "@/screens/app/generate-foot"
 import { HostedChips } from "@/screens/app/hosted/hosted-chips"
 import { TaskPanel } from "@/screens/app/hosted/task-panel"
 import {
@@ -172,9 +172,7 @@ export function BarAppScreen({
                 onOpenSheet={() => sheet[1](true)}
               />
             }
-            price={state.start.price === "" ? undefined : state.start.price}
-            submitValue={state.start.priceValue}
-            submitName={state.start.priceName ?? undefined}
+            {...submitPriceOf(state.start)}
             busy={state.start.isPending || tray.isUploading}
           />
         </>
