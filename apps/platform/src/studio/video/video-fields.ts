@@ -1,4 +1,9 @@
-import type { ModelField } from "@rosesfield/catalog/comfy"
+import {
+  type FieldRole,
+  fieldOfRole,
+  fieldRoleOf,
+  type ModelField,
+} from "@rosesfield/catalog/comfy"
 import { isShownField } from "@/screens/app/hosted/hosted-fields"
 
 type MediaField = Extract<ModelField, { kind: "media" }>
@@ -22,24 +27,7 @@ export type VideoFields = {
   rest: ModelField[]
 }
 
-const lastNames = /(last|end|tail)[_ ]?(frame|image)/i
-
-const referenceNames = /reference/i
-
-const maskNames = /mask/i
-
-const lengthNames =
-  /^(duration|duration_seconds|durationseconds|durations|seconds|length)$/i
-
-const aspectNames = /^(aspect_ratio|aspectratio|aspect|ratio)$/i
-
-const resolutionNames = /^(resolution|output_resolution)$/i
-
-const soundNames = /^(generate_?audio|save_?audio|with_?audio|sound|audio)$/i
-
-function lastOf(field: ModelField): string {
-  return field.path.split(".").at(-1) ?? field.path
-}
+const output = "video"
 
 function images(fields: readonly ModelField[]): MediaField[] {
   return fields.filter(
@@ -48,29 +36,14 @@ function images(fields: readonly ModelField[]): MediaField[] {
   )
 }
 
-function lastFrameOf(fields: readonly ModelField[]): MediaField | null {
-  return images(fields).find((field) => lastNames.test(field.path)) ?? null
-}
-
-function startOf(fields: readonly ModelField[]): MediaField | null {
-  const plain = images(fields).filter(
-    (field) =>
-      !lastNames.test(field.path) &&
-      !referenceNames.test(field.path) &&
-      !maskNames.test(field.path)
-  )
-  return plain.find((field) => field.name === "images") ?? plain[0] ?? null
-}
-
-function referencesOf(
+function imageOfRole(
   fields: readonly ModelField[],
-  start: MediaField | null
+  role: FieldRole
 ): MediaField | null {
-  const named = images(fields).find((field) => referenceNames.test(field.path))
-  if (named !== undefined) {
-    return named
-  }
-  return start !== null && start.max > 1 ? start : null
+  const held = images(fields).filter(
+    (field) => fieldRoleOf(field, output) === role
+  )
+  return held.find((field) => field.name === "images") ?? held[0] ?? null
 }
 
 function isChip(field: ModelField): field is ChipField {
@@ -82,40 +55,38 @@ function isChip(field: ModelField): field is ChipField {
 
 function chipOf(
   fields: readonly ModelField[],
-  names: RegExp
+  role: FieldRole
 ): ChipField | null {
   return (
-    fields.filter(isChip).find((field) => names.test(lastOf(field))) ?? null
+    fields
+      .filter(isChip)
+      .find((field) => fieldRoleOf(field, output) === role) ?? null
   )
 }
 
 function choiceOf(
   fields: readonly ModelField[],
-  names: RegExp
+  role: FieldRole
 ): ChoiceField | null {
-  const field = chipOf(fields, names)
+  const field = chipOf(fields, role)
   return field?.kind === "choice" ? field : null
 }
 
 function soundOf(fields: readonly ModelField[]): ToggleField | null {
-  return (
-    fields.find(
-      (field): field is ToggleField =>
-        field.kind === "toggle" && soundNames.test(lastOf(field))
-    ) ?? null
-  )
+  const field = fieldOfRole(fields, "sound", output)
+  return field?.kind === "toggle" ? field : null
 }
 
 export function videoFieldsOf(fields: readonly ModelField[]): VideoFields {
   const prompt =
     fields.find((field): field is PromptField => field.kind === "prompt") ??
     null
-  const start = startOf(fields)
-  const last = lastFrameOf(fields)
-  const references = referencesOf(fields, start)
-  const length = chipOf(fields, lengthNames)
-  const aspect = choiceOf(fields, aspectNames)
-  const resolution = choiceOf(fields, resolutionNames)
+  const start = imageOfRole(fields, "first-frame")
+  const last = imageOfRole(fields, "last-frame")
+  const references = imageOfRole(fields, "reference")
+  const length = chipOf(fields, "length")
+  const aspect = choiceOf(fields, "aspect")
+  const resolution = choiceOf(fields, "resolution")
   const sound = soundOf(fields)
   const placed = new Set(
     [prompt, start, last, references, length, aspect, resolution, sound]

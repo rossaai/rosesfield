@@ -25,7 +25,9 @@ export type RunJob = {
   status: RunJobStatus
   progress: number | null
   outputs: AssetId[]
+  cost?: Cost
   collectingSince?: string
+  submittingSince?: string
 }
 
 export type RunState = {
@@ -69,6 +71,11 @@ type KeepJobOptions = {
 }
 
 type CollectingOptions = {
+  index: number
+  now: Date
+}
+
+type SubmittingOptions = {
   index: number
   now: Date
 }
@@ -197,14 +204,36 @@ export class Run {
     )
   }
 
-  submitting(index: number): void {
+  submittingSince(): Date | null {
+    const since = this.state.jobs.flatMap((job) =>
+      job.status === "submitting" && job.submittingSince !== undefined
+        ? [Date.parse(job.submittingSince)]
+        : []
+    )
+    return since.length === 0 ? null : new Date(Math.min(...since))
+  }
+
+  submitting(options: SubmittingOptions): void {
     this.refuseWhenFinished()
-    this.jobAt(index).status = "submitting"
+    const job = this.jobAt(options.index)
+    job.status = "submitting"
+    job.submittingSince = options.now.toISOString()
+  }
+
+  release(): void {
+    this.refuseWhenFinished()
+    for (const job of this.state.jobs) {
+      if (job.status === "submitting") {
+        job.status = "pending"
+        delete job.submittingSince
+      }
+    }
   }
 
   submitted(options: SubmittedOptions): void {
     this.refuseWhenFinished()
     const job = this.jobAt(options.index)
+    delete job.submittingSince
     job.ref = options.ref
     job.status = "queued"
     this.state.attempts = 0
@@ -240,7 +269,12 @@ export class Run {
     job.progress = 1
     job.outputs = [...options.outputs]
     this.state.attempts = 0
-    this.addCost(options.cost ?? null)
+    if (options.cost === undefined || options.cost === null) {
+      delete job.cost
+    } else {
+      job.cost = options.cost
+    }
+    this.totalCost()
     this.refresh()
     if (this.state.jobs.every((one) => one.status === "done")) {
       this.state.record.status = "done"
@@ -279,12 +313,16 @@ export class Run {
     return structuredClone(this.state)
   }
 
-  private addCost(cost: Cost | null): void {
-    if (cost === null) {
-      return
+  private totalCost(): void {
+    let amount = 0
+    for (const job of this.state.jobs) {
+      if (job.cost === undefined) {
+        this.state.record.cost = null
+        return
+      }
+      amount += job.cost.amount
     }
-    const held = this.state.record.cost?.amount ?? 0
-    this.state.record.cost = { amount: held + cost.amount, currency: "USD" }
+    this.state.record.cost = { amount, currency: "USD" }
   }
 
   private jobAt(index: number): RunJob {

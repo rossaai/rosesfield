@@ -57,6 +57,14 @@ export class RouterHttp {
     this.options = options
   }
 
+  get requestTimeoutMs(): number {
+    return this.options.timeoutMs
+  }
+
+  get downloadTimeoutMs(): number {
+    return this.options.downloadTimeoutMs
+  }
+
   get hasKey(): boolean {
     return this.options.apiKey !== null
   }

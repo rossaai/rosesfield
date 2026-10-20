@@ -41,6 +41,7 @@ type ModelPickerProps = {
   onChoose: (id: string) => void
   isLoading?: boolean
   notice?: ReactNode
+  settings?: ReactNode
   open?: boolean
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
@@ -109,20 +110,26 @@ function ModelRow({
 }
 
 function RowFacts({ row }: { row: ModelPickerRow }): ReactNode {
-  if (row.tags.length > 0) {
-    return (
-      <span className="flex flex-wrap gap-s1">
-        {row.tags.map((tag) => (
-          <Badge key={tag.label} tone="neutral" className="[&_svg]:glyph-small">
-            {tag.icon}
-            {tag.label}
-          </Badge>
-        ))}
-      </span>
-    )
-  }
-  return row.line === null ? null : (
-    <span className="truncate text-caption text-ink-muted">{row.line}</span>
+  return (
+    <>
+      {row.line === null ? null : (
+        <span className="truncate text-caption text-ink-muted">{row.line}</span>
+      )}
+      {row.tags.length === 0 ? null : (
+        <span className="flex flex-wrap gap-s1">
+          {row.tags.map((tag) => (
+            <Badge
+              key={tag.label}
+              tone="neutral"
+              className="[&_svg]:glyph-small"
+            >
+              {tag.icon}
+              {tag.label}
+            </Badge>
+          ))}
+        </span>
+      )}
+    </>
   )
 }
 
@@ -198,10 +205,10 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
       <PopoverContent
         data-slot="model-picker"
         initialFocus={search}
-        className="w-dialog max-w-[min(var(--spacing-dialog),calc(100vw-2*var(--spacing-s4)))] gap-s2 p-s2_5"
+        className="max-h-(--available-height) w-dialog max-w-[min(var(--spacing-dialog),calc(100vw-2*var(--spacing-s4)))] gap-s2 p-s2_5"
       >
         <PopoverTitle className="sr-only">{props.title}</PopoverTitle>
-        <label className="flex h-field items-center gap-s2 rounded-full bg-(--well) px-s5">
+        <label className="flex h-field shrink-0 items-center gap-s2 rounded-full bg-(--well) px-s5">
           <SearchIcon aria-hidden="true" className="glyph text-ink-muted" />
           <input
             ref={search}
@@ -214,9 +221,17 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
           />
         </label>
         {props.notice}
-        <div className="max-h-list-max overflow-y-auto">
+        <div className="max-h-list-max min-h-0 overflow-y-auto">
           <ModelList {...props} query={query} onChosen={() => setOpen(false)} />
         </div>
+        {props.settings === undefined || props.settings === null ? null : (
+          <div
+            data-slot="model-settings"
+            className="flex max-h-list-max min-h-0 flex-col gap-s4 overflow-y-auto px-s4 pt-s3 pb-s2"
+          >
+            {props.settings}
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   )

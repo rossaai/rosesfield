@@ -1,4 +1,4 @@
-import { assetId, run as runSchema } from "@rosesfield/contract"
+import { assetId, cost, run as runSchema } from "@rosesfield/contract"
 import { assetIdFormat } from "@rosesfield/kernel"
 import { z } from "zod"
 import { Run, type RunJob } from "#domain/run"
@@ -21,16 +21,22 @@ const jobRows = z.array(
     ]),
     progress: z.number().min(0).max(1).nullable(),
     outputs: z.array(assetId),
+    cost: cost.optional(),
     collectingSince: z.iso.datetime().optional(),
+    submittingSince: z.iso.datetime().optional(),
   })
 )
 
 function jobsOf(value: unknown): RunJob[] {
-  return jobRows.parse(value).map(({ collectingSince, ...job }) => ({
-    ...job,
-    outputs: job.outputs.map((id) => assetIdFormat.parse(id)),
-    ...(collectingSince === undefined ? {} : { collectingSince }),
-  }))
+  return jobRows
+    .parse(value)
+    .map(({ collectingSince, submittingSince, cost, ...job }) => ({
+      ...job,
+      ...(cost === undefined ? {} : { cost }),
+      outputs: job.outputs.map((id) => assetIdFormat.parse(id)),
+      ...(collectingSince === undefined ? {} : { collectingSince }),
+      ...(submittingSince === undefined ? {} : { submittingSince }),
+    }))
 }
 
 export function toRunRow(run: Run): RunRow {

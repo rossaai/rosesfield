@@ -6,9 +6,7 @@ export class CatalogModelPolicy extends ModelPolicy {
   override allows(tasks: readonly string[], model: HostedModel): boolean {
     return (
       !isDeniedModel(model.id) &&
-      tasksOfModel(model.id, model.takes, model.makes).some((task) =>
-        tasks.includes(task)
-      )
+      tasksOfModel(model).some((task) => tasks.includes(task))
     )
   }
 }

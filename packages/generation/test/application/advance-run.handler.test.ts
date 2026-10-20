@@ -248,7 +248,7 @@ describe("AdvanceRunHandler", () => {
     )
   })
 
-  it("leaves the run alone when a second submit with the same key loses the save", async () => {
+  it("sends the run once when two watchers read it at the same time", async () => {
     const engine = new FakeGenerationEngine({ refByKey: true })
     const harness = harnessFor({ engines: [engine] })
     const runId = await startImage(harness)
@@ -260,7 +260,7 @@ describe("AdvanceRunHandler", () => {
       "fulfilled",
       "fulfilled",
     ])
-    expect(engine.submitted).toHaveLength(2)
+    expect(engine.submitted).toHaveLength(1)
     expect(engine.cancelled).toEqual([])
     expect((await statusOf(harness, runId)).status).toBe("queued")
   })

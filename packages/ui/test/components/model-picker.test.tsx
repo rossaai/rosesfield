@@ -42,7 +42,7 @@ const sections: ModelPickerSection[] = [
         name: "Sketch 1",
         maker: "Studio",
         line: "Makes an image from words",
-        tags: [],
+        tags: [{ label: "Open weights" }],
       },
     ],
   },
@@ -89,6 +89,35 @@ describe("ModelPicker", () => {
       expect(tag.className).toContain("text-ink-muted")
       expect(tag.className).not.toMatch(/bug|cem|hor|nop/)
     }
+  })
+
+  it("shows a row's one line and its tags together", () => {
+    open()
+    const sketch = screen.getByRole("option", { name: /Sketch 1/ })
+    expect(within(sketch).getByText("Makes an image from words")).toBeTruthy()
+    expect(within(sketch).getByText("Open weights")).toBeTruthy()
+  })
+
+  it("holds the chosen model's settings under the list", () => {
+    render(
+      <ModelPicker
+        trigger={<Chip>Picture 2</Chip>}
+        title="Model"
+        searchLabel="Search models"
+        searchPlaceholder="Search by name or maker"
+        emptyLabel="No model matches"
+        sections={sections}
+        chosen="maker/picture-2"
+        onChoose={() => undefined}
+        settings={<p>Safety tolerance</p>}
+        open
+      />
+    )
+    const list = screen.getByRole("listbox", { name: "Model" })
+    const setting = screen.getByText("Safety tolerance")
+    expect(
+      list.compareDocumentPosition(setting) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
   })
 
   it("filters the rows by name and by maker", () => {

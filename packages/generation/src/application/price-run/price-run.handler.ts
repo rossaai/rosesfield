@@ -1,6 +1,11 @@
-import type { AppDefinition, RunInputs } from "@rosesfield/contract"
+import type {
+  AppDefinition,
+  EngineBinding,
+  RunInputs,
+} from "@rosesfield/contract"
 import type { AppCatalog } from "#domain/app-catalog.port"
 import { AppNotFoundError } from "#domain/error/app-not-found.error"
+import { isOneAtATime } from "#domain/field-role"
 import {
   type GenerationEngine,
   type RunPrice,
@@ -46,14 +51,25 @@ export class PriceRunHandler {
     }
     const binding = resolveBinding(app.engine, input.inputs)
     const count = input.count ?? 1
+    const runner = this.engines.find((engine) => engine.canRun(binding))
+    if (runner?.origin === "demo") {
+      return {
+        price: await runner.priceOf(binding, { inputs: input.inputs, count }),
+      }
+    }
     for (const engine of this.engines) {
       const form = await engine.formOf(binding)
       if (form !== null || engine.canRun(binding)) {
-        const measured = await this.measured(engine, app, form, input)
+        const isPerJob = count > 1 && isJobPerOutput(app, engine, form, binding)
+        const measured = await this.measured(engine, app, form, {
+          ...input,
+          count: isPerJob ? 1 : count,
+        })
         return {
           price:
-            measured ??
-            (await engine.priceOf(binding, { inputs: input.inputs, count })),
+            measured === null
+              ? await engine.priceOf(binding, { inputs: input.inputs, count })
+              : timesOf(measured, isPerJob ? count : 1),
         }
       }
     }
@@ -83,4 +99,21 @@ export class PriceRunHandler {
       ? null
       : { source: "measured", credits: Math.round(credits * 100) / 100 }
   }
+}
+
+function isJobPerOutput(
+  app: AppDefinition,
+  engine: GenerationEngine,
+  form: ModelForm | null,
+  binding: EngineBinding
+): boolean {
+  return form === null
+    ? engine.outputsPerJob(binding) === "one"
+    : isOneAtATime(form.fields, app.output.kind)
+}
+
+function timesOf(price: RunPrice, times: number): RunPrice {
+  return price.credits === null
+    ? price
+    : { ...price, credits: Math.round(price.credits * times * 100) / 100 }
 }

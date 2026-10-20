@@ -1,6 +1,4 @@
 import type { ReactElement } from "react"
-import { t } from "@/copy/t"
-import { ModelPopoverChip } from "@/screens/app/bar/model-settings"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
@@ -14,13 +12,13 @@ export function HostedChips({
   form: AppForm
 }): ReactElement {
   return (
-    <>
-      <CatalogPicker hosted={hosted} />
-      {hosted.fields === null || hosted.fields.length <= 1 ? null : (
-        <ModelPopoverChip text={t("app.inputs.open")}>
+    <CatalogPicker
+      hosted={hosted}
+      settings={
+        hosted.fields === null || hosted.fields.length <= 1 ? null : (
           <HostedFields fields={hosted.fields} form={form} skip={["prompt"]} />
-        </ModelPopoverChip>
-      )}
-    </>
+        )
+      }
+    />
   )
 }

@@ -2,9 +2,9 @@ import type { AppListing } from "@rosesfield/contract"
 import type { ReactElement } from "react"
 import { t } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
-import { ModelPopoverChip } from "@/screens/app/bar/model-settings"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
-import { CatalogPicker, modelNameOf } from "@/screens/app/hosted/catalog-picker"
+import { CountField } from "@/screens/app/fields/output-fields"
+import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import { withoutModelInput } from "@/screens/app/hosted/task-panel"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
@@ -17,15 +17,23 @@ import {
 } from "@/studio/image/image-model-settings"
 
 function HostedCountField({
+  app,
   fields,
   form,
 }: {
+  app: AppListing
   fields: ImageFields
   form: AppForm
 }): ReactElement | null {
   const { count } = fields
   if (count === null) {
-    return null
+    return fields.isOneAtATime ? (
+      <CountField
+        app={app}
+        value={form.values.count}
+        onChange={(value) => form.setForm({ count: value })}
+      />
+    ) : null
   }
   const bounds = countBoundsOf(count, form.values.inputs[count.name])
   return (
@@ -47,10 +55,12 @@ function HostedCountField({
 }
 
 export function HostedPanel({
+  app,
   hosted,
   fields,
   form,
 }: {
+  app: AppListing
   hosted: HostedState
   fields: ImageFields | null
   form: AppForm
@@ -65,7 +75,7 @@ export function HostedPanel({
     <div className="flex flex-col gap-s4">
       <CatalogPicker hosted={hosted} />
       <HostedFields fields={settings} form={form} />
-      <HostedCountField fields={fields} form={form} />
+      <HostedCountField app={app} fields={fields} form={form} />
       <HostedFields fields={fields.rest} form={form} />
     </div>
   )
@@ -105,22 +115,20 @@ export function ModelPopover({
   fields: ImageFields | null
   isGraph: boolean
 }): ReactElement {
-  const name =
-    hosted.chosen === null ? t("bar.model") : modelNameOf(hosted.chosen)
   return (
-    <ModelPopoverChip text={name}>
-      <div className="flex flex-col gap-s4">
-        <CatalogPicker hosted={hosted} />
-        {isGraph ? (
+    <CatalogPicker
+      hosted={hosted}
+      settings={
+        isGraph ? (
           <ImageModelSettings
             app={withoutModelInput(app)}
             state={state}
             chips={graphChips}
           />
-        ) : (
+        ) : (fields?.rest ?? []).length === 0 ? null : (
           <HostedFields fields={fields?.rest ?? []} form={state.form} />
-        )}
-      </div>
-    </ModelPopoverChip>
+        )
+      }
+    />
   )
 }

@@ -68,13 +68,23 @@ export function nameOf(id: string): string {
   return titleOf(spaced)
 }
 
+const makerWords: ReadonlyMap<string, string> = new Map(
+  Object.values(makerNames)
+    .filter((name) => !name.includes(" ") && name !== name.toLowerCase())
+    .map((name) => [name.toLowerCase(), name])
+)
+
 function titleOf(text: string): string {
   return text
     .split(" ")
-    .map((word) =>
-      upperWords.includes(word.toLowerCase())
-        ? word.toUpperCase()
-        : word.charAt(0).toUpperCase() + word.slice(1)
-    )
+    .map((word) => {
+      const lower = word.toLowerCase()
+      if (upperWords.includes(lower)) {
+        return word.toUpperCase()
+      }
+      return (
+        makerWords.get(lower) ?? word.charAt(0).toUpperCase() + word.slice(1)
+      )
+    })
     .join(" ")
 }

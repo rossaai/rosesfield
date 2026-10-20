@@ -95,7 +95,7 @@ function Chips({
       {isGraph ? (
         <GraphSettingChips app={app} form={state.form} />
       ) : fields === null ? null : (
-        <HostedSettingChips fields={fields} form={state.form} />
+        <HostedSettingChips app={app} fields={fields} form={state.form} />
       )}
     </span>
   )
@@ -114,7 +114,7 @@ function Settings({
   return isGraph ? (
     <GraphPanel app={app} state={state} hosted={hosted} />
   ) : (
-    <HostedPanel hosted={hosted} fields={fields} form={state.form} />
+    <HostedPanel app={app} hosted={hosted} fields={fields} form={state.form} />
   )
 }
 

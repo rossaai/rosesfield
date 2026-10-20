@@ -138,13 +138,14 @@ function ChoiceFieldControl({
     value: String(option),
     label: String(option),
   }))
-  const chosen = value === undefined ? (items[0]?.value ?? "") : String(value)
+  const chosen = value === undefined ? "" : String(value)
   return (
     <Frame field={field} value={value} form={form}>
       <ChoiceControl
         label={fieldCaption(field)}
         items={items}
         value={chosen}
+        notSet={t("field.choice.notSet")}
         onChange={(next) => {
           const option = field.options.find((one) => String(one) === next)
           form.setInput(field.name, option)

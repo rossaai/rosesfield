@@ -1,4 +1,9 @@
-import { creditsOfCost } from "@rosesfield/catalog/comfy"
+import {
+  creditsOfCost,
+  inputRoleOf,
+  isHostedModelId,
+  nameOf,
+} from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { appName, aspectOf, isAssetInput } from "@/catalog/app-facts"
@@ -196,6 +201,9 @@ export function runModel(run: Run, app: AppListing | null): string | null {
   }
   const input = app?.inputs.find((one) => one.name === modelInputName)
   const chosen = run.inputs[modelInputName]
+  if (typeof chosen === "string" && isHostedModelId(chosen)) {
+    return nameOf(chosen)
+  }
   if (
     input !== undefined &&
     typeof chosen === "string" &&
@@ -264,6 +272,20 @@ export function runCaption(run: Run, estimate: number | null = null): string {
   return joinParts([lead, madeCaption(run, lead), captionPrice(run, estimate)])
 }
 
+function inputAspectOf(run: Run): string | null {
+  const model = run.inputs[modelInputName]
+  if (typeof model !== "string" || !isHostedModelId(model)) {
+    return null
+  }
+  const output = findCatalogApp(run.appId)?.output.kind ?? "image"
+  for (const [name, value] of Object.entries(run.inputs)) {
+    if (inputRoleOf(name, output) === "aspect" && typeof value === "string") {
+      return value
+    }
+  }
+  return null
+}
+
 export function runAspect(run: Run): MediaAspect {
-  return aspectOf(run.aspectRatio)
+  return aspectOf(run.aspectRatio ?? inputAspectOf(run))
 }

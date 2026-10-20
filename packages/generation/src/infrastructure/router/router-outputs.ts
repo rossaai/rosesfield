@@ -1,6 +1,7 @@
 import type { AssetKind, RunInputs } from "@rosesfield/contract"
 import type { EngineOutput } from "#domain/generation-engine.port"
 import { mediaKindOf, mimeOf } from "#infrastructure/comfy/comfy-media"
+import { mediaSizeOf } from "#infrastructure/media-size"
 import { isObject } from "#infrastructure/router/router-json"
 import type {
   OutputLeaf,
@@ -157,12 +158,13 @@ async function fetchFound(
 }
 
 function outputOf(mime: string, bytes: Uint8Array): EngineOutput {
+  const size = mediaSizeOf(bytes)
   return {
     kind: kindOf(mime),
     mime,
     bytes,
-    width: null,
-    height: null,
+    width: size?.width ?? null,
+    height: size?.height ?? null,
     durationSeconds: null,
   }
 }
