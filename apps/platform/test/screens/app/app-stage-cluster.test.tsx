@@ -59,6 +59,42 @@ describe("the app stage's cluster", () => {
     expect(document.querySelector("[data-slot='view-pill']")).toBeNull()
   })
 
+  it("stands the View control at the top of the 36 px cluster row, 8 px under the bar, not centred 2 px lower", () => {
+    render(
+      withClient(
+        <AppStage app={image} kind="bar">
+          <div />
+        </AppStage>,
+        image,
+        [doneRun(image.id)]
+      )
+    )
+    const view = document.querySelector("[data-slot='canvas-view']")
+    expect(view?.parentElement?.getAttribute("data-slot")).toBe(
+      "canvas-cluster"
+    )
+    expect(view?.className.split(" ")).toContain("self-start")
+  })
+
+  it("leaves the ring room above the stage's first row, so a first tile's focus ring shows whole", () => {
+    render(
+      withClient(
+        <AppStage app={image} kind="bar">
+          <div />
+        </AppStage>,
+        image,
+        [doneRun(image.id)]
+      )
+    )
+    const scroll = document.querySelector("[data-slot='app-stage-scroll']")
+    expect(scroll?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "-mt-[calc(var(--spacing-focus-ring)*2)]",
+        "pt-[calc(var(--spacing-focus-ring)*2)]",
+      ])
+    )
+  })
+
   it("opens on the tab the link asks for, even once you have a run", () => {
     render(
       withClient(

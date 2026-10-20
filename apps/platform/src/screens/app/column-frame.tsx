@@ -115,13 +115,16 @@ export function ColumnFrame(props: ColumnFrameProps): ReactElement {
       {props.hasHeader === false ? null : (
         <h1 className="sr-only">{appName(props.app)}</h1>
       )}
-      <div className="flex min-h-0 flex-1 gap-2 px-4 pt-2 pb-4 @regular:pb-19">
+      <div
+        data-slot="column-row"
+        className="flex min-h-0 flex-1 gap-2 pt-2 pb-4 @regular:px-4 @regular:pb-19"
+      >
         {isRegular ? <ColumnPanel {...props} /> : null}
         <AppStage
           app={props.app}
           kind="column"
           scrollRef={fit.ref}
-          scrollClassName="pb-4 @regular:px-4"
+          scrollClassName="px-4 pb-4"
         >
           {props.canvas(openInputs)}
         </AppStage>

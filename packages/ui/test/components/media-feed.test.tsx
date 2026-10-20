@@ -162,3 +162,12 @@ describe("MediaFeed", () => {
     expect(classesOf(feed, "header")).toContain("mb-5")
   })
 })
+
+describe("ViewAll raise", () => {
+  it("rises to z-index 1 on hover and on focus, over the fade it sits in", () => {
+    const feed = renderFeed("row")
+    expect(classesOf(feed, "viewAll")).toEqual(
+      expect.arrayContaining(["relative", "hover:z-1", "focus-visible:z-1"])
+    )
+  })
+})

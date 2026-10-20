@@ -1,4 +1,5 @@
 import { Slider as SliderPrimitive } from "@base-ui/react/slider"
+import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement } from "react"
 
@@ -55,7 +56,10 @@ export function SettingSlider(props: SettingSliderProps): ReactElement {
         </SliderPrimitive.Track>
         <SliderPrimitive.Thumb
           aria-label={props.label}
-          className="block h-9 w-1 rounded-full bg-ink"
+          className={cn(
+            "block h-9 w-1 rounded-full bg-ink",
+            interaction.thumbRing
+          )}
         />
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>

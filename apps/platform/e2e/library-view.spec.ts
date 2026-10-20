@@ -260,3 +260,59 @@ test("in Grid, items stand at their own shape in columns of their width", async 
   expect(Math.round(right)).toBe(12)
   expect(Math.round(expandBox.y - tileBox.y)).toBe(12)
 })
+
+test("the search field and the tile size slider show the focus ring after Tab", async ({
+  page,
+}, info) => {
+  test.skip(
+    info.project.name !== "desktop",
+    "the cluster's slider shows at 1440"
+  )
+  await open(page, "/library")
+  const search = page.getByRole("searchbox", { name: "Search your library" })
+  const slider = page.getByRole("slider", { name: "Tile size" })
+  await expect(slider).toBeAttached()
+  let seen = { search: false, slider: false }
+  for (let step = 0; step < 40 && !(seen.search && seen.slider); step += 1) {
+    await page.keyboard.press("Tab")
+    if (await search.evaluate((node) => node === document.activeElement)) {
+      await expect(search).toHaveCSS("outline-style", "solid")
+      await expect(search).toHaveCSS("outline-offset", "2px")
+      seen = { ...seen, search: true }
+    }
+    if (await slider.evaluate((node) => node === document.activeElement)) {
+      const thumb = slider.locator("xpath=..")
+      await expect(thumb).toHaveCSS("outline-style", "solid")
+      await expect(thumb).toHaveCSS("outline-offset", "2px")
+      seen = { ...seen, slider: true }
+    }
+  }
+  expect(seen).toEqual({ search: true, slider: true })
+})
+
+test("a first-row tile's focus ring shows whole inside the grid's scroller on History and Library", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop", "Tab walks the desktop grid")
+  for (const path of ["/history", "/library"]) {
+    await open(page, path)
+    await page.getByRole("tab", { name: "Grid" }).click()
+    const scroll = page.locator("[data-slot='canvas-scroll']")
+    const tile = scroll.locator("[data-slot='media']").first()
+    await expect(tile).toBeVisible()
+    const scrollBox = await boxOf(scroll)
+    const tileBox = await boxOf(tile)
+    expect(tileBox.y - scrollBox.y, path).toBeGreaterThanOrEqual(4)
+  }
+})
+
+test("History's head row starts and ends on the page title's 16 px gutter", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop", "the head row at 1440")
+  await open(page, "/history")
+  const tabs = await boxOf(page.getByRole("radiogroup", { name: "State" }))
+  const cluster = await boxOf(page.locator("[data-slot='canvas-cluster']"))
+  expect(tabs.x).toBe(16)
+  expect(cluster.x + cluster.width).toBe(1440 - 16)
+})

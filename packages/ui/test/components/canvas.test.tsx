@@ -118,3 +118,33 @@ describe("StepCards", () => {
     )
   })
 })
+
+describe("Canvas scroll and inset", () => {
+  it("leaves the ring room above the first row, so a first-row tile's focus ring shows whole", () => {
+    render(
+      <Canvas label="Output" tabs={<span>Tabs</span>} hasRuns>
+        <p>Runs</p>
+      </Canvas>
+    )
+    const scroll = document.querySelector("[data-slot='canvas-scroll']")
+    expect(scroll?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "overflow-y-auto",
+        "-mt-[calc(var(--spacing-focus-ring)*2)]",
+        "pt-[calc(var(--spacing-focus-ring)*2)]",
+      ])
+    )
+  })
+
+  it("puts its head row on the page's own edge when it sits in the page gutter", () => {
+    render(
+      <Canvas label="History" tabs={<span>Tabs</span>} hasRuns inset="page">
+        <p>Runs</p>
+      </Canvas>
+    )
+    const head = document.querySelector("[data-slot='canvas-head']")
+    const classes = head?.className.split(" ") ?? []
+    expect(classes).toContain("px-0")
+    expect(classes).not.toContain("px-4")
+  })
+})
