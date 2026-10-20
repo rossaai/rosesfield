@@ -193,8 +193,8 @@ function shareMarkup(share: PagedShare): string {
 function exploreMarkup(shares: readonly PagedShare[]): string {
   const tiles = shares
     .map(
-      (share) =>
-        `<a href="${escapeHtml(share.view.path)}" style="display:block;margin-bottom:var(--spacing-s2);break-inside:avoid">${mediaMarkup(share, false)}</a>`
+      (share, index) =>
+        `<a href="${escapeHtml(share.view.path)}" style="display:block;margin-bottom:var(--spacing-s2);break-inside:avoid">${mediaMarkup(share, index === 0)}</a>`
     )
     .join("")
   return [
@@ -256,5 +256,7 @@ export function explorePage(
           { ...headOf(first, new URL(url).origin), title: shareCopy.lockup },
           url
         )
-  return shares.length === 0 ? html : inject(html, head, exploreMarkup(shares))
+  return shares.length === 0
+    ? html
+    : afterLoad(inject(html, head, exploreMarkup(shares)))
 }
