@@ -47,7 +47,14 @@ export const ALERT_DIALOG = {
     "control.btn": ["--spacing-field"],
     "radius.r8": ["--radius-vessel"],
     "space.s2_5": ["--spacing-s2_5"],
-    "type.bodySize": ["--text-body", "--text-code"],
+    "type.bodySize": [
+      "--text-body",
+      "--text-body--line-height",
+      "--text-body--letter-spacing",
+      "--text-code",
+      "--text-code--line-height",
+      "--text-code--letter-spacing",
+    ],
   },
   material: {
     material: "none",

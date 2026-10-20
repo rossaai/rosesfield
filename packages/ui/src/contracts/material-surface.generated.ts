@@ -71,12 +71,12 @@ export const MATERIAL_SURFACE = {
   variables: {
     "color.layer": ["--layer"],
     "color.layerLine": ["--layer-line"],
-    "material.regular.blur": [],
+    "material.regular.blur": ["--material-filter"],
     "material.regular.saturate": ["--material-filter"],
     "material.regular.tint": ["--opacity-material"],
-    "material.thick.blur": [],
+    "material.thick.blur": ["--material-filter-thick"],
     "material.thick.tint": ["--opacity-material-thick"],
-    "material.thin.blur": [],
+    "material.thin.blur": ["--material-filter-thin"],
     "material.thin.tint": ["--opacity-material-thin"],
   },
   material: {

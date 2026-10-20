@@ -66,7 +66,11 @@ export const TOAST = {
     "radius.r6": ["--radius-field", "--radius-card"],
     "space.s2": ["--spacing-s2"],
     "type.subheadLine": ["--text-label--line-height"],
-    "type.subheadSize": ["--text-label"],
+    "type.subheadSize": [
+      "--text-label",
+      "--text-label--line-height",
+      "--text-label--letter-spacing",
+    ],
   },
   material: {
     material: "material.regular",

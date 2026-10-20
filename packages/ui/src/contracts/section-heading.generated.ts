@@ -102,9 +102,20 @@ export const SECTION_HEADING = {
     "space.s1": ["--spacing-s1"],
     "space.s2": ["--spacing-s2"],
     "type.bodyLine": ["--text-body--line-height", "--text-code--line-height"],
-    "type.bodySize": ["--text-body", "--text-code"],
+    "type.bodySize": [
+      "--text-body",
+      "--text-body--line-height",
+      "--text-body--letter-spacing",
+      "--text-code",
+      "--text-code--line-height",
+      "--text-code--letter-spacing",
+    ],
     "type.subheadLine": ["--text-label--line-height"],
-    "type.subheadSize": ["--text-label"],
+    "type.subheadSize": [
+      "--text-label",
+      "--text-label--line-height",
+      "--text-label--letter-spacing",
+    ],
   },
   material: {
     material: "none",

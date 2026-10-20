@@ -78,7 +78,11 @@ export const TOOLTIP = {
     "space.s3": ["--spacing-s3"],
     "space.s4": ["--spacing-s4"],
     "type.subheadLine": ["--text-label--line-height"],
-    "type.subheadSize": ["--text-label"],
+    "type.subheadSize": [
+      "--text-label",
+      "--text-label--line-height",
+      "--text-label--letter-spacing",
+    ],
   },
   material: {
     material: "none",

@@ -32,7 +32,11 @@ export const COUNT_BADGE = {
     "radius.full": ["--radius-full"],
     "type.bodyLine": ["--text-body--line-height", "--text-code--line-height"],
     "type.subheadLine": ["--text-label--line-height"],
-    "type.subheadSize": ["--text-label"],
+    "type.subheadSize": [
+      "--text-label",
+      "--text-label--line-height",
+      "--text-label--letter-spacing",
+    ],
   },
   material: {
     material: "none",

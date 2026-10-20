@@ -158,9 +158,20 @@ export const FIELD = {
     "space.s1_5": ["--spacing-s1_5"],
     "space.s3": ["--spacing-s3"],
     "type.bodyLine": ["--text-body--line-height", "--text-code--line-height"],
-    "type.bodySize": ["--text-body", "--text-code"],
+    "type.bodySize": [
+      "--text-body",
+      "--text-body--line-height",
+      "--text-body--letter-spacing",
+      "--text-code",
+      "--text-code--line-height",
+      "--text-code--letter-spacing",
+    ],
     "type.subheadLine": ["--text-label--line-height"],
-    "type.subheadSize": ["--text-label"],
+    "type.subheadSize": [
+      "--text-label",
+      "--text-label--line-height",
+      "--text-label--letter-spacing",
+    ],
   },
   material: {
     material: "none",

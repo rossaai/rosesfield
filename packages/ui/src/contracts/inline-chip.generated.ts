@@ -55,7 +55,14 @@ export const INLINE_CHIP = {
     "radius.full": ["--radius-full"],
     "space.s1_5": ["--spacing-s1_5"],
     "type.bodyLine": ["--text-body--line-height", "--text-code--line-height"],
-    "type.bodySize": ["--text-body", "--text-code"],
+    "type.bodySize": [
+      "--text-body",
+      "--text-body--line-height",
+      "--text-body--letter-spacing",
+      "--text-code",
+      "--text-code--line-height",
+      "--text-code--letter-spacing",
+    ],
   },
   material: {
     material: "none",

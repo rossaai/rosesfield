@@ -47,7 +47,11 @@ export const AVATAR = {
     "control.hitRailDense": ["--spacing-button-small", "--spacing-icon-small"],
     "control.hitTouch": ["--spacing-button", "--spacing-icon"],
     "radius.full": ["--radius-full"],
-    "type.legalSize": ["--text-legal"],
+    "type.legalSize": [
+      "--text-legal",
+      "--text-legal--line-height",
+      "--text-legal--letter-spacing",
+    ],
   },
   material: {
     material: "none",

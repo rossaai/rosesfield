@@ -105,7 +105,14 @@ export const TABS = {
     "space.s3": ["--spacing-s3"],
     "space.s8": ["--spacing-s8"],
     "type.bodyLine": ["--text-body--line-height", "--text-code--line-height"],
-    "type.bodySize": ["--text-body", "--text-code"],
+    "type.bodySize": [
+      "--text-body",
+      "--text-body--line-height",
+      "--text-body--letter-spacing",
+      "--text-code",
+      "--text-code--line-height",
+      "--text-code--letter-spacing",
+    ],
   },
   material: {
     material: "none",

@@ -2,7 +2,7 @@
   "files": [
     {
       "path": "apps/platform/public/fonts/OFL.md",
-      "sha256": "25c0eb8d2396763a7737d82eff25da01ef0fa21cbf7d997fb3601c4ebd80a4a8"
+      "sha256": "d429dcdc3198f184bde3ca551658c7f9c0e5a9f9f51631ce4e90967ffb342f5e"
     },
     {
       "path": "apps/platform/public/fonts/jetbrains-mono-400.woff2",
@@ -67,16 +67,20 @@
       "sha256": "9564a5ec0bd1d9e34c5d4e76644125bd42b325c6b0b97b9f9475c3abd0e80c4b"
     },
     {
+      "path": "apps/platform/src/canvas-color.generated.ts",
+      "sha256": "1e1edfb05bd18c3d5ec7f2c8f2a4a7d19b2c1b6fa4e218c228d0512e29631ab4"
+    },
+    {
       "path": "packages/ui/src/contracts/alert-dialog.generated.ts",
-      "sha256": "5c5eb50c96c97dcae7abb1962bef2cee1f8256b8595bcc190d21ccf93fa2b685"
+      "sha256": "0ebfcfa9908db6be77318ef86188739220c5cc78669bf6ab69a8814b458fbfde"
     },
     {
       "path": "packages/ui/src/contracts/avatar.generated.ts",
-      "sha256": "37cfd36fd381a1920b74eaf7d2423f1fdfa94f78b81316beea77a3848b68969d"
+      "sha256": "b4a666df4158aac1009f70618fd09cb820f1ffa7d8b5534b1c430497e45d0fa0"
     },
     {
       "path": "packages/ui/src/contracts/button.generated.ts",
-      "sha256": "c3cd1c4c2bb2a2fe78ece3f8c9a84ffb056197dec33994dad8fe347b6f4f7cf5"
+      "sha256": "606baf00c52e25697162556aedc6f00fc88b374ea44517b23335456bdcf6c99d"
     },
     {
       "path": "packages/ui/src/contracts/checkbox.generated.ts",
@@ -96,11 +100,11 @@
     },
     {
       "path": "packages/ui/src/contracts/count-badge.generated.ts",
-      "sha256": "32fbaff9c9ec7a69bb3fd21efbef6abf0f59d22f2c9421440b1c49566cff1b5b"
+      "sha256": "85b69f7e5a49910dbdf2037d5256e71f609a6f4f0eb4fa7c44c03e9ea954eef4"
     },
     {
       "path": "packages/ui/src/contracts/field.generated.ts",
-      "sha256": "f57c2aee8e5b2abddada70c00110afd5b2f146883b0b0970053245d9a15116d6"
+      "sha256": "5c304659fef22cf3c55284695b5a901f0537166bb585b619ec45fe8f50cad695"
     },
     {
       "path": "packages/ui/src/contracts/icon-button.generated.ts",
@@ -108,11 +112,11 @@
     },
     {
       "path": "packages/ui/src/contracts/inline-chip.generated.ts",
-      "sha256": "9d0b925457b5db45c7bf44b4da02b89f17491294ee4e562ab87307ff21d94098"
+      "sha256": "d37fc199985394733896b72ce65d02f049fe0f80045a8ecb71bfbe2bfaa3c5b5"
     },
     {
       "path": "packages/ui/src/contracts/material-surface.generated.ts",
-      "sha256": "b17fdbe75d38acbe6443aa2a1a86c7b1e094a940ac6b8f63d6510a301c36702c"
+      "sha256": "90ad4f85b8c660ee32c9926b7d13cae98114b56deccb86728223b83b36e2dc05"
     },
     {
       "path": "packages/ui/src/contracts/media-player.generated.ts",
@@ -128,7 +132,7 @@
     },
     {
       "path": "packages/ui/src/contracts/modal.generated.ts",
-      "sha256": "aee203ee0dfdf26ffc750ed8536cfd4caeed72192c382fe9d9f63757109c89d0"
+      "sha256": "ca25729645f254ad0aad105d4e447ed3dd0d8ad9910dbb9e1715a7d1b7cd27e6"
     },
     {
       "path": "packages/ui/src/contracts/popover.generated.ts",
@@ -140,11 +144,11 @@
     },
     {
       "path": "packages/ui/src/contracts/section-heading.generated.ts",
-      "sha256": "3ba51d9c7870770c4f0d455371fe213ba138e1da0bd775c55c4d1d4d4c6da905"
+      "sha256": "bb79c616736d1326e62861afd0f92df2e9e8bb9b2ba241ca32bf001674d92da0"
     },
     {
       "path": "packages/ui/src/contracts/segmented-control.generated.ts",
-      "sha256": "b3c81d9e6a95fa747b806aa9bd8ca90b63bc04b449f515301d660cfc40208480"
+      "sha256": "e25a6fdd527b52b4c5939a8096ed98ef827900deec703b370c293cb3cdfcfb9f"
     },
     {
       "path": "packages/ui/src/contracts/select.generated.ts",
@@ -160,7 +164,7 @@
     },
     {
       "path": "packages/ui/src/contracts/skeleton.generated.ts",
-      "sha256": "790426d09066725e6703559f7ccd6582e0ca2798d6561e17436991035f6fa965"
+      "sha256": "7fe5a76c452982a42b167cb66cf78717a639871928de58bf06df012680de059d"
     },
     {
       "path": "packages/ui/src/contracts/slider.generated.ts",
@@ -168,7 +172,7 @@
     },
     {
       "path": "packages/ui/src/contracts/state-view.generated.ts",
-      "sha256": "e95756500784c6f5b7d76d83a2b654908cd0667410c99730aba0c36784c6795d"
+      "sha256": "aadfe39bd7e2e67bf41440067d49ae74802f4b46ee15b1ba7caf11f1a3645a2c"
     },
     {
       "path": "packages/ui/src/contracts/switch.generated.ts",
@@ -176,15 +180,15 @@
     },
     {
       "path": "packages/ui/src/contracts/tabs.generated.ts",
-      "sha256": "3621f698c371bef247d6d28c3ab39cacbbc3c3aa5c3bd0f08fbe89018a15a8f5"
+      "sha256": "40d7a807d1a1f37fe5680a0c93b1fcfe98d42b7fe975fd06d300f3eff03426ca"
     },
     {
       "path": "packages/ui/src/contracts/toast.generated.ts",
-      "sha256": "6f5a5442fcbc159b3c0b24f65c13055b89d588d43dee28448275a7ffc974837b"
+      "sha256": "936e5c84fd7ef47dc843e2edb0215cad74f4206fe4080213487f9478b70750a3"
     },
     {
       "path": "packages/ui/src/contracts/tooltip.generated.ts",
-      "sha256": "3725e225f8f27f96980b13652599c4acdfda4528ca28691f4201a66b6641d661"
+      "sha256": "389b35c6fc78709e2e95b3f5774fdff9284c96a3445087b3737a123e40c98661"
     },
     {
       "path": "packages/ui/src/fonts.css",

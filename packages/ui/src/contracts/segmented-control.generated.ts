@@ -82,7 +82,11 @@ export const SEGMENTED_CONTROL = {
     "space.s1_5": ["--spacing-s1_5"],
     "space.s2_5": ["--spacing-s2_5"],
     "type.legalLine": ["--text-legal--line-height"],
-    "type.legalSize": ["--text-legal"],
+    "type.legalSize": [
+      "--text-legal",
+      "--text-legal--line-height",
+      "--text-legal--letter-spacing",
+    ],
   },
   material: {
     material: "none",

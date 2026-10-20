@@ -109,7 +109,14 @@ export const MODAL = {
     "space.s12": ["--spacing-s12"],
     "space.s2_5": ["--spacing-s2_5"],
     "space.s5": ["--spacing-s5"],
-    "type.bodySize": ["--text-body", "--text-code"],
+    "type.bodySize": [
+      "--text-body",
+      "--text-body--line-height",
+      "--text-body--letter-spacing",
+      "--text-code",
+      "--text-code--line-height",
+      "--text-code--letter-spacing",
+    ],
   },
   material: {
     material: "none",
