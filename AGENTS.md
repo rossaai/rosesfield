@@ -4,13 +4,13 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 
 ## What this project is
 
-- Its tokens, typefaces, marks and component contracts are generated files, each listed in `generated.json`.
+- Its tokens, typefaces, marks and component contracts are generated files, each listed in `generated.json`. Its rules are its own, one doc per subject under `docs/`.
 - MIT for the code, the docs and the design tokens. The name and the logo are trademarks of ROSSA AI, LLC, and the logo files in `apps/platform/public/` are all rights reserved, per `TRADEMARKS.md`.
 - You bring your own key and run it on your machine or your own host. No accounts, no payments, no credits.
 
 ## Hard lines
 
-1. **The look is its own.** Tokens are values and can be reused.
+1. **Generated files stay generated.** The tokens, typefaces, marks and component contracts are the generated files `generated.json` lists, and none is edited by hand.
 2. **The engine stays behind a port.** No engine name appears in `domain` or `application` code. Comfy is an adapter.
 3. **Proof is real or absent.** No mock output, no invented timing, no placeholder demo in the README or the UI.
 4. **A paid call carries a bound.** Every engine call has a timeout, a retry maximum and an idempotency key. An engine that takes no idempotency key gets one submit and no retry, per `docs/stack.md` §RunPod Serverless.
