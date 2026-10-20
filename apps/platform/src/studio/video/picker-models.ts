@@ -1,44 +1,15 @@
 import {
   type CatalogModel,
   lengthOf,
-  type ModelField,
   type ModelTag,
   topResolutionOf,
 } from "@rosesfield/catalog/comfy"
 import type { AppListing } from "@rosesfield/contract"
+import { graphFormOf } from "@/studio/video/graph-form"
 import { modelsOfTab, type VideoTab } from "@/studio/video/video-tabs"
 
-type AppInput = AppListing["inputs"][number]
-
-function fieldOfInput(input: AppInput): ModelField | null {
-  const base = { name: input.name, path: input.name, required: false }
-  switch (input.type) {
-    case "choice":
-      return {
-        ...base,
-        kind: "choice",
-        options: input.options.map((option) => option.value),
-        default: input.default,
-      }
-    case "number":
-      return {
-        ...base,
-        kind: "number",
-        min: input.min,
-        max: input.max,
-        integer: Number.isInteger(input.step),
-        default: input.default,
-      }
-    default:
-      return null
-  }
-}
-
 export function graphTagsOf(app: AppListing): ModelTag[] {
-  const fields = app.inputs.flatMap((input) => {
-    const field = fieldOfInput(input)
-    return field === null ? [] : [field]
-  })
+  const fields = graphFormOf(app).filter((field) => field.kind !== "media")
   const tags: ModelTag[] = []
   const resolution = topResolutionOf(fields)
   const length = lengthOf(fields)
@@ -57,7 +28,7 @@ export function pickerModelsOf(
   app: AppListing
 ): CatalogModel[] {
   const graphTags = graphTagsOf(app)
-  return modelsOfTab(models, tab).map((model) =>
+  return modelsOfTab(models, tab, app).map((model) =>
     model.kind === "graph"
       ? {
           ...model,

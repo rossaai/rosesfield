@@ -46,6 +46,11 @@ describe("the models Video's picker lists", () => {
         (one) => one.id
       )
     ).toEqual(["minimax/minimax-h3"])
+    expect(
+      pickerModelsOf([graph, minimax, pruna], "first-last", video).map(
+        (one) => one.id
+      )
+    ).toEqual(["ltx-2-5", "minimax/minimax-h3", "pruna/p-video-2"])
   })
 
   it("gives a graph its resolution and length, and leaves a hosted model's own tags", () => {
