@@ -14,6 +14,7 @@ afterEach(cleanup)
 const listing = appListing.parse(app)
 const model = listing.inputs.find((input) => input.name === "model")
 const options = model?.type === "choice" ? model.options : []
+const chosenByDefault = model?.type === "choice" ? model.default : ""
 
 function stateWith(chosen: Record<string, FieldValue>[]): AdsScreenState {
   const form: AppForm = {
@@ -38,7 +39,7 @@ describe("the Ads model chip", () => {
   it("is the shared model chip: the lab mark, the name and a chevron", () => {
     renderChip()
     const name = tCatalog(
-      options.find((one) => one.value === model?.default)?.labelKey ?? ""
+      options.find((one) => one.value === chosenByDefault)?.labelKey ?? ""
     )
     const chip = screen.getByRole("button", {
       name: `${t("model.picker.title")} ${name}`,
@@ -47,7 +48,7 @@ describe("the Ads model chip", () => {
     expect(chip.textContent).not.toContain(t("bar.model"))
     const mark = chip.querySelector("[data-slot=lab-mark]")
     expect(mark?.getAttribute("data-maker")).toBe(
-      choiceMakerOf(model?.default ?? "", name)
+      choiceMakerOf(chosenByDefault, name)
     )
     expect(chip.querySelector("svg.lucide-chevron-right")).not.toBeNull()
   })
@@ -72,7 +73,7 @@ describe("the Ads model chip", () => {
     for (const option of options) {
       expect(all.textContent).toContain(tCatalog(`${option.labelKey}.line`))
     }
-    const other = options.find((one) => one.value !== model?.default)
+    const other = options.find((one) => one.value !== chosenByDefault)
     const row = all.querySelector(`[data-model="${other?.value}"]`)
     if (row === null) {
       throw new Error("no row for the other model")
