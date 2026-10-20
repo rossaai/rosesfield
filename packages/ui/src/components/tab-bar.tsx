@@ -7,8 +7,12 @@ import type { ComponentProps, ReactElement, ReactNode } from "react"
 
 const place: AppBarPlace = "bottom"
 
-const pressClass =
-  "transition-[opacity,translate] duration-(--duration-control) active:translate-y-0.5 active:opacity-60 in-data-[gallery=press]:translate-y-0.5 in-data-[gallery=press]:opacity-60"
+const press =
+  "transition-[opacity,translate] duration-(--duration-control) active:translate-y-0.5 in-data-[gallery=press]:translate-y-0.5"
+
+const linkPress = "active:opacity-60 in-data-[gallery=press]:opacity-60"
+
+const generatePress = "active:opacity-90 in-data-[gallery=press]:opacity-90"
 
 function TabBar({
   label,
@@ -22,8 +26,13 @@ function TabBar({
       aria-label={label}
       data-slot="app-bar"
       data-place={place}
-      className="sticky bottom-0 z-40 w-full border-t border-transparent bg-canvas p-1 pb-[calc(var(--spacing)+env(safe-area-inset-bottom))] @regular:hidden"
+      className="sticky bottom-0 z-40 w-full border-t border-transparent p-1 pb-[calc(var(--spacing)+env(safe-area-inset-bottom))] @regular:hidden"
     >
+      <div
+        aria-hidden="true"
+        data-slot="app-bar-glow"
+        className="pointer-events-none absolute inset-x-0 -top-9 bottom-0 -z-1 bg-linear-to-b from-transparent to-canvas to-[calc(var(--spacing)*8.75)]"
+      />
       <div
         data-slot="app-bar-tabs"
         className="grid h-12 grid-cols-5 items-center"
@@ -57,7 +66,8 @@ function TabBarLink({
       "aria-current": current ? "page" : undefined,
       className: cn(
         "flex h-12 min-w-0 flex-col items-center justify-center gap-0.5 p-1.5 text-caption text-ink-muted no-underline aria-[current=page]:text-ink [&_svg]:size-5",
-        pressClass,
+        press,
+        linkPress,
         interaction.ring,
         className
       ),
@@ -88,7 +98,8 @@ function TabBarGenerate({
         data-slot="app-bar-tabGenerate"
         className={cn(
           "flex h-11 w-16.5 items-center justify-center rounded-card bg-ink text-canvas [&_svg]:size-6",
-          pressClass,
+          press,
+          generatePress,
           interaction.ring,
           className
         )}
