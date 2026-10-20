@@ -203,7 +203,7 @@ describe("inputValueText", () => {
     if (expand === null || top === undefined) {
       return
     }
-    expect(inputValueText(expand, top, 25)).toBe("25%")
+    expect(inputValueText(expand, top, 25)).toBe("25 percent")
   })
 })
 
