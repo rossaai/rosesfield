@@ -1,5 +1,5 @@
-import { Button, IconButton } from "@rosesfield/ui/components/button"
-import { growClass } from "@rosesfield/ui/components/textarea"
+import { IconButton } from "@rosesfield/ui/components/button"
+import { GenerateButton } from "@rosesfield/ui/components/generate-button"
 import { useAutoGrow } from "@rosesfield/ui/hooks/use-auto-grow"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { XIcon } from "lucide-react"
@@ -33,15 +33,17 @@ type PromptBarProps = {
   submitValue?: ReactNode
   submitName?: string | undefined
   busy?: boolean
+  placement?: "inline" | "dock"
   className?: string
 }
 
-const fieldClass = cn(
-  growClass,
-  "w-full bg-transparent px-s1_5 text-body text-ink outline-none placeholder:text-ink-muted"
-)
+const fieldClass =
+  "block max-h-[20dvh] min-h-10 w-full resize-none field-sizing-content overflow-y-auto bg-transparent px-1 py-2.5 text-body text-ink outline-none placeholder:text-ink-muted"
 
-const thumbRadius = "rounded-[calc(var(--radius-vessel)-var(--spacing-s3))]"
+const placements = {
+  inline: "w-full max-w-220",
+  dock: "fixed inset-x-4 bottom-4 z-40 mx-auto max-w-220",
+} satisfies Record<NonNullable<PromptBarProps["placement"]>, string>
 
 function AttachmentThumb({
   attachment,
@@ -57,7 +59,7 @@ function AttachmentThumb({
       <img
         src={attachment.src}
         alt={attachment.alt}
-        className={cn("size-thumb bg-(--tint) object-cover", thumbRadius)}
+        className="size-thumb rounded-dense bg-(--tint) object-cover"
       />
       {attachment.caption === undefined ? null : (
         <span className="max-w-thumb truncate text-caption text-ink-muted">
@@ -68,7 +70,8 @@ function AttachmentThumb({
         <IconButton
           label={removeLabel}
           size="badge"
-          className="material absolute top-s1 right-s1"
+          tone="glass"
+          className="absolute top-s1 right-s1"
           onClick={() => onRemove(attachment.id)}
         >
           <XIcon aria-hidden="true" />
@@ -84,82 +87,6 @@ function isSubmitKey(event: KeyboardEvent<HTMLTextAreaElement>): boolean {
   )
 }
 
-function PromptControls({
-  leading,
-  chips,
-  busy,
-  onSubmit,
-  submitLabel,
-  submitValue,
-  submitName,
-}: PromptBarProps): ReactElement {
-  return (
-    <div className="flex min-w-0 items-center gap-s2">
-      {leading}
-      <div className="flex min-w-0 flex-1 items-center gap-s2">{chips}</div>
-      <Button
-        tone="primary"
-        size="dense"
-        busy={busy === true}
-        onClick={onSubmit}
-        aria-label={submitName}
-      >
-        {submitLabel}
-        {submitValue}
-      </Button>
-    </div>
-  )
-}
-
-function PromptBar(props: PromptBarProps): ReactElement {
-  const field = useRef<HTMLTextAreaElement>(null)
-  useAutoGrow(field)
-  const busy = props.busy === true
-  const submit = (): void => {
-    if (!busy) {
-      props.onSubmit()
-    }
-  }
-  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
-    if (isSubmitKey(event)) {
-      event.preventDefault()
-      submit()
-    }
-  }
-  return (
-    <div
-      data-slot="prompt-bar"
-      className={cn(
-        "flex w-full max-w-prompt-max flex-col gap-s1_5",
-        props.className
-      )}
-    >
-      <div
-        data-ground="surface"
-        className="flex flex-col gap-s2 rounded-vessel bg-surface p-s3"
-      >
-        <PromptTray {...props} />
-        <textarea
-          ref={field}
-          rows={1}
-          aria-label={props.label}
-          placeholder={props.placeholder}
-          value={props.value}
-          onChange={(event) => props.onValueChange(event.target.value)}
-          onKeyDown={onKeyDown}
-          className={fieldClass}
-        />
-        <PromptControls {...props} busy={busy} onSubmit={submit} />
-      </div>
-      {props.price === undefined ? null : (
-        <p className="self-end px-s3 text-caption text-ink-muted">
-          {props.price}
-        </p>
-      )}
-    </div>
-  )
-}
-
 function PromptTray({
   attachments,
   removeLabel,
@@ -169,7 +96,10 @@ function PromptTray({
     return null
   }
   return (
-    <ul className="flex gap-s2 overflow-x-auto">
+    <ul
+      data-slot="composer-attachments"
+      className="flex gap-s2 overflow-x-auto"
+    >
       {attachments.map((attachment) => (
         <AttachmentThumb
           key={attachment.id}
@@ -179,6 +109,90 @@ function PromptTray({
         />
       ))}
     </ul>
+  )
+}
+
+function ChipRow({ leading, chips }: PromptBarProps): ReactElement {
+  return (
+    <div
+      data-slot="composer-toolbar"
+      className="flex h-8 min-w-0 items-center gap-1"
+    >
+      {leading}
+      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+        {chips}
+      </div>
+    </div>
+  )
+}
+
+function PromptField({
+  props,
+  onSubmit,
+}: {
+  props: PromptBarProps
+  onSubmit: () => void
+}): ReactElement {
+  const field = useRef<HTMLTextAreaElement>(null)
+  useAutoGrow(field)
+  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
+    if (isSubmitKey(event)) {
+      event.preventDefault()
+      onSubmit()
+    }
+  }
+  return (
+    <div data-slot="composer-prompt" className="flex min-h-12 items-start">
+      <textarea
+        ref={field}
+        rows={1}
+        aria-label={props.label}
+        placeholder={props.placeholder}
+        value={props.value}
+        onChange={(event) => props.onValueChange(event.target.value)}
+        onKeyDown={onKeyDown}
+        className={fieldClass}
+      />
+    </div>
+  )
+}
+
+function PromptBar(props: PromptBarProps): ReactElement {
+  const busy = props.busy === true
+  const submit = (): void => {
+    if (!busy) {
+      props.onSubmit()
+    }
+  }
+  return (
+    <div
+      data-slot="prompt-bar"
+      data-placement={props.placement ?? "inline"}
+      className={cn(
+        "rounded-vessel bg-surface-2 p-1",
+        placements[props.placement ?? "inline"],
+        props.className
+      )}
+    >
+      <div
+        data-ground="surface"
+        className="flex items-end gap-3 rounded-card bg-surface p-3"
+      >
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <PromptTray {...props} />
+          <PromptField props={props} onSubmit={submit} />
+          <ChipRow {...props} />
+        </div>
+        <GenerateButton
+          form="tile"
+          label={props.submitLabel}
+          price={props.submitValue ?? props.price}
+          busy={busy}
+          onClick={submit}
+          aria-label={props.submitName}
+        />
+      </div>
+    </div>
   )
 }
 

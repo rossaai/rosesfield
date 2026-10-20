@@ -6,6 +6,7 @@ import {
   menuSeparatorClass,
 } from "@rosesfield/ui/components/dropdown-menu"
 import { wellClass } from "@rosesfield/ui/components/input"
+import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -21,8 +22,9 @@ const selectTriggerVariants = cva(
       variant: {
         field: cn(wellClass, "h-field rounded-full pr-s4"),
         chip: cn(
-          "h-button-small max-w-button-max rounded-full bg-(--well) px-s3 font-medium text-body text-ink hover:bg-(--tint) data-popup-open:bg-(--tint)",
-          motion.press
+          "relative h-8 max-w-button-max justify-start gap-1 rounded-dense bg-(--well) px-3 py-1.5 font-medium text-body text-ink data-popup-open:bg-(--tint) [&_svg]:size-4 [&_[data-slot=select-icon]]:hidden",
+          interaction.light,
+          interaction.ring
         ),
       },
     },
@@ -47,8 +49,9 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon
+        data-slot="select-icon"
         className={cn(
-          "flex shrink-0 text-ink-muted group-data-popup-open/select:[transform:rotate(-180deg)]",
+          "flex shrink-0 text-ink-muted group-data-popup-open/select:rotate-180",
           motion.control
         )}
       >
