@@ -132,7 +132,8 @@ describe("the Image bar places each field its model's schema declares", () => {
     expect(placed.references?.name).toBe("images")
     expect(placed.references?.max).toBe(10)
     expect(placed.aspect).toBeNull()
-    expect(placed.size).toBeNull()
+    expect(placed.resolution).toBeNull()
+    expect(placed.quality).toBeNull()
     expect(placed.count).toBeNull()
     expect(names(placed.rest)).toEqual([
       "safetyTolerance",
@@ -142,14 +143,15 @@ describe("the Image bar places each field its model's schema declares", () => {
     ])
   })
 
-  it("takes the first choice the catalog's resolution rule names, as model-tags does, and binds the count", () => {
+  it("gives aspect, quality and resolution a chip each, as the reference shows them, and binds the count", () => {
     const placed = imageFieldsOf(grok)
     expect(placed.references).toBeNull()
     expect(placed.aspect?.name).toBe("aspectRatio")
-    expect(placed.size?.name).toBe("quality")
+    expect(placed.quality?.name).toBe("quality")
+    expect(placed.resolution?.name).toBe("resolution")
     expect(placed.count?.name).toBe("n")
-    expect(names(placed.rest)).toEqual(["resolution", "size"])
-    expect(imageFieldsOf([sizedChoice]).size?.name).toBe("size")
+    expect(names(placed.rest)).toEqual(["size"])
+    expect(imageFieldsOf([sizedChoice]).resolution?.name).toBe("size")
   })
 
   it("shows the count chip for a model whose count field takes at most 1", () => {

@@ -67,6 +67,22 @@ describe("a hosted model's form", () => {
     })
   })
 
+  it("starts a choice with no default on its auto option, so its chip shows a value", () => {
+    const quality: ModelField = {
+      kind: "choice",
+      name: "quality",
+      path: "quality",
+      required: false,
+      options: ["auto", "low", "high"],
+      default: null,
+    }
+    const style: ModelField = { ...quality, name: "style", options: ["a", "b"] }
+    expect(hostedDefaults([quality, style], {})).toEqual({
+      quality: "auto",
+      style: undefined,
+    })
+  })
+
   it("sends the model and every filled field, and leaves out the empty ones", () => {
     const body = hostedBody(
       "maker/clip-3",

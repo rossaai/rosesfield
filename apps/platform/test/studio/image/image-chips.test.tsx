@@ -31,12 +31,17 @@ function formWith(inputs: Record<string, FieldValue>): AppForm {
 afterEach(cleanup)
 
 describe("a choice chip on the Image bar", () => {
-  it("shows its field as not set while you have not set it, and the value once you have", () => {
+  it("shows its value only, with a gem for quality and the setting's name as its accessible name", () => {
     const shown = (): string | null | undefined =>
       screen.getByRole("combobox").querySelector('[data-slot="select-value"]')
         ?.textContent
     render(<FieldChoiceChip field={quality} form={formWith({})} />)
-    expect(shown()).toBe("Quality: not set")
+    expect(shown()).toBe("Not set")
+    const chip = screen.getByRole("combobox")
+    expect(
+      chip.querySelector("[data-slot='chip-icon'] .lucide-gem")
+    ).not.toBeNull()
+    expect(chip.querySelector(".sr-only")?.textContent).toBe("Quality ")
     cleanup()
     render(
       <FieldChoiceChip field={quality} form={formWith({ quality: "low" })} />

@@ -1,10 +1,20 @@
 import { findApp } from "@rosesfield/catalog"
 import { type AppListing, appListing } from "@rosesfield/contract"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
-import { countField, type FormValues } from "@/screens/app/app-form"
+import {
+  aspectField,
+  countField,
+  type FormValues,
+} from "@/screens/app/app-form"
 import { SettingChip, StepperChip } from "@/screens/app/bar/setting-chip"
 import type { AppForm } from "@/screens/app/use-app-form"
 
@@ -71,7 +81,6 @@ describe("the count stepper at the end of the chip row", () => {
           min={1}
           max={4}
           step={1}
-          unit=""
           onChange={() => undefined}
         />
         <StepperChip
@@ -81,7 +90,6 @@ describe("the count stepper at the end of the chip row", () => {
           min={4}
           max={30}
           step={1}
-          unit="s"
           onChange={() => undefined}
         />
       </TooltipProvider>
@@ -91,5 +99,87 @@ describe("the count stepper at the end of the chip row", () => {
     ).toBe("2/4")
     expect(screen.queryByRole("group", { name: "Length" })).toBeNull()
     expect(screen.getByRole("button", { name: /Length/ })).toBeDefined()
+  })
+})
+
+describe("a number chip's popover", () => {
+  it("opens a 334 px slider above its tile, 8 px clear and with no open motion: a 36 px track with the value inside and a 4 px thumb", async () => {
+    render(
+      <TooltipProvider>
+        <StepperChip
+          label="Length"
+          shown="5 s"
+          value={5}
+          min={4}
+          max={30}
+          step={1}
+          onChange={() => undefined}
+        />
+      </TooltipProvider>
+    )
+    fireEvent.click(screen.getByRole("button", { name: /Length/ }))
+    const popover = await waitFor(() => {
+      const found = document.querySelector<HTMLElement>(
+        "[data-slot='popover-content']"
+      )
+      if (found === null) {
+        throw new Error("no popover")
+      }
+      return found
+    })
+    const classes = popover.className.split(" ")
+    expect(classes).toEqual(expect.arrayContaining(["w-83.5", "px-4.25"]))
+    expect(classes).not.toContain("motion-popover")
+    expect(popover.parentElement?.getAttribute("style")).toContain("-8px")
+    const slider = popover.querySelector("[data-slot='setting-slider']")
+    expect(slider).not.toBeNull()
+    expect(
+      popover.querySelector("[data-slot='setting-slider-value']")?.textContent
+    ).toBe("5 s")
+    const input = popover.querySelector<HTMLInputElement>("input[type='range']")
+    expect(input?.getAttribute("aria-label")).toBe("Length")
+    expect([input?.min, input?.max, input?.value]).toEqual(["4", "30", "5"])
+    const thumb = input?.parentElement
+    expect(thumb?.className.split(" ")).toEqual(
+      expect.arrayContaining(["h-9", "w-1"])
+    )
+  })
+})
+
+describe("the aspect chip's menu", () => {
+  it("is 200 px wide with a 32 px header naming the setting, and a shape beside each ratio", async () => {
+    render(
+      <TooltipProvider>
+        <SettingChip app={app} form={formAt(1, [])} name={aspectField} />
+      </TooltipProvider>
+    )
+    const chip = screen.getByRole("combobox")
+    expect(
+      chip.querySelector("[data-slot='chip-icon'] .lucide-scan")
+    ).not.toBeNull()
+    fireEvent.click(chip)
+    const menu = await waitFor(() => {
+      const found = document.querySelector<HTMLElement>(
+        "[data-slot='select-content']"
+      )
+      if (found === null) {
+        throw new Error("no menu")
+      }
+      return found
+    })
+    expect(menu.className.split(" ")).toEqual(
+      expect.arrayContaining(["w-50", "p-2"])
+    )
+    const header = menu.querySelector("[data-slot='select-label']")
+    expect(header?.textContent).toBe(t("field.aspect.label"))
+    expect(header?.className.split(" ")).toContain("h-8")
+    const options = [...menu.querySelectorAll("[data-slot='select-item']")]
+    expect(options.length).toBeGreaterThan(1)
+    for (const option of options) {
+      expect(option.className.split(" ")).toContain("h-9")
+      expect(
+        option.querySelector("[data-slot='select-item-icon'] svg")
+      ).not.toBeNull()
+    }
   })
 })

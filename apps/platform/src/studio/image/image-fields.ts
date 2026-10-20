@@ -13,7 +13,8 @@ type NumberField = Extract<ModelField, { kind: "number" }>
 export type ImageFields = {
   references: MediaField | null
   aspect: ChoiceField | null
-  size: ChoiceField | null
+  resolution: ChoiceField | null
+  quality: ChoiceField | null
   count: NumberField | null
   isOneAtATime: boolean
   rest: ModelField[]
@@ -35,14 +36,14 @@ function hasRole(field: ModelField, role: FieldRole): boolean {
 
 function choiceOf(
   fields: readonly ModelField[],
-  roles: readonly FieldRole[]
+  role: FieldRole
 ): ChoiceField | null {
   return (
     fields.find(
       (field): field is ChoiceField =>
         field.kind === "choice" &&
         field.options.length > 1 &&
-        roles.some((role) => hasRole(field, role))
+        hasRole(field, role)
     ) ?? null
   )
 }
@@ -73,18 +74,20 @@ export function isGraphModel(model: string): boolean {
 
 export function imageFieldsOf(fields: readonly ModelField[]): ImageFields {
   const references = referencesOf(fields)
-  const aspect = choiceOf(fields, ["aspect"])
-  const size = choiceOf(fields, ["resolution", "quality"])
+  const aspect = choiceOf(fields, "aspect")
+  const resolution = choiceOf(fields, "resolution")
+  const quality = choiceOf(fields, "quality")
   const count = countOf(fields)
   const placed = new Set(
-    [references, aspect, size, count].flatMap((field) =>
+    [references, aspect, resolution, quality, count].flatMap((field) =>
       field === null ? [] : [field.name]
     )
   )
   return {
     references,
     aspect,
-    size,
+    resolution,
+    quality,
     count,
     isOneAtATime: isOneAtATime(fields, output),
     rest: fields.filter(
