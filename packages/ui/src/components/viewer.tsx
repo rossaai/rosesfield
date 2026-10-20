@@ -48,7 +48,7 @@ function StepButton({
       onClick={step.onSelect}
       className={cn(
         "absolute top-1/2 -translate-y-1/2",
-        side === "left" ? "left-s2" : "right-s2"
+        side === "left" ? "left-6" : "right-6"
       )}
     >
       {side === "left" ? (
@@ -87,7 +87,7 @@ function ViewerStage(props: ViewerStageProps): ReactElement {
   return (
     <div
       data-slot="media-player-picture"
-      className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center px-0 py-s12 @regular:p-4"
+      className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center px-4 py-s12 @regular:p-4"
       style={{ containerType: "size" }}
     >
       <button

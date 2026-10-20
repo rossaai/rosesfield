@@ -82,7 +82,7 @@ describe("the result viewer", () => {
       "min(100cqw, (100cqh - 2 * var(--spacing-s12)) * 16 / 9)"
     )
     expect(pictureWidthOf(wide, false)).toBe(
-      "min(100cqw - 2 * var(--spacing-s5), (100cqh - var(--spacing-s12)) * 16 / 9)"
+      "min(100cqw, (100cqh - var(--spacing-s12)) * 16 / 9)"
     )
   })
 

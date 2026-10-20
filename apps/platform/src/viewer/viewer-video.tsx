@@ -66,7 +66,7 @@ export function pictureWidthOf(
   const ratio = `${aspect.width} / ${aspect.height}`
   return isRegular
     ? `min(100cqw, (100cqh - 2 * var(--spacing-s12)) * ${ratio})`
-    : `min(100cqw - 2 * var(--spacing-s5), (100cqh - var(--spacing-s12)) * ${ratio})`
+    : `min(100cqw, (100cqh - var(--spacing-s12)) * ${ratio})`
 }
 
 export function shownVolumeOf(playback: Playback): number {
@@ -144,9 +144,11 @@ function showFullScreen(video: VideoRef): void {
 function SoundControls({
   video,
   playback,
+  hasVolume,
 }: {
   video: VideoRef
   playback: Playback
+  hasVolume: boolean
 }): ReactElement {
   const soundLabel = playback.isMuted
     ? t("explore.video.soundOn")
@@ -165,15 +167,17 @@ function SoundControls({
           <Volume2Icon aria-hidden="true" />
         )}
       </IconButton>
-      <Slider
-        className="w-20 shrink-0"
-        aria-label={t("explore.video.volume")}
-        min={0}
-        max={1}
-        step={0.05}
-        value={shownVolumeOf(playback)}
-        onValueChange={(value) => changeVolume(video, value)}
-      />
+      {hasVolume ? (
+        <Slider
+          className="w-20 shrink-0"
+          aria-label={t("explore.video.volume")}
+          min={0}
+          max={1}
+          step={0.05}
+          value={shownVolumeOf(playback)}
+          onValueChange={(value) => changeVolume(video, value)}
+        />
+      ) : null}
     </>
   )
 }
@@ -181,9 +185,11 @@ function SoundControls({
 function Controls({
   video,
   playback,
+  isRegular,
 }: {
   video: VideoRef
   playback: Playback
+  isRegular: boolean
 }): ReactElement {
   const playLabel = playback.isPlaying
     ? t("explore.video.pause")
@@ -191,7 +197,10 @@ function Controls({
   return (
     <div
       data-slot="viewer-controls"
-      className="flex h-s12 shrink-0 items-center gap-2"
+      className={cn(
+        "flex h-s12 shrink-0 items-center",
+        isRegular ? "gap-2" : "gap-1"
+      )}
     >
       <IconButton
         label={playLabel}
@@ -217,7 +226,7 @@ function Controls({
         value={playback.time}
         onValueChange={(value) => seek(video, value)}
       />
-      <SoundControls video={video} playback={playback} />
+      <SoundControls video={video} playback={playback} hasVolume={isRegular} />
       <IconButton
         label={t("explore.video.fullScreen")}
         place="cardWide"
@@ -282,7 +291,7 @@ export function ViewerVideo({
           }}
           onVolumeChange={read}
         />
-        <Controls video={video} playback={playback} />
+        <Controls video={video} playback={playback} isRegular={isRegular} />
       </div>
     </div>
   )

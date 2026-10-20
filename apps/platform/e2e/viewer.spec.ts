@@ -18,19 +18,11 @@ async function fill(locator: Locator): Promise<string> {
   return locator.evaluate((element) => getComputedStyle(element).background)
 }
 
-async function startDemoVideo(): Promise<string> {
-  const started = await fetch(`${gatewayOrigin}/api/apps/video/runs`, {
+async function startDemo(app: string, inputs: object): Promise<string> {
+  const started = await fetch(`${gatewayOrigin}/api/apps/${app}/runs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      inputs: {
-        model: "minimax/minimax-h3",
-        prompt: "a paper boat drifts on a pond",
-        ratio: "16:9",
-        resolution: "768P",
-        duration: 5,
-      },
-    }),
+    body: JSON.stringify({ inputs }),
   })
   const body: { run: { id: string } } = await started.json()
   let outputs: string[] = []
@@ -64,9 +56,55 @@ function isPhone(page: Page): boolean {
 }
 
 let videoAsset = ""
+let imageAsset = ""
 
 test.beforeAll(async () => {
-  videoAsset = await startDemoVideo()
+  videoAsset = await startDemo("video", {
+    model: "minimax/minimax-h3",
+    prompt: "a paper boat drifts on a pond",
+    ratio: "16:9",
+    resolution: "768P",
+    duration: 5,
+  })
+  imageAsset = await startDemo("image", {
+    model: "z-image-turbo",
+    prompt: "a paper boat on a pond",
+    resolution: "1k",
+  })
+})
+
+function crosses(arrow: Box, picture: Box): boolean {
+  const edges = [picture.x, picture.x + picture.width]
+  return edges.some((edge) => arrow.x < edge && edge < arrow.x + arrow.width)
+}
+
+test("the step arrows never cross the video's edge on a desktop", async ({
+  page,
+}) => {
+  test.skip(isPhone(page), "the arrows are measured beside the panel at 1440")
+  await open(page, `/history?view=${videoAsset}`)
+  const picture = await boxOf(page.locator("[data-slot=viewer-video] video"))
+  const arrows = page.getByRole("button", { name: /^(Next|Previous)/ })
+  await expect(arrows.first()).toBeVisible()
+  for (const arrow of await arrows.all()) {
+    expect(crosses(await boxOf(arrow), picture)).toBe(false)
+  }
+})
+
+test("on a phone the image keeps the 16 px gutter at each side", async ({
+  page,
+}) => {
+  test.skip(!isPhone(page), "the gutter is measured at 390 px")
+  await page.addInitScript(() => {
+    window.localStorage.setItem("rosesfield.welcome", "seen")
+  })
+  await page.goto(`/history?view=${imageAsset}`)
+  const picture = page.locator("[data-slot=viewer-frame] img")
+  await expect(picture).toBeVisible()
+  const width = page.viewportSize()?.width ?? 0
+  const box = await boxOf(picture)
+  expect(box.x).toBe(gutter)
+  expect(width - (box.x + box.width)).toBe(gutter)
 })
 
 test("the viewer centres a 16:9 picture alone, with its control row under it", async ({
@@ -186,6 +224,11 @@ test("on a phone the video keeps its gutter and Recreate stays on the screen", a
   expect(width - (picture.x + picture.width)).toBe(gutter)
   expect(row.x).toBe(gutter)
   expect(width - (row.x + row.width)).toBe(gutter)
+  const tracks = page.locator("[data-slot=viewer-controls] [data-slot=slider]")
+  await expect(tracks).toHaveCount(1)
+  expect((await boxOf(tracks.first())).width).toBeGreaterThanOrEqual(
+    row.width / 2
+  )
   await expect(recreate).toBeVisible()
   expect(await fill(recreate)).toContain(ink)
   expect(
