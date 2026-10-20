@@ -1,14 +1,25 @@
 import { creditsOfCost, nameOf } from "@rosesfield/catalog/comfy"
 import type { ShareView } from "@rosesfield/contract"
+import { posterSizeOf } from "#share/share-posters"
 import { shareCopy } from "#share/share.en"
 
 export type PageSource = () => Promise<string | null>
+
+export type PagedShare = {
+  view: ShareView
+  poster: string | null
+}
 
 type Head = {
   title: string
   description: string
   image: string | null
-  video: { url: string; mime: string } | null
+  video: {
+    url: string
+    mime: string
+    width: number | null
+    height: number | null
+  } | null
   width: number | null
   height: number | null
 }
@@ -45,23 +56,48 @@ function absolute(origin: string, path: string): string {
   return new URL(path, origin).href
 }
 
-function headOf(view: ShareView, origin: string): Head {
+function imageOf(share: PagedShare): {
+  path: string | null
+  width: number | null
+  height: number | null
+} {
+  const first = share.view.media[0]
+  if (first?.kind === "image") {
+    return {
+      path: `${share.view.path}/media/0`,
+      width: first.width,
+      height: first.height,
+    }
+  }
+  if (first?.kind === "video" && share.poster !== null) {
+    return { path: share.poster, ...posterSizeOf(first.width, first.height) }
+  }
+  return { path: null, width: null, height: null }
+}
+
+function headOf(share: PagedShare, origin: string): Head {
+  const { view } = share
   const first = view.media[0]
   const mediaPath = `${view.path}/media/0`
-  const image = first?.kind === "image" ? mediaPath : null
+  const image = imageOf(share)
   const facts = [modelNameOf(view), creditsLine(view)].filter(
     (part): part is string => part !== null
   )
   return {
     title: shareCopy.title,
     description: facts.join(", "),
-    image: image === null ? null : absolute(origin, image),
+    image: image.path === null ? null : absolute(origin, image.path),
     video:
       first?.kind === "video"
-        ? { url: absolute(origin, mediaPath), mime: first.mime }
+        ? {
+            url: absolute(origin, mediaPath),
+            mime: first.mime,
+            width: first.width,
+            height: first.height,
+          }
         : null,
-    width: first?.width ?? null,
-    height: first?.height ?? null,
+    width: image.width,
+    height: image.height,
   }
 }
 
@@ -83,13 +119,13 @@ function headTags(head: Head, url: string): string {
     meta("og:description", head.description),
     meta("og:url", url),
     meta("og:image", head.image),
-    meta("og:image:width", head.video === null ? head.width : null),
-    meta("og:image:height", head.video === null ? head.height : null),
+    meta("og:image:width", head.image === null ? null : head.width),
+    meta("og:image:height", head.image === null ? null : head.height),
     meta("og:video", head.video?.url ?? null),
     meta("og:video:secure_url", head.video?.url ?? null),
     meta("og:video:type", head.video?.mime ?? null),
-    meta("og:video:width", head.video === null ? null : head.width),
-    meta("og:video:height", head.video === null ? null : head.height),
+    meta("og:video:width", head.video?.width ?? null),
+    meta("og:video:height", head.video?.height ?? null),
     meta(
       "twitter:card",
       head.image === null ? "summary" : "summary_large_image"
@@ -111,7 +147,8 @@ function ratioOf(view: ShareView): string {
   return view.run.aspectRatio?.replace(":", "/") ?? "auto"
 }
 
-function mediaMarkup(view: ShareView, eager: boolean): string {
+function mediaMarkup(share: PagedShare, eager: boolean): string {
+  const { view } = share
   const first = view.media[0]
   if (first === undefined) {
     return ""
@@ -123,7 +160,9 @@ function mediaMarkup(view: ShareView, eager: boolean): string {
   const frame = `margin:0;position:relative;display:block;overflow:hidden;width:100%;aspect-ratio:${ratioOf(view)};border-radius:var(--radius-cell);background:var(--surface)`
   const fill = "display:block;width:100%;height:100%;object-fit:contain"
   if (first.kind === "video") {
-    return `<figure style="${frame}"><video src="${escapeHtml(src)}" muted loop playsinline autoplay preload="metadata" style="${fill}"></video></figure>`
+    const poster =
+      share.poster === null ? "" : ` poster="${escapeHtml(share.poster)}"`
+    return `<figure style="${frame}"><video src="${escapeHtml(src)}"${poster} muted loop playsinline autoplay preload="metadata" style="${fill}"></video></figure>`
   }
   const loading = eager ? ` fetchpriority="high"` : ` loading="lazy"`
   return `<figure style="${frame}"><img src="${escapeHtml(src)}" alt=""${loading} decoding="async" style="${fill}" /></figure>`
@@ -133,7 +172,8 @@ function lockupMarkup(): string {
   return `<picture><source srcset="/lockup-dark.svg" media="(prefers-color-scheme: dark)" /><img src="/lockup-light.svg" alt="${escapeHtml(shareCopy.lockup)}" width="122" height="32" /></picture>`
 }
 
-function shareMarkup(view: ShareView): string {
+function shareMarkup(share: PagedShare): string {
+  const { view } = share
   const facts = [modelNameOf(view), creditsLine(view)]
     .filter((part): part is string => part !== null)
     .map((part) => escapeHtml(part))
@@ -143,18 +183,18 @@ function shareMarkup(view: ShareView): string {
     `<div style="min-height:100dvh;background:var(--canvas);color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:var(--spacing-s6);padding:var(--spacing-s5) var(--spacing-s4)">`,
     `<header style="width:100%;max-width:var(--spacing-prompt-max)">${lockupMarkup()}</header>`,
     `<main style="width:100%;max-width:var(--spacing-prompt-max);display:flex;flex-direction:column;gap:var(--spacing-s3)">`,
-    mediaMarkup(view, true),
+    mediaMarkup(share, true),
     `<p style="color:var(--ink-muted)">${facts}</p>`,
     `<p><a href="${escapeHtml(recreate)}" style="display:inline-flex;align-items:center;height:var(--spacing-button);padding:0 var(--spacing-s5);border-radius:var(--radius-full);background:var(--ink);color:var(--canvas);font-weight:500;text-decoration:none">${escapeHtml(shareCopy.recreate)}</a></p>`,
     "</main></div>",
   ].join("")
 }
 
-function exploreMarkup(views: readonly ShareView[]): string {
-  const tiles = views
+function exploreMarkup(shares: readonly PagedShare[]): string {
+  const tiles = shares
     .map(
-      (view) =>
-        `<a href="${escapeHtml(view.path)}" style="display:block;margin-bottom:var(--spacing-s2);break-inside:avoid">${mediaMarkup(view, false)}</a>`
+      (share) =>
+        `<a href="${escapeHtml(share.view.path)}" style="display:block;margin-bottom:var(--spacing-s2);break-inside:avoid">${mediaMarkup(share, false)}</a>`
     )
     .join("")
   return [
@@ -193,18 +233,22 @@ function dataTag(view: ShareView): string {
   return `<script id="${shareDataId}" type="application/json">${json}</script>`
 }
 
-export function sharePage(html: string, view: ShareView, url: string): string {
+export function sharePage(
+  html: string,
+  share: PagedShare,
+  url: string
+): string {
   const origin = new URL(url).origin
-  const head = `${headTags(headOf(view, origin), url)}${dataTag(view)}`
-  return afterLoad(inject(html, head, shareMarkup(view)))
+  const head = `${headTags(headOf(share, origin), url)}${dataTag(share.view)}`
+  return afterLoad(inject(html, head, shareMarkup(share)))
 }
 
 export function explorePage(
   html: string,
-  views: readonly ShareView[],
+  shares: readonly PagedShare[],
   url: string
 ): string {
-  const first = views[0]
+  const first = shares[0]
   const head =
     first === undefined
       ? ""
@@ -212,5 +256,5 @@ export function explorePage(
           { ...headOf(first, new URL(url).origin), title: shareCopy.lockup },
           url
         )
-  return views.length === 0 ? html : inject(html, head, exploreMarkup(views))
+  return shares.length === 0 ? html : inject(html, head, exploreMarkup(shares))
 }

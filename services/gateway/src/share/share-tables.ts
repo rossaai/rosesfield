@@ -3,6 +3,11 @@ import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 export type SharePlacement = "link" | "explore"
 
+export type SharedPoster = {
+  key: string
+  mime: string
+}
+
 export type SharedMedia = {
   key: string
   kind: "image" | "video" | "audio"
@@ -10,6 +15,7 @@ export type SharedMedia = {
   width: number | null
   height: number | null
   durationSeconds: number | null
+  poster?: SharedPoster
 }
 
 export const shareTable = sqliteTable(
