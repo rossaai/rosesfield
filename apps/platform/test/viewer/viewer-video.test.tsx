@@ -83,7 +83,7 @@ describe("the viewer's video", () => {
       name: t("explore.video.soundOn"),
     })
     const sliders = rangesIn(container)
-    const volume = rangeNamed(container, t("model.tag.sound"))
+    const volume = rangeNamed(container, t("explore.video.volume"))
     const fullScreen = screen.getByRole("button", {
       name: t("explore.video.fullScreen"),
     })
@@ -104,7 +104,7 @@ describe("the viewer's video", () => {
     asWindow(true)
     const container = renderVideo()
     const video = container.querySelector("video") as HTMLVideoElement
-    const volume = rangeNamed(container, t("model.tag.sound"))
+    const volume = rangeNamed(container, t("explore.video.volume"))
 
     act(() => {
       video.muted = false

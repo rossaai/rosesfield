@@ -35,6 +35,7 @@ export const exploreCopy = {
   "explore.video.position": "Position in the video",
   "explore.video.soundOn": "Turn the sound on",
   "explore.video.soundOff": "Turn the sound off",
+  "explore.video.volume": "Volume",
   "explore.video.fullScreen": "Full screen",
   "share.title": "Share this result",
   "share.link.label": "Link",
