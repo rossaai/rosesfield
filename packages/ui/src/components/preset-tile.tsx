@@ -1,9 +1,9 @@
-import type { PresetTileForm } from "@rosesfield/ui/contracts/preset-tile.generated"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import {
   type MediaAspect,
   MediaTile,
 } from "@rosesfield/ui/components/media-tile"
+import type { PresetTileForm } from "@rosesfield/ui/contracts/preset-tile.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { SparkleIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"

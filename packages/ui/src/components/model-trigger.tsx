@@ -1,6 +1,6 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
-import type { ModelRowPlace } from "@rosesfield/ui/contracts/model-row.generated"
 import { interaction } from "@rosesfield/ui/components/interaction"
+import type { ModelRowPlace } from "@rosesfield/ui/contracts/model-row.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { ChevronRightIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"

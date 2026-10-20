@@ -70,6 +70,7 @@ type AreaMenuProps = {
   children: string
   apps: ReadonlyArray<AreaApp>
   current?: boolean
+  defaultOpen?: boolean
   onOpen?: (app: AreaApp) => void
 }
 
@@ -77,10 +78,11 @@ function AreaMenu({
   children,
   apps,
   current = false,
+  defaultOpen = false,
   onOpen,
 }: AreaMenuProps): ReactElement {
   return (
-    <DropdownMenu>
+    <DropdownMenu defaultOpen={defaultOpen}>
       <DropdownMenuTrigger
         data-slot="app-bar-areas"
         aria-current={current ? "page" : undefined}

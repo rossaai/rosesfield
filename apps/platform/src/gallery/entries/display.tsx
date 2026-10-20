@@ -178,13 +178,16 @@ const badge: GalleryEntry = {
   title: "entry.badge",
   states: [
     {
-      id: "running-failed",
-      label: "state.runningFailed",
+      id: "kinds",
+      label: "state.badgeKinds",
       render: () => (
         <div className="flex flex-wrap items-center gap-s2">
-          <Badge tone="info">{t("sample.badge.working")}</Badge>
-          <Badge tone="warning">{t("sample.badge.waiting")}</Badge>
-          <Badge tone="danger">{t("sample.badge.failed")}</Badge>
+          <Badge kind="new">{t("sample.badge.new")}</Badge>
+          <Badge kind="top">{t("sample.badge.top")}</Badge>
+          <Badge kind="premium">{t("sample.badge.premium")}</Badge>
+          <Badge kind="openWeights" href="https://huggingface.co/">
+            {t("sample.badge.openWeights")}
+          </Badge>
         </div>
       ),
     },

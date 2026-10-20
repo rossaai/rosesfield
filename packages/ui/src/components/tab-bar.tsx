@@ -1,6 +1,6 @@
 import { useRender } from "@base-ui/react/use-render"
-import type { AppBarPlace } from "@rosesfield/ui/contracts/app-bar.generated"
 import { interaction } from "@rosesfield/ui/components/interaction"
+import type { AppBarPlace } from "@rosesfield/ui/contracts/app-bar.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { SparkleIcon } from "lucide-react"
 import type { ComponentProps, ReactElement, ReactNode } from "react"

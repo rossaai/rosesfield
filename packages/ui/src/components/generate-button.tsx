@@ -1,11 +1,11 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
-import type { GenerateButtonForm } from "@rosesfield/ui/contracts/generate-button.generated"
 import { interaction } from "@rosesfield/ui/components/interaction"
+import type { GenerateButtonForm } from "@rosesfield/ui/contracts/generate-button.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { SparkleIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 
-type GenerateButtonProps = Omit<ButtonPrimitive.Props, "children"> & {
+type GenerateButtonProps = Omit<ButtonPrimitive.Props, "children" | "form"> & {
   label: string
   price?: ReactNode
   form?: GenerateButtonForm

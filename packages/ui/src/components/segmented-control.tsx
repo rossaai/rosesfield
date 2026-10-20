@@ -1,7 +1,7 @@
 import { Radio } from "@base-ui/react/radio"
 import { RadioGroup } from "@base-ui/react/radio-group"
-import type { SegmentedControlDensity } from "@rosesfield/ui/contracts/segmented-control.generated"
 import { interaction } from "@rosesfield/ui/components/interaction"
+import type { SegmentedControlDensity } from "@rosesfield/ui/contracts/segmented-control.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import type { ReactElement, ReactNode } from "react"

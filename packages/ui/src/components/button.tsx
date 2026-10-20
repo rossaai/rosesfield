@@ -1,12 +1,12 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
-import type { ButtonTone } from "@rosesfield/ui/contracts/button.generated"
-import type { IconButtonTone } from "@rosesfield/ui/contracts/icon-button.generated"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@rosesfield/ui/components/tooltip"
+import type { ButtonTone } from "@rosesfield/ui/contracts/button.generated"
+import type { IconButtonTone } from "@rosesfield/ui/contracts/icon-button.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { cva, type VariantProps } from "class-variance-authority"
 import type { ReactElement, ReactNode } from "react"

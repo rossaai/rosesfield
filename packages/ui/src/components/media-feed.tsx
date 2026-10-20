@@ -1,6 +1,6 @@
 import { useRender } from "@base-ui/react/use-render"
-import type { MediaFeedLayout } from "@rosesfield/ui/contracts/media-feed.generated"
 import { interaction } from "@rosesfield/ui/components/interaction"
+import type { MediaFeedLayout } from "@rosesfield/ui/contracts/media-feed.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { ArrowUpRightIcon } from "lucide-react"
 import type { ComponentProps, ReactElement, ReactNode } from "react"
