@@ -65,6 +65,16 @@ describe("ResultTile", () => {
     expect(tile?.textContent).toBe("Image · Picture 2Recreate")
   })
 
+  it("leads its mode chip with a 12 px glyph of its kind, 4 px before the name", () => {
+    renderTile()
+    const chip = document.querySelector("[data-slot='media-veil']")
+    const glyph = chip?.firstElementChild
+    expect(glyph?.tagName.toLowerCase()).toBe("svg")
+    expect(glyph?.getAttribute("class")).toContain("size-3")
+    expect(glyph?.getAttribute("class")).toContain("lucide-image")
+    expect(chip?.className.split(" ")).toContain("gap-1")
+  })
+
   it("opens from its open target and from Expand, and recreates from Recreate", () => {
     const calls = renderTile()
     fireEvent.click(screen.getByRole("button", { name: "Open this result" }))

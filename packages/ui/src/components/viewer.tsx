@@ -87,7 +87,7 @@ function ViewerStage(props: ViewerStageProps): ReactElement {
   return (
     <div
       data-slot="media-player-picture"
-      className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center px-0 py-s12 @regular:p-s12"
+      className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center px-0 py-s12 @regular:p-4"
       style={{ containerType: "size" }}
     >
       <button
@@ -136,7 +136,7 @@ function ViewerAside({
       ref={fadeRef}
       data-ground="layer"
       className={cn(
-        "max-h-[50dvh] w-full shrink-0 flex-col gap-s4 overflow-y-auto bg-layer p-s6 text-ink @regular:my-2 @regular:me-2 @regular:flex @regular:max-h-none @regular:w-88 @regular:rounded-card @regular:p-4 @regular:pt-14",
+        "max-h-[50dvh] w-full shrink-0 flex-col gap-s4 overflow-y-auto bg-layer p-s6 text-ink @regular:my-2 @regular:me-2 @regular:flex @regular:max-h-none @regular:w-88 @regular:rounded-card @regular:p-2.5",
         hasBar ? "hidden" : "flex"
       )}
     >
@@ -177,7 +177,7 @@ function ViewerClose({
   onClose: () => void
 }): ReactElement {
   return (
-    <span ref={fadeRef} className="absolute top-4 right-4">
+    <span ref={fadeRef} className="absolute top-6 right-5">
       <IconButton label={label} place="cardWide" onClick={onClose}>
         <XIcon aria-hidden="true" />
       </IconButton>
@@ -202,10 +202,6 @@ function Viewer(props: ViewerProps): ReactElement {
   return (
     <DialogPrimitive.Root open={isMounted} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Backdrop
-          ref={fadeRef}
-          className="fixed inset-0 z-50 bg-scrim"
-        />
         <DialogPrimitive.Popup
           ref={popup}
           aria-label={props.title}
@@ -217,8 +213,8 @@ function Viewer(props: ViewerProps): ReactElement {
           <div
             ref={fadeRef}
             aria-hidden="true"
-            data-ground="layer"
-            className="absolute inset-0 bg-layer @regular:hidden"
+            data-slot="viewer-cover"
+            className="absolute inset-0 bg-layer @regular:bg-surface"
           />
           <div className="relative flex size-full flex-col @regular:flex-row">
             <ViewerStage

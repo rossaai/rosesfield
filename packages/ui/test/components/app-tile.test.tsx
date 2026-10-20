@@ -47,3 +47,77 @@ describe("AppTileGrid", () => {
     expect(nav.className.split(" ")).not.toContain("@container")
   })
 })
+
+describe("AppTile's shells", () => {
+  function renderTile(withMode: boolean) {
+    render(
+      <AppTile
+        href="/apps/video"
+        name="Video"
+        line="A photo to a clip"
+        icon={<svg />}
+        badge={<span>New</span>}
+        {...(withMode ? { mode: { label: "Video", icon: <svg /> } } : {})}
+      />
+    )
+    return screen.getByRole("link", { name: /Video/ })
+  }
+
+  it("holds an inner panel inside a 1 px border and 2 px padding, and opens the ring on hover without moving the panel's content", () => {
+    const tile = renderTile(false)
+    expect(tile.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "border",
+        "border-(--line)",
+        "p-0.5",
+        "hover:border-transparent",
+        "hover:p-0",
+      ])
+    )
+    expect(tile.className).not.toContain("after:")
+    const panel = tile.querySelector("[data-slot='app-tile-panel']")
+    expect(panel?.className.split(" ")).toEqual(
+      expect.arrayContaining(["p-3.5", "group-hover/app:p-4", "bg-(--well)"])
+    )
+  })
+
+  it("slants its badge 6 px after the name, and sets it at the top right on a phone", () => {
+    const tile = renderTile(false)
+    const badge = tile.querySelector("[data-slot='app-tile-badge']")
+    expect(badge?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "-skew-x-12",
+        "absolute",
+        "top-3",
+        "right-3",
+        "@regular:static",
+        "@regular:ms-0.5",
+      ])
+    )
+    expect(badge?.textContent).toBe("New")
+    const line = tile.querySelector("[data-slot='preset-tile-line']")
+    expect(line?.className.split(" ")).toEqual(
+      expect.arrayContaining(["text-body", "@regular:text-label"])
+    )
+  })
+
+  it("carries a Video pill 12 px in from the top right on a tool that makes video, hidden on a phone", () => {
+    const tile = renderTile(true)
+    const pill = tile.querySelector("[data-slot='app-tile-mode']")
+    expect(pill?.textContent).toBe("Video")
+    expect(pill?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "top-3",
+        "right-3",
+        "h-7.5",
+        "rounded-full",
+        "hidden",
+        "@regular:flex",
+      ])
+    )
+    cleanup()
+    expect(
+      renderTile(false).querySelector("[data-slot='app-tile-mode']")
+    ).toBeNull()
+  })
+})

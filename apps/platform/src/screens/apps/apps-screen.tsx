@@ -101,7 +101,10 @@ function AppGroup({
           {tCount("apps.group.count", apps.length)}
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-s3 @regular:grid-cols-4">
+      <div
+        data-slot="app-cards"
+        className="-mx-s5 flex snap-x scroll-px-s5 gap-4 overflow-x-auto px-s5 [scrollbar-width:none] @regular:mx-0 @regular:flex-wrap @regular:overflow-visible @regular:px-0"
+      >
         {apps.map((app) => (
           <AppCard
             key={app.id}
@@ -183,7 +186,7 @@ export function AppsScreen(): ReactElement {
   return (
     <>
       <ScreenHeader title={t("apps.title")} />
-      <div className="flex flex-col gap-s8 px-s5 pb-s12 @regular:px-s4">
+      <div className="mx-auto flex w-full flex-col gap-s8 px-s5 pb-s12 @regular:max-w-320.25 @regular:px-4">
         <div className="flex flex-col gap-s3 @regular:flex-row @regular:items-center">
           <Input
             type="search"

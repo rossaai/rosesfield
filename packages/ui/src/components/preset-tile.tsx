@@ -1,4 +1,5 @@
 import { interaction } from "@rosesfield/ui/components/interaction"
+import { FeedStacks } from "@rosesfield/ui/components/media-feed"
 import {
   type MediaAspect,
   MediaTile,
@@ -64,6 +65,7 @@ function PresetTile({
       </span>
       <PresetReveal
         name={name}
+        isTall={aspect.height > aspect.width}
         {...(line === undefined ? {} : { line })}
         {...(action === undefined ? {} : { action })}
       />
@@ -73,9 +75,12 @@ function PresetTile({
 
 function PresetReveal({
   name,
+  isTall,
   line,
   action,
-}: Pick<PresetTileProps, "name" | "line" | "action">): ReactElement {
+}: Pick<PresetTileProps, "name" | "line" | "action"> & {
+  isTall: boolean
+}): ReactElement {
   return (
     <span
       className={cn(
@@ -85,7 +90,10 @@ function PresetReveal({
     >
       <span
         data-slot="preset-tile-name"
-        className="font-medium text-title text-ink"
+        className={cn(
+          "font-medium text-ink",
+          isTall ? "text-display" : "text-title"
+        )}
       >
         {name}
       </span>
@@ -137,9 +145,7 @@ function PresetGrid({
       data-slot="preset-grid"
       className="@container w-full"
     >
-      <div className="columns-2 gap-2 *:mb-2 *:break-inside-avoid @regular:columns-5">
-        {children}
-      </div>
+      <FeedStacks form="presets">{children}</FeedStacks>
     </section>
   )
 }

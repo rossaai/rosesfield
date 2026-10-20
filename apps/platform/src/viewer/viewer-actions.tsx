@@ -14,7 +14,7 @@ import {
   SheetTitle,
 } from "@rosesfield/ui/components/sheet"
 import { useNavigate } from "@tanstack/react-router"
-import { EllipsisIcon } from "lucide-react"
+import { CopyIcon, DownloadIcon, EllipsisIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useState } from "react"
 import { t } from "@/copy/t"
 import { useDownloadAsset } from "@/pieces/asset-actions"
@@ -94,32 +94,32 @@ export function ViewerActions({
   const openInComfy = useOpenInComfy(run)
   const [isConfirming, setConfirming] = useState(false)
   return (
-    <div className="flex flex-col gap-s2">
-      <Button
-        tone="primary"
-        className={wide}
-        onClick={() => void download(asset)}
-      >
-        {t("output.download")}
-      </Button>
-      <UseInButton asset={asset} className={wide} />
+    <div data-slot="viewer-foot" className="flex flex-col gap-2.5">
       {useInputs === null ? null : (
-        <Button className={wide} onClick={useInputs}>
+        <Button tone="accent" width="full" onClick={useInputs}>
+          <CopyIcon aria-hidden="true" />
           {t("run.useInputs")}
         </Button>
       )}
-      {openInComfy === null ? null : (
-        <Button className={wide} onClick={openInComfy}>
-          {t("run.openInComfy")}
+      <div className="grid grid-cols-2 gap-2">
+        <Button className={wide} onClick={() => void download(asset)}>
+          <DownloadIcon aria-hidden="true" />
+          {t("output.download")}
         </Button>
-      )}
-      <Button
-        tone="danger"
-        className={wide}
-        onClick={() => setConfirming(true)}
-      >
-        {t("output.delete")}
-      </Button>
+        <UseInButton asset={asset} className={wide} />
+        {openInComfy === null ? null : (
+          <Button className={wide} onClick={openInComfy}>
+            {t("run.openInComfy")}
+          </Button>
+        )}
+        <Button
+          tone="danger"
+          className={wide}
+          onClick={() => setConfirming(true)}
+        >
+          {t("output.delete")}
+        </Button>
+      </div>
       <DeleteAsset
         asset={asset}
         open={isConfirming}

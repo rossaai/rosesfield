@@ -22,6 +22,11 @@ function HeroBanner(props: HeroBannerProps): ReactElement {
         interaction.ring
       )}
     >
+      <span
+        aria-hidden="true"
+        data-slot="hero-glow"
+        className="absolute inset-0 bg-radial-[at_50%_100%] from-hor-tint to-transparent"
+      />
       {props.art === undefined ? null : (
         <span
           aria-hidden="true"
@@ -30,6 +35,11 @@ function HeroBanner(props: HeroBannerProps): ReactElement {
           {props.art}
         </span>
       )}
+      <span
+        aria-hidden="true"
+        data-slot="hero-glow-ellipse"
+        className="absolute top-2 left-1/2 h-67.5 w-184 -translate-x-1/2 rounded-full bg-surface opacity-80 blur-3xl"
+      />
       <span className="relative mx-auto flex w-146 flex-col items-center justify-center py-8 text-center">
         <span className="font-medium text-title text-ink">{props.kicker}</span>
         <span className="mt-1 max-w-140 text-display text-balance text-ink">
@@ -38,7 +48,7 @@ function HeroBanner(props: HeroBannerProps): ReactElement {
         <span className="mt-1 text-body text-ink-muted">{props.lead}</span>
         <span
           className={cn(
-            "relative mt-6 inline-flex h-10 items-center rounded-full bg-ink px-4.5 pt-2 pb-2.5 font-medium text-body text-canvas group-hover/hero:after:opacity-10",
+            "relative mt-6 inline-flex h-10 items-center rounded-full bg-ink px-4.5 pt-2 pb-2.5 font-medium text-body text-canvas group-hover/hero:after:opacity-10 group-active/hero:after:opacity-15",
             interaction.light
           )}
         >
@@ -79,7 +89,7 @@ function HeroFan({
             src={picture.src}
             alt=""
             className={cn(
-              "-mx-3 aspect-3/4 w-35 rounded-cell bg-(--well) object-cover",
+              "-mx-2 aspect-3/4 w-22 rounded-cell bg-(--well) object-cover @regular:-mx-3 @regular:w-35",
               tilts[index]
             )}
           />

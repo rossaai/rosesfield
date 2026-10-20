@@ -5,7 +5,13 @@ import {
   MediaTile,
 } from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { CopyIcon, EllipsisIcon, MaximizeIcon } from "lucide-react"
+import {
+  CopyIcon,
+  EllipsisIcon,
+  ImageIcon,
+  MaximizeIcon,
+  VideoIcon,
+} from "lucide-react"
 import type { CSSProperties, ReactElement, ReactNode } from "react"
 
 type Corners = {
@@ -152,9 +158,16 @@ function ResultTile(props: ResultTileProps): ReactElement {
         data-slot="media-veil"
         className={cn(veilClass, corners.topLeft, interaction.reveal)}
       >
-        {props.model === undefined || props.model === ""
-          ? props.app
-          : `${props.app} · ${props.model}`}
+        {props.kind === "video" ? (
+          <VideoIcon aria-hidden="true" className="size-3 shrink-0" />
+        ) : (
+          <ImageIcon aria-hidden="true" className="size-3 shrink-0" />
+        )}
+        <span className="truncate">
+          {props.model === undefined || props.model === ""
+            ? props.app
+            : `${props.app} · ${props.model}`}
+        </span>
       </span>
       <Actions {...props} corners={corners} />
       {props.sound === undefined ? null : (

@@ -3,10 +3,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import type { ReactElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { t } from "@/copy/t"
+import { formatDate } from "@/copy/format"
+import { t, tCatalog } from "@/copy/t"
 import { runPrice } from "@/pieces/run/run-facts"
 import type { VisualEntry } from "@/screens/explore/explore-tile"
-import { ResultPanel } from "@/viewer/result-panel"
+import { modelAndModeOf, ResultPanel } from "@/viewer/result-panel"
 
 const inputId = "4d2c1b0a-9e8f-4a6b-8c5d-3e2f1a0b9c8d"
 const outputId = "3d4e5f6a-7b8c-4d9e-8f0a-2b3c4d5e6f01"
@@ -107,11 +108,50 @@ describe("the result viewer's panel", () => {
     ).toBeNull()
   })
 
-  it("says in its head that the result is machine generated", () => {
+  it("heads the panel with the app's mark, its name and the date, and no machine-made line", () => {
     const { container } = renderPanel(entryOf(runOf({})))
     const head = container.querySelector("[data-slot=viewer-head]")
 
-    expect(head?.textContent).toContain(t("explore.tile.machineMade"))
+    expect(
+      head?.querySelector("[data-slot=viewer-head-mark] svg")
+    ).not.toBeNull()
+    expect(head?.textContent).toContain("Image")
+    expect(head?.textContent).toContain(formatDate("2026-10-19T12:00:00.000Z"))
+    expect(container.querySelector("[data-slot*=machine-made]")).toBeNull()
+    expect(container.textContent).not.toMatch(/\bAI\b|machine/i)
+  })
+
+  it("opens its details under an Info header that folds them away", () => {
+    const { container } = renderPanel(entryOf(runOf({})))
+    const header = screen.getByRole("button", { name: t("viewer.info") })
+
+    expect(header.getAttribute("aria-expanded")).toBe("true")
+    expect(header.querySelector("svg")).not.toBeNull()
+    fireEvent.click(header)
+    expect(header.getAttribute("aria-expanded")).toBe("false")
+    expect(container.querySelector("[data-slot=viewer-details]")).toBeNull()
+  })
+
+  it("gives the model row the model and the mode the run used", () => {
+    const made = runOf({
+      appId: "recast",
+      inputs: {
+        mode: "object",
+        source: [inputId],
+        target: "the boat",
+        prompt: "a paper boat",
+      },
+    })
+    const { container } = renderPanel(entryOf(made))
+    const details = container.querySelector("[data-slot=viewer-details]")
+
+    expect(modelAndModeOf(made)).toBe(
+      `model-a, ${tCatalog("recast.choice.mode.object")}`
+    )
+    expect(details?.textContent).toContain(modelAndModeOf(made))
+    expect(
+      container.querySelectorAll("[data-slot=viewer-inputs] .size-18")
+    ).toHaveLength(1)
   })
 
   it("puts Recreate above Download, each calling its own act", () => {
@@ -132,5 +172,7 @@ describe("the result viewer's panel", () => {
     expect(onDownload).not.toHaveBeenCalled()
     fireEvent.click(download)
     expect(onDownload).toHaveBeenCalledTimes(1)
+    expect(recreate.parentElement?.className.split(" ")).toContain("gap-2.5")
+    expect(download.className.split(" ")).toContain("w-full")
   })
 })
