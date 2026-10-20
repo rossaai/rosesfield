@@ -2,6 +2,7 @@ import { taskBinding } from "@rosesfield/generation/bindings"
 import { defineApp } from "#define-app"
 import { imageBinding } from "#image/comfy/image-binding"
 import {
+  defaultModel,
   defaultResolution,
   firstModel,
   imageModels,
@@ -27,13 +28,13 @@ export const app = defineApp({
       name: "model",
       labelKey: "image.input.model.label",
       options: [
-        { value: firstModel, labelKey: "image.model.flux3Image" },
         ...imageModels.map((model) => ({
           value: model.value,
           labelKey: model.labelKey,
         })),
+        { value: firstModel, labelKey: "image.model.flux3Image" },
       ],
-      default: firstModel,
+      default: defaultModel,
     },
     {
       type: "choice",
@@ -62,7 +63,7 @@ export const app = defineApp({
   engine: taskBinding({
     tasks: ["text-to-image"],
     input: "model",
-    default: firstModel,
+    default: defaultModel,
     fallback: imageBinding,
   }),
   limits: { timeoutSeconds: 600, maxRetries: 2 },
