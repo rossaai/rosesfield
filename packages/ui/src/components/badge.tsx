@@ -1,3 +1,4 @@
+import { HuggingFaceMark } from "@rosesfield/ui/components/hugging-face-mark"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement, ReactNode } from "react"
@@ -30,11 +31,13 @@ function Badge({
   className,
 }: BadgeProps): ReactElement {
   const classes = cn(badgeClass, className)
+  const shownMark =
+    mark ?? (kind === "openWeights" ? <HuggingFaceMark /> : undefined)
   const content = (
     <>
-      {mark === undefined ? null : (
+      {shownMark === undefined ? null : (
         <span aria-hidden="true" className="flex">
-          {mark}
+          {shownMark}
         </span>
       )}
       <span data-slot="count-badge-words">{children}</span>

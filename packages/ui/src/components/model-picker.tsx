@@ -100,6 +100,7 @@ function RowBadge({ badge }: { badge: ModelBadge }): ReactElement {
 function RowName({ row }: { row: ModelPickerRow }): ReactElement {
   const badges = row.badges ?? []
   const facts = badges.filter((badge) => badge.kind !== "openWeights")
+  const weights = badges.filter((badge) => badge.kind === "openWeights")
   return (
     <span className="flex min-w-0 items-center">
       <span data-slot="model-row-name" className="truncate text-body text-ink">
@@ -112,25 +113,16 @@ function RowName({ row }: { row: ModelPickerRow }): ReactElement {
           ))}
         </span>
       )}
-    </span>
-  )
-}
-
-function RowWeights({ row }: { row: ModelPickerRow }): ReactNode {
-  const weights = (row.badges ?? []).filter(
-    (badge) => badge.kind === "openWeights"
-  )
-  if (weights.length === 0) {
-    return null
-  }
-  return (
-    <span
-      data-slot="model-row-weights"
-      className="pointer-events-auto relative z-10 me-2 flex shrink-0"
-    >
-      {weights.map((badge) => (
-        <RowBadge key={badge.kind} badge={badge} />
-      ))}
+      {weights.length === 0 ? null : (
+        <span
+          data-slot="model-row-weights"
+          className="pointer-events-auto relative z-10 flex shrink-0"
+        >
+          {weights.map((badge) => (
+            <RowBadge key={badge.kind} badge={badge} />
+          ))}
+        </span>
+      )}
     </span>
   )
 }
@@ -199,7 +191,6 @@ function ModelRow({
           <RowName row={row} />
           <RowLine row={row} />
         </span>
-        <RowWeights row={row} />
         <span data-slot="model-row-check" className="flex size-5 shrink-0">
           {isChosen ? (
             <CheckIcon aria-hidden="true" className="size-5" />

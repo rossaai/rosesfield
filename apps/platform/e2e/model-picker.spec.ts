@@ -32,11 +32,38 @@ test("a click on a row that carries Open weights chooses its model", async ({
     has: page.locator("[data-slot='model-row-weights']"),
   })
   await expect(rows.first()).toBeVisible()
-  const name = await rows.first().getByRole("option").getAttribute("aria-label")
-  if (name === null) {
-    throw new Error("the row has no name")
+  const current = (await trigger.textContent()) ?? ""
+  const names = await rows
+    .getByRole("option")
+    .evaluateAll((options) =>
+      options.map((option) => option.getAttribute("aria-label") ?? "")
+    )
+  const name = names.find((one) => one !== "" && !current.includes(one))
+  if (name === undefined) {
+    throw new Error("no other row carries Open weights")
   }
-  await rows.first().getByRole("option").click({ timeout: 5000 })
+  const row = rows
+    .filter({ has: page.getByRole("option", { name, exact: true }) })
+    .first()
+  const option = row.getByRole("option")
+  const [optionBox, nameBox, weightsBox] = await Promise.all([
+    option.boundingBox(),
+    row.locator("[data-slot='model-row-name']").boundingBox(),
+    row
+      .locator("[data-slot='model-row-weights'] [data-slot='badge']")
+      .boundingBox(),
+  ])
+  if (optionBox === null || nameBox === null || weightsBox === null) {
+    throw new Error("the row has no box")
+  }
+  expect(weightsBox.x - (nameBox.x + nameBox.width)).toBeCloseTo(4, 0)
+  await option.click({
+    position: {
+      x: nameBox.x + nameBox.width / 2 - optionBox.x,
+      y: nameBox.y + nameBox.height / 2 - optionBox.y,
+    },
+    timeout: 5000,
+  })
   await expect(trigger).toContainText(name)
 })
 

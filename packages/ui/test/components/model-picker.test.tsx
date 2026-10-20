@@ -244,19 +244,24 @@ describe("ModelPicker's Open weights link", () => {
 })
 
 describe("ModelPicker's Open weights place", () => {
-  it("stands Open weights at the row's end beside the check, clear of the name and the row's middle", () => {
+  it("rides 4 px after the name on the name's line, above the row's option", () => {
     open(vi.fn(), badged)
     const row = rowOf("Model 4")
     const weights = row.querySelector("[data-slot='model-row-weights']")
     const name = row.querySelector("[data-slot='model-row-name']")
-    expect(name?.parentElement?.contains(weights ?? null)).toBe(false)
-    expect(weights?.nextElementSibling?.getAttribute("data-slot")).toBe(
-      "model-row-check"
-    )
-    expect(weights?.previousElementSibling?.contains(name ?? null)).toBe(true)
+    expect(name?.parentElement?.contains(weights ?? null)).toBe(true)
+    expect(name?.parentElement?.lastElementChild).toBe(weights)
+    expect(
+      row
+        .querySelector("[data-slot='model-row-check']")
+        ?.previousElementSibling?.contains(weights ?? null)
+    ).toBe(true)
     expect(weights?.className.split(" ")).toEqual(
-      expect.arrayContaining(["pointer-events-auto", "shrink-0"])
+      expect.arrayContaining(["pointer-events-auto", "relative", "shrink-0"])
     )
+    expect(
+      weights?.querySelector("[data-slot='badge']")?.className.split(" ")
+    ).toContain("ms-1")
   })
 })
 

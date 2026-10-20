@@ -29,6 +29,27 @@ describe("Badge", () => {
     expect(link.getAttribute("rel")).toBe("noopener noreferrer")
   })
 
+  it("carries the Hugging Face mark as path data on Open weights, and no mark on the other kinds", () => {
+    render(
+      <>
+        <Badge kind="openWeights" href="https://huggingface.co/maker/model">
+          Open weights
+        </Badge>
+        <Badge kind="new">New</Badge>
+      </>
+    )
+    const link = screen.getByRole("link", { name: "Open weights" })
+    const mark = link.querySelector("[data-slot='hugging-face-mark']")
+    expect(mark?.tagName.toLowerCase()).toBe("svg")
+    expect(mark?.getAttribute("aria-hidden")).toBe("true")
+    expect(
+      mark?.querySelector("path")?.getAttribute("d")?.length
+    ).toBeGreaterThan(1000)
+    expect(link.querySelector("img")).toBeNull()
+    const word = screen.getByText("New").closest("[data-slot='badge']")
+    expect(word?.querySelector("svg")).toBeNull()
+  })
+
   it("stays a word, not a link, for New, Top and Premium", () => {
     render(
       <Badge kind="new" href="https://example.com">

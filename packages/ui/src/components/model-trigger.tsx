@@ -23,7 +23,7 @@ function ModelChip({
       data-slot="model-row"
       data-place={place}
       className={cn(
-        "group/model relative inline-flex h-8 shrink-0 items-center rounded-dense border border-transparent bg-(--well) px-3 font-medium text-body whitespace-nowrap text-ink select-none [&_svg]:size-4",
+        "group/model relative inline-flex h-8 shrink-0 items-center rounded-dense bg-(--well) px-3 font-medium text-body whitespace-nowrap text-ink select-none [&_svg]:size-4",
         interaction.light,
         interaction.ring,
         className
@@ -33,7 +33,7 @@ function ModelChip({
       <span data-slot="model-row-mark" aria-hidden="true" className="flex">
         {mark}
       </span>
-      <span data-slot="model-row-name" className="ms-2 truncate px-1">
+      <span data-slot="model-row-name" className="ms-2 truncate pe-0.5">
         {name}
       </span>
       <ChevronRightIcon
