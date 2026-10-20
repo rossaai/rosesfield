@@ -61,7 +61,9 @@ function ColumnPanel(props: ColumnFrameProps): ReactElement {
     >
       <InputPanel
         label={appName(props.app)}
-        footer={<GenerateFoot start={props.start} leading={props.footLeading} />}
+        footer={
+          <GenerateFoot start={props.start} leading={props.footLeading} />
+        }
       >
         {props.panel}
         <StartProblem start={props.start} />

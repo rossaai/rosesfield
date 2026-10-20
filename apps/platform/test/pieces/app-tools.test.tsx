@@ -12,7 +12,9 @@ afterEach(cleanup)
 describe("the app's tools behind the Generate key", () => {
   it("opens the tools of the app on screen, and nothing once it leaves", () => {
     const opened: string[] = []
-    const screen = renderHook(() => useAppToolsOpener(() => opened.push("image")))
+    const screen = renderHook(() =>
+      useAppToolsOpener(() => opened.push("image"))
+    )
     expect(openAppTools()).toBe(true)
     expect(opened).toEqual(["image"])
     screen.unmount()

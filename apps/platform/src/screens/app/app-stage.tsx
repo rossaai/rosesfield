@@ -1,6 +1,10 @@
 import type { AppListing } from "@rosesfield/contract"
 import { Canvas } from "@rosesfield/ui/components/canvas"
-import { SegmentedTab, SegmentedTabs, Tabs } from "@rosesfield/ui/components/tabs"
+import {
+  SegmentedTab,
+  SegmentedTabs,
+  Tabs,
+} from "@rosesfield/ui/components/tabs"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { BookOpenIcon, FolderIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useEffect, useState } from "react"
@@ -66,10 +70,16 @@ export function AppStage(props: AppStageProps): ReactElement {
           }}
         >
           <SegmentedTabs aria-label={t("app.canvas.label")}>
-            <SegmentedTab value="history" icon={<FolderIcon aria-hidden="true" />}>
+            <SegmentedTab
+              value="history"
+              icon={<FolderIcon aria-hidden="true" />}
+            >
               {t("app.tab.history")}
             </SegmentedTab>
-            <SegmentedTab value="how" icon={<BookOpenIcon aria-hidden="true" />}>
+            <SegmentedTab
+              value="how"
+              icon={<BookOpenIcon aria-hidden="true" />}
+            >
               {t("app.tab.how")}
             </SegmentedTab>
           </SegmentedTabs>

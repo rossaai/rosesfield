@@ -12,7 +12,8 @@ export const appCopy = {
   "app.tab.history": "History",
   "app.tab.how": "How it works",
   "app.how.inputs.title": "Add your inputs",
-  "app.how.inputs.line": "Write what you want, or drop the files the app takes.",
+  "app.how.inputs.line":
+    "Write what you want, or drop the files the app takes.",
   "app.how.model.title": "Choose a model",
   "app.how.model.line": "Each model has its own strengths and its own price.",
   "app.how.result.title": "Get your result",

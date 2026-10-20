@@ -66,12 +66,17 @@ describe("How it works", () => {
 
   it("stands three steps, and puts Recreate on the two that play", () => {
     const samples = samplesOf(
-      [share("a", "video", "image"), share("b", "video", "video"), share("c", "video", "video")],
+      [
+        share("a", "video", "image"),
+        share("b", "video", "video"),
+        share("c", "video", "video"),
+      ],
       "video"
     )
     const steps = stepsOf(video, samples)
     expect(steps.map((step) => step.id)).toEqual(["inputs", "model", "result"])
-    expect(steps.map((step) => step.action !== undefined)).toEqual([false, true, true])
+    const withRecreate = steps.map((step) => step.action !== undefined)
+    expect(withRecreate).toEqual([false, true, true])
     expect(steps.every((step) => step.media !== null)).toBe(true)
   })
 

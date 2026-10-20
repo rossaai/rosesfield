@@ -33,7 +33,9 @@ test.describe("a prompt app on a desktop", () => {
     const row = await boxOf(bar.locator('[data-slot="composer-toolbar"]'))
     expect(row.height).toBe(32)
     expect(generate.y + generate.height).toBe(row.y + row.height)
-    const tile = await boxOf(bar.locator('[data-slot="composer-attachments-edge"]'))
+    const tile = await boxOf(
+      bar.locator('[data-slot="composer-attachments-edge"]')
+    )
     expect([tile.width, tile.height]).toEqual([65, 32])
     expect(tile.x).toBe(row.x)
   })
@@ -48,10 +50,8 @@ test.describe("a prompt app on a desktop", () => {
 
   test("opens on How it works while you have no output", async ({ page }) => {
     await page.goto("/apps/image")
-    await expect(page.getByRole("tab", { name: "How it works" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    )
+    const how = page.getByRole("tab", { name: "How it works" })
+    await expect(how).toHaveAttribute("aria-selected", "true")
     const history = await boxOf(page.getByRole("tab", { name: "History" }))
     expect(history.height).toBe(32)
   })
@@ -69,11 +69,15 @@ test.describe("an app with many inputs on a desktop", () => {
     const box = await boxOf(column)
     expect(box.x).toBe(16)
     expect(box.width).toBe(320)
-    const generate = await boxOf(column.locator('[data-slot="generate-button"]'))
+    const generate = await boxOf(
+      column.locator('[data-slot="generate-button"]')
+    )
     expect([generate.width, generate.height]).toEqual([286, 48])
     const footer = await boxOf(column.locator('[data-slot="composer-toolbar"]'))
     expect(footer.height).toBe(60)
-    const canvas = await boxOf(page.getByRole("region", { name: "Your outputs" }))
+    const canvas = await boxOf(
+      page.getByRole("region", { name: "Your outputs" })
+    )
     expect(canvas.x).toBe(box.x + box.width + 8)
   })
 })

@@ -28,7 +28,9 @@ describe("the References and Elements tile", () => {
     fireEvent.click(screen.getByRole("button", { name: t("bar.references") }))
     fireEvent.click(screen.getByRole("button", { name: t("bar.elements") }))
     expect(calls).toEqual(["upload", "library"])
-    const tile = document.querySelector('[data-slot="composer-attachments-edge"]')
+    const tile = document.querySelector(
+      '[data-slot="composer-attachments-edge"]'
+    )
     expect(tile?.querySelectorAll("button")).toHaveLength(2)
     expect(tile?.className).toContain("w-16.25")
     expect(tile?.className).toContain("h-8")
@@ -38,14 +40,17 @@ describe("the References and Elements tile", () => {
     renderMenu("tile", true)
     const tile = document.querySelector('[data-slot="attach-tile"]')
     expect(tile).toHaveProperty("disabled", true)
-    expect(tile?.contains(screen.getByRole("button", { name: t("bar.references") }))).toBe(true)
+    const references = screen.getByRole("button", {
+      name: t("bar.references"),
+    })
+    expect(tile?.contains(references)).toBe(true)
   })
 
   it("stays one attach button where a composer asks for the menu", () => {
     renderMenu("menu")
+    expect(screen.getByRole("button", { name: t("bar.attach") })).toBeDefined()
     expect(
-      screen.getByRole("button", { name: t("bar.attach") })
-    ).toBeDefined()
-    expect(screen.queryByRole("button", { name: t("bar.references") })).toBeNull()
+      screen.queryByRole("button", { name: t("bar.references") })
+    ).toBeNull()
   })
 })
