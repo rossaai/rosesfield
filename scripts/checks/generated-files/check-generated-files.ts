@@ -2,10 +2,11 @@ import { createHash } from "node:crypto"
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { fileURLToPath } from "node:url"
 
 type Row = { path: string; sha256: string }
 
-const root = new URL("../../../", import.meta.url).pathname
+const root = fileURLToPath(new URL("../../../", import.meta.url))
 
 function rowsOf(text: string): readonly Row[] {
   const parsed: unknown = JSON.parse(text)
@@ -55,14 +56,18 @@ async function controlHolds(rows: readonly Row[]): Promise<boolean> {
   const folder = await mkdtemp(join(tmpdir(), "rosesfield-generated-"))
   try {
     const bytes = await readFile(join(root, first.path))
+    const edited = { path: "edited", sha256: first.sha256 }
     await writeFile(
-      join(folder, "planted"),
+      join(folder, edited.path),
       Buffer.concat([bytes, Buffer.from(" ")])
     )
-    const planted = await refusals(folder, [
-      { path: "planted", sha256: first.sha256 },
-    ])
-    return planted.length === 1
+    const removed = { path: "removed", sha256: first.sha256 }
+    const caught = await refusals(folder, [edited, removed])
+    return (
+      caught.length === 2 &&
+      caught[0]?.startsWith("edited:") === true &&
+      caught[1] === "removed: listed in generated.json and missing"
+    )
   } finally {
     await rm(folder, { recursive: true, force: true })
   }
@@ -75,6 +80,6 @@ for (const line of found) {
 }
 const control = await controlHolds(rows)
 console.log(
-  `${rows.length} generated files checked, ${found.length} refused. The planted edit was ${control ? "caught" : "MISSED"}.`
+  `${rows.length} generated files checked, ${found.length} refused. The planted edit and the removed file were ${control ? "both caught" : "not both caught"}.`
 )
 process.exit(found.length === 0 && control ? 0 : 1)
