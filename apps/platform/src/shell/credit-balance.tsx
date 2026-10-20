@@ -1,7 +1,7 @@
-import { Button } from "@rosesfield/ui/components/button"
+import { Button, buttonVariants } from "@rosesfield/ui/components/button"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { type ReactNode, useEffect } from "react"
+import { type ReactElement, type ReactNode, useEffect } from "react"
 import { settingsQuery } from "@/api/queries"
 import { useHasVisitorKey } from "@/api/visitor-keys"
 import { formatNumber } from "@/copy/format"
@@ -11,6 +11,33 @@ import { useOpenKeyDialog } from "@/shell/key-dialog-context"
 import { noteSpendCap } from "@/shell/spend-cap"
 
 export type BarSize = "bar" | "barCompact"
+
+export function BarLink({
+  to,
+  tone,
+  size,
+  title,
+  children,
+}: {
+  to: "/settings" | "/connect"
+  tone: "default" | "primary"
+  size: BarSize
+  title?: string
+  children: string
+}): ReactElement {
+  return (
+    <Link
+      to={to}
+      data-slot="button"
+      className={buttonVariants({ tone, size })}
+      {...(title === undefined ? {} : { title })}
+    >
+      <span data-slot="button-label" className="min-w-0 truncate">
+        {children}
+      </span>
+    </Link>
+  )
+}
 
 export function creditsLabel(account: Account): string | null {
   const { cap, credits } = account
@@ -50,14 +77,13 @@ export function CreditBalance({ size }: { size: BarSize }): ReactNode {
     return null
   }
   return (
-    <Button
+    <BarLink
+      to="/settings"
       tone="default"
       size={size}
-      render={<Link to="/settings" />}
-      nativeButton={false}
       {...(isDemo ? { title: t("shell.demoEngine.tooltip") } : {})}
     >
       {label ?? t("shell.demoEngine.row")}
-    </Button>
+    </BarLink>
   )
 }

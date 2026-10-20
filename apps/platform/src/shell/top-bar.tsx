@@ -1,5 +1,5 @@
 import { AppBar } from "@rosesfield/ui/components/app-bar"
-import { Button, IconButton } from "@rosesfield/ui/components/button"
+import { IconButton } from "@rosesfield/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +21,7 @@ import { appLine, appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { FieldMark, Lockup } from "@/shell/brand-mark"
-import { type BarSize, CreditBalance } from "@/shell/credit-balance"
+import { BarLink, type BarSize, CreditBalance } from "@/shell/credit-balance"
 import {
   appIcon,
   type MediaArea,
@@ -188,14 +188,9 @@ export function TopBar(): ReactElement {
       areaMenu={<PhoneMenu groups={groups} />}
       balance={<CreditBalance size={size} />}
       connect={
-        <Button
-          tone="primary"
-          size={size}
-          render={<Link to="/connect" />}
-          nativeButton={false}
-        >
+        <BarLink to="/connect" tone="primary" size={size}>
           {t("shell.nav.connect")}
-        </Button>
+        </BarLink>
       }
     />
   )
