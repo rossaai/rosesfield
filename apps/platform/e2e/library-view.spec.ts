@@ -49,13 +49,7 @@ test.beforeAll(async () => {
   await startDemoRun()
 })
 
-test("the head row's cluster holds the view switch and Filter once you have runs", async ({
-  page,
-}) => {
-  await open(page, "/history")
-  const cluster = page.locator("[data-slot='canvas-cluster']")
-  await expect(cluster).toBeVisible()
-  expect((await boxOf(cluster)).height).toBe(36)
+async function expectLayoutWell(cluster: Locator): Promise<void> {
   const well = cluster.getByRole("tablist", { name: "Layout" })
   const wellBox = await boxOf(well)
   expect(wellBox.height).toBe(36)
@@ -75,8 +69,13 @@ test("the head row's cluster holds the view switch and Filter once you have runs
   const filterBox = await boxOf(filter)
   expect(filterBox.height).toBe(36)
   expect(Math.round(filterBox.x - (pillBox.x + pillBox.width))).toBe(8)
+}
 
-  await filter.click()
+async function openFilterGroups(
+  page: Page,
+  cluster: Locator
+): Promise<Locator> {
+  await cluster.getByRole("button", { name: "Filter" }).click()
   const popup = page.locator("[data-slot='popover-content']")
   await expect(popup).toBeVisible()
   await popup.evaluate((element) =>
@@ -91,8 +90,11 @@ test("the head row's cluster holds the view switch and Filter once you have runs
   await expect(
     groups.nth(0).locator("[data-slot='setting-group-count']")
   ).toHaveText(/\d+/)
+  return groups
+}
 
-  const trigger = groups.nth(1).locator("[data-slot='setting-group-trigger']")
+async function expectChoiceCard(page: Page, group: Locator): Promise<void> {
+  const trigger = group.locator("[data-slot='setting-group-trigger']")
   const chevron = trigger.locator("svg").last()
   await trigger.click()
   await page.waitForTimeout(60)
@@ -100,7 +102,7 @@ test("the head row's cluster holds the view switch and Filter once you have runs
     (element) => getComputedStyle(element).rotate
   )
   expect(turning).not.toBe("180deg")
-  const card = groups.nth(1).locator("[data-slot='setting-choice']").first()
+  const card = group.locator("[data-slot='setting-choice']").first()
   await expect(card).toBeVisible()
   await expect(chevron).toHaveCSS("rotate", "180deg")
   await page.waitForTimeout(400)
@@ -122,6 +124,18 @@ test("the head row's cluster holds the view switch and Filter once you have runs
   await card.hover()
   const hovered = await card.evaluate(look)
   expect(hovered).toBe(rest)
+}
+
+test("the head row's cluster holds the view switch and Filter once you have runs", async ({
+  page,
+}) => {
+  await open(page, "/history")
+  const cluster = page.locator("[data-slot='canvas-cluster']")
+  await expect(cluster).toBeVisible()
+  expect((await boxOf(cluster)).height).toBe(36)
+  await expectLayoutWell(cluster)
+  const groups = await openFilterGroups(page, cluster)
+  await expectChoiceCard(page, groups.nth(1))
 })
 
 test("Library and History keep a 16 px gutter on each side, and a focus ring sits inside its control", async ({
