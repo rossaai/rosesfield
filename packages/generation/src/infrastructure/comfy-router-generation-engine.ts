@@ -161,6 +161,13 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     }
   }
 
+  override submitLimitMs(): number {
+    const { requestTimeoutMs, downloadTimeoutMs } = this.http
+    const metered =
+      this.meter === null ? 0 : CreditMeter.longestMs(requestTimeoutMs)
+    return requestTimeoutMs + 2 * downloadTimeoutMs + metered
+  }
+
   override creditsOf(cost: Cost): number {
     return creditsOfCost(cost)
   }

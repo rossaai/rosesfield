@@ -14,8 +14,6 @@ export const collectRetryMs = 30_000
 
 export const resultKeptMs = 86_400_000
 
-export const submitClaimMs = 120_000
-
 export function backoffMs(attempts: number, error: ProjectError): number {
   if (error instanceof RateLimitedError && error.retryAfterSeconds !== null) {
     return error.retryAfterSeconds * 1000
@@ -50,9 +48,17 @@ export function isPastLimit(run: Run, app: AppDefinition, now: Date): boolean {
   return elapsed > app.limits.timeoutSeconds * 1000
 }
 
-export function isClaimHeld(run: Run, now: Date): boolean {
+export function claimMs(engine: GenerationEngine): number {
+  return engine.submitLimitMs() + pollMs
+}
+
+export function isClaimHeld(
+  run: Run,
+  engine: GenerationEngine,
+  now: Date
+): boolean {
   const since = run.submittingSince()
-  return since !== null && now.getTime() - since.getTime() < submitClaimMs
+  return since !== null && now.getTime() - since.getTime() < claimMs(engine)
 }
 
 export function isSubmitDue(run: Run, engine: GenerationEngine): boolean {

@@ -1,12 +1,13 @@
+import { runIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
-import { submitClaimMs } from "#application/advance-run/run-timing"
+import { claimMs } from "#application/advance-run/run-timing"
 import { RunFailedError } from "#domain/error/run-failed.error"
 import type {
   EngineRequest,
   EngineSubmission,
 } from "#domain/generation-engine.port"
 import { FakeGenerationEngine } from "../fake/fake-generation-engine"
-import { harnessFor, startImage } from "./harness"
+import { type Harness, harnessFor, startImage } from "./harness"
 
 class OneKeyAtATime extends FakeGenerationEngine {
   private readonly inFlight = new Set<string>()
@@ -23,7 +24,40 @@ class OneKeyAtATime extends FakeGenerationEngine {
   }
 }
 
+class SlowSubmit extends FakeGenerationEngine {
+  harness: Harness | null = null
+  readonly seen: string[] = []
+
+  override async submit(request: EngineRequest): Promise<EngineSubmission> {
+    const { harness } = this
+    if (harness !== null && this.seen.length === 0) {
+      harness.clock.advance(290_000)
+      const run = await harness.runs.get(
+        runIdFormat.parse(request.idempotencyKey)
+      )
+      this.seen.push(run?.jobs[0]?.status ?? "none")
+      await harness.advance.execute({
+        runId: runIdFormat.parse(request.idempotencyKey),
+      })
+    }
+    return super.submit(request)
+  }
+}
+
 describe("AdvanceRunHandler, a queued run two watchers read", () => {
+  it("holds the claim through a submit that runs longer than two minutes", async () => {
+    const engine = new SlowSubmit({ refByKey: true, submitLimitMs: 316_000 })
+    const harness = harnessFor({ engines: [engine] })
+    engine.harness = harness
+    const runId = await startImage(harness)
+    await harness.advance.execute({ runId })
+    expect(engine.seen).toEqual(["submitting"])
+    expect(engine.submitted).toHaveLength(1)
+    const run = await harness.runs.get(runId)
+    expect(run?.status).toBe("queued")
+    expect(run?.jobs[0]?.status).toBe("queued")
+  })
+
   it("is sent to the engine once, and neither watcher fails it", async () => {
     const engine = new OneKeyAtATime({ refByKey: true })
     const harness = harnessFor({ engines: [engine] })
@@ -52,7 +86,7 @@ describe("AdvanceRunHandler, a queued run two watchers read", () => {
       nextWakeMs: 2000,
     })
     expect(engine.submitted).toEqual([])
-    harness.clock.advance(submitClaimMs)
+    harness.clock.advance(claimMs(engine))
     await harness.advance.execute({ runId })
     expect(engine.submitted.map((one) => one.idempotencyKey)).toEqual([runId])
     expect((await harness.runs.get(runId))?.jobs[0]?.status).toBe("queued")

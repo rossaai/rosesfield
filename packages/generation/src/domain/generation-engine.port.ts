@@ -98,6 +98,9 @@ export abstract class GenerationEngine {
   /** Submits one run and returns the engine's own reference to it. */
   abstract submit(request: EngineRequest): Promise<EngineSubmission>
 
+  /** Says the longest time one submit can take before the engine's own timeouts end it. */
+  abstract submitLimitMs(): number
+
   /** Reads the status of a submitted run once. */
   abstract read(ref: string): Promise<EngineStatus>
 

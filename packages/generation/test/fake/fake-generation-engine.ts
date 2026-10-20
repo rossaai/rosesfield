@@ -41,6 +41,7 @@ type FakeGenerationEngineOptions = {
   finished?: EngineFinished
   creditsPerUsd?: number
   listError?: Error
+  submitLimitMs?: number
 }
 
 export class FakeGenerationEngine extends GenerationEngine {
@@ -65,6 +66,7 @@ export class FakeGenerationEngine extends GenerationEngine {
   private readonly finished: EngineFinished | null
   private readonly creditsPerUsd: number | null
   private readonly listError: Error | null
+  private readonly limitMs: number
   readonly priced: PriceRequest[] = []
 
   constructor(options: FakeGenerationEngineOptions = {}) {
@@ -86,6 +88,11 @@ export class FakeGenerationEngine extends GenerationEngine {
     this.finished = options.finished ?? null
     this.creditsPerUsd = options.creditsPerUsd ?? null
     this.listError = options.listError ?? null
+    this.limitMs = options.submitLimitMs ?? 120_000
+  }
+
+  override submitLimitMs(): number {
+    return this.limitMs
   }
 
   override creditsOf(cost: Cost): number | null {

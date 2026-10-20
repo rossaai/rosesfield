@@ -118,7 +118,7 @@ export class AdvanceRunHandler {
       if (engine.idempotency === "none") {
         return this.failWith(run, new RunFailedError({ cause: "lost submit" }))
       }
-      if (isClaimHeld(run, this.now())) {
+      if (isClaimHeld(run, engine, this.now())) {
         return { nextWakeMs: pollMs }
       }
       run.release()

@@ -57,6 +57,14 @@ function routerWith(recordings: Recording[]) {
 }
 
 describe("the real credits of a run", () => {
+  it("are read inside the time a Router submit claims", () => {
+    const { engine } = routerWith([])
+    const longest =
+      ComfyRouterGenerationEngine.downloadTimeoutMs +
+      (CreditMeter.settleTries - 1) * CreditMeter.settleMs
+    expect(engine.submitLimitMs()).toBeGreaterThan(longest)
+  })
+
   it("come from the balance route before and after a Router run", async () => {
     const { engine, replay } = routerWith([
       catalogPage([pictureModel]),

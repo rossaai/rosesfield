@@ -94,6 +94,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
   override readonly idempotency = "keyed"
 
   private readonly low: ComfyLow
+  private readonly requestTimeoutMs: number
   private readonly downloadTimeoutMs: number
   private readonly isCloud: boolean
 
@@ -101,12 +102,13 @@ export class ComfyGenerationEngine extends GenerationEngine {
     super()
     const baseUrl = options.baseUrl ?? ComfyGenerationEngine.cloudUrl
     this.isCloud = baseUrl === ComfyGenerationEngine.cloudUrl
+    this.requestTimeoutMs =
+      options.requestTimeoutMs ?? ComfyGenerationEngine.requestTimeoutMs
     this.low = createComfyLow({
       baseUrl,
       apiKey: options.apiKey,
       fetch: options.fetch ?? ((input, init) => fetch(input, init)),
-      timeoutMs:
-        options.requestTimeoutMs ?? ComfyGenerationEngine.requestTimeoutMs,
+      timeoutMs: this.requestTimeoutMs,
     })
     this.downloadTimeoutMs =
       options.downloadTimeoutMs ?? ComfyGenerationEngine.downloadTimeoutMs
@@ -141,6 +143,10 @@ export class ComfyGenerationEngine extends GenerationEngine {
       models: config.models ?? [],
       workflowHash: await workflowHashOf(config.workflow),
     }
+  }
+
+  override submitLimitMs(): number {
+    return 2 * this.requestTimeoutMs
   }
 
   override creditsOf(cost: Cost): number {

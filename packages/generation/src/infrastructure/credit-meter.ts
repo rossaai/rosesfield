@@ -44,6 +44,13 @@ export class CreditMeter {
       ((ms) => new Promise((resolve) => setTimeout(resolve, ms)))
   }
 
+  static longestMs(readMs: number): number {
+    return (
+      (1 + CreditMeter.settleTries) * readMs +
+      (CreditMeter.settleTries - 1) * CreditMeter.settleMs
+    )
+  }
+
   async start(reader: BalanceReader): Promise<MeterTicket | null> {
     if (!reader.hasKey) {
       return null
