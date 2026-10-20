@@ -33,6 +33,37 @@ describe("PresetTile", () => {
   })
 })
 
+describe("the preset tile over its clip", () => {
+  it("sets its name and line in the dark scheme, so they read over the darkened clip, and rings the whole tile outside its edge", () => {
+    render(
+      <PresetTile
+        name="Melt"
+        href="/explore/melt"
+        viewLabel="View Melt"
+        line="Turns a photo to wax"
+        clip={{ src: "melt.mp4", alt: "Melt" }}
+        aspect={{ width: 9, height: 16 }}
+      />
+    )
+    const line = document.querySelector("[data-slot='preset-tile-line']")
+    expect(line?.closest("[data-theme]")?.getAttribute("data-theme")).toBe(
+      "dark"
+    )
+    for (const name of document.querySelectorAll(
+      "[data-slot='preset-tile-name']"
+    )) {
+      expect(name.closest("[data-theme]")?.getAttribute("data-theme")).toBe(
+        "dark"
+      )
+    }
+    const card = screen.getByRole("link", { name: "View Melt" })
+    expect(card.hasAttribute("data-cover")).toBe(true)
+    expect(
+      document.querySelector("[data-slot='preset-tile']")?.className.split(" ")
+    ).toContain("has-[>[data-cover]:focus-visible]:outline-solid")
+  })
+})
+
 describe("the preset name", () => {
   it("is sized to its card: the display size on a tall card, the title size on a wide one", () => {
     const names = (["tall", "wide"] as const).map((shape) => {

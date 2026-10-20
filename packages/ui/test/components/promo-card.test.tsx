@@ -57,6 +57,8 @@ describe("PromoCard", () => {
         "px-4",
         "scroll-px-4",
         "snap-x",
+        "-my-[calc(var(--spacing-focus-ring)*2)]",
+        "py-[calc(var(--spacing-focus-ring)*2)]",
       ])
     )
     const section = screen.getByRole("region", { name: "New" })

@@ -70,6 +70,7 @@ function ModeStrip({
       data-form="strip"
       className={cn(
         "flex max-w-full shrink-0 items-start gap-3 overflow-x-auto [scrollbar-width:none]",
+        interaction.ringRoom,
         className
       )}
       {...props}

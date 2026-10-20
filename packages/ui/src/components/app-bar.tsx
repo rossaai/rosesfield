@@ -1,5 +1,6 @@
 import { useRender } from "@base-ui/react/use-render"
 import { buttonVariants } from "@rosesfield/ui/components/button"
+import { interaction } from "@rosesfield/ui/components/interaction"
 import type { AppBarDensity } from "@rosesfield/ui/contracts/app-bar.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import {
@@ -81,9 +82,12 @@ function AreaLinks({ children }: { children: ReactNode }): ReactElement {
       data-scroll-start={ends.start ? undefined : ""}
       data-slot="app-bar-overflow"
       style={maskOf(ends)}
-      className="hidden h-7 min-w-0 flex-1 items-center overflow-x-auto [scrollbar-width:none] @regular:flex"
+      className={cn(
+        "hidden h-9 min-w-0 flex-1 items-center overflow-x-auto [scrollbar-width:none] @regular:flex",
+        interaction.ringRoom
+      )}
     >
-      <div className="mx-auto flex shrink-0 items-center">{children}</div>
+      <div className="flex shrink-0 items-center">{children}</div>
     </div>
   )
 }
@@ -130,6 +134,7 @@ function AppBarAction({
       "data-slot": "button",
       className: cn(
         buttonVariants({ tone, size: "bar" }),
+        interaction.lightPress,
         actions[density],
         "transition-[height,padding,gap] duration-(--duration-surface)",
         className

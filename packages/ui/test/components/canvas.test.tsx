@@ -101,4 +101,20 @@ describe("StepCards", () => {
     const frame = screen.getByRole("listitem").firstElementChild
     expect(frame?.className.split(" ")).toContain("aspect-[25/19]")
   })
+
+  it("sets its heading and line at the start, flush with the cards, and never breaks a word inside a card", () => {
+    render(
+      <StepCards
+        title="How it works"
+        line="Three steps"
+        steps={[{ id: "one", title: "Step", line: "Do", media: null }]}
+      />
+    )
+    const lead = document.querySelector("[data-slot='state-view-lead']")
+    expect(lead?.className.split(" ")).toContain("text-start")
+    expect(lead?.className.split(" ")).not.toContain("text-center")
+    expect(screen.getByRole("list").className.split(" ")).toContain(
+      "wrap-normal"
+    )
+  })
 })

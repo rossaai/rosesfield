@@ -95,7 +95,7 @@ describe("Button's measures", () => {
     )
   })
 
-  it("draws its focus ring inside its own edge, so no overflow clips it", () => {
+  it("draws its focus ring its own width outside its edge", () => {
     render(
       <IconButton label="Close" place="close">
         <svg aria-hidden="true" />
@@ -103,8 +103,8 @@ describe("Button's measures", () => {
     )
     expect(classesOf("Close")).toEqual(
       expect.arrayContaining([
-        "focus-visible:outline-offset-[calc(var(--spacing-focus-ring)*-1)]",
-        "in-data-[gallery=focus]:outline-offset-[calc(var(--spacing-focus-ring)*-1)]",
+        "focus-visible:outline-offset-(--spacing-focus-ring)",
+        "in-data-[gallery=focus]:outline-offset-(--spacing-focus-ring)",
       ])
     )
   })

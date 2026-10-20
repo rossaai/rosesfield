@@ -1,3 +1,4 @@
+import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement, ReactNode } from "react"
 
@@ -33,7 +34,10 @@ function InputPanel({
       )}
       <div
         data-slot="composer-prompt"
-        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2 [scrollbar-width:none]"
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2 [scrollbar-width:none]",
+          interaction.ringScroll
+        )}
       >
         {children}
       </div>
@@ -59,7 +63,10 @@ function PromptBlock({
   chips,
 }: PromptBlockProps): ReactElement {
   return (
-    <div data-slot="composer-prompt-block" className="flex w-full flex-col">
+    <div
+      data-slot="composer-prompt-block"
+      className="flex w-full flex-col rounded-cell outline-hor-text has-[textarea:focus-visible]:outline-(length:--spacing-focus-ring) has-[textarea:focus-visible]:outline-offset-(--spacing-focus-ring) has-[textarea:focus-visible]:outline-solid"
+    >
       <div className="relative flex h-31.5 flex-col rounded-t-cell bg-(--well) px-3 pt-9 pb-2">
         <span className="absolute top-3 left-3 font-medium text-label text-ink-muted">
           {label}
@@ -67,7 +74,7 @@ function PromptBlock({
         {children}
       </div>
       {chips === undefined ? null : (
-        <div className="flex h-10 items-center gap-1 rounded-b-cell bg-(--well) px-3">
+        <div className="flex h-11.5 items-start gap-1 rounded-b-cell bg-(--well) px-3 pt-2">
           {chips}
         </div>
       )}
@@ -79,7 +86,7 @@ function SettingTiles({ children }: { children: ReactNode }): ReactElement {
   return (
     <div
       data-slot="setting-tiles"
-      className="flex w-full gap-2 *:h-10 *:flex-1 *:rounded-dense"
+      className="flex w-full gap-2 *:h-10 *:min-w-max *:flex-1 *:rounded-dense"
     >
       {children}
     </div>

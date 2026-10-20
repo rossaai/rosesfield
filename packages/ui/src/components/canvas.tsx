@@ -70,7 +70,7 @@ function StepCards({
   return (
     <div
       data-slot="state-view-lead"
-      className="flex flex-col px-12 py-24 text-center @regular:px-8"
+      className="flex flex-col px-12 py-24 text-start @regular:px-8"
     >
       <h2 data-slot="state-view-title" className="text-display text-ink">
         {title}
@@ -81,7 +81,7 @@ function StepCards({
       >
         {line}
       </p>
-      <ol className="mt-8 grid grid-cols-3 gap-10 text-left">
+      <ol className="mt-8 grid grid-cols-3 gap-10 wrap-normal">
         {steps.map((step) => (
           <li key={step.id} className="flex min-w-0 flex-col">
             <div className="relative aspect-[25/19] w-full overflow-hidden rounded-card bg-(--well)">

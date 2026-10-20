@@ -75,6 +75,34 @@ describe("ResultTile", () => {
     expect(chip?.className.split(" ")).toContain("gap-1")
   })
 
+  it("gives its mode chip the width left of the action column, so a long name shows whole", () => {
+    renderTile("card")
+    expect(
+      document.querySelector("[data-slot='media-veil']")?.className.split(" ")
+    ).toContain("max-w-[calc(100%-var(--spacing)*13)]")
+    cleanup()
+    renderTile("library")
+    expect(
+      document.querySelector("[data-slot='media-veil']")?.className.split(" ")
+    ).toContain("max-w-[calc(100%-var(--spacing)*16)]")
+  })
+
+  it("rings the whole tile outside its clipping edge when its open target has keyboard focus", () => {
+    renderTile()
+    const open = screen.getByRole("button", { name: "Open this result" })
+    const tile = document.querySelector("[data-slot='media']")
+    expect(open.parentElement).toBe(tile)
+    expect(open.hasAttribute("data-cover")).toBe(true)
+    expect(open.className.split(" ")).toContain("focus-visible:outline-none")
+    expect(tile?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "overflow-hidden",
+        "has-[>[data-cover]:focus-visible]:outline-solid",
+        "has-[>[data-cover]:focus-visible]:outline-offset-(--spacing-focus-ring)",
+      ])
+    )
+  })
+
   it("opens from its open target and from Expand, and recreates from Recreate", () => {
     const calls = renderTile()
     fireEvent.click(screen.getByRole("button", { name: "Open this result" }))

@@ -72,7 +72,7 @@ function GenerateButton({
       className={cn(
         "relative inline-flex shrink-0 items-center bg-ink font-medium text-canvas select-none disabled:pointer-events-none disabled:opacity-(--opacity-disabled) data-disabled:pointer-events-none data-disabled:opacity-(--opacity-disabled) aria-busy:opacity-(--opacity-pulse)",
         forms[form],
-        interaction.light,
+        interaction.lightPress,
         interaction.ring,
         className
       )}

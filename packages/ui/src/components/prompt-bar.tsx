@@ -1,5 +1,6 @@
 import { IconButton } from "@rosesfield/ui/components/button"
 import { GenerateButton } from "@rosesfield/ui/components/generate-button"
+import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "lucide-react"
 import {
@@ -197,7 +198,10 @@ function ChipScroller({ chips }: { chips: ReactNode }): ReactElement {
         ref={row}
         data-slot="chip-row"
         onScroll={update}
-        className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none]"
+        className={cn(
+          "flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none]",
+          interaction.ringRoom
+        )}
       >
         {chips}
       </div>

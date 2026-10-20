@@ -67,8 +67,8 @@ function FeedStacks({
 }
 
 const windows = {
-  masonry: "max-h-256",
-  row: "max-h-224",
+  masonry: "max-h-[calc(--spacing(256)+var(--spacing-focus-ring)*4)]",
+  row: "max-h-[calc(--spacing(224)+var(--spacing-focus-ring)*4)]",
 } satisfies Record<MediaFeedLayout, string>
 
 type ViewAllProps = Omit<ComponentProps<"a">, "children"> & {
@@ -138,7 +138,11 @@ function MediaFeed({
       )}
       <div
         data-slot="media-feed-window"
-        className={cn("relative overflow-hidden", windows[layout])}
+        className={cn(
+          "relative overflow-hidden",
+          interaction.ringRoom,
+          windows[layout]
+        )}
       >
         {content === "presets" || layout === "row" ? (
           <FeedStacks form={content === "presets" ? "presets" : "row"}>
