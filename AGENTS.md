@@ -26,7 +26,7 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 | `packages/` | code two consumers share: `kernel`, `contract`, `ui`, `catalog`, `generation`, `library` and `agent`, per `docs/architecture.md` §The shape |
 | `workflows/` | every ComfyUI workflow, a UI file and an API file each, per `workflows/README.md` |
 | `docs/` | one doc per subject, routed in §Doc routing |
-| `scripts/` | the dependency-cruiser aliases, and `first-light`, which runs each workflow once against the engine you name, per `scripts/first-light/README.md` |
+| `scripts/` | the dependency-cruiser aliases, the checks the gate runs in `scripts/checks/`, such as the generated-file check, and `first-light`, which runs each workflow once against the engine you name, per `scripts/first-light/README.md` |
 
 ## Doc routing
 
