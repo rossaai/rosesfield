@@ -18,8 +18,9 @@
     "test:bun": "bun --bun vitest run --project '!ui' --project '!platform'",
     "test:dom": "vitest run --project ui --project platform",
     "catalog:sync": "bun packages/catalog/scripts/catalog-sync.ts",
+    "generated:check": "bun scripts/checks/generated-files/check-generated-files.ts",
     "ui:add": "cd apps/platform && shadcn add",
-    "gate": "bun run catalog:sync && bun run typecheck && bun run lint && bun run test",
+    "gate": "bun run catalog:sync && bun run generated:check && bun run typecheck && bun run lint && bun run test",
     "deploy": "bun scripts/deploy/deploy.ts"
   },
   "devDependencies": {

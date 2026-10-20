@@ -57,7 +57,8 @@ Run every command from the repository root with bun 1.4.3. Node 22 or 24 must al
 | `bun run test:dom` | Runs vitest on node with jsdom for `ui` and `platform`. |
 | `bun run catalog:sync` | Writes `packages/catalog/src/apps.gen.ts` from the app folders. Each `<app-id>/app.ts` exports `app`. It refuses an `app.ts` without `copy.en.ts` and a name that is not a kebab-case id. |
 | `bun run ui:add <component>` | Adds a shadcn component to `packages/ui/src/components`. Run `bun run format` after it. |
-| `bun run gate` | Runs `catalog:sync`, `typecheck`, `lint` and `test`. It must pass before every commit. |
+| `bun run generated:check` | Refuses a file listed in `generated.json` whose bytes differ from its sha256. Those files are generated, and none is edited by hand. |
+| `bun run gate` | Runs `catalog:sync`, `generated:check`, `typecheck`, `lint` and `test`. It must pass before every commit. |
 
 For one workspace: `bun run --filter @rosesfield/<workspace> typecheck` and `bun run --filter @rosesfield/<workspace> test`.
 
