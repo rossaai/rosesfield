@@ -82,6 +82,53 @@ test.describe("an app with many inputs on a desktop", () => {
   })
 })
 
+test.describe("the parts of Video's column", () => {
+  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
+
+  test("stacks 302 px parts 8 px apart: 36 px mode tabs, a 302 by 130 start frame with Change 6 px from its corner, a 126 px prompt and a 48 px model row", async ({
+    page,
+  }) => {
+    await page.goto("/apps/video")
+    const column = page.locator('[data-slot="composer"]')
+    await expect(column).toBeVisible()
+    const tab = await boxOf(column.getByRole("tab").first())
+    expect(tab.height).toBe(36)
+    const frame = column.locator('[data-slot="composer-attachments-tiles"]')
+    const frameBox = await boxOf(frame)
+    expect([frameBox.width, frameBox.height]).toEqual([302, 130])
+    const change = await boxOf(frame.getByRole("button", { name: "Change" }))
+    expect(frameBox.x + frameBox.width - (change.x + change.width)).toBe(6)
+    expect(change.y - frameBox.y).toBe(6)
+    const prompt = await boxOf(
+      column.locator('[data-slot="composer-prompt-block"]')
+    )
+    expect(prompt.width).toBe(302)
+    const row = await boxOf(column.locator('[data-slot="model-row"]'))
+    expect([row.width, row.height]).toEqual([302, 48])
+    const modes = column.locator('[data-slot="segmented-control"]')
+    if ((await modes.count()) > 0) {
+      const mode = await boxOf(modes)
+      expect([mode.width, mode.height]).toEqual([302, 48])
+      expect(mode.y).toBe(frameBox.y + frameBox.height + 8)
+    }
+    expect(frameBox.y).toBe(tab.y + tab.height + 8)
+  })
+
+  test("opens the model list 8 px to the right of the model row", async ({
+    page,
+  }) => {
+    await page.goto("/apps/video")
+    const row = page.locator('[data-slot="composer"] [data-slot="model-row"]')
+    await row.click()
+    const list = page.locator('[data-slot="model-picker"]')
+    await expect(list).toBeVisible()
+    const rowBox = await boxOf(row)
+    const listBox = await boxOf(list)
+    expect(listBox.x).toBe(rowBox.x + rowBox.width + 8)
+    expect(listBox.width).toBe(402)
+  })
+})
+
 test.describe("an app on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "the sheet is the phone's")
 

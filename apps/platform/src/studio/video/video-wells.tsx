@@ -63,7 +63,7 @@ export function VideoWells({
   }
   const isPair = start !== null && last !== null
   return (
-    <div className="flex flex-col gap-s4">
+    <div className="flex flex-col gap-2">
       {start === null ? null : (
         <Well
           slot={start}

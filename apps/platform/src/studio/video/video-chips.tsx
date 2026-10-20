@@ -1,9 +1,10 @@
 import { fieldRoleOf } from "@rosesfield/catalog/comfy"
 import type { AppListing } from "@rosesfield/contract"
+import { Chip } from "@rosesfield/ui/components/chip"
 import { ChipSelect } from "@rosesfield/ui/components/chip-select"
-import { Switch } from "@rosesfield/ui/components/switch"
+import { SettingTiles } from "@rosesfield/ui/components/input-panel"
 import { Volume2Icon, VolumeOffIcon } from "lucide-react"
-import { type ReactElement, useId } from "react"
+import type { ReactElement } from "react"
 import { withUnit } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { aspectField } from "@/screens/app/app-form"
@@ -91,16 +92,16 @@ export function VideoChips({
 }): ReactElement {
   if (fields === null) {
     return (
-      <div className="flex flex-wrap items-center gap-s2">
+      <SettingTiles>
         {graphChips.map((name) => (
           <SettingChip key={name} app={app} form={form} name={name} />
         ))}
-      </div>
+      </SettingTiles>
     )
   }
   const plain = (value: string | number): string => String(value)
   return (
-    <div className="flex flex-wrap items-center gap-s2">
+    <SettingTiles>
       {fields.length === null ? null : (
         <FieldChip
           field={fields.length}
@@ -125,11 +126,11 @@ export function VideoChips({
           shown={plain}
         />
       )}
-    </div>
+    </SettingTiles>
   )
 }
 
-export function SoundSwitch({
+export function SoundChip({
   form,
   fields,
   isGraph,
@@ -140,7 +141,6 @@ export function SoundSwitch({
   isGraph: boolean
   makesSound: boolean
 }): ReactElement | null {
-  const id = useId()
   const name = isGraph ? soundInput : (fields?.sound?.name ?? null)
   if (name === null && !makesSound) {
     return null
@@ -148,32 +148,18 @@ export function SoundSwitch({
   const isOn = name === null || textOf(form.values.inputs[name]) !== "off"
   const Icon = isOn ? Volume2Icon : VolumeOffIcon
   return (
-    <div className="flex flex-col gap-s1">
-      <div className="flex items-center justify-between gap-s3 rounded-field bg-(--well) px-s5 py-s2">
-        <label
-          htmlFor={id}
-          className="flex items-center gap-s2 text-body text-ink"
-        >
-          <Icon aria-hidden="true" className="glyph text-ink-muted" />
-          {tCatalog("video.input.sound.label")}
-        </label>
-        <Switch
-          id={id}
-          aria-label={tCatalog("video.input.sound.label")}
-          checked={isOn}
-          disabled={name === null}
-          onCheckedChange={(checked) => {
-            if (name !== null) {
-              form.setInput(name, checked ? "on" : "off")
-            }
-          }}
-        />
-      </div>
-      {name === null ? (
-        <p className="px-s1 text-label text-ink-muted">
-          {tCatalog("video.sound.always")}
-        </p>
-      ) : null}
-    </div>
+    <Chip
+      aria-pressed={isOn}
+      disabled={name === null}
+      {...(name === null ? { caption: tCatalog("video.sound.always") } : {})}
+      icon={<Icon aria-hidden="true" />}
+      onClick={() => {
+        if (name !== null) {
+          form.setInput(name, isOn ? "off" : "on")
+        }
+      }}
+    >
+      {tCatalog("video.input.sound.label")}
+    </Chip>
   )
 }

@@ -22,6 +22,7 @@ import { LabMark } from "@/pieces/lab-mark"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import { modelSections } from "@/screens/app/hosted/model-sections"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
+import { openModels } from "@/screens/welcome/open-weights"
 
 const lineKeys: Readonly<Record<string, string>> = {
   "text-to-image": "model.line.textToImage",
@@ -94,10 +95,35 @@ const sectionLabels = {
   all: "model.picker.all",
 } as const
 
-export function badgesOf(tags: readonly ModelTag[]): ModelBadge[] {
-  return tags.some((tag) => tag.kind === "open-weights")
-    ? [{ kind: "openWeights", label: t("model.tag.openWeights") }]
-    : []
+const huggingFace = "https://huggingface.co/"
+const repoPattern = /^[\w.-]+\/[\w.-]+$/
+
+export function weightsLinkOf(id: string): string | null {
+  const model = openModels.find((one) => one.id === id)
+  if (model === undefined) {
+    return null
+  }
+  if (model.link.startsWith(huggingFace)) {
+    return model.link
+  }
+  const repo = model.files.find(
+    (file) => repoPattern.test(file) && !file.endsWith(".safetensors")
+  )
+  return repo === undefined ? null : `${huggingFace}${repo}`
+}
+
+export function badgesOf(id: string, tags: readonly ModelTag[]): ModelBadge[] {
+  if (!tags.some((tag) => tag.kind === "open-weights")) {
+    return []
+  }
+  const href = weightsLinkOf(id)
+  return [
+    {
+      kind: "openWeights",
+      label: t("model.tag.openWeights"),
+      ...(href === null ? {} : { href }),
+    },
+  ]
 }
 
 export function pickerSections(hosted: HostedState): ModelPickerSection[] {
@@ -121,7 +147,7 @@ export function pickerSections(hosted: HostedState): ModelPickerSection[] {
         .filter((tag) => tag.kind !== "open-weights")
         .map(tagOf),
       mark: <LabMark maker={row.maker} />,
-      badges: badgesOf(row.tags),
+      badges: badgesOf(row.id, row.tags),
     })),
   }))
 }

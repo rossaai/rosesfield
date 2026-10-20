@@ -15,6 +15,20 @@ type GenerateFootProps = {
   className?: string
 }
 
+export type SubmitPrice = {
+  submitValue?: string
+  submitName?: string
+}
+
+export function submitPriceOf(start: StartRun): SubmitPrice {
+  const value = start.priceValue ?? null
+  const name = start.priceName ?? null
+  return {
+    ...(value === null ? {} : { submitValue: value }),
+    ...(name === null ? {} : { submitName: name }),
+  }
+}
+
 export function StartProblem({ start }: { start: StartRun }): ReactNode {
   if (start.error === null) {
     return null

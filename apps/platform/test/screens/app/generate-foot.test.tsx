@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
-import { GenerateFoot } from "@/screens/app/generate-foot"
+import { GenerateFoot, submitPriceOf } from "@/screens/app/generate-foot"
 import type { StartRun } from "@/screens/app/use-start-run"
 
 afterEach(cleanup)
@@ -47,5 +47,30 @@ describe("Generate at the foot of a column", () => {
     const button = screen.getByRole("button", { name: t("run.generate") })
     expect(button.getAttribute("data-priced")).toBe("no")
     expect(button.textContent).toBe(t("run.generate"))
+  })
+})
+
+describe("the price on the prompt bar's Generate tile", () => {
+  it("is the run's price in credits and its spoken name", () => {
+    const start = startWith(
+      {
+        price: t("run.price.credits", { amount: "80" }),
+        priceValue: "80",
+        priceName: t("run.generate.priced", { amount: "80" }),
+      },
+      []
+    )
+    expect(submitPriceOf(start)).toEqual({
+      submitValue: "80",
+      submitName: t("run.generate.priced", { amount: "80" }),
+    })
+  })
+
+  it("holds no sentence while the price is unknown", () => {
+    const start = startWith(
+      { price: t("run.price.unknown"), priceValue: null, priceName: null },
+      []
+    )
+    expect(submitPriceOf(start)).toEqual({})
   })
 })
