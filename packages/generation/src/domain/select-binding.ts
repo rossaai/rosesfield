@@ -13,7 +13,7 @@ type SelectConfig = {
 
 export const selectAdapter = "select"
 
-const maxDepth = 4
+const maxDepth = 5
 
 export function selectBinding(config: SelectConfig): EngineBinding {
   return { adapter: selectAdapter, config }

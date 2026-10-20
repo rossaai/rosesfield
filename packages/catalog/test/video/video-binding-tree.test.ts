@@ -1,15 +1,24 @@
 import { startRunBodyFor } from "@rosesfield/contract"
-import { hostedModelOf, resolveBinding } from "@rosesfield/generation"
+import {
+  hostedModelBinding,
+  hostedModelOf,
+  resolveBinding,
+} from "@rosesfield/generation"
 import type { HostedModel, ModelField } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
 import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
 import { listWorkflows } from "#list-workflows"
 import { app } from "#video/app"
-import { ltxStartFrameBinding, ltxTextBinding } from "#video/comfy/video-engine"
+import {
+  ltxFirstLastBinding,
+  ltxStartFrameBinding,
+  ltxTextBinding,
+} from "#video/comfy/video-engine"
 import { videoCopy } from "#video/copy.en"
 import {
   checked,
+  lastFrameId,
   prompt,
   startFrameId,
   videoDefinition,
@@ -64,14 +73,14 @@ function fieldAt(value: unknown, path: readonly string[]): unknown {
 }
 
 describe("the Video app", () => {
-  it("lists the models that make a video from text, an image, references or two frames and opens on MiniMax H3", () => {
+  it("lists the models that make a video from text, an image, references or two frames and opens on the LTX 2.5 graph", () => {
     expect(appTasksOf(definition)).toEqual([
       "text-to-video",
       "image-to-video",
       "reference-to-video",
       "first-last-frame",
     ])
-    expect(defaultModelOf(definition)).toBe("minimax/minimax-h3")
+    expect(defaultModelOf(definition)).toBe("ltx-2-5")
   })
 
   it("lists a model that runs only from references or only from two frames", () => {
@@ -102,13 +111,12 @@ describe("the Video app", () => {
       "model",
       "default",
     ])
-    const approved = body.parse({ inputs: { prompt: "a" } }).inputs.model
-    const ran = hostedModelOf(
-      resolveBinding(definition.engine, { prompt: "a" })
-    )
-    expect(published).toBe("minimax/minimax-h3")
-    expect(approved).toBe(published)
-    expect(ran).toBe(published)
+    const approved = body.parse({ inputs: { prompt: "a" } }).inputs
+    const ran = resolveBinding(definition.engine, approved)
+    expect(published).toBe("ltx-2-5")
+    expect(approved.model).toBe(published)
+    expect(hostedModelOf(ran)).toBeNull()
+    expect(ran).toEqual(ltxTextBinding("480p", "on"))
     expect(defaultModelOf(definition)).toBe(published)
   })
 
@@ -139,6 +147,26 @@ describe("the Video app", () => {
       expected: ltxStartFrameBinding("480p", "on"),
     },
     {
+      name: "LTX 2.5 from a first and a last frame",
+      inputs: {
+        model: "ltx-2-5",
+        startFrame: [startFrameId],
+        lastFrame: [lastFrameId],
+      },
+      expected: ltxFirstLastBinding("480p", "on"),
+    },
+    {
+      name: "LTX 2.5 from two frames at 720p with no sound",
+      inputs: {
+        model: "ltx-2-5",
+        startFrame: [startFrameId],
+        lastFrame: [lastFrameId],
+        resolution: "720p",
+        sound: "off",
+      },
+      expected: ltxFirstLastBinding("720p", "off"),
+    },
+    {
       name: "LTX 2.5 at 720p with no sound",
       inputs: { model: "ltx-2-5", resolution: "720p", sound: "off" },
       expected: ltxTextBinding("720p", "off"),
@@ -160,6 +188,13 @@ describe("the Video app", () => {
     expect(binding.config.outputsPerJob).toBe("one")
   })
 
+  it("runs MiniMax H3 as a hosted model when you pick it", () => {
+    const result = checked({ prompt, model: "minimax/minimax-h3" })
+    expect(result.success).toBe(true)
+    const binding = resolveBinding(app.engine, result.data?.inputs ?? {})
+    expect(binding).toEqual(hostedModelBinding("minimax/minimax-h3"))
+  })
+
   it.each([
     { name: "a Wan model", inputs: { model: "wan-2-2" }, path: "model" },
     { name: "Auto", inputs: { model: "auto" }, path: "model" },
@@ -168,6 +203,19 @@ describe("the Video app", () => {
       name: "two start frames",
       inputs: { startFrame: [startFrameId, startFrameId] },
       path: "startFrame",
+    },
+    {
+      name: "a last frame with no start frame",
+      inputs: { lastFrame: [lastFrameId] },
+      path: "lastFrame",
+    },
+    {
+      name: "two last frames",
+      inputs: {
+        startFrame: [startFrameId],
+        lastFrame: [lastFrameId, lastFrameId],
+      },
+      path: "lastFrame",
     },
     { name: "a length of 6", inputs: { length: 6 }, path: "length" },
     { name: "1080p", inputs: { resolution: "1080p" }, path: "resolution" },

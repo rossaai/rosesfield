@@ -65,6 +65,39 @@ describe("a Video run of the LTX 2.5 graph on the demo engine", () => {
     })
   })
 
+  it("runs LTX 2.5 at 480p and 5 seconds with sound when you pick nothing", async () => {
+    const gateway = demoGateway()
+    const { run } = await gateway.startVideo({ prompt: "a fox in deep snow" })
+    expect(run.inputs).toMatchObject({
+      model: "ltx-2-5",
+      length: 5,
+      resolution: "480p",
+      sound: "on",
+    })
+    await gateway.drive(run.id)
+    expect(gateway.runs.stored.get(run.id)?.toRecord().status).toBe("done")
+    expect(gateway.assets.kept.map((one) => one.mime)).toEqual(["video/mp4"])
+  })
+
+  it("keeps a first and a last frame in the run record", async () => {
+    const gateway = demoGateway()
+    const first = assetIdFormat.parse(crypto.randomUUID())
+    const last = assetIdFormat.parse(crypto.randomUUID())
+    const { run } = await gateway.startVideo({
+      prompt: "a door opens onto a garden",
+      model: "ltx-2-5",
+      startFrame: [first],
+      lastFrame: [last],
+    })
+    await gateway.drive(run.id)
+    const done = gateway.runs.stored.get(run.id)?.toRecord()
+    expect(done?.status).toBe("done")
+    expect(done?.inputs).toMatchObject({
+      startFrame: [first],
+      lastFrame: [last],
+    })
+  })
+
   it("gives a run its full limit and ends it after with RUN_TIMED_OUT", async () => {
     const inTime = demoGateway()
     const first = await inTime.startVideo({
@@ -91,6 +124,11 @@ describe("a Video run of the LTX 2.5 graph on the demo engine", () => {
     { prompt: "a cat", model: "ltx-2-5", length: 6 },
     { prompt: "a cat", model: "ltx-2-5", cameraMove: "orbit" },
     { prompt: "a cat", model: "wan-2-2" },
+    {
+      prompt: "a cat",
+      model: "ltx-2-5",
+      lastFrame: ["5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a"],
+    },
     { prompt: "x".repeat(1001), model: "ltx-2-5" },
   ])("refuses the inputs %j before a run starts", async (inputs) => {
     const gateway = demoGateway()

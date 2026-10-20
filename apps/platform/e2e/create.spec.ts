@@ -147,12 +147,6 @@ test.describe("the parts of Video's column", () => {
     expect(prompt.width).toBe(302)
     const row = await boxOf(column.locator(modelRow))
     expect([row.width, row.height]).toEqual([302, 48])
-    const modes = column.locator('[data-slot="segmented-control"]')
-    if ((await modes.count()) > 0) {
-      const mode = await boxOf(modes)
-      expect([mode.width, mode.height]).toEqual([302, 48])
-      expect(mode.y).toBe(frameBox.y + frameBox.height + 8)
-    }
     expect(frameBox.y).toBe(tab.y + tab.height + 8)
   })
 })
@@ -160,25 +154,17 @@ test.describe("the parts of Video's column", () => {
 test.describe("the tray and rhythm of Video's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("holds the mode tabs 16 px in from the tray's edge, all inside it, and leaves 16 px under the mode switch", async ({
+  test("holds the mode tabs 16 px in from the tray's edge, all inside it", async ({
     page,
   }) => {
     await page.goto("/apps/video")
     const column = page.locator('[data-slot="composer"]')
     await expect(column).toBeVisible()
     const tab = await boxOf(column.getByRole("tab").first())
-    const modes = column.locator('[data-slot="segmented-control"]')
     const tray = await boxOf(column.locator('[data-slot="composer-tray"]'))
     expect(tab.x).toBe(tray.x + 16)
     const last = await boxOf(column.getByRole("tab").last())
     expect(last.x + last.width).toBeLessThanOrEqual(tray.x + tray.width - 16)
-    if ((await modes.count()) > 0) {
-      const mode = await boxOf(modes)
-      const next = await boxOf(
-        modes.locator("xpath=../following-sibling::*[1]")
-      )
-      expect(next.y).toBe(mode.y + mode.height + 16)
-    }
   })
 
   test("opens the model list 8 px to the right of the model row", async ({
@@ -198,26 +184,24 @@ test.describe("the tray and rhythm of Video's column", () => {
   })
 })
 
-test.describe("Video's mode switch and its settings", () => {
+test.describe("Video's model picker and its settings", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("insets the chosen mode's plate 2 px inside its 147 by 40 cell, 143 by 36", async ({
+  test("lists the open-weights and the hosted models of the tab in one picker, LTX 2.5 with its top resolution and length range", async ({
     page,
   }) => {
     await page.goto("/apps/video")
-    const modes = page
-      .locator('[data-slot="composer"]')
-      .locator('[data-slot="segmented-control"]')
-    await expect(modes).toBeVisible()
-    const chosen = modes.locator('[role="radio"][aria-checked="true"]')
-    const cell = await boxOf(chosen)
-    const plate = await boxOf(
-      modes.locator('[data-slot="segmented-control-thumb"]')
-    )
-    expect([cell.width, cell.height]).toEqual([147, 40])
-    expect([plate.width, plate.height]).toEqual([143, 36])
-    expect(plate.x - cell.x).toBe(2)
-    expect(plate.y - cell.y).toBe(2)
+    const column = page.locator('[data-slot="composer"]')
+    await expect(column).toBeVisible()
+    await expect(
+      column.locator('[data-slot="segmented-control"]')
+    ).toHaveCount(0)
+    await column.locator(modelRow).click()
+    const list = page.locator('[data-slot="model-picker"]')
+    await expect(list).toBeVisible()
+    const ltx = list.getByRole("option", { name: "LTX 2.5" }).first()
+    await expect(ltx).toContainText("720p")
+    await expect(ltx).toContainText("2 to 5 s")
   })
 
   test("turns the More settings chevron over the control timing instead of jumping", async ({
