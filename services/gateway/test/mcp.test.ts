@@ -4,9 +4,10 @@ import {
   routes,
   runResponse,
 } from "@rosesfield/contract"
+import { DemoGenerationEngine, type HostedModel } from "@rosesfield/generation"
 import { afterEach, describe, expect, it } from "vitest"
 import { z } from "zod"
-import { type Harness, harnessFor, jsonInit } from "./harness"
+import { type Harness, harnessFor, jsonInit, type PortsFor } from "./harness"
 import { localPorts } from "./local-ports"
 import { pngBytes } from "./sample-apps"
 
@@ -63,7 +64,39 @@ async function rpc(method: string, params: Record<string, unknown>) {
   return rpcReply.parse(JSON.parse(data ?? text))
 }
 
+class CountedCatalog extends DemoGenerationEngine {
+  reads = 0
+
+  override listModels(): Promise<readonly HostedModel[]> {
+    this.reads += 1
+    return Promise.resolve([])
+  }
+}
+
 describe("the /mcp route", () => {
+  it("reads the model catalog for tools/list and tools/call only", async () => {
+    let engine: CountedCatalog | null = null
+    const counted: PortsFor = (clock, folder) => {
+      engine = new CountedCatalog({ clock })
+      return { ...localPorts(clock, folder), engines: [engine] }
+    }
+    gateway = harnessFor({ portsFor: counted })
+    const readsOf = () => engine?.reads ?? -1
+    await rpc("initialize", {
+      protocolVersion: legacyVersion,
+      capabilities: {},
+      clientInfo: { name: "test-client", version: "1.0.0" },
+    })
+    expect(readsOf()).toBe(0)
+    await rpc("tools/list", {})
+    expect(readsOf()).toBe(1)
+    await rpc("tools/call", {
+      name: "sample-audio",
+      arguments: { inputs: { script: "Good morning" } },
+    })
+    expect(readsOf()).toBe(2)
+  })
+
   it("answers the handshake with the server's name", async () => {
     gateway = harnessFor({ portsFor: localPorts })
     const reply = await rpc("initialize", {
