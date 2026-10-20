@@ -66,14 +66,14 @@ function ModelRowTrigger({
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="text-caption text-ink-muted">{caption}</span>
         <span className="flex min-w-0 items-center gap-1.5">
+          <span data-slot="model-row-mark" aria-hidden="true" className="flex">
+            {mark}
+          </span>
           <span
             data-slot="model-row-name"
             className="truncate font-medium text-body text-ink"
           >
             {name}
-          </span>
-          <span data-slot="model-row-mark" aria-hidden="true" className="flex">
-            {mark}
           </span>
         </span>
       </span>
