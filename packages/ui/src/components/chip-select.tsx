@@ -27,6 +27,17 @@ type ChipSelectProps<T extends string> = {
   disabled?: boolean
 }
 
+function ChipIcon({ icon }: { icon: ReactNode }): ReactNode {
+  if (icon === undefined) {
+    return null
+  }
+  return (
+    <span aria-hidden="true" data-slot="chip-icon" className="flex shrink-0">
+      {icon}
+    </span>
+  )
+}
+
 function ChipSelect<T extends string>({
   label,
   value,
@@ -57,7 +68,7 @@ function ChipSelect<T extends string>({
               data-slot="chip-select"
               className="min-w-0 shrink"
             >
-              {icon}
+              <ChipIcon icon={icon} />
               <span className="sr-only">{`${label} `}</span>
               <SelectValue>{display}</SelectValue>
             </SelectTrigger>
@@ -65,7 +76,7 @@ function ChipSelect<T extends string>({
         />
         <TooltipContent>{label}</TooltipContent>
       </Tooltip>
-      <SelectContent>
+      <SelectContent side="top" align="start" sideOffset={4}>
         {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}

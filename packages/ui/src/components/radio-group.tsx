@@ -26,7 +26,7 @@ function RadioGroupItem({
       data-slot="radio-group-item"
       className={cn(
         "relative flex size-checkbox shrink-0 items-center justify-center rounded-full bg-track data-checked:bg-ink data-disabled:opacity-(--opacity-disabled)",
-        motion.pressRound,
+        motion.tint,
         className
       )}
       {...props}

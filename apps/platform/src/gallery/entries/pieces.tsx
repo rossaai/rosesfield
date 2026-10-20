@@ -115,7 +115,6 @@ function PromptDemo({
       }
       leading={<Leading />}
       chips={<Chips />}
-      price={t("sample.price.demo")}
       busy={busy}
     />
   )
@@ -242,7 +241,6 @@ function LongestChipsBar({
           </Chip>
         )
       })}
-      price={t("sample.price.demo")}
     />
   )
 }

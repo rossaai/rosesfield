@@ -7,11 +7,10 @@ function regularQuery(): MediaQueryList | null {
   ) {
     return null
   }
-  const width =
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--container-regular")
-      .trim() || "768px"
-  return window.matchMedia(`(min-width: ${width})`)
+  const width = getComputedStyle(document.documentElement)
+    .getPropertyValue("--container-regular")
+    .trim()
+  return width === "" ? null : window.matchMedia(`(min-width: ${width})`)
 }
 
 function subscribe(onChange: () => void): () => void {

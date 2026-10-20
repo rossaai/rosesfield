@@ -1,5 +1,4 @@
 import type { AppListing, Run } from "@rosesfield/contract"
-import { Button } from "@rosesfield/ui/components/button"
 import {
   Sheet,
   SheetBody,
@@ -15,12 +14,14 @@ import {
   useEffect,
   useState,
 } from "react"
+import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
-import { ContentEndMark, Dock, useContentEnd } from "@/pieces/dock"
 import { useCanvasFit } from "@/pieces/use-canvas-fit"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { AppCanvas } from "@/screens/app/app-canvas"
-import { AppHeader } from "@/screens/app/app-header"
+import { AppStage } from "@/screens/app/app-stage"
 import type { SheetControl } from "@/screens/app/column-frame"
+import { ToolsKey } from "@/screens/app/tools-key"
 
 type BarFrameProps = {
   app: AppListing
@@ -80,11 +81,11 @@ function useBottomScroll(
 
 export function BarFrame(props: BarFrameProps): ReactElement {
   const [isOpen, setOpen] = props.sheet
+  const isRegular = useIsRegularWindow()
   const fit = useCanvasFit()
-  const end = useContentEnd()
   const bottom = useBottomScroll(props.hasRuns)
   const fitRef = fit.ref
-  const canvasRef = useCallback(
+  const scrollRef = useCallback(
     (element: HTMLElement | null) => {
       fitRef(element)
       bottom(element)
@@ -93,33 +94,37 @@ export function BarFrame(props: BarFrameProps): ReactElement {
   )
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <AppHeader app={props.app} isScrolled={fit.isScrolled} />
-      <section
-        ref={canvasRef}
-        className="min-h-0 flex-1 overflow-y-auto px-s5 py-s4 @regular:px-s4"
-      >
-        <AppCanvas
+      <h1 className="sr-only">{appName(props.app)}</h1>
+      <div className="flex min-h-0 flex-1 px-4 pt-2 pb-4">
+        <AppStage
           app={props.app}
-          order="newest-last"
-          onUseInputs={props.onUseInputs}
-        />
-        <ContentEndMark end={end} />
-      </section>
-      <Dock
-        isRaised={end.isContentBelow}
-        className="flex flex-col items-center gap-s2 px-s5 pb-s4 @regular:px-s4 @regular:before:shadow-none"
-      >
-        {props.bar}
-      </Dock>
-      <Sheet open={isOpen} onOpenChange={setOpen}>
+          kind="bar"
+          scrollRef={scrollRef}
+          scrollClassName="pb-4 @regular:px-4 @regular:pb-36"
+        >
+          <AppCanvas
+            app={props.app}
+            order="newest-last"
+            onUseInputs={props.onUseInputs}
+          />
+        </AppStage>
+      </div>
+      {isRegular ? (
+        <div
+          data-slot="prompt-dock"
+          className="fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-220 flex-col items-center gap-2"
+        >
+          {props.bar}
+        </div>
+      ) : null}
+      <ToolsKey onOpen={() => setOpen(true)} />
+      <Sheet open={isOpen && !isRegular} onOpenChange={setOpen}>
         <SheetContent side="bottom" closeLabel={t("viewer.close")}>
           <SheetHeader>
-            <SheetTitle>{t("app.inputs.open")}</SheetTitle>
+            <SheetTitle>{appName(props.app)}</SheetTitle>
           </SheetHeader>
           <SheetBody>{props.settings}</SheetBody>
-          <SheetFooter>
-            <p className="text-caption text-ink-muted">{props.price}</p>
-          </SheetFooter>
+          <SheetFooter>{isRegular ? null : props.bar}</SheetFooter>
         </SheetContent>
       </Sheet>
     </div>
@@ -128,19 +133,16 @@ export function BarFrame(props: BarFrameProps): ReactElement {
 
 export function BarChips({
   chips,
-  onOpenSheet,
 }: {
   chips: ReactNode
   onOpenSheet: () => void
 }): ReactElement {
   return (
-    <>
-      <span className="hidden min-w-0 items-center gap-s2 @regular:flex">
-        {chips}
-      </span>
-      <Button size="small" className="@regular:hidden" onClick={onOpenSheet}>
-        {t("app.inputs.open")}
-      </Button>
-    </>
+    <span
+      data-slot="bar-chips"
+      className="flex min-w-0 shrink-0 items-center gap-1 *:flex-nowrap *:gap-1"
+    >
+      {chips}
+    </span>
   )
 }

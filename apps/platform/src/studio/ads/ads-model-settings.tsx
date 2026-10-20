@@ -7,8 +7,7 @@ import type { ReactElement } from "react"
 import { t, tCatalog } from "@/copy/t"
 import { aspectField, countField } from "@/screens/app/app-form"
 import {
-  ModelPopoverChip,
-  modelChipText,
+  ChoiceModelPicker,
   settingsInputs,
 } from "@/screens/app/bar/model-settings"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
@@ -121,7 +120,9 @@ export function AdsModelSettings({
       {leading.map((input) => (
         <SettingField key={input.name} app={app} form={form} input={input} />
       ))}
-      {model === null ? null : <ModelField input={model} form={form} />}
+      {model === null || chips.includes(modelInput) ? null : (
+        <ModelField input={model} form={form} />
+      )}
       {chips.includes(aspectField) ? null : (
         <AspectField
           app={app}
@@ -146,10 +147,14 @@ export function AdsModelSettings({
 
 export function AdsModelChip(props: AdsSettingsProps): ReactElement {
   const model = modelInputOf(props.app)
-  const value = model === null ? "" : chosenModel(model, props.state.form)
   return (
-    <ModelPopoverChip text={modelChipText(model, value)}>
-      <AdsModelSettings {...props} />
-    </ModelPopoverChip>
+    <ChoiceModelPicker
+      model={model}
+      value={model === null ? "" : chosenModel(model, props.state.form)}
+      onChoose={(next) => props.state.form.setInput(modelInput, next)}
+      settings={
+        <AdsModelSettings {...props} chips={[...props.chips, modelInput]} />
+      }
+    />
   )
 }

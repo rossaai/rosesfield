@@ -43,23 +43,23 @@ const models = [
 ]
 
 describe("the sections of the model picker", () => {
-  it("puts your default and the models you ran before first, then every model by maker", () => {
+  it("puts your default and the models you ran before under Featured, then every model under All", () => {
     const sections = modelSections(
       models,
       ["beta/two", "alpha/one", "beta/two", "gone/model"],
       (one) => one.name
     )
     expect(
-      sections.map((section) => [
-        section.label,
-        section.rows.map((row) => row.id),
-      ])
+      sections.map((section) => [section.id, section.rows.map((row) => row.id)])
     ).toEqual([
-      [null, ["beta/two", "alpha/one"]],
-      ["comfy-cloud", ["open-picture"]],
-      ["Alpha", ["alpha/one"]],
-      ["Beta", ["beta/two", "beta/three"]],
+      ["featured", ["beta/two", "alpha/one"]],
+      ["all", ["open-picture", "alpha/one", "beta/two", "beta/three"]],
     ])
+  })
+
+  it("leaves Featured out when nothing is featured", () => {
+    const sections = modelSections(models, [], (one) => one.name)
+    expect(sections.map((section) => section.id)).toEqual(["all"])
   })
 
   it("gives an image row its line and a video row its factual tags", () => {
@@ -82,12 +82,14 @@ describe("the sections of the model picker", () => {
     expect(image).toMatchObject({ line: "Makes an image from your words" })
     expect(image?.tags.map((tag) => tag.label)).toEqual(["Ran in Rosesfield"])
     expect(video?.tags.map((tag) => tag.label)).toEqual(["1080p", "5 to 10 s"])
-    expect(graph?.tags.map((tag) => tag.label)).toEqual(["Open weights"])
+    expect(graph?.tags.map((tag) => tag.label)).toEqual([])
+    expect(graph?.badges).toEqual([
+      { kind: "openWeights", label: "Open weights" },
+    ])
+    expect(image?.badges).toEqual([])
     expect(pickerSections(hosted).map((section) => section.label)).toEqual([
-      "Your models",
-      "Open weights on Comfy Cloud",
-      "Alpha",
-      "Beta",
+      "Featured",
+      "All",
     ])
   })
 })

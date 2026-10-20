@@ -36,7 +36,7 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 | where code goes, contexts, ports, the catalog, jobs, the two runtimes | `docs/architecture.md` |
 | any `.ts` or `.tsx` file: naming, TypeScript, the single contract law, the simplicity ladder, tests | `docs/standards.md` |
 | any string a person reads, the README, a commit message, a report | `docs/voice.md` |
-| any screen, component, token, motion or mark | `docs/design.md` |
+| any screen, component, token, motion or mark | `generated.json` and the generated files it lists, with `docs/product.md` §The screens |
 | a package, a version, the Comfy API, an engine target, the agent harness, the agent's model, the voice model, deployment | `docs/stack.md` |
 | a ComfyUI workflow, the `workflows/` folder and its format | `workflows/README.md` |
 

@@ -1,22 +1,16 @@
 import type { Run } from "@rosesfield/contract"
-import { IconButton } from "@rosesfield/ui/components/button"
-import {
-  type MediaAspect,
-  MediaTile,
-} from "@rosesfield/ui/components/media-tile"
+import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
+import { PresetTile } from "@rosesfield/ui/components/preset-tile"
+import { ResultTile } from "@rosesfield/ui/components/result-tile"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { Link } from "@tanstack/react-router"
-import { RepeatIcon, Share2Icon } from "lucide-react"
-import { type ReactElement, type ReactNode, useState } from "react"
+import { useNavigate, useRouter } from "@tanstack/react-router"
+import type { ReactElement, ReactNode } from "react"
 import { useAssetSource } from "@/api/use-asset-source"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { joinParts } from "@/copy/format"
 import { t } from "@/copy/t"
-import { AudioRow } from "@/pieces/audio-row"
-import { useRunEstimate } from "@/pieces/run/run-estimate"
 import { runAppName, runModel, runPrice } from "@/pieces/run/run-facts"
-import { ShareDialog } from "@/screens/explore/share-dialog"
 
 export type ExploreKind = "image" | "video" | "audio"
 
@@ -32,6 +26,15 @@ export type ExploreEntry = {
   source: ExploreSource
 }
 
+export type VisualEntry = ExploreEntry & {
+  kind: "image" | "video"
+  aspect: MediaAspect
+}
+
+export type RecreateSearch = { share: string } | { from: string }
+
+export type OpenResult = (entry: VisualEntry, origin: HTMLElement) => void
+
 export function exploreCaption(run: Run, estimate: number | null): string {
   return joinParts([
     runAppName(run),
@@ -40,119 +43,156 @@ export function exploreCaption(run: Run, estimate: number | null): string {
   ])
 }
 
-function RecreateLink({ entry }: { entry: ExploreEntry }): ReactElement {
-  const { run, source } = entry
-  const search =
-    source.kind === "share" ? { share: source.shareId } : { from: run.id }
-  return (
-    <IconButton
-      label={t("explore.tile.recreate")}
-      tone="quiet"
-      size="small"
-      className="material"
-      nativeButton={false}
-      render={
-        <Link to="/apps/$appId" params={{ appId: run.appId }} search={search} />
-      }
-    >
-      <RepeatIcon aria-hidden="true" />
-    </IconButton>
-  )
+export function entryModel(entry: ExploreEntry): string | null {
+  return runModel(entry.run, findCatalogApp(entry.run.appId))
 }
 
-function ShareButton({ entry }: { entry: ExploreEntry }): ReactNode {
-  const [isOpen, setOpen] = useState(false)
+export function recreateSearchOf(entry: ExploreEntry): RecreateSearch {
+  return entry.source.kind === "share"
+    ? { share: entry.source.shareId }
+    : { from: entry.run.id }
+}
+
+export function useEntrySrc(entry: ExploreEntry): string | null {
   const { source } = entry
-  if (source.kind !== "own") {
-    return null
+  const own = useAssetSource(source.kind === "own" ? source.assetId : "")
+  if (source.kind === "share") {
+    return source.src
   }
-  return (
-    <>
-      <IconButton
-        label={t("explore.tile.share")}
-        tone="quiet"
-        size="small"
-        className="material"
-        onClick={() => setOpen(true)}
-      >
-        <Share2Icon aria-hidden="true" />
-      </IconButton>
-      <ShareDialog
-        run={entry.run}
-        outputId={source.assetId}
-        open={isOpen}
-        onOpenChange={setOpen}
-      />
-    </>
-  )
+  return own.state === "ready" ? own.src : null
 }
 
-function TileMedia({
-  entry,
-  src,
-}: {
-  entry: ExploreEntry
-  src: string
-}): ReactElement {
-  const label = t("explore.tile.label", { app: runAppName(entry.run) })
-  if (entry.kind === "audio") {
-    return <AudioRow src={src} name={label} durationSeconds={null} />
-  }
+export function useRecreate(): (entry: ExploreEntry) => void {
+  const navigate = useNavigate()
+  return (entry) =>
+    void navigate({
+      to: "/apps/$appId",
+      params: { appId: entry.run.appId },
+      search: recreateSearchOf(entry),
+    })
+}
+
+export function useRecreateHref(entry: ExploreEntry): string {
+  const router = useRouter()
+  return router.buildLocation({
+    to: "/apps/$appId",
+    params: { appId: entry.run.appId },
+    search: recreateSearchOf(entry),
+  }).href
+}
+
+export function useViewHref(entry: ExploreEntry): string {
+  const router = useRouter()
+  const { source } = entry
+  return source.kind === "share"
+    ? router.buildLocation({
+        to: "/share/$shareId",
+        params: { shareId: source.shareId },
+      }).href
+    : router.buildLocation({ to: "/", search: { view: source.assetId } }).href
+}
+
+function EntrySkeleton({ aspect }: { aspect: MediaAspect }): ReactElement {
   return (
-    <MediaTile
-      kind={entry.kind}
-      src={src}
-      alt={label}
-      {...(entry.aspect === undefined ? {} : { aspect: entry.aspect })}
+    <Skeleton
+      className="w-full rounded-cell"
+      style={{ aspectRatio: `${aspect.width} / ${aspect.height}` }}
     />
   )
 }
 
-function OwnMedia({
-  entry,
-  assetId,
+const machineMadePlace = {
+  bottom: "bottom-2 left-2",
+  top: "top-2 left-2",
+} as const
+
+export function MachineMade({
+  place,
+  children,
 }: {
-  entry: ExploreEntry
-  assetId: string
+  place: keyof typeof machineMadePlace
+  children: ReactNode
 }): ReactElement {
-  const source = useAssetSource(assetId)
-  if (source.state !== "ready") {
-    return (
-      <Skeleton
-        className="w-full rounded-cell"
-        style={{
-          aspectRatio: `${entry.aspect?.width ?? 1} / ${entry.aspect?.height ?? 1}`,
-        }}
-      />
-    )
-  }
-  return <TileMedia entry={entry} src={source.src} />
+  return (
+    <div data-slot="machine-made" className="relative w-full">
+      {children}
+      <span
+        className={cn(
+          "pointer-events-none absolute z-20 rounded-dense bg-scrim px-2 font-medium text-caption text-ink",
+          machineMadePlace[place]
+        )}
+      >
+        {t("explore.tile.machineMade")}
+      </span>
+    </div>
+  )
 }
 
-export function ExploreTile({ entry }: { entry: ExploreEntry }): ReactElement {
-  const estimate = useRunEstimate(entry.run)
-  const { source } = entry
+type ResultCardProps = {
+  entry: VisualEntry
+  narrow: boolean
+  onOpen: OpenResult
+  onMore: (entry: VisualEntry) => void
+}
+
+export function ResultCard({
+  entry,
+  narrow,
+  onOpen,
+  onMore,
+}: ResultCardProps): ReactElement {
+  const src = useEntrySrc(entry)
+  const recreate = useRecreate()
+  if (src === null) {
+    return <EntrySkeleton aspect={entry.aspect} />
+  }
+  const app = runAppName(entry.run)
   return (
-    <article className="flex flex-col gap-s1_5">
-      <div className="group relative">
-        {source.kind === "own" ? (
-          <OwnMedia entry={entry} assetId={source.assetId} />
-        ) : (
-          <TileMedia entry={entry} src={source.src} />
-        )}
-        <div
-          className={cn(
-            "absolute top-s2 right-s2 flex gap-s1_5",
-            "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100"
-          )}
-        >
-          <RecreateLink entry={entry} />
-          <ShareButton entry={entry} />
-        </div>
-      </div>
-      <p className="line-clamp-2 text-caption text-ink-muted">
-        {exploreCaption(entry.run, estimate)}
-      </p>
-    </article>
+    <MachineMade place="bottom">
+      <ResultTile
+        kind={entry.kind}
+        src={src}
+        alt={t("explore.tile.label", { app })}
+        aspect={entry.aspect}
+        app={app}
+        model={entryModel(entry) ?? t("explore.tile.noModel")}
+        openLabel={t("explore.tile.open", { app })}
+        expandLabel={t("explore.tile.expand", { app })}
+        moreLabel={t("explore.tile.more", { app })}
+        recreateLabel={t("explore.tile.recreate")}
+        recreateName={t("explore.tile.recreateName")}
+        onOpen={(origin) => onOpen(entry, origin)}
+        onRecreate={() => recreate(entry)}
+        onMore={() => onMore(entry)}
+        narrow={narrow}
+      />
+    </MachineMade>
+  )
+}
+
+export function ExplorePresetTile({
+  name,
+  entry,
+}: {
+  name: string
+  entry: VisualEntry
+}): ReactElement {
+  const src = useEntrySrc(entry)
+  const viewHref = useViewHref(entry)
+  const actionHref = useRecreateHref(entry)
+  if (src === null) {
+    return <EntrySkeleton aspect={entry.aspect} />
+  }
+  return (
+    <MachineMade place="top">
+      <PresetTile
+        name={name}
+        href={viewHref}
+        viewLabel={t("explore.preset.view", { name })}
+        action={{ label: t("explore.tile.recreate"), href: actionHref }}
+        clip={{ src, alt: name }}
+        aspect={entry.aspect}
+      />
+    </MachineMade>
   )
 }

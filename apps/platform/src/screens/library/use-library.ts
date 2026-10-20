@@ -5,6 +5,7 @@ import { assetsQuery } from "@/api/queries"
 import { runAppName, runHeadline } from "@/pieces/run/run-facts"
 import { useNextPage } from "@/pieces/use-next-page"
 import type { LibraryKind } from "@/screens/library/library-bars"
+import { type GridItem, gridItemOf } from "@/screens/library/result-grid"
 import { useRecentRuns } from "@/shell/use-working-runs"
 
 export type LibraryData = {
@@ -27,6 +28,23 @@ function matches(run: Run | undefined, query: string): boolean {
   return `${runHeadline(run)} ${runAppName(run)}`
     .toLowerCase()
     .includes(query.toLowerCase())
+}
+
+function sourceRun(
+  asset: Asset,
+  runsById: ReadonlyMap<string, Run>
+): Run | null {
+  return asset.sourceRunId === null
+    ? null
+    : (runsById.get(asset.sourceRunId) ?? null)
+}
+
+export function libraryGridItems(
+  data: Pick<LibraryData, "shown" | "runsById">
+): GridItem[] {
+  return data.shown.map((asset) =>
+    gridItemOf(asset, sourceRun(asset, data.runsById))
+  )
 }
 
 export function useLibrary(kind: LibraryKind, query: string): LibraryData {

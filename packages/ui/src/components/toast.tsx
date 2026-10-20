@@ -41,10 +41,7 @@ function ToastItem({
       </ToastPrimitive.Content>
       {toast.actionProps === undefined ? null : (
         <ToastPrimitive.Action
-          className={cn(
-            buttonVariants({ tone: "default", size: "small" }),
-            motion.press
-          )}
+          className={buttonVariants({ tone: "default", size: "small" })}
         />
       )}
     </ToastPrimitive.Root>

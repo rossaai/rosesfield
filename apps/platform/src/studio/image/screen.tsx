@@ -8,7 +8,7 @@ import { LibraryPicker } from "@/pieces/library-picker"
 import { BarChips, BarFrame } from "@/screens/app/bar-frame"
 import { textOf } from "@/screens/app/fields/field-props"
 import { inputPlaceholder } from "@/screens/app/fields/input-copy"
-import { StartProblem } from "@/screens/app/generate-foot"
+import { StartProblem, submitPriceOf } from "@/screens/app/generate-foot"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { type AppScreenState, useAppScreen } from "@/screens/app/use-app-screen"
@@ -169,9 +169,7 @@ function ImageBar({
           onOpenSheet={onOpenSheet}
         />
       }
-      price={state.start.price === "" ? undefined : state.start.price}
-      submitValue={state.start.priceValue}
-      submitName={state.start.priceName ?? undefined}
+      {...submitPriceOf(state.start)}
       busy={state.start.isPending || tray.isUploading}
     />
   )
