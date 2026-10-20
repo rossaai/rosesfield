@@ -7,7 +7,7 @@ import {
   modelForTab,
   modelsOfTab,
   slotsOf,
-  tabOfRun,
+  tabOfInputs,
   tabsOfModel,
 } from "@/studio/video/video-tabs"
 import { h3MaxTurbo, minimaxH3, pVideo, veoLite } from "./video-forms"
@@ -149,20 +149,17 @@ describe("the Video tabs", () => {
   })
 
   it("reads a run's tab from the images it holds", () => {
+    const tabOf = (
+      images: Record<string, number>,
+      model: CatalogModel
+    ): string => tabOfInputs(runOf(images).inputs, model)
     expect(
-      tabOfRun(
-        runOf({ images: 1, instancesLastFrameBytesBase64Encoded: 1 }),
-        veo
-      )
+      tabOf({ images: 1, instancesLastFrameBytesBase64Encoded: 1 }, veo)
     ).toBe("first-last")
-    expect(tabOfRun(runOf({ imageBytesBase64Encoded: 1 }), veo)).toBe(
-      "references"
-    )
-    expect(tabOfRun(runOf({ references: 2 }), minimax)).toBe("references")
-    expect(tabOfRun(runOf({ firstFrame: 1, lastFrame: 1 }), minimax)).toBe(
-      "first-last"
-    )
-    expect(tabOfRun(runOf({ firstFrame: 1 }), minimax)).toBe("text-image")
-    expect(tabOfRun(runOf({ startFrame: 1 }), graph)).toBe("text-image")
+    expect(tabOf({ imageBytesBase64Encoded: 1 }, veo)).toBe("references")
+    expect(tabOf({ references: 2 }, minimax)).toBe("references")
+    expect(tabOf({ firstFrame: 1, lastFrame: 1 }, minimax)).toBe("first-last")
+    expect(tabOf({ firstFrame: 1 }, minimax)).toBe("text-image")
+    expect(tabOf({ startFrame: 1 }, graph)).toBe("text-image")
   })
 })
