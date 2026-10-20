@@ -76,7 +76,7 @@
     },
     {
       "path": "apps/platform/src/copy/app.en.ts",
-      "sha256": "0cda14f303819a213fe9f1da0edc24d9fcdf6ecbc5856341ee2e921017bc266f"
+      "sha256": "c844ba7ab055528038599ec3474f10b4e80a3b1e80531851df53350dacc25d49"
     },
     {
       "path": "apps/platform/src/copy/characters.en.ts",
@@ -92,7 +92,7 @@
     },
     {
       "path": "apps/platform/src/copy/explore.en.ts",
-      "sha256": "722bf3edff754011cf2309dd80ed542f8501e617cc40b024abece59face0950d"
+      "sha256": "d602a28c3003d25ae92df0a7c15e38a13d7863bbba1c5a2dac7f55a81eb0425e"
     },
     {
       "path": "apps/platform/src/copy/field.en.ts",
@@ -116,7 +116,7 @@
     },
     {
       "path": "apps/platform/src/copy/shell.en.ts",
-      "sha256": "e9cda465786673a1d0170868f99e5d4a87ba64f48644eacfd7ca1808e5fb69fe"
+      "sha256": "5e8a58e854f1ddf2d64ea99fc84e400f1e41b736b1f85e1f94bf473f17e88a74"
     },
     {
       "path": "apps/platform/src/copy/welcome.en.ts",
@@ -212,7 +212,7 @@
     },
     {
       "path": "packages/catalog/src/video/copy.en.ts",
-      "sha256": "dbbfd474c2d61f87abcd528e1a87b0738aa092767e03b0d8ae29cab6308e89bc"
+      "sha256": "31394b4c79603c07f29717c28ed61bd9ddd4feb3d9808a33b56df9f2d7ac5a0d"
     },
     {
       "path": "packages/catalog/src/voice/copy.en.ts",
