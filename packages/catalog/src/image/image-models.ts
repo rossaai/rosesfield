@@ -37,7 +37,7 @@ export const imageModels: readonly ImageModel[] = [
   },
   {
     value: "qwen-image-edit-2511",
-    labelKey: "ads.model.qwenImageEdit2511",
+    labelKey: "image.model.qwenImageEdit2511",
     sizes: { "1k": sizesAt1k },
     bind: qwenImageEdit2511,
   },

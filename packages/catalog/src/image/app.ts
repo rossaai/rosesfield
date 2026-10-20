@@ -41,7 +41,7 @@ export const app = defineApp({
     {
       type: "image",
       name: referenceInput,
-      labelKey: "video.well.references",
+      labelKey: "image.input.references.label",
       presence: "required",
       max: editReferenceLimit,
       when: [{ input: "model", is: [referenceModel] }],
