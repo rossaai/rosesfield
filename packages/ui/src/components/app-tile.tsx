@@ -72,7 +72,7 @@ function AppTileGrid({
   children: ReactNode
 }): ReactElement {
   return (
-    <nav aria-label={label} data-slot="app-tile-grid" className="@container">
+    <nav aria-label={label} data-slot="app-tile-grid">
       <div className="grid grid-cols-2 gap-2 @regular:grid-cols-3 @regular:gap-3">
         {children}
       </div>

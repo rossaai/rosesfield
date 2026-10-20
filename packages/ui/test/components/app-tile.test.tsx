@@ -35,3 +35,15 @@ describe("AppTile", () => {
     )
   })
 })
+
+describe("AppTileGrid", () => {
+  it("reads the page's container and sets none of its own, so 3 columns hold at 1440 px", () => {
+    render(
+      <AppTileGrid label="Apps">
+        <AppTile href="/apps/image" name="Image" line="Words" icon={<svg />} />
+      </AppTileGrid>
+    )
+    const nav = screen.getByRole("navigation", { name: "Apps" })
+    expect(nav.className.split(" ")).not.toContain("@container")
+  })
+})
