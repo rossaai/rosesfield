@@ -15,6 +15,7 @@ import { publicAccountParts } from "#session/public-account"
 import { SessionLimiter } from "#session/session-limiter"
 import { SessionPurge } from "#session/session-purge"
 import { SessionVisits } from "#session/session-visits"
+import { sharePostersOf } from "#share/media-share-posters"
 import { r2ShareFiles } from "#share/r2-share-files"
 import { shareLimit } from "#share/share-limit"
 import { SharePurge } from "#share/share-purge"
@@ -43,10 +44,12 @@ function shareMount(
   parts: WorkerParts,
   needsKey: boolean
 ): ShareMount {
+  const posters = sharePostersOf(env.MEDIA)
   return {
     shares: new SqliteShareRepository({ db: parts.db }),
     store: parts.store,
     clock: parts.clock,
+    ...(posters === undefined ? {} : { posters }),
     files: r2ShareFiles(env.BUCKET),
     limit: shareLimit({
       db: parts.db,

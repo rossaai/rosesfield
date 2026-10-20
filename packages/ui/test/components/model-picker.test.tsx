@@ -243,6 +243,23 @@ describe("ModelPicker's Open weights link", () => {
   })
 })
 
+describe("ModelPicker's Open weights place", () => {
+  it("stands Open weights at the row's end beside the check, clear of the name and the row's middle", () => {
+    open(vi.fn(), badged)
+    const row = rowOf("Model 4")
+    const weights = row.querySelector("[data-slot='model-row-weights']")
+    const name = row.querySelector("[data-slot='model-row-name']")
+    expect(name?.parentElement?.contains(weights ?? null)).toBe(false)
+    expect(weights?.nextElementSibling?.getAttribute("data-slot")).toBe(
+      "model-row-check"
+    )
+    expect(weights?.previousElementSibling?.contains(name ?? null)).toBe(true)
+    expect(weights?.className.split(" ")).toEqual(
+      expect.arrayContaining(["pointer-events-auto", "shrink-0"])
+    )
+  })
+})
+
 describe("ModelPicker's rows and motion", () => {
   it("insets each row's tile 6 px and its check slot 12 px inside a 1 px edge", () => {
     open()

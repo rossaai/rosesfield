@@ -138,7 +138,7 @@ test("the head row's cluster holds the view switch and Filter once you have runs
   await expectChoiceCard(page, groups.nth(1))
 })
 
-test("Library and History keep a 16 px gutter on each side, and a focus ring sits inside its control", async ({
+test("Library and History keep a 16 px gutter on each side, and a focus ring stands 2 px outside its control", async ({
   page,
 }) => {
   for (const path of ["/library", "/history"]) {
@@ -165,7 +165,30 @@ test("Library and History keep a 16 px gutter on each side, and a focus ring sit
   await page.keyboard.press("Shift+Tab")
   await page.keyboard.press("Tab")
   await expect(filter).toBeFocused()
-  await expect(filter).toHaveCSS("outline-offset", "-2px")
+  await expect(filter).toHaveCSS("outline-offset", "2px")
+})
+
+test("the Filter popover stays inside the window and under the top bar with every group open", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop", "the desktop window")
+  await startDemoRun()
+  await open(page, "/history")
+  await page.getByRole("button", { name: "Filter" }).click()
+  const popup = page.locator("[data-slot='popover-content']")
+  await expect(popup).toBeVisible()
+  for (const trigger of await popup
+    .locator("[data-slot='setting-group-trigger']")
+    .all()) {
+    if ((await trigger.getAttribute("aria-expanded")) !== "true") {
+      await trigger.click()
+    }
+  }
+  await page.waitForTimeout(400)
+  const bar = await boxOf(page.locator("header[data-slot='app-bar']"))
+  const box = await boxOf(popup)
+  expect(box.y).toBeGreaterThanOrEqual(bar.y + bar.height)
+  expect(box.y + box.height).toBeLessThanOrEqual(900)
 })
 
 test("the screen header's title starts on the same 16 px gutter as the canvas on Library and History", async ({

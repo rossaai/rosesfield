@@ -1,5 +1,6 @@
+import { findApp } from "@rosesfield/catalog"
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
-import { type Run, run } from "@rosesfield/contract"
+import { appListing, type Run, run } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import {
   fieldsOfModel,
@@ -7,7 +8,7 @@ import {
   modelForTab,
   modelsOfTab,
   slotsOf,
-  tabOfRun,
+  tabOfInputs,
   tabsOfModel,
 } from "@/studio/video/video-tabs"
 import { h3MaxTurbo, minimaxH3, pVideo, veoLite } from "./video-forms"
@@ -24,6 +25,8 @@ function model(id: string, form: CatalogModel["form"]): CatalogModel {
     form,
   }
 }
+
+const video = appListing.parse(findApp("video"))
 
 const graph = model("ltx-2-5", null)
 const minimax = model("minimax/minimax-h3", [...minimaxH3])
@@ -62,23 +65,33 @@ function runOf(images: Record<string, number>): Run {
 
 describe("the Video tabs", () => {
   it("lists every model in Text and image, models with references in References, and models with a last frame in First and last frame", () => {
-    expect(modelsOfTab(models, "text-image").map((one) => one.id)).toEqual(
-      models.map((one) => one.id)
-    )
-    expect(modelsOfTab(models, "references").map((one) => one.id)).toEqual([
-      "minimax/minimax-h3",
-      "veo/veo-3.1-lite-generate-001",
-    ])
-    expect(modelsOfTab(models, "first-last").map((one) => one.id)).toEqual([
+    expect(
+      modelsOfTab(models, "text-image", video).map((one) => one.id)
+    ).toEqual(models.map((one) => one.id))
+    expect(
+      modelsOfTab(models, "references", video).map((one) => one.id)
+    ).toEqual(["minimax/minimax-h3", "veo/veo-3.1-lite-generate-001"])
+    expect(
+      modelsOfTab(models, "first-last", video).map((one) => one.id)
+    ).toEqual([
+      "ltx-2-5",
       "minimax/minimax-h3",
       "veo/veo-3.1-lite-generate-001",
       "pruna/p-video-2",
     ])
-    expect(tabsOfModel(graph)).toEqual(["text-image"])
+    expect(tabsOfModel(graph, video)).toEqual(["text-image", "first-last"])
+    expect(tabsOfModel({ ...graph, kind: "hosted" }, video)).toEqual([
+      "text-image",
+    ])
+    const startOnly = {
+      ...video,
+      inputs: video.inputs.filter((input) => input.name !== "lastFrame"),
+    }
+    expect(tabsOfModel(graph, startOnly)).toEqual(["text-image"])
   })
 
   it("keeps the chosen model, then the default, then the first of a tab", () => {
-    const firstLast = modelsOfTab(models, "first-last")
+    const firstLast = modelsOfTab(models, "first-last", video)
     expect(
       modelForTab(firstLast, "pruna/p-video-2", "minimax/minimax-h3")
     ).toBe("pruna/p-video-2")
@@ -86,9 +99,9 @@ describe("the Video tabs", () => {
       modelForTab(firstLast, "fal/h3-max-turbo", "minimax/minimax-h3")
     ).toBe("minimax/minimax-h3")
     expect(modelForTab(firstLast, "fal/h3-max-turbo", "ltx-2-5")).toBe(
-      "minimax/minimax-h3"
+      "ltx-2-5"
     )
-    const references = modelsOfTab(models, "references")
+    const references = modelsOfTab(models, "references", video)
     expect(
       modelForTab(references, "fal/h3-max-turbo", "minimax/minimax-h3")
     ).toBe("minimax/minimax-h3")
@@ -122,9 +135,30 @@ describe("the Video tabs", () => {
       references: null,
       last: { name: "instancesLastFrameBytesBase64Encoded", max: 1 },
     })
-    expect(slotsOf(null, "text-image").start).toEqual({
-      name: "startFrame",
-      max: 1,
+    expect(slotsOf(null, "text-image")).toEqual({
+      start: { name: "startFrame", max: 1 },
+      references: null,
+      last: null,
+    })
+    expect(slotsOf(null, "first-last")).toEqual({
+      start: { name: "startFrame", max: 1 },
+      references: null,
+      last: { name: "lastFrame", max: 1 },
+    })
+    expect(slotsOf(null, "references")).toEqual({
+      start: null,
+      references: null,
+      last: null,
+    })
+  })
+
+  it("drops the graph's last frame when you leave First and last frame", () => {
+    const inputs = { startFrame: ["a"], lastFrame: ["b"] }
+    expect(imagesForTab(null, "first-last", inputs)).toEqual({})
+    expect(imagesForTab(null, "text-image", inputs)).toEqual({ lastFrame: [] })
+    expect(imagesForTab(null, "references", inputs)).toEqual({
+      startFrame: [],
+      lastFrame: [],
     })
   })
 
@@ -149,20 +183,18 @@ describe("the Video tabs", () => {
   })
 
   it("reads a run's tab from the images it holds", () => {
+    const tabOf = (
+      images: Record<string, number>,
+      model: CatalogModel
+    ): string => tabOfInputs(runOf(images).inputs, model, video)
     expect(
-      tabOfRun(
-        runOf({ images: 1, instancesLastFrameBytesBase64Encoded: 1 }),
-        veo
-      )
+      tabOf({ images: 1, instancesLastFrameBytesBase64Encoded: 1 }, veo)
     ).toBe("first-last")
-    expect(tabOfRun(runOf({ imageBytesBase64Encoded: 1 }), veo)).toBe(
-      "references"
-    )
-    expect(tabOfRun(runOf({ references: 2 }), minimax)).toBe("references")
-    expect(tabOfRun(runOf({ firstFrame: 1, lastFrame: 1 }), minimax)).toBe(
-      "first-last"
-    )
-    expect(tabOfRun(runOf({ firstFrame: 1 }), minimax)).toBe("text-image")
-    expect(tabOfRun(runOf({ startFrame: 1 }), graph)).toBe("text-image")
+    expect(tabOf({ imageBytesBase64Encoded: 1 }, veo)).toBe("references")
+    expect(tabOf({ references: 2 }, minimax)).toBe("references")
+    expect(tabOf({ firstFrame: 1, lastFrame: 1 }, minimax)).toBe("first-last")
+    expect(tabOf({ firstFrame: 1 }, minimax)).toBe("text-image")
+    expect(tabOf({ startFrame: 1 }, graph)).toBe("text-image")
+    expect(tabOf({ startFrame: 1, lastFrame: 1 }, graph)).toBe("first-last")
   })
 })

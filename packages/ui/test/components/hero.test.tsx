@@ -55,12 +55,33 @@ describe("HeroBanner", () => {
       />
     )
     const action = screen.getByText("Open Video")
-    expect(action.className.split(" ")).toEqual(
+    const classes = action.className.split(" ")
+    expect(classes).toEqual(
       expect.arrayContaining([
         "group-hover/hero:after:opacity-10",
-        "group-active/hero:after:opacity-15",
+        "group-active/hero:after:opacity-20",
+        "hover:after:opacity-10",
+        "active:after:opacity-20",
       ])
     )
+    expect(classes).not.toContain("active:after:opacity-10")
+  })
+
+  it("rings the banner at the registry's offset, outside its edge", () => {
+    render(
+      <HeroBanner
+        href="/apps/video"
+        kicker="Video"
+        headline="Make a clip from a photo"
+        lead="Pick a model and a preset"
+        action="Open Video"
+      />
+    )
+    const classes = screen.getByRole("link").className.split(" ")
+    expect(classes).toContain(
+      "focus-visible:outline-offset-(--spacing-focus-ring)"
+    )
+    expect(classes).not.toContain("focus-visible:outline-offset-4")
   })
 })
 

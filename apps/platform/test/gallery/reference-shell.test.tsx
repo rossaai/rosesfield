@@ -42,6 +42,37 @@ async function liveBar(path: string): Promise<Controls> {
   return controlsOf(bar, "Open the menu")
 }
 
+describe("the gallery's top bar mark", () => {
+  it("shows the light scheme's mark on light and the dark scheme's mark on dark, as the live bar does", async () => {
+    const entry = referenceShellEntries.find(
+      (item) => item.id === "ref-top-bar"
+    )
+    const frame = entry?.states.find((item) => item.id === "rest")
+    if (frame === undefined) {
+      throw new Error("no top bar rest state")
+    }
+    const picturesOf = (bar: HTMLElement): string[] =>
+      [
+        ...bar.querySelectorAll<HTMLImageElement>(
+          "[data-slot='app-bar-mark'] img"
+        ),
+      ].map((image) => `${image.getAttribute("src")} ${image.className}`)
+    render(frame.render())
+    const gallery = picturesOf(
+      screen.getByRole("banner", { name: "Rosesfield" })
+    )
+    cleanup()
+    renderAt("/", () => <TopBar />)
+    const live = picturesOf(
+      await screen.findByRole("banner", { name: "Rosesfield" })
+    )
+    expect(gallery).toEqual(live)
+    expect(gallery.some((picture) => picture.includes("dark:hidden"))).toBe(
+      true
+    )
+  })
+})
+
 describe("the gallery's top bar", () => {
   it.each([
     ["rest", "/"],

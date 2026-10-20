@@ -59,10 +59,10 @@ function Footer({
         className="w-full bg-surface p-4 @regular:px-4 @regular:py-9"
       >
         <div className="flex flex-col gap-12 @regular:flex-row">
-          <h2 className="text-title text-ink @regular:w-96 @regular:shrink-0 @regular:text-display">
+          <h2 className="pe-10 text-title text-ink @regular:w-96 @regular:shrink-0 @regular:text-display">
             {heading}
           </h2>
-          <div className="grid min-w-0 flex-1 grid-cols-2 gap-12 @regular:grid-cols-5">
+          <div className="grid min-w-0 max-w-83 flex-1 grid-cols-2 gap-12 @regular:max-w-none @regular:grid-cols-5">
             {groups.map((group) => (
               <Group key={group.id} group={group} />
             ))}

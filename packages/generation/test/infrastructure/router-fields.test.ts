@@ -125,6 +125,37 @@ describe("the choices a schema lists in words", () => {
     ).toBeNull()
   })
 
+  it("offers the sizes GPT Image 2's free text size names, with its own example, and nothing more", () => {
+    const fields = fieldsFor({
+      size: {
+        type: "string",
+        example: "1024x1536",
+        description: "Size of the image (e.g., 1024x1024, 1536x1024, auto)",
+      },
+    })
+    expect(named(fields, "size")).toMatchObject({
+      kind: "choice",
+      options: ["1024x1024", "1536x1024", "auto", "1024x1536"],
+      default: null,
+    })
+  })
+
+  it("reads Seedance 2.5's duration bounds from the range beside its auto value", () => {
+    const fields = fieldsFor({
+      duration: {
+        type: "integer",
+        anyOf: [{ enum: [-1] }, { minimum: 2, maximum: 30 }],
+        description: "Video duration in seconds. Seedance 2.5: [4,30] or -1.",
+      },
+    })
+    expect(named(fields, "duration")).toMatchObject({
+      kind: "number",
+      min: 2,
+      max: 30,
+      integer: true,
+    })
+  })
+
   it("shows a value the schema lists twice in different case once", () => {
     const fields = fieldsFor({
       resolution: { type: "string", enum: ["2K", "2k", "768P", "768p"] },

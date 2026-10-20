@@ -18,7 +18,7 @@ export const shellCopy = {
   "shell.nav.settings": "Settings",
   "shell.menu.open": "Open the menu",
   "shell.menu.close": "Close the menu",
-  "shell.footer.heading": "One place to make images, video and sound",
+  "shell.footer.heading": "Make images, video and sound",
   "shell.footer.project": "Project",
   "shell.footer.code": "Code on GitHub",
   "shell.footer.challenge": "The challenge",

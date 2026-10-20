@@ -52,17 +52,19 @@ function resolutionsAllowed(model: string): readonly string[] {
 }
 
 describe("the Image app", () => {
-  it("lists the models that make an image from text and opens on FLUX 3 Image", () => {
+  it("lists the models that make an image from text and opens on the Z-Image Turbo graph", () => {
     expect(appTasksOf(definition)).toEqual(["text-to-image"])
-    expect(defaultModelOf(definition)).toBe("bfl/flux-3-image")
-    const named = resolveBinding(definition.engine, { prompt: "a" })
-    expect(hostedModelOf(named)).toBe("bfl/flux-3-image")
-    const graph = resolveBinding(definition.engine, {
+    expect(defaultModelOf(definition)).toBe("z-image-turbo")
+    const opened = resolveBinding(definition.engine, {
       prompt: "a",
-      model: "z-image-turbo",
       resolution: "1k",
     })
-    expect(graph.adapter).toBe(comfyWorkflowAdapter)
+    expect(opened.adapter).toBe(comfyWorkflowAdapter)
+    const named = resolveBinding(definition.engine, {
+      prompt: "a",
+      model: "bfl/flux-3-image",
+    })
+    expect(hostedModelOf(named)).toBe("bfl/flux-3-image")
   })
 
   it("publishes as its default the model a run with no model runs", () => {
@@ -73,13 +75,12 @@ describe("the Image app", () => {
       "model",
       "default",
     ])
-    const approved = body.parse({ inputs: { prompt: "a" } }).inputs.model
-    const ran = hostedModelOf(
-      resolveBinding(definition.engine, { prompt: "a" })
-    )
-    expect(published).toBe("bfl/flux-3-image")
-    expect(approved).toBe(published)
-    expect(ran).toBe(published)
+    const approved = body.parse({ inputs: { prompt: "a" } }).inputs
+    const ran = resolveBinding(definition.engine, approved)
+    expect(published).toBe("z-image-turbo")
+    expect(approved.model).toBe(published)
+    expect(hostedModelOf(ran)).toBeNull()
+    expect(ran.adapter).toBe(comfyWorkflowAdapter)
     expect(defaultModelOf(definition)).toBe(published)
   })
 

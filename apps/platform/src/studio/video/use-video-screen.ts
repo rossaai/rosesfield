@@ -1,6 +1,7 @@
-import type { ModelField } from "@rosesfield/catalog/comfy"
+import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
 import type { AppListing, Run } from "@rosesfield/contract"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import type { FieldValue } from "@/screens/app/app-form"
 import { textOf } from "@/screens/app/fields/field-props"
 import {
   hostedDefaults,
@@ -16,24 +17,19 @@ import {
 import { chipDefaultsOf, type VideoFields } from "@/studio/video/video-fields"
 import {
   composePrompt,
-  movedPrompt,
   type Preset,
   presetsOf,
   splitPrompt,
   typedPrompt,
 } from "@/studio/video/video-prompt"
+import { graphPrompt, restoredOf } from "@/studio/video/video-restore"
 import {
   fieldsOfModel,
   imagesForTab,
   modelForTab,
   modelsOfTab,
-  tabOfRun,
   type VideoTab,
 } from "@/studio/video/video-tabs"
-
-const graphPrompt = "prompt"
-const cameraMoveInput = "cameraMove"
-const autoMove = "auto"
 
 export type VideoPrompt = {
   name: string
@@ -106,6 +102,26 @@ function useChipDefaults(form: AppForm, fields: VideoFields | null): void {
   })
 }
 
+type Restore = (
+  inputs: Readonly<Record<string, FieldValue>>,
+  model: CatalogModel | null
+) => void
+
+function useRestoreOnSeed(
+  form: AppForm,
+  hosted: HostedState,
+  restore: Restore
+): void {
+  const done = useRef(false)
+  useEffect(() => {
+    if (done.current || form.source !== "seed" || hosted.isLoading) {
+      return
+    }
+    done.current = true
+    restore(form.values.inputs, hosted.chosen)
+  })
+}
+
 function useVideoPrompt(
   form: AppForm,
   fields: VideoFields | null,
@@ -143,7 +159,7 @@ export function useVideoScreen(
     setTabState(next)
     const chosen = textOf(form.values.inputs[modelInputName]) || null
     const id = modelForTab(
-      modelsOfTab(hosted.models, next),
+      modelsOfTab(hosted.models, next, app),
       chosen ?? hosted.defaultModel,
       hosted.defaultModel
     )
@@ -156,19 +172,21 @@ export function useVideoScreen(
       form.setForm({ inputs: { ...form.values.inputs, ...trimmed } })
     }
   }
+  const restore: Restore = (inputs, model) => {
+    const restored = restoredOf(inputs, model, presets, app)
+    for (const [name, value] of Object.entries(restored.inputs)) {
+      form.setInput(name, value)
+    }
+    setTabState(restored.tab)
+  }
+  useRestoreOnSeed(form, hosted, restore)
   const fillForm = state.useInputs
   const fillFromRun = (run: Run): void => {
-    const model = hosted.models.find((one) => one.id === run.inputs.model)
     fillForm(run)
-    const name = fieldsOfModel(model ?? null)?.prompt?.name ?? graphPrompt
-    const move = run.inputs[cameraMoveInput]
-    const written = textOf(run.inputs[name])
-    const moved = movedPrompt(written, move, presets)
-    if (moved !== written) {
-      form.setInput(name, moved)
-      form.setInput(cameraMoveInput, autoMove)
-    }
-    setTabState(tabOfRun(run, model ?? null))
+    restore(
+      run.inputs,
+      hosted.models.find((one) => one.id === run.inputs[modelInputName]) ?? null
+    )
   }
   return {
     state,

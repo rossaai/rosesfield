@@ -14,7 +14,11 @@ import {
   videoAspects,
   videoLengths,
 } from "#video/comfy/video-sizes"
-import { videoWorkflows, withoutSound } from "#video/comfy/video-workflows"
+import {
+  videoWorkflows,
+  withoutLastFrame,
+  withoutSound,
+} from "#video/comfy/video-workflows"
 import { videoCopy } from "#video/copy.en"
 import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 
@@ -96,37 +100,77 @@ const startFrame: WorkflowValueBinding = {
   to: "startFrame",
 }
 
+const lastFrame: WorkflowValueBinding = {
+  from: "input",
+  name: "lastFrame",
+  index: 0,
+  to: "lastFrame",
+}
+
+type Graph = Record<string, unknown>
+
+type Patch = (graph: Graph) => Graph
+
+const keepGraph: Patch = (graph) => graph
+
+function soundPatch(sound: Sound): Patch {
+  return sound === "on" ? keepGraph : (graph) => withoutSound(graph, audioNode)
+}
+
 function ltxWorkflow(
   workflow: string,
   resolution: VideoResolution,
   sound: Sound,
-  extra: readonly WorkflowValueBinding[]
+  extra: readonly WorkflowValueBinding[],
+  patch: Patch
 ): EngineBinding {
   const bindings = [...ltxBindings(resolution), ...extra]
-  return sound === "on"
-    ? workflowBinding({ workflow, bindings, outputsPerJob })
-    : workflowBinding({
-        workflow,
-        bindings,
-        outputsPerJob,
-        patch: (graph) => withoutSound(graph, audioNode),
-      })
+  const bySound = soundPatch(sound)
+  return workflowBinding({
+    workflow,
+    bindings,
+    outputsPerJob,
+    patch: (graph) => bySound(patch(graph)),
+  })
 }
 
 export function ltxTextBinding(
   resolution: VideoResolution,
   sound: Sound
 ): EngineBinding {
-  return ltxWorkflow(videoWorkflows["ltx-2-5-text"], resolution, sound, [])
+  return ltxWorkflow(
+    videoWorkflows["ltx-2-5-text"],
+    resolution,
+    sound,
+    [],
+    keepGraph
+  )
 }
 
 export function ltxStartFrameBinding(
   resolution: VideoResolution,
   sound: Sound
 ): EngineBinding {
-  return ltxWorkflow(videoWorkflows["ltx-2-5-start-frame"], resolution, sound, [
-    startFrame,
-  ])
+  return ltxWorkflow(
+    videoWorkflows["ltx-2-5-start-frame"],
+    resolution,
+    sound,
+    [startFrame],
+    withoutLastFrame
+  )
+}
+
+export function ltxFirstLastBinding(
+  resolution: VideoResolution,
+  sound: Sound
+): EngineBinding {
+  return ltxWorkflow(
+    videoWorkflows["ltx-2-5-start-frame"],
+    resolution,
+    sound,
+    [startFrame, lastFrame],
+    keepGraph
+  )
 }
 
 function byResolution(
@@ -147,7 +191,14 @@ export const videoEngine: EngineBinding = selectBinding({
   input: "startFrame",
   by: "filled",
   options: {
-    filled: byResolution(ltxStartFrameBinding),
+    filled: selectBinding({
+      input: "lastFrame",
+      by: "filled",
+      options: {
+        filled: byResolution(ltxFirstLastBinding),
+        empty: byResolution(ltxStartFrameBinding),
+      },
+    }),
     empty: byResolution(ltxTextBinding),
   },
 })

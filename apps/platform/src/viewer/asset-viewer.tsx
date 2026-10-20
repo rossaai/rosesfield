@@ -10,6 +10,7 @@ import { t } from "@/copy/t"
 import { useAssetName } from "@/pieces/asset-name"
 import { aspectOfAsset } from "@/pieces/asset-tile"
 import { CompareDivider } from "@/pieces/compare-divider"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { readText } from "@/shell/search"
 import { ViewerBar } from "@/viewer/viewer-actions"
 import { useViewer } from "@/viewer/viewer-context"
@@ -28,7 +29,7 @@ const square: MediaAspect = { width: 1, height: 1 }
 const audioAspect: MediaAspect = { width: 4, height: 1 }
 const textAspect: MediaAspect = { width: 4, height: 5 }
 
-function frameAspect(
+function mediaAspectOf(
   asset: Asset | undefined,
   measured: MediaAspect | null
 ): MediaAspect {
@@ -41,8 +42,17 @@ function frameAspect(
   if (asset.kind === "text") {
     return textAspect
   }
-  const aspect = aspectOfAsset(asset, measured ?? square) ?? square
-  return asset.kind === "video" ? stageAspectOf(aspect, "video") : aspect
+  return aspectOfAsset(asset, measured ?? square) ?? square
+}
+
+function frameAspect(
+  asset: Asset | undefined,
+  aspect: MediaAspect,
+  isRegular: boolean
+): MediaAspect {
+  return asset?.kind === "video"
+    ? stageAspectOf(aspect, "video", isRegular)
+    : aspect
 }
 
 function isUsable(aspect: MediaAspect): boolean {
@@ -131,11 +141,13 @@ function useCompare(asset: Asset | undefined): ViewerCompare {
 
 function LayerMedia({
   record,
+  aspect,
   isMissing,
   compare,
   onMeasure,
 }: {
   record: Asset | undefined
+  aspect: MediaAspect
   isMissing: boolean
   compare: ViewerCompare
   onMeasure: (aspect: MediaAspect) => void
@@ -151,9 +163,27 @@ function LayerMedia({
     )
   }
   if (record !== undefined) {
-    return <ViewerMedia asset={record} onMeasure={onMeasure} />
+    return <ViewerMedia asset={record} aspect={aspect} onMeasure={onMeasure} />
   }
   return isMissing ? <ViewerMissing /> : <Skeleton className="size-full" />
+}
+
+function useMeasured(assetId: string): {
+  pixels: MediaAspect | null
+  onMeasure: (aspect: MediaAspect) => void
+} {
+  const [measured, setMeasured] = useState<{
+    id: string
+    aspect: MediaAspect
+  } | null>(null)
+  return {
+    pixels: measured?.id === assetId ? measured.aspect : null,
+    onMeasure: (aspect) => {
+      if (isUsable(aspect)) {
+        setMeasured({ id: assetId, aspect })
+      }
+    },
+  }
 }
 
 function ViewerLayer({
@@ -169,16 +199,9 @@ function ViewerLayer({
   const name = useAssetName(record)
   const steps = useSteps(assetId)
   const compare = useCompare(record)
-  const [measured, setMeasured] = useState<{
-    id: string
-    aspect: MediaAspect
-  } | null>(null)
-  const onMeasure = (aspect: MediaAspect): void => {
-    if (isUsable(aspect)) {
-      setMeasured({ id: assetId, aspect })
-    }
-  }
-  const pixels = measured?.id === assetId ? measured.aspect : null
+  const { pixels, onMeasure } = useMeasured(assetId)
+  const aspect = mediaAspectOf(record, pixels)
+  const isRegular = useIsRegularWindow()
   return (
     <Viewer
       open={open}
@@ -188,7 +211,7 @@ function ViewerLayer({
         }
       }}
       origin={viewer.trail.origin}
-      aspect={frameAspect(record, pixels)}
+      aspect={frameAspect(record, aspect, isRegular)}
       title={name ?? t("viewer.info")}
       closeLabel={t("viewer.close")}
       aside={
@@ -215,6 +238,7 @@ function ViewerLayer({
     >
       <LayerMedia
         record={record}
+        aspect={aspect}
         isMissing={asset.isError}
         compare={compare}
         onMeasure={onMeasure}

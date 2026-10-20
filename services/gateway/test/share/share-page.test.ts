@@ -1,6 +1,12 @@
-import { run, type ShareView } from "@rosesfield/contract"
+import type { ShareView } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
-import { afterLoad, escapeHtml, sharePage } from "#share/share-page"
+import {
+  afterLoad,
+  escapeHtml,
+  explorePage,
+  sharePage,
+} from "#share/share-page"
+import { sharedRun } from "./shared-run"
 
 const built =
   '<head><script type="module" crossorigin src="/assets/index-a1.js"></script><link rel="modulepreload" crossorigin href="/assets/b2.js"></head><body><div id="root"></div></body>'
@@ -25,23 +31,7 @@ describe("a shared output's page", () => {
 const view: ShareView = {
   id: "abc",
   path: "/share/abc",
-  run: run.parse({
-    id: "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e01",
-    appId: "image",
-    status: "done",
-    inputs: { prompt: "</script><script>alert(1)</script>" },
-    count: 1,
-    aspectRatio: "1:1",
-    seed: 1,
-    outputs: [],
-    progress: 1,
-    engine: { adapter: "comfy-workflow", models: [], workflowHash: null },
-    cost: null,
-    origin: "live",
-    failure: null,
-    createdAt: "2026-10-19T12:00:00.000Z",
-    finishedAt: "2026-10-19T12:00:05.000Z",
-  }),
+  run: sharedRun,
   media: [
     {
       index: 0,
@@ -58,7 +48,11 @@ const view: ShareView = {
 
 describe("the share's data in its page", () => {
   it("rides in the page for the app, and a prompt cannot close its script", () => {
-    const page = sharePage(built, view, "https://rosesfield.com/share/abc")
+    const page = sharePage(
+      built,
+      { view, poster: null },
+      "https://rosesfield.com/share/abc"
+    )
 
     expect(page).toContain(
       '<script id="rosesfield-share" type="application/json">'
@@ -75,7 +69,11 @@ describe("what the page writes as it is", () => {
       run: { ...view.run, inputs: { prompt: "cost $& and $' and $$ more" } },
     }
 
-    const page = sharePage(built, priced, "https://rosesfield.com/share/abc")
+    const page = sharePage(
+      built,
+      { view: priced, poster: null },
+      "https://rosesfield.com/share/abc"
+    )
 
     expect(page).toContain(`"prompt":"cost $& and $' and $$ more"`)
   })
@@ -95,10 +93,93 @@ describe("what the page writes as it is", () => {
       ],
     }
 
-    const page = sharePage(built, webm, "https://rosesfield.com/share/abc")
+    const page = sharePage(
+      built,
+      { view: webm, poster: null },
+      "https://rosesfield.com/share/abc"
+    )
 
     expect(page).toContain(
       '<meta property="og:video:type" content="video/webm" />'
     )
+  })
+})
+
+describe("a shared video's card", () => {
+  const clip: ShareView = {
+    ...view,
+    media: [
+      {
+        index: 0,
+        kind: "video",
+        mime: "video/mp4",
+        width: 1080,
+        height: 1920,
+        durationSeconds: 5,
+      },
+    ],
+  }
+
+  it("shows its poster as the image, at the poster's own size", () => {
+    const page = sharePage(
+      built,
+      { view: clip, poster: "/share/abc/media/0/poster" },
+      "https://rosesfield.com/share/abc"
+    )
+
+    expect(page).toContain(
+      '<meta property="og:image" content="https://rosesfield.com/share/abc/media/0/poster" />'
+    )
+    expect(page).toContain('<meta property="og:image:width" content="720" />')
+    expect(page).toContain('<meta property="og:image:height" content="1280" />')
+    expect(page).toContain('<meta property="og:video:width" content="1080" />')
+    expect(page).toContain(
+      '<meta name="twitter:card" content="summary_large_image" />'
+    )
+    expect(page).toContain(
+      '<link rel="preload" as="image" href="https://rosesfield.com/share/abc/media/0/poster" fetchpriority="high" />'
+    )
+  })
+
+  it("names no image when the video has no poster", () => {
+    const page = sharePage(
+      built,
+      { view: clip, poster: null },
+      "https://rosesfield.com/share/abc"
+    )
+
+    expect(page).not.toContain("og:image")
+    expect(page).not.toContain(" poster=")
+    expect(page).toContain('<meta name="twitter:card" content="summary" />')
+  })
+})
+
+describe("the Explore page", () => {
+  const tile = (id: string): ShareView => ({
+    ...view,
+    id,
+    path: `/share/${id}`,
+  })
+
+  it("loads its first tile at once with a high priority, the rest lazily, and the app after the page paints", () => {
+    const page = explorePage(
+      built,
+      [
+        { view: tile("one"), poster: null },
+        { view: tile("two"), poster: null },
+        { view: tile("three"), poster: null },
+      ],
+      "https://rosesfield.com/"
+    )
+    const images = page.match(/<img src="\/share\/[^"]+"[^>]*>/g) ?? []
+    expect(images).toHaveLength(3)
+    expect(images[0]).toContain('fetchpriority="high"')
+    expect(images[0]).not.toContain('loading="lazy"')
+    expect(images.slice(1).every((one) => one.includes('loading="lazy"'))).toBe(
+      true
+    )
+    expect(page).not.toContain('<script type="module" crossorigin src=')
+    expect(page).not.toContain("modulepreload")
+    expect(page).toContain('addEventListener("load"')
   })
 })

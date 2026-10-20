@@ -1,4 +1,5 @@
 import { IconButton } from "@rosesfield/ui/components/button"
+import { interaction } from "@rosesfield/ui/components/interaction"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import type { MediaFeedLayout } from "@rosesfield/ui/contracts/media-feed.generated"
 import type { PresetTileForm } from "@rosesfield/ui/contracts/preset-tile.generated"
@@ -140,7 +141,10 @@ function PromoRow({
         ref={scroller}
         data-slot="media-feed-items"
         onScroll={read}
-        className="flex snap-x scroll-px-4 gap-5 overflow-x-auto px-4 [scrollbar-width:none]"
+        className={cn(
+          "flex snap-x scroll-px-4 gap-5 overflow-x-auto px-4 [scrollbar-width:none]",
+          interaction.ringRoomBlock
+        )}
       >
         {children}
       </div>

@@ -74,11 +74,22 @@ describe("AppBar", () => {
     expect(overflow?.hasAttribute("data-scroll-start")).toBe(true)
     expect(overflow?.className.split(" ")).toEqual(
       expect.arrayContaining([
-        "h-7",
+        "h-9",
         "overflow-x-auto",
         "hidden",
         "@regular:flex",
+        "-m-[calc(var(--spacing-focus-ring)*2)]",
+        "p-[calc(var(--spacing-focus-ring)*2)]",
       ])
+    )
+  })
+
+  it("starts the area links at the list's start, 12 px after the mark, never centred", () => {
+    const bar = renderBar("full")
+    const links = bar.querySelector("[data-slot='app-bar-overflow'] > div")
+    expect(links?.className.split(" ")).not.toContain("mx-auto")
+    expect(links?.className.split(" ")).toEqual(
+      expect.arrayContaining(["flex", "shrink-0"])
     )
   })
 })
@@ -110,6 +121,22 @@ function renderActions(density: "full" | "compact") {
 }
 
 describe("AppBarAction", () => {
+  it("lights a press one step more than a hover, and never changes its size", () => {
+    const { balance, connect } = renderActions("full")
+    for (const action of [balance, connect]) {
+      const classes = action.className.split(" ")
+      expect(classes).toEqual(
+        expect.arrayContaining([
+          "hover:after:opacity-10",
+          "active:after:opacity-20",
+          "in-data-[gallery=press]:after:opacity-20",
+        ])
+      )
+      expect(classes).not.toContain("active:after:opacity-10")
+      expect(classes.filter((name) => /scale/.test(name))).toEqual([])
+    }
+  })
+
   it("holds a 16 px icon, then its label, 8 px apart, on a 36 px control", () => {
     const { balance } = renderActions("full")
     expect(balance.firstElementChild).toBe(screen.getByTestId("coins"))

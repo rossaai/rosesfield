@@ -1,4 +1,9 @@
-import { type ShareView, sharePaths, shareRoutes } from "@rosesfield/contract"
+import {
+  buildPath,
+  type ShareView,
+  sharePaths,
+  shareRoutes,
+} from "@rosesfield/contract"
 import type { Context } from "hono"
 import type { GatewayApp } from "#gateway-env"
 import type { ResponseOf } from "#routes/read-request"
@@ -7,7 +12,12 @@ import { createShare, type ShareParts } from "#share/create-share"
 import type { ByteRange, ShareFiles } from "#share/share-files"
 import { ShareKeyRequiredError } from "#share/share-key-required.error"
 import { ShareNotFoundError } from "#share/share-not-found.error"
-import { explorePage, type PageSource, sharePage } from "#share/share-page"
+import {
+  explorePage,
+  type PagedShare,
+  type PageSource,
+  sharePage,
+} from "#share/share-page"
 import type { ShareRecord } from "#share/sqlite-share-repository"
 
 export type ShareMount = ShareParts & {
@@ -63,6 +73,20 @@ export function rangeOf(
   return {
     start: Number(from),
     end: to === "" ? size - 1 : Math.min(Number(to), size - 1),
+  }
+}
+
+export const posterPath = `${sharePaths.media}/poster`
+
+export function pagedShareOf(record: ShareRecord): PagedShare {
+  const view = shareViewOf(record)
+  const poster = record.media[0]?.poster
+  return {
+    view,
+    poster:
+      poster === undefined
+        ? null
+        : buildPath(posterPath, { shareId: record.id, index: "0" }),
   }
 }
 
@@ -139,6 +163,14 @@ function publicDataRoutes(app: GatewayApp, mount: ShareMount): void {
     }
     return mediaResponse(c, mount, media.key, media.mime)
   })
+  app.get(posterPath, async (c) => {
+    const record = await liveShare(mount, c)
+    const poster = record.media[Number(c.req.param("index"))]?.poster
+    if (poster === undefined) {
+      throw new ShareNotFoundError({ shareId: record.id })
+    }
+    return mediaResponse(c, mount, poster.key, poster.mime)
+  })
 }
 
 function pageRoutes(
@@ -156,7 +188,7 @@ function pageRoutes(
       mount.clock.now().getTime()
     )
     return c.html(
-      record === null ? html : sharePage(html, shareViewOf(record), c.req.url)
+      record === null ? html : sharePage(html, pagedShareOf(record), c.req.url)
     )
   })
   app.get("/", async (c) => {
@@ -165,7 +197,7 @@ function pageRoutes(
       return c.notFound()
     }
     const listed = await mount.shares.listed(mount.clock.now().getTime())
-    return c.html(explorePage(html, listed.map(shareViewOf), c.req.url))
+    return c.html(explorePage(html, listed.map(pagedShareOf), c.req.url))
   })
 }
 

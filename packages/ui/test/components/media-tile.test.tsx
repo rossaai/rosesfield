@@ -123,6 +123,20 @@ describe("MediaTile captions", () => {
     expect(pill?.className).toContain("truncate")
   })
 
+  it("pads its pill 5 px a side, so Demo engine fits whole on a 102 px thumbnail", () => {
+    render(
+      <MediaTile
+        kind="image"
+        src="output.png"
+        alt="An output"
+        caption="Demo engine"
+      />
+    )
+    const pill = document.querySelector("[data-slot='media-tile-caption']")
+    expect(pill?.className.split(" ")).toContain("px-s1_5")
+    expect(pill?.className.split(" ")).not.toContain("px-s2")
+  })
+
   it("shows the length alone when the tile has no note", () => {
     render(
       <MediaTile

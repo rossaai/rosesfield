@@ -63,11 +63,19 @@ export const accountQuery = queryOptions({
   staleTime: 60_000,
 })
 
-export function checkKey(key: string): Promise<Account> {
-  return fetchAccount(
-    { ...credentialHeaders(), [engineKeyHeader]: key },
-    undefined
-  )
+export const keyCheckLimitMs = 10_000
+
+export async function checkKey(key: string): Promise<Account> {
+  const stop = new AbortController()
+  const timer = setTimeout(() => stop.abort(), keyCheckLimitMs)
+  try {
+    return await fetchAccount(
+      { ...credentialHeaders(), [engineKeyHeader]: key },
+      stop.signal
+    )
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 export async function forgetAccount(): Promise<void> {

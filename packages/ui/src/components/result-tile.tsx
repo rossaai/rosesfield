@@ -99,8 +99,13 @@ function Actions(props: ResultTileProps & { corners: Corners }): ReactElement {
   )
 }
 
+const veilWidths = {
+  compact: "max-w-[calc(100%-var(--spacing)*13)]",
+  wide: "max-w-[calc(100%-var(--spacing)*16)]",
+} as const
+
 const veilClass =
-  "pointer-events-none absolute z-20 hidden max-w-[calc(100%-var(--spacing)*24)] items-center gap-1 truncate font-medium text-caption text-ink @regular:flex"
+  "pointer-events-none absolute z-20 hidden items-center gap-1 truncate font-medium text-caption text-ink @regular:flex"
 
 function Recreate(props: ResultTileProps & { corners: Corners }): ReactElement {
   const compact = isCompact(props)
@@ -137,6 +142,7 @@ function ResultTile(props: ResultTileProps): ReactElement {
       data-form={props.form ?? "card"}
       className={cn(
         "group/reveal relative m-0 w-full overflow-hidden rounded-cell bg-(--well)",
+        interaction.ringHost,
         props.className
       )}
       style={aspectStyle(props.aspect)}
@@ -150,13 +156,19 @@ function ResultTile(props: ResultTileProps): ReactElement {
       />
       <button
         type="button"
+        data-cover=""
         aria-label={props.openLabel}
         onClick={(event) => props.onOpen(event.currentTarget)}
-        className={cn("absolute inset-0 z-10 rounded-cell", interaction.ring)}
+        className={cn("absolute inset-0 z-10 rounded-cell", interaction.cover)}
       />
       <span
         data-slot="media-veil"
-        className={cn(veilClass, corners.topLeft, interaction.reveal)}
+        className={cn(
+          veilClass,
+          corners.topLeft,
+          veilWidths[isCompact(props) ? "compact" : "wide"],
+          interaction.reveal
+        )}
       >
         {props.kind === "video" ? (
           <VideoIcon aria-hidden="true" className="size-3 shrink-0" />

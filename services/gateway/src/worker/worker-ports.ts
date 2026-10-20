@@ -19,6 +19,7 @@ export type WorkerBindings = {
   ASSETS: Fetcher
   WATCHERS: DurableObjectNamespace
   AGENTS: DurableObjectNamespace
+  MEDIA?: MediaBinding
   MODE?: string
   COMFY_API_KEY?: string
   COMFY_BASE_URL?: string

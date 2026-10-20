@@ -68,6 +68,34 @@ export function listedOptions(description: string): string[] | null {
   return distinct.size === 1 && only !== undefined ? only : null
 }
 
+const exampleLead = /\b(?:for example|for instance|e\.g\.?|such as)[,:]?\s+/gi
+
+const exampleEnd = /\.(?:\s|$)|\n|;|\)/
+
+/** Reads the values a free text property names as its examples, with its own example value, or an empty list when it names fewer than two. */
+export function namedOptions(schema: Schema): Option[] {
+  const description = (stringOf(fieldOf(schema, "description")) ?? "").replace(
+    /\s+/g,
+    " "
+  )
+  const lists = [...description.matchAll(exampleLead)]
+    .map((match) =>
+      itemsOf(
+        description
+          .slice((match.index ?? 0) + match[0].length)
+          .split(exampleEnd)[0] ?? "",
+        false
+      )
+    )
+    .filter((list): list is string[] => list !== null)
+  const [only] = lists
+  if (lists.length !== 1 || only === undefined) {
+    return []
+  }
+  const example = fieldOf(schema, "example")
+  return uniqueOptions(typeof example === "string" ? [...only, example] : only)
+}
+
 /** Keeps the first spelling of each value that the schema lists twice in different case. */
 export function uniqueOptions(options: readonly Option[]): Option[] {
   const seen = new Set<string>()

@@ -44,16 +44,9 @@ export const videoCopy: Readonly<Record<string, string>> = {
   "video.tab.firstLast": "Two frames",
   "video.tabs.label": "What the video starts from",
   "video.well.start": "Start image",
-  "video.well.start.note": "The video opens on this image.",
   "video.well.references": "References",
-  "video.well.references.note.one":
-    "Up to {count} image. The video keeps what it shows.",
-  "video.well.references.note.other":
-    "Up to {count} images. The video keeps what they show.",
   "video.well.first": "First frame",
-  "video.well.first.note": "The video opens on this image.",
   "video.well.last": "Last frame",
-  "video.well.last.note": "The video ends on this image.",
   "video.well.none":
     "This model takes no image here. Pick another model to add one.",
   "video.preset.title": "Camera move",

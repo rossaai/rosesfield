@@ -224,7 +224,7 @@ describe("an Image run through the local gateway on the demo engine", () => {
     expect(run).toMatchObject({
       origin: "demo",
       engine: { adapter: "demo" },
-      inputs: { prompt: "a paper boat", model: "bfl/flux-3-image" },
+      inputs: { prompt: "a paper boat", model: "z-image-turbo" },
     })
     await drive(run.id)
     const done = await call(buildPath(routes.getRun.path, { runId: run.id }))

@@ -80,7 +80,10 @@ function StartFrame(props: StartFrameProps): ReactElement {
   return (
     <figure
       data-slot="composer-attachments-tiles"
-      className="relative m-0 h-32.5 w-full shrink-0 overflow-hidden rounded-cell bg-(--well) outline-hor-text has-focus-visible:outline-(length:--spacing-focus-ring) has-focus-visible:outline-solid in-data-[gallery=focus]:outline-(length:--spacing-focus-ring) in-data-[gallery=focus]:outline-solid"
+      className={cn(
+        "group/frame relative m-0 h-32.5 w-full shrink-0 overflow-hidden rounded-cell bg-(--well)",
+        interaction.ringHost
+      )}
     >
       <video
         src={props.src}
@@ -96,9 +99,13 @@ function StartFrame(props: StartFrameProps): ReactElement {
       <span
         aria-hidden="true"
         data-slot="start-frame-scrim"
+        data-theme="dark"
         className="absolute inset-0 bg-linear-to-b from-transparent to-scrim to-50%"
       />
-      <figcaption className="absolute inset-x-3 bottom-3 flex min-w-0 flex-col">
+      <figcaption
+        data-theme="dark"
+        className="absolute inset-x-3 bottom-3 flex min-w-0 flex-col"
+      >
         <span className="truncate font-medium text-title text-ink">
           {props.title}
         </span>
@@ -108,15 +115,21 @@ function StartFrame(props: StartFrameProps): ReactElement {
       </figcaption>
       <button
         type="button"
+        data-cover=""
         onClick={props.onChange}
-        className={cn(
-          "material-thin absolute top-1.5 right-1.5 inline-flex h-6 items-center gap-1 rounded-dense px-2 font-medium text-label text-ink [&_svg]:size-3",
-          interaction.light,
-          interaction.ring
-        )}
+        className={cn("absolute inset-0 rounded-cell", interaction.cover)}
       >
-        <PencilIcon aria-hidden="true" />
-        {props.changeLabel}
+        <span
+          data-slot="start-frame-change"
+          className={cn(
+            "material-thin absolute top-1.5 right-1.5 inline-flex h-6 items-center gap-1 rounded-dense px-2 font-medium text-label text-ink [&_svg]:size-3",
+            interaction.light,
+            "group-hover/frame:after:opacity-10 group-active/frame:after:opacity-10"
+          )}
+        >
+          <PencilIcon aria-hidden="true" />
+          {props.changeLabel}
+        </span>
       </button>
     </figure>
   )
@@ -158,7 +171,7 @@ function DropZone({
         ))}
       </span>
       <span className="flex flex-col">
-        <span className="font-medium text-body text-ink-muted">{title}</span>
+        <span className="font-medium text-body text-ink-muted">{title}</span>{" "}
         <span className="font-medium text-caption text-ink-muted">{line}</span>
       </span>
     </button>

@@ -20,6 +20,8 @@ type PopoverMotion = "pop" | "rise" | "none"
 const rise =
   "[transition:opacity_var(--popover-in-opacity),translate_var(--popover-in-transform)] data-starting-style:opacity-0 data-starting-style:translate-y-1 data-[side=right]:data-starting-style:translate-y-0 data-[side=right]:data-starting-style:-translate-x-1 data-ending-style:opacity-0"
 
+const collisionAvoidance = { fallbackAxisSide: "none" } as const
+
 const motions = {
   pop: motion.popover,
   rise,
@@ -45,13 +47,14 @@ function PopoverContent({
         align={align}
         side={side}
         sideOffset={sideOffset}
+        collisionAvoidance={collisionAvoidance}
         className="isolate z-50"
       >
         <PopoverPrimitive.Popup
           data-slot="popover-content"
           data-ground="layer"
           className={cn(
-            "material z-50 flex min-w-popover-min max-w-popover-max flex-col gap-s3 rounded-vessel p-s4 text-ink shadow-float outline-none",
+            "material z-50 flex max-h-(--available-height) min-w-popover-min max-w-popover-max flex-col gap-s3 overflow-y-auto rounded-vessel p-s4 text-ink shadow-float outline-none",
             motions[moves],
             className
           )}
