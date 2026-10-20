@@ -4,6 +4,7 @@ import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { useQuery } from "@tanstack/react-query"
 import type { ReactElement, ReactNode } from "react"
 import { runQuery } from "@/api/queries"
+import { isAssetInput } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import {
   formatBytes,
@@ -12,14 +13,17 @@ import {
   joinParts,
 } from "@/copy/format"
 import { t } from "@/copy/t"
+import { idsOf, runPrice, runSeconds } from "@/pieces/run/run-facts"
+import { inputRowsOf } from "@/pieces/run/run-inputs"
 import {
-  idsOf,
-  runAppName,
-  runModel,
-  runPrice,
-  runSeconds,
-} from "@/pieces/run/run-facts"
-import { RunInputs } from "@/pieces/run/run-inputs"
+  Detail,
+  inputAssetIdsOf,
+  modelAndModeOf,
+  PanelHead,
+  PromptDetail,
+  promptOf,
+  RunSection,
+} from "@/viewer/result-panel"
 import { ViewerActions } from "@/viewer/viewer-actions"
 
 export type ViewerCompare = {
@@ -27,21 +31,6 @@ export type ViewerCompare = {
   isDemo: boolean
   isOn: boolean
   onToggle: () => void
-}
-
-function Row({
-  label,
-  children,
-}: {
-  label: string
-  children: ReactNode
-}): ReactElement {
-  return (
-    <div className="flex flex-col gap-s1">
-      <dt className="text-label text-ink-muted">{label}</dt>
-      <dd className="text-body">{children}</dd>
-    </div>
-  )
 }
 
 export type MeasuredSize = { width: number; height: number } | null
@@ -91,6 +80,27 @@ function CompareToggle({ compare }: { compare: ViewerCompare }): ReactNode {
   )
 }
 
+function detailRowsOf(
+  run: Run
+): Array<{ key: string; label: string; value: ReactNode }> {
+  const app = findCatalogApp(run.appId)
+  if (app === null) {
+    return []
+  }
+  const shownElsewhere = new Set(
+    app.inputs
+      .filter(
+        (input) =>
+          isAssetInput(input) ||
+          input.type === "prompt" ||
+          input.name === "mode" ||
+          input.name === "model"
+      )
+      .map((input) => input.name)
+  )
+  return inputRowsOf(app, run).filter((row) => !shownElsewhere.has(row.key))
+}
+
 function MadeInfo({
   run,
   compare,
@@ -98,40 +108,34 @@ function MadeInfo({
   run: Run
   compare: ViewerCompare
 }): ReactElement {
-  const app = findCatalogApp(run.appId)
   const seconds = runSeconds(run)
-  const model = runModel(run, app)
+  const model = modelAndModeOf(run)
   return (
     <>
-      <div className="flex flex-col gap-s1">
-        <p className="text-body font-medium">
-          {t("viewer.made", {
-            app: runAppName(run),
-            date: formatDate(run.createdAt),
-          })}
+      <PanelHead run={run} line={formatDate(run.createdAt)} />
+      {run.origin === "demo" ? (
+        <p className="px-1 text-caption text-cem-text">
+          {t("run.demoCaption")}
         </p>
-        {run.origin === "demo" ? (
-          <p className="text-caption text-cem-text">{t("run.demoCaption")}</p>
-        ) : null}
-      </div>
+      ) : null}
       <CompareToggle compare={compare} />
-      <section className="flex flex-col gap-s3">
-        <h3 className="text-label font-medium text-ink">
-          {t("viewer.label.inputs")}
-        </h3>
-        <RunInputs app={app} run={run} />
-      </section>
-      <dl className="flex flex-col gap-s3">
+      <RunSection inputIds={inputAssetIdsOf(run)}>
+        <PromptDetail prompt={promptOf(run)} />
         {model === null ? null : (
-          <Row label={t("viewer.label.model")}>{model}</Row>
+          <Detail label={t("viewer.label.model")}>{model}</Detail>
         )}
+        {detailRowsOf(run).map((row) => (
+          <Detail key={row.key} label={row.label}>
+            {row.value}
+          </Detail>
+        ))}
         {seconds === null ? null : (
-          <Row label={t("viewer.label.time")}>
+          <Detail label={t("viewer.label.time")}>
             {t("run.made", { duration: formatDuration(seconds) })}
-          </Row>
+          </Detail>
         )}
-        <Row label={t("viewer.label.price")}>{runPrice(run)}</Row>
-      </dl>
+        <Detail label={t("viewer.label.price")}>{runPrice(run)}</Detail>
+      </RunSection>
     </>
   )
 }
@@ -145,11 +149,13 @@ function UploadInfo({
 }): ReactElement {
   return (
     <>
-      <p className="text-body font-medium">
+      <p className="px-1 pe-9 font-medium text-body">
         {t("viewer.uploaded", { date: formatDate(asset.createdAt) })}
       </p>
-      <dl className="flex flex-col gap-s3">
-        <Row label={t("viewer.label.size")}>{sizeOf(asset, measured)}</Row>
+      <dl className="flex flex-col rounded-card bg-(--well) px-2 py-1">
+        <Detail label={t("viewer.label.size")}>
+          {sizeOf(asset, measured)}
+        </Detail>
       </dl>
     </>
   )
@@ -203,8 +209,9 @@ export function ViewerInfo({
 }): ReactElement {
   const { run } = useSourceRun(asset)
   return (
-    <div className="flex flex-col gap-s4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <ViewerDetails asset={asset} compare={compare} measured={measured} />
+      <span aria-hidden="true" className="flex-1" />
       <ViewerActions asset={asset} run={run} onDeleted={onDeleted} />
     </div>
   )

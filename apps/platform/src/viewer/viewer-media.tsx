@@ -10,6 +10,7 @@ import { useDownloadAsset } from "@/pieces/asset-actions"
 import { assetLabel, useAssetName } from "@/pieces/asset-name"
 import { AudioRow } from "@/pieces/audio-row"
 import { TextOutput } from "@/pieces/text-output"
+import { ViewerVideo } from "@/viewer/viewer-video"
 
 function Failed({ retry }: { retry: () => void }): ReactElement {
   return (
@@ -61,22 +62,7 @@ export function ViewerMedia({
         />
       )
     case "video":
-      return (
-        <video
-          src={source.src}
-          aria-label={name}
-          controls
-          muted
-          playsInline
-          className="size-full object-contain"
-          onLoadedMetadata={(event) =>
-            onMeasure({
-              width: event.currentTarget.videoWidth,
-              height: event.currentTarget.videoHeight,
-            })
-          }
-        />
-      )
+      return <ViewerVideo src={source.src} label={name} onMeasure={onMeasure} />
     case "audio":
       return (
         <div className="grid size-full place-items-center p-s4">

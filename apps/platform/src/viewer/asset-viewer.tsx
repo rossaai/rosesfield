@@ -22,6 +22,7 @@ import {
   ViewerInfo,
 } from "@/viewer/viewer-info"
 import { ViewerMedia, ViewerMissing } from "@/viewer/viewer-media"
+import { stageAspectOf } from "@/viewer/viewer-video"
 
 const square: MediaAspect = { width: 1, height: 1 }
 const audioAspect: MediaAspect = { width: 4, height: 1 }
@@ -40,7 +41,8 @@ function frameAspect(
   if (asset.kind === "text") {
     return textAspect
   }
-  return aspectOfAsset(asset, measured ?? square) ?? square
+  const aspect = aspectOfAsset(asset, measured ?? square) ?? square
+  return asset.kind === "video" ? stageAspectOf(aspect, "video") : aspect
 }
 
 function isUsable(aspect: MediaAspect): boolean {
