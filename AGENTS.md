@@ -5,7 +5,7 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 ## What this project is
 
 - Its look and its rules are its own.
-- MIT for the code, the docs and the design tokens. The name and the logo are trademarks of ROSSA AI, LLC, and `brand/` is all rights reserved, per `TRADEMARKS.md`.
+- MIT for the code, the docs and the design tokens. The name and the logo are trademarks of ROSSA AI, LLC, and the logo files in `apps/platform/public/` are all rights reserved, per `TRADEMARKS.md`.
 - You bring your own key and run it on your machine or your own host. No accounts, no payments, no credits.
 
 ## Hard lines
@@ -26,7 +26,6 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 | `packages/` | code two consumers share: `kernel`, `contract`, `ui`, `catalog`, `generation`, `library` and `agent`, per `docs/architecture.md` §The shape |
 | `workflows/` | every ComfyUI workflow, a UI file and an API file each, per `workflows/README.md` |
 | `docs/` | one doc per subject, routed in §Doc routing |
-| `brand/` | the Rosesfield logo, all rights reserved, per `TRADEMARKS.md` |
 | `scripts/` | the dependency-cruiser aliases, and `first-light`, which runs each workflow once against the engine you name, per `scripts/first-light/README.md` |
 
 ## Doc routing

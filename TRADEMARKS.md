@@ -31,7 +31,7 @@ A fork is welcome, and you do not have to rename it. The one thing that matters 
 
 - Colors, design tokens, layout patterns, the docs and the writing rules are MIT, like the code.
 - The fonts and icons keep their own licences: SIL Open Font License 1.1 for Montserrat and JetBrains Mono, ISC for Lucide.
-- The logo files in `brand/` are not under the MIT licence. Their copyright belongs to ROSSA AI, LLC, and the uses above are the ones allowed.
+- The logo files, `apps/platform/public/lockup-light.svg`, `apps/platform/public/lockup-dark.svg` and the icons in `apps/platform/public/icons/`, are not under the MIT licence. Their copyright belongs to ROSSA AI, LLC, and the uses above are the ones allowed.
 
 ## Other names
 
