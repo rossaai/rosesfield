@@ -10,6 +10,7 @@ import {
   type FormValues,
   type StartRunBodyInput,
 } from "@/screens/app/app-form"
+import { modelInputName } from "@/screens/app/hosted/hosted-form"
 
 export type LayersMode = "split" | "edit" | "relight" | "fill"
 
@@ -19,17 +20,25 @@ export const sourceInput = "source"
 export const layerInput = "layer"
 export const maskInput = "mask"
 
-const modes: readonly LayersMode[] = ["split", "edit", "relight", "fill"]
+export const layersModes: readonly LayersMode[] = [
+  "split",
+  "edit",
+  "relight",
+  "fill",
+]
 
 const ownControls: readonly string[] = [
   modeInput,
+  modelInputName,
   countInput,
   layerInput,
   maskInput,
 ]
 
+const boundedInputs: readonly string[] = [countInput, modelInputName]
+
 export function isLayersMode(value: unknown): value is LayersMode {
-  return modes.some((mode) => mode === value)
+  return layersModes.some((mode) => mode === value)
 }
 
 export function modeOf(values: FormValues): LayersMode {
@@ -101,19 +110,20 @@ export function layersBodyOf(
   values: FormValues
 ): StartRunBodyInput {
   const body = bodyOf(bodyAppFor(app, mode), values)
-  const rule = inputRulesOf(app, body.inputs).find(
-    (one) => one.input.name === countInput
-  )
-  const chosen = body.inputs[countInput]
-  const allowed = rule?.allowed ?? []
-  const layers =
-    typeof chosen === "string" && allowed.includes(chosen)
-      ? chosen
-      : rule?.fallback
-  const inputs =
-    typeof layers === "string"
-      ? { ...body.inputs, [countInput]: layers }
-      : body.inputs
+  const rules = inputRulesOf(app, body.inputs)
+  const inputs = { ...body.inputs }
+  for (const name of boundedInputs) {
+    const rule = rules.find((one) => one.input.name === name)
+    const chosen = inputs[name]
+    const allowed = rule?.allowed ?? []
+    const kept =
+      typeof chosen === "string" && allowed.includes(chosen)
+        ? chosen
+        : rule?.fallback
+    if (typeof kept === "string") {
+      inputs[name] = kept
+    }
+  }
   return {
     ...body,
     inputs,

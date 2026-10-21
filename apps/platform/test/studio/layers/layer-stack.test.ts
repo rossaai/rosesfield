@@ -5,11 +5,17 @@ import {
   canvasRunsOf,
   chooseVersion,
   emptyArrangement,
+  moveLayer,
+  orderedLayers,
+  pickStack,
   type Stack,
   type StackLayer,
   shownVersion,
   stackOf,
+  toggled,
 } from "@/studio/layers/layer-stack"
+import { runModeOf } from "@/studio/layers/layers-models"
+import { catalogIndex, flux3 } from "./layers-fixtures"
 
 const firstLayer = "0a1b2c3d-4e5f-4a6b-8c7d-8e9fa0b1c2d3"
 const secondLayer = "1b2c3d4e-5f6a-4b7c-9d8e-9fa0b1c2d3e4"
@@ -155,5 +161,48 @@ describe("canvasRunsOf", () => {
     const shown = canvasRunsOf([split, failedSplit], split.id)
     expect(shown.latest).toBeNull()
     expect(shown.earlier.map((one) => one.id)).toEqual([failedSplit.id])
+  })
+})
+
+describe("the order and the shown layers of a stack", () => {
+  it("moves a layer up and down and keeps every layer once", () => {
+    const stack = stackOf(split, [split])
+    const order = emptyArrangement(stack).order
+    const up = moveLayer(order, firstLayer, 1)
+    expect(up).toEqual([secondLayer, firstLayer])
+    expect(moveLayer(up, firstLayer, 1)).toEqual(up)
+    const arranged = orderedLayers(stack, {
+      ...emptyArrangement(stack),
+      order: up,
+    })
+    expect(arranged.map((layer) => layer.key)).toEqual([
+      secondLayer,
+      firstLayer,
+    ])
+  })
+
+  it("hides a layer and shows it again", () => {
+    const hidden = toggled(new Set(), secondLayer)
+    expect(hidden.has(secondLayer)).toBe(true)
+    expect(toggled(hidden, secondLayer).has(secondLayer)).toBe(false)
+  })
+})
+
+describe("a hosted edit on a layer", () => {
+  const hostedEdit = layersRun({
+    id: "6a7b8c9d-0e1f-4a2b-8c3d-e4f5a6b7c8d9",
+    minute: 3,
+    inputs: { model: flux3.id, inputImage: [secondLayer], prompt: "a hat" },
+    outputs: [secondEdit],
+  })
+  const isSplit = (one: Run) => runModeOf(one, catalogIndex) === "split"
+
+  it("joins the row of versions of the layer it changed", () => {
+    const stack = stackOf(split, [split, hostedEdit], isSplit)
+    expect(layerOf(stack).versions).toEqual([secondLayer, secondEdit])
+  })
+
+  it("never stands for the stack", () => {
+    expect(pickStack([hostedEdit, split], null, isSplit)?.id).toBe(split.id)
   })
 })
