@@ -1,4 +1,3 @@
-import type { AppSeeds } from "@/screens/app/use-app-screen"
 import { swapHash } from "@/studio/motion/motion-tabs"
 
 const motionAppId = "motion"
@@ -12,7 +11,9 @@ export type MotionAddress = {
   search: { use?: string }
 }
 
-export function motionAddressOf(seeds: Pick<AppSeeds, "use">): MotionAddress {
+type Seeds = { use?: string | undefined }
+
+export function motionAddressOf(seeds: Seeds): MotionAddress {
   return {
     to: "/apps/$appId",
     params: { appId: motionAppId },
@@ -23,7 +24,7 @@ export function motionAddressOf(seeds: Pick<AppSeeds, "use">): MotionAddress {
 
 export function oldAddressOf(
   appId: string,
-  seeds: Pick<AppSeeds, "use">
+  seeds: Seeds
 ): MotionAddress | null {
   return appId === recastAppId ? motionAddressOf(seeds) : null
 }

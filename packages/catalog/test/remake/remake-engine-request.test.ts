@@ -6,6 +6,7 @@ import {
 } from "@rosesfield/generation"
 import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
+import { z } from "zod"
 import { findWorkflow } from "#list-workflows"
 import { app as motionApp } from "#motion/app"
 import {
@@ -57,6 +58,16 @@ const shotApps = {
 }
 
 type Node = { class_type: string; inputs: Record<string, unknown> }
+
+const sentJob = z.object({
+  workflow: z.record(
+    z.string(),
+    z.object({
+      class_type: z.string(),
+      inputs: z.record(z.string(), z.unknown()),
+    })
+  ),
+})
 
 const clipFile: EngineFile = {
   assetId: clipId,
@@ -147,8 +158,8 @@ async function submit(request: ShotRequest, recordings: Recording[]) {
     outputKind: "video",
   })
   const job = replay.sent.find((sent) => sent.url.endsWith("/api/v2/jobs"))
-  const body: { workflow: Record<string, Node> } = JSON.parse(job?.body ?? "{}")
-  return { submission, replay, job, workflow: body.workflow }
+  const { workflow } = sentJob.parse(job?.body ?? { workflow: {} })
+  return { submission, replay, job, workflow }
 }
 
 function classesOf(graph: Record<string, unknown>): string[] {

@@ -22,7 +22,7 @@ describe("the Open weights badge of a model row", () => {
   })
 
   it("links nowhere for a model with no weights page on Hugging Face", () => {
-    expect(weightsLinkOf("sam-3-1")).toBeNull()
+    expect(weightsLinkOf("real-esrgan")).toBeNull()
     expect(weightsLinkOf("minimax/minimax-h3")).toBeNull()
     expect(badgesOf("minimax/minimax-h3", openWeights)).toEqual([
       { kind: "openWeights", label: t("model.tag.openWeights") },
