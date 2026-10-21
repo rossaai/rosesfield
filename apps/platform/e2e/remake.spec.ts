@@ -48,7 +48,7 @@ test.beforeEach(async ({ page }) => {
 test.describe("Remake's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("holds the two wells with their limits, then the other inputs, Price unknown and Generate", async ({
+  test("holds the two wells with their limits, then the other inputs, No cost on the demo engine and Generate", async ({
     page,
   }) => {
     await page.goto("/apps/remake")
@@ -63,7 +63,7 @@ test.describe("Remake's column", () => {
     expect(places.every((place) => place >= 0)).toBe(true)
     expect([...places].sort((a, b) => a - b)).toEqual(places)
     await expect(column.locator('[data-slot="remake-price"]')).toHaveText(
-      "Price unknown"
+      "No cost on the demo engine"
     )
     await expect(column.locator('[data-slot="generate-button"]')).toBeVisible()
   })
