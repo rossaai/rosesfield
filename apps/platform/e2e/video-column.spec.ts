@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 test.describe("Video's mode switch on the keyboard", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("moves focus to Extend on an arrow key and stays on Video, and leaves for Video edit on Space", async ({
+  test("moves focus to Extend on an arrow key and stays on Video, and leaves for Video edit's Extend tab on Space", async ({
     page,
   }) => {
     await page.goto("/apps/video")
@@ -27,7 +27,11 @@ test.describe("Video's mode switch on the keyboard", () => {
     await page.waitForTimeout(300)
     expect(new URL(page.url()).pathname).toBe("/apps/video")
     await page.keyboard.press("Space")
-    await expect(page).toHaveURL(/\/apps\/video-edit/)
+    await expect(page).toHaveURL(/\/apps\/video-edit\?mode=extend/)
+    await expect(page.getByRole("tab", { name: "Extend" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    )
   })
 })
 

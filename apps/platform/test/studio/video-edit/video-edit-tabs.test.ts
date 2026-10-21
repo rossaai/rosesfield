@@ -56,6 +56,10 @@ describe("Video edit's tabs", () => {
     ])
     expect(openingTabOf(fiveTabs)).toBe("edit")
     expect(openingTabOf(fourTabs)).toBe("extend")
+    expect(openingTabOf(fiveTabs, "extend")).toBe("extend")
+    expect(openingTabOf(fiveTabs, "reframe")).toBe("reframe")
+    expect(openingTabOf(fiveTabs, "sideways")).toBe("edit")
+    expect(openingTabOf(fourTabs, "edit")).toBe("extend")
   })
 })
 

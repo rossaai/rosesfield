@@ -1,4 +1,4 @@
-import { type Run, run } from "@rosesfield/contract"
+import { assetId, type Run, run } from "@rosesfield/contract"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -20,7 +20,13 @@ vi.mock("@/api/use-asset-source", () => ({
   }),
 }))
 
-function runOf(inputs: Run["inputs"], outputs: string[] = ["out-1"]): Run {
+const photo1 = assetId.parse("6f9a2c1e-1d2b-4c3d-8e4f-5a6b7c8d9e01")
+const photo2 = assetId.parse("6f9a2c1e-1d2b-4c3d-8e4f-5a6b7c8d9e02")
+const clip1 = assetId.parse("6f9a2c1e-1d2b-4c3d-8e4f-5a6b7c8d9e03")
+const out1 = assetId.parse("6f9a2c1e-1d2b-4c3d-8e4f-5a6b7c8d9e04")
+const photo3 = assetId.parse("6f9a2c1e-1d2b-4c3d-8e4f-5a6b7c8d9e05")
+
+function runOf(inputs: Run["inputs"], outputs: string[] = [out1]): Run {
   return run.parse({
     id: "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e10",
     appId: "upscale",
@@ -40,7 +46,10 @@ function runOf(inputs: Run["inputs"], outputs: string[] = ["out-1"]): Run {
   })
 }
 
-function playable(currentTime: number, ended = false): Playable & {
+function playable(
+  currentTime: number,
+  ended = false
+): Playable & {
   played: number
   paused: number
 } {
@@ -67,10 +76,10 @@ afterEach(() => {
 
 describe("the upscale compare's two sides", () => {
   it("finds your file in the graph's well of the run's tab", () => {
-    const made = runOf({ mode: "image", model: graph.id, image: ["photo-1"] })
+    const made = runOf({ mode: "image", model: graph.id, image: [photo1] })
     expect(compareSidesOf(made, catalog)).toEqual({
-      inputId: "photo-1",
-      outputId: "out-1",
+      inputId: photo1,
+      outputId: out1,
       kind: "image",
     })
   })
@@ -79,13 +88,13 @@ describe("the upscale compare's two sides", () => {
     const image = runOf({
       mode: "image",
       model: waveSpeed.id,
-      inputImage: ["photo-2"],
+      inputImage: [photo2],
     })
-    const video = runOf({ mode: "video", model: flashVsr.id, video: ["clip-1"] })
-    expect(compareSidesOf(image, catalog)?.inputId).toBe("photo-2")
+    const video = runOf({ mode: "video", model: flashVsr.id, video: [clip1] })
+    expect(compareSidesOf(image, catalog)?.inputId).toBe(photo2)
     expect(compareSidesOf(video, catalog)).toEqual({
-      inputId: "clip-1",
-      outputId: "out-1",
+      inputId: clip1,
+      outputId: out1,
       kind: "video",
     })
   })
@@ -93,7 +102,7 @@ describe("the upscale compare's two sides", () => {
   it("offers no compare for a run with no output or no file", () => {
     expect(
       compareSidesOf(
-        runOf({ mode: "image", model: graph.id, image: ["p"] }, []),
+        runOf({ mode: "image", model: graph.id, image: [photo3] }, []),
         catalog
       )
     ).toBeNull()
@@ -151,14 +160,14 @@ function renderCompare(made: Run): HTMLElement {
 describe("the upscale compare on the canvas", () => {
   it("lays your image and the result in the same box, the same size and place", () => {
     const container = renderCompare(
-      runOf({ mode: "image", model: graph.id, image: ["photo-1"] })
+      runOf({ mode: "image", model: graph.id, image: [photo1] })
     )
     fireEvent.click(screen.getByRole("button", { name: t("viewer.compare") }))
     const frame = container.querySelector("[data-slot=upscale-compare]")
     const layers = [...(frame?.querySelectorAll("img") ?? [])]
     expect(layers.map((one) => one.getAttribute("src"))).toEqual([
-      "blob:out-1",
-      "blob:photo-1",
+      `blob:${out1}`,
+      `blob:${photo1}`,
     ])
     expect(layers[0]?.className).toBe(layers[1]?.className)
     expect(layers[1]?.style.clipPath).toBe("inset(0 50% 0 0)")
@@ -167,24 +176,22 @@ describe("the upscale compare on the canvas", () => {
 
   it("plays both videos with one press on play", async () => {
     const played: string[] = []
-    vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(
-      function (this: HTMLMediaElement) {
-        played.push(this.getAttribute("src") ?? "")
-        return Promise.resolve()
-      }
-    )
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(function (
+      this: HTMLMediaElement
+    ) {
+      played.push(this.getAttribute("src") ?? "")
+      return Promise.resolve()
+    })
     vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(
       () => undefined
     )
-    renderCompare(
-      runOf({ mode: "video", model: flashVsr.id, video: ["clip-1"] })
-    )
+    renderCompare(runOf({ mode: "video", model: flashVsr.id, video: [clip1] }))
     fireEvent.click(screen.getByRole("button", { name: t("viewer.compare") }))
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: t("output.play") }))
       await Promise.resolve()
     })
-    expect(played.sort()).toEqual(["blob:clip-1", "blob:out-1"])
+    expect(played.sort()).toEqual([`blob:${clip1}`, `blob:${out1}`])
     expect(screen.getByRole("button", { name: t("output.pause") })).toBeTruthy()
   })
 })

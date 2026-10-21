@@ -1,9 +1,10 @@
+import { type CatalogModel, isHostedModelId } from "@rosesfield/catalog/comfy"
 import type { Asset, Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { useQuery } from "@tanstack/react-query"
 import type { ReactElement, ReactNode } from "react"
-import { runQuery } from "@/api/queries"
+import { runQuery, settingsQuery } from "@/api/queries"
 import { isAssetInput } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import {
@@ -15,6 +16,8 @@ import {
 import { t } from "@/copy/t"
 import { idsOf, runPrice, runSeconds } from "@/pieces/run/run-facts"
 import { inputRowsOf } from "@/pieces/run/run-inputs"
+import { modelInputName } from "@/screens/app/hosted/hosted-form"
+import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
 import {
   Detail,
   inputAssetIdsOf,
@@ -54,15 +57,50 @@ function sizeOf(asset: Asset, measured: MeasuredSize): string {
   return joinParts([formatBytes(asset.bytes), pixels ?? length])
 }
 
-export function compareInputOf(run: Run | null, asset: Asset): string | null {
+function hostedModelOf(run: Run | null): string | null {
+  const model = run?.inputs[modelInputName]
+  return typeof model === "string" && isHostedModelId(model) ? model : null
+}
+
+function modelFieldsOf(
+  run: Run,
+  models: readonly CatalogModel[],
+  kind: "image" | "video"
+): string[] {
+  const model = models.find((one) => one.id === hostedModelOf(run))
+  return (model?.form ?? []).flatMap((field) =>
+    field.kind === "media" && field.media === kind ? [field.name] : []
+  )
+}
+
+export function compareInputOf(
+  run: Run | null,
+  asset: Asset,
+  models: readonly CatalogModel[]
+): string | null {
   if (run === null || (asset.kind !== "image" && asset.kind !== "video")) {
     return null
   }
-  const app = findCatalogApp(run.appId)
-  const input = app?.inputs.find(
-    (one) => one.type === asset.kind && idsOf(run.inputs[one.name]).length > 0
+  const kind = asset.kind
+  const appInputs = (findCatalogApp(run.appId)?.inputs ?? []).flatMap((one) =>
+    one.type === kind ? [one.name] : []
   )
-  return input === undefined ? null : (idsOf(run.inputs[input.name])[0] ?? null)
+  const names = [...appInputs, ...modelFieldsOf(run, models, kind)]
+  const held = names.find((name) => idsOf(run.inputs[name]).length > 0)
+  return held === undefined ? null : (idsOf(run.inputs[held])[0] ?? null)
+}
+
+export function useRunModels(run: Run | null): readonly CatalogModel[] {
+  const isHosted = hostedModelOf(run) !== null
+  const settings = useQuery({ ...settingsQuery, enabled: isHosted })
+  const catalog = useQuery({
+    ...modelCatalogQuery(
+      run?.appId ?? "",
+      settings.data?.engine.key ?? "unknown"
+    ),
+    enabled: isHosted && settings.data !== undefined,
+  })
+  return catalog.data?.models ?? []
 }
 
 function CompareToggle({ compare }: { compare: ViewerCompare }): ReactNode {

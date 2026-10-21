@@ -29,6 +29,7 @@ export type AppSeeds = {
   use: string | undefined
   from: string | undefined
   share?: string | undefined
+  mode?: string | undefined
 }
 
 export const noSeeds: AppSeeds = { use: undefined, from: undefined }

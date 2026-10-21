@@ -131,9 +131,7 @@ describe("where the photo goes", () => {
   it("puts a second image in the next image input with room", () => {
     const slots = imageSlotsOf(toolApp(), null, {})
     expect(extraSlotOf(slots, { person: [photo] })).toBe("clothes")
-    expect(extraSlotOf(slots, { person: [photo], clothes: [other] })).toBe(
-      null
-    )
+    expect(extraSlotOf(slots, { person: [photo], clothes: [other] })).toBe(null)
   })
 
   it("places the held photo in an empty slot, adopts a photo the form brings, and leaves a matching slot alone", () => {
@@ -152,9 +150,9 @@ describe("where the photo goes", () => {
 describe("the output ratio", () => {
   it("follows the photo on a photo tool", () => {
     const tool: EditTool = { id: "angles", ratio: "photo" }
-    expect(
-      ratioFor(tool, toolApp(), {}, { width: 1080, height: 1920 })
-    ).toBe("9:16")
+    expect(ratioFor(tool, toolApp(), {}, { width: 1080, height: 1920 })).toBe(
+      "9:16"
+    )
     expect(ratioFor(tool, toolApp(), {}, null)).toBeNull()
   })
 

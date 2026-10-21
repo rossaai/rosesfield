@@ -15,7 +15,9 @@ test.describe("Video edit's column", () => {
     page,
   }) => {
     await page.goto("/apps/video-edit")
-    const tabs = page.getByRole("tab")
+    const tabs = page
+      .getByRole("tablist", { name: "Operation" })
+      .getByRole("tab")
     await expect(tabs).toHaveText(tabNames)
     const well = page.locator('[data-slot="clip-well"]')
     await expect(well).toContainText("MP4, MOV or WebM")

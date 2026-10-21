@@ -180,9 +180,7 @@ describe("the settings bar", () => {
       throw new Error("no Generate button")
     }
     fireEvent.click(generate)
-    expect(
-      await screen.findByText(t("field.asset.required"))
-    ).not.toBeNull()
+    expect(await screen.findByText(t("field.asset.required"))).not.toBeNull()
   })
 
   it("floats over the canvas on a wide screen", async () => {

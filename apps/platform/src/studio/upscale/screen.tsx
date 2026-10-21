@@ -29,9 +29,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
           order="newest-first"
           onUseInputs={state.useInputs}
           emptyAction={<AddInputsButton onClick={openInputs} />}
-          afterRun={(run) => (
-            <UpscaleCompare run={run} models={state.models} />
-          )}
+          afterRun={(run) => <UpscaleCompare run={run} models={state.models} />}
         />
       )}
     />

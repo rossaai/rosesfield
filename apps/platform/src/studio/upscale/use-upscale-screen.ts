@@ -37,8 +37,8 @@ import {
   nearestRatioOf,
   readingProblemOf,
   type ScaleCheck,
-  scaleCheckOf,
   type Size,
+  scaleCheckOf,
   sizeOf,
   type UpscaleMode,
 } from "@/studio/upscale/upscale-limits"

@@ -7,8 +7,8 @@ import {
 import { useEffect, useRef, useState } from "react"
 import { callRoute } from "@/api/call-route"
 import { assetQuery } from "@/api/queries"
-import { useDevice } from "@/device/device-context"
 import type { Device } from "@/device/device.port"
+import { useDevice } from "@/device/device-context"
 import { type Uploads, useUploads } from "@/pieces/use-uploads"
 import { listOf } from "@/screens/app/fields/field-props"
 import type { AppForm } from "@/screens/app/use-app-form"
@@ -103,9 +103,7 @@ function useSlotKeeper(
 }
 
 function extrasOf(form: AppForm, slots: readonly ImageSlot[]): string[] {
-  return slots
-    .slice(1)
-    .flatMap((slot) => listOf(form.values.inputs[slot.name]))
+  return slots.slice(1).flatMap((slot) => listOf(form.values.inputs[slot.name]))
 }
 
 type Held = {
@@ -135,7 +133,10 @@ function removeFrom(now: Held, assetId: string): void {
   for (const slot of now.slots) {
     const held = listOf(now.form.values.inputs[slot.name])
     if (held.includes(assetId)) {
-      now.form.setInput(slot.name, held.filter((id) => id !== assetId))
+      now.form.setInput(
+        slot.name,
+        held.filter((id) => id !== assetId)
+      )
     }
   }
 }

@@ -48,10 +48,16 @@ export function tabsOf(app: AppListing): VideoEditTab[] {
   })
 }
 
-export function openingTabOf(app: AppListing): VideoEditMode {
+export function openingTabOf(
+  app: AppListing,
+  asked?: string | undefined
+): VideoEditMode {
   const tabs = tabsOf(app)
   const declared = choiceInputOf(app, modeInput)?.default
-  const opening = tabs.find((tab) => tab.mode === declared) ?? tabs[0]
+  const opening =
+    tabs.find((tab) => tab.mode === asked) ??
+    tabs.find((tab) => tab.mode === declared) ??
+    tabs[0]
   return opening?.mode ?? "extend"
 }
 

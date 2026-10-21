@@ -63,10 +63,7 @@ export function extraSlotOf(
   return open?.name ?? null
 }
 
-export function slotMoveOf(
-  photo: string | null,
-  held: FieldValue
-): SlotMove {
+export function slotMoveOf(photo: string | null, held: FieldValue): SlotMove {
   const [first] = listOf(held)
   if (first !== undefined && first !== photo) {
     return { kind: "adopt", photo: first }

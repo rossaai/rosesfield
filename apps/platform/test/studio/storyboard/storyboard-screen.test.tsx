@@ -6,6 +6,7 @@ import { inputsForModel } from "@/studio/storyboard/storyboard-model"
 import { asPhone, resetFrames } from "../../screens/app/frame-render"
 import {
   addScenes,
+  emptyCanvas,
   fluxImage,
   openingValues,
   openStoryboard,
@@ -28,9 +29,7 @@ afterEach(() => {
 describe("Storyboard before any run", () => {
   it("shows the reference well, the character button, one numbered scene, the look field and the empty canvas", async () => {
     openStoryboard()
-    expect(
-      await screen.findByText(tCatalog("storyboard.empty.title"))
-    ).toBeDefined()
+    expect(await emptyCanvas()).toBeDefined()
     expect(screen.getByText(t("app.empty.body"))).toBeDefined()
     expect(
       screen.getAllByText(tCatalog("storyboard.input.reference.label")).length
@@ -51,7 +50,7 @@ describe("Storyboard before any run", () => {
 describe("the scene list", () => {
   it("adds scenes up to 8, then shows the limit in place of Add scene", async () => {
     openStoryboard()
-    await screen.findByText(tCatalog("storyboard.empty.title"))
+    await emptyCanvas()
     addScenes(7)
     expect(sceneFields()).toHaveLength(8)
     expect(
@@ -64,12 +63,12 @@ describe("the scene list", () => {
 
   it("moves scene 3 above scene 1 and removes scene 2, and the numbers follow", async () => {
     openStoryboard()
-    await screen.findByText(tCatalog("storyboard.empty.title"))
+    await emptyCanvas()
     addScenes(2)
     const typed = ["the door", "the stairs", "the roof"]
-    sceneFields().forEach((field, index) =>
+    for (const [index, field] of sceneFields().entries()) {
       fireEvent.change(field, { target: { value: typed[index] } })
-    )
+    }
     for (const number of [3, 2]) {
       fireEvent.click(
         screen.getByRole("button", {
@@ -130,9 +129,7 @@ describe("the model menu and the price", () => {
 
   it("shows Price unknown for a model with no price, and never a price of 0", async () => {
     openStoryboard({ prices: [[openingValues(), qwenEdit, 0]] })
-    expect(
-      await screen.findByText(t("run.price.unknown"))
-    ).toBeDefined()
+    expect(await screen.findByText(t("run.price.unknown"))).toBeDefined()
     expect(screen.queryByRole("button", { name: pricedName(0) })).toBeNull()
   })
 
@@ -145,10 +142,13 @@ describe("the model menu and the price", () => {
       ["a fox"]
     )
     openStoryboard({ prices: [[flux, fluxImage, 14.48]] })
-    const [first] = sceneFields()
-    if (first === undefined) {
-      throw new Error("no scene field")
-    }
+    const first = await vi.waitFor(() => {
+      const [field] = sceneFields()
+      if (field === undefined) {
+        throw new Error("no scene field")
+      }
+      return field
+    })
     fireEvent.change(first, { target: { value: "a fox" } })
     fireEvent.click(
       await screen.findByRole("button", { name: pickerTriggerName(qwenEdit) })
@@ -212,11 +212,11 @@ describe("Use these inputs", () => {
 describe("Back to Storyboard", () => {
   it("returns with your scenes in place", async () => {
     const opened = openStoryboard()
-    await screen.findByText(tCatalog("storyboard.empty.title"))
+    await emptyCanvas()
     addScenes(1)
-    sceneFields().forEach((field, index) =>
+    for (const [index, field] of sceneFields().entries()) {
       fireEvent.change(field, { target: { value: `scene ${index + 1}` } })
-    )
+    }
     await act(opened.leave)
     expect(await screen.findByText("elsewhere")).toBeDefined()
     act(opened.back)

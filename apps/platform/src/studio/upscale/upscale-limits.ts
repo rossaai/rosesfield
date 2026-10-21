@@ -61,10 +61,7 @@ export const modeLimits: Readonly<Record<UpscaleMode, ModeLimits>> = {
   },
 }
 
-export function fileLimitsOf(
-  mode: UpscaleMode,
-  isGraph: boolean
-): FileLimits {
+export function fileLimitsOf(mode: UpscaleMode, isGraph: boolean): FileLimits {
   const limits = modeLimits[mode]
   const isClip = mode === "video" && isGraph
   return {

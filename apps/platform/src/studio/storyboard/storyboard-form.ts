@@ -62,10 +62,7 @@ function sceneCountOf(inputs: FormValues["inputs"], fallback: number): number {
   return Number.isInteger(count) && count >= 1 ? boundedCount(count) : fallback
 }
 
-export function storyboardValuesFromRun(
-  app: AppListing,
-  run: Run
-): FormValues {
+export function storyboardValuesFromRun(app: AppListing, run: Run): FormValues {
   const base = valuesFromRun(app, run)
   const inputs: Record<string, FieldValue> = { ...base.inputs }
   const seed = app.inputs.find((input) => input.type === "seed")
