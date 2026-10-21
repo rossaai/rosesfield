@@ -11,6 +11,7 @@ type Schema = {
   takes: string[]
   makes: string[]
   properties: Record<string, unknown>
+  required?: string[]
 }
 
 export function schemaOf(schema: Schema): Record<string, unknown> {
@@ -29,7 +30,7 @@ export function schemaOf(schema: Schema): Record<string, unknown> {
                 schema: {
                   type: "object",
                   properties: schema.properties,
-                  required: ["prompt"],
+                  required: schema.required ?? ["prompt"],
                 },
               },
             },

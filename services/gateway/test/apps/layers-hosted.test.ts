@@ -18,46 +18,15 @@ import { FixedClock, runIdFormat } from "@rosesfield/kernel"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
 import { app } from "../../../../packages/catalog/src/layers/app"
-import { fakeRouter, type RouterCall } from "../catalog/router-recordings"
+import {
+  fakeRouter,
+  type RouterCall,
+  schemaOf,
+} from "../catalog/router-recordings"
 import { localEnv } from "../server-env"
 
 const host = { host: "127.0.0.1:8787" }
 const photo = Uint8Array.of(137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13)
-
-type Recorded = {
-  model: string
-  takes: string[]
-  properties: Record<string, unknown>
-  required: string[]
-}
-
-function schemaOf(recorded: Recorded): Record<string, unknown> {
-  return {
-    openapi: "3.0.2",
-    "x-comfy-router-model-id": recorded.model,
-    "x-comfy-input-schema-authored": true,
-    "x-comfy-router-input-modalities": recorded.takes,
-    "x-comfy-router-output-modalities": ["image"],
-    paths: {
-      [`/v2/models/${recorded.model}`]: {
-        post: {
-          requestBody: {
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: recorded.properties,
-                  required: recorded.required,
-                },
-              },
-            },
-          },
-          responses: { "200": { content: { "application/json": {} } } },
-        },
-      },
-    },
-  }
-}
 
 const text = { type: "string" }
 
@@ -71,6 +40,7 @@ const recordedCatalog = [
   schemaOf({
     model: "bfl/flux-3-image",
     takes: ["text", "image"],
+    makes: ["image"],
     properties: {
       prompt: text,
       images: {
@@ -85,6 +55,7 @@ const recordedCatalog = [
   schemaOf({
     model: "bfl/flux-pro-1.0-fill",
     takes: ["image", "text"],
+    makes: ["image"],
     properties: {
       image: media("A Base64-encoded string representing the image."),
       mask: {
@@ -102,6 +73,7 @@ const recordedCatalog = [
   schemaOf({
     model: "bria/image-edit-relight",
     takes: ["image", "text"],
+    makes: ["image"],
     properties: {
       image: media("A Base64-encoded string or URL of the image to edit."),
       light_type: text,
@@ -112,11 +84,15 @@ const recordedCatalog = [
   schemaOf({
     model: seedreamPro,
     takes: ["text", "image"],
+    makes: ["image"],
     properties: {
       image: {
         description:
           "The image or images to edit, as an accessible URL or a data-URI-prefixed Base64 payload.",
-        oneOf: [text, { items: text, maxItems: 10, minItems: 1, type: "array" }],
+        oneOf: [
+          text,
+          { items: text, maxItems: 10, minItems: 1, type: "array" },
+        ],
       },
       layer_decomposition: {
         default: false,
@@ -228,6 +204,25 @@ describe("a hosted model picked in each Layers mode, on the demo engine", () => 
       "bfl/flux-3-image": "image-edit",
       "bria/image-edit-relight": "relight",
       "bfl/flux-pro-1.0-fill": "inpaint",
+    })
+  })
+
+  it("marks the fields each recorded schema requires, and no other, as required", async () => {
+    const required = Object.fromEntries(
+      (await modelsOf())
+        .filter((model) => model.kind === "hosted")
+        .map((model) => [
+          model.id,
+          (model.form ?? [])
+            .filter((field) => field.required)
+            .map((field) => field.path),
+        ])
+    )
+    expect(required).toEqual({
+      [seedreamPro]: [],
+      "bfl/flux-3-image": ["prompt"],
+      "bria/image-edit-relight": ["image", "light_type"],
+      "bfl/flux-pro-1.0-fill": ["image"],
     })
   })
 
