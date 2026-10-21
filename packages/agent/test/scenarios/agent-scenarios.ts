@@ -2,8 +2,8 @@ import type { Run as RunRecord } from "@rosesfield/contract"
 import { Run } from "@rosesfield/generation"
 import { assetIdFormat } from "@rosesfield/kernel"
 import type { AnswerEvent, Proposal, RunApproval } from "#agent.contract"
-import { openPiModels } from "#infrastructure/pi-models"
 import type { RunWait } from "#infrastructure/pi-library-tools"
+import { openPiModels } from "#infrastructure/pi-models"
 import type { Fetch } from "#infrastructure/router-chat-fetch"
 import {
   routerChat,
@@ -53,10 +53,11 @@ export type ScenarioRun = {
   fetch: Fetch
 }
 
+const lastOutput = "5c6d7e8f-9a0b-4c2d-9e3f-4a5b6c7d8e9f"
 const outputs: readonly string[] = [
   "3a4b5c6d-7e8f-4a0b-9c1d-2e3f4a5b6c7d",
   "4b5c6d7e-8f9a-4b1c-8d2e-3f4a5b6c7d8e",
-  "5c6d7e8f-9a0b-4c2d-9e3f-4a5b6c7d8e9f",
+  lastOutput,
 ]
 
 function messagesOf(events: readonly AnswerEvent[]): string[] {
@@ -173,7 +174,7 @@ function finishRuns(generation: Generation): RunWait {
           return null
         }
         const state = stored.toState()
-        const output = assetIdFormat.parse(outputs[index] ?? outputs.at(-1))
+        const output = assetIdFormat.parse(outputs[index] ?? lastOutput)
         return generation.runs.save(
           Run.restore({
             ...state,
@@ -243,16 +244,37 @@ function hasPassed(model: ModelResults): boolean {
   )
 }
 
-function totalCredits(model: ModelResults): number {
-  return model.results.reduce((sum, result) => sum + (result.credits ?? 0), 0)
+function totalCredits(model: ModelResults): number | null {
+  let total = 0
+  for (const result of model.results) {
+    if (result.credits === null) {
+      return null
+    }
+    total += result.credits
+  }
+  return total
+}
+
+type PricedPass = {
+  model: string
+  credits: number
+}
+
+function pricedPassOf(model: ModelResults): PricedPass[] {
+  const credits = totalCredits(model)
+  return model.source.kind === "captured" &&
+    hasPassed(model) &&
+    credits !== null
+    ? [{ model: model.model, credits }]
+    : []
 }
 
 export function cheapestPass(models: readonly ModelResults[]): string | null {
   const passed = models
-    .filter((model) => model.source.kind === "captured" && hasPassed(model))
+    .flatMap(pricedPassOf)
     .sort(
       (left, right) =>
-        totalCredits(left) - totalCredits(right) ||
+        left.credits - right.credits ||
         routerChatModels.indexOf(left.model) -
           routerChatModels.indexOf(right.model)
     )

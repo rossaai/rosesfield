@@ -1,3 +1,4 @@
+import { type Run, type RunStatus, run } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import {
   defaultChatModel,
@@ -9,6 +10,7 @@ import {
   replayAnswers,
   routerExchange,
 } from "../fixtures/scenario-answers"
+import { imageApp, motionApp, start } from "../sample"
 import {
   agentScenarios,
   cheapestPass,
@@ -26,7 +28,7 @@ async function replayAll(answers: ModelAnswers): Promise<ModelResults> {
   for (const scenario of agentScenarios) {
     const written = answers.scenarios[scenario.id]
     if (written === undefined) {
-      continue
+      throw new Error(`The answers for ${answers.model} hold no ${scenario.id}`)
     }
     const replay = replayAnswers(answers.model, written.exchanges)
     results.push(
@@ -51,7 +53,46 @@ function defaultAnswers(): ModelAnswers {
   return found
 }
 
-function passing(credits: number): ScenarioResult[] {
+const capturedFiles = answerFiles.filter(
+  (answers) => answers.source.kind === "captured"
+)
+const captured = {
+  kind: "captured",
+  capturedAt: "2026-10-21T10:00:00.000Z",
+} as const
+const imageOutput = "3a4b5c6d-7e8f-4a0b-9c1d-2e3f4a5b6c7d"
+
+function chainRun(options: {
+  id: string
+  appId: string
+  status: RunStatus
+  inputs: Record<string, unknown>
+  outputs: string[]
+}): Run {
+  return run.parse({
+    ...options,
+    count: 1,
+    aspectRatio: null,
+    seed: null,
+    progress: null,
+    engine: { adapter: "comfy-workflow", models: [], workflowHash: null },
+    cost: null,
+    origin: "live",
+    failure: null,
+    createdAt: start.toISOString(),
+    finishedAt: start.toISOString(),
+  })
+}
+
+function failingOn(credits: number, failed: string): ScenarioResult[] {
+  return agentScenarios.map((scenario) => ({
+    scenario: scenario.id,
+    problems: scenario.id === failed ? ["a run did not end done"] : [],
+    credits,
+  }))
+}
+
+function passing(credits: number | null): ScenarioResult[] {
   return agentScenarios.map((scenario) => ({
     scenario: scenario.id,
     problems: [],
@@ -64,6 +105,16 @@ describe("the agent's scenarios on Router answers", () => {
     expect(answerFiles.length).toBeGreaterThan(0)
     for (const answers of answerFiles) {
       expect(routerChatModels).toContain(answers.model)
+    }
+  })
+
+  it("holds every agent scenario in each answer file", () => {
+    const ids = agentScenarios.map((scenario) => scenario.id).sort()
+    for (const answers of answerFiles) {
+      expect({
+        model: answers.model,
+        scenarios: Object.keys(answers.scenarios).sort(),
+      }).toEqual({ model: answers.model, scenarios: ids })
     }
   })
 
@@ -93,10 +144,6 @@ describe("the agent's scenarios on Router answers", () => {
   it("picks the cheapest model whose captured answers pass every scenario", () => {
     const cheap = "qwen/qwen3.6-flash"
     const dear = "z-ai/glm-4.6"
-    const captured = {
-      kind: "captured",
-      capturedAt: "2026-10-21T10:00:00.000Z",
-    } as const
     const models: ModelResults[] = [
       {
         model: defaultChatModel,
@@ -108,6 +155,69 @@ describe("the agent's scenarios on Router answers", () => {
     ]
 
     expect(cheapestPass(models)).toBe(cheap)
+  })
+
+  it("skips a cheaper model that fails a scenario and a model whose credits are unknown", () => {
+    const models: ModelResults[] = [
+      {
+        model: "qwen/qwen3.6-flash",
+        source: captured,
+        results: failingOn(1, "chain"),
+      },
+      {
+        model: "anthropic/claude-sonnet-5",
+        source: captured,
+        results: passing(9),
+      },
+      {
+        model: "deepseek/deepseek-v3.2",
+        source: captured,
+        results: passing(null),
+      },
+      {
+        model: "google/gemini-3.5-flash",
+        source: captured,
+        results: passing(5),
+      },
+    ]
+
+    expect(cheapestPass(models)).toBe("google/gemini-3.5-flash")
+  })
+
+  if (capturedFiles.length > 0) {
+    it("defaults to the cheapest model whose captured answers pass every scenario", async () => {
+      const models = await Promise.all(capturedFiles.map(replayAll))
+
+      expect(defaultChatModel).toBe(cheapestPass(models))
+    })
+  } else {
+    it("rests the default on the hand-written answer file, not yet measured on the Router", () => {
+      expect(defaultAnswers().source).toEqual({ kind: "hand-written" })
+    })
+  }
+
+  it("fails a chain whose image run failed while its video run ended done", () => {
+    const image = chainRun({
+      id: "6d7e8f9a-0b1c-4d3e-8f4a-5b6c7d8e9f0a",
+      appId: imageApp().id,
+      status: "failed",
+      inputs: { prompt: "A red rose" },
+      outputs: [imageOutput],
+    })
+    const video = chainRun({
+      id: "7e8f9a0b-1c2d-4e4f-9a5b-6c7d8e9f0a1b",
+      appId: motionApp().id,
+      status: "done",
+      inputs: { image: [imageOutput], prompt: "The rose opens" },
+      outputs: ["5c6d7e8f-9a0b-4c2d-9e3f-4a5b6c7d8e9f"],
+    })
+
+    const problems = scenarioOf("chain").problemsOf({
+      events: [{ type: "done", credits: 1 }],
+      runs: [image, video],
+    })
+
+    expect(problems).toEqual(["a run did not end done"])
   })
 
   it("fails a chain whose video is made from the run id, not from the image", async () => {
