@@ -1,3 +1,4 @@
+import { keyframeOf } from "@rosesfield/catalog/storyboard"
 import type { Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { interaction } from "@rosesfield/ui/components/interaction"
@@ -43,6 +44,16 @@ export function promptOf(run: Run): string | null {
   return input === null
     ? null
     : inputValueText(app, input, run.inputs[input.name])
+}
+
+export function outputPromptOf(
+  run: Run,
+  assetId: string | null
+): string | null {
+  const keyframe = assetId === null ? null : keyframeOf(run, assetId)
+  return keyframe === null || keyframe.prompt === ""
+    ? promptOf(run)
+    : keyframe.prompt
 }
 
 export function modelAndModeOf(run: Run): string | null {
@@ -203,6 +214,7 @@ export function ResultPanel({
   onDownload,
 }: ResultPanelProps): ReactElement {
   const model = modelAndModeOf(entry.run)
+  const assetId = entry.source.kind === "own" ? entry.source.assetId : null
   return (
     <div
       data-slot="viewer-panel"
@@ -210,7 +222,7 @@ export function ResultPanel({
     >
       <PanelHead run={entry.run} line={formatDate(entry.run.createdAt)} />
       <RunSection inputIds={inputAssetIdsOf(entry.run)}>
-        <PromptDetail prompt={promptOf(entry.run)} />
+        <PromptDetail prompt={outputPromptOf(entry.run, assetId)} />
         {model === null ? null : (
           <Detail label={t("viewer.label.model")}>{model}</Detail>
         )}
