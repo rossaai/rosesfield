@@ -169,6 +169,22 @@ describe("the settings bar", () => {
     expect(frame?.lastElementChild).toBe(dock)
   })
 
+  it("says what is missing when you press Generate without a photo", async () => {
+    openEdit(undefined)
+    await screen.findByRole("tab", { name: nameOf("relight") })
+    const dock = document.querySelector("[data-slot='prompt-dock']")
+    const generate = [...(dock?.querySelectorAll("button") ?? [])].find(
+      (button) => button.textContent?.includes(t("run.generate")) === true
+    )
+    if (generate === undefined) {
+      throw new Error("no Generate button")
+    }
+    fireEvent.click(generate)
+    expect(
+      await screen.findByText(t("field.asset.required"))
+    ).not.toBeNull()
+  })
+
   it("floats over the canvas on a wide screen", async () => {
     openEdit(undefined)
     await screen.findByRole("tab", { name: nameOf("relight") })

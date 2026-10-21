@@ -71,6 +71,14 @@ function placeholderOf(state: EditToolState): string {
   return prompt === null ? "" : (inputPlaceholder(state.app, prompt) ?? "")
 }
 
+function messageOf(state: EditToolState): string | null {
+  const [problem] = state.form.problems.values()
+  if (state.photo.message !== null || problem === undefined) {
+    return state.photo.message
+  }
+  return t(problem.key, problem.values)
+}
+
 function PhotoMessage({
   text,
 }: {
@@ -96,7 +104,7 @@ export function EditBar({ state }: { state: EditToolState }): ReactElement {
   return (
     <>
       <StartProblem start={state.start} />
-      <PhotoMessage text={photo.message} />
+      <PhotoMessage text={messageOf(state)} />
       <PromptBar
         value={prompt === null ? "" : textOf(form.values.inputs[prompt])}
         onValueChange={(value) => {
