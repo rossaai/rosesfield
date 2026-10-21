@@ -125,6 +125,24 @@ function setEndFrame(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, "463").inputs.strength = end.strength
 }
 
+const endGuideNodes: readonly string[] = ["460", "463"]
+
+const fittedPhoto: Link = ["616", 0]
+
+const editedFrame: Link = ["627", 0]
+
+const openingResizeNode = "351"
+
+function setPhotoFrame(graph: Graph, recipe: EffectRecipe): void {
+  if (recipe.photoFrame === "first") {
+    return
+  }
+  nodeOf(graph, openingResizeNode).inputs.input = [...editedFrame]
+  for (const id of endGuideNodes) {
+    nodeOf(graph, id).inputs.image = [...fittedPhoto]
+  }
+}
+
 function setHold(graph: Graph, recipe: EffectRecipe): void {
   if (recipe.hold === null) {
     passThrough(graph, "461")
@@ -153,6 +171,7 @@ export function effectGraph(
   setLength(graph, recipe)
   addAdapter(graph, recipe)
   setEndFrame(graph, recipe)
+  setPhotoFrame(graph, recipe)
   setHold(graph, recipe)
   if (recipe.endFrame.source === "none" && recipe.hold === null) {
     passThrough(graph, "462")

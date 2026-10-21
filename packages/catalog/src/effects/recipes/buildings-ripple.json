@@ -21,6 +21,7 @@
     }
   },
   "prompt": "One shot with a slow camera. The person stays whole and in place in front. Behind them the building, tower or bridge starts to bend, then folds and curls like a wave, more and more until the last frame. The light and colour stay as they are.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
     "prompt": "The same person in front, unchanged, and the building behind them curled over in a large wave, in the same light and colour.",

@@ -39,6 +39,7 @@
     }
   },
   "prompt": "Three shots. Shot one, about four seconds: the person stands as a giant in a city avenue, taller than the lower floors, as the camera moves past cars and people at their feet. Cut. Shot two, about three seconds: seen from inside a dark office through a window, the giant passes between glass towers. Cut. Shot three: in bright daylight the giant stands beside a tall glass tower.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
     "prompt": "The same person as a giant standing beside a tall glass tower in bright daylight, the city below them.",

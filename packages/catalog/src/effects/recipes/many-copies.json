@@ -21,6 +21,7 @@
     }
   },
   "prompt": "One shot with a slow camera. Copies of the person appear one after another around them on the same ground, until four to eight copies stand in the scene by the middle of the clip. Every copy wears the same outfit, each in a different pose. In the last second the whole frame fades to dark.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
     "prompt": "The same scene in near darkness, with the person and several copies of them in the same outfit standing on the ground in different poses.",

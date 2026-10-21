@@ -99,6 +99,48 @@ describe("the effect recipes kept as data", () => {
     })
   })
 
+  it("opens Earth Zoom in orbit and lands on the photo, as its unit page reads, and opens every other look on the photo", () => {
+    expect(
+      Object.fromEntries(
+        effectRecipes.map((recipe) => [recipe.effect, recipe.photoFrame])
+      )
+    ).toEqual(
+      Object.fromEntries(
+        looks.map((effect) => [
+          effect,
+          effect === "pull-back-to-space" ? "last" : "first",
+        ])
+      )
+    )
+    const earthZoom = recipeOf("pull-back-to-space")
+    expect(earthZoom.prompt).toMatch(/The camera starts in orbit/)
+    expect(earthZoom.prompt).toMatch(/lands at ground level on them/)
+    expect(earthZoom.design.lastFrame.shows).toMatch(
+      /^The person at street level/
+    )
+  })
+
+  it("refuses a look that lands on the photo with no edited frame to open on, or with a held subject", () => {
+    const landing = recipeOf("pull-back-to-space")
+    expect(() =>
+      readRecipes(
+        {
+          "pull-back-to-space": {
+            ...landing,
+            endFrame: { source: "none" },
+          },
+        },
+        ledger
+      )
+    ).toThrow(/pull-back-to-space\.json is invalid: endFrame/)
+    expect(() =>
+      readRecipes({ "pull-back-to-space": { ...landing, hold: 0.5 } }, ledger)
+    ).toThrow(/pull-back-to-space\.json is invalid: hold/)
+    expect(() =>
+      readRecipes({ "many-copies": variant({ photoFrame: "middle" }) }, ledger)
+    ).toThrow(/many-copies\.json is invalid: photoFrame/)
+  })
+
   it("reads a passed recipe that carries its run and the proof of that run", () => {
     const [read] = readRecipes(
       { "many-copies": passedRecipe("many-copies") },

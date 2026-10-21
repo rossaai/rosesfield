@@ -47,6 +47,7 @@ export function readingFor(
     height: size.height,
     cuts: cuts.map((window) => (window.min + window.max) / 2),
     loudness: loudnessFor(recipe.design.sound),
+    firstFrameLuma: 96,
     lastFrameLuma: maxLuma === null ? 60 : maxLuma - 1,
   }
 }
