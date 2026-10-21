@@ -1,14 +1,14 @@
 import type { AppListing } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
-import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { Link, useParams, useSearch } from "@tanstack/react-router"
-import { type ReactElement, Suspense } from "react"
+import type { ReactElement } from "react"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import { ScreenState } from "@/pieces/screen-state"
 import { AskedTab } from "@/screens/app/app-stage"
 import { ColumnAppScreen } from "@/screens/app/column-app-screen"
 import { studioScreenFor } from "@/screens/app/studio-screens"
+import { StudioSuspense } from "@/screens/app/studio-suspense"
 import type { AppSeeds } from "@/screens/app/use-app-screen"
 import { ScreenHeader } from "@/shell/screen-header"
 
@@ -45,9 +45,9 @@ function AppScreenFor({
     return <ColumnAppScreen app={app} seeds={seeds} />
   }
   return (
-    <Suspense fallback={<Skeleton className="m-s4 h-s12" />}>
+    <StudioSuspense>
       <Studio app={app} seeds={seeds} />
-    </Suspense>
+    </StudioSuspense>
   )
 }
 
