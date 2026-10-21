@@ -45,10 +45,8 @@ import wLayersFillQwenImageApi from "../../../workflows/layers-fill-qwen-image/l
 import wLayersFillQwenImageEntry from "../../../workflows/layers-fill-qwen-image/entry.json"
 import wLayersSplitQwenImageLayeredApi from "../../../workflows/layers-split-qwen-image-layered/layers-split-qwen-image-layered.api.json"
 import wLayersSplitQwenImageLayeredEntry from "../../../workflows/layers-split-qwen-image-layered/entry.json"
-import wLipsyncClipInfinitetalkApi from "../../../workflows/lipsync-clip-infinitetalk/lipsync-clip-infinitetalk.api.json"
-import wLipsyncClipInfinitetalkEntry from "../../../workflows/lipsync-clip-infinitetalk/entry.json"
-import wLipsyncPhotoInfinitetalkApi from "../../../workflows/lipsync-photo-infinitetalk/lipsync-photo-infinitetalk.api.json"
-import wLipsyncPhotoInfinitetalkEntry from "../../../workflows/lipsync-photo-infinitetalk/entry.json"
+import wLipsyncPhotoLtx23Api from "../../../workflows/lipsync-photo-ltx-2-3/lipsync-photo-ltx-2-3.api.json"
+import wLipsyncPhotoLtx23Entry from "../../../workflows/lipsync-photo-ltx-2-3/entry.json"
 import wMotionLtx23IcLoraApi from "../../../workflows/motion-ltx-2-3-ic-lora/motion-ltx-2-3-ic-lora.api.json"
 import wMotionLtx23IcLoraEntry from "../../../workflows/motion-ltx-2-3-ic-lora/entry.json"
 import wRelightQwenImageEdit2509Api from "../../../workflows/relight-qwen-image-edit-2509/relight-qwen-image-edit-2509.api.json"
@@ -98,8 +96,7 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "layers-edit-qwen-image-edit-2511", entry: wLayersEditQwenImageEdit2511Entry, graph: wLayersEditQwenImageEdit2511Api },
   { folder: "layers-fill-qwen-image", entry: wLayersFillQwenImageEntry, graph: wLayersFillQwenImageApi },
   { folder: "layers-split-qwen-image-layered", entry: wLayersSplitQwenImageLayeredEntry, graph: wLayersSplitQwenImageLayeredApi },
-  { folder: "lipsync-clip-infinitetalk", entry: wLipsyncClipInfinitetalkEntry, graph: wLipsyncClipInfinitetalkApi },
-  { folder: "lipsync-photo-infinitetalk", entry: wLipsyncPhotoInfinitetalkEntry, graph: wLipsyncPhotoInfinitetalkApi },
+  { folder: "lipsync-photo-ltx-2-3", entry: wLipsyncPhotoLtx23Entry, graph: wLipsyncPhotoLtx23Api },
   { folder: "motion-ltx-2-3-ic-lora", entry: wMotionLtx23IcLoraEntry, graph: wMotionLtx23IcLoraApi },
   { folder: "relight-qwen-image-edit-2509", entry: wRelightQwenImageEdit2509Entry, graph: wRelightQwenImageEdit2509Api },
   { folder: "storyboard-qwen-image-edit-2511", entry: wStoryboardQwenImageEdit2511Entry, graph: wStoryboardQwenImageEdit2511Api },

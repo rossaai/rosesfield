@@ -1,229 +1,307 @@
+import type { ModelField } from "@rosesfield/catalog/comfy"
 import type { AppListing, Run } from "@rosesfield/contract"
-import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react"
+import {
+  type KeyboardEvent,
+  type RefObject,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { useAppRuns } from "@/screens/app/app-canvas"
-import { type FieldProblem, valuesFromRun } from "@/screens/app/app-form"
-import { listOf } from "@/screens/app/fields/field-props"
-import type { StudioScreenProps } from "@/screens/app/studio-screens"
-import { type AppForm, useAppForm } from "@/screens/app/use-app-form"
+import { heldProblemsOf, valuesFromRun } from "@/screens/app/app-form"
+import { textOf } from "@/screens/app/fields/field-props"
+import { modelInputName } from "@/screens/app/hosted/hosted-form"
+import {
+  type HostedState,
+  useHostedModel,
+} from "@/screens/app/hosted/use-hosted-model"
+import { usePriceRefresh } from "@/screens/app/hosted/use-price-refresh"
+import {
+  type AppForm,
+  type FormCheck,
+  useAppForm,
+} from "@/screens/app/use-app-form"
+import type { AppSeeds } from "@/screens/app/use-app-screen"
 import { type StartRun, useStartRun } from "@/screens/app/use-start-run"
+import type { MediaFacts } from "@/studio/lipsync/lipsync-checks"
 import {
-  audioLimits,
-  clipLimits,
-  lengthOf,
-  type MediaFacts,
-  nearestRatio,
-  photoLimits,
-  problemOf,
-} from "@/studio/lipsync/lipsync-checks"
+  fieldsOfModel,
+  guardedStart,
+  type Inputs,
+  pricedStart,
+  type RunParts,
+  runPartsOf,
+  withAppModel,
+} from "@/studio/lipsync/lipsync-run"
 import {
-  audioInput,
-  bodyAppFor,
-  clipInput,
-  formAppFor,
-  type LipsyncMode,
-  lengthInput,
-  modeInput,
-  modeOf,
-  photoInput,
-} from "@/studio/lipsync/lipsync-modes"
+  defaultsOfTab,
+  faceOf,
+  featuredOf,
+  lengthStepOf,
+  type LipFields,
+  type LipsyncTab,
+  modelsOfTab,
+  tabOfInputs,
+} from "@/studio/lipsync/lipsync-tabs"
 import {
-  type MediaKind,
-  type MediaReading,
-  useMediaFacts,
-} from "@/studio/lipsync/use-media-facts"
+  lipsyncProblems,
+  modesOf,
+  planOf,
+  type WordsMode,
+  wordsOfInputs,
+  type WordsPlan,
+} from "@/studio/lipsync/lipsync-words"
+import {
+  type LipsyncTabs,
+  useLipsyncTabs,
+  useTabFit,
+} from "@/studio/lipsync/use-lipsync-tabs"
+import {
+  useLipCredits,
+  useSpeechCredits,
+  useVoices,
+  type Voices,
+} from "@/studio/lipsync/use-lipsync-voices"
+import {
+  type LipsyncWells,
+  useLipsyncWells,
+} from "@/studio/lipsync/use-lipsync-wells"
 
-export const autoAspect = "auto"
-
-type Problems = Readonly<Record<string, FieldProblem | undefined>>
-
-export type LipsyncState = {
+export type LipsyncScreen = {
   app: AppListing
-  formApp: AppListing
-  mode: LipsyncMode
+  bodyApp: AppListing
   form: AppForm
   start: StartRun
-  aspect: string
-  setAspect: (aspect: string) => void
-  problems: Problems
+  tab: LipsyncTab
+  setTab: (tab: LipsyncTab) => void
+  plan: WordsPlan
+  modes: readonly WordsMode[]
+  setWords: (mode: WordsMode) => void
+  fields: LipFields | null
+  face: ModelField | null
+  isGraph: boolean
+  hosted: HostedState
+  voices: HostedState
+  wellProblems: LipsyncWells["problems"]
+  audio: MediaFacts | null
   lastSeed: number | null
-  hasRuns: boolean | null
   useInputs: (run: Run) => void
   registerWell: (name: string, focus: () => void) => void
   onShortcut: (event: KeyboardEvent<HTMLElement>) => void
 }
 
-const limitsOf = {
-  [photoInput]: photoLimits,
-  [clipInput]: clipLimits,
-  [audioInput]: audioLimits,
+type LipsyncRun = {
+  parts: RunParts
+  face: ModelField | null
+  start: StartRun
+  wells: LipsyncWells
+  voices: HostedState
+  registerWell: (name: string, focus: () => void) => void
 }
 
-function useWell(
-  form: AppForm,
-  name: keyof typeof limitsOf,
-  kind: MediaKind,
-  setProblems: (change: (current: Problems) => Problems) => void
-): MediaFacts | null {
-  const [first = null] = listOf(form.values.inputs[name])
-  const reading: MediaReading = useMediaFacts(first, kind)
-  const facts = reading.state === "read" ? reading.facts : null
-  const failed = reading.state === "failed"
-  const { setInput } = form
-  useEffect(() => {
-    if (facts === null && !failed) {
-      return
-    }
-    const problem: FieldProblem | null =
-      facts === null
-        ? { name, key: "field.asset.required", values: {} }
-        : problemOf(facts, limitsOf[name])
-    setProblems((current) => ({ ...current, [name]: problem ?? undefined }))
-    if (problem !== null) {
-      setInput(name, [])
-    }
-  }, [facts, failed, name, setInput, setProblems])
-  return facts
-}
-
-function useShape(
-  form: AppForm,
-  mode: LipsyncMode,
-  aspect: string,
-  source: MediaFacts | null
-): void {
-  const setForm = useRef(form.setForm)
-  setForm.current = form.setForm
-  const width = source?.width ?? null
-  const height = source?.height ?? null
-  const current = form.values.aspectRatio
-  useEffect(() => {
-    const chosen =
-      mode === "photo" && aspect !== autoAspect
-        ? aspect
-        : width === null || height === null
-          ? null
-          : nearestRatio(width, height)
-    if (chosen !== null && chosen !== current) {
-      setForm.current({ aspectRatio: chosen })
-    }
-  }, [mode, aspect, width, height, current])
-}
-
-function useLength(form: AppForm, audio: MediaFacts | null): void {
-  const seconds = audio?.seconds ?? null
-  const { setInput } = form
-  const current = form.values.inputs[lengthInput]
-  useEffect(() => {
-    if (seconds === null) {
-      return
-    }
-    const length = lengthOf(seconds)
-    if (length !== current) {
-      setInput(lengthInput, length)
-    }
-  }, [seconds, current, setInput])
-}
-
-function useSeededMode(form: AppForm): void {
-  const decided = useRef(false)
-  const photo = listOf(form.values.inputs[photoInput]).length
-  const clip = listOf(form.values.inputs[clipInput]).length
-  const { setInput } = form
-  useEffect(() => {
-    if (decided.current || photo + clip === 0) {
-      return
-    }
-    decided.current = true
-    if (photo === 0) {
-      setInput(modeInput, "clip")
-    }
-  }, [photo, clip, setInput])
-}
-
-function useLipsyncForm(app: AppListing, seeds: StudioScreenProps["seeds"]) {
-  const [mode, setMode] = useState<LipsyncMode>("photo")
-  const [aspect, setAspect] = useState(autoAspect)
-  const [problems, setProblems] = useState<Problems>({})
-  const formApp = useMemo(() => formAppFor(app, mode), [app, mode])
-  const bodyApp = useMemo(() => bodyAppFor(app, mode), [app, mode])
-  const form = useAppForm(formApp, seeds)
-  const formMode = modeOf(form.values)
-  useEffect(() => {
-    setMode(formMode)
-  }, [formMode])
-  useSeededMode(form)
-  const photo = useWell(form, photoInput, "image", setProblems)
-  const clip = useWell(form, clipInput, "video", setProblems)
-  const audio = useWell(form, audioInput, "audio", setProblems)
-  useShape(form, mode, aspect, mode === "photo" ? photo : clip)
-  useLength(form, audio)
-  return { mode, aspect, setAspect, problems, formApp, bodyApp, form, audio }
-}
-
-function guardedStart(options: {
-  started: StartRun
+type RunOptions = {
+  app: AppListing
   form: AppForm
-  wells: readonly string[]
-  isWaiting: (name: string) => boolean
-  focus: (name: string) => void
-}): StartRun {
+  all: HostedState
+  check: RefObject<FormCheck | null>
+  tab: LipsyncTab
+  plan: WordsPlan
+  fields: LipFields | null
+  onStarted: () => void
+}
+
+function checkOf(
+  options: RunOptions,
+  parts: RunParts,
+  face: ModelField | null
+): FormCheck {
+  const { app, plan } = options
+  const fields = parts.runFields
+  return fields === null
+    ? (values) => heldProblemsOf(app, values)
+    : (values) =>
+        lipsyncProblems({ fields, face: face?.name ?? null, plan, values })
+}
+
+function usePricedRun(
+  options: RunOptions,
+  parts: RunParts,
+  voices: Voices
+): StartRun {
+  const { app, form, all, plan } = options
+  const started = useStartRun(
+    parts.bodyApp,
+    form,
+    options.onStarted,
+    parts.runHosted
+  )
+  const lip = useLipCredits({
+    appId: app.id,
+    ask: plan.isChain ? parts.ask : null,
+    keyState: all.keyState,
+  })
+  const speech = useSpeechCredits({
+    voices,
+    text: plan.field === null ? "" : textOf(form.values.inputs[plan.field]),
+    isChain: plan.isChain,
+  })
+  return pricedStart(started, lip, speech, plan.isChain)
+}
+
+function useLipsyncRun(options: RunOptions): LipsyncRun {
+  const { app, form, all, tab, plan, fields } = options
+  const voices = useVoices({
+    appId: app.id,
+    lipsync: all,
+    form,
+    isChain: plan.isChain,
+  })
+  const parts = runPartsOf({
+    app,
+    all,
+    fields,
+    tab,
+    plan,
+    voices: voices.hosted.models.map((model) => model.id),
+    values: form.values,
+  })
+  const face = faceOf(fields, tab)
+  options.check.current = checkOf(options, parts, face)
+  const priced = usePricedRun(options, parts, voices)
+  const audio = plan.mode === "audio" ? (fields?.audio?.name ?? null) : null
+  const limit = fields?.limit ?? null
+  const length = plan.mode === "audio" ? (fields?.length ?? null) : null
+  const isGraph = all.chosen?.kind === "graph"
+  const wells = useLipsyncWells({
+    form,
+    app,
+    face: { name: face?.name ?? null, kind: tab, limit },
+    audio: { name: audio, kind: "audio", limit },
+    length,
+    lengthStep: lengthStepOf(app, length, isGraph),
+    isGraph,
+  })
+  const focusers = useRef(new Map<string, () => void>())
   return {
-    ...options.started,
-    generate: () => {
-      if (!options.form.validate()) {
-        return
-      }
-      const waiting = options.wells.find(options.isWaiting)
-      if (waiting !== undefined) {
-        options.focus(waiting)
-        return
-      }
-      options.started.generate()
+    parts,
+    face,
+    wells,
+    voices: voices.hosted,
+    start: guardedStart({
+      started: priced,
+      form,
+      wells: [face?.name ?? null, audio],
+      isWaiting: wells.isWaiting,
+      focus: (name) => focusers.current.get(name)?.(),
+    }),
+    registerWell: (name, focus) => {
+      focusers.current.set(name, focus)
     },
+  }
+}
+
+function useRestore(
+  all: HostedState,
+  form: AppForm,
+  restore: (inputs: Inputs) => void
+): void {
+  const done = useRef(false)
+  const hold = useRef(restore)
+  hold.current = restore
+  useEffect(() => {
+    if (done.current || form.source !== "seed" || all.isLoading) {
+      return
+    }
+    done.current = true
+    hold.current(form.values.inputs)
+  })
+}
+
+type Words = {
+  mode: WordsMode
+  setMode: (mode: WordsMode) => void
+  restore: (inputs: Inputs) => void
+}
+
+function useWords(
+  app: AppListing,
+  all: HostedState,
+  form: AppForm,
+  tabs: LipsyncTabs
+): Words {
+  const [mode, setMode] = useState<WordsMode>("audio")
+  const restore = (inputs: Inputs): void => {
+    const model =
+      all.models.find((one) => one.id === inputs[modelInputName]) ?? null
+    const restored = fieldsOfModel(model, app)
+    tabs.setTabState(tabOfInputs(inputs, restored))
+    setMode(wordsOfInputs(inputs, restored))
+  }
+  useRestore(all, form, restore)
+  return { mode, setMode, restore }
+}
+
+function tabHostedOf(
+  app: AppListing,
+  all: HostedState,
+  tabs: LipsyncTabs
+): HostedState {
+  const listed = modelsOfTab(all.models, tabs.tab, app)
+  return {
+    ...all,
+    models: listed,
+    defaultModel: defaultsOfTab(tabs.tab, all.defaultModel)[0] ?? null,
+    ranBefore: featuredOf(listed, all.ranBefore),
+    choose: tabs.choose,
   }
 }
 
 export function useLipsyncScreen(
   app: AppListing,
-  seeds: StudioScreenProps["seeds"],
+  seeds: AppSeeds,
   onStarted: () => void
-): LipsyncState {
-  const lipsync = useLipsyncForm(app, seeds)
-  const { mode, form, problems, audio, setAspect } = lipsync
-  const started = useStartRun(lipsync.bodyApp, form, onStarted)
-  const focusers = useRef(new Map<string, () => void>())
-  const start = guardedStart({
-    started,
-    form,
-    wells: [mode === "photo" ? photoInput : clipInput, audioInput],
-    isWaiting: (name) =>
-      problems[name] !== undefined ||
-      (name === audioInput && (audio?.seconds ?? null) === null),
-    focus: (name) => focusers.current.get(name)?.(),
-  })
+): LipsyncScreen {
+  const check = useRef<FormCheck | null>(null)
+  const form = useAppForm(app, seeds, check)
   const runs = useAppRuns(app)
+  const all = withAppModel(app, useHostedModel(app, form, runs.runs))
+  usePriceRefresh(app.id, runs.runs)
+  const tabs = useLipsyncTabs(app, all, form)
+  const words = useWords(app, all, form, tabs)
+  const chosen = all.chosen
+  const fields = useMemo(() => fieldsOfModel(chosen, app), [chosen, app])
+  const plan = planOf(words.mode, fields)
+  const options = { app, form, all, check, plan, fields, onStarted }
+  const run = useLipsyncRun({ ...options, tab: tabs.tab })
+  useTabFit(app, all, tabs.tab, tabs.choose)
   return {
     app,
-    formApp: lipsync.formApp,
-    mode,
+    bodyApp: run.parts.bodyApp,
     form,
-    start,
-    aspect: lipsync.aspect,
-    setAspect,
-    problems,
-    lastSeed: runs.runs.find((run) => run.seed !== null)?.seed ?? null,
-    hasRuns: runs.isPending ? null : runs.runs.length > 0,
-    useInputs: (run) => {
-      form.fill(valuesFromRun(app, run))
-      setAspect(run.aspectRatio ?? autoAspect)
+    start: run.start,
+    tab: tabs.tab,
+    setTab: tabs.setTab,
+    plan,
+    modes: modesOf(fields),
+    setWords: words.setMode,
+    fields,
+    face: run.face,
+    isGraph: chosen?.kind === "graph",
+    hosted: tabHostedOf(app, all, tabs),
+    voices: run.voices,
+    wellProblems: run.wells.problems,
+    audio: run.wells.audio,
+    lastSeed: runs.runs.find((one) => one.seed !== null)?.seed ?? null,
+    useInputs: (one) => {
+      form.fill(valuesFromRun(app, one))
+      words.restore(one.inputs)
     },
-    registerWell: (name, focus) => {
-      focusers.current.set(name, focus)
-    },
+    registerWell: run.registerWell,
     onShortcut: (event) => {
       if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault()
-        start.generate()
+        run.start.generate()
       }
     },
   }
