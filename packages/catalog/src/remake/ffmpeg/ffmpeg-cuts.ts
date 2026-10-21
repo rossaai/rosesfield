@@ -48,11 +48,18 @@ export function sceneScoresOf(printed: string): SceneScores {
   return { scores, frameCount }
 }
 
-export function middleFrameArgsOf(options: {
+export const planFrameLongestSide = 768
+
+export function planFrameNameOf(index: number): string {
+  return `frame-${index + 1}.jpg`
+}
+
+export function middleFramesArgsOf(options: {
   reference: string
-  frame: number
-  output: string
+  frames: readonly number[]
 }): string[] {
+  const side = planFrameLongestSide
+  const picked = options.frames.map((frame) => `eq(n,${frame})`).join("+")
   return [
     "ffmpeg",
     "-hide_banner",
@@ -62,14 +69,18 @@ export function middleFrameArgsOf(options: {
     "-y",
     "-i",
     options.reference,
+    "-map",
+    "0:v:0",
     "-vf",
-    `fps=${remakeLimits.framesPerSecond},select='eq(n,${options.frame})'`,
+    `fps=${remakeLimits.framesPerSecond},select='${picked}',scale=w='min(${side},iw)':h='min(${side},ih)':force_original_aspect_ratio=decrease`,
+    "-fps_mode",
+    "passthrough",
     "-frames:v",
-    "1",
+    String(options.frames.length),
     "-c:v",
     "mjpeg",
     "-f",
     "image2",
-    options.output,
+    "frame-%d.jpg",
   ]
 }

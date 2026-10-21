@@ -84,7 +84,7 @@ const judgeVars = (): WorkerVars => readWorkerEnv({ OWNER_TOKEN: ownerToken })
 
 describe("the apps a server serves", () => {
   it("offers every effect, drafts after the passed ones, on a server that answers only on this computer", () => {
-    const served = effectsOf(servedApps(localVars(), onePassed()))
+    const served = effectsOf(servedApps(localVars(), "bun", onePassed()))
     expect(served.closedKey).toBeNull()
     expect(optionsOf(served)).toEqual(effectRecipes.map((one) => one.effect))
     expect(optionsOf(served)).toContain(draft)
@@ -96,20 +96,49 @@ describe("the apps a server serves", () => {
     ["the judge deployment", judgeVars],
   ])("offers only the passed effects behind %s", (_, varsOf) => {
     const apps = onePassed()
-    expect(servedApps(varsOf(), apps)).toBe(apps)
-    expect(optionsOf(effectsOf(servedApps(varsOf(), apps)))).toEqual([
+    expect(servedApps(varsOf(), "bun", apps)).toBe(apps)
+    expect(optionsOf(effectsOf(servedApps(varsOf(), "bun", apps)))).toEqual([
       "push-into-eye",
     ])
-    expect(effectsOf(servedApps(varsOf())).closedKey).toBe("effects.closed")
+    expect(effectsOf(servedApps(varsOf(), "bun")).closedKey).toBe(
+      "effects.closed"
+    )
   })
 
   it("keeps every other app as the catalog lists it", () => {
-    const served = servedApps(localVars())
+    const served = servedApps(localVars(), "bun")
     const listed = listApps()
     expect(served.map((app) => app.id)).toEqual(listed.map((app) => app.id))
     for (const app of served.filter((one) => one.id !== "effects")) {
       expect(app).toBe(listed.find((one) => one.id === app.id))
     }
+  })
+})
+
+describe("where Remake runs", () => {
+  function remakeOf(apps: readonly AppDefinition[]): AppDefinition | undefined {
+    return apps.find((app) => app.id === "remake")
+  }
+
+  it.each([
+    ["on this computer", localVars],
+    ["behind an owner token", tokenVars],
+  ])("opens Remake on a server on bun %s, which runs ffmpeg", (_, varsOf) => {
+    expect(remakeOf(servedApps(varsOf(), "bun"))?.closedKey).toBeNull()
+  })
+
+  it.each([
+    ["on Workers", judgeVars, "workers"],
+    ["in public mode", publicVars, "bun"],
+  ] as const)("lists Remake closed %s", (_, varsOf, place) => {
+    const remake = remakeOf(servedApps(varsOf(), place))
+    expect(remake?.closedKey).toBe("remake.closed")
+    expect(remake?.inputs).toEqual(remakeOf(listApps())?.inputs)
+  })
+
+  it("control: a Workers server with no Remake in its list returns the list as it is", () => {
+    const apps = onePassed()
+    expect(servedApps(judgeVars(), "workers", apps)).toBe(apps)
   })
 })
 
@@ -126,7 +155,7 @@ describe("a draft effect run", () => {
     const env = readServerEnv({ HOST: "127.0.0.1", DATA_DIR: folder() })
     open = composeLocalGateway({
       env,
-      apps: servedApps(env),
+      apps: servedApps(env, "bun"),
       clock,
       platformRoot: null,
     })
@@ -220,7 +249,7 @@ describe("a draft effect run", () => {
     })
     open = composeLocalGateway({
       env,
-      apps: servedApps(env),
+      apps: servedApps(env, "bun"),
       platformRoot: null,
     })
     const gateway = open
@@ -249,7 +278,7 @@ describe("a draft effect run", () => {
     })
     open = composeLocalGateway({
       env,
-      apps: servedApps(env, onePassed()),
+      apps: servedApps(env, "bun", onePassed()),
       platformRoot: null,
     })
     const visitor = new Visitor({ app: open.app, seen: [] })

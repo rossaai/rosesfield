@@ -19,6 +19,7 @@ import { idsOf, runPrice, runSeconds } from "@/pieces/run/run-facts"
 import { inputRowsOf } from "@/pieces/run/run-inputs"
 import { modelInputName } from "@/screens/app/hosted/hosted-form"
 import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
+import { RunShotRows } from "@/studio/remake/shot-details"
 import { KeyframeAnchorDetail } from "@/studio/storyboard/keyframe-info"
 import {
   Detail,
@@ -173,6 +174,7 @@ function MadeInfo({
         {model === null ? null : (
           <Detail label={t("viewer.label.model")}>{model}</Detail>
         )}
+        <RunShotRows run={run} />
         {detailRowsOf(run, keyframe).map((row) => (
           <Detail key={row.key} label={row.label}>
             {row.value}

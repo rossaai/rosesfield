@@ -2,6 +2,7 @@ import type { InputDefinition } from "@rosesfield/contract"
 import { type ReactElement, useRef, useState } from "react"
 import { formatDuration } from "@/copy/format"
 import { tCatalog } from "@/copy/t"
+import { ScreenState } from "@/pieces/screen-state"
 import {
   AddInputsButton,
   ColumnFrame,
@@ -10,7 +11,9 @@ import {
 import { InputField } from "@/screens/app/fields/input-field"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
+import { ScreenHeader } from "@/shell/screen-header"
 import { RemakeCanvas } from "@/studio/remake/remake-canvas"
+import { useClosedKey } from "@/studio/remake/use-closed-key"
 import {
   characterInput,
   type RemakeState,
@@ -102,7 +105,31 @@ function PriceCaption({ price }: { price: string }): ReactElement | null {
   )
 }
 
-export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
+function ClosedScreen({
+  app,
+  closedKey,
+}: {
+  app: StudioScreenProps["app"]
+  closedKey: string
+}): ReactElement {
+  return (
+    <>
+      <ScreenHeader title={tCatalog(app.nameKey)} />
+      <ScreenState kind="empty" title={tCatalog(closedKey)} />
+    </>
+  )
+}
+
+export function AppScreen(props: StudioScreenProps): ReactElement {
+  const closedKey = useClosedKey(props.app)
+  return closedKey === null ? (
+    <OpenScreen {...props} />
+  ) : (
+    <ClosedScreen app={props.app} closedKey={closedKey} />
+  )
+}
+
+function OpenScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const sheetClose = useRef<() => void>(() => undefined)
   const state = useRemakeScreen(app, seeds, () => sheetClose.current())
   const sheet: SheetControl = useState(true)

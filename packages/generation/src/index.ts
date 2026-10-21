@@ -84,12 +84,15 @@ export {
   type EngineOutput,
   type EngineRequest,
   type EngineStatus,
+  type EngineStepJob,
+  type EngineSteps,
   type EngineSubmission,
   GenerationEngine,
   type HostedModel,
   type Idempotency,
   type OutputsPerJob,
   type PriceRequest,
+  type RunPlan,
   type RunPrice,
   unknownPrice,
 } from "#domain/generation-engine.port"
@@ -159,4 +162,8 @@ export {
   type CatalogEntry,
   RouterCatalog,
 } from "#infrastructure/router/router-catalog"
+export {
+  creditsUsedOf,
+  RouterHttp,
+} from "#infrastructure/router/router-http"
 export { type Timer, TimerJobRunner } from "#infrastructure/timer-job-runner"

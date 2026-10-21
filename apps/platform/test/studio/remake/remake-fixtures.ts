@@ -6,7 +6,7 @@ import {
   run,
 } from "@rosesfield/contract"
 import type { RemakePlan } from "@/studio/remake/remake-plan"
-import { app } from "../../../../../packages/catalog/src/remake/remake-app"
+import { app } from "../../../../../packages/catalog/src/remake/app"
 
 export const remake: AppListing = appListing.parse(appDefinition.parse(app))
 

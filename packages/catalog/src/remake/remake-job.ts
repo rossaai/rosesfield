@@ -1,17 +1,25 @@
-import type { Cost, RunInputs } from "@rosesfield/contract"
+import type { Cost, EngineBinding, RunInputs } from "@rosesfield/contract"
 import {
   type EngineFile,
   type EngineOutput,
   type EngineRequest,
   type EngineStatus,
+  type EngineStepJob,
+  type EngineSteps,
   EngineUnavailableError,
   type GenerationEngine,
   RunFailedError,
+  type RunPlan,
 } from "@rosesfield/generation"
-import { ProjectError, RateLimitedError } from "@rosesfield/kernel"
+import {
+  type AssetId,
+  ProjectError,
+  RateLimitedError,
+} from "@rosesfield/kernel"
 import {
   type RemakeQuality,
   remakeAspectRatios,
+  type ShotRequest,
 } from "#remake/comfy/remake-engine"
 import type { ReferenceProbe } from "#remake/ffmpeg/ffmpeg-probe"
 import type { MediaFile } from "#remake/media-tool.port"
@@ -34,12 +42,20 @@ export type RemakeStage =
   | "failed"
   | "cancelled"
 
+export type ShotRun = {
+  request: ShotRequest
+  binding: EngineBinding
+  engine: GenerationEngine
+  clip: AssetId | null
+  estimate: number | null
+}
+
 export type ShotWork = {
   shot: PlannedShot
-  engine: GenerationEngine | null
+  run: ShotRun | null
   ref: string | null
-  inputs: RunInputs
   made: EngineOutput | null
+  cost: Cost | null
 }
 
 export type RemakeJob = {
@@ -145,10 +161,58 @@ function costOf(costs: readonly Cost[]): Cost | null {
       }
 }
 
+function creditsOf(work: ShotWork): number | null {
+  const { run, cost } = work
+  if (run === null) {
+    return null
+  }
+  const measured = cost === null ? null : run.engine.creditsOf(cost)
+  return measured ?? run.estimate
+}
+
+function modelOf(work: ShotWork): string | null {
+  const model = work.run?.request.inputs.model
+  return typeof model === "string" && model !== "" ? model : null
+}
+
+export function planShotOf(work: ShotWork): RunPlan["shots"][number] {
+  const { shot } = work
+  return {
+    number: shot.number,
+    startSeconds: shot.startSeconds,
+    endSeconds: shot.endSeconds,
+    route: shot.route,
+    model: modelOf(work),
+    credits: creditsOf(work),
+    seed: work.run?.request.seed ?? null,
+    words: shot.words,
+    cameraMove: shot.cameraMove,
+  }
+}
+
+function stepJobsOf(work: ShotWork): EngineStepJob[] {
+  const { run, ref } = work
+  return run === null || ref === null
+    ? []
+    : [{ number: work.shot.number, engine: run.engine.key, ref }]
+}
+
+export function stepsOf(job: RemakeJob): { steps?: EngineSteps } {
+  if (job.works.length === 0) {
+    return {}
+  }
+  return {
+    steps: {
+      plan: { shots: job.works.map(planShotOf) },
+      jobs: job.works.flatMap(stepJobsOf),
+    },
+  }
+}
+
 export function statusOf(job: RemakeJob): EngineStatus {
   switch (job.stage) {
     case "done":
-      return { state: "succeeded", cost: costOf(job.costs) }
+      return { state: "succeeded", cost: costOf(job.costs), ...stepsOf(job) }
     case "failed":
       return {
         state: "failed",
@@ -163,6 +227,7 @@ export function statusOf(job: RemakeJob): EngineStatus {
         state: "running",
         progress: shots.length === 0 ? null : made / shots.length,
         retryAfterSeconds: null,
+        ...stepsOf(job),
       }
     }
   }

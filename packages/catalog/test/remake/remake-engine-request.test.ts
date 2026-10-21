@@ -16,7 +16,7 @@ import {
   type ShotRequestInput,
   shotRequestOf,
 } from "#remake/comfy/remake-engine"
-import { app } from "#remake/remake-app"
+import { app } from "#remake/app"
 import { type FoundShot, planShots } from "#remake/shot-plan"
 import { app as videoApp } from "#video/app"
 import { type Recording, ReplayFetch } from "../motion/motion-replay"

@@ -1,7 +1,13 @@
-import type { ReactElement } from "react"
+import type { Run } from "@rosesfield/contract"
+import type { ReactElement, ReactNode } from "react"
+import { joinParts } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { CollapsibleSection } from "@/pieces/collapsible-section"
-import type { PlanShot, RemakePlan } from "@/studio/remake/remake-plan"
+import {
+  type PlanShot,
+  type RemakePlan,
+  readPlan,
+} from "@/studio/remake/remake-plan"
 import {
   cameraMoveName,
   creditsText,
@@ -53,4 +59,18 @@ export function ShotDetails({ plan }: { plan: RemakePlan }): ReactElement {
       ))}
     </CollapsibleSection>
   )
+}
+
+export function RunShotRows({ run }: { run: Run }): ReactNode {
+  const plan = readPlan(run.plan)
+  if (plan === null) {
+    return null
+  }
+  return plan.shots.map((shot) => (
+    <Detail key={shot.number} label={shotName(shot)}>
+      <span data-slot="run-shot">
+        {joinParts([shotSpanOf(shot), routeName(shot), shot.model])}
+      </span>
+    </Detail>
+  ))
 }

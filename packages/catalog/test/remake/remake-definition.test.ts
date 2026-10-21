@@ -4,7 +4,7 @@ import {
   startRunBodyFor,
 } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
-import { app } from "#remake/remake-app"
+import { app } from "#remake/app"
 
 const definition = appDefinition.parse(app)
 const editId = "0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d"

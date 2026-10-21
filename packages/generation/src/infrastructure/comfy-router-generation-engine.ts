@@ -35,7 +35,7 @@ import type {
   RouterCatalog,
 } from "#infrastructure/router/router-catalog"
 import { failureOf } from "#infrastructure/router/router-errors"
-import { RouterHttp } from "#infrastructure/router/router-http"
+import { creditsUsedOf, RouterHttp } from "#infrastructure/router/router-http"
 import {
   type OutputRead,
   outputsOf,
@@ -258,7 +258,7 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
       workflowHash: null,
       finished: {
         outputs,
-        cost: costOfCredits(metered ?? creditsOf(response)),
+        cost: costOfCredits(metered ?? creditsUsedOf(response)),
       },
     }
   }
@@ -330,11 +330,6 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
 
 function outputOf(entry: CatalogEntry): string {
   return entry.facts.makes[0] ?? ""
-}
-
-function creditsOf(response: Response): number | null {
-  const credits = Number(response.headers.get("x-comfy-credits-used"))
-  return Number.isFinite(credits) && credits > 0 ? credits : null
 }
 
 function refText(ref: Ref): string {

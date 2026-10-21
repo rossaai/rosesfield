@@ -3,6 +3,7 @@ import type {
   Cost,
   EngineBinding,
   KeyCheck,
+  Run,
   RunInputs,
   RunOrigin,
 } from "@rosesfield/contract"
@@ -16,6 +17,19 @@ export type EngineFile = {
   bytes: Uint8Array
 }
 
+export type RunPlan = NonNullable<Run["plan"]>
+
+export type EngineStepJob = {
+  number: number
+  engine: string
+  ref: string
+}
+
+export type EngineSteps = {
+  plan: RunPlan
+  jobs: readonly EngineStepJob[]
+}
+
 export type EngineRequest = {
   idempotencyKey: string
   binding: EngineBinding
@@ -26,6 +40,7 @@ export type EngineRequest = {
   seed: number | null
   outputKind: AssetKind
   timeoutSeconds?: number
+  steps?: EngineSteps
 }
 
 export type EngineFinished = {
@@ -45,8 +60,9 @@ export type EngineStatus =
       state: "queued" | "running"
       progress: number | null
       retryAfterSeconds: number | null
+      steps?: EngineSteps
     }
-  | { state: "succeeded"; cost?: Cost | null }
+  | { state: "succeeded"; cost?: Cost | null; steps?: EngineSteps }
   | { state: "failed"; error: ProjectError }
   | { state: "cancelled" }
 
@@ -111,6 +127,11 @@ export abstract class GenerationEngine {
 
   /** Asks the engine to stop a submitted run. */
   abstract cancel(ref: string): Promise<void>
+
+  /** Says whether this engine still holds the run of this ref. An engine that keeps its runs in memory loses them when the server restarts. */
+  holds(_ref: string): boolean {
+    return true
+  }
 
   /** Says whether a run's jobs go to this engine one after another, so each job's cost is read on its own. */
   submitsAlone(): boolean {

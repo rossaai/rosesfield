@@ -7,7 +7,8 @@ import type { PlanFrame } from "#remake/comfy/remake-plan-turn"
 import { shotsOf } from "#remake/cut-finder"
 import { EditRefusedError } from "#remake/edit-refused.error"
 import {
-  middleFrameArgsOf,
+  middleFramesArgsOf,
+  planFrameNameOf,
   sceneScoreArgsOf,
   sceneScoresOf,
 } from "#remake/ffmpeg/ffmpeg-cuts"
@@ -89,22 +90,24 @@ export class RemakeMedia {
     return { found, probe: probeOf(probed.stdout) }
   }
 
-  async frameOf(reference: MediaFile, shot: FoundShot): Promise<PlanFrame> {
-    const name = `frame-${shot.number}.jpg`
+  async framesOf(
+    reference: MediaFile,
+    shots: readonly FoundShot[]
+  ): Promise<PlanFrame[]> {
+    const names = shots.map((_, index) => planFrameNameOf(index))
     const result = await this.tool.run({
-      args: middleFrameArgsOf({
+      args: middleFramesArgsOf({
         reference: reference.name,
-        frame: middleFrameOf(shot),
-        output: name,
+        frames: shots.map(middleFrameOf),
       }),
       inputs: [reference],
-      outputs: [name],
+      outputs: names,
     })
-    return {
+    return shots.map((shot, index) => ({
       shot,
       mime: "image/jpeg",
-      base64: base64Of(outputOf(result.outputs, name)),
-    }
+      base64: base64Of(outputOf(result.outputs, names[index] ?? "")),
+    }))
   }
 
   async clipOf(

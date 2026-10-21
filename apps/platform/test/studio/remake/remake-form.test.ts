@@ -19,7 +19,7 @@ import {
 } from "@/screens/app/app-form"
 import { placeAll } from "@/screens/app/form-fill"
 import { problemOf } from "@/studio/remake/use-remake-screen"
-import { app } from "../../../../../packages/catalog/src/remake/remake-app"
+import { app } from "../../../../../packages/catalog/src/remake/app"
 import { checkShots } from "../../../../../packages/catalog/src/remake/shot-plan"
 
 const megabyte = 1024 * 1024

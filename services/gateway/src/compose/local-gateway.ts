@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import type { OpenPiModelsOptions, PiAgentHarness } from "@rosesfield/agent"
+import type { MediaTool } from "@rosesfield/catalog/remake"
 import { BunMediaTool } from "@rosesfield/catalog/remake/bun"
 import type { AppDefinition } from "@rosesfield/contract"
 import {
@@ -67,6 +68,7 @@ type LocalGatewayOptions = {
   platformRoot?: string | null
   fetch?: Fetch
   warmCatalog?: boolean
+  media?: MediaTool
 }
 
 type Parts = {
@@ -76,6 +78,7 @@ type Parts = {
   db: BunSQLiteDatabase
   store: FilesystemAssetStore
   engineOptions: EngineOptions
+  prices: DrizzlePriceBook
   account: ComfyAccount
   publicAccount: PublicAccountParts
   shares: ShareMount
@@ -108,16 +111,19 @@ export function composeLocalGateway(
   const store = new FilesystemAssetStore({ root: join(env.dataDir, "assets") })
   const fetchPart = options.fetch === undefined ? {} : { fetch: options.fetch }
   const account = new ComfyAccount(fetchPart)
+  const prices = new DrizzlePriceBook({ db })
   const parts: Parts = {
     env,
     apps: options.apps,
     clock,
     db,
     store,
+    prices,
     engineOptions: {
       clock,
       meter: sharedCreditMeter(clock),
-      media: new BunMediaTool(),
+      media: options.media ?? new BunMediaTool(),
+      prices,
       ...fetchPart,
       ...(options.warmCatalog === true ? { warmCatalog: true } : {}),
     },
@@ -156,7 +162,7 @@ function ownerHandlers(parts: Parts): Built<TimerJobRunner> {
       store: parts.store,
       engines: pickEngines(parts.env.engine, parts.engineOptions),
       clock: parts.clock,
-      prices: new DrizzlePriceBook({ db }),
+      prices: parts.prices,
     },
     (advance) => new TimerJobRunner({ advance, runs })
   )

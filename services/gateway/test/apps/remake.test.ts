@@ -18,7 +18,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
 import type { EngineSettings } from "#engine/engine-target"
 import { motionEngine } from "../../../../packages/catalog/src/motion/comfy/motion-binding"
-import { app } from "../../../../packages/catalog/src/remake/remake-app"
+import { app } from "../../../../packages/catalog/src/remake/app"
 import { comfyCloud, demoEngine, localEnv } from "../server-env"
 
 const host = { host: "127.0.0.1:8787" }

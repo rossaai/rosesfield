@@ -10,6 +10,7 @@ import {
   DemoGenerationEngine,
   type Fetch,
   type GenerationEngine,
+  type PriceBook,
   type RouterCatalog,
 } from "@rosesfield/generation"
 import type { Clock } from "@rosesfield/kernel"
@@ -29,6 +30,7 @@ export type EngineOptions = {
   meter?: CreditMeter
   warmCatalog?: boolean
   media?: MediaTool
+  prices?: PriceBook
 }
 
 function meterOf(options: EngineOptions): { meter?: CreditMeter } {
@@ -94,6 +96,7 @@ function withRemake(
     engines,
     media: options.media,
     plan: new RouterPlanTurn({ apiKey: key, ...fetchOf(options) }),
+    ...(options.prices === undefined ? {} : { prices: options.prices }),
   })
   return [remake, ...engines]
 }

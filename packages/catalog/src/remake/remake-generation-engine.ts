@@ -1,6 +1,6 @@
 import type { Cost, EngineBinding, KeyCheck } from "@rosesfield/contract"
 import {
-  EngineBindingInvalidError,
+  type EngineFile,
   type EngineOutput,
   type EngineRequest,
   type EngineStatus,
@@ -8,17 +8,13 @@ import {
   EngineUnavailableError,
   GenerationEngine,
   type OutputsPerJob,
+  type PriceBook,
   RunFailedError,
-  resolveBinding,
 } from "@rosesfield/generation"
-import { assetIdFormat, type ProjectError } from "@rosesfield/kernel"
+import type { ProjectError } from "@rosesfield/kernel"
 import { creditsOfCost } from "#comfy/comfy-credits"
-import { remakeShotsAdapter, shotRequestOf } from "#remake/comfy/remake-engine"
-import {
-  type PlanFrame,
-  planModel,
-  planReplyOf,
-} from "#remake/comfy/remake-plan-turn"
+import { remakeShotsAdapter } from "#remake/comfy/remake-engine"
+import { planModel, planReplyOf } from "#remake/comfy/remake-plan-turn"
 import type { RouterPlanTurn } from "#remake/comfy/router-plan-turn"
 import type { MediaTool } from "#remake/media-tool.port"
 import {
@@ -31,23 +27,21 @@ import {
   type RemakeJob,
   type RemakeStage,
   referenceOf,
+  type ShotRun,
   type ShotWork,
   settingsOf,
   statusOf,
 } from "#remake/remake-job"
 import { RemakeMedia } from "#remake/remake-media"
 import { shortestSwapSecondsOf } from "#remake/shot-padding"
-import { planShots } from "#remake/shot-plan"
+import { type PlannedShot, planShots } from "#remake/shot-plan"
+import { ShotWorks } from "#remake/shot-works"
 
 type RemakeGenerationEngineOptions = {
   engines: readonly GenerationEngine[]
   media: MediaTool
   plan: RouterPlanTurn
-}
-
-type Shot = {
-  engine: GenerationEngine
-  submission: EngineSubmission
+  prices?: PriceBook
 }
 
 export class RemakeGenerationEngine extends GenerationEngine {
@@ -58,6 +52,7 @@ export class RemakeGenerationEngine extends GenerationEngine {
   private readonly engines: readonly GenerationEngine[]
   private readonly media: RemakeMedia
   private readonly plan: RouterPlanTurn
+  private readonly works: ShotWorks
   private readonly jobs = new Map<string, RemakeJob>()
 
   constructor(options: RemakeGenerationEngineOptions) {
@@ -65,6 +60,14 @@ export class RemakeGenerationEngine extends GenerationEngine {
     this.engines = options.engines
     this.media = new RemakeMedia(options.media)
     this.plan = options.plan
+    this.works = new ShotWorks({
+      engines: options.engines,
+      ...(options.prices === undefined ? {} : { prices: options.prices }),
+    })
+  }
+
+  override holds(ref: string): boolean {
+    return this.jobs.has(ref)
   }
 
   override canRun(binding: EngineBinding): boolean {
@@ -147,7 +150,7 @@ export class RemakeGenerationEngine extends GenerationEngine {
     const reference = referenceOf(fileOf(request, "reference"))
     const photo = fileOf(request, "character")
     const { found, probe } = await this.media.findShots(reference)
-    return {
+    const job: RemakeJob = {
       ref,
       settings: settingsOf(request),
       reference,
@@ -161,6 +164,11 @@ export class RemakeGenerationEngine extends GenerationEngine {
       error: null,
       isBusy: false,
     }
+    if (request.steps !== undefined) {
+      job.works = await this.works.restored(job, request.steps)
+      job.stage = "making"
+    }
+    return job
   }
 
   private async step(job: RemakeJob): Promise<void> {
@@ -177,10 +185,7 @@ export class RemakeGenerationEngine extends GenerationEngine {
   }
 
   private async planOf(job: RemakeJob): Promise<void> {
-    const frames: PlanFrame[] = []
-    for (const shot of job.found) {
-      frames.push(await this.media.frameOf(job.reference, shot))
-    }
+    const frames = await this.media.framesOf(job.reference, job.found)
     const turn = await this.plan.ask(
       { frames, instructions: job.settings.instructions },
       `${job.ref}-plan`
@@ -198,16 +203,11 @@ export class RemakeGenerationEngine extends GenerationEngine {
         cause: "the plan turn gave no usable entry for each shot",
       })
     }
+    const works = await this.works.planned(job, planned)
     if (this.isStopped(job, "planning")) {
       return
     }
-    job.works = planned.map((shot) => ({
-      shot,
-      engine: null,
-      ref: null,
-      inputs: {},
-      made: null,
-    }))
+    job.works = works
     job.stage = "making"
   }
 
@@ -223,7 +223,7 @@ export class RemakeGenerationEngine extends GenerationEngine {
         continue
       }
       const isWaiting = job.works.some(
-        (one) => isInFlight(one) && one.engine?.submitsAlone() === true
+        (one) => isInFlight(one) && one.run?.engine.submitsAlone() === true
       )
       if (isWaiting) {
         return
@@ -239,55 +239,29 @@ export class RemakeGenerationEngine extends GenerationEngine {
   }
 
   private async submitShot(job: RemakeJob, work: ShotWork): Promise<void> {
-    const shot = await this.sendShot(job, work)
-    work.engine = shot.engine
-    work.ref = shot.submission.ref
-    const { finished } = shot.submission
+    const { run } = work
+    if (run === null) {
+      return
+    }
+    const submission = await this.sendShot(job, work.shot, run)
+    work.ref = submission.ref
+    const { finished } = submission
     if (finished !== undefined) {
       this.keep(job, work, finished.outputs, finished.cost)
     }
     if (job.stage === "cancelled") {
-      await shot.engine.cancel(shot.submission.ref).catch(() => undefined)
+      await run.engine.cancel(submission.ref).catch(() => undefined)
     }
   }
 
-  private async sendShot(job: RemakeJob, work: ShotWork): Promise<Shot> {
-    const { settings } = job
-    const clip = assetIdFormat.parse(crypto.randomUUID())
-    const isReplaced = work.shot.route === "replace"
-    const request = shotRequestOf({
-      runId: job.ref,
-      attempt: 1,
-      shot: work.shot,
-      clip: isReplaced ? clip : null,
-      photo: job.photo.assetId,
-      quality: settings.quality,
-      instructions: settings.instructions,
-      aspectRatio: settings.aspectRatio,
-      seed: settings.seed,
-    })
-    if (request === null) {
-      throw new RunFailedError({ cause: `shot ${work.shot.number} has no run` })
-    }
-    const binding = resolveBinding(request.binding, request.inputs)
-    const engine = this.engines.find((one) => one.canRun(binding))
-    if (engine === undefined) {
-      throw new EngineBindingInvalidError({
-        adapter: binding.adapter,
-        reason: "no engine on this server runs this shot",
-      })
-    }
-    const shortest = isReplaced
-      ? shortestSwapSecondsOf(await engine.formOf(binding))
-      : 0
-    const files = isReplaced
-      ? [
-          job.photo,
-          await this.media.clipOf(job.reference, work.shot, shortest, clip),
-        ]
-      : []
-    work.inputs = request.inputs
-    const submission = await engine.submit({
+  private async sendShot(
+    job: RemakeJob,
+    shot: PlannedShot,
+    run: ShotRun
+  ): Promise<EngineSubmission> {
+    const { request, binding, engine } = run
+    const files = await this.filesOf(job, shot, run)
+    return engine.submit({
       idempotencyKey: request.idempotencyKey,
       binding,
       inputs: request.inputs,
@@ -297,18 +271,32 @@ export class RemakeGenerationEngine extends GenerationEngine {
       seed: request.seed,
       outputKind: "video",
     })
-    return { engine, submission }
+  }
+
+  private async filesOf(
+    job: RemakeJob,
+    shot: PlannedShot,
+    run: ShotRun
+  ): Promise<EngineFile[]> {
+    const { clip, engine, binding } = run
+    if (clip === null) {
+      return []
+    }
+    const shortest = shortestSwapSecondsOf(await engine.formOf(binding))
+    const made = await this.media.clipOf(job.reference, shot, shortest, clip)
+    return [job.photo, made]
   }
 
   private async collect(job: RemakeJob, work: ShotWork): Promise<void> {
-    const { engine, ref } = work
-    if (engine === null || ref === null) {
+    const { run, ref } = work
+    if (run === null || ref === null) {
       return
     }
+    const { engine } = run
     const status = await engine.read(ref)
     switch (status.state) {
       case "succeeded": {
-        const outputs = await engine.listOutputs(ref, work.inputs)
+        const outputs = await engine.listOutputs(ref, run.request.inputs)
         this.keep(job, work, outputs, status.cost ?? null)
         return
       }
@@ -337,6 +325,7 @@ export class RemakeGenerationEngine extends GenerationEngine {
       })
     }
     work.made = video
+    work.cost = cost
     if (cost !== null) {
       job.costs.push(cost)
     }
@@ -365,9 +354,9 @@ export class RemakeGenerationEngine extends GenerationEngine {
   private async stopShots(job: RemakeJob): Promise<void> {
     await Promise.allSettled(
       job.works.flatMap((work) =>
-        work.engine === null || !isInFlight(work)
+        work.run === null || work.ref === null || !isInFlight(work)
           ? []
-          : [work.engine.cancel(work.ref ?? "")]
+          : [work.run.engine.cancel(work.ref)]
       )
     )
   }
