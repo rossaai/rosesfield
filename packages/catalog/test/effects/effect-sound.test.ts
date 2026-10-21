@@ -153,7 +153,12 @@ describe("the sound of an effect ends in its fade and carries its hits", () => {
     const struck = workflowOf(
       effectGraph(
         fileGraph(),
-        eyeWith({ hits: [opening, boom], build: null, brighten: null })
+        eyeWith({
+          hits: [opening, boom],
+          bedGainDb: 0,
+          build: null,
+          brighten: null,
+        })
       )
     )
     const [first, second] = hitSlots
@@ -216,7 +221,10 @@ describe("the sound of an effect ends in its fade and carries its hits", () => {
     const build = { seconds: 4, floorDb: -12 }
     const brighten = { presenceDb: 3, airDb: 2.5 }
     const shaped = workflowOf(
-      effectGraph(fileGraph(), eyeWith({ hits: [boom], build, brighten }))
+      effectGraph(
+        fileGraph(),
+        eyeWith({ hits: [boom], bedGainDb: 0, build, brighten })
+      )
     )
     expect(shaped).toMatchObject({
       [buildNodes.floor]: {
@@ -249,14 +257,17 @@ describe("the sound of an effect ends in its fade and carries its hits", () => {
     })
     expect(brokenLinks(shaped)).toEqual([])
     const bare = workflowOf(
-      effectGraph(fileGraph(), eyeWith({ hits: [], build, brighten }))
+      effectGraph(
+        fileGraph(),
+        eyeWith({ hits: [], bedGainDb: 0, build, brighten })
+      )
     )
     expect(bare[loudnessNode]?.inputs.audio).toEqual([brightenNode, 0])
     expect(brokenLinks(bare)).toEqual([])
     const flat = workflowOf(
       effectGraph(
         fileGraph(),
-        eyeWith({ hits: [], build: null, brighten: null })
+        eyeWith({ hits: [], bedGainDb: 0, build: null, brighten: null })
       )
     )
     const shapeIds = [...Object.values(buildNodes), brightenNode]

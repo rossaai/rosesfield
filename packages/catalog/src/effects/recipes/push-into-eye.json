@@ -20,28 +20,40 @@
       "fadeOut": 0.4,
       "hits": [
         {
-          "prompt": "Soft airy rushing wind, a bright breathy whoosh of air that slowly swells, cinematic sound design. No music, no voice.",
+          "prompt": "Bright airy rushing wind at full level from the very first moment, a breathy whoosh of air, cinematic sound design. No music, no voice.",
           "time": 0,
           "seconds": 3.5,
-          "gainDb": -6
+          "gainDb": -2
         },
         {
           "prompt": "A cinematic riser, an airy whoosh that swells and rises in pitch over three seconds, with a bright shimmering high texture. No music, no voice.",
           "time": 2.5,
           "seconds": 3,
-          "gainDb": -4
+          "gainDb": -2
         },
         {
-          "prompt": "A deep heavy cinematic boom impact with a punchy low thump and a long rumbling tail. No music, no voice.",
-          "time": 5,
-          "seconds": 2,
+          "prompt": "One deep low cinematic thump, a heavy sub bass drum hit with a short rumbling tail. No music, no voice.",
+          "time": 4,
+          "seconds": 1.5,
           "gainDb": 0
         },
         {
+          "prompt": "One deep low cinematic thump, a heavy sub bass drum hit with a short rumbling tail. No music, no voice.",
+          "time": 5,
+          "seconds": 1.5,
+          "gainDb": 1
+        },
+        {
+          "prompt": "One deep low cinematic thump, a heavy sub bass drum hit with a short rumbling tail. No music, no voice.",
+          "time": 5.8,
+          "seconds": 1.5,
+          "gainDb": 2
+        },
+        {
           "prompt": "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice.",
-          "time": 6.3,
+          "time": 6.7,
           "seconds": 2,
-          "gainDb": 4
+          "gainDb": 6
         }
       ],
       "build": {
@@ -51,7 +63,8 @@
       "brighten": {
         "presenceDb": 4,
         "airDb": 4
-      }
+      },
+      "bedGainDb": -4
     },
     "encode": {
       "container": "mp4",
