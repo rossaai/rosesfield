@@ -37,10 +37,8 @@ import wLayersFillQwenImageApi from "../../../workflows/layers-fill-qwen-image/l
 import wLayersFillQwenImageEntry from "../../../workflows/layers-fill-qwen-image/entry.json"
 import wLayersSplitQwenImageLayeredApi from "../../../workflows/layers-split-qwen-image-layered/layers-split-qwen-image-layered.api.json"
 import wLayersSplitQwenImageLayeredEntry from "../../../workflows/layers-split-qwen-image-layered/entry.json"
-import wLipsyncClipInfinitetalkApi from "../../../workflows/lipsync-clip-infinitetalk/lipsync-clip-infinitetalk.api.json"
-import wLipsyncClipInfinitetalkEntry from "../../../workflows/lipsync-clip-infinitetalk/entry.json"
-import wLipsyncPhotoInfinitetalkApi from "../../../workflows/lipsync-photo-infinitetalk/lipsync-photo-infinitetalk.api.json"
-import wLipsyncPhotoInfinitetalkEntry from "../../../workflows/lipsync-photo-infinitetalk/entry.json"
+import wLipsyncPhotoLtx23Api from "../../../workflows/lipsync-photo-ltx-2-3/lipsync-photo-ltx-2-3.api.json"
+import wLipsyncPhotoLtx23Entry from "../../../workflows/lipsync-photo-ltx-2-3/entry.json"
 import wMotionWanAnimate2Api from "../../../workflows/motion-wan-animate-2/motion-wan-animate-2.api.json"
 import wMotionWanAnimate2Entry from "../../../workflows/motion-wan-animate-2/entry.json"
 import wRecastCharacterScail2Api from "../../../workflows/recast-character-scail-2/recast-character-scail-2.api.json"
@@ -112,8 +110,7 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "layers-edit-qwen-image-edit-2511", entry: wLayersEditQwenImageEdit2511Entry, graph: wLayersEditQwenImageEdit2511Api },
   { folder: "layers-fill-qwen-image", entry: wLayersFillQwenImageEntry, graph: wLayersFillQwenImageApi },
   { folder: "layers-split-qwen-image-layered", entry: wLayersSplitQwenImageLayeredEntry, graph: wLayersSplitQwenImageLayeredApi },
-  { folder: "lipsync-clip-infinitetalk", entry: wLipsyncClipInfinitetalkEntry, graph: wLipsyncClipInfinitetalkApi },
-  { folder: "lipsync-photo-infinitetalk", entry: wLipsyncPhotoInfinitetalkEntry, graph: wLipsyncPhotoInfinitetalkApi },
+  { folder: "lipsync-photo-ltx-2-3", entry: wLipsyncPhotoLtx23Entry, graph: wLipsyncPhotoLtx23Api },
   { folder: "motion-wan-animate-2", entry: wMotionWanAnimate2Entry, graph: wMotionWanAnimate2Api },
   { folder: "recast-character-scail-2", entry: wRecastCharacterScail2Entry, graph: wRecastCharacterScail2Api },
   { folder: "recast-object-wan-vace", entry: wRecastObjectWanVaceEntry, graph: wRecastObjectWanVaceApi },
