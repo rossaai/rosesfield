@@ -142,6 +142,13 @@ afterEach(() => {
 describe("Layers before any run", () => {
   it("shows the empty title, what Layers does and one act, Add an image, with no example", async () => {
     openLayers({ runs: [] })
+    expect(
+      await screen.findByRole("tab", {
+        name: t("app.tab.how"),
+        selected: true,
+      })
+    ).not.toBeNull()
+    fireEvent.click(screen.getByRole("tab", { name: t("app.tab.history") }))
     const title = await screen.findByText(tCatalog("layers.empty.title"))
     expect(title).not.toBeNull()
     expect(screen.getByText(tCatalog("layers.empty.body"))).not.toBeNull()
