@@ -3,21 +3,8 @@ import type {
   ToolExecutionResult,
   ToolRegistration,
 } from "@earendil-works/pi-durable"
-import {
-  type ModelForm,
-  publishedInputOf,
-  publishedModelOf,
-} from "@rosesfield/catalog/comfy"
-import {
-  storyboardAppId,
-  storyboardBodyFor,
-} from "@rosesfield/catalog/storyboard"
-import {
-  type AppDefinition,
-  type RunRequest,
-  runRequest,
-} from "@rosesfield/contract"
-import { RunInputInvalidError } from "@rosesfield/generation"
+import type { ModelForm } from "@rosesfield/catalog/comfy"
+import type { AppDefinition, RunRequest } from "@rosesfield/contract"
 import { appIdFormat, runIdFormat } from "@rosesfield/kernel"
 import { z } from "zod"
 import type { Proposal } from "#agent.contract"
@@ -34,6 +21,11 @@ import {
   keyframeRunsOf,
 } from "#infrastructure/pi-keyframe-chain"
 import { type RunWait, timerWait } from "#infrastructure/pi-library-tools"
+import {
+  appInputOf,
+  isKeyframeChain,
+  parseRequest,
+} from "#infrastructure/pi-run-request"
 import { jsonOutput, toolParameters } from "#infrastructure/pi-tool-io"
 
 const idempotencyMemo = "idempotencyKey"
@@ -47,22 +39,9 @@ type AppToolOptions = {
   wait?: RunWait
 }
 
-function isKeyframeChain(app: AppDefinition): boolean {
-  return app.id === storyboardAppId
-}
-
-function schemaOf(
-  app: AppDefinition,
-  forms: readonly ModelForm[]
-): z.ZodType<unknown> {
-  return isKeyframeChain(app)
-    ? storyboardBodyFor(app)
-    : publishedInputOf(app, forms)
-}
-
 export function appTool(options: AppToolOptions): ToolRegistration {
   const { app, handlers } = options
-  const schema = schemaOf(app, options.forms ?? [])
+  const schema = appInputOf(app, options.forms ?? [])
   const wait = options.wait ?? timerWait
   return {
     name: app.id,
@@ -148,42 +127,6 @@ async function propose(
     details: { proposal },
     control: { terminate: true },
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-}
-
-function requestOf(app: AppDefinition, parsed: unknown): RunRequest {
-  const body = isRecord(parsed) ? parsed : {}
-  const given = isRecord(body.inputs) ? body.inputs : {}
-  const inputs = Object.fromEntries(
-    Object.entries(given).filter(
-      ([, value]) => value !== "" && value !== undefined
-    )
-  )
-  const model = publishedModelOf(app)
-  return runRequest.parse({
-    inputs: model === null || "model" in inputs ? inputs : { ...inputs, model },
-    count:
-      typeof body.count === "number" ? body.count : app.output.count.default,
-    aspectRatio: typeof body.aspectRatio === "string" ? body.aspectRatio : null,
-  })
-}
-
-function parseRequest(
-  app: AppDefinition,
-  schema: z.ZodType<unknown>,
-  args: unknown
-): RunRequest {
-  const result = schema.safeParse(args)
-  if (result.success) {
-    return requestOf(app, result.data)
-  }
-  const issues = result.error.issues.map(
-    (issue) => `${issue.path.join(".") || "body"}: ${issue.message}`
-  )
-  throw new RunInputInvalidError({ appId: app.id, issues })
 }
 
 export function proposalOf(record: ProposalRecord): Proposal {

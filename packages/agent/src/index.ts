@@ -106,7 +106,15 @@ export {
   agentTools,
   publishedAgentTools,
 } from "#infrastructure/pi-agent-tools"
-export type { RunWait } from "#infrastructure/pi-library-tools"
+export {
+  type KeyframeHandlers,
+  keyframeRunsOf,
+} from "#infrastructure/pi-keyframe-chain"
+export {
+  type RunPoll,
+  type RunWait,
+  timerWait,
+} from "#infrastructure/pi-library-tools"
 export {
   type AgentModel,
   type OpenPiModelsOptions,
@@ -114,6 +122,11 @@ export {
   type PiModels,
   routerAgentModel,
 } from "#infrastructure/pi-models"
+export {
+  appInputOf,
+  isKeyframeChain,
+  parseRequest,
+} from "#infrastructure/pi-run-request"
 export {
   type RouterAgentHarnessOptions,
   routerAgentHarness,
