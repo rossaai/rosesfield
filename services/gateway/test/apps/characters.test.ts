@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { readApps } from "@rosesfield/catalog"
-import { hostedRunsOf } from "@rosesfield/catalog/characters"
+import { hostedRunsOf, viewsOf } from "@rosesfield/catalog/characters"
 import {
   type CatalogModel,
   catalogRoutes,
@@ -234,6 +234,7 @@ describe("the characters app through the gateway on the demo engine", () => {
       count: "4",
       character: [character],
       model: "qwen-image-edit-2511",
+      view: "front",
     })
     expect(done.inputs).not.toHaveProperty("gender")
   })
@@ -394,7 +395,7 @@ describe("a hosted angle set of Characters, on the demo engine", () => {
     return { made, characterId }
   }
 
-  it("starts each view with the angles mode, the character and the angle set kept in its run, and ends each view with one image", async () => {
+  it("starts each view with the angles mode, the character, the angle set and its own view kept in its run, and ends each view with one image", async () => {
     const { made, characterId } = await views()
     expect(made).toHaveLength(4)
     for (const [index, view] of made.entries()) {
@@ -406,6 +407,7 @@ describe("a hosted angle set of Characters, on the demo engine", () => {
         model: fluxImage,
         character: [characterId],
         angleSet: "turnaround",
+        view: viewsOf("turnaround")[index],
       })
       for (let step = 0; step < 20; step += 1) {
         const { nextWakeMs } = await gateway.handlers.advanceRun.execute({
@@ -433,6 +435,20 @@ describe("a hosted angle set of Characters, on the demo engine", () => {
     const refused = await startView(
       { ...view, inputs: { ...view.inputs, mode: "erase" } },
       "angles-erase-view-1"
+    )
+    expect(refused.status).toBe(400)
+  })
+
+  it("control: refuses a view Characters does not name", async () => {
+    const {
+      made: [view],
+    } = await views()
+    if (view === undefined) {
+      throw new Error("the angle set made no view")
+    }
+    const refused = await startView(
+      { ...view, inputs: { ...view.inputs, view: "sideways" } },
+      "angles-sideways-view-1"
     )
     expect(refused.status).toBe(400)
   })
