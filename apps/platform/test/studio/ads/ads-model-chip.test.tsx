@@ -95,9 +95,7 @@ describe("the Ads model chip", () => {
     expect(choiceMakerOf("qwen-image-edit-2511", "Qwen Image Edit 2511")).toBe(
       "Qwen"
     )
-    expect(choiceMakerOf("flux-2-klein-4b", "FLUX.2 Klein 4B")).toBe(
-      "black-forest-labs"
-    )
+    expect(choiceMakerOf("z-image-turbo", "Z-Image Turbo")).toBe("Tongyi-MAI")
     expect(choiceMakerOf("unknown-model", "Some Model")).toBe("Some Model")
   })
 })
