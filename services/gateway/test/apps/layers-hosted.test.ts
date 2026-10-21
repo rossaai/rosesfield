@@ -61,6 +61,8 @@ function schemaOf(recorded: Recorded): Record<string, unknown> {
 
 const text = { type: "string" }
 
+const seedreamPro = "byteplus/seedream-5-0-pro-260628"
+
 function media(description: string): Record<string, unknown> {
   return { type: "string", description }
 }
@@ -108,18 +110,28 @@ const recordedCatalog = [
     required: ["image", "light_type"],
   }),
   schemaOf({
-    model: "maker/image-layer-separation",
+    model: seedreamPro,
     takes: ["text", "image"],
     properties: {
-      image: media("The image to split, as a URL or a Base64 string."),
+      image: {
+        description:
+          "The image or images to edit, as an accessible URL or a data-URI-prefixed Base64 payload.",
+        oneOf: [text, { items: text, maxItems: 10, minItems: 1, type: "array" }],
+      },
+      layer_decomposition: {
+        default: false,
+        description: "Controls whether layer separation is enabled.",
+        type: "boolean",
+      },
       prompt: text,
+      size: text,
     },
-    required: ["image"],
+    required: [],
   }),
 ]
 
 const picks = [
-  { mode: "split", model: "maker/image-layer-separation" },
+  { mode: "split", model: seedreamPro },
   { mode: "edit", model: "bfl/flux-3-image" },
   { mode: "relight", model: "bria/image-edit-relight" },
   { mode: "fill", model: "bfl/flux-pro-1.0-fill" },
@@ -130,6 +142,8 @@ function bodyFor(model: CatalogModel, mode: string, image: string) {
   for (const field of model.form ?? []) {
     if (field.kind === "media") {
       inputs[field.name] = [image]
+    } else if (field.path === "layer_decomposition" && mode === "split") {
+      inputs[field.name] = "on"
     } else if (field.kind === "choice" && field.required) {
       inputs[field.name] = field.options[0]
     } else if (field.required) {
@@ -210,7 +224,7 @@ describe("a hosted model picked in each Layers mode, on the demo engine", () => 
         .map((model) => [model.id, model.task])
     )
     expect(tasks).toEqual({
-      "maker/image-layer-separation": "layer-separation",
+      [seedreamPro]: "layer-separation",
       "bfl/flux-3-image": "image-edit",
       "bria/image-edit-relight": "relight",
       "bfl/flux-pro-1.0-fill": "inpaint",
@@ -240,6 +254,9 @@ describe("a hosted model picked in each Layers mode, on the demo engine", () => 
       const { run } = runResponse.parse(await started.json())
       expect(run).toMatchObject({ origin: "demo", count: 1 })
       expect(run.inputs).toMatchObject({ model: pick.model, mode: pick.mode })
+      if (pick.mode === "split") {
+        expect(run.inputs.layerDecomposition).toBe("on")
+      }
       const done = await drive(run.id)
       expect(done.status).toBe("done")
       expect(done.outputs).toHaveLength(1)

@@ -1,6 +1,6 @@
-import type { HostedModel } from "@rosesfield/generation/bindings"
+import type { HostedModel, ModelField } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
-import { namedTasksOf, tasksOfModel } from "#comfy/model-tasks"
+import { namedTasksOf, taskFieldOf, tasksOfModel } from "#comfy/model-tasks"
 
 function hosted(id: string): HostedModel {
   return {
@@ -43,5 +43,47 @@ describe("the layer separation and inpaint tasks", () => {
     )
     expect(namedTasksOf(hosted("a/fill"))).toEqual([])
     expect(namedTasksOf(hosted("bfl/flux-pro-1.0-expand"))).toEqual(["expand"])
+  })
+})
+
+describe("a field that switches a model to a task", () => {
+  const layerSwitch: ModelField = {
+    kind: "toggle",
+    name: "layerDecomposition",
+    path: "layer_decomposition",
+    required: false,
+    default: false,
+  }
+
+  function withField(field: ModelField): HostedModel {
+    const model = hosted("byteplus/seedream-5-0-pro-260628")
+    return { ...model, form: { model: model.id, fields: [field] } }
+  }
+
+  it("gives Seedream 5.0 Pro, whose schema switches layer separation on with layer_decomposition, the layer separation task", () => {
+    const seedream = withField(layerSwitch)
+    expect(namedTasksOf(seedream)).toEqual(["layer-separation"])
+    expect(tasksOfModel(seedream)).toEqual([
+      "text-to-image",
+      "image-edit",
+      "layer-separation",
+    ])
+    expect(taskFieldOf([layerSwitch], "layer-separation")).toBe(layerSwitch)
+  })
+
+  it("control: a toggle at another path, or a text field at that path, switches no task", () => {
+    const watermark = { ...layerSwitch, name: "watermark", path: "watermark" }
+    const text: ModelField = {
+      kind: "text",
+      name: "layerDecomposition",
+      path: "layer_decomposition",
+      required: false,
+      maxLength: null,
+      default: null,
+    }
+    expect(namedTasksOf(withField(watermark))).toEqual([])
+    expect(namedTasksOf(withField(text))).toEqual([])
+    expect(taskFieldOf([watermark, text], "layer-separation")).toBeNull()
+    expect(taskFieldOf([layerSwitch], "image-edit")).toBeNull()
   })
 })

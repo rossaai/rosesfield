@@ -11,6 +11,7 @@ import {
   modelIndexOf,
   modelsOfMode,
   runModeOf,
+  shownFieldsOf,
 } from "@/studio/layers/layers-models"
 import type { LayersMode } from "@/studio/layers/layers-modes"
 import { ranBeforeIn } from "@/studio/layers/use-layers-models"
@@ -23,6 +24,7 @@ import {
   flux3,
   fluxFill,
   layersListing,
+  layerSwitch,
   layersRun,
   maskAsset,
   photo,
@@ -93,6 +95,13 @@ describe("a split model whose schema takes no layer count", () => {
     expect(inputs.model).toBe(seedream.id)
     expect(inputs.size).toBe("1K")
     expect(inputs.image).toBeUndefined()
+    expect(inputs.layerDecomposition).toBeUndefined()
+  })
+
+  it("shows no field for the switch that makes the model split", () => {
+    expect(shownFieldsOf(seedream).map((field) => field.name)).toEqual([
+      "size",
+    ])
   })
 })
 
@@ -106,6 +115,28 @@ describe("the body of a hosted Layers run", () => {
       model: seedream.id,
       image: [photo],
       size: "1K",
+      layerDecomposition: "on",
+      mode: "split",
+    })
+  })
+
+  it("control: a toggle at another path is no split switch, so the body leaves it to you", () => {
+    const other = { ...layerSwitch, name: "watermark", path: "watermark" }
+    const plain = {
+      ...seedream,
+      form: (seedream.form ?? []).map((field) =>
+        field === layerSwitch ? other : field
+      ),
+    }
+    const values = valuesWith({
+      ...inputsForModel(valuesWith({ source: [photo] }).inputs, plain),
+    })
+    const body = hostedLayersBody(plain, values, "split", [])
+    expect(body.inputs).toEqual({
+      model: seedream.id,
+      image: [photo],
+      size: "1K",
+      watermark: "off",
       mode: "split",
     })
   })

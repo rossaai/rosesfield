@@ -62,8 +62,16 @@ export const splitGraph = model({
   form: null,
 })
 
+export const layerSwitch: ModelField = {
+  kind: "toggle",
+  name: "layerDecomposition",
+  path: "layer_decomposition",
+  required: false,
+  default: false,
+}
+
 export const seedream = model({
-  id: "bytedance/seedream-5.0-pro-layer-separation",
+  id: "byteplus/seedream-5-0-pro-260628",
   maker: "ByteDance",
   task: "layer-separation",
   form: [
@@ -76,6 +84,7 @@ export const seedream = model({
       options: ["1K", "2K"],
       default: "1K",
     },
+    layerSwitch,
   ],
 })
 

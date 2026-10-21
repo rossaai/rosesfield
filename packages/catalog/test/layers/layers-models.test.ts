@@ -30,11 +30,30 @@ const layerSplit = hosted(
   ["text", "image"],
   ["image"]
 )
-const seedreamPro = hosted(
-  "byteplus/seedream-5-0-pro-260628",
-  ["text", "image"],
-  ["image"]
-)
+const seedreamPro: HostedModel = {
+  ...hosted("byteplus/seedream-5-0-pro-260628", ["text", "image"], ["image"]),
+  form: {
+    model: "byteplus/seedream-5-0-pro-260628",
+    fields: [
+      {
+        kind: "media",
+        name: "image",
+        path: "image",
+        required: false,
+        media: "image",
+        min: 1,
+        max: 10,
+      },
+      {
+        kind: "toggle",
+        name: "layerDecomposition",
+        path: "layer_decomposition",
+        required: false,
+        default: false,
+      },
+    ],
+  },
+}
 const wanEdit = hosted("wan/wan2.6-image-edit", ["text", "image"], ["image"])
 const textOnly = hosted("maker/picture", ["text"], ["image"])
 
@@ -97,8 +116,16 @@ describe("the models of each Layers mode", () => {
       "bfl/flux-pro-1.0-fill": "inpaint",
       "bria/image-edit-gen-fill": "inpaint",
       "maker/image-layer-separation": "layer-separation",
-      "byteplus/seedream-5-0-pro-260628": "image-edit",
+      "byteplus/seedream-5-0-pro-260628": "layer-separation",
     })
+  })
+
+  it("control: Seedream 5.0 Pro with no layer_decomposition in its form stays under image edit", () => {
+    const plain = { ...seedreamPro, form: null }
+    const listed = modelsForApp(definition, [plain]).find(
+      (model) => model.id === plain.id
+    )
+    expect(listed?.task).toBe("image-edit")
   })
 
   it("control: an app that lists only image edit keeps the fill and relight models under image edit", () => {

@@ -65,6 +65,7 @@ export {
   modelTasks,
   namedTasksOf,
   nameRules,
+  taskFieldOf,
   tasksOfModel,
 } from "#comfy/model-tasks"
 export {

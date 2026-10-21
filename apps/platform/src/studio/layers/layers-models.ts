@@ -1,4 +1,8 @@
-import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
+import {
+  type CatalogModel,
+  type ModelField,
+  taskFieldOf,
+} from "@rosesfield/catalog/comfy"
 import { type AppListing, inputRulesOf, type Run } from "@rosesfield/contract"
 import {
   type FieldProblem,
@@ -38,8 +42,10 @@ export type ModelIndex = {
   graphs: ModeGraphs
 }
 
+const splitTask = "layer-separation"
+
 const hostedTasks: Readonly<Record<string, LayersMode>> = {
-  "layer-separation": "split",
+  [splitTask]: "split",
   "image-edit": "edit",
   relight: "relight",
   inpaint: "fill",
@@ -145,8 +151,15 @@ export function isCountShown(
   return mode === "split" && isGraphModel(chosen)
 }
 
+function splitSwitchOf(model: CatalogModel): ModelField | null {
+  return taskFieldOf(model.form ?? [], splitTask)
+}
+
 function ownFieldsOf(model: CatalogModel): ModelField[] {
-  return (model.form ?? []).filter((field) => field.kind !== "media")
+  const split = splitSwitchOf(model)
+  return (model.form ?? []).filter(
+    (field) => field.kind !== "media" && field !== split
+  )
 }
 
 export function shownFieldsOf(model: CatalogModel | null): ModelField[] {
@@ -190,6 +203,10 @@ export function hostedLayersBody(
   const maskField = maskFieldOf(model)
   if (maskField !== null && mask.length > 0) {
     inputs[maskField.name] = [...mask]
+  }
+  const split = splitSwitchOf(model)
+  if (split !== null && mode === "split") {
+    inputs[split.name] = "on"
   }
   return { ...body, inputs }
 }
