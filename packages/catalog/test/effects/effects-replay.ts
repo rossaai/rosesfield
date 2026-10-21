@@ -8,6 +8,7 @@ import { assetIdFormat } from "@rosesfield/kernel"
 import { z } from "zod"
 import { effectsApp } from "#effects/app"
 import { effectRecipes } from "#effects/effect-recipes"
+import { withoutVideoStills } from "../workflows/video-stills"
 
 type Recording = {
   method: "GET" | "POST"
@@ -202,7 +203,7 @@ export async function submitted(
   const submission = await engine.submit(request)
   const job = replay.sent.find((sent) => sent.url === `${cloudUrl}/api/v2/jobs`)
   const { workflow } = sentBody.parse(JSON.parse(job?.body ?? "{}"))
-  return { workflow, replay, ref: submission.ref }
+  return { workflow: withoutVideoStills(workflow), replay, ref: submission.ref }
 }
 
 export const loadedPhoto = { __type: "core/ASSET", info: { id: uploadedId } }
