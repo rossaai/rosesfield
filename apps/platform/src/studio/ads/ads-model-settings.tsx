@@ -17,6 +17,7 @@ import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
 import type { AppForm } from "@/screens/app/use-app-form"
+import { AdsCatalogPicker } from "@/studio/ads/ads-model-picker"
 import { modelInput } from "@/studio/ads/ads-rules"
 import type { AdsScreenState } from "@/studio/ads/use-ads-screen"
 
@@ -82,6 +83,21 @@ function ModelField({
   )
 }
 
+function SheetModel({
+  app,
+  state,
+  input,
+}: {
+  app: AppListing
+  state: AdsScreenState
+  input: ChoiceInput | null
+}): ReactElement | null {
+  if (state.hosted.isTaskApp) {
+    return <AdsCatalogPicker app={app} hosted={state.hosted} place="row" />
+  }
+  return input === null ? null : <ModelField input={input} form={state.form} />
+}
+
 function SettingField({
   app,
   form,
@@ -120,8 +136,8 @@ export function AdsModelSettings({
       {leading.map((input) => (
         <SettingField key={input.name} app={app} form={form} input={input} />
       ))}
-      {model === null || chips.includes(modelInput) ? null : (
-        <ModelField input={model} form={form} />
+      {chips.includes(modelInput) ? null : (
+        <SheetModel app={app} state={state} input={model} />
       )}
       {chips.includes(aspectField) ? null : (
         <AspectField
@@ -147,14 +163,25 @@ export function AdsModelSettings({
 
 export function AdsModelChip(props: AdsSettingsProps): ReactElement {
   const model = modelInputOf(props.app)
+  const settings = (
+    <AdsModelSettings {...props} chips={[...props.chips, modelInput]} />
+  )
+  if (props.state.hosted.isTaskApp) {
+    return (
+      <AdsCatalogPicker
+        app={props.app}
+        hosted={props.state.hosted}
+        place="chip"
+        settings={settings}
+      />
+    )
+  }
   return (
     <ChoiceModelPicker
       model={model}
       value={model === null ? "" : chosenModel(model, props.state.form)}
       onChoose={(next) => props.state.form.setInput(modelInput, next)}
-      settings={
-        <AdsModelSettings {...props} chips={[...props.chips, modelInput]} />
-      }
+      settings={settings}
     />
   )
 }
