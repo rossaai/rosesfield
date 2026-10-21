@@ -150,13 +150,23 @@ export function problemOf(
   return facts.seconds === null ? null : lengthProblem(facts.seconds, limits)
 }
 
+const readingSlack = 0.05
+
+function onStep(seconds: number, step: number): number {
+  const steps = Math.ceil(seconds / step - Math.min(readingSlack / step, 0.5))
+  const perSecond = Math.round(1 / step)
+  return Math.abs(perSecond * step - 1) < 1e-9
+    ? steps / perSecond
+    : steps * step
+}
+
 function numberLength(
   seconds: number,
-  field: Extract<ModelField, { kind: "number" }>
+  field: Extract<ModelField, { kind: "number" }>,
+  step: number | null
 ): number {
-  const wanted = field.integer
-    ? Math.ceil(seconds - 0.05)
-    : Math.round(seconds * 100) / 100
+  const wanted =
+    step === null ? Math.round(seconds * 100) / 100 : onStep(seconds, step)
   return Math.min(field.max ?? wanted, Math.max(field.min ?? wanted, wanted))
 }
 
@@ -174,11 +184,12 @@ function choiceLength(
 
 export function lengthFor(
   seconds: number,
-  field: ModelField
+  field: ModelField,
+  step: number | null
 ): string | number | null {
   switch (field.kind) {
     case "number":
-      return numberLength(seconds, field)
+      return numberLength(seconds, field, step)
     case "choice":
       return choiceLength(seconds, field)
     default:

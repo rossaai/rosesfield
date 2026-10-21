@@ -122,10 +122,10 @@ describe("the length a model is asked for", () => {
       integer: true,
       default: 5,
     }
-    expect(lengthFor(5.02, field)).toBe(5)
-    expect(lengthFor(6.4, field)).toBe(7)
-    expect(lengthFor(2, field)).toBe(4)
-    expect(lengthFor(30, field)).toBe(15)
+    expect(lengthFor(5.02, field, 1)).toBe(5)
+    expect(lengthFor(6.4, field, 1)).toBe(7)
+    expect(lengthFor(2, field, 1)).toBe(4)
+    expect(lengthFor(30, field, 1)).toBe(15)
   })
 
   it("picks the shortest choice that holds the audio", () => {
@@ -137,9 +137,9 @@ describe("the length a model is asked for", () => {
       options: ["5", "10"],
       default: "5",
     }
-    expect(lengthFor(4.2, field)).toBe("5")
-    expect(lengthFor(7, field)).toBe("10")
-    expect(lengthFor(12, field)).toBe("10")
+    expect(lengthFor(4.2, field, null)).toBe("5")
+    expect(lengthFor(7, field, null)).toBe("10")
+    expect(lengthFor(12, field, null)).toBe("10")
   })
 })
 

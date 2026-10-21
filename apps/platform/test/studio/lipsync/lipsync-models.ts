@@ -6,6 +6,10 @@ import type { AppForm } from "@/screens/app/use-app-form"
 
 const lipsync = appListing.parse(findApp("lipsync"))
 
+const graphLength = lipsync.inputs.find((input) => input.name === "length")
+
+export const graphStep = graphLength?.type === "number" ? graphLength.step : 1
+
 export const photoApp: AppListing = {
   ...lipsync,
   inputs: [
@@ -36,7 +40,7 @@ export const photoApp: AppListing = {
       labelKey: "lipsync.input.length.label",
       min: 2,
       max: 10,
-      step: 1,
+      step: graphStep,
       default: 5,
     },
     { type: "seed", name: "seed", labelKey: "field.seed.label" },

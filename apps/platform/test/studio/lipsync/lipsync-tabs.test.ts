@@ -4,16 +4,19 @@ import {
   defaultsOfTab,
   featuredOf,
   formOfModel,
+  lengthStepOf,
   lipFieldsOf,
   modelForTab,
   modelsOfTab,
   nearModels,
   tabOfInputs,
 } from "@/studio/lipsync/lipsync-tabs"
+import { lengthFor } from "@/studio/lipsync/lipsync-checks"
 import {
   avatar,
   catalog,
   clipId,
+  graphStep,
   lipSync,
   ltx,
   photoApp,
@@ -89,5 +92,28 @@ describe("the lip sync tabs", () => {
     const fields = lipFieldsOf(lipSync.form ?? [])
     expect(tabOfInputs({ video: [clipId] }, fields)).toBe("clip")
     expect(tabOfInputs({ video: [] }, fields)).toBe("photo")
+  })
+
+  it("asks the graph for a length on its frame step, so audio of 5.03 s asks for 126 frames", () => {
+    const graph = lipFieldsOf(formOfModel(ltx, photoApp) ?? [])
+    const step = lengthStepOf(photoApp, graph.length, true)
+    expect(graphStep).toBe(1 / 25)
+    expect(step).toBe(graphStep)
+    const field = graph.length
+    if (field === null || step === null) {
+      throw new Error("the graph has a length field")
+    }
+    expect(lengthFor(5.03, field, step)).toBe(126 / 25)
+    expect(lengthFor(5.01, field, step)).toBe(125 / 25)
+    const frames = Number(lengthFor(5.02, field, step)) * 25
+    expect(Math.abs(frames - Math.round(frames))).toBeLessThan(1e-9)
+    expect(lengthFor(1, field, step)).toBe(2)
+    expect(lengthFor(12, field, step)).toBe(10)
+  })
+
+  it("asks a hosted model for whole seconds and reads no step from the app", () => {
+    const own = lipFieldsOf(seedance.form ?? [])
+    expect(own.length?.name).toBe("duration")
+    expect(lengthStepOf(photoApp, own.length, false)).toBe(1)
   })
 })

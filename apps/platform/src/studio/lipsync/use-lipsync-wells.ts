@@ -69,14 +69,15 @@ function useWell(form: AppForm, well: Well, set: SetProblems): WellReading {
 function useDerivedLength(
   form: AppForm,
   audio: MediaFacts | null,
-  field: ModelField | null
+  field: ModelField | null,
+  step: number | null
 ): void {
   const seconds = audio?.seconds ?? null
   const { setInput } = form
   const name = field?.name ?? null
   const current = name === null ? undefined : form.values.inputs[name]
   const value =
-    seconds === null || field === null ? null : lengthFor(seconds, field)
+    seconds === null || field === null ? null : lengthFor(seconds, field, step)
   useEffect(() => {
     if (name !== null && value !== null && value !== current) {
       setInput(name, value)
@@ -123,13 +124,14 @@ export function useLipsyncWells(options: {
   face: Well
   audio: Well
   length: ModelField | null
+  lengthStep: number | null
   isGraph: boolean
 }): LipsyncWells {
   const { form } = options
   const [problems, setProblems] = useState<WellProblems>({})
   const face = useWell(form, options.face, setProblems)
   const audio = useWell(form, options.audio, setProblems)
-  useDerivedLength(form, audio.facts, options.length)
+  useDerivedLength(form, audio.facts, options.length, options.lengthStep)
   useShape(form, options.app, face.facts, options.isGraph)
   const waiting = [
     face.isWaiting ? options.face.name : null,

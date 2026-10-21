@@ -39,6 +39,7 @@ import {
   faceOf,
   featuredOf,
   type LipFields,
+  lengthStepOf,
   type LipsyncTab,
   modelsOfTab,
   tabOfInputs,
@@ -170,13 +171,16 @@ function useLipsyncRun(options: RunOptions): LipsyncRun {
   const priced = usePricedRun(options, parts, voices)
   const audio = plan.mode === "audio" ? (fields?.audio?.name ?? null) : null
   const limit = fields?.limit ?? null
+  const length = plan.mode === "audio" ? (fields?.length ?? null) : null
+  const isGraph = all.chosen?.kind === "graph"
   const wells = useLipsyncWells({
     form,
     app,
     face: { name: face?.name ?? null, kind: tab, limit },
     audio: { name: audio, kind: "audio", limit },
-    length: plan.mode === "audio" ? (fields?.length ?? null) : null,
-    isGraph: all.chosen?.kind === "graph",
+    length,
+    lengthStep: lengthStepOf(app, length, isGraph),
+    isGraph,
   })
   const focusers = useRef(new Map<string, () => void>())
   return {

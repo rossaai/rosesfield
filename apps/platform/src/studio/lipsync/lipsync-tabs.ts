@@ -144,6 +144,23 @@ function lengthFieldOf(fields: readonly ModelField[]): ModelField | null {
   return field?.kind === "number" || field?.kind === "choice" ? field : null
 }
 
+export function lengthStepOf(
+  app: AppListing,
+  field: ModelField | null,
+  isGraph: boolean
+): number | null {
+  if (field?.kind !== "number") {
+    return null
+  }
+  const input = isGraph
+    ? app.inputs.find((one) => one.name === field.name)
+    : undefined
+  if (input?.type === "number") {
+    return input.step
+  }
+  return field.integer ? 1 : null
+}
+
 export function lipFieldsOf(fields: readonly ModelField[]): LipFields {
   const photo = mediaOf(fields, "image")
   const clip = mediaOf(fields, "video")
