@@ -184,3 +184,31 @@ export function traitWords(): TraitWords {
   )
   return { nodes, bindings, output: [details, 0] }
 }
+
+const skippedWhenBald: readonly Step[] = ["hairStyle", "hairColor"]
+
+function fragmentOf(map: Fragments, value: unknown, fallback: string): string {
+  const key =
+    typeof value === "string" && Object.hasOwn(map, value) ? value : fallback
+  return map[key] ?? ""
+}
+
+export function traitPrompt(inputs: Readonly<Record<string, unknown>>): string {
+  const isBald = inputs.hairLength === "bald"
+  const lead =
+    fragmentOf(framing, inputs.framing, "half-body") +
+    fragmentOf(traits.gender, inputs.gender, "auto")
+  const words = chain
+    .filter((step) => !(isBald && skippedWhenBald.includes(step)))
+    .map((step) =>
+      fragmentOf(
+        fragmentsOf(step),
+        inputs[step],
+        step === "plainBackground" ? "on" : "auto"
+      )
+    )
+    .join("")
+  const details = typeof inputs.details === "string" ? inputs.details : ""
+  const base = `${lead}${words}${sourceReady}`
+  return details === "" ? base : `${base}. ${details}`
+}

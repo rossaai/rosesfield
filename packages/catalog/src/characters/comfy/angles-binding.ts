@@ -17,7 +17,7 @@ import { WorkflowInvalidError } from "#workflow-invalid.error"
 
 type Pose = (typeof setPoses)[AngleSet][number]
 
-const viewDistance: Distance = "medium"
+export const viewDistance: Distance = "medium"
 
 function perSet(wordOf: (set: AngleSet) => string): Record<string, string> {
   return Object.fromEntries(angleSets.map((set) => [set, wordOf(set)]))
