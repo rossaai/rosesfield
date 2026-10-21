@@ -13,8 +13,6 @@ export type ModelId =
   | "qwen-image-edit-2509"
   | "qwen-image-layered"
   | "ltx-2-5"
-  | "wan-2-1-vace"
-  | "infinitetalk"
   | "seedvr2"
   | "birefnet"
   | "lucida"
@@ -88,21 +86,6 @@ export const openModels: readonly OpenModel[] = [
     files: [
       "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
       "Lightricks/LTX-2.5",
-    ],
-  },
-  {
-    id: "wan-2-1-vace",
-    licence: "apache-2-0",
-    link: `${huggingFace}/Wan-AI/Wan2.1-VACE-14B`,
-    files: ["wan2.1_vace_14B_fp16.safetensors", "Wan-AI/Wan2.1-VACE-14B"],
-  },
-  {
-    id: "infinitetalk",
-    licence: "apache-2-0",
-    link: `${huggingFace}/MeiGen-AI/InfiniteTalk`,
-    files: [
-      "Wan2_1-InfiniTetalk-Single_fp16.safetensors",
-      "wan2.1_infiniteTalk_single_fp16.safetensors",
     ],
   },
   {
