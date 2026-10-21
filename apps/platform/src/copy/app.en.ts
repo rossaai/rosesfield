@@ -46,6 +46,8 @@ export const appCopy = {
   "run.openInComfy.failed": "The workflow file did not download. Try again.",
   "run.output": "Result {index} of {count}",
   "run.working": "Result {index} of {count} is on its way",
+  "run.dropped.one": "{count} blank result was left out",
+  "run.dropped.other": "{count} blank results were left out",
   "run.noPrompt": "Run of {app}",
   "state.stop": "Stop",
   "state.stopped": "Stopped",

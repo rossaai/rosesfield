@@ -4,7 +4,7 @@ import { PromptBlock } from "@rosesfield/ui/components/input-panel"
 import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import { ModeStrip, ModeTab, Tabs } from "@rosesfield/ui/components/tabs"
 import { useNavigate } from "@tanstack/react-router"
-import { type ReactElement, useMemo } from "react"
+import { type ReactElement, useMemo, useRef } from "react"
 import { t, tCatalog } from "@/copy/t"
 import { CollapsibleSection } from "@/pieces/collapsible-section"
 import { CatalogPicker, modelNameOf } from "@/screens/app/hosted/catalog-picker"
@@ -27,7 +27,11 @@ function isVideoTab(value: unknown): value is VideoTab {
   return videoTabs.some((tab) => tab === value)
 }
 
-export function ModeTabs({ screen }: { screen: VideoScreen }): ReactElement {
+export function ModeTabs({
+  screen,
+}: {
+  screen: Pick<VideoScreen, "tab" | "setTab">
+}): ReactElement {
   return (
     <Tabs
       value={screen.tab}
@@ -55,8 +59,20 @@ export function MakeSwitch({
 }: {
   onExtend: () => void
 }): ReactElement {
+  const isByArrow = useRef(false)
   return (
-    <div data-slot="make-switch" className="mb-2">
+    <div
+      data-slot="make-switch"
+      className="mb-2"
+      onKeyDownCapture={(event) => {
+        isByArrow.current = event.key.startsWith("Arrow")
+      }}
+      onClickCapture={(event) => {
+        if (!(event.target instanceof HTMLInputElement)) {
+          isByArrow.current = false
+        }
+      }}
+    >
       <SegmentedControl<MakeChoice>
         density="composer"
         label={tCatalog("videoEdit.input.mode.label")}
@@ -66,7 +82,7 @@ export function MakeSwitch({
           { value: "extend", label: tCatalog("videoEdit.choice.mode.extend") },
         ]}
         onValueChange={(next) => {
-          if (next === "extend") {
+          if (next === "extend" && !isByArrow.current) {
             onExtend()
           }
         }}

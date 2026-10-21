@@ -152,11 +152,15 @@ function AppBarAction({
 }
 
 function BarEnd({
+  areaMenu,
   balance,
   connect,
-}: Pick<AppBarProps, "balance" | "connect">): ReactElement {
+}: Pick<AppBarProps, "areaMenu" | "balance" | "connect">): ReactElement {
   return (
     <span className="flex shrink-0 items-center gap-1">
+      {areaMenu === undefined ? null : (
+        <span className="flex shrink-0 @regular:hidden">{areaMenu}</span>
+      )}
       {balance === undefined ? null : (
         <span data-slot="app-bar-balance" className="flex">
           {balance}
@@ -214,11 +218,8 @@ function AppBar({
         <AreaLinks>{areas}</AreaLinks>
       </nav>
       <span className="flex-1 @regular:hidden" />
-      {areaMenu === undefined ? null : (
-        <span className="flex shrink-0 @regular:hidden">{areaMenu}</span>
-      )}
       <DensityContext value={density}>
-        <BarEnd balance={balance} connect={connect} />
+        <BarEnd areaMenu={areaMenu} balance={balance} connect={connect} />
       </DensityContext>
     </header>
   )

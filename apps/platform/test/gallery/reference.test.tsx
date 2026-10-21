@@ -1,5 +1,7 @@
-import { cleanup, render } from "@testing-library/react"
+import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
+import { cleanup, render, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
+import { t, tCatalog } from "@/copy/t"
 import { referenceControlEntries } from "@/gallery/entries/reference-controls"
 import { referenceCreateEntries } from "@/gallery/entries/reference-create"
 import { referenceMediaEntries } from "@/gallery/entries/reference-media"
@@ -163,5 +165,49 @@ describe("the create gallery", () => {
     ].map((chip) => chip.textContent)
     expect(chips).toEqual(["Elements", "Sound"])
     expect(block?.querySelector(".lucide-at-sign")).not.toBeNull()
+  })
+})
+
+describe("the create gallery's column", () => {
+  it("shows the live Video column: its three mode tabs, the start frame, the Video and Extend switch and the setting tiles", () => {
+    const entry = referenceCreateEntries.find(
+      (one) => one.id === "ref-input-panel"
+    )
+    const rest = entry?.states.find((one) => one.id === "rest")
+    if (rest === undefined) {
+      throw new Error("no ref-input-panel rest")
+    }
+    const { container } = render(
+      <TooltipProvider>{rest.render()}</TooltipProvider>
+    )
+    const tray = container.querySelector("[data-slot='composer-tray']")
+    if (!(tray instanceof HTMLElement)) {
+      throw new Error("no tray")
+    }
+    expect(
+      within(tray)
+        .getAllByRole("tab")
+        .map((tab) => tab.textContent)
+    ).toEqual([
+      tCatalog("video.tab.textImage"),
+      tCatalog("video.tab.references"),
+      tCatalog("video.tab.firstLast"),
+    ])
+    const parts = container.querySelector("[data-slot='composer-prompt']")
+    if (!(parts instanceof HTMLElement)) {
+      throw new Error("no parts")
+    }
+    expect(
+      within(parts)
+        .getAllByRole("radio")
+        .map((cell) => cell.textContent)
+    ).toEqual([t("kind.video"), tCatalog("videoEdit.choice.mode.extend")])
+    const frame = parts.querySelector(
+      "[data-slot='composer-attachments-tiles']"
+    )
+    expect(frame?.textContent).toContain(tCatalog("video.preset.title"))
+    expect(parts.firstElementChild?.contains(frame ?? null)).toBe(true)
+    const tiles = parts.querySelector("[data-slot='setting-tiles']")
+    expect(tiles?.childElementCount).toBeGreaterThanOrEqual(2)
   })
 })

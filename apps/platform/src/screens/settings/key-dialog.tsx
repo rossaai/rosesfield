@@ -25,6 +25,7 @@ import {
   comfyBillingPage,
   comfyKeyPage,
 } from "@/screens/app/hosted/model-notice"
+import { LegalLinks } from "@/screens/legal/legal-links"
 import {
   type Account,
   accountQuery,
@@ -257,6 +258,7 @@ export function KeyFormView(props: KeyFormViewProps): ReactElement {
         </Button>
         <RetentionLine />
       </div>
+      <LegalLinks />
     </form>
   )
 }

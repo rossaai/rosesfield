@@ -17,7 +17,7 @@ import {
   secondsBetween,
   withUnit,
 } from "@/copy/format"
-import { t, tCatalog } from "@/copy/t"
+import { t, tCatalog, tCount } from "@/copy/t"
 import { inputCaption, inputUnit } from "@/screens/app/fields/input-copy"
 import { openModelLabel, openModelOfFile } from "@/screens/welcome/open-weights"
 
@@ -231,6 +231,20 @@ export function runPrice(run: Run, estimate: number | null = null): string {
   return priceOf(run, estimate) ?? t("run.price.unknown")
 }
 
+export function historyPrice(
+  run: Run,
+  estimate: number | null = null
+): string | null {
+  if (run.origin === "demo") {
+    return null
+  }
+  if (run.status === "done") {
+    return runPrice(run, estimate)
+  }
+  const isEnded = run.status === "failed" || run.status === "cancelled"
+  return isEnded && run.cost !== null ? priceOf(run, null) : null
+}
+
 function captionPrice(run: Run, estimate: number | null): string {
   if (run.origin === "demo") {
     return t("run.caption.price.demo")
@@ -263,13 +277,19 @@ function madeCaption(run: Run, lead: string | null): string | null {
 export function runCaption(run: Run, estimate: number | null = null): string {
   const model = runModel(run, findCatalogApp(run.appId))
   if (run.status === "failed" || run.status === "cancelled") {
-    return model ?? ""
+    const charged = run.cost === null ? null : priceOf(run, null)
+    return joinParts([model, charged])
   }
   const lead = run.origin === "demo" ? t("run.demoCaption") : model
   if (run.status !== "done") {
     return lead ?? ""
   }
-  return joinParts([lead, madeCaption(run, lead), captionPrice(run, estimate)])
+  return joinParts([
+    lead,
+    madeCaption(run, lead),
+    captionPrice(run, estimate),
+    run.dropped === undefined ? null : tCount("run.dropped", run.dropped),
+  ])
 }
 
 function inputAspectOf(run: Run): string | null {

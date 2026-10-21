@@ -4,6 +4,7 @@ import { findCatalogApp } from "@/catalog/catalog-apps"
 import { tCatalog } from "@/copy/t"
 import {
   headlineSource,
+  historyPrice,
   inputValueText,
   runAspect,
   runCaption,
@@ -190,8 +191,68 @@ describe("runCaption", () => {
     expect(failed).not.toContain("made in")
   })
 
+  it("prints the credits Comfy charged on a failed run", () => {
+    const failed = runCaption(
+      runOf({
+        appId: "video",
+        status: "failed",
+        outputs: [],
+        origin: "live",
+        inputs: { model: "auto" },
+        cost: { amount: 1.188768 / 211, currency: "USD" },
+        engine: {
+          adapter: "comfy",
+          models: ["video/ltx-2.5-dev.safetensors"],
+          workflowHash: "abc",
+        },
+      })
+    )
+    expect(failed).toBe("ltx-2.5-dev, 1.1888 Comfy credits")
+    expect(failed).not.toContain("made in")
+  })
+
   it("prints nothing on a failed demo run", () => {
     expect(runCaption(runOf({ status: "failed", outputs: [] }))).toBe("")
+  })
+
+  it("says how many blank results a finished run left out", () => {
+    const one = runCaption(runOf({ status: "done", dropped: 1 }))
+    const two = runCaption(runOf({ status: "done", dropped: 2 }))
+    expect(one).toContain("1 blank result was left out")
+    expect(two).toContain("2 blank results were left out")
+    expect(runCaption(runOf({ status: "done" }))).not.toContain("blank")
+  })
+})
+
+describe("historyPrice", () => {
+  const live = {
+    appId: "video",
+    origin: "live",
+    outputs: [],
+    engine: {
+      adapter: "comfy",
+      models: ["video/ltx-2.5-dev.safetensors"],
+      workflowHash: "abc",
+    },
+  }
+  const cost = { amount: 1.188768 / 211, currency: "USD" }
+
+  it("prints the credits Comfy charged on a failed run", () => {
+    expect(historyPrice(runOf({ ...live, status: "failed", cost }))).toBe(
+      "1.1888 Comfy credits"
+    )
+  })
+
+  it("prints no price on a failed run Comfy charged nothing for", () => {
+    expect(historyPrice(runOf({ ...live, status: "failed" }), 0.57)).toBeNull()
+  })
+
+  it("prints no price on a run still working", () => {
+    expect(historyPrice(runOf({ ...live, status: "running", cost }))).toBeNull()
+  })
+
+  it("prints no price on a demo run", () => {
+    expect(historyPrice(runOf({ status: "failed", cost }))).toBeNull()
   })
 })
 

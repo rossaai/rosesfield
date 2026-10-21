@@ -100,15 +100,19 @@ afterEach(() => {
 })
 
 describe("the form that adds your Comfy key", () => {
-  it("shows one sentence and one link, to Comfy's key page", () => {
+  it("shows one sentence and links to Comfy's key page, Privacy and Terms", () => {
     answerAccounts()
     renderForm()
     expect(screen.getByText(t("key.sentence"))).not.toBeNull()
     const links = screen.getAllByRole("link")
-    expect(links.map((link) => link.getAttribute("href"))).toEqual([
-      comfyKeyPage,
+    expect(
+      links.map((link) => [link.textContent, link.getAttribute("href")])
+    ).toEqual([
+      [t("key.page"), comfyKeyPage],
+      [t("shell.footer.privacy"), "/privacy"],
+      [t("shell.footer.terms"), "/terms"],
     ])
-    expect(links[0]?.textContent).toBe(t("key.page"))
+    expect(screen.getByText(t("key.legal"))).not.toBeNull()
   })
 
   it("sends the pasted key in its header, shows the balance and keeps the key", async () => {

@@ -65,7 +65,10 @@ function PromptBlock({
   return (
     <div
       data-slot="composer-prompt-block"
-      className="flex w-full flex-col rounded-cell outline-hor-text has-[textarea:focus-visible]:outline-(length:--spacing-focus-ring) has-[textarea:focus-visible]:outline-offset-(--spacing-focus-ring) has-[textarea:focus-visible]:outline-solid"
+      className={cn(
+        "flex w-full flex-col rounded-cell",
+        interaction.fieldHostRing
+      )}
     >
       <div className="relative flex h-31.5 flex-col rounded-t-cell bg-(--well) px-3 pt-9 pb-2">
         <span className="absolute top-3 left-3 font-medium text-label text-ink-muted">

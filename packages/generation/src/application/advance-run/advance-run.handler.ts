@@ -1,13 +1,15 @@
 import type { AppDefinition, Cost } from "@rosesfield/contract"
 import {
-  type AssetId,
   type Clock,
   ProjectError,
   RateLimitedError,
   type RunId,
 } from "@rosesfield/kernel"
 import { jobInputsOf } from "#application/advance-run/job-inputs"
-import { keepOutputs } from "#application/advance-run/keep-outputs"
+import {
+  type KeptOutputs,
+  keepOutputs,
+} from "#application/advance-run/keep-outputs"
 import { recordPrice } from "#application/advance-run/record-price"
 import { runRequestOf } from "#application/advance-run/run-request"
 import {
@@ -208,10 +210,10 @@ export class AdvanceRunHandler {
     run: Run,
     watch: Watch,
     index: number,
-    outputs: readonly AssetId[],
+    kept: KeptOutputs,
     cost: Cost | null
   ): Promise<void> {
-    run.keepJob({ index, outputs, cost, now: this.now() })
+    run.keepJob({ ...kept, index, cost, now: this.now() })
     await recordPrice(this.prices, {
       run,
       app: watch.app,

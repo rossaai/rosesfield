@@ -50,7 +50,7 @@
   // than RETENTION_DAYS, and every shared result older than 90 days, once an
   // hour.
   "triggers": { "crons": ["17 * * * *"] },
-  "observability": { "enabled": true },
+  "observability": { "enabled": true, "logs": { "invocation_logs": false } },
   "env": {
     // A private owner link: owner mode on one Comfy key, with a spend cap set by
     // SPEND_CAP_CREDITS. OWNER_TOKEN and COMFY_API_KEY are secrets, set with

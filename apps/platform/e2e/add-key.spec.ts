@@ -62,10 +62,9 @@ async function pasteKey(page: Page, key: string): Promise<void> {
     .getByRole("button", { name: "Add your Comfy key" })
     .click()
   const dialog = page.getByRole("dialog")
-  await expect(dialog.getByRole("link")).toHaveAttribute(
-    "href",
-    "https://platform.comfy.org/profile/api-keys"
-  )
+  await expect(
+    dialog.getByRole("link", { name: "Open Comfy's key page" })
+  ).toHaveAttribute("href", "https://platform.comfy.org/profile/api-keys")
   await dialog.locator("input").fill(key)
   await dialog.getByRole("button", { name: "Add key" }).click()
 }

@@ -114,10 +114,7 @@ function RowName({ row }: { row: ModelPickerRow }): ReactElement {
         </span>
       )}
       {weights.length === 0 ? null : (
-        <span
-          data-slot="model-row-weights"
-          className="pointer-events-auto relative z-10 flex shrink-0"
-        >
+        <span data-slot="model-row-weights" className="flex shrink-0">
           {weights.map((badge) => (
             <RowBadge key={badge.kind} badge={badge} />
           ))}
@@ -134,18 +131,29 @@ function RowLine({ row }: { row: ModelPickerRow }): ReactNode {
   return (
     <span
       data-slot="model-row-line"
-      className="flex min-w-0 items-center gap-1 truncate text-caption text-ink-muted"
+      className="flex min-w-0 flex-wrap items-center gap-x-1 overflow-hidden text-caption whitespace-nowrap text-ink-muted"
     >
-      {row.line === null ? null : <span className="truncate">{row.line}</span>}
-      {row.tags.map((tag) => (
-        <span
-          key={tag.label}
-          className="inline-flex shrink-0 items-center gap-0.5 rounded-dense bg-(--tint) px-1 [&_svg]:size-3"
-        >
-          {tag.icon}
-          {tag.label}
+      {row.line === null ? null : (
+        <span data-slot="model-row-words" className="max-w-full truncate">
+          {row.line}
         </span>
-      ))}
+      )}
+      {row.tags.length === 0 ? null : (
+        <span
+          data-slot="model-row-tags"
+          className="flex max-w-full shrink-0 gap-1 overflow-hidden"
+        >
+          {row.tags.map((tag) => (
+            <span
+              key={tag.label}
+              className="inline-flex shrink-0 items-center gap-0.5 rounded-dense bg-(--tint) px-1 [&_svg]:size-3"
+            >
+              {tag.icon}
+              {tag.label}
+            </span>
+          ))}
+        </span>
+      )}
     </span>
   )
 }

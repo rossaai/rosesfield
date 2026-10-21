@@ -2,6 +2,7 @@ import { PresetGrid, PresetTile } from "@rosesfield/ui/components/preset-tile"
 import { PRESET_TILE } from "@rosesfield/ui/contracts/preset-tile.generated"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
+import { readSource } from "../read-source"
 
 afterEach(cleanup)
 
@@ -109,5 +110,62 @@ describe("PresetGrid", () => {
     expect([...stacks].map((stack) => stack.childElementCount)).toEqual([
       3, 3, 2, 2, 2,
     ])
+  })
+})
+
+function darkHexOf(token: string): string {
+  const declared = new RegExp(`--${token}:[^;]*--if-dark, (#[0-9a-f]+)`)
+  const hex = declared.exec(readSource("tokens.css"))?.[1]
+  if (hex === undefined) {
+    throw new Error(`no dark value for --${token}`)
+  }
+  return hex
+}
+
+function channelsOf(hex: string): number[] {
+  return [1, 3, 5, 7]
+    .map((at) => hex.slice(at, at + 2))
+    .filter((pair) => pair !== "")
+    .map((pair) => Number.parseInt(pair, 16) / 255)
+}
+
+function luminanceOf(rgb: readonly number[]): number {
+  const [r = 0, g = 0, b = 0] = rgb.map((value) =>
+    value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+  )
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+describe("the effect tile's line on its wash", () => {
+  it("reads at the 4.5 to 1 text contrast over the wash on the brightest clip", () => {
+    render(
+      <PresetTile
+        name="Melt"
+        href="/explore/melt"
+        viewLabel="View Melt"
+        line="Turns a photo to wax"
+        clip={{ src: "melt.mp4", alt: "Melt" }}
+        aspect={{ width: 16, height: 9 }}
+      />
+    )
+    const line = document.querySelector("[data-slot='preset-tile-line']")
+    const tone = line?.className
+      .split(" ")
+      .find((name) => /^text-ink(-[a-z]+)?$/.test(name))
+      ?.slice("text-".length)
+    if (tone === undefined) {
+      throw new Error("the line names no text tone")
+    }
+    const [red = 0, green = 0, blue = 0, alpha = 1] = channelsOf(
+      darkHexOf("scrim")
+    )
+    const wash = [red, green, blue].map(
+      (value) => value * alpha + 1 * (1 - alpha)
+    )
+    const text = luminanceOf(channelsOf(darkHexOf(tone)))
+    const ground = luminanceOf(wash)
+    const contrast =
+      (Math.max(text, ground) + 0.05) / (Math.min(text, ground) + 0.05)
+    expect(contrast).toBeGreaterThanOrEqual(4.5)
   })
 })

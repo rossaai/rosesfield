@@ -266,3 +266,15 @@ test("the footer closes Explore with its links and leaves an app page", async ({
   await expect(page.locator("header[data-slot='app-bar']")).toBeVisible()
   expect(await page.locator("footer[data-slot='footer']").count()).toBe(0)
 })
+
+test("on a phone the area menu sits 4 px before the balance", async ({
+  page,
+}) => {
+  test.skip(!isPhone(page), "the phone bar")
+  for (const path of ["/", "/library", "/history"]) {
+    const bar = await open(page, path)
+    const menu = await boxOf(bar.getByRole("button", { name: "Open the menu" }))
+    const balance = await boxOf(bar.locator("[data-slot='app-bar-balance']"))
+    expect(Math.round(balance.x - (menu.x + menu.width)), path).toBe(4)
+  }
+})

@@ -313,6 +313,7 @@ function LibraryCanvas(props: LibraryCanvasProps): ReactElement {
   return (
     <Canvas
       label={t("library.title")}
+      inset="page"
       tabs={
         <div className="min-w-0 flex-1">
           <LibrarySearch

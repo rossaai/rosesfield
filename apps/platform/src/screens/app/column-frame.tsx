@@ -91,7 +91,11 @@ function ColumnSheet(
         <SheetBody>
           {props.isRegular ? null : (
             <>
-              {props.tabs}
+              {props.tabs === undefined ? null : (
+                <div data-slot="sheet-tray" className="mb-2">
+                  {props.tabs}
+                </div>
+              )}
               {props.panel}
             </>
           )}

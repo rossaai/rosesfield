@@ -78,4 +78,7 @@ export const errorCopy = {
   "noun.character": "character",
   "noun.conversation": "conversation",
   "noun.app": "app",
+  "error.RUN_OUTPUT_BLANK.title": "The result came back blank",
+  "error.RUN_OUTPUT_BLANK.body":
+    "Comfy returned only black frames. Your inputs are kept, and you can run it again.",
 } satisfies Record<string, string>

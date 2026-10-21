@@ -68,6 +68,16 @@ describe("AppBar", () => {
     expect(buttons[buttons.length - 1]?.textContent).toBe("Connect")
   })
 
+  it("on a phone sets the area menu 4 px before the balance, in one group with it", () => {
+    const bar = renderBar("full")
+    const menu = screen.getByRole("button", { name: "Areas" })
+    const balance = bar.querySelector("[data-slot='app-bar-balance']")
+    const group = balance?.parentElement
+    expect(group?.contains(menu)).toBe(true)
+    expect(group?.className.split(" ")).toContain("gap-1")
+    expect(menu.parentElement?.nextElementSibling).toBe(balance)
+  })
+
   it("marks the links' scroll start while nothing is scrolled", () => {
     const bar = renderBar("full")
     const overflow = bar.querySelector("[data-slot='app-bar-overflow']")
