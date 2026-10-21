@@ -5,13 +5,18 @@ export const keepSentence =
 
 export const qwenFiles = {
   edit: "qwen_image_edit_2511_fp8mixed.safetensors",
-  text: "qwen_image_2512_fp8_e4m3fn.safetensors",
   encoder: "qwen_2.5_vl_7b_fp8_scaled.safetensors",
   vae: "qwen_image_vae.safetensors",
 } as const
 
-export const kleinFiles = {
-  unet: "flux-2-klein-4b-fp8.safetensors",
-  encoder: "qwen_3_4b.safetensors",
-  vae: "flux2-vae.safetensors",
+export const editNodes = {
+  seed: "6",
+  anchor: "7",
+  anchorScale: "8",
+  latent: "11",
+  firstKeep: "100",
+  firstPrompt: "101",
+  firstEdit: ["103", "104", "105", "106"],
+  firstKeyframe: "106",
+  firstBatch: "902",
 } as const

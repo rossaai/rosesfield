@@ -1,52 +1,34 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectBinding } from "@rosesfield/generation/bindings"
-import { sideMap } from "#storyboard/comfy/keyframe-sizes"
-import type { Link } from "#storyboard/comfy/storyboard-nodes"
+import { defaultModel, imageModels } from "#image/image-models"
+import {
+  type TextPass,
+  textPassOf,
+} from "#storyboard/comfy/keyframe-from-text"
+import { keyframeSizes, sideMap } from "#storyboard/comfy/keyframe-sizes"
+import { editNodes, type Link } from "#storyboard/comfy/storyboard-nodes"
 import {
   maxScenes,
   type StoryboardModel,
   sceneInputName,
   sceneNumbers,
+  storyboardModels,
 } from "#storyboard/storyboard-inputs"
 import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
+import { apiGraph } from "#workflow-entry.contract"
+import { WorkflowInvalidError } from "#workflow-invalid.error"
 
-type Row = {
-  anchored: string
-  fromText: string
-  sizes: readonly WorkflowValueBinding[]
-  firstEdit: string
-  firstText: string
-}
+type ApiGraph = ReturnType<typeof apiGraph.parse>
 
-function sizeBindings(width: string, height: string): WorkflowValueBinding[] {
-  return [
-    { from: "aspectRatio", map: sideMap("width"), to: width },
-    { from: "aspectRatio", map: sideMap("height"), to: height },
-  ]
-}
+const editWorkflow = "storyboard-qwen-image-edit-2511"
 
-export const storyboardRows: Readonly<Record<StoryboardModel, Row>> = {
-  "qwen-image-edit-2511": {
-    anchored: "storyboard-qwen-image-edit-2511",
-    fromText: "storyboard-qwen-image-edit-2511-from-text",
-    sizes: sizeBindings("width", "height"),
-    firstEdit: "106",
-    firstText: "46",
-  },
-  "flux-2-klein-4b": {
-    anchored: "storyboard-flux-2-klein-4b",
-    fromText: "storyboard-flux-2-klein-4b-from-text",
-    sizes: [
-      ...sizeBindings("schedulerWidth", "schedulerHeight"),
-      ...sizeBindings("width", "height"),
-    ],
-    firstEdit: "110",
-    firstText: "50",
-  },
-}
+const sizes: readonly WorkflowValueBinding[] = [
+  { from: "aspectRatio", map: sideMap("width"), to: "width" },
+  { from: "aspectRatio", map: sideMap("height"), to: "height" },
+]
 
-function countMap(first: string): Record<string, Link> {
-  const ends: Record<string, Link> = { "1": [first, 0] }
+function countMap(first: Link): Record<string, Link> {
+  const ends: Record<string, Link> = { "1": first }
   for (let count = 2; count <= maxScenes; count += 1) {
     ends[String(count)] = [String(900 + count), 0]
   }
@@ -60,52 +42,116 @@ function sceneBindings(): WorkflowValueBinding[] {
   ])
 }
 
-type Anchor = "reference" | "character" | "keyframe"
+function sharedBindings(first: Link): WorkflowValueBinding[] {
+  return [
+    { from: "seed", to: "seed" },
+    ...sizes,
+    ...sceneBindings(),
+    { from: "count", map: countMap(first), to: "count" },
+  ]
+}
 
-function anchorBinding(model: StoryboardModel, anchor: Anchor): EngineBinding {
-  const row = storyboardRows[model]
-  const fromText = anchor === "keyframe"
-  const anchorImage: WorkflowValueBinding[] = fromText
-    ? []
-    : [{ from: "input", name: anchor, index: 0, to: "anchor" }]
+function anchoredBinding(anchor: "reference" | "character"): EngineBinding {
   return workflowBinding({
-    workflow: fromText ? row.fromText : row.anchored,
+    workflow: editWorkflow,
     bindings: [
-      { from: "seed", to: "seed" },
-      ...anchorImage,
-      ...row.sizes,
-      ...sceneBindings(),
-      {
-        from: "count",
-        map: countMap(fromText ? row.firstText : row.firstEdit),
-        to: "count",
-      },
+      { from: "input", name: anchor, index: 0, to: "anchor" },
+      ...sharedBindings([editNodes.firstKeyframe, 0]),
     ],
   })
 }
 
-function byAnchor(model: StoryboardModel): EngineBinding {
+function textToImageDefault(): EngineBinding {
+  const model = imageModels.find((one) => one.value === defaultModel)
+  if (model === undefined) {
+    throw new WorkflowInvalidError({
+      folder: editWorkflow,
+      reason: `the text to image default ${defaultModel} is no graph of Image`,
+    })
+  }
+  return model.bind(keyframeSizes)
+}
+
+function nodeAt(graph: ApiGraph, id: string): ApiGraph[string] {
+  const node = graph[id]
+  if (node === undefined) {
+    throw new WorkflowInvalidError({
+      folder: editWorkflow,
+      reason: `the keyframe patch needs node ${id}`,
+    })
+  }
+  return node
+}
+
+function fromTextPatch(graph: ApiGraph, pass: TextPass): ApiGraph {
+  const first = pass.keyframe
+  delete graph[editNodes.anchor]
+  for (const id of editNodes.firstEdit) {
+    delete graph[id]
+  }
+  nodeAt(graph, editNodes.anchorScale).inputs.image = first
+  nodeAt(graph, editNodes.firstBatch).inputs.image1 = first
+  nodeAt(graph, editNodes.firstKeep).inputs = {
+    string_a: "",
+    string_b: "",
+    delimiter: "",
+  }
+  return { ...graph, ...pass.nodes }
+}
+
+function stringsOf(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((one): one is string => typeof one === "string")
+    : []
+}
+
+function keyframeBinding(): EngineBinding {
+  const pass = textPassOf({
+    binding: textToImageDefault(),
+    wires: {
+      prompt: [editNodes.firstPrompt, 0],
+      seed: [editNodes.seed, 0],
+      latent: [editNodes.latent, 0],
+    },
+    folder: editWorkflow,
+  })
+  const binding = workflowBinding({
+    workflow: editWorkflow,
+    bindings: sharedBindings(pass.keyframe),
+    patch: (graph) => fromTextPatch(apiGraph.parse(graph), pass),
+  })
+  const models = [...pass.models, ...stringsOf(binding.config.models)]
+  return {
+    ...binding,
+    config: { ...binding.config, models: [...new Set(models)] },
+  }
+}
+
+function byAnchor(): EngineBinding {
   return selectBinding({
     input: "reference",
     by: "filled",
     options: {
-      filled: anchorBinding(model, "reference"),
+      filled: anchoredBinding("reference"),
       empty: selectBinding({
         input: "character",
         by: "filled",
         options: {
-          filled: anchorBinding(model, "character"),
-          empty: anchorBinding(model, "keyframe"),
+          filled: anchoredBinding("character"),
+          empty: keyframeBinding(),
         },
       }),
     },
   })
 }
 
+const bindings: Readonly<Record<StoryboardModel, () => EngineBinding>> = {
+  "qwen-image-edit-2511": byAnchor,
+}
+
 export const storyboardBinding: EngineBinding = selectBinding({
   input: "model",
-  options: {
-    "qwen-image-edit-2511": byAnchor("qwen-image-edit-2511"),
-    "flux-2-klein-4b": byAnchor("flux-2-klein-4b"),
-  },
+  options: Object.fromEntries(
+    storyboardModels.map((model) => [model, bindings[model]()])
+  ),
 })

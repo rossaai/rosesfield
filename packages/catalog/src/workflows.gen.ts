@@ -51,14 +51,8 @@ import wRecastObjectWanVaceApi from "../../../workflows/recast-object-wan-vace/r
 import wRecastObjectWanVaceEntry from "../../../workflows/recast-object-wan-vace/entry.json"
 import wRelightQwenImageEdit2509Api from "../../../workflows/relight-qwen-image-edit-2509/relight-qwen-image-edit-2509.api.json"
 import wRelightQwenImageEdit2509Entry from "../../../workflows/relight-qwen-image-edit-2509/entry.json"
-import wStoryboardFlux2Klein4bApi from "../../../workflows/storyboard-flux-2-klein-4b/storyboard-flux-2-klein-4b.api.json"
-import wStoryboardFlux2Klein4bEntry from "../../../workflows/storyboard-flux-2-klein-4b/entry.json"
-import wStoryboardFlux2Klein4bFromTextApi from "../../../workflows/storyboard-flux-2-klein-4b-from-text/storyboard-flux-2-klein-4b-from-text.api.json"
-import wStoryboardFlux2Klein4bFromTextEntry from "../../../workflows/storyboard-flux-2-klein-4b-from-text/entry.json"
 import wStoryboardQwenImageEdit2511Api from "../../../workflows/storyboard-qwen-image-edit-2511/storyboard-qwen-image-edit-2511.api.json"
 import wStoryboardQwenImageEdit2511Entry from "../../../workflows/storyboard-qwen-image-edit-2511/entry.json"
-import wStoryboardQwenImageEdit2511FromTextApi from "../../../workflows/storyboard-qwen-image-edit-2511-from-text/storyboard-qwen-image-edit-2511-from-text.api.json"
-import wStoryboardQwenImageEdit2511FromTextEntry from "../../../workflows/storyboard-qwen-image-edit-2511-from-text/entry.json"
 import wTryOnQwenImageEdit2511Api from "../../../workflows/try-on-qwen-image-edit-2511/try-on-qwen-image-edit-2511.api.json"
 import wTryOnQwenImageEdit2511Entry from "../../../workflows/try-on-qwen-image-edit-2511/entry.json"
 import wUpscaleImageSeedvr2Api from "../../../workflows/upscale-image-seedvr2/upscale-image-seedvr2.api.json"
@@ -105,10 +99,7 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "recast-character-scail-2", entry: wRecastCharacterScail2Entry, graph: wRecastCharacterScail2Api },
   { folder: "recast-object-wan-vace", entry: wRecastObjectWanVaceEntry, graph: wRecastObjectWanVaceApi },
   { folder: "relight-qwen-image-edit-2509", entry: wRelightQwenImageEdit2509Entry, graph: wRelightQwenImageEdit2509Api },
-  { folder: "storyboard-flux-2-klein-4b", entry: wStoryboardFlux2Klein4bEntry, graph: wStoryboardFlux2Klein4bApi },
-  { folder: "storyboard-flux-2-klein-4b-from-text", entry: wStoryboardFlux2Klein4bFromTextEntry, graph: wStoryboardFlux2Klein4bFromTextApi },
   { folder: "storyboard-qwen-image-edit-2511", entry: wStoryboardQwenImageEdit2511Entry, graph: wStoryboardQwenImageEdit2511Api },
-  { folder: "storyboard-qwen-image-edit-2511-from-text", entry: wStoryboardQwenImageEdit2511FromTextEntry, graph: wStoryboardQwenImageEdit2511FromTextApi },
   { folder: "try-on-qwen-image-edit-2511", entry: wTryOnQwenImageEdit2511Entry, graph: wTryOnQwenImageEdit2511Api },
   { folder: "upscale-image-seedvr2", entry: wUpscaleImageSeedvr2Entry, graph: wUpscaleImageSeedvr2Api },
   { folder: "upscale-video-seedvr2", entry: wUpscaleVideoSeedvr2Entry, graph: wUpscaleVideoSeedvr2Api },
