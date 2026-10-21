@@ -71,12 +71,10 @@ import wUpscaleVideoSeedvr2Api from "../../../workflows/upscale-video-seedvr2/up
 import wUpscaleVideoSeedvr2Entry from "../../../workflows/upscale-video-seedvr2/entry.json"
 import wVideoEditBackgroundBirefnetApi from "../../../workflows/video-edit-background-birefnet/video-edit-background-birefnet.api.json"
 import wVideoEditBackgroundBirefnetEntry from "../../../workflows/video-edit-background-birefnet/entry.json"
-import wVideoEditExtendWan22Api from "../../../workflows/video-edit-extend-wan-2-2/video-edit-extend-wan-2-2.api.json"
-import wVideoEditExtendWan22Entry from "../../../workflows/video-edit-extend-wan-2-2/entry.json"
 import wVideoEditFrameRateFilmApi from "../../../workflows/video-edit-frame-rate-film/video-edit-frame-rate-film.api.json"
 import wVideoEditFrameRateFilmEntry from "../../../workflows/video-edit-frame-rate-film/entry.json"
-import wVideoEditReframeWanVaceApi from "../../../workflows/video-edit-reframe-wan-vace/video-edit-reframe-wan-vace.api.json"
-import wVideoEditReframeWanVaceEntry from "../../../workflows/video-edit-reframe-wan-vace/entry.json"
+import wVideoEditReframeLtx23Api from "../../../workflows/video-edit-reframe-ltx-2-3/video-edit-reframe-ltx-2-3.api.json"
+import wVideoEditReframeLtx23Entry from "../../../workflows/video-edit-reframe-ltx-2-3/entry.json"
 import wVideoLtx25StartFrameApi from "../../../workflows/video-ltx-2-5-start-frame/video-ltx-2-5-start-frame.api.json"
 import wVideoLtx25StartFrameEntry from "../../../workflows/video-ltx-2-5-start-frame/entry.json"
 import wVideoLtx25TextApi from "../../../workflows/video-ltx-2-5-text/video-ltx-2-5-text.api.json"
@@ -121,9 +119,8 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "upscale-image-seedvr2", entry: wUpscaleImageSeedvr2Entry, graph: wUpscaleImageSeedvr2Api },
   { folder: "upscale-video-seedvr2", entry: wUpscaleVideoSeedvr2Entry, graph: wUpscaleVideoSeedvr2Api },
   { folder: "video-edit-background-birefnet", entry: wVideoEditBackgroundBirefnetEntry, graph: wVideoEditBackgroundBirefnetApi },
-  { folder: "video-edit-extend-wan-2-2", entry: wVideoEditExtendWan22Entry, graph: wVideoEditExtendWan22Api },
   { folder: "video-edit-frame-rate-film", entry: wVideoEditFrameRateFilmEntry, graph: wVideoEditFrameRateFilmApi },
-  { folder: "video-edit-reframe-wan-vace", entry: wVideoEditReframeWanVaceEntry, graph: wVideoEditReframeWanVaceApi },
+  { folder: "video-edit-reframe-ltx-2-3", entry: wVideoEditReframeLtx23Entry, graph: wVideoEditReframeLtx23Api },
   { folder: "video-ltx-2-5-start-frame", entry: wVideoLtx25StartFrameEntry, graph: wVideoLtx25StartFrameApi },
   { folder: "video-ltx-2-5-text", entry: wVideoLtx25TextEntry, graph: wVideoLtx25TextApi },
   { folder: "voice-chatterbox", entry: wVoiceChatterboxEntry, graph: wVoiceChatterboxApi },

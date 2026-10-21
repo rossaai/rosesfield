@@ -5,14 +5,21 @@ import {
 } from "@rosesfield/contract"
 import type { FormValues } from "@/screens/app/app-form"
 
-export type VideoEditMode = "extend" | "reframe" | "background" | "frame-rate"
+export type VideoEditMode =
+  | "edit"
+  | "extend"
+  | "reframe"
+  | "background"
+  | "frame-rate"
 
 export const modeInput = "mode"
 export const sourceInput = "source"
 export const aspectInput = "aspect"
 export const seedInput = "seed"
+export const modelInput = "model"
 
-const modes: readonly VideoEditMode[] = [
+export const videoEditModes: readonly VideoEditMode[] = [
+  "edit",
   "extend",
   "reframe",
   "background",
@@ -23,6 +30,8 @@ const seededModes: readonly VideoEditMode[] = ["extend", "reframe"]
 
 const advanced: readonly string[] = ["resolution", "seed"]
 
+const wellInputs: readonly string[] = [modeInput, sourceInput, modelInput]
+
 const formatRatios: Readonly<Record<string, string>> = {
   "1-1": "1:1",
   "4-3": "4:3",
@@ -31,8 +40,8 @@ const formatRatios: Readonly<Record<string, string>> = {
   "9-16": "9:16",
 }
 
-function isVideoEditMode(value: unknown): value is VideoEditMode {
-  return modes.some((mode) => mode === value)
+export function isVideoEditMode(value: unknown): value is VideoEditMode {
+  return videoEditModes.some((mode) => mode === value)
 }
 
 function appliedIn(app: AppListing, mode: VideoEditMode): ReadonlySet<string> {
@@ -62,7 +71,8 @@ export function shownInputsOf(
   mode: VideoEditMode
 ): InputDefinition[] {
   return bodyAppFor(app, mode).inputs.filter(
-    (input) => !advanced.includes(input.name)
+    (input) =>
+      !(advanced.includes(input.name) || wellInputs.includes(input.name))
   )
 }
 

@@ -9,16 +9,13 @@ import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { app } from "#video-edit/app"
 import {
-  sixteenFpsFrames,
-  sixteenFpsOutput,
-} from "#video-edit/comfy/clip-at-sixteen-fps"
-import {
   type Recording,
   ReplayFetch,
 } from "../../../generation/test/infrastructure/replay-fetch"
 import {
   engineCases,
   graphProblemsOf,
+  ltxPackNodes,
   planted,
   seed,
   uploadedClip,
@@ -51,6 +48,13 @@ const submitted: Recording = {
   url: `${cloudUrl}/api/v2/jobs`,
   status: 201,
   json: { id: jobId, status: "queued", outputs: [] },
+}
+
+const graphModels: Readonly<Record<string, string>> = {
+  extend: "ltx-2-5",
+  reframe: "ltx-2-3-outpaint",
+  background: "birefnet",
+  "frame-rate": "film",
 }
 
 function requestFor(inputs: Record<string, unknown>): EngineRequest {
@@ -97,7 +101,8 @@ describe("the engine requests Video edit sends to Comfy", () => {
     async ({ inputs, model, expected, plant }) => {
       const { submission, workflow } = await submitOnce(inputs)
       expect(submission.models).toEqual([model])
-      expect(graphProblemsOf(workflow)).toEqual([])
+      const packs = inputs.mode === "reframe" ? ltxPackNodes : new Set<string>()
+      expect(graphProblemsOf(workflow, packs)).toEqual([])
       expect(valueProblemsOf(workflow, expected)).toEqual([])
       expect(valueProblemsOf(planted(workflow, plant), expected)).toEqual([
         `node ${plant.node} ${plant.input} is ${JSON.stringify(plant.value)}, not ${JSON.stringify(expected[plant.node]?.[plant.input])}`,
@@ -105,19 +110,34 @@ describe("the engine requests Video edit sends to Comfy", () => {
     }
   )
 
-  it("fills each operation's defaults: 3 seconds at 480p, 1:1 at 480p, green and 2x", async () => {
+  it("fills each graph's defaults: 2 seconds at 480p, 1:1 at 480p, green and 2x", async () => {
     const cases = [
-      { inputs: { mode: "extend" }, node: "98", input: "length", value: 49 },
-      { inputs: { mode: "reframe" }, node: "12", input: "value", value: 480 },
-      { inputs: { mode: "reframe" }, node: "13", input: "value", value: 480 },
       {
-        inputs: { mode: "background" },
+        inputs: { mode: "extend", model: "ltx-2-5" },
+        node: "1008",
+        input: "expression",
+        value: "round(2 * a / 8) * 8 + 1",
+      },
+      {
+        inputs: { mode: "reframe", model: "ltx-2-3-outpaint" },
+        node: "12",
+        input: "value",
+        value: 480,
+      },
+      {
+        inputs: { mode: "reframe", model: "ltx-2-3-outpaint" },
+        node: "13",
+        input: "value",
+        value: 480,
+      },
+      {
+        inputs: { mode: "background", model: "birefnet" },
         node: "10",
         input: "color",
         value: 0x00b140,
       },
       {
-        inputs: { mode: "frame-rate" },
+        inputs: { mode: "frame-rate", model: "film" },
         node: "9",
         input: "multiplier",
         value: 2,
@@ -129,57 +149,44 @@ describe("the engine requests Video edit sends to Comfy", () => {
     }
   })
 
-  it("takes the clip's frames at 16 frames per second, at most 81 of them, in Extend and Reframe", async () => {
-    for (const mode of ["extend", "reframe"]) {
-      const { workflow } = await submitOnce({ mode })
-      const picks = Object.values(workflow).filter(
-        (node) =>
-          node.class_type === "ImageFromBatch" &&
-          Array.isArray(node.inputs.batch_index)
-      )
-      expect(picks).toHaveLength(sixteenFpsFrames)
-      expect(workflow["340"]?.inputs).toEqual({
-        expression: "floor(40 * a / 16)",
-        "values.a": ["2", 2],
-      })
-      expect(workflow["503"]?.inputs).toMatchObject({
-        expression: "min(81, floor((b - 1) * 16 / a) + 1)",
-        "values.b": ["3", 2],
-      })
-    }
-  })
-
-  it("keeps the clip's own frames in Background and Frame rate", async () => {
-    for (const mode of ["background", "frame-rate"]) {
-      const { workflow } = await submitOnce({ mode })
-      expect(workflow[sixteenFpsOutput]).toBeUndefined()
-    }
-  })
-
-  it("sends each operation its own workflow", async () => {
+  it("sends each graph its own workflow", async () => {
     const hashes = await Promise.all(
-      ["extend", "reframe", "background", "frame-rate"].map(async (mode) => {
-        const { submission } = await submitOnce({ mode })
+      Object.entries(graphModels).map(async ([mode, model]) => {
+        const { submission } = await submitOnce({ mode, model })
         return submission.workflowHash
       })
     )
     expect(new Set(hashes).size).toBe(4)
   })
 
+  it("sends no Wan model and no partner node in any graph", async () => {
+    for (const [mode, model] of Object.entries(graphModels)) {
+      const { submission, workflow } = await submitOnce({ mode, model })
+      expect(submission.models.join(" ")).not.toMatch(/wan/i)
+      const files = Object.values(workflow).flatMap((node) =>
+        Object.values(node.inputs).filter(
+          (value): value is string => typeof value === "string"
+        )
+      )
+      expect(files.filter((file) => /wan/i.test(file))).toEqual([])
+    }
+  })
+
   it.each([
-    { mode: "extend", other: { color: "black" } },
-    { mode: "reframe", other: { seconds: 2 } },
-    { mode: "background", other: { resolution: "720p" } },
-    { mode: "frame-rate", other: { aspect: "9-16" } },
+    { mode: "extend", model: "ltx-2-5", other: { color: "black" } },
+    { mode: "reframe", model: "ltx-2-3-outpaint", other: { seconds: 2 } },
+    { mode: "background", model: "birefnet", other: { resolution: "720p" } },
+    { mode: "frame-rate", model: "film", other: { aspect: "9-16" } },
+    { mode: "extend", model: "film", other: {} },
   ])(
-    "control: a $mode request that carries another operation's input never reaches the engine",
-    ({ mode, other }) => {
-      expect(() => requestFor({ mode, ...other })).toThrow()
+    "control: a $mode request on $model that carries another operation's input or graph never reaches the engine",
+    ({ mode, model, other }) => {
+      expect(() => requestFor({ mode, model, ...other })).toThrow()
     }
   )
 
   it("control: the graph check names a planted link to a missing node and a planted node from a pack", async () => {
-    const { workflow } = await submitOnce({ mode: "frame-rate" })
+    const { workflow } = await submitOnce({ mode: "frame-rate", model: "film" })
     const broken: Workflow = {
       ...workflow,
       "9": {
@@ -201,7 +208,7 @@ describe("the engine requests Video edit sends to Comfy", () => {
       fetch: replay.fetch,
     })
     await expect(
-      engine.submit(requestFor({ mode: "extend" }))
+      engine.submit(requestFor({ mode: "extend", model: "ltx-2-5" }))
     ).rejects.toThrow()
     expect(replay.sent.some((sent) => sent.url.endsWith("/api/v2/jobs"))).toBe(
       false

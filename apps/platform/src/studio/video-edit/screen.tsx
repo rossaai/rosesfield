@@ -7,7 +7,7 @@ import {
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { useVideoEditScreen } from "@/studio/video-edit/use-video-edit-screen"
 import { VideoEditCanvas } from "@/studio/video-edit/video-edit-canvas"
-import { VideoEditPanel } from "@/studio/video-edit/video-edit-panel"
+import { ModeTabs, VideoEditPanel } from "@/studio/video-edit/video-edit-panel"
 
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const sheetClose = useRef<() => void>(() => undefined)
@@ -20,6 +20,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       start={state.start}
       onShortcut={state.onShortcut}
       sheet={sheet}
+      tabs={<ModeTabs state={state} />}
       panel={<VideoEditPanel state={state} />}
       canvas={(openInputs) => (
         <VideoEditCanvas
