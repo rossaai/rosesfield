@@ -151,10 +151,14 @@ describe("the effect recipes kept as data", () => {
       strength: 0.5,
     })
     expect(eye.midFrame?.prompt).toMatch(
-      /extreme macro close-up of the iris of one of the person's eyes/
+      /real macro photograph of the iris of one of the person's eyes/
     )
     expect(eye.midFrame?.prompt).toMatch(/iris fills the whole frame/)
-    expect(eye.midFrame?.prompt).toMatch(/black pupil sits in the centre/)
+    expect(eye.midFrame?.prompt).toMatch(/pure black in the centre/)
+    expect(eye.midFrame?.prompt).toMatch(/Do not change the eye colour/)
+    expect(eye.prompt).toMatch(
+      /face, skin tone and eye colour stay exactly as in the photo/
+    )
     expect(eye.prompt).toMatch(/never slows/)
     expect(eye.prompt).toMatch(
       /black pupil grows outward until it swallows the whole frame/
