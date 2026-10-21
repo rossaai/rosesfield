@@ -13,5 +13,20 @@
     },
     "verdict": "kept",
     "failed": []
+  },
+  {
+    "runId": "cb3281e7-8764-475f-848b-8cc386311bae",
+    "effect": "still-in-the-street",
+    "workflowHash": "d09eeab0439ddd83720b48abff95052823f5c717e76b5e7324097ebfa436d98f",
+    "photo": "e2a26592ec17f00140bcbb3facfb72304572a741639ffa1807f33be7f7de151f",
+    "seed": 107086447,
+    "resolution": "1080p",
+    "aspectRatio": "9:16",
+    "balance": {
+      "before": 2263.49,
+      "after": 2244.25
+    },
+    "verdict": "kept",
+    "failed": []
   }
 ]
