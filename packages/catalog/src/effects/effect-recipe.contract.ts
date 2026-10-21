@@ -79,29 +79,60 @@ export const videoReading = z.strictObject({
 
 const credits = z.number().min(0)
 
-export const effectProof = z
+const digest = z.string().regex(/^[0-9a-f]{64}$/)
+
+export const effectProof = z.strictObject({
+  gate: z.strictObject({
+    positives: z.number().int().min(1),
+    planted: z.literal("refused"),
+    verdict: z.literal("held"),
+  }),
+  judge: z.strictObject({
+    criteria: z.number().int().min(1),
+    failed: z.array(z.string().min(1)).max(0),
+    verdict: z.literal("held"),
+  }),
+  reading: videoReading,
+})
+
+export const runVerdictValues = ["kept", "refused"] as const
+
+export const effectRun = z
   .strictObject({
-    gate: z.strictObject({
-      positives: z.number().int().min(1),
-      planted: z.literal("refused"),
-      verdict: z.literal("held"),
-    }),
-    judge: z.strictObject({
-      criteria: z.number().int().min(1),
-      failed: z.array(z.string().min(1)).max(0),
-      verdict: z.literal("held"),
-    }),
-    reading: videoReading,
+    runId: z.uuid(),
+    effect: choiceValue,
+    workflowHash: digest,
+    photo: digest,
+    seed,
+    resolution: z.enum(resolutionValues),
+    aspectRatio,
     balance: z.strictObject({ before: credits, after: credits }),
+    verdict: z.enum(runVerdictValues),
+    failed: z.array(z.string().min(1)),
   })
-  .refine((proof) => proof.balance.after >= minimumBalance, {
-    message: `A run that took the balance under ${minimumBalance} credits proves no effect`,
+  .refine((run) => run.balance.before >= minimumBalance, {
+    message: `A run starts only with ${minimumBalance} credits or more`,
+    path: ["balance", "before"],
+  })
+  .refine((run) => run.balance.after >= minimumBalance, {
+    message: `A run that took the balance under ${minimumBalance} credits breaks the lane's floor`,
     path: ["balance", "after"],
   })
-  .refine((proof) => proof.balance.after <= proof.balance.before, {
+  .refine((run) => run.balance.after <= run.balance.before, {
     message: "A run's balance after it is at most its balance before it",
     path: ["balance", "after"],
   })
+  .refine((run) => (run.verdict === "kept") === (run.failed.length === 0), {
+    message: "A kept run failed no criterion, and a refused run names the ones it failed",
+    path: ["failed"],
+  })
+
+export const effectLedger = z
+  .array(effectRun)
+  .refine(
+    (runs) => new Set(runs.map((run) => run.runId)).size === runs.length,
+    { message: "Each run is one row of the ledger" }
+  )
 
 const preview = z.strictObject({
   file: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*\.mp4$/),
@@ -109,7 +140,7 @@ const preview = z.strictObject({
   seed,
   resolution: z.enum(resolutionValues),
   aspectRatio,
-  workflowHash: z.string().regex(/^[0-9a-f]{64}$/),
+  workflowHash: digest,
 })
 
 export const effectRecipe = z
@@ -139,5 +170,6 @@ export type CutWindow = z.infer<typeof cutWindow>
 export type EffectDesign = z.infer<typeof effectDesign>
 export type VideoReading = z.infer<typeof videoReading>
 export type EffectProof = z.infer<typeof effectProof>
+export type EffectRun = z.infer<typeof effectRun>
 export type EffectRecipe = z.infer<typeof effectRecipe>
 export type ResolutionValue = (typeof resolutionValues)[number]

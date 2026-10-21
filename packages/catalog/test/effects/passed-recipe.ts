@@ -5,6 +5,7 @@ import {
 } from "#effects/comfy/frame-sizes"
 import type {
   EffectRecipe,
+  EffectRun,
   ResolutionValue,
   VideoReading,
 } from "#effects/effect-recipe.contract"
@@ -60,7 +61,17 @@ export function passedRecipe(effect: string): EffectRecipe {
       gate: { positives: 1, planted: "refused", verdict: "held" },
       judge: { criteria: 14, failed: [], verdict: "held" },
       reading: readingFor(recipe, passedRun.resolution, passedRun.aspectRatio),
-      balance: { before: 3662.6, after: 3601.4 },
     },
+  }
+}
+
+export function keptRun(effect: string): EffectRun {
+  return {
+    ...passedRun,
+    effect,
+    photo: "3f1c9a7e0b2d4c6e8f0a1b3c5d7e9f1a2b4c6d8e0f1a3b5c7d9e1f2a4b6c8d0e",
+    balance: { before: 3662.6, after: 3601.4 },
+    verdict: "kept",
+    failed: [],
   }
 }

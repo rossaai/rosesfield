@@ -1,6 +1,8 @@
 import { AppDefinitionInvalidError } from "#app-definition-invalid.error"
 import {
   type EffectRecipe,
+  type EffectRun,
+  effectLedger,
   effectRecipe,
 } from "#effects/effect-recipe.contract"
 import { readingFailures } from "#effects/reading-failures"
@@ -11,6 +13,7 @@ import manyCopies from "./recipes/many-copies.json"
 import meltAway from "./recipes/melt-away.json"
 import pullBackToSpace from "./recipes/pull-back-to-space.json"
 import pushIntoEye from "./recipes/push-into-eye.json"
+import runs from "./runs.json"
 import scatterPetals from "./recipes/scatter-petals.json"
 import stillInTheStreet from "./recipes/still-in-the-street.json"
 
@@ -26,8 +29,48 @@ const files: Readonly<Record<string, unknown>> = {
   "still-in-the-street": stillInTheStreet,
 }
 
+type Preview = NonNullable<EffectRecipe["preview"]>
+
+export function readLedger(source: unknown): EffectRun[] {
+  const parsed = effectLedger.safeParse(source)
+  if (!parsed.success) {
+    throw new AppDefinitionInvalidError({
+      folder: "effects",
+      reason: `the run ledger runs.json is invalid: ${parsed.error.issues
+        .map((issue) => `${issue.path.join(".")} ${issue.message}`)
+        .join(", ")}`,
+    })
+  }
+  return parsed.data
+}
+
+function ledgerFailure(
+  effect: string,
+  preview: Preview,
+  ledger: readonly EffectRun[]
+): string | null {
+  const run = ledger.find((row) => row.runId === preview.runId)
+  if (run === undefined) {
+    return `the run ${preview.runId} is not a row of the run ledger`
+  }
+  const sameInput =
+    run.effect === effect &&
+    run.workflowHash === preview.workflowHash &&
+    run.seed === preview.seed &&
+    run.resolution === preview.resolution &&
+    run.aspectRatio === preview.aspectRatio
+  if (!sameInput) {
+    return `the run ledger records the run ${preview.runId} with another recipe or input`
+  }
+  if (run.verdict !== "kept") {
+    return `the run ledger records the run ${preview.runId} as refused`
+  }
+  return null
+}
+
 export function readRecipes(
-  sources: Readonly<Record<string, unknown>>
+  sources: Readonly<Record<string, unknown>>,
+  ledger: readonly EffectRun[]
 ): EffectRecipe[] {
   return Object.entries(sources).map(([file, source]) => {
     const parsed = effectRecipe.safeParse(source)
@@ -46,6 +89,14 @@ export function readRecipes(
       })
     }
     const { proof, preview } = parsed.data
+    const unrecorded =
+      preview === null ? null : ledgerFailure(file, preview, ledger)
+    if (unrecorded !== null) {
+      throw new AppDefinitionInvalidError({
+        folder: "effects",
+        reason: `the recipe ${file}.json passed on a run the ledger does not keep: ${unrecorded}`,
+      })
+    }
     const failures =
       proof === null || preview === null
         ? []
@@ -60,7 +111,12 @@ export function readRecipes(
   })
 }
 
-export const effectRecipes: readonly EffectRecipe[] = readRecipes(files)
+export const effectRuns: readonly EffectRun[] = readLedger(runs)
+
+export const effectRecipes: readonly EffectRecipe[] = readRecipes(
+  files,
+  effectRuns
+)
 
 export const passedRecipes: readonly EffectRecipe[] = effectRecipes.filter(
   (recipe) => recipe.passed
@@ -85,5 +141,6 @@ export function effectKeyOf(effect: string): string {
 
 export type {
   EffectRecipe,
+  EffectRun,
   ResolutionValue,
 } from "#effects/effect-recipe.contract"

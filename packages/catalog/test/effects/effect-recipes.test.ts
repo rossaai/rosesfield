@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest"
 import type { EffectRecipe } from "#effects/effect-recipe.contract"
 import {
   effectRecipes,
+  effectRuns,
   passedRecipes,
+  readLedger,
   readRecipes,
   recipeOf,
 } from "#effects/effect-recipes"
-import { passedRecipe } from "./passed-recipe"
+import { keptRun, passedRecipe } from "./passed-recipe"
+
+const ledger = [keptRun("many-copies")]
 
 const looks = [
   "buildings-ripple",
@@ -96,7 +100,10 @@ describe("the effect recipes kept as data", () => {
   })
 
   it("reads a passed recipe that carries its run and the proof of that run", () => {
-    const [read] = readRecipes({ "many-copies": passedRecipe("many-copies") })
+    const [read] = readRecipes(
+      { "many-copies": passedRecipe("many-copies") },
+      ledger
+    )
     expect(read).toMatchObject({
       passed: true,
       preview: { file: "many-copies.mp4" },
@@ -112,22 +119,83 @@ describe("the effect recipes kept as data", () => {
         reading: { ...recipe.proof.reading, lastFrameLuma: 90, cuts: [3] },
       },
     }))
-    expect(() => readRecipes(sources)).toThrow(
+    expect(() => readRecipes(sources, ledger)).toThrow(
       /many-copies\.json passed on a run outside its criteria: cut: one at 3 s, outside every window, last frame: luma 90, against at most 40/
     )
   })
 
-  it("refuses a run that took the balance under 2,000 credits", () => {
-    const sources = passedVariant((recipe) => ({
-      ...recipe,
-      proof: recipe.proof && {
-        ...recipe.proof,
-        balance: { before: 2050, after: 1990 },
-      },
-    }))
-    expect(() => readRecipes(sources)).toThrow(
-      /many-copies\.json is invalid: proof\.balance\.after/
+  it("reads an empty run ledger while no look has run", () => {
+    expect(effectRuns).toEqual([])
+  })
+
+  it("refuses a passed recipe whose run is not a row of the run ledger", () => {
+    const sources = { "many-copies": passedRecipe("many-copies") }
+    expect(() => readRecipes(sources, [])).toThrow(
+      /many-copies\.json passed on a run the ledger does not keep: the run 5b1d2c3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e is not a row of the run ledger/
     )
+  })
+
+  it("refuses a passed recipe whose ledger row holds another input, or the judge's refusal", () => {
+    const sources = { "many-copies": passedRecipe("many-copies") }
+    expect(() =>
+      readRecipes(sources, [{ ...keptRun("many-copies"), seed: 8 }])
+    ).toThrow(/with another recipe or input/)
+    expect(() => readRecipes(sources, [keptRun("melt-away")])).toThrow(
+      /with another recipe or input/
+    )
+    expect(() =>
+      readRecipes(sources, [
+        {
+          ...keptRun("many-copies"),
+          verdict: "refused",
+          failed: ["Dark end"],
+        },
+      ])
+    ).toThrow(
+      /records the run 5b1d2c3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e as refused/
+    )
+  })
+
+  it("reads a ledger with a kept and a refused run, each with its recipe, input, balance and verdict", () => {
+    const refused = {
+      ...keptRun("many-copies"),
+      runId: "6c2e3d4f-5a6b-4c7d-9e8f-0a1b2c3d4e5f",
+      balance: { before: 3601.4, after: 3540.2 },
+      verdict: "refused",
+      failed: ["Dark end"],
+    }
+    expect(readLedger([keptRun("many-copies"), refused])).toHaveLength(2)
+  })
+
+  it("refuses a run that took the balance under 2,000 credits, or started under it", () => {
+    expect(() =>
+      readLedger([
+        {
+          ...keptRun("many-copies"),
+          balance: { before: 2050, after: 1990 },
+        },
+      ])
+    ).toThrow(/runs\.json is invalid: 0\.balance\.after/)
+    expect(() =>
+      readLedger([
+        {
+          ...keptRun("many-copies"),
+          balance: { before: 1990, after: 1990 },
+        },
+      ])
+    ).toThrow(/runs\.json is invalid: 0\.balance\.before/)
+  })
+
+  it("refuses a kept run that failed a criterion, a refused run that names none, and one run in two rows", () => {
+    expect(() =>
+      readLedger([{ ...keptRun("many-copies"), failed: ["Dark end"] }])
+    ).toThrow(/runs\.json is invalid: 0\.failed/)
+    expect(() =>
+      readLedger([{ ...keptRun("many-copies"), verdict: "refused" }])
+    ).toThrow(/runs\.json is invalid: 0\.failed/)
+    expect(() =>
+      readLedger([keptRun("many-copies"), keptRun("many-copies")])
+    ).toThrow(/Each run is one row of the ledger/)
   })
 
   it("refuses a judge that failed a criterion, and a gate that let its planted output pass", () => {
@@ -138,7 +206,7 @@ describe("the effect recipes kept as data", () => {
         judge: { criteria: 13, failed: ["Dark end"], verdict: "held" },
       },
     }))
-    expect(() => readRecipes(failed)).toThrow(
+    expect(() => readRecipes(failed, ledger)).toThrow(
       /many-copies\.json is invalid: proof\.judge\.failed/
     )
     const planted = passedVariant((recipe) => ({
@@ -148,14 +216,14 @@ describe("the effect recipes kept as data", () => {
         gate: { positives: 1, planted: "held", verdict: "held" },
       },
     }))
-    expect(() => readRecipes(planted)).toThrow(
+    expect(() => readRecipes(planted, ledger)).toThrow(
       /many-copies\.json is invalid: proof\.gate\.planted/
     )
   })
 
   it("refuses a passed recipe with no proof, and a proof on a recipe not passed", () => {
     const unproven = passedVariant((recipe) => ({ ...recipe, proof: null }))
-    expect(() => readRecipes(unproven)).toThrow(
+    expect(() => readRecipes(unproven, ledger)).toThrow(
       /many-copies\.json is invalid: proof/
     )
     const unpassed = passedVariant((recipe) => ({
@@ -163,36 +231,36 @@ describe("the effect recipes kept as data", () => {
       passed: false,
       preview: null,
     }))
-    expect(() => readRecipes(unpassed)).toThrow(
+    expect(() => readRecipes(unpassed, ledger)).toThrow(
       /many-copies\.json is invalid: proof/
     )
   })
 
   it("refuses an empty effect prompt, a length past 15 seconds and a look with no unit", () => {
     expect(() =>
-      readRecipes({ "many-copies": variant({ prompt: "" }) })
+      readRecipes({ "many-copies": variant({ prompt: "" }) }, ledger)
     ).toThrow(/many-copies\.json is invalid: prompt/)
     expect(() =>
-      readRecipes({ "many-copies": variant({ seconds: 16 }) })
+      readRecipes({ "many-copies": variant({ seconds: 16 }) }, ledger)
     ).toThrow(/many-copies\.json is invalid: seconds/)
     const { unit: _, ...design } = recipeOf("many-copies").design
-    expect(() => readRecipes({ "many-copies": variant({ design }) })).toThrow(
-      /many-copies\.json is invalid: design\.unit/
-    )
+    expect(() =>
+      readRecipes({ "many-copies": variant({ design }) }, ledger)
+    ).toThrow(/many-copies\.json is invalid: design\.unit/)
   })
 
   it("refuses a passed recipe with no run, and a run on a recipe not passed", () => {
     expect(() =>
-      readRecipes({ "many-copies": variant({ passed: true }) })
+      readRecipes({ "many-copies": variant({ passed: true }) }, ledger)
     ).toThrow(/many-copies\.json is invalid: preview/)
     const preview = passedRecipe("many-copies").preview
-    expect(() => readRecipes({ "many-copies": variant({ preview }) })).toThrow(
-      /many-copies\.json is invalid: preview/
-    )
+    expect(() =>
+      readRecipes({ "many-copies": variant({ preview }) }, ledger)
+    ).toThrow(/many-copies\.json is invalid: preview/)
   })
 
   it("refuses a file that names another effect", () => {
-    expect(() => readRecipes({ "melt-away": variant({}) })).toThrow(
+    expect(() => readRecipes({ "melt-away": variant({}) }, ledger)).toThrow(
       /melt-away\.json names the effect many-copies/
     )
   })
