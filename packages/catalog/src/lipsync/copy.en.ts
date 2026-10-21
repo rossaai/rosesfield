@@ -23,6 +23,7 @@ export const lipsyncCopy = {
   "lipsync.input.audio.note":
     "What the person says. One voice. MP3 or WAV, 2 to 10 seconds, up to 20 MB.",
   "lipsync.input.audio.unreadable": "an MP3 or WAV file this browser can open",
+  "lipsync.input.words.label": "Words",
   "lipsync.input.scene.label": "Scene",
   "lipsync.input.scene.placeholder": "Describe the place and the light.",
   "lipsync.input.aspect.label": "Format",
