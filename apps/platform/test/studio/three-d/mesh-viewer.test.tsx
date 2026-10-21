@@ -7,7 +7,7 @@ import {
   waitFor,
 } from "@testing-library/react"
 import type { ReactElement } from "react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { DeviceProvider } from "@/device/device-context"
 import {
   Device,
@@ -16,8 +16,10 @@ import {
 } from "@/device/device.port"
 import { parseGlb } from "@/studio/three-d/glb"
 import { meshFileName, meshQuery } from "@/studio/three-d/mesh-file"
+import { MeshRenderer } from "@/studio/three-d/mesh-renderer"
 import {
   MeshDownload,
+  MeshOnAsk,
   MeshView,
   wheelPixels,
 } from "@/studio/three-d/mesh-viewer"
@@ -50,7 +52,11 @@ class FakeDevice extends Device {
 
 const assetId = "4e5f6a7b-8c9d-4e0f-8a1b-2c3d4e5f6a01"
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+  vi.unstubAllGlobals()
+})
 
 function renderWith(
   piece: ReactElement,
@@ -121,5 +127,53 @@ describe("the 3D viewer", () => {
     expect(wheelPixels({ ...plain, deltaMode: 1 }, 400)).toBe(48)
     expect(wheelPixels({ ...plain, deltaMode: 2 }, 400)).toBe(1200)
     expect(wheelPixels({ ...plain, ctrlKey: true }, 400)).toBe(12)
+  })
+
+  it("says the viewer stopped and draws again when the browser drops its WebGL context", async () => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe(): void {}
+        disconnect(): void {}
+      }
+    )
+    const dispose = vi.fn()
+    const fake = { load: vi.fn(), draw: vi.fn(), dispose }
+    const of = vi
+      .spyOn(MeshRenderer, "of")
+      .mockReturnValue(fake as unknown as MeshRenderer)
+    renderWith(<MeshView assetId={assetId} />, new Blob([triangleGlb()]))
+    const canvas = await screen.findByRole("application")
+    fireEvent(canvas, new Event("webglcontextlost"))
+
+    expect(
+      await screen.findByText("The viewer stopped drawing this model")
+    ).toBeTruthy()
+    expect(dispose).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }))
+    expect(await screen.findByRole("application")).toBeTruthy()
+    expect(of).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe("an earlier 3D model", () => {
+  it("fetches nothing and draws nothing until you ask to see it", async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false, enabled: false } },
+    })
+    const { container } = render(
+      <QueryClientProvider client={client}>
+        <MeshOnAsk assetId={assetId} />
+      </QueryClientProvider>
+    )
+    const key = meshQuery(assetId).queryKey
+    expect(container.querySelector("canvas")).toBeNull()
+    expect(client.getQueryCache().find({ queryKey: key })).toBeUndefined()
+    expect(screen.getByRole("button", { name: "Download" })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole("button", { name: "Show the model" }))
+    expect(container.querySelector("[data-slot=mesh-output]")).toBeTruthy()
+    expect(client.getQueryCache().find({ queryKey: key })).toBeDefined()
   })
 })

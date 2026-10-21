@@ -152,28 +152,50 @@ function mountViewer(
   }
 }
 
+type Drawing = "drawing" | "none" | "lost"
+
 function MeshCanvas({ scene }: { scene: MeshScene }): ReactElement {
   const ref = useRef<HTMLCanvasElement>(null)
-  const [canDraw, setCanDraw] = useState(true)
+  const [drawing, setDrawing] = useState<Drawing>("drawing")
   useEffect(() => {
     const canvas = ref.current
-    if (canvas === null) {
+    if (drawing !== "drawing" || canvas === null) {
       return
     }
     const renderer = MeshRenderer.of(canvas)
     if (renderer === null) {
-      setCanDraw(false)
+      setDrawing("none")
       return
     }
-    return mountViewer(canvas, scene, renderer)
-  }, [scene])
-  if (!canDraw) {
+    const lose = (): void => setDrawing("lost")
+    canvas.addEventListener("webglcontextlost", lose)
+    const stop = mountViewer(canvas, scene, renderer)
+    return () => {
+      canvas.removeEventListener("webglcontextlost", lose)
+      stop()
+    }
+  }, [scene, drawing])
+  if (drawing === "none") {
     return (
       <StateView
         kind="failed"
         density="compact"
         title={tThreeD("threeD.viewer.noDrawing")}
         body={tThreeD("threeD.viewer.download")}
+      />
+    )
+  }
+  if (drawing === "lost") {
+    return (
+      <StateView
+        kind="failed"
+        density="compact"
+        title={tThreeD("threeD.viewer.lost")}
+        actions={
+          <Button onClick={() => setDrawing("drawing")}>
+            {t("state.tryAgain")}
+          </Button>
+        }
       />
     )
   }
@@ -257,6 +279,21 @@ export function MeshOutput({ assetId }: { assetId: string }): ReactElement {
   return (
     <div data-slot="mesh-output" className="flex w-full flex-col gap-s2">
       <MeshView assetId={assetId} />
+      <MeshDownload assetId={assetId} />
+    </div>
+  )
+}
+
+export function MeshOnAsk({ assetId }: { assetId: string }): ReactElement {
+  const [isOpen, setIsOpen] = useState(false)
+  if (isOpen) {
+    return <MeshOutput assetId={assetId} />
+  }
+  return (
+    <div data-slot="mesh-closed" className="flex flex-wrap items-start gap-s2">
+      <Button onClick={() => setIsOpen(true)}>
+        {tThreeD("threeD.viewer.show")}
+      </Button>
       <MeshDownload assetId={assetId} />
     </div>
   )

@@ -7,6 +7,8 @@ const threeDCopy = {
   "threeD.viewer.hint": "Drag to turn. Scroll or pinch to zoom.",
   "threeD.viewer.failed": "This model did not open in the viewer",
   "threeD.viewer.noDrawing": "This browser does not draw 3D models",
+  "threeD.viewer.lost": "The viewer stopped drawing this model",
+  "threeD.viewer.show": "Show the model",
   "threeD.viewer.download":
     "Download the GLB file to open it in another 3D viewer.",
 } satisfies Record<string, string>

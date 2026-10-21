@@ -9,7 +9,7 @@ import { RunOutputs } from "@/pieces/run/run-outputs"
 import { CanvasSkeleton, useAppRuns } from "@/screens/app/app-canvas"
 import { useCanvasView } from "@/screens/app/canvas-view"
 import { keepsRun } from "@/screens/history/history-screen"
-import { MeshOutput } from "@/studio/three-d/mesh-viewer"
+import { MeshOnAsk, MeshOutput } from "@/studio/three-d/mesh-viewer"
 
 type ThreeDCanvasProps = {
   app: AppListing
@@ -19,18 +19,24 @@ type ThreeDCanvasProps = {
 
 function RunBlock({
   run,
+  isLatest,
   onUseInputs,
 }: {
   run: Run
+  isLatest: boolean
   onUseInputs: (run: Run) => void
 }): ReactElement {
   return (
     <article className="flex flex-col gap-s2">
       <RunLine run={run} onUseInputs={onUseInputs} />
       {run.status === "done" ? (
-        run.outputs.map((assetId) => (
-          <MeshOutput key={assetId} assetId={assetId} />
-        ))
+        run.outputs.map((assetId) =>
+          isLatest ? (
+            <MeshOutput key={assetId} assetId={assetId} />
+          ) : (
+            <MeshOnAsk key={assetId} assetId={assetId} />
+          )
+        )
       ) : (
         <RunOutputs run={run} />
       )}
@@ -38,7 +44,7 @@ function RunBlock({
   )
 }
 
-function RunStack({
+export function RunStack({
   runs,
   onUseInputs,
 }: {
@@ -49,7 +55,7 @@ function RunStack({
   return (
     <div className="flex flex-col gap-s6">
       {latest === undefined ? null : (
-        <RunBlock run={latest} onUseInputs={onUseInputs} />
+        <RunBlock run={latest} isLatest onUseInputs={onUseInputs} />
       )}
       {earlier.length === 0 ? null : (
         <h2 className="text-body font-medium text-ink-muted">
@@ -57,7 +63,12 @@ function RunStack({
         </h2>
       )}
       {earlier.map((run) => (
-        <RunBlock key={run.id} run={run} onUseInputs={onUseInputs} />
+        <RunBlock
+          key={run.id}
+          run={run}
+          isLatest={false}
+          onUseInputs={onUseInputs}
+        />
       ))}
     </div>
   )
