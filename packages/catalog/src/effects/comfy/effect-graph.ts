@@ -11,24 +11,49 @@ type Graph = Record<string, Node>
 
 export const effectsWorkflow = "effects-ltx-2-5"
 
-export const endFrameNodes: readonly string[] = [
+export const editFrameNodes: readonly string[] = [
   "620",
   "621",
   "622",
   "623",
-  "624",
   "625",
   "626",
   "627",
 ]
 
-export const fitPromptNode = "610"
+export const endFrameSizeNode = "624"
+
+export const darkFrameNode = "628"
+
+export const endFrameNodes: readonly string[] = [
+  ...editFrameNodes,
+  endFrameSizeNode,
+  darkFrameNode,
+]
+
+export const imageEditNodes: readonly string[] = [
+  "600",
+  "601",
+  "602",
+  "603",
+  "604",
+]
+
+export const fittedPhotoNode = "606"
 
 export const endFramePromptNode = "620"
 
 export const matteNodes: readonly string[] = ["410", "411", "412"]
 
 export const soundNode = "358"
+
+export const loudnessNode = "359"
+
+export const ceilingNodes: readonly string[] = ["360", "361"]
+
+export const peakMargin = 1
+
+const maxCeilingGain = 24
 
 export const adapterNode = "420"
 
@@ -87,7 +112,6 @@ function remove(graph: Graph, ids: readonly string[]): void {
 function setPrompts(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, "501").inputs.string_a = recipe.prompt
   nodeOf(graph, "503").inputs.string_b = recipe.design.sound?.prompt ?? ""
-  nodeOf(graph, fitPromptNode).inputs.prompt = recipe.design.fit.prompt
 }
 
 function setLength(graph: Graph, recipe: EffectRecipe): void {
@@ -112,22 +136,36 @@ function addAdapter(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, "391").inputs.model = [adapterNode, 0]
 }
 
+const endGuideNodes: readonly string[] = ["460", "463"]
+
 function setEndFrame(graph: Graph, recipe: EffectRecipe): void {
   const end = recipe.endFrame
   if (end.source === "none") {
-    remove(graph, endFrameNodes)
+    remove(graph, [...endFrameNodes, ...imageEditNodes])
     passThrough(graph, "460")
     passThrough(graph, "463")
     return
   }
-  nodeOf(graph, endFramePromptNode).inputs.prompt = end.prompt
-  nodeOf(graph, "460").inputs.strength = end.strength
-  nodeOf(graph, "463").inputs.strength = end.strength
+  if (end.source === "dark") {
+    remove(graph, [...editFrameNodes, ...imageEditNodes])
+    nodeOf(graph, darkFrameNode).inputs.color = greyOf(end.luma)
+    for (const id of endGuideNodes) {
+      nodeOf(graph, id).inputs.image = [darkFrameNode, 0]
+    }
+  } else {
+    remove(graph, [darkFrameNode])
+    nodeOf(graph, endFramePromptNode).inputs.prompt = end.prompt
+  }
+  for (const id of endGuideNodes) {
+    nodeOf(graph, id).inputs.strength = end.strength
+  }
 }
 
-const endGuideNodes: readonly string[] = ["460", "463"]
+function greyOf(luma: number): number {
+  return luma * 0x010101
+}
 
-const fittedPhoto: Link = ["616", 0]
+const fittedPhoto: Link = [fittedPhotoNode, 0]
 
 const editedFrame: Link = ["627", 0]
 
@@ -155,11 +193,23 @@ function setHold(graph: Graph, recipe: EffectRecipe): void {
 }
 
 function setSound(graph: Graph, recipe: EffectRecipe): void {
-  if (recipe.design.sound !== null) {
+  const sound = recipe.design.sound
+  if (sound === null) {
+    remove(graph, [soundNode, loudnessNode, ...ceilingNodes])
+    delete nodeOf(graph, "370").inputs.audio
     return
   }
-  remove(graph, [soundNode])
-  delete nodeOf(graph, "370").inputs.audio
+  const ceiling = sound.truePeakMax - peakMargin
+  if (-ceiling > maxCeilingGain) {
+    throw invalid(
+      `the peak ceiling ${ceiling} dB of ${recipe.effect} is under -${maxCeilingGain} dB`
+    )
+  }
+  const [up, down] = ceilingNodes
+  nodeOf(graph, loudnessNode).inputs.lufs =
+    (sound.loudness.min + sound.loudness.max) / 2
+  nodeOf(graph, up ?? "").inputs.gain_db = -ceiling
+  nodeOf(graph, down ?? "").inputs.gain_db = ceiling
 }
 
 export function effectGraph(

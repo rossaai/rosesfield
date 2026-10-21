@@ -52,6 +52,13 @@ export function tasksOf(binding: EngineBinding): readonly string[] {
     : []
 }
 
+export function taskInputOf(binding: EngineBinding): string | null {
+  const { input } = binding.config
+  return binding.adapter === taskAdapter && typeof input === "string"
+    ? input
+    : null
+}
+
 export function graphTaskOf(
   binding: EngineBinding,
   graph: string

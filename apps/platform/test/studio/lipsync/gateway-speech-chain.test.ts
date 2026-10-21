@@ -1,4 +1,5 @@
 import { type Asset, assetId, type Run, runId } from "@rosesfield/contract"
+import { appIdFormat } from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
 import { GatewaySpeechChain } from "@/studio/lipsync/gateway-speech-chain"
 
@@ -13,7 +14,7 @@ type Sent = { url: string; init: RequestInit | undefined }
 function runOf(status: Run["status"]): Run {
   return {
     id: speechRun,
-    appId: "audio",
+    appId: appIdFormat.parse("audio"),
     status,
     inputs: { model: "chatterbox", script: "Hello there" },
     count: 1,

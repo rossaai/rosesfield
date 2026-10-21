@@ -1,8 +1,10 @@
 # Storyboard: up to 8 matching keyframes from one image with Qwen Image Edit 2511
 
-Edits one anchor image, a reference or a character's photo, into one keyframe per scene with Qwen Image Edit 2511, each scene with its own sentence, the shared look and its own seed, and saves the keyframes as one batch.
+Edits one anchor, a reference image or up to 3 photos of a character, into one keyframe per scene with Qwen Image Edit 2511, each scene with its own sentence, the shared look and its own seed, and saves the keyframes as one batch.
 
-With no reference and no character, the catalog removes node 7 and adds the Z-Image Turbo graph of `image-z-image-turbo`, renumbered from 10000. That graph makes keyframe 1 from scene 1 and the look, and every other keyframe edits keyframe 1.
+Nodes 12 and 13 load a character's photos 2 and 3 into `image2` and `image3` of every `TextEncodeQwenImageEditPlus` node. The catalog removes the ones a run does not fill: both for a reference image, and the ones past the character's photo count.
+
+With no reference and no character, the catalog removes nodes 7, 12 and 13 and adds the Z-Image Turbo graph of `image-z-image-turbo`, renumbered from 10000. That graph makes keyframe 1 from scene 1 and the look, and every other keyframe edits keyframe 1.
 
 | | |
 |---|---|
@@ -23,6 +25,8 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 | `width` | 11 `EmptySD3LatentImage` | `width` | a value |
 | `height` | 11 `EmptySD3LatentImage` | `height` | a value |
 | `anchor` | 7 `LoadImage` | `image` | an uploaded image |
+| `anchor2` | 12 `LoadImage` | `image` | an uploaded image |
+| `anchor3` | 13 `LoadImage` | `image` | an uploaded image |
 | `scene1` | 100 `StringConcatenate` | `string_b` | a value |
 | `look1` | 101 `StringConcatenate` | `string_b` | a value |
 | `scene2` | 200 `StringConcatenate` | `string_b` | a value |

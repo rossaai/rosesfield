@@ -26,7 +26,7 @@ export const modeTasks: Readonly<Record<LayersMode, string>> = {
   split: "layer-separation",
   edit: "image-edit",
   relight: "relight",
-  fill: "image-edit",
+  fill: "inpaint",
 }
 
 export const layersTasks: readonly string[] = [

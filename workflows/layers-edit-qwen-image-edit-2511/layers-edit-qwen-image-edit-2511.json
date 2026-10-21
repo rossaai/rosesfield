@@ -903,12 +903,7 @@
       "offset": [0, 0]
     },
     "linearData": {
-      "inputs": [
-        [1, "image"],
-        [3, "batch_size"],
-        [18, "seed"],
-        [13, "prompt"]
-      ],
+      "inputs": [[1, "image"], [3, "batch_size"], [18, "seed"], [13, "prompt"]],
       "outputs": [22]
     }
   },

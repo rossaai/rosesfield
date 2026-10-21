@@ -48,14 +48,6 @@ export const deliveryFrames: Readonly<Record<ResolutionValue, SizeTable>> = {
   },
 }
 
-export const fitFrames: SizeTable = {
-  "1:1": { width: 1024, height: 1024 },
-  "4:3": { width: 1152, height: 864 },
-  "3:4": { width: 864, height: 1152 },
-  "16:9": { width: 1344, height: 768 },
-  "9:16": { width: 768, height: 1344 },
-}
-
 export function ratioOf(ratio: EffectRatio): number {
   const [width, height] = ratio.split(":").map(Number)
   return (width ?? 1) / (height ?? 1)

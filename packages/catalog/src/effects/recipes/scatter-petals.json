@@ -4,9 +4,6 @@
   "design": {
     "unit": "scatter-petals",
     "family": "effects",
-    "fit": {
-      "prompt": "Fit the photo to the new frame. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. Add new matching scene content at every added edge, with no borders, bars or blur."
-    },
     "setPiece": "Everyone holds still, then their bodies vanish in an instant and their clothes drop onto the ground and lie still.",
     "cuts": [
       {

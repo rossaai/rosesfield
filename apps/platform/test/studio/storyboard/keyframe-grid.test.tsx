@@ -37,7 +37,9 @@ describe("the Storyboard keyframes while a run works", () => {
     const tiles = [...grid.querySelectorAll("li")]
     expect(tiles).toHaveLength(3)
     expect(
-      tiles.map((tile) => tile.querySelector(":scope > span[aria-hidden]")?.textContent)
+      tiles.map(
+        (tile) => tile.querySelector(":scope > span[aria-hidden]")?.textContent
+      )
     ).toEqual(["1", "2", "3"])
     expect(
       screen.queryByLabelText(t("run.working", { index: 1, count: 3 }))

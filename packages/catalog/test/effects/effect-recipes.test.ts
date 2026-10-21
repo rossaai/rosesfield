@@ -58,7 +58,6 @@ describe("the effect recipes kept as data", () => {
         unit: recipe.effect,
       })
       expect(design.family).toBe("effects")
-      expect(design.fit.prompt.length).toBeGreaterThan(0)
       expect(design.setPiece.length).toBeGreaterThan(0)
       expect(design.lastFrame.shows.length).toBeGreaterThan(0)
       expect(design.encode).toEqual({
@@ -71,7 +70,9 @@ describe("the effect recipes kept as data", () => {
       for (const window of design.cuts) {
         expect(window.max).toBeLessThanOrEqual(recipe.seconds + 0.05)
       }
-      expect(recipe.endFrame.source).toBe("edit")
+      expect(recipe.endFrame.source).toBe(
+        recipe.effect === "push-into-eye" ? "dark" : "edit"
+      )
     }
   })
 
@@ -139,6 +140,49 @@ describe("the effect recipes kept as data", () => {
     expect(() =>
       readRecipes({ "many-copies": variant({ photoFrame: "middle" }) }, ledger)
     ).toThrow(/many-copies\.json is invalid: photoFrame/)
+  })
+
+  it("ends Push into eye on a dark frame under its last-frame luma, with a camera that moves from the first frame", () => {
+    const eye = recipeOf("push-into-eye")
+    expect(eye.endFrame).toEqual({ source: "dark", luma: 8, strength: 0.9 })
+    expect(
+      eye.endFrame.source === "dark" ? eye.endFrame.luma : 255
+    ).toBeLessThan(eye.design.lastFrame.maxLuma ?? 0)
+    expect(eye.prompt).toMatch(
+      /^One unbroken shot that moves from the first frame/
+    )
+    expect(eye.prompt).not.toMatch(/\bholds?\b|for a moment/)
+    expect(eye.seconds).toBe(7)
+  })
+
+  it("refuses a dark end frame on a look that lands on the photo, and reads one on a look that opens on it", () => {
+    const dark = { source: "dark", luma: 8, strength: 0.9 }
+    expect(() =>
+      readRecipes(
+        {
+          "pull-back-to-space": {
+            ...recipeOf("pull-back-to-space"),
+            endFrame: dark,
+          },
+        },
+        ledger
+      )
+    ).toThrow(
+      /pull-back-to-space\.json is invalid: endFrame A look that lands on the photo guides its last frame with the photo, so it takes no dark end frame/
+    )
+    const [read] = readRecipes(
+      { "many-copies": variant({ endFrame: dark }) },
+      ledger
+    )
+    expect(read?.endFrame).toEqual(dark)
+    for (const luma of [-1, 41, 8.5]) {
+      expect(() =>
+        readRecipes(
+          { "many-copies": variant({ endFrame: { ...dark, luma } }) },
+          ledger
+        )
+      ).toThrow(/many-copies\.json is invalid: endFrame/)
+    }
   })
 
   it("reads a passed recipe that carries its run and the proof of that run", () => {

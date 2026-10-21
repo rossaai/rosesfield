@@ -3,9 +3,16 @@ import { selectAdapter } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import {
   adapterNode,
+  ceilingNodes,
+  darkFrameNode,
+  editFrameNodes,
   effectGraph,
   endFrameNodes,
+  fittedPhotoNode,
+  imageEditNodes,
+  loudnessNode,
   matteNodes,
+  peakMargin,
   soundNode,
 } from "#effects/comfy/effect-graph"
 import {
@@ -81,6 +88,32 @@ function guidesOnAudio(workflow: Workflow): string[] {
     .map(([id]) => id)
 }
 
+function ancestorsOf(workflow: Workflow, id: string): string[] {
+  const seen = new Set<string>()
+  const queue = [id]
+  for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
+    for (const value of Object.values(workflow[next]?.inputs ?? {})) {
+      if (isLink(value) && !seen.has(value[0])) {
+        seen.add(value[0])
+        queue.push(value[0])
+      }
+    }
+  }
+  return [...seen].sort()
+}
+
+function editReaders(workflow: Workflow): string[] {
+  return Object.entries(workflow)
+    .filter(([, node]) =>
+      Object.values(node.inputs).some(
+        (value) => isLink(value) && imageEditNodes.includes(value[0])
+      )
+    )
+    .map(([id]) => id)
+    .filter((id) => !imageEditNodes.includes(id))
+    .sort()
+}
+
 describe("the effect recipes", () => {
   it("sends from every leaf a whole graph of file nodes, guides on the video latent only", () => {
     const fileIds = Object.keys(fileGraph())
@@ -102,26 +135,93 @@ describe("the effect recipes", () => {
     }
   })
 
-  it("fits the photo and makes the last frame with the image edit model before the video", () => {
+  it("scales the photo itself to the shape and makes the last frame from it with the image edit model", () => {
     const workflow = workflowOf(
-      effectGraph(fileGraph(), recipeOf("push-into-eye"))
+      effectGraph(fileGraph(), recipeOf("grow-giant"))
     )
-    const recipe = recipeOf("push-into-eye")
     expect(workflow).toMatchObject({
-      "605": { inputs: { image: ["395", 0] } },
-      "610": {
-        inputs: { prompt: recipe.design.fit.prompt, image1: ["605", 0] },
+      "606": {
+        class_type: "ImageScale",
+        inputs: { image: ["395", 0], crop: "center" },
       },
-      "620": { inputs: { image1: ["616", 0] } },
-      "351": { inputs: { input: ["616", 0] } },
+      "620": { inputs: { image1: ["606", 0] } },
+      "621": { inputs: { image1: ["606", 0] } },
+      "624": { inputs: { image: ["606", 0] } },
+      "351": { inputs: { input: ["606", 0] } },
       "357": { inputs: { image: ["350", 0] } },
       "349": { inputs: { image: ["350", 0] } },
       "460": { inputs: { image: ["627", 0] } },
       "463": { inputs: { image: ["627", 0] } },
       "380": { inputs: { image: ["374", 0], crop: "center" } },
-      "370": { inputs: { images: ["380", 0], audio: [soundNode, 0] } },
+      "370": { inputs: { images: ["380", 0], audio: ["361", 0] } },
       "75": { inputs: { format: "mp4", "format.codec": "h264" } },
     })
+  })
+
+  it("locks frame 0 to the scaled photo, with no image edit node before it, for every look and resolution", () => {
+    const leaves = leavesOf(effectsBinding(effectRecipes))
+    for (const [path, workflow] of leaves) {
+      const lands = path.includes("pull-back-to-space")
+      expect({ path, frame0: ancestorsOf(workflow, "351") }).toEqual({
+        path,
+        frame0: lands
+          ? ancestorsOf(workflow, "627").concat("627").sort()
+          : ["395", fittedPhotoNode],
+      })
+      for (const id of ["357", "349"]) {
+        expect({ path, id, image: workflow[id]?.inputs.image }).toEqual({
+          path,
+          id,
+          image: ["350", 0],
+        })
+      }
+      expect({ path, readers: editReaders(workflow) }).toEqual({
+        path,
+        readers:
+          workflow["620"] === undefined ? [] : ["620", "621", "626", "627"],
+      })
+    }
+  })
+
+  it("guides the last frame of a dark look with a flat grey frame at the video's size, with no image edit node", () => {
+    const recipe = {
+      ...recipeOf("melt-away"),
+      endFrame: { source: "dark", luma: 8, strength: 0.85 } as const,
+    }
+    const workflow = workflowOf(effectGraph(fileGraph(), recipe))
+    expect(workflow[darkFrameNode]).toEqual({
+      class_type: "EmptyImage",
+      inputs: {
+        width: ["624", 0],
+        height: ["624", 1],
+        batch_size: 1,
+        color: 8 * 65536 + 8 * 256 + 8,
+      },
+      _meta: { title: "Dark end frame" },
+    })
+    expect(workflow).toMatchObject({
+      "624": { inputs: { image: [fittedPhotoNode, 0] } },
+      "460": { inputs: { image: [darkFrameNode, 0], strength: 0.85 } },
+      "463": { inputs: { image: [darkFrameNode, 0], strength: 0.85 } },
+      "351": { inputs: { input: [fittedPhotoNode, 0] } },
+    })
+    for (const id of [...editFrameNodes, ...imageEditNodes]) {
+      expect({ id, node: workflow[id] }).toEqual({ id, node: undefined })
+    }
+    expect(brokenLinks(workflow)).toEqual([])
+    expect(() => effectBinding(recipe, "720p")).not.toThrow()
+  })
+
+  it("keeps no dark frame for a look whose last frame is edited", () => {
+    for (const recipe of effectRecipes.filter(
+      (one) => one.endFrame.source === "edit"
+    )) {
+      const workflow = workflowOf(effectGraph(fileGraph(), recipe))
+      expect({ effect: recipe.effect, dark: workflow[darkFrameNode] }).toEqual({
+        effect: recipe.effect,
+        dark: undefined,
+      })
+    }
   })
 
   it("opens a look that lands on the photo on its edited frame, and guides its last frame with the photo", () => {
@@ -129,12 +229,12 @@ describe("the effect recipes", () => {
     const workflow = workflowOf(effectGraph(fileGraph(), recipe))
     expect(recipe.photoFrame).toBe("last")
     expect(workflow).toMatchObject({
-      "620": { inputs: { image1: ["616", 0] } },
+      "620": { inputs: { image1: ["606", 0] } },
       "351": { inputs: { input: ["627", 0] } },
       "357": { inputs: { image: ["350", 0], strength: 0.7 } },
       "349": { inputs: { image: ["350", 0], strength: 1 } },
-      "460": { inputs: { image: ["616", 0], frame_idx: -1 } },
-      "463": { inputs: { image: ["616", 0], frame_idx: -1 } },
+      "460": { inputs: { image: ["606", 0], frame_idx: -1 } },
+      "463": { inputs: { image: ["606", 0], frame_idx: -1 } },
     })
     expect(brokenLinks(workflow)).toEqual([])
   })
@@ -145,7 +245,13 @@ describe("the effect recipes", () => {
       endFrame: { source: "none" } as const,
     }
     const workflow = workflowOf(effectGraph(fileGraph(), recipe))
-    for (const id of [...endFrameNodes, ...matteNodes, "460", "462"]) {
+    for (const id of [
+      ...endFrameNodes,
+      ...imageEditNodes,
+      ...matteNodes,
+      "460",
+      "462",
+    ]) {
       expect({ id, node: workflow[id] }).toEqual({ id, node: undefined })
     }
     expect(workflow).toMatchObject({
@@ -170,6 +276,66 @@ describe("the effect recipes", () => {
     expect(silent[soundNode]).toBeUndefined()
     expect(silent["370"]?.inputs).not.toHaveProperty("audio")
     expect(silent["503"]?.inputs.string_b).toBe("")
+  })
+
+  it("sets each sounding look's loudness to the middle of its band, then holds its peaks under its ceiling, before the video is written", () => {
+    const sounding = effectRecipes.filter((one) => one.design.sound !== null)
+    expect(sounding.length).toBeGreaterThan(0)
+    for (const recipe of sounding) {
+      const sound = recipe.design.sound
+      const workflow = workflowOf(effectGraph(fileGraph(), recipe))
+      const target = sound
+        ? (sound.loudness.min + sound.loudness.max) / 2
+        : Number.NaN
+      const ceiling = sound ? sound.truePeakMax - peakMargin : Number.NaN
+      expect({ effect: recipe.effect, chain: workflow }).toMatchObject({
+        effect: recipe.effect,
+        chain: {
+          [loudnessNode]: {
+            class_type: "NormalizeAudioLoudness",
+            inputs: { audio: [soundNode, 0], lufs: target },
+          },
+          [ceilingNodes[0] ?? ""]: {
+            class_type: "AudioAmplify",
+            inputs: { audio: [loudnessNode, 0], gain_db: -ceiling },
+          },
+          [ceilingNodes[1] ?? ""]: {
+            class_type: "AudioAmplify",
+            inputs: { audio: [ceilingNodes[0], 0], gain_db: ceiling },
+          },
+          "370": { inputs: { audio: [ceilingNodes[1], 0] } },
+        },
+      })
+      expect(target).toBeGreaterThanOrEqual(sound?.loudness.min ?? 0)
+      expect(target).toBeLessThanOrEqual(sound?.loudness.max ?? 0)
+      expect(ceiling).toBeLessThan(sound?.truePeakMax ?? 0)
+    }
+    expect(
+      workflowOf(effectGraph(fileGraph(), recipeOf("push-into-eye")))[
+        loudnessNode
+      ]?.inputs.lufs
+    ).toBe(-23.75)
+  })
+
+  it("keeps no audio node for a silent look", () => {
+    const silent = effectRecipes.filter((one) => one.design.sound === null)
+    expect(silent.length).toBeGreaterThan(0)
+    const audioClasses = [
+      "LTXVAudioVAEDecode",
+      "NormalizeAudioLoudness",
+      "AudioAmplify",
+    ]
+    for (const recipe of silent) {
+      const workflow = workflowOf(effectGraph(fileGraph(), recipe))
+      const audio = Object.entries(workflow)
+        .filter(([, node]) => audioClasses.includes(node.class_type))
+        .map(([id]) => id)
+      expect({ effect: recipe.effect, audio }).toEqual({
+        effect: recipe.effect,
+        audio: [],
+      })
+      expect(brokenLinks(workflow)).toEqual([])
+    }
   })
 
   it("places a recipe's adapter between the model and both guiders", () => {

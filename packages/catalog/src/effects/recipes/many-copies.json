@@ -4,9 +4,6 @@
   "design": {
     "unit": "many-copies",
     "family": "effects",
-    "fit": {
-      "prompt": "Fit the photo to the new frame. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. Add new matching scene content at every added edge, with no borders, bars or blur."
-    },
     "setPiece": "Four to eight copies of the person, in the same outfit and in different poses, appear on the scene's own ground, and the clip fades to dark.",
     "cuts": [],
     "lastFrame": {

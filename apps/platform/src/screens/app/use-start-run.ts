@@ -34,7 +34,7 @@ function hostedBodyOf(
     : hostedBody(chosen.id, chosen.form, form.values, app.output.kind)
 }
 
-function usePrice(
+export function usePrice(
   app: AppListing,
   body: StartRunBodyInput | null,
   keyState: string
@@ -85,11 +85,20 @@ export function useStartRun(
     }
     start.mutate(crypto.randomUUID())
   }
-  const amount = credits === null ? null : formatNumber(credits)
   return {
     generate,
     isPending: start.isPending,
     error: start.error,
+    ...priceLabelsOf(credits, isDemo),
+  }
+}
+
+export function priceLabelsOf(
+  credits: number | null,
+  isDemo: boolean
+): Pick<StartRun, "price" | "priceValue" | "priceName"> {
+  const amount = credits === null ? null : formatNumber(credits)
+  return {
     price: isDemo
       ? t("run.price.demo")
       : amount === null

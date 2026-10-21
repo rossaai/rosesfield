@@ -4,9 +4,6 @@
   "design": {
     "unit": "buildings-ripple",
     "family": "effects",
-    "fit": {
-      "prompt": "Fit the photo to the new frame. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. Add new matching scene content at every added edge, with no borders, bars or blur."
-    },
     "setPiece": "The building, tower or bridge behind the person bends, folds and curls while the person stays whole in front.",
     "cuts": [],
     "lastFrame": {

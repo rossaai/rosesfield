@@ -6,6 +6,7 @@ import {
   speechTextInput,
 } from "@rosesfield/catalog/lipsync"
 import { assetId, type Run, runId } from "@rosesfield/contract"
+import { appIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import type { StartRunBodyInput } from "@/screens/app/app-form"
@@ -16,7 +17,7 @@ import { avatar, ltx, photoApp, photoId } from "./lipsync-models"
 const spoken = assetId.parse("6f7a8b9c-0d1e-4f2a-9b3c-5d6e7f8091a2")
 
 const speechApp: SpeechApp = {
-  id: "audio",
+  id: appIdFormat.parse("audio"),
   inputs: [
     {
       type: "choice",
@@ -40,7 +41,7 @@ type Started = { appId: string; request: ChainRun; key: string }
 function runOf(app: string, status: Run["status"], order: number): Run {
   return {
     id: runId.parse(`7a8b9c0d-1e2f-4a3b-8c4d-6e7f8091a2b${order}`),
-    appId: app,
+    appId: appIdFormat.parse(app),
     status,
     inputs: {},
     count: 1,
@@ -173,6 +174,16 @@ describe("Generate on Text", () => {
       isGraph: false,
     })
     const pressed = pressChain({ ...pressOf(chain, () => undefined), target })
+    await expect(pressed).rejects.toMatchObject({ code: "RUN_INPUT_INVALID" })
+    expect(chain.started).toEqual([])
+  })
+
+  it("starts no run when a photo is not an asset id", async () => {
+    const chain = new FakeSpeechChain({ speechStatus: "done" })
+    const pressed = pressChain({
+      ...pressOf(chain, () => undefined),
+      ask: { ...ask, inputs: { ...ask.inputs, photo: ["not-an-asset"] } },
+    })
     await expect(pressed).rejects.toMatchObject({ code: "RUN_INPUT_INVALID" })
     expect(chain.started).toEqual([])
   })

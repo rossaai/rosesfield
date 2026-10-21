@@ -187,7 +187,7 @@ describe("the Edit tab on Dreamina Seedance 2.5", () => {
 })
 
 describe("the model row of a tab", () => {
-  it("lists every video edit model of the catalog with its maker, its name and one line", () => {
+  it("lists every video edit model of the catalog with its maker and its name, and no task line for a model with no fact row", () => {
     const state = stateOf("edit", dreamina, {})
     const rows = pickerSections(tabHostedOf(state)).flatMap(
       (section) => section.rows
@@ -198,7 +198,7 @@ describe("the model row of a tab", () => {
     for (const row of rows) {
       expect(row.maker).not.toBe("")
       expect(row.name).not.toBe("")
-      expect(row.line).toBe(tCatalog("model.line.videoEdit"))
+      expect(row.line).toBeNull()
     }
     expect(rows.some((row) => row.id === graphs.background.id)).toBe(false)
   })

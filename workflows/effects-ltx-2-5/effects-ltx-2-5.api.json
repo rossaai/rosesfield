@@ -80,7 +80,7 @@
   "351": {
     "class_type": "ResizeImageMaskNode",
     "inputs": {
-      "input": ["616", 0],
+      "input": ["606", 0],
       "resize_type": "scale longer dimension",
       "resize_type.longer_size": 1536,
       "scale_method": "lanczos"
@@ -177,7 +177,7 @@
     "class_type": "CreateVideo",
     "inputs": {
       "images": ["380", 0],
-      "audio": ["358", 0],
+      "audio": ["361", 0],
       "fps": 24,
       "bit_depth": 8
     }
@@ -502,105 +502,13 @@
       "title": "Image edit guidance"
     }
   },
-  "605": {
-    "class_type": "FluxKontextImageScale",
-    "inputs": {
-      "image": ["395", 0]
-    },
-    "_meta": {
-      "title": "Photo for the edit"
-    }
-  },
-  "610": {
-    "class_type": "TextEncodeQwenImageEditPlus",
-    "inputs": {
-      "clip": ["601", 0],
-      "prompt": "Fit the photo to the new frame. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. Add new matching scene content at every added edge, with no borders, bars or blur.",
-      "vae": ["602", 0],
-      "image1": ["605", 0]
-    },
-    "_meta": {
-      "title": "Fit prompt"
-    }
-  },
-  "611": {
-    "class_type": "TextEncodeQwenImageEditPlus",
-    "inputs": {
-      "clip": ["601", 0],
-      "prompt": "",
-      "vae": ["602", 0],
-      "image1": ["605", 0]
-    },
-    "_meta": {
-      "title": "Fit negative"
-    }
-  },
-  "612": {
-    "class_type": "FluxKontextMultiReferenceLatentMethod",
-    "inputs": {
-      "conditioning": ["610", 0],
-      "reference_latents_method": "index_timestep_zero"
-    },
-    "_meta": {
-      "title": "Fit reference"
-    }
-  },
-  "613": {
-    "class_type": "FluxKontextMultiReferenceLatentMethod",
-    "inputs": {
-      "conditioning": ["611", 0],
-      "reference_latents_method": "index_timestep_zero"
-    },
-    "_meta": {
-      "title": "Fit negative reference"
-    }
-  },
-  "614": {
-    "class_type": "EmptySD3LatentImage",
-    "inputs": {
-      "width": 1344,
-      "height": 768,
-      "batch_size": 1
-    },
-    "_meta": {
-      "title": "Fit size"
-    }
-  },
-  "615": {
-    "class_type": "KSampler",
-    "inputs": {
-      "model": ["604", 0],
-      "positive": ["612", 0],
-      "negative": ["613", 0],
-      "latent_image": ["614", 0],
-      "seed": 0,
-      "steps": 20,
-      "cfg": 4,
-      "sampler_name": "euler",
-      "scheduler": "simple",
-      "denoise": 1
-    },
-    "_meta": {
-      "title": "Fit"
-    }
-  },
-  "616": {
-    "class_type": "VAEDecode",
-    "inputs": {
-      "samples": ["615", 0],
-      "vae": ["602", 0]
-    },
-    "_meta": {
-      "title": "Fitted photo"
-    }
-  },
   "620": {
     "class_type": "TextEncodeQwenImageEditPlus",
     "inputs": {
       "clip": ["601", 0],
       "prompt": "The planet Earth seen from orbit above the place in the photo, the curve of the globe with blue oceans, white clouds and a thin glowing blue edge of atmosphere against black space.",
       "vae": ["602", 0],
-      "image1": ["616", 0]
+      "image1": ["606", 0]
     },
     "_meta": {
       "title": "End-frame prompt"
@@ -612,7 +520,7 @@
       "clip": ["601", 0],
       "prompt": "",
       "vae": ["602", 0],
-      "image1": ["616", 0]
+      "image1": ["606", 0]
     },
     "_meta": {
       "title": "End-frame negative"
@@ -641,7 +549,7 @@
   "624": {
     "class_type": "GetImageSize",
     "inputs": {
-      "image": ["616", 0]
+      "image": ["606", 0]
     },
     "_meta": {
       "title": "Fitted size"
@@ -684,6 +592,61 @@
     },
     "_meta": {
       "title": "End frame image"
+    }
+  },
+  "606": {
+    "class_type": "ImageScale",
+    "inputs": {
+      "image": ["395", 0],
+      "upscale_method": "lanczos",
+      "width": 1280,
+      "height": 720,
+      "crop": "center"
+    },
+    "_meta": {
+      "title": "Fitted photo"
+    }
+  },
+  "628": {
+    "class_type": "EmptyImage",
+    "inputs": {
+      "width": ["624", 0],
+      "height": ["624", 1],
+      "batch_size": 1,
+      "color": 0
+    },
+    "_meta": {
+      "title": "Dark end frame"
+    }
+  },
+  "359": {
+    "class_type": "NormalizeAudioLoudness",
+    "inputs": {
+      "audio": ["358", 0],
+      "lufs": -23.0
+    },
+    "_meta": {
+      "title": "Loudness"
+    }
+  },
+  "360": {
+    "class_type": "AudioAmplify",
+    "inputs": {
+      "audio": ["359", 0],
+      "gain_db": 4.0
+    },
+    "_meta": {
+      "title": "Peak ceiling"
+    }
+  },
+  "361": {
+    "class_type": "AudioAmplify",
+    "inputs": {
+      "audio": ["360", 0],
+      "gain_db": -4.0
+    },
+    "_meta": {
+      "title": "Back from the peak ceiling"
     }
   }
 }

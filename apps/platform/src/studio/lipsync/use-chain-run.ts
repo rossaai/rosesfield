@@ -7,7 +7,7 @@ import {
   SpeechChain,
   speakThenSync,
 } from "@rosesfield/catalog/lipsync"
-import type { Run } from "@rosesfield/contract"
+import { type Run, runInputs } from "@rosesfield/contract"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { storeRun } from "@/pieces/run/run-actions"
@@ -57,8 +57,12 @@ export function chainTargetOf(options: {
   }
 }
 
-function requestOf(ask: StartRunBodyInput): ChainRun {
-  return { inputs: ask.inputs, aspectRatio: ask.aspectRatio ?? null }
+function requestOf(ask: StartRunBodyInput): ChainRun | null {
+  const inputs = runInputs.safeParse(ask.inputs)
+  if (!inputs.success) {
+    return null
+  }
+  return { inputs: inputs.data, aspectRatio: ask.aspectRatio ?? null }
 }
 
 function refused(code: string, status: number): GatewayRefusedError {
@@ -102,11 +106,15 @@ export async function pressChain(press: ChainPress): Promise<Run> {
   if (speechApp === null || target === null || ask === null) {
     throw refused(refusedCode, refusedStatus)
   }
+  const request = requestOf(ask)
+  if (request === null) {
+    throw refused(refusedCode, refusedStatus)
+  }
   const outcome = await speakThenSync({
     app: speechApp,
     voices: press.voices,
     target,
-    request: requestOf(ask),
+    request,
     key: press.key,
     chain: new StartedChain({
       inner: press.chain,

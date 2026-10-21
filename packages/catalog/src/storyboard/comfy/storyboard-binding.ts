@@ -1,13 +1,17 @@
-import type { EngineBinding } from "@rosesfield/contract"
+import { characterReferenceMax, type EngineBinding } from "@rosesfield/contract"
 import {
   comfyWorkflowAdapter,
   refusedBinding,
   selectBinding,
 } from "@rosesfield/generation/bindings"
-import { zImageTurbo } from "#image/comfy/open-weights"
+import { editReferenceLimit, zImageTurbo } from "#image/comfy/open-weights"
 import { type TextPass, textPassOf } from "#storyboard/comfy/keyframe-from-text"
 import { keyframeSizes, sideMap } from "#storyboard/comfy/keyframe-sizes"
-import { editNodes, type Link } from "#storyboard/comfy/storyboard-nodes"
+import {
+  editNodes,
+  type Link,
+  photoSlots,
+} from "#storyboard/comfy/storyboard-nodes"
 import {
   maxScenes,
   type StoryboardModel,
@@ -52,13 +56,55 @@ function sharedBindings(first: Link): WorkflowValueBinding[] {
   ]
 }
 
-function anchoredBinding(anchor: "reference" | "character"): EngineBinding {
+function withPhotos(graph: ApiGraph, photos: number): ApiGraph {
+  for (const slot of photoSlots.slice(Math.max(photos - 1, 0))) {
+    delete graph[slot.node]
+    for (const node of Object.values(graph)) {
+      if (node.class_type === editNodes.encoderClass) {
+        delete node.inputs[slot.input]
+      }
+    }
+  }
+  return graph
+}
+
+function anchoredBinding(
+  anchor: "reference" | "character",
+  photos: number
+): EngineBinding {
+  const slots = ["anchor", ...photoSlots.map((slot) => slot.to)]
   return workflowBinding({
     workflow: editWorkflow,
     bindings: [
-      { from: "input", name: anchor, index: 0, to: "anchor" },
+      ...slots.slice(0, photos).map(
+        (to, index): WorkflowValueBinding => ({
+          from: "input",
+          name: anchor,
+          index,
+          to,
+        })
+      ),
       ...sharedBindings([editNodes.firstKeyframe, 0]),
     ],
+    patch: (graph) => withPhotos(apiGraph.parse(graph), photos),
+  })
+}
+
+function byPhotoCount(): EngineBinding {
+  const photos = Array.from(
+    { length: characterReferenceMax },
+    (_, index) => index + 1
+  )
+  return selectBinding({
+    input: "character",
+    by: "count",
+    options: Object.fromEntries([
+      ["0", keyframeBinding()],
+      ...photos.map((count) => [
+        String(count),
+        anchoredBinding("character", Math.min(count, editReferenceLimit)),
+      ]),
+    ]),
   })
 }
 
@@ -75,6 +121,7 @@ function nodeAt(graph: ApiGraph, id: string): ApiGraph[string] {
 
 function fromTextPatch(graph: ApiGraph, pass: TextPass): ApiGraph {
   const first = pass.keyframe
+  withPhotos(graph, 0)
   delete graph[editNodes.anchor]
   for (const id of editNodes.firstEdit) {
     delete graph[id]
@@ -140,15 +187,8 @@ function byAnchor(): EngineBinding {
     input: "reference",
     by: "filled",
     options: {
-      filled: anchoredBinding("reference"),
-      empty: selectBinding({
-        input: "character",
-        by: "filled",
-        options: {
-          filled: anchoredBinding("character"),
-          empty: keyframeBinding(),
-        },
-      }),
+      filled: anchoredBinding("reference", 1),
+      empty: byPhotoCount(),
     },
   })
 }
