@@ -90,23 +90,27 @@ export function withoutRecording(
   return graph
 }
 
+export const chatterboxSpeechBinding: EngineBinding = workflowBinding({
+  workflow: voiceWorkflow,
+  bindings: shared,
+  outputsPerJob: "one",
+  patch: withoutRecording,
+})
+
+export const chatterboxCloneBinding: EngineBinding = workflowBinding({
+  workflow: voiceWorkflow,
+  bindings: [
+    ...shared,
+    { from: "input", name: "recording", index: 0, to: "voice" },
+  ],
+  outputsPerJob: "one",
+})
+
 export const voiceBinding: EngineBinding = selectBinding({
   input: "recording",
   by: "filled",
   options: {
-    filled: workflowBinding({
-      workflow: voiceWorkflow,
-      bindings: [
-        ...shared,
-        { from: "input", name: "recording", index: 0, to: "voice" },
-      ],
-      outputsPerJob: "one",
-    }),
-    empty: workflowBinding({
-      workflow: voiceWorkflow,
-      bindings: shared,
-      outputsPerJob: "one",
-      patch: withoutRecording,
-    }),
+    filled: chatterboxCloneBinding,
+    empty: chatterboxSpeechBinding,
   },
 })
