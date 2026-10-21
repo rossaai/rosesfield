@@ -171,7 +171,7 @@ describe("a Characters run on a hosted model", () => {
 })
 
 function modelInputsOf(run: HostedRun["inputs"]): HostedRun["inputs"] {
-  const { mode: _, ...rest } = run
+  const { mode: _, character: __, angleSet: ___, ...rest } = run
   return rest
 }
 
@@ -197,6 +197,38 @@ describe("the inputs a hosted Characters run sends", () => {
     for (const run of runs) {
       expect(checkModelInputs(form, modelInputsOf(run)).kind).toBe("valid")
     }
+  })
+
+  it("sends the character and the angle set with each view, so each view offers Add to character and names its view", () => {
+    const runs = inputsOf(hostedRunsOf(fields, angles, { photos, count: 4 }))
+    expect(runs).toHaveLength(4)
+    for (const run of runs) {
+      expect(run).toMatchObject({
+        mode: "angles",
+        character: angles.character,
+        angleSet: "quarters",
+      })
+    }
+    const [plain] = inputsOf(
+      hostedRunsOf(
+        fields,
+        { ...angles, angleSet: undefined },
+        { photos, count: 4 }
+      )
+    )
+    expect(plain?.angleSet).toBe("turnaround")
+  })
+
+  it("sends no character or angle set with a traits run", () => {
+    const [run] = inputsOf(
+      hostedRunsOf(
+        fields,
+        { ...traits, character: angles.character, angleSet: "quarters" },
+        once
+      )
+    )
+    expect(run).not.toHaveProperty("character")
+    expect(run).not.toHaveProperty("angleSet")
   })
 
   it("sends no app mode to a model with a mode field of its own", () => {

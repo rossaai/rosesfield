@@ -6,6 +6,7 @@ import type {
 } from "@rosesfield/contract"
 import { type FieldRole, fieldRoleOf } from "#domain/field-role"
 import type { ModelField, ModelForm } from "#domain/model-form"
+import { ruledInputsOf } from "#domain/ruled-inputs"
 import { resolveBinding } from "#domain/select-binding"
 import { chosenModelOf, hostedModelOf } from "#domain/task-binding"
 
@@ -34,7 +35,8 @@ const settingRoles: readonly FieldRole[] = [
 ]
 
 export function pricedRunOf(options: PricedRunOptions): PricedRun {
-  const { app, inputs, form } = options
+  const { app, form } = options
+  const inputs: RunInputs = ruledInputsOf(app, options.inputs)
   const chosen = chosenModelOf(app.engine, inputs)
   const model =
     chosen ??

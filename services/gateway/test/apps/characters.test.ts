@@ -364,23 +364,49 @@ describe("a hosted angle set of Characters, on the demo engine", () => {
     })
   }
 
-  async function views(): Promise<ReturnType<typeof hostedRunsOf>> {
-    const model = await flux()
-    return hostedRunsOf(
-      model.form ?? [],
-      { mode: "angles", model: model.id, angleSet: "turnaround" },
-      { photos: [assetIdFormat.parse(await photo())], count: 4 }
-    )
+  async function character(photoId: string): Promise<string> {
+    const created = await call(routes.createCharacter.path, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Ada", references: [photoId], notes: "" }),
+    })
+    expect(created.status).toBe(201)
+    return characterResponse.parse(await created.json()).character.id
   }
 
-  it("starts each view with the angles mode kept in its run, and ends each view with one image", async () => {
-    const made = await views()
+  async function views(): Promise<{
+    made: ReturnType<typeof hostedRunsOf>
+    characterId: string
+  }> {
+    const model = await flux()
+    const photoId = await photo()
+    const characterId = await character(photoId)
+    const made = hostedRunsOf(
+      model.form ?? [],
+      {
+        mode: "angles",
+        model: model.id,
+        character: [characterId],
+        angleSet: "turnaround",
+      },
+      { photos: [assetIdFormat.parse(photoId)], count: 4 }
+    )
+    return { made, characterId }
+  }
+
+  it("starts each view with the angles mode, the character and the angle set kept in its run, and ends each view with one image", async () => {
+    const { made, characterId } = await views()
     expect(made).toHaveLength(4)
     for (const [index, view] of made.entries()) {
       const started = await startView(view, `angles-press-view-${index + 1}`)
       expect(started.status).toBe(202)
       const { run } = runResponse.parse(await started.json())
-      expect(run.inputs).toMatchObject({ mode: "angles", model: fluxImage })
+      expect(run.inputs).toMatchObject({
+        mode: "angles",
+        model: fluxImage,
+        character: [characterId],
+        angleSet: "turnaround",
+      })
       for (let step = 0; step < 20; step += 1) {
         const { nextWakeMs } = await gateway.handlers.advanceRun.execute({
           runId: runIdFormat.parse(run.id),
@@ -398,13 +424,29 @@ describe("a hosted angle set of Characters, on the demo engine", () => {
   })
 
   it("control: refuses a view whose mode Characters does not have", async () => {
-    const [view] = await views()
+    const {
+      made: [view],
+    } = await views()
     if (view === undefined) {
       throw new Error("the angle set made no view")
     }
     const refused = await startView(
       { ...view, inputs: { ...view.inputs, mode: "erase" } },
       "angles-erase-view-1"
+    )
+    expect(refused.status).toBe(400)
+  })
+
+  it("control: refuses a view whose angle set Characters does not have", async () => {
+    const {
+      made: [view],
+    } = await views()
+    if (view === undefined) {
+      throw new Error("the angle set made no view")
+    }
+    const refused = await startView(
+      { ...view, inputs: { ...view.inputs, angleSet: "spiral" } },
+      "angles-spiral-view-1"
     )
     expect(refused.status).toBe(400)
   })

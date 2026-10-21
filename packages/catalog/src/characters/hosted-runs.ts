@@ -9,7 +9,7 @@ import {
   assetIdFormat,
   characterIdFormat,
 } from "@rosesfield/kernel"
-import { setPoses } from "#angles/angle-views"
+import { type AngleSet, setPoses } from "#angles/angle-views"
 import {
   loraDistanceWords,
   loraHeightWords,
@@ -40,6 +40,10 @@ const modelInput = "model"
 
 const modeInput = "mode"
 
+const characterInput = "character"
+
+const angleSetInput = "angleSet"
+
 const defaultSet = "turnaround"
 
 const ownInputs: ReadonlySet<string> = new Set([
@@ -58,9 +62,12 @@ const sameSubject =
 
 const viewBackground = "on a plain light grey studio background"
 
+function angleSetOf(angleSet: unknown): AngleSet {
+  return angleSets.find((one) => one === angleSet) ?? defaultSet
+}
+
 export function anglePromptsOf(angleSet: unknown): string[] {
-  const set = angleSets.find((one) => one === angleSet) ?? defaultSet
-  return setPoses[set].map((pose) =>
+  return setPoses[angleSetOf(angleSet)].map((pose) =>
     [
       sameSubject,
       loraSideWords[pose.side],
@@ -121,6 +128,22 @@ function sharedInputsOf(
   return shared
 }
 
+function anglesInputsOf(
+  fields: readonly ModelField[],
+  inputs: Inputs
+): HostedInputs {
+  const own = new Set(fields.map((field) => field.name))
+  const kept: HostedInputs = {}
+  const character = inputs[characterInput]
+  if (!own.has(characterInput) && isFilled(character)) {
+    kept[characterInput] = character
+  }
+  if (!own.has(angleSetInput)) {
+    kept[angleSetInput] = angleSetOf(inputs[angleSetInput])
+  }
+  return kept
+}
+
 function promptOf(fields: readonly ModelField[]): ModelField | undefined {
   return fields.find((field) => fieldRoleOf(field, output) === "prompt")
 }
@@ -155,11 +178,10 @@ export function hostedRunsOf(
   if (image === undefined || options.photos.length === 0) {
     return []
   }
-  const shared = sharedInputsOf(
-    fields,
-    inputs,
-    new Set([prompt.name, image.name])
-  )
+  const shared = {
+    ...sharedInputsOf(fields, inputs, new Set([prompt.name, image.name])),
+    ...anglesInputsOf(fields, inputs),
+  }
   const references = options.photos.slice(0, image.max)
   return anglePromptsOf(inputs.angleSet).map((text) => ({
     inputs: { ...shared, [prompt.name]: text, [image.name]: references },

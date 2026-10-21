@@ -48,6 +48,25 @@ function appWith(engine: unknown) {
         ],
       },
       {
+        type: "character",
+        name: "character",
+        labelKey: "inputs.character",
+        presence: "required",
+        max: 1,
+        when: [{ input: "mode", is: ["edit"] }],
+      },
+      {
+        type: "choice",
+        name: "side",
+        labelKey: "inputs.side",
+        options: [
+          { value: "front", labelKey: "side.front" },
+          { value: "back", labelKey: "side.back" },
+        ],
+        default: "front",
+        when: [{ input: "mode", is: ["edit"] }],
+      },
+      {
         type: "choice",
         name: "quality",
         labelKey: "inputs.quality",
@@ -76,6 +95,8 @@ const modeApp = appWith(
     fallback: fakeBinding,
   })
 )
+
+const ada = "1b2c3d4e-5f60-4a7b-8c9d-0e1f2a3b4c5d"
 
 const given = {
   mode: "edit",
@@ -122,6 +143,39 @@ describe("the app inputs that bound a hosted model's choice", () => {
       rest,
       issues: [],
     })
+  })
+
+  it("keeps a character and a choice the bounding mode shows, and leaves them out of the model's inputs", () => {
+    const shown = { ...given, character: [ada], side: "back" }
+    const { mode, character, side, ...rest } = shown
+    expect(chooserInputsOf(modeApp, shown, form)).toEqual({
+      inputs: { mode, character, side },
+      rest,
+      issues: [],
+    })
+  })
+
+  it("refuses a character the given mode hides, and one list longer than the app takes", () => {
+    const hidden = chooserInputsOf(
+      modeApp,
+      { ...given, mode: "split", character: [ada] },
+      form
+    )
+    expect(hidden.inputs).toEqual({ mode: "split" })
+    expect(hidden.rest).not.toHaveProperty("character")
+    expect(hidden.issues).toEqual([
+      "character applies only when mode is edit",
+    ])
+    const two = chooserInputsOf(
+      modeApp,
+      { ...given, character: [ada, ada], side: "left" },
+      form
+    )
+    expect(two.inputs).toEqual({ mode: "edit" })
+    expect(two.issues).toEqual([
+      "character: 1 to 1 saved characters",
+      "side: the value is not one of the app's choices",
+    ])
   })
 
   it("control: an app whose engine names no model input keeps nothing", () => {
