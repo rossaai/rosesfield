@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import { type EffectRecipe, maxHits } from "#effects/effect-recipe.contract"
 import {
   effectRecipes,
-  effectRuns,
   passedRecipes,
   readLedger,
   readRecipes,
@@ -39,15 +38,21 @@ function cutsOf(recipe: EffectRecipe): number {
 }
 
 describe("the effect recipes kept as data", () => {
-  it("reads the nine looks, none passed and none with an adapter", () => {
+  it("reads the nine looks, with Push into eye the one passed and none with an adapter", () => {
     expect(
       effectRecipes.map(({ effect, passed, adapter }) => ({
         effect,
         passed,
         adapter,
       }))
-    ).toEqual(looks.map((effect) => ({ effect, passed: false, adapter: null })))
-    expect(passedRecipes).toEqual([])
+    ).toEqual(
+      looks.map((effect) => ({
+        effect,
+        passed: effect === "push-into-eye",
+        adapter: null,
+      }))
+    )
+    expect(passedRecipes.map((one) => one.effect)).toEqual(["push-into-eye"])
   })
 
   it("names for each look the unit and the family it is designed from, with its whole chain", () => {
@@ -248,10 +253,6 @@ describe("the effect recipes kept as data", () => {
     expect(() => readRecipes(sources, ledger)).toThrow(
       /many-copies\.json passed on a run outside its criteria: cut: one at 3 s, outside every window, last frame: luma 90, against at most 40/
     )
-  })
-
-  it("reads an empty run ledger while no look has run", () => {
-    expect(effectRuns).toEqual([])
   })
 
   it("refuses a passed recipe whose run is not a row of the run ledger", () => {

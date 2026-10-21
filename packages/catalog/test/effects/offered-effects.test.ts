@@ -57,12 +57,13 @@ describe("the effects a server offers", () => {
     ])
   })
 
-  it("opens the app and starts a draft on the local lock, while no effect has passed", () => {
+  it("opens the app with the passed look first and starts a draft on the local lock", () => {
     const app = offeredEffectsApp(effectRecipes, local)
     expect(app.closedKey).toBeNull()
-    expect(effectsOf(app.inputs)?.options.map((one) => one.value)).toEqual(
-      effectRecipes.map((one) => one.effect)
-    )
+    expect(effectsOf(app.inputs)?.options.map((one) => one.value)).toEqual([
+      "push-into-eye",
+      ...effectRecipes.filter((one) => !one.passed).map((one) => one.effect),
+    ])
     const body = startRunBodyFor(app)
     expect(
       body.safeParse({
@@ -81,9 +82,11 @@ describe("the effects a server offers", () => {
         inputs: { effect: "many-copies", image: [passedRun.runId] },
       }).success
     ).toBe(false)
-    expect(offeredEffectsApp(effectRecipes, reach).closedKey).toBe(
-      "effects.closed"
-    )
+    const shipped = offeredEffectsApp(effectRecipes, reach)
+    expect(shipped.closedKey).toBeNull()
+    expect(effectsOf(shipped.inputs)?.options.map((one) => one.value)).toEqual([
+      "push-into-eye",
+    ])
   })
 
   it("swaps in the offered effects app only on the local lock", () => {

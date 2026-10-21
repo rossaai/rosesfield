@@ -1,6 +1,6 @@
 {
   "effect": "push-into-eye",
-  "passed": false,
+  "passed": true,
   "design": {
     "unit": "push-into-eye",
     "family": "effects",
@@ -23,48 +23,45 @@
           "prompt": "Bright airy rushing wind at full level from the very first moment, a breathy whoosh of air, cinematic sound design. No music, no voice.",
           "time": 0,
           "seconds": 3.5,
-          "gainDb": -2
-        },
-        {
-          "prompt": "A cinematic riser, an airy whoosh that swells and rises in pitch over three seconds, with a bright shimmering high texture. No music, no voice.",
-          "time": 2.5,
-          "seconds": 3,
-          "gainDb": -2
+          "gainDb": -10
         },
         {
           "prompt": "One deep low cinematic thump, a heavy sub bass drum hit with a short rumbling tail. No music, no voice.",
           "time": 4,
           "seconds": 1.5,
-          "gainDb": 0
+          "gainDb": 6
         },
         {
           "prompt": "One deep low cinematic thump, a heavy sub bass drum hit with a short rumbling tail. No music, no voice.",
-          "time": 5,
+          "time": 4.3,
           "seconds": 1.5,
-          "gainDb": 1
+          "gainDb": 4
         },
         {
           "prompt": "One deep low cinematic thump, a heavy sub bass drum hit with a short rumbling tail. No music, no voice.",
-          "time": 5.8,
+          "time": 5.3,
           "seconds": 1.5,
-          "gainDb": 2
+          "gainDb": 6
+        },
+        {
+          "prompt": "One deep low cinematic thump, a heavy sub bass drum hit with a short rumbling tail. No music, no voice.",
+          "time": 5.6,
+          "seconds": 1.5,
+          "gainDb": 4
         },
         {
           "prompt": "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice.",
           "time": 6.7,
           "seconds": 2,
-          "gainDb": 6
+          "gainDb": 8
         }
       ],
-      "build": {
-        "seconds": 5,
-        "floorDb": -10
-      },
+      "build": null,
       "brighten": {
         "presenceDb": 4,
-        "airDb": 4
+        "airDb": 0
       },
-      "bedGainDb": -4
+      "bedGainDb": -6
     },
     "encode": {
       "container": "mp4",
@@ -88,6 +85,37 @@
   "hold": null,
   "adapter": null,
   "seconds": 7,
-  "preview": null,
-  "proof": null
+  "preview": {
+    "file": "push-into-eye.mp4",
+    "runId": "1e77db70-4ebe-4050-97e4-84f118438aeb",
+    "seed": 1028487189,
+    "resolution": "1080p",
+    "aspectRatio": "3:4",
+    "workflowHash": "2221d4e0373d184319a67f1d6bccd2c3e96095a82a443400320aac0be8662f36"
+  },
+  "proof": {
+    "gate": {
+      "positives": 5,
+      "planted": "refused",
+      "verdict": "held"
+    },
+    "judge": {
+      "criteria": 12,
+      "failed": [],
+      "verdict": "held"
+    },
+    "reading": {
+      "frames": 169,
+      "fps": 24,
+      "width": 1248,
+      "height": 1664,
+      "cuts": [],
+      "loudness": {
+        "integrated": -25.8,
+        "truePeak": -8.2
+      },
+      "firstFrameLuma": 92.5,
+      "lastFrameLuma": 16
+    }
+  }
 }

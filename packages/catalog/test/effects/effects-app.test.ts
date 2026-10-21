@@ -17,11 +17,20 @@ function inputNamed(
 
 describe("the effects app offers only passed effects", () => {
   it("is closed with its note and offers no effect while none has passed", () => {
-    const shipped = appListing.parse(appDefinition.parse(app))
-    expect(shipped.closedKey).toBe("effects.closed")
-    expect(inputNamed(shipped.inputs, "effect")).toBeUndefined()
-    expect(appDefinition.parse(app).engine.config).toMatchObject({
+    const closed = appListing.parse(appDefinition.parse(effectsApp([])))
+    expect(closed.closedKey).toBe("effects.closed")
+    expect(inputNamed(closed.inputs, "effect")).toBeUndefined()
+    expect(appDefinition.parse(effectsApp([])).engine.config).toMatchObject({
       options: {},
+    })
+  })
+
+  it("ships open with Push into eye, the one look that passed, as its default", () => {
+    const shipped = appListing.parse(appDefinition.parse(app))
+    expect(shipped.closedKey).toBeNull()
+    expect(inputNamed(shipped.inputs, "effect")).toMatchObject({
+      options: [{ value: "push-into-eye" }],
+      default: "push-into-eye",
     })
   })
 

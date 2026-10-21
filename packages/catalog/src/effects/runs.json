@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "runId": "1e77db70-4ebe-4050-97e4-84f118438aeb",
+    "effect": "push-into-eye",
+    "workflowHash": "2221d4e0373d184319a67f1d6bccd2c3e96095a82a443400320aac0be8662f36",
+    "photo": "4878911303dc844df9d1380ef667e54c3bbc27d0a634396496d961404542b221",
+    "seed": 1028487189,
+    "resolution": "1080p",
+    "aspectRatio": "3:4",
+    "balance": {
+      "before": 2530.78,
+      "after": 2492.89
+    },
+    "verdict": "kept",
+    "failed": []
+  }
+]
