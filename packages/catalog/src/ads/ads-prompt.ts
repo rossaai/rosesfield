@@ -1,5 +1,10 @@
 import type { Run } from "@rosesfield/contract"
 import {
+  fieldOfRole,
+  isHostedModelId,
+  type ModelField,
+} from "@rosesfield/generation/bindings"
+import {
   adsAppId,
   defaultKind,
   defaultStyle,
@@ -65,6 +70,26 @@ export function adsPromptOf(inputs: AdsInputs): string {
     .trim()
 }
 
-export function adsRunPromptOf(run: AdsRun): string | null {
-  return run.appId === adsAppId ? adsPromptOf(run.inputs) : null
+const modelInput = "model"
+
+function sentPromptOf(
+  run: AdsRun,
+  fields: readonly ModelField[] | null
+): string | null {
+  const field = fieldOfRole(fields ?? [], "prompt", "image")
+  const sent = field === null ? undefined : run.inputs[field.name]
+  return typeof sent === "string" ? sent : null
+}
+
+export function adsRunPromptOf(
+  run: AdsRun,
+  fields: readonly ModelField[] | null
+): string | null {
+  if (run.appId !== adsAppId) {
+    return null
+  }
+  const model = run.inputs[modelInput]
+  return typeof model === "string" && isHostedModelId(model)
+    ? sentPromptOf(run, fields)
+    : adsPromptOf(run.inputs)
 }

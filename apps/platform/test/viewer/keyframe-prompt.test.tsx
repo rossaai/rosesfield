@@ -122,7 +122,7 @@ describe("the share clip's words for a Storyboard keyframe", () => {
       createObjectURL: () => "blob:keyframe",
       revokeObjectURL: () => undefined,
     })
-    const sources = await clipSourcesOf(storyboardRun(), outputs[1] ?? "")
+    const sources = await clipSourcesOf(storyboardRun(), outputs[1] ?? "", [])
     expect(sources.plan.input).toEqual({
       kind: "text",
       text: `${scenes[1]} ${look}`,
