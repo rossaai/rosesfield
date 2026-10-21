@@ -185,3 +185,41 @@ export function planShots(
     }
   })
 }
+
+const problemCodePattern =
+  /^REMAKE_(SHOT_COUNT|SHOT_LENGTH|EDIT_LENGTH)_(\d+)(?:_(\d+))?$/
+
+export function shotProblemCodeOf(problem: ShotProblem): string {
+  switch (problem.code) {
+    case "shotCount":
+      return `REMAKE_SHOT_COUNT_${problem.count}`
+    case "shotLength":
+      return `REMAKE_SHOT_LENGTH_${problem.number}_${framesOf(problem.seconds)}`
+    case "editLength":
+      return `REMAKE_EDIT_LENGTH_${framesOf(problem.seconds)}`
+  }
+}
+
+export function shotProblemOfCode(code: string): ShotProblem | null {
+  const matched = problemCodePattern.exec(code)
+  if (matched === null) {
+    return null
+  }
+  const [, kind, first, second] = matched
+  const value = Number(first)
+  const fps = remakeLimits.framesPerSecond
+  switch (kind) {
+    case "SHOT_COUNT":
+      return second === undefined ? { code: "shotCount", count: value } : null
+    case "SHOT_LENGTH":
+      return second === undefined
+        ? null
+        : { code: "shotLength", number: value, seconds: Number(second) / fps }
+    case "EDIT_LENGTH":
+      return second === undefined
+        ? { code: "editLength", seconds: value / fps }
+        : null
+    default:
+      return null
+  }
+}

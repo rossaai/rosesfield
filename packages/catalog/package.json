@@ -13,7 +13,9 @@
     "./video": "./src/video/index.ts",
     "./effects": "./src/effects/index.ts",
     "./lipsync": "./src/lipsync/index.ts",
-    "./storyboard": "./src/storyboard/index.ts"
+    "./storyboard": "./src/storyboard/index.ts",
+    "./remake": "./src/remake/index.ts",
+    "./remake/bun": "./src/remake/ffmpeg/bun-media-tool.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
