@@ -105,7 +105,7 @@ export function replayRouter(
     const url = input instanceof Request ? input.url : String(input)
     const next = queue.shift()
     if (next === undefined) {
-      throw new Error(`No recorded Router answer for ${url}`)
+      throw new Error(`No hand-written Router completion is left for ${url}`)
     }
     const request = {
       url,

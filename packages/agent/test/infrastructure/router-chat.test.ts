@@ -220,4 +220,13 @@ describe("the agent on a Comfy Router chat model", () => {
       })
     ).rejects.toBeInstanceOf(AgentModelUnknownError)
   })
+
+  it("names the hand-written completions when a request finds none left", async () => {
+    const replay = replayRouter([])
+    const url = routerChatUrl()
+
+    await expect(replay.fetch(url, {})).rejects.toThrow(
+      `No hand-written Router completion is left for ${url}`
+    )
+  })
 })
