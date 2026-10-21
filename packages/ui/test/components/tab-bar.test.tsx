@@ -2,6 +2,7 @@ import {
   TabBar,
   TabBarGenerate,
   TabBarLink,
+  tabBarCover,
 } from "@rosesfield/ui/components/tab-bar"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -50,13 +51,25 @@ describe("TabBar", () => {
     expect(glow?.className.split(" ")).toEqual(
       expect.arrayContaining([
         "absolute",
-        "-top-9",
+        "-top-(--app-bar-rise)",
         "bottom-0",
         "-z-1",
         "pointer-events-none",
         "to-canvas",
       ])
     )
+  })
+
+  it("raises its glow by one rise, 9 spacing steps, and hands the scrollers above it that rise as their covered bottom below the width switch", () => {
+    renderBar()
+    const bar = screen.getByRole("navigation", { name: "Areas" })
+    const rise = "[--app-bar-rise:calc(var(--spacing)*9)]"
+    expect(bar.className.split(" ")).toContain(rise)
+    expect(tabBarCover.split(" ")).toEqual([
+      rise,
+      "[--covered-bottom:var(--app-bar-rise)]",
+      "@regular:[--covered-bottom:0px]",
+    ])
   })
 
   it("dims a pressed link to 0.6 and a pressed Generate to 0.9, each 2 px down", () => {

@@ -18,12 +18,43 @@ export type ExploreAdmission = {
   brand: boolean
 }
 
-export const exploreList: readonly ExploreAdmission[] = []
+export type ExploreVerdict = "held" | "refused"
+
+export type ExploreJudgment = {
+  verdict: ExploreVerdict
+  criteria: string
+  judge: string
+  inputsBy: string
+}
+
+export type ExploreListEntry = ExploreAdmission & {
+  shareId: string
+  judgment: ExploreJudgment
+}
+
+export const exploreList: readonly ExploreListEntry[] = []
+
+function isHeld(entry: ExploreListEntry): boolean {
+  const { verdict, criteria, judge, inputsBy } = entry.judgment
+  return (
+    entry.shareId.trim() !== "" &&
+    verdict === "held" &&
+    criteria.trim() !== "" &&
+    judge.trim() !== "" &&
+    judge.trim() !== inputsBy.trim()
+  )
+}
+
+export function heldEntries(
+  list: readonly ExploreListEntry[]
+): readonly ExploreAdmission[] {
+  return list.filter(isHeld)
+}
 
 export const exploreListQuery = queryOptions({
   queryKey: ["explore", "list"],
-  queryFn: (): readonly ExploreAdmission[] => exploreList,
-  initialData: exploreList,
+  queryFn: (): readonly ExploreAdmission[] => heldEntries(exploreList),
+  initialData: heldEntries(exploreList),
   staleTime: Number.POSITIVE_INFINITY,
 })
 
