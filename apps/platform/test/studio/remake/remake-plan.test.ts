@@ -1,66 +1,19 @@
-import { describe, expect, it } from "vitest"
+import type { Run } from "@rosesfield/contract"
+import { describe, expect, expectTypeOf, it } from "vitest"
 import { t, tCatalog } from "@/copy/t"
-import {
-  planCreditsOf,
-  type RemakePlan,
-  readPlan,
-} from "@/studio/remake/remake-plan"
+import { planCreditsOf, type RemakePlan } from "@/studio/remake/remake-plan"
 import {
   cameraMoveName,
   shotLengthOf,
   shotSpanOf,
 } from "@/studio/remake/shot-words"
-import { planOfThree, remakeRun, wirePlanOfThree } from "./remake-fixtures"
+import { planOfThree, remakeRun } from "./remake-fixtures"
 
 describe("the plan the run record carries", () => {
-  it("reads every shot with its times, its route, its model, its credits and its seed", () => {
-    expect(readPlan(remakeRun({ plan: wirePlanOfThree }).plan)).toEqual(
-      planOfThree
-    )
-  })
-
-  it("reads a run with no plan yet as no plan", () => {
-    expect(readPlan(remakeRun().plan)).toBeNull()
-    expect(readPlan(null)).toBeNull()
-  })
-
-  it("refuses a plan whose shots are out of order, overlap or end before they start", () => {
-    const [first, second, third] = wirePlanOfThree.shots
-    expect(readPlan({ shots: [second, first, third] })).toBeNull()
-    expect(
-      readPlan({ shots: [first, { ...second, startSeconds: 3 }, third] })
-    ).toBeNull()
-    expect(
-      readPlan({ shots: [{ ...first, endSeconds: 0 }, second, third] })
-    ).toBeNull()
-    expect(readPlan({ shots: [] })).toBeNull()
-  })
-
-  it("keeps words and a camera move for a rebuilt shot only", () => {
-    const [first, second, third] = wirePlanOfThree.shots
-    const read = readPlan({
-      shots: [
-        { ...first, words: "a street", cameraMove: "push-in" },
-        second,
-        third,
-      ],
-    })
-    expect(read?.shots[0]).toMatchObject({ words: null, cameraMove: null })
-    expect(read?.shots[1]).toMatchObject({
-      words: "A wide street at dusk.",
-      cameraMove: "push-in",
-    })
-  })
-
-  it("reads a camera move outside Video's moves as no move", () => {
-    const [first, second, third] = wirePlanOfThree.shots
-    const read = readPlan({
-      shots: [first, { ...second, cameraMove: "spin" }, third],
-    })
-    expect(read?.shots[1]).toMatchObject({
-      words: "A wide street at dusk.",
-      cameraMove: null,
-    })
+  it("is the run's own plan type, with no second type to parse into", () => {
+    expectTypeOf<RemakePlan>().toEqualTypeOf<NonNullable<Run["plan"]>>()
+    const plan: RemakePlan | undefined = remakeRun({ plan: planOfThree }).plan
+    expect(plan).toEqual(planOfThree)
   })
 })
 

@@ -3,11 +3,7 @@ import type { ReactElement, ReactNode } from "react"
 import { joinParts } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { CollapsibleSection } from "@/pieces/collapsible-section"
-import {
-  type PlanShot,
-  type RemakePlan,
-  readPlan,
-} from "@/studio/remake/remake-plan"
+import type { PlanShot, RemakePlan } from "@/studio/remake/remake-plan"
 import {
   cameraMoveName,
   creditsText,
@@ -62,7 +58,7 @@ export function ShotDetails({ plan }: { plan: RemakePlan }): ReactElement {
 }
 
 export function RunShotRows({ run }: { run: Run }): ReactNode {
-  const plan = readPlan(run.plan)
+  const plan = run.plan ?? null
   if (plan === null) {
     return null
   }
