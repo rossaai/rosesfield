@@ -77,6 +77,7 @@ describe("interaction", () => {
     ])
     expect(classesOf("ringScroll")).toEqual([
       "scroll-p-[calc(var(--spacing-focus-ring)*2)]",
+      "scroll-pb-[calc(var(--spacing-focus-ring)*2+var(--covered-bottom,0px))]",
     ])
   })
 

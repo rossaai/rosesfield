@@ -1,6 +1,7 @@
 import { Button } from "@rosesfield/ui/components/button"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { StateView } from "@rosesfield/ui/components/state-view"
+import { tabBarCover } from "@rosesfield/ui/components/tab-bar"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useRouterState } from "@tanstack/react-router"
@@ -70,6 +71,7 @@ export function ShellFrame({
             className={cn(
               "min-h-0 flex-1 overflow-y-auto",
               interaction.ringScroll,
+              tabBarCover,
               footer ? "flex flex-col *:shrink-0" : ""
             )}
           >

@@ -14,6 +14,10 @@ const linkPress = "active:opacity-60 in-data-[gallery=press]:opacity-60"
 
 const generatePress = "active:opacity-90 in-data-[gallery=press]:opacity-90"
 
+const glowRise = "[--app-bar-rise:calc(var(--spacing)*9)]"
+
+const tabBarCover = `${glowRise} [--covered-bottom:var(--app-bar-rise)] @regular:[--covered-bottom:0px]`
+
 function TabBar({
   label,
   children,
@@ -26,12 +30,15 @@ function TabBar({
       aria-label={label}
       data-slot="app-bar"
       data-place={place}
-      className="sticky bottom-0 z-40 w-full border-t border-transparent p-1 pb-[calc(var(--spacing)+env(safe-area-inset-bottom))] @regular:hidden"
+      className={cn(
+        "sticky bottom-0 z-40 w-full border-t border-transparent p-1 pb-[calc(var(--spacing)+env(safe-area-inset-bottom))] @regular:hidden",
+        glowRise
+      )}
     >
       <div
         aria-hidden="true"
         data-slot="app-bar-glow"
-        className="pointer-events-none absolute inset-x-0 -top-9 bottom-0 -z-1 bg-linear-to-b from-transparent to-canvas to-[calc(var(--spacing)*8.75)]"
+        className="pointer-events-none absolute inset-x-0 -top-(--app-bar-rise) bottom-0 -z-1 bg-linear-to-b from-transparent to-canvas to-[calc(var(--spacing)*8.75)]"
       />
       <div
         data-slot="app-bar-tabs"
@@ -112,4 +119,4 @@ function TabBarGenerate({
 }
 
 export type { TabBarLinkProps }
-export { TabBar, TabBarGenerate, TabBarLink }
+export { TabBar, TabBarGenerate, TabBarLink, tabBarCover }

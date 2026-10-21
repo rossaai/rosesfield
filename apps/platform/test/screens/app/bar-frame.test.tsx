@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { BarFrame, type BarPlace } from "@/screens/app/bar-frame"
 import {
   asPhone,
@@ -14,6 +14,46 @@ beforeEach(stubFetch)
 afterEach(() => {
   cleanup()
   resetFrames()
+  vi.restoreAllMocks()
+})
+
+function renderDocked(): ReturnType<typeof render> {
+  return render(
+    withClient(
+      <BarFrame
+        app={image}
+        hasRuns={false}
+        onUseInputs={() => undefined}
+        sheet={[false, () => undefined]}
+        settings={null}
+        bar={() => <div data-testid="bar-dock" />}
+      />,
+      image,
+      []
+    )
+  )
+}
+
+function coveredBottom(): string | undefined {
+  const stage = document.querySelector<HTMLElement>('[data-slot="bar-stage"]')
+  return stage?.style.getPropertyValue("--covered-bottom")
+}
+
+describe("the bar frame's floating prompt bar", () => {
+  it("hands the stage its measured height as the covered bottom, so a focused tile scrolls clear of it", () => {
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(124)
+    renderDocked()
+    expect(screen.getByTestId("bar-dock")).toBeDefined()
+    expect(coveredBottom()).toBe("124px")
+  })
+
+  it("leaves the covered bottom to the tab bar on a phone, where the prompt bar does not float", () => {
+    asPhone()
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(124)
+    renderDocked()
+    expect(screen.queryByTestId("bar-dock")).toBeNull()
+    expect(coveredBottom()).toBe("")
+  })
 })
 
 describe("the bar frame on a phone", () => {
