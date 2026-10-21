@@ -79,10 +79,15 @@ async function openFilterGroups(
   const popup = page.locator("[data-slot='popover-content']")
   await expect(popup).toBeVisible()
   await popup.evaluate((element) =>
-    Promise.all(element.getAnimations().map((animation) => animation.finished))
+    Promise.all(
+      element
+        .getAnimations({ subtree: true })
+        .map((animation) => animation.finished)
+    )
   )
   const groups = page.locator("[data-slot='setting-group']")
   await expect(groups).toHaveCount(2)
+  await expect.poll(async () => (await boxOf(groups.nth(0))).height).toBe(36)
   const first = await boxOf(groups.nth(0))
   const second = await boxOf(groups.nth(1))
   expect(first.height).toBe(36)
