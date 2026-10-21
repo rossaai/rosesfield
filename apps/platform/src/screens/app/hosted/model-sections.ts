@@ -1,4 +1,9 @@
-import type { CatalogModel, ModelTag } from "@rosesfield/catalog/comfy"
+import {
+  type CatalogModel,
+  isOpenWeights,
+  type ModelFacts,
+  type ModelTag,
+} from "@rosesfield/catalog/comfy"
 
 export type SectionRow = {
   id: string
@@ -6,10 +11,11 @@ export type SectionRow = {
   maker: string
   task: string
   tags: readonly ModelTag[]
+  facts: ModelFacts | undefined
 }
 
 export type ModelSection = {
-  id: "featured" | "all"
+  id: "featured" | "open" | "all"
   rows: readonly SectionRow[]
 }
 
@@ -28,6 +34,7 @@ export function rowOf(model: CatalogModel, name: string): SectionRow {
     maker: model.maker,
     task: model.task,
     tags: model.tags.filter((tag) => rowTags.includes(tag.kind)),
+    facts: model.facts,
   }
 }
 
@@ -52,10 +59,16 @@ export function modelSections(
     const model = byId.get(id)
     return model === undefined ? [] : [rowOf(model, nameOf(model))]
   })
-  const all = models.map((model) => rowOf(model, nameOf(model)))
+  const open = models
+    .filter(isOpenWeights)
+    .map((model) => rowOf(model, nameOf(model)))
+  const others = models
+    .filter((model) => !isOpenWeights(model))
+    .map((model) => rowOf(model, nameOf(model)))
   const sections: ModelSection[] = [
     { id: "featured", rows: featured },
-    { id: "all", rows: all },
+    { id: "open", rows: open },
+    { id: "all", rows: others },
   ]
   return sections.filter((section) => section.rows.length > 0)
 }
