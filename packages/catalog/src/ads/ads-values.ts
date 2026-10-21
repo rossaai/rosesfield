@@ -1,3 +1,5 @@
+export const adsAppId = "ads"
+
 export const kindValues = ["product-shot", "ad"] as const
 
 export type KindValue = (typeof kindValues)[number]
@@ -13,7 +15,7 @@ export const styleValues = [
 
 export type StyleValue = (typeof styleValues)[number]
 
-export const modelValues = ["qwen-image-edit-2511", "flux-2-klein-4b"] as const
+export const modelValues = ["qwen-image-edit-2511"] as const
 
 export type ModelValue = (typeof modelValues)[number]
 
@@ -27,7 +29,6 @@ export type PhotoInput = (typeof photoInputs)[number]
 
 export const referenceLimits: Readonly<Record<ModelValue, number>> = {
   "qwen-image-edit-2511": 3,
-  "flux-2-klein-4b": 2,
 }
 
 export const sceneLimit = 500

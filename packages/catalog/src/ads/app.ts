@@ -1,4 +1,5 @@
 import {
+  adsAppId,
   defaultKind,
   defaultModel,
   defaultStyle,
@@ -16,10 +17,9 @@ import { defineApp } from "#define-app"
 
 const productShot = [{ input: "kind", is: ["product-shot"] }]
 const ad = [{ input: "kind", is: ["ad"] }]
-const qwenOnly = ["qwen-image-edit-2511"]
 
 export const app = defineApp({
-  id: "ads",
+  id: adsAppId,
   nameKey: "ads.name",
   category: "image",
   inputs: [
@@ -106,19 +106,6 @@ export const app = defineApp({
         labelKey: `ads.model.${keyOf(value)}`,
       })),
       default: defaultModel,
-      bounds: [
-        {
-          when: [{ input: "thirdPhoto", state: "filled" }],
-          values: qwenOnly,
-        },
-        {
-          when: [
-            { input: "secondPhoto", state: "filled" },
-            { input: "character", state: "filled" },
-          ],
-          values: qwenOnly,
-        },
-      ],
     },
     { type: "seed", name: "seed", labelKey: "ads.input.seed.label" },
   ],
