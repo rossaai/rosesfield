@@ -4,6 +4,7 @@ import {
   type AssistantMessageEventStream,
   createAssistantMessageEventStream,
   createProvider,
+  type FetchFunction,
   type Model,
   type Provider,
   type ProviderStreams,
@@ -64,13 +65,19 @@ export function withRouterCost(
   }
 }
 
+function piFetchOf(adapter: Fetch): FetchFunction {
+  return Object.assign(adapter, { preconnect: globalThis.fetch.preconnect })
+}
+
 function costed(
-  open: (fetch: Fetch) => AssistantMessageEventStream,
+  open: (fetch: FetchFunction) => AssistantMessageEventStream,
   options: RouterChatProviderOptions
 ): AssistantMessageEventStream {
   const call: RouterChatCall = { cost: null }
   const source = open(
-    routerChatFetch({ keyOf: options.keyOf, fetch: options.fetch, call })
+    piFetchOf(
+      routerChatFetch({ keyOf: options.keyOf, fetch: options.fetch, call })
+    )
   )
   const answer = createAssistantMessageEventStream()
   const forward = async (): Promise<void> => {
