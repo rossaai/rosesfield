@@ -7,6 +7,12 @@ import wAnglesQwenImageEdit2511Api from "../../../workflows/angles-qwen-image-ed
 import wAnglesQwenImageEdit2511Entry from "../../../workflows/angles-qwen-image-edit-2511/entry.json"
 import wAnglesSetQwenImageEdit2511Api from "../../../workflows/angles-set-qwen-image-edit-2511/angles-set-qwen-image-edit-2511.api.json"
 import wAnglesSetQwenImageEdit2511Entry from "../../../workflows/angles-set-qwen-image-edit-2511/entry.json"
+import wAudioMusicMinimaxMusic3Api from "../../../workflows/audio-music-minimax-music-3/audio-music-minimax-music-3.api.json"
+import wAudioMusicMinimaxMusic3Entry from "../../../workflows/audio-music-minimax-music-3/entry.json"
+import wAudioSoundStableAudio3Api from "../../../workflows/audio-sound-stable-audio-3/audio-sound-stable-audio-3.api.json"
+import wAudioSoundStableAudio3Entry from "../../../workflows/audio-sound-stable-audio-3/entry.json"
+import wAudioVoiceChangeChatterboxApi from "../../../workflows/audio-voice-change-chatterbox/audio-voice-change-chatterbox.api.json"
+import wAudioVoiceChangeChatterboxEntry from "../../../workflows/audio-voice-change-chatterbox/entry.json"
 import wBackgroundRemovalSolidColorApi from "../../../workflows/background-removal-solid-color/background-removal-solid-color.api.json"
 import wBackgroundRemovalSolidColorEntry from "../../../workflows/background-removal-solid-color/entry.json"
 import wBackgroundRemovalTransparentApi from "../../../workflows/background-removal-transparent/background-removal-transparent.api.json"
@@ -97,6 +103,9 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "ads-qwen-image-edit-2511", entry: wAdsQwenImageEdit2511Entry, graph: wAdsQwenImageEdit2511Api },
   { folder: "angles-qwen-image-edit-2511", entry: wAnglesQwenImageEdit2511Entry, graph: wAnglesQwenImageEdit2511Api },
   { folder: "angles-set-qwen-image-edit-2511", entry: wAnglesSetQwenImageEdit2511Entry, graph: wAnglesSetQwenImageEdit2511Api },
+  { folder: "audio-music-minimax-music-3", entry: wAudioMusicMinimaxMusic3Entry, graph: wAudioMusicMinimaxMusic3Api },
+  { folder: "audio-sound-stable-audio-3", entry: wAudioSoundStableAudio3Entry, graph: wAudioSoundStableAudio3Api },
+  { folder: "audio-voice-change-chatterbox", entry: wAudioVoiceChangeChatterboxEntry, graph: wAudioVoiceChangeChatterboxApi },
   { folder: "background-removal-solid-color", entry: wBackgroundRemovalSolidColorEntry, graph: wBackgroundRemovalSolidColorApi },
   { folder: "background-removal-transparent", entry: wBackgroundRemovalTransparentEntry, graph: wBackgroundRemovalTransparentApi },
   { folder: "characters-angles-qwen-image-edit-2511", entry: wCharactersAnglesQwenImageEdit2511Entry, graph: wCharactersAnglesQwenImageEdit2511Api },

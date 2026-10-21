@@ -10,7 +10,7 @@ import { z } from "zod"
 import { readApps } from "#list-apps"
 import { findWorkflow } from "#list-workflows"
 import { app } from "#voice/app"
-import { voiceWorkflow } from "#voice/comfy/voice-binding"
+import { voiceWorkflow } from "#audio/comfy/chatterbox-binding"
 import { cloudUrl, submitJob } from "../image/comfy-recordings"
 import { type Recording, ReplayFetch } from "../image/replay-fetch"
 

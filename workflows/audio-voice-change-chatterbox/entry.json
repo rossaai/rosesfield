@@ -1,0 +1,15 @@
+{
+  "name": "audio-voice-change-chatterbox",
+  "title": "Voice change: your words in another voice with Chatterbox",
+  "description": "Says the words of your recording in the voice of a second recording. It reads the first 30 seconds of your recording. Built from Comfy's template audio-chatterbox_vc.",
+  "mediaType": "audio",
+  "openSource": true,
+  "models": ["s3gen.pt", "conds.pt"],
+  "requiresCustomNodes": ["comfyui_fill-chatterbox"],
+  "inputBindings": {
+    "source": { "nodeId": "3", "inputName": "audio", "type": "cloud-asset" },
+    "target": { "nodeId": "2", "inputName": "audio", "type": "cloud-asset" },
+    "seed": { "nodeId": "1", "inputName": "seed", "type": "scalar" }
+  },
+  "outputs": [{ "nodeId": "4", "key": "audio", "kind": "audio" }]
+}

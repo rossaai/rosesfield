@@ -3,7 +3,7 @@ import {
   voiceBinding,
   voiceLanguageValues,
   voiceModes,
-} from "#voice/comfy/voice-binding"
+} from "#audio/comfy/chatterbox-binding"
 
 export const app: AppInput = defineApp({
   id: "voice",
