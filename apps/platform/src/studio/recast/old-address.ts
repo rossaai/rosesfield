@@ -1,9 +1,7 @@
 import type { AppSeeds } from "@/screens/app/use-app-screen"
 import { swapHash } from "@/studio/motion/motion-tabs"
 
-export const recastAppId = "recast"
-
-export const motionAppId = "motion"
+const motionAppId = "motion"
 
 export type MotionAddress = {
   to: "/apps/$appId"

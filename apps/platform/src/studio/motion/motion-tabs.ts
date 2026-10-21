@@ -26,7 +26,6 @@ export const swapHash = "swap"
 
 export const modeInput = "mode"
 export const modelInput = "model"
-export const seedInput = "seed"
 
 export type ClipRange = { min: number; max: number }
 
