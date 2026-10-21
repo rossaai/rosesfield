@@ -77,6 +77,7 @@ export type UpscaleState = {
   form: AppForm
   start: StartRun
   hosted: HostedState
+  models: readonly CatalogModel[]
   well: UpscaleWell
   scale: UpscaleScale
   restFields: readonly ModelField[]
@@ -291,6 +292,7 @@ export function useUpscaleScreen(
     form,
     start: { ...start, generate },
     hosted: tabHosted,
+    models: hosted.models,
     lastSeed: runs.runs.find((run) => run.seed !== null)?.seed ?? null,
     hasRuns: runs.isPending ? null : runs.runs.length > 0,
     setMode,

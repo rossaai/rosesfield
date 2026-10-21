@@ -6,6 +6,7 @@ import {
   useSheetOpen,
 } from "@/screens/app/column-frame"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
+import { UpscaleCompare } from "@/studio/upscale/upscale-compare"
 import { ModeTabs, UpscalePanel } from "@/studio/upscale/upscale-panel"
 import { useUpscaleScreen } from "@/studio/upscale/use-upscale-screen"
 
@@ -28,6 +29,9 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
           order="newest-first"
           onUseInputs={state.useInputs}
           emptyAction={<AddInputsButton onClick={openInputs} />}
+          afterRun={(run) => (
+            <UpscaleCompare run={run} models={state.models} />
+          )}
         />
       )}
     />
