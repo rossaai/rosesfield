@@ -16,7 +16,7 @@ import {
   type ShotRequestInput,
   shotRequestOf,
 } from "#remake/comfy/remake-engine"
-import { app } from "#remake/remake-app"
+import { app } from "#remake/app"
 import { type FoundShot, planShots } from "#remake/shot-plan"
 import { app as videoApp } from "#video/app"
 import { type Recording, ReplayFetch } from "../motion/motion-replay"
@@ -188,6 +188,21 @@ function expectWorkflow(
   expect(models).toEqual(file.models)
 }
 
+const wanName = /(^|[^a-z])wan[\s_.-]?2|scail/i
+
+function wanNamesOf(value: unknown): string[] {
+  if (typeof value === "string") {
+    return wanName.test(value) ? [value] : []
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap(wanNamesOf)
+  }
+  if (typeof value === "object" && value !== null) {
+    return Object.values(value).flatMap(wanNamesOf)
+  }
+  return []
+}
+
 function asset(id: string) {
   return { __type: "core/ASSET", info: { id } }
 }
@@ -206,9 +221,37 @@ describe("the engine requests Remake sends to Comfy for each shot", () => {
     ])
     expect(definition.engine).toEqual(remakeEngine)
     expect(remakeEngine.config).toEqual({
+      plan: { task: "chat", model: "vertexai/gemini-3.1-flash-lite" },
       replace: shotApps.motion.engine,
       rebuild: shotApps.video.engine,
     })
+  })
+
+  it("runs no Wan model and no SCAIL-2 graph for any shot", () => {
+    expect(wanNamesOf(remakeEngine.config)).toEqual([])
+    for (const quality of ["draft", "final"] as const) {
+      for (const request of requestsFor(quality, "rebuild", "16:9")) {
+        const binding = resolveBinding(
+          request?.binding ?? remakeEngine,
+          request?.inputs ?? {}
+        )
+        expect(wanNamesOf(binding.config)).toEqual([])
+      }
+    }
+  })
+
+  it("control: a shot bound to a Wan model's files is caught", () => {
+    expect(
+      wanNamesOf({
+        rebuild: {
+          models: ["wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors"],
+        },
+        replace: { workflow: "recast-character-scail-2" },
+      })
+    ).toEqual([
+      "wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors",
+      "recast-character-scail-2",
+    ])
   })
 
   it.each([

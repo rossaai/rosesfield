@@ -43,7 +43,7 @@ async function serve(): Promise<void> {
   const env = readServerEnv(Bun.env)
   const gateway = composeLocalGateway({
     env,
-    apps: servedApps(env),
+    apps: servedApps(env, "bun"),
     warmCatalog: true,
   })
   const server = Bun.serve({

@@ -1,16 +1,19 @@
 import type { InputDefinition } from "@rosesfield/contract"
-import { type ReactElement, useRef } from "react"
+import { type ReactElement, useRef, useState } from "react"
 import { formatDuration } from "@/copy/format"
 import { tCatalog } from "@/copy/t"
+import { ScreenState } from "@/pieces/screen-state"
 import {
   AddInputsButton,
   ColumnFrame,
-  useSheetOpen,
+  type SheetControl,
 } from "@/screens/app/column-frame"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
+import { ScreenHeader } from "@/shell/screen-header"
 import { RemakeCanvas } from "@/studio/remake/remake-canvas"
+import { useClosedKey } from "@/studio/remake/use-closed-key"
 import {
   characterInput,
   type RemakeState,
@@ -91,10 +94,45 @@ function RemakePanel({ state }: { state: RemakeState }): ReactElement {
   )
 }
 
-export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
+function PriceCaption({ price }: { price: string }): ReactElement | null {
+  return price === "" ? null : (
+    <p
+      data-slot="remake-price"
+      className="min-w-0 truncate text-caption text-ink-muted tabular-nums"
+    >
+      {price}
+    </p>
+  )
+}
+
+function ClosedScreen({
+  app,
+  closedKey,
+}: {
+  app: StudioScreenProps["app"]
+  closedKey: string
+}): ReactElement {
+  return (
+    <>
+      <ScreenHeader title={tCatalog(app.nameKey)} />
+      <ScreenState kind="empty" title={tCatalog(closedKey)} />
+    </>
+  )
+}
+
+export function AppScreen(props: StudioScreenProps): ReactElement {
+  const closedKey = useClosedKey(props.app)
+  return closedKey === null ? (
+    <OpenScreen {...props} />
+  ) : (
+    <ClosedScreen app={props.app} closedKey={closedKey} />
+  )
+}
+
+function OpenScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const sheetClose = useRef<() => void>(() => undefined)
   const state = useRemakeScreen(app, seeds, () => sheetClose.current())
-  const sheet = useSheetOpen()
+  const sheet: SheetControl = useState(true)
   sheetClose.current = () => sheet[1](false)
   return (
     <ColumnFrame
@@ -103,6 +141,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       onShortcut={state.onShortcut}
       sheet={sheet}
       panel={<RemakePanel state={state} />}
+      footLeading={<PriceCaption price={state.start.price} />}
       canvas={(openInputs) => (
         <RemakeCanvas
           app={app}

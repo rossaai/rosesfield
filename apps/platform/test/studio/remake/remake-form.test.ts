@@ -1,4 +1,3 @@
-import { findApp } from "@rosesfield/catalog"
 import {
   type AppDefinition,
   appDefinition,
@@ -6,9 +5,11 @@ import {
   run,
   startRunBodyFor,
 } from "@rosesfield/contract"
-import { describe, expect, it } from "vitest"
-import { findCatalogApp } from "@/catalog/catalog-apps"
-import { t, tCatalog } from "@/copy/t"
+import { QueryClient } from "@tanstack/react-query"
+import { afterEach, describe, expect, it, vi } from "vitest"
+import { assetQuery, characterQuery } from "@/api/queries"
+import { appsTaking } from "@/catalog/app-facts"
+import { t } from "@/copy/t"
 import {
   bodyOf,
   defaultsOf,
@@ -16,8 +17,9 @@ import {
   problemsOf,
   valuesFromRun,
 } from "@/screens/app/app-form"
+import { placeAll } from "@/screens/app/form-fill"
 import { problemOf } from "@/studio/remake/use-remake-screen"
-import { app } from "../../../../../packages/catalog/src/remake/remake-app"
+import { app } from "../../../../../packages/catalog/src/remake/app"
 import { checkShots } from "../../../../../packages/catalog/src/remake/shot-plan"
 
 const megabyte = 1024 * 1024
@@ -100,15 +102,62 @@ describe("the Remake form reads a reference's length as the run does", () => {
   })
 })
 
-describe("the catalog keeps Remake out until a runner for its shots exists", () => {
-  it("lists no Remake app, so Apps, the MCP tools and the agent never offer it", () => {
-    expect(findApp("remake")).toBeNull()
-    expect(findCatalogApp("remake")).toBeNull()
+describe("Use in, then Remake", () => {
+  const video = {
+    id: editId,
+    kind: "video",
+    mime: "video/mp4",
+    bytes: megabyte,
+    width: 1080,
+    height: 1920,
+    durationSeconds: 10,
+    sourceRunId: null,
+    createdAt: "2026-10-21T09:00:00.000Z",
+  }
+
+  function clientWithLibrary(): QueryClient {
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, staleTime: Number.POSITIVE_INFINITY },
+      },
+    })
+    client.setQueryData(assetQuery(editId).queryKey, { asset: video })
+    client.setQueryData(characterQuery(characterId).queryKey, {
+      character: { id: characterId },
+    })
+    return client
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
-  it("control: the screen still reads a whole definition with its own words", () => {
-    expect(listing.id).toBe("remake")
-    expect(tCatalog(listing.nameKey)).toBe("Remake")
+  it("offers Remake for a character and for a video", () => {
+    expect(appsTaking([listing], "character").map((one) => one.id)).toEqual([
+      "remake",
+    ])
+    expect(appsTaking([listing], "video").map((one) => one.id)).toEqual([
+      "remake",
+    ])
+    expect(appsTaking([listing], "image")).toEqual([])
+  })
+
+  it("puts a character in the Character well and a video in the Reference edit well", async () => {
+    vi.stubGlobal("fetch", () => Promise.reject(new Error("offline")))
+    const client = clientWithLibrary()
+    const withCharacter = await placeAll(
+      client,
+      listing,
+      defaultsOf(listing),
+      [characterId]
+    )
+    expect(withCharacter.inputs).toMatchObject({ character: [characterId] })
+    expect(withCharacter.inputs.reference).toEqual([])
+    const withVideo = await placeAll(client, listing, defaultsOf(listing), [
+      editId,
+    ])
+    expect(withVideo.inputs).toMatchObject({ reference: [editId] })
+    expect(withVideo.inputs.character).toEqual([])
   })
 })
 

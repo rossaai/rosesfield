@@ -13,6 +13,7 @@ import { app as layers } from "#layers/app"
 import { app as lipsync } from "#lipsync/app"
 import { app as motion } from "#motion/app"
 import { app as relight } from "#relight/app"
+import { app as remake } from "#remake/app"
 import { app as shot } from "#shot/app"
 import { app as storyboard } from "#storyboard/app"
 import { app as tryOn } from "#try-on/app"
@@ -35,6 +36,7 @@ export const apps: readonly AppEntry[] = [
   { folder: "lipsync", app: lipsync },
   { folder: "motion", app: motion },
   { folder: "relight", app: relight },
+  { folder: "remake", app: remake },
   { folder: "shot", app: shot },
   { folder: "storyboard", app: storyboard },
   { folder: "try-on", app: tryOn },

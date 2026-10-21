@@ -5,6 +5,11 @@ import {
   RateLimitedError,
   type RunId,
 } from "@rosesfield/kernel"
+import {
+  keepSteps,
+  type Polled,
+  reopenLost,
+} from "#application/advance-run/engine-steps"
 import { jobInputsOf } from "#application/advance-run/job-inputs"
 import {
   type KeptOutputs,
@@ -30,7 +35,6 @@ import type {
   EngineFinished,
   EngineOutput,
   EngineRequest,
-  EngineStatus,
   GenerationEngine,
 } from "#domain/generation-engine.port"
 import type { PriceBook } from "#domain/price-book.port"
@@ -53,12 +57,6 @@ type AdvanceRunHandlerOptions = {
   assets: RunAssets
   clock: Clock
   prices?: PriceBook
-}
-
-type Polled = {
-  job: RunJob
-  ref: string
-  status: EngineStatus
 }
 
 type Watch = {
@@ -125,6 +123,9 @@ export class AdvanceRunHandler {
       }
       run.release()
     }
+    if (reopenLost(run, engine) === "unkept") {
+      return this.failWith(run, new RunFailedError({ cause: "lost run" }))
+    }
     try {
       return isSubmitDue(run, engine)
         ? await this.submitPending(run, watch)
@@ -150,6 +151,7 @@ export class AdvanceRunHandler {
         idempotencyKey: current.idempotencyKeyOf(job.index),
         seed: job.seed,
         count: current.jobs.length === 1 ? base.count : 1,
+        ...(job.steps === undefined ? {} : { steps: job.steps }),
       })
       if (current.isFinished()) {
         return stop
@@ -231,6 +233,7 @@ export class AdvanceRunHandler {
           : [this.read(watch.engine, job, job.ref)]
       )
     )
+    keepSteps(run, polled)
     let isCollecting = false
     for (const one of polled) {
       if (one.status.state === "succeeded") {

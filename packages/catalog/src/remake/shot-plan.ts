@@ -23,6 +23,12 @@ export type ShotProblem =
   | { code: "shotLength"; number: number; seconds: number }
   | { code: "editLength"; seconds: number }
 
+export type ShotProblemCopy = {
+  titleKey: string
+  bodyKey: string
+  values: Readonly<Record<string, number>>
+}
+
 export const remakeLimits = {
   shortestEditSeconds: 2,
   longestEditSeconds: 12,
@@ -56,17 +62,24 @@ export function framesOf(seconds: number): number {
   return Math.round(seconds * remakeLimits.framesPerSecond)
 }
 
+export function startFrameOf(shot: FoundShot): number {
+  return framesOf(shot.startSeconds)
+}
+
+export function shotFramesOf(shot: FoundShot): number {
+  return framesOf(shot.endSeconds) - framesOf(shot.startSeconds)
+}
+
+export function middleFrameOf(shot: FoundShot): number {
+  return startFrameOf(shot) + Math.floor(shotFramesOf(shot) / 2)
+}
+
 export function shotSecondsOf(shot: FoundShot): number {
-  return (
-    framesOf(shot.endSeconds - shot.startSeconds) / remakeLimits.framesPerSecond
-  )
+  return shotFramesOf(shot) / remakeLimits.framesPerSecond
 }
 
 export function editSecondsOf(shots: readonly FoundShot[]): number {
-  const frames = shots.reduce(
-    (total, shot) => total + framesOf(shotSecondsOf(shot)),
-    0
-  )
+  const frames = shots.reduce((total, shot) => total + shotFramesOf(shot), 0)
   return frames / remakeLimits.framesPerSecond
 }
 
@@ -102,6 +115,32 @@ export function checkShots(shots: readonly FoundShot[]): ShotProblem | null {
     return { code: "editLength", seconds }
   }
   return null
+}
+
+export function shotProblemCopyOf(problem: ShotProblem): ShotProblemCopy {
+  switch (problem.code) {
+    case "shotCount":
+      return {
+        titleKey:
+          problem.count === 1
+            ? "remake.error.shotCount.title.one"
+            : "remake.error.shotCount.title.other",
+        bodyKey: "remake.error.shotCount.body",
+        values: { count: problem.count },
+      }
+    case "shotLength":
+      return {
+        titleKey: "remake.error.shotLength.title",
+        bodyKey: "remake.error.shotLength.body",
+        values: { number: problem.number, seconds: problem.seconds },
+      }
+    case "editLength":
+      return {
+        titleKey: "remake.error.editLength.title",
+        bodyKey: "remake.error.editLength.body",
+        values: { seconds: problem.seconds },
+      }
+  }
 }
 
 export function routeOf(people: ShotPeople, otherShots: OtherShots): ShotRoute {
@@ -145,4 +184,42 @@ export function planShots(
       cameraMove,
     }
   })
+}
+
+const problemCodePattern =
+  /^REMAKE_(SHOT_COUNT|SHOT_LENGTH|EDIT_LENGTH)_(\d+)(?:_(\d+))?$/
+
+export function shotProblemCodeOf(problem: ShotProblem): string {
+  switch (problem.code) {
+    case "shotCount":
+      return `REMAKE_SHOT_COUNT_${problem.count}`
+    case "shotLength":
+      return `REMAKE_SHOT_LENGTH_${problem.number}_${framesOf(problem.seconds)}`
+    case "editLength":
+      return `REMAKE_EDIT_LENGTH_${framesOf(problem.seconds)}`
+  }
+}
+
+export function shotProblemOfCode(code: string): ShotProblem | null {
+  const matched = problemCodePattern.exec(code)
+  if (matched === null) {
+    return null
+  }
+  const [, kind, first, second] = matched
+  const value = Number(first)
+  const fps = remakeLimits.framesPerSecond
+  switch (kind) {
+    case "SHOT_COUNT":
+      return second === undefined ? { code: "shotCount", count: value } : null
+    case "SHOT_LENGTH":
+      return second === undefined
+        ? null
+        : { code: "shotLength", number: value, seconds: Number(second) / fps }
+    case "EDIT_LENGTH":
+      return second === undefined
+        ? { code: "editLength", seconds: value / fps }
+        : null
+    default:
+      return null
+  }
 }

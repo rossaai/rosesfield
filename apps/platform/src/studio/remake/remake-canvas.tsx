@@ -3,18 +3,53 @@ import { Button } from "@rosesfield/ui/components/button"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import type { ReactElement, ReactNode } from "react"
+import { isWorking } from "@/api/queries"
 import { appEmptyTitle, aspectOf, defaultAspectOf } from "@/catalog/app-facts"
-import { t } from "@/copy/t"
+import { t, tCatalog } from "@/copy/t"
 import { aspectStyle } from "@/pieces/asset-tile"
 import { RunLine } from "@/pieces/run/run-line"
 import { RunOutputs } from "@/pieces/run/run-outputs"
 import { useAppRuns } from "@/screens/app/app-canvas"
+import { PlanView } from "@/studio/remake/plan-view"
 import { RemakePair } from "@/studio/remake/remake-pair"
+import { readPlan } from "@/studio/remake/remake-plan"
+import {
+  type ShotProblem,
+  shotProblemCopyOf,
+  shotProblemOfCode,
+} from "../../../../../packages/catalog/src/remake/shot-plan"
 
 type RemakeCanvasProps = {
   app: AppListing
   onUseInputs: (run: Run) => void
   emptyAction: ReactNode
+}
+
+function refusedEditOf(run: Run): ShotProblem | null {
+  return run.status === "failed" && run.failure !== null
+    ? shotProblemOfCode(run.failure.code)
+    : null
+}
+
+function RefusedEdit({ problem }: { problem: ShotProblem }): ReactElement {
+  const copy = shotProblemCopyOf(problem)
+  return (
+    <StateView
+      kind="failed"
+      density="compact"
+      title={tCatalog(copy.titleKey, copy.values)}
+      body={tCatalog(copy.bodyKey, copy.values)}
+    />
+  )
+}
+
+function RemakeOutputs({ run }: { run: Run }): ReactElement {
+  const problem = refusedEditOf(run)
+  return problem === null ? (
+    <RunOutputs run={run} />
+  ) : (
+    <RefusedEdit problem={problem} />
+  )
 }
 
 function RemakeRun({
@@ -25,14 +60,18 @@ function RemakeRun({
   onUseInputs: (run: Run) => void
 }): ReactElement {
   const [outputId] = run.outputs
+  const plan = readPlan(run.plan)
   return (
     <article className="flex flex-col gap-s2">
       <RunLine run={run} onUseInputs={onUseInputs} />
       {run.status === "done" && outputId !== undefined ? (
-        <RemakePair run={run} outputId={outputId} />
+        <RemakePair run={run} outputId={outputId} plan={plan} />
       ) : (
-        <RunOutputs run={run} />
+        <RemakeOutputs run={run} />
       )}
+      {plan !== null && isWorking(run) ? (
+        <PlanView run={run} plan={plan} />
+      ) : null}
     </article>
   )
 }

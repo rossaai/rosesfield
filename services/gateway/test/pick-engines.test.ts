@@ -1,3 +1,4 @@
+import { type MediaResult, MediaTool } from "@rosesfield/catalog/remake"
 import { buildPath, routes, runResponse } from "@rosesfield/contract"
 import {
   CreditMeter,
@@ -17,6 +18,16 @@ import { start } from "./sample-apps"
 import { comfyCloud } from "./server-env"
 
 const clock = new FixedClock({ now: start })
+
+class RefusingMediaTool extends MediaTool {
+  override limitMs(): number {
+    return 1000
+  }
+
+  override run(): Promise<MediaResult> {
+    return Promise.reject(new Error("this test runs no ffmpeg"))
+  }
+}
 
 function targetOf(source: Record<string, string>): string {
   return readServerEnv(source).engine.target
@@ -180,5 +191,39 @@ describe("the engine target the settings select", () => {
     expect(run.engine.adapter).toBe(comfyWorkflowAdapter)
     expect(run.origin).toBe("live")
     gateway.close()
+  })
+
+  it("puts Remake's runner before the live engines when the server runs ffmpeg", () => {
+    const media = new RefusingMediaTool()
+    const remake = { adapter: "remake-shots", config: {} }
+    const engines = pickEngines(comfyCloud("comfyui-k"), { clock, media })
+    expect(engines.map((one) => one.key)).toEqual([
+      "remake-shots",
+      comfyWorkflowAdapter,
+      "comfy-router",
+    ])
+    expect(engines.find((one) => one.canRun(remake))?.key).toBe("remake-shots")
+    expect(
+      pickEngines({ target: "demo" }, { clock, media }).map((one) => one.key)
+    ).toEqual(["comfy-router", "demo"])
+  })
+
+  it("puts Remake's runner before a pasted key's live engines when the server runs ffmpeg", () => {
+    const media = new RefusingMediaTool()
+    const target = comfyCloud("ignored")
+    expect(
+      visitorEngines(target, "comfyui-visitor", { clock, media }).map(
+        (one) => one.key
+      )
+    ).toEqual(["remake-shots", comfyWorkflowAdapter, "comfy-router", "demo"])
+    expect(
+      visitorEngines(target, null, { clock, media }).map((one) => one.key)
+    ).toEqual(["comfy-router", "demo"])
+  })
+
+  it("control: a server that runs no ffmpeg lists no Remake runner", () => {
+    expect(
+      pickEngines(comfyCloud("comfyui-k"), { clock }).map((one) => one.key)
+    ).toEqual([comfyWorkflowAdapter, "comfy-router"])
   })
 })

@@ -1,10 +1,16 @@
 import {
+  type MediaTool,
+  RemakeGenerationEngine,
+  RouterPlanTurn,
+} from "@rosesfield/catalog/remake"
+import {
   ComfyGenerationEngine,
   ComfyRouterGenerationEngine,
   type CreditMeter,
   DemoGenerationEngine,
   type Fetch,
   type GenerationEngine,
+  type PriceBook,
   type RouterCatalog,
 } from "@rosesfield/generation"
 import type { Clock } from "@rosesfield/kernel"
@@ -23,6 +29,8 @@ export type EngineOptions = {
   catalog?: RouterCatalog
   meter?: CreditMeter
   warmCatalog?: boolean
+  media?: MediaTool
+  prices?: PriceBook
 }
 
 function meterOf(options: EngineOptions): { meter?: CreditMeter } {
@@ -76,6 +84,23 @@ function hostedKeyOf(engine: EngineSettings): string | null {
   return key?.startsWith(comfyKeyPrefix) === true ? key : null
 }
 
+function withRemake(
+  engines: readonly GenerationEngine[],
+  key: string | null,
+  options: EngineOptions
+): readonly GenerationEngine[] {
+  if (options.media === undefined) {
+    return engines
+  }
+  const remake = new RemakeGenerationEngine({
+    engines,
+    media: options.media,
+    plan: new RouterPlanTurn({ apiKey: key, ...fetchOf(options) }),
+    ...(options.prices === undefined ? {} : { prices: options.prices }),
+  })
+  return [remake, ...engines]
+}
+
 export function pickEngines(
   engine: EngineSettings,
   options: EngineOptions
@@ -88,7 +113,7 @@ export function pickEngines(
         router,
         new DemoGenerationEngine({ clock: options.clock, rates: router }),
       ]
-    : [live, router]
+    : withRemake([live, router], hostedKeyOf(engine), options)
 }
 
 export function visitorEngines(
@@ -100,5 +125,7 @@ export function visitorEngines(
   const live = key === null ? null : liveEngineOf(keyed, options)
   const router = routerOf(key === null ? null : hostedKeyOf(keyed), options)
   const demo = new DemoGenerationEngine({ clock: options.clock, rates: router })
-  return live === null ? [router, demo] : [live, router, demo]
+  return live === null
+    ? [router, demo]
+    : [...withRemake([live, router], hostedKeyOf(keyed), options), demo]
 }
