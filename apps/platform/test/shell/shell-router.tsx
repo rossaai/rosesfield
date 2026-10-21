@@ -17,6 +17,7 @@ export const ownerSettings: GatewaySettings = {
   mode: "owner",
   engine: { target: "comfy-cloud", address: null, key: "set", origin: "live" },
   lock: "local",
+  keyFrom: "server",
   agent: "unknown",
   agentModel: null,
   retentionDays: null,

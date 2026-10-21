@@ -108,7 +108,7 @@ function EngineParts({
 }: {
   settings: GatewaySettings
 }): ReactElement {
-  if (settings.mode === "public") {
+  if (settings.keyFrom === "settings") {
     return <PublicKey />
   }
   return (

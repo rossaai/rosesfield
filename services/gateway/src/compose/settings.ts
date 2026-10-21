@@ -34,11 +34,20 @@ export function serverReach(vars: WorkerVars): ServerReach {
     : { mode: "public", lock: "none" }
 }
 
+export function canPasteKey(vars: WorkerVars): boolean {
+  const { access } = vars
+  return (
+    access.mode === "public" ||
+    (access.lock.mode === "local" && vars.engine.target === "demo")
+  )
+}
+
 export function ownerSettings(vars: WorkerVars): Settings {
   const { engine } = vars
   const key = engine.target === "demo" ? null : engine.apiKey
   return {
     ...serverReach(vars),
+    keyFrom: canPasteKey(vars) ? "settings" : "server",
     engine: engineStatus(engine, key, engine.target !== "demo"),
     agent: agentStatus(vars.agent, true),
   }
@@ -49,6 +58,7 @@ export function visitorSettings(vars: WorkerVars, keys: VisitorKeys): Settings {
   const isLive = engine.target !== "demo" && keys.engine !== null
   return {
     ...serverReach(vars),
+    keyFrom: "settings",
     engine: engineStatus(engine, keys.engine, isLive),
     agent: agentStatus(vars.agent, keys.engine !== null),
   }

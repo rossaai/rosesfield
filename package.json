@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "bun run --filter './apps/*' --filter './services/*' dev",
     "build": "bun run --filter './apps/*' --filter './services/*' build",
+    "start": "bun run --filter @rosesfield/platform build && bun run --filter @rosesfield/gateway start",
     "typecheck": "tsc --noEmit -p tsconfig.json && bun run --filter './apps/*' --filter './services/*' --filter './packages/*' typecheck",
     "lint": "biome check . && depcruise apps services packages scripts --config .dependency-cruiser.cjs",
     "format": "biome check --write .",

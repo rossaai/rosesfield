@@ -47,9 +47,6 @@ describe("the engine target the settings select", () => {
         COMFY_API_KEY: "wk",
       })
     ).toBe("modal")
-    expect(
-      targetOf({ RUNPOD_ENDPOINT_ID: "abc123", RUNPOD_API_KEY: "rp" })
-    ).toBe("runpod-serverless")
   })
 
   it("selects a keyless ComfyUI on this computer instead of the demo engine", () => {
@@ -67,16 +64,16 @@ describe("the engine target the settings select", () => {
     expect(engines[1]?.canRun(hostedModelBinding("maker/model"))).toBe(false)
   })
 
-  it("refuses two targets at once and a RunPod key without its endpoint", () => {
-    expect(() =>
-      readServerEnv({
+  it("reads no RunPod setting, so a stale one selects nothing", () => {
+    expect(
+      targetOf({ RUNPOD_ENDPOINT_ID: "abc123", RUNPOD_API_KEY: "rp" })
+    ).toBe("demo")
+    expect(
+      targetOf({
         COMFY_BASE_URL: "http://127.0.0.1:8189",
         RUNPOD_ENDPOINT_ID: "abc123",
       })
-    ).toThrow(/COMFY_BASE_URL and RUNPOD_ENDPOINT_ID are both set/)
-    expect(() => readServerEnv({ RUNPOD_API_KEY: "rp" })).toThrow(
-      /RUNPOD_ENDPOINT_ID is missing/
-    )
+    ).toBe("comfyui")
   })
 
   it("refuses RunPod Serverless, which left Rosesfield, once at startup and never per request", () => {

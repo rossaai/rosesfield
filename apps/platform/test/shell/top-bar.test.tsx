@@ -102,7 +102,7 @@ describe("the top bar", () => {
 
   it("offers to add your key in place of a balance in public mode", async () => {
     renderAt("/", () => <TopBar />, {
-      settings: { ...ownerSettings, mode: "public" },
+      settings: { ...ownerSettings, mode: "public", keyFrom: "settings" },
     })
     const bar = await screen.findByRole("banner", { name: "Rosesfield" })
     const add = within(bar).getByRole("button", { name: "Add your Comfy key" })

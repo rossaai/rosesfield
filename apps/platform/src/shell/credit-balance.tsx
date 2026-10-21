@@ -36,7 +36,7 @@ export function CreditBalance(): ReactNode {
   if (settings === undefined) {
     return null
   }
-  if (settings.mode === "public" && !hasKey) {
+  if (settings.keyFrom === "settings" && !hasKey) {
     return (
       <AppBarAction
         icon={<KeyRoundIcon aria-hidden="true" />}
