@@ -51,10 +51,6 @@ import wRecastObjectWanVaceApi from "../../../workflows/recast-object-wan-vace/r
 import wRecastObjectWanVaceEntry from "../../../workflows/recast-object-wan-vace/entry.json"
 import wRelightQwenImageEdit2509Api from "../../../workflows/relight-qwen-image-edit-2509/relight-qwen-image-edit-2509.api.json"
 import wRelightQwenImageEdit2509Entry from "../../../workflows/relight-qwen-image-edit-2509/entry.json"
-import wShotLtx25Api from "../../../workflows/shot-ltx-2-5/shot-ltx-2-5.api.json"
-import wShotLtx25Entry from "../../../workflows/shot-ltx-2-5/entry.json"
-import wShotWan22FunCameraApi from "../../../workflows/shot-wan-2-2-fun-camera/shot-wan-2-2-fun-camera.api.json"
-import wShotWan22FunCameraEntry from "../../../workflows/shot-wan-2-2-fun-camera/entry.json"
 import wStoryboardFlux2Klein4bApi from "../../../workflows/storyboard-flux-2-klein-4b/storyboard-flux-2-klein-4b.api.json"
 import wStoryboardFlux2Klein4bEntry from "../../../workflows/storyboard-flux-2-klein-4b/entry.json"
 import wStoryboardFlux2Klein4bFromTextApi from "../../../workflows/storyboard-flux-2-klein-4b-from-text/storyboard-flux-2-klein-4b-from-text.api.json"
@@ -109,8 +105,6 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "recast-character-scail-2", entry: wRecastCharacterScail2Entry, graph: wRecastCharacterScail2Api },
   { folder: "recast-object-wan-vace", entry: wRecastObjectWanVaceEntry, graph: wRecastObjectWanVaceApi },
   { folder: "relight-qwen-image-edit-2509", entry: wRelightQwenImageEdit2509Entry, graph: wRelightQwenImageEdit2509Api },
-  { folder: "shot-ltx-2-5", entry: wShotLtx25Entry, graph: wShotLtx25Api },
-  { folder: "shot-wan-2-2-fun-camera", entry: wShotWan22FunCameraEntry, graph: wShotWan22FunCameraApi },
   { folder: "storyboard-flux-2-klein-4b", entry: wStoryboardFlux2Klein4bEntry, graph: wStoryboardFlux2Klein4bApi },
   { folder: "storyboard-flux-2-klein-4b-from-text", entry: wStoryboardFlux2Klein4bFromTextEntry, graph: wStoryboardFlux2Klein4bFromTextApi },
   { folder: "storyboard-qwen-image-edit-2511", entry: wStoryboardQwenImageEdit2511Entry, graph: wStoryboardQwenImageEdit2511Api },
