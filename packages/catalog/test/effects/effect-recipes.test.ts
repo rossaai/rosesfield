@@ -58,7 +58,6 @@ describe("the effect recipes kept as data", () => {
         unit: recipe.effect,
       })
       expect(design.family).toBe("effects")
-      expect(design.fit.prompt.length).toBeGreaterThan(0)
       expect(design.setPiece.length).toBeGreaterThan(0)
       expect(design.lastFrame.shows.length).toBeGreaterThan(0)
       expect(design.encode).toEqual({

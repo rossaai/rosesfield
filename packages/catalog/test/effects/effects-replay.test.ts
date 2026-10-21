@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { ratioOf } from "#effects/comfy/frame-sizes"
 import { recipeOf } from "#effects/effect-recipes"
 import { findWorkflow } from "#list-workflows"
 import {
@@ -31,7 +32,7 @@ function endPrompt(effect: string): string {
 }
 
 describe("the effects engine request", () => {
-  it("fits the photo, makes the orbit view it opens on and descends to the photo with its sound", async () => {
+  it("scales the photo, makes the orbit view it opens on and descends to the photo with its sound", async () => {
     const request = requestFor(
       {
         effect: "pull-back-to-space",
@@ -50,11 +51,10 @@ describe("the effects engine request", () => {
     expect(replay.sent[1]?.headers.get("Idempotency-Key")).toBe(idempotencyKey)
     expect(workflow).toMatchObject({
       "395": { inputs: { image: loadedPhoto } },
-      "605": { inputs: { image: ["395", 0] } },
-      "610": { inputs: { prompt: recipe.design.fit.prompt } },
-      "614": { inputs: { width: 768, height: 1344 } },
-      "615": { inputs: { seed: 42, latent_image: ["614", 0] } },
-      "620": { inputs: { image1: ["616", 0] } },
+      "606": {
+        inputs: { image: ["395", 0], width: 704, height: 1280, crop: "center" },
+      },
+      "620": { inputs: { image1: ["606", 0] } },
       "625": { inputs: { width: ["624", 0], height: ["624", 1] } },
       "626": { inputs: { seed: 42 } },
       "339": { inputs: { noise_seed: 42 } },
@@ -63,8 +63,8 @@ describe("the effects engine request", () => {
       "366": { inputs: { frames_number: 241, frame_rate: 24 } },
       "357": { inputs: { image: ["350", 0], strength: 0.7 } },
       "349": { inputs: { image: ["350", 0], strength: 1 } },
-      "460": { inputs: { image: ["616", 0], frame_idx: -1, strength: 0.9 } },
-      "463": { inputs: { image: ["616", 0], frame_idx: -1, strength: 0.9 } },
+      "460": { inputs: { image: ["606", 0], frame_idx: -1, strength: 0.9 } },
+      "463": { inputs: { image: ["606", 0], frame_idx: -1, strength: 0.9 } },
       "380": { inputs: { width: 720, height: 1280, crop: "center" } },
       "370": { inputs: { images: ["380", 0], audio: ["358", 0] } },
     })
@@ -89,7 +89,7 @@ describe("the effects engine request", () => {
     expect(idsOf(workflow)).toEqual(file.filter((id) => id !== "358"))
     expect(workflow).toMatchObject({
       "356": { inputs: { width: 256, height: 352, length: 169 } },
-      "614": { inputs: { width: 864, height: 1152 } },
+      "606": { inputs: { width: 512, height: 704 } },
       "380": { inputs: { width: 554, height: 738 } },
       "411": { inputs: { image: ["351", 0] } },
       "461": {
@@ -119,12 +119,39 @@ describe("the effects engine request", () => {
     expect(workflow).toMatchObject({
       "356": { inputs: { width: 352, height: 352, length: 361 } },
       "366": { inputs: { frames_number: 361 } },
-      "614": { inputs: { width: 1024, height: 1024 } },
+      "606": { inputs: { width: 704, height: 704 } },
       "380": { inputs: { width: 960, height: 960 } },
     })
-    expect(workflow["610"]?.inputs.prompt).toBe(
-      recipeOf("freeze-and-circle").design.fit.prompt
-    )
     expect(brokenLinks(workflow)).toEqual([])
   })
+
+  it.each(["480p", "720p"])(
+    "gives a 9:16 photo a 9:16 frame at every stage at %s, the photo's own pixels with no redraw",
+    async (resolution) => {
+      const request = requestFor(
+        { effect: "melt-away", image: [photoId], resolution },
+        "9:16"
+      )
+      const { workflow } = await submitted(request)
+      const sizeAt = (id: string): number => {
+        const inputs = workflow[id]?.inputs
+        return Number(inputs?.width) / Number(inputs?.height)
+      }
+      for (const id of ["606", "356", "380"]) {
+        expect({ id, ratio: sizeAt(id) }).toEqual({
+          id,
+          ratio: expect.closeTo(ratioOf("9:16"), 1),
+        })
+      }
+      expect(workflow["606"]).toMatchObject({
+        class_type: "ImageScale",
+        inputs: { image: ["395", 0], crop: "center" },
+      })
+      expect(workflow["351"]?.inputs.input).toEqual(["606", 0])
+      for (const id of ["605", "610", "611", "614", "615", "616"]) {
+        expect({ id, node: workflow[id] }).toEqual({ id, node: undefined })
+      }
+      expect(brokenLinks(workflow)).toEqual([])
+    }
+  )
 })

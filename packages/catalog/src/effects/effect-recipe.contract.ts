@@ -47,7 +47,6 @@ export const soundBed = z
 export const effectDesign = z.strictObject({
   unit: choiceValue,
   family: z.literal("effects"),
-  fit: z.strictObject({ prompt: plainLine }),
   setPiece: plainLine,
   cuts: z.array(cutWindow).max(4),
   lastFrame: z.strictObject({

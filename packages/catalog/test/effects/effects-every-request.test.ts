@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import {
   deliveryFrames,
   effectRatios,
-  fitFrames,
   framesOf,
   ltxFrames,
 } from "#effects/comfy/frame-sizes"
@@ -114,7 +113,6 @@ describe("every effects engine request against the recorded v2 routes", () => {
     )
     const size = ltxFrames.sizes[one.resolution][one.ratio]
     const delivery = deliveryFrames[one.resolution][one.ratio]
-    const fit = fitFrames[one.ratio]
     const frames = framesOf(recipe.seconds)
     const { workflow, replay } = await submitted(request)
     expect(replay.sent.map((sent) => `${sent.method} ${sent.url}`)).toEqual([
@@ -126,9 +124,14 @@ describe("every effects engine request against the recorded v2 routes", () => {
     expect(workflow).toMatchObject({
       "395": { inputs: { image: loadedPhoto } },
       "339": { inputs: { noise_seed: 42 } },
-      "615": { inputs: { seed: 42 } },
-      "614": { inputs: { width: fit.width, height: fit.height } },
-      "610": { inputs: { prompt: recipe.design.fit.prompt } },
+      "606": {
+        inputs: {
+          image: ["395", 0],
+          width: size.width,
+          height: size.height,
+          crop: "center",
+        },
+      },
       "356": {
         inputs: {
           width: size.width / 2,
@@ -151,8 +154,8 @@ describe("every effects engine request against the recorded v2 routes", () => {
     )
     expect(workflow["420"]).toBeUndefined()
     const end = recipe.endFrame
-    const opening = recipe.photoFrame === "first" ? ["616", 0] : ["627", 0]
-    const closing = recipe.photoFrame === "first" ? ["627", 0] : ["616", 0]
+    const opening = recipe.photoFrame === "first" ? ["606", 0] : ["627", 0]
+    const closing = recipe.photoFrame === "first" ? ["627", 0] : ["606", 0]
     expect(workflow).toMatchObject({
       "351": { inputs: { input: opening } },
       "357": { inputs: { image: ["350", 0] } },

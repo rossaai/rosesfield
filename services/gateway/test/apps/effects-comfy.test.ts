@@ -39,11 +39,17 @@ describe("the effects app through the gateway on a replayed Comfy", () => {
     expect(comfy.graphs).toHaveLength(1)
     expect(graph).toMatchObject({
       "395": { inputs: { image: { info: { id: uploadedId } } } },
-      "605": { inputs: { image: ["395", 0] } },
-      "351": { inputs: { input: ["616", 0] } },
+      "606": {
+        inputs: {
+          image: ["395", 0],
+          width: 704,
+          height: 1280,
+          crop: "center",
+        },
+      },
+      "351": { inputs: { input: ["606", 0] } },
       "349": { inputs: { image: ["350", 0], strength: 1 } },
       "339": { inputs: { noise_seed: run.seed } },
-      "615": { inputs: { seed: run.seed } },
       "626": { inputs: { seed: run.seed } },
     })
     const history = await gateway.call(routes.listRuns.path)

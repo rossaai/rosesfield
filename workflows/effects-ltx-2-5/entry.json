@@ -1,7 +1,7 @@
 {
   "name": "effects-ltx-2-5",
   "title": "Effects: one photo to a short effect video on LTX 2.5",
-  "description": "Fits your photo to the chosen shape and makes the effect's last frame with Qwen Image Edit 2511, then renders the video between the two on LTX 2.5, with its sound, at the shape's pixel area. This file holds every part a recipe can use, including the subject held through its matte. Each recipe in the catalog removes the parts it does not use.",
+  "description": "Scales and centre-crops your photo to the chosen shape and makes the effect's last frame from it with Qwen Image Edit 2511, then renders the video between the two on LTX 2.5, with its sound, at the shape's pixel area. This file holds every part a recipe can use, including the subject held through its matte. Each recipe in the catalog removes the parts it does not use.",
   "mediaType": "video",
   "openSource": true,
   "models": [
@@ -17,15 +17,46 @@
   ],
   "requiresCustomNodes": [],
   "inputBindings": {
-    "photo": { "nodeId": "395", "inputName": "image", "type": "cloud-asset" },
-    "detail": { "nodeId": "501", "inputName": "string_b", "type": "scalar" },
-    "seed": { "nodeId": "339", "inputName": "noise_seed", "type": "scalar" },
-    "width": { "nodeId": "356", "inputName": "width", "type": "scalar" },
-    "height": { "nodeId": "356", "inputName": "height", "type": "scalar" },
-    "fitWidth": { "nodeId": "614", "inputName": "width", "type": "scalar" },
-    "fitHeight": { "nodeId": "614", "inputName": "height", "type": "scalar" },
-    "fitSeed": { "nodeId": "615", "inputName": "seed", "type": "scalar" },
-    "endFrameSeed": { "nodeId": "626", "inputName": "seed", "type": "scalar" },
+    "photo": {
+      "nodeId": "395",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "detail": {
+      "nodeId": "501",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "339",
+      "inputName": "noise_seed",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "356",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "356",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "fitWidth": {
+      "nodeId": "606",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "fitHeight": {
+      "nodeId": "606",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "endFrameSeed": {
+      "nodeId": "626",
+      "inputName": "seed",
+      "type": "scalar"
+    },
     "deliveryWidth": {
       "nodeId": "380",
       "inputName": "width",
@@ -37,5 +68,11 @@
       "type": "scalar"
     }
   },
-  "outputs": [{ "nodeId": "75", "key": "images", "kind": "video" }]
+  "outputs": [
+    {
+      "nodeId": "75",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
 }

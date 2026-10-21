@@ -5,6 +5,8 @@ import {
   adapterNode,
   effectGraph,
   endFrameNodes,
+  fittedPhotoNode,
+  imageEditNodes,
   matteNodes,
   soundNode,
 } from "#effects/comfy/effect-graph"
@@ -81,6 +83,32 @@ function guidesOnAudio(workflow: Workflow): string[] {
     .map(([id]) => id)
 }
 
+function ancestorsOf(workflow: Workflow, id: string): string[] {
+  const seen = new Set<string>()
+  const queue = [id]
+  for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
+    for (const value of Object.values(workflow[next]?.inputs ?? {})) {
+      if (isLink(value) && !seen.has(value[0])) {
+        seen.add(value[0])
+        queue.push(value[0])
+      }
+    }
+  }
+  return [...seen].sort()
+}
+
+function editReaders(workflow: Workflow): string[] {
+  return Object.entries(workflow)
+    .filter(([, node]) =>
+      Object.values(node.inputs).some(
+        (value) => isLink(value) && imageEditNodes.includes(value[0])
+      )
+    )
+    .map(([id]) => id)
+    .filter((id) => !imageEditNodes.includes(id))
+    .sort()
+}
+
 describe("the effect recipes", () => {
   it("sends from every leaf a whole graph of file nodes, guides on the video latent only", () => {
     const fileIds = Object.keys(fileGraph())
@@ -102,18 +130,19 @@ describe("the effect recipes", () => {
     }
   })
 
-  it("fits the photo and makes the last frame with the image edit model before the video", () => {
+  it("scales the photo itself to the shape and makes the last frame from it with the image edit model", () => {
     const workflow = workflowOf(
       effectGraph(fileGraph(), recipeOf("push-into-eye"))
     )
-    const recipe = recipeOf("push-into-eye")
     expect(workflow).toMatchObject({
-      "605": { inputs: { image: ["395", 0] } },
-      "610": {
-        inputs: { prompt: recipe.design.fit.prompt, image1: ["605", 0] },
+      "606": {
+        class_type: "ImageScale",
+        inputs: { image: ["395", 0], crop: "center" },
       },
-      "620": { inputs: { image1: ["616", 0] } },
-      "351": { inputs: { input: ["616", 0] } },
+      "620": { inputs: { image1: ["606", 0] } },
+      "621": { inputs: { image1: ["606", 0] } },
+      "624": { inputs: { image: ["606", 0] } },
+      "351": { inputs: { input: ["606", 0] } },
       "357": { inputs: { image: ["350", 0] } },
       "349": { inputs: { image: ["350", 0] } },
       "460": { inputs: { image: ["627", 0] } },
@@ -124,17 +153,42 @@ describe("the effect recipes", () => {
     })
   })
 
+  it("locks frame 0 to the scaled photo, with no image edit node before it, for every look and resolution", () => {
+    const leaves = leavesOf(effectsBinding(effectRecipes))
+    for (const [path, workflow] of leaves) {
+      const lands = path.includes("pull-back-to-space")
+      expect({ path, frame0: ancestorsOf(workflow, "351") }).toEqual({
+        path,
+        frame0: lands
+          ? ancestorsOf(workflow, "627").concat("627").sort()
+          : ["395", fittedPhotoNode],
+      })
+      for (const id of ["357", "349"]) {
+        expect({ path, id, image: workflow[id]?.inputs.image }).toEqual({
+          path,
+          id,
+          image: ["350", 0],
+        })
+      }
+      expect({ path, readers: editReaders(workflow) }).toEqual({
+        path,
+        readers:
+          workflow["620"] === undefined ? [] : ["620", "621", "626", "627"],
+      })
+    }
+  })
+
   it("opens a look that lands on the photo on its edited frame, and guides its last frame with the photo", () => {
     const recipe = recipeOf("pull-back-to-space")
     const workflow = workflowOf(effectGraph(fileGraph(), recipe))
     expect(recipe.photoFrame).toBe("last")
     expect(workflow).toMatchObject({
-      "620": { inputs: { image1: ["616", 0] } },
+      "620": { inputs: { image1: ["606", 0] } },
       "351": { inputs: { input: ["627", 0] } },
       "357": { inputs: { image: ["350", 0], strength: 0.7 } },
       "349": { inputs: { image: ["350", 0], strength: 1 } },
-      "460": { inputs: { image: ["616", 0], frame_idx: -1 } },
-      "463": { inputs: { image: ["616", 0], frame_idx: -1 } },
+      "460": { inputs: { image: ["606", 0], frame_idx: -1 } },
+      "463": { inputs: { image: ["606", 0], frame_idx: -1 } },
     })
     expect(brokenLinks(workflow)).toEqual([])
   })
@@ -145,7 +199,13 @@ describe("the effect recipes", () => {
       endFrame: { source: "none" } as const,
     }
     const workflow = workflowOf(effectGraph(fileGraph(), recipe))
-    for (const id of [...endFrameNodes, ...matteNodes, "460", "462"]) {
+    for (const id of [
+      ...endFrameNodes,
+      ...imageEditNodes,
+      ...matteNodes,
+      "460",
+      "462",
+    ]) {
       expect({ id, node: workflow[id] }).toEqual({ id, node: undefined })
     }
     expect(workflow).toMatchObject({

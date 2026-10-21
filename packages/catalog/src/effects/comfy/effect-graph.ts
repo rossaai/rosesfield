@@ -22,7 +22,15 @@ export const endFrameNodes: readonly string[] = [
   "627",
 ]
 
-export const fitPromptNode = "610"
+export const imageEditNodes: readonly string[] = [
+  "600",
+  "601",
+  "602",
+  "603",
+  "604",
+]
+
+export const fittedPhotoNode = "606"
 
 export const endFramePromptNode = "620"
 
@@ -87,7 +95,6 @@ function remove(graph: Graph, ids: readonly string[]): void {
 function setPrompts(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, "501").inputs.string_a = recipe.prompt
   nodeOf(graph, "503").inputs.string_b = recipe.design.sound?.prompt ?? ""
-  nodeOf(graph, fitPromptNode).inputs.prompt = recipe.design.fit.prompt
 }
 
 function setLength(graph: Graph, recipe: EffectRecipe): void {
@@ -115,7 +122,7 @@ function addAdapter(graph: Graph, recipe: EffectRecipe): void {
 function setEndFrame(graph: Graph, recipe: EffectRecipe): void {
   const end = recipe.endFrame
   if (end.source === "none") {
-    remove(graph, endFrameNodes)
+    remove(graph, [...endFrameNodes, ...imageEditNodes])
     passThrough(graph, "460")
     passThrough(graph, "463")
     return
@@ -127,7 +134,7 @@ function setEndFrame(graph: Graph, recipe: EffectRecipe): void {
 
 const endGuideNodes: readonly string[] = ["460", "463"]
 
-const fittedPhoto: Link = ["616", 0]
+const fittedPhoto: Link = [fittedPhotoNode, 0]
 
 const editedFrame: Link = ["627", 0]
 

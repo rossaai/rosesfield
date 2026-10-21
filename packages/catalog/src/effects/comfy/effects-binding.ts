@@ -1,12 +1,7 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectBinding } from "@rosesfield/generation/bindings"
 import { effectGraph, effectsWorkflow } from "#effects/comfy/effect-graph"
-import {
-  deliveryFrames,
-  fitFrames,
-  ltxFrames,
-  sizeMap,
-} from "#effects/comfy/frame-sizes"
+import { deliveryFrames, ltxFrames, sizeMap } from "#effects/comfy/frame-sizes"
 import {
   type EffectRecipe,
   type ResolutionValue,
@@ -24,15 +19,10 @@ function runBindings(
     { from: "input", name: "image", index: 0, to: "photo" },
     { from: "input", name: "prompt", to: "detail" },
     { from: "seed", to: "seed" },
-    { from: "seed", to: "fitSeed" },
     { from: "aspectRatio", map: sizeMap(sizes, "width", 2), to: "width" },
     { from: "aspectRatio", map: sizeMap(sizes, "height", 2), to: "height" },
-    { from: "aspectRatio", map: sizeMap(fitFrames, "width"), to: "fitWidth" },
-    {
-      from: "aspectRatio",
-      map: sizeMap(fitFrames, "height"),
-      to: "fitHeight",
-    },
+    { from: "aspectRatio", map: sizeMap(sizes, "width"), to: "fitWidth" },
+    { from: "aspectRatio", map: sizeMap(sizes, "height"), to: "fitHeight" },
     {
       from: "aspectRatio",
       map: sizeMap(delivery, "width"),
