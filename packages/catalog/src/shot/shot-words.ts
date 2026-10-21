@@ -103,8 +103,6 @@ export const shotPhrases: Readonly<
   },
 }
 
-export const closingPhrase = "One continuous shot."
-
 export const sceneEnd: RegExp = /(?<![.!?])$/
 
 export type ShotChoices = Readonly<Partial<Record<ShotList, string>>>
@@ -112,8 +110,6 @@ export type ShotChoices = Readonly<Partial<Record<ShotList, string>>>
 type SentWordsOptions = {
   scene: string
   choices: ShotChoices
-  movementAsWords: boolean
-  closes: boolean
 }
 
 export function sceneSentence(scene: string): string {
@@ -129,12 +125,10 @@ export function phraseOf(list: ShotList, value: string | undefined): string {
 }
 
 export function sentWords(options: SentWordsOptions): string {
-  const lists = shotListOrder.filter(
-    (list) => options.movementAsWords || list !== "movement"
+  const phrases = shotListOrder.map((list) =>
+    phraseOf(list, options.choices[list])
   )
-  const phrases = lists.map((list) => phraseOf(list, options.choices[list]))
-  const closing = options.closes ? ` ${closingPhrase}` : ""
-  return `${sceneSentence(options.scene)}${phrases.join("")}${closing}`
+  return `${sceneSentence(options.scene)}${phrases.join("")}`
 }
 
 export function keyOf(value: string): string {

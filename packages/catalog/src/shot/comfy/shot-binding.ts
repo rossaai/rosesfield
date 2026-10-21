@@ -1,258 +1,263 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectBinding } from "@rosesfield/generation/bindings"
-import { AppDefinitionInvalidError } from "#app-definition-invalid.error"
-import { cameraMovements } from "#shot/shot-models"
+import { findWorkflow, type Workflow, type WorkflowTarget } from "#list-workflows"
 import {
   autoValue,
-  closingPhrase,
   phraseOf,
   type ShotList,
+  sceneEnd,
+  shotListOrder,
   shotLists,
 } from "#shot/shot-words"
+import {
+  type FrameSize,
+  framesFor,
+  ltxSizes,
+  type VideoAspect,
+  type VideoResolution,
+  videoAspects,
+  videoLengths,
+} from "#video/comfy/video-sizes"
+import {
+  type VideoWorkflowName,
+  videoWorkflows,
+  withoutLastFrame,
+  withoutSound,
+} from "#video/comfy/video-workflows"
 import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 import { apiGraph } from "#workflow-entry.contract"
+import { WorkflowInvalidError } from "#workflow-invalid.error"
 
-type Workflow = Record<string, { inputs: Record<string, unknown> }>
+type Sound = "on" | "off"
+type Side = keyof FrameSize
+type ValueMap = Record<string, string | number>
+type Graph = Record<string, unknown>
+type Patch = (graph: Graph) => Graph
 
-export const shotWorkflows = {
-  "ltx-2-5": "shot-ltx-2-5",
-  "wan-2-2-fun-camera": "shot-wan-2-2-fun-camera",
-} as const
+export const shotResolutions = [
+  "480p",
+  "720p",
+] as const satisfies readonly VideoResolution[]
 
-type FrameSize = { width: number; height: number }
+const promptNode = "900"
 
-export const ltxSizeStep = 64
+const audioNode = "370"
 
-export const ltxSizes: Readonly<
-  Record<string, Readonly<Record<string, FrameSize>>>
-> = {
-  "480p": {
-    "1:1": { width: 640, height: 640 },
-    "4:3": { width: 768, height: 576 },
-    "3:4": { width: 576, height: 768 },
-    "16:9": { width: 896, height: 512 },
-    "9:16": { width: 512, height: 896 },
-  },
-  "720p": {
-    "1:1": { width: 960, height: 960 },
-    "4:3": { width: 1088, height: 832 },
-    "3:4": { width: 832, height: 1088 },
-    "16:9": { width: 1280, height: 704 },
-    "9:16": { width: 704, height: 1280 },
-  },
-  "1080p": {
-    "1:1": { width: 1472, height: 1472 },
-    "4:3": { width: 1728, height: 1280 },
-    "3:4": { width: 1280, height: 1728 },
-    "16:9": { width: 1920, height: 1088 },
-    "9:16": { width: 1088, height: 1920 },
-  },
+const sceneNodes = { trim: "950", period: "951" } as const
+
+const phraseNodes: Readonly<Record<ShotList, string>> = {
+  movement: "952",
+  camera: "953",
+  lens: "954",
+  focus: "955",
+  light: "956",
+  color: "957",
+  mood: "958",
 }
 
-export const wanSizes: Readonly<Record<string, FrameSize>> = {
-  "1:1": { width: 640, height: 640 },
-  "4:3": { width: 736, height: 544 },
-  "3:4": { width: 544, height: 736 },
-  "16:9": { width: 832, height: 480 },
-  "9:16": { width: 480, height: 832 },
+const sides: readonly Side[] = ["width", "height"]
+
+const firstPassDivisor = 2
+
+function invalid(folder: string, reason: string): WorkflowInvalidError {
+  return new WorkflowInvalidError({ folder, reason })
 }
 
-export const wanCameraPoses: Readonly<
-  Record<(typeof cameraMovements)[number], string>
-> = {
-  static: "Static",
-  "push-in": "Zoom In",
-  "pull-out": "Zoom Out",
-  "track-left": "Pan Left",
-  "track-right": "Pan Right",
-  "crane-up": "Pan Up",
-  "crane-down": "Pan Down",
+function targetOf(nodeId: string, inputName: string): WorkflowTarget {
+  return {
+    nodeId,
+    inputName,
+    type: "scalar",
+    path: [nodeId, "inputs", inputName],
+  }
 }
 
-const ltxPhrases: readonly ShotList[] = [
-  "movement",
-  "camera",
-  "lens",
-  "focus",
-  "light",
-  "color",
-  "mood",
-]
+function concat(after: string, words: string): Record<string, unknown> {
+  return {
+    class_type: "StringConcatenate",
+    inputs: { string_a: [after, 0], string_b: words, delimiter: "" },
+  }
+}
 
-const wanPhrases: readonly ShotList[] = [
-  "camera",
-  "lens",
-  "focus",
-  "light",
-  "color",
-  "mood",
-]
+type WordNodes = { nodes: Record<string, unknown>; last: string }
 
-function phraseMap(list: ShotList): Record<string, string> {
+function wordNodes(): WordNodes {
+  const nodes: Record<string, unknown> = {
+    [sceneNodes.trim]: {
+      class_type: "StringTrim",
+      inputs: { string: "", mode: "Both" },
+    },
+    [sceneNodes.period]: {
+      class_type: "RegexReplace",
+      inputs: {
+        string: [sceneNodes.trim, 0],
+        regex_pattern: sceneEnd.source,
+        replace: ".",
+        case_insensitive: false,
+        multiline: false,
+        dotall: false,
+        count: 1,
+      },
+    },
+  }
+  let after: string = sceneNodes.period
+  for (const list of shotListOrder) {
+    nodes[phraseNodes[list]] = concat(after, "")
+    after = phraseNodes[list]
+  }
+  return { nodes, last: after }
+}
+
+export function withShotWords(workflow: Workflow): Workflow {
+  const graph = apiGraph.parse(structuredClone(workflow.graph))
+  const prompt = graph[promptNode]
+  if (prompt?.class_type !== "StringConcatenate") {
+    throw invalid(workflow.id, `node ${promptNode} joins no prompt`)
+  }
+  const added = wordNodes()
+  const taken = Object.keys(added.nodes).find((id) => Object.hasOwn(graph, id))
+  if (taken !== undefined) {
+    throw invalid(workflow.id, `it already holds node ${taken}`)
+  }
+  const joined = {
+    ...prompt,
+    inputs: { ...prompt.inputs, string_a: [added.last, 0], string_b: "" },
+  }
+  const phraseTargets = Object.fromEntries(
+    shotListOrder.map((list) => [list, targetOf(phraseNodes[list], "string_b")])
+  )
+  const { cameraMove: _, ...inputs } = workflow.inputs
+  return {
+    ...workflow,
+    graph: { ...graph, [promptNode]: joined, ...added.nodes },
+    inputs: {
+      ...inputs,
+      prompt: targetOf(sceneNodes.trim, "string"),
+      ...phraseTargets,
+    },
+  }
+}
+
+function findShotWorkflow(id: string): Workflow | null {
+  const workflow = findWorkflow(id)
+  return workflow === null ? null : withShotWords(workflow)
+}
+
+function phraseMap(list: ShotList): ValueMap {
   const values = [autoValue, ...shotLists[list]]
   return Object.fromEntries(
     values.map((value) => [value, phraseOf(list, value)])
   )
 }
 
-function phraseBindings(lists: readonly ShotList[]): WorkflowValueBinding[] {
-  return lists.map((list) => ({
-    from: "input",
-    name: list,
-    map: phraseMap(list),
-    to: list,
-  }))
-}
-
-function mapOf<Value>(
-  table: Readonly<Record<string, Value>>,
-  pick: (value: Value) => string | number
-): Record<string, string | number> {
+function lengthMap(): ValueMap {
   return Object.fromEntries(
-    Object.entries(table).map(([key, value]) => [key, pick(value)])
+    videoLengths.map((seconds) => [String(seconds), framesFor(seconds)])
   )
 }
 
-function nodeOf(
-  workflow: Workflow,
-  id: string
-): { inputs: Record<string, unknown> } {
-  const node = workflow[id]
-  if (node === undefined) {
-    throw new AppDefinitionInvalidError({
-      folder: "shot",
-      reason: `its workflow has no node ${id}`,
-    })
-  }
-  return node
+function sizeMap(resolution: VideoResolution, side: Side): ValueMap {
+  const sizes: Record<VideoAspect, FrameSize> = ltxSizes[resolution]
+  return Object.fromEntries(
+    videoAspects.map((aspect) => [
+      aspect,
+      sizes[aspect][side] / firstPassDivisor,
+    ])
+  )
 }
 
-function ltxWorkflowWith(
-  sound: "on" | "off",
-  graph: Record<string, unknown>
-): Workflow {
-  const workflow: Workflow = apiGraph.parse(graph)
-  nodeOf(workflow, "909").inputs.string_b = ` ${closingPhrase}`
-  if (sound === "off") {
-    delete nodeOf(workflow, "370").inputs.audio
-  }
-  return workflow
-}
-
-function sizeBindings(
-  sizes: Readonly<Record<string, FrameSize>>
-): WorkflowValueBinding[] {
+function shotBindings(resolution: VideoResolution): WorkflowValueBinding[] {
   return [
-    {
-      from: "aspectRatio",
-      map: mapOf(sizes, (size) => size.width),
-      to: "width",
-    },
-    {
-      from: "aspectRatio",
-      map: mapOf(sizes, (size) => size.height),
-      to: "height",
-    },
+    { from: "input", name: "prompt", to: "prompt" },
+    ...shotListOrder.map(
+      (list): WorkflowValueBinding => ({
+        from: "input",
+        name: list,
+        map: phraseMap(list),
+        to: list,
+      })
+    ),
+    ...sides.map(
+      (side): WorkflowValueBinding => ({
+        from: "aspectRatio",
+        map: sizeMap(resolution, side),
+        to: side,
+      })
+    ),
+    { from: "input", name: "length", map: lengthMap(), to: "frames" },
+    { from: "input", name: "length", map: lengthMap(), to: "audioFrames" },
+    { from: "seed", to: "seed" },
   ]
 }
 
-function ltxBinding(
-  sound: "on" | "off",
-  sizes: Readonly<Record<string, FrameSize>>
+const startFrame: WorkflowValueBinding = {
+  from: "input",
+  name: "startFrame",
+  index: 0,
+  to: "startFrame",
+}
+
+const keepGraph: Patch = (graph) => graph
+
+function soundPatch(sound: Sound): Patch {
+  return sound === "on" ? keepGraph : (graph) => withoutSound(graph, audioNode)
+}
+
+type ShotGraph = {
+  workflow: VideoWorkflowName
+  extra: readonly WorkflowValueBinding[]
+  patch: Patch
+}
+
+const textGraph: ShotGraph = {
+  workflow: "ltx-2-5-text",
+  extra: [],
+  patch: keepGraph,
+}
+
+const startFrameGraph: ShotGraph = {
+  workflow: "ltx-2-5-start-frame",
+  extra: [startFrame],
+  patch: withoutLastFrame,
+}
+
+function shotGraphBinding(
+  graph: ShotGraph,
+  resolution: VideoResolution,
+  sound: Sound
 ): EngineBinding {
+  const bySound = soundPatch(sound)
   return workflowBinding({
-    workflow: shotWorkflows["ltx-2-5"],
+    workflow: videoWorkflows[graph.workflow],
+    bindings: [...shotBindings(resolution), ...graph.extra],
     outputsPerJob: "one",
-    patch: (graph) => ltxWorkflowWith(sound, graph),
-    bindings: [
-      { from: "input", name: "prompt", to: "prompt" },
-      ...phraseBindings(ltxPhrases),
-      { from: "input", name: "length", to: "seconds" },
-      ...sizeBindings(sizes),
-      { from: "seed", to: "seed" },
-    ],
+    patch: (one) => bySound(graph.patch(one)),
+    find: findShotWorkflow,
   })
 }
 
-function ltxResolutions(sound: "on" | "off"): EngineBinding {
+function byResolution(graph: ShotGraph): EngineBinding {
+  const bySound = (resolution: VideoResolution): EngineBinding =>
+    selectBinding({
+      input: "sound",
+      options: {
+        on: shotGraphBinding(graph, resolution, "on"),
+        off: shotGraphBinding(graph, resolution, "off"),
+      },
+    })
   return selectBinding({
     input: "resolution",
     options: Object.fromEntries(
-      Object.entries(ltxSizes).map(([resolution, sizes]) => [
-        resolution,
-        ltxBinding(sound, sizes),
-      ])
+      shotResolutions.map((resolution) => [resolution, bySound(resolution)])
     ),
   })
 }
 
-function wanWorkflowWith(
-  camera: "on" | "off",
-  graph: Record<string, unknown>
-): Workflow {
-  const workflow: Workflow = apiGraph.parse(graph)
-  if (camera === "off") {
-    delete nodeOf(workflow, "98").inputs.camera_conditions
-  }
-  return workflow
-}
-
-function wanBinding(camera: "on" | "off"): EngineBinding {
-  const cameraBindings: WorkflowValueBinding[] =
-    camera === "on"
-      ? [
-          {
-            from: "input",
-            name: "movement",
-            map: { ...wanCameraPoses },
-            to: "cameraPose",
-          },
-        ]
-      : []
-  return workflowBinding({
-    workflow: shotWorkflows["wan-2-2-fun-camera"],
-    outputsPerJob: "one",
-    patch: (graph) => wanWorkflowWith(camera, graph),
-    bindings: [
-      { from: "input", name: "prompt", to: "prompt" },
-      ...phraseBindings(wanPhrases),
-      ...cameraBindings,
-      { from: "input", name: "startFrame", index: 0, to: "startFrame" },
-      ...sizeBindings(wanSizes),
-      { from: "seed", to: "seed" },
-    ],
-  })
-}
-
-function wanMovements(): EngineBinding {
-  const withCamera = wanBinding("on")
-  return selectBinding({
-    input: "movement",
-    options: {
-      [autoValue]: wanBinding("off"),
-      ...Object.fromEntries(cameraMovements.map((move) => [move, withCamera])),
-    },
-  })
-}
-
-function byStartFrame(options: Record<string, EngineBinding>): EngineBinding {
-  return selectBinding({ input: "startFrame", by: "filled", options })
-}
-
-export const shotBinding: EngineBinding = selectBinding({
-  input: "model",
+export const shotGraphs: EngineBinding = selectBinding({
+  input: "startFrame",
+  by: "filled",
   options: {
-    "ltx-2-5": byStartFrame({
-      empty: selectBinding({
-        input: "sound",
-        options: { on: ltxResolutions("on"), off: ltxResolutions("off") },
-      }),
-    }),
-    "wan-2-2-fun-camera": byStartFrame({
-      filled: selectBinding({
-        input: "resolution",
-        options: { "480p": wanMovements() },
-      }),
-    }),
+    filled: byResolution(startFrameGraph),
+    empty: byResolution(textGraph),
   },
 })
