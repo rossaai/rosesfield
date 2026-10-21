@@ -88,6 +88,40 @@ describe("an app tool built from its catalog definition", () => {
     expect(lastMessageOf(events)).toBe("refused")
   })
 
+  it("answers a value past an input's bound with RUN_INPUT_INVALID, the gateway's own refusal, and starts no run", async () => {
+    const generation = generationFor([imageApp()])
+    const { agent, faux } = rigFor(generation, "with")
+    const results: string[] = []
+    faux.setResponses([
+      fauxAssistantMessage(
+        [
+          fauxToolCall("sample-image", {
+            inputs: { prompt: "a".repeat(2001) },
+          }),
+        ],
+        { stopReason: "toolUse" }
+      ),
+      (context) => {
+        const result = lastToolResultOf(context)
+        results.push(textOf(result))
+        return fauxAssistantMessage(result?.isError ? "refused" : "started")
+      },
+    ])
+    const { id } = await agent.startConversation({ runApproval: "auto" })
+
+    const events = await readAll(
+      await agent.send({ conversationId: id, text: "Make a long rose" })
+    )
+
+    expect(generation.runs.count).toBe(0)
+    expect(lastMessageOf(events)).toBe("refused")
+    const [refusal] = results
+    expect(JSON.parse(refusal ?? "{}")).toMatchObject({
+      error: { code: "RUN_INPUT_INVALID", status: 400 },
+    })
+    expect(refusal).toMatch(/prompt[^\n]*2000/)
+  })
+
   it("offers the model the app's inputs as JSON Schema, which pi applies before the run starts", async () => {
     const generation = generationFor([imageApp()])
     const { agent, faux } = rigFor(generation, "with")

@@ -1,3 +1,4 @@
+import type { TSchema } from "@earendil-works/pi-ai"
 import type {
   ToolExecutionApi,
   ToolExecutionResult,
@@ -14,11 +15,12 @@ import {
 } from "@rosesfield/catalog/storyboard"
 import {
   type AppDefinition,
+  errorEnvelopeOf,
   type RunRequest,
   runRequest,
 } from "@rosesfield/contract"
 import { RunInputInvalidError } from "@rosesfield/generation"
-import { appIdFormat, runIdFormat } from "@rosesfield/kernel"
+import { appIdFormat, ProjectError, runIdFormat } from "@rosesfield/kernel"
 import { z } from "zod"
 import type { Proposal } from "#agent.contract"
 import { agentCopy } from "#copy.en"
@@ -39,6 +41,19 @@ import { jsonOutput, toolParameters } from "#infrastructure/pi-tool-io"
 const idempotencyMemo = "idempotencyKey"
 const proposalMemo = "proposalId"
 const jsonBody = z.record(z.string(), z.json())
+const boundKeys: ReadonlySet<string> = new Set([
+  "minLength",
+  "maxLength",
+  "minimum",
+  "maximum",
+  "exclusiveMinimum",
+  "exclusiveMaximum",
+  "multipleOf",
+  "minItems",
+  "maxItems",
+  "pattern",
+  "format",
+])
 
 type AppToolOptions = {
   app: AppDefinition
@@ -60,6 +75,49 @@ function schemaOf(
     : publishedInputOf(app, forms)
 }
 
+const namedSchemaKeys: ReadonlySet<string> = new Set([
+  "properties",
+  "$defs",
+  "definitions",
+])
+
+function unboundedNamed(value: unknown): unknown {
+  return isRecord(value)
+    ? Object.fromEntries(
+        Object.entries(value).map(([name, inner]) => [name, unbounded(inner)])
+      )
+    : value
+}
+
+function unbounded(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(unbounded)
+  }
+  if (!isRecord(value)) {
+    return value
+  }
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => !boundKeys.has(key))
+      .map(([key, inner]) => [
+        key,
+        namedSchemaKeys.has(key) ? unboundedNamed(inner) : unbounded(inner),
+      ])
+  )
+}
+
+function shapeOf(schema: z.ZodType<unknown>): TSchema {
+  const shape = unbounded(toolParameters(schema))
+  return isRecord(shape) ? shape : {}
+}
+
+function refusalOf(error: ProjectError): ToolExecutionResult {
+  return {
+    output: jsonOutput({ ...errorEnvelopeOf(error), message: error.message }),
+    isError: true,
+  }
+}
+
 export function appTool(options: AppToolOptions): ToolRegistration {
   const { app, handlers } = options
   const schema = schemaOf(app, options.forms ?? [])
@@ -67,52 +125,71 @@ export function appTool(options: AppToolOptions): ToolRegistration {
   return {
     name: app.id,
     description: agentCopy.tools.app(app),
-    parameters: toolParameters(schema),
+    parameters: shapeOf(schema),
     replay: "unsafe",
     execute: async (args: unknown, api, context) => {
-      const settings = await api.snapshot(
-        conversationSettings,
-        api.conversationId,
-        context
-      )
-      if ((settings?.runApproval ?? "ask") === "ask") {
-        const request = parseRequest(app, schema, args)
-        return propose(
-          { app, request, body: jsonBody.parse(args) },
-          api,
-          context
-        )
-      }
-      const idempotencyKey = await api.memo(
-        idempotencyMemo,
-        `agent-${crypto.randomUUID()}`,
-        context
-      )
-      if (isKeyframeChain(app)) {
-        const runs = await keyframeRunsOf({
-          appId: app.id,
-          request: parseRequest(app, schema, args),
-          key: idempotencyKey,
-          handlers: handlers(),
-          wait,
-          signal: context.abortSignal,
-        })
-        return {
-          output: jsonOutput({ runs }),
-          details: { runIds: runs.flatMap((run) => run?.id ?? []) },
+      try {
+        return await runApp({ app, schema, handlers, wait }, args, api, context)
+      } catch (error) {
+        if (error instanceof ProjectError) {
+          return refusalOf(error)
         }
-      }
-      const started = await handlers().startRun.execute({
-        appId: app.id,
-        body: args,
-        idempotencyKey,
-        seed: null,
-      })
-      return {
-        output: jsonOutput(started),
-        details: { runId: started.run.id },
+        throw error
       }
     },
+  }
+}
+
+type AppRun = {
+  app: AppDefinition
+  schema: z.ZodType<unknown>
+  handlers: () => KeyframeHandlers
+  wait: RunWait
+}
+
+async function runApp(
+  { app, schema, handlers, wait }: AppRun,
+  args: unknown,
+  api: ToolExecutionApi,
+  context: PiContext
+): Promise<ToolExecutionResult> {
+  const request = parseRequest(app, schema, args)
+  const settings = await api.snapshot(
+    conversationSettings,
+    api.conversationId,
+    context
+  )
+  if ((settings?.runApproval ?? "ask") === "ask") {
+    return propose({ app, request, body: jsonBody.parse(args) }, api, context)
+  }
+  const idempotencyKey = await api.memo(
+    idempotencyMemo,
+    `agent-${crypto.randomUUID()}`,
+    context
+  )
+  if (isKeyframeChain(app)) {
+    const runs = await keyframeRunsOf({
+      appId: app.id,
+      request,
+      key: idempotencyKey,
+      handlers: handlers(),
+      wait,
+      signal: context.abortSignal,
+    })
+    return {
+      output: jsonOutput({ runs }),
+      details: { runIds: runs.flatMap((run) => run?.id ?? []) },
+    }
+  }
+  const started = await handlers().startRun.execute({
+    appId: app.id,
+    body: args,
+    idempotencyKey,
+    seed: null,
+  })
+  return {
+    output: jsonOutput(started),
+    details: { runId: started.run.id },
   }
 }
 

@@ -227,7 +227,7 @@ describe("an ad asked of the agent", () => {
     expect(adsPromptOf(run?.inputs ?? {})).toContain(`"${line}"`)
   })
 
-  it("refuses a headline of 61 characters and starts no run", async () => {
+  it("refuses a headline of 61 characters with RUN_INPUT_INVALID, the screen's refusal, and starts no run", async () => {
     const rig = agentGateway((photo) => ({
       kind: "ad",
       headline: "a".repeat(61),
@@ -245,8 +245,8 @@ describe("an ad asked of the agent", () => {
     expect(rig.jobs.enqueued).toEqual([])
     expect(rig.requests).toHaveLength(2)
     const [, refusal] = rig.requests
-    expect(refusal === undefined ? "" : lastToolTextOf(refusal)).toMatch(
-      /headline[^\n]*\b60\b/
-    )
+    const text = refusal === undefined ? "" : lastToolTextOf(refusal)
+    expect(text).toMatch(/headline[^\n]*\b60\b/)
+    expect(text).toContain("RUN_INPUT_INVALID")
   })
 })
