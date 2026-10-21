@@ -31,7 +31,7 @@ describe("the Privacy page", () => {
     ).not.toBeNull()
     const text = pageText()
     expect(text).toContain("sends your requests to Comfy with your key")
-    expect(text).toContain("never stores it and never writes it to a log")
+    expect(text).toContain("never saves it and never writes it to a log")
   })
 
   it("names what it keeps, for how long, where, the one cookie and the logs", () => {
@@ -39,7 +39,7 @@ describe("the Privacy page", () => {
     const text = pageText()
     expect(text).toContain("A hash of your Comfy account id")
     expect(text).toContain("for 30 days after your last visit")
-    expect(text).toContain("An output you share, for 90 days")
+    expect(text).toContain("A result you share, for 90 days")
     expect(text).toContain("on Cloudflare")
     expect(text).toContain("one session cookie")
     expect(text).toContain("Cloudflare keeps a log of the requests")
@@ -72,7 +72,7 @@ describe("the Terms page", () => {
     const text = pageText()
     expect(text).toContain("open-source software")
     expect(text).toContain("It sends your requests to Comfy")
-    expect(text).toContain("Every run happens on your own Comfy account")
+    expect(text).toContain("on the Comfy account whose key it carries")
     expect(text).toContain("Comfy's terms and each model maker's terms")
     expect(text).toContain("You hold the rights to what you add")
     expect(text).toContain(
