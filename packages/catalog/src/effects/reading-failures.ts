@@ -68,9 +68,11 @@ function cutFailures(
   const failures: string[] = []
   const pending = [...cuts]
   for (const window of windows) {
-    const [next] = pending
-    if (next !== undefined && next >= window.min && next <= window.max) {
-      pending.shift()
+    const inside = pending.findIndex(
+      (cut) => cut >= window.min && cut <= window.max
+    )
+    if (inside >= 0) {
+      pending.splice(inside, 1)
     } else if (window.kind === "cut") {
       failures.push(`cut: none between ${window.min} s and ${window.max} s`)
     }
