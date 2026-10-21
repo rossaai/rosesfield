@@ -19,14 +19,21 @@ export type EngineFile = {
 
 export type RunPlan = NonNullable<Run["plan"]>
 
+export type EngineStepOutput = Omit<EngineOutput, "bytes" | "stills"> & {
+  assetId: AssetId
+}
+
 export type EngineStepJob = {
   number: number
   engine: string
   ref: string
+  cost?: Cost
+  made?: EngineStepOutput
 }
 
 export type EngineSteps = {
   plan: RunPlan
+  planCost?: Cost
   jobs: readonly EngineStepJob[]
 }
 

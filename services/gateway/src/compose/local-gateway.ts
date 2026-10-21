@@ -1,5 +1,4 @@
 import { mkdirSync } from "node:fs"
-import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import type { OpenPiModelsOptions, PiAgentHarness } from "@rosesfield/agent"
@@ -25,7 +24,7 @@ import {
 } from "@rosesfield/library"
 import { type BunSQLiteDatabase, drizzle } from "drizzle-orm/bun-sqlite"
 import type { MiddlewareHandler } from "hono"
-import { getConnInfo, serveStatic } from "hono/bun"
+import { getConnInfo } from "hono/bun"
 import { localAgent } from "#agent/local-agent"
 import { SessionAgents } from "#agent/session-agents"
 import { type Built, buildHandlers, type Handlers } from "#build-handlers"
@@ -36,6 +35,7 @@ import {
   pickEngines,
   visitorEngines,
 } from "#compose/pick-engines"
+import { pageOf, platformFiles } from "#compose/platform-files"
 import { ownerScope } from "#compose/request-scope"
 import { canPasteKey, ownerSettings } from "#compose/settings"
 import { visitorScopeFor } from "#compose/visitor-ports"
@@ -137,6 +137,7 @@ export function composeLocalGateway(
       clock,
       meter: sharedCreditMeter(clock),
       media: options.media ?? new BunMediaTool(),
+      store,
       prices,
       ...fetchPart,
       ...(options.warmCatalog === true ? { warmCatalog: true } : {}),
@@ -385,16 +386,4 @@ function sharePurgeOf(parts: Parts): SharePurge {
     store: parts.store,
     clock: parts.clock,
   })
-}
-
-async function pageOf(root: string): Promise<string | null> {
-  try {
-    return await readFile(join(root, "index.html"), "utf8")
-  } catch {
-    return null
-  }
-}
-
-function platformFiles(root: string): MiddlewareHandler[] {
-  return [serveStatic({ root }), serveStatic({ root, path: "index.html" })]
 }

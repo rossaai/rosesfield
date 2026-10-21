@@ -14,6 +14,7 @@ import {
   type RouterCatalog,
 } from "@rosesfield/generation"
 import type { Clock } from "@rosesfield/kernel"
+import type { AssetStore } from "@rosesfield/library"
 import { sharedRouterCatalog } from "#catalog/shared-router-catalog"
 import {
   checkEngineSettings,
@@ -30,6 +31,7 @@ export type EngineOptions = {
   meter?: CreditMeter
   warmCatalog?: boolean
   media?: MediaTool
+  store?: AssetStore
   prices?: PriceBook
 }
 
@@ -89,12 +91,14 @@ function withRemake(
   key: string | null,
   options: EngineOptions
 ): readonly GenerationEngine[] {
-  if (options.media === undefined) {
+  const { media, store } = options
+  if (media === undefined || store === undefined) {
     return engines
   }
   const remake = new RemakeGenerationEngine({
     engines,
-    media: options.media,
+    media,
+    store,
     plan: new RouterPlanTurn({ apiKey: key, ...fetchOf(options) }),
     ...(options.prices === undefined ? {} : { prices: options.prices }),
   })

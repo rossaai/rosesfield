@@ -2,6 +2,9 @@ import type { AppDefinition } from "@rosesfield/contract"
 import {
   AppCatalog,
   EngineBindingInvalidError,
+  type EngineOutput,
+  type EngineStepJob,
+  type EngineStepOutput,
   type EngineSteps,
   type GenerationEngine,
   type PriceBook,
@@ -10,6 +13,7 @@ import {
   resolveBinding,
 } from "@rosesfield/generation"
 import { assetIdFormat } from "@rosesfield/kernel"
+import type { AssetStore } from "@rosesfield/library"
 import { readApps } from "#list-apps"
 import { app as motionApp } from "#motion/app"
 import { shotRequestOf } from "#remake/comfy/remake-engine"
@@ -20,6 +24,7 @@ import { cameraMoves } from "#video/camera-moves"
 
 type ShotWorksOptions = {
   engines: readonly GenerationEngine[]
+  store: AssetStore
   prices?: PriceBook
 }
 
@@ -52,10 +57,12 @@ export function plannedOf(shot: RunPlan["shots"][number]): PlannedShot {
 
 export class ShotWorks {
   private readonly engines: readonly GenerationEngine[]
+  private readonly store: AssetStore
   private readonly prices: PriceRunHandler
 
   constructor(options: ShotWorksOptions) {
     this.engines = options.engines
+    this.store = options.store
     this.prices = new PriceRunHandler({
       apps: new ShotApps(),
       engines: options.engines,
@@ -72,17 +79,54 @@ export class ShotWorks {
 
   async restored(job: RemakeJob, steps: EngineSteps): Promise<ShotWork[]> {
     const works = await this.planned(job, steps.plan.shots.map(plannedOf))
-    return works.map((work) => {
-      const kept = steps.jobs.find((one) => one.number === work.shot.number)
-      return kept === undefined || kept.engine !== work.run?.engine.key
-        ? work
-        : { ...work, ref: kept.ref }
-    })
+    return Promise.all(
+      works.map((work) => {
+        const kept = steps.jobs.find((one) => one.number === work.shot.number)
+        return kept === undefined || kept.engine !== work.run?.engine.key
+          ? work
+          : this.resumed(work, kept)
+      })
+    )
+  }
+
+  async keep(output: EngineOutput): Promise<EngineStepOutput> {
+    const assetId = assetIdFormat.parse(crypto.randomUUID())
+    await this.store.put(assetId, output.bytes, output.mime)
+    const { kind, mime, width, height, durationSeconds } = output
+    return { assetId, kind, mime, width, height, durationSeconds }
+  }
+
+  async forget(works: readonly ShotWork[]): Promise<void> {
+    await Promise.allSettled(
+      works.flatMap((work) =>
+        work.kept === null ? [] : [this.store.delete(work.kept.assetId)]
+      )
+    )
+  }
+
+  private async resumed(
+    work: ShotWork,
+    kept: EngineStepJob
+  ): Promise<ShotWork> {
+    const made = kept.made === undefined ? null : await this.madeOf(kept.made)
+    return {
+      ...work,
+      ref: kept.ref,
+      made,
+      kept: made === null ? null : (kept.made ?? null),
+      cost: kept.cost ?? null,
+    }
+  }
+
+  private async madeOf(kept: EngineStepOutput): Promise<EngineOutput | null> {
+    const bytes = await this.store.get(kept.assetId)
+    const { assetId: _assetId, ...facts } = kept
+    return bytes === null ? null : { ...facts, bytes }
   }
 
   private async workOf(job: RemakeJob, shot: PlannedShot): Promise<ShotWork> {
     const run = await this.runOf(job, shot)
-    return { shot, run, ref: null, made: null, cost: null }
+    return { shot, run, ref: null, made: null, kept: null, cost: null }
   }
 
   private async runOf(
