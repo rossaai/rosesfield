@@ -63,6 +63,7 @@ export {
   type ModelTask,
   mediaRules,
   modelTasks,
+  namedTasksOf,
   nameRules,
   tasksOfModel,
 } from "#comfy/model-tasks"

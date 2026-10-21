@@ -26,6 +26,8 @@ export type ModelTask =
   | "expand"
   | "motion-transfer"
   | "character-swap"
+  | "layer-separation"
+  | "inpaint"
   | "chat"
 
 type Slot = FieldRole | "video" | "audio" | "mask"
@@ -67,6 +69,8 @@ export const modelTasks: readonly ModelTask[] = [
   "expand",
   "motion-transfer",
   "character-swap",
+  "layer-separation",
+  "inpaint",
   "chat",
 ]
 
@@ -146,6 +150,8 @@ export const nameRules: readonly NameRule[] = [
     task: "character-swap",
     pattern: /character-swap|character-replace|swap-character/,
   },
+  { task: "layer-separation", pattern: /layer-separation|layered/ },
+  { task: "inpaint", pattern: /inpaint|-fill\b/ },
 ]
 
 function slotOf(field: ModelField, output: string): Slot | null {
@@ -206,6 +212,16 @@ function fitsName(
     rule.pattern.test(model.id) &&
     (rule.media !== "kept" || keepsMedia(model, media))
   )
+}
+
+export function namedTasksOf(
+  model: HostedModel,
+  media: string | null = null
+): ModelTask[] {
+  const named = nameRules
+    .filter((rule) => fitsName(model, rule, media))
+    .map((rule) => rule.task)
+  return modelTasks.filter((task) => named.includes(task))
 }
 
 /** Lists the tasks a model can run, from the media it takes and makes, the inputs its form needs and, for an app that makes the given media, the tasks that keep that media. A name rule can replace a task the media alone would give. */
