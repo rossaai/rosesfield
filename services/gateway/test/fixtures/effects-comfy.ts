@@ -7,22 +7,12 @@ import { z } from "zod"
 import type { PortsFor } from "../harness"
 import { localPorts } from "../local-ports"
 
+export const videoModel =
+  "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors"
 export const jobId = "3a7c9e1b-5d2f-4b6a-8c0e-1f2a3b4c5d6e"
-const outputId = "2b3e4f56-8a7b-4c2d-9e4f-5a6b9f8a1c0d"
 export const uploadedId = "8e1f2a3b-4c5d-4e6f-9a0b-1c2d3e4f5a6b"
+const outputId = "2b3e4f56-8a7b-4c2d-9e4f-5a6b9f8a1c0d"
 const mp4 = Uint8Array.of(0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73)
-
-export function pngOf(width: number, height: number): Uint8Array {
-  const bytes = new Uint8Array(33)
-  bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
-  bytes.set([0x49, 0x48, 0x44, 0x52], 12)
-  const view = new DataView(bytes.buffer)
-  view.setUint32(8, 13)
-  view.setUint32(16, width)
-  view.setUint32(20, height)
-  bytes.set([8, 6], 24)
-  return bytes
-}
 
 const sentJob = z.object({
   workflow: z.record(
@@ -34,6 +24,12 @@ const sentJob = z.object({
 type SentGraph = z.infer<typeof sentJob>["workflow"]
 
 type JobState = "succeeded" | "running"
+
+export type ReplayedComfy = {
+  fetch: Fetch
+  graphs: SentGraph[]
+  sent: string[]
+}
 
 function outputsOf(status: string): Record<string, unknown>[] {
   if (status !== "succeeded") {
@@ -78,12 +74,6 @@ function uploadBody(): Record<string, unknown> {
     url: `https://cloud.comfy.org/api/v2/assets/${uploadedId}/content`,
     url_expires_at: "2026-10-17T10:00:00Z",
   }
-}
-
-export type ReplayedComfy = {
-  fetch: Fetch
-  graphs: SentGraph[]
-  sent: string[]
 }
 
 export function replayedComfy(state: JobState): ReplayedComfy {

@@ -222,6 +222,8 @@ The agent has 26 tools: one per app, 21 in all, and 5 library tools, `list_asset
 
 Catalog schemas are zod. pi tools take TypeBox. Bridge with `z.toJSONSchema()`, and test one tool end to end before generating all of them.
 
+A value from `@earendil-works/pi-ai` is imported from the file that defines it, such as `@earendil-works/pi-ai/models` for `createModels` or `@earendil-works/pi-ai/utils/event-stream` for `createAssistantMessageEventStream`. A type may come from the package root. The package root is marked free of side effects, so the Worker bundle drops it, and with it the call that sets up the lazily loaded modules it re-exports. A value read through the root is then undefined on Workers. `test/worker/worker-public.test.ts` catches it.
+
 ### The agent's model
 
 The agent runs whatever `AGENT_BASE_URL`, `AGENT_MODEL` and `AGENT_API_KEY` name. On Workers AI alone, an unset `AGENT_MODEL` falls back to `@cf/zai-org/glm-5.3-flash`, per `services/gateway/src/agent/agent-env.ts`.

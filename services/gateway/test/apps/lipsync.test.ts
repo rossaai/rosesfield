@@ -1,3 +1,4 @@
+import { graphModel } from "@rosesfield/catalog/lipsync"
 import {
   type AppDefinition,
   appDefinition,
@@ -118,6 +119,7 @@ describe("a Lip sync run through the gateway on the demo engine", () => {
     expect(done.seed).toEqual(expect.any(Number))
     expect(done.inputs).toEqual({
       mode: "photo",
+      model: graphModel,
       photo: [photoId],
       audio: [audioId],
       scene: "A small kitchen in morning light",
@@ -134,29 +136,20 @@ describe("a Lip sync run through the gateway on the demo engine", () => {
     expect([...output.bytes.slice(4, 8)]).toEqual(mp4Brand)
   })
 
-  it("makes one 9:16 video from a clip and 5 seconds of audio, and keeps no photo or scene with the run", async () => {
+  it("refuses a clip run on the LTX 2.3 graph, which takes only a photo, and enqueues no job", async () => {
     open()
     const clipId = await upload(clipBytes, "video/mp4")
     const audioId = await upload(wave, "audio/wav")
-    const done = await finished(
-      await start(
-        { mode: "clip", clip: [clipId], audio: [audioId], length: 5 },
-        "lipsync-clip-1",
-        "9:16"
-      )
+    const response = await start(
+      { mode: "clip", clip: [clipId], audio: [audioId], length: 5 },
+      "lipsync-clip-1",
+      "9:16"
     )
-    expect(done.status).toBe("done")
-    expect(done.aspectRatio).toBe("9:16")
-    expect(done.inputs).toEqual({
-      mode: "clip",
-      clip: [clipId],
-      audio: [audioId],
-      length: 5,
-    })
-    expect(done.outputs).toHaveLength(1)
-    const output = await outputOf(done.outputs[0] ?? "")
-    expect(output.asset).toMatchObject({ kind: "video", mime: "video/mp4" })
-    expect(output.asset.height).toBeGreaterThan(output.asset.width ?? 0)
+    expect(response.status).toBe(412)
+    expect(errorEnvelope.parse(await response.json()).error.code).toBe(
+      "ENGINE_BINDING_INVALID"
+    )
+    expect(gateway.jobs.enqueued).toEqual([])
   })
 
   it("starts no run without audio, with audio longer than 10 seconds, or with the asset of the other mode", async () => {
@@ -205,7 +198,7 @@ describe("the control of the mode refusals", () => {
 
   afterEach(() => gateway.close())
 
-  it("starts the runs the declared modes refuse once the definition drops its mode rules", async () => {
+  it("passes the runs the declared modes refuse to the binding once the definition drops its mode rules", async () => {
     gateway = harnessFor({
       portsFor: localPorts,
       apps: [withoutModeRules(lipsync)],
@@ -257,6 +250,6 @@ describe("the control of the mode refusals", () => {
       )
       statuses.push(response.status)
     }
-    expect(statuses).toEqual(planted.map(() => 202))
+    expect(statuses).toEqual([202, 202, 412, 412, 412])
   })
 })

@@ -20,7 +20,7 @@ import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
 import { readServerEnv, readWorkerEnv, type WorkerVars } from "#env"
 import { gatewayRoutes, settingsResponse } from "#gateway.contract"
 import { passedRecipe } from "../../../../packages/catalog/test/effects/passed-recipe"
-import { pngOf } from "../apps/effects-comfy"
+import { pngOf } from "../fixtures/effects-gateway"
 import { Visitor } from "../fixtures/visitor"
 import { ownerToken, sessionSecret, start } from "../sample-apps"
 
