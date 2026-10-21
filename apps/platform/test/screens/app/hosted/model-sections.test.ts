@@ -154,6 +154,7 @@ describe("an open-weights row of the model picker", () => {
 
   it("opens the weights page the catalog's facts name", () => {
     expect(ming?.badges).toEqual([
+      { kind: "new", label: "New" },
       {
         kind: "openWeights",
         label: "Open weights",
