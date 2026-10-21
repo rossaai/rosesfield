@@ -1,3 +1,4 @@
+import type { Mode } from "@rosesfield/catalog/characters"
 import { type AppListing, fixedCountOf, type Run } from "@rosesfield/contract"
 import {
   SegmentedControl,
@@ -5,6 +6,7 @@ import {
 } from "@rosesfield/ui/components/segmented-control"
 import { useQuery } from "@tanstack/react-query"
 import {
+  type KeyboardEvent,
   type ReactElement,
   type ReactNode,
   useEffect,
@@ -30,6 +32,7 @@ import {
   noSeeds,
   useAppScreen,
 } from "@/screens/app/use-app-screen"
+import type { StartRun } from "@/screens/app/use-start-run"
 import { ModeCanvas } from "@/studio/characters/mode-canvas"
 import {
   firstModeOf,
@@ -41,13 +44,15 @@ import {
   RandomButton,
   TraitsPanel,
 } from "@/studio/characters/mode-panels"
+import { useCharactersStart } from "@/studio/characters/use-characters-start"
 import { useTraitsModel } from "@/studio/characters/use-traits-model"
-import type { Mode } from "../../../../../packages/catalog/src/characters/traits"
 
 type ModeScreen = {
   listing: AppListing
   state: AppScreenState
   hosted: HostedState | undefined
+  start: StartRun
+  onShortcut: (event: KeyboardEvent<HTMLElement>) => void
 }
 
 const allModes: readonly Mode[] = ["traits", "angles"]
@@ -83,7 +88,19 @@ function useModeScreen(
   )
   const hosted = mode === "traits" ? traits : state.hosted
   useFixedCount(listing, state.form, (hosted?.fields ?? null) !== null)
-  return { listing, state, hosted }
+  const start = useCharactersStart(listing, state, hosted, () => onStarted())
+  return {
+    listing,
+    state,
+    hosted,
+    start,
+    onShortcut: (event) => {
+      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault()
+        start.generate()
+      }
+    },
+  }
 }
 
 function ModePanel({
@@ -156,8 +173,8 @@ function ModeFrame(props: FrameProps): ReactElement {
   return (
     <ColumnFrame
       app={screen.listing}
-      start={screen.state.start}
-      onShortcut={screen.state.onShortcut}
+      start={screen.start}
+      onShortcut={screen.onShortcut}
       sheet={sheet}
       hasHeader={props.hasHeader}
       panel={

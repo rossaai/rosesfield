@@ -1,3 +1,4 @@
+import type { Mode } from "@rosesfield/catalog/characters"
 import {
   type AppDefinition,
   type AppListing,
@@ -19,12 +20,10 @@ import {
   isPanelInput,
   keptInputsOf,
   listingFor,
-  promptNameOf,
   randomTraits,
   traitsModelsOf,
 } from "@/studio/characters/mode-listing"
 import { app } from "../../../../../packages/catalog/src/characters/app"
-import type { Mode } from "../../../../../packages/catalog/src/characters/traits"
 import { flux, qwenEdit, zImage } from "../image/image-screen"
 
 const listing: AppListing = appListing.parse(app)
@@ -178,30 +177,5 @@ describe("the traits pick their model from the text to image task", () => {
       ["hairColor", "red"],
     ])
     expect(keptInputsOf(traits, { seed: 7 }, zImage)).toEqual([["seed", 7]])
-  })
-
-  it("writes the words in the prompt the picked model declares, or in none", () => {
-    const traits = listingFor(listing, "traits")
-    const bare = {
-      ...traits,
-      inputs: traits.inputs.filter((input) => input.name !== "prompt"),
-    }
-    const withPrompt = {
-      ...bare,
-      inputs: [
-        ...bare.inputs,
-        {
-          type: "prompt" as const,
-          name: "prompt",
-          labelKey: "characters.input.details.label",
-          presence: "optional" as const,
-          maxLength: 2000,
-        },
-      ],
-    }
-    expect(promptNameOf(bare, flux.form)).toBe("prompt")
-    expect(promptNameOf(withPrompt, [])).toBeNull()
-    expect(promptNameOf(bare, null)).toBeNull()
-    expect(promptNameOf(withPrompt, null)).toBe("prompt")
   })
 })

@@ -1,4 +1,5 @@
 import { findApp } from "@rosesfield/catalog"
+import { traitNames, traitPrompt } from "@rosesfield/catalog/characters"
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { appListing } from "@rosesfield/contract"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
@@ -28,8 +29,6 @@ import { fieldCaption } from "@/screens/app/hosted/hosted-fields"
 import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
 import { noSeeds } from "@/screens/app/use-app-screen"
 import { AppScreen } from "@/studio/characters/screen"
-import { traitFragments } from "../../../../../packages/catalog/src/characters/comfy/traits-prompt"
-import { traitNames } from "../../../../../packages/catalog/src/characters/traits"
 import { flux, qwen, zImage } from "../image/image-screen"
 
 const characters = appListing.parse(findApp("characters"))
@@ -59,6 +58,36 @@ const editModel: CatalogModel = {
   task: "image-edit",
   tags: [],
   form: null,
+}
+
+const counted: CatalogModel = {
+  id: "maker/picture-2",
+  kind: "hosted",
+  maker: "Maker",
+  name: "Picture 2",
+  nameKey: null,
+  task: "text-to-image",
+  tags: [],
+  form: [
+    {
+      kind: "prompt",
+      name: "prompt",
+      path: "prompt",
+      required: true,
+      maxLength: null,
+      default: null,
+    },
+    {
+      kind: "number",
+      name: "num_images",
+      path: "num_images",
+      required: false,
+      min: 1,
+      max: 2,
+      integer: true,
+      default: 1,
+    },
+  ],
 }
 
 const graphCredits = 4.5
@@ -112,7 +141,7 @@ function openCharacters(): void {
   })
   client.setQueryData(settingsQuery.queryKey, settings)
   client.setQueryData(modelCatalogQuery(characters.id, keyState).queryKey, {
-    models: [zImage, qwen, flux, editModel],
+    models: [zImage, qwen, flux, counted, editModel],
     defaultModel: zImage.id,
     refusal: null,
   })
@@ -154,14 +183,49 @@ function aspectsIn(caption: string): string[] {
     .map((radio) => radio.textContent ?? "")
 }
 
-async function pickFlux(): Promise<void> {
+async function pick(model: CatalogModel): Promise<void> {
   fireEvent.click(
     await screen.findByRole("button", { name: trigger(zImage) })
   )
   fireEvent.click(
-    await screen.findByRole("option", { name: modelNameOf(flux) })
+    await screen.findByRole("option", { name: modelNameOf(model) })
   )
-  await screen.findByRole("button", { name: trigger(flux) })
+  await screen.findByRole("button", { name: trigger(model) })
+}
+
+function pickFlux(): Promise<void> {
+  return pick(flux)
+}
+
+function highestCount(): string {
+  const group = screen.getByRole("group", { name: t("field.count.label") })
+  const more = within(group).getByRole("button", {
+    name: t("field.number.increase"),
+  })
+  for (let press = 0; press < 8 && !more.hasAttribute("disabled"); ) {
+    fireEvent.click(more)
+    press += 1
+  }
+  return group.querySelector("output")?.textContent ?? ""
+}
+
+function fragmentsOf(name: string): string[] {
+  const base = traitPrompt({})
+  const input = characters.inputs.find((one) => one.name === name)
+  const values =
+    input?.type === "choice"
+      ? input.options.map((option) => option.value)
+      : []
+  return values
+    .filter((value) => value !== "auto")
+    .map((value) => {
+      const one = traitPrompt({ [name]: value })
+      let start = 0
+      while (one[start] === base[start]) {
+        start += 1
+      }
+      return one.slice(start, start + one.length - base.length)
+    })
 }
 
 function startedBodies(): unknown[] {
@@ -222,7 +286,7 @@ describe("the traits of Characters", () => {
     )
     const options = await screen.findAllByRole("option")
     expect(new Set(options.map((option) => option.dataset.model))).toEqual(
-      new Set([zImage.id, qwen.id, flux.id])
+      new Set([zImage.id, qwen.id, flux.id, counted.id])
     )
     const fluxRow = options.find((option) => option.dataset.model === flux.id)
     const text = fluxRow?.parentElement?.textContent ?? ""
@@ -250,10 +314,18 @@ describe("the traits of Characters", () => {
       await screen.findByRole("button", { name: pricedName(fluxCredits) })
     ).toBeDefined()
   })
+
+  it("change the count choices to the ones the picked model's schema declares", async () => {
+    openCharacters()
+    await screen.findByRole("button", { name: pricedName(graphCredits) })
+    expect(highestCount()).toBe("4")
+    await pick(counted)
+    expect(highestCount()).toBe("2")
+  })
 })
 
 describe("the random button", () => {
-  it("fills every trait group, and Generate sends those traits as words in the picked model's prompt", async () => {
+  it("fills every trait group, and Generate sends those traits as words in the picked model's prompt, with the count you chose", async () => {
     openCharacters()
     await pickFlux()
     fireEvent.click(
@@ -267,19 +339,19 @@ describe("the random button", () => {
     await vi.waitFor(() => expect(startedBodies()).toHaveLength(1))
     const [body] = startedBodies()
     const prompt = promptOf(body)
-    const isBald = prompt.includes(traitFragments.traits.hairLength.bald)
+    const isBald = prompt.includes(", a bald head")
     for (const name of traitNames) {
       if (isBald && (name === "hairStyle" || name === "hairColor")) {
         continue
       }
-      const fragments = Object.values(traitFragments.traits[name]).filter(
-        (fragment) => fragment !== ""
-      )
+      const fragments = fragmentsOf(name)
+      expect(fragments.length).toBeGreaterThan(0)
       expect(fragments.some((fragment) => prompt.includes(fragment))).toBe(
         true
       )
     }
     expect(modelOf(body)).toBe(flux.id)
+    expect(body).toMatchObject({ count: 2 })
     expect(
       inputNamesOf(body).filter((name) =>
         traitNames.some((trait) => trait === name)

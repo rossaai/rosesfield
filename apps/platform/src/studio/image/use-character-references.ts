@@ -9,27 +9,25 @@ export function useCharacterReferences(
   form: AppForm,
   tray: ReferenceTray
 ): void {
-  const found = useQuery({
+  const isSeeded = form.source !== "defaults"
+  const placed = useQuery({
     ...characterQuery(use ?? ""),
-    enabled: use !== undefined,
-    retry: false,
+    enabled: false,
   })
-  const photos = found.data?.character.references
+  const photos = isSeeded ? placed.data?.character.references : undefined
   const { field, addAssets } = tray
   const fieldKey = field === null ? null : `${field.name}:${field.max}`
-  const isSeeded = form.source !== "defaults"
   const placedIn = useRef(new Set<string>())
   useEffect(() => {
     if (
       photos === undefined ||
       photos.length === 0 ||
       fieldKey === null ||
-      !isSeeded ||
       placedIn.current.has(fieldKey)
     ) {
       return
     }
     placedIn.current.add(fieldKey)
     addAssets(photos)
-  }, [photos, fieldKey, isSeeded, addAssets])
+  }, [photos, fieldKey, addAssets])
 }

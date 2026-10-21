@@ -1,17 +1,55 @@
 import { expect, type Page, test } from "@playwright/test"
 
+const photo = new URL(
+  "../src/gallery/fixtures/demo-image-1-1.png",
+  import.meta.url
+).pathname
+
 const modelRow =
   '[data-slot="popover-trigger"]:has([data-slot="model-row-name"])'
 
-async function openTraits(page: Page): Promise<void> {
+async function skipWelcome(page: Page): Promise<void> {
   await page.addInitScript(() => {
     window.localStorage.setItem("rosesfield.welcome", "seen")
   })
+}
+
+async function runCount(page: Page): Promise<number> {
+  const answer = await page.request.get("/api/runs")
+  const body: { runs: unknown[] } = await answer.json()
+  return body.runs.length
+}
+
+async function openTraits(page: Page): Promise<void> {
+  await skipWelcome(page)
   await page.goto("/apps/characters")
   await expect(
     page.getByRole("radiogroup", { name: "What to make" })
   ).toBeVisible()
 }
+
+test("a character from 1 photo shows in Characters with its photo and its count, and starts no run", async ({
+  page,
+}) => {
+  await skipWelcome(page)
+  await page.goto("/characters/new")
+  await expect(page.getByText("up to 10")).toBeVisible()
+  const runsBefore = await runCount(page)
+  const name = `Ada ${test.info().project.name}`
+  await page.getByRole("textbox").first().fill(name)
+  await page.getByRole("button", { name: "Add an image" }).click()
+  const chooser = page.waitForEvent("filechooser")
+  await page.getByRole("menuitem", { name: "Upload" }).click()
+  await (await chooser).setFiles(photo)
+  await expect(page.getByRole("button", { name: "Remove" })).toHaveCount(1)
+  await page.getByRole("button", { name: "Save character" }).click()
+  await expect(page).toHaveURL(/\/characters\/[0-9a-f-]+$/)
+  await page.goto("/characters")
+  const card = page.getByRole("link", { name: new RegExp(name) })
+  await expect(card).toContainText("1 photo")
+  await expect(card.locator("img")).toHaveCount(1)
+  expect(await runCount(page)).toBe(runsBefore)
+})
 
 test.describe("the traits of Characters on a desktop", () => {
   test.skip(({ isMobile }) => isMobile, "the column panel shows from 768 px")

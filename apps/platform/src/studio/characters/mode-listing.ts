@@ -1,4 +1,5 @@
-import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
+import { type Mode, traitNames } from "@rosesfield/catalog/characters"
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import {
   type AppListing,
   fixedCountOf,
@@ -9,13 +10,10 @@ import {
 } from "@rosesfield/contract"
 import type { FieldValue } from "@/screens/app/app-form"
 import { modelInputName } from "@/screens/app/hosted/hosted-form"
-import {
-  type Mode,
-  traitNames,
-} from "../../../../../packages/catalog/src/characters/traits"
 
 export const modeField = "mode"
 export const countInput = "count"
+export const characterInput = "character"
 
 function narrowed(rule: InputRule, mode: Mode): InputDefinition {
   const { input, allowed, fallback } = rule
@@ -99,24 +97,10 @@ export function randomTraits(app: AppListing): Record<string, string> {
 
 export const traitsTask = "text-to-image"
 
-export const promptInput = "prompt"
-
 export function traitsModelsOf(
   models: readonly CatalogModel[]
 ): CatalogModel[] {
   return models.filter((model) => model.task === traitsTask)
-}
-
-export function promptNameOf(
-  app: AppListing,
-  fields: readonly ModelField[] | null
-): string | null {
-  if (fields !== null) {
-    return fields.find((field) => field.kind === "prompt")?.name ?? null
-  }
-  return app.inputs.some((input) => input.name === promptInput)
-    ? promptInput
-    : null
 }
 
 export function keptInputsOf(

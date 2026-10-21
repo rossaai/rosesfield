@@ -21,7 +21,6 @@ import {
   countInput,
   isPanelInput,
   isTrait,
-  promptInput,
   randomTraits,
 } from "@/studio/characters/mode-listing"
 import { imageFieldsOf } from "@/studio/image/image-fields"
@@ -198,7 +197,6 @@ function isWordsInput(input: InputDefinition, hasPicker: boolean): boolean {
   return (
     isPanelInput(input) &&
     !isTrait(input) &&
-    input.name !== promptInput &&
     !(hasPicker && input.name === modelInputName)
   )
 }

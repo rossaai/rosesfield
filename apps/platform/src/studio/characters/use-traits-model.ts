@@ -1,14 +1,8 @@
 import type { AppListing } from "@rosesfield/contract"
-import { useEffect, useMemo } from "react"
-import { textOf } from "@/screens/app/fields/field-props"
+import { useMemo } from "react"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
-import {
-  keptInputsOf,
-  promptNameOf,
-  traitsModelsOf,
-} from "@/studio/characters/mode-listing"
-import { traitsWords } from "@/studio/characters/traits-words"
+import { keptInputsOf, traitsModelsOf } from "@/studio/characters/mode-listing"
 
 export function useTraitsModel(
   app: AppListing,
@@ -17,17 +11,6 @@ export function useTraitsModel(
 ): HostedState | undefined {
   const models = hosted?.models
   const traitsModels = useMemo(() => traitsModelsOf(models ?? []), [models])
-  const fields = hosted?.fields ?? null
-  const promptName = hosted === undefined ? null : promptNameOf(app, fields)
-  const words = traitsWords(form.values.inputs)
-  const held =
-    promptName === null ? null : textOf(form.values.inputs[promptName])
-  const { setInput } = form
-  useEffect(() => {
-    if (promptName !== null && held !== words) {
-      setInput(promptName, words)
-    }
-  }, [promptName, held, words, setInput])
   if (hosted === undefined) {
     return undefined
   }

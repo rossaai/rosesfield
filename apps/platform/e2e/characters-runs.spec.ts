@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, type Page, test } from "@playwright/test"
 
 const gatewayOrigin = "http://127.0.0.1:8797"
 
@@ -19,7 +19,7 @@ type RunRead = {
   }
 }
 
-type AssetRead = { asset: { mime: string; width: number; height: number } }
+type OpenedFile = { type: string; width: number; height: number }
 
 async function listing(id: string): Promise<Listing> {
   const listed = await fetch(`${gatewayOrigin}/api/apps`)
@@ -59,10 +59,31 @@ async function finishedRun(body: unknown): Promise<RunRead["run"]> {
   return readRun()
 }
 
-async function assetOf(assetId: string): Promise<AssetRead["asset"]> {
-  const answer = await fetch(`${gatewayOrigin}/api/assets/${assetId}`)
-  const body: AssetRead = await answer.json()
-  return body.asset
+async function openedFile(page: Page, assetId: string): Promise<OpenedFile> {
+  return page.evaluate(async (id) => {
+    const answer = await fetch(`/api/assets/${id}/content`)
+    const file = await answer.blob()
+    const image = await createImageBitmap(file)
+    return { type: file.type, width: image.width, height: image.height }
+  }, assetId)
+}
+
+async function expectImages(
+  page: Page,
+  assetIds: readonly string[],
+  ratio: number | null
+): Promise<void> {
+  for (const assetId of assetIds) {
+    const file = await openedFile(page, assetId)
+    expect(file.type).toMatch(/^image\//)
+    expect(file.width).toBeGreaterThan(0)
+    expect(file.height).toBeGreaterThan(0)
+    if (ratio !== null) {
+      expect(Math.abs(file.width / file.height / ratio - 1)).toBeLessThan(
+        0.02
+      )
+    }
+  }
 }
 
 test.describe("Characters runs across the wire", () => {
@@ -76,20 +97,17 @@ test.describe("Characters runs across the wire", () => {
     expect(values.filter((value) => /wan/i.test(value))).toEqual([])
   })
 
-  test("makes the chosen count of portraits in the chosen ratio, then 4 views of one", async () => {
+  test("makes the chosen count of portraits in the chosen ratio, then 4 views of one, each a file that opens as an image", async ({
+    page,
+  }) => {
+    await page.goto("/")
     const portraits = await finishedRun({
       inputs: { gender: "woman", count: "3" },
       aspectRatio: "3:4",
     })
     expect(portraits.count).toBe(3)
     expect(portraits.outputs).toHaveLength(3)
-    for (const assetId of portraits.outputs) {
-      const asset = await assetOf(assetId)
-      expect(asset.mime).toMatch(/^image\//)
-      expect(Math.abs(asset.width / asset.height / 0.75 - 1)).toBeLessThan(
-        0.02
-      )
-    }
+    await expectImages(page, portraits.outputs, 3 / 4)
     const created = await fetch(`${gatewayOrigin}/api/characters`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -110,5 +128,6 @@ test.describe("Characters runs across the wire", () => {
     expect(views.count).toBe(4)
     expect(views.outputs).toHaveLength(4)
     expect(views.inputs).toMatchObject({ model: "qwen-image-edit-2511" })
+    await expectImages(page, views.outputs, null)
   })
 })
