@@ -151,6 +151,12 @@ describe("every effects engine request against the recorded v2 routes", () => {
     )
     expect(workflow["420"]).toBeUndefined()
     const end = recipe.endFrame
+    const opening = recipe.photoFrame === "first" ? ["350", 0] : ["627", 0]
+    const closing = recipe.photoFrame === "first" ? ["627", 0] : ["350", 0]
+    expect(workflow).toMatchObject({
+      "357": { inputs: { image: opening } },
+      "349": { inputs: { image: opening } },
+    })
     if (end.source === "none") {
       expect(workflow["620"]).toBeUndefined()
       expect(workflow["460"]).toBeUndefined()
@@ -158,8 +164,8 @@ describe("every effects engine request against the recorded v2 routes", () => {
       expect(workflow).toMatchObject({
         "620": { inputs: { prompt: end.prompt } },
         "626": { inputs: { seed: 42 } },
-        "460": { inputs: { image: ["627", 0], strength: end.strength } },
-        "463": { inputs: { image: ["627", 0], strength: end.strength } },
+        "460": { inputs: { image: closing, strength: end.strength } },
+        "463": { inputs: { image: closing, strength: end.strength } },
       })
     }
     if (recipe.hold === null) {

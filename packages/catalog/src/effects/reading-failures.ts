@@ -119,11 +119,16 @@ function lastFrameFailures(
     : [`last frame: luma ${reading.lastFrameLuma}, against at most ${maxLuma}`]
 }
 
-function firstFrameFailures(reading: VideoReading): string[] {
+function firstFrameFailures(
+  recipe: EffectRecipe,
+  reading: VideoReading
+): string[] {
+  const opening =
+    recipe.photoFrame === "first" ? "the photo" : "the look's opening frame"
   return reading.firstFrameLuma > blackFloor
     ? []
     : [
-        `first frame: luma ${reading.firstFrameLuma}, a black start against the photo`,
+        `first frame: luma ${reading.firstFrameLuma}, a black start against ${opening}`,
       ]
 }
 
@@ -135,7 +140,7 @@ export function readingFailures(
   return [
     ...lengthFailures(recipe, reading),
     ...frameFailures(reading, run),
-    ...firstFrameFailures(reading),
+    ...firstFrameFailures(recipe, reading),
     ...cutFailures(recipe.design.cuts, reading.cuts),
     ...soundFailures(recipe, reading),
     ...lastFrameFailures(recipe, reading),

@@ -31,7 +31,7 @@ function endPrompt(effect: string): string {
 }
 
 describe("the effects engine request", () => {
-  it("fits the photo, makes the pull back's last frame and renders between the two with its sound", async () => {
+  it("fits the photo, makes the orbit view it opens on and descends to the photo with its sound", async () => {
     const request = requestFor(
       {
         effect: "pull-back-to-space",
@@ -61,10 +61,10 @@ describe("the effects engine request", () => {
       "351": { inputs: { input: ["616", 0] } },
       "356": { inputs: { width: 352, height: 640, length: 241 } },
       "366": { inputs: { frames_number: 241, frame_rate: 24 } },
-      "357": { inputs: { image: ["350", 0], strength: 0.7 } },
-      "349": { inputs: { image: ["350", 0], strength: 1 } },
-      "460": { inputs: { image: ["627", 0], frame_idx: -1, strength: 0.9 } },
-      "463": { inputs: { image: ["627", 0], frame_idx: -1, strength: 0.9 } },
+      "357": { inputs: { image: ["627", 0], strength: 0.7 } },
+      "349": { inputs: { image: ["627", 0], strength: 1 } },
+      "460": { inputs: { image: ["350", 0], frame_idx: -1, strength: 0.9 } },
+      "463": { inputs: { image: ["350", 0], frame_idx: -1, strength: 0.9 } },
       "380": { inputs: { width: 720, height: 1280, crop: "center" } },
       "370": { inputs: { images: ["380", 0], audio: ["358", 0] } },
     })

@@ -104,9 +104,9 @@ describe("the effect recipes", () => {
 
   it("fits the photo and makes the last frame with the image edit model before the video", () => {
     const workflow = workflowOf(
-      effectGraph(fileGraph(), recipeOf("pull-back-to-space"))
+      effectGraph(fileGraph(), recipeOf("push-into-eye"))
     )
-    const recipe = recipeOf("pull-back-to-space")
+    const recipe = recipeOf("push-into-eye")
     expect(workflow).toMatchObject({
       "605": { inputs: { image: ["395", 0] } },
       "610": {
@@ -114,12 +114,28 @@ describe("the effect recipes", () => {
       },
       "620": { inputs: { image1: ["616", 0] } },
       "351": { inputs: { input: ["616", 0] } },
+      "357": { inputs: { image: ["350", 0] } },
+      "349": { inputs: { image: ["350", 0] } },
       "460": { inputs: { image: ["627", 0] } },
       "463": { inputs: { image: ["627", 0] } },
       "380": { inputs: { image: ["374", 0], crop: "center" } },
       "370": { inputs: { images: ["380", 0], audio: [soundNode, 0] } },
       "75": { inputs: { format: "mp4", "format.codec": "h264" } },
     })
+  })
+
+  it("opens a look that lands on the photo on its edited frame, and guides its last frame with the photo", () => {
+    const recipe = recipeOf("pull-back-to-space")
+    const workflow = workflowOf(effectGraph(fileGraph(), recipe))
+    expect(recipe.photoFrame).toBe("last")
+    expect(workflow).toMatchObject({
+      "620": { inputs: { image1: ["616", 0] } },
+      "357": { inputs: { image: ["627", 0], strength: 0.7 } },
+      "349": { inputs: { image: ["627", 0], strength: 1 } },
+      "460": { inputs: { image: ["350", 0], frame_idx: -1 } },
+      "463": { inputs: { image: ["350", 0], frame_idx: -1 } },
+    })
+    expect(brokenLinks(workflow)).toEqual([])
   })
 
   it("removes the end-frame nodes and the crop guides when a look has neither an end frame nor a hold", () => {

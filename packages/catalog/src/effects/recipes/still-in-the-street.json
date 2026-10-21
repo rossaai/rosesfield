@@ -28,6 +28,7 @@
     }
   },
   "prompt": "One shot with a still camera. The person holds their exact pose and does not move at all. Around them the world keeps moving from the first second: people walk past, a van drives by, a worker pushes a cart of boxes, and objects appear around them.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
     "prompt": "The same person in the exact same pose, with new people, a van and boxes around them that were not there before.",

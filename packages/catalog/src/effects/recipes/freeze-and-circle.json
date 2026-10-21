@@ -34,6 +34,7 @@
     }
   },
   "prompt": "Shot one: time stops in a roadside diner. The person sits still at a red booth with a milkshake. A waitress holds a coffee pot mid-pour. Coffee, plates, bacon and eggs hang frozen in the air. The camera circles the person slowly and steadily, then settles. Cut. Shot two, the last two seconds: a calm close-up of the person's face as they sip the milkshake through a straw.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
     "prompt": "A close-up of the same person's face sipping a milkshake through a straw in the diner, soft warm light.",

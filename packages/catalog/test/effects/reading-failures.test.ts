@@ -78,6 +78,13 @@ describe("a run's video reading held against its look's criteria", () => {
     expect(failuresOf("many-copies", { firstFrameLuma: 18 })).toEqual([])
   })
 
+  it("names a black start of a look that opens on its edited frame and lands on the photo", () => {
+    expect(failuresOf("pull-back-to-space", { firstFrameLuma: 4 })).toEqual([
+      "first frame: luma 4, a black start against the look's opening frame",
+    ])
+    expect(failuresOf("pull-back-to-space", {})).toEqual([])
+  })
+
   it("names a last frame brighter than the look's black end", () => {
     expect(failuresOf("push-into-eye", { lastFrameLuma: 40 })).toEqual([
       "last frame: luma 40, against at most 17.5",

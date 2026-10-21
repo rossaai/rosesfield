@@ -58,7 +58,7 @@ Lightricks' LTX 2.5 files are gated on Hugging Face, so their SHA256 digests are
 
 ## The effects
 
-Each effect is a recipe kept as data in [`packages/catalog/src/effects/recipes/`](../../packages/catalog/src/effects/recipes/). A recipe holds its prompt, its end-frame prompt and strength, its hold strength, its adapter, which is always none, and its fixed length of 5 to 15 seconds. Its design holds the unit and the family of the reference reading it is designed from, the fit prompt, the set piece, the cut windows, the last frame, the sound bed with its loudness band and true peak, and the encode.
+Each effect is a recipe kept as data in [`packages/catalog/src/effects/recipes/`](../../packages/catalog/src/effects/recipes/). A recipe holds its prompt, where the photo sits, its end-frame prompt and strength, its hold strength, its adapter, which is always none, and its fixed length of 5 to 15 seconds. Its design holds the unit and the family of the reference reading it is designed from, the fit prompt, the set piece, the cut windows, the last frame, the sound bed with its loudness band and true peak, and the encode.
 
 A recipe passes only with the proof of one run: a gate run of the look's criteria list that held its reference outputs and refused one planted output, a judge that wrote none of its inputs and held the run against every criterion that applies, a reading of the file inside the recipe's length, pixel area, cut windows, loudness band and last frame, with a first frame whose mean luma sits above the black floor of 17.5, so a run that starts black does not pass, and the row of that run in the run ledger, [`runs.json`](../../packages/catalog/src/effects/runs.json), with the same effect, graph, seed, resolution and shape and the verdict kept. Every run that made a kept or a refused output is a row of that ledger with its effect, the hash of its graph, the hash of its photo, its seed, resolution and shape, the balance before and after it, and the judge's verdict with the criteria it failed. The catalog refuses a row that starts or ends under 2,000 credits, and a passed recipe that lacks any of these, and Effects offers only the passed recipes. While none has passed, Effects takes no run.
 
@@ -67,11 +67,16 @@ A recipe passes only with the proof of one run: a gate run of the look's criteri
 | `none` | no end frame. The video runs on the prompt and the frame 0 lock |
 | `edit` | Qwen Image Edit 2511 edits the fitted photo into the effect's last frame |
 
+| Photo frame | What the graph does |
+|---|---|
+| `first` | the fitted photo is locked at frame 0, and the edited frame guides the last frame |
+| `last` | the edited frame is locked at frame 0, and the fitted photo guides the last frame, so the clip lands on the photo. Earth Zoom, the recipe `pull-back-to-space`, opens in orbit and lands on the person, as its reference does. Such a recipe has an edited frame and holds no subject |
+
 ## What every run does
 
 1. It fits your photo to the chosen shape with Qwen Image Edit 2511 in 20 steps, nodes 600 to 616, at about one megapixel. The fit prompt asks for new matching content at the added edges, with no bars.
 2. It makes the effect's last frame from the fitted photo with the same model, nodes 620 to 627, at the fitted size, when the recipe has one.
-3. It locks the fitted photo at frame 0 with `LTXVImgToVideoInplace`: at strength 0.7 in the first stage, node 357, and at 1.0 in the second, node 349.
+3. It locks the fitted photo at frame 0 with `LTXVImgToVideoInplace`, or the edited frame when the recipe lands on the photo: at strength 0.7 in the first stage, node 357, and at 1.0 in the second, node 349.
 4. It makes a matte of the subject with the core BiRefNet nodes `LoadBackgroundRemovalModel` and `RemoveBackground`, nodes 410 to 412, when the recipe holds the subject.
 5. It renders the shot in two stages. The last frame is an `LTXVAddGuide` guide at the last frame, nodes 460 and 463. The photo is a second guide at the last frame with the subject matte as its `attention_mask`, nodes 461 and 464, so the subject holds while the scene changes. `LTXVCropGuides` removes the guide frames after each stage, nodes 462 and 465.
 6. It decodes the sound with node 358 when the recipe has a sound bed, and removes it when the look is silent.
@@ -82,6 +87,7 @@ A recipe passes only with the proof of one run: a gate run of the look's criteri
 The catalog's [`effect-graph.ts`](../../packages/catalog/src/effects/comfy/effect-graph.ts) derives each recipe's graph from this file:
 
 - It writes the recipe's prompt on node 501, its sound line on node 503, its fit prompt on node 610 and its length on nodes 356 and 366.
+- A recipe whose photo frame is `last` reads the edited frame, node 627, in the frame 0 locks 357 and 349, and the fitted photo, node 350, in the last-frame guides 460 and 463.
 - An effect with no end frame removes nodes 620 to 627 and the guides 460 and 463, and links the next node to what the guide read.
 - An effect with no hold removes the guides 461 and 464 and the matte nodes 410 to 412.
 - An effect with no guide at all removes the crop nodes 462 and 465.

@@ -28,6 +28,7 @@
     }
   },
   "prompt": "One unbroken shot that never stops moving. The camera holds the person's face for a moment, then pushes straight in toward one eye. The eye fills the frame, then the iris with its fine fibres, then the black pupil. The camera keeps moving into the pupil until the whole frame is black for the last half second.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
     "prompt": "An extreme close-up inside the person's own eye: the black pupil fills the whole frame, pure black at every edge.",

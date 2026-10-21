@@ -28,6 +28,7 @@
     }
   },
   "prompt": "One unbroken shot with a still camera. Soon after the start, each person begins to melt slowly. Their body and clothes soften and run down into a flat, glossy liquid pool on the ground where they stood, in the colours of their clothes. Their cap, bag, shoes or anything they held drop and rest on the pool. The place behind them does not change. The melt keeps going until the last frame.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
     "prompt": "The same place with the person gone: a flat glossy pool on the ground in the colours of their clothes, with their worn and held items resting on it.",

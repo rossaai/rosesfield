@@ -96,6 +96,8 @@ export const effectProof = z.strictObject({
   reading: videoReading,
 })
 
+export const photoFrameValues = ["first", "last"] as const
+
 export const runVerdictValues = ["kept", "refused"] as const
 
 export const effectRun = z
@@ -151,12 +153,27 @@ export const effectRecipe = z
     passed: z.boolean(),
     design: effectDesign,
     prompt: z.string().min(1).max(1200),
+    photoFrame: z.enum(photoFrameValues),
     endFrame,
     hold: strength.nullable(),
     adapter: adapter.nullable(),
     seconds: z.number().int().min(5).max(15),
     preview: preview.nullable(),
     proof: effectProof.nullable(),
+  })
+  .refine(
+    (recipe) =>
+      recipe.photoFrame === "first" || recipe.endFrame.source === "edit",
+    {
+      message:
+        "A look that lands on the photo opens on its edited frame, so it has one",
+      path: ["endFrame"],
+    }
+  )
+  .refine((recipe) => recipe.photoFrame === "first" || recipe.hold === null, {
+    message:
+      "A look that lands on the photo already guides its last frame with the photo, so it holds no subject",
+    path: ["hold"],
   })
   .refine((recipe) => recipe.passed === (recipe.preview !== null), {
     message: "A passed effect carries the run it passed with, and only it",

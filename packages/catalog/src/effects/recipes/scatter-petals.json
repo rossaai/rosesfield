@@ -34,6 +34,7 @@
     }
   },
   "prompt": "One shot with a still camera. For the first one to two seconds every person holds perfectly still. Then, in an instant, their bodies vanish and their empty clothes and anything they held drop straight down and land on the ground or seat below. The clothes lie still. Nobody comes back.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
     "prompt": "The same place with no person in it: their empty clothes lie on the ground where they stood.",
