@@ -304,6 +304,7 @@ describe("the keyframe facts beside the graph Storyboard sends", () => {
       const body = bodyOf(3, extra)
       const { workflow } = await submit(body, 9)
       const facts = keyframesOf({
+        appId: "storyboard",
         inputs: startRunBodyFor(definition).parse(body).inputs,
         count: 3,
         seed: 9,

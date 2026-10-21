@@ -38,7 +38,13 @@ function runOf(
   scenes.slice(0, count).forEach((scene, index) => {
     inputs[`scene${index + 1}`] = scene
   })
-  return { inputs, count, seed, outputs: outputs.slice(0, count) }
+  return {
+    appId: "storyboard",
+    inputs,
+    count,
+    seed,
+    outputs: outputs.slice(0, count),
+  }
 }
 
 describe("the facts of each Storyboard keyframe", () => {
@@ -94,6 +100,12 @@ describe("the facts of each Storyboard keyframe", () => {
     expect(keyframeOf(run, outputs[2] ?? "")?.number).toBe(3)
     expect(keyframeOf(run, outputs[2] ?? "")?.anchor.kind).toBe("keyframe")
     expect(keyframeOf(run, referenceId)).toBeNull()
+  })
+
+  it("finds no keyframe in a run of another app", () => {
+    const run = { ...runOf(3, {}), appId: "image" }
+    expect(keyframesOf(run)).toEqual([])
+    expect(keyframeOf(run, outputs[0] ?? "")).toBeNull()
   })
 
   it("leaves the asset of a keyframe that has not landed empty", () => {

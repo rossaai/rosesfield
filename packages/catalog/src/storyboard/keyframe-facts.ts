@@ -20,7 +20,12 @@ export type KeyframeFacts = {
   anchor: KeyframeAnchor
 }
 
-export type KeyframeRun = Pick<Run, "inputs" | "count" | "seed" | "outputs">
+export type KeyframeRun = Pick<
+  Run,
+  "appId" | "inputs" | "count" | "seed" | "outputs"
+>
+
+export const storyboardAppId = "storyboard"
 
 function textOf(value: unknown): string {
   return typeof value === "string" ? value.trim() : ""
@@ -49,6 +54,9 @@ function anchorOf(run: KeyframeRun, number: number): KeyframeAnchor {
 }
 
 export function keyframesOf(run: KeyframeRun): KeyframeFacts[] {
+  if (run.appId !== storyboardAppId) {
+    return []
+  }
   const look = textOf(run.inputs.look)
   const count = Math.min(Math.max(run.count, 1), maxScenes)
   return sceneNumbers.slice(0, count).map((number) => {

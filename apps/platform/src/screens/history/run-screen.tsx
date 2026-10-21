@@ -1,3 +1,4 @@
+import { keyframesOf } from "@rosesfield/catalog/storyboard"
 import type { Run } from "@rosesfield/contract"
 import { Button, IconButton } from "@rosesfield/ui/components/button"
 import {
@@ -32,6 +33,7 @@ import { RunInputs } from "@/pieces/run/run-inputs"
 import { RunOutputs } from "@/pieces/run/run-outputs"
 import { ScreenState } from "@/pieces/screen-state"
 import { ScreenHeader } from "@/shell/screen-header"
+import { KeyframePrompts } from "@/studio/storyboard/keyframe-info"
 
 function UseInputs({ run }: { run: Run }): ReactElement {
   return (
@@ -159,6 +161,7 @@ function Section({
 
 function RunDetail({ run }: { run: Run }): ReactElement {
   const end = useContentEnd()
+  const keyframes = keyframesOf(run)
   return (
     <div className="flex min-h-full flex-col">
       <ScreenHeader
@@ -176,6 +179,11 @@ function RunDetail({ run }: { run: Run }): ReactElement {
         <Section title={t("history.run.outputs")}>
           <RunOutputs run={run} />
         </Section>
+        {keyframes.length === 0 ? null : (
+          <Section title={t("viewer.label.prompt")}>
+            <KeyframePrompts keyframes={keyframes} />
+          </Section>
+        )}
         <Section title={t("history.run.inputs")}>
           <RunInputs app={findCatalogApp(run.appId)} run={run} />
         </Section>
