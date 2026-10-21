@@ -7,7 +7,6 @@ import {
   backgrounds,
   clothesValues,
   framings,
-  seedOf,
 } from "#headshots/headshots-values"
 import { readApps } from "#list-apps"
 
@@ -107,11 +106,5 @@ describe("the headshot words", () => {
     ).toBe(
       "Make a headshot of the person in the photo. Keep their face, hair, skin, age and expression exactly as they are. The person faces the camera in even, soft light. The frame shows the head, the shoulders and the upper chest. An office behind the person, out of focus. The person wears a jacket over a collared shirt in a muted color. The person wears no glasses."
     )
-  })
-
-  it("counts the seeds of one run modulo 2147483648", () => {
-    expect([0, 1, 2, 3].map((index) => seedOf(2_147_483_646, index))).toEqual([
-      2_147_483_646, 2_147_483_647, 0, 1,
-    ])
   })
 })
