@@ -1,3 +1,5 @@
+import type { Tool, ToolCall } from "@earendil-works/pi-ai"
+import { validateToolArguments } from "@earendil-works/pi-ai/utils/validation"
 import type {
   ToolExecutionApi,
   ToolExecutionResult,
@@ -14,11 +16,12 @@ import {
 } from "@rosesfield/catalog/storyboard"
 import {
   type AppDefinition,
+  errorEnvelopeOf,
   type RunRequest,
   runRequest,
 } from "@rosesfield/contract"
 import { RunInputInvalidError } from "@rosesfield/generation"
-import { appIdFormat, runIdFormat } from "@rosesfield/kernel"
+import { appIdFormat, ProjectError, runIdFormat } from "@rosesfield/kernel"
 import { z } from "zod"
 import type { Proposal } from "#agent.contract"
 import { agentCopy } from "#copy.en"
@@ -60,59 +63,132 @@ function schemaOf(
     : publishedInputOf(app, forms)
 }
 
+function issuesOf(schema: z.ZodType<unknown>, args: unknown): string[] {
+  const result = schema.safeParse(args)
+  return result.success
+    ? []
+    : result.error.issues.map(
+        (issue) => `${issue.path.join(".") || "body"}: ${issue.message}`
+      )
+}
+
+function refusalTextOf(error: ProjectError): string {
+  return JSON.stringify({ ...errorEnvelopeOf(error), message: error.message })
+}
+
+function checkedArguments(
+  app: AppDefinition,
+  tool: Tool,
+  schema: z.ZodType<unknown>,
+  args: unknown
+): unknown {
+  try {
+    if (!isRecord(args)) {
+      throw new Error("The arguments are not an object")
+    }
+    const call: ToolCall = {
+      type: "toolCall",
+      id: tool.name,
+      name: tool.name,
+      arguments: jsonBody.parse(args),
+    }
+    return validateToolArguments(tool, call)
+  } catch (error) {
+    const found = issuesOf(schema, args)
+    const issues =
+      found.length > 0
+        ? found
+        : [error instanceof Error ? error.message : String(error)]
+    throw new Error(
+      refusalTextOf(new RunInputInvalidError({ appId: app.id, issues }))
+    )
+  }
+}
+
+function refusalOf(error: ProjectError): ToolExecutionResult {
+  return {
+    output: [{ type: "text", text: refusalTextOf(error) }],
+    isError: true,
+  }
+}
+
 export function appTool(options: AppToolOptions): ToolRegistration {
   const { app, handlers } = options
   const schema = schemaOf(app, options.forms ?? [])
   const wait = options.wait ?? timerWait
-  return {
+  const tool: Tool = {
     name: app.id,
     description: agentCopy.tools.app(app),
     parameters: toolParameters(schema),
+  }
+  return {
+    ...tool,
     replay: "unsafe",
+    prepareArguments: (args: unknown) =>
+      checkedArguments(app, tool, schema, args),
     execute: async (args: unknown, api, context) => {
-      const settings = await api.snapshot(
-        conversationSettings,
-        api.conversationId,
-        context
-      )
-      if ((settings?.runApproval ?? "ask") === "ask") {
-        const request = parseRequest(app, schema, args)
-        return propose(
-          { app, request, body: jsonBody.parse(args) },
-          api,
-          context
-        )
-      }
-      const idempotencyKey = await api.memo(
-        idempotencyMemo,
-        `agent-${crypto.randomUUID()}`,
-        context
-      )
-      if (isKeyframeChain(app)) {
-        const runs = await keyframeRunsOf({
-          appId: app.id,
-          request: parseRequest(app, schema, args),
-          key: idempotencyKey,
-          handlers: handlers(),
-          wait,
-          signal: context.abortSignal,
-        })
-        return {
-          output: jsonOutput({ runs }),
-          details: { runIds: runs.flatMap((run) => run?.id ?? []) },
+      try {
+        return await runApp({ app, schema, handlers, wait }, args, api, context)
+      } catch (error) {
+        if (error instanceof ProjectError) {
+          return refusalOf(error)
         }
-      }
-      const started = await handlers().startRun.execute({
-        appId: app.id,
-        body: args,
-        idempotencyKey,
-        seed: null,
-      })
-      return {
-        output: jsonOutput(started),
-        details: { runId: started.run.id },
+        throw error
       }
     },
+  }
+}
+
+type AppRun = {
+  app: AppDefinition
+  schema: z.ZodType<unknown>
+  handlers: () => KeyframeHandlers
+  wait: RunWait
+}
+
+async function runApp(
+  { app, schema, handlers, wait }: AppRun,
+  args: unknown,
+  api: ToolExecutionApi,
+  context: PiContext
+): Promise<ToolExecutionResult> {
+  const request = parseRequest(app, schema, args)
+  const settings = await api.snapshot(
+    conversationSettings,
+    api.conversationId,
+    context
+  )
+  if ((settings?.runApproval ?? "ask") === "ask") {
+    return propose({ app, request, body: jsonBody.parse(args) }, api, context)
+  }
+  const idempotencyKey = await api.memo(
+    idempotencyMemo,
+    `agent-${crypto.randomUUID()}`,
+    context
+  )
+  if (isKeyframeChain(app)) {
+    const runs = await keyframeRunsOf({
+      appId: app.id,
+      request,
+      key: idempotencyKey,
+      handlers: handlers(),
+      wait,
+      signal: context.abortSignal,
+    })
+    return {
+      output: jsonOutput({ runs }),
+      details: { runIds: runs.flatMap((run) => run?.id ?? []) },
+    }
+  }
+  const started = await handlers().startRun.execute({
+    appId: app.id,
+    body: args,
+    idempotencyKey,
+    seed: null,
+  })
+  return {
+    output: jsonOutput(started),
+    details: { runId: started.run.id },
   }
 }
 
@@ -180,10 +256,10 @@ function parseRequest(
   if (result.success) {
     return requestOf(app, result.data)
   }
-  const issues = result.error.issues.map(
-    (issue) => `${issue.path.join(".") || "body"}: ${issue.message}`
-  )
-  throw new RunInputInvalidError({ appId: app.id, issues })
+  throw new RunInputInvalidError({
+    appId: app.id,
+    issues: issuesOf(schema, args),
+  })
 }
 
 export function proposalOf(record: ProposalRecord): Proposal {

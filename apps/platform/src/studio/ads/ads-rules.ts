@@ -1,15 +1,27 @@
+import { adsHostedInputsOf } from "@rosesfield/catalog/ads"
+import {
+  type CatalogModel,
+  isHostedModelId,
+  type ModelField,
+} from "@rosesfield/catalog/comfy"
 import {
   type AppListing,
   type InputDefinition,
   inputRulesOf,
+  isAppOnly,
+  type Run,
 } from "@rosesfield/contract"
 import { isAssetInput } from "@/catalog/app-facts"
 import {
+  bodyOf,
   type FieldProblem,
   type FieldValue,
   type FormValues,
   problemsOf,
+  type StartRunBodyInput,
+  valuesFromRun,
 } from "@/screens/app/app-form"
+import { hostedDefaults } from "@/screens/app/hosted/hosted-form"
 
 type Inputs = Readonly<Record<string, FieldValue>>
 
@@ -26,7 +38,7 @@ export type AdsProblem = {
 
 export const kindInput = "kind"
 export const modelInput = "model"
-const characterInput = "character"
+export const characterInput = "character"
 const lineCount = 2
 
 function textOf(value: FieldValue): string {
@@ -220,7 +232,63 @@ function promptProblems(app: AppListing, inputs: Inputs): AdsProblem[] {
   return found
 }
 
-function photoProblems(app: AppListing, inputs: Inputs): AdsProblem[] {
+const maskPattern = /mask/i
+
+function hostedPhotoLimitOf(model: CatalogModel): number {
+  const tagged = model.tags.find((tag) => tag.kind === "references")
+  if (tagged?.kind === "references") {
+    return tagged.max
+  }
+  const images = (model.form ?? []).flatMap((field) =>
+    field.kind === "media" &&
+    field.media === "image" &&
+    !maskPattern.test(field.name)
+      ? [field.max]
+      : []
+  )
+  return Math.max(1, ...images)
+}
+
+export function modelPhotoLimitOf(
+  app: AppListing,
+  id: string,
+  model: CatalogModel | undefined
+): number {
+  return model?.kind === "hosted"
+    ? hostedPhotoLimitOf(model)
+    : photoLimitOf(app, id)
+}
+
+function hostedPhotoProblems(
+  app: AppListing,
+  inputs: Inputs,
+  model: CatalogModel | undefined
+): AdsProblem[] {
+  if (model === undefined) {
+    return []
+  }
+  const limit = hostedPhotoLimitOf(model)
+  const sent = photoInputsOf(app).reduce(
+    (total, input) => total + listOf(inputs[input.name]).length,
+    0
+  )
+  return sent > limit ? [tooManyPhotos(app, limit)] : []
+}
+
+function tooManyPhotos(app: AppListing, max: number): AdsProblem {
+  return problem(
+    modelInput,
+    `${app.id}.input.${modelInput}.tooManyPhotos`,
+    "attach",
+    { max }
+  )
+}
+
+function photoProblems(
+  app: AppListing,
+  inputs: Inputs,
+  models: readonly CatalogModel[]
+): AdsProblem[] {
   const required = app.inputs.find(
     (input) => isAssetInput(input) && input.presence === "required"
   )
@@ -233,29 +301,27 @@ function photoProblems(app: AppListing, inputs: Inputs): AdsProblem[] {
       ),
     ]
   }
+  const model = textOf(inputs[modelInput]) || defaultModelOf(app)
+  if (isHostedModelId(model)) {
+    return hostedPhotoProblems(
+      app,
+      inputs,
+      models.find((one) => one.id === model)
+    )
+  }
   const rules = inputRulesOf(app, inputs)
   const dropped = photoInputsOf(app).some(
     (input) =>
       listOf(inputs[input.name]).length > 0 &&
       !rules.some((rule) => rule.input.name === input.name)
   )
-  const model = textOf(inputs[modelInput]) || defaultModelOf(app)
   const allowed =
     rules.find((rule) => rule.input.name === modelInput)?.allowed ?? null
   const isRefused = allowed !== null && !allowed.includes(model)
   if (!dropped && !isRefused) {
     return []
   }
-  return [
-    problem(
-      modelInput,
-      `${app.id}.input.${modelInput}.tooManyPhotos`,
-      "attach",
-      {
-        max: photoLimitOf(app, model),
-      }
-    ),
-  ]
+  return [tooManyPhotos(app, photoLimitOf(app, model))]
 }
 
 function defaultModelOf(app: AppListing): string {
@@ -263,8 +329,23 @@ function defaultModelOf(app: AppListing): string {
   return input?.type === "choice" ? input.default : ""
 }
 
-export function adsProblems(app: AppListing, inputs: Inputs): AdsProblem[] {
-  return [...photoProblems(app, inputs), ...promptProblems(app, inputs)]
+export function adsProblems(
+  app: AppListing,
+  inputs: Inputs,
+  models: readonly CatalogModel[] = []
+): AdsProblem[] {
+  return [
+    ...photoProblems(app, inputs, models),
+    ...promptProblems(app, inputs),
+  ]
+}
+
+export function adsValuesOf(app: AppListing, run: Run): FormValues {
+  const { [modelInput]: model, ...kept } = run.inputs
+  const values = valuesFromRun(app, { ...run, inputs: kept })
+  return typeof model === "string"
+    ? { ...values, inputs: { ...values.inputs, [modelInput]: model } }
+    : values
 }
 
 export function compactedPhotos(
@@ -281,4 +362,49 @@ export function compactedPhotos(
       listOf(inputs[input.name]).join() === (placed[input.name] ?? []).join()
   )
   return isSame ? null : placed
+}
+
+type BodyValue = StartRunBodyInput["inputs"][string]
+
+function filledOf(
+  inputs: Readonly<Record<string, FieldValue>>
+): Record<string, BodyValue> {
+  return Object.fromEntries(
+    Object.entries(inputs).filter(
+      (entry): entry is [string, BodyValue] =>
+        entry[1] !== undefined &&
+        entry[1] !== "" &&
+        !(Array.isArray(entry[1]) && entry[1].length === 0)
+    )
+  )
+}
+
+export function adsHostedBodyOf(
+  app: AppListing,
+  values: FormValues,
+  fields: readonly ModelField[],
+  characterPhoto: string | null,
+  own: StartRunBodyInput
+): StartRunBodyInput {
+  const sent = bodyAppFor(app, values.inputs)
+  const appOnly = bodyOf(
+    { ...sent, inputs: sent.inputs.filter(isAppOnly) },
+    values
+  ).inputs
+  const filled = adsHostedInputsOf({
+    inputs: values.inputs,
+    fields,
+    characterPhoto,
+    aspectRatio: values.aspectRatio,
+    count: values.count,
+  })
+  return {
+    ...own,
+    inputs: {
+      ...filledOf(hostedDefaults(fields, {})),
+      ...own.inputs,
+      ...filled,
+      ...filledOf(appOnly),
+    },
+  }
 }

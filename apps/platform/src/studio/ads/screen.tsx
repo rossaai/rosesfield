@@ -1,7 +1,8 @@
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { IconButton } from "@rosesfield/ui/components/button"
+import { Chip } from "@rosesfield/ui/components/chip"
 import { PromptBar } from "@rosesfield/ui/components/prompt-bar"
-import { AtSignIcon } from "lucide-react"
+import { AtSignIcon, SlidersHorizontalIcon } from "lucide-react"
 import { type ReactElement, useState } from "react"
 import { characterInputOf, isAssetInput } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
@@ -19,7 +20,7 @@ import {
   inputNote,
   inputPlaceholder,
 } from "@/screens/app/fields/input-copy"
-import { StartProblem } from "@/screens/app/generate-foot"
+import { StartProblem, submitPriceOf } from "@/screens/app/generate-foot"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { AdsModelChip, AdsModelSettings } from "@/studio/ads/ads-model-settings"
 import { photoMaxOf, photoRoomOf, promptInputsOf } from "@/studio/ads/ads-rules"
@@ -119,14 +120,39 @@ function Chips({
   )
 }
 
+function InputsChip({ onOpen }: { onOpen: () => void }): ReactElement {
+  return (
+    <Chip icon={<SlidersHorizontalIcon />} onClick={onOpen}>
+      {t("app.inputs.open")}
+    </Chip>
+  )
+}
+
+type BarPlacement = { place: BarPlace; onInputs: () => void }
+
+function barChips(
+  app: AppListing,
+  state: AdsScreenState,
+  placement: BarPlacement
+): ReactElement | undefined {
+  switch (placement.place) {
+    case "phone":
+      return <BarChips chips={<InputsChip onOpen={placement.onInputs} />} />
+    case "sheet":
+      return undefined
+    case "dock":
+      return <Chips app={app} state={state} />
+  }
+}
+
 function Bar({
   app,
   state,
-  place,
+  placement,
 }: {
   app: AppListing
   state: AdsScreenState
-  place: BarPlace
+  placement: BarPlacement
 }): ReactElement {
   const tray = useBarTray(app, state.form)
   const [photoMessage, setPhotoMessage] = useState<string | null>(null)
@@ -168,10 +194,9 @@ function Bar({
             onMessage={setPhotoMessage}
           />
         }
-        chips={
-          place === "sheet" ? undefined : <Chips app={app} state={state} />
-        }
+        chips={barChips(app, state, placement)}
         price={state.start.price}
+        {...submitPriceOf(state.start)}
         busy={state.start.isPending || tray.isUploading}
       />
     </div>
@@ -194,14 +219,19 @@ function barPlaceholder(
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const state = useAdsScreen(app, seeds)
   const sheet = useState(false)
+  const [, setOpen] = sheet
+  const onInputs = (): void => setOpen(true)
   return (
     <BarFrame
       app={app}
       hasRuns={state.hasRuns}
       onUseInputs={state.useInputs}
       sheet={sheet}
+      phone="dock"
       settings={<AdsModelSettings app={app} state={state} chips={[]} />}
-      bar={(place) => <Bar app={app} state={state} place={place} />}
+      bar={(place) => (
+        <Bar app={app} state={state} placement={{ place, onInputs }} />
+      )}
     />
   )
 }

@@ -1,3 +1,4 @@
+import { adsRunPromptOf } from "@rosesfield/catalog/ads"
 import { keyframeOf } from "@rosesfield/catalog/storyboard"
 import type { Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
@@ -39,6 +40,10 @@ export function inputAssetIdsOf(run: Run): string[] {
 }
 
 export function promptOf(run: Run): string | null {
+  const shown = adsRunPromptOf(run)
+  if (shown !== null) {
+    return shown
+  }
   const app = findCatalogApp(run.appId)
   const input = app === null ? null : promptInputOf(app)
   return input === null

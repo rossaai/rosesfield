@@ -1,3 +1,4 @@
+import { adsRunPromptOf } from "@rosesfield/catalog/ads"
 import { keyframesOf } from "@rosesfield/catalog/storyboard"
 import type { Run } from "@rosesfield/contract"
 import { Button, IconButton } from "@rosesfield/ui/components/button"
@@ -162,6 +163,7 @@ function Section({
 function RunDetail({ run }: { run: Run }): ReactElement {
   const end = useContentEnd()
   const keyframes = keyframesOf(run)
+  const prompt = adsRunPromptOf(run)
   return (
     <div className="flex min-h-full flex-col">
       <ScreenHeader
@@ -182,6 +184,16 @@ function RunDetail({ run }: { run: Run }): ReactElement {
         {keyframes.length === 0 ? null : (
           <Section title={t("viewer.label.prompt")}>
             <KeyframePrompts keyframes={keyframes} />
+          </Section>
+        )}
+        {prompt === null ? null : (
+          <Section title={t("viewer.label.prompt")}>
+            <p
+              data-slot="run-prompt"
+              className="whitespace-pre-wrap text-body"
+            >
+              {prompt}
+            </p>
           </Section>
         )}
         <Section title={t("history.run.inputs")}>

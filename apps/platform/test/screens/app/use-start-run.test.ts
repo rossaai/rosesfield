@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { formatNumber } from "@/copy/format"
+import { formatAmount, formatNumber } from "@/copy/format"
 import { t } from "@/copy/t"
 import { priceLabelsOf } from "@/screens/app/use-start-run"
 
@@ -18,6 +18,24 @@ describe("the price Generate shows", () => {
       price: t("run.price.unknown"),
       priceValue: null,
       priceName: null,
+    })
+  })
+
+  it("says Price unknown for a price of 0, and never 0", () => {
+    expect(priceLabelsOf(0, false)).toEqual({
+      price: t("run.price.unknown"),
+      priceValue: null,
+      priceName: null,
+    })
+  })
+
+  it("shows a price below one hundredth of a credit with its own digits, not as 0", () => {
+    const amount = formatAmount(0.004)
+    expect(amount).not.toBe(formatNumber(0))
+    expect(priceLabelsOf(0.004, false)).toEqual({
+      price: "",
+      priceValue: amount,
+      priceName: t("run.generate.priced", { amount }),
     })
   })
 
