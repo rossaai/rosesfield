@@ -8,11 +8,11 @@ const png = readFileSync(
 
 type Stop = { name: string; problem: string }
 
-async function startDemoRun(): Promise<void> {
-  const started = await fetch(`${gatewayOrigin}/api/apps/image/runs`, {
+async function startDemoRun(app: string, prompt: string): Promise<void> {
+  const started = await fetch(`${gatewayOrigin}/api/apps/${app}/runs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ inputs: { prompt: "a red rose" } }),
+    body: JSON.stringify({ inputs: { prompt } }),
   })
   const body: { run: { id: string } } = await started.json()
   await expect
@@ -34,12 +34,18 @@ async function open(page: Page, path: string): Promise<void> {
 
 type Edges = { left: number; top: number; right: number; bottom: number }
 
-type Seen = {
-  isNew: boolean
-  name: string
-  ring: Edges | null
-  clips: ReadonlyArray<{ slot: string; edges: Edges }>
+type Box = { slot: string; edges: Edges }
+
+type Ring = {
+  edges: Edges
+  band: number
+  inset: number
+  color: string
 }
+
+type Seen = { isNew: boolean; name: string; ring: Ring | null }
+
+type Boxes = { clips: ReadonlyArray<Box>; layers: ReadonlyArray<Box> }
 
 async function readFocus(page: Page): Promise<Seen | null> {
   return await page.evaluate(() => {
@@ -63,8 +69,38 @@ async function readFocus(page: Page): Promise<Seen | null> {
     while (ringed !== null && !drawn(ringed)) {
       ringed = ringed.parentElement
     }
-    const clips: Array<{ slot: string; edges: Edges }> = []
-    for (let at = ringed?.parentElement; at; at = at.parentElement) {
+    for (const host of document.querySelectorAll("[data-ring-host]")) {
+      host.removeAttribute("data-ring-host")
+    }
+    if (ringed === null) {
+      return { isNew, name: name ?? "", ring: null }
+    }
+    ringed.setAttribute("data-ring-host", "")
+    const style = getComputedStyle(ringed)
+    const band = Number.parseFloat(style.outlineWidth)
+    const reach = Number.parseFloat(style.outlineOffset) + band
+    const box = ringed.getBoundingClientRect()
+    const edges = {
+      left: box.left - reach,
+      top: box.top - reach,
+      right: box.right + reach,
+      bottom: box.bottom + reach,
+    }
+    const inset = Number.parseFloat(style.borderTopLeftRadius) + reach + band
+    const ring = { edges, band, inset, color: style.outlineColor }
+    return { isNew, name: name ?? "", ring }
+  })
+}
+
+async function readBoxes(page: Page): Promise<Boxes> {
+  return await page.evaluate(() => {
+    const host = document.querySelector("[data-ring-host]")
+    const slotOf = (at: Element): string =>
+      at.getAttribute("data-slot") ?? at.tagName
+    const clips: Box[] = []
+    const scrollers: DOMRect[] = []
+    const inside: Element[] = []
+    for (let at = host?.parentElement; at; at = at.parentElement) {
       const style = getComputedStyle(at)
       if (style.overflowX !== "visible" || style.overflowY !== "visible") {
         const box = at.getBoundingClientRect()
@@ -72,45 +108,161 @@ async function readFocus(page: Page): Promise<Seen | null> {
         const top = box.top + Number.parseFloat(style.borderTopWidth)
         const right = left + at.clientWidth
         const bottom = top + at.clientHeight
-        const slot = at.getAttribute("data-slot") ?? at.tagName
-        clips.push({ slot, edges: { left, top, right, bottom } })
+        clips.push({ slot: slotOf(at), edges: { left, top, right, bottom } })
+        scrollers.push(box)
+        inside.push(at)
       }
     }
-    if (ringed === null) {
-      return { isNew, name: name ?? "", ring: null, clips }
+    const isLayer = (at: Element): boolean => {
+      const style = getComputedStyle(at)
+      return (
+        ["absolute", "fixed", "sticky"].includes(style.position) &&
+        style.visibility !== "hidden" &&
+        style.opacity !== "0" &&
+        style.clipPath === "none"
+      )
     }
-    const style = getComputedStyle(ringed)
-    const reach =
-      Number.parseFloat(style.outlineOffset) +
-      Number.parseFloat(style.outlineWidth)
-    const box = ringed.getBoundingClientRect()
-    const ring = {
-      left: box.left - reach,
-      top: box.top - reach,
-      right: box.right + reach,
-      bottom: box.bottom + reach,
+    const layers: Box[] = []
+    for (const at of document.querySelectorAll("#root *")) {
+      const box = at.getBoundingClientRect()
+      const isOverScroller = scrollers.some(
+        (scroller, index) =>
+          !inside[index]?.contains(at) &&
+          box.left < scroller.right &&
+          scroller.left < box.right &&
+          box.top < scroller.bottom &&
+          scroller.top < box.bottom
+      )
+      const isApart = host !== null && !at.contains(host) && !host.contains(at)
+      if (box.width > 0 && box.height > 0 && isApart && isOverScroller) {
+        if (isLayer(at)) {
+          const { left, top, right, bottom } = box
+          layers.push({ slot: slotOf(at), edges: { left, top, right, bottom } })
+        }
+      }
     }
-    return { isNew, name: name ?? "", ring, clips }
+    return { clips, layers }
   })
 }
 
-function problemOf(seen: Seen): string {
-  const { ring } = seen
+function cutSides(ring: Edges, edges: Edges): string[] {
+  return [
+    ring.left < edges.left - 0.5 ? "left" : "",
+    ring.right > edges.right + 0.5 ? "right" : "",
+    ring.top < edges.top - 0.5 ? "top" : "",
+    ring.bottom > edges.bottom + 0.5 ? "bottom" : "",
+  ].filter((side) => side !== "")
+}
+
+type Side = "left" | "right" | "top" | "bottom"
+
+type Point = readonly [number, number]
+
+function sidePoints(ring: Ring, side: Side, over: Edges): Point[] {
+  const { edges, band, inset } = ring
+  const points: Point[] = []
+  const isRow = side === "top" || side === "bottom"
+  const from = isRow
+    ? Math.max(edges.left + inset, over.left)
+    : Math.max(edges.top + inset, over.top)
+  const to = isRow
+    ? Math.min(edges.right - inset, over.right)
+    : Math.min(edges.bottom - inset, over.bottom)
+  const across = {
+    left: edges.left + band / 2,
+    right: edges.right - band / 2,
+    top: edges.top + band / 2,
+    bottom: edges.bottom - band / 2,
+  }[side]
+  const isInBand = isRow
+    ? across > over.top && across < over.bottom
+    : across > over.left && across < over.right
+  for (let along = from; isInBand && along <= to; along += 2) {
+    points.push(isRow ? [along, across] : [across, along])
+  }
+  return points
+}
+
+async function colorsAt(
+  page: Page,
+  points: ReadonlyArray<Point>
+): Promise<string[]> {
+  const size = page.viewportSize() ?? { width: 0, height: 0 }
+  const clip = { x: 0, y: 0, width: size.width, height: size.height }
+  const png = await page.screenshot({ clip, scale: "css" })
+  return await page.evaluate(
+    async ({ data, at }) => {
+      const bytes = Uint8Array.from(atob(data), (char) => char.charCodeAt(0))
+      const bitmap = await createImageBitmap(
+        new Blob([bytes], { type: "image/png" })
+      )
+      const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
+      const context = canvas.getContext("2d")
+      if (context === null) {
+        throw new Error("no 2d context")
+      }
+      context.drawImage(bitmap, 0, 0)
+      return at.map(([x, y]) => {
+        const [r, g, b] = context.getImageData(
+          Math.floor(x),
+          Math.floor(y),
+          1,
+          1
+        ).data
+        return `rgb(${r}, ${g}, ${b})`
+      })
+    },
+    { data: png.toString("base64"), at: points }
+  )
+}
+
+function channels(color: string): number[] {
+  return (color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number)
+}
+
+function isNear(color: string, wanted: string): boolean {
+  const one = channels(color)
+  const two = channels(wanted)
+  const distance = Math.hypot(...one.map((value, at) => value - (two[at] ?? 0)))
+  return distance < 70
+}
+
+async function coveredSides(
+  page: Page,
+  ring: Ring,
+  over: Edges
+): Promise<Side[]> {
+  const sides: Side[] = ["left", "right", "top", "bottom"]
+  const hidden: Side[] = []
+  for (const side of sides) {
+    const points = sidePoints(ring, side, over)
+    if (points.length > 0) {
+      const colors = await colorsAt(page, points)
+      const seen = colors.filter((color) => isNear(color, ring.color))
+      if (seen.length < colors.length * 0.85) {
+        hidden.push(side)
+      }
+    }
+  }
+  return hidden
+}
+
+async function problemOf(page: Page, ring: Ring | null): Promise<string> {
   if (ring === null) {
     return "no ring"
   }
-  return seen.clips
-    .map(({ slot, edges }) => {
-      const sides = [
-        ring.left < edges.left - 0.5 ? "left" : "",
-        ring.right > edges.right + 0.5 ? "right" : "",
-        ring.top < edges.top - 0.5 ? "top" : "",
-        ring.bottom > edges.bottom + 0.5 ? "bottom" : "",
-      ].filter((side) => side !== "")
-      return sides.length === 0 ? "" : `${slot} ${sides.join(",")}`
-    })
-    .filter((cut) => cut !== "")
-    .join("; ")
+  const { clips, layers } = await readBoxes(page)
+  const problems = clips
+    .map(({ slot, edges }) => ({ slot, sides: cutSides(ring.edges, edges) }))
+    .filter(({ sides }) => sides.length > 0)
+    .map(({ slot, sides }) => `cut by ${slot} ${sides.join(",")}`)
+  for (const { slot, edges } of layers) {
+    const sides = await coveredSides(page, ring, edges)
+    if (sides.length > 0) {
+      problems.push(`under ${slot} ${sides.join(",")}`)
+    }
+  }
+  return problems.join("; ")
 }
 
 async function walkStops(page: Page, most: number): Promise<Stop[]> {
@@ -126,7 +278,7 @@ async function walkStops(page: Page, most: number): Promise<Stop[]> {
     if (!seen.isNew) {
       break
     }
-    found.push({ name: seen.name, problem: problemOf(seen) })
+    found.push({ name: seen.name, problem: await problemOf(page, seen.ring) })
   }
   return found
 }
@@ -137,11 +289,18 @@ test.beforeAll(async () => {
     headers: { "Content-Type": "image/png" },
     body: png,
   })
-  await startDemoRun()
+  await Promise.all([
+    ...Array.from({ length: 12 }, (_, at) =>
+      startDemoRun("image", `a red rose ${at}`)
+    ),
+    ...Array.from({ length: 4 }, (_, at) =>
+      startDemoRun("video", `a boat on a lake ${at}`)
+    ),
+  ])
 })
 
 for (const path of ["/history", "/library", "/apps/image", "/apps/video"]) {
-  test(`every Tab stop on ${path} draws its whole focus ring, cut by no clipping box`, async ({
+  test(`every Tab stop on ${path} draws its whole focus ring, cut by no clipping box and under no layer`, async ({
     page,
   }) => {
     test.setTimeout(120_000)
