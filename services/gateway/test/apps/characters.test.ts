@@ -32,7 +32,7 @@ import { app } from "../../../../packages/catalog/src/characters/app"
 import { fakeRouter, schemaOf } from "../catalog/router-recordings"
 import { type Harness, harnessFor, jsonInit } from "../harness"
 import { localPorts } from "../local-ports"
-import { pngBytes, start as now } from "../sample-apps"
+import { start as now, pngBytes } from "../sample-apps"
 import { localEnv } from "../server-env"
 
 function charactersApp(): AppDefinition {
@@ -209,9 +209,9 @@ describe("the characters app through the gateway on the demo engine", () => {
       method: "PATCH",
     })
     expect(edited.status).toBe(200)
-    expect(characterResponse.parse(await edited.json()).character).toMatchObject(
-      { notes: "Wears glasses", references }
-    )
+    expect(
+      characterResponse.parse(await edited.json()).character
+    ).toMatchObject({ notes: "Wears glasses", references })
   })
 
   it("makes 4 views of a saved character", async () => {

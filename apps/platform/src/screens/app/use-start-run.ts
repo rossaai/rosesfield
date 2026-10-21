@@ -108,8 +108,7 @@ export function priceLabelsOf(
   credits: number | null,
   isDemo: boolean
 ): Pick<StartRun, "price" | "priceValue" | "priceName"> {
-  const amount =
-    credits === null || credits <= 0 ? null : creditsText(credits)
+  const amount = credits === null || credits <= 0 ? null : creditsText(credits)
   return {
     price: isDemo
       ? t("run.price.demo")

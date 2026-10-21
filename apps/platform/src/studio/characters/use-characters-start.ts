@@ -133,11 +133,7 @@ function useCharactersStart(
     bodyOf(app, form.values),
   ]
   const [first] = bodies
-  const credits = usePrice(
-    app,
-    first ?? null,
-    hosted.keyState
-  )
+  const credits = usePrice(app, first ?? null, hosted.keyState)
   const pressed = useRef<Press | null>(null)
   const start = useMutation({
     mutationFn: async (press: {

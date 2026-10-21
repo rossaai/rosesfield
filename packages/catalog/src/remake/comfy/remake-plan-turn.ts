@@ -1,10 +1,6 @@
 import { z } from "zod"
 import type { ModelTask } from "#comfy/model-tasks"
-import {
-  type FoundShot,
-  remakeLimits,
-  shotSecondsOf,
-} from "#remake/shot-plan"
+import { type FoundShot, remakeLimits, shotSecondsOf } from "#remake/shot-plan"
 import { cameraMoves } from "#video/camera-moves"
 
 export type PlanFrame = {

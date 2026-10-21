@@ -8,10 +8,7 @@ import {
 } from "@rosesfield/contract"
 import type { AppId, AssetId, ProjectError, RunId } from "@rosesfield/kernel"
 import { RunFinishedError } from "#domain/error/run-finished.error"
-import type {
-  EngineSteps,
-  OutputsPerJob,
-} from "#domain/generation-engine.port"
+import type { EngineSteps, OutputsPerJob } from "#domain/generation-engine.port"
 
 export type RunJobStatus =
   | "pending"

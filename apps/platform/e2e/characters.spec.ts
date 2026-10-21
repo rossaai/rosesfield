@@ -83,7 +83,10 @@ test.describe("the traits of Characters on a desktop", () => {
     await page
       .getByRole("button", { name: "Fill every trait at random" })
       .click()
-    await page.getByRole("button", { name: /^Generate/ }).first().click()
+    await page
+      .getByRole("button", { name: /^Generate/ })
+      .first()
+      .click()
     const save = page.getByRole("button", { name: "Save as character" })
     await expect(save.first()).toBeVisible({ timeout: 90_000 })
     await save.first().click()

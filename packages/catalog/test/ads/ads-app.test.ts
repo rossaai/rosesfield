@@ -139,9 +139,9 @@ describe("the Ads definition", () => {
       "qwen-image-edit-2511"
     )
     expect(optionValues("model")).toEqual(["qwen-image-edit-2511"])
-    expect(
-      optionValues("model").filter((value) => /wan/i.test(value))
-    ).toEqual([])
+    expect(optionValues("model").filter((value) => /wan/i.test(value))).toEqual(
+      []
+    )
     expect(accepts({ ...photosOf(1), model: "flux-2-klein-4b" })).toBe(false)
     expect(findWorkflow("ads-qwen-image-edit-2511")).not.toBeNull()
     expect(findWorkflow("ads-flux-2-klein-4b")).toBeNull()

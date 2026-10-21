@@ -1,6 +1,6 @@
 import type { ModelField, ModelForm } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
-import { joinArgsOf, type JoinShot } from "#remake/ffmpeg/ffmpeg-join"
+import { type JoinShot, joinArgsOf } from "#remake/ffmpeg/ffmpeg-join"
 import { swapClipArgsOf } from "#remake/ffmpeg/ffmpeg-swap-clip"
 import { shortestSwapSecondsOf, swapPaddingOf } from "#remake/shot-padding"
 import type { FoundShot } from "#remake/shot-plan"
@@ -143,9 +143,7 @@ describe("Remake joins the shots into one video as long as the reference", () =>
     expect(filterOf(args).split(";").at(-1)).toBe(
       "[0:a]atrim=start=0:end=6,asetpts=PTS-STARTPTS[a]"
     )
-    expect(args).toEqual(
-      expect.arrayContaining(["-map", "[a]", "-c:a", "aac"])
-    )
+    expect(args).toEqual(expect.arrayContaining(["-map", "[a]", "-c:a", "aac"]))
     expect(args).not.toContain("-an")
   })
 

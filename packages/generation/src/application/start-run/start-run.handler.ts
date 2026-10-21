@@ -27,10 +27,10 @@ import { isRecord } from "#domain/is-record"
 import type { JobRunner } from "#domain/job-runner.port"
 import { checkModelInputs, type ModelForm } from "#domain/model-form"
 import type { ModelPolicy } from "#domain/model-policy.port"
+import { ruledInputsOf } from "#domain/ruled-inputs"
 import { Run } from "#domain/run"
 import type { RunRepository } from "#domain/run.repository"
 import type { RunAssets } from "#domain/run-assets.port"
-import { ruledInputsOf } from "#domain/ruled-inputs"
 import { resolveBinding } from "#domain/select-binding"
 import {
   chosenModelOf,

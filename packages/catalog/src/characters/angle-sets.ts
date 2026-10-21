@@ -1,7 +1,7 @@
 import {
   type AngleSet,
-  angleSets as editAngleSets,
   type Distance,
+  angleSets as editAngleSets,
   type Height,
   type Side,
   setPoses,

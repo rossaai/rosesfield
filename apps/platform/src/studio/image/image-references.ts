@@ -1,9 +1,6 @@
 import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
 import type { AppListing } from "@rosesfield/contract"
-import {
-  modelsTakingInput,
-  referenceImageInputsOf,
-} from "@/catalog/app-facts"
+import { modelsTakingInput, referenceImageInputsOf } from "@/catalog/app-facts"
 
 type MediaField = Extract<ModelField, { kind: "media" }>
 

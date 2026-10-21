@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest"
 import { z } from "zod"
 import { findWorkflow } from "#list-workflows"
 import { app as motionApp } from "#motion/app"
+import { app } from "#remake/app"
 import {
   type RemakeQuality,
   remakeEngine,
@@ -16,7 +17,6 @@ import {
   type ShotRequestInput,
   shotRequestOf,
 } from "#remake/comfy/remake-engine"
-import { app } from "#remake/app"
 import { type FoundShot, planShots } from "#remake/shot-plan"
 import { app as videoApp } from "#video/app"
 import { type Recording, ReplayFetch } from "../motion/motion-replay"

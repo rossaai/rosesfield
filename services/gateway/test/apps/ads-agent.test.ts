@@ -219,9 +219,7 @@ describe("an ad asked of the agent", () => {
       },
     })
     expect(run?.outputs).toHaveLength(1)
-    const kept = library.assets.filter(
-      (asset) => asset.sourceRunId === run?.id
-    )
+    const kept = library.assets.filter((asset) => asset.sourceRunId === run?.id)
     expect(kept.map((asset) => asset.kind)).toEqual(["image"])
     expect(adsPromptOf(run?.inputs ?? {})).toContain(`${headline}", and`)
     expect(adsPromptOf(run?.inputs ?? {})).toContain(`"${line}"`)

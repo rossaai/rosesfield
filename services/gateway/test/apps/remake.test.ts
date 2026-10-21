@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { closeRemake } from "@rosesfield/catalog/remake"
 import {
   type AppDefinition,
   appDefinition,
@@ -12,7 +13,6 @@ import {
   runPageResponse,
   runResponse,
 } from "@rosesfield/contract"
-import { closeRemake } from "@rosesfield/catalog/remake"
 import { FixedClock, runIdFormat } from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
 import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"

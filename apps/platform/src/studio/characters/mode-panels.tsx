@@ -159,12 +159,7 @@ function TraitGroups({
           </Accordion.Header>
           <Accordion.Panel className="flex flex-col gap-s4 pb-s4">
             {inputs.map((input) => (
-              <ChoiceRow
-                key={input.name}
-                app={app}
-                input={input}
-                form={form}
-              />
+              <ChoiceRow key={input.name} app={app} input={input} form={form} />
             ))}
           </Accordion.Panel>
         </Accordion.Item>
@@ -191,9 +186,7 @@ function Field({
 }
 
 function hasCatalogPicker(hosted: HostedState | undefined): boolean {
-  return (
-    hosted !== undefined && (hosted.isTaskApp || hosted.models.length > 0)
-  )
+  return hosted !== undefined && (hosted.isTaskApp || hosted.models.length > 0)
 }
 
 function isWordsInput(input: InputDefinition, hasPicker: boolean): boolean {
@@ -269,19 +262,23 @@ export function AnglesPanel(
   const noPhoto = noPhotoNoteOf(hosted)
   return (
     <div className="flex flex-col gap-s4">
-      {app.inputs.filter(isPanelInput).map((input) =>
-        noPhoto !== null && input.name === modelInputName && isChoice(input) ? (
-          <ChoiceRow
-            key={input.name}
-            app={app}
-            input={input}
-            form={form}
-            note={noPhoto}
-          />
-        ) : (
-          <Field key={input.name} {...props} input={input} />
-        )
-      )}
+      {app.inputs
+        .filter(isPanelInput)
+        .map((input) =>
+          noPhoto !== null &&
+          input.name === modelInputName &&
+          isChoice(input) ? (
+            <ChoiceRow
+              key={input.name}
+              app={app}
+              input={input}
+              form={form}
+              note={noPhoto}
+            />
+          ) : (
+            <Field key={input.name} {...props} input={input} />
+          )
+        )}
       <AdvancedFields {...props} />
     </div>
   )

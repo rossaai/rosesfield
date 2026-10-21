@@ -195,11 +195,14 @@ describe("the plan turn's refusals", () => {
       { error_type: "insufficient_credits", detail: "" },
       "ENGINE_NO_CREDITS",
     ],
-  ])("reads a %i answer by its error type, as every Router call does", async (status, json, code) => {
-    const refusal = await refusalOf(status, json)
-    expect(refusal).toBeInstanceOf(ProjectError)
-    expect((refusal as ProjectError).code).toBe(code)
-  })
+  ])(
+    "reads a %i answer by its error type, as every Router call does",
+    async (status, json, code) => {
+      const refusal = await refusalOf(status, json)
+      expect(refusal).toBeInstanceOf(ProjectError)
+      expect((refusal as ProjectError).code).toBe(code)
+    }
+  )
 
   it("control: a 400 answer with no error type stays a failed run", async () => {
     const refusal = await refusalOf(400, { detail: "" })

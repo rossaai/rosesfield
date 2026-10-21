@@ -70,9 +70,7 @@ describe("Remake finds the hard cuts of a reference", () => {
   it("asks ffmpeg for every frame's scene score on the 24 frames per second grid", () => {
     const args = sceneScoreArgsOf("reference.mp4")
     expect(args[0]).toBe("ffmpeg")
-    expect(args).toContain(
-      "fps=24,select='gte(scene,0)',metadata=print:file=-"
-    )
+    expect(args).toContain("fps=24,select='gte(scene,0)',metadata=print:file=-")
     expect(args.slice(-3)).toEqual(["-f", "null", "-"])
   })
 

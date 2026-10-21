@@ -79,9 +79,7 @@ async function expectImages(
     expect(file.width).toBeGreaterThan(0)
     expect(file.height).toBeGreaterThan(0)
     if (ratio !== null) {
-      expect(Math.abs(file.width / file.height / ratio - 1)).toBeLessThan(
-        0.02
-      )
+      expect(Math.abs(file.width / file.height / ratio - 1)).toBeLessThan(0.02)
     }
   }
 }
