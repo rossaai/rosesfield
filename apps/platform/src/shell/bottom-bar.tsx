@@ -87,7 +87,7 @@ function Tab({ link }: { link: ScreenLink }): ReactElement {
 
 export function BottomBar(): ReactElement {
   const [isAppsOpen, setAppsOpen] = useState(false)
-  const openTools = useAppToolsKey()
+  const requestTools = useAppToolsKey()
   return (
     <>
       <TabBar label={t("shell.bar.label")}>
@@ -95,11 +95,7 @@ export function BottomBar(): ReactElement {
         <Tab link={libraryLink} />
         <TabBarGenerate
           label={t("run.generate")}
-          onClick={() => {
-            if (!openTools()) {
-              setAppsOpen(true)
-            }
-          }}
+          onClick={() => requestTools(() => setAppsOpen(true))}
         />
         <Tab link={historyLink} />
         <TabBarLink
