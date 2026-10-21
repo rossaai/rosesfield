@@ -1,6 +1,7 @@
 import {
   type AppDefinition,
   appOnlyInputsFor,
+  givenRuleIssuesOf,
   isAppOnly,
   type RunInputs,
 } from "@rosesfield/contract"
@@ -24,11 +25,14 @@ export function appOnlyInputsOf(
   const own = Object.fromEntries(entries.filter(([name]) => names.has(name)))
   const rest = Object.fromEntries(entries.filter(([name]) => !names.has(name)))
   const parsed = appOnlyInputsFor(app).safeParse(own)
-  if (parsed.success) {
-    return { inputs: parsed.data, rest, issues: [] }
+  if (!parsed.success) {
+    const issues = parsed.error.issues.map(
+      (issue) => `${issue.path.join(".") || "inputs"}: ${issue.message}`
+    )
+    return { inputs: {}, rest, issues }
   }
-  const issues = parsed.error.issues.map(
-    (issue) => `${issue.path.join(".") || "inputs"}: ${issue.message}`
-  )
-  return { inputs: {}, rest, issues }
+  const issues = givenRuleIssuesOf(app, given, names)
+  return issues.length === 0
+    ? { inputs: parsed.data, rest, issues: [] }
+    : { inputs: {}, rest, issues }
 }

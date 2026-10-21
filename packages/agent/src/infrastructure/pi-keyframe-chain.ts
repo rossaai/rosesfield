@@ -9,7 +9,11 @@ import {
   RunInputInvalidError,
   type StartRunHandler,
 } from "@rosesfield/generation"
-import { type RunWait, readRunToEnd } from "#infrastructure/pi-library-tools"
+import {
+  type RunPoll,
+  type RunWait,
+  readRunToEnd,
+} from "#infrastructure/pi-library-tools"
 
 export type KeyframeHandlers = {
   startRun: StartRunHandler
@@ -23,10 +27,11 @@ type KeyframeRunsOptions = {
   handlers: KeyframeHandlers
   wait: RunWait
   signal: AbortSignal | undefined
+  poll?: RunPoll
 }
 
 function chainOf(options: KeyframeRunsOptions): KeyframeChain {
-  const { handlers, wait, signal } = options
+  const { handlers, wait, signal, poll } = options
   return {
     start: async (appId, request, key) => {
       const { run } = await handlers.startRun.execute({
@@ -41,7 +46,13 @@ function chainOf(options: KeyframeRunsOptions): KeyframeChain {
       return run
     },
     settle: async (run) => {
-      const read = await readRunToEnd(handlers.getRun, run.id, wait, signal)
+      const read = await readRunToEnd(
+        handlers.getRun,
+        run.id,
+        wait,
+        signal,
+        poll
+      )
       return read.run
     },
   }

@@ -22,7 +22,7 @@ import { FixedClock } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { keyframesOf } from "#storyboard/keyframe-facts"
 import { keyframeCallsOf } from "#storyboard/storyboard-chain"
-import { anchorId, definition } from "./storyboard-asks"
+import { anchorId, characterId, definition } from "./storyboard-asks"
 
 const hostedModel = "bfl/flux-3-image"
 
@@ -192,8 +192,28 @@ describe("a Storyboard keyframe made on a hosted model", () => {
     ])
   })
 
-  it("control: still refuses the reference, which is neither app-only nor the model's", async () => {
-    const inputs = { ...hostedCall(1).request.inputs, reference: [anchorId] }
+  it("keeps the reference with the run, and History reads it as the anchor", async () => {
+    const { run } = await start.execute({
+      appId: definition.id,
+      body: { inputs: hostedCall(2).request.inputs },
+      idempotencyKey: null,
+      seed: null,
+    })
+    expect(run.inputs.reference).toEqual([anchorId])
+    expect(run.inputs.image).toEqual([anchorId])
+    expect(keyframesOf(run)).toEqual([
+      expect.objectContaining({
+        number: 2,
+        anchor: { kind: "reference", assetId: anchorId },
+      }),
+    ])
+  })
+
+  it("refuses a character beside a reference, as the app's own rule does", async () => {
+    const inputs = {
+      ...hostedCall(1).request.inputs,
+      character: [characterId],
+    }
     await expect(
       start.execute({
         appId: definition.id,
@@ -201,6 +221,21 @@ describe("a Storyboard keyframe made on a hosted model", () => {
         idempotencyKey: null,
         seed: null,
       })
-    ).rejects.toThrow(/reference: the model takes no such input/)
+    ).rejects.toThrow(/character: character applies only when/)
+  })
+
+  it("control: still refuses the first keyframe, which is neither app-only nor the model's", async () => {
+    const inputs = {
+      ...hostedCall(1).request.inputs,
+      firstKeyframe: [anchorId],
+    }
+    await expect(
+      start.execute({
+        appId: definition.id,
+        body: { inputs },
+        idempotencyKey: null,
+        seed: null,
+      })
+    ).rejects.toThrow(/firstKeyframe: the model takes no such input/)
   })
 })

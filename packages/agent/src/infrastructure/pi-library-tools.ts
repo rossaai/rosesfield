@@ -65,13 +65,17 @@ function readTool<Args>(options: ReadToolOptions<Args>): ToolRegistration {
   }
 }
 
+export type RunPoll = (runId: string) => Promise<void>
+
 export async function readRunToEnd(
   getRun: GetRunHandler,
   runId: string,
   wait: RunWait,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  poll?: RunPoll
 ): Promise<GetRunOutput> {
   for (let waited = 0; ; waited += runWait.pollMs) {
+    await poll?.(runId)
     const read = await getRun.execute({ runId })
     if (
       Run.finishedStatuses.includes(read.run.status) ||

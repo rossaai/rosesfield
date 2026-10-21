@@ -110,6 +110,7 @@ export const app: AppInput = defineApp({
     {
       type: "image",
       name: "reference",
+      scope: "app",
       labelKey: "storyboard.input.reference.label",
       presence: "optional",
       max: 1,
@@ -117,6 +118,7 @@ export const app: AppInput = defineApp({
     {
       type: "character",
       name: "character",
+      scope: "app",
       labelKey: "storyboard.input.character.label",
       presence: "optional",
       max: 1,
