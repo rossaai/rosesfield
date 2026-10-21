@@ -1,4 +1,5 @@
 import { Accordion } from "@base-ui/react/accordion"
+import { takesPhotoAndPrompt } from "@rosesfield/catalog/characters"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { IconButton } from "@rosesfield/ui/components/button"
 import { cn } from "@rosesfield/ui/lib/cn"
@@ -85,14 +86,16 @@ function groupsOf(
   return groups.filter((group) => group.inputs.length > 0)
 }
 
-function TraitField({
+function ChoiceRow({
   app,
   input,
   form,
+  note = inputNote(app, input),
 }: {
   app: AppListing
   input: ChoiceInput
   form: AppForm
+  note?: string | null
 }): ReactElement {
   return (
     <ChoiceField
@@ -103,7 +106,7 @@ function TraitField({
       }))}
       value={textOf(form.values.inputs[input.name]) || input.default}
       onChange={(value) => form.setInput(input.name, value)}
-      note={inputNote(app, input)}
+      note={note}
       register={(focus) => form.register(input.name, focus)}
     />
   )
@@ -156,7 +159,7 @@ function TraitGroups({
           </Accordion.Header>
           <Accordion.Panel className="flex flex-col gap-s4 pb-s4">
             {inputs.map((input) => (
-              <TraitField
+              <ChoiceRow
                 key={input.name}
                 app={app}
                 input={input}
@@ -252,12 +255,33 @@ function GraphOutputFields(props: PanelProps): ReactElement {
   )
 }
 
-export function AnglesPanel(props: PanelProps): ReactElement {
+function noPhotoNoteOf(hosted: HostedState | undefined): string | null {
+  const fields = hosted?.fields ?? null
+  return fields === null || takesPhotoAndPrompt(fields)
+    ? null
+    : tCatalog("video.well.none")
+}
+
+export function AnglesPanel(
+  props: PanelProps & { hosted?: HostedState | undefined }
+): ReactElement {
+  const { app, form, hosted } = props
+  const noPhoto = noPhotoNoteOf(hosted)
   return (
     <div className="flex flex-col gap-s4">
-      {props.app.inputs.filter(isPanelInput).map((input) => (
-        <Field key={input.name} {...props} input={input} />
-      ))}
+      {app.inputs.filter(isPanelInput).map((input) =>
+        noPhoto !== null && input.name === modelInputName && isChoice(input) ? (
+          <ChoiceRow
+            key={input.name}
+            app={app}
+            input={input}
+            form={form}
+            note={noPhoto}
+          />
+        ) : (
+          <Field key={input.name} {...props} input={input} />
+        )
+      )}
       <AdvancedFields {...props} />
     </div>
   )

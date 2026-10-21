@@ -3,6 +3,7 @@ import {
   anglePromptsOf,
   traitNames,
   traitPrompt,
+  viewsOf,
 } from "@rosesfield/catalog/characters"
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { appListing, run } from "@rosesfield/contract"
@@ -38,7 +39,7 @@ import { fieldCaption } from "@/screens/app/hosted/hosted-fields"
 import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
 import { type AppSeeds, noSeeds } from "@/screens/app/use-app-screen"
 import { AppScreen } from "@/studio/characters/screen"
-import { flux, qwen, zImage } from "../image/image-screen"
+import { flux, qwen, qwenEdit, zImage } from "../image/image-screen"
 
 const characters = appListing.parse(findApp("characters"))
 
@@ -532,7 +533,7 @@ function viewOf(call: Call): number {
 }
 
 describe("the angles of Characters on a hosted image edit model", () => {
-  it("price the set at 4 times one view on Generate, and start one run per view, each with the character's photos and the angles mode", async () => {
+  it("price the set at 4 times one view on Generate, and start one run per view, each with the character's photos, the angles mode and the view it asks for", async () => {
     openAngles()
     const generate = await screen.findByRole("button", {
       name: pricedName(viewCredits * 4),
@@ -544,16 +545,19 @@ describe("the angles of Characters on a hosted image edit model", () => {
     await vi.waitFor(() => expect(startedBodies()).toHaveLength(4))
     const bodies = startedBodies()
     expect(bodies.map(promptOf)).toEqual(anglePromptsOf("turnaround"))
-    for (const body of bodies) {
-      expect(body).toEqual({
+    expect(bodies).toEqual(
+      viewsOf("turnaround").map((view, index) => ({
         inputs: {
           mode: "angles",
           model: anglesEdit.id,
-          prompt: promptOf(body),
+          character: [characterId],
+          angleSet: "turnaround",
+          view,
+          prompt: anglePromptsOf("turnaround")[index],
           input_images: photos,
         },
-      })
-    }
+      }))
+    )
   })
 
   it("ask the price of the set once per edit, with no second price request of the plain app form", async () => {
@@ -609,14 +613,22 @@ describe("the angles of Characters on a hosted image edit model", () => {
     )
   })
 
-  it("name the next step when the picked model takes no photo, and start no run", async () => {
+  it("name the next step under the model when the picked model takes no photo, and start no run", async () => {
     openAngles({ model: counted })
+    const note = await screen.findByText(tCatalog("video.well.none"))
     const generate = await screen.findByRole("button", {
       name: t("run.generate"),
     })
     fireEvent.click(generate)
-    expect(await screen.findByText(t("field.choice.required"))).toBeDefined()
+    expect(screen.queryByText(t("field.choice.required"))).toBeNull()
+    expect(note.isConnected).toBe(true)
     expect(startedBodies()).toEqual([])
+  })
+
+  it("control: name no next step when the picked model takes a photo", async () => {
+    openAngles()
+    await screen.findByRole("button", { name: pricedName(viewCredits * 4) })
+    expect(screen.queryByText(tCatalog("video.well.none"))).toBeNull()
   })
 
   it("keep Generate waiting while the character's photos load, and start no run", async () => {
@@ -627,5 +639,33 @@ describe("the angles of Characters on a hosted image edit model", () => {
     expect(generate.getAttribute("aria-busy")).toBe("true")
     fireEvent.click(generate)
     expect(startedBodies()).toEqual([])
+  })
+})
+
+function anglesPriceModels(): unknown[] {
+  return priceCalls()
+    .filter((call) => {
+      const { body } = call
+      return (
+        typeof body === "object" &&
+        body !== null &&
+        "inputs" in body &&
+        typeof body.inputs === "object" &&
+        body.inputs !== null &&
+        "mode" in body.inputs &&
+        body.inputs.mode === "angles"
+      )
+    })
+    .map((call) => modelOf(call.body))
+}
+
+describe("a fresh Characters screen", () => {
+  it("opens the angles on their own default graph, not on the text to image default", async () => {
+    openCharacters()
+    await screen.findByRole("button", { name: pricedName(graphCredits) })
+    await vi.waitFor(() =>
+      expect(anglesPriceModels().length).toBeGreaterThan(0)
+    )
+    expect(new Set(anglesPriceModels())).toEqual(new Set([qwenEdit.id]))
   })
 })

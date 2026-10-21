@@ -92,6 +92,7 @@ describe("the Characters screen follows the contract's modes", () => {
     expect(namesIn("angles")).toEqual([
       "mode",
       "count",
+      "model",
       "character",
       "angleSet",
       "seed",
@@ -105,7 +106,7 @@ describe("the Characters screen follows the contract's modes", () => {
     expect(count).toMatchObject({ default: "4", options: [{ value: "4" }] })
     expect(
       angles.inputs.filter(isPanelInput).map((input) => input.name)
-    ).toEqual(["character", "angleSet"])
+    ).toEqual(["model", "character", "angleSet"])
     expect(listingFor(listing, "traits").output.count).toEqual({
       default: 2,
       max: 4,

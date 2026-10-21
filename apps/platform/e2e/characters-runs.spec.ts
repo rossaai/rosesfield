@@ -127,7 +127,10 @@ test.describe("Characters runs across the wire", () => {
     })
     expect(views.count).toBe(4)
     expect(views.outputs).toHaveLength(4)
-    expect(views.inputs).toMatchObject({ model: "qwen-image-edit-2511" })
+    expect(views.inputs).toMatchObject({
+      model: "qwen-image-edit-2511",
+      view: "front",
+    })
     await expectImages(page, views.outputs, null)
   })
 })

@@ -19,7 +19,7 @@ import { RunLine } from "@/pieces/run/run-line"
 import { RunOutputs } from "@/pieces/run/run-outputs"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import { useUpdateCharacter } from "@/screens/characters/character-actions"
-import { modeOfRun } from "@/studio/characters/mode-listing"
+import { modeOfRun, viewInput } from "@/studio/characters/mode-listing"
 import { SaveCharacterButton } from "@/studio/characters/save-character-dialog"
 
 type ModeCanvasProps = {
@@ -38,7 +38,9 @@ function characterOf(run: Run): string | null {
 function viewCaption(run: Run, index: number): string {
   const angleSet =
     typeof run.inputs.angleSet === "string" ? run.inputs.angleSet : ""
-  const view = viewsOf(angleSet)[index]
+  const views = viewsOf(angleSet)
+  const first = views.findIndex((one) => one === run.inputs[viewInput])
+  const view = views[Math.max(first, 0) + index]
   return view === undefined ? "" : tCatalog(`characters.view.${view}`)
 }
 

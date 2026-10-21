@@ -61,7 +61,13 @@ export function useHostedModel(
     },
     [app, models, values.inputs, setForm]
   )
-  useOpenOnDefault(app, form, defaultModel, models, choose)
+  useOpenOnDefault(
+    app,
+    form,
+    { model: defaultModel, own: taskApp?.defaultModel ?? null },
+    models,
+    choose
+  )
   const refusal = query.data?.refusal ?? null
   return {
     isTaskApp: taskApp !== null,
@@ -86,10 +92,12 @@ export function useHostedModel(
   }
 }
 
+type Defaults = { model: string | null; own: string | null }
+
 function useOpenOnDefault(
   app: AppListing,
   form: AppForm,
-  defaultModel: string | null,
+  defaults: Defaults,
   models: readonly CatalogModel[],
   choose: (id: string) => void
 ): void {
@@ -97,6 +105,7 @@ function useOpenOnDefault(
   const value = textOf(form.values.inputs[modelInputName])
   const appDefault = textOf(defaultsOf(app).inputs[modelInputName])
   const source = form.source ?? "defaults"
+  const { model: defaultModel, own } = defaults
   useEffect(() => {
     if (opened.current || defaultModel === null || models.length === 0) {
       return
@@ -105,9 +114,10 @@ function useOpenOnDefault(
     if (
       source === "defaults" &&
       value === appDefault &&
+      appDefault === own &&
       value !== defaultModel
     ) {
       choose(defaultModel)
     }
-  }, [defaultModel, models, value, appDefault, choose, source])
+  }, [defaultModel, own, models, value, appDefault, choose, source])
 }

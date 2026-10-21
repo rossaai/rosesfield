@@ -81,9 +81,13 @@ function stubGateway(): void {
   )
 }
 
-function runOf(inputs: Run["inputs"], outputs: readonly string[]): Run {
+function runOf(
+  inputs: Run["inputs"],
+  outputs: readonly string[],
+  id = "5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d"
+): Run {
   return run.parse({
-    id: "5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d",
+    id,
     appId: characters.id,
     status: "done",
     inputs,
@@ -103,7 +107,7 @@ function runOf(inputs: Run["inputs"], outputs: readonly string[]): Run {
 
 function openCanvas(
   mode: Mode,
-  shown: Run,
+  shown: Run | readonly Run[],
   references: readonly string[] = [photo]
 ): QueryClient {
   const client = new QueryClient({
@@ -112,7 +116,7 @@ function openCanvas(
     },
   })
   client.setQueryData(runsQuery(characters.id).queryKey, {
-    pages: [{ runs: [shown], next: null }],
+    pages: [{ runs: [shown].flat(), next: null }],
     pageParams: [null],
   })
   client.setQueryData(characterQuery(characterId).queryKey, {
@@ -243,5 +247,46 @@ describe("Add to character on a view", () => {
       views.map(() => true)
     )
     expect(characterPhotoLimit).toBe(10)
+  })
+})
+
+const turnaround = ["front", "right", "back", "left"]
+
+const viewRunIds = [
+  "6a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c01",
+  "6a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c02",
+  "6a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c03",
+  "6a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c04",
+]
+
+describe("the caption of each view", () => {
+  it("names each hosted view, one output per run, by the view its run asked for", async () => {
+    const hosted = turnaround.map((view, index) =>
+      runOf(
+        {
+          mode: "angles",
+          character: [characterId],
+          angleSet: "turnaround",
+          view,
+        },
+        views.slice(index, index + 1),
+        viewRunIds[index]
+      )
+    )
+    openCanvas("angles", hosted)
+    for (const view of turnaround) {
+      expect(
+        await screen.findByText(tCatalog(`characters.view.${view}`))
+      ).toBeDefined()
+    }
+  })
+
+  it("names each view of one graph run by its place in the angle set", async () => {
+    openCanvas("angles", viewsRun())
+    for (const view of turnaround) {
+      expect(
+        await screen.findByText(tCatalog(`characters.view.${view}`))
+      ).toBeDefined()
+    }
   })
 })

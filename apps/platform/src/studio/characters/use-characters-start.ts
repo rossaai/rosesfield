@@ -24,10 +24,7 @@ import {
   type StartRunBodyInput,
 } from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
-import {
-  hostedProblems,
-  modelInputName,
-} from "@/screens/app/hosted/hosted-form"
+import { hostedProblems } from "@/screens/app/hosted/hosted-form"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm, FormCheck } from "@/screens/app/use-app-form"
 import {
@@ -98,11 +95,7 @@ function anglesProblems(
   fields: readonly ModelField[],
   photos: Character["references"]
 ): FieldProblem[] {
-  const gap = anglesGapOf(fields, photos)
-  if (gap === "model") {
-    return [problem(modelInputName, "field.choice.required")]
-  }
-  return gap === "character"
+  return anglesGapOf(fields, photos) === "character"
     ? [problem(characterInput, "field.character.required")]
     : []
 }
@@ -123,16 +116,16 @@ function keyOf(press: Press, index: number, total: number): string {
   return total === 1 ? press.key : `${press.key}${viewKey}${index + 1}`
 }
 
-export function useCharactersStart(
+function useCharactersStart(
   app: AppListing,
   form: AppForm,
-  hosted: HostedState | undefined,
+  hosted: HostedState,
   mode: Mode,
-  onStarted: (run: Run) => void
+  onStarted?: (run: Run) => void
 ): CharactersStart {
   const client = useQueryClient()
   const settings = useQuery(settingsQuery)
-  const fields = hosted?.fields ?? null
+  const fields = hosted.fields
   const { photos, isLoading } = useCharacterPhotos(fields, form, mode)
   const of: ModeRuns = { fields, mode, photos }
   const runs = runsOf(form.values, of)
@@ -143,7 +136,7 @@ export function useCharactersStart(
   const credits = usePrice(
     app,
     first ?? null,
-    hosted?.keyState ?? settings.data?.engine.key ?? "unknown"
+    hosted.keyState
   )
   const pressed = useRef<Press | null>(null)
   const start = useMutation({
@@ -162,7 +155,7 @@ export function useCharactersStart(
           storeRun(client, run)
           if (isFirst) {
             isFirst = false
-            onStarted(run)
+            onStarted?.(run)
           }
           return run
         })
@@ -205,4 +198,22 @@ export function useCharactersStart(
     error: start.error,
     check: checkOf(app, of),
   }
+}
+
+export function useTraitsStart(
+  app: AppListing,
+  form: AppForm,
+  hosted: HostedState,
+  onStarted?: (run: Run) => void
+): CharactersStart {
+  return useCharactersStart(app, form, hosted, "traits", onStarted)
+}
+
+export function useAnglesStart(
+  app: AppListing,
+  form: AppForm,
+  hosted: HostedState,
+  onStarted?: (run: Run) => void
+): CharactersStart {
+  return useCharactersStart(app, form, hosted, "angles", onStarted)
 }

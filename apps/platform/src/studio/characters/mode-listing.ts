@@ -14,6 +14,7 @@ import { modelInputName } from "@/screens/app/hosted/hosted-form"
 export const modeField = "mode"
 export const countInput = "count"
 export const characterInput = "character"
+export const viewInput = "view"
 
 function narrowed(rule: InputRule, mode: Mode): InputDefinition {
   const { input, allowed, fallback } = rule
@@ -31,9 +32,9 @@ function narrowed(rule: InputRule, mode: Mode): InputDefinition {
 }
 
 export function listingFor(app: AppListing, mode: Mode): AppListing {
-  const inputs = inputRulesOf(app, { [modeField]: mode }).map((rule) =>
-    narrowed(rule, mode)
-  )
+  const inputs = inputRulesOf(app, { [modeField]: mode })
+    .filter((rule) => rule.input.name !== viewInput)
+    .map((rule) => narrowed(rule, mode))
   const counter = inputs.find((input) => input.name === countInput)
   const isFixed = counter?.type === "choice" && counter.options.length === 1
   const fixed = fixedCountOf({ inputs }, {}) ?? app.output.count.default

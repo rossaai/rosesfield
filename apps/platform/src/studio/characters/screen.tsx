@@ -6,7 +6,6 @@ import {
 } from "@rosesfield/ui/components/segmented-control"
 import { useQuery } from "@tanstack/react-query"
 import {
-  type KeyboardEvent,
   type ReactElement,
   type ReactNode,
   useEffect,
@@ -16,8 +15,6 @@ import {
 } from "react"
 import { runQuery } from "@/api/queries"
 import { tCatalog } from "@/copy/t"
-import { useAppRuns } from "@/screens/app/app-canvas"
-import { valuesFromRun } from "@/screens/app/app-form"
 import { AppHeader } from "@/screens/app/app-header"
 import {
   AddInputsButton,
@@ -25,23 +22,16 @@ import {
   useSheetOpen,
 } from "@/screens/app/column-frame"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
-import {
-  type HostedState,
-  useHostedModel,
-} from "@/screens/app/hosted/use-hosted-model"
-import { usePriceRefresh } from "@/screens/app/hosted/use-price-refresh"
+import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
-import {
-  type AppForm,
-  type FormCheck,
-  useAppForm,
-} from "@/screens/app/use-app-form"
+import type { AppForm } from "@/screens/app/use-app-form"
 import {
   type AppScreenState,
   type AppSeeds,
   noSeeds,
+  type StartHook,
+  useAppScreen,
 } from "@/screens/app/use-app-screen"
-import type { StartRun } from "@/screens/app/use-start-run"
 import { ModeCanvas } from "@/studio/characters/mode-canvas"
 import {
   firstModeOf,
@@ -53,18 +43,24 @@ import {
   RandomButton,
   TraitsPanel,
 } from "@/studio/characters/mode-panels"
-import { useCharactersStart } from "@/studio/characters/use-characters-start"
+import {
+  useAnglesStart,
+  useTraitsStart,
+} from "@/studio/characters/use-characters-start"
 import { useTraitsModel } from "@/studio/characters/use-traits-model"
 
 type ModeScreen = {
   listing: AppListing
   state: AppScreenState
   hosted: HostedState | undefined
-  start: StartRun
-  onShortcut: (event: KeyboardEvent<HTMLElement>) => void
 }
 
 const allModes: readonly Mode[] = ["traits", "angles"]
+
+const startOf: Readonly<Record<Mode, StartHook>> = {
+  traits: useTraitsStart,
+  angles: useAnglesStart,
+}
 
 function useFixedCount(
   app: AppListing,
@@ -89,38 +85,15 @@ function useModeScreen(
   onStarted: () => void
 ): ModeScreen {
   const listing = useMemo(() => listingFor(app, mode), [app, mode])
-  const check = useRef<FormCheck | null>(null)
-  const form = useAppForm(listing, seeds, check)
-  const runs = useAppRuns(listing)
-  const listed = useHostedModel(listing, form, runs.runs)
-  usePriceRefresh(listing.id, runs.runs)
+  const state = useAppScreen(listing, seeds, onStarted, startOf[mode])
   const traits = useTraitsModel(
     listing,
-    form,
-    mode === "traits" ? listed : undefined
+    state.form,
+    mode === "traits" ? state.hosted : undefined
   )
-  const hosted = mode === "traits" ? traits : listed
-  useFixedCount(listing, form, (hosted?.fields ?? null) !== null)
-  const start = useCharactersStart(listing, form, hosted, mode, () =>
-    onStarted()
-  )
-  check.current = start.check
-  const onShortcut = (event: KeyboardEvent<HTMLElement>): void => {
-    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-      event.preventDefault()
-      start.generate()
-    }
-  }
-  const state: AppScreenState = {
-    form,
-    start,
-    hosted: listed,
-    lastSeed: runs.runs.find((run) => run.seed !== null)?.seed ?? null,
-    hasRuns: runs.isPending ? null : runs.runs.length > 0,
-    useInputs: (run) => form.fill(valuesFromRun(listing, run)),
-    onShortcut,
-  }
-  return { listing, state, hosted, start, onShortcut }
+  const hosted = mode === "traits" ? traits : state.hosted
+  useFixedCount(listing, state.form, (hosted?.fields ?? null) !== null)
+  return { listing, state, hosted }
 }
 
 function ModePanel({
@@ -138,7 +111,7 @@ function ModePanel({
   return mode === "traits" ? (
     <TraitsPanel {...props} hosted={screen.hosted} />
   ) : (
-    <AnglesPanel {...props} />
+    <AnglesPanel {...props} hosted={screen.hosted} />
   )
 }
 
@@ -193,8 +166,8 @@ function ModeFrame(props: FrameProps): ReactElement {
   return (
     <ColumnFrame
       app={screen.listing}
-      start={screen.start}
-      onShortcut={screen.onShortcut}
+      start={screen.state.start}
+      onShortcut={screen.state.onShortcut}
       sheet={sheet}
       hasHeader={props.hasHeader}
       panel={
