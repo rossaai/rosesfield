@@ -55,6 +55,21 @@ export function readModelAnswers(): ModelAnswers[] {
     )
 }
 
+export function readHandWrittenAnswers(): ModelAnswers {
+  const answers = modelAnswers.parse(
+    JSON.parse(
+      readFileSync(
+        fileURLToPath(new URL("./hand-written-answers.json", import.meta.url)),
+        "utf8"
+      )
+    )
+  )
+  if (answers.source.kind !== "hand-written") {
+    throw new Error("hand-written-answers.json is not hand-written")
+  }
+  return answers
+}
+
 function idsOf(text: string): string[] {
   return [...new Set(text.match(uuidPattern) ?? [])].map((id) =>
     id.toLowerCase()

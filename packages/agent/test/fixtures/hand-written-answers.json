@@ -1,0 +1,269 @@
+{
+  "model": "deepseek/deepseek-v4-flash",
+  "source": {
+    "kind": "hand-written"
+  },
+  "scenarios": {
+    "words": {
+      "expectPass": true,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "gen-1760000000-rosesfield-1",
+            "object": "chat.completion",
+            "created": 1760000000,
+            "model": "deepseek/deepseek-v4-flash",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "I run Rosesfield's apps for you: images, video and sound. Ask me for one, and I propose the run first."
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1840,
+              "completion_tokens": 24,
+              "total_tokens": 1864,
+              "cost": 0.00021
+            }
+          }
+        }
+      ]
+    },
+    "propose": {
+      "expectPass": true,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "gen-1760000000-rosesfield-2",
+            "object": "chat.completion",
+            "created": 1760000000,
+            "model": "deepseek/deepseek-v4-flash",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "tool_calls": [
+                    {
+                      "id": "call_1",
+                      "type": "function",
+                      "function": {
+                        "name": "sample-image",
+                        "arguments": "{\"inputs\":{\"prompt\":\"a red rose in a glass vase\"}}"
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": "tool_calls"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1852,
+              "completion_tokens": 24,
+              "total_tokens": 1876,
+              "cost": 0.00024
+            }
+          }
+        }
+      ]
+    },
+    "chain": {
+      "expectPass": true,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "gen-1760000000-rosesfield-3",
+            "object": "chat.completion",
+            "created": 1760000000,
+            "model": "deepseek/deepseek-v4-flash",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "tool_calls": [
+                    {
+                      "id": "call_1",
+                      "type": "function",
+                      "function": {
+                        "name": "sample-image",
+                        "arguments": "{\"inputs\":{\"prompt\":\"a red rose\"}}"
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": "tool_calls"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1860,
+              "completion_tokens": 24,
+              "total_tokens": 1884,
+              "cost": 0.00024
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "gen-1760000000-rosesfield-4",
+            "object": "chat.completion",
+            "created": 1760000000,
+            "model": "deepseek/deepseek-v4-flash",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "tool_calls": [
+                    {
+                      "id": "call_2",
+                      "type": "function",
+                      "function": {
+                        "name": "read_run",
+                        "arguments": "{\"runId\":\"{{result:0}}\"}"
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": "tool_calls"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 2090,
+              "completion_tokens": 24,
+              "total_tokens": 2114,
+              "cost": 0.00026
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "gen-1760000000-rosesfield-5",
+            "object": "chat.completion",
+            "created": 1760000000,
+            "model": "deepseek/deepseek-v4-flash",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "tool_calls": [
+                    {
+                      "id": "call_3",
+                      "type": "function",
+                      "function": {
+                        "name": "sample-motion",
+                        "arguments": "{\"inputs\":{\"image\":[\"{{result:1}}\"],\"prompt\":\"the red rose opens its petals\"}}"
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": "tool_calls"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 2330,
+              "completion_tokens": 24,
+              "total_tokens": 2354,
+              "cost": 0.00029
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "gen-1760000000-rosesfield-6",
+            "object": "chat.completion",
+            "created": 1760000000,
+            "model": "deepseek/deepseek-v4-flash",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "tool_calls": [
+                    {
+                      "id": "call_4",
+                      "type": "function",
+                      "function": {
+                        "name": "read_run",
+                        "arguments": "{\"runId\":\"{{result:0}}\"}"
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": "tool_calls"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 2580,
+              "completion_tokens": 24,
+              "total_tokens": 2604,
+              "cost": 0.00031
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "gen-1760000000-rosesfield-7",
+            "object": "chat.completion",
+            "created": 1760000000,
+            "model": "deepseek/deepseek-v4-flash",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "Done. The image run made the rose, and video run {{result:0}} made it open."
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 2810,
+              "completion_tokens": 24,
+              "total_tokens": 2834,
+              "cost": 0.00033
+            }
+          }
+        }
+      ]
+    }
+  }
+}

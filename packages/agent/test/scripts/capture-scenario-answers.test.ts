@@ -14,25 +14,13 @@ import {
 import {
   type ModelAnswers,
   modelAnswers,
-  readModelAnswers,
+  readHandWrittenAnswers,
   replayAnswers,
 } from "../fixtures/scenario-answers"
 import { agentScenarios, runScenario } from "../scenarios/agent-scenarios"
 
 const comfyKey = "comfyui-rosesfield-test"
 const capturedAt = new Date("2026-10-21T10:00:00.000Z")
-
-function handWritten(): ModelAnswers {
-  const found = readModelAnswers().find(
-    (answers) =>
-      answers.model === defaultChatModel &&
-      answers.source.kind === "hand-written"
-  )
-  if (found === undefined) {
-    throw new Error(`No hand-written answer file holds ${defaultChatModel}`)
-  }
-  return found
-}
 
 function fakeRouterOf(answers: ModelAnswers): Fetch {
   const exchanges = agentScenarios.flatMap(
@@ -200,7 +188,7 @@ describe("the capture of Router answers", () => {
   })
 
   it("captures answers that read back and replay to every verdict", async () => {
-    const written = handWritten()
+    const written = readHandWrittenAnswers()
     const lines: string[] = []
 
     const answers = await captureAnswers({

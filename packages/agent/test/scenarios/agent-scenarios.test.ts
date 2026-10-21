@@ -6,6 +6,7 @@ import {
 } from "#infrastructure/router-chat-models"
 import {
   type ModelAnswers,
+  readHandWrittenAnswers,
   readModelAnswers,
   replayAnswers,
   routerExchange,
@@ -133,12 +134,12 @@ describe("the agent's scenarios on Router answers", () => {
   }
 
   it("takes no hand-written answer file as Router evidence for the default", async () => {
-    const handWritten = answerFiles.filter(
-      (answers) => answers.source.kind === "hand-written"
-    )
-    const models = await Promise.all(handWritten.map(replayAll))
+    const handWritten = await replayAll(readHandWrittenAnswers())
 
-    expect(cheapestPass(models)).toBeNull()
+    expect(handWritten.results.map((result) => result.problems)).toEqual(
+      agentScenarios.map(() => [])
+    )
+    expect(cheapestPass([handWritten])).toBeNull()
   })
 
   it("picks the cheapest model whose captured answers pass every scenario", () => {
@@ -184,17 +185,11 @@ describe("the agent's scenarios on Router answers", () => {
     expect(cheapestPass(models)).toBe("google/gemini-3.5-flash")
   })
 
-  if (capturedFiles.length > 0) {
-    it("defaults to the cheapest model whose captured answers pass every scenario", async () => {
-      const models = await Promise.all(capturedFiles.map(replayAll))
+  it("defaults to the cheapest model whose captured answers pass every scenario", async () => {
+    const models = await Promise.all(capturedFiles.map(replayAll))
 
-      expect(defaultChatModel).toBe(cheapestPass(models))
-    })
-  } else {
-    it("rests the default on the hand-written answer file, not yet measured on the Router", () => {
-      expect(defaultAnswers().source).toEqual({ kind: "hand-written" })
-    })
-  }
+    expect(cheapestPass(models)).toBe(defaultChatModel)
+  })
 
   it("fails a chain whose image run failed while its video run ended done", () => {
     const image = chainRun({
