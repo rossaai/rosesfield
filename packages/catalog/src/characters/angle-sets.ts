@@ -1,6 +1,7 @@
 import {
   type AngleSet,
   angleSets as editAngleSets,
+  type Distance,
   type Height,
   type Side,
   setPoses,
@@ -18,6 +19,8 @@ const namedBy: Readonly<Record<AngleSet, "side" | "height">> = {
 export const angleSets: readonly AngleSet[] = editAngleSets
 
 export const viewsPerRun = viewsPerSet
+
+export const viewDistance: Distance = "medium"
 
 export function viewsOf(angleSet: string): readonly View[] {
   const found = angleSets.find((set) => set === angleSet)

@@ -1,5 +1,6 @@
-import type { ComfyValueBinding } from "@rosesfield/generation/bindings"
 import type { TraitName } from "#characters/traits"
+import type { WorkflowTarget } from "#list-workflows"
+import type { WorkflowValueBinding } from "#workflow-binding"
 
 type Fragments = Record<string, string>
 
@@ -10,9 +11,12 @@ export type WordNode = {
   inputs: { string_a: string | Link; string_b: string; delimiter: string }
 }
 
+type Field = "string_a" | "string_b"
+
 export type TraitWords = {
   nodes: Readonly<Record<string, WordNode>>
-  bindings: readonly ComfyValueBinding[]
+  targets: Readonly<Record<string, WorkflowTarget>>
+  bindings: readonly WorkflowValueBinding[]
   output: Link
 }
 
@@ -133,13 +137,29 @@ function wordNode(from: string | Link, words = "", delimiter = ""): WordNode {
   }
 }
 
-function wordBinding(
-  name: string,
-  map: Fragments,
+type Words = {
+  bindings: WorkflowValueBinding[]
+  targets: Record<string, WorkflowTarget>
+}
+
+function bindWord(
+  words: Words,
+  binding: { name: string; map?: Readonly<Record<string, string | Link>> },
   node: string,
-  field: "string_a" | "string_b"
-): ComfyValueBinding {
-  return { from: "input", name, map: { ...map }, path: [node, "inputs", field] }
+  field: Field
+): void {
+  const to = `word${node}${field === "string_a" ? "A" : "B"}`
+  words.bindings.push(
+    binding.map === undefined
+      ? { from: "input", name: binding.name, to }
+      : { from: "input", name: binding.name, map: { ...binding.map }, to }
+  )
+  words.targets[to] = {
+    nodeId: node,
+    inputName: field,
+    type: "scalar",
+    path: [node, "inputs", field],
+  }
 }
 
 function fragmentsOf(step: Step): Fragments {
@@ -160,29 +180,26 @@ function hairWiring(): Record<string, Link> {
 export function traitWords(): TraitWords {
   const lead = idOf(0)
   const nodes: Record<string, WordNode> = { [lead]: wordNode("") }
-  const bindings: ComfyValueBinding[] = [
-    wordBinding("framing", framing, lead, "string_a"),
-    wordBinding("gender", traits.gender, lead, "string_b"),
-  ]
+  const words: Words = { bindings: [], targets: {} }
+  bindWord(words, { name: "framing", map: framing }, lead, "string_a")
+  bindWord(words, { name: "gender", map: traits.gender }, lead, "string_b")
   chain.forEach((step, index) => {
     const node = idOf(index + 1)
     nodes[node] = wordNode(linkTo(index))
-    bindings.push(wordBinding(step, fragmentsOf(step), node, "string_b"))
+    bindWord(words, { name: step, map: fragmentsOf(step) }, node, "string_b")
   })
   const suffix = idOf(chain.length + 1)
   nodes[suffix] = wordNode(linkTo(chain.length), sourceReady)
   const details = idOf(chain.length + 2)
   nodes[details] = wordNode([suffix, 0], "", ". ")
-  bindings.push(
-    {
-      from: "input",
-      name: "hairLength",
-      map: hairWiring(),
-      path: [idOf(chain.indexOf("eyeColor") + 1), "inputs", "string_a"],
-    },
-    { from: "input", name: "details", path: [details, "inputs", "string_b"] }
+  bindWord(
+    words,
+    { name: "hairLength", map: hairWiring() },
+    idOf(chain.indexOf("eyeColor") + 1),
+    "string_a"
   )
-  return { nodes, bindings, output: [details, 0] }
+  bindWord(words, { name: "details" }, details, "string_b")
+  return { nodes, ...words, output: [details, 0] }
 }
 
 const skippedWhenBald: readonly Step[] = ["hairStyle", "hairColor"]

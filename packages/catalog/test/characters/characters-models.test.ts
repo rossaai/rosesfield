@@ -1,3 +1,4 @@
+import { resolveBinding } from "@rosesfield/generation"
 import type { HostedModel } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import { app } from "#characters/app"
@@ -80,5 +81,22 @@ describe("the models of Characters", () => {
         .map((one) => one.id)
         .filter((id) => id.startsWith("characters-"))
     ).toEqual([])
+  })
+
+  it("resolves a body that names no model to the default graph of its own mode, as the price route and the spend guard read it", () => {
+    if (characters === undefined) {
+      throw new Error("The characters app did not parse")
+    }
+    const character = ["5c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f"]
+    const modelsOf = (inputs: Record<string, string | string[]>): unknown =>
+      resolveBinding(characters.engine, inputs).config.models
+    expect(modelsOf({ mode: "angles", character })).toContain(
+      "qwen-image-edit-2511-multiple-angles-lora.safetensors"
+    )
+    expect(modelsOf({ mode: "angles", character })).toEqual(
+      modelsOf({ mode: "angles", character, model: "qwen-image-edit-2511" })
+    )
+    expect(modelsOf({})).toContain("z_image_turbo_bf16.safetensors")
+    expect(modelsOf({ mode: "traits" })).toEqual(modelsOf({}))
   })
 })

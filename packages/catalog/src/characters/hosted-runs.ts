@@ -1,5 +1,9 @@
 import type { InputValue } from "@rosesfield/contract"
-import { fieldRoleOf, type ModelField } from "@rosesfield/generation/bindings"
+import {
+  fieldRoleOf,
+  isOneAtATime,
+  type ModelField,
+} from "@rosesfield/generation/bindings"
 import {
   type AssetId,
   assetIdFormat,
@@ -11,8 +15,7 @@ import {
   loraHeightWords,
   loraSideWords,
 } from "#angles/comfy/angle-words"
-import { angleSets } from "#characters/angle-sets"
-import { viewDistance } from "#characters/comfy/angles-binding"
+import { angleSets, viewDistance } from "#characters/angle-sets"
 import { traitPrompt } from "#characters/comfy/traits-prompt"
 import { traitNames } from "#characters/traits"
 
@@ -21,6 +24,13 @@ type Inputs = Readonly<Record<string, unknown>>
 type MediaField = Extract<ModelField, { kind: "media" }>
 
 export type HostedInputs = Record<string, InputValue>
+
+export type HostedRun = { inputs: HostedInputs; count?: number }
+
+export type HostedRunsOptions = {
+  photos: readonly AssetId[]
+  count: number
+}
 
 const output = "image"
 
@@ -103,18 +113,21 @@ function sharedInputsOf(
 export function hostedRunsOf(
   fields: readonly ModelField[],
   inputs: Inputs,
-  photos: readonly AssetId[]
-): HostedInputs[] {
+  options: HostedRunsOptions
+): HostedRun[] {
   const prompt = fields.find((field) => fieldRoleOf(field, output) === "prompt")
   if (prompt === undefined) {
     return []
   }
   if (inputs.mode !== "angles") {
     const shared = sharedInputsOf(fields, inputs, new Set([prompt.name]))
-    return [{ ...shared, [prompt.name]: traitPrompt(inputs) }]
+    const run = { ...shared, [prompt.name]: traitPrompt(inputs) }
+    return isOneAtATime(fields, output) && options.count > 1
+      ? [{ inputs: run, count: options.count }]
+      : [{ inputs: run }]
   }
   const image = fields.find(isReference)
-  if (image === undefined || photos.length === 0) {
+  if (image === undefined || options.photos.length === 0) {
     return []
   }
   const shared = sharedInputsOf(
@@ -122,10 +135,8 @@ export function hostedRunsOf(
     inputs,
     new Set([prompt.name, image.name])
   )
-  const references = photos.slice(0, image.max)
+  const references = options.photos.slice(0, image.max)
   return anglePromptsOf(inputs.angleSet).map((text) => ({
-    ...shared,
-    [prompt.name]: text,
-    [image.name]: references,
+    inputs: { ...shared, [prompt.name]: text, [image.name]: references },
   }))
 }

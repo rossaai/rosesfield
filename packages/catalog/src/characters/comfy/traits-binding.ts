@@ -1,8 +1,4 @@
 import type { EngineBinding } from "@rosesfield/contract"
-import {
-  type ComfyValueBinding,
-  comfyWorkflow,
-} from "@rosesfield/generation/bindings"
 import { type TraitWords, traitWords } from "#characters/comfy/traits-prompt"
 import { heightsOf, type SizeTable, widthsOf } from "#image/comfy/image-sizes"
 import {
@@ -11,11 +7,8 @@ import {
   referenceModel,
   resolutionsOf,
 } from "#image/image-models"
-import {
-  findWorkflow,
-  type Workflow,
-  type WorkflowTarget,
-} from "#list-workflows"
+import { findWorkflow, type Workflow } from "#list-workflows"
+import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 import { apiGraph } from "#workflow-entry.contract"
 import { WorkflowInvalidError } from "#workflow-invalid.error"
 
@@ -27,16 +20,12 @@ export const portraitModels: readonly ImageModel[] = imageModels.filter(
   (model) => model.value !== referenceModel
 )
 
-function imageWorkflowOf(model: string): string {
-  return `image-${model}`
-}
-
 export function smallestSizesOf(model: ImageModel): SizeTable {
   const [smallest] = resolutionsOf(model)
   const table = smallest === undefined ? undefined : model.sizes[smallest]
   if (table === undefined) {
     throw new WorkflowInvalidError({
-      folder: imageWorkflowOf(model.value),
+      folder: model.workflow,
       reason: "Image lists no size for this model",
     })
   }
@@ -50,91 +39,79 @@ function isSide(name: string, side: "width" | "height"): boolean {
 
 function valueBinding(
   workflow: Workflow,
-  name: string,
-  target: WorkflowTarget,
+  to: string,
   sizes: SizeTable
-): ComfyValueBinding | null {
-  const path = [...target.path]
-  if (name === promptInput) {
-    return null
+): WorkflowValueBinding {
+  if (to === "seed") {
+    return { from: "seed", to }
   }
-  if (name === "seed") {
-    return { from: "seed", path }
+  if (to === "count") {
+    return { from: "count", to }
   }
-  if (name === "count") {
-    return { from: "count", path }
+  if (isSide(to, "width")) {
+    return { from: "aspectRatio", map: widthsOf(sizes), to }
   }
-  if (isSide(name, "width")) {
-    return { from: "aspectRatio", map: widthsOf(sizes), path }
-  }
-  if (isSide(name, "height")) {
-    return { from: "aspectRatio", map: heightsOf(sizes), path }
+  if (isSide(to, "height")) {
+    return { from: "aspectRatio", map: heightsOf(sizes), to }
   }
   throw new WorkflowInvalidError({
     folder: workflow.id,
-    reason: `Characters fills no input named ${name}`,
+    reason: `Characters fills no input named ${to}`,
   })
 }
 
-function promptTargetOf(workflow: Workflow): WorkflowTarget {
-  const target = Object.hasOwn(workflow.inputs, promptInput)
-    ? workflow.inputs[promptInput]
-    : undefined
-  if (target === undefined) {
+function wordedWorkflow(workflow: Workflow, words: TraitWords): Workflow {
+  const { [promptInput]: prompt, ...inputs } = workflow.inputs
+  if (prompt === undefined) {
     throw new WorkflowInvalidError({
       folder: workflow.id,
       reason: "Characters writes the prompt, which its input map lacks",
     })
   }
-  return target
-}
-
-function wordedGraph(
-  workflow: Workflow,
-  words: TraitWords
-): Record<string, unknown> {
   const graph = apiGraph.parse(structuredClone(workflow.graph))
-  for (const added of Object.keys(words.nodes)) {
-    if (Object.hasOwn(graph, added)) {
-      throw new WorkflowInvalidError({
-        folder: workflow.id,
-        reason: `Characters adds node ${added}, which the graph already holds`,
-      })
-    }
+  const taken = Object.keys(words.nodes).find((id) => Object.hasOwn(graph, id))
+  if (taken !== undefined) {
+    throw new WorkflowInvalidError({
+      folder: workflow.id,
+      reason: `Characters adds node ${taken}, which the graph already holds`,
+    })
   }
-  const [nodeId, , field] = promptTargetOf(workflow).path
-  const prompt = graph[nodeId]
-  if (prompt === undefined) {
+  const [nodeId, , field] = prompt.path
+  const node = graph[nodeId]
+  if (node === undefined) {
     throw new WorkflowInvalidError({
       folder: workflow.id,
       reason: `the prompt names node ${nodeId}, which the graph lacks`,
     })
   }
-  prompt.inputs[field] = words.output
-  return { ...graph, ...words.nodes }
+  node.inputs[field] = words.output
+  return {
+    ...workflow,
+    graph: { ...graph, ...words.nodes },
+    inputs: { ...inputs, ...words.targets },
+  }
 }
 
 export function traitsBinding(
   model: ImageModel,
   find: Find = findWorkflow
 ): EngineBinding {
-  const id = imageWorkflowOf(model.value)
-  const workflow = find(id)
+  const workflow = find(model.workflow)
   if (workflow === null) {
     throw new WorkflowInvalidError({
-      folder: id,
+      folder: model.workflow,
       reason: "no folder of workflows/ holds it",
     })
   }
   const words = traitWords()
   const sizes = smallestSizesOf(model)
-  const values = Object.entries(workflow.inputs).flatMap(([name, target]) => {
-    const binding = valueBinding(workflow, name, target, sizes)
-    return binding === null ? [] : [binding]
-  })
-  return comfyWorkflow({
-    workflow: wordedGraph(workflow, words),
+  const values = Object.keys(workflow.inputs)
+    .filter((name) => name !== promptInput)
+    .map((name) => valueBinding(workflow, name, sizes))
+  const worded = wordedWorkflow(workflow, words)
+  return workflowBinding({
+    workflow: worded.id,
     bindings: [...words.bindings, ...values],
-    models: [...workflow.models],
+    find: () => worded,
   })
 }

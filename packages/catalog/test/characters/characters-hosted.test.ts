@@ -6,7 +6,11 @@ import {
 import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { traitPrompt } from "#characters/comfy/traits-prompt"
-import { anglePromptsOf, hostedRunsOf } from "#characters/hosted-runs"
+import {
+  anglePromptsOf,
+  type HostedRun,
+  hostedRunsOf,
+} from "#characters/hosted-runs"
 
 const model = "bfl/flux-3-image"
 
@@ -81,9 +85,15 @@ const angles = {
   aspect_ratio: "1:1",
 }
 
+function inputsOf(runs: readonly HostedRun[]): HostedRun["inputs"][] {
+  return runs.map((run) => run.inputs)
+}
+
+const once = { photos: [], count: 1 }
+
 describe("a Characters run on a hosted model", () => {
   it("writes the traits into the model's prompt with the graph's words", () => {
-    const [run] = hostedRunsOf(fields, traits, [])
+    const [run] = inputsOf(hostedRunsOf(fields, traits, once))
     expect(run?.prompt).toBe(
       "Head and shoulders portrait photograph of one person, a woman, middle-aged, in their fifties, long hair, wavy hair, red hair, in front of a plain light grey studio background, neutral expression, looking straight at the camera, front view, soft even light, sharp focus. round glasses"
     )
@@ -105,7 +115,7 @@ describe("a Characters run on a hosted model", () => {
   })
 
   it("sends only the model's own inputs, so the model takes every one", () => {
-    const [run] = hostedRunsOf(fields, traits, [])
+    const [run] = inputsOf(hostedRunsOf(fields, traits, once))
     expect(run).toBeDefined()
     expect(checkModelInputs(form, run ?? {}).kind).toBe("valid")
     expect(Object.keys(run ?? {}).sort()).toEqual(
@@ -114,7 +124,7 @@ describe("a Characters run on a hosted model", () => {
   })
 
   it("makes one run per view of the angle set, each naming its view, with the character's photos up to the model's limit", () => {
-    const runs = hostedRunsOf(fields, angles, photos)
+    const runs = inputsOf(hostedRunsOf(fields, angles, { photos, count: 4 }))
     expect(runs).toHaveLength(4)
     expect(runs.map((run) => run.prompt)).toEqual(anglePromptsOf("quarters"))
     expect(runs.map((run) => run.prompt)).toEqual([
@@ -131,12 +141,38 @@ describe("a Characters run on a hosted model", () => {
 
   it("starts no angles run on a model that takes no image or with no photo", () => {
     const textOnly = fields.filter((field) => field.kind !== "media")
-    expect(hostedRunsOf(textOnly, angles, photos)).toEqual([])
-    expect(hostedRunsOf(fields, angles, [])).toEqual([])
+    expect(hostedRunsOf(textOnly, angles, { photos, count: 4 })).toEqual([])
+    expect(hostedRunsOf(fields, angles, { photos: [], count: 4 })).toEqual([])
   })
 
   it("starts no run on a model with no prompt, since the traits reach a model only there", () => {
     const noPrompt = fields.filter((field) => field.kind !== "prompt")
-    expect(hostedRunsOf(noPrompt, traits, [])).toEqual([])
+    expect(hostedRunsOf(noPrompt, traits, once)).toEqual([])
+  })
+
+  it("asks a model that makes one image per call for the count you chose, and a model with its own count through that count", () => {
+    const [many] = hostedRunsOf(fields, traits, { photos: [], count: 3 })
+    expect(many?.count).toBe(3)
+    expect(hostedRunsOf(fields, traits, once)[0]).not.toHaveProperty("count")
+    const counted: readonly ModelField[] = [
+      ...fields,
+      {
+        kind: "number",
+        name: "num_images",
+        path: "num_images",
+        required: false,
+        min: 1,
+        max: 4,
+        integer: true,
+        default: 1,
+      },
+    ]
+    const [own] = hostedRunsOf(
+      counted,
+      { ...traits, num_images: 3 },
+      { photos: [], count: 3 }
+    )
+    expect(own).not.toHaveProperty("count")
+    expect(own?.inputs.num_images).toBe(3)
   })
 })
