@@ -13,7 +13,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "bun --bun vitest run --passWithNoTests"
+    "test": "bun --bun vitest run --passWithNoTests",
+    "record:router": "bun test/scenarios/record.ts"
   },
   "dependencies": {
     "@earendil-works/pi-ai": "1.3.0",
