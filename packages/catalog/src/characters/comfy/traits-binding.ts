@@ -32,32 +32,47 @@ export function smallestSizesOf(model: ImageModel): SizeTable {
   return table
 }
 
-function isSide(name: string, side: "width" | "height"): boolean {
-  const upper = `${side.charAt(0).toUpperCase()}${side.slice(1)}`
-  return name === side || name.endsWith(upper)
+type SizeTargets = {
+  widths: readonly string[]
+  heights: readonly string[]
 }
 
-function valueBinding(
-  workflow: Workflow,
-  to: string,
+const plainSize: SizeTargets = { widths: ["width"], heights: ["height"] }
+
+const sizeTargets: Readonly<Record<string, SizeTargets>> = {
+  "image-z-image-turbo": plainSize,
+  "image-qwen-image-2512": plainSize,
+  "image-ming-image-0-1-design": {
+    widths: ["width", "samplingWidth"],
+    heights: ["height", "samplingHeight"],
+  },
+}
+
+function valueBindings(
+  model: ImageModel,
   sizes: SizeTable
-): WorkflowValueBinding {
-  if (to === "seed") {
-    return { from: "seed", to }
+): WorkflowValueBinding[] {
+  const targets = Object.hasOwn(sizeTargets, model.workflow)
+    ? sizeTargets[model.workflow]
+    : undefined
+  if (targets === undefined) {
+    throw new WorkflowInvalidError({
+      folder: model.workflow,
+      reason: "Characters names no size targets for this graph",
+    })
   }
-  if (to === "count") {
-    return { from: "count", to }
-  }
-  if (isSide(to, "width")) {
-    return { from: "aspectRatio", map: widthsOf(sizes), to }
-  }
-  if (isSide(to, "height")) {
-    return { from: "aspectRatio", map: heightsOf(sizes), to }
-  }
-  throw new WorkflowInvalidError({
-    folder: workflow.id,
-    reason: `Characters fills no input named ${to}`,
-  })
+  const widths = widthsOf(sizes)
+  const heights = heightsOf(sizes)
+  return [
+    { from: "seed", to: "seed" },
+    { from: "count", to: "count" },
+    ...targets.widths.map(
+      (to): WorkflowValueBinding => ({ from: "aspectRatio", map: widths, to })
+    ),
+    ...targets.heights.map(
+      (to): WorkflowValueBinding => ({ from: "aspectRatio", map: heights, to })
+    ),
+  ]
 }
 
 function wordedWorkflow(workflow: Workflow, words: TraitWords): Workflow {
@@ -104,10 +119,7 @@ export function traitsBinding(
     })
   }
   const words = traitWords()
-  const sizes = smallestSizesOf(model)
-  const values = Object.keys(workflow.inputs)
-    .filter((name) => name !== promptInput)
-    .map((name) => valueBinding(workflow, name, sizes))
+  const values = valueBindings(model, smallestSizesOf(model))
   const worded = wordedWorkflow(workflow, words)
   return workflowBinding({
     workflow: worded.id,

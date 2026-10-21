@@ -32,9 +32,13 @@ export type HostedRunsOptions = {
   count: number
 }
 
+export type AnglesGap = "model" | "character" | null
+
 const output = "image"
 
 const modelInput = "model"
+
+const modeInput = "mode"
 
 const defaultSet = "turnaround"
 
@@ -95,8 +99,15 @@ function sharedInputsOf(
   skipped: ReadonlySet<string>
 ): HostedInputs {
   const model = inputs[modelInput]
+  const mode = inputs[modeInput]
   const shared: HostedInputs =
     typeof model === "string" ? { [modelInput]: model } : {}
+  if (
+    typeof mode === "string" &&
+    !fields.some((field) => field.name === modeInput)
+  ) {
+    shared[modeInput] = mode
+  }
   for (const field of fields) {
     const value = inputs[field.name]
     if (
@@ -110,12 +121,26 @@ function sharedInputsOf(
   return shared
 }
 
+function promptOf(fields: readonly ModelField[]): ModelField | undefined {
+  return fields.find((field) => fieldRoleOf(field, output) === "prompt")
+}
+
+export function anglesGapOf(
+  fields: readonly ModelField[],
+  photos: readonly AssetId[]
+): AnglesGap {
+  if (promptOf(fields) === undefined || !fields.some(isReference)) {
+    return "model"
+  }
+  return photos.length === 0 ? "character" : null
+}
+
 export function hostedRunsOf(
   fields: readonly ModelField[],
   inputs: Inputs,
   options: HostedRunsOptions
 ): HostedRun[] {
-  const prompt = fields.find((field) => fieldRoleOf(field, output) === "prompt")
+  const prompt = promptOf(fields)
   if (prompt === undefined) {
     return []
   }

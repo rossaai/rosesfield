@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest"
 import { traitPrompt } from "#characters/comfy/traits-prompt"
 import {
   anglePromptsOf,
+  anglesGapOf,
   type HostedRun,
   hostedRunsOf,
 } from "#characters/hosted-runs"
@@ -114,14 +115,6 @@ describe("a Characters run on a hosted model", () => {
     expect(bald).not.toContain("blond")
   })
 
-  it("sends only the model's own inputs, so the model takes every one", () => {
-    const [run] = inputsOf(hostedRunsOf(fields, traits, once))
-    expect(run).toBeDefined()
-    expect(checkModelInputs(form, run ?? {}).kind).toBe("valid")
-    expect(Object.keys(run ?? {}).sort()).toEqual(
-      ["aspect_ratio", "model", "prompt", "seed"].sort()
-    )
-  })
 
   it("makes one run per view of the angle set, each naming its view, with the character's photos up to the model's limit", () => {
     const runs = inputsOf(hostedRunsOf(fields, angles, { photos, count: 4 }))
@@ -135,7 +128,7 @@ describe("a Characters run on a hosted model", () => {
     ])
     for (const run of runs) {
       expect(run.input_images).toEqual(photos.slice(0, 3))
-      expect(checkModelInputs(form, run).kind).toBe("valid")
+      expect(checkModelInputs(form, modelInputsOf(run)).kind).toBe("valid")
     }
   })
 
@@ -174,5 +167,72 @@ describe("a Characters run on a hosted model", () => {
     )
     expect(own).not.toHaveProperty("count")
     expect(own?.inputs.num_images).toBe(3)
+  })
+})
+
+function modelInputsOf(run: HostedRun["inputs"]): HostedRun["inputs"] {
+  const { mode: _, ...rest } = run
+  return rest
+}
+
+describe("the inputs a hosted Characters run sends", () => {
+  it("sends the model's own inputs and the app's mode, which the run start keeps as the mode's chooser", () => {
+    const [run] = inputsOf(hostedRunsOf(fields, traits, once))
+    expect(run).toBeDefined()
+    expect(run?.mode).toBe("traits")
+    expect(checkModelInputs(form, modelInputsOf(run ?? {})).kind).toBe("valid")
+    expect(Object.keys(run ?? {}).sort()).toEqual(
+      ["aspect_ratio", "mode", "model", "prompt", "seed"].sort()
+    )
+  })
+
+  it("sends the angles mode with each view, so each view shows as an angle view", () => {
+    const runs = inputsOf(hostedRunsOf(fields, angles, { photos, count: 4 }))
+    expect(runs.map((run) => run.mode)).toEqual([
+      "angles",
+      "angles",
+      "angles",
+      "angles",
+    ])
+    for (const run of runs) {
+      expect(checkModelInputs(form, modelInputsOf(run)).kind).toBe("valid")
+    }
+  })
+
+  it("sends no app mode to a model with a mode field of its own", () => {
+    const moded: readonly ModelField[] = [
+      ...fields,
+      {
+        kind: "choice",
+        name: "mode",
+        path: "mode",
+        required: false,
+        options: ["fast", "slow"],
+        default: "fast",
+      },
+    ]
+    const [run] = inputsOf(hostedRunsOf(moded, traits, once))
+    expect(run).not.toHaveProperty("mode")
+  })
+
+  it("sends at most the model's own number of reference photos, the first photos first", () => {
+    const many = [...photos, ...photos.slice(0, 2)]
+    const runs = inputsOf(
+      hostedRunsOf(fields, angles, { photos: many, count: 4 })
+    )
+    for (const run of runs) {
+      expect(run.input_images).toEqual(many.slice(0, 3))
+    }
+  })
+})
+
+describe("what stops a hosted angle set", () => {
+  it("names the model when it takes no photo or no prompt, and the character when no photo is in hand", () => {
+    const textOnly = fields.filter((field) => field.kind !== "media")
+    const noPrompt = fields.filter((field) => field.kind !== "prompt")
+    expect(anglesGapOf(textOnly, photos)).toBe("model")
+    expect(anglesGapOf(noPrompt, photos)).toBe("model")
+    expect(anglesGapOf(fields, [])).toBe("character")
+    expect(anglesGapOf(fields, photos)).toBeNull()
   })
 })
