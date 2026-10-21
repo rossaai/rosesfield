@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import type { OpenPiModelsOptions, PiAgentHarness } from "@rosesfield/agent"
+import { BunMediaTool } from "@rosesfield/catalog/remake/bun"
 import type { AppDefinition } from "@rosesfield/contract"
 import {
   ComfyAccount,
@@ -116,6 +117,7 @@ export function composeLocalGateway(
     engineOptions: {
       clock,
       meter: sharedCreditMeter(clock),
+      media: new BunMediaTool(),
       ...fetchPart,
       ...(options.warmCatalog === true ? { warmCatalog: true } : {}),
     },

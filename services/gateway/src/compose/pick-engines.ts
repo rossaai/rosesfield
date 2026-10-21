@@ -1,4 +1,9 @@
 import {
+  type MediaTool,
+  RemakeGenerationEngine,
+  RouterPlanTurn,
+} from "@rosesfield/catalog/remake"
+import {
   ComfyGenerationEngine,
   ComfyRouterGenerationEngine,
   type CreditMeter,
@@ -23,6 +28,7 @@ export type EngineOptions = {
   catalog?: RouterCatalog
   meter?: CreditMeter
   warmCatalog?: boolean
+  media?: MediaTool
 }
 
 function meterOf(options: EngineOptions): { meter?: CreditMeter } {
@@ -76,6 +82,22 @@ function hostedKeyOf(engine: EngineSettings): string | null {
   return key?.startsWith(comfyKeyPrefix) === true ? key : null
 }
 
+function withRemake(
+  engines: readonly GenerationEngine[],
+  key: string | null,
+  options: EngineOptions
+): readonly GenerationEngine[] {
+  if (options.media === undefined) {
+    return engines
+  }
+  const remake = new RemakeGenerationEngine({
+    engines,
+    media: options.media,
+    plan: new RouterPlanTurn({ apiKey: key, ...fetchOf(options) }),
+  })
+  return [remake, ...engines]
+}
+
 export function pickEngines(
   engine: EngineSettings,
   options: EngineOptions
@@ -88,7 +110,7 @@ export function pickEngines(
         router,
         new DemoGenerationEngine({ clock: options.clock, rates: router }),
       ]
-    : [live, router]
+    : withRemake([live, router], hostedKeyOf(engine), options)
 }
 
 export function visitorEngines(
