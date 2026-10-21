@@ -176,7 +176,7 @@
   "370": {
     "class_type": "CreateVideo",
     "inputs": {
-      "images": ["380", 0],
+      "images": ["381", 0],
       "audio": ["361", 0],
       "fps": 24,
       "bit_depth": 8
@@ -230,6 +230,17 @@
     },
     "_meta": {
       "title": "Delivery size"
+    }
+  },
+  "381": {
+    "class_type": "ImageAddNoise",
+    "inputs": {
+      "image": ["380", 0],
+      "seed": 0,
+      "strength": 0.004
+    },
+    "_meta": {
+      "title": "Grain"
     }
   },
   "384": {

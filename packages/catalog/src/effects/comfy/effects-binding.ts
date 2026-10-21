@@ -37,6 +37,7 @@ function runBindings(
       map: sizeMap(delivery, "height"),
       to: "deliveryHeight",
     },
+    { from: "seed", to: "grainSeed" },
     ...(hasEditPass(recipe)
       ? [{ from: "seed", to: "endFrameSeed" } as const]
       : []),

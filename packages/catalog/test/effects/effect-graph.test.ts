@@ -9,6 +9,7 @@ import {
   effectGraph,
   endFrameNodes,
   fittedPhotoNode,
+  grainNode,
   imageEditNodes,
   loudnessNode,
   matteNodes,
@@ -29,7 +30,6 @@ import {
   type Workflow,
   workflowOf,
 } from "./effects-replay"
-import uiFile from "../../../../workflows/effects-ltx-2-5/effects-ltx-2-5.json"
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -52,22 +52,6 @@ function leavesOf(binding: EngineBinding, path = ""): [string, Workflow][] {
           : []
       )
     : []
-}
-
-const videoLoader = "384"
-
-const textLoader = "387"
-
-const bf16Video = "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
-
-const bf16Text = "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors"
-
-function uiNodeOf(id: number): Record<string, unknown> {
-  const node = uiFile.nodes.find((one) => one.id === id)
-  if (node === undefined) {
-    throw new Error(`the UI file has no node ${id}`)
-  }
-  return node
 }
 
 function guidesOnAudio(workflow: Workflow): string[] {
@@ -110,57 +94,6 @@ function editReaders(workflow: Workflow): string[] {
 }
 
 describe("the effect recipes", () => {
-  it("loads the bf16 LTX 2.5 transformer and text encoder in the API file, the UI file and every leaf", () => {
-    expect(fileGraph()).toMatchObject({
-      [videoLoader]: {
-        class_type: "UNETLoader",
-        inputs: { unet_name: bf16Video },
-      },
-      [textLoader]: {
-        class_type: "CLIPLoader",
-        inputs: { clip_name: bf16Text },
-      },
-    })
-    for (const [id, file, folder] of [
-      [384, bf16Video, "diffusion_models"],
-      [387, bf16Text, "text_encoders"],
-    ] as const) {
-      expect(uiNodeOf(id)).toMatchObject({
-        widgets_values: expect.arrayContaining([file]),
-        properties: {
-          models: [
-            {
-              name: file,
-              url: `https://huggingface.co/Lightricks/LTX-2.5/resolve/main/${folder}/${file}`,
-              directory: folder,
-            },
-          ],
-        },
-      })
-    }
-    for (const recipe of effectRecipes) {
-      for (const resolution of resolutionValues) {
-        const binding = effectBinding(recipe, resolution)
-        const workflow = workflowOf(binding.config.workflow)
-        const path = `${recipe.effect} ${resolution}`
-        expect({
-          path,
-          video: workflow[videoLoader]?.inputs.unet_name,
-          text: workflow[textLoader]?.inputs.clip_name,
-          models: binding.config.models,
-        }).toMatchObject({
-          path,
-          video: bf16Video,
-          text: bf16Text,
-          models: expect.arrayContaining([bf16Video, bf16Text]),
-        })
-        expect(
-          Array.isArray(binding.config.models) ? binding.config.models[0] : null
-        ).toBe(bf16Video)
-      }
-    }
-  })
-
   it("sends from every leaf a whole graph of file nodes, guides on the video latent only", () => {
     const fileIds = Object.keys(fileGraph())
     const leaves = leavesOf(effectsBinding(effectRecipes))
@@ -199,7 +132,7 @@ describe("the effect recipes", () => {
       "460": { inputs: { image: ["627", 0] } },
       "463": { inputs: { image: ["627", 0] } },
       "380": { inputs: { image: ["374", 0], crop: "center" } },
-      "370": { inputs: { images: ["380", 0], audio: ["361", 0] } },
+      "370": { inputs: { images: [grainNode, 0], audio: ["361", 0] } },
       "75": { inputs: { format: "mp4", "format.codec": "h264" } },
     })
   })

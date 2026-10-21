@@ -7,6 +7,10 @@ export const minimumBalance = 2000
 
 const strength = z.number().min(0).max(1)
 
+export const maxGrain = 0.02
+
+export const defaultGrain = 0.004
+
 const plainLine = z.string().min(1).max(600)
 
 export const endFrame = z.discriminatedUnion("source", [
@@ -70,6 +74,7 @@ export const effectDesign = z.strictObject({
     container: z.literal("mp4"),
     codec: z.literal("h264"),
     bitDepth: z.literal(8),
+    grain: z.number().min(0).max(maxGrain).default(defaultGrain),
   }),
 })
 

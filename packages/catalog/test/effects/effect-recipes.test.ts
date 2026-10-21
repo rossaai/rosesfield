@@ -64,6 +64,7 @@ describe("the effect recipes kept as data", () => {
         container: "mp4",
         codec: "h264",
         bitDepth: 8,
+        grain: 0.004,
       })
       expect(recipe.seconds).toBeGreaterThanOrEqual(5)
       expect(recipe.seconds).toBeLessThanOrEqual(15)

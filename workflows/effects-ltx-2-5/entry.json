@@ -66,6 +66,11 @@
       "nodeId": "380",
       "inputName": "height",
       "type": "scalar"
+    },
+    "grainSeed": {
+      "nodeId": "381",
+      "inputName": "seed",
+      "type": "scalar"
     }
   },
   "outputs": [

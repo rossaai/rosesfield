@@ -21,8 +21,7 @@ import {
   submitted,
 } from "./effects-replay"
 
-const videoModel =
-  "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
+const videoModel = "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
 
 const ltxModels = [
   "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
@@ -147,6 +146,15 @@ describe("every effects engine request against the recorded v2 routes", () => {
       "380": {
         inputs: { width: delivery.width, height: delivery.height },
       },
+      "381": {
+        class_type: "ImageAddNoise",
+        inputs: {
+          image: ["380", 0],
+          seed: 42,
+          strength: recipe.design.encode.grain,
+        },
+      },
+      "370": { inputs: { images: ["381", 0] } },
     })
     expect(promptText(workflow, "364").trim()).toBe(expectedPrompt(recipe))
     expect(workflow["373"]?.inputs.text).toBe("")
