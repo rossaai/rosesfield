@@ -4,9 +4,6 @@
   "design": {
     "unit": "grow-giant",
     "family": "effects",
-    "fit": {
-      "prompt": "Place the person, at giant scale, in a wide city avenue with tall buildings. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. The person stands taller than the lower floors of the buildings, and people walk at their feet."
-    },
     "setPiece": "The person as a giant in a city avenue, seen in three shots: from the street, through a window onto glass towers, and beside a glass tower.",
     "cuts": [
       {

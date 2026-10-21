@@ -4,9 +4,6 @@
   "design": {
     "unit": "still-in-the-street",
     "family": "effects",
-    "fit": {
-      "prompt": "Fit the photo to the new frame. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. Add new matching scene content at every added edge, with no borders, bars or blur."
-    },
     "setPiece": "The person holds their pose while the world around them moves: people, a van, a cart and boxes pass and things appear.",
     "cuts": [],
     "lastFrame": {

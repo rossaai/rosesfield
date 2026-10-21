@@ -16,6 +16,11 @@ export const endFrame = z.discriminatedUnion("source", [
     prompt: plainLine,
     strength,
   }),
+  z.strictObject({
+    source: z.literal("dark"),
+    luma: z.number().int().min(0).max(40),
+    strength,
+  }),
 ])
 
 const adapter = z.strictObject({
@@ -47,7 +52,6 @@ export const soundBed = z
 export const effectDesign = z.strictObject({
   unit: choiceValue,
   family: z.literal("effects"),
-  fit: z.strictObject({ prompt: plainLine }),
   setPiece: plainLine,
   cuts: z.array(cutWindow).max(4),
   lastFrame: z.strictObject({
@@ -163,10 +167,19 @@ export const effectRecipe = z
   })
   .refine(
     (recipe) =>
-      recipe.photoFrame === "first" || recipe.endFrame.source === "edit",
+      recipe.photoFrame === "first" || recipe.endFrame.source !== "none",
     {
       message:
         "A look that lands on the photo opens on its edited frame, so it has one",
+      path: ["endFrame"],
+    }
+  )
+  .refine(
+    (recipe) =>
+      recipe.photoFrame === "first" || recipe.endFrame.source !== "dark",
+    {
+      message:
+        "A look that lands on the photo guides its last frame with the photo, so it takes no dark end frame",
       path: ["endFrame"],
     }
   )
