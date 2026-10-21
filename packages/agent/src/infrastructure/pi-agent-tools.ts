@@ -16,6 +16,11 @@ export type AgentToolHandlers = LibraryToolHandlers & {
   readModelForms: ReadModelFormsHandler
 }
 
+export type AgentToolSet = {
+  tools: ToolRegistration[]
+  complete: boolean
+}
+
 type AgentToolsOptions = {
   apps: readonly AppDefinition[]
   handlers: () => AgentToolHandlers
@@ -39,7 +44,7 @@ export function agentTools(options: AgentToolsOptions): ToolRegistration[] {
 
 export function publishedAgentTools(
   options: AgentToolsOptions
-): () => Promise<ToolRegistration[]> {
+): () => Promise<AgentToolSet> {
   return async () => {
     const models = openApps(options.apps).flatMap((app) => {
       const model = publishedModelOf(app)
@@ -47,8 +52,11 @@ export function publishedAgentTools(
     })
     const read =
       models.length === 0
-        ? { forms: [] }
+        ? { forms: [], refusal: null }
         : await options.handlers().readModelForms.execute({ models })
-    return agentTools({ ...options, forms: read.forms })
+    return {
+      tools: agentTools({ ...options, forms: read.forms }),
+      complete: read.forms.length === new Set(models).size,
+    }
   }
 }

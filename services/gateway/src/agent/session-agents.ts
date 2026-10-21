@@ -9,9 +9,9 @@ import {
 import { join } from "node:path"
 import {
   type AgentModel,
-  openPiModels,
-  PiAgentHarness,
-  publishedAgentTools,
+  type OpenPiModelsOptions,
+  type PiAgentHarness,
+  routerAgentHarness,
 } from "@rosesfield/agent"
 import { openSqliteFileStorage } from "@rosesfield/agent/local"
 import type { AppDefinition } from "@rosesfield/contract"
@@ -25,6 +25,7 @@ type SessionAgentsOptions = {
   model: AgentModel
   apps: readonly AppDefinition[]
   clock: Clock
+  modelOptions?: OpenPiModelsOptions
 }
 
 type OpenAgent = {
@@ -43,6 +44,7 @@ export class SessionAgents {
   private readonly model: AgentModel
   private readonly apps: readonly AppDefinition[]
   private readonly clock: Clock
+  private readonly modelOptions: OpenPiModelsOptions
   private readonly open = new Map<SessionId, OpenAgent>()
 
   constructor(options: SessionAgentsOptions) {
@@ -50,6 +52,7 @@ export class SessionAgents {
     this.model = options.model
     this.apps = options.apps
     this.clock = options.clock
+    this.modelOptions = options.modelOptions ?? {}
     mkdirSync(this.folder, { recursive: true })
   }
 
@@ -126,13 +129,12 @@ export class SessionAgents {
     const access = new AgentAccess()
     const model = this.model
     const file = this.fileOf(sessionId)
-    const agent = new PiAgentHarness({
-      models: () => openPiModels(model, { keyOf: () => access.modelKey() }),
+    const agent = routerAgentHarness({
+      model,
+      modelOptions: { ...this.modelOptions, keyOf: () => access.modelKey() },
       storage: () => openSqliteFileStorage(file),
-      tools: publishedAgentTools({
-        apps: this.apps,
-        handlers: () => access.handlers(),
-      }),
+      apps: this.apps,
+      handlers: () => access.handlers(),
       clock: this.clock,
     })
     const entry: OpenAgent = { agent, access, idle: null }

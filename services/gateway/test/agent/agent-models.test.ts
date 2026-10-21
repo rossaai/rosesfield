@@ -134,6 +134,23 @@ describe("the agent's model list", () => {
     })
   })
 
+  it("lists no model when the Router's chat route takes no tools", async () => {
+    const toolless = schemaOf({
+      model: routerChat.route,
+      takes: ["text"],
+      makes: ["text"],
+      properties: { prompt: { type: "string" } },
+    })
+    const router = fakeRouter({ schemas: [pictureModel, toolless] })
+    const app = gatewayWith(router.fetch, agent())
+
+    expect(await modelsOf(await call(app))).toEqual({
+      models: [],
+      model: null,
+      refusal: null,
+    })
+  })
+
   it("answers that a model is needed when the server has no agent", async () => {
     const router = fakeRouter({ schemas: [chatModel] })
     const app = gatewayWith(router.fetch, null)

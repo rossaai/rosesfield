@@ -102,6 +102,7 @@ export {
 } from "#infrastructure/pi-agent-harness"
 export {
   type AgentToolHandlers,
+  type AgentToolSet,
   agentTools,
   publishedAgentTools,
 } from "#infrastructure/pi-agent-tools"
@@ -112,6 +113,10 @@ export {
   type PiModels,
   routerAgentModel,
 } from "#infrastructure/pi-models"
+export {
+  type RouterAgentHarnessOptions,
+  routerAgentHarness,
+} from "#infrastructure/router-agent-harness"
 export type { Fetch } from "#infrastructure/router-chat-fetch"
 export {
   defaultChatModel,

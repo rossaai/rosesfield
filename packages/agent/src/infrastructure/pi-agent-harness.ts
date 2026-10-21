@@ -2,10 +2,12 @@ import {
   ConversationBusy,
   createRegistry,
   defineExtension,
+  type Extension,
   Harness,
   type HarnessSettings,
   type ModelRef,
   type Conversation as PiConversation,
+  type Registry,
   type Storage,
   section,
   type ToolRegistration,
@@ -34,6 +36,7 @@ import { AgentModelUnknownError } from "#domain/error/agent-model-unknown.error"
 import { ConversationBusyError } from "#domain/error/conversation-busy.error"
 import { ConversationNotFoundError } from "#domain/error/conversation-not-found.error"
 import { ProposalNotFoundError } from "#domain/error/proposal-not-found.error"
+import type { AgentToolSet } from "#infrastructure/pi-agent-tools"
 import { PiAnswerStream } from "#infrastructure/pi-answer-stream"
 import { proposalOf } from "#infrastructure/pi-app-tool"
 import { backgroundContext } from "#infrastructure/pi-context"
@@ -49,7 +52,7 @@ import { transcriptOf } from "#infrastructure/pi-transcript"
 
 export type AgentToolSource =
   | readonly ToolRegistration[]
-  | (() => Promise<readonly ToolRegistration[]>)
+  | (() => Promise<AgentToolSet>)
 
 export type PiAgentHarnessOptions = {
   models: () => Promise<PiModels>
@@ -63,6 +66,8 @@ type Opened = {
   harness: Harness
   model: ModelRef
   models: Models
+  registry: Registry
+  tools: { complete: boolean }
 }
 
 type Found = {
@@ -84,16 +89,17 @@ export class PiAgentHarness extends AgentHarness {
 
   private readonly models: () => Promise<PiModels>
   private readonly storage: () => Promise<Storage>
-  private readonly tools: AgentToolSource
+  private readonly tools: () => Promise<AgentToolSet>
   private readonly clock: Clock
   private readonly settings: HarnessSettings
   private opening: Promise<Opened> | null = null
+  private rereading: Promise<void> | null = null
 
   constructor(options: PiAgentHarnessOptions) {
     super()
     this.models = options.models
     this.storage = options.storage
-    this.tools = options.tools
+    this.tools = toolSourceOf(options.tools)
     this.clock = options.clock
     this.settings = options.settings ?? PiAgentHarness.settings
   }
@@ -202,6 +208,7 @@ export class PiAgentHarness extends AgentHarness {
     const found = await this.find(message.conversationId)
     const { harness, conversation } = found
     const opened = await this.open()
+    await this.completeTools(opened)
     await useModel(conversation, {
       provider: found.model.provider,
       modelId: await chosenOf(opened),
@@ -314,23 +321,38 @@ export class PiAgentHarness extends AgentHarness {
 
   private async openHarness(): Promise<Opened> {
     const { models, ref } = await this.models()
-    const tools =
-      typeof this.tools === "function" ? await this.tools() : this.tools
+    const read = await this.tools()
     const registry = createRegistry()
-    registry.install(
-      defineExtension({
-        name: "rosesfield",
-        tools,
-        sections: [section("rosesfield", () => agentCopy.instructions)],
-      })
-    )
+    registry.install(extensionOf(read.tools))
     const harness = await Harness.open(
       await this.storage(),
       { models, registry, settings: this.settings },
       context
     )
     harness.resume()
-    return { harness, model: ref, models }
+    return {
+      harness,
+      model: ref,
+      models,
+      registry,
+      tools: { complete: read.complete },
+    }
+  }
+
+  private async completeTools(opened: Opened): Promise<void> {
+    if (opened.tools.complete) {
+      return
+    }
+    this.rereading ??= this.reinstallTools(opened).finally(() => {
+      this.rereading = null
+    })
+    await this.rereading
+  }
+
+  private async reinstallTools(opened: Opened): Promise<void> {
+    const read = await this.tools()
+    opened.registry.install(extensionOf(read.tools))
+    opened.tools.complete = read.complete
   }
 
   private async find(conversationId: ConversationId): Promise<Found> {
@@ -346,6 +368,22 @@ export class PiAgentHarness extends AgentHarness {
     }
     return { harness, model, listed, conversation }
   }
+}
+
+function toolSourceOf(source: AgentToolSource): () => Promise<AgentToolSet> {
+  if (typeof source === "function") {
+    return source
+  }
+  const tools = [...source]
+  return async () => ({ tools, complete: true })
+}
+
+function extensionOf(tools: readonly ToolRegistration[]): Extension {
+  return defineExtension({
+    name: "rosesfield",
+    tools,
+    sections: [section("rosesfield", () => agentCopy.instructions)],
+  })
 }
 
 async function conversationOf(

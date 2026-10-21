@@ -1,4 +1,5 @@
 import { type AgentModel, routerAgentModel } from "@rosesfield/agent"
+import type { EngineSettings } from "#engine/engine-target"
 import { EnvInvalidError } from "#error/env-invalid.error"
 
 export const goneAgentSettings: readonly string[] = [
@@ -18,6 +19,7 @@ function goneProblem(name: string): string {
 
 export function readAgentEnv(
   source: Readonly<Record<string, unknown>>,
+  engine: EngineSettings,
   mode: "owner" | "public" = "owner"
 ): AgentModel | null {
   const held = goneAgentSettings.filter(
@@ -26,9 +28,11 @@ export function readAgentEnv(
   if (held.length > 0) {
     throw new EnvInvalidError({ problems: held.map(goneProblem) })
   }
+  if (engine.target !== "comfy-cloud") {
+    return null
+  }
   if (mode === "public") {
     return routerAgentModel(null)
   }
-  const key = textOf(source.COMFY_API_KEY)
-  return key === null ? null : routerAgentModel(key)
+  return engine.apiKey === null ? null : routerAgentModel(engine.apiKey)
 }

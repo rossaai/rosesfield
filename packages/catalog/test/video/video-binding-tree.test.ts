@@ -45,6 +45,7 @@ function onlyFrom(id: string, images: readonly ModelField[]): HostedModel {
     provider: "maker",
     takes: ["text", "image"],
     makes: ["video"],
+    takesTools: false,
     form: {
       model: id,
       fields: [

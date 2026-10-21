@@ -51,6 +51,7 @@ const clip: HostedModel = {
   provider: "maker",
   takes: ["text"],
   makes: ["video"],
+  takesTools: false,
   form: {
     model: "maker/clip-1",
     fields: [

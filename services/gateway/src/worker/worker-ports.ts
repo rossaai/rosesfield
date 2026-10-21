@@ -30,10 +30,6 @@ export type WorkerBindings = {
   RETENTION_DAYS?: string
   SESSION_REQUESTS_PER_MINUTE?: string
   SPEND_CAP_CREDITS?: string
-  AGENT_PROVIDER?: string
-  AGENT_MODEL?: string
-  AGENT_API_KEY?: string
-  AGENT_BASE_URL?: string
 }
 
 export type WorkerParts = {

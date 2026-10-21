@@ -26,11 +26,6 @@ afterEach(async () => {
   opened = null
 })
 
-const agentSettings = {
-  AGENT_BASE_URL: "http://127.0.0.1:9/v1",
-  AGENT_MODEL: "qwen3.8:27b",
-}
-
 async function conversationIds(visitor: Visitor): Promise<string[]> {
   const list = conversationListResponse.parse(
     await (await visitor.call(conversationRoutes.listConversations.path)).json()
@@ -120,7 +115,7 @@ describe("your Comfy key as your login", () => {
   })
 
   it("moves the conversations made before the key to the account the key opens", async () => {
-    opened = openGateway({ settings: agentSettings })
+    opened = openGateway()
     const before = opened.visitor()
     const started = await before.call(
       conversationRoutes.startConversation.path,

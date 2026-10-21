@@ -39,7 +39,7 @@ export type ServerEnv = WorkerVars & {
 
 const loopbackHosts: readonly string[] = ["127.0.0.1", "::1", "localhost"]
 const minSecretLength = 32
-const keySettings = ["COMFY_API_KEY", "RUNPOD_API_KEY", "AGENT_API_KEY"]
+const keySettings = ["COMFY_API_KEY", "RUNPOD_API_KEY"]
 
 function blankAsMissing(value: unknown): unknown {
   return typeof value === "string" && value.trim() === "" ? undefined : value
@@ -215,10 +215,11 @@ function varsOf(
     env.MODE === "public"
       ? publicAccess(env, source)
       : { mode: "owner", lock: lockFor(env.OWNER_TOKEN) }
+  const engine = engineOf(env)
   return {
-    engine: engineOf(env),
+    engine,
     access,
-    agent: readAgentEnv(source, access.mode),
+    agent: readAgentEnv(source, engine, access.mode),
     ...(access.mode === "owner" && env.SPEND_CAP_CREDITS !== undefined
       ? {
           spend: {

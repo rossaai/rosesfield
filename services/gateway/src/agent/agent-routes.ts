@@ -29,7 +29,9 @@ async function agentModelsOf(scope: RequestScope): Promise<AgentModels> {
   if (refusal !== null) {
     return { models: [], model: null, refusal: errorEnvelopeOf(refusal).error }
   }
-  const hasChat = models.some((model) => model.id === routerChat.route)
+  const hasChat = models.some(
+    (model) => model.id === routerChat.route && model.takesTools
+  )
   return hasChat
     ? { ...choice, refusal: null }
     : { models: [], model: null, refusal: null }
