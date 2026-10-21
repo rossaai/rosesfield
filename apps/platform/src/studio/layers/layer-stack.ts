@@ -30,12 +30,10 @@ export function isSplitRun(run: Run): boolean {
 function assetsOf(run: Run): string[] {
   const named = run.inputs.layer
   if (Array.isArray(named)) {
-    return named.filter((one): one is string => typeof one === "string")
+    return [...named]
   }
   return Object.values(run.inputs).flatMap((value) =>
-    Array.isArray(value)
-      ? value.filter((one): one is string => typeof one === "string")
-      : []
+    Array.isArray(value) ? value : []
   )
 }
 
