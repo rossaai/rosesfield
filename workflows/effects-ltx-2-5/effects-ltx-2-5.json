@@ -1,8 +1,8 @@
 {
   "id": "0b1c5208-26c1-5d84-b3e2-cae9782924aa",
   "revision": 0,
-  "last_node_id": 698,
-  "last_link_id": 194,
+  "last_node_id": 718,
+  "last_link_id": 221,
   "nodes": [
     {
       "id": 75,
@@ -2368,7 +2368,7 @@
       "title": "Effects: one photo to a short effect video on LTX 2.5",
       "properties": {},
       "widgets_values": [
-        "# Effects: one photo to a short effect video on LTX 2.5\n\nScales and centre-crops your photo to the chosen shape and makes the effect's last frame from it with Qwen Image Edit 2511, then renders the video between the two on LTX 2.5, with its sound, at the shape's pixel area. A recipe can also guide one frame inside the clip with the edited frame, nodes 470 to 473. This file holds every part a recipe can use, including the subject held through its matte. Each recipe in the Rosesfield catalog removes the parts it does not use. Node 381 adds faint noise to every frame before the video is written, at the strength the recipe sets, so no two frames are the same. A recipe can add up to four sounds, each at its own time: Stable Audio 3 Medium makes each one, nodes 630, 631 and 633 load it once, and each of the four groups from node 660, 670, 680 and 690 makes one sound, fades its last 0.3 s, holds silence until its time and adds it to the sound before it. Node 359 sets the loudness of the mix. A recipe removes the groups it does not use, and all of them when it has no sound. A recipe can also end its sound in a fade to silence, with `AudioFadeOut` after node 361.\n\n## Models\n\n- [ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors): LTX 2.5 latent upscaler, 2 times, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-22b-distilled-transformer-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/diffusion_models/ltx-2.5-22b-distilled-transformer-bf16.safetensors): LTX 2.5 22B distilled, bf16, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-video-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-video-vae-bf16.safetensors): LTX 2.5 video VAE, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-audio-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-audio-vae-bf16.safetensors): LTX 2.5 audio VAE, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [gemma4-12b-with-proj-ltx-2.5-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/text_encoders/gemma4-12b-with-proj-ltx-2.5-bf16.safetensors): Gemma 4 12B text encoder with the LTX 2.5 projections, bf16, [the licence of the LTX 2.5 repository it sits in](https://huggingface.co/Lightricks/LTX-2.5).\n- [birefnet.safetensors](https://huggingface.co/Comfy-Org/BiRefNet/resolve/main/background_removal/birefnet.safetensors): BiRefNet, by ZhengPeng7, [MIT](https://huggingface.co/ZhengPeng7/BiRefNet).\n- [qwen_image_edit_2511_bf16.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_bf16.safetensors): Qwen Image Edit 2511, bf16, for the last frame, [Apache-2.0](https://huggingface.co/Qwen/Qwen-Image-Edit-2511).\n- [qwen_2.5_vl_7b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/HunyuanVideo_1.5_repackaged/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors): Qwen2.5-VL 7B text encoder, fp8, [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct).\n- [qwen_image_vae.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors): Qwen Image VAE, [Apache-2.0](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI).\n- [stable_audio_3_medium.safetensors](https://huggingface.co/Comfy-Org/stable-audio-3/resolve/main/checkpoints/stable_audio_3_medium.safetensors): Stable Audio 3 Medium, by Stability AI, for the hit, [Stability AI Community License](https://stability.ai/community-license-agreement).\n- [t5gemma_b_b_ul2.safetensors](https://huggingface.co/Comfy-Org/stable-audio-3/resolve/main/text_encoders/t5gemma_b_b_ul2.safetensors): the T5Gemma text encoder Stable Audio 3 ships with, [Stability AI Community License](https://stability.ai/community-license-agreement).\n\n## Custom node packs\n\n- [ComfyUI-WanVideoWrapper](https://github.com/kijai/ComfyUI-WanVideoWrapper) at commit `088128b224242e110d3906c6750e9a3a348a659b`, Apache-2.0: `NormalizeAudioLoudness`, node 359, sets the sound to the look's loudness.\n- [ComfyUI_AudioTools](https://github.com/lum3on/ComfyUI_AudioTools) at commit `c816d0a1629c05a0f463ddb77ea96ada69875d32`, MIT: two `AudioAmplify` nodes, 360 and 361, hold every sample under the look's peak ceiling, its `AudioFadeOut` fades the end of each sound and of a look's whole sound, and its `AudioFadeIn` and `AudioParametricEQ` shape the sound of a look that asks for them.\n\nComfy Cloud installs both.\n\nRosesfield ships no weights. Each loader lists its file with a download link. Accept the LTX 2.5 licence on Hugging Face before you download its files.\n\nPart of [Rosesfield](https://github.com/rossaai/rosesfield), MIT. Built from Comfy-Org/workflow_templates, MIT, per NOTICE."
+        "# Effects: one photo to a short effect video on LTX 2.5\n\nScales and centre-crops your photo to the chosen shape and makes the effect's last frame from it with Qwen Image Edit 2511, then renders the video between the two on LTX 2.5, with its sound, at the shape's pixel area. A recipe can also guide one frame inside the clip with the edited frame, nodes 470 to 473. This file holds every part a recipe can use, including the subject held through its matte. Each recipe in the Rosesfield catalog removes the parts it does not use. Node 381 adds faint noise to every frame before the video is written, at the strength the recipe sets, so no two frames are the same. A recipe can add up to six sounds, each at its own time: Stable Audio 3 Medium makes each one, nodes 630, 631 and 633 load it once, and each of the six groups from node 660, 670, 680, 690, 700 and 710 makes one sound, fades its last 0.3 s, holds silence until its time and adds it to the sound before it. A recipe can lower the LTX sound under them with one `AudioAdjustVolume` on node 358. Node 359 sets the loudness of the mix. A recipe removes the groups it does not use, and all of them when it has no sound. A recipe can also end its sound in a fade to silence, with `AudioFadeOut` after node 361.\n\n## Models\n\n- [ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors): LTX 2.5 latent upscaler, 2 times, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-22b-distilled-transformer-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/diffusion_models/ltx-2.5-22b-distilled-transformer-bf16.safetensors): LTX 2.5 22B distilled, bf16, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-video-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-video-vae-bf16.safetensors): LTX 2.5 video VAE, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-audio-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-audio-vae-bf16.safetensors): LTX 2.5 audio VAE, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [gemma4-12b-with-proj-ltx-2.5-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/text_encoders/gemma4-12b-with-proj-ltx-2.5-bf16.safetensors): Gemma 4 12B text encoder with the LTX 2.5 projections, bf16, [the licence of the LTX 2.5 repository it sits in](https://huggingface.co/Lightricks/LTX-2.5).\n- [birefnet.safetensors](https://huggingface.co/Comfy-Org/BiRefNet/resolve/main/background_removal/birefnet.safetensors): BiRefNet, by ZhengPeng7, [MIT](https://huggingface.co/ZhengPeng7/BiRefNet).\n- [qwen_image_edit_2511_bf16.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_bf16.safetensors): Qwen Image Edit 2511, bf16, for the last frame, [Apache-2.0](https://huggingface.co/Qwen/Qwen-Image-Edit-2511).\n- [qwen_2.5_vl_7b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/HunyuanVideo_1.5_repackaged/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors): Qwen2.5-VL 7B text encoder, fp8, [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct).\n- [qwen_image_vae.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors): Qwen Image VAE, [Apache-2.0](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI).\n- [stable_audio_3_medium.safetensors](https://huggingface.co/Comfy-Org/stable-audio-3/resolve/main/checkpoints/stable_audio_3_medium.safetensors): Stable Audio 3 Medium, by Stability AI, for the hit, [Stability AI Community License](https://stability.ai/community-license-agreement).\n- [t5gemma_b_b_ul2.safetensors](https://huggingface.co/Comfy-Org/stable-audio-3/resolve/main/text_encoders/t5gemma_b_b_ul2.safetensors): the T5Gemma text encoder Stable Audio 3 ships with, [Stability AI Community License](https://stability.ai/community-license-agreement).\n\n## Custom node packs\n\n- [ComfyUI-WanVideoWrapper](https://github.com/kijai/ComfyUI-WanVideoWrapper) at commit `088128b224242e110d3906c6750e9a3a348a659b`, Apache-2.0: `NormalizeAudioLoudness`, node 359, sets the sound to the look's loudness.\n- [ComfyUI_AudioTools](https://github.com/lum3on/ComfyUI_AudioTools) at commit `c816d0a1629c05a0f463ddb77ea96ada69875d32`, MIT: two `AudioAmplify` nodes, 360 and 361, hold every sample under the look's peak ceiling, its `AudioFadeOut` fades the end of each sound and of a look's whole sound, and its `AudioFadeIn` and `AudioParametricEQ` shape the sound of a look that asks for them.\n\nComfy Cloud installs both.\n\nRosesfield ships no weights. Each loader lists its file with a download link. Accept the LTX 2.5 licence on Hugging Face before you download its files.\n\nPart of [Rosesfield](https://github.com/rossaai/rosesfield), MIT. Built from Comfy-Org/workflow_templates, MIT, per NOTICE."
       ],
       "color": "#432",
       "bgcolor": "#653"
@@ -2456,7 +2456,7 @@
         {
           "name": "audio",
           "type": "AUDIO",
-          "link": 193
+          "link": 221
         }
       ],
       "outputs": [
@@ -2752,7 +2752,7 @@
         {
           "name": "MODEL",
           "type": "MODEL",
-          "links": [142, 154, 166, 178]
+          "links": [142, 154, 166, 178, 195, 208]
         },
         {
           "name": "CLIP",
@@ -2762,7 +2762,7 @@
         {
           "name": "VAE",
           "type": "VAE",
-          "links": [143, 155, 167, 179]
+          "links": [143, 155, 167, 179, 196, 209]
         }
       ],
       "properties": {
@@ -2795,7 +2795,7 @@
         {
           "name": "CLIP",
           "type": "CLIP",
-          "links": [144, 156, 168, 180, 194]
+          "links": [144, 156, 168, 180, 194, 197, 210]
         }
       ],
       "properties": {
@@ -2838,7 +2838,7 @@
         {
           "name": "CONDITIONING",
           "type": "CONDITIONING",
-          "links": [145, 157, 169, 181]
+          "links": [145, 157, 169, 181, 198, 211]
         }
       ],
       "properties": {
@@ -3998,7 +3998,7 @@
         {
           "name": "AUDIO",
           "type": "AUDIO",
-          "links": [193]
+          "links": [207]
         }
       ],
       "properties": {
@@ -4008,6 +4008,586 @@
       },
       "widgets_values": ["add"],
       "title": "Sound with hit 4"
+    },
+    {
+      "id": 700,
+      "type": "CLIPTextEncode",
+      "pos": [16610, 3080],
+      "size": [380, 122],
+      "flags": {},
+      "order": 138,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 197
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [199]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [
+        "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice."
+      ],
+      "title": "Hit 5 prompt"
+    },
+    {
+      "id": 701,
+      "type": "EmptyLatentAudio",
+      "pos": [16610, 3280],
+      "size": [380, 122],
+      "flags": {},
+      "order": 139,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [200]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyLatentAudio",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [2, 1],
+      "title": "Hit 5 length"
+    },
+    {
+      "id": 702,
+      "type": "KSampler",
+      "pos": [17130, 3080],
+      "size": [380, 392],
+      "flags": {},
+      "order": 140,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 195
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 199
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 198
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 200
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [201]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0, "fixed", 8, 1, "lcm", "simple", 1],
+      "title": "Hit 5"
+    },
+    {
+      "id": 703,
+      "type": "VAEDecodeAudio",
+      "pos": [17650, 3080],
+      "size": [380, 84],
+      "flags": {},
+      "order": 141,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 201
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 196
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [202]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecodeAudio",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [],
+      "title": "Hit 5 decode"
+    },
+    {
+      "id": 704,
+      "type": "AudioAdjustVolume",
+      "pos": [18170, 3080],
+      "size": [380, 82],
+      "flags": {},
+      "order": 142,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 202
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [203]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "AudioAdjustVolume",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0],
+      "title": "Hit 5 gain"
+    },
+    {
+      "id": 705,
+      "type": "EmptyAudio",
+      "pos": [18690, 3280],
+      "size": [380, 130],
+      "flags": {},
+      "order": 143,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [205]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyAudio",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [7, 44100, 2],
+      "title": "Silence before hit 5"
+    },
+    {
+      "id": 706,
+      "type": "AudioConcat",
+      "pos": [19210, 3080],
+      "size": [380, 102],
+      "flags": {},
+      "order": 144,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio1",
+          "type": "AUDIO",
+          "link": 205
+        },
+        {
+          "name": "audio2",
+          "type": "AUDIO",
+          "link": 204
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [206]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "AudioConcat",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["after"],
+      "title": "Hit 5 at its time"
+    },
+    {
+      "id": 707,
+      "type": "AudioMerge",
+      "pos": [19730, 3080],
+      "size": [380, 102],
+      "flags": {},
+      "order": 145,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio1",
+          "type": "AUDIO",
+          "link": 207
+        },
+        {
+          "name": "audio2",
+          "type": "AUDIO",
+          "link": 206
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [220]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "AudioMerge",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["add"],
+      "title": "Sound with hit 5"
+    },
+    {
+      "id": 708,
+      "type": "AudioFadeOut",
+      "pos": [18690, 3080],
+      "size": [380, 82],
+      "flags": {},
+      "order": 146,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 203
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [204]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "AudioFadeOut",
+        "aux_id": "lum3on/ComfyUI_AudioTools",
+        "ver": "c816d0a1629c05a0f463ddb77ea96ada69875d32"
+      },
+      "widgets_values": [0.3],
+      "title": "Hit 5 tail"
+    },
+    {
+      "id": 710,
+      "type": "CLIPTextEncode",
+      "pos": [16610, 3620],
+      "size": [380, 122],
+      "flags": {},
+      "order": 147,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 210
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [212]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [
+        "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice."
+      ],
+      "title": "Hit 6 prompt"
+    },
+    {
+      "id": 711,
+      "type": "EmptyLatentAudio",
+      "pos": [16610, 3820],
+      "size": [380, 122],
+      "flags": {},
+      "order": 148,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [213]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyLatentAudio",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [2, 1],
+      "title": "Hit 6 length"
+    },
+    {
+      "id": 712,
+      "type": "KSampler",
+      "pos": [17130, 3620],
+      "size": [380, 392],
+      "flags": {},
+      "order": 149,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 208
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 212
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 211
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 213
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [214]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0, "fixed", 8, 1, "lcm", "simple", 1],
+      "title": "Hit 6"
+    },
+    {
+      "id": 713,
+      "type": "VAEDecodeAudio",
+      "pos": [17650, 3620],
+      "size": [380, 84],
+      "flags": {},
+      "order": 150,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 214
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 209
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [215]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecodeAudio",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [],
+      "title": "Hit 6 decode"
+    },
+    {
+      "id": 714,
+      "type": "AudioAdjustVolume",
+      "pos": [18170, 3620],
+      "size": [380, 82],
+      "flags": {},
+      "order": 151,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 215
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [216]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "AudioAdjustVolume",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0],
+      "title": "Hit 6 gain"
+    },
+    {
+      "id": 715,
+      "type": "EmptyAudio",
+      "pos": [18690, 3820],
+      "size": [380, 130],
+      "flags": {},
+      "order": 152,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [218]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyAudio",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [7, 44100, 2],
+      "title": "Silence before hit 6"
+    },
+    {
+      "id": 716,
+      "type": "AudioConcat",
+      "pos": [19210, 3620],
+      "size": [380, 102],
+      "flags": {},
+      "order": 153,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio1",
+          "type": "AUDIO",
+          "link": 218
+        },
+        {
+          "name": "audio2",
+          "type": "AUDIO",
+          "link": 217
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [219]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "AudioConcat",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["after"],
+      "title": "Hit 6 at its time"
+    },
+    {
+      "id": 717,
+      "type": "AudioMerge",
+      "pos": [19730, 3620],
+      "size": [380, 102],
+      "flags": {},
+      "order": 154,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio1",
+          "type": "AUDIO",
+          "link": 220
+        },
+        {
+          "name": "audio2",
+          "type": "AUDIO",
+          "link": 219
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [221]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "AudioMerge",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["add"],
+      "title": "Sound with hit 6"
+    },
+    {
+      "id": 718,
+      "type": "AudioFadeOut",
+      "pos": [18690, 3620],
+      "size": [380, 82],
+      "flags": {},
+      "order": 155,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 216
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [217]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "AudioFadeOut",
+        "aux_id": "lum3on/ComfyUI_AudioTools",
+        "ver": "c816d0a1629c05a0f463ddb77ea96ada69875d32"
+      },
+      "widgets_values": [0.3],
+      "title": "Hit 6 tail"
     }
   ],
   "links": [
@@ -4183,8 +4763,34 @@
     [190, 667, 0, 677, 0, "AUDIO"],
     [191, 677, 0, 687, 0, "AUDIO"],
     [192, 687, 0, 697, 0, "AUDIO"],
-    [193, 697, 0, 359, 0, "AUDIO"],
-    [194, 631, 0, 633, 0, "CLIP"]
+    [194, 631, 0, 633, 0, "CLIP"],
+    [195, 630, 0, 702, 0, "MODEL"],
+    [196, 630, 2, 703, 1, "VAE"],
+    [197, 631, 0, 700, 0, "CLIP"],
+    [198, 633, 0, 702, 2, "CONDITIONING"],
+    [199, 700, 0, 702, 1, "CONDITIONING"],
+    [200, 701, 0, 702, 3, "LATENT"],
+    [201, 702, 0, 703, 0, "LATENT"],
+    [202, 703, 0, 704, 0, "AUDIO"],
+    [203, 704, 0, 708, 0, "AUDIO"],
+    [204, 708, 0, 706, 1, "AUDIO"],
+    [205, 705, 0, 706, 0, "AUDIO"],
+    [206, 706, 0, 707, 1, "AUDIO"],
+    [207, 697, 0, 707, 0, "AUDIO"],
+    [208, 630, 0, 712, 0, "MODEL"],
+    [209, 630, 2, 713, 1, "VAE"],
+    [210, 631, 0, 710, 0, "CLIP"],
+    [211, 633, 0, 712, 2, "CONDITIONING"],
+    [212, 710, 0, 712, 1, "CONDITIONING"],
+    [213, 711, 0, 712, 3, "LATENT"],
+    [214, 712, 0, 713, 0, "LATENT"],
+    [215, 713, 0, 714, 0, "AUDIO"],
+    [216, 714, 0, 718, 0, "AUDIO"],
+    [217, 718, 0, 716, 1, "AUDIO"],
+    [218, 715, 0, 716, 0, "AUDIO"],
+    [219, 716, 0, 717, 1, "AUDIO"],
+    [220, 707, 0, 717, 0, "AUDIO"],
+    [221, 717, 0, 359, 0, "AUDIO"]
   ],
   "groups": [
     {
@@ -4246,7 +4852,7 @@
     {
       "id": 8,
       "title": "Hits",
-      "bounding": [16060, 900, 4160, 2220],
+      "bounding": [16060, 900, 4160, 3300],
       "color": "#3a5a5a",
       "font_size": 24,
       "flags": {}
@@ -4274,7 +4880,9 @@
         [662, "seed"],
         [672, "seed"],
         [682, "seed"],
-        [692, "seed"]
+        [692, "seed"],
+        [702, "seed"],
+        [712, "seed"]
       ],
       "outputs": [75]
     }

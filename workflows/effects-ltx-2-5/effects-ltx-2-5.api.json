@@ -633,7 +633,7 @@
   "359": {
     "class_type": "NormalizeAudioLoudness",
     "inputs": {
-      "audio": ["697", 0],
+      "audio": ["717", 0],
       "lufs": -23.0
     },
     "_meta": {
@@ -1144,6 +1144,208 @@
     },
     "_meta": {
       "title": "Sound with hit 4"
+    }
+  },
+  "700": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice.",
+      "clip": ["631", 0]
+    },
+    "_meta": {
+      "title": "Hit 5 prompt"
+    }
+  },
+  "701": {
+    "class_type": "EmptyLatentAudio",
+    "inputs": {
+      "seconds": 2,
+      "batch_size": 1
+    },
+    "_meta": {
+      "title": "Hit 5 length"
+    }
+  },
+  "702": {
+    "class_type": "KSampler",
+    "inputs": {
+      "seed": 0,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "lcm",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": ["630", 0],
+      "positive": ["700", 0],
+      "negative": ["633", 0],
+      "latent_image": ["701", 0]
+    },
+    "_meta": {
+      "title": "Hit 5"
+    }
+  },
+  "703": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": ["702", 0],
+      "vae": ["630", 2]
+    },
+    "_meta": {
+      "title": "Hit 5 decode"
+    }
+  },
+  "704": {
+    "class_type": "AudioAdjustVolume",
+    "inputs": {
+      "audio": ["703", 0],
+      "volume": 0
+    },
+    "_meta": {
+      "title": "Hit 5 gain"
+    }
+  },
+  "705": {
+    "class_type": "EmptyAudio",
+    "inputs": {
+      "duration": 7,
+      "sample_rate": 44100,
+      "channels": 2
+    },
+    "_meta": {
+      "title": "Silence before hit 5"
+    }
+  },
+  "706": {
+    "class_type": "AudioConcat",
+    "inputs": {
+      "audio1": ["705", 0],
+      "audio2": ["708", 0],
+      "direction": "after"
+    },
+    "_meta": {
+      "title": "Hit 5 at its time"
+    }
+  },
+  "707": {
+    "class_type": "AudioMerge",
+    "inputs": {
+      "audio1": ["697", 0],
+      "audio2": ["706", 0],
+      "merge_method": "add"
+    },
+    "_meta": {
+      "title": "Sound with hit 5"
+    }
+  },
+  "708": {
+    "class_type": "AudioFadeOut",
+    "inputs": {
+      "audio": ["704", 0],
+      "duration_seconds": 0.3
+    },
+    "_meta": {
+      "title": "Hit 5 tail"
+    }
+  },
+  "710": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice.",
+      "clip": ["631", 0]
+    },
+    "_meta": {
+      "title": "Hit 6 prompt"
+    }
+  },
+  "711": {
+    "class_type": "EmptyLatentAudio",
+    "inputs": {
+      "seconds": 2,
+      "batch_size": 1
+    },
+    "_meta": {
+      "title": "Hit 6 length"
+    }
+  },
+  "712": {
+    "class_type": "KSampler",
+    "inputs": {
+      "seed": 0,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "lcm",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": ["630", 0],
+      "positive": ["710", 0],
+      "negative": ["633", 0],
+      "latent_image": ["711", 0]
+    },
+    "_meta": {
+      "title": "Hit 6"
+    }
+  },
+  "713": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": ["712", 0],
+      "vae": ["630", 2]
+    },
+    "_meta": {
+      "title": "Hit 6 decode"
+    }
+  },
+  "714": {
+    "class_type": "AudioAdjustVolume",
+    "inputs": {
+      "audio": ["713", 0],
+      "volume": 0
+    },
+    "_meta": {
+      "title": "Hit 6 gain"
+    }
+  },
+  "715": {
+    "class_type": "EmptyAudio",
+    "inputs": {
+      "duration": 7,
+      "sample_rate": 44100,
+      "channels": 2
+    },
+    "_meta": {
+      "title": "Silence before hit 6"
+    }
+  },
+  "716": {
+    "class_type": "AudioConcat",
+    "inputs": {
+      "audio1": ["715", 0],
+      "audio2": ["718", 0],
+      "direction": "after"
+    },
+    "_meta": {
+      "title": "Hit 6 at its time"
+    }
+  },
+  "717": {
+    "class_type": "AudioMerge",
+    "inputs": {
+      "audio1": ["707", 0],
+      "audio2": ["716", 0],
+      "merge_method": "add"
+    },
+    "_meta": {
+      "title": "Sound with hit 6"
+    }
+  },
+  "718": {
+    "class_type": "AudioFadeOut",
+    "inputs": {
+      "audio": ["714", 0],
+      "duration_seconds": 0.3
+    },
+    "_meta": {
+      "title": "Hit 6 tail"
     }
   }
 }

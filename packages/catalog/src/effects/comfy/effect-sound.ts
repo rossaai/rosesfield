@@ -59,6 +59,8 @@ export const hitSlots: readonly HitSlot[] = Array.from(
 
 export const hitTailSeconds = 0.3
 
+export const bedGainNode = "649"
+
 export const buildNodes = { floor: "650", rise: "651", sum: "652" } as const
 
 export const brightenNode = "653"
@@ -98,6 +100,13 @@ export function setSound(graph: Graph, recipe: EffectRecipe): void {
 
 function shapeBed(graph: Graph, sound: SoundBed): Link {
   let bed: Link = [soundNode, 0]
+  if (sound.bedGainDb !== 0) {
+    graph[bedGainNode] = {
+      class_type: "AudioAdjustVolume",
+      inputs: { audio: bed, volume: sound.bedGainDb },
+    }
+    bed = [bedGainNode, 0]
+  }
   if (sound.build !== null) {
     graph[buildNodes.floor] = {
       class_type: "AudioAdjustVolume",

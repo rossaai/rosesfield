@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { effectGraph } from "#effects/comfy/effect-graph"
 import {
+  bedGainNode,
   brightenNode,
   buildNodes,
   ceilingNodes,
@@ -63,7 +64,10 @@ function mixedSound(recipe: EffectRecipe): string {
   if (sound?.brighten) {
     return brightenNode
   }
-  return sound?.build ? buildNodes.sum : soundNode
+  if (sound?.build) {
+    return buildNodes.sum
+  }
+  return sound?.bedGainDb ? bedGainNode : soundNode
 }
 
 describe("the sound of an effect ends in its fade and carries its hits", () => {
@@ -136,10 +140,10 @@ describe("the sound of an effect ends in its fade and carries its hits", () => {
     ).toBe(-23.75)
   })
 
-  it("holds four hit slots of nine nodes each from node 660, beside the shared audio model", () => {
+  it("holds six hit slots of nine nodes each from node 660, beside the shared audio model", () => {
     expect(Object.values(hitShared)).toEqual(["630", "631", "633"])
     expect(slotIds(hitSlots)).toEqual(
-      [660, 670, 680, 690].flatMap((first) =>
+      [660, 670, 680, 690, 700, 710].flatMap((first) =>
         Array.from({ length: 9 }, (_, step) => String(first + step))
       )
     )
@@ -260,6 +264,36 @@ describe("the sound of an effect ends in its fade and carries its hits", () => {
     expect(flat[loudnessNode]?.inputs.audio).toEqual([soundNode, 0])
   })
 
+  it("lowers the LTX track by the bed gain before the build and the brighten, and sends no gain node at 0 dB", () => {
+    const build = { seconds: 4, floorDb: -12 }
+    const lowered = workflowOf(
+      effectGraph(
+        fileGraph(),
+        eyeWith({ hits: [boom], bedGainDb: -8, build, brighten: null })
+      )
+    )
+    expect(lowered).toMatchObject({
+      [bedGainNode]: {
+        class_type: "AudioAdjustVolume",
+        inputs: { audio: [soundNode, 0], volume: -8 },
+      },
+      [buildNodes.floor]: { inputs: { audio: [bedGainNode, 0] } },
+      [buildNodes.rise]: { inputs: { audio: [bedGainNode, 0] } },
+    })
+    expect(brokenLinks(lowered)).toEqual([])
+    const bare = workflowOf(
+      effectGraph(
+        fileGraph(),
+        eyeWith({ hits: [], bedGainDb: -8, build: null, brighten: null })
+      )
+    )
+    expect(bare[loudnessNode]?.inputs.audio).toEqual([bedGainNode, 0])
+    const level = workflowOf(
+      effectGraph(fileGraph(), eyeWith({ hits: [boom], bedGainDb: 0 }))
+    )
+    expect(level[bedGainNode]).toBeUndefined()
+  })
+
   it("seeds each hit from the run's seed, and binds no seed for an unused slot", () => {
     const seeded = (recipe: EffectRecipe) =>
       JSON.stringify(effectBinding(recipe, "480p").config.bindings)
@@ -270,13 +304,17 @@ describe("the sound of an effect ends in its fade and carries its hits", () => {
     for (const slot of hitSlots.slice(2)) {
       expect(two).not.toContain(`"${slot.sampler}"`)
     }
+    const six = seeded(eyeWith({ hits: hitSlots.map(() => boom) }))
+    for (const slot of hitSlots) {
+      expect(six).toContain(`"${slot.sampler}","inputs","seed"`)
+    }
     const none = seeded(eyeWith({ hits: [] }))
     for (const slot of hitSlots) {
       expect(none).not.toContain(`"${slot.sampler}"`)
     }
   })
 
-  it("refuses a fade past 2 seconds or off its step, a hit louder than 12 dB, a fifth hit, and a build or brighten out of bounds", () => {
+  it("refuses a fade past 2 seconds or off its step, a hit louder than 12 dB, a seventh hit, a bed gain above 0 dB or off the whole dB, and a build or brighten out of bounds", () => {
     const sound = soundOf(recipeOf("push-into-eye"))
     const withSound = (change: Record<string, unknown>) => ({
       ...recipeOf("many-copies"),
@@ -295,9 +333,13 @@ describe("the sound of an effect ends in its fade and carries its hits", () => {
     expect(read({ hits: [{ ...boom, gainDb: 13 }] })).toThrow(
       refused("hits\\.0\\.gainDb")
     )
-    expect(read({ hits: Array.from({ length: 5 }, () => boom) })).toThrow(
+    expect(read({ hits: Array.from({ length: 6 }, () => boom) })).not.toThrow()
+    expect(read({ hits: Array.from({ length: 7 }, () => boom) })).toThrow(
       refused("hits")
     )
+    expect(read({ bedGainDb: 1 })).toThrow(refused("bedGainDb"))
+    expect(read({ bedGainDb: -2.5 })).toThrow(refused("bedGainDb"))
+    expect(read({ bedGainDb: -25 })).toThrow(refused("bedGainDb"))
     expect(read({ build: { seconds: 7.5, floorDb: -10 } })).toThrow(
       refused("build\\.seconds")
     )

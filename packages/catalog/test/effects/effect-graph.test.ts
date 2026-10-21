@@ -13,6 +13,7 @@ import {
   matteNodes,
 } from "#effects/comfy/effect-graph"
 import {
+  bedGainNode,
   brightenNode,
   buildNodes,
   fadeOutNode,
@@ -97,6 +98,7 @@ function editReaders(workflow: Workflow): string[] {
 
 const runTimeNodes: readonly string[] = [
   fadeOutNode,
+  bedGainNode,
   ...Object.values(buildNodes),
   brightenNode,
 ]

@@ -29,7 +29,7 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 | `deliveryWidth` | 380 `ImageScale`, Delivery size | `width` | a value |
 | `deliveryHeight` | 380 `ImageScale`, Delivery size | `height` | a value |
 | `grainSeed` | 381 `ImageAddNoise`, Grain | `seed` | a value, the run's seed |
-| `hitSeed1` to `hitSeed4` | 662, 672, 682 and 692 `KSampler`, Hit 1 to Hit 4 | `seed` | a value, the run's seed, each bound when the look has that hit |
+| `hitSeed1` to `hitSeed6` | 662, 672, 682, 692, 702 and 712 `KSampler`, Hit 1 to Hit 6 | `seed` | a value, the run's seed, each bound when the look has that hit |
 
 The recipe sets the rest: the prompt on node 501, the sound line on node 503, the length on nodes 356 and 366, the edit prompt on node 620, the mid frame's place on nodes 472 and 473, the strengths on nodes 460, 461, 463, 464, 472 and 473, the grain's strength on node 381, and each hit's prompt, length, gain and time on the prompt, length, gain and lead nodes of its slot, per §The hits, the build, the brighten and the fade.
 
@@ -90,7 +90,7 @@ A recipe can also hold one mid frame: a frame inside the clip, made by the image
 4. It makes a matte of the subject with the core BiRefNet nodes `LoadBackgroundRemovalModel` and `RemoveBackground`, nodes 410 to 412, when the recipe holds the subject.
 5. It renders the shot in two stages. A mid frame is an `LTXVAddGuide` guide at its frame, nodes 472 and 473, read from the edited frame resized and preprocessed as frame 0 is, nodes 470 and 471. The last frame is an `LTXVAddGuide` guide at the last frame, nodes 460 and 463, chained after the mid-frame guides. The photo is a second guide at the last frame with the subject matte as its `attention_mask`, nodes 461 and 464, so the subject holds while the scene changes. `LTXVCropGuides` removes the guide frames after each stage, nodes 462 and 465.
 6. It decodes the sound with node 358 when the recipe has a sound bed. Node 359 sets its integrated loudness to the middle of the look's band. Nodes 360 and 361 then raise it by the ceiling's distance from 0 dBFS, where `AudioAmplify` clips every sample to full scale, and lower it back, so no sample passes the ceiling, 1 dB under the look's true peak, and quieter samples keep their level. `AudioNormalize` was not used: it moves the sample peak to its target in both directions, so it would undo the loudness of node 359. The ceiling acts only on a sound whose peaks sit higher above its loudness than the band leaves room for. A silent look removes nodes 358 to 361.
-7. It builds and brightens the sound, nodes 650 to 653, and adds the look's hits to it, nodes 630, 631, 633 and 660 to 698, when the look has them, before node 359 sets the loudness, per §The hits, the build, the brighten and the fade. It ends the sound in a fade to silence, node 362, when the look has one.
+7. It lowers, builds and brightens the sound, nodes 649 to 653, and adds the look's hits to it, nodes 630, 631, 633 and 660 to 718, when the look has them, before node 359 sets the loudness, per §The hits, the build, the brighten and the fade. It ends the sound in a fade to silence, node 362, when the look has one.
 8. It scales the frames to the pixel area of the chosen resolution in the chosen shape, centre-cropped, node 380, such as 1280 by 720 at 16:9 and 832 by 1110 at 3:4 for 720p, and 1920 by 1080 at 16:9 and 1248 by 1664 at 3:4 for 1080p.
 9. It adds faint noise to every frame with the core `ImageAddNoise`, node 381, seeded from the run's seed, at the grain of the recipe's encode. Then it saves H.264 in MP4 at 24 frames a second, nodes 370 and 75.
 
@@ -109,16 +109,16 @@ The catalog's [`effect-graph.ts`](../../packages/catalog/src/effects/comfy/effec
 - A sounding effect writes the middle of its loudness band on node 359, and its peak ceiling, `truePeakMax` minus 1 dB, as the gain of nodes 360 and 361.
 - A silent effect removes the audio decode and the loudness nodes, 358 to 361.
 - An effect removes each hit slot it does not use. An effect with no hit also removes the shared nodes 630, 631 and 633, so it loads no Stable Audio 3 file. Node 359 reads the last hit's merge, or the bed when the effect has no hit.
-- An effect with a build or a brighten adds nodes 650 to 652 or node 653 on the bed before the first hit joins.
+- An effect with a bed gain, a build or a brighten adds node 649, nodes 650 to 652 or node 653 on the bed before the first hit joins.
 - An effect with a fade adds node 362, `AudioFadeOut`, after node 361, and node 370 reads it.
 - It writes the grain of the recipe's encode as the strength of node 381. The grain is 0 to 0.02 and 0.004 when the recipe names none. `ImageAddNoise` returns `clip(image + strength * randn, 0, 1)` with a separate draw for every pixel of every frame, read in `comfy_extras/nodes_images.py` of ComfyUI v0.41.0. At 0.004 the noise is about one level on the 8-bit scale, which a lit frame does not show. On a black frame, the clip keeps only the positive half, so the mean rises by `strength * 255 / sqrt(2 * pi)`, about 0.4 levels, far under the black floor of 17.5. The grain exists so a clip that ends on black does not repeat one frame: without it, the frames after the clip reaches pure black are byte-identical, and a reference's black tail carries faint noise. The node's schema steps its strength by 0.01 in the canvas, and the catalog sets the exact value in the API graph.
 - A recipe with an adapter adds node 420, a `LoraLoaderModelOnly` between the model and both guiders. No recipe has one.
 
 ## The hits, the build, the brighten and the fade
 
-A look's sound bed can hold up to four hits: designed sounds, such as a whoosh or a heavy boom, each at a set time. LTX 2.5 makes the sound of the whole clip from one prompt, and it does not place a single sound at an exact moment. So a separate model makes each hit, and the graph places it.
+A look's sound bed can hold up to six hits: designed sounds, such as a whoosh or a heavy boom, each at a set time. LTX 2.5 makes the sound of the whole clip from one prompt, and it does not place a single sound at an exact moment. So a separate model makes each hit, and the graph places it.
 
-The four hits share the Stable Audio 3 loader, node 630, its text encoder, node 631, and the empty negative prompt, node 633. Each hit has a slot of nine nodes. The slots start at 660, 670, 680 and 690, and each node sits at the same step from its slot's start:
+The six hits share the Stable Audio 3 loader, node 630, its text encoder, node 631, and the empty negative prompt, node 633. Each hit has a slot of nine nodes. The slots start at 660, 670, 680, 690, 700 and 710, and each node sits at the same step from its slot's start:
 
 | Step | Node | What it does |
 |---|---|---|
@@ -134,8 +134,9 @@ The four hits share the Stable Audio 3 loader, node 630, its text encoder, node 
 
 A hit at 0 s removes its silence and its `AudioConcat`, and its merge reads the faded hit. The hits merge in the order the recipe lists them: the first onto the bed, each next one onto the mix before it. Node 359 reads the last merge, so the loudness and the peak ceiling act on the whole mix.
 
-A look's sound bed can also hold a build and a brighten, both added to the bed before the first hit joins:
+A look's sound bed can also hold a bed gain, a build and a brighten, all added to the bed before the first hit joins, in that order:
 
+- The bed gain lowers the LTX sound, so the hits sit above it. Node 649, `AudioAdjustVolume`, reads node 358 at the bed gain, a whole number of dB from -24 to 0. A bed gain of 0 adds no node.
 - The build makes the bed rise from a floor. Node 650, `AudioAdjustVolume`, is the bed at the floor's gain, a whole number of dB from -30 to 0. Node 651, `AudioFadeIn` from ComfyUI_AudioTools, fades the bed in over the build's length, 0.5 to 7 seconds in steps of 0.1. Node 652, `AudioMerge`, adds the two, so the bed starts at its floor and reaches full level at the end of the build.
 - The brighten, node 653, `AudioParametricEQ` from ComfyUI_AudioTools, cuts under 20 Hz and boosts the presence and air bands, each 0 to 12 dB in steps of 0.5.
 

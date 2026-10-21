@@ -51,7 +51,7 @@ const decibels = z.number().min(-70).max(0)
 
 export const maxFadeOut = 2
 
-export const maxHits = 4
+export const maxHits = 6
 
 export const soundHit = z.strictObject({
   prompt: plainLine,
@@ -66,6 +66,7 @@ export const soundBed = z
     loudness: z.strictObject({ min: decibels, max: decibels }),
     truePeakMax: decibels,
     fadeOut: z.number().min(0).max(maxFadeOut).multipleOf(0.1).default(0),
+    bedGainDb: z.number().int().min(-24).max(0).default(0),
     hits: z.array(soundHit).max(maxHits).default([]),
     build: z
       .strictObject({
