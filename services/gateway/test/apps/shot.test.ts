@@ -20,7 +20,12 @@ const host = { host: "127.0.0.1:8787" }
 const photo = Uint8Array.of(137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13)
 const mp4Brand = [0x66, 0x74, 0x79, 0x70]
 
-type Submitted = { idempotencyKey: string | null; seed: unknown }
+type Submitted = {
+  idempotencyKey: string | null
+  seed: unknown
+  movement: unknown
+  color: unknown
+}
 
 function valueAt(value: unknown, path: readonly string[]): unknown {
   let current = value
@@ -48,14 +53,12 @@ function replayedComfy(): { fetch: Fetch; jobs: Submitted[] } {
       )
     }
     if (request.method === "POST" && path === "/api/v2/jobs") {
+      const body: unknown = await request.json()
       jobs.push({
         idempotencyKey: request.headers.get("idempotency-key"),
-        seed: valueAt(await request.json(), [
-          "workflow",
-          "102",
-          "inputs",
-          "noise_seed",
-        ]),
+        seed: valueAt(body, ["workflow", "339", "inputs", "noise_seed"]),
+        movement: valueAt(body, ["workflow", "952", "inputs", "string_b"]),
+        color: valueAt(body, ["workflow", "957", "inputs", "string_b"]),
       })
       return Response.json(
         { id: crypto.randomUUID(), status: "queued", outputs: [] },
@@ -154,7 +157,7 @@ describe("a Shot run through the gateway on the demo engine", () => {
         model: "ltx-2-5",
         movement: "auto",
         length: 5,
-        resolution: "720p",
+        resolution: "480p",
         sound: "on",
         startFrame: [],
       },
@@ -198,14 +201,13 @@ describe("a Shot run through the gateway on the demo engine", () => {
     )
   }
 
-  it("runs the camera model with a start frame and keeps four videos for a count of 4", async () => {
+  it("runs LTX 2.5 with a start frame and keeps four videos for a count of 4", async () => {
     const frameId = await uploadFrame()
     const started = await startRun({
       inputs: {
         prompt: "A boat leaves the harbor",
-        model: "wan-2-2-fun-camera",
-        resolution: "480p",
         movement: "push-in",
+        color: "black-and-white",
         startFrame: [frameId],
         seed: 77,
       },
@@ -214,40 +216,38 @@ describe("a Shot run through the gateway on the demo engine", () => {
     expect(started.status).toBe(202)
     const { run } = runResponse.parse(await started.json())
     expect(run.seed).toBe(77)
+    expect(run.inputs).toMatchObject({ model: "ltx-2-5", movement: "push-in" })
     const done = await finished(run.id)
     expect(done.status).toBe("done")
     expect(done.outputs).toHaveLength(4)
   })
 
-  it("refuses what each model cannot take and starts no run", async () => {
+  it("refuses the Wan camera model and what Video's graphs cannot take, and starts no run", async () => {
     const frameId = await uploadFrame()
     const scene = "A boat leaves the harbor"
-    const wan = {
-      prompt: scene,
-      model: "wan-2-2-fun-camera",
-      startFrame: [frameId],
-    }
-    await expectRefused({ inputs: { ...wan, resolution: "720p" } })
-    await expectRefused({ inputs: { ...wan, movement: "pan-left" } })
-    await expectRefused({ inputs: { ...wan, length: 8 } })
-    await expectRefused({ inputs: { ...wan, sound: "on" } })
-    await expectRefused({ inputs: { ...wan, startFrame: [] } })
     await expectRefused({
-      inputs: { prompt: scene, model: "ltx-2-5", startFrame: [frameId] },
+      inputs: {
+        prompt: scene,
+        model: "wan-2-2-fun-camera",
+        startFrame: [frameId],
+      },
     })
+    await expectRefused({ inputs: { prompt: scene, resolution: "1080p" } })
+    await expectRefused({ inputs: { prompt: scene, length: 8 } })
+    await expectRefused({ inputs: { prompt: scene, movement: "orbit" } })
     const list = await call(routes.listRuns.path)
     expect(await list.json()).toMatchObject({ runs: [] })
   })
 
-  it("submits one job per output on a replayed Comfy engine, each with its own seed", async () => {
+  it("submits one job per output on a replayed Comfy engine, each with its own seed and the shot words", async () => {
     const comfy = replayedComfy()
     await compose({ comfy: comfy.fetch })
     const frameId = await uploadFrame()
     const started = await startRun({
       inputs: {
         prompt: "A boat leaves the harbor",
-        model: "wan-2-2-fun-camera",
         movement: "push-in",
+        color: "black-and-white",
         startFrame: [frameId],
         seed: 77,
       },
@@ -261,6 +261,10 @@ describe("a Shot run through the gateway on the demo engine", () => {
     })
     expect(comfy.jobs.map((job) => job.seed)).toEqual([77, 78, 79, 80])
     expect(new Set(comfy.jobs.map((job) => job.idempotencyKey)).size).toBe(4)
+    expect(comfy.jobs[0]).toMatchObject({
+      movement: " The camera moves slowly toward the subject.",
+      color: " Black and white, with no color.",
+    })
   })
 
   it("refuses an empty scene, the control", async () => {
