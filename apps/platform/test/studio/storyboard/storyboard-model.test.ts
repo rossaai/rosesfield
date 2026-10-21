@@ -136,7 +136,10 @@ describe("the Storyboard price", () => {
     const values = threeScenes()
     const asks = asksOf({
       ...values,
-      inputs: { ...values.inputs, reference: ["1e3a5c7e-9b2d-4f6a-8c0e-2b4d6f8a0c1e"] },
+      inputs: {
+        ...values.inputs,
+        reference: ["1e3a5c7e-9b2d-4f6a-8c0e-2b4d6f8a0c1e"],
+      },
     })
     expect(asks.text).toBeNull()
     expect(asks.edit?.inputs).toMatchObject({ keyframe: "1" })

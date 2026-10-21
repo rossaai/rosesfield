@@ -181,6 +181,12 @@ export function toolEventOf(entry: EntryRecord | undefined): AnswerEvent[] {
   if (typeof details !== "object" || details === null) {
     return []
   }
+  const runIds = "runIds" in details ? details.runIds : undefined
+  if (Array.isArray(runIds)) {
+    return runIds
+      .filter((one) => runIdFormat.is(one))
+      .map((one): AnswerEvent => ({ type: "run", runId: one }))
+  }
   const runId = "runId" in details ? details.runId : undefined
   if (runIdFormat.is(runId)) {
     return [{ type: "run", runId }]
