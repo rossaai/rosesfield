@@ -1,4 +1,9 @@
-import { angleSets, viewsPerRun } from "#characters/angle-sets"
+import {
+  angleSets,
+  views,
+  viewsOf,
+  viewsPerRun,
+} from "#characters/angle-sets"
 import {
   anglesModel,
   charactersEngine,
@@ -19,6 +24,8 @@ import { type AppInput, defineApp } from "#define-app"
 import { modelLabels } from "#edit/edit-models"
 
 type Input = AppInput["inputs"][number]
+
+type ChoiceInput = Extract<Input, { type: "choice" }>
 
 const countWords: Record<string, string> = {
   "1": "one",
@@ -48,7 +55,7 @@ function choice(
   values: readonly string[],
   fallback: string,
   mode: Mode
-): Input {
+): ChoiceInput {
   return {
     type: "choice",
     name,
@@ -73,6 +80,23 @@ const count: Input = {
   })),
   default: defaultPortraitCount,
   bounds: [{ when: inMode("angles"), values: [String(viewsPerRun)] }],
+}
+
+const view: Input = {
+  type: "choice",
+  name: "view",
+  scope: "app",
+  labelKey: "app.canvas.view",
+  options: views.map((value) => ({
+    value,
+    labelKey: `characters.view.${value}`,
+  })),
+  default: "front",
+  when: inMode("angles"),
+  bounds: angleSets.map((angleSet) => ({
+    when: [{ input: "angleSet", is: [angleSet] }],
+    values: [...viewsOf(angleSet)],
+  })),
 }
 
 const model: Input = {
@@ -104,6 +128,7 @@ export const app = defineApp({
     {
       type: "choice",
       name: "mode",
+      scope: "app",
       labelKey: labelOf("mode"),
       options: modes.map((value) => ({
         value,
@@ -135,12 +160,14 @@ export const app = defineApp({
     {
       type: "character",
       name: "character",
+      scope: "app",
       labelKey: labelOf("character"),
       presence: "required",
       max: 1,
       when: inMode("angles"),
     },
-    choice("angleSet", angleSets, "turnaround", "angles"),
+    { ...choice("angleSet", angleSets, "turnaround", "angles"), scope: "app" },
+    view,
     { type: "seed", name: "seed", labelKey: "field.seed.label" },
   ],
   output: {

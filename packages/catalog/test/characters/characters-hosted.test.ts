@@ -5,12 +5,14 @@ import {
 } from "@rosesfield/generation/bindings"
 import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
+import { viewsOf } from "#characters/angle-sets"
 import { traitPrompt } from "#characters/comfy/traits-prompt"
 import {
   anglePromptsOf,
   anglesGapOf,
   type HostedRun,
   hostedRunsOf,
+  takesPhotoAndPrompt,
 } from "#characters/hosted-runs"
 
 const model = "bfl/flux-3-image"
@@ -115,7 +117,6 @@ describe("a Characters run on a hosted model", () => {
     expect(bald).not.toContain("blond")
   })
 
-
   it("makes one run per view of the angle set, each naming its view, with the character's photos up to the model's limit", () => {
     const runs = inputsOf(hostedRunsOf(fields, angles, { photos, count: 4 }))
     expect(runs).toHaveLength(4)
@@ -171,12 +172,12 @@ describe("a Characters run on a hosted model", () => {
 })
 
 function modelInputsOf(run: HostedRun["inputs"]): HostedRun["inputs"] {
-  const { mode: _, character: __, angleSet: ___, ...rest } = run
+  const { mode: _, character: __, angleSet: ___, view: ____, ...rest } = run
   return rest
 }
 
 describe("the inputs a hosted Characters run sends", () => {
-  it("sends the model's own inputs and the app's mode, which the run start keeps as the mode's chooser", () => {
+  it("sends the model's own inputs and the app's mode, which the run start keeps as an app-only input", () => {
     const [run] = inputsOf(hostedRunsOf(fields, traits, once))
     expect(run).toBeDefined()
     expect(run?.mode).toBe("traits")
@@ -231,7 +232,7 @@ describe("the inputs a hosted Characters run sends", () => {
     expect(run).not.toHaveProperty("angleSet")
   })
 
-  it("sends no app mode to a model with a mode field of its own", () => {
+  it("sends the app's mode to a model with a mode field of its own, and leaves that field to the model's default", () => {
     const moded: readonly ModelField[] = [
       ...fields,
       {
@@ -244,17 +245,37 @@ describe("the inputs a hosted Characters run sends", () => {
       },
     ]
     const [run] = inputsOf(hostedRunsOf(moded, traits, once))
-    expect(run).not.toHaveProperty("mode")
+    expect(run?.mode).toBe("traits")
+    const rest = modelInputsOf(run ?? {})
+    expect(rest).not.toHaveProperty("mode")
+    expect(checkModelInputs({ model, fields: moded }, rest).kind).toBe("valid")
+  })
+
+  it("names the view each run of the angle set asks for, in the order of the set", () => {
+    const runs = inputsOf(hostedRunsOf(fields, angles, { photos, count: 4 }))
+    expect(runs.map((run) => run.view)).toEqual([...viewsOf("quarters")])
+    expect(runs.map((run) => run.view)).toEqual([
+      "front-right",
+      "back-right",
+      "back-left",
+      "front-left",
+    ])
+    const [traitsRun] = inputsOf(hostedRunsOf(fields, traits, once))
+    expect(traitsRun).not.toHaveProperty("view")
   })
 
   it("sends at most the model's own number of reference photos, the first photos first", () => {
     const many = [...photos, ...photos.slice(0, 2)]
-    const runs = inputsOf(
-      hostedRunsOf(fields, angles, { photos: many, count: 4 })
-    )
-    for (const run of runs) {
-      expect(run.input_images).toEqual(many.slice(0, 3))
-    }
+    const withLimit = (max: number): ModelField[] =>
+      fields.map((field) =>
+        field.kind === "media" ? { ...field, max } : field
+      )
+    const sentTo = (max: number) =>
+      inputsOf(
+        hostedRunsOf(withLimit(max), angles, { photos: many, count: 4 })
+      ).map((run) => run.input_images)
+    expect(sentTo(2)).toEqual(Array.from({ length: 4 }, () => many.slice(0, 2)))
+    expect(sentTo(10)).toEqual(Array.from({ length: 4 }, () => many))
   })
 })
 
@@ -266,5 +287,15 @@ describe("what stops a hosted angle set", () => {
     expect(anglesGapOf(noPrompt, photos)).toBe("model")
     expect(anglesGapOf(fields, [])).toBe("character")
     expect(anglesGapOf(fields, photos)).toBeNull()
+  })
+
+  it("reads a model as one that draws the views only when it takes a photo and a prompt", () => {
+    expect(takesPhotoAndPrompt(fields)).toBe(true)
+    expect(
+      takesPhotoAndPrompt(fields.filter((field) => field.kind !== "media"))
+    ).toBe(false)
+    expect(
+      takesPhotoAndPrompt(fields.filter((field) => field.kind !== "prompt"))
+    ).toBe(false)
   })
 })

@@ -15,7 +15,7 @@ import {
   loraHeightWords,
   loraSideWords,
 } from "#angles/comfy/angle-words"
-import { angleSets, viewDistance } from "#characters/angle-sets"
+import { angleSets, viewDistance, viewOf } from "#characters/angle-sets"
 import { traitPrompt } from "#characters/comfy/traits-prompt"
 import { traitNames } from "#characters/traits"
 
@@ -44,6 +44,8 @@ const characterInput = "character"
 
 const angleSetInput = "angleSet"
 
+const viewInput = "view"
+
 const defaultSet = "turnaround"
 
 const ownInputs: ReadonlySet<string> = new Set([
@@ -54,6 +56,7 @@ const ownInputs: ReadonlySet<string> = new Set([
   "plainBackground",
   "character",
   "angleSet",
+  "view",
   ...traitNames,
 ])
 
@@ -66,16 +69,20 @@ function angleSetOf(angleSet: unknown): AngleSet {
   return angleSets.find((one) => one === angleSet) ?? defaultSet
 }
 
+type Pose = (typeof setPoses)[AngleSet][number]
+
+function posePrompt(pose: Pose): string {
+  return [
+    sameSubject,
+    loraSideWords[pose.side],
+    loraHeightWords[pose.height],
+    loraDistanceWords[viewDistance],
+    viewBackground,
+  ].join(", ")
+}
+
 export function anglePromptsOf(angleSet: unknown): string[] {
-  return setPoses[angleSetOf(angleSet)].map((pose) =>
-    [
-      sameSubject,
-      loraSideWords[pose.side],
-      loraHeightWords[pose.height],
-      loraDistanceWords[viewDistance],
-      viewBackground,
-    ].join(", ")
-  )
+  return setPoses[angleSetOf(angleSet)].map(posePrompt)
 }
 
 function isFilled(value: unknown): value is InputValue {
@@ -109,10 +116,7 @@ function sharedInputsOf(
   const mode = inputs[modeInput]
   const shared: HostedInputs =
     typeof model === "string" ? { [modelInput]: model } : {}
-  if (
-    typeof mode === "string" &&
-    !fields.some((field) => field.name === modeInput)
-  ) {
+  if (typeof mode === "string") {
     shared[modeInput] = mode
   }
   for (const field of fields) {
@@ -128,31 +132,27 @@ function sharedInputsOf(
   return shared
 }
 
-function anglesInputsOf(
-  fields: readonly ModelField[],
-  inputs: Inputs
-): HostedInputs {
-  const own = new Set(fields.map((field) => field.name))
-  const kept: HostedInputs = {}
+function anglesInputsOf(inputs: Inputs): HostedInputs {
   const character = inputs[characterInput]
-  if (!own.has(characterInput) && isFilled(character)) {
-    kept[characterInput] = character
+  return {
+    ...(isFilled(character) ? { [characterInput]: character } : {}),
+    [angleSetInput]: angleSetOf(inputs[angleSetInput]),
   }
-  if (!own.has(angleSetInput)) {
-    kept[angleSetInput] = angleSetOf(inputs[angleSetInput])
-  }
-  return kept
 }
 
 function promptOf(fields: readonly ModelField[]): ModelField | undefined {
   return fields.find((field) => fieldRoleOf(field, output) === "prompt")
 }
 
+export function takesPhotoAndPrompt(fields: readonly ModelField[]): boolean {
+  return promptOf(fields) !== undefined && fields.some(isReference)
+}
+
 export function anglesGapOf(
   fields: readonly ModelField[],
   photos: readonly AssetId[]
 ): AnglesGap {
-  if (promptOf(fields) === undefined || !fields.some(isReference)) {
+  if (!takesPhotoAndPrompt(fields)) {
     return "model"
   }
   return photos.length === 0 ? "character" : null
@@ -180,10 +180,16 @@ export function hostedRunsOf(
   }
   const shared = {
     ...sharedInputsOf(fields, inputs, new Set([prompt.name, image.name])),
-    ...anglesInputsOf(fields, inputs),
+    ...anglesInputsOf(inputs),
   }
   const references = options.photos.slice(0, image.max)
-  return anglePromptsOf(inputs.angleSet).map((text) => ({
-    inputs: { ...shared, [prompt.name]: text, [image.name]: references },
+  const angleSet = angleSetOf(inputs.angleSet)
+  return setPoses[angleSet].map((pose) => ({
+    inputs: {
+      ...shared,
+      [viewInput]: viewOf(angleSet, pose),
+      [prompt.name]: posePrompt(pose),
+      [image.name]: references,
+    },
   }))
 }

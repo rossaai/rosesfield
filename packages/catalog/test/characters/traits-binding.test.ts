@@ -11,28 +11,51 @@ import {
   imageGraphs,
   referenceModel,
 } from "#image/image-models"
-import { findWorkflow, type Workflow } from "#list-workflows"
 
-function valueBindingsOf(binding: EngineBinding): unknown[] {
+type Bound = { from?: unknown; name?: unknown; path?: unknown }
+
+function boundOf(binding: EngineBinding): Bound[] {
   const { bindings } = binding.config
   if (!Array.isArray(bindings)) {
     throw new Error("The binding holds no list of bindings")
   }
   return bindings.filter(
-    (one: unknown) =>
-      typeof one === "object" &&
-      one !== null &&
-      "from" in one &&
-      one.from !== "input"
+    (one: unknown): one is Bound => typeof one === "object" && one !== null
   )
 }
 
-function workflowOf(id: string): Workflow {
-  const workflow = findWorkflow(id)
-  if (workflow === null) {
-    throw new Error(`No folder of workflows/ holds ${id}`)
+function valueBindingsOf(binding: EngineBinding): Bound[] {
+  return boundOf(binding).filter((one) => one.from !== "input")
+}
+
+function graphOf(binding: EngineBinding): Record<string, unknown> {
+  const { workflow } = binding.config
+  if (typeof workflow !== "object" || workflow === null) {
+    throw new Error("The binding holds no graph")
   }
-  return workflow
+  return { ...workflow }
+}
+
+function promptPathOf(binding: EngineBinding): string[] {
+  const prompt = boundOf(binding).find(
+    (one) => one.from === "input" && one.name === "prompt"
+  )
+  if (!Array.isArray(prompt?.path)) {
+    throw new Error("Image binds no prompt")
+  }
+  return prompt.path.map(String)
+}
+
+function inputAt(graph: Record<string, unknown>, path: string[]): unknown {
+  const [node, , field] = path
+  const found = graph[node ?? ""]
+  if (typeof found !== "object" || found === null || !("inputs" in found)) {
+    return undefined
+  }
+  const { inputs } = found
+  return typeof inputs === "object" && inputs !== null
+    ? Object.entries(inputs).find(([name]) => name === field)?.[1]
+    : undefined
 }
 
 const portraitGraphs = imageGraphs.filter(
@@ -43,7 +66,7 @@ const cases = portraitGraphs.map((graph) => ({ model: graph.value, graph }))
 
 describe("the traits binding of each portrait graph", () => {
   it.each(cases)(
-    "fills the seed, the count and the size of $model at the targets Image names",
+    "fills the seed, the count and the size of $model where Image's own binding fills them",
     ({ graph }) => {
       const image = graph.bind(smallestSizesOf(graph))
       expect(valueBindingsOf(traitsBinding(graph))).toEqual(
@@ -52,40 +75,49 @@ describe("the traits binding of each portrait graph", () => {
     }
   )
 
-  it("leaves an input whose name only looks like a size at the graph's own value", () => {
-    const turbo = workflowOf("image-z-image-turbo")
-    const width = turbo.inputs.width
-    if (width === undefined) {
-      throw new Error("Z-Image Turbo names no width")
+  it.each(cases)(
+    "feeds the prompt of $model from the trait words and keeps every node of Image's graph",
+    ({ graph }) => {
+      const image = graph.bind(smallestSizesOf(graph))
+      const traits = traitsBinding(graph)
+      const path = promptPathOf(image)
+      expect(Object.keys(graphOf(traits))).toEqual(
+        expect.arrayContaining(Object.keys(graphOf(image)))
+      )
+      const fed = inputAt(graphOf(traits), path)
+      const [wordNode] = Array.isArray(fed) ? fed : []
+      expect(typeof wordNode).toBe("string")
+      expect(graphOf(traits)).toHaveProperty(String(wordNode))
+      expect(inputAt(graphOf(image), path)).not.toEqual(fed)
+      expect(
+        boundOf(traits).some(
+          (one) => one.from === "input" && one.name === "prompt"
+        )
+      ).toBe(false)
     }
-    const grown: Workflow = {
-      ...turbo,
-      inputs: {
-        ...turbo.inputs,
-        upscaleWidth: { ...width, path: ["13", "inputs", "upscale_width"] },
-      },
-    }
-    const model = portraitGraphs.find((one) => one.workflow === turbo.id)
-    if (model === undefined) {
+  )
+
+  it("refuses an image graph whose binding fills no prompt", () => {
+    const turbo = portraitGraphs.find((one) => one.value === "z-image-turbo")
+    if (turbo === undefined) {
       throw new Error("Characters lacks Z-Image Turbo")
     }
-    const binding = traitsBinding(model, () => grown)
-    expect(JSON.stringify(valueBindingsOf(binding))).not.toContain(
-      "upscale_width"
-    )
-  })
-
-  it("refuses a graph it names no size targets for", () => {
-    const other: ImageModel = {
-      value: "other-image",
-      labelKey: "image.model.zImageTurbo",
-      workflow: "image-other-image",
+    const silent: ImageModel = {
+      ...turbo,
       sizes: { "1k": sizesAt1k },
-      bind: zImageTurbo,
+      bind: (table) => {
+        const bound = zImageTurbo(table)
+        return {
+          ...bound,
+          config: {
+            ...bound.config,
+            bindings: valueBindingsOf(bound),
+          },
+        }
+      },
     }
-    const turbo = workflowOf("image-z-image-turbo")
-    expect(() =>
-      traitsBinding(other, () => ({ ...turbo, id: other.workflow }))
-    ).toThrow("Characters names no size targets for this graph")
+    expect(() => traitsBinding(silent)).toThrow(
+      "Characters writes the prompt, which Image binds to no one node"
+    )
   })
 })

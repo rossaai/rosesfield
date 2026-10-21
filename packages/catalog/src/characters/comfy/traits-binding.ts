@@ -1,18 +1,17 @@
 import type { EngineBinding } from "@rosesfield/contract"
-import { type TraitWords, traitWords } from "#characters/comfy/traits-prompt"
-import { heightsOf, type SizeTable, widthsOf } from "#image/comfy/image-sizes"
+import { comfyWorkflowAdapter } from "@rosesfield/generation/bindings"
+import { traitWords } from "#characters/comfy/traits-prompt"
+import type { SizeTable } from "#image/comfy/image-sizes"
 import {
   type ImageModel,
   imageModels,
   referenceModel,
   resolutionsOf,
 } from "#image/image-models"
-import { findWorkflow, type Workflow } from "#list-workflows"
-import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 import { apiGraph } from "#workflow-entry.contract"
 import { WorkflowInvalidError } from "#workflow-invalid.error"
 
-type Find = (id: string) => Workflow | null
+type PromptTarget = { node: string; field: string }
 
 const promptInput = "prompt"
 
@@ -32,98 +31,71 @@ export function smallestSizesOf(model: ImageModel): SizeTable {
   return table
 }
 
-type SizeTargets = {
-  widths: readonly string[]
-  heights: readonly string[]
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-const plainSize: SizeTargets = { widths: ["width"], heights: ["height"] }
-
-const sizeTargets: Readonly<Record<string, SizeTargets>> = {
-  "image-z-image-turbo": plainSize,
-  "image-qwen-image-2512": plainSize,
-  "image-ming-image-0-1-design": {
-    widths: ["width", "samplingWidth"],
-    heights: ["height", "samplingHeight"],
-  },
+function isPromptBinding(binding: unknown): boolean {
+  return (
+    isRecord(binding) &&
+    binding.from === "input" &&
+    binding.name === promptInput
+  )
 }
 
-function valueBindings(
-  model: ImageModel,
-  sizes: SizeTable
-): WorkflowValueBinding[] {
-  const targets = Object.hasOwn(sizeTargets, model.workflow)
-    ? sizeTargets[model.workflow]
-    : undefined
-  if (targets === undefined) {
-    throw new WorkflowInvalidError({
-      folder: model.workflow,
-      reason: "Characters names no size targets for this graph",
-    })
+function promptTargetOf(binding: unknown): PromptTarget | null {
+  if (!isRecord(binding) || !isPromptBinding(binding)) {
+    return null
   }
-  const widths = widthsOf(sizes)
-  const heights = heightsOf(sizes)
-  return [
-    { from: "seed", to: "seed" },
-    { from: "count", to: "count" },
-    ...targets.widths.map(
-      (to): WorkflowValueBinding => ({ from: "aspectRatio", map: widths, to })
-    ),
-    ...targets.heights.map(
-      (to): WorkflowValueBinding => ({ from: "aspectRatio", map: heights, to })
-    ),
-  ]
+  const { path } = binding
+  return Array.isArray(path) &&
+    path.length === 3 &&
+    typeof path[0] === "string" &&
+    path[1] === "inputs" &&
+    typeof path[2] === "string"
+    ? { node: path[0], field: path[2] }
+    : null
 }
 
-function wordedWorkflow(workflow: Workflow, words: TraitWords): Workflow {
-  const { [promptInput]: prompt, ...inputs } = workflow.inputs
-  if (prompt === undefined) {
-    throw new WorkflowInvalidError({
-      folder: workflow.id,
-      reason: "Characters writes the prompt, which its input map lacks",
-    })
+export function traitsBinding(model: ImageModel): EngineBinding {
+  const fail = (reason: string) =>
+    new WorkflowInvalidError({ folder: model.workflow, reason })
+  const image = model.bind(smallestSizesOf(model))
+  const graph = apiGraph.safeParse(image.config.workflow)
+  const bindings = Array.isArray(image.config.bindings)
+    ? image.config.bindings
+    : []
+  if (image.adapter !== comfyWorkflowAdapter || !graph.success) {
+    throw fail("Image binds this model to no single workflow")
   }
-  const graph = apiGraph.parse(structuredClone(workflow.graph))
-  const taken = Object.keys(words.nodes).find((id) => Object.hasOwn(graph, id))
-  if (taken !== undefined) {
-    throw new WorkflowInvalidError({
-      folder: workflow.id,
-      reason: `Characters adds node ${taken}, which the graph already holds`,
-    })
-  }
-  const [nodeId, , field] = prompt.path
-  const node = graph[nodeId]
-  if (node === undefined) {
-    throw new WorkflowInvalidError({
-      folder: workflow.id,
-      reason: `the prompt names node ${nodeId}, which the graph lacks`,
-    })
-  }
-  node.inputs[field] = words.output
-  return {
-    ...workflow,
-    graph: { ...graph, ...words.nodes },
-    inputs: { ...inputs, ...words.targets },
-  }
-}
-
-export function traitsBinding(
-  model: ImageModel,
-  find: Find = findWorkflow
-): EngineBinding {
-  const workflow = find(model.workflow)
-  if (workflow === null) {
-    throw new WorkflowInvalidError({
-      folder: model.workflow,
-      reason: "no folder of workflows/ holds it",
-    })
+  const prompts = bindings
+    .map(promptTargetOf)
+    .filter((one): one is PromptTarget => one !== null)
+  const [prompt] = prompts
+  if (prompt === undefined || prompts.length !== 1) {
+    throw fail("Characters writes the prompt, which Image binds to no one node")
   }
   const words = traitWords()
-  const values = valueBindings(model, smallestSizesOf(model))
-  const worded = wordedWorkflow(workflow, words)
-  return workflowBinding({
-    workflow: worded.id,
-    bindings: [...words.bindings, ...values],
-    find: () => worded,
-  })
+  const taken = Object.keys(words.nodes).find((id) =>
+    Object.hasOwn(graph.data, id)
+  )
+  if (taken !== undefined) {
+    throw fail(`Characters adds node ${taken}, which the graph already holds`)
+  }
+  const node = graph.data[prompt.node]
+  if (node === undefined) {
+    throw fail(`the prompt names node ${prompt.node}, which the graph lacks`)
+  }
+  node.inputs[prompt.field] = words.output
+  return {
+    adapter: image.adapter,
+    config: {
+      ...image.config,
+      workflow: { ...graph.data, ...words.nodes },
+      bindings: [
+        ...words.bindings,
+        ...bindings.filter((binding) => !isPromptBinding(binding)),
+      ],
+    },
+  }
 }

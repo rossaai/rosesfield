@@ -6,5 +6,6 @@ export {
   anglesGapOf,
   type HostedRun,
   hostedRunsOf,
+  takesPhotoAndPrompt,
 } from "#characters/hosted-runs"
 export { type Mode, modes, traitNames } from "#characters/traits"

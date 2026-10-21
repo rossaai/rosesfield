@@ -10,6 +10,8 @@ import {
 
 export type View = Side | Height
 
+type Pose = (typeof setPoses)[AngleSet][number]
+
 const namedBy: Readonly<Record<AngleSet, "side" | "height">> = {
   turnaround: "side",
   quarters: "side",
@@ -22,10 +24,18 @@ export const viewsPerRun = viewsPerSet
 
 export const viewDistance: Distance = "medium"
 
+export function viewOf(angleSet: AngleSet, pose: Pose): View {
+  return pose[namedBy[angleSet]]
+}
+
 export function viewsOf(angleSet: string): readonly View[] {
   const found = angleSets.find((set) => set === angleSet)
   if (found === undefined) {
     return []
   }
-  return setPoses[found].map((pose) => pose[namedBy[found]])
+  return setPoses[found].map((pose) => viewOf(found, pose))
 }
+
+export const views: readonly View[] = [
+  ...new Set(angleSets.flatMap((set) => viewsOf(set))),
+]

@@ -185,6 +185,7 @@ describe("a Characters run on the demo engine", () => {
       mode: "angles",
       count: "4",
       model: "qwen-image-edit-2511",
+      view: "front-right",
     })
     expect(world.assets.reads).toEqual([photoId])
   })
