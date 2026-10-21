@@ -1,5 +1,9 @@
 export const adsAppId = "ads"
 
+export const adsTask = "image-edit"
+
+export const hostedModel = "bfl/flux-3-image"
+
 export const kindValues = ["product-shot", "ad"] as const
 
 export type KindValue = (typeof kindValues)[number]

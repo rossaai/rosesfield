@@ -1,8 +1,20 @@
-import { type AppDefinition, startRunBodyFor } from "@rosesfield/contract"
+import {
+  type AppDefinition,
+  appOnlyInputsFor,
+  isAppOnly,
+  startRunBodyFor,
+} from "@rosesfield/contract"
 import { comfyWorkflowAdapter, resolveBinding } from "@rosesfield/generation"
+import {
+  chosenModelOf,
+  hostedModelOf,
+  tasksOf,
+} from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import {
+  adsTask,
   headlineLimit,
+  hostedModel,
   type KindValue,
   keyOf,
   kindValues,
@@ -16,6 +28,7 @@ import {
 import { app } from "#ads/app"
 import { stylePhrases } from "#ads/comfy/ads-prompts"
 import { adsCopy } from "#ads/copy.en"
+import { modelsForApp } from "#comfy/list-models"
 import { readApps } from "#list-apps"
 import { findWorkflow } from "#list-workflows"
 
@@ -194,6 +207,74 @@ describe("the Ads definition", () => {
       }
     }
   )
+})
+
+describe("Ads as a task app", () => {
+  it("declares the image edit task, opens on the Qwen Image Edit 2511 graph and runs FLUX 3 Image on its maker's service", () => {
+    expect(tasksOf(definition.engine)).toEqual([adsTask])
+    expect(chosenModelOf(definition.engine, {})).toBe("qwen-image-edit-2511")
+    const hosted = resolveBinding(definition.engine, { model: hostedModel })
+    expect(hostedModelOf(hosted)).toBe(hostedModel)
+    const graph = resolveBinding(definition.engine, {
+      ...body.parse({ inputs: photosOf(1) }).inputs,
+    })
+    expect(graph.adapter).toBe(comfyWorkflowAdapter)
+  })
+
+  it("lists its graph first and every hosted model that edits an image, and none that only writes one", () => {
+    const listed = modelsForApp(definition, [
+      {
+        id: hostedModel,
+        provider: "bfl",
+        takes: ["text", "image"],
+        makes: ["image"],
+        takesTools: false,
+        form: null,
+      },
+      {
+        id: "maker/text-only",
+        provider: "maker",
+        takes: ["text"],
+        makes: ["image"],
+        takesTools: false,
+        form: null,
+      },
+    ])
+    expect(listed.map((model) => model.id)).toEqual([
+      "qwen-image-edit-2511",
+      hostedModel,
+    ])
+    expect(listed.map((model) => model.task)).toEqual([adsTask, adsTask])
+  })
+
+  it("keeps its words, its photos, its character, its kind and its style with the run and sends none of them as a hosted model's field", () => {
+    expect(
+      definition.inputs.filter(isAppOnly).map((input) => input.name)
+    ).toEqual([
+      "kind",
+      "scene",
+      "headline",
+      "line",
+      "product",
+      "secondPhoto",
+      "thirdPhoto",
+      "character",
+      "style",
+    ])
+    const kept = appOnlyInputsFor(definition).safeParse({
+      kind: "ad",
+      headline: "Fresh cold brew",
+      line: "Made daily",
+      product: [photo],
+      character: [character],
+      style: "bold",
+    })
+    expect(kept.success).toBe(true)
+    expect(
+      appOnlyInputsFor(definition).safeParse({ headline: "a".repeat(61) })
+        .success
+    ).toBe(false)
+  })
 })
 
 describe("the Ads copy and style phrases", () => {
