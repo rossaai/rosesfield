@@ -101,10 +101,15 @@ function useReference(form: AppForm, app: AppListing) {
   return { reference, referenceProblem: problemOf(reference, bytes) }
 }
 
+type RemakeScreenOptions = {
+  isReachKnown: boolean
+  onStarted: () => void
+}
+
 export function useRemakeScreen(
   app: AppListing,
   seeds: StudioScreenProps["seeds"],
-  onStarted: () => void
+  { isReachKnown, onStarted }: RemakeScreenOptions
 ): RemakeState {
   const form = useAppForm(app, seeds)
   const started = useStartRun(app, form, onStarted)
@@ -114,7 +119,11 @@ export function useRemakeScreen(
   const start: StartRun = {
     ...started,
     ...priceLabelsOf(null, settings.data?.engine.origin === "demo"),
+    isPending: started.isPending || !isReachKnown,
     generate: () => {
+      if (!isReachKnown) {
+        return
+      }
       const isFormValid = form.validate()
       if (referenceProblem !== undefined) {
         if (isFormValid) {

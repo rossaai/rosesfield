@@ -1,135 +1,24 @@
-import type { RunInputs } from "@rosesfield/contract"
-import {
-  comfyWorkflowAdapter,
-  type EngineFile,
-  type EngineRequest,
-  type EngineStatus,
-  type EngineSteps,
-} from "@rosesfield/generation"
-import { assetIdFormat, ProjectError } from "@rosesfield/kernel"
+import { comfyWorkflowAdapter } from "@rosesfield/generation"
+import { ProjectError } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { findWorkflow } from "#list-workflows"
-import { remakeEngine } from "#remake/comfy/remake-engine"
-import { RouterPlanTurn } from "#remake/comfy/router-plan-turn"
 import { remakeCopy } from "#remake/copy.en"
 import { EditRefusedError } from "#remake/edit-refused.error"
-import { RemakeGenerationEngine } from "#remake/remake-generation-engine"
 import {
   shotProblemCodeOf,
   shotProblemCopyOf,
   shotProblemOfCode,
 } from "#remake/shot-plan"
-import { type Recording, ReplayFetch } from "../motion/motion-replay"
-import { FakeShotEngine } from "./fake-generation-engine"
-import { FakeMediaTool, scoresOf } from "./fake-media-tool"
-
-const planUrl = "https://api.comfy.org/v2/models/vertexai/gemini-3.1-flash-lite"
-const referenceId = assetIdFormat.parse("2c3d4e5f-6071-4c8d-9e0f-a1b2c3d4e5f6")
-const photoId = assetIdFormat.parse("3d4e5f60-7182-4d9e-8f1a-b2c3d4e5f6a7")
-
-type People = "none" | "one" | "several"
-
-function planned(people: readonly People[]): Recording {
-  const shots = people.map((one) =>
-    one === "one"
-      ? { people: one, words: null, cameraMove: null }
-      : { people: one, words: "A wet street at night.", cameraMove: "push-in" }
-  )
-  return {
-    method: "POST",
-    url: planUrl,
-    status: 200,
-    json: {
-      candidates: [
-        { content: { parts: [{ text: JSON.stringify({ shots }) }] } },
-      ],
-    },
-  }
-}
-
-const referenceFile: EngineFile = {
-  assetId: referenceId,
-  kind: "video",
-  mime: "video/mp4",
-  bytes: Uint8Array.of(1, 2, 3),
-}
-
-const photoFile: EngineFile = {
-  assetId: photoId,
-  kind: "image",
-  mime: "image/png",
-  bytes: Uint8Array.of(137, 80, 78, 71),
-}
-
-function requestOf(inputs: RunInputs = {}): EngineRequest {
-  return {
-    idempotencyKey: "run-1",
-    binding: remakeEngine,
-    inputs: {
-      reference: [referenceId],
-      character: [photoId],
-      instructions: "Warm light.",
-      otherShots: "rebuild",
-      keepSound: "on",
-      quality: "draft",
-      seed: 41,
-      ...inputs,
-    },
-    files: [referenceFile, photoFile],
-    count: 1,
-    aspectRatio: "16:9",
-    seed: 41,
-    outputKind: "video",
-  }
-}
-
-type Setup = {
-  scores: string
-  people?: readonly People[]
-  hasSound?: boolean
-  isAlone?: boolean
-  credits?: number
-}
-
-function setup(options: Setup) {
-  const media = new FakeMediaTool(options.scores, options.hasSound ?? true)
-  const shots = new FakeShotEngine({
-    isAlone: options.isAlone ?? false,
-    credits: options.credits ?? null,
-  })
-  const replay = new ReplayFetch(
-    options.people === undefined ? [] : [planned(options.people)]
-  )
-  const engine = new RemakeGenerationEngine({
-    engines: [shots],
-    media,
-    plan: new RouterPlanTurn({ apiKey: "comfyui-owner", fetch: replay.fetch }),
-  })
-  return { media, shots, replay, engine }
-}
-
-async function readUntilDone(
-  engine: RemakeGenerationEngine,
-  ref: string
-): Promise<EngineStatus> {
-  for (let read = 0; read < 12; read += 1) {
-    const status = await engine.read(ref)
-    if (status.state !== "running" && status.state !== "queued") {
-      return status
-    }
-  }
-  return expect.unreachable("the run never ended")
-}
-
-function filterOf(args: readonly string[]): string {
-  return args[args.indexOf("-filter_complex") + 1] ?? ""
-}
-
-function inputsOf(args: readonly string[]): string[] {
-  return args.filter((_, index) => args[index - 1] === "-i")
-}
-
-const threeShots = scoresOf(168, [60, 132])
+import { scoresOf } from "./fake-media-tool"
+import {
+  filterOf,
+  inputsOf,
+  planUrl,
+  readUntilDone,
+  requestOf,
+  setup,
+  threeShots,
+} from "./remake-setup"
 
 async function refusalOf(scores: string): Promise<unknown> {
   const { engine, shots, replay } = setup({ scores, people: ["none"] })
@@ -159,23 +48,26 @@ describe("Remake ends a run before any shot when the edit breaks a limit", () =>
       "REMAKE_SHOT_LENGTH_2_168",
       "Shot 2 runs 7 seconds",
     ],
-  ])("refuses an edit with %s and names the limit", async (_, scores, code, title) => {
-    const refusal = await refusalOf(scores)
-    expect(refusal).toBeInstanceOf(EditRefusedError)
-    const error = refusal as EditRefusedError
-    expect(error.code).toBe(code)
-    expect(error.code).toMatch(ProjectError.codePattern)
-    expect(error.status).toBe(400)
-    const problem = shotProblemOfCode(error.code)
-    expect(problem).toEqual(error.problem)
-    const copy = shotProblemCopyOf(error.problem)
-    const words = (remakeCopy[copy.titleKey] ?? "").replace(
-      /\{(\w+)\}/g,
-      (_match, name: string) => String(copy.values[name])
-    )
-    expect(words).toBe(title)
-    expect(remakeCopy[copy.bodyKey]).toMatch(/Remake takes/)
-  })
+  ])(
+    "refuses an edit with %s and names the limit",
+    async (_, scores, code, title) => {
+      const refusal = await refusalOf(scores)
+      expect(refusal).toBeInstanceOf(EditRefusedError)
+      const error = refusal as EditRefusedError
+      expect(error.code).toBe(code)
+      expect(error.code).toMatch(ProjectError.codePattern)
+      expect(error.status).toBe(400)
+      const problem = shotProblemOfCode(error.code)
+      expect(problem).toEqual(error.problem)
+      const copy = shotProblemCopyOf(error.problem)
+      const words = (remakeCopy[copy.titleKey] ?? "").replace(
+        /\{(\w+)\}/g,
+        (_match, name: string) => String(copy.values[name])
+      )
+      expect(words).toBe(title)
+      expect(remakeCopy[copy.bodyKey]).toMatch(/Remake takes/)
+    }
+  )
 
   it("control: an edit of 3 shots inside the limits starts and makes no shot before its plan", async () => {
     const { engine, shots, replay } = setup({ scores: threeShots })
@@ -208,9 +100,7 @@ describe("Remake plans, makes each shot and joins them into one video", () => {
     expect(replay.unused()).toEqual([])
     const [plan] = replay.sent
     expect(plan?.headers.get("X-API-Key")).toBe("comfyui-owner")
-    expect(plan?.headers.get("Idempotency-Key")).toBe(
-      "remake-shots|run-1-plan"
-    )
+    expect(plan?.headers.get("Idempotency-Key")).toBe("remake-shots|run-1-plan")
     expect(JSON.stringify(plan?.body).match(/inlineData/g)).toHaveLength(3)
     expect(shots.sent.map((sent) => sent.idempotencyKey)).toEqual([
       "remake-shots|run-1-shot-1-attempt-1",
@@ -358,185 +248,5 @@ describe("Remake plans, makes each shot and joins them into one video", () => {
   it("control: a ref this server does not hold reads as failed", async () => {
     const { engine } = setup({ scores: threeShots })
     expect((await engine.read("remake-shots|gone")).state).toBe("failed")
-  })
-})
-
-function stepsOf(status: EngineStatus): EngineSteps | undefined {
-  return "steps" in status ? status.steps : undefined
-}
-
-function resumedOf(steps: EngineSteps | undefined): EngineRequest {
-  return steps === undefined ? requestOf() : { ...requestOf(), steps }
-}
-
-function restarted(media: FakeMediaTool, shots: FakeShotEngine) {
-  const replay = new ReplayFetch([])
-  const engine = new RemakeGenerationEngine({
-    engines: [shots],
-    media,
-    plan: new RouterPlanTurn({ apiKey: "comfyui-owner", fetch: replay.fetch }),
-  })
-  return { engine, replay }
-}
-
-describe("Remake writes its plan before any shot and resumes from it", () => {
-  it("reports the plan with each shot's span, route, model and seed before any shot is made", async () => {
-    const { engine, shots } = setup({
-      scores: threeShots,
-      people: ["one", "none", "several"],
-    })
-    const { ref } = await engine.submit(requestOf())
-    const steps = stepsOf(await engine.read(ref))
-    expect(shots.sent).toEqual([])
-    expect(steps?.jobs).toEqual([])
-    expect(steps?.plan.shots).toEqual([
-      {
-        number: 1,
-        startSeconds: 0,
-        endSeconds: 2.5,
-        route: "replace",
-        model: "ltx-2-3-control",
-        credits: null,
-        seed: 41,
-        words: null,
-        cameraMove: null,
-      },
-      {
-        number: 2,
-        startSeconds: 2.5,
-        endSeconds: 5.5,
-        route: "rebuild",
-        model: "ltx-2-5",
-        credits: null,
-        seed: 42,
-        words: "A wet street at night.",
-        cameraMove: "push-in",
-      },
-      {
-        number: 3,
-        startSeconds: 5.5,
-        endSeconds: 7,
-        route: "rebuild",
-        model: "ltx-2-5",
-        credits: null,
-        seed: 43,
-        words: "A wet street at night.",
-        cameraMove: "push-in",
-      },
-    ])
-  })
-
-  it("prices each shot before it is made and reads its measured credits once made", async () => {
-    const { engine } = setup({
-      scores: threeShots,
-      people: ["one", "none", "none"],
-      credits: 12,
-    })
-    const { ref } = await engine.submit(requestOf({ otherShots: "keep" }))
-    const planned = stepsOf(await engine.read(ref))
-    expect(planned?.plan.shots.map((shot) => shot.credits)).toEqual([
-      12,
-      null,
-      null,
-    ])
-    const done = stepsOf(await readUntilDone(engine, ref))
-    expect(done?.plan.shots.map((shot) => shot.credits)).toEqual([
-      1,
-      null,
-      null,
-    ])
-  })
-
-  it("writes each shot's job as it starts", async () => {
-    const { engine } = setup({
-      scores: threeShots,
-      people: ["none", "none", "none"],
-      isAlone: true,
-    })
-    const { ref } = await engine.submit(requestOf())
-    await engine.read(ref)
-    const steps = stepsOf(await engine.read(ref))
-    expect(steps?.jobs).toEqual([
-      { number: 1, engine: comfyWorkflowAdapter, ref: "job-1" },
-    ])
-  })
-
-  it("takes every middle frame in one ffmpeg pass, scaled to a long side of 768", async () => {
-    const { engine, media } = setup({
-      scores: threeShots,
-      people: ["none", "none", "none"],
-    })
-    const { ref } = await engine.submit(requestOf())
-    await engine.read(ref)
-    const framed = media.runs.filter((run) =>
-      run.outputs.some((name) => name.endsWith(".jpg"))
-    )
-    expect(framed).toHaveLength(1)
-    expect(framed[0]?.outputs).toEqual([
-      "frame-1.jpg",
-      "frame-2.jpg",
-      "frame-3.jpg",
-    ])
-    expect(framed[0]?.args.join(" ")).toContain(
-      "select='eq(n,30)+eq(n,96)+eq(n,150)',scale=w='min(768,iw)':h='min(768,ih)':force_original_aspect_ratio=decrease"
-    )
-  })
-
-  it("resumes on a new server from the steps its run kept, with no second plan turn and no shot sent twice", async () => {
-    const first = setup({
-      scores: threeShots,
-      people: ["one", "none", "none"],
-    })
-    const { ref } = await first.engine.submit(requestOf())
-    await first.engine.read(ref)
-    const kept = stepsOf(await first.engine.read(ref))
-    expect(first.shots.sent).toHaveLength(3)
-    const next = restarted(first.media, first.shots)
-    expect(next.engine.holds(ref)).toBe(false)
-    await next.engine.submit(resumedOf(kept))
-    expect(next.engine.holds(ref)).toBe(true)
-    expect((await readUntilDone(next.engine, ref)).state).toBe("succeeded")
-    expect(next.replay.sent).toEqual([])
-    expect(first.shots.sent).toHaveLength(3)
-    expect(inputsOf(first.media.joined())).toEqual([
-      "reference.mp4",
-      "shot-1.mp4",
-      "shot-2.mp4",
-      "shot-3.mp4",
-    ])
-  })
-
-  it("sends only the shots that had not started when the server stopped", async () => {
-    const first = setup({
-      scores: threeShots,
-      people: ["none", "none", "none"],
-      isAlone: true,
-    })
-    const { ref } = await first.engine.submit(requestOf())
-    await first.engine.read(ref)
-    const kept = stepsOf(await first.engine.read(ref))
-    expect(first.shots.sent).toHaveLength(1)
-    const next = restarted(first.media, first.shots)
-    await next.engine.submit(resumedOf(kept))
-    expect((await readUntilDone(next.engine, ref)).state).toBe("succeeded")
-    expect(first.shots.sent.map((sent) => sent.idempotencyKey)).toEqual([
-      "remake-shots|run-1-shot-1-attempt-1",
-      "remake-shots|run-1-shot-2-attempt-1",
-      "remake-shots|run-1-shot-3-attempt-1",
-    ])
-  })
-
-  it("control: a new server given no steps plans again, and with no recording for the plan it never ends", async () => {
-    const first = setup({
-      scores: threeShots,
-      people: ["none", "none", "none"],
-    })
-    const { ref } = await first.engine.submit(requestOf())
-    await first.engine.read(ref)
-    const next = restarted(first.media, first.shots)
-    await next.engine.submit(requestOf())
-    const status = await next.engine.read(ref)
-    expect(status.state).toBe("running")
-    expect(stepsOf(status)).toBeUndefined()
   })
 })

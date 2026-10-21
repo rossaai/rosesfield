@@ -85,6 +85,7 @@ export {
   type EngineRequest,
   type EngineStatus,
   type EngineStepJob,
+  type EngineStepOutput,
   type EngineSteps,
   type EngineSubmission,
   GenerationEngine,

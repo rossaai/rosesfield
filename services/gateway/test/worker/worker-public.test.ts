@@ -107,6 +107,7 @@ describe("the Workers entry in public mode", () => {
       settingsResponse.parse(await response.json()).settings
     ).toMatchObject({
       mode: "public",
+      place: "workers",
       lock: "none",
       engine: { target: "comfy-cloud", key: "set", origin: "live" },
       agent: {

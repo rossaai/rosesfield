@@ -1,4 +1,4 @@
-import type { AppListing, Run } from "@rosesfield/contract"
+import type { Run } from "@rosesfield/contract"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -12,16 +12,15 @@ import {
 } from "@tanstack/react-router"
 import { render } from "@testing-library/react"
 import { vi } from "vitest"
-import type { GatewaySettings } from "@/api/gateway-settings"
+import type { GatewaySettings, ServedPlace } from "@/api/gateway-settings"
 import { runsQuery, settingsQuery } from "@/api/queries"
 import { bodyOf, defaultsOf } from "@/screens/app/app-form"
 import { priceQuery } from "@/screens/app/hosted/model-catalog-query"
 import { type AppSeeds, noSeeds } from "@/screens/app/use-app-screen"
 import { AppScreen } from "@/studio/remake/screen"
-import { servedAppsQuery } from "@/studio/remake/use-closed-key"
 import { remake } from "./remake-fixtures"
 
-const settings: GatewaySettings = {
+export const ownerSettings: GatewaySettings = {
   mode: "owner",
   engine: {
     target: "comfy-cloud",
@@ -30,8 +29,10 @@ const settings: GatewaySettings = {
     origin: "live",
   },
   lock: "local",
+  keyFrom: "server",
   agent: "unknown",
   agentModel: null,
+  place: "bun",
   retentionDays: null,
 }
 
@@ -106,21 +107,20 @@ export function openRemake({
   runs = [],
   seeds = noSeeds,
   credits = null,
-  listed = null,
+  place = "bun",
 }: {
   runs?: readonly Run[]
   seeds?: AppSeeds
   credits?: number | null
-  listed?: AppListing | null
+  place?: ServedPlace | "unknown"
 } = {}): QueryClient {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, staleTime: Number.POSITIVE_INFINITY },
     },
   })
-  client.setQueryData(settingsQuery.queryKey, settings)
-  if (listed !== null) {
-    client.setQueryData(servedAppsQuery.queryKey, { apps: [listed] })
+  if (place !== "unknown") {
+    client.setQueryData(settingsQuery.queryKey, { ...ownerSettings, place })
   }
   client.setQueryData(runsQuery(remake.id).queryKey, {
     pages: [{ runs: [...runs], next: null }],
@@ -128,7 +128,7 @@ export function openRemake({
   })
   if (credits !== null) {
     const ask = JSON.parse(JSON.stringify(bodyOf(remake, defaultsOf(remake))))
-    const key = priceQuery(remake.id, ask, settings.engine.key).queryKey
+    const key = priceQuery(remake.id, ask, ownerSettings.engine.key).queryKey
     client.setQueryData(key, { price: { source: "rates", credits } })
   }
   const root = createRootRoute({

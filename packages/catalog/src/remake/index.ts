@@ -1,5 +1,7 @@
 export {
   closeRemake,
+  isRemakeOpen,
+  type RemakeReach,
   remakeAppId,
   remakeClosedKey,
 } from "#remake/close-remake"

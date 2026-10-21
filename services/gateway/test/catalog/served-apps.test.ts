@@ -3,6 +3,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { listApps, readApps } from "@rosesfield/catalog"
 import { effectRecipes, effectsApp } from "@rosesfield/catalog/effects"
+import { isRemakeOpen } from "@rosesfield/catalog/remake"
 import {
   type AppDefinition,
   assetResponse,
@@ -134,6 +135,25 @@ describe("where Remake runs", () => {
     const remake = remakeOf(servedApps(varsOf(), place))
     expect(remake?.closedKey).toBe("remake.closed")
     expect(remake?.inputs).toEqual(remakeOf(listApps())?.inputs)
+  })
+
+  it("serves its place on the settings, which open Remake exactly where the list does", async () => {
+    const env = readServerEnv({ HOST: "127.0.0.1", DATA_DIR: folder() })
+    open = composeLocalGateway({
+      env,
+      apps: servedApps(env, "bun"),
+      clock,
+      platformRoot: null,
+    })
+    const response = await open.app.request(gatewayRoutes.getSettings.path, {
+      headers: host,
+    })
+    const { settings } = settingsResponse.parse(await response.json())
+    expect(settings).toMatchObject({ mode: "owner", place: "bun" })
+    expect(isRemakeOpen(settings)).toBe(true)
+    expect(remakeOf(servedApps(env, settings.place))?.closedKey).toBeNull()
+    expect(isRemakeOpen({ mode: "owner", place: "workers" })).toBe(false)
+    expect(isRemakeOpen({ mode: "public", place: "bun" })).toBe(false)
   })
 
   it("control: a Workers server with no Remake in its list returns the list as it is", () => {

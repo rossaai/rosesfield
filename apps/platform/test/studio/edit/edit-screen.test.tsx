@@ -34,6 +34,7 @@ const settings: GatewaySettings = {
   keyFrom: "server",
   agent: "unknown",
   agentModel: null,
+  place: "bun",
   retentionDays: null,
 }
 

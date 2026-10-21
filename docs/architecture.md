@@ -92,6 +92,8 @@ A port names a capability. An adapter names its technology. A second adapter is 
 5. When the run succeeds, the runner copies every output into `AssetStore` at once, because Comfy's output links expire: a signed link on Comfy Cloud lasts about 6 hours, and the run's record 30 days. The run becomes `done` with its assets. An output that is empty or black is dropped, and a run with no output left fails with `RUN_OUTPUT_BLANK`. The Comfy adapter adds five small stills, evenly spaced across the frames of each video it saves, to every graph it submits, saved under `rosesfield-stills/`. A video counts as black only when all five stills are black. The stills are never kept as outputs. A video with no stills, such as a hosted model's, is kept.
 6. The client polls the run and shows the result where it was asked for.
 
+A run made of several engine calls, such as Remake's plan turn and its shots, writes each step on the run as it ends: its ref, its cost, and the asset that holds its output. A run resumed after a restart reads its steps back, so no step is paid twice and no cost is lost.
+
 The run states are `queued`, `running`, `done`, `failed` and `cancelled`, declared once in domain. The engine's own states map onto them in the adapter.
 
 ## Two runtimes, one gateway

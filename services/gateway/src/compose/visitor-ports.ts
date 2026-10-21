@@ -10,6 +10,7 @@ import { visitorScope } from "#compose/request-scope"
 import { visitorSettings } from "#compose/settings"
 import type { WorkerVars } from "#env"
 import type { GatewayContext } from "#gateway"
+import type { ServedPlace } from "#gateway.contract"
 import type { RequestScope } from "#gateway-env"
 import { SqliteAssetRepository } from "#infrastructure/sqlite-asset-repository"
 import { SqliteCharacterRepository } from "#infrastructure/sqlite-character-repository"
@@ -26,6 +27,7 @@ export type SessionAgentHost = {
 
 export type VisitorDeps = {
   vars: WorkerVars
+  place: ServedPlace
   apps: readonly AppDefinition[]
   db: SqliteDatabase
   store: AssetStore
@@ -70,7 +72,7 @@ export async function visitorScopeFor(
     handlers,
     runs,
     engines,
-    settings: visitorSettings(deps.vars, keys),
+    settings: visitorSettings(deps.vars, keys, deps.place),
     agent: agents === null ? null : agents.agentOf(sessionId),
     canAnswer: modelKey !== null,
     hold: () =>

@@ -8,8 +8,13 @@ import {
   hostedModelBinding,
 } from "@rosesfield/generation"
 import { FixedClock } from "@rosesfield/kernel"
+import { FilesystemAssetStore } from "@rosesfield/library"
 import { describe, expect, it } from "vitest"
-import { pickEngines, visitorEngines } from "#compose/pick-engines"
+import {
+  pastedKeyEngines,
+  pickEngines,
+  visitorEngines,
+} from "#compose/pick-engines"
 import type { EngineSettings } from "#engine/engine-target"
 import { readServerEnv } from "#env"
 import { harnessFor, jsonInit, type PortsFor } from "./harness"
@@ -18,6 +23,8 @@ import { start } from "./sample-apps"
 import { comfyCloud } from "./server-env"
 
 const clock = new FixedClock({ now: start })
+
+const store = new FilesystemAssetStore({ root: "remake-shots-unused" })
 
 class RefusingMediaTool extends MediaTool {
   override limitMs(): number {
@@ -196,7 +203,11 @@ describe("the engine target the settings select", () => {
   it("puts Remake's runner before the live engines when the server runs ffmpeg", () => {
     const media = new RefusingMediaTool()
     const remake = { adapter: "remake-shots", config: {} }
-    const engines = pickEngines(comfyCloud("comfyui-k"), { clock, media })
+    const engines = pickEngines(comfyCloud("comfyui-k"), {
+      clock,
+      media,
+      store,
+    })
     expect(engines.map((one) => one.key)).toEqual([
       "remake-shots",
       comfyWorkflowAdapter,
@@ -204,7 +215,9 @@ describe("the engine target the settings select", () => {
     ])
     expect(engines.find((one) => one.canRun(remake))?.key).toBe("remake-shots")
     expect(
-      pickEngines({ target: "demo" }, { clock, media }).map((one) => one.key)
+      pickEngines({ target: "demo" }, { clock, media, store }).map(
+        (one) => one.key
+      )
     ).toEqual(["comfy-router", "demo"])
   })
 
@@ -212,13 +225,27 @@ describe("the engine target the settings select", () => {
     const media = new RefusingMediaTool()
     const target = comfyCloud("ignored")
     expect(
-      visitorEngines(target, "comfyui-visitor", { clock, media }).map(
-        (one) => one.key
-      )
+      pastedKeyEngines(target, "comfyui-visitor", {
+        clock,
+        media,
+        store,
+      }).map((one) => one.key)
     ).toEqual(["remake-shots", comfyWorkflowAdapter, "comfy-router", "demo"])
     expect(
-      visitorEngines(target, null, { clock, media }).map((one) => one.key)
+      pastedKeyEngines(target, null, { clock, media, store }).map(
+        (one) => one.key
+      )
     ).toEqual(["comfy-router", "demo"])
+  })
+
+  it("builds no Remake runner for a public visitor, where Remake is closed, even when the server runs ffmpeg", () => {
+    const media = new RefusingMediaTool()
+    const target = comfyCloud("ignored")
+    expect(
+      visitorEngines(target, "comfyui-visitor", { clock, media, store }).map(
+        (one) => one.key
+      )
+    ).toEqual([comfyWorkflowAdapter, "comfy-router", "demo"])
   })
 
   it("control: a server that runs no ffmpeg lists no Remake runner", () => {

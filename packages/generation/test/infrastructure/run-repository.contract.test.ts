@@ -104,6 +104,57 @@ describe.each(subjects)("RunRepository contract: $name", ({ create }) => {
     })
   })
 
+  it("keeps the cost of each step and the stored output of each made step", async () => {
+    const runs = create()
+    const run = runAt(0)
+    run.submitted({ index: 0, ref: "job-1", models: [], workflowHash: null })
+    const each = { amount: 0.01, currency: "USD" as const }
+    run.keepSteps({
+      index: 0,
+      steps: {
+        plan: {
+          shots: [
+            {
+              number: 1,
+              startSeconds: 0,
+              endSeconds: 2.5,
+              route: "rebuild",
+              model: "ltx-2-5",
+              credits: 2.11,
+              seed: 42,
+              words: "A wet street.",
+              cameraMove: null,
+            },
+          ],
+        },
+        planCost: each,
+        jobs: [
+          {
+            number: 1,
+            engine: "comfy-router",
+            ref: "now-1",
+            cost: each,
+            made: {
+              assetId: portraitId,
+              kind: "video",
+              mime: "video/mp4",
+              width: 848,
+              height: 480,
+              durationSeconds: 2.5,
+            },
+          },
+        ],
+      },
+    })
+    const stored = await runs.add(run)
+    const read = await runs.get(run.id)
+    expect(read?.toState()).toEqual(stored.toState())
+    expect(read?.jobs[0]?.steps).toMatchObject({
+      planCost: each,
+      jobs: [{ cost: each, made: { assetId: portraitId, width: 848 } }],
+    })
+  })
+
   it("keeps the time a job began collecting its result", async () => {
     const runs = create()
     const run = runAt(0)

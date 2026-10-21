@@ -1,5 +1,4 @@
 import { mkdirSync } from "node:fs"
-import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import type { OpenPiModelsOptions, PiAgentHarness } from "@rosesfield/agent"
@@ -25,7 +24,7 @@ import {
 } from "@rosesfield/library"
 import { type BunSQLiteDatabase, drizzle } from "drizzle-orm/bun-sqlite"
 import type { MiddlewareHandler } from "hono"
-import { getConnInfo, serveStatic } from "hono/bun"
+import { getConnInfo } from "hono/bun"
 import { localAgent } from "#agent/local-agent"
 import { SessionAgents } from "#agent/session-agents"
 import { type Built, buildHandlers, type Handlers } from "#build-handlers"
@@ -33,9 +32,10 @@ import { sharedCreditMeter } from "#catalog/shared-credit-meter"
 import { PastedKeys } from "#compose/pasted-keys"
 import {
   type EngineOptions,
+  pastedKeyEngines,
   pickEngines,
-  visitorEngines,
 } from "#compose/pick-engines"
+import { pageOf, platformFiles } from "#compose/platform-files"
 import { ownerScope } from "#compose/request-scope"
 import { canPasteKey, ownerSettings } from "#compose/settings"
 import { visitorScopeFor } from "#compose/visitor-ports"
@@ -137,6 +137,7 @@ export function composeLocalGateway(
       clock,
       meter: sharedCreditMeter(clock),
       media: options.media ?? new BunMediaTool(),
+      store,
       prices,
       ...fetchPart,
       ...(options.warmCatalog === true ? { warmCatalog: true } : {}),
@@ -208,7 +209,7 @@ function ownerKeys(parts: Parts): OwnerKeys {
     build: (key) =>
       ownerHandlers(
         parts,
-        visitorEngines(PastedKeys.engine, key, parts.engineOptions),
+        pastedKeyEngines(PastedKeys.engine, key, parts.engineOptions),
         (adapter) => !isDemo(adapter)
       ),
   })
@@ -247,7 +248,11 @@ function composeOwner(
     handlers,
     modelOptions: modelOptionsOf(parts),
   })
-  const scope = ownerScope({ handlers, agent, settings: ownerSettings(env) })
+  const scope = ownerScope({
+    handlers,
+    agent,
+    settings: ownerSettings(env, "bun"),
+  })
   const guard: GatewayGuard = {
     mode: "owner",
     lock,
@@ -344,6 +349,7 @@ function composePublic(
   const scopeFor = (c: GatewayContext): Promise<RequestScope> =>
     visitorScopeFor(c, {
       vars: env,
+      place: "bun",
       apps: parts.apps,
       db,
       store: parts.store,
@@ -385,16 +391,4 @@ function sharePurgeOf(parts: Parts): SharePurge {
     store: parts.store,
     clock: parts.clock,
   })
-}
-
-async function pageOf(root: string): Promise<string | null> {
-  try {
-    return await readFile(join(root, "index.html"), "utf8")
-  } catch {
-    return null
-  }
-}
-
-function platformFiles(root: string): MiddlewareHandler[] {
-  return [serveStatic({ root }), serveStatic({ root, path: "index.html" })]
 }

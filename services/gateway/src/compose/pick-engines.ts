@@ -14,6 +14,7 @@ import {
   type RouterCatalog,
 } from "@rosesfield/generation"
 import type { Clock } from "@rosesfield/kernel"
+import type { AssetStore } from "@rosesfield/library"
 import { sharedRouterCatalog } from "#catalog/shared-router-catalog"
 import {
   checkEngineSettings,
@@ -30,6 +31,7 @@ export type EngineOptions = {
   meter?: CreditMeter
   warmCatalog?: boolean
   media?: MediaTool
+  store?: AssetStore
   prices?: PriceBook
 }
 
@@ -89,12 +91,14 @@ function withRemake(
   key: string | null,
   options: EngineOptions
 ): readonly GenerationEngine[] {
-  if (options.media === undefined) {
+  const { media, store } = options
+  if (media === undefined || store === undefined) {
     return engines
   }
   const remake = new RemakeGenerationEngine({
     engines,
-    media: options.media,
+    media,
+    store,
     plan: new RouterPlanTurn({ apiKey: key, ...fetchOf(options) }),
     ...(options.prices === undefined ? {} : { prices: options.prices }),
   })
@@ -116,16 +120,42 @@ export function pickEngines(
     : withRemake([live, router], hostedKeyOf(engine), options)
 }
 
+type KeyedEngines = {
+  live: GenerationEngine | null
+  router: GenerationEngine
+  demo: GenerationEngine
+  hostedKey: string | null
+}
+
+function keyedEngines(
+  engine: EngineSettings,
+  key: string | null,
+  options: EngineOptions
+): KeyedEngines {
+  const keyed = key === null ? engine : withEngineKey(engine, key)
+  const live = key === null ? null : liveEngineOf(keyed, options)
+  const hostedKey = key === null ? null : hostedKeyOf(keyed)
+  const router = routerOf(hostedKey, options)
+  const demo = new DemoGenerationEngine({ clock: options.clock, rates: router })
+  return { live, router, demo, hostedKey }
+}
+
 export function visitorEngines(
   engine: EngineSettings,
   key: string | null,
   options: EngineOptions
 ): readonly GenerationEngine[] {
-  const keyed = key === null ? engine : withEngineKey(engine, key)
-  const live = key === null ? null : liveEngineOf(keyed, options)
-  const router = routerOf(key === null ? null : hostedKeyOf(keyed), options)
-  const demo = new DemoGenerationEngine({ clock: options.clock, rates: router })
+  const { live, router, demo } = keyedEngines(engine, key, options)
+  return live === null ? [router, demo] : [live, router, demo]
+}
+
+export function pastedKeyEngines(
+  engine: EngineSettings,
+  key: string | null,
+  options: EngineOptions
+): readonly GenerationEngine[] {
+  const { live, router, demo, hostedKey } = keyedEngines(engine, key, options)
   return live === null
     ? [router, demo]
-    : [...withRemake([live, router], hostedKeyOf(keyed), options), demo]
+    : [...withRemake([live, router], hostedKey, options), demo]
 }

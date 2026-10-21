@@ -128,6 +128,7 @@ describe("the owner lock on a server that listens beyond 127.0.0.1", () => {
     expect(JSON.parse(text)).toEqual({
       settings: {
         mode: "owner",
+        place: "bun",
         engine: {
           target: "demo",
           address: null,
@@ -167,6 +168,7 @@ describe("the owner lock on a server that listens on 127.0.0.1 only", () => {
     expect(JSON.parse(text)).toEqual({
       settings: {
         mode: "owner",
+        place: "bun",
         engine: {
           target: "comfy-cloud",
           address: "https://cloud.comfy.org",

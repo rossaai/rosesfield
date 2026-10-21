@@ -5,6 +5,7 @@ import {
   type EngineRequest,
   type EngineStatus,
   type EngineStepJob,
+  type EngineStepOutput,
   type EngineSteps,
   EngineUnavailableError,
   type GenerationEngine,
@@ -55,6 +56,7 @@ export type ShotWork = {
   run: ShotRun | null
   ref: string | null
   made: EngineOutput | null
+  kept: EngineStepOutput | null
   cost: Cost | null
 }
 
@@ -67,7 +69,7 @@ export type RemakeJob = {
   probe: ReferenceProbe
   stage: RemakeStage
   works: ShotWork[]
-  costs: Cost[]
+  planCost: Cost | null
   output: EngineOutput | null
   error: ProjectError | null
   isBusy: boolean
@@ -152,7 +154,10 @@ export function isInFlight(work: ShotWork): boolean {
   return work.ref !== null && work.made === null
 }
 
-function costOf(costs: readonly Cost[]): Cost | null {
+function costOf(job: RemakeJob): Cost | null {
+  const costs = [job.planCost, ...job.works.map((work) => work.cost)].filter(
+    (cost) => cost !== null
+  )
   return costs.length === 0
     ? null
     : {
@@ -191,10 +196,18 @@ export function planShotOf(work: ShotWork): RunPlan["shots"][number] {
 }
 
 function stepJobsOf(work: ShotWork): EngineStepJob[] {
-  const { run, ref } = work
+  const { run, ref, cost, kept } = work
   return run === null || ref === null
     ? []
-    : [{ number: work.shot.number, engine: run.engine.key, ref }]
+    : [
+        {
+          number: work.shot.number,
+          engine: run.engine.key,
+          ref,
+          ...(cost === null ? {} : { cost }),
+          ...(kept === null ? {} : { made: kept }),
+        },
+      ]
 }
 
 export function stepsOf(job: RemakeJob): { steps?: EngineSteps } {
@@ -204,6 +217,7 @@ export function stepsOf(job: RemakeJob): { steps?: EngineSteps } {
   return {
     steps: {
       plan: { shots: job.works.map(planShotOf) },
+      ...(job.planCost === null ? {} : { planCost: job.planCost }),
       jobs: job.works.flatMap(stepJobsOf),
     },
   }
@@ -212,7 +226,7 @@ export function stepsOf(job: RemakeJob): { steps?: EngineSteps } {
 export function statusOf(job: RemakeJob): EngineStatus {
   switch (job.stage) {
     case "done":
-      return { state: "succeeded", cost: costOf(job.costs), ...stepsOf(job) }
+      return { state: "succeeded", cost: costOf(job), ...stepsOf(job) }
     case "failed":
       return {
         state: "failed",

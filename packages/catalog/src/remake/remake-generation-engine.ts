@@ -12,6 +12,7 @@ import {
   RunFailedError,
 } from "@rosesfield/generation"
 import type { ProjectError } from "@rosesfield/kernel"
+import type { AssetStore } from "@rosesfield/library"
 import { creditsOfCost } from "#comfy/comfy-credits"
 import { remakeShotsAdapter } from "#remake/comfy/remake-engine"
 import { planModel, planReplyOf } from "#remake/comfy/remake-plan-turn"
@@ -41,6 +42,7 @@ type RemakeGenerationEngineOptions = {
   engines: readonly GenerationEngine[]
   media: MediaTool
   plan: RouterPlanTurn
+  store: AssetStore
   prices?: PriceBook
 }
 
@@ -62,6 +64,7 @@ export class RemakeGenerationEngine extends GenerationEngine {
     this.plan = options.plan
     this.works = new ShotWorks({
       engines: options.engines,
+      store: options.store,
       ...(options.prices === undefined ? {} : { prices: options.prices }),
     })
   }
@@ -144,6 +147,7 @@ export class RemakeGenerationEngine extends GenerationEngine {
     }
     job.stage = "cancelled"
     await this.stopShots(job)
+    await this.works.forget(job.works)
   }
 
   private async open(ref: string, request: EngineRequest): Promise<RemakeJob> {
@@ -159,13 +163,14 @@ export class RemakeGenerationEngine extends GenerationEngine {
       probe,
       stage: "planning",
       works: [],
-      costs: [],
+      planCost: null,
       output: null,
       error: null,
       isBusy: false,
     }
     if (request.steps !== undefined) {
       job.works = await this.works.restored(job, request.steps)
+      job.planCost = request.steps.planCost ?? null
       job.stage = "making"
     }
     return job
@@ -190,9 +195,7 @@ export class RemakeGenerationEngine extends GenerationEngine {
       { frames, instructions: job.settings.instructions },
       `${job.ref}-plan`
     )
-    if (turn.cost !== null) {
-      job.costs.push(turn.cost)
-    }
+    job.planCost = turn.cost
     const planned = planShots(
       job.found,
       planReplyOf(turn.answer),
@@ -247,7 +250,7 @@ export class RemakeGenerationEngine extends GenerationEngine {
     work.ref = submission.ref
     const { finished } = submission
     if (finished !== undefined) {
-      this.keep(job, work, finished.outputs, finished.cost)
+      await this.keep(work, finished.outputs, finished.cost)
     }
     if (job.stage === "cancelled") {
       await run.engine.cancel(submission.ref).catch(() => undefined)
@@ -297,7 +300,7 @@ export class RemakeGenerationEngine extends GenerationEngine {
     switch (status.state) {
       case "succeeded": {
         const outputs = await engine.listOutputs(ref, run.request.inputs)
-        this.keep(job, work, outputs, status.cost ?? null)
+        await this.keep(work, outputs, status.cost ?? null)
         return
       }
       case "failed":
@@ -312,23 +315,20 @@ export class RemakeGenerationEngine extends GenerationEngine {
     }
   }
 
-  private keep(
-    job: RemakeJob,
+  private async keep(
     work: ShotWork,
     outputs: readonly EngineOutput[],
     cost: Cost | null
-  ): void {
+  ): Promise<void> {
     const video = outputs.find((output) => output.kind === "video")
     if (video === undefined) {
       throw new RunFailedError({
         cause: `shot ${work.shot.number} made no video`,
       })
     }
+    work.kept = await this.works.keep(video)
     work.made = video
-    work.cost = cost
-    if (cost !== null) {
-      job.costs.push(cost)
-    }
+    work.cost = work.cost ?? cost
   }
 
   private async join(job: RemakeJob): Promise<void> {
@@ -337,7 +337,8 @@ export class RemakeGenerationEngine extends GenerationEngine {
       return
     }
     job.output = output
-    job.works = job.works.map((work) => ({ ...work, made: null }))
+    await this.works.forget(job.works)
+    job.works = job.works.map((work) => ({ ...work, made: null, kept: null }))
     job.stage = "done"
   }
 
@@ -349,6 +350,7 @@ export class RemakeGenerationEngine extends GenerationEngine {
     job.stage = "failed"
     job.error = error
     await this.stopShots(job)
+    await this.works.forget(job.works)
   }
 
   private async stopShots(job: RemakeJob): Promise<void> {

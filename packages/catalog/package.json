@@ -17,6 +17,7 @@
     "./characters": "./src/characters/index.ts",
     "./ads": "./src/ads/index.ts",
     "./remake": "./src/remake/index.ts",
+    "./remake/reach": "./src/remake/close-remake.ts",
     "./remake/bun": "./src/remake/ffmpeg/bun-media-tool.ts"
   },
   "scripts": {
@@ -28,6 +29,7 @@
     "@rosesfield/contract": "workspace:*",
     "@rosesfield/generation": "workspace:*",
     "@rosesfield/kernel": "workspace:*",
+    "@rosesfield/library": "workspace:*",
     "zod": "4.6.7"
   }
 }

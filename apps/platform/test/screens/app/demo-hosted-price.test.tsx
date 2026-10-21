@@ -82,6 +82,7 @@ describe("the price on Generate for a hosted model", () => {
       keyFrom: "server",
       agent: "missing",
       agentModel: null,
+      place: "bun",
       retentionDays: null,
     }
     client.setQueryData(settingsQuery.queryKey, settings)
@@ -105,6 +106,7 @@ describe("the price on Generate for a hosted model", () => {
       keyFrom: "server",
       agent: "missing",
       agentModel: null,
+      place: "bun",
       retentionDays: null,
     }
     client.setQueryData(settingsQuery.queryKey, settings)

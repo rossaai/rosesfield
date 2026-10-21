@@ -7,15 +7,29 @@ import {
   type EngineSubmission,
   GenerationEngine,
   type OutputsPerJob,
+  RunFailedError,
   type RunPrice,
   unknownPrice,
 } from "@rosesfield/generation"
 
 const madeBytes = Uint8Array.of(0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70)
 
+const made: EngineOutput = {
+  kind: "video",
+  mime: "video/mp4",
+  bytes: madeBytes,
+  width: 848,
+  height: 480,
+  durationSeconds: 5,
+}
+
+const eachCost: Cost = { amount: 0.01, currency: "USD" }
+
 type FakeShotEngineOptions = {
   isAlone?: boolean
+  isNow?: boolean
   credits?: number | null
+  cost?: Cost | null
 }
 
 export class FakeShotEngine extends GenerationEngine {
@@ -25,12 +39,16 @@ export class FakeShotEngine extends GenerationEngine {
   readonly sent: EngineRequest[] = []
   readonly cancelled: string[] = []
   private readonly isAlone: boolean
+  private readonly isNow: boolean
   private readonly credits: number | null
+  private readonly cost: Cost | null
 
   constructor(options: FakeShotEngineOptions = {}) {
     super()
     this.isAlone = options.isAlone ?? false
+    this.isNow = options.isNow ?? false
     this.credits = options.credits ?? null
+    this.cost = options.cost === undefined ? eachCost : options.cost
   }
 
   override async priceOf(): Promise<RunPrice> {
@@ -57,28 +75,33 @@ export class FakeShotEngine extends GenerationEngine {
 
   override async submit(request: EngineRequest): Promise<EngineSubmission> {
     this.sent.push(request)
-    return { ref: `job-${this.sent.length}`, models: [], workflowHash: null }
+    return this.isNow
+      ? {
+          ref: `now-${this.sent.length}`,
+          models: [],
+          workflowHash: null,
+          finished: { outputs: [made], cost: this.cost },
+        }
+      : { ref: `job-${this.sent.length}`, models: [], workflowHash: null }
   }
 
   override submitLimitMs(): number {
     return 1000
   }
 
-  override async read(): Promise<EngineStatus> {
-    return { state: "succeeded", cost: { amount: 0.01, currency: "USD" } }
+  override async read(ref: string): Promise<EngineStatus> {
+    return ref.startsWith("now-")
+      ? { state: "succeeded" }
+      : { state: "succeeded", cost: this.cost }
   }
 
-  override async listOutputs(): Promise<EngineOutput[]> {
-    return [
-      {
-        kind: "video",
-        mime: "video/mp4",
-        bytes: madeBytes,
-        width: 848,
-        height: 480,
-        durationSeconds: 5,
-      },
-    ]
+  override async listOutputs(ref: string): Promise<EngineOutput[]> {
+    if (ref.startsWith("now-")) {
+      throw new RunFailedError({
+        cause: "a synchronous run keeps its outputs at submit",
+      })
+    }
+    return [made]
   }
 
   override async cancel(ref: string): Promise<void> {
