@@ -21,8 +21,9 @@
     "catalog:sync": "bun packages/catalog/scripts/catalog-sync.ts",
     "generated:check": "bun scripts/checks/generated-files/check-generated-files.ts",
     "copy:check": "bun scripts/checks/typed-copy/check-typed-copy.ts",
+    "glob:check": "bun scripts/checks/glob-calls/check-glob-calls.ts",
     "ui:add": "cd apps/platform && shadcn add",
-    "gate": "bun run catalog:sync && bun run generated:check && bun run copy:check && bun run typecheck && bun run lint && bun run test",
+    "gate": "bun run catalog:sync && bun run generated:check && bun run copy:check && bun run glob:check && bun run typecheck && bun run lint && bun run test",
     "deploy": "bun scripts/deploy/deploy.ts"
   },
   "devDependencies": {
