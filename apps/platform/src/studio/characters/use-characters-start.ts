@@ -12,7 +12,7 @@ import {
   routes,
 } from "@rosesfield/contract"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useRef } from "react"
+import { type RefObject, useRef } from "react"
 import { callRoute } from "@/api/call-route"
 import { characterQuery, settingsQuery } from "@/api/queries"
 import { storeRun } from "@/pieces/run/run-actions"
@@ -116,30 +116,16 @@ function keyOf(press: Press, index: number, total: number): string {
   return total === 1 ? press.key : `${press.key}${viewKey}${index + 1}`
 }
 
-function useCharactersStart(
+type Started = { key: Press; bodies: readonly StartRunBodyInput[] }
+
+function useStartRuns(
   app: AppListing,
-  form: AppForm,
-  hosted: HostedState,
-  mode: Mode,
+  pressed: RefObject<Press | null>,
   onStarted?: (run: Run) => void
-): CharactersStart {
+) {
   const client = useQueryClient()
-  const settings = useQuery(settingsQuery)
-  const fields = hosted.fields
-  const { photos, isLoading } = useCharacterPhotos(fields, form, mode)
-  const of: ModeRuns = { fields, mode, photos }
-  const runs = runsOf(form.values, of)
-  const bodies: readonly StartRunBodyInput[] = runs ?? [
-    bodyOf(app, form.values),
-  ]
-  const [first] = bodies
-  const credits = usePrice(app, first ?? null, hosted.keyState)
-  const pressed = useRef<Press | null>(null)
-  const start = useMutation({
-    mutationFn: async (press: {
-      key: Press
-      bodies: readonly StartRunBodyInput[]
-    }) => {
+  return useMutation({
+    mutationFn: async (press: Started) => {
       let isFirst = true
       const made = await Promise.all(
         press.bodies.map(async (body, index) => {
@@ -162,6 +148,27 @@ function useCharactersStart(
       return made
     },
   })
+}
+
+function useCharactersStart(
+  app: AppListing,
+  form: AppForm,
+  hosted: HostedState,
+  mode: Mode,
+  onStarted?: (run: Run) => void
+): CharactersStart {
+  const settings = useQuery(settingsQuery)
+  const fields = hosted.fields
+  const { photos, isLoading } = useCharacterPhotos(fields, form, mode)
+  const of: ModeRuns = { fields, mode, photos }
+  const runs = runsOf(form.values, of)
+  const bodies: readonly StartRunBodyInput[] = runs ?? [
+    bodyOf(app, form.values),
+  ]
+  const [first] = bodies
+  const credits = usePrice(app, first ?? null, hosted.keyState)
+  const pressed = useRef<Press | null>(null)
+  const start = useStartRuns(app, pressed, onStarted)
   const pressOf = (sent: readonly StartRunBodyInput[]): Press => {
     const signature = JSON.stringify(sent)
     if (pressed.current?.signature !== signature) {

@@ -36,3 +36,14 @@ export function reopenLost(
   }
   return "reopened"
 }
+
+export async function cancelAll(
+  engine: GenerationEngine,
+  refs: readonly string[]
+): Promise<unknown> {
+  const results = await Promise.allSettled(
+    refs.map((ref) => engine.cancel(ref))
+  )
+  const refused = results.find((result) => result.status === "rejected")
+  return refused === undefined ? null : refused.reason
+}

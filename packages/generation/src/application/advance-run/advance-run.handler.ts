@@ -6,6 +6,7 @@ import {
   type RunId,
 } from "@rosesfield/kernel"
 import {
+  cancelAll,
   keepSteps,
   type Polled,
   reopenLost,
@@ -314,7 +315,7 @@ export class AdvanceRunHandler {
         ? [one.ref]
         : []
     )
-    const refused = await this.cancelAll(engine, working)
+    const refused = await cancelAll(engine, working)
     if (ending === "cancelled") {
       run.cancel({ now: this.now() })
     } else {
@@ -328,7 +329,7 @@ export class AdvanceRunHandler {
   }
 
   private async timeOut(run: Run, watch: Watch): Promise<AdvanceRunOutput> {
-    const refused = await this.cancelAll(watch.engine, run.liveRefs())
+    const refused = await cancelAll(watch.engine, run.liveRefs())
     run.fail({
       error: new RunTimedOutError({
         runId: run.id,
@@ -341,17 +342,6 @@ export class AdvanceRunHandler {
       throw refused
     }
     return stop
-  }
-
-  private async cancelAll(
-    engine: GenerationEngine,
-    refs: readonly string[]
-  ): Promise<unknown> {
-    const results = await Promise.allSettled(
-      refs.map((ref) => engine.cancel(ref))
-    )
-    const refused = results.find((result) => result.status === "rejected")
-    return refused === undefined ? null : refused.reason
   }
 
   private async recover(

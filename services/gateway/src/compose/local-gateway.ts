@@ -319,6 +319,19 @@ function publicGuard(
   }
 }
 
+function sessionAgentsOf(parts: Parts): SessionAgents | null {
+  const { env } = parts
+  return env.agent === null
+    ? null
+    : new SessionAgents({
+        folder: join(env.dataDir, "agent-sessions"),
+        model: env.agent,
+        apps: parts.apps,
+        clock: parts.clock,
+        modelOptions: modelOptionsOf(parts),
+      })
+}
+
 function composePublic(
   parts: Parts,
   access: PublicAccess,
@@ -330,16 +343,7 @@ function composePublic(
     pickEngines(env.engine, parts.engineOptions),
     null
   )
-  const agents =
-    env.agent === null
-      ? null
-      : new SessionAgents({
-          folder: join(env.dataDir, "agent-sessions"),
-          model: env.agent,
-          apps: parts.apps,
-          clock,
-          modelOptions: modelOptionsOf(parts),
-        })
+  const agents = sessionAgentsOf(parts)
   const sessionPurge = new SessionPurge({
     db,
     store: parts.store,
