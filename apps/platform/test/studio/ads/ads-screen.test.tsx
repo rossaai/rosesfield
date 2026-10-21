@@ -36,6 +36,25 @@ vi.mock("@/screens/app/use-start-run", () => ({
   },
 }))
 
+vi.mock("@/screens/app/hosted/use-hosted-model", () => ({
+  useHostedModel: () => ({
+    isTaskApp: false,
+    models: [],
+    isLoading: false,
+    error: null,
+    keyState: "set",
+    defaultModel: null,
+    chosen: null,
+    fields: null,
+    ranBefore: [],
+    choose: () => undefined,
+  }),
+}))
+
+vi.mock("@/screens/app/hosted/use-price-refresh", () => ({
+  usePriceRefresh: () => undefined,
+}))
+
 vi.mock("@/screens/app/app-canvas", () => ({
   useAppRuns: () => ({ runs: [], isPending: false }),
 }))
