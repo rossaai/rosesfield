@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { readSource } from "./read-source"
 
-const sources = import.meta.glob<string>(
+const sources = import.meta.glob(
   [
     "../src/components/**/*.{ts,tsx}",
     "../../../apps/platform/src/**/*.{ts,tsx}",

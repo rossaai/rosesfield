@@ -1,6 +1,6 @@
 import type { Preset } from "@/studio/video/video-prompt"
 
-const samples = import.meta.glob<string>("./presets/*.mp4", {
+const samples = import.meta.glob("./presets/*.mp4", {
   eager: true,
   query: "?url",
   import: "default",

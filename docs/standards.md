@@ -71,6 +71,7 @@ Every concrete error extends one base and carries a stable `code`, such as `RUN_
 - The environment is read in one typed `env.ts` that validates at startup and names the missing variable. Code never branches on the environment.
 - Time comes from an injected `Clock`. No `Date.now()` in domain or application.
 - No machine paths in tracked files. They come from config.
+- An `import.meta.glob` call takes no type argument. Vitest caches the transform of every file whose text lacks `import.meta.glob(`, so a typed call keeps the list it read first, and a file added later stays out of it in tests. The query types a `?url` or `?raw` result as a string. Any other result is `unknown` and is checked before use.
 
 ## Comments
 
@@ -101,5 +102,6 @@ A package exists when two apps import it or when it is published. Code one app u
 | layer direction, no npm import in domain | dependency-cruiser |
 | no `any`, no `interface`, no `enum`, size limits, no floating promises | Biome |
 | strict compiler flags | `tsconfig.base.json` |
+| an `import.meta.glob` call with a type argument | `bun run glob:check` |
 | env validated at start | zod in `env.ts` |
 | everything else | a reviewer |
