@@ -1,5 +1,10 @@
 import { angleSets, viewsPerRun } from "#characters/angle-sets"
-import { charactersEngine } from "#characters/comfy/characters-engine"
+import {
+  anglesModel,
+  charactersEngine,
+  portraitDefault,
+} from "#characters/comfy/characters-engine"
+import { portraitModels } from "#characters/comfy/traits-binding"
 import {
   camelOf,
   defaultPortraitCount,
@@ -8,10 +13,10 @@ import {
   modes,
   portraitCounts,
   traitNames,
-  traitsModels,
   traitValues,
 } from "#characters/traits"
 import { type AppInput, defineApp } from "#define-app"
+import { modelLabels } from "#edit/edit-models"
 
 type Input = AppInput["inputs"][number]
 
@@ -70,6 +75,27 @@ const count: Input = {
   bounds: [{ when: inMode("angles"), values: [String(viewsPerRun)] }],
 }
 
+const model: Input = {
+  type: "choice",
+  name: "model",
+  labelKey: labelOf("model"),
+  options: [
+    ...portraitModels.map((one) => ({
+      value: one.value,
+      labelKey: one.labelKey,
+    })),
+    { value: anglesModel, labelKey: modelLabels[anglesModel] },
+  ],
+  default: portraitDefault,
+  bounds: [
+    {
+      when: inMode("traits"),
+      values: portraitModels.map((one) => one.value),
+    },
+    { when: inMode("angles"), values: [anglesModel] },
+  ],
+}
+
 export const app = defineApp({
   id: "characters",
   nameKey: "characters.name",
@@ -105,7 +131,7 @@ export const app = defineApp({
       default: "on",
       when: inMode("traits"),
     },
-    choice("model", traitsModels, "flux-2-klein-4b", "traits"),
+    model,
     {
       type: "character",
       name: "character",

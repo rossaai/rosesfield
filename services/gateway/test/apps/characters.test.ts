@@ -72,7 +72,7 @@ describe("the characters app through the gateway on the demo engine", () => {
     expect(done.inputs).toMatchObject({
       mode: "traits",
       gender: "man",
-      model: "flux-2-klein-4b",
+      model: "z-image-turbo",
       plainBackground: "on",
       count: "2",
     })
@@ -138,6 +138,7 @@ describe("the characters app through the gateway on the demo engine", () => {
       mode: "angles",
       count: "4",
       character: [character],
+      model: "qwen-image-edit-2511",
     })
     expect(done.inputs).not.toHaveProperty("gender")
   })
@@ -151,6 +152,9 @@ describe("the characters app through the gateway on the demo engine", () => {
       { inputs: { count: "3" }, count: 2 },
       { inputs: { age: "child" } },
       { inputs: { model: "nano-banana-pro" } },
+      { inputs: { model: "flux-2-klein-4b" } },
+      { inputs: { model: "qwen-image-edit-2511" } },
+      { inputs: { mode: "angles", character, model: "z-image-turbo" } },
       { inputs: { mode: "angles", character, count: "2" } },
       { inputs: { mode: "angles", character }, count: 2 },
       { inputs: { mode: "angles" } },

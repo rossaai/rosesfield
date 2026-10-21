@@ -158,7 +158,7 @@ describe("a Characters run on the demo engine", () => {
     expect(finished?.inputs).toMatchObject({
       mode: "traits",
       count: "3",
-      model: "flux-2-klein-4b",
+      model: "z-image-turbo",
     })
     expect(finished?.count).toBe(3)
     expect(
@@ -181,12 +181,15 @@ describe("a Characters run on the demo engine", () => {
     expect(finished?.status).toBe("done")
     expect(finished?.count).toBe(4)
     expect(finished?.outputs).toHaveLength(4)
-    expect(finished?.inputs).toMatchObject({ mode: "angles", count: "4" })
-    expect(finished?.inputs).not.toHaveProperty("model")
+    expect(finished?.inputs).toMatchObject({
+      mode: "angles",
+      count: "4",
+      model: "qwen-image-edit-2511",
+    })
     expect(world.assets.reads).toEqual([photoId])
   })
 
-  it("refuses a model the traits mode does not list, and starts no run", async () => {
+  it("refuses the angles graph in traits, and starts no run", async () => {
     const world = harness()
     await expect(
       world.start.execute({
@@ -237,6 +240,16 @@ describe("a Characters run on the demo engine", () => {
       why: "an angle set applies only in angles",
       body: { inputs: { angleSet: "heights" } },
       fixed: { inputs: { mode: "angles", character, angleSet: "heights" } },
+    },
+    {
+      why: "a portrait model does not make angles",
+      body: { inputs: { mode: "angles", character, model: "z-image-turbo" } },
+      fixed: { inputs: { mode: "angles", character } },
+    },
+    {
+      why: "a graph Characters no longer holds is named",
+      body: { inputs: { model: "flux-2-klein-4b" } },
+      fixed: { inputs: { model: "qwen-image-2512" } },
     },
     {
       why: "the count stops at 4",
