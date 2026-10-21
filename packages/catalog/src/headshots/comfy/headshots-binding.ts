@@ -66,22 +66,48 @@ function targetOf(edit: Workflow, name: string): WorkflowTarget {
   if (target === undefined) {
     throw new WorkflowInvalidError({
       folder: edit.id,
-      reason: `Headshot sends its words to the input ${name}, which its input map lacks`,
+      reason: `Headshot binds the input ${name}, which its input map lacks`,
     })
   }
   return target
 }
 
+export const sizeNode = "9205"
+
+type ApiGraph = ReturnType<typeof apiGraph.parse>
+
+function nodeOf(
+  edit: Workflow,
+  graph: ApiGraph,
+  name: string
+): [id: string, node: ApiGraph[string]] {
+  const [id] = targetOf(edit, name).path
+  const node = Object.hasOwn(graph, id) ? graph[id] : undefined
+  if (node === undefined) {
+    throw new WorkflowInvalidError({
+      folder: edit.id,
+      reason: `its ${name} names node ${id}, which the graph lacks`,
+    })
+  }
+  return [id, node]
+}
+
+function isLinkTo(value: unknown, node: string): boolean {
+  return Array.isArray(value) && value[0] === node && value[1] === 0
+}
+
 function wordedGraph(edit: Workflow): Record<string, unknown> {
   const graph = apiGraph.parse(structuredClone(edit.graph))
-  let previous: string | [string, number] = leadWords
-  for (const word of wordNodes) {
-    if (Object.hasOwn(graph, word.node)) {
+  for (const added of [...wordNodes.map((word) => word.node), sizeNode]) {
+    if (Object.hasOwn(graph, added)) {
       throw new WorkflowInvalidError({
         folder: edit.id,
-        reason: `Headshot adds node ${word.node}, which the graph already holds`,
+        reason: `Headshot adds node ${added}, which the graph already holds`,
       })
     }
+  }
+  let previous: string | [string, number] = leadWords
+  for (const word of wordNodes) {
     graph[word.node] = {
       class_type: "StringConcatenate",
       inputs: {
@@ -92,36 +118,39 @@ function wordedGraph(edit: Workflow): Record<string, unknown> {
     }
     previous = [word.node, 0]
   }
-  const [node, , field] = targetOf(edit, "prompt").path
-  const prompt = graph[node]
-  if (prompt === undefined) {
-    throw new WorkflowInvalidError({
-      folder: edit.id,
-      reason: `its prompt names node ${node}, which the graph lacks`,
-    })
-  }
+  const [, prompt] = nodeOf(edit, graph, "prompt")
+  const [, , field] = targetOf(edit, "prompt").path
   prompt.inputs[field] = previous
+  const [scaled] = nodeOf(edit, graph, "megapixels")
+  for (const node of Object.values(graph)) {
+    for (const [name, value] of Object.entries(node.inputs)) {
+      if (isLinkTo(value, scaled)) {
+        node.inputs[name] = [sizeNode, 0]
+      }
+    }
+  }
+  const square = headshotSizes["1:1"]
+  graph[sizeNode] = {
+    class_type: "ImageScale",
+    inputs: {
+      image: [scaled, 0],
+      upscale_method: "lanczos",
+      width: square.width,
+      height: square.height,
+      crop: "center",
+    },
+  }
   return graph
 }
 
-function sizeBindings(edit: Workflow): ComfyValueBinding[] {
-  const width = Object.hasOwn(edit.inputs, "width")
-  const height = Object.hasOwn(edit.inputs, "height")
-  if (!width || !height) {
-    return []
-  }
-  return [
-    {
+function sizeBindings(): ComfyValueBinding[] {
+  return (["width", "height"] as const).map(
+    (side): ComfyValueBinding => ({
       from: "aspectRatio",
-      map: sideMap("width"),
-      path: [...targetOf(edit, "width").path],
-    },
-    {
-      from: "aspectRatio",
-      map: sideMap("height"),
-      path: [...targetOf(edit, "height").path],
-    },
-  ]
+      map: sideMap(side),
+      path: [sizeNode, "inputs", side],
+    })
+  )
 }
 
 export function headshotsBinding(find: Find = findWorkflow): EngineBinding {
@@ -151,7 +180,7 @@ export function headshotsBinding(find: Find = findWorkflow): EngineBinding {
       },
       { from: "seed", path: [...targetOf(edit, "seed").path] },
       ...words,
-      ...sizeBindings(edit),
+      ...sizeBindings(),
     ],
     models: [...edit.models],
     outputsPerJob: "one",

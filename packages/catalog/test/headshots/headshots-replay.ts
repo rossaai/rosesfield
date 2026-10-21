@@ -9,8 +9,9 @@ import {
 } from "@rosesfield/generation"
 import { assetIdFormat } from "@rosesfield/kernel"
 import { app } from "#headshots/app"
+import { editWorkflowId } from "#headshots/comfy/headshots-binding"
 import { readApps } from "#list-apps"
-import { readWorkflow, type Workflow } from "#list-workflows"
+import { findWorkflow, type Workflow } from "#list-workflows"
 
 export type Node = { class_type: string; inputs: Record<string, unknown> }
 export type Graph = Record<string, Node>
@@ -50,59 +51,27 @@ const recordings: Readonly<Record<string, Recording>> = {
   },
 }
 
-export const editModels = [
-  "qwen_image_edit_2511_bf16.safetensors",
-  "qwen_2.5_vl_7b_fp8_scaled.safetensors",
-  "qwen_image_vae.safetensors",
-]
-
-const editGraph: Graph = {
-  "9": { class_type: "SaveImage", inputs: { images: ["8", 0] } },
-  "41": { class_type: "LoadImage", inputs: { image: "" } },
-  "151": {
-    class_type: "TextEncodeQwenImageEditPlus",
-    inputs: { prompt: "", image1: ["41", 0] },
-  },
-  "192": {
-    class_type: "EmptySD3LatentImage",
-    inputs: { width: 1024, height: 1024, batch_size: 1 },
-  },
-  "3": {
-    class_type: "KSampler",
-    inputs: { seed: 0, positive: ["151", 0], latent_image: ["192", 0] },
-  },
-  "8": { class_type: "VAEDecode", inputs: { samples: ["3", 0] } },
+function realEdit(): Workflow {
+  const edit = findWorkflow(editWorkflowId)
+  if (edit === null) {
+    throw new Error(`No folder holds ${editWorkflowId}`)
+  }
+  return edit
 }
 
-type EditShape = { sized?: boolean; drop?: string; extra?: Graph }
+export const editModels = realEdit().models
+
+type EditShape = { drop?: string; extra?: Graph }
 
 export function editWorkflow(shape: EditShape = {}): Workflow {
-  const bindings: Record<string, unknown> = {
-    image: { nodeId: "41", inputName: "image", type: "cloud-asset" },
-    prompt: { nodeId: "151", inputName: "prompt", type: "scalar" },
-    seed: { nodeId: "3", inputName: "seed", type: "scalar" },
-    ...(shape.sized === false
-      ? {}
-      : {
-          width: { nodeId: "192", inputName: "width", type: "scalar" },
-          height: { nodeId: "192", inputName: "height", type: "scalar" },
-        }),
+  const edit = realEdit()
+  return {
+    ...edit,
+    inputs: Object.fromEntries(
+      Object.entries(edit.inputs).filter(([name]) => name !== shape.drop)
+    ),
+    graph: { ...structuredClone(edit.graph), ...shape.extra },
   }
-  const inputBindings = Object.fromEntries(
-    Object.entries(bindings).filter(([name]) => name !== shape.drop)
-  )
-  return readWorkflow({
-    folder: "edit-qwen-image-edit-2511",
-    entry: {
-      name: "edit-qwen-image-edit-2511",
-      mediaType: "image",
-      openSource: true,
-      models: editModels,
-      inputBindings,
-      outputs: [{ nodeId: "9", key: "images", kind: "image" }],
-    },
-    graph: { ...structuredClone(editGraph), ...shape.extra },
-  })
 }
 
 function replayFetch() {
