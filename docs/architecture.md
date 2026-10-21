@@ -9,8 +9,6 @@ apps/                     what ships to your device
   platform/               the one UI codebase: React and Vite, the installable web app
     src/studio/<app-id>/  an app's own screen, when the generic one is not enough
     src/gallery/          every component and screen in every state, for review
-  desktop/                the Electron shell around platform
-  mobile/                 the Capacitor shell around platform
 services/                 what runs on the server
   gateway/                the one public server: Hono on bun and on Workers. Routes, the API, /mcp, the owner lock
 packages/                 code two consumers share
@@ -25,16 +23,15 @@ packages/                 code two consumers share
   generation/             runs, the engine port, its adapters, the run watcher
   library/                assets and characters: uploads, outputs, the people and things you reuse
   agent/                  the agent: the harness, its tools built from the catalog
-workflows/                every ComfyUI workflow, a UI file and an API file each, per workflows/README.md
+workflows/                every ComfyUI graph Rosesfield ships, a UI file and an API file each, per workflows/README.md
 docs/
-bugs/                     one file per proven defect
 ```
 
 `apps/` is what reaches your device. `services/` is what runs on a server. `packages/` is code two of them share. A folder name is a suggestion until the scaffold lands. The rules below are not.
 
 ## One codebase, every platform
 
-`apps/platform` is the only UI code. The web app ships. Electron wraps it for the desktop and Capacitor wraps it for iOS and Android, without a second UI.
+`apps/platform` is the only UI code. The web app ships. A desktop or store shell wraps it later, without a second UI.
 
 So nothing in `packages/` or in `apps/platform` may assume a browser where a shell does it differently. Picking a file, sharing, saving to the device and notifications sit behind a `Device` port. The web adapter lands first, and each shell adds its own.
 
@@ -57,7 +54,7 @@ Every ComfyUI workflow lives in `workflows/` at the repository root. Each one is
 - An app's `comfy/` folder imports the API file and holds the value bindings: which input goes to which node id and input name.
 - Two apps that run the same graph import the same file.
 - A graph is flat, with no subgraph, so a node id is the same in both files, in the bindings and in App Mode.
-- Every target in `docs/stack.md` §Engine targets runs the same API file.
+- Comfy Cloud and your own ComfyUI behind comfy-api-proxy run the same API file, per `docs/stack.md` §The one engine.
 
 Until a graph moves, it sits in `packages/catalog/src/<app-id>/comfy/`.
 
@@ -76,7 +73,7 @@ Imports point inward. dependency-cruiser enforces it.
 
 | Port | What it does | Adapters |
 |---|---|---|
-| `GenerationEngine` | submits a run, reads its status, lists its outputs, cancels it | `comfy-generation-engine.ts` for the Comfy API v2: Comfy Cloud, a Comfy deployment, and a ComfyUI behind comfy-api-proxy on your machine, a RunPod pod or Modal. `runpod-serverless-generation-engine.ts` for RunPod Serverless. `demo-generation-engine.ts` with no engine. Each target is in `docs/stack.md` §Engine targets |
+| `GenerationEngine` | submits a run, reads its status, lists its outputs, cancels it | `comfy-router-generation-engine.ts` for every hosted model of the Comfy Router. `comfy-generation-engine.ts` for the graphs in `workflows/` through the Comfy API v2, on Comfy Cloud or on a ComfyUI behind comfy-api-proxy. `demo-generation-engine.ts` with no key. Each one is in `docs/stack.md` §The one engine |
 | `AssetStore` | puts, gets, deletes and links the bytes of an asset | `filesystem-asset-store.ts` on your machine, `r2-asset-store.ts` on Cloudflare |
 | `JobRunner` | enqueues a job and wakes it until it ends | `timer-job-runner.ts` on your machine, `alarm-job-runner.ts` on Cloudflare |
 | the repositories | store runs, assets, characters and conversations | drizzle over `bun:sqlite` on your machine and D1 on Cloudflare, one schema |
@@ -90,9 +87,9 @@ A port names a capability. An adapter names its technology. A second adapter is 
 
 1. The client posts the inputs to the app's route.
 2. The route validates them against the app's schema and calls `StartRun`.
-3. `StartRun` writes the run as `queued`, asks `GenerationEngine` to submit it with an idempotency key, and asks `JobRunner` to watch it. An engine that takes no idempotency key gets one submit and no retry, per `docs/stack.md` §RunPod Serverless.
+3. `StartRun` writes the run as `queued`, asks `GenerationEngine` to submit it with an idempotency key, and asks `JobRunner` to watch it.
 4. The runner wakes, reads the remote status once, writes progress, and returns the next delay. It honours the engine's `Retry-After`.
-5. When the run succeeds, the runner copies every output into `AssetStore` at once, because engines delete outputs: RunPod Serverless after 30 minutes and Comfy Cloud after 30 days. The run becomes `done` with its assets.
+5. When the run succeeds, the runner copies every output into `AssetStore` at once, because Comfy's output links expire: a signed link on Comfy Cloud lasts about 6 hours, and the run's record 30 days. The run becomes `done` with its assets.
 6. The client polls the run and shows the result where it was asked for.
 
 The run states are `queued`, `running`, `done`, `failed` and `cancelled`, declared once in domain. The engine's own states map onto them in the adapter.
@@ -115,16 +112,15 @@ Rosesfield has no accounts. It has one owner, and every paid call spends the own
 
 ## Public mode
 
-A hosted demo runs in public mode. Strangers use it, so it holds no key of its own and spends none.
+A public host, such as rosesfield.com, runs in public mode. Strangers use it, so it holds no key of its own and spends none. Its settings are in `docs/self-host.md`.
 
-- The deployment holds no engine key and no agent model key. In public mode it refuses to start when one is set, with an error that names the setting.
-- Each visitor brings their own engine key. It stays in the visitor's browser and goes to the gateway with each request, in a header, never in a URL.
-- The gateway hands the key to the engine adapter for that one call and then drops it. It never writes the key to the database, a log, an error, a run record or the asset store.
-- The run watcher reads the engine only inside a visitor's request, because only a request carries the key. A run moves forward while the visitor's page polls it.
-- The agent follows the same rule: the visitor brings the model key, or the agent is off.
-- An anonymous session separates visitors. The gateway gives each new visitor a random session id, kept in the visitor's browser. Runs, assets, characters and conversations are stored under it, and a visitor reads only their own.
-- Outputs are kept for a fixed number of days, then deleted. The number of days is one setting of the deployment.
-- Public mode has no accounts, no payments and no credits.
+- **Your Comfy key is the login.** You paste it in Settings. Rosesfield has no accounts and no passwords of its own.
+- The gateway asks Comfy whose key it is, through `GET https://cloud.comfy.org/api/user`, and keeps your work under a sha256 hash of that Comfy account id. The same key on another device opens the same work, and a new key on the same Comfy account still opens it.
+- The key stays in your browser and goes to the gateway with each request, in a header, never in a URL. The gateway hands it to the engine adapter for that one call and then drops it. It never writes the key to the database, a log, an error, a run record or the asset store.
+- **Your work stays 30 days after your last visit.** Each visit moves the date. Once an hour the host deletes the runs, assets, characters and conversations of every account whose last visit is older, and every shared result older than 90 days.
+- The run watcher reads the engine only inside a request, because only a request carries the key. A run moves forward while your page polls it.
+- The agent follows the same rule: it runs on the key you bring, or it is off.
+- The deployment refuses to start with `COMFY_API_KEY` or `OWNER_TOKEN` set, with an error that names the setting.
 - The owner lock guards the owner's key. Public mode holds none, so it runs without an owner token.
 
 ## What the platform shares across apps
