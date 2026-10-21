@@ -67,11 +67,19 @@ test.describe("Shot's Inputs sheet on a phone", () => {
     page,
   }) => {
     await page.goto("/apps/shot")
+    await expect(
+      page.getByRole("region", { name: "Your results" })
+    ).toBeVisible()
     await page.locator('[data-slot="app-bar-tabGenerate"]').click()
     const sheet = page.getByRole("dialog")
     await expect(sheet).toBeVisible()
     await sheet.getByRole("textbox", { name: "Scene" }).fill(scene)
     const choices = sheet.locator('[data-slot="shot-choices"]')
+    for (const list of selects) {
+      await expect(
+        choices.getByRole("combobox", { name: list, exact: true })
+      ).toHaveText("Auto")
+    }
     await pick(page, choices, "Mood", "Calm")
     await expect(
       sheet.getByRole("region", { name: "Words Shot sends" })
