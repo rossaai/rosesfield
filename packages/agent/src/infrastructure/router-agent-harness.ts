@@ -6,6 +6,7 @@ import {
   type AgentToolHandlers,
   publishedAgentTools,
 } from "#infrastructure/pi-agent-tools"
+import type { RunWait } from "#infrastructure/pi-library-tools"
 import {
   type AgentModel,
   type OpenPiModelsOptions,
@@ -19,6 +20,7 @@ export type RouterAgentHarnessOptions = {
   apps: readonly AppDefinition[]
   handlers: () => AgentToolHandlers
   clock: Clock
+  wait?: RunWait
 }
 
 export function routerAgentHarness(
@@ -31,6 +33,7 @@ export function routerAgentHarness(
     tools: publishedAgentTools({
       apps: options.apps,
       handlers: options.handlers,
+      ...(options.wait === undefined ? {} : { wait: options.wait }),
     }),
     clock: options.clock,
   })

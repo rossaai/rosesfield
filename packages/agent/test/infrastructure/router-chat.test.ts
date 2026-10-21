@@ -71,7 +71,7 @@ async function ask(opened: Opened, text: string, approval: "ask" | "auto") {
 }
 
 describe("the agent on a Comfy Router chat model", () => {
-  it("answers in words with only a Comfy key, on the cheapest model", async () => {
+  it("answers in words with only a Comfy key, on the default model", async () => {
     const opened = openRouterAgent([
       textAnswer(defaultChatModel, "Ask me for an image or a video.", 0.0004),
     ])
@@ -219,5 +219,14 @@ describe("the agent on a Comfy Router chat model", () => {
         apiKey: comfyKey,
       })
     ).rejects.toBeInstanceOf(AgentModelUnknownError)
+  })
+
+  it("names the hand-written completions when a request finds none left", async () => {
+    const replay = replayRouter([])
+    const url = routerChatUrl()
+
+    await expect(replay.fetch(url, {})).rejects.toThrow(
+      `No hand-written Router completion is left for ${url}`
+    )
   })
 })

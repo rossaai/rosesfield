@@ -106,6 +106,7 @@ export {
   agentTools,
   publishedAgentTools,
 } from "#infrastructure/pi-agent-tools"
+export type { RunWait } from "#infrastructure/pi-library-tools"
 export {
   type AgentModel,
   type OpenPiModelsOptions,

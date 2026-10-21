@@ -94,20 +94,26 @@ export function refusedAnswer(
   }
 }
 
-export function replayRouter(answers: readonly RouterAnswer[]): RouterReplay {
+export type RouterAnswerOf = (request: RouterRequest) => RouterAnswer
+
+export function replayRouter(
+  answers: readonly (RouterAnswer | RouterAnswerOf)[]
+): RouterReplay {
   const requests: RouterRequest[] = []
   const queue = [...answers]
   const fetch: Fetch = async (input, init) => {
     const url = input instanceof Request ? input.url : String(input)
-    const answer = queue.shift()
-    if (answer === undefined) {
-      throw new Error(`No recorded Router answer for ${url}`)
+    const next = queue.shift()
+    if (next === undefined) {
+      throw new Error(`No hand-written Router completion is left for ${url}`)
     }
-    requests.push({
+    const request = {
       url,
       headers: new Request(url, init).headers,
       body: bodySchema.parse(JSON.parse(String(init?.body ?? "{}"))),
-    })
+    }
+    requests.push(request)
+    const answer = typeof next === "function" ? next(request) : next
     return Response.json(answer.body, {
       status: answer.status,
       headers: answer.headers ?? {},
