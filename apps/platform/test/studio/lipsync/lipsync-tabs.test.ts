@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { lengthFor } from "@/studio/lipsync/lipsync-checks"
 import {
   clipDefault,
   defaultsOfTab,
@@ -11,7 +12,6 @@ import {
   nearModels,
   tabOfInputs,
 } from "@/studio/lipsync/lipsync-tabs"
-import { lengthFor } from "@/studio/lipsync/lipsync-checks"
 import {
   avatar,
   catalog,
