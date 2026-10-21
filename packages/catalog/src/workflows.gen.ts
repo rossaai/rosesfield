@@ -19,6 +19,8 @@ import wCharactersTraitsQwenImage2512Api from "../../../workflows/characters-tra
 import wCharactersTraitsQwenImage2512Entry from "../../../workflows/characters-traits-qwen-image-2512/entry.json"
 import wCharactersTraitsZImageTurboApi from "../../../workflows/characters-traits-z-image-turbo/characters-traits-z-image-turbo.api.json"
 import wCharactersTraitsZImageTurboEntry from "../../../workflows/characters-traits-z-image-turbo/entry.json"
+import wEditQwenImageEdit2511Api from "../../../workflows/edit-qwen-image-edit-2511/edit-qwen-image-edit-2511.api.json"
+import wEditQwenImageEdit2511Entry from "../../../workflows/edit-qwen-image-edit-2511/entry.json"
 import wEffectsLtx25Api from "../../../workflows/effects-ltx-2-5/effects-ltx-2-5.api.json"
 import wEffectsLtx25Entry from "../../../workflows/effects-ltx-2-5/entry.json"
 import wExpandFormatQwenImageApi from "../../../workflows/expand-format-qwen-image/expand-format-qwen-image.api.json"
@@ -97,6 +99,7 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "characters-traits-flux-2-klein-4b", entry: wCharactersTraitsFlux2Klein4bEntry, graph: wCharactersTraitsFlux2Klein4bApi },
   { folder: "characters-traits-qwen-image-2512", entry: wCharactersTraitsQwenImage2512Entry, graph: wCharactersTraitsQwenImage2512Api },
   { folder: "characters-traits-z-image-turbo", entry: wCharactersTraitsZImageTurboEntry, graph: wCharactersTraitsZImageTurboApi },
+  { folder: "edit-qwen-image-edit-2511", entry: wEditQwenImageEdit2511Entry, graph: wEditQwenImageEdit2511Api },
   { folder: "effects-ltx-2-5", entry: wEffectsLtx25Entry, graph: wEffectsLtx25Api },
   { folder: "expand-format-qwen-image", entry: wExpandFormatQwenImageEntry, graph: wExpandFormatQwenImageApi },
   { folder: "expand-sides-qwen-image", entry: wExpandSidesQwenImageEntry, graph: wExpandSidesQwenImageApi },
