@@ -1,0 +1,1527 @@
+{
+  "boards": {
+    "text-to-image": {
+      "name": "Artificial Analysis Text to Image Arena",
+      "url": "https://artificialanalysis.ai/image/leaderboard/text-to-image",
+      "size": 104,
+      "readOn": "2026-10-20"
+    },
+    "image-edit": {
+      "name": "Artificial Analysis Image Editing Arena",
+      "url": "https://artificialanalysis.ai/image/leaderboard/editing",
+      "size": 71,
+      "readOn": "2026-10-20"
+    },
+    "text-to-video": {
+      "name": "Artificial Analysis AA-Video-T2V v2.1, with audio",
+      "url": "https://artificialanalysis.ai/video/leaderboard/text-to-video",
+      "size": 29,
+      "readOn": "2026-10-20"
+    },
+    "image-to-video": {
+      "name": "Artificial Analysis AA-Video-I2V v1.1, with audio",
+      "url": "https://artificialanalysis.ai/video/leaderboard/image-to-video",
+      "size": 24,
+      "readOn": "2026-10-20"
+    },
+    "reference-to-video": {
+      "name": "Design Arena Multimodal to Video",
+      "url": "https://www.designarena.ai/leaderboard/multimodal-to-video",
+      "size": 18,
+      "readOn": "2026-10-20"
+    },
+    "video-edit": {
+      "name": "Artificial Analysis Video Editing Arena, with audio",
+      "url": "https://artificialanalysis.ai/video/leaderboard/video-editing",
+      "size": 9,
+      "readOn": "2026-10-20"
+    },
+    "speech": {
+      "name": "Artificial Analysis Text to Speech Arena, provider voice",
+      "url": "https://artificialanalysis.ai/text-to-speech/leaderboard/provider-voice",
+      "size": 97,
+      "readOn": "2026-10-20"
+    },
+    "lip-sync": {
+      "name": "OpenArt Arena Lip Sync",
+      "url": "https://openart.ai/arena/leaderboard#board-lip-sync-video",
+      "size": 5,
+      "readOn": "2026-10-20"
+    },
+    "three-d": {
+      "name": "3D Arena",
+      "url": "https://huggingface.co/spaces/3d-arena/3d-arena",
+      "size": 24,
+      "readOn": "2026-10-20"
+    }
+  },
+  "models": {
+    "beeble/switchx": {
+      "lab": "Beeble",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "text-to-image": 3,
+        "image-edit": 3
+      }
+    },
+    "bfl/erase-v1": {
+      "lab": "Black Forest Labs",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "bfl/flux-2-max": {
+      "lab": "Black Forest Labs",
+      "release": "2025-12-16",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 33,
+        "image-edit": 42
+      },
+      "thirds": {}
+    },
+    "bfl/flux-2-pro": {
+      "lab": "Black Forest Labs",
+      "release": "2025-11-25",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 42,
+        "image-edit": 40
+      },
+      "thirds": {}
+    },
+    "bfl/flux-3-image": {
+      "lab": "Black Forest Labs",
+      "release": "2026-10-01",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 13
+      },
+      "thirds": {}
+    },
+    "bfl/flux-3-video": {
+      "lab": "Black Forest Labs",
+      "release": "2026-07-23",
+      "weights": null,
+      "ranks": {
+        "text-to-video": 7,
+        "image-to-video": 8
+      },
+      "thirds": {}
+    },
+    "bfl/flux-kontext-max": {
+      "lab": "Black Forest Labs",
+      "release": "2025-05-29",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 74,
+        "image-edit": 59
+      },
+      "thirds": {}
+    },
+    "bfl/flux-kontext-pro": {
+      "lab": "Black Forest Labs",
+      "release": "2025-05-20",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 76,
+        "image-edit": 60
+      },
+      "thirds": {}
+    },
+    "bfl/flux-pro-1.0-expand": {
+      "lab": "Black Forest Labs",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "bfl/flux-pro-1.0-fill": {
+      "lab": "Black Forest Labs",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "bfl/flux-pro-1.1": {
+      "lab": "Black Forest Labs",
+      "release": "2024-10-02",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 88
+      },
+      "thirds": {}
+    },
+    "bfl/flux-pro-1.1-ultra": {
+      "lab": "Black Forest Labs",
+      "release": "2024-11-06",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 91
+      },
+      "thirds": {}
+    },
+    "bfl/video-edit-v1": {
+      "lab": "Black Forest Labs",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "bfl/video-upscale-v1": {
+      "lab": "Black Forest Labs",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "bfl/vto-v1": {
+      "lab": "Black Forest Labs",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "bria/fibo": {
+      "lab": "Bria",
+      "release": "2025-10-30",
+      "weights": "https://huggingface.co/briaai/FIBO",
+      "ranks": {},
+      "thirds": {
+        "image-edit": 2
+      }
+    },
+    "bria/image-edit-add-object-by-text": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 2
+      }
+    },
+    "bria/image-edit-erase": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 1
+      }
+    },
+    "bria/image-edit-erase-by-text": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 2
+      }
+    },
+    "bria/image-edit-erase-foreground": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 2
+      }
+    },
+    "bria/image-edit-expand": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 1
+      }
+    },
+    "bria/image-edit-gen-fill": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 2
+      }
+    },
+    "bria/image-edit-increase-resolution": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 1,
+        "upscale": 1
+      }
+    },
+    "bria/image-edit-relight": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 2
+      }
+    },
+    "bria/image-edit-remove-background": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 1
+      }
+    },
+    "bria/image-edit-replace-background": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 2
+      }
+    },
+    "bria/image-edit-replace-object-by-text": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 2
+      }
+    },
+    "bria/image-edit-reseason": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 3
+      }
+    },
+    "bria/image-edit-restore": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 3
+      }
+    },
+    "bria/video-edit-green-screen": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "bria/video-edit-remove-background": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "bria/video-edit-replace-background": {
+      "lab": "Bria",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "byteplus/dreamina-seedance-2-0-260128": {
+      "lab": "ByteDance Seed",
+      "release": "2026-03-18",
+      "weights": null,
+      "ranks": {
+        "text-to-video": 8,
+        "image-to-video": 7,
+        "reference-to-video": 3,
+        "video-edit": 6,
+        "lip-sync": 2
+      },
+      "thirds": {}
+    },
+    "byteplus/dreamina-seedance-2-0-fast-260128": {
+      "lab": "ByteDance Seed",
+      "release": null,
+      "weights": null,
+      "ranks": {
+        "reference-to-video": 2
+      },
+      "thirds": {}
+    },
+    "byteplus/dreamina-seedance-2-0-mini": {
+      "lab": "ByteDance Seed",
+      "release": null,
+      "weights": null,
+      "ranks": {
+        "reference-to-video": 5,
+        "lip-sync": 3
+      },
+      "thirds": {}
+    },
+    "byteplus/dreamina-seedance-2-5-260628": {
+      "lab": "ByteDance Seed",
+      "release": "2026-07-31",
+      "weights": null,
+      "ranks": {
+        "text-to-video": 3,
+        "image-to-video": 3,
+        "reference-to-video": 1,
+        "video-edit": 2,
+        "lip-sync": 1
+      },
+      "thirds": {}
+    },
+    "byteplus/seed-audio-1.0": {
+      "lab": "ByteDance Seed",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "speech": 2
+      }
+    },
+    "byteplus/seed-audio-1.0-multilingual": {
+      "lab": "ByteDance Seed",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "speech": 3
+      }
+    },
+    "byteplus/seedance-1-0-pro-250528": {
+      "lab": "ByteDance Seed",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "byteplus/seedance-1-0-pro-fast-251015": {
+      "lab": "ByteDance Seed",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "byteplus/seedance-1-5-pro-251215": {
+      "lab": "ByteDance Seed",
+      "release": "2025-12-15",
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "byteplus/seedream-4-0-250828": {
+      "lab": "ByteDance Seed",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "text-to-image": 1,
+        "image-edit": 1
+      }
+    },
+    "byteplus/seedream-4-5-251128": {
+      "lab": "ByteDance Seed",
+      "release": "2025-12-05",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 28,
+        "image-edit": 33
+      },
+      "thirds": {
+        "text-to-image": 2,
+        "image-edit": 2
+      }
+    },
+    "byteplus/seedream-5-0-260128": {
+      "lab": "ByteDance Seed",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "text-to-image": 2,
+        "image-edit": 2
+      }
+    },
+    "byteplus/seedream-5-0-flash-260915": {
+      "lab": "ByteDance Seed",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "text-to-image": 1,
+        "image-edit": 1
+      }
+    },
+    "byteplus/seedream-5-0-pro-260628": {
+      "lab": "ByteDance Seed",
+      "release": "2026-07-08",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 16,
+        "image-edit": 7
+      },
+      "thirds": {
+        "text-to-image": 2,
+        "image-edit": 1
+      }
+    },
+    "elevenlabs/eleven_multilingual_v2": {
+      "lab": "ElevenLabs",
+      "release": "2023-08-22",
+      "weights": null,
+      "ranks": {
+        "speech": 43
+      },
+      "thirds": {}
+    },
+    "elevenlabs/eleven_sfx_v2": {
+      "lab": "ElevenLabs",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "elevenlabs/eleven_v3": {
+      "lab": "ElevenLabs",
+      "release": "2026-02-02",
+      "weights": null,
+      "ranks": {
+        "speech": 20
+      },
+      "thirds": {}
+    },
+    "elevenlabs/eleven_v4": {
+      "lab": "ElevenLabs",
+      "release": "2026-09-28",
+      "weights": null,
+      "ranks": {
+        "speech": 2
+      },
+      "thirds": {}
+    },
+    "elevenlabs/eleven_v4_turbo": {
+      "lab": "ElevenLabs",
+      "release": "2026-09-28",
+      "weights": null,
+      "ranks": {
+        "speech": 1
+      },
+      "thirds": {}
+    },
+    "fal/crystal-upscaler": {
+      "lab": "fal",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "fal/crystal-video-upscaler": {
+      "lab": "fal",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "fal/h3-max": {
+      "lab": "Fal",
+      "release": "2026-08-26",
+      "weights": null,
+      "ranks": {
+        "text-to-video": 6
+      },
+      "thirds": {}
+    },
+    "fal/h3-max-turbo": {
+      "lab": "fal",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "fal/patina": {
+      "lab": "fal",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 1
+      }
+    },
+    "freepik/ai-image-upscaler-precision-v2": {
+      "lab": "Freepik",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "freepik/ai-skin-enhancer-creative": {
+      "lab": "Freepik",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 3,
+        "upscale": 2
+      }
+    },
+    "freepik/ai-skin-enhancer-faithful": {
+      "lab": "Freepik",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 3,
+        "upscale": 3
+      }
+    },
+    "freepik/ai-skin-enhancer-flexible": {
+      "lab": "Freepik",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 3,
+        "upscale": 3
+      }
+    },
+    "gemini-interactions/gemini-omni-1.1-flash": {
+      "lab": "Google",
+      "release": "2026-08-28",
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "gemini-interactions/gemini-omni-flash-preview": {
+      "lab": "Google",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "graph/ltx-2-5": {
+      "lab": "Lightricks",
+      "release": "2026-08-11",
+      "weights": "https://huggingface.co/Lightricks/LTX-2.5",
+      "ranks": {
+        "text-to-video": 23,
+        "image-to-video": 20
+      },
+      "thirds": {}
+    },
+    "graph/ming-image-0-1-design": {
+      "lab": "inclusionAI",
+      "release": "2026-09-22",
+      "weights": "https://huggingface.co/inclusionAI/Ming-Image-0.1-Design",
+      "ranks": {
+        "text-to-image": 45
+      },
+      "thirds": {}
+    },
+    "graph/qwen-image-2512": {
+      "lab": "Alibaba Qwen",
+      "release": null,
+      "weights": "https://huggingface.co/Qwen/Qwen-Image-2512",
+      "ranks": {},
+      "thirds": {}
+    },
+    "graph/z-image-turbo": {
+      "lab": "Alibaba Tongyi-MAI",
+      "release": "2025-12-02",
+      "weights": "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo",
+      "ranks": {
+        "text-to-image": 70
+      },
+      "thirds": {}
+    },
+    "heygen/starfish": {
+      "lab": "HeyGen",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "speech": 1
+      }
+    },
+    "higgsfield/higgsfield-kling-3-4k": {
+      "lab": "Higgsfield",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "text-to-video": 3
+      }
+    },
+    "higgsfield/higgsfield-kling-3-pro": {
+      "lab": "Higgsfield",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "text-to-video": 2
+      }
+    },
+    "ideogram/ideogram-4-5": {
+      "lab": "Ideogram",
+      "release": "2026-09-30",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 38,
+        "image-edit": 23
+      },
+      "thirds": {}
+    },
+    "ideogram/ideogram-v3": {
+      "lab": "Ideogram",
+      "release": "2025-03-26",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 78
+      },
+      "thirds": {
+        "text-to-image": 2
+      }
+    },
+    "ideogram/ideogram-v4": {
+      "lab": "Ideogram",
+      "release": "2026-06-03",
+      "weights": "https://huggingface.co/collections/ideogram-ai/ideogram-4",
+      "ranks": {
+        "text-to-image": 29
+      },
+      "thirds": {
+        "text-to-image": 2
+      }
+    },
+    "ideogram/p-image-ideogram": {
+      "lab": "Pruna AI",
+      "release": "2026-07-30",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 46
+      },
+      "thirds": {}
+    },
+    "kling/kling-3.0-turbo": {
+      "lab": "Kling",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "text-to-video": 1
+      }
+    },
+    "kling/kling-image-o1": {
+      "lab": "KlingAI",
+      "release": "2025-12-01",
+      "weights": null,
+      "ranks": {
+        "image-edit": 56
+      },
+      "thirds": {
+        "text-to-image": 1,
+        "image-edit": 1
+      }
+    },
+    "kling/kling-v2-5-turbo": {
+      "lab": "KlingAI",
+      "release": "2025-09-23",
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "kling/kling-v2-6": {
+      "lab": "Kling",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "kling/kling-v3": {
+      "lab": "KlingAI",
+      "release": "2026-02-04",
+      "weights": null,
+      "ranks": {
+        "text-to-video": 17
+      },
+      "thirds": {
+        "text-to-video": 2
+      }
+    },
+    "kling/kling-v3-omni": {
+      "lab": "KlingAI",
+      "release": "2026-02-04",
+      "weights": null,
+      "ranks": {
+        "text-to-video": 16,
+        "image-to-video": 18,
+        "video-edit": 9
+      },
+      "thirds": {}
+    },
+    "kling/kling-video-o1": {
+      "lab": "Kling",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "kling/videos-avatar-image2video": {
+      "lab": "Kling",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "kling/videos-lip-sync": {
+      "lab": "Kling",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "kling/videos-video-extend": {
+      "lab": "Kling",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "krea/krea-2": {
+      "lab": "Krea",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "text-to-image": 2
+      }
+    },
+    "krea/krea-2-large": {
+      "lab": "Krea",
+      "release": "2026-05-26",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 22
+      },
+      "thirds": {
+        "text-to-image": 3
+      }
+    },
+    "krea/krea-2-medium": {
+      "lab": "Krea",
+      "release": "2026-05-26",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 41
+      },
+      "thirds": {
+        "text-to-image": 2
+      }
+    },
+    "krea/krea-2-medium-turbo": {
+      "lab": "Krea",
+      "release": "2026-06-03",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 34
+      },
+      "thirds": {
+        "text-to-image": 1
+      }
+    },
+    "krea/krea-3": {
+      "lab": "Krea",
+      "release": "2026-10-15",
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "text-to-image": 2,
+        "image-edit": 2
+      }
+    },
+    "ltx/ltx-2-5-fast": {
+      "lab": "Lightricks",
+      "release": "2026-08-11",
+      "weights": "https://huggingface.co/Lightricks/LTX-2.5",
+      "ranks": {
+        "text-to-video": 23
+      },
+      "thirds": {
+        "text-to-video": 2
+      }
+    },
+    "ltx/ltx-2-5-pro": {
+      "lab": "Lightricks",
+      "release": "2026-08-11",
+      "weights": "https://huggingface.co/Lightricks/LTX-2.5",
+      "ranks": {
+        "text-to-video": 24
+      },
+      "thirds": {
+        "text-to-video": 3
+      }
+    },
+    "luma/photon-1": {
+      "lab": "Luma Labs",
+      "release": "2024-12-02",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 93
+      },
+      "thirds": {
+        "text-to-image": 1
+      }
+    },
+    "luma/photon-flash-1": {
+      "lab": "Luma Labs",
+      "release": "2024-12-02",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 101
+      },
+      "thirds": {
+        "text-to-image": 1
+      }
+    },
+    "luma/ray-2": {
+      "lab": "Luma",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "luma/ray-flash-2": {
+      "lab": "Luma",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "luma_2/uni-1": {
+      "lab": "Luma Labs",
+      "release": "2026-05-05",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 48,
+        "image-edit": 34
+      },
+      "thirds": {
+        "text-to-image": 2,
+        "image-edit": 2
+      }
+    },
+    "luma_2/uni-1-max": {
+      "lab": "Luma Labs",
+      "release": "2026-05-05",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 31,
+        "image-edit": 20
+      },
+      "thirds": {
+        "text-to-image": 3,
+        "image-edit": 3
+      }
+    },
+    "meshy/animations": {
+      "lab": "Meshy",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "meshy/meshy-5": {
+      "lab": "Meshy",
+      "release": null,
+      "weights": null,
+      "ranks": {
+        "three-d": 23
+      },
+      "thirds": {}
+    },
+    "meshy/meshy-6": {
+      "lab": "Meshy",
+      "release": null,
+      "weights": null,
+      "ranks": {
+        "three-d": 3
+      },
+      "thirds": {}
+    },
+    "meshy/meshy-7": {
+      "lab": "Meshy",
+      "release": null,
+      "weights": null,
+      "ranks": {
+        "three-d": 5
+      },
+      "thirds": {}
+    },
+    "meshy/meshy-7.1": {
+      "lab": "Meshy",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "meshy/remesh": {
+      "lab": "Meshy",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "meshy/rigging": {
+      "lab": "Meshy",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "minimax/minimax-h3": {
+      "lab": "MiniMax",
+      "release": "2026-07-30",
+      "weights": "https://huggingface.co/MiniMaxAI/MiniMax-H3",
+      "ranks": {
+        "text-to-video": 5,
+        "image-to-video": 1,
+        "reference-to-video": 4
+      },
+      "thirds": {
+        "text-to-video": 2,
+        "image-to-video": 2,
+        "reference-to-video": 2,
+        "first-last-frame": 2
+      }
+    },
+    "moonvalley/image-to-video": {
+      "lab": "Moonvalley",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "moonvalley/text-to-video": {
+      "lab": "Moonvalley",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "moonvalley/video-to-video": {
+      "lab": "Moonvalley",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "openai/gpt-image-1": {
+      "lab": "OpenAI",
+      "release": "2025-04-23",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 40,
+        "image-edit": 45
+      },
+      "thirds": {}
+    },
+    "openai/gpt-image-1.5": {
+      "lab": "OpenAI",
+      "release": "2025-12-16",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 9,
+        "image-edit": 12
+      },
+      "thirds": {}
+    },
+    "openai/gpt-image-2": {
+      "lab": "OpenAI",
+      "release": "2026-04-21",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 3,
+        "image-edit": 6
+      },
+      "thirds": {
+        "text-to-image": 1,
+        "image-edit": 1
+      }
+    },
+    "openai/gpt-image-2.5-flare": {
+      "lab": "OpenAI",
+      "release": "2026-09-08",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 2,
+        "image-edit": 2
+      },
+      "thirds": {
+        "text-to-image": 1,
+        "image-edit": 1
+      }
+    },
+    "openai/gpt-image-2.5-sunburst": {
+      "lab": "OpenAI",
+      "release": "2026-09-08",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 1,
+        "image-edit": 1
+      },
+      "thirds": {
+        "text-to-image": 1,
+        "image-edit": 1
+      }
+    },
+    "pika/pika-2.5-image-to-video": {
+      "lab": "Pika Art",
+      "release": "2025-11-22",
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "pika/pika-2.5-text-to-video": {
+      "lab": "Pika Art",
+      "release": "2025-11-22",
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "pruna/p-video-2": {
+      "lab": "Pruna",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "text-to-video": 1,
+        "image-to-video": 1,
+        "first-last-frame": 1
+      }
+    },
+    "qwen/qwen-image-3.0": {
+      "lab": "Alibaba",
+      "release": "2026-07-21",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 18,
+        "image-edit": 24
+      },
+      "thirds": {
+        "text-to-image": 3,
+        "image-edit": 2
+      }
+    },
+    "qwen/qwen-image-3.0-pro": {
+      "lab": "Alibaba",
+      "release": "2026-07-21",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 17,
+        "image-edit": 18
+      },
+      "thirds": {
+        "text-to-image": 3,
+        "image-edit": 3
+      }
+    },
+    "recraft/recraftv2": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "recraft/recraftv3": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "recraft/recraftv4": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "recraft/recraftv4_1": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "recraft/recraftv4_1_pro": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "recraft/recraftv4_1_pro_vector": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "recraft/recraftv4_1_utility": {
+      "lab": "Recraft",
+      "release": "2026-05-14",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 27
+      },
+      "thirds": {}
+    },
+    "recraft/recraftv4_1_utility_pro": {
+      "lab": "Recraft",
+      "release": "2026-05-14",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 36
+      },
+      "thirds": {}
+    },
+    "recraft/recraftv4_1_utility_pro_vector": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "recraft/recraftv4_1_utility_vector": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "recraft/recraftv4_1_vector": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "recraft/recraftv4_pro": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "recraft/recraftv4_styles": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "recraft/recraftv4_styles_pro": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "recraft/recraftv4_styles_pro_vector": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "recraft/recraftv4_styles_vector": {
+      "lab": "Recraft",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "runway/aleph2": {
+      "lab": "Runway",
+      "release": "2026-05-21",
+      "weights": null,
+      "ranks": {
+        "video-edit": 8
+      },
+      "thirds": {
+        "video-edit": 3
+      }
+    },
+    "runway/gen4_image": {
+      "lab": "Runway",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "text-to-image": 3,
+        "image-edit": 3
+      }
+    },
+    "runway/gen4_turbo": {
+      "lab": "Runway",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "text-to-video": 1
+      }
+    },
+    "synclabs/sync-3": {
+      "lab": "sync.",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "text-to-video": 3,
+        "video-edit": 2,
+        "lip-sync": 1
+      }
+    },
+    "tencent/hunyuan-3d-part": {
+      "lab": "Tencent",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "three-d": 2
+      }
+    },
+    "tencent/hunyuan-3d-smart-topology": {
+      "lab": "Tencent",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "tencent/hunyuan-3d-texture-edit": {
+      "lab": "Tencent",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "three-d": 3
+      }
+    },
+    "tencent/hunyuan-3d-uv": {
+      "lab": "Tencent",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "three-d": 1
+      }
+    },
+    "veo/veo-3.1-fast-generate-001": {
+      "lab": "Google",
+      "release": "2026-01-30",
+      "weights": null,
+      "ranks": {
+        "text-to-video": 21,
+        "image-to-video": 16
+      },
+      "thirds": {
+        "text-to-video": 1,
+        "image-to-video": 2,
+        "reference-to-video": 1,
+        "first-last-frame": 2,
+        "video-edit": 2
+      }
+    },
+    "veo/veo-3.1-generate-001": {
+      "lab": "Google",
+      "release": "2026-01-30",
+      "weights": null,
+      "ranks": {
+        "text-to-video": 20,
+        "image-to-video": 14
+      },
+      "thirds": {
+        "text-to-video": 3,
+        "image-to-video": 3,
+        "reference-to-video": 3,
+        "first-last-frame": 3,
+        "video-edit": 3
+      }
+    },
+    "veo/veo-3.1-lite-generate-001": {
+      "lab": "Google",
+      "release": "2026-03-31",
+      "weights": null,
+      "ranks": {
+        "text-to-video": 22
+      },
+      "thirds": {
+        "text-to-video": 1,
+        "image-to-video": 1,
+        "reference-to-video": 1,
+        "first-last-frame": 1,
+        "video-edit": 1
+      }
+    },
+    "vertexai/gemini-2.5-flash-image": {
+      "lab": "Google",
+      "release": "2025-08-26",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 57,
+        "image-edit": 49
+      },
+      "thirds": {}
+    },
+    "vertexai/gemini-3-pro-image": {
+      "lab": "Google",
+      "release": "2025-11-20",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 12,
+        "image-edit": 14
+      },
+      "thirds": {
+        "text-to-image": 3,
+        "image-edit": 3
+      }
+    },
+    "vertexai/gemini-3.1-flash-image": {
+      "lab": "Google",
+      "release": "2026-02-26",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 7,
+        "image-edit": 10
+      },
+      "thirds": {
+        "text-to-image": 3,
+        "image-edit": 3
+      }
+    },
+    "vertexai/gemini-3.1-flash-lite-image": {
+      "lab": "Google",
+      "release": "2026-06-30",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 15,
+        "image-edit": 29
+      },
+      "thirds": {}
+    },
+    "vertexai/gemini-nano-banana-2.1": {
+      "lab": "Google",
+      "release": "2026-10-06",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 4,
+        "image-edit": 3
+      },
+      "thirds": {}
+    },
+    "wavespeed/flashvsr": {
+      "lab": "FlashVSR authors",
+      "release": null,
+      "weights": "https://huggingface.co/JunhaoZhuang/FlashVSR",
+      "ranks": {},
+      "thirds": {
+        "video-edit": 1,
+        "upscale": 1
+      }
+    },
+    "wavespeed/seedvr2": {
+      "lab": "ByteDance Seed",
+      "release": null,
+      "weights": "https://huggingface.co/ByteDance-Seed/SeedVR2-7B",
+      "ranks": {},
+      "thirds": {
+        "image-edit": 1,
+        "upscale": 1
+      }
+    },
+    "wavespeed/ultimate-image-upscaler": {
+      "lab": "WaveSpeed",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {
+        "image-edit": 3,
+        "upscale": 2
+      }
+    },
+    "xai/grok-imagine-image": {
+      "lab": "SpaceXAI",
+      "release": "2026-01-28",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 32
+      },
+      "thirds": {}
+    },
+    "xai/grok-imagine-image-2.0": {
+      "lab": "SpaceXAI",
+      "release": "2026-08-07",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 6
+      },
+      "thirds": {}
+    },
+    "xai/grok-imagine-image-pro": {
+      "lab": "xAI",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "xai/grok-imagine-image-quality": {
+      "lab": "SpaceXAI",
+      "release": "2026-05-06",
+      "weights": null,
+      "ranks": {
+        "text-to-image": 20
+      },
+      "thirds": {}
+    },
+    "xai/grok-imagine-video": {
+      "lab": "SpaceXAI",
+      "release": "2026-01-27",
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    },
+    "xai/grok-imagine-video-1.5": {
+      "lab": "SpaceXAI",
+      "release": "2026-05-30",
+      "weights": null,
+      "ranks": {
+        "text-to-video": 11,
+        "image-to-video": 9
+      },
+      "thirds": {}
+    },
+    "xai/grok-imagine-video-1.5-lite": {
+      "lab": "SpaceXAI",
+      "release": "2026-08-26",
+      "weights": null,
+      "ranks": {
+        "text-to-video": 18
+      },
+      "thirds": {}
+    },
+    "xai/grok-imagine-video-1.5-preview": {
+      "lab": "xAI",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {}
+    }
+  }
+}

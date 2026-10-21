@@ -16,22 +16,46 @@ export {
   appTasksOf,
   defaultModelOf,
   graphMaker,
+  isOpenWeights,
   modelsForApp,
 } from "#comfy/list-models"
 export {
+  type FactBadge,
+  factBadgesOf,
+  isNewRelease,
+  isTopHalf,
+  isTopRank,
+  newForDays,
+  topPositions,
+} from "#comfy/model-badges"
+export {
+  type BoardRank,
+  boardRank,
   type CatalogModel,
   catalogModel,
   catalogRoutes,
+  type ModelFacts,
   type ModelListResponse,
   type ModelTag,
+  modelFacts,
   modelField,
   modelListResponse,
   modelTag,
   type PriceResponse,
+  type PriceThird,
   priceBody,
   priceResponse,
+  priceThird,
 } from "#comfy/model-catalog.contract"
 export { deniedNames, deniedProviders, isDeniedModel } from "#comfy/model-deny"
+export {
+  boardRankOf,
+  factsOf,
+  type ModelFactsFile,
+  modelFactsData,
+  modelFactsFile,
+  weightsHost,
+} from "#comfy/model-facts"
 export { makerNames, makerOf, nameOf } from "#comfy/model-names"
 export { hostedTagsOf, lengthOf, topResolutionOf } from "#comfy/model-tags"
 export {

@@ -137,6 +137,54 @@ describe("the engine request the Image binding produces", () => {
     }
   })
 
+  it("opens on Ming Image 0.1 Design and sends it the 1k size of 16:9 on the latent and on the sampling shift, with your prompt as you wrote it", async () => {
+    const replay = new ReplayFetch([submitJob])
+    const engine = new ComfyGenerationEngine({
+      apiKey: "comfyui-test",
+      fetch: replay.fetch,
+    })
+    const submission = await engine.submit(
+      requestFor(
+        {
+          inputs: { prompt: 'a poster that reads "Open late"' },
+          count: 3,
+          aspectRatio: "16:9",
+        },
+        5
+      )
+    )
+    expect(submission.models).toEqual([
+      "ming_image_0.1_design_int8_convrot.safetensors",
+      "ming_image_0.1_ling_mini_2.0_int8_convrot.safetensors",
+      "ming_image_vae_bf16.safetensors",
+    ])
+    const workflow = workflowOf(replay)
+    expect(danglingLinks(workflow)).toEqual([])
+    expect(workflow).toMatchObject({
+      "26": { class_type: "RandomNoise", inputs: { noise_seed: 5 } },
+      "21": { class_type: "BasicScheduler", inputs: { steps: 12 } },
+      "41": {
+        class_type: "EmptyLatentImage",
+        inputs: { width: 1360, height: 768, batch_size: 3 },
+      },
+      "42": {
+        class_type: "ModelSamplingFlux",
+        inputs: { width: 1360, height: 768 },
+      },
+      "40": {
+        class_type: "CLIPTextEncode",
+        inputs: { text: 'a poster that reads "Open late"' },
+      },
+      "84": {
+        class_type: "SaveImage",
+        inputs: { filename_prefix: "rosesfield-image" },
+      },
+    })
+    const classes = Object.values(workflow).map((node) => node.class_type)
+    expect(classes).not.toContain("TextGenerate")
+    expect(replay.unused()).toEqual([])
+  })
+
   it("throws on a request it holds no recording for, so nothing reaches Comfy", async () => {
     const replay = new ReplayFetch([])
     const engine = new ComfyGenerationEngine({

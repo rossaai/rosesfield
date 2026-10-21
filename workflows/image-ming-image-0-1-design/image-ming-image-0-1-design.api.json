@@ -1,0 +1,107 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "ming_image_0.1_design_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "3": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": ["26", 0],
+      "guider": ["73", 0],
+      "sampler": ["18", 0],
+      "sigmas": ["21", 0],
+      "latent_image": ["41", 0]
+    }
+  },
+  "14": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "ming_image_vae_bf16.safetensors"
+    }
+  },
+  "15": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["3", 0],
+      "vae": ["14", 0]
+    }
+  },
+  "18": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+      "sampler_name": "euler"
+    }
+  },
+  "21": {
+    "class_type": "BasicScheduler",
+    "inputs": {
+      "scheduler": "simple",
+      "steps": 12,
+      "denoise": 1,
+      "model": ["42", 0]
+    }
+  },
+  "23": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "ming_image_0.1_ling_mini_2.0_int8_convrot.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    }
+  },
+  "26": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": 0
+    }
+  },
+  "40": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "",
+      "clip": ["23", 0]
+    }
+  },
+  "41": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    }
+  },
+  "42": {
+    "class_type": "ModelSamplingFlux",
+    "inputs": {
+      "max_shift": 1.15,
+      "base_shift": 0.5,
+      "width": 1024,
+      "height": 1024,
+      "model": ["68", 0]
+    }
+  },
+  "68": {
+    "class_type": "ModelAttentionBackend",
+    "inputs": {
+      "model": ["1", 0],
+      "attention": "comfy kitchen attention"
+    }
+  },
+  "73": {
+    "class_type": "BasicGuider",
+    "inputs": {
+      "model": ["42", 0],
+      "conditioning": ["40", 0]
+    }
+  },
+  "84": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "rosesfield-image",
+      "images": ["15", 0]
+    }
+  }
+}
