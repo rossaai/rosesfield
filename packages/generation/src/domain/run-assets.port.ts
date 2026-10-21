@@ -1,7 +1,7 @@
 import type { AssetId, CharacterId, RunId } from "@rosesfield/kernel"
 import type { EngineFile, EngineOutput } from "#domain/generation-engine.port"
 
-export type RunOutput = EngineOutput & { runId: RunId }
+export type RunOutput = Omit<EngineOutput, "stills"> & { runId: RunId }
 
 export abstract class RunAssets {
   /** Reads an asset a run takes as an input, with its bytes. */

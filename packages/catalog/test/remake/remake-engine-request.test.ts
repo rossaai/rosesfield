@@ -20,6 +20,7 @@ import { app } from "#remake/remake-app"
 import { type FoundShot, planShots } from "#remake/shot-plan"
 import { app as videoApp } from "#video/app"
 import { type Recording, ReplayFetch } from "../motion/motion-replay"
+import { withoutVideoStills } from "../workflows/video-stills"
 
 const cloudUrl = "https://cloud.comfy.org"
 const jobId = "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a"
@@ -159,7 +160,7 @@ async function submit(request: ShotRequest, recordings: Recording[]) {
   })
   const job = replay.sent.find((sent) => sent.url.endsWith("/api/v2/jobs"))
   const { workflow } = sentJob.parse(job?.body ?? { workflow: {} })
-  return { submission, replay, job, workflow }
+  return { submission, replay, job, workflow: withoutVideoStills(workflow) }
 }
 
 function classesOf(graph: Record<string, unknown>): string[] {

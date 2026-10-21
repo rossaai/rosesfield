@@ -57,6 +57,7 @@ export type EngineOutput = {
   width: number | null
   height: number | null
   durationSeconds: number | null
+  stills?: readonly Uint8Array[]
 }
 
 export type OutputsPerJob = "all" | "one"
