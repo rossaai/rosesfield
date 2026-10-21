@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShellRouteImport } from './routes/_shell'
 import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UnlockRouteImport } from './routes/unlock'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as ShellIndexRouteImport } from './routes/_shell/index'
@@ -35,6 +37,16 @@ const ShellRoute = ShellRouteImport.update({
 const GalleryRoute = GalleryRouteImport.update({
   id: '/gallery',
   path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UnlockRoute = UnlockRouteImport.update({
@@ -123,6 +135,8 @@ const ShellHistoryRunIdRoute = ShellHistoryRunIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof ShellIndexRoute
   '/gallery': typeof GalleryRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/unlock': typeof UnlockRoute
   '/welcome': typeof WelcomeRoute
   '/connect': typeof ShellConnectRoute
@@ -141,6 +155,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/gallery': typeof GalleryRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/unlock': typeof UnlockRoute
   '/welcome': typeof WelcomeRoute
   '/connect': typeof ShellConnectRoute
@@ -162,6 +178,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_shell': typeof ShellRouteWithChildren
   '/gallery': typeof GalleryRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/unlock': typeof UnlockRoute
   '/welcome': typeof WelcomeRoute
   '/_shell/connect': typeof ShellConnectRoute
@@ -184,6 +202,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/gallery'
+    | '/privacy'
+    | '/terms'
     | '/unlock'
     | '/welcome'
     | '/connect'
@@ -202,6 +222,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/gallery'
+    | '/privacy'
+    | '/terms'
     | '/unlock'
     | '/welcome'
     | '/connect'
@@ -222,6 +244,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_shell'
     | '/gallery'
+    | '/privacy'
+    | '/terms'
     | '/unlock'
     | '/welcome'
     | '/_shell/connect'
@@ -243,6 +267,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   ShellRoute: typeof ShellRouteWithChildren
   GalleryRoute: typeof GalleryRoute
+  PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
   UnlockRoute: typeof UnlockRoute
   WelcomeRoute: typeof WelcomeRoute
   ShareShareIdRoute: typeof ShareShareIdRoute
@@ -262,6 +288,20 @@ declare module '@tanstack/react-router' {
       path: '/gallery'
       fullPath: '/gallery'
       preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/unlock': {
@@ -416,6 +456,8 @@ const ShellRouteWithChildren = ShellRoute._addFileChildren(ShellRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   ShellRoute: ShellRouteWithChildren,
   GalleryRoute: GalleryRoute,
+  PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
   UnlockRoute: UnlockRoute,
   WelcomeRoute: WelcomeRoute,
   ShareShareIdRoute: ShareShareIdRoute,
