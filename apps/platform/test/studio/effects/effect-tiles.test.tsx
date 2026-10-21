@@ -1,5 +1,6 @@
 import {
   type EffectRecipe,
+  effectRecipes,
   effectsApp,
   recipeOf,
 } from "@rosesfield/catalog/effects"
@@ -76,9 +77,26 @@ describe("the effect tiles", () => {
   })
 
   it("shows no tile while the app offers no effect, whatever the recipes say", () => {
+    const closed = listingOf([])
+    expect(closed.closedKey).toBe("effects.closed")
+    expect(effectTiles(closed, recipes, previews)).toEqual([])
+  })
+
+  it("shows Push into eye as the shipped app's one tile, playing its kept run", () => {
     const shipped = findCatalogApp("effects")
-    expect(shipped?.closedKey).toBe("effects.closed")
-    expect(effectTiles(shipped as AppListing, recipes, previews)).toEqual([])
+    if (shipped === null) {
+      throw new TypeError("The catalog lacks Effects")
+    }
+    const tiles = effectTiles(shipped, effectRecipes)
+    expect(tiles).toEqual([
+      expect.objectContaining({
+        effect: "push-into-eye",
+        look: { status: "passed", preview: expect.any(String) },
+      }),
+    ])
+    expect(tiles[0]?.look).toMatchObject({
+      preview: expect.stringContaining("push-into-eye"),
+    })
   })
 
   it("shows the price the price route measured in Comfy credits, and says when there is none", () => {

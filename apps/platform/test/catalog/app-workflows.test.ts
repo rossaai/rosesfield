@@ -19,8 +19,11 @@ describe("workflowFor", () => {
     expect(video?.id).toMatch(/^upscale-video-/)
   })
 
-  it("finds no Effects graph while Effects offers no passed effect", () => {
-    expect(findCatalogApp("effects")?.closedKey).toBe("effects.closed")
+  it("finds the Effects graph for Push into eye, the one passed effect, and none for a draft", () => {
+    expect(findCatalogApp("effects")?.closedKey).toBeNull()
+    expect(workflowFor("effects", { effect: "push-into-eye" })?.id).toBe(
+      "effects-ltx-2-5"
+    )
     expect(workflowFor("effects", { effect: "melt-away" })).toBeNull()
   })
 
