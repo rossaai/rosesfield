@@ -225,6 +225,16 @@ describe("a hosted run in History", () => {
     expect(values.inputs.size).toBe("2K")
   })
 
+  it("fills a split run's image from the run itself when the catalog lists no model", () => {
+    for (const models of [[], [splitGraph]]) {
+      const index = modelIndexOf(layersListing, models)
+      const values = layersValuesOf(layersListing, hostedSplit, index)
+      expect(values.inputs.mode).toBe("split")
+      expect(values.inputs.model).toBe(seedream.id)
+      expect(values.inputs.source).toEqual([photo])
+    }
+  })
+
   it("fills a run that names no mode in the mode of its model", () => {
     const { mode: _, ...rest } = hostedEdit.inputs
     const values = layersValuesOf(

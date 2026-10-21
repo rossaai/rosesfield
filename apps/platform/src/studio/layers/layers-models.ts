@@ -19,6 +19,7 @@ import {
   modelInputName,
 } from "@/screens/app/hosted/hosted-form"
 import type { FormCheck } from "@/screens/app/use-app-form"
+import { runAssetsOf } from "@/studio/layers/layer-stack"
 import {
   isLayersMode,
   type LayersMode,
@@ -240,6 +241,17 @@ export function runImageOf(run: Run, model: CatalogModel): string[] {
   return Array.isArray(value) ? [...value] : []
 }
 
+function runSourceOf(
+  run: Run,
+  mode: LayersMode,
+  model: CatalogModel | undefined
+): string[] {
+  if (model !== undefined && !isGraphModel(model)) {
+    return runImageOf(run, model)
+  }
+  return mode === "split" ? runAssetsOf(run) : []
+}
+
 export function checkOf(
   chosen: CatalogModel | null,
   mode: LayersMode
@@ -261,8 +273,7 @@ export function layersValuesOf(
     runModeOf(run) ??
     (typeof id === "string" ? index.modes.get(id) : undefined) ??
     modeOf(values)
-  const image =
-    model === undefined || isGraphModel(model) ? [] : runImageOf(run, model)
+  const image = runSourceOf(run, mode, model)
   const driven = mode === "split" ? sourceInput : layerInput
   return {
     ...values,

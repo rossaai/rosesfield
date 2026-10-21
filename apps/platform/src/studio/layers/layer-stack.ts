@@ -27,7 +27,7 @@ export function isSplitRun(run: Run): boolean {
   return run.inputs.mode === "split"
 }
 
-function assetsOf(run: Run): string[] {
+export function runAssetsOf(run: Run): string[] {
   const named = run.inputs.layer
   if (Array.isArray(named)) {
     return [...named]
@@ -41,7 +41,7 @@ function sourceLayerOf(
   run: Run,
   layers: readonly StackLayer[]
 ): StackLayer | undefined {
-  for (const asset of assetsOf(run)) {
+  for (const asset of runAssetsOf(run)) {
     const layer = layers.find((candidate) => candidate.versions.includes(asset))
     if (layer !== undefined) {
       return layer
