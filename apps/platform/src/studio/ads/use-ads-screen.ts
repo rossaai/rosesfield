@@ -7,9 +7,14 @@ import {
   useRef,
   useState,
 } from "react"
+import { formatNumber } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { useAppRuns } from "@/screens/app/app-canvas"
-import { valuesFromRun } from "@/screens/app/app-form"
+import {
+  type HostedState,
+  useHostedModel,
+} from "@/screens/app/hosted/use-hosted-model"
+import { usePriceRefresh } from "@/screens/app/hosted/use-price-refresh"
 import { type AppForm, useAppForm } from "@/screens/app/use-app-form"
 import type { AppSeeds } from "@/screens/app/use-app-screen"
 import { type StartRun, useStartRun } from "@/screens/app/use-start-run"
@@ -17,6 +22,7 @@ import {
   type AdsKind,
   type AdsProblem,
   adsProblems,
+  adsValuesOf,
   barTextInputs,
   barTextOf,
   bodyAppFor,
@@ -24,6 +30,7 @@ import {
   formProblemsOf,
   holdsBarText,
   kindOf,
+  modelInput,
   optionalApp,
 } from "@/studio/ads/ads-rules"
 
@@ -31,6 +38,7 @@ export type AdsScreenState = {
   app: AppListing
   form: AppForm
   start: StartRun
+  hosted: HostedState
   kind: AdsKind
   text: string
   setText: (text: string) => void
@@ -53,11 +61,35 @@ function focusFor(
     return bar.querySelector("textarea")
   }
   const attach = t("bar.attach")
-  return (
-    Array.from(bar.querySelectorAll<HTMLElement>("button")).find(
-      (button) => button.getAttribute("aria-label") === attach
-    ) ?? null
-  )
+  const control = Array.from(
+    bar.querySelectorAll<HTMLElement>("[aria-label]")
+  ).find((element) => element.getAttribute("aria-label") === attach)
+  if (control === undefined || control.matches("button")) {
+    return control ?? null
+  }
+  return control.querySelector<HTMLElement>("button:not([disabled])")
+}
+
+function pricedStart(start: StartRun): StartRun {
+  return start.priceValue === formatNumber(0)
+    ? {
+        ...start,
+        price: start.price === "" ? t("run.price.unknown") : start.price,
+        priceValue: null,
+        priceName: null,
+      }
+    : start
+}
+
+function useAdsModels(
+  app: AppListing,
+  form: AppForm,
+  runs: readonly Run[]
+): HostedState {
+  const hosted = useHostedModel(app, form, runs)
+  usePriceRefresh(app.id, runs)
+  const { setInput } = form
+  return { ...hosted, choose: (id) => setInput(modelInput, id) }
 }
 
 function useBarText(app: AppListing, form: AppForm, kind: AdsKind) {
@@ -102,16 +134,19 @@ export function useAdsScreen(app: AppListing, seeds: AppSeeds): AdsScreenState {
     ...form,
     validate: () => formProblemsOf(app, form.values).length === 0,
   }
-  const start = useStartRun(bodyApp, gate)
+  const start = pricedStart(useStartRun(bodyApp, gate))
   const runs = useAppRuns(app)
+  const hosted = useAdsModels(app, form, runs.runs)
   const kind = kindOf(values)
   const barText = useBarText(app, form, kind)
   usePhotoOrder(app, form)
   const bar = useRef<HTMLDivElement | null>(null)
   const [isChecked, setChecked] = useState(false)
-  const first = isChecked ? adsProblems(app, values)[0] : undefined
+  const first = isChecked
+    ? adsProblems(app, values, hosted.models)[0]
+    : undefined
   const generate = (): void => {
-    const problem = adsProblems(app, values)[0]
+    const problem = adsProblems(app, values, hosted.models)[0]
     if (problem === undefined) {
       setChecked(false)
       start.generate()
@@ -124,11 +159,12 @@ export function useAdsScreen(app: AppListing, seeds: AppSeeds): AdsScreenState {
     app,
     form,
     start: { ...start, generate },
+    hosted,
     kind,
     ...barText,
     lastSeed: runs.runs.find((run) => run.seed !== null)?.seed ?? null,
     hasRuns: runs.isPending ? null : runs.runs.length > 0,
-    useInputs: (run) => form.fill(valuesFromRun(app, run)),
+    useInputs: (run) => form.fill(adsValuesOf(app, run)),
     bar,
     message: first === undefined ? null : tCatalog(first.key, first.values),
     onShortcut: (event) => {
