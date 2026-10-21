@@ -202,53 +202,6 @@ describe("the effect recipes kept as data", () => {
     }
   })
 
-  it("reads one edited frame inside the clip beside a dark end frame or none, and refuses it beside an edited end frame or past the clip's end", () => {
-    const midFrame = {
-      source: "edit",
-      prompt: "An extreme close-up of one of the person's eyes.",
-      time: 5.5,
-      strength: 0.8,
-    }
-    const dark = { source: "dark", luma: 1, strength: 0.9 }
-    for (const endFrame of [dark, { source: "none" }]) {
-      const [read] = readRecipes(
-        { "many-copies": variant({ endFrame, midFrame }) },
-        ledger
-      )
-      expect(read?.midFrame).toEqual(midFrame)
-    }
-    expect(recipeOf("many-copies").endFrame.source).toBe("edit")
-    expect(() =>
-      readRecipes({ "many-copies": variant({ midFrame }) }, ledger)
-    ).toThrow(
-      /many-copies\.json is invalid: midFrame The graph has one image edit pass, so a look edits its mid frame or its end frame, not both/
-    )
-    for (const time of [0, 7, 9.5]) {
-      expect(() =>
-        readRecipes(
-          {
-            "many-copies": variant({
-              endFrame: dark,
-              midFrame: { ...midFrame, time },
-            }),
-          },
-          ledger
-        )
-      ).toThrow(/many-copies\.json is invalid: midFrame/)
-    }
-    expect(() =>
-      readRecipes(
-        {
-          "many-copies": variant({
-            endFrame: dark,
-            midFrame: { ...midFrame, source: "dark" },
-          }),
-        },
-        ledger
-      )
-    ).toThrow(/many-copies\.json is invalid: midFrame/)
-  })
-
   it("reads a passed recipe that carries its run and the proof of that run", () => {
     const [read] = readRecipes(
       { "many-copies": passedRecipe("many-copies") },

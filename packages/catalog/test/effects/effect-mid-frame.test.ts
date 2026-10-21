@@ -15,8 +15,15 @@ import {
   type MidFrame,
   resolutionValues,
 } from "#effects/effect-recipe.contract"
-import { effectRecipes, recipeOf } from "#effects/effect-recipes"
+import { effectRecipes, readRecipes, recipeOf } from "#effects/effect-recipes"
 import { brokenLinks, fileGraph, workflowOf } from "./effects-replay"
+import { keptRun } from "./passed-recipe"
+
+const ledger = [keptRun("many-copies")]
+
+function variant(change: Record<string, unknown>): Record<string, unknown> {
+  return { ...recipeOf("many-copies"), ...change }
+}
 
 const eyeEdit: MidFrame = {
   source: "edit",
@@ -188,5 +195,52 @@ describe("a designed frame inside the clip", () => {
         )
       }
     }
+  })
+
+  it("reads one edited frame inside the clip beside a dark end frame or none, and refuses it beside an edited end frame or past the clip's end", () => {
+    const midFrame = {
+      source: "edit",
+      prompt: "An extreme close-up of one of the person's eyes.",
+      time: 5.5,
+      strength: 0.8,
+    }
+    const dark = { source: "dark", luma: 1, strength: 0.9 }
+    for (const endFrame of [dark, { source: "none" }]) {
+      const [read] = readRecipes(
+        { "many-copies": variant({ endFrame, midFrame }) },
+        ledger
+      )
+      expect(read?.midFrame).toEqual(midFrame)
+    }
+    expect(recipeOf("many-copies").endFrame.source).toBe("edit")
+    expect(() =>
+      readRecipes({ "many-copies": variant({ midFrame }) }, ledger)
+    ).toThrow(
+      /many-copies\.json is invalid: midFrame The graph has one image edit pass, so a look edits its mid frame or its end frame, not both/
+    )
+    for (const time of [0, 7, 9.5]) {
+      expect(() =>
+        readRecipes(
+          {
+            "many-copies": variant({
+              endFrame: dark,
+              midFrame: { ...midFrame, time },
+            }),
+          },
+          ledger
+        )
+      ).toThrow(/many-copies\.json is invalid: midFrame/)
+    }
+    expect(() =>
+      readRecipes(
+        {
+          "many-copies": variant({
+            endFrame: dark,
+            midFrame: { ...midFrame, source: "dark" },
+          }),
+        },
+        ledger
+      )
+    ).toThrow(/many-copies\.json is invalid: midFrame/)
   })
 })
