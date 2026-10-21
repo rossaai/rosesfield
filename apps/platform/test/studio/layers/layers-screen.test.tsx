@@ -11,12 +11,7 @@ import {
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { GatewaySettings } from "@/api/gateway-settings"
-import {
-  assetQuery,
-  runQuery,
-  runsQuery,
-  settingsQuery,
-} from "@/api/queries"
+import { assetQuery, runQuery, runsQuery, settingsQuery } from "@/api/queries"
 import { t, tCatalog } from "@/copy/t"
 import { AppScreen } from "@/studio/layers/screen"
 import { asPhone, resetFrames } from "../../screens/app/frame-render"

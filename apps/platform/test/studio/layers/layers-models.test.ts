@@ -23,8 +23,8 @@ import {
   firstLayer,
   flux3,
   fluxFill,
-  layersListing,
   layerSwitch,
+  layersListing,
   layersRun,
   maskAsset,
   photo,
@@ -123,9 +123,7 @@ describe("a split model whose schema takes no layer count", () => {
   })
 
   it("shows no field for the switch that makes the model split", () => {
-    expect(shownFieldsOf(seedream).map((field) => field.name)).toEqual([
-      "size",
-    ])
+    expect(shownFieldsOf(seedream).map((field) => field.name)).toEqual(["size"])
   })
 })
 

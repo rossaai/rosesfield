@@ -137,9 +137,7 @@ export function defaultOfMode(
 ): CatalogModel | null {
   const listed = modelsOfMode(index, mode)
   return (
-    listed.find((model) => model.id === index.graphs[mode]) ??
-    listed[0] ??
-    null
+    listed.find((model) => model.id === index.graphs[mode]) ?? listed[0] ?? null
   )
 }
 
