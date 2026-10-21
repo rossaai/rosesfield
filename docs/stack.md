@@ -133,6 +133,7 @@ The agent runs on a chat model of the Comfy Router, with your Comfy key. It has 
 - A key the Router has not turned on answers `403 not_enabled`. Agent shows the catalog's message, and the agent stays off.
 - You choose the model in Agent, from the Router chat models in `packages/agent/src/infrastructure/router-chat-models.ts`.
 - The context window is fixed at 65,536 tokens, because pi-durable compacts against it. An answer holds at most 8,192 tokens.
+- `COMFY_API_KEY=<key> bun packages/agent/scripts/capture-scenario-answers.ts --model <id>` runs the agent's three scenarios live on one Router chat model and writes `packages/agent/test/fixtures/scenario-answers/<model>.json` as captured. Only the chat turns are live: each app run is answered by the same fakes the replay uses. It makes at most 12 Router calls, each with a 90-second timeout and no retry, drops every header that carries a key or a cookie, writes changing ids as `{{result:n}}` and `{{seen:n}}`, and prints each turn's `usage.cost` and the total. The scenario tests then replay the file and pick the default model.
 
 ## MCP
 

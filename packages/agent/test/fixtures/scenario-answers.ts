@@ -93,7 +93,24 @@ function idsFor(answer: string, seen: Seen): string {
   })
 }
 
-function sentOf(init: RequestInit | undefined): unknown {
+function placeOf(id: string, seen: Seen): string {
+  const lower = id.toLowerCase()
+  const result = seen.result.indexOf(lower)
+  if (result >= 0) {
+    return `{{result:${result}}}`
+  }
+  const anywhere = seen.seen.indexOf(lower)
+  return anywhere >= 0 ? `{{seen:${anywhere}}}` : id
+}
+
+export function placeholdersFor(answer: unknown, sent: unknown): unknown {
+  const seen = seenIn(sent)
+  return JSON.parse(
+    JSON.stringify(answer).replace(uuidPattern, (id) => placeOf(id, seen))
+  )
+}
+
+export function sentOf(init: RequestInit | undefined): unknown {
   return JSON.parse(String(init?.body ?? "{}"))
 }
 
