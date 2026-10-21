@@ -116,6 +116,52 @@ describe("the real credits of a run", () => {
     expect(replay.unused()).toEqual([])
   })
 
+  it("come from the balance route before and after a graph run on Comfy Cloud", async () => {
+    const v2 = comfyV2At(cloudUrl)
+    const replay = new ReplayFetch([
+      balance(1000),
+      v2.submit(),
+      v2.read(succeededJob),
+      balance(999.72),
+      balance(999.72),
+    ])
+    const engine = new ComfyGenerationEngine({
+      apiKey: "comfyui-key",
+      meter: meter(),
+      fetch: replay.fetch,
+    })
+    const submission = await engine.submit(request(workflowBinding))
+    const status = await engine.read(submission.ref)
+    expect(status).toEqual({
+      state: "succeeded",
+      cost: { amount: 0.5908 / 211, currency: "USD" },
+    })
+    expect(replay.unused()).toEqual([])
+  })
+
+  it("keep the execution_ms figure for a graph run whose balance never moved", async () => {
+    const v2 = comfyV2At(cloudUrl)
+    const unmoved = Array.from({ length: CreditMeter.settleTries + 1 }, () =>
+      balance(1000)
+    )
+    const replay = new ReplayFetch([
+      ...unmoved,
+      v2.submit(),
+      v2.read(succeededJob),
+    ])
+    const engine = new ComfyGenerationEngine({
+      apiKey: "comfyui-key",
+      meter: meter(),
+      fetch: replay.fetch,
+    })
+    const submission = await engine.submit(request(workflowBinding))
+    expect(await engine.read(submission.ref)).toEqual({
+      state: "succeeded",
+      cost: { amount: 11.172 / 211, currency: "USD" },
+    })
+    expect(replay.unused()).toEqual([])
+  })
+
   it("are not read for a graph on your own ComfyUI", async () => {
     const v2 = comfyV2At(proxyUrl)
     const replay = new ReplayFetch([v2.submit(), v2.read(succeededJob)])
