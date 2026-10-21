@@ -26,3 +26,7 @@ export const photoSlots = [
   { node: "12", input: "image2", to: "anchor2" },
   { node: "13", input: "image3", to: "anchor3" },
 ] as const
+
+export function keyframeDecodeOf(number: number): string {
+  return String(number * 100 + 6)
+}

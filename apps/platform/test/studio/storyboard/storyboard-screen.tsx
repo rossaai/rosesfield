@@ -25,7 +25,10 @@ import {
 } from "@/screens/app/hosted/model-catalog-query"
 import { noSeeds } from "@/screens/app/use-app-screen"
 import { AppScreen } from "@/studio/storyboard/screen"
-import { keyframeBody } from "@/studio/storyboard/storyboard-model"
+import {
+  priceAsksOf,
+  storyboardAskOf,
+} from "@/studio/storyboard/storyboard-model"
 
 export const storyboard = appListing.parse(findApp("storyboard"))
 
@@ -52,6 +55,17 @@ export const qwenEdit: CatalogModel = {
   name: "Qwen Image Edit 2511",
   nameKey: null,
   task: "image-edit",
+  tags: [{ kind: "open-weights" }],
+  form: null,
+}
+
+export const zImage: CatalogModel = {
+  id: "z-image-turbo",
+  kind: "graph",
+  maker: "Alibaba Tongyi-MAI",
+  name: "Z-Image Turbo",
+  nameKey: null,
+  task: "text-to-image",
   tags: [{ kind: "open-weights" }],
   form: null,
 }
@@ -168,7 +182,7 @@ export function openStoryboard({ runs = [], prices = [] }: Open = {}): Opened {
   })
   client.setQueryData(settingsQuery.queryKey, settings)
   client.setQueryData(modelCatalogQuery(storyboard.id, keyState).queryKey, {
-    models: [qwenEdit, fluxImage],
+    models: [qwenEdit, zImage, fluxImage],
     defaultModel: qwenEdit.id,
     refusal: null,
   })
@@ -177,12 +191,18 @@ export function openStoryboard({ runs = [], prices = [] }: Open = {}): Opened {
     pageParams: [null],
   })
   for (const [values, model, credits] of prices) {
-    const ask = JSON.parse(
-      JSON.stringify(keyframeBody(storyboard, values, model))
+    const asks = priceAsksOf(
+      storyboardAskOf({ app: storyboard, values, chosen: model, photos: [] })
     )
-    client.setQueryData(priceQuery(storyboard.id, ask, keyState).queryKey, {
-      price: { source: "rates", credits },
-    })
+    for (const ask of [asks.text, asks.edit]) {
+      if (ask !== null) {
+        const held = JSON.parse(JSON.stringify(ask))
+        client.setQueryData(
+          priceQuery(storyboard.id, held, keyState).queryKey,
+          { price: { source: "rates", credits } }
+        )
+      }
+    }
   }
   const root = createRootRoute({
     component: () => (

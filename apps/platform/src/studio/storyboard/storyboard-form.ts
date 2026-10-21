@@ -1,3 +1,9 @@
+import {
+  editModel,
+  firstKeyframeInput,
+  keyframeInput,
+  keyframeTextModel,
+} from "@rosesfield/catalog/storyboard"
 import type { AppListing, Run } from "@rosesfield/contract"
 import { t, tCatalog } from "@/copy/t"
 import {
@@ -64,7 +70,14 @@ function sceneCountOf(inputs: FormValues["inputs"], fallback: number): number {
 
 export function storyboardValuesFromRun(app: AppListing, run: Run): FormValues {
   const base = valuesFromRun(app, run)
-  const inputs: Record<string, FieldValue> = { ...base.inputs }
+  const inputs: Record<string, FieldValue> = {
+    ...base.inputs,
+    [keyframeInput]: "1",
+    [firstKeyframeInput]: [],
+  }
+  if (inputs.model === keyframeTextModel?.value) {
+    inputs.model = editModel
+  }
   const seed = app.inputs.find((input) => input.type === "seed")
   const fixedSeed = run.seed
   if (seed !== undefined && fixedSeed !== null) {

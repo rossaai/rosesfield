@@ -10,6 +10,7 @@ import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
 import {
   chosenModelOf,
+  editModelsOf,
   inputsForModel,
 } from "@/studio/storyboard/storyboard-model"
 
@@ -30,7 +31,7 @@ export function useStoryboardModel(
   const settings = useQuery(settingsQuery)
   const keyState = settings.data?.engine.key ?? "unknown"
   const query = useQuery(modelCatalogQuery(app.id, keyState))
-  const models = query.data?.models ?? []
+  const models = editModelsOf(query.data?.models ?? [])
   const defaultModel = query.data?.defaultModel ?? null
   const chosen = chosenModelOf(
     models,

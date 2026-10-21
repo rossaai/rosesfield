@@ -1,5 +1,8 @@
 import type { Run } from "@rosesfield/contract"
 import {
+  firstKeyframeInput,
+  keyframeInput,
+  keyframeNumberOf,
   maxScenes,
   sceneInputName,
   sceneNumbers,
@@ -48,22 +51,31 @@ function anchorOf(run: KeyframeRun, number: number): KeyframeAnchor {
   if (character !== null) {
     return { kind: "character", characterId: character }
   }
-  return number === 1
+  const isOnFirst = firstIdOf(run.inputs[firstKeyframeInput]) !== null
+  return number === 1 && !isOnFirst
     ? { kind: "scene" }
     : { kind: "keyframe", number: 1, labelKey: "storyboard.anchor.keyframe" }
 }
 
+function hasScenes(run: KeyframeRun): boolean {
+  return sceneNumbers.some(
+    (number) => textOf(run.inputs[sceneInputName(number)]) !== ""
+  )
+}
+
 export function keyframesOf(run: KeyframeRun): KeyframeFacts[] {
-  if (run.appId !== storyboardAppId) {
+  if (run.appId !== storyboardAppId || !hasScenes(run)) {
     return []
   }
   const look = textOf(run.inputs.look)
   const count = Math.min(Math.max(run.count, 1), maxScenes)
-  return sceneNumbers.slice(0, count).map((number) => {
+  const chained = keyframeNumberOf(run.inputs[keyframeInput])
+  const numbers = chained === null ? sceneNumbers.slice(0, count) : [chained]
+  return numbers.map((number, index) => {
     const scene = textOf(run.inputs[sceneInputName(number)])
     return {
       number,
-      assetId: run.outputs[number - 1] ?? null,
+      assetId: run.outputs[index] ?? null,
       scene,
       prompt: [scene, look].filter((part) => part !== "").join(" "),
       seed: run.seed === null ? null : run.seed + number - 1,
