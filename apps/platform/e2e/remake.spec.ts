@@ -13,7 +13,7 @@ async function uploaded(bytes: Buffer, mime: string): Promise<string> {
   const response = await fetch(`${gatewayOrigin}/api/assets`, {
     method: "POST",
     headers: { "Content-Type": mime },
-    body: bytes,
+    body: new Uint8Array(bytes),
   })
   const body: { asset: { id: string } } = await response.json()
   return body.asset.id
