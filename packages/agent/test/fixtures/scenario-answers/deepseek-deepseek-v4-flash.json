@@ -1,7 +1,8 @@
 {
   "model": "deepseek/deepseek-v4-flash",
   "source": {
-    "kind": "hand-written"
+    "kind": "captured",
+    "capturedAt": "2026-10-21T21:26:32.552Z"
   },
   "scenarios": {
     "words": {
@@ -10,28 +11,68 @@
         {
           "status": 200,
           "headers": {
-            "content-type": "application/json"
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:26:15 GMT",
+            "idempotent-replayed": "true",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-request-id": "3a8cdb8c-a134-4173-b11f-18d85f23b2ad",
+            "x-comfy-router-provider": "openrouter",
+            "x-content-type-options": "nosniff"
           },
           "body": {
-            "id": "gen-1760000000-rosesfield-1",
+            "id": "gen-1792617884-9CZF32etOMmCirVo5h6W",
             "object": "chat.completion",
-            "created": 1760000000,
+            "created": 1792617884,
             "model": "deepseek/deepseek-v4-flash",
+            "provider": "Baidu",
+            "system_fingerprint": null,
+            "service_tier": null,
             "choices": [
               {
                 "index": 0,
+                "logprobs": null,
+                "finish_reason": "stop",
+                "native_finish_reason": "stop",
                 "message": {
                   "role": "assistant",
-                  "content": "I run Rosesfield's apps for you: images, video and sound. Ask me for one, and I propose the run first."
-                },
-                "finish_reason": "stop"
+                  "content": "Here's what I can do for you in **Rosesfield**:\n\n- **Make images** – Create still pictures from text prompts (up to 4 at a time, square or widescreen).\n- **Make videos** – Turn an image into a short video clip with a motion prompt.\n- **Browse your library** – List and inspect your assets (images, videos, audio, text).\n- **Manage characters** – View your saved characters and their details.\n\nEach run takes a moment to process on the server. I can start runs, check their progress, and use the results as inputs for the next step.\n\nWhat would you like to make?",
+                  "refusal": null,
+                  "reasoning": "The person is asking what capabilities I have. Let me describe what I can do based on the tools available to me.",
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "The person is asking what capabilities I have. Let me describe what I can do based on the tools available to me.",
+                      "format": "unknown",
+                      "index": 0
+                    }
+                  ]
+                }
               }
             ],
             "usage": {
-              "prompt_tokens": 1840,
-              "completion_tokens": 24,
-              "total_tokens": 1864,
-              "cost": 0.00021
+              "prompt_tokens": 1609,
+              "completion_tokens": 160,
+              "total_tokens": 1769,
+              "cost": 0.00008209824,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.00008209824,
+                "upstream_inference_prompt_cost": 0.00006847904,
+                "upstream_inference_completions_cost": 0.0000136192
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 24,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
             }
           }
         }
@@ -43,38 +84,79 @@
         {
           "status": 200,
           "headers": {
-            "content-type": "application/json"
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:26:16 GMT",
+            "idempotent-replayed": "true",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-request-id": "bf880697-c263-4f34-b504-105fd1e774af",
+            "x-comfy-router-provider": "openrouter",
+            "x-content-type-options": "nosniff"
           },
           "body": {
-            "id": "gen-1760000000-rosesfield-2",
+            "id": "gen-1792617888-PvlM0DplFwD10tHZ4LPE",
             "object": "chat.completion",
-            "created": 1760000000,
+            "created": 1792617888,
             "model": "deepseek/deepseek-v4-flash",
+            "provider": "Baidu",
+            "system_fingerprint": null,
+            "service_tier": null,
             "choices": [
               {
                 "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "tool_calls",
                 "message": {
                   "role": "assistant",
                   "content": null,
+                  "refusal": null,
+                  "reasoning": "The person wants me to make an image of a red rose in a glass vase. I need to use the sample-image app. Let me start a run.",
                   "tool_calls": [
                     {
-                      "id": "call_1",
                       "type": "function",
+                      "index": 0,
+                      "id": "call_f78f5a93f117464e865378a2",
                       "function": {
                         "name": "sample-image",
-                        "arguments": "{\"inputs\":{\"prompt\":\"a red rose in a glass vase\"}}"
+                        "arguments": "{\"inputs\": {\"prompt\": \"A single red rose in a clear glass vase, soft natural lighting, photorealistic style, elegant composition\"}}"
                       }
                     }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "The person wants me to make an image of a red rose in a glass vase. I need to use the sample-image app. Let me start a run.",
+                      "format": "unknown",
+                      "index": 0
+                    }
                   ]
-                },
-                "finish_reason": "tool_calls"
+                }
               }
             ],
             "usage": {
-              "prompt_tokens": 1852,
-              "completion_tokens": 24,
-              "total_tokens": 1876,
-              "cost": 0.00024
+              "prompt_tokens": 1615,
+              "completion_tokens": 103,
+              "total_tokens": 1718,
+              "cost": 0.00007750176,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.00007750176,
+                "upstream_inference_prompt_cost": 0.0000687344,
+                "upstream_inference_completions_cost": 0.00000876736
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 32,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
             }
           }
         }
@@ -86,180 +168,400 @@
         {
           "status": 200,
           "headers": {
-            "content-type": "application/json"
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:26:17 GMT",
+            "idempotent-replayed": "true",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-request-id": "afbc5d97-5858-43e5-9399-eb8ab1c4f90c",
+            "x-comfy-router-provider": "openrouter",
+            "x-content-type-options": "nosniff"
           },
           "body": {
-            "id": "gen-1760000000-rosesfield-3",
+            "id": "gen-1792617892-rCVykKzmo6hrjwM0qULq",
             "object": "chat.completion",
-            "created": 1760000000,
+            "created": 1792617892,
             "model": "deepseek/deepseek-v4-flash",
+            "provider": "Baidu",
+            "system_fingerprint": null,
+            "service_tier": null,
             "choices": [
               {
                 "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "tool_calls",
                 "message": {
                   "role": "assistant",
-                  "content": null,
+                  "content": "Let me start by making the red rose image first.\n\n",
+                  "refusal": null,
+                  "reasoning": "I need to first make an image of a red rose, then use that image to make a video. Let me start with the image.\n\nFirst, let me check the library for any existing assets or characters that might be useful.\n\nActually, I'll just start with creating the image of a red rose using sample-image.",
                   "tool_calls": [
                     {
-                      "id": "call_1",
                       "type": "function",
+                      "index": 0,
+                      "id": "call_ea36812200914a0f832e3109",
                       "function": {
                         "name": "sample-image",
-                        "arguments": "{\"inputs\":{\"prompt\":\"a red rose\"}}"
+                        "arguments": "{\"inputs\": {\"prompt\": \"A beautiful red rose, detailed petals, vibrant red color, macro photography, soft lighting\"}}"
                       }
                     }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "I need to first make an image of a red rose, then use that image to make a video. Let me start with the image.\n\nFirst, let me check the library for any existing assets or characters that might be useful.\n\nActually, I'll just start with creating the image of a red rose using sample-image.",
+                      "format": "unknown",
+                      "index": 0
+                    }
                   ]
-                },
-                "finish_reason": "tool_calls"
+                }
               }
             ],
             "usage": {
-              "prompt_tokens": 1860,
-              "completion_tokens": 24,
-              "total_tokens": 1884,
-              "cost": 0.00024
+              "prompt_tokens": 1623,
+              "completion_tokens": 141,
+              "total_tokens": 1764,
+              "cost": 0.000028779072,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 1536,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.000028779072,
+                "upstream_inference_prompt_cost": 0.000016777152,
+                "upstream_inference_completions_cost": 0.00001200192
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 64,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
             }
           }
         },
         {
           "status": 200,
           "headers": {
-            "content-type": "application/json"
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:26:20 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.03",
+            "x-comfy-request-id": "315a0dd4-9de2-487c-b4e8-be046725fcbf",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0001421801"
           },
           "body": {
-            "id": "gen-1760000000-rosesfield-4",
+            "id": "gen-1792617978-4bkkqAHPt2h7P7LnamNm",
             "object": "chat.completion",
-            "created": 1760000000,
+            "created": 1792617978,
             "model": "deepseek/deepseek-v4-flash",
+            "provider": "Baidu",
+            "system_fingerprint": null,
+            "service_tier": null,
             "choices": [
               {
                 "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "tool_calls",
                 "message": {
                   "role": "assistant",
-                  "content": null,
+                  "content": "Started the image run — sample-image run `ebde299d`.\n\nLet me wait for it to complete",
+                  "refusal": null,
+                  "reasoning": "The image run has been queued. Let me wait for it to finish.",
                   "tool_calls": [
                     {
-                      "id": "call_2",
                       "type": "function",
+                      "index": 0,
+                      "id": "call_968ed26e38cb457194ce8507",
                       "function": {
                         "name": "read_run",
-                        "arguments": "{\"runId\":\"{{result:0}}\"}"
+                        "arguments": "{\"runId\": \"{{result:0}}\"}"
                       }
                     }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "The image run has been queued. Let me wait for it to finish.",
+                      "format": "unknown",
+                      "index": 0
+                    }
                   ]
-                },
-                "finish_reason": "tool_calls"
+                }
               }
             ],
             "usage": {
-              "prompt_tokens": 2090,
-              "completion_tokens": 24,
-              "total_tokens": 2114,
-              "cost": 0.00026
+              "prompt_tokens": 1858,
+              "completion_tokens": 104,
+              "total_tokens": 1962,
+              "cost": 0.00008792896,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.00008792896,
+                "upstream_inference_prompt_cost": 0.00007907648,
+                "upstream_inference_completions_cost": 0.00000885248
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 16,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
             }
           }
         },
         {
           "status": 200,
           "headers": {
-            "content-type": "application/json"
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:26:25 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.03",
+            "x-comfy-request-id": "817c109f-c871-40b4-81fe-d547051bc975",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0001421801"
           },
           "body": {
-            "id": "gen-1760000000-rosesfield-5",
+            "id": "gen-1792617981-cnCHDwjsCz0sxv88RgR4",
             "object": "chat.completion",
-            "created": 1760000000,
+            "created": 1792617981,
             "model": "deepseek/deepseek-v4-flash",
+            "provider": "Baidu",
+            "system_fingerprint": null,
+            "service_tier": null,
             "choices": [
               {
                 "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "tool_calls",
                 "message": {
                   "role": "assistant",
-                  "content": null,
+                  "content": "Image is ready. Now I'll make the video of the rose opening using that image.\n\n",
+                  "refusal": null,
+                  "reasoning": "The image is done. The asset id is `{{result:1}}`. Now I need to use that image as input for the motion app to create a video of the rose opening.",
                   "tool_calls": [
                     {
-                      "id": "call_3",
                       "type": "function",
+                      "index": 0,
+                      "id": "call_9e9887c5e4584cd9ab3062c2",
                       "function": {
                         "name": "sample-motion",
-                        "arguments": "{\"inputs\":{\"image\":[\"{{result:1}}\"],\"prompt\":\"the red rose opens its petals\"}}"
+                        "arguments": "{\"inputs\": {\"image\": [\"{{result:1}}\"], \"prompt\": \"A red rose slowly opening its petals, blooming in slow motion, time-lapse\"}}"
                       }
                     }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "The image is done. The asset id is `{{result:1}}`. Now I need to use that image as input for the motion app to create a video of the rose opening.",
+                      "format": "unknown",
+                      "index": 0
+                    }
                   ]
-                },
-                "finish_reason": "tool_calls"
+                }
               }
             ],
             "usage": {
-              "prompt_tokens": 2330,
-              "completion_tokens": 24,
-              "total_tokens": 2354,
-              "cost": 0.00029
+              "prompt_tokens": 2155,
+              "completion_tokens": 194,
+              "total_tokens": 2349,
+              "cost": 0.00010823008,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.00010823008,
+                "upstream_inference_prompt_cost": 0.0000917168,
+                "upstream_inference_completions_cost": 0.00001651328
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 69,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
             }
           }
         },
         {
           "status": 200,
           "headers": {
-            "content-type": "application/json"
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:26:28 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.02",
+            "x-comfy-request-id": "409998a6-7edd-437f-9726-6175f29bfd81",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0000947867"
           },
           "body": {
-            "id": "gen-1760000000-rosesfield-6",
+            "id": "gen-1792617986-gJP7IBKdEjWduJlReisa",
             "object": "chat.completion",
-            "created": 1760000000,
+            "created": 1792617986,
             "model": "deepseek/deepseek-v4-flash",
+            "provider": "Baidu",
+            "system_fingerprint": null,
+            "service_tier": null,
             "choices": [
               {
                 "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "tool_calls",
                 "message": {
                   "role": "assistant",
-                  "content": null,
+                  "content": "Started the video run — sample-motion run `44bc38db`. Let me wait for it.\n\n",
+                  "refusal": null,
+                  "reasoning": "The video run is queued. Let me wait for it to complete.",
                   "tool_calls": [
                     {
-                      "id": "call_4",
                       "type": "function",
+                      "index": 0,
+                      "id": "call_d22687ed5893433d96ad41cd",
                       "function": {
                         "name": "read_run",
-                        "arguments": "{\"runId\":\"{{result:0}}\"}"
+                        "arguments": "{\"runId\": \"{{result:0}}\"}"
                       }
                     }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "The video run is queued. Let me wait for it to complete.",
+                      "format": "unknown",
+                      "index": 0
+                    }
                   ]
-                },
-                "finish_reason": "tool_calls"
+                }
               }
             ],
             "usage": {
-              "prompt_tokens": 2580,
-              "completion_tokens": 24,
-              "total_tokens": 2604,
-              "cost": 0.00031
+              "prompt_tokens": 2470,
+              "completion_tokens": 100,
+              "total_tokens": 2570,
+              "cost": 0.000052621184,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 1792,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.000052621184,
+                "upstream_inference_prompt_cost": 0.000044109184,
+                "upstream_inference_completions_cost": 0.000008512
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 15,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
             }
           }
         },
         {
           "status": 200,
           "headers": {
-            "content-type": "application/json"
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:26:32 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.04",
+            "x-comfy-request-id": "34bbc38b-6139-43fe-aeee-481a78b8dbdd",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0001895735"
           },
           "body": {
-            "id": "gen-1760000000-rosesfield-7",
+            "id": "gen-1792617989-Toj1S9CC1hevHT5reyWW",
             "object": "chat.completion",
-            "created": 1760000000,
+            "created": 1792617989,
             "model": "deepseek/deepseek-v4-flash",
+            "provider": "Baidu",
+            "system_fingerprint": null,
+            "service_tier": null,
             "choices": [
               {
                 "index": 0,
+                "logprobs": null,
+                "finish_reason": "stop",
+                "native_finish_reason": "stop",
                 "message": {
                   "role": "assistant",
-                  "content": "Done. The image run made the rose, and video run {{result:0}} made it open."
-                },
-                "finish_reason": "stop"
+                  "content": "Here's what was made:\n\n1. **Image** – sample-image run `ebde299d`: a red rose, asset id `{{result:1}}`\n2. **Video** – sample-motion run `44bc38db`: a short video of that rose opening its petals, asset id `{{result:2}}`\n\nBoth are now in your library!",
+                  "refusal": null,
+                  "reasoning": "Both runs completed successfully. Let me summarize the results.",
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "Both runs completed successfully. Let me summarize the results.",
+                      "format": "unknown",
+                      "index": 0
+                    }
+                  ]
+                }
               }
             ],
             "usage": {
-              "prompt_tokens": 2810,
-              "completion_tokens": 24,
-              "total_tokens": 2834,
-              "cost": 0.00033
+              "prompt_tokens": 2796,
+              "completion_tokens": 151,
+              "total_tokens": 2947,
+              "cost": 0.00013185088,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.00013185088,
+                "upstream_inference_prompt_cost": 0.00011899776,
+                "upstream_inference_completions_cost": 0.00001285312
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 11,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
             }
           }
         }
