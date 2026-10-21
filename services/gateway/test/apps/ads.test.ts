@@ -144,7 +144,7 @@ describe("the ads app through the gateway on the demo engine", () => {
     }
   })
 
-  it("runs a FLUX.2 Klein 4B product shot with one photo and a character to done", async () => {
+  it("runs a product shot with one photo and a character on the Qwen Image Edit 2511 graph to done", async () => {
     const gateway = openGateway()
     const photo = await uploadPhoto(gateway)
     const character = await saveCharacter(gateway)
@@ -153,7 +153,6 @@ describe("the ads app through the gateway on the demo engine", () => {
         scene: "on a wooden desk",
         product: [photo],
         character: [character],
-        model: "flux-2-klein-4b",
       },
     })
     expect(started.status).toBe(202)
@@ -162,7 +161,7 @@ describe("the ads app through the gateway on the demo engine", () => {
       kind: "product-shot",
       scene: "on a wooden desk",
       character: [character],
-      model: "flux-2-klein-4b",
+      model: "qwen-image-edit-2511",
       style: "studio",
     })
     const done = await finished(gateway, run.id)
@@ -185,15 +184,7 @@ describe("the ads app through the gateway on the demo engine", () => {
       { inputs: { product: [photo], model: "nano-banana-2" } },
       { inputs: { product: [photo], thirdPhoto: [photo] } },
       { inputs: { ...three, character: [character] } },
-      { inputs: { ...three, model: "flux-2-klein-4b" } },
-      {
-        inputs: {
-          product: [photo],
-          secondPhoto: [photo],
-          character: [character],
-          model: "flux-2-klein-4b",
-        },
-      },
+      { inputs: { product: [photo], model: "flux-2-klein-4b" } },
       { inputs: { product: [photo], kind: "ad" } },
       { inputs: { product: [photo], kind: "ad", headline: "a".repeat(61) } },
       {

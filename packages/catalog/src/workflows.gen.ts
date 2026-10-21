@@ -1,6 +1,4 @@
 import type { WorkflowFiles } from "#workflow-entry.contract"
-import wAdsFlux2Klein4bApi from "../../../workflows/ads-flux-2-klein-4b/ads-flux-2-klein-4b.api.json"
-import wAdsFlux2Klein4bEntry from "../../../workflows/ads-flux-2-klein-4b/entry.json"
 import wAdsQwenImageEdit2511Api from "../../../workflows/ads-qwen-image-edit-2511/ads-qwen-image-edit-2511.api.json"
 import wAdsQwenImageEdit2511Entry from "../../../workflows/ads-qwen-image-edit-2511/entry.json"
 import wAnglesQwenImageEdit2511Api from "../../../workflows/angles-qwen-image-edit-2511/angles-qwen-image-edit-2511.api.json"
@@ -73,7 +71,6 @@ import wVoiceChatterboxApi from "../../../workflows/voice-chatterbox/voice-chatt
 import wVoiceChatterboxEntry from "../../../workflows/voice-chatterbox/entry.json"
 
 export const workflowFiles: readonly WorkflowFiles[] = [
-  { folder: "ads-flux-2-klein-4b", entry: wAdsFlux2Klein4bEntry, graph: wAdsFlux2Klein4bApi },
   { folder: "ads-qwen-image-edit-2511", entry: wAdsQwenImageEdit2511Entry, graph: wAdsQwenImageEdit2511Api },
   { folder: "angles-qwen-image-edit-2511", entry: wAnglesQwenImageEdit2511Entry, graph: wAnglesQwenImageEdit2511Api },
   { folder: "angles-set-qwen-image-edit-2511", entry: wAnglesSetQwenImageEdit2511Entry, graph: wAnglesSetQwenImageEdit2511Api },

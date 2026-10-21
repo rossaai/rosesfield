@@ -17,6 +17,7 @@ import { app } from "#ads/app"
 import { stylePhrases } from "#ads/comfy/ads-prompts"
 import { adsCopy } from "#ads/copy.en"
 import { readApps } from "#list-apps"
+import { findWorkflow } from "#list-workflows"
 
 function readAds(): AppDefinition {
   const [read] = readApps([{ folder: "ads", app }])
@@ -117,6 +118,27 @@ describe("the Ads definition", () => {
   it("refuses every value that is not an open-weights model it binds", () => {
     expect(accepts({ ...photosOf(1), model: "nano-banana-2" })).toBe(false)
     expect(accepts({ ...photosOf(1), model: "gpt-image-2" })).toBe(false)
+  })
+
+  it("binds the Qwen Image Edit 2511 graph as its default and its only graph, with no FLUX.2 Klein 4B and no Wan model", () => {
+    const model = definition.inputs.find((input) => input.name === "model")
+    expect(model?.type === "choice" ? model.default : null).toBe(
+      "qwen-image-edit-2511"
+    )
+    expect(optionValues("model")).toEqual(["qwen-image-edit-2511"])
+    expect(
+      optionValues("model").filter((value) => /wan/i.test(value))
+    ).toEqual([])
+    expect(accepts({ ...photosOf(1), model: "flux-2-klein-4b" })).toBe(false)
+    expect(findWorkflow("ads-qwen-image-edit-2511")).not.toBeNull()
+    expect(findWorkflow("ads-flux-2-klein-4b")).toBeNull()
+    const binding = resolveBinding(
+      definition.engine,
+      body.parse({ inputs: photosOf(1) }).inputs
+    )
+    expect(binding.config.models).toContain(
+      "qwen_image_edit_2511_fp8mixed.safetensors"
+    )
   })
 
   it("asks for a product photo and allows up to 4 images in a run", () => {
