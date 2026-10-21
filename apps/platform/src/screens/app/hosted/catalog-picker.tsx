@@ -5,6 +5,7 @@ import {
   graphMaker,
   type ModelFacts,
   type ModelTag,
+  weightsHost,
 } from "@rosesfield/catalog/comfy"
 import {
   type ModelBadge,
@@ -24,7 +25,7 @@ import {
   Volume2Icon,
 } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
-import { hasCatalogText, t, tCatalog } from "@/copy/t"
+import { type CopyValues, hasCatalogText, t, tCatalog } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import { modelSections } from "@/screens/app/hosted/model-sections"
@@ -51,6 +52,12 @@ const lineKeys: Readonly<Record<string, string>> = {
   chat: "model.line.chat",
 }
 
+export type CatalogWords = (key: string, values?: CopyValues) => string | null
+
+function catalogWords(key: string, values?: CopyValues): string | null {
+  return hasCatalogText(key) ? tCatalog(key, values) : null
+}
+
 export function makerNameOf(model: CatalogModel): string {
   return model.maker === graphMaker ? t("model.maker.graphs") : model.maker
 }
@@ -73,12 +80,20 @@ export function lineOf(task: string): string | null {
   return key === undefined ? null : tCatalog(key)
 }
 
+const byMakerKey = "comfy.model.lineByMaker"
+
 export function modelLineOf(
   task: string,
-  facts: ModelFacts | undefined
+  facts: ModelFacts | undefined,
+  maker?: string,
+  words: CatalogWords = catalogWords
 ): string | null {
   const key = facts?.lineKey ?? null
-  return key !== null && hasCatalogText(key) ? tCatalog(key) : lineOf(task)
+  const line = (key === null ? null : words(key)) ?? lineOf(task)
+  if (line === null || maker === undefined) {
+    return line
+  }
+  return words(byMakerKey, { line, maker }) ?? line
 }
 
 export function tagOf(tag: ModelTag): ModelPickerTag {
@@ -119,9 +134,9 @@ const sectionLabels = {
 } as const
 
 const factBadgeKeys = {
-  new: "model.badge.new",
-  top: "model.badge.top",
-  premium: "model.badge.premium",
+  new: "comfy.badge.new",
+  top: "comfy.badge.top",
+  premium: "comfy.badge.premium",
 } as const
 
 type FactBadgeKind = keyof typeof factBadgeKeys
@@ -130,7 +145,6 @@ export function todayOf(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10)
 }
 
-const huggingFace = "https://huggingface.co/"
 const repoPattern = /^[\w.-]+\/[\w.-]+$/
 
 export function weightsLinkOf(id: string): string | null {
@@ -138,22 +152,22 @@ export function weightsLinkOf(id: string): string | null {
   if (model === undefined) {
     return null
   }
-  if (model.link.startsWith(huggingFace)) {
+  if (model.link.startsWith(weightsHost)) {
     return model.link
   }
   const repo = model.files.find(
     (file) => repoPattern.test(file) && !file.endsWith(".safetensors")
   )
-  return repo === undefined ? null : `${huggingFace}${repo}`
+  return repo === undefined ? null : `${weightsHost}${repo}`
 }
 
-function factBadgeOf(badge: FactBadge): ModelBadge[] {
+function factBadgeOf(badge: FactBadge, words: CatalogWords): ModelBadge[] {
   if (badge.kind === "open-weights") {
     return []
   }
   const kind: FactBadgeKind = badge.kind
-  const key = factBadgeKeys[kind]
-  return hasCatalogText(key) ? [{ kind, label: tCatalog(key) }] : []
+  const label = words(factBadgeKeys[kind])
+  return label === null ? [] : [{ kind, label }]
 }
 
 function weightsBadgeOf(
@@ -178,10 +192,11 @@ export function badgesOf(
   id: string,
   tags: readonly ModelTag[],
   facts?: ModelFacts,
-  today: string = todayOf()
+  today: string = todayOf(),
+  words: CatalogWords = catalogWords
 ): ModelBadge[] {
   return [
-    ...factBadgesOf(facts, today).flatMap(factBadgeOf),
+    ...factBadgesOf(facts, today).flatMap((badge) => factBadgeOf(badge, words)),
     ...weightsBadgeOf(id, tags, facts),
   ]
 }
@@ -205,7 +220,7 @@ export function pickerSections(
       id: row.id,
       name: row.name,
       maker: row.maker,
-      line: modelLineOf(row.task, row.facts),
+      line: modelLineOf(row.task, row.facts, labOf(row)),
       tags: row.tags.filter((tag) => tag.kind !== "open-weights").map(tagOf),
       mark: <LabMark maker={labOf(row)} />,
       badges: badgesOf(row.id, row.tags, row.facts, today),
