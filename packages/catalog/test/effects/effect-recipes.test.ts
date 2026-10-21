@@ -143,36 +143,35 @@ describe("the effect recipes kept as data", () => {
     ).toThrow(/many-copies\.json is invalid: photoFrame/)
   })
 
-  it("ends Push into eye on a dark frame under its last-frame luma, after a sharp close-up of an amber iris with a small pupil, with a camera that moves from the first frame", () => {
+  it("ends Push into eye on a dark frame under its last-frame luma, after a light guide toward a photographic amber iris, with a calm face and a camera that moves from the first frame", () => {
     const eye = recipeOf("push-into-eye")
     expect(eye.endFrame).toEqual({ source: "dark", luma: 1, strength: 0.9 })
     expect(eye.midFrame).toMatchObject({
       source: "edit",
       time: 5.5,
-      strength: 0.5,
+      strength: 0.3,
     })
     expect(eye.midFrame?.prompt).toMatch(
       /real macro photograph of the iris of one of the person's eyes/
     )
     expect(eye.midFrame?.prompt).toMatch(/iris fills the whole frame/)
-    expect(eye.midFrame?.prompt).toMatch(/iris glows a warm amber/)
+    expect(eye.midFrame?.prompt).toMatch(/natural amber like a real human eye/)
+    expect(eye.midFrame?.prompt).toMatch(/No glow, no outlines, no drawn lines/)
     expect(eye.midFrame?.prompt).toMatch(
       /pupil in the centre is small, round and pure black/
     )
-    expect(eye.midFrame?.prompt).not.toMatch(/eye colour/)
     expect(eye.prompt).toMatch(
-      /face and skin tone stay exactly as in the photo/
+      /face, skin and calm expression stay exactly as in the photo/
     )
-    expect(eye.prompt).toMatch(/the iris turns a warm glowing amber/)
-    expect(eye.prompt).toMatch(/the small black pupil/)
-    expect(eye.prompt).not.toMatch(/eye colour/)
+    expect(eye.prompt).toMatch(/natural amber like a real human eye/)
+    expect(eye.prompt).not.toMatch(/glow/)
     expect(eye.prompt).toMatch(/never slows/)
     expect(eye.prompt).toMatch(
       /black pupil grows outward until it swallows the whole frame/
     )
     expect(eye.prompt).not.toMatch(/\b(fades?|dims?)\b/)
     expect(eye.design.sound?.prompt).toMatch(/^From the very first frame/)
-    expect(eye.design.sound?.prompt).toMatch(/impact boom .* turns black/)
+    expect(eye.design.sound?.prompt).toMatch(/impact hit .* fills the frame/)
     expect(
       eye.endFrame.source === "dark" ? eye.endFrame.luma : 255
     ).toBeLessThan(eye.design.lastFrame.maxLuma ?? 0)

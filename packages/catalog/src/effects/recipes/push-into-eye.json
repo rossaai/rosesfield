@@ -11,7 +11,7 @@
       "maxLuma": 17.5
     },
     "sound": {
-      "prompt": "From the very first frame, a full cinematic whoosh of air with bright detail over a deep low tone, soft pulses as the camera dives closer, building in power, and one deep impact boom at the moment the frame turns black.",
+      "prompt": "From the very first frame, a deep cinematic drone with a low tone, soft whooshes of air as the camera dives closer and closer, rising in power, and one heavy impact hit at the moment the black pupil fills the frame.",
       "loudness": {
         "min": -28.5,
         "max": -19
@@ -24,7 +24,7 @@
       "bitDepth": 8
     }
   },
-  "prompt": "One unbroken shot that moves from the first frame to the last, with no pause. From the first frame the camera pushes straight in toward one of the person's eyes, and it never slows down. The person's face and skin tone stay exactly as in the photo. As the camera nears, the iris turns a warm glowing amber. The eye fills the frame, then the amber iris with its sharp fine fibres, then the small black pupil. In the last second the black pupil grows outward until it swallows the whole frame, while the camera keeps moving in. The iris stays sharp and bright around the pupil until the pupil covers it.",
+  "prompt": "One unbroken shot that moves from the first frame to the last, with no pause. From the first frame the camera pushes straight in toward one of the person's eyes, and it never slows down. The person's face, skin and calm expression stay exactly as in the photo, like a real photograph. As the camera nears, the iris turns a natural amber like a real human eye. The eye fills the frame, then the real iris with its natural fibres, then the small black pupil. In the last second the black pupil grows outward until it swallows the whole frame, while the camera keeps moving in.",
   "photoFrame": "first",
   "endFrame": {
     "source": "dark",
@@ -33,9 +33,9 @@
   },
   "midFrame": {
     "source": "edit",
-    "prompt": "Change the photo into a real macro photograph of the iris of one of the person's eyes, so close that the iris fills the whole frame from edge to edge and no eyelid, eyelash or skin shows. The iris glows a warm amber with natural, irregular, sharp fibres and one small soft reflection of light. The pupil in the centre is small, round and pure black.",
+    "prompt": "Change the photo into a real macro photograph of the iris of one of the person's eyes, taken with a macro lens, so close that the iris fills the whole frame from edge to edge and no eyelid, eyelash or skin shows. The iris is a natural amber like a real human eye, with real photographic texture, natural irregular fibres and crypts, and one small soft reflection of light. No glow, no outlines, no drawn lines. The pupil in the centre is small, round and pure black.",
     "time": 5.5,
-    "strength": 0.5
+    "strength": 0.3
   },
   "hold": null,
   "adapter": null,
