@@ -41,6 +41,6 @@ describe("the one line each model shows in the picker", () => {
       (model) => model.id === "qwen-image-edit-2511"
     )
     expect(edit?.kind).toBe("graph")
-    expect(edit?.facts?.lineKey).toBeNull()
+    expect(edit?.facts?.lineKey).toBe("comfy.model.graphQwenImageEdit2511.line")
   })
 })
