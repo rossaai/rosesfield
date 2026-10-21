@@ -123,12 +123,13 @@ describe("the fact badges of a model row", () => {
 })
 
 describe("the line of a model row", () => {
-  it("is the model's own line when the copy holds its key, and no line when its fact row holds none, the control being the task's line it showed before", () => {
-    expect(modelLineOf("model.line.speech")).toBe(t("model.line.speech"))
+  it("is the model's own line when the copy holds its key, and no line when the copy or its fact row holds none, the control", () => {
+    expect(modelLineOf("comfy.model.graphZImageTurbo.line")).toBe(
+      "Photorealistic images, with text in English and Chinese"
+    )
     expect(modelLineOf("comfy.model.notWritten.line")).toBeNull()
     expect(modelLineOf(null)).toBeNull()
     expect(modelLineOf(null, "Maker Lab", wordOf)).toBeNull()
-    expect(modelLineOf(null)).not.toBe(t("model.line.textToImage"))
   })
 
   it("says the model's own line and its maker in one line, and keeps the line alone when the copy holds no pattern", () => {
@@ -178,11 +179,12 @@ function hostedOf(models: readonly CatalogModel[]): HostedState {
 }
 
 describe("the line of a row in the catalog picker", () => {
-  it("shows a graph's sourced line, and no line for a graph whose fact row holds none, the control being the task's line, which no row shows", () => {
+  it("shows each graph's sourced line, and no line for a graph with no fact row, the control", () => {
     const rows = pickerSections(
       hostedOf([
         graphOf("z-image-turbo", "text-to-image"),
         graphOf("qwen-image-edit-2511", "image-edit"),
+        graphOf("flux-2-klein-4b", "image-edit"),
       ]),
       "2026-10-21"
     ).flatMap((section) => section.rows)
@@ -190,10 +192,9 @@ describe("the line of a row in the catalog picker", () => {
     expect(lineOfRow("z-image-turbo")).toContain(
       "Photorealistic images, with text in English and Chinese"
     )
-    expect(lineOfRow("qwen-image-edit-2511")).toBeNull()
-    for (const row of rows) {
-      expect(row.line).not.toBe(t("model.line.textToImage"))
-      expect(row.line).not.toBe(t("model.line.imageEdit"))
-    }
+    expect(lineOfRow("qwen-image-edit-2511")).toContain(
+      "Edits an image and keeps the people in it the same"
+    )
+    expect(lineOfRow("flux-2-klein-4b")).toBeNull()
   })
 })

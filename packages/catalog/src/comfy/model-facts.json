@@ -167,7 +167,9 @@
       },
       "thirds": {},
       "line": {
-        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+        "key": "comfy.model.bflFlux3Image.line",
+        "source": "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#api_bfl_flux3_t2i",
+        "quote": "Generate an image from a text prompt with FLUX 3 Image, which interprets and expands the prompt before generating it, at any of sixteen aspect ratios and up to 4K."
       }
     },
     "bfl/flux-3-video": {
@@ -226,7 +228,9 @@
       "ranks": {},
       "thirds": {},
       "line": {
-        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+        "key": "comfy.model.bflFluxPro10Fill.line",
+        "source": "https://docs.bfl.ml/flux_1_fill",
+        "quote": "Transform parts of your image while preserving the surrounding context. Change objects, enhance details, or remove unwanted elements naturally."
       }
     },
     "bfl/flux-pro-1.1": {
@@ -661,7 +665,9 @@
         "image-edit": 1
       },
       "line": {
-        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+        "key": "comfy.model.byteplusSeedream50Pro260628.line",
+        "source": "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#api_bytedance_seedream_5_0_pro_image_edit",
+        "quote": "Ideal for product photography edits, portrait consistency adjustments, and creating structured layouts with multilingual text."
       }
     },
     "elevenlabs/eleven_multilingual_v2": {
@@ -884,6 +890,54 @@
         "key": "comfy.model.graphQwenImage2512.line",
         "source": "https://huggingface.co/Qwen/Qwen-Image-2512/blob/25468b98e3276ca6700de15c6628e51b7de54a26/README.md",
         "quote": "Enhanced Huamn Realism ... Finer Natural Detail ... Improved Text Rendering"
+      }
+    },
+    "graph/qwen-image-edit-2509-relight": {
+      "lab": "Alibaba Qwen",
+      "release": null,
+      "weights": "https://huggingface.co/Qwen/Qwen-Image-Edit-2509",
+      "ranks": {},
+      "thirds": {},
+      "line": {
+        "key": "comfy.model.graphQwenImageEdit2509Relight.line",
+        "source": "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#image_qwen_image_edit_2509_relight",
+        "quote": "Relight images using Qwen-Image-Edit with LoRA support."
+      }
+    },
+    "graph/qwen-image-edit-2511": {
+      "lab": "Alibaba Qwen",
+      "release": null,
+      "weights": "https://huggingface.co/Qwen/Qwen-Image-Edit-2511",
+      "ranks": {},
+      "thirds": {},
+      "line": {
+        "key": "comfy.model.graphQwenImageEdit2511.line",
+        "source": "https://huggingface.co/Qwen/Qwen-Image-Edit-2511/blob/6f3ccc0b56e431dc6a0c2b2039706d7d26f22cb9/README.md",
+        "quote": "Key enhancements in Qwen-Image-Edit-2511 include: mitigate image drift, improved character consistency"
+      }
+    },
+    "graph/qwen-image-inpaint": {
+      "lab": "Alibaba Qwen",
+      "release": null,
+      "weights": "https://huggingface.co/Qwen/Qwen-Image",
+      "ranks": {},
+      "thirds": {},
+      "line": {
+        "key": "comfy.model.graphQwenImageInpaint.line",
+        "source": "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#image_qwen_image_controlnet_patch",
+        "quote": "Control image generation using Qwen-Image ControlNet models. Supports canny, depth, and inpainting controls through model patching."
+      }
+    },
+    "graph/qwen-image-layered": {
+      "lab": "Alibaba Qwen",
+      "release": null,
+      "weights": "https://huggingface.co/Qwen/Qwen-Image-Layered",
+      "ranks": {},
+      "thirds": {},
+      "line": {
+        "key": "comfy.model.graphQwenImageLayered.line",
+        "source": "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#image_qwen_image_layered",
+        "quote": "Decompose an image into editable RGBA layers for high-fidelity recolor, replace, resize, and reposition workflows using Qwen-Image-Layered."
       }
     },
     "graph/z-image-turbo": {

@@ -30,10 +30,7 @@ const catalogRows: Readonly<Record<string, string>> = {
   ...layersCopy,
 }
 
-const owedRows = [
-  "layers.model.qwenImageLayered",
-  "layers.model.qwenImageInpaint",
-]
+const owedRows: string[] = []
 
 function missingKeys(
   read: AppDefinition,
@@ -242,14 +239,12 @@ describe("the Layers definition holds its modes", () => {
     ])
   })
 
-  it("has an English row for every label key but the two model rows the registry owes, and finds a planted missing key, the control", () => {
+  it("has an English row for every label key, and finds a planted missing key, the control", () => {
     expect(missingKeys(definition, catalogRows)).toEqual(owedRows)
     const { "relight.model.qwenImageEdit2509Relight": _, ...planted } =
       catalogRows
     expect(missingKeys(definition, planted)).toEqual([
-      "layers.model.qwenImageLayered",
       "relight.model.qwenImageEdit2509Relight",
-      "layers.model.qwenImageInpaint",
     ])
   })
 })
