@@ -18,6 +18,10 @@ export const upscaleAspectRatios = [
 
 type SeedVr2Model = "seedvr2-3b" | "seedvr2-7b"
 
+export const upscaleTasks: readonly string[] = ["upscale"]
+
+export const upscaleDefaultModel: SeedVr2Model = "seedvr2-3b"
+
 const seedvr2Files: Readonly<Record<SeedVr2Model, string>> = {
   "seedvr2-3b": "seedvr2_3b_int8_convrot.safetensors",
   "seedvr2-7b": "seedvr2_7b_int8_convrot.safetensors",
@@ -48,28 +52,12 @@ function seedvr2(mode: Mode, model: SeedVr2Model): EngineBinding {
   }
 }
 
-function realEsrgan(mode: Mode): EngineBinding {
-  return workflowBinding({
-    workflow: `upscale-${mode}-real-esrgan`,
-    bindings: [
-      { from: "input", name: mode, index: 0, to: mode },
-      {
-        from: "input",
-        name: "scale",
-        map: { "2x": 0.5, "4x": 1 },
-        to: "scale",
-      },
-    ],
-  })
-}
-
 function byModel(mode: Mode): EngineBinding {
   return selectBinding({
     input: "model",
     options: {
       "seedvr2-3b": seedvr2(mode, "seedvr2-3b"),
       "seedvr2-7b": seedvr2(mode, "seedvr2-7b"),
-      "real-esrgan-4x": realEsrgan(mode),
     },
   })
 }
