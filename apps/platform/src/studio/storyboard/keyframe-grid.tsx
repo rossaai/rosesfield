@@ -3,10 +3,14 @@ import { Progress } from "@rosesfield/ui/components/progress"
 import { WorkingPulse } from "@rosesfield/ui/components/working-pulse"
 import { motion } from "@rosesfield/ui/motion"
 import type { ReactElement, ReactNode } from "react"
+import { isWorking } from "@/api/queries"
 import { t, tCatalog } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
 import { runAspect } from "@/pieces/run/run-facts"
 import { RunOutputs, WaitingLine } from "@/pieces/run/run-outputs"
+import type { KeyframeBlock } from "@/studio/storyboard/keyframe-blocks"
+
+type ChainBlock = Extract<KeyframeBlock, { kind: "chain" }>
 
 function Keyframe({
   number,
@@ -135,4 +139,77 @@ export function KeyframeGrid({
     default:
       return <RunOutputs run={run} list={list} />
   }
+}
+
+function PendingKeyframe({
+  block,
+  number,
+}: {
+  block: ChainBlock
+  number: number
+}): ReactElement {
+  return (
+    <Keyframe number={number}>
+      <WorkingPulse
+        aspect={runAspect(block.lead)}
+        label={t("run.working", { index: number, count: block.count })}
+      />
+    </Keyframe>
+  )
+}
+
+function ChainKeyframe({
+  block,
+  number,
+  isChainWorking,
+  list,
+}: {
+  block: ChainBlock
+  number: number
+  isChainWorking: boolean
+  list: readonly string[]
+}): ReactElement | null {
+  const run = block.runs.get(number)
+  if (run === undefined) {
+    return isChainWorking ? (
+      <PendingKeyframe block={block} number={number} />
+    ) : null
+  }
+  if (isWorking(run)) {
+    return <PendingKeyframe block={block} number={number} />
+  }
+  const [landed] = run.outputs
+  return (
+    <Keyframe number={number}>
+      {run.status === "done" && landed !== undefined ? (
+        <LandedKeyframe run={run} assetId={landed} list={list} />
+      ) : (
+        <RunOutputs run={run} list={list} />
+      )}
+    </Keyframe>
+  )
+}
+
+export function ChainKeyframes({
+  block,
+  list,
+}: {
+  block: ChainBlock
+  list: readonly string[]
+}): ReactElement {
+  const isChainWorking = [...block.runs.values()].some(isWorking)
+  return (
+    <Grid>
+      {Array.from({ length: block.count }, (_, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: a keyframe's place in its storyboard is its scene number
+        <ChainKeyframe
+          key={index}
+          block={block}
+          number={index + 1}
+          isChainWorking={isChainWorking}
+          list={list}
+        />
+      ))}
+    </Grid>
+  )
 }

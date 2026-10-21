@@ -4,24 +4,35 @@ import {
   type ModelField,
   type PriceResponse,
 } from "@rosesfield/catalog/comfy"
+import {
+  editTask,
+  type HostedAsk,
+  type KeyframeCall,
+  keyframeCallsOf,
+  type StoryboardAsk,
+} from "@rosesfield/catalog/storyboard"
 import type { AppListing } from "@rosesfield/contract"
 import {
   bodyOf,
   type FieldValue,
   type FormValues,
-  type StartRunBodyInput,
 } from "@/screens/app/app-form"
 import {
   hostedDefaults,
   modelInputName,
 } from "@/screens/app/hosted/hosted-form"
-import {
-  runValues,
-  scenesOf,
-  withScenes,
-} from "@/studio/storyboard/storyboard-form"
+import type { PriceAsk } from "@/screens/app/hosted/model-catalog-query"
+import { runValues } from "@/studio/storyboard/storyboard-form"
 
 export type FormatField = Extract<ModelField, { kind: "choice" }>
+
+export type Price = PriceResponse["price"] | undefined
+
+export type PriceAsks = {
+  text: PriceAsk | null
+  edit: PriceAsk | null
+  edits: number
+}
 
 const output = "image"
 
@@ -51,6 +62,12 @@ export function formatFieldOf(
   )
 }
 
+export function editModelsOf(
+  models: readonly CatalogModel[]
+): CatalogModel[] {
+  return models.filter((model) => model.task === editTask)
+}
+
 export function chosenModelOf(
   models: readonly CatalogModel[],
   value: string,
@@ -72,54 +89,79 @@ export function inputsForModel(
   return { ...inputs, ...settings, [modelInputName]: model.id }
 }
 
-function isEmpty(value: FieldValue): boolean {
-  return (
-    value === undefined ||
-    value === "" ||
-    (Array.isArray(value) && value.length === 0)
-  )
-}
-
-export function storyboardBody(
-  app: AppListing,
+function hostedOf(
   values: FormValues,
-  chosen: CatalogModel | null
-): StartRunBodyInput {
-  const base = bodyOf(app, runValues(values))
-  if (chosen === null) {
-    return base
-  }
-  const inputs: Record<string, string | number | string[]> = {
-    ...base.inputs,
-    [modelInputName]: chosen.id,
-  }
-  if (chosen.form === null) {
-    return { ...base, inputs }
-  }
-  for (const field of settingFieldsOf(chosen.form)) {
+  form: readonly ModelField[],
+  photos: HostedAsk["photos"]
+): HostedAsk {
+  const settings: Record<string, string | number> = {}
+  for (const field of settingFieldsOf(form)) {
     const value = values.inputs[field.name]
-    if (value !== undefined && !isEmpty(value)) {
-      inputs[field.name] = value
+    const isSet =
+      typeof value === "number" || (typeof value === "string" && value !== "")
+    if (isSet) {
+      settings[field.name] = value
     }
   }
-  return base.count === undefined ? { inputs } : { inputs, count: base.count }
+  return { form, settings, photos }
 }
 
-export function keyframeBody(
-  app: AppListing,
-  values: FormValues,
+export function storyboardAskOf(options: {
+  app: AppListing
+  values: FormValues
   chosen: CatalogModel | null
-): StartRunBodyInput {
-  const first = scenesOf(values).slice(0, 1)
-  return storyboardBody(app, withScenes(values, first), chosen)
+  photos: HostedAsk["photos"]
+}): StoryboardAsk {
+  const { app, values, chosen } = options
+  const base = bodyOf(app, runValues(values))
+  const inputs =
+    chosen === null
+      ? base.inputs
+      : { ...base.inputs, [modelInputName]: chosen.id }
+  if (chosen === null || chosen.form === null) {
+    return { inputs, aspectRatio: base.aspectRatio ?? null, hosted: null }
+  }
+  return {
+    inputs,
+    aspectRatio: null,
+    hosted: hostedOf(values, chosen.form, options.photos),
+  }
 }
 
-export function keyframesCredits(
-  price: PriceResponse["price"] | undefined,
-  scenes: number
-): number | null {
-  if (price === undefined || price.credits === null || price.credits <= 0) {
+function priceAskOf(call: KeyframeCall | undefined): PriceAsk | null {
+  if (call === undefined) {
     return null
   }
-  return Math.round(price.credits * scenes * 100) / 100
+  const { inputs, aspectRatio } = call.request
+  return aspectRatio === null ? { inputs } : { inputs, aspectRatio }
+}
+
+export function priceAsksOf(ask: StoryboardAsk): PriceAsks {
+  const calls = keyframeCallsOf(ask)
+  const edits = calls.filter((call) => call.kind === "edit")
+  return {
+    text: priceAskOf(calls.find((call) => call.kind === "text")),
+    edit: priceAskOf(edits[0]),
+    edits: edits.length,
+  }
+}
+
+function creditsOf(price: Price): number | null {
+  return price === undefined || price.credits === null || price.credits <= 0
+    ? null
+    : price.credits
+}
+
+export function callsCredits(
+  parts: readonly { price: Price; calls: number }[]
+): number | null {
+  let total = 0
+  for (const part of parts.filter((one) => one.calls > 0)) {
+    const credits = creditsOf(part.price)
+    if (credits === null) {
+      return null
+    }
+    total += credits * part.calls
+  }
+  return total > 0 ? Math.round(total * 100) / 100 : null
 }

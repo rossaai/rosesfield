@@ -64,8 +64,8 @@ async function sentFor(
       scene1: scenes[0],
       scene2: scenes[1],
       [anchor]: anchor === "character" ? photos.slice(0, 1) : photos,
+      keyframe: "2",
     },
-    count: 2,
     aspectRatio: "16:9",
   })
   const inputs = { ...parsed.inputs, [anchor]: [...photos] }
@@ -79,7 +79,7 @@ async function sentFor(
       mime: "image/png",
       bytes: Uint8Array.of(137, 80, 78, 71, 13, 10, 26, 10),
     })),
-    count: 2,
+    count: parsed.count,
     aspectRatio: "16:9",
     seed: 42,
     outputKind: "image",
@@ -116,6 +116,7 @@ describe("the Storyboard character photos sent to Qwen Image Edit 2511", () => {
   it("sends a character's first 3 photos to every edit call", async () => {
     const workflow = await sentFor("character", photoIds.slice(0, 3))
     expect(danglingLinks(workflow)).toEqual([])
+    expect(workflow["99"]?.inputs.images).toEqual(["206", 0])
     expect(loadedIn(workflow)).toEqual(
       comfyIds
         .slice(0, 3)

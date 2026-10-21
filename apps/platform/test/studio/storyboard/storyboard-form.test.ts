@@ -1,12 +1,14 @@
+import { anchoredOn, keyframeCallsOf } from "@rosesfield/catalog/storyboard"
 import {
   appDefinition,
   appListing,
+  assetId as assetIdSchema,
   run,
   startRunBodyFor,
 } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import { tCatalog } from "@/copy/t"
-import { bodyOf, type FormValues } from "@/screens/app/app-form"
+import type { FormValues } from "@/screens/app/app-form"
 import {
   messagesOf,
   runValues,
@@ -14,6 +16,7 @@ import {
   storyboardValuesFromRun,
   withScenes,
 } from "@/studio/storyboard/storyboard-form"
+import { storyboardAskOf } from "@/studio/storyboard/storyboard-model"
 import { app } from "../../../../../packages/catalog/src/storyboard/app"
 
 const definition = appDefinition.parse(app)
@@ -24,9 +27,23 @@ function form(inputs: FormValues["inputs"], count: number): FormValues {
   return { inputs, seedMode: "random", count, aspectRatio: "16:9" }
 }
 
+const firstKeyframe = assetIdSchema.parse(
+  "2f4b6d8e-0c1a-4b3c-9d5e-7f9a1b3c5d7e"
+)
+
 function contractTakes(values: FormValues): boolean {
-  const body = bodyOf(definition, runValues(values))
-  return startRunBodyFor(definition).safeParse(body).success
+  const ask = storyboardAskOf({
+    app: appListing.parse(app),
+    values,
+    chosen: null,
+    photos: [],
+  })
+  return keyframeCallsOf(ask).every(
+    (call) =>
+      startRunBodyFor(definition).safeParse(
+        (call.waits ? anchoredOn(ask, call, firstKeyframe) : call).request
+      ).success
+  )
 }
 
 describe("the Storyboard form", () => {
@@ -181,5 +198,32 @@ describe("Use these inputs on a Storyboard run", () => {
       seed: 7,
     })
     expect(values.seedMode).toBe("fixed")
+  })
+
+  it("fills a whole storyboard from the run of one keyframe, with the edit default in place of keyframe 1's text model", () => {
+    const values = storyboardValuesFromRun(
+      listing,
+      runWith({
+        inputs: {
+          sceneCount: "2",
+          scene1: "the roof",
+          scene2: "the door",
+          model: "z-image-turbo",
+          keyframe: "2",
+          firstKeyframe: [assetId],
+        },
+        count: 1,
+        seed: 42,
+        aspectRatio: "1:1",
+      })
+    )
+    expect(scenesOf(values)).toEqual(["the roof", "the door"])
+    expect(values.inputs).toMatchObject({
+      model: "qwen-image-edit-2511",
+      keyframe: "1",
+      firstKeyframe: [],
+      seed: 42,
+    })
+    expect(values.count).toBe(2)
   })
 })

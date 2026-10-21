@@ -6,6 +6,7 @@ import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import { type AppForm, useAppForm } from "@/screens/app/use-app-form"
 import type { AppSeeds } from "@/screens/app/use-app-screen"
 import type { StartRun } from "@/screens/app/use-start-run"
+import { keptRunOf } from "@/studio/storyboard/kept-keyframes"
 import {
   referenceMessage,
   useReferenceFacts,
@@ -126,7 +127,7 @@ export function useStoryboardScreen(
     ...sceneEditing(form),
     useInputs: (run) => {
       setChecked(false)
-      form.fill(storyboardValuesFromRun(app, run))
+      form.fill(storyboardValuesFromRun(app, keptRunOf(run)))
     },
     onShortcut: (event) => {
       if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
