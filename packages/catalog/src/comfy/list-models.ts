@@ -88,15 +88,24 @@ function graphsOf(app: AppDefinition, task: string): CatalogModel[] {
   return (input?.options ?? [])
     .filter((option) => !isHostedModelId(option.value))
     .filter((option) => !isDeniedModel(`graph/${option.value}`))
-    .map((option) => ({
-      id: option.value,
-      kind: "graph",
-      maker: graphMaker,
-      name: nameOf(`graph/${option.value}`),
-      nameKey: option.labelKey,
-      task,
-      tags: [{ kind: "open-weights" }],
-      form: null,
-      facts: factsOf(`graph/${option.value}`, task, `${option.labelKey}.line`),
-    }))
+    .map((option) => graphEntry(option.value, option.labelKey, task))
+}
+
+function graphEntry(
+  value: string,
+  labelKey: string,
+  task: string
+): CatalogModel {
+  const facts = factsOf(`graph/${value}`, task, `${labelKey}.line`)
+  return {
+    id: value,
+    kind: "graph",
+    maker: facts.lab ?? graphMaker,
+    name: nameOf(`graph/${value}`),
+    nameKey: labelKey,
+    task,
+    tags: [{ kind: "open-weights" }],
+    form: null,
+    facts,
+  }
 }

@@ -41,7 +41,7 @@ const app = appDefinition.parse({
 })
 
 describe("modelsForApp", () => {
-  it("marks every model of a proven family with the proven tag and names graphs by an id", () => {
+  it("marks every model of a proven family with the proven tag and names a graph with no known lab by Comfy Cloud", () => {
     const models = modelsForApp(app, [
       {
         id: "luma/photon-flash-1",

@@ -113,6 +113,22 @@ describe("the Image app", () => {
     expect(ids).not.toContain("image-flux-2-klein-4b")
   })
 
+  it("names each open-weights graph by its lab, with the line and the weights page of its model", () => {
+    const ming = modelsForApp(definition, []).find(
+      (model) => model.id === "ming-image-0-1-design"
+    )
+    expect(ming).toMatchObject({
+      kind: "graph",
+      maker: "inclusionAI",
+      facts: {
+        lab: "inclusionAI",
+        weights: "https://huggingface.co/inclusionAI/Ming-Image-0.1-Design",
+        lineKey: "image.model.mingImage01Design.line",
+        rank: { position: 45, size: 104 },
+      },
+    })
+  })
+
   it("is read by the catalog with its id as its folder", () => {
     expect(definition.id).toBe("image")
     expect(definition.inputs.map((input) => input.name)).toEqual([
