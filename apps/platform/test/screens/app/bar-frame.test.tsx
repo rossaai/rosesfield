@@ -1,9 +1,11 @@
+import type { Run } from "@rosesfield/contract"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t } from "@/copy/t"
 import { BarFrame, type BarPlace } from "@/screens/app/bar-frame"
 import {
   asPhone,
+  doneRun,
   image,
   resetFrames,
   stubFetch,
@@ -86,7 +88,11 @@ describe("the bar frame on a phone", () => {
 })
 
 describe("the bar frame with its phone bar docked", () => {
-  function renderPhoneDock(isOpen: boolean, places: BarPlace[]): void {
+  function renderPhoneDock(
+    isOpen: boolean,
+    places: BarPlace[],
+    runs: readonly Run[] = []
+  ): void {
     render(
       withClient(
         <BarFrame
@@ -102,7 +108,7 @@ describe("the bar frame with its phone bar docked", () => {
           }}
         />,
         image,
-        []
+        runs
       )
     )
   }
@@ -124,7 +130,7 @@ describe("the bar frame with its phone bar docked", () => {
     asPhone()
     vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(900)
     const scrolled = vi.spyOn(Element.prototype, "scrollTop", "set")
-    renderPhoneDock(false, [])
+    renderPhoneDock(false, [], [doneRun(image.id)])
     expect(scrolled).toHaveBeenCalledWith(900)
   })
 })
