@@ -315,7 +315,7 @@ describe("the Upscale app's models", () => {
     }
   })
 
-  it("lists the catalog's upscale models after the graphs and leaves out the rest", () => {
+  it("lists the catalog's upscale models after the graphs, open weights before closed ones, and leaves out the rest", () => {
     const listed = modelsForApp(definition, [
       hosted("wavespeed/seedvr2", ["image"], ["image"]),
       hosted("bfl/video-upscale-v1", ["video"], ["video"]),
@@ -324,8 +324,8 @@ describe("the Upscale app's models", () => {
     expect(listed.map((model) => [model.id, model.kind, model.task])).toEqual([
       ["seedvr2-3b", "graph", "upscale"],
       ["seedvr2-7b", "graph", "upscale"],
-      ["bfl/video-upscale-v1", "hosted", "upscale"],
       ["wavespeed/seedvr2", "hosted", "upscale"],
+      ["bfl/video-upscale-v1", "hosted", "upscale"],
     ])
   })
 })

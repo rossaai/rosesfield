@@ -1,9 +1,69 @@
 import { isHostedModelId } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
-import { defaultModelOf, isOpenWeights, modelsForApp } from "#comfy/list-models"
+import { z } from "zod"
+import {
+  appTasksOf,
+  defaultModelOf,
+  isOpenWeights,
+  modelsForApp,
+} from "#comfy/list-models"
+import { modelFactsData } from "#comfy/model-facts"
 import { findApp, listApps } from "#list-apps"
+import { findWorkflow, type Workflow } from "#list-workflows"
+import recorded from "./fixtures/cloud-loaders.json"
+
+const cloudLoaders = z.strictObject({
+  source: z.string(),
+  readOn: z.iso.date(),
+  recipe: z.string(),
+  loaders: z.record(
+    z.string(),
+    z.strictObject({ input: z.string(), files: z.array(z.string()) })
+  ),
+})
+
+const cloud = cloudLoaders.parse(recorded)
+
+const heldFiles = new Set(
+  Object.values(cloud.loaders).flatMap((loader) => loader.files)
+)
+
+const closedTasks: readonly string[] = ["video-edit"]
 
 const taskApps = listApps().filter((app) => defaultModelOf(app) !== null)
+
+const imageTask = "text-to-image"
+
+const graphPrefix = "graph/"
+
+type Candidate = { model: string; position: number; workflow: Workflow }
+
+function imageGraphsByRank(): Candidate[] {
+  return Object.entries(modelFactsData.models)
+    .flatMap(([id, row]) => {
+      const position = row.ranks[imageTask]
+      const model = id.slice(graphPrefix.length)
+      const workflow = id.startsWith(graphPrefix)
+        ? findWorkflow(`image-${model}`)
+        : null
+      return position === undefined || row.weights === null || workflow === null
+        ? []
+        : [{ model, position, workflow }]
+    })
+    .sort((a, b) => a.position - b.position)
+}
+
+function isHeldOnCloud(candidate: Candidate): boolean {
+  return candidate.workflow.models.every((file) => heldFiles.has(file))
+}
+
+function imageApp(): NonNullable<ReturnType<typeof findApp>> {
+  const image = findApp("image")
+  if (image === null) {
+    throw new Error("the catalog lacks Image")
+  }
+  return image
+}
 
 describe("the model each app opens on", () => {
   it("is held by at least the Image and the Video apps", () => {
@@ -12,7 +72,11 @@ describe("the model each app opens on", () => {
     )
   })
 
-  it.each(taskApps.map((app) => ({ id: app.id, app })))(
+  it.each(
+    taskApps
+      .filter((app) => !closedTasks.includes(appTasksOf(app)[0] ?? ""))
+      .map((app) => ({ id: app.id, app }))
+  )(
     "$id opens on one of its own open-weights graphs, so a run with the defaults calls no hosted model",
     ({ app }) => {
       const opened = defaultModelOf(app) ?? ""
@@ -23,21 +87,43 @@ describe("the model each app opens on", () => {
     }
   )
 
-  it("opens Image on the open-weights graph ranked highest on its board, citing the board and the date it was read", () => {
-    const image = findApp("image")
-    if (image === null) {
-      throw new Error("the catalog lacks Image")
+  it("opens Video edit on a hosted model, because no open model holds its edit task, and keeps its open-weights graphs for its other modes", () => {
+    const videoEdit = findApp("video-edit")
+    if (videoEdit === null) {
+      throw new Error("the catalog lacks Video edit")
     }
-    const ranked = modelsForApp(image, []).flatMap((model) => {
-      const rank = model.facts?.rank ?? null
-      return rank === null ? [] : [{ id: model.id, rank }]
-    })
-    const best = [...ranked].sort((a, b) => a.rank.position - b.rank.position)
-    expect(best[0]?.id).toBe(defaultModelOf(image))
-    expect(best[0]?.rank).toMatchObject({
+    expect(appTasksOf(videoEdit)[0]).toBe("video-edit")
+    expect(isHostedModelId(defaultModelOf(videoEdit) ?? "")).toBe(true)
+    const graphs = modelsForApp(videoEdit, []).filter(
+      (one) => one.kind === "graph"
+    )
+    expect(graphs.length).toBeGreaterThan(0)
+    expect(graphs.every(isOpenWeights)).toBe(true)
+  })
+
+  it("opens Image on the highest-ranked open-weights graph whose weights Comfy Cloud holds", () => {
+    const held = imageGraphsByRank().filter(isHeldOnCloud)
+    expect(held[0]?.model).toBe(defaultModelOf(imageApp()))
+    expect(defaultModelOf(imageApp())).toBe("z-image-turbo")
+    expect(cloud.readOn).toBe("2026-10-21")
+    const opened = modelsForApp(imageApp(), []).find(
+      (one) => one.id === "z-image-turbo"
+    )
+    expect(opened?.facts?.rank).toMatchObject({
       board: "Artificial Analysis Text to Image Arena",
       readOn: "2026-10-20",
     })
-    expect(best.map((one) => one.id)).toContain("z-image-turbo")
+  })
+
+  it("leaves out of the picker a higher-ranked graph whose weights Comfy Cloud lacks, as it does Ming-Image-0.1-Design", () => {
+    const ranked = imageGraphsByRank()
+    expect(ranked[0]?.model).toBe("ming-image-0-1-design")
+    const lacking = ranked.filter((one) => !isHeldOnCloud(one))
+    expect(lacking.map((one) => one.model)).toEqual(["ming-image-0-1-design"])
+    const listed = modelsForApp(imageApp(), []).map((one) => one.id)
+    for (const one of lacking) {
+      expect(listed).not.toContain(one.model)
+    }
+    expect(listed).toContain("z-image-turbo")
   })
 })

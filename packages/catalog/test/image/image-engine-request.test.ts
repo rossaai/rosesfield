@@ -1,4 +1,8 @@
-import { appDefinition, startRunBodyFor } from "@rosesfield/contract"
+import {
+  appDefinition,
+  type EngineBinding,
+  startRunBodyFor,
+} from "@rosesfield/contract"
 import {
   ComfyGenerationEngine,
   type EngineRequest,
@@ -6,6 +10,8 @@ import {
 } from "@rosesfield/generation"
 import { describe, expect, it } from "vitest"
 import { app } from "#image/app"
+import { sizesAt1k } from "#image/comfy/image-sizes"
+import { mingImage01Design } from "#image/comfy/open-weights"
 import { submitJob } from "./comfy-recordings"
 import { ReplayFetch } from "./replay-fetch"
 
@@ -18,11 +24,15 @@ type Body = {
   aspectRatio?: string
 }
 
-function requestFor(body: Body, seed: number | null): EngineRequest {
+function requestFor(
+  body: Body,
+  seed: number | null,
+  engine: EngineBinding = definition.engine
+): EngineRequest {
   const parsed = startRunBodyFor(definition).parse(body)
   return {
     idempotencyKey: key,
-    binding: resolveBinding(definition.engine, parsed.inputs),
+    binding: resolveBinding(engine, parsed.inputs),
     inputs: parsed.inputs,
     files: [],
     count: parsed.count,
@@ -137,7 +147,7 @@ describe("the engine request the Image binding produces", () => {
     }
   })
 
-  it("opens on Ming Image 0.1 Design and sends it the 1k size of 16:9 on the latent and on the sampling shift, with your prompt as you wrote it", async () => {
+  it("opens on Z-Image Turbo when the run names no model, at the 1k size of 16:9", async () => {
     const replay = new ReplayFetch([submitJob])
     const engine = new ComfyGenerationEngine({
       apiKey: "comfyui-test",
@@ -151,6 +161,35 @@ describe("the engine request the Image binding produces", () => {
           aspectRatio: "16:9",
         },
         5
+      )
+    )
+    expect(submission.models).toEqual([
+      "z_image_turbo_bf16.safetensors",
+      "qwen_3_4b.safetensors",
+      "ae.safetensors",
+    ])
+    expect(workflowOf(replay)).toMatchObject({
+      "13": { inputs: { width: 1360, height: 768, batch_size: 3 } },
+      "27": { inputs: { text: 'a poster that reads "Open late"' } },
+    })
+    expect(replay.unused()).toEqual([])
+  })
+
+  it("keeps the Ming Image 0.1 Design binding off the picker and ready, sending the 1k size of 16:9 on the latent and on the sampling shift, with your prompt as you wrote it", async () => {
+    const replay = new ReplayFetch([submitJob])
+    const engine = new ComfyGenerationEngine({
+      apiKey: "comfyui-test",
+      fetch: replay.fetch,
+    })
+    const submission = await engine.submit(
+      requestFor(
+        {
+          inputs: { prompt: 'a poster that reads "Open late"' },
+          count: 3,
+          aspectRatio: "16:9",
+        },
+        5,
+        mingImage01Design(sizesAt1k)
       )
     )
     expect(submission.models).toEqual([

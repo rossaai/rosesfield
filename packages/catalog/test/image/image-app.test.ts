@@ -62,9 +62,9 @@ function resolutionsAllowed(model: string): readonly string[] {
 }
 
 describe("the Image app", () => {
-  it("lists the models that make an image from text and opens on the Ming Image 0.1 Design graph", () => {
+  it("lists the models that make an image from text and opens on the Z-Image Turbo graph", () => {
     expect(appTasksOf(definition)).toEqual(["text-to-image"])
-    expect(defaultModelOf(definition)).toBe("ming-image-0-1-design")
+    expect(defaultModelOf(definition)).toBe("z-image-turbo")
     const opened = resolveBinding(definition.engine, {
       prompt: "a",
       resolution: "1k",
@@ -87,17 +87,16 @@ describe("the Image app", () => {
     ])
     const approved = body.parse({ inputs: { prompt: "a" } }).inputs
     const ran = resolveBinding(definition.engine, approved)
-    expect(published).toBe("ming-image-0-1-design")
+    expect(published).toBe("z-image-turbo")
     expect(approved.model).toBe(published)
     expect(hostedModelOf(ran)).toBeNull()
     expect(ran.adapter).toBe(comfyWorkflowAdapter)
     expect(defaultModelOf(definition)).toBe(published)
   })
 
-  it("keeps four open-weights graphs, Z-Image Turbo one choice after Ming, Qwen Image Edit 2511 for your references, and no FLUX.2 Klein 4B graph", () => {
+  it("keeps three open-weights graphs, Z-Image Turbo first and Qwen Image Edit 2511 for your references, keeps Ming's graph out of the picker and in the tree, and holds no FLUX.2 Klein 4B graph", () => {
     const graphs = modelsForApp(definition, []).map((model) => model.id)
     expect(graphs).toEqual([
-      "ming-image-0-1-design",
       "z-image-turbo",
       "qwen-image-2512",
       "qwen-image-edit-2511",
@@ -114,17 +113,17 @@ describe("the Image app", () => {
   })
 
   it("names each open-weights graph by its lab, with the line and the weights page of its model", () => {
-    const ming = modelsForApp(definition, []).find(
-      (model) => model.id === "ming-image-0-1-design"
+    const opened = modelsForApp(definition, []).find(
+      (model) => model.id === "z-image-turbo"
     )
-    expect(ming).toMatchObject({
+    expect(opened).toMatchObject({
       kind: "graph",
-      maker: "inclusionAI",
+      maker: "Alibaba Tongyi-MAI",
       facts: {
-        lab: "inclusionAI",
-        weights: "https://huggingface.co/inclusionAI/Ming-Image-0.1-Design",
-        lineKey: "image.model.mingImage01Design.line",
-        rank: { position: 45, size: 104 },
+        lab: "Alibaba Tongyi-MAI",
+        weights: "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo",
+        lineKey: "image.model.zImageTurbo.line",
+        rank: { position: 70, size: 104 },
       },
     })
   })
@@ -177,7 +176,6 @@ describe("the Image app", () => {
   })
 
   it("lets each model take only the resolutions it runs", () => {
-    expect(resolutionsAllowed("ming-image-0-1-design")).toEqual(["1k", "2k"])
     expect(resolutionsAllowed("z-image-turbo")).toEqual(["1k", "2k"])
     expect(resolutionsAllowed("qwen-image-2512")).toEqual(["1k"])
     const ask = (model: string, resolution: string) =>
@@ -219,7 +217,7 @@ describe("the Image app", () => {
         workflows.add(JSON.stringify(workflowOf(binding)))
       }
     }
-    expect(workflows.size).toBe(4)
+    expect(workflows.size).toBe(3)
   })
 
   it("edits up to 3 of your images on Qwen Image Edit 2511 with your words alone, each reference in its own slot", () => {

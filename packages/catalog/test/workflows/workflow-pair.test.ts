@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
@@ -123,8 +123,14 @@ function read(path: string): unknown {
 const workflows = listWorkflows()
 
 describe("each workflow pair in workflows/", () => {
-  it("lists every folder the sync wrote", () => {
-    expect(workflows.length).toBeGreaterThan(40)
+  it("lists every folder of workflows/ that holds an entry", () => {
+    const folders = readdirSync(`${root}workflows`, { withFileTypes: true })
+      .filter((one) => one.isDirectory())
+      .filter((one) => existsSync(`${root}workflows/${one.name}/entry.json`))
+      .map((one) => one.name)
+      .sort()
+    expect(folders.length).toBeGreaterThan(0)
+    expect(workflows.map((workflow) => workflow.id).sort()).toEqual(folders)
   })
 
   it.each(workflows.map((workflow) => ({ id: workflow.id, workflow })))(
