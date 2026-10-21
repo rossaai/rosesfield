@@ -4,9 +4,11 @@ import {
   fauxToolCall,
 } from "@earendil-works/pi-ai"
 import type { Asset } from "@rosesfield/contract"
+import { Run } from "@rosesfield/generation"
 import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
 import { Character } from "@rosesfield/library"
 import { afterEach, describe, expect, it } from "vitest"
+import { type RunWait, runWait } from "#infrastructure/pi-library-tools"
 import { FakeAssetRepository } from "../fake/fake-asset-repository"
 import { FakeCharacterRepository } from "../fake/fake-character-repository"
 import {
@@ -18,6 +20,7 @@ import {
   type Library,
   lastMessageOf,
   lastToolResultOf,
+  noWait,
   readAll,
   textOf,
 } from "../harness"
@@ -85,10 +88,11 @@ function echo(
 async function ask(
   generation: Generation,
   library: Library,
-  steps: FauxResponseStep[]
+  steps: FauxResponseStep[],
+  wait: RunWait = noWait
 ): Promise<string> {
   await rig?.close()
-  rig = agentFor(allToolsFor([imageApp()], generation, library))
+  rig = agentFor(allToolsFor([imageApp()], generation, library, wait))
   rig.faux.setResponses(steps)
   const { id } = await rig.agent.startConversation({ runApproval: "auto" })
   const events = await readAll(
@@ -166,30 +170,78 @@ describe("the library and run tools", () => {
     expect(read).toBe(`ok: ${JSON.stringify({ character: record })}`)
   })
 
-  it("reads the status of a run the agent started", async () => {
+  it("waits in one read_run call until the run ends, with no model call between", async () => {
     const library = await libraryWithOneOfEach()
     const generation = generationFor([imageApp()])
-    let runId = ""
-    const steps: FauxResponseStep[] = [
-      fauxAssistantMessage(
-        [fauxToolCall("sample-image", { inputs: { prompt: "a rose" } })],
-        { stopReason: "toolUse" }
-      ),
-      (context) => {
-        runId = JSON.parse(textOf(lastToolResultOf(context))).run.id
-        return fauxAssistantMessage([fauxToolCall("read_run", { runId })], {
-          stopReason: "toolUse",
-        })
-      },
-      (context) => fauxAssistantMessage(textOf(lastToolResultOf(context))),
-    ]
+    let waits = 0
+    const finishOnSecondWait: RunWait = async () => {
+      waits += 1
+      const [runId] = generation.jobs.enqueued
+      const stored =
+        runId === undefined ? null : await generation.runs.get(runId)
+      if (waits === 2 && stored !== null) {
+        const state = stored.toState()
+        await generation.runs.save(
+          Run.restore({
+            ...state,
+            record: {
+              ...state.record,
+              status: "done",
+              outputs: [assetId],
+              finishedAt: start.toISOString(),
+            },
+          })
+        )
+      }
+    }
 
-    const answer = await ask(generation, library, steps)
+    const answer = await ask(
+      generation,
+      library,
+      startThenReadRun(),
+      finishOnSecondWait
+    )
 
     expect(JSON.parse(answer).run).toMatchObject({
-      id: runId,
+      appId: "sample-image",
+      status: "done",
+      outputs: [assetId],
+    })
+    expect(waits).toBe(2)
+    expect(rig?.faux.state.callCount).toBe(3)
+  })
+
+  it("answers the run as it stands once the wait passes its time limit", async () => {
+    const library = await libraryWithOneOfEach()
+    const generation = generationFor([imageApp()])
+    let waited = 0
+    const countWait: RunWait = async (ms) => {
+      waited += ms
+    }
+
+    const answer = await ask(generation, library, startThenReadRun(), countWait)
+
+    expect(JSON.parse(answer).run).toMatchObject({
       appId: "sample-image",
       status: "queued",
     })
+    expect(waited).toBe(runWait.limitMs)
+    expect(rig?.faux.state.callCount).toBe(3)
   })
 })
+
+function startThenReadRun(): FauxResponseStep[] {
+  return [
+    fauxAssistantMessage(
+      [fauxToolCall("sample-image", { inputs: { prompt: "a rose" } })],
+      { stopReason: "toolUse" }
+    ),
+    (context) => {
+      const runId = JSON.parse(textOf(lastToolResultOf(context))).run.id
+      return fauxAssistantMessage([fauxToolCall("read_run", { runId })], {
+        stopReason: "toolUse",
+      })
+    },
+    (context) => fauxAssistantMessage(textOf(lastToolResultOf(context))),
+  ]
+}

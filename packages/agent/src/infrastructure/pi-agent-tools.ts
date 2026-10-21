@@ -1,14 +1,21 @@
-import type { ToolRegistration } from "@earendil-works/pi-durable"
+import {
+  defineExtension,
+  type Extension,
+  section,
+  type ToolRegistration,
+} from "@earendil-works/pi-durable"
 import { type ModelForm, publishedModelOf } from "@rosesfield/catalog/comfy"
 import type { AppDefinition } from "@rosesfield/contract"
 import type {
   ReadModelFormsHandler,
   StartRunHandler,
 } from "@rosesfield/generation"
+import { agentCopy } from "#copy.en"
 import { appTool } from "#infrastructure/pi-app-tool"
 import {
   type LibraryToolHandlers,
   libraryTools,
+  type RunWait,
 } from "#infrastructure/pi-library-tools"
 
 export type AgentToolHandlers = LibraryToolHandlers & {
@@ -21,10 +28,15 @@ export type AgentToolSet = {
   complete: boolean
 }
 
+export type AgentToolSource =
+  | readonly ToolRegistration[]
+  | (() => Promise<AgentToolSet>)
+
 type AgentToolsOptions = {
   apps: readonly AppDefinition[]
   handlers: () => AgentToolHandlers
   forms?: readonly ModelForm[]
+  wait?: RunWait
 }
 
 function openApps(apps: readonly AppDefinition[]): AppDefinition[] {
@@ -38,7 +50,7 @@ export function agentTools(options: AgentToolsOptions): ToolRegistration[] {
     ...openApps(options.apps).map((app) =>
       appTool(app, () => handlers().startRun, forms)
     ),
-    ...libraryTools(handlers),
+    ...libraryTools(handlers, options.wait),
   ]
 }
 
@@ -59,4 +71,22 @@ export function publishedAgentTools(
       complete: read.forms.length === new Set(models).size,
     }
   }
+}
+
+export function toolSourceOf(
+  source: AgentToolSource
+): () => Promise<AgentToolSet> {
+  if (typeof source === "function") {
+    return source
+  }
+  const tools = [...source]
+  return async () => ({ tools, complete: true })
+}
+
+export function extensionOf(tools: readonly ToolRegistration[]): Extension {
+  return defineExtension({
+    name: "rosesfield",
+    tools,
+    sections: [section("rosesfield", () => agentCopy.instructions)],
+  })
 }

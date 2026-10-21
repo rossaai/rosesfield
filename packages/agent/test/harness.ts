@@ -31,6 +31,7 @@ import {
   agentTools,
 } from "#infrastructure/pi-agent-tools"
 import { appTool } from "#infrastructure/pi-app-tool"
+import type { RunWait } from "#infrastructure/pi-library-tools"
 import type { PiModels } from "#infrastructure/pi-models"
 import { openSqliteFileStorage } from "#infrastructure/sqlite-file-storage"
 import { FakeAppCatalog } from "./fake/fake-app-catalog"
@@ -100,13 +101,16 @@ export function toolHandlersFor(
   }
 }
 
+export const noWait: RunWait = async () => undefined
+
 export function allToolsFor(
   apps: readonly AppDefinition[],
   generation: Generation,
-  library: Library
+  library: Library,
+  wait: RunWait = noWait
 ): ToolRegistration[] {
   const handlers = toolHandlersFor(generation, library)
-  return agentTools({ apps, handlers: () => handlers })
+  return agentTools({ apps, handlers: () => handlers, wait })
 }
 
 export function agentFor(

@@ -1,7 +1,4 @@
-import type {
-  AgentHarness,
-  AgentModelChoice,
-} from "#domain/agent-harness.port"
+import type { AgentHarness, AgentModelChoice } from "#domain/agent-harness.port"
 import { AgentModelMissingError } from "#domain/error/agent-model-missing.error"
 
 type ListAgentModelsHandlerOptions = {

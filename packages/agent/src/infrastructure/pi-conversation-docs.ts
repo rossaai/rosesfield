@@ -1,11 +1,14 @@
 import {
   defineDoc,
   defineDocFamily,
+  type Harness,
   type JsonObject,
   type ConversationId as PiConversationId,
 } from "@earendil-works/pi-durable"
 import type { RunInputs } from "@rosesfield/contract"
-import type { ProposalStatus, RunApproval } from "#agent.contract"
+import type { Conversation, ProposalStatus, RunApproval } from "#agent.contract"
+import { conversationIdFormat } from "#domain/conversation.id"
+import { backgroundContext } from "#infrastructure/pi-context"
 
 export type ListedConversation = {
   conversation: PiConversationId
@@ -70,3 +73,21 @@ export const proposalRecords = defineDocFamily<ProposalRecord, ProposalRecord>({
   family: true,
   initial: (seed) => ({ ...seed }),
 })
+
+export async function conversationOf(
+  harness: Harness,
+  id: string,
+  listed: ListedConversation
+): Promise<Conversation> {
+  const settings = await harness.snapshot(
+    conversationSettings,
+    listed.conversation,
+    backgroundContext
+  )
+  return {
+    id: conversationIdFormat.parse(id),
+    title: listed.title,
+    runApproval: settings?.runApproval ?? "ask",
+    createdAt: listed.createdAt,
+  }
+}

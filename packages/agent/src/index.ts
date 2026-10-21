@@ -96,13 +96,13 @@ export { ProposalNotFoundError } from "#domain/error/proposal-not-found.error"
 export { ProposalSettledError } from "#domain/error/proposal-settled.error"
 export { type ProposalId, proposalIdFormat } from "#domain/proposal.id"
 export {
-  type AgentToolSource,
   PiAgentHarness,
   type PiAgentHarnessOptions,
 } from "#infrastructure/pi-agent-harness"
 export {
   type AgentToolHandlers,
   type AgentToolSet,
+  type AgentToolSource,
   agentTools,
   publishedAgentTools,
 } from "#infrastructure/pi-agent-tools"

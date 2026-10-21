@@ -87,9 +87,7 @@ describe("the agent on a Comfy Router chat model", () => {
     expect(sent?.url).toBe(routerChatUrl())
     expect(sent?.url).toContain(`/v2/models/${routerChat.route}`)
     expect(sent?.headers.get("x-api-key")).toBe(comfyKey)
-    expect(sent?.headers.get("idempotency-key")).toMatch(
-      /^agent-[0-9a-f]{64}$/
-    )
+    expect(sent?.headers.get("idempotency-key")).toMatch(/^agent-[0-9a-f]{64}$/)
     expect(sent?.body.model).toBe(defaultChatModel)
     expect(sent?.body).not.toHaveProperty("stream")
     expect(sent?.body).not.toHaveProperty("stream_options")

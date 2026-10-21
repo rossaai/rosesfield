@@ -183,9 +183,13 @@ export function routerChatErrorOf(refusal: Refusal): ProjectError {
     : new AgentAnswerFailedError({ reason: errorType ?? `status ${status}` })
 }
 
+export function refusalTextOf(error: ProjectError): string {
+  return `${refusalMark}:${error.code}:${error.status}`
+}
+
 export function refusalResponse(error: ProjectError): Response {
   return Response.json(
-    { error: { message: `${refusalMark}:${error.code}:${error.status}` } },
+    { error: { message: refusalTextOf(error) } },
     { status: 400 }
   )
 }

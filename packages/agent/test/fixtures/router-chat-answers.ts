@@ -105,7 +105,7 @@ export function replayRouter(answers: readonly RouterAnswer[]): RouterReplay {
     }
     requests.push({
       url,
-      headers: new Headers(init?.headers),
+      headers: new Request(url, init).headers,
       body: bodySchema.parse(JSON.parse(String(init?.body ?? "{}"))),
     })
     return Response.json(answer.body, {

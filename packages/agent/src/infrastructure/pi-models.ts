@@ -1,6 +1,10 @@
 import { createModels, type Models } from "@earendil-works/pi-ai"
-import type { ModelRef } from "@earendil-works/pi-durable"
+import type {
+  ModelRef,
+  Conversation as PiConversation,
+} from "@earendil-works/pi-durable"
 import { AgentModelUnknownError } from "#domain/error/agent-model-unknown.error"
+import { backgroundContext } from "#infrastructure/pi-context"
 import type { Fetch } from "#infrastructure/router-chat-fetch"
 import {
   defaultChatModel,
@@ -46,4 +50,17 @@ export async function openPiModels(
     })
   }
   return { models, ref: { provider: model.provider, modelId: model.model } }
+}
+
+export async function useModel(
+  conversation: PiConversation,
+  model: ModelRef
+): Promise<void> {
+  const current = (await conversation.agent(backgroundContext)).model
+  if (
+    current?.provider !== model.provider ||
+    current.modelId !== model.modelId
+  ) {
+    await conversation.configure({ model }, backgroundContext)
+  }
 }
