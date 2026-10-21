@@ -13,7 +13,11 @@ type InputRow = { key: string; label: string; value: ReactNode }
 
 export type RunValues = Pick<Run, "inputs" | "seed" | "count" | "aspectRatio">
 
-export function CharacterName({ characterId }: { characterId: string }): ReactElement {
+export function CharacterName({
+  characterId,
+}: {
+  characterId: string
+}): ReactElement {
   const character = useQuery(characterQuery(characterId))
   if (character.data === undefined) {
     return <Skeleton className="h-s5 w-tile" />

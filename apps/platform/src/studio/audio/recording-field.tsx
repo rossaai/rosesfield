@@ -58,12 +58,7 @@ function NamingWell(props: InputFieldProps<AssetInput>): ReactElement {
   }
   return (
     <DeviceProvider device={device}>
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: the wrapper only reads the names of the files the well below takes */}
-      <div
-        className="contents"
-        onDropCapture={onDrop}
-        onPasteCapture={onPaste}
-      >
+      <div className="contents" onDropCapture={onDrop} onPasteCapture={onPaste}>
         <AssetField {...props} onChange={onChange} />
       </div>
     </DeviceProvider>

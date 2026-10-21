@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-  imageId,
-  maskId,
-  type Node,
-  requestFor,
-  submit,
-} from "./layers-comfy"
+import { imageId, maskId, type Node, requestFor, submit } from "./layers-comfy"
 
 type Workflow = Record<string, Node>
 
@@ -112,9 +106,7 @@ describe("the alpha a one-layer run puts back", () => {
     "control: the same $mode graph without the half step loses levels to the float rounding of the alpha path",
     async ({ body }) => {
       const { workflow } = await submit(requestFor(body))
-      expect(changedLevels(withoutHalfStep(workflow)).length).toBeGreaterThan(
-        0
-      )
+      expect(changedLevels(withoutHalfStep(workflow)).length).toBeGreaterThan(0)
     }
   )
 })
