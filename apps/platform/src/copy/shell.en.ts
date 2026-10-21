@@ -52,15 +52,15 @@ export const shellCopy = {
   "legal.privacy.title": "Privacy",
   "legal.privacy.line": "What Rosesfield keeps and for how long",
   "legal.privacy.scope":
-    "This page covers the Rosesfield the project hosts on Cloudflare. A copy you run on your own machine keeps your work on that machine.",
+    "This page covers the public Rosesfield the project hosts on Cloudflare, where each visitor brings their own Comfy key. A copy you run on your own machine keeps your work on that machine.",
   "legal.privacy.key.title": "Your Comfy key",
   "legal.privacy.key.body":
-    "Rosesfield sends your requests to Comfy with your key. Your key stays in this browser. Rosesfield never stores it and never writes it to a log.",
+    "Rosesfield sends your requests to Comfy with your key. This browser keeps your key and sends it with each request. Rosesfield's code never saves it and never writes it to a log.",
   "legal.privacy.kept.title": "What Rosesfield keeps",
   "legal.privacy.kept.account":
     "A hash of your Comfy account id, so your work stays with your account.",
   "legal.privacy.kept.work": "Your work, for 30 days after your last visit.",
-  "legal.privacy.kept.shared": "An output you share, for 90 days.",
+  "legal.privacy.kept.shared": "A result you share, for 90 days.",
   "legal.privacy.kept.where": "Rosesfield keeps these on Cloudflare.",
   "legal.privacy.cookie.title": "One cookie",
   "legal.privacy.cookie.body":
@@ -78,7 +78,7 @@ export const shellCopy = {
     "Rosesfield is open-source software under the MIT licence. It sends your requests to Comfy.",
   "legal.terms.runs.title": "Your Comfy account",
   "legal.terms.runs.body":
-    "Every run happens on your own Comfy account. Comfy's terms and each model maker's terms govern every run.",
+    "Each run happens on the Comfy account whose key it carries. Comfy's terms and each model maker's terms govern every run.",
   "legal.terms.runs.action": "Read Comfy's terms",
   "legal.terms.rights.title": "What you add and make",
   "legal.terms.rights.body":
@@ -89,10 +89,10 @@ export const shellCopy = {
   "legal.terms.warranty.body":
     "Rosesfield comes with no warranty, as its MIT licence says.",
   "legal.terms.warranty.action": "Read the MIT licence",
-  "legal.terms.removal.title": "Remove a shared output",
+  "legal.terms.removal.title": "Remove a shared result",
   "legal.terms.removal.body":
-    "To ask for a shared output to be removed, open an issue on GitHub.",
+    "To ask for a shared result to be removed, open an issue on GitHub.",
   "legal.terms.models.title": "Model licences",
   "legal.terms.models.body":
-    "Each workflow Rosesfield ships loads models under their own licences. Each licence sets what you may do with the outputs.",
+    "Each workflow Rosesfield ships loads models under their own licences. Each licence sets what you may do with the results.",
 } satisfies Record<string, string>

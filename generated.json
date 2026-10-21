@@ -76,7 +76,7 @@
     },
     {
       "path": "apps/platform/src/copy/app.en.ts",
-      "sha256": "c844ba7ab055528038599ec3474f10b4e80a3b1e80531851df53350dacc25d49"
+      "sha256": "abab6b62d7747555002d3c520d92037faf62f547db80d0ba6698e0ae61fbcde0"
     },
     {
       "path": "apps/platform/src/copy/characters.en.ts",
@@ -88,7 +88,7 @@
     },
     {
       "path": "apps/platform/src/copy/error.en.ts",
-      "sha256": "e7d179004e0bb44c34dad2ee939bdc06b5af4f9fa992c9db5045044f3ffcf581"
+      "sha256": "1751d5408fac1a4bb783666070982590efea10dd4744eedc40c6f50480779e77"
     },
     {
       "path": "apps/platform/src/copy/explore.en.ts",
@@ -104,7 +104,7 @@
     },
     {
       "path": "apps/platform/src/copy/key.en.ts",
-      "sha256": "84544f2c4bba218eee83afead1d061590982179896fad582880c33cc99f33ab6"
+      "sha256": "835dd4436234881ec175a8b508d2b8d4316bf25b4cb9fb168a96218335686a95"
     },
     {
       "path": "apps/platform/src/copy/library.en.ts",
@@ -116,7 +116,7 @@
     },
     {
       "path": "apps/platform/src/copy/shell.en.ts",
-      "sha256": "5e8a58e854f1ddf2d64ea99fc84e400f1e41b736b1f85e1f94bf473f17e88a74"
+      "sha256": "1e02336029a3e05153cf51798f20409eb415156367722f75f4ef604d0c288a56"
     },
     {
       "path": "apps/platform/src/copy/welcome.en.ts",
