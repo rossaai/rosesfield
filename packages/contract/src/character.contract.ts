@@ -2,10 +2,12 @@ import { z } from "zod"
 import { assetId, characterId } from "#id.contract"
 import { timestamp } from "#value.contract"
 
+export const characterReferenceMax = 16
+
 export const character = z.object({
   id: characterId,
   name: z.string().regex(/\S/).max(80),
-  references: z.array(assetId).min(1).max(16),
+  references: z.array(assetId).min(1).max(characterReferenceMax),
   notes: z.string().max(2000),
   createdAt: timestamp,
 })
