@@ -1,14 +1,9 @@
 import { run } from "@rosesfield/contract"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { assetQuery } from "@/api/queries"
 import { t } from "@/copy/t"
 import { RemakePair } from "@/studio/remake/remake-pair"
 
@@ -48,6 +43,7 @@ vi.mock("@/api/queries", async (original) => ({
       }
     },
     retry: false,
+    retryOnMount: false,
   }),
 }))
 
@@ -88,10 +84,14 @@ function doneRun(inputs: Record<string, unknown>) {
   })
 }
 
-function show(inputs: Record<string, unknown>): void {
+async function show(
+  inputs: Record<string, unknown>,
+  assets: readonly string[]
+): Promise<void> {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
+  await Promise.all(assets.map((id) => client.prefetchQuery(assetQuery(id))))
   render(
     <QueryClientProvider client={client}>
       <TooltipProvider>
@@ -109,10 +109,11 @@ afterEach(() => {
 
 describe("a finished Remake run in the canvas", () => {
   it("shows your reference and the output as tiles that play muted and loop", async () => {
-    show({ reference: [editId], character: [characterId] })
-    await waitFor(() =>
-      expect(document.querySelectorAll("video")).toHaveLength(2)
-    )
+    await show({ reference: [editId], character: [characterId] }, [
+      editId,
+      outputId,
+    ])
+    expect(document.querySelectorAll("video")).toHaveLength(2)
     for (const video of document.querySelectorAll("video")) {
       expect(video.loop).toBe(true)
       expect(video.muted).toBe(true)
@@ -123,10 +124,11 @@ describe("a finished Remake run in the canvas", () => {
   })
 
   it("opens each side in the viewer, where the output's sound plays", async () => {
-    show({ reference: [editId], character: [characterId] })
-    await waitFor(() =>
-      expect(document.querySelectorAll("video")).toHaveLength(2)
-    )
+    await show({ reference: [editId], character: [characterId] }, [
+      editId,
+      outputId,
+    ])
+    expect(document.querySelectorAll("video")).toHaveLength(2)
     const tiles = document.querySelectorAll<HTMLElement>(
       "button[data-slot='media-tile']"
     )
@@ -142,17 +144,18 @@ describe("a finished Remake run in the canvas", () => {
 
   it("offers Try again when your reference no longer loads, and still shows the output", async () => {
     store.missing.add(editId)
-    show({ reference: [editId], character: [characterId] })
-    await waitFor(() =>
-      expect(
-        screen.getByRole("button", { name: t("state.tryAgain") })
-      ).toBeDefined()
-    )
+    await show({ reference: [editId], character: [characterId] }, [
+      editId,
+      outputId,
+    ])
+    expect(
+      screen.getByRole("button", { name: t("state.tryAgain") })
+    ).toBeDefined()
     expect(document.querySelectorAll("video")).toHaveLength(1)
   })
 
-  it("falls back to the run's outputs when the run holds no reference", () => {
-    show({ character: [characterId] })
+  it("falls back to the run's outputs when the run holds no reference", async () => {
+    await show({ character: [characterId] }, [])
     expect(screen.getByText(`outputs of the run: ${outputId}`)).toBeDefined()
     expect(document.querySelectorAll("video")).toHaveLength(0)
   })
