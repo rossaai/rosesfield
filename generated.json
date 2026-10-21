@@ -164,7 +164,7 @@
     },
     {
       "path": "packages/catalog/src/image/copy.en.ts",
-      "sha256": "2ad6f320aff1bf6f92134ab1354e553924ddfa856c9d91b0da122aa5c78b13b4"
+      "sha256": "2e7d0f4f4e37d467a2d904c9f8427a37a4b921c96e1c5439f59b75b8b1b15cd8"
     },
     {
       "path": "packages/catalog/src/layers/copy.en.ts",

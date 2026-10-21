@@ -40,6 +40,20 @@ export function zImageTurbo(table: SizeTable): EngineBinding {
   })
 }
 
+export function mingImage01Design(table: SizeTable): EngineBinding {
+  return workflowBinding({
+    workflow: "image-ming-image-0-1-design",
+    bindings: [
+      ...shared,
+      ...sizeBindings(
+        table,
+        ["width", "samplingWidth"],
+        ["height", "samplingHeight"]
+      ),
+    ],
+  })
+}
+
 export function qwenImage2512(table: SizeTable): EngineBinding {
   return workflowBinding({
     workflow: "image-qwen-image-2512",

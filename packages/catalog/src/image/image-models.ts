@@ -6,6 +6,7 @@ import {
   sizesAt2k,
 } from "#image/comfy/image-sizes"
 import {
+  mingImage01Design,
   qwenImage2512,
   qwenImageEdit2511,
   zImageTurbo,
@@ -23,6 +24,12 @@ export type ImageModel = {
 }
 
 export const imageModels: readonly ImageModel[] = [
+  {
+    value: "ming-image-0-1-design",
+    labelKey: "image.model.mingImage01Design",
+    sizes: { "1k": sizesAt1k, "2k": sizesAt2k },
+    bind: mingImage01Design,
+  },
   {
     value: "z-image-turbo",
     labelKey: "image.model.zImageTurbo",
@@ -47,7 +54,7 @@ export const referenceModel = "qwen-image-edit-2511"
 
 export const firstModel = "bfl/flux-3-image"
 
-export const defaultModel = "z-image-turbo"
+export const defaultModel = "ming-image-0-1-design"
 
 export const defaultResolution: ResolutionValue = "1k"
 

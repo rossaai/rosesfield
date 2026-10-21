@@ -1,0 +1,57 @@
+{
+  "name": "image-ming-image-0-1-design",
+  "title": "Image: text to image with Ming Image 0.1 Design",
+  "description": "Makes up to 4 images from a prompt with Ming Image 0.1 Design in 12 steps. Built from Comfy's template image_ming_image_01_design_t2i.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "ming_image_0.1_design_int8_convrot.safetensors",
+    "ming_image_0.1_ling_mini_2.0_int8_convrot.safetensors",
+    "ming_image_vae_bf16.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "prompt": {
+      "nodeId": "40",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "26",
+      "inputName": "noise_seed",
+      "type": "scalar"
+    },
+    "count": {
+      "nodeId": "41",
+      "inputName": "batch_size",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "41",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "41",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "samplingWidth": {
+      "nodeId": "42",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "samplingHeight": {
+      "nodeId": "42",
+      "inputName": "height",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "84",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}
