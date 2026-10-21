@@ -4,7 +4,11 @@ import {
   type EngineRequest,
   resolveBinding,
 } from "@rosesfield/generation"
-import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
+import {
+  appIdFormat,
+  assetIdFormat,
+  characterIdFormat,
+} from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { mingImage01Design } from "#image/comfy/open-weights"
 import { listWorkflows } from "#list-workflows"
@@ -304,7 +308,7 @@ describe("the keyframe facts beside the graph Storyboard sends", () => {
       const body = bodyOf(3, extra)
       const { workflow } = await submit(body, 9)
       const facts = keyframesOf({
-        appId: "storyboard",
+        appId: appIdFormat.parse("storyboard"),
         inputs: startRunBodyFor(definition).parse(body).inputs,
         count: 3,
         seed: 9,

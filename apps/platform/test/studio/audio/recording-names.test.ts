@@ -1,3 +1,4 @@
+import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import {
   addedRecordingOf,
@@ -5,8 +6,8 @@ import {
   RecordingNames,
 } from "@/studio/audio/recording-names"
 
-const first = "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c01"
-const second = "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c02"
+const first = assetIdFormat.parse("0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c01")
+const second = assetIdFormat.parse("0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c02")
 
 function wav(name: string, bytes: number): File {
   return new File([new Uint8Array(bytes)], name, { type: "audio/wav" })

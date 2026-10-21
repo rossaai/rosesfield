@@ -1,4 +1,8 @@
-import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
+import {
+  appIdFormat,
+  assetIdFormat,
+  characterIdFormat,
+} from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { storyboardCopy } from "#storyboard/copy.en"
 import {
@@ -7,9 +11,7 @@ import {
   keyframesOf,
 } from "#storyboard/keyframe-facts"
 
-const referenceId = assetIdFormat.parse(
-  "1e3a5c7e-9b2d-4f6a-8c0e-2b4d6f8a0c1e"
-)
+const referenceId = assetIdFormat.parse("1e3a5c7e-9b2d-4f6a-8c0e-2b4d6f8a0c1e")
 const characterId = characterIdFormat.parse(
   "4c6e8a0c-2e4a-4b6c-9d0e-6a8c0e2a4c6e"
 )
@@ -39,7 +41,7 @@ function runOf(
     inputs[`scene${index + 1}`] = scene
   })
   return {
-    appId: "storyboard",
+    appId: appIdFormat.parse("storyboard"),
     inputs,
     count,
     seed,
@@ -103,7 +105,7 @@ describe("the facts of each Storyboard keyframe", () => {
   })
 
   it("finds no keyframe in a run of another app", () => {
-    const run = { ...runOf(3, {}), appId: "image" }
+    const run = { ...runOf(3, {}), appId: appIdFormat.parse("image") }
     expect(keyframesOf(run)).toEqual([])
     expect(keyframeOf(run, outputs[0] ?? "")).toBeNull()
   })
