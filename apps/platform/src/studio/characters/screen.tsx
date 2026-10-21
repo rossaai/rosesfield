@@ -16,6 +16,8 @@ import {
 } from "react"
 import { runQuery } from "@/api/queries"
 import { tCatalog } from "@/copy/t"
+import { useAppRuns } from "@/screens/app/app-canvas"
+import { valuesFromRun } from "@/screens/app/app-form"
 import { AppHeader } from "@/screens/app/app-header"
 import {
   AddInputsButton,
@@ -23,14 +25,21 @@ import {
   useSheetOpen,
 } from "@/screens/app/column-frame"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
-import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
+import {
+  type HostedState,
+  useHostedModel,
+} from "@/screens/app/hosted/use-hosted-model"
+import { usePriceRefresh } from "@/screens/app/hosted/use-price-refresh"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
-import type { AppForm } from "@/screens/app/use-app-form"
+import {
+  type AppForm,
+  type FormCheck,
+  useAppForm,
+} from "@/screens/app/use-app-form"
 import {
   type AppScreenState,
   type AppSeeds,
   noSeeds,
-  useAppScreen,
 } from "@/screens/app/use-app-screen"
 import type { StartRun } from "@/screens/app/use-start-run"
 import { ModeCanvas } from "@/studio/characters/mode-canvas"
@@ -80,27 +89,38 @@ function useModeScreen(
   onStarted: () => void
 ): ModeScreen {
   const listing = useMemo(() => listingFor(app, mode), [app, mode])
-  const state = useAppScreen(listing, seeds, onStarted)
+  const check = useRef<FormCheck | null>(null)
+  const form = useAppForm(listing, seeds, check)
+  const runs = useAppRuns(listing)
+  const listed = useHostedModel(listing, form, runs.runs)
+  usePriceRefresh(listing.id, runs.runs)
   const traits = useTraitsModel(
     listing,
-    state.form,
-    mode === "traits" ? state.hosted : undefined
+    form,
+    mode === "traits" ? listed : undefined
   )
-  const hosted = mode === "traits" ? traits : state.hosted
-  useFixedCount(listing, state.form, (hosted?.fields ?? null) !== null)
-  const start = useCharactersStart(listing, state, hosted, () => onStarted())
-  return {
-    listing,
-    state,
-    hosted,
-    start,
-    onShortcut: (event) => {
-      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault()
-        start.generate()
-      }
-    },
+  const hosted = mode === "traits" ? traits : listed
+  useFixedCount(listing, form, (hosted?.fields ?? null) !== null)
+  const start = useCharactersStart(listing, form, hosted, mode, () =>
+    onStarted()
+  )
+  check.current = start.check
+  const onShortcut = (event: KeyboardEvent<HTMLElement>): void => {
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault()
+      start.generate()
+    }
   }
+  const state: AppScreenState = {
+    form,
+    start,
+    hosted: listed,
+    lastSeed: runs.runs.find((run) => run.seed !== null)?.seed ?? null,
+    hasRuns: runs.isPending ? null : runs.runs.length > 0,
+    useInputs: (run) => form.fill(valuesFromRun(listing, run)),
+    onShortcut,
+  }
+  return { listing, state, hosted, start, onShortcut }
 }
 
 function ModePanel({

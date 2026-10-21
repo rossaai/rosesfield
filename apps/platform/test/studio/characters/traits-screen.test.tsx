@@ -146,9 +146,13 @@ function creditsOf(model: unknown): number {
   return model === anglesEdit.id ? viewCredits : graphCredits
 }
 
-type Call = { url: string; method: string; body: unknown }
+type Call = { url: string; method: string; body: unknown; key: string }
 
 const calls: Call[] = []
+
+type RunAnswer = (call: Call) => Response | null
+
+let answerRun: RunAnswer = () => null
 
 function bodyOf(init?: { body?: unknown }): unknown {
   return typeof init?.body === "string" ? JSON.parse(init.body) : null
@@ -164,14 +168,41 @@ function modelOf(body: unknown): unknown {
     : undefined
 }
 
+function keyOf(init?: { headers?: unknown }): string {
+  const headers = init?.headers
+  if (typeof headers !== "object" || headers === null) {
+    return ""
+  }
+  const key = Object.entries(headers).find(
+    ([name]) => name === "Idempotency-Key"
+  )?.[1]
+  return typeof key === "string" ? key : ""
+}
+
 function stubGateway(): void {
   calls.length = 0
+  answerRun = () => null
   vi.stubGlobal(
     "fetch",
-    (input: unknown, init?: { method?: string; body?: unknown }) => {
+    (
+      input: unknown,
+      init?: { method?: string; body?: unknown; headers?: unknown }
+    ) => {
       const url = String(input)
       const body = bodyOf(init)
-      calls.push({ url, method: init?.method ?? "GET", body })
+      const call = {
+        url,
+        method: init?.method ?? "GET",
+        body,
+        key: keyOf(init),
+      }
+      calls.push(call)
+      const answer = url.endsWith(`/api/apps/${characters.id}/runs`)
+        ? answerRun(call)
+        : null
+      if (answer !== null) {
+        return Promise.resolve(answer)
+      }
       if (url.endsWith(`/api/apps/${characters.id}/price`)) {
         const credits = creditsOf(modelOf(body))
         return Promise.resolve(
@@ -189,7 +220,7 @@ function stubGateway(): void {
 function openCharacters(
   seeds: AppSeeds = noSeeds,
   prime: (client: QueryClient) => void = () => undefined
-): void {
+): QueryClient {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, staleTime: Number.POSITIVE_INFINITY },
@@ -223,6 +254,7 @@ function openCharacters(
       <RouterProvider router={router} />
     </QueryClientProvider>
   )
+  return client
 }
 
 function pricedName(credits: number): string {
@@ -417,31 +449,51 @@ describe("the random button", () => {
   })
 })
 
-function openAngles(): void {
-  const shown = run.parse({
-    id: anglesRunId,
+type AnglesOpen = { model?: CatalogModel; isCharacterRead?: boolean }
+
+function anglesRunOf(id: string, model: CatalogModel) {
+  return run.parse({
+    id,
     appId: characters.id,
-    status: "done",
+    status: "queued",
     inputs: {
       mode: "angles",
-      model: anglesEdit.id,
-      character: [characterId],
+      model: model.id,
       angleSet: "turnaround",
     },
     count: 1,
     aspectRatio: null,
     seed: null,
-    outputs: photos.slice(0, 1),
+    outputs: [],
     progress: null,
     engine: { adapter: "comfy-task", models: [], workflowHash: null },
     cost: null,
     origin: "live",
     failure: null,
     createdAt: "2026-10-17T10:00:00.000Z",
+    finishedAt: null,
+  })
+}
+
+function openAngles(open: AnglesOpen = {}): QueryClient {
+  const model = open.model ?? anglesEdit
+  const shown = run.parse({
+    ...anglesRunOf(anglesRunId, model),
+    status: "done",
+    inputs: {
+      mode: "angles",
+      model: model.id,
+      character: [characterId],
+      angleSet: "turnaround",
+    },
+    outputs: photos.slice(0, 1),
     finishedAt: "2026-10-17T10:00:03.000Z",
   })
-  openCharacters({ use: undefined, from: anglesRunId }, (client) => {
+  return openCharacters({ use: undefined, from: anglesRunId }, (client) => {
     client.setQueryData(runQuery(anglesRunId).queryKey, { run: shown })
+    if (open.isCharacterRead === false) {
+      return
+    }
     client.setQueryData(characterQuery(characterId).queryKey, {
       character: {
         id: characterId,
@@ -454,8 +506,33 @@ function openAngles(): void {
   })
 }
 
+function priceCalls(): Call[] {
+  return calls.filter((call) =>
+    call.url.endsWith(`/api/apps/${characters.id}/price`)
+  )
+}
+
+const viewRunIds = [
+  "6a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c01",
+  "6a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c02",
+  "6a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c03",
+  "6a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c04",
+]
+
+function json(status: number, body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  })
+}
+
+function viewOf(call: Call): number {
+  const found = /-view-(\d)$/.exec(call.key)
+  return found === null ? 0 : Number(found[1])
+}
+
 describe("the angles of Characters on a hosted image edit model", () => {
-  it("price the set at 4 times one view on Generate, and start one run per view, each with the character's photos", async () => {
+  it("price the set at 4 times one view on Generate, and start one run per view, each with the character's photos and the angles mode", async () => {
     openAngles()
     const generate = await screen.findByRole("button", {
       name: pricedName(viewCredits * 4),
@@ -470,11 +547,85 @@ describe("the angles of Characters on a hosted image edit model", () => {
     for (const body of bodies) {
       expect(body).toEqual({
         inputs: {
+          mode: "angles",
           model: anglesEdit.id,
           prompt: promptOf(body),
           input_images: photos,
         },
       })
     }
+  })
+
+  it("ask the price of the set once per edit, with no second price request of the plain app form", async () => {
+    openAngles()
+    await screen.findByRole("button", { name: pricedName(viewCredits * 4) })
+    const hosted = priceCalls().filter(
+      (call) => modelOf(call.body) === anglesEdit.id
+    )
+    expect(hosted).toHaveLength(1)
+    expect(promptOf(hosted[0]?.body)).toBe(anglePromptsOf("turnaround")[0])
+  })
+
+  it("key each view from one key per press and keep each view that starts, so a refused view leaves the started ones in hand and a second press replays them", async () => {
+    answerRun = (call) => {
+      const view = viewOf(call)
+      if (view === 2) {
+        return json(400, { error: { code: "RUN_INPUT_INVALID", status: 400 } })
+      }
+      const id = viewRunIds[view - 1]
+      return id === undefined
+        ? null
+        : json(202, { run: anglesRunOf(id, anglesEdit) })
+    }
+    const client = openAngles()
+    const generate = await screen.findByRole("button", {
+      name: pricedName(viewCredits * 4),
+    })
+    fireEvent.click(generate)
+    await vi.waitFor(() => expect(startedBodies()).toHaveLength(4))
+    const first = calls.filter((call) => viewOf(call) > 0)
+    expect(first.map(viewOf).sort()).toEqual([1, 2, 3, 4])
+    const presses = new Set(
+      first.map((call) => call.key.replace(/-view-\d$/, ""))
+    )
+    expect(presses.size).toBe(1)
+    expect([...presses][0]).toMatch(/^[0-9a-f-]{36}$/)
+    await vi.waitFor(() =>
+      expect(client.getQueryData(["run", viewRunIds[0]])).toBeDefined()
+    )
+    expect(client.getQueryData(["run", viewRunIds[2]])).toBeDefined()
+    expect(
+      await screen.findByText(t("error.RUN_INPUT_INVALID.title"), {
+        exact: false,
+      })
+    ).toBeDefined()
+    fireEvent.click(
+      screen.getByRole("button", { name: pricedName(viewCredits * 4) })
+    )
+    await vi.waitFor(() => expect(startedBodies()).toHaveLength(8))
+    const again = calls.filter((call) => viewOf(call) > 0).slice(4)
+    expect(again.map((call) => call.key).sort()).toEqual(
+      first.map((call) => call.key).sort()
+    )
+  })
+
+  it("name the next step when the picked model takes no photo, and start no run", async () => {
+    openAngles({ model: counted })
+    const generate = await screen.findByRole("button", {
+      name: t("run.generate"),
+    })
+    fireEvent.click(generate)
+    expect(await screen.findByText(t("field.choice.required"))).toBeDefined()
+    expect(startedBodies()).toEqual([])
+  })
+
+  it("keep Generate waiting while the character's photos load, and start no run", async () => {
+    openAngles({ isCharacterRead: false })
+    const generate = await screen.findByRole("button", {
+      name: t("run.generate"),
+    })
+    expect(generate.getAttribute("aria-busy")).toBe("true")
+    fireEvent.click(generate)
+    expect(startedBodies()).toEqual([])
   })
 })

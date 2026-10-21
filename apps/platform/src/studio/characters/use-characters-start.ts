@@ -1,4 +1,9 @@
-import { type HostedRun, hostedRunsOf } from "@rosesfield/catalog/characters"
+import {
+  anglesGapOf,
+  type HostedRun,
+  hostedRunsOf,
+  type Mode,
+} from "@rosesfield/catalog/characters"
 import type { ModelField } from "@rosesfield/catalog/comfy"
 import {
   type AppListing,
@@ -7,158 +12,197 @@ import {
   routes,
 } from "@rosesfield/contract"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useRef } from "react"
 import { callRoute } from "@/api/call-route"
-import { characterQuery } from "@/api/queries"
-import { formatNumber } from "@/copy/format"
-import { t } from "@/copy/t"
+import { characterQuery, settingsQuery } from "@/api/queries"
 import { storeRun } from "@/pieces/run/run-actions"
-import { bodyOf, type StartRunBodyInput } from "@/screens/app/app-form"
+import {
+  bodyOf,
+  type FieldProblem,
+  type FormValues,
+  heldProblemsOf,
+  type StartRunBodyInput,
+} from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
-import { hostedProblems } from "@/screens/app/hosted/hosted-form"
-import { priceQuery } from "@/screens/app/hosted/model-catalog-query"
-import { useDebounced } from "@/screens/app/hosted/use-debounced"
+import {
+  hostedProblems,
+  modelInputName,
+} from "@/screens/app/hosted/hosted-form"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
-import type { AppScreenState } from "@/screens/app/use-app-screen"
-import type { StartRun } from "@/screens/app/use-start-run"
-import { characterInput } from "@/studio/characters/mode-listing"
+import type { AppForm, FormCheck } from "@/screens/app/use-app-form"
+import {
+  priceLabelsOf,
+  type StartRun,
+  usePrice,
+} from "@/screens/app/use-start-run"
+import { characterInput, modeField } from "@/studio/characters/mode-listing"
 
-type Started = { body: StartRunBodyInput; key: string }
+export type CharactersStart = StartRun & { check: FormCheck }
 
-const priceDelayMs = 300
+type Photos = { photos: Character["references"]; isLoading: boolean }
+
+type Press = { signature: string; key: string }
+
+const viewKey = "-view-"
 
 function useCharacterPhotos(
-  hosted: HostedState | undefined,
-  state: AppScreenState
-): Character["references"] {
-  const [characterId] = listOf(state.form.values.inputs[characterInput])
-  const isHosted = (hosted?.fields ?? null) !== null
+  fields: readonly ModelField[] | null,
+  form: AppForm,
+  mode: Mode
+): Photos {
+  const [characterId] = listOf(form.values.inputs[characterInput])
+  const isAsked =
+    fields !== null && mode === "angles" && characterId !== undefined
   const found = useQuery({
     ...characterQuery(characterId ?? ""),
-    enabled: isHosted && characterId !== undefined,
+    enabled: isAsked,
   })
-  return found.data?.character.references ?? []
+  return {
+    photos: found.data?.character.references ?? [],
+    isLoading: isAsked && found.isPending,
+  }
 }
 
-function hostedRunsFor(
-  fields: readonly ModelField[],
-  state: AppScreenState,
+type ModeRuns = {
+  fields: readonly ModelField[] | null
+  mode: Mode
   photos: Character["references"]
-): HostedRun[] {
-  const { values } = state.form
-  return hostedRunsOf(fields, values.inputs, { photos, count: values.count })
 }
 
-function isStartable(
+function runsOf(values: FormValues, of: ModeRuns): HostedRun[] | null {
+  if (of.fields === null) {
+    return null
+  }
+  const inputs = { ...values.inputs, [modeField]: of.mode }
+  return hostedRunsOf(of.fields, inputs, {
+    photos: of.photos,
+    count: values.count,
+  })
+}
+
+function problem(name: string, key: FieldProblem["key"]): FieldProblem {
+  return { name, key, values: {} }
+}
+
+function runProblems(
   fields: readonly ModelField[],
-  state: AppScreenState,
+  values: FormValues,
   runs: readonly HostedRun[]
-): boolean {
-  return (
-    runs.length > 0 &&
-    runs.every(
-      (run) =>
-        hostedProblems(fields, { ...state.form.values, inputs: run.inputs })
-          .length === 0
-    )
+): FieldProblem[] {
+  return runs.flatMap((run) =>
+    hostedProblems(fields, { ...values, inputs: run.inputs })
   )
 }
 
-function useSetPrice(
-  app: AppListing,
-  runs: readonly HostedRun[] | null,
-  keyState: string
-): string | null {
-  const [first] = runs ?? []
-  const isSet = runs !== null && runs.length > 1 && first !== undefined
-  const ask = useDebounced(isSet ? first : null, priceDelayMs)
-  const query = useQuery({
-    ...priceQuery(app.id, ask ?? { inputs: {} }, keyState),
-    enabled: ask !== null,
-  })
-  const price = query.data?.price
-  return !isSet || price === undefined || price.source === "unknown"
-    ? null
-    : formatNumber(price.credits * (runs?.length ?? 1))
+function anglesProblems(
+  fields: readonly ModelField[],
+  photos: Character["references"]
+): FieldProblem[] {
+  const gap = anglesGapOf(fields, photos)
+  if (gap === "model") {
+    return [problem(modelInputName, "field.choice.required")]
+  }
+  return gap === "character"
+    ? [problem(characterInput, "field.character.required")]
+    : []
 }
 
-function pricedStart(
-  start: StartRun,
-  amount: string | null,
-  isSet: boolean
-): Pick<StartRun, "price" | "priceValue" | "priceName"> {
-  if (!isSet) {
-    return {
-      price: start.price,
-      priceValue: start.priceValue ?? null,
-      priceName: start.priceName ?? null,
-    }
+function checkOf(app: AppListing, of: ModeRuns): FormCheck {
+  const { fields } = of
+  if (fields === null) {
+    return (values) => heldProblemsOf(app, values)
   }
-  return amount === null
-    ? { price: t("run.price.unknown"), priceValue: null, priceName: null }
-    : {
-        price: "",
-        priceValue: amount,
-        priceName: t("run.generate.priced", { amount }),
-      }
+  return (values) => {
+    const runs = runsOf(values, of) ?? []
+    const gaps = of.mode === "angles" ? anglesProblems(fields, of.photos) : []
+    return gaps.length > 0 ? gaps : runProblems(fields, values, runs)
+  }
+}
+
+function keyOf(press: Press, index: number, total: number): string {
+  return total === 1 ? press.key : `${press.key}${viewKey}${index + 1}`
 }
 
 export function useCharactersStart(
   app: AppListing,
-  state: AppScreenState,
+  form: AppForm,
   hosted: HostedState | undefined,
+  mode: Mode,
   onStarted: (run: Run) => void
-): StartRun {
+): CharactersStart {
   const client = useQueryClient()
-  const photos = useCharacterPhotos(hosted, state)
+  const settings = useQuery(settingsQuery)
   const fields = hosted?.fields ?? null
-  const runs = fields === null ? null : hostedRunsFor(fields, state, photos)
-  const isSet = runs !== null && runs.length > 1
-  const amount = useSetPrice(app, runs, hosted?.keyState ?? "unknown")
+  const { photos, isLoading } = useCharacterPhotos(fields, form, mode)
+  const of: ModeRuns = { fields, mode, photos }
+  const runs = runsOf(form.values, of)
+  const bodies: readonly StartRunBodyInput[] = runs ?? [
+    bodyOf(app, form.values),
+  ]
+  const [first] = bodies
+  const credits = usePrice(
+    app,
+    first ?? null,
+    hosted?.keyState ?? settings.data?.engine.key ?? "unknown"
+  )
+  const pressed = useRef<Press | null>(null)
   const start = useMutation({
-    mutationFn: (started: readonly Started[]) =>
-      Promise.all(
-        started.map(
-          async ({ body, key }) =>
-            (
-              await callRoute(routes.startRun, {
-                params: { appId: app.id },
-                body,
-                idempotencyKey: key,
-              })
-            ).run
-        )
-      ),
-    onSuccess: (made) => {
-      for (const run of made) {
-        storeRun(client, run)
+    mutationFn: async (press: {
+      key: Press
+      bodies: readonly StartRunBodyInput[]
+    }) => {
+      let isFirst = true
+      const made = await Promise.all(
+        press.bodies.map(async (body, index) => {
+          const { run } = await callRoute(routes.startRun, {
+            params: { appId: app.id },
+            body,
+            idempotencyKey: keyOf(press.key, index, press.bodies.length),
+          })
+          storeRun(client, run)
+          if (isFirst) {
+            isFirst = false
+            onStarted(run)
+          }
+          return run
+        })
+      )
+      if (pressed.current === press.key) {
+        pressed.current = null
       }
-      const [first] = made
-      if (first !== undefined) {
-        onStarted(first)
-      }
+      return made
     },
   })
+  const pressOf = (sent: readonly StartRunBodyInput[]): Press => {
+    const signature = JSON.stringify(sent)
+    if (pressed.current?.signature !== signature) {
+      pressed.current = { signature, key: crypto.randomUUID() }
+    }
+    return pressed.current
+  }
   const generate = (): void => {
-    if (start.isPending) {
+    if (start.isPending || isLoading) {
       return
     }
     if (fields === null || runs === null) {
-      if (state.form.validate()) {
-        const body = bodyOf(app, state.form.values)
-        start.mutate([{ body, key: crypto.randomUUID() }])
+      if (form.validate()) {
+        start.mutate({ key: pressOf(bodies), bodies })
       }
       return
     }
-    if (!isStartable(fields, state, runs)) {
-      state.form.validate()
+    const problems = runProblems(fields, form.values, runs)
+    if (runs.length === 0 || problems.length > 0) {
+      form.validate()
       return
     }
-    start.mutate(runs.map((body) => ({ body, key: crypto.randomUUID() })))
+    start.mutate({ key: pressOf(bodies), bodies })
   }
+  const total = credits === null ? null : credits * bodies.length
   return {
-    ...pricedStart(state.start, amount, isSet),
+    ...priceLabelsOf(total, settings.data?.engine.origin === "demo"),
     generate,
-    isPending: start.isPending,
+    isPending: start.isPending || isLoading,
     error: start.error,
+    check: checkOf(app, of),
   }
 }
