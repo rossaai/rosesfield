@@ -29,7 +29,7 @@ The commands in this README ran on macOS with bun 1.4.3 and Node 24.11.1 on 2026
 - **The catalog.** It holds 20 apps. A gateway test starts each one through its API route on the demo engine. The MCP endpoint lists 20 app tools and 3 library tools.
 - **The engine adapters.** One speaks the Comfy API v2 and one speaks RunPod Serverless. Their tests replay responses written from the published specs. For each engine target below, the server starts and reports that target.
 - **Public mode.** The server keeps no key of its own, and each visitor brings theirs. It refuses to start with an engine key, an agent key or an owner token set. Its tests pass.
-- **The agent.** It runs apps for you on the open-weights model you name, and it can propose a run for you to accept or skip. Its tests run against a fake OpenAI-compatible endpoint.
+- **The agent.** It runs apps for you on a Comfy Router chat model with your Comfy key, and it can propose a run for you to accept or skip. Its tests replay hand-written Router answers. No live turn has run yet.
 - **The workflows.** `workflows/` holds 51 ComfyUI workflows, each with an API file, a UI file, an `entry.json` and a README. A catalog test reads every pair. A second catalog test refuses an app binding that is not a ComfyUI workflow, or that uses a partner node it lists. Reading the 138 node class names in the API files shows no partner node. List the `class_type` values to check.
 - **First light.** `scripts/first-light/` sends each workflow once to the engine you name. It refuses to start without a key, and its tests replay Comfy and RunPod responses written from the published specs.
 - **The gate.** `bun run gate` passes on a clean install.
@@ -306,12 +306,7 @@ A node pack is code, not weights. Each workflow that needs one pins it at a full
 
 ### The agent's model
 
-The agent uses the model you name, with your own key. Rosesfield ships none. The server accepts any OpenAI-compatible endpoint, so the choice of an open-weights model is yours.
-
-| Model | Where it runs | Licence | Link |
-|---|---|---|---|
-| GLM-5.3-Flash | Workers AI as `@cf/zai-org/glm-5.3-flash`. The server picks it when you select Workers AI and name no model. Any OpenAI-compatible endpoint can serve it. | MIT | [Hugging Face](https://huggingface.co/zai-org/GLM-5.3-Flash), [Workers AI](https://developers.cloudflare.com/workers-ai/models/glm-5.3-flash/) |
-| Qwen3.8-27B | On your machine, behind an OpenAI-compatible server such as Ollama, per [docs/stack.md](docs/stack.md) §The agent's model. | Apache-2.0 | [Hugging Face](https://huggingface.co/Qwen/Qwen3.8-27B) |
+The agent uses a chat model of the Comfy Router, with your Comfy key. Rosesfield ships no model. You choose one in Agent from the Router chat models that take tools, per [docs/stack.md](docs/stack.md) §The agent's model. Each model's licence is its maker's.
 
 ## Licence
 

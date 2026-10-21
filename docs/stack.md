@@ -37,7 +37,7 @@ Refused because only pre-releases exist: Hono 5, Drizzle 1.0, @cloudflare/vite-p
 | assets | a folder on disk | R2 |
 | run watcher | a timer over the runs table | a Durable Object alarm per run |
 | agent | pi-durable over a SQLite file | `PiHarness` over the Durable Object's SQLite |
-| agent's model | any OpenAI-compatible endpoint, per §The agent's model | Workers AI through the `AI` binding, or an OpenAI-compatible endpoint on the internet |
+| agent's model | a Comfy Router chat model, per §The agent's model | a Comfy Router chat model, per §The agent's model |
 | engine | any target in §Engine targets | any target with an address on the internet. A ComfyUI on your own `127.0.0.1` is out of its reach |
 
 D1 has no interactive transactions. Multi-row writes use `db.batch` on both runtimes.
@@ -226,30 +226,20 @@ A value from `@earendil-works/pi-ai` is imported from the file that defines it, 
 
 ### The agent's model
 
-The agent runs whatever `AGENT_BASE_URL`, `AGENT_MODEL` and `AGENT_API_KEY` name. On Workers AI alone, an unset `AGENT_MODEL` falls back to `@cf/zai-org/glm-5.3-flash`, per `services/gateway/src/agent/agent-env.ts`.
+The agent runs on a chat model of the Comfy Router, with your Comfy key. It has no setting of its own, per `services/gateway/src/agent/agent-env.ts`.
 
-Open models work through the same three variables. GLM-5.3-Flash, MIT. Qwen3.8-27B, Apache-2.0, fits one 24 GB GPU.
+- Each model call is one `POST` to `https://api.comfy.org/v2/models/openrouter/chat-completions`, with no streaming. It carries your key in `X-API-Key`, an `Idempotency-Key` made from the request body, and a 120-second timeout, per `packages/agent/src/infrastructure/router-chat-fetch.ts`.
+- Each answer is billed on its `usage.cost`, and the turn shows its credits.
+- The agent starts when `COMFY_API_KEY` reaches Comfy Cloud. In public mode it uses the Comfy key each visitor adds.
+- With no Comfy key, or with `COMFY_BASE_URL` at another host, the agent is off, and every agent route answers `AGENT_MODEL_MISSING`.
+- A key the Router has not turned on answers `403 not_enabled`. Agent shows the catalog's message, and the agent stays off.
+- The server refuses to start with `AGENT_PROVIDER`, `AGENT_MODEL`, `AGENT_API_KEY` or `AGENT_BASE_URL` set. The agent reads none of them.
 
-For local development, an OpenAI-compatible proxy in front of your own subscription also works as `AGENT_BASE_URL`, with `/v1` at the end of the URL. It serves closed models.
+You choose the model in Agent, from the Router chat models in `packages/agent/src/infrastructure/router-chat-models.ts`. The list shows only when the Router lists `openrouter/chat-completions` as taking tools. The default is `deepseek/deepseek-v4-flash`.
 
-#### Settings for each host
+Once an answer file captured in a live session exists, a test holds the default to the cheapest model that passes every agent scenario on captured answers, per `packages/agent/test/scenarios/`. A model with an unknown cost is refused. Only a hand-written answer file exists, so the default is not yet measured.
 
-The agent reads `AGENT_BASE_URL`, `AGENT_MODEL` and `AGENT_API_KEY`. With no base URL, `AGENT_PROVIDER=cloudflare-workers-ai` selects Workers AI. It is the one pi-ai provider `packages/agent/src/infrastructure/pi-models.ts` registers, because its list holds only open-weights `@cf/` models. Any other provider id answers `AGENT_MODEL_UNKNOWN`, and every other host goes through `AGENT_BASE_URL`.
-
-| Host | `AGENT_BASE_URL` | `AGENT_MODEL` | `AGENT_API_KEY` |
-|---|---|---|---|
-| Workers AI over HTTPS | `https://api.cloudflare.com/client/v4/accounts/<account-id>/ai/v1` | `@cf/zai-org/glm-5.3-flash` | a Cloudflare API token |
-| RunPod | `https://api.runpod.ai/v2/<endpoint-id>/openai/v1` | `zai-org/GLM-5.3-Flash` | a RunPod API key |
-| Modal | `https://<workspace>--<app>-server.<region>.modal.direct/v1` | the served model name | the vLLM `--api-key` value |
-| Ollama | `http://127.0.0.1:11434/v1` | `qwen3.8:27b` | empty |
-| LM Studio | `http://127.0.0.1:1234/v1` | the id LM Studio lists | empty |
-| llama.cpp | `http://127.0.0.1:9931/v1` | the model it serves | the `--api-key` value, if the server has one |
-
-- Workers AI can also run with no base URL: `AGENT_PROVIDER=cloudflare-workers-ai`. That path needs `CLOUDFLARE_ACCOUNT_ID` in the process environment, because `openPiModels` does not put it in the credential.
-- On the Cloudflare runtime, Workers AI runs through the `AI` binding with no token: `createAI({ binding: env.AI })` from `agents/models/pi-ai`, then `models.setProvider(ai.provider)` and the model ref `{ provider: "cloudflare", modelId: "@cf/zai-org/glm-5.3-flash" }`. Only `@cf/` ids are used, because the other ids that provider lists are closed vendor models.
-- The context window is fixed at 65,536 tokens, because pi-durable compacts against it. Every host serves at least that many. Ollama gives 4K tokens below 24 GiB of VRAM unless you set `OLLAMA_CONTEXT_LENGTH=65536`.
-
-Workers AI, RunPod and Modal serve the published weights. The vLLM and Ollama paths above are the self-host paths.
+The context window is fixed at 65,536 tokens, because pi-durable compacts against it. An answer holds at most 8,192 tokens.
 
 ## MCP
 
