@@ -1,12 +1,47 @@
 {
   "effect": "freeze-and-circle",
   "passed": false,
-  "prompt": "Time stops. The person and everything around them freeze in place, with hair, dust and drops hanging still in the air. The camera glides in a smooth half circle around the frozen person, showing them from one side and then from the other side, while nothing in the scene moves. One continuous orbit shot.",
+  "design": {
+    "unit": "freeze-and-circle",
+    "family": "effects",
+    "fit": {
+      "prompt": "Place the person in a roadside diner. Keep the person's face, hair, skin, age and clothes exactly as they are. The person sits at a red booth table with a milkshake in front of them, a counter with stools behind, a checkered floor and a window onto a road."
+    },
+    "setPiece": "A roadside diner where time stops: a waitress with a coffee pot, and coffee, plates, bacon and eggs hanging in the air while the camera circles the person.",
+    "cuts": [
+      {
+        "min": 12.6,
+        "max": 13.4,
+        "kind": "cut"
+      }
+    ],
+    "lastFrame": {
+      "shows": "A close-up of the person sipping through a straw.",
+      "maxLuma": null
+    },
+    "sound": {
+      "prompt": "The sound is a diner room tone with a soft whoosh as time stops and a slurp at the end.",
+      "loudness": {
+        "min": -18.5,
+        "max": -10
+      },
+      "truePeakMax": -1.5
+    },
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
+  },
+  "prompt": "Shot one: time stops in a roadside diner. The person sits still at a red booth with a milkshake. A waitress holds a coffee pot mid-pour. Coffee, plates, bacon and eggs hang frozen in the air. The camera circles the person slowly and steadily, then settles. Cut. Shot two, the last two seconds: a calm close-up of the person's face as they sip the milkshake through a straw.",
   "endFrame": {
-    "source": "none"
+    "source": "edit",
+    "prompt": "A close-up of the same person's face sipping a milkshake through a straw in the diner, soft warm light.",
+    "strength": 0.9
   },
   "hold": null,
   "adapter": null,
-  "seconds": 5,
-  "preview": null
+  "seconds": 15,
+  "preview": null,
+  "proof": null
 }

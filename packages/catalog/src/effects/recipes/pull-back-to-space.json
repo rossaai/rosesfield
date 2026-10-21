@@ -1,14 +1,41 @@
 {
   "effect": "pull-back-to-space",
   "passed": false,
-  "prompt": "The camera starts close on the person and pulls straight back and up in one fast, continuous move. The person shrinks below as the camera rises over the rooftops, then the whole city, then the coastline and the clouds. The camera keeps rising through the thin blue edge of the sky until the whole planet Earth hangs in black space. One unbroken aerial shot with no cuts.",
+  "design": {
+    "unit": "pull-back-to-space",
+    "family": "effects",
+    "fit": {
+      "prompt": "Fit the photo to the new frame. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. Add new matching scene content at every added edge, with no borders, bars or blur."
+    },
+    "setPiece": "One continuous aerial move from the person on the ground up through the clouds to the whole Earth in black space.",
+    "cuts": [],
+    "lastFrame": {
+      "shows": "The curve of the Earth in black space, the move slowed to almost still.",
+      "maxLuma": null
+    },
+    "sound": {
+      "prompt": "The sound is a steady rush of wind with a low rising tone that settles in the last second.",
+      "loudness": {
+        "min": -20,
+        "max": -12
+      },
+      "truePeakMax": -1
+    },
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
+  },
+  "prompt": "One unbroken aerial shot. The camera starts on the person at ground level and rises straight up and back. The person shrinks below as the streets, the city, the coastline and the clouds come into view. The camera passes through a layer of white cloud and keeps rising until the curve of the Earth and the black of space fill the frame. The move is fastest in the middle and slows to almost still in the last second.",
   "endFrame": {
-    "source": "draw",
-    "prompt": "The planet Earth seen from orbit, the whole globe in black space, blue oceans, white clouds and a thin glowing blue atmosphere at its edge.",
+    "source": "edit",
+    "prompt": "The planet Earth seen from orbit above the place in the photo, the curve of the globe with blue oceans, white clouds and a thin glowing blue edge of atmosphere against black space.",
     "strength": 0.9
   },
   "hold": null,
   "adapter": null,
-  "seconds": 5,
-  "preview": null
+  "seconds": 10,
+  "preview": null,
+  "proof": null
 }

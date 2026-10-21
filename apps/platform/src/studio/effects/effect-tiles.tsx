@@ -82,7 +82,9 @@ function PriceLine({
   return credits === null ? (
     t("run.price.unknown")
   ) : (
-    <CreditPrice amount={formatNumber(credits)} />
+    <CreditPrice
+      amount={t("run.price.credits", { amount: formatNumber(credits) })}
+    />
   )
 }
 

@@ -81,7 +81,7 @@ describe("the effect tiles", () => {
     expect(effectTiles(shipped as AppListing, recipes, previews)).toEqual([])
   })
 
-  it("shows the price the price route measured, and says when there is none", () => {
+  it("shows the price the price route measured in Comfy credits, and says when there is none", () => {
     render(
       <EffectTiles
         app={listingOf(recipes)}
@@ -93,7 +93,9 @@ describe("the effect tiles", () => {
         previews={previews}
       />
     )
-    expect(tileNamed("grow-wings").textContent).toContain("6.95")
+    expect(tileNamed("grow-wings").textContent).toContain(
+      t("run.price.credits", { amount: "6.95" })
+    )
     expect(tileNamed("melt-away").textContent).toContain(t("run.price.unknown"))
   })
 
