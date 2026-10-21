@@ -74,6 +74,7 @@ export const videoReading = z.strictObject({
   height: z.number().int().positive(),
   cuts: z.array(z.number().min(0)),
   loudness: loudness.nullable(),
+  firstFrameLuma: z.number().min(0).max(255),
   lastFrameLuma: z.number().min(0).max(255),
 })
 
