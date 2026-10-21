@@ -101,8 +101,7 @@ export function modeOfModel(
   if (model.kind === "graph") {
     return layersModes.find((mode) => graphs[mode] === model.id) ?? null
   }
-  const mode = hostedTasks[model.task] ?? null
-  return mode === "edit" && maskFieldOf(model) !== null ? "fill" : mode
+  return hostedTasks[model.task] ?? null
 }
 
 export function modelIndexOf(

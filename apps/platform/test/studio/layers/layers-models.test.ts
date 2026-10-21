@@ -67,6 +67,30 @@ describe("the model picker of each Layers mode", () => {
     ])
   })
 
+  it("lists an edit model whose mask is optional under Edit, by its task alone", () => {
+    const maskedEdit = {
+      ...flux3,
+      id: "maker/masked-edit",
+      form: [
+        ...(flux3.form ?? []),
+        {
+          kind: "media" as const,
+          name: "mask",
+          path: "mask",
+          required: false,
+          media: "image" as const,
+          min: 0,
+          max: 1,
+        },
+      ],
+    }
+    const index = modelIndexOf(layersListing, [...catalog, maskedEdit])
+    const listed = (mode: LayersMode) =>
+      modelsOfMode(index, mode).map((model) => model.id)
+    expect(listed("edit")).toEqual([editGraph.id, flux3.id, maskedEdit.id])
+    expect(listed("fill")).toEqual([fillGraph.id, fluxFill.id])
+  })
+
   it("opens each mode on its open-weights graph, with the hosted model one choice away", () => {
     const open = (models: typeof catalog, mode: LayersMode) =>
       defaultOfMode(modelIndexOf(layersListing, models), mode)?.id ?? null
