@@ -5,11 +5,13 @@ import {
   type PriceResponse,
 } from "@rosesfield/catalog/comfy"
 import {
+  storyboardAskOf as askOf,
   editTask,
   type HostedAsk,
   type KeyframeCall,
   keyframeCallsOf,
   type StoryboardAsk,
+  settingFieldsOf,
 } from "@rosesfield/catalog/storyboard"
 import type { AppListing } from "@rosesfield/contract"
 import {
@@ -36,19 +38,6 @@ export type PriceAsks = {
 
 const output = "image"
 
-const ownRoles: readonly string[] = ["prompt", "seed", "count", "reference"]
-
-export function settingFieldsOf(
-  fields: readonly ModelField[]
-): readonly ModelField[] {
-  return fields.filter(
-    (field) =>
-      field.kind !== "prompt" &&
-      field.kind !== "media" &&
-      !ownRoles.includes(fieldRoleOf(field, output) ?? "")
-  )
-}
-
 export function formatFieldOf(
   fields: readonly ModelField[]
 ): FormatField | null {
@@ -62,9 +51,7 @@ export function formatFieldOf(
   )
 }
 
-export function editModelsOf(
-  models: readonly CatalogModel[]
-): CatalogModel[] {
+export function editModelsOf(models: readonly CatalogModel[]): CatalogModel[] {
   return models.filter((model) => model.task === editTask)
 }
 
@@ -89,43 +76,25 @@ export function inputsForModel(
   return { ...inputs, ...settings, [modelInputName]: model.id }
 }
 
-function hostedOf(
-  values: FormValues,
-  form: readonly ModelField[],
-  photos: HostedAsk["photos"]
-): HostedAsk {
-  const settings: Record<string, string | number> = {}
-  for (const field of settingFieldsOf(form)) {
-    const value = values.inputs[field.name]
-    const isSet =
-      typeof value === "number" || (typeof value === "string" && value !== "")
-    if (isSet) {
-      settings[field.name] = value
-    }
-  }
-  return { form, settings, photos }
-}
-
 export function storyboardAskOf(options: {
   app: AppListing
   values: FormValues
   chosen: CatalogModel | null
   photos: HostedAsk["photos"]
-}): StoryboardAsk {
+}): StoryboardAsk | null {
   const { app, values, chosen } = options
   const base = bodyOf(app, runValues(values))
-  const inputs =
-    chosen === null
-      ? base.inputs
-      : { ...base.inputs, [modelInputName]: chosen.id }
-  if (chosen === null || chosen.form === null) {
-    return { inputs, aspectRatio: base.aspectRatio ?? null, hosted: null }
-  }
-  return {
-    inputs,
-    aspectRatio: null,
-    hosted: hostedOf(values, chosen.form, options.photos),
-  }
+  return askOf({
+    inputs:
+      chosen === null
+        ? base.inputs
+        : { ...base.inputs, [modelInputName]: chosen.id },
+    aspectRatio: base.aspectRatio ?? null,
+    hosted:
+      chosen === null || chosen.form === null
+        ? null
+        : { form: chosen.form, values: values.inputs, photos: options.photos },
+  })
 }
 
 function priceAskOf(call: KeyframeCall | undefined): PriceAsk | null {
@@ -136,8 +105,8 @@ function priceAskOf(call: KeyframeCall | undefined): PriceAsk | null {
   return aspectRatio === null ? { inputs } : { inputs, aspectRatio }
 }
 
-export function priceAsksOf(ask: StoryboardAsk): PriceAsks {
-  const calls = keyframeCallsOf(ask)
+export function priceAsksOf(ask: StoryboardAsk | null): PriceAsks {
+  const calls = ask === null ? [] : keyframeCallsOf(ask)
   const edits = calls.filter((call) => call.kind === "edit")
   return {
     text: priceAskOf(calls.find((call) => call.kind === "text")),

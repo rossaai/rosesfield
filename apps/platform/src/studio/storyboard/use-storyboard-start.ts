@@ -12,6 +12,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
+import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { characterQuery, settingsQuery } from "@/api/queries"
 import { formatNumber } from "@/copy/format"
 import { t } from "@/copy/t"
@@ -35,6 +36,10 @@ const priceDelayMs = 300
 
 const seedInput = "seed"
 
+const refusedCode = "RUN_INPUT_INVALID"
+
+const refusedStatus = 400
+
 const emptyAsk = { inputs: {} }
 
 export type KeyframePress = {
@@ -50,7 +55,7 @@ export type KeyframePress = {
 
 function useCallsPrice(
   app: AppListing,
-  ask: StoryboardAsk,
+  ask: StoryboardAsk | null,
   keyState: string
 ): number | null {
   const asks = useDebounced(priceAsksOf(ask), priceDelayMs)
@@ -118,8 +123,16 @@ export async function pressKeyframes(
     chosen === null || chosen.form === null || character === null
       ? []
       : await press.photosOf(character)
+  const ask = storyboardAskOf({ app: press.app, values, chosen, photos })
+  if (ask === null) {
+    throw new GatewayRefusedError({
+      code: refusedCode,
+      status: refusedStatus,
+      retryAfterSeconds: null,
+    })
+  }
   return runKeyframes({
-    ask: storyboardAskOf({ app: press.app, values, chosen, photos }),
+    ask,
     key: press.key,
     chain: startedOnce({ chain: press.chain, onStarted: press.onStarted }),
     keep: press.keep,

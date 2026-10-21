@@ -27,6 +27,7 @@ type Input = AppInput["inputs"][number]
 const sceneCount: Input = {
   type: "choice",
   name: sceneCountInput,
+  scope: "app",
   labelKey: "storyboard.input.sceneCount.label",
   options: sceneCounts.map((value) => ({
     value,
@@ -53,6 +54,7 @@ const keyframeBounds = [
 const keyframe: Input = {
   type: "choice",
   name: keyframeInput,
+  scope: "app",
   labelKey: "storyboard.keyframe.number",
   options: sceneCounts.map((value) => ({
     value,
@@ -90,6 +92,7 @@ const sceneInputs: Input[] = sceneNumbers.map(
   (number): Input => ({
     type: "prompt",
     name: sceneInputName(number),
+    scope: "app",
     labelKey: "storyboard.input.scenes.label",
     presence: "required",
     maxLength: sceneMaxLength,
@@ -124,6 +127,7 @@ export const app: AppInput = defineApp({
     {
       type: "prompt",
       name: "look",
+      scope: "app",
       labelKey: "storyboard.input.look.label",
       presence: "optional",
       maxLength: lookMaxLength,

@@ -8,6 +8,12 @@ export {
   storyboardAppId,
 } from "#storyboard/keyframe-facts"
 export {
+  type HostedValues,
+  settingFieldsOf,
+  storyboardAskOf,
+  storyboardBodyFor,
+} from "#storyboard/storyboard-ask"
+export {
   anchoredOn,
   type HostedAsk,
   type KeptKeyframe,

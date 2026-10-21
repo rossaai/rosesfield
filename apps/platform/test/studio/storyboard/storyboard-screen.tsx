@@ -2,6 +2,7 @@ import { findApp } from "@rosesfield/catalog"
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import type { KeptKeyframe } from "@rosesfield/catalog/storyboard"
 import { appListing, type Run, run } from "@rosesfield/contract"
+import { assetIdFormat } from "@rosesfield/kernel"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -159,7 +160,9 @@ export function storyboardRun(change: RunFields): Run {
   })
 }
 
-export const hostedReference = "1e3a5c7e-9b2d-4f6a-8c0e-2b4d6f8a0c1e"
+export const hostedReference = assetIdFormat.parse(
+  "1e3a5c7e-9b2d-4f6a-8c0e-2b4d6f8a0c1e"
+)
 
 export const hostedScenes = ["the door", "the stairs", "the roof"]
 

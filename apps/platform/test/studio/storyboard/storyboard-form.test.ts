@@ -38,6 +38,9 @@ function contractTakes(values: FormValues): boolean {
     chosen: null,
     photos: [],
   })
+  if (ask === null) {
+    return false
+  }
   return keyframeCallsOf(ask).every(
     (call) =>
       startRunBodyFor(definition).safeParse(

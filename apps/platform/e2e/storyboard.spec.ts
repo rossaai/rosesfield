@@ -36,13 +36,26 @@ async function writeScenes(page: Page, scenes: readonly string[]) {
 }
 
 async function addReference(page: Page): Promise<void> {
-  await page.getByRole("button", { name: /Add an image/ }).first().click()
+  await page
+    .getByRole("button", { name: /Add an image/ })
+    .first()
+    .click()
   const chooser = page.waitForEvent("filechooser")
   await page.getByRole("menuitem", { name: "Upload" }).click()
   await (await chooser).setFiles(photo)
   await expect(
     page.locator('[data-slot="drop-well"]').first().locator("img")
   ).toBeVisible()
+}
+
+function startsOf(page: Page): Request[] {
+  const starts: Request[] = []
+  page.on("request", (request) => {
+    if (isStart(request)) {
+      starts.push(request)
+    }
+  })
+  return starts
 }
 
 test.beforeEach(async ({ page }) => {
@@ -57,12 +70,7 @@ test.describe("Storyboard's keyframes, one run each", () => {
   test("with a reference and 3 scenes starts 3 runs at once, shows 3 numbered tiles and replaces each with its keyframe", async ({
     page,
   }) => {
-    const starts: Request[] = []
-    page.on("request", (request) => {
-      if (isStart(request)) {
-        starts.push(request)
-      }
-    })
+    const starts = startsOf(page)
     await page.goto("/apps/storyboard")
     await addReference(page)
     await writeScenes(page, [
@@ -91,12 +99,7 @@ test.describe("Storyboard's keyframes, one run each", () => {
   test("with no reference makes keyframe 1 first, then edits keyframe 1 for scene 2", async ({
     page,
   }) => {
-    const starts: Request[] = []
-    page.on("request", (request) => {
-      if (isStart(request)) {
-        starts.push(request)
-      }
-    })
+    const starts = startsOf(page)
     await page.goto("/apps/storyboard")
     await writeScenes(page, [
       "a lighthouse at dawn",
