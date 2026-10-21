@@ -1,9 +1,21 @@
 import { type AppInput, defineApp } from "#define-app"
 import {
+  extendSeconds,
   videoEditAspectRatios,
   videoEditEngine,
 } from "#video-edit/comfy/video-edit-engine"
+import {
+  backgroundModel,
+  editModel,
+  extendModel,
+  frameRateModel,
+  graphModes,
+  modeModels,
+  reframeModel,
+  videoEditModes,
+} from "#video-edit/video-edit-models"
 
+const inGraphs = [{ input: "mode", is: [...graphModes] }]
 const inExtend = [{ input: "mode", is: ["extend"] }]
 const inReframe = [{ input: "mode", is: ["reframe"] }]
 const inBackground = [{ input: "mode", is: ["background"] }]
@@ -20,12 +32,13 @@ export const app: AppInput = defineApp({
       name: "mode",
       labelKey: "videoEdit.input.mode.label",
       options: [
+        { value: "edit", labelKey: "videoEdit.choice.mode.edit" },
         { value: "extend", labelKey: "videoEdit.choice.mode.extend" },
         { value: "reframe", labelKey: "videoEdit.choice.mode.reframe" },
         { value: "background", labelKey: "videoEdit.choice.mode.background" },
         { value: "frame-rate", labelKey: "videoEdit.choice.mode.frameRate" },
       ],
-      default: "extend",
+      default: "edit",
     },
     {
       type: "video",
@@ -35,13 +48,30 @@ export const app: AppInput = defineApp({
       max: 1,
     },
     {
+      type: "choice",
+      name: "model",
+      labelKey: "videoEdit.input.model.label",
+      options: [
+        { value: editModel, labelKey: "videoEdit.model.seedance25" },
+        { value: extendModel, labelKey: "videoEdit.model.ltx25" },
+        { value: reframeModel, labelKey: "videoEdit.model.ltx23" },
+        { value: backgroundModel, labelKey: "videoEdit.model.birefnet" },
+        { value: frameRateModel, labelKey: "videoEdit.model.film" },
+      ],
+      default: editModel,
+      bounds: videoEditModes.map((mode) => ({
+        when: [{ input: "mode", is: [mode] }],
+        values: [modeModels[mode]],
+      })),
+    },
+    {
       type: "number",
       name: "seconds",
       labelKey: "videoEdit.input.seconds.label",
-      min: 1,
-      max: 4,
+      min: Math.min(...extendSeconds),
+      max: Math.max(...extendSeconds),
       step: 1,
-      default: 3,
+      default: Math.min(...extendSeconds),
       when: inExtend,
     },
     {
@@ -102,6 +132,7 @@ export const app: AppInput = defineApp({
       name: "keepSound",
       labelKey: "videoEdit.input.keepSound.label",
       default: "on",
+      when: inGraphs,
     },
     {
       type: "choice",
