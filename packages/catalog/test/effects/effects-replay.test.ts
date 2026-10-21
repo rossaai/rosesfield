@@ -52,7 +52,7 @@ describe("the effects engine request", () => {
       "339": { inputs: { noise_seed: 42 } },
       "351": { inputs: { input: ["627", 0] } },
       "356": { inputs: { width: 352, height: 640, length: 241 } },
-      "366": { inputs: { frames_number: 241, frame_rate: 24 } },
+      "366": { inputs: { frames_number: 242, frame_rate: 24 } },
       "357": { inputs: { image: ["350", 0], strength: 0.7 } },
       "349": { inputs: { image: ["350", 0], strength: 1 } },
       "460": { inputs: { image: ["606", 0], frame_idx: -1, strength: 0.9 } },
@@ -121,7 +121,7 @@ describe("the effects engine request", () => {
     const { workflow } = await submitted(request)
     expect(workflow).toMatchObject({
       "356": { inputs: { width: 352, height: 352, length: 361 } },
-      "366": { inputs: { frames_number: 361 } },
+      "366": { inputs: { frames_number: 362 } },
       "606": { inputs: { width: 704, height: 704 } },
       "380": { inputs: { width: 960, height: 960 } },
     })

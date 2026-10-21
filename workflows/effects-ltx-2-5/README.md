@@ -88,7 +88,7 @@ A recipe can also hold one mid frame: a frame inside the clip, made by the image
 
 The catalog's [`effect-graph.ts`](../../packages/catalog/src/effects/comfy/effect-graph.ts) derives each recipe's graph from this file:
 
-- It writes the recipe's prompt on node 501, its sound line on node 503 and its length on nodes 356 and 366.
+- It writes the recipe's prompt on node 501, its sound line on node 503 and its length on nodes 356 and 366. Node 356 takes the video's frames, `seconds * 24 + 1`. Node 366 takes one frame more. The core audio VAE makes `round(frames / 24 * 25)` latents and decodes `4 * latents - 3` mel frames at 100 a second, so 169 frames decode to 7.010 s of sound against 7.042 s of video. One frame more makes the sound at least as long as the video for every length from 5 to 15 seconds, and node 75, `SaveVideo`, cuts the sound to the video's length when it writes the file.
 - A recipe whose photo frame is `last` reads the edited frame, node 627, in the frame 0 locks 357 and 349, and the fitted photo, node 606, in the last-frame guides 460 and 463.
 - A `dark` end frame links node 628 in grey `luma * 0x010101` to the guides 460 and 463. Any other end frame removes node 628.
 - The image edit nodes 600 to 604, 620 to 623 and 625 to 627 run when the recipe has an `edit` end frame or a mid frame, and node 620 takes that frame's prompt. Otherwise they are removed, and the size node 624 is removed too unless node 628 reads it.

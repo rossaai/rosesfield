@@ -340,7 +340,7 @@ describe("the effect recipes", () => {
       effectGraph(fileGraph(), { ...recipeOf("grow-giant"), seconds: 15 })
     )
     expect(workflow["356"]?.inputs.length).toBe(361)
-    expect(workflow["366"]?.inputs.frames_number).toBe(361)
+    expect(workflow["366"]?.inputs.frames_number).toBe(362)
   })
 
   it("records first the video model the graph's guiders read, through an adapter", () => {

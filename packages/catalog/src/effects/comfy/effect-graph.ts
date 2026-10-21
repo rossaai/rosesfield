@@ -1,5 +1,5 @@
 import { AppDefinitionInvalidError } from "#app-definition-invalid.error"
-import { frameAt, framesOf } from "#effects/comfy/frame-sizes"
+import { audioFramesOf, frameAt, framesOf } from "#effects/comfy/frame-sizes"
 import type { EffectRecipe } from "#effects/effect-recipe.contract"
 import { apiGraph } from "#workflow-entry.contract"
 
@@ -115,9 +115,8 @@ function setPrompts(graph: Graph, recipe: EffectRecipe): void {
 }
 
 function setLength(graph: Graph, recipe: EffectRecipe): void {
-  const frames = framesOf(recipe.seconds)
-  nodeOf(graph, "356").inputs.length = frames
-  nodeOf(graph, "366").inputs.frames_number = frames
+  nodeOf(graph, "356").inputs.length = framesOf(recipe.seconds)
+  nodeOf(graph, "366").inputs.frames_number = audioFramesOf(recipe.seconds)
 }
 
 function addAdapter(graph: Graph, recipe: EffectRecipe): void {

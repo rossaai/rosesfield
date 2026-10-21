@@ -146,7 +146,7 @@
     "class_type": "LTXVEmptyLatentAudio",
     "inputs": {
       "audio_vae": ["386", 0],
-      "frames_number": 241,
+      "frames_number": 242,
       "frame_rate": 24,
       "batch_size": 1
     }

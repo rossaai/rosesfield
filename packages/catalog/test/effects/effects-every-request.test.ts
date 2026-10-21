@@ -141,7 +141,7 @@ describe("every effects engine request against the recorded v2 routes", () => {
           length: frames,
         },
       },
-      "366": { inputs: { frames_number: frames } },
+      "366": { inputs: { frames_number: frames + 1 } },
       "357": { inputs: { strength: 0.7 } },
       "349": { inputs: { strength: 1 } },
       "380": {
