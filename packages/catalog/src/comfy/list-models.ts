@@ -62,7 +62,7 @@ export function modelsForApp(
 }
 
 function hostedEntry(model: HostedModel, task: string): CatalogModel {
-  const facts = factsOf(model.id, task, null)
+  const facts = factsOf(model.id, task)
   const tags: ModelTag[] = hostedTagsOf(model)
   if (facts.weights !== null) {
     tags.push({ kind: "open-weights" })
@@ -105,7 +105,7 @@ function graphEntry(
   labelKey: string,
   task: string
 ): CatalogModel {
-  const facts = factsOf(`graph/${value}`, task, `${labelKey}.line`)
+  const facts = factsOf(`graph/${value}`, task)
   return {
     id: value,
     kind: "graph",

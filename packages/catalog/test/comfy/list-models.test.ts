@@ -143,7 +143,7 @@ describe("the order of the listing", () => {
     ])
   })
 
-  it("gives each model the facts the catalog holds for it, with the board and the date of its rank", () => {
+  it("gives each model the facts the catalog holds for it, with the board and the date of its rank, and no line to a graph whose fact row holds none, rather than its app's own words", () => {
     const models = modelsForApp(app, [
       hosted("openai/gpt-image-2"),
       hosted("maker/picture"),
@@ -173,7 +173,7 @@ describe("the order of the listing", () => {
       weights: null,
       lineKey: null,
     })
-    expect(byId("open-a")?.facts?.lineKey).toBe("model.openA.line")
+    expect(byId("open-a")?.facts?.lineKey).toBeNull()
   })
 
   it("lists a background model only in the app that makes its media, an image one in Remove background and a video one in Video edit", () => {

@@ -32,30 +32,6 @@ import { modelSections } from "@/screens/app/hosted/model-sections"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import { openModels } from "@/screens/welcome/open-weights"
 
-const lineKeys: Readonly<Record<string, string>> = {
-  "text-to-image": "model.line.textToImage",
-  "image-edit": "model.line.imageEdit",
-  "text-to-video": "model.line.textToVideo",
-  "image-to-video": "model.line.imageToVideo",
-  "reference-to-video": "model.line.referenceToVideo",
-  "first-last-frame": "model.line.firstLastFrame",
-  "video-edit": "model.line.videoEdit",
-  "lip-sync": "model.line.lipSync",
-  speech: "model.line.speech",
-  "voice-change": "model.line.voiceChange",
-  music: "model.line.music",
-  sound: "model.line.sound",
-  "three-d": "model.line.threeD",
-  upscale: "model.line.upscale",
-  background: "model.line.background",
-  relight: "model.line.relight",
-  "try-on": "model.line.tryOn",
-  expand: "model.line.expand",
-  "motion-transfer": "model.line.motionTransfer",
-  "character-swap": "model.line.characterSwap",
-  chat: "model.line.chat",
-}
-
 export type CatalogWords = (key: string, values?: CopyValues) => string | null
 
 function catalogWords(key: string, values?: CopyValues): string | null {
@@ -79,21 +55,14 @@ export function modelNameOf(model: CatalogModel): string {
     : model.name
 }
 
-export function lineOf(task: string): string | null {
-  const key = lineKeys[task]
-  return key === undefined ? null : tCatalog(key)
-}
-
 const byMakerKey = "comfy.model.lineByMaker"
 
 export function modelLineOf(
-  task: string,
-  facts: ModelFacts | undefined,
+  lineKey: string | null,
   maker?: string,
   words: CatalogWords = catalogWords
 ): string | null {
-  const key = facts?.lineKey ?? null
-  const line = (key === null ? null : words(key)) ?? lineOf(task)
+  const line = lineKey === null ? null : words(lineKey)
   if (line === null || maker === undefined) {
     return line
   }
@@ -224,7 +193,7 @@ export function pickerSections(
       id: row.id,
       name: row.name,
       maker: row.maker,
-      line: modelLineOf(row.task, row.facts, labOf(row)),
+      line: modelLineOf(row.facts?.lineKey ?? null, labOf(row)),
       tags: row.tags.filter((tag) => tag.kind !== "open-weights").map(tagOf),
       mark: <LabMark maker={labOf(row)} />,
       badges: badgesOf(row.id, row.tags, row.facts, today),

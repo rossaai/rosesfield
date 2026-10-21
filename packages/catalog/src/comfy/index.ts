@@ -51,6 +51,7 @@ export { deniedNames, deniedProviders, isDeniedModel } from "#comfy/model-deny"
 export {
   boardRankOf,
   factsOf,
+  lineKeyOf,
   type ModelFactsFile,
   modelFactsData,
   modelFactsFile,
