@@ -1,4 +1,5 @@
 import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
+import { speechModelInput, speechTextInput } from "@rosesfield/catalog/lipsync"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import type { FieldProblem, FormValues } from "@/screens/app/app-form"
 import { listOf, textOf } from "@/screens/app/fields/field-props"
@@ -18,10 +19,6 @@ export type WordsMode = "audio" | "text"
 export const wordsModes: readonly WordsMode[] = ["audio", "text"]
 
 export const wordsLabelKey = "lipsync.input.words.label"
-
-export const speechModelInput = "speechModel"
-
-export const speechTextInput = "speechText"
 
 export const speechTextMax = 2000
 
