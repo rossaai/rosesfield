@@ -5,7 +5,6 @@ import { t } from "@/copy/t"
 export type LicenceId =
   | "apache-2-0"
   | "mit"
-  | "bsd-3-clause"
   | "ltx-community"
   | "film"
 
@@ -18,12 +17,9 @@ export type ModelId =
   | "qwen-image-edit-2509"
   | "qwen-image-layered"
   | "ltx-2-5"
-  | "wan-2-2"
-  | "wan-2-2-fun"
   | "wan-2-1-vace"
   | "infinitetalk"
   | "seedvr2"
-  | "real-esrgan"
   | "birefnet"
   | "lucida"
   | "film"
@@ -99,22 +95,6 @@ export const openModels: readonly OpenModel[] = [
     ],
   },
   {
-    id: "wan-2-2",
-    licence: "apache-2-0",
-    link: `${huggingFace}/Wan-AI/Wan2.2-I2V-A14B`,
-    files: ["Wan-AI/Wan2.2-I2V-A14B", "Wan-AI/Wan2.2-T2V-A14B"],
-  },
-  {
-    id: "wan-2-2-fun",
-    licence: "apache-2-0",
-    link: `${huggingFace}/alibaba-pai/Wan2.2-Fun-A14B-Control-Camera`,
-    files: [
-      "alibaba-pai/Wan2.2-Fun-A14B-Control-Camera",
-      "alibaba-pai/Wan2.2-Fun-A14B-Control",
-      "wan2.2_fun_camera_high_noise_14B_fp8_scaled.safetensors",
-    ],
-  },
-  {
     id: "wan-2-1-vace",
     licence: "apache-2-0",
     link: `${huggingFace}/Wan-AI/Wan2.1-VACE-14B`,
@@ -137,12 +117,6 @@ export const openModels: readonly OpenModel[] = [
       "seedvr2_3b_int8_convrot.safetensors",
       "seedvr2_7b_int8_convrot.safetensors",
     ],
-  },
-  {
-    id: "real-esrgan",
-    licence: "bsd-3-clause",
-    link: "https://github.com/xinntao/Real-ESRGAN",
-    files: ["RealESRGAN_x4plus.safetensors"],
   },
   {
     id: "birefnet",

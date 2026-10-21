@@ -46,7 +46,9 @@ export function modelsForApp(
     return []
   }
   const listed = hosted.flatMap((model) => {
-    const task = tasksOfModel(model).find((one) => tasks.includes(one))
+    const task = tasksOfModel(model, app.output.kind).find((one) =>
+      tasks.includes(one)
+    )
     return task === undefined || isDeniedModel(model.id)
       ? []
       : [hostedEntry(model, task)]

@@ -156,6 +156,18 @@ describe("the choices a schema lists in words", () => {
     })
   })
 
+  it("keeps the step a number's schema names, and names none when the schema names none", () => {
+    const fields = fieldsFor({
+      guidance: { type: "number", minimum: 1, maximum: 10, multipleOf: 0.5 },
+      steps: { type: "integer", minimum: 1, maximum: 50 },
+    })
+    expect(named(fields, "guidance")).toMatchObject({
+      kind: "number",
+      step: 0.5,
+    })
+    expect(named(fields, "steps")).not.toHaveProperty("step")
+  })
+
   it("shows a value the schema lists twice in different case once", () => {
     const fields = fieldsFor({
       resolution: { type: "string", enum: ["2K", "2k", "768P", "768p"] },

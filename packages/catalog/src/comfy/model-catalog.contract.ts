@@ -39,6 +39,7 @@ export const modelField: z.ZodType<ModelField> = z.discriminatedUnion("kind", [
     min: z.number().nullable(),
     max: z.number().nullable(),
     integer: z.boolean(),
+    step: z.number().positive().exactOptional(),
     default: z.number().nullable(),
   }),
   z.object({

@@ -43,6 +43,7 @@ type NameRule = {
   task: ModelTask
   pattern: RegExp
   replaces?: readonly ModelTask[]
+  media?: "kept"
 }
 
 export const modelTasks: readonly ModelTask[] = [
@@ -134,7 +135,7 @@ export const nameRules: readonly NameRule[] = [
     task: "upscale",
     pattern: /upscal|increase-resolution|seedvr|flashvsr|enhance/,
   },
-  { task: "background", pattern: /background|green-screen/ },
+  { task: "background", pattern: /background|green-screen/, media: "kept" },
   { task: "relight", pattern: /relight/ },
   { task: "try-on", pattern: /vto|try-on/ },
   { task: "expand", pattern: /expand|outpaint/ },
@@ -189,9 +190,30 @@ function fits(model: HostedModel, rule: MediaRule): boolean {
   )
 }
 
-/** Lists the tasks a model can run, from the media it takes and makes and the inputs its form needs. */
-export function tasksOfModel(model: HostedModel): ModelTask[] {
-  const named = nameRules.filter((rule) => rule.pattern.test(model.id))
+function keepsMedia(model: HostedModel, media: string | null): boolean {
+  const kept = media === null ? model.takes : [media]
+  return kept.some(
+    (one) => model.takes.includes(one) && model.makes.includes(one)
+  )
+}
+
+function fitsName(
+  model: HostedModel,
+  rule: NameRule,
+  media: string | null
+): boolean {
+  return (
+    rule.pattern.test(model.id) &&
+    (rule.media !== "kept" || keepsMedia(model, media))
+  )
+}
+
+/** Lists the tasks a model can run, from the media it takes and makes, the inputs its form needs and, for an app that makes the given media, the tasks that keep that media. A name rule can replace a task the media alone would give. */
+export function tasksOfModel(
+  model: HostedModel,
+  media: string | null = null
+): ModelTask[] {
+  const named = nameRules.filter((rule) => fitsName(model, rule, media))
   const replaced = named.flatMap((rule) => rule.replaces ?? [])
   const fromMedia = mediaRules
     .filter((rule) => fits(model, rule))

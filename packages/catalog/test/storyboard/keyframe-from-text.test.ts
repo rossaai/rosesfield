@@ -113,7 +113,7 @@ describe("textPassOf", () => {
     ).toThrow(/EmptySD3LatentImage/)
   })
 
-  it("refuses a text to image default that is no single workflow", () => {
+  it("refuses a text graph that is no single workflow", () => {
     const binding = selectBinding({
       input: "references",
       by: "count",

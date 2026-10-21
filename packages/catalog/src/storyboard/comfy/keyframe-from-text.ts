@@ -76,12 +76,12 @@ function parts(options: TextPassOptions): {
   const { adapter, config } = options.binding
   const graph = apiGraph.safeParse(config.workflow)
   if (adapter !== comfyWorkflowAdapter || !graph.success) {
-    throw fail("the text to image default is no single workflow")
+    throw fail("the text graph is no single workflow")
   }
   const bindings = Array.isArray(config.bindings) ? config.bindings : []
   const bound = bindings.map(boundOf)
   if (bound.some((one) => one === null)) {
-    throw fail("the text to image default binds a value outside a node input")
+    throw fail("the text graph binds a value outside a node input")
   }
   const models = Array.isArray(config.models) ? config.models : []
   return {
@@ -100,7 +100,7 @@ function renamerFor(folder: string): (id: string) => string {
     const number = Number(id)
     if (!/^\d+$/.test(id) || number >= textNodeOffset) {
       throw invalidFor(folder)(
-        `the text to image default holds node ${id}, which Storyboard cannot renumber`
+        `the text graph holds node ${id}, which Storyboard cannot renumber`
       )
     }
     return String(textNodeOffset + number)
@@ -115,7 +115,7 @@ function onlyNode(
   const unique = [...new Set(ids)]
   const [id] = unique
   if (unique.length !== 1 || id === undefined) {
-    throw invalidFor(folder)(`the text to image default needs one ${what}`)
+    throw invalidFor(folder)(`the text graph needs one ${what}`)
   }
   return id
 }
@@ -136,14 +136,12 @@ function wiresOf(
       set.push([one.target, wires.prompt])
     } else {
       throw invalidFor(folder)(
-        `the text to image default binds ${one.name ?? one.from}, which Storyboard does not fill`
+        `the text graph binds ${one.name ?? one.from}, which Storyboard does not fill`
       )
     }
   }
   if (set.length !== 2) {
-    throw invalidFor(folder)(
-      "the text to image default needs one prompt and one seed"
-    )
+    throw invalidFor(folder)("the text graph needs one prompt and one seed")
   }
   return { latentIds, set }
 }
@@ -163,7 +161,7 @@ export function textPassOf(options: TextPassOptions): TextPass {
   const image = graph[save]?.inputs.images
   if (graph[latent]?.class_type !== latentClass || !isLink(image)) {
     throw invalidFor(folder)(
-      `the text to image default needs an ${latentClass} and a saved image`
+      `the text graph needs an ${latentClass} and a saved image`
     )
   }
   const relink = (value: unknown): unknown => {

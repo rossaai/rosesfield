@@ -104,6 +104,7 @@ export {
 export { ModelPolicy } from "#domain/model-policy.port"
 export { type MeasuredPrice, PriceBook } from "#domain/price-book.port"
 export { type PricedRun, pricedRunOf } from "#domain/priced-run"
+export { refusedAdapter, refusedBinding } from "#domain/refused-binding"
 export { Run, type RunJob, type RunJobStatus, type RunState } from "#domain/run"
 export {
   type RunCursor,
