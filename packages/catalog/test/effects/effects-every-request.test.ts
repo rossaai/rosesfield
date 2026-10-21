@@ -164,6 +164,13 @@ describe("every effects engine request against the recorded v2 routes", () => {
     if (end.source === "none") {
       expect(workflow["620"]).toBeUndefined()
       expect(workflow["460"]).toBeUndefined()
+    } else if (end.source === "dark") {
+      expect(workflow["620"]).toBeUndefined()
+      expect(workflow).toMatchObject({
+        "628": { inputs: { color: end.luma * 0x010101 } },
+        "460": { inputs: { image: ["628", 0], strength: end.strength } },
+        "463": { inputs: { image: ["628", 0], strength: end.strength } },
+      })
     } else {
       expect(workflow).toMatchObject({
         "620": { inputs: { prompt: end.prompt } },

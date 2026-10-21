@@ -606,5 +606,17 @@
     "_meta": {
       "title": "Fitted photo"
     }
+  },
+  "628": {
+    "class_type": "EmptyImage",
+    "inputs": {
+      "width": ["624", 0],
+      "height": ["624", 1],
+      "batch_size": 1,
+      "color": 0
+    },
+    "_meta": {
+      "title": "Dark end frame"
+    }
   }
 }

@@ -28,7 +28,7 @@ function idsOf(workflow: Readonly<Record<string, unknown>>): string[] {
 
 function endPrompt(effect: string): string {
   const end = recipeOf(effect).endFrame
-  return end.source === "none" ? "" : end.prompt
+  return end.source === "edit" ? end.prompt : ""
 }
 
 describe("the effects engine request", () => {
@@ -86,7 +86,9 @@ describe("the effects engine request", () => {
     )
     const { workflow } = await submitted(request)
     const file = idsOf(fileGraph())
-    expect(idsOf(workflow)).toEqual(file.filter((id) => id !== "358"))
+    expect(idsOf(workflow)).toEqual(
+      file.filter((id) => id !== "358" && id !== "628")
+    )
     expect(workflow).toMatchObject({
       "356": { inputs: { width: 256, height: 352, length: 169 } },
       "606": { inputs: { width: 512, height: 704 } },

@@ -140,6 +140,36 @@ describe("the effect recipes kept as data", () => {
     ).toThrow(/many-copies\.json is invalid: photoFrame/)
   })
 
+  it("refuses a dark end frame on a look that lands on the photo, and reads one on a look that opens on it", () => {
+    const dark = { source: "dark", luma: 8, strength: 0.9 }
+    expect(() =>
+      readRecipes(
+        {
+          "pull-back-to-space": {
+            ...recipeOf("pull-back-to-space"),
+            endFrame: dark,
+          },
+        },
+        ledger
+      )
+    ).toThrow(
+      /pull-back-to-space\.json is invalid: endFrame A look that lands on the photo guides its last frame with the photo, so it takes no dark end frame/
+    )
+    const [read] = readRecipes(
+      { "many-copies": variant({ endFrame: dark }) },
+      ledger
+    )
+    expect(read?.endFrame).toEqual(dark)
+    for (const luma of [-1, 41, 8.5]) {
+      expect(() =>
+        readRecipes(
+          { "many-copies": variant({ endFrame: { ...dark, luma } }) },
+          ledger
+        )
+      ).toThrow(/many-copies\.json is invalid: endFrame/)
+    }
+  })
+
   it("reads a passed recipe that carries its run and the proof of that run", () => {
     const [read] = readRecipes(
       { "many-copies": passedRecipe("many-copies") },

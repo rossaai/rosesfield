@@ -11,15 +11,24 @@ type Graph = Record<string, Node>
 
 export const effectsWorkflow = "effects-ltx-2-5"
 
-export const endFrameNodes: readonly string[] = [
+export const editFrameNodes: readonly string[] = [
   "620",
   "621",
   "622",
   "623",
-  "624",
   "625",
   "626",
   "627",
+]
+
+export const endFrameSizeNode = "624"
+
+export const darkFrameNode = "628"
+
+export const endFrameNodes: readonly string[] = [
+  ...editFrameNodes,
+  endFrameSizeNode,
+  darkFrameNode,
 ]
 
 export const imageEditNodes: readonly string[] = [
@@ -119,6 +128,8 @@ function addAdapter(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, "391").inputs.model = [adapterNode, 0]
 }
 
+const endGuideNodes: readonly string[] = ["460", "463"]
+
 function setEndFrame(graph: Graph, recipe: EffectRecipe): void {
   const end = recipe.endFrame
   if (end.source === "none") {
@@ -127,12 +138,24 @@ function setEndFrame(graph: Graph, recipe: EffectRecipe): void {
     passThrough(graph, "463")
     return
   }
-  nodeOf(graph, endFramePromptNode).inputs.prompt = end.prompt
-  nodeOf(graph, "460").inputs.strength = end.strength
-  nodeOf(graph, "463").inputs.strength = end.strength
+  if (end.source === "dark") {
+    remove(graph, [...editFrameNodes, ...imageEditNodes])
+    nodeOf(graph, darkFrameNode).inputs.color = greyOf(end.luma)
+    for (const id of endGuideNodes) {
+      nodeOf(graph, id).inputs.image = [darkFrameNode, 0]
+    }
+  } else {
+    remove(graph, [darkFrameNode])
+    nodeOf(graph, endFramePromptNode).inputs.prompt = end.prompt
+  }
+  for (const id of endGuideNodes) {
+    nodeOf(graph, id).inputs.strength = end.strength
+  }
 }
 
-const endGuideNodes: readonly string[] = ["460", "463"]
+function greyOf(luma: number): number {
+  return luma * 0x010101
+}
 
 const fittedPhoto: Link = [fittedPhotoNode, 0]
 

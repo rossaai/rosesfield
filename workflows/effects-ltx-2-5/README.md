@@ -65,6 +65,7 @@ A recipe passes only with the proof of one run: a gate run of the look's criteri
 |---|---|
 | `none` | no end frame. The video runs on the prompt and the frame 0 lock |
 | `edit` | Qwen Image Edit 2511 edits the fitted photo into the effect's last frame |
+| `dark` | node 628, an `EmptyImage` at the fitted photo's size in the recipe's grey, `luma` 0 to 40 on the 8-bit scale, guides the last frame at the recipe's strength, so the clip ends on a designed dark frame. No image edit node runs. A look whose photo frame is `last` takes no `dark` end frame |
 
 | Photo frame | What the graph does |
 |---|---|
@@ -87,7 +88,8 @@ The catalog's [`effect-graph.ts`](../../packages/catalog/src/effects/comfy/effec
 
 - It writes the recipe's prompt on node 501, its sound line on node 503 and its length on nodes 356 and 366.
 - A recipe whose photo frame is `last` reads the edited frame, node 627, in the frame 0 locks 357 and 349, and the fitted photo, node 606, in the last-frame guides 460 and 463.
-- An effect with no end frame removes the image edit nodes 600 to 604 and 620 to 627 and the guides 460 and 463, and links the next node to what the guide read.
+- A `dark` end frame removes the image edit nodes 600 to 604, 620 to 623 and 625 to 627, keeps the size node 624, and links node 628 in grey `luma * 0x010101` to the guides 460 and 463. An `edit` end frame removes node 628.
+- An effect with no end frame removes the image edit nodes 600 to 604 and 620 to 628 and the guides 460 and 463, and links the next node to what the guide read.
 - An effect with no hold removes the guides 461 and 464 and the matte nodes 410 to 412.
 - An effect with no guide at all removes the crop nodes 462 and 465.
 - A silent effect removes the audio decode, node 358.

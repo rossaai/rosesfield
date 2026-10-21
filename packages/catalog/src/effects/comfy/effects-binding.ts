@@ -33,9 +33,9 @@ function runBindings(
       map: sizeMap(delivery, "height"),
       to: "deliveryHeight",
     },
-    ...(recipe.endFrame.source === "none"
-      ? []
-      : [{ from: "seed", to: "endFrameSeed" } as const]),
+    ...(recipe.endFrame.source === "edit"
+      ? [{ from: "seed", to: "endFrameSeed" } as const]
+      : []),
   ]
 }
 

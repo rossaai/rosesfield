@@ -1,8 +1,8 @@
 {
   "id": "0b1c5208-26c1-5d84-b3e2-cae9782924aa",
   "revision": 0,
-  "last_node_id": 627,
-  "last_link_id": 122,
+  "last_node_id": 628,
+  "last_link_id": 124,
   "nodes": [
     {
       "id": 75,
@@ -2123,12 +2123,12 @@
         {
           "name": "width",
           "type": "INT",
-          "links": [108]
+          "links": [108, 123]
         },
         {
           "name": "height",
           "type": "INT",
-          "links": [109]
+          "links": [109, 124]
         },
         {
           "name": "batch_size",
@@ -2372,6 +2372,47 @@
       },
       "widgets_values": ["lanczos", 1280, 720, "center"],
       "title": "Fitted photo"
+    },
+    {
+      "id": 628,
+      "type": "EmptyImage",
+      "pos": [11090, 412],
+      "size": [380, 178],
+      "flags": {},
+      "order": 90,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "link": 123,
+          "widget": {
+            "name": "width"
+          }
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "link": 124,
+          "widget": {
+            "name": "height"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [["624", 0], ["624", 1], 1, 0],
+      "title": "Dark end frame"
     }
   ],
   "links": [
@@ -2477,7 +2518,9 @@
     [119, 606, 0, 351, 0, "IMAGE"],
     [120, 606, 0, 620, 2, "IMAGE"],
     [121, 606, 0, 621, 2, "IMAGE"],
-    [122, 606, 0, 624, 0, "IMAGE"]
+    [122, 606, 0, 624, 0, "IMAGE"],
+    [123, 624, 0, 628, 0, "INT"],
+    [124, 624, 1, 628, 1, "INT"]
   ],
   "groups": [
     {

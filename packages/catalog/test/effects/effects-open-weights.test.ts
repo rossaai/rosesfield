@@ -12,6 +12,7 @@ const coreNodeClasses: readonly string[] = [
   "CLIPLoader",
   "CLIPTextEncode",
   "CreateVideo",
+  "EmptyImage",
   "EmptyLTXVLatentVideo",
   "EmptySD3LatentImage",
   "FluxKontextImageScale",

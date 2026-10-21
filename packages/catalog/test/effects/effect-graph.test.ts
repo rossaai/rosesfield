@@ -3,6 +3,8 @@ import { selectAdapter } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import {
   adapterNode,
+  darkFrameNode,
+  editFrameNodes,
   effectGraph,
   endFrameNodes,
   fittedPhotoNode,
@@ -174,6 +176,47 @@ describe("the effect recipes", () => {
         path,
         readers:
           workflow["620"] === undefined ? [] : ["620", "621", "626", "627"],
+      })
+    }
+  })
+
+  it("guides the last frame of a dark look with a flat grey frame at the video's size, with no image edit node", () => {
+    const recipe = {
+      ...recipeOf("melt-away"),
+      endFrame: { source: "dark", luma: 8, strength: 0.85 } as const,
+    }
+    const workflow = workflowOf(effectGraph(fileGraph(), recipe))
+    expect(workflow[darkFrameNode]).toEqual({
+      class_type: "EmptyImage",
+      inputs: {
+        width: ["624", 0],
+        height: ["624", 1],
+        batch_size: 1,
+        color: 8 * 65536 + 8 * 256 + 8,
+      },
+      _meta: { title: "Dark end frame" },
+    })
+    expect(workflow).toMatchObject({
+      "624": { inputs: { image: [fittedPhotoNode, 0] } },
+      "460": { inputs: { image: [darkFrameNode, 0], strength: 0.85 } },
+      "463": { inputs: { image: [darkFrameNode, 0], strength: 0.85 } },
+      "351": { inputs: { input: [fittedPhotoNode, 0] } },
+    })
+    for (const id of [...editFrameNodes, ...imageEditNodes]) {
+      expect({ id, node: workflow[id] }).toEqual({ id, node: undefined })
+    }
+    expect(brokenLinks(workflow)).toEqual([])
+    expect(() => effectBinding(recipe, "720p")).not.toThrow()
+  })
+
+  it("keeps no dark frame for a look whose last frame is edited", () => {
+    for (const recipe of effectRecipes.filter(
+      (one) => one.endFrame.source === "edit"
+    )) {
+      const workflow = workflowOf(effectGraph(fileGraph(), recipe))
+      expect({ effect: recipe.effect, dark: workflow[darkFrameNode] }).toEqual({
+        effect: recipe.effect,
+        dark: undefined,
       })
     }
   })
