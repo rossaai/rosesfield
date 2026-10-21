@@ -1,10 +1,11 @@
 import type { EngineBinding } from "@rosesfield/contract"
-import { selectBinding } from "@rosesfield/generation/bindings"
-import { defaultModel, imageModels } from "#image/image-models"
 import {
-  type TextPass,
-  textPassOf,
-} from "#storyboard/comfy/keyframe-from-text"
+  comfyWorkflowAdapter,
+  refusedBinding,
+  selectBinding,
+} from "@rosesfield/generation/bindings"
+import { zImageTurbo } from "#image/comfy/open-weights"
+import { type TextPass, textPassOf } from "#storyboard/comfy/keyframe-from-text"
 import { keyframeSizes, sideMap } from "#storyboard/comfy/keyframe-sizes"
 import { editNodes, type Link } from "#storyboard/comfy/storyboard-nodes"
 import {
@@ -61,17 +62,6 @@ function anchoredBinding(anchor: "reference" | "character"): EngineBinding {
   })
 }
 
-function textToImageDefault(): EngineBinding {
-  const model = imageModels.find((one) => one.value === defaultModel)
-  if (model === undefined) {
-    throw new WorkflowInvalidError({
-      folder: editWorkflow,
-      reason: `the text to image default ${defaultModel} is no graph of Image`,
-    })
-  }
-  return model.bind(keyframeSizes)
-}
-
 function nodeAt(graph: ApiGraph, id: string): ApiGraph[string] {
   const node = graph[id]
   if (node === undefined) {
@@ -105,9 +95,9 @@ function stringsOf(value: unknown): string[] {
     : []
 }
 
-function keyframeBinding(): EngineBinding {
+function splicedKeyframe(text: EngineBinding): EngineBinding {
   const pass = textPassOf({
-    binding: textToImageDefault(),
+    binding: text,
     wires: {
       prompt: [editNodes.firstPrompt, 0],
       seed: [editNodes.seed, 0],
@@ -125,6 +115,24 @@ function keyframeBinding(): EngineBinding {
     ...binding,
     config: { ...binding.config, models: [...new Set(models)] },
   }
+}
+
+export function keyframeBindingOf(text: () => EngineBinding): EngineBinding {
+  try {
+    return splicedKeyframe(text())
+  } catch (error) {
+    if (error instanceof WorkflowInvalidError) {
+      return refusedBinding({
+        adapter: comfyWorkflowAdapter,
+        reason: error.message,
+      })
+    }
+    throw error
+  }
+}
+
+function keyframeBinding(): EngineBinding {
+  return keyframeBindingOf(() => zImageTurbo(keyframeSizes))
 }
 
 function byAnchor(): EngineBinding {

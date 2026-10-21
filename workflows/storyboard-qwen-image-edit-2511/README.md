@@ -2,7 +2,7 @@
 
 Edits one anchor image, a reference or a character's photo, into one keyframe per scene with Qwen Image Edit 2511, each scene with its own sentence, the shared look and its own seed, and saves the keyframes as one batch.
 
-With no reference and no character, the catalog removes node 7 and adds the graph of Image's text to image default, renumbered from 10000. That graph makes keyframe 1 from scene 1 and the look, and every other keyframe edits keyframe 1.
+With no reference and no character, the catalog removes node 7 and adds the Z-Image Turbo graph of `image-z-image-turbo`, renumbered from 10000. That graph makes keyframe 1 from scene 1 and the look, and every other keyframe edits keyframe 1.
 
 | | |
 |---|---|

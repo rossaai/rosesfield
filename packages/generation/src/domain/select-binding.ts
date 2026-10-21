@@ -1,6 +1,7 @@
 import type { EngineBinding, RunInputs } from "@rosesfield/contract"
 import { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.error"
 import { isRecord } from "#domain/is-record"
+import { refusalOf } from "#domain/refused-binding"
 import { pickTask, taskAdapter } from "#domain/task-binding"
 
 type SelectBy = "value" | "filled" | "count"
@@ -36,6 +37,10 @@ export function resolveBinding(
     } else {
       current = pick(current.config, chosen)
     }
+  }
+  const refusal = refusalOf(current)
+  if (refusal !== null) {
+    throw refusal
   }
   return current
 }

@@ -6,12 +6,14 @@ import {
 } from "@rosesfield/generation"
 import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
-import { defaultModel, imageModels } from "#image/image-models"
+import { mingImage01Design } from "#image/comfy/open-weights"
 import { listWorkflows } from "#list-workflows"
 import { app } from "#storyboard/app"
 import { textNodeOffset } from "#storyboard/comfy/keyframe-from-text"
 import { keyframeSizes } from "#storyboard/comfy/keyframe-sizes"
+import { keyframeBindingOf } from "#storyboard/comfy/storyboard-binding"
 import { keepSentence, qwenFiles } from "#storyboard/comfy/storyboard-nodes"
+import { WorkflowInvalidError } from "#workflow-invalid.error"
 import {
   type ApiWorkflow,
   batchOrder,
@@ -129,13 +131,11 @@ async function submit(
 
 const editModels = [qwenFiles.edit, qwenFiles.encoder, qwenFiles.vae]
 
-function textDefaultModels(): string[] {
-  const model = imageModels.find((one) => one.value === defaultModel)
-  const models = model?.bind(keyframeSizes).config.models
-  return Array.isArray(models)
-    ? models.filter((one): one is string => typeof one === "string")
-    : []
-}
+const zImageTurboFiles = [
+  "z_image_turbo_bf16.safetensors",
+  "qwen_3_4b.safetensors",
+  "ae.safetensors",
+]
 
 function savedKeyframes(workflow: ApiWorkflow): string[] {
   return batchOrder(workflow, workflow["99"]?.inputs.images)
@@ -211,9 +211,9 @@ describe("the engine request the Storyboard binding produces", () => {
     expect(reached.has("806")).toBe(false)
   })
 
-  it("makes keyframe 1 from scene 1 on the catalog's text to image default when there is no anchor, then edits keyframe 1", async () => {
+  it("makes keyframe 1 from scene 1 on the Z-Image Turbo graph when there is no anchor, then edits keyframe 1", async () => {
     const { workflow, models } = await submit(bodyOf(4, {}), 7)
-    expect(models).toEqual([...textDefaultModels(), ...editModels])
+    expect(models).toEqual([...zImageTurboFiles, ...editModels])
     expect(danglingLinks(workflow)).toEqual([])
     expect(workflow["7"]).toBeUndefined()
     const keyframes = savedKeyframes(workflow)
@@ -294,6 +294,21 @@ describe("the engine request the Storyboard binding produces", () => {
       info: { id: uploadedId },
     })
     expect(savedKeyframes(workflow)).toEqual(["106", "206"])
+  })
+})
+
+describe("Storyboard's text pass", () => {
+  it("refuses only the run whose text graph it cannot splice, and the catalog still loads", () => {
+    const refused = keyframeBindingOf(() => mingImage01Design(keyframeSizes))
+    expect(() => resolveBinding(refused, {})).toThrow(/needs one latent node/)
+    const missing = keyframeBindingOf(() => {
+      throw new WorkflowInvalidError({
+        folder: "image-z-image-turbo",
+        reason: "no folder of workflows/ holds it",
+      })
+    })
+    expect(() => resolveBinding(missing, {})).toThrow(/no folder/)
+    expect(definition.id).toBe("storyboard")
   })
 })
 
