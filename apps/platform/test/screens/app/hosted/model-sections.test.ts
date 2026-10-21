@@ -1,4 +1,5 @@
-import type { CatalogModel } from "@rosesfield/catalog/comfy"
+import type { CatalogModel, ModelFacts } from "@rosesfield/catalog/comfy"
+import { isValidElement } from "react"
 import { describe, expect, it } from "vitest"
 import { pickerSections } from "@/screens/app/hosted/catalog-picker"
 import { modelSections } from "@/screens/app/hosted/model-sections"
@@ -43,7 +44,7 @@ const models = [
 ]
 
 describe("the sections of the model picker", () => {
-  it("puts your default and the models you ran before under Featured, then every model under All", () => {
+  it("puts your default and the models you ran before under Featured, then the open-weights models under their own group, then every other model under All", () => {
     const sections = modelSections(
       models,
       ["beta/two", "alpha/one", "beta/two", "gone/model"],
@@ -53,13 +54,14 @@ describe("the sections of the model picker", () => {
       sections.map((section) => [section.id, section.rows.map((row) => row.id)])
     ).toEqual([
       ["featured", ["beta/two", "alpha/one"]],
-      ["all", ["open-picture", "alpha/one", "beta/two", "beta/three"]],
+      ["open", ["open-picture"]],
+      ["all", ["alpha/one", "beta/two", "beta/three"]],
     ])
   })
 
   it("leaves Featured out when nothing is featured", () => {
     const sections = modelSections(models, [], (one) => one.name)
-    expect(sections.map((section) => section.id)).toEqual(["all"])
+    expect(sections.map((section) => section.id)).toEqual(["open", "all"])
   })
 
   it("gives an image row its line and a video row its factual tags", () => {
@@ -89,7 +91,74 @@ describe("the sections of the model picker", () => {
     expect(image?.badges).toEqual([])
     expect(pickerSections(hosted).map((section) => section.label)).toEqual([
       "Featured",
+      "Open weights",
       "All",
+    ])
+  })
+})
+
+const mingFacts: ModelFacts = {
+  lab: "inclusionAI",
+  release: "2026-09-22",
+  rank: {
+    position: 45,
+    size: 104,
+    board: "Artificial Analysis Text to Image Arena",
+    url: "https://artificialanalysis.ai/image/leaderboard/text-to-image",
+    readOn: "2026-10-20",
+  },
+  priceThird: null,
+  weights: "https://huggingface.co/inclusionAI/Ming-Image-0.1-Design",
+  lineKey: "image.model.zImageTurbo.line",
+}
+
+describe("an open-weights row of the model picker", () => {
+  const hosted: HostedState = {
+    isTaskApp: true,
+    models: [
+      model("ming-image-0-1-design", "inclusionAI", {
+        kind: "graph",
+        tags: [{ kind: "open-weights" }],
+        form: null,
+        facts: mingFacts,
+      }),
+      model("beta/two", "Beta"),
+    ],
+    isLoading: false,
+    error: null,
+    keyState: "set",
+    defaultModel: null,
+    chosen: null,
+    fields: null,
+    ranBefore: [],
+    choose: () => undefined,
+  }
+  const rows = pickerSections(hosted, "2026-10-20").flatMap(
+    (section) => section.rows
+  )
+  const ming = rows.find((row) => row.id === "ming-image-0-1-design")
+  const beta = rows.find((row) => row.id === "beta/two")
+
+  it("names its lab as its maker and in its mark, from the catalog's facts", () => {
+    expect(ming?.maker).toBe("inclusionAI")
+    const mark = ming?.mark
+    expect(
+      isValidElement<{ maker: string }>(mark) ? mark.props.maker : null
+    ).toBe("inclusionAI")
+  })
+
+  it("shows the model's own line, and the task's line for a model with none", () => {
+    expect(ming?.line).toBe("Runs 8 steps, at 1K or 2K.")
+    expect(beta?.line).toBe("Makes an image from your words")
+  })
+
+  it("opens the weights page the catalog's facts name", () => {
+    expect(ming?.badges).toEqual([
+      {
+        kind: "openWeights",
+        label: "Open weights",
+        href: "https://huggingface.co/inclusionAI/Ming-Image-0.1-Design",
+      },
     ])
   })
 })
