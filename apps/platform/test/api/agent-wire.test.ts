@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest"
 import {
   type AnswerEvent,
+  chooseAgentModel,
+  listAgentModels,
+  readAgentModels,
   readAnswerEvent,
   sendMessage,
 } from "@/api/agent-wire"
@@ -53,7 +56,14 @@ describe("readAnswerEvent", () => {
       type: "run",
       runId,
     })
-    expect(readAnswerEvent({ type: "done" })).toEqual({ type: "done" })
+    expect(readAnswerEvent({ type: "done" })).toEqual({
+      type: "done",
+      credits: null,
+    })
+    expect(readAnswerEvent({ type: "done", credits: 0.084 })).toEqual({
+      type: "done",
+      credits: 0.084,
+    })
     expect(
       readAnswerEvent({
         type: "failed",
@@ -96,7 +106,7 @@ describe("sendMessage", () => {
         streamOf([
           'event: message\ndata: {"type":"message","index":0,',
           '"text":"Hi"}\n\nevent: run\r\ndata: {"type":"run","runId":"',
-          `${runId}"}\r\n\r\nevent: done\ndata: {"type":"done"}\n\n`,
+          `${runId}"}\r\n\r\nevent: done\ndata: {"type":"done","credits":0.5}\n\n`,
         ]),
         { status: 200, headers: { "Content-Type": "text/event-stream" } }
       )
@@ -104,7 +114,7 @@ describe("sendMessage", () => {
     expect(await collect()).toEqual([
       { type: "message", index: 0, text: "Hi" },
       { type: "run", runId },
-      { type: "done" },
+      { type: "done", credits: 0.5 },
     ])
   })
 
@@ -120,5 +130,48 @@ describe("sendMessage", () => {
       code: "AGENT_MODEL_MISSING",
       status: 412,
     })
+  })
+})
+
+describe("the agent's models", () => {
+  const listed = {
+    models: ["deepseek/deepseek-v4-flash", "qwen/qwen3.6-flash"],
+    model: "deepseek/deepseek-v4-flash",
+    refusal: null,
+  }
+
+  it("reads the models, the chosen one and a refusal", () => {
+    expect(readAgentModels(listed)).toEqual(listed)
+    expect(
+      readAgentModels({
+        models: [],
+        model: null,
+        refusal: { code: "ENGINE_NOT_ENABLED", status: 412 },
+      })
+    ).toEqual({
+      models: [],
+      model: null,
+      refusal: { code: "ENGINE_NOT_ENABLED", status: 412 },
+    })
+    expect(readAgentModels({ ...listed, models: [7] })).toBeNull()
+    expect(readAgentModels({ ...listed, refusal: { code: 1 } })).toBeNull()
+  })
+
+  it("reads the list and sends a choice as a PATCH", async () => {
+    const sent: { url: string; init: RequestInit | undefined }[] = []
+    globalThis.fetch = async (input, init) => {
+      sent.push({ url: String(input), init })
+      return Response.json(listed)
+    }
+
+    expect(await listAgentModels()).toEqual(listed)
+    expect(await chooseAgentModel("qwen/qwen3.6-flash")).toEqual(listed)
+    expect(sent.map((one) => [one.url, one.init?.method])).toEqual([
+      ["/api/agent/models", "GET"],
+      ["/api/agent/models", "PATCH"],
+    ])
+    expect(sent[1]?.init?.body).toBe(
+      JSON.stringify({ model: "qwen/qwen3.6-flash" })
+    )
   })
 })
