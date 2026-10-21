@@ -148,12 +148,13 @@ describe("the effect recipes kept as data", () => {
     expect(eye.midFrame).toMatchObject({
       source: "edit",
       time: 5.5,
-      strength: 0.8,
+      strength: 0.5,
     })
     expect(eye.midFrame?.prompt).toMatch(
-      /extreme close-up of one of the person's eyes/
+      /extreme macro close-up of the iris of one of the person's eyes/
     )
-    expect(eye.midFrame?.prompt).toMatch(/black pupil in the centre/)
+    expect(eye.midFrame?.prompt).toMatch(/iris fills the whole frame/)
+    expect(eye.midFrame?.prompt).toMatch(/black pupil sits in the centre/)
     expect(eye.prompt).toMatch(/never slows/)
     expect(eye.prompt).toMatch(
       /black pupil grows outward until it swallows the whole frame/

@@ -33,9 +33,9 @@
   },
   "midFrame": {
     "source": "edit",
-    "prompt": "Change the photo into an extreme close-up of one of the person's eyes. The iris fills most of the frame, with the round black pupil in the centre. The fine fibres of the iris are sharp. Keep the person's own eye colour and skin.",
+    "prompt": "Change the photo into an extreme macro close-up of the iris of one of the person's eyes, so close that the iris fills the whole frame from edge to edge and no eyelid, eyelash or skin shows. The round black pupil sits in the centre. The fine fibres of the iris are sharp. The iris keeps the exact colour of the person's eyes in the photo.",
     "time": 5.5,
-    "strength": 0.8
+    "strength": 0.5
   },
   "hold": null,
   "adapter": null,
