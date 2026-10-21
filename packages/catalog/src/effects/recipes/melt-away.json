@@ -1,14 +1,41 @@
 {
   "effect": "melt-away",
   "passed": false,
-  "prompt": "The person starts to melt from the head down like warm wax. Their face, hair and clothes soften, sag and run downward in thick glossy streams. The body slumps lower and lower until only a shiny puddle in the colours of their clothes spreads across the ground. The camera stays still.",
+  "design": {
+    "unit": "melt-away",
+    "family": "effects",
+    "fit": {
+      "prompt": "Fit the photo to the new frame. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. Add new matching scene content at every added edge, with no borders, bars or blur."
+    },
+    "setPiece": "Each person melts slowly into a glossy pool in the colours of their clothes, with their cap, bag or shoes resting on it, while the place stays.",
+    "cuts": [],
+    "lastFrame": {
+      "shows": "A glossy pool in the colours of the clothes, items resting on it, the place unchanged.",
+      "maxLuma": null
+    },
+    "sound": {
+      "prompt": "The sound is a soft wet stretching and dripping under a quiet room tone.",
+      "loudness": {
+        "min": -31,
+        "max": -24
+      },
+      "truePeakMax": -2.5
+    },
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
+  },
+  "prompt": "One unbroken shot with a still camera. Soon after the start, each person begins to melt slowly. Their body and clothes soften and run down into a flat, glossy liquid pool on the ground where they stood, in the colours of their clothes. Their cap, bag, shoes or anything they held drop and rest on the pool. The place behind them does not change. The melt keeps going until the last frame.",
   "endFrame": {
     "source": "edit",
-    "prompt": "The same place with no person standing in it. On the ground where the person stood lies a wide shiny puddle of thick liquid in the colours of their clothes.",
+    "prompt": "The same place with the person gone: a flat glossy pool on the ground in the colours of their clothes, with their worn and held items resting on it.",
     "strength": 0.9
   },
   "hold": null,
   "adapter": null,
-  "seconds": 5,
-  "preview": null
+  "seconds": 7,
+  "preview": null,
+  "proof": null
 }

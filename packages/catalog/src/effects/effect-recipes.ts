@@ -3,12 +3,10 @@ import {
   type EffectRecipe,
   effectRecipe,
 } from "#effects/effect-recipe.contract"
+import { readingFailures } from "#effects/reading-failures"
 import buildingsRipple from "./recipes/buildings-ripple.json"
-import fishInTheAir from "./recipes/fish-in-the-air.json"
 import freezeAndCircle from "./recipes/freeze-and-circle.json"
 import growGiant from "./recipes/grow-giant.json"
-import growWings from "./recipes/grow-wings.json"
-import liquidMetal from "./recipes/liquid-metal.json"
 import manyCopies from "./recipes/many-copies.json"
 import meltAway from "./recipes/melt-away.json"
 import pullBackToSpace from "./recipes/pull-back-to-space.json"
@@ -18,11 +16,8 @@ import stillInTheStreet from "./recipes/still-in-the-street.json"
 
 const files: Readonly<Record<string, unknown>> = {
   "buildings-ripple": buildingsRipple,
-  "fish-in-the-air": fishInTheAir,
   "freeze-and-circle": freezeAndCircle,
   "grow-giant": growGiant,
-  "grow-wings": growWings,
-  "liquid-metal": liquidMetal,
   "many-copies": manyCopies,
   "melt-away": meltAway,
   "pull-back-to-space": pullBackToSpace,
@@ -48,6 +43,17 @@ export function readRecipes(
       throw new AppDefinitionInvalidError({
         folder: "effects",
         reason: `the recipe ${file}.json names the effect ${parsed.data.effect}`,
+      })
+    }
+    const { proof, preview } = parsed.data
+    const failures =
+      proof === null || preview === null
+        ? []
+        : readingFailures(parsed.data, proof.reading, preview)
+    if (failures.length > 0) {
+      throw new AppDefinitionInvalidError({
+        folder: "effects",
+        reason: `the recipe ${file}.json passed on a run outside its criteria: ${failures.join(", ")}`,
       })
     }
     return parsed.data

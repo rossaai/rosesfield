@@ -1,12 +1,41 @@
 {
   "effect": "still-in-the-street",
   "passed": false,
-  "prompt": "The person stands perfectly still, frozen like a statue, without blinking or breathing. Around them the street keeps moving fast: people walk past in both directions, cars drive by, and pigeons take off. The camera stays fixed.",
+  "design": {
+    "unit": "still-in-the-street",
+    "family": "effects",
+    "fit": {
+      "prompt": "Fit the photo to the new frame. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. Add new matching scene content at every added edge, with no borders, bars or blur."
+    },
+    "setPiece": "The person holds their pose while the world around them moves: people, a van, a cart and boxes pass and things appear.",
+    "cuts": [],
+    "lastFrame": {
+      "shows": "The person in the same pose, with new people and things around them.",
+      "maxLuma": null
+    },
+    "sound": {
+      "prompt": "The sound is a busy street: footsteps, voices and passing traffic.",
+      "loudness": {
+        "min": -30,
+        "max": -17
+      },
+      "truePeakMax": -2.5
+    },
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
+  },
+  "prompt": "One shot with a still camera. The person holds their exact pose and does not move at all. Around them the world keeps moving from the first second: people walk past, a van drives by, a worker pushes a cart of boxes, and objects appear around them.",
   "endFrame": {
-    "source": "none"
+    "source": "edit",
+    "prompt": "The same person in the exact same pose, with new people, a van and boxes around them that were not there before.",
+    "strength": 0.9
   },
   "hold": 0.9,
   "adapter": null,
-  "seconds": 5,
-  "preview": null
+  "seconds": 6,
+  "preview": null,
+  "proof": null
 }

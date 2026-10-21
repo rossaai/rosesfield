@@ -4,8 +4,8 @@
     "inputs": {
       "video": ["370", 0],
       "filename_prefix": "video/rosesfield-effects",
-      "format": "auto",
-      "format.codec": "auto"
+      "format": "mp4",
+      "format.codec": "h264"
     },
     "_meta": {
       "title": "Video"
@@ -80,7 +80,7 @@
   "351": {
     "class_type": "ResizeImageMaskNode",
     "inputs": {
-      "input": ["395", 0],
+      "input": ["616", 0],
       "resize_type": "scale longer dimension",
       "resize_type.longer_size": 1536,
       "scale_method": "lanczos"
@@ -95,9 +95,9 @@
   "356": {
     "class_type": "EmptyLTXVLatentVideo",
     "inputs": {
-      "width": 352,
-      "height": 640,
-      "length": 121,
+      "width": 640,
+      "height": 352,
+      "length": 241,
       "batch_size": 1
     },
     "_meta": {
@@ -146,7 +146,7 @@
     "class_type": "LTXVEmptyLatentAudio",
     "inputs": {
       "audio_vae": ["386", 0],
-      "frames_number": 121,
+      "frames_number": 241,
       "frame_rate": 24,
       "batch_size": 1
     }
@@ -176,7 +176,7 @@
   "370": {
     "class_type": "CreateVideo",
     "inputs": {
-      "images": ["374", 0],
+      "images": ["380", 0],
       "audio": ["358", 0],
       "fps": 24,
       "bit_depth": 8
@@ -217,6 +217,19 @@
     "inputs": {
       "video_latent": ["461", 2],
       "audio_latent": ["366", 0]
+    }
+  },
+  "380": {
+    "class_type": "ImageScale",
+    "inputs": {
+      "image": ["374", 0],
+      "upscale_method": "lanczos",
+      "width": 1280,
+      "height": 720,
+      "crop": "center"
+    },
+    "_meta": {
+      "title": "Delivery size"
     }
   },
   "384": {
@@ -333,7 +346,7 @@
       "negative": ["365", 1],
       "vae": ["385", 0],
       "latent": ["357", 0],
-      "image": ["536", 0],
+      "image": ["627", 0],
       "frame_idx": -1,
       "strength": 0.9
     },
@@ -372,7 +385,7 @@
       "negative": ["462", 1],
       "vae": ["385", 0],
       "latent": ["349", 0],
-      "image": ["536", 0],
+      "image": ["627", 0],
       "frame_idx": -1,
       "strength": 0.9
     },
@@ -407,7 +420,7 @@
   "501": {
     "class_type": "StringConcatenate",
     "inputs": {
-      "string_a": "The camera starts close on the person and pulls straight back and up in one fast, continuous move. The person shrinks below as the camera rises over the rooftops, then the whole city, then the coastline and the clouds. The camera keeps rising through the thin blue edge of the sky until the whole planet Earth hangs in black space. One unbroken aerial shot with no cuts.",
+      "string_a": "One unbroken aerial shot. The camera starts on the person at ground level and rises straight up and back. The person shrinks below as the streets, the city, the coastline and the clouds come into view. The camera passes through a layer of white cloud and keeps rising until the curve of the Earth and the black of space fill the frame. The move is fastest in the middle and slows to almost still in the last second.",
       "string_b": "",
       "delimiter": " "
     },
@@ -419,7 +432,7 @@
     "class_type": "StringConcatenate",
     "inputs": {
       "string_a": ["501", 0],
-      "string_b": "The sound is a rising rush of wind that fades into silence.",
+      "string_b": "The sound is a steady rush of wind with a low rising tone that settles in the last second.",
       "delimiter": " "
     }
   },
@@ -438,152 +451,239 @@
       "mode": "Both"
     }
   },
-  "520": {
+  "600": {
     "class_type": "UNETLoader",
     "inputs": {
-      "unet_name": "flux-2-klein-4b.safetensors",
+      "unet_name": "qwen_image_edit_2511_bf16.safetensors",
       "weight_dtype": "default"
     },
     "_meta": {
-      "title": "End-frame image model"
+      "title": "Image edit model"
     }
   },
-  "521": {
+  "601": {
     "class_type": "CLIPLoader",
     "inputs": {
-      "clip_name": "qwen_3_4b.safetensors",
-      "type": "flux2",
+      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "type": "qwen_image",
       "device": "default"
     },
     "_meta": {
-      "title": "End-frame text encoder"
+      "title": "Image edit text encoder"
     }
   },
-  "522": {
+  "602": {
     "class_type": "VAELoader",
     "inputs": {
-      "vae_name": "flux2-vae.safetensors"
+      "vae_name": "qwen_image_vae.safetensors"
     },
     "_meta": {
-      "title": "End-frame VAE"
+      "title": "Image edit VAE"
     }
   },
-  "523": {
-    "class_type": "CLIPTextEncode",
+  "603": {
+    "class_type": "ModelSamplingAuraFlow",
     "inputs": {
-      "text": "The planet Earth seen from orbit, the whole globe in black space, blue oceans, white clouds and a thin glowing blue atmosphere at its edge.",
-      "clip": ["521", 0]
+      "model": ["600", 0],
+      "shift": 3.1
+    },
+    "_meta": {
+      "title": "Image edit sampling"
+    }
+  },
+  "604": {
+    "class_type": "CFGNorm",
+    "inputs": {
+      "model": ["603", 0],
+      "strength": 1,
+      "pre_cfg": false
+    },
+    "_meta": {
+      "title": "Image edit guidance"
+    }
+  },
+  "605": {
+    "class_type": "FluxKontextImageScale",
+    "inputs": {
+      "image": ["395", 0]
+    },
+    "_meta": {
+      "title": "Photo for the edit"
+    }
+  },
+  "610": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["601", 0],
+      "prompt": "Fit the photo to the new frame. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. Add new matching scene content at every added edge, with no borders, bars or blur.",
+      "vae": ["602", 0],
+      "image1": ["605", 0]
+    },
+    "_meta": {
+      "title": "Fit prompt"
+    }
+  },
+  "611": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["601", 0],
+      "prompt": "",
+      "vae": ["602", 0],
+      "image1": ["605", 0]
+    },
+    "_meta": {
+      "title": "Fit negative"
+    }
+  },
+  "612": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["610", 0],
+      "reference_latents_method": "index_timestep_zero"
+    },
+    "_meta": {
+      "title": "Fit reference"
+    }
+  },
+  "613": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["611", 0],
+      "reference_latents_method": "index_timestep_zero"
+    },
+    "_meta": {
+      "title": "Fit negative reference"
+    }
+  },
+  "614": {
+    "class_type": "EmptySD3LatentImage",
+    "inputs": {
+      "width": 1344,
+      "height": 768,
+      "batch_size": 1
+    },
+    "_meta": {
+      "title": "Fit size"
+    }
+  },
+  "615": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["604", 0],
+      "positive": ["612", 0],
+      "negative": ["613", 0],
+      "latent_image": ["614", 0],
+      "seed": 0,
+      "steps": 20,
+      "cfg": 4,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
+    },
+    "_meta": {
+      "title": "Fit"
+    }
+  },
+  "616": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["615", 0],
+      "vae": ["602", 0]
+    },
+    "_meta": {
+      "title": "Fitted photo"
+    }
+  },
+  "620": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["601", 0],
+      "prompt": "The planet Earth seen from orbit above the place in the photo, the curve of the globe with blue oceans, white clouds and a thin glowing blue edge of atmosphere against black space.",
+      "vae": ["602", 0],
+      "image1": ["616", 0]
     },
     "_meta": {
       "title": "End-frame prompt"
     }
   },
-  "524": {
-    "class_type": "ConditioningZeroOut",
+  "621": {
+    "class_type": "TextEncodeQwenImageEditPlus",
     "inputs": {
-      "conditioning": ["523", 0]
-    }
-  },
-  "525": {
-    "class_type": "ImageScaleToTotalPixels",
-    "inputs": {
-      "image": ["395", 0],
-      "upscale_method": "lanczos",
-      "megapixels": 1,
-      "resolution_steps": 16
+      "clip": ["601", 0],
+      "prompt": "",
+      "vae": ["602", 0],
+      "image1": ["616", 0]
     },
     "_meta": {
-      "title": "Photo at one megapixel"
+      "title": "End-frame negative"
     }
   },
-  "526": {
+  "622": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["620", 0],
+      "reference_latents_method": "index_timestep_zero"
+    },
+    "_meta": {
+      "title": "End-frame reference"
+    }
+  },
+  "623": {
+    "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "inputs": {
+      "conditioning": ["621", 0],
+      "reference_latents_method": "index_timestep_zero"
+    },
+    "_meta": {
+      "title": "End-frame negative reference"
+    }
+  },
+  "624": {
     "class_type": "GetImageSize",
     "inputs": {
-      "image": ["525", 0]
-    }
-  },
-  "527": {
-    "class_type": "VAEEncode",
-    "inputs": {
-      "pixels": ["525", 0],
-      "vae": ["522", 0]
+      "image": ["616", 0]
     },
     "_meta": {
-      "title": "Photo as reference"
+      "title": "Fitted size"
     }
   },
-  "528": {
-    "class_type": "ReferenceLatent",
+  "625": {
+    "class_type": "EmptySD3LatentImage",
     "inputs": {
-      "conditioning": ["523", 0],
-      "latent": ["527", 0]
-    }
-  },
-  "529": {
-    "class_type": "ReferenceLatent",
-    "inputs": {
-      "conditioning": ["524", 0],
-      "latent": ["527", 0]
-    }
-  },
-  "530": {
-    "class_type": "EmptyFlux2LatentImage",
-    "inputs": {
-      "width": ["526", 0],
-      "height": ["526", 1],
+      "width": ["624", 0],
+      "height": ["624", 1],
       "batch_size": 1
-    }
-  },
-  "531": {
-    "class_type": "Flux2Scheduler",
-    "inputs": {
-      "steps": 4,
-      "width": ["526", 0],
-      "height": ["526", 1]
-    }
-  },
-  "532": {
-    "class_type": "RandomNoise",
-    "inputs": {
-      "noise_seed": 0
     },
     "_meta": {
-      "title": "End-frame seed"
+      "title": "End-frame size"
     }
   },
-  "533": {
-    "class_type": "KSamplerSelect",
+  "626": {
+    "class_type": "KSampler",
     "inputs": {
-      "sampler_name": "euler"
-    }
-  },
-  "534": {
-    "class_type": "CFGGuider",
-    "inputs": {
-      "model": ["520", 0],
-      "positive": ["528", 0],
-      "negative": ["529", 0],
-      "cfg": 1
-    }
-  },
-  "535": {
-    "class_type": "SamplerCustomAdvanced",
-    "inputs": {
-      "noise": ["532", 0],
-      "guider": ["534", 0],
-      "sampler": ["533", 0],
-      "sigmas": ["531", 0],
-      "latent_image": ["530", 0]
-    }
-  },
-  "536": {
-    "class_type": "VAEDecode",
-    "inputs": {
-      "samples": ["535", 0],
-      "vae": ["522", 0]
+      "model": ["604", 0],
+      "positive": ["622", 0],
+      "negative": ["623", 0],
+      "latent_image": ["625", 0],
+      "seed": 0,
+      "steps": 20,
+      "cfg": 4,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1
     },
     "_meta": {
       "title": "End frame"
+    }
+  },
+  "627": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["626", 0],
+      "vae": ["602", 0]
+    },
+    "_meta": {
+      "title": "End frame image"
     }
   }
 }
