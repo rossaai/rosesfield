@@ -87,7 +87,10 @@ describe("the apps a server serves", () => {
   it("offers every effect, drafts after the passed ones, on a server that answers only on this computer", () => {
     const served = effectsOf(servedApps(localVars(), "bun", onePassed()))
     expect(served.closedKey).toBeNull()
-    expect(optionsOf(served)).toEqual(effectRecipes.map((one) => one.effect))
+    expect(optionsOf(served)).toEqual([
+      "push-into-eye",
+      ...effectRecipes.filter((one) => !one.passed).map((one) => one.effect),
+    ])
     expect(optionsOf(served)).toContain(draft)
   })
 
@@ -101,10 +104,29 @@ describe("the apps a server serves", () => {
     expect(optionsOf(effectsOf(servedApps(varsOf(), "bun", apps)))).toEqual([
       "push-into-eye",
     ])
-    expect(effectsOf(servedApps(varsOf(), "bun")).closedKey).toBe(
-      "effects.closed"
-    )
+    const shipped = effectsOf(servedApps(varsOf(), "bun"))
+    expect(shipped.closedKey).toBeNull()
+    expect(optionsOf(shipped)).toEqual(["push-into-eye"])
   })
+
+  it.each([
+    ["an owner token", tokenVars],
+    ["public mode", publicVars],
+    ["the judge deployment", judgeVars],
+  ])(
+    "keeps the app closed with its note behind %s while no effect has passed",
+    (_, varsOf) => {
+      const closed = effectsOf(
+        servedApps(
+          varsOf(),
+          "bun",
+          readApps([{ folder: "effects", app: effectsApp([]) }])
+        )
+      )
+      expect(closed.closedKey).toBe("effects.closed")
+      expect(optionsOf(closed)).toEqual([])
+    }
+  )
 
   it("keeps every other app as the catalog lists it", () => {
     const served = servedApps(localVars(), "bun")
@@ -261,7 +283,7 @@ describe("a draft effect run", () => {
     })
   })
 
-  it("is refused behind an owner token, and starts nothing", async () => {
+  it("is refused behind an owner token with its reason, and starts nothing", async () => {
     const env = readServerEnv({
       HOST: "0.0.0.0",
       OWNER_TOKEN: ownerToken,
@@ -279,9 +301,9 @@ describe("a draft effect run", () => {
         headers: { ...init.headers, authorization: `Bearer ${ownerToken}` },
       })
     const refused = await startDraft(send, crypto.randomUUID())
-    expect(refused.status).toBe(409)
+    expect(refused.status).toBe(400)
     expect(errorEnvelope.parse(await refused.json()).error.code).toBe(
-      "APP_CLOSED"
+      "RUN_INPUT_INVALID"
     )
     const history = await call(gateway, routes.listRuns.path, {
       headers: { authorization: `Bearer ${ownerToken}` },
