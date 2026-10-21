@@ -1,233 +1,180 @@
-import type { AppListing, InputDefinition } from "@rosesfield/contract"
-import { Switch } from "@rosesfield/ui/components/switch"
-import { CircleAlertIcon } from "lucide-react"
-import { type ReactElement, type ReactNode, useId } from "react"
+import type { AppListing } from "@rosesfield/contract"
+import { PromptBlock } from "@rosesfield/ui/components/input-panel"
+import type { ReactElement, ReactNode } from "react"
 import { t, tCatalog } from "@/copy/t"
 import { CollapsibleSection } from "@/pieces/collapsible-section"
 import { ChoiceField } from "@/screens/app/fields/choice-field"
-import { textOf } from "@/screens/app/fields/field-props"
-import { inputCaption } from "@/screens/app/fields/input-copy"
-import { InputField } from "@/screens/app/fields/input-field"
-import { AspectField, CountField } from "@/screens/app/fields/output-fields"
+import { CountField } from "@/screens/app/fields/output-fields"
 import { SeedField } from "@/screens/app/fields/seed-field"
+import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
+import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import { randomSeed } from "@/screens/app/inputs-panel"
-import type { ShotScreenState } from "@/studio/shot/use-shot-screen"
-import { shotModelOf } from "../../../../../packages/catalog/src/shot/shot-models"
-import {
-  keyOf,
-  type ShotChoices,
-  sentWords,
-  shotListOrder,
-} from "../../../../../packages/catalog/src/shot/shot-words"
+import { choiceKeyOf, choiceValuesOf } from "@/studio/shot/shot-prompt"
+import type { ShotScreen } from "@/studio/shot/use-shot-screen"
+import { SoundChip, VideoChips } from "@/studio/video/video-chips"
+import { VideoWells } from "@/studio/video/video-wells"
+import { shotListOrder } from "../../../../../packages/catalog/src/shot/shot-words"
 
 type PanelProps = {
   app: AppListing
-  state: ShotScreenState
+  screen: ShotScreen
 }
 
-const advancedInputs: readonly string[] = ["resolution", "sound", "seed"]
+const soundInput = "sound"
 
-function Problem({ message }: { message: string | undefined }): ReactNode {
-  if (message === undefined) {
+export function SentWords({ words }: { words: string }): ReactNode {
+  if (words === "") {
     return null
   }
-  return (
-    <p
-      role="alert"
-      className="flex items-start gap-s1_5 text-label text-bug-text"
-    >
-      <CircleAlertIcon aria-hidden="true" className="glyph-small" />
-      <span>{message}</span>
-    </p>
-  )
-}
-
-function choicesOf(state: ShotScreenState): ShotChoices {
-  const inputs = state.form.values.inputs
-  return Object.fromEntries(
-    shotListOrder.map((list) => [list, textOf(inputs[list])])
-  )
-}
-
-export function SentWords({ app, state }: PanelProps): ReactNode {
-  const inputs = state.form.values.inputs
-  const scene = textOf(inputs.prompt)
-  if (scene.trim() === "") {
-    return null
-  }
-  const model = shotModelOf(inputs)
-  const words = sentWords({
-    scene,
-    choices: choicesOf(state),
-    movementAsWords: model.movementInput === "words",
-    closes: model.closing === "sentence",
-  })
-  const movement = textOf(inputs.movement)
-  const movementInput = app.inputs.find((input) => input.name === "movement")
-  const option =
-    movementInput?.type === "choice"
-      ? movementInput.options.find((one) => one.value === movement)
-      : undefined
-  const camera =
-    model.movementInput === "camera" &&
-    movement !== "auto" &&
-    option !== undefined
-      ? tCatalog("shot.sentWords.camera", {
-          movement: tCatalog(option.labelKey),
-        })
-      : null
+  const label = tCatalog("shot.sentWords.label")
   return (
     <section
-      aria-label={tCatalog("shot.sentWords.label")}
-      className="flex flex-col gap-s1_5"
+      aria-label={label}
+      data-slot="shot-words"
+      className="flex flex-col gap-1 px-1"
     >
-      <p className="text-label text-ink-muted">
-        {tCatalog("shot.sentWords.label")}
-      </p>
+      <p className="text-label text-ink-muted">{label}</p>
       <p
         aria-live="polite"
-        className="whitespace-pre-wrap rounded-cell bg-surface px-s3 py-s2 text-caption text-ink"
+        className="whitespace-pre-wrap text-caption text-ink"
       >
         {words}
       </p>
-      {camera === null ? null : (
-        <p className="text-label text-ink-muted">{camera}</p>
-      )}
     </section>
   )
 }
 
-function ModelField({
-  input,
-  state,
-}: {
-  input: Extract<InputDefinition, { type: "choice" }>
-  state: ShotScreenState
-}): ReactElement {
-  const model = shotModelOf(state.form.values.inputs)
+function ScenePart({ app, screen }: PanelProps): ReactElement {
+  const { state, promptName, shot, isGraph, fields, hosted } = screen
+  const problem = state.form.problems.get(promptName)
+  const label = tCatalog("shot.input.prompt.label")
+  const hasGraphSound = app.inputs.some((input) => input.name === soundInput)
   return (
-    <ChoiceField
-      label={inputCaption(input)}
-      items={input.options.map((option) => ({
-        value: option.value,
-        label: tCatalog(option.labelKey),
-      }))}
-      value={model.id}
-      onChange={(value) => state.form.setInput(input.name, value)}
-      note={tCatalog(`shot.model.${keyOf(model.id)}.line`)}
-      register={state.register(input.name)}
+    <div className="flex flex-col gap-1">
+      <PromptBlock
+        label={label}
+        chips={
+          <SoundChip
+            form={state.form}
+            fields={fields}
+            isGraph={isGraph && hasGraphSound}
+            makesSound={
+              hosted.chosen?.tags.some((one) => one.kind === "sound") === true
+            }
+          />
+        }
+      >
+        <textarea
+          aria-label={label}
+          aria-invalid={problem === undefined ? undefined : true}
+          placeholder={tCatalog("shot.input.prompt.placeholder")}
+          value={shot.scene}
+          onChange={(event) => screen.setScene(event.target.value)}
+          className="min-h-0 w-full flex-1 resize-none bg-transparent text-body text-ink outline-none placeholder:text-ink-muted"
+        />
+      </PromptBlock>
+      {problem === undefined ? null : (
+        <p role="alert" className="px-1 text-label text-bug-text">
+          {t(problem.key, problem.values)}
+        </p>
+      )}
+      <SentWords words={screen.words} />
+    </div>
+  )
+}
+
+function ShotChoices({ screen }: { screen: ShotScreen }): ReactElement {
+  return (
+    <div data-slot="shot-choices" className="grid grid-cols-2 gap-2">
+      {shotListOrder.map((list) => (
+        <ChoiceField
+          key={list}
+          label={tCatalog(`shot.input.${list}.label`)}
+          items={choiceValuesOf(list).map((value) => ({
+            value,
+            label: tCatalog(choiceKeyOf(list, value)),
+          }))}
+          value={screen.shot.choices[list]}
+          onChange={(value) => screen.setChoice(list, value)}
+          note={null}
+        />
+      ))}
+    </div>
+  )
+}
+
+function GraphSeed({ app, screen }: PanelProps): ReactNode {
+  const { form, lastSeed } = screen.state
+  const seed = app.inputs.find((input) => input.type === "seed")
+  if (seed === undefined) {
+    return null
+  }
+  const value = form.values.inputs[seed.name]
+  return (
+    <SeedField
+      mode={form.values.seedMode}
+      value={value}
+      onMode={(mode) => {
+        form.setForm({ seedMode: mode })
+        if (mode === "fixed" && typeof value !== "number") {
+          form.setInput(seed.name, lastSeed ?? randomSeed())
+        }
+      }}
+      onChange={(next) => form.setInput(seed.name, next)}
     />
   )
 }
 
-function SoundField({ state }: { state: ShotScreenState }): ReactElement {
-  const id = useId()
-  const inputs = state.form.values.inputs
-  const isOn = state.hasSound && textOf(inputs.sound) !== "off"
-  return (
-    <div className="flex flex-col gap-s1_5">
-      <div className="flex items-center justify-between gap-s3">
-        <label htmlFor={id} className="text-label text-ink-muted">
-          {tCatalog("shot.input.sound.label")}
-        </label>
-        <Switch
-          id={id}
-          checked={isOn}
-          disabled={!state.hasSound}
-          onCheckedChange={(checked) =>
-            state.form.setInput("sound", checked ? "on" : "off")
-          }
-        />
-      </div>
-      <p className="text-label text-ink-muted">
-        {tCatalog(
-          state.hasSound
-            ? "shot.input.sound.note"
-            : "shot.input.sound.noteSilent"
-        )}
-      </p>
-    </div>
-  )
+export function hasAdvanced(app: AppListing, screen: ShotScreen): boolean {
+  return screen.fields === null
+    ? app.inputs.some((input) => input.type === "seed")
+    : screen.fields.rest.length > 0
 }
 
-function ShotInput({
-  app,
-  state,
-  input,
-}: PanelProps & { input: InputDefinition }): ReactElement {
-  const { form } = state
-  const field =
-    input.name === "model" && input.type === "choice" ? (
-      <ModelField input={input} state={state} />
-    ) : (
-      <InputField
-        app={app}
-        input={input}
-        value={form.values.inputs[input.name]}
-        problem={form.problems.get(input.name)}
-        onChange={(value) => form.setInput(input.name, value)}
-        register={state.register(input.name)}
-      />
-    )
+function Advanced({ app, screen }: PanelProps): ReactNode {
+  const { fields, state, filled } = screen
+  if (!hasAdvanced(app, screen)) {
+    return null
+  }
   return (
-    <div className="flex flex-col gap-s1_5">
-      {field}
-      <Problem message={state.messages.get(input.name)} />
-      {input.name === "prompt" ? <SentWords app={app} state={state} /> : null}
-    </div>
-  )
-}
-
-function AdvancedInputs({ app, state }: PanelProps): ReactElement {
-  const { form } = state
-  const resolution = app.inputs.find((input) => input.name === "resolution")
-  const seed = form.values.inputs.seed
-  return (
-    <CollapsibleSection title={t("field.advanced")}>
-      {resolution === undefined ? null : (
-        <ShotInput app={app} state={state} input={resolution} />
+    <CollapsibleSection
+      key={filled}
+      title={t("field.advanced")}
+      defaultOpen={filled > 0}
+    >
+      {fields === null ? (
+        <GraphSeed app={app} screen={screen} />
+      ) : (
+        <HostedFields fields={fields.rest} form={state.form} />
       )}
-      <SoundField state={state} />
-      <SeedField
-        mode={form.values.seedMode}
-        value={seed}
-        onMode={(mode) => {
-          form.setForm({ seedMode: mode })
-          if (mode === "fixed" && typeof seed !== "number") {
-            form.setInput("seed", state.lastSeed ?? randomSeed())
-          }
-        }}
-        onChange={(next) => form.setInput("seed", next)}
-      />
     </CollapsibleSection>
   )
 }
 
-export function ShotPanel({ app, state }: PanelProps): ReactElement {
+export function ShotPanel({ app, screen }: PanelProps): ReactElement {
+  const { state, fields, start, picker } = screen
   const { form } = state
-  const shown = app.inputs.filter(
-    (input) => !advancedInputs.includes(input.name)
-  )
   return (
-    <div className="flex flex-col gap-s4">
-      {shown.map((input) => (
-        <div key={input.name} className="contents">
-          {input.name === "length" ? (
-            <AspectField
-              app={app}
-              value={form.values.aspectRatio}
-              onChange={(aspectRatio) => form.setForm({ aspectRatio })}
-            />
-          ) : null}
-          <ShotInput app={app} state={state} input={input} />
-        </div>
-      ))}
+    <div data-slot="shot-parts" className="flex flex-1 flex-col gap-2">
+      <ScenePart app={app} screen={screen} />
+      {start === null ? null : (
+        <VideoWells
+          slots={{ start, references: null, last: null }}
+          form={form}
+        />
+      )}
+      <CatalogPicker hosted={picker} place="row" />
+      <ShotChoices screen={screen} />
+      <VideoChips app={app} form={form} fields={fields} />
       <CountField
         app={app}
         value={form.values.count}
         onChange={(count) => form.setForm({ count })}
       />
-      <AdvancedInputs app={app} state={state} />
+      {fields === null ? null : (
+        <HostedFields fields={fields.required} form={form} />
+      )}
+      <Advanced app={app} screen={screen} />
     </div>
   )
 }
