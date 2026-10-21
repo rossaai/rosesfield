@@ -38,9 +38,7 @@ describe("the layer separation and inpaint tasks", () => {
   })
 
   it("control: a model whose name holds neither gets no named task", () => {
-    expect(namedTasksOf(hosted("byteplus/seedream-5-0-pro-260628"))).toEqual(
-      []
-    )
+    expect(namedTasksOf(hosted("byteplus/seedream-5-0-pro-260628"))).toEqual([])
     expect(namedTasksOf(hosted("a/fill"))).toEqual([])
     expect(namedTasksOf(hosted("bfl/flux-pro-1.0-expand"))).toEqual(["expand"])
   })

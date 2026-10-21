@@ -172,9 +172,8 @@ export function taskFieldOf(
   const rule = fieldRules.find((one) => one.task === task)
   return rule === undefined
     ? null
-    : (fields.find(
-        (one) => one.path === rule.path && one.kind === rule.kind
-      ) ?? null)
+    : (fields.find((one) => one.path === rule.path && one.kind === rule.kind) ??
+        null)
 }
 
 function fieldTasksOf(model: HostedModel): ModelTask[] {

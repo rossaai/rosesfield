@@ -17,9 +17,7 @@ async function uploadPhoto(): Promise<string> {
   return body.asset.id
 }
 
-async function splitOf(
-  source: string
-): Promise<{ id: string; first: string }> {
+async function splitOf(source: string): Promise<{ id: string; first: string }> {
   const started = await fetch(`${gatewayOrigin}/api/apps/layers/runs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
