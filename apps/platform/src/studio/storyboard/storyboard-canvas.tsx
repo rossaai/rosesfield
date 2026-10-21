@@ -7,6 +7,7 @@ import { appEmptyTitle } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { RunLine } from "@/pieces/run/run-line"
 import { useAppRuns } from "@/screens/app/app-canvas"
+import { keptKeyframeOf } from "@/studio/storyboard/kept-keyframes"
 import {
   type KeyframeBlock,
   keyframeBlocksOf,
@@ -86,7 +87,7 @@ export function StoryboardCanvas({
     )
   }
   const list = runs.runs.flatMap((run) => run.outputs)
-  const [latest, ...earlier] = keyframeBlocksOf(runs.runs)
+  const [latest, ...earlier] = keyframeBlocksOf(runs.runs, keptKeyframeOf)
   return (
     <div className="flex flex-col gap-s6">
       {latest === undefined ? null : (

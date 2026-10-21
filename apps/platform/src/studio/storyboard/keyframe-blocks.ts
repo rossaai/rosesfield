@@ -1,10 +1,12 @@
 import {
   firstKeyframeInput,
+  type KeptKeyframe,
   keyframeInput,
   keyframeNumberOf,
   keyframeTextModel,
 } from "@rosesfield/catalog/storyboard"
 import type { Run } from "@rosesfield/contract"
+import { runWithKept } from "@/studio/storyboard/kept-keyframes"
 import {
   maxScenes,
   sceneCountInput,
@@ -62,16 +64,26 @@ function blockOf(group: Group): KeyframeBlock {
   return { kind: "chain", lead, count: countOf(lead), runs: group.runs }
 }
 
-export function keyframeBlocksOf(runs: readonly Run[]): KeyframeBlock[] {
+function noKept(): KeptKeyframe | null {
+  return null
+}
+
+export function keyframeBlocksOf(
+  runs: readonly Run[],
+  keptOf: (run: Run) => KeptKeyframe | null = noKept
+): KeyframeBlock[] {
   const groups: Group[] = []
-  for (const run of runs) {
+  for (const given of runs) {
+    const keyframe = keptOf(given)
+    const run = runWithKept(given, keyframe)
     const number = keyframeNumberOf(run.inputs[keyframeInput])
     const last = groups[groups.length - 1]
     if (number === null) {
       groups.push({ signature: null, first: run, runs: new Map() })
       continue
     }
-    const signature = signatureOf(run)
+    const signature =
+      keyframe === null ? signatureOf(run) : `press:${keyframe.press}`
     if (
       last !== undefined &&
       last.signature === signature &&

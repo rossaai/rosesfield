@@ -1,4 +1,5 @@
 import { type ChainRun, SpeechChain } from "@rosesfield/catalog/lipsync"
+import type { KeptKeyframe } from "@rosesfield/catalog/storyboard"
 import { assetId, type Run } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import type { FormValues } from "@/screens/app/app-form"
@@ -89,6 +90,7 @@ describe("a press of Generate in Storyboard", () => {
       key: "press-1",
       chain,
       photosOf: async () => [],
+      keep: () => undefined,
       onStarted: (run) => started.push(run),
     })
     expect(chain.started.map((one) => one.key)).toEqual([
@@ -106,6 +108,7 @@ describe("a press of Generate in Storyboard", () => {
   it("sends a hosted model the character's photos it reads for the press", async () => {
     const chain = new FakeSpeechChain()
     const asked: string[] = []
+    const kept: (KeptKeyframe & { runId: string })[] = []
     const values = threeScenes()
     await pressKeyframes({
       app: storyboard,
@@ -123,9 +126,23 @@ describe("a press of Generate in Storyboard", () => {
         asked.push(id)
         return photos
       },
+      keep: (run, keyframe) => kept.push({ runId: run.id, ...keyframe }),
       onStarted: () => undefined,
     })
     expect(asked).toEqual([characterId])
+    expect(new Set(kept.map((one) => one.press))).toEqual(new Set(["press-2"]))
+    expect(kept.map((one) => one.runId.slice(-1))).toEqual(["1", "2", "3"])
+    kept.forEach((one, index) => {
+      expect(one.inputs).toMatchObject({
+        keyframe: String(index + 1),
+        scene1: "the door",
+        scene2: "the stairs",
+        scene3: "the roof",
+        sceneCount: "3",
+        character: [characterId],
+        model: fluxImage.id,
+      })
+    })
     expect(chain.started.map((one) => one.request.inputs.images)).toEqual([
       photos,
       photos,

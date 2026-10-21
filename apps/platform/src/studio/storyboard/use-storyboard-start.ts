@@ -1,5 +1,6 @@
 import {
   type HostedAsk,
+  type KeptKeyframe,
   type KeyframeChain,
   runKeyframes,
   type StoryboardAsk,
@@ -23,6 +24,7 @@ import { randomSeed } from "@/screens/app/inputs-panel"
 import type { AppForm } from "@/screens/app/use-app-form"
 import type { StartRun } from "@/screens/app/use-start-run"
 import { GatewaySpeechChain } from "@/studio/lipsync/gateway-speech-chain"
+import { keepKeyframe } from "@/studio/storyboard/kept-keyframes"
 import {
   callsCredits,
   priceAsksOf,
@@ -42,6 +44,7 @@ export type KeyframePress = {
   key: string
   chain: KeyframeChain
   photosOf: (characterId: string) => Promise<HostedAsk["photos"]>
+  keep: (run: Run, keyframe: KeptKeyframe) => void
   onStarted: (run: Run) => void
 }
 
@@ -119,6 +122,7 @@ export async function pressKeyframes(
     ask: storyboardAskOf({ app: press.app, values, chosen, photos }),
     key: press.key,
     chain: startedOnce({ chain: press.chain, onStarted: press.onStarted }),
+    keep: press.keep,
   })
 }
 
@@ -171,6 +175,7 @@ export function useStoryboardStart(
           const answer = await client.fetchQuery(characterQuery(characterId))
           return answer.character.references
         },
+        keep: keepKeyframe,
         onStarted,
       }),
   })

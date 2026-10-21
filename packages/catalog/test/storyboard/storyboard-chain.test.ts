@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest"
 import { type ChainRun, SpeechChain } from "#lipsync/speech-chain.port"
 import { keepSentence } from "#storyboard/comfy/storyboard-nodes"
 import {
+  type KeptKeyframe,
   keyframeCallsOf,
   runKeyframes,
   type StoryboardAsk,
@@ -293,5 +294,41 @@ describe("a Storyboard chain on a hosted edit model", () => {
       [made(1)],
       [made(1)],
     ])
+  })
+
+  it("keeps the press, the keyframe number, the scenes and the look of each run, which the model's own inputs do not hold", async () => {
+    const hosted = {
+      form: fluxForm,
+      settings: { aspectRatio: "1:1" },
+      photos: [],
+    }
+    const chain = new FakeSpeechChain()
+    const kept: KeptKeyframe[] = []
+    const ended = runKeyframes({
+      ask: askOf({}, hosted),
+      key: "press",
+      chain,
+      keep: (_run, keyframe) => kept.push(keyframe),
+    })
+    chain.release()
+    await ended
+    expect(kept.map((one) => one.press)).toEqual(["press", "press", "press"])
+    expect(kept.map((one) => one.inputs.keyframe)).toEqual(["1", "2", "3"])
+    const [text, ...edits] = kept
+    expect(text?.inputs).toMatchObject({ model: "z-image-turbo" })
+    for (const one of edits) {
+      expect(one.inputs).toMatchObject({
+        model: "bfl/flux-3-image",
+        aspectRatio: "1:1",
+        sceneCount: "3",
+        scene1: scenes[0],
+        scene2: scenes[1],
+        scene3: scenes[2],
+        look,
+        firstKeyframe: [made(1)],
+      })
+      expect(one.inputs).not.toHaveProperty("prompt")
+      expect(one.inputs).not.toHaveProperty("images")
+    }
   })
 })

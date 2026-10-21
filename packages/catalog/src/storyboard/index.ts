@@ -10,6 +10,7 @@ export {
 export {
   anchoredOn,
   type HostedAsk,
+  type KeptKeyframe,
   type KeyframeCall,
   type KeyframeChain,
   keyframeCallsOf,

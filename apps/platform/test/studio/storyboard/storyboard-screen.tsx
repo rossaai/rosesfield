@@ -1,5 +1,6 @@
 import { findApp } from "@rosesfield/catalog"
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
+import type { KeptKeyframe } from "@rosesfield/catalog/storyboard"
 import { appListing, type Run, run } from "@rosesfield/contract"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
@@ -156,6 +157,43 @@ export function storyboardRun(change: RunFields): Run {
     finishedAt: "2026-10-20T09:00:20.000Z",
     ...change,
   })
+}
+
+export const hostedReference = "1e3a5c7e-9b2d-4f6a-8c0e-2b4d6f8a0c1e"
+
+export const hostedScenes = ["the door", "the stairs", "the roof"]
+
+export function hostedKeyframe(
+  number: number,
+  change: RunFields = {}
+): { run: Run; kept: KeptKeyframe } {
+  const scenes = Object.fromEntries(
+    hostedScenes.map((scene, index) => [`scene${index + 1}`, scene])
+  )
+  return {
+    run: storyboardRun({
+      id: `7c2e4a6c-8e0a-4c2e-8a4c-6e8a0c2e4b0${number}`,
+      inputs: {
+        model: fluxImage.id,
+        prompt: `${hostedScenes[number - 1]} dusk`,
+        images: [hostedReference],
+        aspectRatio: "16:9",
+      },
+      ...change,
+    }),
+    kept: {
+      press: "press-7",
+      inputs: {
+        aspectRatio: "16:9",
+        ...scenes,
+        sceneCount: String(hostedScenes.length),
+        look: "dusk",
+        reference: [hostedReference],
+        model: fluxImage.id,
+        keyframe: String(number),
+      },
+    },
+  }
 }
 
 export type Price = readonly [FormValues, CatalogModel, number]

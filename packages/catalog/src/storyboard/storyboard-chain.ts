@@ -34,7 +34,13 @@ export type KeyframeCall = {
   number: number
   kind: "text" | "edit"
   request: ChainRun
+  kept: RunInputs
   waits: boolean
+}
+
+export type KeptKeyframe = {
+  press: string
+  inputs: RunInputs
 }
 
 export type KeyframeChain = Pick<SpeechChain, "start" | "settle">
@@ -155,6 +161,32 @@ function editRequest(
     : hostedEdit(ask, ask.hosted, number, anchor)
 }
 
+function keptEdit(
+  ask: StoryboardAsk,
+  number: number,
+  anchor: Id | null
+): RunInputs {
+  return {
+    ...(ask.hosted?.settings ?? {}),
+    ...graphEdit(ask, number, anchor).inputs,
+  }
+}
+
+function editCall(
+  ask: StoryboardAsk,
+  number: number,
+  anchor: Id | null,
+  waits: boolean
+): KeyframeCall {
+  return {
+    number,
+    kind: "edit",
+    request: editRequest(ask, number, anchor),
+    kept: keptEdit(ask, number, anchor),
+    waits,
+  }
+}
+
 function hostedAspectOf(hosted: HostedAsk | null): string | null {
   const field = hosted?.form.find(
     (one) => fieldRoleOf(one, imageOutput) === aspectRole
@@ -182,14 +214,16 @@ export function keyframeCallsOf(ask: StoryboardAsk): KeyframeCall[] {
     .slice(0, sceneCountOf(ask.inputs))
     .map((number): KeyframeCall => {
       if (!anchored && number === 1) {
-        return { number, kind: "text", request: textRequest(ask), waits: false }
+        const request = textRequest(ask)
+        return {
+          number,
+          kind: "text",
+          request,
+          kept: request.inputs,
+          waits: false,
+        }
       }
-      return {
-        number,
-        kind: "edit",
-        request: editRequest(ask, number, null),
-        waits: !anchored,
-      }
+      return editCall(ask, number, null, !anchored)
     })
 }
 
@@ -198,11 +232,7 @@ export function anchoredOn(
   call: KeyframeCall,
   assetId: Id
 ): KeyframeCall {
-  return {
-    ...call,
-    request: editRequest(ask, call.number, assetId),
-    waits: false,
-  }
+  return editCall(ask, call.number, assetId, false)
 }
 
 export function keyframeKeyOf(key: string, number: number): string {
@@ -219,17 +249,19 @@ export async function runKeyframes(options: {
   ask: StoryboardAsk
   key: string
   chain: KeyframeChain
+  keep?: (run: Run, keyframe: KeptKeyframe) => void
 }): Promise<(Run | null)[]> {
-  const { ask, key, chain } = options
+  const { ask, key, chain, keep } = options
   const calls = keyframeCallsOf(ask)
-  const run = async (call: KeyframeCall): Promise<Run> =>
-    chain.settle(
-      await chain.start(
-        storyboardAppId,
-        call.request,
-        keyframeKeyOf(key, call.number)
-      )
+  const run = async (call: KeyframeCall): Promise<Run> => {
+    const started = await chain.start(
+      storyboardAppId,
+      call.request,
+      keyframeKeyOf(key, call.number)
     )
+    keep?.(started, { press: key, inputs: call.kept })
+    return chain.settle(started)
+  }
   const free = new Map(
     calls
       .filter((call) => !call.waits)
