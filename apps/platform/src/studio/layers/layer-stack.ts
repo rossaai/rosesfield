@@ -28,16 +28,38 @@ export function isSplitRun(run: Run): boolean {
   return mode === undefined || mode === "split"
 }
 
-function layerOf(run: Run): string | null {
-  const value = run.inputs.layer
-  if (!Array.isArray(value)) {
-    return null
+export type IsSplit = (run: Run) => boolean
+
+function assetsOf(run: Run): string[] {
+  const named = run.inputs.layer
+  if (Array.isArray(named)) {
+    return named.filter((one): one is string => typeof one === "string")
   }
-  const [first] = value
-  return typeof first === "string" ? first : null
+  return Object.values(run.inputs).flatMap((value) =>
+    Array.isArray(value)
+      ? value.filter((one): one is string => typeof one === "string")
+      : []
+  )
 }
 
-export function stackOf(split: Run, runs: readonly Run[]): Stack {
+function sourceLayerOf(
+  run: Run,
+  layers: readonly StackLayer[]
+): StackLayer | undefined {
+  for (const asset of assetsOf(run)) {
+    const layer = layers.find((candidate) => candidate.versions.includes(asset))
+    if (layer !== undefined) {
+      return layer
+    }
+  }
+  return undefined
+}
+
+export function stackOf(
+  split: Run,
+  runs: readonly Run[],
+  isSplit: IsSplit = isSplitRun
+): Stack {
   const layers: StackLayer[] = split.outputs.map((id, index) => ({
     key: id,
     number: index + 1,
@@ -48,11 +70,10 @@ export function stackOf(split: Run, runs: readonly Run[]): Stack {
     left.createdAt.localeCompare(right.createdAt)
   )
   for (const run of oldestFirst) {
-    const source = isSplitRun(run) ? null : layerOf(run)
     const layer =
-      source === null
+      run.id === split.id || isSplit(run)
         ? undefined
-        : layers.find((candidate) => candidate.versions.includes(source))
+        : sourceLayerOf(run, layers)
     if (layer === undefined) {
       continue
     }
@@ -68,10 +89,11 @@ export function stackOf(split: Run, runs: readonly Run[]): Stack {
 
 export function pickStack(
   runs: readonly Run[],
-  preferred: string | null
+  preferred: string | null,
+  isSplit: IsSplit = isSplitRun
 ): Run | null {
   const splits = runs.filter(
-    (run) => isSplitRun(run) && run.status === "done" && run.outputs.length > 0
+    (run) => isSplit(run) && run.status === "done" && run.outputs.length > 0
   )
   return splits.find((run) => run.id === preferred) ?? splits[0] ?? null
 }

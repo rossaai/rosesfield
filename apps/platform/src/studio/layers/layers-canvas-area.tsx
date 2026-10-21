@@ -6,6 +6,7 @@ import type { ReactElement } from "react"
 import { t, tCatalog } from "@/copy/t"
 import { RunLine } from "@/pieces/run/run-line"
 import { RunOutputs } from "@/pieces/run/run-outputs"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import { DownloadMenu } from "@/studio/layers/download-menu"
 import { type Brush, LayerCanvas } from "@/studio/layers/layer-canvas"
@@ -45,7 +46,26 @@ function brushOf(state: LayersState): Brush | null {
   }
 }
 
-function StackView({
+function StackHead({
+  state,
+  stack,
+}: {
+  state: LayersState
+  stack: Stack
+}): ReactElement {
+  return (
+    <div className="flex min-w-0 flex-col gap-s2 @regular:flex-row @regular:items-start">
+      <div className="min-w-0 flex-1">
+        <RunLine run={stack.run} onUseInputs={state.useInputs} />
+      </div>
+      <div className="shrink-0">
+        <DownloadMenu runId={stack.run.id} rows={state.rows} />
+      </div>
+    </div>
+  )
+}
+
+function RegularStack({
   state,
   stack,
 }: {
@@ -54,15 +74,8 @@ function StackView({
 }): ReactElement {
   return (
     <section className="flex flex-col gap-s3">
-      <div className="flex min-w-0 flex-col gap-s2 @regular:flex-row @regular:items-start">
-        <div className="min-w-0 flex-1">
-          <RunLine run={stack.run} onUseInputs={state.useInputs} />
-        </div>
-        <div className="shrink-0">
-          <DownloadMenu runId={stack.run.id} rows={state.rows} />
-        </div>
-      </div>
-      <div className="flex flex-col gap-s3 @regular:flex-row">
+      <StackHead state={state} stack={stack} />
+      <div className="flex flex-row gap-s3">
         <div className="min-w-0 flex-1">
           <LayerCanvas
             shown={state.shown}
@@ -71,15 +84,8 @@ function StackView({
             isDemo={stack.run.origin === "demo"}
           />
         </div>
-        <div className="hidden w-field-max shrink-0 @regular:block">
+        <div className="w-field-max shrink-0">
           <LayerList
-            rows={state.rows}
-            actions={state.actions}
-            size={state.size}
-          />
-        </div>
-        <div className="@regular:hidden">
-          <LayerStrip
             rows={state.rows}
             actions={state.actions}
             size={state.size}
@@ -87,6 +93,58 @@ function StackView({
         </div>
       </div>
     </section>
+  )
+}
+
+function PhoneStack({
+  state,
+  stack,
+}: {
+  state: LayersState
+  stack: Stack
+}): ReactElement {
+  return (
+    <section
+      data-slot="layers-phone-stack"
+      className="flex h-(--canvas-height) min-h-80 flex-col gap-s3"
+    >
+      <StackHead state={state} stack={stack} />
+      <div
+        data-slot="layers-phone-canvas"
+        className="flex min-h-0 flex-1 items-center justify-center"
+        style={{ containerType: "size" }}
+      >
+        <LayerCanvas
+          shown={state.shown}
+          size={state.size}
+          brush={brushOf(state)}
+          isDemo={stack.run.origin === "demo"}
+          fit="box"
+        />
+      </div>
+      <div className="shrink-0">
+        <LayerStrip
+          rows={state.rows}
+          actions={state.actions}
+          size={state.size}
+        />
+      </div>
+    </section>
+  )
+}
+
+function StackView({
+  state,
+  stack,
+}: {
+  state: LayersState
+  stack: Stack
+}): ReactElement {
+  const isRegular = useIsRegularWindow()
+  return isRegular ? (
+    <RegularStack state={state} stack={stack} />
+  ) : (
+    <PhoneStack state={state} stack={stack} />
   )
 }
 

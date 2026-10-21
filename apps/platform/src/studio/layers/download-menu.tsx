@@ -19,29 +19,53 @@ type DownloadMenuProps = {
   rows: readonly LayerRow[]
 }
 
-export function DownloadMenu({ runId, rows }: DownloadMenuProps): ReactElement {
-  const device = useDevice()
+export type LayerFile = {
+  name: string
+  assetId: string
+}
+
+export type StackDownloads = {
+  flat: { name: string; assetIds: string[] }
+  each: LayerFile[]
+}
+
+export function downloadsOf(
+  runId: string,
+  rows: readonly LayerRow[]
+): StackDownloads {
   const bottomFirst = [...rows].reverse().filter((row) => !row.isHidden)
   const base = `rosesfield-layers-${runId.slice(0, 8)}`
+  return {
+    flat: { name: `${base}.png`, assetIds: bottomFirst.map((row) => row.shown) },
+    each: bottomFirst.map((row) => ({
+      name: `${base}-${row.layer.number}.png`,
+      assetId: row.shown,
+    })),
+  }
+}
+
+export function DownloadMenu({ runId, rows }: DownloadMenuProps): ReactElement {
+  const device = useDevice()
+  const downloads = downloadsOf(runId, rows)
   const saveFlat = async (): Promise<void> => {
-    const blob = await flattenLayers(bottomFirst.map((row) => row.shown))
+    const blob = await flattenLayers(downloads.flat.assetIds)
     if (blob !== null) {
-      await device.save({ name: `${base}.png`, blob })
+      await device.save({ name: downloads.flat.name, blob })
     }
   }
   const saveEach = async (): Promise<void> => {
-    for (const row of bottomFirst) {
+    for (const file of downloads.each) {
       const blob = await callRoute(routes.readAssetContent, {
-        params: { assetId: row.shown },
+        params: { assetId: file.assetId },
       })
-      await device.save({ name: `${base}-${row.layer.number}.png`, blob })
+      await device.save({ name: file.name, blob })
     }
   }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button size="small" disabled={bottomFirst.length === 0}>
+          <Button size="small" disabled={downloads.each.length === 0}>
             <DownloadIcon aria-hidden="true" />
             {t("output.download")}
           </Button>

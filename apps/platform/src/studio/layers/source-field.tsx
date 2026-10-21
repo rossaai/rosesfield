@@ -56,7 +56,8 @@ function useSourceCheck(props: SourceFieldProps): {
   const client = useQueryClient()
   const [message, setMessage] = useState<string | null>(null)
   const [first = null] = listOf(props.value)
-  const { onChange, onSize } = props
+  const answers = useRef({ onChange: props.onChange, onSize: props.onSize })
+  answers.current = { onChange: props.onChange, onSize: props.onSize }
   useEffect(() => {
     if (first === null) {
       return
@@ -73,16 +74,16 @@ function useSourceCheck(props: SourceFieldProps): {
       const refusal = refusalOf(asset.bytes, size)
       setMessage(refusal)
       if (refusal === null) {
-        onSize(size)
+        answers.current.onSize(size)
       } else {
-        onChange([])
+        answers.current.onChange([])
       }
     }
     void check()
     return () => {
       isCurrent = false
     }
-  }, [client, first, onChange, onSize])
+  }, [client, first])
   return { message, setMessage }
 }
 
