@@ -2,6 +2,7 @@ import { cleanup, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { ColumnFrame } from "@/screens/app/column-frame"
 import {
+  asPhone,
   resetFrames,
   start,
   stubFetch,
@@ -67,5 +68,32 @@ describe("the column frame", () => {
     expect(scroll?.className.split(" ")).toContain("px-4")
     const head = document.querySelector("[data-slot='canvas-head']")
     expect(head?.className.split(" ")).toContain("px-4")
+  })
+})
+
+describe("the column frame's phone sheet", () => {
+  it("leaves 8 px under the mode tabs before the first part, as the desktop column's tray does", () => {
+    asPhone()
+    render(
+      withClient(
+        <ColumnFrame
+          app={video}
+          start={start}
+          onShortcut={() => undefined}
+          sheet={[true, () => undefined]}
+          tabs={<div data-testid="tabs" />}
+          panel={<div data-testid="panel" />}
+          canvas={() => null}
+        />,
+        video,
+        null
+      )
+    )
+    const body = document.querySelector("[data-slot='sheet-body']")
+    const tabs = body?.querySelector("[data-testid='tabs']")
+    const tray = tabs?.parentElement
+    expect(tray?.getAttribute("data-slot")).toBe("sheet-tray")
+    expect(tray?.className.split(" ")).toContain("mb-2")
+    expect(tray?.nextElementSibling?.getAttribute("data-testid")).toBe("panel")
   })
 })
