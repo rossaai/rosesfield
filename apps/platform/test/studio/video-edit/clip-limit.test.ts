@@ -5,7 +5,7 @@ import {
   clipLimitsText,
   clipProblemOf,
 } from "@/studio/video-edit/clip-limit"
-import type { ClipFacts } from "@/studio/video-edit/use-clip-facts"
+import type { ClipFacts } from "@/pieces/use-clip-facts"
 import { dreamina, fluxEdit, graphs } from "./video-edit-catalog"
 
 function clipOf(seconds: number): ClipFacts {
