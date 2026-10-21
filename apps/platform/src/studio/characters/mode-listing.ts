@@ -1,3 +1,4 @@
+import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
 import {
   type AppListing,
   fixedCountOf,
@@ -6,6 +7,8 @@ import {
   inputRulesOf,
   type Run,
 } from "@rosesfield/contract"
+import type { FieldValue } from "@/screens/app/app-form"
+import { modelInputName } from "@/screens/app/hosted/hosted-form"
 import {
   type Mode,
   traitNames,
@@ -92,4 +95,43 @@ export function randomTraits(app: AppListing): Record<string, string> {
     }
   }
   return picked
+}
+
+export const traitsTask = "text-to-image"
+
+export const promptInput = "prompt"
+
+export function traitsModelsOf(
+  models: readonly CatalogModel[]
+): CatalogModel[] {
+  return models.filter((model) => model.task === traitsTask)
+}
+
+export function promptNameOf(
+  app: AppListing,
+  fields: readonly ModelField[] | null
+): string | null {
+  if (fields !== null) {
+    return fields.find((field) => field.kind === "prompt")?.name ?? null
+  }
+  return app.inputs.some((input) => input.name === promptInput)
+    ? promptInput
+    : null
+}
+
+export function keptInputsOf(
+  app: AppListing,
+  inputs: Readonly<Record<string, FieldValue>>,
+  next: CatalogModel | undefined
+): Array<[string, FieldValue]> {
+  const taken = new Set([
+    modelInputName,
+    ...(next?.form ?? []).map((field) => field.name),
+  ])
+  return app.inputs.flatMap((input): Array<[string, FieldValue]> => {
+    const value = inputs[input.name]
+    return taken.has(input.name) || value === undefined
+      ? []
+      : [[input.name, value]]
+  })
 }

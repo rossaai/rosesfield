@@ -21,6 +21,7 @@ import {
   useSheetOpen,
 } from "@/screens/app/column-frame"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
+import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import type { AppForm } from "@/screens/app/use-app-form"
 import {
@@ -40,25 +41,31 @@ import {
   RandomButton,
   TraitsPanel,
 } from "@/studio/characters/mode-panels"
+import { useTraitsModel } from "@/studio/characters/use-traits-model"
 import type { Mode } from "../../../../../packages/catalog/src/characters/traits"
 
 type ModeScreen = {
   listing: AppListing
   state: AppScreenState
+  hosted: HostedState | undefined
 }
 
 const allModes: readonly Mode[] = ["traits", "angles"]
 
-function useFixedCount(app: AppListing, form: AppForm): void {
+function useFixedCount(
+  app: AppListing,
+  form: AppForm,
+  isHosted: boolean
+): void {
   const { setForm } = form
   const count =
     fixedCountOf(app, form.values.inputs) ?? app.output.count.default
   const current = form.values.count
   useEffect(() => {
-    if (current !== count) {
+    if (!isHosted && current !== count) {
       setForm({ count })
     }
-  }, [count, current, setForm])
+  }, [isHosted, count, current, setForm])
 }
 
 function useModeScreen(
@@ -69,8 +76,14 @@ function useModeScreen(
 ): ModeScreen {
   const listing = useMemo(() => listingFor(app, mode), [app, mode])
   const state = useAppScreen(listing, seeds, onStarted)
-  useFixedCount(listing, state.form)
-  return { listing, state }
+  const traits = useTraitsModel(
+    listing,
+    state.form,
+    mode === "traits" ? state.hosted : undefined
+  )
+  const hosted = mode === "traits" ? traits : state.hosted
+  useFixedCount(listing, state.form, (hosted?.fields ?? null) !== null)
+  return { listing, state, hosted }
 }
 
 function ModePanel({
@@ -86,7 +99,7 @@ function ModePanel({
     lastSeed: screen.state.lastSeed,
   }
   return mode === "traits" ? (
-    <TraitsPanel {...props} />
+    <TraitsPanel {...props} hosted={screen.hosted} />
   ) : (
     <AnglesPanel {...props} />
   )
