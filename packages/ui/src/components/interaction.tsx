@@ -34,7 +34,8 @@ const ringRoomBlock =
 const ringRoomTop =
   "-mt-[calc(var(--spacing-focus-ring)*2)] pt-[calc(var(--spacing-focus-ring)*2)]"
 
-const ringScroll = "scroll-p-[calc(var(--spacing-focus-ring)*2)]"
+const ringScroll =
+  "scroll-p-[calc(var(--spacing-focus-ring)*2)] scroll-pb-[calc(var(--spacing-focus-ring)*2+var(--covered-bottom,0px))]"
 
 const reveal =
   "opacity-0 transition-opacity duration-(--duration-control) motion-reduce:transition-none group-hover/reveal:opacity-100 group-focus-within/reveal:opacity-100 in-data-[gallery=hover]:opacity-100 in-data-[gallery=focus]:opacity-100"

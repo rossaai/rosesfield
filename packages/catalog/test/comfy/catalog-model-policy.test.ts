@@ -12,23 +12,38 @@ describe("CatalogModelPolicy", () => {
     expect(
       policy.allows(
         ["text-to-image"],
-        model("maker/picture", ["text"], ["image"])
+        model("maker/picture", ["text"], ["image"]),
+        "image"
       )
     ).toBe(true)
   })
 
   it("refuses a model of another task and any Wan model", () => {
     expect(
-      policy.allows(["text-to-image"], model("maker/clip", ["text"], ["video"]))
+      policy.allows(
+        ["text-to-image"],
+        model("maker/clip", ["text"], ["video"]),
+        "image"
+      )
     ).toBe(false)
     expect(
       policy.allows(
         ["text-to-image"],
-        model("wan/wan2.5-t2i-preview", ["text"], ["image"])
+        model("wan/wan2.5-t2i-preview", ["text"], ["image"]),
+        "image"
       )
     ).toBe(false)
-    expect(policy.allows([], model("maker/picture", ["text"], ["image"]))).toBe(
-      false
-    )
+    expect(
+      policy.allows([], model("maker/picture", ["text"], ["image"]), "image")
+    ).toBe(false)
+  })
+
+  it("offers a background model only to an app that makes the media the model keeps", () => {
+    const clip = model("maker/video-background-removal", ["video"], ["video"])
+    const picture = model("maker/remove-background", ["image"], ["image"])
+    expect(policy.allows(["background"], clip, "video")).toBe(true)
+    expect(policy.allows(["background"], clip, "image")).toBe(false)
+    expect(policy.allows(["background"], picture, "image")).toBe(true)
+    expect(policy.allows(["background"], picture, "video")).toBe(false)
   })
 })

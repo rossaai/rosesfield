@@ -1,9 +1,9 @@
-import { listApps } from "@rosesfield/catalog"
 import type { AppDefinition } from "@rosesfield/contract"
 import { DrizzlePriceBook } from "@rosesfield/generation"
 import { type Clock, SystemClock } from "@rosesfield/kernel"
 import { drizzle } from "drizzle-orm/d1"
 import type { HandlerPorts } from "#build-handlers"
+import { servedApps } from "#catalog/served-apps"
 import { sharedCreditMeter } from "#catalog/shared-credit-meter"
 import { type EngineOptions, pickEngines } from "#compose/pick-engines"
 import { readWorkerEnv, type WorkerVars } from "#env"
@@ -30,10 +30,6 @@ export type WorkerBindings = {
   RETENTION_DAYS?: string
   SESSION_REQUESTS_PER_MINUTE?: string
   SPEND_CAP_CREDITS?: string
-  AGENT_PROVIDER?: string
-  AGENT_MODEL?: string
-  AGENT_API_KEY?: string
-  AGENT_BASE_URL?: string
 }
 
 export type WorkerParts = {
@@ -47,9 +43,10 @@ export type WorkerParts = {
 
 export function workerParts(env: WorkerBindings): WorkerParts {
   const clock = new SystemClock()
+  const vars = readWorkerEnv(env)
   return {
-    vars: readWorkerEnv(env),
-    apps: listApps(),
+    vars,
+    apps: servedApps(vars),
     db: drizzle(env.DB),
     store: new R2AssetStore({ bucket: env.BUCKET }),
     clock,

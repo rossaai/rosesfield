@@ -1,14 +1,52 @@
 {
   "effect": "grow-giant",
   "passed": false,
-  "prompt": "The person grows taller and taller in one steady motion. They rise past the street lamps, then past the windows, until they stand as a giant as tall as the buildings. Cars and people look tiny around their feet. The camera tilts up to follow them as they grow.",
+  "design": {
+    "unit": "grow-giant",
+    "family": "effects",
+    "fit": {
+      "prompt": "Place the person, at giant scale, in a wide city avenue with tall buildings. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. The person stands taller than the lower floors of the buildings, and people walk at their feet."
+    },
+    "setPiece": "The person as a giant in a city avenue, seen in three shots: from the street, through a window onto glass towers, and beside a glass tower.",
+    "cuts": [
+      {
+        "min": 3.5,
+        "max": 4.1,
+        "kind": "cut"
+      },
+      {
+        "min": 6.7,
+        "max": 7.5,
+        "kind": "cut"
+      }
+    ],
+    "lastFrame": {
+      "shows": "The giant stands beside a glass tower in bright daylight.",
+      "maxLuma": null
+    },
+    "sound": {
+      "prompt": "The sound is a deep city rumble with heavy footsteps.",
+      "loudness": {
+        "min": -26.5,
+        "max": -21
+      },
+      "truePeakMax": -4
+    },
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
+  },
+  "prompt": "Three shots. Shot one, about four seconds: the person stands as a giant in a city avenue, taller than the lower floors, as the camera moves past cars and people at their feet. Cut. Shot two, about three seconds: seen from inside a dark office through a window, the giant passes between glass towers. Cut. Shot three: in bright daylight the giant stands beside a tall glass tower.",
   "endFrame": {
     "source": "edit",
-    "prompt": "The same person as a giant as tall as the buildings, standing in the middle of the city street, with tiny cars and people around their feet, seen from street level looking up.",
+    "prompt": "The same person as a giant standing beside a tall glass tower in bright daylight, the city below them.",
     "strength": 0.9
   },
   "hold": null,
   "adapter": null,
-  "seconds": 5,
-  "preview": null
+  "seconds": 10,
+  "preview": null,
+  "proof": null
 }

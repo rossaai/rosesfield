@@ -1,5 +1,4 @@
 import { Button, IconButton } from "@rosesfield/ui/components/button"
-import { FieldNote } from "@rosesfield/ui/components/field"
 import { Textarea } from "@rosesfield/ui/components/textarea"
 import { ArrowDownIcon, ArrowUpIcon, PlusIcon, XIcon } from "lucide-react"
 import { type ReactElement, useEffect, useRef } from "react"
@@ -102,7 +101,9 @@ export function SceneList({ state }: { state: StoryboardState }): ReactElement {
           {tCatalog("storyboard.scene.add")}
         </Button>
       ) : (
-        <FieldNote>{tCatalog("storyboard.input.scenes.tooMany")}</FieldNote>
+        <p className="text-label text-ink-muted">
+          {tCatalog("storyboard.input.scenes.tooMany")}
+        </p>
       )}
     </section>
   )

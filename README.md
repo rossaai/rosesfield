@@ -103,10 +103,6 @@ Open `http://127.0.0.1:8787`. The server serves the built web app and the API fr
 | `SESSION_SECRET` | Public mode only. Signs each visitor's session, at least 32 characters. | empty |
 | `RETENTION_DAYS` | Public mode only. The days the server keeps a visitor's runs, assets, characters and conversations, 1 to 365. | `7` |
 | `SESSION_REQUESTS_PER_MINUTE` | Public mode only. The most requests one visitor session may send each minute, 1 to 10000. | `120` |
-| `AGENT_BASE_URL` | The address of an OpenAI-compatible server that serves the agent's model. | empty |
-| `AGENT_MODEL` | The model id that server uses. | empty |
-| `AGENT_API_KEY` | The key for that server, if it needs one. | empty |
-| `AGENT_PROVIDER` | `cloudflare-workers-ai` selects Workers AI when `AGENT_BASE_URL` is empty. | empty |
 
 `.env.example` lists the variables with comments.
 
@@ -151,18 +147,15 @@ bun run build
 MODE=public SESSION_SECRET=<32 characters or more> bun run --filter @rosesfield/gateway start
 ```
 
-The server refuses to start in public mode with `COMFY_API_KEY`, `RUNPOD_API_KEY`, `AGENT_API_KEY` or `OWNER_TOKEN` set, or without `SESSION_SECRET`. Each visitor reads only their own runs, assets, characters and conversations, and the server deletes them after `RETENTION_DAYS`.
+The server refuses to start in public mode with `COMFY_API_KEY`, `RUNPOD_API_KEY` or `OWNER_TOKEN` set, or without `SESSION_SECRET`. Each visitor reads only their own runs, assets, characters and conversations, and the server deletes them after `RETENTION_DAYS`.
 
 ### The agent
 
-The agent starts when you set a model, and Settings shows it. Without one, the server prints that the agent is off, and every agent route answers `AGENT_MODEL_MISSING`.
+The agent runs on a chat model of the Comfy Router with your Comfy key, so it needs no setting of its own. It starts when `COMFY_API_KEY` reaches Comfy Cloud, and Settings shows it. In public mode it answers each visitor on the Comfy key that visitor adds. Each turn spends credits from that key, and the agent shows them under the turn.
 
-```sh
-AGENT_BASE_URL=http://127.0.0.1:11434/v1
-AGENT_MODEL=<the model id your server lists>
-```
+The agent stays off when no Comfy key is set, and when `COMFY_BASE_URL` points at another host, because that key is not a Comfy Cloud key. Then the server prints that the agent is off, and every agent route answers `AGENT_MODEL_MISSING`. A key the Router has not turned on shows Comfy's message in Agent, and the agent stays off.
 
-Put these in `.env`. That address is where Ollama listens, per [docs/stack.md](docs/stack.md) §The agent's model. For Workers AI, set `AGENT_PROVIDER=cloudflare-workers-ai` and `AGENT_API_KEY` to a Cloudflare API token, and leave `AGENT_BASE_URL` empty. That path also needs `CLOUDFLARE_ACCOUNT_ID` in the environment, per `.env.example`. The server accepts any OpenAI-compatible endpoint and does not check that the model is open weights. The settings for each host are in the same section.
+The server refuses to start with `AGENT_BASE_URL`, `AGENT_MODEL`, `AGENT_API_KEY` or `AGENT_PROVIDER` set, because the agent no longer reads them.
 
 ### Use it from Claude or your own code
 

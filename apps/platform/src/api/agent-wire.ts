@@ -1,15 +1,52 @@
-import { buildPath, errorBody } from "@rosesfield/contract"
-import { callPath, fieldOf } from "@/api/call-path"
-import { type Proposal, readProposal } from "@/api/conversation-wire"
+import { buildPath, type ErrorBody, errorBody } from "@rosesfield/contract"
+import { callPath, callPathFor, fieldOf } from "@/api/call-path"
+import { creditsOf, type Proposal, readProposal } from "@/api/conversation-wire"
 
 export type AnswerEvent =
   | { type: "message"; index: number; text: string }
   | { type: "run"; runId: string }
   | { type: "proposal"; proposal: Proposal }
-  | { type: "done" }
+  | { type: "done"; credits: number | null }
   | { type: "failed"; error: { code: string; status: number } }
 
+export type AgentModels = {
+  models: string[]
+  model: string | null
+  refusal: ErrorBody | null
+}
+
 const sendPath = "/api/agent/conversations/:conversationId/messages"
+const modelsPath = "/api/agent/models"
+
+export function readAgentModels(body: unknown): AgentModels | null {
+  const models = fieldOf(body, "models")
+  const given = fieldOf(body, "model")
+  const model = given === null || typeof given === "string" ? given : undefined
+  const refusal = errorBody.nullable().safeParse(fieldOf(body, "refusal"))
+  if (
+    !Array.isArray(models) ||
+    !models.every((one): one is string => typeof one === "string") ||
+    model === undefined ||
+    !refusal.success
+  ) {
+    return null
+  }
+  return { models, model, refusal: refusal.data }
+}
+
+export function listAgentModels(signal?: AbortSignal): Promise<AgentModels> {
+  return callPathFor(
+    { method: "GET", path: modelsPath, signal },
+    readAgentModels
+  )
+}
+
+export function chooseAgentModel(model: string): Promise<AgentModels> {
+  return callPathFor(
+    { method: "PATCH", path: modelsPath, body: { model } },
+    readAgentModels
+  )
+}
 
 export function readAnswerEvent(value: unknown): AnswerEvent | null {
   const type = fieldOf(value, "type")
@@ -31,7 +68,7 @@ export function readAnswerEvent(value: unknown): AnswerEvent | null {
     return proposal === null ? null : { type, proposal }
   }
   if (type === "done") {
-    return { type }
+    return { type, credits: creditsOf(fieldOf(value, "credits")) }
   }
   const error = errorBody.safeParse(fieldOf(value, "error"))
   return type === "failed" && error.success ? { type, error: error.data } : null

@@ -112,6 +112,8 @@ export const appCopy = {
   "model.line.videoEdit": "Changes a clip you give it",
   "model.line.lipSync": "Moves a face to a voice",
   "model.line.speech": "Speaks your words",
+  "model.line.voiceChange": "Says your recording in another voice",
+  "model.line.music": "Makes music from your words",
   "model.line.sound": "Makes a sound from your words",
   "model.line.threeD": "Makes a 3D model",
   "model.line.upscale": "Raises the resolution",
@@ -160,4 +162,6 @@ export const appCopy = {
     "Your key belongs to no Comfy workspace",
   "error.ENGINE_KEY_OUTSIDE_WORKSPACE.body":
     "Make a key in your Comfy workspace, then paste it in Settings.",
+  "model.line.motionTransfer": "Moves a photo with the motion of a clip",
+  "model.line.characterSwap": "Puts a person in place of the one in a clip",
 } satisfies Record<string, string>

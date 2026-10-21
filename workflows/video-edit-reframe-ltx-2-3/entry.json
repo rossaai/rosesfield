@@ -1,0 +1,48 @@
+{
+  "name": "video-edit-reframe-ltx-2-3",
+  "title": "Video edit: reframe a clip to another format with LTX 2.3",
+  "description": "Places your clip in the middle of a black frame of another format, then fills the frame with LTX 2.3 and the outpainting IC-LoRA, at your clip's frame rate, with its sound kept or left out. Built from Comfy's template template_ltx2_3_lora_video_outpainting.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": ["Lightricks/LTX-2.3"],
+  "requiresCustomNodes": ["comfyui-ltxvideo"],
+  "inputBindings": {
+    "source": {
+      "nodeId": "1",
+      "inputName": "file",
+      "type": "cloud-asset"
+    },
+    "keepSound": {
+      "nodeId": "41",
+      "inputName": "value",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "12",
+      "inputName": "value",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "13",
+      "inputName": "value",
+      "type": "scalar"
+    },
+    "prompt": {
+      "nodeId": "5138",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "5117",
+      "inputName": "noise_seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "44",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}

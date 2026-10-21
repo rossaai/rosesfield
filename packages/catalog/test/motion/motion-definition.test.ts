@@ -9,9 +9,14 @@ function isRefused(given: Record<string, unknown>): boolean {
 }
 
 describe("the motion definition", () => {
-  it("takes a photo and a clip and fills every other input with its default", () => {
+  it("takes a photo and a clip and fills every other input with its default, the model with the LTX 2.3 control graph", () => {
     expect(body.parse({ inputs: both })).toEqual({
-      inputs: { ...both, sound: "off", resolution: "720p" },
+      inputs: {
+        ...both,
+        model: "ltx-2-3-control",
+        sound: "off",
+        resolution: "720p",
+      },
       count: 1,
       aspectRatio: "9:16",
     })

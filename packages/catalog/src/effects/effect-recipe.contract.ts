@@ -3,20 +3,17 @@ import { z } from "zod"
 
 export const resolutionValues = ["480p", "720p"] as const
 
+export const minimumBalance = 2000
+
 const strength = z.number().min(0).max(1)
 
-const endFramePrompt = z.string().min(1).max(600)
+const plainLine = z.string().min(1).max(600)
 
 export const endFrame = z.discriminatedUnion("source", [
   z.strictObject({ source: z.literal("none") }),
   z.strictObject({
     source: z.literal("edit"),
-    prompt: endFramePrompt,
-    strength,
-  }),
-  z.strictObject({
-    source: z.literal("draw"),
-    prompt: endFramePrompt,
+    prompt: plainLine,
     strength,
   }),
 ])
@@ -26,31 +23,154 @@ const adapter = z.strictObject({
   strength: z.number().min(0).max(2),
 })
 
+const seconds = z.number().min(0).max(15)
+
+export const cutWindow = z
+  .strictObject({ min: seconds, max: seconds, kind: z.enum(["cut", "may"]) })
+  .refine((window) => window.min <= window.max, {
+    message: "A cut window opens before it closes",
+  })
+
+const decibels = z.number().min(-70).max(0)
+
+export const soundBed = z
+  .strictObject({
+    prompt: plainLine,
+    loudness: z.strictObject({ min: decibels, max: decibels }),
+    truePeakMax: decibels,
+  })
+  .refine((sound) => sound.loudness.min <= sound.loudness.max, {
+    message: "A loudness band opens below where it closes",
+    path: ["loudness"],
+  })
+
+export const effectDesign = z.strictObject({
+  unit: choiceValue,
+  family: z.literal("effects"),
+  fit: z.strictObject({ prompt: plainLine }),
+  setPiece: plainLine,
+  cuts: z.array(cutWindow).max(4),
+  lastFrame: z.strictObject({
+    shows: plainLine,
+    maxLuma: z.number().min(0).max(255).nullable(),
+  }),
+  sound: soundBed.nullable(),
+  encode: z.strictObject({
+    container: z.literal("mp4"),
+    codec: z.literal("h264"),
+    bitDepth: z.literal(8),
+  }),
+})
+
+const loudness = z.strictObject({
+  integrated: z.number(),
+  truePeak: z.number(),
+})
+
+export const videoReading = z.strictObject({
+  frames: z.number().int().min(1),
+  fps: z.number().positive(),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  cuts: z.array(z.number().min(0)),
+  loudness: loudness.nullable(),
+  lastFrameLuma: z.number().min(0).max(255),
+})
+
+const credits = z.number().min(0)
+
+const digest = z.string().regex(/^[0-9a-f]{64}$/)
+
+export const effectProof = z.strictObject({
+  gate: z.strictObject({
+    positives: z.number().int().min(1),
+    planted: z.literal("refused"),
+    verdict: z.literal("held"),
+  }),
+  judge: z.strictObject({
+    criteria: z.number().int().min(1),
+    failed: z.array(z.string().min(1)).max(0),
+    verdict: z.literal("held"),
+  }),
+  reading: videoReading,
+})
+
+export const runVerdictValues = ["kept", "refused"] as const
+
+export const effectRun = z
+  .strictObject({
+    runId: z.uuid(),
+    effect: choiceValue,
+    workflowHash: digest,
+    photo: digest,
+    seed,
+    resolution: z.enum(resolutionValues),
+    aspectRatio,
+    balance: z.strictObject({ before: credits, after: credits }),
+    verdict: z.enum(runVerdictValues),
+    failed: z.array(z.string().min(1)),
+  })
+  .refine((run) => run.balance.before >= minimumBalance, {
+    message: `A run starts only with ${minimumBalance} credits or more`,
+    path: ["balance", "before"],
+  })
+  .refine((run) => run.balance.after >= minimumBalance, {
+    message: `A run that took the balance under ${minimumBalance} credits breaks the lane's floor`,
+    path: ["balance", "after"],
+  })
+  .refine((run) => run.balance.after <= run.balance.before, {
+    message: "A run's balance after it is at most its balance before it",
+    path: ["balance", "after"],
+  })
+  .refine((run) => (run.verdict === "kept") === (run.failed.length === 0), {
+    message:
+      "A kept run failed no criterion, and a refused run names the ones it failed",
+    path: ["failed"],
+  })
+
+export const effectLedger = z
+  .array(effectRun)
+  .refine(
+    (runs) => new Set(runs.map((run) => run.runId)).size === runs.length,
+    { message: "Each run is one row of the ledger" }
+  )
+
 const preview = z.strictObject({
   file: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*\.mp4$/),
   runId: z.uuid(),
   seed,
   resolution: z.enum(resolutionValues),
   aspectRatio,
-  workflowHash: z.string().regex(/^[0-9a-f]{64}$/),
+  workflowHash: digest,
 })
 
 export const effectRecipe = z
   .strictObject({
     effect: choiceValue,
     passed: z.boolean(),
+    design: effectDesign,
     prompt: z.string().min(1).max(1200),
     endFrame,
     hold: strength.nullable(),
     adapter: adapter.nullable(),
-    seconds: z.number().int().min(3).max(8),
+    seconds: z.number().int().min(5).max(15),
     preview: preview.nullable(),
+    proof: effectProof.nullable(),
   })
   .refine((recipe) => recipe.passed === (recipe.preview !== null), {
     message: "A passed effect carries the run it passed with, and only it",
     path: ["preview"],
   })
+  .refine((recipe) => recipe.passed === (recipe.proof !== null), {
+    message: "A passed effect carries the proof of its run, and only it",
+    path: ["proof"],
+  })
 
 export type EndFrame = z.infer<typeof endFrame>
+export type CutWindow = z.infer<typeof cutWindow>
+export type EffectDesign = z.infer<typeof effectDesign>
+export type VideoReading = z.infer<typeof videoReading>
+export type EffectProof = z.infer<typeof effectProof>
+export type EffectRun = z.infer<typeof effectRun>
 export type EffectRecipe = z.infer<typeof effectRecipe>
 export type ResolutionValue = (typeof resolutionValues)[number]

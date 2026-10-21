@@ -72,11 +72,11 @@
     },
     {
       "path": "apps/platform/src/copy/agent.en.ts",
-      "sha256": "4a48c10b08d7cb86121a778e3b208745437862dc19cc81f4a9c1eacf936797ca"
+      "sha256": "49ef6d7a2dfa21330f58510beecfe68daf37f5cf0fbfb2ef51cebc2c9487fecd"
     },
     {
       "path": "apps/platform/src/copy/app.en.ts",
-      "sha256": "abab6b62d7747555002d3c520d92037faf62f547db80d0ba6698e0ae61fbcde0"
+      "sha256": "4de655766bdd1e67ba9f469550820a8550b48d4a4c579baf037e86ef96f6588f"
     },
     {
       "path": "apps/platform/src/copy/characters.en.ts",
@@ -88,7 +88,7 @@
     },
     {
       "path": "apps/platform/src/copy/error.en.ts",
-      "sha256": "1751d5408fac1a4bb783666070982590efea10dd4744eedc40c6f50480779e77"
+      "sha256": "623e51c6d196099bf753d304f21b7029002ac824a07cc36199f9b5ee014b7f26"
     },
     {
       "path": "apps/platform/src/copy/explore.en.ts",
@@ -120,7 +120,7 @@
     },
     {
       "path": "apps/platform/src/copy/welcome.en.ts",
-      "sha256": "6faa875ada3ec60175b100b1b0fd1285efaab5fe6c8592b7dc8a36e8d58cfd11"
+      "sha256": "a740b7593d671c28751e610d395aefaa406f475d9485bf7a5a0a6e04837f900a"
     },
     {
       "path": "apps/platform/src/gallery/copy.en.ts",
@@ -132,7 +132,7 @@
     },
     {
       "path": "packages/agent/src/copy.en.ts",
-      "sha256": "f7599fb6a4daa832b81b12487252f1015e5fa484e61b64757c9715ca5da93610"
+      "sha256": "998dbb4e45d8cd76e46fa712c81f3e5fa7556ed6c782b96b0dbbb108d34b1c4b"
     },
     {
       "path": "packages/catalog/src/ads/copy.en.ts",
@@ -143,16 +143,28 @@
       "sha256": "f83b980929d20ea1f591784b2c7adffed794cabfcd8bc212c064924ab0f75c96"
     },
     {
+      "path": "packages/catalog/src/audio/copy.en.ts",
+      "sha256": "2040d6711cb7f590fc49239e9dd0ddec1fc18e5c2a2923af25dd79c41d21af4f"
+    },
+    {
       "path": "packages/catalog/src/background-removal/copy.en.ts",
-      "sha256": "9d5772ce758b589ad6733f7c533b81f52d322a70ec50c3e6acfb2c6e82b87683"
+      "sha256": "7fe730e2613056aa23c9737b1849c6950833a9cb012486e6ea1bbacbd456d97b"
     },
     {
       "path": "packages/catalog/src/characters/copy.en.ts",
       "sha256": "39e2b362b64d2322c05cbf5afa4d9268ef3fd2852c1f725d8ebb7df870edcab9"
     },
     {
+      "path": "packages/catalog/src/comfy/copy.en.ts",
+      "sha256": "a9cad8db954b1de5d9284e3d59eee8daa73bcdafa16b6d1ef1a54cebc0ab6b30"
+    },
+    {
+      "path": "packages/catalog/src/edit/copy.en.ts",
+      "sha256": "9b9b097c8a53c6922e35b113b556231a02d58824b588e2335bd1e7203ddcf3e0"
+    },
+    {
       "path": "packages/catalog/src/effects/copy.en.ts",
-      "sha256": "e809f8c8d2c131f70e83c118cb42f3dd29c69a0478c070386617f5da623759ed"
+      "sha256": "453928c5d625e4450bddc97adc4c3f7d16b027189706b673f2c57d48c625a50d"
     },
     {
       "path": "packages/catalog/src/expand/copy.en.ts",
@@ -160,11 +172,11 @@
     },
     {
       "path": "packages/catalog/src/headshots/copy.en.ts",
-      "sha256": "b85de9115e8bff88d66d6eb52ad2bc0893568c8a2f559bc8b03c5003f82a51c8"
+      "sha256": "564e4996c1076c1d79bc4bd64b1d6ae27b70679da40417a00a96edf7a19ec8af"
     },
     {
       "path": "packages/catalog/src/image/copy.en.ts",
-      "sha256": "2ad6f320aff1bf6f92134ab1354e553924ddfa856c9d91b0da122aa5c78b13b4"
+      "sha256": "1c4772d4d6c182ce23d8b81d84a4d5574c954489d3b2d3166d2e61a9c565041a"
     },
     {
       "path": "packages/catalog/src/layers/copy.en.ts",
@@ -172,15 +184,11 @@
     },
     {
       "path": "packages/catalog/src/lipsync/copy.en.ts",
-      "sha256": "7660c72f9cbf2b688553a3b95e898f5de1d3730a4b7976889fd88bc3758f8713"
+      "sha256": "2c70ca41f196fcd5f62ca48d6c2f5873c44e454d3310a788a16fc78043a70f1a"
     },
     {
       "path": "packages/catalog/src/motion/copy.en.ts",
-      "sha256": "95ab97e2767bcbc9284eab642807472f79d34299ef824fda76a690600dd9a363"
-    },
-    {
-      "path": "packages/catalog/src/recast/copy.en.ts",
-      "sha256": "6c71e712adac99e5b8b8f60ff25f7574625f5764668d8aafd7c649ce3000d2f3"
+      "sha256": "d069587568ad740968707729ebf846fa675830a9e28968ee8baea7d0525a8080"
     },
     {
       "path": "packages/catalog/src/relight/copy.en.ts",
@@ -192,7 +200,7 @@
     },
     {
       "path": "packages/catalog/src/shot/copy.en.ts",
-      "sha256": "5e4b87fe028d4854f5c8b3e50dca5e593c3348a04d9022c5337e5d75c72c999d"
+      "sha256": "ee7758e31fd06af67c02f6787c54abf74107dae41a117ccb1117214175b025f5"
     },
     {
       "path": "packages/catalog/src/storyboard/copy.en.ts",
@@ -204,11 +212,11 @@
     },
     {
       "path": "packages/catalog/src/upscale/copy.en.ts",
-      "sha256": "54254029c21bdb3ee8c6df68633fbc0b4380a211d4521a3ae19939a9cee61dc1"
+      "sha256": "836f31ac53a325b4ffb51b4082c92a89a66e345d851413a241dd8a91ae1971c2"
     },
     {
       "path": "packages/catalog/src/video-edit/copy.en.ts",
-      "sha256": "312633b7c0f278e22f44dc0c589dab651bf6644e59dbf47ca9884205cefdec5b"
+      "sha256": "67fb60331f097d43f206de7dae7332be875a8c4bc18d9811c59dfd7e1a03d474"
     },
     {
       "path": "packages/catalog/src/video/copy.en.ts",
@@ -216,7 +224,7 @@
     },
     {
       "path": "packages/catalog/src/voice/copy.en.ts",
-      "sha256": "eebe453e5eb90e8e8c794229b11f7766895f2c16c434b6c06cb24804ce228d84"
+      "sha256": "d5c1e9b23551082e7d6cb118709165543ee35dbf3e15d7ef59c006a12dd0fe95"
     },
     {
       "path": "packages/ui/src/contracts/alert-dialog.generated.ts",
@@ -368,7 +376,7 @@
     },
     {
       "path": "services/gateway/src/copy.en.ts",
-      "sha256": "01d2daa109e039bf433170cd9e5460e5cdf4d511d063bd3a2e5566e7af01a8b6"
+      "sha256": "5eb0c7c3aea78eced4b289fde90fc2fee522d2db414446b056577db896080558"
     }
   ]
 }

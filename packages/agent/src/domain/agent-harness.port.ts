@@ -37,6 +37,11 @@ export type StoredProposal = {
   body: unknown
 }
 
+export type AgentModelChoice = {
+  models: string[]
+  model: string
+}
+
 export type ProposalDecision =
   | { status: "accepted"; runId: RunId }
   | { status: "skipped" }
@@ -65,6 +70,12 @@ export abstract class AgentHarness {
 
   /** Reads one run the agent proposed, with the start-run body it holds. */
   abstract readProposal(ref: ProposalRef): Promise<StoredProposal>
+
+  /** Lists the models the agent can answer with and the one it answers with now. */
+  abstract listModels(): Promise<AgentModelChoice>
+
+  /** Makes the agent answer every next turn with one of the models it lists. */
+  abstract chooseModel(model: string): Promise<AgentModelChoice>
 
   /** Records the person's decision on a proposal and tells the agent. */
   abstract settleProposal(

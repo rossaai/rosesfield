@@ -6,6 +6,7 @@ import {
   answerEvent,
   conversationResponse,
   conversationRoutes,
+  defaultChatModel,
 } from "@rosesfield/agent"
 import {
   accountRoutes,
@@ -22,31 +23,27 @@ import { readServerEnv } from "#env"
 import { gatewayRoutes } from "#gateway.contract"
 import { keyHeaders } from "#session/visitor-keys"
 import {
-  type FakeEndpoint,
-  serveChatStreams,
-  textStream,
-  toolCallStream,
-} from "../../../packages/agent/test/fixtures/openai-chat-stream"
+  replayRouter,
+  textAnswer,
+  toolCallAnswer,
+} from "../../../packages/agent/test/fixtures/router-chat-answers"
 import { fakeComfy } from "./fixtures/comfy-fetch"
 import { captureLogs, filesHolding, seenHolding } from "./fixtures/leak-scan"
 import { pageHtml } from "./fixtures/public-gateway"
+import { withRouterChat } from "./fixtures/router-chat-fetch"
 import { type Seen, Visitor } from "./fixtures/visitor"
 import { imageApp, sessionSecret, start } from "./sample-apps"
 
 const engineKey = "comfyui-SENTINEL-engine-4f2a9c7d"
 const refusedKey = "comfyui-SENTINEL-refused-0b9e"
-const agentKey = "sk-SENTINEL-agent-8d1e7b3a"
-const modelId = "qwen3.8:27b"
+const leakedKey = "comfyui-SENTINEL-leaked-8d1e7b3a"
 
 const folders: string[] = []
 let gateway: LocalGateway | null = null
-let endpoint: FakeEndpoint | null = null
 
 afterEach(async () => {
   await gateway?.close()
-  await endpoint?.close()
   gateway = null
-  endpoint = null
   for (const folder of folders.splice(0)) {
     rmSync(folder, { recursive: true, force: true })
   }
@@ -144,14 +141,18 @@ async function driveVisitor(visitor: Visitor, refused: Visitor): Promise<void> {
 }
 
 describe("a visitor's keys in public mode", () => {
-  it("reach the engine and the agent's model for the request alone, and never a file, a log or a response", async () => {
-    endpoint = serveChatStreams([
-      toolCallStream(modelId, {
-        id: "call_1",
-        name: "sample-image",
-        arguments: { inputs: { prompt: "a red door" } },
-      }),
-      textStream(modelId, "Glad it worked."),
+  it("reach the engine and the agent's Router model for the request alone, and never a file, a log or a response", async () => {
+    const router = replayRouter([
+      toolCallAnswer(
+        defaultChatModel,
+        {
+          id: "call_1",
+          name: "sample-image",
+          arguments: { inputs: { prompt: "a red door" } },
+        },
+        0.0003
+      ),
+      textAnswer(defaultChatModel, "Glad it worked.", 0.0002),
     ])
     const dataDir = folder()
     const comfy = fakeComfy()
@@ -161,18 +162,16 @@ describe("a visitor's keys in public mode", () => {
         HOST: "0.0.0.0",
         SESSION_SECRET: sessionSecret,
         DATA_DIR: dataDir,
-        AGENT_BASE_URL: endpoint.baseUrl,
-        AGENT_MODEL: modelId,
       }),
       apps: [imageApp()],
       clock: new FixedClock({ now: start }),
       platformRoot: platformFolder(),
-      fetch: comfy.fetch,
+      fetch: withRouterChat(comfy.fetch, router.fetch),
     })
     const seen: Seen[] = []
     const visitor = new Visitor({
       app: gateway.app,
-      keys: { [keyHeaders.engine]: engineKey, [keyHeaders.agent]: agentKey },
+      keys: { [keyHeaders.engine]: engineKey },
       seen,
     })
     const refused = new Visitor({
@@ -193,11 +192,10 @@ describe("a visitor's keys in public mode", () => {
     expect(
       comfy.calls.filter((call) => call.authorization === `Bearer ${engineKey}`)
     ).not.toHaveLength(0)
-    expect(endpoint.requests.map((request) => request.authorization)).toEqual([
-      `Bearer ${agentKey}`,
-      `Bearer ${agentKey}`,
-    ])
-    for (const secret of [engineKey, refusedKey, agentKey]) {
+    expect(
+      router.requests.map((request) => request.headers.get("x-api-key"))
+    ).toEqual([engineKey, engineKey])
+    for (const secret of [engineKey, refusedKey]) {
       expect(filesHolding(dataDir, secret)).toEqual([])
       expect(logs.lines.filter((line) => line.includes(secret))).toEqual([])
       expect(seenHolding(seen, secret)).toEqual([])
@@ -208,7 +206,7 @@ describe("a visitor's keys in public mode", () => {
     const dataDir = folder()
     writeFileSync(join(dataDir, "leaked.db"), `row ${engineKey} row`)
     const seen: Seen[] = [
-      { status: 200, headers: "[]", body: `{"key":"${agentKey}"}` },
+      { status: 200, headers: "[]", body: `{"key":"${leakedKey}"}` },
     ]
     const logs = captureLogs()
     try {
@@ -220,7 +218,7 @@ describe("a visitor's keys in public mode", () => {
     expect(filesHolding(dataDir, engineKey)).toEqual([
       join(dataDir, "leaked.db"),
     ])
-    expect(seenHolding(seen, agentKey)).toHaveLength(1)
+    expect(seenHolding(seen, leakedKey)).toHaveLength(1)
     expect(logs.lines.join("\n")).toContain(refusedKey)
   })
 })

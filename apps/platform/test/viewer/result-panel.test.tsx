@@ -134,11 +134,10 @@ describe("the result viewer's panel", () => {
 
   it("gives the model row the model and the mode the run used", () => {
     const made = runOf({
-      appId: "recast",
+      appId: "expand",
       inputs: {
-        mode: "object",
-        source: [inputId],
-        target: "the boat",
+        mode: "sides",
+        photo: [inputId],
         prompt: "a paper boat",
       },
     })
@@ -146,7 +145,7 @@ describe("the result viewer's panel", () => {
     const details = container.querySelector("[data-slot=viewer-details]")
 
     expect(modelAndModeOf(made)).toBe(
-      `model-a, ${tCatalog("recast.choice.mode.object")}`
+      `model-a, ${tCatalog("expand.choice.mode.sides")}`
     )
     expect(details?.textContent).toContain(modelAndModeOf(made))
     expect(

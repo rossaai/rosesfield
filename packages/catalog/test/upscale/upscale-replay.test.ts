@@ -3,11 +3,15 @@ import {
   ComfyGenerationEngine,
   type EngineFile,
   type EngineRequest,
+  hostedModelOf,
   resolveBinding,
 } from "@rosesfield/generation"
+import type { HostedModel } from "@rosesfield/generation/bindings"
 import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
+import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
+import { listWorkflows } from "#list-workflows"
 import { app } from "#upscale/app"
 import {
   brokenLinks,
@@ -96,7 +100,6 @@ const seedvr2Files = {
   "seedvr2-3b": "seedvr2_3b_int8_convrot.safetensors",
   "seedvr2-7b": "seedvr2_7b_int8_convrot.safetensors",
 }
-const realEsrganFile = "RealESRGAN_x4plus.safetensors"
 
 const requests = [
   {
@@ -112,12 +115,6 @@ const requests = [
     models: [seedvr2Files["seedvr2-7b"], seedvr2Vae],
   },
   {
-    mode: "image",
-    model: "real-esrgan-4x",
-    workflow: "upscale-image-real-esrgan",
-    models: [realEsrganFile],
-  },
-  {
     mode: "video",
     model: "seedvr2-3b",
     workflow: "upscale-video-seedvr2",
@@ -128,12 +125,6 @@ const requests = [
     model: "seedvr2-7b",
     workflow: "upscale-video-seedvr2",
     models: [seedvr2Files["seedvr2-7b"], seedvr2Vae],
-  },
-  {
-    mode: "video",
-    model: "real-esrgan-4x",
-    workflow: "upscale-video-real-esrgan",
-    models: [realEsrganFile],
   },
 ] as const
 
@@ -190,7 +181,13 @@ describe("the Upscale engine request", () => {
       "52": { inputs: { unet_name: "seedvr2_3b_int8_convrot.safetensors" } },
       "51": { inputs: { vae_name: "seedvr2_ema_vae_fp16.safetensors" } },
       "54": { inputs: { seed: 42, steps: 1, cfg: 1 } },
-      "59": { inputs: { color_correction_method: "none" } },
+      "59": {
+        inputs: {
+          images: ["55", 0],
+          original_resized_images: ["57", 0],
+          color_correction_method: "none",
+        },
+      },
       "9": { class_type: "SaveImage", inputs: { images: ["59", 0] } },
     })
     expect(brokenLinks(workflow)).toEqual([])
@@ -222,6 +219,10 @@ describe("the Upscale engine request", () => {
       "111": { inputs: { input: ["115", 0], "resize_type.multiplier": 2 } },
       "108": { inputs: { unet_name: "seedvr2_3b_int8_convrot.safetensors" } },
       "109": { inputs: { seed: 42 } },
+      "113": {
+        class_type: "SeedVR2PostProcessing",
+        inputs: { images: ["110", 0], original_resized_images: ["111", 0] },
+      },
       "116": {
         class_type: "CreateVideo",
         inputs: {
@@ -238,48 +239,20 @@ describe("the Upscale engine request", () => {
     expect(brokenLinks(workflow)).toEqual([])
   })
 
-  it("sends Real-ESRGAN on an image and halves its 4x output for 2x", async () => {
-    const { workflow } = await submitted(
-      requestFor({ mode: "image", image: [photoId], model: "real-esrgan-4x" })
-    )
-    expect(classesOf(workflow)).toEqual([
-      "ImageScaleBy",
-      "ImageUpscaleWithModel",
-      "JoinImageWithAlpha",
-      "LoadImage",
-      "SaveImage",
-      "UpscaleModelLoader",
-    ])
-    expect(workflow).toMatchObject({
-      "1": { inputs: { image: loaded } },
-      "2": { inputs: { model_name: "RealESRGAN_x4plus.safetensors" } },
-      "4": { inputs: { upscale_method: "lanczos", scale_by: 0.5 } },
-    })
-    expect(brokenLinks(workflow)).toEqual([])
-  })
-
-  it("keeps Real-ESRGAN's own 4x on a video and carries its sound", async () => {
-    const { workflow } = await submitted(
-      requestFor({
-        mode: "video",
-        video: [clipId],
-        scale: "4x",
-        model: "real-esrgan-4x",
-      })
-    )
-    expect(workflow).toMatchObject({
-      "1": { class_type: "LoadVideo", inputs: { file: loaded } },
-      "4": { inputs: { scale_by: 1 } },
-      "11": { inputs: { audio: ["10", 1], fps: ["10", 2] } },
-    })
-    expect(brokenLinks(workflow)).toEqual([])
-  })
-
   it("names a link to a node the workflow does not hold", () => {
     const planted: Workflow = {
       "116": { class_type: "CreateVideo", inputs: { audio: ["115", 1] } },
     }
     expect(brokenLinks(planted)).toEqual(["116.audio -> 115"])
+  })
+
+  it("refuses the Real-ESRGAN model before any request", () => {
+    expect(() =>
+      requestFor({ mode: "image", image: [photoId], model: "real-esrgan-4x" })
+    ).toThrow()
+    expect(() =>
+      requestFor({ mode: "video", video: [clipId], model: "real-esrgan-4x" })
+    ).toThrow()
   })
 
   it("refuses a model the app does not list before any request", () => {
@@ -299,5 +272,60 @@ describe("the Upscale engine request", () => {
     expect(() =>
       requestFor({ mode: "image", image: [photoId], video: [clipId] })
     ).toThrow("video applies only when mode is video")
+  })
+})
+
+function hosted(
+  id: string,
+  takes: readonly string[],
+  makes: readonly string[]
+): HostedModel {
+  return { id, provider: id.split("/")[0] ?? "", takes, makes, form: null }
+}
+
+describe("the Upscale app's models", () => {
+  it("lists the two SeedVR2 graphs, no Real-ESRGAN graph, and opens on the SeedVR2 3B graph", () => {
+    expect(appTasksOf(definition)).toEqual(["upscale"])
+    expect(defaultModelOf(definition)).toBe("seedvr2-3b")
+    const graphs = modelsForApp(definition, [])
+    expect(graphs.map((model) => [model.id, model.kind])).toEqual([
+      ["seedvr2-3b", "graph"],
+      ["seedvr2-7b", "graph"],
+    ])
+    expect(JSON.stringify(definition.inputs)).not.toMatch(/esrgan/i)
+    const ids = listWorkflows().map((workflow) => workflow.id)
+    expect(ids).toEqual(
+      expect.arrayContaining(["upscale-image-seedvr2", "upscale-video-seedvr2"])
+    )
+    expect(ids.filter((id) => /esrgan/i.test(id))).toEqual([])
+  })
+
+  it("runs the SeedVR2 3B graph on each tab when a run names no model", () => {
+    for (const mode of ["image", "video"] as const) {
+      const parsed = startRunBodyFor(definition).parse({
+        inputs: { mode, ...filledFor(mode) },
+      })
+      expect(parsed.inputs.model).toBe("seedvr2-3b")
+      const ran = resolveBinding(definition.engine, parsed.inputs)
+      expect(hostedModelOf(ran)).toBeNull()
+      expect(ran.config.models).toEqual([
+        seedvr2Files["seedvr2-3b"],
+        seedvr2Vae,
+      ])
+    }
+  })
+
+  it("lists the catalog's upscale models after the graphs, open weights before closed ones, and leaves out the rest", () => {
+    const listed = modelsForApp(definition, [
+      hosted("wavespeed/seedvr2", ["image"], ["image"]),
+      hosted("bfl/video-upscale-v1", ["video"], ["video"]),
+      hosted("maker/picture", ["text"], ["image"]),
+    ])
+    expect(listed.map((model) => [model.id, model.kind, model.task])).toEqual([
+      ["seedvr2-3b", "graph", "upscale"],
+      ["seedvr2-7b", "graph", "upscale"],
+      ["wavespeed/seedvr2", "hosted", "upscale"],
+      ["bfl/video-upscale-v1", "hosted", "upscale"],
+    ])
   })
 })

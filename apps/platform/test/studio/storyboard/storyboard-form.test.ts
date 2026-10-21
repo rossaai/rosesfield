@@ -1,4 +1,9 @@
-import { appDefinition, startRunBodyFor } from "@rosesfield/contract"
+import {
+  appDefinition,
+  appListing,
+  run,
+  startRunBodyFor,
+} from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import { tCatalog } from "@/copy/t"
 import { bodyOf, type FormValues } from "@/screens/app/app-form"
@@ -6,8 +11,9 @@ import {
   messagesOf,
   runValues,
   scenesOf,
+  storyboardValuesFromRun,
   withScenes,
-} from "@/studio/storyboard/use-storyboard-screen"
+} from "@/studio/storyboard/storyboard-form"
 import { app } from "../../../../../packages/catalog/src/storyboard/app"
 
 const definition = appDefinition.parse(app)
@@ -91,5 +97,89 @@ describe("the Storyboard form", () => {
     }
     expect(messagesOf(values, null).size).toBe(0)
     expect(contractTakes(values)).toBe(true)
+  })
+})
+
+function runWith(change: {
+  inputs: Record<string, string | number | string[]>
+  count: number
+  seed: number | null
+  aspectRatio: string | null
+}) {
+  return run.parse({
+    id: "6b2d4f6a-8c0e-4a2c-9e4a-6c8e0a2c4e01",
+    appId: "storyboard",
+    status: "done",
+    outputs: [],
+    progress: null,
+    engine: { adapter: "comfy-workflow", models: [], workflowHash: null },
+    cost: null,
+    origin: "live",
+    failure: null,
+    createdAt: "2026-10-20T09:00:00.000Z",
+    finishedAt: "2026-10-20T09:00:20.000Z",
+    ...change,
+  })
+}
+
+describe("Use these inputs on a Storyboard run", () => {
+  const listing = appListing.parse(app)
+
+  it("fills the reference, the scenes in order, the look, the model, the format and the fixed seed", () => {
+    const values = storyboardValuesFromRun(
+      listing,
+      runWith({
+        inputs: {
+          reference: [assetId],
+          sceneCount: "2",
+          scene1: "the roof",
+          scene2: "the door",
+          look: "fog",
+          model: "qwen-image-edit-2511",
+        },
+        count: 2,
+        seed: 42,
+        aspectRatio: "1:1",
+      })
+    )
+    expect(scenesOf(values)).toEqual(["the roof", "the door"])
+    expect(values.inputs).toMatchObject({
+      reference: [assetId],
+      look: "fog",
+      model: "qwen-image-edit-2511",
+      seed: 42,
+      sceneCount: "2",
+    })
+    expect(values.seedMode).toBe("fixed")
+    expect(values.aspectRatio).toBe("1:1")
+    expect(values.count).toBe(2)
+  })
+
+  it("keeps a hosted model's format and its seed, and takes the character", () => {
+    const values = storyboardValuesFromRun(
+      listing,
+      runWith({
+        inputs: {
+          character: [characterId],
+          sceneCount: "3",
+          scene1: "a fox",
+          scene2: "a den",
+          scene3: "a moon",
+          model: "bfl/flux-3-image",
+          aspectRatio: "21:9",
+        },
+        count: 3,
+        seed: 7,
+        aspectRatio: null,
+      })
+    )
+    expect(scenesOf(values)).toEqual(["a fox", "a den", "a moon"])
+    expect(values.inputs).toMatchObject({
+      character: [characterId],
+      model: "bfl/flux-3-image",
+      aspectRatio: "21:9",
+      seed: 7,
+    })
+    expect(values.seedMode).toBe("fixed")
   })
 })

@@ -22,6 +22,7 @@ import {
   videoTabs,
 } from "@/studio/video/video-tabs"
 import { ElementsChip, VideoWells } from "@/studio/video/video-wells"
+import type { VideoEditMode } from "@/studio/video-edit/video-edit-modes"
 
 function isVideoTab(value: unknown): value is VideoTab {
   return videoTabs.some((tab) => tab === value)
@@ -53,6 +54,8 @@ export function ModeTabs({
 }
 
 type MakeChoice = "video" | "extend"
+
+const extendTab: VideoEditMode = "extend"
 
 export function MakeSwitch({
   onExtend,
@@ -188,7 +191,11 @@ export function VideoPanel({
       />
       <MakeSwitch
         onExtend={() =>
-          void navigate({ to: "/apps/$appId", params: { appId: extendApp } })
+          void navigate({
+            to: "/apps/$appId",
+            params: { appId: extendApp },
+            search: { mode: extendTab },
+          })
         }
       />
       {hosted.chosen === null ? null : (

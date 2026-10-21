@@ -1,15 +1,6 @@
+import { taskBinding } from "@rosesfield/generation/bindings"
 import { type AppInput, defineApp } from "#define-app"
-import { shotBinding } from "#shot/comfy/shot-binding"
-import {
-  defaultShotModel,
-  lengthBounds,
-  modelBounds,
-  movementBounds,
-  resolutionBounds,
-  shotModelIds,
-  shotResolutions,
-  soundWhen,
-} from "#shot/shot-models"
+import { shotGraphs, shotResolutions } from "#shot/comfy/shot-binding"
 import {
   autoValue,
   keyOf,
@@ -17,11 +8,16 @@ import {
   shotListOrder,
   shotLists,
 } from "#shot/shot-words"
+import { videoAspects, videoLengths } from "#video/comfy/video-sizes"
+import { graphModel } from "#video/video-models"
 
 type InputEntry = AppInput["inputs"][number]
 
+export const shotTasks: readonly string[] = ["text-to-video", "image-to-video"]
+
+const defaultLength = 5
+
 function choiceOf(list: ShotList): InputEntry {
-  const bounds = list === "movement" ? { bounds: movementBounds } : {}
   return {
     type: "choice",
     name: list,
@@ -34,11 +30,10 @@ function choiceOf(list: ShotList): InputEntry {
       })),
     ],
     default: autoValue,
-    ...bounds,
   }
 }
 
-export const app = defineApp({
+export const app: AppInput = defineApp({
   id: "shot",
   nameKey: "shot.name",
   category: "video",
@@ -61,23 +56,18 @@ export const app = defineApp({
       type: "choice",
       name: "model",
       labelKey: "shot.input.model.label",
-      options: shotModelIds.map((id) => ({
-        value: id,
-        labelKey: `shot.model.${keyOf(id)}.name`,
-      })),
-      default: defaultShotModel,
-      bounds: modelBounds,
+      options: [{ value: graphModel, labelKey: "shot.model.ltx25.name" }],
+      default: graphModel,
     },
     ...shotListOrder.map(choiceOf),
     {
       type: "number",
       name: "length",
       labelKey: "shot.input.length.label",
-      min: 2,
-      max: 10,
+      min: Math.min(...videoLengths),
+      max: Math.max(...videoLengths),
       step: 1,
-      default: 5,
-      bounds: lengthBounds,
+      default: defaultLength,
     },
     {
       type: "choice",
@@ -87,26 +77,26 @@ export const app = defineApp({
         value,
         labelKey: `shot.choice.resolution.r${value}`,
       })),
-      default: "720p",
-      bounds: resolutionBounds,
+      default: "480p",
     },
     {
       type: "toggle",
       name: "sound",
       labelKey: "shot.input.sound.label",
       default: "on",
-      when: soundWhen,
     },
     { type: "seed", name: "seed", labelKey: "shot.input.seed.label" },
   ],
   output: {
     kind: "video",
     count: { default: 1, max: 4 },
-    aspectRatios: {
-      options: ["1:1", "4:3", "3:4", "16:9", "9:16"],
-      default: "16:9",
-    },
+    aspectRatios: { options: [...videoAspects], default: "16:9" },
   },
-  engine: shotBinding,
+  engine: taskBinding({
+    tasks: shotTasks,
+    input: "model",
+    default: graphModel,
+    fallback: shotGraphs,
+  }),
   limits: { timeoutSeconds: 1800, maxRetries: 1 },
 })

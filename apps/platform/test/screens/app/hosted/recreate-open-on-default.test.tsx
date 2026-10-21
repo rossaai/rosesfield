@@ -74,6 +74,8 @@ function graph(id: string): CatalogModel {
   }
 }
 
+const photo = "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c01"
+
 const list = {
   models: [graph("z-image-turbo"), graph("qwen-image-2512"), flux],
   defaultModel: "bfl/flux-3-image",
@@ -144,6 +146,15 @@ describe("the model a form opens on when the model list arrives", () => {
   it("keeps a Recreate of a run on another graph", () => {
     const seeded = valuesFromRun(image, runOf("qwen-image-2512"))
     expect(openWith(seeded, "seed")).toEqual(seeded)
+  })
+
+  it("keeps the file a Use in placed, and the form it placed it in", () => {
+    const base = defaultsOf(image)
+    const placed: FormValues = {
+      ...base,
+      inputs: { ...base.inputs, references: [photo] },
+    }
+    expect(openWith(placed, "placed")).toEqual(placed)
   })
 
   it("moves an untouched form to the task's default model", () => {

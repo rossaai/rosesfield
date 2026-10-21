@@ -80,11 +80,37 @@ function useBottomScroll(
   return setNode
 }
 
+function useDockCover(): {
+  stageRef: (node: HTMLElement | null) => void
+  dockRef: (node: HTMLElement | null) => void
+} {
+  const [stage, setStage] = useState<HTMLElement | null>(null)
+  const [dock, setDock] = useState<HTMLElement | null>(null)
+  useEffect(() => {
+    if (stage === null || dock === null) {
+      return
+    }
+    const cover = (): void => {
+      stage.style.setProperty("--covered-bottom", `${dock.offsetHeight}px`)
+    }
+    cover()
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(cover)
+    observer?.observe(dock)
+    return () => {
+      observer?.disconnect()
+      stage.style.removeProperty("--covered-bottom")
+    }
+  }, [stage, dock])
+  return { stageRef: setStage, dockRef: setDock }
+}
+
 export function BarFrame(props: BarFrameProps): ReactElement {
   const [isOpen, setOpen] = props.sheet
   const isRegular = useIsRegularWindow()
   const fit = useCanvasFit()
   const bottom = useBottomScroll(props.hasRuns)
+  const cover = useDockCover()
   const fitRef = fit.ref
   const scrollRef = useCallback(
     (element: HTMLElement | null) => {
@@ -96,7 +122,11 @@ export function BarFrame(props: BarFrameProps): ReactElement {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <h1 className="sr-only">{appName(props.app)}</h1>
-      <div data-slot="bar-stage" className="flex min-h-0 flex-1 pb-4">
+      <div
+        ref={cover.stageRef}
+        data-slot="bar-stage"
+        className="flex min-h-0 flex-1 pb-4"
+      >
         <AppStage
           app={props.app}
           kind="bar"
@@ -112,6 +142,7 @@ export function BarFrame(props: BarFrameProps): ReactElement {
       </div>
       {isRegular ? (
         <div
+          ref={cover.dockRef}
           data-slot="prompt-dock"
           className="fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-220 flex-col items-center gap-2"
         >

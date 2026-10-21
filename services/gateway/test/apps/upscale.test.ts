@@ -98,7 +98,7 @@ describe("an Upscale run through the gateway on the demo engine", () => {
     expect([...bytes.slice(0, 8)]).toEqual(pngSignature)
   })
 
-  it("ends a video run at 4x on the Real-ESRGAN model with one output", async () => {
+  it("ends a video run at 4x on the SeedVR2 7B graph with one output", async () => {
     const video = await upload(clip, "video/mp4")
     const done = await startAndFinish(
       {
@@ -106,7 +106,7 @@ describe("an Upscale run through the gateway on the demo engine", () => {
           mode: "video",
           video: [video],
           scale: "4x",
-          model: "real-esrgan-4x",
+          model: "seedvr2-7b",
           seed: 7,
         },
         aspectRatio: "16:9",
@@ -118,7 +118,7 @@ describe("an Upscale run through the gateway on the demo engine", () => {
       mode: "video",
       video: [video],
       scale: "4x",
-      model: "real-esrgan-4x",
+      model: "seedvr2-7b",
     })
     expect(done.seed).toBe(7)
     expect(done.outputs).toHaveLength(1)
@@ -167,6 +167,15 @@ describe("an Upscale run through the gateway on the demo engine", () => {
     const runs = await refused(
       { inputs: { mode: "image", image: [image], video: [video] } },
       "upscale-both-1"
+    )
+    expect(runs).toEqual([])
+  })
+
+  it("refuses the Real-ESRGAN model it no longer lists and starts nothing", async () => {
+    const image = await upload(photo, "image/png")
+    const runs = await refused(
+      { inputs: { mode: "image", image: [image], model: "real-esrgan-4x" } },
+      "upscale-esrgan-1"
     )
     expect(runs).toEqual([])
   })

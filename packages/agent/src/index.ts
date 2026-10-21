@@ -1,8 +1,12 @@
 export {
+  type AgentModels,
   type AnswerEvent,
   acceptedProposalResponse,
+  agentModelRoutes,
+  agentModelsResponse,
   answerEvent,
   type Conversation,
+  chooseAgentModelBody,
   conversation,
   conversationId,
   conversationListResponse,
@@ -31,9 +35,14 @@ export {
   type AcceptProposalOutput,
 } from "#application/accept-proposal/accept-proposal.handler"
 export {
+  ChooseAgentModelHandler,
+  type ChooseAgentModelInput,
+} from "#application/choose-agent-model/choose-agent-model.handler"
+export {
   DeleteConversationHandler,
   type DeleteConversationInput,
 } from "#application/delete-conversation/delete-conversation.handler"
+export { ListAgentModelsHandler } from "#application/list-agent-models/list-agent-models.handler"
 export {
   ListConversationsHandler,
   type ListConversationsOutput,
@@ -66,6 +75,7 @@ export {
 export {
   AgentHarness,
   type AgentMessage,
+  type AgentModelChoice,
   type AnswerStream,
   type ConversationChanges,
   type NewConversation,
@@ -91,12 +101,26 @@ export {
 } from "#infrastructure/pi-agent-harness"
 export {
   type AgentToolHandlers,
+  type AgentToolSet,
+  type AgentToolSource,
   agentTools,
+  publishedAgentTools,
 } from "#infrastructure/pi-agent-tools"
 export {
   type AgentModel,
-  endpointModel,
   type OpenPiModelsOptions,
   openPiModels,
   type PiModels,
+  routerAgentModel,
 } from "#infrastructure/pi-models"
+export {
+  type RouterAgentHarnessOptions,
+  routerAgentHarness,
+} from "#infrastructure/router-agent-harness"
+export type { Fetch } from "#infrastructure/router-chat-fetch"
+export {
+  defaultChatModel,
+  isRouterChatModel,
+  routerChat,
+  routerChatModels,
+} from "#infrastructure/router-chat-models"

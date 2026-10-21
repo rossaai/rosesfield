@@ -3,13 +3,13 @@ import { selectBinding } from "@rosesfield/generation/bindings"
 import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 import { apiGraph } from "#workflow-entry.contract"
 
-export const motionWorkflow = "motion-wan-animate-2"
+export const motionWorkflow = "motion-ltx-2-3-ic-lora"
 
-export const videoNode = "245"
+export const videoNode = "122"
 
 export const shortSides: Readonly<Record<string, number>> = {
   "480p": 480,
-  "720p": 720,
+  "720p": 704,
 }
 
 export const motionBindings: readonly WorkflowValueBinding[] = [
@@ -31,7 +31,7 @@ export function withoutSound(
   return graph
 }
 
-export const motionBinding: EngineBinding = selectBinding({
+export const motionEngine: EngineBinding = selectBinding({
   input: "sound",
   options: {
     off: workflowBinding({

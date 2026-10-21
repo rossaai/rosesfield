@@ -31,6 +31,13 @@ export type ScaleCheck =
   | { state: "fits"; width: number; height: number }
   | { state: "tooBig"; width: number; height: number; max: number }
 
+export type FileLimits = {
+  formats: readonly string[]
+  maxBytes: number
+  minSide: number | null
+  seconds: { min: number; max: number } | null
+}
+
 type ModeLimits = {
   formats: readonly string[]
   maxBytes: number
@@ -54,14 +61,19 @@ export const modeLimits: Readonly<Record<UpscaleMode, ModeLimits>> = {
   },
 }
 
-const factors: Readonly<Record<string, number>> = { "2x": 2, "4x": 4 }
+export function fileLimitsOf(mode: UpscaleMode, isGraph: boolean): FileLimits {
+  const limits = modeLimits[mode]
+  const isClip = mode === "video" && isGraph
+  return {
+    formats: limits.formats,
+    maxBytes: limits.maxBytes,
+    minSide: isGraph ? limits.minSide : null,
+    seconds: isClip ? { min: minVideoSeconds, max: maxVideoSeconds } : null,
+  }
+}
 
 export function isUpscaleMode(value: unknown): value is UpscaleMode {
   return value === "image" || value === "video"
-}
-
-export function factorOf(scale: string): number {
-  return factors[scale] ?? 2
 }
 
 export function sizeOf(facts: FileFacts | null): Size | null {
@@ -71,11 +83,26 @@ export function sizeOf(facts: FileFacts | null): Size | null {
   return { width: facts.width, height: facts.height }
 }
 
+function lengthProblemOf(
+  seconds: number,
+  bounds: { min: number; max: number }
+): FileProblem | null {
+  if (seconds > bounds.max) {
+    const over = Math.ceil(seconds * 10) / 10
+    return { kind: "tooLong", seconds: over, max: bounds.max }
+  }
+  if (seconds < bounds.min) {
+    const under = Math.floor(seconds * 10) / 10
+    return { kind: "tooShort", seconds: under, min: bounds.min }
+  }
+  return null
+}
+
 export function fileProblemOf(
   mode: UpscaleMode,
-  facts: FileFacts
+  facts: FileFacts,
+  limits: FileLimits = fileLimitsOf(mode, true)
 ): FileProblem | null {
-  const limits = modeLimits[mode]
   if (!limits.formats.includes(facts.mime)) {
     return { kind: "wrongKind" }
   }
@@ -83,29 +110,22 @@ export function fileProblemOf(
     return { kind: "tooLarge", bytes: facts.bytes, limit: limits.maxBytes }
   }
   const size = sizeOf(facts)
-  if (size === null || (mode === "video" && facts.seconds === null)) {
+  if (size === null || (limits.seconds !== null && facts.seconds === null)) {
     return { kind: "unreadable" }
   }
   const side = Math.min(size.width, size.height)
-  if (side < limits.minSide) {
+  if (limits.minSide !== null && side < limits.minSide) {
     return { kind: "tooSmall", side, min: limits.minSide }
   }
-  if (mode === "video" && facts.seconds !== null) {
-    if (facts.seconds > maxVideoSeconds) {
-      const seconds = Math.ceil(facts.seconds * 10) / 10
-      return { kind: "tooLong", seconds, max: maxVideoSeconds }
-    }
-    if (facts.seconds < minVideoSeconds) {
-      const seconds = Math.floor(facts.seconds * 10) / 10
-      return { kind: "tooShort", seconds, min: minVideoSeconds }
-    }
-  }
-  return null
+  return limits.seconds === null || facts.seconds === null
+    ? null
+    : lengthProblemOf(facts.seconds, limits.seconds)
 }
 
 export function readingProblemOf(
   mode: UpscaleMode,
-  reading: FileReading
+  reading: FileReading,
+  limits: FileLimits = fileLimitsOf(mode, true)
 ): FileProblem | null {
   switch (reading.state) {
     case "none":
@@ -114,19 +134,22 @@ export function readingProblemOf(
     case "failed":
       return { kind: "unreadable" }
     case "read":
-      return fileProblemOf(mode, reading.facts)
+      return fileProblemOf(mode, reading.facts, limits)
   }
 }
 
-export function scaleCheckOf(size: Size | null, scale: string): ScaleCheck {
-  if (size === null) {
+export function scaleCheckOf(
+  size: Size | null,
+  factor: number | null,
+  max: number | null
+): ScaleCheck {
+  if (size === null || factor === null) {
     return { state: "empty" }
   }
-  const factor = factorOf(scale)
-  const width = size.width * factor
-  const height = size.height * factor
-  if (Math.max(width, height) > maxLongSide) {
-    return { state: "tooBig", width, height, max: maxLongSide }
+  const width = Math.round(size.width * factor)
+  const height = Math.round(size.height * factor)
+  if (max !== null && Math.max(width, height) > max) {
+    return { state: "tooBig", width, height, max }
   }
   return { state: "fits", width, height }
 }

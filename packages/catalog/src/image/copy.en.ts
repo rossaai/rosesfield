@@ -23,4 +23,7 @@ export const imageCopy = {
     "Runs 50 steps, at one size for each format.",
   "image.model.qwenImageEdit2511": "Qwen Image Edit 2511",
   "image.model.qwenImageEdit2511.line": "Takes up to 3 photos. Runs 40 steps.",
+  "image.model.mingImage01Design": "Ming Image 0.1 Design",
+  "image.model.mingImage01Design.line":
+    "Built for design work: screens, infographics, posters and text-heavy layouts.",
 } satisfies Record<string, string>

@@ -31,6 +31,7 @@ export type TranscriptItem =
   | { type: "agent"; text: string }
   | { type: "run"; runId: string }
   | { type: "proposal"; proposal: Proposal }
+  | { type: "credits"; credits: number }
 
 export type Transcript = {
   conversation: Conversation
@@ -46,6 +47,12 @@ const listPath = "/api/agent/conversations"
 const itemPath = "/api/agent/conversations/:conversationId"
 const proposalPath =
   "/api/agent/conversations/:conversationId/proposals/:proposalId/:act"
+
+export function creditsOf(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? value
+    : null
+}
 
 function textOf(value: unknown): string | null {
   return typeof value === "string" && value !== "" ? value : null
@@ -95,6 +102,10 @@ function readItem(value: unknown): TranscriptItem | null {
   const runId = textOf(fieldOf(value, "runId"))
   if (type === "run" && runId !== null) {
     return { type, runId }
+  }
+  const credits = creditsOf(fieldOf(value, "credits"))
+  if (type === "credits" && credits !== null) {
+    return { type, credits }
   }
   const proposal = readProposal(fieldOf(value, "proposal"))
   return type === "proposal" && proposal !== null ? { type, proposal } : null

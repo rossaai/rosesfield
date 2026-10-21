@@ -2,7 +2,13 @@ import { IconButton } from "@rosesfield/ui/components/button"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { DownloadIcon, PauseIcon, PlayIcon } from "lucide-react"
-import { type ReactElement, type RefObject, useRef, useState } from "react"
+import {
+  type ReactElement,
+  type ReactNode,
+  type RefObject,
+  useRef,
+  useState,
+} from "react"
 import { formatDuration, joinParts } from "@/copy/format"
 import { t } from "@/copy/t"
 
@@ -12,6 +18,8 @@ type AudioRowProps = {
   durationSeconds: number | null
   caption?: string
   onDownload?: () => void
+  meter?: (fraction: number) => ReactNode
+  action?: ReactNode
   className?: string
 }
 
@@ -19,13 +27,16 @@ function useAudio(): {
   ref: RefObject<HTMLAudioElement | null>
   isPlaying: boolean
   fraction: number
+  seconds: number | null
   toggle: () => void
   onTime: () => void
   onEnd: () => void
+  onMeta: () => void
 } {
   const ref = useRef<HTMLAudioElement | null>(null)
   const [isPlaying, setPlaying] = useState(false)
   const [fraction, setFraction] = useState(0)
+  const [seconds, setSeconds] = useState<number | null>(null)
   const toggle = (): void => {
     const element = ref.current
     if (element === null) {
@@ -51,16 +62,19 @@ function useAudio(): {
     setPlaying(false)
     setFraction(0)
   }
-  return { ref, isPlaying, fraction, toggle, onTime, onEnd }
+  const onMeta = (): void => {
+    const duration = ref.current?.duration ?? Number.NaN
+    setSeconds(Number.isFinite(duration) ? duration : null)
+  }
+  return { ref, isPlaying, fraction, seconds, toggle, onTime, onEnd, onMeta }
 }
 
 export function AudioRow(props: AudioRowProps): ReactElement {
   const audio = useAudio()
+  const seconds = props.durationSeconds ?? audio.seconds
   const caption = joinParts([
     props.caption ?? null,
-    props.durationSeconds === null
-      ? null
-      : formatDuration(props.durationSeconds),
+    seconds === null ? null : formatDuration(seconds),
   ])
   return (
     <div
@@ -77,6 +91,7 @@ export function AudioRow(props: AudioRowProps): ReactElement {
         preload="metadata"
         onTimeUpdate={audio.onTime}
         onEnded={audio.onEnd}
+        onLoadedMetadata={audio.onMeta}
       />
       <IconButton
         label={audio.isPlaying ? t("output.pause") : t("output.play")}
@@ -97,12 +112,16 @@ export function AudioRow(props: AudioRowProps): ReactElement {
             </span>
           )}
         </div>
-        <span className="block h-track w-full overflow-hidden rounded-full bg-track">
-          <span
-            className={cn("block h-full origin-left bg-ink", motion.control)}
-            style={{ transform: `scaleX(${audio.fraction})` }}
-          />
-        </span>
+        {props.meter === undefined ? (
+          <span className="block h-track w-full overflow-hidden rounded-full bg-track">
+            <span
+              className={cn("block h-full origin-left bg-ink", motion.control)}
+              style={{ transform: `scaleX(${audio.fraction})` }}
+            />
+          </span>
+        ) : (
+          props.meter(audio.fraction)
+        )}
       </div>
       {props.onDownload === undefined ? null : (
         <IconButton
@@ -113,6 +132,7 @@ export function AudioRow(props: AudioRowProps): ReactElement {
           <DownloadIcon aria-hidden="true" />
         </IconButton>
       )}
+      {props.action}
     </div>
   )
 }

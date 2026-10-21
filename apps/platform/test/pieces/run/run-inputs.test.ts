@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { inputRowsOf, shownInputsOf } from "@/pieces/run/run-inputs"
 
-function voiceRun(inputs: Run["inputs"]): Run {
-  return runOf("voice", inputs, {})
+function audioRun(inputs: Run["inputs"]): Run {
+  return runOf("audio", inputs, {})
 }
 
 function runOf(
@@ -34,15 +34,16 @@ function runOf(
 
 describe("shownInputsOf", () => {
   it("shows only the inputs the run used and leaves out empty ones", () => {
-    const voice = findCatalogApp("voice")
-    expect(voice).not.toBeNull()
-    if (voice === null) {
+    const audio = findCatalogApp("audio")
+    expect(audio).not.toBeNull()
+    if (audio === null) {
       return
     }
     const shown = shownInputsOf(
-      voice,
-      voiceRun({
-        mode: "model",
+      audio,
+      audioRun({
+        mode: "speech",
+        model: "chatterbox",
         script: "Read this slowly",
         language: "en",
         recording: [],
@@ -50,7 +51,7 @@ describe("shownInputsOf", () => {
         seed: 42,
       })
     ).map((input) => input.name)
-    expect(shown).toEqual(["mode", "script", "language", "expression"])
+    expect(shown).toEqual(["mode", "model", "script", "language", "expression"])
   })
 })
 

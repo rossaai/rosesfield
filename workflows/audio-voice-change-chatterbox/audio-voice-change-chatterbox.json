@@ -1,0 +1,219 @@
+{
+  "id": "253e189e-ea41-532e-840a-6b33e63c39a8",
+  "revision": 0,
+  "last_node_id": 6,
+  "last_link_id": 4,
+  "nodes": [
+    {
+      "id": 3,
+      "type": "LoadAudio",
+      "pos": [730, 100],
+      "size": [380, 152],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [1]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["source.mp3", null, null],
+      "title": "Your recording"
+    },
+    {
+      "id": 2,
+      "type": "LoadAudio",
+      "pos": [730, 312],
+      "size": [380, 152],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [3]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["target.mp3", null, null],
+      "title": "Target voice"
+    },
+    {
+      "id": 5,
+      "type": "TrimAudioDuration",
+      "pos": [1250, 100],
+      "size": [380, 152],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [2]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TrimAudioDuration",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0, 30],
+      "title": "First 30 seconds"
+    },
+    {
+      "id": 1,
+      "type": "FL_ChatterboxVC",
+      "pos": [1250, 312],
+      "size": [380, 242],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "input_audio",
+          "type": "AUDIO",
+          "link": 2
+        },
+        {
+          "name": "target_voice",
+          "type": "AUDIO",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [4]
+        },
+        {
+          "name": "message",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FL_ChatterboxVC",
+        "cnr_id": "comfyui_fill-chatterbox",
+        "aux_id": "filliptm/ComfyUI_Fill-ChatterBox",
+        "ver": "f7d7a16187430abcaf91a3039b9c83aa9960816a"
+      },
+      "widgets_values": [0, "fixed", false, false],
+      "title": "Voice change"
+    },
+    {
+      "id": 4,
+      "type": "SaveAudioMP3",
+      "pos": [1770, 100],
+      "size": [380, 152],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveAudioMP3",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["audio/rosesfield-voice-change", "V0"],
+      "title": "Audio"
+    },
+    {
+      "id": 6,
+      "type": "MarkdownNote",
+      "pos": [60, 100],
+      "size": [560, 760],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Voice change: your words in another voice with Chatterbox",
+      "properties": {},
+      "widgets_values": [
+        "# Voice change: your words in another voice with Chatterbox\n\nSays the words of your recording in the voice of a second recording. It reads the first 30 seconds of your recording. Built from Comfy's template audio-chatterbox_vc.\n\n## Models\n\n- [s3gen.pt](https://huggingface.co/ResembleAI/chatterbox/resolve/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/s3gen.pt): Chatterbox, by Resemble AI, [MIT](https://huggingface.co/ResembleAI/chatterbox).\n- [conds.pt](https://huggingface.co/ResembleAI/chatterbox/resolve/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/conds.pt): Chatterbox, by Resemble AI, [MIT](https://huggingface.co/ResembleAI/chatterbox).\n\nThe voice node has no model loader. The node pack downloads both files into models/chatterbox/chatterbox_vc on its first run.\n\n## Custom nodes\n\n- [ComfyUI_Fill-ChatterBox](https://github.com/filliptm/ComfyUI_Fill-ChatterBox) at commit f7d7a16187430abcaf91a3039b9c83aa9960816a, MIT."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [1, 3, 0, 5, 0, "AUDIO"],
+    [2, 5, 0, 1, 0, "AUDIO"],
+    [3, 2, 0, 1, 1, "AUDIO"],
+    [4, 1, 0, 4, 0, "AUDIO"]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Inputs",
+      "bounding": [700, 20, 440, 444],
+      "color": "#b06634",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Generate",
+      "bounding": [1220, 20, 440, 534],
+      "color": "#444444",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Output",
+      "bounding": [1740, 20, 440, 232],
+      "color": "#3f8a5c",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.55,
+      "offset": [0, 0]
+    },
+    "linearData": {
+      "inputs": [[3, "audio"], [2, "audio"], [1, "seed"]],
+      "outputs": [4]
+    }
+  },
+  "version": 0.4
+}

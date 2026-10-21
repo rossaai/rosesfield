@@ -1,3 +1,4 @@
+import { taskBinding } from "@rosesfield/generation/bindings"
 import { type AppInput, defineApp } from "#define-app"
 import {
   canvasRatios,
@@ -5,6 +6,8 @@ import {
   expandBinding,
   expandFormats,
   expandModes,
+  expandTasks,
+  graphModel,
 } from "#expand/comfy/expand-binding"
 
 const inFormat = [{ input: "mode", is: ["format"] }]
@@ -36,6 +39,15 @@ export const app: AppInput = defineApp({
   nameKey: "expand.name",
   category: "image",
   inputs: [
+    {
+      type: "choice",
+      name: "model",
+      labelKey: "image.input.model.label",
+      options: [
+        { value: graphModel, labelKey: "expand.model.qwenImageInpaint" },
+      ],
+      default: graphModel,
+    },
     {
       type: "choice",
       name: "mode",
@@ -82,6 +94,11 @@ export const app: AppInput = defineApp({
     count: { default: 1, max: 4 },
     aspectRatios: { options: [...canvasRatios], default: "16:9" },
   },
-  engine: expandBinding,
+  engine: taskBinding({
+    tasks: expandTasks,
+    input: "model",
+    default: graphModel,
+    fallback: expandBinding,
+  }),
   limits: { timeoutSeconds: 600, maxRetries: 2 },
 })

@@ -19,7 +19,7 @@ export type EffectTile = {
   effect: string
   label: string
   photo: string
-  preview: string
+  look: { status: "passed"; preview: string } | { status: "draft" }
 }
 
 type EffectTilesProps = {
@@ -33,6 +33,7 @@ type EffectTilesProps = {
 }
 
 const tileAspect = { width: 3, height: 4 }
+const draftKey = "effects.draft"
 
 export function effectOptionsOf(app: AppListing): string[] {
   const input = app.inputs.find(
@@ -49,11 +50,11 @@ export function effectTiles(
 ): EffectTile[] {
   return effectOptionsOf(app).flatMap((effect) => {
     const recipe = recipes.find((one) => one.effect === effect)
-    const preview =
-      recipe?.passed === true && recipe.preview !== null
-        ? previews(recipe.preview.file)
-        : null
-    if (preview === null) {
+    if (recipe === undefined) {
+      return []
+    }
+    const look = lookOf(recipe, previews)
+    if (look === null) {
       return []
     }
     const key = effectKeyOf(effect)
@@ -62,10 +63,43 @@ export function effectTiles(
         effect,
         label: tCatalog(`effects.choice.effect.${key}`),
         photo: tCatalog(`effects.photo.${key}`),
-        preview,
+        look,
       },
     ]
   })
+}
+
+function lookOf(
+  recipe: EffectRecipe,
+  previews: (file: string) => string | null
+): EffectTile["look"] | null {
+  if (!recipe.passed) {
+    return { status: "draft" }
+  }
+  const preview = recipe.preview === null ? null : previews(recipe.preview.file)
+  return preview === null ? null : { status: "passed", preview }
+}
+
+function TileLook({ tile }: { tile: EffectTile }): ReactElement {
+  if (tile.look.status === "passed") {
+    return (
+      <MediaTile
+        kind="video"
+        src={tile.look.preview}
+        alt={tile.label}
+        aspect={tileAspect}
+      />
+    )
+  }
+  return (
+    <span
+      data-slot="effect-draft"
+      className="flex w-full items-center justify-center rounded-cell bg-(--well) text-caption text-ink-muted"
+      style={{ aspectRatio: `${tileAspect.width} / ${tileAspect.height}` }}
+    >
+      {tCatalog(draftKey)}
+    </span>
+  )
 }
 
 function PriceLine({
@@ -82,7 +116,9 @@ function PriceLine({
   return credits === null ? (
     t("run.price.unknown")
   ) : (
-    <CreditPrice amount={formatNumber(credits)} />
+    <CreditPrice
+      amount={t("run.price.credits", { amount: formatNumber(credits) })}
+    />
   )
 }
 
@@ -106,18 +142,14 @@ function Tile({
       ref={isChosen ? chosenRef : undefined}
       onClick={onChoose}
       data-effect={tile.effect}
+      data-look={tile.look.status}
       className={cn(
         "flex w-full min-w-0 flex-col gap-s1_5 rounded-card p-s1_5 text-left",
         isChosen ? "bg-selection" : "hover:bg-(--tint)",
         motion.tint
       )}
     >
-      <MediaTile
-        kind="video"
-        src={tile.preview}
-        alt={tile.label}
-        aspect={tileAspect}
-      />
+      <TileLook tile={tile} />
       <span className="px-s1 text-body">{tile.label}</span>
       <span className="flex items-start gap-s1 px-s1 text-caption text-ink-muted">
         <ImagePlusIcon aria-hidden="true" className="glyph-small shrink-0" />

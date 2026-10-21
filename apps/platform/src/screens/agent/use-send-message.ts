@@ -3,9 +3,14 @@ import { useCallback, useRef } from "react"
 import { type AnswerEvent, sendMessage } from "@/api/agent-wire"
 import { isAbort } from "@/api/call-route"
 import type { Transcript } from "@/api/conversation-wire"
+import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { codeOf } from "@/copy/error-words"
 import type { Draft } from "@/router-context"
-import { isModelMissing, noteAgentModel } from "@/screens/agent/agent-model"
+import {
+  isModelMissing,
+  noteAgentModel,
+  noteAgentRefusal,
+} from "@/screens/agent/agent-model"
 import {
   conversationsQuery,
   transcriptKey,
@@ -53,12 +58,12 @@ function withEvent(
 
 function endOf(
   event: AnswerEvent
-): Pick<Turn, "status" | "failureCode"> | null {
+): Pick<Turn, "status" | "failureCode" | "credits"> | null {
   if (event.type === "done") {
-    return { status: "done", failureCode: null }
+    return { status: "done", failureCode: null, credits: event.credits }
   }
   return event.type === "failed"
-    ? { status: "failed", failureCode: event.error.code }
+    ? { status: "failed", failureCode: event.error.code, credits: null }
     : null
 }
 
@@ -91,6 +96,11 @@ async function streamAnswer(options: StreamOptions): Promise<void> {
       noteAgentModel("ready")
       if (event.type === "run") {
         void client.invalidateQueries({ queryKey: ["runs"] })
+      }
+      if (event.type === "failed") {
+        noteAgentRefusal(
+          new GatewayRefusedError({ ...event.error, retryAfterSeconds: null })
+        )
       }
       const end = endOf(event)
       changeLiveTurn(conversationId, key, (turn) => ({
@@ -125,6 +135,7 @@ function newTurn(draft: Draft, shownItems: number): Turn {
     parts: [],
     status: "answering",
     failureCode: null,
+    credits: null,
     shownItems,
   }
 }
@@ -163,7 +174,13 @@ export function useSendMessage(conversationId: string): SendMessage {
   )
   const retry = useCallback(
     (turn: Turn) =>
-      stream({ ...turn, parts: [], status: "answering", failureCode: null }),
+      stream({
+        ...turn,
+        parts: [],
+        status: "answering",
+        failureCode: null,
+        credits: null,
+      }),
     [stream]
   )
   return { send, retry, stop: () => controller.current?.abort() }

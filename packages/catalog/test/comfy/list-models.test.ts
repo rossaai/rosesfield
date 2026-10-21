@@ -1,7 +1,8 @@
 import { appDefinition } from "@rosesfield/contract"
 import { taskBinding } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
-import { graphMaker, modelsForApp } from "#comfy/list-models"
+import { graphMaker, isOpenWeights, modelsForApp } from "#comfy/list-models"
+import { findApp } from "#list-apps"
 
 const app = appDefinition.parse({
   id: "pictures",
@@ -41,13 +42,14 @@ const app = appDefinition.parse({
 })
 
 describe("modelsForApp", () => {
-  it("marks every model of a proven family with the proven tag and names graphs by an id", () => {
+  it("marks every model of a proven family with the proven tag and names a graph with no known lab by Comfy Cloud", () => {
     const models = modelsForApp(app, [
       {
         id: "luma/photon-flash-1",
         provider: "luma",
         takes: ["text"],
         makes: ["image"],
+        takesTools: false,
         form: null,
       },
       {
@@ -55,6 +57,7 @@ describe("modelsForApp", () => {
         provider: "maker",
         takes: ["text"],
         makes: ["image"],
+        takesTools: false,
         form: null,
       },
     ])
@@ -69,6 +72,31 @@ describe("modelsForApp", () => {
   })
 })
 
+describe("a graph's task", () => {
+  it("is the task its binding names, and the app's first task when it names none", () => {
+    const withTasks = appDefinition.parse({
+      ...app,
+      engine: taskBinding({
+        tasks: ["text-to-image"],
+        input: "model",
+        default: "open-a",
+        fallback: { adapter: "demo", config: {} },
+        graphTasks: { "open-b": "image-edit" },
+      }),
+    })
+    const tasksOf = (definition: typeof app) =>
+      modelsForApp(definition, []).map((one) => [one.id, one.task])
+    expect(tasksOf(withTasks)).toEqual([
+      ["open-a", "text-to-image"],
+      ["open-b", "image-edit"],
+    ])
+    expect(tasksOf(app)).toEqual([
+      ["open-a", "text-to-image"],
+      ["open-b", "text-to-image"],
+    ])
+  })
+})
+
 describe("the reference platform's own models", () => {
   it("are left out of the listing, by provider and by name", () => {
     const hosted = (id: string) => ({
@@ -76,6 +104,7 @@ describe("the reference platform's own models", () => {
       provider: id.split("/")[0] ?? "",
       takes: ["text"],
       makes: ["image"],
+      takesTools: false,
       form: null,
     })
     const models = modelsForApp(app, [
@@ -87,5 +116,91 @@ describe("the reference platform's own models", () => {
     expect(
       models.filter((one) => one.kind === "hosted").map((one) => one.id)
     ).toEqual(["kling/kling-3.0-turbo"])
+  })
+})
+
+describe("the order of the listing", () => {
+  const hosted = (id: string) => ({
+    id,
+    provider: id.split("/")[0] ?? "",
+    takes: ["text"],
+    makes: ["image"],
+    form: null,
+  })
+
+  it("lists the open-weights models first, graphs then hosted, then every other model of the task", () => {
+    const models = modelsForApp(app, [
+      hosted("openai/gpt-image-2"),
+      hosted("ideogram/ideogram-v4"),
+      hosted("bria/fibo"),
+    ])
+    expect(models.map((one) => [one.id, isOpenWeights(one)])).toEqual([
+      ["open-a", true],
+      ["open-b", true],
+      ["bria/fibo", true],
+      ["ideogram/ideogram-v4", true],
+      ["openai/gpt-image-2", false],
+    ])
+  })
+
+  it("gives each model the facts the catalog holds for it, with the board and the date of its rank", () => {
+    const models = modelsForApp(app, [
+      hosted("openai/gpt-image-2"),
+      hosted("maker/picture"),
+    ])
+    const byId = (id: string) => models.find((one) => one.id === id)
+    expect(byId("openai/gpt-image-2")).toMatchObject({
+      tags: [{ kind: "hosted" }, { kind: "proven" }],
+      facts: {
+        lab: "OpenAI",
+        release: "2026-04-21",
+        rank: {
+          position: 3,
+          size: 104,
+          board: "Artificial Analysis Text to Image Arena",
+          readOn: "2026-10-20",
+        },
+        priceThird: 1,
+        weights: null,
+        lineKey: null,
+      },
+    })
+    expect(byId("maker/picture")?.facts).toEqual({
+      lab: null,
+      release: null,
+      rank: null,
+      priceThird: null,
+      weights: null,
+      lineKey: null,
+    })
+    expect(byId("open-a")?.facts?.lineKey).toBe("model.openA.line")
+  })
+
+  it("lists a background model only in the app that makes its media, an image one in Remove background and a video one in Video edit", () => {
+    const image = {
+      id: "maker/remove-background",
+      provider: "maker",
+      takes: ["image"],
+      makes: ["image"],
+      form: null,
+    }
+    const video = {
+      id: "maker/video-background-removal",
+      provider: "maker",
+      takes: ["video"],
+      makes: ["video"],
+      form: null,
+    }
+    const hostedIn = (appId: string): string[] => {
+      const found = findApp(appId)
+      if (found === null) {
+        throw new Error(`the catalog lacks ${appId}`)
+      }
+      return modelsForApp(found, [image, video])
+        .filter((one) => one.kind === "hosted")
+        .map((one) => one.id)
+    }
+    expect(hostedIn("background-removal")).toEqual([image.id])
+    expect(hostedIn("video-edit")).toEqual([video.id])
   })
 })

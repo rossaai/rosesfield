@@ -11,14 +11,24 @@ type Graph = Record<string, Node>
 
 export const effectsWorkflow = "effects-ltx-2-5"
 
-export const endFrameNodes: readonly string[] = Array.from(
-  { length: 17 },
-  (_, index) => String(520 + index)
-)
+export const endFrameNodes: readonly string[] = [
+  "620",
+  "621",
+  "622",
+  "623",
+  "624",
+  "625",
+  "626",
+  "627",
+]
 
-export const referenceNodes: readonly string[] = ["527", "528", "529"]
+export const fitPromptNode = "610"
+
+export const endFramePromptNode = "620"
 
 export const matteNodes: readonly string[] = ["410", "411", "412"]
+
+export const soundNode = "358"
 
 export const adapterNode = "420"
 
@@ -74,9 +84,10 @@ function remove(graph: Graph, ids: readonly string[]): void {
   }
 }
 
-function setPrompt(graph: Graph, recipe: EffectRecipe): void {
+function setPrompts(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, "501").inputs.string_a = recipe.prompt
-  nodeOf(graph, "503").inputs.string_b = ""
+  nodeOf(graph, "503").inputs.string_b = recipe.design.sound?.prompt ?? ""
+  nodeOf(graph, fitPromptNode).inputs.prompt = recipe.design.fit.prompt
 }
 
 function setLength(graph: Graph, recipe: EffectRecipe): void {
@@ -109,15 +120,9 @@ function setEndFrame(graph: Graph, recipe: EffectRecipe): void {
     passThrough(graph, "463")
     return
   }
-  nodeOf(graph, "523").inputs.text = end.prompt
+  nodeOf(graph, endFramePromptNode).inputs.prompt = end.prompt
   nodeOf(graph, "460").inputs.strength = end.strength
   nodeOf(graph, "463").inputs.strength = end.strength
-  if (end.source === "draw") {
-    remove(graph, referenceNodes)
-    const guider = nodeOf(graph, "534").inputs
-    guider.positive = ["523", 0]
-    guider.negative = ["524", 0]
-  }
 }
 
 function setHold(graph: Graph, recipe: EffectRecipe): void {
@@ -131,8 +136,11 @@ function setHold(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, "464").inputs.strength = recipe.hold
 }
 
-function dropSound(graph: Graph): void {
-  remove(graph, ["358"])
+function setSound(graph: Graph, recipe: EffectRecipe): void {
+  if (recipe.design.sound !== null) {
+    return
+  }
+  remove(graph, [soundNode])
   delete nodeOf(graph, "370").inputs.audio
 }
 
@@ -141,7 +149,7 @@ export function effectGraph(
   recipe: EffectRecipe
 ): Record<string, unknown> {
   const graph: Graph = apiGraph.parse(workflow)
-  setPrompt(graph, recipe)
+  setPrompts(graph, recipe)
   setLength(graph, recipe)
   addAdapter(graph, recipe)
   setEndFrame(graph, recipe)
@@ -150,6 +158,6 @@ export function effectGraph(
     passThrough(graph, "462")
     passThrough(graph, "465")
   }
-  dropSound(graph)
+  setSound(graph, recipe)
   return graph
 }

@@ -206,13 +206,12 @@ const viewerEntry: VisualEntry = {
   key: "gallery-viewer",
   run: run.parse({
     ...screenRuns.video,
-    appId: "recast",
+    appId: "motion",
     origin: "live",
     inputs: {
-      mode: "object",
-      source: [screenAssets.clip.id],
-      target: "the boat",
-      prompt: "A paper boat drifts on a pond",
+      photo: [screenAssets.upload.id],
+      clip: [screenAssets.clip.id],
+      scene: "A paper boat drifts on a pond",
     },
     engine: {
       adapter: "comfy-workflow",

@@ -107,9 +107,55 @@ const publicKey = [
   ),
 ]
 
-function admissionOf(target: Run): ExploreAdmission {
+function listedShare(
+  id: string,
+  target: Run,
+  media: SharedOutput["media"][number],
+  source: string
+): SharedOutput {
   return {
-    runId: target.id,
+    id,
+    path: `/share/${id}`,
+    run: target,
+    media: [media],
+    sources: [source],
+    createdAt: "2026-10-19T12:00:00.000Z",
+    expiresAt: "2027-01-17T12:00:00.000Z",
+  }
+}
+
+const imageShare = listedShare(
+  "gallery-image",
+  liveImage,
+  {
+    index: 0,
+    kind: "image",
+    mime: "image/png",
+    width: 900,
+    height: 1600,
+    durationSeconds: null,
+  },
+  demoTall
+)
+
+const videoShare = listedShare(
+  "gallery-video",
+  liveVideo,
+  {
+    index: 0,
+    kind: "video",
+    mime: "video/mp4",
+    width: 1920,
+    height: 1080,
+    durationSeconds: 5,
+  },
+  demoVideo
+)
+
+function admissionOf(share: SharedOutput): ExploreAdmission {
+  return {
+    runId: share.run.id,
+    shareId: share.id,
     source: "own-open-weights",
     yes: "2026-10-19",
     people: "none",
@@ -118,16 +164,20 @@ function admissionOf(target: Run): ExploreAdmission {
 }
 
 const exploreList = seeds.data(exploreListQuery.queryKey, [
-  admissionOf(liveImage),
-  admissionOf(liveVideo),
+  admissionOf(imageShare),
+  admissionOf(videoShare),
 ])
+
+const listedShares = [imageShare, videoShare].map((share) =>
+  seeds.data(["share", share.id], share)
+)
 
 const doneSeeds = [
   ...publicKey,
   exploreList,
   seeds.media(),
   seeds.data(["shares", "published"], [sharedView]),
-  seeds.runs([liveImage, liveVideo]),
+  ...listedShares,
 ]
 
 export const exploreStates: StateSpec[] = [
@@ -146,7 +196,7 @@ export const exploreStates: StateSpec[] = [
     id: "loading",
     label: "state.loading",
     path: "/",
-    seeds: publicNoKey,
+    seeds: [...publicNoKey, exploreList],
     before: noKey,
   },
   {
@@ -162,8 +212,10 @@ export const exploreStates: StateSpec[] = [
     path: "/",
     seeds: [
       ...publicKey,
+      exploreList,
       seeds.failed(["shares", "published"]),
-      seeds.failed(["runs", { appId: null }]),
+      seeds.failed(["share", imageShare.id]),
+      seeds.failed(["share", videoShare.id]),
     ],
     before: withKey,
   },
@@ -192,9 +244,9 @@ export const exploreStates: StateSpec[] = [
         })
       ),
       seeds.media(),
-      exploreList,
+      seeds.data(exploreListQuery.queryKey, [admissionOf(imageShare)]),
       seeds.data(["shares", "published"], []),
-      seeds.runs([liveImage]),
+      seeds.data(["share", imageShare.id], imageShare),
     ],
     before: () => window.localStorage.removeItem("rosesfield.sidebar"),
   },

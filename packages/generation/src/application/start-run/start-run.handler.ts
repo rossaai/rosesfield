@@ -1,6 +1,8 @@
 import {
   type AppDefinition,
   type EngineBinding,
+  inputRulesOf,
+  isRuledInput,
   type RunInputs,
   type Run as RunRecord,
   type RunRequest,
@@ -166,7 +168,10 @@ export class StartRunHandler {
       return null
     }
     const given = isRecord(body.inputs) ? body.inputs : {}
-    const model = chosenModelOf(app.engine, textInputsOf(given))
+    const model = chosenModelOf(
+      app.engine,
+      textInputsOf(ruledInputsOf(app, given))
+    )
     if (model === null || !isHostedModelId(model)) {
       return null
     }
@@ -226,7 +231,7 @@ export class StartRunHandler {
     if (
       listed === undefined ||
       this.policy === null ||
-      !this.policy.allows(tasks, listed)
+      !this.policy.allows(tasks, listed, app.output.kind)
     ) {
       throw new ModelNotOfferedError({ appId: app.id, model })
     }
@@ -330,6 +335,23 @@ function countOf(
     return 1
   }
   return given
+}
+
+function ruledInputsOf(
+  app: AppDefinition,
+  given: Record<string, unknown>
+): Record<string, unknown> {
+  const filled: Record<string, unknown> = { ...given }
+  for (const rule of inputRulesOf(app, given)) {
+    if (
+      isRuledInput(rule.input) &&
+      filled[rule.input.name] === undefined &&
+      rule.fallback !== null
+    ) {
+      filled[rule.input.name] = rule.fallback
+    }
+  }
+  return filled
 }
 
 function textInputsOf(given: Record<string, unknown>): RunInputs {

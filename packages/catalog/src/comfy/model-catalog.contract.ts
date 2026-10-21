@@ -39,6 +39,7 @@ export const modelField: z.ZodType<ModelField> = z.discriminatedUnion("kind", [
     min: z.number().nullable(),
     max: z.number().nullable(),
     integer: z.boolean(),
+    step: z.number().positive().exactOptional(),
     default: z.number().nullable(),
   }),
   z.object({
@@ -69,6 +70,25 @@ export const modelTag = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("proven") }),
 ])
 
+export const boardRank = z.object({
+  position: z.number().int().min(1),
+  size: z.number().int().min(1),
+  board: z.string().min(1).max(120),
+  url: z.url(),
+  readOn: z.iso.date(),
+})
+
+export const priceThird = z.union([z.literal(1), z.literal(2), z.literal(3)])
+
+export const modelFacts = z.object({
+  lab: z.string().min(1).max(80).nullable(),
+  release: z.iso.date().nullable(),
+  rank: boardRank.nullable(),
+  priceThird: priceThird.nullable(),
+  weights: z.url().nullable(),
+  lineKey: z.string().max(120).nullable(),
+})
+
 export const catalogModel = z.object({
   id: z.string().min(1).max(200),
   kind: z.enum(["hosted", "graph"]),
@@ -78,6 +98,7 @@ export const catalogModel = z.object({
   task: z.string().min(1).max(40),
   tags: z.array(modelTag).max(8),
   form: z.array(modelField).max(64).nullable(),
+  facts: modelFacts.optional(),
 })
 
 export const modelListResponse = z.object({
@@ -126,6 +147,9 @@ export const catalogRoutes = {
 }
 
 export type ModelTag = z.infer<typeof modelTag>
+export type BoardRank = z.infer<typeof boardRank>
+export type PriceThird = z.infer<typeof priceThird>
+export type ModelFacts = z.infer<typeof modelFacts>
 export type CatalogModel = z.infer<typeof catalogModel>
 export type ModelListResponse = z.infer<typeof modelListResponse>
 export type PriceResponse = z.infer<typeof priceResponse>

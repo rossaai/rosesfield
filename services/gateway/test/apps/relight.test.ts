@@ -108,7 +108,7 @@ describe("a Relight run through the gateway on the demo engine", () => {
     expect([...bytes.slice(0, 8)]).toEqual(pngSignature)
   })
 
-  it("makes 4 outputs at Count 4 on 2511 at final with a description", async () => {
+  it("makes 4 outputs at Count 4 on 2509 at final with a description", async () => {
     const gateway = openGateway()
     const photoId = await upload(gateway)
     const done = await finish(gateway, {
@@ -117,7 +117,6 @@ describe("a Relight run through the gateway on the demo engine", () => {
         brightness: -2,
         prompt: "Light from a candle on the table",
         quality: "final",
-        model: "qwen-image-edit-2511",
         seed: 7,
       },
       count: 4,
@@ -156,6 +155,7 @@ describe("a Relight run through the gateway on the demo engine", () => {
       { inputs: { image: [photoId], brightness: 0.5 } },
       { inputs: { image: [photoId], prompt: "a".repeat(301) } },
       { inputs: { image: [photoId], model: "another-model" } },
+      { inputs: { image: [photoId], model: "qwen-image-edit-2511" } },
     ]
     for (const body of bodies) {
       expect(await refused(gateway, body)).toBe("RUN_INPUT_INVALID")

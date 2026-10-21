@@ -6,12 +6,14 @@ import {
 } from "@rosesfield/generation"
 import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
+import { mingImage01Design } from "#image/comfy/open-weights"
+import { listWorkflows } from "#list-workflows"
 import { app } from "#storyboard/app"
-import {
-  keepSentence,
-  kleinFiles,
-  qwenFiles,
-} from "#storyboard/comfy/storyboard-nodes"
+import { textNodeOffset } from "#storyboard/comfy/keyframe-from-text"
+import { keyframeSizes } from "#storyboard/comfy/keyframe-sizes"
+import { keyframeBindingOf } from "#storyboard/comfy/storyboard-binding"
+import { keepSentence, qwenFiles } from "#storyboard/comfy/storyboard-nodes"
+import { WorkflowInvalidError } from "#workflow-invalid.error"
 import {
   type ApiWorkflow,
   batchOrder,
@@ -127,6 +129,14 @@ async function submit(
   return { workflow: workflowSent(replay), models: submission.models }
 }
 
+const editModels = [qwenFiles.edit, qwenFiles.encoder, qwenFiles.vae]
+
+const zImageTurboFiles = [
+  "z_image_turbo_bf16.safetensors",
+  "qwen_3_4b.safetensors",
+  "ae.safetensors",
+]
+
 function savedKeyframes(workflow: ApiWorkflow): string[] {
   return batchOrder(workflow, workflow["99"]?.inputs.images)
 }
@@ -169,7 +179,7 @@ describe("the engine request the Storyboard binding produces", () => {
       bodyOf(3, { reference: [anchorId] }),
       42
     )
-    expect(models).toEqual([qwenFiles.edit, qwenFiles.encoder, qwenFiles.vae])
+    expect(models).toEqual(editModels)
     expect(danglingLinks(workflow)).toEqual([])
     expect(workflow["7"]).toEqual({
       class_type: "LoadImage",
@@ -201,39 +211,52 @@ describe("the engine request the Storyboard binding produces", () => {
     expect(reached.has("806")).toBe(false)
   })
 
-  it("makes keyframe 1 from scene 1 on the Qwen row when there is no anchor, then edits keyframe 1", async () => {
+  it("makes keyframe 1 from scene 1 on the Z-Image Turbo graph when there is no anchor, then edits keyframe 1", async () => {
     const { workflow, models } = await submit(bodyOf(4, {}), 7)
-    expect(models).toContain(qwenFiles.text)
+    expect(models).toEqual([...zImageTurboFiles, ...editModels])
     expect(danglingLinks(workflow)).toEqual([])
     expect(workflow["7"]).toBeUndefined()
     const keyframes = savedKeyframes(workflow)
-    expect(keyframes).toEqual(["46", "206", "306", "406"])
-    expect(promptOf(workflow, "46")).toBe(`${scenes[0]} ${look}`)
-    expect(workflow["45"]).toMatchObject({
-      class_type: "KSampler",
-      inputs: { steps: 50, cfg: 4, model: ["42", 0] },
-    })
-    expect(workflow["41"]?.inputs.unet_name).toBe(qwenFiles.text)
-    expect(workflow["8"]?.inputs.image).toEqual(["46", 0])
+    const [first] = keyframes
+    expect(Number(first)).toBeGreaterThan(textNodeOffset)
+    expect(keyframes.slice(1)).toEqual(["206", "306", "406"])
+    expect(promptOf(workflow, first ?? "")).toBe(`${scenes[0]} ${look}`)
+    expect(seedOf(workflow, first ?? "")).toBe(7)
+    expect(workflow["8"]?.inputs.image).toEqual([first, 0])
     for (const decode of keyframes.slice(1)) {
-      expect(reachableFrom(workflow, decode).has("46")).toBe(true)
+      expect(reachableFrom(workflow, decode).has(first ?? "")).toBe(true)
+      expect(promptOf(workflow, decode).startsWith(keepSentence)).toBe(true)
     }
+    expect(workflow["106"]).toBeUndefined()
+    expect(workflow["11"]?.inputs).toMatchObject({ width: 1360, height: 768 })
+    const latents = [...reachableFrom(workflow, first ?? "")].filter(
+      (id) => workflow[id]?.class_type === "EmptySD3LatentImage"
+    )
+    expect(latents).toEqual(["11"])
   })
 
-  it("runs FLUX.2 Klein 4B at 4 steps from a character's photo for 8 scenes in 9:16", async () => {
+  it("runs 2 scenes with no anchor at the smallest format as one text call and one edit of keyframe 1", async () => {
+    const { workflow } = await submit(bodyOf(2, {}, "1:1"), 3)
+    expect(danglingLinks(workflow)).toEqual([])
+    const keyframes = savedKeyframes(workflow)
+    expect(keyframes).toHaveLength(2)
+    expect(keyframes[1]).toBe("206")
+    expect(promptOf(workflow, "206")).toBe(
+      `${keepSentence} ${scenes[1]} ${look}`
+    )
+    expect(workflow["11"]?.inputs).toMatchObject({ width: 1024, height: 1024 })
+  })
+
+  it("edits a character's photo once per scene for 8 scenes in 9:16", async () => {
     const { workflow, models } = await submit(
-      bodyOf(8, { model: "flux-2-klein-4b", character: [characterId] }, "9:16"),
+      bodyOf(8, { character: [characterId] }, "9:16"),
       100
     )
-    expect(models).toEqual([
-      kleinFiles.unet,
-      kleinFiles.encoder,
-      kleinFiles.vae,
-    ])
+    expect(models).toEqual(editModels)
     expect(danglingLinks(workflow)).toEqual([])
     const keyframes = savedKeyframes(workflow)
     expect(keyframes).toEqual(
-      [1, 2, 3, 4, 5, 6, 7, 8].map((scene) => String(scene * 100 + 10))
+      [1, 2, 3, 4, 5, 6, 7, 8].map((scene) => String(scene * 100 + 6))
     )
     expect(keyframes.map((decode) => seedOf(workflow, decode))).toEqual([
       100,
@@ -245,34 +268,10 @@ describe("the engine request the Storyboard binding produces", () => {
       "a + 6",
       "a + 7",
     ])
-    expect(promptOf(workflow, "810")).toBe(
+    expect(promptOf(workflow, "806")).toBe(
       `${keepSentence} ${scenes[7]} ${look}`
     )
-    expect(workflow["5"]).toMatchObject({
-      class_type: "Flux2Scheduler",
-      inputs: { steps: 4, width: 768, height: 1360 },
-    })
     expect(workflow["11"]?.inputs).toMatchObject({ width: 768, height: 1360 })
-    expect(workflow["805"]).toMatchObject({
-      class_type: "ReferenceLatent",
-      inputs: { latent: ["9", 0] },
-    })
-  })
-
-  it("makes keyframe 1 with its own text pass on the Klein row when there is no anchor", async () => {
-    const { workflow } = await submit(
-      bodyOf(2, { model: "flux-2-klein-4b" }, "1:1"),
-      3
-    )
-    expect(danglingLinks(workflow)).toEqual([])
-    expect(savedKeyframes(workflow)).toEqual(["50", "210"])
-    expect(promptOf(workflow, "50")).toBe(`${scenes[0]} ${look}`)
-    expect(workflow["48"]?.inputs).toMatchObject({
-      positive: ["43", 0],
-      negative: ["44", 0],
-    })
-    expect(workflow["8"]?.inputs.image).toEqual(["50", 0])
-    expect(workflow["11"]?.inputs).toMatchObject({ width: 1024, height: 1024 })
   })
 
   it("keeps the prompt to the scene alone when the look is empty", async () => {
@@ -295,6 +294,21 @@ describe("the engine request the Storyboard binding produces", () => {
       info: { id: uploadedId },
     })
     expect(savedKeyframes(workflow)).toEqual(["106", "206"])
+  })
+})
+
+describe("Storyboard's text pass", () => {
+  it("refuses only the run whose text graph it cannot splice, and the catalog still loads", () => {
+    const refused = keyframeBindingOf(() => mingImage01Design(keyframeSizes))
+    expect(() => resolveBinding(refused, {})).toThrow(/needs one latent node/)
+    const missing = keyframeBindingOf(() => {
+      throw new WorkflowInvalidError({
+        folder: "image-z-image-turbo",
+        reason: "no folder of workflows/ holds it",
+      })
+    })
+    expect(() => resolveBinding(missing, {})).toThrow(/no folder/)
+    expect(definition.id).toBe("storyboard")
   })
 })
 
@@ -326,5 +340,52 @@ describe("the rules the Storyboard contract gives every client", () => {
     expect(startRunBodyFor(definition).parse(body).count).toBe(4)
     expect(refusal({ ...bodyOf(4, {}), count: 3 })).toEqual(["count"])
     expect(refusal({ ...bodyOf(1, {}), count: 9 })).toEqual(["count"])
+  })
+})
+
+function workflowLeaves(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) {
+    return value.flatMap(workflowLeaves)
+  }
+  if (typeof value !== "object" || value === null) {
+    return []
+  }
+  const record = Object.fromEntries(Object.entries(value))
+  if (record.adapter === "comfy-workflow") {
+    const config = record.config
+    return typeof config === "object" && config !== null
+      ? [Object.fromEntries(Object.entries(config))]
+      : []
+  }
+  return Object.values(record).flatMap(workflowLeaves)
+}
+
+describe("the graphs Storyboard runs", () => {
+  it("offers Qwen Image Edit 2511 as its one edit graph and holds no FLUX.2 Klein and no Wan model", () => {
+    const model = definition.inputs.find((input) => input.name === "model")
+    expect(
+      model?.type === "choice" ? model.options.map((one) => one.value) : []
+    ).toEqual(["qwen-image-edit-2511"])
+    const leaves = workflowLeaves(definition.engine)
+    expect(leaves).toHaveLength(3)
+    const files = leaves.flatMap((leaf) =>
+      Array.isArray(leaf.models) ? leaf.models.map(String) : []
+    )
+    expect(files).toContain(qwenFiles.edit)
+    expect(files.filter((file) => /klein|wan/i.test(file))).toEqual([])
+  })
+
+  it("lists the Storyboard edit graph and none of the three graphs it left", () => {
+    const ids = listWorkflows().map((workflow) => workflow.id)
+    expect(ids).toContain("storyboard-qwen-image-edit-2511")
+    expect(
+      ids.filter((id) =>
+        [
+          "storyboard-qwen-image-edit-2511-from-text",
+          "storyboard-flux-2-klein-4b",
+          "storyboard-flux-2-klein-4b-from-text",
+        ].includes(id)
+      )
+    ).toEqual([])
   })
 })

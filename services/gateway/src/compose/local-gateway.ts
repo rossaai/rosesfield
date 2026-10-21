@@ -2,7 +2,7 @@ import { mkdirSync } from "node:fs"
 import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
-import type { PiAgentHarness } from "@rosesfield/agent"
+import type { OpenPiModelsOptions, PiAgentHarness } from "@rosesfield/agent"
 import type { AppDefinition } from "@rosesfield/contract"
 import {
   ComfyAccount,
@@ -137,6 +137,11 @@ export function composeLocalGateway(
     : composeOwner(parts, env.access.lock, platform)
 }
 
+function modelOptionsOf(parts: Parts): OpenPiModelsOptions {
+  const { fetch } = parts.engineOptions
+  return fetch === undefined ? {} : { fetch }
+}
+
 function ownerHandlers(parts: Parts): Built<TimerJobRunner> {
   const { db } = parts
   const runs = new DrizzleRunRepository({ db })
@@ -168,6 +173,7 @@ function composeOwner(
     clock: parts.clock,
     apps: parts.apps,
     handlers,
+    modelOptions: modelOptionsOf(parts),
   })
   const scope = ownerScope({ handlers, agent, settings: ownerSettings(env) })
   const guard: GatewayGuard = {
@@ -255,6 +261,7 @@ function composePublic(
           model: env.agent,
           apps: parts.apps,
           clock,
+          modelOptions: modelOptionsOf(parts),
         })
   const sessionPurge = new SessionPurge({
     db,

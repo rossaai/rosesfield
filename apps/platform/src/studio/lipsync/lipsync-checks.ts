@@ -1,11 +1,8 @@
+import type { ModelField } from "@rosesfield/catalog/comfy"
 import { formatBytes, formatSeconds } from "@/copy/format"
 import { tCatalog } from "@/copy/t"
 import type { FieldProblem } from "@/screens/app/app-form"
-import {
-  audioInput,
-  clipInput,
-  photoInput,
-} from "@/studio/lipsync/lipsync-modes"
+import type { LengthLimit } from "@/studio/lipsync/lipsync-tabs"
 
 export type MediaFacts = {
   mime: string
@@ -15,48 +12,60 @@ export type MediaFacts = {
   seconds: number | null
 }
 
-type Limits = {
+export type WellKind = "photo" | "clip" | "audio"
+
+export type Limits = {
   input: string
   maxBytes: number
   mimes: readonly string[]
   formatsKey: string
   unreadableKey: string
   needs: { size: boolean; length: boolean }
-  seconds: { min: number; max: number } | null
+  seconds: LengthLimit | null
 }
 
-export const framesPerSecond = 25
+type KindLimits = Omit<Limits, "input" | "seconds">
 
-const lengthBounds = { min: 2, max: 10 }
-
-export const photoLimits: Limits = {
-  input: photoInput,
-  maxBytes: 20_000_000,
-  mimes: ["image/png", "image/jpeg", "image/webp"],
-  formatsKey: "lipsync.formats.photo",
-  unreadableKey: "lipsync.input.photo.unreadable",
-  needs: { size: true, length: false },
-  seconds: null,
+const kindLimits: Readonly<Record<WellKind, KindLimits>> = {
+  photo: {
+    maxBytes: 20_000_000,
+    mimes: ["image/png", "image/jpeg", "image/webp"],
+    formatsKey: "lipsync.formats.photo",
+    unreadableKey: "lipsync.input.photo.unreadable",
+    needs: { size: true, length: false },
+  },
+  clip: {
+    maxBytes: 100_000_000,
+    mimes: ["video/mp4", "video/quicktime", "video/webm"],
+    formatsKey: "lipsync.formats.clip",
+    unreadableKey: "lipsync.input.clip.unreadable",
+    needs: { size: true, length: true },
+  },
+  audio: {
+    maxBytes: 20_000_000,
+    mimes: [
+      "audio/mpeg",
+      "audio/mp3",
+      "audio/wav",
+      "audio/x-wav",
+      "audio/wave",
+    ],
+    formatsKey: "lipsync.formats.audio",
+    unreadableKey: "lipsync.input.audio.unreadable",
+    needs: { size: false, length: true },
+  },
 }
 
-export const clipLimits: Limits = {
-  input: clipInput,
-  maxBytes: 100_000_000,
-  mimes: ["video/mp4", "video/quicktime", "video/webm"],
-  formatsKey: "lipsync.formats.clip",
-  unreadableKey: "lipsync.input.clip.unreadable",
-  needs: { size: true, length: true },
-  seconds: lengthBounds,
-}
-
-export const audioLimits: Limits = {
-  input: audioInput,
-  maxBytes: 20_000_000,
-  mimes: ["audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/wave"],
-  formatsKey: "lipsync.formats.audio",
-  unreadableKey: "lipsync.input.audio.unreadable",
-  needs: { size: false, length: true },
-  seconds: lengthBounds,
+export function limitsFor(
+  kind: WellKind,
+  input: string,
+  seconds: LengthLimit | null
+): Limits {
+  return {
+    ...kindLimits[kind],
+    input,
+    seconds: kind === "photo" ? null : seconds,
+  }
 }
 
 const ratios: readonly { value: string; width: number; height: number }[] = [
@@ -67,25 +76,22 @@ const ratios: readonly { value: string; width: number; height: number }[] = [
   { value: "9:16", width: 9, height: 16 },
 ]
 
-export function nearestRatio(width: number, height: number): string {
+export function nearestRatio(
+  width: number,
+  height: number,
+  offered: readonly string[]
+): string | null {
   const shape = Math.log(width / height)
-  let best = "1:1"
+  let best: string | null = null
   let bestGap = Number.POSITIVE_INFINITY
   for (const ratio of ratios) {
     const gap = Math.abs(shape - Math.log(ratio.width / ratio.height))
-    if (gap < bestGap) {
+    if (offered.includes(ratio.value) && gap < bestGap) {
       best = ratio.value
       bestGap = gap
     }
   }
   return best
-}
-
-export function lengthOf(seconds: number): number {
-  const frames = Math.round(seconds * framesPerSecond)
-  const least = lengthBounds.min * framesPerSecond
-  const most = lengthBounds.max * framesPerSecond
-  return Math.min(most, Math.max(least, frames)) / framesPerSecond
 }
 
 function lengthProblem(seconds: number, limits: Limits): FieldProblem | null {
@@ -142,4 +148,51 @@ export function problemOf(
     }
   }
   return facts.seconds === null ? null : lengthProblem(facts.seconds, limits)
+}
+
+const readingSlack = 0.05
+
+function onStep(seconds: number, step: number): number {
+  const steps = Math.ceil(seconds / step - Math.min(readingSlack / step, 0.5))
+  const perSecond = Math.round(1 / step)
+  return Math.abs(perSecond * step - 1) < 1e-9
+    ? steps / perSecond
+    : steps * step
+}
+
+function numberLength(
+  seconds: number,
+  field: Extract<ModelField, { kind: "number" }>,
+  step: number | null
+): number {
+  const wanted =
+    step === null ? Math.round(seconds * 100) / 100 : onStep(seconds, step)
+  return Math.min(field.max ?? wanted, Math.max(field.min ?? wanted, wanted))
+}
+
+function choiceLength(
+  seconds: number,
+  field: Extract<ModelField, { kind: "choice" }>
+): string | number | null {
+  const options = field.options
+    .map((option) => ({ option, value: Number.parseFloat(String(option)) }))
+    .filter((one) => Number.isFinite(one.value))
+    .sort((a, b) => a.value - b.value)
+  const fits = options.find((one) => one.value >= seconds - 0.05)
+  return (fits ?? options.at(-1))?.option ?? null
+}
+
+export function lengthFor(
+  seconds: number,
+  field: ModelField,
+  step: number | null
+): string | number | null {
+  switch (field.kind) {
+    case "number":
+      return numberLength(seconds, field, step)
+    case "choice":
+      return choiceLength(seconds, field)
+    default:
+      return null
+  }
 }

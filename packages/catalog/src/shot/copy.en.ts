@@ -36,9 +36,6 @@ export const shotCopy = {
   "shot.model.ltx25.name": "LTX 2.5",
   "shot.model.ltx25.line":
     "Text to video, with sound. 2 to 10 seconds, up to 1080p, 24 frames per second.",
-  "shot.model.wan22FunCamera.name": "Wan 2.2 Fun Camera",
-  "shot.model.wan22FunCamera.line":
-    "A start frame to video, with the movement as a camera input. 5 seconds, 480p, 16 frames per second, no sound.",
   "shot.choice.movement.static": "Static",
   "shot.choice.movement.pushIn": "Push in",
   "shot.choice.movement.pullOut": "Pull out",

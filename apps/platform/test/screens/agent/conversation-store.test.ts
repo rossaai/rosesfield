@@ -28,6 +28,7 @@ function turnOf(key: string): Turn {
     parts: [{ kind: "proposal", proposal }],
     status: "answering",
     failureCode: null,
+    credits: null,
     shownItems: 0,
   }
 }

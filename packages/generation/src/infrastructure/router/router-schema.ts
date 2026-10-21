@@ -46,6 +46,14 @@ export function factsOf(document: unknown): SchemaFacts | null {
   }
 }
 
+export function takesToolsOf(facts: SchemaFacts): boolean {
+  if (facts.request === null) {
+    return false
+  }
+  const { properties } = propertiesOf(facts.request, facts.components)
+  return Object.hasOwn(properties, "tools")
+}
+
 export function resolve(value: unknown, components: Schema): Schema {
   let current = value
   for (let depth = 0; depth < 8; depth += 1) {

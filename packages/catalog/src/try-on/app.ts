@@ -1,5 +1,6 @@
 import { type AppInput, defineApp } from "#define-app"
 import {
+  defaultTryOnModel,
   type TryOnModel,
   tryOnAspectRatios,
   tryOnEngine,
@@ -8,8 +9,6 @@ import {
 
 const modelLabels: Readonly<Record<TryOnModel, string>> = {
   "qwen-image-edit-2511": "tryOn.model.qwenImageEdit2511",
-  "qwen-image-edit-2511-lightning": "tryOn.model.qwenImageEdit2511Lightning",
-  "flux2-klein-4b": "tryOn.model.flux2Klein4b",
 }
 
 export const app: AppInput = defineApp({
@@ -50,7 +49,7 @@ export const app: AppInput = defineApp({
         value,
         labelKey: modelLabels[value],
       })),
-      default: "qwen-image-edit-2511",
+      default: defaultTryOnModel,
     },
     { type: "seed", name: "seed", labelKey: "tryOn.input.seed.label" },
   ],

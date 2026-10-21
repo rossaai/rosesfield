@@ -17,6 +17,7 @@ import { useViewer } from "@/viewer/viewer-context"
 import {
   compareInputOf,
   type MeasuredSize,
+  useRunModels,
   useSourceRun,
   type ViewerCompare,
   ViewerDetails,
@@ -129,7 +130,9 @@ function PhoneBar({
 function useCompare(asset: Asset | undefined): ViewerCompare {
   const { run } = useSourceRun(asset ?? null)
   const [shown, setShown] = useState<string | null>(null)
-  const inputId = asset === undefined ? null : compareInputOf(run, asset)
+  const models = useRunModels(run)
+  const inputId =
+    asset === undefined ? null : compareInputOf(run, asset, models)
   const isOn = inputId !== null && shown === asset?.id
   return {
     inputId,

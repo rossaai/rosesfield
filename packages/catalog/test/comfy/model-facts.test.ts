@@ -64,9 +64,57 @@ describe("the task of a model", () => {
     expect(
       tasksOfModel(hosted("a/video-upscale-v1", ["video"], ["video"]))
     ).toEqual(["video-edit", "upscale"])
+  })
+
+  it("lists a sound effects model under sound and not under speech", () => {
     expect(
       tasksOfModel(hosted("a/eleven-sfx-v2", ["text"], ["audio"]))
-    ).toEqual(["speech", "sound"])
+    ).toEqual(["sound"])
+    expect(
+      tasksOfModel(hosted("elevenlabs/eleven_sfx_v2", ["text"], ["audio"]))
+    ).toEqual(["sound"])
+    expect(
+      tasksOfModel(hosted("elevenlabs/eleven_v3", ["text"], ["audio"]))
+    ).toEqual(["speech"])
+  })
+
+  it("reads motion transfer and character swap from the name, beside the media tasks", () => {
+    const video = image("image", "image_url", true)
+    const clip: ModelField = {
+      kind: "media",
+      name: "video",
+      path: "video_url",
+      required: true,
+      media: "video",
+      min: 1,
+      max: 1,
+    }
+    expect(
+      tasksOfModel(
+        hosted(
+          "a/move-motion-transfer-v1",
+          ["image", "video"],
+          ["video"],
+          [video, clip]
+        )
+      )
+    ).toEqual(["motion-transfer"])
+    expect(
+      tasksOfModel(hosted("a/v3-motion-control", ["image", "video"], ["video"]))
+    ).toContain("motion-transfer")
+    expect(
+      tasksOfModel(
+        hosted(
+          "a/character-replace-v2",
+          ["image", "video"],
+          ["video"],
+          [video, clip]
+        )
+      )
+    ).toEqual(["character-swap"])
+    expect(
+      tasksOfModel(hosted("a/clip-edit", ["image", "video"], ["video"], [clip]))
+    ).toEqual(["video-edit"])
   })
 
   it("lists an edit model that needs an image in Edit and not in text to image", () => {
@@ -168,6 +216,7 @@ describe("the factual tags of a video model", () => {
       provider: "maker",
       takes: ["text"],
       makes: ["video"],
+      takesTools: false,
       form: {
         model: "maker/clip",
         fields: [

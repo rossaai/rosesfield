@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 import {
-  closingPhrase,
   phraseOf,
   type ShotList,
   sentWords,
@@ -50,7 +49,7 @@ describe("the phrase table", () => {
 describe("sentWords", () => {
   const scene = "A woman crosses a rainy street at night"
 
-  it("adds one sentence per chosen value, then the closing sentence", () => {
+  it("adds one sentence per chosen value after the scene, the movement included", () => {
     const words = sentWords({
       scene,
       choices: {
@@ -60,11 +59,9 @@ describe("sentWords", () => {
         lens: "telephoto",
         movement: "push-in",
       },
-      movementAsWords: true,
-      closes: true,
     })
     expect(words).toBe(
-      "A woman crosses a rainy street at night. The camera moves slowly toward the subject. Shot on a telephoto lens. Night lighting. Cool colors. A tense mood. One continuous shot."
+      "A woman crosses a rainy street at night. The camera moves slowly toward the subject. Shot on a telephoto lens. Night lighting. Cool colors. A tense mood."
     )
   })
 
@@ -72,20 +69,17 @@ describe("sentWords", () => {
     const choices = Object.fromEntries(
       shotListOrder.map((list: ShotList) => [list, "auto"])
     )
-    expect(
-      sentWords({ scene, choices, movementAsWords: true, closes: false })
-    ).toBe(`${scene}.`)
+    expect(sentWords({ scene, choices })).toBe(`${scene}.`)
     expect(phraseOf("light", "auto")).toBe("")
   })
 
-  it("keeps the movement out of the words when the model takes it as a camera input", () => {
+  it("trims the scene and keeps the mark it ends on", () => {
     const words = sentWords({
       scene: "  A dog runs on a beach!  ",
-      choices: { movement: "push-in", color: "warm" },
-      movementAsWords: false,
-      closes: false,
+      choices: { movement: "push-in", color: "black-and-white" },
     })
-    expect(words).toBe("A dog runs on a beach! Warm colors.")
-    expect(words).not.toContain(closingPhrase)
+    expect(words).toBe(
+      "A dog runs on a beach! The camera moves slowly toward the subject. Black and white, with no color."
+    )
   })
 })

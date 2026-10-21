@@ -15,6 +15,7 @@ export type Turn = {
   parts: AnswerPart[]
   status: "answering" | "done" | "failed" | "stopped"
   failureCode: string | null
+  credits: number | null
   shownItems: number
 }
 

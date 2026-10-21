@@ -94,7 +94,7 @@ describe("the Image app", () => {
     expect(defaultModelOf(definition)).toBe(published)
   })
 
-  it("keeps three open-weights graphs, Qwen Image Edit 2511 for your references, and no FLUX.2 Klein 4B graph", () => {
+  it("keeps three open-weights graphs, Z-Image Turbo first and Qwen Image Edit 2511 for your references, keeps Ming's graph out of the picker and in the tree, and holds no FLUX.2 Klein 4B graph", () => {
     const graphs = modelsForApp(definition, []).map((model) => model.id)
     expect(graphs).toEqual([
       "z-image-turbo",
@@ -103,9 +103,29 @@ describe("the Image app", () => {
     ])
     const ids = listWorkflows().map((workflow) => workflow.id)
     expect(ids).toEqual(
-      expect.arrayContaining(["image-z-image-turbo", "image-qwen-image-2512"])
+      expect.arrayContaining([
+        "image-ming-image-0-1-design",
+        "image-z-image-turbo",
+        "image-qwen-image-2512",
+      ])
     )
     expect(ids).not.toContain("image-flux-2-klein-4b")
+  })
+
+  it("names each open-weights graph by its lab, with the line and the weights page of its model", () => {
+    const opened = modelsForApp(definition, []).find(
+      (model) => model.id === "z-image-turbo"
+    )
+    expect(opened).toMatchObject({
+      kind: "graph",
+      maker: "Alibaba Tongyi-MAI",
+      facts: {
+        lab: "Alibaba Tongyi-MAI",
+        weights: "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo",
+        lineKey: "comfy.model.graphZImageTurbo.line",
+        rank: { position: 70, size: 104 },
+      },
+    })
   })
 
   it("is read by the catalog with its id as its folder", () => {

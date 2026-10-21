@@ -177,11 +177,6 @@ function expectedGraph(workflowId: string, part: TryOnPart): Workflow {
 
 const models = [
   { model: "qwen-image-edit-2511", workflowId: "try-on-qwen-image-edit-2511" },
-  {
-    model: "qwen-image-edit-2511-lightning",
-    workflowId: "try-on-qwen-image-edit-2511-lightning",
-  },
-  { model: "flux2-klein-4b", workflowId: "try-on-flux-2-klein-4b" },
 ]
 
 const parts: readonly TryOnPart[] = ["all", "top", "bottom"]
@@ -271,57 +266,6 @@ describe("the Try-on engine request", () => {
     expect(tryOnPrompts.top).not.toBe(tryOnPrompts.bottom)
   })
 
-  it("turns on the 4-step LoRA at CFG 1 for the Lightning model", async () => {
-    const { workflow, submission } = await submitted(
-      requestFor({ ...both, model: "qwen-image-edit-2511-lightning" })
-    )
-    expect(workflow).toMatchObject({
-      "153": {
-        class_type: "LoraLoaderModelOnly",
-        inputs: {
-          model: ["152", 0],
-          lora_name:
-            "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
-          strength_model: 1,
-        },
-      },
-      "169": { inputs: { model: ["153", 0], steps: 4, cfg: 1, seed: 42 } },
-    })
-    expect(submission.models).toContain(
-      "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors"
-    )
-    expect(brokenLinks(workflow)).toEqual([])
-  })
-
-  it("sends FLUX.2 Klein 4B with the person and the clothes as two reference latents", async () => {
-    const { workflow, submission } = await submitted(
-      requestFor({ ...both, part: "top", model: "flux2-klein-4b", seed: 9 })
-    )
-    expect(submission.models).toEqual([
-      "flux-2-klein-4b-fp8.safetensors",
-      "qwen_3_4b.safetensors",
-      "flux2-vae.safetensors",
-    ])
-    expect(workflow).toMatchObject({
-      "76": { inputs: { image: person } },
-      "81": { inputs: { image: clothes } },
-      "109": { inputs: { text: tryOnPrompts.top } },
-      "111": { inputs: { image: ["76", 0], resolution_steps: 16 } },
-      "114": { class_type: "GetImageSize", inputs: { image: ["111", 0] } },
-      "117": { inputs: { conditioning: ["109", 0], latent: ["116", 0] } },
-      "120": { inputs: { conditioning: ["117", 0], latent: ["119", 0] } },
-      "118": { inputs: { conditioning: ["115", 0], latent: ["119", 0] } },
-      "113": { inputs: { width: ["114", 0], height: ["114", 1] } },
-      "103": {
-        inputs: { positive: ["120", 0], negative: ["118", 0], cfg: 1 },
-      },
-      "106": { inputs: { noise_seed: 42 } },
-      "102": { inputs: { steps: 4 } },
-    })
-    expect(brokenLinks(workflow)).toEqual([])
-    expect(emptyInputs(workflow)).toEqual([])
-  })
-
   it("names a link to a node the workflow does not hold", () => {
     const planted: Workflow = {
       "169": { class_type: "KSampler", inputs: { latent_image: ["156", 0] } },
@@ -331,9 +275,13 @@ describe("the Try-on engine request", () => {
 
   it("refuses a part or a model the app does not list before any request", () => {
     expect(() => requestFor({ ...both, part: "shoes" })).toThrow()
-    expect(() =>
-      requestFor({ ...both, model: "flux2-klein-9b-tryon" })
-    ).toThrow()
+    for (const model of [
+      "flux2-klein-9b-tryon",
+      "qwen-image-edit-2511-lightning",
+      "flux2-klein-4b",
+    ]) {
+      expect(() => requestFor({ ...both, model })).toThrow()
+    }
     expect(() => requestFor({ person: [personId] })).toThrow()
     expect(() => requestFor({ clothes: [clothesId] })).toThrow()
     expect(() =>

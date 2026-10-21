@@ -1,11 +1,4 @@
-import {
-  acceptedProposalResponse,
-  answerEvent,
-  conversationListResponse,
-  conversationResponse,
-  conversationRoutes,
-  transcriptResponse,
-} from "@rosesfield/agent"
+import { conversationRoutes } from "@rosesfield/agent"
 import { listApps } from "@rosesfield/catalog"
 import { appTasksOf } from "@rosesfield/catalog/comfy"
 import {
@@ -21,34 +14,19 @@ import {
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { createTestHarness } from "wrangler"
 import { gatewayRoutes } from "#gateway.contract"
-import { toolCallStream } from "../../../../packages/agent/test/fixtures/openai-chat-stream"
 import { ownerToken, pngBytes } from "../sample-apps"
-import { serveModel } from "./fake-model"
 import { gatewayRoot, testConfig } from "./platform-proxy"
 
-const modelId = "qwen3.8:27b"
 const app = promptOnlyApp()
 const prompt = app.inputs.find((input) => input.type === "prompt")
 const promptInputs = prompt === undefined ? {} : { [prompt.name]: "a red door" }
-
-const model = await serveModel([
-  toolCallStream(modelId, {
-    id: "call_1",
-    name: app.id,
-    arguments: { inputs: promptInputs },
-  }),
-])
 
 const worker = createTestHarness({
   root: gatewayRoot,
   workers: [
     {
       configPath: testConfig,
-      secrets: {
-        OWNER_TOKEN: ownerToken,
-        AGENT_BASE_URL: model.baseUrl,
-        AGENT_MODEL: modelId,
-      },
+      secrets: { OWNER_TOKEN: ownerToken },
     },
   ],
 })
@@ -62,7 +40,6 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await worker.close()
-  await model.close()
 })
 
 async function codeOf(response: {
@@ -128,10 +105,7 @@ describe("the Workers entry in workerd", () => {
           origin: "demo",
         },
         lock: "token",
-        agent: {
-          model: "set",
-          models: [{ provider: "openai-compatible", id: modelId }],
-        },
+        agent: { model: "missing", models: [] },
       },
     })
     const apps = await worker.fetch(routes.listApps.path, {
@@ -203,70 +177,14 @@ describe("the Workers entry in workerd", () => {
     expect(await runToDone(run.id)).toBe("done")
   })
 
-  it("answers through the agent's Durable Object, proposes a run, and starts it once you accept", async () => {
-    const json = { ...withToken, "content-type": "application/json" }
+  it("keeps the agent off through its Durable Object when the server holds no Comfy key", async () => {
     const started = await worker.fetch(
       conversationRoutes.startConversation.path,
-      {
-        method: "POST",
-        headers: withToken,
-      }
-    )
-    expect(started.status).toBe(201)
-    const { conversation } = conversationResponse.parse(await started.json())
-    const ids = { conversationId: conversation.id }
-    const answer = await worker.fetch(
-      buildPath(conversationRoutes.sendMessage.path, ids),
-      {
-        method: "POST",
-        headers: json,
-        body: JSON.stringify({ text: "A red door" }),
-      }
-    )
-    const events = (await answer.text())
-      .split("\n")
-      .filter((line) => line.startsWith("data: "))
-      .map((line) => answerEvent.parse(JSON.parse(line.slice(6))))
-    const proposed = events.find((event) => event.type === "proposal")
-    if (proposed?.type !== "proposal") {
-      throw new Error(`The agent proposed no run: ${JSON.stringify(events)}`)
-    }
-    const accepted = await worker.fetch(
-      buildPath(conversationRoutes.acceptProposal.path, {
-        ...ids,
-        proposalId: proposed.proposal.id,
-      }),
       { method: "POST", headers: withToken }
     )
-    expect(accepted.status).toBe(202)
-    const { run } = acceptedProposalResponse.parse(await accepted.json())
-    const listed = conversationListResponse.parse(
-      await (
-        await worker.fetch(conversationRoutes.listConversations.path, {
-          headers: withToken,
-        })
-      ).json()
-    )
-    const read = transcriptResponse.parse(
-      await (
-        await worker.fetch(
-          buildPath(conversationRoutes.readConversation.path, ids),
-          {
-            headers: withToken,
-          }
-        )
-      ).json()
-    )
 
-    expect(events.at(-1)).toEqual({ type: "done" })
-    expect(listed.conversations.map((one) => one.id)).toContain(conversation.id)
-    expect(read.items).toContainEqual({ type: "person", text: "A red door" })
-    expect(read.items).toContainEqual({
-      type: "proposal",
-      proposal: { ...proposed.proposal, status: "accepted", runId: run.id },
-    })
-    expect(model.authorizations).toEqual(["Bearer none"])
-    expect(await runToDone(run.id)).toBe("done")
+    expect(started.status).toBe(412)
+    expect(await codeOf(started)).toBe("AGENT_MODEL_MISSING")
   })
 })
 
@@ -285,5 +203,30 @@ describe("the Workers entry without an owner token", () => {
     expect(await codeOf(response)).toBe("ENV_INVALID")
     const logged = open.getLogs().map((log) => JSON.stringify(log))
     expect(logged.join("\n")).toContain("OWNER_TOKEN is missing")
+  })
+})
+
+describe("the Workers entry with a removed agent setting", () => {
+  const removed = createTestHarness({
+    root: gatewayRoot,
+    workers: [
+      {
+        configPath: testConfig,
+        secrets: { OWNER_TOKEN: ownerToken, AGENT_MODEL: "qwen3.8:27b" },
+      },
+    ],
+  })
+
+  beforeAll(() => removed.listen())
+  afterAll(() => removed.close())
+
+  it("refuses every request and names the setting it no longer reads", async () => {
+    const response = await removed.fetch(gatewayRoutes.getHealth.path, {
+      headers: withToken,
+    })
+    expect(response.status).toBe(412)
+    expect(await codeOf(response)).toBe("ENV_INVALID")
+    const logged = removed.getLogs().map((log) => JSON.stringify(log))
+    expect(logged.join("\n")).toContain("AGENT_MODEL is set")
   })
 })

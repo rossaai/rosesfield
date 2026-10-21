@@ -32,15 +32,18 @@ export function scalarOf(
         default: stringOf(fallback),
       }
     case "integer":
-    case "number":
+    case "number": {
+      const step = numberOf(fieldOf(schema, "multipleOf"))
       return {
         ...base,
         kind: "number",
         min: numberOf(fieldOf(schema, "minimum")),
         max: numberOf(fieldOf(schema, "maximum")),
         integer: type === "integer",
+        ...(step === null || step <= 0 ? {} : { step }),
         default: numberOf(fallback),
       }
+    }
     case "boolean":
       return {
         ...base,

@@ -28,4 +28,11 @@ export const motionCopy = {
   "motion.formats.clip": "MP4, MOV or WebM",
   "motion.choice.resolution.p480": "480p",
   "motion.choice.resolution.p720": "720p",
+  "motion.tabs.label": "Mode",
+  "motion.tab.move": "Move a photo",
+  "motion.tab.swap": "Swap a character",
+  "motion.input.clip.range":
+    "{model} takes clips of {min} to {max} seconds. This one runs {seconds} seconds.",
+  "motion.input.model.label": "Model",
+  "motion.model.ltx23": "LTX 2.3 control",
 } as const

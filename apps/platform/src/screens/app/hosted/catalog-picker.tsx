@@ -1,4 +1,12 @@
-import type { CatalogModel, ModelTag } from "@rosesfield/catalog/comfy"
+import {
+  type CatalogModel,
+  type FactBadge,
+  factBadgesOf,
+  graphMaker,
+  type ModelFacts,
+  type ModelTag,
+  weightsHost,
+} from "@rosesfield/catalog/comfy"
 import {
   type ModelBadge,
   ModelPicker,
@@ -17,7 +25,7 @@ import {
   Volume2Icon,
 } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
-import { hasCatalogText, t, tCatalog } from "@/copy/t"
+import { type CopyValues, hasCatalogText, t, tCatalog } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import { modelSections } from "@/screens/app/hosted/model-sections"
@@ -34,6 +42,8 @@ const lineKeys: Readonly<Record<string, string>> = {
   "video-edit": "model.line.videoEdit",
   "lip-sync": "model.line.lipSync",
   speech: "model.line.speech",
+  "voice-change": "model.line.voiceChange",
+  music: "model.line.music",
   sound: "model.line.sound",
   "three-d": "model.line.threeD",
   upscale: "model.line.upscale",
@@ -41,11 +51,26 @@ const lineKeys: Readonly<Record<string, string>> = {
   relight: "model.line.relight",
   "try-on": "model.line.tryOn",
   expand: "model.line.expand",
+  "motion-transfer": "model.line.motionTransfer",
+  "character-swap": "model.line.characterSwap",
   chat: "model.line.chat",
 }
 
+export type CatalogWords = (key: string, values?: CopyValues) => string | null
+
+function catalogWords(key: string, values?: CopyValues): string | null {
+  return hasCatalogText(key) ? tCatalog(key, values) : null
+}
+
 export function makerNameOf(model: CatalogModel): string {
-  return model.kind === "graph" ? t("model.maker.graphs") : model.maker
+  return model.maker === graphMaker ? t("model.maker.graphs") : model.maker
+}
+
+export function labOf(model: {
+  maker: string
+  facts?: ModelFacts | undefined
+}): string {
+  return model.facts?.lab ?? model.maker
 }
 
 export function modelNameOf(model: CatalogModel): string {
@@ -57,6 +82,22 @@ export function modelNameOf(model: CatalogModel): string {
 export function lineOf(task: string): string | null {
   const key = lineKeys[task]
   return key === undefined ? null : tCatalog(key)
+}
+
+const byMakerKey = "comfy.model.lineByMaker"
+
+export function modelLineOf(
+  task: string,
+  facts: ModelFacts | undefined,
+  maker?: string,
+  words: CatalogWords = catalogWords
+): string | null {
+  const key = facts?.lineKey ?? null
+  const line = (key === null ? null : words(key)) ?? lineOf(task)
+  if (line === null || maker === undefined) {
+    return line
+  }
+  return words(byMakerKey, { line, maker }) ?? line
 }
 
 export function tagOf(tag: ModelTag): ModelPickerTag {
@@ -92,10 +133,22 @@ export function tagOf(tag: ModelTag): ModelPickerTag {
 
 const sectionLabels = {
   featured: "model.picker.featured",
+  open: "model.tag.openWeights",
   all: "model.picker.all",
 } as const
 
-const huggingFace = "https://huggingface.co/"
+const factBadgeKeys = {
+  new: "comfy.badge.new",
+  top: "comfy.badge.top",
+  premium: "comfy.badge.premium",
+} as const
+
+type FactBadgeKind = keyof typeof factBadgeKeys
+
+export function todayOf(now: Date = new Date()): string {
+  return now.toISOString().slice(0, 10)
+}
+
 const repoPattern = /^[\w.-]+\/[\w.-]+$/
 
 export function weightsLinkOf(id: string): string | null {
@@ -103,20 +156,33 @@ export function weightsLinkOf(id: string): string | null {
   if (model === undefined) {
     return null
   }
-  if (model.link.startsWith(huggingFace)) {
+  if (model.link.startsWith(weightsHost)) {
     return model.link
   }
   const repo = model.files.find(
     (file) => repoPattern.test(file) && !file.endsWith(".safetensors")
   )
-  return repo === undefined ? null : `${huggingFace}${repo}`
+  return repo === undefined ? null : `${weightsHost}${repo}`
 }
 
-export function badgesOf(id: string, tags: readonly ModelTag[]): ModelBadge[] {
+function factBadgeOf(badge: FactBadge, words: CatalogWords): ModelBadge[] {
+  if (badge.kind === "open-weights") {
+    return []
+  }
+  const kind: FactBadgeKind = badge.kind
+  const label = words(factBadgeKeys[kind])
+  return label === null ? [] : [{ kind, label }]
+}
+
+function weightsBadgeOf(
+  id: string,
+  tags: readonly ModelTag[],
+  facts: ModelFacts | undefined
+): ModelBadge[] {
   if (!tags.some((tag) => tag.kind === "open-weights")) {
     return []
   }
-  const href = weightsLinkOf(id)
+  const href = facts?.weights ?? weightsLinkOf(id)
   return [
     {
       kind: "openWeights",
@@ -126,7 +192,23 @@ export function badgesOf(id: string, tags: readonly ModelTag[]): ModelBadge[] {
   ]
 }
 
-export function pickerSections(hosted: HostedState): ModelPickerSection[] {
+export function badgesOf(
+  id: string,
+  tags: readonly ModelTag[],
+  facts?: ModelFacts,
+  today: string = todayOf(),
+  words: CatalogWords = catalogWords
+): ModelBadge[] {
+  return [
+    ...factBadgesOf(facts, today).flatMap((badge) => factBadgeOf(badge, words)),
+    ...weightsBadgeOf(id, tags, facts),
+  ]
+}
+
+export function pickerSections(
+  hosted: HostedState,
+  today: string = todayOf()
+): ModelPickerSection[] {
   const first = [
     ...(hosted.defaultModel === null ? [] : [hosted.defaultModel]),
     ...hosted.ranBefore,
@@ -142,10 +224,10 @@ export function pickerSections(hosted: HostedState): ModelPickerSection[] {
       id: row.id,
       name: row.name,
       maker: row.maker,
-      line: lineOf(row.task),
+      line: modelLineOf(row.task, row.facts, labOf(row)),
       tags: row.tags.filter((tag) => tag.kind !== "open-weights").map(tagOf),
-      mark: <LabMark maker={row.maker} />,
-      badges: badgesOf(row.id, row.tags),
+      mark: <LabMark maker={labOf(row)} />,
+      badges: badgesOf(row.id, row.tags, row.facts, today),
     })),
   }))
 }
@@ -164,7 +246,9 @@ export function pickerTrigger(
   const chosen = hosted.chosen
   const name = chosen === null ? t("model.picker.title") : modelNameOf(chosen)
   const mark =
-    chosen === null ? undefined : <LabMark maker={makerNameOf(chosen)} />
+    chosen === null ? undefined : (
+      <LabMark maker={chosen.facts?.lab ?? makerNameOf(chosen)} />
+    )
   const markProp = mark === undefined ? {} : { mark }
   return place === "row" ? (
     <ModelRowTrigger

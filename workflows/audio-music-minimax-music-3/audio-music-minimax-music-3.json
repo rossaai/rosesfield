@@ -1,0 +1,392 @@
+{
+  "id": "898d0e76-59eb-5f82-a564-ec71dddcc671",
+  "revision": 0,
+  "last_node_id": 36,
+  "last_link_id": 10,
+  "nodes": [
+    {
+      "id": 6,
+      "type": "UNETLoader",
+      "pos": [730, 100],
+      "size": [380, 122],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [4]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0",
+        "models": [
+          {
+            "name": "minimax_music3_dit_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/diffusion_models/minimax_music3_dit_fp16.safetensors",
+            "directory": "diffusion_models",
+            "hash": "45494a2b6b69af115902ff28eaf54118d19067aa54da01000f3e3efce7ba0e34",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": ["minimax_music3_dit_fp16.safetensors", "default"],
+      "title": "MiniMax-Music3"
+    },
+    {
+      "id": 3,
+      "type": "CLIPLoader",
+      "pos": [730, 282],
+      "size": [380, 152],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [1]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0",
+        "models": [
+          {
+            "name": "minimax_music3_text_encoder_pruned_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/text_encoders/minimax_music3_text_encoder_pruned_int8_convrot.safetensors",
+            "directory": "text_encoders",
+            "hash": "010b7416d2336a08c711bc22ee65849c9623069ddb7d89bec011a75699e52014",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_music3_text_encoder_pruned_int8_convrot.safetensors",
+        "minimax",
+        "default"
+      ],
+      "title": "Text encoder"
+    },
+    {
+      "id": 7,
+      "type": "VAELoader",
+      "pos": [730, 494],
+      "size": [380, 92],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [9]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0",
+        "models": [
+          {
+            "name": "minimax_music3_dav.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/vae/minimax_music3_dav.safetensors",
+            "directory": "vae",
+            "hash": "2a32155b769be01445fcc2a8663b910fc9e1751e18dc1c3ec528064512d9ef0c",
+            "hash_type": "SHA256"
+          }
+        ]
+      },
+      "widgets_values": ["minimax_music3_dav.safetensors"],
+      "title": "Audio VAE"
+    },
+    {
+      "id": 13,
+      "type": "MiniMaxMusic3TextEncode",
+      "pos": [1250, 100],
+      "size": [380, 302],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [2, 5]
+        },
+        {
+          "name": "seconds",
+          "type": "FLOAT",
+          "links": [3]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxMusic3TextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["", "", 0, "fixed", 30, 1.7, 50],
+      "title": "Description and lyrics"
+    },
+    {
+      "id": 10,
+      "type": "ConditioningZeroOut",
+      "pos": [1250, 462],
+      "size": [380, 92],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [6]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [],
+      "title": "Negative"
+    },
+    {
+      "id": 15,
+      "type": "EmptyMiniMaxMusic3LatentAudio",
+      "pos": [1250, 614],
+      "size": [380, 152],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "seconds",
+          "type": "FLOAT",
+          "widget": {
+            "name": "seconds"
+          },
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [7]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyMiniMaxMusic3LatentAudio",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [30, 1],
+      "title": "Song length"
+    },
+    {
+      "id": 9,
+      "type": "KSampler",
+      "pos": [1250, 826],
+      "size": [380, 392],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 4
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 5
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 6
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [8]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0, "fixed", 30, 1.7, "euler", "simple", 1],
+      "title": "Sampler"
+    },
+    {
+      "id": 12,
+      "type": "VAEDecodeAudio",
+      "pos": [1250, 1278],
+      "size": [380, 122],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 8
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [10]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecodeAudio",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [],
+      "title": "Decode"
+    },
+    {
+      "id": 35,
+      "type": "SaveAudioMP3",
+      "pos": [1770, 100],
+      "size": [380, 152],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveAudioMP3",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["audio/rosesfield-music", "V0"],
+      "title": "Audio"
+    },
+    {
+      "id": 36,
+      "type": "MarkdownNote",
+      "pos": [60, 100],
+      "size": [560, 760],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Music: a song from a description with MiniMax-Music3",
+      "properties": {},
+      "widgets_values": [
+        "# Music: a song from a description with MiniMax-Music3\n\nMakes a song from a description and optional lyrics, up to the length you set. The model can end the song before that length. Built from Comfy's template audio_minimax_music_3.\n\n## Models\n\n- [minimax_music3_dit_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/diffusion_models/minimax_music3_dit_fp16.safetensors): MiniMax-Music3, by MiniMax, [MiniMax-Music3 Community License](https://huggingface.co/MiniMaxAI/MiniMax-Music3/blob/fbdf52fbaaca799592917417eb05f1899f1255ec/LICENSE).\n- [minimax_music3_text_encoder_pruned_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/text_encoders/minimax_music3_text_encoder_pruned_int8_convrot.safetensors): MiniMax-Music3's text encoder, [MiniMax-Music3 Community License](https://huggingface.co/MiniMaxAI/MiniMax-Music3/blob/fbdf52fbaaca799592917417eb05f1899f1255ec/LICENSE).\n- [minimax_music3_dav.safetensors](https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/vae/minimax_music3_dav.safetensors): MiniMax-Music3's audio VAE, [MiniMax-Music3 Community License](https://huggingface.co/MiniMaxAI/MiniMax-Music3/blob/fbdf52fbaaca799592917417eb05f1899f1255ec/LICENSE).\n\nThe licence asks a commercial product to show the name MiniMax-Music3."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [1, 3, 0, 13, 0, "CLIP"],
+    [2, 13, 0, 10, 0, "CONDITIONING"],
+    [3, 13, 1, 15, 0, "FLOAT"],
+    [4, 6, 0, 9, 0, "MODEL"],
+    [5, 13, 0, 9, 1, "CONDITIONING"],
+    [6, 10, 0, 9, 2, "CONDITIONING"],
+    [7, 15, 0, 9, 3, "LATENT"],
+    [8, 9, 0, 12, 0, "LATENT"],
+    [9, 7, 0, 12, 1, "VAE"],
+    [10, 12, 0, 35, 0, "AUDIO"]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Models",
+      "bounding": [700, 20, 440, 566],
+      "color": "#444444",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Generate",
+      "bounding": [1220, 20, 440, 1380],
+      "color": "#444444",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Output",
+      "bounding": [1740, 20, 440, 232],
+      "color": "#3f8a5c",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.55,
+      "offset": [0, 0]
+    },
+    "linearData": {
+      "inputs": [
+        [13, "caption"],
+        [13, "lyrics"],
+        [13, "max_duration"],
+        [13, "seed"]
+      ],
+      "outputs": [35]
+    }
+  },
+  "version": 0.4
+}

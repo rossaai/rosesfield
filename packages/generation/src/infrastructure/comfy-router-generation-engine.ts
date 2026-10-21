@@ -43,6 +43,7 @@ import {
 } from "#infrastructure/router/router-outputs"
 import { placeholdersOf } from "#infrastructure/router/router-placeholders"
 import { priceFromRates } from "#infrastructure/router/router-rates"
+import { takesToolsOf } from "#infrastructure/router/router-schema"
 
 type ComfyRouterGenerationEngineOptions = {
   apiKey: string | null
@@ -120,6 +121,7 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
       provider: entry.facts.model.split("/")[0] ?? "",
       takes: entry.facts.takes,
       makes: entry.facts.makes,
+      takesTools: takesToolsOf(entry.facts),
       form: entry.form,
     }))
   }
