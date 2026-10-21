@@ -65,12 +65,8 @@ import wStoryboardQwenImageEdit2511FromTextApi from "../../../workflows/storyboa
 import wStoryboardQwenImageEdit2511FromTextEntry from "../../../workflows/storyboard-qwen-image-edit-2511-from-text/entry.json"
 import wTryOnQwenImageEdit2511Api from "../../../workflows/try-on-qwen-image-edit-2511/try-on-qwen-image-edit-2511.api.json"
 import wTryOnQwenImageEdit2511Entry from "../../../workflows/try-on-qwen-image-edit-2511/entry.json"
-import wUpscaleImageRealEsrganApi from "../../../workflows/upscale-image-real-esrgan/upscale-image-real-esrgan.api.json"
-import wUpscaleImageRealEsrganEntry from "../../../workflows/upscale-image-real-esrgan/entry.json"
 import wUpscaleImageSeedvr2Api from "../../../workflows/upscale-image-seedvr2/upscale-image-seedvr2.api.json"
 import wUpscaleImageSeedvr2Entry from "../../../workflows/upscale-image-seedvr2/entry.json"
-import wUpscaleVideoRealEsrganApi from "../../../workflows/upscale-video-real-esrgan/upscale-video-real-esrgan.api.json"
-import wUpscaleVideoRealEsrganEntry from "../../../workflows/upscale-video-real-esrgan/entry.json"
 import wUpscaleVideoSeedvr2Api from "../../../workflows/upscale-video-seedvr2/upscale-video-seedvr2.api.json"
 import wUpscaleVideoSeedvr2Entry from "../../../workflows/upscale-video-seedvr2/entry.json"
 import wVideoEditBackgroundBirefnetApi from "../../../workflows/video-edit-background-birefnet/video-edit-background-birefnet.api.json"
@@ -122,9 +118,7 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "storyboard-qwen-image-edit-2511", entry: wStoryboardQwenImageEdit2511Entry, graph: wStoryboardQwenImageEdit2511Api },
   { folder: "storyboard-qwen-image-edit-2511-from-text", entry: wStoryboardQwenImageEdit2511FromTextEntry, graph: wStoryboardQwenImageEdit2511FromTextApi },
   { folder: "try-on-qwen-image-edit-2511", entry: wTryOnQwenImageEdit2511Entry, graph: wTryOnQwenImageEdit2511Api },
-  { folder: "upscale-image-real-esrgan", entry: wUpscaleImageRealEsrganEntry, graph: wUpscaleImageRealEsrganApi },
   { folder: "upscale-image-seedvr2", entry: wUpscaleImageSeedvr2Entry, graph: wUpscaleImageSeedvr2Api },
-  { folder: "upscale-video-real-esrgan", entry: wUpscaleVideoRealEsrganEntry, graph: wUpscaleVideoRealEsrganApi },
   { folder: "upscale-video-seedvr2", entry: wUpscaleVideoSeedvr2Entry, graph: wUpscaleVideoSeedvr2Api },
   { folder: "video-edit-background-birefnet", entry: wVideoEditBackgroundBirefnetEntry, graph: wVideoEditBackgroundBirefnetApi },
   { folder: "video-edit-extend-wan-2-2", entry: wVideoEditExtendWan22Entry, graph: wVideoEditExtendWan22Api },
