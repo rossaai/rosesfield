@@ -1,5 +1,7 @@
+import { taskBinding } from "@rosesfield/generation/bindings"
 import { type AppInput, defineApp } from "#define-app"
-import { motionBinding } from "#motion/comfy/motion-binding"
+import { motionEngine } from "#motion/comfy/motion-binding"
+import { graphModel, motionTasks } from "#motion/motion-models"
 
 export const app: AppInput = defineApp({
   id: "motion",
@@ -53,6 +55,11 @@ export const app: AppInput = defineApp({
       default: "9:16",
     },
   },
-  engine: motionBinding,
+  engine: taskBinding({
+    tasks: motionTasks,
+    input: "model",
+    default: graphModel,
+    fallback: motionEngine,
+  }),
   limits: { timeoutSeconds: 1800, maxRetries: 2 },
 })

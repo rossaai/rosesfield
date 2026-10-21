@@ -97,10 +97,12 @@ function parseMotion(): AppDefinition {
 
 export const motion = parseMotion()
 
+export const motionWorkflowId = "motion-ltx-2-3-ic-lora"
+
 export function fileGraph(): Graph {
-  const workflow = findWorkflow("motion-wan-animate-2")
+  const workflow = findWorkflow(motionWorkflowId)
   if (workflow === null) {
-    throw new Error("workflows/motion-wan-animate-2 is not listed")
+    throw new Error(`workflows/${motionWorkflowId} is not listed`)
   }
   return graphSchema.parse(structuredClone(workflow.graph))
 }
