@@ -84,7 +84,6 @@ export function boardRankOf(
 export function factsOf(
   id: string,
   task: string,
-  lineKey: string | null,
   data: ModelFactsFile = modelFactsData
 ): ModelFacts {
   const row = Object.hasOwn(data.models, id) ? data.models[id] : undefined
@@ -96,6 +95,6 @@ export function factsOf(
     rank: boardRankOf(id, task, data),
     priceThird: row?.thirds[task] ?? null,
     weights: weights?.startsWith(weightsHost) === true ? weights : null,
-    lineKey: line !== undefined && "key" in line ? line.key : lineKey,
+    lineKey: line !== undefined && "key" in line ? line.key : null,
   }
 }
