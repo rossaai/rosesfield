@@ -22,10 +22,10 @@ import {
 } from "./effects-replay"
 
 const videoModel =
-  "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors"
+  "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
 
 const ltxModels = [
-  "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+  "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
   "ltx-2.5-audio-vae-bf16.safetensors",
   "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
   "ltx-2.5-video-vae-bf16.safetensors",
