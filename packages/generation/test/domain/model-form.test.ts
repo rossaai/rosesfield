@@ -106,4 +106,28 @@ describe("checkModelInputs", () => {
     expect(low.kind).toBe("invalid")
     expect(high.kind).toBe("invalid")
   })
+
+  it("refuses a number off the field's step and keeps one on it", () => {
+    const stepped: ModelForm = {
+      model: "maker/model",
+      fields: [
+        {
+          kind: "number",
+          name: "frames",
+          path: "frames",
+          required: true,
+          min: 9,
+          max: 121,
+          integer: true,
+          step: 8,
+          default: null,
+        },
+      ],
+    }
+    expect(checkModelInputs(stepped, { frames: 24 }).kind).toBe("valid")
+    expect(checkModelInputs(stepped, { frames: 25 })).toEqual({
+      kind: "invalid",
+      issues: ["frames: the value moves in steps of 8"],
+    })
+  })
 })

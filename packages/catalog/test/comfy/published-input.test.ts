@@ -6,6 +6,7 @@ import {
   taskBinding,
 } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
+import { z } from "zod"
 import { publishedInputOf } from "#comfy/published-input"
 
 function appWith(defaultModel: string) {
@@ -115,6 +116,7 @@ describe("publishedInputOf", () => {
           min: 1,
           max: 50,
           integer: true,
+          step: 2,
           default: null,
         },
       ],
@@ -126,11 +128,15 @@ describe("publishedInputOf", () => {
       [{ prompt: "a fox", duration: "10" }, true],
       [{ prompt: "a fox", duration: 10 }, true],
       [{ prompt: "a fox", steps: "3" }, false],
-      [{ prompt: "a fox", steps: 3 }, true],
+      [{ prompt: "a fox", steps: 3 }, false],
+      [{ prompt: "a fox", steps: 4 }, true],
       [{ prompt: "a fox", resolution: "" }, true],
       [{ prompt: "a fox", steps: "" }, true],
       [{ prompt: "" }, false],
     ]
+    expect(JSON.stringify(z.toJSONSchema(schema, { io: "input" }))).toContain(
+      '"multipleOf":2'
+    )
     for (const [inputs, accepted] of cases) {
       const published = schema.safeParse({ inputs }).success
       const checked = checkModelInputs(form, inputs).kind === "valid"
