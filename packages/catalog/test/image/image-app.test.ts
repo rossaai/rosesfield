@@ -122,7 +122,7 @@ describe("the Image app", () => {
       facts: {
         lab: "Alibaba Tongyi-MAI",
         weights: "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo",
-        lineKey: "image.model.zImageTurbo.line",
+        lineKey: "comfy.model.graphZImageTurbo.line",
         rank: { position: 70, size: 104 },
       },
     })
