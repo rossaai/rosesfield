@@ -13,9 +13,9 @@ import manyCopies from "./recipes/many-copies.json"
 import meltAway from "./recipes/melt-away.json"
 import pullBackToSpace from "./recipes/pull-back-to-space.json"
 import pushIntoEye from "./recipes/push-into-eye.json"
-import runs from "./runs.json"
 import scatterPetals from "./recipes/scatter-petals.json"
 import stillInTheStreet from "./recipes/still-in-the-street.json"
+import runs from "./runs.json"
 
 const files: Readonly<Record<string, unknown>> = {
   "buildings-ripple": buildingsRipple,

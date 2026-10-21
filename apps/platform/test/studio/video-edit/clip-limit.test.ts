@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
+import type { ClipFacts } from "@/pieces/use-clip-facts"
 import {
   clipLimitOf,
   clipLimitsText,
   clipProblemOf,
 } from "@/studio/video-edit/clip-limit"
-import type { ClipFacts } from "@/pieces/use-clip-facts"
 import { dreamina, fluxEdit, graphs } from "./video-edit-catalog"
 
 function clipOf(seconds: number): ClipFacts {

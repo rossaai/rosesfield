@@ -38,9 +38,9 @@ import {
   defaultsOfTab,
   faceOf,
   featuredOf,
-  lengthStepOf,
   type LipFields,
   type LipsyncTab,
+  lengthStepOf,
   modelsOfTab,
   tabOfInputs,
 } from "@/studio/lipsync/lipsync-tabs"
@@ -49,8 +49,8 @@ import {
   modesOf,
   planOf,
   type WordsMode,
-  wordsOfInputs,
   type WordsPlan,
+  wordsOfInputs,
 } from "@/studio/lipsync/lipsync-words"
 import {
   type LipsyncTabs,

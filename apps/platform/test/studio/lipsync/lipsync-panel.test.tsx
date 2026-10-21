@@ -8,10 +8,7 @@ import { formatDuration } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import type { FieldValue } from "@/screens/app/app-form"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
-import {
-  LipsyncModeTabs,
-  LipsyncPanel,
-} from "@/studio/lipsync/lipsync-panel"
+import { LipsyncModeTabs, LipsyncPanel } from "@/studio/lipsync/lipsync-panel"
 import { fieldsOfModel } from "@/studio/lipsync/lipsync-run"
 import { faceOf } from "@/studio/lipsync/lipsync-tabs"
 import {
@@ -122,9 +119,7 @@ function show(node: ReactElement): void {
 
 describe("the Lip sync column", () => {
   it("shows the two tabs, From a photo and From a clip", () => {
-    show(
-      <LipsyncModeTabs screen={{ tab: "photo", setTab: () => undefined }} />
-    )
+    show(<LipsyncModeTabs screen={{ tab: "photo", setTab: () => undefined }} />)
     expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
       tCatalog("lipsync.choice.mode.photo"),
       tCatalog("lipsync.choice.mode.clip"),

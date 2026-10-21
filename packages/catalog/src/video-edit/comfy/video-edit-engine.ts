@@ -92,10 +92,7 @@ function extendInputs(): ComfyValueBinding[] {
       ])
     )
   const frames = Object.fromEntries(
-    extendSeconds.map((seconds) => [
-      String(seconds),
-      framesExpression(seconds),
-    ])
+    extendSeconds.map((seconds) => [String(seconds), framesExpression(seconds)])
   )
   const n = extendNodes
   return [

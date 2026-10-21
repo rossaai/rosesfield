@@ -140,7 +140,6 @@ export function useLipsyncWells(options: {
   return {
     problems,
     audio: audio.facts,
-    isWaiting: (name) =>
-      waiting.includes(name) || problems[name] !== undefined,
+    isWaiting: (name) => waiting.includes(name) || problems[name] !== undefined,
   }
 }

@@ -14,8 +14,8 @@ import { listOf, textOf } from "@/screens/app/fields/field-props"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import {
   speechModelInput,
-  wordsLabelKey,
   type WordsMode,
+  wordsLabelKey,
 } from "@/studio/lipsync/lipsync-words"
 import type { LipsyncScreen } from "@/studio/lipsync/use-lipsync-screen"
 
@@ -152,11 +152,7 @@ function AudioWords({
   )
 }
 
-function TextWords({
-  screen,
-}: {
-  screen: LipsyncScreen
-}): ReactElement | null {
+function TextWords({ screen }: { screen: LipsyncScreen }): ReactElement | null {
   const { form, plan } = screen
   const box = useRef<HTMLTextAreaElement>(null)
   const name = plan.field
@@ -189,11 +185,7 @@ function TextWords({
   )
 }
 
-function VoiceRow({
-  screen,
-}: {
-  screen: LipsyncScreen
-}): ReactElement | null {
+function VoiceRow({ screen }: { screen: LipsyncScreen }): ReactElement | null {
   if (!screen.plan.isChain) {
     return null
   }

@@ -50,7 +50,6 @@ test.describe("Lip sync's column", () => {
     ).toBeVisible()
     await expect(page.locator('[data-slot="generate-button"]')).toBeVisible()
   })
-
 })
 
 test.describe("Lip sync's Generate before the words", () => {
@@ -80,7 +79,6 @@ test.describe("Lip sync's Generate before the words", () => {
       .toBe(true)
     expect(starts).toEqual([])
   })
-
 })
 
 test.describe("Lip sync's Text choice", () => {
@@ -114,9 +112,7 @@ test.describe("Lip sync on a phone", () => {
     const sheet = page.getByRole("dialog")
     await expect(sheet).toBeVisible()
     await expect(sheet.locator('[data-slot="lipsync-words"]')).toBeVisible()
-    const generate = await boxOf(
-      sheet.locator('[data-slot="generate-button"]')
-    )
+    const generate = await boxOf(sheet.locator('[data-slot="generate-button"]'))
     const panel = await boxOf(sheet)
     const bottom = panel.y + panel.height
     expect(bottom).toBeCloseTo(viewport.height, 0)

@@ -2,11 +2,7 @@ import type { Workflow } from "@rosesfield/catalog/workflows"
 import type { AppListing } from "@rosesfield/contract"
 import { t } from "@/copy/t"
 
-export type LicenceId =
-  | "apache-2-0"
-  | "mit"
-  | "ltx-community"
-  | "film"
+export type LicenceId = "apache-2-0" | "mit" | "ltx-community" | "film"
 
 export type ModelId =
   | "flux-2-klein-4b"

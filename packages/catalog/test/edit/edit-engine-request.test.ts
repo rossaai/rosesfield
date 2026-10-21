@@ -168,9 +168,7 @@ describe("the Edit engine request on the Qwen Image Edit 2511 graph", () => {
       megapixels: 0.5,
       resolution_steps: 16,
     })
-    expect(latentSource(workflow)).toBe(
-      "ImageScaleToTotalPixels of LoadImage"
-    )
+    expect(latentSource(workflow)).toBe("ImageScaleToTotalPixels of LoadImage")
     expect(workflow["106"]?.inputs).toMatchObject({
       seed: 4242,
       steps: 40,

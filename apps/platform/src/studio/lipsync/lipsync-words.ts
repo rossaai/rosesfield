@@ -127,9 +127,7 @@ export function graphBodyAppOf(options: {
   voices: readonly string[]
 }): AppListing {
   const dropped = droppedOf(options.fields, options.tab, options.plan)
-  const inputs = options.app.inputs.filter(
-    (input) => !dropped.has(input.name)
-  )
+  const inputs = options.app.inputs.filter((input) => !dropped.has(input.name))
   return {
     ...options.app,
     inputs: options.plan.isChain

@@ -12,10 +12,7 @@ import { useDebounced } from "@/screens/app/hosted/use-debounced"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { speechTask } from "@/studio/lipsync/lipsync-tabs"
-import {
-  speechAskOf,
-  speechModelInput,
-} from "@/studio/lipsync/lipsync-words"
+import { speechAskOf, speechModelInput } from "@/studio/lipsync/lipsync-words"
 
 export const voiceApps: readonly string[] = ["audio", "voice"]
 
@@ -47,8 +44,7 @@ export function useVoices(options: {
   )
   const own = lipsync.models.filter(
     (model) =>
-      model.task === speechTask &&
-      !outside.some((one) => one.id === model.id)
+      model.task === speechTask && !outside.some((one) => one.id === model.id)
   )
   const models = [...outside, ...own]
   const audioDefault = query.data?.defaultModel ?? null

@@ -55,12 +55,10 @@ describe("the Try-on app", () => {
 
   it("lists the Qwen try-on graph first, then Flux Virtual Try-On, and no other graph or task", () => {
     const listed = modelsForApp(definition, [picture, virtualTryOn])
-    expect(listed.map((model) => [model.id, model.kind, model.task])).toEqual(
-      [
-        ["qwen-image-edit-2511", "graph", "try-on"],
-        ["bfl/vto-v1", "hosted", "try-on"],
-      ]
-    )
+    expect(listed.map((model) => [model.id, model.kind, model.task])).toEqual([
+      ["qwen-image-edit-2511", "graph", "try-on"],
+      ["bfl/vto-v1", "hosted", "try-on"],
+    ])
   })
 
   it("keeps no FLUX.2 Klein 4B or Lightning try-on graph in workflows/", () => {

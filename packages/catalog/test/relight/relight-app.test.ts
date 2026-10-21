@@ -43,12 +43,10 @@ describe("the Relight app", () => {
 
   it("lists the Qwen 2509 relight graph and the relight models, and no Qwen Image Edit 2511 relight graph", () => {
     const listed = modelsForApp(definition, [picture, briaRelight])
-    expect(listed.map((model) => [model.id, model.kind, model.task])).toEqual(
-      [
-        ["qwen-image-edit-2509-relight", "graph", "relight"],
-        ["bria/relight", "hosted", "relight"],
-      ]
-    )
+    expect(listed.map((model) => [model.id, model.kind, model.task])).toEqual([
+      ["qwen-image-edit-2509-relight", "graph", "relight"],
+      ["bria/relight", "hosted", "relight"],
+    ])
     const ids = listWorkflows().map((workflow) => workflow.id)
     expect(ids.filter((id) => id.startsWith("relight-"))).toEqual([
       "relight-qwen-image-edit-2509",

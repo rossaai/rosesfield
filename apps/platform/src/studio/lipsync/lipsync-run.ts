@@ -18,8 +18,8 @@ import type { StartRun } from "@/screens/app/use-start-run"
 import {
   formOfModel,
   type LipFields,
-  lipFieldsOf,
   type LipsyncTab,
+  lipFieldsOf,
 } from "@/studio/lipsync/lipsync-tabs"
 import {
   graphBodyAppOf,

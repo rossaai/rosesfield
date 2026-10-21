@@ -43,9 +43,9 @@ describe("the lip sync tabs", () => {
   it("open From a photo on the app's default graph and From a clip on Dreamina Seedance 2.5", () => {
     const photo = modelsOfTab(catalog, "photo", photoApp)
     const clip = modelsOfTab(catalog, "clip", photoApp)
-    expect(
-      modelForTab(photo, null, defaultsOfTab("photo", ltx.id))
-    ).toBe(ltx.id)
+    expect(modelForTab(photo, null, defaultsOfTab("photo", ltx.id))).toBe(
+      ltx.id
+    )
     expect(modelForTab(clip, null, defaultsOfTab("clip", ltx.id))).toBe(
       clipDefault
     )
@@ -54,9 +54,9 @@ describe("the lip sync tabs", () => {
 
   it("keep the model you picked in a tab over the tab's default", () => {
     const photo = modelsOfTab(catalog, "photo", photoApp)
-    expect(
-      modelForTab(photo, avatar.id, defaultsOfTab("photo", ltx.id))
-    ).toBe(avatar.id)
+    expect(modelForTab(photo, avatar.id, defaultsOfTab("photo", ltx.id))).toBe(
+      avatar.id
+    )
   })
 
   it("put Kling Avatar 2.0 and Kling Lip Sync first in the picker, one choice away, before the models you ran", () => {

@@ -6,10 +6,7 @@ import {
   useSheetOpen,
 } from "@/screens/app/column-frame"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
-import {
-  LipsyncModeTabs,
-  LipsyncPanel,
-} from "@/studio/lipsync/lipsync-panel"
+import { LipsyncModeTabs, LipsyncPanel } from "@/studio/lipsync/lipsync-panel"
 import { useLipsyncScreen } from "@/studio/lipsync/use-lipsync-screen"
 
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {

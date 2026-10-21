@@ -151,9 +151,7 @@ describe("the effect recipes kept as data", () => {
           failed: ["Dark end"],
         },
       ])
-    ).toThrow(
-      /records the run 5b1d2c3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e as refused/
-    )
+    ).toThrow(/records the run 5b1d2c3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e as refused/)
   })
 
   it("reads a ledger with a kept and a refused run, each with its recipe, input, balance and verdict", () => {

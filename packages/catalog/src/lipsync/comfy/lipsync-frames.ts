@@ -44,9 +44,7 @@ export const lengthValues: readonly number[] = Array.from(
 )
 
 export function latentsFor(seconds: number): number {
-  return Math.ceil(
-    (stepsOf(seconds) * latentsPerSecond) / lengthStepsPerSecond
-  )
+  return Math.ceil((stepsOf(seconds) * latentsPerSecond) / lengthStepsPerSecond)
 }
 
 export function framesFor(seconds: number): number {

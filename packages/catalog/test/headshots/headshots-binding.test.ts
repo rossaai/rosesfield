@@ -1,11 +1,11 @@
 import { comfyWorkflowAdapter } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
+import { promptOf } from "#headshots/comfy/headshot-words"
 import {
   editWorkflowId,
   headshotsBinding,
   sizeNode,
 } from "#headshots/comfy/headshots-binding"
-import { promptOf } from "#headshots/comfy/headshot-words"
 import {
   backgrounds,
   clothesValues,
@@ -46,9 +46,7 @@ describe("Headshot's words on Edit's graph", () => {
       const { graph } = await submitted(bindingOn(editWorkflow()), {
         inputs: choices,
       })
-      expect(textOf(graph, graph["112"]?.inputs.prompt)).toBe(
-        promptOf(choices)
-      )
+      expect(textOf(graph, graph["112"]?.inputs.prompt)).toBe(promptOf(choices))
     }
   )
 
