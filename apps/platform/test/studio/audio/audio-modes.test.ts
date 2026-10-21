@@ -18,14 +18,18 @@ function namesOf(inputs: readonly { name: string }[]): string[] {
 describe("the inputs of each Audio tab", () => {
   it("shows each tab only the inputs its mode applies, without the mode or the model", () => {
     expect(namesOf(panelInputsOf(audio, "speech"))).toEqual(["script"])
-    expect(namesOf(panelInputsOf(audio, "voice-clone"))).toEqual([
+    expect(namesOf(panelInputsOf(audio, "clone"))).toEqual([
       "script",
       "recording",
     ])
-    expect(namesOf(panelInputsOf(audio, "voice-change"))).toEqual([
-      "recording",
+    expect(namesOf(panelInputsOf(audio, "change"))).toEqual([
+      "source",
+      "target",
     ])
-    expect(namesOf(panelInputsOf(audio, "music"))).toEqual(["description"])
+    expect(namesOf(panelInputsOf(audio, "music"))).toEqual([
+      "description",
+      "length",
+    ])
   })
 
   it("sends only the inputs of the tab, and asks for no input another tab needs", () => {
@@ -41,22 +45,36 @@ describe("the inputs of each Audio tab", () => {
     ).toEqual([])
   })
 
+  it("gives each tab the lengths and the graph its mode allows", () => {
+    const lengthIn = (tab: string) =>
+      formAppFor(audio, tab).inputs.find((input) => input.name === "length")
+    expect(lengthIn("sound")).toMatchObject({ min: 1, max: 60, default: 10 })
+    expect(lengthIn("music")).toMatchObject({ min: 5, max: 240 })
+    const model = bodyAppFor(audio, "change").inputs.find(
+      (input) => input.name === "model"
+    )
+    expect(model).toMatchObject({
+      default: "chatterbox-vc",
+      options: [{ value: "chatterbox-vc" }],
+    })
+  })
+
   it("names the recording of the tabs that take one", () => {
-    expect(recordingOf(audio, "voice-clone")).toBe("recording")
-    expect(recordingOf(audio, "voice-change")).toBe("recording")
+    expect(recordingOf(audio, "clone")).toBe("recording")
+    expect(recordingOf(audio, "change")).toBe("source")
     expect(recordingOf(audio, "speech")).toBeNull()
   })
 
   it("holds the clone's recording to 6 to 30 seconds, and a voice change to none", () => {
-    expect(recordingLengthProblem("voice-clone", "recording", 4.04)).toEqual({
+    expect(recordingLengthProblem("clone", "recording", 4.04)).toEqual({
       name: "recording",
       key: "field.asset.tooShort",
       values: { seconds: 4, min: 6 },
     })
     expect(
-      recordingLengthProblem("voice-clone", "recording", 31)?.key
+      recordingLengthProblem("clone", "recording", 31)?.key
     ).toBe("field.asset.tooLong")
-    expect(recordingLengthProblem("voice-clone", "recording", 12)).toBeNull()
-    expect(recordingLengthProblem("voice-change", "recording", 5)).toBeNull()
+    expect(recordingLengthProblem("clone", "recording", 12)).toBeNull()
+    expect(recordingLengthProblem("change", "recording", 5)).toBeNull()
   })
 })

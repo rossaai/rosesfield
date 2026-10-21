@@ -121,8 +121,9 @@ function useTabSync(
     if (formTab !== tab) {
       form.setInput(modeInput, tab)
     }
-    if (hosted.models.length > 0 && !isOnTab(hosted.models, tab, chosenId)) {
-      const id = modelForTab(hosted.models, tab, [hosted.defaultModel])
+    const isOff = !isOnTab(hosted.models, tab, app, chosenId)
+    if (hosted.models.length > 0 && isOff) {
+      const id = modelForTab(hosted.models, tab, app, [hosted.defaultModel])
       if (id !== null) {
         choose(id)
       }

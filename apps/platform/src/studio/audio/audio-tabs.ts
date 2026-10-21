@@ -1,10 +1,15 @@
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
-import type { AppListing, InputDefinition } from "@rosesfield/contract"
+import {
+  type AppListing,
+  type InputDefinition,
+  inputRulesOf,
+} from "@rosesfield/contract"
 import type { FormValues } from "@/screens/app/app-form"
+import { modelInputName } from "@/screens/app/hosted/hosted-form"
 
 export const modeInput = "mode"
 
-export const voiceCloneTab = "voice-clone"
+export const voiceCloneTab = "clone"
 
 export type AudioTab = {
   value: string
@@ -48,34 +53,57 @@ export function tabOfHash(app: AppListing, hash: string): string | null {
   return isTab(app, value) ? value : null
 }
 
+export function graphsOfTab(
+  app: AppListing,
+  tab: string
+): readonly string[] | null {
+  const rule = inputRulesOf(app, { [modeInput]: tab }).find(
+    (one) => one.input.name === modelInputName
+  )
+  return rule?.allowed ?? null
+}
+
 export function modelsOfTab(
   models: readonly CatalogModel[],
-  tab: string
+  tab: string,
+  app: AppListing
 ): CatalogModel[] {
-  const graphs = models.filter((model) => model.kind === "graph")
-  const ownGraphs = graphs.filter((model) => model.task === tab)
-  const shownGraphs = ownGraphs.length > 0 ? ownGraphs : graphs
-  return models.filter(
-    (model) =>
-      shownGraphs.includes(model) ||
-      (model.kind === "hosted" && model.task === tab)
+  const allowed = graphsOfTab(app, tab)
+  return models.filter((model) =>
+    model.kind === "graph"
+      ? allowed === null || allowed.includes(model.id)
+      : model.task === tab
+  )
+}
+
+export function pickerModelsOf(
+  models: readonly CatalogModel[],
+  tab: string,
+  app: AppListing
+): CatalogModel[] {
+  return modelsOfTab(models, tab, app).map((model) =>
+    model.kind === "graph" ? { ...model, task: tab } : model
   )
 }
 
 export function isOnTab(
   models: readonly CatalogModel[],
   tab: string,
+  app: AppListing,
   id: string | null
 ): boolean {
-  return id !== null && modelsOfTab(models, tab).some((one) => one.id === id)
+  return (
+    id !== null && modelsOfTab(models, tab, app).some((one) => one.id === id)
+  )
 }
 
 export function modelForTab(
   models: readonly CatalogModel[],
   tab: string,
+  app: AppListing,
   wanted: readonly (string | null)[]
 ): string | null {
-  const shown = modelsOfTab(models, tab)
+  const shown = modelsOfTab(models, tab, app)
   for (const id of wanted) {
     if (id !== null && shown.some((model) => model.id === id)) {
       return id

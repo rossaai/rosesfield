@@ -1,13 +1,19 @@
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { type AppListing, appListing } from "@rosesfield/contract"
 
-const tabs = ["speech", "voice-clone", "voice-change", "music", "sound"]
+const tabs = ["speech", "clone", "change", "music", "sound"]
 
-function camelOf(value: string): string {
-  return value.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase())
+const graphs: Readonly<Record<string, string>> = {
+  speech: "chatterbox",
+  clone: "chatterbox",
+  change: "chatterbox-vc",
+  music: "minimax-music-3",
+  sound: "stable-audio-3-medium",
 }
 
-const recordingTabs = ["voice-clone", "voice-change"]
+function inModes(...modes: string[]): [{ input: "mode"; is: string[] }] {
+  return [{ input: "mode", is: modes }]
+}
 
 export function audioListing(): AppListing {
   return appListing.parse({
@@ -21,9 +27,23 @@ export function audioListing(): AppListing {
         labelKey: "audio.input.mode.label",
         options: tabs.map((value) => ({
           value,
-          labelKey: `audio.choice.mode.${camelOf(value)}`,
+          labelKey: `audio.mode.${value}`,
         })),
         default: "speech",
+      },
+      {
+        type: "choice",
+        name: "model",
+        labelKey: "audio.input.model.label",
+        options: [...new Set(Object.values(graphs))].map((value) => ({
+          value,
+          labelKey: "audio.model.graph",
+        })),
+        default: "chatterbox",
+        bounds: tabs.map((tab) => ({
+          when: inModes(tab),
+          values: [graphs[tab]],
+        })),
       },
       {
         type: "prompt",
@@ -31,7 +51,7 @@ export function audioListing(): AppListing {
         labelKey: "audio.input.script.label",
         presence: "required",
         maxLength: 500,
-        when: [{ input: "mode", is: ["speech", "voice-clone"] }],
+        when: inModes("speech", "clone"),
       },
       {
         type: "audio",
@@ -39,30 +59,50 @@ export function audioListing(): AppListing {
         labelKey: "audio.input.recording.label",
         presence: "required",
         max: 1,
-        when: [{ input: "mode", is: recordingTabs }],
+        when: inModes("clone"),
+      },
+      {
+        type: "audio",
+        name: "source",
+        labelKey: "audio.input.source.label",
+        presence: "required",
+        max: 1,
+        when: inModes("change"),
+      },
+      {
+        type: "audio",
+        name: "target",
+        labelKey: "audio.input.target.label",
+        presence: "required",
+        max: 1,
+        when: inModes("change"),
       },
       {
         type: "prompt",
         name: "description",
         labelKey: "audio.input.description.label",
         presence: "required",
-        maxLength: 500,
-        when: [{ input: "mode", is: ["music", "sound"] }],
+        maxLength: 1000,
+        when: inModes("music", "sound"),
       },
       {
-        type: "choice",
-        name: "model",
-        labelKey: "audio.input.model.label",
-        options: [
-          { value: "chatterbox", labelKey: "audio.model.chatterbox" },
-          { value: "minimax-music-3", labelKey: "audio.model.music" },
+        type: "number",
+        name: "length",
+        labelKey: "audio.input.length.label",
+        min: 1,
+        max: 240,
+        step: 1,
+        default: 10,
+        bounds: [
+          { when: inModes("music"), min: 5, max: 240 },
+          { when: inModes("sound"), min: 1, max: 60 },
         ],
-        default: "chatterbox",
+        when: inModes("music", "sound"),
       },
       { type: "seed", name: "seed", labelKey: "field.seed.label" },
     ],
     output: { kind: "audio", count: { default: 1, max: 4 } },
-    limits: { timeoutSeconds: 300, maxRetries: 0 },
+    limits: { timeoutSeconds: 900, maxRetries: 0 },
   })
 }
 

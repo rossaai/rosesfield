@@ -42,7 +42,7 @@ test.describe("Audio's column", () => {
     page,
   }) => {
     await page.goto("/apps/voice")
-    await expect(page).toHaveURL(/\/apps\/audio#voice-clone$/)
+    await expect(page).toHaveURL(/\/apps\/audio#clone$/)
     await expect(
       page.getByRole("tab", { name: "Voice clone" })
     ).toHaveAttribute("aria-selected", "true")
