@@ -6,12 +6,52 @@ import {
   startRunBodyFor,
 } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
+import { editCopy } from "#edit/copy.en"
+import { imageCopy } from "#image/copy.en"
 import { app } from "#layers/app"
+import { layersCopy } from "#layers/copy.en"
+import { relightCopy } from "#relight/copy.en"
 
 const image = "0a1b2c3d-4e5f-4a6b-8c7d-8e9fa0b1c2d3"
 const mask = "1b2c3d4e-5f6a-4b7c-9d8e-9fa0b1c2d3e4"
 
 const definition = appDefinition.parse(app)
+
+const platformKeys = new Set([
+  "choice.auto",
+  "choice.quality.draft",
+  "choice.quality.final",
+])
+
+const catalogRows: Readonly<Record<string, string>> = {
+  ...imageCopy,
+  ...editCopy,
+  ...relightCopy,
+  ...layersCopy,
+}
+
+const owedRows = [
+  "layers.model.qwenImageLayered",
+  "layers.model.qwenImageInpaint",
+]
+
+function missingKeys(
+  read: AppDefinition,
+  rows: Readonly<Record<string, string>>
+): string[] {
+  const keys = [
+    read.nameKey,
+    ...read.inputs.flatMap((input) => [
+      input.labelKey,
+      ...(input.type === "choice"
+        ? input.options.map((option) => option.labelKey)
+        : []),
+    ]),
+  ]
+  return [...new Set(keys)].filter(
+    (key) => !Object.hasOwn(rows, key) && !platformKeys.has(key)
+  )
+}
 
 function withoutRules(input: InputDefinition): InputDefinition {
   switch (input.type) {
@@ -199,6 +239,17 @@ describe("the Layers definition holds its modes", () => {
       "qwen-image-edit-2511",
       "qwen-image-edit-2509-relight",
       "qwen-image-inpaint",
+    ])
+  })
+
+  it("has an English row for every label key but the two model rows the registry owes, and finds a planted missing key, the control", () => {
+    expect(missingKeys(definition, catalogRows)).toEqual(owedRows)
+    const { "relight.model.qwenImageEdit2509Relight": _, ...planted } =
+      catalogRows
+    expect(missingKeys(definition, planted)).toEqual([
+      "layers.model.qwenImageLayered",
+      "relight.model.qwenImageEdit2509Relight",
+      "layers.model.qwenImageInpaint",
     ])
   })
 })

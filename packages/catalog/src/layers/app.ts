@@ -50,8 +50,8 @@ const count: Input = {
 
 const graphLabels: Readonly<Record<LayersMode, string>> = {
   split: "layers.model.qwenImageLayered",
-  edit: "layers.model.qwenImageEdit2511",
-  relight: "layers.model.qwenImageEdit2509Relight",
+  edit: "edit.model.qwenImageEdit2511",
+  relight: "relight.model.qwenImageEdit2509Relight",
   fill: "layers.model.qwenImageInpaint",
 }
 
