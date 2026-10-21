@@ -3,13 +3,16 @@ import { Button } from "@rosesfield/ui/components/button"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import type { ReactElement, ReactNode } from "react"
+import { isWorking } from "@/api/queries"
 import { appEmptyTitle, aspectOf, defaultAspectOf } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { aspectStyle } from "@/pieces/asset-tile"
 import { RunLine } from "@/pieces/run/run-line"
 import { RunOutputs } from "@/pieces/run/run-outputs"
 import { useAppRuns } from "@/screens/app/app-canvas"
+import { PlanView } from "@/studio/remake/plan-view"
 import { RemakePair } from "@/studio/remake/remake-pair"
+import { useRemakePlan } from "@/studio/remake/remake-plan"
 
 type RemakeCanvasProps = {
   app: AppListing
@@ -25,14 +28,18 @@ function RemakeRun({
   onUseInputs: (run: Run) => void
 }): ReactElement {
   const [outputId] = run.outputs
+  const plan = useRemakePlan(run)
   return (
     <article className="flex flex-col gap-s2">
       <RunLine run={run} onUseInputs={onUseInputs} />
       {run.status === "done" && outputId !== undefined ? (
-        <RemakePair run={run} outputId={outputId} />
+        <RemakePair run={run} outputId={outputId} plan={plan} />
       ) : (
         <RunOutputs run={run} />
       )}
+      {plan !== null && isWorking(run) ? (
+        <PlanView run={run} plan={plan} />
+      ) : null}
     </article>
   )
 }
