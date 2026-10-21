@@ -8,6 +8,7 @@ import { assetIdFormat } from "@rosesfield/kernel"
 import { z } from "zod"
 import { effectsApp } from "#effects/app"
 import { effectRecipes } from "#effects/effect-recipes"
+import { findWorkflow } from "#list-workflows"
 import { withoutVideoStills } from "../workflows/video-stills"
 
 type Recording = {
@@ -114,6 +115,37 @@ export function isLink(value: unknown): value is [string, number] {
     typeof value[0] === "string" &&
     typeof value[1] === "number"
   )
+}
+
+export function fileGraph(): Record<string, unknown> {
+  const workflow = findWorkflow("effects-ltx-2-5")
+  if (workflow === null) {
+    throw new Error("workflows/effects-ltx-2-5 is not listed")
+  }
+  return workflow.graph
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function isWorkflow(value: unknown): value is Workflow {
+  return (
+    isRecord(value) &&
+    Object.values(value).every(
+      (node) =>
+        isRecord(node) &&
+        typeof node.class_type === "string" &&
+        isRecord(node.inputs)
+    )
+  )
+}
+
+export function workflowOf(value: unknown): Workflow {
+  if (!isWorkflow(value)) {
+    throw new Error("not an API graph")
+  }
+  return value
 }
 
 export function brokenLinks(workflow: Workflow): string[] {

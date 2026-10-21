@@ -1,6 +1,10 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectBinding } from "@rosesfield/generation/bindings"
-import { effectGraph, effectsWorkflow } from "#effects/comfy/effect-graph"
+import {
+  effectGraph,
+  effectsWorkflow,
+  hasEditPass,
+} from "#effects/comfy/effect-graph"
 import { deliveryFrames, ltxFrames, sizeMap } from "#effects/comfy/frame-sizes"
 import {
   type EffectRecipe,
@@ -33,7 +37,7 @@ function runBindings(
       map: sizeMap(delivery, "height"),
       to: "deliveryHeight",
     },
-    ...(recipe.endFrame.source === "edit"
+    ...(hasEditPass(recipe)
       ? [{ from: "seed", to: "endFrameSeed" } as const]
       : []),
   ]

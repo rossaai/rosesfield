@@ -11,7 +11,7 @@
       "maxLuma": 17.5
     },
     "sound": {
-      "prompt": "The sound is a low swelling hum that rises as the camera moves in.",
+      "prompt": "The sound starts on the first frame: a full rush of air with a deep low tone under it, both rising and building as the camera dives into the eye.",
       "loudness": {
         "min": -28.5,
         "max": -19
@@ -24,12 +24,18 @@
       "bitDepth": 8
     }
   },
-  "prompt": "One unbroken shot that moves from the first frame to the last, with no pause. From the first frame the camera pushes straight in toward one of the person's eyes at a steady speed. The eye fills the frame, then the iris with its fine fibres, then the black pupil. The camera keeps moving into the pupil until the whole frame is black for the last half second.",
+  "prompt": "One unbroken shot that moves from the first frame to the last, with no pause. From the first frame the camera pushes straight in toward one of the person's eyes, and it never slows down. The eye fills the frame, then the iris with its sharp fine fibres, then the black pupil. In the last second the black pupil grows outward until it swallows the whole frame, while the camera keeps moving in. The iris stays sharp and bright around the pupil until the pupil covers it.",
   "photoFrame": "first",
   "endFrame": {
     "source": "dark",
-    "luma": 8,
+    "luma": 1,
     "strength": 0.9
+  },
+  "midFrame": {
+    "source": "edit",
+    "prompt": "Change the photo into an extreme close-up of one of the person's eyes. The iris fills most of the frame, with the round black pupil in the centre. The fine fibres of the iris are sharp. Keep the person's own eye colour and skin.",
+    "time": 5.5,
+    "strength": 0.8
   },
   "hold": null,
   "adapter": null,

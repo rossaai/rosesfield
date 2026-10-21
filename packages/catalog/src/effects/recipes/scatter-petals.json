@@ -37,6 +37,7 @@
     "prompt": "The same place with no person in it: their empty clothes lie on the ground where they stood.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": null,
   "adapter": null,
   "seconds": 5,

@@ -31,6 +31,7 @@
     "prompt": "The same person in the exact same pose, with new people, a van and boxes around them that were not there before.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": 0.9,
   "adapter": null,
   "seconds": 6,
