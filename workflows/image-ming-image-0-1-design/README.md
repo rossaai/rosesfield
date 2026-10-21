@@ -59,3 +59,5 @@ Its nodes follow Comfy's template `image_ming_image_01_design_t2i` in [Comfy-Org
 ## Not checked
 
 No run of this workflow on a live engine exists. Its class names, input names, links and fixed values were read from the template, which Comfy Cloud runs with no custom nodes.
+
+Comfy Cloud's object_info, read on 2026-10-21 into [`cloud-weights.json`](../../packages/catalog/src/comfy/cloud-weights.json), lists none of the three model files. The Image app lists this graph, and opens on it as the open model the text to image board ranks highest, once a new reading of that file lists all three.
