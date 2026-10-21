@@ -110,7 +110,7 @@ const agentStart = screenEntry("agent", "entry.screen.agent", [
     label: "state.noKey",
     path: "/agent",
     seeds: [seeds.settingsAs(publicSettingsOf(false)), seeds.runs([])],
-    before: () => holdVisitorKey("agent", null),
+    before: () => holdVisitorKey("engine", null),
   },
   { id: "loading", label: "state.loading", path: "/agent", seeds: withModel },
   {

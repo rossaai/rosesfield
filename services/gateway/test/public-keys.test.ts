@@ -28,9 +28,9 @@ import {
   toolCallAnswer,
 } from "../../../packages/agent/test/fixtures/router-chat-answers"
 import { fakeComfy } from "./fixtures/comfy-fetch"
-import { withRouterChat } from "./fixtures/router-chat-fetch"
 import { captureLogs, filesHolding, seenHolding } from "./fixtures/leak-scan"
 import { pageHtml } from "./fixtures/public-gateway"
+import { withRouterChat } from "./fixtures/router-chat-fetch"
 import { type Seen, Visitor } from "./fixtures/visitor"
 import { imageApp, sessionSecret, start } from "./sample-apps"
 

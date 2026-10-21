@@ -1,10 +1,6 @@
 import { buildPath, type ErrorBody, errorBody } from "@rosesfield/contract"
 import { callPath, callPathFor, fieldOf } from "@/api/call-path"
-import {
-  creditsOf,
-  type Proposal,
-  readProposal,
-} from "@/api/conversation-wire"
+import { creditsOf, type Proposal, readProposal } from "@/api/conversation-wire"
 
 export type AnswerEvent =
   | { type: "message"; index: number; text: string }
