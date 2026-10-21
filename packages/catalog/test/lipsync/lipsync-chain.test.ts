@@ -278,7 +278,7 @@ describe("the parts of the Text chain", () => {
   })
 
   it("plans no speech for an app with no model choice and no voice picked", () => {
-    const bare = { id: "audio", inputs: audio.inputs.slice(1) }
+    const bare = { id: appId.parse("audio"), inputs: audio.inputs.slice(1) }
     expect(
       speechPlanOf({ app: bare, voices: [], inputs: typed.inputs })
     ).toBeNull()
