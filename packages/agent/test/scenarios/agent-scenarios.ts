@@ -11,6 +11,7 @@ import {
 } from "#infrastructure/router-chat-models"
 import { FakeAssetRepository } from "../fake/fake-asset-repository"
 import { FakeCharacterRepository } from "../fake/fake-character-repository"
+import type { AnswerSource } from "../fixtures/scenario-answers"
 import {
   agentFor,
   allToolsFor,
@@ -42,6 +43,7 @@ export type ScenarioResult = {
 
 export type ModelResults = {
   model: string
+  source: AnswerSource
   results: readonly ScenarioResult[]
 }
 
@@ -247,7 +249,7 @@ function totalCredits(model: ModelResults): number {
 
 export function cheapestPass(models: readonly ModelResults[]): string | null {
   const passed = models
-    .filter(hasPassed)
+    .filter((model) => model.source.kind === "captured" && hasPassed(model))
     .sort(
       (left, right) =>
         totalCredits(left) - totalCredits(right) ||

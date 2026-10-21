@@ -71,7 +71,7 @@ async function ask(opened: Opened, text: string, approval: "ask" | "auto") {
 }
 
 describe("the agent on a Comfy Router chat model", () => {
-  it("answers in words with only a Comfy key, on the cheapest model", async () => {
+  it("answers in words with only a Comfy key, on the default model", async () => {
     const opened = openRouterAgent([
       textAnswer(defaultChatModel, "Ask me for an image or a video.", 0.0004),
     ])

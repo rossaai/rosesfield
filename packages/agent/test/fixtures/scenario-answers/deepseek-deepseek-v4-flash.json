@@ -1,9 +1,11 @@
 {
   "model": "deepseek/deepseek-v4-flash",
+  "source": {
+    "kind": "hand-written"
+  },
   "scenarios": {
     "words": {
-      "recordedAt": null,
-      "passed": true,
+      "expectPass": true,
       "exchanges": [
         {
           "status": 200,
@@ -36,8 +38,7 @@
       ]
     },
     "propose": {
-      "recordedAt": null,
-      "passed": true,
+      "expectPass": true,
       "exchanges": [
         {
           "status": 200,
@@ -80,8 +81,7 @@
       ]
     },
     "chain": {
-      "recordedAt": null,
-      "passed": true,
+      "expectPass": true,
       "exchanges": [
         {
           "status": 200,

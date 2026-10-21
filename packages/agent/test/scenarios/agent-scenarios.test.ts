@@ -4,12 +4,11 @@ import {
   routerChatModels,
 } from "#infrastructure/router-chat-models"
 import {
-  type RouterRecording,
-  readRecordings,
-  replayRecording,
+  type ModelAnswers,
+  readModelAnswers,
+  replayAnswers,
   routerExchange,
-  tapRouter,
-} from "../fixtures/router-recording"
+} from "../fixtures/scenario-answers"
 import {
   agentScenarios,
   cheapestPass,
@@ -20,76 +19,100 @@ import {
 } from "./agent-scenarios"
 
 const comfyKey = "comfyui-rosesfield-test"
-const recordings = readRecordings()
+const answerFiles = readModelAnswers()
 
-async function replayAll(recording: RouterRecording): Promise<ModelResults> {
+async function replayAll(answers: ModelAnswers): Promise<ModelResults> {
   const results: ScenarioResult[] = []
   for (const scenario of agentScenarios) {
-    const recorded = recording.scenarios[scenario.id]
-    if (recorded === undefined) {
+    const written = answers.scenarios[scenario.id]
+    if (written === undefined) {
       continue
     }
-    const replay = replayRecording(recording.model, recorded.exchanges)
+    const replay = replayAnswers(answers.model, written.exchanges)
     results.push(
       await runScenario(scenario, {
-        model: recording.model,
+        model: answers.model,
         key: comfyKey,
         fetch: replay.fetch,
       })
     )
     expect(replay.left()).toBe(0)
   }
-  return { model: recording.model, results }
+  return { model: answers.model, source: answers.source, results }
 }
 
-function defaultRecording(): RouterRecording {
-  const found = recordings.find(
-    (recording) => recording.model === defaultChatModel
+function defaultAnswers(): ModelAnswers {
+  const found = answerFiles.find(
+    (answers) => answers.model === defaultChatModel
   )
   if (found === undefined) {
-    throw new Error(`No recording holds ${defaultChatModel}`)
+    throw new Error(`No answer file holds ${defaultChatModel}`)
   }
   return found
 }
 
-describe("the agent's scenarios on recorded Router answers", () => {
-  it("records only Router chat models the agent offers", () => {
-    expect(recordings.length).toBeGreaterThan(0)
-    for (const recording of recordings) {
-      expect(routerChatModels).toContain(recording.model)
+function passing(credits: number): ScenarioResult[] {
+  return agentScenarios.map((scenario) => ({
+    scenario: scenario.id,
+    problems: [],
+    credits,
+  }))
+}
+
+describe("the agent's scenarios on Router answers", () => {
+  it("holds answers only for Router chat models the agent offers", () => {
+    expect(answerFiles.length).toBeGreaterThan(0)
+    for (const answers of answerFiles) {
+      expect(routerChatModels).toContain(answers.model)
     }
   })
 
-  for (const recording of recordings) {
-    it(`replays ${recording.model} to the verdict each scenario was recorded with`, async () => {
-      const { results } = await replayAll(recording)
+  for (const answers of answerFiles) {
+    it(`replays ${answers.model} to the verdict each scenario expects`, async () => {
+      const { results } = await replayAll(answers)
 
       for (const result of results) {
-        const recorded = recording.scenarios[result.scenario]
+        const written = answers.scenarios[result.scenario]
         expect({
           scenario: result.scenario,
           passed: result.problems.length === 0,
-        }).toEqual({ scenario: result.scenario, passed: recorded?.passed })
+        }).toEqual({ scenario: result.scenario, passed: written?.expectPass })
       }
     })
   }
 
-  it("defaults to the cheapest model that passes every scenario", async () => {
-    const models = await Promise.all(recordings.map(replayAll))
-
-    expect(cheapestPass(models)).toBe(defaultChatModel)
-    const proven = models.find((model) => model.model === defaultChatModel)
-    expect(proven?.results.map((result) => result.scenario)).toEqual(
-      agentScenarios.map((scenario) => scenario.id)
+  it("takes no hand-written answer file as Router evidence for the default", async () => {
+    const handWritten = answerFiles.filter(
+      (answers) => answers.source.kind === "hand-written"
     )
-    for (const result of proven?.results ?? []) {
-      expect(result.credits).toBeGreaterThan(0)
-    }
+    const models = await Promise.all(handWritten.map(replayAll))
+
+    expect(cheapestPass(models)).toBeNull()
+  })
+
+  it("picks the cheapest model whose captured answers pass every scenario", () => {
+    const cheap = "qwen/qwen3.6-flash"
+    const dear = "z-ai/glm-4.6"
+    const captured = {
+      kind: "captured",
+      capturedAt: "2026-10-21T10:00:00.000Z",
+    } as const
+    const models: ModelResults[] = [
+      {
+        model: defaultChatModel,
+        source: { kind: "hand-written" },
+        results: passing(1),
+      },
+      { model: dear, source: captured, results: passing(9) },
+      { model: cheap, source: captured, results: passing(4) },
+    ]
+
+    expect(cheapestPass(models)).toBe(cheap)
   })
 
   it("fails a chain whose video is made from the run id, not from the image", async () => {
-    const recorded = defaultRecording().scenarios.chain
-    const exchanges = (recorded?.exchanges ?? []).map((exchange, index) =>
+    const written = defaultAnswers().scenarios.chain
+    const exchanges = (written?.exchanges ?? []).map((exchange, index) =>
       index === 2
         ? routerExchange.parse(
             JSON.parse(
@@ -98,7 +121,7 @@ describe("the agent's scenarios on recorded Router answers", () => {
           )
         : exchange
     )
-    const replay = replayRecording(defaultChatModel, exchanges)
+    const replay = replayAnswers(defaultChatModel, exchanges)
 
     const result = await runScenario(scenarioOf("chain"), {
       model: defaultChatModel,
@@ -112,8 +135,8 @@ describe("the agent's scenarios on recorded Router answers", () => {
   })
 
   it("fails a turn that asks for an image when the model answers only words", async () => {
-    const words = defaultRecording().scenarios.words
-    const replay = replayRecording(defaultChatModel, words?.exchanges ?? [])
+    const words = defaultAnswers().scenarios.words
+    const replay = replayAnswers(defaultChatModel, words?.exchanges ?? [])
 
     const result = await runScenario(scenarioOf("propose"), {
       model: defaultChatModel,
@@ -124,26 +147,25 @@ describe("the agent's scenarios on recorded Router answers", () => {
     expect(result.problems).toContain("the agent proposed 0 runs, not 1")
   })
 
-  it("keeps the ids the request named as places the replay fills again", async () => {
-    const runId = "1c2d3e4f-5a6b-4c7d-9e8f-0a1b2c3d4e5f"
-    const answer = {
-      choices: [{ message: { content: `Run ${runId} is done.` } }],
-    }
-    const tap = tapRouter(async () => Response.json(answer))
-    const sent = (id: string) => ({
+  it("fills a written id place with the id the request holds", async () => {
+    const otherId = "2d3e4f5a-6b7c-4d8e-8f9a-1b2c3d4e5f6a"
+    const replay = replayAnswers(defaultChatModel, [
+      {
+        status: 200,
+        headers: {},
+        body: {
+          choices: [{ message: { content: "Run {{result:0}} is done." } }],
+        },
+      },
+    ])
+
+    const replayed = await replay.fetch("https://router.test", {
       body: JSON.stringify({
         model: defaultChatModel,
-        messages: [{ role: "tool", content: `{"run":{"id":"${id}"}}` }],
+        messages: [{ role: "tool", content: `{"run":{"id":"${otherId}"}}` }],
       }),
     })
 
-    await tap.fetch("https://router.test", sent(runId))
-    const replay = replayRecording(defaultChatModel, tap.exchanges)
-    const otherId = "2d3e4f5a-6b7c-4d8e-8f9a-1b2c3d4e5f6a"
-    const replayed = await replay.fetch("https://router.test", sent(otherId))
-
-    expect(JSON.stringify(tap.exchanges[0]?.body)).toContain("{{result:0}}")
-    expect(JSON.stringify(tap.exchanges[0]?.body)).not.toContain(runId)
     expect(await replayed.json()).toEqual({
       choices: [{ message: { content: `Run ${otherId} is done.` } }],
     })
