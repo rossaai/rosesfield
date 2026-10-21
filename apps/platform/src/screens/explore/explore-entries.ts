@@ -1,7 +1,7 @@
 import type { Run } from "@rosesfield/contract"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { useQueries, useQuery } from "@tanstack/react-query"
-import { GatewayUnreachableError } from "@/api/gateway-unreachable.error"
+import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { runAspect } from "@/pieces/run/run-facts"
 import {
   admissionsByRun,
@@ -72,8 +72,12 @@ export function exploreShares(list: readonly ExploreAdmission[]): string[] {
   ]
 }
 
-function isUnreachable(error: Error | null): boolean {
-  return error instanceof GatewayUnreachableError
+const goneStatuses: readonly number[] = [404, 410]
+
+function isGone(error: Error | null): boolean {
+  return (
+    error instanceof GatewayRefusedError && goneStatuses.includes(error.status)
+  )
 }
 
 export function useExploreEntries(): ExploreEntries {
@@ -81,7 +85,11 @@ export function useExploreEntries(): ExploreEntries {
   const shares = useQueries({
     queries: exploreShares(list.data).map((shareId) => shareQuery(shareId)),
   })
-  if (shares.length > 0 && shares.every((read) => isUnreachable(read.error))) {
+  if (shares.some((read) => read.isPending)) {
+    return { state: "loading" }
+  }
+  const isBroken = shares.some((read) => read.isError && !isGone(read.error))
+  if (isBroken && shares.every((read) => read.data === undefined)) {
     return {
       state: "failed",
       retry: () => {
@@ -90,9 +98,6 @@ export function useExploreEntries(): ExploreEntries {
         }
       },
     }
-  }
-  if (shares.some((read) => read.isPending)) {
-    return { state: "loading" }
   }
   return {
     state: "ready",

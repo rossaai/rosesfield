@@ -84,9 +84,7 @@ function jsonOf(status: number, body: unknown): Response {
 }
 
 function expired(): Response {
-  return jsonOf(404, {
-    error: { code: "SHARE_NOT_FOUND", message: "The share is gone" },
-  })
+  return jsonOf(404, { error: { code: "SHARE_NOT_FOUND", status: 404 } })
 }
 
 function readExplore(
@@ -139,6 +137,17 @@ describe("Explore's reads", () => {
     )
     await waitFor(() => expect(result.current.state).toBe("ready"))
     expect(idsOf(result.current)).toEqual([])
+  })
+
+  it("show the failure when no share loads for another reason than being gone", async () => {
+    const { result } = readExplore(
+      [admissionOf(liveId, "live"), admissionOf(expiredId, "gone")],
+      async (path) =>
+        path === "/share/live/data"
+          ? jsonOf(502, { error: { code: "DEPENDENCY_FAILED", status: 502 } })
+          : expired()
+    )
+    await waitFor(() => expect(result.current.state).toBe("failed"))
   })
 
   it("show the failure when the gateway answers no read", async () => {
