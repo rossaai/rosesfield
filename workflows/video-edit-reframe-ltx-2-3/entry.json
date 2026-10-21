@@ -1,11 +1,11 @@
 {
-  "name": "video-edit-reframe-wan-vace",
-  "title": "Video edit: reframe a clip to another format with Wan VACE",
-  "description": "Places your clip, resampled to 16 frames per second, in the middle of a frame of another format and fills the new area with Wan 2.1 VACE 14B, with its sound kept or left out. Built from Comfy's template video_wan_vace_outpainting.",
+  "name": "video-edit-reframe-ltx-2-3",
+  "title": "Video edit: reframe a clip to another format with LTX 2.3",
+  "description": "Places your clip in the middle of a black frame of another format, then fills the frame with LTX 2.3 and the outpainting IC-LoRA, at your clip's frame rate, with its sound kept or left out. Built from Comfy's template template_ltx2_3_lora_video_outpainting.",
   "mediaType": "video",
   "openSource": true,
-  "models": ["Wan-AI/Wan2.1-VACE-14B"],
-  "requiresCustomNodes": [],
+  "models": ["Lightricks/LTX-2.3"],
+  "requiresCustomNodes": ["comfyui-ltxvideo"],
   "inputBindings": {
     "source": {
       "nodeId": "1",
@@ -28,13 +28,13 @@
       "type": "scalar"
     },
     "prompt": {
-      "nodeId": "34",
+      "nodeId": "5138",
       "inputName": "text",
       "type": "scalar"
     },
     "seed": {
-      "nodeId": "37",
-      "inputName": "seed",
+      "nodeId": "5117",
+      "inputName": "noise_seed",
       "type": "scalar"
     }
   },
