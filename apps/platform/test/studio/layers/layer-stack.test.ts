@@ -15,7 +15,7 @@ import {
   toggled,
 } from "@/studio/layers/layer-stack"
 import { runModeOf } from "@/studio/layers/layers-models"
-import { catalog, flux3 } from "./layers-fixtures"
+import { catalogIndex, flux3 } from "./layers-fixtures"
 
 const firstLayer = "0a1b2c3d-4e5f-4a6b-8c7d-8e9fa0b1c2d3"
 const secondLayer = "1b2c3d4e-5f6a-4b7c-9d8e-9fa0b1c2d3e4"
@@ -195,7 +195,7 @@ describe("a hosted edit on a layer", () => {
     inputs: { model: flux3.id, inputImage: [secondLayer], prompt: "a hat" },
     outputs: [secondEdit],
   })
-  const isSplit = (one: Run) => runModeOf(one, catalog) === "split"
+  const isSplit = (one: Run) => runModeOf(one, catalogIndex) === "split"
 
   it("joins the row of versions of the layer it changed", () => {
     const stack = stackOf(split, [split, hostedEdit], isSplit)

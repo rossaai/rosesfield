@@ -267,15 +267,14 @@ function shortcutOf(start: StartRun) {
 function useLayersCatalog(
   app: AppListing,
   form: AppForm,
-  runs: readonly Run[],
   check: RefObject<FormCheck | null>
 ) {
   const formMode = modeOf(form.values)
-  const models = useLayersModels(app, form, runs, formMode)
+  const models = useLayersModels(app, form, formMode)
   check.current = checkOf(models.hosted.chosen, formMode)
   const isSplit = useCallback(
-    (run: Run) => runModeOf(run, models.all) === "split",
-    [models.all]
+    (run: Run) => runModeOf(run, models.index) === "split",
+    [models.index]
   )
   return { ...models, isSplit }
 }
@@ -305,7 +304,7 @@ function runActionsOf(options: {
       options.onStarted()
     },
     useInputs: (run: Run): void => {
-      form.fill(layersValuesOf(app, run, catalog.all))
+      form.fill(layersValuesOf(app, run, catalog.index))
       if (catalog.isSplit(run)) {
         setPreferred(run.id)
       }
@@ -321,7 +320,7 @@ export function useLayersScreen(
   const check = useRef<FormCheck | null>(null)
   const { mode, formApp, form } = useModeForm(app, seeds, check)
   const runs = useAppRuns(app)
-  const catalog = useLayersCatalog(app, form, runs.runs, check)
+  const catalog = useLayersCatalog(app, form, check)
   const [preferred, setPreferred] = useState<string | null>(seeds.from ?? null)
   const layers = useStackState(runs.runs, preferred, catalog.isSplit)
   const brush = useBrush()

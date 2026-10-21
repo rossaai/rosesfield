@@ -13,7 +13,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { GatewaySettings } from "@/api/gateway-settings"
 import { assetQuery, runsQuery, settingsQuery } from "@/api/queries"
 import { t, tCatalog } from "@/copy/t"
-import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
 import { AppScreen } from "@/studio/layers/screen"
 import { asPhone, resetFrames } from "../../screens/app/frame-render"
 import {
@@ -60,11 +59,7 @@ function openLayers(options: {
     pageParams: [null],
   })
   if (options.hasCatalog === true) {
-    client.setQueryData(modelCatalogQuery(layersListing.id, "set").queryKey, {
-      models: [...catalog],
-      defaultModel: null,
-      refusal: null,
-    })
+    vi.stubGlobal("fetch", answerCatalog)
   }
   client.setQueryData(assetQuery(photo).queryKey, {
     asset: asset.parse({
@@ -98,6 +93,22 @@ function openLayers(options: {
     <QueryClientProvider client={client}>
       <RouterProvider router={router} />
     </QueryClientProvider>
+  )
+}
+
+const catalogPath = `/api/apps/${layersListing.id}/models`
+
+function answerCatalog(input: RequestInfo | URL): Promise<Response> {
+  const url = new URL(String(input), "http://localhost")
+  if (url.pathname !== catalogPath) {
+    return new Promise(() => undefined)
+  }
+  const body = { models: [...catalog], defaultModel: null, refusal: null }
+  return Promise.resolve(
+    new Response(JSON.stringify(body), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    })
   )
 }
 

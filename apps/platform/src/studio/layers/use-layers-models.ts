@@ -1,9 +1,8 @@
-import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import type { AppListing, Run } from "@rosesfield/contract"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo } from "react"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
-import { settingsQuery } from "@/api/queries"
+import { runsOf, runsQuery, settingsQuery } from "@/api/queries"
 import { textOf } from "@/screens/app/fields/field-props"
 import { modelInputName } from "@/screens/app/hosted/hosted-form"
 import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
@@ -14,19 +13,21 @@ import type { AppForm } from "@/screens/app/use-app-form"
 import {
   defaultOfMode,
   inputsForModel,
+  type ModelIndex,
+  modelIndexOf,
   modelsOfMode,
   runModeOf,
 } from "@/studio/layers/layers-models"
 import type { LayersMode } from "@/studio/layers/layers-modes"
 
 export type LayersModels = {
-  all: readonly CatalogModel[]
+  index: ModelIndex
   hosted: HostedState
 }
 
 function ranBeforeIn(
   runs: readonly Run[],
-  all: readonly CatalogModel[],
+  index: ModelIndex,
   mode: LayersMode
 ): string[] {
   const newest = [...runs].sort((a, b) =>
@@ -34,11 +35,23 @@ function ranBeforeIn(
   )
   return ranBeforeOf(
     newest
-      .filter((run) => runModeOf(run, all) === mode)
+      .filter((run) => runModeOf(run, index) === mode)
       .map((run) => {
         const model = run.inputs[modelInputName]
         return typeof model === "string" ? model : undefined
       })
+  )
+}
+
+function useRanBefore(
+  app: AppListing,
+  index: ModelIndex,
+  mode: LayersMode
+): string[] {
+  const pages = useInfiniteQuery(runsQuery(app.id)).data
+  return useMemo(
+    () => ranBeforeIn(runsOf(pages), index, mode),
+    [pages, index, mode]
   )
 }
 
@@ -61,7 +74,6 @@ function errorOf(
 export function useLayersModels(
   app: AppListing,
   form: AppForm,
-  runs: readonly Run[],
   mode: LayersMode
 ): LayersModels {
   const isTaskApp = useMemo(() => taskAppOf(app.id) !== null, [app.id])
@@ -71,9 +83,13 @@ export function useLayersModels(
     ...modelCatalogQuery(app.id, keyState),
     enabled: isTaskApp,
   })
-  const all = useMemo(() => query.data?.models ?? [], [query.data])
-  const models = useMemo(() => modelsOfMode(all, mode), [all, mode])
-  const fallback = defaultOfMode(all, mode)
+  const index = useMemo(
+    () => modelIndexOf(app, query.data?.models ?? []),
+    [app, query.data]
+  )
+  const models = useMemo(() => modelsOfMode(index, mode), [index, mode])
+  const fallback = useMemo(() => defaultOfMode(index, mode), [index, mode])
+  const ranBefore = useRanBefore(app, index, mode)
   const id = textOf(form.values.inputs[modelInputName])
   const chosen = models.find((model) => model.id === id) ?? null
   const { values, setForm } = form
@@ -93,7 +109,7 @@ export function useLayersModels(
     }
   }, [chosen, fallbackId, choose])
   return {
-    all,
+    index,
     hosted: {
       isTaskApp,
       models,
@@ -103,7 +119,7 @@ export function useLayersModels(
       defaultModel: fallbackId,
       chosen,
       fields: chosen?.form ?? null,
-      ranBefore: ranBeforeIn(runs, all, mode),
+      ranBefore,
       choose,
     },
   }

@@ -5,6 +5,7 @@ import {
   type Run,
   run,
 } from "@rosesfield/contract"
+import { type ModelIndex, modelIndexOf } from "@/studio/layers/layers-models"
 import { app } from "../../../../../packages/catalog/src/layers/app"
 
 export const layersListing: AppListing = appListing.parse(app)
@@ -102,7 +103,7 @@ export const relightGraph = model({
 export const fillGraph = model({
   id: "qwen-image-inpaint",
   maker: "Qwen",
-  task: "inpaint",
+  task: "image-edit",
   form: null,
 })
 
@@ -122,6 +123,8 @@ export const catalog: readonly CatalogModel[] = [
   flux3,
   fluxFill,
 ]
+
+export const catalogIndex: ModelIndex = modelIndexOf(layersListing, catalog)
 
 export function layersRun(options: {
   id: string

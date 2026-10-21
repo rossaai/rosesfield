@@ -7,12 +7,15 @@ import {
   inputsForModel,
   isCountShown,
   layersValuesOf,
+  modeGraphsOf,
+  modelIndexOf,
   modelsOfMode,
   runModeOf,
 } from "@/studio/layers/layers-models"
 import type { LayersMode } from "@/studio/layers/layers-modes"
 import {
   catalog,
+  catalogIndex,
   editGraph,
   fillGraph,
   firstLayer,
@@ -33,22 +36,44 @@ function valuesWith(inputs: FormValues["inputs"]): FormValues {
 }
 
 describe("the model picker of each Layers mode", () => {
-  it("lists every catalog model of the mode's task and no other", () => {
+  it("reads each mode's graph from the catalog's bounds on the model input", () => {
+    expect(modeGraphsOf(layersListing)).toEqual({
+      split: splitGraph.id,
+      edit: editGraph.id,
+      relight: relightGraph.id,
+      fill: fillGraph.id,
+    })
+  })
+
+  it("lists each graph under the mode that names it and each hosted model under its task", () => {
     const listed = (mode: LayersMode) =>
-      modelsOfMode(catalog, mode).map((model) => model.id)
+      modelsOfMode(catalogIndex, mode).map((model) => model.id)
     expect(listed("split")).toEqual([splitGraph.id, seedream.id])
     expect(listed("edit")).toEqual([editGraph.id, flux3.id])
     expect(listed("relight")).toEqual([relightGraph.id])
     expect(listed("fill")).toEqual([fillGraph.id, fluxFill.id])
   })
 
+  it("control: a graph of the edit task that no mode names lists nowhere", () => {
+    const stray = { ...fillGraph, id: "maker/other-graph" }
+    const index = modelIndexOf(layersListing, [...catalog, stray])
+    expect(index.modes.has(stray.id)).toBe(false)
+    expect(modelsOfMode(index, "edit").map((model) => model.id)).toEqual([
+      editGraph.id,
+      flux3.id,
+    ])
+  })
+
   it("opens each mode on its open-weights graph, with the hosted model one choice away", () => {
-    expect(defaultOfMode(catalog, "split")?.id).toBe(splitGraph.id)
-    expect(defaultOfMode(catalog, "edit")?.id).toBe(editGraph.id)
-    expect(defaultOfMode(catalog, "relight")?.id).toBe(relightGraph.id)
-    expect(defaultOfMode(catalog, "fill")?.id).toBe(fillGraph.id)
-    expect(defaultOfMode([seedream], "split")?.id).toBe(seedream.id)
-    expect(defaultOfMode([], "split")).toBeNull()
+    const open = (models: typeof catalog, mode: LayersMode) =>
+      defaultOfMode(modelIndexOf(layersListing, models), mode)?.id ?? null
+    expect(open(catalog, "split")).toBe(splitGraph.id)
+    expect(open(catalog, "edit")).toBe(editGraph.id)
+    expect(open(catalog, "relight")).toBe(relightGraph.id)
+    expect(open(catalog, "fill")).toBe(fillGraph.id)
+    expect(open([fluxFill, ...catalog], "fill")).toBe(fillGraph.id)
+    expect(open([seedream], "split")).toBe(seedream.id)
+    expect(open([], "split")).toBeNull()
   })
 })
 
@@ -122,8 +147,8 @@ describe("a hosted run in History", () => {
   })
 
   it("reads its mode from its model", () => {
-    expect(runModeOf(hostedSplit, catalog)).toBe("split")
-    expect(runModeOf(hostedEdit, catalog)).toBe("edit")
+    expect(runModeOf(hostedSplit, catalogIndex)).toBe("split")
+    expect(runModeOf(hostedEdit, catalogIndex)).toBe("edit")
     expect(
       runModeOf(
         layersRun({
@@ -132,13 +157,13 @@ describe("a hosted run in History", () => {
           inputs: { mode: "relight", layer: [firstLayer] },
           outputs: [photo],
         }),
-        catalog
+        catalogIndex
       )
     ).toBe("relight")
   })
 
   it("fills the form with its image, its model and its settings", () => {
-    const values = layersValuesOf(layersListing, hostedSplit, catalog)
+    const values = layersValuesOf(layersListing, hostedSplit, catalogIndex)
     expect(values.inputs.mode).toBe("split")
     expect(values.inputs.model).toBe(seedream.id)
     expect(values.inputs.source).toEqual([photo])

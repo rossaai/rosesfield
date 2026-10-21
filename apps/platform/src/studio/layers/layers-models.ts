@@ -1,5 +1,5 @@
 import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
-import type { AppListing, Run } from "@rosesfield/contract"
+import { type AppListing, inputRulesOf, type Run } from "@rosesfield/contract"
 import {
   type FieldProblem,
   type FieldValue,
@@ -19,6 +19,7 @@ import {
   isLayersMode,
   type LayersMode,
   layerInput,
+  layersModes,
   modeInput,
   sourceInput,
 } from "@/studio/layers/layers-modes"
@@ -27,11 +28,19 @@ type MediaField = Extract<ModelField, { kind: "media" }>
 
 type Inputs = Readonly<Record<string, FieldValue>>
 
-const modeTasks: Readonly<Record<string, LayersMode>> = {
+export type ModeGraphs = Readonly<Record<LayersMode, string | null>>
+
+export type ModelIndex = {
+  models: readonly CatalogModel[]
+  byId: ReadonlyMap<string, CatalogModel>
+  modes: ReadonlyMap<string, LayersMode>
+  graphs: ModeGraphs
+}
+
+const hostedTasks: Readonly<Record<string, LayersMode>> = {
   "layer-separation": "split",
   "image-edit": "edit",
   relight: "relight",
-  inpaint: "fill",
 }
 
 const maskPattern = /mask/i
@@ -60,24 +69,71 @@ export function imageFieldOf(model: CatalogModel): MediaField | null {
   return images.find((field) => field.required) ?? images[0] ?? null
 }
 
-export function modeOfModel(model: CatalogModel): LayersMode | null {
-  const mode = modeTasks[model.task] ?? null
+function graphOfMode(app: AppListing, mode: LayersMode): string | null {
+  const rule = inputRulesOf(app, { [modeInput]: mode }).find(
+    (one) => one.input.name === modelInputName
+  )
+  const allowed = rule?.allowed ?? []
+  return allowed.length === 1 ? (allowed[0] ?? null) : null
+}
+
+export function modeGraphsOf(app: AppListing): ModeGraphs {
+  return {
+    split: graphOfMode(app, "split"),
+    edit: graphOfMode(app, "edit"),
+    relight: graphOfMode(app, "relight"),
+    fill: graphOfMode(app, "fill"),
+  }
+}
+
+export function modeOfModel(
+  model: CatalogModel,
+  graphs: ModeGraphs
+): LayersMode | null {
+  if (model.kind === "graph") {
+    return layersModes.find((mode) => graphs[mode] === model.id) ?? null
+  }
+  const mode = hostedTasks[model.task] ?? null
   return mode === "edit" && maskFieldOf(model) !== null ? "fill" : mode
 }
 
+export function modelIndexOf(
+  app: AppListing,
+  models: readonly CatalogModel[]
+): ModelIndex {
+  const graphs = modeGraphsOf(app)
+  const modes = new Map<string, LayersMode>()
+  for (const model of models) {
+    const mode = modeOfModel(model, graphs)
+    if (mode !== null) {
+      modes.set(model.id, mode)
+    }
+  }
+  return {
+    models,
+    byId: new Map(models.map((model) => [model.id, model])),
+    modes,
+    graphs,
+  }
+}
+
 export function modelsOfMode(
-  models: readonly CatalogModel[],
+  index: ModelIndex,
   mode: LayersMode
 ): CatalogModel[] {
-  return models.filter((model) => modeOfModel(model) === mode)
+  return index.models.filter((model) => index.modes.get(model.id) === mode)
 }
 
 export function defaultOfMode(
-  models: readonly CatalogModel[],
+  index: ModelIndex,
   mode: LayersMode
 ): CatalogModel | null {
-  const listed = modelsOfMode(models, mode)
-  return listed.find((model) => model.kind === "graph") ?? listed[0] ?? null
+  const listed = modelsOfMode(index, mode)
+  return (
+    listed.find((model) => model.id === index.graphs[mode]) ??
+    listed[0] ??
+    null
+  )
 }
 
 export function isCountShown(
@@ -151,17 +207,18 @@ export function hostedLayersProblems(
   return problems
 }
 
-export function runModeOf(
-  run: Run,
-  models: readonly CatalogModel[]
-): LayersMode {
+function modelOfRun(run: Run, index: ModelIndex): CatalogModel | undefined {
+  const id = run.inputs[modelInputName]
+  return typeof id === "string" ? index.byId.get(id) : undefined
+}
+
+export function runModeOf(run: Run, index: ModelIndex): LayersMode {
   const mode = run.inputs[modeInput]
   if (isLayersMode(mode)) {
     return mode
   }
   const id = run.inputs[modelInputName]
-  const model = models.find((one) => one.id === id)
-  return (model === undefined ? null : modeOfModel(model)) ?? "split"
+  return (typeof id === "string" ? index.modes.get(id) : undefined) ?? "split"
 }
 
 export function runImageOf(run: Run, model: CatalogModel): string[] {
@@ -182,12 +239,12 @@ export function checkOf(
 export function layersValuesOf(
   app: AppListing,
   run: Run,
-  models: readonly CatalogModel[]
+  index: ModelIndex
 ): FormValues {
   const values = valuesFromRun(app, run)
-  const mode = runModeOf(run, models)
+  const mode = runModeOf(run, index)
   const id = run.inputs[modelInputName]
-  const model = models.find((one) => one.id === id)
+  const model = modelOfRun(run, index)
   const image =
     model === undefined || isGraphModel(model) ? [] : runImageOf(run, model)
   const driven = mode === "split" ? sourceInput : layerInput
