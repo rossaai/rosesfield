@@ -1,5 +1,9 @@
 import { buildPath, type Run, routes } from "@rosesfield/contract"
-import { queryOptions, useQuery } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  queryOptions,
+  useQuery,
+} from "@tanstack/react-query"
 import { callPathFor, fieldOf, oneOf } from "@/api/call-path"
 import { isWorking } from "@/api/queries"
 import {
@@ -114,13 +118,9 @@ export function planCreditsOf(plan: RemakePlan): number | null {
   return total
 }
 
-export function planSecondsOf(plan: RemakePlan): number {
-  return plan.shots[plan.shots.length - 1]?.endSeconds ?? 0
-}
-
 export function remakePlanQuery(run: Run) {
   return queryOptions({
-    queryKey: ["remake-plan", run.id],
+    queryKey: ["remake-plan", run.id, run.status],
     queryFn: ({ signal }) =>
       callPathFor(
         {
@@ -130,6 +130,7 @@ export function remakePlanQuery(run: Run) {
         },
         readPlanAnswer
       ),
+    staleTime: Number.POSITIVE_INFINITY,
     refetchInterval: (query) =>
       (query.state.data?.plan ?? null) === null && isWorking(run)
         ? planPollMs
@@ -141,6 +142,7 @@ export function useRemakePlan(run: Run): RemakePlan | null {
   const plan = useQuery({
     ...remakePlanQuery(run),
     enabled: run.status !== "failed",
+    placeholderData: keepPreviousData,
   })
   return plan.data?.plan ?? null
 }
