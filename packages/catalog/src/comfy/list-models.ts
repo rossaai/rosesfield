@@ -1,6 +1,7 @@
 import type { AppDefinition, InputDefinition } from "@rosesfield/contract"
 import {
   chosenModelOf,
+  graphTaskOf,
   type HostedModel,
   isHostedModelId,
   taskAdapter,
@@ -62,7 +63,7 @@ function hostedEntry(model: HostedModel, task: string): CatalogModel {
   }
 }
 
-function graphsOf(app: AppDefinition, task: string): CatalogModel[] {
+function graphsOf(app: AppDefinition, appTask: string): CatalogModel[] {
   const input = app.inputs.find(
     (one): one is Extract<InputDefinition, { type: "choice" }> =>
       one.name === modelInputName && one.type === "choice"
@@ -76,7 +77,7 @@ function graphsOf(app: AppDefinition, task: string): CatalogModel[] {
       maker: graphMaker,
       name: nameOf(`graph/${option.value}`),
       nameKey: option.labelKey,
-      task,
+      task: graphTaskOf(app.engine, option.value) ?? appTask,
       tags: [{ kind: "open-weights" }],
       form: null,
     }))

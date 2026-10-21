@@ -69,6 +69,31 @@ describe("modelsForApp", () => {
   })
 })
 
+describe("a graph's task", () => {
+  it("is the task its binding names, and the app's first task when it names none", () => {
+    const withTasks = appDefinition.parse({
+      ...app,
+      engine: taskBinding({
+        tasks: ["text-to-image"],
+        input: "model",
+        default: "open-a",
+        fallback: { adapter: "demo", config: {} },
+        graphTasks: { "open-b": "image-edit" },
+      }),
+    })
+    const tasksOf = (definition: typeof app) =>
+      modelsForApp(definition, []).map((one) => [one.id, one.task])
+    expect(tasksOf(withTasks)).toEqual([
+      ["open-a", "text-to-image"],
+      ["open-b", "image-edit"],
+    ])
+    expect(tasksOf(app)).toEqual([
+      ["open-a", "text-to-image"],
+      ["open-b", "text-to-image"],
+    ])
+  })
+})
+
 describe("the reference platform's own models", () => {
   it("are left out of the listing, by provider and by name", () => {
     const hosted = (id: string) => ({
