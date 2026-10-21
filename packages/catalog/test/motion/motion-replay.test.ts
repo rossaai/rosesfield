@@ -44,7 +44,7 @@ const succeeded = {
   outputs: [
     {
       id: outputId,
-      node_id: "246",
+      node_id: "68",
       type: "video",
       content_type: "video/mp4",
     },
@@ -86,19 +86,19 @@ function expectedGraph(values: {
     }
     node.inputs[name] = value
   }
-  set("189", "image", asset(photoUpload))
-  set("240", "file", asset(clipUpload))
-  set("582", "text", values.scene)
+  set("200", "image", asset(photoUpload))
+  set("199", "file", asset(clipUpload))
+  set("900", "string_b", values.scene)
   set("702", "value", values.shortSide)
-  set("597", "noise_seed", 914)
+  set("704", "seed", 914)
   if (values.sound === "off") {
-    delete graph["245"]?.inputs.audio
+    delete graph["122"]?.inputs.audio
   }
   return graph
 }
 
 describe("the motion request on the Comfy API v2", () => {
-  it("uploads the photo and the clip, then sends one keyed job with the four model files", async () => {
+  it("uploads the photo and the clip, then sends one keyed job with the five model files of the LTX 2.3 graph", async () => {
     const { submission, replay, job } = await submitted({
       ...both,
       scene: "A quiet beach at dawn, soft light",
@@ -106,10 +106,11 @@ describe("the motion request on the Comfy API v2", () => {
     })
     expect(submission.ref).toBe(jobId)
     expect(submission.models).toEqual([
-      "wan_animate_2_distill_int8_convrot.safetensors",
-      "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
-      "clip_vision_h.safetensors",
-      "Wan2_1_VAE_bf16.safetensors",
+      "ltx-2.3-22b-distilled-fp8.safetensors",
+      "ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors",
+      "gemma_3_12B_it_fp4_mixed.safetensors",
+      "sdpose_wholebody_fp16.safetensors",
+      "rt_detr_v4-x-hgnet_fp16.safetensors",
     ])
     expect(replay.sent.map((sent) => sent.url)).toEqual([
       `${cloudUrl}/api/v2/assets`,
@@ -125,7 +126,7 @@ describe("the motion request on the Comfy API v2", () => {
     expect(replay.unused()).toEqual([])
   })
 
-  it("sends the graph of workflows/motion-wan-animate-2 with only the bound values set, sound off", async () => {
+  it("sends the graph of workflows/motion-ltx-2-3-ic-lora with only the bound values set, sound off", async () => {
     const { workflow } = await submitted({
       ...both,
       scene: "A quiet beach at dawn, soft light",
@@ -138,23 +139,26 @@ describe("the motion request on the Comfy API v2", () => {
         sound: "off",
       })
     )
+    expect(workflow["122"]?.inputs).not.toHaveProperty("audio")
   })
 
-  it("sends the same graph with the clip's audio linked into the video when Keep the clip's sound is on", async () => {
+  it("links the clip's own sound into the video when Keep the clip's sound is on, at 704 pixels for 720p", async () => {
     const { workflow } = await submitted({ ...both, sound: "on" })
     expect(workflow).toEqual(
-      expectedGraph({ scene: "", shortSide: 720, sound: "on" })
+      expectedGraph({ scene: "", shortSide: 704, sound: "on" })
     )
-    expect(workflow["245"]?.inputs).toMatchObject({
-      audio: ["288", 1],
-      fps: ["288", 2],
+    expect(workflow["122"]?.inputs).toMatchObject({
+      audio: ["706", 1],
+      fps: ["706", 2],
     })
+    expect(workflow["706"]?.inputs).toEqual({ video: ["692", 0] })
+    expect(workflow["692"]?.inputs).toMatchObject({ video: ["199", 0] })
   })
 
   it("gives the two sound graphs different workflow hashes", async () => {
     const quiet = await submitted(both)
     const kept = await submitted({ ...both, sound: "on" })
-    expect(quiet.workflow["245"]?.inputs).not.toHaveProperty("audio")
+    expect(quiet.workflow["122"]?.inputs).not.toHaveProperty("audio")
     expect(quiet.submission.workflowHash).not.toBe(kept.submission.workflowHash)
   })
 
