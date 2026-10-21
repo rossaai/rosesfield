@@ -4,6 +4,7 @@ import {
   type AgentToolHandlers,
   type OpenPiModelsOptions,
   type PiAgentHarness,
+  type RunWait,
   routerAgentHarness,
 } from "@rosesfield/agent"
 import { openSqliteFileStorage } from "@rosesfield/agent/local"
@@ -17,6 +18,7 @@ type LocalAgentOptions = {
   apps: readonly AppDefinition[]
   handlers: AgentToolHandlers
   modelOptions?: OpenPiModelsOptions
+  wait?: RunWait
 }
 
 export const agentFileName = "agent.db"
@@ -34,5 +36,6 @@ export function localAgent(options: LocalAgentOptions): PiAgentHarness | null {
     apps: options.apps,
     handlers: () => handlers,
     clock: options.clock,
+    ...(options.wait === undefined ? {} : { wait: options.wait }),
   })
 }
