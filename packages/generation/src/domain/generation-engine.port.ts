@@ -66,7 +66,7 @@ export type HostedModel = {
   provider: string
   takes: readonly string[]
   makes: readonly string[]
-  takesTools: boolean
+  takesTools?: boolean
   form: ModelForm | null
 }
 
