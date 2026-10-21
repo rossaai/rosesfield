@@ -1,7 +1,11 @@
 import { findApp } from "@rosesfield/catalog"
-import { traitNames, traitPrompt } from "@rosesfield/catalog/characters"
+import {
+  anglePromptsOf,
+  traitNames,
+  traitPrompt,
+} from "@rosesfield/catalog/characters"
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
-import { appListing } from "@rosesfield/contract"
+import { appListing, run } from "@rosesfield/contract"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -20,14 +24,19 @@ import {
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { GatewaySettings } from "@/api/gateway-settings"
-import { runsQuery, settingsQuery } from "@/api/queries"
+import {
+  characterQuery,
+  runQuery,
+  runsQuery,
+  settingsQuery,
+} from "@/api/queries"
 import { formatNumber } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { aspectItems } from "@/screens/app/fields/output-fields"
 import { modelNameOf } from "@/screens/app/hosted/catalog-picker"
 import { fieldCaption } from "@/screens/app/hosted/hosted-fields"
 import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
-import { noSeeds } from "@/screens/app/use-app-screen"
+import { type AppSeeds, noSeeds } from "@/screens/app/use-app-screen"
 import { AppScreen } from "@/studio/characters/screen"
 import { flux, qwen, zImage } from "../image/image-screen"
 
@@ -90,8 +99,52 @@ const counted: CatalogModel = {
   ],
 }
 
+const anglesEdit: CatalogModel = {
+  id: "maker/turn-2",
+  kind: "hosted",
+  maker: "Maker",
+  name: "Turn 2",
+  nameKey: null,
+  task: "image-edit",
+  tags: [],
+  form: [
+    {
+      kind: "prompt",
+      name: "prompt",
+      path: "prompt",
+      required: true,
+      maxLength: null,
+      default: null,
+    },
+    {
+      kind: "media",
+      name: "input_images",
+      path: "input_images",
+      required: false,
+      media: "image",
+      min: 0,
+      max: 3,
+    },
+  ],
+}
+
+const characterId = "2d3e4f50-6172-4c8d-8e9f-1a2b3c4d5e6f"
+const photos = [
+  "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c01",
+  "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c02",
+]
+const anglesRunId = "5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d"
+
 const graphCredits = 4.5
 const fluxCredits = 12.37
+const viewCredits = 2.5
+
+function creditsOf(model: unknown): number {
+  if (model === flux.id) {
+    return fluxCredits
+  }
+  return model === anglesEdit.id ? viewCredits : graphCredits
+}
 
 type Call = { url: string; method: string; body: unknown }
 
@@ -120,7 +173,7 @@ function stubGateway(): void {
       const body = bodyOf(init)
       calls.push({ url, method: init?.method ?? "GET", body })
       if (url.endsWith(`/api/apps/${characters.id}/price`)) {
-        const credits = modelOf(body) === flux.id ? fluxCredits : graphCredits
+        const credits = creditsOf(modelOf(body))
         return Promise.resolve(
           new Response(
             JSON.stringify({ price: { source: "rates", credits } }),
@@ -133,15 +186,19 @@ function stubGateway(): void {
   )
 }
 
-function openCharacters(): void {
+function openCharacters(
+  seeds: AppSeeds = noSeeds,
+  prime: (client: QueryClient) => void = () => undefined
+): void {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, staleTime: Number.POSITIVE_INFINITY },
     },
   })
+  prime(client)
   client.setQueryData(settingsQuery.queryKey, settings)
   client.setQueryData(modelCatalogQuery(characters.id, keyState).queryKey, {
-    models: [zImage, qwen, flux, counted, editModel],
+    models: [zImage, qwen, flux, counted, editModel, anglesEdit],
     defaultModel: zImage.id,
     refusal: null,
   })
@@ -154,7 +211,7 @@ function openCharacters(): void {
       component: () => (
         <ToastProvider>
           <TooltipProvider>
-            <AppScreen app={characters} seeds={noSeeds} />
+            <AppScreen app={characters} seeds={seeds} />
           </TooltipProvider>
         </ToastProvider>
       ),
@@ -357,5 +414,67 @@ describe("the random button", () => {
         traitNames.some((trait) => trait === name)
       )
     ).toEqual([])
+  })
+})
+
+function openAngles(): void {
+  const shown = run.parse({
+    id: anglesRunId,
+    appId: characters.id,
+    status: "done",
+    inputs: {
+      mode: "angles",
+      model: anglesEdit.id,
+      character: [characterId],
+      angleSet: "turnaround",
+    },
+    count: 1,
+    aspectRatio: null,
+    seed: null,
+    outputs: photos.slice(0, 1),
+    progress: null,
+    engine: { adapter: "comfy-task", models: [], workflowHash: null },
+    cost: null,
+    origin: "live",
+    failure: null,
+    createdAt: "2026-10-17T10:00:00.000Z",
+    finishedAt: "2026-10-17T10:00:03.000Z",
+  })
+  openCharacters({ use: undefined, from: anglesRunId }, (client) => {
+    client.setQueryData(runQuery(anglesRunId).queryKey, { run: shown })
+    client.setQueryData(characterQuery(characterId).queryKey, {
+      character: {
+        id: characterId,
+        name: "Mara",
+        references: photos,
+        notes: "",
+        createdAt: "2026-10-17T09:00:00.000Z",
+      },
+    })
+  })
+}
+
+describe("the angles of Characters on a hosted image edit model", () => {
+  it("price the set at 4 times one view on Generate, and start one run per view, each with the character's photos", async () => {
+    openAngles()
+    const generate = await screen.findByRole("button", {
+      name: pricedName(viewCredits * 4),
+    })
+    expect(
+      screen.queryByRole("button", { name: pricedName(viewCredits) })
+    ).toBeNull()
+    fireEvent.click(generate)
+    await vi.waitFor(() => expect(startedBodies()).toHaveLength(4))
+    const bodies = startedBodies()
+    expect(bodies.map(promptOf)).toEqual(anglePromptsOf("turnaround"))
+    for (const body of bodies) {
+      expect(body).toEqual({
+        inputs: {
+          model: anglesEdit.id,
+          prompt: promptOf(body),
+          input_images: photos,
+        },
+      })
+    }
   })
 })
