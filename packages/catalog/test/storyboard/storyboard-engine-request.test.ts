@@ -13,6 +13,7 @@ import { textNodeOffset } from "#storyboard/comfy/keyframe-from-text"
 import { keyframeSizes } from "#storyboard/comfy/keyframe-sizes"
 import { keyframeBindingOf } from "#storyboard/comfy/storyboard-binding"
 import { keepSentence, qwenFiles } from "#storyboard/comfy/storyboard-nodes"
+import { keyframesOf } from "#storyboard/keyframe-facts"
 import { WorkflowInvalidError } from "#workflow-invalid.error"
 import {
   type ApiWorkflow,
@@ -294,6 +295,32 @@ describe("the engine request the Storyboard binding produces", () => {
       info: { id: uploadedId },
     })
     expect(savedKeyframes(workflow)).toEqual(["106", "206"])
+  })
+})
+
+describe("the keyframe facts beside the graph Storyboard sends", () => {
+  it("names the prompt each keyframe's graph reads, after the fixed sentence on an edit", async () => {
+    for (const extra of [{}, { reference: [anchorId] }]) {
+      const body = bodyOf(3, extra)
+      const { workflow } = await submit(body, 9)
+      const facts = keyframesOf({
+        appId: "storyboard",
+        inputs: startRunBodyFor(definition).parse(body).inputs,
+        count: 3,
+        seed: 9,
+        outputs: [],
+      })
+      const sent = savedKeyframes(workflow).map((decode) =>
+        promptOf(workflow, decode)
+      )
+      expect(sent).toEqual(
+        facts.map((one) =>
+          one.anchor.kind === "scene"
+            ? one.prompt
+            : `${keepSentence} ${one.prompt}`
+        )
+      )
+    }
   })
 })
 

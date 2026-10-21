@@ -1,4 +1,5 @@
 import { type CatalogModel, isHostedModelId } from "@rosesfield/catalog/comfy"
+import { type KeyframeFacts, keyframeOf } from "@rosesfield/catalog/storyboard"
 import type { Asset, Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
@@ -18,6 +19,7 @@ import { idsOf, runPrice, runSeconds } from "@/pieces/run/run-facts"
 import { inputRowsOf } from "@/pieces/run/run-inputs"
 import { modelInputName } from "@/screens/app/hosted/hosted-form"
 import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
+import { KeyframeAnchorDetail } from "@/studio/storyboard/keyframe-info"
 import {
   Detail,
   inputAssetIdsOf,
@@ -119,12 +121,14 @@ function CompareToggle({ compare }: { compare: ViewerCompare }): ReactNode {
 }
 
 function detailRowsOf(
-  run: Run
+  run: Run,
+  keyframe: KeyframeFacts | null
 ): Array<{ key: string; label: string; value: ReactNode }> {
   const app = findCatalogApp(run.appId)
   if (app === null) {
     return []
   }
+  const isCharacterAnchor = keyframe?.anchor.kind === "character"
   const shownElsewhere = new Set(
     app.inputs
       .filter(
@@ -132,22 +136,35 @@ function detailRowsOf(
           isAssetInput(input) ||
           input.type === "prompt" ||
           input.name === "mode" ||
-          input.name === "model"
+          input.name === "model" ||
+          (isCharacterAnchor && input.type === "character")
       )
       .map((input) => input.name)
   )
   return inputRowsOf(app, run).filter((row) => !shownElsewhere.has(row.key))
 }
 
+function keyframePromptOf(
+  run: Run,
+  keyframe: KeyframeFacts | null
+): string | null {
+  return keyframe === null || keyframe.prompt === ""
+    ? promptOf(run)
+    : keyframe.prompt
+}
+
 function MadeInfo({
   run,
+  assetId,
   compare,
 }: {
   run: Run
+  assetId: string
   compare: ViewerCompare
 }): ReactElement {
   const seconds = runSeconds(run)
   const model = modelAndModeOf(run)
+  const keyframe = keyframeOf(run, assetId)
   return (
     <>
       <PanelHead run={run} line={formatDate(run.createdAt)} />
@@ -158,11 +175,14 @@ function MadeInfo({
       ) : null}
       <CompareToggle compare={compare} />
       <RunSection inputIds={inputAssetIdsOf(run)}>
-        <PromptDetail prompt={promptOf(run)} />
+        <PromptDetail prompt={keyframePromptOf(run, keyframe)} />
+        {keyframe === null ? null : (
+          <KeyframeAnchorDetail keyframe={keyframe} />
+        )}
         {model === null ? null : (
           <Detail label={t("viewer.label.model")}>{model}</Detail>
         )}
-        {detailRowsOf(run).map((row) => (
+        {detailRowsOf(run, keyframe).map((row) => (
           <Detail key={row.key} label={row.label}>
             {row.value}
           </Detail>
@@ -230,7 +250,7 @@ export function ViewerDetails({
   return run === null ? (
     <UploadInfo asset={asset} measured={measured} />
   ) : (
-    <MadeInfo run={run} compare={compare} />
+    <MadeInfo run={run} assetId={asset.id} compare={compare} />
   )
 }
 

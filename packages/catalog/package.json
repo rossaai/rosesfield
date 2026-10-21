@@ -12,7 +12,8 @@
     "./comfy": "./src/comfy/index.ts",
     "./video": "./src/video/index.ts",
     "./effects": "./src/effects/index.ts",
-    "./lipsync": "./src/lipsync/index.ts"
+    "./lipsync": "./src/lipsync/index.ts",
+    "./storyboard": "./src/storyboard/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

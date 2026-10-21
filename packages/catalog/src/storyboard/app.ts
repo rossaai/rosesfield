@@ -1,6 +1,7 @@
 import { type AppInput, defineApp } from "#define-app"
 import { keyframeAspects } from "#storyboard/comfy/keyframe-sizes"
 import { storyboardBinding } from "#storyboard/comfy/storyboard-binding"
+import { storyboardAppId } from "#storyboard/keyframe-facts"
 import {
   countsFrom,
   lookMaxLength,
@@ -43,7 +44,7 @@ const sceneInputs: Input[] = sceneNumbers.map(
 )
 
 export const app: AppInput = defineApp({
-  id: "storyboard",
+  id: storyboardAppId,
   nameKey: "storyboard.name",
   category: "image",
   inputs: [
