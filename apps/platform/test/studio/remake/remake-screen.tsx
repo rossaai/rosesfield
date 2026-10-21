@@ -56,12 +56,19 @@ function answer(body: unknown, status: number): Promise<Response> {
   )
 }
 
+function hasStarted(): boolean {
+  return served.started !== null && startedRuns().length > 0
+}
+
 function respond(url: string, method: string): Promise<Response> {
   const path = new URL(url, "http://localhost").pathname
   if (method === "POST" && path === `/api/apps/${remake.id}/runs`) {
     return served.started === null
       ? new Promise(() => undefined)
       : answer({ run: served.started }, 202)
+  }
+  if (method === "GET" && path === "/api/runs" && hasStarted()) {
+    return answer({ runs: [served.started], next: null }, 200)
   }
   const runMatch = /^\/api\/runs\/([^/]+)$/.exec(path)
   const record =
