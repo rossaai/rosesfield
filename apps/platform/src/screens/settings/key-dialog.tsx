@@ -21,11 +21,11 @@ import { formatNumber } from "@/copy/format"
 import { t, tCount } from "@/copy/t"
 import type { CopyKey } from "@/copy.en"
 import { DialogOrSheet } from "@/pieces/responsive-layer"
-import { LegalLinks } from "@/screens/legal/legal-links"
 import {
   comfyBillingPage,
   comfyKeyPage,
 } from "@/screens/app/hosted/model-notice"
+import { LegalLinks } from "@/screens/legal/legal-links"
 import {
   type Account,
   accountQuery,
