@@ -54,7 +54,10 @@ export function shownTab(
   return chosen ?? (hasRuns === false ? "how" : "history")
 }
 
-export function useStageTab(app: AppListing): {
+export function useStageTab(
+  app: AppListing,
+  hasWork: boolean
+): {
   tab: StageTab
   hasRuns: boolean | null
   choose: (tab: StageTab) => void
@@ -71,20 +74,25 @@ export function useStageTab(app: AppListing): {
     }
     setSeen(count)
   }, [count, seen])
-  return { tab: shownTab(chosen, hasRuns), hasRuns, choose: setChosen }
+  return {
+    tab: shownTab(chosen, hasWork ? true : hasRuns),
+    hasRuns,
+    choose: setChosen,
+  }
 }
 
 type AppStageProps = {
   app: AppListing
   kind: StageKind
   children: ReactNode
+  hasWork?: boolean
   className?: string
   scrollRef?: (node: HTMLElement | null) => void
   scrollClassName?: string
 }
 
 export function AppStage(props: AppStageProps): ReactElement {
-  const stage = useStageTab(props.app)
+  const stage = useStageTab(props.app, props.hasWork ?? false)
   const view = useCanvasViewControl()
   return (
     <Canvas
