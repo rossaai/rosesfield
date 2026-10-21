@@ -16,6 +16,7 @@ import {
   characterId,
   characters,
   counted,
+  findColumnGenerate,
   graphCredits,
   modelOf,
   openCharacters,
@@ -200,9 +201,7 @@ describe("the angles of Characters on a hosted image edit model", () => {
   it("name the next step under the model when the picked model takes no photo, and start no run", async () => {
     openAngles({ model: counted })
     const note = await screen.findByText(tCatalog("video.well.none"))
-    const generate = await screen.findByRole("button", {
-      name: t("run.generate"),
-    })
+    const generate = await findColumnGenerate()
     fireEvent.click(generate)
     expect(screen.queryByText(t("field.choice.required"))).toBeNull()
     expect(note.isConnected).toBe(true)
@@ -217,9 +216,7 @@ describe("the angles of Characters on a hosted image edit model", () => {
 
   it("keep Generate waiting while the character's photos load, and start no run", async () => {
     openAngles({ isCharacterRead: false })
-    const generate = await screen.findByRole("button", {
-      name: t("run.generate"),
-    })
+    const generate = await findColumnGenerate()
     expect(generate.getAttribute("aria-busy")).toBe("true")
     fireEvent.click(generate)
     expect(startedBodies()).toEqual([])

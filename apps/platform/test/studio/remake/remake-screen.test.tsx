@@ -66,9 +66,10 @@ describe("Remake on arrival", () => {
         expect(isBefore(element, next)).toBe(true)
       }
     }
-    expect(
-      screen.getByRole("button", { name: t("run.generate") })
-    ).toBeDefined()
+    const generate = screen
+      .getAllByRole("button", { name: t("run.generate") })
+      .filter((button) => button.dataset.slot === "generate-button")
+    expect(generate).toHaveLength(1)
   })
 
   it("opens the Inputs sheet on a phone before any press", async () => {

@@ -254,6 +254,19 @@ export function openCharacters(
   return client
 }
 
+export async function findColumnGenerate(): Promise<HTMLElement> {
+  const buttons = await screen.findAllByRole("button", {
+    name: t("run.generate"),
+  })
+  const generate = buttons.find(
+    (button) => button.dataset.slot === "generate-button"
+  )
+  if (generate === undefined) {
+    throw new Error("The column shows no Generate button")
+  }
+  return generate
+}
+
 export function pricedName(credits: number): string {
   return t("run.generate.priced", { amount: formatNumber(credits) })
 }
