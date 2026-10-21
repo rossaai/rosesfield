@@ -2,6 +2,7 @@ import { findApp } from "@rosesfield/catalog"
 import { traitPrompt } from "@rosesfield/catalog/characters"
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { appListing } from "@rosesfield/contract"
+import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -112,11 +113,13 @@ export const anglesEdit: CatalogModel = {
   ],
 }
 
-export const characterId = "2d3e4f50-6172-4c8d-8e9f-1a2b3c4d5e6f"
+export const characterId = characterIdFormat.parse(
+  "2d3e4f50-6172-4c8d-8e9f-1a2b3c4d5e6f"
+)
 export const photos = [
   "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c01",
   "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c02",
-]
+].map((photo) => assetIdFormat.parse(photo))
 export const anglesRunId = "5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d"
 
 export const graphCredits = 4.5

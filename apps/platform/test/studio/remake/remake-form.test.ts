@@ -1,10 +1,12 @@
 import {
   type AppDefinition,
+  type Asset,
   appDefinition,
   appListing,
   run,
   startRunBodyFor,
 } from "@rosesfield/contract"
+import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
 import { QueryClient } from "@tanstack/react-query"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { assetQuery, characterQuery } from "@/api/queries"
@@ -23,8 +25,10 @@ import { app } from "../../../../../packages/catalog/src/remake/app"
 import { checkShots } from "../../../../../packages/catalog/src/remake/shot-plan"
 
 const megabyte = 1024 * 1024
-const editId = "0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d"
-const characterId = "2d3e4f50-6172-4c8d-8e9f-1a2b3c4d5e6f"
+const editId = assetIdFormat.parse("0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d")
+const characterId = characterIdFormat.parse(
+  "2d3e4f50-6172-4c8d-8e9f-1a2b3c4d5e6f"
+)
 
 const definition: AppDefinition = appDefinition.parse(app)
 const listing = appListing.parse(definition)
@@ -103,7 +107,7 @@ describe("the Remake form reads a reference's length as the run does", () => {
 })
 
 describe("Use in, then Remake", () => {
-  const video = {
+  const video: Asset = {
     id: editId,
     kind: "video",
     mime: "video/mp4",
@@ -123,7 +127,15 @@ describe("Use in, then Remake", () => {
     })
     client.setQueryData(assetQuery(editId).queryKey, { asset: video })
     client.setQueryData(characterQuery(characterId).queryKey, {
-      character: { id: characterId },
+      character: {
+        id: characterId,
+        name: "Mara",
+        references: [
+          assetIdFormat.parse("4f506172-8394-4a5b-8c6d-7e8f9a0b1c2d"),
+        ],
+        notes: "",
+        createdAt: "2026-10-21T09:00:00.000Z",
+      },
     })
     return client
   }
@@ -145,12 +157,9 @@ describe("Use in, then Remake", () => {
   it("puts a character in the Character well and a video in the Reference edit well", async () => {
     vi.stubGlobal("fetch", () => Promise.reject(new Error("offline")))
     const client = clientWithLibrary()
-    const withCharacter = await placeAll(
-      client,
-      listing,
-      defaultsOf(listing),
-      [characterId]
-    )
+    const withCharacter = await placeAll(client, listing, defaultsOf(listing), [
+      characterId,
+    ])
     expect(withCharacter.inputs).toMatchObject({ character: [characterId] })
     expect(withCharacter.inputs.reference).toEqual([])
     const withVideo = await placeAll(client, listing, defaultsOf(listing), [

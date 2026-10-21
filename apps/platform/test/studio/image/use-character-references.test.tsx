@@ -1,4 +1,5 @@
 import type { ModelField } from "@rosesfield/catalog/comfy"
+import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react"
 import { type ReactNode, useCallback, useState } from "react"
@@ -11,7 +12,9 @@ import { useReferenceTray } from "@/studio/image/use-reference-tray"
 
 type MediaField = Extract<ModelField, { kind: "media" }>
 
-const characterId = "5c6d7e8f-9a0b-4c1d-8e2f-3a4b5c6d7e01"
+const characterId = characterIdFormat.parse(
+  "5c6d7e8f-9a0b-4c1d-8e2f-3a4b5c6d7e01"
+)
 
 const imageId = "7e8f9a0b-1c2d-4e3f-8a4b-5c6d7e8f9a01"
 
@@ -21,7 +24,7 @@ const photos = [
   "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c03",
   "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c04",
   "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c05",
-]
+].map((photo) => assetIdFormat.parse(photo))
 
 function mediaField(name: string, max: number): MediaField {
   return {
@@ -141,9 +144,9 @@ describe("a character opened in Image", () => {
     })
     await tick()
     await tick()
-    expect(
-      requested.filter((url) => url.includes("/api/characters/"))
-    ).toEqual([])
+    expect(requested.filter((url) => url.includes("/api/characters/"))).toEqual(
+      []
+    )
     expect(result.current.inputs.images).toBeUndefined()
   })
 

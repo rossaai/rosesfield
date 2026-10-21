@@ -1,5 +1,7 @@
+import type { RunInputs } from "@rosesfield/contract"
 import { resolveBinding } from "@rosesfield/generation"
 import type { HostedModel } from "@rosesfield/generation/bindings"
+import { characterIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { app } from "#characters/app"
 import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
@@ -64,10 +66,7 @@ describe("the models of Characters", () => {
     if (characters === undefined) {
       throw new Error("The characters app did not parse")
     }
-    const graphs = modelsForApp(characters, []).map((one) => [
-      one.id,
-      one.task,
-    ])
+    const graphs = modelsForApp(characters, []).map((one) => [one.id, one.task])
     expect(graphs).toEqual([
       ["z-image-turbo", "text-to-image"],
       ["qwen-image-2512", "text-to-image"],
@@ -87,8 +86,10 @@ describe("the models of Characters", () => {
     if (characters === undefined) {
       throw new Error("The characters app did not parse")
     }
-    const character = ["5c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f"]
-    const modelsOf = (inputs: Record<string, string | string[]>): unknown =>
+    const character = [
+      characterIdFormat.parse("5c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f"),
+    ]
+    const modelsOf = (inputs: RunInputs): unknown =>
       resolveBinding(characters.engine, inputs).config.models
     expect(modelsOf({ mode: "angles", character })).toContain(
       "qwen-image-edit-2511-multiple-angles-lora.safetensors"

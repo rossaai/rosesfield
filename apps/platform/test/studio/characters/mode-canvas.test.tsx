@@ -6,6 +6,11 @@ import {
   type Run,
   run,
 } from "@rosesfield/contract"
+import {
+  type AssetId,
+  assetIdFormat,
+  characterIdFormat,
+} from "@rosesfield/kernel"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -29,24 +34,26 @@ import { ModeCanvas } from "@/studio/characters/mode-canvas"
 
 const characters = appListing.parse(findApp("characters"))
 
-const characterId = "2d3e4f50-6172-4c8d-8e9f-1a2b3c4d5e6f"
-const photo = "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c01"
+const characterId = characterIdFormat.parse(
+  "2d3e4f50-6172-4c8d-8e9f-1a2b3c4d5e6f"
+)
+const photo = assetIdFormat.parse("0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c01")
 const portraits = [
   "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c11",
   "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c12",
-]
+].map((id) => assetIdFormat.parse(id))
 const views = [
   "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c21",
   "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c22",
   "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c23",
   "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c24",
-]
+].map((id) => assetIdFormat.parse(id))
 
 type Call = { url: string; method: string; body: unknown }
 
 const calls: Call[] = []
 
-function characterWith(references: readonly string[]) {
+function characterWith(references: readonly AssetId[]) {
   return {
     id: characterId,
     name: "Mara",
@@ -63,8 +70,7 @@ function stubGateway(): void {
     (input: unknown, init?: { method?: string; body?: unknown }) => {
       const url = String(input)
       const method = init?.method ?? "GET"
-      const body =
-        typeof init?.body === "string" ? JSON.parse(init.body) : null
+      const body = typeof init?.body === "string" ? JSON.parse(init.body) : null
       calls.push({ url, method, body })
       const isUpdate =
         method === "PATCH" && url.endsWith(`/api/characters/${characterId}`)
@@ -108,7 +114,7 @@ function runOf(
 function openCanvas(
   mode: Mode,
   shown: Run | readonly Run[],
-  references: readonly string[] = [photo]
+  references: readonly AssetId[] = [photo]
 ): QueryClient {
   const client = new QueryClient({
     defaultOptions: {
@@ -235,9 +241,8 @@ describe("Add to character on a view", () => {
   })
 
   it("adds no view to a character that holds the most photos a character keeps", async () => {
-    const full = Array.from(
-      { length: characterPhotoLimit },
-      (_, index) => `0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c${31 + index}`
+    const full = Array.from({ length: characterPhotoLimit }, (_, index) =>
+      assetIdFormat.parse(`0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c${31 + index}`)
     )
     openCanvas("angles", viewsRun(), full)
     const buttons = await screen.findAllByRole("button", {
