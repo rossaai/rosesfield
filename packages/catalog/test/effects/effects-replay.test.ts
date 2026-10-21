@@ -71,9 +71,7 @@ describe("the effects engine request", () => {
     for (const id of ["410", "461", "464"]) {
       expect({ id, node: workflow[id] }).toEqual({ id, node: undefined })
     }
-    expect(workflow["620"]?.inputs.prompt).toBe(
-      endPrompt("pull-back-to-space")
-    )
+    expect(workflow["620"]?.inputs.prompt).toBe(endPrompt("pull-back-to-space"))
     expect(promptText(workflow, "364").trim()).toBe(
       `${recipe.prompt} a red scarf ${recipe.design.sound?.prompt}`
     )

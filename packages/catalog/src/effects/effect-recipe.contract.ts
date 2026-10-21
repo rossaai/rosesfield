@@ -123,7 +123,8 @@ export const effectRun = z
     path: ["balance", "after"],
   })
   .refine((run) => (run.verdict === "kept") === (run.failed.length === 0), {
-    message: "A kept run failed no criterion, and a refused run names the ones it failed",
+    message:
+      "A kept run failed no criterion, and a refused run names the ones it failed",
     path: ["failed"],
   })
 
