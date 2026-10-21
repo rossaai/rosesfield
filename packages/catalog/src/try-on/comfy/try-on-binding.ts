@@ -1,20 +1,18 @@
 import type { EngineBinding } from "@rosesfield/contract"
-import { selectBinding } from "@rosesfield/generation/bindings"
+import { taskBinding } from "@rosesfield/generation/bindings"
 import { tryOnPrompts } from "#try-on/comfy/try-on-prompts"
 import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 
-export const tryOnModels = [
-  "qwen-image-edit-2511",
-  "qwen-image-edit-2511-lightning",
-  "flux2-klein-4b",
-] as const
+export const tryOnModels = ["qwen-image-edit-2511"] as const
 
 export type TryOnModel = (typeof tryOnModels)[number]
 
+export const tryOnTask = "try-on"
+
+export const defaultTryOnModel: TryOnModel = "qwen-image-edit-2511"
+
 export const tryOnWorkflows: Readonly<Record<TryOnModel, string>> = {
   "qwen-image-edit-2511": "try-on-qwen-image-edit-2511",
-  "qwen-image-edit-2511-lightning": "try-on-qwen-image-edit-2511-lightning",
-  "flux2-klein-4b": "try-on-flux-2-klein-4b",
 }
 
 export const tryOnAspectRatios = [
@@ -42,12 +40,12 @@ const bindings: readonly WorkflowValueBinding[] = [
   { from: "seed", to: "seed" },
 ]
 
-export const tryOnEngine: EngineBinding = selectBinding({
+export const tryOnEngine: EngineBinding = taskBinding({
+  tasks: [tryOnTask],
   input: "model",
-  options: Object.fromEntries(
-    tryOnModels.map((model) => [
-      model,
-      workflowBinding({ workflow: tryOnWorkflows[model], bindings }),
-    ])
-  ),
+  default: defaultTryOnModel,
+  fallback: workflowBinding({
+    workflow: tryOnWorkflows[defaultTryOnModel],
+    bindings,
+  }),
 })
