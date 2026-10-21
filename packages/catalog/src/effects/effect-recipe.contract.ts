@@ -49,11 +49,22 @@ export const cutWindow = z
 
 const decibels = z.number().min(-70).max(0)
 
+export const maxFadeOut = 2
+
+export const soundHit = z.strictObject({
+  prompt: plainLine,
+  time: seconds,
+  seconds: z.number().min(0.5).max(5),
+  gainDb: z.number().int().min(-24).max(12),
+})
+
 export const soundBed = z
   .strictObject({
     prompt: plainLine,
     loudness: z.strictObject({ min: decibels, max: decibels }),
     truePeakMax: decibels,
+    fadeOut: z.number().min(0).max(maxFadeOut).multipleOf(0.1).default(0),
+    hit: soundHit.nullable().default(null),
   })
   .refine((sound) => sound.loudness.min <= sound.loudness.max, {
     message: "A loudness band opens below where it closes",

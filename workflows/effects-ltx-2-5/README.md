@@ -8,7 +8,7 @@ Scales and centre-crops your photo to the chosen shape and makes the effect's la
 | Run by | [`effects`](../../packages/catalog/src/effects/) |
 | Core model | LTX 2.5 22B distilled |
 | Image model | Qwen Image Edit 2511, for the last frame |
-| Custom node packs | two, for the sound only. [ComfyUI-WanVideoWrapper](https://github.com/kijai/ComfyUI-WanVideoWrapper) at commit `088128b224242e110d3906c6750e9a3a348a659b`, Apache-2.0, gives `NormalizeAudioLoudness`. [ComfyUI_AudioTools](https://github.com/lum3on/ComfyUI_AudioTools) at commit `c816d0a1629c05a0f463ddb77ea96ada69875d32`, MIT, gives `AudioAmplify`. Comfy Cloud lists both in its `object_info`. Every other node is a ComfyUI core node, and a silent look sends no pack node |
+| Custom node packs | two, for the sound only. [ComfyUI-WanVideoWrapper](https://github.com/kijai/ComfyUI-WanVideoWrapper) at commit `088128b224242e110d3906c6750e9a3a348a659b`, Apache-2.0, gives `NormalizeAudioLoudness`. [ComfyUI_AudioTools](https://github.com/lum3on/ComfyUI_AudioTools) at commit `c816d0a1629c05a0f463ddb77ea96ada69875d32`, MIT, gives `AudioAmplify` and `AudioFadeOut`. Comfy Cloud lists both in its `object_info`. Every other node is a ComfyUI core node, and a silent look sends no pack node |
 | Adapters | none. Comfy Cloud holds no LTX 2.5 adapter, so no recipe loads one |
 | GPU memory | Not measured. LTX's system requirements name at least 32 GB of VRAM for LTX 2.5, on [docs.ltx.io](https://docs.ltx.io/open-source-model/getting-started/system-requirements). The bf16 transformer file alone is 42.0 GB. |
 
@@ -29,8 +29,9 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 | `deliveryWidth` | 380 `ImageScale`, Delivery size | `width` | a value |
 | `deliveryHeight` | 380 `ImageScale`, Delivery size | `height` | a value |
 | `grainSeed` | 381 `ImageAddNoise`, Grain | `seed` | a value, the run's seed |
+| `hitSeed` | 635 `KSampler`, Hit | `seed` | a value, the run's seed, bound when the look has a hit |
 
-The recipe sets the rest: the prompt on node 501, the sound line on node 503, the length on nodes 356 and 366, the edit prompt on node 620, the mid frame's place on nodes 472 and 473, the strengths on nodes 460, 461, 463, 464, 472 and 473, and the grain's strength on node 381.
+The recipe sets the rest: the prompt on node 501, the sound line on node 503, the length on nodes 356 and 366, the edit prompt on node 620, the mid frame's place on nodes 472 and 473, the strengths on nodes 460, 461, 463, 464, 472 and 473, the grain's strength on node 381, and the hit's prompt, length, gain and time on nodes 632, 634, 637 and 638.
 
 ## Outputs
 
@@ -53,6 +54,10 @@ Rosesfield ships no weights. Each file goes into the model folder its row names.
 | `qwen_image_edit_2511_bf16.safetensors` | Qwen Image Edit 2511, bf16, for the last frame | [Apache-2.0](https://huggingface.co/Qwen/Qwen-Image-Edit-2511) | `models/diffusion_models` | [Hugging Face](https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_bf16.safetensors) |
 | `qwen_2.5_vl_7b_fp8_scaled.safetensors` | Qwen2.5-VL 7B text encoder, fp8 | [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct) | `models/text_encoders` | [Hugging Face](https://huggingface.co/Comfy-Org/HunyuanVideo_1.5_repackaged/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors) |
 | `qwen_image_vae.safetensors` | Qwen Image VAE | [Apache-2.0](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI) | `models/vae` | [Hugging Face](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors) |
+| `stable_audio_3_medium.safetensors` | Stable Audio 3 Medium, by Stability AI, for the hit | [Stability AI Community License](https://stability.ai/community-license-agreement) | `models/checkpoints` | [Hugging Face](https://huggingface.co/Comfy-Org/stable-audio-3/resolve/main/checkpoints/stable_audio_3_medium.safetensors) |
+| `t5gemma_b_b_ul2.safetensors` | T5Gemma text encoder of Stable Audio 3 | [Stability AI Community License](https://stability.ai/community-license-agreement) | `models/text_encoders` | [Hugging Face](https://huggingface.co/Comfy-Org/stable-audio-3/resolve/main/text_encoders/t5gemma_b_b_ul2.safetensors) |
+
+Only a look with a hit loads the two Stable Audio 3 files. The Community License grants use below 1,000,000 USD of annual revenue.
 
 Lightricks' LTX 2.5 files are gated on Hugging Face, so their SHA256 digests are not in the UI file. Accept the LTX 2.5 licence on Hugging Face before you download them.
 
@@ -85,8 +90,9 @@ A recipe can also hold one mid frame: a frame inside the clip, made by the image
 4. It makes a matte of the subject with the core BiRefNet nodes `LoadBackgroundRemovalModel` and `RemoveBackground`, nodes 410 to 412, when the recipe holds the subject.
 5. It renders the shot in two stages. A mid frame is an `LTXVAddGuide` guide at its frame, nodes 472 and 473, read from the edited frame resized and preprocessed as frame 0 is, nodes 470 and 471. The last frame is an `LTXVAddGuide` guide at the last frame, nodes 460 and 463, chained after the mid-frame guides. The photo is a second guide at the last frame with the subject matte as its `attention_mask`, nodes 461 and 464, so the subject holds while the scene changes. `LTXVCropGuides` removes the guide frames after each stage, nodes 462 and 465.
 6. It decodes the sound with node 358 when the recipe has a sound bed. Node 359 sets its integrated loudness to the middle of the look's band. Nodes 360 and 361 then raise it by the ceiling's distance from 0 dBFS, where `AudioAmplify` clips every sample to full scale, and lower it back, so no sample passes the ceiling, 1 dB under the look's true peak, and quieter samples keep their level. `AudioNormalize` was not used: it moves the sample peak to its target in both directions, so it would undo the loudness of node 359. The ceiling acts only on a sound whose peaks sit higher above its loudness than the band leaves room for. A silent look removes nodes 358 to 361.
-7. It scales the frames to the pixel area of the chosen resolution in the chosen shape, centre-cropped, node 380, such as 1280 by 720 at 16:9 and 832 by 1110 at 3:4 for 720p.
-8. It adds faint noise to every frame with the core `ImageAddNoise`, node 381, seeded from the run's seed, at the grain of the recipe's encode. Then it saves H.264 in MP4 at 24 frames a second, nodes 370 and 75.
+7. It adds the look's hit to the sound, nodes 630 to 640, when the look has one, before node 359 sets the loudness, per §The hit and the fade. It ends the sound in a fade to silence, node 362, when the look has one.
+8. It scales the frames to the pixel area of the chosen resolution in the chosen shape, centre-cropped, node 380, such as 1280 by 720 at 16:9 and 832 by 1110 at 3:4 for 720p.
+9. It adds faint noise to every frame with the core `ImageAddNoise`, node 381, seeded from the run's seed, at the grain of the recipe's encode. Then it saves H.264 in MP4 at 24 frames a second, nodes 370 and 75.
 
 ## How a recipe changes this file
 
@@ -102,8 +108,23 @@ The catalog's [`effect-graph.ts`](../../packages/catalog/src/effects/comfy/effec
 - An effect with no end frame, no mid frame and no hold removes the crop nodes 462 and 465.
 - A sounding effect writes the middle of its loudness band on node 359, and its peak ceiling, `truePeakMax` minus 1 dB, as the gain of nodes 360 and 361.
 - A silent effect removes the audio decode and the loudness nodes, 358 to 361.
+- An effect with no hit removes the hit nodes 630 to 640, and node 359 reads node 358.
+- An effect with a fade adds node 362, `AudioFadeOut`, after node 361, and node 370 reads it.
 - It writes the grain of the recipe's encode as the strength of node 381. The grain is 0 to 0.02 and 0.004 when the recipe names none. `ImageAddNoise` returns `clip(image + strength * randn, 0, 1)` with a separate draw for every pixel of every frame, read in `comfy_extras/nodes_images.py` of ComfyUI v0.41.0. At 0.004 the noise is about one level on the 8-bit scale, which a lit frame does not show. On a black frame, the clip keeps only the positive half, so the mean rises by `strength * 255 / sqrt(2 * pi)`, about 0.4 levels, far under the black floor of 17.5. The grain exists so a clip that ends on black does not repeat one frame: without it, the frames after the clip reaches pure black are byte-identical, and a reference's black tail carries faint noise. The node's schema steps its strength by 0.01 in the canvas, and the catalog sets the exact value in the API graph.
 - A recipe with an adapter adds node 420, a `LoraLoaderModelOnly` between the model and both guiders. No recipe has one.
+
+## The hit and the fade
+
+A look's sound bed can hold one hit: one designed sound, such as a heavy boom, at a set time. LTX 2.5 makes the sound of the whole clip from one prompt, and it does not place a single sound at an exact moment. So a separate model makes the hit, and the graph places it.
+
+- Stable Audio 3 Medium makes the hit from its own prompt, nodes 630 to 636, at the length the look sets, 0.5 to 5 seconds. The sampler keeps the values of `workflows/audio-sound-stable-audio-3`: 8 steps, CFG 1, `lcm`, `simple`, and its seed is the run's seed.
+- Node 637, `AudioAdjustVolume`, sets the hit's gain, a whole number of dB from -24 to 12.
+- Node 638, `EmptyAudio`, is silence as long as the hit's time. Node 639, `AudioConcat`, puts the hit after it, so the hit starts at its time.
+- Node 640, `AudioMerge`, adds the placed hit to the LTX sound. Node 359 then reads node 640, so the loudness and the peak ceiling act on the mix.
+
+A look's sound bed can also end in a fade to silence, 0 to 2 seconds in steps of 0.1. Node 362, `AudioFadeOut` from ComfyUI_AudioTools, fades the last seconds of the sound after the peak ceiling, so the clip is silent by its last frame. A fade of 0 adds no node.
+
+Push into eye uses both: a drone that builds, one hit at 6.3 s with 4 dB of gain as the black pupil fills the frame, and a fade of 0.4 s.
 
 The UI file holds a muted `MaskPreview` on the matte and a muted `PreviewImage` on the end frame, so you can turn them on.
 
@@ -123,4 +144,4 @@ Written for Rosesfield from ComfyUI core nodes and the two sound packs. Its two-
 
 ## Checked
 
-Every node class this file holds comes from ComfyUI's `nodes` or `comfy_extras` modules, except the three sound nodes 359 to 361, whose inputs were read from both packs' source at the pinned commits and from Comfy Cloud's `object_info`. The LTX 2.5 and BiRefNet nodes and files were listed by Comfy Cloud's `object_info` and model folders on 2026-10-19, and the Qwen Image Edit 2511 nodes and files are the ones the workflow `headshots-qwen-image-edit-2511` runs. The grain node 381, `ImageAddNoise`, was read from `comfy_extras/nodes_images.py` of ComfyUI v0.41.0, not from Comfy Cloud's `object_info`. Node 75 sets no constant-quality value of its own, so the file is the core `SaveVideo` node's H.264 encode. The runs from the Effects screen are the proof that it runs, and the effects lab records them. Some runs start black: their first 57 frames, or every frame, decode to black. The lab's runs with the first-stage lock at 0.7 cleared the cases it measured, and one run of `workflows/video-ltx-2-5-start-frame` with the same lock still started black, so the cause is not settled.
+Every node class this file holds comes from ComfyUI's `nodes` or `comfy_extras` modules, except the sound nodes 359 to 361, whose inputs were read from both packs' source at the pinned commits and from Comfy Cloud's `object_info`, and the fade node 362, `AudioFadeOut`, which ran on Comfy Cloud in the Push into eye runs. The hit's audio nodes 637 to 640 were read from `comfy_extras/nodes_audio.py` of ComfyUI v0.41.0, and its Stable Audio 3 nodes are the ones `workflows/audio-sound-stable-audio-3` runs. The LTX 2.5 and BiRefNet nodes and files were listed by Comfy Cloud's `object_info` and model folders on 2026-10-19, and the Qwen Image Edit 2511 nodes and files are the ones the workflow `headshots-qwen-image-edit-2511` runs. The grain node 381, `ImageAddNoise`, was read from `comfy_extras/nodes_images.py` of ComfyUI v0.41.0, not from Comfy Cloud's `object_info`. Node 75 sets no constant-quality value of its own, so the file is the core `SaveVideo` node's H.264 encode. The runs from the Effects screen are the proof that it runs, and the effects lab records them. Some runs start black: their first 57 frames, or every frame, decode to black. The lab's runs with the first-stage lock at 0.7 cleared the cases it measured, and one run of `workflows/video-ltx-2-5-start-frame` with the same lock still started black, so the cause is not settled.

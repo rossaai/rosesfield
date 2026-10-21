@@ -8,8 +8,10 @@ import {
   editFrameNodes,
   effectGraph,
   endFrameNodes,
+  fadeOutNode,
   fittedPhotoNode,
   grainNode,
+  hitNodes,
   imageEditNodes,
   loudnessNode,
   matteNodes,
@@ -108,7 +110,7 @@ describe("the effect recipes", () => {
         guides: [],
       })
       const foreign = Object.keys(workflow).filter(
-        (id) => !fileIds.includes(id)
+        (id) => !fileIds.includes(id) && id !== fadeOutNode
       )
       expect({ path, foreign }).toEqual({ path, foreign: [] })
     }
@@ -272,7 +274,10 @@ describe("the effect recipes", () => {
         chain: {
           [loudnessNode]: {
             class_type: "NormalizeAudioLoudness",
-            inputs: { audio: [soundNode, 0], lufs: target },
+            inputs: {
+              audio: [sound?.hit ? hitNodes.merged : soundNode, 0],
+              lufs: target,
+            },
           },
           [ceilingNodes[0] ?? ""]: {
             class_type: "AudioAmplify",
@@ -282,7 +287,14 @@ describe("the effect recipes", () => {
             class_type: "AudioAmplify",
             inputs: { audio: [ceilingNodes[0], 0], gain_db: ceiling },
           },
-          "370": { inputs: { audio: [ceilingNodes[1], 0] } },
+          "370": {
+            inputs: {
+              audio: [
+                (sound?.fadeOut ?? 0) > 0 ? fadeOutNode : ceilingNodes[1],
+                0,
+              ],
+            },
+          },
         },
       })
       expect(target).toBeGreaterThanOrEqual(sound?.loudness.min ?? 0)

@@ -2,19 +2,28 @@ import type { EngineBinding } from "@rosesfield/contract"
 import { selectAdapter } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import { effectBinding, effectsBinding } from "#effects/comfy/effects-binding"
-import { resolutionValues } from "#effects/effect-recipe.contract"
+import {
+  type EffectRecipe,
+  resolutionValues,
+} from "#effects/effect-recipe.contract"
 import { effectRecipes } from "#effects/effect-recipes"
 import { findWorkflow } from "#list-workflows"
 import uiFile from "../../../../workflows/effects-ltx-2-5/effects-ltx-2-5.json"
 import { workflowOf } from "./effects-replay"
 
 const coreNodeClasses: readonly string[] = [
+  "AudioAdjustVolume",
+  "AudioConcat",
+  "AudioMerge",
   "CFGNorm",
   "CLIPLoader",
   "CLIPTextEncode",
+  "CheckpointLoaderSimple",
   "CreateVideo",
+  "EmptyAudio",
   "EmptyImage",
   "EmptyLTXVLatentVideo",
+  "EmptyLatentAudio",
   "EmptySD3LatentImage",
   "FluxKontextImageScale",
   "FluxKontextMultiReferenceLatentMethod",
@@ -54,6 +63,7 @@ const coreNodeClasses: readonly string[] = [
   "TextEncodeQwenImageEditPlus",
   "UNETLoader",
   "VAEDecode",
+  "VAEDecodeAudio",
   "VAEDecodeTiled",
   "VAELoader",
 ]
@@ -61,11 +71,23 @@ const coreNodeClasses: readonly string[] = [
 const loudnessPacks: Readonly<Record<string, string>> = {
   NormalizeAudioLoudness: "comfyui-wanvideowrapper",
   AudioAmplify: "comfyui_audiotools",
+  AudioFadeOut: "comfyui_audiotools",
 }
 
 const packCommits: Readonly<Record<string, string>> = {
   NormalizeAudioLoudness: "088128b224242e110d3906c6750e9a3a348a659b",
   AudioAmplify: "c816d0a1629c05a0f463ddb77ea96ada69875d32",
+  AudioFadeOut: "c816d0a1629c05a0f463ddb77ea96ada69875d32",
+}
+
+function packNodesOf(recipe: EffectRecipe): string[] {
+  const sound = recipe.design.sound
+  if (sound === null) {
+    return []
+  }
+  return sound.fadeOut > 0
+    ? ["359", "360", "361", "362"]
+    : ["359", "360", "361"]
 }
 
 const editorNotes: readonly string[] = ["MarkdownNote", "Note"]
@@ -165,7 +187,7 @@ describe("Effects holds only ComfyUI core nodes, and the pinned loudness nodes o
       const [path, graph] = leavesOf(effectsBinding([recipe]))[0] ?? []
       expect({ path, pack: graph ? packNodes(graph) : null }).toEqual({
         path,
-        pack: recipe.design.sound === null ? [] : ["359", "360", "361"],
+        pack: packNodesOf(recipe),
       })
     }
     for (const node of uiNodes(uiFile)) {

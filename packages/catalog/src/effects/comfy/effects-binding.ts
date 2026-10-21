@@ -4,6 +4,7 @@ import {
   effectGraph,
   effectsWorkflow,
   hasEditPass,
+  hasHit,
 } from "#effects/comfy/effect-graph"
 import { deliveryFrames, ltxFrames, sizeMap } from "#effects/comfy/frame-sizes"
 import {
@@ -41,6 +42,7 @@ function runBindings(
     ...(hasEditPass(recipe)
       ? [{ from: "seed", to: "endFrameSeed" } as const]
       : []),
+    ...(hasHit(recipe) ? [{ from: "seed", to: "hitSeed" } as const] : []),
   ]
 }
 

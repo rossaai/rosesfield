@@ -13,7 +13,9 @@
     "birefnet.safetensors",
     "qwen_image_edit_2511_bf16.safetensors",
     "qwen_2.5_vl_7b_fp8_scaled.safetensors",
-    "qwen_image_vae.safetensors"
+    "qwen_image_vae.safetensors",
+    "stable_audio_3_medium.safetensors",
+    "t5gemma_b_b_ul2.safetensors"
   ],
   "requiresCustomNodes": ["comfyui-wanvideowrapper", "comfyui_audiotools"],
   "inputBindings": {
@@ -69,6 +71,11 @@
     },
     "grainSeed": {
       "nodeId": "381",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "hitSeed": {
+      "nodeId": "635",
       "inputName": "seed",
       "type": "scalar"
     }

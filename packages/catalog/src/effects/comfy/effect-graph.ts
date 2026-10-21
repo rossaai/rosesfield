@@ -51,6 +51,22 @@ export const loudnessNode = "359"
 
 export const ceilingNodes: readonly string[] = ["360", "361"]
 
+export const fadeOutNode = "362"
+
+export const hitNodes = {
+  model: "630",
+  encoder: "631",
+  prompt: "632",
+  negative: "633",
+  length: "634",
+  sampler: "635",
+  decode: "636",
+  gain: "637",
+  lead: "638",
+  placed: "639",
+  merged: "640",
+} as const
+
 export const peakMargin = 1
 
 const maxCeilingGain = 24
@@ -246,6 +262,33 @@ function setSound(graph: Graph, recipe: EffectRecipe): void {
     (sound.loudness.min + sound.loudness.max) / 2
   nodeOf(graph, up ?? "").inputs.gain_db = -ceiling
   nodeOf(graph, down ?? "").inputs.gain_db = ceiling
+  if (sound.fadeOut > 0) {
+    graph[fadeOutNode] = {
+      class_type: "AudioFadeOut",
+      inputs: { audio: [down ?? "", 0], duration_seconds: sound.fadeOut },
+    }
+    nodeOf(graph, "370").inputs.audio = [fadeOutNode, 0]
+  }
+}
+
+export function hasHit(recipe: EffectRecipe): boolean {
+  return (recipe.design.sound?.hit ?? null) !== null
+}
+
+function setHit(graph: Graph, recipe: EffectRecipe): void {
+  const sound = recipe.design.sound
+  const hit = sound?.hit ?? null
+  if (hit === null) {
+    remove(graph, Object.values(hitNodes))
+    if (sound !== null) {
+      nodeOf(graph, loudnessNode).inputs.audio = [soundNode, 0]
+    }
+    return
+  }
+  nodeOf(graph, hitNodes.prompt).inputs.text = hit.prompt
+  nodeOf(graph, hitNodes.length).inputs.seconds = hit.seconds
+  nodeOf(graph, hitNodes.gain).inputs.volume = hit.gainDb
+  nodeOf(graph, hitNodes.lead).inputs.duration = hit.time
 }
 
 function setGrain(graph: Graph, recipe: EffectRecipe): void {
@@ -274,6 +317,7 @@ export function effectGraph(
     passThrough(graph, "465")
   }
   setSound(graph, recipe)
+  setHit(graph, recipe)
   setGrain(graph, recipe)
   return graph
 }

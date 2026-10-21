@@ -11,12 +11,19 @@
       "maxLuma": 17.5
     },
     "sound": {
-      "prompt": "From the very first frame, a deep cinematic drone with a low tone, soft whooshes of air as the camera dives closer and closer, rising in power, and one heavy impact hit at the moment the black pupil fills the frame.",
+      "prompt": "From the very first frame, a deep cinematic drone with a low tone, and soft whooshes of air as the camera dives closer and closer.",
       "loudness": {
         "min": -28.5,
         "max": -19
       },
-      "truePeakMax": -3
+      "truePeakMax": -3,
+      "fadeOut": 0.4,
+      "hit": {
+        "prompt": "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice.",
+        "time": 6.3,
+        "seconds": 2,
+        "gainDb": 4
+      }
     },
     "encode": {
       "container": "mp4",
@@ -24,7 +31,7 @@
       "bitDepth": 8
     }
   },
-  "prompt": "One unbroken shot that moves from the first frame to the last, with no pause. From the first frame the camera pushes straight in toward one of the person's eyes, and it never slows down. The person's face, skin and calm expression stay exactly as in the photo, like a real photograph. As the camera nears, the iris turns a natural amber like a real human eye. The eye fills the frame, then the real iris with its natural fibres, then the small black pupil. In the last second the black pupil grows outward until it swallows the whole frame, while the camera keeps moving in.",
+  "prompt": "One unbroken shot that moves from the first frame to the last, with no pause. From the first frame the camera pushes straight in toward one of the person's eyes, and it never slows down. The person's face, skin and calm expression stay exactly as in the photo, like a real photograph, and each eyelash is a fine single hair. As the camera nears, the iris turns a warm copper orange like a real human amber eye, with one tiny round catchlight and no window reflection. By the fifth second the real iris fills the whole frame, with its natural fibres and crypts, then the black pupil in its centre grows larger and larger with a sharp edge. In the last second the black pupil swallows the whole frame, while the camera keeps moving in. The image stays sharp and in focus to the very end.",
   "photoFrame": "first",
   "endFrame": {
     "source": "dark",
@@ -33,8 +40,8 @@
   },
   "midFrame": {
     "source": "edit",
-    "prompt": "Change the photo into a real macro photograph of the iris of one of the person's eyes, taken with a macro lens, so close that the iris fills the whole frame from edge to edge and no eyelid, eyelash or skin shows. The iris is a natural amber like a real human eye, with real photographic texture, natural irregular fibres and crypts, and one small soft reflection of light. No glow, no outlines, no drawn lines. The pupil in the centre is small, round and pure black.",
-    "time": 5.5,
+    "prompt": "Change the photo into a real macro photograph of the iris of one of the person's eyes, taken with a macro lens, so close that the iris fills the whole frame from edge to edge and no eyelid, eyelash or skin shows. The iris is a warm copper orange like a real human amber eye, with real photographic texture: fine natural fibres in irregular bundles, small dark crypts between them, a soft collarette ring around the pupil, and one tiny round catchlight. No glow, no outlines, no drawn lines, no veins. The pupil in the centre is small, round and pure black. The whole image is sharp and in focus.",
+    "time": 5.4,
     "strength": 0.3
   },
   "hold": null,
