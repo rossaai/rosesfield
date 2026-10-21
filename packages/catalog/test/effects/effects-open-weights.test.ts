@@ -1,6 +1,7 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectAdapter } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
+import { brightenNode, buildNodes, hitSlots } from "#effects/comfy/effect-sound"
 import { effectBinding, effectsBinding } from "#effects/comfy/effects-binding"
 import {
   type EffectRecipe,
@@ -72,12 +73,16 @@ const loudnessPacks: Readonly<Record<string, string>> = {
   NormalizeAudioLoudness: "comfyui-wanvideowrapper",
   AudioAmplify: "comfyui_audiotools",
   AudioFadeOut: "comfyui_audiotools",
+  AudioFadeIn: "comfyui_audiotools",
+  AudioParametricEQ: "comfyui_audiotools",
 }
 
 const packCommits: Readonly<Record<string, string>> = {
   NormalizeAudioLoudness: "088128b224242e110d3906c6750e9a3a348a659b",
   AudioAmplify: "c816d0a1629c05a0f463ddb77ea96ada69875d32",
   AudioFadeOut: "c816d0a1629c05a0f463ddb77ea96ada69875d32",
+  AudioFadeIn: "c816d0a1629c05a0f463ddb77ea96ada69875d32",
+  AudioParametricEQ: "c816d0a1629c05a0f463ddb77ea96ada69875d32",
 }
 
 function packNodesOf(recipe: EffectRecipe): string[] {
@@ -85,9 +90,15 @@ function packNodesOf(recipe: EffectRecipe): string[] {
   if (sound === null) {
     return []
   }
-  return sound.fadeOut > 0
-    ? ["359", "360", "361", "362"]
-    : ["359", "360", "361"]
+  return [
+    "359",
+    "360",
+    "361",
+    ...(sound.fadeOut > 0 ? ["362"] : []),
+    ...(sound.build === null ? [] : [buildNodes.rise]),
+    ...(sound.brighten === null ? [] : [brightenNode]),
+    ...hitSlots.slice(0, sound.hits.length).map((slot) => slot.tail),
+  ].sort()
 }
 
 const editorNotes: readonly string[] = ["MarkdownNote", "Note"]

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { hitSlots } from "#effects/comfy/effect-sound"
 import {
   deliveryFrames,
   effectRatios,
@@ -83,7 +84,7 @@ function expectedModels(recipe: EffectRecipe): string[] {
         ? imageEditModels
         : []),
       ...(recipe.hold === null ? [] : ["birefnet.safetensors"]),
-      ...((recipe.design.sound?.hit ?? null) === null ? [] : hitModels),
+      ...((recipe.design.sound?.hits ?? []).length === 0 ? [] : hitModels),
     ].sort(),
   ]
 }
@@ -98,7 +99,11 @@ describe("every effects engine request against the recorded v2 routes", () => {
 
   it("covers each of the nine effects at each resolution", () => {
     expect(all.map((one) => `${one.recipe.effect} ${one.resolution}`)).toEqual(
-      effects.flatMap((effect) => [`${effect} 480p`, `${effect} 720p`])
+      effects.flatMap((effect) => [
+        `${effect} 480p`,
+        `${effect} 720p`,
+        `${effect} 1080p`,
+      ])
     )
   })
 
@@ -169,13 +174,15 @@ describe("every effects engine request against the recorded v2 routes", () => {
       recipe.design.sound !== null
     )
     expect(workflow["420"]).toBeUndefined()
-    if ((recipe.design.sound?.hit ?? null) === null) {
-      expect(workflow["635"]).toBeUndefined()
-    } else {
-      expect(workflow).toMatchObject({
-        "635": { class_type: "KSampler", inputs: { seed: 42 } },
-        "359": { inputs: { audio: ["640", 0] } },
-      })
+    const hits = recipe.design.sound?.hits ?? []
+    for (const [index, slot] of hitSlots.entries()) {
+      expect(workflow[slot.sampler]?.inputs.seed).toBe(
+        index < hits.length ? 42 : undefined
+      )
+    }
+    const lastHit = hitSlots[hits.length - 1]
+    if (lastHit !== undefined) {
+      expect(workflow["359"]?.inputs.audio).toEqual([lastHit.merged, 0])
     }
     const end = recipe.endFrame
     const opening = recipe.photoFrame === "first" ? ["606", 0] : ["627", 0]

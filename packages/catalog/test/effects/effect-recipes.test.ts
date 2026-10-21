@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { EffectRecipe } from "#effects/effect-recipe.contract"
+import { type EffectRecipe, maxHits } from "#effects/effect-recipe.contract"
 import {
   effectRecipes,
   effectRuns,
@@ -178,14 +178,13 @@ describe("the effect recipes kept as data", () => {
     expect(eye.design.sound?.prompt).toMatch(/^From the very first frame/)
     expect(eye.design.sound?.prompt).not.toMatch(/impact|hit/)
     expect(eye.design.sound?.fadeOut).toBe(0.4)
-    expect(eye.design.sound?.hit).toMatchObject({
-      time: 6.3,
-      seconds: 2,
-      gainDb: 4,
-    })
-    expect(eye.design.sound?.hit?.prompt).toMatch(
-      /^One single heavy cinematic impact hit/
-    )
+    const hits = eye.design.sound?.hits ?? []
+    expect(hits.length).toBeGreaterThan(0)
+    expect(hits.length).toBeLessThanOrEqual(maxHits)
+    for (const hit of hits) {
+      expect(hit.time).toBeLessThan(eye.seconds)
+      expect(hit.prompt).toMatch(/no music, no voice\.$/i)
+    }
     expect(
       eye.endFrame.source === "dark" ? eye.endFrame.luma : 255
     ).toBeLessThan(eye.design.lastFrame.maxLuma ?? 0)

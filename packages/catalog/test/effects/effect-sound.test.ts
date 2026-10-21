@@ -1,151 +1,308 @@
 import { describe, expect, it } from "vitest"
+import { effectGraph } from "#effects/comfy/effect-graph"
 import {
+  brightenNode,
+  buildNodes,
   ceilingNodes,
-  effectGraph,
   fadeOutNode,
-  hitNodes,
+  hitShared,
+  hitSlots,
+  hitTailSeconds,
   loudnessNode,
+  peakMargin,
   soundNode,
-} from "#effects/comfy/effect-graph"
+} from "#effects/comfy/effect-sound"
 import { effectBinding } from "#effects/comfy/effects-binding"
-import { readRecipes, recipeOf } from "#effects/effect-recipes"
+import type { EffectRecipe, SoundBed } from "#effects/effect-recipe.contract"
+import { effectRecipes, readRecipes, recipeOf } from "#effects/effect-recipes"
 import { brokenLinks, fileGraph, workflowOf } from "./effects-replay"
 import { keptRun } from "./passed-recipe"
 
 const ledger = [keptRun("many-copies")]
 
-describe("the sound of an effect ends in its fade and carries its hit", () => {
+const opening = {
+  prompt: "Soft airy wind that swells. No music, no voice.",
+  time: 0,
+  seconds: 3,
+  gainDb: -6,
+}
+
+const boom = {
+  prompt: "A deep heavy boom. No music, no voice.",
+  time: 2.5,
+  seconds: 2,
+  gainDb: 3,
+}
+
+function soundOf(recipe: EffectRecipe): SoundBed {
+  const sound = recipe.design.sound
+  if (sound === null) {
+    throw new Error(`${recipe.effect} has a sound bed`)
+  }
+  return sound
+}
+
+function eyeWith(change: Partial<SoundBed>): EffectRecipe {
+  const eye = recipeOf("push-into-eye")
+  return {
+    ...eye,
+    design: { ...eye.design, sound: { ...soundOf(eye), ...change } },
+  }
+}
+
+function slotIds(slots: typeof hitSlots): string[] {
+  return slots.flatMap((slot) => Object.values(slot))
+}
+
+function mixedSound(recipe: EffectRecipe): string {
+  const sound = recipe.design.sound
+  const last = hitSlots[(sound?.hits.length ?? 0) - 1]
+  if (last !== undefined) {
+    return last.merged
+  }
+  if (sound?.brighten) {
+    return brightenNode
+  }
+  return sound?.build ? buildNodes.sum : soundNode
+}
+
+describe("the sound of an effect ends in its fade and carries its hits", () => {
   it("ends the sound of a look with a fade in node 362, after the peak ceiling, and sends no fade node for a look without one", () => {
-    const eye = recipeOf("push-into-eye")
-    const sound = eye.design.sound
-    if (sound === null) {
-      throw new Error("Push into eye has a sound bed")
-    }
-    const faded = workflowOf(effectGraph(fileGraph(), eye))
+    const sound = soundOf(recipeOf("push-into-eye"))
+    expect(sound.fadeOut).toBeGreaterThan(0)
+    const faded = workflowOf(effectGraph(fileGraph(), eyeWith({})))
     expect(faded[fadeOutNode]).toEqual({
       class_type: "AudioFadeOut",
-      inputs: { audio: [ceilingNodes[1], 0], duration_seconds: 0.4 },
+      inputs: {
+        audio: [ceilingNodes[1], 0],
+        duration_seconds: sound.fadeOut,
+      },
     })
     expect(faded["370"]?.inputs.audio).toEqual([fadeOutNode, 0])
     expect(brokenLinks(faded)).toEqual([])
     const unfaded = workflowOf(
-      effectGraph(fileGraph(), {
-        ...eye,
-        design: { ...eye.design, sound: { ...sound, fadeOut: 0 } },
-      })
+      effectGraph(fileGraph(), eyeWith({ fadeOut: 0 }))
     )
     expect(unfaded[fadeOutNode]).toBeUndefined()
     expect(unfaded["370"]?.inputs.audio).toEqual([ceilingNodes[1], 0])
   })
 
-  it("adds a look's hit to its sound at the hit's time and gain, before the loudness, and sends no hit node for a look without one", () => {
-    const eye = recipeOf("push-into-eye")
-    const sound = eye.design.sound
-    const hit = sound?.hit ?? null
-    if (sound === null || hit === null) {
-      throw new Error("Push into eye has a sound bed with a hit")
+  it("sets each sounding look's loudness to the middle of its band, then holds its peaks under its ceiling, before the video is written", () => {
+    const sounding = effectRecipes.filter((one) => one.design.sound !== null)
+    expect(sounding.length).toBeGreaterThan(0)
+    for (const recipe of sounding) {
+      const sound = recipe.design.sound
+      const workflow = workflowOf(effectGraph(fileGraph(), recipe))
+      const target = sound
+        ? (sound.loudness.min + sound.loudness.max) / 2
+        : Number.NaN
+      const ceiling = sound ? sound.truePeakMax - peakMargin : Number.NaN
+      expect({ effect: recipe.effect, chain: workflow }).toMatchObject({
+        effect: recipe.effect,
+        chain: {
+          [loudnessNode]: {
+            class_type: "NormalizeAudioLoudness",
+            inputs: {
+              audio: [mixedSound(recipe), 0],
+              lufs: target,
+            },
+          },
+          [ceilingNodes[0] ?? ""]: {
+            class_type: "AudioAmplify",
+            inputs: { audio: [loudnessNode, 0], gain_db: -ceiling },
+          },
+          [ceilingNodes[1] ?? ""]: {
+            class_type: "AudioAmplify",
+            inputs: { audio: [ceilingNodes[0], 0], gain_db: ceiling },
+          },
+          "370": {
+            inputs: {
+              audio: [
+                (sound?.fadeOut ?? 0) > 0 ? fadeOutNode : ceilingNodes[1],
+                0,
+              ],
+            },
+          },
+        },
+      })
+      expect(target).toBeGreaterThanOrEqual(sound?.loudness.min ?? 0)
+      expect(target).toBeLessThanOrEqual(sound?.loudness.max ?? 0)
+      expect(ceiling).toBeLessThan(sound?.truePeakMax ?? 0)
     }
-    const ids = Object.values(hitNodes)
-    expect(ids).toEqual([
-      ...["630", "631", "632", "633", "634", "635"],
-      ...["636", "637", "638", "639", "640"],
-    ])
-    const struck = workflowOf(effectGraph(fileGraph(), eye))
-    expect(ids.filter((id) => struck[id] === undefined)).toEqual([])
+    expect(
+      workflowOf(effectGraph(fileGraph(), recipeOf("push-into-eye")))[
+        loudnessNode
+      ]?.inputs.lufs
+    ).toBe(-23.75)
+  })
+
+  it("holds four hit slots of nine nodes each from node 660, beside the shared audio model", () => {
+    expect(Object.values(hitShared)).toEqual(["630", "631", "633"])
+    expect(slotIds(hitSlots)).toEqual(
+      [660, 670, 680, 690].flatMap((first) =>
+        Array.from({ length: 9 }, (_, step) => String(first + step))
+      )
+    )
+  })
+
+  it("merges each hit onto the mix before it in recipe order, places a hit at 0 s with no lead, fades each tail, and drops the unused slots", () => {
+    const struck = workflowOf(
+      effectGraph(
+        fileGraph(),
+        eyeWith({ hits: [opening, boom], build: null, brighten: null })
+      )
+    )
+    const [first, second] = hitSlots
+    if (first === undefined || second === undefined) {
+      throw new Error("Effects holds at least two hit slots")
+    }
     expect(struck).toMatchObject({
-      [hitNodes.prompt]: {
-        class_type: "CLIPTextEncode",
-        inputs: { text: hit.prompt },
+      [first.prompt]: { inputs: { text: opening.prompt } },
+      [first.length]: { inputs: { seconds: opening.seconds } },
+      [first.gain]: {
+        inputs: { audio: [first.decode, 0], volume: opening.gainDb },
       },
-      [hitNodes.length]: {
-        class_type: "EmptyLatentAudio",
-        inputs: { seconds: hit.seconds },
+      [first.tail]: {
+        class_type: "AudioFadeOut",
+        inputs: { audio: [first.gain, 0], duration_seconds: hitTailSeconds },
       },
-      [hitNodes.gain]: {
-        class_type: "AudioAdjustVolume",
-        inputs: { audio: [hitNodes.decode, 0], volume: hit.gainDb },
+      [first.merged]: {
+        class_type: "AudioMerge",
+        inputs: { audio1: [soundNode, 0], audio2: [first.tail, 0] },
       },
-      [hitNodes.lead]: {
+      [second.prompt]: { inputs: { text: boom.prompt } },
+      [second.lead]: {
         class_type: "EmptyAudio",
-        inputs: { duration: hit.time },
+        inputs: { duration: boom.time },
       },
-      [hitNodes.placed]: {
+      [second.placed]: {
         class_type: "AudioConcat",
         inputs: {
-          audio1: [hitNodes.lead, 0],
-          audio2: [hitNodes.gain, 0],
+          audio1: [second.lead, 0],
+          audio2: [second.tail, 0],
           direction: "after",
         },
       },
-      [hitNodes.merged]: {
-        class_type: "AudioMerge",
-        inputs: {
-          audio1: [soundNode, 0],
-          audio2: [hitNodes.placed, 0],
-          merge_method: "add",
-        },
+      [second.merged]: {
+        inputs: { audio1: [first.merged, 0], audio2: [second.placed, 0] },
       },
-      [loudnessNode]: { inputs: { audio: [hitNodes.merged, 0] } },
+      [loudnessNode]: { inputs: { audio: [second.merged, 0] } },
     })
-    expect(hit).toMatchObject({ time: 6.3, gainDb: 4 })
+    expect(struck[first.lead]).toBeUndefined()
+    expect(struck[first.placed]).toBeUndefined()
+    expect(
+      slotIds(hitSlots.slice(2)).filter((id) => struck[id] !== undefined)
+    ).toEqual([])
     expect(brokenLinks(struck)).toEqual([])
-    const plain = workflowOf(
-      effectGraph(fileGraph(), {
-        ...eye,
-        design: { ...eye.design, sound: { ...sound, hit: null } },
-      })
-    )
-    expect(ids.filter((id) => plain[id] !== undefined)).toEqual([])
-    expect(plain[loudnessNode]?.inputs.audio).toEqual([soundNode, 0])
+  })
+
+  it("sends no hit node and no audio model for a look without hits or without sound", () => {
+    const hitIds = [...Object.values(hitShared), ...slotIds(hitSlots)]
+    const plain = workflowOf(effectGraph(fileGraph(), eyeWith({ hits: [] })))
+    expect(hitIds.filter((id) => plain[id] !== undefined)).toEqual([])
     expect(brokenLinks(plain)).toEqual([])
     const silent = workflowOf(
       effectGraph(fileGraph(), recipeOf("buildings-ripple"))
     )
-    expect(ids.filter((id) => silent[id] !== undefined)).toEqual([])
+    expect(hitIds.filter((id) => silent[id] !== undefined)).toEqual([])
+    expect(brokenLinks(silent)).toEqual([])
   })
 
-  it("seeds a look's hit from the run's seed, and binds no hit seed for a look without one", () => {
-    const eye = recipeOf("push-into-eye")
-    const sound = eye.design.sound
-    if (sound === null) {
-      throw new Error("Push into eye has a sound bed")
-    }
-    const seeded = (recipe: typeof eye) =>
+  it("builds the bed from its floor and brightens it before the first hit joins, and sends neither node for a look without them", () => {
+    const build = { seconds: 4, floorDb: -12 }
+    const brighten = { presenceDb: 3, airDb: 2.5 }
+    const shaped = workflowOf(
+      effectGraph(fileGraph(), eyeWith({ hits: [boom], build, brighten }))
+    )
+    expect(shaped).toMatchObject({
+      [buildNodes.floor]: {
+        class_type: "AudioAdjustVolume",
+        inputs: { audio: [soundNode, 0], volume: build.floorDb },
+      },
+      [buildNodes.rise]: {
+        class_type: "AudioFadeIn",
+        inputs: { audio: [soundNode, 0], duration_seconds: build.seconds },
+      },
+      [buildNodes.sum]: {
+        class_type: "AudioMerge",
+        inputs: {
+          audio1: [buildNodes.floor, 0],
+          audio2: [buildNodes.rise, 0],
+          merge_method: "add",
+        },
+      },
+      [brightenNode]: {
+        class_type: "AudioParametricEQ",
+        inputs: {
+          audio: [buildNodes.sum, 0],
+          presence_boost_db: brighten.presenceDb,
+          air_boost_db: brighten.airDb,
+        },
+      },
+      [hitSlots[0]?.merged ?? ""]: {
+        inputs: { audio1: [brightenNode, 0] },
+      },
+    })
+    expect(brokenLinks(shaped)).toEqual([])
+    const bare = workflowOf(
+      effectGraph(fileGraph(), eyeWith({ hits: [], build, brighten }))
+    )
+    expect(bare[loudnessNode]?.inputs.audio).toEqual([brightenNode, 0])
+    expect(brokenLinks(bare)).toEqual([])
+    const flat = workflowOf(
+      effectGraph(
+        fileGraph(),
+        eyeWith({ hits: [], build: null, brighten: null })
+      )
+    )
+    const shapeIds = [...Object.values(buildNodes), brightenNode]
+    expect(shapeIds.filter((id) => flat[id] !== undefined)).toEqual([])
+    expect(flat[loudnessNode]?.inputs.audio).toEqual([soundNode, 0])
+  })
+
+  it("seeds each hit from the run's seed, and binds no seed for an unused slot", () => {
+    const seeded = (recipe: EffectRecipe) =>
       JSON.stringify(effectBinding(recipe, "480p").config.bindings)
-    expect(seeded(eye)).toContain(`"${hitNodes.sampler}","inputs","seed"`)
-    expect(
-      seeded({
-        ...eye,
-        design: { ...eye.design, sound: { ...sound, hit: null } },
-      })
-    ).not.toContain(`"${hitNodes.sampler}"`)
+    const two = seeded(eyeWith({ hits: [opening, boom] }))
+    for (const slot of hitSlots.slice(0, 2)) {
+      expect(two).toContain(`"${slot.sampler}","inputs","seed"`)
+    }
+    for (const slot of hitSlots.slice(2)) {
+      expect(two).not.toContain(`"${slot.sampler}"`)
+    }
+    const none = seeded(eyeWith({ hits: [] }))
+    for (const slot of hitSlots) {
+      expect(none).not.toContain(`"${slot.sampler}"`)
+    }
   })
 
-  it("refuses a fade past 2 seconds or off the 0.1 s step, and a hit louder than 12 dB", () => {
-    const sound = recipeOf("push-into-eye").design.sound
+  it("refuses a fade past 2 seconds or off its step, a hit louder than 12 dB, a fifth hit, and a build or brighten out of bounds", () => {
+    const sound = soundOf(recipeOf("push-into-eye"))
     const withSound = (change: Record<string, unknown>) => ({
       ...recipeOf("many-copies"),
       design: {
         ...recipeOf("many-copies").design,
-        sound: { ...sound, ...change },
+        sound: { ...sound, hits: [boom], ...change },
       },
     })
-    expect(() =>
-      readRecipes({ "many-copies": withSound({}) }, ledger)
-    ).not.toThrow()
-    expect(() =>
-      readRecipes({ "many-copies": withSound({ fadeOut: 2.1 }) }, ledger)
-    ).toThrow(/many-copies\.json is invalid: design\.sound\.fadeOut/)
-    expect(() =>
-      readRecipes({ "many-copies": withSound({ fadeOut: 0.45 }) }, ledger)
-    ).toThrow(/many-copies\.json is invalid: design\.sound\.fadeOut/)
-    expect(() =>
-      readRecipes(
-        {
-          "many-copies": withSound({ hit: { ...sound?.hit, gainDb: 13 } }),
-        },
-        ledger
-      )
-    ).toThrow(/many-copies\.json is invalid: design\.sound\.hit\.gainDb/)
+    const read = (change: Record<string, unknown>) => () =>
+      readRecipes({ "many-copies": withSound(change) }, ledger)
+    const refused = (field: string) =>
+      new RegExp(`many-copies\\.json is invalid: design\\.sound\\.${field}`)
+    expect(read({})).not.toThrow()
+    expect(read({ fadeOut: 2.1 })).toThrow(refused("fadeOut"))
+    expect(read({ fadeOut: 0.45 })).toThrow(refused("fadeOut"))
+    expect(read({ hits: [{ ...boom, gainDb: 13 }] })).toThrow(
+      refused("hits\\.0\\.gainDb")
+    )
+    expect(read({ hits: Array.from({ length: 5 }, () => boom) })).toThrow(
+      refused("hits")
+    )
+    expect(read({ build: { seconds: 7.5, floorDb: -10 } })).toThrow(
+      refused("build\\.seconds")
+    )
+    expect(read({ brighten: { presenceDb: 4.2, airDb: 4 } })).toThrow(
+      refused("brighten\\.presenceDb")
+    )
   })
 })

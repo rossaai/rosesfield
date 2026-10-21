@@ -1,12 +1,8 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectBinding } from "@rosesfield/generation/bindings"
-import {
-  effectGraph,
-  effectsWorkflow,
-  hasEditPass,
-  hasHit,
-} from "#effects/comfy/effect-graph"
+import { effectGraph, hasEditPass } from "#effects/comfy/effect-graph"
 import { deliveryFrames, ltxFrames, sizeMap } from "#effects/comfy/frame-sizes"
+import { effectsWorkflow } from "#effects/comfy/graph-edit"
 import {
   type EffectRecipe,
   type ResolutionValue,
@@ -42,7 +38,9 @@ function runBindings(
     ...(hasEditPass(recipe)
       ? [{ from: "seed", to: "endFrameSeed" } as const]
       : []),
-    ...(hasHit(recipe) ? [{ from: "seed", to: "hitSeed" } as const] : []),
+    ...(recipe.design.sound?.hits ?? []).map(
+      (_, index) => ({ from: "seed", to: `hitSeed${index + 1}` }) as const
+    ),
   ]
 }
 

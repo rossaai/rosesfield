@@ -1,7 +1,7 @@
 import { aspectRatio, choiceValue, seed } from "@rosesfield/contract"
 import { z } from "zod"
 
-export const resolutionValues = ["480p", "720p"] as const
+export const resolutionValues = ["480p", "720p", "1080p"] as const
 
 export const minimumBalance = 2000
 
@@ -51,6 +51,8 @@ const decibels = z.number().min(-70).max(0)
 
 export const maxFadeOut = 2
 
+export const maxHits = 4
+
 export const soundHit = z.strictObject({
   prompt: plainLine,
   time: seconds,
@@ -64,7 +66,21 @@ export const soundBed = z
     loudness: z.strictObject({ min: decibels, max: decibels }),
     truePeakMax: decibels,
     fadeOut: z.number().min(0).max(maxFadeOut).multipleOf(0.1).default(0),
-    hit: soundHit.nullable().default(null),
+    hits: z.array(soundHit).max(maxHits).default([]),
+    build: z
+      .strictObject({
+        seconds: z.number().min(0.5).max(7).multipleOf(0.1),
+        floorDb: z.number().int().min(-30).max(0),
+      })
+      .nullable()
+      .default(null),
+    brighten: z
+      .strictObject({
+        presenceDb: z.number().min(0).max(12).multipleOf(0.5),
+        airDb: z.number().min(0).max(12).multipleOf(0.5),
+      })
+      .nullable()
+      .default(null),
   })
   .refine((sound) => sound.loudness.min <= sound.loudness.max, {
     message: "A loudness band opens below where it closes",
@@ -245,4 +261,5 @@ export type VideoReading = z.infer<typeof videoReading>
 export type EffectProof = z.infer<typeof effectProof>
 export type EffectRun = z.infer<typeof effectRun>
 export type EffectRecipe = z.infer<typeof effectRecipe>
+export type SoundBed = z.infer<typeof soundBed>
 export type ResolutionValue = (typeof resolutionValues)[number]

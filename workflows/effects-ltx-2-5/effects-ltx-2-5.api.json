@@ -633,7 +633,7 @@
   "359": {
     "class_type": "NormalizeAudioLoudness",
     "inputs": {
-      "audio": ["640", 0],
+      "audio": ["697", 0],
       "lufs": -23.0
     },
     "_meta": {
@@ -718,7 +718,7 @@
       "ckpt_name": "stable_audio_3_medium.safetensors"
     },
     "_meta": {
-      "title": "Hit: Stable Audio 3 Medium"
+      "title": "Hits: Stable Audio 3 Medium"
     }
   },
   "631": {
@@ -729,17 +729,7 @@
       "device": "default"
     },
     "_meta": {
-      "title": "Hit: text encoder"
-    }
-  },
-  "632": {
-    "class_type": "CLIPTextEncode",
-    "inputs": {
-      "text": "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice.",
-      "clip": ["631", 0]
-    },
-    "_meta": {
-      "title": "Hit prompt"
+      "title": "Hits: text encoder"
     }
   },
   "633": {
@@ -752,17 +742,27 @@
       "title": "Hit negative"
     }
   },
-  "634": {
+  "660": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice.",
+      "clip": ["631", 0]
+    },
+    "_meta": {
+      "title": "Hit 1 prompt"
+    }
+  },
+  "661": {
     "class_type": "EmptyLatentAudio",
     "inputs": {
       "seconds": 2,
       "batch_size": 1
     },
     "_meta": {
-      "title": "Hit length"
+      "title": "Hit 1 length"
     }
   },
-  "635": {
+  "662": {
     "class_type": "KSampler",
     "inputs": {
       "seed": 0,
@@ -772,65 +772,378 @@
       "scheduler": "simple",
       "denoise": 1,
       "model": ["630", 0],
-      "positive": ["632", 0],
+      "positive": ["660", 0],
       "negative": ["633", 0],
-      "latent_image": ["634", 0]
+      "latent_image": ["661", 0]
     },
     "_meta": {
-      "title": "Hit"
+      "title": "Hit 1"
     }
   },
-  "636": {
+  "663": {
     "class_type": "VAEDecodeAudio",
     "inputs": {
-      "samples": ["635", 0],
+      "samples": ["662", 0],
       "vae": ["630", 2]
     },
     "_meta": {
-      "title": "Hit decode"
+      "title": "Hit 1 decode"
     }
   },
-  "637": {
+  "664": {
     "class_type": "AudioAdjustVolume",
     "inputs": {
-      "audio": ["636", 0],
+      "audio": ["663", 0],
       "volume": 0
     },
     "_meta": {
-      "title": "Hit gain"
+      "title": "Hit 1 gain"
     }
   },
-  "638": {
+  "668": {
+    "class_type": "AudioFadeOut",
+    "inputs": {
+      "audio": ["664", 0],
+      "duration_seconds": 0.3
+    },
+    "_meta": {
+      "title": "Hit 1 tail"
+    }
+  },
+  "665": {
     "class_type": "EmptyAudio",
     "inputs": {
-      "duration": 8,
+      "duration": 1,
       "sample_rate": 44100,
       "channels": 2
     },
     "_meta": {
-      "title": "Silence before the hit"
+      "title": "Silence before hit 1"
     }
   },
-  "639": {
+  "666": {
     "class_type": "AudioConcat",
     "inputs": {
-      "audio1": ["638", 0],
-      "audio2": ["637", 0],
+      "audio1": ["665", 0],
+      "audio2": ["668", 0],
       "direction": "after"
     },
     "_meta": {
-      "title": "Hit at its time"
+      "title": "Hit 1 at its time"
     }
   },
-  "640": {
+  "667": {
     "class_type": "AudioMerge",
     "inputs": {
       "audio1": ["358", 0],
-      "audio2": ["639", 0],
+      "audio2": ["666", 0],
       "merge_method": "add"
     },
     "_meta": {
-      "title": "Sound with the hit"
+      "title": "Sound with hit 1"
+    }
+  },
+  "670": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice.",
+      "clip": ["631", 0]
+    },
+    "_meta": {
+      "title": "Hit 2 prompt"
+    }
+  },
+  "671": {
+    "class_type": "EmptyLatentAudio",
+    "inputs": {
+      "seconds": 2,
+      "batch_size": 1
+    },
+    "_meta": {
+      "title": "Hit 2 length"
+    }
+  },
+  "672": {
+    "class_type": "KSampler",
+    "inputs": {
+      "seed": 0,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "lcm",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": ["630", 0],
+      "positive": ["670", 0],
+      "negative": ["633", 0],
+      "latent_image": ["671", 0]
+    },
+    "_meta": {
+      "title": "Hit 2"
+    }
+  },
+  "673": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": ["672", 0],
+      "vae": ["630", 2]
+    },
+    "_meta": {
+      "title": "Hit 2 decode"
+    }
+  },
+  "674": {
+    "class_type": "AudioAdjustVolume",
+    "inputs": {
+      "audio": ["673", 0],
+      "volume": 0
+    },
+    "_meta": {
+      "title": "Hit 2 gain"
+    }
+  },
+  "678": {
+    "class_type": "AudioFadeOut",
+    "inputs": {
+      "audio": ["674", 0],
+      "duration_seconds": 0.3
+    },
+    "_meta": {
+      "title": "Hit 2 tail"
+    }
+  },
+  "675": {
+    "class_type": "EmptyAudio",
+    "inputs": {
+      "duration": 3,
+      "sample_rate": 44100,
+      "channels": 2
+    },
+    "_meta": {
+      "title": "Silence before hit 2"
+    }
+  },
+  "676": {
+    "class_type": "AudioConcat",
+    "inputs": {
+      "audio1": ["675", 0],
+      "audio2": ["678", 0],
+      "direction": "after"
+    },
+    "_meta": {
+      "title": "Hit 2 at its time"
+    }
+  },
+  "677": {
+    "class_type": "AudioMerge",
+    "inputs": {
+      "audio1": ["667", 0],
+      "audio2": ["676", 0],
+      "merge_method": "add"
+    },
+    "_meta": {
+      "title": "Sound with hit 2"
+    }
+  },
+  "680": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice.",
+      "clip": ["631", 0]
+    },
+    "_meta": {
+      "title": "Hit 3 prompt"
+    }
+  },
+  "681": {
+    "class_type": "EmptyLatentAudio",
+    "inputs": {
+      "seconds": 2,
+      "batch_size": 1
+    },
+    "_meta": {
+      "title": "Hit 3 length"
+    }
+  },
+  "682": {
+    "class_type": "KSampler",
+    "inputs": {
+      "seed": 0,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "lcm",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": ["630", 0],
+      "positive": ["680", 0],
+      "negative": ["633", 0],
+      "latent_image": ["681", 0]
+    },
+    "_meta": {
+      "title": "Hit 3"
+    }
+  },
+  "683": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": ["682", 0],
+      "vae": ["630", 2]
+    },
+    "_meta": {
+      "title": "Hit 3 decode"
+    }
+  },
+  "684": {
+    "class_type": "AudioAdjustVolume",
+    "inputs": {
+      "audio": ["683", 0],
+      "volume": 0
+    },
+    "_meta": {
+      "title": "Hit 3 gain"
+    }
+  },
+  "688": {
+    "class_type": "AudioFadeOut",
+    "inputs": {
+      "audio": ["684", 0],
+      "duration_seconds": 0.3
+    },
+    "_meta": {
+      "title": "Hit 3 tail"
+    }
+  },
+  "685": {
+    "class_type": "EmptyAudio",
+    "inputs": {
+      "duration": 5,
+      "sample_rate": 44100,
+      "channels": 2
+    },
+    "_meta": {
+      "title": "Silence before hit 3"
+    }
+  },
+  "686": {
+    "class_type": "AudioConcat",
+    "inputs": {
+      "audio1": ["685", 0],
+      "audio2": ["688", 0],
+      "direction": "after"
+    },
+    "_meta": {
+      "title": "Hit 3 at its time"
+    }
+  },
+  "687": {
+    "class_type": "AudioMerge",
+    "inputs": {
+      "audio1": ["677", 0],
+      "audio2": ["686", 0],
+      "merge_method": "add"
+    },
+    "_meta": {
+      "title": "Sound with hit 3"
+    }
+  },
+  "690": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice.",
+      "clip": ["631", 0]
+    },
+    "_meta": {
+      "title": "Hit 4 prompt"
+    }
+  },
+  "691": {
+    "class_type": "EmptyLatentAudio",
+    "inputs": {
+      "seconds": 2,
+      "batch_size": 1
+    },
+    "_meta": {
+      "title": "Hit 4 length"
+    }
+  },
+  "692": {
+    "class_type": "KSampler",
+    "inputs": {
+      "seed": 0,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "lcm",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": ["630", 0],
+      "positive": ["690", 0],
+      "negative": ["633", 0],
+      "latent_image": ["691", 0]
+    },
+    "_meta": {
+      "title": "Hit 4"
+    }
+  },
+  "693": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": ["692", 0],
+      "vae": ["630", 2]
+    },
+    "_meta": {
+      "title": "Hit 4 decode"
+    }
+  },
+  "694": {
+    "class_type": "AudioAdjustVolume",
+    "inputs": {
+      "audio": ["693", 0],
+      "volume": 0
+    },
+    "_meta": {
+      "title": "Hit 4 gain"
+    }
+  },
+  "698": {
+    "class_type": "AudioFadeOut",
+    "inputs": {
+      "audio": ["694", 0],
+      "duration_seconds": 0.3
+    },
+    "_meta": {
+      "title": "Hit 4 tail"
+    }
+  },
+  "695": {
+    "class_type": "EmptyAudio",
+    "inputs": {
+      "duration": 7,
+      "sample_rate": 44100,
+      "channels": 2
+    },
+    "_meta": {
+      "title": "Silence before hit 4"
+    }
+  },
+  "696": {
+    "class_type": "AudioConcat",
+    "inputs": {
+      "audio1": ["695", 0],
+      "audio2": ["698", 0],
+      "direction": "after"
+    },
+    "_meta": {
+      "title": "Hit 4 at its time"
+    }
+  },
+  "697": {
+    "class_type": "AudioMerge",
+    "inputs": {
+      "audio1": ["687", 0],
+      "audio2": ["696", 0],
+      "merge_method": "add"
+    },
+    "_meta": {
+      "title": "Sound with hit 4"
     }
   }
 }

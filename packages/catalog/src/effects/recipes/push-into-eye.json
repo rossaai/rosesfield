@@ -18,11 +18,39 @@
       },
       "truePeakMax": -3,
       "fadeOut": 0.4,
-      "hit": {
-        "prompt": "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice.",
-        "time": 6.3,
-        "seconds": 2,
-        "gainDb": 4
+      "hits": [
+        {
+          "prompt": "Soft airy rushing wind, a bright breathy whoosh of air that slowly swells, cinematic sound design. No music, no voice.",
+          "time": 0,
+          "seconds": 3.5,
+          "gainDb": -6
+        },
+        {
+          "prompt": "A cinematic riser, an airy whoosh that swells and rises in pitch over three seconds, with a bright shimmering high texture. No music, no voice.",
+          "time": 2.5,
+          "seconds": 3,
+          "gainDb": -4
+        },
+        {
+          "prompt": "A deep heavy cinematic boom impact with a punchy low thump and a long rumbling tail. No music, no voice.",
+          "time": 5,
+          "seconds": 2,
+          "gainDb": 0
+        },
+        {
+          "prompt": "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice.",
+          "time": 6.3,
+          "seconds": 2,
+          "gainDb": 4
+        }
+      ],
+      "build": {
+        "seconds": 5,
+        "floorDb": -10
+      },
+      "brighten": {
+        "presenceDb": 4,
+        "airDb": 4
       }
     },
     "encode": {

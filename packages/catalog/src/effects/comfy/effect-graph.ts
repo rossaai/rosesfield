@@ -1,15 +1,16 @@
-import { AppDefinitionInvalidError } from "#app-definition-invalid.error"
+import { setHits, setSound } from "#effects/comfy/effect-sound"
 import { audioFramesOf, frameAt, framesOf } from "#effects/comfy/frame-sizes"
+import {
+  type Graph,
+  invalid,
+  isLink,
+  type Link,
+  nodeOf,
+  relink,
+  remove,
+} from "#effects/comfy/graph-edit"
 import type { EffectRecipe } from "#effects/effect-recipe.contract"
 import { apiGraph } from "#workflow-entry.contract"
-
-type Link = [string, number]
-
-type Node = { class_type: string; inputs: Record<string, unknown> }
-
-type Graph = Record<string, Node>
-
-export const effectsWorkflow = "effects-ltx-2-5"
 
 export const editFrameNodes: readonly string[] = [
   "620",
@@ -45,68 +46,11 @@ export const endFramePromptNode = "620"
 
 export const matteNodes: readonly string[] = ["410", "411", "412"]
 
-export const soundNode = "358"
-
-export const loudnessNode = "359"
-
-export const ceilingNodes: readonly string[] = ["360", "361"]
-
-export const fadeOutNode = "362"
-
-export const hitNodes = {
-  model: "630",
-  encoder: "631",
-  prompt: "632",
-  negative: "633",
-  length: "634",
-  sampler: "635",
-  decode: "636",
-  gain: "637",
-  lead: "638",
-  placed: "639",
-  merged: "640",
-} as const
-
-export const peakMargin = 1
-
-const maxCeilingGain = 24
-
 export const adapterNode = "420"
 
 export const grainNode = "381"
 
 const guideOutputs = ["positive", "negative", "latent"]
-
-function invalid(reason: string): AppDefinitionInvalidError {
-  return new AppDefinitionInvalidError({ folder: "effects", reason })
-}
-
-function nodeOf(graph: Graph, id: string): Node {
-  const node = graph[id]
-  if (node === undefined) {
-    throw invalid(`the workflow ${effectsWorkflow} has no node ${id}`)
-  }
-  return node
-}
-
-function isLink(value: unknown): value is Link {
-  return (
-    Array.isArray(value) &&
-    value.length === 2 &&
-    typeof value[0] === "string" &&
-    typeof value[1] === "number"
-  )
-}
-
-function relink(graph: Graph, from: Link, to: Link): void {
-  for (const node of Object.values(graph)) {
-    for (const [name, value] of Object.entries(node.inputs)) {
-      if (isLink(value) && value[0] === from[0] && value[1] === from[1]) {
-        node.inputs[name] = [...to]
-      }
-    }
-  }
-}
 
 function passThrough(graph: Graph, id: string): void {
   const node = nodeOf(graph, id)
@@ -118,13 +62,6 @@ function passThrough(graph: Graph, id: string): void {
     }
     relink(graph, [id, slot], source)
   })
-}
-
-function remove(graph: Graph, ids: readonly string[]): void {
-  for (const id of ids) {
-    nodeOf(graph, id)
-    delete graph[id]
-  }
 }
 
 function setPrompts(graph: Graph, recipe: EffectRecipe): void {
@@ -244,53 +181,6 @@ function setHold(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, "464").inputs.strength = recipe.hold
 }
 
-function setSound(graph: Graph, recipe: EffectRecipe): void {
-  const sound = recipe.design.sound
-  if (sound === null) {
-    remove(graph, [soundNode, loudnessNode, ...ceilingNodes])
-    delete nodeOf(graph, "370").inputs.audio
-    return
-  }
-  const ceiling = sound.truePeakMax - peakMargin
-  if (-ceiling > maxCeilingGain) {
-    throw invalid(
-      `the peak ceiling ${ceiling} dB of ${recipe.effect} is under -${maxCeilingGain} dB`
-    )
-  }
-  const [up, down] = ceilingNodes
-  nodeOf(graph, loudnessNode).inputs.lufs =
-    (sound.loudness.min + sound.loudness.max) / 2
-  nodeOf(graph, up ?? "").inputs.gain_db = -ceiling
-  nodeOf(graph, down ?? "").inputs.gain_db = ceiling
-  if (sound.fadeOut > 0) {
-    graph[fadeOutNode] = {
-      class_type: "AudioFadeOut",
-      inputs: { audio: [down ?? "", 0], duration_seconds: sound.fadeOut },
-    }
-    nodeOf(graph, "370").inputs.audio = [fadeOutNode, 0]
-  }
-}
-
-export function hasHit(recipe: EffectRecipe): boolean {
-  return (recipe.design.sound?.hit ?? null) !== null
-}
-
-function setHit(graph: Graph, recipe: EffectRecipe): void {
-  const sound = recipe.design.sound
-  const hit = sound?.hit ?? null
-  if (hit === null) {
-    remove(graph, Object.values(hitNodes))
-    if (sound !== null) {
-      nodeOf(graph, loudnessNode).inputs.audio = [soundNode, 0]
-    }
-    return
-  }
-  nodeOf(graph, hitNodes.prompt).inputs.text = hit.prompt
-  nodeOf(graph, hitNodes.length).inputs.seconds = hit.seconds
-  nodeOf(graph, hitNodes.gain).inputs.volume = hit.gainDb
-  nodeOf(graph, hitNodes.lead).inputs.duration = hit.time
-}
-
 function setGrain(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, grainNode).inputs.strength = recipe.design.encode.grain
 }
@@ -317,7 +207,7 @@ export function effectGraph(
     passThrough(graph, "465")
   }
   setSound(graph, recipe)
-  setHit(graph, recipe)
+  setHits(graph, recipe)
   setGrain(graph, recipe)
   return graph
 }

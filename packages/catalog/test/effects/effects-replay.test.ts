@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { hitNodes } from "#effects/comfy/effect-graph"
+import { hitShared, hitSlots } from "#effects/comfy/effect-sound"
 import { ratioOf } from "#effects/comfy/frame-sizes"
 import { recipeOf } from "#effects/effect-recipes"
 import {
@@ -89,7 +89,8 @@ describe("the effects engine request", () => {
           ![
             ...["358", "359", "360", "361", "628"],
             ...["470", "471", "472", "473"],
-            ...Object.values(hitNodes),
+            ...Object.values(hitShared),
+            ...hitSlots.flatMap((slot) => Object.values(slot)),
           ].includes(id)
       )
     )

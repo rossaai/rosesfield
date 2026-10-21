@@ -23,12 +23,14 @@ export const ltxFrames = {
   sizes: {
     "480p": table(512, 896, 704),
     "720p": table(704, 1280, 960),
+    "1080p": table(1088, 1920, 1472),
   } satisfies Readonly<Record<ResolutionValue, SizeTable>>,
 }
 
 export const deliveryArea: Readonly<Record<ResolutionValue, number>> = {
   "480p": 854 * 480,
   "720p": 1280 * 720,
+  "1080p": 1920 * 1080,
 }
 
 export const deliveryFrames: Readonly<Record<ResolutionValue, SizeTable>> = {
@@ -45,6 +47,13 @@ export const deliveryFrames: Readonly<Record<ResolutionValue, SizeTable>> = {
     "3:4": { width: 832, height: 1110 },
     "16:9": { width: 1280, height: 720 },
     "9:16": { width: 720, height: 1280 },
+  },
+  "1080p": {
+    "1:1": { width: 1440, height: 1440 },
+    "4:3": { width: 1664, height: 1248 },
+    "3:4": { width: 1248, height: 1664 },
+    "16:9": { width: 1920, height: 1080 },
+    "9:16": { width: 1080, height: 1920 },
   },
 }
 
