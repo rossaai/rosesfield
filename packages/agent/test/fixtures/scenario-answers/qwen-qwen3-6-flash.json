@@ -1,0 +1,666 @@
+{
+  "model": "qwen/qwen3.6-flash",
+  "source": {
+    "kind": "captured",
+    "capturedAt": "2026-10-21T21:27:21.053Z"
+  },
+  "scenarios": {
+    "words": {
+      "expectPass": true,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:00 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.33",
+            "x-comfy-request-id": "c4dc9489-645e-4308-b8f3-20c2871bacae",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.001563981"
+          },
+          "body": {
+            "id": "gen-1792618013-EXQBF2BgGuDGFb9YzkSJ",
+            "object": "chat.completion",
+            "created": 1792618013,
+            "model": "qwen/qwen3.6-flash",
+            "provider": "Alibaba",
+            "system_fingerprint": null,
+            "service_tier": null,
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "stop",
+                "native_finish_reason": "stop",
+                "message": {
+                  "role": "assistant",
+                  "content": "I can generate images from text prompts using the sample-image app, or create short videos from existing media using the sample-motion app. I can browse your library of images, videos, audio, and text, and view character profiles that can be used as references. I also monitor the progress of any generation run and retrieve the final results once they finish. Just tell me what you want to create, and I'll handle each step in sequence.",
+                  "refusal": null,
+                  "reasoning": "Here's a thinking process:\n\n1.  **Analyze User Input:** The user asks \"What can you do here?\" This is a general question about my capabilities within the Rosesfield environment.\n\n2.  **Identify Available Tools/Capabilities:**\n   - `sample-image`: Generates images based on prompts, with optional references and seed. Can output in 1:1 or 16:9 aspect ratio, up to 4 counts.\n   - `sample-motion`: Generates videos from an image (or video/audio) and a prompt. Outputs 16:9, count max 1.\n   - `list_assets`: Lists assets in the library (images, videos, audio, text), newest first, 60 at a time, supports pagination with cursor.\n   - `read_asset`: Gets details about a specific asset by ID.\n   - `list_characters`: Lists available characters with names, reference asset IDs, and notes.\n   - `read_character`: Gets details about a specific character by ID.\n   - `read_run`: Checks the status/progress of a run by ID, waits up to 3 minutes for completion, returns result asset IDs when done.\n\n3.  **Synthesize Capabilities into a Clear Response:**\n   - I can generate images from text prompts using the sample-image app.\n   - I can create short videos from images using the sample-motion app.\n   - I can browse your media library (images, videos, audio, text) and check specific asset details.\n   - I can list and view character profiles that can be used as references or inputs.\n   - I can monitor the progress of any generation run and retrieve the final results once they're ready.\n   - I work sequentially: using outputs from one run as inputs for another, managing the whole pipeline until you get your desired result.\n\n4.  **Check Constraints & Style Requirements:**\n   - \"Answer in short plain sentences.\"\n   - \"Name each run you start with its app and its run id.\" (Not applicable yet since no run started)\n   - Keep it concise and direct.\n\n5.  **Draft Response:**\n   I can generate images from text prompts using the sample-image app, or create short videos from existing media using the sample-motion app. I can browse your library of images, videos, audio, and text, as well as view character profiles that can serve as references. I also track and retrieve the results of any generation run you request. Just tell me what you'd like to make, and I'll handle the pipeline step by step.\n\n6.  **Refine against constraints:**\n   - Short plain sentences? Yes.\n   - Covers all tools? Yes.\n   - No extra fluff? Yes.\n   - Matches tone? Yes.\n\n   Looks good. Ready.✅",
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "Here's a thinking process:\n\n1.  **Analyze User Input:** The user asks \"What can you do here?\" This is a general question about my capabilities within the Rosesfield environment.\n\n2.  **Identify Available Tools/Capabilities:**\n   - `sample-image`: Generates images based on prompts, with optional references and seed. Can output in 1:1 or 16:9 aspect ratio, up to 4 counts.\n   - `sample-motion`: Generates videos from an image (or video/audio) and a prompt. Outputs 16:9, count max 1.\n   - `list_assets`: Lists assets in the library (images, videos, audio, text), newest first, 60 at a time, supports pagination with cursor.\n   - `read_asset`: Gets details about a specific asset by ID.\n   - `list_characters`: Lists available characters with names, reference asset IDs, and notes.\n   - `read_character`: Gets details about a specific character by ID.\n   - `read_run`: Checks the status/progress of a run by ID, waits up to 3 minutes for completion, returns result asset IDs when done.\n\n3.  **Synthesize Capabilities into a Clear Response:**\n   - I can generate images from text prompts using the sample-image app.\n   - I can create short videos from images using the sample-motion app.\n   - I can browse your media library (images, videos, audio, text) and check specific asset details.\n   - I can list and view character profiles that can be used as references or inputs.\n   - I can monitor the progress of any generation run and retrieve the final results once they're ready.\n   - I work sequentially: using outputs from one run as inputs for another, managing the whole pipeline until you get your desired result.\n\n4.  **Check Constraints & Style Requirements:**\n   - \"Answer in short plain sentences.\"\n   - \"Name each run you start with its app and its run id.\" (Not applicable yet since no run started)\n   - Keep it concise and direct.\n\n5.  **Draft Response:**\n   I can generate images from text prompts using the sample-image app, or create short videos from existing media using the sample-motion app. I can browse your library of images, videos, audio, and text, as well as view character profiles that can serve as references. I also track and retrieve the results of any generation run you request. Just tell me what you'd like to make, and I'll handle the pipeline step by step.\n\n6.  **Refine against constraints:**\n   - Short plain sentences? Yes.\n   - Covers all tools? Yes.\n   - No extra fluff? Yes.\n   - Matches tone? Yes.\n\n   Looks good. Ready.✅",
+                      "format": "unknown",
+                      "index": 0
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1650,
+              "completion_tokens": 688,
+              "total_tokens": 2338,
+              "cost": 0.001083375,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.001083375,
+                "upstream_inference_prompt_cost": 0.000309375,
+                "upstream_inference_completions_cost": 0.000774
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 595,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "propose": {
+      "expectPass": true,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:02 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.14",
+            "x-comfy-request-id": "91bf02af-9028-4edd-a16d-d3713dde0512",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0006635071"
+          },
+          "body": {
+            "id": "gen-1792618020-b8hMajkqORf9K7Eb7xDv",
+            "object": "chat.completion",
+            "created": 1792618020,
+            "model": "qwen/qwen3.6-flash",
+            "provider": "Alibaba",
+            "system_fingerprint": null,
+            "service_tier": null,
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "tool_calls",
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "refusal": null,
+                  "reasoning": "The user wants to create an image of a red rose in a glass vase.\nThis corresponds to the `sample-image` app.\n\nRequired parameters for `sample-image`:\n- `inputs`: object containing `prompt`. The prompt is \"red rose in a glass vase\".\n\nOptional parameters:\n- `count`: defaults to 1.\n- `aspectRatio`: defaults to \"1:1\".\n- `seed`: optional integer.\n\nI will call `sample-image` with the provided prompt.",
+                  "tool_calls": [
+                    {
+                      "type": "function",
+                      "index": 0,
+                      "id": "call_83058422ea0d4649bcafbc27",
+                      "function": {
+                        "name": "sample-image",
+                        "arguments": "{\"inputs\": {\"prompt\": \"red rose in a glass vase\"}}"
+                      }
+                    }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "The user wants to create an image of a red rose in a glass vase.\nThis corresponds to the `sample-image` app.\n\nRequired parameters for `sample-image`:\n- `inputs`: object containing `prompt`. The prompt is \"red rose in a glass vase\".\n\nOptional parameters:\n- `count`: defaults to 1.\n- `aspectRatio`: defaults to \"1:1\".\n- `seed`: optional integer.\n\nI will call `sample-image` with the provided prompt.",
+                      "format": "unknown",
+                      "index": 0
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1656,
+              "completion_tokens": 145,
+              "total_tokens": 1801,
+              "cost": 0.000473625,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.000473625,
+                "upstream_inference_prompt_cost": 0.0003105,
+                "upstream_inference_completions_cost": 0.000163125
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 104,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "chain": {
+      "expectPass": true,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:06 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.17",
+            "x-comfy-request-id": "2f3a6df6-9da7-4fde-a890-440a4a575ce8",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0008056872"
+          },
+          "body": {
+            "id": "gen-1792618023-NPP8jfAyG1o59iOtbSkb",
+            "object": "chat.completion",
+            "created": 1792618023,
+            "model": "qwen/qwen3.6-flash",
+            "provider": "Alibaba",
+            "system_fingerprint": null,
+            "service_tier": null,
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "tool_calls",
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "refusal": null,
+                  "reasoning": "The user wants to create an image of a red rose first, and then make a short video from that image showing the rose opening.\n\nStep 1: Create an image of a red rose.\nI will use the `sample-image` tool for this.\nInputs:\n- prompt: \"a red rose\"\naspectRatio: default (1:1) or maybe 16:9 is better for a video later? The video tool defaults to 16:9, so I should probably make the image 16:9 to match. Let's set aspectRatio to \"16:9\".\n\nAfter the run completes, I will get an asset ID.\nThen I will use `sample-motion` to generate the video.\nInputs:\n- image: [asset_id_from_step1]\n- prompt: \"the rose opening\"\n\nLet's start with generating the image.\n",
+                  "tool_calls": [
+                    {
+                      "type": "function",
+                      "index": 0,
+                      "id": "call_8cebec5aa5604819a824435b",
+                      "function": {
+                        "name": "sample-image",
+                        "arguments": "{\"inputs\": {\"prompt\": \"a red rose\", \"aspectRatio\": \"16:9\"}}"
+                      }
+                    }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "The user wants to create an image of a red rose first, and then make a short video from that image showing the rose opening.\n\nStep 1: Create an image of a red rose.\nI will use the `sample-image` tool for this.\nInputs:\n- prompt: \"a red rose\"\naspectRatio: default (1:1) or maybe 16:9 is better for a video later? The video tool defaults to 16:9, so I should probably make the image 16:9 to match. Let's set aspectRatio to \"16:9\".\n\nAfter the run completes, I will get an asset ID.\nThen I will use `sample-motion` to generate the video.\nInputs:\n- image: [asset_id_from_step1]\n- prompt: \"the rose opening\"\n\nLet's start with generating the image.\n",
+                      "format": "unknown",
+                      "index": 0
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1664,
+              "completion_tokens": 234,
+              "total_tokens": 1898,
+              "cost": 0.00057525,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.00057525,
+                "upstream_inference_prompt_cost": 0.000312,
+                "upstream_inference_completions_cost": 0.00026325
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 186,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:09 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.16",
+            "x-comfy-request-id": "f93a0553-5471-49c2-8bda-64fb0b402e0e",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0007582938"
+          },
+          "body": {
+            "id": "gen-1792618027-BOBq2p6stxti5eHdclus",
+            "object": "chat.completion",
+            "created": 1792618027,
+            "model": "qwen/qwen3.6-flash",
+            "provider": "Alibaba",
+            "system_fingerprint": null,
+            "service_tier": null,
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "tool_calls",
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "refusal": null,
+                  "reasoning": "The previous attempt to start an image generation run failed because `aspectRatio` was incorrectly placed inside the `inputs` object. According to the schema, `aspectRatio` is a top-level parameter for the `sample-image` function.\n\nI will retry the call with the correct structure:\n- Function: `sample-image`\n- Top-level `aspectRatio`: \"16:9\"\n- Inputs: `{\"prompt\": \"a red rose\"}`\n\nOnce this finishes successfully (after I poll it), I will proceed to use the resulting asset ID in the `sample-motion` app as requested for the video generation.",
+                  "tool_calls": [
+                    {
+                      "type": "function",
+                      "index": 0,
+                      "id": "call_fa720dc7f4374f259282ebe8",
+                      "function": {
+                        "name": "sample-image",
+                        "arguments": "{\"inputs\": {\"prompt\": \"a red rose\"}, \"aspectRatio\": \"16:9\"}"
+                      }
+                    }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "The previous attempt to start an image generation run failed because `aspectRatio` was incorrectly placed inside the `inputs` object. According to the schema, `aspectRatio` is a top-level parameter for the `sample-image` function.\n\nI will retry the call with the correct structure:\n- Function: `sample-image`\n- Top-level `aspectRatio`: \"16:9\"\n- Inputs: `{\"prompt\": \"a red rose\"}`\n\nOnce this finishes successfully (after I poll it), I will proceed to use the resulting asset ID in the `sample-motion` app as requested for the video generation.",
+                      "format": "unknown",
+                      "index": 0
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1774,
+              "completion_tokens": 182,
+              "total_tokens": 1956,
+              "cost": 0.000537375,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.000537375,
+                "upstream_inference_prompt_cost": 0.000332625,
+                "upstream_inference_completions_cost": 0.00020475
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 128,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:12 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.17",
+            "x-comfy-request-id": "b66c8152-3b1d-46ad-b8c7-a7a4a53ac325",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0008056872"
+          },
+          "body": {
+            "id": "gen-1792618030-V3Ps0kUHzkOLt2GeicbB",
+            "object": "chat.completion",
+            "created": 1792618030,
+            "model": "qwen/qwen3.6-flash",
+            "provider": "Alibaba",
+            "system_fingerprint": null,
+            "service_tier": null,
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "tool_calls",
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "refusal": null,
+                  "reasoning": "The user asked for an image of a red rose, and then a short video of that image with the rose opening.\n\nI started a run of the sample-image app with id `{{result:0}}` to generate the image of a red rose. The status is queued. I should wait for this run to finish before proceeding to create the video.\n\nLet me read the run to check its status.",
+                  "tool_calls": [
+                    {
+                      "type": "function",
+                      "index": 0,
+                      "id": "call_05c86312e6344031a88ee2bb",
+                      "function": {
+                        "name": "read_run",
+                        "arguments": "{\"runId\": \"{{result:0}}\"}"
+                      }
+                    }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "The user asked for an image of a red rose, and then a short video of that image with the rose opening.\n\nI started a run of the sample-image app with id `{{result:0}}` to generate the image of a red rose. The status is queued. I should wait for this run to finish before proceeding to create the video.\n\nLet me read the run to check its status.",
+                      "format": "unknown",
+                      "index": 0
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1989,
+              "completion_tokens": 172,
+              "total_tokens": 2161,
+              "cost": 0.0005664375,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0005664375,
+                "upstream_inference_prompt_cost": 0.0003729375,
+                "upstream_inference_completions_cost": 0.0001935
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 110,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:15 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.18",
+            "x-comfy-request-id": "0d3a9762-0881-4082-a265-72f8cde46ce4",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0008530806"
+          },
+          "body": {
+            "id": "gen-1792618033-bcy6YYb5LD4PXDfky2tu",
+            "object": "chat.completion",
+            "created": 1792618033,
+            "model": "qwen/qwen3.6-flash",
+            "provider": "Alibaba",
+            "system_fingerprint": null,
+            "service_tier": null,
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "tool_calls",
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "refusal": null,
+                  "reasoning": "The user asked for a short video of the image with the rose opening. Now I have the asset ID of the generated image: `{{result:1}}`.\n\nI should start the motion app run.",
+                  "tool_calls": [
+                    {
+                      "type": "function",
+                      "index": 0,
+                      "id": "call_39f00356044e4ff5b3a66fcf",
+                      "function": {
+                        "name": "sample-motion",
+                        "arguments": "{\"inputs\": {\"image\": [\"{{result:1}}\"], \"prompt\": \"rose opening\"}}"
+                      }
+                    }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "The user asked for a short video of the image with the rose opening. Now I have the asset ID of the generated image: `{{result:1}}`.\n\nI should start the motion app run.",
+                      "format": "unknown",
+                      "index": 0
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 2271,
+              "completion_tokens": 151,
+              "total_tokens": 2422,
+              "cost": 0.0005956875,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0005956875,
+                "upstream_inference_prompt_cost": 0.0004258125,
+                "upstream_inference_completions_cost": 0.000169875
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 73,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:17 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.19",
+            "x-comfy-request-id": "39e8471a-38f7-45bb-af64-b07db98b7245",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0009004739"
+          },
+          "body": {
+            "id": "gen-1792618036-PJQA1m05rgzpgcUuH9Wy",
+            "object": "chat.completion",
+            "created": 1792618036,
+            "model": "qwen/qwen3.6-flash",
+            "provider": "Alibaba",
+            "system_fingerprint": null,
+            "service_tier": null,
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "tool_calls",
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "refusal": null,
+                  "reasoning": "The user wants a short video of the generated image with the rose opening. I've started the `sample-motion` run (id `{{result:0}}`). It is currently queued. I need to read its status until it's done.",
+                  "tool_calls": [
+                    {
+                      "type": "function",
+                      "index": 0,
+                      "id": "call_a02ec0a3f5724b76976fdf68",
+                      "function": {
+                        "name": "read_run",
+                        "arguments": "{\"runId\": \"{{result:0}}\"}"
+                      }
+                    }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "The user wants a short video of the generated image with the rose opening. I've started the `sample-motion` run (id `{{result:0}}`). It is currently queued. I need to read its status until it's done.",
+                      "format": "unknown",
+                      "index": 0
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 2535,
+              "completion_tokens": 136,
+              "total_tokens": 2671,
+              "cost": 0.0006283125,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0006283125,
+                "upstream_inference_prompt_cost": 0.0004753125,
+                "upstream_inference_completions_cost": 0.000153
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 75,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:20 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.27",
+            "x-comfy-request-id": "1f7f4aaa-515e-4d28-9cd8-8e4c66c5c5a1",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0012796209"
+          },
+          "body": {
+            "id": "gen-1792618038-meU6rfEIHvmhQGwJ9WWp",
+            "object": "chat.completion",
+            "created": 1792618038,
+            "model": "qwen/qwen3.6-flash",
+            "provider": "Alibaba",
+            "system_fingerprint": null,
+            "service_tier": null,
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "stop",
+                "native_finish_reason": "stop",
+                "message": {
+                  "role": "assistant",
+                  "content": "I've created the image and the video.\n\nImage (Run sample-image 5b248efa): Asset 3a4b5c6d\nVideo (Run sample-motion 2a0032ac): Asset 4b5c6d7e",
+                  "refusal": null,
+                  "reasoning": "The user asked for an image of a red rose, and then a short video of that image with the rose opening.\n\nI have successfully:\n1. Created an image using `sample-image` with the prompt \"a red rose\". The run ID is `{{seen:0}}`. The output asset ID is `{{result:1}}`.\n2. Created a video using `sample-motion` with the generated image as input and the prompt \"rose opening\". The run ID is `{{result:0}}`. The output asset ID is `{{result:2}}`.\n\nBoth runs are complete (\"done\"). I can now report the results to the user.",
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "The user asked for an image of a red rose, and then a short video of that image with the rose opening.\n\nI have successfully:\n1. Created an image using `sample-image` with the prompt \"a red rose\". The run ID is `{{seen:0}}`. The output asset ID is `{{result:1}}`.\n2. Created a video using `sample-motion` with the generated image as input and the prompt \"rose opening\". The run ID is `{{result:0}}`. The output asset ID is `{{result:2}}`.\n\nBoth runs are complete (\"done\"). I can now report the results to the user.",
+                      "format": "unknown",
+                      "index": 0
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 2841,
+              "completion_tokens": 314,
+              "total_tokens": 3155,
+              "cost": 0.0008859375,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0008859375,
+                "upstream_inference_prompt_cost": 0.0005326875,
+                "upstream_inference_completions_cost": 0.00035325
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 251,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -58,13 +58,24 @@ export function routerChatUrl(): string {
   return `${base}/v2/models/${routerChat.route}`
 }
 
+function routerMessageOf(message: unknown): unknown {
+  return isRecord(message) &&
+    message.role === "assistant" &&
+    message.content === null
+    ? { ...message, content: "" }
+    : message
+}
+
 export function routerBodyOf(sent: unknown): string {
   const parsed: unknown = typeof sent === "string" ? JSON.parse(sent) : {}
   const body = isRecord(parsed) ? parsed : {}
+  const kept = Object.fromEntries(
+    Object.entries(body).filter(([name]) => !streamFields.includes(name))
+  )
   return JSON.stringify(
-    Object.fromEntries(
-      Object.entries(body).filter(([name]) => !streamFields.includes(name))
-    )
+    Array.isArray(kept.messages)
+      ? { ...kept, messages: kept.messages.map(routerMessageOf) }
+      : kept
   )
 }
 

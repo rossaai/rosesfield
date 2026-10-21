@@ -1,11 +1,14 @@
 import { type Run, type RunStatus, run } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
+import { z } from "zod"
 import {
   defaultChatModel,
   routerChatModels,
 } from "#infrastructure/router-chat-models"
 import {
   type ModelAnswers,
+  type RouterExchange,
+  readHandWrittenAnswers,
   readModelAnswers,
   replayAnswers,
   routerExchange,
@@ -84,6 +87,33 @@ function chainRun(options: {
   })
 }
 
+function isVideoFromImage(exchange: RouterExchange): boolean {
+  const calls = z
+    .object({
+      choices: z.array(
+        z.object({
+          message: z.object({
+            tool_calls: z
+              .array(
+                z.object({ function: z.object({ arguments: z.string() }) })
+              )
+              .optional(),
+          }),
+        })
+      ),
+    })
+    .safeParse(exchange.body)
+  const callsOf = calls.success
+    ? (calls.data.choices[0]?.message.tool_calls ?? [])
+    : []
+  return callsOf.some((call) => {
+    const sent = z
+      .object({ inputs: z.object({ image: z.array(z.string()) }) })
+      .safeParse(JSON.parse(call.function.arguments))
+    return sent.success && sent.data.inputs.image.includes("{{result:1}}")
+  })
+}
+
 function failingOn(credits: number, failed: string): ScenarioResult[] {
   return agentScenarios.map((scenario) => ({
     scenario: scenario.id,
@@ -133,12 +163,12 @@ describe("the agent's scenarios on Router answers", () => {
   }
 
   it("takes no hand-written answer file as Router evidence for the default", async () => {
-    const handWritten = answerFiles.filter(
-      (answers) => answers.source.kind === "hand-written"
-    )
-    const models = await Promise.all(handWritten.map(replayAll))
+    const handWritten = await replayAll(readHandWrittenAnswers())
 
-    expect(cheapestPass(models)).toBeNull()
+    expect(handWritten.results.map((result) => result.problems)).toEqual(
+      agentScenarios.map(() => [])
+    )
+    expect(cheapestPass([handWritten])).toBeNull()
   })
 
   it("picks the cheapest model whose captured answers pass every scenario", () => {
@@ -184,17 +214,11 @@ describe("the agent's scenarios on Router answers", () => {
     expect(cheapestPass(models)).toBe("google/gemini-3.5-flash")
   })
 
-  if (capturedFiles.length > 0) {
-    it("defaults to the cheapest model whose captured answers pass every scenario", async () => {
-      const models = await Promise.all(capturedFiles.map(replayAll))
+  it("defaults to the cheapest model whose captured answers pass every scenario", async () => {
+    const models = await Promise.all(capturedFiles.map(replayAll))
 
-      expect(defaultChatModel).toBe(cheapestPass(models))
-    })
-  } else {
-    it("rests the default on the hand-written answer file, not yet measured on the Router", () => {
-      expect(defaultAnswers().source).toEqual({ kind: "hand-written" })
-    })
-  }
+    expect(cheapestPass(models)).toBe(defaultChatModel)
+  })
 
   it("fails a chain whose image run failed while its video run ended done", () => {
     const image = chainRun({
@@ -221,12 +245,17 @@ describe("the agent's scenarios on Router answers", () => {
   })
 
   it("fails a chain whose video is made from the run id, not from the image", async () => {
-    const written = defaultAnswers().scenarios.chain
-    const exchanges = (written?.exchanges ?? []).map((exchange, index) =>
-      index === 2
+    const written = defaultAnswers().scenarios.chain?.exchanges ?? []
+    const video = written.findIndex(isVideoFromImage)
+    expect(video).toBeGreaterThan(0)
+    const exchanges = written.map((exchange, index) =>
+      index === video
         ? routerExchange.parse(
             JSON.parse(
-              JSON.stringify(exchange).replace("{{result:1}}", "{{result:0}}")
+              JSON.stringify(exchange).replaceAll(
+                "{{result:1}}",
+                "{{result:0}}"
+              )
             )
           )
         : exchange
