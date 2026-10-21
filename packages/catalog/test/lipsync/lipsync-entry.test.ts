@@ -15,14 +15,21 @@ describe("the lip sync entry", () => {
 
   it("gives the screen the mode defaults and the Text chain", () => {
     expect(Object.keys(entry).sort()).toEqual([
+      "SpeechChain",
       "clipModel",
       "graphModel",
+      "lipInputsOf",
       "lipsyncModes",
       "modeDefaults",
+      "speakThenSync",
       "speechAppOf",
       "speechDefaultOf",
+      "speechInputsOf",
+      "speechModelInput",
+      "speechPlanOf",
       "speechRunOf",
       "speechTask",
+      "speechTextInput",
       "spokenInputs",
     ])
   })

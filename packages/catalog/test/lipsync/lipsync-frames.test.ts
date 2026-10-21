@@ -4,6 +4,7 @@ import {
   framesPerSecond,
   heldSecondsFor,
   latentSizeMap,
+  lengthOfSeconds,
   lengthValues,
   sizeMap,
 } from "#lipsync/comfy/lipsync-frames"
@@ -67,5 +68,19 @@ describe("the control of the frame check", () => {
     const atTwentyFive = (seconds: number) => Math.round(seconds * 25) + 1
     expect(frameMisses(nearest).length).toBeGreaterThan(0)
     expect(frameMisses(atTwentyFive).length).toBeGreaterThan(0)
+  })
+})
+
+describe("the length a spoken line asks of the LTX 2.3 graph", () => {
+  it("rounds the speech up to the next step the graph takes, so the video holds every word", () => {
+    expect(lengthOfSeconds(5)).toBe(5)
+    expect(lengthOfSeconds(5.01)).toBe(5.04)
+    expect(lengthOfSeconds(4.999_999_9)).toBe(5)
+    expect(lengthValues).toContain(lengthOfSeconds(5.01))
+  })
+
+  it("keeps a short line at 2 seconds and a long one at 10", () => {
+    expect(lengthOfSeconds(0.6)).toBe(2)
+    expect(lengthOfSeconds(14)).toBe(10)
   })
 })
