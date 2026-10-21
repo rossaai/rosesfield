@@ -72,6 +72,18 @@ export const proposalResponse = z.object({ proposal })
 
 export const acceptedProposalResponse = z.object({ proposal, run })
 
+export const turnCredits = z.number().min(0)
+
+export const agentModelId = z.string().min(1).max(200)
+
+export const agentModelsResponse = z.object({
+  models: z.array(agentModelId),
+  model: agentModelId.nullable(),
+  refusal: errorBody.nullable(),
+})
+
+export const chooseAgentModelBody = z.strictObject({ model: agentModelId })
+
 export const answerEvent = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("message"),
@@ -80,7 +92,7 @@ export const answerEvent = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("run"), runId }),
   z.object({ type: z.literal("proposal"), proposal }),
-  z.object({ type: z.literal("done") }),
+  z.object({ type: z.literal("done"), credits: turnCredits.optional() }),
   z.object({ type: z.literal("failed"), error: errorBody }),
 ])
 
@@ -89,6 +101,7 @@ export const transcriptItem = z.discriminatedUnion("type", [
   z.object({ type: z.literal("agent"), text: z.string() }),
   z.object({ type: z.literal("run"), runId }),
   z.object({ type: z.literal("proposal"), proposal }),
+  z.object({ type: z.literal("credits"), credits: turnCredits }),
 ])
 
 export const transcriptResponse = z.object({
@@ -97,6 +110,27 @@ export const transcriptResponse = z.object({
 })
 
 const conversationParams = z.object({ conversationId })
+
+export const agentModelRoutes = {
+  listAgentModels: defineRoute({
+    method: "GET",
+    path: "/api/agent/models",
+    params: null,
+    query: null,
+    body: null,
+    response: agentModelsResponse,
+    status: 200,
+  }),
+  chooseAgentModel: defineRoute({
+    method: "PATCH",
+    path: "/api/agent/models",
+    params: null,
+    query: null,
+    body: chooseAgentModelBody,
+    response: agentModelsResponse,
+    status: 200,
+  }),
+}
 const proposalParams = z.object({ conversationId, proposalId })
 
 export const conversationRoutes = {
@@ -186,3 +220,4 @@ export type ProposalStatus = z.infer<typeof proposalStatus>
 export type AnswerEvent = z.infer<typeof answerEvent>
 export type TranscriptItem = z.infer<typeof transcriptItem>
 export type Transcript = z.infer<typeof transcriptResponse>
+export type AgentModels = z.infer<typeof agentModelsResponse>

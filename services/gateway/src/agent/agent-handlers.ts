@@ -1,7 +1,9 @@
 import {
   AcceptProposalHandler,
   type AgentHarness,
+  ChooseAgentModelHandler,
   DeleteConversationHandler,
+  ListAgentModelsHandler,
   ListConversationsHandler,
   ReadConversationHandler,
   SendMessageHandler,
@@ -20,6 +22,8 @@ export type AgentRouteHandlers = {
   sendMessage: SendMessageHandler
   acceptProposal: AcceptProposalHandler
   skipProposal: SkipProposalHandler
+  listModels: ListAgentModelsHandler
+  chooseModel: ChooseAgentModelHandler
 }
 
 type AgentRouteHandlersOptions = {
@@ -43,5 +47,7 @@ export function agentRouteHandlers(
     }),
     acceptProposal: new AcceptProposalHandler({ agent, startRun }),
     skipProposal: new SkipProposalHandler({ agent }),
+    listModels: new ListAgentModelsHandler({ agent }),
+    chooseModel: new ChooseAgentModelHandler({ agent }),
   }
 }

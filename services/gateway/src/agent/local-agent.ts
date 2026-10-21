@@ -2,9 +2,9 @@ import { join } from "node:path"
 import {
   type AgentModel,
   type AgentToolHandlers,
-  agentTools,
   openPiModels,
   PiAgentHarness,
+  publishedAgentTools,
 } from "@rosesfield/agent"
 import { openSqliteFileStorage } from "@rosesfield/agent/local"
 import type { AppDefinition } from "@rosesfield/contract"
@@ -29,7 +29,10 @@ export function localAgent(options: LocalAgentOptions): PiAgentHarness | null {
   return new PiAgentHarness({
     models: () => openPiModels(model),
     storage: () => openSqliteFileStorage(file),
-    tools: agentTools({ apps: options.apps, handlers: () => handlers }),
+    tools: publishedAgentTools({
+      apps: options.apps,
+      handlers: () => handlers,
+    }),
     clock: options.clock,
   })
 }

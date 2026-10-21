@@ -9,9 +9,9 @@ import {
 import { join } from "node:path"
 import {
   type AgentModel,
-  agentTools,
   openPiModels,
   PiAgentHarness,
+  publishedAgentTools,
 } from "@rosesfield/agent"
 import { openSqliteFileStorage } from "@rosesfield/agent/local"
 import type { AppDefinition } from "@rosesfield/contract"
@@ -129,7 +129,10 @@ export class SessionAgents {
     const agent = new PiAgentHarness({
       models: () => openPiModels(model, { keyOf: () => access.modelKey() }),
       storage: () => openSqliteFileStorage(file),
-      tools: agentTools({ apps: this.apps, handlers: () => access.handlers() }),
+      tools: publishedAgentTools({
+        apps: this.apps,
+        handlers: () => access.handlers(),
+      }),
       clock: this.clock,
     })
     const entry: OpenAgent = { agent, access, idle: null }

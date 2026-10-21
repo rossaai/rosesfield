@@ -13,6 +13,7 @@ import type { AppDefinition } from "@rosesfield/contract"
 import {
   DemoGenerationEngine,
   GetRunHandler,
+  ReadModelFormsHandler,
   StartRunHandler,
 } from "@rosesfield/generation"
 import { FixedClock } from "@rosesfield/kernel"
@@ -44,6 +45,7 @@ export type Generation = {
   runs: FakeRunRepository
   jobs: FakeJobRunner
   startRun: StartRunHandler
+  readModelForms: ReadModelFormsHandler
 }
 
 export type AgentRig = {
@@ -58,14 +60,16 @@ export function generationFor(apps: readonly AppDefinition[]): Generation {
   const clock = new FixedClock({ now: start })
   const runs = new FakeRunRepository()
   const jobs = new FakeJobRunner()
+  const engines = [new DemoGenerationEngine({ clock })]
   const startRun = new StartRunHandler({
     apps: new FakeAppCatalog(apps),
     runs,
-    engines: [new DemoGenerationEngine({ clock })],
+    engines,
     jobs,
     clock,
   })
-  return { clock, runs, jobs, startRun }
+  const readModelForms = new ReadModelFormsHandler({ engines })
+  return { clock, runs, jobs, startRun, readModelForms }
 }
 
 export function appToolsFor(
@@ -87,6 +91,7 @@ export function toolHandlersFor(
   const { assets, characters } = library
   return {
     startRun: generation.startRun,
+    readModelForms: generation.readModelForms,
     getRun: new GetRunHandler({ runs: generation.runs }),
     listAssets: new ListAssetsHandler({ assets }),
     getAsset: new GetAssetHandler({ assets }),

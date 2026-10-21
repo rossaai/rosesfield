@@ -17,6 +17,10 @@ export type ConversationList = {
   items: Record<string, ListedConversation>
 }
 
+export type AgentSettings = {
+  model: string | null
+}
+
 export type ConversationSettings = {
   runApproval: RunApproval
 }
@@ -39,6 +43,13 @@ export const conversationList = defineDoc<ConversationList>({
   version: 1,
   scope: "session",
   initial: () => ({ items: {} }),
+})
+
+export const agentSettings = defineDoc<AgentSettings>({
+  kind: "rosesfield.agent-settings",
+  version: 1,
+  scope: "session",
+  initial: () => ({ model: null }),
 })
 
 export const conversationSettings = defineDoc<ConversationSettings>({
