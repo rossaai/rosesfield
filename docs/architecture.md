@@ -92,7 +92,7 @@ A port names a capability. An adapter names its technology. A second adapter is 
 2. The route validates them against the app's schema and calls `StartRun`.
 3. `StartRun` writes the run as `queued`, asks `GenerationEngine` to submit it with an idempotency key, and asks `JobRunner` to watch it. An engine that takes no idempotency key gets one submit and no retry, per `docs/stack.md` §RunPod Serverless.
 4. The runner wakes, reads the remote status once, writes progress, and returns the next delay. It honours the engine's `Retry-After`.
-5. When the run succeeds, the runner copies every output into `AssetStore` at once, because engines delete outputs: RunPod Serverless after 30 minutes and Comfy Cloud after 30 days. The run becomes `done` with its assets.
+5. When the run succeeds, the runner copies every output into `AssetStore` at once, because engines delete outputs: RunPod Serverless after 30 minutes and Comfy Cloud after 30 days. The run becomes `done` with its assets. An output that is empty or black is dropped, and a run with no output left fails with `RUN_OUTPUT_BLANK`. The Comfy adapter adds five small stills, evenly spaced across the frames of each video it saves, to every graph it submits, saved under `rosesfield-stills/`. A video counts as black only when all five stills are black. The stills are never kept as outputs. A video with no stills, such as a hosted model's, is kept.
 6. The client polls the run and shows the result where it was asked for.
 
 The run states are `queued`, `running`, `done`, `failed` and `cancelled`, declared once in domain. The engine's own states map onto them in the adapter.

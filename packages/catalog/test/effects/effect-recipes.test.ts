@@ -142,9 +142,27 @@ describe("the effect recipes kept as data", () => {
     ).toThrow(/many-copies\.json is invalid: photoFrame/)
   })
 
-  it("ends Push into eye on a dark frame under its last-frame luma, with a camera that moves from the first frame", () => {
+  it("ends Push into eye on a dark frame under its last-frame luma, after a sharp close-up of the eye, with a camera that moves from the first frame", () => {
     const eye = recipeOf("push-into-eye")
-    expect(eye.endFrame).toEqual({ source: "dark", luma: 8, strength: 0.9 })
+    expect(eye.endFrame).toEqual({ source: "dark", luma: 1, strength: 0.9 })
+    expect(eye.midFrame).toMatchObject({
+      source: "edit",
+      time: 5.5,
+      strength: 0.5,
+    })
+    expect(eye.midFrame?.prompt).toMatch(
+      /extreme macro close-up of the iris of one of the person's eyes/
+    )
+    expect(eye.midFrame?.prompt).toMatch(/iris fills the whole frame/)
+    expect(eye.midFrame?.prompt).toMatch(/black pupil sits in the centre/)
+    expect(eye.prompt).toMatch(/never slows/)
+    expect(eye.prompt).toMatch(
+      /black pupil grows outward until it swallows the whole frame/
+    )
+    expect(eye.prompt).not.toMatch(/\b(fades?|dims?)\b/)
+    expect(eye.design.sound?.prompt).toMatch(
+      /^The sound starts on the first frame/
+    )
     expect(
       eye.endFrame.source === "dark" ? eye.endFrame.luma : 255
     ).toBeLessThan(eye.design.lastFrame.maxLuma ?? 0)

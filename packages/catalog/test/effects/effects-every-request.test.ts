@@ -75,7 +75,9 @@ function expectedModels(recipe: EffectRecipe): string[] {
     videoModel,
     ...[
       ...ltxModels,
-      ...(recipe.endFrame.source === "edit" ? imageEditModels : []),
+      ...(recipe.endFrame.source === "edit" || recipe.midFrame !== null
+        ? imageEditModels
+        : []),
       ...(recipe.hold === null ? [] : ["birefnet.safetensors"]),
     ].sort(),
   ]
@@ -139,7 +141,7 @@ describe("every effects engine request against the recorded v2 routes", () => {
           length: frames,
         },
       },
-      "366": { inputs: { frames_number: frames } },
+      "366": { inputs: { frames_number: frames + 1 } },
       "357": { inputs: { strength: 0.7 } },
       "349": { inputs: { strength: 1 } },
       "380": {
@@ -165,7 +167,7 @@ describe("every effects engine request against the recorded v2 routes", () => {
       expect(workflow["620"]).toBeUndefined()
       expect(workflow["460"]).toBeUndefined()
     } else if (end.source === "dark") {
-      expect(workflow["620"]).toBeUndefined()
+      expect(workflow["620"] === undefined).toBe(recipe.midFrame === null)
       expect(workflow).toMatchObject({
         "628": { inputs: { color: end.luma * 0x010101 } },
         "460": { inputs: { image: ["628", 0], strength: end.strength } },
@@ -177,6 +179,21 @@ describe("every effects engine request against the recorded v2 routes", () => {
         "626": { inputs: { seed: 42 } },
         "460": { inputs: { image: closing, strength: end.strength } },
         "463": { inputs: { image: closing, strength: end.strength } },
+      })
+    }
+    const mid = recipe.midFrame
+    if (mid === null) {
+      expect(workflow["472"]).toBeUndefined()
+      expect(workflow["473"]).toBeUndefined()
+    } else {
+      expect(workflow).toMatchObject({
+        "620": { inputs: { prompt: mid.prompt } },
+        "626": { inputs: { seed: 42 } },
+        "471": { inputs: { image: ["470", 0] } },
+        "472": { inputs: { image: ["471", 0], strength: mid.strength } },
+        "473": { inputs: { image: ["471", 0], strength: mid.strength } },
+        "460": { inputs: { positive: ["472", 0], latent: ["472", 2] } },
+        "463": { inputs: { positive: ["473", 0], latent: ["473", 2] } },
       })
     }
     if (recipe.hold === null) {

@@ -25,11 +25,11 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 | `height` | 356 `EmptyLTXVLatentVideo`, Size and length | `height` | a value |
 | `fitWidth` | 606 `ImageScale`, Fitted photo | `width` | a value |
 | `fitHeight` | 606 `ImageScale`, Fitted photo | `height` | a value |
-| `endFrameSeed` | 626 `KSampler`, End frame | `seed` | a value |
+| `endFrameSeed` | 626 `KSampler`, End frame | `seed` | a value, bound when the image edit pass runs |
 | `deliveryWidth` | 380 `ImageScale`, Delivery size | `width` | a value |
 | `deliveryHeight` | 380 `ImageScale`, Delivery size | `height` | a value |
 
-The recipe sets the rest: the prompt on node 501, the sound line on node 503, the length on nodes 356 and 366, the end-frame prompt on node 620 and the strengths on nodes 460, 461, 463 and 464.
+The recipe sets the rest: the prompt on node 501, the sound line on node 503, the length on nodes 356 and 366, the edit prompt on node 620, the mid frame's place on nodes 472 and 473, and the strengths on nodes 460, 461, 463, 464, 472 and 473.
 
 ## Outputs
 
@@ -57,7 +57,7 @@ Lightricks' LTX 2.5 files are gated on Hugging Face, so their SHA256 digests are
 
 ## The effects
 
-Each effect is a recipe kept as data in [`packages/catalog/src/effects/recipes/`](../../packages/catalog/src/effects/recipes/). A recipe holds its prompt, where the photo sits, its end-frame prompt and strength, its hold strength, its adapter, which is always none, and its fixed length of 5 to 15 seconds. Its design holds the unit and the family of the reference reading it is designed from, the set piece, the cut windows, the last frame, the sound bed with its loudness band and true peak, and the encode.
+Each effect is a recipe kept as data in [`packages/catalog/src/effects/recipes/`](../../packages/catalog/src/effects/recipes/). A recipe holds its prompt, where the photo sits, its end-frame prompt and strength, its mid frame if it has one, its hold strength, its adapter, which is always none, and its fixed length of 5 to 15 seconds. Its design holds the unit and the family of the reference reading it is designed from, the set piece, the cut windows, the last frame, the sound bed with its loudness band and true peak, and the encode.
 
 A recipe passes only with the proof of one run: a gate run of the look's criteria list that held its reference outputs and refused one planted output, a judge that wrote none of its inputs and held the run against every criterion that applies, a reading of the file inside the recipe's length, pixel area, cut windows, loudness band and last frame, with a first frame whose mean luma sits above the black floor of 17.5, so a run that starts black does not pass, and the row of that run in the run ledger, [`runs.json`](../../packages/catalog/src/effects/runs.json), with the same effect, graph, seed, resolution and shape and the verdict kept. Every run that made a kept or a refused output is a row of that ledger with its effect, the hash of its graph, the hash of its photo, its seed, resolution and shape, the balance before and after it, and the judge's verdict with the criteria it failed. The catalog refuses a row that starts or ends under 2,000 credits, and a passed recipe that lacks any of these, and Effects offers only the passed recipes. While none has passed, Effects takes no run.
 
@@ -67,6 +67,8 @@ A recipe passes only with the proof of one run: a gate run of the look's criteri
 | `edit` | Qwen Image Edit 2511 edits the fitted photo into the effect's last frame |
 | `dark` | node 628, an `EmptyImage` at the fitted photo's size in the recipe's grey, `luma` 0 to 40 on the 8-bit scale, guides the last frame at the recipe's strength, so the clip ends on a designed dark frame. No image edit node runs. A look whose photo frame is `last` takes no `dark` end frame |
 
+A recipe can also hold one mid frame: a frame inside the clip, made by the image edit pass from the fitted photo with the recipe's edit prompt, and guided at the recipe's time and strength. The graph has one image edit pass, so a recipe with a mid frame takes a `dark` end frame or none, never an `edit` one.
+
 | Photo frame | What the graph does |
 |---|---|
 | `first` | the fitted photo is locked at frame 0, and the edited frame guides the last frame |
@@ -75,10 +77,10 @@ A recipe passes only with the proof of one run: a gate run of the look's criteri
 ## What every run does
 
 1. It scales your photo and crops its centre to the LTX size of the chosen shape at the chosen resolution, node 606, such as 1280 by 720 at 16:9 and 704 by 1280 at 9:16 for 720p. No model touches the photo, so frame 0 keeps your pixels. The Effects screen picks the shape nearest your photo's own ratio.
-2. It makes the effect's last frame from the fitted photo with Qwen Image Edit 2511, nodes 600 to 604 and 620 to 627, at the fitted size, when the recipe has one.
+2. It makes the effect's edited frame from the fitted photo with Qwen Image Edit 2511, nodes 600 to 604 and 620 to 627, at the fitted size, when the recipe has one: its last frame or its mid frame.
 3. It locks the fitted photo at frame 0 with `LTXVImgToVideoInplace`, or the edited frame when the recipe lands on the photo: at strength 0.7 in the first stage, node 357, and at 1.0 in the second, node 349.
 4. It makes a matte of the subject with the core BiRefNet nodes `LoadBackgroundRemovalModel` and `RemoveBackground`, nodes 410 to 412, when the recipe holds the subject.
-5. It renders the shot in two stages. The last frame is an `LTXVAddGuide` guide at the last frame, nodes 460 and 463. The photo is a second guide at the last frame with the subject matte as its `attention_mask`, nodes 461 and 464, so the subject holds while the scene changes. `LTXVCropGuides` removes the guide frames after each stage, nodes 462 and 465.
+5. It renders the shot in two stages. A mid frame is an `LTXVAddGuide` guide at its frame, nodes 472 and 473, read from the edited frame resized and preprocessed as frame 0 is, nodes 470 and 471. The last frame is an `LTXVAddGuide` guide at the last frame, nodes 460 and 463, chained after the mid-frame guides. The photo is a second guide at the last frame with the subject matte as its `attention_mask`, nodes 461 and 464, so the subject holds while the scene changes. `LTXVCropGuides` removes the guide frames after each stage, nodes 462 and 465.
 6. It decodes the sound with node 358 when the recipe has a sound bed. Node 359 sets its integrated loudness to the middle of the look's band. Nodes 360 and 361 then raise it by the ceiling's distance from 0 dBFS, where `AudioAmplify` clips every sample to full scale, and lower it back, so no sample passes the ceiling, 1 dB under the look's true peak, and quieter samples keep their level. `AudioNormalize` was not used: it moves the sample peak to its target in both directions, so it would undo the loudness of node 359. The ceiling acts only on a sound whose peaks sit higher above its loudness than the band leaves room for. A silent look removes nodes 358 to 361.
 7. It scales the frames to the pixel area of the chosen resolution in the chosen shape, centre-cropped, node 380, such as 1280 by 720 at 16:9 and 832 by 1110 at 3:4 for 720p, and saves H.264 in MP4 at 24 frames a second, nodes 370 and 75.
 
@@ -86,12 +88,14 @@ A recipe passes only with the proof of one run: a gate run of the look's criteri
 
 The catalog's [`effect-graph.ts`](../../packages/catalog/src/effects/comfy/effect-graph.ts) derives each recipe's graph from this file:
 
-- It writes the recipe's prompt on node 501, its sound line on node 503 and its length on nodes 356 and 366.
+- It writes the recipe's prompt on node 501, its sound line on node 503 and its length on nodes 356 and 366. Node 356 takes the video's frames, `seconds * 24 + 1`. Node 366 takes one frame more. The core audio VAE makes `round(frames / 24 * 25)` latents and decodes `4 * latents - 3` mel frames at 100 a second, so 169 frames decode to 7.010 s of sound against 7.042 s of video. One frame more makes the sound at least as long as the video for every length from 5 to 15 seconds, and node 75, `SaveVideo`, cuts the sound to the video's length when it writes the file.
 - A recipe whose photo frame is `last` reads the edited frame, node 627, in the frame 0 locks 357 and 349, and the fitted photo, node 606, in the last-frame guides 460 and 463.
-- A `dark` end frame removes the image edit nodes 600 to 604, 620 to 623 and 625 to 627, keeps the size node 624, and links node 628 in grey `luma * 0x010101` to the guides 460 and 463. An `edit` end frame removes node 628.
-- An effect with no end frame removes the image edit nodes 600 to 604 and 620 to 628 and the guides 460 and 463, and links the next node to what the guide read.
+- A `dark` end frame links node 628 in grey `luma * 0x010101` to the guides 460 and 463. Any other end frame removes node 628.
+- The image edit nodes 600 to 604, 620 to 623 and 625 to 627 run when the recipe has an `edit` end frame or a mid frame, and node 620 takes that frame's prompt. Otherwise they are removed, and the size node 624 is removed too unless node 628 reads it.
+- A mid frame sets `frame_idx` and the strength of the guides 472 and 473. `frame_idx` is its time at 24 frames a second, rounded to a whole frame, such as frame 132 at 5.5 s. For a guide of one image, `LTXVAddGuide` takes any frame from -9999 to 9999 and places the image at that pixel frame. It rounds a frame only for a guide of more than 8 frames, read in `comfy_extras/nodes_lt.py` of ComfyUI v0.41.0. An effect with no mid frame removes the nodes 470 to 473 and links the end-frame guides to what the mid-frame guides read.
+- An effect with no end frame removes the guides 460 and 463, and links the next node to what the guide read.
 - An effect with no hold removes the guides 461 and 464 and the matte nodes 410 to 412.
-- An effect with no guide at all removes the crop nodes 462 and 465.
+- An effect with no end frame, no mid frame and no hold removes the crop nodes 462 and 465.
 - A sounding effect writes the middle of its loudness band on node 359, and its peak ceiling, `truePeakMax` minus 1 dB, as the gain of nodes 360 and 361.
 - A silent effect removes the audio decode and the loudness nodes, 358 to 361.
 - A recipe with an adapter adds node 420, a `LoraLoaderModelOnly` between the model and both guiders. No recipe has one.

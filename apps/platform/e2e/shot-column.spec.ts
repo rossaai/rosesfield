@@ -26,6 +26,7 @@ async function pick(
 ): Promise<void> {
   await choices.getByRole("combobox", { name: list, exact: true }).click()
   await page.getByRole("option", { name: value, exact: true }).click()
+  await expect(page.getByRole("listbox")).toHaveCount(0)
 }
 
 test.describe("Shot's input column", () => {

@@ -146,7 +146,7 @@
     "class_type": "LTXVEmptyLatentAudio",
     "inputs": {
       "audio_vae": ["386", 0],
-      "frames_number": 241,
+      "frames_number": 242,
       "frame_rate": 24,
       "batch_size": 1
     }
@@ -342,10 +342,10 @@
   "460": {
     "class_type": "LTXVAddGuide",
     "inputs": {
-      "positive": ["365", 0],
-      "negative": ["365", 1],
+      "positive": ["472", 0],
+      "negative": ["472", 1],
       "vae": ["385", 0],
-      "latent": ["357", 0],
+      "latent": ["472", 2],
       "image": ["627", 0],
       "frame_idx": -1,
       "strength": 0.9
@@ -381,10 +381,10 @@
   "463": {
     "class_type": "LTXVAddGuide",
     "inputs": {
-      "positive": ["462", 0],
-      "negative": ["462", 1],
+      "positive": ["473", 0],
+      "negative": ["473", 1],
       "vae": ["385", 0],
-      "latent": ["349", 0],
+      "latent": ["473", 2],
       "image": ["627", 0],
       "frame_idx": -1,
       "strength": 0.9
@@ -647,6 +647,58 @@
     },
     "_meta": {
       "title": "Back from the peak ceiling"
+    }
+  },
+  "470": {
+    "class_type": "ResizeImageMaskNode",
+    "inputs": {
+      "input": ["627", 0],
+      "resize_type": "scale longer dimension",
+      "resize_type.longer_size": 1536,
+      "scale_method": "lanczos"
+    },
+    "_meta": {
+      "title": "Mid frame size"
+    }
+  },
+  "471": {
+    "class_type": "LTXVPreprocess",
+    "inputs": {
+      "image": ["470", 0],
+      "img_compression": 18
+    },
+    "_meta": {
+      "title": "Mid frame"
+    }
+  },
+  "472": {
+    "class_type": "LTXVAddGuide",
+    "inputs": {
+      "positive": ["365", 0],
+      "negative": ["365", 1],
+      "vae": ["385", 0],
+      "latent": ["357", 0],
+      "image": ["471", 0],
+      "frame_idx": 132,
+      "strength": 0.8
+    },
+    "_meta": {
+      "title": "Mid-frame guide"
+    }
+  },
+  "473": {
+    "class_type": "LTXVAddGuide",
+    "inputs": {
+      "positive": ["462", 0],
+      "negative": ["462", 1],
+      "vae": ["385", 0],
+      "latent": ["349", 0],
+      "image": ["471", 0],
+      "frame_idx": 132,
+      "strength": 0.8
+    },
+    "_meta": {
+      "title": "Mid-frame guide at full size"
     }
   }
 }

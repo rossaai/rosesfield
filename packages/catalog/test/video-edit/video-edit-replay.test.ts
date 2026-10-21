@@ -12,6 +12,7 @@ import {
   type Recording,
   ReplayFetch,
 } from "../../../generation/test/infrastructure/replay-fetch"
+import { withoutVideoStills } from "../workflows/video-stills"
 import {
   engineCases,
   graphProblemsOf,
@@ -83,7 +84,12 @@ async function submit(request: EngineRequest, recordings: Recording[]) {
   const submission = await engine.submit(request)
   const job = replay.sent.find((sent) => sent.url.endsWith("/api/v2/jobs"))
   const sent: { workflow: Workflow } = JSON.parse(job?.body ?? "{}")
-  return { submission, replay, job, workflow: sent.workflow }
+  return {
+    submission,
+    replay,
+    job,
+    workflow: withoutVideoStills(sent.workflow),
+  }
 }
 
 async function submitOnce(inputs: Record<string, unknown>) {

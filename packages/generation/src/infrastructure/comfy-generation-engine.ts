@@ -29,6 +29,10 @@ import {
 import { mediaKindOf, mimeOf } from "#infrastructure/comfy/comfy-media"
 import { applyBindings } from "#infrastructure/comfy/comfy-value-binding"
 import {
+  addVideoStills,
+  withVideoStills,
+} from "#infrastructure/comfy/comfy-video-stills"
+import {
   comfyWorkflowAdapter,
   parseComfyWorkflow,
   workflowHashOf,
@@ -68,6 +72,7 @@ const jobSchema = z.object({
       z.object({
         id: z.string().min(1),
         node_id: z.string(),
+        name: z.string().default(""),
         type: z.string(),
         content_type: z.string(),
       })
@@ -157,7 +162,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
     const ticket = (await this.meter?.start(this.balance)) ?? null
     let job: Job
     try {
-      job = await this.post(workflow, request.idempotencyKey)
+      job = await this.post(addVideoStills(workflow), request.idempotencyKey)
     } catch (error) {
       this.meter?.drop(ticket)
       throw error
@@ -210,13 +215,13 @@ export class ComfyGenerationEngine extends GenerationEngine {
 
   override async listOutputs(ref: string): Promise<EngineOutput[]> {
     const job = parseJob(await callComfy(() => this.low.getJob(ref)))
-    return Promise.all(
-      job.outputs
-        .filter((output) =>
-          ComfyGenerationEngine.outputKinds.includes(output.type)
-        )
-        .map((output) => this.download(output))
+    const listed = job.outputs.filter((output) =>
+      ComfyGenerationEngine.outputKinds.includes(output.type)
     )
+    const outputs = await Promise.all(
+      listed.map((output) => this.download(output))
+    )
+    return withVideoStills(listed, outputs)
   }
 
   override async cancel(ref: string): Promise<void> {

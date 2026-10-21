@@ -42,6 +42,7 @@
     "prompt": "The same person as a giant standing beside a tall glass tower in bright daylight, the city below them.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": null,
   "adapter": null,
   "seconds": 10,
