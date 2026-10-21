@@ -9,14 +9,7 @@ import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import type { z } from "zod"
 import { app } from "#lipsync/app"
-import { clipWorkflow } from "#lipsync/comfy/clip-workflow"
-import {
-  framesMadeBy,
-  lengthValues,
-  passCount,
-  windowOf,
-} from "#lipsync/comfy/lipsync-frames"
-import { passNode, photoWorkflow } from "#lipsync/comfy/photo-workflow"
+import { photoWorkflow } from "#lipsync/comfy/photo-workflow"
 import { readApps } from "#list-apps"
 import { findWorkflow } from "#list-workflows"
 import { apiGraph } from "#workflow-entry.contract"
@@ -35,22 +28,15 @@ function parseLipsync(): AppDefinition {
 
 type ApiWorkflow = z.infer<typeof apiGraph>
 
-function workflowOf(id: string) {
-  const workflow = findWorkflow(id)
-  if (workflow === null) {
-    throw new Error(`No workflow ${id}`)
-  }
-  return { models: [...workflow.models], graph: apiGraph.parse(workflow.graph) }
+function photoGraph(): ApiWorkflow {
+  return apiGraph.parse(findWorkflow(photoWorkflow)?.graph)
 }
 
 const lipsync = parseLipsync()
-const photoEntry = workflowOf(photoWorkflow)
-const clipEntry = workflowOf(clipWorkflow)
-const writtenScene = photoEntry.graph["9"]?.inputs.text
+const photoModels = findWorkflow(photoWorkflow)?.models ?? []
 const cloudUrl = "https://cloud.comfy.org"
 const jobId = "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a"
 const photoId = assetIdFormat.parse("6a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c9d")
-const clipId = assetIdFormat.parse("7b8c9d0e-1f2a-4b3c-9d4e-5f6a7b8c9d0e")
 const audioId = assetIdFormat.parse("8c9d0e1f-2a3b-4c4d-8e5f-6a7b8c9d0e1f")
 const firstUpload = "9d0e1f2a-3b4c-4d5e-9f6a-7b8c9d0e1f2a"
 const secondUpload = "0e1f2a3b-4c5d-4e6f-8a7b-8c9d0e1f2a3b"
@@ -60,12 +46,6 @@ const photoFile: EngineFile = {
   kind: "image",
   mime: "image/png",
   bytes: Uint8Array.of(137, 80, 78, 71),
-}
-const clipFile: EngineFile = {
-  assetId: clipId,
-  kind: "video",
-  mime: "video/mp4",
-  bytes: Uint8Array.of(0, 0, 0, 24),
 }
 const audioFile: EngineFile = {
   assetId: audioId,
@@ -92,13 +72,13 @@ const submitted: Recording = {
 
 type Body = { inputs: Record<string, unknown>; aspectRatio?: string }
 
-function requestFor(body: Body, files: readonly EngineFile[]): EngineRequest {
+function requestFor(body: Body): EngineRequest {
   const parsed = startRunBodyFor(lipsync).parse(body)
   return {
     idempotencyKey: "lipsync-run-1",
     binding: resolveBinding(lipsync.engine, parsed.inputs),
     inputs: parsed.inputs,
-    files,
+    files: [photoFile, audioFile],
     count: parsed.count,
     aspectRatio: parsed.aspectRatio,
     seed: 4242,
@@ -110,17 +90,17 @@ function isWorkflow(value: unknown): value is ApiWorkflow {
   return typeof value === "object" && value !== null
 }
 
-async function submit(body: Body, files: readonly EngineFile[]) {
+async function submit(body: Body) {
   const replay = new ReplayFetch([
-    uploaded(firstUpload, files[0]?.mime ?? ""),
-    uploaded(secondUpload, files[1]?.mime ?? ""),
+    uploaded(firstUpload, photoFile.mime),
+    uploaded(secondUpload, audioFile.mime),
     submitted,
   ])
   const engine = new ComfyGenerationEngine({
     apiKey: "comfyui-test",
     fetch: replay.fetch,
   })
-  const submission = await engine.submit(requestFor(body, files))
+  const submission = await engine.submit(requestFor(body))
   const job = replay.sent.find((sent) => sent.url.endsWith("/api/v2/jobs"))
   const sent: unknown = JSON.parse(job?.body ?? "null")
   const workflow =
@@ -149,27 +129,24 @@ function linkOf(workflow: ApiWorkflow, node: string, name: string): string {
   return isLink(value) ? value.join(":") : "none"
 }
 
-function danglingLinks(workflow: ApiWorkflow): string[] {
-  return Object.entries(workflow).flatMap(([id, node]) =>
+function audioProblems(workflow: ApiWorkflow): string[] {
+  const problems = Object.entries(workflow).flatMap(([id, node]) =>
     Object.entries(node.inputs).flatMap(([name, value]) =>
       isLink(value) && !Object.hasOwn(workflow, value[0])
         ? [`${id}.${name} -> ${value[0]}`]
         : []
     )
   )
-}
-
-function chainProblems(workflow: ApiWorkflow): string[] {
-  const problems = danglingLinks(workflow)
-  for (let pass = 2; pass <= passCount; pass += 1) {
-    const before =
-      pass === 2 ? `${passNode(1, 6)}:0` : `${passNode(pass - 1, 8)}:0`
-    const talk = passNode(pass, 1)
-    if (linkOf(workflow, talk, "previous_frames") !== before) {
-      problems.push(`pass ${pass} does not read every frame made before it`)
-    }
-    if (linkOf(workflow, passNode(pass, 7), "batch_index") !== `${talk}:4`) {
-      problems.push(`pass ${pass} keeps the frames it carried over`)
+  const checks: readonly [string, string, string, string][] = [
+    ["332", "audio", "276:0", "the trim does not read your audio"],
+    ["328", "audio", "332:0", "the model does not encode your audio"],
+    ["327", "samples", "328:0", "your audio latent is not held"],
+    ["326", "audio_latent", "327:0", "the first stage denoises your audio"],
+    ["312", "audio", "332:0", "the video does not carry your audio"],
+  ]
+  for (const [node, name, from, problem] of checks) {
+    if (linkOf(workflow, node, name) !== from) {
+      problems.push(problem)
     }
   }
   return problems
@@ -181,125 +158,70 @@ const photoBody = {
   audio: [audioId],
 }
 
-const clipBody = {
-  inputs: { mode: "clip", clip: [clipId], audio: [audioId], length: 5 },
-  aspectRatio: "9:16",
-}
-
-const clipShape = {
-  "1": { class_type: "LoadVideo", inputs: { file: asset(firstUpload) } },
-  "2": { class_type: "LoadAudio", inputs: { audio: asset(secondUpload) } },
-  "4": { class_type: "ImageScale", inputs: { width: 480, height: 832 } },
-  "15": {
-    class_type: "MultiTalkWav2VecEmbeds",
-    inputs: { num_frames: 125, audio_1: ["2", 0] },
-  },
-  "19": { inputs: { width: 480, height: 832, mode: "infinitetalk" } },
-  "21": { class_type: "WanVideoSampler", inputs: { seed: 4242 } },
-  "900": { inputs: { length: 125 } },
-  "901": { inputs: { audio: ["2", 0] } },
-}
-
 describe("the engine request the Lip sync binding produces", () => {
-  it("sends the photo, the audio and the scene to 4 chained passes sized for 16:9 and 81 frames", async () => {
-    const { submission, replay, job, workflow } = await submit(
-      {
-        inputs: {
-          ...photoBody,
-          length: 3.24,
-          scene: "A small kitchen in morning light",
-        },
-        aspectRatio: "16:9",
-      },
-      [photoFile, audioFile]
-    )
+  it("sends the photo, the audio and the scene to the LTX 2.3 graph sized for 1:1 and 5 seconds", async () => {
+    const { submission, replay, job, workflow } = await submit({
+      inputs: { ...photoBody, length: 5, scene: "A small kitchen" },
+      aspectRatio: "1:1",
+    })
     expect(submission.ref).toBe(jobId)
-    expect(submission.models).toEqual(photoEntry.models)
-    expect(submission.models).toContain(
-      "wan2.1_infiniteTalk_single_fp16.safetensors"
-    )
+    expect(submission.models).toEqual([...photoModels])
+    expect(submission.models).toContain("ltx-2.3-22b-dev-fp8.safetensors")
     expect(job?.headers.get("Idempotency-Key")).toBe("lipsync-run-1")
     expect(replay.unused()).toEqual([])
-    expect(chainProblems(workflow)).toEqual([])
-    const window = windowOf(81)
-    expect(window).toBe(29)
+    expect(audioProblems(workflow)).toEqual([])
     expect(workflow).toMatchObject({
-      "1": { class_type: "LoadImage", inputs: { image: asset(firstUpload) } },
-      "2": { class_type: "LoadAudio", inputs: { audio: asset(secondUpload) } },
-      "9": { inputs: { text: "A small kitchen in morning light" } },
-      "900": { class_type: "ImageFromBatch", inputs: { length: 81 } },
-      "901": {
-        class_type: "CreateVideo",
-        inputs: { fps: 25, audio: ["2", 0] },
+      "269": {
+        class_type: "LoadImage",
+        inputs: { image: asset(firstUpload) },
       },
-      "902": { class_type: "SaveVideo", inputs: { format: "mp4" } },
+      "276": {
+        class_type: "LoadAudio",
+        inputs: { audio: asset(secondUpload) },
+      },
+      "900": { inputs: { string_b: "A small kitchen" } },
+      "286": { class_type: "RandomNoise", inputs: { noise_seed: 4242 } },
+      "297": {
+        inputs: { "resize_type.width": 512, "resize_type.height": 512 },
+      },
+      "302": {
+        class_type: "EmptyLTXVLatentVideo",
+        inputs: { width: 256, height: 256, length: 121 },
+      },
+      "333": { inputs: { width: 512, height: 512 } },
+      "332": { class_type: "TrimAudioDuration", inputs: { duration: 5 } },
+      "312": { class_type: "CreateVideo", inputs: { fps: 24 } },
+      "341": { class_type: "SaveVideo", inputs: { format: "mp4" } },
     })
-    for (let pass = 1; pass <= passCount; pass += 1) {
-      expect(workflow[passNode(pass, 1)]).toMatchObject({
-        class_type: "WanInfiniteTalkToVideo",
-        inputs: {
-          mode: "single_speaker",
-          width: 832,
-          height: 480,
-          length: window,
-          motion_frame_count: 9,
-        },
-      })
-      expect(workflow[passNode(pass, 2)]).toMatchObject({
-        inputs: { noise_seed: 4242 },
-      })
-      expect(workflow[passNode(pass, 4)]).toMatchObject({
-        inputs: { steps: 6 },
-      })
-    }
-    expect(workflow[passNode(1, 1)]?.inputs).not.toHaveProperty(
-      "previous_frames"
-    )
   })
 
-  it("keeps the written scene and sizes 10 seconds at 1:1 when the run gives no scene and no format", async () => {
-    expect(writtenScene).toEqual(expect.stringMatching(/\S/))
-    const { workflow } = await submit({ inputs: photoBody }, [
-      photoFile,
-      audioFile,
-    ])
+  it("sizes a 9:16 run of 5.32 seconds to 512 by 896 and 129 frames", async () => {
+    const { workflow } = await submit({
+      inputs: { ...photoBody, length: 5.32 },
+      aspectRatio: "9:16",
+    })
     expect(workflow).toMatchObject({
-      "9": { inputs: { text: writtenScene } },
-      "900": { inputs: { length: 250 } },
-      "101": { inputs: { width: 480, height: 480, length: 73 } },
-      "401": { inputs: { width: 480, height: 480, length: 73 } },
+      "297": {
+        inputs: { "resize_type.width": 512, "resize_type.height": 896 },
+      },
+      "302": { inputs: { width: 256, height: 448, length: 129 } },
+      "333": { inputs: { width: 512, height: 896 } },
     })
+    expect(workflow["332"]?.inputs.duration).toBeCloseTo(16 / 3)
   })
 
-  it("makes at least as many frames as the audio holds at every length, in windows the node takes", () => {
-    const misses = lengthValues.flatMap((seconds) => {
-      const frames = Math.round(seconds * 25)
-      const window = windowOf(frames)
-      const made = framesMadeBy(window)
-      return made >= frames && made - frames < 16 && window % 4 === 1
-        ? []
-        : [`${seconds} s: window ${window}, ${made} frames for ${frames}`]
+  it("keeps the graph's talking line and leaves the scene empty when the run gives none", async () => {
+    const written = photoGraph()["900"]?.inputs.string_a
+    const { workflow } = await submit({ inputs: photoBody })
+    expect(written).toEqual(expect.stringMatching(/talks to the camera/))
+    expect(workflow["900"]?.inputs).toMatchObject({
+      string_a: written,
+      string_b: "",
     })
-    expect(lengthValues).toHaveLength(201)
-    expect(misses).toEqual([])
+    expect(workflow["302"]?.inputs.length).toBe(241)
   })
 
-  it("sends the clip and the audio to the clip workflow, with the frame count, the 9:16 size and the seed", async () => {
-    const { submission, replay, job, workflow } = await submit(clipBody, [
-      clipFile,
-      audioFile,
-    ])
-    expect(submission.models).toEqual(clipEntry.models)
-    expect(submission.models).toContain(
-      "Wan2_1-InfiniTetalk-Single_fp16.safetensors"
-    )
-    expect(job?.headers.get("Idempotency-Key")).toBe("lipsync-run-1")
-    expect(replay.unused()).toEqual([])
-    expect(danglingLinks(workflow)).toEqual([])
-    expect(workflow).toMatchObject(clipShape)
-  })
-
-  it("refuses a length off the frame step before anything reaches Comfy", () => {
+  it("refuses a length off the step before anything reaches Comfy", () => {
     expect(
       startRunBodyFor(lipsync).safeParse({
         inputs: { ...photoBody, length: 3.25 },
@@ -308,53 +230,21 @@ describe("the engine request the Lip sync binding produces", () => {
   })
 })
 
-describe("the control of the pass check", () => {
-  it("flags the chain when a pass reads only the pass before it, or keeps its carried frames, or links to a missing node", () => {
-    const planted: ApiWorkflow = apiGraph.parse(
-      findWorkflow(photoWorkflow)?.graph
-    )
-    const third = planted[passNode(3, 1)]
-    const kept = planted[passNode(4, 7)]
-    if (third === undefined || kept === undefined) {
-      throw new Error("The workflow lost a pass")
+describe("the control of the audio check", () => {
+  it("flags the decoded audio on the video, a denoised audio latent and a link to a missing node", () => {
+    const planted = photoGraph()
+    const video = planted["312"]
+    const concat = planted["326"]
+    if (video === undefined || concat === undefined) {
+      throw new Error("The workflow lost its video or its first stage")
     }
-    third.inputs.previous_frames = [passNode(2, 6), 0]
-    kept.inputs.batch_index = 0
-    planted["902"] = {
-      class_type: "SaveVideo",
-      inputs: { video: ["999", 0] },
-    }
-    expect(
-      chainProblems(apiGraph.parse(findWorkflow(photoWorkflow)?.graph))
-    ).toEqual([])
-    expect(chainProblems(planted)).toEqual([
-      "902.video -> 999",
-      "pass 3 does not read every frame made before it",
-      "pass 4 keeps the frames it carried over",
+    video.inputs.audio = ["999", 0]
+    concat.inputs.audio_latent = ["328", 0]
+    expect(audioProblems(photoGraph())).toEqual([])
+    expect(audioProblems(planted)).toEqual([
+      "312.audio -> 999",
+      "the first stage denoises your audio",
+      "the video does not carry your audio",
     ])
-  })
-})
-
-describe("the control of the clip request check", () => {
-  it("flags a clip run sent to the photo workflow, or sized for 3 seconds", async () => {
-    const photoMode = await submit(
-      {
-        inputs: {
-          mode: "photo",
-          photo: [photoId],
-          audio: [audioId],
-          length: 5,
-        },
-        aspectRatio: "9:16",
-      },
-      [photoFile, audioFile]
-    )
-    const short = await submit(
-      { ...clipBody, inputs: { ...clipBody.inputs, length: 3 } },
-      [clipFile, audioFile]
-    )
-    expect(() => expect(photoMode.workflow).toMatchObject(clipShape)).toThrow()
-    expect(() => expect(short.workflow).toMatchObject(clipShape)).toThrow()
-    expect(photoMode.submission.models).not.toEqual(clipEntry.models)
   })
 })
