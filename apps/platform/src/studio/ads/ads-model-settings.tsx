@@ -67,7 +67,7 @@ export function AdsModelSettings({
       )}
       {chips.includes(countField) ? null : (
         <CountField
-          app={app}
+          app={state.countApp}
           value={form.values.count}
           onChange={(count) => form.setForm({ count })}
         />

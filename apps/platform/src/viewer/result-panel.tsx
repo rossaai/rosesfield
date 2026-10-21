@@ -1,4 +1,5 @@
-import { adsRunPromptOf } from "@rosesfield/catalog/ads"
+import { adsAppId, adsRunPromptOf } from "@rosesfield/catalog/ads"
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { keyframeOf } from "@rosesfield/catalog/storyboard"
 import type { Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
@@ -26,6 +27,7 @@ import {
 } from "@/pieces/run/run-facts"
 import type { VisualEntry } from "@/screens/explore/explore-tile"
 import { appIcon } from "@/shell/nav-rows"
+import { runFieldsOf, useRunModels } from "@/viewer/use-run-models"
 
 const modeInputName = "mode"
 
@@ -39,10 +41,12 @@ export function inputAssetIdsOf(run: Run): string[] {
     .flatMap((input) => idsOf(run.inputs[input.name]))
 }
 
-export function promptOf(run: Run): string | null {
-  const shown = adsRunPromptOf(run)
-  if (shown !== null) {
-    return shown
+export function promptOf(
+  run: Run,
+  models: readonly CatalogModel[]
+): string | null {
+  if (run.appId === adsAppId) {
+    return adsRunPromptOf(run, runFieldsOf(run, models))
   }
   const app = findCatalogApp(run.appId)
   const input = app === null ? null : promptInputOf(app)
@@ -53,11 +57,12 @@ export function promptOf(run: Run): string | null {
 
 export function outputPromptOf(
   run: Run,
-  assetId: string | null
+  assetId: string | null,
+  models: readonly CatalogModel[]
 ): string | null {
   const keyframe = assetId === null ? null : keyframeOf(run, assetId)
   return keyframe === null || keyframe.prompt === ""
-    ? promptOf(run)
+    ? promptOf(run, models)
     : keyframe.prompt
 }
 
@@ -219,6 +224,7 @@ export function ResultPanel({
   onDownload,
 }: ResultPanelProps): ReactElement {
   const model = modelAndModeOf(entry.run)
+  const models = useRunModels(entry.run)
   const assetId = entry.source.kind === "own" ? entry.source.assetId : null
   return (
     <div
@@ -227,7 +233,7 @@ export function ResultPanel({
     >
       <PanelHead run={entry.run} line={formatDate(entry.run.createdAt)} />
       <RunSection inputIds={inputAssetIdsOf(entry.run)}>
-        <PromptDetail prompt={outputPromptOf(entry.run, assetId)} />
+        <PromptDetail prompt={outputPromptOf(entry.run, assetId, models)} />
         {model === null ? null : (
           <Detail label={t("viewer.label.model")}>{model}</Detail>
         )}

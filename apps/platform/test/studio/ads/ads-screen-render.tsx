@@ -1,4 +1,5 @@
 import { findApp } from "@rosesfield/catalog"
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { appListing, type Run, run } from "@rosesfield/contract"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
@@ -19,6 +20,7 @@ import { formatNumber } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { bodyOf, defaultsOf, type FormValues } from "@/screens/app/app-form"
 import {
+  modelCatalogQuery,
   type PriceAsk,
   priceQuery,
 } from "@/screens/app/hosted/model-catalog-query"
@@ -47,19 +49,30 @@ const settings: GatewaySettings = {
     origin: "live",
   },
   lock: "local",
+  keyFrom: "server",
   agent: "unknown",
   agentModel: null,
   retentionDays: null,
 }
 
-type Call = { url: string; method: string }
+type Call = { url: string; method: string; body: unknown }
 
 const calls: Call[] = []
 
+type Sent = { method?: string; body?: unknown }
+
+function bodyOfCall(body: unknown): unknown {
+  return typeof body === "string" ? JSON.parse(body) : null
+}
+
 export function stubEngine(): void {
   calls.length = 0
-  vi.stubGlobal("fetch", (input: unknown, init?: { method?: string }) => {
-    calls.push({ url: String(input), method: init?.method ?? "GET" })
+  vi.stubGlobal("fetch", (input: unknown, init?: Sent) => {
+    calls.push({
+      url: String(input),
+      method: init?.method ?? "GET",
+      body: bodyOfCall(init?.body),
+    })
     return new Promise(() => undefined)
   })
 }
@@ -109,9 +122,14 @@ export function priceAskOf(values: FormValues): PriceAsk {
 type Open = {
   runs?: readonly Run[]
   prices?: readonly Price[]
+  models?: readonly CatalogModel[]
 }
 
-export function openAds({ runs = [], prices = [] }: Open = {}): void {
+export function openAds({
+  runs = [],
+  prices = [],
+  models = [],
+}: Open = {}): QueryClient {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, staleTime: Number.POSITIVE_INFINITY },
@@ -122,6 +140,13 @@ export function openAds({ runs = [], prices = [] }: Open = {}): void {
     pages: [{ runs: [...runs], next: null }],
     pageParams: [null],
   })
+  if (models.length > 0) {
+    client.setQueryData(modelCatalogQuery(ads.id, keyState).queryKey, {
+      models: [...models],
+      defaultModel: null,
+      refusal: null,
+    })
+  }
   for (const [values, credits] of prices) {
     client.setQueryData(
       priceQuery(ads.id, priceAskOf(values), keyState).queryKey,
@@ -151,6 +176,7 @@ export function openAds({ runs = [], prices = [] }: Open = {}): void {
       <RouterProvider router={router} />
     </QueryClientProvider>
   )
+  return client
 }
 
 export async function emptyCanvas(): Promise<HTMLElement> {

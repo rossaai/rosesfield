@@ -1,3 +1,4 @@
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { type Run, routes } from "@rosesfield/contract"
 import { callRoute } from "@/api/call-route"
 import { appName } from "@/catalog/app-facts"
@@ -30,10 +31,15 @@ function firstMediaInput(run: Run): string | null {
   return null
 }
 
-function promptOf(run: Run, outputId: string): string {
+function promptOf(
+  run: Run,
+  outputId: string,
+  models: readonly CatalogModel[]
+): string {
   const app = findCatalogApp(run.appId)
   return (
-    outputPromptOf(run, outputId) ?? (app === null ? run.appId : appName(app))
+    outputPromptOf(run, outputId, models) ??
+    (app === null ? run.appId : appName(app))
   )
 }
 
@@ -49,7 +55,8 @@ function partOf(source: { url: string; kind: string }): ClipPart | null {
 
 export async function clipSourcesOf(
   run: Run,
-  outputId: string
+  outputId: string,
+  models: readonly CatalogModel[]
 ): Promise<ClipSources> {
   const inputId = firstMediaInput(run)
   const [result, input] = await Promise.all([
@@ -66,7 +73,10 @@ export async function clipSourcesOf(
   const inputPart = input === null ? null : partOf(input)
   return {
     plan: {
-      input: inputPart ?? { kind: "text", text: promptOf(run, outputId) },
+      input: inputPart ?? {
+        kind: "text",
+        text: promptOf(run, outputId, models),
+      },
       result: resultPart,
     },
     release: () => {

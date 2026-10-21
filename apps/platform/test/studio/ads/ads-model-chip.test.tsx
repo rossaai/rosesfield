@@ -47,6 +47,7 @@ function stateWith(chosen: Record<string, FieldValue>[]): AdsScreenState {
     register: () => undefined,
   }
   return {
+    countApp: listing,
     form,
     lastSeed: null,
     hosted: noCatalog,
@@ -120,7 +121,17 @@ const flux: CatalogModel = {
   nameKey: null,
   task: "image-edit",
   tags: [{ kind: "hosted" }, { kind: "references", max: 10 }],
-  form: null,
+  form: [
+    {
+      kind: "media",
+      name: "input_images",
+      path: "input_images",
+      required: true,
+      media: "image",
+      min: 1,
+      max: 10,
+    },
+  ],
   facts: factsOf("bfl/flux-3-image", "image-edit"),
 }
 
@@ -198,9 +209,7 @@ describe("the Ads model menu from the catalog", () => {
     ).toBe("true")
     const qwenRow = rowOf(qwen.id)
     expect(qwenRow.textContent).toContain(tCatalog(`${qwen.nameKey}.line`))
-    expect(qwenRow.textContent).toContain(
-      t("model.tag.references", { max: 3 })
-    )
+    expect(qwenRow.textContent).toContain(t("model.tag.references", { max: 3 }))
     const fluxRow = rowOf(flux.id)
     expect(fluxRow.textContent).toContain("FLUX 3 Image")
     expect(

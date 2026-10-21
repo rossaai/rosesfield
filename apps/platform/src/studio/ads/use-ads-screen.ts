@@ -23,10 +23,10 @@ import {
   type StartRun,
   useStartRun,
 } from "@/screens/app/use-start-run"
+import { adsHostedBodyOf, countAppOf } from "@/studio/ads/ads-hosted"
 import {
   type AdsKind,
   type AdsProblem,
-  adsHostedBodyOf,
   adsProblems,
   adsValuesOf,
   barTextInputs,
@@ -43,6 +43,7 @@ import {
 
 export type AdsScreenState = {
   app: AppListing
+  countApp: AppListing
   form: AppForm
   start: StartRun
   hosted: HostedState
@@ -88,31 +89,85 @@ function useAdsModels(
   return { ...hosted, choose: (id) => setInput(modelInput, id) }
 }
 
-function useCharacterPhoto(
-  form: AppForm,
-  hosted: HostedState
-): string | null {
+type CharacterPhoto = {
+  photo: string | null
+  isLoading: boolean
+  error: Error | null
+}
+
+function useCharacterPhoto(form: AppForm, hosted: HostedState): CharacterPhoto {
   const value = form.values.inputs[characterInput]
   const [characterId] = Array.isArray(value) ? value : []
-  const isHosted = (hosted.chosen?.form ?? null) !== null
+  const isAsked =
+    (hosted.chosen?.form ?? null) !== null && characterId !== undefined
   const query = useQuery({
     ...characterQuery(characterId ?? ""),
-    enabled: isHosted && characterId !== undefined,
+    enabled: isAsked,
   })
-  return characterId === undefined
-    ? null
-    : (query.data?.character.references[0] ?? null)
+  return {
+    photo: isAsked ? (query.data?.character.references[0] ?? null) : null,
+    isLoading: isAsked && query.isPending,
+    error: isAsked ? query.error : null,
+  }
 }
 
 function useHostedBody(
   app: AppListing,
   form: AppForm,
-  hosted: HostedState
+  hosted: HostedState,
+  character: CharacterPhoto
 ): HostedBodyOf {
-  const characterPhoto = useCharacterPhoto(form, hosted)
   const fields = hosted.chosen?.form ?? []
   return (own) =>
-    adsHostedBodyOf(app, form.values, fields, characterPhoto, own)
+    adsHostedBodyOf(app, form.values, fields, character.photo, own)
+}
+
+function useCountApp(
+  app: AppListing,
+  form: AppForm,
+  hosted: HostedState
+): AppListing {
+  const fields = hosted.chosen?.form ?? null
+  const countApp = useMemo(() => countAppOf(app, fields), [app, fields])
+  const max = countApp.output.count.max
+  const { values, setForm } = form
+  useEffect(() => {
+    if (values.count > max) {
+      setForm({ count: max })
+    }
+  }, [values.count, max, setForm])
+  return countApp
+}
+
+function useWaitedStart(
+  start: StartRun,
+  character: CharacterPhoto
+): { start: StartRun; press: () => void } {
+  const [isWaiting, setWaiting] = useState(false)
+  useEffect(() => {
+    if (!isWaiting || character.isLoading) {
+      return
+    }
+    setWaiting(false)
+    if (character.error === null) {
+      start.generate()
+    }
+  }, [isWaiting, character.isLoading, character.error, start])
+  const press = (): void => {
+    if (character.isLoading) {
+      setWaiting(true)
+      return
+    }
+    start.generate()
+  }
+  return {
+    start: {
+      ...start,
+      isPending: start.isPending || isWaiting,
+      error: start.error ?? character.error,
+    },
+    press,
+  }
 }
 
 function useBarText(app: AppListing, form: AppForm, kind: AdsKind) {
@@ -159,8 +214,11 @@ export function useAdsScreen(app: AppListing, seeds: AppSeeds): AdsScreenState {
   }
   const runs = useAppRuns(app)
   const hosted = useAdsModels(app, form, runs.runs)
-  const hostedBody = useHostedBody(app, form, hosted)
-  const start = useStartRun(bodyApp, gate, undefined, hosted, hostedBody)
+  const character = useCharacterPhoto(form, hosted)
+  const hostedBody = useHostedBody(app, form, hosted, character)
+  const started = useStartRun(bodyApp, gate, undefined, hosted, hostedBody)
+  const { start, press } = useWaitedStart(started, character)
+  const countApp = useCountApp(app, form, hosted)
   const kind = kindOf(values)
   const barText = useBarText(app, form, kind)
   usePhotoOrder(app, form)
@@ -173,7 +231,7 @@ export function useAdsScreen(app: AppListing, seeds: AppSeeds): AdsScreenState {
     const problem = adsProblems(app, values, hosted.models)[0]
     if (problem === undefined) {
       setChecked(false)
-      start.generate()
+      press()
       return
     }
     setChecked(true)
@@ -181,6 +239,7 @@ export function useAdsScreen(app: AppListing, seeds: AppSeeds): AdsScreenState {
   }
   return {
     app,
+    countApp,
     form,
     start: { ...start, generate },
     hosted,

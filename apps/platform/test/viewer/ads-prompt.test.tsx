@@ -1,9 +1,13 @@
 import { adsPromptOf } from "@rosesfield/catalog/ads"
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { type Run, run } from "@rosesfield/contract"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, render } from "@testing-library/react"
 import type { ReactElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import type { GatewaySettings } from "@/api/gateway-settings"
+import { settingsQuery } from "@/api/queries"
+import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
 import type { VisualEntry } from "@/screens/explore/explore-tile"
 import { ResultPanel } from "@/viewer/result-panel"
 
@@ -32,9 +36,49 @@ function adsRun(inputs: Record<string, unknown>): Run {
   })
 }
 
+const hostedModel = "maker/edit-model"
+
+const hostedEdit: CatalogModel = {
+  id: hostedModel,
+  kind: "hosted",
+  maker: "Maker",
+  name: "Edit Model",
+  nameKey: null,
+  task: "image-edit",
+  tags: [{ kind: "hosted" }],
+  form: [
+    {
+      kind: "prompt",
+      name: "instruction",
+      path: "instruction",
+      required: true,
+      maxLength: 2000,
+      default: null,
+    },
+  ],
+}
+
+const settings: GatewaySettings = {
+  mode: "owner",
+  engine: { target: "comfy-cloud", address: null, key: "set", origin: "live" },
+  lock: "local",
+  keyFrom: "server",
+  agent: "unknown",
+  agentModel: null,
+  retentionDays: null,
+}
+
 function Frame({ children }: { children: ReactElement }): ReactElement {
   const client = new QueryClient({
-    defaultOptions: { queries: { enabled: false } },
+    defaultOptions: {
+      queries: { enabled: false, staleTime: Number.POSITIVE_INFINITY },
+    },
+  })
+  client.setQueryData(settingsQuery.queryKey, settings)
+  client.setQueryData(modelCatalogQuery("ads", "set").queryKey, {
+    models: [hostedEdit],
+    defaultModel: null,
+    refusal: null,
   })
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>
 }
@@ -73,16 +117,28 @@ describe("the prompt an Ads run shows in History", () => {
     expect(text).toContain(`${line}"`)
   })
 
-  it.each([
-    "studio",
-    "lifestyle",
-    "outdoor",
-    "flat-lay",
-    "minimal",
-    "bold",
-  ])("shows the whole prompt of a %s run, not only its scene", (style) => {
-    const made = adsRun({ style, scene: "on a desk." })
+  it.each(["studio", "lifestyle", "outdoor", "flat-lay", "minimal", "bold"])(
+    "shows the whole prompt of a %s run, not only its scene",
+    (style) => {
+      const made = adsRun({ style, scene: "on a desk." })
+      const text = detailsOf(made)
+      expect(text).toContain(adsPromptOf(made.inputs))
+    }
+  )
+})
+
+describe("the prompt a hosted Ads run shows", () => {
+  it("is the prompt the model got, even when it is not the prompt the words build", () => {
+    const sent = "Words an agent wrote for the model."
+    const made = adsRun({
+      kind: "ad",
+      headline,
+      line,
+      model: hostedModel,
+      instruction: sent,
+    })
     const text = detailsOf(made)
-    expect(text).toContain(adsPromptOf(made.inputs))
+    expect(text).toContain(sent)
+    expect(text).not.toContain(adsPromptOf(made.inputs))
   })
 })

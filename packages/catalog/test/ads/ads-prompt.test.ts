@@ -1,3 +1,5 @@
+import type { ModelField } from "@rosesfield/generation/bindings"
+import { appIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { adsPromptOf, adsRunPromptOf } from "#ads/ads-prompt"
 import { styleValues } from "#ads/ads-values"
@@ -76,14 +78,54 @@ describe("the prompt Ads shows in History", () => {
   })
 })
 
+const adsId = appIdFormat.parse("ads")
+
+const hostedFields: readonly ModelField[] = [
+  {
+    kind: "prompt",
+    name: "instruction",
+    path: "instruction",
+    required: true,
+    maxLength: 2000,
+    default: null,
+  },
+]
+
 describe("the prompt History reads from a run", () => {
-  it("gives an Ads run the prompt the graph sends", () => {
+  it("rebuilds a graph run's prompt from its words, as the graph does", () => {
     const inputs = { kind: "ad", headline: "Fresh cold brew", style: "bold" }
-    expect(adsRunPromptOf({ appId: "ads", inputs })).toBe(adsPromptOf(inputs))
+    expect(adsRunPromptOf({ appId: adsId, inputs }, null)).toBe(
+      adsPromptOf(inputs)
+    )
+  })
+
+  it("shows a hosted run the prompt stored under the model's prompt field, as the model got it", () => {
+    const sent = "An ad of the product with the words Fresh cold brew."
+    const inputs = {
+      kind: "ad",
+      headline: "Fresh cold brew",
+      model: "maker/edit-model",
+      instruction: sent,
+    }
+    const shown = adsRunPromptOf({ appId: adsId, inputs }, hostedFields)
+    expect(shown).toBe(sent)
+    expect(shown).not.toBe(adsPromptOf(inputs))
+  })
+
+  it("shows nothing for a hosted run until the model's form is known, rather than a prompt it did not get", () => {
+    const inputs = {
+      kind: "ad",
+      headline: "Fresh cold brew",
+      model: "maker/edit-model",
+      instruction: "Words an agent sent.",
+    }
+    expect(adsRunPromptOf({ appId: adsId, inputs }, null)).toBeNull()
   })
 
   it("gives a run of another app no Ads prompt", () => {
     const inputs = { kind: "ad", headline: "Fresh cold brew" }
-    expect(adsRunPromptOf({ appId: "image", inputs })).toBeNull()
+    expect(
+      adsRunPromptOf({ appId: appIdFormat.parse("image"), inputs }, null)
+    ).toBeNull()
   })
 })

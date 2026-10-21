@@ -35,6 +35,7 @@ import { RunOutputs } from "@/pieces/run/run-outputs"
 import { ScreenState } from "@/pieces/screen-state"
 import { ScreenHeader } from "@/shell/screen-header"
 import { KeyframePrompts } from "@/studio/storyboard/keyframe-info"
+import { runFieldsOf, useRunModels } from "@/viewer/use-run-models"
 
 function UseInputs({ run }: { run: Run }): ReactElement {
   return (
@@ -163,7 +164,8 @@ function Section({
 function RunDetail({ run }: { run: Run }): ReactElement {
   const end = useContentEnd()
   const keyframes = keyframesOf(run)
-  const prompt = adsRunPromptOf(run)
+  const models = useRunModels(run)
+  const prompt = adsRunPromptOf(run, runFieldsOf(run, models))
   return (
     <div className="flex min-h-full flex-col">
       <ScreenHeader
@@ -188,10 +190,7 @@ function RunDetail({ run }: { run: Run }): ReactElement {
         )}
         {prompt === null ? null : (
           <Section title={t("viewer.label.prompt")}>
-            <p
-              data-slot="run-prompt"
-              className="whitespace-pre-wrap text-body"
-            >
+            <p data-slot="run-prompt" className="whitespace-pre-wrap text-body">
               {prompt}
             </p>
           </Section>

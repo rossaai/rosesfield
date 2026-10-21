@@ -33,15 +33,10 @@ function rowWithPhotos(
     kind: "references",
     max: modelPhotoLimitOf(app, row.id, model),
   })
-  const listed = model?.tags.find((tag) => tag.kind === "references")
-  const listedLabel = listed === undefined ? null : tagOf(listed).label
   return {
     ...row,
     line: row.line ?? ownLineOf(model),
-    tags:
-      listedLabel === null
-        ? [...row.tags, photos]
-        : row.tags.map((tag) => (tag.label === listedLabel ? photos : tag)),
+    tags: [...row.tags, photos],
   }
 }
 

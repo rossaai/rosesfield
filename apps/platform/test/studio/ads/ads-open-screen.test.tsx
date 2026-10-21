@@ -1,5 +1,8 @@
-import { cleanup, fireEvent, screen } from "@testing-library/react"
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
+import { characterResponse } from "@rosesfield/contract"
+import { act, cleanup, fireEvent, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { characterQuery } from "@/api/queries"
 import { t, tCatalog } from "@/copy/t"
 import type { FormValues } from "@/screens/app/app-form"
 import { priceLabelsOf } from "@/screens/app/use-start-run"
@@ -151,7 +154,12 @@ describe("the Ads price", () => {
 
   it("asks the price of the whole count", async () => {
     const four: FormValues = { ...openingValues(), count: 4 }
-    openAds({ prices: [[openingValues(), 14.48], [four, 57.92]] })
+    openAds({
+      prices: [
+        [openingValues(), 14.48],
+        [four, 57.92],
+      ],
+    })
     expect(
       await screen.findByRole("button", { name: pricedName(14.48) })
     ).toBeDefined()
@@ -233,5 +241,121 @@ describe("Ads on a phone", () => {
     openAds({ runs: [adsRun({ inputs: { product: [photos[0] ?? ""] } })] })
     await vi.waitFor(bar)
     await vi.waitFor(() => expect(scrolled).toHaveBeenCalledWith(900))
+  })
+})
+
+const portrait = "8b6a5f4e-3d2c-4e0f-8a9b-7c6d5e4f3a2b"
+
+const hostedEdit: CatalogModel = {
+  id: "maker/edit-two",
+  kind: "hosted",
+  maker: "Maker",
+  name: "Edit Two",
+  nameKey: null,
+  task: "image-edit",
+  tags: [{ kind: "hosted" }, { kind: "references", max: 4 }],
+  form: [
+    {
+      kind: "prompt",
+      name: "prompt",
+      path: "prompt",
+      required: true,
+      maxLength: 2000,
+      default: null,
+    },
+    {
+      kind: "media",
+      name: "input_images",
+      path: "input_images",
+      required: true,
+      media: "image",
+      min: 1,
+      max: 4,
+    },
+    {
+      kind: "number",
+      name: "n",
+      path: "n",
+      required: false,
+      min: 1,
+      max: 2,
+      integer: true,
+      default: 1,
+    },
+  ],
+}
+
+type SentRun = { inputs: Record<string, unknown>; count?: number }
+
+function sentRuns(): SentRun[] {
+  return startedRuns().map((call) => {
+    const body = call.body
+    if (typeof body !== "object" || body === null || !("inputs" in body)) {
+      throw new Error("a run started with no inputs")
+    }
+    return body as SentRun
+  })
+}
+
+describe("Ads on a hosted model", () => {
+  it("waits for the character's photo before it starts the run, then sends it beside the product photo", async () => {
+    const client = openAds({
+      runs: [
+        adsRun({
+          inputs: {
+            product: [photos[0] ?? ""],
+            character: [character],
+            model: hostedEdit.id,
+          },
+        }),
+      ],
+      models: [hostedEdit],
+    })
+    await recreate()
+    generate()
+    await vi.waitFor(() =>
+      expect(
+        bar()
+          .querySelector("[data-slot=generate-button]")
+          ?.getAttribute("aria-busy")
+      ).toBe("true")
+    )
+    await act(async () => undefined)
+    expect(startedRuns()).toEqual([])
+    client.setQueryData(
+      characterQuery(character).queryKey,
+      characterResponse.parse({
+        character: {
+          id: character,
+          name: "Ana",
+          references: [portrait],
+          notes: "",
+          createdAt: "2026-10-20T09:00:00.000Z",
+        },
+      })
+    )
+    await vi.waitFor(() => expect(startedRuns()).toHaveLength(1))
+    expect(sentRuns()[0]?.inputs.input_images).toEqual([photos[0], portrait])
+  })
+
+  it("shows and sends the count the model takes, 2 for a count of 4", async () => {
+    openAds({
+      runs: [
+        adsRun({
+          inputs: { product: [photos[0] ?? ""], model: hostedEdit.id },
+          count: 4,
+        }),
+      ],
+      models: [hostedEdit],
+    })
+    await recreate()
+    await vi.waitFor(() =>
+      expect(
+        bar().querySelector("[data-slot=count-stepper] output")?.textContent
+      ).toBe("2/2")
+    )
+    generate()
+    await vi.waitFor(() => expect(startedRuns()).toHaveLength(1))
+    expect(sentRuns()[0]?.inputs.n).toBe(2)
   })
 })

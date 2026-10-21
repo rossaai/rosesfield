@@ -1,27 +1,19 @@
-import { adsHostedInputsOf } from "@rosesfield/catalog/ads"
-import {
-  type CatalogModel,
-  isHostedModelId,
-  type ModelField,
-} from "@rosesfield/catalog/comfy"
+import { adsPhotoLimitOf } from "@rosesfield/catalog/ads"
+import { type CatalogModel, isHostedModelId } from "@rosesfield/catalog/comfy"
 import {
   type AppListing,
   type InputDefinition,
   inputRulesOf,
-  isAppOnly,
   type Run,
 } from "@rosesfield/contract"
 import { isAssetInput } from "@/catalog/app-facts"
 import {
-  bodyOf,
   type FieldProblem,
   type FieldValue,
   type FormValues,
   problemsOf,
-  type StartRunBodyInput,
   valuesFromRun,
 } from "@/screens/app/app-form"
-import { hostedDefaults } from "@/screens/app/hosted/hosted-form"
 
 type Inputs = Readonly<Record<string, FieldValue>>
 
@@ -232,21 +224,8 @@ function promptProblems(app: AppListing, inputs: Inputs): AdsProblem[] {
   return found
 }
 
-const maskPattern = /mask/i
-
 function hostedPhotoLimitOf(model: CatalogModel): number {
-  const tagged = model.tags.find((tag) => tag.kind === "references")
-  if (tagged?.kind === "references") {
-    return tagged.max
-  }
-  const images = (model.form ?? []).flatMap((field) =>
-    field.kind === "media" &&
-    field.media === "image" &&
-    !maskPattern.test(field.name)
-      ? [field.max]
-      : []
-  )
-  return Math.max(1, ...images)
+  return adsPhotoLimitOf(model.form ?? [])
 }
 
 export function modelPhotoLimitOf(
@@ -334,10 +313,7 @@ export function adsProblems(
   inputs: Inputs,
   models: readonly CatalogModel[] = []
 ): AdsProblem[] {
-  return [
-    ...photoProblems(app, inputs, models),
-    ...promptProblems(app, inputs),
-  ]
+  return [...photoProblems(app, inputs, models), ...promptProblems(app, inputs)]
 }
 
 export function adsValuesOf(app: AppListing, run: Run): FormValues {
@@ -362,49 +338,4 @@ export function compactedPhotos(
       listOf(inputs[input.name]).join() === (placed[input.name] ?? []).join()
   )
   return isSame ? null : placed
-}
-
-type BodyValue = StartRunBodyInput["inputs"][string]
-
-function filledOf(
-  inputs: Readonly<Record<string, FieldValue>>
-): Record<string, BodyValue> {
-  return Object.fromEntries(
-    Object.entries(inputs).filter(
-      (entry): entry is [string, BodyValue] =>
-        entry[1] !== undefined &&
-        entry[1] !== "" &&
-        !(Array.isArray(entry[1]) && entry[1].length === 0)
-    )
-  )
-}
-
-export function adsHostedBodyOf(
-  app: AppListing,
-  values: FormValues,
-  fields: readonly ModelField[],
-  characterPhoto: string | null,
-  own: StartRunBodyInput
-): StartRunBodyInput {
-  const sent = bodyAppFor(app, values.inputs)
-  const appOnly = bodyOf(
-    { ...sent, inputs: sent.inputs.filter(isAppOnly) },
-    values
-  ).inputs
-  const filled = adsHostedInputsOf({
-    inputs: values.inputs,
-    fields,
-    characterPhoto,
-    aspectRatio: values.aspectRatio,
-    count: values.count,
-  })
-  return {
-    ...own,
-    inputs: {
-      ...filledOf(hostedDefaults(fields, {})),
-      ...own.inputs,
-      ...filled,
-      ...filledOf(appOnly),
-    },
-  }
 }

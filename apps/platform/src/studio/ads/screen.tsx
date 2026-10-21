@@ -112,7 +112,12 @@ function Chips({
         <>
           <AdsModelChip app={app} state={state} chips={chips} />
           {chips.map((name) => (
-            <SettingChip key={name} app={app} form={state.form} name={name} />
+            <SettingChip
+              key={name}
+              app={state.countApp}
+              form={state.form}
+              name={name}
+            />
           ))}
         </>
       }
