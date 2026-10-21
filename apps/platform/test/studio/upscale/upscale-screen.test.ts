@@ -1,11 +1,8 @@
-import { type Run, run } from "@rosesfield/contract"
+import { assetId, type Run, run } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import { bodyOf, defaultsOf } from "@/screens/app/app-form"
 import { scaleOf } from "@/studio/upscale/upscale-models"
-import {
-  scaleMessageOf,
-  scaleNoteOf,
-} from "@/studio/upscale/upscale-panel"
+import { scaleMessageOf, scaleNoteOf } from "@/studio/upscale/upscale-panel"
 import {
   bodyAppFor,
   checkFor,
@@ -21,6 +18,9 @@ import {
   upscaleListing,
   waveSpeed,
 } from "./upscale-fixtures"
+
+const photo = assetId.parse("6f9a2c1e-1d2b-4c3d-8e4f-5a6b7c8d9e01")
+const clip = assetId.parse("6f9a2c1e-1d2b-4c3d-8e4f-5a6b7c8d9e03")
 
 function formWith(inputs: Record<string, string | string[]>) {
   const values = defaultsOf(upscaleListing())
@@ -62,15 +62,15 @@ describe("the upscale checks", () => {
       expect.objectContaining({ name: "inputImage" }),
     ])
     expect(
-      check(formWith({ mode: "image", inputImage: ["photo-1"] }).values)
+      check(formWith({ mode: "image", inputImage: [photo] }).values)
     ).toEqual([])
   })
 
   it("sends only the file of the chosen tab on the graph", () => {
     const app = upscaleListing()
-    const filled = formWith({ image: ["photo-1"], video: ["clip-1"] })
+    const filled = formWith({ image: [photo], video: [clip] })
     const body = bodyOf(bodyAppFor(app, "image"), filled.values)
-    expect(body.inputs).toMatchObject({ mode: "image", image: ["photo-1"] })
+    expect(body.inputs).toMatchObject({ mode: "image", image: [photo] })
     expect(body.inputs).not.toHaveProperty("video")
   })
 
@@ -119,7 +119,7 @@ describe("a run opened again", () => {
   it("opens a hosted video run on the Video tab", () => {
     const values = runValuesOf(
       upscaleListing(),
-      runOf({ model: flashVsr.id, video: ["clip-1"], duration: 5 }),
+      runOf({ model: flashVsr.id, video: [clip], duration: 5 }),
       catalog
     )
     expect(values.inputs.mode).toBe("video")
@@ -128,7 +128,7 @@ describe("a run opened again", () => {
   it("keeps the tab of a graph run", () => {
     const values = runValuesOf(
       upscaleListing(),
-      runOf({ model: graph.id, mode: "video", video: ["clip-1"] }),
+      runOf({ model: graph.id, mode: "video", video: [clip] }),
       catalog
     )
     expect(values.inputs.mode).toBe("video")

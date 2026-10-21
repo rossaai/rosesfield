@@ -15,6 +15,7 @@ import {
   shownInputsOf,
   type VideoEditMode,
 } from "@/studio/video-edit/video-edit-modes"
+import { tabDefaultsOf } from "@/studio/video-edit/video-edit-tabs"
 import { app } from "../../../../../packages/catalog/src/video-edit/app"
 
 function videoEditListing(): AppListing {
@@ -51,7 +52,12 @@ function valuesIn(mode: VideoEditMode): FormValues {
   return {
     ...base,
     seedMode: "fixed",
-    inputs: { ...base.inputs, ...everyInput, mode },
+    inputs: {
+      ...base.inputs,
+      ...everyInput,
+      mode,
+      model: tabDefaultsOf(listing, mode, null)[0] ?? "",
+    },
   }
 }
 

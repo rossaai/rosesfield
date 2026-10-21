@@ -23,7 +23,7 @@ import { AppScreen } from "@/studio/effects/screen"
 import { asPhone, resetFrames, stubFetch } from "../../screens/app/frame-render"
 
 const { held, heldRecipe } = vi.hoisted(() => ({
-  held: ["grow-wings", "liquid-metal", "melt-away"],
+  held: ["grow-giant", "many-copies", "melt-away"],
   heldRecipe: (recipe: EffectRecipe, isHeld: boolean): EffectRecipe =>
     isHeld
       ? {
@@ -111,7 +111,7 @@ describe("Effects on a phone", () => {
   it("puts the held effects in 2 columns in the input sheet, with Generate in the sheet's foot at its bottom edge", async () => {
     openEffects()
     fireEvent.click(
-      await screen.findByRole("button", { name: t("app.empty.action") })
+      await screen.findByRole("button", { name: t("app.tools.open") })
     )
     await screen.findByRole("dialog")
     const body = sheetPart("sheet-body")
