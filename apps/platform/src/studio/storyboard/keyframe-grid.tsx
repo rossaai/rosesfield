@@ -200,16 +200,17 @@ export function ChainKeyframes({
   const isChainWorking = [...block.runs.values()].some(isWorking)
   return (
     <Grid>
-      {Array.from({ length: block.count }, (_, index) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: a keyframe's place in its storyboard is its scene number
-        <ChainKeyframe
-          key={index}
-          block={block}
-          number={index + 1}
-          isChainWorking={isChainWorking}
-          list={list}
-        />
-      ))}
+      {Array.from({ length: block.count }, (_, index) => index + 1).map(
+        (number) => (
+          <ChainKeyframe
+            key={number}
+            block={block}
+            number={number}
+            isChainWorking={isChainWorking}
+            list={list}
+          />
+        )
+      )}
     </Grid>
   )
 }

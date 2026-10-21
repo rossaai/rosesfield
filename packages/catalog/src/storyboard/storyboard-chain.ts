@@ -104,7 +104,7 @@ function imageFieldOf(
       (field): field is Extract<ModelField, { kind: "media" }> =>
         field.kind === "media" &&
         field.media === imageOutput &&
-        fieldRoleOf(field, imageOutput) !== "mask"
+        fieldRoleOf(field, imageOutput) !== null
     ) ?? null
   )
 }
@@ -126,10 +126,7 @@ function hostedEdit(
   const images = imageFieldOf(hosted.form)
   const reference = idsOf(ask.inputs.reference)
   const photos = reference.length > 0 ? reference : hosted.photos
-  const sent = (anchor === null ? photos : [anchor]).slice(
-    0,
-    images?.max ?? 0
-  )
+  const sent = (anchor === null ? photos : [anchor]).slice(0, images?.max ?? 0)
   if (images !== null && sent.length > 0) {
     inputs[images.name] = [...sent]
   }

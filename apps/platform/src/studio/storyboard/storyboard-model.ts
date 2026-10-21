@@ -11,7 +11,7 @@ import {
   keyframeCallsOf,
   type StoryboardAsk,
 } from "@rosesfield/catalog/storyboard"
-import type { AppListing } from "@rosesfield/contract"
+import { type AppListing, runInputs } from "@rosesfield/contract"
 import {
   bodyOf,
   type FieldValue,
@@ -62,9 +62,7 @@ export function formatFieldOf(
   )
 }
 
-export function editModelsOf(
-  models: readonly CatalogModel[]
-): CatalogModel[] {
+export function editModelsOf(models: readonly CatalogModel[]): CatalogModel[] {
   return models.filter((model) => model.task === editTask)
 }
 
@@ -111,13 +109,18 @@ export function storyboardAskOf(options: {
   values: FormValues
   chosen: CatalogModel | null
   photos: HostedAsk["photos"]
-}): StoryboardAsk {
+}): StoryboardAsk | null {
   const { app, values, chosen } = options
   const base = bodyOf(app, runValues(values))
-  const inputs =
+  const parsed = runInputs.safeParse(
     chosen === null
       ? base.inputs
       : { ...base.inputs, [modelInputName]: chosen.id }
+  )
+  if (!parsed.success) {
+    return null
+  }
+  const inputs = parsed.data
   if (chosen === null || chosen.form === null) {
     return { inputs, aspectRatio: base.aspectRatio ?? null, hosted: null }
   }
@@ -136,8 +139,8 @@ function priceAskOf(call: KeyframeCall | undefined): PriceAsk | null {
   return aspectRatio === null ? { inputs } : { inputs, aspectRatio }
 }
 
-export function priceAsksOf(ask: StoryboardAsk): PriceAsks {
-  const calls = keyframeCallsOf(ask)
+export function priceAsksOf(ask: StoryboardAsk | null): PriceAsks {
+  const calls = ask === null ? [] : keyframeCallsOf(ask)
   const edits = calls.filter((call) => call.kind === "edit")
   return {
     text: priceAskOf(calls.find((call) => call.kind === "text")),

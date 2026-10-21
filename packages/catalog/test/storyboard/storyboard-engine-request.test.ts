@@ -1,33 +1,35 @@
-import {
-  appDefinition,
-  type RunInputs,
-  startRunBodyFor,
-} from "@rosesfield/contract"
+import { type RunInputs, startRunBodyFor } from "@rosesfield/contract"
 import {
   ComfyGenerationEngine,
   type EngineRequest,
   resolveBinding,
 } from "@rosesfield/generation"
-import {
-  appIdFormat,
-  assetIdFormat,
-  characterIdFormat,
-} from "@rosesfield/kernel"
+import { appIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { mingImage01Design } from "#image/comfy/open-weights"
-import { app } from "#storyboard/app"
 import { textNodeOffset } from "#storyboard/comfy/keyframe-from-text"
 import { keyframeSizes } from "#storyboard/comfy/keyframe-sizes"
 import { keyframeBindingOf } from "#storyboard/comfy/storyboard-binding"
 import { keepSentence, qwenFiles } from "#storyboard/comfy/storyboard-nodes"
 import { keyframesOf } from "#storyboard/keyframe-facts"
 import {
-  anchoredOn,
   type KeyframeCall,
   keyframeCallsOf,
-  type StoryboardAsk,
 } from "#storyboard/storyboard-chain"
 import { WorkflowInvalidError } from "#workflow-invalid.error"
+import {
+  anchorId,
+  askOf,
+  callsOf,
+  characterId,
+  definition,
+  firstId,
+  look,
+  nth,
+  refusal,
+  scenes,
+  withKeyframe,
+} from "./storyboard-asks"
 import {
   type ApiWorkflow,
   danglingLinks,
@@ -40,47 +42,6 @@ import {
   uploadedId,
   workflowSent,
 } from "./storyboard-replay"
-
-const definition = appDefinition.parse(app)
-const anchorId = assetIdFormat.parse("1e3a5c7e-9b2d-4f6a-8c0e-2b4d6f8a0c1e")
-const firstId = assetIdFormat.parse("2f4b6d8e-0c1a-4b3c-9d5e-7f9a1b3c5d7e")
-const characterId = characterIdFormat.parse(
-  "4c6e8a0c-2e4a-4b6c-9d0e-6a8c0e2a4c6e"
-)
-const look = "late afternoon light, 35 mm lens"
-const scenes = [
-  "a girl opens the door of a small bakery",
-  "she ties an apron and kneads dough",
-  "she slides a tray of bread into the oven",
-  "she hands a warm loaf to a neighbour",
-  "she sweeps the floor after closing",
-  "she counts coins at the counter",
-  "she turns off the lights",
-  "she walks home under the street lamps",
-]
-
-function askOf(
-  count: number,
-  extra: RunInputs,
-  aspectRatio = "16:9"
-): StoryboardAsk {
-  const inputs: RunInputs = {
-    look,
-    sceneCount: String(count),
-    model: "qwen-image-edit-2511",
-    ...extra,
-  }
-  scenes.slice(0, count).forEach((scene, index) => {
-    inputs[`scene${index + 1}`] = scene
-  })
-  return { inputs, aspectRatio, hosted: null }
-}
-
-function callsOf(ask: StoryboardAsk): KeyframeCall[] {
-  return keyframeCallsOf(ask).map((call) =>
-    call.waits ? anchoredOn(ask, call, firstId) : call
-  )
-}
 
 function loadedIn(inputs: RunInputs): string | null {
   for (const name of ["reference", "character", "firstKeyframe"]) {
@@ -117,13 +78,6 @@ function requestFor(call: KeyframeCall, seed: number): EngineRequest {
     seed,
     outputKind: "image",
   }
-}
-
-function refusal(call: KeyframeCall | { request: unknown }): string[] {
-  const result = startRunBodyFor(definition).safeParse(call.request)
-  return result.success
-    ? []
-    : result.error.issues.map((issue) => issue.path.join("."))
 }
 
 async function submit(
@@ -194,19 +148,6 @@ function seedOf(workflow: ApiWorkflow, decode: string): unknown {
     : source?.inputs.expression
 }
 
-function withKeyframe(call: KeyframeCall, keyframe: string): KeyframeCall {
-  const inputs = { ...call.request.inputs, keyframe }
-  return { ...call, request: { ...call.request, inputs } }
-}
-
-function nth(calls: readonly KeyframeCall[], number: number): KeyframeCall {
-  const call = calls.find((one) => one.number === number)
-  if (call === undefined) {
-    throw new Error(`No call makes keyframe ${number}`)
-  }
-  return call
-}
-
 describe("the calls a Storyboard of 3 scenes and a reference makes", () => {
   const calls = callsOf(askOf(3, { reference: [anchorId] }))
 
@@ -250,14 +191,14 @@ describe("the calls a Storyboard of 3 scenes and a reference makes", () => {
 describe("the calls a Storyboard with no reference and no character makes", () => {
   it("makes keyframe 1 as a text call on the open-weights text default and the rest as edits that wait for it", () => {
     const planned = keyframeCallsOf(askOf(4, {}))
-    expect(
-      planned.map((call) => [call.number, call.kind, call.waits])
-    ).toEqual([
-      [1, "text", false],
-      [2, "edit", true],
-      [3, "edit", true],
-      [4, "edit", true],
-    ])
+    expect(planned.map((call) => [call.number, call.kind, call.waits])).toEqual(
+      [
+        [1, "text", false],
+        [2, "edit", true],
+        [3, "edit", true],
+        [4, "edit", true],
+      ]
+    )
     expect(nth(planned, 1).request.inputs).toMatchObject({
       model: "z-image-turbo",
       keyframe: "1",
@@ -370,43 +311,5 @@ describe("Storyboard's text pass", () => {
     })
     expect(() => resolveBinding(missing, {})).toThrow(/no folder/)
     expect(definition.id).toBe("storyboard")
-  })
-})
-
-describe("the rules the Storyboard contract gives every client", () => {
-  it("takes a call from a reference, from a character or from keyframe 1", () => {
-    const reference = callsOf(askOf(2, { reference: [anchorId] }))
-    expect(refusal(nth(reference, 2))).toEqual([])
-    expect(
-      refusal(nth(callsOf(askOf(2, { character: [characterId] })), 2))
-    ).toEqual([])
-    expect(refusal(nth(callsOf(askOf(2, {})), 2))).toEqual([])
-  })
-
-  it("refuses a reference and a character together", () => {
-    const call = nth(
-      callsOf(askOf(2, { reference: [anchorId], character: [characterId] })),
-      1
-    )
-    expect(refusal(call)).toEqual(["inputs.character"])
-  })
-
-  it("refuses an empty scene inside the scene count, a scene past it and a keyframe past it", () => {
-    const empty = askOf(3, { reference: [anchorId] })
-    empty.inputs.scene2 = "  "
-    expect(refusal(nth(callsOf(empty), 1))).toEqual(["inputs.scene2"])
-    const past = askOf(2, { reference: [anchorId] })
-    past.inputs.scene3 = scenes[2] ?? ""
-    expect(refusal(nth(callsOf(past), 1))).toEqual(["inputs.scene3"])
-    const call = nth(callsOf(askOf(2, { reference: [anchorId] })), 2)
-    expect(refusal(withKeyframe(call, "3"))).toEqual(["inputs.keyframe"])
-  })
-
-  it("makes one keyframe per run and refuses a count of more", () => {
-    const call = nth(callsOf(askOf(4, { reference: [anchorId] })), 4)
-    expect(startRunBodyFor(definition).parse(call.request).count).toBe(1)
-    expect(refusal({ request: { ...call.request, count: 4 } })).toEqual([
-      "count",
-    ])
   })
 })

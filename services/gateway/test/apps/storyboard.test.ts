@@ -1,12 +1,7 @@
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { type ChainRun, SpeechChain } from "@rosesfield/catalog/lipsync"
-import {
-  keyframesOf,
-  runKeyframes,
-  type StoryboardAsk,
-} from "@rosesfield/catalog/storyboard"
+import { keyframesOf, runKeyframes } from "@rosesfield/catalog/storyboard"
 import {
   appDefinition,
   assetResponse,
@@ -14,102 +9,28 @@ import {
   characterResponse,
   errorEnvelope,
   type Run,
-  type RunInputs,
   routes,
   runPageResponse,
-  runResponse,
 } from "@rosesfield/contract"
-import { FixedClock, runIdFormat } from "@rosesfield/kernel"
+import {
+  type AssetId,
+  type CharacterId,
+  FixedClock,
+  runIdFormat,
+} from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
 import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
 import { app } from "../../../../packages/catalog/src/storyboard/app"
 import { localEnv } from "../server-env"
+import { askOf, type Call, GatewayChain, postJson } from "./storyboard-chain"
 
 const startPath = buildPath(routes.startRun.path, { appId: "storyboard" })
 const pngSignature = [137, 80, 78, 71, 13, 10, 26, 10]
 const localHost = { host: "127.0.0.1:8787" }
 
-type Call = {
-  method?: string
-  headers?: Record<string, string>
-  body?: string | Uint8Array
-}
-
-function postJson(body: unknown, key: string): Call {
-  return {
-    method: "POST",
-    headers: { "content-type": "application/json", "idempotency-key": key },
-    body: JSON.stringify(body),
-  }
-}
-
 function pngSize(bytes: Uint8Array): { width: number; height: number } {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   return { width: view.getUint32(16), height: view.getUint32(20) }
-}
-
-type ChainEvent = { kind: "start" | "end"; key: string }
-
-class GatewayChain extends SpeechChain {
-  readonly events: ChainEvent[] = []
-  private readonly keys = new Map<string, string>()
-  private readonly call: (path: string, init?: Call) => Promise<Response>
-  private readonly drive: (runId: string) => Promise<void>
-
-  constructor(options: {
-    call: (path: string, init?: Call) => Promise<Response>
-    drive: (runId: string) => Promise<void>
-  }) {
-    super()
-    this.call = options.call
-    this.drive = options.drive
-  }
-
-  async start(appId: string, request: ChainRun, key: string): Promise<Run> {
-    this.events.push({ kind: "start", key })
-    const body =
-      request.aspectRatio === null
-        ? { inputs: request.inputs }
-        : { inputs: request.inputs, aspectRatio: request.aspectRatio }
-    const response = await this.call(
-      buildPath(routes.startRun.path, { appId }),
-      postJson(body, key)
-    )
-    expect(response.status).toBe(202)
-    const { run } = runResponse.parse(await response.json())
-    this.keys.set(run.id, key)
-    return run
-  }
-
-  async settle(run: Run): Promise<Run> {
-    await this.drive(run.id)
-    const read = await this.call(
-      buildPath(routes.getRun.path, { runId: run.id })
-    )
-    const ended = runResponse.parse(await read.json()).run
-    this.events.push({ kind: "end", key: this.keys.get(run.id) ?? "" })
-    return ended
-  }
-
-  async secondsOf(): Promise<number | null> {
-    return null
-  }
-}
-
-function askOf(
-  scenes: readonly string[],
-  extra: RunInputs,
-  aspectRatio = "16:9"
-): StoryboardAsk {
-  const inputs: RunInputs = {
-    sceneCount: String(scenes.length),
-    look: "blue hour, soft fog",
-    ...extra,
-  }
-  scenes.forEach((scene, index) => {
-    inputs[`scene${index + 1}`] = scene
-  })
-  return { inputs, aspectRatio, hosted: null }
 }
 
 describe("a Storyboard run through the local gateway on the demo engine", () => {
@@ -153,7 +74,7 @@ describe("a Storyboard run through the local gateway on the demo engine", () => 
     throw new Error(`Run ${runId} did not end in 20 steps`)
   }
 
-  async function upload(): Promise<string> {
+  async function upload(): Promise<AssetId> {
     const response = await call(routes.uploadAsset.path, {
       method: "POST",
       headers: { "content-type": "image/png" },
@@ -290,7 +211,7 @@ describe("a Storyboard run through the local gateway on the demo engine", () => 
     expect(response.status).toBe(202)
   }
 
-  async function savedCharacter(): Promise<string> {
+  async function savedCharacter(): Promise<CharacterId> {
     const photo = await upload()
     const created = await call(routes.createCharacter.path, {
       method: "POST",

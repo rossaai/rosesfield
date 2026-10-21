@@ -209,9 +209,7 @@ describe("a Storyboard chain with no reference and no character", () => {
       model: "z-image-turbo",
       keyframe: "1",
     })
-    expect(chain.started[0]?.request.inputs).not.toHaveProperty(
-      "firstKeyframe"
-    )
+    expect(chain.started[0]?.request.inputs).not.toHaveProperty("firstKeyframe")
     chain.release()
     const runs = await ended
     expect(chain.events.slice(0, 2)).toEqual([
@@ -269,9 +267,7 @@ describe("a Storyboard chain on a hosted edit model", () => {
 
   it("sends a character's photos up to the model's image limit", () => {
     const hosted = { form: fluxForm, settings: {}, photos: photoIds }
-    const [first] = keyframeCallsOf(
-      askOf({ character: [characterId] }, hosted)
-    )
+    const [first] = keyframeCallsOf(askOf({ character: [characterId] }, hosted))
     expect(first?.request.inputs.images).toEqual(photoIds.slice(0, 2))
   })
 

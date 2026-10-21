@@ -73,19 +73,19 @@ describe("the Storyboard ask", () => {
       chosen: fluxImage,
       photos: [],
     })
-    expect(ask.inputs).toMatchObject({
+    expect(ask?.inputs).toMatchObject({
       model: fluxImage.id,
       scene1: "the door",
       scene2: "the stairs",
       scene3: "the roof",
       sceneCount: "3",
     })
-    expect(ask.inputs).not.toHaveProperty("aspectRatio")
-    expect(ask.hosted?.settings).toEqual({
+    expect(ask?.inputs).not.toHaveProperty("aspectRatio")
+    expect(ask?.hosted?.settings).toEqual({
       aspectRatio: "1:1",
       resolution: "1k",
     })
-    expect(ask.aspectRatio).toBeNull()
+    expect(ask?.aspectRatio).toBeNull()
   })
 
   it("sends a graph's format as the app format and holds no hosted settings", () => {
@@ -95,9 +95,20 @@ describe("the Storyboard ask", () => {
       chosen: qwenEdit,
       photos: [],
     })
-    expect(ask.inputs.model).toBe(qwenEdit.id)
-    expect(ask.aspectRatio).toBe("16:9")
-    expect(ask.hosted).toBeNull()
+    expect(ask?.inputs.model).toBe(qwenEdit.id)
+    expect(ask?.aspectRatio).toBe("16:9")
+    expect(ask?.hosted).toBeNull()
+  })
+
+  it("holds no ask when an input names an asset with no asset id, so no run starts on it", () => {
+    const values = threeScenes()
+    const ask = storyboardAskOf({
+      app: listing,
+      values: { ...values, inputs: { ...values.inputs, reference: ["photo"] } },
+      chosen: qwenEdit,
+      photos: [],
+    })
+    expect(ask).toBeNull()
   })
 })
 
@@ -125,7 +136,7 @@ describe("the Storyboard price", () => {
     const values = threeScenes()
     const asks = asksOf({
       ...values,
-      inputs: { ...values.inputs, reference: ["r"] },
+      inputs: { ...values.inputs, reference: ["1e3a5c7e-9b2d-4f6a-8c0e-2b4d6f8a0c1e"] },
     })
     expect(asks.text).toBeNull()
     expect(asks.edit?.inputs).toMatchObject({ keyframe: "1" })
