@@ -54,10 +54,13 @@ describe("the traits of Characters", () => {
       new Set([zImage.id, qwen.id, flux.id, counted.id])
     )
     const fluxRow = options.find((option) => option.dataset.model === flux.id)
-    const text = fluxRow?.parentElement?.textContent ?? ""
+    const row = fluxRow?.parentElement
+    const text = row?.textContent ?? ""
     expect(text).toContain(modelNameOf(flux))
-    expect(text).toContain(flux.maker)
-    expect(text).toContain(t("model.line.textToImage"))
+    expect(
+      row?.querySelector<HTMLElement>("[data-slot=lab-mark]")?.dataset.maker
+    ).toBe(flux.maker)
+    expect(text).toContain(tCatalog("comfy.model.bflFlux3Image.line"))
   })
 
   it("change the ratio choices to the ones the picked model's schema declares, and the price with them", async () => {

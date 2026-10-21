@@ -1,6 +1,6 @@
 import { findApp } from "@rosesfield/catalog"
 import { traitPrompt } from "@rosesfield/catalog/characters"
-import type { CatalogModel } from "@rosesfield/catalog/comfy"
+import { type CatalogModel, factsOf } from "@rosesfield/catalog/comfy"
 import { appListing } from "@rosesfield/contract"
 import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
@@ -209,6 +209,11 @@ export function stubGateway(): void {
   )
 }
 
+const servedFlux: CatalogModel = {
+  ...flux,
+  facts: factsOf(flux.id, flux.task),
+}
+
 export function openCharacters(
   seeds: AppSeeds = noSeeds,
   prime: (client: QueryClient) => void = () => undefined
@@ -221,7 +226,7 @@ export function openCharacters(
   prime(client)
   client.setQueryData(settingsQuery.queryKey, settings)
   client.setQueryData(modelCatalogQuery(characters.id, keyState).queryKey, {
-    models: [zImage, qwen, flux, counted, editModel, anglesEdit],
+    models: [zImage, qwen, servedFlux, counted, editModel, anglesEdit],
     defaultModel: zImage.id,
     refusal: null,
   })
