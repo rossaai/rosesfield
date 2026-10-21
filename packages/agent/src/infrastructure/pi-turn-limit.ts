@@ -1,13 +1,13 @@
-import {
-  type Api,
-  type AssistantMessage,
-  type AssistantMessageEventStream,
-  type Context,
-  createAssistantMessageEventStream,
-  type Message,
-  type Model,
-  type Models,
+import type {
+  Api,
+  AssistantMessage,
+  AssistantMessageEventStream,
+  Context,
+  Message,
+  Model,
+  Models,
 } from "@earendil-works/pi-ai"
+import { createAssistantMessageEventStream } from "@earendil-works/pi-ai/utils/event-stream"
 import type { Clock } from "@rosesfield/kernel"
 import { AgentTurnLimitError } from "#domain/error/agent-turn-limit.error"
 import { refusalTextOf } from "#infrastructure/router-chat-fetch"

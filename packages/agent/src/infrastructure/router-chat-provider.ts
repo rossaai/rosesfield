@@ -1,15 +1,15 @@
-import {
-  type ApiKeyAuth,
-  type AssistantMessage,
-  type AssistantMessageEventStream,
-  createAssistantMessageEventStream,
-  createProvider,
-  type FetchFunction,
-  type Model,
-  type Provider,
-  type ProviderStreams,
+import type {
+  ApiKeyAuth,
+  AssistantMessage,
+  AssistantMessageEventStream,
+  FetchFunction,
+  Model,
+  Provider,
+  ProviderStreams,
 } from "@earendil-works/pi-ai"
 import { openAICompletionsApi } from "@earendil-works/pi-ai/api/openai-completions.lazy"
+import { createProvider } from "@earendil-works/pi-ai/models"
+import { createAssistantMessageEventStream } from "@earendil-works/pi-ai/utils/event-stream"
 import { ComfyRouterGenerationEngine } from "@rosesfield/generation"
 import {
   type Fetch,

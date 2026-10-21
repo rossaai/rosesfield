@@ -1,4 +1,5 @@
-import { createModels, type Models } from "@earendil-works/pi-ai"
+import type { Models } from "@earendil-works/pi-ai"
+import { createModels } from "@earendil-works/pi-ai/models"
 import type {
   ModelRef,
   Conversation as PiConversation,
