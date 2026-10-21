@@ -10,6 +10,7 @@ import {
 } from "@rosesfield/contract"
 import { assetIdFormat, type Clock, runIdFormat } from "@rosesfield/kernel"
 import type { AppCatalog } from "#domain/app-catalog.port"
+import { appOnlyInputsOf } from "#domain/app-only-inputs"
 import { AppClosedError } from "#domain/error/app-closed.error"
 import { AppNotFoundError } from "#domain/error/app-not-found.error"
 import { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.error"
@@ -26,7 +27,6 @@ import type {
 import { acceptedInputsOf, imageProblemsOf } from "#domain/image-accept"
 import { isRecord } from "#domain/is-record"
 import type { JobRunner } from "#domain/job-runner.port"
-import { chooserInputsOf } from "#domain/model-choosers"
 import { checkModelInputs, type ModelForm } from "#domain/model-form"
 import type { ModelPolicy } from "#domain/model-policy.port"
 import { Run } from "#domain/run"
@@ -308,11 +308,11 @@ function hostedRequestOf(
   body: Record<string, unknown>,
   given: Record<string, unknown>
 ): RunRequest {
-  const choosers = chooserInputsOf(app, given, form)
-  const checked = checkModelInputs(form, choosers.rest)
+  const own = appOnlyInputsOf(app, given)
+  const checked = checkModelInputs(form, own.rest)
   const issues = [
     ...(checked.kind === "invalid" ? checked.issues : []),
-    ...choosers.issues,
+    ...own.issues,
   ]
   const count = countOf(app, form, body.count, issues)
   if (body.aspectRatio !== undefined && body.aspectRatio !== null) {
@@ -322,7 +322,7 @@ function hostedRequestOf(
     throw new RunInputInvalidError({ appId: app.id, issues })
   }
   return {
-    inputs: { ...checked.inputs, ...choosers.inputs },
+    inputs: { ...checked.inputs, ...own.inputs },
     count,
     aspectRatio: null,
   }

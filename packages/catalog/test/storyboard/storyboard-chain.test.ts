@@ -245,7 +245,7 @@ describe("a Storyboard chain with no reference and no character", () => {
 })
 
 describe("a Storyboard chain on a hosted edit model", () => {
-  it("sends each edit the reference and its own prompt, the fixed sentence, the scene and the look, in the model's own inputs", () => {
+  it("sends each edit the reference and its own prompt in the model's own inputs, beside the app-only scenes, look and keyframe", () => {
     const hosted = {
       form: fluxForm,
       settings: { aspectRatio: "16:9" },
@@ -253,8 +253,14 @@ describe("a Storyboard chain on a hosted edit model", () => {
     }
     const calls = keyframeCallsOf(askOf({ reference: [referenceId] }, hosted))
     expect(calls.map((call) => call.request)).toEqual(
-      scenes.map((scene) => ({
+      scenes.map((scene, index) => ({
         inputs: {
+          ...Object.fromEntries(
+            scenes.map((one, at) => [`scene${at + 1}`, one])
+          ),
+          sceneCount: String(scenes.length),
+          look,
+          keyframe: String(index + 1),
           model: "bfl/flux-3-image",
           aspectRatio: "16:9",
           prompt: `${keepSentence} ${scene} ${look}`,

@@ -1,6 +1,7 @@
 import type { Run, RunInputs } from "@rosesfield/contract"
 import { fieldRoleOf, type ModelField } from "@rosesfield/generation/bindings"
 import type { ChainRun, SpeechChain } from "#lipsync/speech-chain.port"
+import { app } from "#storyboard/app"
 import { keyframeAspects } from "#storyboard/comfy/keyframe-sizes"
 import { keyframeTextModel } from "#storyboard/comfy/storyboard-binding"
 import { keepSentence } from "#storyboard/comfy/storyboard-nodes"
@@ -72,6 +73,18 @@ function isAnchored(inputs: RunInputs): boolean {
   )
 }
 
+const appOnlyNames: ReadonlySet<string> = new Set(
+  app.inputs.flatMap((input) =>
+    "scope" in input && input.scope === "app" ? [input.name] : []
+  )
+)
+
+function appOnlyOf(inputs: RunInputs): RunInputs {
+  return Object.fromEntries(
+    Object.entries(inputs).filter(([name]) => appOnlyNames.has(name))
+  )
+}
+
 function ownInputs(inputs: RunInputs): RunInputs {
   return Object.fromEntries(
     Object.entries(inputs).filter(
@@ -116,6 +129,8 @@ function hostedEdit(
   anchor: Id | null
 ): ChainRun {
   const inputs: Record<string, RunInputs[string]> = {
+    ...appOnlyOf(ask.inputs),
+    [keyframeInput]: String(number),
     ...hosted.settings,
     [modelInput]: ask.inputs[modelInput] ?? "",
   }
