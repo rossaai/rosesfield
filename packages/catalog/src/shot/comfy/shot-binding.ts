@@ -1,6 +1,10 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectBinding } from "@rosesfield/generation/bindings"
-import { findWorkflow, type Workflow, type WorkflowTarget } from "#list-workflows"
+import {
+  findWorkflow,
+  type Workflow,
+  type WorkflowTarget,
+} from "#list-workflows"
 import {
   autoValue,
   phraseOf,

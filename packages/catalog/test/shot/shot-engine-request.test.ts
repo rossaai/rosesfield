@@ -178,20 +178,17 @@ describe("Shot on Video's LTX 2.5 graphs", () => {
     expect(brokenLinks(workflow)).toEqual([])
   })
 
-  it.each(
-    shotResolutions.flatMap((resolution) =>
-      videoAspects.map((aspect) => ({ resolution, aspect }))
-    )
-  )("binds $resolution at $aspect to half of Video's size for the first pass", async ({
-    resolution,
-    aspect,
-  }) => {
-    const workflow = await submitted({ ...defaults, resolution }, aspect)
-    const size = ltxSizes[resolution][aspect]
-    expect(workflow["356"]?.inputs).toMatchObject({
-      width: size.width / 2,
-      height: size.height / 2,
-    })
+  it("binds every resolution and format to half of Video's size", async () => {
+    for (const resolution of shotResolutions) {
+      for (const aspect of videoAspects) {
+        const workflow = await submitted({ ...defaults, resolution }, aspect)
+        const size = ltxSizes[resolution][aspect]
+        expect(workflow["356"]?.inputs).toMatchObject({
+          width: size.width / 2,
+          height: size.height / 2,
+        })
+      }
+    }
   })
 
   it("refuses a resolution Video's graphs do not bind, before any request", () => {
@@ -237,7 +234,8 @@ describe("withShotWords", () => {
 
   it("refuses a graph whose prompt node joins no text, the control", () => {
     const workflow = videoGraph()
-    const graph = { ...workflow.graph, "900": { class_type: "Note", inputs: {} } }
+    const note = { class_type: "Note", inputs: {} }
+    const graph = { ...workflow.graph, "900": note }
     expect(() => withShotWords({ ...workflow, graph })).toThrow(
       expect.objectContaining({ code: "WORKFLOW_INVALID" })
     )
