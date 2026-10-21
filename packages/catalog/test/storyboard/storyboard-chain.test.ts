@@ -245,7 +245,7 @@ describe("a Storyboard chain with no reference and no character", () => {
 })
 
 describe("a Storyboard chain on a hosted edit model", () => {
-  it("sends each edit the reference and its own prompt in the model's own inputs, beside the app-only scenes, look and keyframe", () => {
+  it("sends each edit the reference and its own prompt in the model's own inputs, beside the app-only reference, scenes, look and keyframe", () => {
     const hosted = {
       form: fluxForm,
       settings: { aspectRatio: "16:9" },
@@ -255,6 +255,7 @@ describe("a Storyboard chain on a hosted edit model", () => {
     expect(calls.map((call) => call.request)).toEqual(
       scenes.map((scene, index) => ({
         inputs: {
+          reference: [referenceId],
           ...Object.fromEntries(
             scenes.map((one, at) => [`scene${at + 1}`, one])
           ),
