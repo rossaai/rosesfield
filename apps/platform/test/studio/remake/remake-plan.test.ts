@@ -55,6 +55,17 @@ describe("the plan the run record carries", () => {
       cameraMove: "push-in",
     })
   })
+
+  it("reads a camera move outside Video's moves as no move", () => {
+    const [first, second, third] = wirePlanOfThree.shots
+    const read = readPlan({
+      shots: [first, { ...second, cameraMove: "spin" }, third],
+    })
+    expect(read?.shots[1]).toMatchObject({
+      words: "A wide street at dusk.",
+      cameraMove: null,
+    })
+  })
 })
 
 describe("the plan's price", () => {

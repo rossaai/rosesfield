@@ -7,20 +7,22 @@ import {
 import { callPathFor, fieldOf, oneOf } from "@/api/call-path"
 import { isWorking } from "@/api/queries"
 import {
+  type PlannedShot,
   remakeLimits,
   type ShotRoute,
 } from "../../../../../packages/catalog/src/remake/shot-plan"
+import {
+  type CameraMove,
+  cameraMoves,
+} from "../../../../../packages/catalog/src/video/camera-moves"
 
-export type PlanShot = {
-  number: number
-  startSeconds: number
-  endSeconds: number
-  route: ShotRoute
+export type PlanShot = Pick<
+  PlannedShot,
+  "number" | "startSeconds" | "endSeconds" | "route" | "words" | "cameraMove"
+> & {
   model: string | null
   credits: number | null
   seed: number | null
-  words: string | null
-  cameraMove: string | null
 }
 
 export type RemakePlan = {
@@ -49,6 +51,10 @@ function textOf(value: unknown): string | null {
   return typeof value === "string" && /\S/.test(value) ? value : null
 }
 
+function cameraMoveOf(value: unknown): CameraMove | null {
+  return cameraMoves.find((move) => move.value === value)?.value ?? null
+}
+
 function readShot(value: unknown): PlanShot | null {
   const number = wholeOf(fieldOf(value, "number"))
   const startSeconds = secondsOf(fieldOf(value, "startSeconds"))
@@ -73,7 +79,7 @@ function readShot(value: unknown): PlanShot | null {
     seed: wholeOf(fieldOf(value, "seed")),
     words: route === "rebuild" ? textOf(fieldOf(value, "words")) : null,
     cameraMove:
-      route === "rebuild" ? textOf(fieldOf(value, "cameraMove")) : null,
+      route === "rebuild" ? cameraMoveOf(fieldOf(value, "cameraMove")) : null,
   }
 }
 
