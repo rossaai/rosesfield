@@ -147,7 +147,9 @@ describe("ModelPicker", () => {
       "new",
       "openWeights",
     ])
-    const weights = within(row).getByRole("link", { name: "Open weights" })
+    const weights = within(row).getByRole("link", {
+      name: "huggingface.co/maker/model-4",
+    })
     expect(weights.getAttribute("href")).toBe(
       "https://huggingface.co/maker/model-4"
     )
@@ -227,11 +229,11 @@ describe("ModelPicker", () => {
 })
 
 describe("ModelPicker's Open weights link", () => {
-  it("sits outside the option, so a click on it never chooses the row", () => {
+  it("sits outside the option, so a click on the mark never chooses the row, and a click on the words does", () => {
     const onChoose = open(vi.fn(), badged)
     const option = screen.getByRole("option", { name: "Model 4" })
     const weights = within(rowOf("Model 4")).getByRole("link", {
-      name: "Open weights",
+      name: "huggingface.co/maker/model-4",
     })
     expect(option.contains(weights)).toBe(false)
     expect(weights.closest("[role='option']")).toBeNull()
@@ -244,7 +246,7 @@ describe("ModelPicker's Open weights link", () => {
 })
 
 describe("ModelPicker's Open weights place", () => {
-  it("rides 4 px after the name on the name's line, above the row's option", () => {
+  it("rides 4 px after the name on the name's line, and only its 12 px mark takes the pointer", () => {
     open(vi.fn(), badged)
     const row = rowOf("Model 4")
     const weights = row.querySelector("[data-slot='model-row-weights']")
@@ -256,12 +258,41 @@ describe("ModelPicker's Open weights place", () => {
         .querySelector("[data-slot='model-row-check']")
         ?.previousElementSibling?.contains(weights ?? null)
     ).toBe(true)
-    expect(weights?.className.split(" ")).toEqual(
-      expect.arrayContaining(["pointer-events-auto", "relative", "shrink-0"])
+    expect(weights?.className.split(" ")).toContain("shrink-0")
+    expect(weights?.className.split(" ")).not.toContain("pointer-events-auto")
+    const badge = weights?.querySelector("[data-slot='badge']")
+    expect(badge?.className.split(" ")).toEqual(
+      expect.arrayContaining(["ms-1", "[&_svg]:size-3"])
+    )
+    expect(badge?.className.split(" ")).not.toContain("pointer-events-auto")
+    const link = badge?.querySelector("a")
+    expect(link?.className.split(" ")).toEqual(
+      expect.arrayContaining(["pointer-events-auto", "relative", "z-10"])
     )
     expect(
-      weights?.querySelector("[data-slot='badge']")?.className.split(" ")
-    ).toContain("ms-1")
+      link?.querySelector("[data-slot='hugging-face-mark']")
+    ).not.toBeNull()
+    expect(
+      badge?.querySelector("[data-slot='count-badge-words']")?.closest("a")
+    ).toBeNull()
+  })
+})
+
+describe("ModelPicker's one line", () => {
+  it("keeps the line whole and wraps its tags onto their own line when they do not fit after it", () => {
+    open()
+    const line = rowOf("Sketch 1").querySelector("[data-slot='model-row-line']")
+    expect(line?.className.split(" ")).toContain("flex-wrap")
+    const words = line?.querySelector("[data-slot='model-row-words']")
+    expect(words?.textContent).toBe("Makes an image from words")
+    expect(words?.className.split(" ")).toEqual(
+      expect.arrayContaining(["max-w-full", "truncate"])
+    )
+    const tags = line?.querySelector("[data-slot='model-row-tags']")
+    expect(tags?.textContent).toBe("Open weights")
+    expect(tags?.className.split(" ")).toEqual(
+      expect.arrayContaining(["shrink-0", "max-w-full"])
+    )
   })
 })
 

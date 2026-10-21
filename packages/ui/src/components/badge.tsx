@@ -23,6 +23,11 @@ type BadgeProps = {
   className?: string
 }
 
+function linkNameOf(href: string): string {
+  const url = new URL(href)
+  return `${url.host}${url.pathname}`.replace(/\/$/, "")
+}
+
 function Badge({
   kind,
   children,
@@ -30,36 +35,36 @@ function Badge({
   href,
   className,
 }: BadgeProps): ReactElement {
-  const classes = cn(badgeClass, className)
   const shownMark =
     mark ?? (kind === "openWeights" ? <HuggingFaceMark /> : undefined)
-  const content = (
-    <>
-      {shownMark === undefined ? null : (
+  const isLink = kind === "openWeights" && href !== undefined
+  return (
+    <span
+      data-slot="badge"
+      data-kind={kind}
+      className={cn(badgeClass, className)}
+    >
+      {shownMark === undefined ? null : isLink ? (
+        <a
+          data-slot="badge-link"
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={linkNameOf(href)}
+          className={cn(
+            "pointer-events-auto relative z-10 flex rounded-dense",
+            interaction.light,
+            interaction.ring
+          )}
+        >
+          {shownMark}
+        </a>
+      ) : (
         <span aria-hidden="true" className="flex">
           {shownMark}
         </span>
       )}
       <span data-slot="count-badge-words">{children}</span>
-    </>
-  )
-  if (kind === "openWeights" && href !== undefined) {
-    return (
-      <a
-        data-slot="badge"
-        data-kind={kind}
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={cn(classes, interaction.light, interaction.ring)}
-      >
-        {content}
-      </a>
-    )
-  }
-  return (
-    <span data-slot="badge" data-kind={kind} className={classes}>
-      {content}
     </span>
   )
 }
