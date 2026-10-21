@@ -375,6 +375,6 @@ test.describe("Video's runs on a phone", () => {
     await expect(tile).toBeVisible({ timeout: 20_000 })
     expect(tabs.x).toBe(16)
     expect((await boxOf(run)).x).toBe(tabs.x)
-    expect((await boxOf(tile)).x).toBeCloseTo(tabs.x, 0)
+    await expect.poll(async () => (await boxOf(tile)).x).toBeCloseTo(tabs.x, 0)
   })
 })
