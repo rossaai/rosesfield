@@ -75,7 +75,7 @@ function expectedModels(recipe: EffectRecipe): string[] {
     videoModel,
     ...[
       ...ltxModels,
-      ...imageEditModels,
+      ...(recipe.endFrame.source === "edit" ? imageEditModels : []),
       ...(recipe.hold === null ? [] : ["birefnet.safetensors"]),
     ].sort(),
   ]

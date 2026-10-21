@@ -70,7 +70,9 @@ describe("the effect recipes kept as data", () => {
       for (const window of design.cuts) {
         expect(window.max).toBeLessThanOrEqual(recipe.seconds + 0.05)
       }
-      expect(recipe.endFrame.source).toBe("edit")
+      expect(recipe.endFrame.source).toBe(
+        recipe.effect === "push-into-eye" ? "dark" : "edit"
+      )
     }
   })
 
@@ -138,6 +140,19 @@ describe("the effect recipes kept as data", () => {
     expect(() =>
       readRecipes({ "many-copies": variant({ photoFrame: "middle" }) }, ledger)
     ).toThrow(/many-copies\.json is invalid: photoFrame/)
+  })
+
+  it("ends Push into eye on a dark frame under its last-frame luma, with a camera that moves from the first frame", () => {
+    const eye = recipeOf("push-into-eye")
+    expect(eye.endFrame).toEqual({ source: "dark", luma: 8, strength: 0.9 })
+    expect(
+      eye.endFrame.source === "dark" ? eye.endFrame.luma : 255
+    ).toBeLessThan(eye.design.lastFrame.maxLuma ?? 0)
+    expect(eye.prompt).toMatch(
+      /^One unbroken shot that moves from the first frame/
+    )
+    expect(eye.prompt).not.toMatch(/\bholds?\b|for a moment/)
+    expect(eye.seconds).toBe(7)
   })
 
   it("refuses a dark end frame on a look that lands on the photo, and reads one on a look that opens on it", () => {

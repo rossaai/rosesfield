@@ -137,7 +137,7 @@ describe("the effect recipes", () => {
 
   it("scales the photo itself to the shape and makes the last frame from it with the image edit model", () => {
     const workflow = workflowOf(
-      effectGraph(fileGraph(), recipeOf("push-into-eye"))
+      effectGraph(fileGraph(), recipeOf("grow-giant"))
     )
     expect(workflow).toMatchObject({
       "606": {
