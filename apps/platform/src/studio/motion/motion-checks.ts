@@ -1,5 +1,6 @@
 import { formatBytes, formatSeconds } from "@/copy/format"
 import { tCatalog } from "@/copy/t"
+import { clipMimes } from "@/pieces/use-clip-facts"
 import type { FieldProblem } from "@/screens/app/app-form"
 import { type ClipRange, graphClipRange } from "@/studio/motion/motion-tabs"
 
@@ -30,7 +31,7 @@ export const photoLimits: Limits = {
 
 export const clipLimits: Limits = {
   maxBytes: 100_000_000,
-  mimes: ["video/mp4", "video/quicktime", "video/webm"],
+  mimes: clipMimes,
   formatsKey: "motion.formats.clip",
   unreadableKey: "motion.input.clip.unreadable",
 }

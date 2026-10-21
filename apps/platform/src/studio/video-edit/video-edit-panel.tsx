@@ -4,6 +4,7 @@ import { formatDuration } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { assetLimitsText } from "@/pieces/asset-limits"
 import { CollapsibleSection } from "@/pieces/collapsible-section"
+import { clipMimes } from "@/pieces/use-clip-facts"
 import { ChoiceControl } from "@/screens/app/fields/choice-field"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { textOf } from "@/screens/app/fields/field-props"
@@ -11,12 +12,11 @@ import { inputCaption, inputNote } from "@/screens/app/fields/input-copy"
 import { InputField } from "@/screens/app/fields/input-field"
 import { SeedField } from "@/screens/app/fields/seed-field"
 import { randomSeed } from "@/screens/app/inputs-panel"
-import { clipMimes } from "@/studio/recast/recast-checks"
 import {
   largestClipBytes,
   longestClipSeconds,
   shortestClipSeconds,
-} from "@/studio/video-edit/use-clip-facts"
+} from "@/studio/video-edit/clip-limits"
 import type { VideoEditState } from "@/studio/video-edit/use-video-edit-screen"
 import {
   advancedInputsOf,

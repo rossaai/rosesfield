@@ -9,9 +9,11 @@ export type ClipFacts = {
   height: number
 }
 
-export const shortestClipSeconds = 2
-export const longestClipSeconds = 5
-export const largestClipBytes = 100_000_000
+export const clipMimes: readonly string[] = [
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+]
 
 const sameFormatGap = 0.04
 
