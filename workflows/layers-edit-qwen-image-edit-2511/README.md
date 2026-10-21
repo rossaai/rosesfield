@@ -1,6 +1,6 @@
 # Layers: edit one layer with Qwen Image Edit 2511
 
-Places one transparent layer on mid grey, edits it with Qwen Image Edit 2511 and puts its alpha back. Your words reach the prompt at node 13. The draft run samples 4 steps with the Lightning LoRA, and the final run samples 40 steps with the base weights. Relight in Layers runs Edit's Qwen 2509 relight graph, `relight-qwen-image-edit-2509`, with the same grey and alpha steps added in the catalog's code.
+Places one transparent layer on mid grey, edits it with Qwen Image Edit 2511 and puts its alpha back. Your words reach the prompt at node 13. The draft run samples 4 steps with the Lightning LoRA, and the final run samples 40 steps with the base weights. Before each run the catalog adds a `SolidMask` and a `MaskComposite` that lower the mask that node 21 `JoinImageWithAlpha` reads by half of one 8-bit step, because the mask turns into alpha as 1 minus a float32 value and `SaveImage` truncates, which loses one level on 95 of the 256 alpha values. Relight in Layers runs Edit's Qwen 2509 relight graph, `relight-qwen-image-edit-2509`, with the same grey and alpha steps added in the catalog's code.
 
 | | |
 |---|---|
