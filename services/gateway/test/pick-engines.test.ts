@@ -211,6 +211,19 @@ describe("the engine target the settings select", () => {
     ).toEqual(["comfy-router", "demo"])
   })
 
+  it("puts Remake's runner before a pasted key's live engines when the server runs ffmpeg", () => {
+    const media = new RefusingMediaTool()
+    const target = comfyCloud("ignored")
+    expect(
+      visitorEngines(target, "comfyui-visitor", { clock, media }).map(
+        (one) => one.key
+      )
+    ).toEqual(["remake-shots", comfyWorkflowAdapter, "comfy-router", "demo"])
+    expect(
+      visitorEngines(target, null, { clock, media }).map((one) => one.key)
+    ).toEqual(["comfy-router", "demo"])
+  })
+
   it("control: a server that runs no ffmpeg lists no Remake runner", () => {
     expect(
       pickEngines(comfyCloud("comfyui-k"), { clock }).map((one) => one.key)

@@ -125,5 +125,7 @@ export function visitorEngines(
   const live = key === null ? null : liveEngineOf(keyed, options)
   const router = routerOf(key === null ? null : hostedKeyOf(keyed), options)
   const demo = new DemoGenerationEngine({ clock: options.clock, rates: router })
-  return live === null ? [router, demo] : [live, router, demo]
+  return live === null
+    ? [router, demo]
+    : [...withRemake([live, router], hostedKeyOf(keyed), options), demo]
 }
