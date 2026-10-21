@@ -12,14 +12,20 @@ import { textOf } from "@/screens/app/fields/field-props"
 import { inputCaption, inputNote } from "@/screens/app/fields/input-copy"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
+import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
+import { modelInputName } from "@/screens/app/hosted/hosted-form"
+import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
 import type { AppForm } from "@/screens/app/use-app-form"
 import {
   countInput,
   isPanelInput,
   isTrait,
+  promptInput,
   randomTraits,
 } from "@/studio/characters/mode-listing"
+import { imageFieldsOf } from "@/studio/image/image-fields"
+import { HostedPanel } from "@/studio/image/image-settings"
 
 type PanelProps = {
   app: AppListing
@@ -182,16 +188,54 @@ function Field({
   )
 }
 
-export function TraitsPanel(props: PanelProps): ReactElement {
-  const { app, form } = props
+function hasCatalogPicker(hosted: HostedState | undefined): boolean {
+  return (
+    hosted !== undefined && (hosted.isTaskApp || hosted.models.length > 0)
+  )
+}
+
+function isWordsInput(input: InputDefinition, hasPicker: boolean): boolean {
+  return (
+    isPanelInput(input) &&
+    !isTrait(input) &&
+    input.name !== promptInput &&
+    !(hasPicker && input.name === modelInputName)
+  )
+}
+
+export function TraitsPanel(
+  props: PanelProps & { hosted?: HostedState | undefined }
+): ReactElement {
+  const { app, form, hosted } = props
   const traits = app.inputs.filter(isTrait).filter(isChoice)
-  const rest = app.inputs.filter(isPanelInput).filter((one) => !isTrait(one))
+  const hasPicker = hasCatalogPicker(hosted)
+  const rest = app.inputs.filter((one) => isWordsInput(one, hasPicker))
+  const fields = hosted?.fields ?? null
   return (
     <div className="flex flex-col gap-s4">
       <TraitGroups app={app} form={form} traits={traits} />
       {rest.map((input) => (
         <Field key={input.name} {...props} input={input} />
       ))}
+      {hosted === undefined || !hasPicker ? null : fields === null ? (
+        <CatalogPicker hosted={hosted} place="row" />
+      ) : (
+        <HostedPanel
+          app={app}
+          hosted={hosted}
+          fields={imageFieldsOf(fields)}
+          form={form}
+        />
+      )}
+      {fields === null ? <GraphOutputFields {...props} /> : null}
+    </div>
+  )
+}
+
+function GraphOutputFields(props: PanelProps): ReactElement {
+  const { app, form } = props
+  return (
+    <>
       <AspectField
         app={app}
         value={form.values.aspectRatio}
@@ -206,7 +250,7 @@ export function TraitsPanel(props: PanelProps): ReactElement {
         }}
       />
       <AdvancedFields {...props} />
-    </div>
+    </>
   )
 }
 
