@@ -1,0 +1,29 @@
+{
+  "name": "audio-music-minimax-music-3",
+  "title": "Music: a song from a description with MiniMax-Music3",
+  "description": "Makes a song from a description and optional lyrics, up to the length you set. The model can end the song before that length. Built from Comfy's template audio_minimax_music_3.",
+  "mediaType": "audio",
+  "openSource": true,
+  "models": [
+    "minimax_music3_dit_fp16.safetensors",
+    "minimax_music3_text_encoder_pruned_int8_convrot.safetensors",
+    "minimax_music3_dav.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "description": {
+      "nodeId": "13",
+      "inputName": "caption",
+      "type": "scalar"
+    },
+    "lyrics": { "nodeId": "13", "inputName": "lyrics", "type": "scalar" },
+    "length": {
+      "nodeId": "13",
+      "inputName": "max_duration",
+      "type": "scalar"
+    },
+    "seed": { "nodeId": "13", "inputName": "seed", "type": "scalar" },
+    "samplerSeed": { "nodeId": "9", "inputName": "seed", "type": "scalar" }
+  },
+  "outputs": [{ "nodeId": "35", "key": "audio", "kind": "audio" }]
+}
