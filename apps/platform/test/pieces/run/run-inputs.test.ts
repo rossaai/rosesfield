@@ -74,10 +74,12 @@ describe("inputRowsOf", () => {
       "prompt",
       "model",
       "seed",
-      "aspectRatio",
-      "count",
+      "output.aspectRatio",
+      "output.count",
     ])
-    expect(rows.find((row) => row.key === "aspectRatio")?.value).toBe("16:9")
-    expect(rows.find((row) => row.key === "count")?.value).toBe("2")
+    expect(rows.find((row) => row.key === "output.aspectRatio")?.value).toBe(
+      "16:9"
+    )
+    expect(rows.find((row) => row.key === "output.count")?.value).toBe("2")
   })
 })

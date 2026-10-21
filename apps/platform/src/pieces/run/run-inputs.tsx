@@ -79,7 +79,11 @@ export function shownInputsOf(
   )
 }
 
-function outputRows(app: AppListing, run: RunValues): InputRow[] {
+function outputRows(
+  app: AppListing,
+  run: RunValues,
+  shown: readonly InputDefinition[]
+): InputRow[] {
   const output = app.output
   const rows: InputRow[] = []
   if (
@@ -88,14 +92,14 @@ function outputRows(app: AppListing, run: RunValues): InputRow[] {
     run.aspectRatio !== null
   ) {
     rows.push({
-      key: "aspectRatio",
+      key: "output.aspectRatio",
       label: t("field.aspect.label"),
       value: run.aspectRatio,
     })
   }
-  if (output.count.max > 1) {
+  if (output.count.max > 1 && !shown.some((input) => input.name === "count")) {
     rows.push({
-      key: "count",
+      key: "output.count",
       label: t("field.count.label"),
       value: formatNumber(run.count),
     })
@@ -104,14 +108,15 @@ function outputRows(app: AppListing, run: RunValues): InputRow[] {
 }
 
 export function inputRowsOf(app: AppListing, run: RunValues): InputRow[] {
-  const inputs = shownInputsOf(app, run).map((input) => ({
+  const shown = shownInputsOf(app, run)
+  const inputs = shown.map((input) => ({
     key: input.name,
     label: tCatalog(input.labelKey),
     value: (
       <InputValue app={app} input={input} value={runValueOf(input, run)} />
     ),
   }))
-  return [...inputs, ...outputRows(app, run)]
+  return [...inputs, ...outputRows(app, run, shown)]
 }
 
 export function RunInputs({
