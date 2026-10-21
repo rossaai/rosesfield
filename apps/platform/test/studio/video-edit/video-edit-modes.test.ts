@@ -60,30 +60,22 @@ function names(inputs: readonly { name: string }[]): string[] {
 }
 
 describe("the Video edit screen follows the contract's operation rules", () => {
-  it("shows each operation's inputs, with resolution and the seed under Advanced in Extend and Reframe", () => {
+  it("shows each operation's inputs below the clip well, with resolution and the seed under Advanced in Extend and Reframe", () => {
     expect(names(shownInputsOf(listing, "extend"))).toEqual([
-      "mode",
-      "source",
       "seconds",
       "next",
       "keepSound",
     ])
     expect(names(shownInputsOf(listing, "reframe"))).toEqual([
-      "mode",
-      "source",
       "aspect",
       "around",
       "keepSound",
     ])
     expect(names(shownInputsOf(listing, "background"))).toEqual([
-      "mode",
-      "source",
       "color",
       "keepSound",
     ])
     expect(names(shownInputsOf(listing, "frame-rate"))).toEqual([
-      "mode",
-      "source",
       "factor",
       "keepSound",
     ])
