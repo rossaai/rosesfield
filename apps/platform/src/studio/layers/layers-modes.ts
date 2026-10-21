@@ -2,6 +2,7 @@ import {
   type AppListing,
   fixedCountOf,
   type InputDefinition,
+  type InputRule,
   inputRulesOf,
   whenHolds,
 } from "@rosesfield/contract"
@@ -10,6 +11,7 @@ import {
   type FormValues,
   type StartRunBodyInput,
 } from "@/screens/app/app-form"
+import { modelInputName } from "@/screens/app/hosted/hosted-form"
 
 export type LayersMode = "split" | "edit" | "relight" | "fill"
 
@@ -23,6 +25,7 @@ const modes: readonly LayersMode[] = ["split", "edit", "relight", "fill"]
 
 const ownControls: readonly string[] = [
   modeInput,
+  modelInputName,
   countInput,
   layerInput,
   maskInput,
@@ -95,25 +98,32 @@ export function countRangeOf(app: AppListing, mode: LayersMode): CountRange {
   }
 }
 
+const modeBound: readonly string[] = [countInput, modelInputName]
+
+function boundValueOf(
+  rule: InputRule,
+  chosen: unknown
+): string | number | null {
+  const allowed = rule.allowed ?? []
+  return typeof chosen === "string" && allowed.includes(chosen)
+    ? chosen
+    : rule.fallback
+}
+
 export function layersBodyOf(
   app: AppListing,
   mode: LayersMode,
   values: FormValues
 ): StartRunBodyInput {
   const body = bodyOf(bodyAppFor(app, mode), values)
-  const rule = inputRulesOf(app, body.inputs).find(
-    (one) => one.input.name === countInput
-  )
-  const chosen = body.inputs[countInput]
-  const allowed = rule?.allowed ?? []
-  const layers =
-    typeof chosen === "string" && allowed.includes(chosen)
-      ? chosen
-      : rule?.fallback
-  const inputs =
-    typeof layers === "string"
-      ? { ...body.inputs, [countInput]: layers }
-      : body.inputs
+  const inputs = { ...body.inputs }
+  for (const rule of inputRulesOf(app, body.inputs)) {
+    const name = rule.input.name
+    const value = boundValueOf(rule, inputs[name])
+    if (modeBound.includes(name) && typeof value === "string") {
+      inputs[name] = value
+    }
+  }
   return {
     ...body,
     inputs,
