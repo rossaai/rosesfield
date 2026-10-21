@@ -151,11 +151,12 @@ describe("every effects engine request against the recorded v2 routes", () => {
     )
     expect(workflow["420"]).toBeUndefined()
     const end = recipe.endFrame
-    const opening = recipe.photoFrame === "first" ? ["350", 0] : ["627", 0]
-    const closing = recipe.photoFrame === "first" ? ["627", 0] : ["350", 0]
+    const opening = recipe.photoFrame === "first" ? ["616", 0] : ["627", 0]
+    const closing = recipe.photoFrame === "first" ? ["627", 0] : ["616", 0]
     expect(workflow).toMatchObject({
-      "357": { inputs: { image: opening } },
-      "349": { inputs: { image: opening } },
+      "351": { inputs: { input: opening } },
+      "357": { inputs: { image: ["350", 0] } },
+      "349": { inputs: { image: ["350", 0] } },
     })
     if (end.source === "none") {
       expect(workflow["620"]).toBeUndefined()

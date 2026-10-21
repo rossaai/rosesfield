@@ -125,21 +125,19 @@ function setEndFrame(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, "463").inputs.strength = end.strength
 }
 
-const photoLockNodes: readonly string[] = ["357", "349"]
-
 const endGuideNodes: readonly string[] = ["460", "463"]
 
-const fittedPhoto: Link = ["350", 0]
+const fittedPhoto: Link = ["616", 0]
 
 const editedFrame: Link = ["627", 0]
+
+const openingResizeNode = "351"
 
 function setPhotoFrame(graph: Graph, recipe: EffectRecipe): void {
   if (recipe.photoFrame === "first") {
     return
   }
-  for (const id of photoLockNodes) {
-    nodeOf(graph, id).inputs.image = [...editedFrame]
-  }
+  nodeOf(graph, openingResizeNode).inputs.input = [...editedFrame]
   for (const id of endGuideNodes) {
     nodeOf(graph, id).inputs.image = [...fittedPhoto]
   }

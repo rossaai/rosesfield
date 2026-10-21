@@ -130,10 +130,11 @@ describe("the effect recipes", () => {
     expect(recipe.photoFrame).toBe("last")
     expect(workflow).toMatchObject({
       "620": { inputs: { image1: ["616", 0] } },
-      "357": { inputs: { image: ["627", 0], strength: 0.7 } },
-      "349": { inputs: { image: ["627", 0], strength: 1 } },
-      "460": { inputs: { image: ["350", 0], frame_idx: -1 } },
-      "463": { inputs: { image: ["350", 0], frame_idx: -1 } },
+      "351": { inputs: { input: ["627", 0] } },
+      "357": { inputs: { image: ["350", 0], strength: 0.7 } },
+      "349": { inputs: { image: ["350", 0], strength: 1 } },
+      "460": { inputs: { image: ["616", 0], frame_idx: -1 } },
+      "463": { inputs: { image: ["616", 0], frame_idx: -1 } },
     })
     expect(brokenLinks(workflow)).toEqual([])
   })
