@@ -140,7 +140,11 @@ function renderUpscale(first: Record<string, FieldValue>) {
     seconds: 5,
   })
   return renderHook(() =>
-    useUpscaleScreen(listing, { use: undefined, from: undefined }, () => {})
+    useUpscaleScreen(
+      listing,
+      { use: undefined, from: undefined },
+      () => undefined
+    )
   )
 }
 
@@ -151,9 +155,10 @@ describe("Upscale opens", () => {
     const { result } = renderUpscale({})
     expect(result.current.mode).toBe("image")
     expect(result.current.hosted.chosen?.id).toBe(graph.id)
-    expect(result.current.scale.spec?.options.map((one) => one.value)).toEqual(
-      ["2x", "4x"]
-    )
+    expect(result.current.scale.spec?.options.map((one) => one.value)).toEqual([
+      "2x",
+      "4x",
+    ])
     expect(result.current.well).toMatchObject({
       name: "image",
       limits: { minSide: 64 },
@@ -215,9 +220,11 @@ describe("another model", () => {
       limits: { minSide: null },
     })
     expect(result.current.form.values.inputs.inputImage).toEqual([photo])
-    expect(result.current.scale.spec?.options.map((one) => one.value)).toEqual(
-      ["2k", "4k", "8k"]
-    )
+    expect(result.current.scale.spec?.options.map((one) => one.value)).toEqual([
+      "2k",
+      "4k",
+      "8k",
+    ])
     expect(result.current.scale.check.state).toBe("empty")
     expect(result.current.restFields.map((one) => one.name)).toEqual([
       "outputFormat",

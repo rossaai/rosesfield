@@ -15,12 +15,12 @@ import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { clipLimitOf, clipProblemOf } from "@/studio/video-edit/clip-limit"
 import type { VideoEditState } from "@/studio/video-edit/use-video-edit-screen"
+import type { VideoEditMode } from "@/studio/video-edit/video-edit-modes"
 import {
   ModeTabs,
   tabHostedOf,
   VideoEditPanel,
 } from "@/studio/video-edit/video-edit-panel"
-import type { VideoEditMode } from "@/studio/video-edit/video-edit-modes"
 import { clipFieldOf, modelsOfTab } from "@/studio/video-edit/video-edit-tabs"
 import {
   catalog,

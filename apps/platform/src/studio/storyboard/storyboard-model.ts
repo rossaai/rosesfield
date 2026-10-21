@@ -11,7 +11,10 @@ import {
   type FormValues,
   type StartRunBodyInput,
 } from "@/screens/app/app-form"
-import { hostedDefaults, modelInputName } from "@/screens/app/hosted/hosted-form"
+import {
+  hostedDefaults,
+  modelInputName,
+} from "@/screens/app/hosted/hosted-form"
 import {
   runValues,
   scenesOf,
@@ -99,9 +102,7 @@ export function storyboardBody(
       inputs[field.name] = value
     }
   }
-  return base.count === undefined
-    ? { inputs }
-    : { inputs, count: base.count }
+  return base.count === undefined ? { inputs } : { inputs, count: base.count }
 }
 
 export function keyframeBody(

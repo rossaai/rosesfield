@@ -56,10 +56,7 @@ describe("the scene and choices read back from the words a run sent", () => {
   })
 
   it("gives the same words again from what it read back", () => {
-    const words = wordsOf(
-      scene,
-      choicesOf({ focus: "shallow", color: "warm" })
-    )
+    const words = wordsOf(scene, choicesOf({ focus: "shallow", color: "warm" }))
     const read = splitWords(words)
     expect(wordsOf(read.scene, read.choices)).toBe(words)
   })

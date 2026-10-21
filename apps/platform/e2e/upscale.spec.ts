@@ -67,9 +67,7 @@ test.describe("Upscale on a phone", () => {
     await expect(sheet).toBeVisible()
     await expect(sheet.getByRole("tab", { name: "Image" })).toBeVisible()
     await expect(sheet.getByRole("tab", { name: "Video" })).toBeVisible()
-    const generate = await boxOf(
-      sheet.locator('[data-slot="generate-button"]')
-    )
+    const generate = await boxOf(sheet.locator('[data-slot="generate-button"]'))
     const sheetBox = await boxOf(sheet)
     const bottom = sheetBox.y + sheetBox.height
     expect(bottom).toBeGreaterThanOrEqual(840)

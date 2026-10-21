@@ -157,9 +157,7 @@ export function StoryboardFrame(props: StoryboardFrameProps): ReactElement {
           {props.canvas(openInputs)}
         </AppStage>
       </div>
-      {isRegular ? null : (
-        <PhoneDock start={props.start} onOpen={openInputs} />
-      )}
+      {isRegular ? null : <PhoneDock start={props.start} onOpen={openInputs} />}
       <PhoneSheet {...props} isRegular={isRegular} />
     </div>
   )

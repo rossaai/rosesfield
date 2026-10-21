@@ -79,11 +79,7 @@ function messageOf(state: EditToolState): string | null {
   return t(problem.key, problem.values)
 }
 
-function PhotoMessage({
-  text,
-}: {
-  text: string | null
-}): ReactElement | null {
+function PhotoMessage({ text }: { text: string | null }): ReactElement | null {
   return text === null ? null : (
     <p
       role="status"

@@ -61,7 +61,10 @@ export function keepInStep(lead: Playable, follower: Playable): boolean {
   return true
 }
 
-export function playTogether(lead: Playable, follower: Playable): Promise<void> {
+export function playTogether(
+  lead: Playable,
+  follower: Playable
+): Promise<void> {
   if (lead.ended) {
     lead.currentTime = 0
   }

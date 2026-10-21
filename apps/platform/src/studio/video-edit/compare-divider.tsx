@@ -187,7 +187,6 @@ function Stage({
 }): ReactElement {
   const drag = useDrag(setSplit)
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: the picture takes a pointer drag, and the divider slider under it carries the keyboard path
     <div
       data-slot="compare-stage"
       {...drag}
