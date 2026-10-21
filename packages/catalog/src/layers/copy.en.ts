@@ -52,6 +52,8 @@ export const layersCopy: Readonly<Record<string, string>> = {
     "Leave it empty to continue what is around the area.",
   "layers.input.quality.label": "Quality",
   "layers.input.seed.label": "Seed",
+  "layers.model.qwenImageLayered": "Qwen Image Layered",
+  "layers.model.qwenImageInpaint": "Qwen Image Inpaint",
   "layers.stack.title": "Layers of this run",
   "layers.layer.name": "Layer {number}",
   "layers.layer.pick": "Pick layer {number}",
