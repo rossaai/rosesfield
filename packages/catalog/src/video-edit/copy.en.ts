@@ -58,4 +58,11 @@ export const videoEditCopy: Readonly<Record<string, string>> = {
   "videoEdit.compare.output": "Result",
   "videoEdit.compare.play": "Play both",
   "videoEdit.compare.pause": "Pause both",
+  "videoEdit.choice.mode.edit": "Edit",
+  "videoEdit.input.model.label": "Model",
+  "videoEdit.model.seedance25": "Dreamina Seedance 2.5",
+  "videoEdit.model.ltx25": "LTX 2.5",
+  "videoEdit.model.ltx23": "LTX 2.3",
+  "videoEdit.model.birefnet": "BiRefNet",
+  "videoEdit.model.film": "FILM",
 }

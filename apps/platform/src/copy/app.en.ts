@@ -162,4 +162,6 @@ export const appCopy = {
     "Your key belongs to no Comfy workspace",
   "error.ENGINE_KEY_OUTSIDE_WORKSPACE.body":
     "Make a key in your Comfy workspace, then paste it in Settings.",
+  "model.line.motionTransfer": "Moves a photo with the motion of a clip",
+  "model.line.characterSwap": "Puts a person in place of the one in a clip",
 } satisfies Record<string, string>

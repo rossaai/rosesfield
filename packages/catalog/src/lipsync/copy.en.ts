@@ -33,4 +33,6 @@ export const lipsyncCopy = {
   "lipsync.formats.photo": "a PNG, JPEG or WebP photo",
   "lipsync.formats.clip": "an MP4, MOV or WebM clip",
   "lipsync.formats.audio": "an MP3 or WAV file",
+  "lipsync.input.model.label": "Model",
+  "lipsync.model.ltx23": "LTX 2.3",
 }
