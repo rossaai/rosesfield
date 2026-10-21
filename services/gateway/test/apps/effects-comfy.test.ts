@@ -52,12 +52,13 @@ describe("the effects app through the gateway on a replayed Comfy", () => {
       "339": { inputs: { noise_seed: run.seed } },
       "628": { inputs: { color: 0x010101 } },
       "460": { inputs: { image: ["628", 0], positive: ["472", 0] } },
-      "472": { inputs: { image: ["471", 0], frame_idx: 132 } },
-      "473": { inputs: { image: ["471", 0], frame_idx: 132 } },
+      "472": { inputs: { image: ["471", 0], frame_idx: 130 } },
+      "473": { inputs: { image: ["471", 0], frame_idx: 130 } },
       "470": { inputs: { input: ["627", 0] } },
       "626": { inputs: { seed: run.seed } },
-      "359": { inputs: { audio: ["358", 0], lufs: -23.75 } },
-      "370": { inputs: { audio: ["361", 0] } },
+      "359": { inputs: { audio: ["717", 0], lufs: -23.75 } },
+      "362": { inputs: { audio: ["361", 0], duration_seconds: 0.4 } },
+      "370": { inputs: { audio: ["362", 0] } },
     })
     const history = await gateway.call(routes.listRuns.path)
     const { runs } = runPageResponse.parse(await history.json())
