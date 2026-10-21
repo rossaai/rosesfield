@@ -77,7 +77,8 @@ describe("the traits of Characters", () => {
     if (aspect === undefined) {
       throw new Error("FLUX 3 Image declares no aspect")
     }
-    expect(aspectsIn(fieldCaption(aspect))).toEqual(["1:1", "16:9"])
+    const caption = `${fieldCaption(aspect)}${t("field.optional")}`
+    expect(aspectsIn(caption)).toEqual(["1:1", "16:9"])
     expect(
       await screen.findByRole("button", { name: pricedName(fluxCredits) })
     ).toBeDefined()
