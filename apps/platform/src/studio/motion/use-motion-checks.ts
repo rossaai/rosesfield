@@ -1,68 +1,68 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import type { FieldProblem } from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
 import type { AppForm } from "@/screens/app/use-app-form"
 import {
-  clipInput,
   clipProblem,
-  type MediaFacts,
   nearestRatio,
-  photoInput,
   photoProblem,
 } from "@/studio/motion/motion-checks"
+import type { ClipRange, WellNames } from "@/studio/motion/motion-tabs"
 import {
   type MediaReading,
   useMediaFacts,
 } from "@/studio/motion/use-media-facts"
 
 export type MotionChecks = {
-  problems: Readonly<Record<string, FieldProblem | undefined>>
+  clip: FieldProblem | null
+  photo: FieldProblem | null
+  clipSeconds: number | null
   readingInput: string | null
 }
-
-type Problems = Record<string, FieldProblem | undefined>
 
 function missingProblem(name: string): FieldProblem {
   return { name, key: "field.asset.required", values: {} }
 }
 
-function useWellCheck(
-  form: AppForm,
-  name: string,
+export function clipCheckOf(
   reading: MediaReading,
-  check: (facts: MediaFacts) => FieldProblem | null,
-  setProblems: (change: (current: Problems) => Problems) => void
-): void {
-  const { setInput } = form
-  const facts = reading.state === "read" ? reading.facts : null
-  const failed = reading.state === "failed"
-  useEffect(() => {
-    if (facts === null && !failed) {
-      return
-    }
-    const problem = facts === null ? missingProblem(name) : check(facts)
-    setProblems((current) => ({ ...current, [name]: problem ?? undefined }))
-    if (problem !== null) {
-      setInput(name, [])
-    }
-  }, [facts, failed, name, check, setInput, setProblems])
+  range: ClipRange | null,
+  name: string
+): FieldProblem | null {
+  switch (reading.state) {
+    case "none":
+    case "reading":
+      return null
+    case "failed":
+      return missingProblem(name)
+    case "read":
+      return clipProblem(reading.facts, range, name)
+  }
 }
 
-export function useMotionChecks(form: AppForm): MotionChecks {
-  const [photoId = null] = listOf(form.values.inputs[photoInput])
-  const [clipId = null] = listOf(form.values.inputs[clipInput])
-  const photo = useMediaFacts(photoId, "image")
-  const clip = useMediaFacts(clipId, "video")
-  const [problems, setProblems] = useState<Problems>({})
-  useWellCheck(form, photoInput, photo, photoProblem, setProblems)
-  useWellCheck(form, clipInput, clip, clipProblem, setProblems)
-  const width = photo.state === "read" ? photo.facts.width : null
-  const height = photo.state === "read" ? photo.facts.height : null
+export function photoCheckOf(
+  reading: MediaReading,
+  name: string
+): FieldProblem | null {
+  switch (reading.state) {
+    case "none":
+    case "reading":
+      return null
+    case "failed":
+      return missingProblem(name)
+    case "read":
+      return photoProblem(reading.facts, name)
+  }
+}
+
+function useRatioFromPhoto(form: AppForm, reading: MediaReading): void {
+  const width = reading.state === "read" ? reading.facts.width : null
+  const height = reading.state === "read" ? reading.facts.height : null
   const setForm = useRef(form.setForm)
   setForm.current = form.setForm
   const ratio = form.values.aspectRatio
   useEffect(() => {
-    if (width === null || height === null) {
+    if (width === null || height === null || ratio === null) {
       return
     }
     const nearest = nearestRatio(width, height)
@@ -70,11 +70,28 @@ export function useMotionChecks(form: AppForm): MotionChecks {
       setForm.current({ aspectRatio: nearest })
     }
   }, [width, height, ratio])
+}
+
+export function useMotionChecks(
+  form: AppForm,
+  names: WellNames,
+  range: ClipRange | null
+): MotionChecks {
+  const [photoId = null] = listOf(form.values.inputs[names.photo])
+  const [clipId = null] = listOf(form.values.inputs[names.clip])
+  const photo = useMediaFacts(photoId, "image")
+  const clip = useMediaFacts(clipId, "video")
+  useRatioFromPhoto(form, photo)
   const readingInput =
     photo.state === "reading"
-      ? photoInput
+      ? names.photo
       : clip.state === "reading"
-        ? clipInput
+        ? names.clip
         : null
-  return { problems, readingInput }
+  return {
+    clip: clipCheckOf(clip, range, names.clip),
+    photo: photoCheckOf(photo, names.photo),
+    clipSeconds: clip.state === "read" ? clip.facts.seconds : null,
+    readingInput,
+  }
 }
