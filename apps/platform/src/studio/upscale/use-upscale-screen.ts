@@ -1,78 +1,100 @@
-import {
-  type AppListing,
-  type InputDefinition,
-  inputRulesOf,
-  type Run,
-} from "@rosesfield/contract"
+import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
+import { type AppListing, inputRulesOf, type Run } from "@rosesfield/contract"
 import {
   type KeyboardEvent,
   useCallback,
   useEffect,
   useMemo,
   useRef,
-  useState,
 } from "react"
 import { formatBytes } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { useAppRuns } from "@/screens/app/app-canvas"
-import { valuesFromRun } from "@/screens/app/app-form"
-import { listOf, textOf } from "@/screens/app/fields/field-props"
+import {
+  type FormValues,
+  heldProblemsOf,
+  valuesFromRun,
+} from "@/screens/app/app-form"
+import { listOf } from "@/screens/app/fields/field-props"
+import { hostedProblems } from "@/screens/app/hosted/hosted-form"
+import {
+  type HostedState,
+  useHostedModel,
+} from "@/screens/app/hosted/use-hosted-model"
+import { usePriceRefresh } from "@/screens/app/hosted/use-price-refresh"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
-import { type AppForm, useAppForm } from "@/screens/app/use-app-form"
+import {
+  type AppForm,
+  type FormCheck,
+  useAppForm,
+} from "@/screens/app/use-app-form"
 import { type StartRun, useStartRun } from "@/screens/app/use-start-run"
 import {
+  type FileLimits,
   type FileProblem,
+  fileLimitsOf,
   isUpscaleMode,
   nearestRatioOf,
   readingProblemOf,
   type ScaleCheck,
   scaleCheckOf,
+  type Size,
   sizeOf,
   type UpscaleMode,
 } from "@/studio/upscale/upscale-limits"
+import {
+  factorOfScale,
+  fileOf,
+  inputsForModel,
+  modeInput,
+  modelForTab,
+  modelInput,
+  modelsOfTab,
+  modeOfModel,
+  restFieldsOf,
+  type ScaleSpec,
+  scaleOf,
+  scaleValueOf,
+  tabsOfModel,
+  wellNameOf,
+} from "@/studio/upscale/upscale-models"
 import { useFileFacts } from "@/studio/upscale/use-file-facts"
 
-export const modeInput = "mode"
-export const scaleInput = "scale"
-export const modelInput = "model"
+export type UpscaleWell = {
+  name: string
+  limits: FileLimits
+}
+
+export type UpscaleScale = {
+  spec: ScaleSpec | null
+  value: string | number | null
+  check: ScaleCheck
+}
 
 export type UpscaleState = {
   app: AppListing
   mode: UpscaleMode
   form: AppForm
   start: StartRun
+  hosted: HostedState
+  models: readonly CatalogModel[]
+  well: UpscaleWell
+  scale: UpscaleScale
+  restFields: readonly ModelField[]
   fileMessage: string | null
-  scaleCheck: ScaleCheck
   lastSeed: number | null
   hasRuns: boolean | null
+  setMode: (mode: UpscaleMode) => void
   registerScale: (focus: () => void) => void
   registerWell: (focus: () => void) => void
   useInputs: (run: Run) => void
   onShortcut: (event: KeyboardEvent<HTMLElement>) => void
 }
 
-function appliedIn(app: AppListing, mode: UpscaleMode): ReadonlySet<string> {
-  return new Set(
+export function bodyAppFor(app: AppListing, mode: UpscaleMode): AppListing {
+  const applied = new Set(
     inputRulesOf(app, { [modeInput]: mode }).map((rule) => rule.input.name)
   )
-}
-
-function optional(input: InputDefinition): InputDefinition {
-  return "presence" in input ? { ...input, presence: "optional" } : input
-}
-
-export function formAppFor(app: AppListing, mode: UpscaleMode): AppListing {
-  const applied = appliedIn(app, mode)
-  return {
-    ...app,
-    inputs: app.inputs.map((input) =>
-      applied.has(input.name) ? input : optional(input)
-    ),
-  }
-}
-
-export function bodyAppFor(app: AppListing, mode: UpscaleMode): AppListing {
-  const applied = appliedIn(app, mode)
   return {
     ...app,
     inputs: app.inputs.filter((input) => applied.has(input.name)),
@@ -114,6 +136,28 @@ export function messageOf(mode: UpscaleMode, problem: FileProblem): string {
   }
 }
 
+export function checkFor(
+  app: AppListing,
+  model: CatalogModel | null
+): FormCheck {
+  const fields = model?.form ?? null
+  return fields === null
+    ? (values) => heldProblemsOf(app, values)
+    : (values) => hostedProblems(fields, values)
+}
+
+export function runValuesOf(
+  app: AppListing,
+  run: Run,
+  models: readonly CatalogModel[]
+): FormValues {
+  const values = valuesFromRun(app, run)
+  const id = run.inputs[modelInput]
+  const model = models.find((one) => one.id === id) ?? null
+  const mode = modeOfModel(model, modeOf(values.inputs[modeInput]))
+  return { ...values, inputs: { ...values.inputs, [modeInput]: mode } }
+}
+
 function useModeFromUse(form: AppForm, mode: UpscaleMode): void {
   const settled = useRef(false)
   const hasVideo = listOf(form.values.inputs.video).length > 0
@@ -130,6 +174,20 @@ function useModeFromUse(form: AppForm, mode: UpscaleMode): void {
   }, [hasImage, hasVideo, mode, setInput])
 }
 
+function useModeOfModel(
+  form: AppForm,
+  chosen: CatalogModel | null,
+  mode: UpscaleMode
+): void {
+  const { setInput } = form
+  const served = chosen === null ? null : modeOfModel(chosen, mode)
+  useEffect(() => {
+    if (served !== null && served !== mode) {
+      setInput(modeInput, served)
+    }
+  }, [mode, served, setInput])
+}
+
 function useRatioFromFile(form: AppForm, ratio: string | null): void {
   const { setForm } = form
   const current = form.values.aspectRatio
@@ -140,6 +198,17 @@ function useRatioFromFile(form: AppForm, ratio: string | null): void {
   }, [current, ratio, setForm])
 }
 
+function useScaleValue(form: AppForm, scale: UpscaleScale): void {
+  const { setInput } = form
+  const name = scale.spec?.name ?? null
+  const held = name === null ? undefined : form.values.inputs[name]
+  useEffect(() => {
+    if (name !== null && scale.value !== null && held !== scale.value) {
+      setInput(name, scale.value)
+    }
+  }, [name, held, scale.value, setInput])
+}
+
 function useFocuser(): [() => void, (focus: () => void) => void] {
   const focuser = useRef<() => void>(() => undefined)
   const register = useCallback((focus: () => void) => {
@@ -148,44 +217,142 @@ function useFocuser(): [() => void, (focus: () => void) => void] {
   return [() => focuser.current(), register]
 }
 
+function ratioOptionsOf(app: AppListing): readonly string[] {
+  return app.output.kind === "image" || app.output.kind === "video"
+    ? app.output.aspectRatios.options
+    : []
+}
+
+function useTabHosted(
+  app: AppListing,
+  form: AppForm,
+  hosted: HostedState,
+  mode: UpscaleMode
+): [HostedState, (mode: UpscaleMode) => void] {
+  const { models, chosen, defaultModel } = hosted
+  const choose = (id: string): void => {
+    const next = models.find((one) => one.id === id)
+    if (next === undefined) {
+      return
+    }
+    const file = fileOf(form.values.inputs, chosen, mode)
+    form.setForm({
+      inputs: inputsForModel(app, next, form.values.inputs, mode, file),
+    })
+  }
+  const setMode = (next: UpscaleMode): void => {
+    const model = modelForTab(modelsOfTab(models, next), [
+      chosen?.id ?? null,
+      defaultModel,
+    ])
+    if (model === null) {
+      form.setInput(modeInput, next)
+      return
+    }
+    const kept = {
+      ...form.values.inputs,
+      [mode]: fileOf(form.values.inputs, chosen, mode),
+    }
+    const file = fileOf(kept, model, next)
+    form.setForm({ inputs: inputsForModel(app, model, kept, next, file) })
+  }
+  const tabModels = useMemo(() => modelsOfTab(models, mode), [models, mode])
+  return [{ ...hosted, models: tabModels, choose }, setMode]
+}
+
 export function useUpscaleScreen(
   app: AppListing,
   seeds: StudioScreenProps["seeds"],
   onStarted: () => void
 ): UpscaleState {
-  const [mode, setMode] = useState<UpscaleMode>("image")
-  const formApp = useMemo(() => formAppFor(app, mode), [app, mode])
+  const check = useRef<FormCheck | null>(null)
+  const form = useAppForm(app, seeds, check)
+  const runs = useAppRuns(app)
+  const hosted = useHostedModel(app, form, runs.runs)
+  usePriceRefresh(app.id, runs.runs)
+  const mode = modeOf(form.values.inputs[modeInput])
+  const chosen =
+    hosted.chosen !== null && tabsOfModel(hosted.chosen).includes(mode)
+      ? hosted.chosen
+      : null
+  check.current = checkFor(app, chosen)
   const bodyApp = useMemo(() => bodyAppFor(app, mode), [app, mode])
-  const form = useAppForm(formApp, seeds)
-  const formMode = modeOf(form.values.inputs[modeInput])
-  useEffect(() => {
-    setMode(formMode)
-  }, [formMode])
-  return useUpscaleState(app, mode, form, bodyApp, onStarted)
+  const [tabHosted, setMode] = useTabHosted(app, form, hosted, mode)
+  useModeOfModel(form, hosted.chosen, mode)
+  useModeFromUse(form, mode)
+  const start = useStartRun(bodyApp, form, onStarted, {
+    ...hosted,
+    chosen,
+  })
+  const { view, generate } = useUpscaleView(app, form, chosen, mode, start)
+  return {
+    ...view,
+    app,
+    mode,
+    form,
+    start: { ...start, generate },
+    hosted: tabHosted,
+    models: hosted.models,
+    lastSeed: runs.runs.find((run) => run.seed !== null)?.seed ?? null,
+    hasRuns: runs.isPending ? null : runs.runs.length > 0,
+    setMode,
+    useInputs: (run) => form.fill(runValuesOf(app, run, hosted.models)),
+    onShortcut: (event) => {
+      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault()
+        generate()
+      }
+    },
+  }
 }
 
-function useUpscaleState(
+type UpscaleView = Pick<
+  UpscaleState,
+  | "well"
+  | "scale"
+  | "restFields"
+  | "fileMessage"
+  | "registerScale"
+  | "registerWell"
+>
+
+export function scaleFor(
+  spec: ScaleSpec | null,
+  form: Pick<AppForm, "values">,
+  size: Size | null
+): UpscaleScale {
+  const held = spec === null ? undefined : form.values.inputs[spec.name]
+  return {
+    spec,
+    value: spec === null ? null : scaleValueOf(spec, held),
+    check: scaleCheckOf(
+      size,
+      factorOfScale(spec, held),
+      spec?.maxLongSide ?? null
+    ),
+  }
+}
+
+function useUpscaleView(
   app: AppListing,
-  mode: UpscaleMode,
   form: AppForm,
-  bodyApp: AppListing,
-  onStarted: () => void
-): UpscaleState {
-  const [assetId = null] = listOf(form.values.inputs[mode])
+  chosen: CatalogModel | null,
+  mode: UpscaleMode,
+  start: StartRun
+): { view: UpscaleView; generate: () => void } {
+  const isGraph = chosen === null || chosen.form === null
+  const well: UpscaleWell = {
+    name: wellNameOf(chosen, mode),
+    limits: fileLimitsOf(mode, isGraph),
+  }
+  const [assetId = null] = listOf(form.values.inputs[well.name])
   const reading = useFileFacts(assetId, mode)
-  const facts = reading.state === "read" ? reading.facts : null
-  const size = sizeOf(facts)
-  const scale = textOf(form.values.inputs[scaleInput]) || "2x"
-  const problem = readingProblemOf(mode, reading)
-  const check = scaleCheckOf(size, scale)
-  const options =
-    app.output.kind === "image" || app.output.kind === "video"
-      ? app.output.aspectRatios.options
-      : []
-  useRatioFromFile(form, size === null ? null : nearestRatioOf(options, size))
-  useModeFromUse(form, mode)
-  const base = useStartRun(bodyApp, form, onStarted)
-  const runs = useAppRuns(app)
+  const size = sizeOf(reading.state === "read" ? reading.facts : null)
+  const problem = readingProblemOf(mode, reading, well.limits)
+  const scale = scaleFor(scaleOf(chosen, app), form, size)
+  useScaleValue(form, scale)
+  const ratio = size === null ? null : nearestRatioOf(ratioOptionsOf(app), size)
+  useRatioFromFile(form, ratio)
   const [focusScale, registerScale] = useFocuser()
   const [focusWell, registerWell] = useFocuser()
   const generate = (): void => {
@@ -193,30 +360,21 @@ function useUpscaleState(
       focusWell()
       return
     }
-    if (check.state === "tooBig") {
+    if (scale.check.state === "tooBig") {
       focusScale()
       return
     }
-    base.generate()
+    start.generate()
   }
-  const start: StartRun = { ...base, generate }
   return {
-    app,
-    mode,
-    form,
-    start,
-    fileMessage: problem === null ? null : messageOf(mode, problem),
-    scaleCheck: check,
-    lastSeed: runs.runs.find((run) => run.seed !== null)?.seed ?? null,
-    hasRuns: runs.isPending ? null : runs.runs.length > 0,
-    registerScale,
-    registerWell,
-    useInputs: (run) => form.fill(valuesFromRun(app, run)),
-    onShortcut: (event) => {
-      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault()
-        generate()
-      }
+    view: {
+      well,
+      scale,
+      restFields: restFieldsOf(chosen),
+      fileMessage: problem === null ? null : messageOf(mode, problem),
+      registerScale,
+      registerWell,
     },
+    generate,
   }
 }
