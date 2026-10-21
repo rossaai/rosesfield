@@ -33,7 +33,12 @@ const keyState = "set"
 
 const settings: GatewaySettings = {
   mode: "owner",
-  engine: { target: "comfy-cloud", address: null, key: keyState, origin: "live" },
+  engine: {
+    target: "comfy-cloud",
+    address: null,
+    key: keyState,
+    origin: "live",
+  },
   lock: "local",
   agent: "unknown",
   agentModel: null,
@@ -151,7 +156,7 @@ type Open = {
 }
 
 export type Opened = {
-  leave: () => Promise<void>
+  leave: () => void
   back: () => void
 }
 
@@ -208,9 +213,16 @@ export function openStoryboard({ runs = [], prices = [] }: Open = {}): Opened {
     </QueryClientProvider>
   )
   return {
-    leave: () => router.navigate({ to: "/elsewhere" }),
+    leave: () => router.history.push("/elsewhere"),
     back: () => router.history.back(),
   }
+}
+
+export async function emptyCanvas(): Promise<HTMLElement> {
+  fireEvent.click(
+    await screen.findByRole("tab", { name: t("app.tab.history") })
+  )
+  return screen.findByText(tCatalog("storyboard.empty.title"))
 }
 
 export function pricedName(credits: number): string {
