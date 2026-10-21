@@ -1,3 +1,4 @@
+import { speechModelInput } from "@rosesfield/catalog/lipsync"
 import { IconButton } from "@rosesfield/ui/components/button"
 import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
@@ -12,11 +13,7 @@ import { DropWell } from "@/pieces/drop-well"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { listOf, textOf } from "@/screens/app/fields/field-props"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
-import {
-  speechModelInput,
-  type WordsMode,
-  wordsLabelKey,
-} from "@/studio/lipsync/lipsync-words"
+import { type WordsMode, wordsLabelKey } from "@/studio/lipsync/lipsync-words"
 import type { LipsyncScreen } from "@/studio/lipsync/use-lipsync-screen"
 
 const modeKeys = { audio: "kind.audio", text: "kind.text" } as const

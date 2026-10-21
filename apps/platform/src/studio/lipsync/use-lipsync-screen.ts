@@ -52,6 +52,7 @@ import {
   type WordsPlan,
   wordsOfInputs,
 } from "@/studio/lipsync/lipsync-words"
+import { chainTargetOf, useChainRun } from "@/studio/lipsync/use-chain-run"
 import {
   type LipsyncTabs,
   useLipsyncTabs,
@@ -124,18 +125,39 @@ function checkOf(
         lipsyncProblems({ fields, face: face?.name ?? null, plan, values })
 }
 
-function usePricedRun(
+function useChainedStart(
   options: RunOptions,
   parts: RunParts,
   voices: Voices
 ): StartRun {
-  const { app, form, all, plan } = options
+  const { app, form, all, plan, fields } = options
   const started = useStartRun(
     parts.bodyApp,
     form,
     options.onStarted,
     parts.runHosted
   )
+  const chained = useChainRun({
+    form,
+    voices: voices.hosted.models,
+    target: chainTargetOf({
+      appId: app.id,
+      fields,
+      isGraph: all.chosen?.kind === "graph",
+    }),
+    ask: parts.ask,
+    onStarted: options.onStarted,
+  })
+  return plan.isChain ? { ...started, ...chained } : started
+}
+
+function usePricedRun(
+  options: RunOptions,
+  parts: RunParts,
+  voices: Voices
+): StartRun {
+  const { app, form, all, plan } = options
+  const started = useChainedStart(options, parts, voices)
   const lip = useLipCredits({
     appId: app.id,
     ask: plan.isChain ? parts.ask : null,

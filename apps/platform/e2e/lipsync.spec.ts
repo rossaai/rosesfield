@@ -92,6 +92,60 @@ test.describe("Lip sync's Text choice", () => {
   })
 })
 
+test.describe("Lip sync's Text run", () => {
+  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
+
+  test("makes the speech first, then the video from its audio, and History lists both runs", async ({
+    page,
+  }) => {
+    await page.goto("/apps/lipsync")
+    const parts = page.locator('[data-slot="lipsync-parts"]')
+    await addPhoto(page, parts)
+    const words = parts.locator('[data-slot="lipsync-words"]')
+    await words.getByRole("radio", { name: "Text" }).click()
+    await words
+      .getByRole("textbox", { name: "Script" })
+      .fill("Hello, this is the line I typed for the photo.")
+    const speechStart = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        /\/api\/apps\/audio\/runs$/.test(response.url())
+    )
+    const videoStart = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        /\/api\/apps\/lipsync\/runs$/.test(response.url()),
+      { timeout: 30_000 }
+    )
+    await page.locator('[data-slot="generate-button"]').click()
+    const speech = await speechStart
+    expect(speech.status()).toBe(202)
+    const speechKey = speech.request().headers()["idempotency-key"] ?? ""
+    expect(speechKey).toMatch(/-speech$/)
+    const video = await videoStart
+    expect(video.status()).toBe(202)
+    const videoKey = video.request().headers()["idempotency-key"] ?? ""
+    expect(videoKey).toBe(speechKey.replace(/-speech$/, "-video"))
+    const speechId: string = (await speech.json()).run.id
+    const videoId: string = (await video.json()).run.id
+    const sent = video.request().postDataJSON()
+    expect(sent.inputs).not.toHaveProperty("speechText")
+    expect(sent.inputs).not.toHaveProperty("speechModel")
+    const made = await page.request.get(`/api/runs/${speechId}`)
+    const spoken = (await made.json()).run.outputs
+    expect(spoken).toHaveLength(1)
+    expect(sent.inputs.audio).toEqual(spoken)
+    const listed = await page.request.get("/api/runs")
+    const history: { id: string; appId: string }[] = (await listed.json()).runs
+    expect(
+      history
+        .filter((run) => run.id === speechId || run.id === videoId)
+        .map((run) => run.appId)
+        .sort()
+    ).toEqual(["audio", "lipsync"])
+  })
+})
+
 test.describe("Lip sync on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "the sheet is the phone's")
 
