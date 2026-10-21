@@ -7,7 +7,12 @@ import { appEmptyTitle } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { RunLine } from "@/pieces/run/run-line"
 import { useAppRuns } from "@/screens/app/app-canvas"
-import { KeyframeGrid } from "@/studio/storyboard/keyframe-grid"
+import { keptKeyframeOf } from "@/studio/storyboard/kept-keyframes"
+import {
+  type KeyframeBlock,
+  keyframeBlocksOf,
+} from "@/studio/storyboard/keyframe-blocks"
+import { ChainKeyframes, KeyframeGrid } from "@/studio/storyboard/keyframe-grid"
 
 type CanvasProps = {
   app: AppListing
@@ -16,20 +21,31 @@ type CanvasProps = {
 }
 
 function RunBlock({
-  run,
+  block,
   list,
   onUseInputs,
 }: {
-  run: Run
+  block: KeyframeBlock
   list: readonly string[]
   onUseInputs: (run: Run) => void
 }): ReactElement {
   return (
     <article className="flex flex-col gap-s2">
-      <RunLine run={run} onUseInputs={onUseInputs} />
-      <KeyframeGrid run={run} list={list} />
+      <RunLine
+        run={block.kind === "run" ? block.run : block.lead}
+        onUseInputs={onUseInputs}
+      />
+      {block.kind === "run" ? (
+        <KeyframeGrid run={block.run} list={list} />
+      ) : (
+        <ChainKeyframes block={block} list={list} />
+      )}
     </article>
   )
+}
+
+function blockKey(block: KeyframeBlock): string {
+  return block.kind === "run" ? block.run.id : block.lead.id
 }
 
 function CanvasSkeleton(): ReactElement {
@@ -71,21 +87,21 @@ export function StoryboardCanvas({
     )
   }
   const list = runs.runs.flatMap((run) => run.outputs)
-  const [latest, ...earlier] = runs.runs
+  const [latest, ...earlier] = keyframeBlocksOf(runs.runs, keptKeyframeOf)
   return (
     <div className="flex flex-col gap-s6">
       {latest === undefined ? null : (
-        <RunBlock run={latest} list={list} onUseInputs={onUseInputs} />
+        <RunBlock block={latest} list={list} onUseInputs={onUseInputs} />
       )}
       {earlier.length === 0 ? null : (
         <h2 className="text-body font-medium text-ink-muted">
           {t("app.history.title")}
         </h2>
       )}
-      {earlier.map((run) => (
+      {earlier.map((block) => (
         <RunBlock
-          key={run.id}
-          run={run}
+          key={blockKey(block)}
+          block={block}
           list={list}
           onUseInputs={onUseInputs}
         />

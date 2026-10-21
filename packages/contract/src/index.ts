@@ -58,6 +58,7 @@ export {
   imageFormats,
   inputDefinition,
   inputValue,
+  isAppOnly,
   type RunInputs,
   runInputs,
 } from "#input.contract"
@@ -127,6 +128,7 @@ export {
   shareView,
 } from "#share.contract"
 export {
+  appOnlyInputsFor,
   fixedCountOf,
   type StartRunBody,
   startRunBody,

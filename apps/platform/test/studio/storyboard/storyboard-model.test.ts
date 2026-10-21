@@ -3,15 +3,17 @@ import { describe, expect, it } from "vitest"
 import { defaultsOf, type FormValues } from "@/screens/app/app-form"
 import { withScenes } from "@/studio/storyboard/storyboard-form"
 import {
+  callsCredits,
   chosenModelOf,
+  editModelsOf,
   formatFieldOf,
   inputsForModel,
-  keyframeBody,
-  keyframesCredits,
-  storyboardBody,
+  type Price,
+  priceAsksOf,
+  storyboardAskOf,
 } from "@/studio/storyboard/storyboard-model"
 import { app } from "../../../../../packages/catalog/src/storyboard/app"
-import { fluxImage, qwenEdit } from "./storyboard-screen"
+import { fluxImage, qwenEdit, zImage } from "./storyboard-screen"
 
 const listing = appListing.parse(app)
 
@@ -62,52 +64,131 @@ describe("the Storyboard model", () => {
   })
 })
 
-describe("the Storyboard run body", () => {
-  it("sends a hosted model's format in its inputs, one keyframe per scene and no app format", () => {
+describe("the Storyboard ask", () => {
+  it("sends a hosted model's format in its own settings, the scenes in the app inputs and no app format", () => {
     const values = threeScenes()
-    const body = storyboardBody(
-      listing,
-      { ...values, inputs: inputsForModel(values.inputs, fluxImage) },
-      fluxImage
-    )
-    expect(body.inputs).toMatchObject({
+    const ask = storyboardAskOf({
+      app: listing,
+      values: { ...values, inputs: inputsForModel(values.inputs, fluxImage) },
+      chosen: fluxImage,
+      photos: [],
+    })
+    expect(ask?.inputs).toMatchObject({
       model: fluxImage.id,
-      aspectRatio: "1:1",
       scene1: "the door",
       scene2: "the stairs",
       scene3: "the roof",
       sceneCount: "3",
     })
-    expect(body.count).toBe(3)
-    expect(body.aspectRatio).toBeUndefined()
+    expect(ask?.inputs).not.toHaveProperty("aspectRatio")
+    expect(ask?.hosted?.settings).toEqual({
+      aspectRatio: "1:1",
+      resolution: "1k",
+    })
+    expect(ask?.aspectRatio).toBeNull()
   })
 
-  it("sends a graph's format as the app format", () => {
-    const body = storyboardBody(listing, threeScenes(), qwenEdit)
-    expect(body.inputs.model).toBe(qwenEdit.id)
-    expect(body.aspectRatio).toBe("16:9")
-    expect(body.count).toBe(3)
+  it("sends a graph's format as the app format and holds no hosted settings", () => {
+    const ask = storyboardAskOf({
+      app: listing,
+      values: threeScenes(),
+      chosen: qwenEdit,
+      photos: [],
+    })
+    expect(ask?.inputs.model).toBe(qwenEdit.id)
+    expect(ask?.aspectRatio).toBe("16:9")
+    expect(ask?.hosted).toBeNull()
   })
 
-  it("prices one keyframe from the first scene alone", () => {
-    const body = keyframeBody(listing, threeScenes(), qwenEdit)
-    expect(body.count).toBe(1)
-    expect(body.inputs).toMatchObject({ sceneCount: "1", scene1: "the door" })
-    expect(body.inputs.scene2).toBe("")
+  it("holds no ask when an input names an asset with no asset id, so no run starts on it", () => {
+    const values = threeScenes()
+    const ask = storyboardAskOf({
+      app: listing,
+      values: { ...values, inputs: { ...values.inputs, reference: ["photo"] } },
+      chosen: qwenEdit,
+      photos: [],
+    })
+    expect(ask).toBeNull()
   })
 })
 
 describe("the Storyboard price", () => {
-  it("is one keyframe's price times the scene count", () => {
-    expect(keyframesCredits({ source: "rates", credits: 14.48 }, 8)).toBe(
-      115.84
+  function asksOf(values: FormValues) {
+    return priceAsksOf(
+      storyboardAskOf({ app: listing, values, chosen: qwenEdit, photos: [] })
     )
-    expect(keyframesCredits({ source: "measured", credits: 0.5 }, 3)).toBe(1.5)
+  }
+
+  it("prices one text call and two edits of keyframe 1 for 3 scenes with no anchor", () => {
+    const asks = asksOf(threeScenes())
+    expect(asks.text?.inputs).toMatchObject({
+      model: "z-image-turbo",
+      keyframe: "1",
+    })
+    expect(asks.edit?.inputs).toMatchObject({
+      model: qwenEdit.id,
+      keyframe: "2",
+    })
+    expect(asks.edits).toBe(2)
   })
 
-  it("is unknown for a model with no price, and never 0", () => {
-    expect(keyframesCredits({ source: "unknown", credits: null }, 3)).toBeNull()
-    expect(keyframesCredits({ source: "rates", credits: 0 }, 3)).toBeNull()
-    expect(keyframesCredits(undefined, 3)).toBeNull()
+  it("prices 3 edits and no text call for 3 scenes from a reference", () => {
+    const values = threeScenes()
+    const asks = asksOf({
+      ...values,
+      inputs: {
+        ...values.inputs,
+        reference: ["1e3a5c7e-9b2d-4f6a-8c0e-2b4d6f8a0c1e"],
+      },
+    })
+    expect(asks.text).toBeNull()
+    expect(asks.edit?.inputs).toMatchObject({ keyframe: "1" })
+    expect(asks.edits).toBe(3)
+  })
+
+  it("is the sum of its calls, one keyframe times the scene count when every call costs the same", () => {
+    const keyframe: Price = { source: "rates", credits: 14.48 }
+    expect(
+      callsCredits([
+        { price: keyframe, calls: 1 },
+        { price: keyframe, calls: 7 },
+      ])
+    ).toBe(115.84)
+    expect(
+      callsCredits([
+        { price: { source: "measured", credits: 0.25 }, calls: 1 },
+        { price: { source: "measured", credits: 0.5 }, calls: 2 },
+      ])
+    ).toBe(1.25)
+    expect(
+      callsCredits([
+        { price: undefined, calls: 0 },
+        { price: keyframe, calls: 3 },
+      ])
+    ).toBe(43.44)
+  })
+
+  it("is unknown when any call has no price, and never 0", () => {
+    const keyframe: Price = { source: "rates", credits: 14.48 }
+    expect(
+      callsCredits([
+        { price: { source: "unknown", credits: null }, calls: 1 },
+        { price: keyframe, calls: 2 },
+      ])
+    ).toBeNull()
+    expect(
+      callsCredits([{ price: { source: "rates", credits: 0 }, calls: 3 }])
+    ).toBeNull()
+    expect(callsCredits([{ price: undefined, calls: 3 }])).toBeNull()
+    expect(callsCredits([])).toBeNull()
+  })
+})
+
+describe("the Storyboard menu", () => {
+  it("lists the edit models and leaves out the text default keyframe 1 runs on", () => {
+    expect(editModelsOf([qwenEdit, zImage, fluxImage])).toEqual([
+      qwenEdit,
+      fluxImage,
+    ])
   })
 })

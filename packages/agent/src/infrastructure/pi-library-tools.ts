@@ -65,7 +65,7 @@ function readTool<Args>(options: ReadToolOptions<Args>): ToolRegistration {
   }
 }
 
-async function readRunToEnd(
+export async function readRunToEnd(
   getRun: GetRunHandler,
   runId: string,
   wait: RunWait,

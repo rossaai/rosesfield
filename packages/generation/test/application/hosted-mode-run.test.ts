@@ -1,4 +1,5 @@
 import { appDefinition } from "@rosesfield/contract"
+import { runIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { RunInputInvalidError } from "#domain/error/run-input-invalid.error"
 import type { ModelForm } from "#domain/model-form"
@@ -39,6 +40,15 @@ const modeApp = appDefinition.parse({
         { value: "edit", labelKey: "mode.edit" },
       ],
       default: "split",
+      scope: "app",
+    },
+    {
+      type: "prompt",
+      name: "scene",
+      labelKey: "inputs.scene",
+      presence: "optional",
+      maxLength: 500,
+      scope: "app",
     },
     {
       type: "choice",
@@ -79,12 +89,20 @@ const modeApp = appDefinition.parse({
   limits: { timeoutSeconds: 600, maxRetries: 0 },
 })
 
-function startWith(inputs: Record<string, unknown>) {
+function hostedHarness() {
+  const engine = new FakeGenerationEngine({ forms: [hostedForm] })
   const harness = harnessFor({
     apps: [modeApp],
-    engines: [new FakeGenerationEngine({ forms: [hostedForm] })],
+    engines: [engine],
     policy: new FakeModelPolicy([hostedModel]),
   })
+  return { engine, harness }
+}
+
+function startWith(
+  inputs: Record<string, unknown>,
+  harness = hostedHarness().harness
+) {
   return harness.start.execute({
     appId: "sample-layers",
     body: { inputs: { model: hostedModel, image: [referenceId], ...inputs } },
@@ -93,13 +111,35 @@ function startWith(inputs: Record<string, unknown>) {
   })
 }
 
-describe("a hosted run in an app whose mode bounds its model", () => {
+describe("a hosted run in an app that keeps inputs of its own", () => {
   it("keeps the mode it was started in beside the model's own inputs", async () => {
     const { run } = await startWith({ mode: "edit" })
     expect(run.inputs).toEqual({
       model: hostedModel,
       image: [referenceId],
       mode: "edit",
+    })
+  })
+
+  it("keeps an app-only scene with the run and never sends it to the model", async () => {
+    const { engine, harness } = hostedHarness()
+    harness.assets.addFile({
+      assetId: referenceId,
+      kind: "image",
+      mime: "image/png",
+      bytes: Uint8Array.of(137, 80, 78, 71),
+    })
+    const { run } = await startWith({ mode: "edit", scene: "a fox" }, harness)
+    expect(run.inputs).toEqual({
+      model: hostedModel,
+      image: [referenceId],
+      mode: "edit",
+      scene: "a fox",
+    })
+    await harness.advance.execute({ runId: runIdFormat.parse(run.id) })
+    expect(engine.submitted[0]?.inputs).toEqual({
+      model: hostedModel,
+      image: [referenceId],
     })
   })
 

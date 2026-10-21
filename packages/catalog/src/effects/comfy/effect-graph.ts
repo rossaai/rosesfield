@@ -1,5 +1,5 @@
 import { AppDefinitionInvalidError } from "#app-definition-invalid.error"
-import { framesOf } from "#effects/comfy/frame-sizes"
+import { audioFramesOf, frameAt, framesOf } from "#effects/comfy/frame-sizes"
 import type { EffectRecipe } from "#effects/effect-recipe.contract"
 import { apiGraph } from "#workflow-entry.contract"
 
@@ -115,9 +115,8 @@ function setPrompts(graph: Graph, recipe: EffectRecipe): void {
 }
 
 function setLength(graph: Graph, recipe: EffectRecipe): void {
-  const frames = framesOf(recipe.seconds)
-  nodeOf(graph, "356").inputs.length = frames
-  nodeOf(graph, "366").inputs.frames_number = frames
+  nodeOf(graph, "356").inputs.length = framesOf(recipe.seconds)
+  nodeOf(graph, "366").inputs.frames_number = audioFramesOf(recipe.seconds)
 }
 
 function addAdapter(graph: Graph, recipe: EffectRecipe): void {
@@ -138,26 +137,61 @@ function addAdapter(graph: Graph, recipe: EffectRecipe): void {
 
 const endGuideNodes: readonly string[] = ["460", "463"]
 
+export const midFrameNodes: readonly string[] = ["470", "471"]
+
+export const midGuideNodes: readonly string[] = ["472", "473"]
+
+export function hasEditPass(recipe: EffectRecipe): boolean {
+  return recipe.endFrame.source === "edit" || recipe.midFrame !== null
+}
+
+function setEditPass(graph: Graph, recipe: EffectRecipe): void {
+  const end = recipe.endFrame
+  const prompt = end.source === "edit" ? end.prompt : recipe.midFrame?.prompt
+  if (end.source !== "dark") {
+    remove(graph, [darkFrameNode])
+  }
+  if (prompt === undefined) {
+    remove(graph, [...editFrameNodes, ...imageEditNodes])
+    if (end.source !== "dark") {
+      remove(graph, [endFrameSizeNode])
+    }
+    return
+  }
+  nodeOf(graph, endFramePromptNode).inputs.prompt = prompt
+}
+
 function setEndFrame(graph: Graph, recipe: EffectRecipe): void {
   const end = recipe.endFrame
   if (end.source === "none") {
-    remove(graph, [...endFrameNodes, ...imageEditNodes])
     passThrough(graph, "460")
     passThrough(graph, "463")
     return
   }
   if (end.source === "dark") {
-    remove(graph, [...editFrameNodes, ...imageEditNodes])
     nodeOf(graph, darkFrameNode).inputs.color = greyOf(end.luma)
     for (const id of endGuideNodes) {
       nodeOf(graph, id).inputs.image = [darkFrameNode, 0]
     }
-  } else {
-    remove(graph, [darkFrameNode])
-    nodeOf(graph, endFramePromptNode).inputs.prompt = end.prompt
   }
   for (const id of endGuideNodes) {
     nodeOf(graph, id).inputs.strength = end.strength
+  }
+}
+
+function setMidFrame(graph: Graph, recipe: EffectRecipe): void {
+  const mid = recipe.midFrame
+  if (mid === null) {
+    for (const id of midGuideNodes) {
+      passThrough(graph, id)
+    }
+    remove(graph, midFrameNodes)
+    return
+  }
+  for (const id of midGuideNodes) {
+    const guide = nodeOf(graph, id)
+    guide.inputs.frame_idx = frameAt(mid.time)
+    guide.inputs.strength = mid.strength
   }
 }
 
@@ -220,10 +254,16 @@ export function effectGraph(
   setPrompts(graph, recipe)
   setLength(graph, recipe)
   addAdapter(graph, recipe)
+  setEditPass(graph, recipe)
   setEndFrame(graph, recipe)
+  setMidFrame(graph, recipe)
   setPhotoFrame(graph, recipe)
   setHold(graph, recipe)
-  if (recipe.endFrame.source === "none" && recipe.hold === null) {
+  const guided =
+    recipe.endFrame.source !== "none" ||
+    recipe.midFrame !== null ||
+    recipe.hold !== null
+  if (!guided) {
     passThrough(graph, "462")
     passThrough(graph, "465")
   }

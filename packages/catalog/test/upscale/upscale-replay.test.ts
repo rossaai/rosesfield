@@ -13,6 +13,7 @@ import { z } from "zod"
 import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
 import { listWorkflows } from "#list-workflows"
 import { app } from "#upscale/app"
+import { withoutVideoStills } from "../workflows/video-stills"
 import {
   brokenLinks,
   classesOf,
@@ -92,7 +93,12 @@ async function submitted(request: EngineRequest): Promise<Submitted> {
   const submission = await engine.submit(request)
   const job = replay.sent.find((sent) => sent.url === `${cloudUrl}/api/v2/jobs`)
   const { workflow } = sentBody.parse(JSON.parse(job?.body ?? "{}"))
-  return { workflow, replay, ref: submission.ref, models: submission.models }
+  return {
+    workflow: withoutVideoStills(workflow),
+    replay,
+    ref: submission.ref,
+    models: submission.models,
+  }
 }
 
 const seedvr2Vae = "seedvr2_ema_vae_fp16.safetensors"

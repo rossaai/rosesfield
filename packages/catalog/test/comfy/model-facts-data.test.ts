@@ -177,7 +177,9 @@ describe("the model facts the catalog holds", () => {
     expect(lineKeyOf("graph/z-image-turbo")).toBe(
       "comfy.model.graphZImageTurbo.line"
     )
-    expect(lineKeyOf("graph/qwen-image-edit-2511")).toBeNull()
+    expect(lineKeyOf("graph/qwen-image-edit-2511")).toBe(
+      "comfy.model.graphQwenImageEdit2511.line"
+    )
   })
 
   it("gives every model row a line with its source and the words it restates, or the reason it holds none", () => {
@@ -193,6 +195,7 @@ describe("the model facts the catalog holds", () => {
     const sources = [
       "https://huggingface.co/",
       "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#",
+      "https://docs.bfl.ml/",
     ]
     for (const line of described) {
       expect(

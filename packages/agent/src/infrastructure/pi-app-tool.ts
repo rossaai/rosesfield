@@ -9,14 +9,15 @@ import {
   publishedModelOf,
 } from "@rosesfield/catalog/comfy"
 import {
+  storyboardAppId,
+  storyboardBodyFor,
+} from "@rosesfield/catalog/storyboard"
+import {
   type AppDefinition,
   type RunRequest,
   runRequest,
 } from "@rosesfield/contract"
-import {
-  RunInputInvalidError,
-  type StartRunHandler,
-} from "@rosesfield/generation"
+import { RunInputInvalidError } from "@rosesfield/generation"
 import { appIdFormat, runIdFormat } from "@rosesfield/kernel"
 import { z } from "zod"
 import type { Proposal } from "#agent.contract"
@@ -28,18 +29,41 @@ import {
   type ProposalRecord,
   proposalRecords,
 } from "#infrastructure/pi-conversation-docs"
+import {
+  type KeyframeHandlers,
+  keyframeRunsOf,
+} from "#infrastructure/pi-keyframe-chain"
+import { type RunWait, timerWait } from "#infrastructure/pi-library-tools"
 import { jsonOutput, toolParameters } from "#infrastructure/pi-tool-io"
 
 const idempotencyMemo = "idempotencyKey"
 const proposalMemo = "proposalId"
 const jsonBody = z.record(z.string(), z.json())
 
-export function appTool(
+type AppToolOptions = {
+  app: AppDefinition
+  handlers: () => KeyframeHandlers
+  forms?: readonly ModelForm[]
+  wait?: RunWait
+}
+
+function isKeyframeChain(app: AppDefinition): boolean {
+  return app.id === storyboardAppId
+}
+
+function schemaOf(
   app: AppDefinition,
-  startRun: () => StartRunHandler,
-  forms: readonly ModelForm[] = []
-): ToolRegistration {
-  const schema = publishedInputOf(app, forms)
+  forms: readonly ModelForm[]
+): z.ZodType<unknown> {
+  return isKeyframeChain(app)
+    ? storyboardBodyFor(app)
+    : publishedInputOf(app, forms)
+}
+
+export function appTool(options: AppToolOptions): ToolRegistration {
+  const { app, handlers } = options
+  const schema = schemaOf(app, options.forms ?? [])
+  const wait = options.wait ?? timerWait
   return {
     name: app.id,
     description: agentCopy.tools.app(app),
@@ -64,7 +88,21 @@ export function appTool(
         `agent-${crypto.randomUUID()}`,
         context
       )
-      const started = await startRun().execute({
+      if (isKeyframeChain(app)) {
+        const runs = await keyframeRunsOf({
+          appId: app.id,
+          request: parseRequest(app, schema, args),
+          key: idempotencyKey,
+          handlers: handlers(),
+          wait,
+          signal: context.abortSignal,
+        })
+        return {
+          output: jsonOutput({ runs }),
+          details: { runIds: runs.flatMap((run) => run?.id ?? []) },
+        }
+      }
+      const started = await handlers().startRun.execute({
         appId: app.id,
         body: args,
         idempotencyKey,

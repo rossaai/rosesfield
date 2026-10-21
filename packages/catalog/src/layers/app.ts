@@ -78,6 +78,7 @@ export const app: AppInput = defineApp({
     {
       type: "choice",
       name: "mode",
+      scope: "app",
       labelKey: "layers.input.mode.label",
       options: modeValues.map((value) => ({
         value,

@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs"
 import { expect, type Locator, type Page, test } from "@playwright/test"
+import { answerOwnLists } from "./own-lists"
 
 const gatewayOrigin = "http://127.0.0.1:8797"
 const png = readFileSync(
@@ -16,6 +17,8 @@ async function boxOf(locator: Locator): Promise<Box> {
   return box
 }
 
+const own = new Set<string>()
+
 async function startDemoRun(): Promise<void> {
   const started = await fetch(`${gatewayOrigin}/api/apps/image/runs`, {
     method: "POST",
@@ -23,13 +26,20 @@ async function startDemoRun(): Promise<void> {
     body: JSON.stringify({ inputs: { prompt: "a red rose" } }),
   })
   const body: { run: { id: string } } = await started.json()
+  own.add(body.run.id)
+  let outputs: string[] = []
   await expect
     .poll(async () => {
       const read = await fetch(`${gatewayOrigin}/api/runs/${body.run.id}`)
-      const answer: { run: { status: string } } = await read.json()
+      const answer: { run: { status: string; outputs: string[] } } =
+        await read.json()
+      outputs = answer.run.outputs
       return answer.run.status
     })
     .toBe("done")
+  for (const output of outputs) {
+    own.add(output)
+  }
 }
 
 async function open(page: Page, path: string): Promise<void> {
@@ -41,12 +51,18 @@ async function open(page: Page, path: string): Promise<void> {
 }
 
 test.beforeAll(async () => {
-  await fetch(`${gatewayOrigin}/api/assets`, {
+  const uploaded = await fetch(`${gatewayOrigin}/api/assets`, {
     method: "POST",
     headers: { "Content-Type": "image/png" },
     body: png,
   })
+  const body: { asset: { id: string } } = await uploaded.json()
+  own.add(body.asset.id)
   await startDemoRun()
+})
+
+test.beforeEach(async ({ page }) => {
+  await answerOwnLists(page, own)
 })
 
 async function expectLayoutWell(cluster: Locator): Promise<void> {

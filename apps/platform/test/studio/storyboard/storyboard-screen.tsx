@@ -1,6 +1,8 @@
 import { findApp } from "@rosesfield/catalog"
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
+import type { KeptKeyframe } from "@rosesfield/catalog/storyboard"
 import { appListing, type Run, run } from "@rosesfield/contract"
+import { assetIdFormat } from "@rosesfield/kernel"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -25,7 +27,10 @@ import {
 } from "@/screens/app/hosted/model-catalog-query"
 import { noSeeds } from "@/screens/app/use-app-screen"
 import { AppScreen } from "@/studio/storyboard/screen"
-import { keyframeBody } from "@/studio/storyboard/storyboard-model"
+import {
+  priceAsksOf,
+  storyboardAskOf,
+} from "@/studio/storyboard/storyboard-model"
 
 export const storyboard = appListing.parse(findApp("storyboard"))
 
@@ -52,6 +57,17 @@ export const qwenEdit: CatalogModel = {
   name: "Qwen Image Edit 2511",
   nameKey: null,
   task: "image-edit",
+  tags: [{ kind: "open-weights" }],
+  form: null,
+}
+
+export const zImage: CatalogModel = {
+  id: "z-image-turbo",
+  kind: "graph",
+  maker: "Alibaba Tongyi-MAI",
+  name: "Z-Image Turbo",
+  nameKey: null,
+  task: "text-to-image",
   tags: [{ kind: "open-weights" }],
   form: null,
 }
@@ -144,6 +160,45 @@ export function storyboardRun(change: RunFields): Run {
   })
 }
 
+export const hostedReference = assetIdFormat.parse(
+  "1e3a5c7e-9b2d-4f6a-8c0e-2b4d6f8a0c1e"
+)
+
+export const hostedScenes = ["the door", "the stairs", "the roof"]
+
+export function hostedKeyframe(
+  number: number,
+  change: RunFields = {}
+): { run: Run; kept: KeptKeyframe } {
+  const scenes = Object.fromEntries(
+    hostedScenes.map((scene, index) => [`scene${index + 1}`, scene])
+  )
+  return {
+    run: storyboardRun({
+      id: `7c2e4a6c-8e0a-4c2e-8a4c-6e8a0c2e4b0${number}`,
+      inputs: {
+        model: fluxImage.id,
+        prompt: `${hostedScenes[number - 1]} dusk`,
+        images: [hostedReference],
+        aspectRatio: "16:9",
+      },
+      ...change,
+    }),
+    kept: {
+      press: "press-7",
+      inputs: {
+        aspectRatio: "16:9",
+        ...scenes,
+        sceneCount: String(hostedScenes.length),
+        look: "dusk",
+        reference: [hostedReference],
+        model: fluxImage.id,
+        keyframe: String(number),
+      },
+    },
+  }
+}
+
 export type Price = readonly [FormValues, CatalogModel, number]
 
 export function openingValues(): FormValues {
@@ -168,7 +223,7 @@ export function openStoryboard({ runs = [], prices = [] }: Open = {}): Opened {
   })
   client.setQueryData(settingsQuery.queryKey, settings)
   client.setQueryData(modelCatalogQuery(storyboard.id, keyState).queryKey, {
-    models: [qwenEdit, fluxImage],
+    models: [qwenEdit, zImage, fluxImage],
     defaultModel: qwenEdit.id,
     refusal: null,
   })
@@ -177,12 +232,18 @@ export function openStoryboard({ runs = [], prices = [] }: Open = {}): Opened {
     pageParams: [null],
   })
   for (const [values, model, credits] of prices) {
-    const ask = JSON.parse(
-      JSON.stringify(keyframeBody(storyboard, values, model))
+    const asks = priceAsksOf(
+      storyboardAskOf({ app: storyboard, values, chosen: model, photos: [] })
     )
-    client.setQueryData(priceQuery(storyboard.id, ask, keyState).queryKey, {
-      price: { source: "rates", credits },
-    })
+    for (const ask of [asks.text, asks.edit]) {
+      if (ask !== null) {
+        const held = JSON.parse(JSON.stringify(ask))
+        client.setQueryData(
+          priceQuery(storyboard.id, held, keyState).queryKey,
+          { price: { source: "rates", credits } }
+        )
+      }
+    }
   }
   const root = createRootRoute({
     component: () => (

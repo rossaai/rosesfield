@@ -10,6 +10,16 @@ export const referenceLimits = {
 
 export type StoryboardModel = "qwen-image-edit-2511"
 
+export const editModel: StoryboardModel = "qwen-image-edit-2511"
+
+export const editTask = "image-edit"
+
+export const textTask = "text-to-image"
+
+export const keyframeInput = "keyframe"
+
+export const firstKeyframeInput = "firstKeyframe"
+
 export const storyboardModels: readonly StoryboardModel[] = [
   "qwen-image-edit-2511",
 ]
@@ -48,6 +58,13 @@ export function sceneInputName(number: number): string {
 
 export function countsFrom(number: number): string[] {
   return sceneCounts.slice(number - 1)
+}
+
+export function keyframeNumberOf(value: unknown): number | null {
+  const number = typeof value === "string" ? Number(value) : Number.NaN
+  return Number.isInteger(number) && number >= 1 && number <= maxScenes
+    ? number
+    : null
 }
 
 export function modelKeyOf(model: StoryboardModel): string {

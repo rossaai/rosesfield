@@ -27,7 +27,9 @@ export async function keepOutputs(
   const dropped = ofKind.length - good.length
   return {
     outputs: await Promise.all(
-      good.map((output) => assets.keep({ ...output, runId: run.id }))
+      good.map(({ stills: _stills, ...output }) =>
+        assets.keep({ ...output, runId: run.id })
+      )
     ),
     dropped,
     whenEmpty: new RunOutputBlankError({ dropped }),

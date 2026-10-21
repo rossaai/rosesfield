@@ -48,7 +48,12 @@ export function agentTools(options: AgentToolsOptions): ToolRegistration[] {
   const forms = options.forms ?? []
   return [
     ...openApps(options.apps).map((app) =>
-      appTool(app, () => handlers().startRun, forms)
+      appTool({
+        app,
+        handlers,
+        forms,
+        ...(options.wait === undefined ? {} : { wait: options.wait }),
+      })
     ),
     ...libraryTools(handlers, options.wait),
   ]

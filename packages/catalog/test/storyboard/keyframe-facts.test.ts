@@ -119,3 +119,45 @@ describe("the facts of each Storyboard keyframe", () => {
     ])
   })
 })
+
+describe("the facts of a Storyboard run that makes one keyframe", () => {
+  function callRun(
+    keyframe: string,
+    extra: KeyframeRun["inputs"]
+  ): KeyframeRun {
+    const run = runOf(3, { keyframe, ...extra })
+    return { ...run, count: 1, outputs: outputs.slice(0, 1) }
+  }
+
+  it("gives the run's one keyframe its own number, its scene then the look, and the seed of its branch", () => {
+    expect(keyframesOf(callRun("3", { reference: [referenceId] }))).toEqual([
+      {
+        number: 3,
+        assetId: outputs[0],
+        scene: scenes[2],
+        prompt: `${scenes[2]} ${look}`,
+        seed: 44,
+        anchor: { kind: "reference", assetId: referenceId },
+      },
+    ])
+  })
+
+  it("names keyframe 1 as the anchor of a run that edits keyframe 1, and the scene as the anchor of keyframe 1", () => {
+    const [second] = keyframesOf(
+      callRun("2", { firstKeyframe: [outputs[1] ?? referenceId] })
+    )
+    expect(second?.anchor).toEqual({
+      kind: "keyframe",
+      number: 1,
+      labelKey: "storyboard.anchor.keyframe",
+    })
+    const [first] = keyframesOf(callRun("1", {}))
+    expect(first?.anchor).toEqual({ kind: "scene" })
+    expect(keyframeOf(callRun("2", {}), outputs[0] ?? "")?.number).toBe(2)
+  })
+
+  it("finds no keyframe in a run that holds no scene", () => {
+    const run = { ...callRun("1", {}), inputs: { prompt: "a fox" } }
+    expect(keyframesOf(run)).toEqual([])
+  })
+})

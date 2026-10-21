@@ -1,5 +1,6 @@
 import { ComfyGenerationEngine } from "@rosesfield/generation"
 import { describe, expect, it } from "vitest"
+import { withoutVideoStills } from "../workflows/video-stills"
 import {
   both,
   fileGraph,
@@ -68,7 +69,12 @@ async function submitted(inputs: Record<string, unknown>) {
       ? body.workflow
       : null
   )
-  return { submission, replay, job, workflow }
+  return {
+    submission,
+    replay,
+    job,
+    workflow: withoutVideoStills(workflow),
+  }
 }
 
 const asset = (id: string) => ({ __type: "core/ASSET", info: { id } })

@@ -9,6 +9,7 @@ import {
   type TranscriptContext,
 } from "@earendil-works/pi-ai"
 import type { ToolRegistration } from "@earendil-works/pi-durable"
+import type { ModelForm } from "@rosesfield/catalog/comfy"
 import type { AppDefinition } from "@rosesfield/contract"
 import {
   DemoGenerationEngine,
@@ -75,9 +76,19 @@ export function generationFor(apps: readonly AppDefinition[]): Generation {
 
 export function appToolsFor(
   apps: readonly AppDefinition[],
-  generation: Generation
+  generation: Generation,
+  forms: readonly ModelForm[] = [],
+  wait: RunWait = noWait
 ): ToolRegistration[] {
-  return apps.map((app) => appTool(app, () => generation.startRun))
+  const getRun = new GetRunHandler({ runs: generation.runs })
+  return apps.map((app) =>
+    appTool({
+      app,
+      handlers: () => ({ startRun: generation.startRun, getRun }),
+      forms,
+      wait,
+    })
+  )
 }
 
 export type Library = {

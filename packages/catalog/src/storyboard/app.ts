@@ -1,9 +1,15 @@
 import { type AppInput, defineApp } from "#define-app"
 import { keyframeAspects } from "#storyboard/comfy/keyframe-sizes"
-import { storyboardBinding } from "#storyboard/comfy/storyboard-binding"
+import {
+  keyframeTextModel,
+  storyboardEngine,
+} from "#storyboard/comfy/storyboard-binding"
 import { storyboardAppId } from "#storyboard/keyframe-facts"
 import {
   countsFrom,
+  editModel,
+  firstKeyframeInput,
+  keyframeInput,
   lookMaxLength,
   maxScenes,
   modelKeyOf,
@@ -21,19 +27,72 @@ type Input = AppInput["inputs"][number]
 const sceneCount: Input = {
   type: "choice",
   name: sceneCountInput,
+  scope: "app",
   labelKey: "storyboard.input.sceneCount.label",
   options: sceneCounts.map((value) => ({
     value,
     labelKey: `storyboard.choice.sceneCount.${sceneCountWord(Number(value))}`,
-    count: Number(value),
   })),
   default: "1",
 }
+
+const keyframeBounds = [
+  ...sceneCounts.map((count) => ({
+    when: [{ input: sceneCountInput, is: [count] }],
+    values: sceneCounts.slice(0, Number(count)),
+  })),
+  ...(keyframeTextModel === null
+    ? []
+    : [
+        {
+          when: [{ input: "model", is: [keyframeTextModel.value] }],
+          values: ["1"],
+        },
+      ]),
+]
+
+const keyframe: Input = {
+  type: "choice",
+  name: keyframeInput,
+  scope: "app",
+  labelKey: "storyboard.keyframe.number",
+  options: sceneCounts.map((value) => ({
+    value,
+    labelKey: "storyboard.keyframe.number",
+    count: 1,
+  })),
+  default: "1",
+  bounds: keyframeBounds,
+}
+
+const firstKeyframe: Input = {
+  type: "image",
+  name: firstKeyframeInput,
+  labelKey: "storyboard.anchor.keyframe",
+  presence: "required",
+  max: 1,
+  when: [
+    { input: "reference", state: "empty" },
+    { input: "character", state: "empty" },
+    { input: "model", is: [editModel] },
+  ],
+}
+
+const textOption =
+  keyframeTextModel === null
+    ? []
+    : [
+        {
+          value: keyframeTextModel.value,
+          labelKey: keyframeTextModel.labelKey,
+        },
+      ]
 
 const sceneInputs: Input[] = sceneNumbers.map(
   (number): Input => ({
     type: "prompt",
     name: sceneInputName(number),
+    scope: "app",
     labelKey: "storyboard.input.scenes.label",
     presence: "required",
     maxLength: sceneMaxLength,
@@ -68,6 +127,7 @@ export const app: AppInput = defineApp({
     {
       type: "prompt",
       name: "look",
+      scope: "app",
       labelKey: "storyboard.input.look.label",
       presence: "optional",
       maxLength: lookMaxLength,
@@ -76,12 +136,17 @@ export const app: AppInput = defineApp({
       type: "choice",
       name: "model",
       labelKey: "storyboard.input.model.label",
-      options: storyboardModels.map((model) => ({
-        value: model,
-        labelKey: `storyboard.model.${modelKeyOf(model)}`,
-      })),
-      default: "qwen-image-edit-2511",
+      options: [
+        ...storyboardModels.map((model) => ({
+          value: model,
+          labelKey: `storyboard.model.${modelKeyOf(model)}`,
+        })),
+        ...textOption,
+      ],
+      default: editModel,
     },
+    keyframe,
+    firstKeyframe,
     { type: "seed", name: "seed", labelKey: "storyboard.input.seed.label" },
   ],
   output: {
@@ -89,6 +154,6 @@ export const app: AppInput = defineApp({
     count: { default: 1, max: maxScenes },
     aspectRatios: { options: [...keyframeAspects], default: "16:9" },
   },
-  engine: storyboardBinding,
-  limits: { timeoutSeconds: 1200, maxRetries: 2 },
+  engine: storyboardEngine,
+  limits: { timeoutSeconds: 600, maxRetries: 2 },
 })

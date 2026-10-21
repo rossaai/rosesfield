@@ -1,10 +1,10 @@
 # Storyboard: up to 8 matching keyframes from one image with Qwen Image Edit 2511
 
-Edits one anchor, a reference image or up to 3 photos of a character, into one keyframe per scene with Qwen Image Edit 2511, each scene with its own sentence, the shared look and its own seed, and saves the keyframes as one batch.
+Edits one anchor, a reference image, up to 3 photos of a character or keyframe 1 of the same storyboard, into one keyframe with Qwen Image Edit 2511. The graph holds one branch per scene, each with its own sentence, the shared look and its own seed. Each run of Storyboard makes one keyframe, so the catalog points the save node at the branch of the keyframe the run names, and ComfyUI runs that branch alone.
 
 Nodes 12 and 13 load a character's photos 2 and 3 into `image2` and `image3` of every `TextEncodeQwenImageEditPlus` node. The catalog removes the ones a run does not fill: both for a reference image, and the ones past the character's photo count.
 
-With no reference and no character, the catalog removes nodes 7, 12 and 13 and adds the Z-Image Turbo graph of `image-z-image-turbo`, renumbered from 10000. That graph makes keyframe 1 from scene 1 and the look, and every other keyframe edits keyframe 1.
+With no reference and no character, keyframe 1 is a text to image run: the catalog removes nodes 7, 12 and 13 and adds the open-weights text to image graph the catalog ranks first, renumbered from 10000, which makes keyframe 1 from scene 1 and the look. Each later keyframe is its own run that loads keyframe 1 into node 7.
 
 | | |
 |---|---|

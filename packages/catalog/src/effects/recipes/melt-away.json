@@ -31,6 +31,7 @@
     "prompt": "The same place with the person gone: a flat glossy pool on the ground in the colours of their clothes, with their worn and held items resting on it.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": null,
   "adapter": null,
   "seconds": 7,
