@@ -111,3 +111,31 @@ describe("a group of hosted fields", () => {
     expect(container.childElementCount).toBe(0)
   })
 })
+
+describe("Two frames' wells", () => {
+  it("stands the first and the last frame side by side in two columns 8 px apart, so the tab fits the column", () => {
+    show(
+      <VideoWells
+        slots={{
+          start: { name: "firstFrame", max: 1 },
+          references: null,
+          last: { name: "lastFrame", max: 1 },
+        }}
+        form={formOf()}
+      />
+    )
+    const wells = document.querySelector("[data-slot='video-wells']")
+    expect(wells?.className.split(" ")).toEqual(
+      expect.arrayContaining(["grid", "grid-cols-2", "gap-2"])
+    )
+    expect(wells?.childElementCount).toBe(2)
+    expect(zone(tCatalog("video.well.first"))).toBeTruthy()
+    expect(zone(tCatalog("video.well.last"))).toBeTruthy()
+  })
+
+  it("keeps one well a column when the tab takes one image", () => {
+    show(<VideoWells slots={startOnly} form={formOf()} />)
+    const wells = document.querySelector("[data-slot='video-wells']")
+    expect(wells?.className.split(" ")).not.toContain("grid")
+  })
+})

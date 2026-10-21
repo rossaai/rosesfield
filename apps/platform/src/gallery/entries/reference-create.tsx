@@ -26,6 +26,7 @@ import {
   StartFrame,
 } from "@rosesfield/ui/components/upload-zone"
 import {
+  AtSignIcon,
   BookOpenIcon,
   FlaskConicalIcon,
   FolderIcon,
@@ -143,9 +144,14 @@ function Column(): ReactElement {
         <PromptBlock
           label={t("sample.prompt.caption")}
           chips={
-            <Chip size="inline" icon={<Volume2Icon />}>
-              {t("sample.sound")}
-            </Chip>
+            <>
+              <Chip size="inline" icon={<AtSignIcon />}>
+                {t("sample.elements")}
+              </Chip>
+              <Chip size="inline" icon={<Volume2Icon />}>
+                {t("sample.sound")}
+              </Chip>
+            </>
           }
         >
           <textarea

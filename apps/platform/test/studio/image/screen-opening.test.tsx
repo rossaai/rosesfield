@@ -21,7 +21,7 @@ afterEach(() => {
 })
 
 describe("Image opens on its bar", () => {
-  it("chooses the catalog's open-weights default and shows its format, size and count chips and Generate with its price, without attach", async () => {
+  it("chooses the catalog's open-weights default and shows its References and Elements tile, its format, size and count chips and Generate with its price", async () => {
     openImage([], [[openingAsk(1), 4.5]])
     expect(
       await screen.findAllByLabelText(
@@ -36,7 +36,14 @@ describe("Image opens on its bar", () => {
     expect(
       screen.getByRole("group", { name: t("field.count.label") }).textContent
     ).toBe("1/4")
-    expect(screen.queryByLabelText(t("bar.attach"))).toBeNull()
+    const tile = screen.getByRole("group", { name: t("bar.attach") })
+    expect(tile.hasAttribute("disabled")).toBe(false)
+    expect(
+      screen.getByRole("button", { name: t("bar.references") })
+    ).toBeDefined()
+    expect(
+      screen.getByRole("button", { name: t("bar.elements") })
+    ).toBeDefined()
   })
 })
 
@@ -60,5 +67,19 @@ describe("the price on Generate", () => {
       await screen.findByRole("button", { name: pricedName(13.5) })
     ).toBeDefined()
     expect(startedRuns()).toEqual([])
+  })
+})
+
+describe("Generate on a text only graph", () => {
+  it("starts the run without asking for the references that only Qwen Image Edit 2511 takes", async () => {
+    openImage([], [[openingAsk(1), 4.5]])
+    const prompt = await screen.findByRole("textbox", {
+      name: t("home.prompt.label"),
+    })
+    fireEvent.change(prompt, { target: { value: "a paper boat" } })
+    fireEvent.click(
+      await screen.findByRole("button", { name: pricedName(4.5) })
+    )
+    await vi.waitFor(() => expect(startedRuns()).toHaveLength(1))
   })
 })

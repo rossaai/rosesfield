@@ -124,7 +124,7 @@ export const referenceCopy = {
   "sample.nav.areas": "Areas",
   "sample.nav.generate": "Generate",
   "sample.nav.balance": "12.5 credits",
-  "sample.footer.heading": "One place to make images, video and sound",
+  "sample.footer.heading": "Make images, video and sound",
   "sample.footer.project": "Project",
   "sample.footer.code": "Code on GitHub",
   "sample.footer.challenge": "The challenge",

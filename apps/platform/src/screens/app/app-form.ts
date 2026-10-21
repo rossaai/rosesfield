@@ -1,9 +1,10 @@
 import { isHostedModelId } from "@rosesfield/catalog/comfy"
-import type {
-  AppListing,
-  InputDefinition,
-  Run,
-  startRunBody,
+import {
+  type AppListing,
+  type InputDefinition,
+  type Run,
+  type startRunBody,
+  whenHolds,
 } from "@rosesfield/contract"
 import type { SchemaInput } from "@/api/call-route"
 import { defaultAspectOf } from "@/catalog/app-facts"
@@ -193,4 +194,14 @@ export function problemsOf(
   return app.inputs
     .map((input) => problemOf(input, values.inputs[input.name]))
     .filter((problem): problem is FieldProblem => problem !== null)
+}
+
+export function heldProblemsOf(
+  app: AppListing,
+  values: FormValues
+): FieldProblem[] {
+  const held = app.inputs.filter(
+    (input) => input.type === "seed" || whenHolds(input.when, values.inputs)
+  )
+  return problemsOf({ ...app, inputs: held }, values)
 }

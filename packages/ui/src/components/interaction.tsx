@@ -14,6 +14,12 @@ const ring =
 const ringHost =
   "outline-hor-text has-[>[data-cover]:focus-visible]:outline-(length:--spacing-focus-ring) has-[>[data-cover]:focus-visible]:outline-solid has-[>[data-cover]:focus-visible]:outline-offset-(--spacing-focus-ring) in-data-[gallery=focus]:outline-(length:--spacing-focus-ring) in-data-[gallery=focus]:outline-offset-(--spacing-focus-ring) in-data-[gallery=focus]:outline-solid"
 
+const fieldRing =
+  "focus-visible:outline-(length:--spacing-focus-ring) focus-visible:outline-solid focus-visible:outline-hor-text focus-visible:outline-offset-(--spacing-focus-ring) in-data-[gallery=focus]:outline-(length:--spacing-focus-ring) in-data-[gallery=focus]:outline-offset-(--spacing-focus-ring) in-data-[gallery=focus]:outline-hor-text in-data-[gallery=focus]:outline-solid"
+
+const thumbRing =
+  "outline-hor-text has-[:focus-visible]:outline-(length:--spacing-focus-ring) has-[:focus-visible]:outline-solid has-[:focus-visible]:outline-offset-(--spacing-focus-ring) in-data-[gallery=focus]:outline-(length:--spacing-focus-ring) in-data-[gallery=focus]:outline-offset-(--spacing-focus-ring) in-data-[gallery=focus]:outline-solid"
+
 const cover = "focus-visible:outline-none"
 
 const ringRoom =
@@ -21,6 +27,9 @@ const ringRoom =
 
 const ringRoomBlock =
   "-my-[calc(var(--spacing-focus-ring)*2)] py-[calc(var(--spacing-focus-ring)*2)]"
+
+const ringRoomTop =
+  "-mt-[calc(var(--spacing-focus-ring)*2)] pt-[calc(var(--spacing-focus-ring)*2)]"
 
 const ringScroll = "scroll-p-[calc(var(--spacing-focus-ring)*2)]"
 
@@ -35,10 +44,13 @@ export const interaction = {
   lightPress,
   fill,
   ring,
+  fieldRing,
+  thumbRing,
   ringHost,
   cover,
   ringRoom,
   ringRoomBlock,
+  ringRoomTop,
   ringScroll,
   reveal,
   revealPointer,

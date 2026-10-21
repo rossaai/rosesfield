@@ -1,11 +1,13 @@
 import { taskBinding } from "@rosesfield/generation/bindings"
 import { defineApp } from "#define-app"
 import { imageBinding } from "#image/comfy/image-binding"
+import { editReferenceLimit, referenceInput } from "#image/comfy/open-weights"
 import {
   defaultModel,
   defaultResolution,
   firstModel,
   imageModels,
+  referenceModel,
   resolutionKeyOf,
   resolutionsOf,
   resolutionValues,
@@ -35,6 +37,14 @@ export const app = defineApp({
         { value: firstModel, labelKey: "image.model.flux3Image" },
       ],
       default: defaultModel,
+    },
+    {
+      type: "image",
+      name: referenceInput,
+      labelKey: "image.input.references.label",
+      presence: "required",
+      max: editReferenceLimit,
+      when: [{ input: "model", is: [referenceModel] }],
     },
     {
       type: "choice",

@@ -137,7 +137,7 @@ export function CanvasCluster({
             data-slot="canvas-view"
             size="recreate"
             tone="quiet"
-            className="rounded-dense border border-(--line) px-2"
+            className="self-start rounded-dense border border-(--line) px-2"
           >
             <LayoutGridIcon aria-hidden="true" />
             {t("app.canvas.view")}

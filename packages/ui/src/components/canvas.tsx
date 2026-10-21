@@ -1,3 +1,4 @@
+import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement, ReactNode } from "react"
 
@@ -7,6 +8,7 @@ type CanvasProps = {
   cluster?: ReactNode
   hasRuns: boolean
   children: ReactNode
+  inset?: "card" | "page"
   className?: string
 }
 
@@ -16,6 +18,7 @@ function Canvas({
   cluster,
   hasRuns,
   children,
+  inset = "card",
   className,
 }: CanvasProps): ReactElement {
   return (
@@ -29,7 +32,11 @@ function Canvas({
     >
       <header
         data-slot="canvas-head"
-        className="flex min-h-14 shrink-0 items-start px-4 pt-2 pb-3"
+        data-inset={inset}
+        className={cn(
+          "flex min-h-14 shrink-0 items-start pt-2 pb-3",
+          inset === "card" ? "px-4" : "px-0"
+        )}
       >
         <div className="flex min-h-9 w-full flex-wrap items-center justify-between gap-x-3 gap-y-2">
           {tabs}
@@ -45,7 +52,16 @@ function Canvas({
           </div>
         </div>
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+      <div
+        data-slot="canvas-scroll"
+        className={cn(
+          "min-h-0 flex-1 overflow-y-auto",
+          interaction.ringRoomTop,
+          interaction.ringScroll
+        )}
+      >
+        {children}
+      </div>
     </section>
   )
 }

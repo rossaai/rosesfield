@@ -64,15 +64,14 @@ describe("the viewer's video", () => {
     )
   })
 
-  it("keeps the 16 px gutter on a phone, with no room above the picture", () => {
+  it("fills the stage's width on a phone, where the stage holds the 16 px gutter, with no room above the picture", () => {
     asWindow(false)
     const container = renderVideo()
     const picture = container.querySelector("[data-slot=viewer-picture]")
 
     expect(picture?.className.split(" ")).not.toContain("pt-s12")
-    expect(picture?.getAttribute("style")).toContain(
-      "100cqw - 2 * var(--spacing-s5)"
-    )
+    expect(picture?.getAttribute("style")).toContain("min(100cqw, ")
+    expect(picture?.getAttribute("style")).not.toContain("var(--spacing-s5)")
   })
 
   it("carries a volume track right after the speaker, before full screen", () => {
@@ -115,5 +114,22 @@ describe("the viewer's video", () => {
     expect(
       screen.getByRole("button", { name: t("explore.video.soundOff") })
     ).toBeTruthy()
+  })
+
+  it("gives the position track the phone's row: the speaker stays, the volume track and the wide gaps leave", () => {
+    asWindow(false)
+    const container = renderVideo()
+    const row = container.querySelector("[data-slot=viewer-controls]")
+    const sliders = rangesIn(container)
+
+    expect(sliders).toHaveLength(1)
+    expect(sliders[0]?.getAttribute("aria-label")).toBe(
+      t("explore.video.position")
+    )
+    expect(
+      screen.getByRole("button", { name: t("explore.video.soundOn") })
+    ).toBeTruthy()
+    expect(row?.className.split(" ")).toContain("gap-1")
+    expect(row?.className.split(" ")).not.toContain("gap-2")
   })
 })

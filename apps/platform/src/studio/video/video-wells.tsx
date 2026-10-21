@@ -25,8 +25,9 @@ function Well({
   const shown =
     message ?? (problem === undefined ? null : t(problem.key, problem.values))
   return (
-    <Field invalid={shown !== null} className="max-w-none">
+    <Field invalid={shown !== null} className="max-w-none flex-1">
       <DropWell
+        fill
         kind="image"
         title={tCatalog(titleKey)}
         ids={listOf(form.values.inputs[slot.name])}
@@ -99,7 +100,12 @@ export function VideoWells({
   }
   const isPair = start !== null && last !== null
   return (
-    <div className="flex flex-col gap-2">
+    <div
+      data-slot="video-wells"
+      className={
+        isPair ? "grid flex-1 grid-cols-2 gap-2" : "flex flex-1 flex-col gap-2"
+      }
+    >
       {start === null ? null : (
         <Well
           slot={start}

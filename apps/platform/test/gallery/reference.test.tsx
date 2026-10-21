@@ -146,3 +146,22 @@ describe("the controls gallery", () => {
     }
   })
 })
+
+describe("the create gallery", () => {
+  it("joins the column's prompt to its chip row: Elements with its at-sign, then Sound", () => {
+    const entry = referenceCreateEntries.find(
+      (one) => one.id === "ref-input-panel"
+    )
+    const rest = entry?.states.find((one) => one.id === "rest")
+    if (rest === undefined) {
+      throw new Error("no ref-input-panel rest")
+    }
+    const { container } = render(rest.render())
+    const block = container.querySelector("[data-slot='composer-prompt-block']")
+    const chips = [
+      ...(block?.querySelectorAll("[data-slot='chip']") ?? []),
+    ].map((chip) => chip.textContent)
+    expect(chips).toEqual(["Elements", "Sound"])
+    expect(block?.querySelector(".lucide-at-sign")).not.toBeNull()
+  })
+})

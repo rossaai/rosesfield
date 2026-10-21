@@ -1,6 +1,9 @@
 import { buildPath, routes, runResponse } from "@rosesfield/contract"
 import {
+  CreditMeter,
+  comfyWorkflow,
   comfyWorkflowAdapter,
+  type Fetch,
   hostedModelBinding,
 } from "@rosesfield/generation"
 import { FixedClock } from "@rosesfield/kernel"
@@ -104,6 +107,56 @@ describe("the engine target the settings select", () => {
     )
     expect(cloudRouter?.canRun(hosted)).toBe(true)
     expect(proxyRouter?.canRun(hosted)).toBe(false)
+  })
+
+  it("meters a graph on Comfy Cloud by the balance the Router reads", async () => {
+    const jobId = "7f3d2c1b-9a8e-4d6f-b012-3c4d5e6f7a8b"
+    const cents = [1000, 999.5, 999.5]
+    const fetch: Fetch = async (input, init) => {
+      const request = new Request(String(input), init)
+      const { host, pathname } = new URL(request.url)
+      if (host === "api.comfy.org" && pathname === "/customers/balance") {
+        return Response.json({ amount_cents: cents.shift() ?? 999.5 })
+      }
+      if (request.method === "POST" && pathname === "/api/v2/jobs") {
+        return Response.json({ id: jobId, status: "queued" }, { status: 201 })
+      }
+      if (pathname === `/api/v2/jobs/${jobId}`) {
+        return Response.json({
+          id: jobId,
+          status: "succeeded",
+          metrics: { execution_ms: 42000 },
+        })
+      }
+      throw new Error(`No recording for ${request.method} ${request.url}`)
+    }
+    const meter = new CreditMeter({ clock, wait: async () => undefined })
+    const [graph] = pickEngines(comfyCloud("comfyui-k"), {
+      clock,
+      meter,
+      fetch,
+    })
+    const submission = await graph?.submit({
+      idempotencyKey: "1c2d3e4f-5a6b-4c7d-9e8f-0a1b2c3d4e5f",
+      binding: comfyWorkflow({
+        workflow: {
+          "6": { class_type: "CLIPTextEncode", inputs: { text: "" } },
+        },
+        bindings: [
+          { from: "input", name: "prompt", path: ["6", "inputs", "text"] },
+        ],
+      }),
+      inputs: { prompt: "a red door" },
+      files: [],
+      count: 1,
+      aspectRatio: null,
+      seed: 42,
+      outputKind: "image",
+    })
+    expect(await graph?.read(submission?.ref ?? "")).toEqual({
+      state: "succeeded",
+      cost: { amount: 1.055 / 211, currency: "USD" },
+    })
   })
 
   it("gives a visitor the live engine only with their key, and the demo engine always", () => {

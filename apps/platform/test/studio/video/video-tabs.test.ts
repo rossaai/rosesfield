@@ -3,6 +3,7 @@ import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { appListing, type Run, run } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import {
+  defaultsOfTab,
   fieldsOfModel,
   imagesForTab,
   modelForTab,
@@ -93,25 +94,50 @@ describe("the Video tabs", () => {
   it("keeps the chosen model, then the default, then the first of a tab", () => {
     const firstLast = modelsOfTab(models, "first-last", video)
     expect(
-      modelForTab(firstLast, "pruna/p-video-2", "minimax/minimax-h3")
+      modelForTab(firstLast, "pruna/p-video-2", ["minimax/minimax-h3"])
     ).toBe("pruna/p-video-2")
     expect(
-      modelForTab(firstLast, "fal/h3-max-turbo", "minimax/minimax-h3")
+      modelForTab(firstLast, "fal/h3-max-turbo", ["minimax/minimax-h3"])
     ).toBe("minimax/minimax-h3")
-    expect(modelForTab(firstLast, "fal/h3-max-turbo", "ltx-2-5")).toBe(
+    expect(modelForTab(firstLast, "fal/h3-max-turbo", ["ltx-2-5"])).toBe(
       "ltx-2-5"
     )
     const references = modelsOfTab(models, "references", video)
     expect(
-      modelForTab(references, "fal/h3-max-turbo", "minimax/minimax-h3")
+      modelForTab(references, "fal/h3-max-turbo", ["minimax/minimax-h3"])
     ).toBe("minimax/minimax-h3")
     expect(
-      modelForTab(
-        references,
-        "fal/h3-max-turbo",
-        "veo/veo-3.1-lite-generate-001"
-      )
+      modelForTab(references, "fal/h3-max-turbo", [
+        "veo/veo-3.1-lite-generate-001",
+      ])
     ).toBe("veo/veo-3.1-lite-generate-001")
+  })
+
+  it("opens each tab on its task's default from the catalog: LTX 2.5 where it takes the tab's images, Seedance 2.5 on References, where no open model takes a reference image", () => {
+    const seedance = model("byteplus/dreamina-seedance-2-5-260628", [
+      ...minimaxH3,
+    ])
+    const switchx = model("beeble/switchx", [...veoLite])
+    const listed = [graph, switchx, seedance, minimax]
+    expect(defaultsOfTab("text-image")).toEqual(["ltx-2-5"])
+    expect(defaultsOfTab("first-last")).toEqual(["ltx-2-5"])
+    expect(defaultsOfTab("references")).toEqual([
+      "ltx-2-5",
+      "byteplus/dreamina-seedance-2-5-260628",
+    ])
+    const references = modelsOfTab(listed, "references", video)
+    expect(references[0]?.id).toBe("beeble/switchx")
+    expect(
+      modelForTab(references, "ltx-2-5", [
+        ...defaultsOfTab("references"),
+        "ltx-2-5",
+      ])
+    ).toBe("byteplus/dreamina-seedance-2-5-260628")
+    expect(
+      modelForTab(modelsOfTab(listed, "text-image", video), null, [
+        ...defaultsOfTab("text-image"),
+      ])
+    ).toBe("ltx-2-5")
   })
 
   it("gives each tab its image slots and limits", () => {

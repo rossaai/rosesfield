@@ -5,7 +5,11 @@ import {
   sizesAt1k,
   sizesAt2k,
 } from "#image/comfy/image-sizes"
-import { qwenImage2512, zImageTurbo } from "#image/comfy/open-weights"
+import {
+  qwenImage2512,
+  qwenImageEdit2511,
+  zImageTurbo,
+} from "#image/comfy/open-weights"
 
 export const resolutionValues = ["1k", "2k"] as const
 
@@ -31,7 +35,15 @@ export const imageModels: readonly ImageModel[] = [
     sizes: { "1k": qwenSizes },
     bind: qwenImage2512,
   },
+  {
+    value: "qwen-image-edit-2511",
+    labelKey: "image.model.qwenImageEdit2511",
+    sizes: { "1k": sizesAt1k },
+    bind: qwenImageEdit2511,
+  },
 ]
+
+export const referenceModel = "qwen-image-edit-2511"
 
 export const firstModel = "bfl/flux-3-image"
 

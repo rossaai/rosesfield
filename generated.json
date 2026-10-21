@@ -128,7 +128,7 @@
     },
     {
       "path": "apps/platform/src/gallery/reference-copy.en.ts",
-      "sha256": "8106279c3fa119b2f1463bc2cf365f05e3316d2602fff00f9e68a4245aaf9b07"
+      "sha256": "30edde8533b265801da264568f3c274a39a765307f000b63c1898699413d9b8d"
     },
     {
       "path": "packages/agent/src/copy.en.ts",
@@ -164,7 +164,7 @@
     },
     {
       "path": "packages/catalog/src/image/copy.en.ts",
-      "sha256": "4bec0528500d5e9b88d5db809c0f98dc3e2383e6b39f17395afe38521b96069c"
+      "sha256": "2ad6f320aff1bf6f92134ab1354e553924ddfa856c9d91b0da122aa5c78b13b4"
     },
     {
       "path": "packages/catalog/src/layers/copy.en.ts",

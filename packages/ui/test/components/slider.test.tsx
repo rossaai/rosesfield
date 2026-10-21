@@ -29,4 +29,19 @@ describe("Slider", () => {
     expect(thumb?.getAttribute("aria-labelledby")).toBe("size-label")
     expect(group?.getAttribute("aria-labelledby")).not.toBe("size-label")
   })
+
+  it("rings its thumb outside the thumb's edge while the range inside it has keyboard focus", () => {
+    const { container } = render(
+      <Slider aria-label="Tile size" defaultValue={4} />
+    )
+    const thumb = container.querySelector("input[type='range']")?.parentElement
+    expect(thumb?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "has-[:focus-visible]:outline-(length:--spacing-focus-ring)",
+        "has-[:focus-visible]:outline-solid",
+        "has-[:focus-visible]:outline-offset-(--spacing-focus-ring)",
+        "outline-hor-text",
+      ])
+    )
+  })
 })

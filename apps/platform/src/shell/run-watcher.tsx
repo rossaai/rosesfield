@@ -12,6 +12,7 @@ import { isWorking, runQuery, settingsQuery } from "@/api/queries"
 import { appName } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
+import { accountQuery } from "@/screens/settings/account-query"
 import { useRecentRuns } from "@/shell/use-working-runs"
 
 function endedRuns(
@@ -53,6 +54,7 @@ export function isRunPlaceOpen(place: Place, run: Run): boolean {
 
 function refresh(client: QueryClient, run: Run): void {
   void client.invalidateQueries({ queryKey: ["run", run.id] })
+  void client.invalidateQueries({ queryKey: accountQuery.queryKey })
   if (run.status === "done") {
     void client.invalidateQueries({ queryKey: ["assets"] })
   }

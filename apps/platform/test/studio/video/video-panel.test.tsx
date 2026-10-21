@@ -1,10 +1,17 @@
+import { findApp } from "@rosesfield/catalog"
+import { appListing } from "@rosesfield/contract"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
-import { cleanup, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { afterEach, describe, expect, it, vi } from "vitest"
+import { t, tCatalog } from "@/copy/t"
 import type { AppForm } from "@/screens/app/use-app-form"
-import { SoundChip } from "@/studio/video/video-chips"
+import { SoundChip, VideoChips } from "@/studio/video/video-chips"
+import { videoFieldsOf } from "@/studio/video/video-fields"
+import { MakeSwitch } from "@/studio/video/video-panel"
 
 afterEach(cleanup)
+
+const video = appListing.parse(findApp("video"))
 
 const form: AppForm = {
   values: { inputs: {}, seedMode: "random", count: 1, aspectRatio: null },
@@ -25,5 +32,43 @@ describe("the prompt's chip row", () => {
     )
     const chip = screen.getByRole("button", { pressed: true })
     expect(chip.className.split(" ")).toContain("h-6.5")
+  })
+})
+
+describe("the setting tiles", () => {
+  it("draw no row when the model sets no length, format or resolution, so the column keeps one 8 px gap", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <VideoChips app={video} form={form} fields={videoFieldsOf([])} />
+      </TooltipProvider>
+    )
+    expect(container.querySelector("[data-slot='setting-tiles']")).toBeNull()
+    expect(container.childElementCount).toBe(0)
+  })
+})
+
+describe("the column's mode switch", () => {
+  it("is a 48 px two-cell switch, Video chosen, with Extend sending you to the app that extends a clip", () => {
+    const onExtend = vi.fn()
+    render(<MakeSwitch onExtend={onExtend} />)
+    const group = screen.getByRole("radiogroup", {
+      name: tCatalog("videoEdit.input.mode.label"),
+    })
+    const cells = screen.getAllByRole("radio")
+    expect(cells.map((cell) => cell.textContent)).toEqual([
+      t("kind.video"),
+      tCatalog("videoEdit.choice.mode.extend"),
+    ])
+    expect(cells[0]?.getAttribute("aria-checked")).toBe("true")
+    expect(group.className.split(" ")).toEqual(
+      expect.arrayContaining(["h-12", "w-full"])
+    )
+    expect(document.querySelector("[data-slot='make-switch']")?.className).toBe(
+      "mb-2"
+    )
+    fireEvent.click(cells[1] as HTMLElement)
+    expect(onExtend).toHaveBeenCalledTimes(1)
+    fireEvent.click(cells[0] as HTMLElement)
+    expect(onExtend).toHaveBeenCalledTimes(1)
   })
 })

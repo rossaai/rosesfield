@@ -25,16 +25,17 @@ describe("ModelChip", () => {
 })
 
 describe("ModelChip width", () => {
-  it("hugs its name: a 1 px edge, 12 px sides, the 4 px padded name 8 px after the mark and the chevron right after it, so the chip is the name plus 66 px", () => {
+  it("hugs its name with no edge: the mark 12 px in, the name's text 8 px after the mark, 2 px before the chevron, so the chip is the name plus 66 px", () => {
     render(<ModelChip name="Picture 2" mark={<svg data-testid="mark" />} />)
     const chip = screen.getByRole("button", { name: "Picture 2" })
-    expect(chip.className.split(" ")).toEqual(
-      expect.arrayContaining(["border", "border-transparent", "px-3"])
-    )
+    const classes = chip.className.split(" ")
+    expect(classes).toContain("px-3")
+    expect(classes).not.toContain("border")
+    expect(classes.some((one) => one.startsWith("border-"))).toBe(false)
     const name = chip.querySelector("[data-slot='model-row-name']")
-    expect(name?.className.split(" ")).toEqual(
-      expect.arrayContaining(["ms-2", "px-1"])
-    )
+    const nameClasses = name?.className.split(" ") ?? []
+    expect(nameClasses).toEqual(expect.arrayContaining(["ms-2", "pe-0.5"]))
+    expect(nameClasses.some((one) => /^(px|ps|pl)-/.test(one))).toBe(false)
     const chevron = chip.lastElementChild?.getAttribute("class") ?? ""
     expect(chevron).not.toMatch(/\bms-/)
   })

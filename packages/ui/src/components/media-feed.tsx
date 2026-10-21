@@ -89,7 +89,7 @@ function ViewAll({
       ...props,
       "data-slot": "media-feed-viewAll",
       className: cn(
-        "pointer-events-auto relative inline-flex h-12 shrink-0 items-center gap-2 rounded-card bg-(--well) px-3 font-medium text-body whitespace-nowrap text-ink no-underline",
+        "pointer-events-auto relative inline-flex h-12 shrink-0 items-center gap-2 rounded-card bg-(--well) px-3 font-medium text-body whitespace-nowrap text-ink no-underline hover:z-1 focus-visible:z-1 in-data-[gallery=hover]:z-1",
         interaction.light,
         interaction.ring,
         className

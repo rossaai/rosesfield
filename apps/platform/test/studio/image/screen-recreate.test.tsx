@@ -40,7 +40,14 @@ describe("Recreate on a run in History", () => {
       [runOf({ inputs, count: 2, aspectRatio: "16:9", seed: 12345 })],
       [
         [openingAsk(1), 4.5],
-        [{ inputs, count: 2, aspectRatio: "16:9" }, 8.25],
+        [
+          {
+            inputs: { ...inputs, references: [] },
+            count: 2,
+            aspectRatio: "16:9",
+          },
+          8.25,
+        ],
       ]
     )
     await recreate()

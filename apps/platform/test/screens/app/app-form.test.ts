@@ -4,6 +4,7 @@ import {
   bodyOf,
   defaultsOf,
   type FormValues,
+  heldProblemsOf,
   problemsOf,
   valuesFromRun,
 } from "@/screens/app/app-form"
@@ -87,6 +88,29 @@ describe("problemsOf", () => {
       "field.asset.tooMany",
       "field.character.required",
     ])
+  })
+
+  it("asks, in the form a screen checks, for a required input only while its condition holds", () => {
+    const base = imageApp()
+    const app = {
+      ...base,
+      inputs: base.inputs.map((input) =>
+        input.name === "character"
+          ? {
+              ...input,
+              when: [{ input: "references", state: "filled" as const }],
+            }
+          : input
+      ),
+    }
+    expect(heldProblemsOf(app, filled({ character: [] }))).toEqual([])
+    expect(problemsOf(app, filled({ character: [] }))).toHaveLength(1)
+    expect(
+      heldProblemsOf(
+        app,
+        filled({ character: [], references: assetIds.slice(0, 1) })
+      )
+    ).toHaveLength(1)
   })
 
   it("names a number outside its bounds", () => {

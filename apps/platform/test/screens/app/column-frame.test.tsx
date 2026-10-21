@@ -43,4 +43,29 @@ describe("the column frame", () => {
       expect.arrayContaining(["pt-2", "@regular:pb-19"])
     )
   })
+
+  it("on a phone puts the canvas at the screen's edges and its runs 16 px in, on the same line as its tabs", () => {
+    render(
+      withClient(
+        <ColumnFrame
+          app={video}
+          start={start}
+          onShortcut={() => undefined}
+          sheet={[false, () => undefined]}
+          panel={<div />}
+          canvas={() => <div data-testid="runs" />}
+        />,
+        video,
+        null
+      )
+    )
+    const row = document.querySelector("[data-slot='column-row']")
+    const rowClasses = row?.className.split(" ") ?? []
+    expect(rowClasses).toContain("@regular:px-4")
+    expect(rowClasses).not.toContain("px-4")
+    const scroll = document.querySelector("[data-slot='app-stage-scroll']")
+    expect(scroll?.className.split(" ")).toContain("px-4")
+    const head = document.querySelector("[data-slot='canvas-head']")
+    expect(head?.className.split(" ")).toContain("px-4")
+  })
 })

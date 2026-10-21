@@ -28,7 +28,13 @@ function wrapper({ children }: { children: ReactNode }): ReactNode {
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>
 }
 
-function useTray(field: MediaField | null, start: readonly string[]) {
+type Switch = { field: MediaField; choose: () => void } | null
+
+function useTray(
+  field: MediaField | null,
+  start: readonly string[],
+  fallback: Switch = null
+) {
   const [inputs, setInputs] = useState<Record<string, FieldValue>>({
     images: [...start],
   })
@@ -44,7 +50,7 @@ function useTray(field: MediaField | null, start: readonly string[]) {
     validate: () => true,
     register: () => undefined,
   }
-  return { tray: useReferenceTray(field, form), inputs, setInput }
+  return { tray: useReferenceTray(field, form, fallback), inputs, setInput }
 }
 
 afterEach(cleanup)
@@ -74,5 +80,38 @@ describe("the reference tray", () => {
     act(() => result.current.setInput("images", ["a", "b"]))
     act(() => fromTheClick(["c"]))
     expect(result.current.inputs.images).toEqual(["a", "b", "c"])
+  })
+
+  it("keeps the tile on a model that takes no reference, and moves to the open default that takes one when you add one", () => {
+    const chosen: string[] = []
+    const fallback = {
+      field: mediaField("references", 3),
+      choose: () => chosen.push("qwen-image-edit-2511"),
+    }
+    const { result } = renderHook(() => useTray(null, [], fallback), {
+      wrapper,
+    })
+    expect(result.current.tray.field).toBeNull()
+    expect(result.current.tray.target?.name).toBe("references")
+    expect(result.current.tray.room).toBe(3)
+    act(() => result.current.tray.addAssets(["a", "b", "c", "d"]))
+    expect(chosen).toEqual(["qwen-image-edit-2511"])
+    expect(result.current.inputs.references).toEqual(["a", "b", "c"])
+    expect(result.current.tray.message).toBe(
+      "This input takes up to 3. Remove one to add another."
+    )
+  })
+
+  it("moves no model when nothing is added", () => {
+    const chosen: string[] = []
+    const fallback = {
+      field: mediaField("references", 3),
+      choose: () => chosen.push("moved"),
+    }
+    const { result } = renderHook(() => useTray(null, [], fallback), {
+      wrapper,
+    })
+    act(() => result.current.tray.addAssets([]))
+    expect(chosen).toEqual([])
   })
 })

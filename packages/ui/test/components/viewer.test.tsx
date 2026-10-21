@@ -83,6 +83,22 @@ describe("Viewer", () => {
     expect(stage?.className).not.toContain("p-s12 ")
   })
 
+  it("sets Next 24 px from the stage's edge, 8 px inside a picture that fills the 16 px padded stage, so it never crosses the picture's edge", () => {
+    renderViewer()
+    const next = screen.getByRole("button", { name: "Next" })
+    const classes = next.className.split(" ")
+    expect(classes).toContain("right-6")
+    expect(classes).not.toContain("right-s2")
+  })
+
+  it("keeps a 16 px gutter at each side of the picture on a phone, for an image as for a video", () => {
+    renderViewer()
+    const stage = document.querySelector("[data-slot='media-player-picture']")
+    const classes = stage?.className.split(" ") ?? []
+    expect(classes).toContain("px-4")
+    expect(classes).not.toContain("px-0")
+  })
+
   it("sets its 32 px close 12 px from the panel's right and 16 px from its top", () => {
     renderViewer()
     const close = screen.getByRole("button", { name: "Close" })

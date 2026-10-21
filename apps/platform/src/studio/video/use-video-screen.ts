@@ -24,6 +24,7 @@ import {
 } from "@/studio/video/video-prompt"
 import { graphPrompt, restoredOf } from "@/studio/video/video-restore"
 import {
+  defaultsOfTab,
   fieldsOfModel,
   imagesForTab,
   modelForTab,
@@ -158,11 +159,10 @@ export function useVideoScreen(
   const setTab = (next: VideoTab): void => {
     setTabState(next)
     const chosen = textOf(form.values.inputs[modelInputName]) || null
-    const id = modelForTab(
-      modelsOfTab(hosted.models, next, app),
-      chosen ?? hosted.defaultModel,
-      hosted.defaultModel
-    )
+    const id = modelForTab(modelsOfTab(hosted.models, next, app), chosen, [
+      ...defaultsOfTab(next),
+      hosted.defaultModel,
+    ])
     if (id !== null && id !== hosted.chosen?.id) {
       hosted.choose(id)
       return

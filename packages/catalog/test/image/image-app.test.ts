@@ -9,15 +9,17 @@ import {
   hostedModelOf,
   resolveBinding,
 } from "@rosesfield/generation"
-import { AspectRatio } from "@rosesfield/kernel"
+import { AspectRatio, type AssetId, assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
+import { adsCopy } from "#ads/copy.en"
 import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
 import { app } from "#image/app"
 import { imageCopy } from "#image/copy.en"
-import { imageModels, resolutionsOf } from "#image/image-models"
+import { imageModels, referenceModel, resolutionsOf } from "#image/image-models"
 import { readApps } from "#list-apps"
 import { listWorkflows } from "#list-workflows"
+import { videoCopy } from "#video/copy.en"
 
 function readImage(): AppDefinition {
   const [read] = readApps([{ folder: "image", app }])
@@ -42,6 +44,14 @@ function fieldAt(value: unknown, path: readonly string[]): unknown {
         : undefined,
     value
   )
+}
+
+const assetId = assetIdFormat.parse("0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c01")
+
+function referencesFor(model: string, count = 1): { references?: AssetId[] } {
+  return model === referenceModel
+    ? { references: Array.from({ length: count }, () => assetId) }
+    : {}
 }
 
 function resolutionsAllowed(model: string): readonly string[] {
@@ -84,9 +94,13 @@ describe("the Image app", () => {
     expect(defaultModelOf(definition)).toBe(published)
   })
 
-  it("keeps two open-weights graphs and no FLUX.2 Klein 4B graph", () => {
+  it("keeps three open-weights graphs, Qwen Image Edit 2511 for your references, and no FLUX.2 Klein 4B graph", () => {
     const graphs = modelsForApp(definition, []).map((model) => model.id)
-    expect(graphs).toEqual(["z-image-turbo", "qwen-image-2512"])
+    expect(graphs).toEqual([
+      "z-image-turbo",
+      "qwen-image-2512",
+      "qwen-image-edit-2511",
+    ])
     const ids = listWorkflows().map((workflow) => workflow.id)
     expect(ids).toEqual(
       expect.arrayContaining(["image-z-image-turbo", "image-qwen-image-2512"])
@@ -99,6 +113,7 @@ describe("the Image app", () => {
     expect(definition.inputs.map((input) => input.name)).toEqual([
       "prompt",
       "model",
+      "references",
       "resolution",
       "seed",
     ])
@@ -123,7 +138,15 @@ describe("the Image app", () => {
       { inputs: { prompt: "a", model: "nano-banana-2" } },
       { inputs: { prompt: "a", model: "gpt-image-2" } },
       { inputs: { prompt: "a", resolution: "4k" } },
-      { inputs: { prompt: "a", references: [] } },
+      { inputs: { prompt: "a", references: [assetId] } },
+      { inputs: { prompt: "a", model: referenceModel } },
+      {
+        inputs: {
+          prompt: "a",
+          model: referenceModel,
+          references: [assetId, assetId, assetId, assetId],
+        },
+      },
       { inputs: { prompt: "a", character: [] } },
       { inputs: { prompt: "a", quality: "final" } },
     ]
@@ -144,7 +167,11 @@ describe("the Image app", () => {
   it("fills the resolution a model runs when the run names none", () => {
     for (const model of imageModels) {
       const { inputs } = body.parse({
-        inputs: { prompt: "a", model: model.value },
+        inputs: {
+          prompt: "a",
+          model: model.value,
+          ...referencesFor(model.value),
+        },
       })
       expect(inputs.resolution).toBe(resolutionsOf(model)[0])
     }
@@ -155,7 +182,12 @@ describe("the Image app", () => {
     for (const model of imageModels) {
       for (const resolution of ["1k", "2k"]) {
         const isAllowed = resolutionsAllowed(model.value).includes(resolution)
-        const inputs = { prompt: "a", model: model.value, resolution }
+        const inputs = {
+          prompt: "a",
+          model: model.value,
+          resolution,
+          ...referencesFor(model.value),
+        }
         if (!isAllowed) {
           expect(() => resolveBinding(definition.engine, inputs)).toThrow()
           continue
@@ -165,7 +197,28 @@ describe("the Image app", () => {
         workflows.add(JSON.stringify(workflowOf(binding)))
       }
     }
-    expect(workflows.size).toBe(2)
+    expect(workflows.size).toBe(3)
+  })
+
+  it("edits up to 3 of your images on Qwen Image Edit 2511 with your words alone, each reference in its own slot", () => {
+    for (const count of [1, 2, 3]) {
+      const binding = resolveBinding(definition.engine, {
+        prompt: "a",
+        model: referenceModel,
+        resolution: "1k",
+        references: Array.from({ length: count }, () => assetId),
+      })
+      expect(binding.adapter).toBe(comfyWorkflowAdapter)
+      const graph = workflowOf(binding)
+      const loads = [41, 83, 191].filter((node) =>
+        Object.hasOwn(Object(graph), String(node))
+      )
+      expect(loads).toHaveLength(count)
+      expect(fieldAt(graph, ["508", "inputs", "string_b"])).toBe("")
+      expect(fieldAt(graph, ["9", "inputs", "filename_prefix"])).toBe(
+        "rosesfield-image"
+      )
+    }
   })
 
   it("asks for a size within 2% of each format, in steps of 16, within each model's pixel area", () => {
@@ -205,7 +258,11 @@ describe("the Image app", () => {
           : []),
       ]),
     ]
-    const copy: Record<string, string> = imageCopy
+    const copy: Record<string, string> = {
+      ...imageCopy,
+      ...adsCopy,
+      ...videoCopy,
+    }
     for (const key of keys) {
       expect(copy[key], key).toBeTypeOf("string")
     }

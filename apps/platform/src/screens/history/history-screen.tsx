@@ -207,6 +207,7 @@ export function HistoryScreen(): ReactElement {
       <div className="flex w-full flex-1 flex-col px-s5 pb-s12">
         <Canvas
           label={t("history.title")}
+          inset="page"
           tabs={
             <div className="min-w-0">
               <StateTabs {...filters} />

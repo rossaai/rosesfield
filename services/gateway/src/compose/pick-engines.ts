@@ -62,6 +62,7 @@ export function liveEngineOf(
       return new ComfyGenerationEngine({
         apiKey: engine.apiKey,
         baseUrl: engine.baseUrl,
+        ...meterOf(options),
         ...fetchOf(options),
       })
   }

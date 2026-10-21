@@ -1,7 +1,7 @@
 import type { AppListing, Run } from "@rosesfield/contract"
 import { type KeyboardEvent, useRef } from "react"
 import { useAppRuns } from "@/screens/app/app-canvas"
-import { valuesFromRun } from "@/screens/app/app-form"
+import { heldProblemsOf, valuesFromRun } from "@/screens/app/app-form"
 import { hostedProblems } from "@/screens/app/hosted/hosted-form"
 import {
   type HostedState,
@@ -45,7 +45,9 @@ export function useAppScreen(
   usePriceRefresh(app.id, runs.runs)
   const fields = hosted.fields
   check.current =
-    fields === null ? null : (values) => hostedProblems(fields, values)
+    fields === null
+      ? (values) => heldProblemsOf(app, values)
+      : (values) => hostedProblems(fields, values)
   const start = useStartRun(app, form, onStarted, hosted)
   const lastSeed = runs.runs.find((run) => run.seed !== null)?.seed ?? null
   return {

@@ -1,4 +1,5 @@
 import { Slider as SliderPrimitive } from "@base-ui/react/slider"
+import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement } from "react"
 
@@ -27,7 +28,10 @@ function Slider({
           {...(labelledBy === undefined
             ? {}
             : { "aria-labelledby": labelledBy })}
-          className="block h-knob-height w-knob-width rounded-full bg-ink"
+          className={cn(
+            "block h-knob-height w-knob-width rounded-full bg-ink",
+            interaction.thumbRing
+          )}
         />
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>

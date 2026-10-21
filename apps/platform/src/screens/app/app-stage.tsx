@@ -1,5 +1,6 @@
 import type { AppListing } from "@rosesfield/contract"
 import { Canvas } from "@rosesfield/ui/components/canvas"
+import { interaction } from "@rosesfield/ui/components/interaction"
 import {
   SegmentedTab,
   SegmentedTabs,
@@ -125,7 +126,12 @@ export function AppStage(props: AppStageProps): ReactElement {
       <div
         ref={stage.tab === "history" ? props.scrollRef : undefined}
         data-slot="app-stage-scroll"
-        className={cn("h-full overflow-y-auto", props.scrollClassName)}
+        className={cn(
+          "h-full overflow-y-auto",
+          interaction.ringRoomTop,
+          interaction.ringScroll,
+          props.scrollClassName
+        )}
       >
         {stage.tab === "how" ? (
           <HowItWorks app={props.app} kind={props.kind} />

@@ -58,6 +58,7 @@ function graph(id: string, name: string): CatalogModel {
 
 export const zImage = graph("z-image-turbo", "Z-Image Turbo")
 export const qwen = graph("qwen-image-2512", "Qwen Image 2512")
+export const qwenEdit = graph("qwen-image-edit-2511", "Qwen Image Edit 2511")
 
 export const flux: CatalogModel = {
   id: "bfl/flux-3-image",
@@ -117,7 +118,7 @@ export const flux: CatalogModel = {
 export const reference = "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c01"
 
 export const openingAsk = (count: number): PriceAsk => ({
-  inputs: { prompt: "", model: zImage.id, resolution: "1k" },
+  inputs: { prompt: "", model: zImage.id, references: [], resolution: "1k" },
   count,
   aspectRatio: "1:1",
 })
@@ -168,7 +169,7 @@ export function openImage(
   })
   client.setQueryData(settingsQuery.queryKey, settings)
   client.setQueryData(modelCatalogQuery(image.id, keyState).queryKey, {
-    models: [zImage, qwen, flux],
+    models: [zImage, qwen, qwenEdit, flux],
     defaultModel: zImage.id,
     refusal: null,
   })

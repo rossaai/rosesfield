@@ -47,7 +47,7 @@ test.describe("the View control of Image's feed", () => {
     expect(feed.x).toBe(tabs.x)
     if (!isMobile) {
       const bar = await boxOf(page, '[data-slot="app-bar"]')
-      expect(view.y - (bar.y + bar.height)).toBeLessThanOrEqual(10)
+      expect(view.y - (bar.y + bar.height)).toBe(8)
     }
   })
 })

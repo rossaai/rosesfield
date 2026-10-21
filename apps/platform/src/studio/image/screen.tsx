@@ -24,6 +24,10 @@ import {
 } from "@/studio/image/image-fields"
 import { useGraphRules } from "@/studio/image/image-model-settings"
 import {
+  graphReferencesOf,
+  referenceModelOf,
+} from "@/studio/image/image-references"
+import {
   GraphPanel,
   HostedPanel,
   ModelPopover,
@@ -42,28 +46,48 @@ function useImageFields(hosted: HostedState | undefined): ImageFields | null {
   )
 }
 
-function Attach({ tray }: { tray: ReferenceTray }): ReactElement | null {
+function Attach({ tray }: { tray: ReferenceTray }): ReactElement {
   const [isLibraryOpen, setLibraryOpen] = useState(false)
-  if (tray.field === null) {
-    return null
-  }
   return (
     <>
       <AttachMenu
         label={t("bar.attach")}
+        disabled={tray.target === null}
         onUpload={tray.upload}
         onFromLibrary={() => setLibraryOpen(true)}
       />
-      <LibraryPicker
-        open={isLibraryOpen}
-        onOpenChange={setLibraryOpen}
-        kind="image"
-        max={tray.field.max}
-        title={t("bar.addMenu.fromLibrary")}
-        onDone={tray.addAssets}
-      />
+      {tray.target === null ? null : (
+        <LibraryPicker
+          open={isLibraryOpen}
+          onOpenChange={setLibraryOpen}
+          kind="image"
+          max={tray.target.max}
+          title={t("bar.addMenu.fromLibrary")}
+          onDone={tray.addAssets}
+        />
+      )}
     </>
   )
+}
+
+function useImageTray(
+  app: AppListing,
+  state: AppScreenState,
+  fields: ImageFields | null,
+  isGraph: boolean
+): ReferenceTray {
+  const model = textOf(state.form.values.inputs.model)
+  const hosted = state.hosted
+  const field =
+    fields?.references ?? (isGraph ? graphReferencesOf(app, model) : null)
+  const target =
+    hosted === undefined ? null : referenceModelOf(app, hosted.models)
+  const targetField = target === null ? null : graphReferencesOf(app, target)
+  const fallback =
+    field !== null || target === null || targetField === null
+      ? null
+      : { field: targetField, choose: () => hosted?.choose(target) }
+  return useReferenceTray(field, state.form, fallback)
 }
 
 type ViewProps = {
@@ -186,7 +210,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const sheet = useState(false)
   const fields = useImageFields(state.hosted)
   const isGraph = isGraphModel(textOf(state.form.values.inputs.model))
-  const tray = useReferenceTray(fields?.references ?? null, state.form)
+  const tray = useImageTray(app, state, fields, isGraph)
   useGraphRules(app, state.form)
   useHostedDefaults(state.form, state.hosted?.fields ?? null)
   const problems = state.form.problems
