@@ -5,10 +5,7 @@ import { writeFlatPng } from "#infrastructure/demo/flat-png"
 import { pngBytes } from "../sample"
 import { type PlantedPng, plantedPng } from "./planted-png"
 
-function outputOf(
-  kind: EngineOutput["kind"],
-  bytes: Uint8Array
-): EngineOutput {
+function outputOf(kind: EngineOutput["kind"], bytes: Uint8Array): EngineOutput {
   return {
     kind,
     mime: "application/octet-stream",
