@@ -4,7 +4,6 @@ import {
   isRuledInput,
 } from "@rosesfield/contract"
 
-/** Fills each ruled input the given inputs leave out with the fallback its rules hold, as the run start stores it. */
 export function ruledInputsOf<Value>(
   app: AppDefinition,
   given: Readonly<Record<string, Value>>

@@ -5,6 +5,7 @@ import {
 } from "@rosesfield/contract"
 import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
 import type { z } from "zod"
+import { taskBinding } from "#domain/task-binding"
 
 type AppInput = z.input<typeof appDefinition>
 
@@ -96,3 +97,50 @@ export function audioApp(engine: EngineBinding = fakeBinding): AppDefinition {
 export function pngBytes(): Uint8Array {
   return Uint8Array.of(137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13)
 }
+
+export const modesApp: AppDefinition = appDefinition.parse({
+  id: "sample-modes",
+  nameKey: "name",
+  category: "image",
+  inputs: [
+    {
+      type: "choice",
+      name: "mode",
+      labelKey: "inputs.mode",
+      options: [
+        { value: "portrait", labelKey: "mode.portrait" },
+        { value: "views", labelKey: "mode.views" },
+      ],
+      default: "portrait",
+    },
+    {
+      type: "choice",
+      name: "model",
+      labelKey: "inputs.model",
+      options: [
+        { value: "open-portrait", labelKey: "model.portrait" },
+        { value: "open-views", labelKey: "model.views" },
+      ],
+      default: "open-portrait",
+      bounds: [
+        {
+          when: [{ input: "mode", is: ["portrait"] }],
+          values: ["open-portrait"],
+        },
+        { when: [{ input: "mode", is: ["views"] }], values: ["open-views"] },
+      ],
+    },
+  ],
+  output: {
+    kind: "image",
+    count: { default: 1, max: 4 },
+    aspectRatios: { options: ["1:1"], default: "1:1" },
+  },
+  engine: taskBinding({
+    tasks: ["text-to-image", "image-edit"],
+    input: "model",
+    default: "open-portrait",
+    fallback: fakeBinding,
+  }),
+  limits: { timeoutSeconds: 600, maxRetries: 0 },
+})
