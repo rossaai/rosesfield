@@ -29,8 +29,6 @@ export const headshotSizes: Readonly<Record<HeadshotRatio, ImageSize>> = {
 export const maxHeadshots = 4
 export const defaultHeadshots = 2
 
-export const seedSpan = 2_147_483_648
-
 export const photoLimits = {
   formats: ["image/png", "image/jpeg", "image/webp"],
   largestBytes: 20_000_000,
@@ -40,8 +38,4 @@ export const photoLimits = {
 
 export function keyOf(value: string): string {
   return value.replace(/-([a-z0-9])/g, (_, next: string) => next.toUpperCase())
-}
-
-export function seedOf(seed: number, index: number): number {
-  return (seed + index) % seedSpan
 }
