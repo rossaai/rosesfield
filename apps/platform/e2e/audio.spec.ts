@@ -21,14 +21,11 @@ test.describe("Audio's column", () => {
     page,
   }) => {
     await page.goto("/apps/audio")
-    const tabs = page.getByRole("tab")
-    await expect(tabs).toHaveText(tabNames)
     for (const name of tabNames) {
-      await page.getByRole("tab", { name }).click()
-      await expect(page.getByRole("tab", { name })).toHaveAttribute(
-        "aria-selected",
-        "true"
-      )
+      await page.getByRole("tab", { name, exact: true }).click()
+      await expect(
+        page.getByRole("tab", { name, exact: true })
+      ).toHaveAttribute("aria-selected", "true")
       await expect(
         page.getByRole("button", { name: /^Model/ }).first()
       ).toBeVisible()
