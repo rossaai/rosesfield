@@ -24,6 +24,7 @@
     "prompt": "The same person in front, unchanged, and the building behind them curled over in a large wave, in the same light and colour.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": 0.9,
   "adapter": null,
   "seconds": 7,

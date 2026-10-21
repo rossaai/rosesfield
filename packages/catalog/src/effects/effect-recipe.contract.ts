@@ -23,6 +23,13 @@ export const endFrame = z.discriminatedUnion("source", [
   }),
 ])
 
+export const midFrame = z.strictObject({
+  source: z.literal("edit"),
+  prompt: plainLine,
+  time: z.number().positive().max(15),
+  strength,
+})
+
 const adapter = z.strictObject({
   file: z.string().regex(/^[\w.-]+\.safetensors$/),
   strength: z.number().min(0).max(2),
@@ -159,6 +166,7 @@ export const effectRecipe = z
     prompt: z.string().min(1).max(1200),
     photoFrame: z.enum(photoFrameValues),
     endFrame,
+    midFrame: midFrame.nullable(),
     hold: strength.nullable(),
     adapter: adapter.nullable(),
     seconds: z.number().int().min(5).max(15),
@@ -183,6 +191,22 @@ export const effectRecipe = z
       path: ["endFrame"],
     }
   )
+  .refine(
+    (recipe) =>
+      recipe.midFrame === null || recipe.midFrame.time < recipe.seconds,
+    {
+      message: "A designed frame inside the clip comes before its end",
+      path: ["midFrame", "time"],
+    }
+  )
+  .refine(
+    (recipe) => recipe.midFrame === null || recipe.endFrame.source !== "edit",
+    {
+      message:
+        "The graph has one image edit pass, so a look edits its mid frame or its end frame, not both",
+      path: ["midFrame"],
+    }
+  )
   .refine((recipe) => recipe.photoFrame === "first" || recipe.hold === null, {
     message:
       "A look that lands on the photo already guides its last frame with the photo, so it holds no subject",
@@ -198,6 +222,7 @@ export const effectRecipe = z
   })
 
 export type EndFrame = z.infer<typeof endFrame>
+export type MidFrame = z.infer<typeof midFrame>
 export type CutWindow = z.infer<typeof cutWindow>
 export type EffectDesign = z.infer<typeof effectDesign>
 export type VideoReading = z.infer<typeof videoReading>

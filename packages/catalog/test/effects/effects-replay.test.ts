@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest"
 import { ratioOf } from "#effects/comfy/frame-sizes"
 import { recipeOf } from "#effects/effect-recipes"
-import { findWorkflow } from "#list-workflows"
 import {
   brokenLinks,
   cloudUrl,
+  fileGraph,
   idempotencyKey,
   jobId,
   loadedPhoto,
@@ -13,14 +13,6 @@ import {
   requestFor,
   submitted,
 } from "./effects-replay"
-
-function fileGraph(): Record<string, unknown> {
-  const workflow = findWorkflow("effects-ltx-2-5")
-  if (workflow === null) {
-    throw new Error("workflows/effects-ltx-2-5 is not listed")
-  }
-  return workflow.graph
-}
 
 function idsOf(workflow: Readonly<Record<string, unknown>>): string[] {
   return Object.keys(workflow).sort()
@@ -90,7 +82,13 @@ describe("the effects engine request", () => {
     const { workflow } = await submitted(request)
     const file = idsOf(fileGraph())
     expect(idsOf(workflow)).toEqual(
-      file.filter((id) => !["358", "359", "360", "361", "628"].includes(id))
+      file.filter(
+        (id) =>
+          ![
+            ...["358", "359", "360", "361", "628"],
+            ...["470", "471", "472", "473"],
+          ].includes(id)
+      )
     )
     expect(workflow).toMatchObject({
       "356": { inputs: { width: 256, height: 352, length: 169 } },

@@ -37,6 +37,7 @@
     "prompt": "A close-up of the same person's face sipping a milkshake through a straw in the diner, soft warm light.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": null,
   "adapter": null,
   "seconds": 15,

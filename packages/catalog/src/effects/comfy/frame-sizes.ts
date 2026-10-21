@@ -57,6 +57,10 @@ export function framesOf(seconds: number): number {
   return seconds * ltxFrames.fps + 1
 }
 
+export function frameAt(time: number): number {
+  return Math.round(time * ltxFrames.fps)
+}
+
 export function sizeMap(
   sizes: SizeTable,
   side: keyof FrameSize,

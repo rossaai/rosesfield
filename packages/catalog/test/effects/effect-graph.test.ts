@@ -22,38 +22,16 @@ import {
 } from "#effects/comfy/effects-binding"
 import { resolutionValues } from "#effects/effect-recipe.contract"
 import { effectRecipes, recipeOf } from "#effects/effect-recipes"
-import { findWorkflow } from "#list-workflows"
-import { brokenLinks, isLink, type Workflow } from "./effects-replay"
-
-function fileGraph(): Record<string, unknown> {
-  const workflow = findWorkflow("effects-ltx-2-5")
-  if (workflow === null) {
-    throw new Error("workflows/effects-ltx-2-5 is not listed")
-  }
-  return workflow.graph
-}
+import {
+  brokenLinks,
+  fileGraph,
+  isLink,
+  type Workflow,
+  workflowOf,
+} from "./effects-replay"
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
-}
-
-function isWorkflow(value: unknown): value is Workflow {
-  return (
-    isRecord(value) &&
-    Object.values(value).every(
-      (node) =>
-        isRecord(node) &&
-        typeof node.class_type === "string" &&
-        isRecord(node.inputs)
-    )
-  )
-}
-
-function workflowOf(value: unknown): Workflow {
-  if (!isWorkflow(value)) {
-    throw new Error("not an API graph")
-  }
-  return value
 }
 
 function leavesOf(binding: EngineBinding, path = ""): [string, Workflow][] {

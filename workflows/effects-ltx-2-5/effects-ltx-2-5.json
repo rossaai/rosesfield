@@ -2,7 +2,7 @@
   "id": "0b1c5208-26c1-5d84-b3e2-cae9782924aa",
   "revision": 0,
   "last_node_id": 628,
-  "last_link_id": 128,
+  "last_link_id": 140,
   "nodes": [
     {
       "id": 75,
@@ -921,7 +921,7 @@
         {
           "name": "VAE",
           "type": "VAE",
-          "links": [11, 12, 17, 38, 53, 58, 67, 72]
+          "links": [11, 12, 17, 38, 53, 58, 67, 72, 134, 139]
         }
       ],
       "properties": {
@@ -1269,12 +1269,12 @@
         {
           "name": "positive",
           "type": "CONDITIONING",
-          "link": 51
+          "link": 131
         },
         {
           "name": "negative",
           "type": "CONDITIONING",
-          "link": 52
+          "link": 132
         },
         {
           "name": "vae",
@@ -1284,7 +1284,7 @@
         {
           "name": "latent",
           "type": "LATENT",
-          "link": 54
+          "link": 133
         },
         {
           "name": "image",
@@ -1462,12 +1462,12 @@
         {
           "name": "positive",
           "type": "CONDITIONING",
-          "link": 65
+          "link": 136
         },
         {
           "name": "negative",
           "type": "CONDITIONING",
-          "link": 66
+          "link": 137
         },
         {
           "name": "vae",
@@ -1477,7 +1477,7 @@
         {
           "name": "latent",
           "type": "LATENT",
-          "link": 68
+          "link": 138
         },
         {
           "name": "image",
@@ -2254,7 +2254,7 @@
         {
           "name": "IMAGE",
           "type": "IMAGE",
-          "links": [55, 69, 117]
+          "links": [55, 69, 117, 129]
         }
       ],
       "properties": {
@@ -2338,7 +2338,7 @@
       "title": "Effects: one photo to a short effect video on LTX 2.5",
       "properties": {},
       "widgets_values": [
-        "# Effects: one photo to a short effect video on LTX 2.5\n\nScales and centre-crops your photo to the chosen shape and makes the effect's last frame from it with Qwen Image Edit 2511, then renders the video between the two on LTX 2.5, with its sound, at the shape's pixel area. This file holds every part a recipe can use, including the subject held through its matte. Each recipe in the Rosesfield catalog removes the parts it does not use.\n\n## Models\n\n- [ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors): LTX 2.5 latent upscaler, 2 times, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/diffusion_models/ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors): LTX 2.5 22B distilled, int8, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-video-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-video-vae-bf16.safetensors): LTX 2.5 video VAE, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-audio-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-audio-vae-bf16.safetensors): LTX 2.5 audio VAE, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/text_encoders/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors): Gemma 4 12B text encoder with the LTX 2.5 projections, int8, [the licence of the LTX 2.5 repository it sits in](https://huggingface.co/Lightricks/LTX-2.5).\n- [birefnet.safetensors](https://huggingface.co/Comfy-Org/BiRefNet/resolve/main/background_removal/birefnet.safetensors): BiRefNet, by ZhengPeng7, [MIT](https://huggingface.co/ZhengPeng7/BiRefNet).\n- [qwen_image_edit_2511_bf16.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_bf16.safetensors): Qwen Image Edit 2511, bf16, for the last frame, [Apache-2.0](https://huggingface.co/Qwen/Qwen-Image-Edit-2511).\n- [qwen_2.5_vl_7b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/HunyuanVideo_1.5_repackaged/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors): Qwen2.5-VL 7B text encoder, fp8, [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct).\n- [qwen_image_vae.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors): Qwen Image VAE, [Apache-2.0](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI).\n\n## Custom node packs\n\n- [ComfyUI-WanVideoWrapper](https://github.com/kijai/ComfyUI-WanVideoWrapper) at commit `088128b224242e110d3906c6750e9a3a348a659b`, Apache-2.0: `NormalizeAudioLoudness`, node 359, sets the sound to the look's loudness.\n- [ComfyUI_AudioTools](https://github.com/lum3on/ComfyUI_AudioTools) at commit `c816d0a1629c05a0f463ddb77ea96ada69875d32`, MIT: two `AudioAmplify` nodes, 360 and 361, hold every sample under the look's peak ceiling.\n\nComfy Cloud installs both.\n\nRosesfield ships no weights. Each loader lists its file with a download link. Accept the LTX 2.5 licence on Hugging Face before you download its files.\n\nPart of [Rosesfield](https://github.com/rossaai/rosesfield), MIT. Built from Comfy-Org/workflow_templates, MIT, per NOTICE."
+        "# Effects: one photo to a short effect video on LTX 2.5\n\nScales and centre-crops your photo to the chosen shape and makes the effect's last frame from it with Qwen Image Edit 2511, then renders the video between the two on LTX 2.5, with its sound, at the shape's pixel area. A recipe can also guide one frame inside the clip with the edited frame, nodes 470 to 473. This file holds every part a recipe can use, including the subject held through its matte. Each recipe in the Rosesfield catalog removes the parts it does not use.\n\n## Models\n\n- [ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors): LTX 2.5 latent upscaler, 2 times, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/diffusion_models/ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors): LTX 2.5 22B distilled, int8, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-video-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-video-vae-bf16.safetensors): LTX 2.5 video VAE, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-audio-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-audio-vae-bf16.safetensors): LTX 2.5 audio VAE, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/text_encoders/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors): Gemma 4 12B text encoder with the LTX 2.5 projections, int8, [the licence of the LTX 2.5 repository it sits in](https://huggingface.co/Lightricks/LTX-2.5).\n- [birefnet.safetensors](https://huggingface.co/Comfy-Org/BiRefNet/resolve/main/background_removal/birefnet.safetensors): BiRefNet, by ZhengPeng7, [MIT](https://huggingface.co/ZhengPeng7/BiRefNet).\n- [qwen_image_edit_2511_bf16.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_bf16.safetensors): Qwen Image Edit 2511, bf16, for the last frame, [Apache-2.0](https://huggingface.co/Qwen/Qwen-Image-Edit-2511).\n- [qwen_2.5_vl_7b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/HunyuanVideo_1.5_repackaged/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors): Qwen2.5-VL 7B text encoder, fp8, [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct).\n- [qwen_image_vae.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors): Qwen Image VAE, [Apache-2.0](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI).\n\n## Custom node packs\n\n- [ComfyUI-WanVideoWrapper](https://github.com/kijai/ComfyUI-WanVideoWrapper) at commit `088128b224242e110d3906c6750e9a3a348a659b`, Apache-2.0: `NormalizeAudioLoudness`, node 359, sets the sound to the look's loudness.\n- [ComfyUI_AudioTools](https://github.com/lum3on/ComfyUI_AudioTools) at commit `c816d0a1629c05a0f463ddb77ea96ada69875d32`, MIT: two `AudioAmplify` nodes, 360 and 361, hold every sample under the look's peak ceiling.\n\nComfy Cloud installs both.\n\nRosesfield ships no weights. Each loader lists its file with a download link. Accept the LTX 2.5 licence on Hugging Face before you download its files.\n\nPart of [Rosesfield](https://github.com/rossaai/rosesfield), MIT. Built from Comfy-Org/workflow_templates, MIT, per NOTICE."
       ],
       "color": "#432",
       "bgcolor": "#653"
@@ -2504,6 +2504,210 @@
       },
       "widgets_values": [-4.0],
       "title": "Back from the peak ceiling"
+    },
+    {
+      "id": 470,
+      "type": "ResizeImageMaskNode",
+      "pos": [11530, 412],
+      "size": [380, 152],
+      "flags": {},
+      "order": 94,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "input",
+          "type": "IMAGE,MASK",
+          "link": 129
+        }
+      ],
+      "outputs": [
+        {
+          "name": "resized",
+          "type": "IMAGE,MASK",
+          "links": [130]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ResizeImageMaskNode",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["scale longer dimension", 1536, "lanczos"],
+      "title": "Mid frame size"
+    },
+    {
+      "id": 471,
+      "type": "LTXVPreprocess",
+      "pos": [11530, 624],
+      "size": [380, 92],
+      "flags": {},
+      "order": 95,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 130
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output_image",
+          "type": "IMAGE",
+          "links": [135, 140]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LTXVPreprocess",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [18],
+      "title": "Mid frame"
+    },
+    {
+      "id": 472,
+      "type": "LTXVAddGuide",
+      "pos": [13370, 414],
+      "size": [380, 254],
+      "flags": {},
+      "order": 96,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 51
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 52
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 134
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 54
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 135
+        },
+        {
+          "name": "attention_mask",
+          "type": "MASK",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "iclora_parameters",
+          "type": "IC_LORA_PARAMETERS",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [131]
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [132]
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [133]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LTXVAddGuide",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [132, 0.8],
+      "title": "Mid-frame guide"
+    },
+    {
+      "id": 473,
+      "type": "LTXVAddGuide",
+      "pos": [17410, 414],
+      "size": [380, 254],
+      "flags": {},
+      "order": 97,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 65
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 66
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 139
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 68
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 140
+        },
+        {
+          "name": "attention_mask",
+          "type": "MASK",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "iclora_parameters",
+          "type": "IC_LORA_PARAMETERS",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [136]
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [137]
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [138]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LTXVAddGuide",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [132, 0.8],
+      "title": "Mid-frame guide at full size"
     }
   ],
   "links": [
@@ -2555,10 +2759,10 @@
     [48, 410, 0, 411, 0, "BACKGROUND_REMOVAL"],
     [49, 351, 0, 411, 1, "IMAGE,MASK"],
     [50, 411, 0, 412, 0, "MASK"],
-    [51, 365, 0, 460, 0, "CONDITIONING"],
-    [52, 365, 1, 460, 1, "CONDITIONING"],
+    [51, 365, 0, 472, 0, "CONDITIONING"],
+    [52, 365, 1, 472, 1, "CONDITIONING"],
     [53, 385, 0, 460, 2, "VAE"],
-    [54, 357, 0, 460, 3, "LATENT"],
+    [54, 357, 0, 472, 3, "LATENT"],
     [55, 627, 0, 460, 4, "IMAGE"],
     [56, 460, 0, 461, 0, "CONDITIONING"],
     [57, 460, 1, 461, 1, "CONDITIONING"],
@@ -2569,10 +2773,10 @@
     [62, 461, 0, 462, 0, "CONDITIONING"],
     [63, 461, 1, 462, 1, "CONDITIONING"],
     [64, 367, 0, 462, 2, "LATENT"],
-    [65, 462, 0, 463, 0, "CONDITIONING"],
-    [66, 462, 1, 463, 1, "CONDITIONING"],
+    [65, 462, 0, 473, 0, "CONDITIONING"],
+    [66, 462, 1, 473, 1, "CONDITIONING"],
     [67, 385, 0, 463, 2, "VAE"],
-    [68, 349, 0, 463, 3, "LATENT"],
+    [68, 349, 0, 473, 3, "LATENT"],
     [69, 627, 0, 463, 4, "IMAGE"],
     [70, 463, 0, 464, 0, "CONDITIONING"],
     [71, 463, 1, 464, 1, "CONDITIONING"],
@@ -2614,7 +2818,19 @@
     [125, 358, 0, 359, 0, "AUDIO"],
     [126, 359, 0, 360, 0, "AUDIO"],
     [127, 360, 0, 361, 0, "AUDIO"],
-    [128, 361, 0, 370, 1, "AUDIO"]
+    [128, 361, 0, 370, 1, "AUDIO"],
+    [129, 627, 0, 470, 0, "IMAGE"],
+    [130, 470, 0, 471, 0, "IMAGE,MASK"],
+    [131, 472, 0, 460, 0, "CONDITIONING"],
+    [132, 472, 1, 460, 1, "CONDITIONING"],
+    [133, 472, 2, 460, 3, "LATENT"],
+    [134, 385, 0, 472, 2, "VAE"],
+    [135, 471, 0, 472, 4, "IMAGE"],
+    [136, 473, 0, 463, 0, "CONDITIONING"],
+    [137, 473, 1, 463, 1, "CONDITIONING"],
+    [138, 473, 2, 463, 3, "LATENT"],
+    [139, 385, 0, 473, 2, "VAE"],
+    [140, 471, 0, 473, 4, "IMAGE"]
   ],
   "groups": [
     {
@@ -2660,7 +2876,7 @@
     {
       "id": 6,
       "title": "Stage 2",
-      "bounding": [16060, 20, 3960, 556],
+      "bounding": [16060, 20, 3960, 728],
       "color": "#3a3a5a",
       "font_size": 24,
       "flags": {}

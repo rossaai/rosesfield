@@ -24,6 +24,7 @@
     "prompt": "The same scene in near darkness, with the person and several copies of them in the same outfit standing on the ground in different poses.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": null,
   "adapter": null,
   "seconds": 7,
