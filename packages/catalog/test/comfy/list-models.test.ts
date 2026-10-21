@@ -2,6 +2,7 @@ import { appDefinition } from "@rosesfield/contract"
 import { taskBinding } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import { graphMaker, isOpenWeights, modelsForApp } from "#comfy/list-models"
+import { findApp } from "#list-apps"
 
 const app = appDefinition.parse({
   id: "pictures",
@@ -145,5 +146,33 @@ describe("the order of the listing", () => {
       lineKey: null,
     })
     expect(byId("open-a")?.facts?.lineKey).toBe("model.openA.line")
+  })
+
+  it("lists a background model only in the app that makes its media, an image one in Remove background and a video one in Video edit", () => {
+    const image = {
+      id: "maker/remove-background",
+      provider: "maker",
+      takes: ["image"],
+      makes: ["image"],
+      form: null,
+    }
+    const video = {
+      id: "maker/video-background-removal",
+      provider: "maker",
+      takes: ["video"],
+      makes: ["video"],
+      form: null,
+    }
+    const hostedIn = (appId: string): string[] => {
+      const found = findApp(appId)
+      if (found === null) {
+        throw new Error(`the catalog lacks ${appId}`)
+      }
+      return modelsForApp(found, [image, video])
+        .filter((one) => one.kind === "hosted")
+        .map((one) => one.id)
+    }
+    expect(hostedIn("background-removal")).toEqual([image.id])
+    expect(hostedIn("video-edit")).toEqual([video.id])
   })
 })

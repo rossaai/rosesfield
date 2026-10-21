@@ -226,7 +226,7 @@ export class StartRunHandler {
     if (
       listed === undefined ||
       this.policy === null ||
-      !this.policy.allows(tasks, listed)
+      !this.policy.allows(tasks, listed, app.output.kind)
     ) {
       throw new ModelNotOfferedError({ appId: app.id, model })
     }
