@@ -1,3 +1,4 @@
+import { isHostedModelId, lineKeyOf } from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import {
   ModelPicker,
@@ -7,14 +8,14 @@ import {
 import { ModelChip } from "@rosesfield/ui/components/model-trigger"
 import type { ReactElement, ReactNode } from "react"
 import { isAssetInput } from "@/catalog/app-facts"
-import { hasCatalogText, t, tCatalog } from "@/copy/t"
+import { t, tCatalog } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
 import { aspectField, countField } from "@/screens/app/app-form"
 import { chipChoiceText } from "@/screens/app/bar/setting-chip"
 import { textOf } from "@/screens/app/fields/field-props"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
-import { weightsLinkOf } from "@/screens/app/hosted/catalog-picker"
+import { modelLineOf, weightsLinkOf } from "@/screens/app/hosted/catalog-picker"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
 import type { AppScreenState } from "@/screens/app/use-app-screen"
 
@@ -102,16 +103,19 @@ export function choiceMakerOf(value: string, name: string): string {
   return lab === undefined || lab === "" ? name : lab
 }
 
+export function factsIdOf(value: string): string {
+  return isHostedModelId(value) ? value : `graph/${value}`
+}
+
 function choiceRow(option: ChoiceInput["options"][number]): ModelPickerRow {
   const name = tCatalog(option.labelKey)
   const maker = choiceMakerOf(option.value, name)
-  const lineKey = `${option.labelKey}.line`
   const href = weightsLinkOf(option.value)
   return {
     id: option.value,
     name,
     maker,
-    line: hasCatalogText(lineKey) ? tCatalog(lineKey) : null,
+    line: modelLineOf(lineKeyOf(factsIdOf(option.value)), maker),
     tags: [],
     mark: <LabMark maker={maker} />,
     badges:

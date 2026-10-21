@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   boardRankOf,
   factsOf,
+  lineKeyOf,
   type ModelFactsFile,
   modelFactsData,
   modelFactsFile,
@@ -167,6 +168,16 @@ describe("the model facts the catalog holds", () => {
     expect(
       factsOf("maker/elsewhere", "text-to-image", sample).lineKey
     ).toBeNull()
+  })
+
+  it("reads a model's line key with no task, and none for a row with no line or no row, the control", () => {
+    expect(lineKeyOf("maker/open", sample)).toBe("comfy.model.makerOpen.line")
+    expect(lineKeyOf("maker/elsewhere", sample)).toBeNull()
+    expect(lineKeyOf("maker/unknown", sample)).toBeNull()
+    expect(lineKeyOf("graph/z-image-turbo")).toBe(
+      "comfy.model.graphZImageTurbo.line"
+    )
+    expect(lineKeyOf("graph/qwen-image-edit-2511")).toBeNull()
   })
 
   it("gives every model row a line with its source and the words it restates, or the reason it holds none", () => {

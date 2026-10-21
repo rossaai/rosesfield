@@ -1,12 +1,18 @@
-import { type ModelFacts, modelTasks } from "@rosesfield/catalog/comfy"
+import {
+  type CatalogModel,
+  factsOf,
+  graphMaker,
+  type ModelFacts,
+} from "@rosesfield/catalog/comfy"
 import { describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
 import {
   badgesOf,
-  lineOf,
   modelLineOf,
+  pickerSections,
   weightsLinkOf,
 } from "@/screens/app/hosted/catalog-picker"
+import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 
 const openWeights = [{ kind: "open-weights" as const }]
 
@@ -117,44 +123,77 @@ describe("the fact badges of a model row", () => {
 })
 
 describe("the line of a model row", () => {
-  it("is the model's own line when the copy holds its key, and the task's line when it does not", () => {
-    expect(
-      modelLineOf("text-to-image", { ...facts, lineKey: "model.line.speech" })
-    ).toBe(t("model.line.speech"))
-    expect(
-      modelLineOf("text-to-image", {
-        ...facts,
-        lineKey: "comfy.model.notWritten.line",
-      })
-    ).toBe(t("model.line.textToImage"))
-    expect(modelLineOf("text-to-image", undefined)).toBe(
-      t("model.line.textToImage")
-    )
+  it("is the model's own line when the copy holds its key, and no line when its fact row holds none, the control being the task's line it showed before", () => {
+    expect(modelLineOf("model.line.speech")).toBe(t("model.line.speech"))
+    expect(modelLineOf("comfy.model.notWritten.line")).toBeNull()
+    expect(modelLineOf(null)).toBeNull()
+    expect(modelLineOf(null, "Maker Lab", wordOf)).toBeNull()
+    expect(modelLineOf(null)).not.toBe(t("model.line.textToImage"))
   })
 
   it("says the model's own line and its maker in one line, and keeps the line alone when the copy holds no pattern", () => {
-    const own = { ...facts, lineKey: "comfy.model.makerOpen.line" }
-    expect(modelLineOf("text-to-image", own, "Maker Lab", wordOf)).toBe(
+    const own = "comfy.model.makerOpen.line"
+    expect(modelLineOf(own, "Maker Lab", wordOf)).toBe(
       "Makes pictures of open things, by Maker Lab"
     )
-    expect(modelLineOf("text-to-image", own, undefined, wordOf)).toBe(
+    expect(modelLineOf(own, undefined, wordOf)).toBe(
       "Makes pictures of open things"
     )
     expect(
-      modelLineOf("text-to-image", own, "Maker Lab", (key) =>
+      modelLineOf(own, "Maker Lab", (key) =>
         key === "comfy.model.makerOpen.line" ? "Makes pictures" : null
       )
     ).toBe("Makes pictures")
-    expect(modelLineOf("unknown-task", facts, "Maker Lab", wordOf)).toBeNull()
   })
 })
 
-describe("the line of a task", () => {
-  it("names what each task of the catalog makes", () => {
-    for (const task of modelTasks) {
-      expect(lineOf(task), task).toMatch(/\S/)
+function graphOf(id: string, task: string): CatalogModel {
+  const facts = factsOf(`graph/${id}`, task)
+  return {
+    id,
+    kind: "graph",
+    maker: facts.lab ?? graphMaker,
+    name: id,
+    nameKey: null,
+    task,
+    tags: [{ kind: "open-weights" }],
+    form: null,
+    facts,
+  }
+}
+
+function hostedOf(models: readonly CatalogModel[]): HostedState {
+  return {
+    isTaskApp: true,
+    models,
+    isLoading: false,
+    error: null,
+    keyState: "ready",
+    defaultModel: null,
+    chosen: null,
+    fields: null,
+    ranBefore: [],
+    choose: () => undefined,
+  }
+}
+
+describe("the line of a row in the catalog picker", () => {
+  it("shows a graph's sourced line, and no line for a graph whose fact row holds none, the control being the task's line, which no row shows", () => {
+    const rows = pickerSections(
+      hostedOf([
+        graphOf("z-image-turbo", "text-to-image"),
+        graphOf("qwen-image-edit-2511", "image-edit"),
+      ]),
+      "2026-10-21"
+    ).flatMap((section) => section.rows)
+    const lineOfRow = (id: string) => rows.find((row) => row.id === id)?.line
+    expect(lineOfRow("z-image-turbo")).toContain(
+      "Photorealistic images, with text in English and Chinese"
+    )
+    expect(lineOfRow("qwen-image-edit-2511")).toBeNull()
+    for (const row of rows) {
+      expect(row.line).not.toBe(t("model.line.textToImage"))
+      expect(row.line).not.toBe(t("model.line.imageEdit"))
     }
-    expect(lineOf("music")).toBe("Makes music from your words")
-    expect(lineOf("voice-change")).toBe("Says your recording in another voice")
   })
 })
