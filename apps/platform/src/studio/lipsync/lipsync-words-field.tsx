@@ -1,5 +1,6 @@
 import { IconButton } from "@rosesfield/ui/components/button"
 import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
+import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { Textarea } from "@rosesfield/ui/components/textarea"
 import { XIcon } from "lucide-react"
 import { type ReactElement, useEffect, useRef, useState } from "react"
@@ -80,11 +81,11 @@ function HeldAudio({
       data-slot="lipsync-audio"
       className="flex items-center gap-s2"
     >
-      <AudioRow
-        src={source.state === "ready" ? source.src : ""}
-        name={name}
-        durationSeconds={seconds}
-      />
+      {source.state === "ready" ? (
+        <AudioRow src={source.src} name={name} durationSeconds={seconds} />
+      ) : (
+        <Skeleton className="h-icon w-full" />
+      )}
       <IconButton
         label={t("field.asset.remove")}
         tone="quiet"
