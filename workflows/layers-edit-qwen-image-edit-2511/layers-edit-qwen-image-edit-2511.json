@@ -425,7 +425,7 @@
         {
           "name": "prompt",
           "type": "STRING",
-          "link": 13,
+          "link": null,
           "widget": {
             "name": "prompt"
           }
@@ -467,7 +467,7 @@
         "cnr_id": "comfy-core",
         "ver": "0.41.0"
       },
-      "widgets_values": [["23", 0]]
+      "widgets_values": [""]
     },
     {
       "id": 14,
@@ -801,29 +801,6 @@
       "widgets_values": ["layers-edit"]
     },
     {
-      "id": 23,
-      "type": "StringConcatenate",
-      "pos": [2210, 100],
-      "size": [380, 152],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "STRING",
-          "type": "STRING",
-          "links": [13]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "StringConcatenate",
-        "cnr_id": "comfy-core",
-        "ver": "0.41.0"
-      },
-      "widgets_values": ["", "", " "]
-    },
-    {
       "id": 24,
       "type": "MarkdownNote",
       "pos": [60, 100],
@@ -833,10 +810,10 @@
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "title": "Layers: edit or relight one layer with Qwen Image Edit 2511",
+      "title": "Layers: edit one layer with Qwen Image Edit 2511",
       "properties": {},
       "widgets_values": [
-        "# Layers: edit or relight one layer with Qwen Image Edit 2511\n\nPlaces one transparent layer on mid grey, edits it with Qwen Image Edit 2511 and puts its alpha back. This file holds the relight form, where node 23 writes the light and tone sentences into the edit prompt, at 4 steps with the Lightning LoRA. The edit form takes your words at node 13, and the final run samples 40 steps.\n\n## Models\n\n- [Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors](https://huggingface.co/lightx2v/Qwen-Image-Edit-2511-Lightning/resolve/main/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors): Qwen Image Edit 2511 Lightning 4-step LoRA, by lightx2v, [Apache-2.0](https://huggingface.co/lightx2v/Qwen-Image-Edit-2511-Lightning).\n- [qwen_image_edit_2511_bf16.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_bf16.safetensors): Qwen Image Edit 2511, bf16, [Apache-2.0](https://huggingface.co/Qwen/Qwen-Image-Edit-2511).\n- [qwen_2.5_vl_7b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/HunyuanVideo_1.5_repackaged/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors): Qwen2.5-VL 7B text encoder, fp8, [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct).\n- [qwen_image_vae.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors): Qwen Image VAE, [Apache-2.0](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI).\n\nRosesfield ships no weights. Each loader lists its file with a download link.\n\nPart of [Rosesfield](https://github.com/rossaai/rosesfield), MIT. Built from Comfy-Org/workflow_templates, MIT, per NOTICE."
+        "# Layers: edit one layer with Qwen Image Edit 2511\n\nPlaces one transparent layer on mid grey, edits it with Qwen Image Edit 2511 and puts its alpha back. Your words reach the prompt at node 13. The draft run samples 4 steps with the Lightning LoRA, and the final run samples 40 steps with the base weights.\n\n## Models\n\n- [Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors](https://huggingface.co/lightx2v/Qwen-Image-Edit-2511-Lightning/resolve/main/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors): Qwen Image Edit 2511 Lightning 4-step LoRA, by lightx2v, [Apache-2.0](https://huggingface.co/lightx2v/Qwen-Image-Edit-2511-Lightning).\n- [qwen_image_edit_2511_bf16.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_bf16.safetensors): Qwen Image Edit 2511, bf16, [Apache-2.0](https://huggingface.co/Qwen/Qwen-Image-Edit-2511).\n- [qwen_2.5_vl_7b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/HunyuanVideo_1.5_repackaged/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors): Qwen2.5-VL 7B text encoder, fp8, [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct).\n- [qwen_image_vae.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors): Qwen Image VAE, [Apache-2.0](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI).\n\nRosesfield ships no weights. Each loader lists its file with a download link.\n\nPart of [Rosesfield](https://github.com/rossaai/rosesfield), MIT. Built from Comfy-Org/workflow_templates, MIT, per NOTICE."
       ],
       "color": "#432",
       "bgcolor": "#653"
@@ -855,7 +832,6 @@
     [10, 8, 0, 11, 0, "MODEL"],
     [11, 11, 0, 12, 0, "MODEL"],
     [12, 9, 0, 13, 0, "CLIP"],
-    [13, 23, 0, 13, 1, "STRING"],
     [14, 10, 0, 13, 2, "VAE"],
     [15, 7, 0, 13, 3, "IMAGE"],
     [16, 9, 0, 14, 0, "CLIP"],
@@ -931,8 +907,7 @@
         [1, "image"],
         [3, "batch_size"],
         [18, "seed"],
-        [23, "string_a"],
-        [23, "string_b"]
+        [13, "prompt"]
       ],
       "outputs": [22]
     }

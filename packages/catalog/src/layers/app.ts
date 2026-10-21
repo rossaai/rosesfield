@@ -4,6 +4,7 @@ import {
   type LayersMode,
   layerCountValues,
   layersBinding,
+  modeGraphs,
   modeValues,
   oneLayerModes,
 } from "#layers/comfy/layers-binding"
@@ -47,6 +48,28 @@ const count: Input = {
   ],
 }
 
+const graphLabels: Readonly<Record<LayersMode, string>> = {
+  split: "layers.model.qwenImageLayered",
+  edit: "layers.model.qwenImageEdit2511",
+  relight: "layers.model.qwenImageEdit2509Relight",
+  fill: "layers.model.qwenImageInpaint",
+}
+
+const model: Input = {
+  type: "choice",
+  name: "model",
+  labelKey: "image.input.model.label",
+  options: modeValues.map((mode) => ({
+    value: modeGraphs[mode],
+    labelKey: graphLabels[mode],
+  })),
+  default: modeGraphs.split,
+  bounds: modeValues.map((mode) => ({
+    when: inModes(mode),
+    values: [modeGraphs[mode]],
+  })),
+}
+
 export const app: AppInput = defineApp({
   id: "layers",
   nameKey: "layers.name",
@@ -62,6 +85,7 @@ export const app: AppInput = defineApp({
       })),
       default: "split",
     },
+    model,
     count,
     {
       type: "image",

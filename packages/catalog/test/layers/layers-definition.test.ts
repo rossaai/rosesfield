@@ -2,6 +2,7 @@ import {
   type AppDefinition,
   appDefinition,
   type InputDefinition,
+  inputRulesOf,
   startRunBodyFor,
 } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
@@ -100,6 +101,21 @@ const refused: ReadonlyArray<{ name: string; body: unknown }> = [
     body: { inputs: { mode: "fill", layer: [image] } },
   },
   {
+    name: "an edit that names the split graph",
+    body: {
+      inputs: {
+        mode: "edit",
+        layer: [image],
+        change: "a red hat",
+        model: "qwen-image-layered",
+      },
+    },
+  },
+  {
+    name: "a split that names the fill graph",
+    body: { inputs: { source: [image], model: "qwen-image-inpaint" } },
+  },
+  {
     name: "a fill that asks for a tone",
     body: {
       inputs: { mode: "fill", layer: [image], mask: [mask], tone: "warm" },
@@ -126,6 +142,7 @@ describe("the Layers definition holds its modes", () => {
     expect(parsed.count).toBe(4)
     expect(parsed.inputs).toEqual({
       mode: "split",
+      model: "qwen-image-layered",
       count: "4",
       source: [image],
       quality: "draft",
@@ -148,6 +165,7 @@ describe("the Layers definition holds its modes", () => {
     expect(relight.count).toBe(1)
     expect(relight.inputs).toEqual({
       mode: "relight",
+      model: "qwen-image-edit-2509-relight",
       count: "1",
       layer: [image],
       light: "left",
@@ -161,6 +179,7 @@ describe("the Layers definition holds its modes", () => {
     expect(fill.count).toBe(1)
     expect(fill.inputs).toEqual({
       mode: "fill",
+      model: "qwen-image-inpaint",
       count: "1",
       layer: [image],
       mask: [mask],
@@ -168,7 +187,18 @@ describe("the Layers definition holds its modes", () => {
     })
   })
 
-  it("binds no partner model and no model input", () => {
-    expect(definition.inputs.map((input) => input.name)).not.toContain("model")
+  it("opens each mode on its own graph", () => {
+    const opened = (["split", "edit", "relight", "fill"] as const).map(
+      (mode) =>
+        inputRulesOf(definition, { mode }).find(
+          (rule) => rule.input.name === "model"
+        )?.fallback
+    )
+    expect(opened).toEqual([
+      "qwen-image-layered",
+      "qwen-image-edit-2511",
+      "qwen-image-edit-2509-relight",
+      "qwen-image-inpaint",
+    ])
   })
 })

@@ -6,10 +6,10 @@ const keepShape =
   "Keep the shape, the outline, the pose and every detail of the subject."
 
 function lightFrom(side: string, opposite: string): string {
-  return `Relight the subject with one light from the ${side} of the picture. The ${side} side of the subject is bright and the ${opposite} side is in shadow. ${keepShape}`
+  return ` with one light from the ${side} of the picture. The ${side} side of the subject is bright and the ${opposite} side is in shadow. ${keepShape}`
 }
 
-export const lightSentences: Readonly<
+export const lightPhrases: Readonly<
   Record<(typeof lightValues)[number], string>
 > = {
   left: lightFrom("left", "right"),
@@ -18,10 +18,10 @@ export const lightSentences: Readonly<
   bottom: lightFrom("bottom", "top"),
 }
 
-export const toneSentences: Readonly<
+export const tonePhrases: Readonly<
   Record<(typeof toneValues)[number], string>
 > = {
-  auto: "Keep the colors of the subject.",
-  warm: "The light is warm and orange, like a low evening sun.",
-  cool: "The light is cool and blue, like daylight under a clear sky.",
+  auto: " Keep the colors of the subject.",
+  warm: " The light is warm and orange, like a low evening sun.",
+  cool: " The light is cool and blue, like daylight under a clear sky.",
 }
