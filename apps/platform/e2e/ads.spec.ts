@@ -119,6 +119,33 @@ test.describe("Ads on a wide screen", () => {
   })
 })
 
+test.describe("the Ads model menu", () => {
+  test.skip(({ isMobile }) => isMobile, "the bar shows its chips from 768 px")
+
+  test("opens on Qwen Image Edit 2511 with FLUX 3 Image one choice away, each row with the photos it takes, and Generate never reads 0", async ({
+    page,
+  }) => {
+    await openAds(page)
+    const trigger = dock(page).getByRole("button", { name: /^Model/ })
+    await expect(trigger).toContainText("Qwen Image Edit 2511")
+    await trigger.click()
+    const featured = page.getByRole("group", { name: "Featured" })
+    const rows = featured.locator("[data-slot='model-row']")
+    await expect(rows.first()).toContainText("Qwen Image Edit 2511")
+    await expect(rows.nth(1)).toContainText("FLUX 3 Image")
+    await expect(rows.first()).toContainText("Up to 3 images")
+    const listed = page.getByRole("listbox").locator("[data-slot='model-row']")
+    expect(await listed.count()).toBeGreaterThan(2)
+    for (const row of await listed.all()) {
+      await expect(row).toContainText(/Up to \d+ images?/)
+    }
+    await page.keyboard.press("Escape")
+    await expect(
+      dock(page).getByRole("button", { name: /^Generate, 0 Comfy credits$/ })
+    ).toHaveCount(0)
+  })
+})
+
 test.describe("Ads on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "the phone layout")
 

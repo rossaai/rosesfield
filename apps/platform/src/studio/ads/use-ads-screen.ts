@@ -1,4 +1,5 @@
 import type { AppListing, Run } from "@rosesfield/contract"
+import { useQuery } from "@tanstack/react-query"
 import {
   type KeyboardEvent,
   type RefObject,
@@ -7,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react"
-import { formatNumber } from "@/copy/format"
+import { characterQuery } from "@/api/queries"
 import { t, tCatalog } from "@/copy/t"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import {
@@ -17,15 +18,21 @@ import {
 import { usePriceRefresh } from "@/screens/app/hosted/use-price-refresh"
 import { type AppForm, useAppForm } from "@/screens/app/use-app-form"
 import type { AppSeeds } from "@/screens/app/use-app-screen"
-import { type StartRun, useStartRun } from "@/screens/app/use-start-run"
+import {
+  type HostedBodyOf,
+  type StartRun,
+  useStartRun,
+} from "@/screens/app/use-start-run"
 import {
   type AdsKind,
   type AdsProblem,
+  adsHostedBodyOf,
   adsProblems,
   adsValuesOf,
   barTextInputs,
   barTextOf,
   bodyAppFor,
+  characterInput,
   compactedPhotos,
   formProblemsOf,
   holdsBarText,
@@ -70,17 +77,6 @@ function focusFor(
   return control.querySelector<HTMLElement>("button:not([disabled])")
 }
 
-function pricedStart(start: StartRun): StartRun {
-  return start.priceValue === formatNumber(0)
-    ? {
-        ...start,
-        price: start.price === "" ? t("run.price.unknown") : start.price,
-        priceValue: null,
-        priceName: null,
-      }
-    : start
-}
-
 function useAdsModels(
   app: AppListing,
   form: AppForm,
@@ -90,6 +86,33 @@ function useAdsModels(
   usePriceRefresh(app.id, runs)
   const { setInput } = form
   return { ...hosted, choose: (id) => setInput(modelInput, id) }
+}
+
+function useCharacterPhoto(
+  form: AppForm,
+  hosted: HostedState
+): string | null {
+  const value = form.values.inputs[characterInput]
+  const [characterId] = Array.isArray(value) ? value : []
+  const isHosted = (hosted.chosen?.form ?? null) !== null
+  const query = useQuery({
+    ...characterQuery(characterId ?? ""),
+    enabled: isHosted && characterId !== undefined,
+  })
+  return characterId === undefined
+    ? null
+    : (query.data?.character.references[0] ?? null)
+}
+
+function useHostedBody(
+  app: AppListing,
+  form: AppForm,
+  hosted: HostedState
+): HostedBodyOf {
+  const characterPhoto = useCharacterPhoto(form, hosted)
+  const fields = hosted.chosen?.form ?? []
+  return (own) =>
+    adsHostedBodyOf(app, form.values, fields, characterPhoto, own)
 }
 
 function useBarText(app: AppListing, form: AppForm, kind: AdsKind) {
@@ -134,9 +157,10 @@ export function useAdsScreen(app: AppListing, seeds: AppSeeds): AdsScreenState {
     ...form,
     validate: () => formProblemsOf(app, form.values).length === 0,
   }
-  const start = pricedStart(useStartRun(bodyApp, gate))
   const runs = useAppRuns(app)
   const hosted = useAdsModels(app, form, runs.runs)
+  const hostedBody = useHostedBody(app, form, hosted)
+  const start = useStartRun(bodyApp, gate, undefined, hosted, hostedBody)
   const kind = kindOf(values)
   const barText = useBarText(app, form, kind)
   usePhotoOrder(app, form)

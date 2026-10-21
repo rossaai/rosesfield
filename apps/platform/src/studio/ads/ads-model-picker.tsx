@@ -1,4 +1,5 @@
-import { type CatalogModel, isHostedModelId } from "@rosesfield/catalog/comfy"
+import { adsHostedModel } from "@rosesfield/catalog/ads"
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import type { AppListing } from "@rosesfield/contract"
 import {
   ModelPicker,
@@ -14,14 +15,7 @@ import {
 } from "@/screens/app/hosted/catalog-picker"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
-import { modelInput, modelPhotoLimitOf } from "@/studio/ads/ads-rules"
-
-function appModelIds(app: AppListing): string[] {
-  const input = app.inputs.find((one) => one.name === modelInput)
-  return input?.type === "choice"
-    ? input.options.map((option) => option.value)
-    : []
-}
+import { modelPhotoLimitOf } from "@/studio/ads/ads-rules"
 
 function ownLineOf(model: CatalogModel | undefined): string | null {
   const key = model?.nameKey ?? null
@@ -50,10 +44,7 @@ export function adsPickerSections(
   const byId = new Map(hosted.models.map((model) => [model.id, model]))
   const featured = {
     ...hosted,
-    ranBefore: [
-      ...appModelIds(app).filter(isHostedModelId),
-      ...hosted.ranBefore,
-    ],
+    ranBefore: [adsHostedModel, ...hosted.ranBefore],
   }
   return pickerSections(featured).map((section) => ({
     ...section,

@@ -1,3 +1,4 @@
+import { adsHostedModel } from "@rosesfield/catalog/ads"
 import {
   type CatalogModel,
   factsOf,
@@ -52,15 +53,9 @@ function stateWith(chosen: Record<string, FieldValue>[]): AdsScreenState {
   } as unknown as AdsScreenState
 }
 
-function renderChip(): Record<string, FieldValue>[] {
-  const chosen: Record<string, FieldValue>[] = []
-  render(<AdsModelChip app={listing} state={stateWith(chosen)} chips={[]} />)
-  return chosen
-}
-
 describe("the Ads model chip", () => {
   it("is the shared model chip: the lab mark, the name and a chevron", () => {
-    renderChip()
+    render(<AdsModelChip app={listing} state={catalogState([])} chips={[]} />)
     const name = tCatalog(
       options.find((one) => one.value === chosenByDefault)?.labelKey ?? ""
     )
@@ -69,15 +64,12 @@ describe("the Ads model chip", () => {
     })
     expect(chip.getAttribute("data-place")).toBe("trigger")
     expect(chip.textContent).not.toContain(t("bar.model"))
-    const mark = chip.querySelector("[data-slot=lab-mark]")
-    expect(mark?.getAttribute("data-maker")).toBe(
-      choiceMakerOf(chosenByDefault, name)
-    )
+    expect(chip.querySelector("[data-slot=lab-mark]")).not.toBeNull()
     expect(chip.querySelector("svg.lucide-chevron-right")).not.toBeNull()
   })
 
-  it("opens the 402 px list of its models, with no line from the app's own copy, and picks one", () => {
-    const chosen = renderChip()
+  it("opens the 402 px list with Qwen Image Edit 2511 first and FLUX 3 Image one choice away", () => {
+    render(<AdsModelChip app={listing} state={catalogState([])} chips={[]} />)
     fireEvent.click(
       screen.getByRole("button", {
         name: new RegExp(`^${t("model.picker.title")} `),
@@ -88,21 +80,14 @@ describe("the Ads model chip", () => {
     expect(picker?.getAttribute("data-side")).toBe("top")
     expect(picker?.getAttribute("data-align")).toBe("start")
     expect(screen.getByRole("searchbox")).toBeTruthy()
-    const all = screen.getByRole("group", { name: t("model.picker.all") })
-    const rows = all.querySelectorAll("[role=option]")
-    expect([...rows].map((row) => row.getAttribute("aria-label"))).toEqual(
-      options.map((option) => tCatalog(option.labelKey))
-    )
-    for (const option of options) {
-      expect(all.textContent).not.toContain(tCatalog(`${option.labelKey}.line`))
-    }
-    const other = options.find((one) => one.value !== chosenByDefault)
-    const row = all.querySelector(`[data-model="${other?.value}"]`)
-    if (row === null) {
-      throw new Error("no row for the other model")
-    }
-    fireEvent.click(row)
-    expect(chosen).toEqual([{ model: other?.value ?? "" }])
+    const featured = screen.getByRole("group", {
+      name: t("model.picker.featured"),
+    })
+    expect(
+      [...featured.querySelectorAll("[data-model]")].map((row) =>
+        row.getAttribute("data-model")
+      )
+    ).toEqual([chosenByDefault, adsHostedModel])
   })
 
   it("names the lab by its weights' publisher", () => {

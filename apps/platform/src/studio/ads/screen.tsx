@@ -10,7 +10,6 @@ import { useDevice } from "@/device/device-context"
 import { AttachMenu } from "@/pieces/attach-menu"
 import { CharacterPicker } from "@/pieces/character-picker"
 import { LibraryPicker } from "@/pieces/library-picker"
-import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { useUploads } from "@/pieces/use-uploads"
 import { aspectField, countField } from "@/screens/app/app-form"
 import { SettingChip } from "@/screens/app/bar/setting-chip"
@@ -24,7 +23,6 @@ import {
 import { StartProblem, submitPriceOf } from "@/screens/app/generate-foot"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { AdsModelChip, AdsModelSettings } from "@/studio/ads/ads-model-settings"
-import { AdsPhoneFrame } from "@/studio/ads/ads-phone-frame"
 import { photoMaxOf, photoRoomOf, promptInputsOf } from "@/studio/ads/ads-rules"
 import { type AdsScreenState, useAdsScreen } from "@/studio/ads/use-ads-screen"
 
@@ -130,19 +128,21 @@ function InputsChip({ onOpen }: { onOpen: () => void }): ReactElement {
   )
 }
 
-type BarPlacement = { place: BarPlace } | { onInputs: () => void }
+type BarPlacement = { place: BarPlace; onInputs: () => void }
 
 function barChips(
   app: AppListing,
   state: AdsScreenState,
   placement: BarPlacement
 ): ReactElement | undefined {
-  if ("onInputs" in placement) {
-    return <BarChips chips={<InputsChip onOpen={placement.onInputs} />} />
+  switch (placement.place) {
+    case "phone":
+      return <BarChips chips={<InputsChip onOpen={placement.onInputs} />} />
+    case "sheet":
+      return undefined
+    case "dock":
+      return <Chips app={app} state={state} />
   }
-  return placement.place === "sheet" ? undefined : (
-    <Chips app={app} state={state} />
-  )
 }
 
 function Bar({
@@ -219,30 +219,18 @@ function barPlaceholder(
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const state = useAdsScreen(app, seeds)
   const sheet = useState(false)
-  const isRegular = useIsRegularWindow()
-  const settings = <AdsModelSettings app={app} state={state} chips={[]} />
-  if (!isRegular) {
-    return (
-      <AdsPhoneFrame
-        app={app}
-        onUseInputs={state.useInputs}
-        sheet={sheet}
-        settings={settings}
-        bar={(onInputs) => (
-          <Bar app={app} state={state} placement={{ onInputs }} />
-        )}
-      />
-    )
-  }
+  const [, setOpen] = sheet
+  const onInputs = (): void => setOpen(true)
   return (
     <BarFrame
       app={app}
       hasRuns={state.hasRuns}
       onUseInputs={state.useInputs}
       sheet={sheet}
-      settings={settings}
+      phone="dock"
+      settings={<AdsModelSettings app={app} state={state} chips={[]} />}
       bar={(place) => (
-        <Bar app={app} state={state} placement={{ place }} />
+        <Bar app={app} state={state} placement={{ place, onInputs }} />
       )}
     />
   )

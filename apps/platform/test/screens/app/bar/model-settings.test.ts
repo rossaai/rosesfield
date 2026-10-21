@@ -39,7 +39,6 @@ describe("the line of a row in a bar app's model picker", () => {
 
   it("shows no line for a model whose fact row holds none, the control being the app's own line it showed before", () => {
     const lines = linesOf(modelOf("ads"))
-    expect(lines.get("flux-2-klein-4b")).toBeNull()
     expect(lines.get("qwen-image-edit-2511")).toContain(
       tCatalog("comfy.model.graphQwenImageEdit2511.line")
     )

@@ -16,6 +16,8 @@ import {
 } from "react"
 import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
+import { useAppToolsOpener } from "@/pieces/app-tools"
+import { Dock } from "@/pieces/dock"
 import { useCanvasFit } from "@/pieces/use-canvas-fit"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { AppCanvas } from "@/screens/app/app-canvas"
@@ -23,7 +25,9 @@ import { AppStage } from "@/screens/app/app-stage"
 import type { SheetControl } from "@/screens/app/column-frame"
 import { ToolsKey } from "@/screens/app/tools-key"
 
-export type BarPlace = "dock" | "sheet"
+export type BarPlace = "dock" | "sheet" | "phone"
+
+export type PhoneBar = "sheet" | "dock"
 
 type BarFrameProps = {
   app: AppListing
@@ -32,6 +36,7 @@ type BarFrameProps = {
   bar: (place: BarPlace) => ReactNode
   settings: ReactNode
   sheet: SheetControl
+  phone?: PhoneBar
 }
 
 function useBottomScroll(
@@ -105,9 +110,49 @@ function useDockCover(): {
   return { stageRef: setStage, dockRef: setDock }
 }
 
+function PhoneDock({
+  onOpen,
+  children,
+}: {
+  onOpen: () => void
+  children: ReactNode
+}): ReactElement {
+  useAppToolsOpener(onOpen)
+  return (
+    <Dock
+      isRaised
+      className="sticky bottom-0 z-40 shrink-0 px-4 pt-2 pb-[calc(var(--spacing)*2+env(safe-area-inset-bottom))]"
+    >
+      <div data-slot="prompt-dock" className="flex flex-col gap-2">
+        {children}
+      </div>
+    </Dock>
+  )
+}
+
+function PhoneBarPlace({
+  props,
+  isRegular,
+  onOpen,
+}: {
+  props: BarFrameProps
+  isRegular: boolean
+  onOpen: () => void
+}): ReactNode {
+  if (isRegular) {
+    return null
+  }
+  return props.phone === "dock" ? (
+    <PhoneDock onOpen={onOpen}>{props.bar("phone")}</PhoneDock>
+  ) : (
+    <ToolsKey onOpen={onOpen} />
+  )
+}
+
 export function BarFrame(props: BarFrameProps): ReactElement {
   const [isOpen, setOpen] = props.sheet
   const isRegular = useIsRegularWindow()
+  const isDocked = props.phone === "dock"
   const fit = useCanvasFit()
   const bottom = useBottomScroll(props.hasRuns)
   const cover = useDockCover()
@@ -149,14 +194,22 @@ export function BarFrame(props: BarFrameProps): ReactElement {
           {props.bar("dock")}
         </div>
       ) : null}
-      <ToolsKey onOpen={() => setOpen(true)} />
+      <PhoneBarPlace
+        props={props}
+        isRegular={isRegular}
+        onOpen={() => setOpen(true)}
+      />
       <Sheet open={isOpen && !isRegular} onOpenChange={setOpen}>
         <SheetContent side="bottom" closeLabel={t("viewer.close")}>
           <SheetHeader>
-            <SheetTitle>{appName(props.app)}</SheetTitle>
+            <SheetTitle>
+              {isDocked ? t("app.inputs.open") : appName(props.app)}
+            </SheetTitle>
           </SheetHeader>
           <SheetBody>{props.settings}</SheetBody>
-          <SheetFooter>{isRegular ? null : props.bar("sheet")}</SheetFooter>
+          {isDocked ? null : (
+            <SheetFooter>{isRegular ? null : props.bar("sheet")}</SheetFooter>
+          )}
         </SheetContent>
       </Sheet>
     </div>

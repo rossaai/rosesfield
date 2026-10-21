@@ -2,6 +2,7 @@ import { cleanup, fireEvent, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t, tCatalog } from "@/copy/t"
 import type { FormValues } from "@/screens/app/app-form"
+import { priceLabelsOf } from "@/screens/app/use-start-run"
 import { asPhone, resetFrames } from "../../screens/app/frame-render"
 import {
   adsRun,
@@ -25,6 +26,7 @@ beforeEach(stubEngine)
 afterEach(() => {
   cleanup()
   resetFrames()
+  vi.restoreAllMocks()
 })
 
 const adInputs = {
@@ -140,6 +142,13 @@ describe("the Ads price", () => {
     expect(screen.queryByRole("button", { name: pricedName(0) })).toBeNull()
   })
 
+  it("reads a price below one hundredth of a credit as that price", async () => {
+    openAds({ prices: [[openingValues(), 0.004]] })
+    const name = priceLabelsOf(0.004, false).priceName ?? ""
+    expect(await screen.findByRole("button", { name })).toBeDefined()
+    expect(bar().textContent).not.toContain(t("run.price.unknown"))
+  })
+
   it("asks the price of the whole count", async () => {
     const four: FormValues = { ...openingValues(), count: 4 }
     openAds({ prices: [[openingValues(), 14.48], [four, 57.92]] })
@@ -206,7 +215,7 @@ describe("Ads on a phone", () => {
     const text = sheet.textContent ?? ""
     const order = [
       tCatalog("ads.input.kind.label"),
-      tCatalog("ads.input.model.label"),
+      t("model.picker.title"),
       t("field.aspect.label"),
       t("field.count.label"),
       tCatalog("ads.input.style.label"),
@@ -215,5 +224,14 @@ describe("Ads on a phone", () => {
     expect(order.every((at) => at >= 0)).toBe(true)
     expect([...order].sort((a, b) => a - b)).toEqual(order)
     expect(sheet.querySelector("textarea")).toBeNull()
+  })
+
+  it("opens with past runs on the newest, at the bottom of the canvas", async () => {
+    asPhone()
+    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(900)
+    const scrolled = vi.spyOn(Element.prototype, "scrollTop", "set")
+    openAds({ runs: [adsRun({ inputs: { product: [photos[0] ?? ""] } })] })
+    await vi.waitFor(bar)
+    await vi.waitFor(() => expect(scrolled).toHaveBeenCalledWith(900))
   })
 })

@@ -1,18 +1,27 @@
-import { type CatalogModel, isHostedModelId } from "@rosesfield/catalog/comfy"
+import { adsHostedInputsOf } from "@rosesfield/catalog/ads"
+import {
+  type CatalogModel,
+  isHostedModelId,
+  type ModelField,
+} from "@rosesfield/catalog/comfy"
 import {
   type AppListing,
   type InputDefinition,
   inputRulesOf,
+  isAppOnly,
   type Run,
 } from "@rosesfield/contract"
 import { isAssetInput } from "@/catalog/app-facts"
 import {
+  bodyOf,
   type FieldProblem,
   type FieldValue,
   type FormValues,
   problemsOf,
+  type StartRunBodyInput,
   valuesFromRun,
 } from "@/screens/app/app-form"
+import { hostedDefaults } from "@/screens/app/hosted/hosted-form"
 
 type Inputs = Readonly<Record<string, FieldValue>>
 
@@ -29,7 +38,7 @@ export type AdsProblem = {
 
 export const kindInput = "kind"
 export const modelInput = "model"
-const characterInput = "character"
+export const characterInput = "character"
 const lineCount = 2
 
 function textOf(value: FieldValue): string {
@@ -353,4 +362,48 @@ export function compactedPhotos(
       listOf(inputs[input.name]).join() === (placed[input.name] ?? []).join()
   )
   return isSame ? null : placed
+}
+
+type BodyValue = StartRunBodyInput["inputs"][string]
+
+function filledOf(
+  inputs: Readonly<Record<string, FieldValue>>
+): Record<string, BodyValue> {
+  return Object.fromEntries(
+    Object.entries(inputs).filter(
+      (entry): entry is [string, BodyValue] =>
+        entry[1] !== undefined &&
+        entry[1] !== "" &&
+        !(Array.isArray(entry[1]) && entry[1].length === 0)
+    )
+  )
+}
+
+export function adsHostedBodyOf(
+  app: AppListing,
+  values: FormValues,
+  fields: readonly ModelField[],
+  characterPhoto: string | null,
+  own: StartRunBodyInput
+): StartRunBodyInput {
+  const sent = bodyAppFor(app, values.inputs)
+  const appOnly = bodyOf(
+    { ...sent, inputs: sent.inputs.filter(isAppOnly) },
+    values
+  ).inputs
+  const filled = adsHostedInputsOf({
+    inputs: values.inputs,
+    fields,
+    characterPhoto,
+    aspectRatio: values.aspectRatio,
+  })
+  return {
+    ...own,
+    inputs: {
+      ...filledOf(hostedDefaults(fields, {})),
+      ...own.inputs,
+      ...filled,
+      ...filledOf(appOnly),
+    },
+  }
 }

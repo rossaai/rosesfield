@@ -1,8 +1,11 @@
 import { findApp } from "@rosesfield/catalog"
-import type { CatalogModel } from "@rosesfield/catalog/comfy"
+import { adsPromptOf } from "@rosesfield/catalog/ads"
+import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
 import {
   type AppDefinition,
   type AppListing,
+  appOnlyInputsFor,
+  isAppOnly,
   run,
   startRunBodyFor,
 } from "@rosesfield/contract"
@@ -10,7 +13,9 @@ import { describe, expect, it } from "vitest"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { tCatalog } from "@/copy/t"
 import { bodyOf, defaultsOf, type FieldValue } from "@/screens/app/app-form"
+import { hostedBody } from "@/screens/app/hosted/hosted-form"
 import {
+  adsHostedBodyOf,
   adsProblems,
   adsValuesOf,
   barTextInputs,
@@ -103,19 +108,6 @@ const states: { name: string; change: Inputs }[] = [
     name: "3 photos and a character on Qwen",
     change: { ...three, character: [character] },
   },
-  { name: "3 photos on Klein", change: { ...three, model: "flux-2-klein-4b" } },
-  {
-    name: "2 photos and a character on Klein",
-    change: { ...two, character: [character], model: "flux-2-klein-4b" },
-  },
-  {
-    name: "1 photo and a character on Klein",
-    change: {
-      product: [photo],
-      character: [character],
-      model: "flux-2-klein-4b",
-    },
-  },
   {
     name: "an ad after a scene of 600 characters",
     change: {
@@ -149,7 +141,9 @@ describe("the Ads screen rules", () => {
   it("state in each model's line the photos the contract lets it take", () => {
     const model = listing.inputs.find((input) => input.name === "model")
     const options = model?.type === "choice" ? model.options : []
-    expect(options.length).toBe(2)
+    expect(options.map((option) => option.value)).toEqual([
+      "qwen-image-edit-2511",
+    ])
     for (const option of options) {
       const line = tCatalog(`${option.labelKey}.line`)
       expect(line).toContain(
@@ -191,16 +185,13 @@ describe("the Ads screen rules", () => {
       },
     ])
     expect(
-      adsProblems(
-        listing,
-        formInputs({ ...two, character: [character], model: "flux-2-klein-4b" })
-      )[0]?.values
-    ).toEqual({ max: 2 })
+      adsProblems(listing, formInputs({ ...two, character: [character] }))
+    ).toEqual([])
   })
 
   it("read how many photos each model takes from the contract's rules", () => {
     expect(photoLimitOf(listing, "qwen-image-edit-2511")).toBe(3)
-    expect(photoLimitOf(listing, "flux-2-klein-4b")).toBe(2)
+    expect(photoLimitOf(listing, "flux-2-klein-4b")).toBe(0)
   })
 
   it("split the bar's text into the inputs of each kind and join it back", () => {
@@ -315,5 +306,105 @@ describe("Use these inputs on an Ads run", () => {
     expect(values.count).toBe(4)
     expect(values.aspectRatio).toBe("4:5")
     expect(values.inputs).toMatchObject(made.inputs)
+  })
+})
+
+const fluxFields: readonly ModelField[] = [
+  {
+    kind: "prompt",
+    name: "prompt",
+    path: "prompt",
+    required: true,
+    maxLength: 2000,
+    default: null,
+  },
+  {
+    kind: "media",
+    name: "input_images",
+    path: "input_images",
+    required: true,
+    media: "image",
+    min: 1,
+    max: 10,
+  },
+  {
+    kind: "choice",
+    name: "aspect_ratio",
+    path: "aspect_ratio",
+    required: false,
+    options: ["1:1", "4:5"],
+    default: "1:1",
+  },
+  {
+    kind: "choice",
+    name: "output_format",
+    path: "output_format",
+    required: true,
+    options: ["png", "jpeg"],
+    default: "png",
+  },
+]
+
+describe("the body Ads sends a hosted model", () => {
+  const portrait = "6f4e3d2c-1b0a-4c8d-8e7f-5a4b3c2d1e0f"
+  const inputs = formInputs({
+    kind: "ad",
+    headline: "Fresh",
+    line: "Made daily",
+    scene: "a desk left from a product shot",
+    style: "bold",
+    product: [photo],
+    secondPhoto: [otherPhoto],
+    character: [character],
+    model: "bfl/flux-3-image",
+  })
+  const values = {
+    ...defaultsOf(listing),
+    inputs,
+    count: 4,
+    aspectRatio: "4:5",
+  }
+  const own = hostedBody("bfl/flux-3-image", fluxFields, values, "image")
+  const body = adsHostedBodyOf(listing, values, fluxFields, portrait, own)
+  const appOnly = new Set(
+    adsDefinition().inputs.filter(isAppOnly).map((input) => input.name)
+  )
+
+  it("fills the model's prompt with the words Ads builds, its images with the photos and the character's photo, and its format", () => {
+    expect(body.inputs).toMatchObject({
+      model: "bfl/flux-3-image",
+      prompt: adsPromptOf(inputs),
+      input_images: [photo, otherPhoto, portrait],
+      aspect_ratio: "4:5",
+      output_format: "png",
+    })
+    expect(body.count).toBe(4)
+  })
+
+  it("keeps the shown words, photos, character, kind and style as the inputs the run stores, and no scene of the other kind", () => {
+    const kept = Object.fromEntries(
+      Object.entries(body.inputs).filter(([name]) => appOnly.has(name))
+    )
+    expect(kept).toEqual({
+      kind: "ad",
+      headline: "Fresh",
+      line: "Made daily",
+      style: "bold",
+      product: [photo],
+      secondPhoto: [otherPhoto],
+      character: [character],
+    })
+    expect(appOnlyInputsFor(adsDefinition()).safeParse(kept).success).toBe(
+      true
+    )
+  })
+
+  it("sends the model no field it lacks, beside the inputs the run stores", () => {
+    const fieldNames = new Set(["model", ...fluxFields.map((one) => one.name)])
+    expect(
+      Object.keys(body.inputs).filter(
+        (name) => !appOnly.has(name) && !fieldNames.has(name)
+      )
+    ).toEqual([])
   })
 })
