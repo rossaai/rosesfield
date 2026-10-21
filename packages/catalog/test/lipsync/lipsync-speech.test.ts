@@ -1,7 +1,11 @@
 import {
   type AppDefinition,
   appDefinition,
+  appId,
+  assetId,
   type Run,
+  type RunInputs,
+  runId,
 } from "@rosesfield/contract"
 import { taskBinding } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
@@ -47,19 +51,19 @@ function appWithTasks(id: string, tasks: readonly string[]): AppDefinition {
 
 const music = appWithTasks("music", ["music"])
 const audio = appWithTasks("audio", ["music", speechTask])
-const speechAudio = "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
-const yourAudio = "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e"
+const speechAudio = assetId.parse("1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d")
+const yourAudio = assetId.parse("2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e")
 
 function speechRun(status: Run["status"], outputs: readonly string[]): Run {
   return {
-    id: "3c4d5e6f-7a8b-4c9d-8e0f-2a3b4c5d6e7f",
-    appId: "audio",
+    id: runId.parse("3c4d5e6f-7a8b-4c9d-8e0f-2a3b4c5d6e7f"),
+    appId: appId.parse("audio"),
     status,
     inputs: { model: "speech-graph", script: "Hello there" },
     count: 1,
     aspectRatio: null,
     seed: 7,
-    outputs: [...outputs],
+    outputs: outputs.map((output) => assetId.parse(output)),
     progress: null,
     engine: { adapter: "comfy-workflow", models: [], workflowHash: null },
     cost: { amount: 0.01, currency: "USD" },
@@ -70,7 +74,11 @@ function speechRun(status: Run["status"], outputs: readonly string[]): Run {
   }
 }
 
-const lipsyncInputs = { mode: "photo", model: "ltx-2-3", audio: [yourAudio] }
+const lipsyncInputs: RunInputs = {
+  mode: "photo",
+  model: "ltx-2-3",
+  audio: [yourAudio],
+}
 
 describe("the speech run that Text makes first", () => {
   it("asks the speech app for your line on the voice you picked", () => {
