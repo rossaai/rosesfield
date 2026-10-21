@@ -60,13 +60,15 @@ function call(
   key: string | null,
   init: { method?: string; body?: string } = {}
 ): Promise<Response> {
-  return gateway.app.request(`http://127.0.0.1:8787${path}`, {
-    ...init,
-    headers: {
-      "content-type": "application/json",
-      ...(key === null ? {} : { [keyHeaders.engine]: key }),
-    },
-  })
+  return Promise.resolve(
+    gateway.app.request(`http://127.0.0.1:8787${path}`, {
+      ...init,
+      headers: {
+        "content-type": "application/json",
+        ...(key === null ? {} : { [keyHeaders.engine]: key }),
+      },
+    })
+  )
 }
 
 async function settingsOf(gateway: LocalGateway, key: string | null) {
