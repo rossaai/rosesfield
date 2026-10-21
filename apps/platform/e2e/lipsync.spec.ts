@@ -112,10 +112,18 @@ test.describe("Lip sync on a phone", () => {
     const sheet = page.getByRole("dialog")
     await expect(sheet).toBeVisible()
     await expect(sheet.locator('[data-slot="lipsync-words"]')).toBeVisible()
+    await sheet.evaluate((element) =>
+      Promise.all(
+        element
+          .getAnimations({ subtree: true })
+          .map((animation) => animation.finished)
+      )
+    )
     const generate = await boxOf(sheet.locator('[data-slot="generate-button"]'))
     const panel = await boxOf(sheet)
     const bottom = panel.y + panel.height
     expect(bottom).toBeCloseTo(viewport.height, 0)
+    expect(panel.y).toBeGreaterThanOrEqual(0)
     expect(bottom - (generate.y + generate.height)).toBeLessThan(32)
   })
 })
