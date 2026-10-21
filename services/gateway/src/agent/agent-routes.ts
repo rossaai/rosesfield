@@ -1,4 +1,5 @@
 import {
+  type AgentModelChoice,
   type AgentModels,
   agentModelRoutes,
   conversationRoutes,
@@ -23,9 +24,14 @@ export function agentRoutes(app: GatewayApp): void {
   modelRoutes(app)
 }
 
-async function agentModelsOf(scope: RequestScope): Promise<AgentModels> {
-  const choice = await scope.agent.listModels.execute()
-  const { models, refusal } = await scope.handlers.listModels.execute({})
+async function agentModelsOf(
+  scope: RequestScope,
+  chosen: Promise<AgentModelChoice>
+): Promise<AgentModels> {
+  const [choice, { models, refusal }] = await Promise.all([
+    chosen,
+    scope.handlers.listModels.execute({}),
+  ])
   if (refusal !== null) {
     return { models: [], model: null, refusal: errorEnvelopeOf(refusal).error }
   }
@@ -40,25 +46,25 @@ async function agentModelsOf(scope: RequestScope): Promise<AgentModels> {
 function modelRoutes(app: GatewayApp): void {
   const { listAgentModels, chooseAgentModel } = agentModelRoutes
   app.get(listAgentModels.path, async (c) => {
-    const listed = await agentModelsOf(c.var.scope)
+    const { scope } = c.var
+    const listed = await agentModelsOf(scope, scope.agent.listModels.execute())
     return c.json(
       listed satisfies ResponseOf<typeof listAgentModels>,
       listAgentModels.status
     )
   })
-  app.patch(
-    chooseAgentModel.path,
-    limitBody(jsonBodyMaxBytes),
-    async (c) => {
-      const body = parseWith(chooseAgentModel.body, await readJson(c), "body")
-      await c.var.scope.agent.chooseModel.execute({ model: body.model })
-      const listed = await agentModelsOf(c.var.scope)
-      return c.json(
-        listed satisfies ResponseOf<typeof chooseAgentModel>,
-        chooseAgentModel.status
-      )
-    }
-  )
+  app.patch(chooseAgentModel.path, limitBody(jsonBodyMaxBytes), async (c) => {
+    const body = parseWith(chooseAgentModel.body, await readJson(c), "body")
+    const { scope } = c.var
+    const listed = await agentModelsOf(
+      scope,
+      scope.agent.chooseModel.execute({ model: body.model })
+    )
+    return c.json(
+      listed satisfies ResponseOf<typeof chooseAgentModel>,
+      chooseAgentModel.status
+    )
+  })
 }
 
 function conversationListRoutes(app: GatewayApp): void {

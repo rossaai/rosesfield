@@ -70,7 +70,10 @@ function gatewayWith(fetch: Fetch, agent: AgentHarness | null): GatewayApp {
   return ownerGateway(handlers, ports.apps, { mode: "local" }, clock, agent)
 }
 
-function call(app: GatewayApp, init: RequestInit = {}): Promise<Response> {
+async function call(
+  app: GatewayApp,
+  init: RequestInit = {}
+): Promise<Response> {
   return app.request(path, {
     ...init,
     headers: { ...localHost, ...(init.headers ?? {}) },

@@ -22,9 +22,7 @@ export function readAgentEnv(
   engine: EngineSettings,
   mode: "owner" | "public" = "owner"
 ): AgentModel | null {
-  const held = goneAgentSettings.filter(
-    (name) => textOf(source[name]) !== null
-  )
+  const held = goneAgentSettings.filter((name) => textOf(source[name]) !== null)
   if (held.length > 0) {
     throw new EnvInvalidError({ problems: held.map(goneProblem) })
   }
