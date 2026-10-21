@@ -9,6 +9,8 @@ import { photoInputs } from "#ads/ads-values"
 
 type MediaField = Extract<ModelField, { kind: "media" }>
 
+type NumberField = Extract<ModelField, { kind: "number" }>
+
 export type AdsHostedAsk = {
   inputs: Readonly<Record<string, unknown>>
   fields: readonly ModelField[]
@@ -57,18 +59,24 @@ export function adsPhotoLimitOf(fields: readonly ModelField[]): number {
   return referenceFieldOf(fields)?.max ?? 0
 }
 
-function countOf(
-  field: ModelField | null,
-  count: number
-): { name: string; count: number } | null {
-  if (field === null || field.kind !== "number") {
+function countFieldOf(fields: readonly ModelField[]): NumberField | null {
+  if (isOneAtATime(fields, imageOutput)) {
     return null
   }
-  const low = Math.max(count, field.min ?? 1)
-  return {
-    name: field.name,
-    count: field.max === null ? low : Math.min(low, field.max),
-  }
+  const field = fieldOfRole(fields, "count", imageOutput)
+  return field?.kind === "number" ? field : null
+}
+
+export function adsCountMaxOf(
+  fields: readonly ModelField[],
+  most: number
+): number {
+  return Math.min(most, countFieldOf(fields)?.max ?? most)
+}
+
+function countOf(field: NumberField, count: number): number {
+  const top = field.max === null ? count : Math.min(count, field.max)
+  return Math.max(field.min ?? 1, top)
 }
 
 export function adsHostedInputsOf(
@@ -93,11 +101,9 @@ export function adsHostedInputsOf(
   if (aspect !== null && ask.aspectRatio !== null) {
     sent[aspect.name] = ask.aspectRatio
   }
-  const count = isOneAtATime(ask.fields, imageOutput)
-    ? null
-    : countOf(fieldOfRole(ask.fields, "count", imageOutput), ask.count)
+  const count = countFieldOf(ask.fields)
   if (count !== null) {
-    sent[count.name] = count.count
+    sent[count.name] = countOf(count, ask.count)
   }
   return sent
 }

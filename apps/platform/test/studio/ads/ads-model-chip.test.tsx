@@ -47,6 +47,7 @@ function stateWith(chosen: Record<string, FieldValue>[]): AdsScreenState {
     register: () => undefined,
   }
   return {
+    countApp: listing,
     form,
     lastSeed: null,
     hosted: noCatalog,

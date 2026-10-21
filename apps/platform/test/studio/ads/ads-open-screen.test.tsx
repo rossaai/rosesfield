@@ -1,3 +1,4 @@
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { cleanup, fireEvent, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t, tCatalog } from "@/copy/t"
@@ -151,7 +152,12 @@ describe("the Ads price", () => {
 
   it("asks the price of the whole count", async () => {
     const four: FormValues = { ...openingValues(), count: 4 }
-    openAds({ prices: [[openingValues(), 14.48], [four, 57.92]] })
+    openAds({
+      prices: [
+        [openingValues(), 14.48],
+        [four, 57.92],
+      ],
+    })
     expect(
       await screen.findByRole("button", { name: pricedName(14.48) })
     ).toBeDefined()
@@ -233,5 +239,79 @@ describe("Ads on a phone", () => {
     openAds({ runs: [adsRun({ inputs: { product: [photos[0] ?? ""] } })] })
     await vi.waitFor(bar)
     await vi.waitFor(() => expect(scrolled).toHaveBeenCalledWith(900))
+  })
+})
+
+const hostedEdit: CatalogModel = {
+  id: "maker/edit-two",
+  kind: "hosted",
+  maker: "Maker",
+  name: "Edit Two",
+  nameKey: null,
+  task: "image-edit",
+  tags: [{ kind: "hosted" }, { kind: "references", max: 4 }],
+  form: [
+    {
+      kind: "prompt",
+      name: "prompt",
+      path: "prompt",
+      required: true,
+      maxLength: 2000,
+      default: null,
+    },
+    {
+      kind: "media",
+      name: "input_images",
+      path: "input_images",
+      required: true,
+      media: "image",
+      min: 1,
+      max: 4,
+    },
+    {
+      kind: "number",
+      name: "n",
+      path: "n",
+      required: false,
+      min: 1,
+      max: 2,
+      integer: true,
+      default: 1,
+    },
+  ],
+}
+
+type SentRun = { inputs: Record<string, unknown>; count?: number }
+
+function sentRuns(): SentRun[] {
+  return startedRuns().map((call) => {
+    const body = call.body
+    if (typeof body !== "object" || body === null || !("inputs" in body)) {
+      throw new Error("a run started with no inputs")
+    }
+    return body as SentRun
+  })
+}
+
+describe("Ads on a hosted model", () => {
+  it("shows and sends the count the model takes, 2 for a count of 4", async () => {
+    openAds({
+      runs: [
+        adsRun({
+          inputs: { product: [photos[0] ?? ""], model: hostedEdit.id },
+          count: 4,
+        }),
+      ],
+      models: [hostedEdit],
+    })
+    await recreate()
+    await vi.waitFor(() =>
+      expect(
+        bar().querySelector("[data-slot=count-stepper] output")?.textContent
+      ).toBe("2/2")
+    )
+    generate()
+    await vi.waitFor(() => expect(startedRuns()).toHaveLength(1))
+    expect(sentRuns()[0]?.inputs.n).toBe(2)
   })
 })

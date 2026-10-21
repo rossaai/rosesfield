@@ -1,5 +1,6 @@
 export {
   type AdsHostedAsk,
+  adsCountMaxOf,
   adsHostedInputsOf,
   adsPhotoLimitOf,
 } from "#ads/ads-hosted"

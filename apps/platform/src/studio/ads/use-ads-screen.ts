@@ -23,7 +23,7 @@ import {
   type StartRun,
   useStartRun,
 } from "@/screens/app/use-start-run"
-import { adsHostedBodyOf } from "@/studio/ads/ads-hosted"
+import { adsHostedBodyOf, countAppOf } from "@/studio/ads/ads-hosted"
 import {
   type AdsKind,
   type AdsProblem,
@@ -43,6 +43,7 @@ import {
 
 export type AdsScreenState = {
   app: AppListing
+  countApp: AppListing
   form: AppForm
   start: StartRun
   hosted: HostedState
@@ -111,6 +112,23 @@ function useHostedBody(
   return (own) => adsHostedBodyOf(app, form.values, fields, characterPhoto, own)
 }
 
+function useCountApp(
+  app: AppListing,
+  form: AppForm,
+  hosted: HostedState
+): AppListing {
+  const fields = hosted.chosen?.form ?? null
+  const countApp = useMemo(() => countAppOf(app, fields), [app, fields])
+  const max = countApp.output.count.max
+  const { values, setForm } = form
+  useEffect(() => {
+    if (values.count > max) {
+      setForm({ count: max })
+    }
+  }, [values.count, max, setForm])
+  return countApp
+}
+
 function useBarText(app: AppListing, form: AppForm, kind: AdsKind) {
   const [text, setLocal] = useState("")
   const isSame = holdsBarText(app, form.values.inputs, kind, text)
@@ -157,6 +175,7 @@ export function useAdsScreen(app: AppListing, seeds: AppSeeds): AdsScreenState {
   const hosted = useAdsModels(app, form, runs.runs)
   const hostedBody = useHostedBody(app, form, hosted)
   const start = useStartRun(bodyApp, gate, undefined, hosted, hostedBody)
+  const countApp = useCountApp(app, form, hosted)
   const kind = kindOf(values)
   const barText = useBarText(app, form, kind)
   usePhotoOrder(app, form)
@@ -177,6 +196,7 @@ export function useAdsScreen(app: AppListing, seeds: AppSeeds): AdsScreenState {
   }
   return {
     app,
+    countApp,
     form,
     start: { ...start, generate },
     hosted,

@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { defaultsOf, type FieldValue } from "@/screens/app/app-form"
 import { hostedBody } from "@/screens/app/hosted/hosted-form"
-import { adsHostedBodyOf } from "@/studio/ads/ads-hosted"
+import { adsHostedBodyOf, countAppOf } from "@/studio/ads/ads-hosted"
 import { optionalApp } from "@/studio/ads/ads-rules"
 
 const listing = (() => {
@@ -165,5 +165,29 @@ describe("the body Ads sends a hosted model", () => {
     )
     expect(counts.inputs.n).toBe(4)
     expect(counts.count).toBeUndefined()
+  })
+})
+
+describe("the count Ads shows for a model", () => {
+  const twoAtMost: ModelField = {
+    kind: "number",
+    name: "n",
+    path: "n",
+    required: false,
+    min: 1,
+    max: 2,
+    integer: true,
+    default: 1,
+  }
+
+  it("is at most what the model's own count field takes", () => {
+    const shown = countAppOf(listing, [...fluxFields, twoAtMost])
+    expect(shown.output.count.max).toBe(2)
+    expect(shown.output.count.default).toBeLessThanOrEqual(2)
+  })
+
+  it("control: stays the app's own count for a graph model and for a model that makes one image at a time", () => {
+    expect(countAppOf(listing, null)).toBe(listing)
+    expect(countAppOf(listing, fluxFields)).toBe(listing)
   })
 })

@@ -1,6 +1,10 @@
 import type { ModelField } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
-import { adsHostedInputsOf, adsPhotoLimitOf } from "#ads/ads-hosted"
+import {
+  adsCountMaxOf,
+  adsHostedInputsOf,
+  adsPhotoLimitOf,
+} from "#ads/ads-hosted"
 import { adsPromptOf } from "#ads/ads-prompt"
 
 const productOne = "4d2c1b0a-9e8f-4a6b-8c5d-3e2f1a0b9c8d"
@@ -144,6 +148,35 @@ describe("the fields Ads fills on a hosted image edit model", () => {
         count: 1,
       })
     ).toEqual({ prompt: adsPromptOf(ad) })
+  })
+
+  it("caps the count at the most the model's own count field takes, so a count of 4 asks a model of 2 for 2", () => {
+    const twoAtMost: readonly ModelField[] = [
+      ...fields,
+      {
+        kind: "number",
+        name: "n",
+        path: "n",
+        required: false,
+        min: 1,
+        max: 2,
+        integer: true,
+        default: 1,
+      },
+    ]
+    const sent = adsHostedInputsOf({
+      inputs: ad,
+      fields: twoAtMost,
+      characterPhoto: null,
+      aspectRatio: null,
+      count: 4,
+    })
+    expect(sent.n).toBe(2)
+    expect(adsCountMaxOf(twoAtMost, 4)).toBe(2)
+  })
+
+  it("control: a model that makes one image at a time takes the app's whole count, since the run repeats the job", () => {
+    expect(adsCountMaxOf(fields, 4)).toBe(4)
   })
 })
 
