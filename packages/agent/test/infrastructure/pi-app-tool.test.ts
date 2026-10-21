@@ -116,7 +116,8 @@ describe("an app tool built from its catalog definition", () => {
     expect(generation.runs.count).toBe(0)
     expect(lastMessageOf(events)).toBe("refused")
     const [refusal] = results
-    expect(JSON.parse(refusal ?? "{}")).toMatchObject({
+    const envelope = /\{.*\}/.exec(refusal ?? "")?.[0] ?? "{}"
+    expect(JSON.parse(envelope)).toMatchObject({
       error: { code: "RUN_INPUT_INVALID", status: 400 },
     })
     expect(refusal).toMatch(/prompt[^\n]*2000/)
@@ -156,6 +157,7 @@ describe("an app tool built from its catalog definition", () => {
       })
     )
     expect(JSON.stringify(offered)).not.toContain("$schema")
+    expect(JSON.stringify(offered)).toContain('"maxLength":2000')
     const [runId] = generation.jobs.enqueued
     expect((await generation.runs.get(runId!))?.toRecord().count).toBe(2)
   })

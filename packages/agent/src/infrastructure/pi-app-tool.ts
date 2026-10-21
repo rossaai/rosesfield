@@ -1,4 +1,5 @@
-import type { TSchema } from "@earendil-works/pi-ai"
+import type { Tool, ToolCall } from "@earendil-works/pi-ai"
+import { validateToolArguments } from "@earendil-works/pi-ai/utils/validation"
 import type {
   ToolExecutionApi,
   ToolExecutionResult,
@@ -41,19 +42,6 @@ import { jsonOutput, toolParameters } from "#infrastructure/pi-tool-io"
 const idempotencyMemo = "idempotencyKey"
 const proposalMemo = "proposalId"
 const jsonBody = z.record(z.string(), z.json())
-const boundKeys: ReadonlySet<string> = new Set([
-  "minLength",
-  "maxLength",
-  "minimum",
-  "maximum",
-  "exclusiveMinimum",
-  "exclusiveMaximum",
-  "multipleOf",
-  "minItems",
-  "maxItems",
-  "pattern",
-  "format",
-])
 
 type AppToolOptions = {
   app: AppDefinition
@@ -75,45 +63,51 @@ function schemaOf(
     : publishedInputOf(app, forms)
 }
 
-const namedSchemaKeys: ReadonlySet<string> = new Set([
-  "properties",
-  "$defs",
-  "definitions",
-])
-
-function unboundedNamed(value: unknown): unknown {
-  return isRecord(value)
-    ? Object.fromEntries(
-        Object.entries(value).map(([name, inner]) => [name, unbounded(inner)])
+function issuesOf(schema: z.ZodType<unknown>, args: unknown): string[] {
+  const result = schema.safeParse(args)
+  return result.success
+    ? []
+    : result.error.issues.map(
+        (issue) => `${issue.path.join(".") || "body"}: ${issue.message}`
       )
-    : value
 }
 
-function unbounded(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(unbounded)
-  }
-  if (!isRecord(value)) {
-    return value
-  }
-  return Object.fromEntries(
-    Object.entries(value)
-      .filter(([key]) => !boundKeys.has(key))
-      .map(([key, inner]) => [
-        key,
-        namedSchemaKeys.has(key) ? unboundedNamed(inner) : unbounded(inner),
-      ])
-  )
+function refusalTextOf(error: ProjectError): string {
+  return JSON.stringify({ ...errorEnvelopeOf(error), message: error.message })
 }
 
-function shapeOf(schema: z.ZodType<unknown>): TSchema {
-  const shape = unbounded(toolParameters(schema))
-  return isRecord(shape) ? shape : {}
+function checkedArguments(
+  app: AppDefinition,
+  tool: Tool,
+  schema: z.ZodType<unknown>,
+  args: unknown
+): unknown {
+  try {
+    if (!isRecord(args)) {
+      throw new Error("The arguments are not an object")
+    }
+    const call: ToolCall = {
+      type: "toolCall",
+      id: tool.name,
+      name: tool.name,
+      arguments: jsonBody.parse(args),
+    }
+    return validateToolArguments(tool, call)
+  } catch (error) {
+    const found = issuesOf(schema, args)
+    const issues =
+      found.length > 0
+        ? found
+        : [error instanceof Error ? error.message : String(error)]
+    throw new Error(
+      refusalTextOf(new RunInputInvalidError({ appId: app.id, issues }))
+    )
+  }
 }
 
 function refusalOf(error: ProjectError): ToolExecutionResult {
   return {
-    output: jsonOutput({ ...errorEnvelopeOf(error), message: error.message }),
+    output: [{ type: "text", text: refusalTextOf(error) }],
     isError: true,
   }
 }
@@ -122,11 +116,16 @@ export function appTool(options: AppToolOptions): ToolRegistration {
   const { app, handlers } = options
   const schema = schemaOf(app, options.forms ?? [])
   const wait = options.wait ?? timerWait
-  return {
+  const tool: Tool = {
     name: app.id,
     description: agentCopy.tools.app(app),
-    parameters: shapeOf(schema),
+    parameters: toolParameters(schema),
+  }
+  return {
+    ...tool,
     replay: "unsafe",
+    prepareArguments: (args: unknown) =>
+      checkedArguments(app, tool, schema, args),
     execute: async (args: unknown, api, context) => {
       try {
         return await runApp({ app, schema, handlers, wait }, args, api, context)
@@ -257,10 +256,10 @@ function parseRequest(
   if (result.success) {
     return requestOf(app, result.data)
   }
-  const issues = result.error.issues.map(
-    (issue) => `${issue.path.join(".") || "body"}: ${issue.message}`
-  )
-  throw new RunInputInvalidError({ appId: app.id, issues })
+  throw new RunInputInvalidError({
+    appId: app.id,
+    issues: issuesOf(schema, args),
+  })
 }
 
 export function proposalOf(record: ProposalRecord): Proposal {
