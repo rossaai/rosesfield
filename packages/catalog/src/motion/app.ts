@@ -31,6 +31,13 @@ export const app: AppInput = defineApp({
       max: 1,
     },
     {
+      type: "choice",
+      name: "model",
+      labelKey: "motion.input.model.label",
+      options: [{ value: graphModel, labelKey: "motion.model.ltx23" }],
+      default: graphModel,
+    },
+    {
       type: "toggle",
       name: "sound",
       labelKey: "motion.input.sound.label",

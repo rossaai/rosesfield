@@ -98,6 +98,7 @@ describe("the motion app through the gateway on the demo engine", () => {
     expect(done.inputs).toEqual({
       photo: [photo],
       clip: [clip],
+      model: "ltx-2-3-control",
       sound: "off",
       scene: "A rooftop at noon",
       resolution: "720p",

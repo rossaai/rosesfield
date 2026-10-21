@@ -22,6 +22,8 @@ export type ModelTask =
   | "relight"
   | "try-on"
   | "expand"
+  | "motion-transfer"
+  | "character-swap"
   | "chat"
 
 type Slot = FieldRole | "video" | "audio" | "mask"
@@ -57,6 +59,8 @@ export const modelTasks: readonly ModelTask[] = [
   "relight",
   "try-on",
   "expand",
+  "motion-transfer",
+  "character-swap",
   "chat",
 ]
 
@@ -131,6 +135,11 @@ export const nameRules: readonly NameRule[] = [
   { task: "expand", pattern: /expand|outpaint/ },
   { task: "lip-sync", pattern: /lip-sync|lipsync|sync-3|avatar/ },
   { task: "sound", pattern: /sfx|sound-effect/ },
+  { task: "motion-transfer", pattern: /motion-transfer|motion-control/ },
+  {
+    task: "character-swap",
+    pattern: /character-swap|character-replace|swap-character/,
+  },
 ]
 
 function slotOf(field: ModelField, output: string): Slot | null {

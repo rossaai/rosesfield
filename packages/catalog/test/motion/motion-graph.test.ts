@@ -43,13 +43,23 @@ describe("the motion graph", () => {
     )
   })
 
-  it("lists no hosted video model of the catalog, so no Wan model and no partner model shows", () => {
+  it("lists the LTX 2.3 control graph first, then each Router model named for a task, and no Wan, reference or other video model", () => {
     const listed = modelsForApp(motion, [
       hosted("wan/wan2.2-animate", ["image", "video"]),
-      hosted("kling/kling-motion-control", ["image", "video"]),
+      hosted("higgsfield/higgsfield-genjutsu-motion-transfer-v1.0", [
+        "image",
+        "video",
+      ]),
+      hosted("kling/kling-v3-motion-control", ["image", "video"]),
+      hosted("lab/lab-character-swap-v1", ["image", "video"]),
       hosted("ltx/ltx-2-3-pro", ["image"]),
     ])
-    expect(listed).toEqual([])
+    expect(listed.map((one) => [one.id, one.kind, one.task])).toEqual([
+      ["ltx-2-3-control", "graph", "motion-transfer"],
+      ["kling/kling-v3-motion-control", "hosted", "motion-transfer"],
+      ["lab/lab-character-swap-v1", "hosted", "character-swap"],
+    ])
+    expect(listed[0]?.nameKey).toBe("motion.model.ltx23")
   })
 
   it("loads no Wan file, and the Wan Animate 2, SCAIL-2 and Wan VACE graphs and the Recast app are gone", () => {

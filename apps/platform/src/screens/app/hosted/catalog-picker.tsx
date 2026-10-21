@@ -41,6 +41,8 @@ const lineKeys: Readonly<Record<string, string>> = {
   relight: "model.line.relight",
   "try-on": "model.line.tryOn",
   expand: "model.line.expand",
+  "motion-transfer": "model.line.motionTransfer",
+  "character-swap": "model.line.characterSwap",
   chat: "model.line.chat",
 }
 

@@ -45,8 +45,8 @@ export function tabOfHash(hash: string): MotionTab {
   return hash.replace(/^#/, "") === swapHash ? "swap" : "move"
 }
 
-function isGraph(model: CatalogModel): boolean {
-  return model.form === null
+export function isGraph(model: CatalogModel): boolean {
+  return model.kind === "graph"
 }
 
 export function tabsOfModel(model: CatalogModel): MotionTab[] {

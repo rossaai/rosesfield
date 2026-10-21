@@ -39,6 +39,15 @@ describe("Motion's tabs", () => {
     ])
   })
 
+  it("keeps a Router model whose schema is not read yet on the tab of its task, with its own wells", () => {
+    const unread = { ...swapper, id: "lab/swap-v2", form: null }
+    expect(tabsOfModel(unread)).toEqual(["swap"])
+    expect(modelsOfTab([graph, unread], "move").map((one) => one.id)).toEqual([
+      graphId,
+    ])
+    expect(clipRangeOf(listing, unread)).not.toEqual(graphClipRange)
+  })
+
   it("keeps the chosen model on a tab that serves it, and moves a model to the tab of its task", () => {
     const swap = modelsOfTab(catalog, "swap")
     expect(modelForTab(swap, [mover.id, graphId])?.id).toBe(graphId)
