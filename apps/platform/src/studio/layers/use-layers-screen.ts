@@ -1,6 +1,5 @@
 import type { AppListing, Run } from "@rosesfield/contract"
 import { useQuery } from "@tanstack/react-query"
-import { runQuery } from "@/api/queries"
 import {
   type KeyboardEvent,
   type RefObject,
@@ -10,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { runQuery } from "@/api/queries"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
@@ -269,17 +269,21 @@ function useLayersCatalog(
   return models
 }
 
-function useFromRun(
-  app: AppListing,
-  from: string | undefined,
-  isReady: boolean,
+type FromRun = {
+  app: AppListing
+  from: string | undefined
+  runs: ReturnType<typeof useAppRuns>
+  isReady: boolean
   apply: (run: Run) => void
-): void {
+}
+
+function useFromRun({ app, from, runs, isReady, apply }: FromRun): void {
+  const held = runs.runs.find((one) => one.id === from)
   const query = useQuery({
     ...runQuery(from ?? ""),
-    enabled: from !== undefined,
+    enabled: from !== undefined && !runs.isPending && held === undefined,
   })
-  const run = query.data?.run
+  const run = held ?? query.data?.run
   const applied = useRef(false)
   useEffect(() => {
     if (applied.current || !isReady || run === undefined) {
@@ -341,7 +345,13 @@ export function useLayersScreen(
   const focusSource = useRef<() => void>(() => undefined)
   useLayerValue(mode, layers.pickedRow?.shown ?? null, form)
   const actions = runActionsOf({ app, form, catalog, setPreferred, onStarted })
-  useFromRun(app, seeds.from, !catalog.hosted.isLoading, actions.useInputs)
+  useFromRun({
+    app,
+    from: seeds.from,
+    runs,
+    isReady: !catalog.hosted.isLoading,
+    apply: actions.useInputs,
+  })
   const start = useStartFor({
     app,
     mode,

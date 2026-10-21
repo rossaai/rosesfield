@@ -47,6 +47,7 @@ function openLayers(options: {
   runs: readonly Run[]
   use?: string
   from?: Run
+  isFromFetched?: boolean
   hasCatalog?: boolean
 }): void {
   const client = new QueryClient({
@@ -60,9 +61,9 @@ function openLayers(options: {
     pageParams: [null],
   })
   if (options.hasCatalog === true) {
-    vi.stubGlobal("fetch", answerCatalog)
+    vi.stubGlobal("fetch", answerGateway)
   }
-  if (options.from !== undefined) {
+  if (options.from !== undefined && options.isFromFetched !== false) {
     client.setQueryData(runQuery(options.from.id).queryKey, {
       run: options.from,
     })
@@ -104,12 +105,25 @@ function openLayers(options: {
 
 const catalogPath = `/api/apps/${layersListing.id}/models`
 
-function answerCatalog(input: RequestInfo | URL): Promise<Response> {
+const asked: string[] = []
+
+const served: Run[] = []
+
+function bodyOf(pathname: string): unknown {
+  if (pathname === catalogPath) {
+    return { models: [...catalog], defaultModel: null, refusal: null }
+  }
+  const run = served.find((one) => pathname === `/api/runs/${one.id}`)
+  return run === undefined ? undefined : { run }
+}
+
+function answerGateway(input: RequestInfo | URL): Promise<Response> {
   const url = new URL(String(input), "http://localhost")
-  if (url.pathname !== catalogPath) {
+  asked.push(url.pathname)
+  const body = bodyOf(url.pathname)
+  if (body === undefined) {
     return new Promise(() => undefined)
   }
-  const body = { models: [...catalog], defaultModel: null, refusal: null }
   return Promise.resolve(
     new Response(JSON.stringify(body), {
       status: 200,
@@ -129,6 +143,8 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  asked.length = 0
+  served.length = 0
   cleanup()
   resetFrames()
   vi.unstubAllGlobals()
@@ -202,6 +218,45 @@ describe("Use these inputs on a hosted split run in History", () => {
     expect(
       screen.getAllByRole("list", { name: tCatalog("layers.stack.title") })
     ).not.toHaveLength(0)
+  })
+})
+
+describe("Use these inputs on a run History already holds", () => {
+  const heldSplit = layersRun({
+    id: "8e2f3041-5b6c-4d7e-9f80-a12b3c4d5e6f",
+    minute: 5,
+    inputs: { mode: "split", model: seedream.id, image: [photo], size: "2K" },
+    outputs: [firstLayer, secondLayer],
+  })
+
+  it("fills the form from the held run and never asks for it again", async () => {
+    openLayers({
+      runs: [heldSplit],
+      from: heldSplit,
+      isFromFetched: false,
+      hasCatalog: true,
+    })
+    expect(await pickerNamed(seedream.name)).not.toBeNull()
+    expect(
+      await screen.findByRole("button", { name: t("field.asset.remove") })
+    ).not.toBeNull()
+    expect(asked).toContain(catalogPath)
+    expect(asked.filter((path) => path.includes(heldSplit.id))).toEqual([])
+  })
+
+  it("control: asks for a run History does not hold", async () => {
+    served.push(heldSplit)
+    openLayers({
+      runs: [],
+      from: heldSplit,
+      isFromFetched: false,
+      hasCatalog: true,
+    })
+    expect(await pickerNamed(seedream.name)).not.toBeNull()
+    expect(
+      await screen.findByRole("button", { name: t("field.asset.remove") })
+    ).not.toBeNull()
+    expect(asked).toContain(`/api/runs/${heldSplit.id}`)
   })
 })
 
