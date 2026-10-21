@@ -192,7 +192,6 @@ describe("a Storyboard run through the local gateway on the demo engine", () => 
           sceneCount: "2",
           scene1: "she opens a window",
           scene2: "she waters the plants",
-          model: "flux-2-klein-4b",
         },
         aspectRatio: "9:16",
       },
