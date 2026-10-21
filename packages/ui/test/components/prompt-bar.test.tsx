@@ -57,6 +57,21 @@ describe("PromptBar", () => {
   })
 })
 
+describe("PromptBar's focus", () => {
+  it("rings the prompt 2 px outside its row when the field takes keyboard focus", () => {
+    const { field } = renderBar()
+    const row = field.closest("[data-slot='composer-prompt']")
+    expect(row?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "outline-hor-text",
+        "has-[textarea:focus-visible]:outline-solid",
+        "has-[textarea:focus-visible]:outline-(length:--spacing-focus-ring)",
+        "has-[textarea:focus-visible]:outline-offset-(--spacing-focus-ring)",
+      ])
+    )
+  })
+})
+
 describe("PromptBar's Generate", () => {
   it("holds its label, then the price, and names both", () => {
     render(

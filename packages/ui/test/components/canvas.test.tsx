@@ -148,3 +148,37 @@ describe("Canvas scroll and inset", () => {
     expect(classes).not.toContain("px-4")
   })
 })
+
+describe("Canvas ring room in the page gutter", () => {
+  it("clips nothing at its own edge and gives its scroller ring room on every side, so a ring on the edge shows whole", () => {
+    render(
+      <Canvas label="History" tabs={<span>Tabs</span>} hasRuns inset="page">
+        <p>Runs</p>
+      </Canvas>
+    )
+    const canvas = screen.getByRole("region", { name: "History" })
+    expect(canvas.className.split(" ")).not.toContain("overflow-hidden")
+    expect(canvas.className.split(" ")).toContain("overflow-visible")
+    const scroll = canvas.querySelector("[data-slot='canvas-scroll']")
+    expect(scroll?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "-m-[calc(var(--spacing-focus-ring)*2)]",
+        "p-[calc(var(--spacing-focus-ring)*2)]",
+      ])
+    )
+  })
+
+  it("keeps a card canvas clipped to its corners with ring room above its first row", () => {
+    render(
+      <Canvas label="Output" tabs={<span>Tabs</span>} hasRuns>
+        <p>Runs</p>
+      </Canvas>
+    )
+    const canvas = screen.getByRole("region", { name: "Output" })
+    expect(canvas.className.split(" ")).toContain("overflow-hidden")
+    const scroll = canvas.querySelector("[data-slot='canvas-scroll']")
+    expect(scroll?.className.split(" ")).not.toContain(
+      "-m-[calc(var(--spacing-focus-ring)*2)]"
+    )
+  })
+})
