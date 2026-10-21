@@ -131,28 +131,33 @@ describe("a Try-on run through the gateway on the demo engine", () => {
     expect(gateway.jobs.enqueued).toEqual([])
   })
 
-  it.each(["qwen-image-edit-2511-lightning", "flux2-klein-4b"])(
-    "runs %s with a fixed seed and stores the model and the seed",
-    async (model) => {
-      const gateway = openGateway()
-      const person = await upload(gateway)
-      const clothes = await upload(gateway)
-      const response = await start(gateway, {
-        inputs: { person: [person], clothes: [clothes], model, seed: 7 },
-      })
-      expect(response.status).toBe(202)
-      const started = runResponse.parse(await response.json()).run
-      await gateway.drive(started.id)
-      const read = await gateway.call(
-        buildPath(routes.getRun.path, { runId: started.id })
-      )
-      const done = runResponse.parse(await read.json()).run
-      expect(done.status).toBe("done")
-      expect(done.inputs).toMatchObject({ model, part: "all" })
-      expect(done.seed).toBe(7)
-      expect(done.outputs).toHaveLength(1)
-    }
-  )
+  it("runs the Qwen try-on graph with a fixed seed and stores the model and the seed", async () => {
+    const gateway = openGateway()
+    const person = await upload(gateway)
+    const clothes = await upload(gateway)
+    const response = await start(gateway, {
+      inputs: {
+        person: [person],
+        clothes: [clothes],
+        model: "qwen-image-edit-2511",
+        seed: 7,
+      },
+    })
+    expect(response.status).toBe(202)
+    const started = runResponse.parse(await response.json()).run
+    await gateway.drive(started.id)
+    const read = await gateway.call(
+      buildPath(routes.getRun.path, { runId: started.id })
+    )
+    const done = runResponse.parse(await read.json()).run
+    expect(done.status).toBe("done")
+    expect(done.inputs).toMatchObject({
+      model: "qwen-image-edit-2511",
+      part: "all",
+    })
+    expect(done.seed).toBe(7)
+    expect(done.outputs).toHaveLength(1)
+  })
 
   it("refuses a run without a Person photo and a model the app does not list", async () => {
     const gateway = openGateway()
@@ -163,14 +168,16 @@ describe("a Try-on run through the gateway on the demo engine", () => {
     expect(errorEnvelope.parse(await noPerson.json()).error.code).toBe(
       "RUN_INPUT_INVALID"
     )
-    const unlisted = await start(gateway, {
-      inputs: {
-        person: [person],
-        clothes: [clothes],
-        model: "flux2-klein-9b-tryon",
-      },
-    })
-    expect(unlisted.status).toBe(400)
+    for (const model of [
+      "flux2-klein-9b-tryon",
+      "qwen-image-edit-2511-lightning",
+      "flux2-klein-4b",
+    ]) {
+      const unlisted = await start(gateway, {
+        inputs: { person: [person], clothes: [clothes], model },
+      })
+      expect(unlisted.status, model).toBe(400)
+    }
     expect(gateway.jobs.enqueued).toEqual([])
   })
 })

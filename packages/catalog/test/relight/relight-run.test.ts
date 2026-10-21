@@ -170,14 +170,13 @@ describe("a Relight run on the demo engine", () => {
     expect([...(output?.bytes.slice(0, 8) ?? [])]).toEqual(pngSignature)
   })
 
-  it("makes 4 outputs at a count of 4 with a fixed seed on 2511 at final", async () => {
+  it("makes 4 outputs at a count of 4 with a fixed seed on 2509 at final", async () => {
     const { finished } = await runToEnd({
       inputs: {
         image: [photoId],
         brightness: 2,
         prompt: "Light from a candle on the table",
         quality: "final",
-        model: "qwen-image-edit-2511",
         seed: 7,
       },
       count: 4,

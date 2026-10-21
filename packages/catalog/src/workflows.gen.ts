@@ -49,8 +49,6 @@ import wRecastObjectWanVaceApi from "../../../workflows/recast-object-wan-vace/r
 import wRecastObjectWanVaceEntry from "../../../workflows/recast-object-wan-vace/entry.json"
 import wRelightQwenImageEdit2509Api from "../../../workflows/relight-qwen-image-edit-2509/relight-qwen-image-edit-2509.api.json"
 import wRelightQwenImageEdit2509Entry from "../../../workflows/relight-qwen-image-edit-2509/entry.json"
-import wRelightQwenImageEdit2511Api from "../../../workflows/relight-qwen-image-edit-2511/relight-qwen-image-edit-2511.api.json"
-import wRelightQwenImageEdit2511Entry from "../../../workflows/relight-qwen-image-edit-2511/entry.json"
 import wShotLtx25Api from "../../../workflows/shot-ltx-2-5/shot-ltx-2-5.api.json"
 import wShotLtx25Entry from "../../../workflows/shot-ltx-2-5/entry.json"
 import wShotWan22FunCameraApi from "../../../workflows/shot-wan-2-2-fun-camera/shot-wan-2-2-fun-camera.api.json"
@@ -63,12 +61,8 @@ import wStoryboardQwenImageEdit2511Api from "../../../workflows/storyboard-qwen-
 import wStoryboardQwenImageEdit2511Entry from "../../../workflows/storyboard-qwen-image-edit-2511/entry.json"
 import wStoryboardQwenImageEdit2511FromTextApi from "../../../workflows/storyboard-qwen-image-edit-2511-from-text/storyboard-qwen-image-edit-2511-from-text.api.json"
 import wStoryboardQwenImageEdit2511FromTextEntry from "../../../workflows/storyboard-qwen-image-edit-2511-from-text/entry.json"
-import wTryOnFlux2Klein4bApi from "../../../workflows/try-on-flux-2-klein-4b/try-on-flux-2-klein-4b.api.json"
-import wTryOnFlux2Klein4bEntry from "../../../workflows/try-on-flux-2-klein-4b/entry.json"
 import wTryOnQwenImageEdit2511Api from "../../../workflows/try-on-qwen-image-edit-2511/try-on-qwen-image-edit-2511.api.json"
 import wTryOnQwenImageEdit2511Entry from "../../../workflows/try-on-qwen-image-edit-2511/entry.json"
-import wTryOnQwenImageEdit2511LightningApi from "../../../workflows/try-on-qwen-image-edit-2511-lightning/try-on-qwen-image-edit-2511-lightning.api.json"
-import wTryOnQwenImageEdit2511LightningEntry from "../../../workflows/try-on-qwen-image-edit-2511-lightning/entry.json"
 import wUpscaleImageRealEsrganApi from "../../../workflows/upscale-image-real-esrgan/upscale-image-real-esrgan.api.json"
 import wUpscaleImageRealEsrganEntry from "../../../workflows/upscale-image-real-esrgan/entry.json"
 import wUpscaleImageSeedvr2Api from "../../../workflows/upscale-image-seedvr2/upscale-image-seedvr2.api.json"
@@ -118,16 +112,13 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "recast-character-scail-2", entry: wRecastCharacterScail2Entry, graph: wRecastCharacterScail2Api },
   { folder: "recast-object-wan-vace", entry: wRecastObjectWanVaceEntry, graph: wRecastObjectWanVaceApi },
   { folder: "relight-qwen-image-edit-2509", entry: wRelightQwenImageEdit2509Entry, graph: wRelightQwenImageEdit2509Api },
-  { folder: "relight-qwen-image-edit-2511", entry: wRelightQwenImageEdit2511Entry, graph: wRelightQwenImageEdit2511Api },
   { folder: "shot-ltx-2-5", entry: wShotLtx25Entry, graph: wShotLtx25Api },
   { folder: "shot-wan-2-2-fun-camera", entry: wShotWan22FunCameraEntry, graph: wShotWan22FunCameraApi },
   { folder: "storyboard-flux-2-klein-4b", entry: wStoryboardFlux2Klein4bEntry, graph: wStoryboardFlux2Klein4bApi },
   { folder: "storyboard-flux-2-klein-4b-from-text", entry: wStoryboardFlux2Klein4bFromTextEntry, graph: wStoryboardFlux2Klein4bFromTextApi },
   { folder: "storyboard-qwen-image-edit-2511", entry: wStoryboardQwenImageEdit2511Entry, graph: wStoryboardQwenImageEdit2511Api },
   { folder: "storyboard-qwen-image-edit-2511-from-text", entry: wStoryboardQwenImageEdit2511FromTextEntry, graph: wStoryboardQwenImageEdit2511FromTextApi },
-  { folder: "try-on-flux-2-klein-4b", entry: wTryOnFlux2Klein4bEntry, graph: wTryOnFlux2Klein4bApi },
   { folder: "try-on-qwen-image-edit-2511", entry: wTryOnQwenImageEdit2511Entry, graph: wTryOnQwenImageEdit2511Api },
-  { folder: "try-on-qwen-image-edit-2511-lightning", entry: wTryOnQwenImageEdit2511LightningEntry, graph: wTryOnQwenImageEdit2511LightningApi },
   { folder: "upscale-image-real-esrgan", entry: wUpscaleImageRealEsrganEntry, graph: wUpscaleImageRealEsrganApi },
   { folder: "upscale-image-seedvr2", entry: wUpscaleImageSeedvr2Entry, graph: wUpscaleImageSeedvr2Api },
   { folder: "upscale-video-real-esrgan", entry: wUpscaleVideoRealEsrganEntry, graph: wUpscaleVideoRealEsrganApi },

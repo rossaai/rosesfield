@@ -142,63 +142,6 @@ describe("the Relight engine request", () => {
     expect(brokenLinks(workflow)).toEqual([])
   })
 
-  it("drops the Lightning LoRA from 2511 at final and records only the files it loads", async () => {
-    const { workflow, submission } = await submitted(
-      requestFor({
-        image: [photoId],
-        model: "qwen-image-edit-2511",
-        quality: "final",
-      })
-    )
-    expect(workflow["6"]).toBeUndefined()
-    expect(workflow["8"]?.inputs.model).toEqual(["3", 0])
-    expect(workflow["14"]?.inputs).toMatchObject({ steps: 40, cfg: 4 })
-    expect(submission.models).toEqual([
-      "qwen_image_edit_2511_fp8mixed.safetensors",
-      "qwen_2.5_vl_7b_fp8_scaled.safetensors",
-      "qwen_image_vae.safetensors",
-    ])
-    expect(brokenLinks(workflow)).toEqual([])
-  })
-
-  it("sends 2511 with no relight LoRA, no trigger word and the reference method", async () => {
-    const { workflow, submission } = await submitted(
-      requestFor({
-        image: [photoId],
-        direction: "right",
-        model: "qwen-image-edit-2511",
-      })
-    )
-    expect(workflow["7"]).toBeUndefined()
-    expect(workflow["26"]).toBeUndefined()
-    expect(workflow).toMatchObject({
-      "3": {
-        inputs: { unet_name: "qwen_image_edit_2511_fp8mixed.safetensors" },
-      },
-      "6": {
-        inputs: {
-          model: ["3", 0],
-          lora_name:
-            "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
-        },
-      },
-      "8": { inputs: { model: ["6", 0], shift: 3.1 } },
-      "17": {
-        class_type: "FluxKontextMultiReferenceLatentMethod",
-        inputs: { conditioning: ["10", 0] },
-      },
-      "18": { inputs: { conditioning: ["11", 0] } },
-      "14": { inputs: { positive: ["17", 0], negative: ["18", 0] } },
-    })
-    expect(promptSent(workflow)).toBe(
-      "Relight the photo with light from the right side of the picture."
-    )
-    expect(submission.models).not.toContain(
-      "Qwen-Image-Edit-2509-Relight.safetensors"
-    )
-    expect(brokenLinks(workflow)).toEqual([])
-  })
-
   it("names a link to a node the workflow does not hold", () => {
     const planted: Workflow = {
       "8": { class_type: "ModelSamplingAuraFlow", inputs: { model: ["7", 0] } },
