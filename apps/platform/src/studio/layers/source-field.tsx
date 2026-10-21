@@ -25,12 +25,18 @@ type SourceFieldProps = {
   onSize: (size: PixelSize) => void
 }
 
-export function refusalOf(bytes: number, size: PixelSize): string | null {
+export function refusalOf(
+  bytes: number,
+  size: PixelSize | null
+): string | null {
   if (bytes > maxBytes) {
     return t("field.asset.tooLarge", {
       size: formatBytes(bytes),
       limit: formatBytes(maxBytes),
     })
+  }
+  if (size === null) {
+    return null
   }
   const shorter = Math.min(size.width, size.height)
   if (shorter < minSide) {
@@ -56,33 +62,37 @@ function useSourceCheck(props: SourceFieldProps): {
   const client = useQueryClient()
   const [message, setMessage] = useState<string | null>(null)
   const [first = null] = listOf(props.value)
-  const { onChange, onSize } = props
+  const answers = useRef({ onChange: props.onChange, onSize: props.onSize })
+  answers.current = { onChange: props.onChange, onSize: props.onSize }
   useEffect(() => {
     if (first === null) {
       return
     }
     let isCurrent = true
     const check = async (): Promise<void> => {
-      const [{ asset }, size] = await Promise.all([
-        client.fetchQuery(assetQuery(first)),
-        sizeOfAsset(first),
-      ])
-      if (!isCurrent || size === null) {
+      const { asset } = await client.fetchQuery(assetQuery(first))
+      const size =
+        asset.width === null || asset.height === null
+          ? await sizeOfAsset(first)
+          : { width: asset.width, height: asset.height }
+      if (!isCurrent) {
         return
       }
       const refusal = refusalOf(asset.bytes, size)
       setMessage(refusal)
       if (refusal === null) {
-        onSize(size)
+        if (size !== null) {
+          answers.current.onSize(size)
+        }
       } else {
-        onChange([])
+        answers.current.onChange([])
       }
     }
     void check()
     return () => {
       isCurrent = false
     }
-  }, [client, first, onChange, onSize])
+  }, [client, first])
   return { message, setMessage }
 }
 

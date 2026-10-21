@@ -12,7 +12,7 @@ import { isDeniedModel } from "#comfy/model-deny"
 import { factsOf } from "#comfy/model-facts"
 import { makerOf, nameOf } from "#comfy/model-names"
 import { hostedTagsOf } from "#comfy/model-tags"
-import { tasksOfModel } from "#comfy/model-tasks"
+import { namedTasksOf, tasksOfModel } from "#comfy/model-tasks"
 import { isProvenFamily } from "#comfy/proven-families"
 
 export const graphMaker = "comfy-cloud"
@@ -46,9 +46,7 @@ export function modelsForApp(
     return []
   }
   const listed = hosted.flatMap((model) => {
-    const task = tasksOfModel(model, app.output.kind).find((one) =>
-      tasks.includes(one)
-    )
+    const task = appTaskOf(model, tasks, app.output.kind)
     return task === undefined || isDeniedModel(model.id)
       ? []
       : [hostedEntry(model, task)]
@@ -59,6 +57,18 @@ export function modelsForApp(
     ...sorted.filter(isOpenWeights),
     ...sorted.filter((model) => !isOpenWeights(model)),
   ]
+}
+
+function appTaskOf(
+  model: HostedModel,
+  tasks: readonly string[],
+  media: string
+): string | undefined {
+  const listed = (one: string): boolean => tasks.includes(one)
+  return (
+    namedTasksOf(model, media).find(listed) ??
+    tasksOfModel(model, media).find(listed)
+  )
 }
 
 function hostedEntry(model: HostedModel, task: string): CatalogModel {

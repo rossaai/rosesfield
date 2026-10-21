@@ -26,6 +26,8 @@ export type ModelTask =
   | "expand"
   | "motion-transfer"
   | "character-swap"
+  | "layer-separation"
+  | "inpaint"
   | "chat"
 
 type Slot = FieldRole | "video" | "audio" | "mask"
@@ -44,6 +46,12 @@ type NameRule = {
   pattern: RegExp
   replaces?: readonly ModelTask[]
   media?: "kept"
+}
+
+type FieldRule = {
+  task: ModelTask
+  path: string
+  kind: ModelField["kind"]
 }
 
 export const modelTasks: readonly ModelTask[] = [
@@ -67,6 +75,8 @@ export const modelTasks: readonly ModelTask[] = [
   "expand",
   "motion-transfer",
   "character-swap",
+  "layer-separation",
+  "inpaint",
   "chat",
 ]
 
@@ -146,7 +156,33 @@ export const nameRules: readonly NameRule[] = [
     task: "character-swap",
     pattern: /character-swap|character-replace|swap-character/,
   },
+  { task: "layer-separation", pattern: /layer-separation|layered/ },
+  { task: "inpaint", pattern: /inpaint|-fill\b/ },
 ]
+
+const fieldRules: readonly FieldRule[] = [
+  { task: "layer-separation", path: "layer_decomposition", kind: "toggle" },
+]
+
+/** Finds the field of a model's form that switches the model to the given task, such as Seedream's layer_decomposition for layer separation. */
+export function taskFieldOf(
+  fields: readonly ModelField[],
+  task: string
+): ModelField | null {
+  const rule = fieldRules.find((one) => one.task === task)
+  return rule === undefined
+    ? null
+    : (fields.find(
+        (one) => one.path === rule.path && one.kind === rule.kind
+      ) ?? null)
+}
+
+function fieldTasksOf(model: HostedModel): ModelTask[] {
+  const fields = model.form?.fields ?? []
+  return fieldRules
+    .filter((rule) => taskFieldOf(fields, rule.task) !== null)
+    .map((rule) => rule.task)
+}
 
 function slotOf(field: ModelField, output: string): Slot | null {
   if (field.kind !== "media") {
@@ -208,7 +244,20 @@ function fitsName(
   )
 }
 
-/** Lists the tasks a model can run, from the media it takes and makes, the inputs its form needs and, for an app that makes the given media, the tasks that keep that media. A name rule can replace a task the media alone would give. */
+export function namedTasksOf(
+  model: HostedModel,
+  media: string | null = null
+): ModelTask[] {
+  const named = [
+    ...nameRules
+      .filter((rule) => fitsName(model, rule, media))
+      .map((rule) => rule.task),
+    ...fieldTasksOf(model),
+  ]
+  return modelTasks.filter((task) => named.includes(task))
+}
+
+/** Lists the tasks a model can run, from the media it takes and makes, the inputs its form needs, the fields that switch it to a task and, for an app that makes the given media, the tasks that keep that media. A name rule can replace a task the media alone would give. */
 export function tasksOfModel(
   model: HostedModel,
   media: string | null = null
@@ -219,7 +268,7 @@ export function tasksOfModel(
     .filter((rule) => fits(model, rule))
     .map((rule) => rule.task)
     .filter((task) => !replaced.includes(task))
-  const fromName = named.map((rule) => rule.task)
+  const fromName = [...named.map((rule) => rule.task), ...fieldTasksOf(model)]
   return modelTasks.filter(
     (task) => fromMedia.includes(task) || fromName.includes(task)
   )

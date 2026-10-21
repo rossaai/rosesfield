@@ -26,6 +26,7 @@ import type {
 import { acceptedInputsOf, imageProblemsOf } from "#domain/image-accept"
 import { isRecord } from "#domain/is-record"
 import type { JobRunner } from "#domain/job-runner.port"
+import { chooserInputsOf } from "#domain/model-choosers"
 import { checkModelInputs, type ModelForm } from "#domain/model-form"
 import type { ModelPolicy } from "#domain/model-policy.port"
 import { Run } from "#domain/run"
@@ -185,22 +186,12 @@ export class StartRunHandler {
       throw new ModelNotFoundError({ model })
     }
     await this.checkOffered(app, described.engine, model)
-    const checked = checkModelInputs(described.form, given)
-    const issues = checked.kind === "invalid" ? [...checked.issues] : []
-    const count = countOf(app, described.form, body.count, issues)
-    if (body.aspectRatio !== undefined && body.aspectRatio !== null) {
-      issues.push(
-        "aspectRatio: a hosted model sets its own aspect in its inputs"
-      )
-    }
-    if (checked.kind === "invalid" || issues.length > 0) {
-      throw new RunInputInvalidError({ appId: app.id, issues })
-    }
+    const request = hostedRequestOf(app, described.form, body, given)
     return {
       engine,
       binding,
-      request: { inputs: checked.inputs, count, aspectRatio: null },
-      outputsPerJob: count > 1 ? "one" : "all",
+      request,
+      outputsPerJob: request.count > 1 ? "one" : "all",
     }
   }
 
@@ -308,6 +299,32 @@ export class StartRunHandler {
     }
     const random = crypto.getRandomValues(new Uint32Array(1))[0] ?? 0
     return random % (StartRunHandler.maxSeed + 1)
+  }
+}
+
+function hostedRequestOf(
+  app: AppDefinition,
+  form: ModelForm,
+  body: Record<string, unknown>,
+  given: Record<string, unknown>
+): RunRequest {
+  const choosers = chooserInputsOf(app, given, form)
+  const checked = checkModelInputs(form, choosers.rest)
+  const issues = [
+    ...(checked.kind === "invalid" ? checked.issues : []),
+    ...choosers.issues,
+  ]
+  const count = countOf(app, form, body.count, issues)
+  if (body.aspectRatio !== undefined && body.aspectRatio !== null) {
+    issues.push("aspectRatio: a hosted model sets its own aspect in its inputs")
+  }
+  if (checked.kind === "invalid" || issues.length > 0) {
+    throw new RunInputInvalidError({ appId: app.id, issues })
+  }
+  return {
+    inputs: { ...checked.inputs, ...choosers.inputs },
+    count,
+    aspectRatio: null,
   }
 }
 

@@ -1,12 +1,18 @@
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { type AppListing, type Run, routes } from "@rosesfield/contract"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { callRoute } from "@/api/call-route"
 import { settingsQuery } from "@/api/queries"
 import { uploadAsset } from "@/api/upload-asset"
-import { t } from "@/copy/t"
 import { storeRun } from "@/pieces/run/run-actions"
+import type { FormValues, StartRunBodyInput } from "@/screens/app/app-form"
 import type { AppForm } from "@/screens/app/use-app-form"
-import type { StartRun } from "@/screens/app/use-start-run"
+import {
+  priceLabelsOf,
+  type StartRun,
+  usePrice,
+} from "@/screens/app/use-start-run"
+import { hostedLayersBody, isGraphModel } from "@/studio/layers/layers-models"
 import {
   type LayersMode,
   layersBodyOf,
@@ -18,6 +24,8 @@ type LayersStartOptions = {
   app: AppListing
   mode: LayersMode
   form: AppForm
+  chosen: CatalogModel | null
+  keyState: string
   mask: () => { canvas: HTMLCanvasElement; size: PixelSize } | null
   check: () => boolean
   onStarted: (run: Run) => void
@@ -34,20 +42,38 @@ async function maskAssetOf(
   return [asset.id]
 }
 
+export function layersRunBody(options: {
+  app: AppListing
+  mode: LayersMode
+  values: FormValues
+  chosen: CatalogModel | null
+  mask: readonly string[]
+}): StartRunBodyInput {
+  const { app, mode, values, chosen, mask } = options
+  if (chosen !== null && !isGraphModel(chosen)) {
+    return hostedLayersBody(chosen, values, mode, mask)
+  }
+  const body = layersBodyOf(app, mode, values)
+  return mode === "fill"
+    ? { ...body, inputs: { ...body.inputs, [maskInput]: [...mask] } }
+    : body
+}
+
 export function useLayersStart(options: LayersStartOptions): StartRun {
-  const { app, mode, form } = options
+  const { app, mode, form, chosen } = options
   const client = useQueryClient()
   const settings = useQuery(settingsQuery)
+  const credits = usePrice(
+    app,
+    layersRunBody({ app, mode, values: form.values, chosen, mask: [] }),
+    options.keyState
+  )
   const start = useMutation({
     mutationFn: async (key: string) => {
-      const body = layersBodyOf(app, mode, form.values)
-      const inputs =
-        mode === "fill"
-          ? { ...body.inputs, [maskInput]: await maskAssetOf(options.mask()) }
-          : body.inputs
+      const mask = mode === "fill" ? await maskAssetOf(options.mask()) : []
       const answer = await callRoute(routes.startRun, {
         params: { appId: app.id },
-        body: { ...body, inputs },
+        body: layersRunBody({ app, mode, values: form.values, chosen, mask }),
         idempotencyKey: key,
       })
       return answer.run
@@ -67,11 +93,10 @@ export function useLayersStart(options: LayersStartOptions): StartRun {
       start.mutate(crypto.randomUUID())
     }
   }
-  const isDemo = settings.data?.engine.origin === "demo"
   return {
     generate,
     isPending: start.isPending,
     error: start.error,
-    price: isDemo ? t("run.price.demo") : t("run.price.unknown"),
+    ...priceLabelsOf(credits, settings.data?.engine.origin === "demo"),
   }
 }

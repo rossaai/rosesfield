@@ -227,7 +227,11 @@ describe("a Layers run through the gateway on the demo engine", () => {
       "layers-fill-1"
     )
     expect(done.status).toBe("done")
-    expect(done.inputs).toMatchObject({ mode: "fill", mask: [mask] })
+    expect(done.inputs).toMatchObject({
+      mode: "fill",
+      model: "qwen-image-inpaint",
+      mask: [mask],
+    })
     expect(done.outputs).toHaveLength(1)
   })
 

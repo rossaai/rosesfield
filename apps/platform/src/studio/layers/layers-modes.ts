@@ -2,7 +2,6 @@ import {
   type AppListing,
   fixedCountOf,
   type InputDefinition,
-  type InputRule,
   inputRulesOf,
   whenHolds,
 } from "@rosesfield/contract"
@@ -21,7 +20,12 @@ export const sourceInput = "source"
 export const layerInput = "layer"
 export const maskInput = "mask"
 
-const modes: readonly LayersMode[] = ["split", "edit", "relight", "fill"]
+export const layersModes: readonly LayersMode[] = [
+  "split",
+  "edit",
+  "relight",
+  "fill",
+]
 
 const ownControls: readonly string[] = [
   modeInput,
@@ -31,8 +35,10 @@ const ownControls: readonly string[] = [
   maskInput,
 ]
 
+const boundedInputs: readonly string[] = [countInput, modelInputName]
+
 export function isLayersMode(value: unknown): value is LayersMode {
-  return modes.some((mode) => mode === value)
+  return layersModes.some((mode) => mode === value)
 }
 
 export function modeOf(values: FormValues): LayersMode {
@@ -98,30 +104,24 @@ export function countRangeOf(app: AppListing, mode: LayersMode): CountRange {
   }
 }
 
-const modeBound: readonly string[] = [countInput, modelInputName]
-
-function boundValueOf(
-  rule: InputRule,
-  chosen: unknown
-): string | number | null {
-  const allowed = rule.allowed ?? []
-  return typeof chosen === "string" && allowed.includes(chosen)
-    ? chosen
-    : rule.fallback
-}
-
 export function layersBodyOf(
   app: AppListing,
   mode: LayersMode,
   values: FormValues
 ): StartRunBodyInput {
   const body = bodyOf(bodyAppFor(app, mode), values)
+  const rules = inputRulesOf(app, body.inputs)
   const inputs = { ...body.inputs }
-  for (const rule of inputRulesOf(app, body.inputs)) {
-    const name = rule.input.name
-    const value = boundValueOf(rule, inputs[name])
-    if (modeBound.includes(name) && typeof value === "string") {
-      inputs[name] = value
+  for (const name of boundedInputs) {
+    const rule = rules.find((one) => one.input.name === name)
+    const chosen = inputs[name]
+    const allowed = rule?.allowed ?? []
+    const kept =
+      typeof chosen === "string" && allowed.includes(chosen)
+        ? chosen
+        : rule?.fallback
+    if (typeof kept === "string") {
+      inputs[name] = kept
     }
   }
   return {

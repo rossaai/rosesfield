@@ -1,5 +1,6 @@
 import type { AppListing, Run } from "@rosesfield/contract"
 import { useQuery } from "@tanstack/react-query"
+import { runQuery } from "@/api/queries"
 import {
   type KeyboardEvent,
   type RefObject,
@@ -10,9 +11,13 @@ import {
   useState,
 } from "react"
 import { useAppRuns } from "@/screens/app/app-canvas"
-import { valuesFromRun } from "@/screens/app/app-form"
+import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
-import { type AppForm, useAppForm } from "@/screens/app/use-app-form"
+import {
+  type AppForm,
+  type FormCheck,
+  useAppForm,
+} from "@/screens/app/use-app-form"
 import type { StartRun } from "@/screens/app/use-start-run"
 import type { LayerActions, LayerRow } from "@/studio/layers/layer-list"
 import {
@@ -28,6 +33,7 @@ import {
   stackOf,
   toggled,
 } from "@/studio/layers/layer-stack"
+import { checkOf, layersValuesOf } from "@/studio/layers/layers-models"
 import {
   formAppFor,
   type LayersMode,
@@ -39,6 +45,7 @@ import {
   type PixelSize,
   sizeOfAsset,
 } from "@/studio/layers/stack-images"
+import { useLayersModels } from "@/studio/layers/use-layers-models"
 import { useLayersStart } from "@/studio/layers/use-layers-start"
 
 export type LayersState = {
@@ -47,6 +54,7 @@ export type LayersState = {
   mode: LayersMode
   form: AppForm
   start: StartRun
+  hosted: HostedState
   stack: Stack | null
   rows: LayerRow[]
   shown: string[]
@@ -176,10 +184,14 @@ function useStackState(runs: readonly Run[], preferred: string | null) {
   }
 }
 
-function useModeForm(app: AppListing, seeds: StudioScreenProps["seeds"]) {
+function useModeForm(
+  app: AppListing,
+  seeds: StudioScreenProps["seeds"],
+  check: RefObject<FormCheck | null>
+) {
   const [mode, setMode] = useState<LayersMode>("split")
   const formApp = useMemo(() => formAppFor(app, mode), [app, mode])
-  const form = useAppForm(formApp, seeds)
+  const form = useAppForm(formApp, { ...seeds, from: undefined }, check)
   const formMode = modeOf(form.values)
   useEffect(() => setMode(formMode), [formMode])
   return { mode, formApp, form }
@@ -202,6 +214,7 @@ type StartFor = {
   app: AppListing
   mode: LayersMode
   form: AppForm
+  hosted: HostedState
   brush: ReturnType<typeof useBrush>
   size: PixelSize | null
   onStarted: (run: Run) => void
@@ -213,6 +226,8 @@ function useStartFor(options: StartFor): StartRun {
     app: options.app,
     mode,
     form: options.form,
+    chosen: options.hosted.chosen,
+    keyState: options.hosted.keyState,
     mask: () =>
       brush.brushCanvas.current === null || size === null
         ? null
@@ -242,30 +257,99 @@ function shortcutOf(start: StartRun) {
   }
 }
 
+function useLayersCatalog(
+  app: AppListing,
+  form: AppForm,
+  check: RefObject<FormCheck | null>,
+  runs: readonly Run[]
+) {
+  const formMode = modeOf(form.values)
+  const models = useLayersModels(app, form, formMode, runs)
+  check.current = checkOf(models.hosted.chosen, formMode)
+  return models
+}
+
+function useFromRun(
+  app: AppListing,
+  from: string | undefined,
+  isReady: boolean,
+  apply: (run: Run) => void
+): void {
+  const query = useQuery({
+    ...runQuery(from ?? ""),
+    enabled: from !== undefined,
+  })
+  const run = query.data?.run
+  const applied = useRef(false)
+  useEffect(() => {
+    if (applied.current || !isReady || run === undefined) {
+      return
+    }
+    if (run.appId !== app.id) {
+      return
+    }
+    applied.current = true
+    apply(run)
+  }, [app.id, run, isReady, apply])
+}
+
+function shownOf(rows: readonly LayerRow[]): string[] {
+  return [...rows]
+    .reverse()
+    .filter((row) => !row.isHidden)
+    .map((row) => row.shown)
+}
+
+type Catalog = ReturnType<typeof useLayersCatalog>
+
+function runActionsOf(options: {
+  app: AppListing
+  form: AppForm
+  catalog: Catalog
+  setPreferred: (id: string | null) => void
+  onStarted: () => void
+}) {
+  const { app, form, catalog, setPreferred } = options
+  return {
+    onStarted: (run: Run): void => {
+      if (isSplitRun(run)) {
+        setPreferred(null)
+      }
+      options.onStarted()
+    },
+    useInputs: (run: Run): void => {
+      form.fill(layersValuesOf(app, run, catalog.index))
+      if (isSplitRun(run)) {
+        setPreferred(run.id)
+      }
+    },
+  }
+}
+
 export function useLayersScreen(
   app: AppListing,
   seeds: StudioScreenProps["seeds"],
   onStarted: () => void
 ): LayersState {
-  const { mode, formApp, form } = useModeForm(app, seeds)
+  const check = useRef<FormCheck | null>(null)
+  const { mode, formApp, form } = useModeForm(app, seeds, check)
   const runs = useAppRuns(app)
+  const catalog = useLayersCatalog(app, form, check, runs.runs)
   const [preferred, setPreferred] = useState<string | null>(seeds.from ?? null)
   const layers = useStackState(runs.runs, preferred)
   const brush = useBrush()
   const focusSource = useRef<() => void>(() => undefined)
   useLayerValue(mode, layers.pickedRow?.shown ?? null, form)
+  const actions = runActionsOf({ app, form, catalog, setPreferred, onStarted })
+  useFromRun(app, seeds.from, !catalog.hosted.isLoading, actions.useInputs)
   const start = useStartFor({
     app,
     mode,
     form,
+    hosted: catalog.hosted,
     brush,
     size: layers.size,
-    onStarted: (run) => {
-      if (isSplitRun(run)) {
-        setPreferred(null)
-      }
-      onStarted()
-    },
+    onStarted: actions.onStarted,
   })
   return {
     app,
@@ -273,12 +357,10 @@ export function useLayersScreen(
     mode,
     form,
     start,
+    hosted: catalog.hosted,
     stack: layers.stack,
     rows: layers.rows,
-    shown: [...layers.rows]
-      .reverse()
-      .filter((row) => !row.isHidden)
-      .map((row) => row.shown),
+    shown: shownOf(layers.rows),
     size: layers.size,
     actions: layers.actions,
     ...brush,
@@ -286,12 +368,7 @@ export function useLayersScreen(
     pickedNumber: layers.pickedRow?.layer.number ?? null,
     lastSeed: runs.runs.find((run) => run.seed !== null)?.seed ?? null,
     hasRuns: runs.isPending ? null : runs.runs.length > 0,
-    useInputs: (run) => {
-      form.fill(valuesFromRun(app, run))
-      if (isSplitRun(run)) {
-        setPreferred(run.id)
-      }
-    },
+    useInputs: actions.useInputs,
     onShortcut: shortcutOf(start),
   }
 }

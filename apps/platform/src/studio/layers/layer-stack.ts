@@ -24,17 +24,32 @@ export type Arrangement = {
 }
 
 export function isSplitRun(run: Run): boolean {
-  const mode = run.inputs.mode
-  return mode === undefined || mode === "split"
+  return run.inputs.mode === "split"
 }
 
-function layerOf(run: Run): string | null {
-  const value = run.inputs.layer
-  if (!Array.isArray(value)) {
-    return null
+function assetsOf(run: Run): string[] {
+  const named = run.inputs.layer
+  if (Array.isArray(named)) {
+    return named.filter((one): one is string => typeof one === "string")
   }
-  const [first] = value
-  return typeof first === "string" ? first : null
+  return Object.values(run.inputs).flatMap((value) =>
+    Array.isArray(value)
+      ? value.filter((one): one is string => typeof one === "string")
+      : []
+  )
+}
+
+function sourceLayerOf(
+  run: Run,
+  layers: readonly StackLayer[]
+): StackLayer | undefined {
+  for (const asset of assetsOf(run)) {
+    const layer = layers.find((candidate) => candidate.versions.includes(asset))
+    if (layer !== undefined) {
+      return layer
+    }
+  }
+  return undefined
 }
 
 export function stackOf(split: Run, runs: readonly Run[]): Stack {
@@ -48,11 +63,10 @@ export function stackOf(split: Run, runs: readonly Run[]): Stack {
     left.createdAt.localeCompare(right.createdAt)
   )
   for (const run of oldestFirst) {
-    const source = isSplitRun(run) ? null : layerOf(run)
     const layer =
-      source === null
+      run.id === split.id || isSplitRun(run)
         ? undefined
-        : layers.find((candidate) => candidate.versions.includes(source))
+        : sourceLayerOf(run, layers)
     if (layer === undefined) {
       continue
     }

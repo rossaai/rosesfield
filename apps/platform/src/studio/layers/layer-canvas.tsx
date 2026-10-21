@@ -1,4 +1,5 @@
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
+import { cn } from "@rosesfield/ui/lib/cn"
 import {
   type PointerEvent,
   type ReactElement,
@@ -22,6 +23,11 @@ type LayerCanvasProps = {
   size: PixelSize | null
   brush: Brush | null
   isDemo: boolean
+  fit?: "width" | "box"
+}
+
+export function boxWidthOf(size: PixelSize): string {
+  return `min(100cqw, 100cqh * ${size.width} / ${size.height})`
 }
 
 function LayerImage({ assetId }: { assetId: string }): ReactElement | null {
@@ -117,6 +123,7 @@ export function LayerCanvas({
   size,
   brush,
   isDemo,
+  fit = "width",
 }: LayerCanvasProps): ReactElement {
   if (size === null) {
     return <Skeleton className="aspect-square w-full max-w-field-max" />
@@ -124,8 +131,14 @@ export function LayerCanvas({
   return (
     <figure
       aria-label={tCatalog("layers.canvas.label")}
-      className="relative mx-auto max-h-full w-full overflow-hidden rounded-cell bg-(--well)"
-      style={{ aspectRatio: `${size.width} / ${size.height}` }}
+      className={cn(
+        "relative mx-auto overflow-hidden rounded-cell bg-(--well)",
+        fit === "width" ? "max-h-full w-full" : "shrink-0"
+      )}
+      style={{
+        aspectRatio: `${size.width} / ${size.height}`,
+        ...(fit === "box" ? { width: boxWidthOf(size) } : {}),
+      }}
     >
       {shown.map((assetId) => (
         <LayerImage key={assetId} assetId={assetId} />

@@ -19,6 +19,41 @@ function hosted(
 
 const flux = hosted("bfl/flux-3-image", ["text", "image"], ["image"])
 const briaRelight = hosted("bria/relight", ["image"], ["image"])
+const fluxFill = hosted("bfl/flux-pro-1.0-fill", ["image", "text"], ["image"])
+const briaFill = hosted(
+  "bria/image-edit-gen-fill",
+  ["image", "text"],
+  ["image"]
+)
+const layerSplit = hosted(
+  "maker/image-layer-separation",
+  ["text", "image"],
+  ["image"]
+)
+const seedreamPro: HostedModel = {
+  ...hosted("byteplus/seedream-5-0-pro-260628", ["text", "image"], ["image"]),
+  form: {
+    model: "byteplus/seedream-5-0-pro-260628",
+    fields: [
+      {
+        kind: "media",
+        name: "image",
+        path: "image",
+        required: false,
+        media: "image",
+        min: 1,
+        max: 10,
+      },
+      {
+        kind: "toggle",
+        name: "layerDecomposition",
+        path: "layer_decomposition",
+        required: false,
+        default: false,
+      },
+    ],
+  },
+}
 const wanEdit = hosted("wan/wan2.6-image-edit", ["text", "image"], ["image"])
 const textOnly = hosted("maker/picture", ["text"], ["image"])
 
@@ -38,6 +73,7 @@ describe("the models of each Layers mode", () => {
       "layer-separation",
       "image-edit",
       "relight",
+      "inpaint",
     ])
     expect(defaultModelOf(definition)).toBe("qwen-image-layered")
   })
@@ -55,10 +91,58 @@ describe("the models of each Layers mode", () => {
       ["qwen-image-layered", "graph", "layer-separation"],
       ["qwen-image-edit-2511", "graph", "image-edit"],
       ["qwen-image-edit-2509-relight", "graph", "relight"],
-      ["qwen-image-inpaint", "graph", "image-edit"],
+      ["qwen-image-inpaint", "graph", "inpaint"],
       ["bfl/flux-3-image", "hosted", "image-edit"],
     ])
     expect(listed.map((model) => model.id).slice(5)).toEqual(["bria/relight"])
+  })
+
+  it("lists each hosted model under the task its name gives before the task its media gives", () => {
+    const tasks = Object.fromEntries(
+      modelsForApp(definition, [
+        flux,
+        briaRelight,
+        fluxFill,
+        briaFill,
+        layerSplit,
+        seedreamPro,
+      ])
+        .filter((model) => model.kind === "hosted")
+        .map((model) => [model.id, model.task])
+    )
+    expect(tasks).toEqual({
+      "bfl/flux-3-image": "image-edit",
+      "bria/relight": "relight",
+      "bfl/flux-pro-1.0-fill": "inpaint",
+      "bria/image-edit-gen-fill": "inpaint",
+      "maker/image-layer-separation": "layer-separation",
+      "byteplus/seedream-5-0-pro-260628": "layer-separation",
+    })
+  })
+
+  it("control: Seedream 5.0 Pro with no layer_decomposition in its form stays under image edit", () => {
+    const plain = { ...seedreamPro, form: null }
+    const listed = modelsForApp(definition, [plain]).find(
+      (model) => model.id === plain.id
+    )
+    expect(listed?.task).toBe("image-edit")
+  })
+
+  it("control: an app that lists only image edit keeps the fill and relight models under image edit", () => {
+    const editOnly = {
+      ...definition,
+      engine: {
+        ...definition.engine,
+        config: { ...definition.engine.config, tasks: ["image-edit"] },
+      },
+    }
+    const tasks = modelsForApp(editOnly, [briaRelight, fluxFill])
+      .filter((model) => model.kind === "hosted")
+      .map((model) => [model.id, model.task])
+    expect(tasks).toEqual([
+      ["bfl/flux-pro-1.0-fill", "image-edit"],
+      ["bria/relight", "image-edit"],
+    ])
   })
 
   it("control: the same catalog lists the Wan model once it is no longer denied", () => {
