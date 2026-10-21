@@ -3,17 +3,20 @@ import {
   type AppDefinition,
   assetResponse,
   buildPath,
+  characterListResponse,
   characterPhotoLimit,
   characterResponse,
   errorEnvelope,
   routes,
   runResponse,
 } from "@rosesfield/contract"
+import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
+import { Character, type CharacterRepository } from "@rosesfield/library"
 import { afterEach, describe, expect, it } from "vitest"
 import { app } from "../../../../packages/catalog/src/characters/app"
 import { type Harness, harnessFor, jsonInit } from "../harness"
 import { localPorts } from "../local-ports"
-import { pngBytes } from "../sample-apps"
+import { pngBytes, start as now } from "../sample-apps"
 
 function charactersApp(): AppDefinition {
   const [listed] = readApps([{ folder: "characters", app }])
@@ -148,6 +151,50 @@ describe("the characters app through the gateway on the demo engine", () => {
     const one = await create([photo])
     expect(one.status).toBe(201)
     expect(characterPhotoLimit).toBe(10)
+  })
+
+  it("reads, lists and edits a saved character that holds 16 photos", async () => {
+    const held: { characters?: CharacterRepository } = {}
+    const harness = harnessFor({
+      portsFor: (clock, folder) => {
+        const ports = localPorts(clock, folder)
+        held.characters = ports.characters
+        return ports
+      },
+      apps: [charactersApp()],
+    })
+    open.push(harness)
+    const references = Array.from({ length: 16 }, () =>
+      assetIdFormat.parse(crypto.randomUUID())
+    )
+    const saved = Character.create({
+      id: characterIdFormat.parse(crypto.randomUUID()),
+      name: "Ada",
+      references,
+      notes: "",
+      now,
+    })
+    await held.characters?.add(saved)
+    const listed = await harness.call(routes.listCharacters.path)
+    expect(listed.status).toBe(200)
+    const { characters: found } = characterListResponse.parse(
+      await listed.json()
+    )
+    expect(found.map((one) => one.references)).toEqual([references])
+    const path = buildPath(routes.getCharacter.path, { characterId: saved.id })
+    const read = await harness.call(path)
+    expect(read.status).toBe(200)
+    expect(
+      characterResponse.parse(await read.json()).character.references
+    ).toHaveLength(16)
+    const edited = await harness.call(path, {
+      ...jsonInit({ notes: "Wears glasses" }),
+      method: "PATCH",
+    })
+    expect(edited.status).toBe(200)
+    expect(characterResponse.parse(await edited.json()).character).toMatchObject(
+      { notes: "Wears glasses", references }
+    )
   })
 
   it("makes 4 views of a saved character", async () => {

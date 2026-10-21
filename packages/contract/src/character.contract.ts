@@ -4,17 +4,19 @@ import { timestamp } from "#value.contract"
 
 export const characterPhotoLimit = 10
 
+const savedPhotoLimit = 16
+
 export const character = z.object({
   id: characterId,
   name: z.string().regex(/\S/).max(80),
-  references: z.array(assetId).min(1).max(characterPhotoLimit),
+  references: z.array(assetId).min(1).max(savedPhotoLimit),
   notes: z.string().max(2000),
   createdAt: timestamp,
 })
 
 export const createCharacterBody = z.strictObject({
   name: character.shape.name,
-  references: character.shape.references,
+  references: z.array(assetId).min(1).max(characterPhotoLimit),
   notes: character.shape.notes,
 })
 
