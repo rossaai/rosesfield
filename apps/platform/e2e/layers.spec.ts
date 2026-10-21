@@ -87,3 +87,35 @@ test("Use in Layers from the library opens Layers in Split with that image", asy
     await expect(page.getByRole("radio", { name: "Split" })).toBeChecked()
   }
 })
+
+test("A split layer whose run read fails shows the failure with Try again, never as an upload, and recovers", async ({
+  page,
+}) => {
+  const split = await splitOf(await uploadPhoto())
+  let isFailing = true
+  await page.route(`**/api/runs/${split.id}`, async (route) => {
+    if (isFailing) {
+      await route.abort("failed")
+      return
+    }
+    await route.continue()
+  })
+  await open(page, `/history?view=${split.first}`)
+  if (isPhone(page)) {
+    await page.getByRole("button", { name: "Info" }).click()
+  }
+  const tryAgain = page.getByRole("button", { name: "Try again" }).first()
+  await expect(tryAgain).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByText(/^Uploaded on/)).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Recreate" })).toHaveCount(0)
+  isFailing = false
+  await tryAgain.click()
+  await expect(tryAgain).toHaveCount(0)
+  if (isPhone(page)) {
+    await page.getByRole("button", { name: "Close" }).click()
+  }
+  await expect(
+    page.getByRole("button", { name: "Recreate" }).first()
+  ).toBeVisible()
+  await expect(page.getByText(/^Uploaded on/)).toHaveCount(0)
+})

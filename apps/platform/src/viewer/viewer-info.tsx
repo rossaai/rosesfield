@@ -3,11 +3,13 @@ import { type KeyframeFacts, keyframeOf } from "@rosesfield/catalog/storyboard"
 import type { Asset, Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
+import { StateView } from "@rosesfield/ui/components/state-view"
 import { useQuery } from "@tanstack/react-query"
 import type { ReactElement, ReactNode } from "react"
 import { runQuery } from "@/api/queries"
 import { isAssetInput } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
+import { wordsForError } from "@/copy/error-words"
 import {
   formatBytes,
   formatDate,
@@ -193,9 +195,39 @@ function UploadInfo({
   )
 }
 
+function RunFailed({
+  failure,
+  isRetrying,
+  onRetry,
+}: {
+  failure: unknown
+  isRetrying: boolean
+  onRetry: () => void
+}): ReactElement {
+  const words = wordsForError(failure, { thing: "run" })
+  return (
+    <StateView
+      kind="failed"
+      density="compact"
+      title={words.title}
+      body={words.body}
+      actions={
+        words.action === null ? undefined : (
+          <Button busy={isRetrying} onClick={onRetry}>
+            {words.action.label}
+          </Button>
+        )
+      }
+    />
+  )
+}
+
 export function useSourceRun(asset: Asset | null): {
   run: Run | null
   isPending: boolean
+  failure: unknown
+  isRetrying: boolean
+  retry: () => void
 } {
   const runId = asset?.sourceRunId ?? null
   const run = useQuery({
@@ -205,6 +237,9 @@ export function useSourceRun(asset: Asset | null): {
   return {
     run: run.data?.run ?? null,
     isPending: runId !== null && run.isPending,
+    failure: runId !== null && run.isError ? run.error : null,
+    isRetrying: run.isFetching,
+    retry: () => void run.refetch(),
   }
 }
 
@@ -217,14 +252,17 @@ export function ViewerDetails({
   compare: ViewerCompare
   measured: MeasuredSize
 }): ReactElement {
-  const { run, isPending } = useSourceRun(asset)
+  const { run, isPending, failure, isRetrying, retry } = useSourceRun(asset)
   if (isPending) {
     return <Skeleton className="h-s12 w-full" />
   }
-  return run === null ? (
+  if (run !== null) {
+    return <MadeInfo run={run} assetId={asset.id} compare={compare} />
+  }
+  return failure === null ? (
     <UploadInfo asset={asset} measured={measured} />
   ) : (
-    <MadeInfo run={run} assetId={asset.id} compare={compare} />
+    <RunFailed failure={failure} isRetrying={isRetrying} onRetry={retry} />
   )
 }
 
