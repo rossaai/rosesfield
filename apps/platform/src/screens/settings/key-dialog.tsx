@@ -21,6 +21,7 @@ import { formatNumber } from "@/copy/format"
 import { t, tCount } from "@/copy/t"
 import type { CopyKey } from "@/copy.en"
 import { DialogOrSheet } from "@/pieces/responsive-layer"
+import { LegalLinks } from "@/screens/legal/legal-links"
 import {
   comfyBillingPage,
   comfyKeyPage,
@@ -257,6 +258,7 @@ export function KeyFormView(props: KeyFormViewProps): ReactElement {
         </Button>
         <RetentionLine />
       </div>
+      <LegalLinks />
     </form>
   )
 }

@@ -324,6 +324,8 @@ The agent uses the model you name, with your own key. Rosesfield ships none. The
 
 The code, the docs and the design tokens are under the [MIT licence](LICENSE). The Rosesfield name and logo are trademarks of ROSSA AI, LLC. [TRADEMARKS.md](TRADEMARKS.md) says how you can use them.
 
+Every deployment serves a [Privacy](apps/platform/src/screens/legal/privacy-screen.tsx) page at `/privacy` and a [Terms](apps/platform/src/screens/legal/terms-screen.tsx) page at `/terms`.
+
 ## Official source
 
 The official repository is https://github.com/rossaai/rosesfield. A copy with a similar name is not official.

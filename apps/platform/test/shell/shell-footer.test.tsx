@@ -14,8 +14,8 @@ describe("the footer", () => {
       "https://github.com/rossaai/rosesfield"
     )
     expect(hrefOf("The challenge")).toMatch(/^https:\/\/comfy\.org\//)
-    expect(hrefOf("Privacy")).toMatch(/^https:\/\/github\.com\/rossaai\//)
-    expect(hrefOf("Terms")).toMatch(/LICENSE$/)
+    expect(hrefOf("Privacy")).toBe("/privacy")
+    expect(hrefOf("Terms")).toBe("/terms")
   })
 
   it("holds text links only, with no glyph, price or form", () => {

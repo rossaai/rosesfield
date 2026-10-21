@@ -13,6 +13,7 @@ export const keyCopy = {
   "key.kept": "Your key is kept in this browser",
   "key.note":
     "Your key stays in this browser. Rosesfield sends it with each request and never stores it.",
+  "key.legal": "Read what Rosesfield keeps and the terms of each run.",
   "key.retention.one": "Your work stays {count} day after your last visit.",
   "key.retention.other": "Your work stays {count} days after your last visit.",
   "key.balance": "{amount} credits on your Comfy account",
