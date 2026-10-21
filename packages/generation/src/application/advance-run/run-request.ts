@@ -33,7 +33,7 @@ export async function runRequestOf(
   const unique = [...new Set(assetIds)]
   return {
     idempotencyKey: run.id,
-    binding: resolveBinding(app.engine, record.inputs),
+    binding: resolveBinding(app.engine, inputs),
     inputs,
     files: await Promise.all(unique.map((id) => assets.read(id))),
     count: record.count,

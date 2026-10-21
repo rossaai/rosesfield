@@ -24,9 +24,9 @@ import {
   Detail,
   inputAssetIdsOf,
   modelAndModeOf,
+  outputPromptOf,
   PanelHead,
   PromptDetail,
-  promptOf,
   RunSection,
 } from "@/viewer/result-panel"
 import { ViewerActions, ViewerManage } from "@/viewer/viewer-actions"
@@ -144,15 +144,6 @@ function detailRowsOf(
   return inputRowsOf(app, run).filter((row) => !shownElsewhere.has(row.key))
 }
 
-function keyframePromptOf(
-  run: Run,
-  keyframe: KeyframeFacts | null
-): string | null {
-  return keyframe === null || keyframe.prompt === ""
-    ? promptOf(run)
-    : keyframe.prompt
-}
-
 function MadeInfo({
   run,
   assetId,
@@ -175,7 +166,7 @@ function MadeInfo({
       ) : null}
       <CompareToggle compare={compare} />
       <RunSection inputIds={inputAssetIdsOf(run)}>
-        <PromptDetail prompt={keyframePromptOf(run, keyframe)} />
+        <PromptDetail prompt={outputPromptOf(run, assetId)} />
         {keyframe === null ? null : (
           <KeyframeAnchorDetail keyframe={keyframe} />
         )}

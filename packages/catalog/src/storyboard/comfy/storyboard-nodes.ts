@@ -19,4 +19,10 @@ export const editNodes = {
   firstEdit: ["103", "104", "105", "106"],
   firstKeyframe: "106",
   firstBatch: "902",
+  encoderClass: "TextEncodeQwenImageEditPlus",
 } as const
+
+export const photoSlots = [
+  { node: "12", input: "image2", to: "anchor2" },
+  { node: "13", input: "image3", to: "anchor3" },
+] as const
