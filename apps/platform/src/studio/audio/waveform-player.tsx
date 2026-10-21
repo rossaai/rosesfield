@@ -63,9 +63,7 @@ function LoadedPlayer(
     <AudioRow
       src={props.src}
       name={name}
-      durationSeconds={
-        props.asset.durationSeconds ?? waveform?.seconds ?? null
-      }
+      durationSeconds={props.asset.durationSeconds ?? waveform?.seconds ?? null}
       {...(props.isDemo === true ? { caption: t("run.demoCaption") } : {})}
       {...(props.hasDownload === false
         ? {}

@@ -1,11 +1,11 @@
-# Voice: speech in 23 languages with Chatterbox
+# Speech: 23 languages with Chatterbox
 
 Reads your script aloud in one of 23 languages. With a recording, it speaks in the voice of that recording. Without one, the voice node runs with no audio_prompt and uses the model's own voice. Built from Comfy's template audio-chatterbox_tts_multilingual.
 
 | | |
 |---|---|
 | Workflow id | `voice-chatterbox` |
-| Run by | [`voice`](../../packages/catalog/src/voice/), and Speech and Voice clone in [`audio`](../../packages/catalog/src/audio/) |
+| Run by | [`audio`](../../packages/catalog/src/audio/), Speech and Voice clone |
 | Core model | Chatterbox Multilingual |
 | Custom node packs | [ComfyUI_Fill-ChatterBox](https://github.com/filliptm/ComfyUI_Fill-ChatterBox) at commit `f7d7a16187430abcaf91a3039b9c83aa9960816a`, MIT, per its README |
 | GPU memory | Not measured. The node pack's README recommends an NVIDIA GPU with 8 GB of VRAM or more, and runs on a CPU or a Mac too. The model files it loads add up to 3.2 GB. |

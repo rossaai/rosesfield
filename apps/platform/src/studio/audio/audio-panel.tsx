@@ -10,7 +10,7 @@ import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
 import { panelInputsOf, recordingOf } from "@/studio/audio/audio-modes"
-import { modeInputOf, pickerModelsOf, tabsOf } from "@/studio/audio/audio-tabs"
+import { modeInputOf, modelsOfTab, tabsOf } from "@/studio/audio/audio-tabs"
 import { RecordingField } from "@/studio/audio/recording-field"
 import type { AudioState } from "@/studio/audio/use-audio-screen"
 
@@ -96,7 +96,7 @@ export function AudioPanel({ state }: { state: AudioState }): ReactElement {
   const { hosted } = state
   const tabHosted = {
     ...hosted,
-    models: pickerModelsOf(hosted.models, state.tab, state.app),
+    models: modelsOfTab(hosted.models, state.tab, state.app),
     choose: state.choose,
   }
   return (

@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test"
 
-const tabNames = [
-  "Speech",
-  "Voice clone",
-  "Voice change",
-  "Music",
-  "Sound effects",
+const tabs = [
+  { name: "Speech", model: "Chatterbox" },
+  { name: "Voice clone", model: "Chatterbox" },
+  { name: "Voice change", model: "Chatterbox voice change" },
+  { name: "Music", model: "MiniMax-Music3" },
+  { name: "Sound effects", model: "Stable Audio 3 Medium" },
 ]
 
 test.beforeEach(async ({ page }) => {
@@ -17,17 +17,17 @@ test.beforeEach(async ({ page }) => {
 test.describe("Audio's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("shows five tabs, each with its inputs, the model row and Generate", async ({
+  test("shows five tabs, each opening on its graph, with the model row and Generate", async ({
     page,
   }) => {
     await page.goto("/apps/audio")
-    for (const name of tabNames) {
+    for (const { name, model } of tabs) {
       await page.getByRole("tab", { name, exact: true }).click()
       await expect(
         page.getByRole("tab", { name, exact: true })
       ).toHaveAttribute("aria-selected", "true")
       await expect(
-        page.getByRole("button", { name: /^Model/ }).first()
+        page.getByRole("button", { name: `Model ${model}`, exact: true })
       ).toBeVisible()
       await expect(
         page.getByRole("button", { name: /^Generate/ }).first()
@@ -53,6 +53,9 @@ test.describe("Audio on a phone", () => {
     page,
   }) => {
     await page.goto("/apps/audio")
+    await expect(
+      page.getByRole("heading", { name: "Audio", level: 1 })
+    ).toBeAttached()
     await page.locator('[data-slot="app-bar-tabGenerate"]').click()
     const sheet = page.getByRole("dialog")
     await expect(sheet.getByRole("tab", { name: "Speech" })).toBeVisible()

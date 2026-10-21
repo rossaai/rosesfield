@@ -24,7 +24,7 @@ const modelBounds = audioModes.map((mode) => ({
   values: [modeGraphs[mode]],
 }))
 
-export const audioApp: AppInput = defineApp({
+export const app: AppInput = defineApp({
   id: "audio",
   nameKey: "audio.name",
   category: "audio",

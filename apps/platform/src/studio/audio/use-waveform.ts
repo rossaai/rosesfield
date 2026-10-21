@@ -9,8 +9,7 @@ export function useWaveform(
 ): Waveform | null {
   const query = useQuery({
     queryKey: [waveformKey, assetId],
-    queryFn: ({ signal }) =>
-      src === null ? null : readWaveform(src, signal),
+    queryFn: ({ signal }) => (src === null ? null : readWaveform(src, signal)),
     enabled: src !== null,
     staleTime: Number.POSITIVE_INFINITY,
     retry: false,

@@ -26,12 +26,10 @@ describe("the Audio screen's state", () => {
   })
 
   it("opens a recreated hosted run, which sends no mode, on its model's task", () => {
-    expect(
-      tabOfRun(audio, valuesWith({ model: effects.id }), [effects])
-    ).toBe("sound")
-    expect(tabOfRun(audio, valuesWith({ model: "gone/model" }), [])).toBe(
-      null
+    expect(tabOfRun(audio, valuesWith({ model: effects.id }), [effects])).toBe(
+      "sound"
     )
+    expect(tabOfRun(audio, valuesWith({ model: "gone/model" }), [])).toBe(null)
   })
 
   it("carries the script into the prompt of the model a person picks", () => {

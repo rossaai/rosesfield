@@ -1,11 +1,10 @@
 import type { AppDefinition } from "@rosesfield/contract"
-import { audioApp } from "#audio/audio-app"
-import { readApps } from "#list-apps"
+import { findApp } from "#list-apps"
 
 export function audioDefinition(): AppDefinition {
-  const [parsed] = readApps([{ folder: "audio", app: audioApp }])
-  if (parsed === undefined) {
-    throw new Error("The audio app did not parse")
+  const app = findApp("audio")
+  if (app === null) {
+    throw new Error("The catalog lists no audio app. Run bun run catalog:sync")
   }
-  return parsed
+  return app
 }

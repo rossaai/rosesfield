@@ -4,7 +4,7 @@ import {
   type EngineRequest,
   resolveBinding,
 } from "@rosesfield/generation"
-import { assetIdFormat } from "@rosesfield/kernel"
+import { type AssetId, assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
 import {
@@ -13,9 +13,9 @@ import {
   voiceChangeWorkflow,
 } from "#audio/comfy/audio-engine"
 import { findWorkflow } from "#list-workflows"
-import { cloudUrl, submitJob } from "../image/comfy-recordings"
-import { type Recording, ReplayFetch } from "../image/replay-fetch"
-import { audioDefinition } from "./audio-definition"
+import { cloudUrl, submitJob } from "../../image/comfy-recordings"
+import { type Recording, ReplayFetch } from "../../image/replay-fetch"
+import { audioDefinition } from "../audio-definition"
 
 type EngineFile = EngineRequest["files"][number]
 
@@ -48,7 +48,7 @@ function uploadOf(id: string): Recording {
   }
 }
 
-function fileOf(assetId: string): EngineFile {
+function fileOf(assetId: AssetId): EngineFile {
   return { assetId, kind: "audio", mime: "audio/mpeg", bytes: mp3Bytes }
 }
 

@@ -6,7 +6,6 @@ import {
   isOnTab,
   modelForTab,
   modelsOfTab,
-  pickerModelsOf,
   tabOfHash,
   tabOfValues,
   tabsOf,
@@ -16,9 +15,9 @@ import { audioListing, modelOf } from "./audio-app"
 const audio = audioListing()
 
 const chatterbox = modelOf("chatterbox", "graph", "speech")
-const voiceChange = modelOf("chatterbox-vc", "graph", "speech")
-const music = modelOf("minimax-music-3", "graph", "speech")
-const stable = modelOf("stable-audio-3-medium", "graph", "speech")
+const voiceChange = modelOf("chatterbox-vc", "graph", "voice-change")
+const music = modelOf("minimax-music-3", "graph", "music")
+const stable = modelOf("stable-audio-3-medium", "graph", "sound")
 const seed = modelOf("byteplus/seed-audio-1.0", "hosted", "speech")
 const effects = modelOf("elevenlabs/eleven_sfx_v2", "hosted", "sound")
 const models = [chatterbox, voiceChange, music, stable, seed, effects]
@@ -57,14 +56,6 @@ describe("the Audio tabs", () => {
       "stable-audio-3-medium",
       "elevenlabs/eleven_sfx_v2",
     ])
-  })
-
-  it("gives a graph row the task of its tab, so its line is the tab's", () => {
-    const rows = pickerModelsOf(models, "music", audio)
-    expect(rows.map((row) => [row.id, row.task])).toEqual([
-      ["minimax-music-3", "music"],
-    ])
-    expect(pickerModelsOf(models, "sound", audio)[1]?.task).toBe("sound")
   })
 
   it("keeps a wanted model that the tab shows, and otherwise opens on its graph", () => {

@@ -1,6 +1,11 @@
+import { modelTasks } from "@rosesfield/catalog/comfy"
 import { describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
-import { badgesOf, weightsLinkOf } from "@/screens/app/hosted/catalog-picker"
+import {
+  badgesOf,
+  lineOf,
+  weightsLinkOf,
+} from "@/screens/app/hosted/catalog-picker"
 
 const openWeights = [{ kind: "open-weights" as const }]
 
@@ -31,5 +36,15 @@ describe("the Open weights badge of a model row", () => {
 
   it("is absent on a model whose weights are closed", () => {
     expect(badgesOf("z-image-turbo", [{ kind: "sound" }])).toEqual([])
+  })
+})
+
+describe("the line of a model row", () => {
+  it("names what each task of the catalog makes", () => {
+    for (const task of modelTasks) {
+      expect(lineOf(task), task).toMatch(/\S/)
+    }
+    expect(lineOf("music")).toBe("Makes music from your words")
+    expect(lineOf("voice-change")).toBe("Says your recording in another voice")
   })
 })

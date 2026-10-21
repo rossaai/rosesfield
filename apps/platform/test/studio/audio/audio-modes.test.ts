@@ -71,9 +71,9 @@ describe("the inputs of each Audio tab", () => {
       key: "field.asset.tooShort",
       values: { seconds: 4, min: 6 },
     })
-    expect(
-      recordingLengthProblem("clone", "recording", 31)?.key
-    ).toBe("field.asset.tooLong")
+    expect(recordingLengthProblem("clone", "recording", 31)?.key).toBe(
+      "field.asset.tooLong"
+    )
     expect(recordingLengthProblem("clone", "recording", 12)).toBeNull()
     expect(recordingLengthProblem("change", "recording", 5)).toBeNull()
   })

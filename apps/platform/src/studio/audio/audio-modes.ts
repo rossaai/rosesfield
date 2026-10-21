@@ -34,10 +34,7 @@ function boundedOf(input: InputDefinition, rule: InputRule): InputDefinition {
   return input
 }
 
-function rulesIn(
-  app: AppListing,
-  tab: string
-): ReadonlyMap<string, InputRule> {
+function rulesIn(app: AppListing, tab: string): ReadonlyMap<string, InputRule> {
   return new Map(
     inputRulesOf(app, { [modeInput]: tab }).map((rule) => [
       rule.input.name,
@@ -83,8 +80,8 @@ export function panelInputsOf(app: AppListing, tab: string): InputDefinition[] {
 
 export function recordingOf(app: AppListing, tab: string): string | null {
   return (
-    bodyAppFor(app, tab).inputs.find((input) => input.type === "audio")
-      ?.name ?? null
+    bodyAppFor(app, tab).inputs.find((input) => input.type === "audio")?.name ??
+    null
   )
 }
 

@@ -3,6 +3,7 @@ import { selectBinding, taskBinding } from "@rosesfield/generation/bindings"
 import {
   audioTasks,
   chatterboxModel,
+  graphTasks,
   musicModel,
   soundModel,
   voiceChangeModel,
@@ -52,6 +53,7 @@ export const audioEngine: EngineBinding = taskBinding({
   tasks: audioTasks,
   input: "model",
   default: chatterboxModel,
+  graphTasks,
   fallback: selectBinding({
     input: "model",
     options: {

@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router"
 import { AppRouteScreen } from "@/screens/app/app-route-screen"
 import { type StageTab, stageTabs } from "@/screens/app/app-stage"
 import { readOneOf, readText } from "@/shell/search"
+import { movedAppOf } from "@/studio/audio/audio-address"
 
 type AppSearch = {
   use?: string
@@ -24,6 +25,16 @@ export const Route = createFileRoute("/_shell/apps/$appId")({
     }
   },
   beforeLoad: ({ params, search }) => {
+    const moved = movedAppOf(params.appId)
+    if (moved !== null) {
+      throw redirect({
+        to: "/apps/$appId",
+        params: { appId: moved.appId },
+        search,
+        hash: moved.hash,
+        replace: true,
+      })
+    }
     if (
       params.appId === "characters" &&
       search.use === undefined &&

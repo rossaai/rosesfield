@@ -45,9 +45,7 @@ export function RecordingField(
               <IconButton
                 label={t("field.asset.remove")}
                 tone="quiet"
-                onClick={() =>
-                  props.onChange(ids.filter((one) => one !== id))
-                }
+                onClick={() => props.onChange(ids.filter((one) => one !== id))}
               >
                 <XIcon aria-hidden="true" />
               </IconButton>

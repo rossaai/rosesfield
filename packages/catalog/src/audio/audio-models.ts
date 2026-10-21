@@ -1,3 +1,5 @@
+import type { ModelTask } from "#comfy/model-tasks"
+
 export const audioModes = [
   "speech",
   "clone",
@@ -30,18 +32,9 @@ export const modeGraphs: Readonly<Record<AudioMode, string>> = {
   sound: soundModel,
 }
 
-export const modeTasks: Readonly<Record<AudioMode, string | null>> = {
-  speech: "speech",
-  clone: null,
-  change: null,
-  music: null,
-  sound: "sound",
-}
-
-export const modeDefaults: Readonly<Record<AudioMode, readonly string[]>> = {
-  speech: [chatterboxModel, speechHostedModel],
-  clone: [chatterboxModel],
-  change: [voiceChangeModel],
-  music: [musicModel],
-  sound: [soundModel, soundHostedModel],
+export const graphTasks: Readonly<Record<string, ModelTask>> = {
+  [chatterboxModel]: "speech",
+  [voiceChangeModel]: "voice-change",
+  [musicModel]: "music",
+  [soundModel]: "sound",
 }

@@ -76,16 +76,6 @@ export function modelsOfTab(
   )
 }
 
-export function pickerModelsOf(
-  models: readonly CatalogModel[],
-  tab: string,
-  app: AppListing
-): CatalogModel[] {
-  return modelsOfTab(models, tab, app).map((model) =>
-    model.kind === "graph" ? { ...model, task: tab } : model
-  )
-}
-
 export function isOnTab(
   models: readonly CatalogModel[],
   tab: string,

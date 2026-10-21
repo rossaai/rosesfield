@@ -65,9 +65,9 @@ describe("the audio row", () => {
       <span data-slot="meter">{fraction}</span>
     ))
     const container = show({ meter })
-    expect(
-      container.querySelector("[data-slot='meter']")?.textContent
-    ).toBe("0")
+    expect(container.querySelector("[data-slot='meter']")?.textContent).toBe(
+      "0"
+    )
     expect(meter).toHaveBeenCalledWith(0)
     expect(container.querySelector(".h-track")).toBeNull()
   })

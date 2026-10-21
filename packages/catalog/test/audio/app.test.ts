@@ -6,7 +6,6 @@ import { describe, expect, it } from "vitest"
 import {
   type AudioMode,
   audioModes,
-  modeDefaults,
   modeGraphs,
   musicModel,
   soundHostedModel,
@@ -15,6 +14,7 @@ import {
   voiceChangeModel,
 } from "#audio/audio-models"
 import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
+import { findApp } from "#list-apps"
 import { audioDefinition } from "./audio-definition"
 
 type Inputs = Record<string, unknown>
@@ -50,10 +50,14 @@ const validInputs: Readonly<Record<AudioMode, Inputs>> = {
 }
 
 describe("the audio app", () => {
+  it("is listed in the catalog, and the voice app is not", () => {
+    expect(findApp("audio")?.nameKey).toBe("audio.name")
+    expect(findApp("voice")).toBeNull()
+  })
+
   it("opens each tab on its graph when no model is sent", () => {
     for (const mode of audioModes) {
       expect(parsedInputs(validInputs[mode]).model).toBe(modeGraphs[mode])
-      expect(modeDefaults[mode][0]).toBe(modeGraphs[mode])
     }
     expect(modeGraphs).toEqual({
       speech: "chatterbox",
@@ -118,19 +122,19 @@ describe("the audio app", () => {
     expect(appTasksOf(audio)).toEqual(["speech", "sound"])
   })
 
-  it("lists its four graphs, then the Router's speech and sound models", () => {
+  it("lists its four graphs with their own tasks, then the Router's speech and sound models", () => {
     const models = modelsForApp(audio, [
       hosted(speechHostedModel, "audio"),
       hosted(soundHostedModel, "audio"),
       hosted("maker/picture", "image"),
     ])
-    expect(models.map((model) => [model.id, model.kind])).toEqual([
-      ["chatterbox", "graph"],
-      [voiceChangeModel, "graph"],
-      [musicModel, "graph"],
-      [soundModel, "graph"],
-      [speechHostedModel, "hosted"],
-      [soundHostedModel, "hosted"],
+    expect(models.map((model) => [model.id, model.kind, model.task])).toEqual([
+      ["chatterbox", "graph", "speech"],
+      [voiceChangeModel, "graph", "voice-change"],
+      [musicModel, "graph", "music"],
+      [soundModel, "graph", "sound"],
+      [speechHostedModel, "hosted", "speech"],
+      [soundHostedModel, "hosted", "sound"],
     ])
     const music = models.find((model) => model.id === musicModel)
     expect(music?.nameKey).toBe("audio.model.minimaxMusic3")

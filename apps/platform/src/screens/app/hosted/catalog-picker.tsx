@@ -34,6 +34,8 @@ const lineKeys: Readonly<Record<string, string>> = {
   "video-edit": "model.line.videoEdit",
   "lip-sync": "model.line.lipSync",
   speech: "model.line.speech",
+  "voice-change": "model.line.voiceChange",
+  music: "model.line.music",
   sound: "model.line.sound",
   "three-d": "model.line.threeD",
   upscale: "model.line.upscale",
