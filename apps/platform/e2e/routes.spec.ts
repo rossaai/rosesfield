@@ -44,6 +44,8 @@ function routesOf(seeded: Seeded): string[] {
   return [
     "/",
     "/welcome",
+    "/privacy",
+    "/terms",
     "/apps",
     "/apps?q=nothing-matches-this",
     ...seeded.appIds.map((id) => `/apps/${id}`),
