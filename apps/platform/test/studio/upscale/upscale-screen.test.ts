@@ -1,64 +1,75 @@
-import type { AppListing } from "@rosesfield/contract"
+import { type Run, run } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
-import { findCatalogApp } from "@/catalog/catalog-apps"
-import { bodyOf, defaultsOf, problemsOf } from "@/screens/app/app-form"
+import { bodyOf, defaultsOf } from "@/screens/app/app-form"
+import { scaleOf } from "@/studio/upscale/upscale-models"
+import {
+  scaleMessageOf,
+  scaleNoteOf,
+} from "@/studio/upscale/upscale-panel"
 import {
   bodyAppFor,
-  formAppFor,
+  checkFor,
   messageOf,
   modeOf,
+  runValuesOf,
+  scaleFor,
 } from "@/studio/upscale/use-upscale-screen"
+import {
+  catalog,
+  flashVsr,
+  graph,
+  upscaleListing,
+  waveSpeed,
+} from "./upscale-fixtures"
 
-function upscaleListing(): AppListing {
-  const app = findCatalogApp("upscale")
-  if (app === null) {
-    throw new Error("The catalog lists no upscale app")
-  }
-  return app
+function formWith(inputs: Record<string, string | string[]>) {
+  const values = defaultsOf(upscaleListing())
+  return { values: { ...values, inputs: { ...values.inputs, ...inputs } } }
 }
 
-function presenceOf(app: AppListing, name: string): string | null {
-  const input = app.inputs.find((one) => one.name === name)
-  return input !== undefined && "presence" in input ? input.presence : null
-}
-
-describe("the upscale modes", () => {
-  it("requires the file of the chosen mode and leaves the other optional", () => {
-    const app = upscaleListing()
-    expect(presenceOf(formAppFor(app, "image"), "image")).toBe("required")
-    expect(presenceOf(formAppFor(app, "image"), "video")).toBe("optional")
-    expect(presenceOf(formAppFor(app, "video"), "video")).toBe("required")
-    expect(presenceOf(formAppFor(app, "video"), "image")).toBe("optional")
+function runOf(inputs: Run["inputs"]): Run {
+  return run.parse({
+    id: "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e09",
+    appId: "upscale",
+    status: "done",
+    inputs,
+    count: 1,
+    aspectRatio: null,
+    seed: null,
+    outputs: [],
+    progress: null,
+    engine: { adapter: "demo", models: [], workflowHash: null },
+    cost: null,
+    origin: "demo",
+    failure: null,
+    createdAt: "2026-10-17T09:00:00.000Z",
+    finishedAt: "2026-10-17T09:00:03.000Z",
   })
+}
 
-  it("names only the missing file of the chosen mode", () => {
+describe("the upscale checks", () => {
+  it("names only the missing file of the chosen tab on the graph", () => {
     const app = upscaleListing()
-    const names = (mode: "image" | "video") => {
-      const form = formAppFor(app, mode)
-      const values = defaultsOf(form)
-      const chosen = { ...values, inputs: { ...values.inputs, mode } }
-      return problemsOf(form, chosen).map((problem) => problem.name)
-    }
+    const names = (mode: "image" | "video") =>
+      checkFor(app, graph)(formWith({ mode }).values).map((one) => one.name)
     expect(names("image")).toEqual(["image"])
     expect(names("video")).toEqual(["video"])
   })
 
-  it("sends only the file of the chosen mode", () => {
-    const app = upscaleListing()
-    const names = (mode: "image" | "video") =>
-      bodyAppFor(app, mode).inputs.map((input) => input.name)
-    expect(names("image")).toEqual(["mode", "image", "scale", "model", "seed"])
-    expect(names("video")).toEqual(["mode", "video", "scale", "model", "seed"])
+  it("names the file input of a hosted model", () => {
+    const check = checkFor(upscaleListing(), waveSpeed)
+    expect(check(formWith({ mode: "image" }).values)).toEqual([
+      expect.objectContaining({ name: "inputImage" }),
+    ])
+    expect(
+      check(formWith({ mode: "image", inputImage: ["photo-1"] }).values)
+    ).toEqual([])
   })
 
-  it("leaves a video out of the body of an image run", () => {
+  it("sends only the file of the chosen tab on the graph", () => {
     const app = upscaleListing()
-    const values = defaultsOf(formAppFor(app, "image"))
-    const filled = {
-      ...values,
-      inputs: { ...values.inputs, image: ["photo-1"], video: ["clip-1"] },
-    }
-    const body = bodyOf(bodyAppFor(app, "image"), filled)
+    const filled = formWith({ image: ["photo-1"], video: ["clip-1"] })
+    const body = bodyOf(bodyAppFor(app, "image"), filled.values)
     expect(body.inputs).toMatchObject({ mode: "image", image: ["photo-1"] })
     expect(body.inputs).not.toHaveProperty("video")
   })
@@ -67,6 +78,60 @@ describe("the upscale modes", () => {
     expect(modeOf("video")).toBe("video")
     expect(modeOf("audio")).toBe("image")
     expect(modeOf(undefined)).toBe("image")
+  })
+})
+
+describe("the scale line", () => {
+  const app = upscaleListing()
+  const square = { width: 1024, height: 1024 }
+
+  it("reads Makes 2,048 by 2,048 pixels for an image of 1024 by 1024 at 2x", () => {
+    const scale = scaleFor(scaleOf(graph, app), formWith({}), square)
+    expect(scaleNoteOf({ app, scale })).toBe("Makes 2,048 by 2,048 pixels.")
+    expect(scaleMessageOf({ app, scale })).toBeNull()
+  })
+
+  it("names the 3840 pixel limit when 4x passes it", () => {
+    const scale = scaleFor(
+      scaleOf(graph, app),
+      formWith({ scale: "4x" }),
+      square
+    )
+    expect(scale.check.state).toBe("tooBig")
+    expect(scaleMessageOf({ app, scale })).toBe(
+      "4x would make 4,096 by 4,096 pixels. The limit is 3,840 pixels on the long side. Pick a smaller scale or a smaller file."
+    )
+  })
+
+  it("names the scale before a file is added, and says nothing of pixels for a target resolution", () => {
+    const empty = scaleFor(scaleOf(graph, app), formWith({}), null)
+    expect(scaleNoteOf({ app, scale: empty })).toBe(
+      "The result is 2x as wide and as tall as your file."
+    )
+    const target = scaleFor(scaleOf(waveSpeed, app), formWith({}), square)
+    expect(target.value).toBe("4k")
+    expect(scaleNoteOf({ app, scale: target })).toBeNull()
+    expect(scaleMessageOf({ app, scale: target })).toBeNull()
+  })
+})
+
+describe("a run opened again", () => {
+  it("opens a hosted video run on the Video tab", () => {
+    const values = runValuesOf(
+      upscaleListing(),
+      runOf({ model: flashVsr.id, video: ["clip-1"], duration: 5 }),
+      catalog
+    )
+    expect(values.inputs.mode).toBe("video")
+  })
+
+  it("keeps the tab of a graph run", () => {
+    const values = runValuesOf(
+      upscaleListing(),
+      runOf({ model: graph.id, mode: "video", video: ["clip-1"] }),
+      catalog
+    )
+    expect(values.inputs.mode).toBe("video")
   })
 })
 

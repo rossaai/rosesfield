@@ -6,7 +6,7 @@ import {
   useSheetOpen,
 } from "@/screens/app/column-frame"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
-import { UpscalePanel } from "@/studio/upscale/upscale-panel"
+import { ModeTabs, UpscalePanel } from "@/studio/upscale/upscale-panel"
 import { useUpscaleScreen } from "@/studio/upscale/use-upscale-screen"
 
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
@@ -20,6 +20,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       start={state.start}
       onShortcut={state.onShortcut}
       sheet={sheet}
+      tabs={<ModeTabs state={state} />}
       panel={<UpscalePanel state={state} />}
       canvas={(openInputs) => (
         <AppCanvas
