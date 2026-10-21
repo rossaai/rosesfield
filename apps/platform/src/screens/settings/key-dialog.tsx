@@ -21,6 +21,7 @@ import { formatNumber } from "@/copy/format"
 import { t, tCount } from "@/copy/t"
 import type { CopyKey } from "@/copy.en"
 import { DialogOrSheet } from "@/pieces/responsive-layer"
+import { noteAgentModel } from "@/screens/agent/agent-model"
 import {
   comfyBillingPage,
   comfyKeyPage,
@@ -158,6 +159,7 @@ function useKeepAccepted(checked: Checked | null): void {
     }
     const { key, account } = checked
     void keepVisitorKey("engine", key).then(() => {
+      noteAgentModel("unknown")
       client.setQueryData(accountQuery.queryKey, account)
       return client.invalidateQueries({
         predicate: (query) =>

@@ -9,7 +9,6 @@ import { settingsQuery } from "@/api/queries"
 import { t } from "@/copy/t"
 import { RetentionLine } from "@/screens/settings/key-dialog"
 import { ServerPart } from "@/screens/settings/server-part"
-import { VisitorKeyField } from "@/screens/settings/visitor-key-field"
 
 function agentStatus(settings: GatewaySettings): string {
   if (settings.agent !== "set") {
@@ -27,14 +26,6 @@ function AgentParts({ settings }: { settings: GatewaySettings }): ReactElement {
   return (
     <>
       <p className="text-body">{agentStatus(settings)}</p>
-      {isPublic ? (
-        <>
-          <p className="text-body text-ink-muted">
-            {t("settings.visitor.agentNote")}
-          </p>
-          <VisitorKeyField kind="agent" />
-        </>
-      ) : null}
       {!isPublic && settings.agent !== "set" ? (
         <p className="text-body text-ink-muted">{t("settings.agent.howTo")}</p>
       ) : null}

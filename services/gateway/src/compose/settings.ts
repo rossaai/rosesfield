@@ -44,6 +44,6 @@ export function visitorSettings(vars: WorkerVars, keys: VisitorKeys): Settings {
     mode: "public",
     engine: engineStatus(engine, keys.engine, isLive),
     lock: "none",
-    agent: agentStatus(vars.agent, keys.agent !== null),
+    agent: agentStatus(vars.agent, keys.engine !== null),
   }
 }

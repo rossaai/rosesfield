@@ -4,9 +4,14 @@ import type {
   ToolRegistration,
 } from "@earendil-works/pi-durable"
 import {
+  type ModelForm,
+  publishedInputOf,
+  publishedModelOf,
+} from "@rosesfield/catalog/comfy"
+import {
   type AppDefinition,
   type RunRequest,
-  startRunBodyFor,
+  runRequest,
 } from "@rosesfield/contract"
 import {
   RunInputInvalidError,
@@ -31,9 +36,10 @@ const jsonBody = z.record(z.string(), z.json())
 
 export function appTool(
   app: AppDefinition,
-  startRun: () => StartRunHandler
+  startRun: () => StartRunHandler,
+  forms: readonly ModelForm[] = []
 ): ToolRegistration {
-  const schema = startRunBodyFor(app)
+  const schema = publishedInputOf(app, forms)
   return {
     name: app.id,
     description: agentCopy.tools.app(app),
@@ -106,14 +112,35 @@ async function propose(
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function requestOf(app: AppDefinition, parsed: unknown): RunRequest {
+  const body = isRecord(parsed) ? parsed : {}
+  const given = isRecord(body.inputs) ? body.inputs : {}
+  const inputs = Object.fromEntries(
+    Object.entries(given).filter(
+      ([, value]) => value !== "" && value !== undefined
+    )
+  )
+  const model = publishedModelOf(app)
+  return runRequest.parse({
+    inputs: model === null || "model" in inputs ? inputs : { ...inputs, model },
+    count:
+      typeof body.count === "number" ? body.count : app.output.count.default,
+    aspectRatio: typeof body.aspectRatio === "string" ? body.aspectRatio : null,
+  })
+}
+
 function parseRequest(
   app: AppDefinition,
-  schema: z.ZodType<RunRequest>,
+  schema: z.ZodType<unknown>,
   args: unknown
 ): RunRequest {
   const result = schema.safeParse(args)
   if (result.success) {
-    return result.data
+    return requestOf(app, result.data)
   }
   const issues = result.error.issues.map(
     (issue) => `${issue.path.join(".") || "body"}: ${issue.message}`

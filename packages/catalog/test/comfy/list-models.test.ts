@@ -48,6 +48,7 @@ describe("modelsForApp", () => {
         provider: "luma",
         takes: ["text"],
         makes: ["image"],
+        takesTools: false,
         form: null,
       },
       {
@@ -55,6 +56,7 @@ describe("modelsForApp", () => {
         provider: "maker",
         takes: ["text"],
         makes: ["image"],
+        takesTools: false,
         form: null,
       },
     ])
@@ -76,6 +78,7 @@ describe("the reference platform's own models", () => {
       provider: id.split("/")[0] ?? "",
       takes: ["text"],
       makes: ["image"],
+      takesTools: false,
       form: null,
     })
     const models = modelsForApp(app, [

@@ -6,6 +6,7 @@ import { motion } from "@rosesfield/ui/motion"
 import type { ReactElement, ReactNode } from "react"
 import type { TranscriptItem } from "@/api/conversation-wire"
 import { wordsForCode } from "@/copy/error-words"
+import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { useAssetThumbs } from "@/pieces/attachment-thumbs"
 import type { AnswerPart, Turn } from "@/screens/agent/conversation-store"
@@ -62,6 +63,14 @@ function AgentText({
   )
 }
 
+function TurnCredits({ credits }: { credits: number }): ReactElement {
+  return (
+    <p className="text-caption text-ink-muted">
+      {t("run.price.credits", { amount: formatAmount(credits) })}
+    </p>
+  )
+}
+
 function itemNode(conversationId: string, item: TranscriptItem): ReactNode {
   switch (item.type) {
     case "person":
@@ -77,6 +86,8 @@ function itemNode(conversationId: string, item: TranscriptItem): ReactNode {
           proposal={item.proposal}
         />
       )
+    case "credits":
+      return <TurnCredits credits={item.credits} />
   }
 }
 
@@ -195,6 +206,7 @@ export function LiveTurn({
           }
         />
       ) : null}
+      {turn.credits === null ? null : <TurnCredits credits={turn.credits} />}
       {turn.status === "stopped" ? (
         <p className="text-caption text-ink-muted">{t("state.stopped")}</p>
       ) : null}

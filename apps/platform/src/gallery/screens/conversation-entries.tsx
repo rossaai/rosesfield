@@ -76,6 +76,7 @@ function turnOf(change: Partial<Turn>): Turn {
     parts: [],
     status: "answering",
     failureCode: null,
+    credits: null,
     shownItems: 0,
     ...change,
   }

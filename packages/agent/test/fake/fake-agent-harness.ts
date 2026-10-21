@@ -7,6 +7,7 @@ import type {
 import {
   AgentHarness,
   type AgentMessage,
+  type AgentModelChoice,
   type AnswerStream,
   type ConversationChanges,
   type NewConversation,
@@ -15,6 +16,7 @@ import {
   type StoredProposal,
 } from "#domain/agent-harness.port"
 import type { ConversationId } from "#domain/conversation.id"
+import { AgentModelUnknownError } from "#domain/error/agent-model-unknown.error"
 import { ConversationNotFoundError } from "#domain/error/conversation-not-found.error"
 import { ProposalNotFoundError } from "#domain/error/proposal-not-found.error"
 
@@ -23,6 +25,8 @@ export class FakeAgentHarness extends AgentHarness {
   readonly decisions: ProposalDecision[] = []
   readonly conversations = new Map<string, Conversation>()
   readonly proposals = new Map<string, StoredProposal>()
+  readonly models = ["maker/chat-small", "maker/chat-large"]
+  private model = "maker/chat-small"
   private readonly next: Conversation
   private readonly answer: readonly AnswerEvent[]
 
@@ -76,6 +80,18 @@ export class FakeAgentHarness extends AgentHarness {
       },
       stop: async () => undefined,
     }
+  }
+
+  override async listModels(): Promise<AgentModelChoice> {
+    return { models: [...this.models], model: this.model }
+  }
+
+  override async chooseModel(model: string): Promise<AgentModelChoice> {
+    if (!this.models.includes(model)) {
+      throw new AgentModelUnknownError({ provider: "maker", model })
+    }
+    this.model = model
+    return this.listModels()
   }
 
   override async readProposal(ref: ProposalRef): Promise<StoredProposal> {

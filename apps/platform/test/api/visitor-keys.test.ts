@@ -8,7 +8,6 @@ import {
 
 afterEach(() => {
   holdVisitorKey("engine", null)
-  holdVisitorKey("agent", null)
 })
 
 describe("problemOfKey", () => {
@@ -29,14 +28,10 @@ describe("the request headers", () => {
     expect(credentialHeaders()).toEqual({})
   })
 
-  it("send each key the visitor keeps in its own header", () => {
+  it("send the visitor's Comfy key alone, which the engine and the agent both use", () => {
     holdVisitorKey("engine", "engine-key")
-    holdVisitorKey("agent", "model-key")
-    expect(credentialHeaders()).toEqual({
-      "X-Engine-Key": "engine-key",
-      "X-Agent-Key": "model-key",
-    })
-    holdVisitorKey("agent", null)
     expect(credentialHeaders()).toEqual({ "X-Engine-Key": "engine-key" })
+    holdVisitorKey("engine", null)
+    expect(credentialHeaders()).toEqual({})
   })
 })

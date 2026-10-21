@@ -6,10 +6,13 @@ import type {
   SubmissionId,
   SubmissionRecord,
 } from "@earendil-works/pi-durable"
-import { errorEnvelopeOf } from "@rosesfield/contract"
+import { creditsOfCost } from "@rosesfield/catalog/comfy"
+import { type ErrorBody, errorEnvelopeOf } from "@rosesfield/contract"
 import { runIdFormat } from "@rosesfield/kernel"
 import { type AnswerEvent, proposal } from "#agent.contract"
 import { AgentAnswerFailedError } from "#domain/error/agent-answer-failed.error"
+import { refusalBodyOf } from "#infrastructure/router-chat-fetch"
+import { routerChat } from "#infrastructure/router-chat-models"
 
 type ReadingMessage = {
   index: number | null
@@ -25,6 +28,7 @@ export class PiAnswerReader {
   private readonly submissionId: SubmissionId
   private reading: ReadingMessage | null = null
   private nextIndex = 0
+  private cost: number | null = null
 
   constructor(options: PiAnswerReaderOptions) {
     this.submissionId = options.submissionId
@@ -52,11 +56,12 @@ export class PiAnswerReader {
       return []
     }
     if (record.status === "done") {
-      return [{ type: "done" }]
+      return this.cost === null
+        ? [{ type: "done" }]
+        : [{ type: "done", credits: creditsOfCost({ amount: this.cost }) }]
     }
     if (record.status === "unanswered") {
-      const error = new AgentAnswerFailedError({ reason: record.reason })
-      return [{ type: "failed", error: errorEnvelopeOf(error).error }]
+      return [{ type: "failed", error: failureOf(record) }]
     }
     return []
   }
@@ -82,6 +87,10 @@ export class PiAnswerReader {
 
   private end(entry: EntryRecord): AnswerEvent[] {
     const message = entry.model?.[0]
+    const cost = message === undefined ? null : routerCostOf(message)
+    if (cost !== null) {
+      this.cost = (this.cost ?? 0) + cost
+    }
     const shown = message?.role === "assistant" ? this.replace(message) : []
     this.reading = null
     return shown
@@ -108,6 +117,22 @@ export class PiAnswerReader {
     reading.index ??= this.nextIndex++
     return [{ type: "message", index: reading.index, text }]
   }
+}
+
+function failureOf(record: SubmissionRecord): ErrorBody {
+  const refused = refusalBodyOf(record.detail)
+  if (refused !== null) {
+    return refused
+  }
+  const reason = record.reason ?? record.status
+  return errorEnvelopeOf(new AgentAnswerFailedError({ reason })).error
+}
+
+export function routerCostOf(message: Message): number | null {
+  return message.role === "assistant" &&
+    message.provider === routerChat.provider
+    ? message.usage.cost.total
+    : null
 }
 
 function apply(blocks: Map<number, string>, change: MessageChange): void {
