@@ -1,6 +1,8 @@
 import { formatBytes, formatSeconds } from "@/copy/format"
 import { tCatalog } from "@/copy/t"
+import { clipMimes } from "@/pieces/use-clip-facts"
 import type { FieldProblem } from "@/screens/app/app-form"
+import { type ClipRange, graphClipRange } from "@/studio/motion/motion-tabs"
 
 export type MediaFacts = {
   mime: string
@@ -11,7 +13,6 @@ export type MediaFacts = {
 }
 
 type Limits = {
-  input: string
   maxBytes: number
   mimes: readonly string[]
   formatsKey: string
@@ -22,21 +23,17 @@ export const photoInput = "photo"
 export const clipInput = "clip"
 
 export const photoLimits: Limits = {
-  input: photoInput,
   maxBytes: 20_000_000,
   mimes: ["image/png", "image/jpeg", "image/webp"],
   formatsKey: "motion.formats.photo",
   unreadableKey: "motion.input.photo.unreadable",
 }
 
-export const clipLimits: Limits & { minSeconds: number; maxSeconds: number } = {
-  input: clipInput,
+export const clipLimits: Limits = {
   maxBytes: 100_000_000,
-  mimes: ["video/mp4", "video/quicktime", "video/webm"],
+  mimes: clipMimes,
   formatsKey: "motion.formats.clip",
   unreadableKey: "motion.input.clip.unreadable",
-  minSeconds: 2,
-  maxSeconds: 10,
 }
 
 export function nearestRatio(width: number, height: number): string {
@@ -57,17 +54,21 @@ export function nearestRatio(width: number, height: number): string {
   return "16:9"
 }
 
-function fileProblem(facts: MediaFacts, limits: Limits): FieldProblem | null {
+function fileProblem(
+  facts: MediaFacts,
+  limits: Limits,
+  name: string
+): FieldProblem | null {
   if (!limits.mimes.includes(facts.mime)) {
     return {
-      name: limits.input,
+      name,
       key: "field.asset.wrongKind",
       values: { kinds: tCatalog(limits.formatsKey) },
     }
   }
   if (facts.bytes > limits.maxBytes) {
     return {
-      name: limits.input,
+      name,
       key: "field.asset.tooLarge",
       values: {
         size: formatBytes(facts.bytes),
@@ -78,48 +79,65 @@ function fileProblem(facts: MediaFacts, limits: Limits): FieldProblem | null {
   return null
 }
 
-function unreadableProblem(limits: Limits): FieldProblem {
+function unreadableProblem(limits: Limits, name: string): FieldProblem {
   return {
-    name: limits.input,
+    name,
     key: "field.asset.wrongKind",
     values: { kinds: tCatalog(limits.unreadableKey) },
   }
 }
 
-export function photoProblem(facts: MediaFacts): FieldProblem | null {
-  const problem = fileProblem(facts, photoLimits)
+export function photoProblem(
+  facts: MediaFacts,
+  name: string = photoInput
+): FieldProblem | null {
+  const problem = fileProblem(facts, photoLimits, name)
   if (problem !== null) {
     return problem
   }
   if (facts.width === null || facts.height === null) {
-    return unreadableProblem(photoLimits)
+    return unreadableProblem(photoLimits, name)
   }
   return null
 }
 
-export function clipProblem(facts: MediaFacts): FieldProblem | null {
-  const problem = fileProblem(facts, clipLimits)
+export function clipProblem(
+  facts: MediaFacts,
+  range: ClipRange | null = graphClipRange,
+  name: string = clipInput
+): FieldProblem | null {
+  const problem = fileProblem(facts, clipLimits, name)
   if (problem !== null) {
     return problem
   }
   if (facts.seconds === null || facts.width === null || facts.height === null) {
-    return unreadableProblem(clipLimits)
+    return unreadableProblem(clipLimits, name)
+  }
+  if (range === null) {
+    return null
   }
   const shown = Math.round(facts.seconds * 10) / 10
   const seconds = formatSeconds(shown)
-  if (shown > clipLimits.maxSeconds) {
+  if (shown > range.max) {
     return {
-      name: clipInput,
+      name,
       key: "field.asset.tooLong",
-      values: { seconds, max: clipLimits.maxSeconds },
+      values: { seconds, max: range.max },
     }
   }
-  if (shown < clipLimits.minSeconds) {
+  if (shown < range.min) {
     return {
-      name: clipInput,
+      name,
       key: "field.asset.tooShort",
-      values: { seconds, min: clipLimits.minSeconds },
+      values: { seconds, min: range.min },
     }
   }
   return null
+}
+
+export function isLengthProblem(problem: FieldProblem): boolean {
+  return (
+    problem.key === "field.asset.tooLong" ||
+    problem.key === "field.asset.tooShort"
+  )
 }

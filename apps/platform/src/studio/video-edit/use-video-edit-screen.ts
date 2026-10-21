@@ -10,6 +10,12 @@ import {
   useState,
 } from "react"
 import { assetQuery } from "@/api/queries"
+import {
+  type ClipFacts,
+  hasSameFormat,
+  nearestRatio,
+  useClipFacts,
+} from "@/pieces/use-clip-facts"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import {
   type FieldProblem,
@@ -35,12 +41,6 @@ import {
   clipLimitOf,
   clipProblemOf,
 } from "@/studio/video-edit/clip-limit"
-import {
-  type ClipFacts,
-  hasSameFormat,
-  nearestRatio,
-  useClipFacts,
-} from "@/studio/video-edit/use-clip-facts"
 import {
   aspectInput,
   bodyAppFor,

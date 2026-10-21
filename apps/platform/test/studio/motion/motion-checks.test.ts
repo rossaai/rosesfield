@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
 import {
   clipProblem,
+  isLengthProblem,
   type MediaFacts,
   nearestRatio,
   photoProblem,
@@ -55,6 +56,29 @@ describe("the motion checks", () => {
       "This clip runs 1.5 seconds. Pick one of 2 seconds or more."
     )
     expect(clipProblem(clip({ seconds: 10 }))).toBeNull()
+  })
+
+  it("judges a clip by the range of the chosen model, under the name of its well", () => {
+    const range = { min: 3, max: 8 }
+    expect(
+      clipProblem(clip({ seconds: 5 }), range, "referenceVideo")
+    ).toBeNull()
+    const long = clipProblem(clip({ seconds: 9 }), range, "referenceVideo")
+    expect(long).toEqual({
+      name: "referenceVideo",
+      key: "field.asset.tooLong",
+      values: { seconds: "9", max: 8 },
+    })
+    expect(long === null ? false : isLengthProblem(long)).toBe(true)
+    expect(
+      words(clipProblem(clip({ seconds: 2.5 }), range, "referenceVideo"))
+    ).toBe("This clip runs 2.5 seconds. Pick one of 3 seconds or more.")
+  })
+
+  it("passes a clip of any length for a model whose schema declares none, and still checks its file", () => {
+    expect(clipProblem(clip({ seconds: 40 }), null)).toBeNull()
+    const large = clipProblem(clip({ seconds: 40, bytes: 120_000_000 }), null)
+    expect(large?.key).toBe("field.asset.tooLarge")
   })
 
   it("refuses a clip past 100 MB and a clip in a format the app does not take", () => {

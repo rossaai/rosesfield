@@ -17,7 +17,7 @@ import { FixedClock, runIdFormat } from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
 import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
 import type { EngineSettings } from "#engine/engine-target"
-import { recastEngine } from "../../../../packages/catalog/src/recast/comfy/recast-engine"
+import { motionEngine } from "../../../../packages/catalog/src/motion/comfy/motion-binding"
 import { app } from "../../../../packages/catalog/src/remake/remake-app"
 import { comfyCloud, demoEngine, localEnv } from "../server-env"
 
@@ -51,10 +51,7 @@ function loosened(definition: AppDefinition): AppDefinition {
 function onOneWorkflow(definition: AppDefinition): AppDefinition {
   return appDefinition.parse({
     ...definition,
-    engine: resolveBinding(recastEngine, {
-      mode: "character",
-      quality: "draft",
-    }),
+    engine: resolveBinding(motionEngine, { sound: "off" }),
   })
 }
 

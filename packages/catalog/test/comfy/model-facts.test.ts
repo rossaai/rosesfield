@@ -78,6 +78,45 @@ describe("the task of a model", () => {
     ).toEqual(["speech"])
   })
 
+  it("reads motion transfer and character swap from the name, beside the media tasks", () => {
+    const video = image("image", "image_url", true)
+    const clip: ModelField = {
+      kind: "media",
+      name: "video",
+      path: "video_url",
+      required: true,
+      media: "video",
+      min: 1,
+      max: 1,
+    }
+    expect(
+      tasksOfModel(
+        hosted(
+          "a/move-motion-transfer-v1",
+          ["image", "video"],
+          ["video"],
+          [video, clip]
+        )
+      )
+    ).toEqual(["motion-transfer"])
+    expect(
+      tasksOfModel(hosted("a/v3-motion-control", ["image", "video"], ["video"]))
+    ).toContain("motion-transfer")
+    expect(
+      tasksOfModel(
+        hosted(
+          "a/character-replace-v2",
+          ["image", "video"],
+          ["video"],
+          [video, clip]
+        )
+      )
+    ).toEqual(["character-swap"])
+    expect(
+      tasksOfModel(hosted("a/clip-edit", ["image", "video"], ["video"], [clip]))
+    ).toEqual(["video-edit"])
+  })
+
   it("lists an edit model that needs an image in Edit and not in text to image", () => {
     const fill = hosted(
       "a/fill",

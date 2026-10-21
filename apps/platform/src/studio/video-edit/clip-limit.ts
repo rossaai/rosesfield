@@ -1,14 +1,13 @@
 import type { CatalogModel, ModelTag } from "@rosesfield/catalog/comfy"
 import { formatBytes, formatSeconds } from "@/copy/format"
 import { assetLimitsText } from "@/pieces/asset-limits"
+import { type ClipFacts, clipMimes } from "@/pieces/use-clip-facts"
 import type { FieldProblem } from "@/screens/app/app-form"
-import { clipMimes } from "@/studio/recast/recast-checks"
 import {
-  type ClipFacts,
   largestClipBytes,
   longestClipSeconds,
   shortestClipSeconds,
-} from "@/studio/video-edit/use-clip-facts"
+} from "@/studio/video-edit/clip-limits"
 
 export type ClipLimit = {
   min: number

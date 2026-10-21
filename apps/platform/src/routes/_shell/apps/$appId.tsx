@@ -3,6 +3,7 @@ import { AppRouteScreen } from "@/screens/app/app-route-screen"
 import { type StageTab, stageTabs } from "@/screens/app/app-stage"
 import { readOneOf, readText } from "@/shell/search"
 import { movedAppOf } from "@/studio/audio/audio-address"
+import { oldAddressOf } from "@/studio/recast/old-address"
 
 type AppSearch = {
   use?: string
@@ -34,6 +35,10 @@ export const Route = createFileRoute("/_shell/apps/$appId")({
         hash: moved.hash,
         replace: true,
       })
+    }
+    const old = oldAddressOf(params.appId, search)
+    if (old !== null) {
+      throw redirect(old)
     }
     if (
       params.appId === "characters" &&

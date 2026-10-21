@@ -49,12 +49,8 @@ import wLipsyncClipInfinitetalkApi from "../../../workflows/lipsync-clip-infinit
 import wLipsyncClipInfinitetalkEntry from "../../../workflows/lipsync-clip-infinitetalk/entry.json"
 import wLipsyncPhotoInfinitetalkApi from "../../../workflows/lipsync-photo-infinitetalk/lipsync-photo-infinitetalk.api.json"
 import wLipsyncPhotoInfinitetalkEntry from "../../../workflows/lipsync-photo-infinitetalk/entry.json"
-import wMotionWanAnimate2Api from "../../../workflows/motion-wan-animate-2/motion-wan-animate-2.api.json"
-import wMotionWanAnimate2Entry from "../../../workflows/motion-wan-animate-2/entry.json"
-import wRecastCharacterScail2Api from "../../../workflows/recast-character-scail-2/recast-character-scail-2.api.json"
-import wRecastCharacterScail2Entry from "../../../workflows/recast-character-scail-2/entry.json"
-import wRecastObjectWanVaceApi from "../../../workflows/recast-object-wan-vace/recast-object-wan-vace.api.json"
-import wRecastObjectWanVaceEntry from "../../../workflows/recast-object-wan-vace/entry.json"
+import wMotionLtx23IcLoraApi from "../../../workflows/motion-ltx-2-3-ic-lora/motion-ltx-2-3-ic-lora.api.json"
+import wMotionLtx23IcLoraEntry from "../../../workflows/motion-ltx-2-3-ic-lora/entry.json"
 import wRelightQwenImageEdit2509Api from "../../../workflows/relight-qwen-image-edit-2509/relight-qwen-image-edit-2509.api.json"
 import wRelightQwenImageEdit2509Entry from "../../../workflows/relight-qwen-image-edit-2509/entry.json"
 import wStoryboardQwenImageEdit2511Api from "../../../workflows/storyboard-qwen-image-edit-2511/storyboard-qwen-image-edit-2511.api.json"
@@ -104,9 +100,7 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "layers-split-qwen-image-layered", entry: wLayersSplitQwenImageLayeredEntry, graph: wLayersSplitQwenImageLayeredApi },
   { folder: "lipsync-clip-infinitetalk", entry: wLipsyncClipInfinitetalkEntry, graph: wLipsyncClipInfinitetalkApi },
   { folder: "lipsync-photo-infinitetalk", entry: wLipsyncPhotoInfinitetalkEntry, graph: wLipsyncPhotoInfinitetalkApi },
-  { folder: "motion-wan-animate-2", entry: wMotionWanAnimate2Entry, graph: wMotionWanAnimate2Api },
-  { folder: "recast-character-scail-2", entry: wRecastCharacterScail2Entry, graph: wRecastCharacterScail2Api },
-  { folder: "recast-object-wan-vace", entry: wRecastObjectWanVaceEntry, graph: wRecastObjectWanVaceApi },
+  { folder: "motion-ltx-2-3-ic-lora", entry: wMotionLtx23IcLoraEntry, graph: wMotionLtx23IcLoraApi },
   { folder: "relight-qwen-image-edit-2509", entry: wRelightQwenImageEdit2509Entry, graph: wRelightQwenImageEdit2509Api },
   { folder: "storyboard-qwen-image-edit-2511", entry: wStoryboardQwenImageEdit2511Entry, graph: wStoryboardQwenImageEdit2511Api },
   { folder: "try-on-qwen-image-edit-2511", entry: wTryOnQwenImageEdit2511Entry, graph: wTryOnQwenImageEdit2511Api },

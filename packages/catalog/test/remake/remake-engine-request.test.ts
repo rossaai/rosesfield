@@ -4,10 +4,11 @@ import {
   type EngineFile,
   resolveBinding,
 } from "@rosesfield/generation"
-import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
+import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
+import { z } from "zod"
 import { findWorkflow } from "#list-workflows"
-import { app as recastApp } from "#recast/app"
+import { app as motionApp } from "#motion/app"
 import {
   type RemakeQuality,
   remakeEngine,
@@ -18,16 +19,13 @@ import {
 import { app } from "#remake/remake-app"
 import { type FoundShot, planShots } from "#remake/shot-plan"
 import { app as videoApp } from "#video/app"
-import { type Recording, ReplayFetch } from "../recast/replay-fetch"
+import { type Recording, ReplayFetch } from "../motion/motion-replay"
 
 const cloudUrl = "https://cloud.comfy.org"
 const jobId = "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a"
 const runId = "3f2e1d0c-9b8a-4776-a655-443322110000"
 const clipId = assetIdFormat.parse("0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c3d")
 const photoId = assetIdFormat.parse("1b2c3d4e-5f60-4b7c-9d8e-9f0a1b2c3d4e")
-const characterId = characterIdFormat.parse(
-  "2c3d4e5f-6071-4c8d-8e9f-0a1b2c3d4e5f"
-)
 const uploadedClip = "c1d2e3f4-a5b6-4c7d-8e9f-a0b1c2d3e4f5"
 const uploadedPhoto = "d2e3f4a5-b6c7-4d8e-9fa0-b1c2d3e4f5a6"
 const seed = 41
@@ -55,11 +53,21 @@ const reply = {
 }
 
 const shotApps = {
-  recast: appDefinition.parse(recastApp),
+  motion: appDefinition.parse(motionApp),
   video: appDefinition.parse(videoApp),
 }
 
 type Node = { class_type: string; inputs: Record<string, unknown> }
+
+const sentJob = z.object({
+  workflow: z.record(
+    z.string(),
+    z.object({
+      class_type: z.string(),
+      inputs: z.record(z.string(), z.unknown()),
+    })
+  ),
+})
 
 const clipFile: EngineFile = {
   assetId: clipId,
@@ -104,7 +112,7 @@ function requestsFor(
       attempt: 1,
       shot,
       clip: shot.route === "replace" ? clipId : null,
-      character: characterId,
+      photo: photoId,
       quality,
       instructions: "Warm light.",
       aspectRatio,
@@ -138,22 +146,20 @@ async function submit(request: ShotRequest, recordings: Recording[]) {
     apiKey: "comfyui-test",
     fetch: replay.fetch,
   })
-  const isReplaced = request.app === "recast"
+  const isReplaced = request.app === "motion"
   const submission = await engine.submit({
     idempotencyKey: request.idempotencyKey,
     binding: resolveBinding(request.binding, request.inputs),
-    inputs: isReplaced
-      ? { ...request.inputs, character: [photoId] }
-      : request.inputs,
-    files: isReplaced ? [clipFile, photoFile] : [],
+    inputs: request.inputs,
+    files: isReplaced ? [photoFile, clipFile] : [],
     count: 1,
     aspectRatio: request.aspectRatio,
     seed: request.seed,
     outputKind: "video",
   })
   const job = replay.sent.find((sent) => sent.url.endsWith("/api/v2/jobs"))
-  const body: { workflow: Record<string, Node> } = JSON.parse(job?.body ?? "{}")
-  return { submission, replay, job, workflow: body.workflow }
+  const { workflow } = sentJob.parse(job?.body ?? { workflow: {} })
+  return { submission, replay, job, workflow }
 }
 
 function classesOf(graph: Record<string, unknown>): string[] {
@@ -199,7 +205,7 @@ describe("the engine requests Remake sends to Comfy for each shot", () => {
     ])
     expect(definition.engine).toEqual(remakeEngine)
     expect(remakeEngine.config).toEqual({
-      replace: shotApps.recast.engine,
+      replace: shotApps.motion.engine,
       rebuild: shotApps.video.engine,
     })
   })
@@ -212,7 +218,7 @@ describe("the engine requests Remake sends to Comfy for each shot", () => {
     (quality, ratio) => {
       const requests = requestsFor(quality, "rebuild", ratio)
       expect(requests.map((request) => request?.app)).toEqual([
-        "recast",
+        "motion",
         "video",
         "video",
       ])
@@ -235,42 +241,49 @@ describe("the engine requests Remake sends to Comfy for each shot", () => {
     expect(parsed.success).toBe(false)
   })
 
-  it("sends a shot with one person to the character workflow at Final", async () => {
+  it("sends a shot with one person to Motion's Swap a character on the LTX 2.3 control graph at Final", async () => {
     const replaced = shotAt(0, "final", "9:16")
     const { submission, replay, job, workflow } = await submit(replaced, [
-      uploaded(uploadedClip, "video/mp4"),
       uploaded(uploadedPhoto, "image/png"),
+      uploaded(uploadedClip, "video/mp4"),
       submittedJob,
     ])
     expect(replay.unused()).toEqual([])
     expect(job?.headers.get("Idempotency-Key")).toBe(
       `${runId}-shot-1-attempt-1`
     )
-    expectWorkflow("recast-character-scail-2", workflow, submission.models)
+    expectWorkflow("motion-ltx-2-3-ic-lora", workflow, submission.models)
     expect(workflow).toMatchObject({
-      "1": { inputs: { file: asset(uploadedClip) } },
-      "3": {
-        inputs: { "resize_type.width": 704, "resize_type.height": 1248 },
-      },
-      "11": { inputs: { image: asset(uploadedPhoto) } },
-      "20": { inputs: { steps: 40 } },
-      "34": { inputs: { noise_seed: 41 } },
-      "82": { inputs: { value: false } },
+      "200": { inputs: { image: asset(uploadedPhoto) } },
+      "199": { inputs: { file: asset(uploadedClip) } },
+      "702": { inputs: { value: 704 } },
+      "704": { inputs: { seed: 41 } },
     })
+    expect(workflow["122"]?.inputs).not.toHaveProperty("audio")
   })
 
-  it("sends a shot with one person to the character workflow at Draft with its smaller size and fewer steps", async () => {
+  it("sends a shot with one person to the LTX 2.3 control graph at Draft at its smallest resolution", async () => {
     const replaced = shotAt(0, "draft", "16:9")
     const { workflow } = await submit(replaced, [
-      uploaded(uploadedClip, "video/mp4"),
       uploaded(uploadedPhoto, "image/png"),
+      uploaded(uploadedClip, "video/mp4"),
       submittedJob,
     ])
-    expect(workflow).toMatchObject({
-      "3": { inputs: { "resize_type.width": 896, "resize_type.height": 512 } },
-      "20": { inputs: { steps: 6 } },
-      "82": { inputs: { value: false } },
-    })
+    expect(workflow).toMatchObject({ "702": { inputs: { value: 480 } } })
+    expect(workflow["122"]?.inputs).not.toHaveProperty("audio")
+  })
+
+  it("control: a replaced shot with Motion's sound on keeps the clip's audio", async () => {
+    const replaced = shotAt(0, "draft", "16:9")
+    const { workflow } = await submit(
+      { ...replaced, inputs: { ...replaced.inputs, sound: "on" } },
+      [
+        uploaded(uploadedPhoto, "image/png"),
+        uploaded(uploadedClip, "video/mp4"),
+        submittedJob,
+      ]
+    )
+    expect(workflow["122"]?.inputs).toHaveProperty("audio")
   })
 
   it("rebuilds a shot with no person from its words, its move and the next seed with LTX 2.5 at Final", async () => {
@@ -341,7 +354,7 @@ describe("the engine requests Remake sends to Comfy for each shot", () => {
       runId,
       shot: first,
       clip: clipId,
-      character: characterId,
+      photo: photoId,
       quality: "draft",
       instructions: "",
       aspectRatio: "16:9",

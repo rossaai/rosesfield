@@ -7,9 +7,7 @@ export type LicenceId =
   | "mit"
   | "bsd-3-clause"
   | "ltx-community"
-  | "sam"
   | "film"
-  | "scail"
 
 export type ModelId =
   | "flux-2-klein-4b"
@@ -23,10 +21,7 @@ export type ModelId =
   | "wan-2-2"
   | "wan-2-2-fun"
   | "wan-2-1-vace"
-  | "wan-animate-2"
-  | "scail-2"
   | "infinitetalk"
-  | "sam-3-1"
   | "seedvr2"
   | "real-esrgan"
   | "birefnet"
@@ -126,18 +121,6 @@ export const openModels: readonly OpenModel[] = [
     files: ["wan2.1_vace_14B_fp16.safetensors", "Wan-AI/Wan2.1-VACE-14B"],
   },
   {
-    id: "wan-animate-2",
-    licence: "apache-2-0",
-    link: `${huggingFace}/Wan-AI/Wan-Animate-2-14B`,
-    files: ["wan_animate_2_distill_int8_convrot.safetensors"],
-  },
-  {
-    id: "scail-2",
-    licence: "scail",
-    link: `${huggingFace}/zai-org/SCAIL-2`,
-    files: ["wan2.1_14B_SCAIL_2_fp16.safetensors"],
-  },
-  {
     id: "infinitetalk",
     licence: "apache-2-0",
     link: `${huggingFace}/MeiGen-AI/InfiniteTalk`,
@@ -145,12 +128,6 @@ export const openModels: readonly OpenModel[] = [
       "Wan2_1-InfiniTetalk-Single_fp16.safetensors",
       "wan2.1_infiniteTalk_single_fp16.safetensors",
     ],
-  },
-  {
-    id: "sam-3-1",
-    licence: "sam",
-    link: "https://github.com/facebookresearch/sam3/blob/main/LICENSE",
-    files: ["sam3.1_multiplex_fp16.safetensors"],
   },
   {
     id: "seedvr2",
