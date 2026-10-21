@@ -104,7 +104,7 @@ function PresetReveal({
         {name}
       </span>
       {line === undefined ? null : (
-        <span data-slot="preset-tile-line" className="text-body text-ink-muted">
+        <span data-slot="preset-tile-line" className="text-body text-ink">
           {line}
         </span>
       )}
