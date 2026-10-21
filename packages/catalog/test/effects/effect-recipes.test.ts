@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { EffectRecipe } from "#effects/effect-recipe.contract"
+import { type EffectRecipe, maxHits } from "#effects/effect-recipe.contract"
 import {
   effectRecipes,
   effectRuns,
@@ -143,35 +143,48 @@ describe("the effect recipes kept as data", () => {
     ).toThrow(/many-copies\.json is invalid: photoFrame/)
   })
 
-  it("ends Push into eye on a dark frame under its last-frame luma, after a light guide toward a photographic amber iris, with a calm face and a camera that moves from the first frame", () => {
+  it("ends Push into eye on a dark frame under its last-frame luma, after a light guide toward a photographic copper iris, with a calm face, a pupil that grows with a sharp edge, one impact hit and a fade to silence", () => {
     const eye = recipeOf("push-into-eye")
     expect(eye.endFrame).toEqual({ source: "dark", luma: 1, strength: 0.9 })
     expect(eye.midFrame).toMatchObject({
       source: "edit",
-      time: 5.5,
+      time: 5.4,
       strength: 0.3,
     })
     expect(eye.midFrame?.prompt).toMatch(
       /real macro photograph of the iris of one of the person's eyes/
     )
     expect(eye.midFrame?.prompt).toMatch(/iris fills the whole frame/)
-    expect(eye.midFrame?.prompt).toMatch(/natural amber like a real human eye/)
-    expect(eye.midFrame?.prompt).toMatch(/No glow, no outlines, no drawn lines/)
+    expect(eye.midFrame?.prompt).toMatch(
+      /warm copper orange like a real human amber eye/
+    )
+    expect(eye.midFrame?.prompt).toMatch(
+      /No glow, no outlines, no drawn lines, no veins/
+    )
     expect(eye.midFrame?.prompt).toMatch(
       /pupil in the centre is small, round and pure black/
     )
     expect(eye.prompt).toMatch(
       /face, skin and calm expression stay exactly as in the photo/
     )
-    expect(eye.prompt).toMatch(/natural amber like a real human eye/)
+    expect(eye.prompt).toMatch(/warm copper orange like a real human amber eye/)
     expect(eye.prompt).not.toMatch(/glow/)
     expect(eye.prompt).toMatch(/never slows/)
     expect(eye.prompt).toMatch(
-      /black pupil grows outward until it swallows the whole frame/
+      /black pupil in its centre grows larger and larger with a sharp edge/
     )
+    expect(eye.prompt).toMatch(/black pupil swallows the whole frame/)
     expect(eye.prompt).not.toMatch(/\b(fades?|dims?)\b/)
     expect(eye.design.sound?.prompt).toMatch(/^From the very first frame/)
-    expect(eye.design.sound?.prompt).toMatch(/impact hit .* fills the frame/)
+    expect(eye.design.sound?.prompt).not.toMatch(/impact|hit/)
+    expect(eye.design.sound?.fadeOut).toBe(0.4)
+    const hits = eye.design.sound?.hits ?? []
+    expect(hits.length).toBeGreaterThan(0)
+    expect(hits.length).toBeLessThanOrEqual(maxHits)
+    for (const hit of hits) {
+      expect(hit.time).toBeLessThan(eye.seconds)
+      expect(hit.prompt).toMatch(/no music, no voice\.$/i)
+    }
     expect(
       eye.endFrame.source === "dark" ? eye.endFrame.luma : 255
     ).toBeLessThan(eye.design.lastFrame.maxLuma ?? 0)

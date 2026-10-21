@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { hitSlots } from "#effects/comfy/effect-sound"
 import {
   deliveryFrames,
   effectRatios,
@@ -34,6 +35,11 @@ const imageEditModels = [
   "qwen_2.5_vl_7b_fp8_scaled.safetensors",
   "qwen_image_edit_2511_bf16.safetensors",
   "qwen_image_vae.safetensors",
+]
+
+const hitModels = [
+  "stable_audio_3_medium.safetensors",
+  "t5gemma_b_b_ul2.safetensors",
 ]
 
 const detail = "a red scarf"
@@ -78,6 +84,7 @@ function expectedModels(recipe: EffectRecipe): string[] {
         ? imageEditModels
         : []),
       ...(recipe.hold === null ? [] : ["birefnet.safetensors"]),
+      ...((recipe.design.sound?.hits ?? []).length === 0 ? [] : hitModels),
     ].sort(),
   ]
 }
@@ -92,7 +99,11 @@ describe("every effects engine request against the recorded v2 routes", () => {
 
   it("covers each of the nine effects at each resolution", () => {
     expect(all.map((one) => `${one.recipe.effect} ${one.resolution}`)).toEqual(
-      effects.flatMap((effect) => [`${effect} 480p`, `${effect} 720p`])
+      effects.flatMap((effect) => [
+        `${effect} 480p`,
+        `${effect} 720p`,
+        `${effect} 1080p`,
+      ])
     )
   })
 
@@ -163,6 +174,16 @@ describe("every effects engine request against the recorded v2 routes", () => {
       recipe.design.sound !== null
     )
     expect(workflow["420"]).toBeUndefined()
+    const hits = recipe.design.sound?.hits ?? []
+    for (const [index, slot] of hitSlots.entries()) {
+      expect(workflow[slot.sampler]?.inputs.seed).toBe(
+        index < hits.length ? 42 : undefined
+      )
+    }
+    const lastHit = hitSlots[hits.length - 1]
+    if (lastHit !== undefined) {
+      expect(workflow["359"]?.inputs.audio).toEqual([lastHit.merged, 0])
+    }
     const end = recipe.endFrame
     const opening = recipe.photoFrame === "first" ? ["606", 0] : ["627", 0]
     const closing = recipe.photoFrame === "first" ? ["627", 0] : ["606", 0]
