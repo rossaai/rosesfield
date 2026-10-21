@@ -135,6 +135,7 @@ describe("the owner lock on a server that listens beyond 127.0.0.1", () => {
           origin: "demo",
         },
         lock: "token",
+        keyFrom: "server",
         agent: { model: "missing", models: [] },
       },
     })
@@ -173,6 +174,7 @@ describe("the owner lock on a server that listens on 127.0.0.1 only", () => {
           origin: "live",
         },
         lock: "local",
+        keyFrom: "server",
         agent: {
           model: "set",
           models: [{ provider: routerChat.provider, id: defaultChatModel }],

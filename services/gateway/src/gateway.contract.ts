@@ -14,6 +14,7 @@ export const settingsResponse = z.object({
     mode: z.enum(["owner", "public"]),
     engine: engineSettings,
     lock: z.enum(["local", "token", "none"]),
+    keyFrom: z.enum(["server", "settings"]),
     agent: z.object({
       model: z.enum(["set", "missing"]),
       models: z.array(z.object({ provider: z.string(), id: z.string() })),

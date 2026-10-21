@@ -40,6 +40,7 @@ const settings: GatewaySettings = {
     origin: "live",
   },
   lock: "local",
+  keyFrom: "server",
   agent: "unknown",
   agentModel: null,
   retentionDays: null,

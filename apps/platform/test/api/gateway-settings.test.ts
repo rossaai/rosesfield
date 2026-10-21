@@ -40,10 +40,18 @@ describe("readSettings", () => {
         origin: "live",
       },
       lock: "token",
+      keyFrom: "server",
       agent: "set",
       agentModel: "M3",
       retentionDays: null,
     })
+  })
+
+  it("reads where the key comes from, and takes Settings for a public deployment that does not say", () => {
+    const pasted = { settings: { ...ownerBody.settings, keyFrom: "settings" } }
+    expect(readSettings(pasted)).toMatchObject({ keyFrom: "settings" })
+    expect(readSettings(publicBody)).toMatchObject({ keyFrom: "settings" })
+    expect(readSettings(ownerBody)).toMatchObject({ keyFrom: "server" })
   })
 
   it("reads the number of days a public demo keeps a session", () => {

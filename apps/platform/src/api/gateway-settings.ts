@@ -13,6 +13,8 @@ export type EngineTarget =
 
 export type ServerMode = "owner" | "public"
 
+export type KeyFrom = "server" | "settings"
+
 export type GatewaySettings = {
   mode: ServerMode
   engine: {
@@ -22,6 +24,7 @@ export type GatewaySettings = {
     origin: "live" | "demo"
   }
   lock: "local" | "token" | "none"
+  keyFrom: KeyFrom
   agent: AgentModelStatus
   agentModel: string | null
   retentionDays: number | null
@@ -68,6 +71,7 @@ export function readSettings(body: unknown): GatewaySettings | null {
   const key = oneOf(fieldOf(engine, "key"), ["set", "missing"])
   const origin = oneOf(fieldOf(engine, "origin"), ["live", "demo"])
   const lock = oneOf(fieldOf(settings, "lock"), ["local", "token", "none"])
+  const keyFrom = oneOf(fieldOf(settings, "keyFrom"), ["server", "settings"])
   const agent = fieldOf(settings, "agent")
   const model = oneOf(fieldOf(agent, "model"), ["set", "missing"])
   if (
@@ -84,6 +88,7 @@ export function readSettings(body: unknown): GatewaySettings | null {
     mode,
     engine: { target, address, key, origin },
     lock,
+    keyFrom: keyFrom ?? (mode === "public" ? "settings" : "server"),
     agent: model ?? "unknown",
     agentModel: model === "set" ? agentModelOf(agent) : null,
     retentionDays: retentionOf(fieldOf(settings, "retentionDays")),

@@ -105,6 +105,7 @@ describe("the Workers entry in workerd", () => {
           origin: "demo",
         },
         lock: "token",
+        keyFrom: "server",
         agent: { model: "missing", models: [] },
       },
     })
