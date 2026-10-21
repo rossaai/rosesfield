@@ -99,7 +99,7 @@ async function mediaChecks(path: string, expected: Expected): Promise<Check[]> {
   if (length !== null) {
     checks.push(length)
   }
-  if (expected.kind === "video") {
+  if (expected.kind === "image" || expected.kind === "video") {
     const black = await blackFrames(path)
     checks.push(
       check("no black frame", black === 0, `${black} all-black frames`)

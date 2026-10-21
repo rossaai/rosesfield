@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/bun-sqlite"
 import { describe, expect, it } from "vitest"
 import { RunConflictError } from "#domain/error/run-conflict.error"
 import { RunFailedError } from "#domain/error/run-failed.error"
+import { RunOutputBlankError } from "#domain/error/run-output-blank.error"
 import { Run } from "#domain/run"
 import type { RunRepository } from "#domain/run.repository"
 import { migrateRunTable } from "#infrastructure/bun-sqlite-run-migration"
@@ -77,6 +78,30 @@ describe.each(subjects)("RunRepository contract: $name", ({ create }) => {
     const read = await runs.get(run.id)
     read?.keepJob({ index: 1, outputs: [portraitId], cost: each, now: start })
     expect(read?.toRecord().cost).toEqual({ amount: 0.02, currency: "USD" })
+  })
+
+  it("keeps the dropped count and the cost of a blank run", async () => {
+    const runs = create()
+    const run = runAt(0)
+    const each = { amount: 0.01, currency: "USD" as const }
+    const whenEmpty = new RunOutputBlankError({ dropped: 2 })
+    run.keepJob({
+      index: 0,
+      outputs: [],
+      dropped: 2,
+      cost: each,
+      whenEmpty,
+      now: start,
+    })
+    const stored = await runs.add(run)
+    const read = await runs.get(run.id)
+    expect(read?.toState()).toEqual(stored.toState())
+    expect(read?.toRecord()).toMatchObject({
+      status: "failed",
+      failure: { code: "RUN_OUTPUT_BLANK" },
+      cost: each,
+      dropped: 2,
+    })
   })
 
   it("keeps the time a job began collecting its result", async () => {
