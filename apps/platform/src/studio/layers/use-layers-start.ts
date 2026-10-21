@@ -4,14 +4,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { callRoute } from "@/api/call-route"
 import { settingsQuery } from "@/api/queries"
 import { uploadAsset } from "@/api/upload-asset"
-import { formatNumber } from "@/copy/format"
-import { t } from "@/copy/t"
 import { storeRun } from "@/pieces/run/run-actions"
 import type { FormValues, StartRunBodyInput } from "@/screens/app/app-form"
-import { priceQuery } from "@/screens/app/hosted/model-catalog-query"
-import { useDebounced } from "@/screens/app/hosted/use-debounced"
 import type { AppForm } from "@/screens/app/use-app-form"
-import type { StartRun } from "@/screens/app/use-start-run"
+import {
+  priceLabelsOf,
+  type StartRun,
+  usePrice,
+} from "@/screens/app/use-start-run"
 import { hostedLayersBody, isGraphModel } from "@/studio/layers/layers-models"
 import {
   type LayersMode,
@@ -30,8 +30,6 @@ type LayersStartOptions = {
   check: () => boolean
   onStarted: (run: Run) => void
 }
-
-const priceDelayMs = 300
 
 async function maskAssetOf(
   mask: { canvas: HTMLCanvasElement; size: PixelSize } | null
@@ -61,24 +59,11 @@ export function layersRunBody(options: {
     : body
 }
 
-function useLayersPrice(
-  app: AppListing,
-  body: StartRunBodyInput,
-  keyState: string
-): number | null {
-  const ask = useDebounced(body, priceDelayMs)
-  const query = useQuery(priceQuery(app.id, ask, keyState))
-  const price = query.data?.price
-  return price === undefined || price.source === "unknown"
-    ? null
-    : price.credits
-}
-
 export function useLayersStart(options: LayersStartOptions): StartRun {
   const { app, mode, form, chosen } = options
   const client = useQueryClient()
   const settings = useQuery(settingsQuery)
-  const credits = useLayersPrice(
+  const credits = usePrice(
     app,
     layersRunBody({ app, mode, values: form.values, chosen, mask: [] }),
     options.keyState
@@ -108,18 +93,10 @@ export function useLayersStart(options: LayersStartOptions): StartRun {
       start.mutate(crypto.randomUUID())
     }
   }
-  const isDemo = settings.data?.engine.origin === "demo"
-  const amount = credits === null ? null : formatNumber(credits)
   return {
     generate,
     isPending: start.isPending,
     error: start.error,
-    price: isDemo
-      ? t("run.price.demo")
-      : amount === null
-        ? t("run.price.unknown")
-        : "",
-    priceValue: amount,
-    priceName: amount === null ? null : t("run.generate.priced", { amount }),
+    ...priceLabelsOf(credits, settings.data?.engine.origin === "demo"),
   }
 }

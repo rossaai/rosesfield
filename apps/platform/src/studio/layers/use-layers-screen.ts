@@ -1,5 +1,6 @@
 import type { AppListing, Run } from "@rosesfield/contract"
 import { useQuery } from "@tanstack/react-query"
+import { runQuery } from "@/api/queries"
 import {
   type KeyboardEvent,
   type RefObject,
@@ -23,7 +24,7 @@ import {
   type Arrangement,
   chooseVersion,
   emptyArrangement,
-  type IsSplit,
+  isSplitRun,
   moveLayer,
   orderedLayers,
   pickStack,
@@ -32,11 +33,7 @@ import {
   stackOf,
   toggled,
 } from "@/studio/layers/layer-stack"
-import {
-  checkOf,
-  layersValuesOf,
-  runModeOf,
-} from "@/studio/layers/layers-models"
+import { checkOf, layersValuesOf } from "@/studio/layers/layers-models"
 import {
   formAppFor,
   type LayersMode,
@@ -172,13 +169,9 @@ function actionsOf(
   }
 }
 
-function useStackState(
-  runs: readonly Run[],
-  preferred: string | null,
-  isSplit: IsSplit
-) {
-  const split = pickStack(runs, preferred, isSplit)
-  const stack = split === null ? null : stackOf(split, runs, isSplit)
+function useStackState(runs: readonly Run[], preferred: string | null) {
+  const split = pickStack(runs, preferred)
+  const stack = split === null ? null : stackOf(split, runs)
   const { arrangement, change } = useArrangement(stack)
   const [picked, setPicked] = useState<string | null>(null)
   const rows = rowsOf(stack, arrangement, picked)
@@ -198,7 +191,7 @@ function useModeForm(
 ) {
   const [mode, setMode] = useState<LayersMode>("split")
   const formApp = useMemo(() => formAppFor(app, mode), [app, mode])
-  const form = useAppForm(formApp, seeds, check)
+  const form = useAppForm(formApp, { ...seeds, from: undefined }, check)
   const formMode = modeOf(form.values)
   useEffect(() => setMode(formMode), [formMode])
   return { mode, formApp, form }
@@ -267,16 +260,37 @@ function shortcutOf(start: StartRun) {
 function useLayersCatalog(
   app: AppListing,
   form: AppForm,
-  check: RefObject<FormCheck | null>
+  check: RefObject<FormCheck | null>,
+  runs: readonly Run[]
 ) {
   const formMode = modeOf(form.values)
-  const models = useLayersModels(app, form, formMode)
+  const models = useLayersModels(app, form, formMode, runs)
   check.current = checkOf(models.hosted.chosen, formMode)
-  const isSplit = useCallback(
-    (run: Run) => runModeOf(run, models.index) === "split",
-    [models.index]
-  )
-  return { ...models, isSplit }
+  return models
+}
+
+function useFromRun(
+  app: AppListing,
+  from: string | undefined,
+  isReady: boolean,
+  apply: (run: Run) => void
+): void {
+  const query = useQuery({
+    ...runQuery(from ?? ""),
+    enabled: from !== undefined,
+  })
+  const run = query.data?.run
+  const applied = useRef(false)
+  useEffect(() => {
+    if (applied.current || !isReady || run === undefined) {
+      return
+    }
+    if (run.appId !== app.id) {
+      return
+    }
+    applied.current = true
+    apply(run)
+  }, [app.id, run, isReady, apply])
 }
 
 function shownOf(rows: readonly LayerRow[]): string[] {
@@ -298,14 +312,14 @@ function runActionsOf(options: {
   const { app, form, catalog, setPreferred } = options
   return {
     onStarted: (run: Run): void => {
-      if (catalog.isSplit(run)) {
+      if (isSplitRun(run)) {
         setPreferred(null)
       }
       options.onStarted()
     },
     useInputs: (run: Run): void => {
       form.fill(layersValuesOf(app, run, catalog.index))
-      if (catalog.isSplit(run)) {
+      if (isSplitRun(run)) {
         setPreferred(run.id)
       }
     },
@@ -320,13 +334,14 @@ export function useLayersScreen(
   const check = useRef<FormCheck | null>(null)
   const { mode, formApp, form } = useModeForm(app, seeds, check)
   const runs = useAppRuns(app)
-  const catalog = useLayersCatalog(app, form, check)
+  const catalog = useLayersCatalog(app, form, check, runs.runs)
   const [preferred, setPreferred] = useState<string | null>(seeds.from ?? null)
-  const layers = useStackState(runs.runs, preferred, catalog.isSplit)
+  const layers = useStackState(runs.runs, preferred)
   const brush = useBrush()
   const focusSource = useRef<() => void>(() => undefined)
   useLayerValue(mode, layers.pickedRow?.shown ?? null, form)
   const actions = runActionsOf({ app, form, catalog, setPreferred, onStarted })
+  useFromRun(app, seeds.from, !catalog.hosted.isLoading, actions.useInputs)
   const start = useStartFor({
     app,
     mode,

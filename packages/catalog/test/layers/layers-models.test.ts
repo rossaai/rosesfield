@@ -20,7 +20,11 @@ function hosted(
 const flux = hosted("bfl/flux-3-image", ["text", "image"], ["image"])
 const briaRelight = hosted("bria/relight", ["image"], ["image"])
 const fluxFill = hosted("bfl/flux-pro-1.0-fill", ["image", "text"], ["image"])
-const briaFill = hosted("bria/image-edit-gen-fill", ["image", "text"], ["image"])
+const briaFill = hosted(
+  "bria/image-edit-gen-fill",
+  ["image", "text"],
+  ["image"]
+)
 const layerSplit = hosted(
   "maker/image-layer-separation",
   ["text", "image"],
@@ -75,7 +79,7 @@ describe("the models of each Layers mode", () => {
   })
 
   it("lists each hosted model under the task its name gives before the task its media gives", () => {
-    const tasks = new Map(
+    const tasks = Object.fromEntries(
       modelsForApp(definition, [
         flux,
         briaRelight,
@@ -87,7 +91,7 @@ describe("the models of each Layers mode", () => {
         .filter((model) => model.kind === "hosted")
         .map((model) => [model.id, model.task])
     )
-    expect(Object.fromEntries(tasks)).toEqual({
+    expect(tasks).toEqual({
       "bfl/flux-3-image": "image-edit",
       "bria/relight": "relight",
       "bfl/flux-pro-1.0-fill": "inpaint",

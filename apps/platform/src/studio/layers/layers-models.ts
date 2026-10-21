@@ -21,6 +21,7 @@ import {
   layerInput,
   layersModes,
   modeInput,
+  modeOf,
   sourceInput,
 } from "@/studio/layers/layers-modes"
 
@@ -41,6 +42,7 @@ const hostedTasks: Readonly<Record<string, LayersMode>> = {
   "layer-separation": "split",
   "image-edit": "edit",
   relight: "relight",
+  inpaint: "fill",
 }
 
 const maskPattern = /mask/i
@@ -178,6 +180,7 @@ export function hostedLayersBody(
   )
   const inputs: Record<string, string | number | string[]> = {
     ...body.inputs,
+    [modeInput]: mode,
   }
   const image = imageFieldOf(model)
   const picked = listOf(values.inputs[drivenInput(mode)])
@@ -212,13 +215,9 @@ function modelOfRun(run: Run, index: ModelIndex): CatalogModel | undefined {
   return typeof id === "string" ? index.byId.get(id) : undefined
 }
 
-export function runModeOf(run: Run, index: ModelIndex): LayersMode {
+export function runModeOf(run: Run): LayersMode | null {
   const mode = run.inputs[modeInput]
-  if (isLayersMode(mode)) {
-    return mode
-  }
-  const id = run.inputs[modelInputName]
-  return (typeof id === "string" ? index.modes.get(id) : undefined) ?? "split"
+  return isLayersMode(mode) ? mode : null
 }
 
 export function runImageOf(run: Run, model: CatalogModel): string[] {
@@ -242,9 +241,12 @@ export function layersValuesOf(
   index: ModelIndex
 ): FormValues {
   const values = valuesFromRun(app, run)
-  const mode = runModeOf(run, index)
   const id = run.inputs[modelInputName]
   const model = modelOfRun(run, index)
+  const mode =
+    runModeOf(run) ??
+    (typeof id === "string" ? index.modes.get(id) : undefined) ??
+    modeOf(values)
   const image =
     model === undefined || isGraphModel(model) ? [] : runImageOf(run, model)
   const driven = mode === "split" ? sourceInput : layerInput

@@ -1,8 +1,8 @@
 import type { AppListing, Run } from "@rosesfield/contract"
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo } from "react"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
-import { runsOf, runsQuery, settingsQuery } from "@/api/queries"
+import { settingsQuery } from "@/api/queries"
 import { textOf } from "@/screens/app/fields/field-props"
 import { modelInputName } from "@/screens/app/hosted/hosted-form"
 import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
@@ -25,33 +25,17 @@ export type LayersModels = {
   hosted: HostedState
 }
 
-function ranBeforeIn(
-  runs: readonly Run[],
-  index: ModelIndex,
-  mode: LayersMode
-): string[] {
+export function ranBeforeIn(runs: readonly Run[], mode: LayersMode): string[] {
   const newest = [...runs].sort((a, b) =>
     b.createdAt.localeCompare(a.createdAt)
   )
   return ranBeforeOf(
     newest
-      .filter((run) => runModeOf(run, index) === mode)
+      .filter((run) => runModeOf(run) === mode)
       .map((run) => {
         const model = run.inputs[modelInputName]
         return typeof model === "string" ? model : undefined
       })
-  )
-}
-
-function useRanBefore(
-  app: AppListing,
-  index: ModelIndex,
-  mode: LayersMode
-): string[] {
-  const pages = useInfiniteQuery(runsQuery(app.id)).data
-  return useMemo(
-    () => ranBeforeIn(runsOf(pages), index, mode),
-    [pages, index, mode]
   )
 }
 
@@ -74,7 +58,8 @@ function errorOf(
 export function useLayersModels(
   app: AppListing,
   form: AppForm,
-  mode: LayersMode
+  mode: LayersMode,
+  runs: readonly Run[]
 ): LayersModels {
   const isTaskApp = useMemo(() => taskAppOf(app.id) !== null, [app.id])
   const settings = useQuery(settingsQuery)
@@ -89,7 +74,7 @@ export function useLayersModels(
   )
   const models = useMemo(() => modelsOfMode(index, mode), [index, mode])
   const fallback = useMemo(() => defaultOfMode(index, mode), [index, mode])
-  const ranBefore = useRanBefore(app, index, mode)
+  const ranBefore = useMemo(() => ranBeforeIn(runs, mode), [runs, mode])
   const id = textOf(form.values.inputs[modelInputName])
   const chosen = models.find((model) => model.id === id) ?? null
   const { values, setForm } = form

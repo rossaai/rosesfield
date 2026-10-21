@@ -14,8 +14,7 @@ import {
   stackOf,
   toggled,
 } from "@/studio/layers/layer-stack"
-import { runModeOf } from "@/studio/layers/layers-models"
-import { catalogIndex, flux3 } from "./layers-fixtures"
+import { flux3 } from "./layers-fixtures"
 
 const firstLayer = "0a1b2c3d-4e5f-4a6b-8c7d-8e9fa0b1c2d3"
 const secondLayer = "1b2c3d4e-5f6a-4b7c-9d8e-9fa0b1c2d3e4"
@@ -192,17 +191,28 @@ describe("a hosted edit on a layer", () => {
   const hostedEdit = layersRun({
     id: "6a7b8c9d-0e1f-4a2b-8c3d-e4f5a6b7c8d9",
     minute: 3,
-    inputs: { model: flux3.id, inputImage: [secondLayer], prompt: "a hat" },
+    inputs: {
+      mode: "edit",
+      model: flux3.id,
+      inputImage: [secondLayer],
+      prompt: "a hat",
+    },
     outputs: [secondEdit],
   })
-  const isSplit = (one: Run) => runModeOf(one, catalogIndex) === "split"
 
   it("joins the row of versions of the layer it changed", () => {
-    const stack = stackOf(split, [split, hostedEdit], isSplit)
+    const stack = stackOf(split, [split, hostedEdit])
     expect(layerOf(stack).versions).toEqual([secondLayer, secondEdit])
   })
 
-  it("never stands for the stack", () => {
-    expect(pickStack([hostedEdit, split], null, isSplit)?.id).toBe(split.id)
+  it("never stands for the stack, with no catalog to read", () => {
+    expect(pickStack([hostedEdit, split], null)?.id).toBe(split.id)
+    expect(pickStack([hostedEdit], hostedEdit.id)).toBeNull()
+  })
+
+  it("control: a run that names no mode never stands for the stack either", () => {
+    const { mode: _, ...rest } = hostedEdit.inputs
+    const unnamed = { ...hostedEdit, inputs: rest }
+    expect(pickStack([unnamed, split], null)?.id).toBe(split.id)
   })
 })

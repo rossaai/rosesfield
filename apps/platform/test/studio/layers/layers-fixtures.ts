@@ -103,14 +103,14 @@ export const relightGraph = model({
 export const fillGraph = model({
   id: "qwen-image-inpaint",
   maker: "Qwen",
-  task: "image-edit",
+  task: "inpaint",
   form: null,
 })
 
 export const fluxFill = model({
   id: "bfl/flux-pro-1.0-fill",
   maker: "Black Forest Labs",
-  task: "image-edit",
+  task: "inpaint",
   form: [prompt, image("image", true), image("mask", true)],
 })
 

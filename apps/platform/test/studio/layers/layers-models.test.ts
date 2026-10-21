@@ -13,6 +13,7 @@ import {
   runModeOf,
 } from "@/studio/layers/layers-models"
 import type { LayersMode } from "@/studio/layers/layers-modes"
+import { ranBeforeIn } from "@/studio/layers/use-layers-models"
 import {
   catalog,
   catalogIndex,
@@ -55,7 +56,7 @@ describe("the model picker of each Layers mode", () => {
   })
 
   it("control: a graph of the edit task that no mode names lists nowhere", () => {
-    const stray = { ...fillGraph, id: "maker/other-graph" }
+    const stray = { ...editGraph, id: "maker/other-graph" }
     const index = modelIndexOf(layersListing, [...catalog, stray])
     expect(index.modes.has(stray.id)).toBe(false)
     expect(modelsOfMode(index, "edit").map((model) => model.id)).toEqual([
@@ -105,6 +106,7 @@ describe("the body of a hosted Layers run", () => {
       model: seedream.id,
       image: [photo],
       size: "1K",
+      mode: "split",
     })
   })
 
@@ -120,6 +122,7 @@ describe("the body of a hosted Layers run", () => {
       prompt: "a brass handle",
       image: [firstLayer],
       mask: [maskAsset],
+      mode: "fill",
     })
   })
 
@@ -136,30 +139,29 @@ describe("a hosted run in History", () => {
   const hostedSplit = layersRun({
     id: "7d1e2f30-4a5b-4c6d-8e7f-901a2b3c4d5e",
     minute: 0,
-    inputs: { model: seedream.id, image: [photo], size: "2K" },
+    inputs: { mode: "split", model: seedream.id, image: [photo], size: "2K" },
     outputs: [firstLayer],
   })
   const hostedEdit = layersRun({
     id: "8e2f3041-5b6c-4d7e-9f80-a12b3c4d5e6f",
     minute: 1,
-    inputs: { model: flux3.id, inputImage: [firstLayer], prompt: "a hat" },
+    inputs: {
+      mode: "edit",
+      model: flux3.id,
+      inputImage: [firstLayer],
+      prompt: "a hat",
+    },
     outputs: [photo],
   })
 
-  it("reads its mode from its model", () => {
-    expect(runModeOf(hostedSplit, catalogIndex)).toBe("split")
-    expect(runModeOf(hostedEdit, catalogIndex)).toBe("edit")
-    expect(
-      runModeOf(
-        layersRun({
-          id: "9f304152-6c7d-4e8f-a091-b23c4d5e6f70",
-          minute: 2,
-          inputs: { mode: "relight", layer: [firstLayer] },
-          outputs: [photo],
-        }),
-        catalogIndex
-      )
-    ).toBe("relight")
+  it("reads its mode from the run alone, with no catalog to read", () => {
+    expect(runModeOf(hostedSplit)).toBe("split")
+    expect(runModeOf(hostedEdit)).toBe("edit")
+  })
+
+  it("control: a run that names no mode has none, and no catalog stands in for it", () => {
+    const { mode: _, ...rest } = hostedEdit.inputs
+    expect(runModeOf({ ...hostedEdit, inputs: rest })).toBeNull()
   })
 
   it("fills the form with its image, its model and its settings", () => {
@@ -168,5 +170,43 @@ describe("a hosted run in History", () => {
     expect(values.inputs.model).toBe(seedream.id)
     expect(values.inputs.source).toEqual([photo])
     expect(values.inputs.size).toBe("2K")
+  })
+
+  it("fills a run that names no mode in the mode of its model", () => {
+    const { mode: _, ...rest } = hostedEdit.inputs
+    const values = layersValuesOf(
+      layersListing,
+      { ...hostedEdit, inputs: rest },
+      catalogIndex
+    )
+    expect(values.inputs.mode).toBe("edit")
+    expect(values.inputs.layer).toEqual([firstLayer])
+  })
+})
+
+describe("the models you ran before in a mode", () => {
+  it("lists the newest first and only the runs of that mode", () => {
+    const runOf = (
+      id: string,
+      minute: number,
+      inputs: Record<string, unknown>
+    ) => layersRun({ id, minute, inputs, outputs: [photo] })
+    const runs = [
+      runOf("7d1e2f30-4a5b-4c6d-8e7f-901a2b3c4d5e", 0, {
+        mode: "edit",
+        model: editGraph.id,
+      }),
+      runOf("8e2f3041-5b6c-4d7e-9f80-a12b3c4d5e6f", 1, {
+        mode: "edit",
+        model: flux3.id,
+      }),
+      runOf("9f304152-6c7d-4e8f-a091-b23c4d5e6f70", 2, {
+        mode: "fill",
+        model: fluxFill.id,
+      }),
+    ]
+    expect(ranBeforeIn(runs, "edit")).toEqual([flux3.id, editGraph.id])
+    expect(ranBeforeIn(runs, "fill")).toEqual([fluxFill.id])
+    expect(ranBeforeIn(runs, "split")).toEqual([])
   })
 })

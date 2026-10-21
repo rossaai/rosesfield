@@ -11,7 +11,12 @@ import {
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { GatewaySettings } from "@/api/gateway-settings"
-import { assetQuery, runsQuery, settingsQuery } from "@/api/queries"
+import {
+  assetQuery,
+  runQuery,
+  runsQuery,
+  settingsQuery,
+} from "@/api/queries"
 import { t, tCatalog } from "@/copy/t"
 import { AppScreen } from "@/studio/layers/screen"
 import { asPhone, resetFrames } from "../../screens/app/frame-render"
@@ -46,6 +51,7 @@ const settings: GatewaySettings = {
 function openLayers(options: {
   runs: readonly Run[]
   use?: string
+  from?: Run
   hasCatalog?: boolean
 }): void {
   const client = new QueryClient({
@@ -60,6 +66,11 @@ function openLayers(options: {
   })
   if (options.hasCatalog === true) {
     vi.stubGlobal("fetch", answerCatalog)
+  }
+  if (options.from !== undefined) {
+    client.setQueryData(runQuery(options.from.id).queryKey, {
+      run: options.from,
+    })
   }
   client.setQueryData(assetQuery(photo).queryKey, {
     asset: asset.parse({
@@ -81,7 +92,7 @@ function openLayers(options: {
           <TooltipProvider>
             <AppScreen
               app={layersListing}
-              seeds={{ use: options.use, from: undefined }}
+              seeds={{ use: options.use, from: options.from?.id }}
             />
           </TooltipProvider>
         </ToastProvider>
@@ -169,6 +180,26 @@ describe("the model of each Layers mode", () => {
     fireEvent.click(await screen.findByRole("option", { name: seedream.name }))
     expect(await pickerNamed(seedream.name)).not.toBeNull()
     expect(screen.queryAllByText(label)).toHaveLength(0)
+  })
+})
+
+describe("Use these inputs on a hosted split run in History", () => {
+  const hostedSplit = layersRun({
+    id: "6c0d1e2f-3a4b-4c5d-8e6f-7a8b9c0d1e2f",
+    minute: 5,
+    inputs: { mode: "split", model: seedream.id, image: [photo], size: "2K" },
+    outputs: [firstLayer, secondLayer],
+  })
+
+  it("fills the image and the model and shows that run's stack", async () => {
+    openLayers({ runs: [hostedSplit], from: hostedSplit, hasCatalog: true })
+    expect(await pickerNamed(seedream.name)).not.toBeNull()
+    expect(
+      await screen.findByRole("button", { name: t("field.asset.remove") })
+    ).not.toBeNull()
+    expect(
+      screen.getAllByRole("list", { name: tCatalog("layers.stack.title") })
+    ).not.toHaveLength(0)
   })
 })
 

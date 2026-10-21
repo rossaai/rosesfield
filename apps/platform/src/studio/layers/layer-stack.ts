@@ -24,11 +24,8 @@ export type Arrangement = {
 }
 
 export function isSplitRun(run: Run): boolean {
-  const mode = run.inputs.mode
-  return mode === undefined || mode === "split"
+  return run.inputs.mode === "split"
 }
-
-export type IsSplit = (run: Run) => boolean
 
 function assetsOf(run: Run): string[] {
   const named = run.inputs.layer
@@ -55,11 +52,7 @@ function sourceLayerOf(
   return undefined
 }
 
-export function stackOf(
-  split: Run,
-  runs: readonly Run[],
-  isSplit: IsSplit = isSplitRun
-): Stack {
+export function stackOf(split: Run, runs: readonly Run[]): Stack {
   const layers: StackLayer[] = split.outputs.map((id, index) => ({
     key: id,
     number: index + 1,
@@ -71,7 +64,7 @@ export function stackOf(
   )
   for (const run of oldestFirst) {
     const layer =
-      run.id === split.id || isSplit(run)
+      run.id === split.id || isSplitRun(run)
         ? undefined
         : sourceLayerOf(run, layers)
     if (layer === undefined) {
@@ -89,11 +82,10 @@ export function stackOf(
 
 export function pickStack(
   runs: readonly Run[],
-  preferred: string | null,
-  isSplit: IsSplit = isSplitRun
+  preferred: string | null
 ): Run | null {
   const splits = runs.filter(
-    (run) => isSplit(run) && run.status === "done" && run.outputs.length > 0
+    (run) => isSplitRun(run) && run.status === "done" && run.outputs.length > 0
   )
   return splits.find((run) => run.id === preferred) ?? splits[0] ?? null
 }
