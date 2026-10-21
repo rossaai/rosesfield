@@ -22,6 +22,7 @@ function valuesFor(mode: "format" | "sides") {
 describe("the inputs an Expand mode sends", () => {
   it("sends the format and no side in To a format", () => {
     expect(namesIn("format")).toEqual([
+      "model",
       "mode",
       "photo",
       "aspect",
@@ -30,6 +31,7 @@ describe("the inputs an Expand mode sends", () => {
     ])
     const body = bodyOf(bodyAppFor(listing, "format"), valuesFor("format"))
     expect(body.inputs).toEqual({
+      model: "qwen-image-inpaint",
       mode: "format",
       photo: [photo],
       aspect: "16-9",
@@ -38,6 +40,7 @@ describe("the inputs an Expand mode sends", () => {
 
   it("sends the four sides and no format in By side", () => {
     expect(namesIn("sides")).toEqual([
+      "model",
       "mode",
       "photo",
       "top",
@@ -49,6 +52,7 @@ describe("the inputs an Expand mode sends", () => {
     ])
     const body = bodyOf(bodyAppFor(listing, "sides"), valuesFor("sides"))
     expect(body.inputs).toEqual({
+      model: "qwen-image-inpaint",
       mode: "sides",
       photo: [photo],
       top: 0,
