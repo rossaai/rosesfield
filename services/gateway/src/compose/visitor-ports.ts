@@ -46,6 +46,7 @@ export async function visitorScopeFor(
   const { db, agents } = deps
   const scope = new SessionScope({ db, sessionId })
   const runs = new SqliteRunRepository({ db, scope })
+  const modelKey = deps.vars.agent === null ? null : keys.engine
   const engines = visitorEngines(
     deps.vars.engine,
     keys.engine,
@@ -71,10 +72,10 @@ export async function visitorScopeFor(
     engines,
     settings: visitorSettings(deps.vars, keys),
     agent: agents === null ? null : agents.agentOf(sessionId),
-    canAnswer: keys.agent !== null,
+    canAnswer: modelKey !== null,
     hold: () =>
       agents === null
         ? () => undefined
-        : agents.hold(sessionId, { handlers, modelKey: keys.agent }),
+        : agents.hold(sessionId, { handlers, modelKey }),
   })
 }

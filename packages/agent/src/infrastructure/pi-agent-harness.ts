@@ -1,14 +1,13 @@
+import type { Models } from "@earendil-works/pi-ai"
 import {
   ConversationBusy,
   createRegistry,
-  defineExtension,
   Harness,
   type HarnessSettings,
   type ModelRef,
   type Conversation as PiConversation,
+  type Registry,
   type Storage,
-  section,
-  type ToolRegistration,
   watchEvents,
 } from "@earendil-works/pi-durable"
 import type { Clock } from "@rosesfield/kernel"
@@ -17,6 +16,7 @@ import { agentCopy } from "#copy.en"
 import {
   AgentHarness,
   type AgentMessage,
+  type AgentModelChoice,
   type AnswerStream,
   type ConversationChanges,
   type NewConversation,
@@ -28,25 +28,35 @@ import {
   type ConversationId,
   conversationIdFormat,
 } from "#domain/conversation.id"
+import { AgentModelUnknownError } from "#domain/error/agent-model-unknown.error"
 import { ConversationBusyError } from "#domain/error/conversation-busy.error"
 import { ConversationNotFoundError } from "#domain/error/conversation-not-found.error"
 import { ProposalNotFoundError } from "#domain/error/proposal-not-found.error"
+import {
+  type AgentToolSet,
+  type AgentToolSource,
+  extensionOf,
+  toolSourceOf,
+} from "#infrastructure/pi-agent-tools"
 import { PiAnswerStream } from "#infrastructure/pi-answer-stream"
 import { proposalOf } from "#infrastructure/pi-app-tool"
 import { backgroundContext } from "#infrastructure/pi-context"
 import {
+  agentSettings,
   conversationList,
+  conversationOf,
   conversationSettings,
   type ListedConversation,
   proposalRecords,
 } from "#infrastructure/pi-conversation-docs"
-import type { PiModels } from "#infrastructure/pi-models"
+import { type PiModels, useModel } from "#infrastructure/pi-models"
 import { transcriptOf } from "#infrastructure/pi-transcript"
+import { TurnLimit, turnLimitedModels } from "#infrastructure/pi-turn-limit"
 
 export type PiAgentHarnessOptions = {
   models: () => Promise<PiModels>
   storage: () => Promise<Storage>
-  tools: readonly ToolRegistration[]
+  tools: AgentToolSource
   clock: Clock
   settings?: HarnessSettings
 }
@@ -54,6 +64,9 @@ export type PiAgentHarnessOptions = {
 type Opened = {
   harness: Harness
   model: ModelRef
+  models: Models
+  registry: Registry
+  tools: { complete: boolean }
 }
 
 type Found = {
@@ -75,18 +88,21 @@ export class PiAgentHarness extends AgentHarness {
 
   private readonly models: () => Promise<PiModels>
   private readonly storage: () => Promise<Storage>
-  private readonly tools: readonly ToolRegistration[]
+  private readonly tools: () => Promise<AgentToolSet>
   private readonly clock: Clock
   private readonly settings: HarnessSettings
+  private readonly turns: TurnLimit
   private opening: Promise<Opened> | null = null
+  private rereading: Promise<void> | null = null
 
   constructor(options: PiAgentHarnessOptions) {
     super()
     this.models = options.models
     this.storage = options.storage
-    this.tools = options.tools
+    this.tools = toolSourceOf(options.tools)
     this.clock = options.clock
     this.settings = options.settings ?? PiAgentHarness.settings
+    this.turns = new TurnLimit({ clock: options.clock })
   }
 
   override async startConversation(
@@ -169,10 +185,35 @@ export class PiAgentHarness extends AgentHarness {
     }, context)
   }
 
+  override async listModels(): Promise<AgentModelChoice> {
+    const opened = await this.open()
+    return { models: listedOf(opened), model: await chosenOf(opened) }
+  }
+
+  override async chooseModel(model: string): Promise<AgentModelChoice> {
+    const opened = await this.open()
+    if (!listedOf(opened).includes(model)) {
+      throw new AgentModelUnknownError({
+        provider: opened.model.provider,
+        model,
+      })
+    }
+    await opened.harness.commit(async (tx) => {
+      const settings = await tx.doc(agentSettings)
+      settings.model = model
+    }, context)
+    return this.listModels()
+  }
+
   override async send(message: AgentMessage): Promise<AnswerStream> {
     const found = await this.find(message.conversationId)
     const { harness, conversation } = found
-    await useModel(conversation, found.model)
+    const opened = await this.open()
+    await this.completeTools(opened)
+    await useModel(conversation, {
+      provider: found.model.provider,
+      modelId: await chosenOf(opened),
+    })
     if (found.listed.title === null) {
       await this.title(message)
     }
@@ -281,21 +322,42 @@ export class PiAgentHarness extends AgentHarness {
 
   private async openHarness(): Promise<Opened> {
     const { models, ref } = await this.models()
+    const read = await this.tools()
     const registry = createRegistry()
-    registry.install(
-      defineExtension({
-        name: "rosesfield",
-        tools: this.tools,
-        sections: [section("rosesfield", () => agentCopy.instructions)],
-      })
-    )
+    registry.install(extensionOf(read.tools))
     const harness = await Harness.open(
       await this.storage(),
-      { models, registry, settings: this.settings },
+      {
+        models: turnLimitedModels(models, this.turns),
+        registry,
+        settings: this.settings,
+      },
       context
     )
     harness.resume()
-    return { harness, model: ref }
+    return {
+      harness,
+      model: ref,
+      models,
+      registry,
+      tools: { complete: read.complete },
+    }
+  }
+
+  private async completeTools(opened: Opened): Promise<void> {
+    if (opened.tools.complete) {
+      return
+    }
+    this.rereading ??= this.reinstallTools(opened).finally(() => {
+      this.rereading = null
+    })
+    await this.rereading
+  }
+
+  private async reinstallTools(opened: Opened): Promise<void> {
+    const read = await this.tools()
+    opened.registry.install(extensionOf(read.tools))
+    opened.tools.complete = read.complete
   }
 
   private async find(conversationId: ConversationId): Promise<Found> {
@@ -313,33 +375,14 @@ export class PiAgentHarness extends AgentHarness {
   }
 }
 
-async function conversationOf(
-  harness: Harness,
-  id: string,
-  listed: ListedConversation
-): Promise<Conversation> {
-  const settings = await harness.snapshot(
-    conversationSettings,
-    listed.conversation,
-    context
-  )
-  return {
-    id: conversationIdFormat.parse(id),
-    title: listed.title,
-    runApproval: settings?.runApproval ?? "ask",
-    createdAt: listed.createdAt,
-  }
+function listedOf(opened: Opened): string[] {
+  return opened.models.getModels(opened.model.provider).map((model) => model.id)
 }
 
-async function useModel(
-  conversation: PiConversation,
-  model: ModelRef
-): Promise<void> {
-  const current = (await conversation.agent(context)).model
-  if (
-    current?.provider !== model.provider ||
-    current.modelId !== model.modelId
-  ) {
-    await conversation.configure({ model }, context)
-  }
+async function chosenOf(opened: Opened): Promise<string> {
+  const settings = await opened.harness.snapshot(agentSettings, context)
+  const chosen = settings?.model ?? null
+  return chosen !== null && listedOf(opened).includes(chosen)
+    ? chosen
+    : opened.model.modelId
 }

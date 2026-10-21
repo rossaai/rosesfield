@@ -1,6 +1,13 @@
-import { conversationRoutes } from "@rosesfield/agent"
+import {
+  type AgentModelChoice,
+  type AgentModels,
+  agentModelRoutes,
+  conversationRoutes,
+  routerChat,
+} from "@rosesfield/agent"
+import { errorEnvelopeOf } from "@rosesfield/contract"
 import { streamSSE } from "hono/streaming"
-import type { GatewayApp } from "#gateway-env"
+import type { GatewayApp, RequestScope } from "#gateway-env"
 import {
   jsonBodyMaxBytes,
   limitBody,
@@ -14,6 +21,50 @@ export function agentRoutes(app: GatewayApp): void {
   conversationListRoutes(app)
   conversationItemRoutes(app)
   proposalRoutes(app)
+  modelRoutes(app)
+}
+
+async function agentModelsOf(
+  scope: RequestScope,
+  chosen: Promise<AgentModelChoice>
+): Promise<AgentModels> {
+  const [choice, { models, refusal }] = await Promise.all([
+    chosen,
+    scope.handlers.listModels.execute({}),
+  ])
+  if (refusal !== null) {
+    return { models: [], model: null, refusal: errorEnvelopeOf(refusal).error }
+  }
+  const hasChat = models.some(
+    (model) => model.id === routerChat.route && model.takesTools
+  )
+  return hasChat
+    ? { ...choice, refusal: null }
+    : { models: [], model: null, refusal: null }
+}
+
+function modelRoutes(app: GatewayApp): void {
+  const { listAgentModels, chooseAgentModel } = agentModelRoutes
+  app.get(listAgentModels.path, async (c) => {
+    const { scope } = c.var
+    const listed = await agentModelsOf(scope, scope.agent.listModels.execute())
+    return c.json(
+      listed satisfies ResponseOf<typeof listAgentModels>,
+      listAgentModels.status
+    )
+  })
+  app.patch(chooseAgentModel.path, limitBody(jsonBodyMaxBytes), async (c) => {
+    const body = parseWith(chooseAgentModel.body, await readJson(c), "body")
+    const { scope } = c.var
+    const listed = await agentModelsOf(
+      scope,
+      scope.agent.chooseModel.execute({ model: body.model })
+    )
+    return c.json(
+      listed satisfies ResponseOf<typeof chooseAgentModel>,
+      chooseAgentModel.status
+    )
+  })
 }
 
 function conversationListRoutes(app: GatewayApp): void {

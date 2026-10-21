@@ -2,7 +2,9 @@ import { InvalidIdError } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import type { Conversation } from "#agent.contract"
 import { AcceptProposalHandler } from "#application/accept-proposal/accept-proposal.handler"
+import { ChooseAgentModelHandler } from "#application/choose-agent-model/choose-agent-model.handler"
 import { DeleteConversationHandler } from "#application/delete-conversation/delete-conversation.handler"
+import { ListAgentModelsHandler } from "#application/list-agent-models/list-agent-models.handler"
 import { ListConversationsHandler } from "#application/list-conversations/list-conversations.handler"
 import { ReadConversationHandler } from "#application/read-conversation/read-conversation.handler"
 import { SendMessageHandler } from "#application/send-message/send-message.handler"
@@ -11,6 +13,7 @@ import { StartConversationHandler } from "#application/start-conversation/start-
 import { UpdateConversationHandler } from "#application/update-conversation/update-conversation.handler"
 import { conversationIdFormat } from "#domain/conversation.id"
 import { AgentModelMissingError } from "#domain/error/agent-model-missing.error"
+import { AgentModelUnknownError } from "#domain/error/agent-model-unknown.error"
 import { ConversationNotFoundError } from "#domain/error/conversation-not-found.error"
 import { ProposalSettledError } from "#domain/error/proposal-settled.error"
 import { proposalIdFormat } from "#domain/proposal.id"
@@ -77,9 +80,13 @@ describe("the agent's handlers", () => {
         startRun: generation.startRun,
       }).execute(ref),
       new SkipProposalHandler({ agent: null }).execute(ref),
+      new ListAgentModelsHandler({ agent: null }).execute(),
+      new ChooseAgentModelHandler({ agent: null }).execute({
+        model: "maker/chat-large",
+      }),
     ])
 
-    expect(refusals).toHaveLength(8)
+    expect(refusals).toHaveLength(10)
     for (const refusal of refusals) {
       expect(refusal.status).toBe("rejected")
       const reason = refusal.status === "rejected" ? refusal.reason : null
@@ -87,6 +94,25 @@ describe("the agent's handlers", () => {
       expect(reason).toMatchObject({ code: "AGENT_MODEL_MISSING", status: 412 })
     }
     expect(generation.runs.count).toBe(0)
+  })
+
+  it("list the agent's models and change the one it answers with", async () => {
+    const agent = fakeAgent()
+
+    const before = await new ListAgentModelsHandler({ agent }).execute()
+    const chosen = await new ChooseAgentModelHandler({ agent }).execute({
+      model: "maker/chat-large",
+    })
+
+    expect(before).toEqual({
+      models: ["maker/chat-small", "maker/chat-large"],
+      model: "maker/chat-small",
+    })
+    expect(chosen.model).toBe("maker/chat-large")
+    await expect(
+      new ChooseAgentModelHandler({ agent }).execute({ model: "maker/other" })
+    ).rejects.toBeInstanceOf(AgentModelUnknownError)
+    expect((await agent.listModels()).model).toBe("maker/chat-large")
   })
 
   it("start a conversation that asks before each run unless told otherwise", async () => {

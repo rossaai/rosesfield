@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { defaultChatModel, routerChat } from "@rosesfield/agent"
 import { errorEnvelope, routes } from "@rosesfield/contract"
 import { afterAll, describe, expect, it } from "vitest"
 import { composeLocalGateway } from "#compose/local-gateway"
@@ -172,7 +173,10 @@ describe("the owner lock on a server that listens on 127.0.0.1 only", () => {
           origin: "live",
         },
         lock: "local",
-        agent: { model: "missing", models: [] },
+        agent: {
+          model: "set",
+          models: [{ provider: routerChat.provider, id: defaultChatModel }],
+        },
       },
     })
   })

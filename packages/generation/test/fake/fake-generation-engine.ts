@@ -120,6 +120,7 @@ export class FakeGenerationEngine extends GenerationEngine {
       provider: form.model.split("/")[0] ?? "",
       takes: ["text"],
       makes: ["image"],
+      takesTools: false,
       form,
     }))
   }

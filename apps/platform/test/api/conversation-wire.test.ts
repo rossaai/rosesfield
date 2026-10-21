@@ -70,6 +70,7 @@ describe("readTranscript", () => {
         { type: "agent", text: "I will run Image." },
         { type: "run", runId },
         { type: "proposal", proposal },
+        { type: "credits", credits: 0.11 },
       ],
     })
     expect(read?.conversation).toEqual(conversation)
@@ -78,7 +79,9 @@ describe("readTranscript", () => {
       "agent",
       "run",
       "proposal",
+      "credits",
     ])
+    expect(read?.items[4]).toEqual({ type: "credits", credits: 0.11 })
     expect(read?.items[3]).toEqual({
       type: "proposal",
       proposal: { ...proposal, request: { ...proposal.request } },
@@ -96,6 +99,12 @@ describe("readTranscript", () => {
     ).toBeNull()
     expect(
       readTranscript({ conversation: { ...conversation, id: "" }, items: [] })
+    ).toBeNull()
+    expect(
+      readTranscript({
+        conversation,
+        items: [{ type: "credits", credits: -1 }],
+      })
     ).toBeNull()
   })
 })

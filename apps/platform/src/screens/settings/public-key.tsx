@@ -4,6 +4,7 @@ import { type ReactElement, type ReactNode, useState } from "react"
 import { forgetVisitorKey, useHasVisitorKey } from "@/api/visitor-keys"
 import { formatNumber } from "@/copy/format"
 import { t } from "@/copy/t"
+import { noteAgentModel } from "@/screens/agent/agent-model"
 import { accountQuery, forgetAccount } from "@/screens/settings/account-query"
 import {
   Balance,
@@ -25,6 +26,7 @@ function KeptKey(): ReactElement {
         <Button
           onClick={() => {
             void forgetVisitorKey("engine")
+              .then(() => noteAgentModel("unknown"))
               .then(() => forgetAccount().catch(() => undefined))
               .then(() => client.invalidateQueries())
           }}

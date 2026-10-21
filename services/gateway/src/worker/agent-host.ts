@@ -1,8 +1,7 @@
 import {
   type AgentModel,
-  agentTools,
-  openPiModels,
-  PiAgentHarness,
+  type PiAgentHarness,
+  routerAgentHarness,
 } from "@rosesfield/agent"
 import { openDurableObjectStorage } from "@rosesfield/agent/cloudflare"
 import { Hono } from "hono"
@@ -143,13 +142,12 @@ export class AgentHost implements DurableObject {
 
   private agentFor(parts: WorkerParts, model: AgentModel): PiAgentHarness {
     const access = this.access
-    return new PiAgentHarness({
-      models: () => openPiModels(model, { keyOf: () => access.modelKey() }),
+    return routerAgentHarness({
+      model,
+      modelOptions: { keyOf: () => access.modelKey() },
       storage: () => openDurableObjectStorage(this.state.storage),
-      tools: agentTools({
-        apps: parts.apps,
-        handlers: () => access.handlers(),
-      }),
+      apps: parts.apps,
+      handlers: () => access.handlers(),
       clock: parts.clock,
     })
   }

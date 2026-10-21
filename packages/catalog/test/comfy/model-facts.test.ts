@@ -216,6 +216,7 @@ describe("the factual tags of a video model", () => {
       provider: "maker",
       takes: ["text"],
       makes: ["video"],
+      takesTools: false,
       form: {
         model: "maker/clip",
         fields: [
