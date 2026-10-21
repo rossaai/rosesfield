@@ -2,7 +2,15 @@ import { expect, type Locator, type Page, test } from "@playwright/test"
 
 const scene = "A boat leaves the harbor"
 
-const selects = ["Movement", "Camera", "Lens", "Light", "Color", "Mood"]
+const selects = [
+  "Movement",
+  "Camera",
+  "Lens",
+  "Focus",
+  "Light",
+  "Color",
+  "Mood",
+]
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -34,11 +42,6 @@ test.describe("Shot's input column", () => {
         choices.getByRole("combobox", { name: list, exact: true })
       ).toHaveText("Auto")
     }
-    await expect(
-      choices
-        .getByRole("radiogroup", { name: "Focus" })
-        .getByRole("radio", { name: "Auto" })
-    ).toHaveAttribute("aria-checked", "true")
     await expect(
       page.getByRole("button", { name: "Advanced", exact: true })
     ).toHaveAttribute("aria-expanded", "false")

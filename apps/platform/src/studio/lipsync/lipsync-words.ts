@@ -146,7 +146,7 @@ export function wordsProblemOf(
   const value = values.inputs[plan.field]
   if (plan.mode === "audio") {
     return listOf(value).length === 0
-      ? { name: plan.field, key: "field.asset.add.audio", values: {} }
+      ? { name: plan.field, key: "field.asset.required", values: {} }
       : null
   }
   return textOf(value).trim() === ""

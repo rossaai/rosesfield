@@ -55,7 +55,7 @@ test.describe("Lip sync's column", () => {
 test.describe("Lip sync's Generate before the words", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("with a photo and no words starts no run, moves focus to the Words field and says to add audio", async ({
+  test("with a photo and no words starts no run, moves focus to the Words field and says to add one", async ({
     page,
   }) => {
     const starts: string[] = []
@@ -69,7 +69,7 @@ test.describe("Lip sync's Generate before the words", () => {
     await addPhoto(page, parts)
     await page.locator('[data-slot="generate-button"]').click()
     const words = parts.locator('[data-slot="lipsync-words"]')
-    await expect(words.getByText("Add audio")).toBeVisible()
+    await expect(words.getByText("Add at least one")).toBeVisible()
     await expect
       .poll(() =>
         words.evaluate((element) =>

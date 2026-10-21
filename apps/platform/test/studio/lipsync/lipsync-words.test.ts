@@ -108,7 +108,7 @@ describe("Generate with a photo and no words", () => {
     expect(found.map((problem) => problem.name)).toEqual(["audio"])
     const first = found[0]
     expect(first === undefined ? null : t(first.key, first.values)).toBe(
-      t("field.asset.add.audio")
+      t("field.asset.required")
     )
   })
 
