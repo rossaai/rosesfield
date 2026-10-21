@@ -2,6 +2,8 @@ import { z } from "zod"
 import { assetId, characterId } from "#id.contract"
 import { timestamp } from "#value.contract"
 
+export const characterPhotoLimit = 10
+
 export const characterReferenceMax = 16
 
 export const character = z.object({
@@ -14,7 +16,7 @@ export const character = z.object({
 
 export const createCharacterBody = z.strictObject({
   name: character.shape.name,
-  references: character.shape.references,
+  references: z.array(assetId).min(1).max(characterPhotoLimit),
   notes: character.shape.notes,
 })
 

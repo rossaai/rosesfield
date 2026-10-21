@@ -1,8 +1,6 @@
 import {
   type AppDefinition,
   type EngineBinding,
-  inputRulesOf,
-  isRuledInput,
   type RunInputs,
   type Run as RunRecord,
   type RunRequest,
@@ -32,6 +30,7 @@ import type { ModelPolicy } from "#domain/model-policy.port"
 import { Run } from "#domain/run"
 import type { RunRepository } from "#domain/run.repository"
 import type { RunAssets } from "#domain/run-assets.port"
+import { ruledInputsOf } from "#domain/ruled-inputs"
 import { resolveBinding } from "#domain/select-binding"
 import {
   chosenModelOf,
@@ -352,23 +351,6 @@ function countOf(
     return 1
   }
   return given
-}
-
-function ruledInputsOf(
-  app: AppDefinition,
-  given: Record<string, unknown>
-): Record<string, unknown> {
-  const filled: Record<string, unknown> = { ...given }
-  for (const rule of inputRulesOf(app, given)) {
-    if (
-      isRuledInput(rule.input) &&
-      filled[rule.input.name] === undefined &&
-      rule.fallback !== null
-    ) {
-      filled[rule.input.name] = rule.fallback
-    }
-  }
-  return filled
 }
 
 function textInputsOf(given: Record<string, unknown>): RunInputs {

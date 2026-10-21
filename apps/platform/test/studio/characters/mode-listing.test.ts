@@ -1,3 +1,4 @@
+import type { Mode } from "@rosesfield/catalog/characters"
 import {
   type AppDefinition,
   type AppListing,
@@ -17,11 +18,13 @@ import {
 import {
   firstModeOf,
   isPanelInput,
+  keptInputsOf,
   listingFor,
   randomTraits,
+  traitsModelsOf,
 } from "@/studio/characters/mode-listing"
 import { app } from "../../../../../packages/catalog/src/characters/app"
-import type { Mode } from "../../../../../packages/catalog/src/characters/traits"
+import { flux, qwenEdit, zImage } from "../image/image-screen"
 
 const listing: AppListing = appListing.parse(app)
 const definition: AppDefinition = appDefinition.parse(app)
@@ -89,6 +92,7 @@ describe("the Characters screen follows the contract's modes", () => {
     expect(namesIn("angles")).toEqual([
       "mode",
       "count",
+      "model",
       "character",
       "angleSet",
       "seed",
@@ -102,7 +106,7 @@ describe("the Characters screen follows the contract's modes", () => {
     expect(count).toMatchObject({ default: "4", options: [{ value: "4" }] })
     expect(
       angles.inputs.filter(isPanelInput).map((input) => input.name)
-    ).toEqual(["character", "angleSet"])
+    ).toEqual(["model", "character", "angleSet"])
     expect(listingFor(listing, "traits").output.count).toEqual({
       default: 2,
       max: 4,
@@ -143,5 +147,36 @@ describe("the Characters screen follows the contract's modes", () => {
     expect(
       firstModeOf(listing, { use: undefined }, anglesRun("another-app"))
     ).toBe("traits")
+  })
+})
+
+describe("the traits pick their model from the text to image task", () => {
+  it("lists only the models that make an image from text", () => {
+    const edit = { ...flux, id: "bfl/flux-3-image-edit", task: "image-edit" }
+    expect(
+      traitsModelsOf([zImage, edit, flux, qwenEdit]).map((model) => model.id)
+    ).toEqual([zImage.id, flux.id, qwenEdit.id])
+  })
+
+  it("keeps the traits and drops the model and the next model's own inputs on a pick", () => {
+    const traits = listingFor(listing, "traits")
+    const kept = keptInputsOf(
+      traits,
+      {
+        mode: "traits",
+        gender: "woman",
+        hairColor: "red",
+        model: zImage.id,
+        seed: 7,
+        prompt: "words",
+      },
+      flux
+    )
+    expect(kept).toEqual([
+      ["mode", "traits"],
+      ["gender", "woman"],
+      ["hairColor", "red"],
+    ])
+    expect(keptInputsOf(traits, { seed: 7 }, zImage)).toEqual([["seed", 7]])
   })
 })

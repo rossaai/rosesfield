@@ -1,7 +1,22 @@
+import type { ComfyValueBinding } from "@rosesfield/generation/bindings"
 import type { TraitName } from "#characters/traits"
-import type { WorkflowValueBinding } from "#workflow-binding"
 
 type Fragments = Record<string, string>
+
+type Link = [nodeId: string, output: number]
+
+export type WordNode = {
+  class_type: "StringConcatenate"
+  inputs: { string_a: string | Link; string_b: string; delimiter: string }
+}
+
+type Field = "string_a" | "string_b"
+
+export type TraitWords = {
+  nodes: Readonly<Record<string, WordNode>>
+  bindings: readonly ComfyValueBinding[]
+  output: Link
+}
 
 const framing: Fragments = {
   portrait: "Head and shoulders portrait photograph of one person",
@@ -89,7 +104,9 @@ const background: Fragments = {
 const sourceReady =
   ", neutral expression, looking straight at the camera, front view, soft even light, sharp focus"
 
-const chain: readonly (TraitName | "plainBackground" | "suffix")[] = [
+type Step = TraitName | "plainBackground"
+
+const chain: readonly Step[] = [
   "age",
   "skinTone",
   "bodyType",
@@ -99,44 +116,46 @@ const chain: readonly (TraitName | "plainBackground" | "suffix")[] = [
   "eyeColor",
   "outfit",
   "plainBackground",
-  "suffix",
 ]
 
-const firstId = 101
+const firstWordNode = 8101
 
 function idOf(index: number): string {
-  return String(firstId + index)
+  return String(firstWordNode + index)
 }
 
-const hairLengthIndex = chain.indexOf("hairLength")
-const hairColorIndex = chain.indexOf("hairColor")
-
-function textBinding(name: string, map: Fragments): WorkflowValueBinding {
-  return { from: "input", name, map, to: name }
+function linkTo(index: number): Link {
+  return [idOf(index), 0]
 }
 
-export function traitsPromptBindings(): WorkflowValueBinding[] {
-  const bindings: WorkflowValueBinding[] = [
-    { from: "input", name: "framing", map: framing, to: "framing" },
-    textBinding("gender", traits.gender),
-  ]
-  chain.forEach((step) => {
-    if (step === "suffix") {
-      return
-    }
-    const map = step === "plainBackground" ? background : traits[step]
-    bindings.push(textBinding(step, map))
-  })
+function wordNode(from: string | Link, words = "", delimiter = ""): WordNode {
+  return {
+    class_type: "StringConcatenate",
+    inputs: { string_a: from, string_b: words, delimiter },
+  }
+}
+
+function bindWord(
+  bindings: ComfyValueBinding[],
+  binding: { name: string; map?: Readonly<Record<string, string | Link>> },
+  node: string,
+  field: Field
+): void {
+  const path = [node, "inputs", field]
   bindings.push(
-    { from: "input", name: "hairLength", map: hairWiring(), to: "hairWiring" },
-    { from: "input", name: "details", to: "details" }
+    binding.map === undefined
+      ? { from: "input", name: binding.name, path }
+      : { from: "input", name: binding.name, map: { ...binding.map }, path }
   )
-  return bindings
 }
 
-function hairWiring(): Record<string, [string, number]> {
-  const withHair: [string, number] = [idOf(hairColorIndex + 1), 0]
-  const bald: [string, number] = [idOf(hairLengthIndex + 1), 0]
+function fragmentsOf(step: Step): Fragments {
+  return step === "plainBackground" ? background : traits[step]
+}
+
+function hairWiring(): Record<string, Link> {
+  const withHair = linkTo(chain.indexOf("hairColor") + 1)
+  const bald = linkTo(chain.indexOf("hairLength") + 1)
   return Object.fromEntries(
     Object.keys(traits.hairLength).map((value) => [
       value,
@@ -145,4 +164,55 @@ function hairWiring(): Record<string, [string, number]> {
   )
 }
 
-export const traitFragments = { framing, traits, background, sourceReady }
+export function traitWords(): TraitWords {
+  const lead = idOf(0)
+  const nodes: Record<string, WordNode> = { [lead]: wordNode("") }
+  const bindings: ComfyValueBinding[] = []
+  bindWord(bindings, { name: "framing", map: framing }, lead, "string_a")
+  bindWord(bindings, { name: "gender", map: traits.gender }, lead, "string_b")
+  chain.forEach((step, index) => {
+    const node = idOf(index + 1)
+    nodes[node] = wordNode(linkTo(index))
+    bindWord(bindings, { name: step, map: fragmentsOf(step) }, node, "string_b")
+  })
+  const suffix = idOf(chain.length + 1)
+  nodes[suffix] = wordNode(linkTo(chain.length), sourceReady)
+  const details = idOf(chain.length + 2)
+  nodes[details] = wordNode([suffix, 0], "", ". ")
+  bindWord(
+    bindings,
+    { name: "hairLength", map: hairWiring() },
+    idOf(chain.indexOf("eyeColor") + 1),
+    "string_a"
+  )
+  bindWord(bindings, { name: "details" }, details, "string_b")
+  return { nodes, bindings, output: [details, 0] }
+}
+
+const skippedWhenBald: readonly Step[] = ["hairStyle", "hairColor"]
+
+function fragmentOf(map: Fragments, value: unknown, fallback: string): string {
+  const key =
+    typeof value === "string" && Object.hasOwn(map, value) ? value : fallback
+  return map[key] ?? ""
+}
+
+export function traitPrompt(inputs: Readonly<Record<string, unknown>>): string {
+  const isBald = inputs.hairLength === "bald"
+  const lead =
+    fragmentOf(framing, inputs.framing, "half-body") +
+    fragmentOf(traits.gender, inputs.gender, "auto")
+  const words = chain
+    .filter((step) => !(isBald && skippedWhenBald.includes(step)))
+    .map((step) =>
+      fragmentOf(
+        fragmentsOf(step),
+        inputs[step],
+        step === "plainBackground" ? "on" : "auto"
+      )
+    )
+    .join("")
+  const details = typeof inputs.details === "string" ? inputs.details : ""
+  const base = `${lead}${words}${sourceReady}`
+  return details === "" ? base : `${base}. ${details}`
+}

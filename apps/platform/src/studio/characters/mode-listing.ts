@@ -1,3 +1,5 @@
+import { type Mode, traitNames } from "@rosesfield/catalog/characters"
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import {
   type AppListing,
   fixedCountOf,
@@ -6,13 +8,13 @@ import {
   inputRulesOf,
   type Run,
 } from "@rosesfield/contract"
-import {
-  type Mode,
-  traitNames,
-} from "../../../../../packages/catalog/src/characters/traits"
+import type { FieldValue } from "@/screens/app/app-form"
+import { modelInputName } from "@/screens/app/hosted/hosted-form"
 
 export const modeField = "mode"
 export const countInput = "count"
+export const characterInput = "character"
+export const viewInput = "view"
 
 function narrowed(rule: InputRule, mode: Mode): InputDefinition {
   const { input, allowed, fallback } = rule
@@ -30,9 +32,9 @@ function narrowed(rule: InputRule, mode: Mode): InputDefinition {
 }
 
 export function listingFor(app: AppListing, mode: Mode): AppListing {
-  const inputs = inputRulesOf(app, { [modeField]: mode }).map((rule) =>
-    narrowed(rule, mode)
-  )
+  const inputs = inputRulesOf(app, { [modeField]: mode })
+    .filter((rule) => rule.input.name !== viewInput)
+    .map((rule) => narrowed(rule, mode))
   const counter = inputs.find((input) => input.name === countInput)
   const isFixed = counter?.type === "choice" && counter.options.length === 1
   const fixed = fixedCountOf({ inputs }, {}) ?? app.output.count.default
@@ -92,4 +94,29 @@ export function randomTraits(app: AppListing): Record<string, string> {
     }
   }
   return picked
+}
+
+export const traitsTask = "text-to-image"
+
+export function traitsModelsOf(
+  models: readonly CatalogModel[]
+): CatalogModel[] {
+  return models.filter((model) => model.task === traitsTask)
+}
+
+export function keptInputsOf(
+  app: AppListing,
+  inputs: Readonly<Record<string, FieldValue>>,
+  next: CatalogModel | undefined
+): Array<[string, FieldValue]> {
+  const taken = new Set([
+    modelInputName,
+    ...(next?.form ?? []).map((field) => field.name),
+  ])
+  return app.inputs.flatMap((input): Array<[string, FieldValue]> => {
+    const value = inputs[input.name]
+    return taken.has(input.name) || value === undefined
+      ? []
+      : [[input.name, value]]
+  })
 }

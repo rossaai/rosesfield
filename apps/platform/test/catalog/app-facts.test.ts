@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { takesText } from "@/catalog/app-facts"
-import { findCatalogApp } from "@/catalog/catalog-apps"
+import { appsTakingCharacter, takesText } from "@/catalog/app-facts"
+import { catalogApps, findCatalogApp } from "@/catalog/catalog-apps"
 import { imageApp } from "../sample-app"
 
 function takesOf(appId: string): string {
@@ -30,5 +30,18 @@ describe("takesText", () => {
     expect(takesText(imageApp())).toBe(
       "Takes a prompt, images, and a character, makes images"
     )
+  })
+})
+
+describe("appsTakingCharacter", () => {
+  it("lists every app with a character input and Image, whose reference images take the character's photos", () => {
+    const ids = appsTakingCharacter(catalogApps).map((app) => app.id)
+    const withCharacter = catalogApps
+      .filter((app) => app.inputs.some((input) => input.type === "character"))
+      .map((app) => app.id)
+    expect(withCharacter.length).toBeGreaterThan(0)
+    expect(ids).toEqual(expect.arrayContaining([...withCharacter, "image"]))
+    expect(ids).toHaveLength(withCharacter.length + 1)
+    expect(ids).not.toContain("edit")
   })
 })

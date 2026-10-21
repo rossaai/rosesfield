@@ -35,6 +35,7 @@ export {
   type Character,
   type CreateCharacterBody,
   character,
+  characterPhotoLimit,
   characterReferenceMax,
   createCharacterBody,
   type UpdateCharacterBody,

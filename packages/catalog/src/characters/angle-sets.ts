@@ -1,22 +1,41 @@
-export const angleSetViews = {
-  turnaround: ["front", "right", "back", "left"],
-  quarters: ["front-right", "back-right", "back-left", "front-left"],
-  heights: ["low", "eye-level", "elevated", "high"],
-} as const
+import {
+  type AngleSet,
+  angleSets as editAngleSets,
+  type Distance,
+  type Height,
+  type Side,
+  setPoses,
+  viewsPerSet,
+} from "#angles/angle-views"
 
-export type AngleSet = keyof typeof angleSetViews
+export type View = Side | Height
 
-export type View = (typeof angleSetViews)[AngleSet][number]
+type Pose = (typeof setPoses)[AngleSet][number]
 
-export const angleSets: readonly AngleSet[] = [
-  "turnaround",
-  "quarters",
-  "heights",
-]
+const namedBy: Readonly<Record<AngleSet, "side" | "height">> = {
+  turnaround: "side",
+  quarters: "side",
+  heights: "height",
+}
 
-export const viewsPerRun = 4
+export const angleSets: readonly AngleSet[] = editAngleSets
+
+export const viewsPerRun = viewsPerSet
+
+export const viewDistance: Distance = "medium"
+
+export function viewOf(angleSet: AngleSet, pose: Pose): View {
+  return pose[namedBy[angleSet]]
+}
 
 export function viewsOf(angleSet: string): readonly View[] {
   const found = angleSets.find((set) => set === angleSet)
-  return found === undefined ? [] : angleSetViews[found]
+  if (found === undefined) {
+    return []
+  }
+  return setPoses[found].map((pose) => viewOf(found, pose))
 }
+
+export const views: readonly View[] = [
+  ...new Set(angleSets.flatMap((set) => viewsOf(set))),
+]
