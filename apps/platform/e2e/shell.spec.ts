@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test"
+import { answerOwnLists } from "./own-lists"
 
 type Box = { x: number; y: number; width: number; height: number }
 
@@ -103,10 +104,7 @@ test("on a short page the footer sits at the window's foot", async ({
   page,
 }) => {
   test.skip(isPhone(page), "a page shorter than the desktop window")
-  await page.route(
-    (url) => url.pathname === "/api/runs",
-    (route) => route.fulfill({ json: { runs: [], next: null } })
-  )
+  await answerOwnLists(page, new Set())
   await open(page, "/history")
   await expect(page.getByText("Your runs show here")).toBeVisible()
   const footer = page.locator("footer[data-slot='footer']")
