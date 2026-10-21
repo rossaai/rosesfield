@@ -23,13 +23,13 @@ describe("modelRowsOf", () => {
     const rows = modelRowsOf([image, upscale], (appId) =>
       appId === "image"
         ? [workflowLoading("one", ["z_image_turbo_bf16.safetensors"])]
-        : [workflowLoading("two", ["RealESRGAN_x4plus.safetensors"])]
+        : [workflowLoading("two", ["seedvr2_3b_int8_convrot.safetensors"])]
     )
     expect(
       rows.map((row) => [row.model.id, row.apps.map((app) => app.id)])
     ).toEqual([
       ["z-image-turbo", ["image"]],
-      ["real-esrgan", ["upscale"]],
+      ["seedvr2", ["upscale"]],
     ])
   })
 })
