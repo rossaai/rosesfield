@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { tabOfHash } from "@/studio/motion/motion-tabs"
-import { motionAddressOf } from "@/studio/recast/old-address"
+import { motionAddressOf, oldAddressOf } from "@/studio/recast/old-address"
 
 describe("the old Recast address", () => {
   it("opens Motion on Swap a character", () => {
@@ -18,5 +18,19 @@ describe("the old Recast address", () => {
     expect(motionAddressOf({ use: "clip-5s" }).search).toEqual({
       use: "clip-5s",
     })
+  })
+
+  it("sends the Recast address to Motion on Swap a character with your file", () => {
+    expect(oldAddressOf("recast", { use: "clip-5s" })).toEqual({
+      to: "/apps/$appId",
+      params: { appId: "motion" },
+      hash: "swap",
+      search: { use: "clip-5s" },
+    })
+  })
+
+  it("leaves every other app's address alone", () => {
+    expect(oldAddressOf("motion", { use: undefined })).toBeNull()
+    expect(oldAddressOf("video-edit", { use: "clip-5s" })).toBeNull()
   })
 })
