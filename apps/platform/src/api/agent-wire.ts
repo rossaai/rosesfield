@@ -24,12 +24,13 @@ const modelsPath = "/api/agent/models"
 
 export function readAgentModels(body: unknown): AgentModels | null {
   const models = fieldOf(body, "models")
-  const model = fieldOf(body, "model")
+  const given = fieldOf(body, "model")
+  const model = given === null || typeof given === "string" ? given : undefined
   const refusal = errorBody.nullable().safeParse(fieldOf(body, "refusal"))
   if (
     !Array.isArray(models) ||
     !models.every((one): one is string => typeof one === "string") ||
-    (model !== null && typeof model !== "string") ||
+    model === undefined ||
     !refusal.success
   ) {
     return null
