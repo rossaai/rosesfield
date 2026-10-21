@@ -23,6 +23,10 @@ import {
   usePhotoChecks,
 } from "@/studio/effects/use-photo-checks"
 
+vi.mock("@/api/call-route", () => ({
+  callRoute: async () => new Blob([new Uint8Array(8)], { type: "image/png" }),
+}))
+
 type Pending = { assetId: string; answer: (check: PhotoCheck) => void }
 
 function checksAnsweredByHand(): { check: CheckPhoto; pending: Pending[] } {
@@ -83,6 +87,7 @@ const tooSmall: PhotoCheck = { refusal: "too small" }
 
 afterEach(() => {
   cleanup()
+  vi.unstubAllGlobals()
 })
 
 describe("the effects photo checks behind Generate", () => {
@@ -171,6 +176,34 @@ describe("the effects photo checks behind Generate", () => {
         size: formatBytes(20_000_001),
         limit: formatBytes(20_000_000),
       }),
+    })
+  })
+
+  it("refuses a photo under 480 px on its shorter side with its size, and keeps one of 480 px", async () => {
+    const accept = acceptOf(findCatalogApp("effects") as AppListing, "image")
+    const client = new QueryClient()
+    for (const id of ["asset-wide", "asset-even"]) {
+      client.setQueryData(assetQuery(id).queryKey, {
+        asset: { mime: "image/jpeg", bytes: 1_000_000 },
+      } as never)
+    }
+    const sizes = [
+      { width: 1920, height: 479 },
+      { width: 480, height: 2000 },
+    ]
+    vi.stubGlobal("createImageBitmap", async () => ({
+      ...(sizes.shift() ?? { width: 0, height: 0 }),
+      close: () => undefined,
+    }))
+    const check = photoCheckOf(accept)
+    expect(await check(client, "asset-wide")).toEqual({
+      refusal: tCatalog("effects.input.image.tooSmall", {
+        side: 479,
+        min: 480,
+      }),
+    })
+    expect(await check(client, "asset-even")).toEqual({
+      size: { width: 480, height: 2000 },
     })
   })
 })
