@@ -23,9 +23,12 @@ async function runCount(page: Page): Promise<number> {
 async function openTraits(page: Page): Promise<void> {
   await skipWelcome(page)
   await page.goto("/apps/characters")
+  await expect(page).toHaveURL(/\/characters\/new\?mode=traits$/)
   await expect(
-    page.getByRole("radiogroup", { name: "What to make" })
-  ).toBeVisible()
+    page
+      .getByRole("radiogroup", { name: "How to make it" })
+      .getByRole("radio", { name: "From traits" })
+  ).toBeChecked()
 }
 
 test("a character from 1 photo shows in Characters with its photo and its count, and starts no run", async ({
