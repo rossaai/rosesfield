@@ -6,6 +6,7 @@ import {
 } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import { app, effectsApp, photoAccept } from "#effects/app"
+import { passedRecipes } from "#effects/effect-recipes"
 import { passedRecipe, passedRun } from "./passed-recipe"
 
 function inputNamed(
@@ -25,12 +26,12 @@ describe("the effects app offers only passed effects", () => {
     })
   })
 
-  it("ships open with Push into eye, the one look that passed, as its default", () => {
+  it("ships open with every look that passed, in recipe order, with the first as its default", () => {
     const shipped = appListing.parse(appDefinition.parse(app))
     expect(shipped.closedKey).toBeNull()
     expect(inputNamed(shipped.inputs, "effect")).toMatchObject({
-      options: [{ value: "push-into-eye" }],
-      default: "push-into-eye",
+      options: passedRecipes.map((one) => ({ value: one.effect })),
+      default: passedRecipes[0]?.effect,
     })
   })
 

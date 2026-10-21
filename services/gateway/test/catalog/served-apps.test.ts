@@ -2,7 +2,11 @@ import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { listApps, readApps } from "@rosesfield/catalog"
-import { effectRecipes, effectsApp } from "@rosesfield/catalog/effects"
+import {
+  effectRecipes,
+  effectsApp,
+  passedRecipes,
+} from "@rosesfield/catalog/effects"
 import { isRemakeOpen } from "@rosesfield/catalog/remake"
 import {
   type AppDefinition,
@@ -88,7 +92,7 @@ describe("the apps a server serves", () => {
     const served = effectsOf(servedApps(localVars(), "bun", onePassed()))
     expect(served.closedKey).toBeNull()
     expect(optionsOf(served)).toEqual([
-      "push-into-eye",
+      ...passedRecipes.map((one) => one.effect),
       ...effectRecipes.filter((one) => !one.passed).map((one) => one.effect),
     ])
     expect(optionsOf(served)).toContain(draft)
@@ -106,7 +110,7 @@ describe("the apps a server serves", () => {
     ])
     const shipped = effectsOf(servedApps(varsOf(), "bun"))
     expect(shipped.closedKey).toBeNull()
-    expect(optionsOf(shipped)).toEqual(["push-into-eye"])
+    expect(optionsOf(shipped)).toEqual(passedRecipes.map((one) => one.effect))
   })
 
   it.each([

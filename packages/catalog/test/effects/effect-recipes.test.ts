@@ -23,6 +23,13 @@ const looks = [
   "still-in-the-street",
 ]
 
+const passedLooks = ["push-into-eye", "still-in-the-street"]
+
+const endFrameSources: Readonly<Record<string, string>> = {
+  "push-into-eye": "dark",
+  "still-in-the-street": "none",
+}
+
 function variant(change: Record<string, unknown>): Record<string, unknown> {
   return { ...recipeOf("many-copies"), ...change }
 }
@@ -38,7 +45,7 @@ function cutsOf(recipe: EffectRecipe): number {
 }
 
 describe("the effect recipes kept as data", () => {
-  it("reads the nine looks, with Push into eye the one passed and none with an adapter", () => {
+  it("reads the nine looks, with Push into eye and Still in the street the ones passed and none with an adapter", () => {
     expect(
       effectRecipes.map(({ effect, passed, adapter }) => ({
         effect,
@@ -48,11 +55,11 @@ describe("the effect recipes kept as data", () => {
     ).toEqual(
       looks.map((effect) => ({
         effect,
-        passed: effect === "push-into-eye",
+        passed: passedLooks.includes(effect),
         adapter: null,
       }))
     )
-    expect(passedRecipes.map((one) => one.effect)).toEqual(["push-into-eye"])
+    expect(passedRecipes.map((one) => one.effect)).toEqual(passedLooks)
   })
 
   it("names for each look the unit and the family it is designed from, with its whole chain", () => {
@@ -76,8 +83,8 @@ describe("the effect recipes kept as data", () => {
       for (const window of design.cuts) {
         expect(window.max).toBeLessThanOrEqual(recipe.seconds + 0.05)
       }
-      expect(recipe.endFrame.source).toBe(
-        recipe.effect === "push-into-eye" ? "dark" : "edit"
+      expect(recipe.endFrame.source, recipe.effect).toBe(
+        endFrameSources[recipe.effect] ?? "edit"
       )
     }
   })

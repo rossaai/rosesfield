@@ -1,6 +1,6 @@
 import { type InputDefinition, startRunBodyFor } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
-import { effectRecipes, recipeOf } from "#effects/effect-recipes"
+import { effectRecipes, passedRecipes, recipeOf } from "#effects/effect-recipes"
 import {
   canTryDrafts,
   offeredEffectsApp,
@@ -57,11 +57,11 @@ describe("the effects a server offers", () => {
     ])
   })
 
-  it("opens the app with the passed look first and starts a draft on the local lock", () => {
+  it("opens the app with the passed looks first and starts a draft on the local lock", () => {
     const app = offeredEffectsApp(effectRecipes, local)
     expect(app.closedKey).toBeNull()
     expect(effectsOf(app.inputs)?.options.map((one) => one.value)).toEqual([
-      "push-into-eye",
+      ...passedRecipes.map((one) => one.effect),
       ...effectRecipes.filter((one) => !one.passed).map((one) => one.effect),
     ])
     const body = startRunBodyFor(app)
@@ -84,9 +84,9 @@ describe("the effects a server offers", () => {
     ).toBe(false)
     const shipped = offeredEffectsApp(effectRecipes, reach)
     expect(shipped.closedKey).toBeNull()
-    expect(effectsOf(shipped.inputs)?.options.map((one) => one.value)).toEqual([
-      "push-into-eye",
-    ])
+    expect(effectsOf(shipped.inputs)?.options.map((one) => one.value)).toEqual(
+      passedRecipes.map((one) => one.effect)
+    )
   })
 
   it("swaps in the offered effects app only on the local lock", () => {
