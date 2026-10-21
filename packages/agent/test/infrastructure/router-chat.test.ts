@@ -3,6 +3,7 @@ import { AgentModelUnknownError } from "#domain/error/agent-model-unknown.error"
 import { openPiModels, routerAgentModel } from "#infrastructure/pi-models"
 import {
   idempotencyKeyOf,
+  routerBodyOf,
   routerChatUrl,
 } from "#infrastructure/router-chat-fetch"
 import {
@@ -209,6 +210,33 @@ describe("the agent on a Comfy Router chat model", () => {
     expect(await idempotencyKeyOf(body)).not.toBe(
       await idempotencyKeyOf(`${body} `)
     )
+  })
+
+  it("sends an assistant turn that only calls a tool with empty words, which the Router takes where it refuses null", () => {
+    const toolTurn = {
+      role: "assistant",
+      content: null,
+      tool_calls: [
+        {
+          id: "call_1",
+          type: "function",
+          function: { name: "read_run", arguments: '{"runId":"r"}' },
+        },
+      ],
+    }
+    const sent = JSON.stringify({
+      model: defaultChatModel,
+      stream: true,
+      stream_options: { include_usage: true },
+      messages: [{ role: "user", content: "Make a clip" }, toolTurn],
+    })
+    const body = JSON.parse(routerBodyOf(sent))
+    expect(body.stream).toBeUndefined()
+    expect(body.stream_options).toBeUndefined()
+    expect(body.messages).toEqual([
+      { role: "user", content: "Make a clip" },
+      { ...toolTurn, content: "" },
+    ])
   })
 
   it("refuses a model the Router chat list does not hold", async () => {
