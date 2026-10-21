@@ -26,6 +26,41 @@ export const ltxFrames = {
   } satisfies Readonly<Record<ResolutionValue, SizeTable>>,
 }
 
+export const deliveryArea: Readonly<Record<ResolutionValue, number>> = {
+  "480p": 854 * 480,
+  "720p": 1280 * 720,
+}
+
+export const deliveryFrames: Readonly<Record<ResolutionValue, SizeTable>> = {
+  "480p": {
+    "1:1": { width: 640, height: 640 },
+    "4:3": { width: 738, height: 554 },
+    "3:4": { width: 554, height: 738 },
+    "16:9": { width: 854, height: 480 },
+    "9:16": { width: 480, height: 854 },
+  },
+  "720p": {
+    "1:1": { width: 960, height: 960 },
+    "4:3": { width: 1110, height: 832 },
+    "3:4": { width: 832, height: 1110 },
+    "16:9": { width: 1280, height: 720 },
+    "9:16": { width: 720, height: 1280 },
+  },
+}
+
+export const fitFrames: SizeTable = {
+  "1:1": { width: 1024, height: 1024 },
+  "4:3": { width: 1152, height: 864 },
+  "3:4": { width: 864, height: 1152 },
+  "16:9": { width: 1344, height: 768 },
+  "9:16": { width: 768, height: 1344 },
+}
+
+export function ratioOf(ratio: EffectRatio): number {
+  const [width, height] = ratio.split(":").map(Number)
+  return (width ?? 1) / (height ?? 1)
+}
+
 export function framesOf(seconds: number): number {
   return seconds * ltxFrames.fps + 1
 }
@@ -33,7 +68,7 @@ export function framesOf(seconds: number): number {
 export function sizeMap(
   sizes: SizeTable,
   side: keyof FrameSize,
-  divisor: number
+  divisor = 1
 ): Record<string, number> {
   return Object.fromEntries(
     effectRatios.map((ratio) => [ratio, sizes[ratio][side] / divisor])

@@ -8,17 +8,18 @@ import { findWorkflow } from "#list-workflows"
 import uiFile from "../../../../workflows/effects-ltx-2-5/effects-ltx-2-5.json"
 
 const coreNodeClasses: readonly string[] = [
-  "CFGGuider",
+  "CFGNorm",
   "CLIPLoader",
   "CLIPTextEncode",
-  "ConditioningZeroOut",
   "CreateVideo",
-  "EmptyFlux2LatentImage",
   "EmptyLTXVLatentVideo",
-  "Flux2Scheduler",
+  "EmptySD3LatentImage",
+  "FluxKontextImageScale",
+  "FluxKontextMultiReferenceLatentMethod",
   "GetImageSize",
   "GrowMask",
-  "ImageScaleToTotalPixels",
+  "ImageScale",
+  "KSampler",
   "KSamplerSelect",
   "LTXVAddGuide",
   "LTXVAudioVAEDecode",
@@ -37,9 +38,9 @@ const coreNodeClasses: readonly string[] = [
   "LoraLoaderModelOnly",
   "ManualSigmas",
   "MaskPreview",
+  "ModelSamplingAuraFlow",
   "PreviewImage",
   "RandomNoise",
-  "ReferenceLatent",
   "RemoveBackground",
   "ResizeImageMaskNode",
   "SamplerCustomAdvanced",
@@ -47,10 +48,10 @@ const coreNodeClasses: readonly string[] = [
   "StringConcatenate",
   "StringReplace",
   "StringTrim",
+  "TextEncodeQwenImageEditPlus",
   "UNETLoader",
   "VAEDecode",
   "VAEDecodeTiled",
-  "VAEEncode",
   "VAELoader",
 ]
 
@@ -130,7 +131,7 @@ describe("Effects holds only ComfyUI core nodes", () => {
   it("sends from every leaf only core node classes", () => {
     const leaves = leavesOf(effectsBinding(effectRecipes))
     expect(leaves).toHaveLength(effectRecipes.length * resolutionValues.length)
-    expect(effectRecipes).toHaveLength(12)
+    expect(effectRecipes).toHaveLength(9)
     for (const [path, graph] of leaves) {
       expect({ path, notCore: notCore(classesOf(graph)) }).toEqual({
         path,

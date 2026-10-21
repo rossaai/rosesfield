@@ -4,7 +4,9 @@ import { describe, expect, it } from "vitest"
 import {
   adapterNode,
   effectGraph,
-  referenceNodes,
+  endFrameNodes,
+  matteNodes,
+  soundNode,
 } from "#effects/comfy/effect-graph"
 import {
   effectBinding,
@@ -100,21 +102,57 @@ describe("the effect recipes", () => {
     }
   })
 
-  it("removes only the reference nodes when it draws the end frame from its prompt", () => {
-    const drawn = workflowOf(
+  it("fits the photo and makes the last frame with the image edit model before the video", () => {
+    const workflow = workflowOf(
+      effectGraph(fileGraph(), recipeOf("pull-back-to-space"))
+    )
+    const recipe = recipeOf("pull-back-to-space")
+    expect(workflow).toMatchObject({
+      "605": { inputs: { image: ["395", 0] } },
+      "610": {
+        inputs: { prompt: recipe.design.fit.prompt, image1: ["605", 0] },
+      },
+      "620": { inputs: { image1: ["616", 0] } },
+      "351": { inputs: { input: ["616", 0] } },
+      "460": { inputs: { image: ["627", 0] } },
+      "463": { inputs: { image: ["627", 0] } },
+      "380": { inputs: { image: ["374", 0], crop: "center" } },
+      "370": { inputs: { images: ["380", 0], audio: [soundNode, 0] } },
+      "75": { inputs: { format: "mp4", "format.codec": "h264" } },
+    })
+  })
+
+  it("removes the end-frame nodes and the crop guides when a look has neither an end frame nor a hold", () => {
+    const recipe = {
+      ...recipeOf("melt-away"),
+      endFrame: { source: "none" } as const,
+    }
+    const workflow = workflowOf(effectGraph(fileGraph(), recipe))
+    for (const id of [...endFrameNodes, ...matteNodes, "460", "462"]) {
+      expect({ id, node: workflow[id] }).toEqual({ id, node: undefined })
+    }
+    expect(workflow).toMatchObject({
+      "377": { inputs: { video_latent: ["357", 0] } },
+      "388": { inputs: { positive: ["365", 0] } },
+      "348": { inputs: { samples: ["367", 0] } },
+    })
+    expect(brokenLinks(workflow)).toEqual([])
+  })
+
+  it("keeps the sound for a look with a sound bed and removes it for a silent look", () => {
+    const sounding = workflowOf(
       effectGraph(fileGraph(), recipeOf("push-into-eye"))
     )
-    const edited = workflowOf(effectGraph(fileGraph(), recipeOf("grow-wings")))
-    const removed = Object.keys(edited).filter((id) => drawn[id] === undefined)
-    expect(removed.sort()).toEqual([...referenceNodes].sort())
-    expect(drawn["534"]?.inputs).toMatchObject({
-      positive: ["523", 0],
-      negative: ["524", 0],
-    })
-    expect(edited["534"]?.inputs).toMatchObject({
-      positive: ["528", 0],
-      negative: ["529", 0],
-    })
+    const silent = workflowOf(
+      effectGraph(fileGraph(), recipeOf("buildings-ripple"))
+    )
+    expect(sounding[soundNode]).toBeDefined()
+    expect(sounding["503"]?.inputs.string_b).toBe(
+      recipeOf("push-into-eye").design.sound?.prompt
+    )
+    expect(silent[soundNode]).toBeUndefined()
+    expect(silent["370"]?.inputs).not.toHaveProperty("audio")
+    expect(silent["503"]?.inputs.string_b).toBe("")
   })
 
   it("places a recipe's adapter between the model and both guiders", () => {
@@ -138,10 +176,10 @@ describe("the effect recipes", () => {
 
   it("sets the length of both latents from the recipe's seconds", () => {
     const workflow = workflowOf(
-      effectGraph(fileGraph(), { ...recipeOf("grow-giant"), seconds: 3 })
+      effectGraph(fileGraph(), { ...recipeOf("grow-giant"), seconds: 15 })
     )
-    expect(workflow["356"]?.inputs.length).toBe(73)
-    expect(workflow["366"]?.inputs.frames_number).toBe(73)
+    expect(workflow["356"]?.inputs.length).toBe(361)
+    expect(workflow["366"]?.inputs.frames_number).toBe(361)
   })
 
   it("records first the video model the graph's guiders read, through an adapter", () => {

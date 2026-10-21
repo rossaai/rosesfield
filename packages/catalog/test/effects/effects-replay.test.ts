@@ -11,7 +11,6 @@ import {
   promptText,
   requestFor,
   submitted,
-  type Workflow,
 } from "./effects-replay"
 
 function fileGraph(): Record<string, unknown> {
@@ -26,19 +25,13 @@ function idsOf(workflow: Readonly<Record<string, unknown>>): string[] {
   return Object.keys(workflow).sort()
 }
 
-function nodesOf(workflow: Workflow, from: number, to: number): string[] {
-  return Object.keys(workflow).filter(
-    (id) => Number(id) >= from && Number(id) <= to
-  )
-}
-
 function endPrompt(effect: string): string {
   const end = recipeOf(effect).endFrame
   return end.source === "none" ? "" : end.prompt
 }
 
 describe("the effects engine request", () => {
-  it("draws the pull back end frame from its prompt alone and binds the run to it", async () => {
+  it("fits the photo, makes the pull back's last frame and renders between the two with its sound", async () => {
     const request = requestFor(
       {
         effect: "pull-back-to-space",
@@ -48,6 +41,7 @@ describe("the effects engine request", () => {
       "9:16"
     )
     const { workflow, replay, ref } = await submitted(request)
+    const recipe = recipeOf("pull-back-to-space")
     expect(ref).toBe(jobId)
     expect(replay.sent.map((sent) => sent.url)).toEqual([
       `${cloudUrl}/api/v2/assets`,
@@ -56,105 +50,83 @@ describe("the effects engine request", () => {
     expect(replay.sent[1]?.headers.get("Idempotency-Key")).toBe(idempotencyKey)
     expect(workflow).toMatchObject({
       "395": { inputs: { image: loadedPhoto } },
+      "605": { inputs: { image: ["395", 0] } },
+      "610": { inputs: { prompt: recipe.design.fit.prompt } },
+      "614": { inputs: { width: 768, height: 1344 } },
+      "615": { inputs: { seed: 42, latent_image: ["614", 0] } },
+      "620": { inputs: { image1: ["616", 0] } },
+      "625": { inputs: { width: ["624", 0], height: ["624", 1] } },
+      "626": { inputs: { seed: 42 } },
       "339": { inputs: { noise_seed: 42 } },
-      "532": { inputs: { noise_seed: 42 } },
-      "356": { inputs: { width: 352, height: 640, length: 121 } },
-      "366": { inputs: { frames_number: 121, frame_rate: 24 } },
+      "351": { inputs: { input: ["616", 0] } },
+      "356": { inputs: { width: 352, height: 640, length: 241 } },
+      "366": { inputs: { frames_number: 241, frame_rate: 24 } },
       "357": { inputs: { image: ["350", 0], strength: 0.7 } },
       "349": { inputs: { image: ["350", 0], strength: 1 } },
-      "525": { inputs: { image: ["395", 0], megapixels: 1 } },
-      "530": { inputs: { width: ["526", 0], height: ["526", 1] } },
-      "534": {
-        inputs: { model: ["520", 0], positive: ["523", 0], cfg: 1 },
-      },
-      "460": { inputs: { image: ["536", 0], frame_idx: -1, strength: 0.9 } },
-      "463": { inputs: { image: ["536", 0], frame_idx: -1, strength: 0.9 } },
-      "388": { inputs: { positive: ["460", 0] } },
+      "460": { inputs: { image: ["627", 0], frame_idx: -1, strength: 0.9 } },
+      "463": { inputs: { image: ["627", 0], frame_idx: -1, strength: 0.9 } },
+      "380": { inputs: { width: 720, height: 1280, crop: "center" } },
+      "370": { inputs: { images: ["380", 0], audio: ["358", 0] } },
     })
-    expect(workflow["534"]?.inputs.negative).toEqual(["524", 0])
-    for (const id of ["527", "528", "529", "410", "461", "464", "358"]) {
+    for (const id of ["410", "461", "464"]) {
       expect({ id, node: workflow[id] }).toEqual({ id, node: undefined })
     }
-    expect(workflow["523"]?.inputs.text).toBe(endPrompt("pull-back-to-space"))
+    expect(workflow["620"]?.inputs.prompt).toBe(
+      endPrompt("pull-back-to-space")
+    )
     expect(promptText(workflow, "364").trim()).toBe(
-      `${recipeOf("pull-back-to-space").prompt} a red scarf`
+      `${recipe.prompt} a red scarf ${recipe.design.sound?.prompt}`
     )
     expect(workflow["373"]?.inputs.text).toBe("")
-    expect(workflow["370"]?.inputs).not.toHaveProperty("audio")
     expect(brokenLinks(workflow)).toEqual([])
   })
 
-  it("edits the photo into the melt end frame through its reference latent", async () => {
-    const request = requestFor({ effect: "melt-away", image: [photoId] }, "3:4")
+  it("holds the person whole through the matte while the building bends, with no sound", async () => {
+    const request = requestFor(
+      { effect: "buildings-ripple", image: [photoId], resolution: "480p" },
+      "3:4"
+    )
     const { workflow } = await submitted(request)
     const file = idsOf(fileGraph())
-    const gone = ["358", "410", "411", "412", "461", "464"]
-    expect(idsOf(workflow)).toEqual(file.filter((id) => !gone.includes(id)))
+    expect(idsOf(workflow)).toEqual(file.filter((id) => id !== "358"))
     expect(workflow).toMatchObject({
-      "527": { inputs: { pixels: ["525", 0], vae: ["522", 0] } },
-      "528": { inputs: { conditioning: ["523", 0], latent: ["527", 0] } },
-      "529": { inputs: { conditioning: ["524", 0], latent: ["527", 0] } },
-      "534": { inputs: { positive: ["528", 0], negative: ["529", 0] } },
-      "462": { inputs: { positive: ["460", 0], latent: ["367", 0] } },
-      "465": { inputs: { positive: ["463", 0] } },
-      "356": { inputs: { width: 352, height: 480 } },
-    })
-    expect(workflow["523"]?.inputs.text).toBe(endPrompt("melt-away"))
-    expect(promptText(workflow, "364").trim()).toBe(
-      recipeOf("melt-away").prompt
-    )
-    expect(brokenLinks(workflow)).toEqual([])
-  })
-
-  it("holds the subject through the matte in a busy street, with no end frame", async () => {
-    const request = requestFor(
-      { effect: "still-in-the-street", image: [photoId], resolution: "480p" },
-      "16:9"
-    )
-    const { workflow } = await submitted(request)
-    expect(nodesOf(workflow, 520, 536)).toEqual([])
-    expect(workflow["460"]).toBeUndefined()
-    expect(workflow["463"]).toBeUndefined()
-    expect(workflow).toMatchObject({
-      "356": { inputs: { width: 448, height: 256, length: 121 } },
+      "356": { inputs: { width: 256, height: 352, length: 169 } },
+      "614": { inputs: { width: 864, height: 1152 } },
+      "380": { inputs: { width: 554, height: 738 } },
+      "411": { inputs: { image: ["351", 0] } },
       "461": {
         inputs: {
-          positive: ["365", 0],
-          latent: ["357", 0],
+          positive: ["460", 0],
           image: ["350", 0],
           attention_mask: ["412", 0],
           strength: 0.9,
         },
       },
-      "464": {
-        inputs: {
-          positive: ["462", 0],
-          latent: ["349", 0],
-          attention_mask: ["412", 0],
-          strength: 0.9,
-        },
-      },
-      "411": { inputs: { image: ["351", 0] } },
+      "464": { inputs: { attention_mask: ["412", 0], strength: 0.9 } },
     })
+    expect(workflow["370"]?.inputs).not.toHaveProperty("audio")
+    expect(workflow["503"]?.inputs.string_b).toBe("")
+    expect(promptText(workflow, "364").trim()).toBe(
+      recipeOf("buildings-ripple").prompt
+    )
     expect(brokenLinks(workflow)).toEqual([])
   })
 
-  it("keeps only the frame 0 lock and the two-stage render for a prompt-only effect", async () => {
+  it("renders the 15 seconds of the diner look at the 720p area of a square frame", async () => {
     const request = requestFor(
       { effect: "freeze-and-circle", image: [photoId] },
       "1:1"
     )
     const { workflow } = await submitted(request)
-    expect(nodesOf(workflow, 410, 465)).toEqual([])
-    expect(nodesOf(workflow, 520, 536)).toEqual([])
     expect(workflow).toMatchObject({
-      "377": { inputs: { video_latent: ["357", 0] } },
-      "388": { inputs: { model: ["384", 0], positive: ["365", 0] } },
-      "348": { inputs: { samples: ["367", 0] } },
-      "340": { inputs: { video_latent: ["349", 0] } },
-      "374": { inputs: { samples: ["369", 0] } },
-      "356": { inputs: { width: 352, height: 352 } },
+      "356": { inputs: { width: 352, height: 352, length: 361 } },
+      "366": { inputs: { frames_number: 361 } },
+      "614": { inputs: { width: 1024, height: 1024 } },
+      "380": { inputs: { width: 960, height: 960 } },
     })
+    expect(workflow["610"]?.inputs.prompt).toBe(
+      recipeOf("freeze-and-circle").design.fit.prompt
+    )
     expect(brokenLinks(workflow)).toEqual([])
   })
 })
