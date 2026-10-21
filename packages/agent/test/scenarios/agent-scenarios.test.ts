@@ -1,11 +1,13 @@
 import { type Run, type RunStatus, run } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
+import { z } from "zod"
 import {
   defaultChatModel,
   routerChatModels,
 } from "#infrastructure/router-chat-models"
 import {
   type ModelAnswers,
+  type RouterExchange,
   readHandWrittenAnswers,
   readModelAnswers,
   replayAnswers,
@@ -82,6 +84,33 @@ function chainRun(options: {
     failure: null,
     createdAt: start.toISOString(),
     finishedAt: start.toISOString(),
+  })
+}
+
+function isVideoFromImage(exchange: RouterExchange): boolean {
+  const calls = z
+    .object({
+      choices: z.array(
+        z.object({
+          message: z.object({
+            tool_calls: z
+              .array(
+                z.object({ function: z.object({ arguments: z.string() }) })
+              )
+              .optional(),
+          }),
+        })
+      ),
+    })
+    .safeParse(exchange.body)
+  const callsOf = calls.success
+    ? (calls.data.choices[0]?.message.tool_calls ?? [])
+    : []
+  return callsOf.some((call) => {
+    const sent = z
+      .object({ inputs: z.object({ image: z.array(z.string()) }) })
+      .safeParse(JSON.parse(call.function.arguments))
+    return sent.success && sent.data.inputs.image.includes("{{result:1}}")
   })
 }
 
@@ -216,12 +245,17 @@ describe("the agent's scenarios on Router answers", () => {
   })
 
   it("fails a chain whose video is made from the run id, not from the image", async () => {
-    const written = defaultAnswers().scenarios.chain
-    const exchanges = (written?.exchanges ?? []).map((exchange, index) =>
-      index === 2
+    const written = defaultAnswers().scenarios.chain?.exchanges ?? []
+    const video = written.findIndex(isVideoFromImage)
+    expect(video).toBeGreaterThan(0)
+    const exchanges = written.map((exchange, index) =>
+      index === video
         ? routerExchange.parse(
             JSON.parse(
-              JSON.stringify(exchange).replace("{{result:1}}", "{{result:0}}")
+              JSON.stringify(exchange).replaceAll(
+                "{{result:1}}",
+                "{{result:0}}"
+              )
             )
           )
         : exchange
