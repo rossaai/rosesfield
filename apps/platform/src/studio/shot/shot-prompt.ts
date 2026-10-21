@@ -55,7 +55,7 @@ export function wordsOf(scene: string, choices: ShotChoices): string {
   if (scene.trim() === "") {
     return ""
   }
-  return sentWords({ scene, choices, movementAsWords: true, closes: false })
+  return sentWords({ scene, choices })
 }
 
 function phraseAtEnd(
