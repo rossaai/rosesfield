@@ -7,6 +7,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react"
+import type { ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { formatDuration } from "@/copy/format"
 import { t } from "@/copy/t"
@@ -55,14 +56,16 @@ vi.mock("@/studio/audio/waveform", async (original) => ({
   }),
 }))
 
-function show(): HTMLElement {
+function show(
+  props: { hasDownload?: boolean; action?: ReactNode } = {}
+): HTMLElement {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
   return render(
     <QueryClientProvider client={client}>
       <TooltipProvider>
-        <WaveformPlayer assetId={assetId} />
+        <WaveformPlayer assetId={assetId} {...props} />
       </TooltipProvider>
     </QueryClientProvider>
   ).container
@@ -107,5 +110,16 @@ describe("the Audio output player", () => {
     expect(download).toHaveBeenCalledWith(
       expect.objectContaining({ id: assetId })
     )
+  })
+
+  it("draws its action in place of Download on a recording field", async () => {
+    show({
+      hasDownload: false,
+      action: <button type="button">Remove</button>,
+    })
+    expect(await screen.findByRole("button", { name: "Remove" })).toBeTruthy()
+    expect(
+      screen.queryByRole("button", { name: t("output.download") })
+    ).toBeNull()
   })
 })
