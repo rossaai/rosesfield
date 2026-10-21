@@ -1,5 +1,11 @@
 import { findApp } from "@rosesfield/catalog"
-import { appListing, type Run, run } from "@rosesfield/contract"
+import type { Mode } from "@rosesfield/catalog/characters"
+import {
+  appListing,
+  characterPhotoLimit,
+  type Run,
+  run,
+} from "@rosesfield/contract"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -20,7 +26,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { characterQuery, runsQuery } from "@/api/queries"
 import { t, tCatalog } from "@/copy/t"
 import { ModeCanvas } from "@/studio/characters/mode-canvas"
-import type { Mode } from "../../../../../packages/catalog/src/characters/traits"
 
 const characters = appListing.parse(findApp("characters"))
 
@@ -41,16 +46,36 @@ type Call = { url: string; method: string; body: unknown }
 
 const calls: Call[] = []
 
+function characterWith(references: readonly string[]) {
+  return {
+    id: characterId,
+    name: "Mara",
+    references: [...references],
+    notes: "",
+    createdAt: "2026-10-17T09:00:00.000Z",
+  }
+}
+
 function stubGateway(): void {
   calls.length = 0
   vi.stubGlobal(
     "fetch",
     (input: unknown, init?: { method?: string; body?: unknown }) => {
-      calls.push({
-        url: String(input),
-        method: init?.method ?? "GET",
-        body: typeof init?.body === "string" ? JSON.parse(init.body) : null,
-      })
+      const url = String(input)
+      const method = init?.method ?? "GET"
+      const body =
+        typeof init?.body === "string" ? JSON.parse(init.body) : null
+      calls.push({ url, method, body })
+      const isUpdate =
+        method === "PATCH" && url.endsWith(`/api/characters/${characterId}`)
+      if (isUpdate) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({ character: characterWith(body.references) }),
+            { status: 200, headers: { "Content-Type": "application/json" } }
+          )
+        )
+      }
       return new Promise(() => undefined)
     }
   )
@@ -76,7 +101,11 @@ function runOf(inputs: Run["inputs"], outputs: readonly string[]): Run {
   })
 }
 
-function openCanvas(mode: Mode, shown: Run): void {
+function openCanvas(
+  mode: Mode,
+  shown: Run,
+  references: readonly string[] = [photo]
+): QueryClient {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, staleTime: Number.POSITIVE_INFINITY },
@@ -87,13 +116,7 @@ function openCanvas(mode: Mode, shown: Run): void {
     pageParams: [null],
   })
   client.setQueryData(characterQuery(characterId).queryKey, {
-    character: {
-      id: characterId,
-      name: "Mara",
-      references: [photo],
-      notes: "",
-      createdAt: "2026-10-17T09:00:00.000Z",
-    },
+    character: characterWith(references),
   })
   const router = createRouter({
     routeTree: createRootRoute({
@@ -118,6 +141,23 @@ function openCanvas(mode: Mode, shown: Run): void {
       <RouterProvider router={router} />
     </QueryClientProvider>
   )
+  return client
+}
+
+const viewsRun = (): Run =>
+  runOf(
+    {
+      mode: "angles",
+      count: "4",
+      character: [characterId],
+      angleSet: "turnaround",
+    },
+    views
+  )
+
+function photoCountOf(client: QueryClient): number | undefined {
+  return client.getQueryData(characterQuery(characterId).queryKey)?.character
+    .references.length
 }
 
 function sent(method: string, path: string): unknown[] {
@@ -164,19 +204,9 @@ describe("Save as character on the portraits you keep", () => {
 })
 
 describe("Add to character on a view", () => {
-  it("adds the view after the character's photos, one photo more", async () => {
-    openCanvas(
-      "angles",
-      runOf(
-        {
-          mode: "angles",
-          count: "4",
-          character: [characterId],
-          angleSet: "turnaround",
-        },
-        views
-      )
-    )
+  it("adds the view after the character's photos, and the character's photo count rises by 1", async () => {
+    const client = openCanvas("angles", viewsRun())
+    expect(photoCountOf(client)).toBe(1)
     const [first] = await screen.findAllByRole("button", {
       name: t("characters.detail.addToCharacter"),
     })
@@ -189,8 +219,29 @@ describe("Add to character on a view", () => {
         { references: [photo, views[0]] },
       ])
     )
+    await vi.waitFor(() => expect(photoCountOf(client)).toBe(2))
+    expect(
+      await screen.findByRole("button", {
+        name: tCatalog("characters.studio.added"),
+      })
+    ).toBeDefined()
     expect(
       screen.getAllByText(tCatalog("characters.view.front")).length
     ).toBeGreaterThan(0)
+  })
+
+  it("adds no view to a character that holds the most photos a character keeps", async () => {
+    const full = Array.from(
+      { length: characterPhotoLimit },
+      (_, index) => `0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c${31 + index}`
+    )
+    openCanvas("angles", viewsRun(), full)
+    const buttons = await screen.findAllByRole("button", {
+      name: t("characters.detail.addToCharacter"),
+    })
+    expect(buttons.map((button) => button.hasAttribute("disabled"))).toEqual(
+      views.map(() => true)
+    )
+    expect(characterPhotoLimit).toBe(10)
   })
 })

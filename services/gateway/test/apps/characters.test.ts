@@ -3,6 +3,7 @@ import {
   type AppDefinition,
   assetResponse,
   buildPath,
+  characterPhotoLimit,
   characterResponse,
   errorEnvelope,
   routes,
@@ -118,6 +119,36 @@ describe("the characters app through the gateway on the demo engine", () => {
     )
     return characterResponse.parse(await created.json()).character.id
   }
+
+  it("keeps a character to 1 to 10 photos, the bound the screens read", async () => {
+    const gateway = openGateway()
+    const uploaded = await gateway.call(routes.uploadAsset.path, {
+      method: "POST",
+      headers: { "content-type": "image/png" },
+      body: pngBytes,
+    })
+    const photo = assetResponse.parse(await uploaded.json()).asset.id
+    const others = Array.from({ length: characterPhotoLimit }, () =>
+      crypto.randomUUID()
+    )
+    const create = (references: string[]) =>
+      gateway.call(
+        routes.createCharacter.path,
+        jsonInit({ name: "Ada", references, notes: "" })
+      )
+    const over = await create([photo, ...others])
+    expect(over.status).toBe(400)
+    expect(errorEnvelope.parse(await over.json()).error.code).toBe(
+      "REQUEST_INVALID"
+    )
+    const atBound = await create([photo, ...others.slice(1)])
+    expect(errorEnvelope.parse(await atBound.json()).error.code).not.toBe(
+      "REQUEST_INVALID"
+    )
+    const one = await create([photo])
+    expect(one.status).toBe(201)
+    expect(characterPhotoLimit).toBe(10)
+  })
 
   it("makes 4 views of a saved character", async () => {
     const gateway = openGateway()

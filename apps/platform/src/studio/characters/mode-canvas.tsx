@@ -1,4 +1,9 @@
-import type { AppListing, Run } from "@rosesfield/contract"
+import { type Mode, viewsOf } from "@rosesfield/catalog/characters"
+import {
+  type AppListing,
+  characterPhotoLimit,
+  type Run,
+} from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
@@ -16,8 +21,6 @@ import { useAppRuns } from "@/screens/app/app-canvas"
 import { useUpdateCharacter } from "@/screens/characters/character-actions"
 import { modeOfRun } from "@/studio/characters/mode-listing"
 import { SaveCharacterButton } from "@/studio/characters/save-character-dialog"
-import { viewsOf } from "../../../../../packages/catalog/src/characters/angle-sets"
-import type { Mode } from "../../../../../packages/catalog/src/characters/traits"
 
 type ModeCanvasProps = {
   app: AppListing
@@ -26,8 +29,6 @@ type ModeCanvasProps = {
   onUseInputs: (run: Run) => void
   emptyAction: ReactNode
 }
-
-const maxReferences = 16
 
 function characterOf(run: Run): string | null {
   const value = run.inputs.character
@@ -59,7 +60,7 @@ function AddToCharacter({
       disabled={
         found.data === undefined ||
         isAdded ||
-        references.length >= maxReferences
+        references.length >= characterPhotoLimit
       }
       onClick={() => update.mutate({ references: [...references, assetId] })}
     >
