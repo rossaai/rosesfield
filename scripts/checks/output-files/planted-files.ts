@@ -56,16 +56,13 @@ async function halfOf(from: string, to: string): Promise<void> {
   await Bun.write(to, bytes.subarray(0, Math.floor(bytes.length / 2)))
 }
 
+async function stillOf(source: string, to: string): Promise<void> {
+  await ffmpeg(["-f", "lavfi", "-i", source, "-frames:v", "1", to])
+}
+
 async function writeFiles(at: (name: string) => string): Promise<void> {
-  await ffmpeg([
-    "-f",
-    "lavfi",
-    "-i",
-    "testsrc=size=320x180",
-    "-frames:v",
-    "1",
-    at("good.png"),
-  ])
+  await stillOf("testsrc=size=320x180", at("good.png"))
+  await stillOf("color=c=black:s=320x180", at("black.png"))
   await ffmpeg([
     "-f",
     "lavfi",
@@ -115,6 +112,7 @@ export async function writePlanted(folder: string): Promise<Planted[]> {
       expected: { kind: "image", ratio: 1 },
       defect: "size",
     },
+    { file: at("black.png"), expected: image, defect: "no black frame" },
     { file: at("good.mp4"), expected: video, defect: null },
     { file: at("truncated.mp4"), expected: video, defect: "opens" },
     { file: at("black.mp4"), expected: video, defect: "no black frame" },

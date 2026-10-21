@@ -3,6 +3,7 @@ import { appIdFormat, runIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { EngineNoCreditsError } from "#domain/error/engine-no-credits.error"
 import { RunFinishedError } from "#domain/error/run-finished.error"
+import { RunOutputBlankError } from "#domain/error/run-output-blank.error"
 import type { OutputsPerJob } from "#domain/generation-engine.port"
 import { Run } from "#domain/run"
 import { portraitId, referenceId, start } from "../sample"
@@ -146,6 +147,44 @@ describe("Run", () => {
       finishedAt: "2026-10-17T09:01:30.000Z",
     })
     expect(run.isFinished()).toBe(true)
+  })
+
+  it("fails with its cost once every job kept nothing but dropped", () => {
+    const run = queued("one")
+    const each = { amount: 0.01, currency: "USD" as const }
+    const whenEmpty = new RunOutputBlankError({ dropped: 1 })
+    const dropped = { outputs: [], dropped: 1, cost: each, whenEmpty }
+    run.keepJob({ ...dropped, index: 0, now: later })
+    expect(run.toRecord()).toMatchObject({ status: "running", dropped: 1 })
+    run.keepJob({ ...dropped, index: 1, now: later })
+    expect(run.toRecord()).toMatchObject({
+      status: "failed",
+      failure: { code: "RUN_OUTPUT_BLANK", status: 502 },
+      cost: { amount: 0.02, currency: "USD" },
+      outputs: [],
+      dropped: 2,
+      finishedAt: "2026-10-17T09:01:30.000Z",
+    })
+  })
+
+  it("finishes done on one job's outputs when another dropped all", () => {
+    const run = queued("one")
+    const whenEmpty = new RunOutputBlankError({ dropped: 1 })
+    run.keepJob({ index: 0, outputs: [], dropped: 1, whenEmpty, now: later })
+    run.keepJob({ index: 1, outputs: [portraitId], whenEmpty, now: later })
+    expect(run.toRecord()).toMatchObject({
+      status: "done",
+      outputs: [portraitId],
+      dropped: 1,
+      failure: null,
+    })
+  })
+
+  it("names no dropped output when no job dropped one", () => {
+    const run = queued()
+    run.keepJob({ index: 0, outputs: [portraitId], dropped: 0, now: later })
+    expect(run.toRecord()).not.toHaveProperty("dropped")
+    expect(run.jobs[0]).not.toHaveProperty("dropped")
   })
 
   it("fails with the code and status of the error and no message", () => {

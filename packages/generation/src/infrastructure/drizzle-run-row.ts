@@ -21,6 +21,7 @@ const jobRows = z.array(
     ]),
     progress: z.number().min(0).max(1).nullable(),
     outputs: z.array(assetId),
+    dropped: z.number().int().min(1).optional(),
     cost: cost.optional(),
     collectingSince: z.iso.datetime().optional(),
     submittingSince: z.iso.datetime().optional(),
@@ -30,9 +31,10 @@ const jobRows = z.array(
 function jobsOf(value: unknown): RunJob[] {
   return jobRows
     .parse(value)
-    .map(({ collectingSince, submittingSince, cost, ...job }) => ({
+    .map(({ collectingSince, submittingSince, cost, dropped, ...job }) => ({
       ...job,
       ...(cost === undefined ? {} : { cost }),
+      ...(dropped === undefined ? {} : { dropped }),
       outputs: job.outputs.map((id) => assetIdFormat.parse(id)),
       ...(collectingSince === undefined ? {} : { collectingSince }),
       ...(submittingSince === undefined ? {} : { submittingSince }),
@@ -69,6 +71,8 @@ export function toRunRow(run: Run): RunRow {
 }
 
 export function fromRunRow(row: RunRow): Run {
+  const jobs = jobsOf(row.jobs)
+  const dropped = jobs.reduce((sum, job) => sum + (job.dropped ?? 0), 0)
   const record = runSchema.parse({
     id: row.id,
     appId: row.appId,
@@ -78,6 +82,7 @@ export function fromRunRow(row: RunRow): Run {
     aspectRatio: row.aspectRatio,
     seed: row.seed,
     outputs: row.outputs,
+    ...(dropped === 0 ? {} : { dropped }),
     progress: row.progress,
     engine: {
       adapter: row.engineAdapter,
@@ -99,7 +104,7 @@ export function fromRunRow(row: RunRow): Run {
   })
   return Run.restore({
     record,
-    jobs: jobsOf(row.jobs),
+    jobs,
     idempotencyKey: row.idempotencyKey,
     attempts: row.attempts,
     version: row.version,

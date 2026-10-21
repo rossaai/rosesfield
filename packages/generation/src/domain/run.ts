@@ -25,6 +25,7 @@ export type RunJob = {
   status: RunJobStatus
   progress: number | null
   outputs: AssetId[]
+  dropped?: number
   cost?: Cost
   collectingSince?: string
   submittingSince?: string
@@ -66,8 +67,10 @@ type ObserveOptions = {
 type KeepJobOptions = {
   index: number
   outputs: readonly AssetId[]
+  dropped?: number
   cost?: Cost | null
   now: Date
+  whenEmpty?: ProjectError
 }
 
 type CollectingOptions = {
@@ -274,13 +277,25 @@ export class Run {
     } else {
       job.cost = options.cost
     }
+    if (options.dropped === undefined || options.dropped === 0) {
+      delete job.dropped
+    } else {
+      job.dropped = options.dropped
+    }
     this.totalCost()
     this.refresh()
-    if (this.state.jobs.every((one) => one.status === "done")) {
-      this.state.record.status = "done"
-      this.state.record.progress = 1
-      this.state.record.finishedAt = options.now.toISOString()
+    if (this.state.jobs.some((one) => one.status !== "done")) {
+      return
     }
+    const { record } = this.state
+    if (record.outputs.length === 0 && options.whenEmpty !== undefined) {
+      record.status = "failed"
+      record.failure = errorEnvelopeOf(options.whenEmpty).error
+    } else {
+      record.status = "done"
+      record.progress = 1
+    }
+    record.finishedAt = options.now.toISOString()
   }
 
   retried(): void {
@@ -343,6 +358,12 @@ export class Run {
     )
     record.status = hasStarted ? "running" : "queued"
     record.outputs = jobs.flatMap((job) => job.outputs)
+    const dropped = jobs.reduce((sum, job) => sum + (job.dropped ?? 0), 0)
+    if (dropped === 0) {
+      delete record.dropped
+    } else {
+      record.dropped = dropped
+    }
     const isMeasured = jobs.some((job) => job.progress !== null)
     record.progress = isMeasured
       ? jobs.reduce((sum, job) => sum + (job.progress ?? 0), 0) / jobs.length
