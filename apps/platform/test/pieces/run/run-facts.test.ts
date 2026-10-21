@@ -214,6 +214,14 @@ describe("runCaption", () => {
   it("prints nothing on a failed demo run", () => {
     expect(runCaption(runOf({ status: "failed", outputs: [] }))).toBe("")
   })
+
+  it("says how many blank results a finished run left out", () => {
+    const one = runCaption(runOf({ status: "done", dropped: 1 }))
+    const two = runCaption(runOf({ status: "done", dropped: 2 }))
+    expect(one).toContain("1 blank result was left out")
+    expect(two).toContain("2 blank results were left out")
+    expect(runCaption(runOf({ status: "done" }))).not.toContain("blank")
+  })
 })
 
 describe("historyPrice", () => {

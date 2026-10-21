@@ -17,7 +17,7 @@ import {
   secondsBetween,
   withUnit,
 } from "@/copy/format"
-import { t, tCatalog } from "@/copy/t"
+import { t, tCatalog, tCount } from "@/copy/t"
 import { inputCaption, inputUnit } from "@/screens/app/fields/input-copy"
 import { openModelLabel, openModelOfFile } from "@/screens/welcome/open-weights"
 
@@ -284,7 +284,12 @@ export function runCaption(run: Run, estimate: number | null = null): string {
   if (run.status !== "done") {
     return lead ?? ""
   }
-  return joinParts([lead, madeCaption(run, lead), captionPrice(run, estimate)])
+  return joinParts([
+    lead,
+    madeCaption(run, lead),
+    captionPrice(run, estimate),
+    run.dropped === undefined ? null : tCount("run.dropped", run.dropped),
+  ])
 }
 
 function inputAspectOf(run: Run): string | null {
