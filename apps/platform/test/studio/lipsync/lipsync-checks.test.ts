@@ -1,12 +1,18 @@
+import type { ModelField } from "@rosesfield/catalog/comfy"
 import { describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
 import {
-  audioLimits,
-  clipLimits,
+  lengthFor,
+  limitsFor,
   type MediaFacts,
-  photoLimits,
+  nearestRatio,
   problemOf,
 } from "@/studio/lipsync/lipsync-checks"
+
+const bounds = { min: 2, max: 10 }
+const audioLimits = limitsFor("audio", "audio", bounds)
+const clipLimits = limitsFor("clip", "clip", bounds)
+const photoLimits = limitsFor("photo", "photo", bounds)
 
 const audio = (change: Partial<MediaFacts>): MediaFacts => ({
   mime: "audio/mpeg",
@@ -78,5 +84,69 @@ describe("the lip sync checks", () => {
     expect(
       words(problemOf(audio({ mime: "audio/ogg", seconds: null }), audioLimits))
     ).toBe("This input takes an MP3 or WAV file. Pick another file.")
+  })
+})
+
+describe("the chosen model's length limit", () => {
+  it("names the limit of the model you picked, and the same audio passes a model that takes longer", () => {
+    const long = audio({ seconds: 12 })
+    const short = limitsFor("audio", "soundFile", bounds)
+    expect(words(problemOf(long, short))).toBe(
+      "This clip runs 12 seconds. Pick one of 10 seconds or less."
+    )
+    expect(
+      problemOf(long, limitsFor("audio", "soundFile", { min: 4, max: 15 }))
+    ).toBeNull()
+  })
+
+  it("checks no length when the model declares none", () => {
+    expect(
+      problemOf(audio({ seconds: 40 }), limitsFor("audio", "soundFile", null))
+    ).toBeNull()
+  })
+
+  it("never checks the length of a photo", () => {
+    expect(limitsFor("photo", "photo", bounds).seconds).toBeNull()
+  })
+})
+
+describe("the length a model is asked for", () => {
+  it("follows the audio inside the model's bounds", () => {
+    const field: ModelField = {
+      kind: "number",
+      name: "duration",
+      path: "duration",
+      required: false,
+      min: 4,
+      max: 15,
+      integer: true,
+      default: 5,
+    }
+    expect(lengthFor(5.02, field)).toBe(5)
+    expect(lengthFor(6.4, field)).toBe(7)
+    expect(lengthFor(2, field)).toBe(4)
+    expect(lengthFor(30, field)).toBe(15)
+  })
+
+  it("picks the shortest choice that holds the audio", () => {
+    const field: ModelField = {
+      kind: "choice",
+      name: "duration",
+      path: "duration",
+      required: false,
+      options: ["5", "10"],
+      default: "5",
+    }
+    expect(lengthFor(4.2, field)).toBe("5")
+    expect(lengthFor(7, field)).toBe("10")
+    expect(lengthFor(12, field)).toBe("10")
+  })
+})
+
+describe("the shape a graph run takes", () => {
+  it("is the offered ratio nearest the face", () => {
+    expect(nearestRatio(720, 1280, ["1:1", "9:16"])).toBe("9:16")
+    expect(nearestRatio(720, 1280, ["1:1", "4:3"])).toBe("1:1")
+    expect(nearestRatio(720, 1280, [])).toBeNull()
   })
 })
