@@ -61,6 +61,14 @@ export const hitTailSeconds = 0.3
 
 export const bedGainNode = "649"
 
+export const bedLevelNode = "648"
+
+export const layerLufs = -20
+
+export function hitLevelOf(slot: HitSlot): string {
+  return String(Number(slot.prompt) + 9)
+}
+
 export const buildNodes = { floor: "650", rise: "651", sum: "652" } as const
 
 export const brightenNode = "653"
@@ -100,6 +108,13 @@ export function setSound(graph: Graph, recipe: EffectRecipe): void {
 
 function shapeBed(graph: Graph, sound: SoundBed): Link {
   let bed: Link = [soundNode, 0]
+  if (sound.hits.length > 0) {
+    graph[bedLevelNode] = {
+      class_type: "NormalizeAudioLoudness",
+      inputs: { audio: bed, lufs: layerLufs },
+    }
+    bed = [bedLevelNode, 0]
+  }
   if (sound.bedGainDb !== 0) {
     graph[bedGainNode] = {
       class_type: "AudioAdjustVolume",
@@ -161,6 +176,12 @@ export function setHits(graph: Graph, recipe: EffectRecipe): void {
     }
     nodeOf(graph, slot.prompt).inputs.text = hit.prompt
     nodeOf(graph, slot.length).inputs.seconds = hit.seconds
+    const level = hitLevelOf(slot)
+    graph[level] = {
+      class_type: "NormalizeAudioLoudness",
+      inputs: { audio: [slot.decode, 0], lufs: layerLufs },
+    }
+    nodeOf(graph, slot.gain).inputs.audio = [level, 0]
     nodeOf(graph, slot.gain).inputs.volume = hit.gainDb
     nodeOf(graph, slot.tail).inputs.duration_seconds = hitTailSeconds
     let placed: Link = [slot.placed, 0]

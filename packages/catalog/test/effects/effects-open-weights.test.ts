@@ -1,7 +1,13 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectAdapter } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
-import { brightenNode, buildNodes, hitSlots } from "#effects/comfy/effect-sound"
+import {
+  bedLevelNode,
+  brightenNode,
+  buildNodes,
+  hitLevelOf,
+  hitSlots,
+} from "#effects/comfy/effect-sound"
 import { effectBinding, effectsBinding } from "#effects/comfy/effects-binding"
 import {
   type EffectRecipe,
@@ -97,7 +103,10 @@ function packNodesOf(recipe: EffectRecipe): string[] {
     ...(sound.fadeOut > 0 ? ["362"] : []),
     ...(sound.build === null ? [] : [buildNodes.rise]),
     ...(sound.brighten === null ? [] : [brightenNode]),
-    ...hitSlots.slice(0, sound.hits.length).map((slot) => slot.tail),
+    ...(sound.hits.length > 0 ? [bedLevelNode] : []),
+    ...hitSlots
+      .slice(0, sound.hits.length)
+      .flatMap((slot) => [slot.tail, hitLevelOf(slot)]),
   ].sort()
 }
 

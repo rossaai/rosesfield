@@ -2,13 +2,16 @@ import { describe, expect, it } from "vitest"
 import { effectGraph } from "#effects/comfy/effect-graph"
 import {
   bedGainNode,
+  bedLevelNode,
   brightenNode,
   buildNodes,
   ceilingNodes,
   fadeOutNode,
+  hitLevelOf,
   hitShared,
   hitSlots,
   hitTailSeconds,
+  layerLufs,
   loudnessNode,
   peakMargin,
   soundNode,
@@ -168,8 +171,23 @@ describe("the sound of an effect ends in its fade and carries its hits", () => {
     expect(struck).toMatchObject({
       [first.prompt]: { inputs: { text: opening.prompt } },
       [first.length]: { inputs: { seconds: opening.seconds } },
+      [bedLevelNode]: {
+        class_type: "NormalizeAudioLoudness",
+        inputs: { audio: [soundNode, 0], lufs: layerLufs },
+      },
+      [hitLevelOf(first)]: {
+        class_type: "NormalizeAudioLoudness",
+        inputs: { audio: [first.decode, 0], lufs: layerLufs },
+      },
       [first.gain]: {
-        inputs: { audio: [first.decode, 0], volume: opening.gainDb },
+        inputs: { audio: [hitLevelOf(first), 0], volume: opening.gainDb },
+      },
+      [hitLevelOf(second)]: {
+        class_type: "NormalizeAudioLoudness",
+        inputs: { audio: [second.decode, 0], lufs: layerLufs },
+      },
+      [second.gain]: {
+        inputs: { audio: [hitLevelOf(second), 0], volume: boom.gainDb },
       },
       [first.tail]: {
         class_type: "AudioFadeOut",
@@ -177,7 +195,7 @@ describe("the sound of an effect ends in its fade and carries its hits", () => {
       },
       [first.merged]: {
         class_type: "AudioMerge",
-        inputs: { audio1: [soundNode, 0], audio2: [first.tail, 0] },
+        inputs: { audio1: [bedLevelNode, 0], audio2: [first.tail, 0] },
       },
       [second.prompt]: { inputs: { text: boom.prompt } },
       [second.lead]: {
@@ -202,11 +220,22 @@ describe("the sound of an effect ends in its fade and carries its hits", () => {
     expect(
       slotIds(hitSlots.slice(2)).filter((id) => struck[id] !== undefined)
     ).toEqual([])
+    expect(
+      hitSlots
+        .slice(2)
+        .map(hitLevelOf)
+        .filter((id) => struck[id] !== undefined)
+    ).toEqual([])
     expect(brokenLinks(struck)).toEqual([])
   })
 
   it("sends no hit node and no audio model for a look without hits or without sound", () => {
-    const hitIds = [...Object.values(hitShared), ...slotIds(hitSlots)]
+    const hitIds = [
+      ...Object.values(hitShared),
+      ...slotIds(hitSlots),
+      ...hitSlots.map(hitLevelOf),
+      bedLevelNode,
+    ]
     const plain = workflowOf(effectGraph(fileGraph(), eyeWith({ hits: [] })))
     expect(hitIds.filter((id) => plain[id] !== undefined)).toEqual([])
     expect(brokenLinks(plain)).toEqual([])
@@ -229,11 +258,14 @@ describe("the sound of an effect ends in its fade and carries its hits", () => {
     expect(shaped).toMatchObject({
       [buildNodes.floor]: {
         class_type: "AudioAdjustVolume",
-        inputs: { audio: [soundNode, 0], volume: build.floorDb },
+        inputs: { audio: [bedLevelNode, 0], volume: build.floorDb },
       },
       [buildNodes.rise]: {
         class_type: "AudioFadeIn",
-        inputs: { audio: [soundNode, 0], duration_seconds: build.seconds },
+        inputs: {
+          audio: [bedLevelNode, 0],
+          duration_seconds: build.seconds,
+        },
       },
       [buildNodes.sum]: {
         class_type: "AudioMerge",
@@ -286,7 +318,7 @@ describe("the sound of an effect ends in its fade and carries its hits", () => {
     expect(lowered).toMatchObject({
       [bedGainNode]: {
         class_type: "AudioAdjustVolume",
-        inputs: { audio: [soundNode, 0], volume: -8 },
+        inputs: { audio: [bedLevelNode, 0], volume: -8 },
       },
       [buildNodes.floor]: { inputs: { audio: [bedGainNode, 0] } },
       [buildNodes.rise]: { inputs: { audio: [bedGainNode, 0] } },

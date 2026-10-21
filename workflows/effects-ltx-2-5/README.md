@@ -90,7 +90,7 @@ A recipe can also hold one mid frame: a frame inside the clip, made by the image
 4. It makes a matte of the subject with the core BiRefNet nodes `LoadBackgroundRemovalModel` and `RemoveBackground`, nodes 410 to 412, when the recipe holds the subject.
 5. It renders the shot in two stages. A mid frame is an `LTXVAddGuide` guide at its frame, nodes 472 and 473, read from the edited frame resized and preprocessed as frame 0 is, nodes 470 and 471. The last frame is an `LTXVAddGuide` guide at the last frame, nodes 460 and 463, chained after the mid-frame guides. The photo is a second guide at the last frame with the subject matte as its `attention_mask`, nodes 461 and 464, so the subject holds while the scene changes. `LTXVCropGuides` removes the guide frames after each stage, nodes 462 and 465.
 6. It decodes the sound with node 358 when the recipe has a sound bed. Node 359 sets its integrated loudness to the middle of the look's band. Nodes 360 and 361 then raise it by the ceiling's distance from 0 dBFS, where `AudioAmplify` clips every sample to full scale, and lower it back, so no sample passes the ceiling, 1 dB under the look's true peak, and quieter samples keep their level. `AudioNormalize` was not used: it moves the sample peak to its target in both directions, so it would undo the loudness of node 359. The ceiling acts only on a sound whose peaks sit higher above its loudness than the band leaves room for. A silent look removes nodes 358 to 361.
-7. It lowers, builds and brightens the sound, nodes 649 to 653, and adds the look's hits to it, nodes 630, 631, 633 and 660 to 718, when the look has them, before node 359 sets the loudness, per §The hits, the build, the brighten and the fade. It ends the sound in a fade to silence, node 362, when the look has one.
+7. It levels, lowers, builds and brightens the sound, nodes 648 to 653, and adds the look's hits to it, nodes 630, 631, 633 and 660 to 719, when the look has them, before node 359 sets the loudness, per §The hits, the build, the brighten and the fade. It ends the sound in a fade to silence, node 362, when the look has one.
 8. It scales the frames to the pixel area of the chosen resolution in the chosen shape, centre-cropped, node 380, such as 1280 by 720 at 16:9 and 832 by 1110 at 3:4 for 720p, and 1920 by 1080 at 16:9 and 1248 by 1664 at 3:4 for 1080p.
 9. It adds faint noise to every frame with the core `ImageAddNoise`, node 381, seeded from the run's seed, at the grain of the recipe's encode. Then it saves H.264 in MP4 at 24 frames a second, nodes 370 and 75.
 
@@ -126,11 +126,14 @@ The six hits share the Stable Audio 3 loader, node 630, its text encoder, node 6
 | +1 | `EmptyLatentAudio` | the hit's length, 0.5 to 5 seconds |
 | +2 | `KSampler` | the values of `workflows/audio-sound-stable-audio-3`: 8 steps, CFG 1, `lcm`, `simple`. Its seed is the run's seed |
 | +3 | `VAEDecodeAudio` | decodes the hit |
+| +9 | `NormalizeAudioLoudness` | levels the hit to -20 LUFS, added at run time |
 | +4 | `AudioAdjustVolume` | the hit's gain, a whole number of dB from -24 to 12 |
 | +8 | `AudioFadeOut` | fades the last 0.3 s of the hit, so it does not end in a click |
 | +5 | `EmptyAudio` | silence as long as the hit's time |
 | +6 | `AudioConcat` | puts the hit after the silence, so the hit starts at its time |
 | +7 | `AudioMerge` | adds the placed hit to the mix before it |
+
+Before the mix, every layer is levelled to the same loudness, -20 LUFS, by `NormalizeAudioLoudness`. Each hit's level node sits at the slot's step +9, nodes 669, 679, 689, 699, 709 and 719, between its decode and its gain. The LTX sound is levelled by node 648 before the bed gain, the build and the brighten, and only when the look has a hit. A layer's raw level changes from run to run, so the hit's gain and the bed gain are offsets from -20 LUFS, not from that raw level.
 
 A hit at 0 s removes its silence and its `AudioConcat`, and its merge reads the faded hit. The hits merge in the order the recipe lists them: the first onto the bed, each next one onto the mix before it. Node 359 reads the last merge, so the loudness and the peak ceiling act on the whole mix.
 

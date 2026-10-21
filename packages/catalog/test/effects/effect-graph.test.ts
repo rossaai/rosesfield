@@ -14,9 +14,12 @@ import {
 } from "#effects/comfy/effect-graph"
 import {
   bedGainNode,
+  bedLevelNode,
   brightenNode,
   buildNodes,
   fadeOutNode,
+  hitLevelOf,
+  hitSlots,
   soundNode,
 } from "#effects/comfy/effect-sound"
 import {
@@ -98,6 +101,8 @@ function editReaders(workflow: Workflow): string[] {
 
 const runTimeNodes: readonly string[] = [
   fadeOutNode,
+  bedLevelNode,
+  ...hitSlots.map(hitLevelOf),
   bedGainNode,
   ...Object.values(buildNodes),
   brightenNode,
