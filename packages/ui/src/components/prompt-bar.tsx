@@ -262,7 +262,13 @@ function PromptField({
     }
   }
   return (
-    <div data-slot="composer-prompt" className="flex min-h-12 items-start">
+    <div
+      data-slot="composer-prompt"
+      className={cn(
+        "flex min-h-12 items-start rounded-cell",
+        interaction.fieldHostRing
+      )}
+    >
       <textarea
         ref={field}
         rows={1}

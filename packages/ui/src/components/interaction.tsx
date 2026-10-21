@@ -17,6 +17,9 @@ const ringHost =
 const fieldRing =
   "focus-visible:outline-(length:--spacing-focus-ring) focus-visible:outline-solid focus-visible:outline-hor-text focus-visible:outline-offset-(--spacing-focus-ring) in-data-[gallery=focus]:outline-(length:--spacing-focus-ring) in-data-[gallery=focus]:outline-offset-(--spacing-focus-ring) in-data-[gallery=focus]:outline-hor-text in-data-[gallery=focus]:outline-solid"
 
+const fieldHostRing =
+  "outline-hor-text has-[textarea:focus-visible]:outline-(length:--spacing-focus-ring) has-[textarea:focus-visible]:outline-offset-(--spacing-focus-ring) has-[textarea:focus-visible]:outline-solid"
+
 const thumbRing =
   "outline-hor-text has-[:focus-visible]:outline-(length:--spacing-focus-ring) has-[:focus-visible]:outline-solid has-[:focus-visible]:outline-offset-(--spacing-focus-ring) in-data-[gallery=focus]:outline-(length:--spacing-focus-ring) in-data-[gallery=focus]:outline-offset-(--spacing-focus-ring) in-data-[gallery=focus]:outline-solid"
 
@@ -45,6 +48,7 @@ export const interaction = {
   fill,
   ring,
   fieldRing,
+  fieldHostRing,
   thumbRing,
   ringHost,
   cover,

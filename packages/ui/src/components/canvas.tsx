@@ -26,7 +26,8 @@ function Canvas({
       aria-label={label}
       data-slot="state-view"
       className={cn(
-        "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-card bg-canvas",
+        "flex min-h-0 min-w-0 flex-1 flex-col rounded-card bg-canvas",
+        inset === "card" ? "overflow-hidden" : "overflow-visible",
         className
       )}
     >
@@ -56,7 +57,7 @@ function Canvas({
         data-slot="canvas-scroll"
         className={cn(
           "min-h-0 flex-1 overflow-y-auto",
-          interaction.ringRoomTop,
+          inset === "card" ? interaction.ringRoomTop : interaction.ringRoom,
           interaction.ringScroll
         )}
       >

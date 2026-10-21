@@ -18,15 +18,24 @@ describe("Badge", () => {
     }
   )
 
-  it("opens the weights page from Open weights in a new tab", () => {
+  it("makes only the Hugging Face mark the link to the weights page, named by that page, in a new tab", () => {
     render(
       <Badge kind="openWeights" href="https://huggingface.co/maker/model">
         Open weights
       </Badge>
     )
-    const link = screen.getByRole("link", { name: "Open weights" })
+    const link = screen.getByRole("link", {
+      name: "huggingface.co/maker/model",
+    })
+    expect(link.getAttribute("href")).toBe("https://huggingface.co/maker/model")
     expect(link.getAttribute("target")).toBe("_blank")
     expect(link.getAttribute("rel")).toBe("noopener noreferrer")
+    expect(link.className.split(" ")).toContain("pointer-events-auto")
+    expect(link.textContent).toBe("")
+    expect(screen.getByText("Open weights").closest("a")).toBeNull()
+    const badge = link.closest("[data-slot='badge']")
+    expect(badge?.tagName.toLowerCase()).toBe("span")
+    expect(badge?.className.split(" ")).toContain("ms-1")
   })
 
   it("carries the Hugging Face mark as path data on Open weights, and no mark on the other kinds", () => {
@@ -38,7 +47,9 @@ describe("Badge", () => {
         <Badge kind="new">New</Badge>
       </>
     )
-    const link = screen.getByRole("link", { name: "Open weights" })
+    const link = screen.getByRole("link", {
+      name: "huggingface.co/maker/model",
+    })
     const mark = link.querySelector("[data-slot='hugging-face-mark']")
     expect(mark?.tagName.toLowerCase()).toBe("svg")
     expect(mark?.getAttribute("aria-hidden")).toBe("true")

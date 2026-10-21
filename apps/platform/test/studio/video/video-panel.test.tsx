@@ -72,3 +72,22 @@ describe("the column's mode switch", () => {
     expect(onExtend).toHaveBeenCalledTimes(1)
   })
 })
+
+describe("the column's mode switch on the keyboard", () => {
+  it("keeps you on Video when an arrow key reaches Extend, and leaves only on a click or a press", () => {
+    const onExtend = vi.fn()
+    render(<MakeSwitch onExtend={onExtend} />)
+    const [video, extend] = screen.getAllByRole("radio")
+    if (video === undefined || extend === undefined) {
+      throw new Error("the switch has no two cells")
+    }
+    video.focus()
+    fireEvent.keyDown(video, { key: "ArrowRight" })
+    extend.focus()
+    expect(onExtend).not.toHaveBeenCalled()
+    expect(video.getAttribute("aria-checked")).toBe("true")
+    fireEvent.keyDown(extend, { key: " " })
+    fireEvent.click(extend)
+    expect(onExtend).toHaveBeenCalledTimes(1)
+  })
+})

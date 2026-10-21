@@ -12,10 +12,7 @@ import {
   ModelRowTrigger,
 } from "@rosesfield/ui/components/model-trigger"
 import { PromptBar } from "@rosesfield/ui/components/prompt-bar"
-import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import {
-  ModeStrip,
-  ModeTab,
   SegmentedTab,
   SegmentedTabs,
   Tabs,
@@ -38,12 +35,17 @@ import {
   Volume2Icon,
 } from "lucide-react"
 import type { ReactElement } from "react"
+import { catalogApps } from "@/catalog/catalog-apps"
+import { tCatalog } from "@/copy/t"
 import { t } from "@/gallery/copy.en"
 import demoSquare from "@/gallery/fixtures/demo-image-1-1.png"
 import demoVideo from "@/gallery/fixtures/demo-video-16-9.mp4"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
 import { frameState, interactionStates } from "@/gallery/reference-frames"
+import type { AppForm } from "@/screens/app/use-app-form"
 import { tileSizes, ViewCluster } from "@/screens/library/view-cluster"
+import { VideoChips } from "@/studio/video/video-chips"
+import { MakeSwitch, ModeTabs } from "@/studio/video/video-panel"
 
 const mark = <FlaskConicalIcon aria-hidden="true" />
 
@@ -98,6 +100,18 @@ function Bar(): ReactElement {
   )
 }
 
+const videoApp = catalogApps.find((one) => one.id === "video")
+
+const sampleForm: AppForm = {
+  values: { inputs: {}, seedMode: "random", count: 1, aspectRatio: null },
+  problems: new Map(),
+  setInput: () => undefined,
+  setForm: () => undefined,
+  fill: () => undefined,
+  validate: () => true,
+  register: () => undefined,
+}
+
 function Column(): ReactElement {
   return (
     <div className="h-195">
@@ -105,12 +119,7 @@ function Column(): ReactElement {
         label={t("sample.sheet.title")}
         className="h-full"
         tabs={
-          <Tabs defaultValue="create">
-            <ModeStrip aria-label={t("sample.mode.create")}>
-              <ModeTab value="create">{t("sample.mode.create")}</ModeTab>
-              <ModeTab value="edit">{t("sample.mode.edit")}</ModeTab>
-            </ModeStrip>
-          </Tabs>
+          <ModeTabs screen={{ tab: "text-image", setTab: () => undefined }} />
         }
         footer={
           <GenerateButton
@@ -120,18 +129,15 @@ function Column(): ReactElement {
           />
         }
       >
-        <div className="mb-2">
-          <SegmentedControl
-            label={t("sample.source")}
-            density="composer"
-            value="upload"
-            onValueChange={() => undefined}
-            items={[
-              { value: "upload", label: t("sample.source.upload") },
-              { value: "library", label: t("sample.source.library") },
-            ]}
-          />
-        </div>
+        <StartFrame
+          src={demoVideo}
+          alt={t("sample.output")}
+          title={tCatalog("video.preset.title")}
+          line={t("sample.model")}
+          changeLabel={tCatalog("video.preset.change")}
+          onChange={() => undefined}
+        />
+        <MakeSwitch onExtend={() => undefined} />
         <DropZone
           title={t("sample.drop.title")}
           line={t("sample.drop.line")}
@@ -165,6 +171,9 @@ function Column(): ReactElement {
           name={t("sample.model")}
           mark={mark}
         />
+        {videoApp === undefined ? null : (
+          <VideoChips app={videoApp} form={sampleForm} fields={null} />
+        )}
       </InputPanel>
     </div>
   )
