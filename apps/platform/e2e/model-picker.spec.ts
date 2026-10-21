@@ -155,3 +155,85 @@ for (const state of ["open", "with-settings"]) {
     expect(after.bottom).toBeLessThanOrEqual(shortScreen.height)
   })
 }
+
+test("each row of the Image picker draws its lab's mark as path data or its first letter, and shows no picture", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop", "the desktop picker")
+  await page.addInitScript(() => {
+    window.localStorage.setItem("rosesfield.welcome", "seen")
+  })
+  await page.goto("/apps/image")
+  await openImagePicker(page)
+  const list = page.getByRole("listbox")
+  const marks = await list
+    .locator("[data-slot='model-row-mark'] [data-slot='lab-mark']")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        maker: node.getAttribute("data-maker") ?? "",
+        mark: node.getAttribute("data-mark") ?? "",
+        paths: node.querySelectorAll("svg path").length,
+        text: node.textContent ?? "",
+        width: node.getBoundingClientRect().width,
+      }))
+    )
+  expect(marks.length).toBeGreaterThan(10)
+  for (const one of marks) {
+    expect(one.width, one.maker).toBe(16)
+    if (one.mark === "letter") {
+      expect(one.paths, one.maker).toBe(0)
+      expect(one.text, one.maker).toMatch(/^\p{Lu}$|^\p{N}$/u)
+    } else {
+      expect(one.paths, one.maker).toBe(1)
+      expect(one.text, one.maker).toBe("")
+    }
+  }
+  expect(marks.find((one) => one.maker === "Google")?.mark).toBe("google")
+  expect(marks.find((one) => one.maker === "Black Forest Labs")?.mark).toBe(
+    "letter"
+  )
+  expect(await list.locator("img, video, picture").count()).toBe(0)
+})
+
+test("the Image picker's list fades in while it moves 4 px from its trigger", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop", "the desktop picker")
+  await page.addInitScript(() => {
+    window.localStorage.setItem("rosesfield.welcome", "seen")
+  })
+  await page.goto("/apps/image")
+  const trigger = page.getByRole("button", { name: /^Model/ }).first()
+  await expect(trigger).toBeVisible()
+  const frames = await trigger.evaluate(
+    (button) =>
+      new Promise<{ y: number; opacity: number }[]>((resolve) => {
+        const read: { y: number; opacity: number }[] = []
+        const sample = (): void => {
+          const list = document.querySelector("[data-slot='model-picker']")
+          if (list !== null) {
+            const style = getComputedStyle(list)
+            const y = Number.parseFloat(style.translate.split(" ")[1] ?? "0")
+            read.push({
+              y: Number.isNaN(y) ? 0 : y,
+              opacity: Number(style.opacity),
+            })
+          }
+          if (read.length < 40) {
+            requestAnimationFrame(sample)
+          } else {
+            resolve(read)
+          }
+        }
+        if (button instanceof HTMLElement) {
+          button.click()
+        }
+        requestAnimationFrame(sample)
+      })
+  )
+  const moved = Math.max(...frames.map((frame) => frame.y))
+  expect(frames[0]?.opacity).toBeLessThan(1)
+  expect(moved).toBeGreaterThan(0)
+  expect(moved).toBeLessThanOrEqual(4)
+  expect(frames.at(-1)).toEqual({ y: 0, opacity: 1 })
+})

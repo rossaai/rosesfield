@@ -55,6 +55,59 @@
       "readOn": "2026-10-20"
     }
   },
+  "markSet": {
+    "name": "Simple Icons",
+    "version": "16.35.0",
+    "licence": "CC0-1.0",
+    "url": "https://github.com/simple-icons/simple-icons/tree/16.35.0/icons"
+  },
+  "marks": {
+    "Alibaba": {
+      "slug": "alibabacloud",
+      "title": "Alibaba Cloud",
+      "path": "M3.996 4.517h5.291L8.01 6.324 4.153 7.506a1.668 1.668 0 0 0-1.165 1.601v5.786a1.668 1.668 0 0 0 1.165 1.6l3.857 1.183 1.277 1.807H3.996A3.996 3.996 0 0 1 0 15.487V8.513a3.996 3.996 0 0 1 3.996-3.996m16.008 0h-5.291l1.277 1.807 3.857 1.182c.715.227 1.17.889 1.165 1.601v5.786a1.668 1.668 0 0 1-1.165 1.6l-3.857 1.183-1.277 1.807h5.291A3.996 3.996 0 0 0 24 15.487V8.513a3.996 3.996 0 0 0-3.996-3.996m-4.007 8.345H8.002v-1.804h7.995Z"
+    },
+    "Alibaba Qwen": {
+      "slug": "qwen",
+      "title": "QWen",
+      "path": "M23.919 14.545 20.817 9.17l1.47-2.544a.56.56 0 0 0 0-.566l-1.633-2.83a.57.57 0 0 0-.49-.283h-6.207L12.487.402a.57.57 0 0 0-.49-.284H8.732a.56.56 0 0 0-.49.284L5.139 5.775h-2.94a.56.56 0 0 0-.49.284L.077 8.887a.56.56 0 0 0 0 .567L3.18 14.83l-1.47 2.545a.56.56 0 0 0 0 .566l1.634 2.83a.57.57 0 0 0 .49.283h6.205l1.47 2.545a.57.57 0 0 0 .49.284h3.266a.57.57 0 0 0 .49-.284l3.104-5.375h2.94a.57.57 0 0 0 .49-.283l1.634-2.828a.55.55 0 0 0-.004-.568M8.733.686l1.634 2.828-1.634 2.828H21.8L20.164 9.17H7.425L5.63 6.06Zm1.306 19.801-6.205-.002 1.634-2.83h3.265L2.201 6.344h3.267q3.182 5.517 6.367 11.032zm10.124-5.66L18.53 12l-6.532 11.315-1.634-2.83c2.129-3.673 4.25-7.351 6.373-11.028h3.592l3.102 5.374z"
+    },
+    "Alibaba Tongyi-MAI": {
+      "slug": "alibabacloud",
+      "title": "Alibaba Cloud",
+      "path": "M3.996 4.517h5.291L8.01 6.324 4.153 7.506a1.668 1.668 0 0 0-1.165 1.601v5.786a1.668 1.668 0 0 0 1.165 1.6l3.857 1.183 1.277 1.807H3.996A3.996 3.996 0 0 1 0 15.487V8.513a3.996 3.996 0 0 1 3.996-3.996m16.008 0h-5.291l1.277 1.807 3.857 1.182c.715.227 1.17.889 1.165 1.601v5.786a1.668 1.668 0 0 1-1.165 1.6l-3.857 1.183-1.277 1.807h5.291A3.996 3.996 0 0 0 24 15.487V8.513a3.996 3.996 0 0 0-3.996-3.996m-4.007 8.345H8.002v-1.804h7.995Z"
+    },
+    "ByteDance Seed": {
+      "slug": "bytedance",
+      "title": "ByteDance",
+      "path": "M19.8772 1.4685L24 2.5326v18.9426l-4.1228 1.0563V1.4685zm-13.3481 9.428l4.115 1.0641v8.9786l-4.115 1.0642v-11.107zM0 2.572l4.115 1.0642v16.7354L0 21.428V2.572zm17.4553 5.6205v11.107l-4.1228-1.0642V9.2568l4.1228-1.0642z"
+    },
+    "ElevenLabs": {
+      "slug": "elevenlabs",
+      "title": "ElevenLabs",
+      "path": "M4.6035 0v24h4.9317V0zm9.8613 0v24h4.9317V0z"
+    },
+    "Freepik": {
+      "slug": "freepik",
+      "title": "Freepik",
+      "path": "M4.315 6.939c-.702.702-1.204 1.505-1.706 2.308l-.702-.402c-.1-.401-.602-.702-1.004-.702-.602.1-.903.502-.903 1.104 0 .501.502.903 1.004.803.1 0 .2 0 .3-.1l.703.4c-.401.904-.702 1.807-.803 2.81l1.204.201c.402-2.107 1.305-4.014 2.81-5.52Zm12.544 7.626c-1.204 0-2.107-1.003-2.107-2.107 0-1.204 1.004-2.107 2.107-2.107 1.205 0 2.108 1.003 2.108 2.107 0 1.204-.903 2.107-2.108 2.107zm-7.325 1.506a2.912 2.912 0 0 1-2.91-2.91c0-1.707 1.304-3.011 2.91-3.011a2.912 2.912 0 0 1 2.91 2.91c0 1.606-1.305 3.01-2.91 3.01zm3.311-10.337a9.422 9.422 0 0 0-9.433 9.434c0 .702.1 1.304.2 2.007 1.004.802 4.216 1.405 8.33 1.204 4.516-.301 8.23-1.505 10.437-3.412 0-.301 0-.602-.1-.903-.603-4.817-4.617-8.33-9.434-8.33Zm-.803 13.749c-.602 0-1.204.1-1.806.1-1.405 0-2.71-.1-3.914-.3-.602-.101-1.304-.302-2.007-.503 1.606 2.91 4.817 4.918 8.43 4.918 4.415 0 8.229-3.011 9.232-7.125a16.828 16.828 0 0 1-3.813 1.806c-1.806.602-3.914 1.003-6.122 1.104zM23.182 7.34c.501-.1.903-.502.803-1.104-.1-.502-.502-.903-1.004-.803-.502.1-.803.502-.803 1.004l-.702.602c-.703-.703-1.405-1.305-2.208-1.806l-.602 1.003a11.225 11.225 0 0 1 4.014 4.616l1.104-.501c-.402-.904-.903-1.706-1.505-2.51l.602-.601c.1.1.2.1.3.1zM12.845 3.326h-.803l-.1-1.004c.301-.2.502-.602.401-1.003-.1-.602-.602-1.104-1.204-1.004-.602.1-1.003.602-1.003 1.305.1.401.3.702.602.903l.1 1.004c-1.104.2-2.208.501-3.211 1.003l.502 1.104a10.425 10.425 0 0 1 4.616-1.104c.803 0 1.505.1 2.308.301l.2-1.204c-.702-.2-1.505-.301-2.408-.301Z"
+    },
+    "Google": {
+      "slug": "google",
+      "title": "Google",
+      "path": "M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
+    },
+    "MiniMax": {
+      "slug": "minimax",
+      "title": "MiniMax",
+      "path": "M11.43 3.92a.86.86 0 1 0-1.718 0v14.236a1.999 1.999 0 0 1-3.997 0V9.022a.86.86 0 1 0-1.718 0v3.87a1.999 1.999 0 0 1-3.997 0V11.49a.57.57 0 0 1 1.139 0v1.404a.86.86 0 0 0 1.719 0V9.022a1.999 1.999 0 0 1 3.997 0v9.134a.86.86 0 0 0 1.719 0V3.92a1.998 1.998 0 1 1 3.996 0v11.788a.57.57 0 1 1-1.139 0zm10.572 3.105a2 2 0 0 0-1.999 1.997v7.63a.86.86 0 0 1-1.718 0V3.923a1.999 1.999 0 0 0-3.997 0v16.16a.86.86 0 0 1-1.719 0V18.08a.57.57 0 1 0-1.138 0v2a1.998 1.998 0 0 0 3.996 0V3.92a.86.86 0 0 1 1.719 0v12.73a1.999 1.999 0 0 0 3.996 0V9.023a.86.86 0 1 1 1.72 0v6.686a.57.57 0 0 0 1.138 0V9.022a2 2 0 0 0-1.998-1.997"
+    },
+    "Tencent": {
+      "slug": "tencenthy",
+      "title": "Tencent Hy",
+      "path": "M12 0a1 1 0 0 1 0 24 1 1 0 0 1 0-24m1.65 1.12c.533.097 1.023.233 1.41.404 6.086 2.686 7.398 9.217 1.603 14.341a3.782 3.782 0 0 1-6.126-1.75 3.66 3.66 0 0 1-.095-1.622c-1.934.6-3.295 2.305-3.524 4.45-.204 1.912.324 4.044 2.056 5.634A11 11 0 1 0 13.65 1.12M2.748 6.21A11 11 0 0 0 8.9 22.55c-5.377-4.022-6.06-8.4-2.43-13.87a2.234 2.234 0 1 0-3.722-2.47m10.157-5.172c4.408 1.33 3.61 5.41 2.447 6.924-.86 1.117-2.922 1.46-3.708 2.238a4.18 4.18 0 0 0-1.212 2.292A5.3 5.3 0 0 1 12 12.258a5.672 5.672 0 0 0 1.404-11.169 11 11 0 0 0-.5-.052"
+    }
+  },
   "models": {
     "beeble/switchx": {
       "lab": "Beeble",
@@ -64,6 +117,9 @@
       "thirds": {
         "text-to-image": 3,
         "image-edit": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bfl/erase-v1": {
@@ -71,7 +127,10 @@
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bfl/flux-2-max": {
       "lab": "Black Forest Labs",
@@ -81,7 +140,10 @@
         "text-to-image": 33,
         "image-edit": 42
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bfl/flux-2-pro": {
       "lab": "Black Forest Labs",
@@ -91,7 +153,10 @@
         "text-to-image": 42,
         "image-edit": 40
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bfl/flux-3-image": {
       "lab": "Black Forest Labs",
@@ -100,7 +165,10 @@
       "ranks": {
         "text-to-image": 13
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bfl/flux-3-video": {
       "lab": "Black Forest Labs",
@@ -110,7 +178,10 @@
         "text-to-video": 7,
         "image-to-video": 8
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bfl/flux-kontext-max": {
       "lab": "Black Forest Labs",
@@ -120,7 +191,10 @@
         "text-to-image": 74,
         "image-edit": 59
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bfl/flux-kontext-pro": {
       "lab": "Black Forest Labs",
@@ -130,21 +204,30 @@
         "text-to-image": 76,
         "image-edit": 60
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bfl/flux-pro-1.0-expand": {
       "lab": "Black Forest Labs",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bfl/flux-pro-1.0-fill": {
       "lab": "Black Forest Labs",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bfl/flux-pro-1.1": {
       "lab": "Black Forest Labs",
@@ -153,7 +236,10 @@
       "ranks": {
         "text-to-image": 88
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bfl/flux-pro-1.1-ultra": {
       "lab": "Black Forest Labs",
@@ -162,28 +248,40 @@
       "ranks": {
         "text-to-image": 91
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bfl/video-edit-v1": {
       "lab": "Black Forest Labs",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bfl/video-upscale-v1": {
       "lab": "Black Forest Labs",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bfl/vto-v1": {
       "lab": "Black Forest Labs",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bria/fibo": {
       "lab": "Bria",
@@ -192,6 +290,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 2
+      },
+      "line": {
+        "none": "Its Hugging Face card is gated and was not read, and Comfy's template index holds no FIBO template"
       }
     },
     "bria/image-edit-add-object-by-text": {
@@ -201,6 +302,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bria/image-edit-erase": {
@@ -210,6 +314,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bria/image-edit-erase-by-text": {
@@ -219,6 +326,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bria/image-edit-erase-foreground": {
@@ -228,6 +338,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bria/image-edit-expand": {
@@ -237,6 +350,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bria/image-edit-gen-fill": {
@@ -246,6 +362,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bria/image-edit-increase-resolution": {
@@ -256,6 +375,9 @@
       "thirds": {
         "image-edit": 1,
         "upscale": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bria/image-edit-relight": {
@@ -265,6 +387,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bria/image-edit-remove-background": {
@@ -274,6 +399,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bria/image-edit-replace-background": {
@@ -283,6 +411,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bria/image-edit-replace-object-by-text": {
@@ -292,6 +423,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bria/image-edit-reseason": {
@@ -301,6 +435,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bria/image-edit-restore": {
@@ -310,6 +447,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "bria/video-edit-green-screen": {
@@ -317,21 +457,30 @@
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bria/video-edit-remove-background": {
       "lab": "Bria",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "bria/video-edit-replace-background": {
       "lab": "Bria",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "byteplus/dreamina-seedance-2-0-260128": {
       "lab": "ByteDance Seed",
@@ -344,7 +493,10 @@
         "video-edit": 6,
         "lip-sync": 2
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "byteplus/dreamina-seedance-2-0-fast-260128": {
       "lab": "ByteDance Seed",
@@ -353,7 +505,10 @@
       "ranks": {
         "reference-to-video": 2
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "byteplus/dreamina-seedance-2-0-mini": {
       "lab": "ByteDance Seed",
@@ -363,7 +518,10 @@
         "reference-to-video": 5,
         "lip-sync": 3
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "byteplus/dreamina-seedance-2-5-260628": {
       "lab": "ByteDance Seed",
@@ -376,7 +534,10 @@
         "video-edit": 2,
         "lip-sync": 1
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "byteplus/seed-audio-1.0": {
       "lab": "ByteDance Seed",
@@ -385,6 +546,9 @@
       "ranks": {},
       "thirds": {
         "speech": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "byteplus/seed-audio-1.0-multilingual": {
@@ -394,6 +558,9 @@
       "ranks": {},
       "thirds": {
         "speech": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "byteplus/seedance-1-0-pro-250528": {
@@ -401,21 +568,30 @@
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "byteplus/seedance-1-0-pro-fast-251015": {
       "lab": "ByteDance Seed",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "byteplus/seedance-1-5-pro-251215": {
       "lab": "ByteDance Seed",
       "release": "2025-12-15",
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "byteplus/seedream-4-0-250828": {
       "lab": "ByteDance Seed",
@@ -425,6 +601,9 @@
       "thirds": {
         "text-to-image": 1,
         "image-edit": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "byteplus/seedream-4-5-251128": {
@@ -438,6 +617,9 @@
       "thirds": {
         "text-to-image": 2,
         "image-edit": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "byteplus/seedream-5-0-260128": {
@@ -448,6 +630,9 @@
       "thirds": {
         "text-to-image": 2,
         "image-edit": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "byteplus/seedream-5-0-flash-260915": {
@@ -458,6 +643,9 @@
       "thirds": {
         "text-to-image": 1,
         "image-edit": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "byteplus/seedream-5-0-pro-260628": {
@@ -471,6 +659,9 @@
       "thirds": {
         "text-to-image": 2,
         "image-edit": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "elevenlabs/eleven_multilingual_v2": {
@@ -480,14 +671,20 @@
       "ranks": {
         "speech": 43
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "elevenlabs/eleven_sfx_v2": {
       "lab": "ElevenLabs",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "elevenlabs/eleven_v3": {
       "lab": "ElevenLabs",
@@ -496,7 +693,10 @@
       "ranks": {
         "speech": 20
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "elevenlabs/eleven_v4": {
       "lab": "ElevenLabs",
@@ -505,7 +705,10 @@
       "ranks": {
         "speech": 2
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "elevenlabs/eleven_v4_turbo": {
       "lab": "ElevenLabs",
@@ -514,21 +717,30 @@
       "ranks": {
         "speech": 1
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "fal/crystal-upscaler": {
       "lab": "fal",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "fal/crystal-video-upscaler": {
       "lab": "fal",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "fal/h3-max": {
       "lab": "Fal",
@@ -537,14 +749,20 @@
       "ranks": {
         "text-to-video": 6
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "fal/h3-max-turbo": {
       "lab": "fal",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "fal/patina": {
       "lab": "fal",
@@ -553,6 +771,9 @@
       "ranks": {},
       "thirds": {
         "image-edit": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "freepik/ai-image-upscaler-precision-v2": {
@@ -560,7 +781,10 @@
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "freepik/ai-skin-enhancer-creative": {
       "lab": "Freepik",
@@ -570,6 +794,9 @@
       "thirds": {
         "image-edit": 3,
         "upscale": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "freepik/ai-skin-enhancer-faithful": {
@@ -580,6 +807,9 @@
       "thirds": {
         "image-edit": 3,
         "upscale": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "freepik/ai-skin-enhancer-flexible": {
@@ -590,6 +820,9 @@
       "thirds": {
         "image-edit": 3,
         "upscale": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "gemini-interactions/gemini-omni-1.1-flash": {
@@ -597,14 +830,20 @@
       "release": "2026-08-28",
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "gemini-interactions/gemini-omni-flash-preview": {
       "lab": "Google",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "graph/ltx-2-5": {
       "lab": "Lightricks",
@@ -614,7 +853,12 @@
         "text-to-video": 23,
         "image-to-video": 20
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "key": "comfy.model.graphLtx25.line",
+        "source": "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#video_ltx2_5_i2v",
+        "quote": "native multishot capability that holds character, environment, and lighting across connected scenes"
+      }
     },
     "graph/ming-image-0-1-design": {
       "lab": "inclusionAI",
@@ -623,14 +867,24 @@
       "ranks": {
         "text-to-image": 45
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "key": "comfy.model.graphMingImage01Design.line",
+        "source": "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#image_ming_image_01_design_t2i",
+        "quote": "Generate text-heavy design compositions from text prompts using Ming Image 0.1 Design, a 6B model tuned for UI screens, infographics, and posters."
+      }
     },
     "graph/qwen-image-2512": {
       "lab": "Alibaba Qwen",
       "release": null,
       "weights": "https://huggingface.co/Qwen/Qwen-Image-2512",
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "key": "comfy.model.graphQwenImage2512.line",
+        "source": "https://huggingface.co/Qwen/Qwen-Image-2512/blob/25468b98e3276ca6700de15c6628e51b7de54a26/README.md",
+        "quote": "Enhanced Huamn Realism ... Finer Natural Detail ... Improved Text Rendering"
+      }
     },
     "graph/z-image-turbo": {
       "lab": "Alibaba Tongyi-MAI",
@@ -639,7 +893,12 @@
       "ranks": {
         "text-to-image": 70
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "key": "comfy.model.graphZImageTurbo.line",
+        "source": "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/blob/f332072aa78be7aecdf3ee76d5c247082da564a6/README.md",
+        "quote": "It excels in photorealistic image generation, bilingual text rendering (English & Chinese)"
+      }
     },
     "heygen/starfish": {
       "lab": "HeyGen",
@@ -648,6 +907,9 @@
       "ranks": {},
       "thirds": {
         "speech": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "higgsfield/higgsfield-kling-3-4k": {
@@ -657,6 +919,9 @@
       "ranks": {},
       "thirds": {
         "text-to-video": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "higgsfield/higgsfield-kling-3-pro": {
@@ -666,6 +931,9 @@
       "ranks": {},
       "thirds": {
         "text-to-video": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "ideogram/ideogram-4-5": {
@@ -676,7 +944,10 @@
         "text-to-image": 38,
         "image-edit": 23
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "ideogram/ideogram-v3": {
       "lab": "Ideogram",
@@ -687,6 +958,9 @@
       },
       "thirds": {
         "text-to-image": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "ideogram/ideogram-v4": {
@@ -698,6 +972,11 @@
       },
       "thirds": {
         "text-to-image": 2
+      },
+      "line": {
+        "key": "comfy.model.ideogramIdeogramV4.line",
+        "source": "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#image_ideogram4_t2i",
+        "quote": "Generate an image with precise layout, color, and style control using Ideogram 4.0."
       }
     },
     "ideogram/p-image-ideogram": {
@@ -707,7 +986,10 @@
       "ranks": {
         "text-to-image": 46
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "kling/kling-3.0-turbo": {
       "lab": "Kling",
@@ -716,6 +998,9 @@
       "ranks": {},
       "thirds": {
         "text-to-video": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "kling/kling-image-o1": {
@@ -728,6 +1013,9 @@
       "thirds": {
         "text-to-image": 1,
         "image-edit": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "kling/kling-v2-5-turbo": {
@@ -735,14 +1023,20 @@
       "release": "2025-09-23",
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "kling/kling-v2-6": {
       "lab": "Kling",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "kling/kling-v3": {
       "lab": "KlingAI",
@@ -753,6 +1047,9 @@
       },
       "thirds": {
         "text-to-video": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "kling/kling-v3-omni": {
@@ -764,35 +1061,50 @@
         "image-to-video": 18,
         "video-edit": 9
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "kling/kling-video-o1": {
       "lab": "Kling",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "kling/videos-avatar-image2video": {
       "lab": "Kling",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "kling/videos-lip-sync": {
       "lab": "Kling",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "kling/videos-video-extend": {
       "lab": "Kling",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "krea/krea-2": {
       "lab": "Krea",
@@ -801,6 +1113,9 @@
       "ranks": {},
       "thirds": {
         "text-to-image": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "krea/krea-2-large": {
@@ -812,6 +1127,9 @@
       },
       "thirds": {
         "text-to-image": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "krea/krea-2-medium": {
@@ -823,6 +1141,9 @@
       },
       "thirds": {
         "text-to-image": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "krea/krea-2-medium-turbo": {
@@ -834,6 +1155,9 @@
       },
       "thirds": {
         "text-to-image": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "krea/krea-3": {
@@ -844,6 +1168,9 @@
       "thirds": {
         "text-to-image": 2,
         "image-edit": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "ltx/ltx-2-5-fast": {
@@ -855,6 +1182,9 @@
       },
       "thirds": {
         "text-to-video": 2
+      },
+      "line": {
+        "none": "Comfy's LTX-2.5 API template names Pro, so no description is matched to Fast"
       }
     },
     "ltx/ltx-2-5-pro": {
@@ -866,6 +1196,11 @@
       },
       "thirds": {
         "text-to-video": 3
+      },
+      "line": {
+        "key": "comfy.model.ltxLtx25Pro.line",
+        "source": "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#api_ltx2_5_t2v",
+        "quote": "support for native multishot scenes that hold character and style across cuts"
       }
     },
     "luma/photon-1": {
@@ -877,6 +1212,9 @@
       },
       "thirds": {
         "text-to-image": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "luma/photon-flash-1": {
@@ -888,6 +1226,9 @@
       },
       "thirds": {
         "text-to-image": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "luma/ray-2": {
@@ -895,14 +1236,20 @@
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "luma/ray-flash-2": {
       "lab": "Luma",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "luma_2/uni-1": {
       "lab": "Luma Labs",
@@ -915,6 +1262,9 @@
       "thirds": {
         "text-to-image": 2,
         "image-edit": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "luma_2/uni-1-max": {
@@ -928,6 +1278,9 @@
       "thirds": {
         "text-to-image": 3,
         "image-edit": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "meshy/animations": {
@@ -935,7 +1288,10 @@
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "meshy/meshy-5": {
       "lab": "Meshy",
@@ -944,7 +1300,10 @@
       "ranks": {
         "three-d": 23
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "meshy/meshy-6": {
       "lab": "Meshy",
@@ -953,7 +1312,10 @@
       "ranks": {
         "three-d": 3
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "meshy/meshy-7": {
       "lab": "Meshy",
@@ -962,28 +1324,40 @@
       "ranks": {
         "three-d": 5
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "meshy/meshy-7.1": {
       "lab": "Meshy",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "meshy/remesh": {
       "lab": "Meshy",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "meshy/rigging": {
       "lab": "Meshy",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "minimax/minimax-h3": {
       "lab": "MiniMax",
@@ -999,6 +1373,11 @@
         "image-to-video": 2,
         "reference-to-video": 2,
         "first-last-frame": 2
+      },
+      "line": {
+        "key": "comfy.model.minimaxMinimaxH3.line",
+        "source": "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#api_minimax_h3_t2v",
+        "quote": "producing a 5-15 second clip with native stereo audio"
       }
     },
     "moonvalley/image-to-video": {
@@ -1006,21 +1385,30 @@
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "moonvalley/text-to-video": {
       "lab": "Moonvalley",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "moonvalley/video-to-video": {
       "lab": "Moonvalley",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "openai/gpt-image-1": {
       "lab": "OpenAI",
@@ -1030,7 +1418,10 @@
         "text-to-image": 40,
         "image-edit": 45
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "openai/gpt-image-1.5": {
       "lab": "OpenAI",
@@ -1040,7 +1431,10 @@
         "text-to-image": 9,
         "image-edit": 12
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "openai/gpt-image-2": {
       "lab": "OpenAI",
@@ -1053,6 +1447,9 @@
       "thirds": {
         "text-to-image": 1,
         "image-edit": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "openai/gpt-image-2.5-flare": {
@@ -1066,6 +1463,9 @@
       "thirds": {
         "text-to-image": 1,
         "image-edit": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "openai/gpt-image-2.5-sunburst": {
@@ -1079,6 +1479,9 @@
       "thirds": {
         "text-to-image": 1,
         "image-edit": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "pika/pika-2.5-image-to-video": {
@@ -1086,14 +1489,20 @@
       "release": "2025-11-22",
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "pika/pika-2.5-text-to-video": {
       "lab": "Pika Art",
       "release": "2025-11-22",
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "pruna/p-video-2": {
       "lab": "Pruna",
@@ -1104,6 +1513,9 @@
         "text-to-video": 1,
         "image-to-video": 1,
         "first-last-frame": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "qwen/qwen-image-3.0": {
@@ -1117,6 +1529,9 @@
       "thirds": {
         "text-to-image": 3,
         "image-edit": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "qwen/qwen-image-3.0-pro": {
@@ -1130,6 +1545,9 @@
       "thirds": {
         "text-to-image": 3,
         "image-edit": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "recraft/recraftv2": {
@@ -1137,42 +1555,60 @@
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv3": {
       "lab": "Recraft",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4": {
       "lab": "Recraft",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4_1": {
       "lab": "Recraft",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4_1_pro": {
       "lab": "Recraft",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4_1_pro_vector": {
       "lab": "Recraft",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4_1_utility": {
       "lab": "Recraft",
@@ -1181,7 +1617,10 @@
       "ranks": {
         "text-to-image": 27
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4_1_utility_pro": {
       "lab": "Recraft",
@@ -1190,63 +1629,90 @@
       "ranks": {
         "text-to-image": 36
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4_1_utility_pro_vector": {
       "lab": "Recraft",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4_1_utility_vector": {
       "lab": "Recraft",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4_1_vector": {
       "lab": "Recraft",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4_pro": {
       "lab": "Recraft",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4_styles": {
       "lab": "Recraft",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4_styles_pro": {
       "lab": "Recraft",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4_styles_pro_vector": {
       "lab": "Recraft",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "recraft/recraftv4_styles_vector": {
       "lab": "Recraft",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "runway/aleph2": {
       "lab": "Runway",
@@ -1257,6 +1723,9 @@
       },
       "thirds": {
         "video-edit": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "runway/gen4_image": {
@@ -1267,6 +1736,9 @@
       "thirds": {
         "text-to-image": 3,
         "image-edit": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "runway/gen4_turbo": {
@@ -1276,6 +1748,9 @@
       "ranks": {},
       "thirds": {
         "text-to-video": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "synclabs/sync-3": {
@@ -1287,6 +1762,9 @@
         "text-to-video": 3,
         "video-edit": 2,
         "lip-sync": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "tencent/hunyuan-3d-part": {
@@ -1296,6 +1774,9 @@
       "ranks": {},
       "thirds": {
         "three-d": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "tencent/hunyuan-3d-smart-topology": {
@@ -1303,7 +1784,10 @@
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "tencent/hunyuan-3d-texture-edit": {
       "lab": "Tencent",
@@ -1312,6 +1796,9 @@
       "ranks": {},
       "thirds": {
         "three-d": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "tencent/hunyuan-3d-uv": {
@@ -1321,6 +1808,9 @@
       "ranks": {},
       "thirds": {
         "three-d": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "veo/veo-3.1-fast-generate-001": {
@@ -1337,6 +1827,9 @@
         "reference-to-video": 1,
         "first-last-frame": 2,
         "video-edit": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "veo/veo-3.1-generate-001": {
@@ -1353,6 +1846,9 @@
         "reference-to-video": 3,
         "first-last-frame": 3,
         "video-edit": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "veo/veo-3.1-lite-generate-001": {
@@ -1368,6 +1864,9 @@
         "reference-to-video": 1,
         "first-last-frame": 1,
         "video-edit": 1
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "vertexai/gemini-2.5-flash-image": {
@@ -1378,7 +1877,10 @@
         "text-to-image": 57,
         "image-edit": 49
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "vertexai/gemini-3-pro-image": {
       "lab": "Google",
@@ -1391,6 +1893,9 @@
       "thirds": {
         "text-to-image": 3,
         "image-edit": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "vertexai/gemini-3.1-flash-image": {
@@ -1404,6 +1909,9 @@
       "thirds": {
         "text-to-image": 3,
         "image-edit": 3
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "vertexai/gemini-3.1-flash-lite-image": {
@@ -1414,7 +1922,10 @@
         "text-to-image": 15,
         "image-edit": 29
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "vertexai/gemini-nano-banana-2.1": {
       "lab": "Google",
@@ -1424,7 +1935,10 @@
         "text-to-image": 4,
         "image-edit": 3
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "wavespeed/flashvsr": {
       "lab": "FlashVSR authors",
@@ -1434,6 +1948,11 @@
       "thirds": {
         "video-edit": 1,
         "upscale": 1
+      },
+      "line": {
+        "key": "comfy.model.wavespeedFlashvsr.line",
+        "source": "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#api_wavespeed_flshvsr_video_upscale",
+        "quote": "Upload a video to upscale it to 720p, 1080p, 2K, or 4K."
       }
     },
     "wavespeed/seedvr2": {
@@ -1444,6 +1963,11 @@
       "thirds": {
         "image-edit": 1,
         "upscale": 1
+      },
+      "line": {
+        "key": "comfy.model.wavespeedSeedvr2.line",
+        "source": "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#api_wavespeed_seedvr2_ai_image_fix",
+        "quote": "Upload an AI-generated image to restore details and upscale."
       }
     },
     "wavespeed/ultimate-image-upscaler": {
@@ -1454,6 +1978,9 @@
       "thirds": {
         "image-edit": 3,
         "upscale": 2
+      },
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
       }
     },
     "xai/grok-imagine-image": {
@@ -1463,7 +1990,10 @@
       "ranks": {
         "text-to-image": 32
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "xai/grok-imagine-image-2.0": {
       "lab": "SpaceXAI",
@@ -1472,14 +2002,20 @@
       "ranks": {
         "text-to-image": 6
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "xai/grok-imagine-image-pro": {
       "lab": "xAI",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "xai/grok-imagine-image-quality": {
       "lab": "SpaceXAI",
@@ -1488,14 +2024,20 @@
       "ranks": {
         "text-to-image": 20
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "xai/grok-imagine-video": {
       "lab": "SpaceXAI",
       "release": "2026-01-27",
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "xai/grok-imagine-video-1.5": {
       "lab": "SpaceXAI",
@@ -1505,7 +2047,10 @@
         "text-to-video": 11,
         "image-to-video": 9
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "xai/grok-imagine-video-1.5-lite": {
       "lab": "SpaceXAI",
@@ -1514,14 +2059,20 @@
       "ranks": {
         "text-to-video": 18
       },
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     },
     "xai/grok-imagine-video-1.5-preview": {
       "lab": "xAI",
       "release": null,
       "weights": null,
       "ranks": {},
-      "thirds": {}
+      "thirds": {},
+      "line": {
+        "none": "facts.md cites no page that holds the maker's or Comfy's description of this model"
+      }
     }
   }
 }

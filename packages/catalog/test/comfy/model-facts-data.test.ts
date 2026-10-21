@@ -8,7 +8,18 @@ import {
   weightsHost,
 } from "#comfy/model-facts"
 
+const markSet = {
+  name: "Simple Icons",
+  version: "16.35.0",
+  licence: "CC0-1.0",
+  url: "https://icons.example/set",
+}
+
+const noLine = { none: "No page read holds a description" }
+
 const sample: ModelFactsFile = modelFactsFile.parse({
+  markSet,
+  marks: {},
   boards: {
     "text-to-image": {
       name: "Picture Arena",
@@ -24,6 +35,11 @@ const sample: ModelFactsFile = modelFactsFile.parse({
       weights: "https://huggingface.co/maker/open",
       ranks: { "text-to-image": 2 },
       thirds: { "text-to-image": 3 },
+      line: {
+        key: "comfy.model.makerOpen.line",
+        source: "https://huggingface.co/maker/open/blob/abc/README.md",
+        quote: "Makes pictures of open things.",
+      },
     },
     "maker/elsewhere": {
       lab: "Maker Lab",
@@ -31,6 +47,7 @@ const sample: ModelFactsFile = modelFactsFile.parse({
       weights: "https://github.com/maker/elsewhere",
       ranks: {},
       thirds: {},
+      line: noLine,
     },
   },
 })
@@ -49,7 +66,7 @@ describe("the model facts the catalog holds", () => {
       },
       priceThird: 3,
       weights: "https://huggingface.co/maker/open",
-      lineKey: "a.line",
+      lineKey: "comfy.model.makerOpen.line",
     })
   })
 
@@ -120,17 +137,149 @@ describe("the model facts the catalog holds", () => {
       weights: null,
       ranks: { "text-to-image": 2.5 },
       thirds: {},
+      line: noLine,
     }
     const pricey = { ...row, ranks: {}, thirds: { "text-to-image": 4 } }
     for (const one of [row, pricey]) {
       expect(
-        modelFactsFile.safeParse({ boards: {}, models: { "a/b": one } }).success
+        modelFactsFile.safeParse({
+          boards: {},
+          markSet,
+          marks: {},
+          models: { "a/b": one },
+        }).success
       ).toBe(false)
     }
     expect(
       modelFactsFile.safeParse({
         boards: {},
+        markSet,
+        marks: {},
         models: { "a/b": { ...row, ranks: {} } },
+      }).success
+    ).toBe(true)
+  })
+
+  it("reads a model's line through the key its own row holds, and keeps the key it was given for a row that holds none", () => {
+    expect(
+      factsOf("maker/open", "text-to-image", "app.model.open.line", sample)
+        .lineKey
+    ).toBe("comfy.model.makerOpen.line")
+    expect(
+      factsOf(
+        "maker/elsewhere",
+        "text-to-image",
+        "app.model.elsewhere.line",
+        sample
+      ).lineKey
+    ).toBe("app.model.elsewhere.line")
+    expect(
+      factsOf("maker/elsewhere", "text-to-image", null, sample).lineKey
+    ).toBeNull()
+  })
+
+  it("gives every model row a line with its source and the words it restates, or the reason it holds none", () => {
+    const rows = Object.entries(modelFactsData.models)
+    const described = rows.flatMap(([id, row]) =>
+      "key" in row.line ? [{ id, ...row.line }] : []
+    )
+    const undescribed = rows.filter(([, row]) => "none" in row.line)
+    expect(described.length + undescribed.length).toBe(rows.length)
+    expect(described.length).toBeGreaterThan(5)
+    const keys = described.map((line) => line.key)
+    expect(new Set(keys).size).toBe(keys.length)
+    const sources = [
+      "https://huggingface.co/",
+      "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#",
+    ]
+    for (const line of described) {
+      expect(
+        sources.some((start) => line.source.startsWith(start)),
+        line.id
+      ).toBe(true)
+    }
+    expect(
+      factsOf(
+        "graph/z-image-turbo",
+        "text-to-image",
+        "image.model.zImageTurbo.line"
+      ).lineKey
+    ).toBe("comfy.model.graphZImageTurbo.line")
+    expect(
+      factsOf("openai/gpt-image-2", "text-to-image", null).lineKey
+    ).toBeNull()
+  })
+
+  it("refuses a line with no source, a row with no line and a key outside the catalog's line keys, the control", () => {
+    const base = {
+      lab: "Maker Lab",
+      release: null,
+      weights: null,
+      ranks: {},
+      thirds: {},
+    }
+    const lines = [
+      undefined,
+      { key: "comfy.model.makerOpen.line", quote: "Makes pictures." },
+      {
+        key: "model.makerOpen",
+        source: "https://huggingface.co/maker/open",
+        quote: "Makes pictures.",
+      },
+      { none: "" },
+    ]
+    for (const line of lines) {
+      const row = line === undefined ? base : { ...base, line }
+      expect(
+        modelFactsFile.safeParse({
+          boards: {},
+          markSet,
+          marks: {},
+          models: { "a/b": row },
+        }).success
+      ).toBe(false)
+    }
+  })
+
+  it("draws each lab's mark from one public icon set as path data, for labs a model row names", () => {
+    expect(modelFactsData.markSet).toMatchObject({
+      name: "Simple Icons",
+      licence: "CC0-1.0",
+    })
+    const labs = new Set(
+      Object.values(modelFactsData.models).map((row) => row.lab)
+    )
+    const marked = Object.keys(modelFactsData.marks)
+    expect(marked.length).toBeGreaterThan(5)
+    expect(marked.filter((lab) => !labs.has(lab))).toEqual([])
+    expect(modelFactsData.marks.Google?.slug).toBe("google")
+    expect(Object.hasOwn(modelFactsData.marks, "Black Forest Labs")).toBe(false)
+  })
+
+  it("refuses a mark that is markup or a picture rather than path data, the control", () => {
+    const marks = [
+      { slug: "maker", title: "Maker", path: "<image href='maker.png'/>" },
+      { slug: "maker", title: "Maker", path: 'M0 0h24v24H0z"/><script>' },
+      { slug: "Maker Lab", title: "Maker", path: "M0 0h24v24H0z" },
+    ]
+    for (const mark of marks) {
+      expect(
+        modelFactsFile.safeParse({
+          boards: {},
+          markSet,
+          marks: { "Maker Lab": mark },
+          models: {},
+        }).success
+      ).toBe(false)
+    }
+    expect(
+      modelFactsFile.safeParse({
+        boards: {},
+        markSet,
+        marks: {
+          "Maker Lab": { slug: "maker", title: "Maker", path: "M0 0h24v24H0z" },
+        },
+        models: {},
       }).success
     ).toBe(true)
   })
