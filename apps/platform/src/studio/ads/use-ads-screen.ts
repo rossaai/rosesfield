@@ -23,10 +23,10 @@ import {
   type StartRun,
   useStartRun,
 } from "@/screens/app/use-start-run"
+import { adsHostedBodyOf } from "@/studio/ads/ads-hosted"
 import {
   type AdsKind,
   type AdsProblem,
-  adsHostedBodyOf,
   adsProblems,
   adsValuesOf,
   barTextInputs,
@@ -88,10 +88,7 @@ function useAdsModels(
   return { ...hosted, choose: (id) => setInput(modelInput, id) }
 }
 
-function useCharacterPhoto(
-  form: AppForm,
-  hosted: HostedState
-): string | null {
+function useCharacterPhoto(form: AppForm, hosted: HostedState): string | null {
   const value = form.values.inputs[characterInput]
   const [characterId] = Array.isArray(value) ? value : []
   const isHosted = (hosted.chosen?.form ?? null) !== null
@@ -111,8 +108,7 @@ function useHostedBody(
 ): HostedBodyOf {
   const characterPhoto = useCharacterPhoto(form, hosted)
   const fields = hosted.chosen?.form ?? []
-  return (own) =>
-    adsHostedBodyOf(app, form.values, fields, characterPhoto, own)
+  return (own) => adsHostedBodyOf(app, form.values, fields, characterPhoto, own)
 }
 
 function useBarText(app: AppListing, form: AppForm, kind: AdsKind) {

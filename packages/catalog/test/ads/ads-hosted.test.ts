@@ -1,6 +1,6 @@
 import type { ModelField } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
-import { adsHostedInputsOf } from "#ads/ads-hosted"
+import { adsHostedInputsOf, adsPhotoLimitOf } from "#ads/ads-hosted"
 import { adsPromptOf } from "#ads/ads-prompt"
 
 const productOne = "4d2c1b0a-9e8f-4a6b-8c5d-3e2f1a0b9c8d"
@@ -144,5 +144,50 @@ describe("the fields Ads fills on a hosted image edit model", () => {
         count: 1,
       })
     ).toEqual({ prompt: adsPromptOf(ad) })
+  })
+})
+
+describe("the photo limit of a hosted image edit model", () => {
+  const masked: readonly ModelField[] = [
+    {
+      kind: "media",
+      name: "images",
+      path: "images",
+      required: true,
+      media: "image",
+      min: 1,
+      max: 1,
+    },
+    {
+      kind: "media",
+      name: "region",
+      path: "edit.mask",
+      required: false,
+      media: "image",
+      min: 0,
+      max: 4,
+    },
+  ]
+
+  it("is the most of the field the photos are sent to, and never a mask, even when the mask's name says nothing of it", () => {
+    expect(adsPhotoLimitOf(masked)).toBe(1)
+    const sent = adsHostedInputsOf({
+      inputs: { product: [productOne] },
+      fields: masked,
+      characterPhoto: null,
+      aspectRatio: null,
+      count: 1,
+    })
+    expect(Object.keys(sent)).toEqual(["images"])
+  })
+
+  it("is the widest of the fields that take photos", () => {
+    expect(adsPhotoLimitOf(fields)).toBe(10)
+  })
+
+  it("control: a model with no field for photos takes none", () => {
+    expect(
+      adsPhotoLimitOf(fields.filter((field) => field.kind !== "media"))
+    ).toBe(0)
   })
 })

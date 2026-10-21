@@ -53,6 +53,10 @@ function aspectFieldOf(
       ) ?? null)
 }
 
+export function adsPhotoLimitOf(fields: readonly ModelField[]): number {
+  return referenceFieldOf(fields)?.max ?? 0
+}
+
 function countOf(
   field: ModelField | null,
   count: number
