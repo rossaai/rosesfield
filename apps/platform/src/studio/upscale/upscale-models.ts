@@ -3,10 +3,7 @@ import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { defaultsOf, type FieldValue } from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
 import { hostedDefaults } from "@/screens/app/hosted/hosted-form"
-import {
-  maxLongSide,
-  type UpscaleMode,
-} from "@/studio/upscale/upscale-limits"
+import { maxLongSide, type UpscaleMode } from "@/studio/upscale/upscale-limits"
 
 export const modeInput = "mode"
 export const scaleInput = "scale"
@@ -111,8 +108,12 @@ function numberOptions(
   const max = field.max ?? Number.POSITIVE_INFINITY
   const inRange = factorCandidates.filter((one) => one >= min && one <= max)
   const largest = inRange.at(-1) ?? Number.NEGATIVE_INFINITY
+  const ceiling = factorCandidates.at(-1) ?? 4
   const top =
-    field.max !== null && field.max > largest && field.max > 1
+    field.max !== null &&
+    field.max > largest &&
+    field.max > 1 &&
+    field.max <= ceiling
       ? [field.max]
       : []
   const values = [...inRange, ...top]

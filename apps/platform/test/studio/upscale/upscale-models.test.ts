@@ -96,6 +96,20 @@ describe("the scales a model declares", () => {
     ])
   })
 
+  it("never offers the top of a range past 4x, so one press cannot ask for a factor of 200", () => {
+    const wide = {
+      ...fluxVideo,
+      id: "fal/crystal-upscaler",
+      form: (fluxVideo.form ?? []).map((field) =>
+        field.kind === "number" ? { ...field, min: 1, max: 200 } : field
+      ),
+    }
+    expect(scaleOf(wide, upscaleListing())?.options).toEqual([
+      { value: 2, factor: 2 },
+      { value: 4, factor: 4 },
+    ])
+  })
+
   it("has no scale for a model that declares none", () => {
     expect(scaleOf(flashVsr, upscaleListing())).toBeNull()
   })
