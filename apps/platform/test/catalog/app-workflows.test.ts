@@ -1,3 +1,4 @@
+import { passedRecipes } from "@rosesfield/catalog/effects"
 import { describe, expect, it } from "vitest"
 import { outputKindsOf, workflowFor } from "@/catalog/app-workflows"
 import { findCatalogApp } from "@/catalog/catalog-apps"
@@ -19,8 +20,15 @@ describe("workflowFor", () => {
     expect(video?.id).toMatch(/^upscale-video-/)
   })
 
-  it("finds no Effects graph while Effects offers no passed effect", () => {
-    expect(findCatalogApp("effects")?.closedKey).toBe("effects.closed")
+  it("finds the Effects graph for each passed effect, and none for a draft", () => {
+    expect(findCatalogApp("effects")?.closedKey).toBeNull()
+    expect(passedRecipes.length).toBeGreaterThan(0)
+    for (const { effect } of passedRecipes) {
+      expect({
+        effect,
+        workflow: workflowFor("effects", { effect })?.id,
+      }).toEqual({ effect, workflow: "effects-ltx-2-5" })
+    }
     expect(workflowFor("effects", { effect: "melt-away" })).toBeNull()
   })
 

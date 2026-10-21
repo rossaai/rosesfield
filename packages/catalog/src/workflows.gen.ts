@@ -1,6 +1,4 @@
 import type { WorkflowFiles } from "#workflow-entry.contract"
-import wAdsFlux2Klein4bApi from "../../../workflows/ads-flux-2-klein-4b/ads-flux-2-klein-4b.api.json"
-import wAdsFlux2Klein4bEntry from "../../../workflows/ads-flux-2-klein-4b/entry.json"
 import wAdsQwenImageEdit2511Api from "../../../workflows/ads-qwen-image-edit-2511/ads-qwen-image-edit-2511.api.json"
 import wAdsQwenImageEdit2511Entry from "../../../workflows/ads-qwen-image-edit-2511/entry.json"
 import wAnglesQwenImageEdit2511Api from "../../../workflows/angles-qwen-image-edit-2511/angles-qwen-image-edit-2511.api.json"
@@ -17,14 +15,6 @@ import wBackgroundRemovalSolidColorApi from "../../../workflows/background-remov
 import wBackgroundRemovalSolidColorEntry from "../../../workflows/background-removal-solid-color/entry.json"
 import wBackgroundRemovalTransparentApi from "../../../workflows/background-removal-transparent/background-removal-transparent.api.json"
 import wBackgroundRemovalTransparentEntry from "../../../workflows/background-removal-transparent/entry.json"
-import wCharactersAnglesQwenImageEdit2511Api from "../../../workflows/characters-angles-qwen-image-edit-2511/characters-angles-qwen-image-edit-2511.api.json"
-import wCharactersAnglesQwenImageEdit2511Entry from "../../../workflows/characters-angles-qwen-image-edit-2511/entry.json"
-import wCharactersTraitsFlux2Klein4bApi from "../../../workflows/characters-traits-flux-2-klein-4b/characters-traits-flux-2-klein-4b.api.json"
-import wCharactersTraitsFlux2Klein4bEntry from "../../../workflows/characters-traits-flux-2-klein-4b/entry.json"
-import wCharactersTraitsQwenImage2512Api from "../../../workflows/characters-traits-qwen-image-2512/characters-traits-qwen-image-2512.api.json"
-import wCharactersTraitsQwenImage2512Entry from "../../../workflows/characters-traits-qwen-image-2512/entry.json"
-import wCharactersTraitsZImageTurboApi from "../../../workflows/characters-traits-z-image-turbo/characters-traits-z-image-turbo.api.json"
-import wCharactersTraitsZImageTurboEntry from "../../../workflows/characters-traits-z-image-turbo/entry.json"
 import wEditQwenImageEdit2511Api from "../../../workflows/edit-qwen-image-edit-2511/edit-qwen-image-edit-2511.api.json"
 import wEditQwenImageEdit2511Entry from "../../../workflows/edit-qwen-image-edit-2511/entry.json"
 import wEffectsLtx25Api from "../../../workflows/effects-ltx-2-5/effects-ltx-2-5.api.json"
@@ -73,7 +63,6 @@ import wVoiceChatterboxApi from "../../../workflows/voice-chatterbox/voice-chatt
 import wVoiceChatterboxEntry from "../../../workflows/voice-chatterbox/entry.json"
 
 export const workflowFiles: readonly WorkflowFiles[] = [
-  { folder: "ads-flux-2-klein-4b", entry: wAdsFlux2Klein4bEntry, graph: wAdsFlux2Klein4bApi },
   { folder: "ads-qwen-image-edit-2511", entry: wAdsQwenImageEdit2511Entry, graph: wAdsQwenImageEdit2511Api },
   { folder: "angles-qwen-image-edit-2511", entry: wAnglesQwenImageEdit2511Entry, graph: wAnglesQwenImageEdit2511Api },
   { folder: "angles-set-qwen-image-edit-2511", entry: wAnglesSetQwenImageEdit2511Entry, graph: wAnglesSetQwenImageEdit2511Api },
@@ -82,10 +71,6 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "audio-voice-change-chatterbox", entry: wAudioVoiceChangeChatterboxEntry, graph: wAudioVoiceChangeChatterboxApi },
   { folder: "background-removal-solid-color", entry: wBackgroundRemovalSolidColorEntry, graph: wBackgroundRemovalSolidColorApi },
   { folder: "background-removal-transparent", entry: wBackgroundRemovalTransparentEntry, graph: wBackgroundRemovalTransparentApi },
-  { folder: "characters-angles-qwen-image-edit-2511", entry: wCharactersAnglesQwenImageEdit2511Entry, graph: wCharactersAnglesQwenImageEdit2511Api },
-  { folder: "characters-traits-flux-2-klein-4b", entry: wCharactersTraitsFlux2Klein4bEntry, graph: wCharactersTraitsFlux2Klein4bApi },
-  { folder: "characters-traits-qwen-image-2512", entry: wCharactersTraitsQwenImage2512Entry, graph: wCharactersTraitsQwenImage2512Api },
-  { folder: "characters-traits-z-image-turbo", entry: wCharactersTraitsZImageTurboEntry, graph: wCharactersTraitsZImageTurboApi },
   { folder: "edit-qwen-image-edit-2511", entry: wEditQwenImageEdit2511Entry, graph: wEditQwenImageEdit2511Api },
   { folder: "effects-ltx-2-5", entry: wEffectsLtx25Entry, graph: wEffectsLtx25Api },
   { folder: "expand-format-qwen-image", entry: wExpandFormatQwenImageEntry, graph: wExpandFormatQwenImageApi },

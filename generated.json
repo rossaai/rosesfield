@@ -76,7 +76,7 @@
     },
     {
       "path": "apps/platform/src/copy/app.en.ts",
-      "sha256": "4de655766bdd1e67ba9f469550820a8550b48d4a4c579baf037e86ef96f6588f"
+      "sha256": "a8aafbd361c64a56fbb9decfe99493dc7a5ee80dcfdc4dd201733ac73c5e2c40"
     },
     {
       "path": "apps/platform/src/copy/characters.en.ts",
@@ -152,11 +152,11 @@
     },
     {
       "path": "packages/catalog/src/characters/copy.en.ts",
-      "sha256": "39e2b362b64d2322c05cbf5afa4d9268ef3fd2852c1f725d8ebb7df870edcab9"
+      "sha256": "6c3aa8b9f8fd1f9fce1f927e54568d63f1ea4cdc16a2015c5d7a7be9913ee8dd"
     },
     {
       "path": "packages/catalog/src/comfy/copy.en.ts",
-      "sha256": "a9cad8db954b1de5d9284e3d59eee8daa73bcdafa16b6d1ef1a54cebc0ab6b30"
+      "sha256": "14623b4f36c66976d05d4e56c31ed360a9e8ac843101a05fe8db65cd0c6429fa"
     },
     {
       "path": "packages/catalog/src/edit/copy.en.ts",
@@ -164,7 +164,7 @@
     },
     {
       "path": "packages/catalog/src/effects/copy.en.ts",
-      "sha256": "453928c5d625e4450bddc97adc4c3f7d16b027189706b673f2c57d48c625a50d"
+      "sha256": "7026e5a3a5bcaa5669f393e4069bffabb71e2ef87ebabfb5c8b17312ba193aad"
     },
     {
       "path": "packages/catalog/src/expand/copy.en.ts",
@@ -180,7 +180,7 @@
     },
     {
       "path": "packages/catalog/src/layers/copy.en.ts",
-      "sha256": "feb2bf7eb8e31b916d0006a828f121d815ee492982637ea8bc35a2a5cd9400a7"
+      "sha256": "39b28222b3fe1f71f69eae749209cb53e37c4cf89c08d6270d1ec3c899451adb"
     },
     {
       "path": "packages/catalog/src/lipsync/copy.en.ts",
@@ -196,7 +196,7 @@
     },
     {
       "path": "packages/catalog/src/remake/copy.en.ts",
-      "sha256": "cedfc90102f8bb79685b2366006eef0010a92329266086d4a32336e0967244fd"
+      "sha256": "240ffa7333193cb5f99af93ce8fa15d0179f052fc63f8fe4dae4c31eed5cfd2b"
     },
     {
       "path": "packages/catalog/src/shot/copy.en.ts",

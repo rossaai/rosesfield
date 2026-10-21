@@ -34,22 +34,42 @@ export type AppSeeds = {
 
 export const noSeeds: AppSeeds = { use: undefined, from: undefined }
 
+export type ScreenStart = StartRun & { check?: FormCheck }
+
+export type StartHook = (
+  app: AppListing,
+  form: AppForm,
+  hosted: HostedState,
+  onStarted?: (run: Run) => void
+) => ScreenStart
+
+function useHostedStart(
+  app: AppListing,
+  form: AppForm,
+  hosted: HostedState,
+  onStarted?: (run: Run) => void
+): ScreenStart {
+  return useStartRun(app, form, onStarted, hosted)
+}
+
 export function useAppScreen(
   app: AppListing,
   seeds: AppSeeds,
-  onStarted?: () => void
+  onStarted?: () => void,
+  useStart: StartHook = useHostedStart
 ): AppScreenState {
   const check = useRef<FormCheck | null>(null)
   const form = useAppForm(app, seeds, check)
   const runs = useAppRuns(app)
   const hosted = useHostedModel(app, form, runs.runs)
   usePriceRefresh(app.id, runs.runs)
+  const start = useStart(app, form, hosted, onStarted)
   const fields = hosted.fields
   check.current =
-    fields === null
+    start.check ??
+    (fields === null
       ? (values) => heldProblemsOf(app, values)
-      : (values) => hostedProblems(fields, values)
-  const start = useStartRun(app, form, onStarted, hosted)
+      : (values) => hostedProblems(fields, values))
   const lastSeed = runs.runs.find((run) => run.seed !== null)?.seed ?? null
   return {
     form,

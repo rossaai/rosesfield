@@ -1,5 +1,17 @@
-import { angleSets, viewsPerRun } from "#characters/angle-sets"
-import { charactersEngine } from "#characters/comfy/characters-engine"
+import { sides } from "#angles/angle-views"
+import {
+  angleSets,
+  type View,
+  views,
+  viewsOf,
+  viewsPerRun,
+} from "#characters/angle-sets"
+import {
+  anglesModel,
+  charactersEngine,
+  portraitDefault,
+} from "#characters/comfy/characters-engine"
+import { portraitModels } from "#characters/comfy/traits-binding"
 import {
   camelOf,
   defaultPortraitCount,
@@ -8,12 +20,14 @@ import {
   modes,
   portraitCounts,
   traitNames,
-  traitsModels,
   traitValues,
 } from "#characters/traits"
 import { type AppInput, defineApp } from "#define-app"
+import { modelLabels } from "#edit/edit-models"
 
 type Input = AppInput["inputs"][number]
+
+type ChoiceInput = Extract<Input, { type: "choice" }>
 
 const countWords: Record<string, string> = {
   "1": "one",
@@ -34,6 +48,11 @@ function optionLabel(list: string, value: string): string {
   return `characters.choice.${list}.${key ?? value}`
 }
 
+function viewLabel(view: View): string {
+  const group = sides.some((side) => side === view) ? "side" : "height"
+  return `angles.choice.${group}.${camelOf(view)}`
+}
+
 function inMode(mode: Mode) {
   return [{ input: "mode", is: [mode] }]
 }
@@ -43,7 +62,7 @@ function choice(
   values: readonly string[],
   fallback: string,
   mode: Mode
-): Input {
+): ChoiceInput {
   return {
     type: "choice",
     name,
@@ -70,6 +89,41 @@ const count: Input = {
   bounds: [{ when: inMode("angles"), values: [String(viewsPerRun)] }],
 }
 
+const view: Input = {
+  type: "choice",
+  name: "view",
+  scope: "app",
+  labelKey: "app.canvas.view",
+  options: views.map((value) => ({ value, labelKey: viewLabel(value) })),
+  default: "front",
+  when: inMode("angles"),
+  bounds: angleSets.map((angleSet) => ({
+    when: [{ input: "angleSet", is: [angleSet] }],
+    values: [...viewsOf(angleSet)],
+  })),
+}
+
+const model: Input = {
+  type: "choice",
+  name: "model",
+  labelKey: labelOf("model"),
+  options: [
+    ...portraitModels.map((one) => ({
+      value: one.value,
+      labelKey: one.labelKey,
+    })),
+    { value: anglesModel, labelKey: modelLabels[anglesModel] },
+  ],
+  default: portraitDefault,
+  bounds: [
+    {
+      when: inMode("traits"),
+      values: portraitModels.map((one) => one.value),
+    },
+    { when: inMode("angles"), values: [anglesModel] },
+  ],
+}
+
 export const app = defineApp({
   id: "characters",
   nameKey: "characters.name",
@@ -78,6 +132,7 @@ export const app = defineApp({
     {
       type: "choice",
       name: "mode",
+      scope: "app",
       labelKey: labelOf("mode"),
       options: modes.map((value) => ({
         value,
@@ -105,16 +160,18 @@ export const app = defineApp({
       default: "on",
       when: inMode("traits"),
     },
-    choice("model", traitsModels, "flux-2-klein-4b", "traits"),
+    model,
     {
       type: "character",
       name: "character",
+      scope: "app",
       labelKey: labelOf("character"),
       presence: "required",
       max: 1,
       when: inMode("angles"),
     },
-    choice("angleSet", angleSets, "turnaround", "angles"),
+    { ...choice("angleSet", angleSets, "turnaround", "angles"), scope: "app" },
+    view,
     { type: "seed", name: "seed", labelKey: "field.seed.label" },
   ],
   output: {

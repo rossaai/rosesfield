@@ -4,8 +4,9 @@ import type {
   Run,
   RunInputs,
 } from "@rosesfield/contract"
-import { tasksOf } from "@rosesfield/generation/bindings"
+import { type ModelField, tasksOf } from "@rosesfield/generation/bindings"
 import { defaultModelOf } from "#comfy/list-models"
+import type { CatalogModel } from "#comfy/model-catalog.contract"
 
 export const speechTask = "speech"
 
@@ -16,6 +17,13 @@ const modelInput = "model"
 export type SpeechRun = {
   appId: string
   inputs: RunInputs
+}
+
+export type SpeechApp = Pick<AppDefinition, "id" | "inputs">
+
+type TextField = {
+  name: string
+  maxLength: number | null
 }
 
 export function speechAppOf(
@@ -29,29 +37,84 @@ export function speechDefaultOf(apps: readonly AppDefinition[]): string | null {
   return app === null ? null : defaultModelOf(app)
 }
 
+function graphTextOf(app: SpeechApp): TextField | null {
+  const script = app.inputs.find(
+    (input): input is Extract<InputDefinition, { type: "prompt" }> =>
+      input.type === "prompt"
+  )
+  return script === undefined
+    ? null
+    : { name: script.name, maxLength: script.maxLength }
+}
+
+function hostedTextOf(form: readonly ModelField[]): TextField | null {
+  const field = form.find(
+    (one): one is Extract<ModelField, { kind: "prompt" | "text" }> =>
+      one.kind === "prompt" || one.kind === "text"
+  )
+  return field === undefined
+    ? null
+    : { name: field.name, maxLength: field.maxLength }
+}
+
+function hostedDefaultsOf(form: readonly ModelField[]): RunInputs {
+  const filled: Record<string, string | number> = {}
+  for (const field of form) {
+    const value = "default" in field ? field.default : null
+    if (
+      field.required &&
+      (typeof value === "string" || typeof value === "number")
+    ) {
+      filled[field.name] = value
+    }
+  }
+  return filled
+}
+
+export function speechInputsOf(options: {
+  app: SpeechApp
+  voice: CatalogModel | null
+  model: string
+  text: string
+}): RunInputs | null {
+  const form = options.voice?.kind === "hosted" ? options.voice.form : null
+  const field = form === null ? graphTextOf(options.app) : hostedTextOf(form)
+  const line = options.text.trim()
+  if (
+    field === null ||
+    line === "" ||
+    (field.maxLength !== null && line.length > field.maxLength)
+  ) {
+    return null
+  }
+  return {
+    ...(form === null ? {} : hostedDefaultsOf(form)),
+    [modelInput]: options.model,
+    [field.name]: line,
+  }
+}
+
 export function speechRunOf(
   apps: readonly AppDefinition[],
   text: string,
   voice: string | null
 ): SpeechRun | null {
   const app = speechAppOf(apps)
-  const script = app?.inputs.find(
-    (input): input is Extract<InputDefinition, { type: "prompt" }> =>
-      input.type === "prompt"
-  )
   const model = voice ?? (app === null ? null : defaultModelOf(app))
-  if (app === null || script === undefined || model === null) {
+  if (app === null || model === null) {
     return null
   }
-  const line = text.trim()
-  return line === "" || line.length > script.maxLength
-    ? null
-    : { appId: app.id, inputs: { [modelInput]: model, [script.name]: line } }
+  const inputs = speechInputsOf({ app, voice: null, model, text })
+  return inputs === null ? null : { appId: app.id, inputs }
 }
 
-export function spokenInputs(inputs: RunInputs, speech: Run): RunInputs | null {
+export function spokenInputs(
+  inputs: RunInputs,
+  speech: Run,
+  audio: string = audioInput
+): RunInputs | null {
   const [made] = speech.outputs
   return speech.status !== "done" || made === undefined
     ? null
-    : { ...inputs, [audioInput]: [made] }
+    : { ...inputs, [audio]: [made] }
 }

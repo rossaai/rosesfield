@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest"
-import type { EffectRecipe } from "#effects/effect-recipe.contract"
+import { type EffectRecipe, maxHits } from "#effects/effect-recipe.contract"
 import {
   effectRecipes,
-  effectRuns,
   passedRecipes,
   readLedger,
   readRecipes,
@@ -24,6 +23,13 @@ const looks = [
   "still-in-the-street",
 ]
 
+const passedLooks = ["push-into-eye", "still-in-the-street"]
+
+const endFrameSources: Readonly<Record<string, string>> = {
+  "push-into-eye": "dark",
+  "still-in-the-street": "none",
+}
+
 function variant(change: Record<string, unknown>): Record<string, unknown> {
   return { ...recipeOf("many-copies"), ...change }
 }
@@ -39,15 +45,21 @@ function cutsOf(recipe: EffectRecipe): number {
 }
 
 describe("the effect recipes kept as data", () => {
-  it("reads the nine looks, none passed and none with an adapter", () => {
+  it("reads the nine looks, with Push into eye and Still in the street the ones passed and none with an adapter", () => {
     expect(
       effectRecipes.map(({ effect, passed, adapter }) => ({
         effect,
         passed,
         adapter,
       }))
-    ).toEqual(looks.map((effect) => ({ effect, passed: false, adapter: null })))
-    expect(passedRecipes).toEqual([])
+    ).toEqual(
+      looks.map((effect) => ({
+        effect,
+        passed: passedLooks.includes(effect),
+        adapter: null,
+      }))
+    )
+    expect(passedRecipes.map((one) => one.effect)).toEqual(passedLooks)
   })
 
   it("names for each look the unit and the family it is designed from, with its whole chain", () => {
@@ -58,20 +70,22 @@ describe("the effect recipes kept as data", () => {
         unit: recipe.effect,
       })
       expect(design.family).toBe("effects")
-      expect(design.fit.prompt.length).toBeGreaterThan(0)
       expect(design.setPiece.length).toBeGreaterThan(0)
       expect(design.lastFrame.shows.length).toBeGreaterThan(0)
       expect(design.encode).toEqual({
         container: "mp4",
         codec: "h264",
         bitDepth: 8,
+        grain: 0.004,
       })
       expect(recipe.seconds).toBeGreaterThanOrEqual(5)
       expect(recipe.seconds).toBeLessThanOrEqual(15)
       for (const window of design.cuts) {
         expect(window.max).toBeLessThanOrEqual(recipe.seconds + 0.05)
       }
-      expect(recipe.endFrame.source).toBe("edit")
+      expect(recipe.endFrame.source, recipe.effect).toBe(
+        endFrameSources[recipe.effect] ?? "edit"
+      )
     }
   })
 
@@ -99,6 +113,130 @@ describe("the effect recipes kept as data", () => {
     })
   })
 
+  it("opens Earth Zoom in orbit and lands on the photo, as its unit page reads, and opens every other look on the photo", () => {
+    expect(
+      Object.fromEntries(
+        effectRecipes.map((recipe) => [recipe.effect, recipe.photoFrame])
+      )
+    ).toEqual(
+      Object.fromEntries(
+        looks.map((effect) => [
+          effect,
+          effect === "pull-back-to-space" ? "last" : "first",
+        ])
+      )
+    )
+    const earthZoom = recipeOf("pull-back-to-space")
+    expect(earthZoom.prompt).toMatch(/The camera starts in orbit/)
+    expect(earthZoom.prompt).toMatch(/lands at ground level on them/)
+    expect(earthZoom.design.lastFrame.shows).toMatch(
+      /^The person at street level/
+    )
+  })
+
+  it("refuses a look that lands on the photo with no edited frame to open on, or with a held subject", () => {
+    const landing = recipeOf("pull-back-to-space")
+    expect(() =>
+      readRecipes(
+        {
+          "pull-back-to-space": {
+            ...landing,
+            endFrame: { source: "none" },
+          },
+        },
+        ledger
+      )
+    ).toThrow(/pull-back-to-space\.json is invalid: endFrame/)
+    expect(() =>
+      readRecipes({ "pull-back-to-space": { ...landing, hold: 0.5 } }, ledger)
+    ).toThrow(/pull-back-to-space\.json is invalid: hold/)
+    expect(() =>
+      readRecipes({ "many-copies": variant({ photoFrame: "middle" }) }, ledger)
+    ).toThrow(/many-copies\.json is invalid: photoFrame/)
+  })
+
+  it("ends Push into eye on a dark frame under its last-frame luma, after a light guide toward a photographic copper iris, with a calm face, a pupil that grows with a sharp edge, one impact hit and a fade to silence", () => {
+    const eye = recipeOf("push-into-eye")
+    expect(eye.endFrame).toEqual({ source: "dark", luma: 1, strength: 0.9 })
+    expect(eye.midFrame).toMatchObject({
+      source: "edit",
+      time: 5.4,
+      strength: 0.3,
+    })
+    expect(eye.midFrame?.prompt).toMatch(
+      /real macro photograph of the iris of one of the person's eyes/
+    )
+    expect(eye.midFrame?.prompt).toMatch(/iris fills the whole frame/)
+    expect(eye.midFrame?.prompt).toMatch(
+      /warm copper orange like a real human amber eye/
+    )
+    expect(eye.midFrame?.prompt).toMatch(
+      /No glow, no outlines, no drawn lines, no veins/
+    )
+    expect(eye.midFrame?.prompt).toMatch(
+      /pupil in the centre is small, round and pure black/
+    )
+    expect(eye.prompt).toMatch(
+      /face, skin and calm expression stay exactly as in the photo/
+    )
+    expect(eye.prompt).toMatch(/warm copper orange like a real human amber eye/)
+    expect(eye.prompt).not.toMatch(/glow/)
+    expect(eye.prompt).toMatch(/never slows/)
+    expect(eye.prompt).toMatch(
+      /black pupil in its centre grows larger and larger with a sharp edge/
+    )
+    expect(eye.prompt).toMatch(/black pupil swallows the whole frame/)
+    expect(eye.prompt).not.toMatch(/\b(fades?|dims?)\b/)
+    expect(eye.design.sound?.prompt).toMatch(/^From the very first frame/)
+    expect(eye.design.sound?.prompt).not.toMatch(/impact|hit/)
+    expect(eye.design.sound?.fadeOut).toBe(0.4)
+    const hits = eye.design.sound?.hits ?? []
+    expect(hits.length).toBeGreaterThan(0)
+    expect(hits.length).toBeLessThanOrEqual(maxHits)
+    for (const hit of hits) {
+      expect(hit.time).toBeLessThan(eye.seconds)
+      expect(hit.prompt).toMatch(/no music, no voice\.$/i)
+    }
+    expect(
+      eye.endFrame.source === "dark" ? eye.endFrame.luma : 255
+    ).toBeLessThan(eye.design.lastFrame.maxLuma ?? 0)
+    expect(eye.prompt).toMatch(
+      /^One unbroken shot that moves from the first frame/
+    )
+    expect(eye.prompt).not.toMatch(/\bholds?\b|for a moment/)
+    expect(eye.seconds).toBe(7)
+  })
+
+  it("refuses a dark end frame on a look that lands on the photo, and reads one on a look that opens on it", () => {
+    const dark = { source: "dark", luma: 8, strength: 0.9 }
+    expect(() =>
+      readRecipes(
+        {
+          "pull-back-to-space": {
+            ...recipeOf("pull-back-to-space"),
+            endFrame: dark,
+          },
+        },
+        ledger
+      )
+    ).toThrow(
+      /pull-back-to-space\.json is invalid: endFrame A look that lands on the photo guides its last frame with the photo, so it takes no dark end frame/
+    )
+    const [read] = readRecipes(
+      { "many-copies": variant({ endFrame: dark }) },
+      ledger
+    )
+    expect(read?.endFrame).toEqual(dark)
+    for (const luma of [-1, 41, 8.5]) {
+      expect(() =>
+        readRecipes(
+          { "many-copies": variant({ endFrame: { ...dark, luma } }) },
+          ledger
+        )
+      ).toThrow(/many-copies\.json is invalid: endFrame/)
+    }
+  })
+
   it("reads a passed recipe that carries its run and the proof of that run", () => {
     const [read] = readRecipes(
       { "many-copies": passedRecipe("many-copies") },
@@ -122,10 +260,6 @@ describe("the effect recipes kept as data", () => {
     expect(() => readRecipes(sources, ledger)).toThrow(
       /many-copies\.json passed on a run outside its criteria: cut: one at 3 s, outside every window, last frame: luma 90, against at most 40/
     )
-  })
-
-  it("reads an empty run ledger while no look has run", () => {
-    expect(effectRuns).toEqual([])
   })
 
   it("refuses a passed recipe whose run is not a row of the run ledger", () => {

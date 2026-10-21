@@ -14,11 +14,6 @@ import {
 } from "#ads/comfy/ads-prompts"
 import { sizeBindings } from "#ads/comfy/ads-sizes"
 import {
-  kleinSizeTargets,
-  kleinSlots,
-  kleinWorkflow,
-} from "#ads/comfy/klein-edit-workflow"
-import {
   qwenSizeTargets,
   qwenSlots,
   qwenWorkflow,
@@ -38,11 +33,6 @@ const modelGraphs: Readonly<Record<ModelValue, ModelGraph>> = {
     workflow: qwenWorkflow,
     slots: qwenSlots,
     sizes: qwenSizeTargets,
-  },
-  "flux-2-klein-4b": {
-    workflow: kleinWorkflow,
-    slots: kleinSlots,
-    sizes: kleinSizeTargets,
   },
 }
 

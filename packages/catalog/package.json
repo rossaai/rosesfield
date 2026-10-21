@@ -12,7 +12,13 @@
     "./comfy": "./src/comfy/index.ts",
     "./video": "./src/video/index.ts",
     "./effects": "./src/effects/index.ts",
-    "./lipsync": "./src/lipsync/index.ts"
+    "./lipsync": "./src/lipsync/index.ts",
+    "./storyboard": "./src/storyboard/index.ts",
+    "./characters": "./src/characters/index.ts",
+    "./ads": "./src/ads/index.ts",
+    "./remake": "./src/remake/index.ts",
+    "./remake/reach": "./src/remake/close-remake.ts",
+    "./remake/bun": "./src/remake/ffmpeg/bun-media-tool.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
@@ -23,6 +29,7 @@
     "@rosesfield/contract": "workspace:*",
     "@rosesfield/generation": "workspace:*",
     "@rosesfield/kernel": "workspace:*",
+    "@rosesfield/library": "workspace:*",
     "zod": "4.6.7"
   }
 }

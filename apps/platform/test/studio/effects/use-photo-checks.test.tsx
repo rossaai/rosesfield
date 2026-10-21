@@ -100,9 +100,12 @@ describe("the effects photo checks behind Generate", () => {
     expect(result.current.checked.isPending).toBe(true)
     expect(spies.generate).not.toHaveBeenCalled()
     act(() => pending[0]?.answer(passed))
-    await waitFor(() => expect(spies.generate).toHaveBeenCalledTimes(1))
+    await waitFor(() => {
+      expect(spies.generate).toHaveBeenCalledTimes(1)
+      expect(result.current.checked.isPending).toBe(false)
+    })
+    expect(spies.generate).toHaveBeenCalledTimes(1)
     expect(result.current.checks.sizeOf("asset-photo")).toEqual(passed.size)
-    expect(result.current.checked.isPending).toBe(false)
   })
 
   it("removes a refused photo with its reason and refuses the waiting run", async () => {

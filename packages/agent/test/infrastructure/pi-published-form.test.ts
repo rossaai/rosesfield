@@ -5,11 +5,11 @@ import {
 } from "@earendil-works/pi-ai"
 import type { ModelForm } from "@rosesfield/generation/bindings"
 import { afterEach, describe, expect, it } from "vitest"
-import { appTool } from "#infrastructure/pi-app-tool"
 import { clipApp, clipForm, clipModel as model } from "../fixtures/clip-app"
 import {
   type AgentRig,
   agentFor,
+  appToolsFor,
   generationFor,
   lastMessageOf,
   lastToolResultOf,
@@ -28,15 +28,14 @@ function rigWith(forms: readonly ModelForm[]): {
   runs: () => number
 } {
   const generation = generationFor([clipApp()])
-  rig = agentFor([appTool(clipApp(), () => generation.startRun, forms)])
+  rig = agentFor(appToolsFor([clipApp()], generation, forms))
   return { rig, runs: () => generation.runs.count }
 }
 
 describe("an app tool on the published form of its app", () => {
   it("offers the fields of the app's default model, not the app's own inputs", () => {
-    const { startRun } = generationFor([])
-    const tool = appTool(clipApp(), () => startRun, [clipForm])
-    const parameters = JSON.stringify(tool.parameters)
+    const [tool] = appToolsFor([clipApp()], generationFor([]), [clipForm])
+    const parameters = JSON.stringify(tool?.parameters)
 
     expect(parameters).toContain('"resolution"')
     expect(parameters).toContain('"768P"')

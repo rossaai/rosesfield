@@ -19,6 +19,19 @@ export const comfyCopy = {
     "Restores detail in a generated image and enlarges it",
   "comfy.model.ideogramIdeogramV4.line":
     "Images with control of layout, color and style",
+  "comfy.model.graphQwenImageLayered.line":
+    "Splits an image into layers you can move, resize or recolor",
+  "comfy.model.graphQwenImageEdit2511.line":
+    "Edits an image and keeps the people in it the same",
+  "comfy.model.graphQwenImageEdit2509Relight.line":
+    "Changes the light on an image",
+  "comfy.model.graphQwenImageInpaint.line":
+    "Fills a marked area of an image from your words",
+  "comfy.model.bflFlux3Image.line": "Images up to 4K in sixteen aspect ratios",
+  "comfy.model.bflFluxPro10Fill.line":
+    "Changes or removes a marked area and keeps the rest",
+  "comfy.model.byteplusSeedream50Pro260628.line":
+    "Layouts with text in many languages",
   "comfy.badge.new": "New",
   "comfy.badge.top": "Top",
   "comfy.badge.premium": "Premium",

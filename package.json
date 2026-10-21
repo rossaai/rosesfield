@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "bun run --filter './apps/*' --filter './services/*' dev",
     "build": "bun run --filter './apps/*' --filter './services/*' build",
+    "start": "bun run --filter @rosesfield/platform build && bun run --filter @rosesfield/gateway start",
     "typecheck": "tsc --noEmit -p tsconfig.json && bun run --filter './apps/*' --filter './services/*' --filter './packages/*' typecheck",
     "lint": "biome check . && depcruise apps services packages scripts --config .dependency-cruiser.cjs",
     "format": "biome check --write .",
@@ -20,8 +21,9 @@
     "catalog:sync": "bun packages/catalog/scripts/catalog-sync.ts",
     "generated:check": "bun scripts/checks/generated-files/check-generated-files.ts",
     "copy:check": "bun scripts/checks/typed-copy/check-typed-copy.ts",
+    "glob:check": "bun scripts/checks/glob-calls/check-glob-calls.ts",
     "ui:add": "cd apps/platform && shadcn add",
-    "gate": "bun run catalog:sync && bun run generated:check && bun run copy:check && bun run typecheck && bun run lint && bun run test",
+    "gate": "bun run catalog:sync && bun run generated:check && bun run copy:check && bun run glob:check && bun run typecheck && bun run lint && bun run test",
     "deploy": "bun scripts/deploy/deploy.ts"
   },
   "devDependencies": {

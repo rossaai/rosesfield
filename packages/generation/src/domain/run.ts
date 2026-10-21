@@ -8,7 +8,7 @@ import {
 } from "@rosesfield/contract"
 import type { AppId, AssetId, ProjectError, RunId } from "@rosesfield/kernel"
 import { RunFinishedError } from "#domain/error/run-finished.error"
-import type { OutputsPerJob } from "#domain/generation-engine.port"
+import type { EngineSteps, OutputsPerJob } from "#domain/generation-engine.port"
 
 export type RunJobStatus =
   | "pending"
@@ -29,6 +29,7 @@ export type RunJob = {
   cost?: Cost
   collectingSince?: string
   submittingSince?: string
+  steps?: EngineSteps
 }
 
 export type RunState = {
@@ -73,15 +74,9 @@ type KeepJobOptions = {
   whenEmpty?: ProjectError
 }
 
-type CollectingOptions = {
-  index: number
-  now: Date
-}
+type JobAt = { index: number }
 
-type SubmittingOptions = {
-  index: number
-  now: Date
-}
+type JobAtTime = JobAt & { now: Date }
 
 type FailOptions = {
   error: ProjectError
@@ -216,7 +211,7 @@ export class Run {
     return since.length === 0 ? null : new Date(Math.min(...since))
   }
 
-  submitting(options: SubmittingOptions): void {
+  submitting(options: JobAtTime): void {
     this.refuseWhenFinished()
     const job = this.jobAt(options.index)
     job.status = "submitting"
@@ -256,7 +251,23 @@ export class Run {
     this.refresh()
   }
 
-  collecting(options: CollectingOptions): void {
+  keepSteps(options: JobAt & { steps: EngineSteps }): void {
+    this.refuseWhenFinished()
+    const job = this.jobAt(options.index)
+    job.steps = structuredClone(options.steps)
+    this.state.record.plan = structuredClone(options.steps.plan)
+  }
+
+  reopen(options: JobAt): void {
+    this.refuseWhenFinished()
+    const job = this.jobAt(options.index)
+    job.status = "pending"
+    job.ref = null
+    delete job.submittingSince
+    delete job.collectingSince
+  }
+
+  collecting(options: JobAtTime): void {
     this.refuseWhenFinished()
     const job = this.jobAt(options.index)
     job.status = "collecting"

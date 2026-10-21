@@ -1,11 +1,15 @@
 import { aspectRatio, choiceValue, seed } from "@rosesfield/contract"
 import { z } from "zod"
 
-export const resolutionValues = ["480p", "720p"] as const
+export const resolutionValues = ["480p", "720p", "1080p"] as const
 
 export const minimumBalance = 2000
 
 const strength = z.number().min(0).max(1)
+
+export const maxGrain = 0.02
+
+export const defaultGrain = 0.004
 
 const plainLine = z.string().min(1).max(600)
 
@@ -16,7 +20,19 @@ export const endFrame = z.discriminatedUnion("source", [
     prompt: plainLine,
     strength,
   }),
+  z.strictObject({
+    source: z.literal("dark"),
+    luma: z.number().int().min(0).max(40),
+    strength,
+  }),
 ])
+
+export const midFrame = z.strictObject({
+  source: z.literal("edit"),
+  prompt: plainLine,
+  time: z.number().positive().max(15),
+  strength,
+})
 
 const adapter = z.strictObject({
   file: z.string().regex(/^[\w.-]+\.safetensors$/),
@@ -33,11 +49,39 @@ export const cutWindow = z
 
 const decibels = z.number().min(-70).max(0)
 
+export const maxFadeOut = 2
+
+export const maxHits = 6
+
+export const soundHit = z.strictObject({
+  prompt: plainLine,
+  time: seconds,
+  seconds: z.number().min(0.5).max(5),
+  gainDb: z.number().int().min(-24).max(12),
+})
+
 export const soundBed = z
   .strictObject({
     prompt: plainLine,
     loudness: z.strictObject({ min: decibels, max: decibels }),
     truePeakMax: decibels,
+    fadeOut: z.number().min(0).max(maxFadeOut).multipleOf(0.1).default(0),
+    bedGainDb: z.number().int().min(-24).max(0).default(0),
+    hits: z.array(soundHit).max(maxHits).default([]),
+    build: z
+      .strictObject({
+        seconds: z.number().min(0.5).max(7).multipleOf(0.1),
+        floorDb: z.number().int().min(-30).max(0),
+      })
+      .nullable()
+      .default(null),
+    brighten: z
+      .strictObject({
+        presenceDb: z.number().min(0).max(12).multipleOf(0.5),
+        airDb: z.number().min(0).max(12).multipleOf(0.5),
+      })
+      .nullable()
+      .default(null),
   })
   .refine((sound) => sound.loudness.min <= sound.loudness.max, {
     message: "A loudness band opens below where it closes",
@@ -47,7 +91,6 @@ export const soundBed = z
 export const effectDesign = z.strictObject({
   unit: choiceValue,
   family: z.literal("effects"),
-  fit: z.strictObject({ prompt: plainLine }),
   setPiece: plainLine,
   cuts: z.array(cutWindow).max(4),
   lastFrame: z.strictObject({
@@ -59,6 +102,7 @@ export const effectDesign = z.strictObject({
     container: z.literal("mp4"),
     codec: z.literal("h264"),
     bitDepth: z.literal(8),
+    grain: z.number().min(0).max(maxGrain).default(defaultGrain),
   }),
 })
 
@@ -74,6 +118,7 @@ export const videoReading = z.strictObject({
   height: z.number().int().positive(),
   cuts: z.array(z.number().min(0)),
   loudness: loudness.nullable(),
+  firstFrameLuma: z.number().min(0).max(255),
   lastFrameLuma: z.number().min(0).max(255),
 })
 
@@ -94,6 +139,8 @@ export const effectProof = z.strictObject({
   }),
   reading: videoReading,
 })
+
+export const photoFrameValues = ["first", "last"] as const
 
 export const runVerdictValues = ["kept", "refused"] as const
 
@@ -150,12 +197,53 @@ export const effectRecipe = z
     passed: z.boolean(),
     design: effectDesign,
     prompt: z.string().min(1).max(1200),
+    photoFrame: z.enum(photoFrameValues),
     endFrame,
+    midFrame: midFrame.nullable(),
     hold: strength.nullable(),
     adapter: adapter.nullable(),
     seconds: z.number().int().min(5).max(15),
     preview: preview.nullable(),
     proof: effectProof.nullable(),
+  })
+  .refine(
+    (recipe) =>
+      recipe.photoFrame === "first" || recipe.endFrame.source !== "none",
+    {
+      message:
+        "A look that lands on the photo opens on its edited frame, so it has one",
+      path: ["endFrame"],
+    }
+  )
+  .refine(
+    (recipe) =>
+      recipe.photoFrame === "first" || recipe.endFrame.source !== "dark",
+    {
+      message:
+        "A look that lands on the photo guides its last frame with the photo, so it takes no dark end frame",
+      path: ["endFrame"],
+    }
+  )
+  .refine(
+    (recipe) =>
+      recipe.midFrame === null || recipe.midFrame.time < recipe.seconds,
+    {
+      message: "A designed frame inside the clip comes before its end",
+      path: ["midFrame", "time"],
+    }
+  )
+  .refine(
+    (recipe) => recipe.midFrame === null || recipe.endFrame.source !== "edit",
+    {
+      message:
+        "The graph has one image edit pass, so a look edits its mid frame or its end frame, not both",
+      path: ["midFrame"],
+    }
+  )
+  .refine((recipe) => recipe.photoFrame === "first" || recipe.hold === null, {
+    message:
+      "A look that lands on the photo already guides its last frame with the photo, so it holds no subject",
+    path: ["hold"],
   })
   .refine((recipe) => recipe.passed === (recipe.preview !== null), {
     message: "A passed effect carries the run it passed with, and only it",
@@ -167,10 +255,12 @@ export const effectRecipe = z
   })
 
 export type EndFrame = z.infer<typeof endFrame>
+export type MidFrame = z.infer<typeof midFrame>
 export type CutWindow = z.infer<typeof cutWindow>
 export type EffectDesign = z.infer<typeof effectDesign>
 export type VideoReading = z.infer<typeof videoReading>
 export type EffectProof = z.infer<typeof effectProof>
 export type EffectRun = z.infer<typeof effectRun>
 export type EffectRecipe = z.infer<typeof effectRecipe>
+export type SoundBed = z.infer<typeof soundBed>
 export type ResolutionValue = (typeof resolutionValues)[number]

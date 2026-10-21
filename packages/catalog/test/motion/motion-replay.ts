@@ -52,7 +52,7 @@ export class ReplayFetch {
     this.sent.push({
       method,
       url,
-      headers: new Headers(init?.headers),
+      headers: new Request(url, init).headers,
       body: typeof init?.body === "string" ? JSON.parse(init.body) : null,
       form: init?.body instanceof FormData ? init.body : new FormData(),
     })

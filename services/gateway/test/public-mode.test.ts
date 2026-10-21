@@ -109,10 +109,13 @@ describe("the settings of public mode", () => {
     expect(readServerEnv(base).access).toEqual({
       mode: "public",
       sessionSecret,
-      retentionDays: 7,
-      requestsPerMinute: 120,
+      retentionDays: 30,
+      requestsPerMinute: 600,
     })
-    for (const name of ["COMFY_API_KEY", "RUNPOD_API_KEY", "AGENT_API_KEY"]) {
+    expect(
+      readServerEnv({ ...base, RUNPOD_API_KEY: "a-key" }).access.mode
+    ).toBe("public")
+    for (const name of ["COMFY_API_KEY", "AGENT_API_KEY"]) {
       expect(() => readServerEnv({ ...base, [name]: "a-key" })).toThrow(
         new RegExp(`${name} is set`)
       )

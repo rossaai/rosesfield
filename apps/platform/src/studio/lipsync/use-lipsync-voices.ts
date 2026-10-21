@@ -1,4 +1,5 @@
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
+import { speechModelInput } from "@rosesfield/catalog/lipsync"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect } from "react"
 import { textOf } from "@/screens/app/fields/field-props"
@@ -12,7 +13,7 @@ import { useDebounced } from "@/screens/app/hosted/use-debounced"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { speechTask } from "@/studio/lipsync/lipsync-tabs"
-import { speechAskOf, speechModelInput } from "@/studio/lipsync/lipsync-words"
+import { speechAskOf } from "@/studio/lipsync/lipsync-words"
 
 export const voiceApps: readonly string[] = ["audio", "voice"]
 
@@ -23,7 +24,7 @@ export type Voices = {
   sourceOf: (model: CatalogModel) => string
 }
 
-function voiceAppOf(): string | null {
+export function voiceAppOf(): string | null {
   return voiceApps.find((id) => taskAppOf(id) !== null) ?? null
 }
 

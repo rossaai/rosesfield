@@ -2,15 +2,53 @@ import {
   type AppDefinition,
   appDefinition,
   type InputDefinition,
+  inputRulesOf,
   startRunBodyFor,
 } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
+import { editCopy } from "#edit/copy.en"
+import { imageCopy } from "#image/copy.en"
 import { app } from "#layers/app"
+import { layersCopy } from "#layers/copy.en"
+import { relightCopy } from "#relight/copy.en"
 
 const image = "0a1b2c3d-4e5f-4a6b-8c7d-8e9fa0b1c2d3"
 const mask = "1b2c3d4e-5f6a-4b7c-9d8e-9fa0b1c2d3e4"
 
 const definition = appDefinition.parse(app)
+
+const platformKeys = new Set([
+  "choice.auto",
+  "choice.quality.draft",
+  "choice.quality.final",
+])
+
+const catalogRows: Readonly<Record<string, string>> = {
+  ...imageCopy,
+  ...editCopy,
+  ...relightCopy,
+  ...layersCopy,
+}
+
+const owedRows: string[] = []
+
+function missingKeys(
+  read: AppDefinition,
+  rows: Readonly<Record<string, string>>
+): string[] {
+  const keys = [
+    read.nameKey,
+    ...read.inputs.flatMap((input) => [
+      input.labelKey,
+      ...(input.type === "choice"
+        ? input.options.map((option) => option.labelKey)
+        : []),
+    ]),
+  ]
+  return [...new Set(keys)].filter(
+    (key) => !Object.hasOwn(rows, key) && !platformKeys.has(key)
+  )
+}
 
 function withoutRules(input: InputDefinition): InputDefinition {
   switch (input.type) {
@@ -100,6 +138,21 @@ const refused: ReadonlyArray<{ name: string; body: unknown }> = [
     body: { inputs: { mode: "fill", layer: [image] } },
   },
   {
+    name: "an edit that names the split graph",
+    body: {
+      inputs: {
+        mode: "edit",
+        layer: [image],
+        change: "a red hat",
+        model: "qwen-image-layered",
+      },
+    },
+  },
+  {
+    name: "a split that names the fill graph",
+    body: { inputs: { source: [image], model: "qwen-image-inpaint" } },
+  },
+  {
     name: "a fill that asks for a tone",
     body: {
       inputs: { mode: "fill", layer: [image], mask: [mask], tone: "warm" },
@@ -126,6 +179,7 @@ describe("the Layers definition holds its modes", () => {
     expect(parsed.count).toBe(4)
     expect(parsed.inputs).toEqual({
       mode: "split",
+      model: "qwen-image-layered",
       count: "4",
       source: [image],
       quality: "draft",
@@ -148,6 +202,7 @@ describe("the Layers definition holds its modes", () => {
     expect(relight.count).toBe(1)
     expect(relight.inputs).toEqual({
       mode: "relight",
+      model: "qwen-image-edit-2509-relight",
       count: "1",
       layer: [image],
       light: "left",
@@ -161,6 +216,7 @@ describe("the Layers definition holds its modes", () => {
     expect(fill.count).toBe(1)
     expect(fill.inputs).toEqual({
       mode: "fill",
+      model: "qwen-image-inpaint",
       count: "1",
       layer: [image],
       mask: [mask],
@@ -168,7 +224,27 @@ describe("the Layers definition holds its modes", () => {
     })
   })
 
-  it("binds no partner model and no model input", () => {
-    expect(definition.inputs.map((input) => input.name)).not.toContain("model")
+  it("opens each mode on its own graph", () => {
+    const opened = (["split", "edit", "relight", "fill"] as const).map(
+      (mode) =>
+        inputRulesOf(definition, { mode }).find(
+          (rule) => rule.input.name === "model"
+        )?.fallback
+    )
+    expect(opened).toEqual([
+      "qwen-image-layered",
+      "qwen-image-edit-2511",
+      "qwen-image-edit-2509-relight",
+      "qwen-image-inpaint",
+    ])
+  })
+
+  it("has an English row for every label key, and finds a planted missing key, the control", () => {
+    expect(missingKeys(definition, catalogRows)).toEqual(owedRows)
+    const { "relight.model.qwenImageEdit2509Relight": _, ...planted } =
+      catalogRows
+    expect(missingKeys(definition, planted)).toEqual([
+      "relight.model.qwenImageEdit2509Relight",
+    ])
   })
 })

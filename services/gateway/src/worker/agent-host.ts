@@ -165,7 +165,7 @@ export class AgentHost implements DurableObject {
               hold: (_sessionId: string, request: AgentRequest) =>
                 this.access.enter(request),
             }
-      return (c) => visitorScopeFor(c, { ...parts, agents })
+      return (c) => visitorScopeFor(c, { ...parts, place: "workers", agents })
     }
     const { handlers } = buildHandlers(
       ownerPorts(parts),
@@ -175,7 +175,7 @@ export class AgentHost implements DurableObject {
     const scope = ownerScope({
       handlers,
       agent,
-      settings: ownerSettings(parts.vars),
+      settings: ownerSettings(parts.vars, "workers"),
     })
     return async () => scope
   }

@@ -1,3 +1,4 @@
+import { speechModelInput, speechTextInput } from "@rosesfield/catalog/lipsync"
 import { describe, expect, it, vi } from "vitest"
 import { t } from "@/copy/t"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
@@ -10,11 +11,7 @@ import {
   runPartsOf,
   withAppModel,
 } from "@/studio/lipsync/lipsync-run"
-import {
-  planOf,
-  speechModelInput,
-  speechTextInput,
-} from "@/studio/lipsync/lipsync-words"
+import { planOf } from "@/studio/lipsync/lipsync-words"
 import {
   audioId,
   avatar,

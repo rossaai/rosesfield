@@ -20,6 +20,8 @@ export type ReadingRun = {
 
 const tolerance = 0.01
 
+const blackFloor = 17.5
+
 function isRatio(value: string): value is EffectRatio {
   return effectRatios.some((ratio) => ratio === value)
 }
@@ -117,6 +119,19 @@ function lastFrameFailures(
     : [`last frame: luma ${reading.lastFrameLuma}, against at most ${maxLuma}`]
 }
 
+function firstFrameFailures(
+  recipe: EffectRecipe,
+  reading: VideoReading
+): string[] {
+  const opening =
+    recipe.photoFrame === "first" ? "the photo" : "the look's opening frame"
+  return reading.firstFrameLuma > blackFloor
+    ? []
+    : [
+        `first frame: luma ${reading.firstFrameLuma}, a black start against ${opening}`,
+      ]
+}
+
 export function readingFailures(
   recipe: EffectRecipe,
   reading: VideoReading,
@@ -125,6 +140,7 @@ export function readingFailures(
   return [
     ...lengthFailures(recipe, reading),
     ...frameFailures(reading, run),
+    ...firstFrameFailures(recipe, reading),
     ...cutFailures(recipe.design.cuts, reading.cuts),
     ...soundFailures(recipe, reading),
     ...lastFrameFailures(recipe, reading),

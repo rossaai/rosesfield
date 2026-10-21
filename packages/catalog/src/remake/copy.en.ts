@@ -2,6 +2,7 @@
 
 export const remakeCopy: Readonly<Record<string, string>> = {
   "remake.name": "Remake",
+  "remake.closed": "Remake needs Rosesfield on your own machine.",
   "remake.line": "Rebuild an edit with your character and the same cuts.",
   "remake.keywords": "edit, cuts, pacing, shots, character, video",
   "remake.empty.title": "Your remade edits show here",
@@ -18,7 +19,7 @@ export const remakeCopy: Readonly<Record<string, string>> = {
   "remake.input.instructions.placeholder":
     "Describe the look of the rebuilt shots.",
   "remake.input.instructions.note":
-    "Added to the words of every rebuilt shot. Shots with your character keep the scene of your reference.",
+    "Added to the words of every rebuilt shot. A shot with your character takes its scene from your character's photo.",
   "remake.input.otherShots.label": "Shots with no person",
   "remake.input.otherShots.note":
     "This also applies to a shot with more than one person.",

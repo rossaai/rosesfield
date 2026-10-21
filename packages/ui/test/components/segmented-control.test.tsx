@@ -1,3 +1,4 @@
+import { Field, FieldCaption } from "@rosesfield/ui/components/field"
 import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { useState } from "react"
@@ -47,6 +48,23 @@ describe("SegmentedControl", () => {
   it("reports the value of the cell you press", () => {
     const change = vi.fn()
     render(<Format onChange={change} />)
+    fireEvent.click(screen.getByRole("radio", { name: "16:9" }))
+    expect(change).toHaveBeenCalledWith("16-9")
+  })
+
+  it("names each cell by its own label inside a field with a caption", () => {
+    const change = vi.fn()
+    render(
+      <Field>
+        <FieldCaption>Size</FieldCaption>
+        <Format onChange={change} />
+      </Field>
+    )
+    const names = screen
+      .getAllByRole("radio")
+      .map((cell) => cell.getAttribute("aria-labelledby"))
+      .map((id) => document.getElementById(id ?? "")?.textContent)
+    expect(names).toEqual(["1:1", "4:3", "16:9"])
     fireEvent.click(screen.getByRole("radio", { name: "16:9" }))
     expect(change).toHaveBeenCalledWith("16-9")
   })

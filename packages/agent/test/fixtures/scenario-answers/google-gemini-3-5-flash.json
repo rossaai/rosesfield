@@ -1,0 +1,612 @@
+{
+  "model": "google/gemini-3.5-flash",
+  "source": {
+    "kind": "captured",
+    "capturedAt": "2026-10-21T21:27:55.124Z"
+  },
+  "scenarios": {
+    "words": {
+      "expectPass": true,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:37 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "1.14",
+            "x-comfy-request-id": "1492c938-847e-418c-86d3-6d0578539726",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0054028436"
+          },
+          "body": {
+            "id": "gen-1792618055-bWFWk8T1jeNWUfJCaRnh",
+            "object": "chat.completion",
+            "created": 1792618055,
+            "model": "google/gemini-3.5-flash",
+            "provider": "Google",
+            "system_fingerprint": null,
+            "service_tier": "default",
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "stop",
+                "native_finish_reason": "STOP",
+                "message": {
+                  "role": "assistant",
+                  "content": "I am your assistant in Rosesfield. \n\nI can generate images and turn them into videos. I can also look through your library of assets and characters. \n\nTell me what you want to create, and I will get started.",
+                  "refusal": null,
+                  "reasoning": "**Answering Your Question**\n\nI understand you're asking about my functions within Rosesfield. I can generate images, like the one you requested. Let me know what else you need!\n\n",
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "**Answering Your Question**\n\nI understand you're asking about my functions within Rosesfield. I can generate images, like the one you requested. Let me know what else you need!\n\n",
+                      "format": "google-gemini-v1",
+                      "index": 0
+                    },
+                    {
+                      "type": "reasoning.encrypted",
+                      "data": "AY89a19WrCUXkny08MW1U61oIxyMdboTxwYxDpdE+XyJxRIF8iGwlTk6BDksDL6mL/XkqIo6LqpZhh5IMqoud6pplJ/Jh+tN70MDp7MEAXeyZpzI/rn8Ih3GFVlbERbOPnOMYFkrKyTKuDJWcGJ+8kFK1neltzRn9Cfuy+eHifuAFh2lhuceQYWKfncY0GDr+huFIs7P01LFXVz3Q6mXeloh5KRjnlywBfzV5E+zJByDc0mxQMrEXxKiUz1G7nQduJmPKn2hvWn3OVX6zZDmhLWfY7p5OnoA8vDklzwP0aJGqEcg/f9vDiQ5aHqBjs1xk5rRJIR80CKmebKltXOcaUAV8nsrb4PPpcFj3pQ+7xDPE+V6JrZOpW8CEzLghXBSDU46WmceP5KISRa+TOamgUTefXb3NNOyTl6LtrftyFj+kbfyjQR7qcPemIkLL2sD15dY6Gzhl5Xk86e/tG/GzY6rUqxNZZtrqQ8P7g2YtcVUMj5Kte65o2v3+Lr4HA5XhPjCdT5sDMEYNT7vjo5HqumQKSjDONObQ7vg66OV20StoUaNnnciJldQfeJEWUe3dmITdqWrZ46CvX3eM4vO4AZnJgI0y1/YS6VbyQJFGcXe6ZN2BDrHiCFpYLkSf0DAU8GyiDnqBHGJunVVEX09Rw6lwZ61d005KoCg9nNOMXPqQLa9b3PuQOViCabT6Ezu4ymjVPrhqD21ouQI4MkoyaBwOi49Jo5F0UP3qxaS7pf5BuecomQeiqsq3CEaB8rLWaxoiA68v4+NFsYglQu3vmM1BcOAOHLiW2gnFv0MCtaQLYZSmQ4IjbTwsF1tQIybODlzDofwyaGO52fLFpNNYi/BcAeexY8BXjwUANbbDgad54o6CGGP0NXy9BB2vZIBG4R6IKJUSe65j16XPTBNnw1+XwxHeIK4lMrzumPbpT8rSRm2wEVh16y4tEmZNTTLrOVpSVipUjA1Bg+QyigfXtLfvSt1MChjSFH4iiU6+YF5nltG5Kt80UZ92hBnECCH73mTaGVhbr9qSp2QjEJOMEPMtj/wTuILXFz3xMBL9kn0/LxWybSpawkfeHFwgmxiaDF3BLygAVeyUjD4Z8nG0vwpHaDNHVHjYZwzZqI12my85GlI99NopJdxuO/PVmZ78JRB4SQUuVA450vyMUg4ztsuN/eA6VxQ3ie7DuXzk8U+TVL3EQJv7DXx7I2DDNerR0Aq4+bK/R8E6NqEtto1tpTsgnV4ZcDBHuXQLlBEWSECAzxkRPW5CPe5N9GfWBgb2A1W+CIQ0EkkzUORODI+JY8m6rbcbbL7+T2Z4lRIidaJMNC1G9p5j5S2GNVSH37mUguaf0e3EXH5BSXisFKGkq8tS8wZjth6P/aIPEjsL+j9psrJb8jw5+zO5XH4UClvYJrdH+grvEToO6H5Q06scNGmpzIYflq53BwAgp3W2e7UX6y4od+hCzhsqA==",
+                      "format": "google-gemini-v1",
+                      "index": 1
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 995,
+              "completion_tokens": 254,
+              "total_tokens": 1249,
+              "cost": 0.0037785,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0037785,
+                "upstream_inference_prompt_cost": 0.0014925,
+                "upstream_inference_completions_cost": 0.002286
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 206,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "propose": {
+      "expectPass": true,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:42 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "1.54",
+            "x-comfy-request-id": "41f4f603-05a1-4a19-81e4-dbccc69927aa",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0072985782"
+          },
+          "body": {
+            "id": "gen-1792618058-znC8y5WUnO92m6SlY6kL",
+            "object": "chat.completion",
+            "created": 1792618058,
+            "model": "google/gemini-3.5-flash",
+            "provider": "Google",
+            "system_fingerprint": null,
+            "service_tier": "default",
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "STOP",
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "refusal": null,
+                  "reasoning": "**Generating Image Prompt**\n\nI'm focused on fulfilling your request for an image. I've identified the need to use the `sample-image` tool and am now formulating the precise prompt based on your description of a red rose in a glass vase, ensuring all key elements are captured for optimal generation.\n\n",
+                  "tool_calls": [
+                    {
+                      "type": "function",
+                      "index": 0,
+                      "id": "call_4808725",
+                      "function": {
+                        "name": "sample-image",
+                        "arguments": "{\"inputs\":{\"prompt\":\"A single vibrant red rose in a clear glass vase, standing on a wooden table, soft dramatic studio lighting, highly detailed, photorealistic\"}}"
+                      }
+                    }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "**Generating Image Prompt**\n\nI'm focused on fulfilling your request for an image. I've identified the need to use the `sample-image` tool and am now formulating the precise prompt based on your description of a red rose in a glass vase, ensuring all key elements are captured for optimal generation.\n\n",
+                      "format": "google-gemini-v1",
+                      "index": 0
+                    },
+                    {
+                      "type": "reasoning.encrypted",
+                      "data": "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",
+                      "format": "google-gemini-v1",
+                      "id": "call_4808725",
+                      "index": 1
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1001,
+              "completion_tokens": 400,
+              "total_tokens": 1401,
+              "cost": 0.0051015,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0051015,
+                "upstream_inference_prompt_cost": 0.0015015,
+                "upstream_inference_completions_cost": 0.0036
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 356,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "chain": {
+      "expectPass": true,
+      "exchanges": [
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:45 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.97",
+            "x-comfy-request-id": "8fb0534c-548a-4c53-99f3-f9098c913f25",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0045971564"
+          },
+          "body": {
+            "id": "gen-1792618063-jYm78KR9lxafuChtLh6W",
+            "object": "chat.completion",
+            "created": 1792618063,
+            "model": "google/gemini-3.5-flash",
+            "provider": "Google",
+            "system_fingerprint": null,
+            "service_tier": "provisioned",
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "STOP",
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "refusal": null,
+                  "reasoning": "**Generating Initial Asset**\n\nMy primary focus is on procuring a high-fidelity image of a vibrant red rose to serve as the foundational element. I am currently reviewing the necessary parameters for the `sample-image` tool to ensure the generated output meets the desired aesthetic and quality standards for the subsequent video sequence.\n\n",
+                  "tool_calls": [
+                    {
+                      "type": "function",
+                      "index": 0,
+                      "id": "call_967527",
+                      "function": {
+                        "name": "sample-image",
+                        "arguments": "{\"inputs\":{\"prompt\":\"A close-up shot of a beautiful red rose blooming with morning dew on its petals, dark moody background, highly detailed.\"}}"
+                      }
+                    }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "**Generating Initial Asset**\n\nMy primary focus is on procuring a high-fidelity image of a vibrant red rose to serve as the foundational element. I am currently reviewing the necessary parameters for the `sample-image` tool to ensure the generated output meets the desired aesthetic and quality standards for the subsequent video sequence.\n\n",
+                      "format": "google-gemini-v1",
+                      "index": 0
+                    },
+                    {
+                      "type": "reasoning.encrypted",
+                      "data": "AY89a19LcIISUY17z6bAlHcQ9JSNOa2DlXzRYWC6ZPAb6cmydKiOU6D/rniTpNjXK3Fvn7BbgirtEVMALLu2BZ2KgPatcmgWGbodb+knYFv98d4hL5NUEgMySW9N5UIVYhyP8thfIxRMjL7R5ZO4XYX0/AtgCLbRue68JiyuQuvuyrzpOC0Q9epzSjgQstF55PYd4zke6icU2JpXgghATn6EciT3Es3JhPVDbDy+KQ9T7sy34zrpfXHmINUOqGeZ3A54ku77ZXsihescGeJhEEPKBIloYx5PEAFnfQyBLfVr7b+aWRZgn5WZcz3T50e+ctfPU+RDWgs+w7MfEjXPPCMsf9W6ZIK2JMx183rcVn26/zGvTkt9yRZ3pBrlr8RuMRQVpcHUrA55qacFywoCRYlWnQ4Ip1HcQjsi9xe2b9j9uXo0mJ06zRYuugc38bnMJFZVg/dAkfeGz0/S1LRf+hs29wb87Y71Yq4xRRHLtt6LYHNdhqLu3IFSO5GqmosTrL1v4flaeCfqYUNu970MaQRgpcpRJi7o+a0lINEikqFMozoQzU6ALTah5BimyH76qGiyuPQKdyPD7o5c5XEoTeXbuEg1QhVEf0wJPVyyeReeMbA0xJ35GHFC6uf33ynSABvxcMsBcUxmNE+npEYJsuu1Dr68PMHTuVniKQrp4xobj8h1xlOW9j9IKUtPYWt5qOU3A2DFHwuWg1HinwwPQLJJvh+0u55neFmHLts0cwIMnP1lfjj2ikCPAZxZY+4RiVYmcEpvH0LT/OoMnnAwN/TIaGwJbAJkawodPt+rHBbC9seNjyT1YzPf45kJ20Agt45t78XOSVJ8Eo8KCDJxMA5ymvZDun5AstabzOK4VN6LYqWbyE4593yr2EdXBRhkSHqKmDXM6IJ3eVauWemr8zzBtVmXuqXw9ETAUVrY1bhOTqs8GtPN6T9pECuWEqRLk2Iw",
+                      "format": "google-gemini-v1",
+                      "id": "call_967527",
+                      "index": 1
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1009,
+              "completion_tokens": 189,
+              "total_tokens": 1198,
+              "cost": 0.0032145,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0032145,
+                "upstream_inference_prompt_cost": 0.0015135,
+                "upstream_inference_completions_cost": 0.001701
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 147,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:47 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.72",
+            "x-comfy-request-id": "1a14d6c6-69d6-462c-b42a-d3ff875cc110",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0034123223"
+          },
+          "body": {
+            "id": "gen-1792618065-oOgSIaG0bmyRdagRBfUt",
+            "object": "chat.completion",
+            "created": 1792618065,
+            "model": "google/gemini-3.5-flash",
+            "provider": "Google",
+            "system_fingerprint": null,
+            "service_tier": "default",
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "STOP",
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "refusal": null,
+                  "reasoning": null,
+                  "tool_calls": [
+                    {
+                      "type": "function",
+                      "index": 0,
+                      "id": "call_3987915",
+                      "function": {
+                        "name": "read_run",
+                        "arguments": "{\"runId\":\"{{result:0}}\"}"
+                      }
+                    }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.encrypted",
+                      "data": "AY89a1+AxhpO185A5TbBaEtlzhSTvUbbQZ9OZLA7NpE/jdDHI7JyM8QZ/lBK0+P10YCUf23aGigs3j8t5xPwsshC3OBTFd9imIDZN1OHWKAIncQ36uV75i82wtY6ZnTp64ihIIAGGoQEMWn8KCGUtWeJe1ufkR9o3dS0o6OemzBHnjFIGSJWIUIoEeH4AGUwDOs5IvwRs/YXiLsONhGZkbeZzkMZF+/fz3wB2govUhncmJeU9k/trh6W82sBD8Yjdt9dDFBYFKAg",
+                      "format": "google-gemini-v1",
+                      "id": "call_3987915",
+                      "index": 0
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1180,
+              "completion_tokens": 69,
+              "total_tokens": 1249,
+              "cost": 0.002391,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.002391,
+                "upstream_inference_prompt_cost": 0.00177,
+                "upstream_inference_completions_cost": 0.000621
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 21,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:50 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "1.2",
+            "x-comfy-request-id": "4a0edbe0-8011-4341-a23d-8d3270430f17",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0056872038"
+          },
+          "body": {
+            "id": "gen-1792618067-O4wQfHreomiq2GYpBjSm",
+            "object": "chat.completion",
+            "created": 1792618067,
+            "model": "google/gemini-3.5-flash",
+            "provider": "Google",
+            "system_fingerprint": null,
+            "service_tier": "provisioned",
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "STOP",
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "refusal": null,
+                  "reasoning": "**Developing Rose Animation**\n\nI'm focusing on creating a short video of the generated image, specifically animating the rose to open. My next step involves utilizing the sample-motion tool, inputting the asset ID `{{result:1}}` as the image source for this process.\n\n",
+                  "tool_calls": [
+                    {
+                      "type": "function",
+                      "index": 0,
+                      "id": "call_813363",
+                      "function": {
+                        "name": "sample-motion",
+                        "arguments": "{\"inputs\":{\"prompt\":\"The red rose slowly opens its petals, blooming in slow motion with morning dew glistening.\",\"image\":[\"{{result:1}}\"]}}"
+                      }
+                    }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.text",
+                      "text": "**Developing Rose Animation**\n\nI'm focusing on creating a short video of the generated image, specifically animating the rose to open. My next step involves utilizing the sample-motion tool, inputting the asset ID `{{result:1}}` as the image source for this process.\n\n",
+                      "format": "google-gemini-v1",
+                      "index": 0
+                    },
+                    {
+                      "type": "reasoning.encrypted",
+                      "data": "AY89a1/dwcDdOeyN+V+L95qpV7M5qk4KWdfi7tMCMpYbNry6h166HIvkquTNnrV2Mrzua56Un9MV+9i5sIvQXFGGqcNkkmGJwZfVKHWKVQ8PfLxPh8AIuoVAI4mIK8xfIUksodB1e6WBpThOTFPguvmRCPfZm6TerDTsPcdufwUG38/jsb6Pz0zv7oFOa7NKkh6MOE5GT0mb9EUW91linaOqynS6+GogfbGnqORypcrWztsFM7bb8fEdwp+yINxQYr8sLdddZWuWvmDjY8i/J10wp7m7/XePnQgmeEzo/tStROVKm+DfZ8R16Ovz3Y9k7StdLCSc/IeuXwFh5QdAINvrNqO7QTYaThQaB5EGLyI87miIc4eNH7LS4bUoKyft6hIrVnLDwE3MbyIj6EeJZXTXIpAcFEmDUSLZNM8rzrrFPMS8I7fy5+AvgQsRsubsCw5/8VHUysATS8A2fJZjuJ/gquxmbkDbPrVdxpH54dadAPjjzXAeHfzPuJ3zGBoStlD0tI9BJCJjmhfKw3XMUexo+vnVZOPTZ5EcEC2KE8JMudDgddUN5IjaM+ynUxZoLrYngqSWlkknE0ek2CqliUipVcRK0Mm+gE4M916OwiU9LtP+GuzB7n6lZEcB+Abm0n/yg82QDwLGl8HmJFxnrkqGQQ79",
+                      "format": "google-gemini-v1",
+                      "id": "call_813363",
+                      "index": 1
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1417,
+              "completion_tokens": 206,
+              "total_tokens": 1623,
+              "cost": 0.0039795,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0039795,
+                "upstream_inference_prompt_cost": 0.0021255,
+                "upstream_inference_completions_cost": 0.001854
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 131,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:52 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "0.86",
+            "x-comfy-request-id": "9cd873f1-e2f5-4f65-bc5c-d6da7b0bafb2",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0040758294"
+          },
+          "body": {
+            "id": "gen-1792618070-rhvSJuSoub6JjoitkLJQ",
+            "object": "chat.completion",
+            "created": 1792618070,
+            "model": "google/gemini-3.5-flash",
+            "provider": "Google",
+            "system_fingerprint": null,
+            "service_tier": "provisioned",
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "tool_calls",
+                "native_finish_reason": "STOP",
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "refusal": null,
+                  "reasoning": null,
+                  "tool_calls": [
+                    {
+                      "type": "function",
+                      "index": 0,
+                      "id": "call_803718",
+                      "function": {
+                        "name": "read_run",
+                        "arguments": "{\"runId\":\"{{result:0}}\"}"
+                      }
+                    }
+                  ],
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.encrypted",
+                      "data": "ZTI0ODMwYTctNWNkNi00MmZlLTk5OGItZWU1MzllNzJiOWMz",
+                      "format": "google-gemini-v1",
+                      "id": "call_803718",
+                      "index": 0
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1635,
+              "completion_tokens": 45,
+              "total_tokens": 1680,
+              "cost": 0.0028575,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0028575,
+                "upstream_inference_prompt_cost": 0.0024525,
+                "upstream_inference_completions_cost": 0.000405
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+            "content-type": "application/json",
+            "date": "Wed, 21 Oct 2026 21:27:55 GMT",
+            "vary": "Origin",
+            "via": "1.1 google",
+            "x-comfy-credits-used": "1.18",
+            "x-comfy-request-id": "19ea9d52-8ddd-4b9a-b6d6-583428912e15",
+            "x-comfy-router-provider": "openrouter",
+            "x-concurrency-current": "1",
+            "x-concurrency-limit": "5",
+            "x-concurrency-remaining": "4",
+            "x-content-type-options": "nosniff",
+            "x-litellm-response-cost": "0.0055924171"
+          },
+          "body": {
+            "id": "gen-1792618073-lLhU3202Xv4YCaeZJFnp",
+            "object": "chat.completion",
+            "created": 1792618073,
+            "model": "google/gemini-3.5-flash",
+            "provider": "Google",
+            "system_fingerprint": null,
+            "service_tier": "provisioned",
+            "choices": [
+              {
+                "index": 0,
+                "logprobs": null,
+                "finish_reason": "stop",
+                "native_finish_reason": "STOP",
+                "message": {
+                  "role": "assistant",
+                  "content": "I have completed both tasks.\n\nFirst, I started the `sample-image` app under run ID `{{seen:0}}` to create the image of the red rose.\n\nNext, I used that image to start the `sample-motion` app under run ID `{{result:0}}` to animate the rose opening.",
+                  "refusal": null,
+                  "reasoning": null,
+                  "reasoning_details": [
+                    {
+                      "type": "reasoning.encrypted",
+                      "data": "AY89a1/ACenVJBUhpoISiNSjFcQWYGxZJOMlVj8Y3jjZ2WaUDJGGxaFxYoOS/pdMhlvS97ZawHGA30g70zc0r41EgHPZ+bchCUgw4fpKeol20z48",
+                      "format": "google-gemini-v1",
+                      "index": 0
+                    }
+                  ]
+                }
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1887,
+              "completion_tokens": 120,
+              "total_tokens": 2007,
+              "cost": 0.0039105,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0039105,
+                "upstream_inference_prompt_cost": 0.0028305,
+                "upstream_inference_completions_cost": 0.00108
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

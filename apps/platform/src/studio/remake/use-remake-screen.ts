@@ -1,7 +1,7 @@
 import type { AppListing, Run } from "@rosesfield/contract"
 import { useQuery } from "@tanstack/react-query"
 import { type KeyboardEvent, useEffect, useRef } from "react"
-import { assetQuery } from "@/api/queries"
+import { assetQuery, settingsQuery } from "@/api/queries"
 import { formatBytes, formatSeconds } from "@/copy/format"
 import {
   type ClipFacts,
@@ -13,7 +13,11 @@ import { type FieldProblem, valuesFromRun } from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { type AppForm, useAppForm } from "@/screens/app/use-app-form"
-import { type StartRun, useStartRun } from "@/screens/app/use-start-run"
+import {
+  priceLabelsOf,
+  type StartRun,
+  useStartRun,
+} from "@/screens/app/use-start-run"
 import {
   editLengthOf,
   remakeLimits,
@@ -97,18 +101,29 @@ function useReference(form: AppForm, app: AppListing) {
   return { reference, referenceProblem: problemOf(reference, bytes) }
 }
 
+type RemakeScreenOptions = {
+  isReachKnown: boolean
+  onStarted: () => void
+}
+
 export function useRemakeScreen(
   app: AppListing,
   seeds: StudioScreenProps["seeds"],
-  onStarted: () => void
+  { isReachKnown, onStarted }: RemakeScreenOptions
 ): RemakeState {
   const form = useAppForm(app, seeds)
   const started = useStartRun(app, form, onStarted)
   const { reference, referenceProblem } = useReference(form, app)
   const focusReference = useRef<() => void>(() => undefined)
+  const settings = useQuery(settingsQuery)
   const start: StartRun = {
     ...started,
+    ...priceLabelsOf(null, settings.data?.engine.origin === "demo"),
+    isPending: started.isPending || !isReachKnown,
     generate: () => {
+      if (!isReachKnown) {
+        return
+      }
       const isFormValid = form.validate()
       if (referenceProblem !== undefined) {
         if (isFormValid) {

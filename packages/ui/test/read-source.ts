@@ -1,4 +1,4 @@
-const sources = import.meta.glob<string>(
+const sources = import.meta.glob(
   [
     "../src/tokens.css",
     "../src/styles/motion.css",

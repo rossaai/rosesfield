@@ -30,6 +30,7 @@ export const app: AppInput = defineApp({
     {
       type: "choice",
       name: "mode",
+      scope: "app",
       labelKey: "videoEdit.input.mode.label",
       options: [
         { value: "edit", labelKey: "videoEdit.choice.mode.edit" },

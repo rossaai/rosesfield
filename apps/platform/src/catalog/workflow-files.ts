@@ -1,6 +1,6 @@
 import type { Workflow } from "@rosesfield/catalog/workflows"
 
-const uiFiles = import.meta.glob<string>(
+const uiFiles = import.meta.glob(
   [
     "../../../../workflows/*/*.json",
     "!../../../../workflows/*/*.api.json",

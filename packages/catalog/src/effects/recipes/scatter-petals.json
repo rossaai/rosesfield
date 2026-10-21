@@ -4,9 +4,6 @@
   "design": {
     "unit": "scatter-petals",
     "family": "effects",
-    "fit": {
-      "prompt": "Fit the photo to the new frame. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. Add new matching scene content at every added edge, with no borders, bars or blur."
-    },
     "setPiece": "Everyone holds still, then their bodies vanish in an instant and their clothes drop onto the ground and lie still.",
     "cuts": [
       {
@@ -34,11 +31,13 @@
     }
   },
   "prompt": "One shot with a still camera. For the first one to two seconds every person holds perfectly still. Then, in an instant, their bodies vanish and their empty clothes and anything they held drop straight down and land on the ground or seat below. The clothes lie still. Nobody comes back.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
     "prompt": "The same place with no person in it: their empty clothes lie on the ground where they stood.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": null,
   "adapter": null,
   "seconds": 5,

@@ -1,10 +1,18 @@
 import { type CallToolResult, McpServer } from "@modelcontextprotocol/server"
+import {
+  appInputOf,
+  isKeyframeChain,
+  keyframeRunsOf,
+  parseRequest,
+  timerWait,
+} from "@rosesfield/agent"
 import type { ModelForm } from "@rosesfield/catalog/comfy"
 import {
   type AppDefinition,
   buildPath,
   errorEnvelopeOf,
   routes,
+  run,
   runResponse,
 } from "@rosesfield/contract"
 import { ProjectError } from "@rosesfield/kernel"
@@ -21,6 +29,8 @@ export type CatalogServerOptions = {
 }
 
 const keyPrefix = "mcp-"
+
+const keyframeRunsResponse = z.object({ runs: z.array(run.nullable()) })
 
 const readOnly = {
   readOnlyHint: true,
@@ -44,7 +54,7 @@ export function catalogMcpServer(options: CatalogServerOptions): McpServer {
       {
         description: gatewayCopy.mcp.toolDescription(app.id, app.output.kind),
         inputSchema: startRunInputOf(app, options.forms),
-        outputSchema: runResponse,
+        outputSchema: isKeyframeChain(app) ? keyframeRunsResponse : runResponse,
         annotations: {
           readOnlyHint: false,
           destructiveHint: false,
@@ -52,7 +62,12 @@ export function catalogMcpServer(options: CatalogServerOptions): McpServer {
           openWorldHint: true,
         },
       },
-      (args) => answer(() => startRun(options.scope, app, args))
+      (args, extra) =>
+        answer(() =>
+          isKeyframeChain(app)
+            ? startKeyframes(options.scope, app, args, extra.mcpReq.signal)
+            : startRun(options.scope, app, args)
+        )
     )
   }
   libraryTools(server, options.scope)
@@ -72,6 +87,26 @@ async function startRun(
     idempotencyKey: await scope.keyFor(key),
     seed: null,
   })
+}
+
+async function startKeyframes(
+  scope: RequestScope,
+  app: AppDefinition,
+  args: unknown,
+  signal: AbortSignal
+): Promise<unknown> {
+  const { body, idempotencyKey } = splitStartRunArguments(args)
+  const key = idempotencyKey ?? `${keyPrefix}${crypto.randomUUID()}`
+  const runs = await keyframeRunsOf({
+    appId: app.id,
+    request: parseRequest(app, appInputOf(app, []), body),
+    key: (await scope.keyFor(key)) ?? key,
+    handlers: scope.handlers,
+    wait: timerWait,
+    signal,
+    poll: scope.pollRun,
+  })
+  return { runs }
 }
 
 function libraryTools(server: McpServer, scope: RequestScope): void {

@@ -1,14 +1,17 @@
 import { mkdirSync } from "node:fs"
-import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import type { OpenPiModelsOptions, PiAgentHarness } from "@rosesfield/agent"
+import type { MediaTool } from "@rosesfield/catalog/remake"
+import { BunMediaTool } from "@rosesfield/catalog/remake/bun"
 import type { AppDefinition } from "@rosesfield/contract"
 import {
   ComfyAccount,
+  DemoGenerationEngine,
   DrizzlePriceBook,
   DrizzleRunRepository,
   type Fetch,
+  type GenerationEngine,
   migrateRunTable,
   TimerJobRunner,
 } from "@rosesfield/generation"
@@ -21,20 +24,32 @@ import {
 } from "@rosesfield/library"
 import { type BunSQLiteDatabase, drizzle } from "drizzle-orm/bun-sqlite"
 import type { MiddlewareHandler } from "hono"
-import { getConnInfo, serveStatic } from "hono/bun"
+import { getConnInfo } from "hono/bun"
 import { localAgent } from "#agent/local-agent"
 import { SessionAgents } from "#agent/session-agents"
 import { type Built, buildHandlers, type Handlers } from "#build-handlers"
 import { sharedCreditMeter } from "#catalog/shared-credit-meter"
-import { type EngineOptions, pickEngines } from "#compose/pick-engines"
+import { PastedKeys } from "#compose/pasted-keys"
+import {
+  type EngineOptions,
+  pastedKeyEngines,
+  pickEngines,
+} from "#compose/pick-engines"
+import { pageOf, platformFiles } from "#compose/platform-files"
 import { ownerScope } from "#compose/request-scope"
-import { ownerSettings } from "#compose/settings"
+import { canPasteKey, ownerSettings } from "#compose/settings"
 import { visitorScopeFor } from "#compose/visitor-ports"
 import type { OwnerLock, PublicAccess, ServerEnv } from "#env"
 import { createGateway, type GatewayContext, type GatewayGuard } from "#gateway"
 import type { GatewayApp, RequestScope } from "#gateway-env"
+import { AdapterRunRepository } from "#infrastructure/adapter-run-repository"
 import { TokenTries } from "#lock/token-tries"
-import { ownerAccount, visitorAccount } from "#session/account-routes"
+import {
+  type AccountReader,
+  type CapReader,
+  ownerAccount,
+  visitorAccount,
+} from "#session/account-routes"
 import { migrateSessionTables } from "#session/bun-sqlite-session-migration"
 import { KeyProbe } from "#session/key-probe"
 import {
@@ -44,6 +59,7 @@ import {
 import { SessionLimiter } from "#session/session-limiter"
 import { type PurgeCount, SessionPurge } from "#session/session-purge"
 import { SessionVisits } from "#session/session-visits"
+import { readVisitorKeys } from "#session/visitor-keys"
 import { filesystemShareFiles } from "#share/filesystem-share-files"
 import { shareLimit } from "#share/share-limit"
 import { SharePurge } from "#share/share-purge"
@@ -66,6 +82,7 @@ type LocalGatewayOptions = {
   platformRoot?: string | null
   fetch?: Fetch
   warmCatalog?: boolean
+  media?: MediaTool
 }
 
 type Parts = {
@@ -75,6 +92,7 @@ type Parts = {
   db: BunSQLiteDatabase
   store: FilesystemAssetStore
   engineOptions: EngineOptions
+  prices: DrizzlePriceBook
   account: ComfyAccount
   publicAccount: PublicAccountParts
   shares: ShareMount
@@ -107,15 +125,20 @@ export function composeLocalGateway(
   const store = new FilesystemAssetStore({ root: join(env.dataDir, "assets") })
   const fetchPart = options.fetch === undefined ? {} : { fetch: options.fetch }
   const account = new ComfyAccount(fetchPart)
+  const prices = new DrizzlePriceBook({ db })
   const parts: Parts = {
     env,
     apps: options.apps,
     clock,
     db,
     store,
+    prices,
     engineOptions: {
       clock,
       meter: sharedCreditMeter(clock),
+      media: options.media ?? new BunMediaTool(),
+      store,
+      prices,
       ...fetchPart,
       ...(options.warmCatalog === true ? { warmCatalog: true } : {}),
     },
@@ -142,9 +165,15 @@ function modelOptionsOf(parts: Parts): OpenPiModelsOptions {
   return fetch === undefined ? {} : { fetch }
 }
 
-function ownerHandlers(parts: Parts): Built<TimerJobRunner> {
+function ownerHandlers(
+  parts: Parts,
+  engines: readonly GenerationEngine[],
+  resumes: ((adapter: string) => boolean) | null
+): Built<TimerJobRunner> {
   const { db } = parts
   const runs = new DrizzleRunRepository({ db })
+  const resumed =
+    resumes === null ? runs : new AdapterRunRepository({ runs, resumes })
   return buildHandlers(
     {
       apps: parts.apps,
@@ -152,12 +181,55 @@ function ownerHandlers(parts: Parts): Built<TimerJobRunner> {
       assets: new DrizzleAssetRepository({ db }),
       characters: new DrizzleCharacterRepository({ db }),
       store: parts.store,
-      engines: pickEngines(parts.env.engine, parts.engineOptions),
+      engines,
       clock: parts.clock,
-      prices: new DrizzlePriceBook({ db }),
+      prices: parts.prices,
     },
-    (advance) => new TimerJobRunner({ advance, runs })
+    (advance) => new TimerJobRunner({ advance, runs: resumed })
   )
+}
+
+type OwnerKeys = {
+  built: Built<TimerJobRunner>
+  pasted: PastedKeys | null
+}
+
+function ownerKeys(parts: Parts): OwnerKeys {
+  const engines = pickEngines(parts.env.engine, parts.engineOptions)
+  if (!canPasteKey(parts.env)) {
+    return { built: ownerHandlers(parts, engines, null), pasted: null }
+  }
+  const isDemo = (adapter: string): boolean =>
+    engines.some(
+      (engine) =>
+        engine.key === adapter && engine instanceof DemoGenerationEngine
+    )
+  const pasted = new PastedKeys({
+    vars: parts.env,
+    build: (key) =>
+      ownerHandlers(
+        parts,
+        pastedKeyEngines(PastedKeys.engine, key, parts.engineOptions),
+        (adapter) => !isDemo(adapter)
+      ),
+  })
+  return { built: ownerHandlers(parts, engines, isDemo), pasted }
+}
+
+function ownerAccountOf(
+  parts: Parts,
+  pasted: PastedKeys | null,
+  cap: CapReader | null
+): AccountReader {
+  const probe = new KeyProbe({ account: parts.account })
+  const { engine } = parts.env
+  const key = engine.target === "demo" ? null : engine.apiKey
+  return (c) =>
+    ownerAccount({
+      probe,
+      key: pasted === null ? key : readVisitorKeys(c).engine,
+      cap,
+    })(c)
 }
 
 function composeOwner(
@@ -166,7 +238,8 @@ function composeOwner(
   platform: MiddlewareHandler[]
 ): LocalGateway {
   const { env } = parts
-  const { handlers, jobs } = ownerHandlers(parts)
+  const { built, pasted } = ownerKeys(parts)
+  const { handlers, jobs } = built
   const agent: PiAgentHarness | null = localAgent({
     model: env.agent,
     dataDir: env.dataDir,
@@ -175,14 +248,17 @@ function composeOwner(
     handlers,
     modelOptions: modelOptionsOf(parts),
   })
-  const scope = ownerScope({ handlers, agent, settings: ownerSettings(env) })
+  const scope = ownerScope({
+    handlers,
+    agent,
+    settings: ownerSettings(env, "bun"),
+  })
   const guard: GatewayGuard = {
     mode: "owner",
     lock,
     tries: new TokenTries({ clock: parts.clock }),
     clientOf,
   }
-  const key = env.engine.target === "demo" ? null : env.engine.apiKey
   const spend = ownerSpend({
     settings: env.spend,
     db: parts.db,
@@ -192,13 +268,9 @@ function composeOwner(
   const app = createGateway({
     apps: parts.apps,
     guard,
-    scopeFor: async () => scope,
+    scopeFor: pasted === null ? async () => scope : pasted.scopeFor(scope),
     agent: { mode: "routes" },
-    account: ownerAccount({
-      probe: new KeyProbe({ account: parts.account }),
-      key,
-      cap: spend?.cap ?? null,
-    }),
+    account: ownerAccountOf(parts, pasted, spend?.cap ?? null),
     shares: parts.shares,
     ...(spend === null ? {} : { spendGuard: spend.guard }),
     platform,
@@ -216,6 +288,7 @@ function composeOwner(
     }),
     close: async () => {
       jobs.stop()
+      pasted?.stop()
       await agent?.close()
     },
   }
@@ -246,23 +319,31 @@ function publicGuard(
   }
 }
 
+function sessionAgentsOf(parts: Parts): SessionAgents | null {
+  const { env } = parts
+  return env.agent === null
+    ? null
+    : new SessionAgents({
+        folder: join(env.dataDir, "agent-sessions"),
+        model: env.agent,
+        apps: parts.apps,
+        clock: parts.clock,
+        modelOptions: modelOptionsOf(parts),
+      })
+}
+
 function composePublic(
   parts: Parts,
   access: PublicAccess,
   platform: MiddlewareHandler[]
 ): LocalGateway {
   const { env, db, clock } = parts
-  const { handlers, jobs } = ownerHandlers(parts)
-  const agents =
-    env.agent === null
-      ? null
-      : new SessionAgents({
-          folder: join(env.dataDir, "agent-sessions"),
-          model: env.agent,
-          apps: parts.apps,
-          clock,
-          modelOptions: modelOptionsOf(parts),
-        })
+  const { handlers, jobs } = ownerHandlers(
+    parts,
+    pickEngines(env.engine, parts.engineOptions),
+    null
+  )
+  const agents = sessionAgentsOf(parts)
   const sessionPurge = new SessionPurge({
     db,
     store: parts.store,
@@ -272,6 +353,7 @@ function composePublic(
   const scopeFor = (c: GatewayContext): Promise<RequestScope> =>
     visitorScopeFor(c, {
       vars: env,
+      place: "bun",
       apps: parts.apps,
       db,
       store: parts.store,
@@ -313,16 +395,4 @@ function sharePurgeOf(parts: Parts): SharePurge {
     store: parts.store,
     clock: parts.clock,
   })
-}
-
-async function pageOf(root: string): Promise<string | null> {
-  try {
-    return await readFile(join(root, "index.html"), "utf8")
-  } catch {
-    return null
-  }
-}
-
-function platformFiles(root: string): MiddlewareHandler[] {
-  return [serveStatic({ root }), serveStatic({ root, path: "index.html" })]
 }

@@ -1,7 +1,7 @@
 {
   "name": "storyboard-qwen-image-edit-2511",
   "title": "Storyboard: up to 8 matching keyframes from one image with Qwen Image Edit 2511",
-  "description": "Edits one anchor image, a reference or a character's photo, into one keyframe per scene with Qwen Image Edit 2511, each scene with its own sentence, the shared look and its own seed, and saves the keyframes as one batch.",
+  "description": "Edits one anchor, a reference image, up to 3 photos of a character or keyframe 1 of the same storyboard, into the keyframe of one scene with Qwen Image Edit 2511, with the scene's sentence, the shared look and the scene's seed.",
   "mediaType": "image",
   "openSource": true,
   "models": [
@@ -33,6 +33,16 @@
     },
     "anchor": {
       "nodeId": "7",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "anchor2": {
+      "nodeId": "12",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "anchor3": {
+      "nodeId": "13",
       "inputName": "image",
       "type": "cloud-asset"
     },

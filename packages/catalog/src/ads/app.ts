@@ -1,4 +1,7 @@
+import { taskBinding } from "@rosesfield/generation/bindings"
 import {
+  adsAppId,
+  adsTask,
   defaultKind,
   defaultModel,
   defaultStyle,
@@ -16,16 +19,16 @@ import { defineApp } from "#define-app"
 
 const productShot = [{ input: "kind", is: ["product-shot"] }]
 const ad = [{ input: "kind", is: ["ad"] }]
-const qwenOnly = ["qwen-image-edit-2511"]
 
 export const app = defineApp({
-  id: "ads",
+  id: adsAppId,
   nameKey: "ads.name",
   category: "image",
   inputs: [
     {
       type: "choice",
       name: "kind",
+      scope: "app",
       labelKey: "ads.input.kind.label",
       options: kindValues.map((value) => ({
         value,
@@ -36,6 +39,7 @@ export const app = defineApp({
     {
       type: "prompt",
       name: "scene",
+      scope: "app",
       labelKey: "ads.input.scene.label",
       presence: "optional",
       maxLength: sceneLimit,
@@ -44,6 +48,7 @@ export const app = defineApp({
     {
       type: "prompt",
       name: "headline",
+      scope: "app",
       labelKey: "ads.input.headline.label",
       presence: "required",
       maxLength: headlineLimit,
@@ -52,6 +57,7 @@ export const app = defineApp({
     {
       type: "prompt",
       name: "line",
+      scope: "app",
       labelKey: "ads.input.line.label",
       presence: "optional",
       maxLength: lineLimit,
@@ -60,6 +66,7 @@ export const app = defineApp({
     {
       type: "image",
       name: "product",
+      scope: "app",
       labelKey: "ads.input.product.label",
       presence: "required",
       max: 1,
@@ -67,6 +74,7 @@ export const app = defineApp({
     {
       type: "image",
       name: "secondPhoto",
+      scope: "app",
       labelKey: "ads.input.secondPhoto.label",
       presence: "optional",
       max: 1,
@@ -74,6 +82,7 @@ export const app = defineApp({
     {
       type: "image",
       name: "thirdPhoto",
+      scope: "app",
       labelKey: "ads.input.thirdPhoto.label",
       presence: "optional",
       max: 1,
@@ -82,6 +91,7 @@ export const app = defineApp({
     {
       type: "character",
       name: "character",
+      scope: "app",
       labelKey: "ads.input.character.label",
       presence: "optional",
       max: 1,
@@ -90,6 +100,7 @@ export const app = defineApp({
     {
       type: "choice",
       name: "style",
+      scope: "app",
       labelKey: "ads.input.style.label",
       options: styleValues.map((value) => ({
         value,
@@ -106,19 +117,6 @@ export const app = defineApp({
         labelKey: `ads.model.${keyOf(value)}`,
       })),
       default: defaultModel,
-      bounds: [
-        {
-          when: [{ input: "thirdPhoto", state: "filled" }],
-          values: qwenOnly,
-        },
-        {
-          when: [
-            { input: "secondPhoto", state: "filled" },
-            { input: "character", state: "filled" },
-          ],
-          values: qwenOnly,
-        },
-      ],
     },
     { type: "seed", name: "seed", labelKey: "ads.input.seed.label" },
   ],
@@ -127,7 +125,12 @@ export const app = defineApp({
     count: { default: 1, max: 4 },
     aspectRatios: { options: [...adsRatios], default: "1:1" },
   },
-  engine: adsBinding,
+  engine: taskBinding({
+    tasks: [adsTask],
+    input: "model",
+    default: defaultModel,
+    fallback: adsBinding,
+  }),
   limits: { timeoutSeconds: 600, maxRetries: 1 },
   preview: null,
 })

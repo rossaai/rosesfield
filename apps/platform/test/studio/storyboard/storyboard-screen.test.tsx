@@ -1,6 +1,10 @@
 import { act, cleanup, fireEvent, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t, tCatalog } from "@/copy/t"
+import {
+  forgetKeptKeyframes,
+  keepKeyframe,
+} from "@/studio/storyboard/kept-keyframes"
 import { withScenes } from "@/studio/storyboard/storyboard-form"
 import { inputsForModel } from "@/studio/storyboard/storyboard-model"
 import { asPhone, resetFrames } from "../../screens/app/frame-render"
@@ -8,6 +12,7 @@ import {
   addScenes,
   emptyCanvas,
   fluxImage,
+  hostedKeyframe,
   openingValues,
   openStoryboard,
   pickerTriggerName,
@@ -113,8 +118,17 @@ describe("Generate with an empty scene", () => {
 })
 
 describe("the model menu and the price", () => {
-  it("opens on Qwen Image Edit 2511 and prices one keyframe times the scene count", async () => {
-    openStoryboard({ prices: [[openingValues(), qwenEdit, 14.48]] })
+  it("opens on Qwen Image Edit 2511 and prices the sum of its calls, one keyframe times the scene count", async () => {
+    const eight = withScenes(
+      openingValues(),
+      Array.from({ length: 8 }, () => "")
+    )
+    openStoryboard({
+      prices: [
+        [openingValues(), qwenEdit, 14.48],
+        [eight, qwenEdit, 14.48],
+      ],
+    })
     expect(
       await screen.findByRole("button", { name: pickerTriggerName(qwenEdit) })
     ).toBeDefined()
@@ -157,6 +171,7 @@ describe("the model menu and the price", () => {
     if (row === null) {
       throw new Error("no row for FLUX 3 Image")
     }
+    expect(document.querySelector('[data-model="z-image-turbo"]')).toBeNull()
     fireEvent.click(row)
     expect(
       await screen.findByRole("button", { name: pickerTriggerName(fluxImage) })
@@ -280,5 +295,39 @@ describe("Storyboard on a phone", () => {
     })
     expect(grid.className.split(" ")).toContain("grid-cols-2")
     expect(grid.querySelectorAll("li")).toHaveLength(2)
+  })
+})
+
+describe("Storyboard on a hosted edit model", () => {
+  it("shows the working runs of one press as one grid of tiles numbered 1 to 3, with no History", async () => {
+    window.localStorage.clear()
+    forgetKeptKeyframes()
+    const keyframes = [3, 2, 1].map((number) =>
+      hostedKeyframe(number, { status: "running", finishedAt: null })
+    )
+    for (const one of keyframes) {
+      keepKeyframe(one.run, one.kept)
+    }
+    openStoryboard({ runs: keyframes.map((one) => one.run) })
+    const grid = await vi.waitFor(() => {
+      const found = document.querySelector("[data-slot=keyframe-grid]")
+      if (found === null) {
+        throw new Error("no keyframe grid")
+      }
+      return found
+    })
+    expect(document.querySelectorAll("[data-slot=keyframe-grid]")).toHaveLength(
+      1
+    )
+    expect(
+      [...grid.querySelectorAll("li")].map(
+        (tile) => tile.querySelector(".sr-only")?.textContent
+      )
+    ).toEqual(
+      [1, 2, 3].map((number) =>
+        tCatalog("storyboard.keyframe.number", { number })
+      )
+    )
+    expect(screen.queryByText(t("app.history.title"))).toBeNull()
   })
 })

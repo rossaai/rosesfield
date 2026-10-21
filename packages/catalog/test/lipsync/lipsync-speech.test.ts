@@ -9,9 +9,11 @@ import {
 } from "@rosesfield/contract"
 import { taskBinding } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
+import type { CatalogModel } from "#comfy/model-catalog.contract"
 import {
   speechAppOf,
   speechDefaultOf,
+  speechInputsOf,
   speechRunOf,
   speechTask,
   spokenInputs,
@@ -130,5 +132,92 @@ describe("the speech run that Text makes first", () => {
       spokenInputs(lipsyncInputs, speechRun("failed", [speechAudio]))
     ).toBeNull()
     expect(spokenInputs(lipsyncInputs, speechRun("done", []))).toBeNull()
+  })
+})
+
+const hostedVoice: CatalogModel = {
+  id: "byteplus/seed-audio-1.0",
+  kind: "hosted",
+  maker: "ByteDance",
+  name: "Seed Audio 1.0",
+  nameKey: null,
+  task: speechTask,
+  tags: [{ kind: "hosted" }],
+  form: [
+    {
+      kind: "text",
+      name: "text",
+      path: "text",
+      required: true,
+      maxLength: 12,
+      default: null,
+    },
+    {
+      kind: "choice",
+      name: "speaker",
+      path: "speaker",
+      required: true,
+      options: ["warm", "bright"],
+      default: "warm",
+    },
+    {
+      kind: "number",
+      name: "speed",
+      path: "speed",
+      required: false,
+      min: 0.5,
+      max: 2,
+      integer: false,
+      default: 1,
+    },
+  ],
+}
+
+describe("the inputs of the speech run for the voice you picked", () => {
+  it("writes your line in the hosted voice's own text field, with the defaults its schema needs", () => {
+    expect(
+      speechInputsOf({
+        app: audio,
+        voice: hostedVoice,
+        model: hostedVoice.id,
+        text: " Hello there ",
+      })
+    ).toEqual({
+      model: "byteplus/seed-audio-1.0",
+      speaker: "warm",
+      text: "Hello there",
+    })
+  })
+
+  it("holds a line past the hosted voice's own length to that length", () => {
+    expect(
+      speechInputsOf({
+        app: audio,
+        voice: hostedVoice,
+        model: hostedVoice.id,
+        text: "a".repeat(13),
+      })
+    ).toBeNull()
+  })
+
+  it("writes your line in the app's own script input for a voice of the app's graph", () => {
+    expect(
+      speechInputsOf({
+        app: audio,
+        voice: null,
+        model: "speech-graph",
+        text: "Hello there",
+      })
+    ).toEqual({ model: "speech-graph", script: "Hello there" })
+  })
+
+  it("gives the audio the speech made to the input the lip sync model names", () => {
+    expect(
+      spokenInputs(
+        { model: "kling/lip-sync" },
+        speechRun("done", [speechAudio]),
+        "voiceTrack"
+      )
+    ).toEqual({ model: "kling/lip-sync", voiceTrack: [speechAudio] })
   })
 })

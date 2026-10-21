@@ -4,9 +4,6 @@
   "design": {
     "unit": "many-copies",
     "family": "effects",
-    "fit": {
-      "prompt": "Fit the photo to the new frame. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. Add new matching scene content at every added edge, with no borders, bars or blur."
-    },
     "setPiece": "Four to eight copies of the person, in the same outfit and in different poses, appear on the scene's own ground, and the clip fades to dark.",
     "cuts": [],
     "lastFrame": {
@@ -21,11 +18,13 @@
     }
   },
   "prompt": "One shot with a slow camera. Copies of the person appear one after another around them on the same ground, until four to eight copies stand in the scene by the middle of the clip. Every copy wears the same outfit, each in a different pose. In the last second the whole frame fades to dark.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
     "prompt": "The same scene in near darkness, with the person and several copies of them in the same outfit standing on the ground in different poses.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": null,
   "adapter": null,
   "seconds": 7,

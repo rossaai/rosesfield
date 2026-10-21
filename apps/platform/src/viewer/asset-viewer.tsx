@@ -12,12 +12,12 @@ import { aspectOfAsset } from "@/pieces/asset-tile"
 import { CompareDivider } from "@/pieces/compare-divider"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { readText } from "@/shell/search"
+import { useRunModels } from "@/viewer/use-run-models"
 import { ViewerBar } from "@/viewer/viewer-actions"
 import { useViewer } from "@/viewer/viewer-context"
 import {
   compareInputOf,
   type MeasuredSize,
-  useRunModels,
   useSourceRun,
   type ViewerCompare,
   ViewerDetails,

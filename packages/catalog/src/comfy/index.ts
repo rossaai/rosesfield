@@ -51,6 +51,7 @@ export { deniedNames, deniedProviders, isDeniedModel } from "#comfy/model-deny"
 export {
   boardRankOf,
   factsOf,
+  lineKeyOf,
   type ModelFactsFile,
   modelFactsData,
   modelFactsFile,
@@ -62,7 +63,9 @@ export {
   type ModelTask,
   mediaRules,
   modelTasks,
+  namedTasksOf,
   nameRules,
+  taskFieldOf,
   tasksOfModel,
 } from "#comfy/model-tasks"
 export {

@@ -46,7 +46,7 @@ export function workerParts(env: WorkerBindings): WorkerParts {
   const vars = readWorkerEnv(env)
   return {
     vars,
-    apps: servedApps(vars),
+    apps: servedApps(vars, "workers"),
     db: drizzle(env.DB),
     store: new R2AssetStore({ bucket: env.BUCKET }),
     clock,

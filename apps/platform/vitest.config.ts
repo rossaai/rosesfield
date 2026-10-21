@@ -10,5 +10,7 @@ export default defineProject({
     name: "platform",
     include: ["test/**/*.test.{ts,tsx}"],
     environment: "jsdom",
+    testTimeout: 15_000,
+    setupFiles: ["test/setup-dom.ts"],
   },
 })

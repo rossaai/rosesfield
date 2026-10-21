@@ -14,6 +14,7 @@ const named = {
   name: inputName,
   labelKey: copyKey,
   when: inputWhen.optional(),
+  scope: z.literal("app").optional(),
 }
 
 const promptInput = z.strictObject({
@@ -164,3 +165,7 @@ export type InputDefinition = z.infer<typeof inputDefinition>
 export type ImageAccept = z.infer<typeof imageAccept>
 export type InputValue = z.infer<typeof inputValue>
 export type RunInputs = z.infer<typeof runInputs>
+
+export function isAppOnly(input: InputDefinition): boolean {
+  return input.type !== "seed" && input.scope === "app"
+}

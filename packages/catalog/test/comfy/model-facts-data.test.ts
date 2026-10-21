@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   boardRankOf,
   factsOf,
+  lineKeyOf,
   type ModelFactsFile,
   modelFactsData,
   modelFactsFile,
@@ -54,7 +55,7 @@ const sample: ModelFactsFile = modelFactsFile.parse({
 
 describe("the model facts the catalog holds", () => {
   it("gives a model its lab, its release, its rank with the board and the date, its price third and its weights page", () => {
-    expect(factsOf("maker/open", "text-to-image", "a.line", sample)).toEqual({
+    expect(factsOf("maker/open", "text-to-image", sample)).toEqual({
       lab: "Maker Lab",
       release: "2026-10-01",
       rank: {
@@ -71,11 +72,11 @@ describe("the model facts the catalog holds", () => {
   })
 
   it("leaves each fact it does not hold empty, and keeps a weights page off Hugging Face out", () => {
-    expect(factsOf("maker/open", "image-edit", null, sample)).toMatchObject({
+    expect(factsOf("maker/open", "image-edit", sample)).toMatchObject({
       rank: null,
       priceThird: null,
     })
-    expect(factsOf("maker/elsewhere", "text-to-image", null, sample)).toEqual({
+    expect(factsOf("maker/elsewhere", "text-to-image", sample)).toEqual({
       lab: "Maker Lab",
       release: null,
       rank: null,
@@ -83,7 +84,7 @@ describe("the model facts the catalog holds", () => {
       weights: null,
       lineKey: null,
     })
-    expect(factsOf("maker/unknown", "text-to-image", null, sample)).toEqual({
+    expect(factsOf("maker/unknown", "text-to-image", sample)).toEqual({
       lab: null,
       release: null,
       rank: null,
@@ -108,7 +109,7 @@ describe("the model facts the catalog holds", () => {
 
   it("names Ming Image 0.1 Design by inclusionAI, 45 of 104 on the text to image board read on 2026-10-20, with its weights page", () => {
     expect(
-      factsOf("graph/ming-image-0-1-design", "text-to-image", null)
+      factsOf("graph/ming-image-0-1-design", "text-to-image")
     ).toMatchObject({
       lab: "inclusionAI",
       release: "2026-09-22",
@@ -160,22 +161,25 @@ describe("the model facts the catalog holds", () => {
     ).toBe(true)
   })
 
-  it("reads a model's line through the key its own row holds, and keeps the key it was given for a row that holds none", () => {
+  it("reads a model's line through the key its own row holds, and gives a row that holds none no line", () => {
+    expect(factsOf("maker/open", "text-to-image", sample).lineKey).toBe(
+      "comfy.model.makerOpen.line"
+    )
     expect(
-      factsOf("maker/open", "text-to-image", "app.model.open.line", sample)
-        .lineKey
-    ).toBe("comfy.model.makerOpen.line")
-    expect(
-      factsOf(
-        "maker/elsewhere",
-        "text-to-image",
-        "app.model.elsewhere.line",
-        sample
-      ).lineKey
-    ).toBe("app.model.elsewhere.line")
-    expect(
-      factsOf("maker/elsewhere", "text-to-image", null, sample).lineKey
+      factsOf("maker/elsewhere", "text-to-image", sample).lineKey
     ).toBeNull()
+  })
+
+  it("reads a model's line key with no task, and none for a row with no line or no row, the control", () => {
+    expect(lineKeyOf("maker/open", sample)).toBe("comfy.model.makerOpen.line")
+    expect(lineKeyOf("maker/elsewhere", sample)).toBeNull()
+    expect(lineKeyOf("maker/unknown", sample)).toBeNull()
+    expect(lineKeyOf("graph/z-image-turbo")).toBe(
+      "comfy.model.graphZImageTurbo.line"
+    )
+    expect(lineKeyOf("graph/qwen-image-edit-2511")).toBe(
+      "comfy.model.graphQwenImageEdit2511.line"
+    )
   })
 
   it("gives every model row a line with its source and the words it restates, or the reason it holds none", () => {
@@ -191,6 +195,7 @@ describe("the model facts the catalog holds", () => {
     const sources = [
       "https://huggingface.co/",
       "https://github.com/Comfy-Org/workflow_templates/blob/46e060ea88eb07adecf07197ec384c54a70e030c/templates/index.json#",
+      "https://docs.bfl.ml/",
     ]
     for (const line of described) {
       expect(
@@ -198,16 +203,10 @@ describe("the model facts the catalog holds", () => {
         line.id
       ).toBe(true)
     }
-    expect(
-      factsOf(
-        "graph/z-image-turbo",
-        "text-to-image",
-        "image.model.zImageTurbo.line"
-      ).lineKey
-    ).toBe("comfy.model.graphZImageTurbo.line")
-    expect(
-      factsOf("openai/gpt-image-2", "text-to-image", null).lineKey
-    ).toBeNull()
+    expect(factsOf("graph/z-image-turbo", "text-to-image").lineKey).toBe(
+      "comfy.model.graphZImageTurbo.line"
+    )
+    expect(factsOf("openai/gpt-image-2", "text-to-image").lineKey).toBeNull()
   })
 
   it("refuses a line with no source, a row with no line and a key outside the catalog's line keys, the control", () => {

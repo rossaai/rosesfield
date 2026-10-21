@@ -1,7 +1,10 @@
+import { adsPhotoLimitOf } from "@rosesfield/catalog/ads"
+import { type CatalogModel, isHostedModelId } from "@rosesfield/catalog/comfy"
 import {
   type AppListing,
   type InputDefinition,
   inputRulesOf,
+  type Run,
 } from "@rosesfield/contract"
 import { isAssetInput } from "@/catalog/app-facts"
 import {
@@ -9,6 +12,7 @@ import {
   type FieldValue,
   type FormValues,
   problemsOf,
+  valuesFromRun,
 } from "@/screens/app/app-form"
 
 type Inputs = Readonly<Record<string, FieldValue>>
@@ -26,7 +30,7 @@ export type AdsProblem = {
 
 export const kindInput = "kind"
 export const modelInput = "model"
-const characterInput = "character"
+export const characterInput = "character"
 const lineCount = 2
 
 function textOf(value: FieldValue): string {
@@ -220,7 +224,50 @@ function promptProblems(app: AppListing, inputs: Inputs): AdsProblem[] {
   return found
 }
 
-function photoProblems(app: AppListing, inputs: Inputs): AdsProblem[] {
+function hostedPhotoLimitOf(model: CatalogModel): number {
+  return adsPhotoLimitOf(model.form ?? [])
+}
+
+export function modelPhotoLimitOf(
+  app: AppListing,
+  id: string,
+  model: CatalogModel | undefined
+): number {
+  return model?.kind === "hosted"
+    ? hostedPhotoLimitOf(model)
+    : photoLimitOf(app, id)
+}
+
+function hostedPhotoProblems(
+  app: AppListing,
+  inputs: Inputs,
+  model: CatalogModel | undefined
+): AdsProblem[] {
+  if (model === undefined) {
+    return []
+  }
+  const limit = hostedPhotoLimitOf(model)
+  const sent = photoInputsOf(app).reduce(
+    (total, input) => total + listOf(inputs[input.name]).length,
+    0
+  )
+  return sent > limit ? [tooManyPhotos(app, limit)] : []
+}
+
+function tooManyPhotos(app: AppListing, max: number): AdsProblem {
+  return problem(
+    modelInput,
+    `${app.id}.input.${modelInput}.tooManyPhotos`,
+    "attach",
+    { max }
+  )
+}
+
+function photoProblems(
+  app: AppListing,
+  inputs: Inputs,
+  models: readonly CatalogModel[]
+): AdsProblem[] {
   const required = app.inputs.find(
     (input) => isAssetInput(input) && input.presence === "required"
   )
@@ -233,29 +280,27 @@ function photoProblems(app: AppListing, inputs: Inputs): AdsProblem[] {
       ),
     ]
   }
+  const model = textOf(inputs[modelInput]) || defaultModelOf(app)
+  if (isHostedModelId(model)) {
+    return hostedPhotoProblems(
+      app,
+      inputs,
+      models.find((one) => one.id === model)
+    )
+  }
   const rules = inputRulesOf(app, inputs)
   const dropped = photoInputsOf(app).some(
     (input) =>
       listOf(inputs[input.name]).length > 0 &&
       !rules.some((rule) => rule.input.name === input.name)
   )
-  const model = textOf(inputs[modelInput]) || defaultModelOf(app)
   const allowed =
     rules.find((rule) => rule.input.name === modelInput)?.allowed ?? null
   const isRefused = allowed !== null && !allowed.includes(model)
   if (!dropped && !isRefused) {
     return []
   }
-  return [
-    problem(
-      modelInput,
-      `${app.id}.input.${modelInput}.tooManyPhotos`,
-      "attach",
-      {
-        max: photoLimitOf(app, model),
-      }
-    ),
-  ]
+  return [tooManyPhotos(app, photoLimitOf(app, model))]
 }
 
 function defaultModelOf(app: AppListing): string {
@@ -263,8 +308,20 @@ function defaultModelOf(app: AppListing): string {
   return input?.type === "choice" ? input.default : ""
 }
 
-export function adsProblems(app: AppListing, inputs: Inputs): AdsProblem[] {
-  return [...photoProblems(app, inputs), ...promptProblems(app, inputs)]
+export function adsProblems(
+  app: AppListing,
+  inputs: Inputs,
+  models: readonly CatalogModel[] = []
+): AdsProblem[] {
+  return [...photoProblems(app, inputs, models), ...promptProblems(app, inputs)]
+}
+
+export function adsValuesOf(app: AppListing, run: Run): FormValues {
+  const { [modelInput]: model, ...kept } = run.inputs
+  const values = valuesFromRun(app, { ...run, inputs: kept })
+  return typeof model === "string"
+    ? { ...values, inputs: { ...values.inputs, [modelInput]: model } }
+    : values
 }
 
 export function compactedPhotos(

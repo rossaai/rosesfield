@@ -8,6 +8,7 @@ import { t } from "@/copy/t"
 import { useDownloadAsset } from "@/pieces/asset-actions"
 import { assetLabel, useAssetName } from "@/pieces/asset-name"
 import { AudioRow } from "@/pieces/audio-row"
+import { recordingNames } from "@/studio/audio/recording-names"
 import { useWaveform } from "@/studio/audio/use-waveform"
 import { playedBarsOf } from "@/studio/audio/waveform"
 
@@ -57,7 +58,8 @@ function LoadedPlayer(
 ): ReactElement {
   const waveform = useWaveform(props.asset.id, props.src)
   const download = useDownloadAsset()
-  const name = useAssetName(props.asset) ?? assetLabel(props.asset)
+  const assetName = useAssetName(props.asset) ?? assetLabel(props.asset)
+  const name = recordingNames.nameOf(props.asset) ?? assetName
   const peaks = waveform?.peaks ?? []
   return (
     <AudioRow

@@ -11,7 +11,7 @@ export const photoAccept = {
   minShortSide: 480,
 } as const
 
-export const runLimitSeconds = 180
+export const runLimitSeconds = 600
 
 type AppInputs = AppInput["inputs"]
 
@@ -66,6 +66,7 @@ export function effectsApp(offered: readonly EffectRecipe[]): AppInput {
         options: [
           { value: "480p", labelKey: "effects.choice.resolution.p480" },
           { value: "720p", labelKey: "effects.choice.resolution.p720" },
+          { value: "1080p", labelKey: "effects.choice.resolution.p1080" },
         ],
         default: "720p",
       },

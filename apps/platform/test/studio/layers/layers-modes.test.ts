@@ -48,6 +48,13 @@ function valuesIn(
 
 const modes: readonly LayersMode[] = ["split", "edit", "relight", "fill"]
 
+const modeGraph: Readonly<Record<LayersMode, string>> = {
+  split: "qwen-image-layered",
+  edit: "qwen-image-edit-2511",
+  relight: "qwen-image-edit-2509-relight",
+  fill: "qwen-image-inpaint",
+}
+
 describe("the Layers screen follows the contract's mode rules", () => {
   it("shows the inputs of each mode beside its own controls", () => {
     const names = (mode: LayersMode) =>
@@ -70,6 +77,7 @@ describe("the Layers screen follows the contract's mode rules", () => {
       const parsed = contract.safeParse(body)
       expect(parsed.success).toBe(true)
       expect(parsed.data?.count).toBe(mode === "split" ? 6 : 1)
+      expect(body.inputs.model).toBe(modeGraph[mode])
     }
   )
 

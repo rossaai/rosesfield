@@ -4,7 +4,12 @@ import { interaction } from "@rosesfield/ui/components/interaction"
 import type { SegmentedControlDensity } from "@rosesfield/ui/contracts/segmented-control.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
-import type { CSSProperties, ReactElement, ReactNode } from "react"
+import {
+  type CSSProperties,
+  type ReactElement,
+  type ReactNode,
+  useId,
+} from "react"
 
 type SegmentedItem<T extends string> = {
   value: T
@@ -103,9 +108,11 @@ function SegmentedCell<T extends string>({
   item: SegmentedItem<T>
   density: SegmentedControlDensity
 }): ReactElement {
+  const labelId = useId()
   return (
     <Radio.Root
       value={item.value}
+      aria-labelledby={labelId}
       data-slot="segmented-control-cells"
       className={cn(
         "relative flex min-w-0 items-center justify-center gap-1 font-medium text-ink-muted [&_svg]:size-4",
@@ -119,7 +126,7 @@ function SegmentedCell<T extends string>({
           {item.icon}
         </span>
       )}
-      <span data-slot="segment-label" className="truncate">
+      <span id={labelId} data-slot="segment-label" className="truncate">
         {item.label}
       </span>
     </Radio.Root>

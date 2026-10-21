@@ -1,8 +1,11 @@
+import type { Run } from "@rosesfield/contract"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { t } from "@/copy/t"
 import { BarFrame, type BarPlace } from "@/screens/app/bar-frame"
 import {
   asPhone,
+  doneRun,
   image,
   resetFrames,
   stubFetch,
@@ -81,6 +84,54 @@ describe("the bar frame on a phone", () => {
     expect(screen.getByTestId("bar-sheet")).toBeDefined()
     expect(screen.queryByTestId("bar-dock")).toBeNull()
     expect(places.every((place) => place === "sheet")).toBe(true)
+  })
+})
+
+describe("the bar frame with its phone bar docked", () => {
+  function renderPhoneDock(
+    isOpen: boolean,
+    places: BarPlace[],
+    runs: readonly Run[] = []
+  ): void {
+    render(
+      withClient(
+        <BarFrame
+          app={image}
+          hasRuns={true}
+          onUseInputs={() => undefined}
+          sheet={[isOpen, () => undefined]}
+          phone="dock"
+          settings={<div data-testid="settings" />}
+          bar={(place) => {
+            places.push(place)
+            return <div data-testid={`bar-${place}`} />
+          }}
+        />,
+        image,
+        runs
+      )
+    )
+  }
+
+  it("docks the bar under the canvas on a phone and keeps the sheet for the settings alone", () => {
+    asPhone()
+    const places: BarPlace[] = []
+    renderPhoneDock(true, places)
+    const dock = document.querySelector("[data-slot=prompt-dock]")
+    expect(dock?.querySelector("[data-testid=bar-phone]")).not.toBeNull()
+    expect(screen.getAllByTestId("settings")).toHaveLength(1)
+    expect(screen.queryByTestId("bar-sheet")).toBeNull()
+    expect(screen.getByText(t("app.inputs.open"))).toBeDefined()
+    expect(document.querySelector("[data-slot=app-tools-key]")).toBeNull()
+    expect(places.every((place) => place === "phone")).toBe(true)
+  })
+
+  it("opens a phone with past runs on the newest, at the bottom of the canvas", () => {
+    asPhone()
+    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(900)
+    const scrolled = vi.spyOn(Element.prototype, "scrollTop", "set")
+    renderPhoneDock(false, [], [doneRun(image.id)])
+    expect(scrolled).toHaveBeenCalledWith(900)
   })
 })
 

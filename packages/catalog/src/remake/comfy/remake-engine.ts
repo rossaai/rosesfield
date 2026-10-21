@@ -1,12 +1,15 @@
 import type { EngineBinding, RunInputs } from "@rosesfield/contract"
 import type { AssetId } from "@rosesfield/kernel"
 import { app as motionApp, motionAspectRatios } from "#motion/app"
+import { graphModel as swapModel } from "#motion/motion-models"
+import { planModel, planTask } from "#remake/comfy/remake-plan-turn"
 import {
   type PlannedShot,
   remakeLimits,
   shotSecondsOf,
 } from "#remake/shot-plan"
 import { app as videoApp } from "#video/app"
+import { defaultModel as rebuildModel } from "#video/video-models"
 
 export type RemakeQuality = "draft" | "final"
 
@@ -54,13 +57,17 @@ const replaceResolution: Readonly<Record<RemakeQuality, string>> = {
 }
 
 const rebuildVideo: Readonly<Record<RemakeQuality, RunInputs>> = {
-  draft: { model: "ltx-2-5", resolution: "480p", sound: "off" },
-  final: { model: "ltx-2-5", resolution: "720p", sound: "off" },
+  draft: { model: rebuildModel, resolution: "480p", sound: "off" },
+  final: { model: rebuildModel, resolution: "720p", sound: "off" },
 }
 
 export const remakeEngine: EngineBinding = {
   adapter: remakeShotsAdapter,
-  config: { replace: motionApp.engine, rebuild: videoApp.engine },
+  config: {
+    plan: { task: planTask, model: planModel },
+    replace: motionApp.engine,
+    rebuild: videoApp.engine,
+  },
 }
 
 export function shotKeyOf(
@@ -96,6 +103,7 @@ function replaced(input: ShotRequestInput): Routed | null {
     app: "motion",
     binding: motionApp.engine,
     inputs: {
+      model: swapModel,
       photo: [input.photo],
       clip: [input.clip],
       sound: "off",

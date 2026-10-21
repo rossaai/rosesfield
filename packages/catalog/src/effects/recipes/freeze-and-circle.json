@@ -4,9 +4,6 @@
   "design": {
     "unit": "freeze-and-circle",
     "family": "effects",
-    "fit": {
-      "prompt": "Place the person in a roadside diner. Keep the person's face, hair, skin, age and clothes exactly as they are. The person sits at a red booth table with a milkshake in front of them, a counter with stools behind, a checkered floor and a window onto a road."
-    },
     "setPiece": "A roadside diner where time stops: a waitress with a coffee pot, and coffee, plates, bacon and eggs hanging in the air while the camera circles the person.",
     "cuts": [
       {
@@ -34,11 +31,13 @@
     }
   },
   "prompt": "Shot one: time stops in a roadside diner. The person sits still at a red booth with a milkshake. A waitress holds a coffee pot mid-pour. Coffee, plates, bacon and eggs hang frozen in the air. The camera circles the person slowly and steadily, then settles. Cut. Shot two, the last two seconds: a calm close-up of the person's face as they sip the milkshake through a straw.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
     "prompt": "A close-up of the same person's face sipping a milkshake through a straw in the diner, soft warm light.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": null,
   "adapter": null,
   "seconds": 15,

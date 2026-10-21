@@ -32,6 +32,7 @@ export const app: AppInput = defineApp({
     {
       type: "choice",
       name: "mode",
+      scope: "app",
       labelKey: "audio.input.mode.label",
       options: audioModes.map((value) => ({
         value,

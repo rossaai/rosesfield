@@ -1,3 +1,4 @@
+import { speechModelInput, speechTextInput } from "@rosesfield/catalog/lipsync"
 import { describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
 import { formOfModel, lipFieldsOf } from "@/studio/lipsync/lipsync-tabs"
@@ -7,8 +8,6 @@ import {
   planOf,
   runFieldsOf,
   speechAskOf,
-  speechModelInput,
-  speechTextInput,
   totalOf,
   wordsOfInputs,
 } from "@/studio/lipsync/lipsync-words"

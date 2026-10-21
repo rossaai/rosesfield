@@ -5,7 +5,6 @@ import { t } from "@/copy/t"
 export type LicenceId = "apache-2-0" | "mit" | "ltx-community" | "film"
 
 export type ModelId =
-  | "flux-2-klein-4b"
   | "z-image-turbo"
   | "qwen-image-2512"
   | "qwen-image"
@@ -34,12 +33,6 @@ export type ModelRow = {
 const huggingFace = "https://huggingface.co"
 
 export const openModels: readonly OpenModel[] = [
-  {
-    id: "flux-2-klein-4b",
-    licence: "apache-2-0",
-    link: `${huggingFace}/black-forest-labs/FLUX.2-klein-4B`,
-    files: ["flux-2-klein-4b.safetensors", "flux-2-klein-4b-fp8.safetensors"],
-  },
   {
     id: "z-image-turbo",
     licence: "apache-2-0",
@@ -85,6 +78,7 @@ export const openModels: readonly OpenModel[] = [
     link: "https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x",
     files: [
       "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
+      "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
       "Lightricks/LTX-2.5",
     ],
   },

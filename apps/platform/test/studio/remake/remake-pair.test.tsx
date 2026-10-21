@@ -1,16 +1,13 @@
 import { run } from "@rosesfield/contract"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { t } from "@/copy/t"
+import { assetQuery } from "@/api/queries"
+import { t, tCatalog } from "@/copy/t"
 import { RemakePair } from "@/studio/remake/remake-pair"
+import type { RemakePlan } from "@/studio/remake/remake-plan"
+import { planOfThree } from "./remake-fixtures"
 
 const editId = "0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d"
 const outputId = "4f506172-8394-4e0f-9a1b-3c4d5e6f7081"
@@ -48,6 +45,7 @@ vi.mock("@/api/queries", async (original) => ({
       }
     },
     retry: false,
+    retryOnMount: false,
   }),
 }))
 
@@ -88,14 +86,19 @@ function doneRun(inputs: Record<string, unknown>) {
   })
 }
 
-function show(inputs: Record<string, unknown>): void {
+async function show(
+  inputs: Record<string, unknown>,
+  assets: readonly string[],
+  plan: RemakePlan | null = null
+): Promise<void> {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
+  await Promise.all(assets.map((id) => client.prefetchQuery(assetQuery(id))))
   render(
     <QueryClientProvider client={client}>
       <TooltipProvider>
-        <RemakePair run={doneRun(inputs)} outputId={outputId} />
+        <RemakePair run={doneRun(inputs)} outputId={outputId} plan={plan} />
       </TooltipProvider>
     </QueryClientProvider>
   )
@@ -109,10 +112,11 @@ afterEach(() => {
 
 describe("a finished Remake run in the canvas", () => {
   it("shows your reference and the output as tiles that play muted and loop", async () => {
-    show({ reference: [editId], character: [characterId] })
-    await waitFor(() =>
-      expect(document.querySelectorAll("video")).toHaveLength(2)
-    )
+    await show({ reference: [editId], character: [characterId] }, [
+      editId,
+      outputId,
+    ])
+    expect(document.querySelectorAll("video")).toHaveLength(2)
     for (const video of document.querySelectorAll("video")) {
       expect(video.loop).toBe(true)
       expect(video.muted).toBe(true)
@@ -123,10 +127,11 @@ describe("a finished Remake run in the canvas", () => {
   })
 
   it("opens each side in the viewer, where the output's sound plays", async () => {
-    show({ reference: [editId], character: [characterId] })
-    await waitFor(() =>
-      expect(document.querySelectorAll("video")).toHaveLength(2)
-    )
+    await show({ reference: [editId], character: [characterId] }, [
+      editId,
+      outputId,
+    ])
+    expect(document.querySelectorAll("video")).toHaveLength(2)
     const tiles = document.querySelectorAll<HTMLElement>(
       "button[data-slot='media-tile']"
     )
@@ -142,18 +147,95 @@ describe("a finished Remake run in the canvas", () => {
 
   it("offers Try again when your reference no longer loads, and still shows the output", async () => {
     store.missing.add(editId)
-    show({ reference: [editId], character: [characterId] })
-    await waitFor(() =>
-      expect(
-        screen.getByRole("button", { name: t("state.tryAgain") })
-      ).toBeDefined()
-    )
+    await show({ reference: [editId], character: [characterId] }, [
+      editId,
+      outputId,
+    ])
+    expect(
+      screen.getByRole("button", { name: t("state.tryAgain") })
+    ).toBeDefined()
     expect(document.querySelectorAll("video")).toHaveLength(1)
   })
 
-  it("falls back to the run's outputs when the run holds no reference", () => {
-    show({ character: [characterId] })
+  it("falls back to the run's outputs when the run holds no reference", async () => {
+    await show({ character: [characterId] }, [])
     expect(screen.getByText(`outputs of the run: ${outputId}`)).toBeDefined()
     expect(document.querySelectorAll("video")).toHaveLength(0)
+  })
+})
+
+type Clock = { at: number; plays: number }
+
+function watchVideos(): Clock[] {
+  return [...document.querySelectorAll("video")].map((video) => {
+    const clock: Clock = { at: 0, plays: 0 }
+    Object.defineProperty(video, "currentTime", {
+      get: () => clock.at,
+      set: (value: number) => {
+        clock.at = value
+      },
+    })
+    Object.defineProperty(video, "play", {
+      value: () => {
+        clock.plays += 1
+        return Promise.resolve()
+      },
+    })
+    Object.defineProperty(video, "pause", { value: () => undefined })
+    return clock
+  })
+}
+
+describe("a finished Remake run with its plan", () => {
+  const both = { reference: [editId], character: [characterId] }
+
+  it("marks the cuts on one timeline under both videos", async () => {
+    await show(both, [editId, outputId], planOfThree)
+    const timelines = document.querySelectorAll("[data-slot='shot-timeline']")
+    expect(timelines).toHaveLength(1)
+    expect(document.querySelectorAll("[data-slot='cut']")).toHaveLength(2)
+  })
+
+  it("moves both videos to the start of a shot when you press its number, and plays both from there", async () => {
+    await show(both, [editId, outputId], planOfThree)
+    const clocks = watchVideos()
+    expect(clocks).toHaveLength(2)
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: tCatalog("remake.plan.shot", { number: 2 }),
+      })
+    )
+    expect(clocks.map((clock) => clock.at)).toEqual([4, 4])
+    fireEvent.click(
+      screen.getByRole("button", { name: tCatalog("remake.compare.play") })
+    )
+    expect(clocks.map((clock) => clock.at)).toEqual([4, 4])
+    expect(clocks.map((clock) => clock.plays)).toEqual([1, 1])
+  })
+
+  it("lists each shot in the info panel with its span, its route, its model, its credits and its seed, and a rebuilt shot's words and camera move", async () => {
+    await show(both, [editId, outputId], planOfThree)
+    fireEvent.click(screen.getByRole("button", { name: t("viewer.info") }))
+    const shots = [...document.querySelectorAll("[data-slot='shot-detail']")]
+    expect(shots).toHaveLength(3)
+    const [replaced, rebuilt, kept] = shots.map((shot) => shot.textContent)
+    expect(replaced).toContain(tCatalog("remake.route.replace"))
+    expect(replaced).toContain(t("model.tag.length", { min: "0", max: "4" }))
+    expect(replaced).toContain("LTX 2.3 control")
+    expect(replaced).toContain(t("run.price.credits", { amount: "8" }))
+    expect(replaced).toContain(`${t("viewer.label.seed")}7`)
+    expect(replaced).not.toContain(t("viewer.label.prompt"))
+    expect(rebuilt).toContain(tCatalog("remake.route.rebuild"))
+    expect(rebuilt).toContain("A wide street at dusk.")
+    expect(rebuilt).toContain(tCatalog("video.choice.cameraMove.pushIn"))
+    expect(rebuilt).toContain(`${t("viewer.label.seed")}8`)
+    expect(kept).toContain(tCatalog("remake.route.keep"))
+    expect(kept).not.toContain(t("viewer.label.model"))
+  })
+
+  it("control: shows no timeline and no info panel for a run with no plan", async () => {
+    await show(both, [editId, outputId])
+    expect(document.querySelector("[data-slot='shot-timeline']")).toBeNull()
+    expect(screen.queryByRole("button", { name: t("viewer.info") })).toBeNull()
   })
 })

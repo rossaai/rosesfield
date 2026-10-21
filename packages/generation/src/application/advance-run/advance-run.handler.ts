@@ -5,6 +5,12 @@ import {
   RateLimitedError,
   type RunId,
 } from "@rosesfield/kernel"
+import {
+  cancelAll,
+  keepSteps,
+  type Polled,
+  reopenLost,
+} from "#application/advance-run/engine-steps"
 import { jobInputsOf } from "#application/advance-run/job-inputs"
 import {
   type KeptOutputs,
@@ -30,7 +36,6 @@ import type {
   EngineFinished,
   EngineOutput,
   EngineRequest,
-  EngineStatus,
   GenerationEngine,
 } from "#domain/generation-engine.port"
 import type { PriceBook } from "#domain/price-book.port"
@@ -53,12 +58,6 @@ type AdvanceRunHandlerOptions = {
   assets: RunAssets
   clock: Clock
   prices?: PriceBook
-}
-
-type Polled = {
-  job: RunJob
-  ref: string
-  status: EngineStatus
 }
 
 type Watch = {
@@ -125,6 +124,9 @@ export class AdvanceRunHandler {
       }
       run.release()
     }
+    if (reopenLost(run, engine) === "unkept") {
+      return this.failWith(run, new RunFailedError({ cause: "lost run" }))
+    }
     try {
       return isSubmitDue(run, engine)
         ? await this.submitPending(run, watch)
@@ -150,6 +152,7 @@ export class AdvanceRunHandler {
         idempotencyKey: current.idempotencyKeyOf(job.index),
         seed: job.seed,
         count: current.jobs.length === 1 ? base.count : 1,
+        ...(job.steps === undefined ? {} : { steps: job.steps }),
       })
       if (current.isFinished()) {
         return stop
@@ -231,6 +234,7 @@ export class AdvanceRunHandler {
           : [this.read(watch.engine, job, job.ref)]
       )
     )
+    keepSteps(run, polled)
     let isCollecting = false
     for (const one of polled) {
       if (one.status.state === "succeeded") {
@@ -311,7 +315,7 @@ export class AdvanceRunHandler {
         ? [one.ref]
         : []
     )
-    const refused = await this.cancelAll(engine, working)
+    const refused = await cancelAll(engine, working)
     if (ending === "cancelled") {
       run.cancel({ now: this.now() })
     } else {
@@ -325,7 +329,7 @@ export class AdvanceRunHandler {
   }
 
   private async timeOut(run: Run, watch: Watch): Promise<AdvanceRunOutput> {
-    const refused = await this.cancelAll(watch.engine, run.liveRefs())
+    const refused = await cancelAll(watch.engine, run.liveRefs())
     run.fail({
       error: new RunTimedOutError({
         runId: run.id,
@@ -338,17 +342,6 @@ export class AdvanceRunHandler {
       throw refused
     }
     return stop
-  }
-
-  private async cancelAll(
-    engine: GenerationEngine,
-    refs: readonly string[]
-  ): Promise<unknown> {
-    const results = await Promise.allSettled(
-      refs.map((ref) => engine.cancel(ref))
-    )
-    const refused = results.find((result) => result.status === "rejected")
-    return refused === undefined ? null : refused.reason
   }
 
   private async recover(

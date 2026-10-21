@@ -3,6 +3,7 @@ import {
   graphMaker,
   type ModelField,
 } from "@rosesfield/catalog/comfy"
+import { speechModelInput, speechTextInput } from "@rosesfield/catalog/lipsync"
 import type { AppListing } from "@rosesfield/contract"
 import { formatNumber } from "@/copy/format"
 import { t } from "@/copy/t"
@@ -24,8 +25,6 @@ import {
 import {
   graphBodyAppOf,
   runFieldsOf,
-  speechModelInput,
-  speechTextInput,
   totalOf,
   type WordsPlan,
 } from "@/studio/lipsync/lipsync-words"

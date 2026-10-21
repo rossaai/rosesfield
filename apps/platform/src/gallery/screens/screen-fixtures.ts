@@ -155,8 +155,10 @@ export function settingsOf(
     mode: "owner",
     engine: { target: "demo", address: null, key: "missing", origin: "demo" },
     lock: "local",
+    keyFrom: "server",
     agent,
     agentModel: agent === "set" ? "MiniMax-M3" : null,
+    place: "bun",
     retentionDays: null,
   }
 }
@@ -170,8 +172,10 @@ export const liveSettings: GatewaySettings = {
     origin: "live",
   },
   lock: "token",
+  keyFrom: "server",
   agent: "set",
   agentModel: "MiniMax-M3",
+  place: "bun",
   retentionDays: null,
 }
 
@@ -185,8 +189,10 @@ export function publicSettingsOf(hasKeys: boolean): GatewaySettings {
       origin: hasKeys ? "live" : "demo",
     },
     lock: "none",
+    keyFrom: "settings",
     agent: hasKeys ? "set" : "missing",
     agentModel: hasKeys ? "MiniMax-M3" : null,
+    place: "workers",
     retentionDays: 7,
   }
 }

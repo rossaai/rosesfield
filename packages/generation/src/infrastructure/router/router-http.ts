@@ -295,6 +295,11 @@ export class RouterHttp {
   }
 }
 
+export function creditsUsedOf(response: Response): number | null {
+  const credits = Number(response.headers.get("x-comfy-credits-used"))
+  return Number.isFinite(credits) && credits > 0 ? credits : null
+}
+
 type SendInit = {
   body?: string
   headers?: Record<string, string> | undefined

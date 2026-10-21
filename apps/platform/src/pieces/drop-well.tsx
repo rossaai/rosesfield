@@ -1,3 +1,4 @@
+import type { Asset } from "@rosesfield/contract"
 import { IconButton } from "@rosesfield/ui/components/button"
 import {
   DropdownMenu,
@@ -19,6 +20,7 @@ import {
   type DragEvent,
   type ReactElement,
   type Ref,
+  useRef,
   useState,
 } from "react"
 import { t } from "@/copy/t"
@@ -53,10 +55,21 @@ function fits(file: File, kind: WellKind): boolean {
 function useWellFiles(props: DropWellProps): {
   uploads: ReturnType<typeof useUploads>
   addFiles: (files: readonly File[]) => void
+  retry: (key: string) => void
   pick: () => void
 } {
   const uploads = useUploads()
   const device = useDevice()
+  const latest = useRef(props.ids)
+  latest.current = props.ids
+  const settle = (assets: readonly Asset[]): void => {
+    const next = [...latest.current, ...assets.map((asset) => asset.id)].slice(
+      0,
+      props.max
+    )
+    latest.current = next
+    props.onChange(next)
+  }
   const addFiles = (files: readonly File[]): void => {
     const fitting = files.filter((file) => fits(file, props.kind))
     const room = props.max - props.ids.length
@@ -69,18 +82,17 @@ function useWellFiles(props: DropWellProps): {
     } else {
       props.onMessage(null)
     }
-    void uploads.start(fitting.slice(0, Math.max(0, room))).then((assets) => {
-      props.onChange(
-        [...props.ids, ...assets.map((asset) => asset.id)].slice(0, props.max)
-      )
-    })
+    void uploads.start(fitting.slice(0, Math.max(0, room))).then(settle)
+  }
+  const retry = (key: string): void => {
+    void uploads.retry(key).then(settle)
   }
   const pick = (): void => {
     void device
       .pickFiles({ accept: [`${props.kind}/*`], multiple: props.max > 1 })
       .then(addFiles)
   }
-  return { uploads, addFiles, pick }
+  return { uploads, addFiles, retry, pick }
 }
 
 function AddMenu({
@@ -248,7 +260,7 @@ export function DropWell(props: DropWellProps): ReactElement {
           key={upload.key}
           upload={upload}
           onStop={() => files.uploads.stop(upload.key)}
-          onRetry={() => void files.uploads.retry(upload.key)}
+          onRetry={() => files.retry(upload.key)}
           onRemove={() => files.uploads.remove(upload.key)}
         />
       ))}

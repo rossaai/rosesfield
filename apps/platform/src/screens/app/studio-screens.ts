@@ -11,14 +11,23 @@ type StudioModule = {
   AppScreen: ComponentType<StudioScreenProps>
 }
 
-const loaders = import.meta.glob<StudioModule>("../../studio/*/screen.tsx")
+const loaders = import.meta.glob("../../studio/*/screen.tsx")
+
+function isStudioModule(value: unknown): value is StudioModule {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "AppScreen" in value &&
+    typeof value.AppScreen === "function"
+  )
+}
 
 const loaded = new Map<
   string,
   LazyExoticComponent<ComponentType<StudioScreenProps>>
 >()
 
-function loaderFor(appId: string): (() => Promise<StudioModule>) | null {
+function loaderFor(appId: string): (() => Promise<unknown>) | null {
   const entry = Object.entries(loaders).find(([path]) =>
     path.endsWith(`/studio/${appId}/screen.tsx`)
   )
@@ -36,7 +45,13 @@ export function studioScreenFor(
   if (loader === null) {
     return null
   }
-  const screen = lazy(async () => ({ default: (await loader()).AppScreen }))
+  const screen = lazy(async () => {
+    const module = await loader()
+    if (!isStudioModule(module)) {
+      throw new Error(`studio/${appId}/screen.tsx exports no AppScreen`)
+    }
+    return { default: module.AppScreen }
+  })
   loaded.set(appId, screen)
   return screen
 }

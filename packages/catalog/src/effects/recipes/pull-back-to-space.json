@@ -4,17 +4,14 @@
   "design": {
     "unit": "pull-back-to-space",
     "family": "effects",
-    "fit": {
-      "prompt": "Fit the photo to the new frame. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. Add new matching scene content at every added edge, with no borders, bars or blur."
-    },
-    "setPiece": "One continuous aerial move from the person on the ground up through the clouds to the whole Earth in black space.",
+    "setPiece": "One continuous aerial descent from orbit above the Earth, down through the clouds and over the city, landing on the person at street level.",
     "cuts": [],
     "lastFrame": {
-      "shows": "The curve of the Earth in black space, the move slowed to almost still.",
+      "shows": "The person at street level in an outdoor place, framed from the hips or thighs up, the move slowed to almost still.",
       "maxLuma": null
     },
     "sound": {
-      "prompt": "The sound is a steady rush of wind with a low rising tone that settles in the last second.",
+      "prompt": "The sound is a steady rush of wind that rises through the dive and settles in the last second.",
       "loudness": {
         "min": -20,
         "max": -12
@@ -27,12 +24,14 @@
       "bitDepth": 8
     }
   },
-  "prompt": "One unbroken aerial shot. The camera starts on the person at ground level and rises straight up and back. The person shrinks below as the streets, the city, the coastline and the clouds come into view. The camera passes through a layer of white cloud and keeps rising until the curve of the Earth and the black of space fill the frame. The move is fastest in the middle and slows to almost still in the last second.",
+  "prompt": "One unbroken aerial shot. The camera starts in orbit, above the curve of the Earth against black space, and dives straight down. It passes through a layer of white cloud within the first second, then over the coastline, the city and the streets. The person comes into view between the fifth and the seventh second, and the camera lands at ground level on them, framed from the hips up. The move is fastest in the middle and slows to almost still in the last second.",
+  "photoFrame": "last",
   "endFrame": {
     "source": "edit",
-    "prompt": "The planet Earth seen from orbit above the place in the photo, the curve of the globe with blue oceans, white clouds and a thin glowing blue edge of atmosphere against black space.",
+    "prompt": "The planet Earth seen from orbit above the place in the photo, the curve of the globe with blue oceans, white clouds and a thin glowing blue edge of atmosphere against black space, with no person in view.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": null,
   "adapter": null,
   "seconds": 10,

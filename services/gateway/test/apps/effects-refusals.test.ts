@@ -2,7 +2,7 @@ import type { AgentToolHandlers } from "@rosesfield/agent"
 import { agentTools } from "@rosesfield/agent"
 import { errorEnvelope } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
-import { app } from "../../../../packages/catalog/src/effects/app"
+import { app, effectsApp } from "../../../../packages/catalog/src/effects/app"
 import {
   effectsGateways,
   mcp,
@@ -76,7 +76,7 @@ describe("the effects app's refusals through the gateway", () => {
   })
 
   it("refuses every run and lists no tool for /mcp or the agent while no effect has passed", async () => {
-    const closed = parsedEffects(app)
+    const closed = parsedEffects(effectsApp([]))
     const gateway = openGateway(closed)
     const photo = await upload(gateway, pngOf(1080, 1920))
     const response = await start(gateway, { inputs: { image: [photo] } })
@@ -100,5 +100,14 @@ describe("the effects app's refusals through the gateway", () => {
         handlers: () => ({}) as AgentToolHandlers,
       }).map((tool) => tool.name)
     ).not.toContain("effects")
+  })
+
+  it("lists the effects tool for the agent from the shipped app, now that Push into eye has passed", () => {
+    expect(
+      agentTools({
+        apps: [parsedEffects(app)],
+        handlers: () => ({}) as AgentToolHandlers,
+      }).map((tool) => tool.name)
+    ).toContain("effects")
   })
 })

@@ -1,6 +1,6 @@
 import { isHostedModelId } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
-import { z } from "zod"
+import { cloudWeights, heldFilesOf } from "#comfy/cloud-weights"
 import {
   appTasksOf,
   defaultModelOf,
@@ -8,25 +8,15 @@ import {
   modelsForApp,
 } from "#comfy/list-models"
 import { modelFactsData } from "#comfy/model-facts"
+import {
+  heldImageModels,
+  imageGraphs,
+  openDefaultOf,
+} from "#image/image-models"
 import { findApp, listApps } from "#list-apps"
 import { findWorkflow, type Workflow } from "#list-workflows"
-import recorded from "./fixtures/cloud-loaders.json"
 
-const cloudLoaders = z.strictObject({
-  source: z.string(),
-  readOn: z.iso.date(),
-  recipe: z.string(),
-  loaders: z.record(
-    z.string(),
-    z.strictObject({ input: z.string(), files: z.array(z.string()) })
-  ),
-})
-
-const cloud = cloudLoaders.parse(recorded)
-
-const heldFiles = new Set(
-  Object.values(cloud.loaders).flatMap((loader) => loader.files)
-)
+const heldFiles = heldFilesOf()
 
 const closedTasks: readonly string[] = ["video-edit"]
 
@@ -105,7 +95,7 @@ describe("the model each app opens on", () => {
     const held = imageGraphsByRank().filter(isHeldOnCloud)
     expect(held[0]?.model).toBe(defaultModelOf(imageApp()))
     expect(defaultModelOf(imageApp())).toBe("z-image-turbo")
-    expect(cloud.readOn).toBe("2026-10-21")
+    expect(cloudWeights.readOn).toBe("2026-10-21")
     const opened = modelsForApp(imageApp(), []).find(
       (one) => one.id === "z-image-turbo"
     )
@@ -125,5 +115,48 @@ describe("the model each app opens on", () => {
       expect(listed).not.toContain(one.model)
     }
     expect(listed).toContain("z-image-turbo")
+  })
+
+  it("lists Ming-Image-0.1-Design and opens Image on it once Comfy Cloud's object_info holds its three weight files, and keeps its graph in the tree meanwhile", () => {
+    const ming = findWorkflow("image-ming-image-0-1-design")
+    expect(ming?.models).toHaveLength(3)
+    const today = heldImageModels(imageGraphs, heldFiles)
+    expect(today.map((one) => one.value)).not.toContain("ming-image-0-1-design")
+    expect(openDefaultOf(today)).toBe("z-image-turbo")
+    const later = heldImageModels(
+      imageGraphs,
+      new Set([...heldFiles, ...(ming?.models ?? [])])
+    )
+    expect(later[0]?.value).toBe("ming-image-0-1-design")
+    expect(openDefaultOf(later)).toBe("ming-image-0-1-design")
+    const partly = heldImageModels(
+      imageGraphs,
+      new Set([...heldFiles, ...(ming?.models.slice(0, 2) ?? [])])
+    )
+    expect(partly.map((one) => one.value)).not.toContain(
+      "ming-image-0-1-design"
+    )
+  })
+
+  it("opens on the open-weights graph the board ranks highest, not on the first one listed, and on the first one listed when the board ranks none", () => {
+    const today = heldImageModels(imageGraphs, heldFiles)
+    const unranked = today
+      .filter((one) => one.value !== "z-image-turbo")
+      .reverse()
+    expect(unranked.length).toBeGreaterThan(1)
+    expect(openDefaultOf(unranked)).toBe(unranked[0]?.value)
+    const reordered = [...today].reverse()
+    expect(reordered[0]?.value).not.toBe("z-image-turbo")
+    expect(openDefaultOf(reordered)).toBe("z-image-turbo")
+    const closed = {
+      ...modelFactsData,
+      models: Object.fromEntries(
+        Object.entries(modelFactsData.models).map(([id, row]) => [
+          id,
+          id === "graph/z-image-turbo" ? { ...row, weights: null } : row,
+        ])
+      ),
+    }
+    expect(openDefaultOf(reordered, closed)).toBe(reordered[0]?.value)
   })
 })

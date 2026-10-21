@@ -2,7 +2,12 @@ import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { listApps, readApps } from "@rosesfield/catalog"
-import { effectRecipes, effectsApp } from "@rosesfield/catalog/effects"
+import {
+  effectRecipes,
+  effectsApp,
+  passedRecipes,
+} from "@rosesfield/catalog/effects"
+import { isRemakeOpen } from "@rosesfield/catalog/remake"
 import {
   type AppDefinition,
   assetResponse,
@@ -84,9 +89,12 @@ const judgeVars = (): WorkerVars => readWorkerEnv({ OWNER_TOKEN: ownerToken })
 
 describe("the apps a server serves", () => {
   it("offers every effect, drafts after the passed ones, on a server that answers only on this computer", () => {
-    const served = effectsOf(servedApps(localVars(), onePassed()))
+    const served = effectsOf(servedApps(localVars(), "bun", onePassed()))
     expect(served.closedKey).toBeNull()
-    expect(optionsOf(served)).toEqual(effectRecipes.map((one) => one.effect))
+    expect(optionsOf(served)).toEqual([
+      ...passedRecipes.map((one) => one.effect),
+      ...effectRecipes.filter((one) => !one.passed).map((one) => one.effect),
+    ])
     expect(optionsOf(served)).toContain(draft)
   })
 
@@ -96,20 +104,87 @@ describe("the apps a server serves", () => {
     ["the judge deployment", judgeVars],
   ])("offers only the passed effects behind %s", (_, varsOf) => {
     const apps = onePassed()
-    expect(servedApps(varsOf(), apps)).toBe(apps)
-    expect(optionsOf(effectsOf(servedApps(varsOf(), apps)))).toEqual([
+    expect(servedApps(varsOf(), "bun", apps)).toBe(apps)
+    expect(optionsOf(effectsOf(servedApps(varsOf(), "bun", apps)))).toEqual([
       "push-into-eye",
     ])
-    expect(effectsOf(servedApps(varsOf())).closedKey).toBe("effects.closed")
+    const shipped = effectsOf(servedApps(varsOf(), "bun"))
+    expect(shipped.closedKey).toBeNull()
+    expect(optionsOf(shipped)).toEqual(passedRecipes.map((one) => one.effect))
   })
 
+  it.each([
+    ["an owner token", tokenVars],
+    ["public mode", publicVars],
+    ["the judge deployment", judgeVars],
+  ])(
+    "keeps the app closed with its note behind %s while no effect has passed",
+    (_, varsOf) => {
+      const closed = effectsOf(
+        servedApps(
+          varsOf(),
+          "bun",
+          readApps([{ folder: "effects", app: effectsApp([]) }])
+        )
+      )
+      expect(closed.closedKey).toBe("effects.closed")
+      expect(optionsOf(closed)).toEqual([])
+    }
+  )
+
   it("keeps every other app as the catalog lists it", () => {
-    const served = servedApps(localVars())
+    const served = servedApps(localVars(), "bun")
     const listed = listApps()
     expect(served.map((app) => app.id)).toEqual(listed.map((app) => app.id))
     for (const app of served.filter((one) => one.id !== "effects")) {
       expect(app).toBe(listed.find((one) => one.id === app.id))
     }
+  })
+})
+
+describe("where Remake runs", () => {
+  function remakeOf(apps: readonly AppDefinition[]): AppDefinition | undefined {
+    return apps.find((app) => app.id === "remake")
+  }
+
+  it.each([
+    ["on this computer", localVars],
+    ["behind an owner token", tokenVars],
+  ])("opens Remake on a server on bun %s, which runs ffmpeg", (_, varsOf) => {
+    expect(remakeOf(servedApps(varsOf(), "bun"))?.closedKey).toBeNull()
+  })
+
+  it.each([
+    ["on Workers", judgeVars, "workers"],
+    ["in public mode", publicVars, "bun"],
+  ] as const)("lists Remake closed %s", (_, varsOf, place) => {
+    const remake = remakeOf(servedApps(varsOf(), place))
+    expect(remake?.closedKey).toBe("remake.closed")
+    expect(remake?.inputs).toEqual(remakeOf(listApps())?.inputs)
+  })
+
+  it("serves its place on the settings, which open Remake exactly where the list does", async () => {
+    const env = readServerEnv({ HOST: "127.0.0.1", DATA_DIR: folder() })
+    open = composeLocalGateway({
+      env,
+      apps: servedApps(env, "bun"),
+      clock,
+      platformRoot: null,
+    })
+    const response = await open.app.request(gatewayRoutes.getSettings.path, {
+      headers: host,
+    })
+    const { settings } = settingsResponse.parse(await response.json())
+    expect(settings).toMatchObject({ mode: "owner", place: "bun" })
+    expect(isRemakeOpen(settings)).toBe(true)
+    expect(remakeOf(servedApps(env, settings.place))?.closedKey).toBeNull()
+    expect(isRemakeOpen({ mode: "owner", place: "workers" })).toBe(false)
+    expect(isRemakeOpen({ mode: "public", place: "bun" })).toBe(false)
+  })
+
+  it("control: a Workers server with no Remake in its list returns the list as it is", () => {
+    const apps = onePassed()
+    expect(servedApps(judgeVars(), "workers", apps)).toBe(apps)
   })
 })
 
@@ -126,7 +201,7 @@ describe("a draft effect run", () => {
     const env = readServerEnv({ HOST: "127.0.0.1", DATA_DIR: folder() })
     open = composeLocalGateway({
       env,
-      apps: servedApps(env),
+      apps: servedApps(env, "bun"),
       clock,
       platformRoot: null,
     })
@@ -212,7 +287,7 @@ describe("a draft effect run", () => {
     })
   })
 
-  it("is refused behind an owner token, and starts nothing", async () => {
+  it("is refused behind an owner token with its reason, and starts nothing", async () => {
     const env = readServerEnv({
       HOST: "0.0.0.0",
       OWNER_TOKEN: ownerToken,
@@ -220,7 +295,7 @@ describe("a draft effect run", () => {
     })
     open = composeLocalGateway({
       env,
-      apps: servedApps(env),
+      apps: servedApps(env, "bun"),
       platformRoot: null,
     })
     const gateway = open
@@ -230,9 +305,9 @@ describe("a draft effect run", () => {
         headers: { ...init.headers, authorization: `Bearer ${ownerToken}` },
       })
     const refused = await startDraft(send, crypto.randomUUID())
-    expect(refused.status).toBe(409)
+    expect(refused.status).toBe(400)
     expect(errorEnvelope.parse(await refused.json()).error.code).toBe(
-      "APP_CLOSED"
+      "RUN_INPUT_INVALID"
     )
     const history = await call(gateway, routes.listRuns.path, {
       headers: { authorization: `Bearer ${ownerToken}` },
@@ -249,7 +324,7 @@ describe("a draft effect run", () => {
     })
     open = composeLocalGateway({
       env,
-      apps: servedApps(env, onePassed()),
+      apps: servedApps(env, "bun", onePassed()),
       platformRoot: null,
     })
     const visitor = new Visitor({ app: open.app, seen: [] })

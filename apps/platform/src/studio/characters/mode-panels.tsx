@@ -1,4 +1,5 @@
 import { Accordion } from "@base-ui/react/accordion"
+import { takesPhotoAndPrompt } from "@rosesfield/catalog/characters"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { IconButton } from "@rosesfield/ui/components/button"
 import { cn } from "@rosesfield/ui/lib/cn"
@@ -12,6 +13,9 @@ import { textOf } from "@/screens/app/fields/field-props"
 import { inputCaption, inputNote } from "@/screens/app/fields/input-copy"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
+import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
+import { modelInputName } from "@/screens/app/hosted/hosted-form"
+import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
 import type { AppForm } from "@/screens/app/use-app-form"
 import {
@@ -20,6 +24,8 @@ import {
   isTrait,
   randomTraits,
 } from "@/studio/characters/mode-listing"
+import { imageFieldsOf } from "@/studio/image/image-fields"
+import { HostedPanel } from "@/studio/image/image-settings"
 
 type PanelProps = {
   app: AppListing
@@ -80,14 +86,16 @@ function groupsOf(
   return groups.filter((group) => group.inputs.length > 0)
 }
 
-function TraitField({
+function ChoiceRow({
   app,
   input,
   form,
+  note = inputNote(app, input),
 }: {
   app: AppListing
   input: ChoiceInput
   form: AppForm
+  note?: string | null
 }): ReactElement {
   return (
     <ChoiceField
@@ -98,7 +106,7 @@ function TraitField({
       }))}
       value={textOf(form.values.inputs[input.name]) || input.default}
       onChange={(value) => form.setInput(input.name, value)}
-      note={inputNote(app, input)}
+      note={note}
       register={(focus) => form.register(input.name, focus)}
     />
   )
@@ -151,12 +159,7 @@ function TraitGroups({
           </Accordion.Header>
           <Accordion.Panel className="flex flex-col gap-s4 pb-s4">
             {inputs.map((input) => (
-              <TraitField
-                key={input.name}
-                app={app}
-                input={input}
-                form={form}
-              />
+              <ChoiceRow key={input.name} app={app} input={input} form={form} />
             ))}
           </Accordion.Panel>
         </Accordion.Item>
@@ -182,16 +185,51 @@ function Field({
   )
 }
 
-export function TraitsPanel(props: PanelProps): ReactElement {
-  const { app, form } = props
+function hasCatalogPicker(hosted: HostedState | undefined): boolean {
+  return hosted !== undefined && (hosted.isTaskApp || hosted.models.length > 0)
+}
+
+function isWordsInput(input: InputDefinition, hasPicker: boolean): boolean {
+  return (
+    isPanelInput(input) &&
+    !isTrait(input) &&
+    !(hasPicker && input.name === modelInputName)
+  )
+}
+
+export function TraitsPanel(
+  props: PanelProps & { hosted?: HostedState | undefined }
+): ReactElement {
+  const { app, form, hosted } = props
   const traits = app.inputs.filter(isTrait).filter(isChoice)
-  const rest = app.inputs.filter(isPanelInput).filter((one) => !isTrait(one))
+  const hasPicker = hasCatalogPicker(hosted)
+  const rest = app.inputs.filter((one) => isWordsInput(one, hasPicker))
+  const fields = hosted?.fields ?? null
   return (
     <div className="flex flex-col gap-s4">
       <TraitGroups app={app} form={form} traits={traits} />
       {rest.map((input) => (
         <Field key={input.name} {...props} input={input} />
       ))}
+      {hosted === undefined || !hasPicker ? null : fields === null ? (
+        <CatalogPicker hosted={hosted} place="row" />
+      ) : (
+        <HostedPanel
+          app={app}
+          hosted={hosted}
+          fields={imageFieldsOf(fields)}
+          form={form}
+        />
+      )}
+      {fields === null ? <GraphOutputFields {...props} /> : null}
+    </div>
+  )
+}
+
+function GraphOutputFields(props: PanelProps): ReactElement {
+  const { app, form } = props
+  return (
+    <>
       <AspectField
         app={app}
         value={form.values.aspectRatio}
@@ -206,16 +244,41 @@ export function TraitsPanel(props: PanelProps): ReactElement {
         }}
       />
       <AdvancedFields {...props} />
-    </div>
+    </>
   )
 }
 
-export function AnglesPanel(props: PanelProps): ReactElement {
+function noPhotoNoteOf(hosted: HostedState | undefined): string | null {
+  const fields = hosted?.fields ?? null
+  return fields === null || takesPhotoAndPrompt(fields)
+    ? null
+    : tCatalog("video.well.none")
+}
+
+export function AnglesPanel(
+  props: PanelProps & { hosted?: HostedState | undefined }
+): ReactElement {
+  const { app, form, hosted } = props
+  const noPhoto = noPhotoNoteOf(hosted)
   return (
     <div className="flex flex-col gap-s4">
-      {props.app.inputs.filter(isPanelInput).map((input) => (
-        <Field key={input.name} {...props} input={input} />
-      ))}
+      {app.inputs
+        .filter(isPanelInput)
+        .map((input) =>
+          noPhoto !== null &&
+          input.name === modelInputName &&
+          isChoice(input) ? (
+            <ChoiceRow
+              key={input.name}
+              app={app}
+              input={input}
+              form={form}
+              note={noPhoto}
+            />
+          ) : (
+            <Field key={input.name} {...props} input={input} />
+          )
+        )}
       <AdvancedFields {...props} />
     </div>
   )

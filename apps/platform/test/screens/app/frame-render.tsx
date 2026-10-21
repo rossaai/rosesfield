@@ -5,6 +5,7 @@ import {
   type Run,
   run,
 } from "@rosesfield/contract"
+import { ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { ReactElement, ReactNode } from "react"
@@ -56,7 +57,9 @@ export function withClient(
   }
   return (
     <QueryClientProvider client={client}>
-      <TooltipProvider>{children}</TooltipProvider>
+      <ToastProvider>
+        <TooltipProvider>{children}</TooltipProvider>
+      </ToastProvider>
     </QueryClientProvider>
   )
 }

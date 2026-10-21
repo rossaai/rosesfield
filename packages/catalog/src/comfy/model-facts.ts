@@ -81,21 +81,28 @@ export function boardRankOf(
   }
 }
 
+export function lineKeyOf(
+  id: string,
+  data: ModelFactsFile = modelFactsData
+): string | null {
+  const row = Object.hasOwn(data.models, id) ? data.models[id] : undefined
+  const line = row?.line
+  return line !== undefined && "key" in line ? line.key : null
+}
+
 export function factsOf(
   id: string,
   task: string,
-  lineKey: string | null,
   data: ModelFactsFile = modelFactsData
 ): ModelFacts {
   const row = Object.hasOwn(data.models, id) ? data.models[id] : undefined
   const weights = row?.weights ?? null
-  const line = row?.line
   return {
     lab: row?.lab ?? null,
     release: row?.release ?? null,
     rank: boardRankOf(id, task, data),
     priceThird: row?.thirds[task] ?? null,
     weights: weights?.startsWith(weightsHost) === true ? weights : null,
-    lineKey: line !== undefined && "key" in line ? line.key : lineKey,
+    lineKey: lineKeyOf(id, data),
   }
 }

@@ -33,6 +33,13 @@ function bodyOf(mode: Mode, quality: Quality): unknown {
   }
 }
 
+const fillModels = [
+  "qwen_image_fp8_e4m3fn.safetensors",
+  "qwen_image_inpaint_diffsynth_controlnet.safetensors",
+  "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+  "qwen_image_vae.safetensors",
+]
+
 const editModels = [
   "qwen_image_edit_2511_bf16.safetensors",
   "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
@@ -40,20 +47,30 @@ const editModels = [
   "qwen_image_vae.safetensors",
 ]
 
-const modelsOf: Readonly<Record<Mode, readonly string[]>> = {
-  split: [
-    "qwen_image_layered_bf16.safetensors",
-    "qwen_image_layered_vae.safetensors",
-    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
-  ],
-  edit: editModels,
-  relight: editModels,
-  fill: [
-    "qwen_image_fp8_e4m3fn.safetensors",
-    "qwen_image_inpaint_diffsynth_controlnet.safetensors",
-    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
-    "qwen_image_vae.safetensors",
-  ],
+const relightModels = [
+  "qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+  "Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+  "Qwen-Image-Edit-2509-Relight.safetensors",
+  "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+  "qwen_image_vae.safetensors",
+]
+
+const splitModels = [
+  "qwen_image_layered_bf16.safetensors",
+  "qwen_image_layered_vae.safetensors",
+  "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+]
+
+type ModelsByQuality = Readonly<Record<Quality, readonly string[]>>
+
+const modelsOf: Readonly<Record<Mode, ModelsByQuality>> = {
+  split: { draft: splitModels, final: splitModels },
+  edit: { draft: editModels, final: editModels },
+  relight: {
+    draft: relightModels,
+    final: relightModels.filter((name) => !name.includes("Lightning")),
+  },
+  fill: { draft: fillModels, final: fillModels },
 }
 
 const expectedValues: Readonly<
@@ -68,8 +85,8 @@ const expectedValues: Readonly<
     final: { "6": { strength_model: 0 }, "18": { steps: 40, cfg: 4 } },
   },
   relight: {
-    draft: { "6": { strength_model: 1 }, "18": { steps: 4, cfg: 1 } },
-    final: { "6": { strength_model: 0 }, "18": { steps: 40, cfg: 4 } },
+    draft: { "6": { strength_model: 1 }, "14": { steps: 4, cfg: 1 } },
+    final: { "14": { steps: 40, cfg: 4 } },
   },
   fill: {
     draft: { "45": { steps: 20, cfg: 2.5 } },
@@ -107,7 +124,7 @@ describe("every engine request Layers sends to Comfy", () => {
       const { submission, workflow } = await submit(
         requestFor(bodyOf(mode, quality))
       )
-      expect(submission.models).toEqual(modelsOf[mode])
+      expect(submission.models).toEqual(modelsOf[mode][quality])
       expect(mismatchesOf(workflow, mode, quality)).toEqual([])
     }
   )

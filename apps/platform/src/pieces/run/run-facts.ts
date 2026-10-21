@@ -126,10 +126,16 @@ function headlineInputsOf(app: AppListing): InputDefinition[] {
 }
 
 function promptText(app: AppListing, run: Run): string | null {
-  const prompt = app.inputs.find((input) => input.type === "prompt")
-  return prompt === undefined
-    ? null
-    : inputValueText(app, prompt, run.inputs[prompt.name])
+  for (const input of app.inputs) {
+    const text =
+      input.type === "prompt"
+        ? inputValueText(app, input, run.inputs[input.name])
+        : null
+    if (text !== null) {
+      return text
+    }
+  }
+  return null
 }
 
 function sourceOf(

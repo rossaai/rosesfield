@@ -50,5 +50,6 @@ export const effectsCopy = {
   "effects.photo.stillInTheStreet": "A person on a busy street",
   "effects.choice.resolution.p480": "480p",
   "effects.choice.resolution.p720": "720p",
+  "effects.choice.resolution.p1080": "1080p",
   "effects.draft": "Draft",
 } satisfies Record<string, string>

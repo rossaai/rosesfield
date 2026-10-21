@@ -39,7 +39,6 @@ export type ServerEnv = WorkerVars & {
 
 const loopbackHosts: readonly string[] = ["127.0.0.1", "::1", "localhost"]
 const minSecretLength = 32
-const keySettings = ["COMFY_API_KEY", "RUNPOD_API_KEY"]
 
 function blankAsMissing(value: unknown): unknown {
   return typeof value === "string" && value.trim() === "" ? undefined : value
@@ -82,18 +81,10 @@ const sharedFields = {
       .url({ protocol: /^https?$/, error: "needs an http or https URL" })
       .optional()
   ),
-  RUNPOD_API_KEY: optionalText,
-  RUNPOD_ENDPOINT_ID: z.preprocess(
-    blankAsMissing,
-    z
-      .string()
-      .regex(/^[A-Za-z0-9-]{1,64}$/, "needs the endpoint id RunPod shows")
-      .optional()
-  ),
   OWNER_TOKEN: secret,
   SESSION_SECRET: secret,
-  RETENTION_DAYS: whole(1, 365, 7),
-  SESSION_REQUESTS_PER_MINUTE: whole(1, 10_000, 120),
+  RETENTION_DAYS: whole(1, 365, 30),
+  SESSION_REQUESTS_PER_MINUTE: whole(1, 10_000, 600),
   SPEND_UNKNOWN_RUN_CREDITS: whole(1, 100_000, 100),
   SPEND_CAP_CREDITS: z.preprocess(
     blankAsMissing,
@@ -135,24 +126,7 @@ function problem(text: string): EnvInvalidError {
 }
 
 function engineOf(env: SharedEnv): EngineSettings {
-  const { COMFY_BASE_URL: baseUrl, RUNPOD_ENDPOINT_ID: endpointId } = env
-  if (baseUrl !== undefined && endpointId !== undefined) {
-    throw problem(
-      "COMFY_BASE_URL and RUNPOD_ENDPOINT_ID are both set. Set the one engine target the server runs on."
-    )
-  }
-  if (env.RUNPOD_API_KEY !== undefined && endpointId === undefined) {
-    throw problem(
-      "RUNPOD_ENDPOINT_ID is missing. RUNPOD_API_KEY is set, so the server needs the endpoint it runs on."
-    )
-  }
-  if (endpointId !== undefined) {
-    return {
-      target: "runpod-serverless",
-      endpointId,
-      apiKey: env.RUNPOD_API_KEY ?? null,
-    }
-  }
+  const baseUrl = env.COMFY_BASE_URL
   if (baseUrl !== undefined) {
     return {
       target: comfyTargetOf(baseUrl),
@@ -170,16 +144,10 @@ function engineOf(env: SharedEnv): EngineSettings {
   return { target: "demo" }
 }
 
-function publicAccess(
-  env: SharedEnv,
-  source: Readonly<Record<string, unknown>>
-): PublicAccess {
-  const held = keySettings.find(
-    (name) => blankAsMissing(source[name]) !== undefined
-  )
-  if (held !== undefined) {
+function publicAccess(env: SharedEnv): PublicAccess {
+  if (env.COMFY_API_KEY !== undefined) {
     throw problem(
-      `${held} is set. Public mode holds no key of its own, because each visitor brings their own. Leave ${held} empty.`
+      "COMFY_API_KEY is set. Public mode holds no key of its own, because each visitor brings their own. Leave COMFY_API_KEY empty."
     )
   }
   if (env.OWNER_TOKEN !== undefined) {
@@ -213,7 +181,7 @@ function varsOf(
 ): WorkerVars {
   const access: Access =
     env.MODE === "public"
-      ? publicAccess(env, source)
+      ? publicAccess(env)
       : { mode: "owner", lock: lockFor(env.OWNER_TOKEN) }
   const engine = engineOf(env)
   return {

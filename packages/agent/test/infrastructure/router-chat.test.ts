@@ -3,6 +3,7 @@ import { AgentModelUnknownError } from "#domain/error/agent-model-unknown.error"
 import { openPiModels, routerAgentModel } from "#infrastructure/pi-models"
 import {
   idempotencyKeyOf,
+  routerBodyOf,
   routerChatUrl,
 } from "#infrastructure/router-chat-fetch"
 import {
@@ -71,7 +72,7 @@ async function ask(opened: Opened, text: string, approval: "ask" | "auto") {
 }
 
 describe("the agent on a Comfy Router chat model", () => {
-  it("answers in words with only a Comfy key, on the cheapest model", async () => {
+  it("answers in words with only a Comfy key, on the default model", async () => {
     const opened = openRouterAgent([
       textAnswer(defaultChatModel, "Ask me for an image or a video.", 0.0004),
     ])
@@ -211,6 +212,33 @@ describe("the agent on a Comfy Router chat model", () => {
     )
   })
 
+  it("sends an assistant turn that only calls a tool with empty words, which the Router takes where it refuses null", () => {
+    const toolTurn = {
+      role: "assistant",
+      content: null,
+      tool_calls: [
+        {
+          id: "call_1",
+          type: "function",
+          function: { name: "read_run", arguments: '{"runId":"r"}' },
+        },
+      ],
+    }
+    const sent = JSON.stringify({
+      model: defaultChatModel,
+      stream: true,
+      stream_options: { include_usage: true },
+      messages: [{ role: "user", content: "Make a clip" }, toolTurn],
+    })
+    const body = JSON.parse(routerBodyOf(sent))
+    expect(body.stream).toBeUndefined()
+    expect(body.stream_options).toBeUndefined()
+    expect(body.messages).toEqual([
+      { role: "user", content: "Make a clip" },
+      { ...toolTurn, content: "" },
+    ])
+  })
+
   it("refuses a model the Router chat list does not hold", async () => {
     await expect(
       openPiModels({
@@ -219,5 +247,14 @@ describe("the agent on a Comfy Router chat model", () => {
         apiKey: comfyKey,
       })
     ).rejects.toBeInstanceOf(AgentModelUnknownError)
+  })
+
+  it("names the hand-written completions when a request finds none left", async () => {
+    const replay = replayRouter([])
+    const url = routerChatUrl()
+
+    await expect(replay.fetch(url, {})).rejects.toThrow(
+      `No hand-written Router completion is left for ${url}`
+    )
   })
 })

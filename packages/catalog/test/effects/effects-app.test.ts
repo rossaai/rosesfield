@@ -6,6 +6,7 @@ import {
 } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import { app, effectsApp, photoAccept } from "#effects/app"
+import { passedRecipes } from "#effects/effect-recipes"
 import { passedRecipe, passedRun } from "./passed-recipe"
 
 function inputNamed(
@@ -17,11 +18,20 @@ function inputNamed(
 
 describe("the effects app offers only passed effects", () => {
   it("is closed with its note and offers no effect while none has passed", () => {
-    const shipped = appListing.parse(appDefinition.parse(app))
-    expect(shipped.closedKey).toBe("effects.closed")
-    expect(inputNamed(shipped.inputs, "effect")).toBeUndefined()
-    expect(appDefinition.parse(app).engine.config).toMatchObject({
+    const closed = appListing.parse(appDefinition.parse(effectsApp([])))
+    expect(closed.closedKey).toBe("effects.closed")
+    expect(inputNamed(closed.inputs, "effect")).toBeUndefined()
+    expect(appDefinition.parse(effectsApp([])).engine.config).toMatchObject({
       options: {},
+    })
+  })
+
+  it("ships open with every look that passed, in recipe order, with the first as its default", () => {
+    const shipped = appListing.parse(appDefinition.parse(app))
+    expect(shipped.closedKey).toBeNull()
+    expect(inputNamed(shipped.inputs, "effect")).toMatchObject({
+      options: passedRecipes.map((one) => ({ value: one.effect })),
+      default: passedRecipes[0]?.effect,
     })
   })
 

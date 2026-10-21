@@ -35,6 +35,8 @@ export {
   type Character,
   type CreateCharacterBody,
   character,
+  characterPhotoLimit,
+  characterReferenceMax,
   createCharacterBody,
   type UpdateCharacterBody,
   updateCharacterBody,
@@ -56,6 +58,7 @@ export {
   imageFormats,
   inputDefinition,
   inputValue,
+  isAppOnly,
   type RunInputs,
   runInputs,
 } from "#input.contract"
@@ -99,6 +102,7 @@ export {
   runPageResponse,
   runResponse,
 } from "#route-manifest.contract"
+export { givenRuleIssuesOf } from "#ruled-inputs.contract"
 export {
   type Cost,
   cost,
@@ -125,6 +129,7 @@ export {
   shareView,
 } from "#share.contract"
 export {
+  appOnlyInputsFor,
   fixedCountOf,
   type StartRunBody,
   startRunBody,

@@ -30,6 +30,8 @@ export const secondsStep = 1 / lengthStepsPerSecond
 
 const firstPassDivisor = 2
 
+const stepTolerance = 1e-6
+
 const latentsPerSecond = framesPerSecond / framesPerLatent
 
 function stepsOf(seconds: number): number {
@@ -42,6 +44,13 @@ export const lengthValues: readonly number[] = Array.from(
   },
   (_, index) => (stepsOf(shortestSeconds) + index) / lengthStepsPerSecond
 )
+
+export function lengthOfSeconds(seconds: number): number {
+  const steps = Math.ceil(seconds * lengthStepsPerSecond - stepTolerance)
+  const shortest = stepsOf(shortestSeconds)
+  const longest = stepsOf(longestSeconds)
+  return Math.min(Math.max(steps, shortest), longest) / lengthStepsPerSecond
+}
 
 export function latentsFor(seconds: number): number {
   return Math.ceil((stepsOf(seconds) * latentsPerSecond) / lengthStepsPerSecond)

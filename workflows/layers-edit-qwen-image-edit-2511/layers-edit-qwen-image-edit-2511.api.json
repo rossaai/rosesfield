@@ -95,7 +95,7 @@
       "clip": ["9", 0],
       "vae": ["10", 0],
       "image1": ["7", 0],
-      "prompt": ["23", 0]
+      "prompt": ""
     }
   },
   "14": {
@@ -172,14 +172,6 @@
     "inputs": {
       "images": ["21", 0],
       "filename_prefix": "layers-edit"
-    }
-  },
-  "23": {
-    "class_type": "StringConcatenate",
-    "inputs": {
-      "string_a": "",
-      "string_b": "",
-      "delimiter": " "
     }
   }
 }

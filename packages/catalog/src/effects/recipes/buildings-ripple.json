@@ -4,9 +4,6 @@
   "design": {
     "unit": "buildings-ripple",
     "family": "effects",
-    "fit": {
-      "prompt": "Fit the photo to the new frame. Keep the person's face, hair, skin, age, clothes and pose exactly as they are. Add new matching scene content at every added edge, with no borders, bars or blur."
-    },
     "setPiece": "The building, tower or bridge behind the person bends, folds and curls while the person stays whole in front.",
     "cuts": [],
     "lastFrame": {
@@ -21,11 +18,13 @@
     }
   },
   "prompt": "One shot with a slow camera. The person stays whole and in place in front. Behind them the building, tower or bridge starts to bend, then folds and curls like a wave, more and more until the last frame. The light and colour stay as they are.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
     "prompt": "The same person in front, unchanged, and the building behind them curled over in a large wave, in the same light and colour.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": 0.9,
   "adapter": null,
   "seconds": 7,

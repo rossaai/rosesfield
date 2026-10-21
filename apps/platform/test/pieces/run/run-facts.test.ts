@@ -8,7 +8,9 @@ import {
   inputValueText,
   runAspect,
   runCaption,
+  runHeadline,
   runModel,
+  runOutputName,
 } from "@/pieces/run/run-facts"
 
 const assetId = "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c01"
@@ -33,6 +35,32 @@ function runOf(change: Partial<Record<keyof Run, unknown>>): Run {
     ...change,
   })
 }
+
+describe("the headline and the output name of an ad", () => {
+  const ad = runOf({
+    appId: "ads",
+    inputs: {
+      kind: "ad",
+      headline: "Fresh cold brew",
+      line: "Made daily",
+      product: [assetId],
+      style: "bold",
+    },
+  })
+
+  it("are the ad's headline, the first words it holds", () => {
+    expect(runHeadline(ad)).toBe("Fresh cold brew")
+    expect(runOutputName(ad)).toBe("Fresh cold brew")
+  })
+
+  it("control: a product shot reads its scene, the first prompt it fills", () => {
+    const shot = runOf({
+      appId: "ads",
+      inputs: { kind: "product-shot", scene: "on a desk", product: [assetId] },
+    })
+    expect(runHeadline(shot)).toBe("on a desk")
+  })
+})
 
 describe("headlineSource", () => {
   it("names a choice by its label, never by its value", () => {

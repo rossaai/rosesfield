@@ -14,6 +14,7 @@ import {
 import type { ModelForm } from "#domain/model-form"
 import type { PriceBook } from "#domain/price-book.port"
 import { pricedRunOf } from "#domain/priced-run"
+import { ruledInputsOf } from "#domain/ruled-inputs"
 import { resolveBinding } from "#domain/select-binding"
 
 export type PriceRunInput = {
@@ -49,12 +50,13 @@ export class PriceRunHandler {
     if (app === null) {
       throw new AppNotFoundError({ appId: input.appId })
     }
-    const binding = resolveBinding(app.engine, input.inputs)
+    const inputs: RunInputs = ruledInputsOf(app, input.inputs)
+    const binding = resolveBinding(app.engine, inputs)
     const count = input.count ?? 1
     const runner = this.engines.find((engine) => engine.canRun(binding))
     if (runner?.origin === "demo") {
       return {
-        price: await runner.priceOf(binding, { inputs: input.inputs, count }),
+        price: await runner.priceOf(binding, { inputs, count }),
       }
     }
     for (const engine of this.engines) {
@@ -63,12 +65,13 @@ export class PriceRunHandler {
         const isPerJob = count > 1 && isJobPerOutput(app, engine, form, binding)
         const measured = await this.measured(engine, app, form, {
           ...input,
+          inputs,
           count: isPerJob ? 1 : count,
         })
         return {
           price:
             measured === null
-              ? await engine.priceOf(binding, { inputs: input.inputs, count })
+              ? await engine.priceOf(binding, { inputs, count })
               : timesOf(measured, isPerJob ? count : 1),
         }
       }
