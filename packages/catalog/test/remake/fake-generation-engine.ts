@@ -1,4 +1,4 @@
-import type { EngineBinding, KeyCheck } from "@rosesfield/contract"
+import type { Cost, EngineBinding, KeyCheck } from "@rosesfield/contract"
 import {
   comfyWorkflowAdapter,
   type EngineOutput,
@@ -7,9 +7,16 @@ import {
   type EngineSubmission,
   GenerationEngine,
   type OutputsPerJob,
+  type RunPrice,
+  unknownPrice,
 } from "@rosesfield/generation"
 
 const madeBytes = Uint8Array.of(0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70)
+
+type FakeShotEngineOptions = {
+  isAlone?: boolean
+  credits?: number | null
+}
 
 export class FakeShotEngine extends GenerationEngine {
   override readonly key = comfyWorkflowAdapter
@@ -18,10 +25,22 @@ export class FakeShotEngine extends GenerationEngine {
   readonly sent: EngineRequest[] = []
   readonly cancelled: string[] = []
   private readonly isAlone: boolean
+  private readonly credits: number | null
 
-  constructor(isAlone: boolean) {
+  constructor(options: FakeShotEngineOptions = {}) {
     super()
-    this.isAlone = isAlone
+    this.isAlone = options.isAlone ?? false
+    this.credits = options.credits ?? null
+  }
+
+  override async priceOf(): Promise<RunPrice> {
+    return this.credits === null
+      ? unknownPrice
+      : { source: "rates", credits: this.credits }
+  }
+
+  override creditsOf(cost: Cost): number | null {
+    return this.credits === null ? null : cost.amount * 100
   }
 
   override canRun(binding: EngineBinding): boolean {

@@ -4,7 +4,9 @@ import {
   startRunBodyFor,
 } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
+import { listApps } from "#list-apps"
 import { app } from "#remake/app"
+import { closeRemake, remakeClosedKey } from "#remake/close-remake"
 
 const definition = appDefinition.parse(app)
 const editId = "0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d"
@@ -142,4 +144,22 @@ describe("the contract refuses the same Remake runs for every client", () => {
       expect(parsed.error?.issues ?? []).toEqual([])
     }
   )
+})
+
+describe("Remake in the catalog", () => {
+  it("is listed, open, by the catalog the server and the client read", () => {
+    const listed = listApps().find((one) => one.id === "remake")
+    expect(listed?.nameKey).toBe("remake.name")
+    expect(listed?.closedKey).toBeNull()
+  })
+
+  it("closes with its own key where it cannot run, and leaves every other app as it is", () => {
+    const listed = listApps()
+    const closed = closeRemake(listed)
+    expect(closed.find((one) => one.id === "remake")?.closedKey).toBe(
+      remakeClosedKey
+    )
+    const others = closed.filter((one) => one.id !== "remake")
+    expect(others).toEqual(listed.filter((one) => one.id !== "remake"))
+  })
 })

@@ -1,15 +1,18 @@
 import { resolveBinding } from "@rosesfield/generation"
-import { assetIdFormat } from "@rosesfield/kernel"
+import { assetIdFormat, ProjectError } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { findWorkflow } from "#list-workflows"
 import { type RemakeQuality, shotRequestOf } from "#remake/comfy/remake-engine"
 import {
+  type PlanFrame,
   planModel,
   planReplyOf,
   planTurnBodyOf,
 } from "#remake/comfy/remake-plan-turn"
+import { RouterPlanTurn } from "#remake/comfy/router-plan-turn"
 import { type FoundShot, planShots } from "#remake/shot-plan"
 import { cameraMoves } from "#video/camera-moves"
+import { ReplayFetch } from "../motion/motion-replay"
 
 const runId = "3f2e1d0c-9b8a-4776-a655-443322110000"
 const photoId = assetIdFormat.parse("1b2c3d4e-5f60-4b7c-9d8e-9f0a1b2c3d4e")
@@ -141,5 +144,80 @@ describe("the plan turn of a Remake run", () => {
     expect(
       requestsAt("final").map((request) => request?.inputs.resolution)
     ).toEqual(["720p", "720p"])
+  })
+})
+
+const planUrl = `https://api.comfy.org/v2/models/${planModel}`
+
+const frames: PlanFrame[] = shots.map((shot) => ({
+  shot,
+  mime: "image/jpeg",
+  base64: "frame",
+}))
+
+async function refusalOf(status: number, json: unknown): Promise<unknown> {
+  const replay = new ReplayFetch([
+    { method: "POST", url: planUrl, status, json },
+  ])
+  const turn = new RouterPlanTurn({
+    apiKey: "comfyui-owner",
+    fetch: replay.fetch,
+  })
+  return turn
+    .ask({ frames, instructions: "" }, "remake-shots|run-1-plan")
+    .catch((error: unknown) => error)
+}
+
+describe("the plan turn's refusals", () => {
+  it.each([
+    [
+      403,
+      { error_type: "not_enabled", detail: "Enable the model." },
+      "ENGINE_NOT_ENABLED",
+    ],
+    [
+      403,
+      { error_type: "not_enabled", detail: "Not in this workspace." },
+      "ENGINE_KEY_OUTSIDE_WORKSPACE",
+    ],
+    [
+      400,
+      { error_type: "invalid_input", detail: "The image is too large." },
+      "RUN_INPUT_REFUSED",
+    ],
+    [
+      400,
+      { error_type: "content_policy_violation", detail: "" },
+      "RUN_INPUT_REFUSED",
+    ],
+    [
+      402,
+      { error_type: "insufficient_credits", detail: "" },
+      "ENGINE_NO_CREDITS",
+    ],
+  ])("reads a %i answer by its error type, as every Router call does", async (status, json, code) => {
+    const refusal = await refusalOf(status, json)
+    expect(refusal).toBeInstanceOf(ProjectError)
+    expect((refusal as ProjectError).code).toBe(code)
+  })
+
+  it("control: a 400 answer with no error type stays a failed run", async () => {
+    const refusal = await refusalOf(400, { detail: "" })
+    expect((refusal as ProjectError).code).toBe("RUN_FAILED")
+  })
+
+  it("sends its key and the idempotency key, and reads the answer", async () => {
+    const replay = new ReplayFetch([
+      { method: "POST", url: planUrl, status: 200, json: answerOf("{}") },
+    ])
+    const turn = new RouterPlanTurn({
+      apiKey: "comfyui-owner",
+      fetch: replay.fetch,
+    })
+    const answer = await turn.ask({ frames, instructions: "" }, "key-1")
+    expect(answer.answer).toEqual(answerOf("{}"))
+    expect(answer.cost).toBeNull()
+    expect(replay.sent[0]?.headers.get("Idempotency-Key")).toBe("key-1")
+    expect(replay.sent[0]?.headers.get("X-API-Key")).toBe("comfyui-owner")
   })
 })

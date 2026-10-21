@@ -1,4 +1,4 @@
-import type { Run } from "@rosesfield/contract"
+import type { AppListing, Run } from "@rosesfield/contract"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -18,6 +18,7 @@ import { bodyOf, defaultsOf } from "@/screens/app/app-form"
 import { priceQuery } from "@/screens/app/hosted/model-catalog-query"
 import { type AppSeeds, noSeeds } from "@/screens/app/use-app-screen"
 import { AppScreen } from "@/studio/remake/screen"
+import { servedAppsQuery } from "@/studio/remake/use-closed-key"
 import { remake } from "./remake-fixtures"
 
 const settings: GatewaySettings = {
@@ -100,10 +101,12 @@ export function openRemake({
   runs = [],
   seeds = noSeeds,
   credits = null,
+  listed = null,
 }: {
   runs?: readonly Run[]
   seeds?: AppSeeds
   credits?: number | null
+  listed?: AppListing | null
 } = {}): QueryClient {
   const client = new QueryClient({
     defaultOptions: {
@@ -111,6 +114,9 @@ export function openRemake({
     },
   })
   client.setQueryData(settingsQuery.queryKey, settings)
+  if (listed !== null) {
+    client.setQueryData(servedAppsQuery.queryKey, { apps: [listed] })
+  }
   client.setQueryData(runsQuery(remake.id).queryKey, {
     pages: [{ runs: [...runs], next: null }],
     pageParams: [null],

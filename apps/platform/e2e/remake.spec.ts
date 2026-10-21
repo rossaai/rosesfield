@@ -1,4 +1,34 @@
+import { readFileSync } from "node:fs"
 import { expect, test } from "@playwright/test"
+
+const gatewayOrigin = "http://127.0.0.1:8797"
+const png = readFileSync(
+  new URL("../src/gallery/fixtures/demo-image-1-1.png", import.meta.url)
+)
+const mp4 = readFileSync(
+  new URL("../src/gallery/fixtures/demo-video-16-9.mp4", import.meta.url)
+)
+
+async function uploaded(bytes: Buffer, mime: string): Promise<string> {
+  const response = await fetch(`${gatewayOrigin}/api/assets`, {
+    method: "POST",
+    headers: { "Content-Type": mime },
+    body: bytes,
+  })
+  const body: { asset: { id: string } } = await response.json()
+  return body.asset.id
+}
+
+async function savedCharacter(name: string): Promise<string> {
+  const photo = await uploaded(png, "image/png")
+  const response = await fetch(`${gatewayOrigin}/api/characters`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, references: [photo], notes: "" }),
+  })
+  const body: { character: { id: string } } = await response.json()
+  return body.character.id
+}
 
 const inputs = [
   "Reference edit",
@@ -52,5 +82,46 @@ test.describe("Remake on a phone", () => {
     await expect(sheet).toContainText("Reference edit")
     await expect(sheet).toContainText("Character")
     await expect(sheet.locator('[data-slot="generate-button"]')).toBeVisible()
+  })
+})
+
+test.describe("Remake from Use in", () => {
+  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
+
+  test("the server lists Remake open on bun", async () => {
+    const response = await fetch(`${gatewayOrigin}/api/apps`)
+    const body: { apps: Array<{ id: string; closedKey: string | null }> } =
+      await response.json()
+    const remake = body.apps.find((app) => app.id === "remake")
+    expect(remake?.closedKey).toBeNull()
+  })
+
+  test("a character's Use in opens Remake with that character picked", async ({
+    page,
+  }) => {
+    const characterId = await savedCharacter("Remake June")
+    await page.goto(`/characters/${characterId}`)
+    await page.getByRole("button", { name: "Use in" }).click()
+    await page.getByRole("menuitem", { name: "Remake", exact: true }).click()
+    await expect(page).toHaveURL(
+      new RegExp(`/apps/remake\\?use=${characterId}`)
+    )
+    await expect(page.locator('[data-slot="composer"]')).toContainText(
+      "Remake June"
+    )
+  })
+
+  test("a library video's Use in fills the Reference edit well", async ({
+    page,
+  }) => {
+    const videoId = await uploaded(mp4, "video/mp4")
+    await page.goto(`/library?view=${videoId}`)
+    await page.getByRole("button", { name: "Use in" }).click()
+    await page.getByRole("menuitem", { name: "Remake", exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`/apps/remake\\?use=${videoId}`))
+    const column = page.locator('[data-slot="composer"]')
+    await expect(column).not.toContainText(
+      "MP4, MOV or WebM, 2 to 12 seconds, 100 MB, 2 to 6 shots"
+    )
   })
 })

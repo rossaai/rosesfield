@@ -12,12 +12,11 @@ import {
   runPageResponse,
   runResponse,
 } from "@rosesfield/contract"
-import { resolveBinding } from "@rosesfield/generation"
+import { closeRemake } from "@rosesfield/catalog/remake"
 import { FixedClock, runIdFormat } from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
 import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
 import type { EngineSettings } from "#engine/engine-target"
-import { motionEngine } from "../../../../packages/catalog/src/motion/comfy/motion-binding"
 import { app } from "../../../../packages/catalog/src/remake/app"
 import { comfyCloud, demoEngine, localEnv } from "../server-env"
 
@@ -45,13 +44,6 @@ function loosened(definition: AppDefinition): AppDefinition {
           return input
       }
     }),
-  })
-}
-
-function onOneWorkflow(definition: AppDefinition): AppDefinition {
-  return appDefinition.parse({
-    ...definition,
-    engine: resolveBinding(motionEngine, { sound: "off" }),
   })
 }
 
@@ -261,28 +253,33 @@ describe("a Remake run through the gateway", () => {
     expect(await runCount()).toBe(bodies.length)
   })
 
-  it("refuses a run on a Comfy key before any request, because no engine on the server runs a whole edit yet", async () => {
+  it("starts a run on the Remake runner with a Comfy key, because a server on bun runs ffmpeg", async () => {
     compose(comfyCloud("comfyui-test"))
+    const reference = await upload(edit, "video/mp4")
+    const character = await saveCharacter()
+    const response = await call(
+      startPath,
+      post(
+        { inputs: { reference: [reference], character: [character] } },
+        "remake-3"
+      )
+    )
+    expect(response.status).toBe(202)
+    const { run } = runResponse.parse(await response.json())
+    expect(run.engine.adapter).toBe("remake-shots")
+    expect(await runCount()).toBe(1)
+  })
+
+  it("control: the same gateway serving Remake closed, as Workers and public mode do, refuses the run and starts nothing", async () => {
+    compose(comfyCloud("comfyui-test"), closeRemake([remake])[0] ?? remake)
     const reference = await upload(edit, "video/mp4")
     const character = await saveCharacter()
     const { status, code } = await startStatus(
       { inputs: { reference: [reference], character: [character] } },
-      "remake-3"
-    )
-    expect(status).toBe(412)
-    expect(code).toBe("ENGINE_BINDING_INVALID")
-    expect(await runCount()).toBe(0)
-  })
-
-  it("control: the same Comfy gateway starts the run when Remake is bound to one Comfy workflow", async () => {
-    compose(comfyCloud("comfyui-test"), onOneWorkflow(remake))
-    const reference = await upload(edit, "video/mp4")
-    const character = await saveCharacter()
-    const { status } = await startStatus(
-      { inputs: { reference: [reference], character: [character] } },
       "remake-4"
     )
-    expect(status).toBe(202)
-    expect(await runCount()).toBe(1)
+    expect(status).toBe(409)
+    expect(code).toBe("APP_CLOSED")
+    expect(await runCount()).toBe(0)
   })
 })

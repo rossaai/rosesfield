@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import { cutFinder, type FrameScore, shotsOf } from "#remake/cut-finder"
 import {
-  middleFrameArgsOf,
+  middleFramesArgsOf,
+  planFrameNameOf,
   sceneScoreArgsOf,
   sceneScoresOf,
 } from "#remake/ffmpeg/ffmpeg-cuts"
@@ -75,12 +76,17 @@ describe("Remake finds the hard cuts of a reference", () => {
     expect(args.slice(-3)).toEqual(["-f", "null", "-"])
   })
 
-  it("takes the middle frame of each shot for the plan", () => {
+  it("takes the middle frame of every shot for the plan in one command, each at a long side of 768 or less", () => {
     const shot = { number: 2, startSeconds: 2, endSeconds: 3.5 }
     expect(middleFrameOf(shot)).toBe(66)
-    expect(
-      middleFrameArgsOf({ reference: "r.mp4", frame: 66, output: "m.jpg" })
-    ).toContain("fps=24,select='eq(n,66)'")
+    const args = middleFramesArgsOf({ reference: "r.mp4", frames: [24, 66] })
+    expect(args.filter((arg) => arg === "-i")).toHaveLength(1)
+    expect(args[args.indexOf("-vf") + 1]).toBe(
+      "fps=24,select='eq(n,24)+eq(n,66)',scale=w='min(768,iw)':h='min(768,ih)':force_original_aspect_ratio=decrease"
+    )
+    expect(args[args.indexOf("-frames:v") + 1]).toBe("2")
+    expect(args.at(-1)).toBe("frame-%d.jpg")
+    expect([0, 1].map(planFrameNameOf)).toEqual(["frame-1.jpg", "frame-2.jpg"])
   })
 })
 
