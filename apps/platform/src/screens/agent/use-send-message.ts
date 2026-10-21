@@ -3,9 +3,9 @@ import { useCallback, useRef } from "react"
 import { type AnswerEvent, sendMessage } from "@/api/agent-wire"
 import { isAbort } from "@/api/call-route"
 import type { Transcript } from "@/api/conversation-wire"
+import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { codeOf } from "@/copy/error-words"
 import type { Draft } from "@/router-context"
-import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import {
   isModelMissing,
   noteAgentModel,

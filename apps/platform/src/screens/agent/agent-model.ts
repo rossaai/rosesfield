@@ -14,13 +14,16 @@ import {
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import type { AgentModelStatus } from "@/api/gateway-settings"
 import { settingsQuery } from "@/api/queries"
-import { isModelNoticeCode } from "@/screens/app/hosted/model-notice"
 
 export type AgentModelState = "unknown" | "missing" | "off" | "ready"
 
 const missingCodes: readonly string[] = [
   "AGENT_MODEL_MISSING",
   "AGENT_MODEL_UNKNOWN",
+]
+const offCodes: readonly string[] = [
+  "ENGINE_KEY_OUTSIDE_WORKSPACE",
+  "ENGINE_NOT_ENABLED",
 ]
 const listeners = new Set<() => void>()
 let state: AgentModelState = "unknown"
@@ -57,8 +60,12 @@ export function noteAgentModel(next: AgentModelState): void {
   emit()
 }
 
+export function isAgentOffCode(error: GatewayRefusedError): boolean {
+  return offCodes.includes(error.code)
+}
+
 export function noteAgentRefusal(error: GatewayRefusedError): void {
-  if (!isModelNoticeCode(error)) {
+  if (!isAgentOffCode(error)) {
     return
   }
   refusal = error

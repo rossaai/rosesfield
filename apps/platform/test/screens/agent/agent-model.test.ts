@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { agentStateOf, modelStateOf } from "@/screens/agent/agent-model"
+import { GatewayRefusedError } from "@/api/gateway-refused.error"
+import {
+  agentStateOf,
+  isAgentOffCode,
+  modelStateOf,
+} from "@/screens/agent/agent-model"
 
 describe("modelStateOf", () => {
   it("waits only while the settings are on their way", () => {
@@ -48,5 +53,24 @@ describe("agentStateOf", () => {
 
   it("leaves a missing model missing whatever the list says", () => {
     expect(agentStateOf("missing", listed)).toBe("missing")
+  })
+})
+
+describe("isAgentOffCode", () => {
+  function refused(code: string): GatewayRefusedError {
+    return new GatewayRefusedError({
+      code,
+      status: 412,
+      retryAfterSeconds: null,
+    })
+  }
+
+  it("turns the agent off for a key the Router has not turned on", () => {
+    expect(isAgentOffCode(refused("ENGINE_NOT_ENABLED"))).toBe(true)
+    expect(isAgentOffCode(refused("ENGINE_KEY_OUTSIDE_WORKSPACE"))).toBe(true)
+  })
+
+  it("keeps the composer when the account runs out of credits", () => {
+    expect(isAgentOffCode(refused("ENGINE_NO_CREDITS"))).toBe(false)
   })
 })
