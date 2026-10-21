@@ -206,9 +206,8 @@ describe("the Ads model menu from the catalog", () => {
     expect(
       fluxRow.querySelector("[data-slot=lab-mark]")?.getAttribute("data-maker")
     ).toBe("Black Forest Labs")
-    expect(fluxRow.textContent).toContain(
-      t("model.tag.references", { max: 10 })
-    )
+    const fluxPhotos = t("model.tag.references", { max: 10 })
+    expect(fluxRow.textContent?.split(fluxPhotos)).toHaveLength(2)
     expect(rowOf(oneImage.id).textContent).toContain(
       t("model.tag.references", { max: 1 })
     )

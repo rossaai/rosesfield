@@ -29,11 +29,19 @@ function rowWithPhotos(
   row: ModelPickerRow,
   model: CatalogModel | undefined
 ): ModelPickerRow {
-  const max = modelPhotoLimitOf(app, row.id, model)
+  const photos = tagOf({
+    kind: "references",
+    max: modelPhotoLimitOf(app, row.id, model),
+  })
+  const listed = model?.tags.find((tag) => tag.kind === "references")
+  const listedLabel = listed === undefined ? null : tagOf(listed).label
   return {
     ...row,
     line: row.line ?? ownLineOf(model),
-    tags: [...row.tags, tagOf({ kind: "references", max })],
+    tags:
+      listedLabel === null
+        ? [...row.tags, photos]
+        : row.tags.map((tag) => (tag.label === listedLabel ? photos : tag)),
   }
 }
 
