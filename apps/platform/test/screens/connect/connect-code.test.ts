@@ -18,6 +18,7 @@ const owner: GatewaySettings = {
   keyFrom: "server",
   agent: "missing",
   agentModel: null,
+  place: "bun",
   retentionDays: null,
 }
 

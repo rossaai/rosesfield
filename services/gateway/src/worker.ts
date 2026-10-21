@@ -91,7 +91,8 @@ function composePublic(
       visits: new SessionVisits({ db: parts.db, clock: parts.clock }),
       moveAgent: (from, to) => moveAgentHost(env.AGENTS, from, to),
     },
-    scopeFor: (c) => visitorScopeFor(c, { ...parts, agents: null }),
+    scopeFor: (c) =>
+      visitorScopeFor(c, { ...parts, place: "workers", agents: null }),
     agent,
     account: visitorAccount({
       readings: account.readings,
@@ -118,7 +119,7 @@ function composeOwner(
   const scope = ownerScope({
     handlers,
     agent: null,
-    settings: ownerSettings(vars),
+    settings: ownerSettings(vars, "workers"),
   })
   const account = new ComfyAccount()
   const spend = ownerSpend({

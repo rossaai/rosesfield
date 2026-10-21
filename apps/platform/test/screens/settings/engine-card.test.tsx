@@ -15,6 +15,7 @@ const localDemo: GatewaySettings = {
   keyFrom: "settings",
   agent: "missing",
   agentModel: null,
+  place: "bun",
   retentionDays: null,
 }
 

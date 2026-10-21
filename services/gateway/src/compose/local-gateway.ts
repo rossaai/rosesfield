@@ -248,7 +248,11 @@ function composeOwner(
     handlers,
     modelOptions: modelOptionsOf(parts),
   })
-  const scope = ownerScope({ handlers, agent, settings: ownerSettings(env) })
+  const scope = ownerScope({
+    handlers,
+    agent,
+    settings: ownerSettings(env, "bun"),
+  })
   const guard: GatewayGuard = {
     mode: "owner",
     lock,
@@ -345,6 +349,7 @@ function composePublic(
   const scopeFor = (c: GatewayContext): Promise<RequestScope> =>
     visitorScopeFor(c, {
       vars: env,
+      place: "bun",
       apps: parts.apps,
       db,
       store: parts.store,

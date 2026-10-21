@@ -1,10 +1,27 @@
-import { cleanup, render, screen } from "@testing-library/react"
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { settingsQuery } from "@/api/queries"
 import { t, tCatalog } from "@/copy/t"
 import { RunShotRows } from "@/studio/remake/shot-details"
-import { resetFrames } from "../../screens/app/frame-render"
-import { remake, remakeRun, wirePlanOfThree } from "./remake-fixtures"
-import { openRemake, stubGateway } from "./remake-screen"
+import { asPhone, resetFrames } from "../../screens/app/frame-render"
+import { remakeRun, runId, wirePlanOfThree } from "./remake-fixtures"
+import {
+  calls,
+  openRemake,
+  ownerSettings,
+  runReads,
+  served,
+  startedRuns,
+  stubGateway,
+} from "./remake-screen"
 
 beforeEach(stubGateway)
 
@@ -15,20 +32,70 @@ afterEach(() => {
 
 describe("Remake where the server cannot run it", () => {
   it("says so in the closed key's words and offers no Generate", async () => {
-    openRemake({ listed: { ...remake, closedKey: "remake.closed" } })
+    openRemake({ place: "workers" })
     expect(await screen.findByText(tCatalog("remake.closed"))).toBeDefined()
     expect(screen.queryByRole("button", { name: t("run.generate") })).toBeNull()
     expect(
       screen.queryByText(tCatalog("remake.input.reference.label"))
     ).toBeNull()
+    expect(calls.filter((call) => call.url.endsWith("/api/apps"))).toEqual([])
   })
 
-  it("control: the same listing open shows the inputs and Generate", async () => {
-    openRemake({ listed: remake })
+  it("control: the same server on bun shows the inputs and Generate", async () => {
+    openRemake({ place: "bun" })
     expect(
-      await screen.findByRole("button", { name: t("run.generate") })
-    ).toBeDefined()
+      (await screen.findAllByRole("button", { name: t("run.generate") })).length
+    ).toBeGreaterThan(0)
     expect(screen.queryByText(tCatalog("remake.closed"))).toBeNull()
+  })
+})
+
+describe("Remake before the server says where it runs", () => {
+  async function pressGenerate(): Promise<void> {
+    const sheet = await screen.findByRole("dialog")
+    const generate = within(sheet).getByRole("button", {
+      name: t("run.generate"),
+    })
+    await within(sheet).findAllByText(tCatalog("remake.input.reference.label"))
+    fireEvent.click(generate)
+  }
+
+  function startWithInputs(place: "unknown" | "bun") {
+    asPhone()
+    served.runs.set(runId, { run: remakeRun() })
+    served.started = remakeRun({ status: "running", outputs: [] })
+    return openRemake({ place, seeds: { use: undefined, from: runId } })
+  }
+
+  it("keeps Generate unable, so a press starts no run", async () => {
+    const client = startWithInputs("unknown")
+    await screen.findByRole("dialog")
+    await waitFor(() => expect(runReads().length).toBeGreaterThan(0))
+    await pressGenerate()
+    await act(async () => undefined)
+    expect(startedRuns()).toEqual([])
+    const sheet = screen.getByRole("dialog")
+    expect(
+      within(sheet)
+        .getByRole("button", { name: t("run.generate") })
+        .getAttribute("aria-busy")
+    ).toBe("true")
+    client.setQueryData(settingsQuery.queryKey, {
+      ...ownerSettings,
+      place: "bun",
+    })
+    await waitFor(async () => {
+      await pressGenerate()
+      expect(startedRuns()).toHaveLength(1)
+    })
+  })
+
+  it("control: a server known to run Remake starts the run on the same press", async () => {
+    startWithInputs("bun")
+    await waitFor(async () => {
+      await pressGenerate()
+      expect(startedRuns()).toHaveLength(1)
+    })
   })
 })
 

@@ -158,6 +158,7 @@ export function settingsOf(
     keyFrom: "server",
     agent,
     agentModel: agent === "set" ? "MiniMax-M3" : null,
+    place: "bun",
     retentionDays: null,
   }
 }
@@ -174,6 +175,7 @@ export const liveSettings: GatewaySettings = {
   keyFrom: "server",
   agent: "set",
   agentModel: "MiniMax-M3",
+  place: "bun",
   retentionDays: null,
 }
 
@@ -190,6 +192,7 @@ export function publicSettingsOf(hasKeys: boolean): GatewaySettings {
     keyFrom: "settings",
     agent: hasKeys ? "set" : "missing",
     agentModel: hasKeys ? "MiniMax-M3" : null,
+    place: "workers",
     retentionDays: 7,
   }
 }

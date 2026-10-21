@@ -44,7 +44,8 @@ export class PastedKeys {
         agent: null,
         settings: visitorSettings(
           { ...this.vars, engine: PastedKeys.engine },
-          { engine: key }
+          { engine: key },
+          "bun"
         ),
       })
     }

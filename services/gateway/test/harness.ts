@@ -54,11 +54,14 @@ export function ownerGateway(
   const scope = ownerScope({
     handlers,
     agent,
-    settings: ownerSettings({
-      engine: { target: "demo" },
-      access: { mode: "owner", lock },
-      agent: null,
-    }),
+    settings: ownerSettings(
+      {
+        engine: { target: "demo" },
+        access: { mode: "owner", lock },
+        agent: null,
+      },
+      "bun"
+    ),
   })
   return createGateway({
     apps,

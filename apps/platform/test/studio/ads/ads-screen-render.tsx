@@ -49,6 +49,7 @@ const settings: GatewaySettings = {
   lock: "local",
   agent: "unknown",
   agentModel: null,
+  place: "bun",
   retentionDays: null,
 }
 

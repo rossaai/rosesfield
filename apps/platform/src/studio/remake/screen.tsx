@@ -1,3 +1,4 @@
+import { remakeClosedKey } from "@rosesfield/catalog/remake/reach"
 import type { InputDefinition } from "@rosesfield/contract"
 import { type ReactElement, useRef, useState } from "react"
 import { formatDuration } from "@/copy/format"
@@ -13,7 +14,7 @@ import { AdvancedFields } from "@/screens/app/inputs-panel"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { ScreenHeader } from "@/shell/screen-header"
 import { RemakeCanvas } from "@/studio/remake/remake-canvas"
-import { useClosedKey } from "@/studio/remake/use-closed-key"
+import { useRemakeReach } from "@/studio/remake/use-remake-reach"
 import {
   characterInput,
   type RemakeState,
@@ -107,31 +108,36 @@ function PriceCaption({ price }: { price: string }): ReactElement | null {
 
 function ClosedScreen({
   app,
-  closedKey,
 }: {
   app: StudioScreenProps["app"]
-  closedKey: string
 }): ReactElement {
   return (
     <>
       <ScreenHeader title={tCatalog(app.nameKey)} />
-      <ScreenState kind="empty" title={tCatalog(closedKey)} />
+      <ScreenState kind="empty" title={tCatalog(remakeClosedKey)} />
     </>
   )
 }
 
 export function AppScreen(props: StudioScreenProps): ReactElement {
-  const closedKey = useClosedKey(props.app)
-  return closedKey === null ? (
-    <OpenScreen {...props} />
+  const reach = useRemakeReach()
+  return reach === "closed" ? (
+    <ClosedScreen app={props.app} />
   ) : (
-    <ClosedScreen app={props.app} closedKey={closedKey} />
+    <OpenScreen {...props} isReachKnown={reach === "open"} />
   )
 }
 
-function OpenScreen({ app, seeds }: StudioScreenProps): ReactElement {
+function OpenScreen({
+  app,
+  seeds,
+  isReachKnown,
+}: StudioScreenProps & { isReachKnown: boolean }): ReactElement {
   const sheetClose = useRef<() => void>(() => undefined)
-  const state = useRemakeScreen(app, seeds, () => sheetClose.current())
+  const state = useRemakeScreen(app, seeds, {
+    isReachKnown,
+    onStarted: () => sheetClose.current(),
+  })
   const sheet: SheetControl = useState(true)
   sheetClose.current = () => sheet[1](false)
   return (
