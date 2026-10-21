@@ -103,6 +103,7 @@ describe("the Workers entry in workerd", () => {
     expect(await settings.json()).toEqual({
       settings: {
         mode: "owner",
+        place: "workers",
         engine: {
           target: "demo",
           address: null,
