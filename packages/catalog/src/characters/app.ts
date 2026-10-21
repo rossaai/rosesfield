@@ -1,5 +1,7 @@
+import { sides } from "#angles/angle-views"
 import {
   angleSets,
+  type View,
   views,
   viewsOf,
   viewsPerRun,
@@ -46,6 +48,11 @@ function optionLabel(list: string, value: string): string {
   return `characters.choice.${list}.${key ?? value}`
 }
 
+function viewLabel(view: View): string {
+  const group = sides.some((side) => side === view) ? "side" : "height"
+  return `angles.choice.${group}.${camelOf(view)}`
+}
+
 function inMode(mode: Mode) {
   return [{ input: "mode", is: [mode] }]
 }
@@ -87,10 +94,7 @@ const view: Input = {
   name: "view",
   scope: "app",
   labelKey: "app.canvas.view",
-  options: views.map((value) => ({
-    value,
-    labelKey: `characters.view.${value}`,
-  })),
+  options: views.map((value) => ({ value, labelKey: viewLabel(value) })),
   default: "front",
   when: inMode("angles"),
   bounds: angleSets.map((angleSet) => ({

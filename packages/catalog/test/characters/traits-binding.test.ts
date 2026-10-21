@@ -40,10 +40,11 @@ function promptPathOf(binding: EngineBinding): string[] {
   const prompt = boundOf(binding).find(
     (one) => one.from === "input" && one.name === "prompt"
   )
-  if (!Array.isArray(prompt?.path)) {
+  const path = prompt?.path
+  if (!Array.isArray(path)) {
     throw new Error("Image binds no prompt")
   }
-  return prompt.path.map(String)
+  return path.map(String)
 }
 
 function inputAt(graph: Record<string, unknown>, path: string[]): unknown {
