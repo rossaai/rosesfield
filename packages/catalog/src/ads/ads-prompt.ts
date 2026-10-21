@@ -1,4 +1,6 @@
+import type { Run } from "@rosesfield/contract"
 import {
+  adsAppId,
   defaultKind,
   defaultStyle,
   kindValues,
@@ -18,6 +20,8 @@ import {
 } from "#ads/comfy/ads-prompts"
 
 type AdsInputs = Readonly<Record<string, unknown>>
+
+export type AdsRun = Pick<Run, "appId" | "inputs">
 
 function oneOf<Value extends string>(
   values: readonly Value[],
@@ -59,4 +63,8 @@ export function adsPromptOf(inputs: AdsInputs): string {
     .replace(new RegExp(lineBreakPattern, "gi"), " ")
     .replaceAll("  ", " ")
     .trim()
+}
+
+export function adsRunPromptOf(run: AdsRun): string | null {
+  return run.appId === adsAppId ? adsPromptOf(run.inputs) : null
 }

@@ -1,4 +1,5 @@
 import {
+  adsAppId,
   defaultKind,
   defaultModel,
   defaultStyle,
@@ -18,7 +19,7 @@ const productShot = [{ input: "kind", is: ["product-shot"] }]
 const ad = [{ input: "kind", is: ["ad"] }]
 
 export const app = defineApp({
-  id: "ads",
+  id: adsAppId,
   nameKey: "ads.name",
   category: "image",
   inputs: [

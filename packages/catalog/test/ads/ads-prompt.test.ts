@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { adsPromptOf } from "#ads/ads-prompt"
+import { adsPromptOf, adsRunPromptOf } from "#ads/ads-prompt"
 import { styleValues } from "#ads/ads-values"
 import {
   keepRule,
@@ -73,5 +73,17 @@ describe("the prompt Ads shows in History", () => {
     expect(shown).toBe(await graphPromptOf(inputs))
     expect(shown).toContain(" on a desk. ")
     expect(shown).not.toContain('"')
+  })
+})
+
+describe("the prompt History reads from a run", () => {
+  it("gives an Ads run the prompt the graph sends", () => {
+    const inputs = { kind: "ad", headline: "Fresh cold brew", style: "bold" }
+    expect(adsRunPromptOf({ appId: "ads", inputs })).toBe(adsPromptOf(inputs))
+  })
+
+  it("gives a run of another app no Ads prompt", () => {
+    const inputs = { kind: "ad", headline: "Fresh cold brew" }
+    expect(adsRunPromptOf({ appId: "image", inputs })).toBeNull()
   })
 })

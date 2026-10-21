@@ -1,3 +1,5 @@
+export const adsAppId = "ads"
+
 export const kindValues = ["product-shot", "ad"] as const
 
 export type KindValue = (typeof kindValues)[number]
