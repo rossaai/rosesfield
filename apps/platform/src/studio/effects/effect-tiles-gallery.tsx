@@ -34,8 +34,8 @@ function passed(effect: string): EffectRecipe {
 
 const shown: readonly EffectRecipe[] = [
   passed("pull-back-to-space"),
-  passed("liquid-metal"),
-  passed("grow-wings"),
+  passed("many-copies"),
+  passed("grow-giant"),
 ]
 
 const openApp: AppListing = appListing.parse(
@@ -44,7 +44,7 @@ const openApp: AppListing = appListing.parse(
 
 const measured: Readonly<Record<string, number>> = {
   "pull-back-to-space": 7.18,
-  "grow-wings": 6.95,
+  "grow-giant": 6.95,
 }
 
 const prices: EffectPrices = {

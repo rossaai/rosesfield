@@ -10,7 +10,7 @@ import { priceQuery } from "@/screens/app/hosted/model-catalog-query"
 import { useEffectPrices } from "@/studio/effects/use-effect-prices"
 
 const preview = {
-  file: "grow-wings.mp4",
+  file: "grow-giant.mp4",
   runId: "5b1d2c3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e",
   seed: 7,
   resolution: "480p" as const,
@@ -22,7 +22,7 @@ const preview = {
 const app = appListing.parse(
   appDefinition.parse(
     effectsApp(
-      ["grow-wings", "melt-away"].map((effect) => ({
+      ["grow-giant", "melt-away"].map((effect) => ({
         ...recipeOf(effect),
         passed: true,
         preview,
@@ -33,7 +33,7 @@ const app = appListing.parse(
 
 const values: FormValues = {
   inputs: {
-    effect: "grow-wings",
+    effect: "grow-giant",
     image: ["0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c01"],
     resolution: "720p",
   },
@@ -77,11 +77,11 @@ describe("the price on each effect tile", () => {
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     )
     const { result } = renderHook(
-      () => useEffectPrices(app, ["grow-wings", "melt-away"], values),
+      () => useEffectPrices(app, ["grow-giant", "melt-away"], values),
       { wrapper }
     )
     expect(result.current.isDemo).toBe(false)
-    expect(result.current.creditsOf("grow-wings")).toBe(6.95)
+    expect(result.current.creditsOf("grow-giant")).toBe(6.95)
     expect(result.current.creditsOf("melt-away")).toBeNull()
   })
 })

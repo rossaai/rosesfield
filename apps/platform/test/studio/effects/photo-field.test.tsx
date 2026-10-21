@@ -27,12 +27,12 @@ import { assetQuery, assetsQuery } from "@/api/queries"
 import { isAssetInput } from "@/catalog/app-facts"
 import { formatBytes } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
-import { DeviceProvider } from "@/device/device-context"
 import {
   Device,
   type DeviceFile,
   type PickFilesOptions,
 } from "@/device/device.port"
+import { DeviceProvider } from "@/device/device-context"
 import type { FieldValue } from "@/screens/app/app-form"
 import { PhotoField } from "@/studio/effects/photo-field"
 
@@ -42,10 +42,10 @@ const app = appListing.parse(
   appDefinition.parse(
     effectsApp([
       {
-        ...recipeOf("grow-wings"),
+        ...recipeOf("grow-giant"),
         passed: true,
         preview: {
-          file: "grow-wings.mp4",
+          file: "grow-giant.mp4",
           runId: "5b1d2c3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e",
           seed: 7,
           resolution: "480p",

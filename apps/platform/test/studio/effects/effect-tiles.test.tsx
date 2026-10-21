@@ -33,24 +33,24 @@ function passed(effect: string): EffectRecipe {
   }
 }
 
-const recipes = [passed("grow-wings"), passed("melt-away")]
+const recipes = [passed("grow-giant"), passed("melt-away")]
 
 function listingOf(offered: readonly EffectRecipe[]): AppListing {
   return appListing.parse(appDefinition.parse(effectsApp(offered)))
 }
 
 const previews = (file: string): string | null =>
-  file === "grow-wings.mp4" || file === "melt-away.mp4"
+  file === "grow-giant.mp4" || file === "melt-away.mp4"
     ? `/previews/${file}`
     : null
 
 const prices: EffectPrices = {
   isDemo: false,
-  creditsOf: (effect) => (effect === "grow-wings" ? 6.95 : null),
+  creditsOf: (effect) => (effect === "grow-giant" ? 6.95 : null),
 }
 
 function tileNamed(effect: string): HTMLElement {
-  const key = effect === "grow-wings" ? "growWings" : "meltAway"
+  const key = effect === "grow-giant" ? "growGiant" : "meltAway"
   return screen.getByRole("button", {
     name: new RegExp(tCatalog(`effects.choice.effect.${key}`)),
   })
@@ -63,14 +63,14 @@ afterEach(() => {
 describe("the effect tiles", () => {
   it("shows each effect the app offers with its run, and none whose run file is missing", () => {
     const tiles = effectTiles(listingOf(recipes), recipes, (file) =>
-      file === "grow-wings.mp4" ? "/previews/grow-wings.mp4" : null
+      file === "grow-giant.mp4" ? "/previews/grow-giant.mp4" : null
     )
     expect(tiles).toEqual([
       {
-        effect: "grow-wings",
-        label: tCatalog("effects.choice.effect.growWings"),
-        photo: tCatalog("effects.photo.growWings"),
-        preview: "/previews/grow-wings.mp4",
+        effect: "grow-giant",
+        label: tCatalog("effects.choice.effect.growGiant"),
+        photo: tCatalog("effects.photo.growGiant"),
+        look: { status: "passed", preview: "/previews/grow-giant.mp4" },
       },
     ])
   })
@@ -85,7 +85,7 @@ describe("the effect tiles", () => {
     render(
       <EffectTiles
         app={listingOf(recipes)}
-        value="grow-wings"
+        value="grow-giant"
         prices={prices}
         onChange={() => undefined}
         register={() => undefined}
@@ -93,7 +93,7 @@ describe("the effect tiles", () => {
         previews={previews}
       />
     )
-    expect(tileNamed("grow-wings").textContent).toContain(
+    expect(tileNamed("grow-giant").textContent).toContain(
       t("run.price.credits", { amount: "6.95" })
     )
     expect(tileNamed("melt-away").textContent).toContain(t("run.price.unknown"))
@@ -113,12 +113,54 @@ describe("the effect tiles", () => {
       />
     )
     const video = container.querySelector("video")
-    expect(video?.getAttribute("src")).toBe("/previews/grow-wings.mp4")
+    expect(video?.getAttribute("src")).toBe("/previews/grow-giant.mp4")
     expect(video?.muted).toBe(true)
     expect(video?.loop).toBe(true)
-    expect(tileNamed("grow-wings").getAttribute("aria-pressed")).toBe("false")
-    fireEvent.click(tileNamed("grow-wings"))
-    expect(onChange).toHaveBeenCalledWith("grow-wings")
+    expect(tileNamed("grow-giant").getAttribute("aria-pressed")).toBe("false")
+    fireEvent.click(tileNamed("grow-giant"))
+    expect(onChange).toHaveBeenCalledWith("grow-giant")
     expect(tileNamed("melt-away").getAttribute("aria-pressed")).toBe("true")
+  })
+
+  it("marks an offered effect that has not passed as a draft, with no run to play", () => {
+    const offered = [...recipes, recipeOf("many-copies")]
+    const tiles = effectTiles(listingOf(offered), offered, previews)
+    expect(tiles.map((tile) => [tile.effect, tile.look.status])).toEqual([
+      ["grow-giant", "passed"],
+      ["melt-away", "passed"],
+      ["many-copies", "draft"],
+    ])
+    render(
+      <EffectTiles
+        app={listingOf(offered)}
+        value="grow-giant"
+        prices={prices}
+        onChange={() => undefined}
+        register={() => undefined}
+        recipes={offered}
+        previews={previews}
+      />
+    )
+    const draft = screen.getByRole("button", {
+      name: new RegExp(tCatalog("effects.choice.effect.manyCopies")),
+    })
+    expect(draft.getAttribute("data-look")).toBe("draft")
+    expect(draft.textContent).toContain(tCatalog("effects.draft"))
+    expect(draft.querySelector("video")).toBeNull()
+    expect(tileNamed("grow-giant").textContent).not.toContain(
+      tCatalog("effects.draft")
+    )
+  })
+
+  it("shows no draft the app does not offer", () => {
+    const tiles = effectTiles(
+      listingOf(recipes),
+      [...recipes, recipeOf("many-copies")],
+      previews
+    )
+    expect(tiles.map((tile) => tile.effect)).toEqual([
+      "grow-giant",
+      "melt-away",
+    ])
   })
 })

@@ -3,7 +3,11 @@ import {
   effectRecipes,
   effectsApp,
 } from "@rosesfield/catalog/effects"
-import { appDefinition, appListing } from "@rosesfield/contract"
+import {
+  type AppListing,
+  appDefinition,
+  appListing,
+} from "@rosesfield/contract"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -15,15 +19,20 @@ import {
 } from "@tanstack/react-router"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import type { GatewaySettings } from "@/api/gateway-settings"
 import { runsQuery, settingsQuery } from "@/api/queries"
 import { t, tCatalog } from "@/copy/t"
-import { liveSettings } from "@/gallery/screens/screen-fixtures"
+import {
+  liveSettings,
+  publicSettingsOf,
+} from "@/gallery/screens/screen-fixtures"
+import { AskedTab } from "@/screens/app/app-stage"
 import { noSeeds } from "@/screens/app/use-app-screen"
 import { AppScreen } from "@/studio/effects/screen"
 import { asPhone, resetFrames, stubFetch } from "../../screens/app/frame-render"
 
 const { held, heldRecipe } = vi.hoisted(() => ({
-  held: ["grow-wings", "liquid-metal", "melt-away"],
+  held: ["grow-giant", "many-copies", "melt-away"],
   heldRecipe: (recipe: EffectRecipe, isHeld: boolean): EffectRecipe =>
     isHeld
       ? {
@@ -57,15 +66,26 @@ vi.mock("@/studio/effects/effect-previews", () => ({
   previewOf: (file: string) => `/previews/${file}`,
 }))
 
-function openEffects(): void {
-  const offered = effectRecipes.filter((recipe) => recipe.passed)
-  const app = appListing.parse(appDefinition.parse(effectsApp(offered)))
+const localSettings: GatewaySettings = { ...liveSettings, lock: "local" }
+
+function shippedApp(
+  offered: readonly EffectRecipe[] = effectRecipes.filter(
+    (recipe) => recipe.passed
+  )
+): AppListing {
+  return appListing.parse(appDefinition.parse(effectsApp(offered)))
+}
+
+function openEffects(
+  settings: GatewaySettings = liveSettings,
+  app: AppListing = shippedApp()
+): void {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, staleTime: Number.POSITIVE_INFINITY },
     },
   })
-  client.setQueryData(settingsQuery.queryKey, liveSettings)
+  client.setQueryData(settingsQuery.queryKey, settings)
   client.setQueryData(runsQuery(app.id).queryKey, {
     pages: [{ runs: [], next: null }],
     pageParams: [null],
@@ -75,7 +95,9 @@ function openEffects(): void {
       component: () => (
         <ToastProvider>
           <TooltipProvider>
-            <AppScreen app={app} seeds={noSeeds} />
+            <AskedTab tab="history">
+              <AppScreen app={app} seeds={noSeeds} />
+            </AskedTab>
           </TooltipProvider>
         </ToastProvider>
       ),
@@ -88,6 +110,26 @@ function openEffects(): void {
     </QueryClientProvider>
   )
 }
+
+async function openSheet(): Promise<void> {
+  fireEvent.click(
+    await screen.findByRole("button", { name: t("app.empty.action") })
+  )
+  await screen.findByRole("dialog")
+}
+
+function tilesShown(): { effect: string | null; look: string | null }[] {
+  return Array.from(
+    sheetPart("sheet-body").querySelectorAll("[data-effect]")
+  ).map((tile) => ({
+    effect: tile.getAttribute("data-effect"),
+    look: tile.getAttribute("data-look"),
+  }))
+}
+
+const drafts = effectRecipes
+  .filter((recipe) => !held.includes(recipe.effect))
+  .map((recipe) => recipe.effect)
 
 function sheetPart(slot: string): HTMLElement {
   const part = document.querySelector<HTMLElement>(`[data-slot='${slot}']`)
@@ -110,10 +152,7 @@ afterEach(() => {
 describe("Effects on a phone", () => {
   it("puts the held effects in 2 columns in the input sheet, with Generate in the sheet's foot at its bottom edge", async () => {
     openEffects()
-    fireEvent.click(
-      await screen.findByRole("button", { name: t("app.empty.action") })
-    )
-    await screen.findByRole("dialog")
+    await openSheet()
     const body = sheetPart("sheet-body")
     const tiles = body.querySelector<HTMLElement>(
       `ul[aria-label='${tCatalog("effects.input.effect.label")}']`
@@ -137,5 +176,54 @@ describe("Effects on a phone", () => {
     expect(
       body.compareDocumentPosition(foot) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy()
+  })
+})
+
+describe("Effects drafts", () => {
+  it("shows every recipe on a server that answers only on this computer, each draft marked after the passed looks", async () => {
+    openEffects(localSettings)
+    await openSheet()
+    expect(tilesShown()).toEqual([
+      ...held.map((effect) => ({ effect, look: "passed" })),
+      ...drafts.map((effect) => ({ effect, look: "draft" })),
+    ])
+    const draft = sheetPart("sheet-body").querySelector(
+      `[data-effect='${drafts[0]}']`
+    )
+    expect(
+      draft?.querySelector("[data-slot='effect-draft']")?.textContent
+    ).toBe(tCatalog("effects.draft"))
+    expect(draft?.querySelector("video")).toBeNull()
+  })
+
+  it("opens Effects on a local server while the shipped app is closed", async () => {
+    openEffects(localSettings, shippedApp([]))
+    await openSheet()
+    expect(tilesShown()).toEqual([
+      ...held.map((effect) => ({ effect, look: "passed" })),
+      ...drafts.map((effect) => ({ effect, look: "draft" })),
+    ])
+  })
+
+  it.each([
+    ["an owner token", liveSettings],
+    ["public mode", publicSettingsOf(true)],
+  ])("shows only the passed looks behind %s", async (_, settings) => {
+    openEffects(settings)
+    await openSheet()
+    expect(tilesShown()).toEqual(
+      held.map((effect) => ({ effect, look: "passed" }))
+    )
+  })
+
+  it.each([
+    ["an owner token", liveSettings],
+    ["public mode", publicSettingsOf(true)],
+  ])("stays closed behind %s while no look has passed", async (_, settings) => {
+    openEffects(settings, shippedApp([]))
+    expect(await screen.findByText(tCatalog("effects.closed"))).not.toBeNull()
+    expect(
+      screen.queryByRole("button", { name: t("app.empty.action") })
+    ).toBeNull()
   })
 })
