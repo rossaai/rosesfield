@@ -38,7 +38,7 @@ const settings: GatewaySettings = {
 type Call = { url: string; method: string }
 
 export type Served = {
-  runs: Map<string, { run: Run; plan?: unknown }>
+  runs: Map<string, { run: Run }>
   started: Run | null
 }
 
@@ -68,12 +68,7 @@ function respond(url: string, method: string): Promise<Response> {
       ? served.runs.get(runMatch[1] ?? "")
       : undefined
   if (record !== undefined) {
-    return answer(
-      record.plan === undefined
-        ? { run: record.run }
-        : { run: { ...record.run, plan: record.plan } },
-      200
-    )
+    return answer({ run: record.run }, 200)
   }
   return new Promise(() => undefined)
 }
@@ -88,6 +83,16 @@ export function stubGateway(): void {
     calls.push({ url, method })
     return respond(url, method)
   })
+}
+
+const runPath = /^\/api\/runs\/[^/]+$/
+
+export function runReads(): Call[] {
+  return calls.filter(
+    (call) =>
+      call.method === "GET" &&
+      runPath.test(new URL(call.url, "http://localhost").pathname)
+  )
 }
 
 export function startedRuns(): Call[] {

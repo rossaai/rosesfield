@@ -12,7 +12,7 @@ import { RunOutputs } from "@/pieces/run/run-outputs"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import { PlanView } from "@/studio/remake/plan-view"
 import { RemakePair } from "@/studio/remake/remake-pair"
-import { useRemakePlan } from "@/studio/remake/remake-plan"
+import { readPlan } from "@/studio/remake/remake-plan"
 import {
   type ShotProblem,
   shotProblemCopyOf,
@@ -60,7 +60,7 @@ function RemakeRun({
   onUseInputs: (run: Run) => void
 }): ReactElement {
   const [outputId] = run.outputs
-  const plan = useRemakePlan(run)
+  const plan = readPlan(run.plan)
   return (
     <article className="flex flex-col gap-s2">
       <RunLine run={run} onUseInputs={onUseInputs} />

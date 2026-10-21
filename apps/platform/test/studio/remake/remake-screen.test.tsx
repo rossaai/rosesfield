@@ -7,10 +7,15 @@ import {
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { t, tCatalog } from "@/copy/t"
-import { remakePlanQuery } from "@/studio/remake/remake-plan"
 import { asPhone, resetFrames } from "../../screens/app/frame-render"
 import { remakeRun, runId, wirePlanOfThree } from "./remake-fixtures"
-import { openRemake, served, startedRuns, stubGateway } from "./remake-screen"
+import {
+  openRemake,
+  runReads,
+  served,
+  startedRuns,
+  stubGateway,
+} from "./remake-screen"
 
 const workingId = "5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d"
 
@@ -100,7 +105,6 @@ describe("Remake on arrival", () => {
 describe("a run before its plan shows", () => {
   it("shows a working tile in the reference's ratio and no plan", async () => {
     const working = workingRun()
-    served.runs.set(workingId, { run: working })
     openRemake({ runs: [working] })
     const tile = await screen.findByRole("status", {
       name: t("run.working", { index: 1, count: 1 }),
@@ -112,8 +116,7 @@ describe("a run before its plan shows", () => {
 
 describe("a run once its plan shows", () => {
   it("marks every cut on the reference's timeline and lists each shot with its length, its route and its model", async () => {
-    const working = workingRun()
-    served.runs.set(workingId, { run: working, plan: wirePlanOfThree })
+    const working = workingRun({ plan: wirePlanOfThree })
     openRemake({ runs: [working] })
     const plan = await waitFor(() => {
       const found = document.querySelector<HTMLElement>(
@@ -145,17 +148,25 @@ describe("a run once its plan shows", () => {
   })
 
   it("gives way to one caption, Stopped, once the run is stopped", async () => {
-    const stopped = workingRun({ status: "cancelled" })
-    served.runs.set(workingId, { run: stopped, plan: wirePlanOfThree })
-    const client = openRemake({ runs: [stopped] })
+    const stopped = workingRun({ status: "cancelled", plan: wirePlanOfThree })
+    openRemake({ runs: [stopped] })
     expect(await screen.findByText(t("state.stopped"))).toBeDefined()
-    await waitFor(() =>
-      expect(
-        client.getQueryData(remakePlanQuery(stopped).queryKey)
-      ).toBeDefined()
-    )
     expect(document.querySelector("[data-slot='remake-plan']")).toBeNull()
     expect(document.querySelector("[data-slot='working-pulse']")).toBeNull()
+  })
+})
+
+describe("the plans of the runs in the history", () => {
+  it("reads each plan from the run the runs page carries, with no read of its own per run", async () => {
+    const working = workingRun({ plan: wirePlanOfThree })
+    const earlier = remakeRun({ plan: wirePlanOfThree })
+    openRemake({ runs: [working, earlier] })
+    await waitFor(() => {
+      if (document.querySelector("[data-slot='remake-plan']") === null) {
+        throw new Error("no plan")
+      }
+    })
+    expect(runReads()).toEqual([])
   })
 })
 

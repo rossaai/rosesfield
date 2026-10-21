@@ -4,28 +4,24 @@ import {
   planCreditsOf,
   type RemakePlan,
   readPlan,
-  readPlanAnswer,
 } from "@/studio/remake/remake-plan"
 import {
   cameraMoveName,
   shotLengthOf,
   shotSpanOf,
 } from "@/studio/remake/shot-words"
-import { planOfThree, wirePlanOfThree } from "./remake-fixtures"
+import { planOfThree, remakeRun, wirePlanOfThree } from "./remake-fixtures"
 
 describe("the plan the run record carries", () => {
   it("reads every shot with its times, its route, its model, its credits and its seed", () => {
-    expect(
-      readPlanAnswer({ run: { id: "x", plan: wirePlanOfThree } })
-    ).toEqual({ plan: planOfThree })
+    expect(readPlan(remakeRun({ plan: wirePlanOfThree }).plan)).toEqual(
+      planOfThree
+    )
   })
 
-  it("reads a run with no plan yet as no plan, and a body with no run as unreadable", () => {
-    expect(readPlanAnswer({ run: { id: "x" } })).toEqual({ plan: null })
-    expect(readPlanAnswer({ run: { id: "x", plan: null } })).toEqual({
-      plan: null,
-    })
-    expect(readPlanAnswer({})).toBeNull()
+  it("reads a run with no plan yet as no plan", () => {
+    expect(readPlan(remakeRun().plan)).toBeNull()
+    expect(readPlan(null)).toBeNull()
   })
 
   it("refuses a plan whose shots are out of order, overlap or end before they start", () => {

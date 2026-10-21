@@ -1,11 +1,4 @@
-import { buildPath, type Run, routes } from "@rosesfield/contract"
-import {
-  keepPreviousData,
-  queryOptions,
-  useQuery,
-} from "@tanstack/react-query"
-import { callPathFor, fieldOf, oneOf } from "@/api/call-path"
-import { isWorking } from "@/api/queries"
+import { fieldOf, oneOf } from "@/api/call-path"
 import {
   type PlannedShot,
   remakeLimits,
@@ -29,11 +22,7 @@ export type RemakePlan = {
   shots: readonly PlanShot[]
 }
 
-type PlanAnswer = { plan: RemakePlan | null }
-
 const shotRoutes: readonly ShotRoute[] = ["replace", "rebuild", "keep"]
-
-const planPollMs = 1000
 
 function secondsOf(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value >= 0
@@ -102,14 +91,6 @@ export function readPlan(value: unknown): RemakePlan | null {
   return isWhole ? { shots: read.filter((shot) => shot !== null) } : null
 }
 
-export function readPlanAnswer(body: unknown): PlanAnswer | null {
-  const run = fieldOf(body, "run")
-  if (typeof run !== "object" || run === null) {
-    return null
-  }
-  return { plan: readPlan(fieldOf(run, "plan")) }
-}
-
 export function planCreditsOf(plan: RemakePlan): number | null {
   let total = 0
   for (const shot of plan.shots) {
@@ -122,33 +103,4 @@ export function planCreditsOf(plan: RemakePlan): number | null {
     }
   }
   return total
-}
-
-export function remakePlanQuery(run: Run) {
-  return queryOptions({
-    queryKey: ["remake-plan", run.id, run.status],
-    queryFn: ({ signal }) =>
-      callPathFor(
-        {
-          method: "GET",
-          path: buildPath(routes.getRun.path, { runId: run.id }),
-          signal,
-        },
-        readPlanAnswer
-      ),
-    staleTime: Number.POSITIVE_INFINITY,
-    refetchInterval: (query) =>
-      (query.state.data?.plan ?? null) === null && isWorking(run)
-        ? planPollMs
-        : false,
-  })
-}
-
-export function useRemakePlan(run: Run): RemakePlan | null {
-  const plan = useQuery({
-    ...remakePlanQuery(run),
-    enabled: run.status !== "failed",
-    placeholderData: keepPreviousData,
-  })
-  return plan.data?.plan ?? null
 }
