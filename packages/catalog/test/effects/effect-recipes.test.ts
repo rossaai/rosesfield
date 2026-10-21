@@ -164,9 +164,8 @@ describe("the effect recipes kept as data", () => {
       /black pupil grows outward until it swallows the whole frame/
     )
     expect(eye.prompt).not.toMatch(/\b(fades?|dims?)\b/)
-    expect(eye.design.sound?.prompt).toMatch(
-      /^The sound starts on the first frame/
-    )
+    expect(eye.design.sound?.prompt).toMatch(/^From the very first frame/)
+    expect(eye.design.sound?.prompt).toMatch(/impact boom .* turns black/)
     expect(
       eye.endFrame.source === "dark" ? eye.endFrame.luma : 255
     ).toBeLessThan(eye.design.lastFrame.maxLuma ?? 0)
