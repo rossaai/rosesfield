@@ -68,9 +68,7 @@ export function LegalPage({
         <div className="flex flex-col gap-s2">
           <h1 className="text-title">{t(title)}</h1>
           <p className="text-body text-ink-muted">{t(line)}</p>
-          {intro === undefined ? null : (
-            <p className="text-body">{t(intro)}</p>
-          )}
+          {intro === undefined ? null : <p className="text-body">{t(intro)}</p>}
         </div>
         {sections.map((section) => (
           <SectionView key={section.id} section={section} />
