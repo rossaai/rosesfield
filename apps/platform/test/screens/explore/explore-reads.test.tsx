@@ -1,10 +1,11 @@
-import { type Run, run } from "@rosesfield/contract"
+import { type Run, run, type ShareView } from "@rosesfield/contract"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, renderHook, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import {
-  exploreReads,
+  type ExploreEntries,
+  exploreShares,
   useExploreEntries,
 } from "@/screens/explore/explore-entries"
 import {
@@ -12,8 +13,8 @@ import {
   exploreListQuery,
 } from "@/screens/explore/explore-list"
 
-const oldId = "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e01"
-const newId = "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e02"
+const liveId = "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e01"
+const expiredId = "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e02"
 
 afterEach(() => {
   cleanup()
@@ -40,9 +41,30 @@ function runOf(id: string): Run {
   })
 }
 
-function admissionOf(runId: string): ExploreAdmission {
+function shareOf(shareId: string, runId: string): ShareView {
+  return {
+    id: shareId,
+    path: `/share/${shareId}`,
+    run: runOf(runId),
+    media: [
+      {
+        index: 0,
+        kind: "image",
+        mime: "image/png",
+        width: 1024,
+        height: 1024,
+        durationSeconds: null,
+      },
+    ],
+    createdAt: "2026-10-01T12:00:10.000Z",
+    expiresAt: null,
+  }
+}
+
+function admissionOf(runId: string, shareId: string): ExploreAdmission {
   return {
     runId,
+    shareId,
     source: "own-open-weights",
     yes: "2026-10-20",
     people: "none",
@@ -54,59 +76,86 @@ function pathOf(input: unknown): string {
   return typeof input === "string" ? input : String(input)
 }
 
-function bodyOf(path: string): unknown {
-  if (path.startsWith("/api/runs/")) {
-    return { run: runOf(path.slice("/api/runs/".length)) }
-  }
-  if (path.startsWith("/api/runs")) {
-    return { runs: [runOf(newId)], next: "older" }
-  }
-  return { shares: [] }
-}
-
-function jsonOf(body: unknown): Response {
+function jsonOf(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
-    status: 200,
+    status,
     headers: { "Content-Type": "application/json" },
   })
 }
 
-describe("Explore's reads", () => {
-  it("read each admitted run by its id, however many newer runs you made", async () => {
-    const requested: string[] = []
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: unknown) => {
-        const path = pathOf(input)
-        requested.push(path)
-        return jsonOf(bodyOf(path))
-      })
-    )
-    const client = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
+function expired(): Response {
+  return jsonOf(404, {
+    error: { code: "SHARE_NOT_FOUND", message: "The share is gone" },
+  })
+}
+
+function readExplore(
+  list: readonly ExploreAdmission[],
+  answer: (path: string) => Promise<Response>
+): { requested: string[]; result: { current: ExploreEntries } } {
+  const requested: string[] = []
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: unknown) => {
+      const path = pathOf(input)
+      requested.push(path)
+      return answer(path)
     })
-    client.setQueryData(exploreListQuery.queryKey, [admissionOf(oldId)])
-    const wrapper = ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  )
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  client.setQueryData(exploreListQuery.queryKey, list)
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  )
+  const { result } = renderHook(() => useExploreEntries(), { wrapper })
+  return { requested, result }
+}
+
+function idsOf(entries: ExploreEntries): string[] {
+  return entries.state === "ready"
+    ? entries.entries.map((entry) => entry.run.id)
+    : []
+}
+
+describe("Explore's reads", () => {
+  it("read only the share each entry names, and drop the entry whose share expired", async () => {
+    const { requested, result } = readExplore(
+      [admissionOf(liveId, "live"), admissionOf(expiredId, "gone")],
+      async (path) =>
+        path === "/share/live/data"
+          ? jsonOf(200, { share: shareOf("live", liveId) })
+          : expired()
     )
-
-    const { result } = renderHook(() => useExploreEntries(), { wrapper })
-
     await waitFor(() => expect(result.current.state).toBe("ready"))
-    const entries =
-      result.current.state === "ready" ? result.current.entries : []
-    expect(entries.map((entry) => entry.run.id)).toEqual([oldId])
-    expect(requested).toEqual([`/api/runs/${oldId}`])
+    expect(idsOf(result.current)).toEqual([liveId])
+    expect(requested.sort()).toEqual(["/share/gone/data", "/share/live/data"])
   })
 
-  it("grow with the Explore list and read a share by the id it names", () => {
-    expect(exploreReads([])).toEqual({ runIds: [], shareIds: [] })
+  it("show an empty list, not a failure, when every share expired", async () => {
+    const { result } = readExplore([admissionOf(expiredId, "gone")], async () =>
+      expired()
+    )
+    await waitFor(() => expect(result.current.state).toBe("ready"))
+    expect(idsOf(result.current)).toEqual([])
+  })
+
+  it("show the failure when the gateway answers no read", async () => {
+    const { result } = readExplore([admissionOf(liveId, "live")], async () => {
+      throw new TypeError("offline")
+    })
+    await waitFor(() => expect(result.current.state).toBe("failed"))
+  })
+
+  it("grow with the Explore list, one read per share", () => {
+    expect(exploreShares([])).toEqual([])
     expect(
-      exploreReads([
-        admissionOf(oldId),
-        { ...admissionOf(newId), shareId: "abc" },
-        admissionOf(oldId),
+      exploreShares([
+        admissionOf(liveId, "abc"),
+        admissionOf(expiredId, "def"),
+        admissionOf(liveId, "abc"),
       ])
-    ).toEqual({ runIds: [oldId, newId], shareIds: ["abc"] })
+    ).toEqual(["abc", "def"])
   })
 })

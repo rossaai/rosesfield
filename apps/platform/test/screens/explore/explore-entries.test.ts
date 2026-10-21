@@ -2,10 +2,10 @@ import { type Run, run, shareView } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import {
   admittedEntries,
-  ownEntries,
   sharedEntries,
 } from "@/screens/explore/explore-entries"
 import type { ExploreAdmission } from "@/screens/explore/explore-list"
+import type { ExploreEntry } from "@/screens/explore/explore-tile"
 import { sharedOutputOf } from "@/screens/explore/share-api"
 
 const outputId = "3d4e5f6a-7b8c-4d9e-8f0a-2b3c4d5e6f01"
@@ -31,20 +31,33 @@ function runOf(change: Partial<Record<keyof Run, unknown>>): Run {
   })
 }
 
+function sharesOf(runs: readonly Run[]): ExploreEntry[] {
+  return sharedEntries(
+    runs.map((made) =>
+      sharedOutputOf(
+        shareView.parse({
+          id: `share-${made.id.slice(-2)}`,
+          path: `/share/share-${made.id.slice(-2)}`,
+          run: made,
+          media: [
+            {
+              index: 0,
+              kind: "image",
+              mime: "image/png",
+              width: 1,
+              height: 1,
+              durationSeconds: null,
+            },
+          ],
+          createdAt: "2026-10-19T12:00:00.000Z",
+          expiresAt: null,
+        })
+      )
+    )
+  )
+}
+
 describe("Explore's outputs", () => {
-  it("show only real, finished runs that made an output", () => {
-    const real = runOf({})
-    const entries = ownEntries([
-      real,
-      runOf({ id: "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e02", origin: "demo" }),
-      runOf({ id: "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e03", status: "failed" }),
-      runOf({ id: "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e04", outputs: [] }),
-    ])
-
-    expect(entries.map((entry) => entry.run.id)).toEqual([real.id])
-    expect(entries[0]?.source).toEqual({ kind: "own", assetId: outputId })
-  })
-
   it("read a shared output from the gateway, with the address of its media", () => {
     const share = shareView.safeParse({
       id: "abc",
@@ -82,16 +95,16 @@ describe("Explore's outputs", () => {
   it("show a result only when the Explore list admits its run with a yes", () => {
     const admitted = runOf({})
     const unlisted = runOf({ id: "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e09" })
-    const entries = admittedEntries(ownEntries([admitted, unlisted]), [
+    const entries = admittedEntries(sharesOf([admitted, unlisted]), [
       admissionOf(admitted.id),
     ])
 
     expect(entries.map((entry) => entry.run.id)).toEqual([admitted.id])
-    expect(admittedEntries(ownEntries([admitted]), [])).toEqual([])
+    expect(admittedEntries(sharesOf([admitted]), [])).toEqual([])
   })
 
   it("keep out a run whose input shows a person without consent, or a brand", () => {
-    const made = ownEntries([runOf({})])
+    const made = sharesOf([runOf({})])
     const id = made[0]?.run.id
     const other = admissionOf(id, { people: "other" })
     const brand = admissionOf(id, { brand: true })
@@ -126,19 +139,17 @@ describe("Explore's outputs", () => {
     })
 
     expect(
-      admittedEntries(ownEntries([weights]), [admissionOf(weights.id)])
+      admittedEntries(sharesOf([weights]), [admissionOf(weights.id)])
     ).toEqual([])
-    expect(admittedEntries(ownEntries([wan]), [admissionOf(wan.id)])).toEqual(
-      []
-    )
+    expect(admittedEntries(sharesOf([wan]), [admissionOf(wan.id)])).toEqual([])
     expect(
-      admittedEntries(ownEntries([hosted]), [
+      admittedEntries(sharesOf([hosted]), [
         admissionOf(hosted.id, { source: "own-minimax-api" }),
       ])
     ).toHaveLength(1)
   })
 
-  it("show an admitted run once when it is both shared and your own", () => {
+  it("show an admitted run once when two shares hold it", () => {
     const made = runOf({})
     const share = shareView.parse({
       id: "abc",
@@ -158,11 +169,11 @@ describe("Explore's outputs", () => {
       expiresAt: null,
     })
     const entries = admittedEntries(
-      [...sharedEntries([sharedOutputOf(share)]), ...ownEntries([made])],
+      [...sharedEntries([sharedOutputOf(share)]), ...sharesOf([made])],
       [admissionOf(made.id)]
     )
 
-    expect(entries.map((entry) => entry.source.kind)).toEqual(["share"])
+    expect(entries.map((entry) => entry.key)).toEqual(["share-abc"])
   })
 })
 
