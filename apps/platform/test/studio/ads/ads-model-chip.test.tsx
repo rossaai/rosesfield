@@ -53,7 +53,7 @@ describe("the Ads model chip", () => {
     expect(chip.querySelector("svg.lucide-chevron-right")).not.toBeNull()
   })
 
-  it("opens the 402 px list of its models, each with its line, and picks one", () => {
+  it("opens the 402 px list of its models, with no line from the app's own copy, and picks one", () => {
     const chosen = renderChip()
     fireEvent.click(
       screen.getByRole("button", {
@@ -71,7 +71,7 @@ describe("the Ads model chip", () => {
       options.map((option) => tCatalog(option.labelKey))
     )
     for (const option of options) {
-      expect(all.textContent).toContain(tCatalog(`${option.labelKey}.line`))
+      expect(all.textContent).not.toContain(tCatalog(`${option.labelKey}.line`))
     }
     const other = options.find((one) => one.value !== chosenByDefault)
     const row = all.querySelector(`[data-model="${other?.value}"]`)
