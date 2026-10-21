@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, type Locator, type Page, test } from "@playwright/test"
 
 const tabs = [
   { name: "Speech", model: "Chatterbox" },
@@ -7,6 +7,37 @@ const tabs = [
   { name: "Music", model: "MiniMax-Music3" },
   { name: "Sound effects", model: "Stable Audio 3 Medium" },
 ]
+
+function silentWav(seconds: number): Buffer {
+  const rate = 8000
+  const data = rate * seconds * 2
+  const header = Buffer.alloc(44)
+  header.write("RIFF", 0)
+  header.writeUInt32LE(36 + data, 4)
+  header.write("WAVE", 8)
+  header.write("fmt ", 12)
+  header.writeUInt32LE(16, 16)
+  header.writeUInt16LE(1, 20)
+  header.writeUInt16LE(1, 22)
+  header.writeUInt32LE(rate, 24)
+  header.writeUInt32LE(rate * 2, 28)
+  header.writeUInt16LE(2, 32)
+  header.writeUInt16LE(16, 34)
+  header.write("data", 36)
+  header.writeUInt32LE(data, 40)
+  return Buffer.concat([header, Buffer.alloc(data)])
+}
+
+async function upload(
+  page: Page,
+  field: Locator,
+  file: { name: string; mimeType: string; buffer: Buffer }
+): Promise<void> {
+  await field.getByRole("button", { name: /Add audio/ }).click()
+  const chooser = page.waitForEvent("filechooser")
+  await page.getByRole("menuitem", { name: "Upload" }).click()
+  await (await chooser).setFiles(file)
+}
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -33,6 +64,37 @@ test.describe("Audio's column", () => {
         page.getByRole("button", { name: /^Generate/ }).first()
       ).toBeVisible()
     }
+  })
+
+  test("shows a recording you add by its name and length with a play button, and refuses a file that is not audio with the reason", async ({
+    page,
+  }) => {
+    await page.goto("/apps/audio#clone")
+    const clone = page.locator('[data-slot="field"]', {
+      hasText: "Voice recording",
+    })
+    await upload(page, clone, {
+      name: "interview.wav",
+      mimeType: "audio/wav",
+      buffer: silentWav(7),
+    })
+    const row = clone.locator('[data-slot="audio-row"]')
+    await expect(row.getByText("interview.wav")).toBeVisible()
+    await expect(row.getByText("7 seconds")).toBeVisible()
+    await expect(row.getByRole("button", { name: "Play" })).toBeVisible()
+    await page.getByRole("tab", { name: "Voice change", exact: true }).click()
+    const source = page.locator('[data-slot="field"]', {
+      hasText: "Your recording",
+    })
+    await upload(page, source, {
+      name: "notes.txt",
+      mimeType: "text/plain",
+      buffer: Buffer.from("notes"),
+    })
+    await expect(source.locator('[data-slot="field-message"]')).toHaveText(
+      "This input takes audio. Pick another file."
+    )
+    await expect(source.locator('[data-slot="audio-row"]')).toHaveCount(0)
   })
 
   test("opens the old Voice address on Audio's Voice clone", async ({
