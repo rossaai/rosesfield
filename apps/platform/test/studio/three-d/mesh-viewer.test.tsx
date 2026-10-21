@@ -1,0 +1,125 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react"
+import type { ReactElement } from "react"
+import { afterEach, describe, expect, it } from "vitest"
+import { DeviceProvider } from "@/device/device-context"
+import {
+  Device,
+  type DeviceFile,
+  type PickFilesOptions,
+} from "@/device/device.port"
+import { parseGlb } from "@/studio/three-d/glb"
+import { meshFileName, meshQuery } from "@/studio/three-d/mesh-file"
+import {
+  MeshDownload,
+  MeshView,
+  wheelPixels,
+} from "@/studio/three-d/mesh-viewer"
+import { triangleGlb } from "./glb-bytes"
+
+class FakeDevice extends Device {
+  readonly saved: DeviceFile[] = []
+
+  override pickFiles(_options: PickFilesOptions): Promise<File[]> {
+    return Promise.resolve([])
+  }
+
+  override save(file: DeviceFile): Promise<void> {
+    this.saved.push(file)
+    return Promise.resolve()
+  }
+
+  override canShare(_file: DeviceFile): boolean {
+    return false
+  }
+
+  override share(_file: DeviceFile): Promise<void> {
+    return Promise.resolve()
+  }
+
+  override copyText(_text: string): Promise<void> {
+    return Promise.resolve()
+  }
+}
+
+const assetId = "4e5f6a7b-8c9d-4e0f-8a1b-2c3d4e5f6a01"
+
+afterEach(cleanup)
+
+function renderWith(
+  piece: ReactElement,
+  blob: Blob,
+  device: Device = new FakeDevice()
+): void {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  const bytes = triangleGlb()
+  client.setQueryData(meshQuery(assetId).queryKey, {
+    blob,
+    scene: parseGlb(bytes),
+  })
+  render(
+    <QueryClientProvider client={client}>
+      <DeviceProvider device={device}>{piece}</DeviceProvider>
+    </QueryClientProvider>
+  )
+}
+
+describe("the 3D download", () => {
+  it("saves the model as a GLB file named for its asset", async () => {
+    const device = new FakeDevice()
+    const blob = new Blob([triangleGlb()], {
+      type: "application/octet-stream",
+    })
+    renderWith(<MeshDownload assetId={assetId} />, blob, device)
+    fireEvent.click(screen.getByRole("button", { name: "Download" }))
+    await waitFor(() => expect(device.saved).toHaveLength(1))
+    const [file] = device.saved
+    expect(file?.name).toBe("rosesfield-4e5f6a7b.glb")
+    expect(file?.blob.type).toBe("model/gltf-binary")
+    expect(file?.blob.size).toBe(blob.size)
+  })
+
+  it("names every file with the .glb extension", () => {
+    expect(meshFileName(assetId).endsWith(".glb")).toBe(true)
+  })
+})
+
+describe("the 3D viewer", () => {
+  it("says the browser draws no 3D and offers the GLB when WebGL 2 is missing", async () => {
+    renderWith(<MeshView assetId={assetId} />, new Blob([triangleGlb()]))
+    expect(
+      await screen.findByText("This browser does not draw 3D models")
+    ).toBeTruthy()
+  })
+
+  it("says the model did not open when its file is not a GLB", () => {
+    const client = new QueryClient()
+    client.setQueryData(meshQuery(assetId).queryKey, {
+      blob: new Blob(["solid cube"]),
+      scene: null,
+    })
+    render(
+      <QueryClientProvider client={client}>
+        <MeshView assetId={assetId} />
+      </QueryClientProvider>
+    )
+    const failed = screen.getByText("This model did not open in the viewer")
+    expect(failed).toBeTruthy()
+  })
+
+  it("reads a scroll in lines, in pages and in pixels as pixels", () => {
+    const plain = { deltaY: 3, deltaMode: 0, ctrlKey: false }
+    expect(wheelPixels(plain, 400)).toBe(3)
+    expect(wheelPixels({ ...plain, deltaMode: 1 }, 400)).toBe(48)
+    expect(wheelPixels({ ...plain, deltaMode: 2 }, 400)).toBe(1200)
+    expect(wheelPixels({ ...plain, ctrlKey: true }, 400)).toBe(12)
+  })
+})
