@@ -36,7 +36,10 @@ export function downloadsOf(
   const bottomFirst = [...rows].reverse().filter((row) => !row.isHidden)
   const base = `rosesfield-layers-${runId.slice(0, 8)}`
   return {
-    flat: { name: `${base}.png`, assetIds: bottomFirst.map((row) => row.shown) },
+    flat: {
+      name: `${base}.png`,
+      assetIds: bottomFirst.map((row) => row.shown),
+    },
     each: bottomFirst.map((row) => ({
       name: `${base}-${row.layer.number}.png`,
       assetId: row.shown,
