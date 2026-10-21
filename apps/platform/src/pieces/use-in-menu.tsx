@@ -7,7 +7,7 @@ import {
 } from "@rosesfield/ui/components/dropdown-menu"
 import { useNavigate } from "@tanstack/react-router"
 import type { ReactElement } from "react"
-import { appName, appsTaking } from "@/catalog/app-facts"
+import { appName, appsTaking, appsTakingCharacter } from "@/catalog/app-facts"
 import { catalogApps } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 
@@ -21,7 +21,11 @@ export function useUseInItems({
   useId,
 }: UseInItemsProps): ReactElement[] {
   const navigate = useNavigate()
-  return appsTaking(catalogApps, kind).map((app) => (
+  const apps =
+    kind === "character"
+      ? appsTakingCharacter(catalogApps)
+      : appsTaking(catalogApps, kind)
+  return apps.map((app) => (
     <DropdownMenuItem
       key={app.id}
       onClick={() =>

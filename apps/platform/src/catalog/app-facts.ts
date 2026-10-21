@@ -177,6 +177,33 @@ export function appsTaking(
   return apps.filter((app) => app.inputs.some((input) => input.type === kind))
 }
 
+type ImageInput = Extract<InputDefinition, { type: "image" }>
+
+const modelInput = "model"
+
+export function modelsTakingInput(input: InputDefinition): readonly string[] {
+  return input.type === "image"
+    ? (input.when ?? []).flatMap((condition) =>
+        "is" in condition && condition.input === modelInput ? condition.is : []
+      )
+    : []
+}
+
+export function referenceImageInputsOf(app: AppListing): ImageInput[] {
+  return app.inputs.filter(
+    (input): input is ImageInput =>
+      input.type === "image" && modelsTakingInput(input).length > 0
+  )
+}
+
+export function appsTakingCharacter(apps: readonly AppListing[]): AppListing[] {
+  return apps.filter(
+    (app) =>
+      app.inputs.some((input) => input.type === "character") ||
+      referenceImageInputsOf(app).length > 0
+  )
+}
+
 export function hasPrompt(app: AppListing): boolean {
   return promptInputOf(app) !== null
 }
