@@ -1,6 +1,6 @@
 import type { EngineBinding, RunInputs } from "@rosesfield/contract"
-import type { AssetId, CharacterId } from "@rosesfield/kernel"
-import { recastAspectRatios, recastEngine } from "#recast/comfy/recast-engine"
+import type { AssetId } from "@rosesfield/kernel"
+import { app as motionApp, motionAspectRatios } from "#motion/app"
 import {
   type PlannedShot,
   remakeLimits,
@@ -12,7 +12,7 @@ export type RemakeQuality = "draft" | "final"
 
 export type ShotAttempt = 1 | 2
 
-export type ShotApp = "recast" | "video"
+export type ShotApp = "motion" | "video"
 
 export type ShotRequest = {
   shot: number
@@ -29,7 +29,7 @@ export type ShotRequestInput = {
   attempt: ShotAttempt
   shot: PlannedShot
   clip: AssetId | null
-  character: CharacterId
+  photo: AssetId
   quality: RemakeQuality
   instructions: string
   aspectRatio: string
@@ -44,9 +44,14 @@ type Routed = {
 
 export const remakeShotsAdapter = "remake-shots"
 
-export const remakeAspectRatios: readonly string[] = [...recastAspectRatios]
+export const remakeAspectRatios: readonly string[] = [...motionAspectRatios]
 
 const seedSpan = 2_147_483_648
+
+const replaceResolution: Readonly<Record<RemakeQuality, string>> = {
+  draft: "480p",
+  final: "720p",
+}
 
 const rebuildVideo: Readonly<Record<RemakeQuality, RunInputs>> = {
   draft: { model: "ltx-2-5", resolution: "480p", sound: "off" },
@@ -55,7 +60,7 @@ const rebuildVideo: Readonly<Record<RemakeQuality, RunInputs>> = {
 
 export const remakeEngine: EngineBinding = {
   adapter: remakeShotsAdapter,
-  config: { replace: recastEngine, rebuild: videoApp.engine },
+  config: { replace: motionApp.engine, rebuild: videoApp.engine },
 }
 
 export function shotKeyOf(
@@ -88,14 +93,13 @@ function replaced(input: ShotRequestInput): Routed | null {
     return null
   }
   return {
-    app: "recast",
-    binding: recastEngine,
+    app: "motion",
+    binding: motionApp.engine,
     inputs: {
-      mode: "character",
-      source: [input.clip],
-      character: [input.character],
-      keepSound: "off",
-      quality: input.quality,
+      photo: [input.photo],
+      clip: [input.clip],
+      sound: "off",
+      resolution: replaceResolution[input.quality],
     },
   }
 }
