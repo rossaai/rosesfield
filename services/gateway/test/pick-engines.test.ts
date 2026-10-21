@@ -10,7 +10,11 @@ import {
 import { FixedClock } from "@rosesfield/kernel"
 import { FilesystemAssetStore } from "@rosesfield/library"
 import { describe, expect, it } from "vitest"
-import { pickEngines, visitorEngines } from "#compose/pick-engines"
+import {
+  pastedKeyEngines,
+  pickEngines,
+  visitorEngines,
+} from "#compose/pick-engines"
 import type { EngineSettings } from "#engine/engine-target"
 import { readServerEnv } from "#env"
 import { harnessFor, jsonInit, type PortsFor } from "./harness"
@@ -221,15 +225,27 @@ describe("the engine target the settings select", () => {
     const media = new RefusingMediaTool()
     const target = comfyCloud("ignored")
     expect(
-      visitorEngines(target, "comfyui-visitor", { clock, media, store }).map(
-        (one) => one.key
-      )
+      pastedKeyEngines(target, "comfyui-visitor", {
+        clock,
+        media,
+        store,
+      }).map((one) => one.key)
     ).toEqual(["remake-shots", comfyWorkflowAdapter, "comfy-router", "demo"])
     expect(
-      visitorEngines(target, null, { clock, media, store }).map(
+      pastedKeyEngines(target, null, { clock, media, store }).map(
         (one) => one.key
       )
     ).toEqual(["comfy-router", "demo"])
+  })
+
+  it("builds no Remake runner for a public visitor, where Remake is closed, even when the server runs ffmpeg", () => {
+    const media = new RefusingMediaTool()
+    const target = comfyCloud("ignored")
+    expect(
+      visitorEngines(target, "comfyui-visitor", { clock, media, store }).map(
+        (one) => one.key
+      )
+    ).toEqual([comfyWorkflowAdapter, "comfy-router", "demo"])
   })
 
   it("control: a server that runs no ffmpeg lists no Remake runner", () => {

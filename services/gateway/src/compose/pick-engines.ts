@@ -120,16 +120,42 @@ export function pickEngines(
     : withRemake([live, router], hostedKeyOf(engine), options)
 }
 
+type KeyedEngines = {
+  live: GenerationEngine | null
+  router: GenerationEngine
+  demo: GenerationEngine
+  hostedKey: string | null
+}
+
+function keyedEngines(
+  engine: EngineSettings,
+  key: string | null,
+  options: EngineOptions
+): KeyedEngines {
+  const keyed = key === null ? engine : withEngineKey(engine, key)
+  const live = key === null ? null : liveEngineOf(keyed, options)
+  const hostedKey = key === null ? null : hostedKeyOf(keyed)
+  const router = routerOf(hostedKey, options)
+  const demo = new DemoGenerationEngine({ clock: options.clock, rates: router })
+  return { live, router, demo, hostedKey }
+}
+
 export function visitorEngines(
   engine: EngineSettings,
   key: string | null,
   options: EngineOptions
 ): readonly GenerationEngine[] {
-  const keyed = key === null ? engine : withEngineKey(engine, key)
-  const live = key === null ? null : liveEngineOf(keyed, options)
-  const router = routerOf(key === null ? null : hostedKeyOf(keyed), options)
-  const demo = new DemoGenerationEngine({ clock: options.clock, rates: router })
+  const { live, router, demo } = keyedEngines(engine, key, options)
+  return live === null ? [router, demo] : [live, router, demo]
+}
+
+export function pastedKeyEngines(
+  engine: EngineSettings,
+  key: string | null,
+  options: EngineOptions
+): readonly GenerationEngine[] {
+  const { live, router, demo, hostedKey } = keyedEngines(engine, key, options)
   return live === null
     ? [router, demo]
-    : [...withRemake([live, router], hostedKeyOf(keyed), options), demo]
+    : [...withRemake([live, router], hostedKey, options), demo]
 }

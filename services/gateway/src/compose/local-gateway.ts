@@ -32,8 +32,8 @@ import { sharedCreditMeter } from "#catalog/shared-credit-meter"
 import { PastedKeys } from "#compose/pasted-keys"
 import {
   type EngineOptions,
+  pastedKeyEngines,
   pickEngines,
-  visitorEngines,
 } from "#compose/pick-engines"
 import { pageOf, platformFiles } from "#compose/platform-files"
 import { ownerScope } from "#compose/request-scope"
@@ -209,7 +209,7 @@ function ownerKeys(parts: Parts): OwnerKeys {
     build: (key) =>
       ownerHandlers(
         parts,
-        visitorEngines(PastedKeys.engine, key, parts.engineOptions),
+        pastedKeyEngines(PastedKeys.engine, key, parts.engineOptions),
         (adapter) => !isDemo(adapter)
       ),
   })
