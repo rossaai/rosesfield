@@ -1,4 +1,5 @@
 import { expect, type Locator, test } from "@playwright/test"
+import { answerOwnLists } from "./own-lists"
 
 type Box = { x: number; y: number; width: number; height: number }
 
@@ -52,6 +53,7 @@ test.describe("a prompt app on a desktop", () => {
   })
 
   test("opens on How it works while you have no output", async ({ page }) => {
+    await answerOwnLists(page, new Set())
     await page.goto("/apps/image")
     const how = page.getByRole("tab", { name: "How it works" })
     await expect(how).toHaveAttribute("aria-selected", "true")
@@ -362,6 +364,8 @@ test.describe("Video's runs on a phone", () => {
       }),
     })
     expect(started.ok).toBe(true)
+    const made: { run: { id: string } } = await started.json()
+    await answerOwnLists(page, new Set([made.run.id]))
     await page.goto("/apps/video")
     const region = page.getByRole("region", { name: "Your results" })
     const tabs = await boxOf(region.getByRole("tablist").first())
