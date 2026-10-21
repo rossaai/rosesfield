@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest"
 import {
   speechAppOf,
   speechDefaultOf,
+  speechRunOf,
   speechTask,
   spokenInputs,
 } from "#lipsync/lipsync-speech"
@@ -24,6 +25,13 @@ function appWithTasks(id: string, tasks: readonly string[]): AppDefinition {
         labelKey: "inputs.model",
         options: [{ value: "speech-graph", labelKey: "model.speechGraph" }],
         default: "speech-graph",
+      },
+      {
+        type: "prompt",
+        name: "script",
+        labelKey: "inputs.script",
+        presence: "required",
+        maxLength: 20,
       },
     ],
     output: { kind: "audio", count: { default: 1, max: 1 } },
@@ -65,6 +73,28 @@ function speechRun(status: Run["status"], outputs: readonly string[]): Run {
 const lipsyncInputs = { mode: "photo", model: "ltx-2-3", audio: [yourAudio] }
 
 describe("the speech run that Text makes first", () => {
+  it("asks the speech app for your line on the voice you picked", () => {
+    expect(
+      speechRunOf([music, audio], "  Hello there ", "hosted/voice")
+    ).toEqual({
+      appId: "audio",
+      inputs: { model: "hosted/voice", script: "Hello there" },
+    })
+  })
+
+  it("asks for your line on the speech default when you pick no voice", () => {
+    expect(speechRunOf([music, audio], "Hello there", null)).toEqual({
+      appId: "audio",
+      inputs: { model: "speech-graph", script: "Hello there" },
+    })
+  })
+
+  it("asks for no speech run with no line, a line past the app's length or no speech app", () => {
+    expect(speechRunOf([music, audio], "   ", null)).toBeNull()
+    expect(speechRunOf([music, audio], "a".repeat(21), null)).toBeNull()
+    expect(speechRunOf([music], "Hello there", null)).toBeNull()
+  })
+
   it("finds the app that holds the speech task and reads its default", () => {
     expect(speechAppOf([music, audio])?.id).toBe("audio")
     expect(speechDefaultOf([music, audio])).toBe("speech-graph")
