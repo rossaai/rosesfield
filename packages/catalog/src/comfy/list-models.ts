@@ -1,6 +1,7 @@
 import type { AppDefinition, InputDefinition } from "@rosesfield/contract"
 import {
   chosenModelOf,
+  graphTaskOf,
   type HostedModel,
   isHostedModelId,
   taskAdapter,
@@ -80,7 +81,7 @@ function hostedEntry(model: HostedModel, task: string): CatalogModel {
   }
 }
 
-function graphsOf(app: AppDefinition, task: string): CatalogModel[] {
+function graphsOf(app: AppDefinition, appTask: string): CatalogModel[] {
   const input = app.inputs.find(
     (one): one is Extract<InputDefinition, { type: "choice" }> =>
       one.name === modelInputName && one.type === "choice"
@@ -88,7 +89,13 @@ function graphsOf(app: AppDefinition, task: string): CatalogModel[] {
   return (input?.options ?? [])
     .filter((option) => !isHostedModelId(option.value))
     .filter((option) => !isDeniedModel(`graph/${option.value}`))
-    .map((option) => graphEntry(option.value, option.labelKey, task))
+    .map((option) =>
+      graphEntry(
+        option.value,
+        option.labelKey,
+        graphTaskOf(app.engine, option.value) ?? appTask
+      )
+    )
 }
 
 function graphEntry(

@@ -76,7 +76,7 @@
     },
     {
       "path": "apps/platform/src/copy/app.en.ts",
-      "sha256": "abab6b62d7747555002d3c520d92037faf62f547db80d0ba6698e0ae61fbcde0"
+      "sha256": "843c0f8090997fd99be704143fa437a70f41caef282b138fff7db420af871bfd"
     },
     {
       "path": "apps/platform/src/copy/characters.en.ts",
@@ -141,6 +141,10 @@
     {
       "path": "packages/catalog/src/angles/copy.en.ts",
       "sha256": "f83b980929d20ea1f591784b2c7adffed794cabfcd8bc212c064924ab0f75c96"
+    },
+    {
+      "path": "packages/catalog/src/audio/copy.en.ts",
+      "sha256": "2040d6711cb7f590fc49239e9dd0ddec1fc18e5c2a2923af25dd79c41d21af4f"
     },
     {
       "path": "packages/catalog/src/background-removal/copy.en.ts",

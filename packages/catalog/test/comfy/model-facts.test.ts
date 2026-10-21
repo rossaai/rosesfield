@@ -64,9 +64,18 @@ describe("the task of a model", () => {
     expect(
       tasksOfModel(hosted("a/video-upscale-v1", ["video"], ["video"]))
     ).toEqual(["video-edit", "upscale"])
+  })
+
+  it("lists a sound effects model under sound and not under speech", () => {
     expect(
       tasksOfModel(hosted("a/eleven-sfx-v2", ["text"], ["audio"]))
-    ).toEqual(["speech", "sound"])
+    ).toEqual(["sound"])
+    expect(
+      tasksOfModel(hosted("elevenlabs/eleven_sfx_v2", ["text"], ["audio"]))
+    ).toEqual(["sound"])
+    expect(
+      tasksOfModel(hosted("elevenlabs/eleven_v3", ["text"], ["audio"]))
+    ).toEqual(["speech"])
   })
 
   it("lists an edit model that needs an image in Edit and not in text to image", () => {

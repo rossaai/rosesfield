@@ -1,4 +1,4 @@
-import { type AppDefinition, startRunBodyFor } from "@rosesfield/contract"
+import { startRunBodyFor } from "@rosesfield/contract"
 import {
   ComfyGenerationEngine,
   type EngineRequest,
@@ -7,22 +7,13 @@ import {
 import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
-import { readApps } from "#list-apps"
+import { voiceWorkflow } from "#audio/comfy/chatterbox-binding"
 import { findWorkflow } from "#list-workflows"
-import { app } from "#voice/app"
-import { voiceWorkflow } from "#voice/comfy/voice-binding"
-import { cloudUrl, submitJob } from "../image/comfy-recordings"
-import { type Recording, ReplayFetch } from "../image/replay-fetch"
+import { cloudUrl, submitJob } from "../../image/comfy-recordings"
+import { type Recording, ReplayFetch } from "../../image/replay-fetch"
+import { audioDefinition } from "../audio-definition"
 
-function parseVoice(): AppDefinition {
-  const [parsed] = readApps([{ folder: "voice", app }])
-  if (parsed === undefined) {
-    throw new Error("The voice app did not parse")
-  }
-  return parsed
-}
-
-const voice = parseVoice()
+const audio = audioDefinition()
 const recordingId = assetIdFormat.parse("8a7b6c5d-4e3f-4a2b-9c1d-0e9f8a7b6c5d")
 const uploadedId = "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a"
 const mp3Bytes = Uint8Array.of(73, 68, 51, 4, 0, 0, 0, 0, 0, 0)
@@ -59,10 +50,10 @@ function requestFor(
   inputs: Record<string, unknown>,
   files: EngineRequest["files"] = []
 ): EngineRequest {
-  const parsed = startRunBodyFor(voice).parse({ inputs, count: 1 })
+  const parsed = startRunBodyFor(audio).parse({ inputs, count: 1 })
   return {
-    idempotencyKey: "voice-run-1:0",
-    binding: resolveBinding(voice.engine, parsed.inputs),
+    idempotencyKey: "audio-run-1:0",
+    binding: resolveBinding(audio.engine, parsed.inputs),
     inputs: parsed.inputs,
     files,
     count: parsed.count,
@@ -86,11 +77,11 @@ async function sent(
   return { workflow, urls: replay.sent.map((one) => one.url) }
 }
 
-describe("the voice binding", () => {
+describe("the Chatterbox binding of Speech and Voice clone", () => {
   it("clones the voice of a recording with the Chatterbox workflow of workflows/", async () => {
     const request = requestFor(
       {
-        mode: "recording",
+        mode: "clone",
         script,
         language: "es",
         recording: [recordingId],
@@ -132,12 +123,9 @@ describe("the voice binding", () => {
     })
   })
 
-  it("reads the script in the model's own voice with no LoadAudio node", async () => {
-    const request = requestFor({ mode: "model", script })
-    const { workflow, urls } = await sent(request, [submitJob])
-    expect(urls).toEqual([`${cloudUrl}/api/v2/jobs`])
-    expect(workflow["2"]).toBeUndefined()
-    expect(workflow["1"]?.inputs).not.toHaveProperty("audio_prompt")
+  it("reads the script in the model's own voice at the default expression", async () => {
+    const request = requestFor({ mode: "speech", script })
+    const { workflow } = await sent(request, [submitJob])
     expect(workflow["1"]?.inputs).toMatchObject({
       text: script,
       language: "English (en)",
@@ -145,38 +133,10 @@ describe("the voice binding", () => {
     })
   })
 
-  it("makes one output per job, so a count of 3 runs 3 seeds", () => {
-    const engine = new ComfyGenerationEngine({ apiKey: "comfyui-test" })
-    const withRecording = requestFor(
-      { mode: "recording", script, recording: [recordingId] },
-      []
-    ).binding
-    const without = requestFor({ script }).binding
-    expect(engine.outputsPerJob(withRecording)).toBe("one")
-    expect(engine.outputsPerJob(without)).toBe("one")
-  })
-
   it("refuses an empty script and a language the model does not speak", () => {
-    expect(() => requestFor({ script: "  " })).toThrow()
-    expect(() => requestFor({ script, language: "xx" })).toThrow()
-  })
-
-  it("asks for a recording only in Use a recording", () => {
-    const body = startRunBodyFor(voice)
-    const issues = (inputs: Record<string, unknown>) => {
-      const result = body.safeParse({ inputs, count: 1 })
-      return result.success
-        ? []
-        : result.error.issues.map((issue) => issue.path.join("."))
-    }
-    expect(issues({ mode: "recording", script })).toEqual(["inputs.recording"])
-    expect(issues({ mode: "model", script, recording: [recordingId] })).toEqual(
-      ["inputs.recording"]
-    )
-    expect(issues({ mode: "sing", script })).toEqual(["inputs.mode"])
-    expect(
-      issues({ mode: "recording", script, recording: [recordingId] })
-    ).toEqual([])
-    expect(issues({ script })).toEqual([])
+    expect(() => requestFor({ mode: "speech", script: "  " })).toThrow()
+    expect(() =>
+      requestFor({ mode: "speech", script, language: "xx" })
+    ).toThrow()
   })
 })

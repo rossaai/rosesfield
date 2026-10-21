@@ -11,10 +11,10 @@ import { afterEach, describe, expect, it } from "vitest"
 import { type Harness, harnessFor, jsonInit } from "../harness"
 import { localPorts } from "../local-ports"
 
-function voiceApp(): AppDefinition {
-  const app = findApp("voice")
+function audioApp(): AppDefinition {
+  const app = findApp("audio")
   if (app === null) {
-    throw new Error("The catalog lists no voice app. Run bun run catalog:sync")
+    throw new Error("The catalog lists no audio app. Run bun run catalog:sync")
   }
   return app
 }
@@ -23,7 +23,7 @@ const script =
   "The library opens at nine. Bring your card, and return the books you borrowed last month."
 const wave = Uint8Array.of(82, 73, 70, 70, 36, 0, 0, 0, 87, 65, 86, 69)
 
-describe("the voice app through the gateway on the demo engine", () => {
+describe("the audio app through the gateway on the demo engine", () => {
   const open: Harness[] = []
 
   afterEach(() => {
@@ -33,14 +33,14 @@ describe("the voice app through the gateway on the demo engine", () => {
   })
 
   function openGateway(): Harness {
-    const harness = harnessFor({ portsFor: localPorts, apps: [voiceApp()] })
+    const harness = harnessFor({ portsFor: localPorts, apps: [audioApp()] })
     open.push(harness)
     return harness
   }
 
   function start(gateway: Harness, body: unknown, key = crypto.randomUUID()) {
     return gateway.call(
-      buildPath(routes.startRun.path, { appId: "voice" }),
+      buildPath(routes.startRun.path, { appId: "audio" }),
       jsonInit(body, { "Idempotency-Key": key })
     )
   }
@@ -64,7 +64,13 @@ describe("the voice app through the gateway on the demo engine", () => {
   it("speaks a script in Spanish at Count 3 and keeps 3 WAV outputs with the inputs", async () => {
     const gateway = openGateway()
     const response = await start(gateway, {
-      inputs: { script, language: "es", expression: 0.8, seed: 41 },
+      inputs: {
+        mode: "speech",
+        script,
+        language: "es",
+        expression: 0.8,
+        seed: 41,
+      },
       count: 3,
     })
     expect(response.status).toBe(202)
@@ -73,7 +79,8 @@ describe("the voice app through the gateway on the demo engine", () => {
     const done = await finish(gateway, run.id)
     expect(done.status).toBe("done")
     expect(done.inputs).toEqual({
-      mode: "model",
+      mode: "speech",
+      model: "chatterbox",
       script,
       language: "es",
       expression: 0.8,
@@ -110,7 +117,7 @@ describe("the voice app through the gateway on the demo engine", () => {
     const gateway = openGateway()
     const recordingId = await upload(gateway)
     const response = await start(gateway, {
-      inputs: { mode: "recording", script, recording: [recordingId] },
+      inputs: { mode: "clone", script, recording: [recordingId] },
       count: 2,
     })
     expect(response.status).toBe(202)
@@ -118,17 +125,45 @@ describe("the voice app through the gateway on the demo engine", () => {
     const done = await finish(gateway, run.id)
     expect(done.status).toBe("done")
     expect(done.inputs).toMatchObject({
-      mode: "recording",
+      mode: "clone",
       script,
       recording: [recordingId],
     })
     expect(done.outputs).toHaveLength(2)
   })
 
+  it.each([
+    ["change", "chatterbox-vc"],
+    ["music", "minimax-music-3"],
+    ["sound", "stable-audio-3-medium"],
+  ])(
+    "runs %s on its own graph and keeps an audio output",
+    async (mode, model) => {
+      const gateway = openGateway()
+      const recordingId = await upload(gateway)
+      const inputs =
+        mode === "change"
+          ? { mode, source: [recordingId], target: [recordingId] }
+          : { mode, description: "a door creaks open", length: 5 }
+      const response = await start(gateway, { inputs })
+      expect(response.status).toBe(202)
+      const { run } = runResponse.parse(await response.json())
+      const done = await finish(gateway, run.id)
+      expect(done.status).toBe("done")
+      expect(done.inputs).toMatchObject({ mode, model })
+      expect(done.outputs).toHaveLength(1)
+    }
+  )
+
   it("refuses an empty script and a Count of 5 before a run starts", async () => {
     const gateway = openGateway()
-    const empty = await start(gateway, { inputs: { script: "  " } })
-    const tooMany = await start(gateway, { inputs: { script }, count: 5 })
+    const empty = await start(gateway, {
+      inputs: { mode: "speech", script: "  " },
+    })
+    const tooMany = await start(gateway, {
+      inputs: { mode: "speech", script },
+      count: 5,
+    })
     for (const response of [empty, tooMany]) {
       expect(response.status).toBe(400)
       const body = errorEnvelope.parse(await response.json())
@@ -137,14 +172,14 @@ describe("the voice app through the gateway on the demo engine", () => {
     expect(gateway.jobs.enqueued).toEqual([])
   })
 
-  it("refuses a recording outside Use a recording and Use a recording without one", async () => {
+  it("refuses a recording outside Voice clone and Voice clone without one", async () => {
     const gateway = openGateway()
     const recordingId = await upload(gateway)
     const missing = await start(gateway, {
-      inputs: { mode: "recording", script },
+      inputs: { mode: "clone", script },
     })
     const extra = await start(gateway, {
-      inputs: { mode: "model", script, recording: [recordingId] },
+      inputs: { mode: "speech", script, recording: [recordingId] },
     })
     for (const response of [missing, extra]) {
       expect(response.status).toBe(400)
@@ -157,7 +192,7 @@ describe("the voice app through the gateway on the demo engine", () => {
   it("refuses a language the list does not hold and a mode the app does not offer", async () => {
     const gateway = openGateway()
     const language = await start(gateway, {
-      inputs: { script, language: "xx" },
+      inputs: { mode: "speech", script, language: "xx" },
     })
     const mode = await start(gateway, { inputs: { mode: "describe", script } })
     expect(language.status).toBe(400)

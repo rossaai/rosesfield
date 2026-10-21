@@ -112,6 +112,8 @@ export const appCopy = {
   "model.line.videoEdit": "Changes a clip you give it",
   "model.line.lipSync": "Moves a face to a voice",
   "model.line.speech": "Speaks your words",
+  "model.line.voiceChange": "Says your recording in another voice",
+  "model.line.music": "Makes music from your words",
   "model.line.sound": "Makes a sound from your words",
   "model.line.threeD": "Makes a 3D model",
   "model.line.upscale": "Raises the resolution",

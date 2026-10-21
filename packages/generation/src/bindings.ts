@@ -17,6 +17,7 @@ export { ModelPolicy } from "#domain/model-policy.port"
 export { selectAdapter, selectBinding } from "#domain/select-binding"
 export {
   chosenModelOf,
+  graphTaskOf,
   hostedModelOf,
   isHostedModelId,
   taskAdapter,

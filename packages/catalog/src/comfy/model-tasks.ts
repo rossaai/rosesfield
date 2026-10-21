@@ -15,6 +15,8 @@ export type ModelTask =
   | "video-edit"
   | "lip-sync"
   | "speech"
+  | "voice-change"
+  | "music"
   | "sound"
   | "three-d"
   | "upscale"
@@ -38,6 +40,7 @@ type MediaRule = {
 type NameRule = {
   task: ModelTask
   pattern: RegExp
+  replaces?: readonly ModelTask[]
 }
 
 export const modelTasks: readonly ModelTask[] = [
@@ -50,6 +53,8 @@ export const modelTasks: readonly ModelTask[] = [
   "video-edit",
   "lip-sync",
   "speech",
+  "voice-change",
+  "music",
   "sound",
   "three-d",
   "upscale",
@@ -130,7 +135,7 @@ export const nameRules: readonly NameRule[] = [
   { task: "try-on", pattern: /vto|try-on/ },
   { task: "expand", pattern: /expand|outpaint/ },
   { task: "lip-sync", pattern: /lip-sync|lipsync|sync-3|avatar/ },
-  { task: "sound", pattern: /sfx|sound-effect/ },
+  { task: "sound", pattern: /sfx|sound-effect/, replaces: ["speech"] },
 ]
 
 function slotOf(field: ModelField, output: string): Slot | null {
@@ -177,12 +182,13 @@ function fits(model: HostedModel, rule: MediaRule): boolean {
 
 /** Lists the tasks a model can run, from the media it takes and makes and the inputs its form needs. */
 export function tasksOfModel(model: HostedModel): ModelTask[] {
+  const named = nameRules.filter((rule) => rule.pattern.test(model.id))
+  const replaced = named.flatMap((rule) => rule.replaces ?? [])
   const fromMedia = mediaRules
     .filter((rule) => fits(model, rule))
     .map((rule) => rule.task)
-  const fromName = nameRules
-    .filter((rule) => rule.pattern.test(model.id))
-    .map((rule) => rule.task)
+    .filter((task) => !replaced.includes(task))
+  const fromName = named.map((rule) => rule.task)
   return modelTasks.filter(
     (task) => fromMedia.includes(task) || fromName.includes(task)
   )
