@@ -57,6 +57,8 @@ const maxCeilingGain = 24
 
 export const adapterNode = "420"
 
+export const grainNode = "381"
+
 const guideOutputs = ["positive", "negative", "latent"]
 
 function invalid(reason: string): AppDefinitionInvalidError {
@@ -246,6 +248,10 @@ function setSound(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, down ?? "").inputs.gain_db = ceiling
 }
 
+function setGrain(graph: Graph, recipe: EffectRecipe): void {
+  nodeOf(graph, grainNode).inputs.strength = recipe.design.encode.grain
+}
+
 export function effectGraph(
   workflow: Record<string, unknown>,
   recipe: EffectRecipe
@@ -268,5 +274,6 @@ export function effectGraph(
     passThrough(graph, "465")
   }
   setSound(graph, recipe)
+  setGrain(graph, recipe)
   return graph
 }

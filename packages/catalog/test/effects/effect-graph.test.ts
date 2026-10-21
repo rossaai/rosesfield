@@ -9,6 +9,7 @@ import {
   effectGraph,
   endFrameNodes,
   fittedPhotoNode,
+  grainNode,
   imageEditNodes,
   loudnessNode,
   matteNodes,
@@ -131,7 +132,7 @@ describe("the effect recipes", () => {
       "460": { inputs: { image: ["627", 0] } },
       "463": { inputs: { image: ["627", 0] } },
       "380": { inputs: { image: ["374", 0], crop: "center" } },
-      "370": { inputs: { images: ["380", 0], audio: ["361", 0] } },
+      "370": { inputs: { images: [grainNode, 0], audio: ["361", 0] } },
       "75": { inputs: { format: "mp4", "format.codec": "h264" } },
     })
   })

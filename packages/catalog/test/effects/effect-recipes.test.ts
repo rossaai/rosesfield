@@ -64,6 +64,7 @@ describe("the effect recipes kept as data", () => {
         container: "mp4",
         codec: "h264",
         bitDepth: 8,
+        grain: 0.004,
       })
       expect(recipe.seconds).toBeGreaterThanOrEqual(5)
       expect(recipe.seconds).toBeLessThanOrEqual(15)
@@ -142,7 +143,7 @@ describe("the effect recipes kept as data", () => {
     ).toThrow(/many-copies\.json is invalid: photoFrame/)
   })
 
-  it("ends Push into eye on a dark frame under its last-frame luma, after a sharp close-up of the eye, with a camera that moves from the first frame", () => {
+  it("ends Push into eye on a dark frame under its last-frame luma, after a sharp close-up of an amber iris with a small pupil, with a camera that moves from the first frame", () => {
     const eye = recipeOf("push-into-eye")
     expect(eye.endFrame).toEqual({ source: "dark", luma: 1, strength: 0.9 })
     expect(eye.midFrame).toMatchObject({
@@ -154,11 +155,17 @@ describe("the effect recipes kept as data", () => {
       /real macro photograph of the iris of one of the person's eyes/
     )
     expect(eye.midFrame?.prompt).toMatch(/iris fills the whole frame/)
-    expect(eye.midFrame?.prompt).toMatch(/pure black in the centre/)
-    expect(eye.midFrame?.prompt).toMatch(/Do not change the eye colour/)
-    expect(eye.prompt).toMatch(
-      /face, skin tone and eye colour stay exactly as in the photo/
+    expect(eye.midFrame?.prompt).toMatch(/iris glows a warm amber/)
+    expect(eye.midFrame?.prompt).toMatch(
+      /pupil in the centre is small, round and pure black/
     )
+    expect(eye.midFrame?.prompt).not.toMatch(/eye colour/)
+    expect(eye.prompt).toMatch(
+      /face and skin tone stay exactly as in the photo/
+    )
+    expect(eye.prompt).toMatch(/the iris turns a warm glowing amber/)
+    expect(eye.prompt).toMatch(/the small black pupil/)
+    expect(eye.prompt).not.toMatch(/eye colour/)
     expect(eye.prompt).toMatch(/never slows/)
     expect(eye.prompt).toMatch(
       /black pupil grows outward until it swallows the whole frame/

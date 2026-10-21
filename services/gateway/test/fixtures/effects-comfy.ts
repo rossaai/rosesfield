@@ -7,8 +7,7 @@ import { z } from "zod"
 import type { PortsFor } from "../harness"
 import { localPorts } from "../local-ports"
 
-export const videoModel =
-  "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors"
+export const videoModel = "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
 export const jobId = "3a7c9e1b-5d2f-4b6a-8c0e-1f2a3b4c5d6e"
 export const uploadedId = "8e1f2a3b-4c5d-4e6f-9a0b-1c2d3e4f5a6b"
 const outputId = "2b3e4f56-8a7b-4c2d-9e4f-5a6b9f8a1c0d"

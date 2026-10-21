@@ -61,7 +61,8 @@ describe("the effects engine request", () => {
       "359": { inputs: { audio: ["358", 0], lufs: -16 } },
       "360": { inputs: { audio: ["359", 0], gain_db: 2 } },
       "361": { inputs: { audio: ["360", 0], gain_db: -2 } },
-      "370": { inputs: { images: ["380", 0], audio: ["361", 0] } },
+      "381": { inputs: { image: ["380", 0], seed: 42, strength: 0.004 } },
+      "370": { inputs: { images: ["381", 0], audio: ["361", 0] } },
     })
     for (const id of ["410", "461", "464"]) {
       expect({ id, node: workflow[id] }).toEqual({ id, node: undefined })

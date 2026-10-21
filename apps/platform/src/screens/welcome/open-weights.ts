@@ -85,6 +85,7 @@ export const openModels: readonly OpenModel[] = [
     link: "https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x",
     files: [
       "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
+      "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
       "Lightricks/LTX-2.5",
     ],
   },

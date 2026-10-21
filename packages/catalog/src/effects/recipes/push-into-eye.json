@@ -24,7 +24,7 @@
       "bitDepth": 8
     }
   },
-  "prompt": "One unbroken shot that moves from the first frame to the last, with no pause. From the first frame the camera pushes straight in toward one of the person's eyes, and it never slows down. The person's face, skin tone and eye colour stay exactly as in the photo. The eye fills the frame, then the iris with its sharp fine fibres, then the black pupil. In the last second the black pupil grows outward until it swallows the whole frame, while the camera keeps moving in. The iris stays sharp and bright around the pupil until the pupil covers it.",
+  "prompt": "One unbroken shot that moves from the first frame to the last, with no pause. From the first frame the camera pushes straight in toward one of the person's eyes, and it never slows down. The person's face and skin tone stay exactly as in the photo. As the camera nears, the iris turns a warm glowing amber. The eye fills the frame, then the amber iris with its sharp fine fibres, then the small black pupil. In the last second the black pupil grows outward until it swallows the whole frame, while the camera keeps moving in. The iris stays sharp and bright around the pupil until the pupil covers it.",
   "photoFrame": "first",
   "endFrame": {
     "source": "dark",
@@ -33,7 +33,7 @@
   },
   "midFrame": {
     "source": "edit",
-    "prompt": "Change the photo into a real macro photograph of the iris of one of the person's eyes, so close that the iris fills the whole frame from edge to edge and no eyelid, eyelash or skin shows. The pupil is round and pure black in the centre. The iris has natural, irregular, sharp fibres and one small soft reflection of light. Do not change the eye colour: the iris is the same colour as the person's eyes in the photo.",
+    "prompt": "Change the photo into a real macro photograph of the iris of one of the person's eyes, so close that the iris fills the whole frame from edge to edge and no eyelid, eyelash or skin shows. The iris glows a warm amber with natural, irregular, sharp fibres and one small soft reflection of light. The pupil in the centre is small, round and pure black.",
     "time": 5.5,
     "strength": 0.5
   },

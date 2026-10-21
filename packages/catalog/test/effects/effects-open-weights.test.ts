@@ -1,11 +1,12 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectAdapter } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
-import { effectsBinding } from "#effects/comfy/effects-binding"
+import { effectBinding, effectsBinding } from "#effects/comfy/effects-binding"
 import { resolutionValues } from "#effects/effect-recipe.contract"
 import { effectRecipes } from "#effects/effect-recipes"
 import { findWorkflow } from "#list-workflows"
 import uiFile from "../../../../workflows/effects-ltx-2-5/effects-ltx-2-5.json"
+import { workflowOf } from "./effects-replay"
 
 const coreNodeClasses: readonly string[] = [
   "CFGNorm",
@@ -19,6 +20,7 @@ const coreNodeClasses: readonly string[] = [
   "FluxKontextMultiReferenceLatentMethod",
   "GetImageSize",
   "GrowMask",
+  "ImageAddNoise",
   "ImageScale",
   "KSampler",
   "KSamplerSelect",
@@ -212,5 +214,64 @@ describe("Effects holds only ComfyUI core nodes, and the pinned loudness nodes o
       nodes: [...uiFile.nodes, { id: 9999, type: partnerNode }],
     }
     expect(notCore(uiClasses(plantedUi))).toEqual([partnerNode])
+  })
+})
+
+const bf16Loaders = [
+  {
+    id: "384",
+    input: "unet_name",
+    file: "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+    folder: "diffusion_models",
+  },
+  {
+    id: "387",
+    input: "clip_name",
+    file: "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
+    folder: "text_encoders",
+  },
+] as const
+
+describe("Effects loads the bf16 LTX 2.5 transformer and text encoder", () => {
+  it("names the bf16 files on nodes 384 and 387 in the API file and the UI file, with their links", () => {
+    const graph = workflowOf(findWorkflow("effects-ltx-2-5")?.graph)
+    for (const loader of bf16Loaders) {
+      expect(graph[loader.id]?.inputs[loader.input]).toBe(loader.file)
+      const node = uiNodes(uiFile).find((one) => String(one.id) === loader.id)
+      expect(node).toMatchObject({
+        widgets_values: expect.arrayContaining([loader.file]),
+        properties: {
+          models: [
+            {
+              name: loader.file,
+              url: `https://huggingface.co/Lightricks/LTX-2.5/resolve/main/${loader.folder}/${loader.file}`,
+              directory: loader.folder,
+            },
+          ],
+        },
+      })
+    }
+  })
+
+  it("sends the bf16 files from every leaf and records the bf16 transformer first", () => {
+    for (const recipe of effectRecipes) {
+      for (const resolution of resolutionValues) {
+        const binding = effectBinding(recipe, resolution)
+        const graph = workflowOf(binding.config.workflow)
+        const models = binding.config.models
+        const path = `${recipe.effect} ${resolution}`
+        expect({
+          path,
+          sent: bf16Loaders.map((one) => graph[one.id]?.inputs[one.input]),
+          first: Array.isArray(models) ? models[0] : null,
+          models,
+        }).toMatchObject({
+          path,
+          sent: bf16Loaders.map((one) => one.file),
+          first: bf16Loaders[0].file,
+          models: expect.arrayContaining(bf16Loaders.map((one) => one.file)),
+        })
+      }
+    }
   })
 })
