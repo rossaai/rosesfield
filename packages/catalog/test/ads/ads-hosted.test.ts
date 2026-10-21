@@ -63,6 +63,7 @@ describe("the fields Ads fills on a hosted image edit model", () => {
         fields,
         characterPhoto: portrait,
         aspectRatio: "4:5",
+        count: 1,
       })
     ).toEqual({
       prompt: adsPromptOf(ad),
@@ -77,10 +78,59 @@ describe("the fields Ads fills on a hosted image edit model", () => {
       fields,
       characterPhoto: null,
       aspectRatio: "21:9",
+      count: 1,
     })
     expect(Object.keys(sent).sort()).toEqual(["input_images", "prompt"])
     expect(sent.input_images).toEqual([productOne, productTwo])
     expect(sent.prompt).toContain('"Fresh cold brew')
+  })
+
+  it("writes the count into a model's own count field, so a count of 4 asks the model for 4 images", () => {
+    const counted: readonly ModelField[] = [
+      ...fields,
+      {
+        kind: "number",
+        name: "n",
+        path: "n",
+        required: false,
+        min: 1,
+        max: 10,
+        integer: true,
+        default: 1,
+      },
+    ]
+    const sent = adsHostedInputsOf({
+      inputs: ad,
+      fields: counted,
+      characterPhoto: null,
+      aspectRatio: null,
+      count: 4,
+    })
+    expect(sent.n).toBe(4)
+  })
+
+  it("control: a model that makes one image at a time gets no count field, since the run repeats the job", () => {
+    const single: readonly ModelField[] = [
+      ...fields,
+      {
+        kind: "number",
+        name: "n",
+        path: "n",
+        required: false,
+        min: 1,
+        max: 1,
+        integer: true,
+        default: 1,
+      },
+    ]
+    const sent = adsHostedInputsOf({
+      inputs: ad,
+      fields: single,
+      characterPhoto: null,
+      aspectRatio: null,
+      count: 4,
+    })
+    expect(sent).not.toHaveProperty("n")
   })
 
   it("control: a model with no image field gets the prompt alone", () => {
@@ -91,6 +141,7 @@ describe("the fields Ads fills on a hosted image edit model", () => {
         fields: textOnly,
         characterPhoto: portrait,
         aspectRatio: null,
+        count: 1,
       })
     ).toEqual({ prompt: adsPromptOf(ad) })
   })

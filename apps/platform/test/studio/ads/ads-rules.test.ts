@@ -407,4 +407,35 @@ describe("the body Ads sends a hosted model", () => {
       )
     ).toEqual([])
   })
+
+  it("asks a model that sets its own count, such as GPT Image 2, for the count shown, so 4 is priced and made as 4 images", () => {
+    const counted: readonly ModelField[] = [
+      ...fluxFields,
+      {
+        kind: "number",
+        name: "n",
+        path: "n",
+        required: false,
+        min: 1,
+        max: 10,
+        integer: true,
+        default: 1,
+      },
+    ]
+    const ownOfCounted = hostedBody(
+      "openai/gpt-image-2",
+      counted,
+      values,
+      "image"
+    )
+    const counts = adsHostedBodyOf(
+      listing,
+      values,
+      counted,
+      portrait,
+      ownOfCounted
+    )
+    expect(counts.inputs.n).toBe(4)
+    expect(counts.count).toBeUndefined()
+  })
 })

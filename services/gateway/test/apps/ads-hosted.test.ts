@@ -162,6 +162,7 @@ describe("Ads on a hosted model of the catalog, on the demo engine", () => {
       fields: await fluxForm(),
       characterPhoto: null,
       aspectRatio: null,
+      count: 1,
     })
     expect(filled).toEqual({ prompt: adsPromptOf(own), images: [image] })
     const started = await start({ model: flux, ...filled, ...own }, "ads-flux")
@@ -183,6 +184,7 @@ describe("Ads on a hosted model of the catalog, on the demo engine", () => {
       fields: await fluxForm(),
       characterPhoto: null,
       aspectRatio: null,
+      count: 1,
     })
     const refused = await start({ model: flux, ...filled, ...own }, "ads-long")
     expect(refused.status).toBe(400)

@@ -1,4 +1,9 @@
-import { fieldRoleOf, type ModelField } from "@rosesfield/generation/bindings"
+import {
+  fieldOfRole,
+  fieldRoleOf,
+  isOneAtATime,
+  type ModelField,
+} from "@rosesfield/generation/bindings"
 import { adsPromptOf } from "#ads/ads-prompt"
 import { photoInputs } from "#ads/ads-values"
 
@@ -9,6 +14,7 @@ export type AdsHostedAsk = {
   fields: readonly ModelField[]
   characterPhoto: string | null
   aspectRatio: string | null
+  count: number
 }
 
 const imageOutput = "image"
@@ -47,10 +53,24 @@ function aspectFieldOf(
       ) ?? null)
 }
 
+function countOf(
+  field: ModelField | null,
+  count: number
+): { name: string; count: number } | null {
+  if (field === null || field.kind !== "number") {
+    return null
+  }
+  const low = Math.max(count, field.min ?? 1)
+  return {
+    name: field.name,
+    count: field.max === null ? low : Math.min(low, field.max),
+  }
+}
+
 export function adsHostedInputsOf(
   ask: AdsHostedAsk
-): Record<string, string | string[]> {
-  const sent: Record<string, string | string[]> = {}
+): Record<string, string | string[] | number> {
+  const sent: Record<string, string | string[] | number> = {}
   const prompt = ask.fields.find(
     (field) => fieldRoleOf(field, imageOutput) === "prompt"
   )
@@ -68,6 +88,12 @@ export function adsHostedInputsOf(
   const aspect = aspectFieldOf(ask.fields, ask.aspectRatio)
   if (aspect !== null && ask.aspectRatio !== null) {
     sent[aspect.name] = ask.aspectRatio
+  }
+  const count = isOneAtATime(ask.fields, imageOutput)
+    ? null
+    : countOf(fieldOfRole(ask.fields, "count", imageOutput), ask.count)
+  if (count !== null) {
+    sent[count.name] = count.count
   }
   return sent
 }

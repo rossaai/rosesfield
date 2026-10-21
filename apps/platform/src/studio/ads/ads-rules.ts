@@ -396,6 +396,7 @@ export function adsHostedBodyOf(
     fields,
     characterPhoto,
     aspectRatio: values.aspectRatio,
+    count: values.count,
   })
   return {
     ...own,
