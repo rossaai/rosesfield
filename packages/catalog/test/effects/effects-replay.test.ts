@@ -66,7 +66,10 @@ describe("the effects engine request", () => {
       "460": { inputs: { image: ["606", 0], frame_idx: -1, strength: 0.9 } },
       "463": { inputs: { image: ["606", 0], frame_idx: -1, strength: 0.9 } },
       "380": { inputs: { width: 720, height: 1280, crop: "center" } },
-      "370": { inputs: { images: ["380", 0], audio: ["358", 0] } },
+      "359": { inputs: { audio: ["358", 0], lufs: -16 } },
+      "360": { inputs: { audio: ["359", 0], gain_db: 2 } },
+      "361": { inputs: { audio: ["360", 0], gain_db: -2 } },
+      "370": { inputs: { images: ["380", 0], audio: ["361", 0] } },
     })
     for (const id of ["410", "461", "464"]) {
       expect({ id, node: workflow[id] }).toEqual({ id, node: undefined })
@@ -87,7 +90,7 @@ describe("the effects engine request", () => {
     const { workflow } = await submitted(request)
     const file = idsOf(fileGraph())
     expect(idsOf(workflow)).toEqual(
-      file.filter((id) => id !== "358" && id !== "628")
+      file.filter((id) => !["358", "359", "360", "361", "628"].includes(id))
     )
     expect(workflow).toMatchObject({
       "356": { inputs: { width: 256, height: 352, length: 169 } },

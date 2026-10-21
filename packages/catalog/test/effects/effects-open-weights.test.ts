@@ -56,6 +56,16 @@ const coreNodeClasses: readonly string[] = [
   "VAELoader",
 ]
 
+const loudnessPacks: Readonly<Record<string, string>> = {
+  NormalizeAudioLoudness: "comfyui-wanvideowrapper",
+  AudioAmplify: "comfyui_audiotools",
+}
+
+const packCommits: Readonly<Record<string, string>> = {
+  NormalizeAudioLoudness: "088128b224242e110d3906c6750e9a3a348a659b",
+  AudioAmplify: "c816d0a1629c05a0f463ddb77ea96ada69875d32",
+}
+
 const editorNotes: readonly string[] = ["MarkdownNote", "Note"]
 
 type ApiGraph = Record<string, { class_type: string }>
@@ -100,7 +110,22 @@ function leavesOf(binding: EngineBinding, path = ""): [string, ApiGraph][] {
 }
 
 function notCore(classes: readonly string[]): string[] {
-  return [...new Set(classes)].filter((name) => !coreNodeClasses.includes(name))
+  return [...new Set(classes)].filter(
+    (name) =>
+      !coreNodeClasses.includes(name) && !Object.hasOwn(loudnessPacks, name)
+  )
+}
+
+function packNodes(graph: ApiGraph): string[] {
+  return Object.entries(graph)
+    .filter(([, node]) => Object.hasOwn(loudnessPacks, node.class_type))
+    .map(([id]) => id)
+    .sort()
+}
+
+function uiNodes(file: unknown): Record<string, unknown>[] {
+  const nodes = isRecord(file) && Array.isArray(file.nodes) ? file.nodes : []
+  return nodes.filter(isRecord)
 }
 
 function classesOf(graph: ApiGraph): string[] {
@@ -128,7 +153,30 @@ function fileGraph(): ApiGraph {
 
 const partnerNode = "KlingImage2VideoNode"
 
-describe("Effects holds only ComfyUI core nodes", () => {
+describe("Effects holds only ComfyUI core nodes, and the pinned loudness nodes on its sound", () => {
+  it("sends the loudness nodes only on a look with sound, and lists their packs", () => {
+    const workflow = findWorkflow("effects-ltx-2-5")
+    expect(workflow?.requiresCustomNodes).toEqual(
+      [...new Set(Object.values(loudnessPacks))].sort()
+    )
+    for (const recipe of effectRecipes) {
+      const [path, graph] = leavesOf(effectsBinding([recipe]))[0] ?? []
+      expect({ path, pack: graph ? packNodes(graph) : null }).toEqual({
+        path,
+        pack: recipe.design.sound === null ? [] : ["359", "360", "361"],
+      })
+    }
+    for (const node of uiNodes(uiFile)) {
+      const type = typeof node.type === "string" ? node.type : ""
+      if (Object.hasOwn(loudnessPacks, type)) {
+        expect({ id: node.id, properties: node.properties }).toMatchObject({
+          id: node.id,
+          properties: { ver: packCommits[type] },
+        })
+      }
+    }
+  })
+
   it("sends from every leaf only core node classes", () => {
     const leaves = leavesOf(effectsBinding(effectRecipes))
     expect(leaves).toHaveLength(effectRecipes.length * resolutionValues.length)

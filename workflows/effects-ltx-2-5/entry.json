@@ -15,7 +15,7 @@
     "qwen_2.5_vl_7b_fp8_scaled.safetensors",
     "qwen_image_vae.safetensors"
   ],
-  "requiresCustomNodes": [],
+  "requiresCustomNodes": ["comfyui-wanvideowrapper", "comfyui_audiotools"],
   "inputBindings": {
     "photo": {
       "nodeId": "395",

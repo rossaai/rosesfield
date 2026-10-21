@@ -47,6 +47,14 @@ export const matteNodes: readonly string[] = ["410", "411", "412"]
 
 export const soundNode = "358"
 
+export const loudnessNode = "359"
+
+export const ceilingNodes: readonly string[] = ["360", "361"]
+
+export const peakMargin = 1
+
+const maxCeilingGain = 24
+
 export const adapterNode = "420"
 
 const guideOutputs = ["positive", "negative", "latent"]
@@ -185,11 +193,23 @@ function setHold(graph: Graph, recipe: EffectRecipe): void {
 }
 
 function setSound(graph: Graph, recipe: EffectRecipe): void {
-  if (recipe.design.sound !== null) {
+  const sound = recipe.design.sound
+  if (sound === null) {
+    remove(graph, [soundNode, loudnessNode, ...ceilingNodes])
+    delete nodeOf(graph, "370").inputs.audio
     return
   }
-  remove(graph, [soundNode])
-  delete nodeOf(graph, "370").inputs.audio
+  const ceiling = sound.truePeakMax - peakMargin
+  if (-ceiling > maxCeilingGain) {
+    throw invalid(
+      `the peak ceiling ${ceiling} dB of ${recipe.effect} is under -${maxCeilingGain} dB`
+    )
+  }
+  const [up, down] = ceilingNodes
+  nodeOf(graph, loudnessNode).inputs.lufs =
+    (sound.loudness.min + sound.loudness.max) / 2
+  nodeOf(graph, up ?? "").inputs.gain_db = -ceiling
+  nodeOf(graph, down ?? "").inputs.gain_db = ceiling
 }
 
 export function effectGraph(

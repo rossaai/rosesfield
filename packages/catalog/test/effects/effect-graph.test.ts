@@ -3,13 +3,16 @@ import { selectAdapter } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import {
   adapterNode,
+  ceilingNodes,
   darkFrameNode,
   editFrameNodes,
   effectGraph,
   endFrameNodes,
   fittedPhotoNode,
   imageEditNodes,
+  loudnessNode,
   matteNodes,
+  peakMargin,
   soundNode,
 } from "#effects/comfy/effect-graph"
 import {
@@ -150,7 +153,7 @@ describe("the effect recipes", () => {
       "460": { inputs: { image: ["627", 0] } },
       "463": { inputs: { image: ["627", 0] } },
       "380": { inputs: { image: ["374", 0], crop: "center" } },
-      "370": { inputs: { images: ["380", 0], audio: [soundNode, 0] } },
+      "370": { inputs: { images: ["380", 0], audio: ["361", 0] } },
       "75": { inputs: { format: "mp4", "format.codec": "h264" } },
     })
   })
@@ -273,6 +276,66 @@ describe("the effect recipes", () => {
     expect(silent[soundNode]).toBeUndefined()
     expect(silent["370"]?.inputs).not.toHaveProperty("audio")
     expect(silent["503"]?.inputs.string_b).toBe("")
+  })
+
+  it("sets each sounding look's loudness to the middle of its band, then holds its peaks under its ceiling, before the video is written", () => {
+    const sounding = effectRecipes.filter((one) => one.design.sound !== null)
+    expect(sounding.length).toBeGreaterThan(0)
+    for (const recipe of sounding) {
+      const sound = recipe.design.sound
+      const workflow = workflowOf(effectGraph(fileGraph(), recipe))
+      const target = sound
+        ? (sound.loudness.min + sound.loudness.max) / 2
+        : Number.NaN
+      const ceiling = sound ? sound.truePeakMax - peakMargin : Number.NaN
+      expect({ effect: recipe.effect, chain: workflow }).toMatchObject({
+        effect: recipe.effect,
+        chain: {
+          [loudnessNode]: {
+            class_type: "NormalizeAudioLoudness",
+            inputs: { audio: [soundNode, 0], lufs: target },
+          },
+          [ceilingNodes[0] ?? ""]: {
+            class_type: "AudioAmplify",
+            inputs: { audio: [loudnessNode, 0], gain_db: -ceiling },
+          },
+          [ceilingNodes[1] ?? ""]: {
+            class_type: "AudioAmplify",
+            inputs: { audio: [ceilingNodes[0], 0], gain_db: ceiling },
+          },
+          "370": { inputs: { audio: [ceilingNodes[1], 0] } },
+        },
+      })
+      expect(target).toBeGreaterThanOrEqual(sound?.loudness.min ?? 0)
+      expect(target).toBeLessThanOrEqual(sound?.loudness.max ?? 0)
+      expect(ceiling).toBeLessThan(sound?.truePeakMax ?? 0)
+    }
+    expect(
+      workflowOf(effectGraph(fileGraph(), recipeOf("push-into-eye")))[
+        loudnessNode
+      ]?.inputs.lufs
+    ).toBe(-23.75)
+  })
+
+  it("keeps no audio node for a silent look", () => {
+    const silent = effectRecipes.filter((one) => one.design.sound === null)
+    expect(silent.length).toBeGreaterThan(0)
+    const audioClasses = [
+      "LTXVAudioVAEDecode",
+      "NormalizeAudioLoudness",
+      "AudioAmplify",
+    ]
+    for (const recipe of silent) {
+      const workflow = workflowOf(effectGraph(fileGraph(), recipe))
+      const audio = Object.entries(workflow)
+        .filter(([, node]) => audioClasses.includes(node.class_type))
+        .map(([id]) => id)
+      expect({ effect: recipe.effect, audio }).toEqual({
+        effect: recipe.effect,
+        audio: [],
+      })
+      expect(brokenLinks(workflow)).toEqual([])
+    }
   })
 
   it("places a recipe's adapter between the model and both guiders", () => {

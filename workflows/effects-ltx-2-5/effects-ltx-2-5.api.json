@@ -177,7 +177,7 @@
     "class_type": "CreateVideo",
     "inputs": {
       "images": ["380", 0],
-      "audio": ["358", 0],
+      "audio": ["361", 0],
       "fps": 24,
       "bit_depth": 8
     }
@@ -617,6 +617,36 @@
     },
     "_meta": {
       "title": "Dark end frame"
+    }
+  },
+  "359": {
+    "class_type": "NormalizeAudioLoudness",
+    "inputs": {
+      "audio": ["358", 0],
+      "lufs": -23.0
+    },
+    "_meta": {
+      "title": "Loudness"
+    }
+  },
+  "360": {
+    "class_type": "AudioAmplify",
+    "inputs": {
+      "audio": ["359", 0],
+      "gain_db": 4.0
+    },
+    "_meta": {
+      "title": "Peak ceiling"
+    }
+  },
+  "361": {
+    "class_type": "AudioAmplify",
+    "inputs": {
+      "audio": ["360", 0],
+      "gain_db": -4.0
+    },
+    "_meta": {
+      "title": "Back from the peak ceiling"
     }
   }
 }

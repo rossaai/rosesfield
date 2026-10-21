@@ -8,7 +8,7 @@ Scales and centre-crops your photo to the chosen shape and makes the effect's la
 | Run by | [`effects`](../../packages/catalog/src/effects/) |
 | Core model | LTX 2.5 22B distilled |
 | Image model | Qwen Image Edit 2511, for the last frame |
-| Custom node packs | none, every node is a ComfyUI core node |
+| Custom node packs | two, for the sound only. [ComfyUI-WanVideoWrapper](https://github.com/kijai/ComfyUI-WanVideoWrapper) at commit `088128b224242e110d3906c6750e9a3a348a659b`, Apache-2.0, gives `NormalizeAudioLoudness`. [ComfyUI_AudioTools](https://github.com/lum3on/ComfyUI_AudioTools) at commit `c816d0a1629c05a0f463ddb77ea96ada69875d32`, MIT, gives `AudioAmplify`. Comfy Cloud lists both in its `object_info`. Every other node is a ComfyUI core node, and a silent look sends no pack node |
 | Adapters | none. Comfy Cloud holds no LTX 2.5 adapter, so no recipe loads one |
 | GPU memory | Not measured. LTX's system requirements name at least 32 GB of VRAM for LTX 2.5, on [docs.ltx.io](https://docs.ltx.io/open-source-model/getting-started/system-requirements). |
 
@@ -79,7 +79,7 @@ A recipe passes only with the proof of one run: a gate run of the look's criteri
 3. It locks the fitted photo at frame 0 with `LTXVImgToVideoInplace`, or the edited frame when the recipe lands on the photo: at strength 0.7 in the first stage, node 357, and at 1.0 in the second, node 349.
 4. It makes a matte of the subject with the core BiRefNet nodes `LoadBackgroundRemovalModel` and `RemoveBackground`, nodes 410 to 412, when the recipe holds the subject.
 5. It renders the shot in two stages. The last frame is an `LTXVAddGuide` guide at the last frame, nodes 460 and 463. The photo is a second guide at the last frame with the subject matte as its `attention_mask`, nodes 461 and 464, so the subject holds while the scene changes. `LTXVCropGuides` removes the guide frames after each stage, nodes 462 and 465.
-6. It decodes the sound with node 358 when the recipe has a sound bed, and removes it when the look is silent.
+6. It decodes the sound with node 358 when the recipe has a sound bed. Node 359 sets its integrated loudness to the middle of the look's band. Nodes 360 and 361 then raise it by the ceiling's distance from 0 dBFS, where `AudioAmplify` clips every sample to full scale, and lower it back, so no sample passes the ceiling, 1 dB under the look's true peak, and quieter samples keep their level. `AudioNormalize` was not used: it moves the sample peak to its target in both directions, so it would undo the loudness of node 359. The ceiling acts only on a sound whose peaks sit higher above its loudness than the band leaves room for. A silent look removes nodes 358 to 361.
 7. It scales the frames to the pixel area of the chosen resolution in the chosen shape, centre-cropped, node 380, such as 1280 by 720 at 16:9 and 832 by 1110 at 3:4 for 720p, and saves H.264 in MP4 at 24 frames a second, nodes 370 and 75.
 
 ## How a recipe changes this file
@@ -92,7 +92,8 @@ The catalog's [`effect-graph.ts`](../../packages/catalog/src/effects/comfy/effec
 - An effect with no end frame removes the image edit nodes 600 to 604 and 620 to 628 and the guides 460 and 463, and links the next node to what the guide read.
 - An effect with no hold removes the guides 461 and 464 and the matte nodes 410 to 412.
 - An effect with no guide at all removes the crop nodes 462 and 465.
-- A silent effect removes the audio decode, node 358.
+- A sounding effect writes the middle of its loudness band on node 359, and its peak ceiling, `truePeakMax` minus 1 dB, as the gain of nodes 360 and 361.
+- A silent effect removes the audio decode and the loudness nodes, 358 to 361.
 - A recipe with an adapter adds node 420, a `LoraLoaderModelOnly` between the model and both guiders. No recipe has one.
 
 The UI file holds a muted `MaskPreview` on the matte and a muted `PreviewImage` on the end frame, so you can turn them on.
@@ -109,8 +110,8 @@ The LTX-2.x Community License asks Rosesfield to pass its use restrictions to yo
 
 ## Source
 
-Written for Rosesfield from ComfyUI core nodes. Its two-stage render starts from Comfy's template `video_ltx2_5_i2v` and keeps its node ids, and its end-frame pass starts from the wiring of Comfy's template `image_qwen_image_edit_2511`, both in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT. Rosesfield adds the scale to the shape, the end-frame and hold guides, the crop guides, the recipe's length and sound, and the scale to the delivery size. Lightricks' own example workflows carry the LTX-2 Community License and were not used.
+Written for Rosesfield from ComfyUI core nodes and the two sound packs. Its two-stage render starts from Comfy's template `video_ltx2_5_i2v` and keeps its node ids, and its end-frame pass starts from the wiring of Comfy's template `image_qwen_image_edit_2511`, both in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT. Rosesfield adds the scale to the shape, the end-frame and hold guides, the crop guides, the recipe's length and sound, and the scale to the delivery size. Lightricks' own example workflows carry the LTX-2 Community License and were not used.
 
 ## Checked
 
-Every node class this file holds comes from ComfyUI's `nodes` or `comfy_extras` modules. The LTX 2.5 and BiRefNet nodes and files were listed by Comfy Cloud's `object_info` and model folders on 2026-10-19, and the Qwen Image Edit 2511 nodes and files are the ones the workflow `headshots-qwen-image-edit-2511` runs. Node 75 sets no constant-quality value of its own, so the file is the core `SaveVideo` node's H.264 encode. The runs from the Effects screen are the proof that it runs, and the effects lab records them. Some runs start black: their first 57 frames, or every frame, decode to black. The lab's runs with the first-stage lock at 0.7 cleared the cases it measured, and one run of `workflows/video-ltx-2-5-start-frame` with the same lock still started black, so the cause is not settled.
+Every node class this file holds comes from ComfyUI's `nodes` or `comfy_extras` modules, except the three sound nodes 359 to 361, whose inputs were read from both packs' source at the pinned commits and from Comfy Cloud's `object_info`. The LTX 2.5 and BiRefNet nodes and files were listed by Comfy Cloud's `object_info` and model folders on 2026-10-19, and the Qwen Image Edit 2511 nodes and files are the ones the workflow `headshots-qwen-image-edit-2511` runs. Node 75 sets no constant-quality value of its own, so the file is the core `SaveVideo` node's H.264 encode. The runs from the Effects screen are the proof that it runs, and the effects lab records them. Some runs start black: their first 57 frames, or every frame, decode to black. The lab's runs with the first-stage lock at 0.7 cleared the cases it measured, and one run of `workflows/video-ltx-2-5-start-frame` with the same lock still started black, so the cause is not settled.
