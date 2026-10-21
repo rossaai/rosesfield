@@ -1,6 +1,10 @@
 import { conversationRoutes } from "@rosesfield/agent"
 import { listApps } from "@rosesfield/catalog"
-import { appTasksOf } from "@rosesfield/catalog/comfy"
+import {
+  appTasksOf,
+  defaultModelOf,
+  isHostedModelId,
+} from "@rosesfield/catalog/comfy"
 import {
   type AppDefinition,
   appListResponse,
@@ -51,7 +55,8 @@ async function codeOf(response: {
 function promptOnlyApp(): AppDefinition {
   const found = listApps().find(
     (one) =>
-      appTasksOf(one).length === 0 &&
+      (appTasksOf(one).length === 0 ||
+        !isHostedModelId(defaultModelOf(one) ?? "")) &&
       one.inputs.every((input) =>
         input.type === "prompt" ||
         input.type === "choice" ||
