@@ -33,6 +33,15 @@ describe("run", () => {
     expect(parsed.failure?.code).toBe("ENGINE_UNAVAILABLE")
   })
 
+  it("keeps how many black outputs a run dropped, or none", () => {
+    expect(run.parse({ ...sampleRun(), dropped: 2 }).dropped).toBe(2)
+    expect(run.parse(sampleRun())).not.toHaveProperty("dropped")
+  })
+
+  it.each([0, -1, 1.5])("refuses %s dropped outputs", (dropped) => {
+    expect(run.safeParse({ ...sampleRun(), dropped }).success).toBe(false)
+  })
+
   it.each(["queued", "running", "done", "failed", "cancelled"])(
     "accepts the state %s",
     (status) => {

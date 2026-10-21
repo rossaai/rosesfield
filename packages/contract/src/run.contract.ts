@@ -42,6 +42,7 @@ export const run = z.object({
   aspectRatio: aspectRatio.nullable(),
   seed: seed.nullable(),
   outputs: z.array(assetId),
+  dropped: z.number().int().min(1).max(1000).optional(),
   progress: z.number().min(0).max(1).nullable(),
   engine: runEngine,
   cost: cost.nullable(),

@@ -10,7 +10,7 @@ import { formatTime, joinParts } from "@/copy/format"
 import { t } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
 import { useRunEstimate } from "@/pieces/run/run-estimate"
-import { runAppName, runPrice } from "@/pieces/run/run-facts"
+import { historyPrice, runAppName } from "@/pieces/run/run-facts"
 import { RunHeadline } from "@/pieces/run/run-headline"
 import { RunMenu } from "@/pieces/run/run-menu"
 
@@ -92,8 +92,7 @@ export function HistoryRowSkeleton(): ReactElement {
 export function HistoryRow({ run }: { run: Run }): ReactElement {
   const isDemo = run.origin === "demo"
   const estimate = useRunEstimate(run)
-  const price =
-    run.status === "done" && !isDemo ? runPrice(run, estimate) : null
+  const price = historyPrice(run, estimate)
   return (
     <li className="flex items-center gap-s3 border-b border-(--line) py-s3">
       <Link
