@@ -70,7 +70,7 @@ describe("the effect tiles", () => {
         effect: "grow-giant",
         label: tCatalog("effects.choice.effect.growGiant"),
         photo: tCatalog("effects.photo.growGiant"),
-        preview: "/previews/grow-giant.mp4",
+        look: { status: "passed", preview: "/previews/grow-giant.mp4" },
       },
     ])
   })
@@ -120,5 +120,47 @@ describe("the effect tiles", () => {
     fireEvent.click(tileNamed("grow-giant"))
     expect(onChange).toHaveBeenCalledWith("grow-giant")
     expect(tileNamed("melt-away").getAttribute("aria-pressed")).toBe("true")
+  })
+
+  it("marks an offered effect that has not passed as a draft, with no run to play", () => {
+    const offered = [...recipes, recipeOf("many-copies")]
+    const tiles = effectTiles(listingOf(offered), offered, previews)
+    expect(tiles.map((tile) => [tile.effect, tile.look.status])).toEqual([
+      ["grow-giant", "passed"],
+      ["melt-away", "passed"],
+      ["many-copies", "draft"],
+    ])
+    render(
+      <EffectTiles
+        app={listingOf(offered)}
+        value="grow-giant"
+        prices={prices}
+        onChange={() => undefined}
+        register={() => undefined}
+        recipes={offered}
+        previews={previews}
+      />
+    )
+    const draft = screen.getByRole("button", {
+      name: new RegExp(tCatalog("effects.choice.effect.manyCopies")),
+    })
+    expect(draft.getAttribute("data-look")).toBe("draft")
+    expect(draft.textContent).toContain(tCatalog("effects.draft"))
+    expect(draft.querySelector("video")).toBeNull()
+    expect(tileNamed("grow-giant").textContent).not.toContain(
+      tCatalog("effects.draft")
+    )
+  })
+
+  it("shows no draft the app does not offer", () => {
+    const tiles = effectTiles(
+      listingOf(recipes),
+      [...recipes, recipeOf("many-copies")],
+      previews
+    )
+    expect(tiles.map((tile) => tile.effect)).toEqual([
+      "grow-giant",
+      "melt-away",
+    ])
   })
 })
