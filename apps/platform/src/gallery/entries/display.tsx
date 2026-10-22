@@ -114,13 +114,13 @@ const skeleton: GalleryEntry = {
       id: "shapes",
       label: "state.shapes",
       render: () => (
-        <div className="flex items-center gap-s4">
+        <div className="flex w-full items-center gap-s4">
           <Skeleton className="size-tile" />
-          <Skeleton className="size-icon rounded-full" />
-          <div className="flex flex-1 flex-col gap-s2">
-            <Skeleton className="h-s3 w-[88%] rounded-full" />
-            <Skeleton className="h-s3 w-[64%] rounded-full" />
-            <Skeleton className="h-s3 w-[40%] rounded-full" />
+          <Skeleton shape="circle" size="touch" />
+          <div className="flex min-w-0 flex-1 flex-col gap-s2">
+            <Skeleton shape="line" measure="long" />
+            <Skeleton shape="line" measure="mid" />
+            <Skeleton shape="line" measure="short" />
           </div>
         </div>
       ),

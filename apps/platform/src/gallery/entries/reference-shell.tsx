@@ -86,15 +86,12 @@ function Bar({
           </IconButton>
         }
         balance={
-          <AppBarAction
-            icon={<CoinsIcon aria-hidden="true" />}
-            render={<a href="?settings" />}
-          >
+          <AppBarAction icon={<CoinsIcon aria-hidden="true" />}>
             {t("sample.nav.balance")}
           </AppBarAction>
         }
         connect={
-          <AppBarAction tone="primary" render={<a href="?connect" />}>
+          <AppBarAction tone="primary">
             {t("sample.nav.connect")}
           </AppBarAction>
         }
@@ -160,15 +157,6 @@ function FooterDemo(): ReactElement {
               { id: "terms", label: t("sample.footer.terms"), href: "?terms" },
             ],
           },
-        ]}
-        notice={t("sample.footer.notice")}
-        legal={[
-          {
-            id: "privacy",
-            label: t("sample.footer.privacy"),
-            href: "?privacy",
-          },
-          { id: "terms", label: t("sample.footer.terms"), href: "?terms" },
         ]}
       />
     </div>

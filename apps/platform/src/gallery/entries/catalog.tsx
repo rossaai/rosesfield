@@ -227,22 +227,6 @@ const generatePrice: GalleryEntry = {
         </div>
       ),
     },
-    {
-      id: "unknown",
-      label: "state.priceUnknown",
-      render: () => (
-        <PromptBar
-          value={t("sample.prompt.short")}
-          onValueChange={() => undefined}
-          onSubmit={() => undefined}
-          label={t("sample.prompt.label")}
-          placeholder=""
-          submitLabel={t("sample.generate")}
-          price={t("sample.priceUnknown")}
-          removeLabel={t("sample.remove")}
-        />
-      ),
-    },
   ],
 }
 

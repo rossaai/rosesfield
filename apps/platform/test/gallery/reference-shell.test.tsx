@@ -17,8 +17,8 @@ function shapeOf(element: HTMLElement): string[] {
 
 function controlsOf(bar: HTMLElement, menu: string): Controls {
   return {
-    balance: shapeOf(within(bar).getByRole("link", { name: "12.5 credits" })),
-    connect: shapeOf(within(bar).getByRole("link", { name: "Connect" })),
+    balance: shapeOf(within(bar).getByRole("button", { name: "12.5 credits" })),
+    connect: shapeOf(within(bar).getByRole("button", { name: "Connect" })),
     menu: shapeOf(within(bar).getByRole("button", { name: menu })),
   }
 }
