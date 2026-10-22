@@ -102,7 +102,7 @@ test.describe("Ads on a wide screen", () => {
   }) => {
     await openAds(page)
     await addPhotos(page, [photo(40), photo(120), photo(200)])
-    const thumbs = dock(page).locator("[data-slot='prompt-bar'] li img")
+    const thumbs = dock(page).locator("[data-bar='prompt'] li img")
     await expect(thumbs).toHaveCount(3)
     const third = await thumbs.nth(2).getAttribute("src")
     await addPhotos(page, [photo(250)])
@@ -114,7 +114,7 @@ test.describe("Ads on a wide screen", () => {
     await expect(thumbs).toHaveCount(2)
     await expect(thumbs.nth(1)).toHaveAttribute("src", third ?? "")
     await expect(
-      dock(page).locator("[data-slot='prompt-bar'] li").nth(1)
+      dock(page).locator("[data-bar='prompt'] li").nth(1)
     ).toContainText("Second photo")
   })
 })

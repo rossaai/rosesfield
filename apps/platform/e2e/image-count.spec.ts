@@ -25,7 +25,7 @@ test.describe("a run of 4 on Image", () => {
     page,
   }) => {
     await openImage(page)
-    const bar = page.locator('[data-slot="prompt-bar"]')
+    const bar = page.locator('[data-bar="prompt"]')
     await bar
       .getByRole("textbox", { name: "Prompt" })
       .fill("a paper boat on a still pond")

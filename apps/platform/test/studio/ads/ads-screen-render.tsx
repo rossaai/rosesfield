@@ -218,7 +218,7 @@ export function prompt(): HTMLTextAreaElement {
 
 export function generate(): void {
   const button = bar().querySelector<HTMLElement>(
-    "[data-slot=prompt-bar] [data-slot=generate-button]"
+    "[data-bar=prompt] [data-slot=generate-button]"
   )
   if (button === null) {
     throw new Error("no Generate in the bar")

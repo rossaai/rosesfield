@@ -220,7 +220,7 @@ describe("Ads on a phone", () => {
     const mention = `[aria-label="${t("bar.mention")}"]`
     expect(dock.querySelector(mention)).not.toBeNull()
     expect(
-      dock.querySelector("[data-slot=prompt-bar] [data-slot=generate-button]")
+      dock.querySelector("[data-bar=prompt] [data-slot=generate-button]")
     ).not.toBeNull()
     expect(dock.textContent).not.toContain(t("model.picker.title"))
     fireEvent.click(screen.getByRole("button", { name: t("app.inputs.open") }))
