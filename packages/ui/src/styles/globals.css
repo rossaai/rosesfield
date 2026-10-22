@@ -7,6 +7,14 @@
 @source "../../../../apps/platform/src";
 @source "..";
 
+/*
+  A bare transition lands on a registry curve. Every transition a component
+  draws names a motion preset, and this default only catches what none names.
+*/
+@theme {
+  --default-transition-timing-function: var(--ease-bloom);
+}
+
 @custom-variant dark {
   &:where([data-theme="dark"], [data-theme="dark"] *) {
     @slot;
@@ -69,6 +77,22 @@
 
   @media (prefers-reduced-transparency: reduce) {
     background-color: var(--layer);
+    backdrop-filter: none;
+  }
+}
+
+/*
+  The scrim under a dialog or a sheet: the scrim's dim with the thin
+  material's blur behind it, and the dim alone where transparency is reduced.
+*/
+@utility material-scrim {
+  background-color: var(--scrim);
+
+  @supports (backdrop-filter: blur(1px)) {
+    backdrop-filter: var(--material-filter-thin);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
     backdrop-filter: none;
   }
 }

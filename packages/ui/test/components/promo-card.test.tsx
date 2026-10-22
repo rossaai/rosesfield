@@ -102,7 +102,7 @@ describe("PromoCard", () => {
     expect(document.querySelector("[data-slot^='promo']")).toBeNull()
   })
 
-  it("shows a 40 px arrow at the row's right edge on hover while cards remain, and scrolls one card", () => {
+  it("shows a 36 px glass arrow at the row's right edge on hover while cards remain, and scrolls one card", () => {
     stubRowSize(2000, 1440)
     const scrollBy = vi.fn()
     Object.defineProperty(HTMLElement.prototype, "scrollBy", {
@@ -125,7 +125,9 @@ describe("PromoCard", () => {
         "@regular:flex",
       ])
     )
-    expect(next.className).toContain("size-10")
+    expect(next.className.split(" ")).toEqual(
+      expect.arrayContaining(["size-icon", "material-thin", "shadow-float"])
+    )
     fireEvent.click(next)
     expect(scrollBy).toHaveBeenCalledTimes(1)
   })
