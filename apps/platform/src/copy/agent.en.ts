@@ -28,7 +28,6 @@ export const agentCopy = {
   "agent.proposal.skip": "Skip",
   "agent.proposal.skipped": "Skipped",
   "agent.run.open": "Open run",
-  "agent.model.rate": "Per 1M tokens: {input} in, {output} out",
   "agent.you": "You",
   "agent.attached.assets": "Assets from my library: {ids}",
   "agent.attached.characters": "Characters from my library: {ids}",
@@ -47,4 +46,5 @@ export const agentCopy = {
   "agent.loadFailed.title": "This conversation did not load",
   "agent.missing.title": "This conversation was deleted",
   "agent.missing.action": "Start a conversation",
+  "agent.model.rate": "Per 1M tokens: {input} in, {output} out",
 } satisfies Record<string, string>
