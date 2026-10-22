@@ -79,7 +79,7 @@ function SizeRow({ size }: { size: ViewSize }): ReactElement {
             size.onValueChange(next)
           }
         }}
-        className="flex-1"
+        className="min-w-32 flex-1"
       />
     </div>
   )

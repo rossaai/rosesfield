@@ -57,6 +57,10 @@ describe("ViewMenu", () => {
     const size = document.querySelector("[data-slot='view-menu-size']")
     expect(size?.textContent).toBe("Size")
     expect(size?.querySelector("input[type='range']")).not.toBeNull()
+    const slider = size?.querySelector("[data-slot='slider']")
+    expect(slider?.className.split(" ")).toEqual(
+      expect.arrayContaining(["min-w-32", "flex-1"])
+    )
   })
 
   it("holds each filter as a submenu inside the menu, with the chosen option checked", async () => {
