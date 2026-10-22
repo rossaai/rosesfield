@@ -157,7 +157,6 @@ export function SoundChip({
   const Icon = isOn ? Volume2Icon : VolumeOffIcon
   return (
     <Chip
-      size="inline"
       aria-pressed={isOn}
       disabled={name === null}
       {...(name === null ? { caption: tCatalog("video.sound.always") } : {})}
