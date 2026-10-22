@@ -105,7 +105,11 @@ export function hostedBody(
     [modelInputName]: model,
   }
   for (const field of fields) {
-    const value = values.inputs[field.name]
+    const given = values.inputs[field.name]
+    const value =
+      field.kind === "choice" && !isEmpty(given) && !fitsField(field, given)
+        ? (field.default ?? undefined)
+        : given
     if (value !== undefined && !isEmpty(value)) {
       inputs[field.name] = value
     }
