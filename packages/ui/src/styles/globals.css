@@ -151,3 +151,45 @@
     color: var(--ink-muted);
   }
 }
+
+/*
+  The pointer. Every pressable shows the pointer cursor and a disabled one the
+  default cursor. The rule sits outside the layers, so it stands over any
+  cursor a component or a screen writes, and no screen sets a cursor of its
+  own. A hidden press target, such as the viewer's backdrop, keeps the default.
+*/
+:where(
+  button:not([aria-hidden="true"]),
+  a[href],
+  summary,
+  select,
+  [role="button"],
+  [role="tab"],
+  [role="radio"],
+  [role="checkbox"],
+  [role="switch"],
+  [role="option"],
+  [role="menuitem"],
+  [role="menuitemradio"],
+  [role="menuitemcheckbox"]
+) {
+  cursor: pointer;
+}
+
+:where(
+  button,
+  a[href],
+  summary,
+  select,
+  [role="button"],
+  [role="tab"],
+  [role="radio"],
+  [role="checkbox"],
+  [role="switch"],
+  [role="option"],
+  [role="menuitem"],
+  [role="menuitemradio"],
+  [role="menuitemcheckbox"]
+):is(:disabled, [aria-disabled="true"], [data-disabled]) {
+  cursor: default;
+}
