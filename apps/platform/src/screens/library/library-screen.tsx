@@ -272,6 +272,22 @@ type LibraryCanvasProps = {
 function LibraryCanvas(props: LibraryCanvasProps): ReactElement {
   const { search, view, data } = props
   const hasRuns = data.assets.length > 0 || props.isFiltered
+  const viewMenu =
+    hasRuns || data.isPending ? (
+      <ViewMenu
+        layout={view.layout}
+        onLayout={view.setLayout}
+        size={view.size}
+        onSize={view.setSize}
+        isLoading={data.isPending}
+        groups={[
+          ...appFilterGroups(search.appId, (next) =>
+            search.setSearch({ appId: next })
+          ),
+          dateFilterGroup(view.date, view.setDate),
+        ]}
+      />
+    ) : null
   return (
     <Canvas
       label={t("library.title")}
@@ -286,24 +302,11 @@ function LibraryCanvas(props: LibraryCanvasProps): ReactElement {
             onKind={(next) => search.setSearch({ kind: next })}
             isRegular={props.isRegular}
           />
-          {hasRuns || data.isPending ? (
-            <ViewMenu
-              layout={view.layout}
-              onLayout={view.setLayout}
-              size={view.size}
-              onSize={view.setSize}
-              isLoading={data.isPending}
-              groups={[
-                ...appFilterGroups(search.appId, (next) =>
-                  search.setSearch({ appId: next })
-                ),
-                dateFilterGroup(view.date, view.setDate),
-              ]}
-            />
-          ) : null}
+          {props.isRegular ? null : viewMenu}
         </div>
       }
-      hasRuns={false}
+      {...(props.isRegular ? { cluster: viewMenu } : {})}
+      hasRuns={props.isRegular && viewMenu !== null}
     >
       {props.children}
     </Canvas>

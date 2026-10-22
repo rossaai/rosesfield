@@ -9,6 +9,7 @@ import { isWorking, runsOf, runsQuery } from "@/api/queries"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { dayKey, dayLabel } from "@/copy/format"
 import { t } from "@/copy/t"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { useNextPage } from "@/pieces/use-next-page"
 import {
   type HistoryFilterProps,
@@ -219,6 +220,19 @@ export function HistoryScreen(): ReactElement {
   const history = useHistoryQuery(filters.appId)
   const [layout, setLayout] = useState<ViewLayout>("grid")
   const [size, setSize] = useState<number>(tileSizes.initial)
+  const isRegular = useIsRegularWindow()
+  const hasView =
+    history.runs.length > 0 || filters.isFiltered || history.query.isPending
+  const viewMenu = hasView ? (
+    <ViewMenu
+      layout={layout}
+      onLayout={setLayout}
+      size={size}
+      onSize={setSize}
+      isLoading={history.query.isPending}
+      groups={historyFilterGroups(filters)}
+    />
+  ) : null
   return (
     <>
       <ScreenHeader title={t("history.title")} />
@@ -232,21 +246,11 @@ export function HistoryScreen(): ReactElement {
               className="flex min-w-0 flex-1 items-center justify-between gap-s3"
             >
               <StateTabs {...filters} />
-              {history.runs.length > 0 ||
-              filters.isFiltered ||
-              history.query.isPending ? (
-                <ViewMenu
-                  layout={layout}
-                  onLayout={setLayout}
-                  size={size}
-                  onSize={setSize}
-                  isLoading={history.query.isPending}
-                  groups={historyFilterGroups(filters)}
-                />
-              ) : null}
+              {isRegular ? null : viewMenu}
             </div>
           }
-          hasRuns={false}
+          {...(isRegular ? { cluster: viewMenu } : {})}
+          hasRuns={isRegular && viewMenu !== null}
         >
           <HistoryBody
             filters={filters}
