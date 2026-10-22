@@ -63,7 +63,7 @@ function AspectChoice(props: EffectsPanelProps): ReactElement {
       items={items}
       value={props.aspect}
       onChange={props.onAspect}
-      note={tCatalog("effects.input.aspect.note")}
+      note={null}
     />
   )
 }
