@@ -9,7 +9,6 @@ export const connectCopy = {
   "connect.tab.api": "HTTP API",
   "connect.address.label": "Server address",
   "connect.copy": "Copy",
-  "connect.cancel": "Cancel",
   "connect.local.title": "{client} cannot reach this computer",
   "connect.local.body":
     "{client} runs on its own servers. Host Rosesfield on your Cloudflare account to give it an address it can reach.",
@@ -45,4 +44,5 @@ export const connectCopy = {
     "Read the run by its id from its runs route until its status is done, failed or cancelled.",
   "connect.api.step.3":
     "Read each result by its asset id from the assets route.",
+  "connect.cancel": "Cancel",
 } satisfies Record<string, string>

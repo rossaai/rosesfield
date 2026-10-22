@@ -21,7 +21,6 @@ export const exploreCopy = {
   "explore.promo.open": "Open {app}",
   "explore.apps.label": "Apps",
   "explore.model.line": "Results made with {model}",
-  "explore.showcase.title": "Made with Rosesfield",
   "explore.shared.title": "Shared results",
   "explore.shared.line":
     "Each result opens with its app, its model and its credits",
@@ -63,4 +62,5 @@ export const exploreCopy = {
   "share.page.failed.title": "This page did not load",
   "share.page.label": "Shared result",
   "explore.row.learnMore": "Learn more",
+  "explore.showcase.title": "Made with Rosesfield",
 } satisfies Record<string, string>

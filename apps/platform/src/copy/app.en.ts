@@ -28,8 +28,6 @@ export const appCopy = {
   "run.price.demo": "No cost on the demo engine",
   "run.price.credits": "{amount} Comfy credits",
   "run.price.estimated": "{amount} Comfy credits, estimated",
-  "run.price.kept":
-    "{amount} Comfy credits, measured on the {resolution} example",
   "run.generate.priced": "Generate, {amount} Comfy credits",
   "run.made": "Made in {duration}",
   "run.caption.made": "made in {duration}",
@@ -145,4 +143,6 @@ export const appCopy = {
     "Your key belongs to no Comfy workspace",
   "error.ENGINE_KEY_OUTSIDE_WORKSPACE.body":
     "Make a key in your Comfy workspace, then paste it in Settings.",
+  "run.price.kept":
+    "{amount} Comfy credits, measured on the {resolution} example",
 } satisfies Record<string, string>

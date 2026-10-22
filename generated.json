@@ -76,7 +76,7 @@
     },
     {
       "path": "apps/platform/src/copy/app.en.ts",
-      "sha256": "a8aafbd361c64a56fbb9decfe99493dc7a5ee80dcfdc4dd201733ac73c5e2c40"
+      "sha256": "35fca568410f91c6951c372598925adb6ae7b563e40efb21856ed37a0b6a1c2c"
     },
     {
       "path": "apps/platform/src/copy/characters.en.ts",
@@ -84,7 +84,7 @@
     },
     {
       "path": "apps/platform/src/copy/connect.en.ts",
-      "sha256": "4cb52ea2a1c0760cc0b9eabcc0b1ef10f4809fec535700ff1e82873dd734183e"
+      "sha256": "7de6265f67d779756714b8f3b7a0ef03caf96b9b57397d17d42fc7c3cb874374"
     },
     {
       "path": "apps/platform/src/copy/error.en.ts",
@@ -92,7 +92,7 @@
     },
     {
       "path": "apps/platform/src/copy/explore.en.ts",
-      "sha256": "d602a28c3003d25ae92df0a7c15e38a13d7863bbba1c5a2dac7f55a81eb0425e"
+      "sha256": "55758958b8ace00fc353426f7d6d3949b887e6741442ca3075570be5b67259bc"
     },
     {
       "path": "apps/platform/src/copy/field.en.ts",
@@ -104,7 +104,7 @@
     },
     {
       "path": "apps/platform/src/copy/key.en.ts",
-      "sha256": "835dd4436234881ec175a8b508d2b8d4316bf25b4cb9fb168a96218335686a95"
+      "sha256": "4e4d1089cd0a259c6e4002a9e367af36cabd9f8ed189524025229520ed94a46f"
     },
     {
       "path": "apps/platform/src/copy/library.en.ts",
