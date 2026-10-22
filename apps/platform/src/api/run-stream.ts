@@ -17,9 +17,9 @@ type Opened = {
   refused: number | null
 }
 
-export const failedOpensBeforeRead = 3
+const failedOpensBeforeRead = 3
 
-export const readAgainMs = 10_000
+const readAgainMs = 10_000
 
 function waitFor(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve) => {
