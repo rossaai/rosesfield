@@ -243,11 +243,8 @@ test("the footer closes Explore with its links and leaves an app page", async ({
     expect(columns).toHaveLength(5)
     expect(new Set(columns).size).toBe(1)
   }
-  const notice = footer.locator("p").last()
-  const trademarks = await boxOf(
-    footer.getByRole("link", { name: "Trademarks" })
-  )
-  const noticeBox = await boxOf(notice)
+  expect(await footer.locator(":scope > div").count()).toBe(1)
+  expect(await footer.locator("p").count()).toBe(0)
   if (isPhone(page)) {
     const groups = await footer.locator("section").all()
     const columns = await Promise.all(groups.map(boxOf))
@@ -255,13 +252,9 @@ test("the footer closes Explore with its links and leaves an app page", async ({
       [16, 142],
       [206, 142],
     ])
-    expect(noticeBox.y).toBeGreaterThan(trademarks.y)
-    expect(await style(notice, "text-align")).toBe("center")
-  } else {
-    expect(noticeBox.x).toBe(24)
-    const middle = (box: Box): number => box.y + box.height / 2
-    expect(Math.abs(middle(noticeBox) - middle(trademarks))).toBeLessThan(1)
   }
+  const legal = footer.locator("section").filter({ hasText: "Legal" })
+  await expect(legal.getByRole("link", { name: "Trademarks" })).toBeVisible()
   for (const name of ["Code on GitHub", "The challenge", "Privacy", "Terms"]) {
     await expect(footer.getByRole("link", { name })).toBeVisible()
   }
