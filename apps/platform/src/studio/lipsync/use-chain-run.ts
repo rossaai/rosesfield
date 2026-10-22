@@ -7,7 +7,7 @@ import {
   SpeechChain,
   speakThenSync,
 } from "@rosesfield/catalog/lipsync"
-import { type Run, runInputs } from "@rosesfield/contract"
+import { inputNamesOf, type Run, runInputs } from "@rosesfield/contract"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { storeRun } from "@/pieces/run/run-actions"
@@ -131,7 +131,15 @@ export async function pressChain(press: ChainPress): Promise<Run> {
       onStarted: press.onStarted,
     }),
   })
-  if (outcome.kind === "unplanned" || outcome.kind === "invalid") {
+  if (outcome.kind === "invalid") {
+    throw new GatewayRefusedError({
+      code: refusedCode,
+      status: refusedStatus,
+      retryAfterSeconds: null,
+      inputs: inputNamesOf(outcome.issues),
+    })
+  }
+  if (outcome.kind === "unplanned") {
     throw refused(refusedCode, refusedStatus)
   }
   if (outcome.kind === "unspoken") {
@@ -170,6 +178,7 @@ export function useChainRun(options: {
         }),
         onStarted: options.onStarted,
       }),
+    onError: (error) => options.form.refuse?.(error),
   })
   return {
     generate: () => {

@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import type { Draft } from "@/router-context"
 import {
   defaultsOf,
@@ -35,6 +36,7 @@ export type AppForm = {
   setForm: (change: Partial<FormValues>) => void
   fill: (values: FormValues) => void
   validate: () => boolean
+  refuse?: (error: unknown) => void
   register: (name: string, focus: () => void) => void
 }
 
@@ -95,6 +97,42 @@ function useSeededValues(
 
 export type FormCheck = (values: FormValues) => FieldProblem[]
 
+const invalidCode = "RUN_INPUT_INVALID"
+
+/** Names the inputs a refusal of the gateway names, or none for any other error. */
+export function refusedInputsOf(error: unknown): readonly string[] {
+  return error instanceof GatewayRefusedError && error.code === invalidCode
+    ? error.inputs
+    : []
+}
+
+function useRefuse(
+  setProblems: Dispatch<SetStateAction<ReadonlyMap<string, FieldProblem>>>,
+  focusers: RefObject<Map<string, () => void>>
+): (error: unknown) => void {
+  return useCallback(
+    (error: unknown): void => {
+      const names = refusedInputsOf(error)
+      if (names.length === 0) {
+        return
+      }
+      setProblems(
+        new Map(
+          names.map((name) => [
+            name,
+            { name, key: "error.RUN_INPUT_INVALID.title", values: {} },
+          ])
+        )
+      )
+      const [first] = names
+      if (first !== undefined) {
+        focusers.current.get(first)?.()
+      }
+    },
+    [setProblems, focusers]
+  )
+}
+
 export function useAppForm(
   app: AppListing,
   seeds: FormSeeds,
@@ -131,10 +169,12 @@ export function useAppForm(
     }
     return found.length === 0
   }, [app, values, check])
+  const refuse = useRefuse(setProblems, focusers)
   return {
     values,
     source,
     problems,
+    refuse,
     setInput,
     setForm: (change) => setValues((current) => ({ ...current, ...change })),
     fill: (next) => {

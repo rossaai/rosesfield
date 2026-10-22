@@ -2,6 +2,7 @@ type GatewayRefusedErrorOptions = {
   code: string
   status: number
   retryAfterSeconds: number | null
+  inputs?: readonly string[] | undefined
 }
 
 export class GatewayRefusedError extends Error {
@@ -13,6 +14,7 @@ export class GatewayRefusedError extends Error {
   readonly code: string
   readonly status: number
   readonly retryAfterSeconds: number | null
+  readonly inputs: readonly string[]
 
   constructor(options: GatewayRefusedErrorOptions) {
     super(`The gateway answered ${options.status} with ${options.code}`)
@@ -20,6 +22,7 @@ export class GatewayRefusedError extends Error {
     this.code = options.code
     this.status = options.status
     this.retryAfterSeconds = options.retryAfterSeconds
+    this.inputs = options.inputs ?? []
   }
 
   isLock(): boolean {

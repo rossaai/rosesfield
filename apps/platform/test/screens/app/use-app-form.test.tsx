@@ -6,9 +6,10 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router"
-import { cleanup, render, waitFor } from "@testing-library/react"
+import { act, cleanup, render, waitFor } from "@testing-library/react"
 import type { ReactElement } from "react"
 import { afterEach, describe, expect, it } from "vitest"
+import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { assetQuery, runQuery } from "@/api/queries"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { type AppForm, useAppForm } from "@/screens/app/use-app-form"
@@ -99,5 +100,59 @@ describe("the source of an app's opening values", () => {
 
   it("is the seed when the app reopens a run from History", async () => {
     expect(await sourceOf({ use: undefined, from: runId })).toBe("seed")
+  })
+})
+
+async function formOf(): Promise<() => AppForm> {
+  if (app === null) {
+    throw new Error("no video app")
+  }
+  const seen: AppForm[] = []
+  const opened = app
+  function Probe(): ReactElement | null {
+    seen.push(useAppForm(opened, { use: undefined, from: undefined }))
+    return null
+  }
+  const router = createRouter({
+    routeTree: createRootRoute({ component: Probe }),
+    history: createMemoryHistory(),
+  })
+  render(
+    <QueryClientProvider client={clientWithRecords()}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  )
+  await waitFor(() => expect(seen.length).toBeGreaterThan(0))
+  return () => {
+    const last = seen.at(-1)
+    if (last === undefined) {
+      throw new Error("no form")
+    }
+    return last
+  }
+}
+
+function refusal(code: string, inputs: readonly string[]): GatewayRefusedError {
+  return new GatewayRefusedError({
+    code,
+    status: 400,
+    retryAfterSeconds: null,
+    inputs,
+  })
+}
+
+describe("a refusal that names inputs", () => {
+  it("shows the refusal's message under each input it names", async () => {
+    const form = await formOf()
+    act(() => form().refuse?.(refusal("RUN_INPUT_INVALID", ["prompt"])))
+    expect([...form().problems.values()]).toEqual([
+      { name: "prompt", key: "error.RUN_INPUT_INVALID.title", values: {} },
+    ])
+  })
+
+  it("control: shows nothing under a field for another refusal", async () => {
+    const form = await formOf()
+    act(() => form().refuse?.(refusal("ENGINE_RATE_LIMITED", ["prompt"])))
+    expect(form().problems.size).toBe(0)
   })
 })

@@ -48,6 +48,7 @@ export {
   errorCode,
   errorEnvelope,
   errorEnvelopeOf,
+  inputNamesOf,
 } from "#error.contract"
 export { appId, assetId, characterId, runId } from "#id.contract"
 export {
