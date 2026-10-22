@@ -62,7 +62,11 @@ export function appFilterGroups(
         choices: [
           {
             value: every,
-            label: t("history.filter.allApps"),
+            label: t(
+              category.id === "character"
+                ? "kind.all"
+                : "history.filter.allApps"
+            ),
             picture: <ShapesIcon />,
           },
           ...inCategory.map((app) => ({

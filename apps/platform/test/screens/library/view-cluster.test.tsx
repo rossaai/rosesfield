@@ -1,8 +1,10 @@
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, type Mock, vi } from "vitest"
+import { t } from "@/copy/t"
 import { SoundButton } from "@/screens/library/result-grid"
 import {
+  appFilterGroups,
   type FilterGroup,
   type ViewLayout,
   ViewMenu,
@@ -48,6 +50,16 @@ async function openView(): Promise<void> {
     fireEvent.click(screen.getByRole("button", { name: "View" }))
   })
 }
+
+describe("the View filter's app groups", () => {
+  it("gives the Characters group its own all value, not All apps", () => {
+    const groups = appFilterGroups(null, () => undefined)
+    const characters = groups.find((group) => group.id === "app-character")
+    const image = groups.find((group) => group.id === "app-image")
+    expect(characters?.choices[0]?.label).toBe(t("kind.all"))
+    expect(image?.choices[0]?.label).toBe(t("history.filter.allApps"))
+  })
+})
 
 describe("the View menu", () => {
   it("is one View button whose menu holds the layout, a size slider in Grid, and Filter as submenus", async () => {
