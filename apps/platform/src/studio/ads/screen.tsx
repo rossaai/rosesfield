@@ -142,7 +142,7 @@ function barChips(
 ): ReactElement | undefined {
   switch (placement.place) {
     case "phone":
-      return <BarChips chips={<InputsChip onOpen={placement.onInputs} />} />
+      return <InputsChip onOpen={placement.onInputs} />
     case "sheet":
       return undefined
     case "dock":
