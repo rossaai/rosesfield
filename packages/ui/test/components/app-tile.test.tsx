@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest"
 afterEach(cleanup)
 
 describe("AppTile", () => {
-  it("is one link with a 20 px icon, its name and one line, 130 px tall, in 3 columns 12 px apart", () => {
+  it("is one link with a 20 px icon, its name and one line, 130 px tall, in 3 columns 12 px apart that grow to 6 across a wide page", () => {
     render(
       <AppTileGrid label="Apps">
         <AppTile
@@ -29,8 +29,8 @@ describe("AppTile", () => {
       expect.arrayContaining([
         "grid-cols-2",
         "gap-2",
-        "@regular:grid-cols-3",
         "@regular:gap-3",
+        "@regular:grid-cols-[repeat(auto-fill,minmax(max(calc((100%_-_var(--spacing)*15)/6),min(calc((100%_-_var(--spacing)*6)/3),calc((var(--spacing)*336_-_100%)*1000))),1fr))]",
       ])
     )
   })

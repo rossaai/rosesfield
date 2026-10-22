@@ -23,6 +23,9 @@ type AppTileProps = Omit<ComponentProps<"a">, "children"> & {
 const openRing =
   "hover:border-transparent hover:p-0 in-data-[gallery=hover]:border-transparent in-data-[gallery=hover]:p-0"
 
+const wideColumns =
+  "@regular:grid-cols-[repeat(auto-fill,minmax(max(calc((100%_-_var(--spacing)*15)/6),min(calc((100%_-_var(--spacing)*6)/3),calc((var(--spacing)*336_-_100%)*1000))),1fr))]"
+
 const panelGrows = "group-hover/app:p-4 in-data-[gallery=hover]:p-4"
 
 function ModePill({ mode }: { mode: AppTileMode }): ReactElement {
@@ -115,7 +118,7 @@ function AppTileGrid({
 }): ReactElement {
   return (
     <nav aria-label={label} data-slot="app-tile-grid">
-      <div className="grid grid-cols-2 gap-2 @regular:grid-cols-3 @regular:gap-3">
+      <div className={cn("grid grid-cols-2 gap-2 @regular:gap-3", wideColumns)}>
         {children}
       </div>
     </nav>
