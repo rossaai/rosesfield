@@ -1,4 +1,6 @@
 import type { Run } from "@rosesfield/contract"
+import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
+import { Skeleton, SkeletonGroup } from "@rosesfield/ui/components/skeleton"
 import {
   Children,
   type CSSProperties,
@@ -6,11 +8,6 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react"
-import {
-  Skeleton,
-  SkeletonGroup,
-} from "@rosesfield/ui/components/skeleton"
-import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { aspectStyle } from "@/pieces/asset-tile"
 import { OutputRow } from "@/pieces/run/output-row"
@@ -155,34 +152,34 @@ export function RunColumns({
   }
   return (
     <div
-        data-slot="run-columns"
-        data-columns={count}
-        style={style}
-        className="grid grid-cols-1 items-start gap-x-s3 gap-y-s6 @regular:grid-cols-(--run-columns)"
-      >
-        {Array.from({ length: count }, (_, column) => (
-          <div
-            // biome-ignore lint/suspicious/noArrayIndexKey: a column's place is its identity
-            key={column}
-            data-slot="run-column"
-            className="contents @regular:flex @regular:min-w-0 @regular:flex-col @regular:gap-y-s6"
-          >
-            {items.flatMap((item, place) => {
-              const placeStyle: PlaceStyle = { "--place": place }
-              return placed[place] === column
-                ? [
-                    <div
-                      key={item.key}
-                      style={placeStyle}
-                      className="order-(--place) min-w-0 @regular:order-none"
-                    >
-                      {item}
-                    </div>,
-                  ]
-                : []
-            })}
-          </div>
-        ))}
-      </div>
+      data-slot="run-columns"
+      data-columns={count}
+      style={style}
+      className="grid grid-cols-1 items-start gap-x-s3 gap-y-s6 @regular:grid-cols-(--run-columns)"
+    >
+      {Array.from({ length: count }, (_, column) => (
+        <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: a column's place is its identity
+          key={column}
+          data-slot="run-column"
+          className="contents @regular:flex @regular:min-w-0 @regular:flex-col @regular:gap-y-s6"
+        >
+          {items.flatMap((item, place) => {
+            const placeStyle: PlaceStyle = { "--place": place }
+            return placed[place] === column
+              ? [
+                  <div
+                    key={item.key}
+                    style={placeStyle}
+                    className="order-(--place) min-w-0 @regular:order-none"
+                  >
+                    {item}
+                  </div>,
+                ]
+              : []
+          })}
+        </div>
+      ))}
+    </div>
   )
 }

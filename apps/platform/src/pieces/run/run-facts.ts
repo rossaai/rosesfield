@@ -310,10 +310,7 @@ function presentBadges(badges: ReadonlyArray<RunBadge | null>): RunBadge[] {
   return badges.filter((badge): badge is RunBadge => badge !== null)
 }
 
-export function runFacts(
-  run: Run,
-  estimate: number | null = null
-): RunBadge[] {
+export function runFacts(run: Run, estimate: number | null = null): RunBadge[] {
   const lead = leadOf(run)
   if (run.status === "failed" || run.status === "cancelled") {
     return presentBadges([

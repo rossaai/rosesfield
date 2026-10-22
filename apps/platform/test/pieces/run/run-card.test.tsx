@@ -97,7 +97,10 @@ describe("a run on an app page", () => {
       client,
       <RunCard
         run={runOf({
-          inputs: { prompt: "a dancer turning in a narrow street", model: "ltx-2-5" },
+          inputs: {
+            prompt: "a dancer turning in a narrow street",
+            model: "ltx-2-5",
+          },
         })}
         onUseInputs={() => undefined}
       />
@@ -106,13 +109,17 @@ describe("a run on an app page", () => {
     const row = card.querySelector("[data-slot=output-row]")
     expect(card.firstElementChild).toBe(row)
     const facts = row?.querySelector("[data-slot=media-chrome-facts]")
-    const badges = [...(facts?.querySelectorAll("[data-slot=media-badge]") ?? [])]
+    const badges = [
+      ...(facts?.querySelectorAll("[data-slot=media-badge]") ?? []),
+    ]
     expect(badges.map((badge) => badge.textContent)).toEqual([
       "LTX 2.5",
       "3 seconds",
     ])
     expect(
-      badges[0]?.querySelector("[data-slot=lab-mark]")?.getAttribute("data-maker")
+      badges[0]
+        ?.querySelector("[data-slot=lab-mark]")
+        ?.getAttribute("data-maker")
     ).toBe("Lightricks")
     expect(facts?.className).toContain("group-hover/reveal:opacity-100")
     expect(facts?.className).toContain("group-focus-within/reveal:opacity-100")
@@ -141,7 +148,9 @@ describe("a run on an app page", () => {
         <span />
       </RunColumns>
     )
-    const columns = document.querySelector<HTMLElement>("[data-slot=run-columns]")
+    const columns = document.querySelector<HTMLElement>(
+      "[data-slot=run-columns]"
+    )
     expect(columns?.className).toContain("grid-cols-1")
     expect(columns?.className).toContain("@regular:grid-cols-(--run-columns)")
     expect(columns?.style.getPropertyValue("--run-columns")).toBe(
@@ -157,7 +166,9 @@ describe("a run on an app page", () => {
         ))}
       </RunColumns>
     )
-    const columns = document.querySelector<HTMLElement>("[data-slot=run-columns]")
+    const columns = document.querySelector<HTMLElement>(
+      "[data-slot=run-columns]"
+    )
     expect(columns?.style.getPropertyValue("--run-columns")).toBe(
       "repeat(4, minmax(0, 1fr))"
     )
@@ -180,10 +191,13 @@ describe("the runs of an app page on desktop", () => {
       "secondfourth",
     ])
     const places = [
-      ...document.querySelectorAll<HTMLElement>("[data-slot=run-column] [style]"),
-    ].map(
-      (place) => [place.textContent, place.style.getPropertyValue("--place")]
-    )
+      ...document.querySelectorAll<HTMLElement>(
+        "[data-slot=run-column] [style]"
+      ),
+    ].map((place) => [
+      place.textContent,
+      place.style.getPropertyValue("--place"),
+    ])
     expect(places).toEqual([
       ["first", "0"],
       ["third", "2"],
