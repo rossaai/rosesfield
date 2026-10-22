@@ -1,7 +1,10 @@
 import type { Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
+import { framedSource } from "@rosesfield/ui/components/media-tile"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { Slider } from "@rosesfield/ui/components/slider"
+import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { PauseIcon, PlayIcon } from "lucide-react"
 import {
   type PointerEvent,
@@ -75,23 +78,33 @@ export function followLead(
 
 function LayerVideo({ layer }: { layer: Layer }): ReactElement {
   const source = useAssetSource(layer.assetId)
+  const [hasFrame, setFrame] = useState(false)
   if (source.state !== "ready") {
     return <Skeleton className="absolute inset-0" />
   }
   return (
-    <video
-      ref={layer.video}
-      src={source.src}
-      aria-label={layer.label}
-      muted={layer.isMuted}
-      playsInline
-      preload="metadata"
-      onEnded={layer.onEnded}
-      onTimeUpdate={layer.onTime}
-      onSeeked={layer.onTime}
-      className="absolute inset-0 h-full w-full object-contain"
-      style={layer.clip === null ? undefined : { clipPath: layer.clip }}
-    />
+    <>
+      {hasFrame ? null : <Skeleton className="absolute inset-0" />}
+      <video
+        ref={layer.video}
+        src={framedSource(source.src)}
+        aria-label={layer.label}
+        data-arrival={hasFrame ? "loaded" : "waiting"}
+        muted={layer.isMuted}
+        playsInline
+        preload="metadata"
+        onLoadedData={() => setFrame(true)}
+        onError={() => setFrame(true)}
+        onEnded={layer.onEnded}
+        onTimeUpdate={layer.onTime}
+        onSeeked={layer.onTime}
+        className={cn(
+          "absolute inset-0 h-full w-full object-contain",
+          motion.enter
+        )}
+        style={layer.clip === null ? undefined : { clipPath: layer.clip }}
+      />
+    </>
   )
 }
 

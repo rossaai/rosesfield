@@ -1,5 +1,5 @@
 import { MediaTile } from "@rosesfield/ui/components/media-tile"
-import { act, cleanup, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { readSource } from "../read-source"
 
@@ -95,6 +95,20 @@ describe("MediaTile with a video", () => {
     observer.show(false)
     expect(pause).toHaveBeenCalledTimes(1)
     expect(video.dataset.playback).toBe("paused")
+  })
+
+  it("asks a video with no poster for a frame past its start, and keeps the tile hidden over its skeleton until that frame loads", () => {
+    const video = renderVideo()
+    expect(video.getAttribute("src")).toBe("clip.mp4#t=0.1")
+    const tile = video.closest("[data-slot='media-tile']")
+    Object.defineProperty(video, "videoWidth", { value: 1080 })
+    Object.defineProperty(video, "videoHeight", { value: 1920 })
+    fireEvent.loadedMetadata(video)
+    expect(video.dataset.arrival).toBe("waiting")
+    expect(tile?.className.split(" ")).toContain("motion-pulse")
+    fireEvent.loadedData(video)
+    expect(video.dataset.arrival).toBe("loaded")
+    expect(tile?.className.split(" ")).not.toContain("motion-pulse")
   })
 
   it("keeps the poster under reduced motion", () => {

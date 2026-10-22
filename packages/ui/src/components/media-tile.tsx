@@ -67,6 +67,12 @@ function aspectStyle(aspect: MediaAspect | undefined): CSSProperties {
     : { aspectRatio: `${aspect.width} / ${aspect.height}` }
 }
 
+const firstFrameSeconds = 0.1
+
+function framedSource(src: string): string {
+  return src.includes("#") ? src : `${src}#t=${firstFrameSeconds}`
+}
+
 function shapeOf(width: number, height: number): MediaAspect | null {
   return width > 0 && height > 0 ? { width, height } : null
 }
@@ -139,7 +145,7 @@ function TileVideo({
   return (
     <video
       ref={video}
-      src={src}
+      src={poster === undefined ? framedSource(src) : src}
       poster={poster}
       aria-label={alt}
       data-playback="paused"
@@ -157,9 +163,6 @@ function TileVideo({
         )
         if (shape !== null) {
           onShape?.(shape)
-        }
-        if (poster === undefined) {
-          onLoaded()
         }
       }}
       onLoadedData={onLoaded}
@@ -337,4 +340,4 @@ function MediaTile(props: MediaTileProps): ReactElement {
 }
 
 export type { MediaAspect, MediaTileProps }
-export { ArrivalIndex, MediaBadge, MediaTile }
+export { ArrivalIndex, framedSource, MediaBadge, MediaTile }

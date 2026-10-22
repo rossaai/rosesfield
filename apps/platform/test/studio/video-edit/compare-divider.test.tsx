@@ -72,6 +72,25 @@ function showCompare(): { yours: HTMLVideoElement; output: HTMLVideoElement } {
   return { yours, output }
 }
 
+describe("the comparison's clips before they play", () => {
+  it("ask for a frame past the start and keep a skeleton over each clip until that frame loads", () => {
+    const { yours, output } = showCompare()
+    for (const video of [yours, output]) {
+      expect(video.getAttribute("src")).toMatch(/#t=0\.1$/)
+      expect(video.dataset.arrival).toBe("waiting")
+    }
+    const skeletons = (): number =>
+      document.querySelectorAll(
+        "[data-slot='compare-stage'] [data-slot='skeleton']"
+      ).length
+    const before = skeletons()
+    fireEvent.loadedData(yours)
+    fireEvent.loadedData(output)
+    expect(yours.dataset.arrival).toBe("loaded")
+    expect(skeletons()).toBe(before - 2)
+  })
+})
+
 describe("the comparison's divider", () => {
   it("follows the pointer across the picture, held between its edges", () => {
     expect(splitAt(150, 100, 200)).toBe(25)
