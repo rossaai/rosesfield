@@ -62,11 +62,16 @@ export class DemoHost {
     this.#key = options.key
   }
 
-  async #answer(path: string, timeoutMs: number): Promise<Response> {
+  async #answer(
+    path: string,
+    timeoutMs: number,
+    method = "GET"
+  ): Promise<Response> {
     let response: Response
     try {
       response = await fetch(new URL(path, this.url), {
-        headers: { [keyHeader]: this.#key },
+        method,
+        headers: { Accept: "application/json", [keyHeader]: this.#key },
         signal: AbortSignal.timeout(timeoutMs),
       })
     } catch {
@@ -120,6 +125,19 @@ export class DemoHost {
       kind: textOf(asset.kind),
       mime: textOf(asset.mime),
     }
+  }
+
+  async share(runId: string): Promise<string> {
+    const response = await this.#answer(
+      `/api/runs/${runId}/share`,
+      requestMs,
+      "POST"
+    )
+    const path = rowOf(rowOf(await response.json()).share).path
+    if (typeof path !== "string" || !path.startsWith("/share/")) {
+      throw new Error(`Share answered with no link for run ${runId}.`)
+    }
+    return path
   }
 
   async download(assetId: string, file: string): Promise<void> {

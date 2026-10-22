@@ -2,7 +2,7 @@ import { mkdir } from "node:fs/promises"
 import { join } from "node:path"
 import { type BrowserContext, chromium } from "@playwright/test"
 import { type CaptureOptions, captureOptionsOf } from "./demo-args"
-import { type Proof, proofOf } from "./demo-budget"
+import { type Proof, proofOf, reserveCredits } from "./demo-budget"
 import { type CaptionFacts, hookCaption, sceneCaption } from "./demo-captions"
 import { DemoHost, type HostRun, rowOf } from "./demo-host"
 import { liveRunScene } from "./demo-live"
@@ -86,6 +86,14 @@ async function planOf(options: CaptureOptions): Promise<Planned> {
   if (account.key !== "valid") {
     throw new Error(`Comfy answered ${account.key} for DEMO_KEY on ${options.url}.`)
   }
+  if (
+    options.isLive &&
+    (account.credits === null || account.credits <= reserveCredits)
+  ) {
+    throw new Error(
+      `The Comfy balance is ${account.credits ?? "unknown"} credits, and a live run keeps it at ${reserveCredits} credits or more.`
+    )
+  }
   const effect = await chooseRun(host, {
     appId: effectsAppId,
     runId: options.runId,
@@ -118,6 +126,7 @@ function printedPlan(options: CaptureOptions, planned: Planned): string {
       apps: planned.apps.map((run) => ({ appId: run.appId, runId: run.id })),
       live: options.isLive,
       budget: options.budget,
+      reserve: reserveCredits,
       proof: planned.proof,
       graph: planned.graph,
       out: options.out,
@@ -164,9 +173,11 @@ async function tour(session: Session): Promise<Tour> {
     modelListScene(page, at, "/apps/image", 5)
   )
   const run = await runScene(session)
-  const appName = appNameOf(run.effect.appId)
   const share = await recordWith(context, folder, "share", (page, at) =>
-    shareScene(page, at, { id: run.effect.id, appName })
+    shareScene(page, at, {
+      runId: run.effect.id,
+      makeLink: (runId) => session.planned.host.share(runId),
+    })
   )
   const credits = await recordScene(context, folder, "credits", (page, at) =>
     creditsScene(page, at, run.effect.id)

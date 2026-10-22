@@ -6,6 +6,7 @@ import { manifestName, manifestOf } from "./demo-manifest"
 import {
   type CutPlan,
   checkPlan,
+  checkTake,
   cutPlan,
   type Output,
   srtOf,
@@ -108,6 +109,7 @@ async function main(): Promise<void> {
   const options = optionsOf(Bun.argv.slice(2))
   const take = options.take ?? (await latestTake())
   const manifest = manifestOf(await Bun.file(join(take, manifestName)).json())
+  checkTake(manifest, options.isDraft)
   const plan = cutPlan(manifest, options.isDraft)
   checkPlan(plan)
   if (options.isDryRun) {

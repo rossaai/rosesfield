@@ -1,3 +1,4 @@
+import { siteUrl } from "./demo-args"
 import { clipCaption, linkCaption } from "./demo-captions"
 import {
   type AppTake,
@@ -267,6 +268,14 @@ export function cutPlan(manifest: Manifest, isDraft: boolean): CutPlan {
       ...apps.map((one) => ({ file: one.out, ...clipSize, maxSeconds: clipSeconds + 1 })),
     ],
     seconds: { video, built, vertical: photoSeconds + resultSeconds },
+  }
+}
+
+export function checkTake(manifest: Manifest, isDraft: boolean): void {
+  if (!isDraft && manifest.url !== siteUrl) {
+    throw new Error(
+      `The take was recorded on ${manifest.url}. The video shows real runs on ${siteUrl}, so record the take there, or cut this one with --draft to check it.`
+    )
   }
 }
 

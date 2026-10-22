@@ -1,5 +1,7 @@
 import { fileURLToPath } from "node:url"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { captureOptionsOf } from "../../../../scripts/demo/demo-args"
+import { DemoHost } from "../../../../scripts/demo/demo-host"
 
 const command = fileURLToPath(
   new URL("../../../../scripts/demo/capture.ts", import.meta.url)
@@ -60,6 +62,12 @@ function hostAnswer(mode: string, request: Request): Response {
     return Response.json({
       account: { key: "valid", credits: 2490.5, retentionDays: 30, cap: null },
     })
+  }
+  if (pathname === `/api/runs/${kept}/share` && request.method === "POST") {
+    return Response.json(
+      { share: { id: "Zq3Ftb8mVwq1J0aXrN4u2A", path: "/share/Zq3Ftb8mVwq1J0aXrN4u2A" } },
+      { status: 201 }
+    )
   }
   if (pathname === "/api/runs") {
     return Response.json({ runs, next: null })
@@ -174,11 +182,31 @@ describe("bun run demo:capture --plan", () => {
     expect(wrong.error).not.toContain("comfyui-not-this-one")
   })
 
-  it("records DEMO_URL, and the local runtime's address when none is named", async () => {
+  it("records DEMO_URL, and rosesfield.com when none is named", async () => {
     const fromEnv = await capture(["--plan"], { DEMO_KEY: key, DEMO_URL: publicHost.url.origin })
-    const fallback = await capture(["--plan"])
+    const fallback = captureOptionsOf([], { DEMO_KEY: key }, new Date("2026-10-22T12:00:00Z"))
 
     expect(planned(fromEnv.out).url).toBe(publicHost.url.origin)
-    expect(`${fallback.out}${fallback.error}`).toContain("http://127.0.0.1:8788")
+    expect(fallback.url).toBe("https://rosesfield.com")
+  })
+
+  it("prints the 2000 credits the live runs keep on the balance", async () => {
+    const done = await capture(["--plan", "--live", "--url", publicHost.url.origin])
+
+    expect(planned(done.out)).toMatchObject({ live: true, budget: 200, reserve: 2000 })
+  })
+})
+
+describe("the Share scene's link", () => {
+  it("asks the site to share the run with your key and takes the link it answers", async () => {
+    const host = new DemoHost({ url: publicHost.url.origin, key })
+
+    expect(await host.share(kept)).toBe("/share/Zq3Ftb8mVwq1J0aXrN4u2A")
+  })
+
+  it("stops when the site shares no link for the run", async () => {
+    const host = new DemoHost({ url: publicHost.url.origin, key })
+
+    await expect(host.share(older)).rejects.toThrow("answered 404")
   })
 })

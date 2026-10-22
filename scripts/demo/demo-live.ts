@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test"
-import { checkLiveRun, priceIn } from "./demo-budget"
+import { checkLiveRun, liveSpentOf, priceIn } from "./demo-budget"
 import type { DemoHost, HostRun } from "./demo-host"
 import type { Window } from "./demo-manifest"
 import { type Clock, hold, openBar } from "./demo-scenes"
@@ -42,10 +42,11 @@ export async function liveRunScene(
   const price = generate.locator("[data-slot='generate-button-price']")
   await price.waitFor({ timeout: 30_000 })
   await hold(page, 1.5)
-  const estimate = checkLiveRun(
-    priceIn((await price.textContent()) ?? ""),
-    options.left
-  )
+  const { estimate, balance } = checkLiveRun({
+    estimate: priceIn((await price.textContent()) ?? ""),
+    left: options.left,
+    balance: (await host.account()).credits,
+  })
   const before = new Set((await host.runs(from.appId)).map((run) => run.id))
   const start = at()
   await generate.click()
@@ -54,12 +55,13 @@ export async function liveRunScene(
   const run = await arrival(host, from.appId, before)
   const arrived = at()
   await hold(page, 5)
+  const after = (await host.account()).credits
   return {
     windows: [
       started,
       { start: Math.max(started.end, arrived - 2), end: at() },
     ],
     run,
-    credits: run.credits ?? estimate,
+    credits: liveSpentOf(balance, after, run.credits ?? estimate),
   }
 }

@@ -1,6 +1,5 @@
 import { join } from "node:path"
 import type { BrowserContext, Locator, Page } from "@playwright/test"
-import { rowOf } from "./demo-host"
 import type { SceneId, Window } from "./demo-manifest"
 
 export type Clock = () => number
@@ -158,47 +157,19 @@ export async function storedRunScene(
   return [{ start, end: at() }]
 }
 
-function sharePathOf(body: unknown): string {
-  const path = rowOf(rowOf(body).share).path
-  if (typeof path !== "string" || path === "") {
-    throw new Error("Share answered with no link.")
-  }
-  return path
-}
-
 export async function shareScene(
   page: Page,
   at: Clock,
-  run: { id: string; appName: string }
+  share: { runId: string; makeLink: (runId: string) => Promise<string> }
 ): Promise<{ windows: Window[]; path: string }> {
-  await openBar(page, "/")
-  const more = page
-    .getByRole("button", { name: `More for this ${run.appName} result` })
-    .first()
-  await more.waitFor({ timeout: waitMs })
-  await more.scrollIntoViewIfNeeded()
+  await openBar(page, `/history/${share.runId}`)
+  await shownResult(page)
   await hold(page, 1.5)
   const start = at()
-  const answered = page.waitForResponse(
-    (response) =>
-      /^\/api\/runs\/[^/]+\/share$/.test(new URL(response.url()).pathname),
-    { timeout: waitMs }
-  )
-  await more.click()
-  const response = await answered
-  if (!new URL(response.url()).pathname.includes(run.id)) {
-    throw new Error(
-      `Explore's first ${run.appName} result is another run than ${run.id}. Name that run with --run, or make ${run.id} the latest.`
-    )
-  }
-  const path = sharePathOf(await response.json())
-  await page
-    .getByRole("dialog")
-    .getByRole("link", { name: "Open the page" })
-    .waitFor({ timeout: waitMs })
-  await hold(page, 4)
-  await page.keyboard.press("Escape")
-  await hold(page, 0.5)
+  const path = await share.makeLink(share.runId)
+  await page.goto(path)
+  await shownResult(page)
+  await hold(page, 5)
   return { windows: [{ start, end: at() }], path }
 }
 

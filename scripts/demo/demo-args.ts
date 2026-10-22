@@ -14,7 +14,9 @@ export type CaptureOptions = {
   out: string
 }
 
-export const defaultUrl = "http://127.0.0.1:8788"
+export const siteUrl = "https://rosesfield.com"
+
+export const defaultUrl = siteUrl
 
 export const budgetCeiling = 200
 
@@ -27,7 +29,7 @@ const appIdPattern = /^[a-z][a-z0-9-]{0,63}$/
 export const captureUsage = [
   "bun run demo:capture [--url <address>] [--run <run id>] [--apps <app>[=<run id>],...] [--live] [--budget <credits>] [--out <folder>] [--plan]",
   "",
-  `  DEMO_URL  the site to record, ${defaultUrl} by default. --url wins over it`,
+  `  DEMO_URL  the site to record, ${defaultUrl} by default. --url wins over it. demo:cut cuts the final video only from a take of ${siteUrl}`,
   "  DEMO_KEY  your Comfy key. It is typed into the masked key field and sent in a header, and never printed",
   "  --run     the Effects run the video opens on, the latest finished live Effects run by default",
   "  --apps    the apps that get a short clip, each with its kept run, effects by default",

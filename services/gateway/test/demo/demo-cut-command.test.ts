@@ -159,6 +159,18 @@ describe("bun run demo:cut", () => {
     expect(app).toMatchObject({ width: 1280, height: 720 })
   }, 120_000)
 
+  it("cuts the final video only from a take recorded on rosesfield.com, and a local take only as a draft", async () => {
+    const local = await mkdtemp(join(tmpdir(), "rosesfield-demo-take-"))
+    await writeTake(local, manifest({ url: "http://127.0.0.1:8788" }))
+
+    const [final, draft] = await Promise.all([cut(local, "--dry-run"), cut(local, "--dry-run", "--draft")])
+    await rm(local, { recursive: true })
+
+    expect(final.code).toBe(1)
+    expect(final.error).toContain("recorded on http://127.0.0.1:8788")
+    expect(draft.code).toBe(0)
+  })
+
   it("refuses a take with no share link or with a scene missing, so no video goes out without them", async () => {
     const noLink = await mkdtemp(join(tmpdir(), "rosesfield-demo-take-"))
     const noScene = await mkdtemp(join(tmpdir(), "rosesfield-demo-take-"))
