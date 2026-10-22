@@ -27,6 +27,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
         <ThreeDCanvas
           app={app}
           onUseInputs={screen.fillFromRun}
+          opened={seeds.open}
           emptyAction={<AddInputsButton onClick={openInputs} />}
         />
       )}

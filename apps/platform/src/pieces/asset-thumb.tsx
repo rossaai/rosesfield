@@ -41,7 +41,7 @@ function useOpenAsset(
     void navigate({
       to: "/apps/$appId",
       params: { appId: meshAppId },
-      search: asset.sourceRunId === null ? {} : { from: asset.sourceRunId },
+      search: { open: asset.id },
     })
 }
 

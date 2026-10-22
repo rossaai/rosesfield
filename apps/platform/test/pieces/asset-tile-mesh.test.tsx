@@ -86,21 +86,18 @@ describe("a mesh in the library", () => {
     expect(document.querySelector("video")).toBeNull()
   })
 
-  it("opens 3D with the run that made it when you press it", async () => {
-    const router = renderTile(meshOf(runId))
-    fireEvent.click(await meshTile())
-    await waitFor(() => {
-      expect(router.state.location.pathname).toBe("/apps/three-d")
-    })
-    expect(router.state.location.search).toEqual({ from: runId })
-  })
-
-  it("opens 3D with no run for a GLB you uploaded", async () => {
-    const router = renderTile(meshOf(null))
-    fireEvent.click(await meshTile())
-    await waitFor(() => {
-      expect(router.state.location.pathname).toBe("/apps/three-d")
-    })
-    expect(router.state.location.search).toEqual({})
-  })
+  it.each([
+    { made: "a run made", sourceRunId: runId },
+    { made: "you uploaded", sourceRunId: null },
+  ])(
+    "opens 3D on the mesh you pressed, for a GLB $made",
+    async ({ sourceRunId }) => {
+      const router = renderTile(meshOf(sourceRunId))
+      fireEvent.click(await meshTile())
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe("/apps/three-d")
+      })
+      expect(router.state.location.search).toEqual({ open: assetId })
+    }
+  )
 })

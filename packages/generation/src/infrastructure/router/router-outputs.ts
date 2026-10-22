@@ -133,7 +133,11 @@ function foundOf(
     const bytes = bytesOf(inline[2] ?? "")
     return bytes === null
       ? null
-      : { kind: "bytes", bytes, mime: inline[1] ?? "" }
+      : {
+          kind: "bytes",
+          bytes,
+          mime: sniffed(bytes, (inline[1] ?? "").toLowerCase()),
+        }
   }
   if (leaf === "url") {
     return /^https:\/\/\S+$/.test(value) && !written.has(value)

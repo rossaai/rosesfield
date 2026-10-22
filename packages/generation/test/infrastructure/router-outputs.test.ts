@@ -130,6 +130,21 @@ describe("the outputs of a Router result", () => {
     }
   )
 
+  it("keep a GLB written inline as octet-stream as a mesh", async () => {
+    const base64 = btoa(String.fromCharCode(...glbBytes()))
+    const { engine } = engineWith([
+      resultWith({
+        result: { sample: `data:application/octet-stream;base64,${base64}` },
+      }),
+    ])
+    const outputs = await engine.listOutputs(ref, { prompt: "a chair" })
+    expect(outputs).toHaveLength(1)
+    expect(outputs[0]).toMatchObject({
+      kind: "mesh",
+      mime: "model/gltf-binary",
+    })
+  })
+
   it("drop a mesh file that is not a GLB", async () => {
     const { engine } = engineWith([
       resultWith({ result: { sample: outputUrl } }),

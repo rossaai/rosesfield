@@ -17,6 +17,7 @@ function glb(): Uint8Array {
 }
 
 const own = new Set<string>()
+let uploadedId = ""
 
 test.beforeAll(async () => {
   const uploaded = await fetch(`${gatewayOrigin}/api/assets`, {
@@ -28,6 +29,7 @@ test.beforeAll(async () => {
   const body: { asset: { id: string; kind: string } } = await uploaded.json()
   expect(body.asset.kind).toBe("mesh")
   own.add(body.asset.id)
+  uploadedId = body.asset.id
 })
 
 test.beforeEach(async ({ page }) => {
@@ -37,7 +39,7 @@ test.beforeEach(async ({ page }) => {
   await answerOwnLists(page, own)
 })
 
-test("a GLB in the library shows as a tile with the 3D mark, and pressing it opens 3D", async ({
+test("a GLB in the library shows as a tile with the 3D mark, and pressing it opens that GLB in 3D's viewer", async ({
   page,
 }) => {
   await page.goto("/library")
@@ -47,7 +49,12 @@ test("a GLB in the library shows as a tile with the 3D mark, and pressing it ope
     tile.locator("[data-slot='asset-thumb-mark'] svg.lucide-box")
   ).toBeVisible()
   await tile.click()
-  await expect(page).toHaveURL(/\/apps\/three-d$/)
+  await expect(page).toHaveURL(
+    new RegExp(`/apps/three-d\\?open=${uploadedId}$`)
+  )
+  const viewer = page.locator("[data-slot='mesh-output']")
+  await expect(viewer).toHaveCount(1)
+  await expect(viewer.getByRole("button", { name: "Download" })).toBeVisible()
   await expect(
     page.getByRole("tab", { name: "From text" }).first()
   ).toBeVisible()
