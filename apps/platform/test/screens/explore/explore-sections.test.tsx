@@ -44,12 +44,8 @@ function stubObserver(): { fire: (isIntersecting: boolean) => void } {
       constructor(callback: Watch) {
         watch = callback
       }
-      observe(): void {
-        return undefined
-      }
-      disconnect(): void {
-        return undefined
-      }
+      observe = vi.fn()
+      disconnect = vi.fn()
     }
   )
   return { fire: (isIntersecting) => watch([{ isIntersecting }]) }
