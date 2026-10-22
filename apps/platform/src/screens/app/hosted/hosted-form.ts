@@ -5,6 +5,7 @@ import type {
   FormValues,
   StartRunBodyInput,
 } from "@/screens/app/app-form"
+import { fieldCaption } from "@/screens/app/hosted/field-words"
 
 export const modelInputName = "model"
 
@@ -114,24 +115,26 @@ export function hostedBody(
     : { inputs }
 }
 
-function missingKeyOf(field: ModelField): FieldProblem["key"] {
+function missingOf(field: ModelField): FieldProblem {
+  const name = field.name
   switch (field.kind) {
     case "media":
-      return "field.asset.required"
+      return { name, key: "field.asset.required", values: {} }
     case "prompt":
+      return { name, key: "field.prompt.required", values: {} }
     case "text":
-      return "field.prompt.required"
+      return { name, key: "bar.notSet", values: { field: fieldCaption(field) } }
     case "number":
-      return "field.number.required"
+      return { name, key: "field.number.required", values: {} }
     default:
-      return "field.choice.required"
+      return { name, key: "field.choice.required", values: {} }
   }
 }
 
 function problemOf(field: ModelField, value: FieldValue): FieldProblem | null {
   const name = field.name
   if (field.required && isEmpty(value)) {
-    return { name, key: missingKeyOf(field), values: {} }
+    return missingOf(field)
   }
   if (
     field.kind === "media" &&

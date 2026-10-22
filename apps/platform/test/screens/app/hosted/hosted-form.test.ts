@@ -1,5 +1,6 @@
 import type { ModelField } from "@rosesfield/catalog/comfy"
 import { describe, expect, it } from "vitest"
+import { t } from "@/copy/t"
 import type { FormValues } from "@/screens/app/app-form"
 import {
   hostedBody,
@@ -133,6 +134,32 @@ describe("a hosted model's form", () => {
     )
     expect(problems.map((problem) => [problem.name, problem.key])).toEqual([
       ["promptExpansionMode", "field.choice.required"],
+    ])
+  })
+
+  it("names a required text field you left empty by its own caption", () => {
+    const voice: ModelField = {
+      kind: "text",
+      name: "voiceId",
+      path: "voice_id",
+      required: true,
+      maxLength: 64,
+      default: null,
+    }
+    const [problem, ...rest] = hostedProblems(
+      [fields[0]!, voice],
+      valuesWith({ prompt: "Hello", voiceId: "" })
+    )
+    expect(rest).toEqual([])
+    expect(problem?.name).toBe("voiceId")
+    expect(problem?.key).not.toBe("field.prompt.required")
+    expect(t(problem!.key, problem!.values)).toBe("Voice id: not set")
+  })
+
+  it("control: an empty required prompt still asks for a prompt", () => {
+    const problems = hostedProblems(fields, valuesWith({ prompt: "" }))
+    expect(problems.map((problem) => [problem.name, problem.key])).toEqual([
+      ["prompt", "field.prompt.required"],
     ])
   })
 

@@ -10,7 +10,7 @@ import {
   StepperChip,
   withShapes,
 } from "@/screens/app/bar/setting-chip"
-import { fieldCaption } from "@/screens/app/hosted/hosted-fields"
+import { fieldCaption } from "@/screens/app/hosted/field-words"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { countBoundsOf, type ImageFields } from "@/studio/image/image-fields"
 import { shownInputOf } from "@/studio/image/image-rules"

@@ -1,7 +1,6 @@
 import type { ModelField } from "@rosesfield/catalog/comfy"
 import { describe, expect, it } from "vitest"
-import { wordsOfPath } from "@/screens/app/hosted/field-words"
-import { fieldCaption } from "@/screens/app/hosted/hosted-fields"
+import { fieldCaption, wordsOfPath } from "@/screens/app/hosted/field-words"
 
 describe("the caption of a hosted model's field", () => {
   it("comes from the copy file for a field the copy names", () => {
