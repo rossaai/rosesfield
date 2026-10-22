@@ -61,6 +61,7 @@ export {
   type ModelFactsFile,
   modelFactsData,
   modelFactsFile,
+  unmarkedLabsOf,
   weightsHost,
 } from "#comfy/model-facts"
 export { makerNames, makerOf, nameOf } from "#comfy/model-names"

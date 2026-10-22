@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 afterEach(cleanup)
 
 describe("FilterChip", () => {
-  it("is a 32 px link to its preset with 10 px sides and a 4 px label frame", () => {
+  it("is a 33 px capsule link to its preset with 10 px sides that presses on the press preset", () => {
     render(
       <FilterChipRow label="Presets">
         <FilterChip href="/apps/effects?preset=melt">Melt</FilterChip>
@@ -19,7 +19,12 @@ describe("FilterChip", () => {
     const chip = screen.getByRole("link", { name: "Melt" })
     expect(chip.getAttribute("href")).toBe("/apps/effects?preset=melt")
     expect(chip.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-8", "px-2.5", "border"])
+      expect.arrayContaining([
+        "h-button-dense",
+        "px-s3",
+        "rounded-full",
+        "motion-press",
+      ])
     )
     expect(chip.firstElementChild?.className).toBe("px-1")
   })
@@ -133,7 +138,7 @@ describe("SettingGroup", () => {
     expect(screen.getByRole("button", { name: "Dolly" })).toBeTruthy()
   })
 
-  it("clips its card and moves its panel's height on the chevron's timing", () => {
+  it("clips its card, yields its panel's height and turns its chevron on the disclosure preset", () => {
     const { container } = render(
       <SettingGroup name="Camera" count={12} icon={<svg />} defaultOpen>
         <button type="button">Dolly</button>
@@ -146,7 +151,7 @@ describe("SettingGroup", () => {
       expect.arrayContaining([
         "h-(--collapsible-panel-height)",
         "overflow-hidden",
-        "[transition:height_var(--control-change)]",
+        "motion-yield",
         "data-starting-style:h-0",
         "data-ending-style:h-0",
       ])
@@ -161,8 +166,8 @@ describe("SettingGroup", () => {
     ].at(-1)
     expect(chevron?.getAttribute("class")?.split(" ")).toEqual(
       expect.arrayContaining([
-        "[transition:rotate_var(--control-change)]",
-        "group-data-panel-open/trigger:rotate-180",
+        "motion-disclosure",
+        "group-data-panel-open/trigger:-rotate-180",
       ])
     )
   })

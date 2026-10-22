@@ -3,6 +3,7 @@ import {
   ModelPicker,
   type ModelPickerSection,
 } from "@rosesfield/ui/components/model-picker"
+import { ModelRow } from "@rosesfield/ui/components/model-row"
 import {
   cleanup,
   fireEvent,
@@ -21,7 +22,6 @@ const sections: ModelPickerSection[] = [
         id: "maker/picture-2",
         name: "Picture 2",
         maker: "Maker",
-        line: "Makes an image from words",
         tags: [],
       },
     ],
@@ -34,14 +34,12 @@ const sections: ModelPickerSection[] = [
         id: "studio/clip-3",
         name: "Clip 3",
         maker: "Studio",
-        line: null,
         tags: [{ label: "1080p" }, { label: "5 to 10 s" }],
       },
       {
         id: "studio/sketch-1",
         name: "Sketch 1",
         maker: "Studio",
-        line: "Makes an image from words",
         tags: [{ label: "Open weights" }],
       },
     ],
@@ -57,7 +55,6 @@ const badged: ModelPickerSection[] = [
         id: "maker/model-4",
         name: "Model 4",
         maker: "Maker",
-        line: "Best at faces",
         tags: [],
         mark: <svg data-testid="mark" aria-hidden="true" />,
         badges: [
@@ -120,23 +117,51 @@ describe("ModelPicker", () => {
     expect(screen.getAllByRole("option", { selected: false })).toHaveLength(2)
   })
 
-  it("shows the factual tags of a row in the neutral tone", () => {
+  it("shows up to three capability facts on one caption line in the neutral tone", () => {
     open()
-    const tags = within(rowOf("Clip 3")).getAllByText(/1080p|5 to 10 s/)
-    expect(tags).toHaveLength(2)
-    for (const tag of tags) {
-      expect(tag.closest("[data-slot='model-row-line']")?.className).toContain(
-        "text-ink-muted"
+    const facts = within(rowOf("Clip 3")).getAllByText(/1080p|5 to 10 s/)
+    expect(facts).toHaveLength(2)
+    for (const fact of facts) {
+      const line = fact.closest("[data-slot='model-row-capabilities']")
+      expect(line?.className.split(" ")).toEqual(
+        expect.arrayContaining(["text-caption", "text-ink-muted"])
       )
-      expect(tag.className).not.toMatch(/bug|cem|hor|nop/)
+      expect(fact.className).not.toMatch(/bug|cem|hor|nop/)
     }
   })
 
-  it("shows a row's one line and its tags together", () => {
-    open()
-    const sketch = rowOf("Sketch 1")
-    expect(within(sketch).getByText("Makes an image from words")).toBeTruthy()
-    expect(within(sketch).getByText("Open weights")).toBeTruthy()
+  it("never shows more than three facts", () => {
+    render(
+      <ModelPicker
+        trigger={<Chip>Many</Chip>}
+        title="Model"
+        searchLabel="Search models"
+        searchPlaceholder="Search by name or maker"
+        emptyLabel="No model matches"
+        sections={[
+          {
+            id: "all",
+            label: "All",
+            rows: [
+              {
+                id: "a/many",
+                name: "Many",
+                maker: "A",
+                tags: ["One", "Two", "Three", "Four"].map((label) => ({
+                  label,
+                })),
+              },
+            ],
+          },
+        ]}
+        chosen={null}
+        onChoose={() => undefined}
+        open
+      />
+    )
+    expect(
+      rowOf("Many").querySelectorAll("[data-slot='model-row-capability']")
+    ).toHaveLength(3)
   })
 
   it("puts the badges after the name and links Open weights to its page", () => {
@@ -255,7 +280,7 @@ describe("ModelPicker's Open weights place", () => {
     expect(name?.parentElement?.lastElementChild).toBe(weights)
     expect(
       row
-        .querySelector("[data-slot='model-row-check']")
+        .querySelector("[data-slot='model-row-price']")
         ?.previousElementSibling?.contains(weights ?? null)
     ).toBe(true)
     expect(weights?.className.split(" ")).toContain("shrink-0")
@@ -278,48 +303,74 @@ describe("ModelPicker's Open weights place", () => {
   })
 })
 
-describe("ModelPicker's one line", () => {
-  it("keeps the line whole and wraps its tags onto their own line when they do not fit after it", () => {
-    open()
-    const line = rowOf("Sketch 1").querySelector("[data-slot='model-row-line']")
-    expect(line?.className.split(" ")).toContain("flex-wrap")
-    const words = line?.querySelector("[data-slot='model-row-words']")
-    expect(words?.textContent).toBe("Makes an image from words")
-    expect(words?.className.split(" ")).toEqual(
-      expect.arrayContaining(["max-w-full", "truncate"])
-    )
-    const tags = line?.querySelector("[data-slot='model-row-tags']")
-    expect(tags?.textContent).toBe("Open weights")
-    expect(tags?.className.split(" ")).toEqual(
-      expect.arrayContaining(["shrink-0", "max-w-full"])
-    )
-  })
-})
-
 describe("ModelPicker's rows and motion", () => {
-  it("insets each row's tile 6 px and its check slot 12 px inside a 1 px edge", () => {
+  it("sets each row's 33 px mark tile on its ground's well and the check muted at the end", () => {
     open()
-    const list = document.querySelector("[data-slot='model-picker']")
-    expect(list?.className.split(" ")).toContain("p-px")
-    const inner = rowOf("Clip 3").querySelector(
-      "[data-slot='model-row-mark']"
-    )?.parentElement
-    expect(inner?.className.split(" ")).toEqual(
-      expect.arrayContaining(["ps-1.5", "pe-3"])
+    const tile = rowOf("Clip 3").querySelector("[data-slot='model-row-mark']")
+    expect(tile?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "size-icon-dense",
+        "bg-(--well)",
+        "[&_svg]:glyph-small",
+      ])
     )
+    expect(
+      rowOf("Picture 2").querySelector("[data-slot='model-row-check']")
+        ?.className
+    ).toContain("text-ink-muted")
   })
 
-  it("fades in while it rises 4 px, on the popover's timing and with no scale", () => {
+  it("opens on the popover preset over the thick material, growing from its chip", () => {
     open()
     const list = document.querySelector("[data-slot='model-picker']")
     const classes = list?.className.split(" ") ?? []
     expect(classes).toEqual(
-      expect.arrayContaining([
-        "[transition:opacity_var(--popover-in-opacity),translate_var(--popover-in-transform)]",
-        "data-starting-style:opacity-0",
-        "data-starting-style:translate-y-1",
-      ])
+      expect.arrayContaining(["motion-popover", "material-thick"])
     )
-    expect(classes).not.toContain("motion-popover")
+    expect(classes.filter((name) => name.includes("translate-y"))).toEqual([])
+    expect(list?.getAttribute("data-material")).toBe("thick")
+  })
+})
+
+describe("ModelRow's price slot", () => {
+  it("holds a skeleton while pending, the figure after the coin when known, and nothing when no price exists, at one height", () => {
+    const row = { id: "a/one", name: "One", maker: "A", tags: [] }
+    const heights: string[] = []
+    const states: (string | null | undefined)[] = []
+    for (const [price, isPricing] of [
+      [undefined, true],
+      [{ amount: "6.5", name: "6.5 credits" }, false],
+      [undefined, false],
+    ] as const) {
+      const { container } = render(
+        <ModelRow
+          row={price === undefined ? row : { ...row, price }}
+          isChosen={false}
+          isPricing={isPricing}
+          onChoose={() => undefined}
+        />
+      )
+      const slot = container.querySelector("[data-slot='model-row-price']")
+      states.push(slot?.getAttribute("data-state"))
+      heights.push(
+        container.querySelector("[data-slot='model-row']")?.className ?? ""
+      )
+      if (price === undefined && isPricing) {
+        expect(
+          slot?.querySelector("[data-slot='model-row-price-loading']")
+        ).not.toBeNull()
+      } else if (price !== undefined) {
+        const figure = slot?.querySelector("[data-slot='credit-price']")
+        expect(figure?.textContent).toBe("6.5")
+        expect(figure?.firstElementChild?.tagName.toLowerCase()).toBe("svg")
+      } else {
+        expect(slot?.childElementCount).toBe(0)
+      }
+      expect(container.textContent).not.toMatch(/unknown/i)
+      cleanup()
+    }
+    expect(states).toEqual(["pending", "known", "none"])
+    expect(new Set(heights).size).toBe(1)
+    expect(heights[0]).toContain("h-13")
   })
 })

@@ -23,7 +23,7 @@ const settled: GrowPose = {
   clipPath: "inset(0px 0px 0px 0px round 0px)",
 }
 
-function isOnScreen(rect: Box): boolean {
+export function isOnScreen(rect: Box): boolean {
   return (
     rect.width > 0 &&
     rect.height > 0 &&
@@ -67,13 +67,23 @@ export function originShapeOf(origin: HTMLElement | null): OriginShape | null {
   return naturalShapeOf(media)
 }
 
+export function growScaleOf(
+  from: Pick<Box, "width" | "height">,
+  target: Pick<Box, "width" | "height">
+): number {
+  return Math.min(
+    1,
+    Math.max(from.width / target.width, from.height / target.height)
+  )
+}
+
 export function growPoseOf(
   from: Box,
   frame: Box,
   target: Box,
   radius: number
 ): GrowPose {
-  const scale = Math.max(from.width / target.width, from.height / target.height)
+  const scale = growScaleOf(from, target)
   const centreX = target.left - frame.left + target.width / 2
   const centreY = target.top - frame.top + target.height / 2
   const x = from.left + from.width / 2 - frame.left - scale * centreX
@@ -135,7 +145,22 @@ function play(
   }
   const ordered = phase === "in" ? keyframes : [...keyframes].reverse()
   const timing = readMotion("layer", phase, track)
-  return node.animate(ordered, { ...timing, fill: "both" })
+  const animation = node.animate(ordered, { ...timing, fill: "both" })
+  if (phase === "in") {
+    holdForFirstFrame(animation)
+  }
+  return animation
+}
+
+function holdForFirstFrame(animation: Animation): void {
+  animation.pause()
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (animation.playState === "paused") {
+        animation.play()
+      }
+    })
+  })
 }
 
 function fade(node: HTMLElement, phase: MotionPhase): Animation | null {

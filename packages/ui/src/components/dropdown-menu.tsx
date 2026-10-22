@@ -6,15 +6,15 @@ import {
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { CheckIcon, ChevronRightIcon } from "lucide-react"
-import type { ComponentProps, ReactElement } from "react"
+import type { ComponentProps, ReactElement, ReactNode } from "react"
 
 const menuPanelClass = cn(
-  "material z-50 flex max-h-(--available-height) min-w-popover-min max-w-popover-max flex-col overflow-y-auto rounded-vessel p-s2_5 text-ink shadow-float outline-none",
+  "material z-50 flex has-[[data-slot=dropdown-menu-lead]]:[--menu-lead:calc(var(--spacing-glyph)+var(--spacing-s3))] max-h-(--available-height) min-w-popover-min max-w-popover-max flex-col overflow-y-auto rounded-vessel p-s2_5 text-ink shadow-float outline-none",
   motion.popover
 )
 
 const menuItemClass = cn(
-  "relative flex min-h-button w-full cursor-default items-center gap-s3 rounded-item px-s4 py-s2 text-left text-body text-ink outline-none select-none data-highlighted:bg-(--tint) data-disabled:pointer-events-none data-disabled:opacity-(--opacity-disabled) data-[tone=danger]:text-bug-text [&_svg]:glyph",
+  "relative flex min-h-button w-full cursor-default items-center gap-s3 rounded-item py-s2 ps-[calc(var(--spacing-s4)+var(--menu-lead,0px))] pe-s4 has-[>[data-slot=dropdown-menu-lead]]:ps-s4 text-left text-body text-ink outline-none select-none data-highlighted:bg-(--tint) data-disabled:pointer-events-none data-disabled:opacity-(--opacity-disabled) data-[tone=danger]:text-bug-text [&_svg]:glyph",
   motion.tint
 )
 
@@ -82,13 +82,31 @@ function DropdownMenuLabel({
   )
 }
 
+function MenuLead({ lead }: { lead: ReactNode }): ReactNode {
+  if (lead === undefined || lead === null) {
+    return null
+  }
+  return (
+    <span
+      aria-hidden="true"
+      data-slot="dropdown-menu-lead"
+      className="flex size-glyph shrink-0 items-center justify-center text-ink-muted [&_svg]:glyph"
+    >
+      {lead}
+    </span>
+  )
+}
+
 type DropdownMenuItemProps = MenuPrimitive.Item.Props & {
   tone?: "default" | "danger"
+  lead?: ReactNode
 }
 
 function DropdownMenuItem({
   className,
   tone = "default",
+  lead,
+  children,
   ...props
 }: DropdownMenuItemProps): ReactElement {
   return (
@@ -97,7 +115,10 @@ function DropdownMenuItem({
       data-tone={tone}
       className={cn(menuItemClass, className)}
       {...props}
-    />
+    >
+      <MenuLead lead={lead} />
+      {children}
+    </MenuPrimitive.Item>
   )
 }
 
@@ -108,14 +129,16 @@ function DropdownMenuSub(props: MenuPrimitive.SubmenuRoot.Props): ReactElement {
 function DropdownMenuSubTrigger({
   className,
   children,
+  lead,
   ...props
-}: MenuPrimitive.SubmenuTrigger.Props): ReactElement {
+}: MenuPrimitive.SubmenuTrigger.Props & { lead?: ReactNode }): ReactElement {
   return (
     <MenuPrimitive.SubmenuTrigger
       data-slot="dropdown-menu-sub-trigger"
       className={cn(menuItemClass, "data-popup-open:bg-(--tint)", className)}
       {...props}
     >
+      <MenuLead lead={lead} />
       {children}
       <ChevronRightIcon aria-hidden="true" className="ml-auto text-ink-muted" />
     </MenuPrimitive.SubmenuTrigger>
@@ -144,14 +167,16 @@ function DropdownMenuRadioGroup(
 function DropdownMenuRadioItem({
   className,
   children,
+  lead,
   ...props
-}: MenuPrimitive.RadioItem.Props): ReactElement {
+}: MenuPrimitive.RadioItem.Props & { lead?: ReactNode }): ReactElement {
   return (
     <MenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
-      className={cn(menuItemClass, "pr-s12", className)}
+      className={cn(menuItemClass, "pe-s12", className)}
       {...props}
     >
+      <MenuLead lead={lead} />
       {children}
       <MenuPrimitive.RadioItemIndicator className="absolute right-s4 flex text-ink-muted">
         <CheckIcon aria-hidden="true" />

@@ -3,6 +3,7 @@ import { CreditPrice } from "@rosesfield/ui/components/credit-price"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { CheckIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 
@@ -29,7 +30,6 @@ type ModelPickerRow = {
   name: string
   maker: string
   lab?: string
-  line: string | null
   tags: readonly ModelPickerTag[]
   mark?: ReactNode
   badges?: readonly ModelBadge[]
@@ -78,36 +78,28 @@ function RowName({ row }: { row: ModelPickerRow }): ReactElement {
   )
 }
 
-function RowLine({ row }: { row: ModelPickerRow }): ReactNode {
-  if (row.line === null && row.tags.length === 0) {
+const factLimit = 3
+
+function RowFacts({ row }: { row: ModelPickerRow }): ReactNode {
+  const facts = row.tags.slice(0, factLimit)
+  if (facts.length === 0) {
     return null
   }
   return (
     <span
-      data-slot="model-row-line"
-      className="flex min-w-0 flex-wrap items-center gap-x-1 overflow-hidden text-caption whitespace-nowrap text-ink-muted"
+      data-slot="model-row-capabilities"
+      className="flex min-w-0 items-center gap-s2 overflow-hidden text-caption whitespace-nowrap text-ink-muted"
     >
-      {row.line === null ? null : (
-        <span data-slot="model-row-words" className="max-w-full truncate">
-          {row.line}
-        </span>
-      )}
-      {row.tags.length === 0 ? null : (
+      {facts.map((fact) => (
         <span
-          data-slot="model-row-tags"
-          className="flex max-w-full shrink-0 gap-1 overflow-hidden"
+          key={fact.label}
+          data-slot="model-row-capability"
+          className="inline-flex min-w-0 shrink-0 items-center gap-s1 last:shrink last:truncate [&_svg]:glyph-small"
         >
-          {row.tags.map((tag) => (
-            <span
-              key={tag.label}
-              className="inline-flex shrink-0 items-center gap-0.5 rounded-dense bg-(--tint) px-1 [&_svg]:size-3"
-            >
-              {tag.icon}
-              {tag.label}
-            </span>
-          ))}
+          {fact.icon}
+          {fact.label}
         </span>
-      )}
+      ))}
     </span>
   )
 }
@@ -118,21 +110,27 @@ function RowPrice({
 }: {
   price: ModelPrice | undefined
   isPricing: boolean
-}): ReactNode {
-  if (price !== undefined) {
-    return (
-      <CreditPrice
-        amount={price.amount}
-        className="ms-2 shrink-0 text-caption text-ink-muted"
-      />
-    )
-  }
-  return isPricing ? (
-    <Skeleton
-      data-slot="model-row-price-loading"
-      className="ms-2 h-3 w-8 shrink-0 rounded-dense"
-    />
-  ) : null
+}): ReactElement {
+  return (
+    <span
+      data-slot="model-row-price"
+      data-state={
+        price !== undefined ? "known" : isPricing ? "pending" : "none"
+      }
+      className="ms-s2 flex w-[calc(2*var(--spacing-s8))] shrink-0 items-center justify-end text-caption text-ink-muted"
+    >
+      {price !== undefined ? (
+        <CreditPrice amount={price.amount} />
+      ) : isPricing ? (
+        <Skeleton
+          data-slot="model-row-price-loading"
+          shape="line"
+          text="caption"
+          measure="full"
+        />
+      ) : null}
+    </span>
+  )
 }
 
 function ModelRow({
@@ -151,7 +149,8 @@ function ModelRow({
       role="none"
       data-slot="model-row"
       data-chosen={isChosen ? "yes" : "no"}
-      className="group/row relative mx-3 h-13 rounded-cell data-[chosen=yes]:bg-(--tint)"
+      data-ground={isChosen ? "surface" : undefined}
+      className="group/row relative mx-s3 h-13 rounded-cell data-[chosen=yes]:bg-surface"
     >
       <button
         type="button"
@@ -162,34 +161,51 @@ function ModelRow({
         }
         data-model={row.id}
         className={cn(
-          "absolute inset-0 rounded-cell outline-none",
-          interaction.light,
+          "absolute inset-0 rounded-cell outline-none group-data-[chosen=no]/row:hover:bg-(--tint)",
+          motion.tint,
           interaction.ring
         )}
         onClick={() => onChoose(row.id)}
       />
-      <span className="pointer-events-none relative flex h-full items-center ps-1.5 pe-3">
+      <span className="pointer-events-none relative flex h-full items-center ps-s2 pe-s3">
         <span
           data-slot="model-row-mark"
           aria-hidden="true"
-          className="flex size-10 shrink-0 items-center justify-center rounded-dense bg-(--tint) text-ink-muted group-data-[chosen=yes]/row:text-ink [&_svg]:size-4"
+          className="flex size-icon-dense shrink-0 items-center justify-center rounded-dense bg-(--well) text-ink-muted group-data-[chosen=yes]/row:text-ink [&_svg]:glyph-small"
         >
           {row.mark}
         </span>
-        <span className="ms-2 flex min-w-0 flex-1 flex-col">
+        <span className="ms-s2 flex min-w-0 flex-1 flex-col">
           <RowName row={row} />
-          <RowLine row={row} />
+          <RowFacts row={row} />
         </span>
         <RowPrice price={row.price} isPricing={isPricing} />
-        <span data-slot="model-row-check" className="flex size-5 shrink-0">
-          {isChosen ? (
-            <CheckIcon aria-hidden="true" className="size-5" />
-          ) : null}
+        <span
+          data-slot="model-row-check"
+          className="ms-s2 flex size-glyph shrink-0 text-ink-muted"
+        >
+          {isChosen ? <CheckIcon aria-hidden="true" className="glyph" /> : null}
         </span>
       </span>
     </div>
   )
 }
 
+function ModelRowSkeleton(): ReactElement {
+  return (
+    <div
+      data-slot="model-row"
+      data-state="loading"
+      className="flex h-13 items-center gap-s2 rounded-cell ps-s2 pe-s3"
+    >
+      <Skeleton shape="block" className="size-icon-dense rounded-dense" />
+      <span className="flex min-w-0 flex-1 flex-col">
+        <Skeleton shape="line" text="body" measure="mid" />
+        <Skeleton shape="line" text="caption" measure="short" />
+      </span>
+    </div>
+  )
+}
+
 export type { ModelBadge, ModelPickerRow, ModelPickerTag, ModelPrice }
-export { ModelRow }
+export { ModelRow, ModelRowSkeleton }

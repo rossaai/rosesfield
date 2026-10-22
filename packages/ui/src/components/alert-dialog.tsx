@@ -1,8 +1,10 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { Button, type ButtonProps } from "@rosesfield/ui/components/button"
 import { DialogScrim, dialogPanelClass } from "@rosesfield/ui/components/dialog"
+import { useLayerOrigin } from "@rosesfield/ui/hooks/use-layer-origin"
 import { cn } from "@rosesfield/ui/lib/cn"
-import type { ComponentProps, ReactElement } from "react"
+import { mergeRefs } from "@rosesfield/ui/lib/merge-refs"
+import { type ComponentProps, type ReactElement, useMemo } from "react"
 
 function AlertDialog(props: DialogPrimitive.Root.Props): ReactElement {
   return <DialogPrimitive.Root data-slot="alert-dialog" {...props} />
@@ -16,12 +18,16 @@ function AlertDialogTrigger(
 
 function AlertDialogContent({
   className,
+  ref,
   ...props
 }: DialogPrimitive.Popup.Props): ReactElement {
+  const origin = useLayerOrigin()
+  const popupRef = useMemo(() => mergeRefs(origin, ref), [origin, ref])
   return (
     <DialogPrimitive.Portal>
       <DialogScrim forceRender />
       <DialogPrimitive.Popup
+        ref={popupRef}
         data-slot="alert-dialog-content"
         data-ground="layer"
         role="alertdialog"

@@ -1,5 +1,12 @@
+import { ArrivalIndex } from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
-import type { ComponentProps, ReactElement } from "react"
+import {
+  Children,
+  type ComponentProps,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from "react"
 
 type MediaGridProps = ComponentProps<"div"> & {
   layout?: "square" | "masonry"
@@ -11,9 +18,24 @@ const layouts: Record<NonNullable<MediaGridProps["layout"]>, string> = {
   masonry: "columns-2 gap-s2 @regular:columns-4 *:mb-s2 *:break-inside-avoid",
 }
 
+function keyOf(child: ReactNode, index: number): string {
+  return isValidElement(child) && child.key !== null
+    ? child.key
+    : `place-${index}`
+}
+
+function indexed(children: ReactNode): ReactNode[] {
+  return Children.toArray(children).map((child, index) => (
+    <ArrivalIndex key={keyOf(child, index)} value={index}>
+      {child}
+    </ArrivalIndex>
+  ))
+}
+
 function MediaGrid({
   className,
   layout = "square",
+  children,
   ...props
 }: MediaGridProps): ReactElement {
   return (
@@ -22,9 +44,11 @@ function MediaGrid({
       data-layout={layout}
       className={cn(layouts[layout], className)}
       {...props}
-    />
+    >
+      {indexed(children)}
+    </div>
   )
 }
 
 export type { MediaGridProps }
-export { MediaGrid }
+export { indexed, MediaGrid }

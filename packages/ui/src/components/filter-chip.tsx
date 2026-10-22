@@ -1,6 +1,7 @@
 import { Collapsible } from "@base-ui/react/collapsible"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { ChevronDownIcon } from "lucide-react"
 import type { ComponentProps, ReactElement, ReactNode } from "react"
 
@@ -22,8 +23,8 @@ function FilterChip({
       data-slot="inline-chip"
       href={href}
       className={cn(
-        "relative inline-flex h-8 shrink-0 items-center rounded-dense border border-transparent bg-(--well) px-2.5 font-medium text-body whitespace-nowrap text-ink",
-        interaction.light,
+        "relative inline-flex h-button-dense shrink-0 items-center rounded-full bg-(--well) px-s3 font-medium text-body whitespace-nowrap text-ink no-underline",
+        motion.press,
         interaction.ring,
         className
       )}
@@ -92,8 +93,9 @@ function SettingGroup({
       <Collapsible.Trigger
         data-slot="setting-group-trigger"
         className={cn(
-          "group/trigger relative flex h-7 w-full items-center gap-2 rounded-cell px-3 py-1 text-left font-medium text-body text-ink-muted [&_svg]:size-4",
-          interaction.light,
+          "group/trigger relative flex h-button-small w-full items-center gap-2 rounded-cell px-3 text-left font-medium text-body text-ink-muted [&_svg]:glyph",
+          interaction.fill,
+          motion.tint,
           interaction.ring
         )}
       >
@@ -106,12 +108,18 @@ function SettingGroup({
         </span>
         <ChevronDownIcon
           aria-hidden="true"
-          className="shrink-0 [transition:rotate_var(--control-change)] group-data-panel-open/trigger:rotate-180"
+          className={cn(
+            "shrink-0 group-data-panel-open/trigger:-rotate-180",
+            motion.disclosure
+          )}
         />
       </Collapsible.Trigger>
       <Collapsible.Panel
         data-slot="setting-group-panel"
-        className="h-(--collapsible-panel-height) overflow-hidden [transition:height_var(--control-change)] data-ending-style:h-0 data-starting-style:h-0"
+        className={cn(
+          "h-(--collapsible-panel-height) overflow-hidden data-ending-style:h-0 data-starting-style:h-0",
+          motion.yield
+        )}
       >
         <div
           data-slot="setting-group-choices"
@@ -145,6 +153,7 @@ function SettingChoice({
       onClick={onChoose}
       className={cn(
         "relative flex h-26 items-end justify-center overflow-hidden rounded-dense bg-(--well) p-1 text-ink aria-pressed:inset-ring-4 aria-pressed:inset-ring-ink",
+        motion.press,
         interaction.ring
       )}
     >

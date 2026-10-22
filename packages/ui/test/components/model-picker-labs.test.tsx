@@ -22,9 +22,9 @@ const byLab: ModelPickerSection[] = [
         id: "zeta/one",
         name: "Zeta One",
         maker: "Zeta",
-        line: null,
         tags: [],
         mark: <svg data-testid="zeta-mark" aria-hidden="true" />,
+        price: { amount: "14.48", name: "14.48 Comfy credits" },
       },
     ],
   },
@@ -36,7 +36,6 @@ const byLab: ModelPickerSection[] = [
         id: "zeta/one",
         name: "Zeta One",
         maker: "Zeta",
-        line: null,
         tags: [],
         mark: <svg data-testid="zeta-mark" aria-hidden="true" />,
         price: { amount: "14.48", name: "14.48 Comfy credits" },
@@ -46,7 +45,6 @@ const byLab: ModelPickerSection[] = [
         name: "Alpha Two",
         maker: "alpha",
         lab: "Alpha Lab",
-        line: null,
         tags: [],
         mark: <svg data-testid="alpha-mark" aria-hidden="true" />,
       },
@@ -54,7 +52,6 @@ const byLab: ModelPickerSection[] = [
         id: "beta/three",
         name: "Beta Three",
         maker: "Beta",
-        line: null,
         tags: [],
       },
     ],
@@ -68,7 +65,6 @@ const byLab: ModelPickerSection[] = [
         name: "Alpha Four",
         maker: "alpha",
         lab: "Alpha Lab",
-        line: null,
         tags: [],
         mark: <svg data-testid="alpha-mark" aria-hidden="true" />,
       },
@@ -86,7 +82,7 @@ function rowOf(name: string): HTMLElement {
   return row
 }
 
-function open(isPricing = false) {
+function open(isPricing = false, chosen: string | null = null) {
   render(
     <ModelPicker
       trigger={<Chip>Zeta One</Chip>}
@@ -95,7 +91,7 @@ function open(isPricing = false) {
       searchPlaceholder="Search by name or maker"
       emptyLabel="No model matches"
       sections={byLab}
-      chosen={null}
+      chosen={chosen}
       onChoose={() => undefined}
       isPricing={isPricing}
       open
@@ -112,9 +108,9 @@ function groupsShown(): (string | null)[] {
 }
 
 describe("ModelPicker's labs", () => {
-  it("keeps the featured group first and whole, then groups every other row by its lab, in the lab's name order", () => {
+  it("keeps the featured group first and whole, then groups every other row by its lab, leaving a featured model out of its lab", () => {
     open()
-    expect(groupsShown()).toEqual(["Featured", "Alpha Lab", "Beta", "Zeta"])
+    expect(groupsShown()).toEqual(["Featured", "Alpha Lab", "Beta"])
     const alpha = screen.getByRole("group", { name: "Alpha Lab" })
     expect(
       within(alpha)
@@ -123,19 +119,30 @@ describe("ModelPicker's labs", () => {
     ).toEqual(["alpha/two", "alpha/four"])
   })
 
-  it("heads each lab with its mark, and the featured group with the sparkle", () => {
+  it("heads each lab with its name alone, and the featured group with the sparkle", () => {
     open()
     const heading = (name: string) =>
       screen
         .getByRole("group", { name })
         .querySelector("[data-slot='model-section-heading']")
-    expect(
-      heading("Alpha Lab")?.querySelector("[data-testid='alpha-mark']")
-    ).not.toBeNull()
-    expect(
-      heading("Featured")?.querySelector("[data-testid='zeta-mark']")
-    ).toBeNull()
+    expect(heading("Alpha Lab")?.querySelector("svg")).toBeNull()
+    expect(heading("Alpha Lab")?.textContent).toBe("Alpha Lab")
     expect(heading("Featured")?.querySelector("svg")).not.toBeNull()
+  })
+
+  it("lists each model once, with exactly one check on the chosen row", () => {
+    open(false, "zeta/one")
+    const ids = screen.getAllByRole("option").map((one) => one.dataset.model)
+    expect(new Set(ids).size).toBe(ids.length)
+    const checks = document.querySelectorAll(
+      "[data-slot='model-row-check'] svg"
+    )
+    expect(checks).toHaveLength(1)
+    const chosen = rowOf("Zeta One, 14.48 Comfy credits")
+    expect(chosen.getAttribute("data-ground")).toBe("surface")
+    expect(
+      chosen.querySelector("[data-slot='model-row-mark']")?.className
+    ).toContain("bg-(--well)")
   })
 
   it("lists a model once in its lab when two groups both hold it", () => {
@@ -148,6 +155,9 @@ describe("ModelPicker's labs", () => {
       "beta/three",
       "zeta/one",
     ])
+    const withFeatured = labSectionsOf(byLab)
+    const listed = withFeatured.flatMap((one) => one.rows.map((row) => row.id))
+    expect(listed.filter((id) => id === "zeta/one")).toHaveLength(1)
   })
 
   it("finds a row by its lab's name", () => {
@@ -175,6 +185,11 @@ describe("ModelPicker's prices", () => {
       rowOf("Beta Three").querySelector("[data-slot='credit-price']")
     ).toBeNull()
     expect(rowOf("Beta Three").textContent).not.toMatch(/unknown/i)
+    expect(
+      rowOf("Beta Three")
+        .querySelector("[data-slot='model-row-price']")
+        ?.getAttribute("data-state")
+    ).toBe("none")
   })
 
   it("holds a skeleton where a price will show while the prices load, the control", () => {
@@ -182,6 +197,14 @@ describe("ModelPicker's prices", () => {
     expect(
       rowOf("Beta Three").querySelector("[data-slot='model-row-price-loading']")
     ).not.toBeNull()
+    const slots = ["Beta Three", "Alpha Two"].map((name) =>
+      rowOf(name).querySelector("[data-slot='model-row-price']")
+    )
+    for (const slot of slots) {
+      expect(slot?.className.split(" ")).toContain(
+        "w-[calc(2*var(--spacing-s8))]"
+      )
+    }
     const zeta = screen
       .getByRole("option", { name: "Zeta One, 14.48 Comfy credits" })
       .closest<HTMLElement>("[data-slot='model-row']")

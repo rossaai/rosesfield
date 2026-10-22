@@ -4,6 +4,7 @@ import {
   type ModelPickerTag,
   type ModelPrice,
   ModelRow,
+  ModelRowSkeleton,
 } from "@rosesfield/ui/components/model-row"
 import {
   Popover,
@@ -11,8 +12,9 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@rosesfield/ui/components/popover"
-import { Skeleton } from "@rosesfield/ui/components/skeleton"
+import { SkeletonGroup } from "@rosesfield/ui/components/skeleton"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { SearchIcon, SparkleIcon } from "lucide-react"
 import {
   type ReactElement,
@@ -27,7 +29,6 @@ type ModelPickerSection = {
   id: string
   label: string
   rows: readonly ModelPickerRow[]
-  mark?: ReactNode
 }
 
 type ModelPickerProps = {
@@ -68,7 +69,10 @@ function matches(row: ModelPickerRow, query: string): boolean {
 function labSectionsOf(
   sections: readonly ModelPickerSection[]
 ): ModelPickerSection[] {
-  const seen = new Set<string>()
+  const featured = sections.filter((section) => section.id === featuredId)
+  const seen = new Set<string>(
+    featured.flatMap((section) => section.rows.map((row) => row.id))
+  )
   const byLab = new Map<string, ModelPickerRow[]>()
   for (const section of sections) {
     if (section.id === featuredId) {
@@ -85,13 +89,8 @@ function labSectionsOf(
     a.localeCompare(b, undefined, { sensitivity: "base" })
   )
   return [
-    ...sections.filter((section) => section.id === featuredId),
-    ...labs.map(([lab, rows]) => ({
-      id: `lab:${lab}`,
-      label: lab,
-      rows,
-      ...(rows[0]?.mark === undefined ? {} : { mark: rows[0].mark }),
-    })),
+    ...featured,
+    ...labs.map(([lab, rows]) => ({ id: `lab:${lab}`, label: lab, rows })),
   ]
 }
 
@@ -109,11 +108,11 @@ function filterSections(
 
 function LoadingRows(): ReactElement {
   return (
-    <div className="flex flex-col gap-1 px-3 py-2">
+    <SkeletonGroup className="flex flex-col gap-s1 px-s3 py-s2">
       {["first", "second", "third", "fourth"].map((key) => (
-        <Skeleton key={key} className="h-13 w-full rounded-cell" />
+        <ModelRowSkeleton key={key} />
       ))}
-    </div>
+    </SkeletonGroup>
   )
 }
 
@@ -130,9 +129,11 @@ function SectionRows(
     >
       <p
         data-slot="model-section-heading"
-        className="flex h-8.5 items-center gap-1.5 px-3 font-medium text-label text-ink-muted [&_svg]:size-3.5"
+        className="flex h-button-small items-center gap-s1_5 px-s4 font-medium text-label text-ink-muted [&_svg]:glyph-small"
       >
-        {props.section.mark ?? <SparkleIcon aria-hidden="true" />}
+        {props.section.id === featuredId ? (
+          <SparkleIcon aria-hidden="true" />
+        ) : null}
         {props.section.label}
       </p>
       {props.section.rows.map((row) => (
@@ -182,8 +183,10 @@ function readEnds(element: HTMLElement): Ends {
   }
 }
 
-const fadeClass =
-  "pointer-events-none absolute inset-x-0 z-10 h-9.5 from-(--ground) to-transparent transition-opacity duration-(--duration-control)"
+const fadeClass = cn(
+  "pointer-events-none absolute inset-x-0 z-10 h-s12 from-(--ground) to-transparent",
+  motion.tint
+)
 
 function ScrollRegion({ children }: { children: ReactNode }): ReactElement {
   const [ends, setEnds] = useState<Ends>({ top: false, bottom: true })
@@ -228,8 +231,8 @@ function SearchRow(props: {
   onQuery: (query: string) => void
 }): ReactElement {
   return (
-    <label className="flex h-10.5 shrink-0 items-center gap-2 border-b border-(--line) px-3">
-      <SearchIcon aria-hidden="true" className="size-6 text-ink-muted" />
+    <label className="flex h-field shrink-0 items-center gap-s2 border-b border-(--line) px-s4">
+      <SearchIcon aria-hidden="true" className="glyph text-ink-muted" />
       <input
         ref={props.search}
         type="search"
@@ -243,29 +246,85 @@ function SearchRow(props: {
   )
 }
 
+type Placement = {
+  anchor: () => Element | null
+  padding: { top: number; right: number; bottom: number; left: number }
+  origin: string
+}
+
+function insetOf(name: string): number {
+  const value = Number.parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue(name)
+  )
+  return Number.isFinite(value) ? value : 0
+}
+
+function vesselOf(trigger: HTMLElement): Element {
+  return trigger.closest("[data-slot='composer']") ?? trigger
+}
+
+function placementOf(trigger: HTMLElement | null): Placement | null {
+  if (trigger === null) {
+    return null
+  }
+  const vessel = vesselOf(trigger)
+  const inset = insetOf("--spacing-s4")
+  const bar = document
+    .querySelector("header[data-slot='app-bar']")
+    ?.getBoundingClientRect()
+  const chip = trigger.getBoundingClientRect()
+  const box = vessel.getBoundingClientRect()
+  const gap = insetOf("--spacing-s2_5")
+  const x = chip.left + chip.width / 2 - box.left
+  const y = chip.top + chip.height / 2 - box.top + gap
+  return {
+    anchor: () => vesselOf(trigger),
+    padding: {
+      top: Math.max(inset, (bar?.bottom ?? 0) + inset),
+      right: inset,
+      bottom: inset,
+      left: inset,
+    },
+    origin: `${x}px calc(100% + ${y}px)`,
+  }
+}
+
 function ModelPicker(props: ModelPickerProps): ReactElement {
   const [query, setQuery] = useState("")
   const search = useRef<HTMLInputElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
+  const [placement, setPlacement] = useState<Placement | null>(null)
   const [isOpenHere, setOpenHere] = useState(props.defaultOpen === true)
   const isOpen = props.open ?? isOpenHere
   const side = props.side ?? "top"
   const setOpen = (open: boolean): void => {
+    if (open) {
+      setPlacement(placementOf(trigger.current))
+    }
     setOpenHere(open)
     props.onOpenChange?.(open)
     if (!open) {
       setQuery("")
     }
   }
+  const isAbove = side === "top" && placement !== null
   return (
     <Popover open={isOpen} onOpenChange={setOpen}>
-      <PopoverTrigger render={props.trigger} />
+      <PopoverTrigger ref={trigger} render={props.trigger} />
       <PopoverContent
         data-slot="model-picker"
         initialFocus={search}
         side={side}
         align={side === "top" ? "start" : "end"}
-        sideOffset={side === "top" ? 4 : 8}
-        motion="rise"
+        sideOffset={insetOf("--spacing-s2_5")}
+        material="thick"
+        {...(isAbove
+          ? {
+              anchor: placement.anchor,
+              collisionPadding: placement.padding,
+              style: { transformOrigin: placement.origin },
+            }
+          : {})}
         className="max-h-[min(var(--available-height),calc(var(--spacing)*160.5))] w-100.5 max-w-[calc(100vw-2*var(--spacing-s4))] gap-0 overflow-hidden p-px"
       >
         <PopoverTitle className="sr-only">{props.title}</PopoverTitle>

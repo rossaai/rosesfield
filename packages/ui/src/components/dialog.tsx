@@ -1,10 +1,12 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { IconButton } from "@rosesfield/ui/components/button"
 import { LayerDepth } from "@rosesfield/ui/components/layer-depth"
+import { useLayerOrigin } from "@rosesfield/ui/hooks/use-layer-origin"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { mergeRefs } from "@rosesfield/ui/lib/merge-refs"
 import { motion } from "@rosesfield/ui/motion"
 import { XIcon } from "lucide-react"
-import type { ComponentProps, ReactElement } from "react"
+import { type ComponentProps, type ReactElement, useMemo } from "react"
 
 const dialogPanelClass = cn(
   "fixed inset-0 z-50 m-auto flex h-fit max-h-[calc(100dvh-2*var(--spacing-s6))] w-[min(var(--spacing-dialog),calc(100%-2*var(--spacing-s5)))] flex-col gap-s3 overflow-y-auto rounded-vessel bg-layer p-s4 text-ink shadow-lift outline-none",
@@ -30,7 +32,11 @@ function DialogScrim({
   return (
     <DialogPrimitive.Backdrop
       data-slot="dialog-scrim"
-      className={cn("fixed inset-0 z-50 bg-scrim", motion.scrim, className)}
+      className={cn(
+        "material-scrim fixed inset-0 z-50",
+        motion.scrim,
+        className
+      )}
       {...props}
     />
   )
@@ -44,12 +50,16 @@ function DialogContent({
   className,
   children,
   closeLabel,
+  ref,
   ...props
 }: DialogContentProps): ReactElement {
+  const origin = useLayerOrigin()
+  const popupRef = useMemo(() => mergeRefs(origin, ref), [origin, ref])
   return (
     <DialogPrimitive.Portal>
       <DialogScrim />
       <DialogPrimitive.Popup
+        ref={popupRef}
         data-slot="dialog-content"
         data-ground="layer"
         className={cn(dialogPanelClass, className)}
@@ -61,8 +71,7 @@ function DialogContent({
             <IconButton
               label={closeLabel}
               tone="quiet"
-              size="small"
-              className="absolute top-s4 right-s4"
+              className="absolute top-s1_5 right-s1_5"
             />
           }
         >
@@ -109,7 +118,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-title", className)}
+      className={cn("font-medium text-body", className)}
       {...props}
     />
   )

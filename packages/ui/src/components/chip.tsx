@@ -7,37 +7,25 @@ import {
 import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement, ReactNode } from "react"
 
-type ChipSize = "bar" | "inline"
-
-const sizes = {
-  bar: "",
-  inline: "h-6.5 px-2",
-} satisfies Record<ChipSize, string>
-
-type ChipProps = Omit<ButtonProps, "size" | "children"> & {
+type ChipProps = Omit<ButtonProps, "size" | "tone" | "children"> & {
   children: string
   caption?: string
   icon?: ReactNode
-  size?: ChipSize
 }
 
 function Chip({
   children,
   caption,
   icon,
-  size = "bar",
   className,
   ...props
 }: ChipProps): ReactElement {
   const chip = (
     <Button
       data-slot="chip"
-      size="recreate"
-      className={cn(
-        "group/chip min-w-0 shrink gap-1 rounded-dense data-popup-open:bg-(--tint)",
-        sizes[size],
-        className
-      )}
+      size="small"
+      tone="quiet"
+      className={cn("group/chip min-w-0 shrink gap-s1 px-s3", className)}
       {...props}
     >
       {caption === undefined ? null : (
@@ -47,7 +35,7 @@ function Chip({
         <span
           aria-hidden="true"
           data-slot="chip-icon"
-          className="flex shrink-0 [&_svg]:size-4"
+          className="flex shrink-0 [&_svg]:glyph-small"
         >
           {icon}
         </span>
@@ -66,5 +54,5 @@ function Chip({
   )
 }
 
-export type { ChipProps, ChipSize }
+export type { ChipProps }
 export { Chip }

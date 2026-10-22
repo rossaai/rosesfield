@@ -1,15 +1,15 @@
 import { HeroBanner, HeroFan } from "@rosesfield/ui/components/hero"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
+import { readSource } from "../read-source"
 
 afterEach(cleanup)
 
 describe("HeroBanner", () => {
-  it("is one link 400 px tall, shown only from the width switch, its action a span", () => {
+  it("is one link at least 400 px tall, shown only from the width switch, its action a span", () => {
     render(
       <HeroBanner
         href="/apps/video"
-        kicker="Video"
         headline="Make a clip from a photo"
         lead="Pick a model and a preset"
         action="Open Video"
@@ -17,61 +17,61 @@ describe("HeroBanner", () => {
     )
     const banner = screen.getByRole("link")
     expect(banner.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-100", "mt-6", "hidden", "@regular:flex"])
-    )
-    expect(banner.querySelectorAll("a, button")).toHaveLength(0)
-    const column = banner.lastElementChild
-    expect(column?.className.split(" ")).toEqual(
-      expect.arrayContaining(["w-146", "py-8"])
-    )
-  })
-
-  it("lays a glow over the banner and a 736 by 270 ellipse behind the text", () => {
-    render(
-      <HeroBanner
-        href="/apps/video"
-        kicker="Video"
-        headline="Make a clip from a photo"
-        lead="Pick a model and a preset"
-        action="Open Video"
-      />
-    )
-    const glow = document.querySelector("[data-slot='hero-glow']")
-    expect(glow?.className.split(" ")).toContain("inset-0")
-    const ellipse = document.querySelector("[data-slot='hero-glow-ellipse']")
-    expect(ellipse?.className.split(" ")).toEqual(
-      expect.arrayContaining(["w-184", "h-67.5", "rounded-full"])
-    )
-  })
-
-  it("answers a press anywhere on the banner on its action", () => {
-    render(
-      <HeroBanner
-        href="/apps/video"
-        kicker="Video"
-        headline="Make a clip from a photo"
-        lead="Pick a model and a preset"
-        action="Open Video"
-      />
-    )
-    const action = screen.getByText("Open Video")
-    const classes = action.className.split(" ")
-    expect(classes).toEqual(
       expect.arrayContaining([
-        "group-hover/hero:after:opacity-10",
-        "group-active/hero:after:opacity-20",
-        "hover:after:opacity-10",
-        "active:after:opacity-20",
+        "min-h-100",
+        "hidden",
+        "@regular:flex",
+        "bg-surface",
       ])
     )
-    expect(classes).not.toContain("active:after:opacity-10")
+    expect(banner.querySelectorAll("a, button")).toHaveLength(0)
+  })
+
+  it("sets one headline at the statement tier from the emitted tokens, with no kicker, wash or glow", () => {
+    render(
+      <HeroBanner
+        href="/apps/video"
+        headline="Make a clip from a photo"
+        lead="Pick a model and a preset"
+        action="Open Video"
+      />
+    )
+    const headline = document.querySelector("[data-slot='hero-headline']")
+    expect(headline?.textContent).toBe("Make a clip from a photo")
+    expect(headline?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "text-[clamp(var(--text-statement-floor),calc(var(--text-statement-share)*100vw),var(--text-statement-ceiling))]",
+        "leading-(--text-statement-leading)",
+      ])
+    )
+    expect(document.querySelector("[data-slot^='hero-glow']")).toBeNull()
+    const banner = screen.getByRole("link")
+    expect(banner.innerHTML).not.toMatch(/gradient|radial|blur-/)
+    const tokens = readSource("tokens.css")
+    expect(tokens).toContain("--text-statement-floor: 44px;")
+    expect(tokens).toContain("--text-statement-ceiling: 88px;")
+  })
+
+  it("draws its action as the primary button, pressing on the press preset", () => {
+    render(
+      <HeroBanner
+        href="/apps/video"
+        headline="Make a clip from a photo"
+        lead="Pick a model and a preset"
+        action="Open Video"
+      />
+    )
+    const classes = screen.getByText("Open Video").className.split(" ")
+    expect(classes).toEqual(
+      expect.arrayContaining(["bg-ink", "text-canvas", "motion-press"])
+    )
+    expect(classes.filter((name) => name.includes("after:"))).toEqual([])
   })
 
   it("rings the banner at the registry's offset, outside its edge", () => {
     render(
       <HeroBanner
         href="/apps/video"
-        kicker="Video"
         headline="Make a clip from a photo"
         lead="Pick a model and a preset"
         action="Open Video"
@@ -86,12 +86,11 @@ describe("HeroBanner", () => {
 })
 
 describe("HeroBanner's tag and portraits", () => {
-  it("opens with a tinted tag over the kicker, inside the one link", () => {
+  it("opens with a tinted tag over the headline, inside the one link", () => {
     render(
       <HeroBanner
         href="/apps/image"
         tag={{ label: "MIT licence", icon: <svg /> }}
-        kicker="Rosesfield"
         headline="Make images and video"
         lead="Every app works with your key"
         action="Open Image"
@@ -100,9 +99,11 @@ describe("HeroBanner's tag and portraits", () => {
     const tag = document.querySelector("[data-slot='hero-tag']")
     expect(tag?.textContent).toBe("MIT licence")
     expect(tag?.className.split(" ")).toEqual(
-      expect.arrayContaining(["bg-hor-tint", "text-hor-text", "h-7", "mb-8"])
+      expect.arrayContaining(["bg-hor-tint", "text-hor-text", "h-button-small"])
     )
-    expect(tag?.nextElementSibling?.textContent).toBe("Rosesfield")
+    expect(tag?.nextElementSibling?.getAttribute("data-slot")).toBe(
+      "hero-headline"
+    )
     expect(screen.getByRole("link").querySelectorAll("a, button")).toHaveLength(
       0
     )
@@ -112,7 +113,6 @@ describe("HeroBanner's tag and portraits", () => {
     render(
       <HeroBanner
         href="/apps/image"
-        kicker="Rosesfield"
         headline="Make images and video"
         lead="Every app works with your key"
         action="Open Image"
@@ -120,7 +120,12 @@ describe("HeroBanner's tag and portraits", () => {
       />
     )
     const banner = screen.getByRole("link")
-    expect(banner.className.split(" ")).toContain("@container/hero")
+    expect(banner.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "@container/hero",
+        "[--hero-portrait:min(--spacing(75),calc((100cqw_-_var(--spacing)*146)/2))]",
+      ])
+    )
     const portraits = [
       ...banner.querySelectorAll<HTMLImageElement>(
         "[data-slot='hero-portrait']"
@@ -132,11 +137,7 @@ describe("HeroBanner's tag and portraits", () => {
     ])
     expect(portraits.map((one) => one.alt)).toEqual(["", ""])
     expect(portraits[0]?.className.split(" ")).toEqual(
-      expect.arrayContaining([
-        "bottom-0",
-        "left-0",
-        "w-[min(--spacing(75),calc((100cqw_-_var(--spacing)*146)/2))]",
-      ])
+      expect.arrayContaining(["bottom-0", "left-0", "w-(--hero-portrait)"])
     )
     expect(portraits[1]?.className.split(" ")).toEqual(
       expect.arrayContaining(["bottom-0", "right-0"])
@@ -147,7 +148,6 @@ describe("HeroBanner's tag and portraits", () => {
     render(
       <HeroBanner
         href="/apps/image"
-        kicker="Rosesfield"
         headline="Make images and video"
         lead="Every app works with your key"
         action="Open Image"

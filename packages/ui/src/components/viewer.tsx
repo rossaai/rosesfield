@@ -1,5 +1,6 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { IconButton } from "@rosesfield/ui/components/button"
+import { interaction } from "@rosesfield/ui/components/interaction"
 import { LayerDepth } from "@rosesfield/ui/components/layer-depth"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { useGrowFrom } from "@rosesfield/ui/hooks/use-grow-from"
@@ -28,6 +29,8 @@ type ViewerProps = {
   closeLabel: string
   children: ReactNode
   aside?: ReactNode
+  head?: ReactNode
+  actions?: ReactNode
   bar?: ReactNode
   previous?: ViewerStep
   next?: ViewerStep
@@ -46,10 +49,11 @@ function StepButton({
   return (
     <IconButton
       label={step.label}
+      tone="glass"
       onClick={step.onSelect}
       className={cn(
-        "absolute top-1/2 -translate-y-1/2",
-        side === "left" ? "left-6" : "right-6"
+        "absolute top-1/2 -mt-[calc(var(--spacing-icon)/2)]",
+        side === "left" ? "left-s5" : "right-s5"
       )}
     >
       {side === "left" ? (
@@ -122,26 +126,58 @@ function ViewerStage(props: ViewerStageProps): ReactElement {
 
 function ViewerAside({
   fadeRef,
+  head,
+  actions,
   children,
   hasBar,
 }: {
   fadeRef: RefCallback<HTMLElement>
+  head: ReactNode
+  actions: ReactNode
   children: ReactNode
   hasBar: boolean
 }): ReactNode {
-  if (children === undefined) {
+  if (children === undefined && head === undefined && actions === undefined) {
     return null
   }
   return (
     <aside
       ref={fadeRef}
       data-ground="layer"
+      data-slot="viewer-aside"
       className={cn(
-        "max-h-[50dvh] w-full shrink-0 flex-col gap-s4 overflow-y-auto bg-layer p-s6 text-ink @regular:my-2 @regular:me-2 @regular:flex @regular:max-h-none @regular:w-88 @regular:rounded-card @regular:p-2.5",
+        "max-h-[50dvh] w-full shrink-0 flex-col overflow-hidden bg-layer text-ink @regular:my-s2 @regular:me-s2 @regular:flex @regular:max-h-none @regular:w-88 @regular:rounded-card",
         hasBar ? "hidden" : "flex"
       )}
     >
-      {children}
+      {head === undefined ? null : (
+        <div
+          data-slot="viewer-head"
+          className="flex shrink-0 flex-col gap-s2 px-s4 pt-s4 pb-s2"
+        >
+          {head}
+        </div>
+      )}
+      <div
+        data-slot="viewer-body"
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-s4 overflow-y-auto px-s4 py-s2",
+          head === undefined ? "pt-s4" : "",
+          actions === undefined ? "pb-s4" : "",
+          interaction.ringScroll
+        )}
+      >
+        {children}
+      </div>
+      {actions === undefined ? null : (
+        <div
+          data-slot="viewer-foot"
+          data-density="chrome"
+          className="flex shrink-0 flex-wrap items-center gap-s2 px-s4 pt-s2 pb-s4"
+        >
+          {actions}
+        </div>
+      )}
     </aside>
   )
 }
@@ -178,8 +214,8 @@ function ViewerClose({
   onClose: () => void
 }): ReactElement {
   return (
-    <span ref={fadeRef} className="absolute top-6 right-5">
-      <IconButton label={label} place="cardWide" onClick={onClose}>
+    <span ref={fadeRef} className="absolute top-s5 right-s5">
+      <IconButton label={label} tone="glass" onClick={onClose}>
         <XIcon aria-hidden="true" />
       </IconButton>
     </span>
@@ -225,7 +261,12 @@ function Viewer(props: ViewerProps): ReactElement {
               onClose={close}
             />
             <LayerDepth>
-              <ViewerAside fadeRef={fadeRef} hasBar={props.bar !== undefined}>
+              <ViewerAside
+                fadeRef={fadeRef}
+                head={props.head}
+                actions={props.actions}
+                hasBar={props.bar !== undefined}
+              >
                 {props.aside}
               </ViewerAside>
               <ViewerBar fadeRef={fadeRef}>{props.bar}</ViewerBar>

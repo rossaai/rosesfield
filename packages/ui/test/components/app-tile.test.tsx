@@ -63,53 +63,60 @@ describe("AppTile's shells", () => {
     return screen.getByRole("link", { name: /Video/ })
   }
 
-  it("holds an inner panel inside a 1 px border and 2 px padding, and opens the ring on hover without moving the panel's content", () => {
+  it("is one well tile with 13 px padding, no border and no ring, that presses on the press preset", () => {
     const tile = renderTile(false)
-    expect(tile.className.split(" ")).toEqual(
+    const classes = tile.className.split(" ")
+    expect(classes).toEqual(
       expect.arrayContaining([
-        "border",
-        "border-(--line)",
-        "p-0.5",
-        "hover:border-transparent",
-        "hover:p-0",
+        "bg-(--well)",
+        "p-s4",
+        "rounded-card",
+        "motion-press",
       ])
     )
+    expect(
+      classes.filter((name) => /^(hover:)?border|^p-0/.test(name))
+    ).toEqual([])
     expect(tile.className).not.toContain("after:")
-    const panel = tile.querySelector("[data-slot='app-tile-panel']")
-    expect(panel?.className.split(" ")).toEqual(
-      expect.arrayContaining(["p-3.5", "group-hover/app:p-4", "bg-(--well)"])
-    )
   })
 
-  it("slants its badge 6 px after the name, and sets it at the top right on a phone", () => {
+  it("draws no media well without media, and holds the media in a clipped frame when given", () => {
+    const tile = renderTile(false)
+    expect(tile.getAttribute("data-media")).toBe("no")
+    expect(tile.querySelector("[data-slot='app-tile-media']")).toBeNull()
+    cleanup()
+    render(
+      <AppTile
+        href="/apps/video"
+        name="Video"
+        line="A photo to a clip"
+        icon={<svg />}
+        media={<img src="/a.png" alt="" />}
+      />
+    )
+    const withMedia = screen.getByRole("link", { name: /Video/ })
+    expect(withMedia.getAttribute("data-media")).toBe("yes")
+    expect(
+      withMedia.querySelector("[data-slot='app-tile-media'] img")
+    ).not.toBeNull()
+  })
+
+  it("sets its badge after the name on one line", () => {
     const tile = renderTile(false)
     const badge = tile.querySelector("[data-slot='app-tile-badge']")
-    expect(badge?.className.split(" ")).toEqual(
-      expect.arrayContaining([
-        "-skew-x-12",
-        "absolute",
-        "top-3",
-        "right-3",
-        "@regular:static",
-        "@regular:ms-0.5",
-      ])
-    )
     expect(badge?.textContent).toBe("New")
-    const line = tile.querySelector("[data-slot='preset-tile-line']")
-    expect(line?.className.split(" ")).toEqual(
-      expect.arrayContaining(["text-body", "@regular:text-label"])
-    )
+    expect(badge?.previousElementSibling?.textContent).toBe("Video")
   })
 
-  it("carries a Video pill 12 px in from the top right on a tool that makes video, hidden on a phone", () => {
+  it("carries a Video pill 13 px in from the top right on a tool that makes video, hidden on a phone", () => {
     const tile = renderTile(true)
     const pill = tile.querySelector("[data-slot='app-tile-mode']")
     expect(pill?.textContent).toBe("Video")
     expect(pill?.className.split(" ")).toEqual(
       expect.arrayContaining([
-        "top-3",
-        "right-3",
-        "h-7.5",
+        "top-s4",
+        "right-s4",
+        "h-button-small",
         "rounded-full",
         "hidden",
         "@regular:flex",

@@ -1,6 +1,7 @@
 import { Button, IconButton } from "@rosesfield/ui/components/button"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { readSource } from "../read-source"
 
 afterEach(cleanup)
 
@@ -27,7 +28,7 @@ describe("Button", () => {
 })
 
 describe("IconButton", () => {
-  it("sits in a circle on its ground's well when quiet", () => {
+  it("sits as a clear circle when quiet, and takes its ground's tint on hover, open and on", () => {
     render(
       <IconButton label="Open the menu" tone="quiet">
         <svg aria-hidden="true" />
@@ -36,9 +37,16 @@ describe("IconButton", () => {
     const classes = screen
       .getByRole("button", { name: "Open the menu" })
       .className.split(" ")
-    expect(classes).toContain("bg-(--well)")
-    expect(classes).toContain("rounded-full")
-    expect(classes).not.toContain("bg-transparent")
+    expect(classes).toEqual(
+      expect.arrayContaining([
+        "bg-transparent",
+        "rounded-full",
+        "hover:bg-(--tint)",
+        "aria-expanded:bg-(--tint)",
+        "aria-pressed:bg-(--tint)",
+      ])
+    )
+    expect(classes).not.toContain("bg-(--well)")
   })
 })
 
@@ -46,58 +54,134 @@ function classesOf(name: string): string[] {
   return screen.getByRole("button", { name }).className.split(" ")
 }
 
-describe("Button's measures", () => {
-  it("stands a hero 48 px tall with 16 px padding, hugging its one-line label", () => {
-    render(<Button size="hero">Start</Button>)
-    const classes = classesOf("Start")
-    expect(classes).toEqual(
-      expect.arrayContaining(["h-12", "p-4", "whitespace-nowrap"])
-    )
-    expect(classes.some((name) => name.startsWith("max-w-"))).toBe(false)
-  })
+const motionCss = readSource("styles/motion.css")
+const tokens = readSource("tokens.css")
 
-  it("stands Recreate 32 px tall and 28 px when small, its 16 px glyph against a label with 6 px of its own padding", () => {
+function pressScaleOf(utility: string): string | undefined {
+  const block = motionCss.slice(motionCss.indexOf(`@utility ${utility} {`))
+  return /(?:--press-scale: |scale\(var\(--press-scale, )var\((--scale-press-[a-z]+)\)/.exec(
+    block
+  )?.[1]
+}
+
+function tokenOf(name: string): string | undefined {
+  return new RegExp(`${name}: ([0-9.]+);`).exec(tokens)?.[1]
+}
+
+describe("Button's press", () => {
+  it("yields a capsule to 0.96 and a circle to 0.94 on the press preset", () => {
     render(
       <>
-        <Button size="recreate">
+        <Button>Generate</Button>
+        <IconButton label="Close">
           <svg aria-hidden="true" />
-          Recreate
-        </Button>
-        <Button size="recreateSmall">
-          <svg aria-hidden="true" />
-          Copy
-        </Button>
+        </IconButton>
       </>
     )
-    const pad = "[&_[data-slot=button-label]]:px-1.5"
-    expect(classesOf("Recreate")).toEqual(
-      expect.arrayContaining(["h-8", "px-3", "gap-0", "[&_svg]:size-4", pad])
+    expect(classesOf("Generate")).toContain("motion-press")
+    expect(classesOf("Generate")).not.toContain("motion-press-round")
+    expect(classesOf("Close")).toEqual(
+      expect.arrayContaining(["motion-press", "motion-press-round"])
     )
-    expect(classesOf("Copy")).toEqual(
-      expect.arrayContaining(["h-7", "px-2", "gap-0", "[&_svg]:size-4", pad])
-    )
-    const label = screen
-      .getByRole("button", { name: "Recreate" })
-      .querySelector("[data-slot='button-label']")
-    expect(label?.textContent).toBe("Recreate")
-    expect(label?.previousElementSibling?.tagName.toLowerCase()).toBe("svg")
+    const capsule = pressScaleOf("motion-press")
+    const round = pressScaleOf("motion-press-round")
+    expect(capsule).toBe("--scale-press-capsule")
+    expect(round).toBe("--scale-press-round")
+    expect(tokenOf(capsule ?? "")).toBe("0.96")
+    expect(tokenOf(round ?? "")).toBe("0.94")
   })
 
-  it("draws the same light on press as on hover and never changes its size", () => {
-    render(<Button tone="primary">Generate</Button>)
-    const classes = classesOf("Generate")
-    expect(classes).toContain("hover:after:opacity-10")
-    expect(classes).toContain("active:after:opacity-10")
-    expect(classes).toContain("in-data-[gallery=press]:after:opacity-10")
-    expect(classes.filter((name) => name.includes("opacity-15"))).toEqual([])
-    expect(classes.filter((name) => /scale|motion-press/.test(name))).toEqual(
-      []
+  it("draws no light over any tone, so a surface keeps its own well colour on hover", () => {
+    const tones = [
+      "surface",
+      "primary",
+      "accent",
+      "quiet",
+      "muted",
+      "canvas",
+      "danger",
+      "glass",
+    ] as const
+    render(
+      tones.map((tone) => (
+        <Button key={tone} tone={tone}>
+          {tone}
+        </Button>
+      ))
     )
+    for (const tone of tones) {
+      const classes = classesOf(tone)
+      expect(classes.filter((name) => name.includes("after:"))).toEqual([])
+    }
+    expect(
+      classesOf("surface").filter((name) => name.startsWith("hover:bg"))
+    ).toEqual([])
+    expect(classesOf("quiet")).toContain("hover:bg-(--tint)")
+    expect(classesOf("muted")).toContain("hover:bg-(--tint)")
+  })
+
+  it("edges the glass tone with the hairline and the float shadow", () => {
+    render(<Button tone="glass">Next</Button>)
+    expect(classesOf("Next")).toEqual(
+      expect.arrayContaining([
+        "material-thin",
+        "border",
+        "border-surface-2",
+        "shadow-float",
+      ])
+    )
+  })
+})
+
+describe("Button's sizes", () => {
+  it("stands 40, 33 and 26 tall as a capsule, and takes its region's density by default", () => {
+    render(
+      <>
+        <Button>Chrome</Button>
+        <Button size="dense">Dense</Button>
+        <Button size="small">Small</Button>
+      </>
+    )
+    expect(classesOf("Chrome")).toEqual(
+      expect.arrayContaining([
+        "h-field",
+        "in-data-[density=composer]:h-button-dense",
+        "in-data-[density=row]:h-button-small",
+        "rounded-full",
+      ])
+    )
+    expect(classesOf("Dense")).toContain("h-button-dense")
+    expect(classesOf("Small")).toContain("h-button-small")
+  })
+
+  it("stands 36, 33 and 26 as a circle, and takes its region's density by default", () => {
+    render(
+      <>
+        <IconButton label="Chrome">
+          <svg aria-hidden="true" />
+        </IconButton>
+        <IconButton label="Dense" size="dense">
+          <svg aria-hidden="true" />
+        </IconButton>
+        <IconButton label="Small" size="small">
+          <svg aria-hidden="true" />
+        </IconButton>
+      </>
+    )
+    expect(classesOf("Chrome")).toEqual(
+      expect.arrayContaining([
+        "size-icon",
+        "in-data-[density=composer]:size-icon-dense",
+        "in-data-[density=row]:size-icon-small",
+      ])
+    )
+    expect(classesOf("Dense")).toContain("size-icon-dense")
+    expect(classesOf("Small")).toContain("size-icon-small")
   })
 
   it("draws its focus ring its own width outside its edge", () => {
     render(
-      <IconButton label="Close" place="close">
+      <IconButton label="Close">
         <svg aria-hidden="true" />
       </IconButton>
     )
@@ -107,26 +191,5 @@ describe("Button's measures", () => {
         "in-data-[gallery=focus]:outline-offset-(--spacing-focus-ring)",
       ])
     )
-  })
-})
-
-describe("IconButton's roles", () => {
-  it.each([
-    ["barCompact", "size-6"],
-    ["bar", "size-9"],
-    ["close", "size-9.5"],
-    ["card", "size-7"],
-    ["cardWide", "size-8"],
-    ["clip", "size-10"],
-    ["carousel", "size-15"],
-  ] as const)("sizes the %s glyph button with %s", (place, size) => {
-    render(
-      <IconButton label="Close" place={place}>
-        <svg aria-hidden="true" />
-      </IconButton>
-    )
-    const button = screen.getByRole("button", { name: "Close" })
-    expect(button.className.split(" ")).toContain(size)
-    expect(button.textContent).toBe("")
   })
 })

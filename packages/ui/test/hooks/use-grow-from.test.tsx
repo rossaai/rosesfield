@@ -1,5 +1,9 @@
 import { Viewer } from "@rosesfield/ui/components/viewer"
-import { growPoseOf, originShapeOf } from "@rosesfield/ui/hooks/use-grow-from"
+import {
+  growPoseOf,
+  growScaleOf,
+  originShapeOf,
+} from "@rosesfield/ui/hooks/use-grow-from"
 import { cleanup, render } from "@testing-library/react"
 import { StrictMode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -131,6 +135,9 @@ type Played = {
   keyframes: Keyframe[]
   cancel: () => void
   finished: Promise<void>
+  playState: "running" | "paused"
+  pause: () => void
+  play: () => void
 }
 
 const tileBox = new DOMRect(16, 195, 102, 102)
@@ -158,6 +165,13 @@ describe("a viewer opening in strict mode", () => {
         keyframes: keyframes as Keyframe[],
         cancel: () => live.delete(played),
         finished: Promise.resolve(),
+        playState: "running",
+        pause: () => {
+          played.playState = "paused"
+        },
+        play: () => {
+          played.playState = "running"
+        },
       }
       live.add(played)
       return played as unknown as Animation
@@ -218,5 +232,58 @@ describe("a viewer opening in strict mode", () => {
     expect(grows).toHaveLength(1)
     expect(grows[0]?.keyframes[0]?.transform).toMatch(/scale\(0\.21841/)
     tile.remove()
+  })
+
+  it("holds the grow on its first pose until the frame that mounts the viewer has painted, so a slow mount never eats the opening", () => {
+    const frames: FrameRequestCallback[] = []
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      frames.push(callback)
+      return frames.length
+    })
+    const tile = document.createElement("button")
+    tile.dataset.origin = "tile"
+    document.body.append(tile)
+    render(
+      <Viewer
+        open={true}
+        onOpenChange={() => undefined}
+        origin={tile}
+        aspect={{ width: 9, height: 16 }}
+        title="A result"
+        closeLabel="Close"
+      >
+        <span>media</span>
+      </Viewer>
+    )
+    const grow = [...live].find((played) =>
+      played.keyframes.some((frame) => frame.transform !== undefined)
+    )
+    expect(grow?.playState).toBe("paused")
+    for (const frame of frames.splice(0)) {
+      frame(0)
+    }
+    expect(grow?.playState).toBe("paused")
+    for (const frame of frames.splice(0)) {
+      frame(16)
+    }
+    expect(grow?.playState).toBe("running")
+    tile.remove()
+  })
+})
+
+describe("growPoseOf's scale", () => {
+  it("never starts larger than its target, from an origin larger than the target", () => {
+    const tile = { left: 100, top: 50, width: 699, height: 932 }
+    const target = { left: 300, top: 100, width: 400, height: 600 }
+    expect(growScaleOf(tile, target)).toBe(1)
+    expect(growPoseOf(tile, target, target, 12).transform).toMatch(
+      /scale\(1\)$/
+    )
+  })
+
+  it("takes the larger of the two ratios below one", () => {
+    expect(
+      growScaleOf({ width: 100, height: 300 }, { width: 400, height: 600 })
+    ).toBe(0.5)
   })
 })

@@ -1,5 +1,6 @@
 import {
   ModelChip,
+  ModelChipSkeleton,
   ModelRowTrigger,
 } from "@rosesfield/ui/components/model-trigger"
 import { cleanup, render, screen } from "@testing-library/react"
@@ -8,70 +9,67 @@ import { afterEach, describe, expect, it } from "vitest"
 afterEach(cleanup)
 
 describe("ModelChip", () => {
-  it("is the lab's mark, the name and a chevron pointing right, 32 px tall with 12 px sides", () => {
+  it("is the lab's mark, the name and a chevron, a 26 px capsule on its ground's well", () => {
     render(<ModelChip name="Picture 2" mark={<svg data-testid="mark" />} />)
     const chip = screen.getByRole("button", { name: "Picture 2" })
     expect(chip.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-8", "px-3"])
+      expect.arrayContaining([
+        "h-button-small",
+        "rounded-full",
+        "bg-(--well)",
+        "max-w-button-max",
+        "in-data-[density=composer]:bg-transparent",
+        "hover:bg-(--tint)",
+        "motion-press",
+      ])
     )
     const parts = [...chip.children].map((child) =>
       child.getAttribute("data-slot")
     )
     expect(parts.slice(0, 2)).toEqual(["model-row-mark", "model-row-name"])
-    expect(chip.lastElementChild?.getAttribute("class")).toContain(
-      "lucide-chevron-right"
-    )
+    const chevron = chip.lastElementChild?.getAttribute("class") ?? ""
+    expect(chevron).toContain("lucide-chevron-down")
+    expect(chevron).toContain("motion-disclosure")
+  })
+
+  it("truncates only its name, so the mark and the chevron keep their size", () => {
+    render(<ModelChip name="A very long model name" mark={<svg />} />)
+    const chip = screen.getByRole("button", { name: "A very long model name" })
+    expect(
+      chip.querySelector("[data-slot='model-row-name']")?.className.split(" ")
+    ).toEqual(expect.arrayContaining(["min-w-0", "truncate"]))
+    expect(
+      chip.querySelector("[data-slot='model-row-mark']")?.className.split(" ")
+    ).toContain("shrink-0")
   })
 })
 
-describe("ModelChip width", () => {
-  it("hugs its name with no edge: the mark 12 px in, the name's text 8 px after the mark, 2 px before the chevron, so the chip is the name plus 66 px", () => {
-    render(<ModelChip name="Picture 2" mark={<svg data-testid="mark" />} />)
-    const chip = screen.getByRole("button", { name: "Picture 2" })
-    const classes = chip.className.split(" ")
-    expect(classes).toContain("px-3")
-    expect(classes).not.toContain("border")
-    expect(classes.some((one) => one.startsWith("border-"))).toBe(false)
-    const name = chip.querySelector("[data-slot='model-row-name']")
-    const nameClasses = name?.className.split(" ") ?? []
-    expect(nameClasses).toEqual(expect.arrayContaining(["ms-2", "pe-0.5"]))
-    expect(nameClasses.some((one) => /^(px|ps|pl)-/.test(one))).toBe(false)
-    const chevron = chip.lastElementChild?.getAttribute("class") ?? ""
-    expect(chevron).not.toMatch(/\bms-/)
+describe("ModelChipSkeleton", () => {
+  it("shows a mark circle and a name line and no words while the model loads", () => {
+    const { container } = render(<ModelChipSkeleton />)
+    const group = container.firstElementChild
+    expect(group?.textContent).toBe("")
+    expect(group?.className.split(" ")).toEqual(
+      expect.arrayContaining(["h-button-small", "rounded-full"])
+    )
+    const shapes = [
+      ...container.querySelectorAll("[data-slot='skeleton']"),
+    ].map((one) => one.getAttribute("data-shape"))
+    expect(shapes).toEqual(["circle", "line"])
   })
 })
 
 describe("ModelRowTrigger", () => {
-  it("is a 48 px row with its caption over the name", () => {
-    render(<ModelRowTrigger caption="Model" name="Clip 3" />)
-    const row = screen.getByRole("button", { name: /Clip 3/ })
-    expect(row.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-12", "w-full"])
+  it("is one 36 px row: the label at the start and the 26 px trigger as its value", () => {
+    render(<ModelRowTrigger caption="Model" name="Clip 3" mark={<svg />} />)
+    const trigger = screen.getByRole("button", { name: /Clip 3/ })
+    const row = trigger.parentElement
+    expect(row?.getAttribute("data-slot")).toBe("model-row-field")
+    expect(row?.className.split(" ")).toEqual(
+      expect.arrayContaining(["h-button", "justify-between"])
     )
-    expect(row.textContent).toBe("ModelClip 3")
-  })
-})
-
-describe("ModelRowTrigger order", () => {
-  it("puts the name first, the lab's mark after it, then the chevron at the edge", () => {
-    render(
-      <ModelRowTrigger
-        caption="Model"
-        name="Clip 3"
-        mark={<svg data-testid="mark" />}
-      />
-    )
-    const row = screen.getByRole("button", { name: /Clip 3/ })
-    const order = [
-      ...row.querySelectorAll(
-        "[data-slot='model-row-mark'], [data-slot='model-row-name'], .lucide-chevron-right"
-      ),
-    ].map(
-      (part) =>
-        part.getAttribute("data-slot") ?? String(part.getAttribute("class"))
-    )
-    expect(order[0]).toBe("model-row-name")
-    expect(order[1]).toBe("model-row-mark")
-    expect(order[2]).toContain("lucide-chevron-right")
+    expect(row?.firstElementChild?.textContent).toBe("Model")
+    expect(trigger.className.split(" ")).toContain("h-button-small")
+    expect(trigger.textContent).toBe("Clip 3")
   })
 })
