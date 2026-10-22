@@ -161,7 +161,7 @@ function hostedOf(models: readonly CatalogModel[]): HostedState {
 }
 
 describe("the capability line of a row in the catalog picker", () => {
-  it("shows a ranked graph's board rank, and no capability for a graph the facts hold nothing on, the control", () => {
+  it("leads with what each model does when the picker mixes tasks, then a ranked graph's board rank", () => {
     const rows = pickerSections(
       hostedOf([
         graphOf("z-image-turbo", "text-to-image"),
@@ -171,8 +171,19 @@ describe("the capability line of a row in the catalog picker", () => {
     ).flatMap((section) => section.rows)
     const tagsOfRow = (id: string) =>
       rows.find((row) => row.id === id)?.tags.map((tag) => tag.label)
-    expect(tagsOfRow("z-image-turbo")).toEqual(["Rank 70 of 104"])
-    expect(tagsOfRow("flux-2-klein-4b")).toEqual([])
+    expect(tagsOfRow("z-image-turbo")).toEqual([
+      t("model.task.textToImage"),
+      "Rank 70 of 104",
+    ])
+    expect(tagsOfRow("flux-2-klein-4b")).toEqual([t("model.task.imageEdit")])
+  })
+
+  it("names no task when every model in the picker does the same task", () => {
+    const rows = pickerSections(
+      hostedOf([graphOf("z-image-turbo", "text-to-image")]),
+      "2026-10-21"
+    ).flatMap((section) => section.rows)
+    expect(rows[0]?.tags.map((tag) => tag.label)).toEqual(["Rank 70 of 104"])
   })
 
   it("puts a hosted video model's own facts before its rank and the hosting fact last", () => {

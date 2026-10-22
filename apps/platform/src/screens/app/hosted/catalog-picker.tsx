@@ -134,6 +134,15 @@ export function capabilitiesOf(
   ]
 }
 
+export function taskTagOf(task: string): ModelPickerTag | null {
+  const key = `model.task.${task.replace(/-(\w)/g, (_match: string, letter: string) => letter.toUpperCase())}`
+  return hasCatalogText(key) ? { label: tCatalog(key) } : null
+}
+
+function isMixedTasks(models: readonly CatalogModel[]): boolean {
+  return new Set(models.map((model) => model.task)).size > 1
+}
+
 const sectionLabels = {
   featured: "model.picker.featured",
   all: "model.picker.all",
@@ -223,6 +232,7 @@ export function pickerSections(
     ...model,
     maker: makerNameOf(model),
   }))
+  const isMixed = isMixedTasks(hosted.models)
   return modelSections(models, first, modelNameOf).map((section) => ({
     id: section.id,
     label: t(sectionLabels[section.id]),
@@ -233,7 +243,12 @@ export function pickerSections(
         name: row.name,
         maker: row.maker,
         lab: labOf(row),
-        tags: capabilitiesOf(row.tags, row.facts),
+        tags: [
+          ...(isMixed ? [taskTagOf(row.task)] : []).filter(
+            (tag): tag is ModelPickerTag => tag !== null
+          ),
+          ...capabilitiesOf(row.tags, row.facts),
+        ],
         mark: <LabMark maker={labOf(row)} />,
         badges: badgesOf(row.id, row.tags, row.facts, today),
         ...(price === undefined ? {} : { price }),
