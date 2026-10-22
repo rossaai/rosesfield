@@ -161,20 +161,18 @@ function hostedOf(models: readonly CatalogModel[]): HostedState {
 }
 
 describe("the capability line of a row in the catalog picker", () => {
-  it("leads with what each model does when the picker mixes tasks, then a ranked graph's board rank", () => {
+  it("leads a row with what its model does when that differs from most of the picker's models", () => {
     const rows = pickerSections(
       hostedOf([
         graphOf("z-image-turbo", "text-to-image"),
+        graphOf("qwen-image-2512", "text-to-image"),
         graphOf("flux-2-klein-4b", "image-edit"),
       ]),
       "2026-10-21"
     ).flatMap((section) => section.rows)
     const tagsOfRow = (id: string) =>
       rows.find((row) => row.id === id)?.tags.map((tag) => tag.label)
-    expect(tagsOfRow("z-image-turbo")).toEqual([
-      t("model.task.textToImage"),
-      "Rank 70 of 104",
-    ])
+    expect(tagsOfRow("z-image-turbo")).toEqual(["Rank 70 of 104"])
     expect(tagsOfRow("flux-2-klein-4b")).toEqual([t("model.task.imageEdit")])
   })
 

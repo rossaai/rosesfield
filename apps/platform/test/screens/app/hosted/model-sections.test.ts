@@ -80,16 +80,13 @@ describe("the sections of the model picker", () => {
     const image = rows.find((row) => row.id === "alpha/one")
     const video = rows.find((row) => row.id === "beta/three")
     const graph = rows.find((row) => row.id === "open-picture")
-    expect(image?.tags.map((tag) => tag.label)).toEqual([
-      "From text",
-      "Ran in Rosesfield",
-    ])
+    expect(image?.tags.map((tag) => tag.label)).toEqual(["Ran in Rosesfield"])
     expect(video?.tags.map((tag) => tag.label)).toEqual([
       "From text",
       "1080p",
       "5 to 10 s",
     ])
-    expect(graph?.tags.map((tag) => tag.label)).toEqual(["From text"])
+    expect(graph?.tags.map((tag) => tag.label)).toEqual([])
     expect(graph?.badges).toEqual([
       { kind: "openWeights", label: "Open weights", markColour: "#FFD21E" },
     ])

@@ -139,8 +139,13 @@ export function taskTagOf(task: string): ModelPickerTag | null {
   return hasCatalogText(key) ? { label: tCatalog(key) } : null
 }
 
-function isMixedTasks(models: readonly CatalogModel[]): boolean {
-  return new Set(models.map((model) => model.task)).size > 1
+export function mainTaskOf(models: readonly CatalogModel[]): string | null {
+  const counts = new Map<string, number>()
+  for (const model of models) {
+    counts.set(model.task, (counts.get(model.task) ?? 0) + 1)
+  }
+  const [first] = [...counts.entries()].sort((a, b) => b[1] - a[1])
+  return first === undefined ? null : first[0]
 }
 
 const sectionLabels = {
@@ -232,7 +237,7 @@ export function pickerSections(
     ...model,
     maker: makerNameOf(model),
   }))
-  const isMixed = isMixedTasks(hosted.models)
+  const mainTask = mainTaskOf(hosted.models)
   return modelSections(models, first, modelNameOf).map((section) => ({
     id: section.id,
     label: t(sectionLabels[section.id]),
@@ -244,7 +249,7 @@ export function pickerSections(
         maker: row.maker,
         lab: labOf(row),
         tags: [
-          ...(isMixed ? [taskTagOf(row.task)] : []).filter(
+          ...(row.task === mainTask ? [] : [taskTagOf(row.task)]).filter(
             (tag): tag is ModelPickerTag => tag !== null
           ),
           ...capabilitiesOf(row.tags, row.facts),
