@@ -90,7 +90,7 @@ describe("the agent composer", () => {
       )
     }
     const chip = screen.getByRole("button", {
-      name: `${t("model.picker.title")} Deepseek V4 Flash`,
+      name: `${t("model.picker.title")} DeepSeek V4 Flash`,
     })
     expect(chip.className).toContain("h-button-small")
     expect(chip.className).toContain("rounded-full")
@@ -102,7 +102,7 @@ describe("the agent composer", () => {
     await field()
     fireEvent.click(
       screen.getByRole("button", {
-        name: `${t("model.picker.title")} Deepseek V4 Flash`,
+        name: `${t("model.picker.title")} DeepSeek V4 Flash`,
       })
     )
     expect(await screen.findByText(t("model.picker.featured"))).not.toBeNull()
