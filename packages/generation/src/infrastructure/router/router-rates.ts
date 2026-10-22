@@ -18,7 +18,9 @@ export type RateRow = {
 
 type Values = Map<string, string>
 
-type Fit = "holds" | "names-output" | null
+type Fit = "holds" | "names-output" | "open" | null
+
+type Score = { holds: number; open: number }
 
 type RunFacts = {
   values: Values
@@ -105,11 +107,17 @@ export function priceFromRates(
     seconds:
       roleNumber(form, inputs, "length") ?? numberIn(values, ["duration"]),
   }
-  const scored = own
-    .map((row) => ({ row, score: scoreOf(row.conditions, run) }))
-    .filter((one) => one.score !== null)
-  const best = Math.max(...scored.map((one) => one.score ?? 0))
-  const top = scored.filter((one) => one.score === best)
+  const scored = own.flatMap((row) => {
+    const score = scoreOf(row.conditions, run)
+    return score === null ? [] : [{ row, score }]
+  })
+  const settled = scored.filter((one) => one.score.open === 0)
+  const best = Math.max(...settled.map((one) => one.score.holds))
+  const top = scored.filter(
+    (one) =>
+      one.score.holds === best ||
+      (one.score.open > 0 && one.score.holds >= best)
+  )
   const each = isOneAtATime(form.fields, output) ? count : 1
   const prices = new Set(
     top.map((one) => amountOf(one.row, form, inputs, values))
@@ -147,8 +155,8 @@ function amountOf(
   return row.credits * units * count
 }
 
-function scoreOf(conditions: string, run: RunFacts): number | null {
-  let score = 0
+function scoreOf(conditions: string, run: RunFacts): Score | null {
+  const score: Score = { holds: 0, open: 0 }
   for (const raw of conditions.split(";")) {
     const part = raw.trim()
     if (part === "") {
@@ -158,7 +166,8 @@ function scoreOf(conditions: string, run: RunFacts): number | null {
     if (fit === null) {
       return null
     }
-    score += fit === "holds" ? 1 : 0
+    score.holds += fit === "holds" ? 1 : 0
+    score.open += fit === "open" ? 1 : 0
   }
   return score
 }
@@ -171,7 +180,10 @@ function fitOf(part: string, run: RunFacts): Fit {
   const pair = /^([A-Za-z_ ]+)=(.+)$/.exec(part)
   if (pair !== null) {
     const held = values.get(keyOf(pair[1] ?? ""))
-    return held !== undefined && held === keyOf(pair[2] ?? "") ? "holds" : null
+    if (held === undefined) {
+      return "open"
+    }
+    return held === keyOf(pair[2] ?? "") ? "holds" : null
   }
   const seconds = /^(\d+)s$/.exec(part)
   if (seconds !== null) {

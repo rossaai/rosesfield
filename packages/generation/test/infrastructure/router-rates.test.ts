@@ -86,7 +86,7 @@ describe("priceFromRates", () => {
     expect(priceFromRates(rows, clip, { resolution: "720p" }, "video")).toBe(10)
   })
 
-  it("changes the price with quality and output size", () => {
+  it("changes the price with quality and output size, and names none while a size the rows name is unknown", () => {
     const picture: ModelForm = {
       model: "maker/picture-4",
       fields: [
@@ -159,7 +159,13 @@ describe("priceFromRates", () => {
         "image"
       )
     ).toBe(4.22)
-    expect(priceFromRates(rows, picture, {}, "image")).toBe(12.66)
+    expect(priceFromRates(rows, picture, {}, "image")).toBeNull()
+    expect(
+      priceFromRates(rows, picture, { quality: "high" }, "image")
+    ).toBeNull()
+    expect(
+      priceFromRates(rows, picture, { quality: "high", size: "auto" }, "image")
+    ).toBeNull()
     const sized: ModelForm = {
       ...picture,
       fields: picture.fields.map((field) =>
