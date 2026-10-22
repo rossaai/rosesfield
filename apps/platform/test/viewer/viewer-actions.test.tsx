@@ -170,6 +170,8 @@ describe("the viewer's actions", () => {
       name: t("output.delete"),
     })
     expect(item.getAttribute("data-tone")).toBe("danger")
+    const menu = item.closest("[data-slot=dropdown-menu-content]")
+    expect(menu?.getAttribute("data-side")).toMatch(/^(inline-start|left)$/)
     fireEvent.click(item)
     const dialog = await screen.findByRole("alertdialog")
     expect(fetched.filter((call) => call.startsWith("DELETE"))).toEqual([])

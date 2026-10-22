@@ -81,12 +81,16 @@ function useUseInputs(run: Run | null): (() => void) | null {
         })
 }
 
+type MenuSide = "inline-start" | "top"
+
 function MoreMenu({
   asset,
   onDeleted,
+  side,
 }: {
   asset: Asset
   onDeleted: () => void
+  side: MenuSide
 }): ReactElement {
   const [isConfirmOpen, setConfirmOpen] = useState(false)
   return (
@@ -99,7 +103,7 @@ function MoreMenu({
             </IconButton>
           }
         />
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent side={side} align="end">
           <DropdownMenuItem
             tone="danger"
             lead={<Trash2Icon aria-hidden="true" />}
@@ -183,7 +187,7 @@ export function ViewerActions({
           {t("output.download")}
         </Button>
         <UseInButton asset={asset} form="label" />
-        <MoreMenu asset={asset} onDeleted={onDeleted} />
+        <MoreMenu asset={asset} onDeleted={onDeleted} side="inline-start" />
       </div>
       <OpenInComfy run={run} form="label" />
     </div>
@@ -214,7 +218,7 @@ export function ViewerBar({
       </IconButton>
       <UseInButton asset={asset} form="circle" />
       <OpenInComfy run={run} form="circle" />
-      <MoreMenu asset={asset} onDeleted={onDeleted} />
+      <MoreMenu asset={asset} onDeleted={onDeleted} side="top" />
       <Sheet open={isInfoOpen} onOpenChange={setInfoOpen}>
         <SheetContent side="bottom" closeLabel={t("viewer.close")}>
           <SheetHeader>
