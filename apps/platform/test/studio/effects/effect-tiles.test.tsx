@@ -1,6 +1,8 @@
 import {
   type EffectRecipe,
+  type EffectRun,
   effectRecipes,
+  effectRuns,
   effectsApp,
   passedRecipes,
   recipeOf,
@@ -13,8 +15,9 @@ import {
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { findCatalogApp } from "@/catalog/catalog-apps"
-import { tCatalog } from "@/copy/t"
+import { t, tCatalog } from "@/copy/t"
 import { EffectTiles, effectTiles } from "@/studio/effects/effect-tiles"
+import type { EffectPrices } from "@/studio/effects/use-effect-prices"
 
 const runId = "5b1d2c3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e"
 
@@ -45,11 +48,37 @@ const previews = (file: string): string | null =>
     ? `/previews/${file}`
     : null
 
-function renderTiles(value = "grow-giant"): void {
+const noPrices: EffectPrices = {
+  isDemo: false,
+  creditsOf: () => null,
+  isMeasured: () => false,
+}
+
+const keptRun: EffectRun = {
+  runId,
+  effect: "melt-away",
+  workflowHash:
+    "ed50011518009bb7519b8d93286267699aeb1c3863c4fe89c4ade3470cf8673f",
+  photo: "4878911303dc844df9d1380ef667e54c3bbc27d0a634396496d961404542b221",
+  seed: 7,
+  resolution: "480p",
+  aspectRatio: "9:16",
+  balance: { before: 2530.78, after: 2492.89 },
+  verdict: "kept",
+  failed: [],
+}
+
+function renderTiles(
+  value = "grow-giant",
+  prices: EffectPrices = noPrices,
+  runs: readonly EffectRun[] = []
+): void {
   render(
     <EffectTiles
       app={listingOf(recipes)}
       value={value}
+      prices={prices}
+      runs={runs}
       onChange={() => undefined}
       register={() => undefined}
       recipes={recipes}
@@ -81,6 +110,7 @@ describe("the effect tiles", () => {
         photo: tCatalog("effects.photo.growGiant"),
         preview: "/previews/grow-giant.mp4",
         aspect: { width: 9, height: 16 },
+        kept: null,
       },
     ])
   })
@@ -110,11 +140,62 @@ describe("the effect tiles", () => {
     expect(new Set(loops).size).toBe(passedRecipes.length)
   })
 
-  it("shows each tile as its clip at the clip's shape and its name, with no price, count or second caption line", () => {
+  it("shows the credits its kept run measured on the clip, named as measured on that run's resolution, until your own run measures it", () => {
+    const kept = t("run.price.kept", { amount: "37.89", resolution: "480p" })
+    renderTiles("grow-giant", noPrices, [keptRun])
+    const badge = tileNamed("grow-giant").querySelector<HTMLElement>(
+      "[data-slot=effect-price]"
+    )
+    expect(badge?.getAttribute("title")).toBe(kept)
+    expect(badge?.textContent).toContain("37.89")
+    expect(badge?.textContent).toContain(kept)
+    expect(badge?.closest("[data-slot=effect-clip]")).not.toBeNull()
+    cleanup()
+    renderTiles(
+      "grow-giant",
+      { isDemo: false, creditsOf: () => 41.2, isMeasured: () => true },
+      [keptRun]
+    )
+    const own = tileNamed("grow-giant").querySelector<HTMLElement>(
+      "[data-slot=effect-price]"
+    )
+    expect(own?.getAttribute("title")).toBe(
+      t("run.price.credits", { amount: "41.2" })
+    )
+    expect(document.body.textContent).not.toContain(kept)
+  })
+
+  it("shows no price, never Price unknown, where no run measured one", () => {
+    renderTiles("grow-giant", noPrices, [])
+    expect(document.querySelector("[data-slot=effect-price]")).toBeNull()
+    expect(document.body.textContent).not.toContain(t("run.price.unknown"))
+  })
+
+  it("prices each shipped look from its own kept run in the run ledger", () => {
+    const shipped = findCatalogApp("effects")
+    if (shipped === null) {
+      throw new TypeError("The catalog lacks Effects")
+    }
+    const tiles = effectTiles(shipped, effectRecipes)
+    for (const tile of tiles) {
+      const recipe = passedRecipes.find((one) => one.effect === tile.effect)
+      const run = effectRuns.find((one) => one.runId === recipe?.preview?.runId)
+      expect(run).toBeDefined()
+      expect(tile.kept).toEqual({
+        credits:
+          Math.round(
+            ((run?.balance.before ?? 0) - (run?.balance.after ?? 0)) * 100
+          ) / 100,
+        resolution: run?.resolution,
+      })
+      expect(tile.kept?.credits).toBeGreaterThan(0)
+    }
+  })
+
+  it("shows each tile as its clip at the clip's shape and its name, with no count or second caption line", () => {
     renderTiles()
     const tile = tileNamed("grow-giant")
     expect(tile.textContent).toBe(tCatalog("effects.choice.effect.growGiant"))
-    expect(tile.querySelector("[data-slot=credit-price]")).toBeNull()
     expect(
       tile.querySelector<HTMLElement>("[data-slot=effect-clip]")?.style
         .aspectRatio
@@ -145,6 +226,7 @@ describe("the effect tiles", () => {
       <EffectTiles
         app={listingOf(recipes)}
         value="melt-away"
+        prices={noPrices}
         onChange={onChange}
         register={() => undefined}
         recipes={recipes}
@@ -176,6 +258,7 @@ describe("the effect tiles", () => {
       <EffectTiles
         app={listingOf(offered)}
         value="grow-giant"
+        prices={noPrices}
         onChange={() => undefined}
         register={() => undefined}
         recipes={offered}
