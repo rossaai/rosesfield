@@ -76,7 +76,7 @@
     },
     {
       "path": "apps/platform/src/copy/app.en.ts",
-      "sha256": "eeed97644d3556e4f2fa68554b0b12e36f426b98257c5bce2bf083ac85d86c69"
+      "sha256": "b5c17a266a29511d2410bbc05b2ad0dbed9b4f8c46972bbd13a9cd7d8ed3db54"
     },
     {
       "path": "apps/platform/src/copy/characters.en.ts",
@@ -132,7 +132,7 @@
     },
     {
       "path": "packages/agent/src/copy.en.ts",
-      "sha256": "998dbb4e45d8cd76e46fa712c81f3e5fa7556ed6c782b96b0dbbb108d34b1c4b"
+      "sha256": "685fc8f0b157607cc6dee2eb3ed33a9e0efc6994f362d882cc5852a305d894ff"
     },
     {
       "path": "packages/catalog/src/ads/copy.en.ts",
@@ -205,6 +205,10 @@
     {
       "path": "packages/catalog/src/storyboard/copy.en.ts",
       "sha256": "c3f6e54bf14d979eecb74aa74aa2fda68dfffeaf0d75327bf9ee1ba2f06da4fc"
+    },
+    {
+      "path": "packages/catalog/src/three-d/copy.en.ts",
+      "sha256": "e7655e7c036f1016a2b616a033daed62c5b4c1ec1c5cc5257e99a2119653e6e3"
     },
     {
       "path": "packages/catalog/src/try-on/copy.en.ts",
@@ -376,7 +380,7 @@
     },
     {
       "path": "services/gateway/src/copy.en.ts",
-      "sha256": "5eb0c7c3aea78eced4b289fde90fc2fee522d2db414446b056577db896080558"
+      "sha256": "9964d8ffe82fe88b4ad6d96e5915e35dccddb430e110cb19fb57489537ebe574"
     }
   ]
 }

@@ -1,3 +1,5 @@
+// Generated. Do not edit.
+
 export const threeDCopy = {
   "threeD.name": "3D",
   "three-d.line": "Describe an object and get a 3D model as a GLB file.",
