@@ -68,6 +68,7 @@ export const appCopy = {
   "bar.attachment.remove": "Remove",
   "bar.attachment.moveTo": "Use as {input}",
   "bar.model": "Model",
+  "bar.settings": "Settings",
   "bar.field": "{field}: {value}",
   "bar.notSet": "{field}: not set",
   "bar.count.image.one": "{count} image",

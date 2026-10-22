@@ -1,4 +1,11 @@
 import type { AppListing, Run } from "@rosesfield/contract"
+import { Chip } from "@rosesfield/ui/components/chip"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@rosesfield/ui/components/popover"
 import {
   Sheet,
   SheetBody,
@@ -7,6 +14,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@rosesfield/ui/components/sheet"
+import { SlidersHorizontalIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useEffect, useState } from "react"
 import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
@@ -147,11 +155,43 @@ export function BarFrame(props: BarFrameProps): ReactElement {
   )
 }
 
+function FoldedChips({ chips }: { chips: ReactNode }): ReactElement {
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Chip data-slot="bar-settings" icon={<SlidersHorizontalIcon />}>
+            {t("bar.settings")}
+          </Chip>
+        }
+      />
+      <PopoverContent
+        side="top"
+        sideOffset={8}
+        aria-label={t("bar.settings")}
+        data-density="composer"
+      >
+        <PopoverTitle className="sr-only">{t("bar.settings")}</PopoverTitle>
+        <div
+          data-slot="bar-settings-chips"
+          className="flex flex-wrap items-center gap-s1"
+        >
+          {chips}
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 export function BarChips({ chips }: { chips: ReactNode }): ReactElement {
+  const isRegular = useIsRegularWindow()
+  if (!isRegular) {
+    return <FoldedChips chips={chips} />
+  }
   return (
     <span
       data-slot="bar-chips"
-      className="flex min-w-0 shrink-0 items-center gap-1 *:flex-nowrap *:gap-1"
+      className="flex min-w-0 shrink-0 items-center gap-s1 *:flex-nowrap *:gap-s1"
     >
       {chips}
     </span>
