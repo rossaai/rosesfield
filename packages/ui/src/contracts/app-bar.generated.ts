@@ -64,6 +64,11 @@ export const APP_BAR = {
       tablet: "control.hitTouch",
       desktop: "control.hitTouch",
     },
+    compactActionHeight: {
+      phone: "control.hitTouch",
+      tablet: "control.hitRailDense",
+      desktop: "control.hitRailDense",
+    },
     actionRadius: {
       phone: "radius.full",
       tablet: "radius.full",

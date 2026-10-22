@@ -109,11 +109,11 @@
   --spacing-hairline: 1px;
   --spacing-focus-ring: 2px;
   --spacing-rise: 16px;
-  --spacing-feed-window: 1024px;
-  --spacing-feed-fade: 208px;
-  --spacing-settings-modal-w: 768px;
-  --spacing-settings-modal-h: 600px;
-  --spacing-settings-rail: 240px;
+  --spacing-feed-window: 843px;
+  --spacing-feed-fade: 171px;
+  --spacing-settings-modal-w: 632px;
+  --spacing-settings-modal-h: 494px;
+  --spacing-settings-rail: 198px;
 
   --breakpoint-*: initial;
   --container-*: initial;
