@@ -8,7 +8,7 @@ import {
 } from "@rosesfield/ui/components/model-picker"
 import type { ModelPrice } from "@rosesfield/ui/components/model-row"
 import { type ReactElement, type ReactNode, useState } from "react"
-import { hasCatalogText, t, tCatalog } from "@/copy/t"
+import { t } from "@/copy/t"
 import {
   pickerSections,
   pickerTrigger,
@@ -19,13 +19,6 @@ import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import { useRowPrices } from "@/screens/app/hosted/use-row-prices"
 import { modelPhotoLimitOf } from "@/studio/ads/ads-rules"
-
-function ownLineOf(model: CatalogModel | undefined): string | null {
-  const key = model?.nameKey ?? null
-  return key !== null && hasCatalogText(`${key}.line`)
-    ? tCatalog(`${key}.line`)
-    : null
-}
 
 function rowWithPhotos(
   app: AppListing,
@@ -38,7 +31,6 @@ function rowWithPhotos(
   })
   return {
     ...row,
-    line: row.line ?? ownLineOf(model),
     tags: [...row.tags, photos],
   }
 }
