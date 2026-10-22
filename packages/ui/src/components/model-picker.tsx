@@ -318,10 +318,10 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
         align={side === "top" ? "start" : "end"}
         sideOffset={insetOf("--spacing-s2_5")}
         material="thick"
+        {...(placement === null ? {} : { collisionPadding: placement.padding })}
         {...(isAbove
           ? {
               anchor: placement.anchor,
-              collisionPadding: placement.padding,
               style: { transformOrigin: placement.origin },
             }
           : {})}
