@@ -12,6 +12,8 @@ import {
   defaultsOfTab,
   modelForTab,
   modelsOfTab,
+  openingTab,
+  shownTabs,
   type ThreeDTab,
   tabsOfModel,
 } from "@/studio/three-d/three-d-tabs"
@@ -20,6 +22,7 @@ export type ThreeDScreen = {
   state: AppScreenState
   hosted: HostedState
   tab: ThreeDTab
+  tabs: readonly ThreeDTab[]
   tabModels: readonly CatalogModel[]
   setTab: (tab: ThreeDTab) => void
   fillFromRun: (run: Run) => void
@@ -70,6 +73,13 @@ export function modelToOpen(
   ])
 }
 
+export function tabShown(
+  picked: ThreeDTab,
+  tabs: readonly ThreeDTab[]
+): ThreeDTab {
+  return tabs.includes(picked) ? picked : openingTab
+}
+
 type Picked = Record<ThreeDTab, string | null>
 
 function useTabModel(
@@ -110,7 +120,12 @@ export function useThreeDScreen(
 ): ThreeDScreen {
   const state = useAppScreen(app, seeds, onStarted)
   const hosted = state.hosted ?? emptyHosted()
-  const [tab, setTab] = useState<ThreeDTab>("image")
+  const [picked, setTab] = useState<ThreeDTab>(openingTab)
+  const tabs = useMemo(
+    () => shownTabs(hosted.models, app),
+    [hosted.models, app]
+  )
+  const tab = tabShown(picked, tabs)
   useTabModel({ state, hosted, tab }, app, setTab)
   const tabModels = useMemo(
     () => modelsOfTab(hosted.models, tab, app),
@@ -121,6 +136,7 @@ export function useThreeDScreen(
     state,
     hosted,
     tab,
+    tabs,
     tabModels,
     setTab,
     fillFromRun: (run) => {

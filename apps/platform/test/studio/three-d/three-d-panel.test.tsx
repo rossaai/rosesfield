@@ -5,21 +5,42 @@ import { ModeTabs } from "@/studio/three-d/three-d-panel"
 afterEach(cleanup)
 
 describe("the 3D mode tabs", () => {
-  it("shows From an image and From text, with From an image chosen", () => {
-    render(<ModeTabs screen={{ tab: "image", setTab: () => undefined }} />)
+  it("shows From text first and chosen, then From an image", () => {
+    render(
+      <ModeTabs
+        screen={{
+          tab: "text",
+          tabs: ["text", "image"],
+          setTab: () => undefined,
+        }}
+      />
+    )
     const tabs = screen.getAllByRole("tab")
     expect(tabs.map((tab) => tab.textContent)).toEqual([
-      "From an image",
       "From text",
+      "From an image",
     ])
-    const image = screen.getByRole("tab", { name: "From an image" })
-    expect(image.getAttribute("aria-selected")).toBe("true")
+    const text = screen.getByRole("tab", { name: "From text" })
+    expect(text.getAttribute("aria-selected")).toBe("true")
   })
 
-  it("moves to From text when you press it", () => {
+  it("shows no From an image tab while the screen lists only From text", () => {
+    render(
+      <ModeTabs
+        screen={{ tab: "text", tabs: ["text"], setTab: () => undefined }}
+      />
+    )
+    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+      "From text",
+    ])
+  })
+
+  it("moves to From an image when you press it", () => {
     const setTab = vi.fn()
-    render(<ModeTabs screen={{ tab: "image", setTab }} />)
-    fireEvent.click(screen.getByRole("tab", { name: "From text" }))
-    expect(setTab).toHaveBeenCalledWith("text")
+    render(
+      <ModeTabs screen={{ tab: "text", tabs: ["text", "image"], setTab }} />
+    )
+    fireEvent.click(screen.getByRole("tab", { name: "From an image" }))
+    expect(setTab).toHaveBeenCalledWith("image")
   })
 })

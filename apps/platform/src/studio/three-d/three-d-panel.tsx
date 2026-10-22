@@ -20,7 +20,7 @@ function isThreeDTab(value: unknown): value is ThreeDTab {
 export function ModeTabs({
   screen,
 }: {
-  screen: Pick<ThreeDScreen, "tab" | "setTab">
+  screen: Pick<ThreeDScreen, "tab" | "tabs" | "setTab">
 }): ReactElement {
   return (
     <Tabs
@@ -32,7 +32,7 @@ export function ModeTabs({
       }}
     >
       <ModeStrip aria-label={tThreeD("threeD.tabs.label")}>
-        {threeDTabs.map((one) => (
+        {screen.tabs.map((one) => (
           <ModeTab key={one} value={one}>
             {tThreeD(tabKeys[one])}
           </ModeTab>

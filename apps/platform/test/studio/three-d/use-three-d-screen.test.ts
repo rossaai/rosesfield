@@ -1,7 +1,11 @@
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { describe, expect, it } from "vitest"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
-import { modelToOpen, tabOfModel } from "@/studio/three-d/use-three-d-screen"
+import {
+  modelToOpen,
+  tabOfModel,
+  tabShown,
+} from "@/studio/three-d/use-three-d-screen"
 import {
   graph,
   hunyuan,
@@ -52,6 +56,12 @@ describe("the model each 3D tab opens on", () => {
   it("keeps the chosen model while the tab lists it", () => {
     expect(modelToOpen(hostedWith(hunyuan), "image", app, null)).toBeNull()
     expect(modelToOpen(hostedWith(meshy6), "text", app, null)).toBeNull()
+  })
+
+  it("shows From text when the tab you were on is no longer listed", () => {
+    expect(tabShown("image", ["text"])).toBe("text")
+    expect(tabShown("image", ["text", "image"])).toBe("image")
+    expect(tabShown("text", ["text"])).toBe("text")
   })
 
   it("moves to the tab of a model a run used", () => {

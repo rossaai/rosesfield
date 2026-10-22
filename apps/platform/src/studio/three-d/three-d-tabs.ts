@@ -4,7 +4,9 @@ import type { ThreeDKey } from "@/studio/three-d/copy.en"
 
 export type ThreeDTab = "image" | "text"
 
-export const threeDTabs: readonly ThreeDTab[] = ["image", "text"]
+export const threeDTabs: readonly ThreeDTab[] = ["text", "image"]
+
+export const openingTab: ThreeDTab = "text"
 
 export const tabKeys = {
   image: "threeD.tab.image",
@@ -92,4 +94,13 @@ export function modelForTab(
     }
   }
   return models[0]?.id ?? null
+}
+
+export function shownTabs(
+  models: readonly CatalogModel[],
+  app: AppListing
+): ThreeDTab[] {
+  return threeDTabs.filter(
+    (tab) => tab === openingTab || modelsOfTab(models, tab, app).length > 0
+  )
 }

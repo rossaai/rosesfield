@@ -3,6 +3,8 @@ import {
   defaultsOfTab,
   modelForTab,
   modelsOfTab,
+  openingTab,
+  shownTabs,
   tabsOfModel,
   textModel,
 } from "@/studio/three-d/three-d-tabs"
@@ -47,6 +49,14 @@ describe("the 3D tabs", () => {
     expect(defaultsOfTab(models, "image")).toEqual(["pixal3d-trellis-2"])
     expect(defaultsOfTab(models, "text")).toEqual([textModel])
     expect(textModel).toBe("meshy/meshy-7.1")
+  })
+
+  it("opens on From text and shows From an image only while the catalog lists a model for it", () => {
+    expect(openingTab).toBe("text")
+    expect(shownTabs(models, app)).toEqual(["text", "image"])
+    expect(shownTabs([meshy6, meshy71], app)).toEqual(["text"])
+    expect(shownTabs([], app)).toEqual(["text"])
+    expect(shownTabs([meshy71, graph], app)).toEqual(["text", "image"])
   })
 
   it("picks the first id the tab lists, then the tab's first model", () => {
