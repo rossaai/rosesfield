@@ -65,12 +65,15 @@ export const proposal = z.object({
   appId,
   request: runRequest,
   status: proposalStatus,
-  runId: runId.nullable(),
+  runIds: z.array(runId),
 })
 
 export const proposalResponse = z.object({ proposal })
 
-export const acceptedProposalResponse = z.object({ proposal, run })
+export const acceptedProposalResponse = z.object({
+  proposal,
+  runs: z.array(run),
+})
 
 export const turnCredits = z.number().min(0)
 

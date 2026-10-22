@@ -99,7 +99,11 @@ async function driveVisitor(visitor: Visitor, refused: Visitor): Promise<void> {
       )
     ).json()
   )
-  const runPath = buildPath(routes.getRun.path, { runId: accepted.run.id })
+  const [run] = accepted.runs
+  if (run === undefined) {
+    throw new Error("The accepted proposal started no run")
+  }
+  const runPath = buildPath(routes.getRun.path, { runId: run.id })
   await visitor.call(runPath)
   const done = runResponse.parse(await (await visitor.call(runPath)).json())
   expect(done.run.status).toBe("done")

@@ -135,8 +135,14 @@ export function ProposalCard(props: ProposalCardProps): ReactElement {
   const acts = useProposalActs(props.conversationId, proposal.id)
   const price = useProposalPrice(proposal)
   const app = findCatalogApp(proposal.appId)
-  if (proposal.status === "accepted" && proposal.runId !== null) {
-    return <RunCard runId={proposal.runId} />
+  if (proposal.status === "accepted" && proposal.runIds.length > 0) {
+    return (
+      <div className="flex flex-col gap-s4">
+        {proposal.runIds.map((runId) => (
+          <RunCard key={runId} runId={runId} />
+        ))}
+      </div>
+    )
   }
   const failure = acts.generate.error ?? acts.skip.error
   const isSkipped = proposal.status === "skipped"

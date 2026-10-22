@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import type { AnswerEvent, Proposal } from "#agent.contract"
 import { AcceptProposalHandler } from "#application/accept-proposal/accept-proposal.handler"
 import { SkipProposalHandler } from "#application/skip-proposal/skip-proposal.handler"
+import { proposalRecords } from "#infrastructure/pi-conversation-docs"
 import {
   type AgentRig,
   agentFor,
@@ -10,6 +11,7 @@ import {
   type Generation,
   generationFor,
   lastMessageOf,
+  proposalRunnerFor,
   readAll,
 } from "../harness"
 import { imageApp } from "../sample"
@@ -60,7 +62,7 @@ describe("a conversation that asks before each run", () => {
     expect(proposalOf(events)).toMatchObject({
       appId: "sample-image",
       status: "proposed",
-      runId: null,
+      runIds: [],
       request: { inputs: { prompt: "a red rose" }, count: 2 },
     })
     expect(events.some((event) => event.type === "run")).toBe(false)
@@ -88,22 +90,24 @@ describe("a conversation that asks before each run", () => {
 
     const accepted = await new AcceptProposalHandler({
       agent: rig.agent,
-      startRun: generation.startRun,
+      runner: proposalRunnerFor(generation),
     }).execute({ conversationId: id, proposalId: proposal.id })
     await readAll(await rig.agent.send({ conversationId: id, text: "Thanks" }))
 
+    const runIds = accepted.runs.map((run) => run.id)
     expect(generation.runs.count).toBe(1)
-    expect(accepted.run).toMatchObject({
+    expect(accepted.runs).toHaveLength(1)
+    expect(accepted.runs[0]).toMatchObject({
       appId: "sample-image",
       count: 2,
       inputs: { prompt: "a red rose" },
     })
     expect(told).toContain(proposal.id)
-    expect(told).toContain(accepted.run.id)
+    expect(told).toContain(runIds[0])
     const { items } = await rig.agent.readConversation(id)
     expect(items).toContainEqual({
       type: "proposal",
-      proposal: { ...proposal, status: "accepted", runId: accepted.run.id },
+      proposal: { ...proposal, status: "accepted", runIds },
     })
   })
 
@@ -143,5 +147,28 @@ describe("a conversation that asks before each run", () => {
 
     expect(events.some((event) => event.type === "proposal")).toBe(false)
     expect(lastMessageOf(events)).toBe("I need a prompt.")
+  })
+
+  it("reads a proposal stored with one run id as a list of that run", () => {
+    const stored = {
+      id: "3a4b5c6d-7e8f-4a1b-8c2d-3e4f5a6b7c8d",
+      appId: "sample-image",
+      request: { inputs: { prompt: "a rose" }, count: 1, aspectRatio: null },
+      body: {},
+      status: "accepted",
+      runId: "1c2d3e4f-5a6b-4c7d-9e8f-0a1b2c3d4e5f",
+    }
+    const migrate = proposalRecords.definition.migrate
+    expect(migrate?.(stored, 1)).toEqual({
+      id: stored.id,
+      appId: stored.appId,
+      request: stored.request,
+      body: {},
+      status: "accepted",
+      runIds: [stored.runId],
+    })
+    expect(
+      migrate?.({ ...stored, status: "proposed", runId: null }, 1)
+    ).toMatchObject({ status: "proposed", runIds: [] })
   })
 })

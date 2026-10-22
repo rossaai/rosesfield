@@ -17,7 +17,7 @@ const proposal: Proposal = {
     aspectRatio: null,
   },
   status: "proposed",
-  runId: null,
+  runIds: [],
 }
 
 let asked = 0

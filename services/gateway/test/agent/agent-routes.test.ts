@@ -43,7 +43,7 @@ const proposal: Proposal = {
   appId: appIdFormat.parse("sample-image"),
   request: { inputs: { prompt: "a rose" }, count: 1, aspectRatio: "1:1" },
   status: "proposed",
-  runId: null,
+  runIds: [],
 }
 
 const routes = conversationRoutes
@@ -261,9 +261,10 @@ describe("the agent routes", () => {
     )
 
     expect(accepted.status).toBe(202)
-    const { run } = acceptedProposalResponse.parse(await accepted.json())
-    expect(run.inputs).toMatchObject({ prompt: "a rose" })
-    expect(jobs.enqueued).toEqual([run.id])
+    const { runs } = acceptedProposalResponse.parse(await accepted.json())
+    expect(runs).toHaveLength(1)
+    expect(runs[0]?.inputs).toMatchObject({ prompt: "a rose" })
+    expect(jobs.enqueued).toEqual(runs.map((run) => run.id))
     expect(skipped.status).toBe(409)
     expect(await codeOf(skipped)).toBe("PROPOSAL_SETTLED")
     agent.proposals.set(proposal.id, { proposal, body: {} })

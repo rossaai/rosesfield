@@ -255,7 +255,7 @@ export class PiAgentHarness extends AgentHarness {
   ): Promise<Proposal> {
     const { proposal } = await this.readProposal(ref)
     const { conversation } = await this.find(ref.conversationId)
-    const runId = decision.status === "accepted" ? decision.runId : null
+    const runIds = decision.status === "accepted" ? decision.runIds : []
     await conversation.commit(async (tx) => {
       const draft = await tx.doc(
         proposalRecords,
@@ -264,19 +264,19 @@ export class PiAgentHarness extends AgentHarness {
         { ...proposal, body: {} }
       )
       draft.status = decision.status
-      draft.runId = runId
+      draft.runIds = runIds
     }, context)
     const settled = { proposalId: proposal.id, appId: proposal.appId }
     const note =
-      runId === null
-        ? agentCopy.proposal.skipped(settled)
-        : agentCopy.proposal.accepted(settled, runId)
+      decision.status === "accepted"
+        ? agentCopy.proposal.accepted(settled, runIds.join(", "))
+        : agentCopy.proposal.skipped(settled)
     await conversation.submit(
       {
         type: "write",
         entry: {
           kind: decisionKind,
-          data: { proposalId: proposal.id, status: decision.status, runId },
+          data: { proposalId: proposal.id, status: decision.status, runIds },
           model: [
             {
               role: "user",
@@ -288,7 +288,7 @@ export class PiAgentHarness extends AgentHarness {
       },
       context
     )
-    return { ...proposal, status: decision.status, runId }
+    return { ...proposal, status: decision.status, runIds }
   }
 
   async close(): Promise<void> {

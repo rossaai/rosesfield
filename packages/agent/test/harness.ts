@@ -34,6 +34,7 @@ import {
 import { appTool } from "#infrastructure/pi-app-tool"
 import type { RunWait } from "#infrastructure/pi-library-tools"
 import type { PiModels } from "#infrastructure/pi-models"
+import { PiProposalRunner } from "#infrastructure/pi-proposal-runner"
 import { openSqliteFileStorage } from "#infrastructure/sqlite-file-storage"
 import { FakeAppCatalog } from "./fake/fake-app-catalog"
 import type { FakeAssetRepository } from "./fake/fake-asset-repository"
@@ -89,6 +90,19 @@ export function appToolsFor(
       wait,
     })
   )
+}
+
+export function proposalRunnerFor(
+  generation: Generation,
+  wait: RunWait = noWait
+): PiProposalRunner {
+  return new PiProposalRunner({
+    handlers: {
+      startRun: generation.startRun,
+      getRun: new GetRunHandler({ runs: generation.runs }),
+    },
+    wait,
+  })
 }
 
 export type Library = {

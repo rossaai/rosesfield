@@ -18,7 +18,7 @@ import { ConversationNotFoundError } from "#domain/error/conversation-not-found.
 import { ProposalSettledError } from "#domain/error/proposal-settled.error"
 import { proposalIdFormat } from "#domain/proposal.id"
 import { FakeAgentHarness } from "../fake/fake-agent-harness"
-import { generationFor, readAll } from "../harness"
+import { generationFor, proposalRunnerFor, readAll } from "../harness"
 import { imageApp, start } from "../sample"
 
 const conversation: Conversation = {
@@ -48,7 +48,7 @@ async function agentWithProposal(): Promise<FakeAgentHarness> {
       appId: imageApp().id,
       request: { inputs: { prompt: "a rose" }, count: 1, aspectRatio: "1:1" },
       status: "proposed",
-      runId: null,
+      runIds: [],
     },
     body: { inputs: { prompt: "a rose" } },
   })
@@ -77,7 +77,7 @@ describe("the agent's handlers", () => {
       }),
       new AcceptProposalHandler({
         agent: null,
-        startRun: generation.startRun,
+        runner: proposalRunnerFor(generation),
       }).execute(ref),
       new SkipProposalHandler({ agent: null }).execute(ref),
       new ListAgentModelsHandler({ agent: null }).execute(),
@@ -183,23 +183,23 @@ describe("the agent's handlers", () => {
     const generation = generationFor([imageApp()])
     const accept = new AcceptProposalHandler({
       agent,
-      startRun: generation.startRun,
+      runner: proposalRunnerFor(generation),
     })
 
     const first = await accept.execute(ref)
     const again = await accept.execute(ref)
 
+    const [run] = first.runs
+    expect(first.runs).toHaveLength(1)
     expect(first.proposal).toMatchObject({
       status: "accepted",
-      runId: first.run.id,
+      runIds: [run?.id],
     })
-    expect(first.run.inputs).toMatchObject({ prompt: "a rose" })
-    expect(again.run.id).toBe(first.run.id)
+    expect(run?.inputs).toMatchObject({ prompt: "a rose" })
+    expect(again.runs.map((one) => one.id)).toEqual([run?.id])
     expect(generation.runs.count).toBe(1)
-    expect(generation.jobs.enqueued).toEqual([first.run.id])
-    expect(agent.decisions).toEqual([
-      { status: "accepted", runId: first.run.id },
-    ])
+    expect(generation.jobs.enqueued).toEqual([run?.id])
+    expect(agent.decisions).toEqual([{ status: "accepted", runIds: [run?.id] }])
   })
 
   it("skip a proposal without starting a run, and refuse to accept it after", async () => {
@@ -212,7 +212,7 @@ describe("the agent's handlers", () => {
     await expect(
       new AcceptProposalHandler({
         agent,
-        startRun: generation.startRun,
+        runner: proposalRunnerFor(generation),
       }).execute(ref)
     ).rejects.toThrow(ProposalSettledError)
     expect(generation.runs.count).toBe(0)
@@ -223,14 +223,14 @@ describe("the agent's handlers", () => {
     const generation = generationFor([imageApp()])
     await new AcceptProposalHandler({
       agent,
-      startRun: generation.startRun,
+      runner: proposalRunnerFor(generation),
     }).execute(ref)
 
     await expect(
       new SkipProposalHandler({ agent }).execute(ref)
     ).rejects.toThrow(ProposalSettledError)
     expect(agent.decisions).toEqual([
-      { status: "accepted", runId: generation.jobs.enqueued[0] },
+      { status: "accepted", runIds: generation.jobs.enqueued },
     ])
   })
 })

@@ -25,7 +25,7 @@ const proposal = {
   appId: "image",
   request: { inputs: { prompt: "A red bicycle" }, count: 2, aspectRatio: null },
   status: "proposed",
-  runId: null,
+  runIds: [],
 }
 
 const run = {
@@ -138,10 +138,13 @@ describe("the conversation calls", () => {
     expect(sent[0]?.init?.body).toBe(JSON.stringify({ title: "Bicycles" }))
   })
 
-  it("accepts a proposal and reads the run it started", async () => {
+  it("accepts a proposal and reads the runs it started", async () => {
     const sent = answerWith(
       Response.json(
-        { proposal: { ...proposal, status: "accepted", runId }, run },
+        {
+          proposal: { ...proposal, status: "accepted", runIds: [runId] },
+          runs: [run],
+        },
         { status: 202 }
       )
     )
@@ -150,7 +153,8 @@ describe("the conversation calls", () => {
       `/api/agent/conversations/${conversationId}/proposals/${proposalId}/accept`
     )
     expect(accepted.proposal.status).toBe("accepted")
-    expect(accepted.run.id).toBe(runId)
+    expect(accepted.proposal.runIds).toEqual([runId])
+    expect(accepted.runs.map((one) => one.id)).toEqual([runId])
   })
 
   it("turns an answer it cannot read into a refusal", async () => {
