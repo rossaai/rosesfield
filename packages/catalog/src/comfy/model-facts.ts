@@ -81,6 +81,7 @@ const labMark = z
 const markMissing = z.strictObject({
   searched: z.array(z.string().min(1).max(80)).min(1),
   ground: hex,
+  ink: z.enum(["000000", "FFFFFF"]),
   source: z.url(),
 })
 

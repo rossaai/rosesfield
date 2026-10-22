@@ -28,22 +28,6 @@ export function markColourOf(mark: { hex: string; hexDark: string }): string {
   return `var(--if-light, #${mark.hex}) var(--if-dark, #${mark.hexDark})`
 }
 
-function luminanceOf(hex: string): number {
-  const channels = [0, 2, 4].map((at) => {
-    const value = Number.parseInt(hex.slice(at, at + 2), 16) / 255
-    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
-  })
-  const [red = 0, green = 0, blue = 0] = channels
-  return 0.2126 * red + 0.7152 * green + 0.0722 * blue
-}
-
-export function letterInkOf(ground: string): "#000000" | "#FFFFFF" {
-  const light = luminanceOf(ground)
-  const onBlack = (light + 0.05) / 0.05
-  const onWhite = 1.05 / (light + 0.05)
-  return onBlack >= onWhite ? "#000000" : "#FFFFFF"
-}
-
 function groundStyleOf(ground: string): CSSProperties {
   return { backgroundColor: `#${ground}` }
 }
@@ -83,21 +67,21 @@ function MarkPath({
 export function LabMark({ maker }: { maker: string }): ReactElement {
   const mark = labMarkOf(maker)
   if (mark === null) {
-    const ground = letterGroundOf(maker)?.ground
+    const letter = letterGroundOf(maker)
     return (
       <span
         aria-hidden="true"
         data-slot="lab-mark"
         data-maker={maker}
         data-mark="letter"
-        {...(ground === undefined ? {} : { "data-ground": "mark" })}
+        {...(letter === null ? {} : { "data-ground": "mark" })}
         className="flex size-4 shrink-0 items-center justify-center rounded-dense font-medium text-legal leading-none"
-        {...(ground === undefined
+        {...(letter === null
           ? {}
           : {
               style: {
-                backgroundColor: `#${ground}`,
-                color: letterInkOf(ground),
+                backgroundColor: `#${letter.ground}`,
+                color: `#${letter.ink}`,
               },
             })}
       >

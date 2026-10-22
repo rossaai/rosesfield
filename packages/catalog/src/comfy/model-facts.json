@@ -372,7 +372,8 @@
         "resemble.ai press and brand pages"
       ],
       "ground": "32D2A1",
-      "source": "https://cdn.prod.website-files.com/69bc3de63d285e297507b3ef/69c27862161f0ac544733a65_resemble-ai-logo.svg"
+      "source": "https://cdn.prod.website-files.com/69bc3de63d285e297507b3ef/69c27862161f0ac544733a65_resemble-ai-logo.svg",
+      "ink": "000000"
     },
     "Higgsfield": {
       "searched": [
@@ -381,7 +382,8 @@
         "higgsfield.ai press and brand pages"
       ],
       "ground": "D1FE17",
-      "source": "https://higgsfield.ai/"
+      "source": "https://higgsfield.ai/",
+      "ink": "000000"
     },
     "HeyGen": {
       "searched": [
@@ -390,7 +392,8 @@
         "HeyGen brand kit, a raster symbol"
       ],
       "ground": "00C3FF",
-      "source": "https://www.heygen.com/brand-kit"
+      "source": "https://www.heygen.com/brand-kit",
+      "ink": "000000"
     },
     "Moonvalley": {
       "searched": [
@@ -399,7 +402,8 @@
         "moonvalley.com press and brand pages"
       ],
       "ground": "DBDAC6",
-      "source": "https://moonvalley.com/"
+      "source": "https://moonvalley.com/",
+      "ink": "000000"
     },
     "FlashVSR authors": {
       "searched": [
@@ -408,7 +412,8 @@
         "the FlashVSR project page"
       ],
       "ground": "7C5CFF",
-      "source": "https://zhuang2002.github.io/FlashVSR/"
+      "source": "https://zhuang2002.github.io/FlashVSR/",
+      "ink": "000000"
     },
     "BiRefNet authors": {
       "searched": [
@@ -417,7 +422,8 @@
         "the BiRefNet repository and demo"
       ],
       "ground": "800080",
-      "source": "https://huggingface.co/spaces/ZhengPeng7/BiRefNet_demo"
+      "source": "https://huggingface.co/spaces/ZhengPeng7/BiRefNet_demo",
+      "ink": "FFFFFF"
     }
   },
   "models": {

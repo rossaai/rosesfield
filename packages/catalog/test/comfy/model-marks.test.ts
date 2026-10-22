@@ -23,6 +23,19 @@ function withLab(lab: string, data: ModelFactsFile): ModelFactsFile {
   }
 }
 
+function luminanceOf(hex: string): number {
+  const [red = 0, green = 0, blue = 0] = [0, 2, 4].map((at) => {
+    const value = Number.parseInt(hex.slice(at, at + 2), 16) / 255
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+}
+
+function inkOn(ground: string): string {
+  const light = luminanceOf(ground)
+  return (light + 0.05) / 0.05 >= 1.05 / (light + 0.05) ? "000000" : "FFFFFF"
+}
+
 describe("the lab marks", () => {
   it("hold a mark, or a row naming every set searched, for each lab the catalog names", () => {
     expect(unmarkedLabsOf()).toEqual([])
@@ -43,6 +56,7 @@ describe("the lab marks", () => {
         "Planted Lab": {
           searched: ["Simple Icons 16.35.0"],
           ground: "7C5CFF",
+          ink: "000000" as const,
           source: "https://example.com/",
         },
       },
@@ -60,6 +74,7 @@ describe("the lab marks", () => {
         grey: false,
       })
       expect(row.source, lab).toMatch(/^https:\/\//)
+      expect({ lab, ink: row.ink }).toEqual({ lab, ink: inkOn(row.ground) })
     }
   })
 
@@ -67,6 +82,7 @@ describe("the lab marks", () => {
     const { ground: _, ...colourless } = {
       searched: ["Simple Icons 16.35.0", "LobeHub Icons 1.95.1"],
       ground: "7C5CFF",
+      ink: "000000",
       source: "https://example.com/",
     }
     expect(

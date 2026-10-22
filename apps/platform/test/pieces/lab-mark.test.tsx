@@ -1,11 +1,6 @@
 import { cleanup, render } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
-import {
-  LabMark,
-  labInitialOf,
-  labMarkOf,
-  letterInkOf,
-} from "@/pieces/lab-mark"
+import { LabMark, labInitialOf, labMarkOf } from "@/pieces/lab-mark"
 
 afterEach(cleanup)
 
@@ -113,7 +108,5 @@ describe("the colour of a lab's mark", () => {
     expect(
       birefnet.querySelector<HTMLElement>("[data-slot='lab-mark']")?.style.color
     ).toBe("rgb(255, 255, 255)")
-    expect(letterInkOf("DBDAC6")).toBe("#000000")
-    expect(letterInkOf("800080")).toBe("#FFFFFF")
   })
 })
