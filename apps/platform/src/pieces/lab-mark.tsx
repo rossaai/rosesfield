@@ -12,6 +12,8 @@ const markGrounds: Readonly<Record<Scheme, string>> = {
 
 const leastContrast = 1.5
 
+export const weightsMaker = "Hugging Face"
+
 export function labInitialOf(maker: string): string {
   const letter = /[\p{L}\p{N}]/u.exec(maker)?.[0]
   return letter === undefined ? "" : letter.toLocaleUpperCase()

@@ -47,6 +47,7 @@ const labMark = z.strictObject({
     .string()
     .max(8000)
     .regex(/^[Mm][-+.,\deMmLlHhVvCcSsQqTtAaZz\s]*$/),
+  source: z.url().optional(),
 })
 
 export const modelFactsFile = z.strictObject({

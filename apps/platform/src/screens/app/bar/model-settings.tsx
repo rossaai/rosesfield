@@ -15,7 +15,11 @@ import { chipChoiceText } from "@/screens/app/bar/setting-chip"
 import { textOf } from "@/screens/app/fields/field-props"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
-import { modelLineOf, weightsLinkOf } from "@/screens/app/hosted/catalog-picker"
+import {
+  modelLineOf,
+  openWeightsBadge,
+  weightsLinkOf,
+} from "@/screens/app/hosted/catalog-picker"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
 import type { AppScreenState } from "@/screens/app/use-app-screen"
 
@@ -118,10 +122,7 @@ function choiceRow(option: ChoiceInput["options"][number]): ModelPickerRow {
     line: modelLineOf(lineKeyOf(factsIdOf(option.value)), maker),
     tags: [],
     mark: <LabMark maker={maker} />,
-    badges:
-      href === null
-        ? []
-        : [{ kind: "openWeights", label: t("model.tag.openWeights"), href }],
+    badges: href === null ? [] : [openWeightsBadge(href)],
   }
 }
 

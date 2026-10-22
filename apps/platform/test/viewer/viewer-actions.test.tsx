@@ -169,6 +169,9 @@ describe("the viewer's actions", () => {
     expect(
       comfy.querySelector("[data-slot=lab-mark]")?.getAttribute("data-maker")
     ).toBe("Comfy")
+    expect(
+      comfy.querySelector("[data-slot=lab-mark]")?.getAttribute("data-mark")
+    ).toBe("comfy")
     expect(buttons.some(isColoured)).toBe(false)
   })
 

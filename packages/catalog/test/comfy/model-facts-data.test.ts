@@ -54,6 +54,8 @@ const sample: ModelFactsFile = modelFactsFile.parse({
   },
 })
 
+const markedServices: readonly string[] = ["Comfy", "Hugging Face"]
+
 describe("the model facts the catalog holds", () => {
   it("gives a model its lab, its release, its rank with the board and the date, its price third and its weights page", () => {
     expect(factsOf("maker/open", "text-to-image", sample)).toEqual({
@@ -241,7 +243,7 @@ describe("the model facts the catalog holds", () => {
     }
   })
 
-  it("draws each lab's mark from one public icon set as path data, for labs a model row names", () => {
+  it("draws each lab's mark from one public icon set as path data, for labs a model row names and the two services a screen marks", () => {
     expect(modelFactsData.markSet).toMatchObject({
       name: "Simple Icons",
       licence: "CC0-1.0",
@@ -251,9 +253,25 @@ describe("the model facts the catalog holds", () => {
     )
     const marked = Object.keys(modelFactsData.marks)
     expect(marked.length).toBeGreaterThan(5)
-    expect(marked.filter((lab) => !labs.has(lab))).toEqual([])
+    expect(
+      marked.filter((lab) => !(labs.has(lab) || markedServices.includes(lab)))
+    ).toEqual([])
     expect(modelFactsData.marks.Google?.slug).toBe("google")
     expect(Object.hasOwn(modelFactsData.marks, "Black Forest Labs")).toBe(false)
+  })
+
+  it("takes a mark the icon set lacks from its owner's own published file, and names that file", () => {
+    expect(modelFactsData.marks.Comfy).toMatchObject({
+      slug: "comfy",
+      hex: "F2FF59",
+      source: "https://comfy.org/icons/logomark.svg",
+    })
+    expect(
+      Object.entries(modelFactsData.marks)
+        .filter(([, mark]) => mark.source !== undefined)
+        .map(([name]) => name)
+    ).toEqual(["Comfy"])
+    expect(modelFactsData.marks["Hugging Face"]?.hex).toBe("FFD21E")
   })
 
   it("colours each lab's mark with the hex its icon set publishes beside it", () => {

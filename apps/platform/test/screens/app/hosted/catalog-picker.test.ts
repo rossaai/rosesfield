@@ -16,6 +16,8 @@ import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 
 const openWeights = [{ kind: "open-weights" as const }]
 
+const huggingFaceYellow = "#FFD21E"
+
 describe("the Open weights badge of a model row", () => {
   it("opens the model's weights page on Hugging Face", () => {
     expect(badgesOf("z-image-turbo", openWeights)).toEqual([
@@ -23,6 +25,7 @@ describe("the Open weights badge of a model row", () => {
         kind: "openWeights",
         label: t("model.tag.openWeights"),
         href: "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo",
+        markColour: huggingFaceYellow,
       },
     ])
   })
@@ -37,7 +40,11 @@ describe("the Open weights badge of a model row", () => {
     expect(weightsLinkOf("sam-3-1")).toBeNull()
     expect(weightsLinkOf("minimax/minimax-h3")).toBeNull()
     expect(badgesOf("minimax/minimax-h3", openWeights)).toEqual([
-      { kind: "openWeights", label: t("model.tag.openWeights") },
+      {
+        kind: "openWeights",
+        label: t("model.tag.openWeights"),
+        markColour: huggingFaceYellow,
+      },
     ])
   })
 
@@ -95,6 +102,7 @@ describe("the fact badges of a model row", () => {
         kind: "openWeights",
         label: t("model.tag.openWeights"),
         href: "https://huggingface.co/maker/open",
+        markColour: huggingFaceYellow,
       },
     ])
   })

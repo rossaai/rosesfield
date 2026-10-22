@@ -27,7 +27,7 @@ import {
 } from "lucide-react"
 import { type ReactElement, type ReactNode, useState } from "react"
 import { type CopyValues, hasCatalogText, t, tCatalog } from "@/copy/t"
-import { LabMark } from "@/pieces/lab-mark"
+import { LabMark, labMarkOf, weightsMaker } from "@/pieces/lab-mark"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import { modelSections } from "@/screens/app/hosted/model-sections"
@@ -153,14 +153,17 @@ function weightsBadgeOf(
   if (!tags.some((tag) => tag.kind === "open-weights")) {
     return []
   }
-  const href = facts?.weights ?? weightsLinkOf(id)
-  return [
-    {
-      kind: "openWeights",
-      label: t("model.tag.openWeights"),
-      ...(href === null ? {} : { href }),
-    },
-  ]
+  return [openWeightsBadge(facts?.weights ?? weightsLinkOf(id))]
+}
+
+export function openWeightsBadge(href: string | null): ModelBadge {
+  const mark = labMarkOf(weightsMaker)
+  return {
+    kind: "openWeights",
+    label: t("model.tag.openWeights"),
+    ...(href === null ? {} : { href }),
+    ...(mark === null ? {} : { markColour: `#${mark.hex}` }),
+  }
 }
 
 export function badgesOf(

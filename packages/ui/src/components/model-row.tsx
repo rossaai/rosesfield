@@ -16,6 +16,7 @@ type ModelBadge = {
   label: string
   href?: string
   mark?: ReactNode
+  markColour?: string
 }
 
 type ModelPrice = {
@@ -41,6 +42,9 @@ function RowBadge({ badge }: { badge: ModelBadge }): ReactElement {
       kind={badge.kind}
       {...(badge.href === undefined ? {} : { href: badge.href })}
       {...(badge.mark === undefined ? {} : { mark: badge.mark })}
+      {...(badge.markColour === undefined
+        ? {}
+        : { markColour: badge.markColour })}
     >
       {badge.label}
     </Badge>
