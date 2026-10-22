@@ -27,8 +27,8 @@ type WatchRunHandlerOptions = {
   ) => Promise<number | null>
   keep: (run: Run) => Promise<Run>
   isOverdue: (run: Run) => boolean
-  mark: (runId: RunId) => void
-  unmark: (runId: RunId) => void
+  mark: (runId: RunId) => Promise<void>
+  unmark: (runId: RunId) => Promise<void>
   renewMs: number
 }
 
@@ -89,14 +89,14 @@ export class WatchRunHandler {
     }
     const stop = new AbortController()
     const signal = AbortSignal.any([input.signal, stop.signal])
-    this.options.mark(runId)
+    await this.options.mark(runId)
     const renewing = this.renew(runId, { ...input, signal })
     try {
       yield* this.follow(found, sent, { ...input, signal })
     } finally {
       stop.abort()
       await renewing
-      this.options.unmark(runId)
+      await this.options.unmark(runId)
     }
   }
 
@@ -104,7 +104,7 @@ export class WatchRunHandler {
     while (!input.signal.aborted) {
       await input.pause(this.options.renewMs, input.signal)
       if (!input.signal.aborted) {
-        this.options.mark(runId)
+        await this.options.mark(runId)
       }
     }
   }

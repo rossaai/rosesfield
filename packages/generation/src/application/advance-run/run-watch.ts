@@ -1,6 +1,9 @@
 import type { Clock, RunId } from "@rosesfield/kernel"
 import { isPastLimit } from "#application/advance-run/run-timing"
-import { WatchMarks } from "#application/advance-run/watch-marks"
+import {
+  type WatchMarkPort,
+  WatchMarks,
+} from "#application/advance-run/watch-marks"
 import {
   type WatchedRun,
   WatchRunHandler,
@@ -19,6 +22,7 @@ export type RunWatchPorts = {
   engines: readonly GenerationEngine[]
   clock: Clock
   marks: WatchMarks
+  shared: WatchMarkPort | null
   advance: (
     runId: RunId,
     known: ReadonlyMap<string, EngineStatus>
@@ -26,7 +30,7 @@ export type RunWatchPorts = {
 }
 
 export function runWatchOf(ports: RunWatchPorts): WatchRunHandler {
-  const { apps, runs, engines, clock, marks } = ports
+  const { apps, runs, engines, clock, marks, shared } = ports
   const find = async (runId: RunId): Promise<WatchedRun | null> => {
     const run = await runs.get(runId)
     if (run === null) {
@@ -48,8 +52,14 @@ export function runWatchOf(ports: RunWatchPorts): WatchRunHandler {
     advance: ports.advance,
     keep: (run) => runs.save(run),
     isOverdue,
-    mark: (runId) => marks.mark(runId, clock.now()),
-    unmark: (runId) => marks.clear(runId),
+    mark: async (runId) => {
+      marks.mark(runId, clock.now())
+      await shared?.mark(runId).catch(() => undefined)
+    },
+    unmark: async (runId) => {
+      marks.clear(runId)
+      await shared?.clear(runId).catch(() => undefined)
+    },
     renewMs: WatchMarks.renewMs,
   })
 }

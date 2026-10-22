@@ -28,7 +28,10 @@ import {
   wakeMs,
 } from "#application/advance-run/run-timing"
 import { runWatchOf } from "#application/advance-run/run-watch"
-import { WatchMarks } from "#application/advance-run/watch-marks"
+import {
+  type WatchMarkPort,
+  WatchMarks,
+} from "#application/advance-run/watch-marks"
 import type {
   RunFrame,
   WatchRunInput,
@@ -66,6 +69,7 @@ type AdvanceRunHandlerOptions = {
   assets: RunAssets
   clock: Clock
   prices?: PriceBook
+  watchMarks?: WatchMarkPort
 }
 
 type Watch = {
@@ -89,6 +93,7 @@ export class AdvanceRunHandler {
   private readonly clock: Clock
   private readonly prices: PriceBook | null
   private readonly marks = new WatchMarks()
+  private readonly watchMarks: WatchMarkPort | null
 
   constructor(options: AdvanceRunHandlerOptions) {
     this.apps = options.apps
@@ -97,6 +102,7 @@ export class AdvanceRunHandler {
     this.assets = options.assets
     this.clock = options.clock
     this.prices = options.prices ?? null
+    this.watchMarks = options.watchMarks ?? null
   }
 
   watch(input: WatchRunInput): AsyncGenerator<RunFrame, void, void> {
@@ -106,6 +112,7 @@ export class AdvanceRunHandler {
       engines: this.engines,
       clock: this.clock,
       marks: this.marks,
+      shared: this.watchMarks,
       advance: async (runId, known) =>
         (await this.execute({ runId, known, source: "stream" })).nextWakeMs,
     }).execute(input)

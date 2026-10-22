@@ -16,6 +16,7 @@ import {
   RepeatRunHandler,
   type RunRepository,
   StartRunHandler,
+  type WatchMarkPort,
 } from "@rosesfield/generation"
 import type { Clock } from "@rosesfield/kernel"
 import {
@@ -45,6 +46,7 @@ export type HandlerPorts = {
   engines: readonly GenerationEngine[]
   clock: Clock
   prices?: PriceBook
+  watchMarks?: WatchMarkPort
 }
 
 function pricesOf(ports: HandlerPorts): { prices?: PriceBook } {
@@ -120,6 +122,7 @@ export function buildAdvance(
     assets: runAssetsOf(library),
     clock: ports.clock,
     ...pricesOf(ports),
+    ...(ports.watchMarks === undefined ? {} : { watchMarks: ports.watchMarks }),
   })
 }
 

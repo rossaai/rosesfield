@@ -1,5 +1,10 @@
 import type { RunId } from "@rosesfield/kernel"
 
+export type WatchMarkPort = {
+  mark: (runId: RunId) => Promise<void>
+  clear: (runId: RunId) => Promise<void>
+}
+
 export class WatchMarks {
   static readonly markMs = 60_000
   static readonly renewMs = 30_000

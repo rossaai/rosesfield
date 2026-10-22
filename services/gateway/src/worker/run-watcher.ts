@@ -1,6 +1,7 @@
-import { AdvanceRunHandler } from "@rosesfield/generation"
+import { AdvanceRunHandler, type WatchMarkPort } from "@rosesfield/generation"
 import { type RunId, runIdFormat } from "@rosesfield/kernel"
 import { buildAdvance, buildLibrary } from "#build-handlers"
+import { RunWatcherUnavailableError } from "#error/run-watcher-unavailable.error"
 import {
   ownerPorts,
   type WorkerBindings,
@@ -13,6 +14,7 @@ export class RunWatcher implements DurableObject {
   static readonly errorDelayMs = 30_000
   static readonly watchUrl = "https://run-watcher/watch"
   static readonly markUrl = "https://run-watcher/mark"
+  static readonly clearUrl = "https://run-watcher/clear"
 
   private readonly state: DurableObjectState
   private readonly env: WorkerBindings
@@ -22,13 +24,24 @@ export class RunWatcher implements DurableObject {
     this.env = env
   }
 
-  static async mark(
+  static marksOf(watchers: DurableObjectNamespace): WatchMarkPort {
+    return {
+      mark: (runId) => RunWatcher.send(watchers, RunWatcher.markUrl, runId),
+      clear: (runId) => RunWatcher.send(watchers, RunWatcher.clearUrl, runId),
+    }
+  }
+
+  private static async send(
     watchers: DurableObjectNamespace,
+    url: string,
     runId: RunId
   ): Promise<void> {
-    await watchers
+    const response = await watchers
       .getByName(runId)
-      .fetch(RunWatcher.markUrl, { method: "POST", body: runId })
+      .fetch(url, { method: "POST", body: runId })
+    if (!response.ok) {
+      throw new RunWatcherUnavailableError({ status: response.status })
+    }
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -38,6 +51,13 @@ export class RunWatcher implements DurableObject {
         RunWatcher.watchedKey,
         Date.now() + AdvanceRunHandler.watchMarkMs
       )
+      return new Response(null, { status: 204 })
+    }
+    if (request.url === RunWatcher.clearUrl) {
+      await this.state.storage.delete(RunWatcher.watchedKey)
+      if ((await this.state.storage.get(RunWatcher.runKey)) !== undefined) {
+        await this.state.storage.setAlarm(Date.now())
+      }
       return new Response(null, { status: 204 })
     }
     await this.state.storage.put(RunWatcher.runKey, runId)
@@ -52,15 +72,14 @@ export class RunWatcher implements DurableObject {
     if (!runIdFormat.is(stored)) {
       return
     }
-    const ports = ownerPorts(workerParts(this.env))
-    const now = ports.clock.now().getTime()
     const watched: unknown = await this.state.storage.get(
       RunWatcher.watchedKey
     )
-    if (typeof watched === "number" && watched > now) {
+    if (typeof watched === "number" && watched > Date.now()) {
       await this.state.storage.setAlarm(watched)
       return
     }
+    const ports = ownerPorts(workerParts(this.env))
     const advance = buildAdvance(ports, buildLibrary(ports))
     const next = await nextWake(advance, stored)
     if (next === null) {
