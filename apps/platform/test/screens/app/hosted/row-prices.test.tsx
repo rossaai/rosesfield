@@ -11,6 +11,7 @@ import {
   waitFor,
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { t } from "@/copy/t"
 import type { FormValues } from "@/screens/app/app-form"
 import { ChoiceModelPicker } from "@/screens/app/bar/model-settings"
 import { AgentModelPicker } from "@/screens/app/hosted/agent-model-picker"
@@ -135,7 +136,18 @@ describe("the price a row shows", () => {
       ],
     })
     expect([...prices.keys()]).toEqual(["alpha/one", "open-picture"])
-    expect(prices.get("open-picture")?.amount).toBe("2")
+    expect(prices.get("open-picture")).toEqual({
+      amount: "2",
+      name: t("run.price.measured", { amount: "2" }),
+    })
+    expect(prices.get("alpha/one")?.name).toBe(
+      t("run.price.credits", { amount: "6.33" })
+    )
+    expect(
+      rowPricesOf(["alpha/one"], {
+        prices: [{ source: "estimate", credits: 60.35 }],
+      }).get("alpha/one")?.name
+    ).toBe(t("run.price.estimated", { amount: "60.35" }))
   })
 })
 

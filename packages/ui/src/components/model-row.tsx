@@ -114,6 +114,7 @@ function RowPrice({
   return (
     <span
       data-slot="model-row-price"
+      title={price?.name}
       data-state={
         price !== undefined ? "known" : isPricing ? "pending" : "none"
       }
