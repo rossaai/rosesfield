@@ -3,7 +3,7 @@ import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import type { EngineOutput } from "#domain/generation-engine.port"
 import { FakeGenerationEngine } from "../fake/fake-generation-engine"
 import { imageApp, pngBytes } from "../sample"
-import { harnessFor, startImage } from "./harness"
+import { type Harness, harnessFor, startImage } from "./harness"
 
 const image: EngineOutput = {
   kind: "image",
@@ -15,6 +15,30 @@ const image: EngineOutput = {
 }
 
 const gone = () => new EngineUnavailableError({ cause: "download 503" })
+
+function failStoreWrites(harness: Harness, times: number): void {
+  const keep = harness.assets.keep.bind(harness.assets)
+  let failures = times
+  harness.assets.keep = async (output) => {
+    if (failures > 0) {
+      failures -= 1
+      throw new Error("The asset store answered 502 to the write")
+    }
+    return keep(output)
+  }
+}
+
+async function storeRun(failures: number) {
+  const engine = new FakeGenerationEngine({ outputs: [image] })
+  const harness = harnessFor({
+    apps: [imageApp(undefined, { timeoutSeconds: 60, maxRetries: 2 })],
+    engines: [engine],
+  })
+  failStoreWrites(harness, failures)
+  const runId = await startImage(harness)
+  await harness.advance.execute({ runId })
+  return { harness, runId }
+}
 
 describe("AdvanceRunHandler collecting a finished run", () => {
   it("retries a failed download past the retry maximum and the time limit, then keeps the outputs", async () => {
@@ -78,5 +102,45 @@ describe("AdvanceRunHandler collecting a finished run", () => {
     })
     expect(harness.assets.kept).toHaveLength(1)
     expect(engine.reads).toEqual([])
+  })
+
+  it("keeps a succeeded job collecting when the asset store refuses a write, then keeps its output", async () => {
+    const { harness, runId } = await storeRun(1)
+    expect(await harness.advance.execute({ runId })).toEqual({
+      nextWakeMs: 30_000,
+    })
+    expect((await harness.get.execute({ runId })).run.status).toBe("running")
+    harness.clock.advance(120_000)
+    expect(await harness.advance.execute({ runId })).toEqual({
+      nextWakeMs: null,
+    })
+    const { run } = await harness.get.execute({ runId })
+    expect(run.status).toBe("done")
+    expect(run.outputs).toHaveLength(1)
+    expect(harness.logged).toEqual([])
+  })
+
+  it("keeps the output of a succeeded job at once when the asset store answers", async () => {
+    const { harness, runId } = await storeRun(0)
+    expect(await harness.advance.execute({ runId })).toEqual({
+      nextWakeMs: null,
+    })
+    const { run } = await harness.get.execute({ runId })
+    expect(run.status).toBe("done")
+    expect(harness.assets.kept).toHaveLength(1)
+  })
+
+  it("fails the run past the retry maximum of store writes and logs the store's error with the run id", async () => {
+    const { harness, runId } = await storeRun(3)
+    await harness.advance.execute({ runId })
+    await harness.advance.execute({ runId })
+    expect(await harness.advance.execute({ runId })).toEqual({
+      nextWakeMs: null,
+    })
+    const { run } = await harness.get.execute({ runId })
+    expect(run.failure?.code).toBe("RUN_FAILED")
+    expect(harness.logged).toEqual([
+      `Run ${runId} failed: Error: The asset store answered 502 to the write`,
+    ])
   })
 })

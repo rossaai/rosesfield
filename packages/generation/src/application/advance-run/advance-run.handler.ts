@@ -1,10 +1,5 @@
 import type { AppDefinition, Cost } from "@rosesfield/contract"
-import {
-  type Clock,
-  ProjectError,
-  RateLimitedError,
-  type RunId,
-} from "@rosesfield/kernel"
+import { type Clock, ProjectError, type RunId } from "@rosesfield/kernel"
 import {
   cancelAll,
   keepSteps,
@@ -23,7 +18,9 @@ import {
   isClaimHeld,
   isPastLimit,
   isPastResultKept,
+  isRetryable,
   isSubmitDue,
+  mayKeepLater,
   pollMs,
   wakeMs,
 } from "#application/advance-run/run-timing"
@@ -58,6 +55,7 @@ type AdvanceRunHandlerOptions = {
   assets: RunAssets
   clock: Clock
   prices?: PriceBook
+  log?: (line: string) => void
 }
 
 type Watch = {
@@ -68,12 +66,6 @@ type Watch = {
 type Collected = "kept" | "empty" | "retry"
 
 const stop: AdvanceRunOutput = { nextWakeMs: null }
-
-function isRetryable(error: unknown): boolean {
-  return (
-    error instanceof RateLimitedError || error instanceof EngineUnavailableError
-  )
-}
 
 function noOutput(): RunFailedError {
   return new RunFailedError({ cause: "no output of the app's kind" })
@@ -86,6 +78,7 @@ export class AdvanceRunHandler {
   private readonly assets: RunAssets
   private readonly clock: Clock
   private readonly prices: PriceBook | null
+  private readonly log: (line: string) => void
 
   constructor(options: AdvanceRunHandlerOptions) {
     this.apps = options.apps
@@ -94,6 +87,7 @@ export class AdvanceRunHandler {
     this.assets = options.assets
     this.clock = options.clock
     this.prices = options.prices ?? null
+    this.log = options.log ?? console.error
   }
 
   async execute(input: AdvanceRunInput): Promise<AdvanceRunOutput> {
@@ -286,7 +280,17 @@ export class AdvanceRunHandler {
       run.collecting({ index: polled.job.index, now: this.now() })
       return "retry"
     }
-    const kept = await keepOutputs(run, watch.app, outputs, this.assets)
+    let kept: KeptOutputs | null
+    try {
+      kept = await keepOutputs(run, watch.app, outputs, this.assets)
+    } catch (error) {
+      if (!mayKeepLater(run, watch.app, error, this.now())) {
+        throw error
+      }
+      run.collecting({ index: polled.job.index, now: this.now() })
+      run.retried()
+      return "retry"
+    }
     if (kept === null) {
       return "empty"
     }
@@ -373,6 +377,8 @@ export class AdvanceRunHandler {
       await this.runs.save(run)
       return { nextWakeMs: backoffMs(run.attempts, failure) }
     }
+    const raw = error instanceof Error ? error : new Error(String(error))
+    this.log(`Run ${run.id} failed: ${raw.name}: ${raw.message}`)
     return this.failWith(run, failure)
   }
 
