@@ -43,6 +43,7 @@ describe("a dropdown menu's ground", () => {
     const menu = await panel()
     expect(menu.dataset.depth).toBe("nested")
     expect(menu.className).toContain("dark:[--layer:var(--surface)]")
+    expect(menu.className).toContain("dark:backdrop-filter-none!")
   })
 
   it("stands on the layer itself over a page", async () => {
