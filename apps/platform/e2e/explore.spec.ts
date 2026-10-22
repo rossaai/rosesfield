@@ -46,7 +46,7 @@ test("Explore opens with one banner link over one apps row that steps sideways",
   await expect(page.getByText("Open Image", { exact: true })).toHaveCount(1)
 })
 
-test("on a phone Explore drops the banner and keeps the one apps row", async ({
+test("on a phone Explore shows the banner as a compact card without its portraits, over the one apps row", async ({
   page,
 }, info) => {
   test.skip(
@@ -54,7 +54,14 @@ test("on a phone Explore drops the banner and keeps the one apps row", async ({
     "the phone layout shows under 768 px"
   )
   const apps = await openExplore(page)
-  await expect(page.locator("[data-slot=hero]")).toBeHidden()
+  const banner = page.locator("[data-slot=hero]")
+  await expect(banner).toBeVisible()
+  await expect(banner).toContainText("Make images and video on your own key")
+  for (const portrait of await banner
+    .locator("[data-slot=hero-portrait]")
+    .all()) {
+    await expect(portrait).toBeHidden()
+  }
   const first = await boxOf(apps.locator("[data-slot=explore-app]").first())
   expect(Math.round(first.x)).toBe(16)
   const pageWidth = await page.evaluate(
@@ -79,7 +86,7 @@ test("an app in the row opens its app without reloading the page", async ({
   )
 })
 
-test("Explore shows every held still once in a masonry with no share and no key", async ({
+test("Explore shows every held still and clip once in a masonry packed into the shortest stack, with no share and no key, each clip looping muted", async ({
   page,
 }, info) => {
   await openExplore(page)
@@ -87,13 +94,16 @@ test("Explore shows every held still once in a masonry with no share and no key"
   await expect(feed).toBeVisible()
   await expect(page.getByText("No result is here yet")).toHaveCount(0)
   const tiles = feed.locator("[data-slot=media]")
-  expect(await tiles.count()).toBe(13)
-  await expect(feed.locator("video")).toHaveCount(0)
+  expect(await tiles.count()).toBe(20)
+  const clips = feed.locator("video")
+  await expect(clips).toHaveCount(2)
+  for (const clip of await clips.all()) {
+    await expect(clip).toHaveJSProperty("muted", true)
+    await expect(clip).toHaveJSProperty("loop", true)
+  }
   const sources = await feed
-    .locator("img")
-    .evaluateAll((images) =>
-      images.map((one) => (one as HTMLImageElement).getAttribute("src"))
-    )
+    .locator("img, video")
+    .evaluateAll((media) => media.map((one) => one.getAttribute("src")))
   expect(new Set(sources).size).toBe(sources.length)
   const images = feed.locator("img")
   await expect(images.first()).toHaveJSProperty("complete", true)
@@ -101,19 +111,18 @@ test("Explore shows every held still once in a masonry with no share and no key"
     await images.first().evaluate((one: HTMLImageElement) => one.naturalWidth)
   ).toBeGreaterThan(0)
   if (info.project.name === "desktop") {
-    const ends = await feed
+    const stacks = await feed
       .locator("[data-slot=media-feed-stack]")
-      .evaluateAll((stacks) =>
-        stacks.map(
-          (stack) => stack.lastElementChild?.getBoundingClientRect().bottom ?? 0
-        )
+      .evaluateAll((all) =>
+        all.map((stack) => {
+          const last = stack.lastElementChild?.getBoundingClientRect()
+          return { top: last?.top ?? 0, bottom: last?.bottom ?? 0 }
+        })
       )
-    const shortest = Math.min(
-      ...(await tiles.evaluateAll((all) =>
-        all.map((one) => one.getBoundingClientRect().height)
-      ))
-    )
-    expect(Math.max(...ends) - Math.min(...ends)).toBeLessThan(shortest)
+    const lowestEnd = Math.min(...stacks.map((stack) => stack.bottom))
+    for (const stack of stacks) {
+      expect(stack.top).toBeLessThanOrEqual(lowestEnd + 8)
+    }
   }
 })
 

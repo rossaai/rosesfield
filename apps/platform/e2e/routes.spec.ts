@@ -139,9 +139,7 @@ test("every route renders without console errors", async ({ page }) => {
   }
 })
 
-test("the first visit opens Explore at / with its banner", async ({
-  page,
-}, info) => {
+test("the first visit opens Explore at / with its banner", async ({ page }) => {
   const errors = watchErrors(page)
   await page.goto("/")
   await expect(
@@ -149,12 +147,8 @@ test("the first visit opens Explore at / with its banner", async ({
   ).toBeVisible()
   expect(new URL(page.url()).pathname).toBe("/")
   const banner = page.locator("[data-slot=hero]")
-  if (info.project.name === "phone") {
-    await expect(banner).toBeHidden()
-  } else {
-    await expect(banner).toBeVisible()
-    await expect(banner).toContainText("Make images and video on your own key")
-  }
+  await expect(banner).toBeVisible()
+  await expect(banner).toContainText("Make images and video on your own key")
   expect(errors).toEqual([])
 })
 
