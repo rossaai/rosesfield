@@ -47,15 +47,22 @@ describe("MediaFeed", () => {
     }
   })
 
-  it("lays a masonry of 6 columns, 1 on a phone, 8 px apart in a 1024 px window", () => {
-    const feed = renderFeed("masonry")
+  it("lays a masonry of 6 column stacks, 1 column on a phone, 8 px apart in a 1024 px window", () => {
+    const feed = renderFeed("masonry", "media", 8)
     expect(classesOf(feed, "items")).toEqual(
       expect.arrayContaining([
         "columns-1",
-        "@regular:columns-6",
         "gap-2",
-        "*:mb-2",
+        "@regular:grid",
+        "@regular:grid-cols-6",
       ])
+    )
+    const stacks = feed.querySelectorAll("[data-slot='media-feed-stack']")
+    expect(stacks).toHaveLength(6)
+    expect(stacks[0]?.textContent).toBe("item 0item 6")
+    expect(stacks[5]?.textContent).toBe("item 5")
+    expect(stacks[0]?.className.split(" ")).toEqual(
+      expect.arrayContaining(["contents", "*:mb-2", "@regular:gap-2"])
     )
     expect(classesOf(feed, "window")).toEqual(
       expect.arrayContaining([
@@ -148,6 +155,18 @@ describe("MediaFeed", () => {
     expect([...stacks].map((stack) => stack.childElementCount)).toEqual([
       3, 3, 2, 2, 2,
     ])
+  })
+
+  it("shows every item, with no window, when no View all leads to the rest", () => {
+    render(
+      <MediaFeed label="Examples">
+        <span>item</span>
+      </MediaFeed>
+    )
+    const feed = screen.getByRole("region", { name: "Examples" })
+    const window = feed.querySelector("[data-slot='media-feed-window']")
+    expect(window?.className).not.toContain("max-h-")
+    expect(feed.querySelector("[data-slot='media-feed-fade']")).toBeNull()
   })
 
   it("ends in a 208 px fade with View all 48 px tall, 36 px above its foot", () => {

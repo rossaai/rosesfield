@@ -12,18 +12,23 @@ import {
 
 type MediaFeedContent = "media" | "presets"
 
-type StackForm = "row" | "presets"
+type StackForm = "masonry" | "row" | "presets"
 
 const stackForms = {
+  masonry: {
+    count: 6,
+    grid: "columns-1 @regular:grid-cols-6",
+    stack: "",
+  },
   row: {
     count: 4,
-    grid: "@regular:grid-cols-4 @regular:gap-0",
+    grid: "columns-2 @regular:grid-cols-4 @regular:gap-0",
     stack:
       "@regular:pe-2 [&_[data-slot=media]>[data-slot=media-tile]]:origin-bottom [&_[data-slot=media]>[data-slot=media-tile]]:scale-125",
   },
   presets: {
     count: 5,
-    grid: "@regular:grid-cols-[repeat(5,minmax(0,--spacing(68.5)))] @regular:justify-center @regular:gap-x-2",
+    grid: "columns-2 @regular:grid-cols-[repeat(5,minmax(0,--spacing(68.5)))] @regular:justify-center @regular:gap-x-2",
     stack: "",
   },
 } satisfies Record<StackForm, { count: number; grid: string; stack: string }>
@@ -47,7 +52,7 @@ function FeedStacks({
     <div
       data-slot="media-feed-items"
       data-stacks={form}
-      className={cn("columns-2 gap-2 @regular:grid @regular:items-start", grid)}
+      className={cn("gap-2 @regular:grid @regular:items-start", grid)}
     >
       {stacksOf(children, count).map((items, column) => (
         <div
@@ -141,21 +146,12 @@ function MediaFeed({
         className={cn(
           "relative overflow-hidden",
           interaction.ringRoom,
-          windows[layout]
+          viewAll === undefined ? null : windows[layout]
         )}
       >
-        {content === "presets" || layout === "row" ? (
-          <FeedStacks form={content === "presets" ? "presets" : "row"}>
-            {children}
-          </FeedStacks>
-        ) : (
-          <div
-            data-slot="media-feed-items"
-            className="columns-1 gap-2 *:mb-2 *:break-inside-avoid @regular:columns-6"
-          >
-            {children}
-          </div>
-        )}
+        <FeedStacks form={content === "presets" ? "presets" : layout}>
+          {children}
+        </FeedStacks>
         {viewAll === undefined ? null : (
           <div
             data-slot="media-feed-fade"
