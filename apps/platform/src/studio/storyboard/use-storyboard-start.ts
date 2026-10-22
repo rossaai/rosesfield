@@ -201,11 +201,7 @@ export function useStoryboardStart(
     },
     isPending: start.isPending,
     error: start.error,
-    price: isDemo
-      ? t("run.price.demo")
-      : amount === null
-        ? t("run.price.unknown")
-        : "",
+    price: isDemo ? t("run.price.demo") : "",
     priceValue: amount,
     priceName: amount === null ? null : t("run.generate.priced", { amount }),
   }

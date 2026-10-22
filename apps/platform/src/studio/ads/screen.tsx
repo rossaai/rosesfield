@@ -200,7 +200,7 @@ function Bar({
           />
         }
         chips={barChips(app, state, placement)}
-        price={state.start.price}
+        {...(state.start.price === "" ? {} : { price: state.start.price })}
         {...submitPriceOf(state.start)}
         busy={state.start.isPending || tray.isUploading}
       />
@@ -229,7 +229,6 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   return (
     <BarFrame
       app={app}
-      hasRuns={state.hasRuns}
       onUseInputs={state.useInputs}
       sheet={sheet}
       phone="dock"

@@ -110,11 +110,7 @@ export function priceLabelsOf(
 ): Pick<StartRun, "price" | "priceValue" | "priceName"> {
   const amount = credits === null || credits <= 0 ? null : creditsText(credits)
   return {
-    price: isDemo
-      ? t("run.price.demo")
-      : amount === null
-        ? t("run.price.unknown")
-        : "",
+    price: isDemo ? t("run.price.demo") : "",
     priceValue: amount,
     priceName: amount === null ? null : t("run.generate.priced", { amount }),
   }

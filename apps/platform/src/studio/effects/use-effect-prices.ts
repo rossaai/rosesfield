@@ -7,6 +7,7 @@ import { priceQuery } from "@/screens/app/hosted/model-catalog-query"
 export type EffectPrices = {
   isDemo: boolean
   creditsOf: (effect: string) => number | null
+  isMeasured: (effect: string) => boolean
 }
 
 const effectInput = "effect"
@@ -32,13 +33,16 @@ export function useEffectPrices(
       enabled: !isDemo && settings.data !== undefined,
     })),
   })
+  const priceOf = (effect: string) =>
+    answers[effects.indexOf(effect)]?.data?.price
   return {
     isDemo,
     creditsOf: (effect) => {
-      const price = answers[effects.indexOf(effect)]?.data?.price
+      const price = priceOf(effect)
       return price === undefined || price.source === "unknown"
         ? null
         : price.credits
     },
+    isMeasured: (effect) => priceOf(effect)?.source === "measured",
   }
 }

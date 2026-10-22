@@ -48,12 +48,12 @@ export function creditsText(credits: number): string {
   return t("run.price.credits", { amount: formatNumber(credits) })
 }
 
-export function planPriceOf(run: Run, plan: RemakePlan): string {
+export function planPriceOf(run: Run, plan: RemakePlan): string | null {
   if (run.origin === "demo") {
     return t("run.price.demo")
   }
   const credits = planCreditsOf(plan)
-  return credits === null ? t("run.price.unknown") : creditsText(credits)
+  return credits === null ? null : creditsText(credits)
 }
 
 export function cameraMoveName(move: string): string | null {

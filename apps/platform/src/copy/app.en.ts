@@ -28,6 +28,8 @@ export const appCopy = {
   "run.price.demo": "No cost on the demo engine",
   "run.price.credits": "{amount} Comfy credits",
   "run.price.estimated": "{amount} Comfy credits, estimated",
+  "run.price.kept":
+    "{amount} Comfy credits, measured on the {resolution} example",
   "run.generate.priced": "Generate, {amount} Comfy credits",
   "run.made": "Made in {duration}",
   "run.caption.made": "made in {duration}",

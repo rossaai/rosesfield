@@ -13,17 +13,17 @@ describe("the price Generate shows", () => {
     })
   })
 
-  it("says Price unknown for a model with no price", () => {
+  it("shows Generate alone for a model with no price, and never Price unknown", () => {
     expect(priceLabelsOf(null, false)).toEqual({
-      price: t("run.price.unknown"),
+      price: "",
       priceValue: null,
       priceName: null,
     })
   })
 
-  it("says Price unknown for a price of 0, and never 0", () => {
+  it("shows Generate alone for a price of 0, and never 0", () => {
     expect(priceLabelsOf(0, false)).toEqual({
-      price: t("run.price.unknown"),
+      price: "",
       priceValue: null,
       priceName: null,
     })

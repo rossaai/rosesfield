@@ -19,6 +19,7 @@ export function PlanView({
   run: Run
   plan: RemakePlan
 }): ReactElement {
+  const price = planPriceOf(run, plan)
   return (
     <section
       data-slot="remake-plan"
@@ -28,7 +29,9 @@ export function PlanView({
         <h3 className="text-body font-medium text-ink">
           {tCatalog("remake.plan.title")}
         </h3>
-        <p className="text-caption text-ink-muted">{planPriceOf(run, plan)}</p>
+        {price === null ? null : (
+          <p className="text-caption text-ink-muted">{price}</p>
+        )}
       </div>
       <ShotTimeline shots={plan.shots} />
       <ol className="flex flex-col gap-s1_5">

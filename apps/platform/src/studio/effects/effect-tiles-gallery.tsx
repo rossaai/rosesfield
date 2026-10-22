@@ -50,6 +50,7 @@ const measured: Readonly<Record<string, number>> = {
 const prices: EffectPrices = {
   isDemo: false,
   creditsOf: (effect) => measured[effect] ?? null,
+  isMeasured: (effect) => measured[effect] !== undefined,
 }
 
 function Tiles({ width }: { width: number }): ReactElement {
