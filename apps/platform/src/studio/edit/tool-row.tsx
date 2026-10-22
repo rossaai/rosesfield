@@ -1,4 +1,4 @@
-import { TabsList, TabsTrigger, Tabs } from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { useNavigate } from "@tanstack/react-router"
 import type { ReactElement } from "react"
 import { appName } from "@/catalog/app-facts"

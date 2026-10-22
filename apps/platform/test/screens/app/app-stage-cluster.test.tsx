@@ -49,29 +49,36 @@ describe("the app stage's header", () => {
   it.each([
     ["an app with a column", video, "column" as const],
     ["a prompt app", image, "bar" as const],
-  ])("holds History and How it works, then one View menu and no filter, on %s", (_, app, kind) => {
-    render(
-      withClient(
-        <AppStage app={app} kind={kind}>
-          <div />
-        </AppStage>,
-        app,
-        [doneRun(app.id)]
+  ])(
+    "holds History and How it works, then one View menu and no filter, on %s",
+    (_, app, kind) => {
+      render(
+        withClient(
+          <AppStage app={app} kind={kind}>
+            <div />
+          </AppStage>,
+          app,
+          [doneRun(app.id)]
+        )
       )
-    )
-    const head = document.querySelector("[data-slot='canvas-head']")
-    const tabs = head?.querySelector("[data-slot='tabs-list']")
-    expect(
-      [...(tabs?.querySelectorAll("[data-slot='tabs-trigger']") ?? [])].map(
-        (tab) => tab.textContent
+      const head = document.querySelector("[data-slot='canvas-head']")
+      const tabs = head?.querySelector("[data-slot='tabs-list']")
+      expect(
+        [...(tabs?.querySelectorAll("[data-slot='tabs-trigger']") ?? [])].map(
+          (tab) => tab.textContent
+        )
+      ).toEqual([t("app.tab.history"), t("app.tab.how")])
+      const cluster = document.querySelector("[data-slot='canvas-cluster']")
+      expect(cluster?.className.split(" ")).not.toContain("invisible")
+      expect(cluster?.querySelectorAll("[data-slot='view-menu']")).toHaveLength(
+        1
       )
-    ).toEqual([t("app.tab.history"), t("app.tab.how")])
-    const cluster = document.querySelector("[data-slot='canvas-cluster']")
-    expect(cluster?.className.split(" ")).not.toContain("invisible")
-    expect(cluster?.querySelectorAll("[data-slot='view-menu']")).toHaveLength(1)
-    expect(head?.querySelector("input[type='range']")).toBeNull()
-    expect(screen.queryByRole("button", { name: t("library.filter") })).toBeNull()
-  })
+      expect(head?.querySelector("input[type='range']")).toBeNull()
+      expect(
+        screen.queryByRole("button", { name: t("library.filter") })
+      ).toBeNull()
+    }
+  )
 
   it("sets the run feed's column count from the View size, two at rest", async () => {
     render(
@@ -91,9 +98,13 @@ describe("the app stage's header", () => {
     )
     expect(slider).not.toBeNull()
     fireEvent.keyDown(slider ?? document.body, { key: "ArrowRight" })
-    await waitFor(() => expect(columnsShown()).toBe("repeat(1, minmax(0, 1fr))"))
+    await waitFor(() =>
+      expect(columnsShown()).toBe("repeat(1, minmax(0, 1fr))")
+    )
     fireEvent.keyDown(slider ?? document.body, { key: "Home" })
-    await waitFor(() => expect(columnsShown()).toBe("repeat(4, minmax(0, 1fr))"))
+    await waitFor(() =>
+      expect(columnsShown()).toBe("repeat(4, minmax(0, 1fr))")
+    )
   })
 
   it("keeps one column and puts View in the tabs row on a phone", () => {
@@ -111,7 +122,9 @@ describe("the app stage's header", () => {
     const row = document.querySelector("[data-slot='app-stage-tabs']")
     expect(row?.querySelector("[data-slot='view-menu']")).not.toBeNull()
     expect(
-      document.querySelector("[data-slot='canvas-cluster'] [data-slot='view-menu']")
+      document.querySelector(
+        "[data-slot='canvas-cluster'] [data-slot='view-menu']"
+      )
     ).toBeNull()
   })
 

@@ -1,4 +1,4 @@
-import { ViewMenu, type ViewLayout } from "@rosesfield/ui/components/view-menu"
+import { type ViewLayout, ViewMenu } from "@rosesfield/ui/components/view-menu"
 import {
   createContext,
   type ReactElement,

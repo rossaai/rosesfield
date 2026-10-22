@@ -1,5 +1,5 @@
 import type { InputDefinition } from "@rosesfield/contract"
-import { TabsList, TabsTrigger, Tabs } from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import type { ReactElement } from "react"
 import { isAssetInput } from "@/catalog/app-facts"
 import { tCatalog } from "@/copy/t"

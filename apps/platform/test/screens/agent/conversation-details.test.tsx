@@ -41,9 +41,7 @@ describe("the conversation's header title", () => {
       )
     ).toBeNull()
     expect(shownTitleOf(transcriptOf(null, [first]))).toBeNull()
-    expect(
-      shownTitleOf(transcriptOf("Make a red bicycle", [first]))
-    ).toBeNull()
+    expect(shownTitleOf(transcriptOf("Make a red bicycle", [first]))).toBeNull()
   })
 
   it("shows the name the person gave it", () => {

@@ -1,6 +1,6 @@
 import type { AppListing } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
-import { TabsList, TabsTrigger, Tabs } from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { type ReactElement, useEffect, useRef, useState } from "react"
 import { formatDuration } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"

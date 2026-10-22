@@ -158,9 +158,9 @@ describe("How it works, one composition for every app", () => {
     expect(grid?.className).toContain("@regular:grid-cols-3")
     expect(grid?.className).toContain("grid-cols-1")
     const titles = [...document.querySelectorAll("[data-slot=how-step] h3")]
-    expect(titles.every((title) => title.className.includes("font-medium"))).toBe(
-      true
-    )
+    expect(
+      titles.every((title) => title.className.includes("font-medium"))
+    ).toBe(true)
     expect(titles.every((title) => title.className.includes("text-body"))).toBe(
       true
     )

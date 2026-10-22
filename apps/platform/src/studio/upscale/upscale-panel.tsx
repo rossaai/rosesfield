@@ -1,5 +1,5 @@
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
-import { TabsList, TabsTrigger, Tabs } from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { type ReactElement, useEffect, useRef, useState } from "react"
 import { t, tCatalog } from "@/copy/t"
 import { assetLimitsText } from "@/pieces/asset-limits"

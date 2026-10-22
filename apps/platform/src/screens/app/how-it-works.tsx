@@ -140,7 +140,9 @@ function SettingsMedia({
     const input = app.inputs.find((one) => one.name === row.key)
     return (
       input === undefined ||
-      (!isAssetInput(input) && input.type !== "prompt" && input.name !== "model")
+      (!isAssetInput(input) &&
+        input.type !== "prompt" &&
+        input.name !== "model")
     )
   })
   return (

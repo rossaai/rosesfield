@@ -333,7 +333,9 @@ test.describe("an app on a phone", () => {
       await page.goto(`/apps/${appId}`)
       const region = page.getByRole("region", { name: "Your results" })
       await expect(region).toBeVisible()
-      await expect(page.locator('[data-slot="composer"][data-bar="prompt"]')).toHaveCount(0)
+      await expect(
+        page.locator('[data-slot="composer"][data-bar="prompt"]')
+      ).toHaveCount(0)
       await expect(page.locator('[data-slot="composer"]')).toHaveCount(0)
       const edge = await boxOf(region.getByRole("tablist").first())
       expect(edge.x).toBe(16)

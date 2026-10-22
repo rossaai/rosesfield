@@ -103,23 +103,23 @@ function StageTabs({
       className="flex min-w-0 flex-1 items-center justify-between gap-s2"
     >
       <Tabs
-          value={stage.tab}
-          onValueChange={(next) => {
-            if (isStageTab(next)) {
-              stage.choose(next)
-            }
-          }}
-        >
-          <TabsList aria-label={t("app.canvas.label")}>
-            <TabsTrigger value="history">
-              <FolderIcon aria-hidden="true" />
-              {t("app.tab.history")}
-            </TabsTrigger>
-            <TabsTrigger value="how">
-              <BookOpenIcon aria-hidden="true" />
-              {t("app.tab.how")}
-            </TabsTrigger>
-          </TabsList>
+        value={stage.tab}
+        onValueChange={(next) => {
+          if (isStageTab(next)) {
+            stage.choose(next)
+          }
+        }}
+      >
+        <TabsList aria-label={t("app.canvas.label")}>
+          <TabsTrigger value="history">
+            <FolderIcon aria-hidden="true" />
+            {t("app.tab.history")}
+          </TabsTrigger>
+          <TabsTrigger value="how">
+            <BookOpenIcon aria-hidden="true" />
+            {t("app.tab.how")}
+          </TabsTrigger>
+        </TabsList>
       </Tabs>
       {view}
     </div>
