@@ -53,7 +53,8 @@ export function SettingsRowBody({
         data-slot="settings-row-lead"
         className={cn(
           "flex size-glyph shrink-0 items-center justify-center [&_svg]:glyph",
-          tone === "danger" ? "text-bug-text" : "text-ink-muted"
+          tone === "danger" ? "text-bug-text" : "text-ink-muted",
+          motion.tint
         )}
       >
         {icon}
@@ -62,7 +63,8 @@ export function SettingsRowBody({
         data-slot="settings-row-label"
         className={cn(
           "min-w-16 flex-1",
-          tone === "danger" ? "text-bug-text" : "text-ink"
+          tone === "danger" ? "text-bug-text" : "text-ink",
+          motion.tint
         )}
       >
         {label}
