@@ -123,7 +123,7 @@ describe("a finished Remake run in the canvas", () => {
     }
     expect(
       [...document.querySelectorAll("video")].map((video) => video.src)
-    ).toEqual([`blob:${editId}`, `blob:${outputId}`])
+    ).toEqual([`blob:${editId}#t=0.1`, `blob:${outputId}#t=0.1`])
   })
 
   it("opens each side in the viewer, where the output's sound plays", async () => {

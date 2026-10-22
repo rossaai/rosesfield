@@ -112,7 +112,7 @@ describe("a run before its plan shows", () => {
       name: t("run.working", { index: 1, count: 1 }),
     })
     const row = tile.closest<HTMLElement>("[data-slot=output-row]")
-    expect(row?.style.maxWidth).toMatch(/\* 0\.5625\)$/)
+    expect(row?.style.maxWidth).toMatch(/\* 0\.5625\)\)$/)
     expect(document.querySelector("[data-slot='remake-plan']")).toBeNull()
   })
 })
