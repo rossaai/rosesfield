@@ -30,7 +30,7 @@ function renderBar() {
 }
 
 describe("TabBar", () => {
-  it("sticks to the foot under the width switch, five equal columns in one 48 px row", () => {
+  it("sticks to the foot under the width switch, five equal columns in one row at the header height, the record's tabHeight", () => {
     renderBar()
     const bar = screen.getByRole("navigation", { name: "Areas" })
     expect(bar.className.split(" ")).toEqual(
@@ -38,7 +38,7 @@ describe("TabBar", () => {
     )
     const row = bar.querySelector("[data-slot='app-bar-tabs']")
     expect(row?.className.split(" ")).toEqual(
-      expect.arrayContaining(["grid-cols-5", "h-12"])
+      expect.arrayContaining(["grid-cols-5", "h-header"])
     )
   })
 

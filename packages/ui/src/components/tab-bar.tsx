@@ -28,7 +28,7 @@ function TabBar({
     >
       <div
         data-slot="app-bar-tabs"
-        className="grid h-12 grid-cols-5 items-center"
+        className="grid h-header grid-cols-5 items-center"
       >
         {children}
       </div>
@@ -58,7 +58,7 @@ function TabBarLink({
       ...props,
       "aria-current": current ? "page" : undefined,
       className: cn(
-        "flex h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-cell p-1.5 text-caption text-ink-muted no-underline hover:text-ink aria-[current=page]:text-ink [&_svg]:size-5",
+        "flex h-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-cell p-1.5 text-caption text-ink-muted no-underline hover:text-ink aria-[current=page]:text-ink [&_svg]:size-5",
         motion.press,
         interaction.ring,
         className
