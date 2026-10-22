@@ -7,9 +7,13 @@ import { settingsQuery } from "@/api/queries"
 import { bodyOf, defaultsOf, type FormValues } from "@/screens/app/app-form"
 import { textOf } from "@/screens/app/fields/field-props"
 import {
+  appMediaFieldsOf,
+  type HeldMedia,
+  heldMediaOf,
   hostedBody,
   hostedDefaults,
   modelInputName,
+  placedMedia,
   settingsFor,
 } from "@/screens/app/hosted/hosted-form"
 import {
@@ -73,6 +77,42 @@ function useRowPricing(app: AppListing, values: FormValues): RowPricing {
   )
 }
 
+function useChoose(
+  app: AppListing,
+  form: AppForm,
+  models: readonly CatalogModel[],
+  chosen: CatalogModel | null
+): (id: string) => void {
+  const { values, setForm } = form
+  const held = useRef<HeldMedia>({})
+  return useCallback(
+    (id: string) => {
+      const next = models.find((model) => model.id === id)
+      const kept = values.inputs
+      const output = app.output.kind
+      const media = heldMediaOf(
+        chosen?.form ?? appMediaFieldsOf(app),
+        kept,
+        held.current,
+        output
+      )
+      held.current = media
+      const inputs =
+        next?.form === null || next?.form === undefined
+          ? { ...defaultsOf(app).inputs, prompt: kept.prompt }
+          : hostedDefaults(next.form, kept)
+      const placed = placedMedia(
+        next?.form ?? appMediaFieldsOf(app),
+        media,
+        kept,
+        output
+      )
+      setForm({ inputs: { ...inputs, ...placed, [modelInputName]: id } })
+    },
+    [app, chosen, models, values.inputs, setForm]
+  )
+}
+
 export function useHostedModel(
   app: AppListing,
   form: AppForm,
@@ -89,19 +129,8 @@ export function useHostedModel(
   const defaultModel = query.data?.defaultModel ?? taskApp?.defaultModel ?? null
   const chosenId = textOf(form.values.inputs[modelInputName]) || defaultModel
   const chosen = models.find((model) => model.id === chosenId) ?? null
-  const { values, setForm } = form
-  const choose = useCallback(
-    (id: string) => {
-      const next = models.find((model) => model.id === id)
-      const kept = values.inputs
-      const inputs =
-        next?.form === null || next?.form === undefined
-          ? { ...defaultsOf(app).inputs, prompt: kept.prompt }
-          : hostedDefaults(next.form, kept)
-      setForm({ inputs: { ...inputs, [modelInputName]: id } })
-    },
-    [app, models, values.inputs, setForm]
-  )
+  const { values } = form
+  const choose = useChoose(app, form, models, chosen)
   useOpenOnDefault(
     app,
     form,
