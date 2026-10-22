@@ -127,6 +127,15 @@ describe("ModelPicker", () => {
         expect.arrayContaining(["text-caption", "text-ink-muted"])
       )
       expect(fact.className).not.toMatch(/bug|cem|hor|nop/)
+      expect(fact.className).not.toMatch(/truncate/)
+      expect(fact.className.split(" ")).toContain("shrink-0")
+      expect(line?.className.split(" ")).toEqual(
+        expect.arrayContaining([
+          "flex-wrap",
+          "overflow-hidden",
+          "h-(--text-caption--line-height)",
+        ])
+      )
     }
   })
 
@@ -365,6 +374,9 @@ describe("ModelRow's price slot", () => {
         expect(figure?.firstElementChild?.tagName.toLowerCase()).toBe("svg")
       } else {
         expect(slot?.childElementCount).toBe(0)
+        expect(slot?.className.split(" ")).toEqual(
+          expect.arrayContaining(["data-[state=none]:w-0"])
+        )
       }
       expect(container.textContent).not.toMatch(/unknown/i)
       cleanup()

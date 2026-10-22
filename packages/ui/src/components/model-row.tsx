@@ -88,13 +88,13 @@ function RowFacts({ row }: { row: ModelPickerRow }): ReactNode {
   return (
     <span
       data-slot="model-row-capabilities"
-      className="flex min-w-0 items-center gap-s2 overflow-hidden text-caption whitespace-nowrap text-ink-muted"
+      className="flex h-(--text-caption--line-height) min-w-0 flex-wrap items-center gap-x-s2 overflow-hidden text-caption whitespace-nowrap text-ink-muted"
     >
       {facts.map((fact) => (
         <span
           key={fact.label}
           data-slot="model-row-capability"
-          className="inline-flex min-w-0 shrink-0 items-center gap-s1 last:shrink last:truncate [&_svg]:glyph-small"
+          className="inline-flex h-(--text-caption--line-height) shrink-0 items-center gap-s1 [&_svg]:glyph-small"
         >
           {fact.icon}
           {fact.label}
@@ -117,7 +117,7 @@ function RowPrice({
       data-state={
         price !== undefined ? "known" : isPricing ? "pending" : "none"
       }
-      className="ms-s2 flex w-[calc(2*var(--spacing-s8))] shrink-0 items-center justify-end text-caption text-ink-muted"
+      className="ms-s2 flex w-[calc(2*var(--spacing-s8))] shrink-0 items-center justify-end text-caption text-ink-muted data-[state=none]:ms-0 data-[state=none]:w-0"
     >
       {price !== undefined ? (
         <CreditPrice amount={price.amount} />
