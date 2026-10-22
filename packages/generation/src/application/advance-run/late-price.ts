@@ -6,8 +6,8 @@ import type {
   RunFrame,
   WatchRunInput,
 } from "#application/watch-run/watch-run.handler"
-import { RunConflictError } from "#domain/error/run-conflict.error"
 import type { AppCatalog } from "#domain/app-catalog.port"
+import { RunConflictError } from "#domain/error/run-conflict.error"
 import type { GenerationEngine } from "#domain/generation-engine.port"
 import type { PriceBook } from "#domain/price-book.port"
 import { Run } from "#domain/run"

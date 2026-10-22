@@ -166,32 +166,22 @@
       "indexes": {
         "runs_idempotency_key_unique": {
           "name": "runs_idempotency_key_unique",
-          "columns": [
-            "idempotency_key"
-          ],
+          "columns": ["idempotency_key"],
           "isUnique": true
         },
         "runs_created_at_id": {
           "name": "runs_created_at_id",
-          "columns": [
-            "created_at",
-            "id"
-          ],
+          "columns": ["created_at", "id"],
           "isUnique": false
         },
         "runs_app_id_created_at": {
           "name": "runs_app_id_created_at",
-          "columns": [
-            "app_id",
-            "created_at"
-          ],
+          "columns": ["app_id", "created_at"],
           "isUnique": false
         },
         "runs_status": {
           "name": "runs_status",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         }
       },
@@ -236,10 +226,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "measured_prices_model_settings_pk": {
-          "columns": [
-            "model",
-            "settings"
-          ],
+          "columns": ["model", "settings"],
           "name": "measured_prices_model_settings_pk"
         }
       },

@@ -10,6 +10,7 @@ import { DemoGenerationEngine } from "#infrastructure/demo-generation-engine"
 import { RouterCatalog } from "#infrastructure/router/router-catalog"
 import type { Timer } from "#infrastructure/timer-job-runner"
 import { start } from "../sample"
+import { pictureModel, queueStatus, requestId } from "./fixtures/comfy-router"
 import {
   cloudUrl,
   comfyV2,
@@ -17,7 +18,6 @@ import {
   runningJob,
   succeededJob,
 } from "./fixtures/comfy-v2"
-import { pictureModel, queueStatus, requestId } from "./fixtures/comfy-router"
 import { type Recording, ReplayFetch } from "./replay-fetch"
 
 type Frame = { event: string; data: Record<string, unknown> }

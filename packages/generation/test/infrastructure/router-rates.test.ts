@@ -309,12 +309,7 @@ describe("priceFromRates on a usage-credit rate", () => {
     ).toBeNull()
     const other = { ...meshy, model: "meshy/remesh" }
     expect(
-      priceFromRates(
-        [{ ...meshyRate, model: other.model }],
-        other,
-        chair,
-        "3d"
-      )
+      priceFromRates([{ ...meshyRate, model: other.model }], other, chair, "3d")
     ).toBeNull()
     expect(
       priceFromRates(

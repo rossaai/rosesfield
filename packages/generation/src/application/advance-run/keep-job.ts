@@ -70,10 +70,7 @@ export async function collectJob(
   const index = polled.job.index
   let outputs: EngineOutput[]
   try {
-    outputs = await watch.engine.listOutputs(
-      polled.ref,
-      run.toRecord().inputs
-    )
+    outputs = await watch.engine.listOutputs(polled.ref, run.toRecord().inputs)
   } catch (error) {
     if (!isRetryable(error)) {
       throw error

@@ -1,7 +1,6 @@
 import type { Clock } from "@rosesfield/kernel"
 import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import type { ModelForm } from "#domain/model-form"
-import { fieldsOf } from "#infrastructure/router/router-fields"
 import {
   type CatalogDatabase,
   type CatalogSource,
@@ -9,6 +8,7 @@ import {
   type KeptListing,
   type KeptSchema,
 } from "#infrastructure/router/drizzle-router-catalog-store"
+import { fieldsOf } from "#infrastructure/router/router-fields"
 import type { RouterHttp } from "#infrastructure/router/router-http"
 import {
   type OutputPath,
