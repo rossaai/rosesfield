@@ -20,7 +20,7 @@ function AlertDialogContent({
 }: DialogPrimitive.Popup.Props): ReactElement {
   return (
     <DialogPrimitive.Portal>
-      <DialogScrim />
+      <DialogScrim forceRender />
       <DialogPrimitive.Popup
         data-slot="alert-dialog-content"
         data-ground="layer"
