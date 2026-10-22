@@ -4,7 +4,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query"
-import { useNavigate } from "@tanstack/react-router"
+import { useNavigate, useRouter } from "@tanstack/react-router"
 import {
   acceptProposal,
   type Conversation,
@@ -59,9 +59,17 @@ export function useUpdateConversation(conversationId: string) {
   })
 }
 
+export function isConversationOpen(
+  pathname: string,
+  conversationId: string
+): boolean {
+  return pathname === `/agent/${conversationId}`
+}
+
 export function useDeleteConversation(conversationId: string) {
   const client = useQueryClient()
   const navigate = useNavigate()
+  const router = useRouter()
   return useMutation({
     mutationFn: () => deleteConversation(conversationId),
     onSuccess: async () => {
@@ -69,7 +77,9 @@ export function useDeleteConversation(conversationId: string) {
       client.setQueryData<Conversation[]>(conversationsQuery.queryKey, (list) =>
         list?.filter((one) => one.id !== conversationId)
       )
-      await navigate({ to: "/agent" })
+      if (isConversationOpen(router.state.location.pathname, conversationId)) {
+        await navigate({ to: "/agent" })
+      }
       client.removeQueries({ queryKey: transcriptKey(conversationId) })
     },
   })

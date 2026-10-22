@@ -67,5 +67,7 @@ test("a key the Router takes opens the composer with the agent's model to choose
   })
 
   await expect(page.getByRole("textbox", { name: "Message" })).toBeVisible()
-  await expect(page.getByRole("combobox", { name: /Model/ })).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: "Model Deepseek V4 Flash" })
+  ).toBeVisible()
 })
