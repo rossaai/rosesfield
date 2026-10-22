@@ -82,7 +82,7 @@ describe("choice input", () => {
     expect(issuePaths(withInputs([choice]))).toEqual(["inputs.0.default"])
   })
 
-  it("takes a hosted model's provider and name as a value, and refuses other marks", () => {
+  it("takes a hosted model's provider and name as a value, with a version dot, and refuses other marks", () => {
     const choice = (value: string): InputInput => ({
       type: "choice",
       name: "model",
@@ -91,6 +91,9 @@ describe("choice input", () => {
       default: value,
     })
     expect(issuePaths(withInputs([choice("bfl/flux-3-image")]))).toEqual([])
+    expect(issuePaths(withInputs([choice("meshy/meshy-7.1")]))).toEqual([])
+    expect(issuePaths(withInputs([choice("meshy/meshy-7..1")]))).not.toEqual([])
+    expect(issuePaths(withInputs([choice("meshy/.meshy")]))).not.toEqual([])
     expect(issuePaths(withInputs([choice("bfl/flux/3")]))).not.toEqual([])
     expect(issuePaths(withInputs([choice("Bfl/flux")]))).not.toEqual([])
   })

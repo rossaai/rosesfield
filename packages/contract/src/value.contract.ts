@@ -24,7 +24,7 @@ export const inputName = z
 
 export const choiceValue = z
   .string()
-  .regex(/^[a-z0-9]+(-[a-z0-9]+)*(\/[a-z0-9]+(-[a-z0-9]+)*)?$/)
+  .regex(/^[a-z0-9]+([.-][a-z0-9]+)*(\/[a-z0-9]+([.-][a-z0-9]+)*)?$/)
   .max(40)
 
 export const toggleValue = z.enum(["on", "off"])
