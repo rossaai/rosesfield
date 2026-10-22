@@ -1,8 +1,9 @@
 import { isHostedModelId, nameOf } from "@rosesfield/catalog/comfy"
+import { Badge } from "@rosesfield/ui/components/badge"
 import { Button } from "@rosesfield/ui/components/button"
 import { Card } from "@rosesfield/ui/components/card"
 import { useQuery } from "@tanstack/react-query"
-import type { ReactElement, ReactNode } from "react"
+import type { ReactElement } from "react"
 import type { Proposal } from "@/api/conversation-wire"
 import { settingsQuery } from "@/api/queries"
 import { appName } from "@/catalog/app-facts"
@@ -11,6 +12,7 @@ import { wordsForError } from "@/copy/error-words"
 import { formatAmount, formatNumber } from "@/copy/format"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
+import { idsOf } from "@/pieces/run/run-facts"
 import { RunInputs } from "@/pieces/run/run-inputs"
 import { useProposalActs } from "@/screens/agent/conversation-queries"
 import { RunCard } from "@/screens/agent/run-card"
@@ -22,11 +24,19 @@ type ProposalCardProps = {
   proposal: Proposal
 }
 
-type SettingRow = { key: string; label: string; value: ReactNode }
+type ProposalFact = { key: string; text: string }
+
+export type ProposalFacts = {
+  prompts: ProposalFact[]
+  assetIds: string[]
+  badges: ProposalFact[]
+}
 
 const modelInput = "model"
 
-function useProposalPrice(proposal: Proposal): string {
+const promptEnding = "prompt"
+
+function useProposalPrice(proposal: Proposal): string | null {
   const settings = useQuery(settingsQuery)
   const isDemo = settings.data?.engine.origin === "demo"
   const { request } = proposal
@@ -47,7 +57,7 @@ function useProposalPrice(proposal: Proposal): string {
     return t("run.price.demo")
   }
   if (found === undefined || found.source === "unknown") {
-    return t("run.price.unknown")
+    return null
   }
   const amount = formatAmount(found.credits)
   return found.source === "measured"
@@ -62,60 +72,77 @@ function settingLabel(name: string): string {
     : t("model.field.other", { name: wordsOfPath(name) })
 }
 
-function settingValue(value: unknown): ReactNode {
-  if (Array.isArray(value)) {
-    return (
-      <span className="flex flex-wrap gap-s2">
-        {value.map((assetId: unknown) => (
-          <span key={String(assetId)} className="size-thumb">
-            <AssetTile assetId={String(assetId)} shape="square" />
-          </span>
-        ))}
-      </span>
-    )
+function badgeOf(name: string, value: unknown): string {
+  if (typeof value === "number") {
+    return t("run.field", {
+      caption: settingLabel(name),
+      value: formatNumber(value),
+    })
   }
-  return (
-    <span className="whitespace-pre-wrap">
-      {typeof value === "number" ? formatNumber(value) : String(value)}
-    </span>
-  )
+  return String(value)
 }
 
-export function hostedRowsOf(proposal: Proposal): SettingRow[] | null {
+export function hostedFactsOf(proposal: Proposal): ProposalFacts | null {
   const { inputs } = proposal.request
   const model = inputs[modelInput]
   if (typeof model !== "string" || !isHostedModelId(model)) {
     return null
   }
-  const settings = Object.entries(inputs)
-    .filter(([name]) => name !== modelInput)
-    .map(([name, value]) => ({
-      key: name,
-      label: settingLabel(name),
-      value: settingValue(value),
-    }))
-  return [
-    { key: modelInput, label: t("model.picker.title"), value: nameOf(model) },
-    ...settings,
-  ]
+  const facts: ProposalFacts = {
+    prompts: [],
+    assetIds: [],
+    badges: [{ key: modelInput, text: nameOf(model) }],
+  }
+  for (const [name, value] of Object.entries(inputs)) {
+    if (name === modelInput || value === null || value === undefined) {
+      continue
+    }
+    if (Array.isArray(value)) {
+      facts.assetIds.push(...idsOf(value))
+    } else if (name.endsWith(promptEnding) && typeof value === "string") {
+      facts.prompts.push({ key: name, text: value.trim() })
+    } else {
+      facts.badges.push({ key: name, text: badgeOf(name, value) })
+    }
+  }
+  return facts
+}
+
+function ProposalFactsView({ facts }: { facts: ProposalFacts }): ReactElement {
+  return (
+    <div className="flex flex-col gap-s3">
+      {facts.prompts.map((prompt) => (
+        <p key={prompt.key} className="whitespace-pre-wrap text-body">
+          {prompt.text}
+        </p>
+      ))}
+      {facts.assetIds.length === 0 ? null : (
+        <span className="flex flex-wrap gap-s2">
+          {facts.assetIds.map((assetId) => (
+            <span key={assetId} className="size-thumb">
+              <AssetTile assetId={assetId} shape="square" />
+            </span>
+          ))}
+        </span>
+      )}
+      <span data-slot="proposal-badges" className="flex flex-wrap gap-s1">
+        {facts.badges.map((badge) => (
+          <Badge key={badge.key} className="ms-0">
+            {badge.text}
+          </Badge>
+        ))}
+      </span>
+    </div>
+  )
 }
 
 function ProposalSettings({ proposal }: { proposal: Proposal }): ReactElement {
-  const rows = hostedRowsOf(proposal)
-  if (rows === null) {
+  const facts = hostedFactsOf(proposal)
+  if (facts === null) {
     const app = findCatalogApp(proposal.appId)
     return <RunInputs app={app} run={{ ...proposal.request, seed: null }} />
   }
-  return (
-    <dl className="flex flex-col gap-s3">
-      {rows.map((row) => (
-        <div key={row.key} className="flex flex-col gap-s1">
-          <dt className="text-label text-ink-muted">{row.label}</dt>
-          <dd className="text-body">{row.value}</dd>
-        </div>
-      ))}
-    </dl>
-  )
+  return <ProposalFactsView facts={facts} />
 }
 
 export function ProposalCard(props: ProposalCardProps): ReactElement {
@@ -135,9 +162,11 @@ export function ProposalCard(props: ProposalCardProps): ReactElement {
         <h3 className="text-body font-medium">
           {app === null ? proposal.appId : appName(app)}
         </h3>
-        <span className="text-caption text-ink-muted">
-          {isSkipped ? t("agent.proposal.skipped") : price}
-        </span>
+        {isSkipped || price !== null ? (
+          <span className="text-caption text-ink-muted">
+            {isSkipped ? t("agent.proposal.skipped") : price}
+          </span>
+        ) : null}
       </div>
       <ProposalSettings proposal={proposal} />
       {failure === null ? null : (

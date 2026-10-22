@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { Proposal } from "@/api/conversation-wire"
-import { t } from "@/copy/t"
-import { hostedRowsOf } from "@/screens/agent/proposal-card"
+import { hostedFactsOf } from "@/screens/agent/proposal-card"
 
 function proposalWith(inputs: Proposal["request"]["inputs"]): Proposal {
   return {
@@ -14,31 +13,34 @@ function proposalWith(inputs: Proposal["request"]["inputs"]): Proposal {
 }
 
 describe("the settings a proposal names", () => {
-  it("names the model first, then each setting the agent chose", () => {
-    const rows = hostedRowsOf(
+  it("shows the prompt as text and the model first, then each other setting, as badges", () => {
+    const facts = hostedFactsOf(
       proposalWith({
         model: "maker/clip-3",
         prompt: "Zoom out from orbit",
         resolution: "720p",
+        count: 2,
       })
     )
 
-    expect(rows?.map((row) => row.key)).toEqual([
-      "model",
-      "prompt",
-      "resolution",
+    expect(facts?.prompts).toEqual([
+      { key: "prompt", text: "Zoom out from orbit" },
     ])
-    expect(rows?.[0]).toMatchObject({
-      label: t("model.picker.title"),
-      value: "Clip 3",
-    })
-    expect(rows?.[2]?.label).not.toBe("")
+    expect(facts?.badges.map((badge) => badge.key)).toEqual([
+      "model",
+      "resolution",
+      "count",
+    ])
+    expect(facts?.badges[0]?.text).toBe("Clip 3")
+    expect(facts?.badges[1]?.text).toBe("720p")
+    expect(facts?.badges[2]?.text).toContain("2")
+    expect(facts?.badges[2]?.text).not.toBe("2")
   })
 
   it("leaves a run of the app's own inputs to the app's rows", () => {
-    expect(hostedRowsOf(proposalWith({ prompt: "A rose" }))).toBeNull()
+    expect(hostedFactsOf(proposalWith({ prompt: "A rose" }))).toBeNull()
     expect(
-      hostedRowsOf(proposalWith({ model: "open-picture", prompt: "A rose" }))
+      hostedFactsOf(proposalWith({ model: "open-picture", prompt: "A rose" }))
     ).toBeNull()
   })
 })
