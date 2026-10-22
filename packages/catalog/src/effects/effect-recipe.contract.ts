@@ -88,9 +88,30 @@ export const soundBed = z
     path: ["loudness"],
   })
 
+const pageTitle = z
+  .string()
+  .min(1)
+  .max(80)
+  .regex(/^[^/\\]+$/, {
+    message: "A reference page is named by its title, never a path",
+  })
+
+export const referencePage = z.strictObject({
+  id: choiceValue,
+  title: pageTitle,
+})
+
+export const fitEdgeValues = ["crop"] as const
+
+export const photoFit = z.strictObject({
+  by: z.literal("area"),
+  edges: z.enum(fitEdgeValues),
+})
+
 export const effectDesign = z.strictObject({
-  unit: choiceValue,
-  family: z.literal("effects"),
+  unit: referencePage,
+  family: referencePage.extend({ id: z.literal("effects") }),
+  fit: photoFit,
   setPiece: plainLine,
   cuts: z.array(cutWindow).max(4),
   lastFrame: z.strictObject({
@@ -245,6 +266,10 @@ export const effectRecipe = z
       "A look that lands on the photo already guides its last frame with the photo, so it holds no subject",
     path: ["hold"],
   })
+  .refine((recipe) => recipe.design.unit.id === recipe.effect, {
+    message: "A look is designed from its own unit page",
+    path: ["design", "unit", "id"],
+  })
   .refine((recipe) => recipe.passed === (recipe.preview !== null), {
     message: "A passed effect carries the run it passed with, and only it",
     path: ["preview"],
@@ -258,6 +283,8 @@ export type EndFrame = z.infer<typeof endFrame>
 export type MidFrame = z.infer<typeof midFrame>
 export type CutWindow = z.infer<typeof cutWindow>
 export type EffectDesign = z.infer<typeof effectDesign>
+export type ReferencePage = z.infer<typeof referencePage>
+export type PhotoFit = z.infer<typeof photoFit>
 export type VideoReading = z.infer<typeof videoReading>
 export type EffectProof = z.infer<typeof effectProof>
 export type EffectRun = z.infer<typeof effectRun>

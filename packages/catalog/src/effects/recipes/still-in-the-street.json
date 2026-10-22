@@ -2,8 +2,18 @@
   "effect": "still-in-the-street",
   "passed": true,
   "design": {
-    "unit": "still-in-the-street",
-    "family": "effects",
+    "unit": {
+      "id": "still-in-the-street",
+      "title": "Unit: still-in-the-street"
+    },
+    "family": {
+      "id": "effects",
+      "title": "Family: effects"
+    },
+    "fit": {
+      "by": "area",
+      "edges": "crop"
+    },
     "setPiece": "The person holds their pose while the world around them moves: people, a van, a cart and boxes pass and things appear.",
     "cuts": [],
     "lastFrame": {

@@ -2,8 +2,18 @@
   "effect": "push-into-eye",
   "passed": true,
   "design": {
-    "unit": "push-into-eye",
-    "family": "effects",
+    "unit": {
+      "id": "push-into-eye",
+      "title": "Unit: push-into-eye"
+    },
+    "family": {
+      "id": "effects",
+      "title": "Family: effects"
+    },
+    "fit": {
+      "by": "area",
+      "edges": "crop"
+    },
     "setPiece": "One continuous push from the person's face into one eye until the black pupil fills the frame.",
     "cuts": [],
     "lastFrame": {

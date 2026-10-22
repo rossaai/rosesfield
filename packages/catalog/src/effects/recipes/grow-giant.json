@@ -2,8 +2,18 @@
   "effect": "grow-giant",
   "passed": false,
   "design": {
-    "unit": "grow-giant",
-    "family": "effects",
+    "unit": {
+      "id": "grow-giant",
+      "title": "Unit: grow-giant"
+    },
+    "family": {
+      "id": "effects",
+      "title": "Family: effects"
+    },
+    "fit": {
+      "by": "area",
+      "edges": "crop"
+    },
     "setPiece": "The person as a giant in a city avenue, seen in three shots: from the street, through a window onto glass towers, and beside a glass tower.",
     "cuts": [
       {

@@ -2,8 +2,18 @@
   "effect": "melt-away",
   "passed": false,
   "design": {
-    "unit": "melt-away",
-    "family": "effects",
+    "unit": {
+      "id": "melt-away",
+      "title": "Unit: melt-away"
+    },
+    "family": {
+      "id": "effects",
+      "title": "Family: effects"
+    },
+    "fit": {
+      "by": "area",
+      "edges": "crop"
+    },
     "setPiece": "Each person melts slowly into a glossy pool in the colours of their clothes, with their cap, bag or shoes resting on it, while the place stays.",
     "cuts": [],
     "lastFrame": {
