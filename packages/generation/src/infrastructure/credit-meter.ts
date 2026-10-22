@@ -15,7 +15,7 @@ export type MeterTicket = {
 }
 
 type Finished = {
-  credits: number | null
+  credits: Promise<number | null>
   at: number
 }
 
@@ -28,7 +28,7 @@ export class CreditMeter {
   static readonly creditsPerUsd = 211
   static readonly creditsPerCent = CreditMeter.creditsPerUsd / 100
   static readonly settleMs = 2000
-  static readonly settleTries = 8
+  static readonly settleTries = 5
   static readonly staleMs = 7_200_000
 
   private readonly clock: Clock
@@ -92,14 +92,18 @@ export class CreditMeter {
     this.byRef.delete(ref)
   }
 
-  async finishRef(reader: BalanceReader, ref: string): Promise<number | null> {
+  holdsRef(ref: string): boolean {
+    return this.byRef.has(ref)
+  }
+
+  finishRef(reader: BalanceReader, ref: string): Promise<number | null> {
     const held = this.finished.get(ref)
     if (held !== undefined) {
       return held.credits
     }
     const ticket = this.byRef.get(ref) ?? null
     this.byRef.delete(ref)
-    const credits = await this.finish(reader, ticket)
+    const credits = this.finish(reader, ticket).catch(() => null)
     this.finished.set(ref, { credits, at: this.now() })
     return credits
   }
