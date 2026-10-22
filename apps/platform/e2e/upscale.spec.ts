@@ -1,4 +1,5 @@
 import { expect, type Locator, test } from "@playwright/test"
+import { expectTip } from "./well-tip"
 
 async function boxOf(
   locator: Locator
@@ -29,8 +30,9 @@ test.describe("Upscale's column", () => {
     const image = tabs.getByRole("tab", { name: "Image" })
     const video = tabs.getByRole("tab", { name: "Video" })
     await expect(image).toHaveAttribute("aria-selected", "true")
-    await expect(column.locator('[data-slot="drop-well"]')).toHaveCount(1)
-    await expect(column).toContainText(/PNG, JPEG,? or WebP/)
+    const well = column.locator('[data-slot="drop-well"]')
+    await expect(well).toHaveCount(1)
+    await expectTip(page, well, /PNG, JPEG,? or WebP/)
     const scale = column.getByRole("radiogroup", { name: "Scale" })
     await expect(scale.getByRole("radio")).toHaveText(["2x", "4x"])
     await expect(
@@ -42,8 +44,8 @@ test.describe("Upscale's column", () => {
     await expect(column.locator('[data-slot="generate-button"]')).toBeVisible()
     await video.click()
     await expect(video).toHaveAttribute("aria-selected", "true")
-    await expect(column.locator('[data-slot="drop-well"]')).toHaveCount(1)
-    await expect(column).toContainText(/MP4, MOV,? or WebM/)
+    await expect(well).toHaveCount(1)
+    await expectTip(page, well, /MP4, MOV,? or WebM/)
     await expect(scale.getByRole("radio")).toHaveText(["2x", "4x"])
   })
 })

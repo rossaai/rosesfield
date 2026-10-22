@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test"
+import { expectTip } from "./well-tip"
 
 const tabNames = ["Edit", "Extend", "Reframe", "Background", "Frame rate"]
 
@@ -20,7 +21,7 @@ test.describe("Video edit's column", () => {
       .getByRole("tab")
     await expect(tabs).toHaveText(tabNames)
     const well = page.locator('[data-slot="clip-well"]')
-    await expect(well).toContainText("MP4, MOV or WebM")
+    await expectTip(page, well, "MP4, MOV or WebM")
     const tabBox = await tabs.first().boundingBox()
     const wellBox = await well.boundingBox()
     if (tabBox === null || wellBox === null) {

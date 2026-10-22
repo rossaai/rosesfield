@@ -36,7 +36,10 @@ test("a character from 1 photo shows in Characters with its photo and its count,
 }) => {
   await skipWelcome(page)
   await page.goto("/characters/new")
-  await expect(page.getByText("up to 10")).toBeVisible()
+  await page.locator('[data-slot="drop-well"]').hover()
+  await expect(page.locator('[data-slot="tooltip-content"]')).toContainText(
+    "up to 10"
+  )
   const runsBefore = await runCount(page)
   const name = `Ada ${test.info().project.name}`
   await page.getByRole("textbox").first().fill(name)

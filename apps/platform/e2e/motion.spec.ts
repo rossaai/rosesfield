@@ -1,4 +1,5 @@
 import { expect, type Locator, test } from "@playwright/test"
+import { expectTip } from "./well-tip"
 
 async function boxOf(
   locator: Locator
@@ -29,9 +30,10 @@ test.describe("Motion's column", () => {
     const move = tabs.getByRole("tab", { name: "Move a photo" })
     const swap = tabs.getByRole("tab", { name: "Swap a character" })
     await expect(move).toHaveAttribute("aria-selected", "true")
-    await expect(column.locator('[data-slot="drop-well"]')).toHaveCount(2)
-    await expect(column).toContainText(/MP4, MOV,? or WebM/)
-    await expect(column).toContainText(/PNG, JPEG,? or WebP/)
+    const wells = column.locator('[data-slot="drop-well"]')
+    await expect(wells).toHaveCount(2)
+    await expectTip(page, wells.nth(0), /MP4, MOV,? or WebM/)
+    await expectTip(page, wells.nth(1), /PNG, JPEG,? or WebP/)
     await expect(
       column.getByRole("button", { name: /^Model/ }).first()
     ).toBeVisible()
