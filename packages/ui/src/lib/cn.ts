@@ -2,7 +2,19 @@ import type { CnFunction } from "cn"
 import { createCn } from "cn/config"
 
 const tokenNames = {
-  text: ["display", "title", "body", "label", "legal", "caption", "code"],
+  text: [
+    "display",
+    "title",
+    "body",
+    "label",
+    "legal",
+    "caption",
+    "code",
+    "statement-floor",
+    "statement-ceiling",
+    "statement-share",
+    "statement-leading",
+  ],
   radius: ["dense", "cell", "item", "field", "card", "vessel", "full"],
   shadow: ["seam", "float", "lift"],
   ease: ["bloom", "fold", "glide", "snap", "settle", "pop"],
@@ -57,6 +69,11 @@ const tokenNames = {
     "hairline",
     "focus-ring",
     "rise",
+    "feed-window",
+    "feed-fade",
+    "settings-modal-w",
+    "settings-modal-h",
+    "settings-rail",
   ],
 } satisfies Record<string, string[]>
 
