@@ -8,7 +8,9 @@ import { GetCharacterHandler } from "#application/get-character/get-character.ha
 import { LinkAssetHandler } from "#application/link-asset/link-asset.handler"
 import { ListAssetsHandler } from "#application/list-assets/list-assets.handler"
 import { ListCharactersHandler } from "#application/list-characters/list-characters.handler"
+import { PutAssetPreviewHandler } from "#application/put-asset-preview/put-asset-preview.handler"
 import { ReadAssetContentHandler } from "#application/read-asset-content/read-asset-content.handler"
+import { ReadAssetPreviewHandler } from "#application/read-asset-preview/read-asset-preview.handler"
 import { UpdateCharacterHandler } from "#application/update-character/update-character.handler"
 import { UploadAssetHandler } from "#application/upload-asset/upload-asset.handler"
 import { migrateLibraryTables } from "#infrastructure/bun-sqlite-library-migration"
@@ -41,6 +43,8 @@ export function libraryFor() {
     readContent: new ReadAssetContentHandler({ assets, store }),
     deleteAsset: new DeleteAssetHandler({ assets, store, characters }),
     link: new LinkAssetHandler({ assets, store }),
+    putPreview: new PutAssetPreviewHandler({ assets, store }),
+    readPreview: new ReadAssetPreviewHandler({ assets, store }),
     createCharacter: new CreateCharacterHandler({ characters, assets, clock }),
     listCharacters: new ListCharactersHandler({ characters }),
     getCharacter: new GetCharacterHandler({ characters }),
