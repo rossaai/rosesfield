@@ -1,9 +1,4 @@
-import {
-  labOfModel,
-  lineKeyOf,
-  makerOf,
-  nameOf,
-} from "@rosesfield/catalog/comfy"
+import { labOfModel, makerOf, nameOf } from "@rosesfield/catalog/comfy"
 import {
   ModelPicker,
   type ModelPickerRow,
@@ -13,7 +8,6 @@ import { ModelChip } from "@rosesfield/ui/components/model-trigger"
 import type { ReactElement } from "react"
 import { t } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
-import { modelLineOf } from "@/screens/app/hosted/catalog-picker"
 
 export function agentLabOf(model: string): string {
   return labOfModel(model) ?? makerOf(model.split("/")[0] ?? model)
@@ -26,7 +20,6 @@ function agentRowOf(model: string): ModelPickerRow {
     name: nameOf(model),
     maker: lab,
     lab,
-    line: modelLineOf(lineKeyOf(model), lab),
     tags: [],
     mark: <LabMark maker={lab} />,
   }

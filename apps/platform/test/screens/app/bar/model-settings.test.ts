@@ -1,7 +1,7 @@
 import { findApp } from "@rosesfield/catalog"
 import { appListing, type InputDefinition } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
-import { tCatalog } from "@/copy/t"
+import { t } from "@/copy/t"
 import {
   choiceSections,
   factsIdOf,
@@ -20,32 +20,47 @@ function modelOf(id: string): ChoiceInput {
   return input
 }
 
-function linesOf(model: ChoiceInput): Map<string, string | null> {
+function tagsOf(model: ChoiceInput): Map<string, string[]> {
   const rows = choiceSections(model).flatMap((section) => section.rows)
-  return new Map(rows.map((row) => [row.id, row.line]))
+  return new Map(rows.map((row) => [row.id, row.tags.map((tag) => tag.label)]))
 }
 
-describe("the line of a row in a bar app's model picker", () => {
-  it("reads a graph's line from its fact row and the hosted model's from its own row", () => {
+function rowsOf(model: ChoiceInput) {
+  return choiceSections(model).flatMap((section) => section.rows)
+}
+
+describe("a row in a bar app's model picker", () => {
+  it("reads a graph's facts from its fact row and the hosted model's from its own row", () => {
     expect(factsIdOf("z-image-turbo")).toBe("graph/z-image-turbo")
     expect(factsIdOf("minimax/minimax-h3")).toBe("minimax/minimax-h3")
   })
 
-  it("shows the sourced line of a graph whose fact row holds one", () => {
-    expect(linesOf(modelOf("image")).get("z-image-turbo")).toContain(
-      tCatalog("comfy.model.graphZImageTurbo.line")
+  it("names the graph's real lab, never the weights host's account", () => {
+    const row = rowsOf(modelOf("image")).find(
+      (one) => one.id === "z-image-turbo"
+    )
+    expect(row?.maker).toBe("Alibaba Tongyi-MAI")
+  })
+
+  it("shows a ranked graph's board rank as a capability", () => {
+    expect(tagsOf(modelOf("image")).get("z-image-turbo")).toContain(
+      "Rank 70 of 104"
     )
   })
 
-  it("shows no line for a model whose fact row holds none, the control being the app's own line it showed before", () => {
-    const lines = linesOf(modelOf("ads"))
-    expect(lines.get("qwen-image-edit-2511")).toContain(
-      tCatalog("comfy.model.graphQwenImageEdit2511.line")
-    )
-    for (const option of modelOf("ads").options) {
-      expect(lines.get(option.value)).not.toBe(
-        tCatalog(`${option.labelKey}.line`)
+  it("shows Open weights as a capability only where no weights badge says it, and never on a hosted model", () => {
+    const rows = rowsOf(modelOf("video"))
+    for (const row of rows) {
+      const hasBadge = (row.badges ?? []).some(
+        (badge) => badge.kind === "openWeights"
       )
+      const hasTag = row.tags.some(
+        (tag) => tag.label === t("model.tag.openWeights")
+      )
+      expect(hasBadge && hasTag).toBe(false)
     }
+    expect(tagsOf(modelOf("video")).get("minimax/minimax-h3")).not.toContain(
+      t("model.tag.openWeights")
+    )
   })
 })

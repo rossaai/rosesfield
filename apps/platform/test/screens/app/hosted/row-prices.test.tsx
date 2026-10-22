@@ -13,6 +13,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { FormValues } from "@/screens/app/app-form"
 import { ChoiceModelPicker } from "@/screens/app/bar/model-settings"
+import { AgentModelPicker } from "@/screens/app/hosted/agent-model-picker"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { settingsFor } from "@/screens/app/hosted/hosted-form"
 import {
@@ -191,11 +192,24 @@ function hostedState(withPricing: boolean): HostedState {
   }
 }
 
-function renderPicker(withPricing = true): void {
+function renderPicker(withPricing = true, appId: string = image.id): void {
+  const state = hostedState(withPricing)
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <CatalogPicker hosted={hostedState(withPricing)} />
+      <CatalogPicker
+        hosted={
+          state.pricing === undefined
+            ? state
+            : { ...state, pricing: { ...state.pricing, appId } }
+        }
+      />
     </QueryClientProvider>
+  )
+}
+
+function priceSlots(): (string | null)[] {
+  return [...document.querySelectorAll("[data-slot=model-row-price]")].map(
+    (slot) => slot.getAttribute("data-state")
   )
 }
 
@@ -213,7 +227,7 @@ describe("the model picker's prices", () => {
     await waitFor(() =>
       expect(
         screen.getAllByRole("option", { name: "one, 6.33 Comfy credits" })
-      ).toHaveLength(2)
+      ).toHaveLength(1)
     )
     expect(calls).toHaveLength(1)
     expect(calls[0]?.url).toContain("/api/apps/image/prices")
@@ -233,7 +247,57 @@ describe("the model picker's prices", () => {
     fireEvent.click(screen.getByRole("button", { name: /Model/ }))
     await act(() => vi.advanceTimersByTimeAsync(1000))
     expect(calls).toEqual([])
-    expect(screen.getAllByRole("option", { name: "one" }).length).toBe(2)
+    expect(screen.getAllByRole("option", { name: "one" }).length).toBe(1)
+  })
+})
+
+describe("the price slot of every picker", () => {
+  it.each(["image", "video", "audio"])(
+    "reads a price on %s rows, an empty slot where none is known, and never Price unknown",
+    async (appId) => {
+      renderPicker(true, appId)
+      fireEvent.click(screen.getByRole("button", { name: /Model/ }))
+      await act(() => vi.advanceTimersByTimeAsync(400))
+      await waitFor(() => expect(priceSlots()).toContain("known"))
+      expect(calls[0]?.url).toContain(`/api/apps/${appId}/prices`)
+      expect(priceSlots()).toEqual(["known", "none", "none"])
+      expect(document.body.textContent).not.toContain("Price unknown")
+    }
+  )
+
+  it("draws a skeleton in every slot while its one request is in flight", async () => {
+    vi.stubGlobal("fetch", (url: string) => {
+      calls.push({ url: String(url), body: null })
+      return new Promise(() => undefined)
+    })
+    renderPicker()
+    fireEvent.click(screen.getByRole("button", { name: /Model/ }))
+    await act(() => vi.advanceTimersByTimeAsync(400))
+    await waitFor(() =>
+      expect(priceSlots()).toEqual(["pending", "pending", "pending"])
+    )
+    expect(
+      document.querySelectorAll("[data-slot=model-row-price-loading]")
+    ).toHaveLength(3)
+    expect(priceCalls()).toHaveLength(1)
+  })
+
+  it("leaves every agent row's slot empty, because the agent's model list holds no price", async () => {
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <AgentModelPicker
+          models={["anthropic/claude-sonnet-5", "openai/gpt-5.5"]}
+          chosen="anthropic/claude-sonnet-5"
+          onChoose={() => undefined}
+        />
+      </QueryClientProvider>
+    )
+    fireEvent.click(screen.getByRole("button", { name: /Model/ }))
+    await act(() => vi.advanceTimersByTimeAsync(400))
+    await waitFor(() => expect(priceSlots().length).toBeGreaterThan(0))
+    expect(new Set(priceSlots())).toEqual(new Set(["none"]))
+    expect(calls).toEqual([])
+    expect(document.body.textContent).not.toContain("Price unknown")
   })
 })
 

@@ -22,7 +22,7 @@ describe("the agent's model picker", () => {
     expect(agentLabOf("openrouter/new-model")).toBe("OpenRouter")
   })
 
-  it("puts the chosen model under Featured, then every model in a group of its lab, each headed by its mark", () => {
+  it("puts the chosen model under Featured, then every other model in a group of its lab, each headed by its mark", () => {
     render(
       <AgentModelPicker
         models={models}
@@ -34,19 +34,11 @@ describe("the agent's model picker", () => {
     const groups = screen
       .getAllByRole("group")
       .map((group) => group.getAttribute("aria-label"))
-    expect(groups).toEqual([
-      "Featured",
-      "Anthropic",
-      "DeepSeek",
-      "OpenAI",
-      "Z.ai",
-    ])
-    const heading = screen
-      .getByRole("group", { name: "DeepSeek" })
-      .querySelector(
-        "[data-slot='model-section-heading'] [data-slot='lab-mark']"
-      )
-    expect(heading?.getAttribute("data-mark")).toBe("deepseek")
+    expect(groups).toEqual(["Featured", "Anthropic", "OpenAI", "Z.ai"])
+    const mark = screen
+      .getByRole("group", { name: "Anthropic" })
+      .querySelector("[data-slot='model-row-mark'] [data-slot='lab-mark']")
+    expect(mark?.getAttribute("data-mark")).toBe("anthropic")
   })
 
   it("shows no price on a row, since no price for a chat model is known", () => {

@@ -31,7 +31,7 @@ function renderDocked(): ReturnType<typeof render> {
         bar={() => <div data-testid="bar-dock" />}
       />,
       image,
-      []
+      null
     )
   )
 }
@@ -75,7 +75,7 @@ describe("the bar frame on a phone", () => {
           }}
         />,
         image,
-        []
+        null
       )
     )
     expect(screen.getAllByTestId("settings")).toHaveLength(1)
@@ -89,7 +89,7 @@ describe("the bar frame with its phone bar docked", () => {
   function renderPhoneDock(
     isOpen: boolean,
     places: BarPlace[],
-    runs: readonly Run[] = []
+    runs: readonly Run[] | null = null
   ): void {
     render(
       withClient(
@@ -144,7 +144,7 @@ describe("the bar frame's canvas", () => {
           bar={() => null}
         />,
         image,
-        []
+        null
       )
     )
     const stage = document.querySelector('[data-slot="bar-stage"]')
