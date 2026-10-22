@@ -71,12 +71,13 @@ describe("the real credits of a run", () => {
     expect(engine.submitLimitMs()).toBeGreaterThan(longest)
   })
 
-  it("come from the balance route before and after a Router run", async () => {
+  it("come from the balance route before and after a Router run, read after its done read", async () => {
     const { engine, replay } = routerWith([
       catalogPage([pictureModel]),
       schemaRead(pictureModel, pictureSchema),
       balance(1000),
       submitted(),
+      queueStatus("COMPLETED"),
       queueStatus("COMPLETED"),
       balance(999.5),
       balance(999.5),
@@ -84,11 +85,13 @@ describe("the real credits of a run", () => {
     const submission = await engine.submit(
       request(hostedModelBinding(pictureModel))
     )
-    const status = await engine.read(submission.ref)
-    expect(status).toEqual({
+    expect(await engine.read(submission.ref)).toEqual({ state: "succeeded" })
+    expect(balanceReads(replay)).toBe(1)
+    expect(await engine.read(submission.ref)).toEqual({
       state: "succeeded",
       cost: { amount: 1.055 / 211, currency: "USD" },
     })
+    expect(balanceReads(replay)).toBe(3)
     expect(replay.unused()).toEqual([])
   })
 

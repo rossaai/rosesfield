@@ -43,6 +43,7 @@ export type WorkerParts = {
   store: R2AssetStore
   clock: Clock
   engineOptions: EngineOptions
+  defer: RuntimeDefer
 }
 
 const databases = new WeakMap<D1Database, SqliteDatabase>()
@@ -70,6 +71,7 @@ export function workerParts(
     db,
     store: new R2AssetStore({ bucket: env.BUCKET }),
     clock,
+    defer: defer ?? (() => undefined),
     engineOptions: {
       clock,
       catalog: sharedRouterCatalog(

@@ -130,9 +130,7 @@ export class AdvanceRunHandler {
     if (output.nextWakeMs !== null) {
       return output
     }
-    if (input.source !== "stream") {
-      await this.late.settle(input.runId)
-    } else if (output !== ended) {
+    if (input.source !== "stream" || output !== ended) {
       void this.late.settle(input.runId)
     }
     return stop

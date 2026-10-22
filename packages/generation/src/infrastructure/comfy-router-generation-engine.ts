@@ -222,7 +222,11 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     if (state.errorType !== null) {
       return { state: "failed", error: failureOf(state.errorType, 200, state) }
     }
-    const credits = (await this.meter?.finishRef(this.http, ref)) ?? null
+    const meter = this.meter
+    if (meter?.deferRef(ref) === true) {
+      return { state: "succeeded" }
+    }
+    const credits = (await meter?.finishRef(this.http, ref)) ?? null
     return { state: "succeeded", cost: costOfCredits(credits) }
   }
 

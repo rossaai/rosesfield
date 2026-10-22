@@ -57,7 +57,7 @@ function meteredEngine(onRead: () => Promise<void> = async () => undefined) {
 }
 
 describe("AdvanceRunHandler, a cost read after the result", () => {
-  it("marks the run done with its price not known, then writes the cost the engine reads after before the alarm's step returns", async () => {
+  it("marks the run done with its price not known and ends the alarm's step, then writes the cost the engine reads after", async () => {
     const late = gate()
     const reached = gate()
     const engine = meteredEngine(async () => {
@@ -71,21 +71,17 @@ describe("AdvanceRunHandler, a cost read after the result", () => {
     const runId = await startImage(harness)
     await harness.advance.execute({ runId })
 
-    let isOver = false
-    const ending = harness.advance.execute({ runId }).then((output) => {
-      isOver = true
-      return output
-    })
+    const ending = harness.advance.execute({ runId })
     await reached.held
+    expect(await ending).toEqual({ nextWakeMs: null })
     const shown = (await harness.get.execute({ runId })).run
     expect(shown.status).toBe("done")
     expect(shown.outputs).toHaveLength(1)
     expect(shown.cost).toBeNull()
     expect(prices.kept).toEqual([])
-    expect(isOver).toBe(false)
 
     late.release()
-    expect(await ending).toEqual({ nextWakeMs: null })
+    await harness.advance.priced(runId)
     const priced = (await harness.get.execute({ runId })).run
     expect(priced.status).toBe("done")
     expect(priced.cost).toEqual(charged)
@@ -130,9 +126,9 @@ describe("AdvanceRunHandler, a cost read after the result", () => {
     const kept = (await harness.runs.get(runId))?.jobs ?? []
     expect(kept.map((job) => job.status)).toEqual(["done", "running"])
 
-    expect(
-      await freshHandler(harness, engine, prices).execute({ runId })
-    ).toEqual({ nextWakeMs: null })
+    const last = freshHandler(harness, engine, prices)
+    expect(await last.execute({ runId })).toEqual({ nextWakeMs: null })
+    await last.priced(runId)
     const { run } = await harness.get.execute({ runId })
     expect(run.status).toBe("done")
     expect(run.cost).toEqual({ amount: 2 / 211, currency: "USD" })
@@ -149,16 +145,16 @@ describe("AdvanceRunHandler, a cost read after the result", () => {
     const harness = harnessFor({ engines: [engine] })
     const runId = await startImage(harness)
     await harness.advance.execute({ runId, source: "stream" })
-    expect(
-      await harness.advance.execute({ runId, source: "stream" })
-    ).toEqual({ nextWakeMs: null })
+    expect(await harness.advance.execute({ runId, source: "stream" })).toEqual({
+      nextWakeMs: null,
+    })
     const shown = (await harness.get.execute({ runId })).run
     expect(shown.status).toBe("done")
     expect(shown.cost).toBeNull()
 
-    expect(await freshHandler(harness, engine).execute({ runId })).toEqual({
-      nextWakeMs: null,
-    })
+    const alarm = freshHandler(harness, engine)
+    expect(await alarm.execute({ runId })).toEqual({ nextWakeMs: null })
+    await alarm.priced(runId)
     const { run } = await harness.get.execute({ runId })
     expect(run.cost).toEqual(charged)
   })

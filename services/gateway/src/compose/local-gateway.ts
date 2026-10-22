@@ -362,6 +362,7 @@ function composePublic(
       clock,
       engineOptions: parts.engineOptions,
       agents,
+      defer: () => undefined,
     })
   const app = createGateway({
     apps: parts.apps,

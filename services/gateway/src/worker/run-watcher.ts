@@ -72,9 +72,7 @@ export class RunWatcher implements DurableObject {
     if (!runIdFormat.is(stored)) {
       return
     }
-    const watched: unknown = await this.state.storage.get(
-      RunWatcher.watchedKey
-    )
+    const watched: unknown = await this.state.storage.get(RunWatcher.watchedKey)
     if (typeof watched === "number" && watched > Date.now()) {
       await this.state.storage.setAlarm(watched)
       return
@@ -82,6 +80,7 @@ export class RunWatcher implements DurableObject {
     const ports = ownerPorts(workerParts(this.env))
     const advance = buildAdvance(ports, buildLibrary(ports))
     const next = await nextWake(advance, stored)
+    this.state.waitUntil(advance.priced(stored))
     if (next === null) {
       await this.state.storage.deleteAll()
       return
