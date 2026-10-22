@@ -5,18 +5,78 @@ import { afterEach, describe, expect, it } from "vitest"
 afterEach(cleanup)
 
 describe("Badge", () => {
-  it.each(badgeKinds)(
-    "rides 4 px after its host's label, 16 px tall, on the one accent's tint, as %s",
-    (kind) => {
+  it.each([
+    ["new", "nop"],
+    ["top", "hor"],
+    ["premium", "cem"],
+    ["openWeights", "cem"],
+  ] as const)(
+    "rides 4 px after its host's label, 16 px tall, %s on the %s tint with its text tone",
+    (kind, hue) => {
       render(<Badge kind={kind}>Word</Badge>)
       const badge = screen.getByText("Word").closest("[data-slot='badge']")
       expect(badge?.getAttribute("data-kind")).toBe(kind)
+      expect(badge?.getAttribute("data-tone")).toBe(hue)
       expect(badge?.className.split(" ")).toEqual(
-        expect.arrayContaining(["ms-1", "h-4", "bg-(--tint)", "text-ink"])
+        expect.arrayContaining([
+          "ms-1",
+          "h-4",
+          `bg-${hue}-tint`,
+          `text-${hue}-text`,
+        ])
       )
-      expect(badge?.className).not.toMatch(/hor-|nop-|cem-/)
+      expect(badge?.className.split(" ")).not.toContain("bg-(--tint)")
     }
   )
+
+  it("gives every kind a hue tint, and two kinds a hue only when one of them carries a mark", () => {
+    const tones = badgeKinds.map((kind) => {
+      render(<Badge kind={kind}>{kind}</Badge>)
+      return (
+        screen
+          .getByText(kind)
+          .closest("[data-slot='badge']")
+          ?.getAttribute("data-tone") ?? ""
+      )
+    })
+    expect(tones.every((tone) => ["nop", "hor", "cem"].includes(tone))).toBe(
+      true
+    )
+    expect(new Set(tones.slice(0, 3)).size).toBe(3)
+  })
+
+  it("takes a tone of its own, and the quiet tint with no kind, for a fact a screen shows", () => {
+    render(
+      <>
+        <Badge>Demo engine</Badge>
+        <Badge tone="glass">12 s</Badge>
+        <Badge kind="new" tone="hor">
+          Fresh
+        </Badge>
+      </>
+    )
+    const quiet = screen.getByText("Demo engine").closest("[data-slot='badge']")
+    expect(quiet?.getAttribute("data-kind")).toBeNull()
+    expect(quiet?.className.split(" ")).toEqual(
+      expect.arrayContaining(["bg-(--tint)", "text-ink"])
+    )
+    const glass = screen.getByText("12 s").closest("[data-slot='badge']")
+    expect(glass?.className.split(" ")).toContain("material-thin")
+    const fresh = screen.getByText("Fresh").closest("[data-slot='badge']")
+    expect(fresh?.className.split(" ")).toContain("bg-hor-tint")
+    expect(fresh?.className.split(" ")).not.toContain("bg-nop-tint")
+  })
+
+  it("leads with a mark a screen gives, in the colour it gives", () => {
+    render(
+      <Badge tone="quiet" mark={<svg data-testid="lab" />} markColour="red">
+        Lab
+      </Badge>
+    )
+    const mark = screen.getByTestId("lab").closest("[data-slot='badge-mark']")
+    expect(mark?.getAttribute("aria-hidden")).toBe("true")
+    expect(mark instanceof HTMLElement ? mark.style.color : "").toBe("red")
+  })
 
   it("makes only the Hugging Face mark the link to the weights page, named by that page, in a new tab", () => {
     render(

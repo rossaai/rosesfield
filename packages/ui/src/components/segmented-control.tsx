@@ -82,6 +82,12 @@ const cells = {
   row: "rounded-dense px-2 py-1 text-label data-checked:text-ink",
 } satisfies Record<SegmentedControlDensity, string>
 
+const labelMotion = {
+  chrome: "[transition:color_var(--travel)]",
+  composer: motion.tint,
+  row: motion.tint,
+} satisfies Record<SegmentedControlDensity, string>
+
 function SegmentedThumb({
   index,
   count,
@@ -95,7 +101,7 @@ function SegmentedThumb({
     <span
       aria-hidden="true"
       data-slot="segmented-control-thumb"
-      className={cn("absolute transition-none", plates[density])}
+      className={cn("absolute", plates[density], motion.travel)}
       style={plateBox(geometry[density], index, count)}
     />
   )
@@ -117,7 +123,7 @@ function SegmentedCell<T extends string>({
       className={cn(
         "relative flex min-w-0 items-center justify-center gap-1 font-medium text-ink-muted [&_svg]:size-4",
         cells[density],
-        motion.tint,
+        labelMotion[density],
         interaction.ring
       )}
     >
