@@ -19,7 +19,10 @@ export type EngineFile = {
 
 export type RunPlan = NonNullable<Run["plan"]>
 
-export type EngineStepOutput = Omit<EngineOutput, "bytes" | "stills"> & {
+export type EngineStepOutput = Omit<
+  EngineOutput,
+  "bytes" | "stills" | "preview"
+> & {
   assetId: AssetId
 }
 
@@ -81,6 +84,12 @@ export type EngineOutput = {
   height: number | null
   durationSeconds: number | null
   stills?: readonly Uint8Array[]
+  preview?: EnginePreview
+}
+
+export type EnginePreview = {
+  mime: string
+  bytes: Uint8Array
 }
 
 export type OutputsPerJob = "all" | "one"

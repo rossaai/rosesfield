@@ -36,10 +36,20 @@ export {
   type ListCharactersOutput,
 } from "#application/list-characters/list-characters.handler"
 export {
+  PutAssetPreviewHandler,
+  type PutAssetPreviewInput,
+} from "#application/put-asset-preview/put-asset-preview.handler"
+export {
   ReadAssetContentHandler,
   type ReadAssetContentInput,
   type ReadAssetContentOutput,
+  type ServedRange,
 } from "#application/read-asset-content/read-asset-content.handler"
+export {
+  ReadAssetPreviewHandler,
+  type ReadAssetPreviewInput,
+  type ReadAssetPreviewOutput,
+} from "#application/read-asset-preview/read-asset-preview.handler"
 export {
   UpdateCharacterHandler,
   type UpdateCharacterInput,
@@ -56,7 +66,7 @@ export {
   AssetRepository,
 } from "#domain/asset.repository"
 export { kindOfMime } from "#domain/asset-kind"
-export { AssetStore } from "#domain/asset-store.port"
+export { AssetStore, type ByteRange } from "#domain/asset-store.port"
 export { Character } from "#domain/character"
 export { CharacterRepository } from "#domain/character.repository"
 export { AssetCursorInvalidError } from "#domain/error/asset-cursor-invalid.error"
@@ -64,6 +74,8 @@ export { AssetInUseError } from "#domain/error/asset-in-use.error"
 export { AssetInvalidError } from "#domain/error/asset-invalid.error"
 export { AssetKindUnsupportedError } from "#domain/error/asset-kind-unsupported.error"
 export { AssetNotFoundError } from "#domain/error/asset-not-found.error"
+export { AssetPreviewInvalidError } from "#domain/error/asset-preview-invalid.error"
+export { AssetPreviewNotFoundError } from "#domain/error/asset-preview-not-found.error"
 export { AssetTooLargeError } from "#domain/error/asset-too-large.error"
 export { CharacterInvalidError } from "#domain/error/character-invalid.error"
 export { CharacterNotFoundError } from "#domain/error/character-not-found.error"

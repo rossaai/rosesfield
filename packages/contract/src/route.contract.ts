@@ -4,7 +4,7 @@ import { MissingPathParamError } from "#missing-path-param.error"
 export type RoutePayload = z.ZodType | "bytes" | null
 
 export type RouteDefinition = {
-  method: "GET" | "POST" | "PATCH" | "DELETE"
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
   path: `/api/${string}`
   params: z.ZodObject | null
   query: z.ZodObject | null
