@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   boardRankOf,
   factsOf,
+  labOfModel,
   lineKeyOf,
   type ModelFactsFile,
   modelFactsData,
@@ -255,11 +256,52 @@ describe("the model facts the catalog holds", () => {
     expect(Object.hasOwn(modelFactsData.marks, "Black Forest Labs")).toBe(false)
   })
 
+  it("colours each lab's mark with the hex its icon set publishes beside it", () => {
+    expect(modelFactsData.marks.Google?.hex).toBe("4285F4")
+    expect(modelFactsData.marks.MiniMax?.hex).toBe("E73562")
+    expect(modelFactsData.marks.DeepSeek?.hex).toBe("5786FE")
+  })
+
+  it("names one lab for each maker, so a picker groups a maker's models once", () => {
+    const labs = new Set(
+      Object.values(modelFactsData.models).map((row) => row.lab)
+    )
+    for (const split of [
+      "KlingAI",
+      "Fal",
+      "Luma Labs",
+      "Pruna AI",
+      "SpaceXAI",
+    ]) {
+      expect(labs.has(split), split).toBe(false)
+    }
+    expect(labOfModel("kling/kling-v3")).toBe("Kling")
+    expect(labOfModel("xai/grok-imagine-video")).toBe("xAI")
+    expect(labOfModel("qwen/qwen-image-3.0")).toBe("Alibaba Qwen")
+  })
+
+  it("names the lab of each chat model the agent runs, and none for a model it does not hold", () => {
+    expect(labOfModel("deepseek/deepseek-v4-flash")).toBe("DeepSeek")
+    expect(labOfModel("z-ai/glm-4.6")).toBe("Z.ai")
+    expect(labOfModel("anthropic/claude-sonnet-5")).toBe("Anthropic")
+    expect(labOfModel("maker/unknown")).toBeNull()
+    expect(labOfModel("toString")).toBeNull()
+  })
+
   it("refuses a mark that is markup or a picture rather than path data, the control", () => {
+    const mark = {
+      slug: "maker",
+      title: "Maker",
+      hex: "4285F4",
+      path: "M0 0h24v24H0z",
+    }
     const marks = [
-      { slug: "maker", title: "Maker", path: "<image href='maker.png'/>" },
-      { slug: "maker", title: "Maker", path: 'M0 0h24v24H0z"/><script>' },
-      { slug: "Maker Lab", title: "Maker", path: "M0 0h24v24H0z" },
+      { ...mark, path: "<image href='maker.png'/>" },
+      { ...mark, path: 'M0 0h24v24H0z"/><script>' },
+      { ...mark, slug: "Maker Lab" },
+      { ...mark, hex: "#4285F4" },
+      { ...mark, hex: "blue" },
+      { slug: "maker", title: "Maker", path: "M0 0h24v24H0z" },
     ]
     for (const mark of marks) {
       expect(
@@ -275,9 +317,7 @@ describe("the model facts the catalog holds", () => {
       modelFactsFile.safeParse({
         boards: {},
         markSet,
-        marks: {
-          "Maker Lab": { slug: "maker", title: "Maker", path: "M0 0h24v24H0z" },
-        },
+        marks: { "Maker Lab": mark },
         models: {},
       }).success
     ).toBe(true)
