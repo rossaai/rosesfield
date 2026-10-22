@@ -1,4 +1,10 @@
-import { Skeleton, SkeletonGroup } from "@rosesfield/ui/components/skeleton"
+import {
+  Skeleton,
+  SkeletonCard,
+  SkeletonGroup,
+  SkeletonMasonry,
+  SkeletonRow,
+} from "@rosesfield/ui/components/skeleton"
 import { SKELETON } from "@rosesfield/ui/contracts/skeleton.generated"
 import { cleanup, render } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -122,5 +128,44 @@ describe("Skeleton", () => {
     const group = document.querySelector("[data-slot='skeleton-group']")
     expect(classesOf(group)).toContain("motion-pulse")
     expect(group?.getAttribute("aria-busy")).toBe("true")
+  })
+})
+
+describe("Skeleton's composed shapes", () => {
+  it("draws a masonry of the columns asked, its tiles at 3:4, 1:1 and 9:16", () => {
+    const { container } = render(<SkeletonMasonry columns={6} />)
+    const stacks = container.querySelectorAll("[data-slot='skeleton-stack']")
+    expect(stacks).toHaveLength(6)
+    const ratios = new Set(
+      [...container.querySelectorAll("[data-ratio]")].map((tile) =>
+        tile.getAttribute("data-ratio")
+      )
+    )
+    expect([...ratios].sort()).toEqual([
+      "aspect-3/4",
+      "aspect-9/16",
+      "aspect-square",
+    ])
+    const grid = container.firstElementChild
+    expect(
+      grid instanceof HTMLElement ? grid.style.gridTemplateColumns : ""
+    ).toBe("repeat(6, minmax(0, 1fr))")
+  })
+
+  it("draws a list row as a thumb and one body line at full width", () => {
+    const { container } = render(<SkeletonRow />)
+    const parts = [...container.querySelectorAll("[data-slot='skeleton']")]
+    expect(parts).toHaveLength(2)
+    expect(classesOf(parts[0] ?? null)).toContain("size-thumb")
+    expect(parts[1]?.getAttribute("data-shape")).toBe("line")
+    expect(classesOf(parts[1] ?? null)).toContain("w-full")
+  })
+
+  it("draws a card at the size it is given", () => {
+    const { container } = render(
+      <SkeletonCard aspect={{ width: 16, height: 9 }} />
+    )
+    const card = container.querySelector<HTMLElement>("[data-shape='card']")
+    expect(card?.style.aspectRatio).toBe("16 / 9")
   })
 })

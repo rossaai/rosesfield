@@ -32,7 +32,7 @@ function renderFooter(): void {
 }
 
 describe("Footer", () => {
-  it("closes the page in one muted band of text links, 24 px rows on a 36 px pitch", () => {
+  it("closes the page in one muted band of 26 px text links that tint on the tint preset", () => {
     renderFooter()
     const footer = screen.getByRole("contentinfo", { name: "Rosesfield" })
     expect(footer.children).toHaveLength(1)
@@ -42,41 +42,33 @@ describe("Footer", () => {
     expect(footer.querySelectorAll("p")).toHaveLength(0)
     for (const link of screen.getAllByRole("link")) {
       expect(link.querySelector("svg, img")).toBeNull()
-      expect(link.className.split(" ")).toContain("h-6")
+      expect(link.className.split(" ")).toEqual(
+        expect.arrayContaining(["h-s8", "hover:text-ink-muted", "motion-tint"])
+      )
     }
-    expect(
-      screen.getByRole("link", { name: "Code" }).closest("ul")?.className
-    ).toContain("gap-3")
     expect(footer.querySelector("form, button")).toBeNull()
   })
 
-  it("sets the groups in five equal columns from the width switch", () => {
-    renderFooter()
-    const grid = screen
-      .getByRole("heading", { name: "Project" })
-      .closest("section")?.parentElement
-    expect(grid?.className.split(" ")).toEqual(
-      expect.arrayContaining(["grid-cols-2", "@regular:grid-cols-5"])
-    )
-    expect(grid?.className).not.toContain("grid-flow-col")
-  })
-
-  it("holds a phone's two group columns at 142 px with 48 px between them, as the reference's 332 px grid does", () => {
-    renderFooter()
-    const grid = screen
-      .getByRole("heading", { name: "Project" })
-      .closest("section")?.parentElement
-    expect(grid?.className.split(" ")).toEqual(
-      expect.arrayContaining(["max-w-83", "gap-12", "@regular:max-w-none"])
-    )
-  })
-
-  it("keeps 40 px clear at the heading's end, as the reference's heading does at both widths", () => {
+  it("divides on thirds from the width switch: the tagline in the first, the groups across the other two", () => {
     renderFooter()
     const heading = screen.getByRole("heading", {
       level: 2,
       name: "One place to make images, video and sound",
     })
-    expect(heading.className.split(" ")).toContain("pe-10")
+    expect(heading.className.split(" ")).toContain("text-title")
+    expect(heading.parentElement?.className.split(" ")).toContain(
+      "@regular:grid-cols-3"
+    )
+    const groups = screen
+      .getByRole("heading", { name: "Project" })
+      .closest("section")?.parentElement
+    expect(groups?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "grid-cols-2",
+        "@regular:col-span-2",
+        "@regular:grid-flow-col",
+        "@regular:auto-cols-fr",
+      ])
+    )
   })
 })

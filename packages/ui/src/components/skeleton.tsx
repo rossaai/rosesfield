@@ -157,5 +157,74 @@ function SkeletonGroup({
   )
 }
 
+const masonryRatios = ["aspect-3/4", "aspect-square", "aspect-9/16"] as const
+
+const masonryDepth = 3
+
+function SkeletonMasonry({
+  columns,
+  className,
+}: {
+  columns: number
+  className?: string
+}): ReactElement {
+  const stacks = Array.from({ length: columns }, (_, column) => column)
+  return (
+    <SkeletonGroup
+      data-columns={columns}
+      className={cn("grid items-start gap-s2", className)}
+      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+    >
+      {stacks.map((column) => (
+        <div
+          key={column}
+          data-slot="skeleton-stack"
+          className="flex min-w-0 flex-col gap-s2"
+        >
+          {Array.from({ length: masonryDepth }, (_, row) => (
+            <Skeleton
+              // biome-ignore lint/suspicious/noArrayIndexKey: a tile's place in its stack is its identity
+              key={row}
+              data-ratio={masonryRatios[(column + row) % masonryRatios.length]}
+              className={cn(
+                "w-full rounded-cell",
+                masonryRatios[(column + row) % masonryRatios.length]
+              )}
+            />
+          ))}
+        </div>
+      ))}
+    </SkeletonGroup>
+  )
+}
+
+function SkeletonRow({ className }: { className?: string }): ReactElement {
+  return (
+    <SkeletonGroup
+      data-shape="row"
+      className={cn("flex items-center gap-s3 py-s3", className)}
+    >
+      <Skeleton className="size-thumb shrink-0 rounded-cell" />
+      <Skeleton shape="line" text="body" measure="full" className="flex-1" />
+    </SkeletonGroup>
+  )
+}
+
+function SkeletonCard({
+  aspect,
+  className,
+}: {
+  aspect: { readonly width: number; readonly height: number }
+  className?: string
+}): ReactElement {
+  return (
+    <Skeleton
+      data-shape="card"
+      className={cn("w-full rounded-card", className)}
+      style={{ aspectRatio: `${aspect.width} / ${aspect.height}` }}
+    />
+  )
+}
+
 export type { SkeletonProps, SkeletonShape }
-export { Skeleton, SkeletonGroup }
+export { Skeleton, SkeletonCard, SkeletonGroup, SkeletonMasonry, SkeletonRow }

@@ -1,4 +1,8 @@
-import { MediaFeed, ViewAll } from "@rosesfield/ui/components/media-feed"
+import {
+  MediaFeed,
+  packStacks,
+  ViewAll,
+} from "@rosesfield/ui/components/media-feed"
 import { ResultTile } from "@rosesfield/ui/components/result-tile"
 import { MEDIA_FEED } from "@rosesfield/ui/contracts/media-feed.generated"
 import { cleanup, render, screen } from "@testing-library/react"
@@ -47,12 +51,12 @@ describe("MediaFeed", () => {
     }
   })
 
-  it("lays a masonry of 6 column stacks, 1 column on a phone, 8 px apart in a 1024 px window", () => {
+  it("lays a masonry of 6 column stacks, 2 columns on a phone, 7 px apart in the feed window token", () => {
     const feed = renderFeed("masonry", "media", 8)
     expect(classesOf(feed, "items")).toEqual(
       expect.arrayContaining([
-        "columns-1",
-        "gap-2",
+        "columns-2",
+        "gap-s2",
         "@regular:grid",
         "@regular:grid-cols-6",
       ])
@@ -61,83 +65,97 @@ describe("MediaFeed", () => {
     expect(stacks).toHaveLength(6)
     expect(stacks[0]?.textContent).toBe("item 0item 6")
     expect(stacks[5]?.textContent).toBe("item 5")
-    expect(stacks[0]?.className.split(" ")).toEqual(
-      expect.arrayContaining(["contents", "*:mb-2", "@regular:gap-2"])
-    )
     expect(classesOf(feed, "window")).toEqual(
       expect.arrayContaining([
-        "max-h-[calc(--spacing(256)+var(--spacing-focus-ring)*4)]",
+        "max-h-[calc(var(--spacing-feed-window)+var(--spacing-focus-ring)*4)]",
         "-m-[calc(var(--spacing-focus-ring)*2)]",
         "p-[calc(var(--spacing-focus-ring)*2)]",
       ])
     )
   })
 
-  it("stands a model's row in 4 column stacks of 352 px, each tile 8 px inside its column, 2 columns on a phone, in an 896 px window", () => {
-    const feed = renderFeed("row", "media", 6)
-    expect(classesOf(feed, "items")).toEqual(
-      expect.arrayContaining([
-        "columns-2",
-        "gap-2",
-        "@regular:grid",
-        "@regular:grid-cols-4",
-        "@regular:gap-0",
-      ])
+  it("places each tile in the shortest stack, so every column ends within one tile of the others", () => {
+    const tall = { width: 9, height: 16 }
+    const wide = { width: 16, height: 9 }
+    const ratios = [tall, wide, tall, wide, tall, wide]
+    const stacks = packStacks(
+      ratios.map((ratio) => ratio.height / ratio.width),
+      2
     )
-    const stacks = feed.querySelectorAll("[data-slot='media-feed-stack']")
-    expect(stacks).toHaveLength(4)
-    expect(stacks[0]?.textContent).toBe("item 0item 4")
-    expect(stacks[1]?.textContent).toBe("item 1item 5")
-    expect(stacks[0]?.className.split(" ")).toEqual(
-      expect.arrayContaining(["contents", "@regular:flex", "@regular:pe-2"])
+    const bottoms = stacks.map((places) =>
+      places.reduce((sum, place) => {
+        const ratio = ratios[place]
+        return ratio === undefined ? sum : sum + ratio.height / ratio.width
+      }, 0)
     )
-    expect(classesOf(feed, "window")).toContain(
-      "max-h-[calc(--spacing(224)+var(--spacing-focus-ring)*4)]"
+    expect(stacks).toEqual([
+      [0, 3, 4],
+      [1, 2, 5],
+    ])
+    expect(Math.max(...bottoms) - Math.min(...bottoms)).toBeLessThanOrEqual(
+      tall.height / tall.width
     )
   })
 
-  it("draws a row's clip at 125 percent from the foot, and a masonry's at its own size", () => {
-    const tile = (
-      <ResultTile
-        kind="image"
-        src="a.png"
-        alt="A rose"
-        aspect={{ width: 9, height: 16 }}
-        app="Image"
-        openLabel="Open"
-        expandLabel="Expand"
-        moreLabel="More"
-        recreateLabel="Recreate"
-        recreateName="Recreate this result"
-        onOpen={() => undefined}
-        onRecreate={() => undefined}
-      />
-    )
+  it("reads each tile's own ratio when it packs a feed of result tiles", () => {
+    const tall = { width: 9, height: 16 }
+    const wide = { width: 16, height: 9 }
     render(
-      <MediaFeed label="Row" layout="row">
-        {tile}
+      <MediaFeed label="Packed">
+        {[tall, wide, wide, wide].map((aspect, index) => (
+          <ResultTile
+            // biome-ignore lint/suspicious/noArrayIndexKey: fixed test list
+            key={index}
+            kind="image"
+            src={`${index}.png`}
+            alt={`Result ${index}`}
+            aspect={aspect}
+            app="Image"
+            openLabel={`Open ${index}`}
+            expandLabel="Expand"
+            moreLabel="More"
+            recreateLabel="Recreate"
+            recreateName="Recreate this result"
+            onOpen={() => undefined}
+            onRecreate={() => undefined}
+          />
+        ))}
       </MediaFeed>
     )
-    const stack = screen
-      .getByRole("region", { name: "Row" })
-      .querySelector("[data-slot='media-feed-stack']")
-    expect(stack?.className.split(" ")).toEqual(
+    const stacks = screen
+      .getByRole("region", { name: "Packed" })
+      .querySelectorAll("[data-slot='media-feed-stack']")
+    expect(stacks[0]?.querySelectorAll("[data-slot='media']")).toHaveLength(1)
+  })
+
+  it("lays a row as one sideways scroller showing three whole tiles and part of a fourth, with an edge fade and glass steps", () => {
+    render(
+      <MediaFeed
+        label="Row"
+        layout="row"
+        rowLabels={{ previous: "Previous", next: "Next" }}
+      >
+        <span>a</span>
+        <span>b</span>
+      </MediaFeed>
+    )
+    const feed = screen.getByRole("region", { name: "Row" })
+    const items = classesOf(feed, "items")
+    expect(items).toEqual(
       expect.arrayContaining([
-        "[&_[data-slot=media]>[data-slot=media-tile]]:origin-bottom",
-        "[&_[data-slot=media]>[data-slot=media-tile]]:scale-125",
+        "flex",
+        "overflow-x-auto",
+        "*:w-[calc((100%-var(--spacing-s2)*3)/3.4)]",
+        "*:snap-start",
       ])
     )
-    expect(
-      stack?.querySelector("[data-slot=media]>[data-slot=media-tile]")
-    ).not.toBeNull()
-    cleanup()
-    render(
-      <MediaFeed label="Masonry" layout="masonry">
-        {tile}
-      </MediaFeed>
+    const next = screen.getByRole("button", { name: "Next" })
+    expect(next.className.split(" ")).toEqual(
+      expect.arrayContaining(["material-thin", "size-icon", "border"])
     )
-    const masonry = screen.getByRole("region", { name: "Masonry" })
-    expect(masonry.innerHTML).not.toContain("scale-125")
+    expect(
+      feed.querySelector("[data-slot='media-feed-next']")?.className
+    ).toContain("@regular:flex")
   })
 
   it("stands presets in 5 column stacks of 274 px, 8 px apart and centred, 2 on a phone", () => {
@@ -169,16 +187,16 @@ describe("MediaFeed", () => {
     expect(feed.querySelector("[data-slot='media-feed-fade']")).toBeNull()
   })
 
-  it("ends in a 208 px fade with View all 48 px tall, 36 px above its foot", () => {
+  it("ends in the feed fade token with one 40 px View all pill", () => {
     const feed = renderFeed("masonry")
     expect(classesOf(feed, "fade")).toEqual(
-      expect.arrayContaining(["h-52", "pb-9", "pointer-events-none"])
+      expect.arrayContaining(["h-feed-fade", "pointer-events-none"])
     )
     const viewAll = screen.getByRole("link", { name: "View all" })
     expect(viewAll.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-12", "px-3", "gap-2"])
+      expect.arrayContaining(["h-field", "rounded-full", "motion-press"])
     )
-    expect(classesOf(feed, "header")).toContain("mb-5")
+    expect(screen.getAllByRole("link", { name: "View all" })).toHaveLength(1)
   })
 })
 
