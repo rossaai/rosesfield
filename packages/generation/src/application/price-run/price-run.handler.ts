@@ -16,6 +16,7 @@ import {
   type RunPrice,
   unknownPrice,
 } from "#domain/generation-engine.port"
+import { inputsOfKept, keptCountOf, nearestKeptOf } from "#domain/kept-settings"
 import type { ModelForm } from "#domain/model-form"
 import type { PriceBook } from "#domain/price-book.port"
 import { pricedRunOf } from "#domain/priced-run"
@@ -51,6 +52,8 @@ type PriceRunHandlerOptions = {
 export class PriceRunHandler {
   static readonly parallelAsks = 6
 
+  static readonly quoteTolerance = 0.05
+
   private readonly apps: AppCatalog
   private readonly engines: readonly GenerationEngine[]
   private readonly prices: PriceBook | null
@@ -84,11 +87,16 @@ export class PriceRunHandler {
           inputs,
           count: isPerJob ? 1 : count,
         })
+        if (measured !== null) {
+          return { price: timesOf(measured, isPerJob ? count : 1) }
+        }
+        const quoted = await engine.priceOf(binding, { inputs, count })
         return {
-          price:
-            measured === null
-              ? await engine.priceOf(binding, { inputs, count })
-              : timesOf(measured, isPerJob ? count : 1),
+          price: await this.heldToMeasured(engine, app, form, quoted, {
+            ...input,
+            inputs,
+            count,
+          }),
         }
       }
     }
@@ -123,6 +131,57 @@ export class PriceRunHandler {
       }
       throw error
     }
+  }
+
+  /**
+   * A quote the rate card or the estimate gave is set against the model's
+   * nearest measured run. When the same source priced that run's settings
+   * more than a tolerance away from what it cost, the quote is scaled by the
+   * measured ratio and named an estimate, so it never contradicts a run.
+   */
+  private async heldToMeasured(
+    engine: GenerationEngine,
+    app: AppDefinition,
+    form: ModelForm | null,
+    quoted: RunPrice,
+    input: PriceRunInput
+  ): Promise<RunPrice> {
+    if (this.prices === null || form === null || quoted.credits === null) {
+      return quoted
+    }
+    const asked = pricedRunOf({
+      app,
+      inputs: input.inputs,
+      form,
+      count: input.count ?? 1,
+      aspectRatio: input.aspectRatio ?? null,
+    })
+    const nearest = nearestKeptOf(
+      asked.settings,
+      await this.prices.runsOf(asked.model)
+    )
+    const measured = nearest === null ? null : engine.creditsOf(nearest.cost)
+    if (nearest === null || measured === null || measured <= 0) {
+      return quoted
+    }
+    const keptInputs = inputsOfKept(form, nearest.settings, input.inputs)
+    const atKept = await engine.priceOf(
+      resolveBinding(app.engine, keptInputs),
+      {
+        inputs: keptInputs,
+        count: keptCountOf(nearest.settings),
+      }
+    )
+    if (atKept.credits === null || atKept.credits <= 0) {
+      return quoted
+    }
+    const ratio = measured / atKept.credits
+    return Math.abs(ratio - 1) <= PriceRunHandler.quoteTolerance
+      ? quoted
+      : {
+          source: "estimate",
+          credits: Math.round(quoted.credits * ratio * 100) / 100,
+        }
   }
 
   private async measured(
