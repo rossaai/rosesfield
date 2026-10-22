@@ -145,7 +145,22 @@ function play(
   }
   const ordered = phase === "in" ? keyframes : [...keyframes].reverse()
   const timing = readMotion("layer", phase, track)
-  return node.animate(ordered, { ...timing, fill: "both" })
+  const animation = node.animate(ordered, { ...timing, fill: "both" })
+  if (phase === "in") {
+    holdForFirstFrame(animation)
+  }
+  return animation
+}
+
+function holdForFirstFrame(animation: Animation): void {
+  animation.pause()
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (animation.playState === "paused") {
+        animation.play()
+      }
+    })
+  })
 }
 
 function fade(node: HTMLElement, phase: MotionPhase): Animation | null {
