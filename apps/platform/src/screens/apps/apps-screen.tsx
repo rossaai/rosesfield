@@ -1,14 +1,8 @@
 import type { AppListing, Run } from "@rosesfield/contract"
+import { AppTileGrid } from "@rosesfield/ui/components/app-tile"
 import { Button } from "@rosesfield/ui/components/button"
 import { Input } from "@rosesfield/ui/components/input"
 import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@rosesfield/ui/components/select"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import type { ReactElement } from "react"
@@ -21,8 +15,8 @@ import {
   outputKinds,
 } from "@/catalog/app-facts"
 import { catalogApps } from "@/catalog/catalog-apps"
-import { t, tCount } from "@/copy/t"
-import { AppCard } from "@/screens/apps/app-card"
+import { t } from "@/copy/t"
+import { AppCard, appCardFormOf } from "@/screens/apps/app-card"
 import { ScreenHeader } from "@/shell/screen-header"
 import { useRecentRuns } from "@/shell/use-working-runs"
 
@@ -52,35 +46,14 @@ function KindControl({
   if (items.length < 3) {
     return null
   }
-  if (items.length <= 4) {
-    return (
-      <SegmentedControl
-        items={items}
-        value={value}
-        onValueChange={onChange}
-        label={t("apps.kind.label")}
-      />
-    )
-  }
   return (
-    <Select
+    <SegmentedControl
       items={items}
       value={value}
-      onValueChange={(next) =>
-        onChange(items.find((item) => item.value === next)?.value ?? "all")
-      }
-    >
-      <SelectTrigger aria-label={t("apps.kind.label")}>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {items.map((item) => (
-          <SelectItem key={item.value} value={item.value}>
-            {item.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+      onValueChange={onChange}
+      label={t("apps.kind.label")}
+      density="chrome"
+    />
   )
 }
 
@@ -93,34 +66,49 @@ function AppGroup({
   apps: readonly AppListing[]
   runs: readonly Run[]
 }): ReactElement {
+  const cards = apps.map((app) => {
+    const newest =
+      runs.find((run) => run.appId === app.id && run.status === "done") ?? null
+    return {
+      app,
+      newest,
+      working: runs.filter((run) => run.appId === app.id && isWorking(run))
+        .length,
+      form: appCardFormOf(app, newest),
+    }
+  })
+  const media = cards.filter((card) => card.form === "media")
+  const compact = cards.filter((card) => card.form === "compact")
   return (
     <section className="flex flex-col gap-s3">
-      <div className="flex items-baseline gap-s2">
-        <h2 className="text-title">{t(`kind.${kind}`)}</h2>
-        <span className="text-caption text-ink-muted">
-          {tCount("apps.group.count", apps.length)}
-        </span>
-      </div>
-      <div
-        data-slot="app-cards"
-        className="-mx-s5 flex snap-x scroll-px-s5 gap-4 overflow-x-auto px-s5 [scrollbar-width:none] @regular:mx-0 @regular:grid @regular:grid-cols-[repeat(auto-fill,minmax(--spacing(59.25),1fr))] @regular:overflow-visible @regular:px-0"
-      >
-        {apps.map((app) => (
-          <AppCard
-            key={app.id}
-            app={app}
-            newest={
-              runs.find(
-                (run) => run.appId === app.id && run.status === "done"
-              ) ?? null
-            }
-            working={
-              runs.filter((run) => run.appId === app.id && isWorking(run))
-                .length
-            }
-          />
-        ))}
-      </div>
+      <h2 className="text-title">{t(`kind.${kind}`)}</h2>
+      {media.length === 0 ? null : (
+        <div
+          data-slot="app-cards"
+          className="-mx-s5 flex snap-x scroll-px-s5 gap-4 overflow-x-auto px-s5 [scrollbar-width:none] @regular:mx-0 @regular:grid @regular:grid-cols-[repeat(auto-fill,minmax(--spacing(59.25),1fr))] @regular:overflow-visible @regular:px-0"
+        >
+          {media.map((card) => (
+            <AppCard
+              key={card.app.id}
+              app={card.app}
+              newest={card.newest}
+              working={card.working}
+            />
+          ))}
+        </div>
+      )}
+      {compact.length === 0 ? null : (
+        <AppTileGrid label={t(`kind.${kind}`)}>
+          {compact.map((card) => (
+            <AppCard
+              key={card.app.id}
+              app={card.app}
+              newest={card.newest}
+              working={card.working}
+            />
+          ))}
+        </AppTileGrid>
+      )}
     </section>
   )
 }
