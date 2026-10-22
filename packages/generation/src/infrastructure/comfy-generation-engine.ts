@@ -5,8 +5,6 @@ import type {
   EngineBinding,
   KeyCheck,
 } from "@rosesfield/contract"
-import { z } from "zod"
-import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import { RunFailedError } from "#domain/error/run-failed.error"
 import {
   type EngineOutput,
@@ -23,6 +21,13 @@ import {
   jobFailureOf,
   keyCheckOf,
 } from "#infrastructure/comfy/comfy-errors"
+import {
+  type Job,
+  type JobOutput,
+  outputSchema,
+  parseJob,
+  readingOf,
+} from "#infrastructure/comfy/comfy-job"
 import {
   createComfyLow,
   type Fetch,
@@ -59,48 +64,7 @@ type ComfyGenerationEngineOptions = {
   timer?: Timer
 }
 
-type EventReading = EngineStatus | "ended" | null
-
-const jobSchema = z.object({
-  id: z.string().min(1),
-  status: z.enum([
-    "queued",
-    "running",
-    "succeeded",
-    "canceling",
-    "canceled",
-    "failed",
-    "expired",
-  ]),
-  progress: z.object({ value: z.number().min(0).max(1) }).nullish(),
-  metrics: z.object({ execution_ms: z.number().min(0).nullish() }).nullish(),
-  outputs: z
-    .array(
-      z.object({
-        id: z.string().min(1),
-        node_id: z.string(),
-        name: z.string().default(""),
-        type: z.string(),
-        content_type: z.string(),
-      })
-    )
-    .default([]),
-  error: z
-    .object({
-      code: z.string(),
-      message: z.string().nullish(),
-      node_id: z.string().nullish(),
-      class_type: z.string().nullish(),
-      node_errors: z.record(z.string(), z.unknown()).optional(),
-    })
-    .nullish(),
-})
-
-type Job = z.infer<typeof jobSchema>
-
-const statusEvent = z.object({ status: jobSchema.shape.status })
-
-const progressEvent = z.object({ value: z.number().min(0).max(1) })
+type Fetched = Map<string, Promise<EngineOutput | null>>
 
 export class ComfyGenerationEngine extends GenerationEngine {
   static readonly cloudUrl = "https://cloud.comfy.org"
@@ -109,6 +73,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
   static readonly unknownJobId = "00000000-0000-0000-0000-000000000000"
   static readonly gpuCreditsPerSecond = 0.266
   static readonly statusEveryMs = 2000
+  static readonly heldRefs = 8
   static readonly outputKinds: readonly string[] = [
     "image",
     "video",
@@ -127,6 +92,8 @@ export class ComfyGenerationEngine extends GenerationEngine {
   private readonly meter: CreditMeter | null
   private readonly balance: BalanceReader
   private readonly pause: Pause
+  private readonly terminal = new Map<string, Job>()
+  private readonly fetched = new Map<string, Fetched>()
 
   constructor(options: ComfyGenerationEngineOptions) {
     super()
@@ -213,6 +180,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
           retryAfterSeconds: null,
         }
       case "succeeded":
+        keepAtMost(this.terminal, ref, job)
         return this.succeeded(job)
       case "canceled":
         this.meter?.dropRef(ref)
@@ -231,6 +199,40 @@ export class ComfyGenerationEngine extends GenerationEngine {
     ref: string,
     signal: AbortSignal
   ): AsyncGenerator<EngineStatus, void, void> {
+    let last: EngineStatus | null = null
+    try {
+      for await (const status of this.relay(ref, signal)) {
+        last = status
+        yield status
+      }
+    } finally {
+      if (last?.state !== "succeeded") {
+        this.fetched.delete(ref)
+      }
+    }
+  }
+
+  override async listOutputs(ref: string): Promise<EngineOutput[]> {
+    const job =
+      this.terminal.get(ref) ??
+      parseJob(await callComfy(() => this.low.getJob(ref)))
+    const fetched = this.fetched.get(ref)
+    this.terminal.delete(ref)
+    this.fetched.delete(ref)
+    const listed = job.outputs.filter(isKept)
+    const outputs = await Promise.all(
+      listed.map(
+        async (output) =>
+          (await fetched?.get(output.id)) ?? (await this.download(output))
+      )
+    )
+    return withVideoStills(listed, outputs)
+  }
+
+  private async *relay(
+    ref: string,
+    signal: AbortSignal
+  ): AsyncGenerator<EngineStatus, void, void> {
     const events = this.low.getJobEvents(ref, { signal })
     let opened = false
     let hasEnded = false
@@ -238,6 +240,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
     try {
       for await (const event of events) {
         opened = true
+        this.fetchEarly(ref, event)
         const reading = readingOf(event, progress)
         if (reading === "ended") {
           hasEnded = true
@@ -264,17 +267,6 @@ export class ComfyGenerationEngine extends GenerationEngine {
     }
   }
 
-  override async listOutputs(ref: string): Promise<EngineOutput[]> {
-    const job = parseJob(await callComfy(() => this.low.getJob(ref)))
-    const listed = job.outputs.filter((output) =>
-      ComfyGenerationEngine.outputKinds.includes(output.type)
-    )
-    const outputs = await Promise.all(
-      listed.map((output) => this.download(output))
-    )
-    return withVideoStills(listed, outputs)
-  }
-
   override async cancel(ref: string): Promise<void> {
     this.meter?.dropRef(ref)
     await callComfy(() => this.low.cancelJob(ref))
@@ -290,11 +282,31 @@ export class ComfyGenerationEngine extends GenerationEngine {
   }
 
   private async succeeded(job: Job): Promise<EngineStatus> {
-    const metered = (await this.meter?.finishRef(this.balance, job.id)) ?? null
+    const meter = this.meter
+    if (meter?.deferRef(job.id) === true) {
+      return { state: "succeeded" }
+    }
+    const metered = (await meter?.finishRef(this.balance, job.id)) ?? null
     const credits = metered ?? gpuCreditsOf(this.isCloud, job)
-    return credits === null
-      ? { state: "succeeded" }
-      : { state: "succeeded", cost: costOfCredits(credits) }
+    return { state: "succeeded", cost: costOfCredits(credits) }
+  }
+
+  private fetchEarly(ref: string, event: RawEvent): void {
+    if (event.event !== "output") {
+      return
+    }
+    const parsed = outputSchema.safeParse(event.data)
+    if (!parsed.success || !isKept(parsed.data)) {
+      return
+    }
+    const fetched: Fetched = this.fetched.get(ref) ?? new Map()
+    if (!fetched.has(parsed.data.id)) {
+      fetched.set(
+        parsed.data.id,
+        this.download(parsed.data).catch(() => null)
+      )
+    }
+    keepAtMost(this.fetched, ref, fetched)
   }
 
   private async post(
@@ -306,9 +318,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
     )
   }
 
-  private async download(
-    output: Job["outputs"][number]
-  ): Promise<EngineOutput> {
+  private async download(output: JobOutput): Promise<EngineOutput> {
     const response = await callComfy(() =>
       this.low.getAssetContent(output.id, { timeoutMs: this.downloadTimeoutMs })
     )
@@ -325,35 +335,18 @@ export class ComfyGenerationEngine extends GenerationEngine {
   }
 }
 
-function readingOf(event: RawEvent, progress: number | null): EventReading {
-  if (event.event === "error") {
-    return "ended"
-  }
-  if (event.event === "progress") {
-    const progress = progressEvent.safeParse(event.data)
-    return progress.success
-      ? {
-          state: "running",
-          progress: progress.data.value,
-          retryAfterSeconds: null,
-        }
-      : null
-  }
-  if (event.event !== "status") {
-    return null
-  }
-  const status = statusEvent.safeParse(event.data)
-  if (!status.success) {
-    return null
-  }
-  switch (status.data.status) {
-    case "queued":
-      return { state: "queued", progress: null, retryAfterSeconds: null }
-    case "running":
-    case "canceling":
-      return { state: "running", progress, retryAfterSeconds: null }
-    default:
-      return "ended"
+function isKept(output: JobOutput): boolean {
+  return ComfyGenerationEngine.outputKinds.includes(output.type)
+}
+
+function keepAtMost<V>(map: Map<string, V>, ref: string, value: V): void {
+  map.delete(ref)
+  map.set(ref, value)
+  for (const oldest of map.keys()) {
+    if (map.size <= ComfyGenerationEngine.heldRefs) {
+      return
+    }
+    map.delete(oldest)
   }
 }
 
@@ -365,14 +358,6 @@ function gpuCreditsOf(isCloud: boolean, job: Job): number | null {
   const credits =
     (executionMs / 1000) * ComfyGenerationEngine.gpuCreditsPerSecond
   return Math.round(credits * 1_000_000) / 1_000_000
-}
-
-function parseJob(value: unknown): Job {
-  const result = jobSchema.safeParse(value)
-  if (!result.success) {
-    throw new EngineUnavailableError({ cause: result.error })
-  }
-  return result.data
 }
 
 function kindOf(type: string, contentType: string): AssetKind {

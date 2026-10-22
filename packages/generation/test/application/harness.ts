@@ -33,6 +33,7 @@ export function harnessFor(options: HarnessOptions = {}) {
   const assets = new FakeRunAssets()
   const apps = new FakeAppCatalog(options.apps ?? [imageApp()])
   const engines = options.engines ?? [new FakeGenerationEngine()]
+  const logged: string[] = []
   const startRun = new StartRunHandler({
     apps,
     runs,
@@ -47,6 +48,7 @@ export function harnessFor(options: HarnessOptions = {}) {
     runs,
     jobs,
     assets,
+    logged,
     start: startRun,
     advance: new AdvanceRunHandler({
       apps,
@@ -54,6 +56,7 @@ export function harnessFor(options: HarnessOptions = {}) {
       engines,
       assets,
       clock,
+      log: (line) => logged.push(line),
       ...(options.prices === undefined ? {} : { prices: options.prices }),
     }),
     price: new PriceRunHandler({
