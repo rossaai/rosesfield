@@ -124,7 +124,7 @@ function AudioWords({
     <FieldFrame
       caption={tCatalog("lipsync.input.audio.label")}
       isOptional={false}
-      note={limitNote(screen)}
+      note={null}
       problem={problemOf(screen, name)}
       message={message}
     >
@@ -136,6 +136,7 @@ function AudioWords({
           onChange={(next) => form.setInput(name, next)}
           onMessage={setMessage}
           triggerRef={trigger}
+          limits={limitNote(screen) ?? undefined}
         />
       ) : (
         <HeldAudio

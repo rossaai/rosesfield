@@ -121,11 +121,10 @@ describe("the effect tiles", () => {
     ).toBe("9 / 16")
   })
 
-  it("puts the chosen effect's photo hint under the grid, once", () => {
+  it("keeps the photo hint out of the grid, because the photo well names it", () => {
     renderTiles("melt-away")
-    const hints = document.querySelectorAll("[data-slot=effect-hint]")
-    expect(hints).toHaveLength(1)
-    expect(hints[0]?.textContent).toBe(tCatalog("effects.photo.meltAway"))
+    expect(document.querySelector("[data-slot=effect-hint]")).toBeNull()
+    expect(screen.queryByText(tCatalog("effects.photo.meltAway"))).toBeNull()
   })
 
   it("veils the chosen tile's clip with the selection tint and an ink ring", () => {

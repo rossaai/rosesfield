@@ -7,8 +7,7 @@ import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { ImagePlusIcon } from "lucide-react"
-import { type ReactElement, type ReactNode, useEffect, useRef } from "react"
+import { type ReactElement, useEffect, useRef } from "react"
 import { tCatalog } from "@/copy/t"
 import { ChosenVeil } from "@/pieces/selectable-tile"
 import { previewOf } from "@/studio/effects/effect-previews"
@@ -126,21 +125,6 @@ function Tile({
   )
 }
 
-function ChosenHint({ tile }: { tile: EffectTile | undefined }): ReactNode {
-  if (tile === undefined) {
-    return null
-  }
-  return (
-    <p
-      data-slot="effect-hint"
-      className="flex items-start gap-s1_5 text-body text-ink-muted"
-    >
-      <ImagePlusIcon aria-hidden="true" className="glyph mt-0.5 shrink-0" />
-      <span>{tile.photo}</span>
-    </p>
-  )
-}
-
 export function EffectTiles(props: EffectTilesProps): ReactElement {
   const chosen = useRef<HTMLButtonElement | null>(null)
   const { register } = props
@@ -167,7 +151,6 @@ export function EffectTiles(props: EffectTilesProps): ReactElement {
           </li>
         ))}
       </ul>
-      <ChosenHint tile={tiles.find((tile) => tile.effect === props.value)} />
     </section>
   )
 }

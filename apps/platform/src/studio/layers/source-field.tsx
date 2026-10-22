@@ -110,7 +110,7 @@ export function SourceField(props: SourceFieldProps): ReactElement | null {
     <FieldFrame
       caption={inputCaption(input)}
       isOptional={false}
-      note={inputNote(props.app, input)}
+      note={null}
       problem={props.problem}
       message={message}
     >
@@ -121,6 +121,7 @@ export function SourceField(props: SourceFieldProps): ReactElement | null {
         onChange={props.onChange}
         onMessage={setMessage}
         triggerRef={trigger}
+        limits={inputNote(props.app, input) ?? undefined}
       />
     </FieldFrame>
   )

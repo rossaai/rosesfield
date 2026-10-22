@@ -55,7 +55,7 @@ function show(node: ReactElement): void {
 
 function zone(title: string): HTMLElement {
   const name = (text: string): boolean =>
-    text.replace(/\s/g, "") === `${title}${t("kind.image")}`.replace(/\s/g, "")
+    text.replace(/\s/g, "") === title.replace(/\s/g, "")
   return screen.getByRole("button", { name })
 }
 

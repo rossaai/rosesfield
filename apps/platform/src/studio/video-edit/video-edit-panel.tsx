@@ -78,7 +78,7 @@ function ClipWell({ state }: { state: VideoEditState }): ReactElement | null {
       <FieldFrame
         caption={inputCaption(source)}
         isOptional={false}
-        note={inputNote(state.app, source)}
+        note={null}
         problem={problem}
         message={message}
       >
@@ -89,7 +89,12 @@ function ClipWell({ state }: { state: VideoEditState }): ReactElement | null {
           onChange={(ids) => form.setInput(name, ids)}
           onMessage={setMessage}
           triggerRef={trigger}
-          limits={clipLimitsText(state.clipLimit)}
+          limits={[
+            inputNote(state.app, source),
+            clipLimitsText(state.clipLimit),
+          ]
+            .filter((one) => one !== null)
+            .join(" ")}
         />
       </FieldFrame>
       {state.clip === null || problem !== undefined ? null : (

@@ -20,7 +20,7 @@ export function AssetField(props: InputFieldProps<AssetInput>): ReactElement {
     <FieldFrame
       caption={inputCaption(input)}
       isOptional={isOptionalInput(input)}
-      note={inputNote(props.app, input)}
+      note={null}
       problem={props.problem}
       message={message}
     >
@@ -31,6 +31,7 @@ export function AssetField(props: InputFieldProps<AssetInput>): ReactElement {
         onChange={props.onChange}
         onMessage={setMessage}
         triggerRef={trigger}
+        limits={inputNote(props.app, input) ?? undefined}
       />
     </FieldFrame>
   )

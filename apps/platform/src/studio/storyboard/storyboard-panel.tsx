@@ -35,7 +35,7 @@ function ReferenceField({ state }: { state: StoryboardState }): ReactElement {
     <FieldFrame
       caption={tCatalog("storyboard.input.reference.label")}
       isOptional
-      note={tCatalog("storyboard.input.reference.note")}
+      note={null}
       problem={undefined}
       message={wellMessage ?? state.messages.get("reference") ?? null}
     >
@@ -46,6 +46,7 @@ function ReferenceField({ state }: { state: StoryboardState }): ReactElement {
         onChange={(ids) => state.form.setInput("reference", ids)}
         onMessage={setWellMessage}
         triggerRef={trigger}
+        limits={tCatalog("storyboard.input.reference.note")}
       />
     </FieldFrame>
   )

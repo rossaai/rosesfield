@@ -89,7 +89,7 @@ function FromPhotos(): ReactElement {
       <FieldFrame
         caption={t("characters.new.photos.label")}
         isOptional={false}
-        note={t("characters.new.photos.note", { max: characterPhotoLimit })}
+        note={null}
         problem={undefined}
         message={message?.field === "photos" ? message.text : wellMessage}
       >
@@ -99,6 +99,7 @@ function FromPhotos(): ReactElement {
           max={characterPhotoLimit}
           onChange={setPhotos}
           onMessage={setWellMessage}
+          limits={t("characters.new.photos.note", { max: characterPhotoLimit })}
         />
       </FieldFrame>
       {save.error === null ? null : (

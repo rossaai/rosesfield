@@ -79,7 +79,7 @@ function FaceWell({ screen }: { screen: LipsyncScreen }): ReactElement | null {
     <FieldFrame
       caption={tCatalog(keys.label)}
       isOptional={!face.required}
-      note={tab === "photo" ? tCatalog(keys.note) : null}
+      note={null}
       problem={screen.wellProblems[name] ?? form.problems.get(name)}
       message={message}
     >
@@ -90,6 +90,7 @@ function FaceWell({ screen }: { screen: LipsyncScreen }): ReactElement | null {
         onChange={(next) => form.setInput(name, next)}
         onMessage={setMessage}
         triggerRef={trigger}
+        limits={tab === "photo" ? tCatalog(keys.note) : undefined}
       />
     </FieldFrame>
   )

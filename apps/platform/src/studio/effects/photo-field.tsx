@@ -9,6 +9,7 @@ import { inputCaption, inputNote } from "@/screens/app/fields/input-copy"
 import { acceptOf } from "@/studio/effects/use-photo-checks"
 
 type PhotoFieldProps = InputFieldProps<AssetInput> & {
+  title?: string | undefined
   message: string | null
   onMessage: (message: string | null) => void
 }
@@ -24,14 +25,7 @@ export function PhotoField(props: PhotoFieldProps): ReactElement {
     <FieldFrame
       caption={inputCaption(input)}
       isOptional={false}
-      note={
-        accept === null
-          ? inputNote(props.app, input)
-          : tCatalog("effects.input.image.note", {
-              size: formatBytes(accept.maxBytes),
-              min: accept.minShortSide,
-            })
-      }
+      note={null}
       problem={props.problem}
       message={props.message}
     >
@@ -42,6 +36,15 @@ export function PhotoField(props: PhotoFieldProps): ReactElement {
         onChange={props.onChange}
         onMessage={props.onMessage}
         triggerRef={trigger}
+        title={props.title}
+        limits={
+          accept === null
+            ? (inputNote(props.app, input) ?? undefined)
+            : tCatalog("effects.input.image.note", {
+                size: formatBytes(accept.maxBytes),
+                min: accept.minShortSide,
+              })
+        }
       />
     </FieldFrame>
   )

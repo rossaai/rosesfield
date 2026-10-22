@@ -107,10 +107,12 @@ function Field({
   first,
   message,
   seen,
+  title,
 }: {
   first: string[]
   message: string | null
   seen: Seen
+  title?: string
 }): ReactElement {
   const [value, setValue] = useState<FieldValue>(first)
   if (photoInput === undefined || !isAssetInput(photoInput)) {
@@ -124,6 +126,7 @@ function Field({
       problem={undefined}
       onChange={setValue}
       register={() => undefined}
+      title={title}
       message={message}
       onMessage={(next) => seen.messages.push(next)}
     />
@@ -134,6 +137,7 @@ function renderField(options: {
   first: string[]
   message?: string | null
   picked?: File[]
+  title?: string
 }): Seen {
   const seen: Seen = { messages: [] }
   const client = new QueryClient({
@@ -156,6 +160,9 @@ function renderField(options: {
                 first={options.first}
                 message={options.message ?? null}
                 seen={seen}
+                {...(options.title === undefined
+                  ? {}
+                  : { title: options.title })}
               />
             </TooltipProvider>
           </ToastProvider>
@@ -240,15 +247,29 @@ describe("the effects photo field", () => {
     expect(photoTile()).toBeNull()
   })
 
-  it("names the formats, the 20 MB limit and the 480 px side under the field", async () => {
-    renderField({ first: [photoId] })
+  it("keeps the formats, the 20 MB limit and the 480 px side out of the page until the well is hovered", async () => {
+    renderField({ first: [] })
+    const rules = tCatalog("effects.input.image.note", {
+      size: formatBytes(20_000_000),
+      min: 480,
+    })
+    const zone = await screen.findByRole("button", {
+      name: new RegExp(t("field.asset.add.image")),
+    })
+    expect(screen.queryByText(rules)).toBeNull()
+    expect(document.querySelector('[data-slot="field-note"]')).toBeNull()
+    fireEvent.pointerEnter(zone, { pointerType: "mouse" })
+    fireEvent.mouseEnter(zone)
+    fireEvent.focus(zone)
+    expect(await screen.findByText(rules, {}, { timeout: 3000 })).not.toBeNull()
+  })
+
+  it("names the photo the chosen effect needs in the empty well, in place of a second caption", async () => {
+    renderField({ first: [], title: tCatalog("effects.photo.growGiant") })
     expect(
-      await screen.findByText(
-        tCatalog("effects.input.image.note", {
-          size: formatBytes(20_000_000),
-          min: 480,
-        })
-      )
+      await screen.findByRole("button", {
+        name: tCatalog("effects.photo.growGiant"),
+      })
     ).not.toBeNull()
   })
 

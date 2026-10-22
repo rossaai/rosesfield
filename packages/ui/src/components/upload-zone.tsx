@@ -1,5 +1,10 @@
 import { buttonVariants, IconButton } from "@rosesfield/ui/components/button"
 import { interaction } from "@rosesfield/ui/components/interaction"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@rosesfield/ui/components/tooltip"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { AtSignIcon, PencilIcon, PlusIcon } from "lucide-react"
@@ -113,13 +118,15 @@ function StartFrame(props: StartFrameProps): ReactElement {
 
 type DropZoneProps = Omit<ComponentProps<"button">, "children"> & {
   title: string
-  line: string
+  line?: string | undefined
+  tip?: string | undefined
   kinds: ReadonlyArray<ReactNode>
 }
 
 function DropZone({
   title,
   line,
+  tip,
   kinds,
   className,
   onDragEnter,
@@ -128,7 +135,7 @@ function DropZone({
   ...props
 }: DropZoneProps): ReactElement {
   const [isOver, setOver] = useState(false)
-  return (
+  const zone = (
     <button
       type="button"
       data-slot="composer-attachments-row"
@@ -168,10 +175,25 @@ function DropZone({
         ))}
       </span>
       <span className="flex flex-col">
-        <span className="font-medium text-body text-ink">{title}</span>{" "}
-        <span className="text-caption text-ink-muted">{line}</span>
+        <span className="font-medium text-body text-ink">{title}</span>
+        {line === undefined ? null : (
+          <>
+            {" "}
+            <span className="text-caption text-ink-muted">{line}</span>
+          </>
+        )}
       </span>
     </button>
+  )
+  return tip === undefined ? (
+    zone
+  ) : (
+    <Tooltip>
+      <TooltipTrigger render={zone} />
+      <TooltipContent className="h-auto whitespace-normal py-s2">
+        {tip}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 

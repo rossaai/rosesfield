@@ -39,8 +39,8 @@ type DropWellProps = {
   onChange: (ids: string[]) => void
   onMessage: (message: string | null) => void
   triggerRef?: Ref<HTMLButtonElement>
-  limits?: string
-  title?: string
+  limits?: string | undefined
+  title?: string | undefined
   fill?: boolean
 }
 
@@ -128,7 +128,7 @@ function AddMenu({
           ) : (
             <DropZone
               title={label}
-              line={limits ?? t(`kind.${kind}`)}
+              tip={limits}
               kinds={Array.from(
                 { length: Math.min(mostDiscs, Math.max(1, max)) },
                 () => kindGlyph

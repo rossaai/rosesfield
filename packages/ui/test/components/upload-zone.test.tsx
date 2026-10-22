@@ -1,3 +1,4 @@
+import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import {
   DropZone,
   ReferenceTile,
@@ -147,6 +148,27 @@ describe("DropZone", () => {
     )
     expect(zone.className).not.toMatch(/border/)
     expect(zone.textContent).toBe("Drop your files Image, video or audio")
+  })
+
+  it("shows its title alone when it has no line, and keeps its file rules in a tip that opens on hover", async () => {
+    render(
+      <TooltipProvider>
+        <DropZone
+          title="Add an image"
+          tip="JPG or PNG, up to 20 MB"
+          kinds={[]}
+        />
+      </TooltipProvider>
+    )
+    const zone = screen.getByRole("button", { name: "Add an image" })
+    expect(zone.textContent).toBe("Add an image")
+    expect(screen.queryByText("JPG or PNG, up to 20 MB")).toBeNull()
+    fireEvent.pointerEnter(zone, { pointerType: "mouse" })
+    fireEvent.mouseEnter(zone)
+    fireEvent.focus(zone)
+    expect(
+      await screen.findByText("JPG or PNG, up to 20 MB", {}, { timeout: 3000 })
+    ).not.toBeNull()
   })
 
   it("takes its ground's tint while a file is dragged over it, and rests again when it leaves or drops", () => {

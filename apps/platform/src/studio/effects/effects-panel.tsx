@@ -10,7 +10,7 @@ import { InputField } from "@/screens/app/fields/input-field"
 import { SeedField } from "@/screens/app/fields/seed-field"
 import { randomSeed } from "@/screens/app/inputs-panel"
 import type { AppForm } from "@/screens/app/use-app-form"
-import { EffectTiles } from "@/studio/effects/effect-tiles"
+import { EffectTiles, effectTiles } from "@/studio/effects/effect-tiles"
 import { PhotoField } from "@/studio/effects/photo-field"
 
 export const autoAspect = "auto"
@@ -139,6 +139,15 @@ function AdvancedPart(props: EffectsPanelProps): ReactElement {
   )
 }
 
+function chosenPhotoOf(props: EffectsPanelProps): string | undefined {
+  const effect = choiceOf(props.app, "effect")
+  const chosen =
+    effect === null
+      ? ""
+      : textOf(props.form.values.inputs[effect.name]) || effect.default
+  return effectTiles(props.app).find((tile) => tile.effect === chosen)?.photo
+}
+
 export function EffectsPanel(props: EffectsPanelProps): ReactElement {
   const { app } = props
   const photo = app.inputs.find((input) => input.name === "image")
@@ -150,6 +159,7 @@ export function EffectsPanel(props: EffectsPanelProps): ReactElement {
         <PhotoField
           {...fieldProps(props, photo)}
           input={photo}
+          title={chosenPhotoOf(props)}
           message={props.photoMessage}
           onMessage={props.onPhotoMessage}
         />

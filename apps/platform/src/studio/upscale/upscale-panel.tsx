@@ -133,7 +133,7 @@ function FileWell({ state }: { state: UpscaleState }): ReactElement {
     <FieldFrame
       caption={wellCaptionOf(state.app, mode)}
       isOptional={false}
-      note={wellNoteOf(state.app, mode)}
+      note={null}
       problem={form.problems.get(name)}
       message={wellMessage ?? state.fileMessage}
     >
@@ -144,12 +144,17 @@ function FileWell({ state }: { state: UpscaleState }): ReactElement {
         onChange={(ids) => form.setInput(name, ids)}
         onMessage={setWellMessage}
         triggerRef={trigger}
-        limits={assetLimitsText({
-          formats: limits.formats,
-          bytes: limits.maxBytes,
-          ...(limits.minSide === null ? {} : { shortSide: limits.minSide }),
-          ...(limits.seconds === null ? {} : { seconds: limits.seconds }),
-        })}
+        limits={[
+          wellNoteOf(state.app, mode),
+          assetLimitsText({
+            formats: limits.formats,
+            bytes: limits.maxBytes,
+            ...(limits.minSide === null ? {} : { shortSide: limits.minSide }),
+            ...(limits.seconds === null ? {} : { seconds: limits.seconds }),
+          }),
+        ]
+          .filter((one) => one !== null)
+          .join(" ")}
       />
     </FieldFrame>
   )
