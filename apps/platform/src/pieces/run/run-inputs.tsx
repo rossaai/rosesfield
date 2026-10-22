@@ -98,7 +98,11 @@ function outputRows(
       value: run.aspectRatio,
     })
   }
-  if (output.count.max > 1 && !shown.some((input) => input.name === "count")) {
+  if (
+    output.count.max > 1 &&
+    run.count > 1 &&
+    !shown.some((input) => input.name === "count")
+  ) {
     rows.push({
       key: "output.count",
       label: t("field.count.label"),
