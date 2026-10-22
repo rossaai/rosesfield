@@ -32,6 +32,28 @@ describe("workflowFor", () => {
     expect(workflowFor("effects", { effect: "melt-away" })).toBeNull()
   })
 
+  it("follows a Video run with a start frame through every nested choice to the start frame graph", () => {
+    const startFrame = ["a633abb1-83d6-4051-a32e-90baad7f1d29"]
+    expect(
+      workflowFor("video", {
+        prompt: "The old man looks into the camera",
+        startFrame,
+        lastFrame: [],
+        model: "ltx-2-5",
+        resolution: "720p",
+        sound: "off",
+      })?.id
+    ).toBe("video-ltx-2-5-start-frame")
+    expect(
+      workflowFor("video", {
+        prompt: "A field at dusk",
+        startFrame,
+        lastFrame: startFrame,
+        model: "ltx-2-5",
+      })?.id
+    ).toBe("video-ltx-2-5-start-frame")
+  })
+
   it("names no workflow for an app the catalog does not hold", () => {
     expect(workflowFor("no-such-app", {})).toBeNull()
   })
