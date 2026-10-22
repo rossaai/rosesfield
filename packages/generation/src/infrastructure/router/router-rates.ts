@@ -107,15 +107,12 @@ const usageTables: readonly UsageTable[] = [
   {
     source: "https://docs.meshy.ai/en/api/pricing",
     readOn: "2026-10-22",
-    models: ["meshy/meshy-6", "meshy/meshy-7.1"],
+    models: ["meshy/meshy-6", "meshy/meshy-7", "meshy/meshy-7.1"],
     credits: 20,
     surcharges: [
       {
         credits: 5,
-        when: [
-          { key: "geometryresolution", values: ["2k", "4k"] },
-          { key: "ultramode", values: ["true"] },
-        ],
+        when: [{ key: "geometryresolution", values: ["2k", "4k"] }],
       },
     ],
     refuses: [{ key: "mode", values: ["refine"] }],
