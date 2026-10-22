@@ -102,7 +102,7 @@ export function modeOfModel(
   if (model.kind === "graph") {
     return layersModes.find((mode) => graphs[mode] === model.id) ?? null
   }
-  return hostedTasks[model.task] ?? null
+  return model.task === null ? null : (hostedTasks[model.task] ?? null)
 }
 
 export function modelIndexOf(

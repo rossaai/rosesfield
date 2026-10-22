@@ -43,7 +43,7 @@ export function modelsForApp(
 ): CatalogModel[] {
   const tasks = appTasksOf(app)
   if (tasks.length === 0) {
-    return []
+    return ownGraphOf(app)
   }
   const listed = hosted.flatMap((model) => {
     const task = appTaskOf(model, tasks, app.output.kind)
@@ -93,6 +93,15 @@ function hostedEntry(model: HostedModel, task: string): CatalogModel {
   }
 }
 
+function ownGraphOf(app: AppDefinition): CatalogModel[] {
+  const graph = defaultModelOf(app)
+  return graph === null ||
+    isHostedModelId(graph) ||
+    isDeniedModel(`graph/${graph}`)
+    ? []
+    : [graphEntry(graph, null, null)]
+}
+
 function graphsOf(app: AppDefinition, appTask: string): CatalogModel[] {
   const input = app.inputs.find(
     (one): one is Extract<InputDefinition, { type: "choice" }> =>
@@ -112,8 +121,8 @@ function graphsOf(app: AppDefinition, appTask: string): CatalogModel[] {
 
 function graphEntry(
   value: string,
-  labelKey: string,
-  task: string
+  labelKey: string | null,
+  task: string | null
 ): CatalogModel {
   const facts = factsOf(`graph/${value}`, task)
   return {

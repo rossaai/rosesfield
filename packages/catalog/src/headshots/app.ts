@@ -1,4 +1,6 @@
+import { taskBinding } from "@rosesfield/generation/bindings"
 import { type AppInput, defineApp } from "#define-app"
+import { graphModel } from "#edit/edit-models"
 import { headshotsBinding } from "#headshots/comfy/headshots-binding"
 import {
   backgrounds,
@@ -56,7 +58,12 @@ export const app = defineApp({
     count: { default: defaultHeadshots, max: maxHeadshots },
     aspectRatios: { options: [...headshotRatios], default: "1:1" },
   },
-  engine: headshotsBinding(),
+  engine: taskBinding({
+    tasks: [],
+    input: "model",
+    default: graphModel,
+    fallback: headshotsBinding(),
+  }),
   limits: { timeoutSeconds: 1200, maxRetries: 1 },
   preview: null,
 })
