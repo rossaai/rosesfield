@@ -91,7 +91,11 @@ function usePosterArrival(
         latest.current()
       }
     }
-    picture.decode().then(arrive, arrive)
+    if (typeof picture.decode === "function") {
+      picture.decode().then(arrive, arrive)
+    } else {
+      arrive()
+    }
     return () => {
       isCurrent = false
     }
