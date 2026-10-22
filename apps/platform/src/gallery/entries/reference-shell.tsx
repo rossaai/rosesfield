@@ -91,9 +91,7 @@ function Bar({
           </AppBarAction>
         }
         connect={
-          <AppBarAction tone="primary">
-            {t("sample.nav.connect")}
-          </AppBarAction>
+          <AppBarAction tone="primary">{t("sample.nav.connect")}</AppBarAction>
         }
       />
     </div>
