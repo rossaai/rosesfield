@@ -33,6 +33,8 @@ export {
   PriceRunHandler,
   type PriceRunInput,
   type PriceRunOutput,
+  type PriceRunsInput,
+  type PriceRunsOutput,
 } from "#application/price-run/price-run.handler"
 export {
   ReadModelFormsHandler,

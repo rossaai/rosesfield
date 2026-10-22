@@ -3,6 +3,11 @@ import type {
   EngineBinding,
   RunInputs,
 } from "@rosesfield/contract"
+import {
+  InvalidArgumentError,
+  NotFoundError,
+  PreconditionFailedError,
+} from "@rosesfield/kernel"
 import type { AppCatalog } from "#domain/app-catalog.port"
 import { AppNotFoundError } from "#domain/error/app-not-found.error"
 import { isOneAtATime } from "#domain/field-role"
@@ -28,6 +33,15 @@ export type PriceRunOutput = {
   price: RunPrice
 }
 
+export type PriceRunsInput = {
+  appId: string
+  asks: readonly Omit<PriceRunInput, "appId">[]
+}
+
+export type PriceRunsOutput = {
+  prices: RunPrice[]
+}
+
 type PriceRunHandlerOptions = {
   apps: AppCatalog
   engines: readonly GenerationEngine[]
@@ -35,6 +49,8 @@ type PriceRunHandlerOptions = {
 }
 
 export class PriceRunHandler {
+  static readonly parallelAsks = 6
+
   private readonly apps: AppCatalog
   private readonly engines: readonly GenerationEngine[]
   private readonly prices: PriceBook | null
@@ -79,6 +95,36 @@ export class PriceRunHandler {
     return { price: unknownPrice }
   }
 
+  async executeAll(input: PriceRunsInput): Promise<PriceRunsOutput> {
+    if (this.apps.find(input.appId) === null) {
+      throw new AppNotFoundError({ appId: input.appId })
+    }
+    const prices: RunPrice[] = new Array(input.asks.length)
+    let next = 0
+    const lane = async (): Promise<void> => {
+      for (let at = next++; at < input.asks.length; at = next++) {
+        const ask = input.asks[at]
+        if (ask !== undefined) {
+          prices[at] = await this.priceOne({ ...ask, appId: input.appId })
+        }
+      }
+    }
+    const lanes = Math.min(PriceRunHandler.parallelAsks, input.asks.length)
+    await Promise.all(Array.from({ length: lanes }, lane))
+    return { prices }
+  }
+
+  private async priceOne(input: PriceRunInput): Promise<RunPrice> {
+    try {
+      return (await this.execute(input)).price
+    } catch (error) {
+      if (isRowRefusal(error)) {
+        return unknownPrice
+      }
+      throw error
+    }
+  }
+
   private async measured(
     engine: GenerationEngine,
     app: AppDefinition,
@@ -102,6 +148,14 @@ export class PriceRunHandler {
       ? null
       : { source: "measured", credits: Math.round(credits * 100) / 100 }
   }
+}
+
+function isRowRefusal(error: unknown): boolean {
+  return (
+    error instanceof NotFoundError ||
+    error instanceof InvalidArgumentError ||
+    error instanceof PreconditionFailedError
+  )
 }
 
 function isJobPerOutput(

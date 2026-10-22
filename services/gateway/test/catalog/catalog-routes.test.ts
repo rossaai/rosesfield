@@ -1,17 +1,10 @@
 import { catalogRoutes, modelListResponse } from "@rosesfield/catalog/comfy"
-import {
-  appDefinition,
-  buildPath,
-  type EngineBinding,
-} from "@rosesfield/contract"
-import { type Fetch, RouterCatalog, taskBinding } from "@rosesfield/generation"
-import type { FixedClock } from "@rosesfield/kernel"
+import { buildPath } from "@rosesfield/contract"
+import { type Fetch, RouterCatalog } from "@rosesfield/generation"
 import { afterEach, describe, expect, it } from "vitest"
-import { pickEngines } from "#compose/pick-engines"
-import type { EngineSettings } from "#engine/engine-target"
-import { type Harness, harnessFor, jsonInit, type PortsFor } from "../harness"
-import { localPorts } from "../local-ports"
-import { comfyCloud, demoEngine } from "../server-env"
+import { type Harness, jsonInit } from "../harness"
+import { demoEngine } from "../server-env"
+import { closeGateways, gatewayWith } from "./catalog-gateway"
 import {
   clipModel,
   fakeRouter,
@@ -22,88 +15,9 @@ import {
   wanModel,
 } from "./router-recordings"
 
+afterEach(closeGateways)
+
 const oneHourMs = 3_600_000
-
-const graph: EngineBinding = { adapter: "demo", config: {} }
-
-function taskApp(id: string, tasks: string[]) {
-  return appDefinition.parse({
-    id,
-    nameKey: "name",
-    category: "image",
-    inputs: [
-      {
-        type: "prompt",
-        name: "prompt",
-        labelKey: "inputs.prompt",
-        presence: "required",
-        maxLength: 2000,
-      },
-      {
-        type: "choice",
-        name: "model",
-        labelKey: "inputs.model",
-        options: [
-          { value: "open-picture", labelKey: "model.openPicture" },
-          { value: "open-sketch", labelKey: "model.openSketch" },
-        ],
-        default: "open-picture",
-      },
-    ],
-    output: {
-      kind: "image",
-      count: { default: 1, max: 4 },
-      aspectRatios: { options: ["1:1"], default: "1:1" },
-    },
-    engine: taskBinding({
-      tasks,
-      input: "model",
-      default: "maker/picture-2",
-      fallback: graph,
-    }),
-    limits: { timeoutSeconds: 600, maxRetries: 2 },
-  })
-}
-
-const apps = [
-  taskApp("pictures", ["text-to-image"]),
-  taskApp("clips", ["text-to-video"]),
-]
-
-function portsWith(
-  fetch: Fetch,
-  catalog: (clock: FixedClock) => RouterCatalog,
-  engine: EngineSettings
-): PortsFor {
-  return (clock, folder) => ({
-    ...localPorts(clock, folder),
-    apps,
-    engines: pickEngines(engine, {
-      clock,
-      fetch,
-      catalog: catalog(clock),
-    }),
-  })
-}
-
-let open: Harness[] = []
-
-afterEach(() => {
-  for (const one of open) {
-    one.close()
-  }
-  open = []
-})
-
-function gatewayWith(
-  fetch: Fetch,
-  catalog: (clock: FixedClock) => RouterCatalog,
-  engine: EngineSettings = comfyCloud("comfyui-owner")
-): Harness {
-  const gateway = harnessFor({ portsFor: portsWith(fetch, catalog, engine) })
-  open.push(gateway)
-  return gateway
-}
 
 async function modelsOf(gateway: Harness, appId: string) {
   const response = await gateway.call(

@@ -42,10 +42,15 @@ export {
   modelListResponse,
   modelTag,
   type PriceResponse,
+  type PricesResponse,
   type PriceThird,
+  priceAsksMax,
   priceBody,
   priceResponse,
+  pricesBody,
+  pricesResponse,
   priceThird,
+  runPrice,
 } from "#comfy/model-catalog.contract"
 export { deniedNames, deniedProviders, isDeniedModel } from "#comfy/model-deny"
 export {
