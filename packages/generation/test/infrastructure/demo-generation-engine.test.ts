@@ -162,6 +162,40 @@ describe("DemoGenerationEngine", () => {
     expect(output?.bytes.length).toBe(0)
   })
 
+  it("makes a GLB mesh of one triangle", async () => {
+    const [output] = await outputsOf("mesh", null)
+    expect(output).toMatchObject({
+      kind: "mesh",
+      mime: "model/gltf-binary",
+      width: null,
+      height: null,
+      durationSeconds: null,
+    })
+    const bytes = output?.bytes ?? new Uint8Array(0)
+    const view = new DataView(bytes.buffer, bytes.byteOffset)
+    expect(new TextDecoder().decode(bytes.slice(0, 4))).toBe("glTF")
+    expect(view.getUint32(4, true)).toBe(2)
+    expect(view.getUint32(8, true)).toBe(bytes.length)
+    const jsonLength = view.getUint32(12, true)
+    expect(new TextDecoder().decode(bytes.slice(16, 20))).toBe("JSON")
+    const json = JSON.parse(
+      new TextDecoder().decode(bytes.slice(20, 20 + jsonLength))
+    )
+    expect(json.asset.version).toBe("2.0")
+    expect(json.accessors[0]).toMatchObject({ count: 3, type: "VEC3" })
+    const binStart = 20 + jsonLength
+    const binLength = view.getUint32(binStart, true)
+    expect(
+      new TextDecoder().decode(bytes.slice(binStart + 4, binStart + 7))
+    ).toBe("BIN")
+    expect(binLength).toBe(json.buffers[0].byteLength)
+    expect(binStart + 8 + binLength).toBe(bytes.length)
+    const corners = new Float32Array(
+      bytes.slice(binStart + 8, binStart + 8 + binLength).buffer
+    )
+    expect([...corners]).toEqual([0, 0, 0, 1, 0, 0, 0, 1, 0])
+  })
+
   it("makes as many outputs as the run asked for", async () => {
     expect(await outputsOf("image", "1:1", 3)).toHaveLength(3)
   })

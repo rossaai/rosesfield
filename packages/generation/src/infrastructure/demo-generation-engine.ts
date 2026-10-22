@@ -14,9 +14,11 @@ import {
   type RunPrice,
   unknownPrice,
 } from "#domain/generation-engine.port"
+import { meshMime } from "#infrastructure/comfy/comfy-media"
 import { writeFlatMp4 } from "#infrastructure/demo/flat-mp4"
 import { writeFlatPng } from "#infrastructure/demo/flat-png"
 import { writeSilentWav } from "#infrastructure/demo/silent-wav"
+import { writeTriangleGlb } from "#infrastructure/demo/triangle-glb"
 import { type Timer, TimerJobRunner } from "#infrastructure/timer-job-runner"
 
 type DemoGenerationEngineOptions = {
@@ -42,7 +44,7 @@ export class DemoGenerationEngine extends GenerationEngine {
   static readonly sampleRate = 24_000
   static readonly gray = 128
   static readonly refPattern: RegExp =
-    /^demo:(\d+):(image|video|audio|text):(\d+)x(\d+):(\d+)$/
+    /^demo:(\d+):(image|video|audio|text|mesh):(\d+)x(\d+):(\d+)$/
 
   override readonly key = "demo"
   override readonly origin = "demo"
@@ -146,7 +148,8 @@ function parseRef(ref: string): DemoRun {
     (kind !== "image" &&
       kind !== "video" &&
       kind !== "audio" &&
-      kind !== "text")
+      kind !== "text" &&
+      kind !== "mesh")
   ) {
     throw new RunFailedError({ cause: ref })
   }
@@ -216,6 +219,15 @@ async function outputOf(run: DemoRun): Promise<EngineOutput> {
         kind: "text",
         mime: "text/plain",
         bytes: new Uint8Array(0),
+        width: null,
+        height: null,
+        durationSeconds: null,
+      }
+    case "mesh":
+      return {
+        kind: "mesh",
+        mime: meshMime,
+        bytes: writeTriangleGlb(),
         width: null,
         height: null,
         durationSeconds: null,
