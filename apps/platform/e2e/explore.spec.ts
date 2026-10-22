@@ -135,10 +135,18 @@ test("the Apps page fills its width with cards of 237 px or more, and a rail of 
   await page.goto("/apps")
   const cards = page.locator("[data-slot=app-cards]").first().locator("a")
   await expect(cards.first()).toBeVisible()
-  const [first, second] = await Promise.all([
-    boxOf(cards.nth(0)),
-    boxOf(cards.nth(1)),
-  ])
+  const [first, second] = await page
+    .locator("[data-slot=app-cards]")
+    .first()
+    .evaluate((grid) =>
+      [...grid.querySelectorAll(":scope > a")].slice(0, 2).map((card) => {
+        const { x, y, width, height } = card.getBoundingClientRect()
+        return { x, y, width, height }
+      })
+    )
+  if (first === undefined || second === undefined) {
+    throw new Error("the Apps page lists two cards")
+  }
   if (info.project.name === "desktop") {
     expect(Math.round(first.width)).toBeGreaterThanOrEqual(237)
     expect(Math.round(second.x - first.x - first.width)).toBe(16)
