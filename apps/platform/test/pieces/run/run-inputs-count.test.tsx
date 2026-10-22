@@ -101,4 +101,21 @@ describe("RunInputs count", () => {
     ).toEqual(["3"])
     expect(valuesOf(container, t("field.count.label"))).toEqual([])
   })
+
+  it("lists Count for a run of more than one result, and no Count for a run of one", () => {
+    const image = (id: string, count: number) =>
+      runOf(id, "image", count, {
+        prompt: "a red kite",
+        model: "z-image-turbo",
+      })
+    const two = render(
+      <Shown shown={image("b0000000-0000-4000-8000-000000000004", 2)} />
+    )
+    expect(valuesOf(two.container, t("field.count.label"))).toEqual(["2"])
+    cleanup()
+    const one = render(
+      <Shown shown={image("b0000000-0000-4000-8000-000000000005", 1)} />
+    )
+    expect(valuesOf(one.container, t("field.count.label"))).toEqual([])
+  })
 })

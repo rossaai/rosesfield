@@ -126,15 +126,10 @@ describe("the result viewer's panel", () => {
     expect(container.textContent).not.toMatch(/\bAI\b|machine/i)
   })
 
-  it("opens its details under an Info header that folds them away", () => {
+  it("keeps its details always open, with no Info header to fold them", () => {
     const { container } = renderPanel(entryOf(runOf({})))
-    const header = screen.getByRole("button", { name: t("viewer.info") })
-
-    expect(header.getAttribute("aria-expanded")).toBe("true")
-    expect(header.querySelector("svg")).not.toBeNull()
-    fireEvent.click(header)
-    expect(header.getAttribute("aria-expanded")).toBe("false")
-    expect(container.querySelector("[data-slot=viewer-details]")).toBeNull()
+    expect(screen.queryByRole("button", { name: t("viewer.info") })).toBeNull()
+    expect(container.querySelector("[data-slot=viewer-details]")).not.toBeNull()
   })
 
   it("gives the model row the model and the mode the run used", () => {

@@ -31,7 +31,7 @@ import {
   RunSection,
 } from "@/viewer/result-panel"
 import { runFieldsOf, useRunModels } from "@/viewer/use-run-models"
-import { ViewerActions, ViewerManage } from "@/viewer/viewer-actions"
+import { ViewerActions } from "@/viewer/viewer-actions"
 
 export type ViewerCompare = {
   inputId: string | null
@@ -273,20 +273,25 @@ export function ViewerInfo({
   asset,
   compare,
   measured,
-  onDeleted,
 }: {
   asset: Asset
   compare: ViewerCompare
   measured: MeasuredSize
+}): ReactElement {
+  return (
+    <div data-slot="viewer-info" className="flex flex-col gap-s4">
+      <ViewerDetails asset={asset} compare={compare} measured={measured} />
+    </div>
+  )
+}
+
+export function ViewerFoot({
+  asset,
+  onDeleted,
+}: {
+  asset: Asset
   onDeleted: () => void
 }): ReactElement {
   const { run } = useSourceRun(asset)
-  return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <ViewerDetails asset={asset} compare={compare} measured={measured} />
-      <ViewerManage run={run} />
-      <span aria-hidden="true" className="flex-1" />
-      <ViewerActions asset={asset} run={run} onDeleted={onDeleted} />
-    </div>
-  )
+  return <ViewerActions asset={asset} run={run} onDeleted={onDeleted} />
 }

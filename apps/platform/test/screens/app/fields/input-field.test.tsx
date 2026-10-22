@@ -3,6 +3,7 @@ import { appListing, type InputDefinition } from "@rosesfield/contract"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { t, tCatalog } from "@/copy/t"
+import type { FieldValue } from "@/screens/app/app-form"
 import { InputField } from "@/screens/app/fields/input-field"
 
 const audio = appListing.parse(findApp("audio"))
@@ -17,7 +18,7 @@ function inputOf(name: string): InputDefinition {
   return input
 }
 
-function renderField(input: InputDefinition, value: unknown): void {
+function renderField(input: InputDefinition, value: FieldValue): void {
   render(
     <InputField
       app={audio}
