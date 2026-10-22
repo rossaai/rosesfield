@@ -59,6 +59,10 @@ function report(id: WaitId, ms: number): void {
     type: `wait ${id}`,
     description: `${rounded} ms, bound ${bounds[id]} ms`,
   })
+  expect(
+    rounded,
+    `the ${id} wait reads a time after its start`
+  ).toBeGreaterThanOrEqual(0)
   expect(rounded, `the ${id} wait passes its bound`).toBeLessThanOrEqual(
     bounds[id]
   )
@@ -112,6 +116,9 @@ async function startDemoVideo(): Promise<string> {
   return body.run.id
 }
 
+const stageCards =
+  '[data-slot="app-stage-scroll"] article[data-slot="run-card"]:not([data-state="loading"])'
+
 const chipName =
   '[data-slot="model-row"][data-place="trigger"] [data-slot="model-row-name"]'
 
@@ -126,6 +133,11 @@ test.describe("the three waits on the demo engine", () => {
     await bar
       .getByRole("textbox", { name: "Prompt" })
       .fill("a paper boat on a still pond")
+    const shownBefore = await page
+      .locator(`${stageCards} img`)
+      .evaluateAll((images) =>
+        images.map((image) => image.getAttribute("src") ?? "")
+      )
     const started = page.waitForResponse(
       (response) =>
         response.request().method() === "POST" &&
@@ -136,20 +148,24 @@ test.describe("the three waits on the demo engine", () => {
       await started
     ).json()
     const engineDoneAt = Date.parse(answer.run.createdAt) + demoDelayMs
-    const run = page.locator('[data-slot="app-stage-scroll"] article').first()
+    const run = page.locator(stageCards).first()
     await expect(
       run.locator('[data-slot="working-pulse"]').first()
     ).toBeVisible()
     const painted = await page.waitForFunction(
-      () => {
-        const image = document.querySelector<HTMLImageElement>(
-          '[data-slot="app-stage-scroll"] article img'
-        )
-        return image !== null && image.complete && image.naturalWidth > 0
+      ({ cards, before }) => {
+        const card = document.querySelector(cards)
+        const image = card?.querySelector<HTMLImageElement>("img") ?? null
+        const src = image?.getAttribute("src") ?? ""
+        return image !== null &&
+          src !== "" &&
+          !before.includes(src) &&
+          image.complete &&
+          image.naturalWidth > 0
           ? Date.now()
           : false
       },
-      null,
+      { cards: stageCards, before: shownBefore },
       { polling: "raf", timeout: 30_000 }
     )
     const paintedAt = Number(await painted.jsonValue())
