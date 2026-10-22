@@ -111,7 +111,7 @@ describe("a run on an app page", () => {
     expect(row?.querySelector("[data-slot=run-prompt]")?.textContent).toBe(
       "a dancer turning in a narrow street"
     )
-    expect(card.textContent).not.toContain(t("run.price.unknown"))
+    expect(card.textContent).not.toContain("Price unknown")
     expect(card.querySelector("[data-slot=media-tile-caption]")).toBeNull()
   })
 

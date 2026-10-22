@@ -146,7 +146,7 @@ describe("the Ads price", () => {
           ?.getAttribute("data-priced")
       ).toBe("no")
     )
-    expect(bar().textContent).not.toContain(t("run.price.unknown"))
+    expect(bar().textContent).not.toContain("Price unknown")
     expect(screen.queryByRole("button", { name: pricedName(0) })).toBeNull()
   })
 
@@ -154,7 +154,7 @@ describe("the Ads price", () => {
     openAds({ prices: [[openingValues(), 0.004]] })
     const name = priceLabelsOf(0.004, false).priceName ?? ""
     expect(await screen.findByRole("button", { name })).toBeDefined()
-    expect(bar().textContent).not.toContain(t("run.price.unknown"))
+    expect(bar().textContent).not.toContain("Price unknown")
   })
 
   it("asks the price of the whole count", async () => {

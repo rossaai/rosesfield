@@ -147,9 +147,7 @@ describe("the effect tiles", () => {
     expect(tileNamed("grow-giant").textContent).toContain(
       t("run.price.credits", { amount: "6.95" })
     )
-    expect(tileNamed("melt-away").textContent).not.toContain(
-      t("run.price.unknown")
-    )
+    expect(tileNamed("melt-away").textContent).not.toContain("Price unknown")
     expect(
       tileNamed("melt-away").querySelector("[data-slot=credit-price]")
     ).toBeNull()

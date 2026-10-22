@@ -152,7 +152,7 @@ describe("the model menu and the price", () => {
       ).toBe("no")
     )
     expect(document.querySelector("[data-slot=storyboard-price]")).toBeNull()
-    expect(screen.queryByText(t("run.price.unknown"))).toBeNull()
+    expect(screen.queryByText("Price unknown")).toBeNull()
     expect(screen.queryByRole("button", { name: pricedName(0) })).toBeNull()
   })
 
