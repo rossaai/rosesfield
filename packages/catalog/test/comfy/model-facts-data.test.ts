@@ -10,18 +10,21 @@ import {
   weightsHost,
 } from "#comfy/model-facts"
 
-const markSet = {
-  name: "Simple Icons",
-  version: "16.35.0",
-  licence: "CC0-1.0",
-  url: "https://icons.example/set",
-}
+const markSet = [
+  {
+    name: "Simple Icons",
+    version: "16.35.0",
+    licence: "CC0-1.0",
+    url: "https://icons.example/set",
+  },
+]
 
 const noLine = { none: "No page read holds a description" }
 
 const sample: ModelFactsFile = modelFactsFile.parse({
   markSet,
   marks: {},
+  marksMissing: {},
   boards: {
     "text-to-image": {
       name: "Picture Arena",
@@ -150,6 +153,7 @@ describe("the model facts the catalog holds", () => {
           boards: {},
           markSet,
           marks: {},
+          marksMissing: {},
           models: { "a/b": one },
         }).success
       ).toBe(false)
@@ -159,6 +163,7 @@ describe("the model facts the catalog holds", () => {
         boards: {},
         markSet,
         marks: {},
+        marksMissing: {},
         models: { "a/b": { ...row, ranks: {} } },
       }).success
     ).toBe(true)
@@ -237,33 +242,43 @@ describe("the model facts the catalog holds", () => {
           boards: {},
           markSet,
           marks: {},
+          marksMissing: {},
           models: { "a/b": row },
         }).success
       ).toBe(false)
     }
   })
 
-  it("draws each lab's mark from one public icon set as path data, for labs a model row names and the two services a screen marks", () => {
-    expect(modelFactsData.markSet).toMatchObject({
-      name: "Simple Icons",
-      licence: "CC0-1.0",
-    })
+  it("draws each lab's mark from a pinned public icon set as path data, for labs a model row names and the two services a screen marks", () => {
+    expect(modelFactsData.markSet.map((set) => set.name)).toEqual([
+      "Simple Icons",
+      "LobeHub Icons",
+    ])
+    const lobe = modelFactsData.markSet.find(
+      (set) => set.name === "LobeHub Icons"
+    )
+    expect(lobe?.licence).toBe("MIT")
+    expect(lobe !== undefined && "text" in lobe ? lobe.text : "").toContain(
+      "Permission is hereby granted"
+    )
     const labs = new Set(
       Object.values(modelFactsData.models).map((row) => row.lab)
     )
     const marked = Object.keys(modelFactsData.marks)
-    expect(marked.length).toBeGreaterThan(5)
+    expect(marked.length).toBeGreaterThan(20)
     expect(
       marked.filter((lab) => !(labs.has(lab) || markedServices.includes(lab)))
     ).toEqual([])
     expect(modelFactsData.marks.Google?.slug).toBe("google")
-    expect(Object.hasOwn(modelFactsData.marks, "Black Forest Labs")).toBe(false)
+    expect(modelFactsData.marks["Black Forest Labs"]?.set).toBe("LobeHub Icons")
   })
 
-  it("takes a mark the icon set lacks from its owner's own published file, and names that file", () => {
+  it("takes a mark no icon set holds from its owner's own published file, names that file, and seats it on its owner's ground", () => {
     expect(modelFactsData.marks.Comfy).toMatchObject({
       slug: "comfy",
       hex: "F2FF59",
+      ground: "211927",
+      set: "Comfy",
       source: "https://comfy.org/icons/logomark.svg",
     })
     expect(
@@ -274,10 +289,14 @@ describe("the model facts the catalog holds", () => {
     expect(modelFactsData.marks["Hugging Face"]?.hex).toBe("FFD21E")
   })
 
-  it("colours each lab's mark with the hex its icon set publishes beside it", () => {
+  it("colours each lab's mark with a hex for each scheme, the set's own beside it in light", () => {
     expect(modelFactsData.marks.Google?.hex).toBe("4285F4")
     expect(modelFactsData.marks.MiniMax?.hex).toBe("E73562")
     expect(modelFactsData.marks.DeepSeek?.hex).toBe("5786FE")
+    expect(modelFactsData.marks.OpenAI).toMatchObject({
+      hex: "000000",
+      hexDark: "FFFFFF",
+    })
   })
 
   it("names one lab for each maker, so a picker groups a maker's models once", () => {
@@ -311,9 +330,13 @@ describe("the model facts the catalog holds", () => {
       slug: "maker",
       title: "Maker",
       hex: "4285F4",
+      hexDark: "4285F4",
+      set: "Simple Icons",
       path: "M0 0h24v24H0z",
     }
     const marks = [
+      { ...mark, hexDark: "dark" },
+      { ...mark, set: "Somewhere" },
       { ...mark, path: "<image href='maker.png'/>" },
       { ...mark, path: 'M0 0h24v24H0z"/><script>' },
       { ...mark, slug: "Maker Lab" },
@@ -327,6 +350,7 @@ describe("the model facts the catalog holds", () => {
           boards: {},
           markSet,
           marks: { "Maker Lab": mark },
+          marksMissing: {},
           models: {},
         }).success
       ).toBe(false)
@@ -336,6 +360,7 @@ describe("the model facts the catalog holds", () => {
         boards: {},
         markSet,
         marks: { "Maker Lab": mark },
+        marksMissing: {},
         models: {},
       }).success
     ).toBe(true)
