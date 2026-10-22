@@ -2,7 +2,7 @@ import { z } from "zod"
 import { assetId, runId } from "#id.contract"
 import { timestamp } from "#value.contract"
 
-export const assetKind = z.enum(["image", "video", "audio", "text"])
+export const assetKind = z.enum(["image", "video", "audio", "text", "mesh"])
 
 export const mimeType = z
   .string()

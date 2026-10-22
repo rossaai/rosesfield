@@ -13,9 +13,9 @@ import { findCatalogApp } from "@/catalog/catalog-apps"
 import { aspectStyle } from "@/pieces/asset-tile"
 import { OutputRow } from "@/pieces/run/output-row"
 import { RunChrome } from "@/pieces/run/run-chrome"
-import { runAspect } from "@/pieces/run/run-facts"
 import {
   type ChromePlace,
+  outputAspectOf,
   type RunChromeOf,
   RunOutputs,
 } from "@/pieces/run/run-outputs"
@@ -133,7 +133,7 @@ export function runHeightOf(run: Run): number {
   if (kind === "audio" || kind === "text") {
     return audioHeight
   }
-  const aspect = runAspect(run)
+  const aspect = outputAspectOf(run)
   const count = Math.max(run.outputs.length, run.count, 1)
   return aspect.height / (aspect.width * count) + chromeHeight
 }

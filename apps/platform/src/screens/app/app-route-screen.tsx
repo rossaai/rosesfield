@@ -61,13 +61,14 @@ export function AppRouteScreen(): ReactElement {
   return (
     <AskedTab tab={search.tab ?? null}>
       <AppScreenFor
-        key={`${app.id}:${search.from ?? ""}:${search.use ?? ""}:${search.share ?? ""}:${search.tab ?? ""}:${search.mode ?? ""}`}
+        key={`${app.id}:${search.from ?? ""}:${search.use ?? ""}:${search.share ?? ""}:${search.tab ?? ""}:${search.mode ?? ""}:${search.open ?? ""}`}
         app={app}
         seeds={{
           use: search.use,
           from: search.from,
           share: search.share,
           mode: search.mode,
+          open: search.open,
         }}
       />
     </AskedTab>

@@ -1,6 +1,11 @@
 import type { AssetKind, RunInputs } from "@rosesfield/contract"
 import type { EngineOutput } from "#domain/generation-engine.port"
-import { mediaKindOf, mimeOf } from "#infrastructure/comfy/comfy-media"
+import {
+  isGlb,
+  mediaKindOf,
+  meshMime,
+  mimeOf,
+} from "#infrastructure/comfy/comfy-media"
 import { mediaSizeOf } from "#infrastructure/media-size"
 import { isObject } from "#infrastructure/router/router-json"
 import type {
@@ -128,7 +133,11 @@ function foundOf(
     const bytes = bytesOf(inline[2] ?? "")
     return bytes === null
       ? null
-      : { kind: "bytes", bytes, mime: inline[1] ?? "" }
+      : {
+          kind: "bytes",
+          bytes,
+          mime: sniffed(bytes, (inline[1] ?? "").toLowerCase()),
+        }
   }
   if (leaf === "url") {
     return /^https:\/\/\S+$/.test(value) && !written.has(value)
@@ -184,6 +193,9 @@ function sniffed(bytes: Uint8Array, given: string): string {
     given !== "binary/octet-stream"
   ) {
     return given
+  }
+  if (isGlb(bytes)) {
+    return meshMime
   }
   const head = [...bytes.subarray(0, 12)]
   const ascii = String.fromCharCode(...head)

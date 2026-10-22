@@ -11,6 +11,7 @@ type AppSearch = {
   share?: string
   tab?: StageTab
   mode?: string
+  open?: string
 }
 
 export const Route = createFileRoute("/_shell/apps/$appId")({
@@ -20,12 +21,14 @@ export const Route = createFileRoute("/_shell/apps/$appId")({
     const share = readText(search.share)
     const tab = readOneOf(search.tab, stageTabs)
     const mode = readText(search.mode)
+    const open = readText(search.open)
     return {
       ...(use === undefined ? {} : { use }),
       ...(from === undefined ? {} : { from }),
       ...(share === undefined ? {} : { share }),
       ...(tab === undefined ? {} : { tab }),
       ...(mode === undefined ? {} : { mode }),
+      ...(open === undefined ? {} : { open }),
     }
   },
   beforeLoad: ({ params, search }) => {

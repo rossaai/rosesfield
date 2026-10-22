@@ -18,7 +18,7 @@ import { findWorkflow, type Workflow } from "#list-workflows"
 
 const heldFiles = heldFilesOf()
 
-const closedTasks: readonly string[] = ["video-edit"]
+const closedTasks: readonly string[] = ["video-edit", "three-d"]
 
 const taskApps = listApps().filter((app) => defaultModelOf(app) !== null)
 

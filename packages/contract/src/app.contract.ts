@@ -44,6 +44,7 @@ export const appOutput = z.discriminatedUnion("kind", [
   }),
   z.strictObject({ kind: z.literal("audio"), count: outputCount }),
   z.strictObject({ kind: z.literal("text"), count: outputCount }),
+  z.strictObject({ kind: z.literal("mesh"), count: outputCount }),
 ])
 
 export const engineBinding = z.strictObject({

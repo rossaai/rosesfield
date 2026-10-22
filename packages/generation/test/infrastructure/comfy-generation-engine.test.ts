@@ -3,6 +3,7 @@ import type { EngineRequest } from "#domain/generation-engine.port"
 import { comfyWorkflow } from "#infrastructure/comfy/comfy-workflow-binding"
 import { ComfyGenerationEngine } from "#infrastructure/comfy-generation-engine"
 import { writeFlatMp4 } from "#infrastructure/demo/flat-mp4"
+import { glbBytes } from "../glb-bytes"
 import { pngBytes, referenceId } from "../sample"
 import {
   cloudUrl,
@@ -231,6 +232,35 @@ describe("ComfyGenerationEngine", () => {
     const outputs = await engine.listOutputs(jobId)
     expect(outputs).toHaveLength(1)
     expect(outputs[0]).toMatchObject({ kind: "video", mime: "video/mp4" })
+  })
+
+  it.each([
+    { type: "3d", content_type: "application/octet-stream", name: "mesh" },
+    { type: "model", content_type: "model/gltf-binary", name: "mesh" },
+    { type: "file", content_type: "application/octet-stream", name: "a.glb" },
+  ])("keeps a GLB a graph saves as a mesh: %j", async (listed) => {
+    const glb = {
+      ...listed,
+      node_id: "60",
+      size_bytes: 28,
+      id: outputId,
+      hash: null,
+      url: `https://storage.comfy.org/signed/${outputId}`,
+      url_expires_at: "2026-10-22T13:16:19Z",
+      job_id: jobId,
+    }
+    const { engine } = engineFor([
+      comfyV2.read({ ...succeededJob, outputs: [glb] }),
+      { ...comfyV2.content(), bytes: glbBytes() },
+    ])
+    const outputs = await engine.listOutputs(jobId)
+    expect(outputs).toHaveLength(1)
+    expect(outputs[0]).toMatchObject({
+      kind: "mesh",
+      mime: "model/gltf-binary",
+      width: null,
+      height: null,
+    })
   })
 
   it("stores each output with the width and height its file shows", async () => {

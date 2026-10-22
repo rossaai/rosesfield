@@ -70,8 +70,14 @@ export function RunFrame({
   )
 }
 
+const meshAspect: MediaAspect = { width: 1, height: 1 }
+
 function outputKindOf(run: Run): string {
   return findCatalogApp(run.appId)?.output.kind ?? "image"
+}
+
+export function outputAspectOf(run: Run): MediaAspect {
+  return outputKindOf(run) === "mesh" ? meshAspect : runAspect(run)
 }
 
 function LandedTile({
@@ -101,7 +107,7 @@ function LandedTile({
 
 function WorkingTiles({ run, list, chrome }: RunOutputsProps): ReactElement {
   const kind = outputKindOf(run)
-  const aspect = runAspect(run)
+  const aspect = outputAspectOf(run)
   const count = run.count
   const shown = list ?? run.outputs
   const isBare = chrome !== undefined
@@ -204,7 +210,7 @@ function WorkingRun({ run, list, chrome }: RunOutputsProps): ReactElement {
 }
 
 function useOutputAspects(run: Run): MediaAspect[] {
-  const fallback = runAspect(run)
+  const fallback = outputAspectOf(run)
   const assets = useQueries({
     queries: run.outputs.map((assetId) => assetQuery(assetId)),
   })
@@ -217,7 +223,7 @@ function useOutputAspects(run: Run): MediaAspect[] {
 }
 
 function DoneRun({ run, list, chrome }: RunOutputsProps): ReactElement {
-  const aspect = runAspect(run)
+  const aspect = outputAspectOf(run)
   const aspects = useOutputAspects(run)
   const kind = outputKindOf(run)
   const isBare = chrome !== undefined
@@ -323,5 +329,5 @@ function endedFrameOf(run: Run): {
   const kind = outputKindOf(run)
   return kind === "audio" || kind === "text"
     ? { place: "under" }
-    : { aspect: runAspect(run), place: "over" }
+    : { aspect: outputAspectOf(run), place: "over" }
 }

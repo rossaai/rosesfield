@@ -33,7 +33,12 @@ import {
   type Fetch,
   uploadComfyInputs,
 } from "#infrastructure/comfy/comfy-low"
-import { mediaKindOf, mimeOf } from "#infrastructure/comfy/comfy-media"
+import {
+  isGlb,
+  mediaKindOf,
+  meshMime,
+  mimeOf,
+} from "#infrastructure/comfy/comfy-media"
 import { applyBindings } from "#infrastructure/comfy/comfy-value-binding"
 import {
   addVideoStills,
@@ -79,6 +84,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
     "video",
     "audio",
     "text",
+    "3d",
   ]
 
   override readonly key = comfyWorkflowAdapter
@@ -323,6 +329,9 @@ export class ComfyGenerationEngine extends GenerationEngine {
       this.low.getAssetContent(output.id, { timeoutMs: this.downloadTimeoutMs })
     )
     const bytes = new Uint8Array(await callComfy(() => response.arrayBuffer()))
+    if (isGlb(bytes)) {
+      return meshOutputOf(bytes)
+    }
     const size = mediaSizeOf(bytes)
     return {
       kind: kindOf(output.type, output.content_type),
@@ -336,7 +345,11 @@ export class ComfyGenerationEngine extends GenerationEngine {
 }
 
 function isKept(output: JobOutput): boolean {
-  return ComfyGenerationEngine.outputKinds.includes(output.type)
+  return (
+    ComfyGenerationEngine.outputKinds.includes(output.type) ||
+    mimeOf(output.content_type) === meshMime ||
+    output.name.toLowerCase().endsWith(".glb")
+  )
 }
 
 function keepAtMost<V>(map: Map<string, V>, ref: string, value: V): void {
@@ -358,6 +371,17 @@ function gpuCreditsOf(isCloud: boolean, job: Job): number | null {
   const credits =
     (executionMs / 1000) * ComfyGenerationEngine.gpuCreditsPerSecond
   return Math.round(credits * 1_000_000) / 1_000_000
+}
+
+function meshOutputOf(bytes: Uint8Array): EngineOutput {
+  return {
+    kind: "mesh",
+    mime: meshMime,
+    bytes,
+    width: null,
+    height: null,
+    durationSeconds: null,
+  }
 }
 
 function kindOf(type: string, contentType: string): AssetKind {
