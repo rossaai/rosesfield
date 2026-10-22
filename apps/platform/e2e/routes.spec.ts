@@ -156,10 +156,22 @@ test("the first visit opens Explore at / with its banner", async ({
   expect(errors).toEqual([])
 })
 
-test("Welcome stays reachable at /welcome", async ({ page }) => {
+test("/welcome opens Explore, and the logo opens Explore from every page", async ({
+  page,
+}, info) => {
   const errors = watchErrors(page)
   await page.goto("/welcome")
-  await expect(page).toHaveURL(/\/welcome$/)
-  await expect(page.getByRole("heading", { level: 2 }).first()).toBeVisible()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.locator("[data-slot=app-tile-grid]")).toBeVisible()
+  for (const path of ["/apps/image", "/library", "/settings"]) {
+    await page.goto(path)
+    const bar = page.locator("header[data-slot='app-bar']")
+    const logo = bar
+      .locator("[data-slot='app-bar-mark']")
+      .nth(info.project.name === "phone" ? 1 : 0)
+      .locator("a")
+    await logo.click()
+    await expect(page, `the logo on ${path}`).toHaveURL(/\/$/)
+  }
   expect(errors).toEqual([])
 })

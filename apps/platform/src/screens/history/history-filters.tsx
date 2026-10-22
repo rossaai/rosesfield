@@ -2,17 +2,16 @@ import {
   SegmentedControl,
   type SegmentedItem,
 } from "@rosesfield/ui/components/segmented-control"
-import { LayoutGridIcon, ShapesIcon } from "lucide-react"
+import { ShapesIcon } from "lucide-react"
 import type { ReactElement } from "react"
-import { appName, type OutputKind, outputKinds } from "@/catalog/app-facts"
-import { catalogApps } from "@/catalog/catalog-apps"
+import { type OutputKind, outputKinds } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import {
+  appFilterGroups,
   type FilterChoice,
   type FilterGroup,
   kindPictures,
 } from "@/screens/library/view-cluster"
-import { appIcon } from "@/shell/nav-rows"
 
 export type StateChoice = "all" | "working" | "failed"
 
@@ -22,19 +21,6 @@ const stateItems: SegmentedItem<StateChoice>[] = [
   { value: "all", label: t("kind.all") },
   { value: "working", label: t("history.filter.working") },
   { value: "failed", label: t("history.filter.failed") },
-]
-
-const appChoices: readonly FilterChoice[] = [
-  {
-    value: every,
-    label: t("history.filter.allApps"),
-    picture: <LayoutGridIcon />,
-  },
-  ...catalogApps.map((app) => ({
-    value: app.id,
-    label: appName(app),
-    picture: appIcon(app),
-  })),
 ]
 
 const kindChoices: readonly FilterChoice[] = [
@@ -62,14 +48,6 @@ function kindOf(value: string): OutputKind | undefined {
 export function historyFilterGroups(props: HistoryFilterProps): FilterGroup[] {
   return [
     {
-      id: "app",
-      name: t("history.filter.app"),
-      icon: <LayoutGridIcon />,
-      choices: appChoices,
-      value: props.appId ?? every,
-      onChoose: (value) => props.onApp(value === every ? null : value),
-    },
-    {
       id: "kind",
       name: t("library.kind.label"),
       icon: <ShapesIcon />,
@@ -77,6 +55,7 @@ export function historyFilterGroups(props: HistoryFilterProps): FilterGroup[] {
       value: props.kind ?? every,
       onChoose: (value) => props.onKind(kindOf(value)),
     },
+    ...appFilterGroups(props.appId, props.onApp),
   ]
 }
 

@@ -1,11 +1,14 @@
 import { Button } from "@rosesfield/ui/components/button"
-import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { useQuery } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 import type { GatewaySettings } from "@/api/gateway-settings"
 import { settingsQuery } from "@/api/queries"
 import { t } from "@/copy/t"
+import {
+  SettingsGroup,
+  SettingsRowSkeleton,
+} from "@/screens/settings/settings-row"
 
 export function ServerPart({
   children,
@@ -14,7 +17,12 @@ export function ServerPart({
 }): ReactNode {
   const settings = useQuery(settingsQuery)
   if (settings.isPending) {
-    return <Skeleton className="h-s5 w-full" />
+    return (
+      <SettingsGroup>
+        <SettingsRowSkeleton />
+        <SettingsRowSkeleton />
+      </SettingsGroup>
+    )
   }
   if (settings.isError) {
     return (

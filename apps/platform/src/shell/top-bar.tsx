@@ -29,6 +29,7 @@ import {
   type ScreenLink,
 } from "@/shell/nav-rows"
 import { appIdOfPath } from "@/shell/page-kind"
+import { useOpenConnect } from "@/shell/shell-dialogs"
 
 export function isAreaCurrent(area: MediaArea, pathname: string): boolean {
   const appId = appIdOfPath(pathname)
@@ -149,6 +150,7 @@ export function TopBar(): ReactElement {
   })
   const isAppPage = appIdOfPath(pathname) !== null
   const groups = navGroups()
+  const openConnect = useOpenConnect()
   return (
     <AppBar
       label={t("shell.name")}
@@ -167,7 +169,7 @@ export function TopBar(): ReactElement {
       areaMenu={<PhoneMenu groups={groups} />}
       balance={<CreditBalance />}
       connect={
-        <AppBarAction tone="primary" render={<Link to="/connect" />}>
+        <AppBarAction tone="primary" onClick={() => openConnect()}>
           {t("shell.nav.connect")}
         </AppBarAction>
       }

@@ -17,7 +17,7 @@ import { AssetTile, aspectOfAsset } from "@/pieces/asset-tile"
 import { runAppName, runAspect, runModel } from "@/pieces/run/run-facts"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import {
-  columnCount,
+  columnLayout,
   packColumns,
   tileStepOf,
   useAvailableWidth,
@@ -211,21 +211,24 @@ export function ResultGrid({
   const isRegular = useIsRegularWindow()
   const [ref, available] = useAvailableWidth()
   const step = tileStepOf(size, isRegular)
-  const columns = packColumns(
-    items,
-    columnCount(available, step, isRegular),
-    (item) => item.aspect
-  )
+  const layout = columnLayout(items.length, available, step, isRegular)
+  const columns = packColumns(items, layout.count, (item) => item.aspect)
   const list = items.map((item) => item.assetId)
   return (
     <div ref={ref} data-slot="result-grid" className="flex w-full flex-col">
-      <div className="mx-auto flex items-start gap-4">
+      <div
+        data-fills={layout.fills ? "" : undefined}
+        className="flex w-full items-start justify-start gap-2"
+      >
         {columns.map((column, index) => (
           <div
             // biome-ignore lint/suspicious/noArrayIndexKey: a column's place is its identity
             key={index}
             data-slot="result-column"
-            className={cn("flex flex-col gap-4", step.className)}
+            className={cn(
+              "flex min-w-0 flex-col gap-2",
+              layout.fills ? "flex-1" : cn("shrink-0", step.className)
+            )}
           >
             {column.map((item) => (
               <GridTile key={item.assetId} item={item} list={list} />

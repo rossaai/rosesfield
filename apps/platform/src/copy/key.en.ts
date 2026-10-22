@@ -32,6 +32,7 @@ export const keyCopy = {
   "key.unreachable.title": "Comfy did not answer",
   "key.unreachable.body": "Your key is not kept yet. Try again.",
   "key.credits": "{amount} credits",
+  "key.account.title": "Your Comfy account",
   "key.cap.left": "{left} of {cap} credits left",
   "key.cap.spent": "This link has spent its {cap} credits",
 } satisfies Record<string, string>

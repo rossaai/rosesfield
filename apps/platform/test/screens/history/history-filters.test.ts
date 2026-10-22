@@ -17,17 +17,9 @@ function groupsWith(appId: string | null) {
 }
 
 describe("History's filter groups", () => {
-  it("count every app and every kind, each with All first", () => {
+  it("hold the kinds, then the apps grouped by kind, so no group lists every app", () => {
     const { groups } = groupsWith(null)
-    const [apps, kinds] = groups
-    expect(apps?.choices).toHaveLength(catalogApps.length + 1)
-    expect(apps?.choices[0]?.value).toBe("all")
-    for (const choice of [
-      ...(apps?.choices ?? []),
-      ...(kinds?.choices ?? []),
-    ]) {
-      expect(choice.picture, choice.value).toBeTruthy()
-    }
+    const [kinds, ...appGroups] = groups
     expect(kinds?.choices.map((choice) => choice.value)).toEqual([
       "all",
       "image",
@@ -35,14 +27,38 @@ describe("History's filter groups", () => {
       "audio",
       "text",
     ])
+    expect(appGroups.map((group) => group.id)).toEqual([
+      "app-image",
+      "app-video",
+      "app-audio",
+      "app-character",
+    ])
+    const listed = appGroups.flatMap((group) =>
+      group.choices.map((choice) => choice.value)
+    )
+    expect([...listed].sort()).toEqual(catalogApps.map((app) => app.id).sort())
+    for (const group of appGroups) {
+      expect(group.choices.length).toBeLessThan(catalogApps.length)
+      for (const choice of group.choices) {
+        expect(
+          catalogApps.find((app) => app.id === choice.value)?.category
+        ).toBe(group.id.replace("app-", ""))
+        expect(choice.picture, choice.value).toBeTruthy()
+      }
+    }
   })
 
-  it("marks the chosen app, and choosing All clears it", () => {
-    const { groups, onApp, onKind } = groupsWith("image")
-    const [apps, kinds] = groups
-    expect(apps?.value).toBe("image")
-    apps?.onChoose("all")
-    expect(onApp).toHaveBeenCalledWith(null)
+  it("marks the chosen app in its kind's group, and choosing it again clears it", () => {
+    const { groups, onApp, onKind } = groupsWith("video")
+    const video = groups.find((group) => group.id === "app-video")
+    const image = groups.find((group) => group.id === "app-image")
+    expect(video?.value).toBe("video")
+    expect(image?.value).toBe("")
+    video?.onChoose("video")
+    expect(onApp).toHaveBeenLastCalledWith(null)
+    image?.onChoose("image")
+    expect(onApp).toHaveBeenLastCalledWith("image")
+    const kinds = groups[0]
     kinds?.onChoose("video")
     kinds?.onChoose("all")
     expect(onKind.mock.calls).toEqual([["video"], [undefined]])

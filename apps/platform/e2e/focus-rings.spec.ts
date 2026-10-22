@@ -311,7 +311,7 @@ for (const path of ["/history", "/library", "/apps/image", "/apps/video"]) {
   })
 }
 
-test("Library's search field and its first-column tile start on the page title's 16 px gutter", async ({
+test("Library's first-column tile starts on the page title's 16 px gutter, and its search field sits in the title row", async ({
   page,
 }) => {
   await open(page, "/library")
@@ -323,6 +323,17 @@ test("Library's search field and its first-column tile start on the page title's
   expect(box?.x).toBe(16)
   const search = page.getByRole("searchbox", { name: "Search your library" })
   if (await search.isVisible()) {
-    expect((await search.boundingBox())?.x).toBe(16)
+    const title = await page
+      .locator("header h1")
+      .filter({ visible: true })
+      .first()
+      .boundingBox()
+    const field = await search.boundingBox()
+    if (title === null || field === null) {
+      throw new Error("the title row holds the title and the search field")
+    }
+    const middle = (box: { y: number; height: number }): number =>
+      box.y + box.height / 2
+    expect(Math.abs(middle(field) - middle(title))).toBeLessThan(1)
   }
 })

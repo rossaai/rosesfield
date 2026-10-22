@@ -9,6 +9,7 @@ import { SelectableTile } from "@/pieces/selectable-tile"
 import { UploadRow } from "@/pieces/upload-row"
 import { useLongPress } from "@/pieces/use-long-press"
 import type { Upload } from "@/pieces/use-uploads"
+import { squareSteps, stepOf } from "@/screens/library/tile-columns"
 
 type DayGroup = { key: number; label: string; assets: Asset[] }
 
@@ -31,6 +32,7 @@ export function groupByDay(assets: readonly Asset[], now: Date): DayGroup[] {
 }
 
 type LibraryGridProps = {
+  size: number
   assets: readonly Asset[]
   runsById: ReadonlyMap<string, Run>
   working: readonly Run[]
@@ -103,7 +105,12 @@ export function LibraryGrid(props: LibraryGridProps): ReactElement {
       {groupByDay(props.assets, new Date()).map((group) => (
         <section key={group.key} className="flex flex-col gap-s3">
           <h2 className="text-body font-medium">{group.label}</h2>
-          <MediaGrid>
+          <MediaGrid
+            data-size={props.size}
+            className={
+              props.isTouch ? squareSteps[0] : stepOf(squareSteps, props.size)
+            }
+          >
             {group.assets.map((asset) =>
               selected === null ? (
                 <PressTile

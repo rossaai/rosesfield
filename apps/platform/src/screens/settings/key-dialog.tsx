@@ -74,7 +74,7 @@ export function isRefusal(status: KeyStatus): status is Refusal {
   return status !== "missing" && status !== "valid"
 }
 
-function ExternalLink({
+export function ExternalLink({
   href,
   children,
 }: {
@@ -178,7 +178,7 @@ function useKeyCheck() {
   })
 }
 
-function KeyField({
+export function KeyField({
   value,
   onChange,
   problem,
@@ -272,35 +272,41 @@ function refusalOf(account: Account | null, isError: boolean): Refusal | null {
   return account !== null && isRefusal(account.key) ? account.key : null
 }
 
-export function KeyForm({ onDone }: { onDone: () => void }): ReactElement {
+export type KeyEntry = KeyFormViewProps & { accepted: Account | null }
+
+export function useKeyEntry(): KeyEntry {
   const [value, setValue] = useState("")
   const [problem, setProblem] = useState<CopyKey | null>(null)
   const check = useKeyCheck()
   useKeepAccepted(check.data ?? null)
   const account = check.data?.account ?? null
-  if (account?.key === "valid") {
-    return <KeyAccepted credits={account.credits} onDone={onDone} />
+  return {
+    value,
+    onChange: (next) => {
+      setProblem(null)
+      check.reset()
+      setValue(next)
+    },
+    problem,
+    refusal: refusalOf(account, check.isError),
+    busy: check.isPending,
+    onSubmit: () => {
+      const found = problemOfKey(value)
+      setProblem(found === null ? null : keyProblems[found])
+      if (found === null) {
+        check.mutate(value.trim())
+      }
+    },
+    accepted: account?.key === "valid" ? account : null,
   }
-  return (
-    <KeyFormView
-      value={value}
-      onChange={(next) => {
-        setProblem(null)
-        check.reset()
-        setValue(next)
-      }}
-      problem={problem}
-      refusal={refusalOf(account, check.isError)}
-      busy={check.isPending}
-      onSubmit={() => {
-        const found = problemOfKey(value)
-        setProblem(found === null ? null : keyProblems[found])
-        if (found === null) {
-          check.mutate(value.trim())
-        }
-      }}
-    />
-  )
+}
+
+export function KeyForm({ onDone }: { onDone: () => void }): ReactElement {
+  const { accepted, ...entry } = useKeyEntry()
+  if (accepted !== null) {
+    return <KeyAccepted credits={accepted.credits} onDone={onDone} />
+  }
+  return <KeyFormView {...entry} />
 }
 
 export function KeyDialog({

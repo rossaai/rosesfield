@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import type { GatewaySettings } from "@/api/gateway-settings"
 import { t } from "@/copy/t"
 import type { Account } from "@/screens/settings/account-query"
-import { EngineCard } from "@/screens/settings/engine-card"
+import { EnginePane } from "@/screens/settings/engine-pane"
 import { renderAt } from "../../shell/shell-router"
 
 afterEach(cleanup)
@@ -26,9 +26,9 @@ const noKey: Account = {
   cap: null,
 }
 
-describe("the engine card", () => {
+describe("the engine pane", () => {
   it("offers to paste your key on a server on your machine with no setting", async () => {
-    renderAt("/", () => <EngineCard />, {
+    renderAt("/", () => <EnginePane />, {
       settings: localDemo,
       account: noKey,
     })
@@ -40,7 +40,7 @@ describe("the engine card", () => {
   })
 
   it("says where to set the key on a server that holds its own", async () => {
-    renderAt("/", () => <EngineCard />, {
+    renderAt("/", () => <EnginePane />, {
       settings: { ...localDemo, keyFrom: "server" },
       account: noKey,
     })

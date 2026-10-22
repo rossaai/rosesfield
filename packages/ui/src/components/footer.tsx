@@ -16,8 +16,6 @@ type FooterProps = {
   label: string
   heading: string
   groups: ReadonlyArray<FooterGroup>
-  notice: string
-  legal: ReadonlyArray<FooterLink>
 }
 
 const linkClass =
@@ -40,13 +38,7 @@ function Group({ group }: { group: FooterGroup }): ReactElement {
   )
 }
 
-function Footer({
-  label,
-  heading,
-  groups,
-  notice,
-  legal,
-}: FooterProps): ReactElement {
+function Footer({ label, heading, groups }: FooterProps): ReactElement {
   return (
     <footer
       role="contentinfo"
@@ -68,20 +60,6 @@ function Footer({
             ))}
           </div>
         </div>
-      </div>
-      <div className="flex w-full flex-col-reverse items-center gap-5 bg-canvas p-6 text-body @regular:h-17 @regular:flex-row @regular:justify-between @regular:py-0">
-        <p className="text-center text-ink-muted @regular:text-start">
-          {notice}
-        </p>
-        <ul className="flex flex-wrap justify-center gap-6">
-          {legal.map((link) => (
-            <li key={link.id}>
-              <a href={link.href} className={linkClass}>
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
       </div>
     </footer>
   )
