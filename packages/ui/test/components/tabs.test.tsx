@@ -1,6 +1,6 @@
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 afterEach(cleanup)
@@ -70,5 +70,25 @@ describe("TabsList", () => {
         ...interaction.ringRoom.split(" "),
       ])
     )
+  })
+
+  it("sets its tabs space.s1 apart and fades the edge a tab passes under while the strip scrolls, per the tabs record", () => {
+    render(
+      <Tabs defaultValue="one">
+        <TabsList aria-label="Modes">
+          <TabsTrigger value="one">Text and image</TabsTrigger>
+          <TabsTrigger value="two">References</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    )
+    const list = screen.getByRole("tablist", { name: "Modes" })
+    expect(classesOf(list)).toContain("gap-s1")
+    expect(list.getAttribute("data-scroll-end")).toBe("no")
+    Object.defineProperty(list, "scrollWidth", { value: 400 })
+    Object.defineProperty(list, "clientWidth", { value: 200 })
+    fireEvent.scroll(list)
+    expect(list.getAttribute("data-scroll-end")).toBe("yes")
+    expect(list.style.maskImage).toContain("transparent")
+    expect(list.style.maskImage).toContain("var(--spacing-s8)")
   })
 })

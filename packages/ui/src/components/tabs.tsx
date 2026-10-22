@@ -1,8 +1,9 @@
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs"
 import { interaction } from "@rosesfield/ui/components/interaction"
+import { edgeMaskOf, useScrollEnds } from "@rosesfield/ui/hooks/use-scroll-ends"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
-import type { ReactElement } from "react"
+import { type ReactElement, useRef } from "react"
 
 function Tabs({ className, ...props }: TabsPrimitive.Root.Props): ReactElement {
   return (
@@ -14,16 +15,30 @@ function Tabs({ className, ...props }: TabsPrimitive.Root.Props): ReactElement {
   )
 }
 
+const stripFade = "var(--spacing-s8)"
+
 function TabsList({
   className,
   children,
+  style,
+  onScroll,
   ...props
 }: TabsPrimitive.List.Props): ReactElement {
+  const strip = useRef<HTMLDivElement>(null)
+  const { ends, update } = useScrollEnds(strip)
   return (
     <TabsPrimitive.List
+      ref={strip}
       data-slot="tabs-list"
+      data-scroll-start={ends.start ? "yes" : "no"}
+      data-scroll-end={ends.end ? "yes" : "no"}
+      onScroll={(event) => {
+        update()
+        onScroll?.(event)
+      }}
+      style={{ ...edgeMaskOf(ends, stripFade), ...style }}
       className={cn(
-        "relative flex max-w-[calc(100%+var(--spacing-focus-ring)*4)] items-center gap-s2 overflow-x-auto",
+        "relative flex max-w-[calc(100%+var(--spacing-focus-ring)*4)] items-center gap-s1 overflow-x-auto [scrollbar-width:none]",
         interaction.ringRoom,
         className
       )}
