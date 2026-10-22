@@ -118,18 +118,11 @@ async function openSheet(): Promise<void> {
   await screen.findByRole("dialog")
 }
 
-function tilesShown(): { effect: string | null; look: string | null }[] {
+function tilesShown(): (string | null)[] {
   return Array.from(
     sheetPart("sheet-body").querySelectorAll("[data-effect]")
-  ).map((tile) => ({
-    effect: tile.getAttribute("data-effect"),
-    look: tile.getAttribute("data-look"),
-  }))
+  ).map((tile) => tile.getAttribute("data-effect"))
 }
-
-const drafts = effectRecipes
-  .filter((recipe) => !held.includes(recipe.effect))
-  .map((recipe) => recipe.effect)
 
 function sheetPart(slot: string): HTMLElement {
   const part = document.querySelector<HTMLElement>(`[data-slot='${slot}']`)
@@ -180,29 +173,19 @@ describe("Effects on a phone", () => {
 })
 
 describe("Effects drafts", () => {
-  it("shows every recipe on a server that answers only on this computer, each draft marked after the passed looks", async () => {
+  it("shows only the judged looks on a server that answers only on this computer, and no tile reads Draft", async () => {
     openEffects(localSettings)
     await openSheet()
-    expect(tilesShown()).toEqual([
-      ...held.map((effect) => ({ effect, look: "passed" })),
-      ...drafts.map((effect) => ({ effect, look: "draft" })),
-    ])
-    const draft = sheetPart("sheet-body").querySelector(
-      `[data-effect='${drafts[0]}']`
+    expect(tilesShown()).toEqual(held)
+    expect(sheetPart("sheet-body").textContent).not.toContain(
+      tCatalog("effects.draft")
     )
-    expect(
-      draft?.querySelector("[data-slot='effect-draft']")?.textContent
-    ).toBe(tCatalog("effects.draft"))
-    expect(draft?.querySelector("video")).toBeNull()
   })
 
   it("opens Effects on a local server while the shipped app is closed", async () => {
     openEffects(localSettings, shippedApp([]))
     await openSheet()
-    expect(tilesShown()).toEqual([
-      ...held.map((effect) => ({ effect, look: "passed" })),
-      ...drafts.map((effect) => ({ effect, look: "draft" })),
-    ])
+    expect(tilesShown()).toEqual(held)
   })
 
   it.each([
@@ -211,9 +194,7 @@ describe("Effects drafts", () => {
   ])("shows only the passed looks behind %s", async (_, settings) => {
     openEffects(settings)
     await openSheet()
-    expect(tilesShown()).toEqual(
-      held.map((effect) => ({ effect, look: "passed" }))
-    )
+    expect(tilesShown()).toEqual(held)
   })
 
   it.each([
