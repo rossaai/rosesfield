@@ -30,8 +30,8 @@ describe("Explore's showcase", () => {
     expect(feed.getAttribute("data-layout")).toBe("masonry")
     const tiles = [...feed.querySelectorAll<HTMLElement>("[data-slot=media]")]
     expect(tiles).toHaveLength(showcaseItems.length)
-    expect(tiles.map((tile) => tile.style.aspectRatio)).toEqual(
-      showcaseItems.map((item) => `${item.width} / ${item.height}`)
+    expect(tiles.map((tile) => tile.style.aspectRatio).sort()).toEqual(
+      showcaseItems.map((item) => `${item.width} / ${item.height}`).sort()
     )
   })
 

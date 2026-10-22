@@ -30,7 +30,14 @@ function bytesOf(file: string): Buffer {
 type Size = { width: number; height: number }
 
 function webpSize(bytes: Buffer): Size {
-  expect(bytes.toString("ascii", 12, 16)).toBe("VP8 ")
+  const chunk = bytes.toString("ascii", 12, 16)
+  expect(["VP8 ", "VP8X"]).toContain(chunk)
+  if (chunk === "VP8X") {
+    return {
+      width: bytes.readUIntLE(24, 3) + 1,
+      height: bytes.readUIntLE(27, 3) + 1,
+    }
+  }
   return {
     width: bytes.readUInt16LE(26) & 0x3fff,
     height: bytes.readUInt16LE(28) & 0x3fff,
