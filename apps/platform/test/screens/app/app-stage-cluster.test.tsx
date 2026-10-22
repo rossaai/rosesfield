@@ -33,7 +33,9 @@ describe("the app stage's cluster", () => {
     expect(cluster?.className.split(" ")).not.toContain("invisible")
     const view = cluster?.querySelector("[data-slot='view-menu']")
     expect(view?.textContent).toBe(t("app.canvas.view"))
-    expect(screen.queryByRole("tab", { name: t("library.view.grid") })).toBeNull()
+    expect(
+      screen.queryByRole("tab", { name: t("library.view.grid") })
+    ).toBeNull()
   })
 
   it("holds one View control with a grid glyph on a prompt app", () => {

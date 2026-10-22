@@ -24,9 +24,7 @@ describe("Characters while it loads", () => {
       </TooltipProvider>
     ))
     await screen.findByRole("heading", { name: "Characters" })
-    const cards = [
-      ...document.querySelectorAll("[data-skeleton='character']"),
-    ]
+    const cards = [...document.querySelectorAll("[data-skeleton='character']")]
     expect(cards).toHaveLength(characterSkeletonCount)
     for (const card of cards) {
       expect(card.querySelector("[data-slot='card']")).not.toBeNull()
