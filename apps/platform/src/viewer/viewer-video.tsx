@@ -272,6 +272,7 @@ export function ViewerVideo({
       >
         <video
           ref={video}
+          data-grow-target=""
           src={src}
           aria-label={label}
           muted

@@ -281,9 +281,9 @@ export function ViewerInfo({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <ViewerDetails asset={asset} compare={compare} measured={measured} />
-      <ViewerManage asset={asset} run={run} onDeleted={onDeleted} />
+      <ViewerManage run={run} />
       <span aria-hidden="true" className="flex-1" />
-      <ViewerActions asset={asset} run={run} />
+      <ViewerActions asset={asset} run={run} onDeleted={onDeleted} />
     </div>
   )
 }
