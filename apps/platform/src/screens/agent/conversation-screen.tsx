@@ -64,7 +64,7 @@ function PlainHeader(): ReactElement {
   return (
     <ScreenHeader
       title={t("agent.title")}
-      phoneAction={<ConversationsDrawer />}
+      phoneLead={<ConversationsDrawer />}
     />
   )
 }
@@ -103,12 +103,8 @@ function ConversationHeader({
       <ScreenHeader
         title={conversation.title ?? t("agent.untitled")}
         actions={menu}
-        phoneAction={
-          <>
-            <ConversationsDrawer />
-            {menu}
-          </>
-        }
+        phoneLead={<ConversationsDrawer />}
+        phoneAction={menu}
       />
       <ConversationDialogs
         conversation={conversation}

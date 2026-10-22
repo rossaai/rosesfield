@@ -72,7 +72,7 @@ export function AgentStartScreen(): ReactElement {
     <AgentFrame>
       <ScreenHeader
         title={t("agent.title")}
-        phoneAction={<ConversationsDrawer />}
+        phoneLead={<ConversationsDrawer />}
       />
       <div className="flex min-h-0 flex-1 flex-col items-center gap-s6 overflow-y-auto px-s5 pb-s4 @regular:pt-[calc(100dvh/6)]">
         <div className="flex max-w-prompt-max flex-col items-center gap-s2 pt-s12 text-center @regular:pt-0">

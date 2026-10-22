@@ -24,6 +24,21 @@ describe("the screen header", () => {
     expect(phone?.contains(filter)).toBe(true)
   })
 
+  it("puts the phone lead before the title and the phone action after it", () => {
+    const { container } = render(
+      <ScreenHeader
+        title="Agent"
+        phoneLead={<button type="button">Conversations</button>}
+        phoneAction={<button type="button">More</button>}
+      />
+    )
+    const [phone] = headersOf(container)
+    const order = [...(phone?.querySelectorAll("button, h1") ?? [])].map(
+      (node) => node.textContent
+    )
+    expect(order).toEqual(["Conversations", "Agent", "More"])
+  })
+
   it("draws no phone row with no title and no phone action", () => {
     const { container } = render(<ScreenHeader title={null} />)
     expect(headersOf(container)).toHaveLength(1)

@@ -6,6 +6,7 @@ type ScreenHeaderProps = {
   phoneTitle?: ReactNode
   line?: ReactNode
   actions?: ReactNode
+  phoneLead?: ReactNode
   phoneAction?: ReactNode
   isScrolled?: boolean
 }
@@ -33,13 +34,17 @@ export function useScrolledPast(): [
 
 function PhoneHeader({
   title,
+  phoneLead,
   phoneAction,
-}: Pick<ScreenHeaderProps, "title" | "phoneAction">): ReactNode {
-  if (title === null && phoneAction === undefined) {
+}: Pick<ScreenHeaderProps, "title" | "phoneLead" | "phoneAction">): ReactNode {
+  if (title === null && phoneLead === undefined && phoneAction === undefined) {
     return null
   }
   return (
     <header className="flex h-header shrink-0 items-center gap-s3 px-s5 @regular:hidden">
+      {phoneLead === undefined ? null : (
+        <div className="-ms-s2 flex shrink-0 items-center">{phoneLead}</div>
+      )}
       {title === null ? null : (
         <h1 className="min-w-0 flex-1 truncate text-body font-medium">
           {title}
@@ -62,6 +67,9 @@ export function ScreenHeader(props: ScreenHeaderProps): ReactElement {
       <span ref={sentinel} aria-hidden="true" className="block h-0" />
       <PhoneHeader
         title={props.phoneTitle ?? props.title}
+        {...(props.phoneLead === undefined
+          ? {}
+          : { phoneLead: props.phoneLead })}
         phoneAction={props.phoneAction}
       />
       <header
