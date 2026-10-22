@@ -1,4 +1,9 @@
 import { IconButton } from "@rosesfield/ui/components/button"
+import {
+  Composer,
+  ComposerToolbar as KernelToolbar,
+} from "@rosesfield/ui/components/composer"
+import { interaction } from "@rosesfield/ui/components/interaction"
 import type { PromptAttachment } from "@rosesfield/ui/components/prompt-bar"
 import { cn } from "@rosesfield/ui/lib/cn"
 import {
@@ -32,8 +37,10 @@ import {
 } from "@/screens/agent/agent-model"
 import { AgentModelPicker } from "@/screens/app/hosted/agent-model-picker"
 
-export const composerCircle =
-  "bg-transparent aria-pressed:bg-(--tint) aria-expanded:bg-(--tint) data-popup-open:bg-(--tint)"
+const quietCircle = cn(
+  "bg-transparent aria-expanded:bg-(--tint) data-popup-open:bg-(--tint)",
+  interaction.fill
+)
 
 const fieldClass =
   "mb-s1_5 block max-h-[calc(6*var(--text-body--line-height)+var(--spacing-s1_5))] w-full resize-none overflow-y-auto bg-transparent px-s2 pt-s1_5 text-body text-ink outline-none placeholder:text-ink-muted"
@@ -139,7 +146,6 @@ function ModelPill(): ReactElement | null {
       chosen={(choose.isPending ? choose.variables : null) ?? listed.model}
       onChoose={(model) => choose.mutate(model)}
       disabled={choose.isPending}
-      className="h-button-small max-w-button-max min-w-0 shrink rounded-full px-s3"
     />
   )
 }
@@ -155,9 +161,8 @@ export function AskToggle({
   return (
     <IconButton
       label={t("agent.ask.label")}
-      size="dense"
+      tone="quiet"
       aria-pressed={isAsking}
-      className={composerCircle}
       onClick={() => onValueChange(isAsking ? "auto" : "ask")}
     >
       <HandIcon aria-hidden="true" />
@@ -180,12 +185,7 @@ function SendCircle({
 }): ReactElement {
   if (isAnswering) {
     return (
-      <IconButton
-        label={t("agent.stop")}
-        size="dense"
-        tone="accent"
-        onClick={onStop}
-      >
+      <IconButton label={t("agent.stop")} tone="primary" onClick={onStop}>
         <SquareIcon aria-hidden="true" />
       </IconButton>
     )
@@ -193,8 +193,7 @@ function SendCircle({
   return (
     <IconButton
       label={t("agent.send")}
-      size="dense"
-      tone="accent"
+      tone="primary"
       busy={busy}
       disabled={!isArmed}
       onClick={onSend}
@@ -211,11 +210,7 @@ function MentionCircle({ mention }: { mention: Mention }): ReactElement {
       onOpenChange={mention.setOpen}
       onPick={mention.onPick}
       trigger={
-        <IconButton
-          label={t("bar.mention")}
-          size="dense"
-          className={composerCircle}
-        >
+        <IconButton label={t("bar.mention")} tone="quiet">
           <AtSignIcon aria-hidden="true" />
         </IconButton>
       }
@@ -250,15 +245,12 @@ function ComposerToolbar({
   openLibrary: () => void
 }): ReactElement {
   return (
-    <div
-      data-slot="agent-composer-toolbar"
-      className="flex min-w-0 items-center gap-s2"
-    >
+    <KernelToolbar data-slot="agent-composer-toolbar">
       <AttachMenu
         form="menu"
         label={t("bar.attach")}
         glyph={<PlusIcon aria-hidden="true" />}
-        className={composerCircle}
+        className={quietCircle}
         onUpload={() => void props.state.upload()}
         onFromLibrary={openLibrary}
       />
@@ -276,7 +268,7 @@ function ComposerToolbar({
         onSend={send}
         onStop={props.onStop}
       />
-    </div>
+    </KernelToolbar>
   )
 }
 
@@ -297,13 +289,10 @@ export function AgentComposer(props: AgentComposerProps): ReactElement {
   }
   return (
     <>
-      <div
-        data-slot="agent-composer"
-        data-ground="surface"
-        className={cn(
-          "flex w-full max-w-prompt-max flex-col gap-s2 rounded-vessel bg-surface p-s3",
-          props.className
-        )}
+      <Composer
+        data-bar="agent"
+        floating
+        className={cn("max-w-prompt-max", props.className)}
       >
         <AttachmentRow
           attachments={attachments}
@@ -322,7 +311,7 @@ export function AgentComposer(props: AgentComposerProps): ReactElement {
           send={send}
           openLibrary={() => setLibraryOpen(true)}
         />
-      </div>
+      </Composer>
       <LibraryPicker
         open={isLibraryOpen}
         onOpenChange={setLibraryOpen}

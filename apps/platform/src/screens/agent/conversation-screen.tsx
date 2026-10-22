@@ -90,6 +90,18 @@ function MissingConversation(): ReactElement {
   )
 }
 
+const autoTitleLength = 80
+
+export function shownTitleOf(transcript: Transcript): string | null {
+  const { title } = transcript.conversation
+  const first = transcript.items.find((item) => item.type === "person")
+  if (title === null || first === undefined) {
+    return title
+  }
+  const line = first.text.trim().split("\n")[0] ?? ""
+  return line.slice(0, autoTitleLength).trim() === title ? null : title
+}
+
 function ConversationHeader({
   transcript,
 }: {
@@ -101,7 +113,7 @@ function ConversationHeader({
   return (
     <>
       <ScreenHeader
-        title={conversation.title ?? t("agent.untitled")}
+        title={shownTitleOf(transcript)}
         actions={menu}
         phoneLead={<ConversationsDrawer />}
         phoneAction={menu}

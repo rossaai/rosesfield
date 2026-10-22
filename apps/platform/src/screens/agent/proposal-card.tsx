@@ -30,7 +30,11 @@ const modelInput = "model"
 
 const promptEnding = "prompt"
 
-function useProposalPrice(proposal: Proposal): string | null {
+type ProposalPrice =
+  | { kind: "demo"; label: string }
+  | { kind: "credits"; amount: string; label: string }
+
+function useProposalPrice(proposal: Proposal): ProposalPrice | null {
   const settings = useQuery(settingsQuery)
   const isDemo = settings.data?.engine.origin === "demo"
   const { request } = proposal
@@ -48,15 +52,20 @@ function useProposalPrice(proposal: Proposal): string | null {
   })
   const found = price.data?.price
   if (isDemo) {
-    return t("run.price.demo")
+    return { kind: "demo", label: t("run.price.demo") }
   }
   if (found === undefined || found.source === "unknown") {
     return null
   }
   const amount = formatAmount(found.credits)
-  return found.source === "measured"
-    ? t("run.price.credits", { amount })
-    : t("run.price.estimated", { amount })
+  return {
+    kind: "credits",
+    amount,
+    label:
+      found.source === "measured"
+        ? t("run.price.credits", { amount })
+        : t("run.price.estimated", { amount }),
+  }
 }
 
 function settingLabel(name: string): string {
@@ -103,12 +112,22 @@ export function hostedFactsOf(proposal: Proposal): RunFacts | null {
   return facts
 }
 
-function ProposalSettings({ proposal }: { proposal: Proposal }): ReactNode {
+function ProposalSettings({
+  proposal,
+  price,
+}: {
+  proposal: Proposal
+  price: ProposalPrice | null
+}): ReactNode {
   const app = findCatalogApp(proposal.appId)
   const facts =
     hostedFactsOf(proposal) ??
     (app === null ? null : runFactsOf(app, { ...proposal.request, seed: null }))
-  return facts === null ? null : <RunFactsView facts={facts} />
+  const shown =
+    price?.kind === "credits"
+      ? { amount: price.amount, label: price.label }
+      : null
+  return facts === null ? null : <RunFactsView facts={facts} price={shown} />
 }
 
 export function ProposalCard(props: ProposalCardProps): ReactElement {
@@ -128,13 +147,13 @@ export function ProposalCard(props: ProposalCardProps): ReactElement {
         <h3 className="text-body font-medium">
           {app === null ? proposal.appId : appName(app)}
         </h3>
-        {isSkipped || price !== null ? (
+        {isSkipped || price?.kind === "demo" ? (
           <span className="text-caption text-ink-muted">
-            {isSkipped ? t("agent.proposal.skipped") : price}
+            {isSkipped ? t("agent.proposal.skipped") : price?.label}
           </span>
         ) : null}
       </div>
-      <ProposalSettings proposal={proposal} />
+      <ProposalSettings proposal={proposal} price={isSkipped ? null : price} />
       {failure === null ? null : (
         <p role="alert" className="text-label text-bug-text">
           {wordsForError(failure, { thing: "run" }).title}
