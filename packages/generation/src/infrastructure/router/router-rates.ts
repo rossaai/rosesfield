@@ -1,5 +1,6 @@
 import type { RunInputs } from "@rosesfield/contract"
 import { type FieldRole, fieldOfRole, isOneAtATime } from "#domain/field-role"
+import type { TokenRate } from "#domain/generation-engine.port"
 import type { ModelForm } from "#domain/model-form"
 import {
   arrayOf,
@@ -50,6 +51,41 @@ export function rateRowsOf(snapshot: unknown): RateRow[] {
       },
     ]
   })
+}
+
+const perMillionTokens = "per 1M tokens"
+
+const tokenSides = {
+  input: "Input text tokens",
+  output: "Output text tokens",
+} as const
+
+function tokenCreditsOf(
+  rows: readonly RateRow[],
+  model: string,
+  conditions: string
+): number | null {
+  const found = new Set(
+    rows
+      .filter(
+        (row) =>
+          row.model === model &&
+          row.unit === perMillionTokens &&
+          row.conditions === conditions
+      )
+      .map((row) => row.credits)
+  )
+  const [only] = [...found]
+  return found.size === 1 && only !== undefined ? only : null
+}
+
+export function tokenRateOf(
+  rows: readonly RateRow[],
+  model: string
+): TokenRate | null {
+  const input = tokenCreditsOf(rows, model, tokenSides.input)
+  const output = tokenCreditsOf(rows, model, tokenSides.output)
+  return input === null || output === null ? null : { input, output }
 }
 
 export function priceFromRates(

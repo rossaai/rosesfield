@@ -18,6 +18,7 @@ import {
   type OutputsPerJob,
   type PriceRequest,
   type RunPrice,
+  type TokenRate,
   unknownPrice,
 } from "#domain/generation-engine.port"
 import type { ModelForm } from "#domain/model-form"
@@ -42,7 +43,10 @@ import {
   urlsWritten,
 } from "#infrastructure/router/router-outputs"
 import { placeholdersOf } from "#infrastructure/router/router-placeholders"
-import { priceFromRates } from "#infrastructure/router/router-rates"
+import {
+  priceFromRates,
+  tokenRateOf,
+} from "#infrastructure/router/router-rates"
 import { takesToolsOf } from "#infrastructure/router/router-schema"
 
 type ComfyRouterGenerationEngineOptions = {
@@ -148,6 +152,20 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     } catch {
       return unknownPrice
     }
+  }
+
+  override async tokenRatesOf(
+    models: readonly string[]
+  ): Promise<ReadonlyMap<string, TokenRate>> {
+    const rows = await this.catalog.rateRows(this.http).catch(() => [])
+    const rates = new Map<string, TokenRate>()
+    for (const model of models) {
+      const rate = tokenRateOf(rows, model)
+      if (rate !== null) {
+        rates.set(model, rate)
+      }
+    }
+    return rates
   }
 
   override async submit(request: EngineRequest): Promise<EngineSubmission> {

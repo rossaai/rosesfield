@@ -1,4 +1,5 @@
 export {
+  type AgentModelRate,
   type AgentModels,
   type AnswerEvent,
   acceptedProposalResponse,

@@ -107,9 +107,52 @@ describe("the agent's model list", () => {
       models: ["maker/chat-small", "maker/chat-large"],
       model: "maker/chat-small",
       refusal: null,
+      rates: {},
     })
     expect(chosen.model).toBe("maker/chat-large")
     expect((await modelsOf(await call(app))).model).toBe("maker/chat-large")
+  })
+
+  it("gives each chat model its credits per million text tokens in and out from Comfy's rate card, and none to a model the card holds no pair for", async () => {
+    const tokens = "per 1M tokens"
+    const router = fakeRouter({
+      schemas: [pictureModel, chatModel],
+      rates: {
+        rates: [
+          {
+            model_id: "maker/chat-small",
+            credits: "63.3",
+            unit: tokens,
+            conditions: "Input text tokens",
+          },
+          {
+            model_id: "maker/chat-small",
+            credits: "316.5",
+            unit: tokens,
+            conditions: "Output text tokens",
+          },
+          {
+            model_id: "maker/chat-small",
+            credits: "6.33",
+            unit: tokens,
+            conditions: "Cached input tokens",
+          },
+          {
+            model_id: "maker/chat-large",
+            credits: "633",
+            unit: tokens,
+            conditions: "Input text tokens",
+          },
+        ],
+      },
+    })
+    const app = gatewayWith(router.fetch, agent())
+
+    const listed = await modelsOf(await call(app))
+
+    expect(listed.rates).toEqual({
+      "maker/chat-small": { input: 63.3, output: 316.5 },
+    })
   })
 
   it("shows the catalog's refusal and lists no model when the Router has not turned the key on", async () => {

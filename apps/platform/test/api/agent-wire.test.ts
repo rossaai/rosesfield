@@ -141,7 +141,7 @@ describe("the agent's models", () => {
   }
 
   it("reads the models, the chosen one and a refusal", () => {
-    expect(readAgentModels(listed)).toEqual(listed)
+    expect(readAgentModels(listed)).toEqual({ ...listed, rates: {} })
     expect(
       readAgentModels({
         models: [],
@@ -152,9 +152,24 @@ describe("the agent's models", () => {
       models: [],
       model: null,
       refusal: { code: "ENGINE_NOT_ENABLED", status: 412 },
+      rates: {},
     })
     expect(readAgentModels({ ...listed, models: [7] })).toBeNull()
     expect(readAgentModels({ ...listed, refusal: { code: 1 } })).toBeNull()
+  })
+
+  it("reads each model's credits per million tokens and drops a rate it cannot read", () => {
+    expect(
+      readAgentModels({
+        ...listed,
+        rates: {
+          "deepseek/deepseek-v4-flash": { input: 603.46, output: 3017.3 },
+          "qwen/qwen3.6-flash": { input: "cheap", output: 1 },
+        },
+      })?.rates
+    ).toEqual({
+      "deepseek/deepseek-v4-flash": { input: 603.46, output: 3017.3 },
+    })
   })
 
   it("reads the list and sends a choice as a PATCH", async () => {
@@ -164,8 +179,11 @@ describe("the agent's models", () => {
       return Response.json(listed)
     }
 
-    expect(await listAgentModels()).toEqual(listed)
-    expect(await chooseAgentModel("qwen/qwen3.6-flash")).toEqual(listed)
+    expect(await listAgentModels()).toEqual({ ...listed, rates: {} })
+    expect(await chooseAgentModel("qwen/qwen3.6-flash")).toEqual({
+      ...listed,
+      rates: {},
+    })
     expect(sent.map((one) => [one.url, one.init?.method])).toEqual([
       ["/api/agent/models", "GET"],
       ["/api/agent/models", "PATCH"],

@@ -38,9 +38,13 @@ async function agentModelsOf(
   const hasChat = models.some(
     (model) => model.id === routerChat.route && model.takesTools
   )
-  return hasChat
-    ? { ...choice, refusal: null }
-    : { models: [], model: null, refusal: null }
+  if (!hasChat) {
+    return { models: [], model: null, refusal: null }
+  }
+  const { rates } = await scope.handlers.readTokenRates.execute({
+    models: choice.models,
+  })
+  return { ...choice, refusal: null, rates: Object.fromEntries(rates) }
 }
 
 function modelRoutes(app: GatewayApp): void {

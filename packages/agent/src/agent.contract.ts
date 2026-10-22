@@ -76,10 +76,16 @@ export const turnCredits = z.number().min(0)
 
 export const agentModelId = z.string().min(1).max(200)
 
+export const agentModelRate = z.object({
+  input: z.number().min(0),
+  output: z.number().min(0),
+})
+
 export const agentModelsResponse = z.object({
   models: z.array(agentModelId),
   model: agentModelId.nullable(),
   refusal: errorBody.nullable(),
+  rates: z.record(agentModelId, agentModelRate).optional(),
 })
 
 export const chooseAgentModelBody = z.strictObject({ model: agentModelId })
@@ -221,3 +227,5 @@ export type AnswerEvent = z.infer<typeof answerEvent>
 export type TranscriptItem = z.infer<typeof transcriptItem>
 export type Transcript = z.infer<typeof transcriptResponse>
 export type AgentModels = z.infer<typeof agentModelsResponse>
+
+export type AgentModelRate = z.infer<typeof agentModelRate>

@@ -99,6 +99,11 @@ export type PriceRequest = {
   count: number
 }
 
+export type TokenRate = {
+  input: number
+  output: number
+}
+
 export type RunPrice =
   | { source: "measured" | "estimate" | "rates"; credits: number }
   | { source: "unknown"; credits: null }
@@ -166,6 +171,13 @@ export abstract class GenerationEngine {
   /** Prices one run before it starts, in the engine's credits. */
   priceOf(_binding: EngineBinding, _request: PriceRequest): Promise<RunPrice> {
     return Promise.resolve(unknownPrice)
+  }
+
+  /** Reads the published credits per million input and output text tokens of each chat model it holds a rate for. */
+  tokenRatesOf(
+    _models: readonly string[]
+  ): Promise<ReadonlyMap<string, TokenRate>> {
+    return Promise.resolve(new Map())
   }
 
   /** Says what a cost this engine measured comes to in its credits, or null when it has no credits. */

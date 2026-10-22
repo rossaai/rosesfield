@@ -56,6 +56,7 @@ export function renderAgent(children: () => ReactNode, path = "/agent"): void {
     models: ["deepseek/deepseek-v4-flash", "qwen/qwen3.6-flash"],
     model: "deepseek/deepseek-v4-flash",
     refusal: null,
+    rates: {},
   })
   client.setQueryData(conversationsQuery.queryKey, conversations)
   const router = createRouter({

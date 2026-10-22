@@ -41,6 +41,30 @@ describe("the agent's model picker", () => {
     expect(mark?.getAttribute("data-mark")).toBe("anthropic")
   })
 
+  it("shows a model's credits per million tokens in and out from the rate card, and nothing on a row the card holds no rate for", () => {
+    render(
+      <AgentModelPicker
+        models={models}
+        rates={{
+          "anthropic/claude-sonnet-5": { input: 603.46, output: 3017.3 },
+        }}
+        chosen="deepseek/deepseek-v4-flash"
+        onChoose={() => undefined}
+      />
+    )
+    fireEvent.click(screen.getByRole("button", { name: /Model/ }))
+    const rowOf = (model: string): Element | null | undefined =>
+      screen
+        .getAllByRole("option")
+        .find((one) => one.dataset.model === model)
+        ?.closest("[data-slot='model-row']")
+    expect(rowOf("anthropic/claude-sonnet-5")?.textContent).toContain(
+      "Per 1M tokens: 603 in, 3,017 out"
+    )
+    expect(rowOf("z-ai/glm-4.6")?.textContent).not.toContain("Per 1M tokens")
+    expect(document.body.textContent).not.toMatch(/unknown/i)
+  })
+
   it("shows no price on a row, since no price for a chat model is known", () => {
     render(
       <AgentModelPicker
