@@ -1,3 +1,5 @@
+import { findApp } from "@rosesfield/catalog"
+import { appListing } from "@rosesfield/contract"
 import {
   cleanup,
   fireEvent,
@@ -20,6 +22,8 @@ import {
   video,
   withClient,
 } from "./frame-render"
+
+const motion = appListing.parse(findApp("motion"))
 
 beforeEach(stubFetch)
 
@@ -168,12 +172,12 @@ describe("the app stage's header", () => {
     render(
       withClient(
         <AskedTab tab="how">
-          <AppStage app={video} kind="column">
+          <AppStage app={motion} kind="column">
             <div />
           </AppStage>
         </AskedTab>,
-        video,
-        [doneRun(video.id)]
+        motion,
+        [doneRun(motion.id)]
       )
     )
     expect(
@@ -184,11 +188,11 @@ describe("the app stage's header", () => {
     cleanup()
     render(
       withClient(
-        <AppStage app={video} kind="column">
+        <AppStage app={motion} kind="column">
           <div />
         </AppStage>,
-        video,
-        [doneRun(video.id)]
+        motion,
+        [doneRun(motion.id)]
       )
     )
     expect(

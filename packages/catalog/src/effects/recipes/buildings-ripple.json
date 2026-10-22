@@ -2,8 +2,18 @@
   "effect": "buildings-ripple",
   "passed": false,
   "design": {
-    "unit": "buildings-ripple",
-    "family": "effects",
+    "unit": {
+      "id": "buildings-ripple",
+      "title": "Unit: buildings-ripple"
+    },
+    "family": {
+      "id": "effects",
+      "title": "Family: effects"
+    },
+    "fit": {
+      "by": "area",
+      "edges": "crop"
+    },
     "setPiece": "The building, tower or bridge behind the person bends, folds and curls while the person stays whole in front.",
     "cuts": [],
     "lastFrame": {

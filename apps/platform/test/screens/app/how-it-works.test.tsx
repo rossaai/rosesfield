@@ -27,6 +27,7 @@ afterEach(() => {
 })
 
 const video = appListing.parse(findApp("video"))
+const motion = appListing.parse(findApp("motion"))
 const effects = appListing.parse(findApp("effects"))
 const image = appListing.parse(findApp("image"))
 const relight = appListing.parse(findApp("relight"))
@@ -97,12 +98,12 @@ describe("How it works", () => {
   it("shows only real results of this app, never a sound or another app's", () => {
     const samples = samplesOf(
       [
-        share("a", "video", "video"),
+        share("a", "motion", "video"),
         share("b", "image", "image"),
-        share("c", "video", "audio"),
-        share("d", "video", "image"),
+        share("c", "motion", "audio"),
+        share("d", "motion", "image"),
       ],
-      "video"
+      "motion"
     )
     expect(
       samples.map((sample) => [sample.key, sample.kind, sample.source])
@@ -238,15 +239,15 @@ describe("How it works, one composition for every app", () => {
   })
 
   it("shows what an app with no example takes, its default model and what it makes, with no picture", async () => {
-    renderHow(() => <HowItWorks app={video} />, [])
+    renderHow(() => <HowItWorks app={motion} />, [])
     const steps = await stepsShown(3)
     expect(
       [...(steps[0]?.querySelectorAll("[data-made=no]") ?? [])].map((disc) =>
         disc.getAttribute("data-kind")
       )
-    ).toContain("prompt")
+    ).toContain("image")
     expect(steps[1]?.querySelector("[data-slot=how-model]")?.textContent).toBe(
-      "LTX 2.5"
+      "LTX 2.3 control"
     )
     expect(
       steps[2]?.querySelector("[data-made=yes]")?.getAttribute("data-kind")

@@ -3,6 +3,10 @@ import type { CSSProperties, ReactElement } from "react"
 
 type LabMarkData = ModelFactsFile["marks"][string]
 
+type LetterGround = ModelFactsFile["marksMissing"][string]
+
+const defaultViewBox = "0 0 24 24"
+
 export const weightsMaker = "Hugging Face"
 
 export function labInitialOf(maker: string): string {
@@ -15,7 +19,12 @@ export function labMarkOf(maker: string): LabMarkData | null {
   return Object.hasOwn(marks, maker) ? (marks[maker] ?? null) : null
 }
 
-export function markColourOf(mark: LabMarkData): string {
+export function letterGroundOf(maker: string): LetterGround | null {
+  const missing = modelFactsData.marksMissing
+  return Object.hasOwn(missing, maker) ? (missing[maker] ?? null) : null
+}
+
+export function markColourOf(mark: { hex: string; hexDark: string }): string {
   return `var(--if-light, #${mark.hex}) var(--if-dark, #${mark.hexDark})`
 }
 
@@ -33,7 +42,7 @@ function MarkPath({
   return (
     <svg
       aria-hidden="true"
-      viewBox="0 0 24 24"
+      viewBox={mark.viewBox ?? defaultViewBox}
       fill="currentColor"
       className={className}
       style={{ color: markColourOf(mark) }}
@@ -44,6 +53,13 @@ function MarkPath({
           ? {}
           : { fillRule: mark.fillRule, clipRule: mark.fillRule })}
       />
+      {mark.accent === undefined ? null : (
+        <path
+          data-slot="lab-mark-accent"
+          d={mark.accent.path}
+          style={{ color: markColourOf(mark.accent) }}
+        />
+      )}
     </svg>
   )
 }
@@ -51,13 +67,23 @@ function MarkPath({
 export function LabMark({ maker }: { maker: string }): ReactElement {
   const mark = labMarkOf(maker)
   if (mark === null) {
+    const letter = letterGroundOf(maker)
     return (
       <span
         aria-hidden="true"
         data-slot="lab-mark"
         data-maker={maker}
         data-mark="letter"
-        className="flex size-4 shrink-0 items-center justify-center font-medium text-legal leading-none"
+        {...(letter === null ? {} : { "data-ground": "mark" })}
+        className="flex size-4 shrink-0 items-center justify-center rounded-dense font-medium text-legal leading-none"
+        {...(letter === null
+          ? {}
+          : {
+              style: {
+                backgroundColor: `#${letter.ground}`,
+                color: `#${letter.ink}`,
+              },
+            })}
       >
         {labInitialOf(maker)}
       </span>

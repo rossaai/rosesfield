@@ -8,7 +8,7 @@ import {
 } from "@/screens/app/hosted/model-catalog-query"
 import { useDebounced } from "@/screens/app/hosted/use-debounced"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
-import { priceLabelsOf } from "@/screens/app/use-start-run"
+import { priceLabelsOf, type QuoteSource } from "@/screens/app/use-start-run"
 
 export type RowPrices = {
   prices: ReadonlyMap<string, ModelPrice>
@@ -17,11 +17,20 @@ export type RowPrices = {
 
 const askDelayMs = 300
 
-export function rowPriceOf(credits: number | null): ModelPrice | null {
+const rowNames = {
+  measured: "run.price.measured",
+  estimate: "run.price.estimated",
+  rates: "run.price.credits",
+} as const satisfies Record<QuoteSource, string>
+
+export function rowPriceOf(
+  credits: number | null,
+  source: QuoteSource = "rates"
+): ModelPrice | null {
   const amount = priceLabelsOf(credits, false).priceValue ?? null
   return amount === null
     ? null
-    : { amount, name: t("run.price.credits", { amount }) }
+    : { amount, name: t(rowNames[source], { amount }) }
 }
 
 export function rowPricesOf(
@@ -30,7 +39,11 @@ export function rowPricesOf(
 ): Map<string, ModelPrice> {
   const prices = new Map<string, ModelPrice>()
   ids.forEach((id, at) => {
-    const price = rowPriceOf(answer?.prices[at]?.credits ?? null)
+    const answered = answer?.prices[at]
+    const price =
+      answered === undefined || answered.source === "unknown"
+        ? null
+        : rowPriceOf(answered.credits, answered.source)
     if (price !== null) {
       prices.set(id, price)
     }

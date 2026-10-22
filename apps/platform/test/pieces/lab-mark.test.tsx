@@ -19,7 +19,7 @@ describe("the lab's mark", () => {
   it("is the icon set's path for a lab the catalog marks, and nothing for a lab it does not", () => {
     expect(labMarkOf("Google")).toMatchObject({ slug: "google" })
     expect(labMarkOf("Google")?.path).toMatch(/^M/)
-    expect(labMarkOf("Beeble")).toBeNull()
+    expect(labMarkOf("HeyGen")).toBeNull()
     expect(labMarkOf("toString")).toBeNull()
   })
 })
@@ -38,12 +38,28 @@ describe("LabMark", () => {
     expect(mark?.textContent).toBe("")
   })
 
-  it("keeps the first letter of a lab the icon set does not hold", () => {
-    const { container } = render(<LabMark maker="Beeble" />)
+  it("keeps the first letter of a lab whose mark no source publishes", () => {
+    const { container } = render(<LabMark maker="HeyGen" />)
     const mark = container.querySelector("[data-slot='lab-mark']")
     expect(mark?.getAttribute("data-mark")).toBe("letter")
     expect(mark?.querySelector("svg")).toBeNull()
-    expect(mark?.textContent).toBe("B")
+    expect(mark?.textContent).toBe("H")
+  })
+
+  it("draws a mark from a lab's own brand page in its view box, its accent in the brand colour", () => {
+    const { container } = render(<LabMark maker="Beeble" />)
+    const mark = container.querySelector("[data-slot='lab-mark']")
+    expect(mark?.getAttribute("data-mark")).toBe("beeble")
+    expect(labMarkOf("Beeble")?.source).toBe("https://beeble.ai/brand")
+    const svg = mark?.querySelector("svg")
+    expect(svg?.getAttribute("viewBox")).toBe("0 0 300 300")
+    expect(svg?.getAttribute("style")).toContain(
+      "var(--if-light, #000000) var(--if-dark, #FFFFFF)"
+    )
+    const accent = svg?.querySelector("[data-slot='lab-mark-accent']")
+    expect(accent?.getAttribute("style")).toContain(
+      "var(--if-light, #00D084) var(--if-dark, #00D084)"
+    )
   })
 })
 
@@ -81,10 +97,16 @@ describe("the colour of a lab's mark", () => {
     expect(google.querySelector("path")?.getAttribute("fill-rule")).toBeNull()
   })
 
-  it("leaves a lettered lab with no colour of its own", () => {
-    const letter = render(<LabMark maker="Beeble" />).container
+  it("seats a lettered lab's letter on its brand colour, never grey, in the ink that reads on it", () => {
+    const heygen = render(<LabMark maker="HeyGen" />).container
+    const mark = heygen.querySelector<HTMLElement>("[data-slot='lab-mark']")
+    expect(mark?.getAttribute("data-ground")).toBe("mark")
+    expect(mark?.style.backgroundColor).toBe("rgb(0, 195, 255)")
+    expect(mark?.style.color).toBe("rgb(0, 0, 0)")
+    cleanup()
+    const birefnet = render(<LabMark maker="BiRefNet authors" />).container
     expect(
-      letter.querySelector("[data-slot='lab-mark']")?.getAttribute("style")
-    ).toBeNull()
+      birefnet.querySelector<HTMLElement>("[data-slot='lab-mark']")?.style.color
+    ).toBe("rgb(255, 255, 255)")
   })
 })

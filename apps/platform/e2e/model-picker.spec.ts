@@ -174,7 +174,7 @@ for (const state of ["open", "with-settings"]) {
   })
 }
 
-test("each row of the Image picker draws its lab's mark as path data or its first letter, and shows no picture", async ({
+test("each row of the Image picker draws its lab's mark as path data or its first letter on its brand colour, and shows no picture", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "desktop", "the desktop picker")
@@ -193,6 +193,7 @@ test("each row of the Image picker draws its lab's mark as path data or its firs
         paths: node.querySelectorAll("svg path").length,
         text: node.textContent ?? "",
         width: node.getBoundingClientRect().width,
+        ground: getComputedStyle(node).backgroundColor,
       }))
     )
   expect(marks.length).toBeGreaterThan(10)
@@ -201,8 +202,14 @@ test("each row of the Image picker draws its lab's mark as path data or its firs
     if (one.mark === "letter") {
       expect(one.paths, one.maker).toBe(0)
       expect(one.text, one.maker).toMatch(/^\p{Lu}$|^\p{N}$/u)
+      const [red, green, blue] = (one.ground.match(/\d+/g) ?? []).map(Number)
+      expect({
+        maker: one.maker,
+        grey: red === green && green === blue,
+      }).toEqual({ maker: one.maker, grey: false })
     } else {
-      expect(one.paths, one.maker).toBe(1)
+      expect(one.paths, one.maker).toBeGreaterThanOrEqual(1)
+      expect(one.paths, one.maker).toBeLessThanOrEqual(2)
       expect(one.text, one.maker).toBe("")
     }
   }
@@ -210,7 +217,7 @@ test("each row of the Image picker draws its lab's mark as path data or its firs
   expect(marks.find((one) => one.maker === "Black Forest Labs")?.mark).toBe(
     "bfl"
   )
-  expect(marks.find((one) => one.maker === "Beeble")?.mark).toBe("letter")
+  expect(marks.find((one) => one.maker === "Beeble")?.mark).toBe("beeble")
   expect(await list.locator("img, video, picture").count()).toBe(0)
 })
 

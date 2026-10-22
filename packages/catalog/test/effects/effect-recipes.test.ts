@@ -62,14 +62,15 @@ describe("the effect recipes kept as data", () => {
     expect(passedRecipes.map((one) => one.effect)).toEqual(passedLooks)
   })
 
-  it("names for each look the unit and the family it is designed from, with its whole chain", () => {
+  it("names for each look the unit page and the family page it is designed from by id and title, with its whole chain", () => {
     for (const recipe of effectRecipes) {
       const { design } = recipe
       expect({ effect: recipe.effect, unit: design.unit }).toEqual({
         effect: recipe.effect,
-        unit: recipe.effect,
+        unit: { id: recipe.effect, title: `Unit: ${recipe.effect}` },
       })
-      expect(design.family).toBe("effects")
+      expect(design.family).toEqual({ id: "effects", title: "Family: effects" })
+      expect(design.fit).toEqual({ by: "area", edges: "crop" })
       expect(design.setPiece.length).toBeGreaterThan(0)
       expect(design.lastFrame.shows.length).toBeGreaterThan(0)
       expect(design.encode).toEqual({

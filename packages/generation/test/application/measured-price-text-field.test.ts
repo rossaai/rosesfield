@@ -162,10 +162,18 @@ describe("a measured price is kept per model and setting", () => {
     expect(keyOf({ prompt: "a window" })).toEqual(keyOf({ prompt: "a door" }))
   })
 
-  it("gives no measured price at 4k after a run at 1k", async () => {
+  it("gives no measured price at 4k after a run at 1k, and scales the rate the 1k run disproved into an estimate", async () => {
     const { harness, prices } = harnessWith(14.48)
     await runOnce(harness, { prompt: "a door", resolution: "1k" })
     expect(prices.kept).toHaveLength(1)
+    expect(
+      await priceOf(harness, { prompt: "a door", resolution: "4k" })
+    ).toEqual({ price: { source: "estimate", credits: 14.48 } })
+  })
+
+  it("keeps the rate at other settings while the measured run agrees with it", async () => {
+    const { harness } = harnessWith(0.59)
+    await runOnce(harness, { prompt: "a door", resolution: "1k" })
     expect(
       await priceOf(harness, { prompt: "a door", resolution: "4k" })
     ).toEqual({ price: { source: "rates", credits: 0.57 } })

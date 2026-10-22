@@ -59,6 +59,7 @@ export function GenerateFoot({
         busy={start.isPending}
         onClick={start.generate}
         aria-label={start.priceName ?? undefined}
+        title={start.priceName ?? undefined}
         className="min-w-0 flex-1"
       />
     </div>

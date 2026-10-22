@@ -13,6 +13,19 @@ describe("the price Generate shows", () => {
     })
   })
 
+  it("names a price measured on your last run at these settings, and an estimate held to such a run, as what they are", () => {
+    const amount = formatNumber(60.35)
+    expect(priceLabelsOf(60.35, false, "measured").priceName).toBe(
+      t("run.generate.measured", { amount })
+    )
+    expect(priceLabelsOf(60.35, false, "estimate").priceName).toBe(
+      t("run.generate.estimated", { amount })
+    )
+    expect(priceLabelsOf(60.35, false, "rates").priceName).toBe(
+      t("run.generate.priced", { amount })
+    )
+  })
+
   it("shows Generate alone for a model with no price, and never Price unknown", () => {
     expect(priceLabelsOf(null, false)).toEqual({
       price: "",

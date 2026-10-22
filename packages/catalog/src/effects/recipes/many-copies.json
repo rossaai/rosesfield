@@ -2,8 +2,18 @@
   "effect": "many-copies",
   "passed": false,
   "design": {
-    "unit": "many-copies",
-    "family": "effects",
+    "unit": {
+      "id": "many-copies",
+      "title": "Unit: many-copies"
+    },
+    "family": {
+      "id": "effects",
+      "title": "Family: effects"
+    },
+    "fit": {
+      "by": "area",
+      "edges": "crop"
+    },
     "setPiece": "Four to eight copies of the person, in the same outfit and in different poses, appear on the scene's own ground, and the clip fades to dark.",
     "cuts": [],
     "lastFrame": {

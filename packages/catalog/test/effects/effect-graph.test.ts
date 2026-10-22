@@ -7,6 +7,7 @@ import {
   editFrameNodes,
   effectGraph,
   endFrameNodes,
+  fitCrops,
   fittedPhotoNode,
   grainNode,
   imageEditNodes,
@@ -150,6 +151,22 @@ describe("the effect recipes", () => {
       "370": { inputs: { images: [grainNode, 0], audio: ["361", 0] } },
       "75": { inputs: { format: "mp4", "format.codec": "h264" } },
     })
+  })
+
+  it("fits every look's photo by its recipe's fit, a centre crop at the chosen shape", () => {
+    for (const recipe of effectRecipes) {
+      const fitted = workflowOf(effectGraph(fileGraph(), recipe))[
+        fittedPhotoNode
+      ]
+      expect({ effect: recipe.effect, fitted }).toMatchObject({
+        effect: recipe.effect,
+        fitted: {
+          class_type: "ImageScale",
+          inputs: { crop: fitCrops[recipe.design.fit.edges] },
+        },
+      })
+      expect(fitCrops[recipe.design.fit.edges]).toBe("center")
+    }
   })
 
   it("locks frame 0 to the scaled photo, with no image edit node before it, for every look and resolution", () => {

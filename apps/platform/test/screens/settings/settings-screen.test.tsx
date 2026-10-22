@@ -25,8 +25,9 @@ function openSettings(section: SettingsSection | undefined): void {
   ))
 }
 
+const identityName = t("settings.target.comfy-cloud")
+
 const sectionNames = [
-  t("settings.engine.title"),
   t("settings.agent.title"),
   t("settings.lock.title"),
   t("settings.appearance.title"),
@@ -64,16 +65,24 @@ describe("settings on a desktop", () => {
     expect(document.querySelector("[data-slot='dialog-scrim']")).not.toBeNull()
   })
 
-  it("lists every section in a rail with an ink thumb on the open one, and switches by press", async () => {
+  it("heads the rail with the engine's identity row, lists the other sections, and moves one tint capsule to the open one", async () => {
     const onSection = vi.fn<(section: SettingsSection) => void>()
     openModal("about", onSection)
     const rail = await screen.findByRole("navigation", {
       name: t("settings.title"),
     })
-    const rows = within(rail).getAllByRole("button")
+    const identity = rail.querySelector<HTMLElement>(
+      "[data-slot='settings-identity']"
+    )
+    expect(identity?.textContent).toBe(identityName)
+    expect(
+      identity
+        ?.querySelector("[data-slot='lab-mark']")
+        ?.getAttribute("data-maker")
+    ).toBe("Comfy")
+    const rows = rowsOf(rail)
     expect(rows.map((row) => row.textContent)).toEqual(sectionNames)
     expect(rows.map((row) => row.getAttribute("aria-current"))).toEqual([
-      null,
       null,
       null,
       null,
@@ -83,13 +92,35 @@ describe("settings on a desktop", () => {
       "[data-slot='settings-rail-thumb']"
     )
     expect(thumb?.className.split(" ")).toEqual(
-      expect.arrayContaining(["bg-ink", "motion-travel"])
+      expect.arrayContaining(["bg-(--tint)", "motion-travel"])
     )
-    expect(thumb?.style.translate).toContain("4 *")
+    expect(thumb?.className.split(" ")).not.toContain("bg-ink")
+    expect(rail.getAttribute("data-ground")).toBe("surface")
+    expect(thumb?.style.translate).toContain("3 *")
     fireEvent.click(
       within(rail).getByRole("button", { name: t("settings.agent.title") })
     )
     expect(onSection).toHaveBeenCalledWith("agent")
+    fireEvent.click(within(rail).getByRole("button", { name: identityName }))
+    expect(onSection).toHaveBeenCalledWith("engine")
+  })
+
+  it("seats the close circle over the pane's head, level with the first row", async () => {
+    openModal("engine")
+    const dialog = await screen.findByRole("dialog")
+    expect(dialog.className).toContain("[&>[data-slot=tooltip-trigger]]:z-2")
+    expect(dialog.className).toContain("[&>[data-slot=tooltip-trigger]]:top-s4")
+    const close = within(dialog).getByRole("button", {
+      name: t("viewer.close"),
+    })
+    expect(close.parentElement).toBe(dialog)
+    expect(close.getAttribute("data-slot")).toBe("tooltip-trigger")
+    const head = dialog.querySelector(
+      "[data-slot='settings-modal-pane'] header"
+    )
+    expect(head?.className).toContain(
+      "h-[calc(2*var(--spacing-s4)+var(--spacing-button))]"
+    )
   })
 
   it("draws a pane as 36 px rows in groups that each open with a heading", async () => {
@@ -114,6 +145,9 @@ describe("settings on a desktop", () => {
         expect.arrayContaining(["min-h-button", "py-0"])
       )
       expect(row.className.split(" ")).not.toContain("min-h-11")
+      expect(row.className.split(" ")).toContain(
+        "@max-regular:min-h-[round(var(--spacing-button)*17/14,var(--spacing-hairline))]"
+      )
     }
     const titles = [...pane.querySelectorAll("h2")]
     expect(titles).toHaveLength(1)
@@ -168,8 +202,13 @@ describe("settings on a phone", () => {
     const list = await screen.findByRole("navigation", {
       name: t("settings.title"),
     })
+    const identity = list.querySelector<HTMLElement>(
+      "[data-slot='settings-identity']"
+    )
+    expect(identity?.textContent).toBe(identityName)
+    expect(identity?.getAttribute("href")).toBe("/settings?section=engine")
     const rows = rowsOf(list)
-    expect(rows).toHaveLength(sectionNames.length)
+    expect(rows.map((row) => row.textContent)).toEqual(sectionNames)
     for (const row of rows) {
       expect(row.tagName.toLowerCase()).toBe("a")
       expect(row.lastElementChild?.tagName.toLowerCase()).toBe("svg")

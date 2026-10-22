@@ -2,8 +2,18 @@
   "effect": "scatter-petals",
   "passed": false,
   "design": {
-    "unit": "scatter-petals",
-    "family": "effects",
+    "unit": {
+      "id": "scatter-petals",
+      "title": "Unit: scatter-petals"
+    },
+    "family": {
+      "id": "effects",
+      "title": "Family: effects"
+    },
+    "fit": {
+      "by": "area",
+      "edges": "crop"
+    },
     "setPiece": "Everyone holds still, then their bodies vanish in an instant and their clothes drop onto the ground and lie still.",
     "cuts": [
       {

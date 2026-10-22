@@ -94,9 +94,9 @@ test("Explore shows every held still and clip once in a masonry packed into the 
   await expect(feed).toBeVisible()
   await expect(page.getByText("No result is here yet")).toHaveCount(0)
   const tiles = feed.locator("[data-slot=media]")
-  expect(await tiles.count()).toBe(19)
+  expect(await tiles.count()).toBe(23)
   const clips = feed.locator("video")
-  await expect(clips).toHaveCount(2)
+  await expect(clips).toHaveCount(4)
   for (const clip of await clips.all()) {
     await expect(clip).toHaveJSProperty("muted", true)
     await expect(clip).toHaveJSProperty("loop", true)

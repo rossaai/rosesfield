@@ -52,23 +52,37 @@ const markSet = z.union([
 
 const hex = z.string().regex(/^[0-9A-F]{6}$/)
 
-const labMark = z.strictObject({
-  slug: z.string().regex(/^[a-z0-9]+$/),
-  title: z.string().min(1).max(80),
-  hex,
-  hexDark: hex,
-  ground: hex.optional(),
-  fillRule: z.literal("evenodd").optional(),
-  set: z.union([markSetName, z.literal("Comfy")]),
-  path: z
-    .string()
-    .max(8000)
-    .regex(/^[Mm][-+.,\deMmLlHhVvCcSsQqTtAaZz\s]*$/),
-  source: z.url().optional(),
-})
+const markPath = z
+  .string()
+  .max(8000)
+  .regex(/^[Mm][-+.,\deMmLlHhVvCcSsQqTtAaZz\s]*$/)
+
+const viewBox = z.string().regex(/^-?\d+(\.\d+)?( -?\d+(\.\d+)?){3}$/)
+
+const labMark = z
+  .strictObject({
+    slug: z.string().regex(/^[a-z0-9]+$/),
+    title: z.string().min(1).max(80),
+    hex,
+    hexDark: hex,
+    ground: hex.optional(),
+    fillRule: z.literal("evenodd").optional(),
+    set: z.union([markSetName, z.literal("Comfy"), z.literal("Brand")]),
+    path: markPath,
+    viewBox: viewBox.optional(),
+    accent: z.strictObject({ path: markPath, hex, hexDark: hex }).optional(),
+    source: z.url().optional(),
+  })
+  .refine((mark) => mark.set !== "Brand" || mark.source !== undefined, {
+    message: "A mark taken from a lab's own brand page names that page",
+    path: ["source"],
+  })
 
 const markMissing = z.strictObject({
   searched: z.array(z.string().min(1).max(80)).min(1),
+  ground: hex,
+  ink: z.enum(["000000", "FFFFFF"]),
+  source: z.url(),
 })
 
 export const modelFactsFile = z.strictObject({

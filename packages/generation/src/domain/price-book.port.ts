@@ -1,4 +1,5 @@
 import type { Cost } from "@rosesfield/contract"
+import type { KeptRun } from "#domain/kept-settings"
 import type { PricedRun } from "#domain/priced-run"
 
 export type MeasuredPrice = PricedRun & {
@@ -12,4 +13,9 @@ export abstract class PriceBook {
 
   /** Keeps the measured cost of one run, replacing the one held for the same model and settings. */
   abstract keep(price: MeasuredPrice): Promise<void>
+
+  /** Returns every measured cost of a model, one per settings it ran at. */
+  runsOf(_model: string): Promise<readonly KeptRun<Cost>[]> {
+    return Promise.resolve([])
+  }
 }

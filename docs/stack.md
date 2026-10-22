@@ -56,7 +56,9 @@ Comfy runs every model. Two adapters of the one `GenerationEngine` port reach it
 - A Comfy key starts with `comfyui-`. The Router runs only with such a key, so a proxy token reaches the graphs and never the Router.
 - Every call has a timeout. Every submit carries an `Idempotency-Key`, so a submit sent again never pays twice. The run watcher polls and honours `Retry-After`.
 - Each run's credits come from `GET https://api.comfy.org/customers/balance` before the submit and after the run ends, read by the credit meter in `packages/generation/src/infrastructure/credit-meter.ts`. A graph on Comfy Cloud with no balance reading is priced from its `execution_ms` at the GPU rate in §Prices.
-- A price that is not known shows "price unknown", never zero.
+- A price that is not known shows no figure: Generate stands alone, never zero and never "Price unknown".
+- A quote never contradicts a measured run. The last run of a model at the same settings prices the next one, named as measured. With no run at those settings, the estimate or the rate card prices it, and when that source priced the model's nearest measured run more than 5 percent away from what it cost, the quote is scaled by that run's ratio and named an estimate, per `packages/generation/src/application/price-run/price-run.handler.ts`.
+- A rate card row whose condition names a setting the run leaves unknown, such as a quality or an output size, keeps every row it could match in play. When those rows disagree, the rate card gives no price.
 
 ### The Comfy Router
 
