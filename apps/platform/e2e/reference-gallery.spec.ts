@@ -134,7 +134,7 @@ test("a segmented control's track stands 40 px in chrome and 26 px in the compos
   expect(Math.abs(plate.width - cell.width)).toBeLessThan(0.5)
 })
 
-test("the tabs stand 30 px, 7 px apart, over one plate that travels to the current tab", async ({
+test("the tabs stand 30 px, 3 px apart, over one plate that travels to the current tab", async ({
   page,
 }) => {
   await open(page, "ref-tabs")
@@ -143,7 +143,7 @@ test("the tabs stand 30 px, 7 px apart, over one plate that travels to the curre
   const one = await boxOf(history)
   const two = await boxOf(how)
   expect(one.height).toBe(30)
-  expect(Math.round(two.x - (one.x + one.width))).toBe(7)
+  expect(Math.round(two.x - (one.x + one.width))).toBe(3)
   const plate = page.locator("[data-slot='tabs-indicator']").first()
   expect(await style(plate, "transition-property")).toContain("translate")
   await history.click()

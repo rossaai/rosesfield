@@ -17,7 +17,7 @@ const modelRow =
 test.describe("a prompt app on a desktop", () => {
   test.skip(({ isMobile }) => isMobile, "the bar shows from 768 px")
 
-  test("docks the prompt bar 16 px above the bottom, 880 by 124, with Generate as its 120 by 80 tile and the 65 by 32 References tile first on a text only default", async ({
+  test("docks the prompt bar 16 px above the bottom, 880 by 100, with Generate as its 120 by 80 tile and the 73 by 33 References tile first on a text only default", async ({
     page,
   }) => {
     await page.goto("/apps/image")
@@ -29,18 +29,18 @@ test.describe("a prompt app on a desktop", () => {
     }
     const box = await boxOf(bar)
     expect(box.width).toBe(880)
-    expect(box.height).toBe(124)
+    expect(box.height).toBe(100)
     expect(box.y + box.height).toBe(viewport.height - 16)
     expect(box.x + box.width / 2).toBe(viewport.width / 2)
     const generate = await boxOf(bar.locator('[data-slot="generate-button"]'))
     expect([generate.width, generate.height]).toEqual([120, 80])
     const row = await boxOf(bar.locator('[data-slot="composer-toolbar"]'))
-    expect(row.height).toBe(32)
+    expect(row.height).toBe(33)
     expect(generate.y + generate.height).toBe(row.y + row.height)
     const tile = bar.locator('[data-slot="composer-attachments-edge"]')
     await expect(tile).toHaveCount(1)
     const tileBox = await boxOf(tile)
-    expect([tileBox.width, tileBox.height]).toEqual([65, 32])
+    expect([tileBox.width, tileBox.height]).toEqual([73, 33])
     expect(tileBox.x).toBe(row.x)
   })
 
@@ -103,12 +103,12 @@ test.describe("the prompt bar's field and model chip", () => {
       .toBeGreaterThan(early.height)
     await page.waitForTimeout(500)
     const grown = await boxOf(field)
-    expect(rest.height).toBe(40)
+    expect(rest.height).toBe(25)
     expect(grown.height).toBeLessThanOrEqual(180)
     expect(grown.height).toBeGreaterThan(rest.height)
   })
 
-  test("hugs the model chip around its name's text, the text plus 66 px, the mark 12 px in and the text 8 px after it", async ({
+  test("hugs the model chip around its name's text, the text plus 53 px, the mark 7 px in and the text 5 px after it", async ({
     page,
   }) => {
     await page.goto("/apps/image")
@@ -127,9 +127,9 @@ test.describe("the prompt bar's field and model chip", () => {
       })
     const mark = await boxOf(chip.locator('[data-slot="model-row-mark"]'))
     const box = await boxOf(chip)
-    expect(Math.round(box.width - text.width)).toBe(66)
-    expect(Math.round(mark.x - box.x)).toBe(12)
-    expect(Math.round(text.x - (mark.x + mark.width))).toBe(8)
+    expect(Math.round(box.width - text.width)).toBe(53)
+    expect(Math.round(mark.x - box.x)).toBe(7)
+    expect(Math.round(text.x - (mark.x + mark.width))).toBe(5)
     await expect(chip).toHaveCSS("border-left-width", "0px")
   })
 })
@@ -137,7 +137,7 @@ test.describe("the prompt bar's field and model chip", () => {
 test.describe("an app with many inputs on a desktop", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("holds a 320 px column at x 16 with Generate across its 60 px footer, the output 8 px to its right", async ({
+  test("holds a 320 px column at x 16 with a 40 px Generate across its 60 px footer, the output 8 px to its right", async ({
     page,
   }) => {
     await page.goto("/apps/video")
@@ -149,22 +149,22 @@ test.describe("an app with many inputs on a desktop", () => {
     const generate = await boxOf(
       column.locator('[data-slot="generate-button"]')
     )
-    expect([generate.width, generate.height]).toEqual([286, 48])
+    expect([generate.width, generate.height]).toEqual([286, 40])
     const footer = await boxOf(column.locator('[data-slot="composer-toolbar"]'))
     expect(footer.height).toBe(60)
     const canvas = await boxOf(
       page.getByRole("region", { name: "Your results" })
     )
     expect(canvas.x).toBe(box.x + box.width + 8)
-    expect(box.height).toBe(780)
-    expect(canvas.height).toBe(780)
+    expect(box.height).toBe(786)
+    expect(canvas.height).toBe(786)
   })
 })
 
 test.describe("the parts of Video's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("stacks 302 px parts 8 px apart: 30 px mode tabs, a 302 by 130 start frame with Change 6 px from its corner, a 302 px prompt and a 36 px model row", async ({
+  test("stacks 302 px parts 8 px apart: 30 px mode tabs, a 302 by 130 start frame with Change 7 px from its corner, a 302 px prompt and a 36 px model field holding a 26 px chip", async ({
     page,
   }) => {
     await page.goto("/apps/video")
@@ -178,14 +178,15 @@ test.describe("the parts of Video's column", () => {
     const change = await boxOf(
       frame.locator('[data-slot="start-frame-change"]')
     )
-    expect(frameBox.x + frameBox.width - (change.x + change.width)).toBe(6)
-    expect(change.y - frameBox.y).toBe(6)
+    expect(frameBox.x + frameBox.width - (change.x + change.width)).toBe(7)
+    expect(change.y - frameBox.y).toBe(7)
     const prompt = await boxOf(
       column.locator('[data-slot="composer-prompt-block"]')
     )
     expect(prompt.width).toBe(302)
-    const row = await boxOf(column.locator(modelRow))
-    expect([row.width, row.height]).toEqual([302, 36])
+    const field = await boxOf(column.locator('[data-slot="model-row-field"]'))
+    expect([field.width, field.height]).toEqual([302, 36])
+    expect((await boxOf(column.locator(modelRow))).height).toBe(26)
     expect(frameBox.y).toBe(tab.y + tab.height + 8)
   })
 })
@@ -193,7 +194,7 @@ test.describe("the parts of Video's column", () => {
 test.describe("the tray and rhythm of Video's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("holds the mode tabs 16 px in from the tray's edge, all inside it", async ({
+  test("holds the mode tabs 16 px in from the tray's edge, fades the strip's end where a tab passes under it, and scrolls a chosen tab into the tray", async ({
     page,
   }) => {
     await page.goto("/apps/video")
@@ -202,8 +203,18 @@ test.describe("the tray and rhythm of Video's column", () => {
     const tab = await boxOf(column.getByRole("tab").first())
     const tray = await boxOf(column.locator('[data-slot="composer-tray"]'))
     expect(tab.x).toBe(tray.x + 16)
-    const last = await boxOf(column.getByRole("tab").last())
-    expect(last.x + last.width).toBeLessThanOrEqual(tray.x + tray.width - 16)
+    const strip = column.getByRole("tablist")
+    await expect(strip).toHaveAttribute("data-scroll-end", "yes")
+    await expect(strip).toHaveCSS("mask-image", /rgba\(0, 0, 0, 0\)\)$/)
+    const last = column.getByRole("tab").last()
+    await last.click()
+    await expect(last).toHaveAttribute("aria-selected", "true")
+    await expect
+      .poll(async () => {
+        const box = await boxOf(last)
+        return box.x + box.width <= tray.x + tray.width
+      })
+      .toBe(true)
   })
 
   test("fits every part above the footer at rest on LTX 2.5, with an Elements chip in the prompt", async ({
@@ -327,7 +338,7 @@ test.describe("an app on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "the sheet is the phone's")
 
   for (const appId of ["image", "video"]) {
-    test(`opens the inputs and Generate from the 66 by 44 Generate key, ${appId}`, async ({
+    test(`opens the inputs and Generate from the 66 by 40 Generate key, ${appId}`, async ({
       page,
     }) => {
       await page.goto(`/apps/${appId}`)
@@ -337,12 +348,12 @@ test.describe("an app on a phone", () => {
         page.locator('[data-slot="composer"][data-bar="prompt"]')
       ).toHaveCount(0)
       await expect(page.locator('[data-slot="composer"]')).toHaveCount(0)
-      const edge = await boxOf(region.getByRole("tablist").first())
+      const edge = await boxOf(region.getByRole("tab").first())
       expect(edge.x).toBe(16)
       const key = page.locator('[data-slot="app-bar-tabGenerate"]')
       await expect(key).toHaveAccessibleName("Generate")
       const box = await boxOf(key)
-      expect([box.width, box.height]).toEqual([66, 44])
+      expect([box.width, box.height]).toEqual([66, 40])
       await key.click()
       const sheet = page.getByRole("dialog")
       await expect(sheet).toBeVisible()
@@ -370,7 +381,7 @@ test.describe("Video's runs on a phone", () => {
     await answerOwnLists(page, new Set([made.run.id]))
     await page.goto("/apps/video")
     const region = page.getByRole("region", { name: "Your results" })
-    const tabs = await boxOf(region.getByRole("tablist").first())
+    const tabs = await boxOf(region.getByRole("tab").first())
     const run = region.locator('[data-slot="app-stage-scroll"] article').first()
     await expect(run).toBeVisible({ timeout: 20_000 })
     const tile = run.locator("video, img").first()
