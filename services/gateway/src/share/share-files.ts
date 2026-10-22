@@ -1,7 +1,6 @@
-export type ByteRange = {
-  start: number
-  end: number
-}
+import type { ByteRange } from "@rosesfield/library"
+
+export type { ByteRange }
 
 export type FilePart = {
   body: ReadableStream<Uint8Array>
