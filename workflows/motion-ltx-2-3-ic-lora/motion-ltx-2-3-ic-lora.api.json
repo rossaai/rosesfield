@@ -434,11 +434,11 @@
     "class_type": "ImageFromBatch",
     "inputs": {
       "image": ["105", 0],
-      "batch_index": 0,
+      "batch_index": 1,
       "length": ["713", 2]
     },
     "_meta": {
-      "title": "Clip length"
+      "title": "Clip length, from the first generated frame"
     }
   },
   "122": {
