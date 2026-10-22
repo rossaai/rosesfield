@@ -1,28 +1,32 @@
 import type { Asset, Run } from "@rosesfield/contract"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
-import { assetsQuery } from "@/api/queries"
+import { assetsQuery, runsOf, runsQuery } from "@/api/queries"
 import { runAppName, runHeadline } from "@/pieces/run/run-facts"
 import { useNextPage } from "@/pieces/use-next-page"
 import type { LibraryKind } from "@/screens/library/library-bars"
 import { type GridItem, gridItemOf } from "@/screens/library/result-grid"
-import { useRecentRuns } from "@/shell/use-working-runs"
 
 export type LibraryData = {
   assets: Asset[]
   shown: Asset[]
   runsById: ReadonlyMap<string, Run>
   isPending: boolean
+  hasMore: boolean
   isError: boolean
   refetch: () => void
   sentinel: (node: HTMLElement | null) => void
 }
 
-function matches(run: Run | undefined, query: string): boolean {
-  if (query === "") {
+function matches(
+  run: Run | undefined,
+  query: string,
+  appId: string | null
+): boolean {
+  if (query === "" && appId === null) {
     return true
   }
-  if (run === undefined) {
+  if (run === undefined || (appId !== null && run.appId !== appId)) {
     return false
   }
   return `${runHeadline(run)} ${runAppName(run)}`
@@ -47,9 +51,14 @@ export function libraryGridItems(
   )
 }
 
-export function useLibrary(kind: LibraryKind, query: string): LibraryData {
+export function useLibrary(
+  kind: LibraryKind,
+  query: string,
+  appId: string | null = null
+): LibraryData {
   const assets = useInfiniteQuery(assetsQuery(kind === "all" ? null : kind))
-  const runs = useRecentRuns()
+  const runPages = useInfiniteQuery(runsQuery(appId))
+  const runs = useMemo(() => runsOf(runPages.data), [runPages.data])
   const runsById = useMemo(
     () => new Map(runs.map((run) => [run.id, run])),
     [runs]
@@ -58,9 +67,19 @@ export function useLibrary(kind: LibraryKind, query: string): LibraryData {
     () => assets.data?.pages.flatMap((page) => page.assets) ?? [],
     [assets.data]
   )
+  const runsToRead = appId !== null && runPages.hasNextPage
   const sentinel = useNextPage(
-    assets.hasNextPage && !assets.isFetchingNextPage,
-    () => void assets.fetchNextPage()
+    (assets.hasNextPage || runsToRead) &&
+      !assets.isFetchingNextPage &&
+      !runPages.isFetchingNextPage,
+    () => {
+      if (assets.hasNextPage) {
+        void assets.fetchNextPage()
+      }
+      if (runsToRead) {
+        void runPages.fetchNextPage()
+      }
+    }
   )
   return {
     assets: list,
@@ -69,11 +88,13 @@ export function useLibrary(kind: LibraryKind, query: string): LibraryData {
         asset.sourceRunId === null
           ? undefined
           : runsById.get(asset.sourceRunId),
-        query.trim()
+        query.trim(),
+        appId
       )
     ),
     runsById,
     isPending: assets.isPending,
+    hasMore: assets.hasNextPage || runsToRead,
     isError: assets.isError,
     refetch: () => void assets.refetch(),
     sentinel,

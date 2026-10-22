@@ -65,6 +65,20 @@ test.beforeEach(async ({ page }) => {
   await answerOwnLists(page, own)
 })
 
+async function openView(page: Page): Promise<Locator> {
+  await page.locator("[data-slot='canvas-view']").click()
+  const view = page.locator("[data-slot='popover-content']").first()
+  await expect(view).toBeVisible()
+  return view
+}
+
+async function chooseGrid(page: Page): Promise<void> {
+  const view = await openView(page)
+  await view.getByRole("tab", { name: "Grid" }).click()
+  await page.keyboard.press("Escape")
+  await expect(view).toBeHidden()
+}
+
 async function expectLayoutWell(cluster: Locator): Promise<void> {
   const well = cluster.getByRole("tablist", { name: "Layout" })
   const wellBox = await boxOf(well)
@@ -92,7 +106,7 @@ async function openFilterGroups(
   cluster: Locator
 ): Promise<Locator> {
   await cluster.getByRole("button", { name: "Filter" }).click()
-  const popup = page.locator("[data-slot='popover-content']")
+  const popup = page.locator("[data-slot='popover-content']").last()
   await expect(popup).toBeVisible()
   await popup.evaluate((element) =>
     Promise.all(
@@ -102,7 +116,10 @@ async function openFilterGroups(
     )
   )
   const groups = page.locator("[data-slot='setting-group']")
-  await expect(groups).toHaveCount(2)
+  await expect(groups).toHaveCount(5)
+  await expect(
+    groups.locator("[data-slot='setting-group-trigger']")
+  ).toHaveText([/^Kind/, /^Image/, /^Video/, /^Audio/, /^Characters/])
   await expect.poll(async () => (await boxOf(groups.nth(0))).height).toBe(36)
   const first = await boxOf(groups.nth(0))
   const second = await boxOf(groups.nth(1))
@@ -147,16 +164,18 @@ async function expectChoiceCard(page: Page, group: Locator): Promise<void> {
   expect(hovered).toBe(rest)
 }
 
-test("the head row's cluster holds the view switch and Filter once you have runs", async ({
+test("the head row ends in View, which holds the view switch and a Filter that groups apps by kind", async ({
   page,
 }) => {
   await open(page, "/history")
   const cluster = page.locator("[data-slot='canvas-cluster']")
   await expect(cluster).toBeVisible()
   expect((await boxOf(cluster)).height).toBe(36)
-  await expectLayoutWell(cluster)
-  const groups = await openFilterGroups(page, cluster)
-  await expectChoiceCard(page, groups.nth(1))
+  await expect(cluster.getByRole("button")).toHaveText(["View"])
+  const view = await openView(page)
+  await expectLayoutWell(view)
+  const groups = await openFilterGroups(page, view)
+  await expectChoiceCard(page, groups.nth(0))
 })
 
 test("Library and History keep a 16 px gutter on each side, and a focus ring stands 2 px outside its control", async ({
@@ -181,12 +200,12 @@ test("Library and History keep a 16 px gutter on each side, and a focus ring sta
       })
     expect(gutter, path).toEqual({ left: 16, right: 16 })
   }
-  const filter = page.getByRole("button", { name: "Filter" })
-  await filter.focus()
+  const view = page.locator("[data-slot='canvas-view']")
+  await view.focus()
   await page.keyboard.press("Shift+Tab")
   await page.keyboard.press("Tab")
-  await expect(filter).toBeFocused()
-  await expect(filter).toHaveCSS("outline-offset", "2px")
+  await expect(view).toBeFocused()
+  await expect(view).toHaveCSS("outline-offset", "2px")
 })
 
 test("the Filter popover stays inside the window and under the top bar with every group open", async ({
@@ -195,8 +214,9 @@ test("the Filter popover stays inside the window and under the top bar with ever
   test.skip(info.project.name !== "desktop", "the desktop window")
   await startDemoRun()
   await open(page, "/history")
-  await page.getByRole("button", { name: "Filter" }).click()
-  const popup = page.locator("[data-slot='popover-content']")
+  const view = await openView(page)
+  await view.getByRole("button", { name: "Filter" }).click()
+  const popup = page.locator("[data-slot='popover-content']").last()
   await expect(popup).toBeVisible()
   for (const trigger of await popup
     .locator("[data-slot='setting-group-trigger']")
@@ -251,18 +271,20 @@ test("History's state tabs show every label whole, with the plate on the chosen 
   expect(plate.height).toBe(cell.height)
 })
 
-test("in Grid, items stand at their own shape in columns of their width", async ({
+test("in Grid, items stand at their own shape in 228 px columns from the row's start, a phone's column across its width", async ({
   page,
 }, testInfo) => {
   await open(page, "/library")
-  await page.getByRole("tab", { name: "Grid" }).click()
+  await chooseGrid(page)
   const column = page.locator("[data-slot='result-column']").first()
   await expect(column).toBeVisible()
   const isPhone = testInfo.project.name === "phone"
-  expect((await boxOf(column)).width).toBe(isPhone ? 300 : 330)
+  const columnBox = await boxOf(column)
+  expect(Math.round(columnBox.width)).toBe(isPhone ? 358 : 228)
+  expect(columnBox.x).toBe(16)
   const item = column.locator("[data-slot='grid-item']").first()
   await expect(item).toBeVisible()
-  expect((await boxOf(item)).width).toBe(isPhone ? 300 : 330)
+  expect(Math.round((await boxOf(item)).width)).toBe(isPhone ? 358 : 228)
   if (isPhone) {
     return
   }
@@ -291,16 +313,20 @@ test("the search field and the tile size slider show the focus ring after Tab", 
   )
   await open(page, "/library")
   const search = page.getByRole("searchbox", { name: "Search your library" })
-  const slider = page.getByRole("slider", { name: "Tile size" })
-  await expect(slider).toBeAttached()
   let seen = { search: false, slider: false }
-  for (let step = 0; step < 40 && !(seen.search && seen.slider); step += 1) {
+  for (let step = 0; step < 40 && !seen.search; step += 1) {
     await page.keyboard.press("Tab")
     if (await search.evaluate((node) => node === document.activeElement)) {
       await expect(search).toHaveCSS("outline-style", "solid")
       await expect(search).toHaveCSS("outline-offset", "2px")
       seen = { ...seen, search: true }
     }
+  }
+  await openView(page)
+  const slider = page.getByRole("slider", { name: "Tile size" })
+  await expect(slider).toBeAttached()
+  for (let step = 0; step < 10 && !seen.slider; step += 1) {
+    await page.keyboard.press("Tab")
     if (await slider.evaluate((node) => node === document.activeElement)) {
       const thumb = slider.locator("xpath=..")
       await expect(thumb).toHaveCSS("outline-style", "solid")
@@ -317,7 +343,7 @@ test("a first-row tile's focus ring shows whole inside the grid's scroller on Hi
   test.skip(info.project.name !== "desktop", "Tab walks the desktop grid")
   for (const path of ["/history", "/library"]) {
     await open(page, path)
-    await page.getByRole("tab", { name: "Grid" }).click()
+    await chooseGrid(page)
     const scroll = page.locator("[data-slot='canvas-scroll']")
     const tile = scroll.locator("[data-slot='media']").first()
     await expect(tile).toBeVisible()

@@ -29,17 +29,17 @@ function StateCaption({ run }: { run: Run }): ReactNode {
   return null
 }
 
-function NoOutput({ run }: { run: Run }): ReactElement {
+function NoOutput({ run, thumb }: { run: Run; thumb: string }): ReactElement {
   if (isWorking(run)) {
     return (
       <span
         aria-hidden="true"
-        className={cn("size-thumb rounded-cell bg-(--well)", motion.pulse)}
+        className={cn(thumb, "rounded-cell bg-(--well)", motion.pulse)}
       />
     )
   }
   return (
-    <span aria-hidden="true" className="flex size-thumb items-center">
+    <span aria-hidden="true" className={cn("flex items-center", thumb)}>
       {run.status === "failed" ? (
         <span className="flex size-icon items-center justify-center rounded-full bg-bug-tint text-bug-text">
           <CircleAlertIcon className="glyph" />
@@ -49,19 +49,18 @@ function NoOutput({ run }: { run: Run }): ReactElement {
   )
 }
 
-function Thumbs({ run }: { run: Run }): ReactElement {
+function Thumbs({ run, thumb }: { run: Run; thumb: string }): ReactElement {
   const shown = run.outputs.slice(0, 4)
   return (
     <span className="flex shrink-0 gap-s1">
       {shown.length === 0 ? (
-        <NoOutput run={run} />
+        <NoOutput run={run} thumb={thumb} />
       ) : (
         shown.map((id, index) => (
           <span
             key={id}
-            className={
-              index === 0 ? "size-thumb" : "hidden size-thumb @regular:block"
-            }
+            data-slot="history-thumb"
+            className={cn(thumb, index === 0 ? "" : "hidden @regular:block")}
           >
             <AssetTile
               assetId={id}
@@ -89,7 +88,13 @@ export function HistoryRowSkeleton(): ReactElement {
   )
 }
 
-export function HistoryRow({ run }: { run: Run }): ReactElement {
+export function HistoryRow({
+  run,
+  thumb = "size-thumb",
+}: {
+  run: Run
+  thumb?: string
+}): ReactElement {
   const isDemo = run.origin === "demo"
   const estimate = useRunEstimate(run)
   const price = historyPrice(run, estimate)
@@ -103,7 +108,7 @@ export function HistoryRow({ run }: { run: Run }): ReactElement {
           motion.tint
         )}
       >
-        <Thumbs run={run} />
+        <Thumbs run={run} thumb={thumb} />
         <span className="flex min-w-0 flex-1 flex-col gap-s1">
           <span className="truncate text-label text-ink-muted">
             {runAppName(run)}

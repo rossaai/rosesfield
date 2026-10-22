@@ -19,10 +19,11 @@ import {
 import { historyGridItems } from "@/screens/history/history-grid-items"
 import { HistoryRow, HistoryRowSkeleton } from "@/screens/history/history-row"
 import { ResultGrid } from "@/screens/library/result-grid"
+import { stepOf, thumbSteps } from "@/screens/library/tile-columns"
 import {
   tileSizes,
-  ViewCluster,
   type ViewLayout,
+  ViewMenu,
 } from "@/screens/library/view-cluster"
 import { ScreenHeader } from "@/shell/screen-header"
 
@@ -179,14 +180,15 @@ function HistoryBody({
       <ResultGrid items={historyGridItems(runs)} size={size} after={sentinel} />
     )
   }
+  const thumb = stepOf(thumbSteps, size)
   return (
-    <div className="flex w-full max-w-prompt-max flex-col">
+    <div data-slot="history-list" className="flex w-full flex-col">
       {groupRuns(runs, new Date()).map((group) => (
         <section key={group.key} className="flex flex-col">
           <h2 className="pt-s4 text-body font-medium">{group.label}</h2>
           <ul>
             {group.runs.map((run) => (
-              <HistoryRow key={run.id} run={run} />
+              <HistoryRow key={run.id} run={run} thumb={thumb} />
             ))}
           </ul>
         </section>
@@ -214,7 +216,7 @@ export function HistoryScreen(): ReactElement {
             </div>
           }
           cluster={
-            <ViewCluster
+            <ViewMenu
               layout={layout}
               onLayout={setLayout}
               size={size}

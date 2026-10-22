@@ -1,3 +1,4 @@
+import type { AppListing } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import {
   SettingChoice,
@@ -23,11 +24,16 @@ import {
   ListIcon,
   ShapesIcon,
   TypeIcon,
+  UsersIcon,
   VideoIcon,
 } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
-import type { OutputKind } from "@/catalog/app-facts"
+import { appName, type OutputKind } from "@/catalog/app-facts"
+import { catalogApps } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
+import type { CopyKey } from "@/copy.en"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
+import { appIcon } from "@/shell/nav-rows"
 
 export type ViewLayout = "list" | "grid"
 
@@ -42,10 +48,51 @@ export type FilterGroup = {
   onChoose: (value: string) => void
 }
 
+type AppCategory = AppListing["category"]
+
+const appCategories: ReadonlyArray<{
+  id: AppCategory
+  name: CopyKey
+  icon: ReactNode
+}> = [
+  { id: "image", name: "shell.area.image", icon: <ImageIcon /> },
+  { id: "video", name: "shell.area.video", icon: <VideoIcon /> },
+  { id: "audio", name: "shell.area.audio", icon: <AudioLinesIcon /> },
+  { id: "character", name: "shell.nav.characters", icon: <UsersIcon /> },
+]
+
+export function appFilterGroups(
+  appId: string | null,
+  onApp: (appId: string | null) => void,
+  apps: readonly AppListing[] = catalogApps
+): FilterGroup[] {
+  return appCategories.flatMap((category) => {
+    const inCategory = apps.filter((app) => app.category === category.id)
+    if (inCategory.length === 0) {
+      return []
+    }
+    const chosen = inCategory.find((app) => app.id === appId)
+    return [
+      {
+        id: `app-${category.id}`,
+        name: t(category.name),
+        icon: category.icon,
+        choices: inCategory.map((app) => ({
+          value: app.id,
+          label: appName(app),
+          picture: appIcon(app),
+        })),
+        value: chosen?.id ?? "",
+        onChoose: (value: string) => onApp(value === appId ? null : value),
+      },
+    ]
+  })
+}
+
 export const tileSizes = {
   min: 0,
   max: 4,
-  initial: 2,
+  initial: 1,
 } as const
 
 export const kindPictures = {
@@ -104,11 +151,15 @@ function SizeSlider({
 }: {
   size: number
   onSize: (size: number) => void
-}): ReactElement {
+}): ReactNode {
+  const isRegular = useIsRegularWindow()
+  if (!isRegular) {
+    return null
+  }
   return (
     <div
       data-slot="view-size"
-      className="hidden h-8 items-center gap-2 pr-3 pl-1 @regular:flex"
+      className="flex h-8 items-center gap-2 pr-3 pl-1"
     >
       <span
         aria-hidden="true"
@@ -148,6 +199,10 @@ function FilterChoices({ group }: { group: FilterGroup }): ReactElement {
   )
 }
 
+function isChosen(group: FilterGroup): boolean {
+  return group.value !== "" && group.value !== group.choices[0]?.value
+}
+
 export function FilterMenu({
   groups,
 }: {
@@ -171,6 +226,7 @@ export function FilterMenu({
               name={group.name}
               count={group.choices.length}
               icon={group.icon}
+              defaultOpen={isChosen(group)}
             >
               <FilterChoices group={group} />
             </SettingGroup>
@@ -181,12 +237,42 @@ export function FilterMenu({
   )
 }
 
-type ViewClusterProps = {
+export type ViewClusterProps = {
   layout: ViewLayout
   onLayout: (layout: ViewLayout) => void
   size: number
   onSize: (size: number) => void
   groups: readonly FilterGroup[]
+}
+
+export function ViewMenu(props: ViewClusterProps): ReactElement {
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Button
+            data-slot="canvas-view"
+            size="recreate"
+            tone="quiet"
+            className="self-start rounded-dense border border-(--line) px-2"
+          >
+            <LayoutGridIcon aria-hidden="true" />
+            {t("app.canvas.view")}
+          </Button>
+        }
+      />
+      <PopoverContent
+        align="end"
+        side="bottom"
+        sideOffset={8}
+        className="max-w-none"
+      >
+        <div className="flex items-center gap-2">
+          <ViewCluster {...props} />
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 export function ViewCluster(props: ViewClusterProps): ReactElement {

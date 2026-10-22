@@ -1,48 +1,43 @@
 import type { Asset } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Input } from "@rosesfield/ui/components/input"
+import {
+  SegmentedControl,
+  type SegmentedItem,
+} from "@rosesfield/ui/components/segmented-control"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { ShapesIcon } from "lucide-react"
 import { type ReactElement, useState } from "react"
 import { t, tCount } from "@/copy/t"
 import { useDownloadAsset } from "@/pieces/asset-actions"
 import { DeleteAssetDialog } from "@/pieces/delete-asset-dialog"
-import {
-  type FilterChoice,
-  type FilterGroup,
-  kindPictures,
-} from "@/screens/library/view-cluster"
+import { kindPictures } from "@/screens/library/view-cluster"
 
 export type LibraryKind = "all" | "image" | "video" | "audio"
 
-const kindChoices: readonly FilterChoice[] = (
+const kindItems: SegmentedItem<LibraryKind>[] = (
   ["all", "image", "video", "audio"] as const
 ).map((kind) => ({
   value: kind,
   label: t(`kind.${kind}`),
-  picture: kindPictures[kind],
+  icon: kindPictures[kind],
 }))
 
-function kindOf(value: string): LibraryKind {
-  return value === "image" || value === "video" || value === "audio"
-    ? value
-    : "all"
-}
-
-export function libraryFilterGroups(
-  kind: LibraryKind,
+export function KindTabs({
+  kind,
+  onKind,
+}: {
+  kind: LibraryKind
   onKind: (kind: LibraryKind) => void
-): FilterGroup[] {
-  return [
-    {
-      id: "kind",
-      name: t("library.kind.label"),
-      icon: <ShapesIcon />,
-      choices: kindChoices,
-      value: kind,
-      onChoose: (value) => onKind(kindOf(value)),
-    },
-  ]
+}): ReactElement {
+  return (
+    <SegmentedControl
+      items={kindItems}
+      value={kind}
+      onValueChange={onKind}
+      label={t("library.kind.label")}
+      density="row"
+    />
+  )
 }
 
 type SearchProps = {
@@ -60,7 +55,7 @@ export function LibrarySearch(props: SearchProps): ReactElement {
       value={props.query}
       onChange={(event) => props.onQuery(event.target.value)}
       className={cn(
-        "max-w-none @regular:flex @regular:max-w-field-max",
+        "max-w-none @regular:w-field-max @regular:max-w-field-max",
         props.isSearchOpen ? "" : "hidden"
       )}
     />

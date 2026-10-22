@@ -17,9 +17,9 @@ import { useGridColumns } from "@/pieces/use-columns"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { type Uploads, useUploads } from "@/pieces/use-uploads"
 import {
+  KindTabs,
   type LibraryKind,
   LibrarySearch,
-  libraryFilterGroups,
   SelectionBar,
 } from "@/screens/library/library-bars"
 import { LibraryGrid, PendingTiles } from "@/screens/library/library-grid"
@@ -30,37 +30,48 @@ import {
   useLibrary,
 } from "@/screens/library/use-library"
 import {
+  appFilterGroups,
   tileSizes,
-  ViewCluster,
   type ViewLayout,
+  ViewMenu,
 } from "@/screens/library/view-cluster"
 import { ScreenHeader } from "@/shell/screen-header"
 import { useWorkingRuns } from "@/shell/use-working-runs"
 
 const accept: readonly string[] = ["image/*", "video/*", "audio/*"]
 
+type SearchChange = {
+  kind?: LibraryKind
+  query?: string
+  appId?: string | null
+}
+
 function useLibrarySearch(): {
   kind: LibraryKind
   query: string
-  setSearch: (next: { kind?: LibraryKind; query?: string }) => void
+  appId: string | null
+  setSearch: (next: SearchChange) => void
 } {
   const search = useSearch({ from: "/_shell/library" })
   const navigate = useNavigate({ from: "/library" })
   const kind: LibraryKind =
     search.kind === "text" ? "all" : (search.kind ?? "all")
   const query = search.q ?? ""
-  const setSearch = (next: { kind?: LibraryKind; query?: string }): void => {
+  const appId = search.app ?? null
+  const setSearch = (next: SearchChange): void => {
     const k = next.kind ?? kind
     const q = next.query ?? query
+    const a = next.appId === undefined ? appId : next.appId
     void navigate({
       search: {
         ...(k === "all" ? {} : { kind: k }),
         ...(q === "" ? {} : { q }),
+        ...(a === null ? {} : { app: a }),
       },
       replace: true,
     })
   }
-  return { kind, query, setSearch }
+  return { kind, query, appId, setSearch }
 }
 
 function SkeletonRows(): ReactElement {
@@ -136,6 +147,14 @@ function LibraryBody(props: BodyProps): ReactNode {
     data.shown.length === 0 &&
     uploads.uploads.length === 0 &&
     working.length === 0
+  if (isEmpty && data.hasMore) {
+    return (
+      <>
+        <SkeletonRows />
+        <span ref={data.sentinel} aria-hidden="true" className="block h-s1" />
+      </>
+    )
+  }
   if (isEmpty) {
     return <LibraryEmpty {...props} />
   }
@@ -184,6 +203,7 @@ function LibraryResults(
   return (
     <>
       <LibraryGrid
+        size={props.size}
         assets={data.shown}
         runsById={data.runsById}
         working={working}
@@ -246,16 +266,19 @@ function LibraryHeader({
   onSelect,
   onUpload,
   onSearch,
+  search,
 }: {
   onSelect: () => void
   onUpload: () => void
   onSearch: () => void
+  search: ReactNode
 }): ReactElement {
   return (
     <ScreenHeader
       title={t("library.title")}
       actions={
         <>
+          {search}
           <Button tone="quiet" onClick={onSelect}>
             {t("library.select")}
           </Button>
@@ -315,22 +338,21 @@ function LibraryCanvas(props: LibraryCanvasProps): ReactElement {
       label={t("library.title")}
       inset="page"
       tabs={
-        <div className="min-w-0 flex-1">
-          <LibrarySearch
-            query={search.query}
-            isSearchOpen={props.isSearchOpen || search.query !== ""}
-            onQuery={(next) => search.setSearch({ query: next })}
+        <div className="min-w-0">
+          <KindTabs
+            kind={search.kind}
+            onKind={(next) => search.setSearch({ kind: next })}
           />
         </div>
       }
       cluster={
-        <ViewCluster
+        <ViewMenu
           layout={view.layout}
           onLayout={view.setLayout}
           size={view.size}
           onSize={view.setSize}
-          groups={libraryFilterGroups(search.kind, (next) =>
-            search.setSearch({ kind: next })
+          groups={appFilterGroups(search.appId, (next) =>
+            search.setSearch({ appId: next })
           )}
         />
       }
@@ -343,8 +365,8 @@ function LibraryCanvas(props: LibraryCanvasProps): ReactElement {
 
 export function LibraryScreen(): ReactElement {
   const search = useLibrarySearch()
-  const { kind, query, setSearch } = search
-  const data = useLibrary(kind, query)
+  const { kind, query, appId, setSearch } = search
+  const data = useLibrary(kind, query, appId)
   const uploads = useUploads()
   const device = useDevice()
   const view = useLibraryView()
@@ -352,7 +374,7 @@ export function LibraryScreen(): ReactElement {
   const [isSearchOpen, setSearchOpen] = useState(query !== "")
   const isRegular = useIsRegularWindow()
   const drop = useDropUpload(uploads.start)
-  const isFiltered = kind !== "all" || query !== ""
+  const isFiltered = kind !== "all" || query !== "" || appId !== null
   const upload = (): void => {
     void device.pickFiles({ accept, multiple: true }).then(uploads.start)
   }
@@ -362,8 +384,22 @@ export function LibraryScreen(): ReactElement {
         onSelect={() => setSelected(selected === null ? [] : null)}
         onUpload={upload}
         onSearch={() => setSearchOpen(!isSearchOpen)}
+        search={
+          <LibrarySearch
+            query={query}
+            isSearchOpen={true}
+            onQuery={(next) => setSearch({ query: next })}
+          />
+        }
       />
-      <div className="flex flex-1 flex-col gap-s6 px-s5 pb-s12">
+      <div className="flex flex-1 flex-col gap-s3 px-s5 pb-s12">
+        {isRegular || !(isSearchOpen || query !== "") ? null : (
+          <LibrarySearch
+            query={query}
+            isSearchOpen={true}
+            onQuery={(next) => setSearch({ query: next })}
+          />
+        )}
         <LibraryCanvas
           search={search}
           data={data}
@@ -377,7 +413,7 @@ export function LibraryScreen(): ReactElement {
             selected={selected}
             setSelected={setSelected}
             onUpload={upload}
-            onClear={() => setSearch({ kind: "all", query: "" })}
+            onClear={() => setSearch({ kind: "all", query: "", appId: null })}
             isFiltered={isFiltered}
             isRegular={isRegular}
             layout={view.layout}
