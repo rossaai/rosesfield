@@ -24,10 +24,17 @@ async function openImagePicker(page: Page): Promise<Locator> {
   await expect(
     page.locator("[role='listbox'] [data-slot='model-row']").first()
   ).toBeVisible()
+  await page
+    .locator("[data-slot='model-picker']")
+    .evaluate((element) =>
+      Promise.all(
+        element.getAnimations().map((animation) => animation.finished)
+      )
+    )
   return trigger
 }
 
-test("a click at the centre of every row of the Image picker chooses that row's model", async ({
+test("a click at the centre of every row of the Image picker, or beside the weights mark that links out when it sits there, chooses that row's model", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "desktop", "the desktop picker")
@@ -49,12 +56,21 @@ test("a click at the centre of every row of the Image picker chooses that row's 
     const row = rows.nth(index)
     await row.scrollIntoViewIfNeeded()
     const name =
-      (await row.getByRole("option").getAttribute("aria-label")) ?? ""
+      (await row.locator("[data-slot='model-row-name']").textContent()) ?? ""
     const box = await row.boundingBox()
     if (box === null) {
       throw new Error(`the row ${name} has no box`)
     }
-    const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+    const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+    const mark = row.locator("[data-slot='model-row-weights'] a")
+    const weights = (await mark.count()) === 0 ? null : await mark.boundingBox()
+    const isOnWeights =
+      weights !== null &&
+      middle.x >= weights.x &&
+      middle.x <= weights.x + weights.width
+    const centre = isOnWeights
+      ? { x: weights.x + weights.width + weights.width, y: middle.y }
+      : middle
     const isLink = await page.evaluate(
       ({ x, y }) => document.elementFromPoint(x, y)?.closest("a") !== null,
       centre
@@ -85,16 +101,18 @@ test("on a row with Open weights only the 12 px mark links to the weights page, 
   })
   const current = (await trigger.textContent()) ?? ""
   const names = await rows
-    .getByRole("option")
-    .evaluateAll((options) =>
-      options.map((option) => option.getAttribute("aria-label") ?? "")
-    )
+    .locator("[data-slot='model-row-name']")
+    .allTextContents()
   const name = names.find((one) => one !== "" && !current.includes(one))
   if (name === undefined) {
     throw new Error("no other row carries Open weights")
   }
   const row = rows
-    .filter({ has: page.getByRole("option", { name, exact: true }) })
+    .filter({
+      has: page
+        .locator("[data-slot='model-row-name']")
+        .getByText(name, { exact: true }),
+    })
     .first()
   const badge = row.locator(
     "[data-slot='model-row-weights'] [data-slot='badge']"
@@ -190,12 +208,13 @@ test("each row of the Image picker draws its lab's mark as path data or its firs
   }
   expect(marks.find((one) => one.maker === "Google")?.mark).toBe("google")
   expect(marks.find((one) => one.maker === "Black Forest Labs")?.mark).toBe(
-    "letter"
+    "bfl"
   )
+  expect(marks.find((one) => one.maker === "Beeble")?.mark).toBe("letter")
   expect(await list.locator("img, video, picture").count()).toBe(0)
 })
 
-test("the Image picker's list fades in while it moves 4 px from its trigger", async ({
+test("the Image picker's list fades in while it grows from 0.94 to its size on the popover preset", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "desktop", "the desktop picker")
@@ -205,35 +224,44 @@ test("the Image picker's list fades in while it moves 4 px from its trigger", as
   await page.goto("/apps/image")
   const trigger = page.getByRole("button", { name: /^Model/ }).first()
   await expect(trigger).toBeVisible()
-  const frames = await trigger.evaluate(
-    (button) =>
-      new Promise<{ y: number; opacity: number }[]>((resolve) => {
-        const read: { y: number; opacity: number }[] = []
-        const sample = (): void => {
-          const list = document.querySelector("[data-slot='model-picker']")
-          if (list !== null) {
-            const style = getComputedStyle(list)
-            const y = Number.parseFloat(style.translate.split(" ")[1] ?? "0")
-            read.push({
-              y: Number.isNaN(y) ? 0 : y,
-              opacity: Number(style.opacity),
-            })
-          }
-          if (read.length < 40) {
-            requestAnimationFrame(sample)
-          } else {
-            resolve(read)
-          }
-        }
-        if (button instanceof HTMLElement) {
-          button.click()
-        }
+  await page.evaluate(() => {
+    const frames: { scale: number; opacity: number }[] = []
+    Object.assign(window, { pickerFrames: frames })
+    const sample = (): void => {
+      const list = document.querySelector("[data-slot='model-picker']")
+      if (list !== null) {
+        const matrix = new DOMMatrix(getComputedStyle(list).transform)
+        frames.push({
+          scale: Math.round(matrix.a * 1000) / 1000,
+          opacity: Number(getComputedStyle(list).opacity),
+        })
+      }
+      if (frames.length < 40) {
         requestAnimationFrame(sample)
-      })
+      }
+    }
+    requestAnimationFrame(sample)
+  })
+  await trigger.click()
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as { pickerFrames: unknown[] }).pickerFrames.length
+      )
+    )
+    .toBe(40)
+  const frames = await page.evaluate(
+    () =>
+      (
+        window as unknown as {
+          pickerFrames: { scale: number; opacity: number }[]
+        }
+      ).pickerFrames
   )
-  const moved = Math.max(...frames.map((frame) => frame.y))
+  const scales = frames.map((frame) => frame.scale)
   expect(frames[0]?.opacity).toBeLessThan(1)
-  expect(moved).toBeGreaterThan(0)
-  expect(moved).toBeLessThanOrEqual(4)
-  expect(frames.at(-1)).toEqual({ y: 0, opacity: 1 })
+  expect(Math.min(...scales)).toBe(0.94)
+  expect(scales.some((scale) => scale > 0.94 && scale < 1)).toBe(true)
+  expect(frames.at(-1)).toEqual({ scale: 1, opacity: 1 })
 })
