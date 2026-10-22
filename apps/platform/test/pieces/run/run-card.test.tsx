@@ -13,7 +13,7 @@ import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { assetQuery } from "@/api/queries"
 import { t } from "@/copy/t"
-import { RunCard, RunColumns } from "@/pieces/run/run-card"
+import { columnsOf, RunCard, RunColumns } from "@/pieces/run/run-card"
 
 const assetId = "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c11"
 
@@ -137,6 +137,54 @@ describe("a run on an app page", () => {
     const columns = document.querySelector("[data-slot=run-columns]")
     expect(columns?.className).toContain("grid-cols-1")
     expect(columns?.className).toContain("@regular:grid-cols-2")
+  })
+})
+
+describe("the runs of an app page on desktop", () => {
+  it("pack into two column stacks, newest first across them, so a tall run leaves no gap beside it", () => {
+    render(
+      <RunColumns>
+        {["first", "second", "third", "fourth"].map((name) => (
+          <span key={name}>{name}</span>
+        ))}
+      </RunColumns>
+    )
+    const stacks = [...document.querySelectorAll("[data-slot=run-column]")]
+    expect(stacks.map((stack) => stack.textContent)).toEqual([
+      "firstthird",
+      "secondfourth",
+    ])
+    const places = [...document.querySelectorAll<HTMLElement>("[style]")].map(
+      (place) => [place.textContent, place.style.getPropertyValue("--place")]
+    )
+    expect(places).toEqual([
+      ["first", "0"],
+      ["third", "2"],
+      ["second", "1"],
+      ["fourth", "3"],
+    ])
+  })
+
+  it("puts each run in the shorter column, so a tall run's neighbour column takes the next runs", () => {
+    expect(columnsOf(4, [1.78, 1, 1, 1])).toEqual([0, 1, 1, 0])
+    expect(columnsOf(3, undefined)).toEqual([0, 1, 0])
+  })
+
+  it("lets a run's media fill its column, and keeps the canvas height cap on a phone", async () => {
+    const client = clientWith(videoOf({ width: 1080, height: 1920 }))
+    renderWith(
+      client,
+      <RunColumns>
+        <RunCard key="tall" run={runOf({})} />
+      </RunColumns>
+    )
+    const card = await screen.findByRole("article")
+    const row = card.querySelector<HTMLElement>("[data-slot=output-row]")
+    expect(row?.className.split(" ")).toEqual(
+      expect.arrayContaining(["max-w-(--row-max)", "@regular:max-w-none"])
+    )
+    expect(row?.style.maxWidth).toBe("")
+    expect(row?.style.getPropertyValue("--row-max")).toMatch(/\* 0\.5625\)$/)
   })
 })
 

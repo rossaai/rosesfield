@@ -8,7 +8,7 @@ import { runsOf, runsQuery } from "@/api/queries"
 import { appEmptyTitle, aspectOf, defaultAspectOf } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { aspectStyle } from "@/pieces/asset-tile"
-import { RunCard, RunColumns } from "@/pieces/run/run-card"
+import { RunCard, RunColumns, runHeightOf } from "@/pieces/run/run-card"
 import { useCanvasView } from "@/screens/app/canvas-view"
 import { historyGridItems } from "@/screens/history/history-grid-items"
 import { keepsRun } from "@/screens/history/history-screen"
@@ -105,7 +105,7 @@ function RunStack({
 }: AppCanvasProps & { runs: readonly Run[] }): ReactElement {
   const list = runs.flatMap((run) => run.outputs)
   return (
-    <RunColumns>
+    <RunColumns heights={runs.map(runHeightOf)}>
       {runs.map((run) => (
         <RunCard
           key={run.id}
