@@ -42,33 +42,34 @@ describe("the Apps page card's media", () => {
     expect(clip?.getAttribute("src")).toBe(showcaseOf("effects")[0]?.src)
   })
 
-  it("shows the compact tile with no media slot, and no invented picture, for an app with no example", async () => {
+  it("draws an app with no example as what it takes and what it makes, with no invented picture", async () => {
     expect(showcaseOf("lipsync")).toEqual([])
     expect(await mediaOfCard("lipsync")).toBeNull()
     const card = await screen.findByRole("link")
     expect(card.getAttribute("data-app-card")).toBe("compact")
-    expect(card.querySelector("[data-slot='app-tile-media']")).toBeNull()
+    const flow = card.querySelector("[data-slot='app-card-flow']")
+    const kinds = (made: string) =>
+      [...(flow?.querySelectorAll(`[data-made='${made}']`) ?? [])].map(
+        (disc) => disc.getAttribute("data-kind")
+      )
+    expect(kinds("no")).toEqual(expect.arrayContaining(["image", "audio"]))
+    expect(kinds("yes")).toEqual(["video"])
+    expect(card.querySelector("[data-slot='app-card-play']")).toBeNull()
   })
 
-  it("draws every catalog app as held media or the compact tile, never a well with a glyph alone", async () => {
+  it("draws every catalog app as one card with the same 203 by 196 frame, held media or its flow", async () => {
     for (const app of catalogApps) {
       renderAt("/", () => <AppCard app={app} newest={null} working={0} />)
       const card = await screen.findByRole("link")
-      const form = card.getAttribute("data-app-card")
-      if (form === "media") {
-        expect(
-          card.querySelector(
-            "[data-slot='app-card-media'] img, [data-slot='app-card-media'] video"
-          ),
-          app.id
-        ).not.toBeNull()
-      } else {
-        expect(form, app.id).toBe("compact")
-        expect(
-          card.querySelector("[data-slot='app-card-media']"),
-          app.id
-        ).toBeNull()
-      }
+      const slot = card.querySelector("[data-slot='app-card-media']")
+      expect(slot, app.id).not.toBeNull()
+      const media = slot?.querySelector("img, video")
+      const flow = slot?.querySelector("[data-slot='app-card-flow']")
+      expect(media === null ? flow : media, app.id).not.toBeNull()
+      expect(
+        slot?.querySelector("[style]")?.getAttribute("style"),
+        app.id
+      ).toContain("203 / 196")
       cleanup()
     }
   })
@@ -103,7 +104,7 @@ describe("the Apps page card", () => {
     expect(play?.className).not.toMatch(/transition|duration-/)
   })
 
-  it("tints its fill on hover with no border, and clamps its line at two", async () => {
+  it("tints its fill on hover with no border, and keeps its line to one", async () => {
     const card = await renderCard()
     expect(card.className).not.toContain("after:")
     const fill = card.querySelector("[data-slot='card']")?.className ?? ""
@@ -112,7 +113,7 @@ describe("the Apps page card", () => {
     )
     expect(fill).not.toMatch(/border/)
     expect(card.querySelector("p")?.className.split(" ")).toContain(
-      "line-clamp-2"
+      "truncate"
     )
   })
 })

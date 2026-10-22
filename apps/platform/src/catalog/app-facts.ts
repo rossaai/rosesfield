@@ -33,6 +33,12 @@ const takenKinds: readonly TakenKind[] = [
 ]
 const square: MediaAspect = { width: 1, height: 1 }
 
+export function takenKindsOf(app: AppListing): TakenKind[] {
+  return takenKinds.filter((kind) =>
+    app.inputs.some((input) => input.type === kind)
+  )
+}
+
 export function appName(app: AppListing): string {
   return tCatalog(app.nameKey)
 }

@@ -1,5 +1,4 @@
 import type { AppListing, Run } from "@rosesfield/contract"
-import { AppTileGrid } from "@rosesfield/ui/components/app-tile"
 import { Button } from "@rosesfield/ui/components/button"
 import { Input } from "@rosesfield/ui/components/input"
 import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
@@ -77,38 +76,26 @@ function AppGroup({
       form: appCardFormOf(app, newest),
     }
   })
-  const media = cards.filter((card) => card.form === "media")
-  const compact = cards.filter((card) => card.form === "compact")
+  const ordered = [
+    ...cards.filter((card) => card.form === "media"),
+    ...cards.filter((card) => card.form === "compact"),
+  ]
   return (
     <section className="flex flex-col gap-s3">
       <h2 className="text-title">{t(`kind.${kind}`)}</h2>
-      {media.length === 0 ? null : (
-        <div
-          data-slot="app-cards"
-          className="-mx-s5 flex snap-x scroll-px-s5 gap-4 overflow-x-auto px-s5 [scrollbar-width:none] @regular:mx-0 @regular:grid @regular:grid-cols-[repeat(auto-fill,minmax(--spacing(59.25),1fr))] @regular:overflow-visible @regular:px-0"
-        >
-          {media.map((card) => (
-            <AppCard
-              key={card.app.id}
-              app={card.app}
-              newest={card.newest}
-              working={card.working}
-            />
-          ))}
-        </div>
-      )}
-      {compact.length === 0 ? null : (
-        <AppTileGrid label={t(`kind.${kind}`)}>
-          {compact.map((card) => (
-            <AppCard
-              key={card.app.id}
-              app={card.app}
-              newest={card.newest}
-              working={card.working}
-            />
-          ))}
-        </AppTileGrid>
-      )}
+      <div
+        data-slot="app-cards"
+        className="-mx-s5 flex snap-x scroll-px-s5 gap-4 overflow-x-auto px-s5 [scrollbar-width:none] @regular:mx-0 @regular:grid @regular:grid-cols-[repeat(auto-fill,minmax(--spacing(59.25),1fr))] @regular:overflow-visible @regular:px-0"
+      >
+        {ordered.map((card) => (
+          <AppCard
+            key={card.app.id}
+            app={card.app}
+            newest={card.newest}
+            working={card.working}
+          />
+        ))}
+      </div>
     </section>
   )
 }

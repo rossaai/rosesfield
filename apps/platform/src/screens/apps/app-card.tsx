@@ -1,5 +1,4 @@
 import type { AppListing, Run } from "@rosesfield/contract"
-import { AppTile } from "@rosesfield/ui/components/app-tile"
 import { Card } from "@rosesfield/ui/components/card"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import {
@@ -9,12 +8,27 @@ import {
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { Link } from "@tanstack/react-router"
-import { PlayIcon } from "lucide-react"
+import {
+  ArrowRightIcon,
+  FileAudioIcon,
+  FileTextIcon,
+  ImageIcon,
+  PlayIcon,
+  TypeIcon,
+  UserRoundIcon,
+  VideoIcon,
+} from "lucide-react"
 import type { ReactElement } from "react"
-import { appLine, appName } from "@/catalog/app-facts"
+import {
+  appLine,
+  appName,
+  type OutputKind,
+  type TakenKind,
+  takenKindsOf,
+} from "@/catalog/app-facts"
+import { outputKindsOf } from "@/catalog/app-workflows"
 import { tCount } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
-import { appIcon } from "@/shell/nav-rows"
 import { type ShowcaseItem, showcaseOf } from "@/showcase/showcase"
 
 const frame: MediaAspect = { width: 203, height: 196 }
@@ -42,10 +56,69 @@ export function appCardFormOf(
   return hasRun || examples.length > 0 ? "media" : "compact"
 }
 
+const kindGlyphs = {
+  prompt: TypeIcon,
+  character: UserRoundIcon,
+  image: ImageIcon,
+  video: VideoIcon,
+  audio: FileAudioIcon,
+  text: FileTextIcon,
+} satisfies Record<TakenKind | OutputKind, typeof ImageIcon>
+
+function KindDisc({
+  kind,
+  isMade,
+}: {
+  kind: TakenKind | OutputKind
+  isMade: boolean
+}): ReactElement {
+  const Glyph = kindGlyphs[kind]
+  return (
+    <span
+      data-kind={kind}
+      data-made={isMade ? "yes" : "no"}
+      className={cn(
+        "flex size-10 items-center justify-center rounded-full [&_svg]:glyph",
+        isMade ? "bg-ink text-canvas" : "bg-(--ground) text-ink-muted"
+      )}
+    >
+      <Glyph />
+    </span>
+  )
+}
+
+function FlowFrame({ app }: { app: AppListing }): ReactElement {
+  const taken = takenKindsOf(app)
+  return (
+    <span
+      aria-hidden="true"
+      data-slot="app-card-flow"
+      className="flex w-full items-center justify-center gap-s2 bg-(--well) text-ink-muted"
+      style={{ aspectRatio: `${frame.width} / ${frame.height}` }}
+    >
+      {taken.length === 0 ? null : (
+        <>
+          <span className="flex -space-x-2">
+            {taken.map((kind) => (
+              <KindDisc key={kind} kind={kind} isMade={false} />
+            ))}
+          </span>
+          <ArrowRightIcon className="glyph-small" />
+        </>
+      )}
+      <span className="flex -space-x-2">
+        {outputKindsOf(app).map((kind) => (
+          <KindDisc key={kind} kind={kind} isMade={true} />
+        ))}
+      </span>
+    </span>
+  )
+}
+
 function FrameMedia({
   app,
   newest,
-}: Pick<AppCardProps, "app" | "newest">): ReactElement | null {
+}: Pick<AppCardProps, "app" | "newest">): ReactElement {
   const media = newest?.outputs[0]
   if (media !== undefined && newest !== null) {
     return (
@@ -59,7 +132,9 @@ function FrameMedia({
     )
   }
   const example = showcaseOf(app.id)[0]
-  return example === undefined ? null : (
+  return example === undefined ? (
+    <FlowFrame app={app} />
+  ) : (
     <MediaTile
       kind={example.kind}
       src={example.src}
@@ -79,17 +154,19 @@ function CardMedia({
       className="relative block overflow-hidden rounded-cell"
     >
       <FrameMedia app={app} newest={newest} />
-      <span
-        aria-hidden="true"
-        data-slot="app-card-play"
-        className={cn(
-          "absolute right-2 bottom-2 flex size-8 items-center justify-center rounded-full bg-ink text-canvas opacity-0 [&_svg]:size-3 [&_svg]:fill-current",
-          motion.tint,
-          playShown
-        )}
-      >
-        <PlayIcon />
-      </span>
+      {appCardFormOf(app, newest) === "compact" ? null : (
+        <span
+          aria-hidden="true"
+          data-slot="app-card-play"
+          className={cn(
+            "absolute right-2 bottom-2 flex size-8 items-center justify-center rounded-full bg-ink text-canvas opacity-0 [&_svg]:size-3 [&_svg]:fill-current",
+            motion.tint,
+            playShown
+          )}
+        >
+          <PlayIcon />
+        </span>
+      )}
     </span>
   )
 }
@@ -103,23 +180,12 @@ function WorkingLine({ working }: { working: number }): ReactElement | null {
 }
 
 export function AppCard({ app, newest, working }: AppCardProps): ReactElement {
-  if (appCardFormOf(app, newest) === "compact") {
-    return (
-      <AppTile
-        data-app-card="compact"
-        name={appName(app)}
-        line={appLine(app)}
-        icon={appIcon(app)}
-        render={<Link to="/apps/$appId" params={{ appId: app.id }} />}
-      />
-    )
-  }
   return (
     <Link
       to="/apps/$appId"
       params={{ appId: app.id }}
       data-slot="app-card"
-      data-app-card="media"
+      data-app-card={appCardFormOf(app, newest)}
       className={cn(
         "group/card relative block w-62 shrink-0 snap-start rounded-card @regular:w-auto",
         interaction.ring
@@ -129,9 +195,7 @@ export function AppCard({ app, newest, working }: AppCardProps): ReactElement {
         <CardMedia app={app} newest={newest} />
         <div className="flex flex-col gap-1 py-4">
           <h3 className="font-medium text-body">{appName(app)}</h3>
-          <p className="line-clamp-2 text-body text-ink-muted">
-            {appLine(app)}
-          </p>
+          <p className="truncate text-body text-ink-muted">{appLine(app)}</p>
           <WorkingLine working={working} />
         </div>
       </Card>
