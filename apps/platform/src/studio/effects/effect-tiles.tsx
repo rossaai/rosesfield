@@ -1,7 +1,9 @@
 import {
   type EffectRecipe,
+  type EffectRun,
   effectKeyOf,
   effectRecipes,
+  effectRuns,
 } from "@rosesfield/catalog/effects"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { CreditPrice } from "@rosesfield/ui/components/credit-price"
@@ -15,11 +17,17 @@ import { t, tCatalog } from "@/copy/t"
 import { previewOf } from "@/studio/effects/effect-previews"
 import type { EffectPrices } from "@/studio/effects/use-effect-prices"
 
+export type KeptRunPrice = {
+  credits: number
+  resolution: string
+}
+
 export type EffectTile = {
   effect: string
   label: string
   photo: string
   look: { status: "passed"; preview: string } | { status: "draft" }
+  kept: KeptRunPrice | null
 }
 
 type EffectTilesProps = {
@@ -30,6 +38,7 @@ type EffectTilesProps = {
   register: (focus: () => void) => void
   recipes?: readonly EffectRecipe[]
   previews?: (file: string) => string | null
+  runs?: readonly EffectRun[]
 }
 
 const tileAspect = { width: 3, height: 4 }
@@ -43,10 +52,28 @@ export function effectOptionsOf(app: AppListing): string[] {
   return input === undefined ? [] : input.options.map((option) => option.value)
 }
 
+function keptPriceOf(
+  recipe: EffectRecipe,
+  runs: readonly EffectRun[]
+): KeptRunPrice | null {
+  const preview = recipe.preview
+  const run =
+    preview === null
+      ? undefined
+      : runs.find((one) => one.runId === preview.runId)
+  if (run === undefined) {
+    return null
+  }
+  const credits =
+    Math.round((run.balance.before - run.balance.after) * 100) / 100
+  return credits > 0 ? { credits, resolution: run.resolution } : null
+}
+
 export function effectTiles(
   app: AppListing,
   recipes: readonly EffectRecipe[] = effectRecipes,
-  previews: (file: string) => string | null = previewOf
+  previews: (file: string) => string | null = previewOf,
+  runs: readonly EffectRun[] = effectRuns
 ): EffectTile[] {
   return effectOptionsOf(app).flatMap((effect) => {
     const recipe = recipes.find((one) => one.effect === effect)
@@ -64,6 +91,7 @@ export function effectTiles(
         label: tCatalog(`effects.choice.effect.${key}`),
         photo: tCatalog(`effects.photo.${key}`),
         look,
+        kept: recipe.passed ? keptPriceOf(recipe, runs) : null,
       },
     ]
   })
@@ -102,23 +130,41 @@ function TileLook({ tile }: { tile: EffectTile }): ReactElement {
   )
 }
 
+function priceTextOf(tile: EffectTile, prices: EffectPrices): string | null {
+  const credits = prices.creditsOf(tile.effect)
+  if (credits !== null && prices.isMeasured(tile.effect)) {
+    return t("run.price.credits", { amount: formatNumber(credits) })
+  }
+  if (tile.kept !== null) {
+    return t("run.price.kept", {
+      amount: formatNumber(tile.kept.credits),
+      resolution: tile.kept.resolution,
+    })
+  }
+  return credits === null
+    ? null
+    : t("run.price.credits", { amount: formatNumber(credits) })
+}
+
 function PriceLine({
-  effect,
+  tile,
   prices,
 }: {
-  effect: string
+  tile: EffectTile
   prices: EffectPrices
 }): ReactNode {
   if (prices.isDemo) {
-    return t("run.price.demo")
+    return (
+      <span className="px-s1 text-caption text-ink-muted">
+        {t("run.price.demo")}
+      </span>
+    )
   }
-  const credits = prices.creditsOf(effect)
-  return credits === null ? (
-    t("run.price.unknown")
-  ) : (
-    <CreditPrice
-      amount={t("run.price.credits", { amount: formatNumber(credits) })}
-    />
+  const text = priceTextOf(tile, prices)
+  return text === null ? null : (
+    <span className="px-s1 text-caption text-ink-muted">
+      <CreditPrice amount={text} />
+    </span>
   )
 }
 
@@ -155,9 +201,7 @@ function Tile({
         <ImagePlusIcon aria-hidden="true" className="glyph-small shrink-0" />
         <span>{tile.photo}</span>
       </span>
-      <span className="px-s1 text-caption text-ink-muted">
-        <PriceLine effect={tile.effect} prices={prices} />
-      </span>
+      <PriceLine tile={tile} prices={prices} />
     </button>
   )
 }
@@ -168,7 +212,12 @@ export function EffectTiles(props: EffectTilesProps): ReactElement {
   useEffect(() => {
     register(() => chosen.current?.focus())
   }, [register])
-  const tiles = effectTiles(props.app, props.recipes, props.previews)
+  const tiles = effectTiles(
+    props.app,
+    props.recipes,
+    props.previews,
+    props.runs
+  )
   const setChosen = (element: HTMLButtonElement | null): void => {
     chosen.current = element
   }

@@ -1,11 +1,10 @@
-import type { Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import type { ReactElement } from "react"
 import { t, tCatalog } from "@/copy/t"
+import { RunCard, RunColumns } from "@/pieces/run/run-card"
 import { RunLine } from "@/pieces/run/run-line"
-import { RunOutputs } from "@/pieces/run/run-outputs"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import { DownloadMenu } from "@/studio/layers/download-menu"
@@ -17,21 +16,6 @@ import type { LayersState } from "@/studio/layers/use-layers-screen"
 type CanvasAreaProps = {
   state: LayersState
   onAdd: () => void
-}
-
-function RunBlock({
-  run,
-  onUseInputs,
-}: {
-  run: Run
-  onUseInputs: (run: Run) => void
-}): ReactElement {
-  return (
-    <article className="flex flex-col gap-s2">
-      <RunLine run={run} onUseInputs={onUseInputs} />
-      <RunOutputs run={run} />
-    </article>
-  )
 }
 
 function brushOf(state: LayersState): Brush | null {
@@ -187,17 +171,18 @@ export function LayersCanvasArea({
   return (
     <div className="flex flex-col gap-s6">
       {latest === null ? null : (
-        <RunBlock run={latest} onUseInputs={state.useInputs} />
+        <RunColumns>
+          <RunCard run={latest} onUseInputs={state.useInputs} />
+        </RunColumns>
       )}
       {stack === null ? null : <StackView state={state} stack={stack} />}
       {earlier.length === 0 ? null : (
-        <h2 className="text-body font-medium text-ink-muted">
-          {t("app.history.title")}
-        </h2>
+        <RunColumns>
+          {earlier.map((run) => (
+            <RunCard key={run.id} run={run} onUseInputs={state.useInputs} />
+          ))}
+        </RunColumns>
       )}
-      {earlier.map((run) => (
-        <RunBlock key={run.id} run={run} onUseInputs={state.useInputs} />
-      ))}
     </div>
   )
 }

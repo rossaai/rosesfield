@@ -85,16 +85,17 @@ describe("Remake on arrival", () => {
     ).toBeDefined()
   })
 
-  it("says Price unknown beside Generate, because no plan has priced the shots", async () => {
+  it("shows Generate alone, with no price caption, because no plan has priced the shots", async () => {
     openRemake({ credits: 5 })
-    const caption = await waitFor(() => {
-      const found = document.querySelector("[data-slot='remake-price']")
-      if (found === null) {
-        throw new Error("no price caption")
-      }
-      return found
-    })
-    expect(caption.textContent).toBe(t("run.price.unknown"))
+    await waitFor(() =>
+      expect(
+        document
+          .querySelector("[data-slot=generate-button]")
+          ?.getAttribute("data-priced")
+      ).toBe("no")
+    )
+    expect(document.querySelector("[data-slot='remake-price']")).toBeNull()
+    expect(screen.queryByText(t("run.price.unknown"))).toBeNull()
     expect(
       screen.queryByRole("button", {
         name: t("run.generate.priced", { amount: "5" }),
@@ -110,7 +111,8 @@ describe("a run before its plan shows", () => {
     const tile = await screen.findByRole("status", {
       name: t("run.working", { index: 1, count: 1 }),
     })
-    expect(tile.parentElement?.style.flex).toBe("0.5625 1 0%")
+    const row = tile.closest<HTMLElement>("[data-slot=output-row]")
+    expect(row?.style.maxWidth).toMatch(/\* 0\.5625\)$/)
     expect(document.querySelector("[data-slot='remake-plan']")).toBeNull()
   })
 })

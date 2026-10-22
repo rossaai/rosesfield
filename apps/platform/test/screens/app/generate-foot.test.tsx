@@ -68,7 +68,7 @@ describe("the price on the prompt bar's Generate tile", () => {
 
   it("holds no sentence while the price is unknown", () => {
     const start = startWith(
-      { price: t("run.price.unknown"), priceValue: null, priceName: null },
+      { price: "", priceValue: null, priceName: null },
       []
     )
     expect(submitPriceOf(start)).toEqual({})

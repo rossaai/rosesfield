@@ -101,6 +101,22 @@ function boxesIn(
   return boxes
 }
 
+function isTurned(bytes: Uint8Array, matrixAt: number): boolean {
+  const a = u32(bytes, matrixAt) | 0
+  const b = u32(bytes, matrixAt + 4) | 0
+  return a === 0 && b !== 0
+}
+
+function shownSize(bytes: Uint8Array, end: number): MediaSize | null {
+  const width = Math.round(u32(bytes, end - 8) / 65_536)
+  const height = Math.round(u32(bytes, end - 4) / 65_536)
+  const found = sizeOf(width, height)
+  if (found === null || !isTurned(bytes, end - 44)) {
+    return found
+  }
+  return { width: found.height, height: found.width }
+}
+
 function trackSize(
   bytes: Uint8Array,
   from: number,
@@ -108,9 +124,7 @@ function trackSize(
 ): MediaSize | null {
   for (const box of boxesIn(bytes, from, to)) {
     if (box.type === "tkhd") {
-      const width = u32(bytes, box.end - 8) / 65_536
-      const height = u32(bytes, box.end - 4) / 65_536
-      const found = sizeOf(Math.round(width), Math.round(height))
+      const found = shownSize(bytes, box.end)
       if (found !== null) {
         return found
       }
@@ -125,7 +139,7 @@ function trackSize(
   return null
 }
 
-/** Reads the width and height a PNG, JPEG, WebP or MP4 file declares in its header, or null. */
+/** Reads the width and height a PNG, JPEG, WebP or MP4 file shows, with an MP4 track's quarter turn applied, or null. */
 export function mediaSizeOf(bytes: Uint8Array): MediaSize | null {
   if (bytes[0] === 0x89 && ascii(bytes, 1, 3) === "PNG") {
     return pngSize(bytes)

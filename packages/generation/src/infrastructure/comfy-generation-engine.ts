@@ -43,6 +43,7 @@ import {
   costOfCredits,
   creditsOfCost,
 } from "#infrastructure/credit-meter"
+import { mediaSizeOf } from "#infrastructure/media-size"
 import { RouterHttp } from "#infrastructure/router/router-http"
 
 type ComfyGenerationEngineOptions = {
@@ -262,12 +263,13 @@ export class ComfyGenerationEngine extends GenerationEngine {
       this.low.getAssetContent(output.id, { timeoutMs: this.downloadTimeoutMs })
     )
     const bytes = new Uint8Array(await callComfy(() => response.arrayBuffer()))
+    const size = mediaSizeOf(bytes)
     return {
       kind: kindOf(output.type, output.content_type),
       mime: mimeOf(output.content_type),
       bytes,
-      width: null,
-      height: null,
+      width: size?.width ?? null,
+      height: size?.height ?? null,
       durationSeconds: null,
     }
   }

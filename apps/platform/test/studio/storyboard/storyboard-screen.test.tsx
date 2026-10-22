@@ -141,9 +141,17 @@ describe("the model menu and the price", () => {
     ).toBeDefined()
   })
 
-  it("shows Price unknown for a model with no price, and never a price of 0", async () => {
+  it("shows Generate alone for a model with no price, never a price of 0 or Price unknown", async () => {
     openStoryboard({ prices: [[openingValues(), qwenEdit, 0]] })
-    expect(await screen.findByText(t("run.price.unknown"))).toBeDefined()
+    await vi.waitFor(() =>
+      expect(
+        document
+          .querySelector("[data-slot=generate-button]")
+          ?.getAttribute("data-priced")
+      ).toBe("no")
+    )
+    expect(document.querySelector("[data-slot=storyboard-price]")).toBeNull()
+    expect(screen.queryByText(t("run.price.unknown"))).toBeNull()
     expect(screen.queryByRole("button", { name: pricedName(0) })).toBeNull()
   })
 

@@ -5,15 +5,17 @@ import type { ReactElement, ReactNode } from "react"
 type OutputRowProps = {
   aspects: readonly MediaAspect[]
   children: (index: number) => ReactNode
+  overlay?: ReactNode
   className?: string
 }
 
 const fitHeight =
-  "var(--canvas-height, calc(100dvh - 4 * var(--spacing-header))) - max(var(--spacing-icon), var(--text-body--line-height) + var(--text-caption--line-height)) - var(--spacing-s2)"
+  "var(--canvas-height, calc(100dvh - 4 * var(--spacing-header)))"
 
 export function OutputRow({
   aspects,
   children,
+  overlay,
   className,
 }: OutputRowProps): ReactElement {
   const total = aspects.reduce(
@@ -24,7 +26,8 @@ export function OutputRow({
     <div
       data-slot="output-row"
       className={cn(
-        "grid w-full grid-cols-2 gap-s2 @regular:flex @regular:items-start",
+        "relative grid w-full gap-s2 @regular:flex @regular:items-start",
+        aspects.length > 1 ? "grid-cols-2" : "grid-cols-1",
         className
       )}
       style={{
@@ -35,12 +38,14 @@ export function OutputRow({
         <div
           // biome-ignore lint/suspicious/noArrayIndexKey: an output's place in its run is its identity
           key={index}
+          data-slot="output-cell"
           className="min-w-0"
-          style={{ flex: `${aspect.width / aspect.height} 1 0%` }}
+          style={{ flex: `${aspect.width / aspect.height / total} 1 0%` }}
         >
           {children(index)}
         </div>
       ))}
+      {overlay}
     </div>
   )
 }

@@ -82,6 +82,8 @@ describe("the price on each effect tile", () => {
     )
     expect(result.current.isDemo).toBe(false)
     expect(result.current.creditsOf("grow-giant")).toBe(6.95)
+    expect(result.current.isMeasured("grow-giant")).toBe(true)
     expect(result.current.creditsOf("melt-away")).toBeNull()
+    expect(result.current.isMeasured("melt-away")).toBe(false)
   })
 })

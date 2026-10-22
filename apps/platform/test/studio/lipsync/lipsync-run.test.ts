@@ -138,10 +138,10 @@ describe("the price on Generate", () => {
     expect(priced.priceName).toBe(t("run.generate.priced", { amount: "60.35" }))
   })
 
-  it("says Price unknown when the speech run has no price", () => {
+  it("shows Generate alone when the speech run has no price", () => {
     const priced = pricedStart(started, 59.1, null, true)
     expect(priced.priceValue).toBeNull()
-    expect(priced.price).toBe(t("run.price.unknown"))
+    expect(priced.price).toBe("")
   })
 
   it("keeps the lip sync price alone on Audio", () => {

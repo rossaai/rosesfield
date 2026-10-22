@@ -25,7 +25,6 @@ function renderDocked(): ReturnType<typeof render> {
     withClient(
       <BarFrame
         app={image}
-        hasRuns={false}
         onUseInputs={() => undefined}
         sheet={[false, () => undefined]}
         settings={null}
@@ -67,7 +66,6 @@ describe("the bar frame on a phone", () => {
       withClient(
         <BarFrame
           app={image}
-          hasRuns={false}
           onUseInputs={() => undefined}
           sheet={[true, () => undefined]}
           settings={<div data-testid="settings" />}
@@ -97,7 +95,6 @@ describe("the bar frame with its phone bar docked", () => {
       withClient(
         <BarFrame
           app={image}
-          hasRuns={true}
           onUseInputs={() => undefined}
           sheet={[isOpen, () => undefined]}
           phone="dock"
@@ -126,12 +123,12 @@ describe("the bar frame with its phone bar docked", () => {
     expect(places.every((place) => place === "phone")).toBe(true)
   })
 
-  it("opens a phone with past runs on the newest, at the bottom of the canvas", () => {
+  it("opens a phone with past runs at the top, the newest first, and never scrolls to the bottom", () => {
     asPhone()
     vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(900)
     const scrolled = vi.spyOn(Element.prototype, "scrollTop", "set")
     renderPhoneDock(false, [], [doneRun(image.id)])
-    expect(scrolled).toHaveBeenCalledWith(900)
+    expect(scrolled).not.toHaveBeenCalledWith(900)
   })
 })
 
@@ -141,7 +138,6 @@ describe("the bar frame's canvas", () => {
       withClient(
         <BarFrame
           app={image}
-          hasRuns={false}
           onUseInputs={() => undefined}
           sheet={[false, () => undefined]}
           settings={null}

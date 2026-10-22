@@ -137,7 +137,6 @@ export function BarAppScreen({
   return (
     <BarFrame
       app={app}
-      hasRuns={state.hasRuns}
       onUseInputs={state.useInputs}
       sheet={sheet}
       settings={<BarSettings app={app} state={state} />}

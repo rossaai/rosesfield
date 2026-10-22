@@ -4,8 +4,12 @@ import { StateView } from "@rosesfield/ui/components/state-view"
 import type { ReactElement, ReactNode } from "react"
 import { appEmptyTitle } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
-import { RunLine } from "@/pieces/run/run-line"
-import { RunOutputs } from "@/pieces/run/run-outputs"
+import { RunCard, RunColumns } from "@/pieces/run/run-card"
+import {
+  type RunChromeOf,
+  RunFrame,
+  RunOutputs,
+} from "@/pieces/run/run-outputs"
 import { CanvasSkeleton, useAppRuns } from "@/screens/app/app-canvas"
 import { useCanvasView } from "@/screens/app/canvas-view"
 import { historyGridItems } from "@/screens/history/history-grid-items"
@@ -19,35 +23,24 @@ type AudioCanvasProps = {
   emptyAction: ReactNode
 }
 
-function AudioOutputs({ run }: { run: Run }): ReactElement {
-  if (run.status !== "done") {
-    return <RunOutputs run={run} />
-  }
-  return (
-    <div className="flex w-full flex-col gap-s2">
-      {run.outputs.map((assetId) => (
-        <WaveformPlayer
-          key={assetId}
-          assetId={assetId}
-          isDemo={run.origin === "demo"}
-        />
-      ))}
-    </div>
-  )
-}
-
-function AudioRun({
+function AudioOutputs({
   run,
-  onUseInputs,
+  chrome,
 }: {
   run: Run
-  onUseInputs: (run: Run) => void
+  chrome: RunChromeOf
 }): ReactElement {
+  if (run.status !== "done") {
+    return <RunOutputs run={run} chrome={chrome} />
+  }
   return (
-    <article className="flex flex-col gap-s2">
-      <RunLine run={run} onUseInputs={onUseInputs} />
-      <AudioOutputs run={run} />
-    </article>
+    <RunFrame chrome={chrome} place="under">
+      <div className="flex w-full flex-col gap-s2">
+        {run.outputs.map((assetId) => (
+          <WaveformPlayer key={assetId} assetId={assetId} />
+        ))}
+      </div>
+    </RunFrame>
   )
 }
 
@@ -58,21 +51,14 @@ function AudioRuns({
   runs: readonly Run[]
   onUseInputs: (run: Run) => void
 }): ReactElement {
-  const [latest, ...earlier] = runs
   return (
-    <div className="flex flex-col gap-s6">
-      {latest === undefined ? null : (
-        <AudioRun run={latest} onUseInputs={onUseInputs} />
-      )}
-      {earlier.length === 0 ? null : (
-        <h2 className="text-body font-medium text-ink-muted">
-          {t("app.history.title")}
-        </h2>
-      )}
-      {earlier.map((run) => (
-        <AudioRun key={run.id} run={run} onUseInputs={onUseInputs} />
+    <RunColumns>
+      {runs.map((run) => (
+        <RunCard key={run.id} run={run} onUseInputs={onUseInputs}>
+          {(chrome) => <AudioOutputs run={run} chrome={chrome} />}
+        </RunCard>
       ))}
-    </div>
+    </RunColumns>
   )
 }
 

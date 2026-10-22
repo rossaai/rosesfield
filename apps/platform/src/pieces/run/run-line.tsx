@@ -1,7 +1,8 @@
 import type { Run } from "@rosesfield/contract"
 import type { ReactElement } from "react"
+import { joinParts } from "@/copy/format"
 import { useRunEstimate } from "@/pieces/run/run-estimate"
-import { runCaption } from "@/pieces/run/run-facts"
+import { runFacts } from "@/pieces/run/run-facts"
 import { RunHeadline } from "@/pieces/run/run-headline"
 import { RunMenu } from "@/pieces/run/run-menu"
 
@@ -11,7 +12,7 @@ type RunLineProps = {
 }
 
 export function RunLine({ run, onUseInputs }: RunLineProps): ReactElement {
-  const caption = runCaption(run, useRunEstimate(run))
+  const caption = joinParts(runFacts(run, useRunEstimate(run)))
   return (
     <div className="flex min-w-0 items-start gap-s2">
       <div className="flex min-w-0 flex-1 flex-col">

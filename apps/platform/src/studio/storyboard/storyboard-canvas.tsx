@@ -5,7 +5,8 @@ import { StateView } from "@rosesfield/ui/components/state-view"
 import type { ReactElement, ReactNode } from "react"
 import { appEmptyTitle } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
-import { RunLine } from "@/pieces/run/run-line"
+import { RunCard } from "@/pieces/run/run-card"
+import { RunFrame } from "@/pieces/run/run-outputs"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import { keptKeyframeOf } from "@/studio/storyboard/kept-keyframes"
 import {
@@ -30,17 +31,20 @@ function RunBlock({
   onUseInputs: (run: Run) => void
 }): ReactElement {
   return (
-    <article className="flex flex-col gap-s2">
-      <RunLine
-        run={block.kind === "run" ? block.run : block.lead}
-        onUseInputs={onUseInputs}
-      />
-      {block.kind === "run" ? (
-        <KeyframeGrid run={block.run} list={list} />
-      ) : (
-        <ChainKeyframes block={block} list={list} />
+    <RunCard
+      run={block.kind === "run" ? block.run : block.lead}
+      onUseInputs={onUseInputs}
+    >
+      {(chrome) => (
+        <RunFrame chrome={chrome}>
+          {block.kind === "run" ? (
+            <KeyframeGrid run={block.run} list={list} />
+          ) : (
+            <ChainKeyframes block={block} list={list} />
+          )}
+        </RunFrame>
       )}
-    </article>
+    </RunCard>
   )
 }
 
@@ -51,7 +55,6 @@ function blockKey(block: KeyframeBlock): string {
 function CanvasSkeleton(): ReactElement {
   return (
     <div className="flex flex-col gap-s2">
-      <Skeleton className="h-s5 w-1/2" />
       <div className="grid grid-cols-2 gap-s2 @regular:grid-cols-4">
         {[0, 1, 2, 3].map((tile) => (
           <Skeleton key={tile} className="aspect-video w-full" />
@@ -92,11 +95,6 @@ export function StoryboardCanvas({
     <div className="flex flex-col gap-s6">
       {latest === undefined ? null : (
         <RunBlock block={latest} list={list} onUseInputs={onUseInputs} />
-      )}
-      {earlier.length === 0 ? null : (
-        <h2 className="text-body font-medium text-ink-muted">
-          {t("app.history.title")}
-        </h2>
       )}
       {earlier.map((block) => (
         <RunBlock

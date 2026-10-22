@@ -13,7 +13,6 @@ import {
   formatAmount,
   formatDuration,
   formatTime,
-  joinParts,
   secondsBetween,
   withUnit,
 } from "@/copy/format"
@@ -230,11 +229,14 @@ export function runSeconds(run: Run): number | null {
     : secondsBetween(run.createdAt, run.finishedAt)
 }
 
-export function runPrice(run: Run, estimate: number | null = null): string {
+export function runPrice(
+  run: Run,
+  estimate: number | null = null
+): string | null {
   if (run.origin === "demo") {
     return t("run.price.demo")
   }
-  return priceOf(run, estimate) ?? t("run.price.unknown")
+  return priceOf(run, estimate)
 }
 
 export function historyPrice(
@@ -251,13 +253,6 @@ export function historyPrice(
   return isEnded && run.cost !== null ? priceOf(run, null) : null
 }
 
-function captionPrice(run: Run, estimate: number | null): string {
-  if (run.origin === "demo") {
-    return t("run.caption.price.demo")
-  }
-  return priceOf(run, estimate) ?? t("run.caption.price.unknown")
-}
-
 function priceOf(run: Run, estimate: number | null): string | null {
   if (run.cost !== null) {
     return t("run.price.credits", {
@@ -269,31 +264,28 @@ function priceOf(run: Run, estimate: number | null): string | null {
     : t("run.price.estimated", { amount: formatAmount(estimate) })
 }
 
-function madeCaption(run: Run, lead: string | null): string | null {
-  const seconds = runSeconds(run)
-  if (seconds === null) {
-    return null
-  }
-  const duration = formatDuration(seconds)
-  return lead === null
-    ? t("run.made", { duration })
-    : t("run.caption.made", { duration })
+function present(parts: ReadonlyArray<string | null>): string[] {
+  return parts.filter((part): part is string => part !== null)
 }
 
-export function runCaption(run: Run, estimate: number | null = null): string {
-  const model = runModel(run, findCatalogApp(run.appId))
+export function runFacts(run: Run, estimate: number | null = null): string[] {
+  const lead =
+    run.origin === "demo"
+      ? t("run.demoCaption")
+      : runModel(run, findCatalogApp(run.appId))
   if (run.status === "failed" || run.status === "cancelled") {
-    const charged = run.cost === null ? null : priceOf(run, null)
-    return joinParts([model, charged])
+    return present([lead, run.cost === null ? null : priceOf(run, null)])
   }
-  const lead = run.origin === "demo" ? t("run.demoCaption") : model
   if (run.status !== "done") {
-    return lead ?? ""
+    return present([lead])
   }
-  return joinParts([
+  const seconds = runSeconds(run)
+  return present([
     lead,
-    madeCaption(run, lead),
-    captionPrice(run, estimate),
+    seconds === null
+      ? null
+      : t("run.made", { duration: formatDuration(seconds) }),
+    run.origin === "demo" ? null : priceOf(run, estimate),
     run.dropped === undefined ? null : tCount("run.dropped", run.dropped),
   ])
 }

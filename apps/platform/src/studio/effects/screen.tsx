@@ -203,7 +203,6 @@ function OpenScreen(props: StudioScreenProps): ReactElement {
       canvas={(openInputs) => (
         <AppCanvas
           app={app}
-          order="newest-first"
           onUseInputs={state.onUseInputs}
           emptyAction={<AddInputsButton onClick={openInputs} />}
           afterRun={(run) => (

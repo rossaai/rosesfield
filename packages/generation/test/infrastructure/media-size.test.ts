@@ -37,6 +37,19 @@ function webpOf(width: number, height: number): Uint8Array {
   return bytes
 }
 
+const quarterTurn = [0, 1, 0, -1, 0, 0, 0, 0, 0x4000]
+
+function turnedMp4(width: number, height: number): Uint8Array {
+  const bytes = writeFlatMp4({ width, height, seconds: 1 })
+  const view = new DataView(bytes.buffer)
+  const name = new TextDecoder("latin1").decode(bytes).indexOf("tkhd")
+  const end = name - 4 + view.getUint32(name - 4)
+  quarterTurn.forEach((value, index) => {
+    view.setInt32(end - 44 + index * 4, value * 0x10000)
+  })
+  return bytes
+}
+
 describe("mediaSizeOf", () => {
   it("reads the size a PNG, a JPEG and a WebP declare", async () => {
     expect(
@@ -53,6 +66,10 @@ describe("mediaSizeOf", () => {
     expect(
       mediaSizeOf(writeFlatMp4({ width: 64, height: 36, seconds: 1 }))
     ).toEqual({ width: 64, height: 36 })
+  })
+
+  it("reads a video turned a quarter as the shape it shows", () => {
+    expect(mediaSizeOf(turnedMp4(64, 36))).toEqual({ width: 36, height: 64 })
   })
 
   it("answers null for bytes with no known header", () => {

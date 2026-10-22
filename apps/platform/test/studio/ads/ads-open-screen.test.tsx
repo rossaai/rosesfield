@@ -136,12 +136,17 @@ describe("the Ads Generate press", () => {
 })
 
 describe("the Ads price", () => {
-  it("reads Price unknown for a price of 0, and never 0", async () => {
+  it("shows Generate alone for a price of 0, and never 0 or Price unknown", async () => {
     openAds({ prices: [[openingValues(), 0]] })
     await emptyCanvas()
     await vi.waitFor(() =>
-      expect(bar().textContent).toContain(t("run.price.unknown"))
+      expect(
+        bar()
+          .querySelector("[data-slot=generate-button]")
+          ?.getAttribute("data-priced")
+      ).toBe("no")
     )
+    expect(bar().textContent).not.toContain(t("run.price.unknown"))
     expect(screen.queryByRole("button", { name: pricedName(0) })).toBeNull()
   })
 
@@ -234,13 +239,16 @@ describe("Ads on a phone", () => {
     expect(sheet.querySelector("textarea")).toBeNull()
   })
 
-  it("opens with past runs on the newest, at the bottom of the canvas", async () => {
+  it("opens with past runs at the top, the newest first, and never scrolls to the bottom", async () => {
     asPhone()
     vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(900)
     const scrolled = vi.spyOn(Element.prototype, "scrollTop", "set")
     openAds({ runs: [adsRun({ inputs: { product: [photos[0] ?? ""] } })] })
     await vi.waitFor(bar)
-    await vi.waitFor(() => expect(scrolled).toHaveBeenCalledWith(900))
+    await vi.waitFor(() =>
+      expect(document.querySelector("[data-slot=run-card]")).not.toBeNull()
+    )
+    expect(scrolled).not.toHaveBeenCalledWith(900)
   })
 })
 

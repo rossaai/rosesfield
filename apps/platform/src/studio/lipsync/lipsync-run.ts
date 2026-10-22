@@ -150,7 +150,7 @@ export function pricedStart(
   const amount = total === null ? null : formatNumber(total)
   return {
     ...started,
-    price: amount === null ? t("run.price.unknown") : "",
+    price: "",
     priceValue: amount,
     priceName: amount === null ? null : t("run.generate.priced", { amount }),
   }

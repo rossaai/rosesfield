@@ -26,6 +26,7 @@ type MediaTileProps = {
   caption?: ReactNode
   length?: ReactNode
   onOpen?: (origin: HTMLElement) => void
+  onShape?: (shape: MediaAspect) => void
   ref?: Ref<HTMLElement>
   className?: string
 }
@@ -36,16 +37,22 @@ function aspectStyle(aspect: MediaAspect | undefined): CSSProperties {
     : { aspectRatio: `${aspect.width} / ${aspect.height}` }
 }
 
+function shapeOf(width: number, height: number): MediaAspect | null {
+  return width > 0 && height > 0 ? { width, height } : null
+}
+
 function TileVideo({
   src,
   poster,
   alt,
   fitClass,
+  onShape,
 }: {
   src: string
   poster: string | undefined
   alt: string
   fitClass: string
+  onShape: ((shape: MediaAspect) => void) | undefined
 }): ReactElement {
   const video = useRef<HTMLVideoElement>(null)
   useInView(video, (isInView) => {
@@ -73,14 +80,49 @@ function TileVideo({
       muted
       loop
       playsInline
-      preload="none"
+      preload={onShape === undefined ? "none" : "metadata"}
+      onLoadedMetadata={(event) => {
+        const shape = shapeOf(
+          event.currentTarget.videoWidth,
+          event.currentTarget.videoHeight
+        )
+        if (shape !== null) {
+          onShape?.(shape)
+        }
+      }}
       className={fitClass}
     />
   )
 }
 
-const pillClass =
-  "material absolute bottom-s2 left-s2 max-w-[calc(100%-2*var(--spacing-s2))] truncate whitespace-nowrap rounded-full px-s1_5 py-hairline text-caption text-ink"
+const badgeClass =
+  "max-w-full truncate whitespace-nowrap rounded-full px-s1_5 py-hairline text-caption"
+
+const badgeGrounds = {
+  media: "material text-ink",
+  plain: "bg-(--well) text-ink-muted",
+} as const
+
+const pillClass = `${badgeClass} ${badgeGrounds.media} absolute bottom-s2 left-s2 max-w-[calc(100%-2*var(--spacing-s2))]`
+
+function MediaBadge({
+  children,
+  ground = "media",
+  className,
+}: {
+  children: ReactNode
+  ground?: keyof typeof badgeGrounds
+  className?: string
+}): ReactElement {
+  return (
+    <span
+      data-slot="media-badge"
+      className={cn(badgeClass, badgeGrounds[ground], className)}
+    >
+      {children}
+    </span>
+  )
+}
 
 function TileCaption({
   caption,
@@ -109,6 +151,7 @@ function TileBody({
   fit = "cover",
   caption,
   length,
+  onShape,
 }: MediaTileProps): ReactElement {
   const fitClass = cn(
     "size-full",
@@ -117,13 +160,28 @@ function TileBody({
   return (
     <>
       {kind === "video" ? (
-        <TileVideo src={src} poster={poster} alt={alt} fitClass={fitClass} />
+        <TileVideo
+          src={src}
+          poster={poster}
+          alt={alt}
+          fitClass={fitClass}
+          onShape={onShape}
+        />
       ) : (
         <img
           src={src}
           alt={alt}
           loading="lazy"
           decoding="async"
+          onLoad={(event) => {
+            const shape = shapeOf(
+              event.currentTarget.naturalWidth,
+              event.currentTarget.naturalHeight
+            )
+            if (shape !== null) {
+              onShape?.(shape)
+            }
+          }}
           className={fitClass}
         />
       )}
@@ -167,4 +225,4 @@ function MediaTile(props: MediaTileProps): ReactElement {
 }
 
 export type { MediaAspect, MediaTileProps }
-export { MediaTile }
+export { MediaBadge, MediaTile }

@@ -1,5 +1,6 @@
 import {
   type EffectRecipe,
+  type EffectRun,
   effectRecipes,
   effectsApp,
   passedRecipes,
@@ -49,6 +50,39 @@ const previews = (file: string): string | null =>
 const prices: EffectPrices = {
   isDemo: false,
   creditsOf: (effect) => (effect === "grow-giant" ? 6.95 : null),
+  isMeasured: (effect) => effect === "grow-giant",
+}
+
+const keptRun: EffectRun = {
+  runId,
+  effect: "melt-away",
+  workflowHash:
+    "ed50011518009bb7519b8d93286267699aeb1c3863c4fe89c4ade3470cf8673f",
+  photo: "4878911303dc844df9d1380ef667e54c3bbc27d0a634396496d961404542b221",
+  seed: 7,
+  resolution: "480p",
+  aspectRatio: "9:16",
+  balance: { before: 2530.78, after: 2492.89 },
+  verdict: "kept",
+  failed: [],
+}
+
+function renderTiles(
+  tilePrices: EffectPrices,
+  runs: readonly EffectRun[]
+): void {
+  render(
+    <EffectTiles
+      app={listingOf(recipes)}
+      value="grow-giant"
+      prices={tilePrices}
+      onChange={() => undefined}
+      register={() => undefined}
+      recipes={recipes}
+      previews={previews}
+      runs={runs}
+    />
+  )
 }
 
 function tileNamed(effect: string): HTMLElement {
@@ -73,6 +107,7 @@ describe("the effect tiles", () => {
         label: tCatalog("effects.choice.effect.growGiant"),
         photo: tCatalog("effects.photo.growGiant"),
         look: { status: "passed", preview: "/previews/grow-giant.mp4" },
+        kept: null,
       },
     ])
   })
@@ -107,22 +142,33 @@ describe("the effect tiles", () => {
     expect(new Set(loops).size).toBe(passedRecipes.length)
   })
 
-  it("shows the price the price route measured in Comfy credits, and says when there is none", () => {
-    render(
-      <EffectTiles
-        app={listingOf(recipes)}
-        value="grow-giant"
-        prices={prices}
-        onChange={() => undefined}
-        register={() => undefined}
-        recipes={recipes}
-        previews={previews}
-      />
-    )
+  it("shows the price your own run measured, and no price where nothing measured one, never Price unknown", () => {
+    renderTiles(prices, [])
     expect(tileNamed("grow-giant").textContent).toContain(
       t("run.price.credits", { amount: "6.95" })
     )
-    expect(tileNamed("melt-away").textContent).toContain(t("run.price.unknown"))
+    expect(tileNamed("melt-away").textContent).not.toContain(
+      t("run.price.unknown")
+    )
+    expect(
+      tileNamed("melt-away").querySelector("[data-slot=credit-price]")
+    ).toBeNull()
+  })
+
+  it("shows the credits its kept run measured, named as that run's, until your own run measures it", () => {
+    const kept = t("run.price.kept", { amount: "37.89", resolution: "480p" })
+    renderTiles({ ...prices, creditsOf: () => 5, isMeasured: () => false }, [
+      keptRun,
+    ])
+    expect(tileNamed("melt-away").textContent).toContain(kept)
+    cleanup()
+    renderTiles({ ...prices, creditsOf: () => 41.2, isMeasured: () => true }, [
+      keptRun,
+    ])
+    expect(tileNamed("melt-away").textContent).toContain(
+      t("run.price.credits", { amount: "41.2" })
+    )
+    expect(tileNamed("melt-away").textContent).not.toContain(kept)
   })
 
   it("plays each effect's run muted and picks an effect on a press", () => {

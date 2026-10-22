@@ -7,13 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@rosesfield/ui/components/sheet"
-import {
-  type ReactElement,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useState,
-} from "react"
+import { type ReactElement, type ReactNode, useEffect, useState } from "react"
 import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useAppToolsOpener } from "@/pieces/app-tools"
@@ -31,58 +25,11 @@ export type PhoneBar = "sheet" | "dock"
 
 type BarFrameProps = {
   app: AppListing
-  hasRuns: boolean | null
   onUseInputs: (run: Run) => void
   bar: (place: BarPlace) => ReactNode
   settings: ReactNode
   sheet: SheetControl
   phone?: PhoneBar
-}
-
-function useBottomScroll(
-  hasRuns: boolean | null
-): (node: HTMLElement | null) => void {
-  const [node, setNode] = useState<HTMLElement | null>(null)
-  useEffect(() => {
-    if (node === null || hasRuns !== true) {
-      return
-    }
-    let isPinned = true
-    const toBottom = (): void => {
-      if (isPinned) {
-        node.scrollTop = node.scrollHeight
-      }
-    }
-    const onScroll = (): void => {
-      isPinned = node.scrollHeight - node.scrollTop - node.clientHeight < 1
-    }
-    const sizes =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(toBottom)
-    const watch = (): void => {
-      for (const child of node.children) {
-        sizes?.observe(child)
-      }
-    }
-    const children =
-      typeof MutationObserver === "undefined"
-        ? null
-        : new MutationObserver(() => {
-            watch()
-            toBottom()
-          })
-    watch()
-    children?.observe(node, { childList: true })
-    toBottom()
-    node.addEventListener("scroll", onScroll, { passive: true })
-    return () => {
-      sizes?.disconnect()
-      children?.disconnect()
-      node.removeEventListener("scroll", onScroll)
-    }
-  }, [node, hasRuns])
-  return setNode
 }
 
 function useDockCover(): {
@@ -154,16 +101,7 @@ export function BarFrame(props: BarFrameProps): ReactElement {
   const isRegular = useIsRegularWindow()
   const isDocked = props.phone === "dock"
   const fit = useCanvasFit()
-  const bottom = useBottomScroll(props.hasRuns)
   const cover = useDockCover()
-  const fitRef = fit.ref
-  const scrollRef = useCallback(
-    (element: HTMLElement | null) => {
-      fitRef(element)
-      bottom(element)
-    },
-    [fitRef, bottom]
-  )
   return (
     <div className="flex h-full min-h-0 flex-col">
       <h1 className="sr-only">{appName(props.app)}</h1>
@@ -175,14 +113,10 @@ export function BarFrame(props: BarFrameProps): ReactElement {
         <AppStage
           app={props.app}
           kind="bar"
-          scrollRef={scrollRef}
+          scrollRef={fit.ref}
           scrollClassName="px-4 pb-4 @regular:pb-36"
         >
-          <AppCanvas
-            app={props.app}
-            order="newest-last"
-            onUseInputs={props.onUseInputs}
-          />
+          <AppCanvas app={props.app} onUseInputs={props.onUseInputs} />
         </AppStage>
       </div>
       {isRegular ? (
