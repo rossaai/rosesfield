@@ -14,7 +14,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 const sections: ModelPickerSection[] = [
   {
-    id: "first",
+    id: "featured",
     label: "Your models",
     rows: [
       {

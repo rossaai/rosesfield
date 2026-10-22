@@ -12,6 +12,7 @@ import {
   ModelPicker,
   type ModelPickerSection,
   type ModelPickerTag,
+  type ModelPrice,
 } from "@rosesfield/ui/components/model-picker"
 import {
   ModelChip,
@@ -24,12 +25,14 @@ import {
   ScanIcon,
   Volume2Icon,
 } from "lucide-react"
-import type { ReactElement, ReactNode } from "react"
+import { type ReactElement, type ReactNode, useState } from "react"
 import { type CopyValues, hasCatalogText, t, tCatalog } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import { modelSections } from "@/screens/app/hosted/model-sections"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
+import { useRowPrices } from "@/screens/app/hosted/use-row-prices"
 import { openModels } from "@/screens/welcome/open-weights"
 
 export type CatalogWords = (key: string, values?: CopyValues) => string | null
@@ -102,7 +105,6 @@ export function tagOf(tag: ModelTag): ModelPickerTag {
 
 const sectionLabels = {
   featured: "model.picker.featured",
-  open: "model.tag.openWeights",
   all: "model.picker.all",
 } as const
 
@@ -176,7 +178,8 @@ export function badgesOf(
 
 export function pickerSections(
   hosted: HostedState,
-  today: string = todayOf()
+  today: string = todayOf(),
+  prices: ReadonlyMap<string, ModelPrice> = new Map()
 ): ModelPickerSection[] {
   const first = [
     ...(hosted.defaultModel === null ? [] : [hosted.defaultModel]),
@@ -189,15 +192,20 @@ export function pickerSections(
   return modelSections(models, first, modelNameOf).map((section) => ({
     id: section.id,
     label: t(sectionLabels[section.id]),
-    rows: section.rows.map((row) => ({
-      id: row.id,
-      name: row.name,
-      maker: row.maker,
-      line: modelLineOf(row.facts?.lineKey ?? null, labOf(row)),
-      tags: row.tags.filter((tag) => tag.kind !== "open-weights").map(tagOf),
-      mark: <LabMark maker={labOf(row)} />,
-      badges: badgesOf(row.id, row.tags, row.facts, today),
-    })),
+    rows: section.rows.map((row) => {
+      const price = prices.get(row.id)
+      return {
+        id: row.id,
+        name: row.name,
+        maker: row.maker,
+        lab: labOf(row),
+        line: modelLineOf(row.facts?.lineKey ?? null, labOf(row)),
+        tags: row.tags.filter((tag) => tag.kind !== "open-weights").map(tagOf),
+        mark: <LabMark maker={labOf(row)} />,
+        badges: badgesOf(row.id, row.tags, row.facts, today),
+        ...(price === undefined ? {} : { price }),
+      }
+    }),
   }))
 }
 
@@ -241,6 +249,10 @@ export function CatalogPicker({
   settings,
   place = "chip",
 }: CatalogPickerProps): ReactElement {
+  const [isOpen, setOpen] = useState(defaultOpen)
+  const { prices, isPricing } = useRowPrices(hosted, isOpen)
+  const isRegular = useIsRegularWindow()
+  const isBeside = place === "row" && isRegular
   return (
     <ModelPicker
       trigger={pickerTrigger(hosted, place)}
@@ -248,12 +260,14 @@ export function CatalogPicker({
       searchLabel={t("model.picker.search")}
       searchPlaceholder={t("model.picker.searchPlaceholder")}
       emptyLabel={t("model.picker.empty")}
-      sections={pickerSections(hosted)}
+      sections={pickerSections(hosted, todayOf(), prices)}
       chosen={hosted.chosen?.id ?? null}
       onChoose={hosted.choose}
-      defaultOpen={defaultOpen}
+      open={isOpen}
+      onOpenChange={setOpen}
+      isPricing={isPricing}
       settings={settings}
-      side={place === "row" ? "right" : "top"}
+      side={isBeside ? "right" : "top"}
       isLoading={hosted.isLoading}
       notice={
         hosted.error === null ? null : <ModelNotice error={hosted.error} />

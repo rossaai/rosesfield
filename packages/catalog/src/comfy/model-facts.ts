@@ -42,6 +42,7 @@ const markSet = z.strictObject({
 const labMark = z.strictObject({
   slug: z.string().regex(/^[a-z0-9]+$/),
   title: z.string().min(1).max(80),
+  hex: z.string().regex(/^[0-9A-F]{6}$/),
   path: z
     .string()
     .max(8000)
@@ -60,6 +61,13 @@ export type ModelFactsFile = z.infer<typeof modelFactsFile>
 export const weightsHost = "https://huggingface.co/"
 
 export const modelFactsData: ModelFactsFile = modelFactsFile.parse(source)
+
+export function labOfModel(
+  id: string,
+  data: ModelFactsFile = modelFactsData
+): string | null {
+  return Object.hasOwn(data.models, id) ? (data.models[id]?.lab ?? null) : null
+}
 
 export function boardRankOf(
   id: string,
@@ -98,7 +106,7 @@ export function factsOf(
   const row = Object.hasOwn(data.models, id) ? data.models[id] : undefined
   const weights = row?.weights ?? null
   return {
-    lab: row?.lab ?? null,
+    lab: labOfModel(id, data),
     release: row?.release ?? null,
     rank: boardRankOf(id, task, data),
     priceThird: row?.thirds[task] ?? null,

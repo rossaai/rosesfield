@@ -15,7 +15,7 @@ export type SectionRow = {
 }
 
 export type ModelSection = {
-  id: "featured" | "open" | "all"
+  id: "featured" | "all"
   rows: readonly SectionRow[]
 }
 
@@ -59,16 +59,13 @@ export function modelSections(
     const model = byId.get(id)
     return model === undefined ? [] : [rowOf(model, nameOf(model))]
   })
-  const open = models
-    .filter(isOpenWeights)
-    .map((model) => rowOf(model, nameOf(model)))
-  const others = models
-    .filter((model) => !isOpenWeights(model))
-    .map((model) => rowOf(model, nameOf(model)))
+  const all = [
+    ...models.filter(isOpenWeights),
+    ...models.filter((model) => !isOpenWeights(model)),
+  ].map((model) => rowOf(model, nameOf(model)))
   const sections: ModelSection[] = [
     { id: "featured", rows: featured },
-    { id: "open", rows: open },
-    { id: "all", rows: others },
+    { id: "all", rows: all },
   ]
   return sections.filter((section) => section.rows.length > 0)
 }

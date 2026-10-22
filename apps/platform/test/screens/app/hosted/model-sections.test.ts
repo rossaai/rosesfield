@@ -44,7 +44,7 @@ const models = [
 ]
 
 describe("the sections of the model picker", () => {
-  it("puts your default and the models you ran before under Featured, then the open-weights models under their own group, then every other model under All", () => {
+  it("puts your default and the models you ran before under Featured, then every model under All, open weights first, for the picker to group by lab", () => {
     const sections = modelSections(
       models,
       ["beta/two", "alpha/one", "beta/two", "gone/model"],
@@ -54,14 +54,13 @@ describe("the sections of the model picker", () => {
       sections.map((section) => [section.id, section.rows.map((row) => row.id)])
     ).toEqual([
       ["featured", ["beta/two", "alpha/one"]],
-      ["open", ["open-picture"]],
-      ["all", ["alpha/one", "beta/two", "beta/three"]],
+      ["all", ["open-picture", "alpha/one", "beta/two", "beta/three"]],
     ])
   })
 
   it("leaves Featured out when nothing is featured", () => {
     const sections = modelSections(models, [], (one) => one.name)
-    expect(sections.map((section) => section.id)).toEqual(["open", "all"])
+    expect(sections.map((section) => section.id)).toEqual(["all"])
   })
 
   it("gives an image row with no fact row no line, and a video row its factual tags", () => {
@@ -91,9 +90,9 @@ describe("the sections of the model picker", () => {
     expect(image?.badges).toEqual([])
     expect(pickerSections(hosted).map((section) => section.label)).toEqual([
       "Featured",
-      "Open weights",
       "All",
     ])
+    expect(rows.map((row) => row.lab)).toContain("Alpha")
   })
 })
 
@@ -141,6 +140,7 @@ describe("an open-weights row of the model picker", () => {
 
   it("names its lab as its maker and in its mark, from the catalog's facts", () => {
     expect(ming?.maker).toBe("inclusionAI")
+    expect(ming?.lab).toBe("inclusionAI")
     const mark = ming?.mark
     expect(
       isValidElement<{ maker: string }>(mark) ? mark.props.maker : null
@@ -161,5 +161,35 @@ describe("an open-weights row of the model picker", () => {
         href: "https://huggingface.co/inclusionAI/Ming-Image-0.1-Design",
       },
     ])
+  })
+})
+
+describe("the prices of the model picker's rows", () => {
+  const hosted: HostedState = {
+    isTaskApp: true,
+    models: [model("alpha/one", "Alpha"), model("beta/two", "Beta")],
+    isLoading: false,
+    error: null,
+    keyState: "set",
+    defaultModel: "alpha/one",
+    chosen: null,
+    fields: null,
+    ranBefore: [],
+    choose: () => undefined,
+  }
+
+  it("gives each priced row its price, in the featured group too, and an unpriced row none", () => {
+    const price = { amount: "6.33", name: "6.33 Comfy credits" }
+    const rows = pickerSections(
+      hosted,
+      "2026-10-20",
+      new Map([["alpha/one", price]])
+    ).flatMap((section) => section.rows)
+    expect(
+      rows.filter((row) => row.id === "alpha/one").map((row) => row.price)
+    ).toEqual([price, price])
+    expect(rows.find((row) => row.id === "beta/two")).not.toHaveProperty(
+      "price"
+    )
   })
 })
