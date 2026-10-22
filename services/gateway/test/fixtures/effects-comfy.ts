@@ -77,6 +77,7 @@ function uploadBody(): Record<string, unknown> {
 
 type ReplayOptions = {
   balanceAfter?: Promise<void>
+  onBalanceAfter?: () => void
 }
 
 export function replayedComfy(
@@ -92,6 +93,7 @@ export function replayedComfy(
     sent.push(`${request.method} ${pathname}`)
     if (host === "api.comfy.org" && pathname === "/customers/balance") {
       if (cents.length < 3) {
+        options.onBalanceAfter?.()
         await options.balanceAfter
       }
       return Response.json({ amount_cents: cents.shift() ?? 999.5 })

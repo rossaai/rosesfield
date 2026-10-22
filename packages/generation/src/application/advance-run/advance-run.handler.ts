@@ -18,7 +18,7 @@ import {
   keepFinished,
   type Watch,
 } from "#application/advance-run/keep-job"
-import { isCostLate, LatePrices } from "#application/advance-run/late-price"
+import { LatePrices } from "#application/advance-run/late-price"
 import { runRequestOf } from "#application/advance-run/run-request"
 import {
   backoffMs,
@@ -77,6 +77,8 @@ const unknown: ReadonlyMap<string, EngineStatus> = new Map()
 
 const stop: AdvanceRunOutput = { nextWakeMs: null }
 
+const ended: AdvanceRunOutput = { nextWakeMs: null }
+
 export class AdvanceRunHandler {
   static readonly watchMarkMs = WatchMarks.markMs
 
@@ -101,7 +103,9 @@ export class AdvanceRunHandler {
     this.watchMarks = options.watchMarks ?? null
     this.log = options.log ?? console.error
     this.late = new LatePrices({
+      apps: this.apps,
       runs: this.runs,
+      engines: this.engines,
       prices: this.prices,
       clock: this.clock,
     })
@@ -123,10 +127,15 @@ export class AdvanceRunHandler {
 
   async execute(input: AdvanceRunInput): Promise<AdvanceRunOutput> {
     const output = await this.step(input)
-    if (output.nextWakeMs === null) {
-      this.late.settle(input.runId)
+    if (output.nextWakeMs !== null) {
+      return output
     }
-    return output
+    if (input.source !== "stream") {
+      await this.late.settle(input.runId)
+    } else if (output !== ended) {
+      void this.late.settle(input.runId)
+    }
+    return stop
   }
 
   priced(runId: RunId): Promise<void> {
@@ -142,7 +151,7 @@ export class AdvanceRunHandler {
     }
     const run = await this.runs.get(input.runId)
     if (run === null || run.isFinished()) {
-      return stop
+      return ended
     }
     const app = this.apps.find(run.appId)
     const engine = this.engines.find(
@@ -290,13 +299,6 @@ export class AdvanceRunHandler {
       const collected = await collectJob(this.keepPorts(), run, one, watch)
       if (collected === "empty") {
         return "empty"
-      }
-      if (collected === "kept" && isCostLate(one.status, watch.engine)) {
-        this.late.owe(run.id, {
-          ...watch,
-          index: one.job.index,
-          ref: one.ref,
-        })
       }
       isCollecting ||= collected === "retry"
     }

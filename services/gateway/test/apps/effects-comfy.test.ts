@@ -87,12 +87,19 @@ describe("the effects app through the gateway on a replayed Comfy", () => {
     })
   })
 
-  it("shows a Comfy run done with its credits not known, then writes them once the balance is read", async () => {
+  it("shows a Comfy run done with its credits not known, then writes them once the balance is read, before the alarm's step returns", async () => {
     let release: () => void = () => undefined
     const balanceAfter = new Promise<void>((resolve) => {
       release = resolve
     })
-    const comfy = replayedComfy("succeeded", { balanceAfter })
+    let reach: () => void = () => undefined
+    const reached = new Promise<void>((resolve) => {
+      reach = resolve
+    })
+    const comfy = replayedComfy("succeeded", {
+      balanceAfter,
+      onBalanceAfter: () => reach(),
+    })
     const gateway = openGateway(openEffects(), livePorts(comfy))
     const photo = await upload(gateway, pngOf(1080, 1920))
     const run = await started(gateway, {
@@ -100,23 +107,29 @@ describe("the effects app through the gateway on a replayed Comfy", () => {
       aspectRatio: "9:16",
     })
     const runId = runIdFormat.parse(run.id)
-    for (let step = 0; step < 20; step += 1) {
-      const { nextWakeMs } = await gateway.handlers.advanceRun.execute({
-        runId,
-      })
-      if (nextWakeMs === null) {
-        break
+    let isOver = false
+    const ending = (async () => {
+      for (let step = 0; step < 20; step += 1) {
+        const { nextWakeMs } = await gateway.handlers.advanceRun.execute({
+          runId,
+        })
+        if (nextWakeMs === null) {
+          break
+        }
+        gateway.clock.advance(nextWakeMs)
       }
-      gateway.clock.advance(nextWakeMs)
-    }
+      isOver = true
+    })()
 
+    await reached
     const shown = await readRun(gateway, run.id)
     expect(shown.status).toBe("done")
     expect(shown.outputs).toHaveLength(1)
     expect(shown.cost).toBeNull()
+    expect(isOver).toBe(false)
 
     release()
-    await gateway.handlers.advanceRun.priced(runId)
+    await ending
     const priced = await readRun(gateway, run.id)
     expect(priced.cost).toEqual({ amount: 1.055 / 211, currency: "USD" })
   })

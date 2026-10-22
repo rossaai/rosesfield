@@ -7,34 +7,34 @@ import type {
   WatchRunInput,
 } from "#application/watch-run/watch-run.handler"
 import { RunConflictError } from "#domain/error/run-conflict.error"
-import type {
-  EngineStatus,
-  GenerationEngine,
-} from "#domain/generation-engine.port"
+import type { AppCatalog } from "#domain/app-catalog.port"
+import type { GenerationEngine } from "#domain/generation-engine.port"
 import type { PriceBook } from "#domain/price-book.port"
 import { Run } from "#domain/run"
 import type { RunRepository } from "#domain/run.repository"
 
-export type LateJob = Watch & { index: number; ref: string }
+type OwedJob = { index: number; ref: string }
 
 type JobCost = { index: number; cost: Cost }
 
 type LatePricesOptions = {
+  apps: AppCatalog
   runs: RunRepository
+  engines: readonly GenerationEngine[]
   prices: PriceBook | null
   clock: Clock
 }
 
 const noCost: Cost = { amount: 0, currency: "USD" }
 
-export function isCostLate(
-  status: EngineStatus,
-  engine: GenerationEngine
-): boolean {
-  return (
-    status.state === "succeeded" &&
-    status.cost === undefined &&
-    engine.creditsOf(noCost) !== null
+function owedOf(run: Run, engine: GenerationEngine): OwedJob[] {
+  if (engine.creditsOf(noCost) === null) {
+    return []
+  }
+  return run.jobs.flatMap((job) =>
+    job.status === "done" && job.ref !== null && job.cost === undefined
+      ? [{ index: job.index, ref: job.ref }]
+      : []
   )
 }
 
@@ -98,28 +98,16 @@ export class LatePrices {
   static readonly saveTries = 3
 
   private readonly options: LatePricesOptions
-  private readonly owed = new Map<RunId, LateJob[]>()
   private readonly writing = new Map<RunId, Promise<void>>()
 
   constructor(options: LatePricesOptions) {
     this.options = options
   }
 
-  owe(runId: RunId, job: LateJob): void {
-    const owed = (this.owed.get(runId) ?? []).filter(
-      (one) => one.index !== job.index
-    )
-    keepAtMost(this.owed, runId, [...owed, job])
-  }
-
-  settle(runId: RunId): void {
-    const owed = this.owed.get(runId)
-    if (owed === undefined) {
-      return
-    }
-    this.owed.delete(runId)
-    const writing = this.write(runId, owed).catch(() => undefined)
+  settle(runId: RunId): Promise<void> {
+    const writing = this.write(runId).catch(() => undefined)
     keepAtMost(this.writing, runId, writing)
+    return writing
   }
 
   written(runId: RunId): Promise<void> {
@@ -150,15 +138,20 @@ export class LatePrices {
     }
   }
 
-  private async write(runId: RunId, owed: readonly LateJob[]): Promise<void> {
+  private async write(runId: RunId): Promise<void> {
+    const ended = await this.options.runs.get(runId)
+    const watch = ended === null ? null : this.watchOf(ended)
+    if (ended === null || watch === null) {
+      return
+    }
     const read = await Promise.all(
-      owed.map(async (job) => ({
-        job,
-        cost: await lateCostOf(job.engine, job.ref),
+      owedOf(ended, watch.engine).map(async (job) => ({
+        index: job.index,
+        cost: await lateCostOf(watch.engine, job.ref),
       }))
     )
-    const costs = read.flatMap(({ job, cost }) =>
-      cost === null ? [] : [{ job, index: job.index, cost }]
+    const costs = read.flatMap(({ index, cost }) =>
+      cost === null ? [] : [{ index, cost }]
     )
     if (costs.length === 0) {
       return
@@ -171,7 +164,7 @@ export class LatePrices {
       }
       try {
         const saved = await this.options.runs.save(priced)
-        await this.record(saved, costs)
+        await this.record(saved, watch, costs)
         return
       } catch (error) {
         if (!(error instanceof RunConflictError)) {
@@ -181,17 +174,26 @@ export class LatePrices {
     }
   }
 
+  private watchOf(run: Run): Watch | null {
+    const app = this.options.apps.find(run.appId)
+    const engine = this.options.engines.find(
+      (candidate) => candidate.key === run.adapter
+    )
+    return app === null || engine === undefined ? null : { app, engine }
+  }
+
   private async record(
     run: Run,
-    costs: readonly (JobCost & { job: LateJob })[]
+    watch: Watch,
+    costs: readonly JobCost[]
   ): Promise<void> {
     const now = this.options.clock.now()
     await Promise.all(
-      costs.map(({ job, cost }) =>
+      costs.map(({ cost }) =>
         recordPrice(this.options.prices, {
           run,
-          app: job.app,
-          engine: job.engine,
+          app: watch.app,
+          engine: watch.engine,
           cost,
           now,
         }).catch(() => undefined)
