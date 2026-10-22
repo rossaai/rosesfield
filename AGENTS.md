@@ -37,6 +37,7 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 | a package, a version, the Comfy Router, the Comfy API v2, the one engine, prices, the agent harness, the agent's model, MCP | `docs/stack.md` |
 | how the model list is read from Comfy, the licence of each graph | `docs/models.md` |
 | a public host: Cloudflare, its settings, the judge link | `docs/self-host.md` |
+| how long you wait on Rosesfield: a result painted, a video's first frame, an app's catalog, their bounds and `apps/platform/e2e/waits.spec.ts` | `docs/waits.md` |
 | a ComfyUI workflow, the `workflows/` folder and its format | `workflows/README.md` |
 | any screen, component, token, motion, mark or string a person reads | `generated.json` and the generated files it lists |
 
