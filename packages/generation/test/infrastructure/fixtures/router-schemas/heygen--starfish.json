@@ -1,0 +1,62 @@
+{
+  "x-comfy-router-model-id": "heygen/starfish",
+  "x-comfy-router-input-modalities": ["text"],
+  "x-comfy-router-output-modalities": ["audio"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/heygen/starfish": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for HeyGen v3 text-to-speech generation",
+                "example": {
+                  "text": "Hello from Comfy. This voice is generated with the HeyGen Starfish engine.",
+                  "voice_id": "d2f4f24783d04e22ab49ee8fdc3715e0"
+                },
+                "properties": {
+                  "input_type": {
+                    "description": "Type of the input: 'text' for plain text, 'ssml' for SSML markup. Defaults to 'text'",
+                    "type": "string"
+                  },
+                  "language": {
+                    "description": "Base language code (e.g. 'en'). Auto-detected from text when omitted",
+                    "type": "string"
+                  },
+                  "locale": {
+                    "description": "BCP-47 locale tag (e.g. 'en-US'). When set, language is inferred from locale",
+                    "type": "string"
+                  },
+                  "speed": {
+                    "description": "Speed multiplier (0.5-2.0)",
+                    "format": "double",
+                    "maximum": 2,
+                    "minimum": 0.5,
+                    "type": "number"
+                  },
+                  "text": {
+                    "description": "Text to synthesize (1-5000 characters)",
+                    "maxLength": 5000,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "voice_id": {
+                    "description": "Voice ID to use. The voice must support the starfish engine",
+                    "type": "string"
+                  }
+                },
+                "required": ["text", "voice_id"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

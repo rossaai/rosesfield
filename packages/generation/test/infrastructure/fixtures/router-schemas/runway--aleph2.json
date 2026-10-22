@@ -1,0 +1,182 @@
+{
+  "x-comfy-router-model-id": "runway/aleph2",
+  "x-comfy-router-input-modalities": ["video", "text", "image"],
+  "x-comfy-router-output-modalities": ["video"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/runway/aleph2": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request to edit an input video into a new video using Runway's API.",
+                "example": {
+                  "promptText": "recolor the scene in cool blue tones",
+                  "videoUri": "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4"
+                },
+                "properties": {
+                  "contentModeration": {
+                    "$ref": "#/components/schemas/RunwayContentModeration"
+                  },
+                  "keyframes": {
+                    "description": "Timed guidance images placed at specific points in the input video. Up to 5 keyframes.",
+                    "items": {
+                      "$ref": "#/components/schemas/RunwayVideoToVideoKeyframe"
+                    },
+                    "maxItems": 5,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "model": {
+                    "description": "Model to use for generation. On the Comfy Router route `POST /v2/models/runway/{model}` this field is supplied from the path and MUST NOT be sent; on the v1 `POST /proxy/runway/video_to_video` route it is required and constrained to the RunwayVideoToVideoModelEnum (`aleph2`).",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "promptImage": {
+                    "description": "A list of up to 5 image keyframes for guiding the edit at specific points in the video.",
+                    "items": {
+                      "$ref": "#/components/schemas/RunwayVideoToVideoPromptImage"
+                    },
+                    "maxItems": 5,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "promptText": {
+                    "description": "A non-empty string up to 1000 characters describing what should appear in the output.",
+                    "maxLength": 1000,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "seed": {
+                    "description": "Random seed for generation.",
+                    "format": "int64",
+                    "maximum": 4294967295,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "videoUri": {
+                    "description": "The input video to edit (HTTPS URL, Runway upload URI, or data URI). Must be 30 seconds or shorter.",
+                    "type": "string"
+                  }
+                },
+                "required": ["promptText", "videoUri"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RunwayContentModeration": {
+        "description": "Settings that affect the behavior of the content moderation system.",
+        "properties": {
+          "publicFigureThreshold": {
+            "description": "When set to `low`, the content moderation system will be less strict about preventing generations that include recognizable public figures.",
+            "enum": ["auto", "low"],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "RunwayVideoToVideoKeyframe": {
+        "description": "Timed guidance image placed at a specific point in the input video.",
+        "oneOf": [
+          {
+            "properties": {
+              "seconds": {
+                "description": "Absolute timestamp in seconds from the start of the input video when this guidance image should apply.",
+                "maximum": 30,
+                "minimum": 0,
+                "type": "number"
+              },
+              "uri": {
+                "description": "A HTTPS URL, Runway or data URI containing an encoded image.",
+                "type": "string"
+              }
+            },
+            "required": ["uri", "seconds"],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "at": {
+                "description": "Position as a fraction [0.0, 1.0] of the input video duration when this guidance image should apply.",
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "uri": {
+                "description": "A HTTPS URL, Runway or data URI containing an encoded image.",
+                "type": "string"
+              }
+            },
+            "required": ["uri", "at"],
+            "type": "object"
+          }
+        ]
+      },
+      "RunwayVideoToVideoPromptImage": {
+        "description": "An image keyframe for guiding the edit at a specific point in the video.",
+        "properties": {
+          "position": {
+            "$ref": "#/components/schemas/RunwayVideoToVideoPromptImagePosition"
+          },
+          "uri": {
+            "description": "A HTTPS URL, Runway or data URI containing an encoded image.",
+            "type": "string"
+          }
+        },
+        "required": ["uri", "position"],
+        "type": "object"
+      },
+      "RunwayVideoToVideoPromptImagePosition": {
+        "description": "The position in the output video where the image should apply.",
+        "oneOf": [
+          {
+            "description": "\"first\" places the image at the start (timestamp 0); \"last\" places it at the end (timestamp = duration).",
+            "enum": ["first", "last"],
+            "type": "string"
+          },
+          {
+            "description": "Places the image at an absolute timestamp.",
+            "properties": {
+              "timestampSeconds": {
+                "description": "Absolute timestamp in seconds from the start of the output video.",
+                "minimum": 0,
+                "type": "number"
+              },
+              "type": {
+                "enum": ["timestamp"],
+                "type": "string"
+              }
+            },
+            "required": ["type", "timestampSeconds"],
+            "type": "object"
+          },
+          {
+            "description": "Places the image at a relative position.",
+            "properties": {
+              "positionPercentage": {
+                "description": "Position as a fraction [0.0, 1.0] of the total video duration.",
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "type": {
+                "enum": ["position"],
+                "type": "string"
+              }
+            },
+            "required": ["type", "positionPercentage"],
+            "type": "object"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "x-comfy-router-model-id": "bria/video-edit-green-screen",
+  "x-comfy-router-input-modalities": ["video"],
+  "x-comfy-router-output-modalities": ["video"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/bria/video-edit-green-screen": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for Bria Video Green Screen API",
+                "example": {
+                  "green_shade": "broadcast_green",
+                  "video": "https://example.com/input.mp4"
+                },
+                "properties": {
+                  "green_shade": {
+                    "description": "The solid background shade applied behind the foreground for chroma keying. Defaults to broadcast_green.",
+                    "enum": ["broadcast_green", "chroma_green", "blue_screen"],
+                    "type": "string"
+                  },
+                  "output_container_and_codec": {
+                    "description": "Output container and codec preset.",
+                    "enum": [
+                      "mp4_h264",
+                      "mp4_h265",
+                      "webm_vp9",
+                      "mov_h265",
+                      "mov_proresks",
+                      "mkv_h264",
+                      "mkv_h265",
+                      "mkv_vp9",
+                      "gif"
+                    ],
+                    "type": "string"
+                  },
+                  "preserve_audio": {
+                    "description": "Whether to preserve audio from the input video.",
+                    "type": "boolean"
+                  },
+                  "video": {
+                    "description": "Publicly accessible URL of the input video. Input resolution supported up to 16000x16000 (16K). Max duration 60 seconds.",
+                    "type": "string"
+                  }
+                },
+                "required": ["video"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

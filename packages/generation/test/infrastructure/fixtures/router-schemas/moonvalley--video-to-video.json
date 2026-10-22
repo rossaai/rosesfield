@@ -1,0 +1,100 @@
+{
+  "x-comfy-router-model-id": "moonvalley/video-to-video",
+  "x-comfy-router-input-modalities": ["video", "text"],
+  "x-comfy-router-output-modalities": ["video"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/moonvalley/video-to-video": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for Moonvalley's video-to-video prompt route. A control video and a control type are what distinguish this route from text-to-video, and Moonvalley requires both alongside the prompt.",
+                "example": {
+                  "control_type": "motion_control",
+                  "prompt_text": "Apply motion control to enhance this video",
+                  "video_url": "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4"
+                },
+                "properties": {
+                  "control_type": {
+                    "description": "Supported types for video control",
+                    "enum": ["motion_control", "pose_control"],
+                    "type": "string"
+                  },
+                  "image_url": {
+                    "description": "Url to control image",
+                    "type": "string"
+                  },
+                  "inference_params": {
+                    "$ref": "#/components/schemas/MoonvalleyVideoToVideoInferenceParams"
+                  },
+                  "prompt_text": {
+                    "description": "Describes the video to generate",
+                    "type": "string"
+                  },
+                  "video_url": {
+                    "description": "Url to control video",
+                    "type": "string"
+                  },
+                  "webhook_url": {
+                    "description": "Optional webhook URL for notifications",
+                    "type": "string"
+                  }
+                },
+                "required": ["prompt_text", "video_url", "control_type"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "MoonvalleyVideoToVideoInferenceParams": {
+        "properties": {
+          "control_params": {
+            "properties": {
+              "motion_intensity": {
+                "default": 6,
+                "description": "Intensity of motion control",
+                "format": "int32",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "guidance_scale": {
+            "default": 10,
+            "description": "Guidance scale for generation control",
+            "format": "float",
+            "type": "number"
+          },
+          "negative_prompt": {
+            "description": "Negative prompt text",
+            "type": "string"
+          },
+          "seed": {
+            "default": 9,
+            "description": "Random seed for generation (default: random)",
+            "type": "integer"
+          },
+          "steps": {
+            "default": 80,
+            "description": "Number of denoising steps",
+            "type": "integer"
+          },
+          "use_negative_prompts": {
+            "default": true,
+            "description": "Whether to use negative prompts",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "x-comfy-router-model-id": "veed/video-background-removal",
+  "x-comfy-router-input-modalities": ["video"],
+  "x-comfy-router-output-modalities": ["video"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/veed/video-background-removal": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for `POST /proxy/veed/v1/video-background-removal` and `POST /proxy/veed/v1/video-background-removal-fast`. The job is billed from the credits VEED charges once it completes.",
+                "example": {
+                  "output_codec": "vp9",
+                  "refine_foreground_edges": true,
+                  "subject_is_person": true,
+                  "video_url": "https://static-assets.veed.io/api-examples/bg-v2v-input.mp4"
+                },
+                "properties": {
+                  "output_codec": {
+                    "default": "vp9",
+                    "description": "Output encoding: vp9 (one WebM with alpha) or h264 (the RGB video and an alpha matte).",
+                    "type": "string"
+                  },
+                  "refine_foreground_edges": {
+                    "default": true,
+                    "description": "Improves the quality of the subject's edges.",
+                    "type": "boolean"
+                  },
+                  "subject_is_person": {
+                    "default": true,
+                    "description": "Set to false when the subject is not a person.",
+                    "type": "boolean"
+                  },
+                  "video_url": {
+                    "description": "Public http(s) URL of the source video.",
+                    "type": "string"
+                  }
+                },
+                "required": ["video_url"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

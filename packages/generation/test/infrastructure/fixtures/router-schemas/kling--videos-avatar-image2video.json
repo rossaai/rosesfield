@@ -1,0 +1,88 @@
+{
+  "x-comfy-router-model-id": "kling/videos-avatar-image2video",
+  "x-comfy-router-input-modalities": ["image", "audio"],
+  "x-comfy-router-output-modalities": ["video"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/kling/videos-avatar-image2video": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Generate an avatar video from an image and exactly one audio source: audio_id or sound_file.",
+                "example": {
+                  "image": "https://example.invalid/kling/avatar.png",
+                  "mode": "std",
+                  "prompt": "The presenter smiles and gestures towards the camera.",
+                  "sound_file": "https://example.invalid/kling/voice.mp3"
+                },
+                "oneOf": [
+                  {
+                    "required": ["audio_id"]
+                  },
+                  {
+                    "required": ["sound_file"]
+                  }
+                ],
+                "properties": {
+                  "audio_id": {
+                    "description": "Audio ID Generated via TTS API. Only supports 2-300 second audio generated within the last 30 days. Either audio_id or sound_file must be provided (mutually exclusive).",
+                    "type": "string"
+                  },
+                  "callback_url": {
+                    "description": "The callback notification address for the result of this task.",
+                    "format": "uri",
+                    "type": "string"
+                  },
+                  "external_task_id": {
+                    "description": "Customized Task ID. Must be unique within a single user account.",
+                    "type": "string"
+                  },
+                  "image": {
+                    "description": "Avatar Reference Image. Supports Base64 encoding or image URL. Supported formats: .jpg/.jpeg/.png. Max 10MB, min 300px width/height, aspect ratio between 1:2.5 and 2.5:1.",
+                    "type": "string"
+                  },
+                  "mode": {
+                    "$ref": "#/components/schemas/KlingAvatarMode"
+                  },
+                  "prompt": {
+                    "description": "Positive text prompt. Can define avatar actions, emotions, and camera movements.",
+                    "maxLength": 2500,
+                    "type": "string"
+                  },
+                  "sound_file": {
+                    "description": "Sound File. Supports Base64-encoded audio or accessible audio URL. Accepted formats: .mp3/.wav/.m4a/.aac (max 5MB), 2-300 seconds. Either audio_id or sound_file must be provided (mutually exclusive).",
+                    "type": "string"
+                  },
+                  "watermark_info": {
+                    "properties": {
+                      "enabled": {
+                        "description": "Whether to generate watermarked results simultaneously.",
+                        "type": "boolean"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "required": ["image"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "KlingAvatarMode": {
+        "default": "std",
+        "description": "Video generation mode. std: Standard Mode (cost-effective), pro: Professional Mode (longer duration, higher quality).",
+        "enum": ["std", "pro"],
+        "type": "string"
+      }
+    }
+  }
+}

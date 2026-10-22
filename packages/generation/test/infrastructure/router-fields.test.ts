@@ -320,3 +320,62 @@ describe("the images of a content list", () => {
     ])
   })
 })
+
+describe("a list whose item requires more than its text", () => {
+  const components = {
+    DialogueInput: {
+      properties: {
+        text: { type: "string" },
+        voice_id: { type: "string" },
+      },
+      required: ["text", "voice_id"],
+      type: "object",
+    },
+    Part: {
+      properties: { text: { type: "string" } },
+      type: "object",
+    },
+  }
+
+  it("asks for every key the item requires and puts them in one item", () => {
+    const fields = fieldsFor(
+      {
+        inputs: {
+          items: { $ref: "#/components/schemas/DialogueInput" },
+          minItems: 1,
+          type: "array",
+        },
+      },
+      { required: ["inputs"], components }
+    )
+    expect(
+      fields.map((field) => [field.path, field.kind, field.required])
+    ).toEqual([
+      ["inputs.0.text", "prompt", true],
+      ["inputs.0.voice_id", "text", true],
+    ])
+    const body = bodyOf(
+      { model, fields },
+      { text: "Hello there.", voiceId: "21m00Tcm4TlvDq8ikWAM" },
+      []
+    )
+    expect(body.inputs).toEqual([
+      { text: "Hello there.", voice_id: "21m00Tcm4TlvDq8ikWAM" },
+    ])
+  })
+
+  it("control: a list of text parts still reads as one prompt", () => {
+    const fields = fieldsFor(
+      {
+        parts: {
+          items: { $ref: "#/components/schemas/Part" },
+          type: "array",
+        },
+      },
+      { required: ["parts"], components }
+    )
+    expect(fields.map((field) => [field.path, field.kind])).toEqual([
+      ["parts.[].text", "prompt"],
+    ])
+  })
+})

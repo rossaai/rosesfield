@@ -1,3 +1,6 @@
+import type { ModelField } from "@rosesfield/catalog/comfy"
+import { hasCatalogText, t, tCatalog } from "@/copy/t"
+
 const placeKeys: readonly string[] = [
   "url",
   "uri",
@@ -48,4 +51,11 @@ export function wordsOfPath(path: string): string {
     .filter((one) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(one))
   const words = keyWordsOf(segments, path).join(" ")
   return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
+export function fieldCaption(field: ModelField): string {
+  const key = `model.field.${field.name}`
+  return hasCatalogText(key)
+    ? tCatalog(key)
+    : t("model.field.other", { name: wordsOfPath(field.path) })
 }

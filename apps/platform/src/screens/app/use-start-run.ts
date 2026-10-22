@@ -95,6 +95,7 @@ export function useStartRun(
       storeRun(client, run)
       onStarted?.(run)
     },
+    onError: (error) => form.refuse?.(error),
   })
   const generate = (): void => {
     if (start.isPending || !form.validate()) {

@@ -1,4 +1,16 @@
-import type { InputDefinition, Run, RunInputs } from "@rosesfield/contract"
+import {
+  type AppDefinition,
+  assetId,
+  type InputDefinition,
+  type Run,
+  type RunInputs,
+  startRunBodyFor,
+} from "@rosesfield/contract"
+import {
+  appOnlyInputsOf,
+  checkModelInputs,
+  type ModelForm,
+} from "@rosesfield/generation/bindings"
 import type { CatalogModel } from "#comfy/model-catalog.contract"
 import { lengthOfSeconds } from "#lipsync/comfy/lipsync-frames"
 import {
@@ -18,14 +30,21 @@ const speechKeySuffix = "-speech"
 
 const videoKeySuffix = "-video"
 
+export type VideoCheck = {
+  app: AppDefinition
+  form: ModelForm | null
+}
+
 export type ChainTarget = {
   appId: string
   audio: string
   length: string | null
+  check: VideoCheck
 }
 
 export type ChainOutcome =
   | { kind: "unplanned" }
+  | { kind: "invalid"; issues: string[] }
   | { kind: "unspoken"; speech: Run }
   | { kind: "started"; speech: Run; video: Run }
 
@@ -68,6 +87,41 @@ export function speechPlanOf(options: {
   })
 }
 
+/** Lists what the gateway's own input check refuses in a video run's inputs, with no run started. */
+export function videoProblemsOf(
+  check: VideoCheck,
+  request: ChainRun
+): string[] {
+  if (check.form === null) {
+    const parsed = startRunBodyFor(check.app).safeParse(
+      request.aspectRatio === null
+        ? { inputs: request.inputs }
+        : { inputs: request.inputs, aspectRatio: request.aspectRatio }
+    )
+    return parsed.success
+      ? []
+      : parsed.error.issues.map(
+          (issue) => `${issue.path.join(".") || "body"}: ${issue.message}`
+        )
+  }
+  const own = appOnlyInputsOf(check.app, request.inputs)
+  const checked = checkModelInputs(check.form, own.rest)
+  return [...(checked.kind === "invalid" ? checked.issues : []), ...own.issues]
+}
+
+function foreseenProblemsOf(target: ChainTarget, request: ChainRun): string[] {
+  const inputs = {
+    ...lipInputsOf(request.inputs),
+    [target.audio]: [assetId.parse(crypto.randomUUID())],
+  }
+  const length = target.length
+  return videoProblemsOf(target.check, { ...request, inputs }).filter(
+    (issue) =>
+      length === null ||
+      !(issue.startsWith(`${length}:`) || issue.startsWith(`inputs.${length}`))
+  )
+}
+
 async function lengthedInputs(
   inputs: RunInputs,
   speech: Run,
@@ -100,6 +154,10 @@ export async function speakThenSync(options: {
   })
   if (planned === null) {
     return { kind: "unplanned" }
+  }
+  const issues = foreseenProblemsOf(target, request)
+  if (issues.length > 0) {
+    return { kind: "invalid", issues }
   }
   const queued = await chain.start(
     app.id,

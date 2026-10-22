@@ -1,0 +1,111 @@
+{
+  "x-comfy-router-model-id": "ideogram/ideogram-4-5",
+  "x-comfy-router-input-modalities": ["text", "image"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/ideogram/ideogram-4-5": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Generate or edit images with Ideogram 4.5. Omit every image field for text-to-image. Send `images` to edit with the generate operation, or `image` (optionally with `reference_images`) to run Precise Edit instead — the presence of `image` is what selects Precise Edit, and the two spellings cannot be combined in one request. Each image is either an https URL Router fetches or a `data:` URI; see the `images` item schema for the accepted forms. Fields other than the ones below are dropped rather than forwarded. `size` and `magic_prompt` apply to generate only and are dropped when `image` selects Precise Edit.",
+                "example": {
+                  "prompt": "A poster for a jazz festival, bold typography, warm colours",
+                  "quality": "low"
+                },
+                "properties": {
+                  "enable_copyright_detection": {
+                    "description": "Opt into post-generation copyright detection.",
+                    "type": "boolean"
+                  },
+                  "image": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/OpenAIImageRouterMedia"
+                      }
+                    ],
+                    "description": "The one source image for Precise Edit. Its presence selects Precise Edit."
+                  },
+                  "images": {
+                    "description": "Optional source images for the generate operation. The first is the primary source and the rest are references. Up to five, or four with a mask.",
+                    "items": {
+                      "$ref": "#/components/schemas/OpenAIImageRouterMedia"
+                    },
+                    "maxItems": 5,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "magic_prompt": {
+                    "description": "Generate only. Prompt rewriting for text-to-image. Supported values are auto, on, and off. Defaults to auto.",
+                    "type": "string"
+                  },
+                  "mask": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/OpenAIImageRouterMedia"
+                      }
+                    ],
+                    "description": "Optional mask with the same dimensions as the first source image (`images[0]`, or `image` for Precise Edit). Black areas are edited and white areas are preserved. Omit `size` when you send a mask."
+                  },
+                  "num_images": {
+                    "default": 1,
+                    "description": "Number of images to return. Each is billed.",
+                    "maximum": 8,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "prompt": {
+                    "description": "The instruction or description for the image, 1 to 10,000 characters.",
+                    "maxLength": 10000,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "quality": {
+                    "description": "Quality tier, which is also the billed rate. With source images: very_low, low, medium, or high (default medium). Without source images: low, medium, or high (default high); very_low on a text-to-image request is refused.",
+                    "enum": ["very_low", "low", "medium", "high"],
+                    "example": "medium",
+                    "type": "string"
+                  },
+                  "reference_images": {
+                    "description": "Optional reference images for Precise Edit; requires `image`. Up to four, or three with a mask.",
+                    "items": {
+                      "$ref": "#/components/schemas/OpenAIImageRouterMedia"
+                    },
+                    "maxItems": 4,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "seed": {
+                    "description": "Seed for reproducible results.",
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "size": {
+                    "description": "Generate only. Output size. auto (default), source (requires images), or WIDTHxHEIGHT. Omit it when you send a mask; a request that sets both is refused.",
+                    "example": "2048x2048",
+                    "type": "string"
+                  }
+                },
+                "required": ["prompt"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "OpenAIImageRouterMedia": {
+        "description": "One image, as either an https URL Router fetches on the caller's behalf or a `data:image/<format>;base64,<payload>` URI carrying the bytes inline. Accepted image types are png, webp and jpeg, and that set is ENFORCED at resolve time rather than left to the provider -- an svg, gif, avif or tiff is refused here, naming the image you sent, instead of becoming a partner error two hops from the cause.\nPrefer the URL form. A base64 payload inflates roughly 4/3 and the whole request body is capped at 100 MiB, so the inline form caps out near a 75 MB source image; a URL sidesteps that entirely. The per-image and per-request media ceilings stated at the end of this description are tighter than the body cap, so for an image of any real size they are what you meet first.\nTHE URL MUST RESOLVE WITHOUT YOUR CREDENTIALS. Router fetches it server-side and sends no caller credential with the request, so a presigned URL -- one whose signature is in the query string -- is the supported form. An authenticated endpoint such as `/api/assets/{id}/content` answers Router 401 rather than the image; request that URL yourself and pass the signed URL it redirects to.\nTHE FETCH IS CONFINED TO A NAMED SET OF HOSTS rather than the open internet, and the same list is re-applied to every redirect hop as well as to the URL you send -- so a URL on any other host, or one that redirects off the list, is refused before any provider is contacted. Today that list is Comfy's own asset delivery only: a signed `storage.googleapis.com` URL under a Comfy asset bucket, which is the form `/api/assets/{id}/content` redirects you to. A partner CDN or a plain https host is NOT on the list.\nTWO WIDENINGS ARE BEING ROLLED OUT AND ARE BOTH OFF BY DEFAULT TODAY. They ship behind ONE switch and are enabled together, so treat everything below as forthcoming rather than as something to build against yet -- ask before you rely on either.\nThe FIRST is the bucket `POST /customers/storage` signs your upload into. Until the rollout reaches your environment an upload URL from that endpoint is refused here, even though the bucket is Comfy's own and the host is the same one -- so \"upload to Comfy, then pass the URL\" does NOT work yet, and the form that does is the signed URL `/api/assets/{id}/content` redirects to.\nThe SECOND is ENABLED PER ACCOUNT rather than for everyone at once, because the bucket behind these hosts is yours rather than ours: even once the switch above is on, an account that has not had third-party inbound media enabled is refused, and told so in those words rather than told the host is unsupported. Ask your Comfy contact to enable it for your account. It additionally admits these third-party object-storage hosts, where the bucket is yours and Router makes no ownership claim on it: Cloudflare R2 (`<account>.r2.cloudflarestorage.com`, `pub-<hash>.r2.dev`), Amazon S3 (`s3.amazonaws.com` and `s3.<region>.amazonaws.com`, in either the path-style or the `<bucket>.`-prefixed form), Azure Blob Storage (`<account>.blob.core.windows.net`) and Alibaba Cloud OSS (`<bucket>.oss-<region>.aliyuncs.com`, including the `oss-accelerate` endpoint). Those are object-storage endpoints specifically: a general-purpose endpoint on the same provider domain, such as an Alibaba Function Compute trigger, is not on the list and is refused.\nWHAT IS MATCHED IS THE HOSTNAME FORM, NOT THE PROVIDER -- so naming a provider above does NOT mean every URL that provider can issue is accepted, and three near-misses are worth stating outright because a caller can reasonably arrive with each of them. An R2 CUSTOM DOMAIN (`cdn.example.com`) is NOT accepted: Cloudflare documents `pub-<hash>.r2.dev` as a rate-limited debug hostname and points production traffic at a custom domain instead, but a custom domain carries nothing in its hostname identifying it as R2, so Router cannot tell it from any other host and refuses it -- presign the `<account>.r2.cloudflarestorage.com` endpoint, or use the `pub-<hash>.r2.dev` form. S3's IPv6 dualstack endpoint (`s3.dualstack.<region>.amazonaws.com`) is not accepted either; use the plain regional endpoint. Nor is Azure Blob's alternate DNS zone (`<account>.z<N>.blob.storage.azure.net`); use `<account>.blob.core.windows.net`. The refusal you get back names these same forms, so you do not have to come here to read them.\nThe `<account>` and `pub-<hash>` placeholders above show the form you will normally arrive with; they are not a depth restriction. Matching is on the object-storage domain suffix, so a deeper name under the same namespace (`a.b.pub-<hash>.r2.dev`) is accepted as well. What is NOT widened by that is the namespace itself -- the suffix still has to be one of the ones listed.\nThe example below shows the shape only: a real value also carries the signing query parameters, which are deliberately omitted here because a published example lives in the spec forever and a real signature is both a leaked credential and a link that stops working.\nEach image is capped at 25 MiB and one request's images at 64 MiB in total.",
+        "example": "https://storage.googleapis.com/comfy-cloud-assets/0199b3f4-1d2e-7a3b-8c4d-5e6f70819234.png",
+        "type": "string"
+      }
+    }
+  }
+}

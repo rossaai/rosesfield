@@ -1,0 +1,63 @@
+{
+  "x-comfy-router-model-id": "freepik/ai-skin-enhancer-faithful",
+  "x-comfy-router-input-modalities": ["image"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/freepik/ai-skin-enhancer-faithful": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "image": "https://img.magnific.com/free-photo/portrait-woman_395237-33.jpg?w=740&q=80"
+                },
+                "properties": {
+                  "image": {
+                    "description": "Input image. Supports Base64 encoding or HTTPS URL (must be publicly accessible).",
+                    "example": "https://example.com/portrait.jpg",
+                    "type": "string"
+                  },
+                  "sharpen": {
+                    "default": 0,
+                    "description": "Sharpening intensity",
+                    "maximum": 100,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "skin_detail": {
+                    "default": 80,
+                    "description": "Skin detail enhancement level",
+                    "maximum": 100,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "smart_grain": {
+                    "default": 2,
+                    "description": "Smart grain intensity",
+                    "maximum": 100,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "webhook_url": {
+                    "description": "Optional callback URL for async notifications.",
+                    "example": "https://www.example.com/webhook",
+                    "format": "uri",
+                    "type": "string"
+                  }
+                },
+                "required": ["image"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

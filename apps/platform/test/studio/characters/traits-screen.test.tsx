@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t, tCatalog } from "@/copy/t"
 import { aspectItems } from "@/screens/app/fields/output-fields"
 import { modelNameOf } from "@/screens/app/hosted/catalog-picker"
-import { fieldCaption } from "@/screens/app/hosted/hosted-fields"
+import { fieldCaption } from "@/screens/app/hosted/field-words"
 import { flux, qwen, zImage } from "../image/image-screen"
 import {
   aspectsIn,

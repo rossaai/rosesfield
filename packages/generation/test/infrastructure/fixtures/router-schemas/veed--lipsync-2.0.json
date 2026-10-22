@@ -1,0 +1,41 @@
+{
+  "x-comfy-router-model-id": "veed/lipsync-2.0",
+  "x-comfy-router-input-modalities": ["video", "audio"],
+  "x-comfy-router-output-modalities": ["video", "audio"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/veed/lipsync-2.0": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for `POST /proxy/veed/v1/lipsync-2.0`. The job is billed from the credits VEED charges once it completes.",
+                "example": {
+                  "audio_url": "https://static-assets.veed.io/api-examples/lipsyncv2-input.mp3",
+                  "video_url": "https://static-assets.veed.io/api-examples/lipsyncv2-input.mp4"
+                },
+                "properties": {
+                  "audio_url": {
+                    "description": "Public http(s) URL of the new audio track to lip-sync the video to.",
+                    "type": "string"
+                  },
+                  "video_url": {
+                    "description": "Public http(s) URL of the source video, with one speaker.",
+                    "type": "string"
+                  }
+                },
+                "required": ["video_url", "audio_url"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

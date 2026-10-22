@@ -1,0 +1,41 @@
+{
+  "x-comfy-router-model-id": "bria/image-edit-erase-by-text",
+  "x-comfy-router-input-modalities": ["image", "text"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/bria/image-edit-erase-by-text": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for Bria Erase by Text API",
+                "example": {
+                  "image": "https://img.freepik.com/free-psd/close-up-delicious-apple_23-2151868338.jpg",
+                  "object_name": "the pie"
+                },
+                "properties": {
+                  "image": {
+                    "description": "The image to edit. Supported input types are Base64-encoded string or URL pointing to a publicly accessible image file. Accepted formats JPEG, JPG, PNG, WEBP.",
+                    "type": "string"
+                  },
+                  "object_name": {
+                    "description": "A text description of the object to remove (for example, \"the lamp\").",
+                    "type": "string"
+                  }
+                },
+                "required": ["image", "object_name"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

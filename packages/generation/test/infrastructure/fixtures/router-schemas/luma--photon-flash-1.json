@@ -1,0 +1,129 @@
+{
+  "x-comfy-router-model-id": "luma/photon-flash-1",
+  "x-comfy-router-input-modalities": ["text"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/luma/photon-flash-1": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "The image generation request object",
+                "example": {
+                  "aspect_ratio": "1:1",
+                  "prompt": "a red circle on a plain white background"
+                },
+                "properties": {
+                  "aspect_ratio": {
+                    "$ref": "#/components/schemas/LumaAspectRatio"
+                  },
+                  "callback_url": {
+                    "description": "The callback URL for the generation",
+                    "format": "uri",
+                    "type": "string"
+                  },
+                  "character_ref": {
+                    "properties": {
+                      "identity0": {
+                        "$ref": "#/components/schemas/LumaImageIdentity"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "generation_type": {
+                    "default": "image",
+                    "enum": ["image"],
+                    "type": "string"
+                  },
+                  "image_ref": {
+                    "items": {
+                      "$ref": "#/components/schemas/LumaImageRef"
+                    },
+                    "type": "array"
+                  },
+                  "model": {
+                    "description": "The image model used for the generation. On the Comfy Router route `POST /v2/models/luma/{model}` this field is supplied from the path and MUST NOT be sent; on the v1 `POST /proxy/luma/generations/image` route it is constrained to the LumaImageModel enum (`photon-1`, `photon-flash-1`), which the Rewrite enforces by refusing an omitted or unknown model.",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "modify_image_ref": {
+                    "$ref": "#/components/schemas/LumaModifyImageRef"
+                  },
+                  "prompt": {
+                    "description": "The prompt of the generation",
+                    "type": "string"
+                  },
+                  "style_ref": {
+                    "items": {
+                      "$ref": "#/components/schemas/LumaImageRef"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LumaAspectRatio": {
+        "default": "16:9",
+        "description": "The aspect ratio of the generation",
+        "enum": ["1:1", "16:9", "9:16", "4:3", "3:4", "21:9", "9:21"],
+        "example": "16:9",
+        "type": "string"
+      },
+      "LumaImageIdentity": {
+        "description": "The image identity object",
+        "properties": {
+          "images": {
+            "description": "The URLs of the image identity",
+            "items": {
+              "format": "uri",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "LumaImageRef": {
+        "description": "The image reference object",
+        "properties": {
+          "url": {
+            "description": "The URL of the image reference",
+            "format": "uri",
+            "type": "string"
+          },
+          "weight": {
+            "description": "The weight of the image reference",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "LumaModifyImageRef": {
+        "description": "The modify image reference object",
+        "properties": {
+          "url": {
+            "description": "The URL of the image reference",
+            "format": "uri",
+            "type": "string"
+          },
+          "weight": {
+            "description": "The weight of the modify image reference",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      }
+    }
+  }
+}

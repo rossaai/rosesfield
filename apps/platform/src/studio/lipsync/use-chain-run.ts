@@ -7,7 +7,7 @@ import {
   SpeechChain,
   speakThenSync,
 } from "@rosesfield/catalog/lipsync"
-import { type Run, runInputs } from "@rosesfield/contract"
+import { inputNamesOf, type Run, runInputs } from "@rosesfield/contract"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { storeRun } from "@/pieces/run/run-actions"
@@ -44,16 +44,26 @@ const refusedStatus = 400
 export function chainTargetOf(options: {
   appId: string
   fields: LipFields | null
-  isGraph: boolean
+  chosen: CatalogModel | null
 }): ChainTarget | null {
   const audio = options.fields?.audio ?? null
-  if (audio === null) {
+  const app = findApp(options.appId)
+  if (audio === null || app === null) {
     return null
   }
+  const isGraph = options.chosen?.kind === "graph"
+  const form = isGraph ? null : (options.chosen?.form ?? null)
   return {
     appId: options.appId,
     audio: audio.name,
-    length: options.isGraph ? (options.fields?.length?.name ?? null) : null,
+    length: isGraph ? (options.fields?.length?.name ?? null) : null,
+    check: {
+      app,
+      form:
+        form === null
+          ? null
+          : { model: options.chosen?.id ?? "", fields: form },
+    },
   }
 }
 
@@ -121,6 +131,14 @@ export async function pressChain(press: ChainPress): Promise<Run> {
       onStarted: press.onStarted,
     }),
   })
+  if (outcome.kind === "invalid") {
+    throw new GatewayRefusedError({
+      code: refusedCode,
+      status: refusedStatus,
+      retryAfterSeconds: null,
+      inputs: inputNamesOf(outcome.issues),
+    })
+  }
   if (outcome.kind === "unplanned") {
     throw refused(refusedCode, refusedStatus)
   }
@@ -160,6 +178,7 @@ export function useChainRun(options: {
         }),
         onStarted: options.onStarted,
       }),
+    onError: (error) => options.form.refuse?.(error),
   })
   return {
     generate: () => {

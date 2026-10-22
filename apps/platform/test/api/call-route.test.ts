@@ -68,6 +68,19 @@ describe("callRoute", () => {
     })
   })
 
+  it("keeps the names of the inputs a refusal names", async () => {
+    answer(() =>
+      Response.json(
+        { error: { code: "RUN_INPUT_INVALID", status: 400, inputs: ["mode"] } },
+        { status: 400 }
+      )
+    )
+    await expect(callRoute(routes.listApps, {})).rejects.toMatchObject({
+      code: "RUN_INPUT_INVALID",
+      inputs: ["mode"],
+    })
+  })
+
   it("refuses a body that breaks the response schema", async () => {
     answer(() => Response.json({ apps: "none" }))
     await expect(callRoute(routes.listApps, {})).rejects.toMatchObject({

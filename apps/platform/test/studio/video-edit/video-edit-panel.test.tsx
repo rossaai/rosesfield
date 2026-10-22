@@ -10,7 +10,7 @@ import {
   pickerSections,
   pickerTrigger,
 } from "@/screens/app/hosted/catalog-picker"
-import { fieldCaption } from "@/screens/app/hosted/hosted-fields"
+import { fieldCaption } from "@/screens/app/hosted/field-words"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { clipLimitOf, clipProblemOf } from "@/studio/video-edit/clip-limit"

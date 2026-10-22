@@ -6,7 +6,7 @@ import { useDevice } from "@/device/device-context"
 import { useAssetThumbs } from "@/pieces/attachment-thumbs"
 import { useUploads } from "@/pieces/use-uploads"
 import { listOf } from "@/screens/app/fields/field-props"
-import { fieldCaption } from "@/screens/app/hosted/hosted-fields"
+import { fieldCaption } from "@/screens/app/hosted/field-words"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { roomFor } from "@/studio/image/image-fields"
 

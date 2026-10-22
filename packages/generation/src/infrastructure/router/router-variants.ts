@@ -41,6 +41,23 @@ export function typeOf(schema: Schema, components: Schema): string | null {
   return types.length === 1 ? (types[0] ?? null) : null
 }
 
+/** Reads the enum of a property's string variant as its own, when the property lists none at its top. */
+export function withVariantEnum(schema: Schema, components: Schema): Schema {
+  if (arrayOf(fieldOf(schema, "enum")) !== null) {
+    return schema
+  }
+  const listed = variantsOf(schema)
+    .map((one) => resolve(one, components))
+    .find(
+      (one) =>
+        fieldOf(one, "type") === "string" &&
+        (arrayOf(fieldOf(one, "enum"))?.length ?? 0) > 0
+    )
+  return listed === undefined
+    ? schema
+    : { ...schema, type: "string", enum: fieldOf(listed, "enum") }
+}
+
 export function withVariantBounds(schema: Schema, components: Schema): Schema {
   if (
     fieldOf(schema, "minimum") !== undefined ||
