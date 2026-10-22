@@ -12,6 +12,7 @@ import {
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { FormValues } from "@/screens/app/app-form"
+import { ChoiceModelPicker } from "@/screens/app/bar/model-settings"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { settingsFor } from "@/screens/app/hosted/hosted-form"
 import {
@@ -19,8 +20,10 @@ import {
   priceAskOf,
 } from "@/screens/app/hosted/use-hosted-model"
 import { rowPriceOf, rowPricesOf } from "@/screens/app/hosted/use-row-prices"
+import { AdsCatalogPicker } from "@/studio/ads/ads-model-picker"
 
 const image = appListing.parse(findApp("image"))
+const ads = appListing.parse(findApp("ads"))
 
 const length: ModelField = {
   kind: "number",
@@ -139,6 +142,10 @@ type Call = { url: string; body: unknown }
 
 let calls: Call[] = []
 
+function priceCalls(): Call[] {
+  return calls.filter((call) => call.url.includes("/prices"))
+}
+
 beforeEach(() => {
   calls = []
   vi.useFakeTimers({ shouldAdvanceTime: true })
@@ -227,5 +234,68 @@ describe("the model picker's prices", () => {
     await act(() => vi.advanceTimersByTimeAsync(1000))
     expect(calls).toEqual([])
     expect(screen.getAllByRole("option", { name: "one" }).length).toBe(2)
+  })
+})
+
+describe("the Ads model picker's prices", () => {
+  it("prices every row in one request when it opens", async () => {
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <AdsCatalogPicker app={ads} hosted={hostedState(true)} place="chip" />
+      </QueryClientProvider>
+    )
+    await act(() => vi.advanceTimersByTimeAsync(1000))
+    expect(calls).toEqual([])
+    fireEvent.click(screen.getByRole("button", { name: /Model/ }))
+    await act(() => vi.advanceTimersByTimeAsync(400))
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole("option", { name: /^one, 6.33 Comfy credits/ })
+      ).not.toHaveLength(0)
+    )
+    expect(calls).toHaveLength(1)
+    expect(calls[0]?.url).toContain("/api/apps/image/prices")
+  })
+})
+
+describe("the bar's model picker's prices", () => {
+  const model = {
+    type: "choice" as const,
+    name: "model",
+    labelKey: "image.input.model.label",
+    options: ["first", "second", "third"].map((value) => ({
+      value,
+      labelKey: "image.input.model.label",
+    })),
+    default: "first",
+  }
+
+  it("prices each choice at the current settings in one request when it opens", async () => {
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ChoiceModelPicker
+          model={model}
+          value="first"
+          onChoose={() => undefined}
+          settings={null}
+          pricing={{
+            appId: "expand",
+            askOf: (id) => ({ inputs: { model: id, prompt: "a boat" } }),
+          }}
+        />
+      </QueryClientProvider>
+    )
+    await act(() => vi.advanceTimersByTimeAsync(1000))
+    expect(priceCalls()).toEqual([])
+    fireEvent.click(screen.getByRole("button", { name: /Model/ }))
+    await act(() => vi.advanceTimersByTimeAsync(400))
+    await waitFor(() => expect(document.body.textContent).toContain("6.33"))
+    expect(priceCalls()).toHaveLength(1)
+    expect(priceCalls()[0]?.url).toContain("/api/apps/expand/prices")
+    expect(priceCalls()[0]?.body).toEqual({
+      asks: ["first", "second", "third"].map((id) => ({
+        inputs: { model: id, prompt: "a boat" },
+      })),
+    })
   })
 })

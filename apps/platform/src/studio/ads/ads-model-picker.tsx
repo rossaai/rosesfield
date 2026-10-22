@@ -6,15 +6,18 @@ import {
   type ModelPickerRow,
   type ModelPickerSection,
 } from "@rosesfield/ui/components/model-picker"
-import type { ReactElement, ReactNode } from "react"
+import type { ModelPrice } from "@rosesfield/ui/components/model-row"
+import { type ReactElement, type ReactNode, useState } from "react"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import {
   pickerSections,
   pickerTrigger,
   tagOf,
+  todayOf,
 } from "@/screens/app/hosted/catalog-picker"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
+import { useRowPrices } from "@/screens/app/hosted/use-row-prices"
 import { modelPhotoLimitOf } from "@/studio/ads/ads-rules"
 
 function ownLineOf(model: CatalogModel | undefined): string | null {
@@ -42,14 +45,15 @@ function rowWithPhotos(
 
 export function adsPickerSections(
   app: AppListing,
-  hosted: HostedState
+  hosted: HostedState,
+  prices: ReadonlyMap<string, ModelPrice> = new Map()
 ): ModelPickerSection[] {
   const byId = new Map(hosted.models.map((model) => [model.id, model]))
   const featured = {
     ...hosted,
     ranBefore: [adsHostedModel, ...hosted.ranBefore],
   }
-  return pickerSections(featured).map((section) => ({
+  return pickerSections(featured, todayOf(), prices).map((section) => ({
     ...section,
     rows: section.rows.map((row) => rowWithPhotos(app, row, byId.get(row.id))),
   }))
@@ -68,6 +72,8 @@ export function AdsCatalogPicker({
   place,
   settings,
 }: AdsCatalogPickerProps): ReactElement {
+  const [isOpen, setOpen] = useState(false)
+  const { prices, isPricing } = useRowPrices(hosted, isOpen)
   return (
     <ModelPicker
       trigger={pickerTrigger(hosted, place)}
@@ -75,9 +81,12 @@ export function AdsCatalogPicker({
       searchLabel={t("model.picker.search")}
       searchPlaceholder={t("model.picker.searchPlaceholder")}
       emptyLabel={t("model.picker.empty")}
-      sections={adsPickerSections(app, hosted)}
+      sections={adsPickerSections(app, hosted, prices)}
       chosen={hosted.chosen?.id ?? null}
       onChoose={hosted.choose}
+      open={isOpen}
+      onOpenChange={setOpen}
+      isPricing={isPricing}
       settings={settings}
       side="top"
       isLoading={hosted.isLoading}

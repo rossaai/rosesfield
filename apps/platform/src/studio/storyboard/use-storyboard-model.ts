@@ -12,6 +12,8 @@ import {
   chosenModelOf,
   editModelsOf,
   inputsForModel,
+  priceAsksOf,
+  storyboardAskOf,
 } from "@/studio/storyboard/storyboard-model"
 
 function modelsRun(runs: readonly Run[]): (string | undefined)[] {
@@ -53,6 +55,20 @@ export function useStoryboardModel(
     chosen,
     fields: chosen?.form ?? null,
     ranBefore: ranBeforeOf(modelsRun(runs)),
+    pricing: {
+      appId: app.id,
+      askOf: (model) => {
+        const asks = priceAsksOf(
+          storyboardAskOf({
+            app,
+            values: form.values,
+            chosen: model,
+            photos: [],
+          })
+        )
+        return asks.edit ?? asks.text ?? { inputs: {} }
+      },
+    },
     choose: (id) => {
       const next = models.find((model) => model.id === id)
       if (next !== undefined) {

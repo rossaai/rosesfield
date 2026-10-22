@@ -10,6 +10,7 @@ import { inputsForModel } from "@/studio/storyboard/storyboard-model"
 import { asPhone, resetFrames } from "../../screens/app/frame-render"
 import {
   addScenes,
+  calls,
   emptyCanvas,
   fluxImage,
   hostedKeyframe,
@@ -153,6 +154,21 @@ describe("the model menu and the price", () => {
     expect(document.querySelector("[data-slot=storyboard-price]")).toBeNull()
     expect(screen.queryByText(t("run.price.unknown"))).toBeNull()
     expect(screen.queryByRole("button", { name: pricedName(0) })).toBeNull()
+  })
+
+  it("prices every model row in one request when the menu opens, each at its own keyframe call", async () => {
+    openStoryboard({ prices: [[openingValues(), qwenEdit, 14.48]] })
+    fireEvent.click(
+      await screen.findByRole("button", { name: pickerTriggerName(qwenEdit) })
+    )
+    const priced = await vi.waitFor(() => {
+      const found = calls.filter((call) =>
+        call.url.endsWith("/api/apps/storyboard/prices")
+      )
+      expect(found).toHaveLength(1)
+      return found
+    })
+    expect(priced[0]?.method).toBe("POST")
   })
 
   it("lists FLUX 3 Image one choice away, and picking it keeps the scene and shows the formats of its schema", async () => {

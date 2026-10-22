@@ -1,7 +1,7 @@
 import { appListing } from "@rosesfield/contract"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, cleanup, render, renderHook } from "@testing-library/react"
-import type { ReactNode } from "react"
+import type { ReactElement, ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { t, tCatalog } from "@/copy/t"
 import type { FieldValue, FormValues } from "@/screens/app/app-form"
@@ -9,6 +9,14 @@ import type { AppForm } from "@/screens/app/use-app-form"
 import { AdsModelSettings } from "@/studio/ads/ads-model-settings"
 import { useAdsScreen } from "@/studio/ads/use-ads-screen"
 import { app } from "../../../../../packages/catalog/src/ads/app"
+
+const queryClient = new QueryClient()
+
+function WithQuery({ children }: { children: ReactNode }): ReactElement {
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  )
+}
 
 const listing = appListing.parse(app)
 const photo = "4d2c1b0a-9e8f-4a6b-8c5d-3e2f1a0b9c8d"
@@ -153,7 +161,8 @@ describe("the Ads model menu", () => {
         app={listing}
         state={result.current}
         chips={["kind", "aspectRatio", "count"]}
-      />
+      />,
+      { wrapper: WithQuery }
     )
     const text = view.container.textContent ?? ""
     const row = view.container.querySelector(

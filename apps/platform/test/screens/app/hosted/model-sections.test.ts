@@ -85,7 +85,7 @@ describe("the sections of the model picker", () => {
     expect(video?.tags.map((tag) => tag.label)).toEqual(["1080p", "5 to 10 s"])
     expect(graph?.tags.map((tag) => tag.label)).toEqual([])
     expect(graph?.badges).toEqual([
-      { kind: "openWeights", label: "Open weights" },
+      { kind: "openWeights", label: "Open weights", markColour: "#FFD21E" },
     ])
     expect(image?.badges).toEqual([])
     expect(pickerSections(hosted).map((section) => section.label)).toEqual([
@@ -159,6 +159,7 @@ describe("an open-weights row of the model picker", () => {
         kind: "openWeights",
         label: "Open weights",
         href: "https://huggingface.co/inclusionAI/Ming-Image-0.1-Design",
+        markColour: "#FFD21E",
       },
     ])
   })

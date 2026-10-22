@@ -5,7 +5,9 @@ import {
   graphMaker,
 } from "@rosesfield/catalog/comfy"
 import { appListing } from "@rosesfield/contract"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import type { ReactElement, ReactNode } from "react"
 import { afterEach, describe, expect, it } from "vitest"
 import { t, tCatalog } from "@/copy/t"
 import type { FieldValue } from "@/screens/app/app-form"
@@ -15,6 +17,14 @@ import type { AppForm } from "@/screens/app/use-app-form"
 import { AdsModelChip } from "@/studio/ads/ads-model-settings"
 import type { AdsScreenState } from "@/studio/ads/use-ads-screen"
 import { app } from "../../../../../packages/catalog/src/ads/app"
+
+const queryClient = new QueryClient()
+
+function WithQuery({ children }: { children: ReactNode }): ReactElement {
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  )
+}
 
 afterEach(cleanup)
 
@@ -56,7 +66,9 @@ function stateWith(chosen: Record<string, FieldValue>[]): AdsScreenState {
 
 describe("the Ads model chip", () => {
   it("is the shared model chip: the lab mark, the name and a chevron", () => {
-    render(<AdsModelChip app={listing} state={catalogState([])} chips={[]} />)
+    render(<AdsModelChip app={listing} state={catalogState([])} chips={[]} />, {
+      wrapper: WithQuery,
+    })
     const name = tCatalog(
       options.find((one) => one.value === chosenByDefault)?.labelKey ?? ""
     )
@@ -70,7 +82,9 @@ describe("the Ads model chip", () => {
   })
 
   it("opens the 402 px list with Qwen Image Edit 2511 first and FLUX 3 Image one choice away", () => {
-    render(<AdsModelChip app={listing} state={catalogState([])} chips={[]} />)
+    render(<AdsModelChip app={listing} state={catalogState([])} chips={[]} />, {
+      wrapper: WithQuery,
+    })
     fireEvent.click(
       screen.getByRole("button", {
         name: new RegExp(`^${t("model.picker.title")} `),
@@ -190,7 +204,8 @@ describe("the Ads model menu from the catalog", () => {
   it("opens on Qwen Image Edit 2511 and lists every model of the task with its maker, its name, its line and its photos", () => {
     const chosen: Record<string, FieldValue>[] = []
     render(
-      <AdsModelChip app={listing} state={catalogState(chosen)} chips={[]} />
+      <AdsModelChip app={listing} state={catalogState(chosen)} chips={[]} />,
+      { wrapper: WithQuery }
     )
     fireEvent.click(
       screen.getByRole("button", {
