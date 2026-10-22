@@ -4,7 +4,7 @@ import { MediaGrid } from "@rosesfield/ui/components/media-grid"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { useNavigate, useSearch } from "@tanstack/react-router"
-import { SearchIcon, UploadIcon } from "lucide-react"
+import { ListChecksIcon, SearchIcon, UploadIcon } from "lucide-react"
 import {
   type DragEvent,
   type ReactElement,
@@ -23,6 +23,7 @@ import {
   SelectionBar,
 } from "@/screens/library/library-bars"
 import { LibraryGrid, PendingTiles } from "@/screens/library/library-grid"
+import { LibraryRows } from "@/screens/library/library-rows"
 import { ResultGrid } from "@/screens/library/result-grid"
 import {
   type LibraryData,
@@ -172,6 +173,20 @@ function LibraryBody(props: BodyProps): ReactNode {
   )
 }
 
+export type LibraryShown = "masonry" | "rows" | "tiles"
+
+export const libraryLayout: ViewLayout = "grid"
+
+export function libraryShownOf(
+  layout: ViewLayout,
+  selected: readonly string[] | null
+): LibraryShown {
+  if (selected !== null) {
+    return "tiles"
+  }
+  return layout === "grid" ? "masonry" : "rows"
+}
+
 function LibraryResults(
   props: BodyProps & { working: ReturnType<typeof useWorkingRuns> }
 ): ReactElement {
@@ -184,7 +199,8 @@ function LibraryResults(
   const sentinel = (
     <span ref={data.sentinel} aria-hidden="true" className="block h-s1" />
   )
-  if (props.layout === "grid" && props.selected === null) {
+  const shown = libraryShownOf(props.layout, props.selected)
+  if (shown === "masonry") {
     return (
       <div className="flex flex-col gap-s6">
         <PendingTiles
@@ -197,6 +213,23 @@ function LibraryResults(
           size={props.size}
           after={sentinel}
         />
+      </div>
+    )
+  }
+  if (shown === "rows") {
+    return (
+      <div className="flex flex-col gap-s6">
+        <PendingTiles
+          uploads={uploads.uploads}
+          working={working}
+          uploadActions={uploadActions}
+        />
+        <LibraryRows
+          size={props.size}
+          assets={data.shown}
+          runsById={data.runsById}
+        />
+        {sentinel}
       </div>
     )
   }
@@ -297,6 +330,13 @@ function LibraryHeader({
             <SearchIcon aria-hidden="true" />
           </IconButton>
           <IconButton
+            label={t("library.select")}
+            tone="quiet"
+            onClick={onSelect}
+          >
+            <ListChecksIcon aria-hidden="true" />
+          </IconButton>
+          <IconButton
             label={t("library.upload")}
             tone="quiet"
             onClick={onUpload}
@@ -317,7 +357,7 @@ type LibraryView = {
 }
 
 function useLibraryView(): LibraryView {
-  const [layout, setLayout] = useState<ViewLayout>("list")
+  const [layout, setLayout] = useState<ViewLayout>(libraryLayout)
   const [size, setSize] = useState<number>(tileSizes.initial)
   return { layout, setLayout, size, setSize }
 }
