@@ -189,6 +189,7 @@ export function ExplorePresetTile({
   const src = useEntrySrc(entry)
   const viewHref = useViewHref(entry)
   const actionHref = useRecreateHref(entry)
+  const recreate = useRecreate()
   if (src === null) {
     return <EntrySkeleton aspect={entry.aspect} />
   }
@@ -197,7 +198,11 @@ export function ExplorePresetTile({
       name={name}
       href={viewHref}
       viewLabel={t("explore.preset.view", { name })}
-      action={{ label: t("explore.tile.recreate"), href: actionHref }}
+      action={{
+        label: t("explore.tile.recreate"),
+        href: actionHref,
+        onSelect: () => recreate(entry),
+      }}
       clip={{ src, alt: name }}
       aspect={entry.aspect}
     />
