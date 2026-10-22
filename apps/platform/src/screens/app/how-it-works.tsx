@@ -147,7 +147,7 @@ function promptOf(item: ShowcaseItem): string | null {
 }
 
 function inputFileOf(item: ShowcaseItem): string | null {
-  return item.input ?? item.from ?? null
+  return item.input?.file ?? item.from ?? null
 }
 
 function promptOfRun(app: AppListing, run: Run): string | null {

@@ -1,7 +1,12 @@
+export type ExampleInput = {
+  file: string
+  name: string
+}
+
 export type ShowcaseRow = {
   runId: string
   file: string
-  input?: string
+  input?: ExampleInput
   appId: string
   kind: "image" | "video"
   width: number
@@ -38,6 +43,7 @@ export const showcaseRows: readonly ShowcaseRow[] = [
   {
     runId: "cb3281e7-8764-475f-848b-8cc386311bae",
     file: "still-in-the-street.mp4",
+    input: { file: "street-golden-hour.webp", name: "image" },
     appId: "effects",
     kind: "video",
     width: 540,
@@ -70,6 +76,7 @@ export const showcaseRows: readonly ShowcaseRow[] = [
   {
     runId: "1e77db70-4ebe-4050-97e4-84f118438aeb",
     file: "push-into-eye.mp4",
+    input: { file: "portrait-woman.webp", name: "image" },
     appId: "effects",
     kind: "video",
     width: 540,
@@ -151,7 +158,7 @@ export const showcaseRows: readonly ShowcaseRow[] = [
   {
     runId: "d4958c06-57e2-40e6-8a3a-fd9278f5df6a",
     file: "sneaker-cutout.webp",
-    input: "sneaker.webp",
+    input: { file: "sneaker.webp", name: "image" },
     appId: "background-removal",
     kind: "image",
     width: 1280,
@@ -200,7 +207,7 @@ export const showcaseRows: readonly ShowcaseRow[] = [
   {
     runId: "e1fffadc-7f6f-478f-8c5f-7a423a1aa106",
     file: "relight-portrait.webp",
-    input: "portrait-woman.webp",
+    input: { file: "portrait-woman.webp", name: "image" },
     appId: "relight",
     kind: "image",
     width: 880,
@@ -367,7 +374,7 @@ export const showcaseRows: readonly ShowcaseRow[] = [
   {
     runId: "a0b0265f-8c88-4d39-88a0-3fc1a68f7872",
     file: "push-into-eye-48fps.mp4",
-    input: "push-into-eye.mp4",
+    input: { file: "push-into-eye.mp4", name: "source" },
     appId: "video-edit",
     kind: "video",
     width: 540,

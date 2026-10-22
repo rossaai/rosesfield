@@ -76,7 +76,11 @@ const madeFromClip = new Set(
 
 const shownSources = new Set(
   showcaseRows.flatMap((row) =>
-    row.from === undefined || madeFromClip.has(row.runId) ? [] : [row.from]
+    madeFromClip.has(row.runId)
+      ? []
+      : [row.from, row.input?.file].filter(
+          (file): file is string => file !== undefined
+        )
   )
 )
 
@@ -90,4 +94,18 @@ export function isFeedExample(runId: string): boolean {
 export function exampleGroupOf(runId: string): string {
   const row = showcaseRows.find((one) => one.runId === runId)
   return row === undefined ? runId : (row.from ?? row.file)
+}
+
+export type ExampleSource = {
+  src: string
+  name: string
+}
+
+export function exampleInputOf(
+  runId: string,
+  media: (file: string) => string | null = mediaOf
+): ExampleSource | null {
+  const input = showcaseRows.find((row) => row.runId === runId)?.input
+  const src = input === undefined ? null : media(input.file)
+  return input === undefined || src === null ? null : { src, name: input.name }
 }

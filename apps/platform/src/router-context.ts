@@ -11,6 +11,7 @@ export type Draft = {
   characterIds: string[]
   inputs?: Run["inputs"]
   aspectRatio?: string | null
+  input?: { src: string; name: string }
 }
 
 declare module "@tanstack/react-router" {

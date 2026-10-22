@@ -12,6 +12,7 @@ import { joinParts } from "@/copy/format"
 import { t } from "@/copy/t"
 import { runAppName, runModel, runPrice } from "@/pieces/run/run-facts"
 import type { Draft } from "@/router-context"
+import { exampleInputOf } from "@/showcase/showcase"
 
 export type ExploreKind = "image" | "video" | "audio"
 
@@ -65,7 +66,8 @@ export function recreateTargetOf(entry: ExploreEntry): RecreateTarget {
       return { search: { share: entry.source.shareId } }
     case "own":
       return { search: { from: entry.run.id } }
-    case "showcase":
+    case "showcase": {
+      const input = exampleInputOf(entry.run.id)
       return {
         draft: {
           prompt: promptOfRun(entry.run),
@@ -73,8 +75,10 @@ export function recreateTargetOf(entry: ExploreEntry): RecreateTarget {
           characterIds: [],
           inputs: entry.run.inputs,
           aspectRatio: entry.run.aspectRatio,
+          ...(input === null ? {} : { input }),
         },
       }
+    }
   }
 }
 
