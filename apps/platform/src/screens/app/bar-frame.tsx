@@ -12,7 +12,6 @@ import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useAppToolsOpener } from "@/pieces/app-tools"
 import { Dock } from "@/pieces/dock"
-import { useCanvasFit } from "@/pieces/use-canvas-fit"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { AppCanvas } from "@/screens/app/app-canvas"
 import { AppStage } from "@/screens/app/app-stage"
@@ -100,7 +99,6 @@ export function BarFrame(props: BarFrameProps): ReactElement {
   const [isOpen, setOpen] = props.sheet
   const isRegular = useIsRegularWindow()
   const isDocked = props.phone === "dock"
-  const fit = useCanvasFit()
   const cover = useDockCover()
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -113,7 +111,6 @@ export function BarFrame(props: BarFrameProps): ReactElement {
         <AppStage
           app={props.app}
           kind="bar"
-          scrollRef={fit.ref}
           scrollClassName="px-4 pb-4 @regular:pb-36"
         >
           <AppCanvas app={props.app} onUseInputs={props.onUseInputs} />

@@ -1,25 +1,24 @@
 import type { AppListing } from "@rosesfield/contract"
 import { Canvas } from "@rosesfield/ui/components/canvas"
 import { interaction } from "@rosesfield/ui/components/interaction"
-import {
-  SegmentedTab,
-  SegmentedTabs,
-  Tabs,
-} from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { BookOpenIcon, FolderIcon } from "lucide-react"
 import {
   createContext,
   type ReactElement,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useState,
 } from "react"
 import { t } from "@/copy/t"
+import { useCanvasFit } from "@/pieces/use-canvas-fit"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import {
-  CanvasCluster,
+  CanvasViewMenu,
   CanvasViewProvider,
   useCanvasViewControl,
 } from "@/screens/app/canvas-view"
@@ -91,22 +90,19 @@ type AppStageProps = {
   scrollClassName?: string
 }
 
-export function AppStage(props: AppStageProps): ReactElement {
-  const stage = useStageTab(props.app, props.hasWork ?? false)
-  const view = useCanvasViewControl()
+function StageTabs({
+  stage,
+  view,
+}: {
+  stage: ReturnType<typeof useStageTab>
+  view: ReactNode
+}): ReactElement {
   return (
-    <Canvas
-      label={t("app.canvas.label")}
-      hasRuns={stage.hasRuns === true && stage.tab === "history"}
-      cluster={
-        <CanvasCluster
-          control={view}
-          form={props.kind === "bar" ? "menu" : "cluster"}
-        />
-      }
-      {...(props.className === undefined ? {} : { className: props.className })}
-      tabs={
-        <Tabs
+    <div
+      data-slot="app-stage-tabs"
+      className="flex min-w-0 flex-1 items-center justify-between gap-s2"
+    >
+      <Tabs
           value={stage.tab}
           onValueChange={(next) => {
             if (isStageTab(next)) {
@@ -114,25 +110,49 @@ export function AppStage(props: AppStageProps): ReactElement {
             }
           }}
         >
-          <SegmentedTabs aria-label={t("app.canvas.label")}>
-            <SegmentedTab
-              value="history"
-              icon={<FolderIcon aria-hidden="true" />}
-            >
+          <TabsList aria-label={t("app.canvas.label")}>
+            <TabsTrigger value="history">
+              <FolderIcon aria-hidden="true" />
               {t("app.tab.history")}
-            </SegmentedTab>
-            <SegmentedTab
-              value="how"
-              icon={<BookOpenIcon aria-hidden="true" />}
-            >
+            </TabsTrigger>
+            <TabsTrigger value="how">
+              <BookOpenIcon aria-hidden="true" />
               {t("app.tab.how")}
-            </SegmentedTab>
-          </SegmentedTabs>
-        </Tabs>
+            </TabsTrigger>
+          </TabsList>
+      </Tabs>
+      {view}
+    </div>
+  )
+}
+
+export function AppStage(props: AppStageProps): ReactElement {
+  const stage = useStageTab(props.app, props.hasWork ?? false)
+  const view = useCanvasViewControl()
+  const fit = useCanvasFit()
+  const outerRef = props.scrollRef
+  const scrollRef = useCallback(
+    (node: HTMLElement | null): void => {
+      fit.ref(node)
+      outerRef?.(node)
+    },
+    [fit.ref, outerRef]
+  )
+  const isRegular = useIsRegularWindow()
+  const hasView = stage.hasRuns === true && stage.tab === "history"
+  const menu = <CanvasViewMenu control={view} />
+  return (
+    <Canvas
+      label={t("app.canvas.label")}
+      hasRuns={isRegular && hasView}
+      cluster={isRegular ? menu : undefined}
+      {...(props.className === undefined ? {} : { className: props.className })}
+      tabs={
+        <StageTabs stage={stage} view={!isRegular && hasView ? menu : null} />
       }
     >
       <div
-        ref={stage.tab === "history" ? props.scrollRef : undefined}
+        ref={stage.tab === "history" ? scrollRef : undefined}
         data-slot="app-stage-scroll"
         className={cn(
           "h-full overflow-y-auto",
@@ -142,7 +162,7 @@ export function AppStage(props: AppStageProps): ReactElement {
         )}
       >
         {stage.tab === "how" ? (
-          <HowItWorks app={props.app} kind={props.kind} />
+          <HowItWorks app={props.app} />
         ) : (
           <CanvasViewProvider control={view}>
             {props.children}

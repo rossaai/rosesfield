@@ -1,17 +1,19 @@
 import type { AppListing, Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
-import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import type { ReactElement, ReactNode } from "react"
 import { runsOf, runsQuery } from "@/api/queries"
 import { appEmptyTitle, aspectOf, defaultAspectOf } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
-import { aspectStyle } from "@/pieces/asset-tile"
-import { RunCard, RunColumns, runHeightOf } from "@/pieces/run/run-card"
+import {
+  RunCard,
+  RunCardSkeleton,
+  RunColumns,
+  runHeightOf,
+} from "@/pieces/run/run-card"
 import { useCanvasView } from "@/screens/app/canvas-view"
 import { historyGridItems } from "@/screens/history/history-grid-items"
-import { keepsRun } from "@/screens/history/history-screen"
 import { ResultGrid } from "@/screens/library/result-grid"
 
 type AppCanvasProps = {
@@ -38,12 +40,15 @@ export function useAppRuns(app: AppListing): AppRuns {
   }
 }
 
+const skeletonPlaces = ["first", "second", "third", "fourth"] as const
+
 export function CanvasSkeleton({ app }: { app: AppListing }): ReactElement {
   const aspect = aspectOf(defaultAspectOf(app))
+  const view = useCanvasView()
   return (
-    <RunColumns>
-      {[0, 1].map((tile) => (
-        <Skeleton key={tile} className="w-full" style={aspectStyle(aspect)} />
+    <RunColumns columns={view.columns}>
+      {skeletonPlaces.slice(0, Math.max(2, view.columns)).map((place) => (
+        <RunCardSkeleton key={place} aspect={aspect} />
       ))}
     </RunColumns>
   )
@@ -78,34 +83,23 @@ function ViewedRuns(
   props: AppCanvasProps & { runs: readonly Run[] }
 ): ReactElement {
   const view = useCanvasView()
-  const runs = props.runs.filter((run) => keepsRun(run, view.state, undefined))
-  if (runs.length === 0) {
+  if (view.layout === "grid") {
     return (
-      <StateView
-        kind="empty"
-        title={t("history.filterEmpty.title")}
-        actions={
-          <Button onClick={view.clear}>
-            {t("history.filterEmpty.action")}
-          </Button>
-        }
-      />
+      <ResultGrid items={historyGridItems(props.runs)} size={view.gridSize} />
     )
   }
-  if (view.layout === "grid") {
-    return <ResultGrid items={historyGridItems(runs)} size={view.size} />
-  }
-  return <RunStack {...props} runs={runs} />
+  return <RunStack {...props} columns={view.columns} />
 }
 
 function RunStack({
   runs,
+  columns,
   onUseInputs,
   afterRun,
-}: AppCanvasProps & { runs: readonly Run[] }): ReactElement {
+}: AppCanvasProps & { runs: readonly Run[]; columns: number }): ReactElement {
   const list = runs.flatMap((run) => run.outputs)
   return (
-    <RunColumns heights={runs.map(runHeightOf)}>
+    <RunColumns heights={runs.map(runHeightOf)} columns={columns}>
       {runs.map((run) => (
         <RunCard
           key={run.id}

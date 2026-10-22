@@ -17,7 +17,6 @@ import {
 } from "react"
 import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
-import { useCanvasFit } from "@/pieces/use-canvas-fit"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { AppStage } from "@/screens/app/app-stage"
 import { GenerateFoot, StartProblem } from "@/screens/app/generate-foot"
@@ -112,7 +111,6 @@ function ColumnSheet(
 export function ColumnFrame(props: ColumnFrameProps): ReactElement {
   const setOpen = props.sheet[1]
   const isRegular = useIsRegularWindow()
-  const fit = useCanvasFit()
   const openInputs = (): void => setOpen(true)
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
@@ -127,7 +125,6 @@ export function ColumnFrame(props: ColumnFrameProps): ReactElement {
         <AppStage
           app={props.app}
           kind="column"
-          scrollRef={fit.ref}
           scrollClassName="px-4 pb-4"
         >
           {props.canvas(openInputs)}

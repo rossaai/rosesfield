@@ -6,8 +6,14 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react"
+import {
+  Skeleton,
+  SkeletonGroup,
+} from "@rosesfield/ui/components/skeleton"
+import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { findCatalogApp } from "@/catalog/catalog-apps"
-import { FillColumn } from "@/pieces/run/output-row"
+import { aspectStyle } from "@/pieces/asset-tile"
+import { OutputRow } from "@/pieces/run/output-row"
 import { RunChrome } from "@/pieces/run/run-chrome"
 import { runAspect } from "@/pieces/run/run-facts"
 import {
@@ -57,9 +63,50 @@ export function RunCard({
   )
 }
 
+export function RunCardSkeleton({
+  aspect,
+}: {
+  aspect: MediaAspect
+}): ReactElement {
+  return (
+    <article
+      data-slot="run-card"
+      data-state="loading"
+      className="flex min-w-0 flex-col gap-s2"
+    >
+      <SkeletonGroup>
+        <OutputRow aspects={[aspect]}>
+          {() => (
+            <div
+              data-slot="run-card-media"
+              className="relative w-full rounded-cell bg-(--tint)"
+              style={aspectStyle(aspect)}
+            >
+              <span
+                data-slot="run-card-facts"
+                className="absolute start-s2 top-s2 flex gap-s1"
+              >
+                <Skeleton shape="chip" size="chip" ground="canvas" />
+              </span>
+              <span
+                data-slot="run-card-actions"
+                className="absolute end-s2 top-s2 flex"
+              >
+                <Skeleton shape="circle" size="dense" ground="canvas" />
+              </span>
+            </div>
+          )}
+        </OutputRow>
+      </SkeletonGroup>
+    </article>
+  )
+}
+
 type PlaceStyle = CSSProperties & { "--place": number }
 
-const columnCount = 2
+type ColumnsStyle = CSSProperties & { "--run-columns": string }
+
+export const runColumnsDefault = 2
 
 const audioHeight = 0.25
 
@@ -67,7 +114,8 @@ const chromeHeight = 0.05
 
 export function columnsOf(
   count: number,
-  heights: readonly number[] | undefined
+  heights: readonly number[] | undefined,
+  columnCount: number = runColumnsDefault
 ): number[] {
   const filled = Array.from({ length: columnCount }, () => 0)
   return Array.from({ length: count }, (_, place) => {
@@ -93,19 +141,26 @@ export function runHeightOf(run: Run): number {
 export function RunColumns({
   children,
   heights,
+  columns = runColumnsDefault,
 }: {
   children: ReactNode
   heights?: readonly number[]
+  columns?: number
 }): ReactElement {
   const items = Children.toArray(children).filter(isValidElement)
-  const columns = columnsOf(items.length, heights)
+  const count = Math.max(1, Math.round(columns))
+  const placed = columnsOf(items.length, heights, count)
+  const style: ColumnsStyle = {
+    "--run-columns": `repeat(${count}, minmax(0, 1fr))`,
+  }
   return (
-    <FillColumn>
-      <div
+    <div
         data-slot="run-columns"
-        className="grid grid-cols-1 items-start gap-x-s3 gap-y-s6 @regular:grid-cols-2"
+        data-columns={count}
+        style={style}
+        className="grid grid-cols-1 items-start gap-x-s3 gap-y-s6 @regular:grid-cols-(--run-columns)"
       >
-        {Array.from({ length: columnCount }, (_, column) => (
+        {Array.from({ length: count }, (_, column) => (
           <div
             // biome-ignore lint/suspicious/noArrayIndexKey: a column's place is its identity
             key={column}
@@ -113,12 +168,12 @@ export function RunColumns({
             className="contents @regular:flex @regular:min-w-0 @regular:flex-col @regular:gap-y-s6"
           >
             {items.flatMap((item, place) => {
-              const style: PlaceStyle = { "--place": place }
-              return columns[place] === column
+              const placeStyle: PlaceStyle = { "--place": place }
+              return placed[place] === column
                 ? [
                     <div
                       key={item.key}
-                      style={style}
+                      style={placeStyle}
                       className="order-(--place) min-w-0 @regular:order-none"
                     >
                       {item}
@@ -129,6 +184,5 @@ export function RunColumns({
           </div>
         ))}
       </div>
-    </FillColumn>
   )
 }
