@@ -14,7 +14,7 @@ import {
 import { RotateCcwIcon } from "lucide-react"
 import type { CSSProperties, ReactElement } from "react"
 import { assetQuery } from "@/api/queries"
-import { useAssetSource } from "@/api/use-asset-source"
+import { useAssetSource, useTileSource } from "@/api/use-asset-source"
 import { t } from "@/copy/t"
 import { useDownloadAsset } from "@/pieces/asset-actions"
 import { AssetContextMenu } from "@/pieces/asset-context-menu"
@@ -107,7 +107,7 @@ function FailedTile({
 
 function VisualTile(props: AssetTileProps & { asset: Asset }): ReactElement {
   const { asset } = props
-  const source = useAssetSource(asset.id)
+  const source = useTileSource(asset)
   const viewer = useViewer()
   const client = useQueryClient()
   const aspect = shapedAspect(props, asset)
@@ -134,6 +134,7 @@ function VisualTile(props: AssetTileProps & { asset: Asset }): ReactElement {
     <MediaTile
       kind={asset.kind === "video" ? "video" : "image"}
       src={source.src}
+      {...(source.poster === undefined ? {} : { poster: source.poster })}
       alt={name}
       fit={props.fit ?? "cover"}
       caption={
