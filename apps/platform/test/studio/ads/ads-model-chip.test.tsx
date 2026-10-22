@@ -78,7 +78,7 @@ describe("the Ads model chip", () => {
     expect(chip.getAttribute("data-place")).toBe("trigger")
     expect(chip.textContent).not.toContain(t("bar.model"))
     expect(chip.querySelector("[data-slot=lab-mark]")).not.toBeNull()
-    expect(chip.querySelector("svg.lucide-chevron-right")).not.toBeNull()
+    expect(chip.querySelector("svg.lucide-chevron-down")).not.toBeNull()
   })
 
   it("opens the 402 px list with Qwen Image Edit 2511 first and FLUX 3 Image one choice away", () => {
@@ -123,6 +123,7 @@ const qwen: CatalogModel = {
   task: "image-edit",
   tags: [{ kind: "open-weights" }],
   form: null,
+  facts: factsOf("graph/qwen-image-edit-2511", "image-edit"),
 }
 
 const flux: CatalogModel = {
@@ -201,7 +202,7 @@ function rowOf(id: string): HTMLElement {
 }
 
 describe("the Ads model menu from the catalog", () => {
-  it("opens on Qwen Image Edit 2511 and lists every model of the task with its maker, its name, its line and its photos", () => {
+  it("opens on Qwen Image Edit 2511 and lists every model of the task with its maker, its name and its photos", () => {
     const chosen: Record<string, FieldValue>[] = []
     render(
       <AdsModelChip app={listing} state={catalogState(chosen)} chips={[]} />,
@@ -221,7 +222,6 @@ describe("the Ads model menu from the catalog", () => {
         ?.getAttribute("aria-selected")
     ).toBe("true")
     const qwenRow = rowOf(qwen.id)
-    expect(qwenRow.textContent).toContain(tCatalog(`${qwen.nameKey}.line`))
     expect(qwenRow.textContent).toContain(t("model.tag.references", { max: 3 }))
     const fluxRow = rowOf(flux.id)
     expect(fluxRow.textContent).toContain("FLUX 3 Image")

@@ -44,7 +44,7 @@ describe("the traits of Characters", () => {
     ).toBeDefined()
   })
 
-  it("list every model of the catalog that makes an image from text, each with its maker, its name and one line", async () => {
+  it("list every model of the catalog that makes an image from text, each with its maker and its name", async () => {
     openCharacters()
     fireEvent.click(
       await screen.findByRole("button", { name: trigger(zImage) })
@@ -60,7 +60,6 @@ describe("the traits of Characters", () => {
     expect(
       row?.querySelector<HTMLElement>("[data-slot=lab-mark]")?.dataset.maker
     ).toBe(flux.maker)
-    expect(text).toContain(tCatalog("comfy.model.bflFlux3Image.line"))
   })
 
   it("change the ratio choices to the ones the picked model's schema declares, and the price with them", async () => {
