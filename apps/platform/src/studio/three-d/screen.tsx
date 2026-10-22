@@ -21,6 +21,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       start={state.start}
       onShortcut={state.onShortcut}
       sheet={sheet}
+      hasWork={seeds.open !== undefined}
       tabs={<ModeTabs screen={screen} />}
       panel={<ThreeDPanel app={app} screen={screen} />}
       canvas={(openInputs) => (

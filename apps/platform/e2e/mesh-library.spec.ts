@@ -41,6 +41,7 @@ test.beforeEach(async ({ page }) => {
 
 test("a GLB in the library shows as a tile with the 3D mark, and pressing it opens that GLB in 3D's viewer", async ({
   page,
+  isMobile,
 }) => {
   await page.goto("/library")
   const tile = page.locator("button[data-kind='mesh']").first()
@@ -55,6 +56,9 @@ test("a GLB in the library shows as a tile with the 3D mark, and pressing it ope
   const viewer = page.locator("[data-slot='mesh-output']")
   await expect(viewer).toHaveCount(1)
   await expect(viewer.getByRole("button", { name: "Download" })).toBeVisible()
+  if (isMobile) {
+    await page.getByRole("button", { name: "Generate", exact: true }).click()
+  }
   await expect(
     page.getByRole("tab", { name: "From text" }).first()
   ).toBeVisible()

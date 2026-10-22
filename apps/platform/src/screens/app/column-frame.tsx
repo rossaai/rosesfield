@@ -39,6 +39,7 @@ type ColumnFrameProps = {
   canvas: (openInputs: () => void) => ReactNode
   footLeading?: ReactNode
   hasHeader?: boolean
+  hasWork?: boolean
 }
 
 export function AddInputsButton({
@@ -122,7 +123,12 @@ export function ColumnFrame(props: ColumnFrameProps): ReactElement {
         className="flex min-h-0 flex-1 gap-2 pt-2 @regular:px-4"
       >
         {isRegular ? <ColumnPanel {...props} /> : null}
-        <AppStage app={props.app} kind="column" scrollClassName="px-4">
+        <AppStage
+          app={props.app}
+          kind="column"
+          scrollClassName="px-4"
+          hasWork={props.hasWork ?? false}
+        >
           {props.canvas(openInputs)}
         </AppStage>
       </div>
