@@ -6,6 +6,7 @@ import {
 } from "@rosesfield/ui/components/segmented-control"
 import { useToast } from "@rosesfield/ui/components/toast"
 import { useQuery } from "@tanstack/react-query"
+import { CopyIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import type { GatewaySettings } from "@/api/gateway-settings"
 import { settingsQuery } from "@/api/queries"
@@ -14,7 +15,6 @@ import { catalogApps } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import type { CopyKey } from "@/copy.en"
 import { useDevice } from "@/device/device-context"
-import { CodeBlock } from "@/pieces/copy-button"
 import { DialogOrSheet } from "@/pieces/responsive-layer"
 import { comfyKeyPage } from "@/screens/app/hosted/model-notice"
 import {
@@ -122,7 +122,14 @@ function InstructionBody({
           {t(step)}
         </p>
       ))}
-      <CodeBlock code={instruction.code} />
+      <div
+        data-slot="connect-command"
+        className="overflow-x-auto rounded-cell bg-(--well) p-s3 [scrollbar-width:thin]"
+      >
+        <pre className="w-max font-mono text-code whitespace-pre">
+          {instruction.code}
+        </pre>
+      </div>
       <CredentialNote settings={settings} />
       {client === "chatgpt" && settings?.lock === "local" ? (
         <ReachNote />
@@ -163,7 +170,7 @@ function KeyStep(props: ConnectDialogProps): ReactElement {
         }}
         className="flex flex-col gap-s3"
       >
-        <ClientChoice {...props} />
+        <p className="text-body">{t("key.sentence")}</p>
         <ExternalLink href={comfyKeyPage}>{t("key.page")}</ExternalLink>
         <KeyField
           value={entry.value}
@@ -177,7 +184,7 @@ function KeyStep(props: ConnectDialogProps): ReactElement {
           {t("connect.cancel")}
         </Button>
         <Button type="submit" form={keyFormId} tone="primary" busy={entry.busy}>
-          {t("shell.nav.connect")}
+          {t("key.save")}
         </Button>
       </DialogFooter>
     </>
@@ -194,7 +201,7 @@ function CopyStep(
     window.location.origin,
     props.settings
   )
-  const connect = async (): Promise<void> => {
+  const copy = async (): Promise<void> => {
     await device.copyText(instruction.code)
     toast.add({ title: t("output.copied") })
     props.onOpenChange(false)
@@ -211,8 +218,9 @@ function CopyStep(
         <Button tone="quiet" onClick={() => props.onOpenChange(false)}>
           {t("connect.cancel")}
         </Button>
-        <Button tone="primary" onClick={() => void connect()}>
-          {t("shell.nav.connect")}
+        <Button tone="primary" onClick={() => void copy()}>
+          <CopyIcon aria-hidden="true" />
+          {t("connect.copy")}
         </Button>
       </DialogFooter>
     </>
@@ -227,7 +235,7 @@ export function ConnectDialog(props: ConnectDialogProps): ReactElement {
     <DialogOrSheet
       open={props.open}
       onOpenChange={props.onOpenChange}
-      title={t("connect.title")}
+      title={needsKey ? t("key.title") : t("connect.title")}
     >
       {needsKey ? (
         <KeyStep {...props} />
