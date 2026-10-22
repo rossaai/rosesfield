@@ -1,4 +1,4 @@
-import { ModeStrip, ModeTab, Tabs } from "@rosesfield/ui/components/tabs"
+import { TabsList, TabsTrigger, Tabs } from "@rosesfield/ui/components/tabs"
 import { useNavigate } from "@tanstack/react-router"
 import type { ReactElement } from "react"
 import { appName } from "@/catalog/app-facts"
@@ -28,13 +28,13 @@ export function ToolRow({ current, photo }: ToolRowProps): ReactElement {
         })
       }}
     >
-      <ModeStrip aria-label={edit === null ? undefined : appName(edit)}>
+      <TabsList aria-label={edit === null ? undefined : appName(edit)}>
         {tools.map(({ tool, app }) => (
-          <ModeTab key={tool.id} value={tool.id}>
+          <TabsTrigger key={tool.id} value={tool.id}>
             {appName(app)}
-          </ModeTab>
+          </TabsTrigger>
         ))}
-      </ModeStrip>
+      </TabsList>
     </Tabs>
   )
 }

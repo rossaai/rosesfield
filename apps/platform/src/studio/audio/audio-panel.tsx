@@ -1,5 +1,5 @@
 import type { InputDefinition } from "@rosesfield/contract"
-import { ModeStrip, ModeTab, Tabs } from "@rosesfield/ui/components/tabs"
+import { TabsList, TabsTrigger, Tabs } from "@rosesfield/ui/components/tabs"
 import type { ReactElement } from "react"
 import { isAssetInput } from "@/catalog/app-facts"
 import { tCatalog } from "@/copy/t"
@@ -34,13 +34,13 @@ export function AudioTabs({
         }
       }}
     >
-      <ModeStrip aria-label={tCatalog(input.labelKey)}>
+      <TabsList aria-label={tCatalog(input.labelKey)}>
         {tabs.map((tab) => (
-          <ModeTab key={tab.value} value={tab.value}>
+          <TabsTrigger key={tab.value} value={tab.value}>
             {tCatalog(tab.labelKey)}
-          </ModeTab>
+          </TabsTrigger>
         ))}
-      </ModeStrip>
+      </TabsList>
     </Tabs>
   )
 }
