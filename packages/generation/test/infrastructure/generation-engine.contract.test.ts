@@ -106,7 +106,6 @@ const comfyRun = (v2: ReturnType<typeof comfyV2At>): Recording[] => [
   v2.read(queuedJob),
   v2.read(runningJob),
   v2.read(succeededJob),
-  v2.read(succeededJob),
   v2.content(),
   v2.cancel(),
 ]
