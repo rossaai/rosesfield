@@ -27,8 +27,10 @@ export {
 export {
   type Asset,
   type AssetKind,
+  type AssetLink,
   asset,
   assetKind,
+  assetLink,
   mimeType,
 } from "#asset.contract"
 export {

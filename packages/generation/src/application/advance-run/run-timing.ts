@@ -1,6 +1,6 @@
 import type { AppDefinition } from "@rosesfield/contract"
 import { ProjectError, RateLimitedError } from "@rosesfield/kernel"
-import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
+import { isRetryable } from "#application/advance-run/end-run"
 import type {
   EngineStatus,
   GenerationEngine,
@@ -42,12 +42,6 @@ export function wakeMs(statuses: readonly EngineStatus[]): number {
 export function isPastResultKept(run: Run, now: Date): boolean {
   const since = run.collectingSince()
   return since !== null && now.getTime() - since.getTime() > resultKeptMs
-}
-
-export function isRetryable(error: unknown): boolean {
-  return (
-    error instanceof RateLimitedError || error instanceof EngineUnavailableError
-  )
 }
 
 export function mayKeepLater(

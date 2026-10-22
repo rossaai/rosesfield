@@ -52,7 +52,7 @@ function taskApp(id: string, tasks: string[]) {
   })
 }
 
-const apps = [
+export const catalogApps = [
   taskApp("pictures", ["text-to-image"]),
   taskApp("clips", ["text-to-video"]),
 ]
@@ -64,7 +64,7 @@ function portsWith(
 ): PortsFor {
   return (clock, folder) => ({
     ...localPorts(clock, folder),
-    apps,
+    apps: catalogApps,
     engines: pickEngines(engine, {
       clock,
       fetch,

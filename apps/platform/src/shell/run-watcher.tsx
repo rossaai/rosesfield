@@ -1,14 +1,10 @@
 import type { Run } from "@rosesfield/contract"
 import { useToast } from "@rosesfield/ui/components/toast"
-import {
-  type QueryClient,
-  useQueries,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query"
+import { type QueryClient, useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useRouterState } from "@tanstack/react-router"
 import { useEffect, useRef } from "react"
-import { isWorking, runQuery, settingsQuery } from "@/api/queries"
+import { isWorking, keepRun } from "@/api/queries"
+import { watchRunStream } from "@/api/run-stream"
 import { appName } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
@@ -60,22 +56,53 @@ function refresh(client: QueryClient, run: Run): void {
   }
 }
 
-const publicPollMs = 2000
-
-function usePublicPolls(runs: readonly Run[]): void {
-  const isPublic = useQuery(settingsQuery).data?.mode === "public"
-  const working = isPublic ? runs.filter(isWorking) : []
-  useQueries({
-    queries: working.map((run) => ({
-      ...runQuery(run.id),
-      refetchInterval: publicPollMs,
-    })),
-  })
+export function useRunStreams(runs: readonly Run[]): void {
+  const client = useQueryClient()
+  const streams = useRef(new Map<string, AbortController>())
+  const working = runs
+    .filter(isWorking)
+    .map((run) => run.id)
+    .join(" ")
+  useEffect(() => {
+    const held = streams.current
+    const wanted = new Set(working === "" ? [] : working.split(" "))
+    for (const [runId, stop] of held) {
+      if (!wanted.has(runId)) {
+        stop.abort()
+        held.delete(runId)
+      }
+    }
+    for (const runId of wanted) {
+      if (held.has(runId)) {
+        continue
+      }
+      const stop = new AbortController()
+      held.set(runId, stop)
+      void watchRunStream({
+        runId,
+        signal: stop.signal,
+        onRun: (run) => keepRun(client, run),
+      }).finally(() => {
+        if (held.get(runId) === stop) {
+          held.delete(runId)
+        }
+      })
+    }
+  }, [working, client])
+  useEffect(() => {
+    const held = streams.current
+    return () => {
+      for (const stop of held.values()) {
+        stop.abort()
+      }
+      held.clear()
+    }
+  }, [])
 }
 
 export function RunWatcher(): null {
   const runs = useRecentRuns()
-  usePublicPolls(runs)
+  useRunStreams(runs)
   const seen = useRef(new Map<string, Run["status"]>())
   const client = useQueryClient()
   const toast = useToast()

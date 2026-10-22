@@ -9,7 +9,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { CheckIcon, Volume2Icon, VolumeOffIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useRef, useState } from "react"
 import { assetQuery } from "@/api/queries"
-import { useAssetSource } from "@/api/use-asset-source"
+import { useTileSource } from "@/api/use-asset-source"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import { AssetContextMenu } from "@/pieces/asset-context-menu"
@@ -88,12 +88,14 @@ function RunResult({
   run,
   aspect,
   src,
+  poster,
   list,
 }: {
   asset: Asset
   run: Run
   aspect: MediaAspect
   src: string
+  poster?: string
   list: readonly string[]
 }): ReactElement {
   const viewer = useViewer()
@@ -108,6 +110,7 @@ function RunResult({
         <ResultTile
           kind={isVideo ? "video" : "image"}
           src={src}
+          {...(poster === undefined ? {} : { poster })}
           alt={name}
           aspect={aspectOfAsset(asset, aspect) ?? aspect}
           app={runAppName(run)}
@@ -172,7 +175,7 @@ function RunTile({
   asset: Asset
   list: readonly string[]
 }): ReactElement {
-  const source = useAssetSource(asset.id)
+  const source = useTileSource(asset)
   if (source.state !== "ready") {
     return <OwnTile item={item} list={list} isVideo={asset.kind === "video"} />
   }
@@ -182,6 +185,7 @@ function RunTile({
       run={run}
       aspect={item.aspect}
       src={source.src}
+      {...(source.poster === undefined ? {} : { poster: source.poster })}
       list={list}
     />
   )

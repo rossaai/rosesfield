@@ -10,6 +10,7 @@ import {
 } from "@rosesfield/kernel"
 import type {
   GetCharacterHandler,
+  PutAssetPreviewHandler,
   ReadAssetContentHandler,
   UploadAssetHandler,
 } from "@rosesfield/library"
@@ -18,18 +19,21 @@ type LibraryRunAssetsOptions = {
   readContent: ReadAssetContentHandler
   getCharacter: GetCharacterHandler
   upload: UploadAssetHandler
+  putPreview: PutAssetPreviewHandler
 }
 
 export class LibraryRunAssets extends RunAssets {
   private readonly readContent: ReadAssetContentHandler
   private readonly getCharacter: GetCharacterHandler
   private readonly upload: UploadAssetHandler
+  private readonly putPreview: PutAssetPreviewHandler
 
   constructor(options: LibraryRunAssetsOptions) {
     super()
     this.readContent = options.readContent
     this.getCharacter = options.getCharacter
     this.upload = options.upload
+    this.putPreview = options.putPreview
   }
 
   override async read(assetId: AssetId): Promise<EngineFile> {
@@ -53,6 +57,12 @@ export class LibraryRunAssets extends RunAssets {
       height: output.height,
       durationSeconds: output.durationSeconds,
     })
+    const { preview } = output
+    if (preview !== undefined) {
+      await this.putPreview
+        .execute({ assetId: asset.id, ...preview })
+        .catch(() => undefined)
+    }
     return assetIdFormat.parse(asset.id)
   }
 }
