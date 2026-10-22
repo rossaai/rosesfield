@@ -85,6 +85,79 @@ describe("HeroBanner", () => {
   })
 })
 
+describe("HeroBanner's tag and portraits", () => {
+  it("opens with a tinted tag over the kicker, inside the one link", () => {
+    render(
+      <HeroBanner
+        href="/apps/image"
+        tag={{ label: "MIT licence", icon: <svg /> }}
+        kicker="Rosesfield"
+        headline="Make images and video"
+        lead="Every app works with your key"
+        action="Open Image"
+      />
+    )
+    const tag = document.querySelector("[data-slot='hero-tag']")
+    expect(tag?.textContent).toBe("MIT licence")
+    expect(tag?.className.split(" ")).toEqual(
+      expect.arrayContaining(["bg-hor-tint", "text-hor-text", "h-7", "mb-8"])
+    )
+    expect(tag?.nextElementSibling?.textContent).toBe("Rosesfield")
+    expect(screen.getByRole("link").querySelectorAll("a, button")).toHaveLength(
+      0
+    )
+  })
+
+  it("stands a portrait on each bottom corner, 300 px wide, narrowing so it never reaches the text", () => {
+    render(
+      <HeroBanner
+        href="/apps/image"
+        kicker="Rosesfield"
+        headline="Make images and video"
+        lead="Every app works with your key"
+        action="Open Image"
+        portraits={{ start: "a.webp", end: "b.webp" }}
+      />
+    )
+    const banner = screen.getByRole("link")
+    expect(banner.className.split(" ")).toContain("@container/hero")
+    const portraits = [
+      ...banner.querySelectorAll<HTMLImageElement>(
+        "[data-slot='hero-portrait']"
+      ),
+    ]
+    expect(portraits.map((one) => one.getAttribute("src"))).toEqual([
+      "a.webp",
+      "b.webp",
+    ])
+    expect(portraits.map((one) => one.alt)).toEqual(["", ""])
+    expect(portraits[0]?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "bottom-0",
+        "left-0",
+        "w-[min(--spacing(75),calc((100cqw_-_var(--spacing)*146)/2))]",
+      ])
+    )
+    expect(portraits[1]?.className.split(" ")).toEqual(
+      expect.arrayContaining(["bottom-0", "right-0"])
+    )
+  })
+
+  it("draws no portrait and no tag when none is given", () => {
+    render(
+      <HeroBanner
+        href="/apps/image"
+        kicker="Rosesfield"
+        headline="Make images and video"
+        lead="Every app works with your key"
+        action="Open Image"
+      />
+    )
+    expect(document.querySelector("[data-slot='hero-portrait']")).toBeNull()
+    expect(document.querySelector("[data-slot='hero-tag']")).toBeNull()
+  })
+})
+
 describe("HeroFan", () => {
   it("fans four pictures over a two-line headline that names the model", () => {
     const { container } = render(
