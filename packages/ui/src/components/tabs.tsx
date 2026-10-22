@@ -23,7 +23,7 @@ function TabsList({
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        "relative flex max-w-full items-center gap-s2 overflow-x-auto",
+        "relative flex max-w-[calc(100%+var(--spacing-focus-ring)*4)] items-center gap-s2 overflow-x-auto",
         interaction.ringRoom,
         className
       )}

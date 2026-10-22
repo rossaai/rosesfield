@@ -54,7 +54,7 @@ describe("TabsList", () => {
     expect(classesOf(video)).toContain("z-1")
   })
 
-  it("gives its tabs' focus rings room inside the scroll box that clips them", () => {
+  it("gives its tabs' focus rings room inside the scroll box that clips them, and widens its cap by that room so the tabs never scroll", () => {
     render(
       <Tabs defaultValue="one">
         <TabsList aria-label="Panes">
@@ -66,6 +66,7 @@ describe("TabsList", () => {
     expect(classesOf(list)).toEqual(
       expect.arrayContaining([
         "overflow-x-auto",
+        "max-w-[calc(100%+var(--spacing-focus-ring)*4)]",
         ...interaction.ringRoom.split(" "),
       ])
     )
