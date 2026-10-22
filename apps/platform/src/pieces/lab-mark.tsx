@@ -3,15 +3,6 @@ import type { CSSProperties, ReactElement } from "react"
 
 type LabMarkData = ModelFactsFile["marks"][string]
 
-type Scheme = "light" | "dark"
-
-const markGrounds: Readonly<Record<Scheme, string>> = {
-  light: "F1F1F1",
-  dark: "191919",
-}
-
-const leastContrast = 1.5
-
 export const weightsMaker = "Hugging Face"
 
 export function labInitialOf(maker: string): string {
@@ -24,61 +15,78 @@ export function labMarkOf(maker: string): LabMarkData | null {
   return Object.hasOwn(marks, maker) ? (marks[maker] ?? null) : null
 }
 
-function channelOf(hex: string, at: number): number {
-  const value = Number.parseInt(hex.slice(at, at + 2), 16) / 255
-  return value <= 0.039_28 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+export function markColourOf(mark: LabMarkData): string {
+  return `var(--if-light, #${mark.hex}) var(--if-dark, #${mark.hexDark})`
 }
 
-function luminanceOf(hex: string): number {
+function groundStyleOf(ground: string): CSSProperties {
+  return { backgroundColor: `#${ground}` }
+}
+
+function MarkPath({
+  mark,
+  className,
+}: {
+  mark: LabMarkData
+  className: string
+}): ReactElement {
   return (
-    0.2126 * channelOf(hex, 0) +
-    0.7152 * channelOf(hex, 2) +
-    0.0722 * channelOf(hex, 4)
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      style={{ color: markColourOf(mark) }}
+    >
+      <path
+        d={mark.path}
+        {...(mark.fillRule === undefined
+          ? {}
+          : { fillRule: mark.fillRule, clipRule: mark.fillRule })}
+      />
+    </svg>
   )
-}
-
-export function contrastOf(first: string, second: string): number {
-  const [high, low] = [luminanceOf(first), luminanceOf(second)].sort(
-    (a, b) => b - a
-  )
-  return ((high ?? 0) + 0.05) / ((low ?? 0) + 0.05)
-}
-
-export function markColourOf(hex: string, scheme: Scheme): string | null {
-  return contrastOf(hex, markGrounds[scheme]) >= leastContrast
-    ? `#${hex}`
-    : null
-}
-
-function colourStyleOf(mark: LabMarkData): CSSProperties {
-  const light = markColourOf(mark.hex, "light") ?? "currentColor"
-  const dark = markColourOf(mark.hex, "dark") ?? "currentColor"
-  return { color: `var(--if-light, ${light}) var(--if-dark, ${dark})` }
 }
 
 export function LabMark({ maker }: { maker: string }): ReactElement {
   const mark = labMarkOf(maker)
+  if (mark === null) {
+    return (
+      <span
+        aria-hidden="true"
+        data-slot="lab-mark"
+        data-maker={maker}
+        data-mark="letter"
+        className="flex size-4 shrink-0 items-center justify-center font-medium text-legal leading-none"
+      >
+        {labInitialOf(maker)}
+      </span>
+    )
+  }
+  if (mark.ground !== undefined) {
+    return (
+      <span
+        aria-hidden="true"
+        data-slot="lab-mark"
+        data-maker={maker}
+        data-mark={mark.slug}
+        data-ground="mark"
+        className="flex size-4 shrink-0 items-center justify-center rounded-dense"
+        style={groundStyleOf(mark.ground)}
+      >
+        <MarkPath mark={mark} className="size-2.5" />
+      </span>
+    )
+  }
   return (
     <span
       aria-hidden="true"
       data-slot="lab-mark"
       data-maker={maker}
-      data-mark={mark === null ? "letter" : mark.slug}
-      className="flex size-4 shrink-0 items-center justify-center font-medium text-legal leading-none"
+      data-mark={mark.slug}
+      className="flex size-4 shrink-0 items-center justify-center"
     >
-      {mark === null ? (
-        labInitialOf(maker)
-      ) : (
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="size-4"
-          style={colourStyleOf(mark)}
-        >
-          <path d={mark.path} />
-        </svg>
-      )}
+      <MarkPath mark={mark} className="size-4" />
     </span>
   )
 }
