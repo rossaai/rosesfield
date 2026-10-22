@@ -344,6 +344,7 @@ export function ShowcaseFeed({
     <Reveal>
       <MediaFeed
         label={t("explore.showcase.title")}
+        isClipped={true}
         header={
           <SectionHeader
             title={t("explore.showcase.title")}

@@ -74,9 +74,16 @@ const madeFromClip = new Set(
   )
 )
 
+const shownSources = new Set(
+  showcaseRows.flatMap((row) =>
+    row.from === undefined || madeFromClip.has(row.runId) ? [] : [row.from]
+  )
+)
+
 export function isFeedExample(runId: string): boolean {
+  const row = showcaseRows.find((one) => one.runId === runId)
   return (
-    showcaseRows.some((row) => row.runId === runId) && !madeFromClip.has(runId)
+    row !== undefined && !madeFromClip.has(runId) && !shownSources.has(row.file)
   )
 }
 

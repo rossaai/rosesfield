@@ -309,6 +309,7 @@ type MediaFeedProps = {
   viewAll?: ReactNode
   content?: MediaFeedContent
   rowLabels?: RowLabels
+  isClipped?: boolean
   children: ReactNode
   className?: string
 }
@@ -338,10 +339,12 @@ function MediaFeed({
   header,
   viewAll,
   rowLabels,
+  isClipped = false,
   children,
   className,
 }: MediaFeedProps): ReactElement {
-  const isWindowed = viewAll !== undefined && layout === "masonry"
+  const isWindowed =
+    layout === "masonry" && (viewAll !== undefined || isClipped)
   return (
     <section
       aria-label={label}

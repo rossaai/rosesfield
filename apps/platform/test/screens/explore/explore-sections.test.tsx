@@ -11,7 +11,7 @@ afterEach(() => {
 })
 
 describe("Explore's examples", () => {
-  it("lists every example once, clips and app results included, and leaves out a clip made from another clip", () => {
+  it("lists every example once, clips and app results included, and leaves out a clip made from another clip and a still another example was made from", () => {
     const examples = feedExamples(showcaseEntries(showcaseItems))
     const files = examples.map((entry) => entry.key)
     expect(new Set(files).size).toBe(files.length)
@@ -27,7 +27,34 @@ describe("Explore's examples", () => {
         (row) => row.kind === "video" && row.from?.endsWith(".mp4") !== true
       ).length
     )
-    expect(examples).toHaveLength(showcaseRows.length - fromClips.length)
+    const sources = new Set(
+      showcaseRows.flatMap((row) =>
+        row.from === undefined || row.from.endsWith(".mp4") ? [] : [row.from]
+      )
+    )
+    expect(examples).toHaveLength(
+      showcaseRows.length - fromClips.length - sources.size
+    )
+  })
+
+  it("shows only the after of a before and after pair, never the source still beside its result", () => {
+    const files = feedExamples(showcaseEntries(showcaseItems)).map(
+      (entry) => entry.key
+    )
+    for (const source of [
+      "portrait-woman.webp",
+      "sneaker.webp",
+      "street-golden-hour.webp",
+    ]) {
+      expect(files).not.toContain(`showcase-${source}`)
+    }
+    for (const after of [
+      "relight-portrait.webp",
+      "sneaker-cutout.webp",
+      "still-in-the-street.mp4",
+    ]) {
+      expect(files).toContain(`showcase-${after}`)
+    }
   })
 
   it("keeps an example a full row away from the still it was made from, so no two neighbours show the same person", () => {

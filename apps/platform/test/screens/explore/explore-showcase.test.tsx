@@ -43,6 +43,16 @@ describe("Explore's showcase", () => {
     expect(feed.querySelectorAll("video").length).toBeGreaterThan(0)
   })
 
+  it("ends at the feed window's even edge under a fade, so no column bottom shows", async () => {
+    const feed = await renderShowcase()
+    const window = feed.querySelector("[data-slot=media-feed-window]")
+    expect(window?.className).toContain(
+      "max-h-[calc(var(--spacing-feed-window)"
+    )
+    expect(window?.className.split(" ")).toContain("overflow-hidden")
+    expect(feed.querySelector("[data-slot=media-feed-fade]")).not.toBeNull()
+  })
+
   it("names the app and the model as a pill with Recreate on hover, and keeps one View all in the header", async () => {
     const feed = await renderShowcase()
     const pills = [...feed.querySelectorAll("[data-slot=media-badge]")].map(
