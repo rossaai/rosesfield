@@ -1,9 +1,3 @@
-import { Button } from "@rosesfield/ui/components/button"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@rosesfield/ui/components/popover"
 import {
   ActivityIcon,
   CircleAlertIcon,
@@ -25,7 +19,9 @@ import {
   type FilterGroup,
   tileSizes,
   ViewCluster,
+  type ViewClusterProps,
   type ViewLayout,
+  ViewMenu,
 } from "@/screens/library/view-cluster"
 
 export type CanvasView = {
@@ -107,16 +103,14 @@ export function stateGroup(control: CanvasViewControl): FilterGroup {
   }
 }
 
-function Cluster({ control }: { control: CanvasViewControl }): ReactElement {
-  return (
-    <ViewCluster
-      layout={control.layout}
-      onLayout={control.setLayout}
-      size={control.size}
-      onSize={control.setSize}
-      groups={[stateGroup(control)]}
-    />
-  )
+function clusterProps(control: CanvasViewControl): ViewClusterProps {
+  return {
+    layout: control.layout,
+    onLayout: control.setLayout,
+    size: control.size,
+    onSize: control.setSize,
+    groups: [stateGroup(control)],
+  }
 }
 
 export function CanvasCluster({
@@ -126,30 +120,10 @@ export function CanvasCluster({
   control: CanvasViewControl
   form: "cluster" | "menu"
 }): ReactElement {
-  if (form === "cluster") {
-    return <Cluster control={control} />
-  }
-  return (
-    <Popover>
-      <PopoverTrigger
-        render={
-          <Button
-            data-slot="canvas-view"
-            size="recreate"
-            tone="quiet"
-            className="self-start rounded-dense border border-(--line) px-2"
-          >
-            <LayoutGridIcon aria-hidden="true" />
-            {t("app.canvas.view")}
-          </Button>
-        }
-      />
-      <PopoverContent align="end" side="bottom" sideOffset={8}>
-        <div className="flex items-center gap-2">
-          <Cluster control={control} />
-        </div>
-      </PopoverContent>
-    </Popover>
+  return form === "cluster" ? (
+    <ViewCluster {...clusterProps(control)} />
+  ) : (
+    <ViewMenu {...clusterProps(control)} />
   )
 }
 
