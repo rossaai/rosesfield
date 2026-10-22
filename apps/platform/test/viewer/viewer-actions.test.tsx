@@ -10,7 +10,13 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router"
-import { cleanup, render, screen } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react"
 import type { ReactElement } from "react"
 import { afterEach, describe, expect, it } from "vitest"
 import { runQuery } from "@/api/queries"
@@ -93,43 +99,101 @@ function isColoured(element: Element): boolean {
 afterEach(cleanup)
 
 describe("the viewer's actions", () => {
-  it("puts Recreate over Download and Use in, a pair that closes the foot", async () => {
-    renderPiece(() => <ViewerActions asset={output} run={made} />)
+  it("puts Recreate over Download, Use in and More, the row that closes the foot", async () => {
+    renderPiece(() => (
+      <ViewerActions asset={output} run={made} onDeleted={() => undefined} />
+    ))
     const recreate = await screen.findByRole("button", {
       name: t("run.useInputs"),
     })
     const foot = recreate.closest("[data-slot=viewer-foot]")
-    const pair = foot?.querySelector("[data-slot=viewer-foot-pair]")
-    const names = [...(pair?.querySelectorAll("button") ?? [])].map(
-      (button) => button.textContent
+    const pair = foot?.querySelector<HTMLElement>(
+      "[data-slot=viewer-foot-pair]"
     )
+    const names = within(pair as HTMLElement)
+      .getAllByRole("button")
+      .map((button) => button.getAttribute("aria-label") ?? button.textContent)
 
-    expect(names).toEqual([t("output.download"), t("output.useIn")])
-    expect(foot?.lastElementChild).toBe(pair)
+    expect(names).toEqual([
+      t("output.download"),
+      t("output.useIn"),
+      t("viewer.more"),
+    ])
     expect(
       recreate.compareDocumentPosition(pair as Node) &
         Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy()
-    expect(foot?.textContent).not.toContain(t("output.delete"))
+    expect(
+      screen.queryByRole("button", { name: t("output.delete") })
+    ).toBeNull()
   })
 
-  it("keeps Recreate the one filled control, and Delete quiet", async () => {
+  it("keeps Delete in the More menu, in the error colour, and asks before it deletes", async () => {
+    renderPiece(() => (
+      <ViewerActions asset={output} run={made} onDeleted={() => undefined} />
+    ))
+    fireEvent.click(
+      await screen.findByRole("button", { name: t("viewer.more") })
+    )
+    const remove = await screen.findByRole("menuitem", {
+      name: t("output.delete"),
+    })
+
+    expect(remove.dataset.tone).toBe("danger")
+    expect(remove.className).toContain("data-[tone=danger]:text-bug-text")
+    fireEvent.click(remove)
+    const confirm = await screen.findByRole("button", {
+      name: t("viewer.delete.confirm"),
+    })
+    expect(confirm.className.split(" ")).toEqual(
+      expect.arrayContaining(["bg-bug-tint", "text-bug-text"])
+    )
+    expect(screen.getByText(t("viewer.delete.title"))).toBeTruthy()
+  })
+
+  it("keeps Recreate the one filled control, and Open in ComfyUI a secondary button with the Comfy mark", async () => {
     renderPiece(() => (
       <>
-        <ViewerManage asset={output} run={made} onDeleted={() => undefined} />
-        <ViewerActions asset={output} run={made} />
+        <ViewerManage run={made} />
+        <ViewerActions asset={output} run={made} onDeleted={() => undefined} />
       </>
     ))
     const buttons = await screen.findAllByRole("button")
     const filled = buttons.filter(isFilled)
-    const remove = screen.getByRole("button", { name: t("output.delete") })
+    const comfy = screen.getByRole("button", { name: t("run.openInComfy") })
 
     expect(filled.map((button) => button.textContent)).toEqual([
       t("run.useInputs"),
     ])
-    expect(isColoured(remove)).toBe(false)
-    expect(remove.className.split(" ")).toContain("bg-transparent")
+    expect(comfy.className.split(" ")).toContain("bg-(--well)")
+    expect(
+      comfy.querySelector("[data-slot=lab-mark]")?.getAttribute("data-maker")
+    ).toBe("Comfy")
     expect(buttons.some(isColoured)).toBe(false)
+  })
+
+  it("puts Open in ComfyUI with the Comfy mark and Delete in the phone bar's More menu", async () => {
+    renderPiece(() => (
+      <ViewerBar
+        asset={output}
+        run={made}
+        onDeleted={() => undefined}
+        details={null}
+      />
+    ))
+    fireEvent.click(
+      await screen.findByRole("button", { name: t("viewer.more") })
+    )
+    const items = await screen.findAllByRole("menuitem")
+
+    expect(items).toHaveLength(2)
+    expect(items[0]?.textContent).toContain(t("run.openInComfy"))
+    expect(items[1]?.textContent).toBe(t("output.delete"))
+    expect(
+      items[0]
+        ?.querySelector("[data-slot=lab-mark]")
+        ?.getAttribute("data-maker")
+    ).toBe("Comfy")
   })
 
   it("shows Recreate on the phone bar as its one filled control", async () => {

@@ -14,11 +14,12 @@ import {
   SheetTitle,
 } from "@rosesfield/ui/components/sheet"
 import { useNavigate } from "@tanstack/react-router"
-import { CopyIcon, DownloadIcon, EllipsisIcon } from "lucide-react"
+import { CopyIcon, DownloadIcon, EllipsisIcon, Trash2Icon } from "lucide-react"
 import { type ReactElement, type ReactNode, useState } from "react"
 import { t } from "@/copy/t"
 import { useDownloadAsset } from "@/pieces/asset-actions"
 import { DeleteAssetDialog } from "@/pieces/delete-asset-dialog"
+import { LabMark } from "@/pieces/lab-mark"
 import { useOpenInComfy } from "@/pieces/run/open-in-comfy"
 import { useUseInItems } from "@/pieces/use-in-menu"
 
@@ -84,39 +85,56 @@ function DeleteAsset({
 
 const wide = "w-full max-w-none"
 
-export function ViewerManage({
-  asset,
-  run,
-  onDeleted,
-}: ViewerActionsProps): ReactElement {
-  const openInComfy = useOpenInComfy(run)
-  const [isConfirming, setConfirming] = useState(false)
+const comfyMark = "Comfy"
+
+function MoreMenu({
+  onDelete,
+  children,
+}: {
+  onDelete: () => void
+  children?: ReactNode
+}): ReactElement {
   return (
-    <div data-slot="viewer-manage" className="flex flex-wrap gap-2">
-      {openInComfy === null ? null : (
-        <Button tone="quiet" onClick={openInComfy}>
-          {t("run.openInComfy")}
-        </Button>
-      )}
-      <Button tone="quiet" onClick={() => setConfirming(true)}>
-        {t("output.delete")}
-      </Button>
-      <DeleteAsset
-        asset={asset}
-        open={isConfirming}
-        onOpenChange={setConfirming}
-        onDeleted={onDeleted}
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <IconButton label={t("viewer.more")}>
+            <EllipsisIcon aria-hidden="true" />
+          </IconButton>
+        }
       />
-    </div>
+      <DropdownMenuContent align="end">
+        {children}
+        <DropdownMenuItem tone="danger" onClick={onDelete}>
+          <Trash2Icon aria-hidden="true" />
+          {t("output.delete")}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+export function ViewerManage({ run }: { run: Run | null }): ReactNode {
+  const openInComfy = useOpenInComfy(run)
+  if (openInComfy === null) {
+    return null
+  }
+  return (
+    <Button data-slot="viewer-manage" width="full" onClick={openInComfy}>
+      <LabMark maker={comfyMark} />
+      {t("run.openInComfy")}
+    </Button>
   )
 }
 
 export function ViewerActions({
   asset,
   run,
-}: Omit<ViewerActionsProps, "onDeleted">): ReactElement {
+  onDeleted,
+}: ViewerActionsProps): ReactElement {
   const download = useDownloadAsset()
   const useInputs = useUseInputs(run)
+  const [isConfirming, setConfirming] = useState(false)
   return (
     <div data-slot="viewer-foot" className="flex flex-col gap-2.5">
       {useInputs === null ? null : (
@@ -125,13 +143,23 @@ export function ViewerActions({
           {t("run.useInputs")}
         </Button>
       )}
-      <div data-slot="viewer-foot-pair" className="grid grid-cols-2 gap-2">
+      <div
+        data-slot="viewer-foot-pair"
+        className="grid grid-cols-[1fr_1fr_auto] gap-2"
+      >
         <Button className={wide} onClick={() => void download(asset)}>
           <DownloadIcon aria-hidden="true" />
           {t("output.download")}
         </Button>
         <UseInButton asset={asset} className={wide} />
+        <MoreMenu onDelete={() => setConfirming(true)} />
       </div>
+      <DeleteAsset
+        asset={asset}
+        open={isConfirming}
+        onOpenChange={setConfirming}
+        onDeleted={onDeleted}
+      />
     </div>
   )
 }
@@ -184,25 +212,14 @@ export function ViewerBar({
       )}
       <BarDownload asset={asset} isLead={useInputs === null} />
       <UseInButton asset={asset} className="" />
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <IconButton label={t("viewer.more")}>
-              <EllipsisIcon aria-hidden="true" />
-            </IconButton>
-          }
-        />
-        <DropdownMenuContent align="end">
-          {openInComfy === null ? null : (
-            <DropdownMenuItem onClick={openInComfy}>
-              {t("run.openInComfy")}
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem tone="danger" onClick={() => setConfirming(true)}>
-            {t("output.delete")}
+      <MoreMenu onDelete={() => setConfirming(true)}>
+        {openInComfy === null ? null : (
+          <DropdownMenuItem onClick={openInComfy}>
+            <LabMark maker={comfyMark} />
+            {t("run.openInComfy")}
           </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        )}
+      </MoreMenu>
       <Sheet open={isInfoOpen} onOpenChange={setInfoOpen}>
         <SheetContent side="bottom" closeLabel={t("viewer.close")}>
           <SheetHeader>
