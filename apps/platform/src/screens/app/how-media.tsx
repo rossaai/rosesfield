@@ -1,6 +1,11 @@
 import { labOfModel } from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@rosesfield/ui/components/tooltip"
 import type { ReactElement, ReactNode } from "react"
 import { isAssetInput } from "@/catalog/app-facts"
 import { tCatalog } from "@/copy/t"
@@ -54,7 +59,19 @@ export function PromptMedia({ prompt }: { prompt: string }): ReactElement {
       data-slot="how-prompt"
       className="flex size-full items-start p-s5 text-body text-ink-muted"
     >
-      <p className="line-clamp-[8] @regular:line-clamp-[12]">{prompt}</p>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <p
+              data-slot="how-prompt-text"
+              className="line-clamp-3 cursor-default"
+            />
+          }
+        >
+          {prompt}
+        </TooltipTrigger>
+        <TooltipContent className="max-w-prose-max">{prompt}</TooltipContent>
+      </Tooltip>
     </div>
   )
 }
@@ -117,6 +134,7 @@ function isSettingInput(input: InputDefinition | undefined): boolean {
     input === undefined ||
     (!isAssetInput(input) &&
       input.type !== "prompt" &&
+      input.type !== "seed" &&
       input.name !== modelInputName)
   )
 }

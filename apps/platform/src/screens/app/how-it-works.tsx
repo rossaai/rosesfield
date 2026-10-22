@@ -40,7 +40,6 @@ export type AppSample = VisualEntry
 export type HowStep = {
   id: "add" | "choose" | "get"
   title: string
-  line: string
   media: ReactNode
   form: "picture" | "words"
   action?: ReactNode
@@ -157,10 +156,10 @@ function promptOfRun(app: AppListing, run: Run): string | null {
   return typeof value === "string" && value !== "" ? value : null
 }
 
-const stepCopy = {
-  add: ["app.how.inputs.title", "app.how.inputs.line"],
-  choose: ["app.how.model.title", "app.how.model.line"],
-  get: ["app.how.result.title", "app.how.result.line"],
+const stepTitles = {
+  add: "app.how.inputs.title",
+  choose: "app.how.model.title",
+  get: "app.how.result.title",
 } as const
 
 type StepMedia = {
@@ -267,8 +266,7 @@ export function stepsOf(
         : plainMedia(app)
   return (["add", "choose", "get"] as const).map((id) => ({
     id,
-    title: t(stepCopy[id][0]),
-    line: t(stepCopy[id][1]),
+    title: t(stepTitles[id]),
     media: shown.media[id],
     form: shown.forms[id],
     ...(id === "get" && shown.action !== null ? { action: shown.action } : {}),
@@ -317,10 +315,9 @@ function StepCard({ step }: { step: HowStep }): ReactElement {
           )}
         </div>
       ) : null}
-      <div className="flex flex-col gap-s1 @regular:row-start-2">
-        <h3 className="font-medium text-body text-ink">{step.title}</h3>
-        <p className="text-body text-ink-muted">{step.line}</p>
-      </div>
+      <h3 className="font-medium text-body text-ink @regular:row-start-2">
+        {step.title}
+      </h3>
     </li>
   )
 }

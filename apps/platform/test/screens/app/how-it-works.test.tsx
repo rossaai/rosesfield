@@ -10,12 +10,14 @@ import {
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { appLine } from "@/catalog/app-facts"
+import { t } from "@/copy/t"
 import {
   HowItWorks,
   ownExampleOf,
   samplesOf,
   stepsOf,
 } from "@/screens/app/how-it-works"
+import { RunSettings } from "@/screens/app/how-media"
 import { publishedQuery, type SharedOutput } from "@/screens/explore/share-api"
 import { mediaOf, showcaseOf } from "@/showcase/showcase"
 
@@ -28,6 +30,7 @@ const video = appListing.parse(findApp("video"))
 const effects = appListing.parse(findApp("effects"))
 const image = appListing.parse(findApp("image"))
 const relight = appListing.parse(findApp("relight"))
+const audio = appListing.parse(findApp("audio"))
 
 const otherId = "93e9078d-0000-4000-8000-0000000000ff"
 
@@ -258,5 +261,41 @@ describe("How it works, one composition for every app", () => {
     expect(steps[0]?.querySelector("[data-slot=how-prompt]")?.textContent).toBe(
       item?.prompt
     )
+  })
+
+  it("titles each step with no shared caption, clamps the prompt to three lines and lists no seed", async () => {
+    renderHow(() => <HowItWorks app={image} />, [])
+    const steps = await stepsShown(3)
+    for (const step of steps) {
+      expect(step.querySelector(":scope > div ~ p, :scope > p")).toBeNull()
+      expect(step.textContent).not.toContain(t("app.how.model.line"))
+    }
+    const prompt = steps[0]?.querySelector("[data-slot=how-prompt-text]")
+    expect(prompt?.className.split(" ")).toContain("line-clamp-3")
+    const labels = [
+      ...(steps[1]?.querySelectorAll("[data-slot=how-settings] dt") ?? []),
+    ].map((label) => label.textContent)
+    expect(labels.length).toBeGreaterThan(0)
+  })
+
+  it("lists an example's settings with no seed row", () => {
+    render(
+      <RunSettings
+        app={audio}
+        run={run.parse({
+          ...madeVideo,
+          appId: "audio",
+          inputs: { prompt: "Here is the one change", language: "en" },
+          seed: 1488584158,
+          aspectRatio: null,
+        })}
+      />
+    )
+    const labels = [
+      ...document.querySelectorAll("[data-slot=how-settings] dt"),
+    ].map((label) => label.textContent ?? "")
+    expect(labels.length).toBeGreaterThan(0)
+    expect(labels.some((label) => /seed/i.test(label))).toBe(false)
+    expect(document.body.textContent).not.toContain("1488584158")
   })
 })
