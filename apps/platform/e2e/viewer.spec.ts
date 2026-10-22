@@ -3,6 +3,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test"
 const gatewayOrigin = "http://127.0.0.1:8797"
 const gutter = 16
 const ink = "rgb(12, 10, 7)"
+const bugText = "rgb(181, 0, 66)"
 
 type Box = { x: number; y: number; width: number; height: number }
 
@@ -107,15 +108,18 @@ test("on a phone the image keeps the 16 px gutter at each side", async ({
   expect(width - (box.x + box.width)).toBe(gutter)
 })
 
-test("the viewer centres a 16:9 picture alone, with its control row under it", async ({
+test("the viewer centres a 16:9 picture alone between the gutter and the panel, with its control row under it", async ({
   page,
 }) => {
   test.skip(isPhone(page), "the reference measures the stage at 1440")
   await open(page, "/gallery?entry=ref-media-viewer&state=open")
   const picture = await boxOf(page.locator("[data-slot=viewer-video] video"))
   const row = await boxOf(page.locator("[data-slot=viewer-controls]"))
+  const aside = await boxOf(page.locator("[data-slot=viewer-aside]"))
 
-  expect(picture.width).toBe(1048)
+  expect(1440 - (aside.x + aside.width)).toBe(7)
+  expect(picture.x).toBe(gutter)
+  expect(picture.width).toBe(aside.x - 2 * gutter)
   expect(Math.abs(picture.y + picture.height / 2 - 450)).toBeLessThanOrEqual(1)
   expect(Math.abs(row.y - (picture.y + picture.height))).toBeLessThanOrEqual(1)
 })
@@ -162,7 +166,7 @@ test("the input strip cuts its last visible tile at the clip edge", async ({
       .map((rect) => ({ left: rect.x, right: rect.x + rect.width }))
     return {
       scrolls: scroller.scrollWidth > scroller.clientWidth,
-      cut: lefts.filter((one) => one.left < edge - 4 && one.right > edge),
+      cut: lefts.filter((one) => one.left < edge && one.right > edge),
       pitch: (lefts[1]?.left ?? 0) - (lefts[0]?.left ?? 0),
     }
   })
@@ -172,26 +176,34 @@ test("the input strip cuts its last visible tile at the clip edge", async ({
   expect(strip?.cut).toHaveLength(1)
 })
 
-test("Recreate is the one filled action, over Download and Use in at the foot, and Delete is quiet", async ({
+test("Recreate is the one filled action over Download, Use in and More, a workflow run's Open in ComfyUI sits at the foot, and Delete waits in More in error red behind a confirm", async ({
   page,
 }) => {
   test.skip(isPhone(page), "the phone bar is proven on its own")
-  await open(page, `/history?view=${videoAsset}`)
+  await page.addInitScript(() => {
+    window.localStorage.setItem("rosesfield.welcome", "seen")
+  })
+  await page.goto(`/history?view=${imageAsset}`)
+  await expect(page.locator("[data-slot=viewer-frame] img")).toBeVisible()
   const aside = page.getByRole("dialog").locator("aside")
   const panel = await boxOf(aside)
   const recreate = aside.getByRole("button", { name: "Recreate" })
   const download = await boxOf(aside.getByRole("button", { name: "Download" }))
   const useIn = await boxOf(aside.getByRole("button", { name: "Use in" }))
-  const remove = aside.getByRole("button", { name: "Delete" })
-  const caption = aside.getByText("Demo engine", { exact: true })
+  const more = aside.getByRole("button", { name: "More" })
+  const comfy = aside.getByRole("button", { name: "Open in ComfyUI" })
+  const comfyBox = await boxOf(comfy)
 
   expect(await fill(recreate)).toContain(ink)
-  expect(await fill(remove)).toContain("rgba(0, 0, 0, 0)")
-  expect(await remove.evaluate((one) => getComputedStyle(one).color)).toBe(ink)
   expect(download.y).toBe(useIn.y)
   expect(download.width).toBe(useIn.width)
   expect(download.y).toBeGreaterThan((await boxOf(recreate)).y)
-  expect(panel.y + panel.height - (download.y + download.height)).toBe(10)
+  expect((await boxOf(more)).y).toBe(download.y)
+  expect(comfyBox.y).toBeGreaterThan(download.y)
+  expect(await fill(comfy)).not.toContain(ink)
+  await expect(comfy.locator("svg, img").first()).toBeVisible()
+  expect(panel.y + panel.height - (comfyBox.y + comfyBox.height)).toBe(13)
+  await expect(aside.getByRole("button", { name: "Delete" })).toHaveCount(0)
   const filled = await aside
     .getByRole("button")
     .evaluateAll(
@@ -202,11 +214,18 @@ test("Recreate is the one filled action, over Download and Use in at the foot, a
       ink
     )
   expect(filled).toBe(1)
-  expect(await caption.evaluate((one) => getComputedStyle(one).color)).toBe(
-    await aside
-      .getByRole("button", { name: "Info" })
-      .evaluate((one) => getComputedStyle(one).color)
+  await more.click()
+  const remove = page.getByRole("menuitem", { name: "Delete" })
+  await expect(remove).toHaveCSS("color", bugText)
+  await remove.click()
+  const confirm = page.getByRole("alertdialog")
+  await expect(confirm).toBeVisible()
+  await expect(confirm.getByRole("button", { name: "Delete" })).toHaveCSS(
+    "color",
+    bugText
   )
+  await confirm.getByRole("button", { name: "Cancel" }).click()
+  await expect(confirm).toBeHidden()
 })
 
 test("on a phone the video keeps its gutter and Recreate stays on the screen", async ({
