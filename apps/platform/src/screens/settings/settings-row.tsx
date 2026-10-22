@@ -16,8 +16,13 @@ import {
 } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 
-const rowClass =
-  "relative flex min-h-button w-full items-center gap-s3 rounded-item px-s4 py-0 text-start text-body"
+const phoneRowHeight =
+  "@max-regular:min-h-[round(var(--spacing-button)*17/14,1px)]"
+
+const rowClass = cn(
+  "relative flex min-h-button w-full items-center gap-s3 rounded-item px-s4 py-0 text-start text-body",
+  phoneRowHeight
+)
 
 const hairlines =
   "*:not-first:before:pointer-events-none *:not-first:before:absolute *:not-first:before:-top-px *:not-first:before:right-s4 *:not-first:before:left-[calc(var(--spacing-s4)+var(--spacing-glyph)+var(--spacing-s3))] *:not-first:before:h-px *:not-first:before:bg-(--line)"
@@ -32,6 +37,7 @@ const trailGlyph = "glyph shrink-0 text-ink-muted"
 
 type RowParts = {
   icon: ReactElement
+  mark?: boolean
   label: ReactNode
   value?: ReactNode
   control?: ReactNode
@@ -40,6 +46,7 @@ type RowParts = {
 
 export function SettingsRowBody({
   icon,
+  mark = false,
   label,
   value,
   control,
@@ -52,7 +59,8 @@ export function SettingsRowBody({
         aria-hidden="true"
         data-slot="settings-row-lead"
         className={cn(
-          "flex size-glyph shrink-0 items-center justify-center [&_svg]:glyph",
+          "flex size-glyph shrink-0 items-center justify-center",
+          mark ? "" : "[&_svg]:glyph",
           tone === "danger" ? "text-bug-text" : "text-ink-muted",
           motion.tint
         )}

@@ -16,11 +16,12 @@ import {
   LockIcon,
   SunMoonIcon,
 } from "lucide-react"
-import type { ReactElement } from "react"
+import { type ReactElement, type RefObject, useRef } from "react"
 import { settingsQuery } from "@/api/queries"
 import { t } from "@/copy/t"
 import type { CopyKey } from "@/copy.en"
-import { EnginePane } from "@/screens/settings/engine-pane"
+import { LabMark } from "@/pieces/lab-mark"
+import { EnginePane, targetName } from "@/screens/settings/engine-pane"
 import {
   AboutPane,
   AgentPane,
@@ -31,6 +32,7 @@ import {
   SettingsGroup,
   SettingsNavBody,
   SettingsRowBody,
+  SettingsRowSkeleton,
   settingsNavRowClass,
 } from "@/screens/settings/settings-row"
 import { ScreenHeader } from "@/shell/screen-header"
@@ -80,6 +82,18 @@ function useSectionLabel(): (section: SettingsSection) => string {
       : t(specs[section].label)
 }
 
+export const identitySection: SettingsSection = "engine"
+
+export const listedSections: readonly SettingsSection[] =
+  settingsSections.filter((section) => section !== identitySection)
+
+const identityMark = <LabMark maker="Comfy" />
+
+function useIdentityName(): string | null {
+  const engine = useQuery(settingsQuery).data?.engine
+  return engine === undefined ? null : targetName(engine.target)
+}
+
 function Pane({ section }: { section: SettingsSection }): ReactElement {
   const Body = specs[section].pane
   return (
@@ -117,6 +131,19 @@ const titleArrivals = {
   above: "starting:-translate-y-s2_5",
 } satisfies Record<PaneArrival, string>
 
+function railOffsetOf(section: SettingsSection): string {
+  if (section === identitySection) {
+    return "0"
+  }
+  const index = Math.max(0, listedSections.indexOf(section))
+  return `calc(var(--spacing-button) + var(--spacing-s4) + ${index} * (var(--spacing-button) + var(--spacing-s1)))`
+}
+
+const railRowClass = cn(
+  settingsNavRowClass,
+  "aria-[current=page]:bg-transparent"
+)
+
 function ModalRail({
   current,
   onSection,
@@ -125,35 +152,46 @@ function ModalRail({
   onSection: (section: SettingsSection) => void
 }): ReactElement {
   const labelOf = useSectionLabel()
-  const index = Math.max(0, settingsSections.indexOf(current))
+  const name = useIdentityName()
   return (
     <nav
       aria-label={t("settings.title")}
       data-slot="settings-rail"
+      data-ground="surface"
       className="relative flex w-settings-rail shrink-0 flex-col gap-s1 bg-layer-well px-s3 py-s4"
     >
       <span
         aria-hidden="true"
         data-slot="settings-rail-thumb"
         className={cn(
-          "absolute inset-x-s3 top-s4 h-button rounded-full bg-ink",
+          "absolute inset-x-s3 top-s4 h-button rounded-full bg-(--tint)",
           motion.travel
         )}
-        style={{
-          translate: `0 calc(${index} * (var(--spacing-button) + var(--spacing-s1)))`,
-        }}
+        style={{ translate: `0 ${railOffsetOf(current)}` }}
       />
-      {settingsSections.map((section) => (
+      {name === null ? (
+        <div data-slot="settings-identity" className="mb-s3">
+          <SettingsRowSkeleton />
+        </div>
+      ) : (
+        <button
+          type="button"
+          aria-current={current === identitySection ? "page" : undefined}
+          data-slot="settings-identity"
+          onClick={() => onSection(identitySection)}
+          className={cn(railRowClass, "mb-s3")}
+        >
+          <SettingsRowBody icon={identityMark} mark={true} label={name} />
+        </button>
+      )}
+      {listedSections.map((section) => (
         <button
           key={section}
           type="button"
           aria-current={section === current ? "page" : undefined}
           data-slot="settings-row"
           onClick={() => onSection(section)}
-          className={cn(
-            settingsNavRowClass,
-            "aria-[current=page]:bg-transparent aria-[current=page]:**:text-canvas"
-          )}
+          className={railRowClass}
         >
           <SettingsRowBody
             icon={specs[section].icon}
@@ -165,16 +203,24 @@ function ModalRail({
   )
 }
 
-function ModalPane({ place }: { place: SettingsPlace }): ReactElement {
+function ModalPane({
+  place,
+  paneRef,
+}: {
+  place: SettingsPlace
+  paneRef: RefObject<HTMLElement | null>
+}): ReactElement {
   const labelOf = useSectionLabel()
   const { section, arrival } = place
   return (
     <section
+      ref={paneRef}
+      tabIndex={-1}
       aria-label={labelOf(section)}
       data-slot="settings-modal-pane"
-      className="flex min-w-0 flex-1 flex-col overflow-y-auto"
+      className="flex min-w-0 flex-1 flex-col overflow-y-auto outline-none"
     >
-      <header className="sticky top-0 z-1 flex h-header shrink-0 items-center overflow-hidden bg-layer ps-[calc(var(--spacing-s4)+var(--spacing-s1)+var(--spacing-s4)+var(--spacing-glyph)+var(--spacing-s3))] pe-s12">
+      <header className="sticky top-0 z-1 flex h-[calc(2*var(--spacing-s4)+var(--spacing-button))] shrink-0 items-center overflow-hidden bg-layer ps-[calc(var(--spacing-s4)+var(--spacing-s1)+var(--spacing-s4)+var(--spacing-glyph)+var(--spacing-s3))] pe-[calc(2*var(--spacing-s4)+var(--spacing-icon))]">
         <DialogTitle
           key={section}
           className={cn("truncate", motion.travel, titleArrivals[arrival])}
@@ -192,6 +238,9 @@ function ModalPane({ place }: { place: SettingsPlace }): ReactElement {
   )
 }
 
+const closeSeat =
+  "[&>[data-slot=tooltip-trigger]]:top-s4 [&>[data-slot=tooltip-trigger]]:right-s4 [&>[data-slot=tooltip-trigger]]:z-2 [&>[data-slot=tooltip-trigger]]:bg-(--well)"
+
 export function SettingsModal({
   open,
   place,
@@ -203,17 +252,42 @@ export function SettingsModal({
   onSection: (section: SettingsSection) => void
   onOpenChange: (open: boolean) => void
 }): ReactElement {
+  const pane = useRef<HTMLElement | null>(null)
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         closeLabel={t("viewer.close")}
         data-slot="settings-modal"
-        className="h-[min(var(--spacing-settings-modal-h),calc(100dvh-2*var(--spacing-s6)))] w-[min(var(--spacing-settings-modal-w),calc(100%-2*var(--spacing-s5)))] flex-row gap-0 overflow-hidden p-0"
+        initialFocus={pane}
+        className={cn(
+          "h-[min(var(--spacing-settings-modal-h),calc(100dvh-2*var(--spacing-s6)))] w-[min(var(--spacing-settings-modal-w),calc(100%-2*var(--spacing-s5)))] flex-row gap-0 overflow-hidden p-0",
+          closeSeat
+        )}
       >
         <ModalRail current={place.section} onSection={onSection} />
-        <ModalPane place={place} />
+        <ModalPane place={place} paneRef={pane} />
       </DialogContent>
     </Dialog>
+  )
+}
+
+function PhoneIdentity(): ReactElement {
+  const name = useIdentityName()
+  return (
+    <SettingsGroup>
+      {name === null ? (
+        <SettingsRowSkeleton />
+      ) : (
+        <Link
+          to="/settings"
+          search={{ section: identitySection }}
+          data-slot="settings-identity"
+          className={settingsNavRowClass}
+        >
+          <SettingsNavBody icon={identityMark} mark={true} label={name} />
+        </Link>
+      )}
+    </SettingsGroup>
   )
 }
 
@@ -222,9 +296,13 @@ function PhoneList(): ReactElement {
   return (
     <>
       <ScreenHeader title={t("settings.title")} />
-      <nav aria-label={t("settings.title")} className="px-s5 pb-s12">
+      <nav
+        aria-label={t("settings.title")}
+        className="flex flex-col gap-s4 px-s5 pb-s12"
+      >
+        <PhoneIdentity />
         <SettingsGroup>
-          {settingsSections.map((section) => (
+          {listedSections.map((section) => (
             <Link
               key={section}
               to="/settings"
