@@ -23,6 +23,7 @@ describe("the settings a proposal names", () => {
       })
     )
 
+    expect(facts?.characterIds).toEqual([])
     expect(facts?.prompts).toEqual([
       { key: "prompt", text: "Zoom out from orbit" },
     ])

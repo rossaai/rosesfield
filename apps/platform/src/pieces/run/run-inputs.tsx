@@ -1,4 +1,5 @@
 import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
+import { Badge } from "@rosesfield/ui/components/badge"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { useQuery } from "@tanstack/react-query"
 import type { ReactElement, ReactNode } from "react"
@@ -136,5 +137,100 @@ export function RunInputs({
         </div>
       ))}
     </dl>
+  )
+}
+
+export type RunFact = { key: string; text: string }
+
+export type RunFacts = {
+  prompts: RunFact[]
+  assetIds: string[]
+  characterIds: string[]
+  badges: RunFact[]
+}
+
+function badgeTextOf(
+  app: AppListing,
+  input: InputDefinition,
+  value: unknown
+): string | null {
+  const text = inputValueText(app, input, value)
+  if (text === null) {
+    return null
+  }
+  return input.type === "number" || input.type === "seed"
+    ? t("run.field", { caption: tCatalog(input.labelKey), value: text })
+    : text
+}
+
+export function runFactsOf(app: AppListing, run: RunValues): RunFacts {
+  const facts: RunFacts = {
+    prompts: [],
+    assetIds: [],
+    characterIds: [],
+    badges: [],
+  }
+  const shown = shownInputsOf(app, run)
+  for (const input of shown) {
+    const value = runValueOf(input, run)
+    if (isAssetInput(input)) {
+      facts.assetIds.push(...idsOf(value))
+    } else if (input.type === "character") {
+      facts.characterIds.push(...idsOf(value))
+    } else if (input.type === "prompt") {
+      facts.prompts.push({ key: input.name, text: String(value).trim() })
+    } else {
+      const text = badgeTextOf(app, input, value)
+      if (text !== null) {
+        facts.badges.push({ key: input.name, text })
+      }
+    }
+  }
+  for (const row of outputRows(app, run, shown)) {
+    facts.badges.push({
+      key: row.key,
+      text:
+        row.key === "output.count"
+          ? t("run.field", { caption: row.label, value: String(row.value) })
+          : String(row.value),
+    })
+  }
+  return facts
+}
+
+export function RunFactsView({ facts }: { facts: RunFacts }): ReactElement {
+  return (
+    <div data-slot="run-facts-view" className="flex flex-col gap-s3">
+      {facts.prompts.map((prompt) => (
+        <p key={prompt.key} className="whitespace-pre-wrap text-body">
+          {prompt.text}
+        </p>
+      ))}
+      {facts.assetIds.length === 0 ? null : (
+        <span className="flex flex-wrap gap-s2">
+          {facts.assetIds.map((assetId) => (
+            <span key={assetId} className="size-thumb">
+              <AssetTile assetId={assetId} shape="square" />
+            </span>
+          ))}
+        </span>
+      )}
+      {facts.characterIds.length === 0 ? null : (
+        <span className="flex flex-wrap gap-s2 text-body">
+          {facts.characterIds.map((id) => (
+            <CharacterName key={id} characterId={id} />
+          ))}
+        </span>
+      )}
+      {facts.badges.length === 0 ? null : (
+        <span data-slot="run-fact-badges" className="flex flex-wrap gap-s1">
+          {facts.badges.map((badge) => (
+            <Badge key={badge.key} className="ms-0">
+              {badge.text}
+            </Badge>
+          ))}
+        </span>
+      )}
+    </div>
   )
 }

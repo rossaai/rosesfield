@@ -8,7 +8,7 @@ import { runQuery } from "@/api/queries"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import { runAppName, runPrice } from "@/pieces/run/run-facts"
-import { RunInputs } from "@/pieces/run/run-inputs"
+import { RunFactsView, runFactsOf } from "@/pieces/run/run-inputs"
 import { RunOutputs } from "@/pieces/run/run-outputs"
 
 export function RunCard({ runId }: { runId: string }): ReactElement {
@@ -17,13 +17,14 @@ export function RunCard({ runId }: { runId: string }): ReactElement {
     return <Skeleton className="h-s12 w-full rounded-card" />
   }
   const found = run.data.run
+  const app = findCatalogApp(found.appId)
   return (
     <Card className="gap-s4">
       <div className="flex items-baseline justify-between gap-s2">
         <h3 className="text-body font-medium">{runAppName(found)}</h3>
         <span className="text-caption text-ink-muted">{runPrice(found)}</span>
       </div>
-      <RunInputs app={findCatalogApp(found.appId)} run={found} />
+      {app === null ? null : <RunFactsView facts={runFactsOf(app, found)} />}
       <RunOutputs run={found} />
       <Button
         className="self-start"

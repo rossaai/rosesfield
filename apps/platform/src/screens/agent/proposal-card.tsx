@@ -1,9 +1,8 @@
 import { isHostedModelId, nameOf } from "@rosesfield/catalog/comfy"
-import { Badge } from "@rosesfield/ui/components/badge"
 import { Button } from "@rosesfield/ui/components/button"
 import { Card } from "@rosesfield/ui/components/card"
 import { useQuery } from "@tanstack/react-query"
-import type { ReactElement } from "react"
+import type { ReactElement, ReactNode } from "react"
 import type { Proposal } from "@/api/conversation-wire"
 import { settingsQuery } from "@/api/queries"
 import { appName } from "@/catalog/app-facts"
@@ -11,9 +10,12 @@ import { findCatalogApp } from "@/catalog/catalog-apps"
 import { wordsForError } from "@/copy/error-words"
 import { formatAmount, formatNumber } from "@/copy/format"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
-import { AssetTile } from "@/pieces/asset-tile"
 import { idsOf } from "@/pieces/run/run-facts"
-import { RunInputs } from "@/pieces/run/run-inputs"
+import {
+  type RunFacts,
+  RunFactsView,
+  runFactsOf,
+} from "@/pieces/run/run-inputs"
 import { useProposalActs } from "@/screens/agent/conversation-queries"
 import { RunCard } from "@/screens/agent/run-card"
 import { wordsOfPath } from "@/screens/app/hosted/field-words"
@@ -22,14 +24,6 @@ import { priceQuery } from "@/screens/app/hosted/model-catalog-query"
 type ProposalCardProps = {
   conversationId: string
   proposal: Proposal
-}
-
-type ProposalFact = { key: string; text: string }
-
-export type ProposalFacts = {
-  prompts: ProposalFact[]
-  assetIds: string[]
-  badges: ProposalFact[]
 }
 
 const modelInput = "model"
@@ -82,15 +76,16 @@ function badgeOf(name: string, value: unknown): string {
   return String(value)
 }
 
-export function hostedFactsOf(proposal: Proposal): ProposalFacts | null {
+export function hostedFactsOf(proposal: Proposal): RunFacts | null {
   const { inputs } = proposal.request
   const model = inputs[modelInput]
   if (typeof model !== "string" || !isHostedModelId(model)) {
     return null
   }
-  const facts: ProposalFacts = {
+  const facts: RunFacts = {
     prompts: [],
     assetIds: [],
+    characterIds: [],
     badges: [{ key: modelInput, text: nameOf(model) }],
   }
   for (const [name, value] of Object.entries(inputs)) {
@@ -108,41 +103,12 @@ export function hostedFactsOf(proposal: Proposal): ProposalFacts | null {
   return facts
 }
 
-function ProposalFactsView({ facts }: { facts: ProposalFacts }): ReactElement {
-  return (
-    <div className="flex flex-col gap-s3">
-      {facts.prompts.map((prompt) => (
-        <p key={prompt.key} className="whitespace-pre-wrap text-body">
-          {prompt.text}
-        </p>
-      ))}
-      {facts.assetIds.length === 0 ? null : (
-        <span className="flex flex-wrap gap-s2">
-          {facts.assetIds.map((assetId) => (
-            <span key={assetId} className="size-thumb">
-              <AssetTile assetId={assetId} shape="square" />
-            </span>
-          ))}
-        </span>
-      )}
-      <span data-slot="proposal-badges" className="flex flex-wrap gap-s1">
-        {facts.badges.map((badge) => (
-          <Badge key={badge.key} className="ms-0">
-            {badge.text}
-          </Badge>
-        ))}
-      </span>
-    </div>
-  )
-}
-
-function ProposalSettings({ proposal }: { proposal: Proposal }): ReactElement {
-  const facts = hostedFactsOf(proposal)
-  if (facts === null) {
-    const app = findCatalogApp(proposal.appId)
-    return <RunInputs app={app} run={{ ...proposal.request, seed: null }} />
-  }
-  return <ProposalFactsView facts={facts} />
+function ProposalSettings({ proposal }: { proposal: Proposal }): ReactNode {
+  const app = findCatalogApp(proposal.appId)
+  const facts =
+    hostedFactsOf(proposal) ??
+    (app === null ? null : runFactsOf(app, { ...proposal.request, seed: null }))
+  return facts === null ? null : <RunFactsView facts={facts} />
 }
 
 export function ProposalCard(props: ProposalCardProps): ReactElement {

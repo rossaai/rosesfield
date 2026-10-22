@@ -51,7 +51,7 @@ describe("a proposal card with no known price", () => {
     const prompt = await screen.findByText("Zoom out from orbit")
     await vi.waitFor(() => expect(asked).toBeGreaterThan(0))
     const card = prompt.closest("[data-slot='card']") ?? document.body
-    const badges = card.querySelector("[data-slot='proposal-badges']")
+    const badges = card.querySelector("[data-slot='run-fact-badges']")
     expect(
       [...(badges?.querySelectorAll("[data-slot='badge']") ?? [])].map(
         (badge) => badge.textContent
@@ -59,5 +59,34 @@ describe("a proposal card with no known price", () => {
     ).toEqual(["Clip 3", "720p"])
     expect(card.querySelector("dl")).toBeNull()
     expect(card.querySelector(".text-caption")).toBeNull()
+  })
+})
+
+describe("a proposal card for an app's own inputs", () => {
+  it("shows the prompt as text and the model, format and count as badges, with no labelled list", async () => {
+    renderAgent(() => (
+      <ProposalCard
+        conversationId="c3cfa88a-1688-41ae-a38f-b931f134c3d9"
+        proposal={{
+          ...proposal,
+          appId: "image",
+          request: {
+            inputs: { prompt: "A red bicycle against a white wall" },
+            count: 2,
+            aspectRatio: "16:9",
+          },
+        }}
+      />
+    ))
+    const prompt = await screen.findByText("A red bicycle against a white wall")
+    const card = prompt.closest("[data-slot='card']") ?? document.body
+    const badges = [
+      ...card.querySelectorAll(
+        "[data-slot='run-fact-badges'] [data-slot='badge']"
+      ),
+    ].map((badge) => badge.textContent ?? "")
+    expect(badges).toContain("16:9")
+    expect(badges.some((badge) => badge.includes("2"))).toBe(true)
+    expect(card.querySelector("dl")).toBeNull()
   })
 })
