@@ -41,6 +41,11 @@ function footerGroups(): FooterGroup[] {
           label: t("shell.footer.terms"),
           href: footerLinks.terms,
         },
+        {
+          id: "trademarks",
+          label: t("shell.footer.trademarks"),
+          href: footerLinks.trademarks,
+        },
       ],
     },
   ]
@@ -52,14 +57,6 @@ export function ShellFooter(): ReactElement {
       label={t("shell.name")}
       heading={t("shell.footer.heading")}
       groups={footerGroups()}
-      notice={t("shell.footer.notice")}
-      legal={[
-        {
-          id: "trademarks",
-          label: t("shell.footer.trademarks"),
-          href: footerLinks.trademarks,
-        },
-      ]}
     />
   )
 }

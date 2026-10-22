@@ -1,7 +1,12 @@
 import { z } from "zod"
 import type { AppDefinition, AppOutput } from "#app.contract"
 import { assetId, characterId } from "#id.contract"
-import { type InputDefinition, runInputs } from "#input.contract"
+import {
+  type InputDefinition,
+  isAppOnly,
+  type RunInputs,
+  runInputs,
+} from "#input.contract"
 import { isRuledInput } from "#input-rule.contract"
 import { checkRuledInputs } from "#ruled-inputs.contract"
 import { type RunRequest, runCount, runRequest } from "#run.contract"
@@ -132,6 +137,18 @@ function bodyOf(app: AppDefinition, count: z.ZodType) {
     )
   )
   return z.strictObject({ inputs, count, ...aspectRatioFor(app.output) })
+}
+
+export function appOnlyInputsFor(app: AppDefinition): z.ZodType<RunInputs> {
+  return z
+    .strictObject(
+      Object.fromEntries(
+        app.inputs
+          .filter(isAppOnly)
+          .map((input) => [input.name, ruledValueFor(input)])
+      )
+    )
+    .pipe(runInputs)
 }
 
 export function startRunBodyFor(app: AppDefinition): z.ZodType<RunRequest> {

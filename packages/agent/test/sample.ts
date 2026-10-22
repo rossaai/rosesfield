@@ -34,5 +34,36 @@ export function imageApp(): AppDefinition {
   })
 }
 
+export function motionApp(): AppDefinition {
+  return appDefinition.parse({
+    id: "sample-motion",
+    nameKey: "name",
+    category: "video",
+    inputs: [
+      {
+        type: "image",
+        name: "image",
+        labelKey: "inputs.image",
+        presence: "required",
+        max: 1,
+      },
+      {
+        type: "prompt",
+        name: "prompt",
+        labelKey: "inputs.prompt",
+        presence: "required",
+        maxLength: 2000,
+      },
+    ],
+    output: {
+      kind: "video",
+      count: { default: 1, max: 1 },
+      aspectRatios: { options: ["16:9"], default: "16:9" },
+    },
+    engine: { adapter: "comfy-workflow", config: { workflow: {} } },
+    limits: { timeoutSeconds: 600, maxRetries: 2 },
+  })
+}
+
 export const assetUuid = "0b8f3c2e-5a4d-4c1b-9e7f-2d6a8b9c0e1f"
 export const characterUuid = "7f6e5d4c-3b2a-4190-a8b7-c6d5e4f3a2b1"

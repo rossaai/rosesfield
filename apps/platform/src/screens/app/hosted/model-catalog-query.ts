@@ -18,12 +18,31 @@ export type PriceAsk = {
   aspectRatio?: string | null | undefined
 }
 
-export function priceQuery(appId: string, ask: PriceAsk, keyState: string) {
-  const body = {
+function bodyOfAsk(ask: PriceAsk) {
+  return {
     inputs: ask.inputs,
     ...(ask.count === undefined ? {} : { count: ask.count }),
     ...(ask.aspectRatio === undefined ? {} : { aspectRatio: ask.aspectRatio }),
   }
+}
+
+export function pricesQuery(
+  appId: string,
+  asks: readonly PriceAsk[],
+  keyState: string
+) {
+  const body = { asks: asks.map(bodyOfAsk) }
+  return queryOptions({
+    queryKey: ["price", appId, keyState, body],
+    queryFn: ({ signal }) =>
+      callRoute(catalogRoutes.priceRuns, { params: { appId }, body, signal }),
+    staleTime: 60_000,
+    retry: false,
+  })
+}
+
+export function priceQuery(appId: string, ask: PriceAsk, keyState: string) {
+  const body = bodyOfAsk(ask)
   return queryOptions({
     queryKey: ["price", appId, keyState, body],
     queryFn: ({ signal }) =>

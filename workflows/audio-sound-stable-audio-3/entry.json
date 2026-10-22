@@ -1,0 +1,18 @@
+{
+  "name": "audio-sound-stable-audio-3",
+  "title": "Sound: a sound from a description with Stable Audio 3 Medium",
+  "description": "Makes stereo sound from a description, such as a sound effect, an ambience or a short piece of music, as long as the length you set. Built from Comfy's template audio_stable_audio_3_medium, without its Qwen rewrite of the description.",
+  "mediaType": "audio",
+  "openSource": true,
+  "models": [
+    "stable_audio_3_medium.safetensors",
+    "t5gemma_b_b_ul2.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "description": { "nodeId": "6", "inputName": "text", "type": "scalar" },
+    "length": { "nodeId": "11", "inputName": "seconds", "type": "scalar" },
+    "seed": { "nodeId": "3", "inputName": "seed", "type": "scalar" }
+  },
+  "outputs": [{ "nodeId": "57", "key": "audio", "kind": "audio" }]
+}

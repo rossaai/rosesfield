@@ -12,6 +12,7 @@ import {
   TabBarLink,
 } from "@rosesfield/ui/components/tab-bar"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { Link } from "@tanstack/react-router"
 import { PlugIcon } from "lucide-react"
 import { type ReactElement, useState } from "react"
@@ -26,6 +27,7 @@ import {
   navGroups,
   type ScreenLink,
 } from "@/shell/nav-rows"
+import { useOpenConnect } from "@/shell/shell-dialogs"
 
 function AppsSheet({
   open,
@@ -56,7 +58,7 @@ function AppsSheet({
                       onClick={() => onOpenChange(false)}
                       className={cn(
                         "relative flex h-button items-center gap-s2 rounded-full bg-(--well) px-s4 text-body [&_svg]:glyph",
-                        interaction.light,
+                        motion.press,
                         interaction.ring
                       )}
                     >
@@ -87,7 +89,8 @@ function Tab({ link }: { link: ScreenLink }): ReactElement {
 
 export function BottomBar(): ReactElement {
   const [isAppsOpen, setAppsOpen] = useState(false)
-  const openTools = useAppToolsKey()
+  const requestTools = useAppToolsKey()
+  const openConnect = useOpenConnect()
   return (
     <>
       <TabBar label={t("shell.bar.label")}>
@@ -95,16 +98,12 @@ export function BottomBar(): ReactElement {
         <Tab link={libraryLink} />
         <TabBarGenerate
           label={t("run.generate")}
-          onClick={() => {
-            if (!openTools()) {
-              setAppsOpen(true)
-            }
-          }}
+          onClick={() => requestTools(() => setAppsOpen(true))}
         />
         <Tab link={historyLink} />
         <TabBarLink
           icon={<PlugIcon aria-hidden="true" />}
-          render={<Link to="/connect" />}
+          render={<button type="button" onClick={() => openConnect()} />}
         >
           {t("shell.nav.connect")}
         </TabBarLink>

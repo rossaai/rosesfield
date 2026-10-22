@@ -28,8 +28,20 @@ export async function isBlankOutput(output: EngineOutput): Promise<boolean> {
   if (output.bytes.length === 0) {
     return true
   }
-  const png = output.kind === "image" ? pngOf(output.bytes) : null
-  return png === null ? false : isBlackPng(png)
+  if (output.kind === "image") {
+    return isBlackImage(output.bytes)
+  }
+  const stills = output.stills ?? []
+  if (stills.length === 0) {
+    return false
+  }
+  const black = await Promise.all(stills.map(isBlackImage))
+  return black.every((isStillBlack) => isStillBlack)
+}
+
+function isBlackImage(bytes: Uint8Array): Promise<boolean> {
+  const png = pngOf(bytes)
+  return png === null ? Promise.resolve(false) : isBlackPng(png)
 }
 
 function isColorType(value: number): value is ColorType {

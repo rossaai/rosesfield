@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   type ExploreEntry,
   entryModel,
-  recreateSearchOf,
+  recreateTargetOf,
 } from "@/screens/explore/explore-tile"
 
 const made = run.parse({
@@ -43,8 +43,22 @@ describe("a result tile", () => {
     const shared = entryOf({ kind: "share", shareId: "abc", src: "/x" })
     const own = entryOf({ kind: "own", assetId: "asset" })
 
-    expect(recreateSearchOf(shared)).toEqual({ share: "abc" })
-    expect(recreateSearchOf(own)).toEqual({ from: made.id })
+    expect(recreateTargetOf(shared)).toEqual({ search: { share: "abc" } })
+    expect(recreateTargetOf(own)).toEqual({ search: { from: made.id } })
+  })
+
+  it("recreates a bundled example by carrying its prompt, its inputs and its format into the app", () => {
+    const bundled = entryOf({ kind: "showcase", src: "/media/rose.webp" })
+
+    expect(recreateTargetOf(bundled)).toEqual({
+      draft: {
+        prompt: "a red rose",
+        assetIds: [],
+        characterIds: [],
+        inputs: { prompt: "a red rose" },
+        aspectRatio: "1:1",
+      },
+    })
   })
 
   it("names the model the run used", () => {

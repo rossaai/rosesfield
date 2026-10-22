@@ -33,11 +33,14 @@ function lockedGateway() {
   const scope = ownerScope({
     handlers,
     agent: null,
-    settings: ownerSettings({
-      engine: { target: "demo" },
-      access: { mode: "owner", lock },
-      agent: null,
-    }),
+    settings: ownerSettings(
+      {
+        engine: { target: "demo" },
+        access: { mode: "owner", lock },
+        agent: null,
+      },
+      "bun"
+    ),
   })
   const app = createGateway({
     apps: ports.apps,

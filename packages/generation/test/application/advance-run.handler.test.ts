@@ -4,6 +4,7 @@ import { EngineRateLimitedError } from "#domain/error/engine-rate-limited.error"
 import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import { RunInputRefusedError } from "#domain/error/run-input-refused.error"
 import type { EngineOutput } from "#domain/generation-engine.port"
+import { selectBinding } from "#domain/select-binding"
 import { FakeGenerationEngine } from "../fake/fake-generation-engine"
 import {
   characterId,
@@ -96,6 +97,40 @@ describe("AdvanceRunHandler", () => {
     ])
     expect(request?.outputKind).toBe("image")
     expect(request?.seed).toBe((await statusOf(harness, runId)).seed)
+  })
+
+  it("picks the binding by the number of photos a character holds", async () => {
+    const engine = new FakeGenerationEngine()
+    const byPhotos = (photos: number) => ({
+      adapter: "fake-engine",
+      config: { photos },
+    })
+    const app = imageApp(
+      selectBinding({
+        input: "character",
+        by: "count",
+        options: { "0": byPhotos(0), "1": byPhotos(1), "2": byPhotos(2) },
+      })
+    )
+    const harness = harnessFor({ apps: [app], engines: [engine] })
+    for (const assetId of [referenceId, portraitId]) {
+      harness.assets.addFile({
+        assetId,
+        kind: "image",
+        mime: "image/png",
+        bytes: pngBytes(),
+      })
+    }
+    harness.assets.characters.set(characterId, [portraitId, referenceId])
+    const runId = await startImage(harness, {
+      inputs: { prompt: "a red door", character: [characterId] },
+    })
+    await harness.advance.execute({ runId })
+    expect(engine.submitted[0]?.binding.config).toEqual({ photos: 2 })
+    expect(engine.submitted[0]?.inputs.character).toEqual([
+      portraitId,
+      referenceId,
+    ])
   })
 
   it("fails the run with the error the engine reports", async () => {

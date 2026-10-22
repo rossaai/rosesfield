@@ -47,6 +47,45 @@ export function hostedDefaults(
   )
 }
 
+function fitsField(field: ModelField, value: FieldValue): boolean {
+  switch (field.kind) {
+    case "prompt":
+    case "text":
+      return typeof value === "string"
+    case "choice":
+      return (
+        value !== undefined &&
+        !Array.isArray(value) &&
+        field.options.some((option) => String(option) === String(value))
+      )
+    case "number":
+      return (
+        typeof value === "number" &&
+        (field.min === null || value >= field.min) &&
+        (field.max === null || value <= field.max)
+      )
+    case "toggle":
+      return value === "on" || value === "off"
+    case "media":
+      return Array.isArray(value) && value.length <= field.max
+  }
+}
+
+export function settingsFor(
+  fields: readonly ModelField[],
+  kept: Readonly<Record<string, FieldValue>>
+): Record<string, FieldValue> {
+  const defaults = hostedDefaults(fields, kept)
+  return Object.fromEntries(
+    fields.map((field) => [
+      field.name,
+      fitsField(field, kept[field.name])
+        ? kept[field.name]
+        : defaults[field.name],
+    ])
+  )
+}
+
 function isEmpty(value: FieldValue): boolean {
   return (
     value === undefined ||

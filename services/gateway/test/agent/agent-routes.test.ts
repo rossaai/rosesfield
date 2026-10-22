@@ -14,6 +14,8 @@ import {
   type Proposal,
   proposalIdFormat,
   proposalResponse,
+  routerAgentModel,
+  routerChat,
   transcriptResponse,
 } from "@rosesfield/agent"
 import { buildPath, errorEnvelope } from "@rosesfield/contract"
@@ -41,7 +43,7 @@ const proposal: Proposal = {
   appId: appIdFormat.parse("sample-image"),
   request: { inputs: { prompt: "a rose" }, count: 1, aspectRatio: "1:1" },
   status: "proposed",
-  runId: null,
+  runIds: [],
 }
 
 const routes = conversationRoutes
@@ -259,9 +261,10 @@ describe("the agent routes", () => {
     )
 
     expect(accepted.status).toBe(202)
-    const { run } = acceptedProposalResponse.parse(await accepted.json())
-    expect(run.inputs).toMatchObject({ prompt: "a rose" })
-    expect(jobs.enqueued).toEqual([run.id])
+    const { runs } = acceptedProposalResponse.parse(await accepted.json())
+    expect(runs).toHaveLength(1)
+    expect(runs[0]?.inputs).toMatchObject({ prompt: "a rose" })
+    expect(jobs.enqueued).toEqual(runs.map((run) => run.id))
     expect(skipped.status).toBe(409)
     expect(await codeOf(skipped)).toBe("PROPOSAL_SETTLED")
     agent.proposals.set(proposal.id, { proposal, body: {} })
@@ -305,18 +308,13 @@ describe("the agent in the gateway", () => {
     expect(await codeOf(allowed)).toBe("AGENT_MODEL_MISSING")
   })
 
-  it("opens the agent's SQLite file in the data folder for an OpenAI-compatible model", async () => {
+  it("opens the agent's SQLite file in the data folder for a Router chat model", async () => {
     const dataDir = folder()
     const clock = new FixedClock({ now: start })
     const ports = localPorts(clock, dataDir)
     const { handlers } = buildHandlers(ports, () => new FakeJobRunner())
     const agent = localAgent({
-      model: {
-        provider: "openai-compatible",
-        model: "qwen3.8:27b",
-        apiKey: null,
-        baseUrl: "http://127.0.0.1:11434/v1",
-      },
+      model: routerAgentModel("comfyui-owner"),
       dataDir,
       clock,
       apps: ports.apps,
@@ -340,17 +338,16 @@ describe("the agent in the gateway", () => {
     await agent?.close()
   })
 
-  it("answers a model its provider does not list with a typed error", async () => {
+  it("answers a model the Router chat list does not hold with a typed error", async () => {
     const dataDir = folder()
     const clock = new FixedClock({ now: start })
     const ports = localPorts(clock, dataDir)
     const { handlers } = buildHandlers(ports, () => new FakeJobRunner())
     const agent = localAgent({
       model: {
-        provider: "cloudflare-workers-ai",
+        provider: routerChat.provider,
         model: "no-such-model",
-        apiKey: "k",
-        baseUrl: null,
+        apiKey: "comfyui-owner",
       },
       dataDir,
       clock,

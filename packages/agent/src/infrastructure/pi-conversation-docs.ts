@@ -1,11 +1,20 @@
 import {
   defineDoc,
   defineDocFamily,
+  type Harness,
   type JsonObject,
   type ConversationId as PiConversationId,
 } from "@earendil-works/pi-durable"
-import type { RunInputs } from "@rosesfield/contract"
-import type { ProposalStatus, RunApproval } from "#agent.contract"
+import { type RunInputs, runRequest } from "@rosesfield/contract"
+import { z } from "zod"
+import {
+  type Conversation,
+  type ProposalStatus,
+  proposalStatus,
+  type RunApproval,
+} from "#agent.contract"
+import { conversationIdFormat } from "#domain/conversation.id"
+import { backgroundContext } from "#infrastructure/pi-context"
 
 export type ListedConversation = {
   conversation: PiConversationId
@@ -15,6 +24,10 @@ export type ListedConversation = {
 
 export type ConversationList = {
   items: Record<string, ListedConversation>
+}
+
+export type AgentSettings = {
+  model: string | null
 }
 
 export type ConversationSettings = {
@@ -31,7 +44,21 @@ export type ProposalRecord = {
   }
   body: JsonObject
   status: ProposalStatus
-  runId: string | null
+  runIds: string[]
+}
+
+const proposalRecordOne = z.object({
+  id: z.string(),
+  appId: z.string(),
+  request: runRequest,
+  body: z.record(z.string(), z.json()),
+  status: proposalStatus,
+  runId: z.string().nullable(),
+})
+
+function proposalRecordOf(value: JsonObject): ProposalRecord {
+  const { runId, ...record } = proposalRecordOne.parse(value)
+  return { ...record, runIds: runId === null ? [] : [runId] }
 }
 
 export const conversationList = defineDoc<ConversationList>({
@@ -39,6 +66,13 @@ export const conversationList = defineDoc<ConversationList>({
   version: 1,
   scope: "session",
   initial: () => ({ items: {} }),
+})
+
+export const agentSettings = defineDoc<AgentSettings>({
+  kind: "rosesfield.agent-settings",
+  version: 1,
+  scope: "session",
+  initial: () => ({ model: null }),
 })
 
 export const conversationSettings = defineDoc<ConversationSettings>({
@@ -52,10 +86,29 @@ export const conversationSettings = defineDoc<ConversationSettings>({
 
 export const proposalRecords = defineDocFamily<ProposalRecord, ProposalRecord>({
   kind: "rosesfield.proposal",
-  version: 1,
+  version: 2,
   scope: "conversation",
   history: "latest",
   fork: "current",
   family: true,
   initial: (seed) => ({ ...seed }),
+  migrate: proposalRecordOf,
 })
+
+export async function conversationOf(
+  harness: Harness,
+  id: string,
+  listed: ListedConversation
+): Promise<Conversation> {
+  const settings = await harness.snapshot(
+    conversationSettings,
+    listed.conversation,
+    backgroundContext
+  )
+  return {
+    id: conversationIdFormat.parse(id),
+    title: listed.title,
+    runApproval: settings?.runApproval ?? "ask",
+    createdAt: listed.createdAt,
+  }
+}

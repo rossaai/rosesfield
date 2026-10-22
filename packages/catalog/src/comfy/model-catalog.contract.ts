@@ -39,6 +39,7 @@ export const modelField: z.ZodType<ModelField> = z.discriminatedUnion("kind", [
     min: z.number().nullable(),
     max: z.number().nullable(),
     integer: z.boolean(),
+    step: z.number().positive().exactOptional(),
     default: z.number().nullable(),
   }),
   z.object({
@@ -112,15 +113,23 @@ export const priceBody = z.object({
   aspectRatio: aspectRatio.nullable().default(null),
 })
 
-export const priceResponse = z.object({
-  price: z.discriminatedUnion("source", [
-    z.object({
-      source: z.enum(["measured", "estimate", "rates"]),
-      credits: z.number(),
-    }),
-    z.object({ source: z.literal("unknown"), credits: z.null() }),
-  ]),
+export const runPrice = z.discriminatedUnion("source", [
+  z.object({
+    source: z.enum(["measured", "estimate", "rates"]),
+    credits: z.number(),
+  }),
+  z.object({ source: z.literal("unknown"), credits: z.null() }),
+])
+
+export const priceResponse = z.object({ price: runPrice })
+
+export const priceAsksMax = 128
+
+export const pricesBody = z.object({
+  asks: z.array(priceBody).min(1).max(priceAsksMax),
 })
+
+export const pricesResponse = z.object({ prices: z.array(runPrice) })
 
 const appParams = z.object({ appId })
 
@@ -143,6 +152,15 @@ export const catalogRoutes = {
     response: priceResponse,
     status: 200,
   }),
+  priceRuns: defineRoute({
+    method: "POST",
+    path: "/api/apps/:appId/prices",
+    params: appParams,
+    query: null,
+    body: pricesBody,
+    response: pricesResponse,
+    status: 200,
+  }),
 }
 
 export type ModelTag = z.infer<typeof modelTag>
@@ -152,3 +170,4 @@ export type ModelFacts = z.infer<typeof modelFacts>
 export type CatalogModel = z.infer<typeof catalogModel>
 export type ModelListResponse = z.infer<typeof modelListResponse>
 export type PriceResponse = z.infer<typeof priceResponse>
+export type PricesResponse = z.infer<typeof pricesResponse>

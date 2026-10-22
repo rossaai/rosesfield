@@ -26,3 +26,34 @@ describe("PopoverContent", () => {
     )
   })
 })
+
+describe("PopoverContent's material", () => {
+  it("wears the regular material by default and the thick one for a list panel", () => {
+    render(
+      <>
+        <Popover open>
+          <PopoverTrigger>Regular</PopoverTrigger>
+          <PopoverContent>
+            <p>Regular panel</p>
+          </PopoverContent>
+        </Popover>
+        <Popover open>
+          <PopoverTrigger>Thick</PopoverTrigger>
+          <PopoverContent material="thick">
+            <p>Thick panel</p>
+          </PopoverContent>
+        </Popover>
+      </>
+    )
+    const regular = screen
+      .getByText("Regular panel")
+      .closest("[data-slot='popover-content']")
+    const thick = screen
+      .getByText("Thick panel")
+      .closest("[data-slot='popover-content']")
+    expect(regular?.className.split(" ")).toContain("material")
+    expect(thick?.className.split(" ")).toContain("material-thick")
+    expect(thick?.className.split(" ")).not.toContain("material")
+    expect(thick?.className.split(" ")).toContain("motion-popover")
+  })
+})

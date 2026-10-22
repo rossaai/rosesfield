@@ -44,7 +44,8 @@ function valueSchemaOf(field: ModelField): z.ZodType {
     case "number": {
       const base = field.integer ? z.number().int() : z.number()
       const low = field.min === null ? base : base.min(field.min)
-      return field.max === null ? low : low.max(field.max)
+      const high = field.max === null ? low : low.max(field.max)
+      return field.step === undefined ? high : high.multipleOf(field.step)
     }
     case "toggle":
       return z.enum(["on", "off"])

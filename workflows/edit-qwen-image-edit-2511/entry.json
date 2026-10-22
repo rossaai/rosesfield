@@ -1,0 +1,42 @@
+{
+  "name": "edit-qwen-image-edit-2511",
+  "title": "Edit: change a photo by your words with Qwen Image Edit 2511",
+  "description": "Changes your photo the way your words say with Qwen Image Edit 2511 in 40 steps, and keeps its format. Your photo is scaled to the size you pick, so the output keeps its ratio. Built from Comfy's template image_qwen_image_edit_2511.",
+  "mediaType": "image",
+  "openSource": true,
+  "models": [
+    "qwen_image_edit_2511_fp8mixed.safetensors",
+    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "qwen_image_vae.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "image": {
+      "nodeId": "41",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "prompt": {
+      "nodeId": "112",
+      "inputName": "prompt",
+      "type": "scalar"
+    },
+    "megapixels": {
+      "nodeId": "107",
+      "inputName": "megapixels",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "106",
+      "inputName": "seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "9",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}

@@ -23,6 +23,11 @@
   --enter-out-opacity: var(--duration-press) var(--ease-fold);
   --control-change: var(--duration-snap) var(--ease-snap);
   --pane-change: var(--duration-settle) var(--ease-settle);
+  --disclosure: var(--duration-snap) var(--ease-snap);
+  --swap: var(--duration-press) var(--ease-glide);
+  --travel: var(--duration-settle) var(--ease-settle);
+  --yield: var(--duration-settle) var(--ease-settle);
+  --arrival-step: var(--duration-stagger);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -44,18 +49,23 @@
     --enter-out-opacity: var(--duration-reduced) var(--ease-bloom);
     --control-change: 0s linear;
     --pane-change: 0s linear;
+    --disclosure: 0s linear;
+    --swap: var(--duration-reduced) var(--ease-glide);
+    --travel: 0s linear;
+    --yield: 0s linear;
+    --arrival-step: 0s;
   }
 }
 
 @utility motion-press {
-  --press-scale: var(--scale-press-capsule);
   transition:
     transform var(--press-up),
     background-color var(--tint-change),
     color var(--tint-change);
 
-  &:active:not(:disabled, [data-disabled]) {
-    transform: scale(var(--press-scale));
+  &:active:not(:disabled, [data-disabled]),
+  :where([data-gallery="press"]) & {
+    transform: scale(var(--press-scale, var(--scale-press-capsule)));
     transition:
       transform var(--press-down),
       background-color var(--tint-change),
@@ -67,10 +77,17 @@
   --press-scale: var(--scale-press-round);
 }
 
+/*
+  The tint preset carries every change in place on the press clock: a hover
+  or press tint, a colour, the opacity of a part that reveals on hover, and
+  the seam a sticky bar gains once content runs under it.
+*/
 @utility motion-tint {
   transition:
     background-color var(--tint-change),
-    color var(--tint-change);
+    color var(--tint-change),
+    opacity var(--tint-change),
+    box-shadow var(--tint-change);
 }
 
 @utility motion-popover {
@@ -105,7 +122,7 @@
   &[data-starting-style],
   &[data-ending-style] {
     opacity: 0;
-    transform: translateY(var(--spacing-rise));
+    transform: var(--layer-origin, translateY(var(--spacing-rise)));
   }
 
   &[data-side="bottom"][data-starting-style],
@@ -138,10 +155,27 @@
   }
 }
 
+/*
+  A media element that waits for its pixels arrives on the enter preset's
+  opacity leg once decoded, its delay one stagger beat per place in its list
+  and capped at the stagger's whole length.
+*/
 @utility motion-enter {
   transition:
     transform var(--enter-in-transform),
     opacity var(--enter-in-opacity);
+
+  &[data-arrival] {
+    transition: opacity var(--enter-in-opacity)
+      min(
+        calc(var(--arrival-index, 0) * var(--arrival-step)),
+        var(--duration-stagger-max)
+      );
+  }
+
+  &[data-arrival="waiting"] {
+    opacity: 0;
+  }
 
   @starting-style {
     opacity: 0;
@@ -165,6 +199,42 @@
 
 @utility motion-pane {
   transition: transform var(--pane-change);
+}
+
+/*
+  The four presets the component contracts name beside the ones above.
+  disclosure turns a chevron or moves a part inside a control. swap crosses
+  a glyph or a label in its slot. travel moves a selection indicator between
+  positions, its offset and its measure on one spring. yield releases or
+  takes layout space, a grid row or a column, on the same spring.
+*/
+@utility motion-disclosure {
+  transition:
+    transform var(--disclosure),
+    rotate var(--disclosure),
+    translate var(--disclosure);
+}
+
+@utility motion-swap {
+  transition:
+    opacity var(--swap),
+    scale var(--swap);
+}
+
+@utility motion-travel {
+  transition:
+    transform var(--travel),
+    translate var(--travel),
+    width var(--travel),
+    height var(--travel);
+}
+
+@utility motion-yield {
+  transition:
+    grid-template-rows var(--yield),
+    grid-template-columns var(--yield),
+    width var(--yield),
+    height var(--yield);
 }
 
 @utility motion-pulse {

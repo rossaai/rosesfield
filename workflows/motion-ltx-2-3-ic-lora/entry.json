@@ -1,0 +1,49 @@
+{
+  "name": "motion-ltx-2-3-ic-lora",
+  "title": "Motion: move a photo with the motion of a clip on LTX 2.3",
+  "description": "Renders the person in your photo making the movements of your clip, on LTX 2.3 22B distilled with its union control IC-LoRA in 8 steps. SDPose draws the pose of one person in each frame of the clip as the guide, and your photo sets the first frame, so the scene comes from your photo. The video starts on the first frame the model makes, after your photo, and keeps the clip's frame count and frame rate, with the clip's sound kept or left out. Built from Comfy's template video_ltx2_3_ic_lora.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": [
+    "ltx-2.3-22b-distilled-fp8.safetensors",
+    "ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors",
+    "gemma_3_12B_it_fp4_mixed.safetensors",
+    "sdpose_wholebody_fp16.safetensors",
+    "rt_detr_v4-x-hgnet_fp16.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "photo": {
+      "nodeId": "200",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "clip": {
+      "nodeId": "199",
+      "inputName": "file",
+      "type": "cloud-asset"
+    },
+    "scene": {
+      "nodeId": "900",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "shortSide": {
+      "nodeId": "702",
+      "inputName": "value",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "704",
+      "inputName": "seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "68",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}

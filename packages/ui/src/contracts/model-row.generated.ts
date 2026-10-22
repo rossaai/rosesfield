@@ -3,7 +3,16 @@
 export const MODEL_ROW = {
   id: "model-row",
   name: "ModelRow",
-  slots: ["mark", "name", "line", "badges", "weights", "check"],
+  slots: [
+    "mark",
+    "name",
+    "line",
+    "badges",
+    "weights",
+    "capabilities",
+    "price",
+    "check",
+  ],
   variants: {
     place: {
       values: ["list", "trigger"],
@@ -66,6 +75,16 @@ export const MODEL_ROW = {
       phone: "type.captionLine",
       tablet: "type.captionLine",
       desktop: "type.captionLine",
+    },
+    capabilitySize: {
+      phone: "type.captionSize",
+      tablet: "type.captionSize",
+      desktop: "type.captionSize",
+    },
+    priceSize: {
+      phone: "type.captionSize",
+      tablet: "type.captionSize",
+      desktop: "type.captionSize",
     },
     weightsMark: {
       phone: "icon.smSize",

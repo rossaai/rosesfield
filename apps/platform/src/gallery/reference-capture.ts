@@ -1,4 +1,4 @@
-const captures = import.meta.glob<string>("./reference/*.png", {
+const captures = import.meta.glob("./reference/*.png", {
   query: "?url",
   import: "default",
   eager: true,

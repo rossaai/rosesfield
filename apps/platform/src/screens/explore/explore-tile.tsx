@@ -6,16 +6,20 @@ import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { useNavigate, useRouter } from "@tanstack/react-router"
 import type { ReactElement } from "react"
 import { useAssetSource } from "@/api/use-asset-source"
+import { promptInputOf } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { joinParts } from "@/copy/format"
 import { t } from "@/copy/t"
 import { runAppName, runModel, runPrice } from "@/pieces/run/run-facts"
+import type { Draft } from "@/router-context"
+import { exampleInputOf } from "@/showcase/showcase"
 
 export type ExploreKind = "image" | "video" | "audio"
 
 export type ExploreSource =
   | { kind: "share"; shareId: string; src: string }
   | { kind: "own"; assetId: string }
+  | { kind: "showcase"; src: string }
 
 export type ExploreEntry = {
   key: string
@@ -30,7 +34,10 @@ export type VisualEntry = ExploreEntry & {
   aspect: MediaAspect
 }
 
-export type RecreateSearch = { share: string } | { from: string }
+export type RecreateTarget =
+  | { search: { share: string } }
+  | { search: { from: string } }
+  | { draft: Draft }
 
 export type OpenResult = (entry: VisualEntry, origin: HTMLElement) => void
 
@@ -46,16 +53,39 @@ export function entryModel(entry: ExploreEntry): string | null {
   return runModel(entry.run, findCatalogApp(entry.run.appId))
 }
 
-export function recreateSearchOf(entry: ExploreEntry): RecreateSearch {
-  return entry.source.kind === "share"
-    ? { share: entry.source.shareId }
-    : { from: entry.run.id }
+function promptOfRun(run: Run): string {
+  const app = findCatalogApp(run.appId)
+  const input = app === null ? null : promptInputOf(app)
+  const value = input === null ? undefined : run.inputs[input.name]
+  return typeof value === "string" ? value : ""
+}
+
+export function recreateTargetOf(entry: ExploreEntry): RecreateTarget {
+  switch (entry.source.kind) {
+    case "share":
+      return { search: { share: entry.source.shareId } }
+    case "own":
+      return { search: { from: entry.run.id } }
+    case "showcase": {
+      const input = exampleInputOf(entry.run.id)
+      return {
+        draft: {
+          prompt: promptOfRun(entry.run),
+          assetIds: [],
+          characterIds: [],
+          inputs: entry.run.inputs,
+          aspectRatio: entry.run.aspectRatio,
+          ...(input === null ? {} : { input }),
+        },
+      }
+    }
+  }
 }
 
 export function useEntrySrc(entry: ExploreEntry): string | null {
   const { source } = entry
   const own = useAssetSource(source.kind === "own" ? source.assetId : "")
-  if (source.kind === "share") {
+  if (source.kind !== "own") {
     return source.src
   }
   return own.state === "ready" ? own.src : null
@@ -63,32 +93,45 @@ export function useEntrySrc(entry: ExploreEntry): string | null {
 
 export function useRecreate(): (entry: ExploreEntry) => void {
   const navigate = useNavigate()
-  return (entry) =>
-    void navigate({
-      to: "/apps/$appId",
-      params: { appId: entry.run.appId },
-      search: recreateSearchOf(entry),
-    })
+  return (entry) => {
+    const target = recreateTargetOf(entry)
+    const to = { to: "/apps/$appId", params: { appId: entry.run.appId } }
+    void navigate(
+      "draft" in target
+        ? { ...to, state: { draft: target.draft } }
+        : { ...to, search: target.search }
+    )
+  }
 }
 
 export function useRecreateHref(entry: ExploreEntry): string {
   const router = useRouter()
+  const target = recreateTargetOf(entry)
   return router.buildLocation({
     to: "/apps/$appId",
     params: { appId: entry.run.appId },
-    search: recreateSearchOf(entry),
+    ...("draft" in target ? {} : { search: target.search }),
   }).href
 }
 
 export function useViewHref(entry: ExploreEntry): string {
   const router = useRouter()
   const { source } = entry
-  return source.kind === "share"
-    ? router.buildLocation({
+  switch (source.kind) {
+    case "share":
+      return router.buildLocation({
         to: "/share/$shareId",
         params: { shareId: source.shareId },
       }).href
-    : router.buildLocation({ to: "/", search: { view: source.assetId } }).href
+    case "own":
+      return router.buildLocation({ to: "/", search: { view: source.assetId } })
+        .href
+    case "showcase":
+      return router.buildLocation({
+        to: "/apps/$appId",
+        params: { appId: entry.run.appId },
+      }).href
+  }
 }
 
 function EntrySkeleton({ aspect }: { aspect: MediaAspect }): ReactElement {
@@ -102,21 +145,21 @@ function EntrySkeleton({ aspect }: { aspect: MediaAspect }): ReactElement {
 
 type ResultCardProps = {
   entry: VisualEntry
-  narrow: boolean
+  aspect: MediaAspect
   onOpen: OpenResult
   onMore: (entry: VisualEntry) => void
 }
 
 export function ResultCard({
   entry,
-  narrow,
+  aspect,
   onOpen,
   onMore,
 }: ResultCardProps): ReactElement {
   const src = useEntrySrc(entry)
   const recreate = useRecreate()
   if (src === null) {
-    return <EntrySkeleton aspect={entry.aspect} />
+    return <EntrySkeleton aspect={aspect} />
   }
   const app = runAppName(entry.run)
   return (
@@ -124,7 +167,7 @@ export function ResultCard({
       kind={entry.kind}
       src={src}
       alt={t("explore.tile.label", { app })}
-      aspect={entry.aspect}
+      aspect={aspect}
       app={app}
       model={entryModel(entry) ?? t("explore.tile.noModel")}
       openLabel={t("explore.tile.open", { app })}
@@ -135,7 +178,6 @@ export function ResultCard({
       onOpen={(origin) => onOpen(entry, origin)}
       onRecreate={() => recreate(entry)}
       onMore={() => onMore(entry)}
-      narrow={narrow}
     />
   )
 }
@@ -150,6 +192,7 @@ export function ExplorePresetTile({
   const src = useEntrySrc(entry)
   const viewHref = useViewHref(entry)
   const actionHref = useRecreateHref(entry)
+  const recreate = useRecreate()
   if (src === null) {
     return <EntrySkeleton aspect={entry.aspect} />
   }
@@ -158,7 +201,11 @@ export function ExplorePresetTile({
       name={name}
       href={viewHref}
       viewLabel={t("explore.preset.view", { name })}
-      action={{ label: t("explore.tile.recreate"), href: actionHref }}
+      action={{
+        label: t("explore.tile.recreate"),
+        href: actionHref,
+        onSelect: () => recreate(entry),
+      }}
       clip={{ src, alt: name }}
       aspect={entry.aspect}
     />

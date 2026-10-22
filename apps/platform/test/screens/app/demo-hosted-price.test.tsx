@@ -79,8 +79,10 @@ describe("the price on Generate for a hosted model", () => {
       mode: "owner",
       engine: { target: "demo", address: null, key: "missing", origin: "demo" },
       lock: "local",
+      keyFrom: "server",
       agent: "missing",
       agentModel: null,
+      place: "bun",
       retentionDays: null,
     }
     client.setQueryData(settingsQuery.queryKey, settings)
@@ -101,8 +103,10 @@ describe("the price on Generate for a hosted model", () => {
       mode: "owner",
       engine: { target: "demo", address: null, key: "missing", origin: "demo" },
       lock: "local",
+      keyFrom: "server",
       agent: "missing",
       agentModel: null,
+      place: "bun",
       retentionDays: null,
     }
     client.setQueryData(settingsQuery.queryKey, settings)

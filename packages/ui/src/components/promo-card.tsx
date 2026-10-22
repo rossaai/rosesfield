@@ -4,7 +4,7 @@ import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import type { MediaFeedLayout } from "@rosesfield/ui/contracts/media-feed.generated"
 import type { PresetTileForm } from "@rosesfield/ui/contracts/preset-tile.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { prefersReducedMotion } from "@rosesfield/ui/motion"
+import { motion, prefersReducedMotion } from "@rosesfield/ui/motion"
 import { ChevronRightIcon } from "lucide-react"
 import {
   type ReactElement,
@@ -54,7 +54,10 @@ function PromoCard({
       <div className="mt-3 flex h-12 min-w-0 flex-col">
         <h3
           data-slot="preset-tile-name"
-          className="truncate font-medium text-body text-ink transition-colors duration-(--duration-control) group-hover/promo:text-hor-text in-data-[gallery=hover]:text-hor-text"
+          className={cn(
+            "truncate font-medium text-body text-ink group-hover/promo:text-hor-text in-data-[gallery=hover]:text-hor-text",
+            motion.tint
+          )}
         >
           {name}
         </h3>
@@ -151,11 +154,13 @@ function PromoRow({
       {atEnd ? null : (
         <span
           data-slot="media-feed-next"
-          className="absolute top-31 right-1 z-20 hidden opacity-0 transition-opacity duration-(--duration-control) group-focus-within/promo-row:opacity-100 group-hover/promo-row:opacity-100 in-data-[gallery=hover]:opacity-100 @regular:flex"
+          className={cn(
+            "absolute top-31 right-1 z-20 hidden opacity-0 group-focus-within/promo-row:opacity-100 group-hover/promo-row:opacity-100 in-data-[gallery=hover]:opacity-100 @regular:flex",
+            motion.tint
+          )}
         >
           <IconButton
             label={nextLabel}
-            place="clip"
             tone="glass"
             onClick={() => scrollOneCard(scroller.current)}
           >

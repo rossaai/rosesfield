@@ -123,7 +123,9 @@ function DeleteDialog({
           <AlertDialogAction
             tone="danger"
             busy={remove.isPending}
-            onClick={() => remove.mutate()}
+            onClick={() =>
+              remove.mutate(undefined, { onSuccess: () => onOpenChange(false) })
+            }
           >
             {t("agent.delete.confirm")}
           </AlertDialogAction>
@@ -161,17 +163,30 @@ export function ConversationDialogs({
 }
 
 export function ConversationMenu({
+  place = "header",
   onDialogChange,
 }: {
+  place?: "header" | "row"
   onDialogChange: (dialog: ConversationDialog) => void
 }): ReactElement {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <IconButton label={t("agent.more")} tone="quiet">
-            <EllipsisIcon aria-hidden="true" />
-          </IconButton>
+          place === "row" ? (
+            <IconButton
+              label={t("agent.more")}
+              size="small"
+              tone="quiet"
+              className="bg-transparent hover:bg-(--well)"
+            >
+              <EllipsisIcon aria-hidden="true" />
+            </IconButton>
+          ) : (
+            <IconButton label={t("agent.more")} tone="quiet">
+              <EllipsisIcon aria-hidden="true" />
+            </IconButton>
+          )
         }
       />
       <DropdownMenuContent align="end">
@@ -186,22 +201,5 @@ export function ConversationMenu({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
-
-export function ConversationActions({
-  onDialogChange,
-}: {
-  onDialogChange: (dialog: ConversationDialog) => void
-}): ReactElement {
-  return (
-    <div className="flex flex-wrap gap-s2 pt-s2">
-      <Button onClick={() => onDialogChange("rename")}>
-        {t("agent.rename")}
-      </Button>
-      <Button tone="danger" onClick={() => onDialogChange("delete")}>
-        {t("agent.delete")}
-      </Button>
-    </div>
   )
 }

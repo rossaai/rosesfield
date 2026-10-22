@@ -12,8 +12,7 @@ import { GalleryData } from "@/gallery/gallery-data"
 import type { GalleryEntry, GalleryState } from "@/gallery/gallery-entry"
 import { AudioRow } from "@/pieces/audio-row"
 import { DropWell } from "@/pieces/drop-well"
-import { RunLine } from "@/pieces/run/run-line"
-import { RunOutputs } from "@/pieces/run/run-outputs"
+import { RunCard } from "@/pieces/run/run-card"
 import { UploadRow } from "@/pieces/upload-row"
 import type { Upload } from "@/pieces/use-uploads"
 import {
@@ -34,10 +33,7 @@ function RunBlock({
   return (
     <GalleryData>
       <PriceSeed run={run} estimate={estimate}>
-        <article className="flex flex-col gap-s2">
-          <RunLine run={run} onUseInputs={() => undefined} />
-          <RunOutputs run={run} />
-        </article>
+        <RunCard run={run} onUseInputs={() => undefined} />
       </PriceSeed>
     </GalleryData>
   )

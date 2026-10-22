@@ -1,59 +1,56 @@
-import { AppDefinitionInvalidError } from "#app-definition-invalid.error"
-import { framesOf } from "#effects/comfy/frame-sizes"
+import { setHits, setSound } from "#effects/comfy/effect-sound"
+import { audioFramesOf, frameAt, framesOf } from "#effects/comfy/frame-sizes"
+import {
+  type Graph,
+  invalid,
+  isLink,
+  type Link,
+  nodeOf,
+  relink,
+  remove,
+} from "#effects/comfy/graph-edit"
 import type { EffectRecipe } from "#effects/effect-recipe.contract"
 import { apiGraph } from "#workflow-entry.contract"
 
-type Link = [string, number]
+export const editFrameNodes: readonly string[] = [
+  "620",
+  "621",
+  "622",
+  "623",
+  "625",
+  "626",
+  "627",
+]
 
-type Node = { class_type: string; inputs: Record<string, unknown> }
+export const endFrameSizeNode = "624"
 
-type Graph = Record<string, Node>
+export const darkFrameNode = "628"
 
-export const effectsWorkflow = "effects-ltx-2-5"
+export const endFrameNodes: readonly string[] = [
+  ...editFrameNodes,
+  endFrameSizeNode,
+  darkFrameNode,
+]
 
-export const endFrameNodes: readonly string[] = Array.from(
-  { length: 17 },
-  (_, index) => String(520 + index)
-)
+export const imageEditNodes: readonly string[] = [
+  "600",
+  "601",
+  "602",
+  "603",
+  "604",
+]
 
-export const referenceNodes: readonly string[] = ["527", "528", "529"]
+export const fittedPhotoNode = "606"
+
+export const endFramePromptNode = "620"
 
 export const matteNodes: readonly string[] = ["410", "411", "412"]
 
 export const adapterNode = "420"
 
+export const grainNode = "381"
+
 const guideOutputs = ["positive", "negative", "latent"]
-
-function invalid(reason: string): AppDefinitionInvalidError {
-  return new AppDefinitionInvalidError({ folder: "effects", reason })
-}
-
-function nodeOf(graph: Graph, id: string): Node {
-  const node = graph[id]
-  if (node === undefined) {
-    throw invalid(`the workflow ${effectsWorkflow} has no node ${id}`)
-  }
-  return node
-}
-
-function isLink(value: unknown): value is Link {
-  return (
-    Array.isArray(value) &&
-    value.length === 2 &&
-    typeof value[0] === "string" &&
-    typeof value[1] === "number"
-  )
-}
-
-function relink(graph: Graph, from: Link, to: Link): void {
-  for (const node of Object.values(graph)) {
-    for (const [name, value] of Object.entries(node.inputs)) {
-      if (isLink(value) && value[0] === from[0] && value[1] === from[1]) {
-        node.inputs[name] = [...to]
-      }
-    }
-  }
-}
 
 function passThrough(graph: Graph, id: string): void {
   const node = nodeOf(graph, id)
@@ -67,22 +64,14 @@ function passThrough(graph: Graph, id: string): void {
   })
 }
 
-function remove(graph: Graph, ids: readonly string[]): void {
-  for (const id of ids) {
-    nodeOf(graph, id)
-    delete graph[id]
-  }
-}
-
-function setPrompt(graph: Graph, recipe: EffectRecipe): void {
+function setPrompts(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, "501").inputs.string_a = recipe.prompt
-  nodeOf(graph, "503").inputs.string_b = ""
+  nodeOf(graph, "503").inputs.string_b = recipe.design.sound?.prompt ?? ""
 }
 
 function setLength(graph: Graph, recipe: EffectRecipe): void {
-  const frames = framesOf(recipe.seconds)
-  nodeOf(graph, "356").inputs.length = frames
-  nodeOf(graph, "366").inputs.frames_number = frames
+  nodeOf(graph, "356").inputs.length = framesOf(recipe.seconds)
+  nodeOf(graph, "366").inputs.frames_number = audioFramesOf(recipe.seconds)
 }
 
 function addAdapter(graph: Graph, recipe: EffectRecipe): void {
@@ -101,22 +90,83 @@ function addAdapter(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, "391").inputs.model = [adapterNode, 0]
 }
 
+const endGuideNodes: readonly string[] = ["460", "463"]
+
+export const midFrameNodes: readonly string[] = ["470", "471"]
+
+export const midGuideNodes: readonly string[] = ["472", "473"]
+
+export function hasEditPass(recipe: EffectRecipe): boolean {
+  return recipe.endFrame.source === "edit" || recipe.midFrame !== null
+}
+
+function setEditPass(graph: Graph, recipe: EffectRecipe): void {
+  const end = recipe.endFrame
+  const prompt = end.source === "edit" ? end.prompt : recipe.midFrame?.prompt
+  if (end.source !== "dark") {
+    remove(graph, [darkFrameNode])
+  }
+  if (prompt === undefined) {
+    remove(graph, [...editFrameNodes, ...imageEditNodes])
+    if (end.source !== "dark") {
+      remove(graph, [endFrameSizeNode])
+    }
+    return
+  }
+  nodeOf(graph, endFramePromptNode).inputs.prompt = prompt
+}
+
 function setEndFrame(graph: Graph, recipe: EffectRecipe): void {
   const end = recipe.endFrame
   if (end.source === "none") {
-    remove(graph, endFrameNodes)
     passThrough(graph, "460")
     passThrough(graph, "463")
     return
   }
-  nodeOf(graph, "523").inputs.text = end.prompt
-  nodeOf(graph, "460").inputs.strength = end.strength
-  nodeOf(graph, "463").inputs.strength = end.strength
-  if (end.source === "draw") {
-    remove(graph, referenceNodes)
-    const guider = nodeOf(graph, "534").inputs
-    guider.positive = ["523", 0]
-    guider.negative = ["524", 0]
+  if (end.source === "dark") {
+    nodeOf(graph, darkFrameNode).inputs.color = greyOf(end.luma)
+    for (const id of endGuideNodes) {
+      nodeOf(graph, id).inputs.image = [darkFrameNode, 0]
+    }
+  }
+  for (const id of endGuideNodes) {
+    nodeOf(graph, id).inputs.strength = end.strength
+  }
+}
+
+function setMidFrame(graph: Graph, recipe: EffectRecipe): void {
+  const mid = recipe.midFrame
+  if (mid === null) {
+    for (const id of midGuideNodes) {
+      passThrough(graph, id)
+    }
+    remove(graph, midFrameNodes)
+    return
+  }
+  for (const id of midGuideNodes) {
+    const guide = nodeOf(graph, id)
+    guide.inputs.frame_idx = frameAt(mid.time)
+    guide.inputs.strength = mid.strength
+  }
+}
+
+function greyOf(luma: number): number {
+  return luma * 0x010101
+}
+
+const fittedPhoto: Link = [fittedPhotoNode, 0]
+
+const editedFrame: Link = ["627", 0]
+
+const openingResizeNode = "351"
+
+function setPhotoFrame(graph: Graph, recipe: EffectRecipe): void {
+  if (recipe.photoFrame === "first") {
+    return
+  }
+  nodeOf(graph, openingResizeNode).inputs.input = [...editedFrame]
+  for (const id of endGuideNodes) {
+    nodeOf(graph, id).inputs.image = [...fittedPhoto]
   }
 }
 
@@ -131,9 +181,8 @@ function setHold(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, "464").inputs.strength = recipe.hold
 }
 
-function dropSound(graph: Graph): void {
-  remove(graph, ["358"])
-  delete nodeOf(graph, "370").inputs.audio
+function setGrain(graph: Graph, recipe: EffectRecipe): void {
+  nodeOf(graph, grainNode).inputs.strength = recipe.design.encode.grain
 }
 
 export function effectGraph(
@@ -141,15 +190,24 @@ export function effectGraph(
   recipe: EffectRecipe
 ): Record<string, unknown> {
   const graph: Graph = apiGraph.parse(workflow)
-  setPrompt(graph, recipe)
+  setPrompts(graph, recipe)
   setLength(graph, recipe)
   addAdapter(graph, recipe)
+  setEditPass(graph, recipe)
   setEndFrame(graph, recipe)
+  setMidFrame(graph, recipe)
+  setPhotoFrame(graph, recipe)
   setHold(graph, recipe)
-  if (recipe.endFrame.source === "none" && recipe.hold === null) {
+  const guided =
+    recipe.endFrame.source !== "none" ||
+    recipe.midFrame !== null ||
+    recipe.hold !== null
+  if (!guided) {
     passThrough(graph, "462")
     passThrough(graph, "465")
   }
-  dropSound(graph)
+  setSound(graph, recipe)
+  setHits(graph, recipe)
+  setGrain(graph, recipe)
   return graph
 }

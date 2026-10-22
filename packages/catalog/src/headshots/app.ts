@@ -1,5 +1,5 @@
 import { type AppInput, defineApp } from "#define-app"
-import { headshotsBinding } from "#headshots/comfy/headshots-workflow"
+import { headshotsBinding } from "#headshots/comfy/headshots-binding"
 import {
   backgrounds,
   clothesValues,
@@ -56,7 +56,7 @@ export const app = defineApp({
     count: { default: defaultHeadshots, max: maxHeadshots },
     aspectRatios: { options: [...headshotRatios], default: "1:1" },
   },
-  engine: headshotsBinding,
+  engine: headshotsBinding(),
   limits: { timeoutSeconds: 1200, maxRetries: 1 },
   preview: null,
 })

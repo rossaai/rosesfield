@@ -57,18 +57,36 @@ describe("PromptBar", () => {
   })
 })
 
-describe("PromptBar's focus", () => {
-  it("rings the prompt 2 px outside its row when the field takes keyboard focus", () => {
-    const { field } = renderBar()
-    const row = field.closest("[data-slot='composer-prompt']")
-    expect(row?.className.split(" ")).toEqual(
-      expect.arrayContaining([
-        "outline-hor-text",
-        "has-[textarea:focus-visible]:outline-solid",
-        "has-[textarea:focus-visible]:outline-(length:--spacing-focus-ring)",
-        "has-[textarea:focus-visible]:outline-offset-(--spacing-focus-ring)",
-      ])
+describe("PromptBar's vessel", () => {
+  it("is the one kernel composer: a surface vessel at the 26 px radius and 10 px padding, with no second frame", () => {
+    renderBar()
+    const vessel = document.querySelector<HTMLElement>("[data-bar='prompt']")
+    expect(vessel?.getAttribute("data-slot")).toBe("composer")
+    expect(vessel?.getAttribute("data-density")).toBe("composer")
+    expect(vessel?.getAttribute("data-ground")).toBe("surface")
+    expect(vessel?.className.split(" ")).toEqual(
+      expect.arrayContaining(["bg-surface", "rounded-vessel", "p-s3"])
     )
+    expect(vessel?.className).not.toContain("bg-surface-2")
+    expect(vessel?.querySelector("[class*='rounded-card']")).toBeNull()
+  })
+
+  it("floats over media with the float shadow only when docked", () => {
+    render(
+      <PromptBar
+        value=""
+        onValueChange={() => undefined}
+        onSubmit={() => undefined}
+        label="Prompt"
+        placeholder="Describe the image"
+        submitLabel="Generate"
+        removeLabel="Remove"
+        placement="dock"
+      />
+    )
+    const vessel = document.querySelector("[data-bar='prompt']")
+    expect(vessel?.className.split(" ")).toContain("shadow-float")
+    expect(vessel?.getAttribute("data-floating")).toBe("yes")
   })
 })
 
@@ -95,9 +113,9 @@ describe("PromptBar's Generate", () => {
     expect(price?.querySelector("[data-testid='price']")).not.toBeNull()
   })
 
-  it("stands as the tile at the bar's trailing end", () => {
+  it("stands as the 13 px radius tile at the bar's trailing end", () => {
     renderBar()
-    const bar = document.querySelector("[data-slot='prompt-bar']")
+    const bar = document.querySelector("[data-bar='prompt']")
     const generate = screen.getByRole("button", { name: "Generate" })
     expect(generate.getAttribute("data-form")).toBe("tile")
     const controls = bar?.querySelectorAll("button, textarea") ?? []
@@ -119,9 +137,9 @@ describe("PromptBar's placement", () => {
         placement="dock"
       />
     )
-    const bar = document.querySelector<HTMLElement>("[data-slot='prompt-bar']")
+    const bar = document.querySelector<HTMLElement>("[data-bar='prompt']")
     expect(bar?.className.split(" ")).toEqual(
-      expect.arrayContaining(["fixed", "bottom-4", "max-w-220"])
+      expect.arrayContaining(["fixed", "bottom-s5", "max-w-220"])
     )
     rerender(
       <PromptBar
@@ -164,7 +182,7 @@ describe("PromptBar's composer slots", () => {
 })
 
 describe("PromptBar's prompt height", () => {
-  it("sets the field's height from its text and moves it on the control timing", () => {
+  it("sets the field's height from its text and moves it on the yield preset", () => {
     const { rerender } = render(
       <PromptBar
         value="one line"
@@ -177,9 +195,7 @@ describe("PromptBar's prompt height", () => {
       />
     )
     const field = screen.getByRole("textbox", { name: "Prompt" })
-    expect(field.className).toContain(
-      "[transition:height_var(--control-change)]"
-    )
+    expect(field.className.split(" ")).toContain("motion-yield")
     expect(field.className).not.toContain("field-sizing-content")
     Object.defineProperty(field, "scrollHeight", {
       configurable: true,
@@ -201,7 +217,7 @@ describe("PromptBar's prompt height", () => {
 })
 
 describe("PromptBar's chip row", () => {
-  it("holds the chips in a sideways row with a hidden 28 px arrow at each end while nothing overflows", () => {
+  it("holds the chips in a sideways row with an edge fade and a hidden 26 px arrow at each end while nothing overflows", () => {
     render(
       <PromptBar
         value=""
@@ -227,12 +243,12 @@ describe("PromptBar's chip row", () => {
       ...document.querySelectorAll("[data-slot='chip-row-arrow']"),
     ]
     expect(arrows.map((arrow) => arrow.getAttribute("data-end"))).toEqual([
-      "back",
-      "forward",
+      "start",
+      "end",
     ])
     for (const arrow of arrows) {
       expect(arrow.className.split(" ")).toEqual(
-        expect.arrayContaining(["size-7", "opacity-0"])
+        expect.arrayContaining(["size-icon-small", "opacity-0", "motion-tint"])
       )
     }
   })
@@ -275,12 +291,13 @@ describe("PromptBar's chip row", () => {
     row.scrollBy = scrollBy
     fireEvent.scroll(row)
     const forward = document.querySelector<HTMLElement>(
-      "[data-slot='chip-row-arrow'][data-end='forward']"
+      "[data-slot='chip-row-arrow'][data-end='end']"
     )
     expect(forward?.className).toContain("opacity-100")
+    expect(row.style.maskImage).toContain("transparent")
     if (forward !== null) {
       fireEvent.click(forward)
     }
-    expect(scrollBy).toHaveBeenCalledWith({ left: 200, behavior: "smooth" })
+    expect(scrollBy).toHaveBeenCalledWith({ left: 100, behavior: "smooth" })
   })
 })

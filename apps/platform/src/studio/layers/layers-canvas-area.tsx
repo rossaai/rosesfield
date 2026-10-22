@@ -1,11 +1,11 @@
-import type { Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import type { ReactElement } from "react"
 import { t, tCatalog } from "@/copy/t"
-import { RunLine } from "@/pieces/run/run-line"
-import { RunOutputs } from "@/pieces/run/run-outputs"
+import { RunCard, RunColumns } from "@/pieces/run/run-card"
+import { RunChrome } from "@/pieces/run/run-chrome"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import { DownloadMenu } from "@/studio/layers/download-menu"
 import { type Brush, LayerCanvas } from "@/studio/layers/layer-canvas"
@@ -16,21 +16,6 @@ import type { LayersState } from "@/studio/layers/use-layers-screen"
 type CanvasAreaProps = {
   state: LayersState
   onAdd: () => void
-}
-
-function RunBlock({
-  run,
-  onUseInputs,
-}: {
-  run: Run
-  onUseInputs: (run: Run) => void
-}): ReactElement {
-  return (
-    <article className="flex flex-col gap-s2">
-      <RunLine run={run} onUseInputs={onUseInputs} />
-      <RunOutputs run={run} />
-    </article>
-  )
 }
 
 function brushOf(state: LayersState): Brush | null {
@@ -45,7 +30,7 @@ function brushOf(state: LayersState): Brush | null {
   }
 }
 
-function StackView({
+function StackDownload({
   state,
   stack,
 }: {
@@ -53,40 +38,102 @@ function StackView({
   stack: Stack
 }): ReactElement {
   return (
-    <section className="flex flex-col gap-s3">
-      <div className="flex min-w-0 flex-col gap-s2 @regular:flex-row @regular:items-start">
-        <div className="min-w-0 flex-1">
-          <RunLine run={stack.run} onUseInputs={state.useInputs} />
-        </div>
-        <div className="shrink-0">
-          <DownloadMenu runId={stack.run.id} rows={state.rows} />
-        </div>
+    <div className="flex shrink-0 justify-end">
+      <DownloadMenu runId={stack.run.id} rows={state.rows} />
+    </div>
+  )
+}
+
+function RegularStack({
+  state,
+  stack,
+}: {
+  state: LayersState
+  stack: Stack
+}): ReactElement {
+  return (
+    <section className="flex flex-row gap-s3">
+      <div className="min-w-0 flex-1">
+        <LayerCanvas
+          shown={state.shown}
+          size={state.size}
+          brush={brushOf(state)}
+          chrome={
+            <RunChrome
+              run={stack.run}
+              place="over"
+              onUseInputs={state.useInputs}
+            />
+          }
+        />
       </div>
-      <div className="flex flex-col gap-s3 @regular:flex-row">
-        <div className="min-w-0 flex-1">
-          <LayerCanvas
-            shown={state.shown}
-            size={state.size}
-            brush={brushOf(state)}
-            isDemo={stack.run.origin === "demo"}
-          />
-        </div>
-        <div className="hidden w-field-max shrink-0 @regular:block">
-          <LayerList
-            rows={state.rows}
-            actions={state.actions}
-            size={state.size}
-          />
-        </div>
-        <div className="@regular:hidden">
-          <LayerStrip
-            rows={state.rows}
-            actions={state.actions}
-            size={state.size}
-          />
-        </div>
+      <div className="flex w-field-max shrink-0 flex-col gap-s3">
+        <StackDownload state={state} stack={stack} />
+        <LayerList
+          rows={state.rows}
+          actions={state.actions}
+          size={state.size}
+        />
       </div>
     </section>
+  )
+}
+
+function PhoneStack({
+  state,
+  stack,
+}: {
+  state: LayersState
+  stack: Stack
+}): ReactElement {
+  return (
+    <section
+      data-slot="layers-phone-stack"
+      className="flex h-(--canvas-height) min-h-80 flex-col gap-s3"
+    >
+      <div
+        data-slot="layers-phone-canvas"
+        className="flex min-h-0 flex-1 items-center justify-center"
+        style={{ containerType: "size" }}
+      >
+        <LayerCanvas
+          shown={state.shown}
+          size={state.size}
+          brush={brushOf(state)}
+          chrome={
+            <RunChrome
+              run={stack.run}
+              place="over"
+              onUseInputs={state.useInputs}
+            />
+          }
+          fit="box"
+        />
+      </div>
+      <StackDownload state={state} stack={stack} />
+      <div className="shrink-0">
+        <LayerStrip
+          rows={state.rows}
+          actions={state.actions}
+          size={state.size}
+        />
+      </div>
+    </section>
+  )
+}
+
+function StackView({
+  state,
+  stack,
+}: {
+  state: LayersState
+  stack: Stack
+}): ReactElement {
+  const isRegular = useIsRegularWindow()
+  return isRegular ? (
+    <RegularStack state={state} stack={stack} />
+  ) : (
+    <PhoneStack state={state} stack={stack} />
   )
 }
 
@@ -129,17 +176,18 @@ export function LayersCanvasArea({
   return (
     <div className="flex flex-col gap-s6">
       {latest === null ? null : (
-        <RunBlock run={latest} onUseInputs={state.useInputs} />
+        <RunColumns>
+          <RunCard run={latest} onUseInputs={state.useInputs} />
+        </RunColumns>
       )}
       {stack === null ? null : <StackView state={state} stack={stack} />}
       {earlier.length === 0 ? null : (
-        <h2 className="text-body font-medium text-ink-muted">
-          {t("app.history.title")}
-        </h2>
+        <RunColumns>
+          {earlier.map((run) => (
+            <RunCard key={run.id} run={run} onUseInputs={state.useInputs} />
+          ))}
+        </RunColumns>
       )}
-      {earlier.map((run) => (
-        <RunBlock key={run.id} run={run} onUseInputs={state.useInputs} />
-      ))}
     </div>
   )
 }

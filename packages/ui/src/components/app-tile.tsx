@@ -2,6 +2,7 @@ import { useRender } from "@base-ui/react/use-render"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import type { PresetTileForm } from "@rosesfield/ui/contracts/preset-tile.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import type { ComponentProps, ReactElement, ReactNode } from "react"
 
 const form: PresetTileForm = "app"
@@ -11,30 +12,59 @@ type AppTileMode = {
   icon: ReactNode
 }
 
-type AppTileProps = Omit<ComponentProps<"a">, "children"> & {
+type AppTileProps = Omit<ComponentProps<"a">, "children" | "media"> & {
   name: string
   line: string
   icon: ReactNode
   badge?: ReactNode
   mode?: AppTileMode
+  media?: ReactNode
   render?: ReactElement
 }
 
-const openRing =
-  "hover:border-transparent hover:p-0 in-data-[gallery=hover]:border-transparent in-data-[gallery=hover]:p-0"
-
-const panelGrows = "group-hover/app:p-4 in-data-[gallery=hover]:p-4"
+const wideColumns =
+  "@regular:grid-cols-[repeat(auto-fill,minmax(max(calc((100%_-_var(--spacing)*15)/6),min(calc((100%_-_var(--spacing)*6)/3),calc((var(--spacing)*336_-_100%)*1000))),1fr))]"
 
 function ModePill({ mode }: { mode: AppTileMode }): ReactElement {
   return (
     <span
       data-slot="app-tile-mode"
-      className="material-thin absolute top-3 right-3 hidden h-7.5 items-center gap-1 rounded-full px-2.5 text-label text-ink [&_svg]:size-3.5 @regular:flex"
+      className="material-thin absolute top-s4 right-s4 hidden h-button-small items-center gap-s1 rounded-full px-s2_5 text-label text-ink [&_svg]:glyph-small @regular:flex"
     >
       <span aria-hidden="true" className="flex">
         {mode.icon}
       </span>
       {mode.label}
+    </span>
+  )
+}
+
+function TileText({
+  name,
+  line,
+  badge,
+}: Pick<AppTileProps, "name" | "line" | "badge">): ReactElement {
+  return (
+    <span className="flex min-w-0 flex-col gap-s1">
+      <span className="flex min-w-0 items-center gap-s1">
+        <span
+          data-slot="preset-tile-name"
+          className="truncate font-medium text-body"
+        >
+          {name}
+        </span>
+        {badge === undefined ? null : (
+          <span data-slot="app-tile-badge" className="flex shrink-0">
+            {badge}
+          </span>
+        )}
+      </span>
+      <span
+        data-slot="preset-tile-line"
+        className="truncate text-label text-ink-muted"
+      >
+        {line}
+      </span>
     </span>
   )
 }
@@ -45,10 +75,12 @@ function AppTile({
   icon,
   badge,
   mode,
+  media,
   render,
   className,
   ...props
 }: AppTileProps): ReactElement {
+  const hasMedia = media !== undefined && media !== null
   return useRender({
     defaultTagName: "a",
     render,
@@ -56,49 +88,29 @@ function AppTile({
       ...props,
       "data-slot": "preset-tile",
       "data-form": form,
+      "data-media": hasMedia ? "yes" : "no",
       className: cn(
-        "group/app relative flex h-33.5 min-w-0 rounded-card border border-(--line) p-0.5 text-ink no-underline transition-[padding,border-color] duration-(--duration-control) @regular:h-32.5",
-        openRing,
+        "group/app relative flex min-w-0 flex-col gap-s4 rounded-card bg-(--well) p-s4 text-ink no-underline",
+        hasMedia ? "" : "h-33.5 justify-between @regular:h-32.5",
+        motion.press,
         interaction.ring,
         className
       ),
       children: (
         <>
-          <span
-            data-slot="app-tile-panel"
-            className={cn(
-              "relative flex min-w-0 flex-1 flex-col justify-between rounded-item bg-(--well) p-3.5 transition-[padding] duration-(--duration-control)",
-              panelGrows
-            )}
-          >
-            <span aria-hidden="true" className="flex [&_svg]:size-5">
+          {hasMedia ? (
+            <span
+              data-slot="app-tile-media"
+              className="relative block aspect-video overflow-hidden rounded-cell *:size-full *:object-cover"
+            >
+              {media}
+            </span>
+          ) : (
+            <span aria-hidden="true" className="flex [&_svg]:glyph">
               {icon}
             </span>
-            <span className="flex min-w-0 flex-col gap-1">
-              <span className="flex min-w-0 items-center">
-                <span
-                  data-slot="preset-tile-name"
-                  className="truncate font-medium text-body"
-                >
-                  {name}
-                </span>
-                {badge === undefined ? null : (
-                  <span
-                    data-slot="app-tile-badge"
-                    className="absolute top-3 right-3 flex -skew-x-12 @regular:static @regular:ms-0.5"
-                  >
-                    {badge}
-                  </span>
-                )}
-              </span>
-              <span
-                data-slot="preset-tile-line"
-                className="truncate text-body text-ink-muted @regular:text-label"
-              >
-                {line}
-              </span>
-            </span>
-          </span>
+          )}
+          <TileText name={name} line={line} badge={badge} />
           {mode === undefined ? null : <ModePill mode={mode} />}
         </>
       ),
@@ -115,7 +127,7 @@ function AppTileGrid({
 }): ReactElement {
   return (
     <nav aria-label={label} data-slot="app-tile-grid">
-      <div className="grid grid-cols-2 gap-2 @regular:grid-cols-3 @regular:gap-3">
+      <div className={cn("grid grid-cols-2 gap-2 @regular:gap-3", wideColumns)}>
         {children}
       </div>
     </nav>

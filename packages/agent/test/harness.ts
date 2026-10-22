@@ -9,10 +9,12 @@ import {
   type TranscriptContext,
 } from "@earendil-works/pi-ai"
 import type { ToolRegistration } from "@earendil-works/pi-durable"
+import type { ModelForm } from "@rosesfield/catalog/comfy"
 import type { AppDefinition } from "@rosesfield/contract"
 import {
   DemoGenerationEngine,
   GetRunHandler,
+  ReadModelFormsHandler,
   StartRunHandler,
 } from "@rosesfield/generation"
 import { FixedClock } from "@rosesfield/kernel"
@@ -30,7 +32,9 @@ import {
   agentTools,
 } from "#infrastructure/pi-agent-tools"
 import { appTool } from "#infrastructure/pi-app-tool"
+import type { RunWait } from "#infrastructure/pi-library-tools"
 import type { PiModels } from "#infrastructure/pi-models"
+import { PiProposalRunner } from "#infrastructure/pi-proposal-runner"
 import { openSqliteFileStorage } from "#infrastructure/sqlite-file-storage"
 import { FakeAppCatalog } from "./fake/fake-app-catalog"
 import type { FakeAssetRepository } from "./fake/fake-asset-repository"
@@ -44,6 +48,7 @@ export type Generation = {
   runs: FakeRunRepository
   jobs: FakeJobRunner
   startRun: StartRunHandler
+  readModelForms: ReadModelFormsHandler
 }
 
 export type AgentRig = {
@@ -58,21 +63,46 @@ export function generationFor(apps: readonly AppDefinition[]): Generation {
   const clock = new FixedClock({ now: start })
   const runs = new FakeRunRepository()
   const jobs = new FakeJobRunner()
+  const engines = [new DemoGenerationEngine({ clock })]
   const startRun = new StartRunHandler({
     apps: new FakeAppCatalog(apps),
     runs,
-    engines: [new DemoGenerationEngine({ clock })],
+    engines,
     jobs,
     clock,
   })
-  return { clock, runs, jobs, startRun }
+  const readModelForms = new ReadModelFormsHandler({ engines })
+  return { clock, runs, jobs, startRun, readModelForms }
 }
 
 export function appToolsFor(
   apps: readonly AppDefinition[],
-  generation: Generation
+  generation: Generation,
+  forms: readonly ModelForm[] = [],
+  wait: RunWait = noWait
 ): ToolRegistration[] {
-  return apps.map((app) => appTool(app, () => generation.startRun))
+  const getRun = new GetRunHandler({ runs: generation.runs })
+  return apps.map((app) =>
+    appTool({
+      app,
+      handlers: () => ({ startRun: generation.startRun, getRun }),
+      forms,
+      wait,
+    })
+  )
+}
+
+export function proposalRunnerFor(
+  generation: Generation,
+  wait: RunWait = noWait
+): PiProposalRunner {
+  return new PiProposalRunner({
+    handlers: {
+      startRun: generation.startRun,
+      getRun: new GetRunHandler({ runs: generation.runs }),
+    },
+    wait,
+  })
 }
 
 export type Library = {
@@ -87,6 +117,7 @@ export function toolHandlersFor(
   const { assets, characters } = library
   return {
     startRun: generation.startRun,
+    readModelForms: generation.readModelForms,
     getRun: new GetRunHandler({ runs: generation.runs }),
     listAssets: new ListAssetsHandler({ assets }),
     getAsset: new GetAssetHandler({ assets }),
@@ -95,13 +126,16 @@ export function toolHandlersFor(
   }
 }
 
+export const noWait: RunWait = async () => undefined
+
 export function allToolsFor(
   apps: readonly AppDefinition[],
   generation: Generation,
-  library: Library
+  library: Library,
+  wait: RunWait = noWait
 ): ToolRegistration[] {
   const handlers = toolHandlersFor(generation, library)
-  return agentTools({ apps, handlers: () => handlers })
+  return agentTools({ apps, handlers: () => handlers, wait })
 }
 
 export function agentFor(

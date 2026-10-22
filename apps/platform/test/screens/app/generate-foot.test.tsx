@@ -34,7 +34,7 @@ describe("Generate at the foot of a column", () => {
       name: t("run.generate.priced", { amount: "80" }),
     })
     expect(button.getAttribute("data-form")).toBe("bar")
-    expect(button.className).toContain("h-12")
+    expect(button.className.split(" ")).toContain("h-field")
     expect(button.textContent).toBe(`${t("run.generate")}80`)
     const price = button.querySelector('[data-slot="generate-button-price"]')
     expect(price?.querySelector("svg")).not.toBeNull()
@@ -68,7 +68,7 @@ describe("the price on the prompt bar's Generate tile", () => {
 
   it("holds no sentence while the price is unknown", () => {
     const start = startWith(
-      { price: t("run.price.unknown"), priceValue: null, priceName: null },
+      { price: "", priceValue: null, priceName: null },
       []
     )
     expect(submitPriceOf(start)).toEqual({})

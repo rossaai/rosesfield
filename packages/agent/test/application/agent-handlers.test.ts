@@ -2,7 +2,9 @@ import { InvalidIdError } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import type { Conversation } from "#agent.contract"
 import { AcceptProposalHandler } from "#application/accept-proposal/accept-proposal.handler"
+import { ChooseAgentModelHandler } from "#application/choose-agent-model/choose-agent-model.handler"
 import { DeleteConversationHandler } from "#application/delete-conversation/delete-conversation.handler"
+import { ListAgentModelsHandler } from "#application/list-agent-models/list-agent-models.handler"
 import { ListConversationsHandler } from "#application/list-conversations/list-conversations.handler"
 import { ReadConversationHandler } from "#application/read-conversation/read-conversation.handler"
 import { SendMessageHandler } from "#application/send-message/send-message.handler"
@@ -11,11 +13,12 @@ import { StartConversationHandler } from "#application/start-conversation/start-
 import { UpdateConversationHandler } from "#application/update-conversation/update-conversation.handler"
 import { conversationIdFormat } from "#domain/conversation.id"
 import { AgentModelMissingError } from "#domain/error/agent-model-missing.error"
+import { AgentModelUnknownError } from "#domain/error/agent-model-unknown.error"
 import { ConversationNotFoundError } from "#domain/error/conversation-not-found.error"
 import { ProposalSettledError } from "#domain/error/proposal-settled.error"
 import { proposalIdFormat } from "#domain/proposal.id"
 import { FakeAgentHarness } from "../fake/fake-agent-harness"
-import { generationFor, readAll } from "../harness"
+import { generationFor, proposalRunnerFor, readAll } from "../harness"
 import { imageApp, start } from "../sample"
 
 const conversation: Conversation = {
@@ -45,7 +48,7 @@ async function agentWithProposal(): Promise<FakeAgentHarness> {
       appId: imageApp().id,
       request: { inputs: { prompt: "a rose" }, count: 1, aspectRatio: "1:1" },
       status: "proposed",
-      runId: null,
+      runIds: [],
     },
     body: { inputs: { prompt: "a rose" } },
   })
@@ -74,12 +77,16 @@ describe("the agent's handlers", () => {
       }),
       new AcceptProposalHandler({
         agent: null,
-        startRun: generation.startRun,
+        runner: proposalRunnerFor(generation),
       }).execute(ref),
       new SkipProposalHandler({ agent: null }).execute(ref),
+      new ListAgentModelsHandler({ agent: null }).execute(),
+      new ChooseAgentModelHandler({ agent: null }).execute({
+        model: "maker/chat-large",
+      }),
     ])
 
-    expect(refusals).toHaveLength(8)
+    expect(refusals).toHaveLength(10)
     for (const refusal of refusals) {
       expect(refusal.status).toBe("rejected")
       const reason = refusal.status === "rejected" ? refusal.reason : null
@@ -87,6 +94,25 @@ describe("the agent's handlers", () => {
       expect(reason).toMatchObject({ code: "AGENT_MODEL_MISSING", status: 412 })
     }
     expect(generation.runs.count).toBe(0)
+  })
+
+  it("list the agent's models and change the one it answers with", async () => {
+    const agent = fakeAgent()
+
+    const before = await new ListAgentModelsHandler({ agent }).execute()
+    const chosen = await new ChooseAgentModelHandler({ agent }).execute({
+      model: "maker/chat-large",
+    })
+
+    expect(before).toEqual({
+      models: ["maker/chat-small", "maker/chat-large"],
+      model: "maker/chat-small",
+    })
+    expect(chosen.model).toBe("maker/chat-large")
+    await expect(
+      new ChooseAgentModelHandler({ agent }).execute({ model: "maker/other" })
+    ).rejects.toBeInstanceOf(AgentModelUnknownError)
+    expect((await agent.listModels()).model).toBe("maker/chat-large")
   })
 
   it("start a conversation that asks before each run unless told otherwise", async () => {
@@ -157,23 +183,23 @@ describe("the agent's handlers", () => {
     const generation = generationFor([imageApp()])
     const accept = new AcceptProposalHandler({
       agent,
-      startRun: generation.startRun,
+      runner: proposalRunnerFor(generation),
     })
 
     const first = await accept.execute(ref)
     const again = await accept.execute(ref)
 
+    const [run] = first.runs
+    expect(first.runs).toHaveLength(1)
     expect(first.proposal).toMatchObject({
       status: "accepted",
-      runId: first.run.id,
+      runIds: [run?.id],
     })
-    expect(first.run.inputs).toMatchObject({ prompt: "a rose" })
-    expect(again.run.id).toBe(first.run.id)
+    expect(run?.inputs).toMatchObject({ prompt: "a rose" })
+    expect(again.runs.map((one) => one.id)).toEqual([run?.id])
     expect(generation.runs.count).toBe(1)
-    expect(generation.jobs.enqueued).toEqual([first.run.id])
-    expect(agent.decisions).toEqual([
-      { status: "accepted", runId: first.run.id },
-    ])
+    expect(generation.jobs.enqueued).toEqual([run?.id])
+    expect(agent.decisions).toEqual([{ status: "accepted", runIds: [run?.id] }])
   })
 
   it("skip a proposal without starting a run, and refuse to accept it after", async () => {
@@ -186,7 +212,7 @@ describe("the agent's handlers", () => {
     await expect(
       new AcceptProposalHandler({
         agent,
-        startRun: generation.startRun,
+        runner: proposalRunnerFor(generation),
       }).execute(ref)
     ).rejects.toThrow(ProposalSettledError)
     expect(generation.runs.count).toBe(0)
@@ -197,14 +223,14 @@ describe("the agent's handlers", () => {
     const generation = generationFor([imageApp()])
     await new AcceptProposalHandler({
       agent,
-      startRun: generation.startRun,
+      runner: proposalRunnerFor(generation),
     }).execute(ref)
 
     await expect(
       new SkipProposalHandler({ agent }).execute(ref)
     ).rejects.toThrow(ProposalSettledError)
     expect(agent.decisions).toEqual([
-      { status: "accepted", runId: generation.jobs.enqueued[0] },
+      { status: "accepted", runIds: generation.jobs.enqueued },
     ])
   })
 })

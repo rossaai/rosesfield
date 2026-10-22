@@ -8,12 +8,25 @@ export const referenceLimits = {
   mimes: ["image/png", "image/jpeg", "image/webp"],
 } as const
 
-export type StoryboardModel = "qwen-image-edit-2511" | "flux-2-klein-4b"
+export type StoryboardModel = "qwen-image-edit-2511"
+
+export const editModel: StoryboardModel = "qwen-image-edit-2511"
+
+export const editTask = "image-edit"
+
+export const textTask = "text-to-image"
+
+export const keyframeInput = "keyframe"
+
+export const firstKeyframeInput = "firstKeyframe"
 
 export const storyboardModels: readonly StoryboardModel[] = [
   "qwen-image-edit-2511",
-  "flux-2-klein-4b",
 ]
+
+const modelKeys: Readonly<Record<StoryboardModel, string>> = {
+  "qwen-image-edit-2511": "qwenImageEdit2511",
+}
 
 export const sceneCountInput = "sceneCount"
 
@@ -47,6 +60,13 @@ export function countsFrom(number: number): string[] {
   return sceneCounts.slice(number - 1)
 }
 
+export function keyframeNumberOf(value: unknown): number | null {
+  const number = typeof value === "string" ? Number(value) : Number.NaN
+  return Number.isInteger(number) && number >= 1 && number <= maxScenes
+    ? number
+    : null
+}
+
 export function modelKeyOf(model: StoryboardModel): string {
-  return model === "qwen-image-edit-2511" ? "qwenImageEdit2511" : "flux2Klein4b"
+  return modelKeys[model]
 }

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShellRouteImport } from './routes/_shell'
+import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -32,6 +33,11 @@ import { Route as ShellHistoryRunIdRouteImport } from './routes/_shell/history/$
 
 const ShellRoute = ShellRouteImport.update({
   id: '/_shell',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GalleryRoute = GalleryRouteImport.update({
@@ -134,6 +140,7 @@ const ShellHistoryRunIdRoute = ShellHistoryRunIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof ShellIndexRoute
+  '/explore': typeof ExploreRoute
   '/gallery': typeof GalleryRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/history/': typeof ShellHistoryIndexRoute
 }
 export interface FileRoutesByTo {
+  '/explore': typeof ExploreRoute
   '/gallery': typeof GalleryRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
@@ -177,6 +185,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_shell': typeof ShellRouteWithChildren
+  '/explore': typeof ExploreRoute
   '/gallery': typeof GalleryRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
@@ -201,6 +210,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/explore'
     | '/gallery'
     | '/privacy'
     | '/terms'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/history/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/explore'
     | '/gallery'
     | '/privacy'
     | '/terms'
@@ -243,6 +254,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_shell'
+    | '/explore'
     | '/gallery'
     | '/privacy'
     | '/terms'
@@ -266,6 +278,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   ShellRoute: typeof ShellRouteWithChildren
+  ExploreRoute: typeof ExploreRoute
   GalleryRoute: typeof GalleryRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
@@ -281,6 +294,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof ShellRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gallery': {
@@ -455,6 +475,7 @@ const ShellRouteWithChildren = ShellRoute._addFileChildren(ShellRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   ShellRoute: ShellRouteWithChildren,
+  ExploreRoute: ExploreRoute,
   GalleryRoute: GalleryRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,

@@ -53,8 +53,8 @@ describe("the count stepper at the end of the chip row", () => {
     const changes = renderCount(1)
     const stepper = screen.getByRole("group", { name: t("field.count.label") })
     expect(stepper.textContent).toBe("1/4")
-    expect(stepper.className).toContain("w-24.5")
-    expect(stepper.className).toContain("h-8")
+    expect(stepper.className).toContain("h-button-small")
+    expect(stepper.className).toContain("rounded-full")
     fireEvent.click(screen.getByRole("button", { name: t("bar.count.more") }))
     expect(changes).toEqual([{ count: 2 }])
   })
@@ -180,6 +180,33 @@ describe("the aspect chip's menu", () => {
       expect(
         option.querySelector("[data-slot='select-item-icon'] svg")
       ).not.toBeNull()
+    }
+  })
+})
+
+describe("a choice chip with no icon of its own", () => {
+  it("names its setting with its value, so Relight's three Auto chips read apart", () => {
+    const relight = appListing.parse(findApp("relight"))
+    render(
+      <TooltipProvider>
+        {["direction", "softness", "color"].map((name) => (
+          <SettingChip
+            key={name}
+            app={relight}
+            form={formAt(1, [])}
+            name={name}
+          />
+        ))}
+      </TooltipProvider>
+    )
+    const faces = screen
+      .getAllByRole("combobox")
+      .map(
+        (chip) => chip.querySelector("[data-slot='select-value']")?.textContent
+      )
+    expect(new Set(faces).size).toBe(3)
+    for (const face of faces) {
+      expect(face).toMatch(/^\S.*: \S/)
     }
   })
 })

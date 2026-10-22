@@ -1,23 +1,23 @@
 import type { AppListing, Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
-import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import type { ReactElement, ReactNode } from "react"
 import { runsOf, runsQuery } from "@/api/queries"
 import { appEmptyTitle, aspectOf, defaultAspectOf } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
-import { aspectStyle } from "@/pieces/asset-tile"
-import { RunLine } from "@/pieces/run/run-line"
-import { RunOutputs } from "@/pieces/run/run-outputs"
+import {
+  RunCard,
+  RunCardSkeleton,
+  RunColumns,
+  runHeightOf,
+} from "@/pieces/run/run-card"
 import { useCanvasView } from "@/screens/app/canvas-view"
 import { historyGridItems } from "@/screens/history/history-grid-items"
-import { keepsRun } from "@/screens/history/history-screen"
 import { ResultGrid } from "@/screens/library/result-grid"
 
 type AppCanvasProps = {
   app: AppListing
-  order: "newest-first" | "newest-last"
   onUseInputs: (run: Run) => void
   emptyAction?: ReactNode
   afterRun?: (run: Run) => ReactNode
@@ -40,37 +40,17 @@ export function useAppRuns(app: AppListing): AppRuns {
   }
 }
 
-function RunBlock({
-  run,
-  list,
-  onUseInputs,
-  afterRun,
-}: {
-  run: Run
-  list: readonly string[]
-  onUseInputs: (run: Run) => void
-  afterRun?: ((run: Run) => ReactNode) | undefined
-}): ReactElement {
-  return (
-    <article className="flex flex-col gap-s2">
-      <RunLine run={run} onUseInputs={onUseInputs} />
-      <RunOutputs run={run} list={list} />
-      {afterRun?.(run)}
-    </article>
-  )
-}
+const skeletonPlaces = ["first", "second", "third", "fourth"] as const
 
 export function CanvasSkeleton({ app }: { app: AppListing }): ReactElement {
   const aspect = aspectOf(defaultAspectOf(app))
+  const view = useCanvasView()
   return (
-    <div className="flex flex-col gap-s4">
-      {[0, 1].map((row) => (
-        <div key={row} className="flex flex-col gap-s2">
-          <Skeleton className="h-s5 w-1/2" />
-          <Skeleton className="w-1/2" style={aspectStyle(aspect)} />
-        </div>
+    <RunColumns columns={view.columns}>
+      {skeletonPlaces.slice(0, Math.max(2, view.columns)).map((place) => (
+        <RunCardSkeleton key={place} aspect={aspect} />
       ))}
-    </div>
+    </RunColumns>
   )
 }
 
@@ -103,66 +83,25 @@ function ViewedRuns(
   props: AppCanvasProps & { runs: readonly Run[] }
 ): ReactElement {
   const view = useCanvasView()
-  const runs = props.runs.filter((run) => keepsRun(run, view.state, undefined))
-  if (runs.length === 0) {
+  if (view.layout === "grid") {
     return (
-      <StateView
-        kind="empty"
-        title={t("history.filterEmpty.title")}
-        actions={
-          <Button onClick={view.clear}>
-            {t("history.filterEmpty.action")}
-          </Button>
-        }
-      />
+      <ResultGrid items={historyGridItems(props.runs)} size={view.gridSize} />
     )
   }
-  if (view.layout === "grid") {
-    return <ResultGrid items={historyGridItems(runs)} size={view.size} />
-  }
-  return <RunStack {...props} runs={runs} />
+  return <RunStack {...props} columns={view.columns} />
 }
 
 function RunStack({
   runs,
-  order,
+  columns,
   onUseInputs,
   afterRun,
-}: AppCanvasProps & { runs: readonly Run[] }): ReactElement {
+}: AppCanvasProps & { runs: readonly Run[]; columns: number }): ReactElement {
   const list = runs.flatMap((run) => run.outputs)
-  if (order === "newest-last") {
-    return (
-      <div className="flex flex-col gap-s6">
-        {[...runs].reverse().map((run) => (
-          <RunBlock
-            key={run.id}
-            run={run}
-            list={list}
-            onUseInputs={onUseInputs}
-            afterRun={afterRun}
-          />
-        ))}
-      </div>
-    )
-  }
-  const [latest, ...earlier] = runs
   return (
-    <div className="flex flex-col gap-s6">
-      {latest === undefined ? null : (
-        <RunBlock
-          run={latest}
-          list={list}
-          onUseInputs={onUseInputs}
-          afterRun={afterRun}
-        />
-      )}
-      {earlier.length === 0 ? null : (
-        <h2 className="text-body font-medium text-ink-muted">
-          {t("app.history.title")}
-        </h2>
-      )}
-      {earlier.map((run) => (
-        <RunBlock
+    <RunColumns heights={runs.map(runHeightOf)} columns={columns}>
+      {runs.map((run) => (
+        <RunCard
           key={run.id}
           run={run}
           list={list}
@@ -170,6 +109,6 @@ function RunStack({
           afterRun={afterRun}
         />
       ))}
-    </div>
+    </RunColumns>
   )
 }

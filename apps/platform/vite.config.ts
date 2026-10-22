@@ -67,7 +67,6 @@ const icon = (size: number, purpose: "any" | "maskable") => ({
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(versionOf(platformPackage, commitOf())),
-    __LANDING_PAGE__: JSON.stringify(process.env.ROSESFIELD_LANDING === "1"),
   },
   plugins: [
     tanstackRouter({

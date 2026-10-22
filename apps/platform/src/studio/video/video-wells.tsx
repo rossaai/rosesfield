@@ -64,7 +64,6 @@ export function ElementsChip({
   return (
     <>
       <Chip
-        size="inline"
         icon={<AtSignIcon aria-hidden="true" />}
         disabled={held.length >= slot.max}
         onClick={() => setOpen(true)}

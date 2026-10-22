@@ -98,9 +98,9 @@ export const MODAL = {
     },
   },
   variables: {
-    "component.settings.modalH": [],
-    "component.settings.modalW": [],
-    "component.settings.rail.width": [],
+    "component.settings.modalH": ["--spacing-settings-modal-h"],
+    "component.settings.modalW": ["--spacing-settings-modal-w"],
+    "component.settings.rail.width": ["--spacing-settings-rail"],
     "component.sheet.panelMaxW": ["--spacing-dialog"],
     "component.sheet.wideMaxW": [],
     "control.hitTouch": ["--spacing-button", "--spacing-icon"],

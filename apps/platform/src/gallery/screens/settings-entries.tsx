@@ -42,7 +42,6 @@ const publicSettings = screenEntry(
       seeds: [seeds.settingsAs(publicSettingsOf(false))],
       before: () => {
         holdVisitorKey("engine", null)
-        holdVisitorKey("agent", null)
       },
     },
     { id: "loading", label: "state.loading", path: "/settings", seeds: [] },
@@ -53,7 +52,6 @@ const publicSettings = screenEntry(
       seeds: [seeds.settingsAs(publicSettingsOf(true))],
       before: () => {
         holdVisitorKey("engine", sampleKey)
-        holdVisitorKey("agent", sampleKey)
       },
     },
     {

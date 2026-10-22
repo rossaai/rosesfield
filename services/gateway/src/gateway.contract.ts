@@ -9,11 +9,15 @@ export const engineSettings = z.object({
   origin: runOrigin,
 })
 
+export const servedPlace = z.enum(["bun", "workers"])
+
 export const settingsResponse = z.object({
   settings: z.object({
     mode: z.enum(["owner", "public"]),
+    place: servedPlace,
     engine: engineSettings,
     lock: z.enum(["local", "token", "none"]),
+    keyFrom: z.enum(["server", "settings"]),
     agent: z.object({
       model: z.enum(["set", "missing"]),
       models: z.array(z.object({ provider: z.string(), id: z.string() })),
@@ -44,6 +48,7 @@ export const appSchemaResponse = z.record(z.string(), z.unknown())
 export const healthResponse = z.object({ status: z.literal("ok") })
 
 export type Settings = z.infer<typeof settingsResponse>["settings"]
+export type ServedPlace = z.infer<typeof servedPlace>
 export type EngineStatus = z.infer<typeof engineSettings>
 
 export const gatewayRoutes = {

@@ -23,7 +23,7 @@ export type Proposal = {
   appId: string
   request: RunRequest
   status: ProposalStatus
-  runId: string | null
+  runIds: string[]
 }
 
 export type TranscriptItem =
@@ -31,6 +31,7 @@ export type TranscriptItem =
   | { type: "agent"; text: string }
   | { type: "run"; runId: string }
   | { type: "proposal"; proposal: Proposal }
+  | { type: "credits"; credits: number }
 
 export type Transcript = {
   conversation: Conversation
@@ -46,6 +47,12 @@ const listPath = "/api/agent/conversations"
 const itemPath = "/api/agent/conversations/:conversationId"
 const proposalPath =
   "/api/agent/conversations/:conversationId/proposals/:proposalId/:act"
+
+export function creditsOf(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? value
+    : null
+}
 
 function textOf(value: unknown): string | null {
   return typeof value === "string" && value !== "" ? value : null
@@ -67,6 +74,14 @@ export function readConversationOf(value: unknown): Conversation | null {
   return { id, title: title === "" ? null : title, runApproval, createdAt }
 }
 
+function runIdsOf(value: unknown): string[] | null {
+  if (!Array.isArray(value)) {
+    return null
+  }
+  const runIds = value.flatMap((one) => textOf(one) ?? [])
+  return runIds.length === value.length ? runIds : null
+}
+
 export function readProposal(value: unknown): Proposal | null {
   const id = textOf(fieldOf(value, "id"))
   const appId = textOf(fieldOf(value, "appId"))
@@ -76,14 +91,17 @@ export function readProposal(value: unknown): Proposal | null {
     "accepted",
     "skipped",
   ])
-  const runId = fieldOf(value, "runId")
-  if (id === null || appId === null || !request.success || status === null) {
+  const runIds = runIdsOf(fieldOf(value, "runIds"))
+  if (
+    id === null ||
+    appId === null ||
+    !request.success ||
+    status === null ||
+    runIds === null
+  ) {
     return null
   }
-  if (runId !== null && textOf(runId) === null) {
-    return null
-  }
-  return { id, appId, request: request.data, status, runId: textOf(runId) }
+  return { id, appId, request: request.data, status, runIds }
 }
 
 function readItem(value: unknown): TranscriptItem | null {
@@ -95,6 +113,10 @@ function readItem(value: unknown): TranscriptItem | null {
   const runId = textOf(fieldOf(value, "runId"))
   if (type === "run" && runId !== null) {
     return { type, runId }
+  }
+  const credits = creditsOf(fieldOf(value, "credits"))
+  if (type === "credits" && credits !== null) {
+    return { type, credits }
   }
   const proposal = readProposal(fieldOf(value, "proposal"))
   return type === "proposal" && proposal !== null ? { type, proposal } : null
@@ -168,18 +190,18 @@ export async function deleteConversation(
   await callPath({ method: "DELETE", path })
 }
 
-function acceptedOf(body: unknown): { proposal: Proposal; run: Run } | null {
+function acceptedOf(body: unknown): { proposal: Proposal; runs: Run[] } | null {
   const proposal = readProposal(fieldOf(body, "proposal"))
-  const started = run.safeParse(fieldOf(body, "run"))
+  const started = run.array().safeParse(fieldOf(body, "runs"))
   return proposal === null || !started.success
     ? null
-    : { proposal, run: started.data }
+    : { proposal, runs: started.data }
 }
 
 export function acceptProposal(
   conversationId: string,
   proposalId: string
-): Promise<{ proposal: Proposal; run: Run }> {
+): Promise<{ proposal: Proposal; runs: Run[] }> {
   const path = buildPath(proposalPath, {
     conversationId,
     proposalId,

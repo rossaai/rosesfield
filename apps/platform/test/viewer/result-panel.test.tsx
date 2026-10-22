@@ -82,8 +82,13 @@ describe("the result viewer's panel", () => {
 
     expect(details?.textContent).toContain("a red rose in rain")
     expect(details?.textContent).toContain("model-a")
-    expect(details?.textContent).toContain(runPrice(entry.run))
+    expect(details?.textContent).toContain(runPrice(entry.run) ?? "?")
     expect(screen.getByText(t("explore.viewer.credits"))).toBeTruthy()
+  })
+
+  it("shows no credits row when the run carries no cost", () => {
+    renderPanel(entryOf(runOf({ cost: null })))
+    expect(screen.queryByText(t("explore.viewer.credits"))).toBeNull()
   })
 
   it("shows each input asset as a tile, and none for a shared result", () => {
@@ -121,24 +126,18 @@ describe("the result viewer's panel", () => {
     expect(container.textContent).not.toMatch(/\bAI\b|machine/i)
   })
 
-  it("opens its details under an Info header that folds them away", () => {
+  it("keeps its details always open, with no Info header to fold them", () => {
     const { container } = renderPanel(entryOf(runOf({})))
-    const header = screen.getByRole("button", { name: t("viewer.info") })
-
-    expect(header.getAttribute("aria-expanded")).toBe("true")
-    expect(header.querySelector("svg")).not.toBeNull()
-    fireEvent.click(header)
-    expect(header.getAttribute("aria-expanded")).toBe("false")
-    expect(container.querySelector("[data-slot=viewer-details]")).toBeNull()
+    expect(screen.queryByRole("button", { name: t("viewer.info") })).toBeNull()
+    expect(container.querySelector("[data-slot=viewer-details]")).not.toBeNull()
   })
 
   it("gives the model row the model and the mode the run used", () => {
     const made = runOf({
-      appId: "recast",
+      appId: "expand",
       inputs: {
-        mode: "object",
-        source: [inputId],
-        target: "the boat",
+        mode: "sides",
+        photo: [inputId],
         prompt: "a paper boat",
       },
     })
@@ -146,7 +145,7 @@ describe("the result viewer's panel", () => {
     const details = container.querySelector("[data-slot=viewer-details]")
 
     expect(modelAndModeOf(made)).toBe(
-      `model-a, ${tCatalog("recast.choice.mode.object")}`
+      `model-a, ${tCatalog("expand.choice.mode.sides")}`
     )
     expect(details?.textContent).toContain(modelAndModeOf(made))
     expect(

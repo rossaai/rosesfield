@@ -1,6 +1,6 @@
 import type { Asset } from "@rosesfield/contract"
-import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { FileAudioIcon, FileTextIcon } from "lucide-react"
 import type { ReactElement } from "react"
 import { joinParts } from "@/copy/format"
@@ -36,7 +36,7 @@ export function AssetThumb(props: AssetThumbProps): ReactElement {
       }
       className={cn(
         "relative flex aspect-square w-full min-w-0 flex-col items-center justify-center gap-s1 rounded-cell bg-(--well) p-s2",
-        interaction.light
+        motion.press
       )}
     >
       <span className="flex size-icon items-center justify-center rounded-full bg-(--ground) [&_svg]:glyph">

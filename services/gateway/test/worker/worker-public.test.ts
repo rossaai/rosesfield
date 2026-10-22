@@ -2,6 +2,8 @@ import {
   conversationListResponse,
   conversationResponse,
   conversationRoutes,
+  defaultChatModel,
+  routerChat,
 } from "@rosesfield/agent"
 import {
   assetResponse,
@@ -33,8 +35,6 @@ const worker = createTestHarness({
         MODE: "public",
         SESSION_SECRET: sessionSecret,
         SESSION_REQUESTS_PER_MINUTE: "1000",
-        AGENT_BASE_URL: "http://127.0.0.1:9/v1",
-        AGENT_MODEL: "qwen3.8:27b",
       },
     },
   ],
@@ -107,8 +107,13 @@ describe("the Workers entry in public mode", () => {
       settingsResponse.parse(await response.json()).settings
     ).toMatchObject({
       mode: "public",
+      place: "workers",
       lock: "none",
       engine: { target: "comfy-cloud", key: "set", origin: "live" },
+      agent: {
+        model: "set",
+        models: [{ provider: routerChat.provider, id: defaultChatModel }],
+      },
     })
   })
 
@@ -148,7 +153,7 @@ describe("the Workers entry in public mode", () => {
         conversationId: conversation.id,
       })
     )
-    const withoutModelKey = await owner.call(
+    const withoutKey = await owner.call(
       buildPath(conversationRoutes.sendMessage.path, {
         conversationId: conversation.id,
       }),
@@ -166,7 +171,7 @@ describe("the Workers entry in public mode", () => {
     expect(strangerAsset.status).toBe(404)
     expect(strangerRuns.runs).toEqual([])
     expect(strangerRead.status).toBe(404)
-    expect(await codeOf(withoutModelKey)).toBe("AGENT_MODEL_MISSING")
+    expect(await codeOf(withoutKey)).toBe("AGENT_MODEL_MISSING")
   })
 
   it("moves a visitor's conversations to the account's agent host when the key is added", async () => {

@@ -1,6 +1,8 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { defaultChatModel, routerChat } from "@rosesfield/agent"
+import { catalogRoutes } from "@rosesfield/catalog/comfy"
 import { errorEnvelope, routes } from "@rosesfield/contract"
 import { afterAll, describe, expect, it } from "vitest"
 import { composeLocalGateway } from "#compose/local-gateway"
@@ -95,6 +97,10 @@ describe("the owner lock on a server that listens beyond 127.0.0.1", () => {
         path: routes.startRun.path.replace(":appId", "sample-image"),
         method: "POST",
       },
+      {
+        path: catalogRoutes.priceRuns.path.replace(":appId", "sample-image"),
+        method: "POST",
+      },
       { path: "/mcp", method: "POST" },
       { path: "/api/nothing-here", method: "GET" },
     ]) {
@@ -127,6 +133,7 @@ describe("the owner lock on a server that listens beyond 127.0.0.1", () => {
     expect(JSON.parse(text)).toEqual({
       settings: {
         mode: "owner",
+        place: "bun",
         engine: {
           target: "demo",
           address: null,
@@ -134,6 +141,7 @@ describe("the owner lock on a server that listens beyond 127.0.0.1", () => {
           origin: "demo",
         },
         lock: "token",
+        keyFrom: "server",
         agent: { model: "missing", models: [] },
       },
     })
@@ -165,6 +173,7 @@ describe("the owner lock on a server that listens on 127.0.0.1 only", () => {
     expect(JSON.parse(text)).toEqual({
       settings: {
         mode: "owner",
+        place: "bun",
         engine: {
           target: "comfy-cloud",
           address: "https://cloud.comfy.org",
@@ -172,7 +181,11 @@ describe("the owner lock on a server that listens on 127.0.0.1 only", () => {
           origin: "live",
         },
         lock: "local",
-        agent: { model: "missing", models: [] },
+        keyFrom: "server",
+        agent: {
+          model: "set",
+          models: [{ provider: routerChat.provider, id: defaultChatModel }],
+        },
       },
     })
   })

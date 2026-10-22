@@ -55,7 +55,6 @@ export function ColumnAppScreen({
       canvas={(openInputs) => (
         <AppCanvas
           app={app}
-          order="newest-first"
           onUseInputs={state.useInputs}
           emptyAction={<AddInputsButton onClick={openInputs} />}
         />

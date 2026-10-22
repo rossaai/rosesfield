@@ -72,7 +72,12 @@ function formSettingOf(
     return []
   }
   return field.kind === "media"
-    ? [[field.name, Array.isArray(value) ? value.length : 0]]
+    ? [
+        [
+          field.name,
+          Math.max(Array.isArray(value) ? value.length : 0, field.min),
+        ],
+      ]
     : [[field.name, settingOf(value) ?? field.default]]
 }
 
@@ -89,7 +94,15 @@ function appSettingOf(
     case "video":
     case "audio":
     case "character":
-      return [[input.name, Array.isArray(value) ? value.length : 0]]
+      return [
+        [
+          input.name,
+          Math.max(
+            Array.isArray(value) ? value.length : 0,
+            input.presence === "required" ? 1 : 0
+          ),
+        ],
+      ]
     default:
       return [[input.name, settingOf(value) ?? input.default]]
   }

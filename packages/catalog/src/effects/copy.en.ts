@@ -4,7 +4,7 @@ export const effectsCopy = {
   "effects.name": "Effects",
   "effects.line": "Pick an effect, add a photo, and get a short clip.",
   "effects.keywords":
-    "effect, photo to video, space, eye, giant, wings, petals, liquid metal, copies, fish",
+    "effect, photo to video, space, eye, giant, wings, petals, liquid metal, copies",
   "effects.empty.title": "Your effect videos show here",
   "effects.closed": "The effects are in review and open here once they pass.",
   "effects.input.effect.label": "Effect",
@@ -27,7 +27,6 @@ export const effectsCopy = {
   "effects.again.photo": "Another photo",
   "effects.again.effect": "Another effect",
   "effects.choice.effect.buildingsRipple": "Buildings ripple",
-  "effects.choice.effect.fishInTheAir": "Fish in the air",
   "effects.choice.effect.freezeAndCircle": "Freeze and circle",
   "effects.choice.effect.growGiant": "Grow into a giant",
   "effects.choice.effect.growWings": "Grow wings",
@@ -39,7 +38,6 @@ export const effectsCopy = {
   "effects.choice.effect.scatterPetals": "Scatter into petals",
   "effects.choice.effect.stillInTheStreet": "Still in a busy street",
   "effects.photo.buildingsRipple": "A person in front of buildings",
-  "effects.photo.fishInTheAir": "A person, or a room",
   "effects.photo.freezeAndCircle": "A person in motion",
   "effects.photo.growGiant": "A person on a street",
   "effects.photo.growWings": "A person, head to waist",
@@ -52,4 +50,6 @@ export const effectsCopy = {
   "effects.photo.stillInTheStreet": "A person on a busy street",
   "effects.choice.resolution.p480": "480p",
   "effects.choice.resolution.p720": "720p",
+  "effects.choice.resolution.p1080": "1080p",
+  "effects.draft": "Draft",
 } satisfies Record<string, string>

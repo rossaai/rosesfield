@@ -1,3 +1,4 @@
+import type { Run } from "@rosesfield/contract"
 import type { QueryClient } from "@tanstack/react-query"
 
 export type RouterContext = {
@@ -8,6 +9,9 @@ export type Draft = {
   prompt: string
   assetIds: string[]
   characterIds: string[]
+  inputs?: Run["inputs"]
+  aspectRatio?: string | null
+  input?: { src: string; name: string }
 }
 
 declare module "@tanstack/react-router" {

@@ -42,18 +42,26 @@ export {
   modelListResponse,
   modelTag,
   type PriceResponse,
+  type PricesResponse,
   type PriceThird,
+  priceAsksMax,
   priceBody,
   priceResponse,
+  pricesBody,
+  pricesResponse,
   priceThird,
+  runPrice,
 } from "#comfy/model-catalog.contract"
 export { deniedNames, deniedProviders, isDeniedModel } from "#comfy/model-deny"
 export {
   boardRankOf,
   factsOf,
+  labOfModel,
+  lineKeyOf,
   type ModelFactsFile,
   modelFactsData,
   modelFactsFile,
+  unmarkedLabsOf,
   weightsHost,
 } from "#comfy/model-facts"
 export { makerNames, makerOf, nameOf } from "#comfy/model-names"
@@ -62,7 +70,9 @@ export {
   type ModelTask,
   mediaRules,
   modelTasks,
+  namedTasksOf,
   nameRules,
+  taskFieldOf,
   tasksOfModel,
 } from "#comfy/model-tasks"
 export {

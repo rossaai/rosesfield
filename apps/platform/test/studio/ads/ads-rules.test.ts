@@ -1,7 +1,10 @@
 import { findApp } from "@rosesfield/catalog"
+import { adsPhotoLimitOf } from "@rosesfield/catalog/ads"
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import {
   type AppDefinition,
   type AppListing,
+  run,
   startRunBodyFor,
 } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
@@ -10,12 +13,14 @@ import { tCatalog } from "@/copy/t"
 import { bodyOf, defaultsOf, type FieldValue } from "@/screens/app/app-form"
 import {
   adsProblems,
+  adsValuesOf,
   barTextInputs,
   barTextOf,
   bodyAppFor,
   compactedPhotos,
   formProblemsOf,
   holdsBarText,
+  modelPhotoLimitOf,
   optionalApp,
   photoLimitOf,
   photoMaxOf,
@@ -99,19 +104,6 @@ const states: { name: string; change: Inputs }[] = [
     name: "3 photos and a character on Qwen",
     change: { ...three, character: [character] },
   },
-  { name: "3 photos on Klein", change: { ...three, model: "flux-2-klein-4b" } },
-  {
-    name: "2 photos and a character on Klein",
-    change: { ...two, character: [character], model: "flux-2-klein-4b" },
-  },
-  {
-    name: "1 photo and a character on Klein",
-    change: {
-      product: [photo],
-      character: [character],
-      model: "flux-2-klein-4b",
-    },
-  },
   {
     name: "an ad after a scene of 600 characters",
     change: {
@@ -145,7 +137,9 @@ describe("the Ads screen rules", () => {
   it("state in each model's line the photos the contract lets it take", () => {
     const model = listing.inputs.find((input) => input.name === "model")
     const options = model?.type === "choice" ? model.options : []
-    expect(options.length).toBe(2)
+    expect(options.map((option) => option.value)).toEqual([
+      "qwen-image-edit-2511",
+    ])
     for (const option of options) {
       const line = tCatalog(`${option.labelKey}.line`)
       expect(line).toContain(
@@ -187,16 +181,13 @@ describe("the Ads screen rules", () => {
       },
     ])
     expect(
-      adsProblems(
-        listing,
-        formInputs({ ...two, character: [character], model: "flux-2-klein-4b" })
-      )[0]?.values
-    ).toEqual({ max: 2 })
+      adsProblems(listing, formInputs({ ...two, character: [character] }))
+    ).toEqual([])
   })
 
   it("read how many photos each model takes from the contract's rules", () => {
     expect(photoLimitOf(listing, "qwen-image-edit-2511")).toBe(3)
-    expect(photoLimitOf(listing, "flux-2-klein-4b")).toBe(2)
+    expect(photoLimitOf(listing, "flux-2-klein-4b")).toBe(0)
   })
 
   it("split the bar's text into the inputs of each kind and join it back", () => {
@@ -233,5 +224,138 @@ describe("the Ads screen rules", () => {
       compactedPhotos(listing, { product: [photo], thirdPhoto: [otherPhoto] })
     ).toEqual({ product: [photo], secondPhoto: [otherPhoto], thirdPhoto: [] })
     expect(compactedPhotos(listing, three)).toBeNull()
+  })
+})
+
+const twoReferences: CatalogModel = {
+  id: "maker/two-references",
+  kind: "hosted",
+  maker: "Maker",
+  name: "Two references",
+  nameKey: null,
+  task: "image-edit",
+  tags: [{ kind: "hosted" }, { kind: "references", max: 2 }],
+  form: [
+    {
+      kind: "media",
+      name: "images",
+      path: "images",
+      required: true,
+      media: "image",
+      min: 1,
+      max: 2,
+    },
+  ],
+}
+
+const maskedByPath: CatalogModel = {
+  ...twoReferences,
+  id: "maker/one-image-and-a-region",
+  tags: [{ kind: "hosted" }],
+  form: [
+    {
+      kind: "media",
+      name: "images",
+      path: "images",
+      required: true,
+      media: "image",
+      min: 1,
+      max: 1,
+    },
+    {
+      kind: "media",
+      name: "region",
+      path: "edit.mask",
+      required: false,
+      media: "image",
+      min: 0,
+      max: 4,
+    },
+  ],
+}
+
+describe("the Ads photo limit of a catalog model", () => {
+  it("reads a hosted model's limit from its references, counting the character's photo", () => {
+    const inputs = formInputs({
+      product: [photo],
+      secondPhoto: [otherPhoto],
+      character: [character],
+      model: twoReferences.id,
+    })
+    expect(adsProblems(listing, inputs, [twoReferences])).toEqual([
+      {
+        input: "model",
+        key: "ads.input.model.tooManyPhotos",
+        values: { max: 2 },
+        focus: "attach",
+      },
+    ])
+    expect(
+      adsProblems(listing, { ...inputs, character: [] }, [twoReferences])
+    ).toEqual([])
+    const hosted = modelPhotoLimitOf(listing, twoReferences.id, twoReferences)
+    const graph = modelPhotoLimitOf(listing, "qwen-image-edit-2511", undefined)
+    expect(hosted).toBe(2)
+    expect(graph).toBe(photoLimitOf(listing, "qwen-image-edit-2511"))
+  })
+
+  it("reads the limit from the field the photos are sent to, never from a mask the path names", () => {
+    const inputs = formInputs({
+      product: [photo],
+      secondPhoto: [otherPhoto],
+      model: maskedByPath.id,
+    })
+    expect(modelPhotoLimitOf(listing, maskedByPath.id, maskedByPath)).toBe(
+      adsPhotoLimitOf(maskedByPath.form ?? [])
+    )
+    expect(adsProblems(listing, inputs, [maskedByPath])).toEqual([
+      {
+        input: "model",
+        key: "ads.input.model.tooManyPhotos",
+        values: { max: 1 },
+        focus: "attach",
+      },
+    ])
+  })
+
+  it("leaves a hosted model the catalog has not listed to the gateway", () => {
+    const inputs = formInputs({ ...three, model: twoReferences.id })
+    expect(adsProblems(listing, inputs, [])).toEqual([])
+  })
+})
+
+describe("Use these inputs on an Ads run", () => {
+  it("fills a hosted model's run with its seed, its words, its photos and its model", () => {
+    const made = run.parse({
+      id: "7c2e4a6c-8e0a-4c2e-8a4c-6e8a0c2e4a02",
+      appId: "ads",
+      status: "done",
+      inputs: {
+        kind: "ad",
+        headline: "Fresh",
+        line: "Made daily",
+        product: [photo],
+        character: [character],
+        style: "bold",
+        model: "bfl/flux-3-image",
+      },
+      count: 4,
+      aspectRatio: "4:5",
+      seed: 42,
+      outputs: [],
+      progress: null,
+      engine: { adapter: "hosted-model", models: [], workflowHash: null },
+      cost: null,
+      origin: "live",
+      failure: null,
+      createdAt: "2026-10-20T09:00:00.000Z",
+      finishedAt: "2026-10-20T09:00:20.000Z",
+    })
+    const values = adsValuesOf(listing, made)
+    expect(values.seedMode).toBe("fixed")
+    expect(values.inputs.seed).toBe(42)
+    expect(values.count).toBe(4)
+    expect(values.aspectRatio).toBe("4:5")
+    expect(values.inputs).toMatchObject(made.inputs)
   })
 })

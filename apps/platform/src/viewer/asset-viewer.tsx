@@ -2,9 +2,10 @@ import type { Asset } from "@rosesfield/contract"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { Viewer, type ViewerStep } from "@rosesfield/ui/components/viewer"
+import type { OriginShape } from "@rosesfield/ui/hooks/use-grow-from"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { useSearch } from "@tanstack/react-router"
-import { type ReactElement, type ReactNode, useEffect, useState } from "react"
+import { type ReactElement, type ReactNode, useState } from "react"
 import { assetQuery, assetsQuery } from "@/api/queries"
 import { t } from "@/copy/t"
 import { useAssetName } from "@/pieces/asset-name"
@@ -12,14 +13,16 @@ import { aspectOfAsset } from "@/pieces/asset-tile"
 import { CompareDivider } from "@/pieces/compare-divider"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { readText } from "@/shell/search"
+import { useRunModels } from "@/viewer/use-run-models"
 import { ViewerBar } from "@/viewer/viewer-actions"
-import { useViewer } from "@/viewer/viewer-context"
+import { shapeFor, useViewer } from "@/viewer/viewer-context"
 import {
   compareInputOf,
   type MeasuredSize,
   useSourceRun,
   type ViewerCompare,
   ViewerDetails,
+  ViewerFoot,
   ViewerInfo,
 } from "@/viewer/viewer-info"
 import { ViewerMedia, ViewerMissing } from "@/viewer/viewer-media"
@@ -29,30 +32,28 @@ const square: MediaAspect = { width: 1, height: 1 }
 const audioAspect: MediaAspect = { width: 4, height: 1 }
 const textAspect: MediaAspect = { width: 4, height: 5 }
 
-function mediaAspectOf(
+export function mediaAspectOf(
   asset: Asset | undefined,
-  measured: MediaAspect | null
+  measured: MediaAspect | null,
+  shape: OriginShape | null
 ): MediaAspect {
-  if (asset === undefined) {
-    return square
-  }
-  if (asset.kind === "audio") {
+  if (asset?.kind === "audio") {
     return audioAspect
   }
-  if (asset.kind === "text") {
+  if (asset?.kind === "text") {
     return textAspect
   }
-  return aspectOfAsset(asset, measured ?? square) ?? square
+  const known = measured ?? shape ?? square
+  const aspect = { width: known.width, height: known.height }
+  return asset === undefined ? aspect : (aspectOfAsset(asset, aspect) ?? aspect)
 }
 
-function frameAspect(
-  asset: Asset | undefined,
+export function frameAspectOf(
+  kind: Asset["kind"] | undefined,
   aspect: MediaAspect,
   isRegular: boolean
 ): MediaAspect {
-  return asset?.kind === "video"
-    ? stageAspectOf(aspect, "video", isRegular)
-    : aspect
+  return kind === "video" ? stageAspectOf(aspect, "video", isRegular) : aspect
 }
 
 function isUsable(aspect: MediaAspect): boolean {
@@ -129,7 +130,9 @@ function PhoneBar({
 function useCompare(asset: Asset | undefined): ViewerCompare {
   const { run } = useSourceRun(asset ?? null)
   const [shown, setShown] = useState<string | null>(null)
-  const inputId = asset === undefined ? null : compareInputOf(run, asset)
+  const models = useRunModels(run)
+  const inputId =
+    asset === undefined ? null : compareInputOf(run, asset, models)
   const isOn = inputId !== null && shown === asset?.id
   return {
     inputId,
@@ -200,7 +203,8 @@ function ViewerLayer({
   const steps = useSteps(assetId)
   const compare = useCompare(record)
   const { pixels, onMeasure } = useMeasured(assetId)
-  const aspect = mediaAspectOf(record, pixels)
+  const shape = shapeFor(viewer.trail, assetId)
+  const aspect = mediaAspectOf(record, pixels, shape)
   const isRegular = useIsRegularWindow()
   return (
     <Viewer
@@ -211,17 +215,17 @@ function ViewerLayer({
         }
       }}
       origin={viewer.trail.origin}
-      aspect={frameAspect(record, aspect, isRegular)}
+      aspect={frameAspectOf(record?.kind ?? shape?.kind, aspect, isRegular)}
       title={name ?? t("viewer.info")}
       closeLabel={t("viewer.close")}
       aside={
         record === undefined ? undefined : (
-          <ViewerInfo
-            asset={record}
-            compare={compare}
-            measured={pixels}
-            onDeleted={viewer.close}
-          />
+          <ViewerInfo asset={record} compare={compare} measured={pixels} />
+        )
+      }
+      actions={
+        record === undefined ? undefined : (
+          <ViewerFoot asset={record} onDeleted={viewer.close} />
         )
       }
       bar={
@@ -250,12 +254,11 @@ function ViewerLayer({
 export function AssetViewer(): ReactNode {
   const search = useSearch({ strict: false })
   const view = readText(search.view)
-  const [shown, setShown] = useState<string | null>(view ?? null)
-  useEffect(() => {
-    if (view !== undefined) {
-      setShown(view)
-    }
-  }, [view])
+  const [held, setHeld] = useState<string | null>(view ?? null)
+  if (view !== undefined && view !== held) {
+    setHeld(view)
+  }
+  const shown = view ?? held
   if (shown === null) {
     return null
   }

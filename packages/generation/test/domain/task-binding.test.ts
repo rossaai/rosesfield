@@ -3,6 +3,7 @@ import { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.
 import { resolveBinding, selectBinding } from "#domain/select-binding"
 import {
   chosenModelOf,
+  graphTaskOf,
   hostedModelOf,
   isHostedModelId,
   taskBinding,
@@ -47,6 +48,21 @@ describe("a task binding", () => {
   it("names the tasks it lists", () => {
     expect(tasksOf(imageTask)).toEqual(["text-to-image"])
     expect(tasksOf(open)).toEqual([])
+  })
+
+  it("names the task of each graph it declares, and none for the rest", () => {
+    const audioTask = taskBinding({
+      tasks: ["speech"],
+      input: "model",
+      default: "open",
+      fallback: graphs,
+      graphTasks: { open: "speech", other: "music" },
+    })
+    expect(graphTaskOf(audioTask, "open")).toBe("speech")
+    expect(graphTaskOf(audioTask, "other")).toBe("music")
+    expect(graphTaskOf(audioTask, "toString")).toBeNull()
+    expect(graphTaskOf(imageTask, "open")).toBeNull()
+    expect(graphTaskOf(open, "open")).toBeNull()
   })
 
   it("refuses a task binding with no fallback", () => {

@@ -1,0 +1,12 @@
+refused <span className="transition-opacity duration-(--duration-control)" />
+refused <span className="transition-[height,padding] duration-200" />
+refused <span className="ease-bloom" />
+refused <span className="[transition:height_var(--control-change)]" />
+refused <span className="motion-reduce:transition-none" />
+refused <span className="hover:delay-75" />
+refused <span className="transition" />
+allowed <span className={cn("opacity-0", motion.tint)} />
+allowed <span className="motion-tint motion-press motion-press-round" />
+allowed <span className="group-hover/reveal:opacity-100" />
+allowed const timing = readMotion("layer", "in", "transform")
+allowed const word = "startTransition"

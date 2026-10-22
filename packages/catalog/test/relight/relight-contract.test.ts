@@ -38,6 +38,9 @@ describe("the Relight contract", () => {
     expect(refused({ image: [photoId], model: "another-model" })).toEqual([
       "inputs.model",
     ])
+    expect(
+      refused({ image: [photoId], model: "qwen-image-edit-2511" })
+    ).toEqual(["inputs.model"])
     expect(refused({ image: [photoId] }, 5)).toEqual(["count"])
     expect(refused({ image: [photoId] }, 0)).toEqual(["count"])
   })

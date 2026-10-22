@@ -15,10 +15,19 @@ function shapeOf(element: HTMLElement): string[] {
   ]
 }
 
+function labelled(bar: HTMLElement, name: string): HTMLElement {
+  const buttons = within(bar).getAllByRole("button", { name })
+  const button = buttons.find((one) => one.textContent === name)
+  if (button === undefined) {
+    throw new Error(`the bar holds no labelled ${name}`)
+  }
+  return button
+}
+
 function controlsOf(bar: HTMLElement, menu: string): Controls {
   return {
-    balance: shapeOf(within(bar).getByRole("link", { name: "12.5 credits" })),
-    connect: shapeOf(within(bar).getByRole("link", { name: "Connect" })),
+    balance: shapeOf(labelled(bar, "12.5 credits")),
+    connect: shapeOf(labelled(bar, "Connect")),
     menu: shapeOf(within(bar).getByRole("button", { name: menu })),
   }
 }

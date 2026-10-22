@@ -1,3 +1,5 @@
+import { Run } from "@rosesfield/generation"
+import { appIdFormat, runIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { photoInputs } from "#ads/ads-values"
 import {
@@ -6,6 +8,7 @@ import {
   personRule,
   stylePhrases,
 } from "#ads/comfy/ads-prompts"
+import { adsRatios, adsSizes } from "#ads/comfy/ads-sizes"
 import {
   adPrompt,
   brokenLinks,
@@ -45,26 +48,6 @@ const variants: { name: string; inputs: Record<string, unknown> }[] = [
       character: [characterId],
     },
   })),
-  {
-    name: "Klein with 1 photo",
-    inputs: { product: [productOne], model: "flux-2-klein-4b" },
-  },
-  {
-    name: "Klein with 2 photos",
-    inputs: {
-      product: [productOne],
-      secondPhoto: [productTwo],
-      model: "flux-2-klein-4b",
-    },
-  },
-  {
-    name: "Klein with 1 photo and a character",
-    inputs: {
-      product: [productOne],
-      character: [characterId],
-      model: "flux-2-klein-4b",
-    },
-  },
 ]
 
 describe("the Ads engine request", () => {
@@ -181,57 +164,70 @@ describe("the Ads engine request", () => {
     )
   })
 
-  it("sends a FLUX.2 Klein 4B product shot with no scene through one reference chain", async () => {
-    const request = requestFor(
-      { product: [productOne], model: "flux-2-klein-4b", style: "bold" },
-      "9:16"
-    )
+  it("sends a Qwen Image Edit 2511 product shot with one photo and no scene at the 1:1 size", async () => {
+    const request = requestFor({ product: [productOne] }, "1:1")
     const { workflow } = await submitted(request)
-    expect(loadNodes(workflow)).toEqual(["76"])
-    for (const removed of ["81", "124", "125", "126", "127"]) {
-      expect(workflow[removed]).toBeUndefined()
-    }
+    expect(loadNodes(workflow)).toEqual(["41"])
     expect(workflow).toMatchObject({
-      "76": { inputs: { image: loaded(productOne) } },
-      "62": { inputs: { steps: 4, width: 768, height: 1344 } },
-      "66": { inputs: { width: 768, height: 1344, batch_size: 1 } },
-      "73": { inputs: { noise_seed: 42 } },
-      "63": {
-        inputs: { cfg: 1, positive: ["122", 0], negative: ["123", 0] },
-      },
+      "41": { inputs: { image: loaded(productOne) } },
+      "192": { inputs: { width: 1024, height: 1024, batch_size: 1 } },
     })
-    expect(promptOf(workflow, "74", "text")).toBe(
-      `${kindLeads["product-shot"]}${stylePhrases.bold} ${keepRule}`
+    expect(promptOf(workflow, "151", "prompt")).toBe(
+      `${kindLeads["product-shot"]}${stylePhrases.studio} ${keepRule}`
     )
     expect(brokenLinks(workflow)).toEqual([])
   })
 
-  it("sends a Klein ad with the character in the second reference chain", async () => {
-    const request = requestFor(
-      {
-        kind: "ad",
-        headline: "Made to last",
-        product: [productOne],
-        character: [characterId],
-        model: "flux-2-klein-4b",
-      },
-      "1:1"
-    )
-    const { workflow } = await submitted(request)
-    expect(workflow).toMatchObject({
-      "76": { inputs: { image: loaded(productOne) } },
-      "81": { inputs: { image: loaded(characterPhoto) } },
-      "63": { inputs: { positive: ["126", 0], negative: ["127", 0] } },
+  it("gives each of 4 images its own job on the seed, the seed plus 1, the seed plus 2 and the seed plus 3", async () => {
+    const request = requestFor({ product: [productOne] }, "16:9")
+    const engine = engineWith(new ReplayFetch([submitRecording]))
+    const run = Run.queue({
+      id: runIdFormat.parse("1b2c3d4e-5f6a-4b7c-8d9e-0f1a2b3c4d5e"),
+      appId: appIdFormat.parse("ads"),
+      request: { inputs: request.inputs, count: 4, aspectRatio: "16:9" },
+      seed: 42,
+      adapter: engine.key,
+      origin: "live",
+      idempotencyKey: key,
+      now: new Date("2026-10-21T09:00:00Z"),
+      outputsPerJob: engine.outputsPerJob(request.binding),
     })
-    expect(promptOf(workflow, "74", "text")).toBe(
-      adPrompt({
-        style: "studio",
-        headline: "Made to last",
-        line: null,
-        hasPerson: true,
+    expect(run.jobs.map((job) => job.seed)).toEqual([42, 43, 44, 45])
+    const sent: unknown[] = []
+    for (const job of run.jobs) {
+      const { workflow } = await submitted({
+        ...request,
+        seed: job.seed,
+        count: 1,
       })
+      sent.push({
+        seed: workflow["169"]?.inputs.seed,
+        batch: workflow["192"]?.inputs.batch_size,
+        width: workflow["192"]?.inputs.width,
+        height: workflow["192"]?.inputs.height,
+      })
+    }
+    expect(sent).toEqual(
+      [42, 43, 44, 45].map((seed) => ({
+        seed,
+        batch: 1,
+        width: 1344,
+        height: 768,
+      }))
     )
   })
+
+  it.each([...adsRatios])(
+    "sizes a %s image within 2 percent of its ratio",
+    (ratio) => {
+      const [wide, tall] = ratio.split(":").map(Number)
+      const { width, height } = adsSizes[ratio]
+      const wanted = (wide ?? 0) / (tall ?? 1)
+      expect(Math.abs(width / height - wanted) / wanted).toBeLessThanOrEqual(
+        0.02
+      )
+    }
+  )
 
   it.each(variants)(
     "fills every image slot of $name and leaves no link dangling",

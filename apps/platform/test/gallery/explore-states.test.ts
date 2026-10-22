@@ -1,17 +1,16 @@
 import { QueryClient } from "@tanstack/react-query"
 import { describe, expect, it } from "vitest"
-import { runsOf } from "@/api/queries"
 import { exploreStates } from "@/gallery/screens/explore-entries"
 import {
   admittedEntries,
-  ownEntries,
+  exploreShares,
   sharedEntries,
 } from "@/screens/explore/explore-entries"
 import {
   type ExploreAdmission,
   exploreListQuery,
 } from "@/screens/explore/explore-list"
-import { publishedQuery, type SharedOutput } from "@/screens/explore/share-api"
+import { type SharedOutput, shareQuery } from "@/screens/explore/share-api"
 
 function shownIn(id: string): number {
   const spec = exploreStates.find((one) => one.id === id)
@@ -26,13 +25,11 @@ function shownIn(id: string): number {
     client.getQueryData<readonly ExploreAdmission[]>(
       exploreListQuery.queryKey
     ) ?? []
-  const shares =
-    client.getQueryData<readonly SharedOutput[]>(publishedQuery.queryKey) ?? []
-  const runs = runsOf(
-    client.getQueryData<Parameters<typeof runsOf>[0]>(["runs", { appId: null }])
+  const shares = exploreShares(list).flatMap(
+    (shareId) =>
+      client.getQueryData<SharedOutput>(shareQuery(shareId).queryKey) ?? []
   )
-  return admittedEntries([...sharedEntries(shares), ...ownEntries(runs)], list)
-    .length
+  return admittedEntries(sharedEntries(shares), list).length
 }
 
 describe("the gallery's Explore states", () => {

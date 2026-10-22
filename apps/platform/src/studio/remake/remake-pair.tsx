@@ -7,6 +7,9 @@ import { tCatalog } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
 import { runAspect } from "@/pieces/run/run-facts"
 import { RunOutputs } from "@/pieces/run/run-outputs"
+import type { RemakePlan } from "@/studio/remake/remake-plan"
+import { ShotDetails } from "@/studio/remake/shot-details"
+import { ShotTimeline } from "@/studio/remake/shot-timeline"
 import { referenceInput } from "@/studio/remake/use-remake-screen"
 
 type Side = {
@@ -32,6 +35,7 @@ function videosIn(
 function usePlayBoth(frames: readonly RefObject<HTMLDivElement | null>[]): {
   isPlaying: boolean
   toggle: () => void
+  seek: (seconds: number) => void
 } {
   const [isPlaying, setPlaying] = useState(false)
   const toggle = (): void => {
@@ -43,23 +47,31 @@ function usePlayBoth(frames: readonly RefObject<HTMLDivElement | null>[]): {
       setPlaying(false)
       return
     }
+    const from = videos[0]?.currentTime ?? 0
     for (const video of videos) {
-      video.currentTime = 0
+      video.currentTime = from
     }
     setPlaying(true)
     void Promise.all(videos.map((video) => video.play())).catch(() =>
       setPlaying(false)
     )
   }
-  return { isPlaying, toggle }
+  const seek = (seconds: number): void => {
+    for (const video of videosIn(frames)) {
+      video.currentTime = seconds
+    }
+  }
+  return { isPlaying, toggle, seek }
 }
 
 export function RemakePair({
   run,
   outputId,
+  plan,
 }: {
   run: Run
   outputId: string
+  plan: RemakePlan | null
 }): ReactElement {
   const yours = useRef<HTMLDivElement>(null)
   const output = useRef<HTMLDivElement>(null)
@@ -105,6 +117,12 @@ export function RemakePair({
           </figure>
         ))}
       </div>
+      {plan === null ? null : (
+        <ShotTimeline
+          shots={plan.shots}
+          onSeek={(shot) => playback.seek(shot.startSeconds)}
+        />
+      )}
       <div>
         <Button size="small" onClick={playback.toggle}>
           {playback.isPlaying ? (
@@ -117,6 +135,7 @@ export function RemakePair({
             : tCatalog("remake.compare.play")}
         </Button>
       </div>
+      {plan === null ? null : <ShotDetails plan={plan} />}
     </div>
   )
 }

@@ -1,44 +1,101 @@
-import { assetId, cost, run as runSchema } from "@rosesfield/contract"
+import {
+  assetId,
+  assetKind,
+  cost,
+  mimeType,
+  run as runSchema,
+} from "@rosesfield/contract"
 import { assetIdFormat } from "@rosesfield/kernel"
 import { z } from "zod"
+import type { EngineStepJob, EngineSteps } from "#domain/generation-engine.port"
 import { Run, type RunJob } from "#domain/run"
 import type { runTable } from "#infrastructure/drizzle-run-table"
 
 export type RunRow = typeof runTable.$inferSelect
 
-const jobRows = z.array(
-  z.object({
-    index: z.number().int().min(0).max(15),
-    seed: z.number().int().min(0).nullable(),
-    ref: z.string().min(1).nullable(),
-    status: z.enum([
-      "pending",
-      "submitting",
-      "queued",
-      "running",
-      "collecting",
-      "done",
-    ]),
-    progress: z.number().min(0).max(1).nullable(),
-    outputs: z.array(assetId),
-    dropped: z.number().int().min(1).optional(),
-    cost: cost.optional(),
-    collectingSince: z.iso.datetime().optional(),
-    submittingSince: z.iso.datetime().optional(),
-  })
-)
+const planRow = runSchema.shape.plan.unwrap()
+
+const stepOutputRow = z.object({
+  assetId,
+  kind: assetKind,
+  mime: mimeType,
+  width: z.number().int().min(1).nullable(),
+  height: z.number().int().min(1).nullable(),
+  durationSeconds: z.number().positive().nullable(),
+})
+
+const stepsRow = z.object({
+  plan: planRow,
+  planCost: cost.optional(),
+  jobs: z.array(
+    z.object({
+      number: z.number().int().min(1),
+      engine: z.string().min(1),
+      ref: z.string().min(1),
+      cost: cost.optional(),
+      made: stepOutputRow.optional(),
+    })
+  ),
+})
+
+type StepJobRow = z.infer<typeof stepsRow>["jobs"][number]
+
+function stepJobOf(row: StepJobRow): EngineStepJob {
+  const { cost, made, ...job } = row
+  return {
+    ...job,
+    ...(cost === undefined ? {} : { cost }),
+    ...(made === undefined
+      ? {}
+      : { made: { ...made, assetId: assetIdFormat.parse(made.assetId) } }),
+  }
+}
+
+function stepsOf(row: z.infer<typeof stepsRow>): EngineSteps {
+  const { planCost } = row
+  return {
+    plan: row.plan,
+    ...(planCost === undefined ? {} : { planCost }),
+    jobs: row.jobs.map(stepJobOf),
+  }
+}
+
+const jobRow = z.object({
+  index: z.number().int().min(0).max(15),
+  seed: z.number().int().min(0).nullable(),
+  ref: z.string().min(1).nullable(),
+  status: z.enum([
+    "pending",
+    "submitting",
+    "queued",
+    "running",
+    "collecting",
+    "done",
+  ]),
+  progress: z.number().min(0).max(1).nullable(),
+  outputs: z.array(assetId),
+  dropped: z.number().int().min(1).optional(),
+  cost: cost.optional(),
+  collectingSince: z.iso.datetime().optional(),
+  submittingSince: z.iso.datetime().optional(),
+  steps: stepsRow.optional(),
+})
+
+function jobOf(row: z.infer<typeof jobRow>): RunJob {
+  const { collectingSince, submittingSince, cost, dropped, steps, ...job } = row
+  return {
+    ...job,
+    ...(cost === undefined ? {} : { cost }),
+    ...(dropped === undefined ? {} : { dropped }),
+    outputs: job.outputs.map((id) => assetIdFormat.parse(id)),
+    ...(collectingSince === undefined ? {} : { collectingSince }),
+    ...(submittingSince === undefined ? {} : { submittingSince }),
+    ...(steps === undefined ? {} : { steps: stepsOf(steps) }),
+  }
+}
 
 function jobsOf(value: unknown): RunJob[] {
-  return jobRows
-    .parse(value)
-    .map(({ collectingSince, submittingSince, cost, dropped, ...job }) => ({
-      ...job,
-      ...(cost === undefined ? {} : { cost }),
-      ...(dropped === undefined ? {} : { dropped }),
-      outputs: job.outputs.map((id) => assetIdFormat.parse(id)),
-      ...(collectingSince === undefined ? {} : { collectingSince }),
-      ...(submittingSince === undefined ? {} : { submittingSince }),
-    }))
+  return z.array(jobRow).parse(value).map(jobOf)
 }
 
 export function toRunRow(run: Run): RunRow {
@@ -73,6 +130,7 @@ export function toRunRow(run: Run): RunRow {
 export function fromRunRow(row: RunRow): Run {
   const jobs = jobsOf(row.jobs)
   const dropped = jobs.reduce((sum, job) => sum + (job.dropped ?? 0), 0)
+  const plan = jobs.find((job) => job.steps !== undefined)?.steps?.plan
   const record = runSchema.parse({
     id: row.id,
     appId: row.appId,
@@ -83,6 +141,7 @@ export function fromRunRow(row: RunRow): Run {
     seed: row.seed,
     outputs: row.outputs,
     ...(dropped === 0 ? {} : { dropped }),
+    ...(plan === undefined ? {} : { plan }),
     progress: row.progress,
     engine: {
       adapter: row.engineAdapter,

@@ -1,14 +1,46 @@
 {
   "effect": "scatter-petals",
   "passed": false,
-  "prompt": "The person begins to break apart into red rose petals, starting at their fingertips and hair. The petals peel away and blow off in a soft wind, more and more of them, until the whole body has scattered into a swirl of petals that drifts out of the frame. The empty place remains. The camera stays still.",
+  "design": {
+    "unit": "scatter-petals",
+    "family": "effects",
+    "setPiece": "Everyone holds still, then their bodies vanish in an instant and their clothes drop onto the ground and lie still.",
+    "cuts": [
+      {
+        "min": 4.1,
+        "max": 5.04,
+        "kind": "may"
+      }
+    ],
+    "lastFrame": {
+      "shows": "Empty clothes lie where each person stood, and nobody is in frame.",
+      "maxLuma": null
+    },
+    "sound": {
+      "prompt": "The sound is a quiet room tone, a soft pop as the bodies vanish and the thud of the clothes landing.",
+      "loudness": {
+        "min": -24,
+        "max": -14
+      },
+      "truePeakMax": -1.2
+    },
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
+  },
+  "prompt": "One shot with a still camera. For the first one to two seconds every person holds perfectly still. Then, in an instant, their bodies vanish and their empty clothes and anything they held drop straight down and land on the ground or seat below. The clothes lie still. Nobody comes back.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
-    "prompt": "The same place with no person in it, and a few red rose petals drifting in the air where the person stood.",
+    "prompt": "The same place with no person in it: their empty clothes lie on the ground where they stood.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": null,
   "adapter": null,
   "seconds": 5,
-  "preview": null
+  "preview": null,
+  "proof": null
 }

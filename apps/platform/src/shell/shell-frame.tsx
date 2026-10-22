@@ -13,7 +13,8 @@ import { BottomBar } from "@/shell/bottom-bar"
 import { KeyDialogProvider } from "@/shell/key-dialog-context"
 import { hasFooter } from "@/shell/page-kind"
 import { RunWatcher } from "@/shell/run-watcher"
-import { ScreenHeader } from "@/shell/screen-header"
+import { PhoneTitleProvider, ScreenHeader } from "@/shell/screen-header"
+import { ShellDialogsProvider } from "@/shell/shell-dialogs"
 import { ShellFooter } from "@/shell/shell-footer"
 import { TopBar } from "@/shell/top-bar"
 import { AssetViewer } from "@/viewer/asset-viewer"
@@ -62,30 +63,34 @@ export function ShellFrame({
   return (
     <ViewerProvider>
       <KeyDialogProvider>
-        <div
-          data-slot="shell"
-          className="@container flex h-dvh flex-col bg-canvas"
-        >
-          <TopBar />
-          <main
-            className={cn(
-              "min-h-0 flex-1 overflow-y-auto",
-              interaction.ringScroll,
-              tabBarCover,
-              footer ? "flex flex-col *:shrink-0" : ""
-            )}
-          >
-            <ShellContent>{children}</ShellContent>
-            {footer ? (
-              <div data-slot="shell-footer" className="mt-auto">
-                <ShellFooter />
-              </div>
-            ) : null}
-          </main>
-          <BottomBar />
-        </div>
-        <RunWatcher />
-        <AssetViewer />
+        <ShellDialogsProvider>
+          <PhoneTitleProvider>
+            <div
+              data-slot="shell"
+              className="@container flex h-dvh flex-col bg-canvas"
+            >
+              <TopBar />
+              <main
+                className={cn(
+                  "min-h-0 flex-1 overflow-y-auto",
+                  interaction.ringScroll,
+                  tabBarCover,
+                  footer ? "flex flex-col *:shrink-0" : ""
+                )}
+              >
+                <ShellContent>{children}</ShellContent>
+                {footer ? (
+                  <div data-slot="shell-footer" className="mt-auto">
+                    <ShellFooter />
+                  </div>
+                ) : null}
+              </main>
+              <BottomBar />
+            </div>
+          </PhoneTitleProvider>
+          <RunWatcher />
+          <AssetViewer />
+        </ShellDialogsProvider>
       </KeyDialogProvider>
     </ViewerProvider>
   )

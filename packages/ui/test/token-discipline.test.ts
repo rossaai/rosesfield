@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { readSource } from "./read-source"
 
-const sources = import.meta.glob<string>(
+const sources = import.meta.glob(
   [
     "../src/components/**/*.{ts,tsx}",
     "../../../apps/platform/src/**/*.{ts,tsx}",
@@ -160,13 +160,18 @@ describe("token discipline", () => {
     expect(tokens).not.toMatch(/--spacing:\s/)
   })
 
-  it("lets no component or screen scale on hover or press", () => {
+  it("lets a component scale on press only through the press preset", () => {
+    const own = /(?:hover|active|in-data-\[gallery=press\]):(?:-)?scale-/
+    expect(own.test(`<span className="active:scale-95" />`)).toBe(true)
+    expect(own.test(`<span className={motion.press} />`)).toBe(false)
     const scaling = Object.entries(sources)
-      .filter(([, text]) =>
-        /motion\.press|motion\.pressRound|(?:hover|active):scale-/.test(text)
-      )
+      .filter(([, text]) => own.test(text))
       .map(([file]) => file)
     expect(scaling).toEqual([])
+    const pressing = Object.entries(sources).filter(([, text]) =>
+      /motion\.press/.test(text)
+    )
+    expect(pressing.length).toBeGreaterThan(0)
   })
 
   it("finds no component or screen that writes its own value", () => {

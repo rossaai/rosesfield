@@ -8,6 +8,7 @@ import {
 } from "@rosesfield/contract"
 import { assetIdFormat, type Clock, runIdFormat } from "@rosesfield/kernel"
 import type { AppCatalog } from "#domain/app-catalog.port"
+import { appOnlyInputsOf } from "#domain/app-only-inputs"
 import { AppClosedError } from "#domain/error/app-closed.error"
 import { AppNotFoundError } from "#domain/error/app-not-found.error"
 import { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.error"
@@ -26,6 +27,7 @@ import { isRecord } from "#domain/is-record"
 import type { JobRunner } from "#domain/job-runner.port"
 import { checkModelInputs, type ModelForm } from "#domain/model-form"
 import type { ModelPolicy } from "#domain/model-policy.port"
+import { ruledInputsOf } from "#domain/ruled-inputs"
 import { Run } from "#domain/run"
 import type { RunRepository } from "#domain/run.repository"
 import type { RunAssets } from "#domain/run-assets.port"
@@ -166,7 +168,10 @@ export class StartRunHandler {
       return null
     }
     const given = isRecord(body.inputs) ? body.inputs : {}
-    const model = chosenModelOf(app.engine, textInputsOf(given))
+    const model = chosenModelOf(
+      app.engine,
+      textInputsOf(ruledInputsOf(app, given))
+    )
     if (model === null || !isHostedModelId(model)) {
       return null
     }
@@ -180,22 +185,12 @@ export class StartRunHandler {
       throw new ModelNotFoundError({ model })
     }
     await this.checkOffered(app, described.engine, model)
-    const checked = checkModelInputs(described.form, given)
-    const issues = checked.kind === "invalid" ? [...checked.issues] : []
-    const count = countOf(app, described.form, body.count, issues)
-    if (body.aspectRatio !== undefined && body.aspectRatio !== null) {
-      issues.push(
-        "aspectRatio: a hosted model sets its own aspect in its inputs"
-      )
-    }
-    if (checked.kind === "invalid" || issues.length > 0) {
-      throw new RunInputInvalidError({ appId: app.id, issues })
-    }
+    const request = hostedRequestOf(app, described.form, body, given)
     return {
       engine,
       binding,
-      request: { inputs: checked.inputs, count, aspectRatio: null },
-      outputsPerJob: count > 1 ? "one" : "all",
+      request,
+      outputsPerJob: request.count > 1 ? "one" : "all",
     }
   }
 
@@ -226,7 +221,7 @@ export class StartRunHandler {
     if (
       listed === undefined ||
       this.policy === null ||
-      !this.policy.allows(tasks, listed)
+      !this.policy.allows(tasks, listed, app.output.kind)
     ) {
       throw new ModelNotOfferedError({ appId: app.id, model })
     }
@@ -303,6 +298,32 @@ export class StartRunHandler {
     }
     const random = crypto.getRandomValues(new Uint32Array(1))[0] ?? 0
     return random % (StartRunHandler.maxSeed + 1)
+  }
+}
+
+function hostedRequestOf(
+  app: AppDefinition,
+  form: ModelForm,
+  body: Record<string, unknown>,
+  given: Record<string, unknown>
+): RunRequest {
+  const own = appOnlyInputsOf(app, given)
+  const checked = checkModelInputs(form, own.rest)
+  const issues = [
+    ...(checked.kind === "invalid" ? checked.issues : []),
+    ...own.issues,
+  ]
+  const count = countOf(app, form, body.count, issues)
+  if (body.aspectRatio !== undefined && body.aspectRatio !== null) {
+    issues.push("aspectRatio: a hosted model sets its own aspect in its inputs")
+  }
+  if (checked.kind === "invalid" || issues.length > 0) {
+    throw new RunInputInvalidError({ appId: app.id, issues })
+  }
+  return {
+    inputs: { ...checked.inputs, ...own.inputs },
+    count,
+    aspectRatio: null,
   }
 }
 

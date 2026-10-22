@@ -4,9 +4,49 @@ import {
   SettingTiles,
 } from "@rosesfield/ui/components/input-panel"
 import { cleanup, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+  Reflect.deleteProperty(HTMLElement.prototype, "scrollHeight")
+  Reflect.deleteProperty(HTMLElement.prototype, "clientHeight")
+})
+
+function partsAt(scrollHeight: number, clientHeight: number): Element | null {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe = vi.fn()
+      disconnect = vi.fn()
+    }
+  )
+  Object.defineProperties(HTMLElement.prototype, {
+    scrollHeight: { configurable: true, get: () => scrollHeight },
+    clientHeight: { configurable: true, get: () => clientHeight },
+  })
+  render(
+    <InputPanel label="Inputs" footer={<button type="button">Generate</button>}>
+      <span>Part</span>
+    </InputPanel>
+  )
+  return screen
+    .getByRole("region", { name: "Inputs" })
+    .querySelector("[data-slot='composer-prompt']")
+}
+
+describe("InputPanel's parts", () => {
+  it("fade out over the footer, with room for the last part above Generate, only while they overflow", () => {
+    const clipped = partsAt(900, 600)
+    expect(clipped?.getAttribute("data-clipped")).toBe("yes")
+    expect(clipped?.className.split(" ")).toContain("pb-s12")
+    cleanup()
+    const fits = partsAt(400, 600)
+    expect(fits?.getAttribute("data-clipped")).toBe("no")
+    expect(fits?.className).not.toContain("mask-image")
+    expect(fits?.className.split(" ")).toContain("p-2")
+  })
+})
 
 describe("InputPanel", () => {
   it("is a 320 px column whose parts sit 8 px apart over a 60 px footer that holds Generate", () => {

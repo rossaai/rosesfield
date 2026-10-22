@@ -24,6 +24,7 @@ export function fieldOfInput(input: AppInput): ModelField | null {
         min: input.min,
         max: input.max,
         integer: Number.isInteger(input.step),
+        step: input.step,
         default: input.default,
       }
     case "image":

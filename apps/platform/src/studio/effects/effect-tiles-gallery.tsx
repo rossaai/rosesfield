@@ -12,7 +12,6 @@ import { type ReactElement, useState } from "react"
 import demoVideo from "@/gallery/fixtures/demo-video-16-9.mp4"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
 import { EffectTiles } from "@/studio/effects/effect-tiles"
-import type { EffectPrices } from "@/studio/effects/use-effect-prices"
 
 const runId = "5b1d2c3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e"
 
@@ -34,23 +33,13 @@ function passed(effect: string): EffectRecipe {
 
 const shown: readonly EffectRecipe[] = [
   passed("pull-back-to-space"),
-  passed("liquid-metal"),
-  passed("grow-wings"),
+  passed("many-copies"),
+  passed("grow-giant"),
 ]
 
 const openApp: AppListing = appListing.parse(
   appDefinition.parse(effectsApp(shown))
 )
-
-const measured: Readonly<Record<string, number>> = {
-  "pull-back-to-space": 7.18,
-  "grow-wings": 6.95,
-}
-
-const prices: EffectPrices = {
-  isDemo: false,
-  creditsOf: (effect) => measured[effect] ?? null,
-}
 
 function Tiles({ width }: { width: number }): ReactElement {
   const [value, setValue] = useState(shown[0]?.effect ?? "")
@@ -59,7 +48,6 @@ function Tiles({ width }: { width: number }): ReactElement {
       <EffectTiles
         app={openApp}
         value={value}
-        prices={prices}
         onChange={setValue}
         register={() => undefined}
         recipes={shown}

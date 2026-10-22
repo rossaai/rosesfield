@@ -44,4 +44,5 @@ export const connectCopy = {
     "Read the run by its id from its runs route until its status is done, failed or cancelled.",
   "connect.api.step.3":
     "Read each result by its asset id from the assets route.",
+  "connect.cancel": "Cancel",
 } satisfies Record<string, string>

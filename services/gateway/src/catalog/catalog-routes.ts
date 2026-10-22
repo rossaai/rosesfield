@@ -3,6 +3,7 @@ import {
   defaultModelOf,
   modelsForApp,
   priceBody,
+  pricesBody,
 } from "@rosesfield/catalog/comfy"
 import { type AppDefinition, errorEnvelopeOf } from "@rosesfield/contract"
 import { AppNotFoundError } from "@rosesfield/generation"
@@ -39,6 +40,10 @@ export function modelRoutes(
     }
     return c.json(body, catalogRoutes.listModels.status)
   })
+  priceRoutes(app, apps)
+}
+
+function priceRoutes(app: GatewayApp, apps: readonly AppDefinition[]): void {
   app.post(
     catalogRoutes.priceRun.path,
     limitBody(jsonBodyMaxBytes),
@@ -57,6 +62,20 @@ export function modelRoutes(
       })
       const body: ResponseOf<typeof catalogRoutes.priceRun> = { price }
       return c.json(body, catalogRoutes.priceRun.status)
+    }
+  )
+  app.post(
+    catalogRoutes.priceRuns.path,
+    limitBody(jsonBodyMaxBytes),
+    async (c) => {
+      const appId = appOf(apps, c.req.param("appId")).id
+      const { asks } = parseWith(pricesBody, await readJson(c), "body")
+      const { prices } = await c.var.scope.handlers.priceRun.executeAll({
+        appId,
+        asks,
+      })
+      const body: ResponseOf<typeof catalogRoutes.priceRuns> = { prices }
+      return c.json(body, catalogRoutes.priceRuns.status)
     }
   )
 }

@@ -1,7 +1,7 @@
 {
   "name": "layers-edit-qwen-image-edit-2511",
-  "title": "Layers: edit or relight one layer with Qwen Image Edit 2511",
-  "description": "Places one transparent layer on mid grey, edits it with Qwen Image Edit 2511 and puts its alpha back. This file holds the relight form, where node 23 writes the light and tone sentences into the edit prompt, at 4 steps with the Lightning LoRA. The edit form takes your words at node 13, and the final run samples 40 steps.",
+  "title": "Layers: edit one layer with Qwen Image Edit 2511",
+  "description": "Places one transparent layer on mid grey, edits it with Qwen Image Edit 2511 and puts its alpha back. Your words reach the prompt at node 13. The draft run samples 4 steps with the Lightning LoRA, and the final run samples 40 steps with the base weights.",
   "mediaType": "image",
   "openSource": true,
   "models": [
@@ -30,16 +30,6 @@
     "change": {
       "nodeId": "13",
       "inputName": "prompt",
-      "type": "scalar"
-    },
-    "light": {
-      "nodeId": "23",
-      "inputName": "string_a",
-      "type": "scalar"
-    },
-    "tone": {
-      "nodeId": "23",
-      "inputName": "string_b",
       "type": "scalar"
     }
   },

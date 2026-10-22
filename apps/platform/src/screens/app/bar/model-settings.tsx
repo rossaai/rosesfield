@@ -1,20 +1,37 @@
+import {
+  factsOf,
+  isHostedModelId,
+  labOfModel,
+  modelFactsData,
+} from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import {
   ModelPicker,
   type ModelPickerRow,
   type ModelPickerSection,
+  type ModelPickerTag,
 } from "@rosesfield/ui/components/model-picker"
+import type { ModelPrice } from "@rosesfield/ui/components/model-row"
 import { ModelChip } from "@rosesfield/ui/components/model-trigger"
-import type { ReactElement, ReactNode } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { type ReactElement, type ReactNode, useState } from "react"
+import { settingsQuery } from "@/api/queries"
 import { isAssetInput } from "@/catalog/app-facts"
-import { hasCatalogText, t, tCatalog } from "@/copy/t"
+import { t, tCatalog } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
-import { aspectField, countField } from "@/screens/app/app-form"
+import { aspectField, bodyOf, countField } from "@/screens/app/app-form"
 import { chipChoiceText } from "@/screens/app/bar/setting-chip"
 import { textOf } from "@/screens/app/fields/field-props"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
-import { weightsLinkOf } from "@/screens/app/hosted/catalog-picker"
+import {
+  openWeightsBadge,
+  openWeightsTag,
+  rankTagOf,
+  weightsLinkOf,
+} from "@/screens/app/hosted/catalog-picker"
+import type { PriceAsk } from "@/screens/app/hosted/model-catalog-query"
+import { useAskPrices } from "@/screens/app/hosted/use-row-prices"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
 import type { AppScreenState } from "@/screens/app/use-app-screen"
 
@@ -102,32 +119,55 @@ export function choiceMakerOf(value: string, name: string): string {
   return lab === undefined || lab === "" ? name : lab
 }
 
-function choiceRow(option: ChoiceInput["options"][number]): ModelPickerRow {
+export function factsIdOf(value: string): string {
+  return isHostedModelId(value) ? value : `graph/${value}`
+}
+
+export function choiceLabOf(value: string, name: string): string {
+  return labOfModel(factsIdOf(value)) ?? choiceMakerOf(value, name)
+}
+
+export function choiceTagsOf(
+  value: string,
+  hasWeightsBadge: boolean
+): ModelPickerTag[] {
+  const id = factsIdOf(value)
+  const facts = modelFactsData.models[id]
+  const rankTask = facts === undefined ? undefined : Object.keys(facts.ranks)[0]
+  const rank = rankTask === undefined ? null : rankTagOf(factsOf(id, rankTask))
+  return [
+    ...(isHostedModelId(value) || hasWeightsBadge ? [] : [openWeightsTag()]),
+    ...(rank === null ? [] : [rank]),
+  ]
+}
+
+function choiceRow(
+  option: ChoiceInput["options"][number],
+  prices: ReadonlyMap<string, ModelPrice>
+): ModelPickerRow {
+  const price = prices.get(option.value)
   const name = tCatalog(option.labelKey)
-  const maker = choiceMakerOf(option.value, name)
-  const lineKey = `${option.labelKey}.line`
+  const maker = choiceLabOf(option.value, name)
   const href = weightsLinkOf(option.value)
   return {
     id: option.value,
     name,
     maker,
-    line: hasCatalogText(lineKey) ? tCatalog(lineKey) : null,
-    tags: [],
+    tags: choiceTagsOf(option.value, href !== null),
     mark: <LabMark maker={maker} />,
-    badges:
-      href === null
-        ? []
-        : [{ kind: "openWeights", label: t("model.tag.openWeights"), href }],
+    badges: href === null ? [] : [openWeightsBadge(href)],
+    ...(price === undefined ? {} : { price }),
   }
 }
 
 export function choiceSections(
-  model: ChoiceInput | null
+  model: ChoiceInput | null,
+  prices: ReadonlyMap<string, ModelPrice> = new Map()
 ): ModelPickerSection[] {
   if (model === null) {
     return []
   }
-  const rows = model.options.map(choiceRow)
+  const rows = model.options.map((option) => choiceRow(option, prices))
   const featured = rows.filter((row) => row.id === model.default)
   return [
     { id: "featured", label: t("model.picker.featured"), rows: featured },
@@ -135,11 +175,17 @@ export function choiceSections(
   ].filter((section) => section.rows.length > 0)
 }
 
+type ChoicePricing = {
+  appId: string
+  askOf: (value: string) => PriceAsk
+}
+
 type ChoiceModelPickerProps = {
   model: ChoiceInput | null
   value: string
   onChoose: (value: string) => void
   settings: ReactNode
+  pricing?: ChoicePricing
 }
 
 export function ChoiceModelPicker({
@@ -147,10 +193,20 @@ export function ChoiceModelPicker({
   value,
   onChoose,
   settings,
+  pricing,
 }: ChoiceModelPickerProps): ReactElement {
+  const [isOpen, setOpen] = useState(false)
+  const keyState = useQuery(settingsQuery).data?.engine.key ?? "unknown"
+  const { prices, isPricing } = useAskPrices({
+    appId: pricing?.appId ?? "",
+    keyState,
+    ids: model?.options.map((option) => option.value) ?? [],
+    askOf: (id) => pricing?.askOf(id) ?? { inputs: {} },
+    isOpen,
+  })
   const chosen = model === null ? null : value || model.default
   const name = modelChipText(model, value)
-  const maker = chosen === null ? null : choiceMakerOf(chosen, name)
+  const maker = chosen === null ? null : choiceLabOf(chosen, name)
   return (
     <ModelPicker
       trigger={
@@ -164,9 +220,12 @@ export function ChoiceModelPicker({
       searchLabel={t("model.picker.search")}
       searchPlaceholder={t("model.picker.searchPlaceholder")}
       emptyLabel={t("model.picker.empty")}
-      sections={choiceSections(model)}
+      sections={choiceSections(model, prices)}
       chosen={chosen}
       onChoose={onChoose}
+      open={isOpen}
+      onOpenChange={setOpen}
+      isPricing={isPricing}
       settings={settings}
       side="top"
     />
@@ -176,9 +235,19 @@ export function ChoiceModelPicker({
 export function BarModelChip(props: ModelSettingsProps): ReactElement {
   const input = props.app.inputs.find((one) => one.name === modelInputName)
   const model = input?.type === "choice" ? input : null
+  const { app } = props
+  const { values } = props.state.form
   return (
     <ChoiceModelPicker
       model={model}
+      pricing={{
+        appId: app.id,
+        askOf: (id) =>
+          bodyOf(app, {
+            ...values,
+            inputs: { ...values.inputs, [modelInputName]: id },
+          }),
+      }}
       value={textOf(props.state.form.values.inputs[modelInputName])}
       onChoose={(next) => props.state.form.setInput(modelInputName, next)}
       settings={

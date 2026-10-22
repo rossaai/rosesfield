@@ -1,5 +1,5 @@
-import { listApps } from "@rosesfield/catalog"
 import { UploadAssetHandler } from "@rosesfield/library"
+import { servedApps } from "#catalog/served-apps"
 import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
 import { gatewayCopy } from "#copy.en"
 import { readServerEnv, type ServerEnv } from "#env"
@@ -43,7 +43,7 @@ async function serve(): Promise<void> {
   const env = readServerEnv(Bun.env)
   const gateway = composeLocalGateway({
     env,
-    apps: listApps(),
+    apps: servedApps(env, "bun"),
     warmCatalog: true,
   })
   const server = Bun.serve({

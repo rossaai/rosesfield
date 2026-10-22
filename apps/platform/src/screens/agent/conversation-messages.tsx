@@ -1,4 +1,5 @@
 import { Button } from "@rosesfield/ui/components/button"
+import { CreditPrice } from "@rosesfield/ui/components/credit-price"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { cn } from "@rosesfield/ui/lib/cn"
@@ -6,6 +7,7 @@ import { motion } from "@rosesfield/ui/motion"
 import type { ReactElement, ReactNode } from "react"
 import type { TranscriptItem } from "@/api/conversation-wire"
 import { wordsForCode } from "@/copy/error-words"
+import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { useAssetThumbs } from "@/pieces/attachment-thumbs"
 import type { AnswerPart, Turn } from "@/screens/agent/conversation-store"
@@ -18,9 +20,12 @@ type PersonMessage = { prompt: string; assetIds: string[] }
 function YourMessage({ message }: { message: PersonMessage }): ReactElement {
   const thumbs = useAssetThumbs(message.assetIds)
   return (
-    <div className="flex flex-col items-end gap-s2 self-end">
+    <div
+      data-slot="your-message"
+      className="flex w-full flex-col items-end gap-s2"
+    >
       {thumbs.length === 0 ? null : (
-        <div className="flex flex-wrap justify-end gap-s2">
+        <div className="flex max-w-[85%] flex-wrap justify-end gap-s2">
           {thumbs.map((thumb) => (
             <img
               key={thumb.id}
@@ -34,7 +39,8 @@ function YourMessage({ message }: { message: PersonMessage }): ReactElement {
       {message.prompt === "" ? null : (
         <p
           data-ground="surface"
-          className="max-w-prose-max rounded-card bg-surface px-s5 py-s3 text-body whitespace-pre-wrap"
+          data-slot="your-message-text"
+          className="max-w-[85%] rounded-card bg-surface px-s5 py-s3 text-body whitespace-pre-wrap wrap-break-word"
         >
           {message.prompt}
         </p>
@@ -62,6 +68,19 @@ function AgentText({
   )
 }
 
+function TurnCredits({ credits }: { credits: number }): ReactElement {
+  const amount = formatAmount(credits)
+  return (
+    <p
+      data-slot="turn-credits"
+      title={t("run.price.credits", { amount })}
+      className="text-caption text-ink-muted"
+    >
+      <CreditPrice amount={amount} />
+    </p>
+  )
+}
+
 function itemNode(conversationId: string, item: TranscriptItem): ReactNode {
   switch (item.type) {
     case "person":
@@ -77,6 +96,8 @@ function itemNode(conversationId: string, item: TranscriptItem): ReactNode {
           proposal={item.proposal}
         />
       )
+    case "credits":
+      return <TurnCredits credits={item.credits} />
   }
 }
 
@@ -195,6 +216,7 @@ export function LiveTurn({
           }
         />
       ) : null}
+      {turn.credits === null ? null : <TurnCredits credits={turn.credits} />}
       {turn.status === "stopped" ? (
         <p className="text-caption text-ink-muted">{t("state.stopped")}</p>
       ) : null}

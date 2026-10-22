@@ -32,6 +32,7 @@ import {
   HostedPanel,
   ModelPopover,
 } from "@/studio/image/image-settings"
+import { useCharacterReferences } from "@/studio/image/use-character-references"
 import { useHostedDefaults } from "@/studio/image/use-hosted-defaults"
 import {
   type ReferenceTray,
@@ -213,12 +214,12 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const tray = useImageTray(app, state, fields, isGraph)
   useGraphRules(app, state.form)
   useHostedDefaults(state.form, state.hosted?.fields ?? null)
+  useCharacterReferences(seeds.use, state.form, tray)
   const problems = state.form.problems
   const view = { app, state, fields, isGraph }
   return (
     <BarFrame
       app={app}
-      hasRuns={state.hasRuns}
       onUseInputs={state.useInputs}
       sheet={sheet}
       settings={<Settings {...view} />}

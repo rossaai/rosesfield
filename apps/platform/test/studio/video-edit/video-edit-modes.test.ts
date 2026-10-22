@@ -15,6 +15,7 @@ import {
   shownInputsOf,
   type VideoEditMode,
 } from "@/studio/video-edit/video-edit-modes"
+import { tabDefaultsOf } from "@/studio/video-edit/video-edit-tabs"
 import { app } from "../../../../../packages/catalog/src/video-edit/app"
 
 function videoEditListing(): AppListing {
@@ -51,7 +52,12 @@ function valuesIn(mode: VideoEditMode): FormValues {
   return {
     ...base,
     seedMode: "fixed",
-    inputs: { ...base.inputs, ...everyInput, mode },
+    inputs: {
+      ...base.inputs,
+      ...everyInput,
+      mode,
+      model: tabDefaultsOf(listing, mode, null)[0] ?? "",
+    },
   }
 }
 
@@ -60,30 +66,22 @@ function names(inputs: readonly { name: string }[]): string[] {
 }
 
 describe("the Video edit screen follows the contract's operation rules", () => {
-  it("shows each operation's inputs, with resolution and the seed under Advanced in Extend and Reframe", () => {
+  it("shows each operation's inputs below the clip well, with resolution and the seed under Advanced in Extend and Reframe", () => {
     expect(names(shownInputsOf(listing, "extend"))).toEqual([
-      "mode",
-      "source",
       "seconds",
       "next",
       "keepSound",
     ])
     expect(names(shownInputsOf(listing, "reframe"))).toEqual([
-      "mode",
-      "source",
       "aspect",
       "around",
       "keepSound",
     ])
     expect(names(shownInputsOf(listing, "background"))).toEqual([
-      "mode",
-      "source",
       "color",
       "keepSound",
     ])
     expect(names(shownInputsOf(listing, "frame-rate"))).toEqual([
-      "mode",
-      "source",
       "factor",
       "keepSound",
     ])

@@ -17,21 +17,14 @@ describe("GenerateButton", () => {
     expect(button.textContent).toBe("Generate6.5")
   })
 
-  it("lights a press one step more than a hover and moves nothing", () => {
+  it("presses on the press preset and draws no light over its ink", () => {
     render(<GenerateButton label="Generate" price="6.5" form="tile" />)
     const classes = screen.getByRole("button").className.split(" ")
-    expect(classes).toEqual(
-      expect.arrayContaining([
-        "hover:after:opacity-10",
-        "active:after:opacity-20",
-        "in-data-[gallery=press]:after:opacity-20",
-      ])
-    )
-    expect(classes).not.toContain("active:after:opacity-10")
-    expect(classes.filter((name) => /scale|translate/.test(name))).toEqual([])
+    expect(classes).toContain("motion-press")
+    expect(classes.filter((name) => name.includes("after:"))).toEqual([])
   })
 
-  it("stands 120 by 80 as a tile and 48 px across its column as a bar", () => {
+  it("stands 120 by 80 as a tile and 40 px across its column as a bar, both at the 13 px radius", () => {
     render(
       <>
         <GenerateButton label="Tile" form="tile" />
@@ -40,10 +33,12 @@ describe("GenerateButton", () => {
     )
     expect(
       screen.getByRole("button", { name: "Tile" }).className.split(" ")
-    ).toEqual(expect.arrayContaining(["h-20", "w-30", "flex-col"]))
+    ).toEqual(
+      expect.arrayContaining(["h-20", "w-30", "flex-col", "rounded-cell"])
+    )
     expect(
       screen.getByRole("button", { name: "Bar" }).className.split(" ")
-    ).toEqual(expect.arrayContaining(["h-12", "w-full", "gap-2"]))
+    ).toEqual(expect.arrayContaining(["h-field", "w-full", "rounded-cell"]))
   })
 
   it("shows no price row when the run has no price", () => {

@@ -1,4 +1,4 @@
-import { routes } from "@rosesfield/contract"
+import { characterPhotoLimit, routes } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Input } from "@rosesfield/ui/components/input"
 import {
@@ -20,8 +20,6 @@ import { ScreenHeader } from "@/shell/screen-header"
 import { ModeView } from "@/studio/characters/screen"
 
 type Mode = "photos" | "traits"
-
-const maxPhotos = 16
 
 const modes: SegmentedItem<Mode>[] = [
   { value: "photos", label: t("characters.new.mode.photos") },
@@ -91,16 +89,17 @@ function FromPhotos(): ReactElement {
       <FieldFrame
         caption={t("characters.new.photos.label")}
         isOptional={false}
-        note={t("characters.new.photos.note", { max: maxPhotos })}
+        note={null}
         problem={undefined}
         message={message?.field === "photos" ? message.text : wellMessage}
       >
         <DropWell
           kind="image"
           ids={photos}
-          max={maxPhotos}
+          max={characterPhotoLimit}
           onChange={setPhotos}
           onMessage={setWellMessage}
+          limits={t("characters.new.photos.note", { max: characterPhotoLimit })}
         />
       </FieldFrame>
       {save.error === null ? null : (

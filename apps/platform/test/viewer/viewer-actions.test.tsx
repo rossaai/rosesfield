@@ -10,12 +10,19 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router"
-import { cleanup, render, screen } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import type { ReactElement } from "react"
 import { afterEach, describe, expect, it } from "vitest"
 import { runQuery } from "@/api/queries"
 import { t } from "@/copy/t"
-import { ViewerActions, ViewerBar, ViewerManage } from "@/viewer/viewer-actions"
+import { ViewerActions, ViewerBar } from "@/viewer/viewer-actions"
 import { ViewerInfo } from "@/viewer/viewer-info"
 
 const runId = "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e01"
@@ -92,51 +99,97 @@ function isColoured(element: Element): boolean {
 
 afterEach(cleanup)
 
+const live: Run = { ...made, origin: "live" }
+
+function comfyMarkOf(element: Element | null): string | null | undefined {
+  return element
+    ?.querySelector("[data-slot=lab-mark]")
+    ?.getAttribute("data-mark")
+}
+
 describe("the viewer's actions", () => {
-  it("puts Recreate over Download and Use in, a pair that closes the foot", async () => {
-    renderPiece(() => <ViewerActions asset={output} run={made} />)
+  it("sets Recreate first, then Download, Use in and More, then Open in ComfyUI, with no bare Delete", async () => {
+    renderPiece(() => (
+      <ViewerActions asset={output} run={live} onDeleted={() => undefined} />
+    ))
     const recreate = await screen.findByRole("button", {
       name: t("run.useInputs"),
     })
-    const foot = recreate.closest("[data-slot=viewer-foot]")
-    const pair = foot?.querySelector("[data-slot=viewer-foot-pair]")
-    const names = [...(pair?.querySelectorAll("button") ?? [])].map(
-      (button) => button.textContent
-    )
-
-    expect(names).toEqual([t("output.download"), t("output.useIn")])
-    expect(foot?.lastElementChild).toBe(pair)
+    const actions = recreate.closest("[data-slot=viewer-actions]")
+    const names = within(actions as HTMLElement)
+      .getAllByRole("button")
+      .map((button) => button.getAttribute("aria-label") ?? button.textContent)
+    expect(names).toEqual([
+      t("run.useInputs"),
+      t("output.download"),
+      t("output.useIn"),
+      t("viewer.more"),
+      t("run.openInComfy"),
+    ])
     expect(
-      recreate.compareDocumentPosition(pair as Node) &
-        Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy()
-    expect(foot?.textContent).not.toContain(t("output.delete"))
+      screen.queryByRole("button", { name: t("output.delete") })
+    ).toBeNull()
   })
 
-  it("keeps Recreate the one filled control, and Delete quiet", async () => {
+  it("keeps Recreate the one filled control, and Open in ComfyUI a secondary button with the Comfy mark on its ink tile", async () => {
     renderPiece(() => (
-      <>
-        <ViewerManage asset={output} run={made} onDeleted={() => undefined} />
-        <ViewerActions asset={output} run={made} />
-      </>
+      <ViewerActions asset={output} run={live} onDeleted={() => undefined} />
     ))
-    const buttons = await screen.findAllByRole("button")
-    const filled = buttons.filter(isFilled)
-    const remove = screen.getByRole("button", { name: t("output.delete") })
-
+    await screen.findByRole("button", { name: t("run.useInputs") })
+    const filled = screen.getAllByRole("button").filter(isFilled)
+    const comfy = screen.getByRole("button", { name: t("run.openInComfy") })
     expect(filled.map((button) => button.textContent)).toEqual([
       t("run.useInputs"),
     ])
-    expect(isColoured(remove)).toBe(false)
-    expect(remove.className.split(" ")).toContain("bg-transparent")
-    expect(buttons.some(isColoured)).toBe(false)
+    expect(comfy.className.split(" ")).toContain("bg-(--well)")
+    expect(comfyMarkOf(comfy)).toBe("comfy")
+    expect(
+      comfy.querySelector("[data-slot=lab-mark]")?.getAttribute("data-ground")
+    ).toBe("mark")
   })
 
-  it("shows Recreate on the phone bar as its one filled control", async () => {
+  it("deletes from the More menu only after the confirm, whose Delete is in error red", async () => {
+    const deleted: string[] = []
+    const fetched: string[] = []
+    const real = globalThis.fetch
+    globalThis.fetch = async (url: RequestInfo | URL, init?: RequestInit) => {
+      fetched.push(`${init?.method ?? "GET"} ${String(url)}`)
+      return new Response(null, { status: 204 })
+    }
+    renderPiece(() => (
+      <ViewerActions
+        asset={output}
+        run={live}
+        onDeleted={() => deleted.push("done")}
+      />
+    ))
+    fireEvent.click(
+      await screen.findByRole("button", { name: t("viewer.more") })
+    )
+    const item = await screen.findByRole("menuitem", {
+      name: t("output.delete"),
+    })
+    expect(item.getAttribute("data-tone")).toBe("danger")
+    const menu = item.closest("[data-slot=dropdown-menu-content]")
+    expect(menu?.getAttribute("data-side")).toMatch(/^(inline-start|left)$/)
+    fireEvent.click(item)
+    const dialog = await screen.findByRole("alertdialog")
+    expect(fetched.filter((call) => call.startsWith("DELETE"))).toEqual([])
+    const confirm = within(dialog).getByRole("button", {
+      name: t("viewer.delete.confirm"),
+    })
+    expect(confirm.className).toMatch(/bug/)
+    fireEvent.click(confirm)
+    await waitFor(() => expect(deleted).toEqual(["done"]))
+    expect(fetched.filter((call) => call.startsWith("DELETE"))).toHaveLength(1)
+    globalThis.fetch = real
+  })
+
+  it("puts Info, Recreate, Download, Use in, Open in ComfyUI and More on the phone bar, Recreate the one filled control", async () => {
     renderPiece(() => (
       <ViewerBar
         asset={output}
-        run={made}
+        run={live}
         onDeleted={() => undefined}
         details={null}
       />
@@ -144,12 +197,14 @@ describe("the viewer's actions", () => {
     const recreate = await screen.findByRole("button", {
       name: t("run.useInputs"),
     })
-    const filled = screen.getAllByRole("button").filter(isFilled)
-
-    expect(filled).toEqual([recreate])
+    expect(screen.getAllByRole("button").filter(isFilled)).toEqual([recreate])
     expect(
-      screen.getByRole("button", { name: t("output.download") })
-    ).toBeTruthy()
+      comfyMarkOf(screen.getByRole("button", { name: t("run.openInComfy") }))
+    ).toBe("comfy")
+    expect(screen.getByRole("button", { name: t("viewer.more") })).toBeTruthy()
+    expect(
+      screen.queryByRole("button", { name: t("output.delete") })
+    ).toBeNull()
   })
 
   it("fills no control on the phone bar of an upload, which has no Recreate", async () => {
@@ -161,11 +216,7 @@ describe("the viewer's actions", () => {
         details={null}
       />
     ))
-    const download = await screen.findByRole("button", {
-      name: t("output.download"),
-    })
-
-    expect(download.textContent).toBe(t("output.download"))
+    await screen.findByRole("button", { name: t("output.download") })
     expect(screen.getAllByRole("button").filter(isFilled)).toEqual([])
     expect(
       screen.queryByRole("button", { name: t("run.useInputs") })
@@ -183,7 +234,6 @@ describe("the viewer's actions", () => {
           onToggle: () => undefined,
         }}
         measured={null}
-        onDeleted={() => undefined}
       />
     ))
     const caption = await screen.findByText(t("run.demoCaption"))

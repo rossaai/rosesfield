@@ -95,20 +95,28 @@ describe("the Lip sync modes in the contract", () => {
       inputRulesOf(lipsync, { mode }).map((rule) => rule.input.name)
     expect(applied("photo")).toEqual([
       "mode",
+      "model",
       "photo",
       "audio",
       "scene",
       "length",
       "seed",
     ])
-    expect(applied("clip")).toEqual(["mode", "clip", "audio", "length", "seed"])
+    expect(applied("clip")).toEqual([
+      "mode",
+      "model",
+      "clip",
+      "audio",
+      "length",
+      "seed",
+    ])
   })
 
   it.each(refused)("refuses $issue", ({ inputs, issue }) => {
     expect(issuesOf(lipsync, inputs)).toEqual([issue])
   })
 
-  it("starts From a photo with a photo and From a clip with a clip, and fills the length", () => {
+  it("starts From a photo with a photo and From a clip with a clip, and fills the model and the length", () => {
     const photoRun = startRunBodyFor(lipsync).parse({
       inputs: { mode: "photo", photo: [photoId], audio: [audioId] },
     })
@@ -118,12 +126,14 @@ describe("the Lip sync modes in the contract", () => {
     })
     expect(photoRun.inputs).toEqual({
       mode: "photo",
+      model: "ltx-2-3",
       photo: [photoId],
       audio: [audioId],
       length: 10,
     })
     expect(clipRun.inputs).toEqual({
       mode: "clip",
+      model: "ltx-2-3",
       clip: [clipId],
       audio: [audioId],
       length: 5,

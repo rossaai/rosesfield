@@ -1,3 +1,4 @@
+import { buttonVariants, IconButton } from "@rosesfield/ui/components/button"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import {
   Tooltip,
@@ -5,38 +6,14 @@ import {
   TooltipTrigger,
 } from "@rosesfield/ui/components/tooltip"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { AtSignIcon, PencilIcon, PlusIcon } from "lucide-react"
-import type { ComponentProps, ReactElement, ReactNode } from "react"
-
-type TileButtonProps = {
-  label: string
-  icon: ReactNode
-  onClick: () => void
-}
-
-function TileButton({ label, icon, onClick }: TileButtonProps): ReactElement {
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <button
-            type="button"
-            aria-label={label}
-            onClick={onClick}
-            className={cn(
-              "relative flex size-8 items-center justify-center rounded-dense text-ink [&_svg]:size-4",
-              interaction.light,
-              interaction.ring
-            )}
-          >
-            {icon}
-          </button>
-        }
-      />
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
-  )
-}
+import {
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+  useState,
+} from "react"
 
 type ReferenceTileProps = {
   referencesLabel: string
@@ -47,22 +24,27 @@ type ReferenceTileProps = {
 
 function ReferenceTile(props: ReferenceTileProps): ReactElement {
   return (
-    <div
+    <span
       data-slot="composer-attachments-edge"
-      className="flex h-8 w-16.25 shrink-0 items-center rounded-dense bg-(--well)"
+      className="flex shrink-0 items-center gap-s2"
     >
-      <TileButton
+      <IconButton
         label={props.referencesLabel}
-        icon={<PlusIcon aria-hidden="true" />}
+        tone="quiet"
+        size="dense"
         onClick={props.onReferences}
-      />
-      <span aria-hidden="true" className="h-4 w-px shrink-0 bg-(--line)" />
-      <TileButton
+      >
+        <PlusIcon aria-hidden="true" />
+      </IconButton>
+      <IconButton
         label={props.elementsLabel}
-        icon={<AtSignIcon aria-hidden="true" />}
+        tone="quiet"
+        size="dense"
         onClick={props.onElements}
-      />
-    </div>
+      >
+        <AtSignIcon aria-hidden="true" />
+      </IconButton>
+    </span>
   )
 }
 
@@ -122,9 +104,8 @@ function StartFrame(props: StartFrameProps): ReactElement {
         <span
           data-slot="start-frame-change"
           className={cn(
-            "material-thin absolute top-1.5 right-1.5 inline-flex h-6 items-center gap-1 rounded-dense px-2 font-medium text-label text-ink [&_svg]:size-3",
-            interaction.light,
-            "group-hover/frame:after:opacity-10 group-active/frame:after:opacity-10"
+            buttonVariants({ tone: "glass", size: "small" }),
+            "absolute top-s2 right-s2 text-label"
           )}
         >
           <PencilIcon aria-hidden="true" />
@@ -137,23 +118,46 @@ function StartFrame(props: StartFrameProps): ReactElement {
 
 type DropZoneProps = Omit<ComponentProps<"button">, "children"> & {
   title: string
-  line: string
+  line?: string | undefined
+  tip?: string | undefined
   kinds: ReadonlyArray<ReactNode>
 }
 
 function DropZone({
   title,
   line,
+  tip,
   kinds,
   className,
+  onDragEnter,
+  onDragLeave,
+  onDrop,
   ...props
 }: DropZoneProps): ReactElement {
-  return (
+  const [isOver, setOver] = useState(false)
+  const zone = (
     <button
       type="button"
       data-slot="composer-attachments-row"
+      data-drop={isOver ? "over" : "rest"}
+      onDragEnter={(event) => {
+        setOver(true)
+        onDragEnter?.(event)
+      }}
+      onDragLeave={(event) => {
+        const next = event.relatedTarget
+        if (!(next instanceof Node && event.currentTarget.contains(next))) {
+          setOver(false)
+        }
+        onDragLeave?.(event)
+      }}
+      onDrop={(event) => {
+        setOver(false)
+        onDrop?.(event)
+      }}
       className={cn(
-        "flex min-h-30 w-full flex-col items-center justify-center gap-3 rounded-card border border-dashed border-(--line) bg-(--well) p-4 text-center",
+        "flex min-h-30 w-full flex-col items-center justify-center gap-s3 rounded-card bg-(--well) p-s5 text-center hover:bg-(--tint) data-[drop=over]:bg-(--tint)",
+        motion.tint,
         interaction.ring,
         className
       )}
@@ -164,17 +168,32 @@ function DropZone({
           <span
             // biome-ignore lint/suspicious/noArrayIndexKey: the discs are a fixed row of glyphs
             key={index}
-            className="flex size-9 items-center justify-center rounded-full bg-(--tint) text-ink-muted [&_svg]:size-4"
+            className="flex size-icon items-center justify-center rounded-full bg-(--ground) text-ink-muted [&_svg]:glyph"
           >
             {kind}
           </span>
         ))}
       </span>
       <span className="flex flex-col">
-        <span className="font-medium text-body text-ink-muted">{title}</span>{" "}
-        <span className="font-medium text-caption text-ink-muted">{line}</span>
+        <span className="font-medium text-body text-ink">{title}</span>
+        {line === undefined ? null : (
+          <>
+            {" "}
+            <span className="text-caption text-ink-muted">{line}</span>
+          </>
+        )}
       </span>
     </button>
+  )
+  return tip === undefined ? (
+    zone
+  ) : (
+    <Tooltip>
+      <TooltipTrigger render={zone} />
+      <TooltipContent className="h-auto whitespace-normal py-s2">
+        {tip}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 

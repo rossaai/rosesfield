@@ -1,5 +1,10 @@
 import type { EngineBinding } from "@rosesfield/contract"
-import { graphOf, inputsOf, oneLayerBindings } from "#layers/comfy/layer-nodes"
+import {
+  graphOf,
+  inputsOf,
+  keepEveryAlphaStep,
+  oneLayerBindings,
+} from "#layers/comfy/layer-nodes"
 import { workflowBinding } from "#workflow-binding"
 
 export const fillQuality = {
@@ -10,6 +15,8 @@ export const fillQuality = {
 type Quality = keyof typeof fillQuality
 
 export const fillWorkflow = "layers-fill-qwen-image"
+
+export const fillNodes = { size: "2", join: "51" } as const
 
 export function fillBinding(quality: Quality): EngineBinding {
   return workflowBinding({
@@ -25,6 +32,7 @@ export function fillBinding(quality: Quality): EngineBinding {
       const sampler = inputsOf(graph, "45")
       sampler.steps = fillQuality[quality].steps
       sampler.cfg = fillQuality[quality].cfg
+      keepEveryAlphaStep(graph, fillNodes.join, fillNodes.size)
       return graph
     },
   })

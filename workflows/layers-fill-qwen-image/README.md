@@ -1,6 +1,6 @@
 # Layers: fill a masked area of one layer with Qwen Image and the DiffSynth inpaint patch
 
-Fills the area your mask marks on one layer with Qwen Image and the DiffSynth inpaint model patch, then pastes the result back into the layer with its alpha. This file holds the draft run at 20 steps. The final run samples 50.
+Fills the area your mask marks on one layer with Qwen Image and the DiffSynth inpaint model patch, then pastes the result back into the layer with its alpha. This file holds the draft run at 20 steps. The final run samples 50. Before each run the catalog adds a `SolidMask` and a `MaskComposite` that lower the mask that node 51 `JoinImageWithAlpha` reads by half of one 8-bit step, because the mask turns into alpha as 1 minus a float32 value and `SaveImage` truncates, which loses one level on 95 of the 256 alpha values.
 
 | | |
 |---|---|

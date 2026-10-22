@@ -1,3 +1,4 @@
+import type { Mode } from "@rosesfield/catalog/characters"
 import { type AppListing, fixedCountOf, type Run } from "@rosesfield/contract"
 import {
   SegmentedControl,
@@ -21,12 +22,14 @@ import {
   useSheetOpen,
 } from "@/screens/app/column-frame"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
+import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import type { AppForm } from "@/screens/app/use-app-form"
 import {
   type AppScreenState,
   type AppSeeds,
   noSeeds,
+  type StartHook,
   useAppScreen,
 } from "@/screens/app/use-app-screen"
 import { ModeCanvas } from "@/studio/characters/mode-canvas"
@@ -40,25 +43,39 @@ import {
   RandomButton,
   TraitsPanel,
 } from "@/studio/characters/mode-panels"
-import type { Mode } from "../../../../../packages/catalog/src/characters/traits"
+import {
+  useAnglesStart,
+  useTraitsStart,
+} from "@/studio/characters/use-characters-start"
+import { useTraitsModel } from "@/studio/characters/use-traits-model"
 
 type ModeScreen = {
   listing: AppListing
   state: AppScreenState
+  hosted: HostedState | undefined
 }
 
 const allModes: readonly Mode[] = ["traits", "angles"]
 
-function useFixedCount(app: AppListing, form: AppForm): void {
+const startOf: Readonly<Record<Mode, StartHook>> = {
+  traits: useTraitsStart,
+  angles: useAnglesStart,
+}
+
+function useFixedCount(
+  app: AppListing,
+  form: AppForm,
+  isHosted: boolean
+): void {
   const { setForm } = form
   const count =
     fixedCountOf(app, form.values.inputs) ?? app.output.count.default
   const current = form.values.count
   useEffect(() => {
-    if (current !== count) {
+    if (!isHosted && current !== count) {
       setForm({ count })
     }
-  }, [count, current, setForm])
+  }, [isHosted, count, current, setForm])
 }
 
 function useModeScreen(
@@ -68,9 +85,15 @@ function useModeScreen(
   onStarted: () => void
 ): ModeScreen {
   const listing = useMemo(() => listingFor(app, mode), [app, mode])
-  const state = useAppScreen(listing, seeds, onStarted)
-  useFixedCount(listing, state.form)
-  return { listing, state }
+  const state = useAppScreen(listing, seeds, onStarted, startOf[mode])
+  const traits = useTraitsModel(
+    listing,
+    state.form,
+    mode === "traits" ? state.hosted : undefined
+  )
+  const hosted = mode === "traits" ? traits : state.hosted
+  useFixedCount(listing, state.form, (hosted?.fields ?? null) !== null)
+  return { listing, state, hosted }
 }
 
 function ModePanel({
@@ -86,9 +109,9 @@ function ModePanel({
     lastSeed: screen.state.lastSeed,
   }
   return mode === "traits" ? (
-    <TraitsPanel {...props} />
+    <TraitsPanel {...props} hosted={screen.hosted} />
   ) : (
-    <AnglesPanel {...props} />
+    <AnglesPanel {...props} hosted={screen.hosted} />
   )
 }
 

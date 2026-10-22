@@ -157,7 +157,7 @@ function SoundControls({
     <>
       <IconButton
         label={soundLabel}
-        place="cardWide"
+        size="dense"
         tone="quiet"
         onClick={() => toggleSound(video)}
       >
@@ -204,7 +204,7 @@ function Controls({
     >
       <IconButton
         label={playLabel}
-        place="cardWide"
+        size="dense"
         tone="quiet"
         onClick={() => togglePlay(video)}
       >
@@ -229,7 +229,7 @@ function Controls({
       <SoundControls video={video} playback={playback} hasVolume={isRegular} />
       <IconButton
         label={t("explore.video.fullScreen")}
-        place="cardWide"
+        size="dense"
         tone="quiet"
         onClick={() => showFullScreen(video)}
       >
@@ -272,6 +272,7 @@ export function ViewerVideo({
       >
         <video
           ref={video}
+          data-grow-target=""
           src={src}
           aria-label={label}
           muted

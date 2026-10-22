@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react"
+import type { Draft } from "@/router-context"
 import {
   defaultsOf,
   type FieldProblem,
@@ -24,7 +25,7 @@ import {
   placeAll,
 } from "@/screens/app/form-fill"
 
-export type FormSource = "defaults" | "seed"
+export type FormSource = "defaults" | "seed" | "placed"
 
 export type AppForm = {
   values: FormValues
@@ -41,6 +42,12 @@ type FormSeeds = {
   use: string | undefined
   from: string | undefined
   share?: string | undefined
+}
+
+function hasPlaced(draft: Draft | undefined): boolean {
+  return (
+    draft !== undefined && draft.assetIds.length + draft.characterIds.length > 0
+  )
 }
 
 function useSeededValues(
@@ -77,6 +84,8 @@ function useSeededValues(
       setValues(next)
       if (fromRun !== null) {
         setSource("seed")
+      } else if (seeds.use !== undefined || hasPlaced(draft)) {
+        setSource("placed")
       }
     }
     void fill()

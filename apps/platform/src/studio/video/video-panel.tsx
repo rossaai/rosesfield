@@ -2,7 +2,7 @@ import { extendApp } from "@rosesfield/catalog/video"
 import type { AppListing } from "@rosesfield/contract"
 import { PromptBlock } from "@rosesfield/ui/components/input-panel"
 import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
-import { ModeStrip, ModeTab, Tabs } from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { useNavigate } from "@tanstack/react-router"
 import { type ReactElement, useMemo, useRef } from "react"
 import { t, tCatalog } from "@/copy/t"
@@ -22,6 +22,7 @@ import {
   videoTabs,
 } from "@/studio/video/video-tabs"
 import { ElementsChip, VideoWells } from "@/studio/video/video-wells"
+import type { VideoEditMode } from "@/studio/video-edit/video-edit-modes"
 
 function isVideoTab(value: unknown): value is VideoTab {
   return videoTabs.some((tab) => tab === value)
@@ -41,18 +42,20 @@ export function ModeTabs({
         }
       }}
     >
-      <ModeStrip aria-label={tCatalog("video.tabs.label")}>
+      <TabsList aria-label={tCatalog("video.tabs.label")}>
         {videoTabs.map((one) => (
-          <ModeTab key={one} value={one}>
+          <TabsTrigger key={one} value={one}>
             {tCatalog(tabKeys[one])}
-          </ModeTab>
+          </TabsTrigger>
         ))}
-      </ModeStrip>
+      </TabsList>
     </Tabs>
   )
 }
 
 type MakeChoice = "video" | "extend"
+
+const extendTab: VideoEditMode = "extend"
 
 export function MakeSwitch({
   onExtend,
@@ -188,7 +191,11 @@ export function VideoPanel({
       />
       <MakeSwitch
         onExtend={() =>
-          void navigate({ to: "/apps/$appId", params: { appId: extendApp } })
+          void navigate({
+            to: "/apps/$appId",
+            params: { appId: extendApp },
+            search: { mode: extendTab },
+          })
         }
       />
       {hosted.chosen === null ? null : (

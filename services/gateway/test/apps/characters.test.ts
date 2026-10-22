@@ -1,26 +1,20 @@
-import { readApps } from "@rosesfield/catalog"
 import {
-  type AppDefinition,
   assetResponse,
   buildPath,
+  characterListResponse,
+  characterPhotoLimit,
   characterResponse,
   errorEnvelope,
   routes,
   runResponse,
 } from "@rosesfield/contract"
+import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
+import { Character, type CharacterRepository } from "@rosesfield/library"
 import { afterEach, describe, expect, it } from "vitest"
-import { app } from "../../../../packages/catalog/src/characters/app"
 import { type Harness, harnessFor, jsonInit } from "../harness"
 import { localPorts } from "../local-ports"
-import { pngBytes } from "../sample-apps"
-
-function charactersApp(): AppDefinition {
-  const [listed] = readApps([{ folder: "characters", app }])
-  if (listed === undefined) {
-    throw new Error("The characters app did not parse")
-  }
-  return listed
-}
+import { start as now, pngBytes } from "../sample-apps"
+import { charactersApp } from "./characters-app"
 
 describe("the characters app through the gateway on the demo engine", () => {
   const open: Harness[] = []
@@ -72,7 +66,7 @@ describe("the characters app through the gateway on the demo engine", () => {
     expect(done.inputs).toMatchObject({
       mode: "traits",
       gender: "man",
-      model: "flux-2-klein-4b",
+      model: "z-image-turbo",
       plainBackground: "on",
       count: "2",
     })
@@ -119,6 +113,80 @@ describe("the characters app through the gateway on the demo engine", () => {
     return characterResponse.parse(await created.json()).character.id
   }
 
+  it("keeps a character to 1 to 10 photos, the bound the screens read", async () => {
+    const gateway = openGateway()
+    const uploaded = await gateway.call(routes.uploadAsset.path, {
+      method: "POST",
+      headers: { "content-type": "image/png" },
+      body: pngBytes,
+    })
+    const photo = assetResponse.parse(await uploaded.json()).asset.id
+    const others = Array.from({ length: characterPhotoLimit }, () =>
+      crypto.randomUUID()
+    )
+    const create = (references: string[]) =>
+      gateway.call(
+        routes.createCharacter.path,
+        jsonInit({ name: "Ada", references, notes: "" })
+      )
+    const over = await create([photo, ...others])
+    expect(over.status).toBe(400)
+    expect(errorEnvelope.parse(await over.json()).error.code).toBe(
+      "REQUEST_INVALID"
+    )
+    const atBound = await create([photo, ...others.slice(1)])
+    expect(errorEnvelope.parse(await atBound.json()).error.code).not.toBe(
+      "REQUEST_INVALID"
+    )
+    const one = await create([photo])
+    expect(one.status).toBe(201)
+    expect(characterPhotoLimit).toBe(10)
+  })
+
+  it("reads, lists and edits a saved character that holds 16 photos", async () => {
+    const held: { characters?: CharacterRepository } = {}
+    const harness = harnessFor({
+      portsFor: (clock, folder) => {
+        const ports = localPorts(clock, folder)
+        held.characters = ports.characters
+        return ports
+      },
+      apps: [charactersApp()],
+    })
+    open.push(harness)
+    const references = Array.from({ length: 16 }, () =>
+      assetIdFormat.parse(crypto.randomUUID())
+    )
+    const saved = Character.create({
+      id: characterIdFormat.parse(crypto.randomUUID()),
+      name: "Ada",
+      references,
+      notes: "",
+      now,
+    })
+    await held.characters?.add(saved)
+    const listed = await harness.call(routes.listCharacters.path)
+    expect(listed.status).toBe(200)
+    const { characters: found } = characterListResponse.parse(
+      await listed.json()
+    )
+    expect(found.map((one) => one.references)).toEqual([references])
+    const path = buildPath(routes.getCharacter.path, { characterId: saved.id })
+    const read = await harness.call(path)
+    expect(read.status).toBe(200)
+    expect(
+      characterResponse.parse(await read.json()).character.references
+    ).toHaveLength(16)
+    const edited = await harness.call(path, {
+      ...jsonInit({ notes: "Wears glasses" }),
+      method: "PATCH",
+    })
+    expect(edited.status).toBe(200)
+    expect(
+      characterResponse.parse(await edited.json()).character
+    ).toMatchObject({ notes: "Wears glasses", references })
+  })
+
   it("makes 4 views of a saved character", async () => {
     const gateway = openGateway()
     const character = await savedCharacter(gateway)
@@ -138,6 +206,8 @@ describe("the characters app through the gateway on the demo engine", () => {
       mode: "angles",
       count: "4",
       character: [character],
+      model: "qwen-image-edit-2511",
+      view: "front",
     })
     expect(done.inputs).not.toHaveProperty("gender")
   })
@@ -151,6 +221,9 @@ describe("the characters app through the gateway on the demo engine", () => {
       { inputs: { count: "3" }, count: 2 },
       { inputs: { age: "child" } },
       { inputs: { model: "nano-banana-pro" } },
+      { inputs: { model: "flux-2-klein-4b" } },
+      { inputs: { model: "qwen-image-edit-2511" } },
+      { inputs: { mode: "angles", character, model: "z-image-turbo" } },
       { inputs: { mode: "angles", character, count: "2" } },
       { inputs: { mode: "angles", character }, count: 2 },
       { inputs: { mode: "angles" } },

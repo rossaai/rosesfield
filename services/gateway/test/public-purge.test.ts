@@ -19,7 +19,6 @@ import { FixedClock } from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
 import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
 import { readServerEnv } from "#env"
-import { keyHeaders } from "#session/visitor-keys"
 import { type Seen, Visitor } from "./fixtures/visitor"
 import { imageApp, pngBytes, sessionSecret, start } from "./sample-apps"
 
@@ -45,8 +44,6 @@ function openPublic(clock: FixedClock) {
       SESSION_SECRET: sessionSecret,
       DATA_DIR: dataDir,
       RETENTION_DAYS: "7",
-      AGENT_BASE_URL: "http://127.0.0.1:11434/v1",
-      AGENT_MODEL: "qwen3.8:27b",
     }),
     apps: [imageApp()],
     clock,
@@ -160,7 +157,7 @@ describe("public mode's retention", () => {
   it("keeps each visitor's conversations apart, and deletes a session's conversations after the retention", async () => {
     const clock = new FixedClock({ now: start })
     const { dataDir, visitor } = openPublic(clock)
-    const first = visitor({ [keyHeaders.agent]: "sk-visitor-one" })
+    const first = visitor()
     const second = visitor()
     const started = await first.call(
       conversationRoutes.startConversation.path,

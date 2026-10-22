@@ -12,7 +12,7 @@ const done: Run = run.parse({
   id: "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e01",
   appId: "effects",
   status: "done",
-  inputs: { effect: "grow-wings", image: [photoId], resolution: "480p" },
+  inputs: { effect: "grow-giant", image: [photoId], resolution: "480p" },
   count: 1,
   aspectRatio: "9:16",
   seed: 7,
@@ -90,7 +90,7 @@ describe("running an effect again from a result", () => {
     const { result } = renderHook(() => useScreen(given))
     act(() => result.current.again.onAnotherPhoto(done))
     expect(result.current.inputs).toMatchObject({
-      effect: "grow-wings",
+      effect: "grow-giant",
       image: [],
       resolution: "480p",
     })
@@ -105,7 +105,7 @@ describe("running an effect again from a result", () => {
     const { result } = renderHook(() => useScreen(given))
     act(() => result.current.again.onAnotherEffect(done))
     expect(result.current.inputs).toMatchObject({
-      effect: "grow-wings",
+      effect: "grow-giant",
       image: [photoId],
     })
     expect(given.onNewPhoto).not.toHaveBeenCalled()

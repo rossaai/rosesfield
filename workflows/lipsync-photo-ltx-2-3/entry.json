@@ -1,0 +1,83 @@
+{
+  "name": "lipsync-photo-ltx-2-3",
+  "title": "Lip sync: a talking video from a photo and audio with LTX 2.3",
+  "description": "Makes a video of the person in your photo speaking your audio with LTX 2.3 22B in two stages, half size then twice the size with the spatial upscaler, while your audio stays fixed as the model's audio, and puts your audio on the video. Built from Comfy's template video_ltx2_3_ia2v.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": [
+    "ltx-2.3-22b-dev-fp8.safetensors",
+    "ltx_2.3_22b_distilled_1.1_lora_dynamic_fro09_avg_rank_111_bf16.safetensors",
+    "gemma_3_12B_it_fp4_mixed.safetensors",
+    "ltx-2.3-spatial-upscaler-x2-1.1.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "photo": {
+      "nodeId": "269",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "audio": {
+      "nodeId": "276",
+      "inputName": "audio",
+      "type": "cloud-asset"
+    },
+    "scene": {
+      "nodeId": "900",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "286",
+      "inputName": "noise_seed",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "297",
+      "inputName": "resize_type.width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "297",
+      "inputName": "resize_type.height",
+      "type": "scalar"
+    },
+    "latentWidth": {
+      "nodeId": "302",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "latentHeight": {
+      "nodeId": "302",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "frames": {
+      "nodeId": "302",
+      "inputName": "length",
+      "type": "scalar"
+    },
+    "maskWidth": {
+      "nodeId": "333",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "maskHeight": {
+      "nodeId": "333",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "seconds": {
+      "nodeId": "332",
+      "inputName": "duration",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "341",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}

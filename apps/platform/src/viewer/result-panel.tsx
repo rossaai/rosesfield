@@ -1,15 +1,10 @@
+import { adsAppId, adsRunPromptOf } from "@rosesfield/catalog/ads"
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
+import { keyframeOf } from "@rosesfield/catalog/storyboard"
 import type { Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
-import { interaction } from "@rosesfield/ui/components/interaction"
-import { cn } from "@rosesfield/ui/lib/cn"
-import {
-  ChevronUpIcon,
-  CopyIcon,
-  DownloadIcon,
-  ImagesIcon,
-  InfoIcon,
-} from "lucide-react"
-import { type ReactElement, type ReactNode, useState } from "react"
+import { CopyIcon, DownloadIcon, ImagesIcon } from "lucide-react"
+import type { ReactElement, ReactNode } from "react"
 import { isAssetInput, promptInputOf } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { formatDate, joinParts } from "@/copy/format"
@@ -24,6 +19,7 @@ import {
 } from "@/pieces/run/run-facts"
 import type { VisualEntry } from "@/screens/explore/explore-tile"
 import { appIcon } from "@/shell/nav-rows"
+import { runFieldsOf, useRunModels } from "@/viewer/use-run-models"
 
 const modeInputName = "mode"
 
@@ -37,12 +33,29 @@ export function inputAssetIdsOf(run: Run): string[] {
     .flatMap((input) => idsOf(run.inputs[input.name]))
 }
 
-export function promptOf(run: Run): string | null {
+export function promptOf(
+  run: Run,
+  models: readonly CatalogModel[]
+): string | null {
+  if (run.appId === adsAppId) {
+    return adsRunPromptOf(run, runFieldsOf(run, models))
+  }
   const app = findCatalogApp(run.appId)
   const input = app === null ? null : promptInputOf(app)
   return input === null
     ? null
     : inputValueText(app, input, run.inputs[input.name])
+}
+
+export function outputPromptOf(
+  run: Run,
+  assetId: string | null,
+  models: readonly CatalogModel[]
+): string | null {
+  const keyframe = assetId === null ? null : keyframeOf(run, assetId)
+  return keyframe === null || keyframe.prompt === ""
+    ? promptOf(run, models)
+    : keyframe.prompt
 }
 
 export function modelAndModeOf(run: Run): string | null {
@@ -141,36 +154,6 @@ export function PromptDetail({ prompt }: { prompt: string | null }): ReactNode {
   )
 }
 
-function Details({ children }: { children: ReactNode }): ReactElement {
-  const [isOpen, setOpen] = useState(true)
-  return (
-    <div data-slot="viewer-details-group" className="flex flex-col">
-      <button
-        type="button"
-        aria-expanded={isOpen}
-        onClick={() => setOpen(!isOpen)}
-        className={cn(
-          "relative flex h-12 items-center gap-2 rounded-cell px-2 text-label text-ink-muted [&_svg]:size-4",
-          interaction.light,
-          interaction.ring
-        )}
-      >
-        <InfoIcon aria-hidden="true" />
-        <span className="flex-1 text-start">{t("viewer.info")}</span>
-        <ChevronUpIcon
-          aria-hidden="true"
-          className={isOpen ? undefined : "rotate-180"}
-        />
-      </button>
-      {isOpen ? (
-        <dl data-slot="viewer-details" className="flex flex-col">
-          {children}
-        </dl>
-      ) : null}
-    </div>
-  )
-}
-
 export function RunSection({
   inputIds,
   children,
@@ -184,7 +167,9 @@ export function RunSection({
       className="flex flex-col rounded-card bg-(--well) px-2 pb-2.5"
     >
       <InputAssets ids={inputIds} />
-      <Details>{children}</Details>
+      <dl data-slot="viewer-details" className="flex flex-col">
+        {children}
+      </dl>
     </section>
   )
 }
@@ -203,6 +188,9 @@ export function ResultPanel({
   onDownload,
 }: ResultPanelProps): ReactElement {
   const model = modelAndModeOf(entry.run)
+  const models = useRunModels(entry.run)
+  const assetId = entry.source.kind === "own" ? entry.source.assetId : null
+  const price = runPrice(entry.run)
   return (
     <div
       data-slot="viewer-panel"
@@ -210,13 +198,13 @@ export function ResultPanel({
     >
       <PanelHead run={entry.run} line={formatDate(entry.run.createdAt)} />
       <RunSection inputIds={inputAssetIdsOf(entry.run)}>
-        <PromptDetail prompt={promptOf(entry.run)} />
+        <PromptDetail prompt={outputPromptOf(entry.run, assetId, models)} />
         {model === null ? null : (
           <Detail label={t("viewer.label.model")}>{model}</Detail>
         )}
-        <Detail label={t("explore.viewer.credits")}>
-          {runPrice(entry.run)}
-        </Detail>
+        {price === null ? null : (
+          <Detail label={t("explore.viewer.credits")}>{price}</Detail>
+        )}
       </RunSection>
       <span aria-hidden="true" className="flex-1" />
       <div data-slot="viewer-foot" className="flex flex-col gap-2.5">

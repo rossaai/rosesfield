@@ -1,6 +1,9 @@
+import { taskBinding } from "@rosesfield/generation/bindings"
 import {
   backgroundRemovalAspectRatios,
   backgroundRemovalEngine,
+  backgroundRemovalTasks,
+  defaultModel,
 } from "#background-removal/comfy/background-removal-engine"
 import { type AppInput, defineApp } from "#define-app"
 
@@ -44,7 +47,7 @@ export const app: AppInput = defineApp({
         { value: "birefnet", labelKey: "backgroundRemoval.model.birefnet" },
         { value: "lucida", labelKey: "backgroundRemoval.model.lucida" },
       ],
-      default: "birefnet",
+      default: defaultModel,
     },
   ],
   output: {
@@ -55,6 +58,11 @@ export const app: AppInput = defineApp({
       default: "1:1",
     },
   },
-  engine: backgroundRemovalEngine,
+  engine: taskBinding({
+    tasks: backgroundRemovalTasks,
+    input: "model",
+    default: defaultModel,
+    fallback: backgroundRemovalEngine,
+  }),
   limits: { timeoutSeconds: 300, maxRetries: 1 },
 })

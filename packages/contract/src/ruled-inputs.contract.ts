@@ -93,6 +93,37 @@ function checkRule(rule: InputRule, given: unknown): Check {
   }
 }
 
+function whenProblem(input: InputDefinition, given: unknown): string | null {
+  const when = whenOf(input)
+  return isGiven(given) && when !== null
+    ? `${input.name} applies only when ${describeWhen(when)}`
+    : null
+}
+
+export function givenRuleIssuesOf(
+  app: { inputs: readonly InputDefinition[] },
+  inputs: Inputs,
+  names: ReadonlySet<string>
+): string[] {
+  const rules = new Map(
+    inputRulesOf(app, inputs).map((rule) => [rule.input.name, rule])
+  )
+  return app.inputs.flatMap((input) => {
+    const given = inputs[input.name]
+    if (!names.has(input.name) || !isGiven(given)) {
+      return []
+    }
+    const rule = rules.get(input.name)
+    const problem =
+      rule === undefined
+        ? whenProblem(input, given)
+        : isRuledInput(input)
+          ? boundProblem(rule, given)
+          : null
+    return problem === null ? [] : [`${input.name}: ${problem}`]
+  })
+}
+
 export function checkRuledInputs(
   app: { inputs: readonly InputDefinition[] },
   inputs: Inputs,
@@ -111,12 +142,9 @@ export function checkRuledInputs(
     const given = inputs[input.name]
     const rule = rules.get(input.name)
     if (rule === undefined) {
-      const when = whenOf(input)
-      if (isGiven(given) && when !== null) {
-        refuse(
-          input.name,
-          `${input.name} applies only when ${describeWhen(when)}`
-        )
+      const problem = whenProblem(input, given)
+      if (problem !== null) {
+        refuse(input.name, problem)
       }
       continue
     }

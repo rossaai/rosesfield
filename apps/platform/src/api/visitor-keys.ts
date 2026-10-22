@@ -2,17 +2,16 @@ import { useSyncExternalStore } from "react"
 import { KeptValues } from "@/api/kept-values"
 import { readOwnerToken } from "@/api/owner-token"
 
-export type VisitorKeyKind = "engine" | "agent"
+export type VisitorKeyKind = "engine"
 
 export type VisitorKeyProblem = "required" | "invalid" | null
 
-export const visitorKeyKinds: readonly VisitorKeyKind[] = ["engine", "agent"]
+export const visitorKeyKinds: readonly VisitorKeyKind[] = ["engine"]
 
 export const engineKeyHeader = "X-Engine-Key"
 
 const headerNames: Readonly<Record<VisitorKeyKind, string>> = {
   engine: engineKeyHeader,
-  agent: "X-Agent-Key",
 }
 
 const keyPattern = /^[\x21-\x7e]{1,1024}$/
@@ -20,7 +19,6 @@ const kept = new KeptValues({ database: "rosesfield-visitor", store: "keys" })
 const listeners = new Set<() => void>()
 let current: Readonly<Record<VisitorKeyKind, string | null>> = {
   engine: null,
-  agent: null,
 }
 
 function emit(): void {
@@ -57,12 +55,11 @@ export function visitorKeyHeaders(): Record<string, string> {
   return headers
 }
 
+const goneKinds: readonly string[] = ["agent"]
+
 export async function loadVisitorKeys(): Promise<void> {
-  const [engine, agent] = await Promise.all([
-    kept.read("engine"),
-    kept.read("agent"),
-  ])
-  current = { engine, agent }
+  await Promise.all(goneKinds.map((kind) => kept.remove(kind)))
+  current = { engine: await kept.read("engine") }
   emit()
 }
 

@@ -3,6 +3,7 @@ import type {
   Cost,
   EngineBinding,
   KeyCheck,
+  Run,
   RunInputs,
   RunOrigin,
 } from "@rosesfield/contract"
@@ -16,6 +17,26 @@ export type EngineFile = {
   bytes: Uint8Array
 }
 
+export type RunPlan = NonNullable<Run["plan"]>
+
+export type EngineStepOutput = Omit<EngineOutput, "bytes" | "stills"> & {
+  assetId: AssetId
+}
+
+export type EngineStepJob = {
+  number: number
+  engine: string
+  ref: string
+  cost?: Cost
+  made?: EngineStepOutput
+}
+
+export type EngineSteps = {
+  plan: RunPlan
+  planCost?: Cost
+  jobs: readonly EngineStepJob[]
+}
+
 export type EngineRequest = {
   idempotencyKey: string
   binding: EngineBinding
@@ -26,6 +47,7 @@ export type EngineRequest = {
   seed: number | null
   outputKind: AssetKind
   timeoutSeconds?: number
+  steps?: EngineSteps
 }
 
 export type EngineFinished = {
@@ -45,8 +67,9 @@ export type EngineStatus =
       state: "queued" | "running"
       progress: number | null
       retryAfterSeconds: number | null
+      steps?: EngineSteps
     }
-  | { state: "succeeded"; cost?: Cost | null }
+  | { state: "succeeded"; cost?: Cost | null; steps?: EngineSteps }
   | { state: "failed"; error: ProjectError }
   | { state: "cancelled" }
 
@@ -57,6 +80,7 @@ export type EngineOutput = {
   width: number | null
   height: number | null
   durationSeconds: number | null
+  stills?: readonly Uint8Array[]
 }
 
 export type OutputsPerJob = "all" | "one"
@@ -66,12 +90,18 @@ export type HostedModel = {
   provider: string
   takes: readonly string[]
   makes: readonly string[]
+  takesTools?: boolean
   form: ModelForm | null
 }
 
 export type PriceRequest = {
   inputs: RunInputs
   count: number
+}
+
+export type TokenRate = {
+  input: number
+  output: number
 }
 
 export type RunPrice =
@@ -110,6 +140,11 @@ export abstract class GenerationEngine {
   /** Asks the engine to stop a submitted run. */
   abstract cancel(ref: string): Promise<void>
 
+  /** Says whether this engine still holds the run of this ref. An engine that keeps its runs in memory loses them when the server restarts. */
+  holds(_ref: string): boolean {
+    return true
+  }
+
   /** Says whether a run's jobs go to this engine one after another, so each job's cost is read on its own. */
   submitsAlone(): boolean {
     return false
@@ -136,6 +171,13 @@ export abstract class GenerationEngine {
   /** Prices one run before it starts, in the engine's credits. */
   priceOf(_binding: EngineBinding, _request: PriceRequest): Promise<RunPrice> {
     return Promise.resolve(unknownPrice)
+  }
+
+  /** Reads the published credits per million input and output text tokens of each chat model it holds a rate for. */
+  tokenRatesOf(
+    _models: readonly string[]
+  ): Promise<ReadonlyMap<string, TokenRate>> {
+    return Promise.resolve(new Map())
   }
 
   /** Says what a cost this engine measured comes to in its credits, or null when it has no credits. */

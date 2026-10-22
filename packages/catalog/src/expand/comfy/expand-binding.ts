@@ -10,6 +10,10 @@ export const expandFormats = ["1-1", "4-3", "3-4", "16-9", "9-16"] as const
 
 export type ExpandFormat = (typeof expandFormats)[number]
 
+export const expandTasks: readonly string[] = ["expand"]
+
+export const graphModel = "qwen-image-inpaint"
+
 export const expandSides = ["top", "right", "bottom", "left"] as const
 
 export const canvasRatios = [

@@ -26,14 +26,6 @@ export const traitNames: readonly TraitName[] = [
 
 export const framingValues = ["portrait", "half-body", "full-body"] as const
 
-export const traitsModels = [
-  "flux-2-klein-4b",
-  "z-image-turbo",
-  "qwen-image-2512",
-] as const
-
-export const anglesModel = "qwen-image-edit-2511"
-
 export const modes = ["traits", "angles"] as const
 
 export type Mode = (typeof modes)[number]

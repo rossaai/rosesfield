@@ -59,7 +59,8 @@ async function openPublic(page: Page): Promise<string[]> {
 async function pasteKey(page: Page, key: string): Promise<void> {
   await page
     .locator("[data-slot='app-bar']")
-    .getByRole("button", { name: "Add your Comfy key" })
+    .getByRole("button", { name: "Connect", exact: true })
+    .filter({ hasText: "Connect" })
     .click()
   const dialog = page.getByRole("dialog")
   await expect(
@@ -69,20 +70,17 @@ async function pasteKey(page: Page, key: string): Promise<void> {
   await dialog.getByRole("button", { name: "Add key" }).click()
 }
 
-test("a key Comfy accepts shows your balance within 3 seconds and goes in its header", async ({
+test("a key Comfy accepts puts your balance in the header within 3 seconds and moves Connect on to the command", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "desktop", "the top bar names the action")
   const sentKeys = await openPublic(page)
   await pasteKey(page, "comfyui-good")
-  const dialog = page.getByRole("dialog")
-  await expect(
-    dialog.getByText("4,201.5 credits on your Comfy account")
-  ).toBeVisible({ timeout: 3000 })
-  await dialog.getByRole("button", { name: "Done" }).click()
   await expect(
     page.locator("header[data-slot='app-bar']").getByText("4,201.5 credits")
-  ).toBeVisible()
+  ).toBeVisible({ timeout: 3000 })
+  const dialog = page.getByRole("dialog")
+  await expect(dialog.getByRole("button", { name: "Copy" })).toBeVisible()
   expect(sentKeys).toContain("comfyui-good")
 })
 

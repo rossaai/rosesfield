@@ -1,12 +1,33 @@
 {
   "effect": "buildings-ripple",
   "passed": false,
-  "prompt": "The buildings behind the person start to ripple and bend like a flag in the wind. Waves roll through the walls, windows and rooftops, curving them up and down like liquid. The person stays solid and still in front of the moving city. The camera stays fixed.",
-  "endFrame": {
-    "source": "none"
+  "design": {
+    "unit": "buildings-ripple",
+    "family": "effects",
+    "setPiece": "The building, tower or bridge behind the person bends, folds and curls while the person stays whole in front.",
+    "cuts": [],
+    "lastFrame": {
+      "shows": "The structure behind the person curled into a wave, the person whole.",
+      "maxLuma": null
+    },
+    "sound": null,
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
   },
-  "hold": 0.7,
+  "prompt": "One shot with a slow camera. The person stays whole and in place in front. Behind them the building, tower or bridge starts to bend, then folds and curls like a wave, more and more until the last frame. The light and colour stay as they are.",
+  "photoFrame": "first",
+  "endFrame": {
+    "source": "edit",
+    "prompt": "The same person in front, unchanged, and the building behind them curled over in a large wave, in the same light and colour.",
+    "strength": 0.9
+  },
+  "midFrame": null,
+  "hold": 0.9,
   "adapter": null,
-  "seconds": 5,
-  "preview": null
+  "seconds": 7,
+  "preview": null,
+  "proof": null
 }

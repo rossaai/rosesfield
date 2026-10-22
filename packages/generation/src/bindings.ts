@@ -14,9 +14,11 @@ export {
   type ModelForm,
 } from "#domain/model-form"
 export { ModelPolicy } from "#domain/model-policy.port"
+export { refusedAdapter, refusedBinding } from "#domain/refused-binding"
 export { selectAdapter, selectBinding } from "#domain/select-binding"
 export {
   chosenModelOf,
+  graphTaskOf,
   hostedModelOf,
   isHostedModelId,
   taskAdapter,

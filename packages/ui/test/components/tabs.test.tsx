@@ -1,10 +1,5 @@
-import {
-  ModeStrip,
-  ModeTab,
-  SegmentedTab,
-  SegmentedTabs,
-  Tabs,
-} from "@rosesfield/ui/components/tabs"
+import { interaction } from "@rosesfield/ui/components/interaction"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
@@ -14,93 +9,86 @@ function classesOf(element: Element): string[] {
   return element.className.split(" ")
 }
 
-describe("ModeStrip", () => {
-  it("holds text tabs 36 px tall and 12 px apart, the current one underlined, changing at once", () => {
+describe("tabs", () => {
+  it("export one pane switch, with no second strip or segmented tab", async () => {
+    const tabs = await import("@rosesfield/ui/components/tabs")
+    expect(Object.keys(tabs).sort()).toEqual([
+      "Tabs",
+      "TabsContent",
+      "TabsList",
+      "TabsTrigger",
+    ])
+  })
+
+  it("set each tab as a 30 px capsule at the body size", () => {
     render(
-      <Tabs defaultValue="video">
-        <ModeStrip aria-label="Mode">
-          <ModeTab value="video">Create video</ModeTab>
-          <ModeTab value="edit">Edit video</ModeTab>
-        </ModeStrip>
+      <Tabs defaultValue="one">
+        <TabsList aria-label="Panes">
+          <TabsTrigger value="one">History</TabsTrigger>
+        </TabsList>
       </Tabs>
     )
-    const strip = screen.getByRole("tablist", { name: "Mode" })
-    expect(classesOf(strip)).toEqual(
-      expect.arrayContaining([
-        "gap-3",
-        "-m-[calc(var(--spacing-focus-ring)*2)]",
-        "p-[calc(var(--spacing-focus-ring)*2)]",
-      ])
+    expect(classesOf(screen.getByRole("tab", { name: "History" }))).toEqual(
+      expect.arrayContaining(["h-tab", "rounded-full", "text-body"])
     )
-    const edit = screen.getByRole("tab", { name: "Edit video" })
-    expect(classesOf(edit)).toEqual(
-      expect.arrayContaining(["h-9", "border-b-2", "transition-none"])
-    )
-    expect(edit.getAttribute("aria-selected")).toBe("false")
-    fireEvent.click(edit)
-    expect(edit.getAttribute("aria-selected")).toBe("true")
-    expect(
-      screen
-        .getByRole("tab", { name: "Create video" })
-        .getAttribute("aria-selected")
-    ).toBe("false")
   })
 })
 
-describe("SegmentedTabs", () => {
-  it("holds 32 px cells 4 px apart over a plate of its own that jumps", () => {
+describe("TabsList", () => {
+  it("tints the current tab with one plate that travels, never a tint of each tab", () => {
     render(
-      <Tabs defaultValue="how">
-        <SegmentedTabs aria-label="View">
-          <SegmentedTab value="history" icon={<svg data-testid="icon" />}>
-            History
-          </SegmentedTab>
-          <SegmentedTab value="how">How it works</SegmentedTab>
-        </SegmentedTabs>
+      <Tabs defaultValue="all">
+        <TabsList aria-label="Kind">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="video">Video</TabsTrigger>
+        </TabsList>
       </Tabs>
     )
-    const list = screen.getByRole("tablist", { name: "View" })
-    expect(classesOf(list)).toContain("gap-1")
-    const history = screen.getByRole("tab", { name: "History" })
-    expect(classesOf(history)).toEqual(
-      expect.arrayContaining(["h-8", "gap-1", "[&_svg]:size-4", "z-1"])
-    )
-    const plate = list.querySelector("[data-slot='segmented-control-thumb']")
-    expect(plate?.className.split(" ")).toContain("transition-none")
-    expect(
-      screen
-        .getByRole("tab", { name: "How it works" })
-        .getAttribute("aria-selected")
-    ).toBe("true")
-  })
-})
-
-describe("SegmentedTabs on a well", () => {
-  it("sits on a 36 px well with 2 px padding and puts the current cell on a 30 px plate inset 1 px", () => {
-    render(
-      <Tabs defaultValue="list">
-        <SegmentedTabs form="well" aria-label="View">
-          <SegmentedTab value="list">List</SegmentedTab>
-          <SegmentedTab value="grid">Grid</SegmentedTab>
-        </SegmentedTabs>
-      </Tabs>
-    )
-    const list = screen.getByRole("tablist", { name: "View" })
-    expect(list.getAttribute("data-form")).toBe("well")
-    expect(classesOf(list)).toEqual(
-      expect.arrayContaining(["h-9", "p-0.5", "gap-1", "rounded-dense"])
-    )
-    const plate = list.querySelector("[data-slot='segmented-control-thumb']")
+    const list = screen.getByRole("tablist", { name: "Kind" })
+    const plate = list.querySelector("[data-slot='tabs-indicator']")
     expect(plate?.className.split(" ")).toEqual(
+      expect.arrayContaining(["bg-(--tint)", "rounded-full", "motion-travel"])
+    )
+    const video = screen.getByRole("tab", { name: "Video" })
+    expect(classesOf(video)).not.toContain("data-active:bg-(--tint)")
+    expect(classesOf(video)).toContain("z-1")
+  })
+
+  it("gives its tabs' focus rings room inside the scroll box that clips them, and widens its cap by that room so the tabs never scroll", () => {
+    render(
+      <Tabs defaultValue="one">
+        <TabsList aria-label="Panes">
+          <TabsTrigger value="one">History</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    )
+    const list = screen.getByRole("tablist", { name: "Panes" })
+    expect(classesOf(list)).toEqual(
       expect.arrayContaining([
-        "h-tab",
-        "top-[calc(var(--active-tab-top)+var(--spacing-hairline))]",
-        "transition-none",
+        "overflow-x-auto",
+        "max-w-[calc(100%+var(--spacing-focus-ring)*4)]",
+        ...interaction.ringRoom.split(" "),
       ])
     )
-    const grid = screen.getByRole("tab", { name: "Grid" })
-    expect(grid.getAttribute("tabindex")).toBe("-1")
-    fireEvent.click(grid)
-    expect(grid.getAttribute("aria-selected")).toBe("true")
+  })
+
+  it("sets its tabs space.s1 apart and fades the edge a tab passes under while the strip scrolls, per the tabs record", () => {
+    render(
+      <Tabs defaultValue="one">
+        <TabsList aria-label="Modes">
+          <TabsTrigger value="one">Text and image</TabsTrigger>
+          <TabsTrigger value="two">References</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    )
+    const list = screen.getByRole("tablist", { name: "Modes" })
+    expect(classesOf(list)).toContain("gap-s1")
+    expect(list.getAttribute("data-scroll-end")).toBe("no")
+    Object.defineProperty(list, "scrollWidth", { value: 400 })
+    Object.defineProperty(list, "clientWidth", { value: 200 })
+    fireEvent.scroll(list)
+    expect(list.getAttribute("data-scroll-end")).toBe("yes")
+    expect(list.style.maskImage).toContain("transparent")
+    expect(list.style.maskImage).toContain("var(--spacing-s8)")
   })
 })

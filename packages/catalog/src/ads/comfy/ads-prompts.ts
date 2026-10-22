@@ -43,6 +43,10 @@ export const keepRule =
 export const personRule =
   " The last picture shows a person. That person presents the product."
 
+export const linkPattern = "https?://\\S+"
+
+export const lineBreakPattern = "\\s*\\n\\s*"
+
 const textFlags = {
   case_insensitive: true,
   multiline: false,
@@ -73,9 +77,18 @@ export function promptPatch(
   const inputsOf = (id: string) => nodeInputs(graph, workflow, id)
   Object.assign(inputsOf("506"), { string_a: ["505", 0], string_b: ["502", 0] })
   Object.assign(inputsOf("507"), { string_a: "", string_b: "" })
+  graph["524"] = {
+    class_type: "RegexReplace",
+    inputs: {
+      string: ["507", 0],
+      regex_pattern: linkPattern,
+      replace: "",
+      ...textFlags,
+    },
+  }
   graph["523"] = {
     class_type: "StringTrim",
-    inputs: { string: ["507", 0], mode: "Both" },
+    inputs: { string: ["524", 0], mode: "Both" },
   }
   Object.assign(inputsOf("503"), {
     string: ["523", 0],
@@ -100,7 +113,7 @@ export function promptPatch(
     class_type: "RegexReplace",
     inputs: {
       string: ["509", 0],
-      regex_pattern: "\\s*\\n\\s*",
+      regex_pattern: lineBreakPattern,
       replace: " ",
       ...textFlags,
     },

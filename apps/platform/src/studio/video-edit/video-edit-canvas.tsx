@@ -6,7 +6,7 @@ import { type ReactElement, type ReactNode, useState } from "react"
 import { appEmptyTitle, aspectOf, defaultAspectOf } from "@/catalog/app-facts"
 import { t, tCatalog } from "@/copy/t"
 import { aspectStyle } from "@/pieces/asset-tile"
-import { RunLine } from "@/pieces/run/run-line"
+import { RunCard, RunColumns } from "@/pieces/run/run-card"
 import { RunOutputs } from "@/pieces/run/run-outputs"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import { CompareDivider } from "@/studio/video-edit/compare-divider"
@@ -30,37 +30,37 @@ function EditedRun({
   const [outputId] = run.outputs
   const canCompare = run.status === "done" && outputId !== undefined
   return (
-    <article className="flex flex-col gap-s2">
-      <RunLine run={run} onUseInputs={onUseInputs} />
-      {canCompare && isComparing ? (
-        <CompareDivider run={run} outputId={outputId} />
-      ) : (
-        <RunOutputs run={run} list={list} />
+    <RunCard run={run} onUseInputs={onUseInputs}>
+      {(chrome) => (
+        <>
+          {canCompare && isComparing ? (
+            <CompareDivider run={run} outputId={outputId} />
+          ) : (
+            <RunOutputs run={run} list={list} chrome={chrome} />
+          )}
+          {canCompare ? (
+            <div>
+              <Button size="small" onClick={() => setComparing(!isComparing)}>
+                {isComparing
+                  ? tCatalog("videoEdit.compare.close")
+                  : tCatalog("videoEdit.compare.open")}
+              </Button>
+            </div>
+          ) : null}
+        </>
       )}
-      {canCompare ? (
-        <div>
-          <Button size="small" onClick={() => setComparing(!isComparing)}>
-            {isComparing
-              ? tCatalog("videoEdit.compare.close")
-              : tCatalog("videoEdit.compare.open")}
-          </Button>
-        </div>
-      ) : null}
-    </article>
+    </RunCard>
   )
 }
 
 function CanvasSkeleton({ app }: { app: AppListing }): ReactElement {
   const aspect = aspectOf(defaultAspectOf(app))
   return (
-    <div className="flex flex-col gap-s4">
-      {[0, 1].map((row) => (
-        <div key={row} className="flex flex-col gap-s2">
-          <Skeleton className="h-s5 w-1/2" />
-          <Skeleton className="w-1/2" style={aspectStyle(aspect)} />
-        </div>
+    <RunColumns>
+      {[0, 1].map((tile) => (
+        <Skeleton key={tile} className="w-full" style={aspectStyle(aspect)} />
       ))}
-    </div>
+    </RunColumns>
   )
 }
 
@@ -92,14 +92,8 @@ export function VideoEditCanvas({
   }
   const list = runs.runs.flatMap((run) => run.outputs)
   return (
-    <div className="flex flex-col gap-s6">
-      <EditedRun run={latest} list={list} onUseInputs={onUseInputs} />
-      {earlier.length === 0 ? null : (
-        <h2 className="text-body font-medium text-ink-muted">
-          {t("app.history.title")}
-        </h2>
-      )}
-      {earlier.map((run) => (
+    <RunColumns>
+      {[latest, ...earlier].map((run) => (
         <EditedRun
           key={run.id}
           run={run}
@@ -107,6 +101,6 @@ export function VideoEditCanvas({
           onUseInputs={onUseInputs}
         />
       ))}
-    </div>
+    </RunColumns>
   )
 }

@@ -1,22 +1,19 @@
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { Textarea } from "@rosesfield/ui/components/textarea"
 import { type ReactElement, useEffect, useRef, useState } from "react"
-import { t, tCatalog } from "@/copy/t"
+import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import { DropWell } from "@/pieces/drop-well"
 import { CharacterField } from "@/screens/app/fields/character-field"
 import { ChoiceField } from "@/screens/app/fields/choice-field"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { listOf, textOf } from "@/screens/app/fields/field-props"
 import { AspectField } from "@/screens/app/fields/output-fields"
+import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
 import { SceneList } from "@/studio/storyboard/scene-list"
+import { formatFieldOf } from "@/studio/storyboard/storyboard-model"
 import type { StoryboardState } from "@/studio/storyboard/use-storyboard-screen"
-import {
-  lookMaxLength,
-  modelKeyOf,
-  type StoryboardModel,
-  storyboardModels,
-} from "../../../../../packages/catalog/src/storyboard/storyboard-inputs"
+import { lookMaxLength } from "../../../../../packages/catalog/src/storyboard/storyboard-inputs"
 
 type PanelProps = {
   app: AppListing
@@ -38,7 +35,7 @@ function ReferenceField({ state }: { state: StoryboardState }): ReactElement {
     <FieldFrame
       caption={tCatalog("storyboard.input.reference.label")}
       isOptional
-      note={tCatalog("storyboard.input.reference.note")}
+      note={null}
       problem={undefined}
       message={wellMessage ?? state.messages.get("reference") ?? null}
     >
@@ -49,6 +46,7 @@ function ReferenceField({ state }: { state: StoryboardState }): ReactElement {
         onChange={(ids) => state.form.setInput("reference", ids)}
         onMessage={setWellMessage}
         triggerRef={trigger}
+        limits={tCatalog("storyboard.input.reference.note")}
       />
     </FieldFrame>
   )
@@ -84,29 +82,70 @@ function LookField({ state }: { state: StoryboardState }): ReactElement {
   )
 }
 
-function isModel(value: unknown): value is StoryboardModel {
-  return storyboardModels.some((model) => model === value)
-}
-
-function ModelField({ state }: { state: StoryboardState }): ReactElement {
-  const chosen = state.form.values.inputs.model
-  const value = isModel(chosen) ? chosen : "qwen-image-edit-2511"
-  const key = modelKeyOf(value)
+function ModelField({ app, state }: PanelProps): ReactElement | null {
+  if (state.model.isTaskApp || state.model.isLoading) {
+    return <CatalogPicker hosted={state.model} place="row" />
+  }
+  const input = inputNamed(app, "model")
+  if (input?.type !== "choice") {
+    return null
+  }
+  const chosen = textOf(state.form.values.inputs.model)
+  const items = input.options.map((option) => ({
+    value: option.value,
+    label: tCatalog(option.labelKey),
+  }))
+  const value = items.some((item) => item.value === chosen)
+    ? chosen
+    : input.default
+  const picked = input.options.find((option) => option.value === value)
+  const lineKey = picked === undefined ? null : `${picked.labelKey}.line`
   return (
     <ChoiceField
-      label={tCatalog("storyboard.input.model.label")}
-      items={storyboardModels.map((model) => ({
-        value: model,
-        label: tCatalog(`storyboard.model.${modelKeyOf(model)}`),
-      }))}
+      label={tCatalog(input.labelKey)}
+      items={items}
       value={value}
+      onChange={(next) => state.form.setInput("model", next)}
+      note={
+        lineKey !== null && hasCatalogText(lineKey) ? tCatalog(lineKey) : null
+      }
+      register={(focus) => state.form.register("model", focus)}
+    />
+  )
+}
+
+function FormatField({ app, state }: PanelProps): ReactElement | null {
+  const fields = state.model.chosen?.form ?? null
+  if (fields === null) {
+    return (
+      <AspectField
+        app={app}
+        value={state.form.values.aspectRatio}
+        onChange={(aspectRatio) => state.form.setForm({ aspectRatio })}
+      />
+    )
+  }
+  const field = formatFieldOf(fields)
+  if (field === null) {
+    return null
+  }
+  const held = state.form.values.inputs[field.name] ?? field.default
+  const items = field.options.map((option) => ({
+    value: String(option),
+    label: String(option),
+  }))
+  return (
+    <ChoiceField
+      label={t("field.aspect.label")}
+      items={items}
+      value={held === null || held === undefined ? "" : String(held)}
       onChange={(next) => {
-        if (isModel(next)) {
-          state.form.setInput("model", next)
+        const option = field.options.find((one) => String(one) === next)
+        if (option !== undefined) {
+          state.form.setInput(field.name, option)
         }
       }}
-      note={`${tCatalog(`storyboard.model.${key}.line`)} ${tCatalog("storyboard.model.limits")}`}
-      register={(focus) => state.form.register("model", focus)}
+      note={null}
     />
   )
 }
@@ -135,12 +174,8 @@ export function StoryboardPanel({ app, state }: PanelProps): ReactElement {
       <CharacterInput app={app} state={state} />
       <SceneList state={state} />
       <LookField state={state} />
-      <ModelField state={state} />
-      <AspectField
-        app={app}
-        value={state.form.values.aspectRatio}
-        onChange={(aspectRatio) => state.form.setForm({ aspectRatio })}
-      />
+      <ModelField app={app} state={state} />
+      <FormatField app={app} state={state} />
       <AdvancedFields app={app} form={state.form} lastSeed={state.lastSeed} />
     </div>
   )

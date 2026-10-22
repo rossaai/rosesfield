@@ -1,32 +1,115 @@
 {
   "name": "effects-ltx-2-5",
   "title": "Effects: one photo to a short effect video on LTX 2.5",
-  "description": "Locks your photo at frame 0, makes a matte of its subject, draws an end frame for the effect and renders one continuous shot in two stages on LTX 2.5. This file holds every part a recipe can use: an end frame drawn from the photo by FLUX.2 Klein 4B and the subject held at the last frame through its matte. Each recipe in the catalog removes the parts it does not use.",
+  "description": "Scales and centre-crops your photo to the chosen shape and makes the effect's last frame from it with Qwen Image Edit 2511, then renders the video between the two on LTX 2.5, with its sound, at the shape's pixel area. This file holds every part a recipe can use, including the subject held through its matte. Each recipe in the catalog removes the parts it does not use.",
   "mediaType": "video",
   "openSource": true,
   "models": [
-    "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
-    "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+    "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+    "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
     "ltx-2.5-video-vae-bf16.safetensors",
     "ltx-2.5-audio-vae-bf16.safetensors",
     "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
     "birefnet.safetensors",
-    "flux-2-klein-4b.safetensors",
-    "qwen_3_4b.safetensors",
-    "flux2-vae.safetensors"
+    "qwen_image_edit_2511_bf16.safetensors",
+    "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "qwen_image_vae.safetensors",
+    "stable_audio_3_medium.safetensors",
+    "t5gemma_b_b_ul2.safetensors"
   ],
-  "requiresCustomNodes": [],
+  "requiresCustomNodes": ["comfyui-wanvideowrapper", "comfyui_audiotools"],
   "inputBindings": {
-    "photo": { "nodeId": "395", "inputName": "image", "type": "cloud-asset" },
-    "detail": { "nodeId": "501", "inputName": "string_b", "type": "scalar" },
-    "seed": { "nodeId": "339", "inputName": "noise_seed", "type": "scalar" },
-    "width": { "nodeId": "356", "inputName": "width", "type": "scalar" },
-    "height": { "nodeId": "356", "inputName": "height", "type": "scalar" },
-    "endFrameSeed": {
-      "nodeId": "532",
+    "photo": {
+      "nodeId": "395",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "detail": {
+      "nodeId": "501",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "339",
       "inputName": "noise_seed",
+      "type": "scalar"
+    },
+    "width": {
+      "nodeId": "356",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "height": {
+      "nodeId": "356",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "fitWidth": {
+      "nodeId": "606",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "fitHeight": {
+      "nodeId": "606",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "endFrameSeed": {
+      "nodeId": "626",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "deliveryWidth": {
+      "nodeId": "380",
+      "inputName": "width",
+      "type": "scalar"
+    },
+    "deliveryHeight": {
+      "nodeId": "380",
+      "inputName": "height",
+      "type": "scalar"
+    },
+    "grainSeed": {
+      "nodeId": "381",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "hitSeed1": {
+      "nodeId": "662",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "hitSeed2": {
+      "nodeId": "672",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "hitSeed3": {
+      "nodeId": "682",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "hitSeed4": {
+      "nodeId": "692",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "hitSeed5": {
+      "nodeId": "702",
+      "inputName": "seed",
+      "type": "scalar"
+    },
+    "hitSeed6": {
+      "nodeId": "712",
+      "inputName": "seed",
       "type": "scalar"
     }
   },
-  "outputs": [{ "nodeId": "75", "key": "images", "kind": "video" }]
+  "outputs": [
+    {
+      "nodeId": "75",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
 }

@@ -1,8 +1,13 @@
 export {
+  type AgentModelRate,
+  type AgentModels,
   type AnswerEvent,
   acceptedProposalResponse,
+  agentModelRoutes,
+  agentModelsResponse,
   answerEvent,
   type Conversation,
+  chooseAgentModelBody,
   conversation,
   conversationId,
   conversationListResponse,
@@ -31,9 +36,14 @@ export {
   type AcceptProposalOutput,
 } from "#application/accept-proposal/accept-proposal.handler"
 export {
+  ChooseAgentModelHandler,
+  type ChooseAgentModelInput,
+} from "#application/choose-agent-model/choose-agent-model.handler"
+export {
   DeleteConversationHandler,
   type DeleteConversationInput,
 } from "#application/delete-conversation/delete-conversation.handler"
+export { ListAgentModelsHandler } from "#application/list-agent-models/list-agent-models.handler"
 export {
   ListConversationsHandler,
   type ListConversationsOutput,
@@ -66,6 +76,7 @@ export {
 export {
   AgentHarness,
   type AgentMessage,
+  type AgentModelChoice,
   type AnswerStream,
   type ConversationChanges,
   type NewConversation,
@@ -86,17 +97,50 @@ export { ProposalNotFoundError } from "#domain/error/proposal-not-found.error"
 export { ProposalSettledError } from "#domain/error/proposal-settled.error"
 export { type ProposalId, proposalIdFormat } from "#domain/proposal.id"
 export {
+  ProposalRunner,
+  type ProposedRuns,
+} from "#domain/proposal-runner.port"
+export {
   PiAgentHarness,
   type PiAgentHarnessOptions,
 } from "#infrastructure/pi-agent-harness"
 export {
   type AgentToolHandlers,
+  type AgentToolSet,
+  type AgentToolSource,
   agentTools,
+  publishedAgentTools,
 } from "#infrastructure/pi-agent-tools"
 export {
+  type KeyframeHandlers,
+  keyframeRunsOf,
+} from "#infrastructure/pi-keyframe-chain"
+export {
+  type RunPoll,
+  type RunWait,
+  timerWait,
+} from "#infrastructure/pi-library-tools"
+export {
   type AgentModel,
-  endpointModel,
   type OpenPiModelsOptions,
   openPiModels,
   type PiModels,
+  routerAgentModel,
 } from "#infrastructure/pi-models"
+export { PiProposalRunner } from "#infrastructure/pi-proposal-runner"
+export {
+  appInputOf,
+  isKeyframeChain,
+  parseRequest,
+} from "#infrastructure/pi-run-request"
+export {
+  type RouterAgentHarnessOptions,
+  routerAgentHarness,
+} from "#infrastructure/router-agent-harness"
+export type { Fetch } from "#infrastructure/router-chat-fetch"
+export {
+  defaultChatModel,
+  isRouterChatModel,
+  routerChat,
+  routerChatModels,
+} from "#infrastructure/router-chat-models"

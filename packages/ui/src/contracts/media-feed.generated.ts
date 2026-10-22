@@ -72,8 +72,8 @@ export const MEDIA_FEED = {
     },
   },
   variables: {
-    "component.feed.fade": [],
-    "component.feed.window": [],
+    "component.feed.fade": ["--spacing-feed-fade"],
+    "component.feed.window": ["--spacing-feed-window"],
     "component.mediaGrid.tileVertical": [],
     "control.btn": ["--spacing-field"],
     "control.hitTouch": ["--spacing-button", "--spacing-icon"],

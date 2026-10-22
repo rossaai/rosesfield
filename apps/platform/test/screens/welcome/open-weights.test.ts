@@ -23,13 +23,13 @@ describe("modelRowsOf", () => {
     const rows = modelRowsOf([image, upscale], (appId) =>
       appId === "image"
         ? [workflowLoading("one", ["z_image_turbo_bf16.safetensors"])]
-        : [workflowLoading("two", ["RealESRGAN_x4plus.safetensors"])]
+        : [workflowLoading("two", ["seedvr2_3b_int8_convrot.safetensors"])]
     )
     expect(
       rows.map((row) => [row.model.id, row.apps.map((app) => app.id)])
     ).toEqual([
       ["z-image-turbo", ["image"]],
-      ["real-esrgan", ["upscale"]],
+      ["seedvr2", ["upscale"]],
     ])
   })
 })
@@ -57,7 +57,8 @@ describe("the open-weights list", () => {
     )
     const rows = modelRowsOf(catalogApps, appWorkflows)
     const ltx = rows.find((row) => row.model.id === "ltx-2-5")
-    expect(ltx?.apps.map((app) => app.id)).toContain("video")
-    expect(ltx?.apps.map((app) => app.id)).not.toContain("effects")
+    expect(ltx?.apps.map((app) => app.id)).toEqual(
+      expect.arrayContaining(["video", "effects"])
+    )
   })
 })

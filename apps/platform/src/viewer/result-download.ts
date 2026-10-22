@@ -7,7 +7,12 @@ import type { ExploreEntry } from "@/screens/explore/explore-tile"
 
 export function resultFileName(entry: ExploreEntry, mime: string): string {
   const { source } = entry
-  const id = source.kind === "own" ? source.assetId : source.shareId
+  const id =
+    source.kind === "own"
+      ? source.assetId
+      : source.kind === "share"
+        ? source.shareId
+        : entry.run.id
   const extension = mime.split("/")[1]?.split(";")[0] || "bin"
   return `rosesfield-${id.slice(0, 8)}.${extension}`
 }

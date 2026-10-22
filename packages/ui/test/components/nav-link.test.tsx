@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it } from "vitest"
 afterEach(cleanup)
 
 describe("NavLink", () => {
-  it("is text only, 28 px tall with 4 by 8 px padding, flush with the next", () => {
+  it("is text only, at the record's linkHeight and linkRadius, 26 px with the dense radius and 10 px sides, and presses on the press preset", () => {
     render(
       <nav>
         <NavLink href="/">Explore</NavLink>
@@ -20,7 +20,13 @@ describe("NavLink", () => {
     const link = screen.getByRole("link", { name: "Explore" })
     expect(link.querySelector("svg, img")).toBeNull()
     expect(link.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-7", "px-2", "py-1", "hover:bg-(--tint)"])
+      expect.arrayContaining([
+        "h-button-small",
+        "px-s3",
+        "rounded-dense",
+        "hover:bg-(--tint)",
+        "motion-press",
+      ])
     )
     expect(link.getAttribute("aria-current")).toBeNull()
   })

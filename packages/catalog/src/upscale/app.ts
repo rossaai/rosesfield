@@ -1,7 +1,10 @@
+import { taskBinding } from "@rosesfield/generation/bindings"
 import { type AppInput, defineApp } from "#define-app"
 import {
   upscaleAspectRatios,
+  upscaleDefaultModel,
   upscaleEngine,
+  upscaleTasks,
 } from "#upscale/comfy/upscale-engine"
 
 export const app: AppInput = defineApp({
@@ -52,9 +55,8 @@ export const app: AppInput = defineApp({
       options: [
         { value: "seedvr2-3b", labelKey: "upscale.model.seedvr23b" },
         { value: "seedvr2-7b", labelKey: "upscale.model.seedvr27b" },
-        { value: "real-esrgan-4x", labelKey: "upscale.model.realEsrgan4x" },
       ],
-      default: "seedvr2-3b",
+      default: upscaleDefaultModel,
     },
     { type: "seed", name: "seed", labelKey: "upscale.input.seed.label" },
   ],
@@ -63,6 +65,11 @@ export const app: AppInput = defineApp({
     count: { default: 1, max: 1 },
     aspectRatios: { options: [...upscaleAspectRatios], default: "1:1" },
   },
-  engine: upscaleEngine,
+  engine: taskBinding({
+    tasks: upscaleTasks,
+    input: "model",
+    default: upscaleDefaultModel,
+    fallback: upscaleEngine,
+  }),
   limits: { timeoutSeconds: 1800, maxRetries: 2 },
 })

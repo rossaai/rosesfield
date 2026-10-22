@@ -6,36 +6,25 @@ function classesOf(name: keyof typeof interaction): string[] {
   return interaction[name].split(" ")
 }
 
-function pressOf(classes: readonly string[]): string[] {
-  return classes.filter(
-    (name) => name.startsWith("active:") || name.includes("gallery=press")
-  )
-}
-
 describe("interaction", () => {
-  it("lights a plain press exactly as much as a hover", () => {
-    const light = classesOf("light")
-    expect(light.filter((name) => name.startsWith("hover:"))).toEqual([
-      "hover:after:opacity-10",
-    ])
-    expect(pressOf(light)).toEqual([
-      "active:after:opacity-10",
-      "in-data-[gallery=press]:after:opacity-10",
-    ])
+  it("holds no light overlay, so nothing draws over a control or a photo", () => {
+    expect(Object.keys(interaction)).not.toContain("light")
+    expect(Object.keys(interaction)).not.toContain("lightPress")
+    for (const classes of Object.values(interaction)) {
+      expect(classes).not.toContain("after:bg-current")
+    }
   })
 
-  it("gives a press its own second light step where the reference darkens twice", () => {
-    const lightPress = classesOf("lightPress")
-    expect(lightPress.filter((name) => name.startsWith("hover:"))).toEqual([
-      "hover:after:opacity-10",
-    ])
-    expect(pressOf(lightPress)).toEqual([
-      "active:after:opacity-20",
-      "in-data-[gallery=press]:after:opacity-20",
-    ])
-    expect(lightPress.filter((name) => /scale|translate/.test(name))).toEqual(
-      []
+  it("tints a quiet control on hover with its ground's tint and leaves the timing to the press preset", () => {
+    expect(classesOf("fill")).toEqual(
+      expect.arrayContaining([
+        "hover:bg-(--tint)",
+        "in-data-[gallery=hover]:bg-(--tint)",
+      ])
     )
+    expect(
+      classesOf("fill").filter((name) => /transition|duration/.test(name))
+    ).toEqual([])
   })
 
   it("draws the focus ring its own width outside the control's edge", () => {
@@ -81,7 +70,12 @@ describe("interaction", () => {
     ])
   })
 
-  it("removes the reveal's fade under reduced motion", () => {
-    expect(classesOf("reveal")).toContain("motion-reduce:transition-none")
+  it("reveals on the tint preset, which reduced motion shortens once", () => {
+    expect(classesOf("reveal")).toContain("motion-tint")
+    expect(
+      classesOf("reveal").filter((name) => /transition|duration/.test(name))
+    ).toEqual([])
+    const motion = readSource("styles/motion.css")
+    expect(motion).toMatch(/--tint-change: var\(--duration-reduced\)/)
   })
 })

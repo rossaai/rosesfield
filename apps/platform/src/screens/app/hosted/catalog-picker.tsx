@@ -3,14 +3,17 @@ import {
   type FactBadge,
   factBadgesOf,
   graphMaker,
+  labOfModel,
   type ModelFacts,
   type ModelTag,
+  weightsHost,
 } from "@rosesfield/catalog/comfy"
 import {
   type ModelBadge,
   ModelPicker,
   type ModelPickerSection,
   type ModelPickerTag,
+  type ModelPrice,
 } from "@rosesfield/ui/components/model-picker"
 import {
   ModelChip,
@@ -21,34 +24,23 @@ import {
   ClockIcon,
   LockOpenIcon,
   ScanIcon,
+  TrophyIcon,
   Volume2Icon,
 } from "lucide-react"
-import type { ReactElement, ReactNode } from "react"
-import { hasCatalogText, t, tCatalog } from "@/copy/t"
-import { LabMark } from "@/pieces/lab-mark"
+import { type ReactElement, type ReactNode, useState } from "react"
+import { type CopyValues, hasCatalogText, t, tCatalog } from "@/copy/t"
+import { LabMark, labMarkOf, weightsMaker } from "@/pieces/lab-mark"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import { modelSections } from "@/screens/app/hosted/model-sections"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
+import { useRowPrices } from "@/screens/app/hosted/use-row-prices"
 import { openModels } from "@/screens/welcome/open-weights"
 
-const lineKeys: Readonly<Record<string, string>> = {
-  "text-to-image": "model.line.textToImage",
-  "image-edit": "model.line.imageEdit",
-  "text-to-video": "model.line.textToVideo",
-  "image-to-video": "model.line.imageToVideo",
-  "reference-to-video": "model.line.referenceToVideo",
-  "first-last-frame": "model.line.firstLastFrame",
-  "video-edit": "model.line.videoEdit",
-  "lip-sync": "model.line.lipSync",
-  speech: "model.line.speech",
-  sound: "model.line.sound",
-  "three-d": "model.line.threeD",
-  upscale: "model.line.upscale",
-  background: "model.line.background",
-  relight: "model.line.relight",
-  "try-on": "model.line.tryOn",
-  expand: "model.line.expand",
-  chat: "model.line.chat",
+export type CatalogWords = (key: string, values?: CopyValues) => string | null
+
+function catalogWords(key: string, values?: CopyValues): string | null {
+  return hasCatalogText(key) ? tCatalog(key, values) : null
 }
 
 export function makerNameOf(model: CatalogModel): string {
@@ -62,23 +54,18 @@ export function labOf(model: {
   return model.facts?.lab ?? model.maker
 }
 
+export function chosenLabOf(model: CatalogModel): string | null {
+  const lab = model.facts?.lab ?? labOfModel(model.id)
+  if (lab !== null) {
+    return lab
+  }
+  return model.maker === graphMaker ? null : model.maker
+}
+
 export function modelNameOf(model: CatalogModel): string {
   return model.nameKey !== null && hasCatalogText(model.nameKey)
     ? tCatalog(model.nameKey)
     : model.name
-}
-
-export function lineOf(task: string): string | null {
-  const key = lineKeys[task]
-  return key === undefined ? null : tCatalog(key)
-}
-
-export function modelLineOf(
-  task: string,
-  facts: ModelFacts | undefined
-): string | null {
-  const key = facts?.lineKey ?? null
-  return key !== null && hasCatalogText(key) ? tCatalog(key) : lineOf(task)
 }
 
 export function tagOf(tag: ModelTag): ModelPickerTag {
@@ -112,16 +99,64 @@ export function tagOf(tag: ModelTag): ModelPickerTag {
   }
 }
 
+export function openWeightsTag(): ModelPickerTag {
+  return tagOf({ kind: "open-weights" })
+}
+
+export function rankTagOf(
+  facts: ModelFacts | undefined
+): ModelPickerTag | null {
+  const rank = facts?.rank ?? null
+  return rank === null
+    ? null
+    : {
+        label: t("model.tag.rank", {
+          position: rank.position,
+          size: rank.size,
+        }),
+        icon: <TrophyIcon aria-hidden="true" />,
+      }
+}
+
+export function capabilitiesOf(
+  tags: readonly ModelTag[],
+  facts: ModelFacts | undefined
+): ModelPickerTag[] {
+  const specific = tags.filter(
+    (tag) => tag.kind !== "open-weights" && tag.kind !== "hosted"
+  )
+  const rank = rankTagOf(facts)
+  const hosted = tags.filter((tag) => tag.kind === "hosted")
+  return [
+    ...specific.map(tagOf),
+    ...(rank === null ? [] : [rank]),
+    ...hosted.map(tagOf),
+  ]
+}
+
+export function taskTagOf(task: string): ModelPickerTag | null {
+  const key = `model.task.${task.replace(/-(\w)/g, (_match: string, letter: string) => letter.toUpperCase())}`
+  return hasCatalogText(key) ? { label: tCatalog(key) } : null
+}
+
+export function mainTaskOf(models: readonly CatalogModel[]): string | null {
+  const counts = new Map<string, number>()
+  for (const model of models) {
+    counts.set(model.task, (counts.get(model.task) ?? 0) + 1)
+  }
+  const [first] = [...counts.entries()].sort((a, b) => b[1] - a[1])
+  return first === undefined ? null : first[0]
+}
+
 const sectionLabels = {
   featured: "model.picker.featured",
-  open: "model.tag.openWeights",
   all: "model.picker.all",
 } as const
 
 const factBadgeKeys = {
-  new: "model.badge.new",
-  top: "model.badge.top",
-  premium: "model.badge.premium",
+  new: "comfy.badge.new",
+  top: "comfy.badge.top",
+  premium: "comfy.badge.premium",
 } as const
 
 type FactBadgeKind = keyof typeof factBadgeKeys
@@ -130,7 +165,6 @@ export function todayOf(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10)
 }
 
-const huggingFace = "https://huggingface.co/"
 const repoPattern = /^[\w.-]+\/[\w.-]+$/
 
 export function weightsLinkOf(id: string): string | null {
@@ -138,22 +172,22 @@ export function weightsLinkOf(id: string): string | null {
   if (model === undefined) {
     return null
   }
-  if (model.link.startsWith(huggingFace)) {
+  if (model.link.startsWith(weightsHost)) {
     return model.link
   }
   const repo = model.files.find(
     (file) => repoPattern.test(file) && !file.endsWith(".safetensors")
   )
-  return repo === undefined ? null : `${huggingFace}${repo}`
+  return repo === undefined ? null : `${weightsHost}${repo}`
 }
 
-function factBadgeOf(badge: FactBadge): ModelBadge[] {
+function factBadgeOf(badge: FactBadge, words: CatalogWords): ModelBadge[] {
   if (badge.kind === "open-weights") {
     return []
   }
   const kind: FactBadgeKind = badge.kind
-  const key = factBadgeKeys[kind]
-  return hasCatalogText(key) ? [{ kind, label: tCatalog(key) }] : []
+  const label = words(factBadgeKeys[kind])
+  return label === null ? [] : [{ kind, label }]
 }
 
 function weightsBadgeOf(
@@ -164,31 +198,36 @@ function weightsBadgeOf(
   if (!tags.some((tag) => tag.kind === "open-weights")) {
     return []
   }
-  const href = facts?.weights ?? weightsLinkOf(id)
-  return [
-    {
-      kind: "openWeights",
-      label: t("model.tag.openWeights"),
-      ...(href === null ? {} : { href }),
-    },
-  ]
+  return [openWeightsBadge(facts?.weights ?? weightsLinkOf(id))]
+}
+
+export function openWeightsBadge(href: string | null): ModelBadge {
+  const mark = labMarkOf(weightsMaker)
+  return {
+    kind: "openWeights",
+    label: t("model.tag.openWeights"),
+    ...(href === null ? {} : { href }),
+    ...(mark === null ? {} : { markColour: `#${mark.hex}` }),
+  }
 }
 
 export function badgesOf(
   id: string,
   tags: readonly ModelTag[],
   facts?: ModelFacts,
-  today: string = todayOf()
+  today: string = todayOf(),
+  words: CatalogWords = catalogWords
 ): ModelBadge[] {
   return [
-    ...factBadgesOf(facts, today).flatMap(factBadgeOf),
+    ...factBadgesOf(facts, today).flatMap((badge) => factBadgeOf(badge, words)),
     ...weightsBadgeOf(id, tags, facts),
   ]
 }
 
 export function pickerSections(
   hosted: HostedState,
-  today: string = todayOf()
+  today: string = todayOf(),
+  prices: ReadonlyMap<string, ModelPrice> = new Map()
 ): ModelPickerSection[] {
   const first = [
     ...(hosted.defaultModel === null ? [] : [hosted.defaultModel]),
@@ -198,18 +237,28 @@ export function pickerSections(
     ...model,
     maker: makerNameOf(model),
   }))
+  const mainTask = mainTaskOf(hosted.models)
   return modelSections(models, first, modelNameOf).map((section) => ({
     id: section.id,
     label: t(sectionLabels[section.id]),
-    rows: section.rows.map((row) => ({
-      id: row.id,
-      name: row.name,
-      maker: row.maker,
-      line: modelLineOf(row.task, row.facts),
-      tags: row.tags.filter((tag) => tag.kind !== "open-weights").map(tagOf),
-      mark: <LabMark maker={labOf(row)} />,
-      badges: badgesOf(row.id, row.tags, row.facts, today),
-    })),
+    rows: section.rows.map((row) => {
+      const price = prices.get(row.id)
+      return {
+        id: row.id,
+        name: row.name,
+        maker: row.maker,
+        lab: labOf(row),
+        tags: [
+          ...(row.task === mainTask ? [] : [taskTagOf(row.task)]).filter(
+            (tag): tag is ModelPickerTag => tag !== null
+          ),
+          ...capabilitiesOf(row.tags, row.facts),
+        ],
+        mark: <LabMark maker={labOf(row)} />,
+        badges: badgesOf(row.id, row.tags, row.facts, today),
+        ...(price === undefined ? {} : { price }),
+      }
+    }),
   }))
 }
 
@@ -226,10 +275,8 @@ export function pickerTrigger(
 ): ReactElement {
   const chosen = hosted.chosen
   const name = chosen === null ? t("model.picker.title") : modelNameOf(chosen)
-  const mark =
-    chosen === null ? undefined : (
-      <LabMark maker={chosen.facts?.lab ?? makerNameOf(chosen)} />
-    )
+  const lab = chosen === null ? null : chosenLabOf(chosen)
+  const mark = lab === null ? undefined : <LabMark maker={lab} />
   const markProp = mark === undefined ? {} : { mark }
   return place === "row" ? (
     <ModelRowTrigger
@@ -253,6 +300,10 @@ export function CatalogPicker({
   settings,
   place = "chip",
 }: CatalogPickerProps): ReactElement {
+  const [isOpen, setOpen] = useState(defaultOpen)
+  const { prices, isPricing } = useRowPrices(hosted, isOpen)
+  const isRegular = useIsRegularWindow()
+  const isBeside = place === "row" && isRegular
   return (
     <ModelPicker
       trigger={pickerTrigger(hosted, place)}
@@ -260,12 +311,14 @@ export function CatalogPicker({
       searchLabel={t("model.picker.search")}
       searchPlaceholder={t("model.picker.searchPlaceholder")}
       emptyLabel={t("model.picker.empty")}
-      sections={pickerSections(hosted)}
+      sections={pickerSections(hosted, todayOf(), prices)}
       chosen={hosted.chosen?.id ?? null}
       onChoose={hosted.choose}
-      defaultOpen={defaultOpen}
+      open={isOpen}
+      onOpenChange={setOpen}
+      isPricing={isPricing}
       settings={settings}
-      side={place === "row" ? "right" : "top"}
+      side={isBeside ? "right" : "top"}
       isLoading={hosted.isLoading}
       notice={
         hosted.error === null ? null : <ModelNotice error={hosted.error} />

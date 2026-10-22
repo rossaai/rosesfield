@@ -1,8 +1,11 @@
-import { cleanup, render, screen } from "@testing-library/react"
+import type { Run } from "@rosesfield/contract"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { BarFrame, type BarPlace } from "@/screens/app/bar-frame"
+import { t } from "@/copy/t"
+import { BarChips, BarFrame, type BarPlace } from "@/screens/app/bar-frame"
 import {
   asPhone,
+  doneRun,
   image,
   resetFrames,
   stubFetch,
@@ -22,14 +25,13 @@ function renderDocked(): ReturnType<typeof render> {
     withClient(
       <BarFrame
         app={image}
-        hasRuns={false}
         onUseInputs={() => undefined}
         sheet={[false, () => undefined]}
         settings={null}
         bar={() => <div data-testid="bar-dock" />}
       />,
       image,
-      []
+      null
     )
   )
 }
@@ -45,6 +47,23 @@ describe("the bar frame's floating prompt bar", () => {
     renderDocked()
     expect(screen.getByTestId("bar-dock")).toBeDefined()
     expect(coveredBottom()).toBe("124px")
+  })
+
+  it("covers from the bar's top to the stage's bottom, the bar's own inset under it included, now the stage runs to the window's bottom", () => {
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(100)
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: HTMLElement) {
+        const isStage = this.dataset.slot === "bar-stage"
+        return DOMRect.fromRect({
+          x: 0,
+          y: isStage ? 0 : 784,
+          width: 100,
+          height: isStage ? 900 : 100,
+        })
+      }
+    )
+    renderDocked()
+    expect(coveredBottom()).toBe("116px")
   })
 
   it("leaves the covered bottom to the tab bar on a phone, where the prompt bar does not float", () => {
@@ -64,7 +83,6 @@ describe("the bar frame on a phone", () => {
       withClient(
         <BarFrame
           app={image}
-          hasRuns={false}
           onUseInputs={() => undefined}
           sheet={[true, () => undefined]}
           settings={<div data-testid="settings" />}
@@ -74,7 +92,7 @@ describe("the bar frame on a phone", () => {
           }}
         />,
         image,
-        []
+        null
       )
     )
     expect(screen.getAllByTestId("settings")).toHaveLength(1)
@@ -84,20 +102,66 @@ describe("the bar frame on a phone", () => {
   })
 })
 
+describe("the bar frame with its phone bar docked", () => {
+  function renderPhoneDock(
+    isOpen: boolean,
+    places: BarPlace[],
+    runs: readonly Run[] | null = null
+  ): void {
+    render(
+      withClient(
+        <BarFrame
+          app={image}
+          onUseInputs={() => undefined}
+          sheet={[isOpen, () => undefined]}
+          phone="dock"
+          settings={<div data-testid="settings" />}
+          bar={(place) => {
+            places.push(place)
+            return <div data-testid={`bar-${place}`} />
+          }}
+        />,
+        image,
+        runs
+      )
+    )
+  }
+
+  it("docks the bar under the canvas on a phone and keeps the sheet for the settings alone", () => {
+    asPhone()
+    const places: BarPlace[] = []
+    renderPhoneDock(true, places)
+    const dock = document.querySelector("[data-slot=prompt-dock]")
+    expect(dock?.querySelector("[data-testid=bar-phone]")).not.toBeNull()
+    expect(screen.getAllByTestId("settings")).toHaveLength(1)
+    expect(screen.queryByTestId("bar-sheet")).toBeNull()
+    expect(screen.getByText(t("app.inputs.open"))).toBeDefined()
+    expect(document.querySelector("[data-slot=app-tools-key]")).toBeNull()
+    expect(places.every((place) => place === "phone")).toBe(true)
+  })
+
+  it("opens a phone with past runs at the top, the newest first, and never scrolls to the bottom", () => {
+    asPhone()
+    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(900)
+    const scrolled = vi.spyOn(Element.prototype, "scrollTop", "set")
+    renderPhoneDock(false, [], [doneRun(image.id)])
+    expect(scrolled).not.toHaveBeenCalledWith(900)
+  })
+})
+
 describe("the bar frame's canvas", () => {
   it("reaches the page's edges, so its head row and its feed share the 16 px gutter at every width", () => {
     render(
       withClient(
         <BarFrame
           app={image}
-          hasRuns={false}
           onUseInputs={() => undefined}
           sheet={[false, () => undefined]}
           settings={null}
           bar={() => null}
         />,
         image,
-        []
+        null
       )
     )
     const stage = document.querySelector('[data-slot="bar-stage"]')
@@ -109,5 +173,40 @@ describe("the bar frame's canvas", () => {
     )
     expect(classes(feed)).toContain("px-4")
     expect(classes(feed).some((one) => one.includes(":px-"))).toBe(false)
+  })
+})
+
+describe("the bar's chips", () => {
+  function renderChips(): void {
+    render(
+      withClient(
+        <BarChips
+          chips={
+            <>
+              <button type="button">first chip</button>
+              <button type="button">second chip</button>
+            </>
+          }
+        />,
+        image,
+        null
+      )
+    )
+  }
+
+  it("stand in one row on a regular width", () => {
+    renderChips()
+    expect(screen.getByRole("button", { name: "first chip" })).toBeDefined()
+    expect(document.querySelector("[data-slot=bar-settings]")).toBeNull()
+  })
+
+  it("fold into one Settings chip on a phone, so no chip is cut at the row's edge", async () => {
+    asPhone()
+    renderChips()
+    expect(screen.queryByRole("button", { name: "first chip" })).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: t("bar.settings") }))
+    expect(
+      await screen.findByRole("button", { name: "second chip" })
+    ).toBeDefined()
   })
 })

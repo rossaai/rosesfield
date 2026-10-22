@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   type FileFacts,
+  fileLimitsOf,
   fileProblemOf,
   nearestRatioOf,
   readingProblemOf,
@@ -111,11 +112,14 @@ describe("the upscale reading", () => {
 describe("the upscale scale check", () => {
   it("is empty without a size", () => {
     expect(sizeOf(photo({ width: null }))).toBeNull()
-    expect(scaleCheckOf(null, "4x")).toEqual({ state: "empty" })
+    expect(scaleCheckOf(null, 4, 3840)).toEqual({ state: "empty" })
+    expect(scaleCheckOf({ width: 10, height: 10 }, null, 3840)).toEqual({
+      state: "empty",
+    })
   })
 
   it("fits 1920 by 1080 at 2x on the 3840 pixel cap", () => {
-    expect(scaleCheckOf({ width: 1920, height: 1080 }, "2x")).toEqual({
+    expect(scaleCheckOf({ width: 1920, height: 1080 }, 2, 3840)).toEqual({
       state: "fits",
       width: 3840,
       height: 2160,
@@ -123,17 +127,51 @@ describe("the upscale scale check", () => {
   })
 
   it("refuses 1920 by 1080 at 4x and a tall file whose long side passes the cap", () => {
-    expect(scaleCheckOf({ width: 1920, height: 1080 }, "4x")).toEqual({
+    expect(scaleCheckOf({ width: 1920, height: 1080 }, 4, 3840)).toEqual({
       state: "tooBig",
       width: 7680,
       height: 4320,
       max: 3840,
     })
-    expect(scaleCheckOf({ width: 1000, height: 1921 }, "2x")).toEqual({
+    expect(scaleCheckOf({ width: 1000, height: 1921 }, 2, 3840)).toEqual({
       state: "tooBig",
       width: 2000,
       height: 3842,
       max: 3840,
+    })
+  })
+})
+
+describe("the upscale scale check of a model with no pixel cap", () => {
+  it("passes 4x on 1920 by 1080 and rounds a factor of 1.5 to whole pixels", () => {
+    expect(scaleCheckOf({ width: 1920, height: 1080 }, 4, null)).toEqual({
+      state: "fits",
+      width: 7680,
+      height: 4320,
+    })
+    expect(scaleCheckOf({ width: 1001, height: 667 }, 1.5, null)).toEqual({
+      state: "fits",
+      width: 1502,
+      height: 1001,
+    })
+  })
+})
+
+describe("the upscale limits of a model", () => {
+  it("holds the graph to the short side and the clip length", () => {
+    expect(fileLimitsOf("video", true)).toMatchObject({
+      minSide: 64,
+      seconds: { min: 1, max: 10 },
+    })
+  })
+
+  it("holds a hosted model only to the formats and the upload size", () => {
+    const limits = fileLimitsOf("video", false)
+    expect(limits).toMatchObject({ minSide: null, seconds: null })
+    expect(fileProblemOf("video", clip({ seconds: 30 }), limits)).toBeNull()
+    expect(fileProblemOf("video", clip({ height: 32 }), limits)).toBeNull()
+    expect(fileProblemOf("video", photo({}), limits)).toEqual({
+      kind: "wrongKind",
     })
   })
 })

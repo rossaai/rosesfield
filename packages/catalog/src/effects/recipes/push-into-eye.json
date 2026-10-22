@@ -1,14 +1,121 @@
 {
   "effect": "push-into-eye",
-  "passed": false,
-  "prompt": "The camera pushes straight in toward one of the person's eyes in a smooth, fast zoom. The face fills the frame, then only the eye, then the iris with its fine coloured fibres. The camera keeps moving forward into the black pupil, where a glowing spiral galaxy of stars opens up. One continuous push-in with no cuts.",
+  "passed": true,
+  "design": {
+    "unit": "push-into-eye",
+    "family": "effects",
+    "setPiece": "One continuous push from the person's face into one eye until the black pupil fills the frame.",
+    "cuts": [],
+    "lastFrame": {
+      "shows": "The black pupil fills the whole frame.",
+      "maxLuma": 17.5
+    },
+    "sound": {
+      "prompt": "From the very first frame, a deep cinematic drone with a low tone, and soft whooshes of air as the camera dives closer and closer.",
+      "loudness": {
+        "min": -28.5,
+        "max": -19
+      },
+      "truePeakMax": -3,
+      "fadeOut": 0.4,
+      "hits": [
+        {
+          "prompt": "Bright airy rushing wind at full level from the very first moment, a breathy whoosh of air, cinematic sound design. No music, no voice.",
+          "time": 0,
+          "seconds": 3.5,
+          "gainDb": -10
+        },
+        {
+          "prompt": "One deep low cinematic thump, a heavy sub bass drum hit with a short rumbling tail. No music, no voice.",
+          "time": 4,
+          "seconds": 1.5,
+          "gainDb": 6
+        },
+        {
+          "prompt": "One deep low cinematic thump, a heavy sub bass drum hit with a short rumbling tail. No music, no voice.",
+          "time": 4.3,
+          "seconds": 1.5,
+          "gainDb": 4
+        },
+        {
+          "prompt": "One deep low cinematic thump, a heavy sub bass drum hit with a short rumbling tail. No music, no voice.",
+          "time": 5.3,
+          "seconds": 1.5,
+          "gainDb": 6
+        },
+        {
+          "prompt": "One deep low cinematic thump, a heavy sub bass drum hit with a short rumbling tail. No music, no voice.",
+          "time": 5.6,
+          "seconds": 1.5,
+          "gainDb": 4
+        },
+        {
+          "prompt": "One single heavy cinematic impact hit, a deep sub bass boom with a sharp punch at the very start and a long low rumbling tail that fades out. Trailer hit, no music, no voice.",
+          "time": 6.7,
+          "seconds": 2,
+          "gainDb": 8
+        }
+      ],
+      "build": null,
+      "brighten": {
+        "presenceDb": 4,
+        "airDb": 0
+      },
+      "bedGainDb": -6
+    },
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
+  },
+  "prompt": "One unbroken shot that moves from the first frame to the last, with no pause. From the first frame the camera pushes straight in toward one of the person's eyes, and it never slows down. The person's face, skin and calm expression stay exactly as in the photo, like a real photograph, and each eyelash is a fine single hair. As the camera nears, the iris turns a warm copper orange like a real human amber eye, with one tiny round catchlight and no window reflection. By the fifth second the real iris fills the whole frame, with its natural fibres and crypts, then the black pupil in its centre grows larger and larger with a sharp edge. In the last second the black pupil swallows the whole frame, while the camera keeps moving in. The image stays sharp and in focus to the very end.",
+  "photoFrame": "first",
   "endFrame": {
-    "source": "draw",
-    "prompt": "An extreme macro close-up of a human iris filling the whole frame, fine blue and amber fibres around a black pupil that holds a glowing spiral galaxy of stars.",
+    "source": "dark",
+    "luma": 1,
     "strength": 0.9
+  },
+  "midFrame": {
+    "source": "edit",
+    "prompt": "Change the photo into a real macro photograph of the iris of one of the person's eyes, taken with a macro lens, so close that the iris fills the whole frame from edge to edge and no eyelid, eyelash or skin shows. The iris is a warm copper orange like a real human amber eye, with real photographic texture: fine natural fibres in irregular bundles, small dark crypts between them, a soft collarette ring around the pupil, and one tiny round catchlight. No glow, no outlines, no drawn lines, no veins. The pupil in the centre is small, round and pure black. The whole image is sharp and in focus.",
+    "time": 5.4,
+    "strength": 0.3
   },
   "hold": null,
   "adapter": null,
-  "seconds": 5,
-  "preview": null
+  "seconds": 7,
+  "preview": {
+    "file": "push-into-eye.mp4",
+    "runId": "1e77db70-4ebe-4050-97e4-84f118438aeb",
+    "seed": 1028487189,
+    "resolution": "1080p",
+    "aspectRatio": "3:4",
+    "workflowHash": "2221d4e0373d184319a67f1d6bccd2c3e96095a82a443400320aac0be8662f36"
+  },
+  "proof": {
+    "gate": {
+      "positives": 5,
+      "planted": "refused",
+      "verdict": "held"
+    },
+    "judge": {
+      "criteria": 12,
+      "failed": [],
+      "verdict": "held"
+    },
+    "reading": {
+      "frames": 169,
+      "fps": 24,
+      "width": 1248,
+      "height": 1664,
+      "cuts": [],
+      "loudness": {
+        "integrated": -25.8,
+        "truePeak": -8.2
+      },
+      "firstFrameLuma": 92.5,
+      "lastFrameLuma": 16
+    }
+  }
 }

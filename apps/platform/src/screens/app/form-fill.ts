@@ -1,6 +1,8 @@
-import type { AppListing, AssetKind } from "@rosesfield/contract"
+import { isHostedModelId } from "@rosesfield/catalog/comfy"
+import type { AppListing, Asset, AssetKind, Run } from "@rosesfield/contract"
 import type { QueryClient } from "@tanstack/react-query"
 import { assetQuery, characterQuery, runQuery } from "@/api/queries"
+import { uploadAsset } from "@/api/upload-asset"
 import { isAssetInput } from "@/catalog/app-facts"
 import type { Draft } from "@/router-context"
 import {
@@ -86,14 +88,78 @@ export async function placeAll(
   )
 }
 
+const modelInput = "model"
+
+export function withInputs(
+  app: AppListing,
+  values: FormValues,
+  given: Run["inputs"],
+  aspectRatio: string | null = null
+): FormValues {
+  const model = given[modelInput]
+  const isHosted = typeof model === "string" && isHostedModelId(model)
+  const names = new Set(app.inputs.map((input) => input.name))
+  const inputs: Record<string, FieldValue> = { ...values.inputs }
+  for (const [name, value] of Object.entries(given)) {
+    if (isHosted || names.has(name)) {
+      inputs[name] = Array.isArray(value) ? [...value] : value
+    }
+  }
+  return {
+    ...values,
+    inputs,
+    aspectRatio: aspectRatio ?? values.aspectRatio,
+  }
+}
+
+export type UploadFile = (file: Blob) => Promise<Asset>
+
+const uploadQuietly: UploadFile = (file) =>
+  uploadAsset({ file, onProgress: () => undefined })
+
+type ExampleInput = NonNullable<Draft["input"]>
+
+export async function withExampleInput(
+  client: QueryClient,
+  app: AppListing,
+  values: FormValues,
+  input: ExampleInput,
+  upload: UploadFile = uploadQuietly
+): Promise<FormValues> {
+  const target = app.inputs.find((one) => one.name === input.name)
+  if (target === undefined || !isAssetInput(target)) {
+    return values
+  }
+  try {
+    const response = await fetch(input.src)
+    if (!response.ok) {
+      return values
+    }
+    const asset = await upload(await response.blob())
+    client.setQueryData(assetQuery(asset.id).queryKey, { asset })
+    return { ...values, inputs: { ...values.inputs, [input.name]: [asset.id] } }
+  } catch {
+    return values
+  }
+}
+
 export async function fillFromDraft(
   client: QueryClient,
   app: AppListing,
   values: FormValues,
-  draft: Draft
+  draft: Draft,
+  upload: UploadFile = uploadQuietly
 ): Promise<FormValues> {
-  const prompted = withPrompt(app, values, draft.prompt)
-  const placed = await placeAll(client, app, prompted, draft.assetIds)
+  const given =
+    draft.inputs === undefined
+      ? values
+      : withInputs(app, values, draft.inputs, draft.aspectRatio ?? null)
+  const prompted = withPrompt(app, given, draft.prompt)
+  const exampled =
+    draft.input === undefined
+      ? prompted
+      : await withExampleInput(client, app, prompted, draft.input, upload)
+  const placed = await placeAll(client, app, exampled, draft.assetIds)
   return draft.characterIds.reduce(
     (current, id) => withPlaced(app, current, { kind: "character", id }),
     placed

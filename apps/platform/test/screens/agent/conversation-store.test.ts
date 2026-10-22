@@ -15,7 +15,7 @@ const proposal: Proposal = {
   appId: "image",
   request: { inputs: { prompt: "A red bicycle" }, count: 1, aspectRatio: null },
   status: "proposed",
-  runId: null,
+  runIds: [],
 }
 
 function turnOf(key: string): Turn {
@@ -28,6 +28,7 @@ function turnOf(key: string): Turn {
     parts: [{ kind: "proposal", proposal }],
     status: "answering",
     failureCode: null,
+    credits: null,
     shownItems: 0,
   }
 }
@@ -52,12 +53,12 @@ describe("the live turn", () => {
     noteProposal(conversationId, {
       ...proposal,
       status: "accepted",
-      runId: "run-1",
+      runIds: ["run-1"],
     })
     expect(readLiveTurn(conversationId)?.parts).toEqual([
       {
         kind: "proposal",
-        proposal: { ...proposal, status: "accepted", runId: "run-1" },
+        proposal: { ...proposal, status: "accepted", runIds: ["run-1"] },
       },
     ])
     setLiveTurn(conversationId, null)
