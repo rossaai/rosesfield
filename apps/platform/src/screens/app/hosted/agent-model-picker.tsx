@@ -49,6 +49,7 @@ type AgentModelPickerProps = {
   chosen: string
   onChoose: (model: string) => void
   disabled?: boolean
+  className?: string
 }
 
 export function AgentModelPicker({
@@ -56,6 +57,7 @@ export function AgentModelPicker({
   chosen,
   onChoose,
   disabled = false,
+  className,
 }: AgentModelPickerProps): ReactElement {
   const name = nameOf(chosen)
   return (
@@ -66,6 +68,7 @@ export function AgentModelPicker({
           aria-label={`${t("model.picker.title")} ${name}`}
           mark={<LabMark maker={agentLabOf(chosen)} />}
           disabled={disabled}
+          {...(className === undefined ? {} : { className })}
         />
       }
       title={t("model.picker.title")}

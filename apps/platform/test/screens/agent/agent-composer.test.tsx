@@ -83,6 +83,17 @@ describe("the agent composer", () => {
     expect(chip.className).not.toContain("rounded-dense")
   })
 
+  it("opens the agent's model picker from the pill, with the chosen model featured and each model under its lab's mark", async () => {
+    renderComposer()
+    await field()
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: `${t("model.picker.title")} Deepseek V4 Flash`,
+      })
+    )
+    expect(await screen.findByText(t("model.picker.featured"))).not.toBeNull()
+  })
+
   it("draws no focus ring around the field and sets its text on the well's text line", async () => {
     renderComposer()
     const prompt = await field()

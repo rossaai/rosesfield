@@ -1,10 +1,4 @@
-import { makerOf, nameOf } from "@rosesfield/catalog/comfy"
 import { IconButton } from "@rosesfield/ui/components/button"
-import {
-  ModelPicker,
-  type ModelPickerRow,
-} from "@rosesfield/ui/components/model-picker"
-import { ModelChip } from "@rosesfield/ui/components/model-trigger"
 import type { PromptAttachment } from "@rosesfield/ui/components/prompt-bar"
 import { cn } from "@rosesfield/ui/lib/cn"
 import {
@@ -30,13 +24,13 @@ import { AttachMenu } from "@/pieces/attach-menu"
 import { useAssetThumbs, useCharacterThumbs } from "@/pieces/attachment-thumbs"
 import { CharacterPicker } from "@/pieces/character-picker"
 import { type Mention, useMention } from "@/pieces/draft-bar"
-import { LabMark } from "@/pieces/lab-mark"
 import { LibraryPicker } from "@/pieces/library-picker"
 import type { DraftState } from "@/pieces/use-draft"
 import {
   useAgentModels,
   useChooseAgentModel,
 } from "@/screens/agent/agent-model"
+import { AgentModelPicker } from "@/screens/app/hosted/agent-model-picker"
 
 export const composerCircle =
   "bg-transparent aria-pressed:bg-(--tint) aria-expanded:bg-(--tint) data-popup-open:bg-(--tint)"
@@ -132,20 +126,6 @@ function AttachmentRow({
   )
 }
 
-export function agentModelRows(models: readonly string[]): ModelPickerRow[] {
-  return models.map((id) => {
-    const maker = makerOf(id.split("/")[0] ?? id)
-    return {
-      id,
-      name: nameOf(id),
-      maker,
-      line: null,
-      tags: [],
-      mark: <LabMark maker={maker} />,
-    }
-  })
-}
-
 function ModelPill(): ReactElement | null {
   const models = useAgentModels()
   const choose = useChooseAgentModel()
@@ -153,34 +133,13 @@ function ModelPill(): ReactElement | null {
   if (listed === undefined || listed.model === null) {
     return null
   }
-  const chosen = (choose.isPending ? choose.variables : null) ?? listed.model
-  const [row] = agentModelRows([chosen])
-  const name = row?.name ?? chosen
   return (
-    <ModelPicker
-      trigger={
-        <ModelChip
-          name={name}
-          mark={row?.mark}
-          aria-label={`${t("model.picker.title")} ${name}`}
-          disabled={choose.isPending}
-          className="h-button-small max-w-button-max min-w-0 shrink rounded-full px-s3"
-        />
-      }
-      title={t("model.picker.title")}
-      searchLabel={t("model.picker.search")}
-      searchPlaceholder={t("model.picker.searchPlaceholder")}
-      emptyLabel={t("model.picker.empty")}
-      sections={[
-        {
-          id: "all",
-          label: t("model.picker.all"),
-          rows: agentModelRows(listed.models),
-        },
-      ]}
-      chosen={chosen}
+    <AgentModelPicker
+      models={listed.models}
+      chosen={(choose.isPending ? choose.variables : null) ?? listed.model}
       onChoose={(model) => choose.mutate(model)}
-      side="top"
+      disabled={choose.isPending}
+      className="h-button-small max-w-button-max min-w-0 shrink rounded-full px-s3"
     />
   )
 }
