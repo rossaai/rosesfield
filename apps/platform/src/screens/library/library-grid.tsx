@@ -2,7 +2,7 @@ import type { Asset, Run } from "@rosesfield/contract"
 import { MediaGrid } from "@rosesfield/ui/components/media-grid"
 import { SkeletonMasonry } from "@rosesfield/ui/components/skeleton"
 import { WorkingPulse } from "@rosesfield/ui/components/working-pulse"
-import type { ReactElement, ReactNode } from "react"
+import { type ReactElement, type ReactNode, useEffect } from "react"
 import { dayKey, dayLabel } from "@/copy/format"
 import { t } from "@/copy/t"
 import { UploadRow } from "@/pieces/upload-row"
@@ -91,4 +91,23 @@ export function GridSkeleton({ size }: { size: number }): ReactElement {
       <SkeletonMasonry columns={columns} />
     </div>
   )
+}
+
+export function PagingSkeleton({
+  size,
+  read,
+  isFetching,
+  fetchMore,
+}: {
+  size: number
+  read: number
+  isFetching: boolean
+  fetchMore: () => void
+}): ReactElement {
+  useEffect(() => {
+    if (!isFetching) {
+      fetchMore()
+    }
+  }, [isFetching, fetchMore, read])
+  return <GridSkeleton size={size} />
 }

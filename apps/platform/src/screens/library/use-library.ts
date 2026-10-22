@@ -13,6 +13,8 @@ export type LibraryData = {
   runsById: ReadonlyMap<string, Run>
   isPending: boolean
   hasMore: boolean
+  isFetchingMore: boolean
+  fetchMore: () => void
   isError: boolean
   refetch: () => void
   sentinel: (node: HTMLElement | null) => void
@@ -68,18 +70,19 @@ export function useLibrary(
     [assets.data]
   )
   const runsToRead = appId !== null && runPages.hasNextPage
-  const sentinel = useNextPage(
-    (assets.hasNextPage || runsToRead) &&
-      !assets.isFetchingNextPage &&
-      !runPages.isFetchingNextPage,
-    () => {
-      if (assets.hasNextPage) {
-        void assets.fetchNextPage()
-      }
-      if (runsToRead) {
-        void runPages.fetchNextPage()
-      }
+  const isFetchingMore =
+    assets.isFetchingNextPage || runPages.isFetchingNextPage
+  const fetchMore = (): void => {
+    if (assets.hasNextPage) {
+      void assets.fetchNextPage()
     }
+    if (runsToRead) {
+      void runPages.fetchNextPage()
+    }
+  }
+  const sentinel = useNextPage(
+    (assets.hasNextPage || runsToRead) && !isFetchingMore,
+    fetchMore
   )
   return {
     assets: list,
@@ -95,6 +98,8 @@ export function useLibrary(
     runsById,
     isPending: assets.isPending,
     hasMore: assets.hasNextPage || runsToRead,
+    isFetchingMore,
+    fetchMore,
     isError: assets.isError,
     refetch: () => void assets.refetch(),
     sentinel,

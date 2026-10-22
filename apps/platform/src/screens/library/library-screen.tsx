@@ -18,7 +18,11 @@ import {
   type LibraryKind,
   LibrarySearch,
 } from "@/screens/library/library-bars"
-import { GridSkeleton, PendingTiles } from "@/screens/library/library-grid"
+import {
+  GridSkeleton,
+  PagingSkeleton,
+  PendingTiles,
+} from "@/screens/library/library-grid"
 import { LibraryRows } from "@/screens/library/library-rows"
 import { libraryLayout } from "@/screens/library/library-view"
 import { ResultGrid } from "@/screens/library/result-grid"
@@ -144,10 +148,12 @@ function LibraryBody(props: BodyProps): ReactNode {
     working.length === 0
   if (isEmpty && data.hasMore) {
     return (
-      <>
-        <GridSkeleton size={props.size} />
-        <span ref={data.sentinel} aria-hidden="true" className="block h-s1" />
-      </>
+      <PagingSkeleton
+        size={props.size}
+        read={data.assets.length}
+        isFetching={data.isFetchingMore}
+        fetchMore={data.fetchMore}
+      />
     )
   }
   if (isEmpty) {
