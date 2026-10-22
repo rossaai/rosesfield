@@ -974,7 +974,7 @@
         "cnr_id": "comfy-core",
         "ver": "0.41.0"
       },
-      "widgets_values": ["round(a * c / min(a, b) / 32) * 32"],
+      "widgets_values": ["round(a * c / min(a, b) / 64) * 64"],
       "title": "Width"
     },
     {
@@ -1032,7 +1032,7 @@
         "cnr_id": "comfy-core",
         "ver": "0.41.0"
       },
-      "widgets_values": ["round(b * c / min(a, b) / 32) * 32"],
+      "widgets_values": ["round(b * c / min(a, b) / 64) * 64"],
       "title": "Height"
     },
     {

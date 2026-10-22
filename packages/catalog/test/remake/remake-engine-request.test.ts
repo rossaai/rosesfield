@@ -134,7 +134,7 @@ describe("the engine requests Remake sends to Comfy for each shot", () => {
       uploaded(uploadedClip, "video/mp4"),
       submittedJob,
     ])
-    expect(workflow).toMatchObject({ "702": { inputs: { value: 480 } } })
+    expect(workflow).toMatchObject({ "702": { inputs: { value: 448 } } })
     expect(workflow["122"]?.inputs).not.toHaveProperty("audio")
   })
 

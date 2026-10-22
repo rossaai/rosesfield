@@ -141,7 +141,7 @@ describe("the motion request on the Comfy API v2", () => {
     expect(workflow).toEqual(
       expectedGraph({
         scene: "A quiet beach at dawn, soft light",
-        shortSide: 480,
+        shortSide: 448,
         sound: "off",
       })
     )

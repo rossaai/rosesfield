@@ -19,7 +19,7 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 | `photo` | 200 `LoadImage`, Photo | `image` | an uploaded image |
 | `clip` | 199 `LoadVideo`, Clip | `file` | an uploaded video |
 | `scene` | 900 `StringConcatenate`, Motion and scene | `string_b` | a value |
-| `shortSide` | 702 `PrimitiveInt`, Short side | `value` | a value: 480, or 704 for 720p |
+| `shortSide` | 702 `PrimitiveInt`, Short side | `value` | a value: 448 for 480p, or 704 for 720p |
 | `seed` | 704 `KSampler` | `seed` | a value |
 
 ## Outputs
@@ -33,7 +33,7 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 - **The clip.** Node 692 keeps the first 10 seconds of the clip, and node 706 splits it into its frames, its sound and its frame rate.
 - **The pose guide.** Node 709 finds one person in each frame with RT-DETR, node 711 reads their body, hands, face and feet with SDPose, and node 712 draws that pose. The template guides with a depth map of the clip, and a depth map carries the clip's room and objects. A pose carries only the person's movement, so the scene comes from your photo. The union control IC-LoRA takes pose, depth and edges, per its [model card](https://huggingface.co/Lightricks/LTX-2.3-22b-IC-LoRA-Union-Control).
 - **The length.** LTX renders 8 n + 1 frames. A clip of n frames gets the last pose repeated until the guide holds the next count of 8 n + 1 frames, nodes 714 to 719. Node 724 keeps the first n frames of the render, and node 122 writes them at the clip's frame rate, so the video lasts as long as the clip.
-- **The size.** Nodes 721 to 723 set the short side of the video to the bound value and keep the photo's ratio, each side a multiple of 32.
+- **The size.** Nodes 721 to 723 set the short side of the video to the bound value and keep the photo's ratio, each side a multiple of 64. The union control IC-LoRA guides at half size, so node 115 needs each side of the latent, the pixel side over 32, to be even.
 - **The first frame.** Node 198 puts your photo in the first frame at full strength. Node 115 adds the pose guide through the IC-LoRA's parameters, node 196, and node 106 removes the guide frames after sampling.
 - **The sound.** LTX 2.3 samples video and audio together, so the graph keeps its audio latent, nodes 101 and 119, and never decodes it. With Keep the clip's sound on, node 122 writes the clip's own sound, cut to the video's length. With it off, the catalog removes that link, and the video has no audio track.
 - **The prompt.** Node 900 puts a fixed sentence about following the pose before your words about the scene. The prompt enhancer of the template is left out, so the model reads your words.

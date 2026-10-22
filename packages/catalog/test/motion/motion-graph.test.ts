@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest"
 import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
 import { listApps } from "#list-apps"
 import { findWorkflow, listWorkflows } from "#list-workflows"
+import { motionAspectRatios } from "#motion/app"
+import { shortSides } from "#motion/comfy/motion-binding"
 import {
   both,
   fileGraph,
@@ -26,6 +28,27 @@ function hosted(id: string, takes: string[]): HostedModel {
 
 function inputOf(graph: Graph, id: string, name: string): unknown {
   return graph[id]?.inputs[name]
+}
+
+const sidePattern = /^round\(([ab]) \* c \/ min\(a, b\) \/ (\d+)\) \* (\d+)$/
+
+function sideOf(graph: Graph, id: string, photo: number[], shortSide: number) {
+  const found = sidePattern.exec(String(inputOf(graph, id, "expression")))
+  if (found === null) {
+    throw new Error(`Node ${id} holds no side expression`)
+  }
+  const [width = 0, height = 0] = photo
+  const side = found[1] === "a" ? width : height
+  const step = Number(found[2])
+  return (
+    Math.round((side * shortSide) / Math.min(width, height) / step) *
+    Number(found[3])
+  )
+}
+
+function photoOf(aspect: string): number[] {
+  const [across = 1, down = 1] = aspect.split(":").map(Number)
+  return [across * 256, down * 256]
 }
 
 function boundGraph(sound: "on" | "off"): Graph {
@@ -98,6 +121,24 @@ describe("the motion graph", () => {
     expect(inputOf(graph, "122", "fps")).toEqual(["706", 2])
     expect(inputOf(graph, "109", "frame_rate")).toEqual(["706", 2])
     expect(inputOf(graph, "68", "format")).toBe("mp4")
+  })
+
+  it("gives an even latent width and height, the pixel side over 32, at every resolution and aspect, as the half-size union control IC-LoRA needs", () => {
+    const graph = fileGraph()
+    expect(inputOf(graph, "108", "width")).toEqual(["722", 1])
+    expect(inputOf(graph, "108", "height")).toEqual(["723", 1])
+    for (const shortSide of Object.values(shortSides)) {
+      for (const aspect of motionAspectRatios) {
+        const photo = photoOf(aspect)
+        const width = sideOf(graph, "722", photo, shortSide)
+        const height = sideOf(graph, "723", photo, shortSide)
+        expect([width % 64, height % 64, Math.min(width, height)]).toEqual([
+          0,
+          0,
+          shortSide,
+        ])
+      }
+    }
   })
 
   it("carries the clip's sound with Keep the clip's sound on and no audio track with it off", () => {

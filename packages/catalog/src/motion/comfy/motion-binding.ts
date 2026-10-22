@@ -8,7 +8,7 @@ export const motionWorkflow = "motion-ltx-2-3-ic-lora"
 export const videoNode = "122"
 
 export const shortSides: Readonly<Record<string, number>> = {
-  "480p": 480,
+  "480p": 448,
   "720p": 704,
 }
 
