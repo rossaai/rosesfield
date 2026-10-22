@@ -17,7 +17,10 @@ import {
   type StateChoice,
   StateTabs,
 } from "@/screens/history/history-filters"
-import { historyGridItems } from "@/screens/history/history-grid-items"
+import {
+  historyGridItems,
+  historyShownOf,
+} from "@/screens/history/history-grid-items"
 import { HistoryRow, HistoryRowSkeleton } from "@/screens/history/history-row"
 import { GridSkeleton } from "@/screens/library/library-grid"
 import { ResultGrid } from "@/screens/library/result-grid"
@@ -185,13 +188,14 @@ function HistoryBody({
   const runs = history.runs.filter((run) =>
     keepsRun(run, filters.state, filters.kind, filters.date, now)
   )
-  if (runs.length === 0) {
+  const shown = historyShownOf(runs, layout)
+  if (shown === "empty") {
     return <HistoryEmpty filters={filters} />
   }
   const sentinel = (
     <span ref={history.sentinel} aria-hidden="true" className="block h-s1" />
   )
-  if (layout === "grid") {
+  if (shown === "grid") {
     return (
       <ResultGrid items={historyGridItems(runs)} size={size} after={sentinel} />
     )
