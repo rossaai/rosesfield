@@ -1,3 +1,7 @@
+import {
+  type OriginShape,
+  originShapeOf,
+} from "@rosesfield/ui/hooks/use-grow-from"
 import { useRouter } from "@tanstack/react-router"
 import {
   createContext,
@@ -9,8 +13,11 @@ import {
   useState,
 } from "react"
 
+type ViewerShape = OriginShape & { assetId: string }
+
 type ViewerTrail = {
   origin: HTMLElement | null
+  shape: ViewerShape | null
   list: readonly string[]
   isPushed: boolean
 }
@@ -26,7 +33,12 @@ type ViewerApi = {
   close: () => void
 }
 
-const emptyTrail: ViewerTrail = { origin: null, list: [], isPushed: false }
+const emptyTrail: ViewerTrail = {
+  origin: null,
+  shape: null,
+  list: [],
+  isPushed: false,
+}
 
 const ViewerContext = createContext<ViewerApi>({
   trail: emptyTrail,
@@ -45,6 +57,21 @@ function urlWithView(assetId: string | null): string {
   return `${url.pathname}${url.search}${url.hash}`
 }
 
+function shapeAt(
+  assetId: string,
+  origin: HTMLElement | null
+): ViewerShape | null {
+  const shape = originShapeOf(origin)
+  return shape === null ? null : { ...shape, assetId }
+}
+
+export function shapeFor(
+  trail: ViewerTrail,
+  assetId: string
+): OriginShape | null {
+  return trail.shape?.assetId === assetId ? trail.shape : null
+}
+
 export function ViewerProvider({
   children,
 }: {
@@ -54,7 +81,12 @@ export function ViewerProvider({
   const [trail, setTrail] = useState<ViewerTrail>(emptyTrail)
   const open = useCallback(
     (assetId: string, origin: HTMLElement | null, list: readonly string[]) => {
-      setTrail({ origin, list, isPushed: true })
+      setTrail({
+        origin,
+        shape: shapeAt(assetId, origin),
+        list,
+        isPushed: true,
+      })
       router.history.push(urlWithView(assetId))
     },
     [router]
