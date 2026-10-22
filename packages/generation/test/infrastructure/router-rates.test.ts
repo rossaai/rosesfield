@@ -273,7 +273,7 @@ describe("priceFromRates on a usage-credit rate", () => {
     ).toBe(241.38)
   })
 
-  it("adds 5 Meshy credits for the 2k or 4k mesh, once", () => {
+  it("adds 5 Meshy credits for the 2k or 4k mesh only, once", () => {
     for (const geometryResolution of ["2k", "4k"]) {
       expect(
         priceFromRates(
@@ -286,7 +286,7 @@ describe("priceFromRates on a usage-credit rate", () => {
     }
     expect(
       priceFromRates([meshyRate], meshy, { ...chair, ultraMode: "on" }, "3d")
-    ).toBe(301.73)
+    ).toBe(241.38)
     expect(
       priceFromRates(
         [meshyRate],
