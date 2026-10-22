@@ -9,7 +9,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 afterEach(cleanup)
 
 describe("ReferenceTile", () => {
-  it("holds References and Elements as two 32 px glyph buttons in one 65 by 32 tile", () => {
+  it("holds References and Elements as two separate 33 px quiet circles with no shared tile or hairline", () => {
     const calls = { references: vi.fn(), elements: vi.fn() }
     render(
       <ReferenceTile
@@ -22,10 +22,20 @@ describe("ReferenceTile", () => {
     const references = screen.getByRole("button", { name: "References" })
     const elements = screen.getByRole("button", { name: "Elements" })
     expect(references.textContent).toBe("")
-    expect(references.className.split(" ")).toContain("size-8")
-    expect(references.parentElement?.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-8", "w-16.25"])
+    for (const circle of [references, elements]) {
+      expect(circle.className.split(" ")).toEqual(
+        expect.arrayContaining([
+          "size-icon-dense",
+          "rounded-full",
+          "bg-transparent",
+        ])
+      )
+    }
+    const edge = document.querySelector(
+      "[data-slot='composer-attachments-edge']"
     )
+    expect(edge?.className).not.toMatch(/bg-|border|rounded/)
+    expect(edge?.querySelector("[class*='w-px']")).toBeNull()
     fireEvent.click(elements)
     expect(calls.elements).toHaveBeenCalledTimes(1)
     expect(calls.references).not.toHaveBeenCalled()
@@ -52,7 +62,12 @@ describe("StartFrame", () => {
     const button = screen.getByRole("button", { name: "Change" })
     const chip = button.querySelector("[data-slot='start-frame-change']")
     expect(chip?.className.split(" ")).toEqual(
-      expect.arrayContaining(["top-1.5", "right-1.5", "h-6"])
+      expect.arrayContaining([
+        "top-s2",
+        "right-s2",
+        "h-button-small",
+        "material-thin",
+      ])
     )
     fireEvent.click(button)
     expect(change).toHaveBeenCalledTimes(1)
@@ -116,7 +131,7 @@ describe("StartFrame's scrim and focus", () => {
 })
 
 describe("DropZone", () => {
-  it("is at least 120 px tall with a dashed edge and names what it takes", () => {
+  it("is at least 120 px tall, one tone off its ground with no stroke, and names what it takes", () => {
     render(
       <DropZone
         title="Drop your files"
@@ -128,8 +143,31 @@ describe("DropZone", () => {
       name: "Drop your files Image, video or audio",
     })
     expect(zone.className.split(" ")).toEqual(
-      expect.arrayContaining(["min-h-30", "border-dashed", "p-4"])
+      expect.arrayContaining(["min-h-30", "bg-(--well)", "motion-tint"])
     )
+    expect(zone.className).not.toMatch(/border/)
     expect(zone.textContent).toBe("Drop your files Image, video or audio")
+  })
+
+  it("takes its ground's tint while a file is dragged over it, and rests again when it leaves or drops", () => {
+    render(
+      <DropZone
+        title="Drop your files"
+        line="Image, video or audio"
+        kinds={[]}
+      />
+    )
+    const zone = screen.getByRole("button", {
+      name: "Drop your files Image, video or audio",
+    })
+    expect(zone.className.split(" ")).toContain("data-[drop=over]:bg-(--tint)")
+    expect(zone.getAttribute("data-drop")).toBe("rest")
+    fireEvent.dragEnter(zone)
+    expect(zone.getAttribute("data-drop")).toBe("over")
+    fireEvent.dragLeave(zone)
+    expect(zone.getAttribute("data-drop")).toBe("rest")
+    fireEvent.dragEnter(zone)
+    fireEvent.drop(zone)
+    expect(zone.getAttribute("data-drop")).toBe("rest")
   })
 })
