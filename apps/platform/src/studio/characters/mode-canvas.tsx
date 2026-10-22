@@ -14,9 +14,9 @@ import { appEmptyTitle } from "@/catalog/app-facts"
 import { t, tCatalog } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
 import { OutputRow } from "@/pieces/run/output-row"
+import { RunCard } from "@/pieces/run/run-card"
 import { runAspect } from "@/pieces/run/run-facts"
-import { RunLine } from "@/pieces/run/run-line"
-import { RunOutputs } from "@/pieces/run/run-outputs"
+import { type RunChromeOf, RunOutputs } from "@/pieces/run/run-outputs"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import { useUpdateCharacter } from "@/screens/characters/character-actions"
 import { modeOfRun, viewInput } from "@/studio/characters/mode-listing"
@@ -73,11 +73,17 @@ function AddToCharacter({
   )
 }
 
-function ViewRow({ run }: { run: Run }): ReactElement {
+function ViewRow({
+  run,
+  chrome,
+}: {
+  run: Run
+  chrome: RunChromeOf
+}): ReactElement {
   const aspect = runAspect(run)
   const characterId = characterOf(run)
   return (
-    <OutputRow aspects={run.outputs.map(() => aspect)}>
+    <OutputRow aspects={run.outputs.map(() => aspect)} overlay={chrome("over")}>
       {(index) => {
         const assetId = run.outputs[index]
         if (assetId === undefined) {
@@ -89,6 +95,7 @@ function ViewRow({ run }: { run: Run }): ReactElement {
               assetId={assetId}
               aspectHint={aspect}
               isDemo={run.origin === "demo"}
+              isBare
               list={run.outputs}
             />
             <figcaption className="text-caption text-ink-muted">
@@ -114,19 +121,22 @@ function RunBlock({
   const isDone = run.status === "done"
   const mode = modeOfRun(run)
   return (
-    <article className="flex flex-col gap-s2">
-      <RunLine run={run} onUseInputs={() => onUseInputs(run)} />
-      {isDone && mode === "angles" ? (
-        <ViewRow run={run} />
-      ) : (
-        <RunOutputs run={run} />
+    <RunCard run={run} onUseInputs={() => onUseInputs(run)}>
+      {(chrome) => (
+        <>
+          {isDone && mode === "angles" ? (
+            <ViewRow run={run} chrome={chrome} />
+          ) : (
+            <RunOutputs run={run} chrome={chrome} />
+          )}
+          {isDone && mode === "traits" && run.outputs.length > 0 ? (
+            <div>
+              <SaveCharacterButton run={run} />
+            </div>
+          ) : null}
+        </>
       )}
-      {isDone && mode === "traits" && run.outputs.length > 0 ? (
-        <div>
-          <SaveCharacterButton run={run} />
-        </div>
-      ) : null}
-    </article>
+    </RunCard>
   )
 }
 

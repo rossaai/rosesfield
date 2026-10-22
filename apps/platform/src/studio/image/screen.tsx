@@ -220,7 +220,6 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   return (
     <BarFrame
       app={app}
-      hasRuns={state.hasRuns}
       onUseInputs={state.useInputs}
       sheet={sheet}
       settings={<Settings {...view} />}

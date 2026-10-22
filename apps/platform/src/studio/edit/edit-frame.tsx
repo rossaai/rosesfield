@@ -37,11 +37,7 @@ export function EditFrame({ state }: { state: EditToolState }): ReactElement {
           scrollClassName={cn("px-4 pb-4", isRegular ? "pb-36" : "")}
         >
           <PhotoView photo={state.photo} />
-          <AppCanvas
-            app={state.app}
-            order="newest-last"
-            onUseInputs={state.useInputs}
-          />
+          <AppCanvas app={state.app} onUseInputs={state.useInputs} />
         </AppStage>
       </div>
       <div data-slot="prompt-dock" data-place={place} className={docks[place]}>

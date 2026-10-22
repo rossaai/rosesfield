@@ -5,6 +5,7 @@ import { Progress } from "@rosesfield/ui/components/progress"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { WorkingPulse } from "@rosesfield/ui/components/working-pulse"
+import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { useQueries } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
@@ -14,15 +15,59 @@ import { findCatalogApp } from "@/catalog/catalog-apps"
 import { wordsForCode } from "@/copy/error-words"
 import { formatDuration } from "@/copy/format"
 import { t } from "@/copy/t"
-import { AssetTile } from "@/pieces/asset-tile"
+import { AssetTile, aspectStyle } from "@/pieces/asset-tile"
 import { OutputRow } from "@/pieces/run/output-row"
 import { useCancelRun, useRepeatRun } from "@/pieces/run/run-actions"
 import { runAspect, waitingAfterMs } from "@/pieces/run/run-facts"
 import { useNow } from "@/pieces/use-now"
 
+export type ChromePlace = "over" | "under"
+
+export type RunChromeOf = (place: ChromePlace) => ReactNode
+
 type RunOutputsProps = {
   run: Run
   list?: readonly string[]
+  chrome?: RunChromeOf | undefined
+}
+
+export function RunFrame({
+  chrome,
+  aspect,
+  place = "over",
+  children,
+}: {
+  chrome: RunChromeOf | undefined
+  aspect?: MediaAspect | undefined
+  place?: ChromePlace
+  children: ReactNode
+}): ReactNode {
+  if (chrome === undefined) {
+    return children
+  }
+  if (place === "under") {
+    return (
+      <div data-slot="run-frame" className="flex w-full flex-col gap-s1_5">
+        {children}
+        {chrome("under")}
+      </div>
+    )
+  }
+  return (
+    <div
+      data-slot="run-frame"
+      className={cn(
+        "relative w-full",
+        aspect === undefined
+          ? ""
+          : "grid place-items-center rounded-cell bg-(--well) p-s4"
+      )}
+      style={aspectStyle(aspect)}
+    >
+      {children}
+      {chrome("over")}
+    </div>
+  )
 }
 
 function outputKindOf(run: Run): string {
@@ -34,16 +79,19 @@ function LandedTile({
   assetId,
   aspect,
   list,
+  isBare,
 }: {
   run: Run
   assetId: string
   aspect?: MediaAspect
   list: readonly string[]
+  isBare: boolean
 }): ReactElement {
   return (
     <AssetTile
       assetId={assetId}
       isDemo={run.origin === "demo"}
+      isBare={isBare}
       list={list}
       className={motion.enter}
       {...(aspect === undefined ? {} : { aspectHint: aspect })}
@@ -51,40 +99,47 @@ function LandedTile({
   )
 }
 
-function WorkingTiles({ run, list }: RunOutputsProps): ReactElement {
+function WorkingTiles({ run, list, chrome }: RunOutputsProps): ReactElement {
   const kind = outputKindOf(run)
   const aspect = runAspect(run)
   const count = run.count
   const shown = list ?? run.outputs
+  const isBare = chrome !== undefined
   if (kind === "audio" || kind === "text") {
     return (
-      <div className="flex w-full flex-col gap-s2">
-        {Array.from({ length: count }, (_, index) => {
-          const assetId = run.outputs[index]
-          return assetId === undefined ? (
-            <Skeleton
-              // biome-ignore lint/suspicious/noArrayIndexKey: a working tile's place is its identity
-              key={index}
-              className={
-                kind === "audio"
-                  ? "h-s12 w-full"
-                  : "h-tile w-full max-w-prose-max"
-              }
-            />
-          ) : (
-            <LandedTile
-              key={assetId}
-              run={run}
-              assetId={assetId}
-              list={shown}
-            />
-          )
-        })}
-      </div>
+      <RunFrame chrome={chrome} place="under">
+        <div className="flex w-full flex-col gap-s2">
+          {Array.from({ length: count }, (_, index) => {
+            const assetId = run.outputs[index]
+            return assetId === undefined ? (
+              <Skeleton
+                // biome-ignore lint/suspicious/noArrayIndexKey: a working tile's place is its identity
+                key={index}
+                className={
+                  kind === "audio"
+                    ? "h-s12 w-full"
+                    : "h-tile w-full max-w-prose-max"
+                }
+              />
+            ) : (
+              <LandedTile
+                key={assetId}
+                run={run}
+                assetId={assetId}
+                list={shown}
+                isBare={isBare}
+              />
+            )
+          })}
+        </div>
+      </RunFrame>
     )
   }
   return (
-    <OutputRow aspects={Array.from({ length: count }, () => aspect)}>
+    <OutputRow
+      aspects={Array.from({ length: count }, () => aspect)}
+      overlay={chrome?.("over")}
+    >
       {(index) => {
         const assetId = run.outputs[index]
         return assetId === undefined ? (
@@ -98,6 +153,7 @@ function WorkingTiles({ run, list }: RunOutputsProps): ReactElement {
             assetId={assetId}
             aspect={aspect}
             list={shown}
+            isBare={isBare}
           />
         )
       }}
@@ -131,10 +187,14 @@ export function WaitingLine({ run }: { run: Run }): ReactNode {
   )
 }
 
-function WorkingRun({ run, list }: RunOutputsProps): ReactElement {
+function WorkingRun({ run, list, chrome }: RunOutputsProps): ReactElement {
   return (
     <div className="flex flex-col gap-s2">
-      <WorkingTiles run={run} {...(list === undefined ? {} : { list })} />
+      <WorkingTiles
+        run={run}
+        chrome={chrome}
+        {...(list === undefined ? {} : { list })}
+      />
       {run.progress === null ? null : (
         <Progress value={run.progress * 100} aria-label={t("state.working")} />
       )}
@@ -156,25 +216,28 @@ function useOutputAspects(run: Run): MediaAspect[] {
   })
 }
 
-function DoneRun({ run, list }: RunOutputsProps): ReactElement {
+function DoneRun({ run, list, chrome }: RunOutputsProps): ReactElement {
   const aspect = runAspect(run)
   const aspects = useOutputAspects(run)
   const kind = outputKindOf(run)
+  const isBare = chrome !== undefined
   if (kind === "audio" || kind === "text") {
     return (
-      <div className="flex w-full flex-col gap-s2">
-        {run.outputs.map((assetId) => (
-          <AssetTile
-            key={assetId}
-            assetId={assetId}
-            isDemo={run.origin === "demo"}
-          />
-        ))}
-      </div>
+      <RunFrame chrome={chrome} place="under">
+        <div className="flex w-full flex-col gap-s2">
+          {run.outputs.map((assetId) => (
+            <AssetTile
+              key={assetId}
+              assetId={assetId}
+              isDemo={run.origin === "demo" && !isBare}
+            />
+          ))}
+        </div>
+      </RunFrame>
     )
   }
   return (
-    <OutputRow aspects={aspects}>
+    <OutputRow aspects={aspects} overlay={chrome?.("over")}>
       {(index) => {
         const assetId = run.outputs[index]
         return assetId === undefined ? null : (
@@ -182,6 +245,7 @@ function DoneRun({ run, list }: RunOutputsProps): ReactElement {
             assetId={assetId}
             aspectHint={aspects[index] ?? aspect}
             isDemo={run.origin === "demo"}
+            isBare={isBare}
             list={list ?? run.outputs}
             className={motion.enter}
           />
@@ -225,16 +289,39 @@ function FailedRun({ run }: { run: Run }): ReactElement {
   )
 }
 
-export function RunOutputs({ run, list }: RunOutputsProps): ReactElement {
+export function RunOutputs({
+  run,
+  list,
+  chrome,
+}: RunOutputsProps): ReactElement {
+  const shown = list === undefined ? {} : { list }
   switch (run.status) {
     case "queued":
     case "running":
-      return <WorkingRun run={run} {...(list === undefined ? {} : { list })} />
+      return <WorkingRun run={run} chrome={chrome} {...shown} />
     case "done":
-      return <DoneRun run={run} {...(list === undefined ? {} : { list })} />
+      return <DoneRun run={run} chrome={chrome} {...shown} />
     case "failed":
-      return <FailedRun run={run} />
+      return (
+        <RunFrame chrome={chrome} {...endedFrameOf(run)}>
+          <FailedRun run={run} />
+        </RunFrame>
+      )
     case "cancelled":
-      return <p className="text-caption text-ink-muted">{t("state.stopped")}</p>
+      return (
+        <RunFrame chrome={chrome} {...endedFrameOf(run)}>
+          <p className="text-caption text-ink-muted">{t("state.stopped")}</p>
+        </RunFrame>
+      )
   }
+}
+
+function endedFrameOf(run: Run): {
+  aspect?: MediaAspect
+  place: ChromePlace
+} {
+  const kind = outputKindOf(run)
+  return kind === "audio" || kind === "text"
+    ? { place: "under" }
+    : { aspect: runAspect(run), place: "over" }
 }

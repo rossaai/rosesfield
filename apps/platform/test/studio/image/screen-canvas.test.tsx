@@ -67,7 +67,9 @@ describe("a run of 4 on the Image canvas", () => {
       expect(workingTiles()).toEqual([false, false, true, true])
     )
     const row = document.querySelector('[data-slot="output-row"]')
-    expect(row?.children.length).toBe(4)
+    expect(
+      row?.querySelectorAll(":scope > [data-slot=output-cell]")
+    ).toHaveLength(4)
     await waitFor(() =>
       expect(
         landed.map((assetId) =>

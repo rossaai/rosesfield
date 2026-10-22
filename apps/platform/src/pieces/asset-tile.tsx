@@ -6,7 +6,11 @@ import {
 } from "@rosesfield/ui/components/media-tile"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { useQuery } from "@tanstack/react-query"
+import {
+  type QueryClient,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import { RotateCcwIcon } from "lucide-react"
 import type { CSSProperties, ReactElement } from "react"
 import { assetQuery } from "@/api/queries"
@@ -29,6 +33,7 @@ export type AssetTileProps = {
   fit?: "cover" | "contain"
   isStatic?: boolean
   hasMenu?: boolean
+  isBare?: boolean
   className?: string
 }
 
@@ -47,6 +52,20 @@ export function aspectOfAsset(
   return asset.width !== null && asset.height !== null
     ? { width: asset.width, height: asset.height }
     : hint
+}
+
+function keepShape(
+  client: QueryClient,
+  asset: Asset,
+  shape: MediaAspect
+): void {
+  client.setQueryData(assetQuery(asset.id).queryKey, (held) =>
+    held === undefined ||
+    held.asset.width !== null ||
+    held.asset.height !== null
+      ? held
+      : { ...held, asset: { ...held.asset, ...shape } }
+  )
 }
 
 function shapedAspect(
@@ -90,7 +109,9 @@ function VisualTile(props: AssetTileProps & { asset: Asset }): ReactElement {
   const { asset } = props
   const source = useAssetSource(asset.id)
   const viewer = useViewer()
+  const client = useQueryClient()
   const aspect = shapedAspect(props, asset)
+  const isShapeless = asset.width === null || asset.height === null
   const name = useAssetName(asset) ?? assetLabel(asset)
   if (source.state === "loading") {
     return (
@@ -115,12 +136,21 @@ function VisualTile(props: AssetTileProps & { asset: Asset }): ReactElement {
       src={source.src}
       alt={name}
       fit={props.fit ?? "cover"}
-      caption={props.isDemo === true ? t("run.demoCaption") : undefined}
+      caption={
+        props.isDemo === true && props.isBare !== true
+          ? t("run.demoCaption")
+          : undefined
+      }
       length={
-        asset.kind === "video" && props.shape !== "square"
+        asset.kind === "video" &&
+        props.shape !== "square" &&
+        props.isBare !== true
           ? assetLength(asset)
           : undefined
       }
+      {...(isShapeless
+        ? { onShape: (shape: MediaAspect) => keepShape(client, asset, shape) }
+        : {})}
       {...(props.isStatic === true
         ? {}
         : {

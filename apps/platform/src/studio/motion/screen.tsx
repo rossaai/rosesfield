@@ -33,7 +33,6 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       canvas={(openInputs) => (
         <AppCanvas
           app={app}
-          order="newest-first"
           onUseInputs={state.useInputs}
           emptyAction={<AddInputsButton onClick={openInputs} />}
         />

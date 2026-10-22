@@ -25,7 +25,6 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       canvas={(openInputs) => (
         <AppCanvas
           app={app}
-          order="newest-first"
           onUseInputs={screen.fillFromRun}
           emptyAction={<AddInputsButton onClick={openInputs} />}
         />

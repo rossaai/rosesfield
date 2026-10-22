@@ -18,12 +18,14 @@ type RunMenuProps = {
   run: Run
   onUseInputs?: (run: Run) => void
   extra?: ReactNode
+  form?: "line" | "card"
 }
 
 export function RunMenu({
   run,
   onUseInputs,
   extra,
+  form = "line",
 }: RunMenuProps): ReactElement {
   const navigate = useNavigate()
   const cancel = useCancelRun()
@@ -44,7 +46,11 @@ export function RunMenu({
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <IconButton label={t("run.menu")} tone="quiet">
+          <IconButton
+            label={t("run.menu")}
+            tone={form === "card" ? "glass" : "quiet"}
+            {...(form === "card" ? { place: "card" } : {})}
+          >
             <EllipsisIcon aria-hidden="true" />
           </IconButton>
         }

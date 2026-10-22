@@ -51,7 +51,6 @@ export type AdsScreenState = {
   text: string
   setText: (text: string) => void
   lastSeed: number | null
-  hasRuns: boolean | null
   useInputs: (run: Run) => void
   onShortcut: (event: KeyboardEvent<HTMLElement>) => void
   message: string | null
@@ -246,7 +245,6 @@ export function useAdsScreen(app: AppListing, seeds: AppSeeds): AdsScreenState {
     kind,
     ...barText,
     lastSeed: runs.runs.find((run) => run.seed !== null)?.seed ?? null,
-    hasRuns: runs.isPending ? null : runs.runs.length > 0,
     useInputs: (run) => form.fill(adsValuesOf(app, run)),
     bar,
     message: first === undefined ? null : tCatalog(first.key, first.values),
