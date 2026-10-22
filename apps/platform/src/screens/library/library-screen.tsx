@@ -150,7 +150,6 @@ function LibraryBody(props: BodyProps): ReactNode {
     return (
       <PagingSkeleton
         size={props.size}
-        read={data.assets.length}
         isFetching={data.isFetchingMore}
         fetchMore={data.fetchMore}
       />

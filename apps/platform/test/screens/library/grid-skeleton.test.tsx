@@ -27,30 +27,15 @@ describe("the skeleton of a search with no match yet", () => {
   it("reads the next page itself, without waiting for a sentinel to scroll into view, and asks nothing while a page is on its way", () => {
     const fetchMore = vi.fn()
     const { rerender } = render(
-      <PagingSkeleton
-        size={1}
-        read={20}
-        isFetching={false}
-        fetchMore={fetchMore}
-      />
+      <PagingSkeleton size={1} isFetching={false} fetchMore={fetchMore} />
     )
     expect(fetchMore).toHaveBeenCalledTimes(1)
     rerender(
-      <PagingSkeleton
-        size={1}
-        read={20}
-        isFetching={true}
-        fetchMore={fetchMore}
-      />
+      <PagingSkeleton size={1} isFetching={true} fetchMore={fetchMore} />
     )
     expect(fetchMore).toHaveBeenCalledTimes(1)
     rerender(
-      <PagingSkeleton
-        size={1}
-        read={40}
-        isFetching={false}
-        fetchMore={fetchMore}
-      />
+      <PagingSkeleton size={1} isFetching={false} fetchMore={fetchMore} />
     )
     expect(fetchMore).toHaveBeenCalledTimes(2)
   })

@@ -95,12 +95,10 @@ export function GridSkeleton({ size }: { size: number }): ReactElement {
 
 export function PagingSkeleton({
   size,
-  read,
   isFetching,
   fetchMore,
 }: {
   size: number
-  read: number
   isFetching: boolean
   fetchMore: () => void
 }): ReactElement {
@@ -108,6 +106,6 @@ export function PagingSkeleton({
     if (!isFetching) {
       fetchMore()
     }
-  }, [isFetching, fetchMore, read])
+  }, [isFetching, fetchMore])
   return <GridSkeleton size={size} />
 }
