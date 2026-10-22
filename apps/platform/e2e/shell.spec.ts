@@ -156,7 +156,9 @@ test("the balance holds a 16 px icon 3 px before its label, the button's gap, on
   const gap = 3
   for (const path of ["/", "/apps/image"]) {
     const bar = await open(page, path)
-    const balance = bar.locator("[data-slot='app-bar-balance'] [data-slot='button']")
+    const balance = bar.locator(
+      "[data-slot='app-bar-balance'] [data-slot='button']"
+    )
     await expect(balance).toBeVisible()
     await expect.poll(() => style(balance, "gap")).toBe(`${gap}px`)
     const icon = await boxOf(balance.locator("svg"))
