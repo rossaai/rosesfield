@@ -37,6 +37,7 @@ export type HowStep = {
   title: string
   line: string
   media: ReactNode
+  form: "picture" | "words"
   action?: ReactNode
 }
 
@@ -121,7 +122,7 @@ function PromptMedia({ prompt }: { prompt: string }): ReactElement {
       data-slot="how-prompt"
       className="flex size-full items-start p-s5 text-body text-ink-muted"
     >
-      <p className="line-clamp-[12]">{prompt}</p>
+      <p className="line-clamp-[8] @regular:line-clamp-[12]">{prompt}</p>
     </div>
   )
 }
@@ -171,11 +172,15 @@ function SettingsMedia({
   )
 }
 
+function inputStillOf(item: ShowcaseItem | undefined): string | null {
+  return item?.input === undefined ? null : mediaOf(item.input)
+}
+
 function addMediaOf(item: ShowcaseItem | undefined): ReactNode {
   if (item === undefined) {
     return null
   }
-  const input = item.input === undefined ? null : mediaOf(item.input)
+  const input = inputStillOf(item)
   if (input !== null) {
     return <img src={input} alt="" className="size-full object-cover" />
   }
@@ -205,11 +210,17 @@ export function stepsOf(
     choose: item === undefined ? null : <SettingsMedia app={app} item={item} />,
     get: result === undefined ? null : <ResultMedia sample={result} />,
   }
+  const forms = {
+    add: inputStillOf(item) === null ? "words" : "picture",
+    choose: "words",
+    get: "picture",
+  } as const
   return (["add", "choose", "get"] as const).map((id) => ({
     id,
     title: t(stepCopy[id][0]),
     line: t(stepCopy[id][1]),
     media: media[id],
+    form: forms[id],
     ...(id === "get" && result !== undefined
       ? { action: <RecreateLink app={app} sample={result} /> }
       : {}),
@@ -222,12 +233,18 @@ function StepCard({ step }: { step: HowStep }): ReactElement {
     <li
       data-slot="how-step"
       data-step={step.id}
-      className="flex min-w-0 flex-col gap-s3"
+      className="flex min-w-0 flex-col gap-s3 @regular:row-span-2 @regular:grid @regular:grid-rows-subgrid"
     >
       {hasMedia ? (
         <div
           data-slot="how-step-media"
-          className="relative aspect-4/5 w-full overflow-hidden rounded-card bg-(--well)"
+          data-form={step.form}
+          className={cn(
+            "relative w-full overflow-hidden rounded-card bg-(--well)",
+            step.form === "picture"
+              ? "aspect-4/5"
+              : "min-h-[calc(4*var(--spacing-s12))] @regular:aspect-4/5"
+          )}
         >
           {step.media}
           {step.action === undefined ? null : (
@@ -237,7 +254,7 @@ function StepCard({ step }: { step: HowStep }): ReactElement {
           )}
         </div>
       ) : null}
-      <div className="flex flex-col gap-s1">
+      <div className="flex flex-col gap-s1 @regular:row-start-2">
         <h3 className="font-medium text-body text-ink">{step.title}</h3>
         <p className="text-body text-ink-muted">{step.line}</p>
       </div>
@@ -257,7 +274,7 @@ export function HowItWorks({ app }: { app: AppListing }): ReactElement {
         <h2 className="text-display text-ink">{appLine(app)}</h2>
         <ol
           className={cn(
-            "grid grid-cols-1 items-start gap-s8 @regular:grid-cols-3 @regular:gap-s12"
+            "grid grid-cols-1 gap-s8 @regular:grid-cols-3 @regular:gap-x-s12 @regular:gap-y-s3"
           )}
         >
           {steps.map((step) => (
