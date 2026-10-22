@@ -20,6 +20,7 @@ import { MeshRenderer } from "@/studio/three-d/mesh-renderer"
 import {
   MeshDownload,
   MeshOnAsk,
+  MeshOutput,
   MeshView,
   wheelPixels,
 } from "@/studio/three-d/mesh-viewer"
@@ -91,6 +92,56 @@ describe("the 3D download", () => {
     expect(file?.name).toBe("rosesfield-4e5f6a7b.glb")
     expect(file?.blob.type).toBe("model/gltf-binary")
     expect(file?.blob.size).toBe(blob.size)
+  })
+
+  const unreadable: [string, Readonly<Record<string, unknown>>][] = [
+    [
+      "needs an extension it cannot decode",
+      { extensionsRequired: ["KHR_draco_mesh_compression"] },
+    ],
+    [
+      "has a negative offset",
+      {
+        accessors: [
+          {
+            bufferView: 0,
+            byteOffset: -4,
+            componentType: 5126,
+            count: 3,
+            type: "VEC3",
+          },
+          { bufferView: 1, componentType: 5123, count: 3, type: "SCALAR" },
+        ],
+      },
+    ],
+  ]
+
+  const cannotShow = "says it cannot show a model that %s and saves its file"
+
+  it.each(unreadable)(cannotShow, async (_, extra) => {
+    const bytes = triangleGlb(extra)
+    vi.stubGlobal("fetch", () =>
+      Promise.resolve(new Response(bytes, { status: 200 }))
+    )
+    const device = new FakeDevice()
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    render(
+      <QueryClientProvider client={client}>
+        <DeviceProvider device={device}>
+          <MeshOutput assetId={assetId} />
+        </DeviceProvider>
+      </QueryClientProvider>
+    )
+    expect(
+      await screen.findByText("This model did not open in the viewer")
+    ).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Download" }))
+    await waitFor(() => expect(device.saved).toHaveLength(1))
+    expect(device.saved[0]?.blob.size).toBe(bytes.byteLength)
+    expect(screen.queryByRole("alert")).toBeNull()
   })
 
   it("names every file with the .glb extension", () => {

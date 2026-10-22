@@ -68,6 +68,15 @@ export function numberOr(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback
 }
 
+function offsetOr(value: unknown, fallback: number): number | null {
+  if (value === undefined) {
+    return fallback
+  }
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0
+    ? value
+    : null
+}
+
 function jsonOf(bytes: ArrayBuffer, start: number, length: number): unknown {
   const text = new TextDecoder().decode(new Uint8Array(bytes, start, length))
   try {
@@ -114,14 +123,31 @@ function spanOf(glb: Glb, index: unknown): Span | null {
   const size = typeSizes[String(accessor.type)]
   const component = numberOr(accessor.componentType, 0)
   const bytes = componentBytes[component]
-  const count = numberOr(accessor.count, 0)
-  if (view === null || size === undefined || bytes === undefined || count < 1) {
+  const count = offsetOr(accessor.count, 0)
+  if (
+    view === null ||
+    size === undefined ||
+    bytes === undefined ||
+    count === null ||
+    count < 1
+  ) {
     return null
   }
-  const viewStart = numberOr(view.byteOffset, 0)
-  const viewEnd = viewStart + numberOr(view.byteLength, 0)
-  const start = viewStart + numberOr(accessor.byteOffset, 0)
-  const stride = numberOr(view.byteStride, size * bytes)
+  const viewStart = offsetOr(view.byteOffset, 0)
+  const viewLength = offsetOr(view.byteLength, 0)
+  const offset = offsetOr(accessor.byteOffset, 0)
+  const stride = offsetOr(view.byteStride, size * bytes)
+  if (
+    viewStart === null ||
+    viewLength === null ||
+    offset === null ||
+    stride === null ||
+    stride < size * bytes
+  ) {
+    return null
+  }
+  const viewEnd = viewStart + viewLength
+  const start = viewStart + offset
   const end = start + (count - 1) * stride + size * bytes
   if (end > viewEnd || end > glb.bin.byteLength) {
     return null
@@ -211,9 +237,14 @@ export function bytesOfView(glb: Glb, index: unknown): Uint8Array | null {
   if (view === null || glb.bin === null) {
     return null
   }
-  const start = numberOr(view.byteOffset, 0)
-  const length = numberOr(view.byteLength, 0)
-  if (length < 1 || start + length > glb.bin.byteLength) {
+  const start = offsetOr(view.byteOffset, 0)
+  const length = offsetOr(view.byteLength, 0)
+  if (
+    start === null ||
+    length === null ||
+    length < 1 ||
+    start + length > glb.bin.byteLength
+  ) {
     return null
   }
   return new Uint8Array(glb.bin.buffer, glb.bin.byteOffset + start, length)

@@ -48,6 +48,34 @@ describe("parseGlb", () => {
     expect(parseGlb(long)).toBeNull()
   })
 
+  it("opens nothing whose offsets, stride or count no buffer can hold", () => {
+    const positions = { bufferView: 0, componentType: 5126, type: "VEC3" }
+    const indices = {
+      bufferView: 1,
+      componentType: 5123,
+      count: 3,
+      type: "SCALAR",
+    }
+    const corners = { buffer: 0, byteOffset: 0, byteLength: 36 }
+    const order = { buffer: 0, byteOffset: 36, byteLength: 8 }
+    const broken = [
+      { accessors: [{ ...positions, count: 3, byteOffset: -4 }, indices] },
+      {
+        bufferViews: [{ ...corners, byteOffset: -4, byteLength: 40 }, order],
+      },
+      {
+        accessors: [{ ...positions, count: 2 ** 31 }, indices],
+        bufferViews: [{ ...corners, byteStride: 0 }, order],
+      },
+      { bufferViews: [{ ...corners, byteStride: -12 }, order] },
+      { accessors: [{ ...positions, count: 2.5 }, indices] },
+    ]
+    for (const extra of broken) {
+      expect(() => parseGlb(triangleGlb(extra))).not.toThrow()
+      expect(parseGlb(triangleGlb(extra))).toBeNull()
+    }
+  })
+
   it("opens nothing whose indices point past its corners", () => {
     const json = {
       asset: { version: "2.0" },
