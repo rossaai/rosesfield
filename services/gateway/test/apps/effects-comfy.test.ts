@@ -87,7 +87,7 @@ describe("the effects app through the gateway on a replayed Comfy", () => {
     })
   })
 
-  it("shows a Comfy run done with its credits not known, then writes them once the balance is read, before the alarm's step returns", async () => {
+  it("shows a Comfy run done with its credits not known and ends the alarm's step, then writes them once the balance is read", async () => {
     let release: () => void = () => undefined
     const balanceAfter = new Promise<void>((resolve) => {
       release = resolve
@@ -107,7 +107,6 @@ describe("the effects app through the gateway on a replayed Comfy", () => {
       aspectRatio: "9:16",
     })
     const runId = runIdFormat.parse(run.id)
-    let isOver = false
     const ending = (async () => {
       for (let step = 0; step < 20; step += 1) {
         const { nextWakeMs } = await gateway.handlers.advanceRun.execute({
@@ -118,7 +117,6 @@ describe("the effects app through the gateway on a replayed Comfy", () => {
         }
         gateway.clock.advance(nextWakeMs)
       }
-      isOver = true
     })()
 
     await reached
@@ -126,10 +124,11 @@ describe("the effects app through the gateway on a replayed Comfy", () => {
     expect(shown.status).toBe("done")
     expect(shown.outputs).toHaveLength(1)
     expect(shown.cost).toBeNull()
-    expect(isOver).toBe(false)
+    await ending
+    expect((await readRun(gateway, run.id)).cost).toBeNull()
 
     release()
-    await ending
+    await gateway.handlers.advanceRun.priced(runId)
     const priced = await readRun(gateway, run.id)
     expect(priced.cost).toEqual({ amount: 1.055 / 211, currency: "USD" })
   })

@@ -237,14 +237,17 @@ describe("a public deployment", () => {
     expect(first.status).toBe("queued")
     expect(second.status).toBe("done")
     expect(second.outputs).toHaveLength(1)
-    expect(
-      engineCalls(comfy).map((call) => `${call.method} ${call.path}`)
-    ).toEqual([
+    const calls = engineCalls(comfy).map(
+      (call) => `${call.method} ${call.path}`
+    )
+    const jobRead = "GET /api/v2/jobs/7f3d2c1b-9a8e-4d6f-b012-3c4d5e6f7a8b"
+    expect(calls.slice(0, 3)).toEqual([
       "POST /api/v2/jobs",
-      "GET /api/v2/jobs/7f3d2c1b-9a8e-4d6f-b012-3c4d5e6f7a8b",
-      "GET /api/v2/jobs/7f3d2c1b-9a8e-4d6f-b012-3c4d5e6f7a8b",
+      jobRead,
       "GET /api/v2/assets/2b3e4f56-8a7b-4c2d-9e4f-5a6b9f8a1c0d/content",
     ])
+    expect(calls.slice(3).every((call) => call === jobRead)).toBe(true)
+    expect(calls.length).toBeLessThanOrEqual(4)
     expect(
       engineCalls(comfy).every(
         (call) => call.authorization === "Bearer comfyui-visitor-key"

@@ -176,14 +176,8 @@ describe("the motion request on the Comfy API v2", () => {
     }
   })
 
-  it("reads a finished job and downloads its one MP4 from the output node", async () => {
+  it("reads a finished job once and downloads its one MP4 from the output node", async () => {
     const replay = new ReplayFetch([
-      {
-        method: "GET",
-        url: `${cloudUrl}/api/v2/jobs/${jobId}`,
-        status: 200,
-        json: succeeded,
-      },
       {
         method: "GET",
         url: `${cloudUrl}/api/v2/jobs/${jobId}`,
@@ -199,7 +193,10 @@ describe("the motion request on the Comfy API v2", () => {
       },
     ])
     const engine = engineOn(replay)
-    expect(await engine.read(jobId)).toEqual({ state: "succeeded" })
+    expect(await engine.read(jobId)).toEqual({
+      state: "succeeded",
+      cost: null,
+    })
     const outputs = await engine.listOutputs(jobId)
     expect(outputs).toHaveLength(1)
     expect(outputs[0]).toMatchObject({ kind: "video", mime: "video/mp4" })

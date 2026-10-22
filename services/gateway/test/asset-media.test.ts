@@ -9,6 +9,7 @@ import {
 } from "@rosesfield/contract"
 import { afterEach, describe, expect, it } from "vitest"
 import { ContentLinks } from "#lock/content-links"
+import { keyHeaders } from "#session/visitor-keys"
 import { finishedRun, openGateway } from "./fixtures/public-gateway"
 import { type Harness, harnessFor } from "./harness"
 import { localPorts } from "./local-ports"
@@ -201,8 +202,9 @@ describe("a signed content link in public mode", () => {
   it("reads the visitor's own asset with no cookie and no key, and nobody else's", async () => {
     const opened = openGateway()
     try {
-      const owner = opened.visitor()
+      const owner = opened.visitor({ [keyHeaders.engine]: "comfyui-owner" })
       const run = await finishedRun(owner, "a red door")
+      expect(run.status).toBe("done")
       const assetId = run.outputs[0] ?? ""
       const answer = await owner.call(
         buildPath(routes.linkAssetContent.path, { assetId })
@@ -267,15 +269,17 @@ describe("the asset preview routes", () => {
       headers: { "content-type": "image/webp" },
       body: big,
     })
-    expect(tooBig.status).toBe(413)
+    expect(tooBig.status).toBe(400)
+    expect(await codeOf(tooBig)).toBe("BODY_TOO_LARGE")
     expect((await gateway.call(previewPath(assetId))).status).toBe(404)
   })
 
   it("is refused for an asset of another owner", async () => {
     const opened = openGateway()
     try {
-      const owner = opened.visitor()
+      const owner = opened.visitor({ [keyHeaders.engine]: "comfyui-owner" })
       const run = await finishedRun(owner, "a red door")
+      expect(run.status).toBe("done")
       const assetId = run.outputs[0] ?? ""
       const stranger = opened.visitor()
       const sent = await stranger.call(previewPath(assetId), {
@@ -313,8 +317,9 @@ describe("the public purge and the preview", () => {
   it("deletes a preview with its expired asset", async () => {
     const opened = openGateway({ settings: { RETENTION_DAYS: "7" } })
     try {
-      const owner = opened.visitor()
+      const owner = opened.visitor({ [keyHeaders.engine]: "comfyui-owner" })
       const run = await finishedRun(owner, "a red door")
+      expect(run.status).toBe("done")
       const assetId = run.outputs[0] ?? ""
       await owner.call(previewPath(assetId), {
         method: "PUT",
