@@ -144,9 +144,9 @@ describe("How it works", () => {
   })
 
   it("takes your newest finished run of this app as the example, never a demo, a failure or another app's", () => {
-    const failed = { ...madeVideo, id: otherId, status: "failed" as const }
-    const demo = { ...madeVideo, id: otherId, origin: "demo" as const }
-    const other = { ...madeVideo, id: otherId, appId: "image" }
+    const failed = run.parse({ ...madeVideo, id: otherId, status: "failed" })
+    const demo = run.parse({ ...madeVideo, id: otherId, origin: "demo" })
+    const other = run.parse({ ...madeVideo, id: otherId, appId: "image" })
     expect(ownExampleOf(video, [failed, demo, other, madeVideo])?.id).toBe(
       madeVideo.id
     )

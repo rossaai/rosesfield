@@ -49,8 +49,8 @@ describe("the Apps page card's media", () => {
     expect(card.getAttribute("data-app-card")).toBe("compact")
     const flow = card.querySelector("[data-slot='app-card-flow']")
     const kinds = (made: string) =>
-      [...(flow?.querySelectorAll(`[data-made='${made}']`) ?? [])].map(
-        (disc) => disc.getAttribute("data-kind")
+      [...(flow?.querySelectorAll(`[data-made='${made}']`) ?? [])].map((disc) =>
+        disc.getAttribute("data-kind")
       )
     expect(kinds("no")).toEqual(expect.arrayContaining(["image", "audio"]))
     expect(kinds("yes")).toEqual(["video"])
@@ -112,8 +112,6 @@ describe("the Apps page card", () => {
       expect.arrayContaining(["motion-tint", "group-hover/card:bg-(--tint)"])
     )
     expect(fill).not.toMatch(/border/)
-    expect(card.querySelector("p")?.className.split(" ")).toContain(
-      "truncate"
-    )
+    expect(card.querySelector("p")?.className.split(" ")).toContain("truncate")
   })
 })
