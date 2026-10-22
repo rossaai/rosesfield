@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   type ModelFactsFile,
   modelFactsData,
+  modelFactsFile,
   unmarkedLabsOf,
 } from "#comfy/model-facts"
 
@@ -39,10 +40,49 @@ describe("the lab marks", () => {
       ...data,
       marksMissing: {
         ...data.marksMissing,
-        "Planted Lab": { searched: ["Simple Icons 16.35.0"] },
+        "Planted Lab": {
+          searched: ["Simple Icons 16.35.0"],
+          ground: "7C5CFF",
+          source: "https://example.com/",
+        },
       },
     }
     expect(unmarkedLabsOf(partial)).toEqual(["Planted Lab"])
+  })
+
+  it("give each lab with no published mark its brand colour and where it was read, never a grey", () => {
+    for (const [lab, row] of Object.entries(modelFactsData.marksMissing)) {
+      const [red, green, blue] = [0, 2, 4].map((at) =>
+        Number.parseInt(row.ground.slice(at, at + 2), 16)
+      )
+      expect({ lab, grey: red === green && green === blue }).toEqual({
+        lab,
+        grey: false,
+      })
+      expect(row.source, lab).toMatch(/^https:\/\//)
+    }
+  })
+
+  it("refuse a missing row with no brand colour, and a brand-page mark that names no page", () => {
+    const { ground: _, ...colourless } = {
+      searched: ["Simple Icons 16.35.0", "LobeHub Icons 1.95.1"],
+      ground: "7C5CFF",
+      source: "https://example.com/",
+    }
+    expect(
+      modelFactsFile.safeParse({
+        ...modelFactsData,
+        marksMissing: { "Planted Lab": colourless },
+      }).success
+    ).toBe(false)
+    const { source: __, ...unsourced } = modelFactsData.marks.Beeble ?? {}
+    expect(
+      modelFactsFile.safeParse({
+        ...modelFactsData,
+        marks: { ...modelFactsData.marks, Beeble: unsourced },
+      }).success
+    ).toBe(false)
+    expect(modelFactsFile.safeParse(modelFactsData).success).toBe(true)
   })
 
   it("carry each graph model's real lab, so Chatterbox names Resemble AI and the video graph names Lightricks", () => {
