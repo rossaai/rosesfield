@@ -24,6 +24,7 @@ function TabsList({
       data-slot="tabs-list"
       className={cn(
         "relative flex max-w-full items-center gap-s2 overflow-x-auto",
+        interaction.ringRoom,
         className
       )}
       {...props}

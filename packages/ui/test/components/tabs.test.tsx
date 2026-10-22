@@ -1,3 +1,4 @@
+import { interaction } from "@rosesfield/ui/components/interaction"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -51,5 +52,22 @@ describe("TabsList", () => {
     const video = screen.getByRole("tab", { name: "Video" })
     expect(classesOf(video)).not.toContain("data-active:bg-(--tint)")
     expect(classesOf(video)).toContain("z-1")
+  })
+
+  it("gives its tabs' focus rings room inside the scroll box that clips them", () => {
+    render(
+      <Tabs defaultValue="one">
+        <TabsList aria-label="Panes">
+          <TabsTrigger value="one">History</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    )
+    const list = screen.getByRole("tablist", { name: "Panes" })
+    expect(classesOf(list)).toEqual(
+      expect.arrayContaining([
+        "overflow-x-auto",
+        ...interaction.ringRoom.split(" "),
+      ])
+    )
   })
 })
