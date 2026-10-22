@@ -47,7 +47,7 @@ function Portraits({
             data-slot="hero-portrait"
             data-side={side}
             className={cn(
-              "absolute bottom-0 h-full w-(--hero-portrait) object-cover",
+              "absolute bottom-0 hidden h-full w-(--hero-portrait) object-cover @regular:block",
               portraitSides[side]
             )}
           />,
@@ -78,7 +78,7 @@ function HeroBanner(props: HeroBannerProps): ReactElement {
       data-slot="hero"
       href={props.href}
       className={cn(
-        "group/hero @container/hero relative mt-s6 [--hero-portrait:min(--spacing(75),calc((100cqw_-_var(--spacing)*146)/2))] hidden min-h-100 w-full overflow-hidden rounded-vessel bg-surface text-ink no-underline @regular:flex",
+        "group/hero @container/hero relative mt-s4 flex w-full overflow-hidden rounded-vessel bg-surface text-ink no-underline [--hero-portrait:min(--spacing(75),calc((100cqw_-_var(--spacing)*146)/2))] @regular:mt-s6 @regular:min-h-100",
         interaction.ring
       )}
     >
@@ -93,7 +93,7 @@ function HeroBanner(props: HeroBannerProps): ReactElement {
       {props.portraits === undefined ? null : (
         <Portraits portraits={props.portraits} />
       )}
-      <span className="relative mx-auto flex w-[calc(100cqw-2*var(--hero-portrait))] flex-col items-center justify-center px-s6 py-s12 text-center">
+      <span className="relative mx-auto flex w-full flex-col items-center justify-center px-s5 py-s8 text-center @regular:w-[calc(100cqw-2*var(--hero-portrait))] @regular:px-s6 @regular:py-s12">
         {props.tag === undefined ? null : <Tag tag={props.tag} />}
         <span data-slot="hero-headline" className={cn("text-ink", statement)}>
           {props.headline}

@@ -6,7 +6,7 @@ import { readSource } from "../read-source"
 afterEach(cleanup)
 
 describe("HeroBanner", () => {
-  it("is one link at least 400 px tall, shown only from the width switch, its action a span", () => {
+  it("is one link on every width, at least 400 px tall from the width switch and compact on a phone, its action a span", () => {
     render(
       <HeroBanner
         href="/apps/video"
@@ -17,13 +17,10 @@ describe("HeroBanner", () => {
     )
     const banner = screen.getByRole("link")
     expect(banner.className.split(" ")).toEqual(
-      expect.arrayContaining([
-        "min-h-100",
-        "hidden",
-        "@regular:flex",
-        "bg-surface",
-      ])
+      expect.arrayContaining(["flex", "@regular:min-h-100", "bg-surface"])
     )
+    expect(banner.className.split(" ")).not.toContain("hidden")
+    expect(banner.className.split(" ")).not.toContain("min-h-100")
     expect(banner.querySelectorAll("a, button")).toHaveLength(0)
   })
 
@@ -137,7 +134,13 @@ describe("HeroBanner's tag and portraits", () => {
     ])
     expect(portraits.map((one) => one.alt)).toEqual(["", ""])
     expect(portraits[0]?.className.split(" ")).toEqual(
-      expect.arrayContaining(["bottom-0", "left-0", "w-(--hero-portrait)"])
+      expect.arrayContaining([
+        "bottom-0",
+        "left-0",
+        "w-(--hero-portrait)",
+        "hidden",
+        "@regular:block",
+      ])
     )
     expect(portraits[1]?.className.split(" ")).toEqual(
       expect.arrayContaining(["bottom-0", "right-0"])
