@@ -5,10 +5,7 @@ import {
 } from "@rosesfield/catalog/effects"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { interaction } from "@rosesfield/ui/components/interaction"
-import {
-  type MediaAspect,
-  MediaTile,
-} from "@rosesfield/ui/components/media-tile"
+import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { ImagePlusIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useEffect, useRef } from "react"
@@ -45,10 +42,7 @@ export function effectOptionsOf(app: AppListing): string[] {
 
 function aspectOfRatio(ratio: string | undefined): MediaAspect {
   const [width, height] = (ratio ?? "").split(":").map(Number)
-  return width !== undefined &&
-    height !== undefined &&
-    width > 0 &&
-    height > 0
+  return width !== undefined && height !== undefined && width > 0 && height > 0
     ? { width, height }
     : fallbackAspect
 }
@@ -108,11 +102,15 @@ function Tile({
         className="relative w-full overflow-hidden rounded-cell bg-(--well)"
         style={{ aspectRatio: `${tile.aspect.width} / ${tile.aspect.height}` }}
       >
-        <MediaTile
-          kind="video"
+        <video
           src={tile.preview}
-          alt={tile.label}
-          className="absolute inset-0 rounded-none"
+          aria-label={tile.label}
+          muted
+          loop
+          autoPlay
+          playsInline
+          preload="auto"
+          className="absolute inset-0 size-full object-cover"
         />
         <ChosenVeil isChosen={isChosen} />
       </span>
