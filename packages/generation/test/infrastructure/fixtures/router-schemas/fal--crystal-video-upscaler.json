@@ -1,0 +1,44 @@
+{
+  "x-comfy-router-model-id": "fal/crystal-video-upscaler",
+  "x-comfy-router-input-modalities": ["video"],
+  "x-comfy-router-output-modalities": ["video"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/fal/crystal-video-upscaler": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for Clarity AI's Crystal Video Upscaler on fal (clarityai/crystal-video-upscaler): upscale a single video.",
+                "example": {
+                  "scale_factor": 2,
+                  "video_url": "https://storage.googleapis.com/falserverless/example_inputs/crystal_upscaler/video_upscaling/video_in.mp4"
+                },
+                "properties": {
+                  "scale_factor": {
+                    "default": 2,
+                    "description": "Factor applied to each side of the input video. The upscaled video must not exceed 5K. fal bills per output megapixel per second, so the price grows with the square of this value.",
+                    "maximum": 200,
+                    "minimum": 1,
+                    "type": "number"
+                  },
+                  "video_url": {
+                    "description": "URL of the input video (MP4, MOV, WebM, M4V or GIF).",
+                    "type": "string"
+                  }
+                },
+                "required": ["video_url"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

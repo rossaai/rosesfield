@@ -1,0 +1,137 @@
+{
+  "x-comfy-router-model-id": "krea/krea-2",
+  "x-comfy-router-input-modalities": ["text"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/krea/krea-2": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "aspect_ratio": "1:1",
+                  "prompt": "a red circle",
+                  "resolution": "1K"
+                },
+                "properties": {
+                  "aspect_ratio": {
+                    "description": "Aspect ratio. One of: 1:1, 4:3, 3:2, 16:9, 2.35:1, 4:5, 2:3, 9:16.",
+                    "enum": [
+                      "1:1",
+                      "4:3",
+                      "3:2",
+                      "16:9",
+                      "2.35:1",
+                      "4:5",
+                      "2:3",
+                      "9:16"
+                    ],
+                    "type": "string"
+                  },
+                  "creativity": {
+                    "default": "medium",
+                    "description": "Prompt interpretation strength: raw=0, low=10, medium=50, high=100.",
+                    "enum": ["raw", "low", "medium", "high"],
+                    "type": "string"
+                  },
+                  "image_style_references": {
+                    "description": "Style references to use for the generation",
+                    "items": {
+                      "$ref": "#/components/schemas/KreaImageStyleReference"
+                    },
+                    "maxItems": 10,
+                    "type": "array"
+                  },
+                  "moodboards": {
+                    "description": "Moodboards to use for generation. Currently limited to one moodboard.",
+                    "items": {
+                      "$ref": "#/components/schemas/KreaMoodboard"
+                    },
+                    "maxItems": 1,
+                    "type": "array"
+                  },
+                  "prompt": {
+                    "type": "string"
+                  },
+                  "resolution": {
+                    "description": "Resolution scale. One of: 1K.",
+                    "enum": ["1K"],
+                    "type": "string"
+                  },
+                  "seed": {
+                    "nullable": true,
+                    "type": "number"
+                  },
+                  "styles": {
+                    "description": "Styles (typically LoRAs) to use for the generation",
+                    "items": {
+                      "$ref": "#/components/schemas/KreaStyle"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": ["prompt", "aspect_ratio", "resolution"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "KreaImageStyleReference": {
+        "properties": {
+          "strength": {
+            "format": "double",
+            "maximum": 2,
+            "minimum": -2,
+            "type": "number"
+          },
+          "url": {
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": ["strength"],
+        "type": "object"
+      },
+      "KreaMoodboard": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "strength": {
+            "default": 0.35,
+            "format": "double",
+            "maximum": 1.5,
+            "minimum": -0.5,
+            "type": "number"
+          }
+        },
+        "required": ["id"],
+        "type": "object"
+      },
+      "KreaStyle": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "strength": {
+            "format": "double",
+            "maximum": 2,
+            "minimum": -2,
+            "type": "number"
+          }
+        },
+        "required": ["id", "strength"],
+        "type": "object"
+      }
+    }
+  }
+}

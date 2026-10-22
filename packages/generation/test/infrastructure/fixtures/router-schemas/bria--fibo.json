@@ -1,0 +1,117 @@
+{
+  "x-comfy-router-model-id": "bria/fibo",
+  "x-comfy-router-input-modalities": ["image", "text"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/bria/fibo": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "required": ["instruction"]
+                  },
+                  {
+                    "required": ["structured_instruction"]
+                  }
+                ],
+                "description": "The Bria FIBO edit fields, shared by the v1 `POST /proxy/bria/v2/image/edit` request body and the Comfy Router input schema for `bria/fibo`. See the note above this component for why the two surfaces share properties but not `model_version`'s constraints.",
+                "example": {
+                  "images": [
+                    "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAAC2klEQVR42u3TQQ0AQAgEMeTgX8W5gi8OjoROVgGhUdLhwgkEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAAkACQAJAAkACQAJAAkACQAJAAkACQAFjSy7SPAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8IIAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASABIAEgASABIAEgASABIAEgASABIAEgASABIAAgACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkAadSRm+WukYdfewAAAABJRU5ErkJggg=="
+                  ],
+                  "instruction": "make the background light blue"
+                },
+                "properties": {
+                  "guidance_scale": {
+                    "default": 5,
+                    "description": "Determines how closely the generated image should adhere to the instruction.",
+                    "format": "float",
+                    "maximum": 5,
+                    "minimum": 3,
+                    "type": "number"
+                  },
+                  "images": {
+                    "description": "The source image to be edited. Publicly available URL or Base64-encoded. Accepted formats JPEG, JPG, PNG, WEBP. Must contain exactly one item.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "instruction": {
+                    "description": "Text-based edit instruction (e.g., \"make the sky blue\", \"add a cat\"). Either instruction or structured_instruction must be provided.",
+                    "type": "string"
+                  },
+                  "ip_signal": {
+                    "default": false,
+                    "description": "If true, returns a warning for potential IP content in the instruction.",
+                    "type": "boolean"
+                  },
+                  "mask": {
+                    "description": "Optional mask image URL or Base64-encoded. Black areas will be preserved, white areas will be edited.",
+                    "type": "string"
+                  },
+                  "model_version": {
+                    "description": "The version of the model to use. Comfy Router supplies this from the `{model}` path segment, so omit it there; the value Bria runs is `FIBO`, which the v1 route also defaults to when the field is absent. Not constrained to an enum on this half: Router writes the value in after the caller's body has been validated.",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "negative_prompt": {
+                    "description": "A text prompt specifying concepts, styles, or objects to exclude from the edited image.",
+                    "type": "string"
+                  },
+                  "prompt_content_moderation": {
+                    "default": true,
+                    "description": "If true, returns 422 on instruction moderation failure.",
+                    "type": "boolean"
+                  },
+                  "seed": {
+                    "description": "Seed for deterministic generation. If omitted, a random seed is used.",
+                    "type": "integer"
+                  },
+                  "steps_num": {
+                    "default": 50,
+                    "description": "Number of diffusion steps.",
+                    "maximum": 50,
+                    "minimum": 20,
+                    "type": "integer"
+                  },
+                  "structured_instruction": {
+                    "description": "A string containing the structured edit instruction in JSON format. Use this instead of instruction for precise, programmatic control.",
+                    "type": "string"
+                  },
+                  "sync": {
+                    "description": "Must be false or omitted. Bria's synchronous mode (true) is refused rather than forwarded, on Comfy Router and on this operation's own `/proxy/` route: Comfy Router fixes the return mode before dispatch and polls for the result inside the call, and the `/proxy/` route returns the request_id and status_url to poll.",
+                    "nullable": true,
+                    "type": "boolean"
+                  },
+                  "visual_input_content_moderation": {
+                    "default": true,
+                    "description": "If true, returns 422 on images or mask moderation failure.",
+                    "type": "boolean"
+                  },
+                  "visual_output_content_moderation": {
+                    "default": true,
+                    "description": "If true, returns 422 on visual output moderation failure.",
+                    "type": "boolean"
+                  }
+                },
+                "required": ["images"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

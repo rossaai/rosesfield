@@ -1,0 +1,41 @@
+{
+  "x-comfy-router-model-id": "bria/image-edit-replace-object-by-text",
+  "x-comfy-router-input-modalities": ["image", "text"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/bria/image-edit-replace-object-by-text": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for Bria Replace Object by Text API",
+                "example": {
+                  "image": "https://img.freepik.com/free-psd/close-up-delicious-apple_23-2151868338.jpg",
+                  "instruction": "Replace the pie with a chocolate cake"
+                },
+                "properties": {
+                  "image": {
+                    "description": "The image to edit. Supported input types are Base64-encoded string or URL pointing to a publicly accessible image file. Accepted formats JPEG, JPG, PNG, WEBP.",
+                    "type": "string"
+                  },
+                  "instruction": {
+                    "description": "A text instruction that describes the replacement (for example, \"Replace the red apple with a green pear\").",
+                    "type": "string"
+                  }
+                },
+                "required": ["image", "instruction"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

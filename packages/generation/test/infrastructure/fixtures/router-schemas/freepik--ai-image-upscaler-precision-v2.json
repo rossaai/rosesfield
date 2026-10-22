@@ -1,0 +1,73 @@
+{
+  "x-comfy-router-model-id": "freepik/ai-image-upscaler-precision-v2",
+  "x-comfy-router-input-modalities": ["image"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/freepik/ai-image-upscaler-precision-v2": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "image": "https://img.magnific.com/free-photo/light-through-mountains_395237-33.jpg?semt=ais_hybrid&w=740&q=80",
+                  "scale_factor": 8
+                },
+                "properties": {
+                  "flavor": {
+                    "description": "Image processing flavor:\n- sublime: Optimized for artistic and illustrated images\n- photo: Optimized for photographic images\n- photo_denoiser: Specialized for photos with noise reduction\n",
+                    "enum": ["sublime", "photo", "photo_denoiser"],
+                    "type": "string"
+                  },
+                  "image": {
+                    "description": "Source image to upscale. Accepts either:\n- A publicly accessible HTTPS URL pointing to the image\n- A base64-encoded image string\n",
+                    "type": "string"
+                  },
+                  "scale_factor": {
+                    "description": "Image scaling factor. Determines how much larger the output will be compared to input.",
+                    "maximum": 16,
+                    "minimum": 2,
+                    "type": "integer"
+                  },
+                  "sharpen": {
+                    "default": 7,
+                    "description": "Image sharpness intensity control. Higher values increase edge definition and clarity.",
+                    "maximum": 100,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "smart_grain": {
+                    "default": 7,
+                    "description": "Intelligent grain/texture enhancement. Higher values add more fine-grained texture.",
+                    "maximum": 100,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "ultra_detail": {
+                    "default": 30,
+                    "description": "Ultra detail enhancement level. Higher values create more intricate details.",
+                    "maximum": 100,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "webhook_url": {
+                    "description": "Optional callback URL that will receive asynchronous notifications when the upscaling task completes.",
+                    "format": "uri",
+                    "type": "string"
+                  }
+                },
+                "required": ["image"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

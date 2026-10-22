@@ -1,0 +1,69 @@
+{
+  "x-comfy-router-model-id": "fal/patina",
+  "x-comfy-router-input-modalities": ["image"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/fal/patina": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for the fal PATINA image-to-image model (fal-ai/patina): predict PBR maps from a single input image.",
+                "example": {
+                  "image_url": "https://storage.googleapis.com/falserverless/gallery/patina-blog-hero-render.png"
+                },
+                "properties": {
+                  "enable_safety_checker": {
+                    "default": true,
+                    "description": "Enable the safety checker for images.",
+                    "type": "boolean"
+                  },
+                  "image_url": {
+                    "description": "URL of the input image (photograph or render).",
+                    "type": "string"
+                  },
+                  "maps": {
+                    "default": [
+                      "basecolor",
+                      "normal",
+                      "roughness",
+                      "metalness",
+                      "height"
+                    ],
+                    "description": "Which PBR maps to predict. Defaults to all five.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "output_format": {
+                    "default": "png",
+                    "description": "Output image format: jpeg, png, or webp.",
+                    "type": "string"
+                  },
+                  "seed": {
+                    "description": "Random seed for reproducible denoising.",
+                    "type": "integer"
+                  },
+                  "sync_mode": {
+                    "default": false,
+                    "description": "If true, return images as data URIs instead of CDN URLs.",
+                    "type": "boolean"
+                  }
+                },
+                "required": ["image_url"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

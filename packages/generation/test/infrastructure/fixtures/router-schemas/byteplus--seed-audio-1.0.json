@@ -1,0 +1,162 @@
+{
+  "x-comfy-router-model-id": "byteplus/seed-audio-1.0",
+  "x-comfy-router-input-modalities": ["text"],
+  "x-comfy-router-output-modalities": ["audio"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/byteplus/seed-audio-1.0": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for a BytePlus Seed Audio 1.0 generation. The `example` below is the COMFY ROUTER form and deliberately omits `model`, which Router fills from the `{model}` path segment; a direct v1 call to POST /proxy/byteplus/api/v3/tts/create must add `model` to it. One example cannot serve both surfaces — this component is the Router input schema for BOTH seed-audio-1.0 spellings, so an example naming either one is refused by the other model's route for naming a different model, while the omitting form is valid on both.",
+                "example": {
+                  "audio_config": {
+                    "format": "wav",
+                    "sample_rate": 24000
+                  },
+                  "text_prompt": "Hello from Comfy Router."
+                },
+                "properties": {
+                  "audio_config": {
+                    "$ref": "#/components/schemas/BytePlusTTSAudioConfig"
+                  },
+                  "model": {
+                    "description": "Model identifier. Supported models: seed-audio-1.0 and seed-audio-1.0-multilingual. A direct v1 call to POST /proxy/byteplus/api/v3/tts/create MUST supply it — the proxy refuses any other value, and an omitted one, with a 400. It is NOT in this schema's `required` list because Comfy Router fills it from the `{model}` path segment of /v2/models/byteplus/{model}, so a Router caller omits it.",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "references": {
+                    "description": "Reference resources. Omit for text-only generation. Up to 3 audio references (each up to 30 seconds and 10 MB decoded; wav, mp3, pcm or ogg_opus) or exactly 1 image reference (up to 10 MB decoded; jpeg, png or webp). Image references cannot be mixed with audio references. Those ceilings are BytePlus's and are stated in DECODED bytes: base64 inflates an asset by about 4/3, and a Comfy Router call is capped at 100 MiB for the whole JSON document, so an inline `audio_data`/`image_data` reference sent to /v2/models/byteplus/{model} may carry roughly 75 MB decoded before the transport limit refuses it. BytePlus's own 10 MB per-reference ceiling is therefore what binds first for any single inlined reference, and three audio references at that ceiling now fit in one body; use `audio_url`/`image_url` to keep large assets out of the request entirely.\n",
+                    "items": {
+                      "$ref": "#/components/schemas/BytePlusTTSReference"
+                    },
+                    "maxItems": 3,
+                    "type": "array"
+                  },
+                  "text_prompt": {
+                    "description": "Prompt or text to synthesize (1 to 3,000 characters; an empty string is refused). When audio references are provided, reference them by order using @Audio1, @Audio2 and @Audio3.\n",
+                    "maxLength": 3000,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "watermark": {
+                    "$ref": "#/components/schemas/BytePlusTTSWatermark"
+                  }
+                },
+                "required": ["text_prompt"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BytePlusTTSAudioConfig": {
+        "description": "Output audio configuration.",
+        "properties": {
+          "enable_subtitle": {
+            "description": "Whether to enable the subtitle service. When enabled, the response includes utterance- and word-level timestamps (default: false).\n",
+            "type": "boolean"
+          },
+          "format": {
+            "description": "Output audio format: wav (default), mp3, pcm or ogg_opus.",
+            "enum": ["wav", "mp3", "pcm", "ogg_opus"],
+            "type": "string"
+          },
+          "loudness_rate": {
+            "description": "-50 to 100; 100 means 2.0x volume, -50 means 0.5x volume (default: 0).",
+            "maximum": 100,
+            "minimum": -50,
+            "type": "integer"
+          },
+          "pitch_rate": {
+            "description": "-12 to 12 (default: 0).",
+            "maximum": 12,
+            "minimum": -12,
+            "type": "integer"
+          },
+          "sample_rate": {
+            "description": "Output sample rate: 8000, 16000, 24000 (default), 32000, 44100 or 48000.",
+            "enum": [8000, 16000, 24000, 32000, 44100, 48000],
+            "type": "integer"
+          },
+          "speech_rate": {
+            "description": "-50 to 100; 100 means 2.0x speed, -50 means 0.5x speed (default: 0).",
+            "maximum": 100,
+            "minimum": -50,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "BytePlusTTSReference": {
+        "description": "A single reference resource. For an audio reference, provide exactly one of speaker, audio_data or audio_url. For an image reference, provide exactly one of image_data or image_url.\n",
+        "properties": {
+          "audio_data": {
+            "description": "Base64-encoded reference audio.",
+            "type": "string"
+          },
+          "audio_url": {
+            "description": "URL of a remote reference audio file.",
+            "type": "string"
+          },
+          "image_data": {
+            "description": "Base64-encoded reference image.",
+            "type": "string"
+          },
+          "image_url": {
+            "description": "URL of a remote reference image.",
+            "type": "string"
+          },
+          "speaker": {
+            "description": "Voice ID. Can be a supported Doubao TTS voice or a voice-clone voice ID.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "BytePlusTTSWatermark": {
+        "description": "Watermark configuration object. An empty object is accepted.",
+        "properties": {
+          "aigc_metadata": {
+            "description": "Implicit watermark. Adds metadata to the synthesized audio header.",
+            "properties": {
+              "content_producer": {
+                "description": "Name or code of the synthesis service provider.",
+                "type": "string"
+              },
+              "content_propagator": {
+                "description": "Name or code of the content distribution service provider.",
+                "type": "string"
+              },
+              "enable": {
+                "description": "Whether to enable the implicit watermark (default: false).",
+                "type": "boolean"
+              },
+              "produce_id": {
+                "description": "Content production ID.",
+                "type": "string"
+              },
+              "propagate_id": {
+                "description": "Content distribution ID.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "aigc_watermark": {
+            "description": "Explicit watermark switch. Adds an audio rhythm marker at the end of the synthesized audio (default: false).\n",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      }
+    }
+  }
+}

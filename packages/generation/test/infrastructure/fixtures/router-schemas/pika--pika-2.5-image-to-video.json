@@ -1,0 +1,68 @@
+{
+  "x-comfy-router-model-id": "pika/pika-2.5-image-to-video",
+  "x-comfy-router-input-modalities": ["text", "image"],
+  "x-comfy-router-output-modalities": ["video"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/pika/pika-2.5-image-to-video": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Request body for Pika 2.5 image-to-video: animate a source image, with an optional prompt guiding the motion. Comfy Router forwards this body to Pika's `pika/pika-2.5/image-to-video` endpoint unchanged and polls the job on the caller's behalf, so the response is the finished job document. A body outside the bounds declared here is refused with `422 invalid_input` before any provider is dialled.",
+                "example": {
+                  "duration_s": 5,
+                  "image": "https://example.invalid/pika/source.png",
+                  "prompt": "The camera slowly pushes in as the leaves begin to sway",
+                  "resolution": "720p"
+                },
+                "properties": {
+                  "duration_s": {
+                    "default": 5,
+                    "description": "Video length in seconds.",
+                    "enum": [5, 10],
+                    "type": "integer"
+                  },
+                  "image": {
+                    "description": "Public https URL of the source image to animate. The image carries the subject. Plain `http://` is refused: Pika fetches the URL on a request sent under Comfy's key.",
+                    "pattern": "^https://",
+                    "type": "string"
+                  },
+                  "negative_prompt": {
+                    "description": "Text describing what to avoid in the video.",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "Text prompt guiding the motion.",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "resolution": {
+                    "default": "1080p",
+                    "description": "Output resolution.",
+                    "enum": ["720p", "1080p"],
+                    "type": "string"
+                  },
+                  "seed": {
+                    "description": "Seed for reproducible generation. Omit it (or send null) for a random seed.",
+                    "nullable": true,
+                    "type": "integer"
+                  }
+                },
+                "required": ["image"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

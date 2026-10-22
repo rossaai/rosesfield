@@ -1,0 +1,46 @@
+{
+  "x-comfy-router-model-id": "gemini-interactions/gemini-omni-1.1-flash",
+  "x-comfy-router-input-modalities": ["text", "image", "audio", "video"],
+  "x-comfy-router-output-modalities": ["text", "image", "audio"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/gemini-interactions/gemini-omni-1.1-flash": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "description": "The Gemini Interactions fields, shared by the v1 `POST /proxy/gemini-interactions` request body and the Comfy Router input schema for the `gemini-interactions/*` models. Mirrors the upstream `/v1beta/interactions` schema with strict typing only on the fields the proxy reads (model, `input` for prompt extraction); all other fields (`response_format`, `generation_config`, `store`, `safety_settings`, ...) pass through unchanged via `additionalProperties`. TWO EXCEPTIONS, refused rather than forwarded: `background` and `stream`. Both are honoured by Google and both produce a 2xx this proxy cannot meter — `background: true` answers a queued `in_progress` document carrying no `usage`, whose finished generation is only ever reachable through `GET /proxy/gemini-interactions/{id}`, which meters nothing; `stream: true` answers a `text/event-stream` the billing path cannot decode. Naming either with a value other than `false` or `null` is a 400; omitting them, or sending them false/null, is the synchronous request this surface serves. On the Comfy Router route `POST /v2/models/gemini-interactions/{model}` both fields are settled to `false` before dispatch (routerSettledBoolFields) rather than refused. `required` here is the ROUTER-SAFE floor: `model` is absent from it because Router writes the path's model into the body after routervalidate.Guard has already validated the caller's bytes; the v1 wrapper `GeminiInteractionRequest` re-adds it.",
+                "example": {
+                  "input": "Reply with the single word: ok",
+                  "stream": false
+                },
+                "properties": {
+                  "input": {
+                    "description": "Either a prompt string or an array of typed content parts (text, image, audio, video, document)."
+                  },
+                  "model": {
+                    "description": "Gemini model identifier: `gemini-omni-1.1-flash` (generally available), or the deprecated `gemini-omni-flash-preview`. On the Comfy Router route `POST /v2/models/gemini-interactions/{model}` it is supplied from the path and may be omitted. Those two spellings — the set Comfy Router addresses as `gemini-interactions/<model>` — are the ones this operation serves (supportedGeminiInteractionModels); they are written out here rather than constrained to an enum, because the proxy validates the model itself and answers its own 400 for a spelling it does not serve.",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "previous_interaction_id": {
+                    "description": "ID of a prior stored interaction, enabling stateful multi-turn video editing.",
+                    "type": "string"
+                  }
+                },
+                "required": ["input"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

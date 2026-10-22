@@ -1,0 +1,91 @@
+{
+  "x-comfy-router-model-id": "bfl/flux-kontext-max",
+  "x-comfy-router-input-modalities": ["image", "text"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/bfl/flux-kontext-max": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for the BFL FLUX.1 Kontext [max] API. Edits input_image when one is supplied; generates from the prompt alone when it is not.",
+                "example": {
+                  "prompt": "A watercolor painting of a lighthouse at dawn, soft light on the water"
+                },
+                "properties": {
+                  "aspect_ratio": {
+                    "description": "Aspect ratio of the output between 21:9 and 9:21, e.g. 16:9. Defaults to the input image's aspect ratio when one is given, otherwise 1:1.",
+                    "example": "16:9",
+                    "type": "string"
+                  },
+                  "input_image": {
+                    "description": "Image to edit, as a base64-encoded image or an http(s) URL. Optional; without it the model generates from the prompt alone.",
+                    "type": "string"
+                  },
+                  "input_image_2": {
+                    "description": "Additional reference image, base64-encoded or an http(s) URL (experimental multi-reference).",
+                    "type": "string"
+                  },
+                  "input_image_3": {
+                    "description": "Additional reference image, base64-encoded or an http(s) URL (experimental multi-reference).",
+                    "type": "string"
+                  },
+                  "input_image_4": {
+                    "description": "Additional reference image, base64-encoded or an http(s) URL (experimental multi-reference).",
+                    "type": "string"
+                  },
+                  "output_format": {
+                    "default": "png",
+                    "description": "Output image format.",
+                    "enum": ["jpeg", "png", "webp"],
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "Text prompt describing the edit to apply to input_image, or the image to generate when no input_image is given.",
+                    "type": "string"
+                  },
+                  "prompt_upsampling": {
+                    "default": false,
+                    "description": "Whether to upsample the prompt. If active, the prompt is automatically modified for more creative generation.",
+                    "type": "boolean"
+                  },
+                  "safety_tolerance": {
+                    "default": 2,
+                    "description": "Tolerance level for input and output moderation, between 0 (most strict) and 6 (least strict).",
+                    "maximum": 6,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "seed": {
+                    "description": "Optional seed for reproducibility. A random seed is used when omitted.",
+                    "example": 42,
+                    "type": "integer"
+                  },
+                  "webhook_secret": {
+                    "description": "Optional secret for webhook signature verification.",
+                    "type": "string"
+                  },
+                  "webhook_url": {
+                    "description": "URL to receive webhook notifications.",
+                    "format": "uri",
+                    "maxLength": 2083,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["prompt"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "x-comfy-router-model-id": "krea/krea-3",
+  "x-comfy-router-input-modalities": ["text", "image"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/krea/krea-3": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "prompt": "A ceramic coffee mug on a clean studio background",
+                  "resolution": "1k"
+                },
+                "properties": {
+                  "aspect_ratio": {
+                    "description": "1:1, 4:5, 3:4, 2:3, 9:16, 5:4, 4:3, 3:2, 16:9 or 21:9. Use with resolution; omit for automatic framing.",
+                    "type": "string"
+                  },
+                  "image_urls": {
+                    "description": "Input image URLs, up to 8. Each must be the image_url returned by uploading the image to POST /proxy/krea/assets (multipart form field `file`); any link that is not an https URL on the host app-uploads.krea.ai, including your own https URLs, is rejected with 400, and an app-uploads.krea.ai link that is not a live upload fails with a 5xx error. Omit for text-to-image.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 8,
+                    "type": "array"
+                  },
+                  "model": {
+                    "description": "berry (default, quality) or jam (speed).",
+                    "type": "string"
+                  },
+                  "negative_prompt": {
+                    "maxLength": 1024,
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "What to generate. With image_urls, the editing instruction; describe what should change and what should stay the same.",
+                    "type": "string"
+                  },
+                  "regional_edit": {
+                    "description": "Set true for a local edit that keeps the rest of the image. Needs model berry and at least one image in image_urls.",
+                    "type": "boolean"
+                  },
+                  "resolution": {
+                    "description": "1k or 2k.",
+                    "type": "string"
+                  },
+                  "seed": {
+                    "nullable": true,
+                    "type": "integer"
+                  },
+                  "thinking_mode": {
+                    "description": "fast (default), high or ultra. High and ultra plan complex edits in more detail and take longer. Ultra needs resolution 2k.",
+                    "type": "string"
+                  }
+                },
+                "required": ["prompt", "resolution"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

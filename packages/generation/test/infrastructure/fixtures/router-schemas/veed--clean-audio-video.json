@@ -1,0 +1,59 @@
+{
+  "x-comfy-router-model-id": "veed/clean-audio-video",
+  "x-comfy-router-input-modalities": ["video"],
+  "x-comfy-router-output-modalities": ["video", "audio"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/veed/clean-audio-video": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for `POST /proxy/veed/v1/clean-audio-video`. The job is billed from the credits VEED charges once it completes.",
+                "example": {
+                  "normalize_loudness": true,
+                  "strength": 0.874,
+                  "target_lufs": -19,
+                  "video_url": "https://static-assets.veed.io/api-examples/clean-audio-video-input.mp4"
+                },
+                "properties": {
+                  "normalize_loudness": {
+                    "default": true,
+                    "description": "Set to false to keep the input loudness.",
+                    "type": "boolean"
+                  },
+                  "strength": {
+                    "default": 0.874,
+                    "description": "How much background noise is removed under speech.",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "target_lufs": {
+                    "default": -19,
+                    "description": "Output loudness in LUFS. Ignored when `normalize_loudness` is false.",
+                    "maximum": -8,
+                    "minimum": -40,
+                    "nullable": true,
+                    "type": "number"
+                  },
+                  "video_url": {
+                    "description": "Public http(s) URL of the video to clean, up to 30 minutes.",
+                    "type": "string"
+                  }
+                },
+                "required": ["video_url"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

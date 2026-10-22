@@ -1,0 +1,106 @@
+{
+  "x-comfy-router-model-id": "pruna/p-video-2",
+  "x-comfy-router-input-modalities": ["text", "image", "audio"],
+  "x-comfy-router-output-modalities": ["video", "audio"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/pruna/p-video-2": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for `POST /proxy/pruna/v1/predictions/p-video-2`. The model is fixed by the route, so the body carries only Pruna's `input` object.",
+                "example": {
+                  "input": {
+                    "aspect_ratio": "16:9",
+                    "draft": false,
+                    "duration": 2,
+                    "fps": 24,
+                    "prompt": "A single red maple leaf resting on a plain white background.",
+                    "resolution": "720p"
+                  }
+                },
+                "properties": {
+                  "input": {
+                    "$ref": "#/components/schemas/PrunaPVideo2Input"
+                  }
+                },
+                "required": ["input"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PrunaPVideo2Input": {
+        "description": "P-Video-2 generation parameters. The generation is billed per second of the finished video, measured from the returned file, at a rate set by `resolution` and `draft`. The safety filter is always on; a `disable_safety_filter` value in the request is ignored.",
+        "properties": {
+          "aspect_ratio": {
+            "default": "16:9",
+            "description": "Aspect ratio: 16:9, 9:16, 4:3, 3:4, 3:2, 2:3 or 1:1. Ignored when `image` is set.",
+            "type": "string"
+          },
+          "audio": {
+            "description": "Input audio URI to condition the generation (flac, mp3 or wav). The output length follows the audio.",
+            "type": "string"
+          },
+          "draft": {
+            "default": false,
+            "description": "Faster, lower-quality preview, billed at the draft rate.",
+            "type": "boolean"
+          },
+          "duration": {
+            "description": "Duration of the generated video in seconds (1-20). When omitted the model chooses the length from the prompt, up to 20 seconds. Ignored when `audio` is set.",
+            "maximum": 20,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "fps": {
+            "default": 24,
+            "description": "Frame rate: 24 or 48.",
+            "type": "integer"
+          },
+          "image": {
+            "description": "Input image URI for image-to-video (jpg, jpeg, png or webp).",
+            "type": "string"
+          },
+          "last_frame_image": {
+            "description": "Reference image URI for the last frame.",
+            "type": "string"
+          },
+          "prompt": {
+            "description": "Text prompt for video generation.",
+            "type": "string"
+          },
+          "prompt_upsampling": {
+            "default": true,
+            "description": "Rewrite the prompt before generation. Disable it when a `seed` must reproduce a result.",
+            "type": "boolean"
+          },
+          "resolution": {
+            "default": "720p",
+            "description": "Output resolution: 720p or 1080p.",
+            "type": "string"
+          },
+          "save_audio": {
+            "default": true,
+            "description": "Save the video with audio.",
+            "type": "boolean"
+          },
+          "seed": {
+            "description": "Random seed for reproducible generation. Random when omitted.",
+            "type": "integer"
+          }
+        },
+        "required": ["prompt"],
+        "type": "object"
+      }
+    }
+  }
+}

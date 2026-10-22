@@ -1,0 +1,48 @@
+{
+  "x-comfy-router-model-id": "wavespeed/flashvsr",
+  "x-comfy-router-input-modalities": ["video"],
+  "x-comfy-router-output-modalities": ["video"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/wavespeed/flashvsr": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for WavespeedAI FlashVSR video upscaling",
+                "example": {
+                  "duration": 4,
+                  "target_resolution": "1080p",
+                  "video": "https://samplelib.com/mp4/sample-30s.mp4"
+                },
+                "properties": {
+                  "duration": {
+                    "description": "Duration of the video in seconds\n",
+                    "type": "number"
+                  },
+                  "target_resolution": {
+                    "default": "1080p",
+                    "description": "Target resolution to upscale to.",
+                    "enum": ["720p", "1080p", "2k", "4k"],
+                    "type": "string"
+                  },
+                  "video": {
+                    "description": "The video to upscale. Can be a URL to the video file or a base64-encoded video.\n",
+                    "type": "string"
+                  }
+                },
+                "required": ["video", "duration"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

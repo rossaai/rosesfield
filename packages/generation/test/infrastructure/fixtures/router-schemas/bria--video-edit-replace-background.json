@@ -1,0 +1,60 @@
+{
+  "x-comfy-router-model-id": "bria/video-edit-replace-background",
+  "x-comfy-router-input-modalities": ["video", "text"],
+  "x-comfy-router-output-modalities": ["video"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/bria/video-edit-replace-background": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for Bria Video Replace Background API",
+                "example": {
+                  "background_url": "https://example.com/background.mp4",
+                  "video": "https://example.com/input.mp4"
+                },
+                "properties": {
+                  "background_url": {
+                    "description": "Publicly accessible URL of the background asset (image or video) to composite behind the foreground. Must match the foreground aspect ratio.",
+                    "type": "string"
+                  },
+                  "output_container_and_codec": {
+                    "description": "Output container and codec preset.",
+                    "enum": [
+                      "mp4_h264",
+                      "mp4_h265",
+                      "webm_vp9",
+                      "mov_h265",
+                      "mov_proresks",
+                      "mkv_h264",
+                      "mkv_h265",
+                      "mkv_vp9",
+                      "gif"
+                    ],
+                    "type": "string"
+                  },
+                  "preserve_audio": {
+                    "description": "Whether to preserve audio from the input (foreground) video.",
+                    "type": "boolean"
+                  },
+                  "video": {
+                    "description": "Publicly accessible URL of the input (foreground) video. Input resolution supported up to 16000x16000 (16K). Max duration 60 seconds.",
+                    "type": "string"
+                  }
+                },
+                "required": ["video", "background_url"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}
