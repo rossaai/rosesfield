@@ -4,16 +4,26 @@ import { useQuery } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { settingsQuery } from "@/api/queries"
-import { defaultsOf } from "@/screens/app/app-form"
+import { bodyOf, defaultsOf, type FormValues } from "@/screens/app/app-form"
 import { textOf } from "@/screens/app/fields/field-props"
 import {
+  hostedBody,
   hostedDefaults,
   modelInputName,
+  settingsFor,
 } from "@/screens/app/hosted/hosted-form"
-import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
+import {
+  modelCatalogQuery,
+  type PriceAsk,
+} from "@/screens/app/hosted/model-catalog-query"
 import { ranBeforeOf } from "@/screens/app/hosted/model-sections"
 import { taskAppOf } from "@/screens/app/hosted/task-app"
 import type { AppForm } from "@/screens/app/use-app-form"
+
+export type RowPricing = {
+  appId: string
+  askOf: (model: CatalogModel) => PriceAsk
+}
 
 export type HostedState = {
   isTaskApp: boolean
@@ -26,10 +36,41 @@ export type HostedState = {
   fields: readonly ModelField[] | null
   ranBefore: readonly string[]
   choose: (id: string) => void
+  pricing?: RowPricing
+}
+
+export function priceAskOf(
+  app: AppListing,
+  values: FormValues,
+  model: CatalogModel
+): PriceAsk {
+  if (model.form === null) {
+    return bodyOf(app, {
+      ...values,
+      inputs: { ...values.inputs, [modelInputName]: model.id },
+    })
+  }
+  const inputs = settingsFor(model.form, values.inputs)
+  return hostedBody(
+    model.id,
+    model.form,
+    { ...values, inputs },
+    app.output.kind
+  )
 }
 
 function newestFirst(runs: readonly Run[]): Run[] {
   return [...runs].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
+function useRowPricing(app: AppListing, values: FormValues): RowPricing {
+  return useMemo(
+    () => ({
+      appId: app.id,
+      askOf: (model: CatalogModel) => priceAskOf(app, values, model),
+    }),
+    [app, values]
+  )
 }
 
 export function useHostedModel(
@@ -69,6 +110,7 @@ export function useHostedModel(
     choose
   )
   const refusal = query.data?.refusal ?? null
+  const pricing = useRowPricing(app, values)
   return {
     isTaskApp: taskApp !== null,
     models,
@@ -89,6 +131,7 @@ export function useHostedModel(
       })
     ),
     choose,
+    pricing,
   }
 }
 
