@@ -134,7 +134,7 @@ describe("Video edit's tabs", () => {
 })
 
 describe("the Edit tab on Dreamina Seedance 2.5", () => {
-  it("shows the clip well with its limits, then the model's inputs, then the model row", () => {
+  it("shows the clip well with its limits in its tip, then the model's inputs, then the model row", () => {
     show(<VideoEditPanel state={stateOf("edit", dreamina, { video: [] })} />)
     const well = document.querySelector("[data-slot='clip-well']")
     const [promptField] = dreamina.form ?? []
@@ -150,7 +150,7 @@ describe("the Edit tab on Dreamina Seedance 2.5", () => {
     if (well === null) {
       throw new Error("the panel has no clip well")
     }
-    expect(well.textContent).toContain(
+    expect(well.textContent).not.toContain(
       "MP4, MOV or WebM, 2 to 15 seconds, up to 100 MB"
     )
     expect(isBefore(well, prompt)).toBe(true)
