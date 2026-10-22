@@ -44,8 +44,12 @@ function stubObserver(): { fire: (isIntersecting: boolean) => void } {
       constructor(callback: Watch) {
         watch = callback
       }
-      observe(): void {}
-      disconnect(): void {}
+      observe(): void {
+        return undefined
+      }
+      disconnect(): void {
+        return undefined
+      }
     }
   )
   return { fire: (isIntersecting) => watch([{ isIntersecting }]) }
