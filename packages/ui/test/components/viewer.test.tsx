@@ -83,12 +83,20 @@ describe("Viewer", () => {
     expect(stage?.className).not.toContain("p-s12 ")
   })
 
-  it("sets Next 24 px from the stage's edge, 8 px inside a picture that fills the 16 px padded stage, so it never crosses the picture's edge", () => {
+  it("sets Next as a 36 px glass circle 16 px inside the picture's edge, so it reads on any ground", () => {
     renderViewer()
     const next = screen.getByRole("button", { name: "Next" })
     const classes = next.className.split(" ")
-    expect(classes).toContain("right-6")
-    expect(classes).not.toContain("right-s2")
+    expect(classes).toEqual(
+      expect.arrayContaining([
+        "right-s5",
+        "size-icon",
+        "material-thin",
+        "border",
+        "border-surface-2",
+        "shadow-float",
+      ])
+    )
   })
 
   it("keeps a 16 px gutter at each side of the picture on a phone, for an image as for a video", () => {
@@ -99,12 +107,56 @@ describe("Viewer", () => {
     expect(classes).not.toContain("px-0")
   })
 
-  it("sets its 32 px close 12 px from the panel's right and 16 px from its top", () => {
+  it("sets its 36 px glass close 16 px from the corner", () => {
     renderViewer()
     const close = screen.getByRole("button", { name: "Close" })
     expect(close.parentElement?.className.split(" ")).toEqual(
-      expect.arrayContaining(["top-6", "right-5"])
+      expect.arrayContaining(["top-s5", "right-s5"])
     )
-    expect(close.className).toContain("size-8")
+    expect(close.className.split(" ")).toEqual(
+      expect.arrayContaining(["size-icon", "material-thin"])
+    )
+  })
+})
+
+describe("Viewer's panel", () => {
+  it("holds a fixed head, a body that scrolls and a fixed foot for its actions", () => {
+    render(
+      <Viewer
+        open
+        onOpenChange={() => undefined}
+        origin={null}
+        aspect={{ width: 9, height: 16 }}
+        title="A clip"
+        closeLabel="Close"
+        head={<h2>Clip</h2>}
+        aside={<p>A long prompt</p>}
+        actions={<button type="button">Delete</button>}
+      >
+        <span>media</span>
+      </Viewer>
+    )
+    const aside = document.querySelector("[data-slot='viewer-aside']")
+    expect(aside?.className.split(" ")).toEqual(
+      expect.arrayContaining(["flex-col", "overflow-hidden"])
+    )
+    const parts = [...(aside?.children ?? [])].map((part) =>
+      part.getAttribute("data-slot")
+    )
+    expect(parts).toEqual(["viewer-head", "viewer-body", "viewer-foot"])
+    expect(
+      document.querySelector("[data-slot='viewer-body']")?.className.split(" ")
+    ).toEqual(expect.arrayContaining(["min-h-0", "flex-1", "overflow-y-auto"]))
+    for (const fixed of ["viewer-head", "viewer-foot"]) {
+      expect(
+        document.querySelector(`[data-slot='${fixed}']`)?.className.split(" ")
+      ).toContain("shrink-0")
+    }
+    expect(
+      screen
+        .getByRole("button", { name: "Delete" })
+        .closest("[data-slot]")
+        ?.getAttribute("data-slot")
+    ).toBe("viewer-foot")
   })
 })
