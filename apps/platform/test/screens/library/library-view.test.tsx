@@ -4,7 +4,7 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t } from "@/copy/t"
 import { LibraryRows } from "@/screens/library/library-rows"
-import { libraryLayout, libraryShownOf } from "@/screens/library/library-screen"
+import { libraryLayout, libraryShownOf } from "@/screens/library/library-view"
 
 const runId = "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e01"
 

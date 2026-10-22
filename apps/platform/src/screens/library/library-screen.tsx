@@ -24,6 +24,7 @@ import {
 } from "@/screens/library/library-bars"
 import { LibraryGrid, PendingTiles } from "@/screens/library/library-grid"
 import { LibraryRows } from "@/screens/library/library-rows"
+import { libraryLayout, libraryShownOf } from "@/screens/library/library-view"
 import { ResultGrid } from "@/screens/library/result-grid"
 import {
   type LibraryData,
@@ -171,20 +172,6 @@ function LibraryBody(props: BodyProps): ReactNode {
       <LibraryResults {...props} working={working} />
     </>
   )
-}
-
-export type LibraryShown = "masonry" | "rows" | "tiles"
-
-export const libraryLayout: ViewLayout = "grid"
-
-export function libraryShownOf(
-  layout: ViewLayout,
-  selected: readonly string[] | null
-): LibraryShown {
-  if (selected !== null) {
-    return "tiles"
-  }
-  return layout === "grid" ? "masonry" : "rows"
 }
 
 function LibraryResults(
