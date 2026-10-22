@@ -29,6 +29,7 @@ import { localAgent } from "#agent/local-agent"
 import { SessionAgents } from "#agent/session-agents"
 import { type Built, buildHandlers, type Handlers } from "#build-handlers"
 import { sharedCreditMeter } from "#catalog/shared-credit-meter"
+import { sharedRouterCatalog } from "#catalog/shared-router-catalog"
 import { PastedKeys } from "#compose/pasted-keys"
 import {
   type EngineOptions,
@@ -135,6 +136,7 @@ export function composeLocalGateway(
     prices,
     engineOptions: {
       clock,
+      catalog: sharedRouterCatalog(clock, { db }),
       meter: sharedCreditMeter(clock),
       media: options.media ?? new BunMediaTool(),
       store,

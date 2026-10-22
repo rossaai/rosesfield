@@ -62,7 +62,7 @@ describe("RouterCatalog", () => {
     expect(again.sent).toEqual([])
   })
 
-  it("revalidates each schema by ETag inside the request after an hour and lists a model Comfy added", async () => {
+  it("serves its copy at once after an hour, revalidates each schema by ETag behind it and then lists a model Comfy added", async () => {
     const clock = new FixedClock({ now: start })
     const catalog = catalogAt(clock)
     await catalog.models(
@@ -79,8 +79,11 @@ describe("RouterCatalog", () => {
       schemaSame(pictureModel),
       schemaRead(clipModel, clipSchema),
     ])
-    const models = await catalog.models(httpWith(later))
+    const served = await catalog.models(httpWith(later))
+    expect(served.map((one) => one.facts.model)).toEqual([pictureModel])
+    await catalog.idle()
     expect(later.unused()).toEqual([])
+    const models = await catalog.models(httpWith(later))
     expect(models.map((one) => one.facts.model)).toEqual([
       pictureModel,
       clipModel,
