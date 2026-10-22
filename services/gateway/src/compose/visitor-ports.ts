@@ -35,7 +35,7 @@ export type VisitorDeps = {
   clock: Clock
   engineOptions: EngineOptions
   agents: SessionAgentHost | null
-  defer: RuntimeDefer
+  defer?: RuntimeDefer
 }
 
 export async function visitorScopeFor(
@@ -77,7 +77,7 @@ export async function visitorScopeFor(
     settings: visitorSettings(deps.vars, keys, deps.place),
     agent: agents === null ? null : agents.agentOf(sessionId),
     canAnswer: modelKey !== null,
-    defer: deps.defer,
+    defer: deps.defer ?? (() => undefined),
     hold: () =>
       agents === null
         ? () => undefined

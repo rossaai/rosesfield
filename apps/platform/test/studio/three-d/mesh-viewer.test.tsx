@@ -188,8 +188,8 @@ describe("the 3D viewer", () => {
     vi.stubGlobal(
       "ResizeObserver",
       class {
-        observe(): void {}
-        disconnect(): void {}
+        observe = (): undefined => undefined
+        disconnect = (): undefined => undefined
       }
     )
     const dispose = vi.fn()

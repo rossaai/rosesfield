@@ -122,121 +122,126 @@ const stageCards =
 const chipName =
   '[data-slot="model-row"][data-place="trigger"] [data-slot="model-row-name"]'
 
+async function paintResult({ page }: { page: Page }): Promise<void> {
+  await open(page, "/apps/image")
+  const bar = page.locator('[data-bar="prompt"]')
+  await bar
+    .getByRole("textbox", { name: "Prompt" })
+    .fill("a paper boat on a still pond")
+  const shownBefore = await page
+    .locator(`${stageCards} img`)
+    .evaluateAll((images) =>
+      images.map((image) => image.getAttribute("src") ?? "")
+    )
+  const started = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      new URL(response.url()).pathname === "/api/apps/image/runs"
+  )
+  await bar.locator('[data-slot="generate-button"]').click()
+  const answer: { run: { createdAt: string } } = await (await started).json()
+  const engineDoneAt = Date.parse(answer.run.createdAt) + demoDelayMs
+  const run = page.locator(stageCards).first()
+  await expect(run.locator('[data-slot="working-pulse"]').first()).toBeVisible()
+  const painted = await page.waitForFunction(
+    ({ cards, before }) => {
+      const card = document.querySelector(cards)
+      const image = card?.querySelector<HTMLImageElement>("img") ?? null
+      const src = image?.getAttribute("src") ?? ""
+      return image !== null &&
+        src !== "" &&
+        !before.includes(src) &&
+        image.complete &&
+        image.naturalWidth > 0
+        ? Date.now()
+        : false
+    },
+    { cards: stageCards, before: shownBefore },
+    { polling: "raf", timeout: 30_000 }
+  )
+  const paintedAt = Number(await painted.jsonValue())
+  report("result", paintedAt - engineDoneAt)
+}
+
+async function showFirstFrame({ page }: { page: Page }): Promise<void> {
+  const runId = await startDemoVideo()
+  await open(page, `/history/${runId}`)
+  const tile = page
+    .locator(
+      "button[data-slot='media-tile']:visible, [data-slot='media'] [data-cover]:visible"
+    )
+    .first()
+  await expect(tile).toBeVisible()
+  await tile.scrollIntoViewIfNeeded()
+  await markNextClick(page)
+  await tile.click()
+  const shown = await page.waitForFunction(
+    () => {
+      const clickedAt = Reflect.get(window, "waitsClickedAt")
+      const video = document.querySelector<HTMLVideoElement>(
+        "[data-slot=viewer-video] video"
+      )
+      return typeof clickedAt === "number" &&
+        video !== null &&
+        video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+        ? performance.now() - clickedAt
+        : false
+    },
+    null,
+    { polling: "raf", timeout: 30_000 }
+  )
+  report("video", Number(await shown.jsonValue()))
+}
+
+async function showCatalog({ page }: { page: Page }): Promise<void> {
+  await open(page, "/apps/image")
+  const imageChip = page.locator(chipName).filter({ visible: true }).first()
+  await expect(imageChip).not.toHaveText("Model")
+  const imageName = (await imageChip.textContent()) ?? ""
+  await page
+    .locator("header[data-slot='app-bar']")
+    .getByRole("button", { name: "Video", exact: true })
+    .click()
+  const link = page
+    .locator("[data-slot='app-bar-areaMenu']")
+    .locator('a[href="/apps/video"]')
+  await expect(link).toBeVisible()
+  await markNextClick(page)
+  await link.click()
+  const listed = await page.waitForFunction(
+    ({ selector, before }) => {
+      const clickedAt = Reflect.get(window, "waitsClickedAt")
+      const chip = [...document.querySelectorAll(selector)].find((one) =>
+        one.checkVisibility()
+      )
+      const name = chip?.textContent ?? ""
+      return typeof clickedAt === "number" &&
+        window.location.pathname === "/apps/video" &&
+        name !== "" &&
+        name !== "Model" &&
+        name !== before
+        ? performance.now() - clickedAt
+        : false
+    },
+    { selector: chipName, before: imageName },
+    { polling: "raf", timeout: 30_000 }
+  )
+  report("catalog", Number(await listed.jsonValue()))
+}
+
 test.describe("the three waits on the demo engine", () => {
   test.skip(({ isMobile }) => isMobile, "the waits are read at 1440 px")
 
-  test("paints a finished result within its bound of the engine's done", async ({
-    page,
-  }) => {
-    await open(page, "/apps/image")
-    const bar = page.locator('[data-bar="prompt"]')
-    await bar
-      .getByRole("textbox", { name: "Prompt" })
-      .fill("a paper boat on a still pond")
-    const shownBefore = await page
-      .locator(`${stageCards} img`)
-      .evaluateAll((images) =>
-        images.map((image) => image.getAttribute("src") ?? "")
-      )
-    const started = page.waitForResponse(
-      (response) =>
-        response.request().method() === "POST" &&
-        new URL(response.url()).pathname === "/api/apps/image/runs"
-    )
-    await bar.locator('[data-slot="generate-button"]').click()
-    const answer: { run: { createdAt: string } } = await (await started).json()
-    const engineDoneAt = Date.parse(answer.run.createdAt) + demoDelayMs
-    const run = page.locator(stageCards).first()
-    await expect(
-      run.locator('[data-slot="working-pulse"]').first()
-    ).toBeVisible()
-    const painted = await page.waitForFunction(
-      ({ cards, before }) => {
-        const card = document.querySelector(cards)
-        const image = card?.querySelector<HTMLImageElement>("img") ?? null
-        const src = image?.getAttribute("src") ?? ""
-        return image !== null &&
-          src !== "" &&
-          !before.includes(src) &&
-          image.complete &&
-          image.naturalWidth > 0
-          ? Date.now()
-          : false
-      },
-      { cards: stageCards, before: shownBefore },
-      { polling: "raf", timeout: 30_000 }
-    )
-    const paintedAt = Number(await painted.jsonValue())
-    report("result", paintedAt - engineDoneAt)
-  })
-
-  test("shows a video's first frame within its bound of opening it", async ({
-    page,
-  }) => {
-    const runId = await startDemoVideo()
-    await open(page, `/history/${runId}`)
-    const tile = page
-      .locator(
-        "button[data-slot='media-tile']:visible, [data-slot='media'] [data-cover]:visible"
-      )
-      .first()
-    await expect(tile).toBeVisible()
-    await tile.scrollIntoViewIfNeeded()
-    await markNextClick(page)
-    await tile.click()
-    const shown = await page.waitForFunction(
-      () => {
-        const clickedAt = Reflect.get(window, "waitsClickedAt")
-        const video = document.querySelector<HTMLVideoElement>(
-          "[data-slot=viewer-video] video"
-        )
-        return typeof clickedAt === "number" &&
-          video !== null &&
-          video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
-          ? performance.now() - clickedAt
-          : false
-      },
-      null,
-      { polling: "raf", timeout: 30_000 }
-    )
-    report("video", Number(await shown.jsonValue()))
-  })
-
-  test("shows an app's catalog within its bound of opening the app", async ({
-    page,
-  }) => {
-    await open(page, "/apps/image")
-    const imageChip = page.locator(chipName).filter({ visible: true }).first()
-    await expect(imageChip).not.toHaveText("Model")
-    const imageName = (await imageChip.textContent()) ?? ""
-    await page
-      .locator("header[data-slot='app-bar']")
-      .getByRole("button", { name: "Video", exact: true })
-      .click()
-    const link = page
-      .locator("[data-slot='app-bar-areaMenu']")
-      .locator('a[href="/apps/video"]')
-    await expect(link).toBeVisible()
-    await markNextClick(page)
-    await link.click()
-    const listed = await page.waitForFunction(
-      ({ selector, before }) => {
-        const clickedAt = Reflect.get(window, "waitsClickedAt")
-        const chip = [...document.querySelectorAll(selector)].find((one) =>
-          one.checkVisibility()
-        )
-        const name = chip?.textContent ?? ""
-        return typeof clickedAt === "number" &&
-          window.location.pathname === "/apps/video" &&
-          name !== "" &&
-          name !== "Model" &&
-          name !== before
-          ? performance.now() - clickedAt
-          : false
-      },
-      { selector: chipName, before: imageName },
-      { polling: "raf", timeout: 30_000 }
-    )
-    report("catalog", Number(await listed.jsonValue()))
-  })
+  test(
+    "paints a finished result within its bound of the engine's done",
+    paintResult
+  )
+  test(
+    "shows a video's first frame within its bound of opening it",
+    showFirstFrame
+  )
+  test(
+    "shows an app's catalog within its bound of opening the app",
+    showCatalog
+  )
 })

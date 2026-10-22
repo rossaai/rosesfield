@@ -39,7 +39,9 @@ function viewCaption(run: Run, index: number): string {
   const angleSet =
     typeof run.inputs.angleSet === "string" ? run.inputs.angleSet : ""
   const views = viewsOf(angleSet)
-  const first = views.findIndex((one) => one === run.inputs[viewInput])
+  const asked = run.inputs[viewInput]
+  const names: readonly string[] = views
+  const first = typeof asked === "string" ? names.indexOf(asked) : -1
   const view = views[Math.max(first, 0) + index]
   return view === undefined ? "" : tCatalog(`characters.view.${view}`)
 }

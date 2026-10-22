@@ -81,7 +81,7 @@ export function srtOf(caption: Caption): string {
   return `1\n${stampOf(0)} --> ${stampOf(caption.seconds)}\n${caption.text}\n`
 }
 
-function fit(size: Size): string {
+function scaleToFit(size: Size): string {
   return `scale=${size.width}:${size.height}:force_original_aspect_ratio=decrease,pad=${size.width}:${size.height}:(ow-iw)/2:(oh-ih)/2:color=${canvas},setsar=1,fps=30,format=yuv420p`
 }
 
@@ -154,7 +154,7 @@ function sceneSegments(
       text: scene.caption,
       seconds: piece.seconds,
     }
-    const filter = `${fit(wide)},tpad=stop_mode=clone:stop_duration=${fixed(piece.seconds)},${subtitles(caption.file, wide)}`
+    const filter = `${scaleToFit(wide)},tpad=stop_mode=clone:stop_duration=${fixed(piece.seconds)},${subtitles(caption.file, wide)}`
     const args = [
       ...["-y", "-v", "error", "-ss", fixed(piece.start), "-i", scene.file],
       ...["-t", fixed(piece.seconds), "-vf", filter],
@@ -182,7 +182,7 @@ function sideBySide(
     ...looped(input, options.seconds),
     ...looped(take.output, options.seconds),
     "-filter_complex",
-    `[0:v]${fit(half)}[a];[1:v]${fit(half)}[b];[a][b]hstack=inputs=2,${subtitles(options.caption.file, options.size)}[v]`,
+    `[0:v]${scaleToFit(half)}[a];[1:v]${scaleToFit(half)}[b];[a][b]hstack=inputs=2,${subtitles(options.caption.file, options.size)}[v]`,
     ...["-map", "[v]", "-t", fixed(options.seconds)],
     ...encode(options.isDraft),
     options.out,
@@ -231,7 +231,7 @@ function verticalStep(
     ...looped(take.input, photoSeconds),
     ...looped(take.output, resultSeconds),
     "-filter_complex",
-    `[0:v]${fit(tall)}[a];[1:v]${fit(tall)}[b];[a][b]concat=n=2:v=1:a=0,${subtitles(caption.file, tall)}[v]`,
+    `[0:v]${scaleToFit(tall)}[a];[1:v]${scaleToFit(tall)}[b];[a][b]concat=n=2:v=1:a=0,${subtitles(caption.file, tall)}[v]`,
     ...["-map", "[v]", "-t", fixed(seconds)],
     ...encode(isDraft),
     verticalFile,
@@ -261,7 +261,10 @@ function appStep(
       ? [
           ...["-y", "-v", "error"],
           ...looped(take.output, clipSeconds),
-          ...["-vf", `${fit(clipSize)},${subtitles(caption.file, clipSize)}`],
+          ...[
+            "-vf",
+            `${scaleToFit(clipSize)},${subtitles(caption.file, clipSize)}`,
+          ],
           ...["-t", fixed(clipSeconds)],
           ...encode(isDraft),
           out,

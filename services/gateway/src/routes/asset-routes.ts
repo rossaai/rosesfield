@@ -60,6 +60,29 @@ function previewTypeOf(c: Context): string {
   return mime
 }
 
+function contentRoutes(app: GatewayApp): void {
+  app.get(routes.readAssetContent.path, async (c) => {
+    const header = c.req.header("range")
+    const read = await c.var.scope.handlers.readAssetContent.execute({
+      assetId: c.req.param("assetId"),
+      ...(header === undefined
+        ? {}
+        : { rangeOf: (size: number) => rangeOf(header, size) }),
+    })
+    return contentResponse(c, read)
+  })
+  app.get(routes.linkAssetContent.path, async (c) => {
+    const { url } = await c.var.scope.handlers.linkAsset.execute({
+      assetId: c.req.param("assetId"),
+    })
+    const link = await c.var.signContent(url)
+    return c.json(
+      link satisfies ResponseOf<typeof routes.linkAssetContent>,
+      routes.linkAssetContent.status
+    )
+  })
+}
+
 function previewRoutes(app: GatewayApp): void {
   app.get(routes.readAssetPreview.path, async (c) => {
     const read = await c.var.scope.handlers.readAssetPreview.execute({
@@ -125,26 +148,7 @@ export function assetRoutes(app: GatewayApp): void {
       routes.getAsset.status
     )
   })
-  app.get(routes.readAssetContent.path, async (c) => {
-    const header = c.req.header("range")
-    const read = await c.var.scope.handlers.readAssetContent.execute({
-      assetId: c.req.param("assetId"),
-      ...(header === undefined
-        ? {}
-        : { rangeOf: (size: number) => rangeOf(header, size) }),
-    })
-    return contentResponse(c, read)
-  })
-  app.get(routes.linkAssetContent.path, async (c) => {
-    const { url } = await c.var.scope.handlers.linkAsset.execute({
-      assetId: c.req.param("assetId"),
-    })
-    const link = await c.var.signContent(url)
-    return c.json(
-      link satisfies ResponseOf<typeof routes.linkAssetContent>,
-      routes.linkAssetContent.status
-    )
-  })
+  contentRoutes(app)
   previewRoutes(app)
   app.delete(routes.deleteAsset.path, async (c) => {
     await c.var.scope.handlers.deleteAsset.execute({

@@ -201,6 +201,7 @@ function MeshCanvas({ scene }: { scene: MeshScene }): ReactElement {
   }
   return (
     <div className="flex flex-col gap-s2">
+      {/* biome-ignore lint/a11y/noInteractiveElementToNoninteractiveRole: the canvas takes the arrow keys and the wheel to turn the model, so it is announced as an application */}
       <canvas
         ref={ref}
         role="application"
