@@ -39,7 +39,9 @@ describe("the Apps page card's media", () => {
     cleanup()
     const clip = await mediaOfCard("effects")
     expect(clip?.tagName).toBe("VIDEO")
-    expect(clip?.getAttribute("src")).toBe(showcaseOf("effects")[0]?.src)
+    expect(clip?.getAttribute("src")).toBe(
+      `${showcaseOf("effects")[0]?.src}#t=0.1`
+    )
   })
 
   it("draws an app with no example as what it takes and what it makes, with no invented picture", async () => {
@@ -104,7 +106,7 @@ describe("the Apps page card", () => {
     expect(play?.className).not.toMatch(/transition|duration-/)
   })
 
-  it("tints its fill on hover with no border, and keeps its line to one", async () => {
+  it("tints its fill on hover with no border", async () => {
     const card = await renderCard()
     expect(card.className).not.toContain("after:")
     const fill = card.querySelector("[data-slot='card']")?.className ?? ""
@@ -112,6 +114,39 @@ describe("the Apps page card", () => {
       expect.arrayContaining(["motion-tint", "group-hover/card:bg-(--tint)"])
     )
     expect(fill).not.toMatch(/border/)
-    expect(card.querySelector("p")?.className.split(" ")).toContain("truncate")
+  })
+})
+
+describe("the Apps page card's line", () => {
+  it("clamps to two lines and shows whole, never cut mid-word on one line", async () => {
+    const card = await renderCard()
+    const line = card.querySelector<HTMLElement>("[data-slot='app-card-line']")
+    expect(line?.className.split(" ")).toContain("line-clamp-2")
+    expect(line?.className.split(" ")).not.toContain("truncate")
+    expect(line?.dataset.fit).toBe("whole")
+  })
+
+  it("leaves the title alone when the line would need a third line", async () => {
+    const heights = {
+      scrollHeight: { configurable: true, get: () => 60 },
+      clientHeight: { configurable: true, get: () => 40 },
+    }
+    Object.defineProperties(HTMLElement.prototype, heights)
+    try {
+      const card = await renderCard()
+      const line = card.querySelector<HTMLElement>(
+        "[data-slot='app-card-line']"
+      )
+      expect(line?.dataset.fit).toBe("clipped")
+      expect(line?.className.split(" ")).toEqual(
+        expect.arrayContaining([
+          "data-[fit=clipped]:invisible",
+          "data-[fit=clipped]:absolute",
+        ])
+      )
+    } finally {
+      Reflect.deleteProperty(HTMLElement.prototype, "scrollHeight")
+      Reflect.deleteProperty(HTMLElement.prototype, "clientHeight")
+    }
   })
 })

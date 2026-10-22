@@ -9,7 +9,7 @@ import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { Link } from "@tanstack/react-router"
 import { PlayIcon } from "lucide-react"
-import type { ReactElement } from "react"
+import { type ReactElement, useLayoutEffect, useRef, useState } from "react"
 import { appLine, appName } from "@/catalog/app-facts"
 import { tCount } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
@@ -118,6 +118,39 @@ function WorkingLine({ working }: { working: number }): ReactElement | null {
   )
 }
 
+export function isClipped(element: HTMLElement): boolean {
+  return element.scrollHeight > element.clientHeight + 1
+}
+
+function CardLine({ text }: { text: string }): ReactElement {
+  const line = useRef<HTMLParagraphElement>(null)
+  const [isWhole, setWhole] = useState(true)
+  useLayoutEffect(() => {
+    const element = line.current
+    if (element === null) {
+      return
+    }
+    const check = (): void => setWhole(!isClipped(element))
+    check()
+    if (typeof ResizeObserver === "undefined") {
+      return
+    }
+    const observer = new ResizeObserver(check)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+  return (
+    <p
+      ref={line}
+      data-slot="app-card-line"
+      data-fit={isWhole ? "whole" : "clipped"}
+      className="line-clamp-2 text-body text-ink-muted data-[fit=clipped]:invisible data-[fit=clipped]:absolute data-[fit=clipped]:inset-x-0"
+    >
+      {text}
+    </p>
+  )
+}
+
 export function AppCard({ app, newest, working }: AppCardProps): ReactElement {
   return (
     <Link
@@ -132,9 +165,9 @@ export function AppCard({ app, newest, working }: AppCardProps): ReactElement {
     >
       <Card className={cn("h-full gap-0 p-4", motion.tint, tinted)}>
         <CardMedia app={app} newest={newest} />
-        <div className="flex flex-col gap-1 py-4">
+        <div className="relative flex flex-col gap-1 py-4">
           <h3 className="font-medium text-body">{appName(app)}</h3>
-          <p className="truncate text-body text-ink-muted">{appLine(app)}</p>
+          <CardLine text={appLine(app)} />
           <WorkingLine working={working} />
         </div>
       </Card>
