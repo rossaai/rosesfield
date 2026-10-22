@@ -17,7 +17,7 @@ import {
 import type { ReactElement, ReactNode } from "react"
 
 const phoneRowHeight =
-  "@max-regular:min-h-[round(var(--spacing-button)*17/14,1px)]"
+  "@max-regular:min-h-[round(var(--spacing-button)*17/14,var(--spacing-hairline))]"
 
 const rowClass = cn(
   "relative flex min-h-button w-full items-center gap-s3 rounded-item px-s4 py-0 text-start text-body",

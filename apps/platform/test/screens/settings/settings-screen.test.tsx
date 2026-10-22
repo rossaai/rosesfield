@@ -146,7 +146,7 @@ describe("settings on a desktop", () => {
       )
       expect(row.className.split(" ")).not.toContain("min-h-11")
       expect(row.className.split(" ")).toContain(
-        "@max-regular:min-h-[round(var(--spacing-button)*17/14,1px)]"
+        "@max-regular:min-h-[round(var(--spacing-button)*17/14,var(--spacing-hairline))]"
       )
     }
     const titles = [...pane.querySelectorAll("h2")]
