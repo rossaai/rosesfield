@@ -9,8 +9,9 @@ import {
   exploreListQuery,
   isAdmitted,
 } from "@/screens/explore/explore-list"
-import type { ExploreEntry } from "@/screens/explore/explore-tile"
+import type { ExploreEntry, VisualEntry } from "@/screens/explore/explore-tile"
 import { type SharedOutput, shareQuery } from "@/screens/explore/share-api"
+import type { ShowcaseItem } from "@/showcase/showcase"
 
 export type ExploreEntries =
   | { state: "loading" }
@@ -42,6 +43,16 @@ export function sharedEntries(shares: readonly SharedOutput[]): ExploreEntry[] {
       },
     ]
   })
+}
+
+export function showcaseEntries(items: readonly ShowcaseItem[]): VisualEntry[] {
+  return items.map((item) => ({
+    key: `showcase-${item.file}`,
+    run: item.run,
+    kind: item.kind,
+    aspect: { width: item.width, height: item.height },
+    source: { kind: "showcase", src: item.src },
+  }))
 }
 
 export function admittedEntries(

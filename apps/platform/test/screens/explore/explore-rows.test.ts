@@ -132,9 +132,36 @@ describe("Explore's rows", () => {
 
   it("put one card per app in the promo row", () => {
     const first = entryOf({})
-    const promos = promoEntries([first, entryOf({}), moveOf("static")])
+    const promos = promoEntries([
+      first,
+      entryOf({}),
+      moveOf("static"),
+      entryOf({ appId: "edit" }),
+    ])
 
-    expect(promos.map((promo) => promo.app.id)).toEqual(["image", "video"])
+    expect(promos.map((promo) => promo.app.id)).toEqual([
+      "image",
+      "video",
+      "edit",
+    ])
     expect(promos[0]?.entry).toBe(first)
+  })
+
+  it("give each promo card the app's result closest to its wide frame", () => {
+    const tall = entryOf({})
+    const wide = { ...entryOf({}), aspect: { width: 4, height: 3 } }
+    const promos = promoEntries([
+      tall,
+      wide,
+      moveOf("static"),
+      entryOf({ appId: "edit" }),
+    ])
+
+    expect(promos[0]?.entry).toBe(wide)
+  })
+
+  it("leave the promo row out while too few apps hold a result to fill it", () => {
+    const two = ["image", "edit"].map((appId) => entryOf({ appId }))
+    expect(promoEntries(two)).toEqual([])
   })
 })
