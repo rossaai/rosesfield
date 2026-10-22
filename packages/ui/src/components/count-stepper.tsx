@@ -1,5 +1,6 @@
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { MinusIcon, PlusIcon } from "lucide-react"
 import type { ReactElement } from "react"
 
@@ -14,8 +15,8 @@ type CountStepperProps = {
 }
 
 const stepClass = cn(
-  "relative flex size-8 shrink-0 items-center justify-center rounded-dense text-ink-muted disabled:cursor-not-allowed disabled:opacity-(--opacity-disabled) [&_svg]:size-4",
-  interaction.light,
+  "relative flex size-icon-small shrink-0 items-center justify-center rounded-full text-ink-muted hover:text-ink disabled:opacity-(--opacity-disabled) [&_svg]:glyph-small",
+  motion.pressRound,
   interaction.ring
 )
 
@@ -32,7 +33,10 @@ function CountStepper({
     <fieldset
       data-slot="count-stepper"
       aria-label={label}
-      className="m-0 inline-flex h-8 w-24.5 shrink-0 items-center justify-between rounded-dense border-0 bg-(--well) p-0"
+      className={cn(
+        "m-0 inline-flex h-button-small shrink-0 items-center gap-s1 rounded-full border-0 bg-transparent p-0 hover:bg-(--tint) in-data-[gallery=hover]:bg-(--tint)",
+        motion.tint
+      )}
     >
       <button
         type="button"

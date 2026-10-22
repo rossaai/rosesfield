@@ -2,6 +2,7 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import type { GenerateButtonForm } from "@rosesfield/ui/contracts/generate-button.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { SparkleIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 
@@ -13,34 +14,17 @@ type GenerateButtonProps = Omit<ButtonPrimitive.Props, "children" | "form"> & {
 }
 
 const forms = {
-  tile: "h-20 w-30 flex-col justify-center gap-0.5 rounded-card px-3",
-  bar: "h-12 w-full flex-row justify-center gap-2 rounded-cell px-4",
+  tile: "h-20 w-30 flex-col justify-center gap-0.5 rounded-cell px-3",
+  bar: "h-field w-full flex-row justify-center gap-2 rounded-cell px-4",
 } satisfies Record<GenerateButtonForm, string>
 
-const glyphs = {
-  tile: "size-3",
-  bar: "size-5",
-} satisfies Record<GenerateButtonForm, string>
-
-function Price({
-  price,
-  form,
-}: {
-  price: ReactNode
-  form: GenerateButtonForm
-}): ReactElement {
+function Price({ price }: { price: ReactNode }): ReactElement {
   return (
     <span
       data-slot="generate-button-price"
-      className={cn(
-        "inline-flex items-center gap-0.5 tabular-nums",
-        form === "tile" ? "text-label" : "text-body"
-      )}
+      className="inline-flex items-center gap-0.5 text-label tabular-nums"
     >
-      <SparkleIcon
-        aria-hidden="true"
-        className={cn("shrink-0", glyphs[form])}
-      />
+      <SparkleIcon aria-hidden="true" className="glyph-small" />
       {price}
     </span>
   )
@@ -72,7 +56,7 @@ function GenerateButton({
       className={cn(
         "relative inline-flex shrink-0 items-center bg-ink font-medium text-canvas select-none disabled:pointer-events-none disabled:opacity-(--opacity-disabled) data-disabled:pointer-events-none data-disabled:opacity-(--opacity-disabled) aria-busy:opacity-(--opacity-pulse)",
         forms[form],
-        interaction.lightPress,
+        motion.press,
         interaction.ring,
         className
       )}
@@ -84,9 +68,7 @@ function GenerateButton({
       >
         {label}
       </span>
-      {price === undefined || price === null ? null : (
-        <Price price={price} form={form} />
-      )}
+      {price === undefined || price === null ? null : <Price price={price} />}
     </ButtonPrimitive>
   )
 }

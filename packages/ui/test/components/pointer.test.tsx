@@ -15,15 +15,8 @@ import {
 } from "@rosesfield/ui/components/filter-chip"
 import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import { Switch } from "@rosesfield/ui/components/switch"
-import {
-  ModeStrip,
-  ModeTab,
-  SegmentedTab,
-  SegmentedTabs,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
+import { ViewMenu } from "@rosesfield/ui/components/view-menu"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { readSource } from "../read-source"
@@ -93,16 +86,14 @@ describe("the pointer rule", () => {
             <TabsTrigger value="one">Pill</TabsTrigger>
           </TabsList>
         </Tabs>
-        <Tabs defaultValue="one">
-          <ModeStrip aria-label="Mode tabs">
-            <ModeTab value="one">Mode</ModeTab>
-          </ModeStrip>
-        </Tabs>
-        <Tabs defaultValue="one">
-          <SegmentedTabs aria-label="Segment tabs">
-            <SegmentedTab value="one">Segment</SegmentedTab>
-          </SegmentedTabs>
-        </Tabs>
+        <ViewMenu
+          label="View"
+          layoutLabel="Layout"
+          listLabel="List"
+          gridLabel="Grid"
+          layout="grid"
+          onLayoutChange={() => undefined}
+        />
       </>
     )
     const pressables = [
@@ -115,8 +106,7 @@ describe("the pointer rule", () => {
       screen.getByRole("checkbox", { name: "Keep" }),
       screen.getByRole("radio", { name: "4:3" }),
       screen.getByRole("tab", { name: "Pill" }),
-      screen.getByRole("tab", { name: "Mode" }),
-      screen.getByRole("tab", { name: "Segment" }),
+      screen.getByRole("button", { name: "View" }),
     ]
     for (const pressable of pressables) {
       expect(shows(pressable), pressable.outerHTML.slice(0, 80)).toBe("pointer")
@@ -159,12 +149,12 @@ describe("the pointer rule", () => {
           disabled
         />
         <Tabs defaultValue="one">
-          <SegmentedTabs aria-label="Segment tabs">
-            <SegmentedTab value="one">Segment</SegmentedTab>
-            <SegmentedTab value="two" disabled>
+          <TabsList aria-label="Segment tabs">
+            <TabsTrigger value="one">Segment</TabsTrigger>
+            <TabsTrigger value="two" disabled>
               Later
-            </SegmentedTab>
-          </SegmentedTabs>
+            </TabsTrigger>
+          </TabsList>
         </Tabs>
       </>
     )

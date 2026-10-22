@@ -22,8 +22,8 @@ const selectTriggerVariants = cva(
       variant: {
         field: cn(wellClass, "h-field rounded-full pr-s4"),
         chip: cn(
-          "relative h-8 max-w-button-max justify-start gap-1 rounded-dense bg-(--well) px-3 py-1.5 font-medium text-body text-ink data-popup-open:bg-(--tint) [&_svg]:size-4 [&_[data-slot=select-icon]]:hidden",
-          interaction.light,
+          "relative h-button-small max-w-button-max justify-start gap-s1 rounded-full bg-transparent px-s3 font-medium text-body text-ink data-popup-open:bg-(--tint) [&_svg]:glyph-small [&_[data-slot=select-icon]]:hidden",
+          interaction.fill,
           interaction.ring
         ),
       },
@@ -51,8 +51,8 @@ function SelectTrigger({
       <SelectPrimitive.Icon
         data-slot="select-icon"
         className={cn(
-          "flex shrink-0 text-ink-muted group-data-popup-open/select:rotate-180",
-          motion.control
+          "flex shrink-0 text-ink-muted group-data-popup-open/select:-rotate-180",
+          motion.disclosure
         )}
       >
         <ChevronDownIcon aria-hidden="true" />
@@ -116,7 +116,7 @@ function SelectItem({
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
-      className={cn(menuItemClass, "pr-s12", className)}
+      className={cn(menuItemClass, "pe-s12", className)}
       {...props}
     >
       {icon === undefined ? null : (

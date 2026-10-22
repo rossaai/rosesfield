@@ -12,6 +12,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@rosesfield/ui/components/tooltip"
+import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import type { ReactElement, ReactNode } from "react"
 
 type ChipOption<T extends string> = {
@@ -70,7 +72,7 @@ function ChipSelect<T extends string>({
               variant="chip"
               aria-label={label}
               data-slot="chip-select"
-              className="min-w-0 shrink"
+              className={cn("min-w-0 shrink", motion.press)}
             >
               <ChipIcon icon={icon} />
               <span className="sr-only">{`${label} `}</span>
