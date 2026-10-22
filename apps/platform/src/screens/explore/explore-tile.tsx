@@ -141,21 +141,21 @@ function EntrySkeleton({ aspect }: { aspect: MediaAspect }): ReactElement {
 
 type ResultCardProps = {
   entry: VisualEntry
-  narrow: boolean
+  aspect: MediaAspect
   onOpen: OpenResult
   onMore: (entry: VisualEntry) => void
 }
 
 export function ResultCard({
   entry,
-  narrow,
+  aspect,
   onOpen,
   onMore,
 }: ResultCardProps): ReactElement {
   const src = useEntrySrc(entry)
   const recreate = useRecreate()
   if (src === null) {
-    return <EntrySkeleton aspect={entry.aspect} />
+    return <EntrySkeleton aspect={aspect} />
   }
   const app = runAppName(entry.run)
   return (
@@ -163,7 +163,7 @@ export function ResultCard({
       kind={entry.kind}
       src={src}
       alt={t("explore.tile.label", { app })}
-      aspect={entry.aspect}
+      aspect={aspect}
       app={app}
       model={entryModel(entry) ?? t("explore.tile.noModel")}
       openLabel={t("explore.tile.open", { app })}
@@ -174,7 +174,6 @@ export function ResultCard({
       onOpen={(origin) => onOpen(entry, origin)}
       onRecreate={() => recreate(entry)}
       onMore={() => onMore(entry)}
-      narrow={narrow}
     />
   )
 }

@@ -1,12 +1,23 @@
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@rosesfield/ui/components/dropdown-menu"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
-import { ArrowUpRightIcon, ChevronRightIcon } from "lucide-react"
+import {
+  ArrowUpRightIcon,
+  ChevronRightIcon,
+  ChevronsUpDownIcon,
+} from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 
 const rowClass =
-  "relative flex min-h-11 w-full items-center gap-s3 rounded-item px-s4 py-s2 text-start text-body"
+  "relative flex min-h-button w-full items-center gap-s3 rounded-item px-s4 py-0 text-start text-body"
 
 const hairlines =
   "*:not-first:before:pointer-events-none *:not-first:before:absolute *:not-first:before:-top-px *:not-first:before:right-s4 *:not-first:before:left-[calc(var(--spacing-s4)+var(--spacing-glyph)+var(--spacing-s3))] *:not-first:before:h-px *:not-first:before:bg-(--line)"
@@ -42,7 +53,8 @@ export function SettingsRowBody({
         data-slot="settings-row-lead"
         className={cn(
           "flex size-glyph shrink-0 items-center justify-center [&_svg]:glyph",
-          tone === "danger" ? "text-bug-text" : "text-ink-muted"
+          tone === "danger" ? "text-bug-text" : "text-ink-muted",
+          motion.tint
         )}
       >
         {icon}
@@ -51,7 +63,8 @@ export function SettingsRowBody({
         data-slot="settings-row-label"
         className={cn(
           "min-w-16 flex-1",
-          tone === "danger" ? "text-bug-text" : "text-ink"
+          tone === "danger" ? "text-bug-text" : "text-ink",
+          motion.tint
         )}
       >
         {label}
@@ -120,6 +133,63 @@ export function SettingsLinkRow(
 
 export const settingsNavRowClass = cn(rowClass, pressClass)
 
+type SelectOption<T extends string> = { value: T; label: string }
+
+export function SettingsSelectRow<T extends string>({
+  icon,
+  label,
+  value,
+  options,
+  onValueChange,
+}: {
+  icon: ReactElement
+  label: string
+  value: T
+  options: ReadonlyArray<SelectOption<T>>
+  onValueChange: (value: T) => void
+}): ReactElement {
+  const chosen = options.find((option) => option.value === value)
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <button
+            type="button"
+            data-slot="settings-row"
+            className={cn(rowClass, pressClass, "data-popup-open:bg-(--tint)")}
+          />
+        }
+      >
+        <SettingsRowBody
+          icon={icon}
+          label={label}
+          value={chosen?.label ?? ""}
+          trail={
+            <ChevronsUpDownIcon aria-hidden="true" className={trailGlyph} />
+          }
+        />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" data-slot="settings-select-menu">
+        <DropdownMenuRadioGroup
+          value={value}
+          onValueChange={(next) => {
+            const option = options.find((one) => one.value === next)
+            if (option !== undefined) {
+              onValueChange(option.value)
+            }
+          }}
+        >
+          {options.map((option) => (
+            <DropdownMenuRadioItem key={option.value} value={option.value}>
+              {option.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 export function SettingsNavBody(props: RowParts): ReactElement {
   return (
     <SettingsRowBody
@@ -140,10 +210,13 @@ export function SettingsGroup({
     <section
       data-slot="settings-group"
       aria-label={label}
-      className="flex flex-col gap-s2"
+      className="flex flex-col gap-s1"
     >
       {label === undefined ? null : (
-        <h3 className="ps-[calc(var(--spacing-s1)+var(--spacing-s4)+var(--spacing-glyph)+var(--spacing-s3))] text-label font-medium text-ink-muted">
+        <h3
+          data-slot="section-heading"
+          className="flex h-tab items-center ps-[calc(var(--spacing-s1)+var(--spacing-s4)+var(--spacing-glyph)+var(--spacing-s3))] font-medium text-label text-ink-muted"
+        >
           {label}
         </h3>
       )}

@@ -1,7 +1,3 @@
-import {
-  SegmentedControl,
-  type SegmentedItem,
-} from "@rosesfield/ui/components/segmented-control"
 import { useNavigate } from "@tanstack/react-router"
 import {
   BotIcon,
@@ -28,6 +24,7 @@ import {
   SettingsGroup,
   SettingsLinkRow,
   SettingsRow,
+  SettingsSelectRow,
 } from "@/screens/settings/settings-row"
 import {
   keepThemeChoice,
@@ -52,7 +49,7 @@ function AgentRows({ settings }: { settings: GatewaySettings }): ReactElement {
   const model = settings.agent === "set" ? settings.agentModel : null
   return (
     <>
-      <SettingsGroup>
+      <SettingsGroup label={t("settings.agent.model")}>
         {model === null ? (
           <SettingsRow icon={<BotIcon />} label={agentStatus(settings)} />
         ) : (
@@ -64,7 +61,7 @@ function AgentRows({ settings }: { settings: GatewaySettings }): ReactElement {
         )}
       </SettingsGroup>
       {settings.mode !== "public" && settings.agent !== "set" ? (
-        <SettingsGroup>
+        <SettingsGroup label={t("settings.group.help")}>
           <SettingsLinkRow
             icon={<TerminalIcon />}
             label={t("settings.agent.howTo")}
@@ -90,29 +87,25 @@ function OwnerLock({ settings }: { settings: GatewaySettings }): ReactElement {
   }
   const isLocal = settings.lock === "local"
   return (
-    <>
-      <SettingsGroup>
-        <SettingsRow
-          icon={isLocal ? <LockOpenIcon /> : <LockIcon />}
-          label={isLocal ? t("settings.lock.local") : t("settings.lock.on")}
-        />
-      </SettingsGroup>
+    <SettingsGroup label={t("settings.group.server")}>
+      <SettingsRow
+        icon={isLocal ? <LockOpenIcon /> : <LockIcon />}
+        label={isLocal ? t("settings.lock.local") : t("settings.lock.on")}
+      />
       {readOwnerToken() === null ? null : (
-        <SettingsGroup>
-          <SettingsButtonRow
-            icon={<LogOutIcon />}
-            label={t("settings.lock.action")}
-            onPress={() => void lock()}
-          />
-        </SettingsGroup>
+        <SettingsButtonRow
+          icon={<LogOutIcon />}
+          label={t("settings.lock.action")}
+          onPress={() => void lock()}
+        />
       )}
-    </>
+    </SettingsGroup>
   )
 }
 
 function PublicWork(): ReactElement {
   return (
-    <SettingsGroup>
+    <SettingsGroup label={t("settings.group.privacy")}>
       <SettingsRow icon={<GlobeIcon />} label={t("settings.public.body")} />
       <SettingsRow icon={<CloudIcon />} label={t("settings.public.session")} />
       <RetentionRow />
@@ -134,7 +127,7 @@ export function LockPane(): ReactElement {
   )
 }
 
-const themes: SegmentedItem<ThemeChoice>[] = [
+const themes: ReadonlyArray<{ value: ThemeChoice; label: string }> = [
   { value: "system", label: t("settings.theme.system") },
   { value: "light", label: t("settings.theme.light") },
   { value: "dark", label: t("settings.theme.dark") },
@@ -143,22 +136,16 @@ const themes: SegmentedItem<ThemeChoice>[] = [
 export function AppearancePane(): ReactElement {
   const [theme, setTheme] = useState(readThemeChoice)
   return (
-    <SettingsGroup>
-      <SettingsRow
+    <SettingsGroup label={t("settings.group.general")}>
+      <SettingsSelectRow
         icon={<SunMoonIcon />}
         label={t("settings.theme.label")}
-        control={
-          <SegmentedControl
-            items={themes}
-            value={theme}
-            onValueChange={(next) => {
-              setTheme(next)
-              keepThemeChoice(next)
-            }}
-            label={t("settings.theme.label")}
-            density="row"
-          />
-        }
+        value={theme}
+        options={themes}
+        onValueChange={(next) => {
+          setTheme(next)
+          keepThemeChoice(next)
+        }}
       />
     </SettingsGroup>
   )
@@ -166,7 +153,7 @@ export function AppearancePane(): ReactElement {
 
 export function AboutPane(): ReactElement {
   return (
-    <SettingsGroup>
+    <SettingsGroup label={t("shell.name")}>
       {__APP_VERSION__ === "" ? null : (
         <SettingsRow
           icon={<TagIcon />}

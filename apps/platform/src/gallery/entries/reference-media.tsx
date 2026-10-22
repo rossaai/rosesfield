@@ -16,6 +16,7 @@ import { ImageIcon, VideoIcon, Volume2Icon } from "lucide-react"
 import { type ReactElement, useState } from "react"
 import { t as tLive } from "@/copy/t"
 import { t } from "@/gallery/copy.en"
+import { skeletonState } from "@/gallery/entries/reference-kernel"
 import demoSquare from "@/gallery/fixtures/demo-image-1-1.png"
 import demoTall from "@/gallery/fixtures/demo-image-9-16.png"
 import demoWide from "@/gallery/fixtures/demo-image-16-9.png"
@@ -36,22 +37,25 @@ const shapes = [
   { src: demoSquare, aspect: { width: 1, height: 1 } },
 ] as const
 
+function shapeOf(index: number): (typeof shapes)[number] {
+  return shapes[index % shapes.length] ?? shapes[0]
+}
+
 function Result({
   index,
+  aspect,
   form = "card",
-  narrow = true,
 }: {
   index: number
+  aspect: { readonly width: number; readonly height: number }
   form?: "card" | "library"
-  narrow?: boolean
 }): ReactElement {
-  const shape = shapes[index % shapes.length] ?? shapes[0]
   return (
     <ResultTile
       kind="image"
-      src={shape.src}
+      src={shapeOf(index).src}
       alt={t("sample.output")}
-      aspect={shape.aspect}
+      aspect={aspect}
       app={t("sample.nav.image")}
       model={t("sample.model")}
       openLabel={t("sample.openResult")}
@@ -62,11 +66,10 @@ function Result({
       onOpen={() => undefined}
       onRecreate={() => undefined}
       form={form}
-      narrow={narrow}
       {...(form === "library"
         ? {
             sound: (
-              <IconButton label={t("sample.sound")} place="clip" tone="glass">
+              <IconButton label={t("sample.sound")} size="dense" tone="glass">
                 <Volume2Icon aria-hidden="true" />
               </IconButton>
             ),
@@ -81,10 +84,8 @@ const twelve = Array.from({ length: 12 }, (_, index) => index)
 function HeaderActions(): ReactElement {
   return (
     <>
-      <Button size="hero" tone="primary">
-        {t("sample.start")}
-      </Button>
-      <Button size="hero">{t("sample.learnMore")}</Button>
+      <Button tone="primary">{t("sample.start")}</Button>
+      <Button>{t("sample.learnMore")}</Button>
     </>
   )
 }
@@ -114,7 +115,7 @@ function Feed({ layout }: { layout: "masonry" | "row" }): ReactElement {
       }
     >
       {twelve.map((index) => (
-        <Result key={index} index={index} narrow={layout === "masonry"} />
+        <Result key={index} index={index} aspect={shapeOf(index).aspect} />
       ))}
     </MediaFeed>
   )
@@ -257,7 +258,7 @@ export const referenceMediaEntries: GalleryEntry[] = [
     title: "ref.imageCard",
     states: interactionStates(() => (
       <div className="w-57">
-        <Result index={0} />
+        <Result index={0} aspect={shapeOf(0).aspect} />
       </div>
     )),
   },
@@ -267,7 +268,7 @@ export const referenceMediaEntries: GalleryEntry[] = [
     title: "ref.videoTile",
     states: interactionStates(() => (
       <div className="w-82.5">
-        <Result index={1} form="library" />
+        <Result index={1} aspect={shapeOf(1).aspect} form="library" />
       </div>
     )),
   },
@@ -296,7 +297,10 @@ export const referenceMediaEntries: GalleryEntry[] = [
     id: "ref-gallery-grid",
     unit: "gallery-grid",
     title: "ref.galleryGrid",
-    states: interactionStates(() => <Feed layout="masonry" />),
+    states: [
+      ...interactionStates(() => <Feed layout="masonry" />),
+      skeletonState,
+    ],
   },
   {
     id: "ref-media-row",

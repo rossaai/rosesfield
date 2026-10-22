@@ -12,6 +12,7 @@ import {
   TabBarLink,
 } from "@rosesfield/ui/components/tab-bar"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { Link } from "@tanstack/react-router"
 import { PlugIcon } from "lucide-react"
 import { type ReactElement, useState } from "react"
@@ -57,7 +58,7 @@ function AppsSheet({
                       onClick={() => onOpenChange(false)}
                       className={cn(
                         "relative flex h-button items-center gap-s2 rounded-full bg-(--well) px-s4 text-body [&_svg]:glyph",
-                        interaction.light,
+                        motion.press,
                         interaction.ring
                       )}
                     >

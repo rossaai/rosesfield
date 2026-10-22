@@ -3,9 +3,10 @@ import { IconButton } from "@rosesfield/ui/components/button"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { ResultTile } from "@rosesfield/ui/components/result-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { Volume2Icon, VolumeOffIcon } from "lucide-react"
+import { CheckIcon, Volume2Icon, VolumeOffIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useRef, useState } from "react"
 import { assetQuery } from "@/api/queries"
 import { useAssetSource } from "@/api/use-asset-source"
@@ -14,8 +15,10 @@ import { t } from "@/copy/t"
 import { AssetContextMenu } from "@/pieces/asset-context-menu"
 import { assetLabel, useAssetName } from "@/pieces/asset-name"
 import { AssetTile, aspectOfAsset } from "@/pieces/asset-tile"
+import { LabMark } from "@/pieces/lab-mark"
 import { runAppName, runAspect, runModel } from "@/pieces/run/run-facts"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
+import { runLabOf } from "@/screens/history/history-row"
 import {
   columnLayout,
   packColumns,
@@ -47,7 +50,7 @@ export function SoundButton(): ReactElement {
   return (
     <IconButton
       label={t(isOn ? "output.soundOff" : "output.soundOn")}
-      place="clip"
+      size="dense"
       tone="glass"
       aria-pressed={isOn}
       onClick={(event) => {
@@ -98,6 +101,7 @@ function RunResult({
   const holder = useRef<HTMLDivElement>(null)
   const name = useAssetName(asset) ?? assetLabel(asset)
   const isVideo = asset.kind === "video"
+  const lab = runLabOf(run)
   return (
     <AssetContextMenu asset={asset}>
       <div ref={holder} data-slot="grid-item" className="w-full">
@@ -108,6 +112,7 @@ function RunResult({
           aspect={aspectOfAsset(asset, aspect) ?? aspect}
           app={runAppName(run)}
           model={runModel(run, findCatalogApp(run.appId)) ?? ""}
+          {...(lab === null ? {} : { mark: <LabMark maker={lab} /> })}
           openLabel={t("library.tile.open", { name })}
           expandLabel={t("library.tile.expand")}
           moreLabel={t("viewer.more")}
@@ -123,7 +128,6 @@ function RunResult({
           }
           onMore={() => openMenuAt(holder.current)}
           form="library"
-          narrow={false}
           {...(isVideo ? { sound: <SoundButton /> } : {})}
         />
       </div>
@@ -149,7 +153,7 @@ function OwnTile({
         isDemo={item.run?.origin === "demo"}
       />
       {isVideo ? (
-        <span className="absolute right-2 bottom-2 z-20 flex">
+        <span className="absolute end-s3 bottom-s3 z-20 flex">
           <SoundButton />
         </span>
       ) : null}
@@ -199,26 +203,88 @@ export function GridTile({
   return <OwnTile item={item} list={list} isVideo={kind === "video"} />
 }
 
+export function SelectMark({
+  isSelected,
+  onToggle,
+}: {
+  isSelected: boolean
+  onToggle: () => void
+}): ReactElement {
+  return (
+    <button
+      type="button"
+      data-slot="select-mark"
+      aria-pressed={isSelected}
+      aria-label={t("library.tile.select")}
+      onClick={onToggle}
+      className={cn(
+        "absolute inset-0 z-40 rounded-cell aria-pressed:bg-selection",
+        motion.tint
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "absolute top-s2 left-s2 flex size-checkbox items-center justify-center rounded-dense text-canvas",
+          isSelected ? "bg-ink" : "bg-track"
+        )}
+      >
+        {isSelected ? <CheckIcon className="glyph-small" /> : null}
+      </span>
+    </button>
+  )
+}
+
+export type GridSelection = {
+  selected: readonly string[]
+  onToggle: (assetId: string) => void
+}
+
+function SelectableGridTile({
+  item,
+  list,
+  selection,
+}: {
+  item: GridItem
+  list: readonly string[]
+  selection: GridSelection | undefined
+}): ReactElement {
+  if (selection === undefined) {
+    return <GridTile item={item} list={list} />
+  }
+  return (
+    <div data-slot="grid-select" className="relative">
+      <GridTile item={item} list={list} />
+      <SelectMark
+        isSelected={selection.selected.includes(item.assetId)}
+        onToggle={() => selection.onToggle(item.assetId)}
+      />
+    </div>
+  )
+}
+
 export function ResultGrid({
   items,
   size,
   after,
+  selection,
 }: {
   items: readonly GridItem[]
   size: number
   after?: ReactNode
+  selection?: GridSelection
 }): ReactElement {
   const isRegular = useIsRegularWindow()
   const [ref, available] = useAvailableWidth()
   const step = tileStepOf(size, isRegular)
-  const layout = columnLayout(items.length, available, step, isRegular)
+  const layout = columnLayout(items.length, available, step, isRegular, size)
   const columns = packColumns(items, layout.count, (item) => item.aspect)
   const list = items.map((item) => item.assetId)
   return (
     <div ref={ref} data-slot="result-grid" className="flex w-full flex-col">
       <div
         data-fills={layout.fills ? "" : undefined}
-        className="flex w-full items-start justify-start gap-2"
+        className="flex w-full items-start justify-start gap-s2"
       >
         {columns.map((column, index) => (
           <div
@@ -226,12 +292,17 @@ export function ResultGrid({
             key={index}
             data-slot="result-column"
             className={cn(
-              "flex min-w-0 flex-col gap-2",
+              "flex min-w-0 flex-col gap-s2",
               layout.fills ? "flex-1" : cn("shrink-0", step.className)
             )}
           >
             {column.map((item) => (
-              <GridTile key={item.assetId} item={item} list={list} />
+              <SelectableGridTile
+                key={item.assetId}
+                item={item}
+                list={list}
+                selection={selection}
+              />
             ))}
           </div>
         ))}

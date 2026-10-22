@@ -61,7 +61,6 @@ describe("Library's View", () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
         <LibraryRows
-          size={0}
           assets={[
             assetOf("3d4e5f6a-7b8c-4d9e-8f0a-2b3c4d5e6f01", runId),
             assetOf("4e5f6a7b-8c9d-4e0f-9a1b-3c4d5e6f7a02", null),

@@ -134,15 +134,13 @@ function ServerEngine({
   const needsKey = engine.origin === "demo" || engine.key === "missing"
   return (
     <>
-      {engine.origin === "demo" ? (
-        <SettingsGroup>
+      <SettingsGroup label={t("settings.group.server")}>
+        {engine.origin === "demo" ? (
           <SettingsRow
             icon={<FlaskConicalIcon className="text-cem-text" />}
             label={t("settings.demo.title")}
           />
-        </SettingsGroup>
-      ) : null}
-      <SettingsGroup>
+        ) : null}
         <SettingsRow
           icon={<ServerIcon />}
           label={t("settings.engine.target")}
@@ -161,7 +159,7 @@ function ServerEngine({
         <AccountRows />
       </SettingsGroup>
       {needsKey ? (
-        <SettingsGroup>
+        <SettingsGroup label={t("settings.group.help")}>
           <SettingsLinkRow
             icon={<TerminalIcon />}
             label={t("settings.engine.howTo")}
@@ -186,7 +184,7 @@ function VisitorKey(): ReactElement {
   }
   return (
     <>
-      <SettingsGroup>
+      <SettingsGroup label={t("settings.engine.key")}>
         {hasKey ? (
           <>
             <SettingsRow icon={<KeyRoundIcon />} label={t("key.kept")} />
@@ -200,19 +198,17 @@ function VisitorKey(): ReactElement {
           />
         )}
         <RetentionRow />
-      </SettingsGroup>
-      {hasKey && status !== null && isRefusal(status) ? (
-        <KeyRefusal status={status} />
-      ) : null}
-      {hasKey ? (
-        <SettingsGroup>
+        {hasKey ? (
           <SettingsButtonRow
             icon={<TrashIcon />}
             label={t("key.forget")}
             tone="danger"
             onPress={forget}
           />
-        </SettingsGroup>
+        ) : null}
+      </SettingsGroup>
+      {hasKey && status !== null && isRefusal(status) ? (
+        <KeyRefusal status={status} />
       ) : null}
       <KeyDialog open={isAdding} onOpenChange={setAdding} />
     </>

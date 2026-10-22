@@ -13,7 +13,7 @@ import { BottomBar } from "@/shell/bottom-bar"
 import { KeyDialogProvider } from "@/shell/key-dialog-context"
 import { hasFooter } from "@/shell/page-kind"
 import { RunWatcher } from "@/shell/run-watcher"
-import { ScreenHeader } from "@/shell/screen-header"
+import { PhoneTitleProvider, ScreenHeader } from "@/shell/screen-header"
 import { ShellDialogsProvider } from "@/shell/shell-dialogs"
 import { ShellFooter } from "@/shell/shell-footer"
 import { TopBar } from "@/shell/top-bar"
@@ -64,28 +64,30 @@ export function ShellFrame({
     <ViewerProvider>
       <KeyDialogProvider>
         <ShellDialogsProvider>
-          <div
-            data-slot="shell"
-            className="@container flex h-dvh flex-col bg-canvas"
-          >
-            <TopBar />
-            <main
-              className={cn(
-                "min-h-0 flex-1 overflow-y-auto",
-                interaction.ringScroll,
-                tabBarCover,
-                footer ? "flex flex-col *:shrink-0" : ""
-              )}
+          <PhoneTitleProvider>
+            <div
+              data-slot="shell"
+              className="@container flex h-dvh flex-col bg-canvas"
             >
-              <ShellContent>{children}</ShellContent>
-              {footer ? (
-                <div data-slot="shell-footer" className="mt-auto">
-                  <ShellFooter />
-                </div>
-              ) : null}
-            </main>
-            <BottomBar />
-          </div>
+              <TopBar />
+              <main
+                className={cn(
+                  "min-h-0 flex-1 overflow-y-auto",
+                  interaction.ringScroll,
+                  tabBarCover,
+                  footer ? "flex flex-col *:shrink-0" : ""
+                )}
+              >
+                <ShellContent>{children}</ShellContent>
+                {footer ? (
+                  <div data-slot="shell-footer" className="mt-auto">
+                    <ShellFooter />
+                  </div>
+                ) : null}
+              </main>
+              <BottomBar />
+            </div>
+          </PhoneTitleProvider>
           <RunWatcher />
           <AssetViewer />
         </ShellDialogsProvider>

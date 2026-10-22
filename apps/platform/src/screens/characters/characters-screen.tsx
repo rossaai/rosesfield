@@ -2,9 +2,10 @@ import type { Character } from "@rosesfield/contract"
 import { Button, IconButton } from "@rosesfield/ui/components/button"
 import { Card } from "@rosesfield/ui/components/card"
 import { interaction } from "@rosesfield/ui/components/interaction"
-import { Skeleton } from "@rosesfield/ui/components/skeleton"
+import { Skeleton, SkeletonGroup } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { PlusIcon } from "lucide-react"
@@ -22,7 +23,7 @@ function CharacterCard({ character }: { character: Character }): ReactElement {
       params={{ characterId: character.id }}
       className={cn(
         "relative block rounded-card",
-        interaction.light,
+        motion.press,
         interaction.ring
       )}
     >
@@ -43,13 +44,30 @@ function CharacterCard({ character }: { character: Character }): ReactElement {
 
 const grid = "grid grid-cols-2 gap-s3 @regular:grid-cols-4"
 
+export const characterSkeletonCount = 2
+
+function CharacterCardSkeleton(): ReactElement {
+  return (
+    <SkeletonGroup data-skeleton="character">
+      <Card className="gap-s3 p-s4">
+        <Skeleton shape="thumbnail" />
+        <div className="flex flex-col gap-s1">
+          <Skeleton shape="line" text="body" measure="mid" />
+          <Skeleton shape="line" text="caption" measure="short" />
+        </div>
+      </Card>
+    </SkeletonGroup>
+  )
+}
+
 function CharacterList(): ReactNode {
   const characters = useQuery(charactersQuery)
   if (characters.isPending) {
     return (
       <div className={grid}>
-        {[0, 1, 2, 3].map((index) => (
-          <Skeleton key={index} className="aspect-[3/4] rounded-card" />
+        {Array.from({ length: characterSkeletonCount }, (_, index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: a skeleton's place is its identity
+          <CharacterCardSkeleton key={index} />
         ))}
       </div>
     )

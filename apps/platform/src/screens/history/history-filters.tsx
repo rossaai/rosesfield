@@ -2,20 +2,17 @@ import {
   SegmentedControl,
   type SegmentedItem,
 } from "@rosesfield/ui/components/segmented-control"
-import { ShapesIcon } from "lucide-react"
 import type { ReactElement } from "react"
-import { type OutputKind, outputKinds } from "@/catalog/app-facts"
+import type { OutputKind } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import {
   appFilterGroups,
-  type FilterChoice,
+  type DateChoice,
+  dateFilterGroup,
   type FilterGroup,
-  kindPictures,
 } from "@/screens/library/view-cluster"
 
 export type StateChoice = "all" | "working" | "failed"
-
-const every = "all"
 
 const stateItems: SegmentedItem<StateChoice>[] = [
   { value: "all", label: t("kind.all") },
@@ -23,39 +20,21 @@ const stateItems: SegmentedItem<StateChoice>[] = [
   { value: "failed", label: t("history.filter.failed") },
 ]
 
-const kindChoices: readonly FilterChoice[] = [
-  { value: every, label: t("kind.all"), picture: kindPictures.all },
-  ...outputKinds.map((kind) => ({
-    value: kind,
-    label: t(`kind.${kind}`),
-    picture: kindPictures[kind],
-  })),
-]
-
 export type HistoryFilterProps = {
   appId: string | null
   state: StateChoice
   kind: OutputKind | undefined
+  date: DateChoice
   onApp: (appId: string | null) => void
   onState: (state: StateChoice) => void
   onKind: (kind: OutputKind | undefined) => void
-}
-
-function kindOf(value: string): OutputKind | undefined {
-  return outputKinds.find((kind) => kind === value)
+  onDate: (date: DateChoice) => void
 }
 
 export function historyFilterGroups(props: HistoryFilterProps): FilterGroup[] {
   return [
-    {
-      id: "kind",
-      name: t("library.kind.label"),
-      icon: <ShapesIcon />,
-      choices: kindChoices,
-      value: props.kind ?? every,
-      onChoose: (value) => props.onKind(kindOf(value)),
-    },
     ...appFilterGroups(props.appId, props.onApp),
+    dateFilterGroup(props.date, props.onDate),
   ]
 }
 

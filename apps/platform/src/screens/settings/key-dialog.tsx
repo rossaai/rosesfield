@@ -6,9 +6,10 @@ import {
   FieldMessage,
   FieldNote,
 } from "@rosesfield/ui/components/field"
+import { InlineChip } from "@rosesfield/ui/components/inline-chip"
 import { Input } from "@rosesfield/ui/components/input"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { CheckIcon, EyeIcon, EyeOffIcon } from "lucide-react"
+import { ArrowUpRightIcon, CheckIcon, EyeIcon, EyeOffIcon } from "lucide-react"
 import {
   type FormEvent,
   type ReactElement,
@@ -79,17 +80,19 @@ export function ExternalLink({
   children,
 }: {
   href: string
-  children: ReactNode
+  children: string
 }): ReactElement {
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="text-body text-hor-text underline"
-    >
-      {children}
-    </a>
+    <span className="flex">
+      <InlineChip
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        lead={<ArrowUpRightIcon />}
+      >
+        {children}
+      </InlineChip>
+    </span>
   )
 }
 

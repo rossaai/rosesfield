@@ -13,6 +13,7 @@ export type ShowcaseRow = {
   seconds: number
   madeAt: string
   banner?: "start" | "end"
+  from?: string
 }
 
 export const showcaseRows: readonly ShowcaseRow[] = [
@@ -47,6 +48,7 @@ export const showcaseRows: readonly ShowcaseRow[] = [
     credits: 19.24,
     seconds: 102.2,
     madeAt: "2026-10-21T22:04:40Z",
+    from: "street-golden-hour.webp",
   },
   {
     runId: "58bdf412-f014-462f-99e7-7308cee99c2a",
@@ -78,6 +80,7 @@ export const showcaseRows: readonly ShowcaseRow[] = [
     credits: 37.89,
     seconds: 162.3,
     madeAt: "2026-10-21T21:02:43Z",
+    from: "portrait-woman.webp",
   },
   {
     runId: "70ab1a97-f67a-4ab2-a1b9-c69c3fcbba95",
@@ -158,6 +161,7 @@ export const showcaseRows: readonly ShowcaseRow[] = [
     credits: 0.68,
     seconds: 36.3,
     madeAt: "2026-10-22T01:10:42Z",
+    from: "sneaker.webp",
   },
   {
     runId: "6b73aad7-3c3b-4316-9930-79cbfb37f311",
@@ -212,6 +216,7 @@ export const showcaseRows: readonly ShowcaseRow[] = [
     credits: 17.04,
     seconds: 90.2,
     madeAt: "2026-10-22T01:06:32Z",
+    from: "portrait-woman.webp",
   },
   {
     runId: "6d80b2b7-9f99-4ebf-a693-afb6838d192a",
@@ -244,5 +249,53 @@ export const showcaseRows: readonly ShowcaseRow[] = [
     credits: 1.86,
     seconds: 30.1,
     madeAt: "2026-10-22T01:04:26Z",
+  },
+  {
+    runId: "d158cff5-bfd6-4c51-831b-435d0efcf123",
+    file: "teal-wide.webp",
+    appId: "image",
+    kind: "image",
+    width: 1280,
+    height: 720,
+    model: "z_image_turbo_bf16.safetensors",
+    prompt:
+      "Wide portrait photograph of an invented man in his thirties with a dark moustache, wearing a mustard yellow cardigan, against a plain teal backdrop with empty space around him. Soft light. Sharp editorial photograph, no text, no logo.",
+    inputs: { model: "z-image-turbo", resolution: "2k" },
+    aspectRatio: "16:9",
+    credits: 1.37,
+    seconds: 24.1,
+    madeAt: "2026-10-22T02:41:29Z",
+  },
+  {
+    runId: "ad653a63-dada-418f-b188-563fe65c9a7a",
+    file: "lilac-square.webp",
+    appId: "image",
+    kind: "image",
+    width: 1024,
+    height: 1024,
+    model: "z_image_turbo_bf16.safetensors",
+    prompt:
+      "Square portrait photograph of an invented young woman with straight black hair in a blunt bob, wearing a plain lilac knit top, against a plain pale pink backdrop. Soft light. Sharp editorial photograph, no text, no logo.",
+    inputs: { model: "z-image-turbo", resolution: "2k" },
+    aspectRatio: "1:1",
+    credits: 4.67,
+    seconds: 36.2,
+    madeAt: "2026-10-22T02:42:16Z",
+  },
+  {
+    runId: "07adf91b-e14b-4be4-bf26-efdac9ed1d45",
+    file: "white-shirt-tall.webp",
+    appId: "image",
+    kind: "image",
+    width: 720,
+    height: 1280,
+    model: "z_image_turbo_bf16.safetensors",
+    prompt:
+      "Full-body fashion photograph of an invented man with a shaved head in a plain loose white linen suit and white sneakers, standing against a plain sage green backdrop. Sharp editorial photograph, no text, no logo.",
+    inputs: { model: "z-image-turbo", resolution: "2k" },
+    aspectRatio: "9:16",
+    credits: 1.37,
+    seconds: 21.0,
+    madeAt: "2026-10-22T02:44:05Z",
   },
 ]
