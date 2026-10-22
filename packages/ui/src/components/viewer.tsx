@@ -1,5 +1,6 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { IconButton } from "@rosesfield/ui/components/button"
+import { LayerDepth } from "@rosesfield/ui/components/layer-depth"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { useGrowFrom } from "@rosesfield/ui/hooks/use-grow-from"
 import { cn } from "@rosesfield/ui/lib/cn"
@@ -223,10 +224,12 @@ function Viewer(props: ViewerProps): ReactElement {
               fadeRef={fadeRef}
               onClose={close}
             />
-            <ViewerAside fadeRef={fadeRef} hasBar={props.bar !== undefined}>
-              {props.aside}
-            </ViewerAside>
-            <ViewerBar fadeRef={fadeRef}>{props.bar}</ViewerBar>
+            <LayerDepth>
+              <ViewerAside fadeRef={fadeRef} hasBar={props.bar !== undefined}>
+                {props.aside}
+              </ViewerAside>
+              <ViewerBar fadeRef={fadeRef}>{props.bar}</ViewerBar>
+            </LayerDepth>
           </div>
           <ViewerClose
             fadeRef={fadeRef}

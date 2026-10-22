@@ -1,5 +1,6 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { IconButton } from "@rosesfield/ui/components/button"
+import { LayerDepth } from "@rosesfield/ui/components/layer-depth"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { XIcon } from "lucide-react"
@@ -54,7 +55,7 @@ function DialogContent({
         className={cn(dialogPanelClass, className)}
         {...props}
       >
-        {children}
+        <LayerDepth>{children}</LayerDepth>
         <DialogPrimitive.Close
           render={
             <IconButton

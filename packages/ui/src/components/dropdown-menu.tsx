@@ -1,4 +1,8 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
+import {
+  nestedLayerClass,
+  useIsInLayer,
+} from "@rosesfield/ui/components/layer-depth"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { CheckIcon, ChevronRightIcon } from "lucide-react"
@@ -36,6 +40,7 @@ function DropdownMenuContent({
   className,
   ...props
 }: DropdownMenuContentProps): ReactElement {
+  const isNested = useIsInLayer()
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
@@ -47,7 +52,12 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"
           data-ground="layer"
-          className={cn(menuPanelClass, className)}
+          data-depth={isNested ? "nested" : undefined}
+          className={cn(
+            menuPanelClass,
+            isNested ? nestedLayerClass : "",
+            className
+          )}
           {...props}
         />
       </MenuPrimitive.Positioner>
