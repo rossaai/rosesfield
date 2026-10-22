@@ -71,6 +71,8 @@ export function recreateTargetOf(entry: ExploreEntry): RecreateTarget {
           prompt: promptOfRun(entry.run),
           assetIds: [],
           characterIds: [],
+          inputs: entry.run.inputs,
+          aspectRatio: entry.run.aspectRatio,
         },
       }
   }

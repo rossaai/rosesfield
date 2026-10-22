@@ -1,4 +1,5 @@
-import type { AppListing, AssetKind } from "@rosesfield/contract"
+import { isHostedModelId } from "@rosesfield/catalog/comfy"
+import type { AppListing, AssetKind, Run } from "@rosesfield/contract"
 import type { QueryClient } from "@tanstack/react-query"
 import { assetQuery, characterQuery, runQuery } from "@/api/queries"
 import { isAssetInput } from "@/catalog/app-facts"
@@ -86,13 +87,41 @@ export async function placeAll(
   )
 }
 
+const modelInput = "model"
+
+export function withInputs(
+  app: AppListing,
+  values: FormValues,
+  given: Run["inputs"],
+  aspectRatio: string | null = null
+): FormValues {
+  const model = given[modelInput]
+  const isHosted = typeof model === "string" && isHostedModelId(model)
+  const names = new Set(app.inputs.map((input) => input.name))
+  const inputs: Record<string, FieldValue> = { ...values.inputs }
+  for (const [name, value] of Object.entries(given)) {
+    if (isHosted || names.has(name)) {
+      inputs[name] = Array.isArray(value) ? [...value] : value
+    }
+  }
+  return {
+    ...values,
+    inputs,
+    aspectRatio: aspectRatio ?? values.aspectRatio,
+  }
+}
+
 export async function fillFromDraft(
   client: QueryClient,
   app: AppListing,
   values: FormValues,
   draft: Draft
 ): Promise<FormValues> {
-  const prompted = withPrompt(app, values, draft.prompt)
+  const given =
+    draft.inputs === undefined
+      ? values
+      : withInputs(app, values, draft.inputs, draft.aspectRatio ?? null)
+  const prompted = withPrompt(app, given, draft.prompt)
   const placed = await placeAll(client, app, prompted, draft.assetIds)
   return draft.characterIds.reduce(
     (current, id) => withPlaced(app, current, { kind: "character", id }),

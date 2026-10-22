@@ -47,11 +47,17 @@ describe("a result tile", () => {
     expect(recreateTargetOf(own)).toEqual({ search: { from: made.id } })
   })
 
-  it("recreates a bundled example by carrying its prompt into the app", () => {
+  it("recreates a bundled example by carrying its prompt, its inputs and its format into the app", () => {
     const bundled = entryOf({ kind: "showcase", src: "/media/rose.webp" })
 
     expect(recreateTargetOf(bundled)).toEqual({
-      draft: { prompt: "a red rose", assetIds: [], characterIds: [] },
+      draft: {
+        prompt: "a red rose",
+        assetIds: [],
+        characterIds: [],
+        inputs: { prompt: "a red rose" },
+        aspectRatio: "1:1",
+      },
     })
   })
 
