@@ -43,7 +43,12 @@ type Ring = {
   color: string
 }
 
-type Seen = { isNew: boolean; name: string; ring: Ring | null }
+type Seen = {
+  isNew: boolean
+  name: string
+  takesText: boolean
+  ring: Ring | null
+}
 
 type Boxes = { clips: ReadonlyArray<Box>; layers: ReadonlyArray<Box> }
 
@@ -58,6 +63,11 @@ async function readFocus(page: Page): Promise<Seen | null> {
     const name = (focused.getAttribute("aria-label") ?? focused.textContent)
       ?.trim()
       .slice(0, 40)
+    const takesText =
+      focused instanceof HTMLTextAreaElement ||
+      (focused instanceof HTMLInputElement &&
+        ["text", "search", "url", "email"].includes(focused.type)) ||
+      (focused instanceof HTMLElement && focused.isContentEditable)
     const drawn = (at: Element): boolean => {
       const style = getComputedStyle(at)
       return (
@@ -73,7 +83,7 @@ async function readFocus(page: Page): Promise<Seen | null> {
       host.removeAttribute("data-ring-host")
     }
     if (ringed === null) {
-      return { isNew, name: name ?? "", ring: null }
+      return { isNew, name: name ?? "", takesText, ring: null }
     }
     ringed.setAttribute("data-ring-host", "")
     const style = getComputedStyle(ringed)
@@ -88,7 +98,7 @@ async function readFocus(page: Page): Promise<Seen | null> {
     }
     const inset = Number.parseFloat(style.borderTopLeftRadius) + reach + band
     const ring = { edges, band, inset, color: style.outlineColor }
-    return { isNew, name: name ?? "", ring }
+    return { isNew, name: name ?? "", takesText, ring }
   })
 }
 
@@ -247,9 +257,10 @@ async function coveredSides(
   return hidden
 }
 
-async function problemOf(page: Page, ring: Ring | null): Promise<string> {
+async function problemOf(page: Page, seen: Seen): Promise<string> {
+  const { ring } = seen
   if (ring === null) {
-    return "no ring"
+    return seen.takesText ? "" : "no ring"
   }
   const { clips, layers } = await readBoxes(page)
   const problems = clips
@@ -278,7 +289,7 @@ async function walkStops(page: Page, most: number): Promise<Stop[]> {
     if (!seen.isNew) {
       break
     }
-    found.push({ name: seen.name, problem: await problemOf(page, seen.ring) })
+    found.push({ name: seen.name, problem: await problemOf(page, seen) })
   }
   return found
 }
@@ -311,7 +322,7 @@ for (const path of ["/history", "/library", "/apps/image", "/apps/video"]) {
   })
 }
 
-test("Library's search field and its first-column tile start on the page title's 16 px gutter", async ({
+test("Library's first-column tile starts on the page title's 16 px gutter, and its search field sits in the title row", async ({
   page,
 }) => {
   await open(page, "/library")
@@ -323,6 +334,17 @@ test("Library's search field and its first-column tile start on the page title's
   expect(box?.x).toBe(16)
   const search = page.getByRole("searchbox", { name: "Search your library" })
   if (await search.isVisible()) {
-    expect((await search.boundingBox())?.x).toBe(16)
+    const title = await page
+      .locator("header h1")
+      .filter({ visible: true })
+      .first()
+      .boundingBox()
+    const field = await search.boundingBox()
+    if (title === null || field === null) {
+      throw new Error("the title row holds the title and the search field")
+    }
+    const middle = (box: { y: number; height: number }): number =>
+      box.y + box.height / 2
+    expect(Math.abs(middle(field) - middle(title))).toBeLessThan(1)
   }
 })

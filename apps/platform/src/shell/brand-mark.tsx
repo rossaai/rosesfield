@@ -7,9 +7,9 @@ const lockups = {
   dark: "/lockup-dark.svg",
 }
 
-const fields = {
-  light: "/icons/rosesfield-icon-light.svg",
-  dark: "/icons/rosesfield-icon-dark.svg",
+const hills = {
+  light: "/icons/rosesfield-hill-light.svg",
+  dark: "/icons/rosesfield-hill-dark.svg",
 }
 
 function SchemePair({
@@ -50,9 +50,9 @@ export function Lockup({ className }: { className?: string }): ReactElement {
 export function FieldMark({ className }: { className?: string }): ReactElement {
   return (
     <SchemePair
-      sources={fields}
+      sources={hills}
       label=""
-      className={cn("size-button-small", className)}
+      className={cn("aspect-3/2 h-6", className)}
     />
   )
 }

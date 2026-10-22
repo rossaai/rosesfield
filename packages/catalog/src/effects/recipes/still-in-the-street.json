@@ -1,12 +1,69 @@
 {
   "effect": "still-in-the-street",
-  "passed": false,
-  "prompt": "The person stands perfectly still, frozen like a statue, without blinking or breathing. Around them the street keeps moving fast: people walk past in both directions, cars drive by, and pigeons take off. The camera stays fixed.",
+  "passed": true,
+  "design": {
+    "unit": "still-in-the-street",
+    "family": "effects",
+    "setPiece": "The person holds their pose while the world around them moves: people, a van, a cart and boxes pass and things appear.",
+    "cuts": [],
+    "lastFrame": {
+      "shows": "The person in the same pose, with new people and things around them.",
+      "maxLuma": null
+    },
+    "sound": {
+      "prompt": "The sound is a street from the first frame: footsteps and quiet voices, the low rumble of the van as it passes, and the soft thud of boxes set down.",
+      "loudness": {
+        "min": -30,
+        "max": -17
+      },
+      "truePeakMax": -2.5
+    },
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
+  },
+  "prompt": "One shot with a still camera. The person holds their exact pose and does not move at all, and their face, hair and clothes stay exactly as in the photo and sharp to the last frame. The sunlight and the paving stones under and around them stay exactly as in the photo for the whole shot. The street is already busy in the very first frame and keeps moving to the very last: people walk past one at a time, farther back, a white van drives slowly through the middle of the street behind the person, and a worker wheels a cart a few steps to one side of the person, sets a stack of plain brown boxes down there and walks on out of the frame. The boxes stay there to the last frame.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "none"
   },
+  "midFrame": null,
   "hold": 0.9,
   "adapter": null,
-  "seconds": 5,
-  "preview": null
+  "seconds": 6,
+  "preview": {
+    "file": "still-in-the-street.mp4",
+    "runId": "cb3281e7-8764-475f-848b-8cc386311bae",
+    "seed": 107086447,
+    "resolution": "1080p",
+    "aspectRatio": "9:16",
+    "workflowHash": "d09eeab0439ddd83720b48abff95052823f5c717e76b5e7324097ebfa436d98f"
+  },
+  "proof": {
+    "gate": {
+      "positives": 5,
+      "planted": "refused",
+      "verdict": "held"
+    },
+    "judge": {
+      "criteria": 13,
+      "failed": [],
+      "verdict": "held"
+    },
+    "reading": {
+      "frames": 145,
+      "fps": 24,
+      "width": 1080,
+      "height": 1920,
+      "cuts": [],
+      "loudness": {
+        "integrated": -23.5,
+        "truePeak": -10.6
+      },
+      "firstFrameLuma": 121.8,
+      "lastFrameLuma": 120.1
+    }
+  }
 }

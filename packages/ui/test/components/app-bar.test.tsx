@@ -35,27 +35,66 @@ function slotsOf(bar: HTMLElement): string[] {
 }
 
 describe("AppBar", () => {
-  it("sits sticky across the top, 52 px tall, in one row with 16 px sides and 12 px between groups", () => {
+  it("sits sticky across the top on the canvas, its row 53 px tall with 16 px sides", () => {
     const bar = renderBar("full")
     expect(bar.className.split(" ")).toEqual(
       expect.arrayContaining([
         "sticky",
         "top-0",
         "w-full",
-        "h-13",
-        "px-4",
-        "gap-3",
+        "bg-canvas",
+        "px-s5",
       ])
+    )
+    const row = bar.querySelector("[data-slot='app-bar-row']")
+    expect(row?.className.split(" ")).toEqual(
+      expect.arrayContaining(["h-header", "gap-s4", "motion-yield"])
     )
   })
 
-  it("shrinks to 36 px and a 20 px mark on an app page, from the width switch", () => {
+  it("shrinks its row to 30 px and a 16 by 24 px mark on an app page, from the width switch, on the yield preset", () => {
     const bar = renderBar("compact")
-    expect(bar.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-13", "@regular:h-9"])
+    const row = bar.querySelector("[data-slot='app-bar-row']")
+    expect(row?.className.split(" ")).toEqual(
+      expect.arrayContaining(["h-header", "@regular:h-tab", "motion-yield"])
     )
     const mark = screen.getByTestId("mark").parentElement
-    expect(mark?.className.split(" ")).toContain("@regular:size-5")
+    expect(mark?.className.split(" ")).toEqual(
+      expect.arrayContaining(["@regular:h-4", "@regular:w-6", "motion-yield"])
+    )
+  })
+
+  it("rests on the canvas and wears the regular material and the seam once content runs under it", () => {
+    render(
+      <AppBar
+        label="Rest"
+        scrolled={false}
+        mark={null}
+        lockup={null}
+        areas={null}
+      />
+    )
+    render(
+      <AppBar
+        label="Scrolled"
+        scrolled
+        mark={null}
+        lockup={null}
+        areas={null}
+      />
+    )
+    const rest = screen.getByRole("banner", { name: "Rest" })
+    const scrolled = screen.getByRole("banner", { name: "Scrolled" })
+    expect(rest.getAttribute("data-scrolled")).toBe("no")
+    expect(scrolled.getAttribute("data-scrolled")).toBe("yes")
+    expect(scrolled.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "data-[scrolled=yes]:material",
+        "data-[scrolled=yes]:shadow-seam",
+        "dark:data-[scrolled=yes]:shadow-none",
+        "motion-tint",
+      ])
+    )
   })
 
   it("holds its contract's mark, areas, balance and connect, with Connect last", () => {
@@ -84,7 +123,7 @@ describe("AppBar", () => {
     expect(overflow?.hasAttribute("data-scroll-start")).toBe(true)
     expect(overflow?.className.split(" ")).toEqual(
       expect.arrayContaining([
-        "h-9",
+        "h-button",
         "overflow-x-auto",
         "hidden",
         "@regular:flex",
@@ -131,54 +170,22 @@ function renderActions(density: "full" | "compact") {
 }
 
 describe("AppBarAction", () => {
-  it("lights a press one step more than a hover, and never changes its size", () => {
-    const { balance, connect } = renderActions("full")
-    for (const action of [balance, connect]) {
-      const classes = action.className.split(" ")
-      expect(classes).toEqual(
-        expect.arrayContaining([
-          "hover:after:opacity-10",
-          "active:after:opacity-20",
-          "in-data-[gallery=press]:after:opacity-20",
-        ])
-      )
-      expect(classes).not.toContain("active:after:opacity-10")
-      expect(classes.filter((name) => /scale/.test(name))).toEqual([])
-    }
-  })
-
-  it("holds a 16 px icon, then its label, 8 px apart, on a 36 px control", () => {
+  it("stands 36 px in the full bar with its icon before its label, and presses on the press preset", () => {
     const { balance } = renderActions("full")
     expect(balance.firstElementChild).toBe(screen.getByTestId("coins"))
     expect(balance.lastElementChild?.textContent).toBe("12.5 credits")
-    expect(balance.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-9", "px-3", "gap-2", "[&_svg]:glyph"])
+    const classes = balance.className.split(" ")
+    expect(classes).toEqual(
+      expect.arrayContaining(["h-button", "rounded-full", "motion-press"])
     )
-    expect(balance.className).not.toContain("@regular:h-6")
+    expect(classes.filter((name) => name.includes("after:"))).toEqual([])
   })
 
-  it("shrinks to 24 px with 10 px sides and a 6 px gap with the compact bar", () => {
+  it("shrinks to the 26 px small size in the compact bar", () => {
     const { balance, connect } = renderActions("compact")
     for (const action of [balance, connect]) {
       expect(action.className.split(" ")).toEqual(
-        expect.arrayContaining([
-          "h-9",
-          "@regular:h-6",
-          "@regular:px-2.5",
-          "@regular:gap-1.5",
-        ])
-      )
-    }
-  })
-
-  it("moves its height, padding and gap with the bar over the surface duration", () => {
-    const { balance, connect } = renderActions("compact")
-    for (const action of [balance, connect]) {
-      expect(action.className.split(" ")).toEqual(
-        expect.arrayContaining([
-          "transition-[height,padding,gap]",
-          "duration-(--duration-surface)",
-        ])
+        expect.arrayContaining(["@regular:h-button-small", "@regular:px-s3"])
       )
     }
   })

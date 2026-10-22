@@ -302,9 +302,6 @@ const outside = [
   screenEntry("unlock", "entry.screen.unlock", [
     { id: "empty", label: "state.empty", path: "/unlock", seeds: [] },
   ]),
-  screenEntry("welcome", "entry.screen.welcome", [
-    { id: "done", label: "state.done", path: "/welcome", seeds: [] },
-  ]),
   screenEntry("not-found", "entry.screen.notFound", [
     { id: "empty", label: "state.empty", path: "/no-such-page", seeds: base },
   ]),

@@ -15,6 +15,7 @@ import {
   ShareFailed,
   ShareMaking,
 } from "@/screens/explore/share-views"
+import { useRunModels } from "@/viewer/use-run-models"
 
 type ShareDialogProps = {
   run: Run
@@ -55,9 +56,10 @@ function ClipSection({
   outputId: string
   url: string
 }): ReactElement {
+  const models = useRunModels(run)
   const clip = useMutation({
     mutationFn: async () => {
-      const sources = await clipSourcesOf(run, outputId)
+      const sources = await clipSourcesOf(run, outputId, models)
       try {
         return await makeClip(sources.plan, clipColors())
       } finally {

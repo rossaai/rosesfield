@@ -2,14 +2,15 @@ import { useRender } from "@base-ui/react/use-render"
 import { buttonVariants } from "@rosesfield/ui/components/button"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import type { AppBarDensity } from "@rosesfield/ui/contracts/app-bar.generated"
+import { edgeMaskOf, useScrollEnds } from "@rosesfield/ui/hooks/use-scroll-ends"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import {
   type ComponentProps,
-  type CSSProperties,
   createContext,
   type ReactElement,
   type ReactNode,
-  type UIEvent,
+  type RefObject,
   useContext,
   useEffect,
   useRef,
@@ -25,65 +26,24 @@ type AppBarProps = {
   balance?: ReactNode
   connect?: ReactNode
   density?: AppBarDensity
+  scrolled?: boolean
   className?: string
 }
 
-const fade = "calc(var(--spacing) * 18)"
-
-type Ends = { start: boolean; end: boolean }
-
-function maskOf(ends: Ends): CSSProperties {
-  const left = ends.start ? `transparent, black ${fade}` : "black, black"
-  const right = ends.end ? `black calc(100% - ${fade}), transparent` : "black"
-  const image = `linear-gradient(to right, ${left}, ${right})`
-  return { maskImage: image, WebkitMaskImage: image }
-}
-
-function readEnds(element: HTMLElement): Ends {
-  return {
-    start: element.scrollLeft > 0,
-    end: element.scrollLeft + element.clientWidth < element.scrollWidth - 1,
-  }
-}
+const fade = "var(--spacing-s12)"
 
 function AreaLinks({ children }: { children: ReactNode }): ReactElement {
-  const [ends, setEnds] = useState<Ends>({ start: false, end: false })
   const box = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const element = box.current
-    if (element === null) {
-      return
-    }
-    const measure = (): void => {
-      setEnds((was) => {
-        const next = readEnds(element)
-        return was.start === next.start && was.end === next.end ? was : next
-      })
-    }
-    measure()
-    if (typeof ResizeObserver === "undefined") {
-      window.addEventListener("resize", measure)
-      return () => window.removeEventListener("resize", measure)
-    }
-    const observer = new ResizeObserver(measure)
-    observer.observe(element)
-    if (element.firstElementChild !== null) {
-      observer.observe(element.firstElementChild)
-    }
-    return () => observer.disconnect()
-  }, [])
-  const onScroll = (event: UIEvent<HTMLDivElement>): void => {
-    setEnds(readEnds(event.currentTarget))
-  }
+  const { ends, update } = useScrollEnds(box)
   return (
     <div
       ref={box}
-      onScroll={onScroll}
+      onScroll={update}
       data-scroll-start={ends.start ? undefined : ""}
       data-slot="app-bar-overflow"
-      style={maskOf(ends)}
+      style={edgeMaskOf(ends, fade)}
       className={cn(
-        "hidden h-9 min-w-0 flex-1 items-center overflow-x-auto [scrollbar-width:none] @regular:flex",
+        "hidden h-button min-w-0 flex-1 items-center overflow-x-auto [scrollbar-width:none] @regular:flex",
         interaction.ringRoom
       )}
     >
@@ -92,19 +52,65 @@ function AreaLinks({ children }: { children: ReactNode }): ReactElement {
   )
 }
 
+function seamOffset(): number {
+  const value = Number.parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue(
+      "--spacing-s2_5"
+    )
+  )
+  return Number.isFinite(value) ? value : 0
+}
+
+function isScroller(element: Element): boolean {
+  const { overflowY } = getComputedStyle(element)
+  return overflowY === "auto" || overflowY === "scroll"
+}
+
+function scrollerAfter(bar: HTMLElement): HTMLElement | null {
+  let next = bar.nextElementSibling
+  while (next !== null) {
+    if (next instanceof HTMLElement && isScroller(next)) {
+      return next
+    }
+    next = next.nextElementSibling
+  }
+  return null
+}
+
+function useIsScrolled(bar: RefObject<HTMLElement | null>): boolean {
+  const [isScrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const element = bar.current
+    if (element === null) {
+      return
+    }
+    const offset = seamOffset()
+    const scroller = scrollerAfter(element)
+    const target: HTMLElement | Window = scroller ?? window
+    const read = (): void =>
+      setScrolled(
+        (scroller === null ? window.scrollY : scroller.scrollTop) > offset
+      )
+    read()
+    target.addEventListener("scroll", read, { passive: true })
+    return () => target.removeEventListener("scroll", read)
+  }, [bar])
+  return isScrolled
+}
+
 const bars = {
-  full: "h-13",
-  compact: "h-13 @regular:h-9",
+  full: "h-header",
+  compact: "h-header @regular:h-tab",
 } satisfies Record<AppBarDensity, string>
 
 const marks = {
-  full: "size-8",
-  compact: "size-8 @regular:size-5",
+  full: "h-6 w-9",
+  compact: "h-6 w-9 @regular:h-4 @regular:w-6",
 } satisfies Record<AppBarDensity, string>
 
 const actions = {
-  full: "gap-2",
-  compact: "gap-2 @regular:h-6 @regular:gap-1.5 @regular:px-2.5",
+  full: "h-button",
+  compact: "h-button @regular:h-button-small @regular:px-s3",
 } satisfies Record<AppBarDensity, string>
 
 const DensityContext = createContext<AppBarDensity>("full")
@@ -133,10 +139,8 @@ function AppBarAction({
       ...props,
       "data-slot": "button",
       className: cn(
-        buttonVariants({ tone, size: "bar" }),
-        interaction.lightPress,
+        buttonVariants({ tone, size: "dense" }),
         actions[density],
-        "transition-[height,padding,gap] duration-(--duration-surface)",
         className
       ),
       children: (
@@ -184,43 +188,59 @@ function AppBar({
   balance,
   connect,
   density = "full",
+  scrolled,
   className,
 }: AppBarProps): ReactElement {
+  const bar = useRef<HTMLElement>(null)
+  const isScrolledHere = useIsScrolled(bar)
+  const isScrolled = scrolled ?? isScrolledHere
   return (
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: a header outside any section is the banner landmark, which ARIA lets aria-label name
     <header
+      ref={bar}
       aria-label={label}
       data-slot="app-bar"
       data-density={density}
+      data-scrolled={isScrolled ? "yes" : "no"}
       data-ground="canvas"
       className={cn(
-        "sticky top-0 z-40 flex w-full shrink-0 items-center gap-3 bg-canvas px-4 transition-[height] duration-(--duration-surface)",
-        bars[density],
+        "sticky top-0 z-40 w-full shrink-0 bg-canvas px-s5 data-[scrolled=yes]:material data-[scrolled=yes]:shadow-seam dark:data-[scrolled=yes]:shadow-none dark:data-[scrolled=yes]:[--layer:var(--surface)]",
+        motion.tint,
         className
       )}
     >
-      <span
-        data-slot="app-bar-mark"
+      <div
+        data-slot="app-bar-row"
         className={cn(
-          "hidden shrink-0 transition-[width,height] duration-(--duration-surface) @regular:flex *:size-full",
-          marks[density]
+          "flex w-full items-center gap-s4",
+          motion.yield,
+          bars[density]
         )}
       >
-        {mark}
-      </span>
-      <span
-        data-slot="app-bar-mark"
-        className="flex h-8 shrink-0 @regular:hidden"
-      >
-        {lockup}
-      </span>
-      <nav aria-label={label} className="contents">
-        <AreaLinks>{areas}</AreaLinks>
-      </nav>
-      <span className="flex-1 @regular:hidden" />
-      <DensityContext value={density}>
-        <BarEnd areaMenu={areaMenu} balance={balance} connect={connect} />
-      </DensityContext>
+        <span
+          data-slot="app-bar-mark"
+          className={cn(
+            "hidden shrink-0 @regular:flex *:size-full",
+            motion.yield,
+            marks[density]
+          )}
+        >
+          {mark}
+        </span>
+        <span
+          data-slot="app-bar-mark"
+          className="flex h-8 shrink-0 @regular:hidden"
+        >
+          {lockup}
+        </span>
+        <nav aria-label={label} className="contents">
+          <AreaLinks>{areas}</AreaLinks>
+        </nav>
+        <span className="flex-1 @regular:hidden" />
+        <DensityContext value={density}>
+          <BarEnd areaMenu={areaMenu} balance={balance} connect={connect} />
+        </DensityContext>
+      </div>
     </header>
   )
 }

@@ -1,6 +1,9 @@
 import { type Run, run } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
-import { historyGridItems } from "@/screens/history/history-grid-items"
+import {
+  historyGridItems,
+  historyShownOf,
+} from "@/screens/history/history-grid-items"
 
 function runOf(change: Partial<Record<keyof Run, unknown>>): Run {
   return run.parse({
@@ -38,5 +41,13 @@ describe("History's grid", () => {
     expect(items.map((item) => item.assetId)).toEqual(tall.outputs)
     expect(items.every((item) => item.run?.id === tall.id)).toBe(true)
     expect(items[0]?.aspect).toEqual({ width: 9, height: 16 })
+  })
+
+  it("lists runs with no media as rows in the grid view, so a failed or working tab is never blank", () => {
+    const failed = runOf({ status: "failed", outputs: [] })
+    expect(historyShownOf([failed], "grid")).toBe("rows")
+    expect(historyShownOf([runOf({}), failed], "grid")).toBe("grid")
+    expect(historyShownOf([runOf({})], "list")).toBe("rows")
+    expect(historyShownOf([], "grid")).toBe("empty")
   })
 })

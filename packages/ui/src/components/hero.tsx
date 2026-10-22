@@ -1,15 +1,76 @@
+import { buttonVariants } from "@rosesfield/ui/components/button"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement, ReactNode } from "react"
 
+type HeroTag = {
+  label: string
+  icon: ReactNode
+}
+
+type HeroPortraits = {
+  start?: string
+  end?: string
+}
+
 type HeroBannerProps = {
   href: string
-  kicker: string
   headline: string
   lead: string
   action: string
   art?: ReactNode
+  tag?: HeroTag
+  portraits?: HeroPortraits
 }
+
+const sides: ReadonlyArray<keyof HeroPortraits> = ["start", "end"]
+
+const portraitSides = {
+  start: "left-0 mask-r-from-60%",
+  end: "right-0 mask-l-from-60%",
+} satisfies Record<keyof HeroPortraits, string>
+
+function Portraits({
+  portraits,
+}: {
+  portraits: HeroPortraits
+}): ReactElement[] {
+  return sides.flatMap((side) => {
+    const src = portraits[side]
+    return src === undefined
+      ? []
+      : [
+          <img
+            key={side}
+            src={src}
+            alt=""
+            data-slot="hero-portrait"
+            data-side={side}
+            className={cn(
+              "absolute bottom-0 hidden h-full w-(--hero-portrait) object-cover @regular:block",
+              portraitSides[side]
+            )}
+          />,
+        ]
+  })
+}
+
+function Tag({ tag }: { tag: HeroTag }): ReactElement {
+  return (
+    <span
+      data-slot="hero-tag"
+      className="mb-s6 inline-flex h-button-small items-center gap-s1 rounded-full bg-hor-tint ps-s2 pe-s3 font-medium text-body text-hor-text [&_svg]:glyph-small"
+    >
+      <span aria-hidden="true" className="flex">
+        {tag.icon}
+      </span>
+      {tag.label}
+    </span>
+  )
+}
+
+const statement =
+  "text-[clamp(var(--text-statement-floor),calc(var(--text-statement-share)*100vw),var(--text-statement-ceiling))] leading-(--text-statement-leading) tracking-(--text-display--letter-spacing)"
 
 function HeroBanner(props: HeroBannerProps): ReactElement {
   return (
@@ -17,15 +78,10 @@ function HeroBanner(props: HeroBannerProps): ReactElement {
       data-slot="hero"
       href={props.href}
       className={cn(
-        "group/hero relative mt-6 hidden h-100 w-full overflow-hidden rounded-vessel bg-surface @regular:flex",
+        "group/hero @container/hero relative mt-s4 flex w-full overflow-hidden rounded-vessel bg-surface text-ink no-underline [--hero-portrait:min(--spacing(75),calc((100cqw_-_var(--spacing)*146)/2))] @regular:mt-s6 @regular:min-h-100",
         interaction.ring
       )}
     >
-      <span
-        aria-hidden="true"
-        data-slot="hero-glow"
-        className="absolute inset-0 bg-radial-[at_50%_100%] from-hor-tint to-transparent"
-      />
       {props.art === undefined ? null : (
         <span
           aria-hidden="true"
@@ -34,24 +90,18 @@ function HeroBanner(props: HeroBannerProps): ReactElement {
           {props.art}
         </span>
       )}
-      <span
-        aria-hidden="true"
-        data-slot="hero-glow-ellipse"
-        className="absolute top-2 left-1/2 h-67.5 w-184 -translate-x-1/2 rounded-full bg-surface opacity-80 blur-3xl"
-      />
-      <span className="relative mx-auto flex w-146 flex-col items-center justify-center py-8 text-center">
-        <span className="font-medium text-title text-ink">{props.kicker}</span>
-        <span className="mt-1 max-w-140 text-display text-balance text-ink">
+      {props.portraits === undefined ? null : (
+        <Portraits portraits={props.portraits} />
+      )}
+      <span className="relative mx-auto flex w-full flex-col items-center justify-center px-s5 py-s8 text-center @regular:w-[calc(100cqw-2*var(--hero-portrait))] @regular:px-s6 @regular:py-s12">
+        {props.tag === undefined ? null : <Tag tag={props.tag} />}
+        <span data-slot="hero-headline" className={cn("text-ink", statement)}>
           {props.headline}
         </span>
-        <span className="mt-1 text-body text-ink-muted">{props.lead}</span>
+        <span className="mt-s4 text-body text-ink-muted">{props.lead}</span>
         <span
           data-slot="hero-action"
-          className={cn(
-            "relative mt-6 inline-flex h-10 items-center rounded-full bg-ink px-4.5 pt-2 pb-2.5 font-medium text-body text-canvas",
-            interaction.lightPress,
-            "group-hover/hero:after:opacity-10 group-active/hero:after:opacity-20"
-          )}
+          className={cn(buttonVariants({ tone: "primary" }), "mt-s6")}
         >
           {props.action}
         </span>
@@ -107,5 +157,5 @@ function HeroFan({
   )
 }
 
-export type { FanPicture, HeroBannerProps }
+export type { FanPicture, HeroBannerProps, HeroPortraits, HeroTag }
 export { HeroBanner, HeroFan }

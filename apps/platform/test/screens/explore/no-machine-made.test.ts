@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-const sources = import.meta.glob<string>(
+const sources = import.meta.glob(
   ["../../../src/**/*.{ts,tsx}", "!../../../src/copy/**", "!**/*.gen.ts"],
   { query: "?raw", import: "default", eager: true }
 )

@@ -81,9 +81,6 @@ export const charactersCopy = {
   "characters.choice.model.flux2Klein4b": "FLUX.2 Klein 4B",
   "characters.choice.model.zImageTurbo": "Z-Image Turbo",
   "characters.choice.model.qwenImage2512": "Qwen Image 2512",
-  "characters.model.flux-2-klein-4b.line": "4 billion parameters, 4 steps",
-  "characters.model.z-image-turbo.line": "6 billion parameters, 8 steps",
-  "characters.model.qwen-image-2512.line": "20 billion parameters, 50 steps",
   "characters.input.character.label": "Character",
   "characters.input.character.note":
     "Characters uses the character's first photo.",

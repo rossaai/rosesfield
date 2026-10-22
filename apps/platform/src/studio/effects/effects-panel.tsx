@@ -10,9 +10,8 @@ import { InputField } from "@/screens/app/fields/input-field"
 import { SeedField } from "@/screens/app/fields/seed-field"
 import { randomSeed } from "@/screens/app/inputs-panel"
 import type { AppForm } from "@/screens/app/use-app-form"
-import { EffectTiles, effectOptionsOf } from "@/studio/effects/effect-tiles"
+import { EffectTiles, effectTiles } from "@/studio/effects/effect-tiles"
 import { PhotoField } from "@/studio/effects/photo-field"
-import { useEffectPrices } from "@/studio/effects/use-effect-prices"
 
 export const autoAspect = "auto"
 
@@ -64,7 +63,7 @@ function AspectChoice(props: EffectsPanelProps): ReactElement {
       items={items}
       value={props.aspect}
       onChange={props.onAspect}
-      note={tCatalog("effects.input.aspect.note")}
+      note={null}
     />
   )
 }
@@ -98,7 +97,6 @@ function ChoiceInputField(
 function EffectPart(props: EffectsPanelProps): ReactElement | null {
   const { app, form } = props
   const effect = choiceOf(app, "effect")
-  const prices = useEffectPrices(app, effectOptionsOf(app), form.values)
   if (effect === null) {
     return null
   }
@@ -106,7 +104,6 @@ function EffectPart(props: EffectsPanelProps): ReactElement | null {
     <EffectTiles
       app={app}
       value={textOf(form.values.inputs[effect.name]) || effect.default}
-      prices={prices}
       onChange={(value) => form.setInput(effect.name, value)}
       register={(focus) => form.register(effect.name, focus)}
     />
@@ -142,6 +139,15 @@ function AdvancedPart(props: EffectsPanelProps): ReactElement {
   )
 }
 
+function chosenPhotoOf(props: EffectsPanelProps): string | undefined {
+  const effect = choiceOf(props.app, "effect")
+  const chosen =
+    effect === null
+      ? ""
+      : textOf(props.form.values.inputs[effect.name]) || effect.default
+  return effectTiles(props.app).find((tile) => tile.effect === chosen)?.photo
+}
+
 export function EffectsPanel(props: EffectsPanelProps): ReactElement {
   const { app } = props
   const photo = app.inputs.find((input) => input.name === "image")
@@ -153,6 +159,7 @@ export function EffectsPanel(props: EffectsPanelProps): ReactElement {
         <PhotoField
           {...fieldProps(props, photo)}
           input={photo}
+          title={chosenPhotoOf(props)}
           message={props.photoMessage}
           onMessage={props.onPhotoMessage}
         />

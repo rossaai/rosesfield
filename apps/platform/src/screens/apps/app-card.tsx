@@ -1,23 +1,28 @@
 import type { AppListing, Run } from "@rosesfield/contract"
 import { Card } from "@rosesfield/ui/components/card"
 import { interaction } from "@rosesfield/ui/components/interaction"
-import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
+import {
+  type MediaAspect,
+  MediaTile,
+} from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { Link } from "@tanstack/react-router"
 import { PlayIcon } from "lucide-react"
-import type { ReactElement } from "react"
+import { type ReactElement, useLayoutEffect, useRef, useState } from "react"
 import { appLine, appName } from "@/catalog/app-facts"
 import { tCount } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
-import { appIcon } from "@/shell/nav-rows"
+import { KindFlow } from "@/pieces/kind-discs"
+import { type ShowcaseItem, showcaseOf } from "@/showcase/showcase"
 
 const frame: MediaAspect = { width: 203, height: 196 }
 
-const hovered =
-  "group-hover/card:border-(--line) group-hover/card:bg-(--tint) in-data-[gallery=hover]:border-(--line) in-data-[gallery=hover]:bg-(--tint)"
+const tinted =
+  "group-hover/card:bg-(--tint) in-data-[gallery=hover]:bg-(--tint)"
 
 const playShown =
-  "group-hover/card:translate-y-0 group-hover/card:opacity-100 group-focus-visible/card:translate-y-0 group-focus-visible/card:opacity-100 in-data-[gallery=hover]:translate-y-0 in-data-[gallery=hover]:opacity-100"
+  "group-hover/card:opacity-100 group-focus-visible/card:opacity-100 in-data-[gallery=hover]:opacity-100"
 
 type AppCardProps = {
   app: AppListing
@@ -25,43 +30,124 @@ type AppCardProps = {
   working: number
 }
 
-function CardMedia({
+export type AppCardForm = "media" | "compact"
+
+export function appCardFormOf(
+  app: AppListing,
+  newest: Run | null,
+  examples: readonly ShowcaseItem[] = showcaseOf(app.id)
+): AppCardForm {
+  const hasRun = newest !== null && newest.outputs[0] !== undefined
+  return hasRun || examples.length > 0 ? "media" : "compact"
+}
+
+function FlowFrame({ app }: { app: AppListing }): ReactElement {
+  return (
+    <span
+      aria-hidden="true"
+      data-slot="app-card-flow"
+      className="flex w-full items-center justify-center gap-s2 bg-(--well) text-ink-muted"
+      style={{ aspectRatio: `${frame.width} / ${frame.height}` }}
+    >
+      <KindFlow app={app} />
+    </span>
+  )
+}
+
+function FrameMedia({
   app,
   newest,
 }: Pick<AppCardProps, "app" | "newest">): ReactElement {
   const media = newest?.outputs[0]
+  if (media !== undefined && newest !== null) {
+    return (
+      <AssetTile
+        assetId={media}
+        shape="frame"
+        aspectHint={frame}
+        isDemo={newest.origin === "demo"}
+        isStatic={true}
+      />
+    )
+  }
+  const example = showcaseOf(app.id)[0]
+  return example === undefined ? (
+    <FlowFrame app={app} />
+  ) : (
+    <MediaTile
+      kind={example.kind}
+      src={example.src}
+      alt={appName(app)}
+      aspect={frame}
+    />
+  )
+}
+
+function CardMedia({
+  app,
+  newest,
+}: Pick<AppCardProps, "app" | "newest">): ReactElement {
   return (
     <span
       data-slot="app-card-media"
       className="relative block overflow-hidden rounded-cell"
     >
-      {media === undefined || newest === null ? (
+      <FrameMedia app={app} newest={newest} />
+      {appCardFormOf(app, newest) === "compact" ? null : (
         <span
-          className="flex w-full items-center justify-center bg-(--well) text-ink-muted [&_svg]:size-6"
-          style={{ aspectRatio: `${frame.width} / ${frame.height}` }}
+          aria-hidden="true"
+          data-slot="app-card-play"
+          className={cn(
+            "absolute right-2 bottom-2 flex size-8 items-center justify-center rounded-full bg-ink text-canvas opacity-0 [&_svg]:size-3 [&_svg]:fill-current",
+            motion.tint,
+            playShown
+          )}
         >
-          {appIcon(app)}
+          <PlayIcon />
         </span>
-      ) : (
-        <AssetTile
-          assetId={media}
-          shape="frame"
-          aspectHint={frame}
-          isDemo={newest.origin === "demo"}
-          isStatic={true}
-        />
       )}
-      <span
-        aria-hidden="true"
-        data-slot="app-card-play"
-        className={cn(
-          "absolute right-2 bottom-2 flex size-8 translate-y-2 items-center justify-center rounded-full bg-ink text-canvas opacity-0 transition-[opacity,translate] duration-(--duration-control) [&_svg]:size-3 [&_svg]:fill-current",
-          playShown
-        )}
-      >
-        <PlayIcon />
-      </span>
     </span>
+  )
+}
+
+function WorkingLine({ working }: { working: number }): ReactElement | null {
+  return working === 0 ? null : (
+    <p className="text-caption text-ink">
+      {tCount("apps.card.working", working)}
+    </p>
+  )
+}
+
+export function isClipped(element: HTMLElement): boolean {
+  return element.scrollHeight > element.clientHeight + 1
+}
+
+function CardLine({ text }: { text: string }): ReactElement {
+  const line = useRef<HTMLParagraphElement>(null)
+  const [isWhole, setWhole] = useState(true)
+  useLayoutEffect(() => {
+    const element = line.current
+    if (element === null) {
+      return
+    }
+    const check = (): void => setWhole(!isClipped(element))
+    check()
+    if (typeof ResizeObserver === "undefined") {
+      return
+    }
+    const observer = new ResizeObserver(check)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+  return (
+    <p
+      ref={line}
+      data-slot="app-card-line"
+      data-fit={isWhole ? "whole" : "clipped"}
+      className="line-clamp-2 text-body text-ink-muted data-[fit=clipped]:invisible data-[fit=clipped]:absolute data-[fit=clipped]:inset-x-0"
+    >
+      {text}
+    </p>
   )
 }
 
@@ -71,28 +157,18 @@ export function AppCard({ app, newest, working }: AppCardProps): ReactElement {
       to="/apps/$appId"
       params={{ appId: app.id }}
       data-slot="app-card"
+      data-app-card={appCardFormOf(app, newest)}
       className={cn(
-        "group/card relative block w-62 shrink-0 snap-start rounded-card @regular:w-59.25",
+        "group/card relative block w-62 shrink-0 snap-start rounded-card @regular:w-auto",
         interaction.ring
       )}
     >
-      <Card
-        className={cn(
-          "h-full gap-0 border border-transparent p-4 transition-colors duration-(--duration-control)",
-          hovered
-        )}
-      >
+      <Card className={cn("h-full gap-0 p-4", motion.tint, tinted)}>
         <CardMedia app={app} newest={newest} />
-        <div className="flex flex-col gap-1 py-4">
+        <div className="relative flex flex-col gap-1 py-4">
           <h3 className="font-medium text-body">{appName(app)}</h3>
-          <p className="line-clamp-2 text-body text-ink-muted">
-            {appLine(app)}
-          </p>
-          {working === 0 ? null : (
-            <p className="text-caption text-ink">
-              {tCount("apps.card.working", working)}
-            </p>
-          )}
+          <CardLine text={appLine(app)} />
+          <WorkingLine working={working} />
         </div>
       </Card>
     </Link>

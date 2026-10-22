@@ -33,6 +33,24 @@ export const runRequest = z.object({
   aspectRatio: aspectRatio.nullable().default(null),
 })
 
+const planRoute = z.enum(["replace", "rebuild", "keep"])
+
+const planShot = z.object({
+  number: z.number().int().min(1).max(16),
+  startSeconds: z.number().min(0),
+  endSeconds: z.number().min(0),
+  route: planRoute,
+  model: z.string().min(1).max(200).nullable(),
+  credits: z.number().min(0).nullable(),
+  seed: seed.nullable(),
+  words: z.string().min(1).max(2000).nullable(),
+  cameraMove: z.string().min(1).max(64).nullable(),
+})
+
+const runPlan = z.object({
+  shots: z.array(planShot).min(1).max(16),
+})
+
 export const run = z.object({
   id: runId,
   appId,
@@ -48,6 +66,7 @@ export const run = z.object({
   cost: cost.nullable(),
   origin: runOrigin,
   failure: errorBody.nullable(),
+  plan: runPlan.optional(),
   createdAt: timestamp,
   finishedAt: timestamp.nullable(),
 })

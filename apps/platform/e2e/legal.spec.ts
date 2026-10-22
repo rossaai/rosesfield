@@ -45,7 +45,7 @@ test("the footer opens Privacy and Terms", async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem("rosesfield.welcome", "seen")
   })
-  await page.goto("/library")
+  await page.goto("/apps")
   const footer = page.locator("footer[data-slot='footer']")
   await footer.getByRole("link", { name: "Privacy" }).click()
   await expect(page).toHaveURL(/\/privacy$/)

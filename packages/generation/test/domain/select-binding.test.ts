@@ -1,6 +1,7 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.error"
+import { refusedBinding } from "#domain/refused-binding"
 import { resolveBinding, selectBinding } from "#domain/select-binding"
 import { taskBinding } from "#domain/task-binding"
 import { portraitId, referenceId } from "../sample"
@@ -17,6 +18,24 @@ describe("resolveBinding", () => {
 
   it("returns a binding that selects nothing as it is", () => {
     expect(resolveBinding(open, { model: "hosted" })).toBe(open)
+  })
+
+  it("refuses a run that reaches a refused binding, with the binding's reason, and still runs its other options", () => {
+    const refused = refusedBinding({
+      adapter: "engine-a",
+      reason: "the graph holds no latent node",
+    })
+    const byOption = selectBinding({
+      input: "model",
+      options: { open, broken: refused },
+    })
+    expect(() => resolveBinding(byOption, { model: "broken" })).toThrow(
+      new EngineBindingInvalidError({
+        adapter: "engine-a",
+        reason: "the graph holds no latent node",
+      })
+    )
+    expect(resolveBinding(byOption, { model: "open" })).toEqual(open)
   })
 
   it("follows a select inside a select", () => {

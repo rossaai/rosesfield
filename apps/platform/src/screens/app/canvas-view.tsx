@@ -1,72 +1,52 @@
-import { Button } from "@rosesfield/ui/components/button"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@rosesfield/ui/components/popover"
-import {
-  ActivityIcon,
-  CircleAlertIcon,
-  LayoutGridIcon,
-  LoaderIcon,
-} from "lucide-react"
+import { type ViewLayout, ViewMenu } from "@rosesfield/ui/components/view-menu"
 import {
   createContext,
   type ReactElement,
   type ReactNode,
-  useCallback,
   useContext,
   useMemo,
   useState,
 } from "react"
 import { t } from "@/copy/t"
-import type { StateChoice } from "@/screens/history/history-filters"
-import {
-  type FilterGroup,
-  tileSizes,
-  ViewCluster,
-  type ViewLayout,
-} from "@/screens/library/view-cluster"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 
 export type CanvasView = {
   layout: ViewLayout
-  size: number
-  state: StateChoice
-  clear: () => void
+  columns: number
+  gridSize: number
 }
 
 type CanvasViewControl = CanvasView & {
+  size: number
   setLayout: (layout: ViewLayout) => void
   setSize: (size: number) => void
-  setState: (state: StateChoice) => void
+}
+
+export const runSizes = {
+  min: 1,
+  max: 4,
+  initial: 3,
+} as const
+
+export function runColumnsOf(size: number, isRegular: boolean): number {
+  if (!isRegular) {
+    return 1
+  }
+  const kept = Math.min(Math.max(size, runSizes.min), runSizes.max)
+  return runSizes.max + runSizes.min - kept
+}
+
+export function gridSizeOf(size: number): number {
+  return size - runSizes.min
 }
 
 const listView: CanvasView = {
   layout: "list",
-  size: tileSizes.initial,
-  state: "all",
-  clear: () => undefined,
+  columns: runColumnsOf(runSizes.initial, true),
+  gridSize: gridSizeOf(runSizes.initial),
 }
 
 const CanvasViewContext = createContext<CanvasView>(listView)
-
-const stateChoices: readonly StateChoice[] = ["all", "working", "failed"]
-
-const stateKeys = {
-  all: "kind.all",
-  working: "history.filter.working",
-  failed: "history.filter.failed",
-} as const satisfies Record<StateChoice, string>
-
-const statePictures = {
-  all: <LayoutGridIcon />,
-  working: <LoaderIcon />,
-  failed: <CircleAlertIcon />,
-} satisfies Record<StateChoice, ReactNode>
-
-function isStateChoice(value: string): value is StateChoice {
-  return stateChoices.some((choice) => choice === value)
-}
 
 export function useCanvasView(): CanvasView {
   return useContext(CanvasViewContext)
@@ -74,82 +54,44 @@ export function useCanvasView(): CanvasView {
 
 export function useCanvasViewControl(): CanvasViewControl {
   const [layout, setLayout] = useState<ViewLayout>("list")
-  const [size, setSize] = useState<number>(tileSizes.initial)
-  const [state, setState] = useState<StateChoice>("all")
-  const clear = useCallback(() => setState("all"), [])
+  const [size, setSize] = useState<number>(runSizes.initial)
+  const isRegular = useIsRegularWindow()
   return {
     layout,
     size,
-    state,
-    clear,
+    columns: runColumnsOf(size, isRegular),
+    gridSize: gridSizeOf(size),
     setLayout,
     setSize,
-    setState,
   }
 }
 
-export function stateGroup(control: CanvasViewControl): FilterGroup {
-  return {
-    id: "state",
-    name: t("history.filter.state"),
-    icon: <ActivityIcon />,
-    choices: stateChoices.map((choice) => ({
-      value: choice,
-      label: t(stateKeys[choice]),
-      picture: statePictures[choice],
-    })),
-    value: control.state,
-    onChoose: (value) => {
-      if (isStateChoice(value)) {
-        control.setState(value)
-      }
-    },
-  }
-}
-
-function Cluster({ control }: { control: CanvasViewControl }): ReactElement {
-  return (
-    <ViewCluster
-      layout={control.layout}
-      onLayout={control.setLayout}
-      size={control.size}
-      onSize={control.setSize}
-      groups={[stateGroup(control)]}
-    />
-  )
-}
-
-export function CanvasCluster({
+export function CanvasViewMenu({
   control,
-  form,
 }: {
   control: CanvasViewControl
-  form: "cluster" | "menu"
 }): ReactElement {
-  if (form === "cluster") {
-    return <Cluster control={control} />
-  }
+  const isRegular = useIsRegularWindow()
   return (
-    <Popover>
-      <PopoverTrigger
-        render={
-          <Button
-            data-slot="canvas-view"
-            size="recreate"
-            tone="quiet"
-            className="self-start rounded-dense border border-(--line) px-2"
-          >
-            <LayoutGridIcon aria-hidden="true" />
-            {t("app.canvas.view")}
-          </Button>
-        }
-      />
-      <PopoverContent align="end" side="bottom" sideOffset={8}>
-        <div className="flex items-center gap-2">
-          <Cluster control={control} />
-        </div>
-      </PopoverContent>
-    </Popover>
+    <ViewMenu
+      label={t("app.canvas.view")}
+      layoutLabel={t("library.view.label")}
+      listLabel={t("library.view.list")}
+      gridLabel={t("library.view.grid")}
+      layout={control.layout}
+      onLayoutChange={control.setLayout}
+      {...(isRegular
+        ? {
+            size: {
+              label: t("library.view.size"),
+              value: control.size,
+              min: runSizes.min,
+              max: runSizes.max,
+              onValueChange: control.setSize,
+            },
+          }
+        : {})}
+    />
   )
 }
 
@@ -160,10 +102,10 @@ export function CanvasViewProvider({
   control: CanvasViewControl
   children: ReactNode
 }): ReactElement {
-  const { layout, size, state, clear } = control
+  const { layout, columns, gridSize } = control
   const view = useMemo(
-    () => ({ layout, size, state, clear }),
-    [layout, size, state, clear]
+    () => ({ layout, columns, gridSize }),
+    [layout, columns, gridSize]
   )
   return (
     <CanvasViewContext.Provider value={view}>

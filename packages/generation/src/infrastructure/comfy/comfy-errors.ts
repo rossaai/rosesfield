@@ -54,13 +54,16 @@ export function comfyErrorOf(error: unknown): ProjectError {
   return new EngineUnavailableError({ cause: error })
 }
 
-export function jobFailureOf(
-  code: string,
-  hasNodeErrors: boolean
-): ProjectError {
-  return hasNodeErrors || refusedJobCodes.includes(code)
-    ? new RunInputRefusedError({ cause: code })
-    : new RunFailedError({ cause: code })
+export type JobFailure = {
+  code: string
+  node_errors?: Record<string, unknown> | undefined
+}
+
+export function jobFailureOf(failure: JobFailure): ProjectError {
+  return failure.node_errors !== undefined ||
+    refusedJobCodes.includes(failure.code)
+    ? new RunInputRefusedError({ cause: failure })
+    : new RunFailedError({ cause: failure })
 }
 
 export function keyCheckOf(error: unknown): KeyCheck {

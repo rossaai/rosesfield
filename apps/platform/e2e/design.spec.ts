@@ -111,7 +111,7 @@ test("display: the card draws the card radius, its inset and the surface", async
   expect(await style(card, "background-color")).toBe(rgb(lightOf("--surface")))
 })
 
-test("media: the tile draws the cell radius and its caption the caption size", async ({
+test("media: the tile draws the cell radius and its caption badge the caption size", async ({
   page,
 }) => {
   const tile = light(page, "media-tile")
@@ -123,7 +123,9 @@ test("media: the tile draws the cell radius and its caption the caption size", a
   ).toBe(token("--radius-cell"))
   expect(
     await style(
-      tile.locator('[data-slot="media-tile-caption"]').first(),
+      tile
+        .locator('[data-slot="media-tile-caption"] [data-slot="media-badge"]')
+        .first(),
       "font-size"
     )
   ).toBe(token("--text-caption"))

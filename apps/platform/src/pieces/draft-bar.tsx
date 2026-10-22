@@ -23,12 +23,14 @@ type DraftBarProps = {
   className?: string
 }
 
-function useMention(state: DraftState): {
+export type Mention = {
   isOpen: boolean
   setOpen: (open: boolean) => void
   onValueChange: (value: string) => void
   onPick: (characterId: string) => void
-} {
+}
+
+export function useMention(state: DraftState): Mention {
   const [isOpen, setOpen] = useState(false)
   const characters = useQuery(charactersQuery)
   const onValueChange = (value: string): void => {
@@ -56,7 +58,7 @@ function DraftLeading({
   openLibrary,
 }: {
   state: DraftState
-  mention: ReturnType<typeof useMention>
+  mention: Mention
   openLibrary: () => void
 }): ReactElement {
   return (

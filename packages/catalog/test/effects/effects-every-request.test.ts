@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest"
-import { effectRatios, framesOf, ltxFrames } from "#effects/comfy/frame-sizes"
+import { hitSlots } from "#effects/comfy/effect-sound"
+import {
+  deliveryFrames,
+  effectRatios,
+  framesOf,
+  ltxFrames,
+} from "#effects/comfy/frame-sizes"
 import {
   type EffectRecipe,
   resolutionValues,
@@ -16,31 +22,32 @@ import {
   submitted,
 } from "./effects-replay"
 
-const videoModel =
-  "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors"
+const videoModel = "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
 
 const ltxModels = [
-  "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+  "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
   "ltx-2.5-audio-vae-bf16.safetensors",
   "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
   "ltx-2.5-video-vae-bf16.safetensors",
 ]
 
-const endFrameModels = [
-  "flux-2-klein-4b.safetensors",
-  "flux2-vae.safetensors",
-  "qwen_3_4b.safetensors",
+const imageEditModels = [
+  "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+  "qwen_image_edit_2511_bf16.safetensors",
+  "qwen_image_vae.safetensors",
+]
+
+const hitModels = [
+  "stable_audio_3_medium.safetensors",
+  "t5gemma_b_b_ul2.safetensors",
 ]
 
 const detail = "a red scarf"
 
 const effects = [
   "buildings-ripple",
-  "fish-in-the-air",
   "freeze-and-circle",
   "grow-giant",
-  "grow-wings",
-  "liquid-metal",
   "many-copies",
   "melt-away",
   "pull-back-to-space",
@@ -73,22 +80,30 @@ function expectedModels(recipe: EffectRecipe): string[] {
     videoModel,
     ...[
       ...ltxModels,
+      ...(recipe.endFrame.source === "edit" || recipe.midFrame !== null
+        ? imageEditModels
+        : []),
       ...(recipe.hold === null ? [] : ["birefnet.safetensors"]),
-      ...(recipe.endFrame.source === "none" ? [] : endFrameModels),
+      ...((recipe.design.sound?.hits ?? []).length === 0 ? [] : hitModels),
     ].sort(),
   ]
 }
 
 function expectedPrompt(recipe: EffectRecipe): string {
-  return [recipe.prompt, detail].filter((part) => part !== "").join(" ")
+  const parts = [recipe.prompt, detail, recipe.design.sound?.prompt ?? ""]
+  return parts.filter((part) => part !== "").join(" ")
 }
 
 describe("every effects engine request against the recorded v2 routes", () => {
   const all = cases()
 
-  it("covers each of the 12 effects at each resolution", () => {
+  it("covers each of the nine effects at each resolution", () => {
     expect(all.map((one) => `${one.recipe.effect} ${one.resolution}`)).toEqual(
-      effects.flatMap((effect) => [`${effect} 480p`, `${effect} 720p`])
+      effects.flatMap((effect) => [
+        `${effect} 480p`,
+        `${effect} 720p`,
+        `${effect} 1080p`,
+      ])
     )
   })
 
@@ -109,6 +124,7 @@ describe("every effects engine request against the recorded v2 routes", () => {
       one.ratio
     )
     const size = ltxFrames.sizes[one.resolution][one.ratio]
+    const delivery = deliveryFrames[one.resolution][one.ratio]
     const frames = framesOf(recipe.seconds)
     const { workflow, replay } = await submitted(request)
     expect(replay.sent.map((sent) => `${sent.method} ${sent.url}`)).toEqual([
@@ -120,6 +136,14 @@ describe("every effects engine request against the recorded v2 routes", () => {
     expect(workflow).toMatchObject({
       "395": { inputs: { image: loadedPhoto } },
       "339": { inputs: { noise_seed: 42 } },
+      "606": {
+        inputs: {
+          image: ["395", 0],
+          width: size.width,
+          height: size.height,
+          crop: "center",
+        },
+      },
       "356": {
         inputs: {
           width: size.width / 2,
@@ -127,27 +151,79 @@ describe("every effects engine request against the recorded v2 routes", () => {
           length: frames,
         },
       },
-      "366": { inputs: { frames_number: frames } },
+      "366": { inputs: { frames_number: frames + 1 } },
       "357": { inputs: { strength: 0.7 } },
       "349": { inputs: { strength: 1 } },
+      "380": {
+        inputs: { width: delivery.width, height: delivery.height },
+      },
+      "381": {
+        class_type: "ImageAddNoise",
+        inputs: {
+          image: ["380", 0],
+          seed: 42,
+          strength: recipe.design.encode.grain,
+        },
+      },
+      "370": { inputs: { images: ["381", 0] } },
     })
     expect(promptText(workflow, "364").trim()).toBe(expectedPrompt(recipe))
     expect(workflow["373"]?.inputs.text).toBe("")
-    expect(workflow["358"]).toBeUndefined()
-    expect(workflow["370"]?.inputs).not.toHaveProperty("audio")
+    expect(workflow["358"] !== undefined).toBe(recipe.design.sound !== null)
+    expect(workflow["370"]?.inputs.audio !== undefined).toBe(
+      recipe.design.sound !== null
+    )
     expect(workflow["420"]).toBeUndefined()
+    const hits = recipe.design.sound?.hits ?? []
+    for (const [index, slot] of hitSlots.entries()) {
+      expect(workflow[slot.sampler]?.inputs.seed).toBe(
+        index < hits.length ? 42 : undefined
+      )
+    }
+    const lastHit = hitSlots[hits.length - 1]
+    if (lastHit !== undefined) {
+      expect(workflow["359"]?.inputs.audio).toEqual([lastHit.merged, 0])
+    }
     const end = recipe.endFrame
+    const opening = recipe.photoFrame === "first" ? ["606", 0] : ["627", 0]
+    const closing = recipe.photoFrame === "first" ? ["627", 0] : ["606", 0]
+    expect(workflow).toMatchObject({
+      "351": { inputs: { input: opening } },
+      "357": { inputs: { image: ["350", 0] } },
+      "349": { inputs: { image: ["350", 0] } },
+    })
     if (end.source === "none") {
-      expect(workflow["520"]).toBeUndefined()
+      expect(workflow["620"]).toBeUndefined()
       expect(workflow["460"]).toBeUndefined()
+    } else if (end.source === "dark") {
+      expect(workflow["620"] === undefined).toBe(recipe.midFrame === null)
+      expect(workflow).toMatchObject({
+        "628": { inputs: { color: end.luma * 0x010101 } },
+        "460": { inputs: { image: ["628", 0], strength: end.strength } },
+        "463": { inputs: { image: ["628", 0], strength: end.strength } },
+      })
     } else {
       expect(workflow).toMatchObject({
-        "523": { inputs: { text: end.prompt } },
-        "532": { inputs: { noise_seed: 42 } },
-        "460": { inputs: { image: ["536", 0], strength: end.strength } },
-        "463": { inputs: { image: ["536", 0], strength: end.strength } },
+        "620": { inputs: { prompt: end.prompt } },
+        "626": { inputs: { seed: 42 } },
+        "460": { inputs: { image: closing, strength: end.strength } },
+        "463": { inputs: { image: closing, strength: end.strength } },
       })
-      expect(workflow["527"] !== undefined).toBe(end.source === "edit")
+    }
+    const mid = recipe.midFrame
+    if (mid === null) {
+      expect(workflow["472"]).toBeUndefined()
+      expect(workflow["473"]).toBeUndefined()
+    } else {
+      expect(workflow).toMatchObject({
+        "620": { inputs: { prompt: mid.prompt } },
+        "626": { inputs: { seed: 42 } },
+        "471": { inputs: { image: ["470", 0] } },
+        "472": { inputs: { image: ["471", 0], strength: mid.strength } },
+        "473": { inputs: { image: ["471", 0], strength: mid.strength } },
+        "460": { inputs: { positive: ["472", 0], latent: ["472", 2] } },
+        "463": { inputs: { positive: ["473", 0], latent: ["473", 2] } },
+      })
     }
     if (recipe.hold === null) {
       expect(workflow["461"]).toBeUndefined()

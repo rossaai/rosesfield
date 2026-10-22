@@ -73,6 +73,7 @@ describe("an Expand run through the gateway on the demo engine", () => {
     )
     expect(done.status).toBe("done")
     expect(done.inputs).toEqual({
+      model: "qwen-image-inpaint",
       mode: "format",
       photo: [photoId],
       aspect: "16-9",
@@ -105,6 +106,7 @@ describe("an Expand run through the gateway on the demo engine", () => {
     )
     expect(done.status).toBe("done")
     expect(done.inputs).toEqual({
+      model: "qwen-image-inpaint",
       mode: "format",
       photo: [photoId],
       aspect: "16-9",
@@ -127,6 +129,7 @@ describe("an Expand run through the gateway on the demo engine", () => {
     )
     expect(done.status).toBe("done")
     expect(done.inputs).toEqual({
+      model: "qwen-image-inpaint",
       mode: "sides",
       photo: [photoId],
       top: 0,

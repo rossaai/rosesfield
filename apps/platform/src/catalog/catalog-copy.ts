@@ -1,4 +1,4 @@
-const modules = import.meta.glob<Record<string, unknown>>(
+const modules = import.meta.glob(
   "../../../../packages/catalog/src/*/copy.en.ts",
   { eager: true }
 )
@@ -14,6 +14,9 @@ function isTextRecord(value: unknown): value is Record<string, string> {
 function readCatalogCopy(): Readonly<Record<string, string>> {
   const merged: Record<string, string> = {}
   for (const module of Object.values(modules)) {
+    if (typeof module !== "object" || module === null) {
+      continue
+    }
     for (const value of Object.values(module)) {
       if (isTextRecord(value)) {
         Object.assign(merged, value)

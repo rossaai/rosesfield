@@ -25,6 +25,7 @@ export type ModelField =
       min: number | null
       max: number | null
       integer: boolean
+      step?: number
       default: number | null
     })
   | (FieldBase & { kind: "toggle"; default: boolean | null })
@@ -121,9 +122,17 @@ function numberProblem(
   if (field.min !== null && value < field.min) {
     return `the value is at least ${field.min}`
   }
-  return field.max !== null && value > field.max
-    ? `the value is at most ${field.max}`
-    : null
+  if (field.max !== null && value > field.max) {
+    return `the value is at most ${field.max}`
+  }
+  return field.step === undefined || isOnStep(value, field.step)
+    ? null
+    : `the value moves in steps of ${field.step}`
+}
+
+function isOnStep(value: number, step: number): boolean {
+  const steps = value / step
+  return Math.abs(steps - Math.round(steps)) < 1e-9
 }
 
 function mediaProblem(

@@ -51,13 +51,27 @@ describe("the kind of page", () => {
     expect(appIdOfPath("/")).toBeNull()
   })
 
-  it("closes every page without inputs with the footer", () => {
+  it("tells the pages that take inputs", () => {
     for (const path of ["/", "/apps", "/library", "/history", "/characters"]) {
       expect(hasInputs(path)).toBe(false)
-      expect(hasFooter(path)).toBe(true)
     }
     for (const path of ["/apps/image", "/agent", "/characters/new"]) {
       expect(hasInputs(path)).toBe(true)
+    }
+  })
+
+  it("closes only the browse and legal pages with the footer", () => {
+    for (const path of ["/", "/apps", "/apps/", "/privacy", "/terms"]) {
+      expect(hasFooter(path)).toBe(true)
+    }
+    for (const path of [
+      "/library",
+      "/history",
+      "/characters",
+      "/settings",
+      "/apps/image",
+      "/agent",
+    ]) {
       expect(hasFooter(path)).toBe(false)
     }
   })

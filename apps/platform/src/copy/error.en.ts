@@ -81,4 +81,8 @@ export const errorCopy = {
   "error.RUN_OUTPUT_BLANK.title": "The result came back blank",
   "error.RUN_OUTPUT_BLANK.body":
     "Comfy returned only black frames. Your inputs are kept, and you can run it again.",
+  "error.AGENT_TURN_LIMIT.title": "The agent stopped this turn",
+  "error.AGENT_TURN_LIMIT.body":
+    "It reached its limit of model calls for one turn. Your runs keep going. Send a message to go on.",
+  "error.AGENT_TURN_LIMIT.action": "Try again",
 } satisfies Record<string, string>

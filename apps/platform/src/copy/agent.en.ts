@@ -35,8 +35,7 @@ export const agentCopy = {
   "agent.empty.body":
     "The agent can run every app, read your library and use one run's result in the next.",
   "agent.noModel.title": "The agent has no model",
-  "agent.noModel.body":
-    "Set the agent's model and its key on the server, as .env.example shows.",
+  "agent.noModel.body": "Set {keyName} on the server to a Comfy Cloud key.",
   "agent.noModel.action": "Open settings",
   "agent.noKey.title": "The agent needs your model key",
   "agent.noKey.body":
@@ -47,4 +46,5 @@ export const agentCopy = {
   "agent.loadFailed.title": "This conversation did not load",
   "agent.missing.title": "This conversation was deleted",
   "agent.missing.action": "Start a conversation",
+  "agent.model.rate": "Per 1M tokens: {input} in, {output} out",
 } satisfies Record<string, string>

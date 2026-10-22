@@ -139,27 +139,43 @@ test("every route renders without console errors", async ({ page }) => {
   }
 })
 
-test("the first visit opens Explore at / with its banner", async ({
-  page,
-}, info) => {
+test("the first visit opens Explore at / with its banner", async ({ page }) => {
   const errors = watchErrors(page)
   await page.goto("/")
-  await expect(page.locator("[data-slot=app-tile-grid]")).toBeVisible()
+  await expect(
+    page.getByRole("region", { name: "Apps", exact: true })
+  ).toBeVisible()
   expect(new URL(page.url()).pathname).toBe("/")
   const banner = page.locator("[data-slot=hero]")
-  if (info.project.name === "phone") {
-    await expect(banner).toBeHidden()
-  } else {
-    await expect(banner).toBeVisible()
-    await expect(banner).toContainText("Make images and video on your own key")
-  }
+  await expect(banner).toBeVisible()
+  await expect(banner).toContainText("Make images and video on your own key")
   expect(errors).toEqual([])
 })
 
-test("Welcome stays reachable at /welcome", async ({ page }) => {
+test("/welcome and /explore open Explore, and the logo opens Explore from every page that shows it", async ({
+  page,
+}, info) => {
   const errors = watchErrors(page)
-  await page.goto("/welcome")
-  await expect(page).toHaveURL(/\/welcome$/)
-  await expect(page.getByRole("heading", { level: 2 }).first()).toBeVisible()
+  for (const path of ["/welcome", "/explore"]) {
+    await page.goto(path)
+    await expect(page).toHaveURL(/\/$/)
+    await expect(
+      page.getByRole("region", { name: "Apps", exact: true })
+    ).toBeVisible()
+  }
+  const paths =
+    info.project.name === "phone"
+      ? ["/apps/image"]
+      : ["/apps/image", "/library", "/history"]
+  for (const path of paths) {
+    await page.goto(path)
+    const bar = page.locator("header[data-slot='app-bar']")
+    const logo = bar
+      .locator("[data-slot='app-bar-mark']")
+      .nth(info.project.name === "phone" ? 1 : 0)
+      .locator("a")
+    await logo.click()
+    await expect(page, `the logo on ${path}`).toHaveURL(/\/$/)
+  }
   expect(errors).toEqual([])
 })

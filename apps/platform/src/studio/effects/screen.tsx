@@ -26,6 +26,7 @@ import { autoAspect, EffectsPanel } from "@/studio/effects/effects-panel"
 import { nearestRatio } from "@/studio/effects/nearest-ratio"
 import { useCheckedStart } from "@/studio/effects/use-checked-start"
 import { useEffectAgain } from "@/studio/effects/use-effect-again"
+import { useOfferedApp } from "@/studio/effects/use-offered-app"
 import {
   acceptOf,
   type PhotoSize,
@@ -152,10 +153,11 @@ function ClosedScreen({ app }: { app: AppListing }): ReactElement {
 }
 
 export function AppScreen(props: StudioScreenProps): ReactElement {
-  return props.app.closedKey === null ? (
-    <OpenScreen {...props} />
+  const app = useOfferedApp(props.app)
+  return app.closedKey === null ? (
+    <OpenScreen {...props} app={app} />
   ) : (
-    <ClosedScreen app={props.app} />
+    <ClosedScreen app={app} />
   )
 }
 
@@ -201,7 +203,6 @@ function OpenScreen(props: StudioScreenProps): ReactElement {
       canvas={(openInputs) => (
         <AppCanvas
           app={app}
-          order="newest-first"
           onUseInputs={state.onUseInputs}
           emptyAction={<AddInputsButton onClick={openInputs} />}
           afterRun={(run) => (

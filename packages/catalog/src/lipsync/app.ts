@@ -1,11 +1,12 @@
 import { type AppInput, defineApp } from "#define-app"
-import { lipsyncBinding, lipsyncModes } from "#lipsync/comfy/lipsync-binding"
+import { lipsyncBinding } from "#lipsync/comfy/lipsync-binding"
 import {
   lipsyncAspects,
   longestSeconds,
   secondsStep,
   shortestSeconds,
 } from "#lipsync/comfy/lipsync-frames"
+import { defaultModel, graphModel, lipsyncModes } from "#lipsync/lipsync-models"
 
 function labelOf(name: string): string {
   return `lipsync.input.${name}.label`
@@ -28,6 +29,13 @@ export const app: AppInput = defineApp({
         labelKey: `lipsync.choice.mode.${value}`,
       })),
       default: "photo",
+    },
+    {
+      type: "choice",
+      name: "model",
+      labelKey: labelOf("model"),
+      options: [{ value: graphModel, labelKey: "lipsync.model.ltx23" }],
+      default: defaultModel,
     },
     {
       type: "image",

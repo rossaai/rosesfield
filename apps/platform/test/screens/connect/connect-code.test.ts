@@ -15,8 +15,10 @@ const owner: GatewaySettings = {
   mode: "owner",
   engine: { target: "demo", address: null, key: "missing", origin: "demo" },
   lock: "local",
+  keyFrom: "server",
   agent: "missing",
   agentModel: null,
+  place: "bun",
   retentionDays: null,
 }
 

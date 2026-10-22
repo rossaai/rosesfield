@@ -1,5 +1,9 @@
 import { type AppInput, defineApp } from "#define-app"
-import { relightBinding, relightModels } from "#relight/comfy/relight-binding"
+import {
+  defaultRelightModel,
+  relightBinding,
+  relightModels,
+} from "#relight/comfy/relight-binding"
 import {
   autoValue,
   brightnessSteps,
@@ -26,7 +30,6 @@ export const relightAspectRatios = [
 
 const modelLabels: Readonly<Record<(typeof relightModels)[number], string>> = {
   "qwen-image-edit-2509-relight": "relight.model.qwenImageEdit2509Relight",
-  "qwen-image-edit-2511": "relight.model.qwenImageEdit2511",
 }
 
 function choiceOptions(list: keyof typeof relightLists) {
@@ -106,7 +109,7 @@ export const app: AppInput = defineApp({
         value,
         labelKey: modelLabels[value],
       })),
-      default: "qwen-image-edit-2509-relight",
+      default: defaultRelightModel,
     },
     { type: "seed", name: "seed", labelKey: "relight.input.seed.label" },
   ],

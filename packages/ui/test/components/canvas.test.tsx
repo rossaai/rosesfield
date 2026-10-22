@@ -66,7 +66,7 @@ describe("Canvas", () => {
 })
 
 describe("StepCards", () => {
-  it("stands three steps in equal columns 40 px apart, each a frame over a heading and a sentence", () => {
+  it("stands three steps in equal columns 40 px apart from the regular width, one column on a phone, each a frame over a heading and a sentence", () => {
     render(
       <StepCards
         title="How it works"
@@ -81,12 +81,17 @@ describe("StepCards", () => {
     )
     const list = screen.getByRole("list")
     expect(list.className.split(" ")).toEqual(
-      expect.arrayContaining(["grid-cols-3", "gap-10"])
+      expect.arrayContaining([
+        "grid-cols-1",
+        "@regular:grid-cols-3",
+        "@regular:gap-10",
+      ])
     )
+    expect(list.className.split(" ")).not.toContain("grid-cols-3")
     expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(3)
   })
 
-  it("frames each step at 1.316 to 1, 48 px from the canvas's sides once the stage's 16 px inset is counted", () => {
+  it("frames each step at 1.316 to 1, 48 px from the canvas's sides once the stage's 16 px inset is counted, and on the stage's own inset on a phone", () => {
     render(
       <StepCards
         title="How it works"
@@ -96,8 +101,9 @@ describe("StepCards", () => {
     )
     const lead = document.querySelector("[data-slot='state-view-lead']")
     expect(lead?.className.split(" ")).toEqual(
-      expect.arrayContaining(["px-12", "@regular:px-8", "py-24"])
+      expect.arrayContaining(["py-8", "@regular:px-8", "@regular:py-24"])
     )
+    expect(lead?.className.split(" ")).not.toContain("px-12")
     const frame = screen.getByRole("listitem").firstElementChild
     expect(frame?.className.split(" ")).toContain("aspect-[25/19]")
   })

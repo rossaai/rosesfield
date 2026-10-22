@@ -1,12 +1,36 @@
 import { PresetGrid, PresetTile } from "@rosesfield/ui/components/preset-tile"
 import { PRESET_TILE } from "@rosesfield/ui/contracts/preset-tile.generated"
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { readSource } from "../read-source"
 
 afterEach(cleanup)
 
 describe("PresetTile", () => {
+  it("hands a plain press on its action to onSelect, and keeps the href for a new tab", () => {
+    const selected: string[] = []
+    render(
+      <PresetTile
+        name="Melt"
+        href="/explore/melt"
+        viewLabel="View Melt"
+        action={{
+          label: "Try it",
+          href: "/apps/effects",
+          onSelect: () => selected.push("melt"),
+        }}
+        clip={{ src: "melt.mp4", alt: "Melt" }}
+        aspect={{ width: 9, height: 16 }}
+      />
+    )
+    const action = screen.getByRole("link", { name: "Try it" })
+    expect(fireEvent.click(action)).toBe(false)
+    expect(selected).toEqual(["melt"])
+    expect(fireEvent.click(action, { metaKey: true })).toBe(true)
+    expect(selected).toEqual(["melt"])
+    expect(action.getAttribute("href")).toBe("/apps/effects")
+  })
+
   it("holds its contract's clip, name, line and action, the card and the action two links", () => {
     render(
       <PresetTile

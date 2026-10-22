@@ -27,8 +27,7 @@ const toolNames = {
 }
 
 const envNames = {
-  baseUrl: "AGENT_BASE_URL",
-  model: "AGENT_MODEL",
+  comfyKey: "COMFY_API_KEY",
 }
 
 const plural = new Intl.PluralRules("en")
@@ -66,7 +65,7 @@ export const gatewayCopy = {
         ? `Public mode: each visitor's Comfy key opens their own work, and their runs, assets, characters and conversations are deleted ${days} day after their last visit.`
         : `Public mode: each visitor's Comfy key opens their own work, and their runs, assets, characters and conversations are deleted ${days} days after their last visit.`,
     agentOn: (model: string): string => `The agent answers with ${model}.`,
-    agentOff: `The agent is off, because no agent model is set. Set ${envNames.baseUrl} and ${envNames.model}.`,
+    agentOff: `The agent is off, because it needs a Comfy Cloud key in ${envNames.comfyKey}.`,
     resumed: (count: number): string =>
       plural.select(count) === "one"
         ? `${count} unfinished run is watched again.`

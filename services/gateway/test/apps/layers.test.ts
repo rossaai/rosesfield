@@ -172,6 +172,7 @@ describe("a Layers run through the gateway on the demo engine", () => {
     expect(done).toMatchObject({ count: 4, aspectRatio: "4:3" })
     expect(done.inputs).toEqual({
       mode: "split",
+      model: "qwen-image-layered",
       count: "4",
       source: [source],
       quality: "draft",
@@ -204,6 +205,7 @@ describe("a Layers run through the gateway on the demo engine", () => {
     expect(done.count).toBe(1)
     expect(done.inputs).toEqual({
       mode: "relight",
+      model: "qwen-image-edit-2509-relight",
       count: "1",
       layer: [layer],
       light: "top",
@@ -225,7 +227,11 @@ describe("a Layers run through the gateway on the demo engine", () => {
       "layers-fill-1"
     )
     expect(done.status).toBe("done")
-    expect(done.inputs).toMatchObject({ mode: "fill", mask: [mask] })
+    expect(done.inputs).toMatchObject({
+      mode: "fill",
+      model: "qwen-image-inpaint",
+      mask: [mask],
+    })
     expect(done.outputs).toHaveLength(1)
   })
 

@@ -29,6 +29,8 @@ import {
   type ScreenLink,
 } from "@/shell/nav-rows"
 import { appIdOfPath } from "@/shell/page-kind"
+import { usePhoneTitleSlot } from "@/shell/screen-header"
+import { useOpenConnect } from "@/shell/shell-dialogs"
 
 export function isAreaCurrent(area: MediaArea, pathname: string): boolean {
   const appId = appIdOfPath(pathname)
@@ -113,7 +115,7 @@ function PhoneMenu({ groups }: { groups: NavGroups }): ReactElement {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <IconButton label={t("shell.menu.open")} tone="quiet" place="bar">
+          <IconButton label={t("shell.menu.open")} tone="quiet">
             <MenuIcon aria-hidden="true" />
           </IconButton>
         }
@@ -143,12 +145,31 @@ function PhoneMenu({ groups }: { groups: NavGroups }): ReactElement {
   )
 }
 
+function PhoneLead(): ReactElement {
+  const slot = usePhoneTitleSlot()
+  if (slot.titles > 0) {
+    return (
+      <span
+        ref={slot.setNode}
+        data-slot="app-bar-title"
+        className="flex h-full max-w-[calc(100cqw-var(--spacing-s5)*2-var(--spacing-icon)*2-var(--spacing-s4)*2-var(--spacing))] min-w-0 items-center"
+      />
+    )
+  }
+  return (
+    <Link to="/" className="flex items-center">
+      <Lockup className="h-8" />
+    </Link>
+  )
+}
+
 export function TopBar(): ReactElement {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
   const isAppPage = appIdOfPath(pathname) !== null
   const groups = navGroups()
+  const openConnect = useOpenConnect()
   return (
     <AppBar
       label={t("shell.name")}
@@ -158,16 +179,12 @@ export function TopBar(): ReactElement {
           <FieldMark className="size-full" />
         </Link>
       }
-      lockup={
-        <Link to="/" className="flex items-center">
-          <Lockup className="h-8" />
-        </Link>
-      }
+      lockup={<PhoneLead />}
       areas={<AreaLinks groups={groups} pathname={pathname} />}
       areaMenu={<PhoneMenu groups={groups} />}
       balance={<CreditBalance />}
       connect={
-        <AppBarAction tone="primary" render={<Link to="/connect" />}>
+        <AppBarAction tone="primary" onClick={() => openConnect()}>
           {t("shell.nav.connect")}
         </AppBarAction>
       }

@@ -1,6 +1,7 @@
 import { useRender } from "@base-ui/react/use-render"
 import type { SectionHeadingRhythm } from "@rosesfield/ui/contracts/section-heading.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import type { ReactElement, ReactNode } from "react"
 
 type SectionHeaderProps = {
@@ -24,7 +25,7 @@ function Title({
     props: {
       href,
       "data-slot": "section-heading-label",
-      className: "text-ink no-underline hover:text-hor-text",
+      className: cn("text-ink no-underline hover:text-hor-text", motion.tint),
       children: title,
     },
   })
@@ -70,7 +71,8 @@ function SectionHeader({
       {actions === undefined ? null : (
         <div
           data-slot="section-heading-actions"
-          className="flex shrink-0 gap-2"
+          data-density="chrome"
+          className="flex shrink-0 items-center gap-s2"
         >
           {actions}
         </div>

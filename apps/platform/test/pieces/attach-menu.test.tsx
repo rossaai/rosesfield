@@ -31,9 +31,13 @@ describe("the References and Elements tile", () => {
     const tile = document.querySelector(
       '[data-slot="composer-attachments-edge"]'
     )
-    expect(tile?.querySelectorAll("button")).toHaveLength(2)
-    expect(tile?.className).toContain("w-16.25")
-    expect(tile?.className).toContain("h-8")
+    const circles = [...(tile?.querySelectorAll("button") ?? [])]
+    expect(circles).toHaveLength(2)
+    for (const circle of circles) {
+      expect(circle.className.split(" ")).toEqual(
+        expect.arrayContaining(["size-icon-dense", "rounded-full"])
+      )
+    }
   })
 
   it("takes no press while it is disabled", () => {

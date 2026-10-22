@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { EngineRequest } from "#domain/generation-engine.port"
 import { comfyWorkflow } from "#infrastructure/comfy/comfy-workflow-binding"
 import { ComfyGenerationEngine } from "#infrastructure/comfy-generation-engine"
+import { writeFlatMp4 } from "#infrastructure/demo/flat-mp4"
 import { pngBytes, referenceId } from "../sample"
 import {
   cloudUrl,
@@ -185,6 +186,20 @@ describe("ComfyGenerationEngine", () => {
     }
   )
 
+  it("keeps Comfy's message and the node that failed on the cause of a failed run, and leaves out the traceback", async () => {
+    const { engine } = engineFor([comfyV2.read(failedJob)])
+    const status = await engine.read(jobId)
+    if (status.state !== "failed") {
+      throw new Error("The job did not read as failed")
+    }
+    expect(status.error.cause).toEqual({
+      code: "node_execution_error",
+      message: "KSampler raised an error",
+      node_id: "3",
+      class_type: "KSampler",
+    })
+  })
+
   it("lists media outputs and leaves out latents", async () => {
     const { engine } = engineFor([
       comfyV2.read(succeededJob),
@@ -216,6 +231,30 @@ describe("ComfyGenerationEngine", () => {
     const outputs = await engine.listOutputs(jobId)
     expect(outputs).toHaveLength(1)
     expect(outputs[0]).toMatchObject({ kind: "video", mime: "video/mp4" })
+  })
+
+  it("stores each output with the width and height its file shows", async () => {
+    const video = {
+      node_id: "75",
+      name: "video/rosesfield-video_00001_.mp4",
+      type: "video",
+      content_type: "video/mp4",
+      size_bytes: 4096,
+      id: outputId,
+      hash: null,
+      url: `https://storage.comfy.org/signed/${outputId}`,
+      url_expires_at: "2026-10-19T13:16:19Z",
+      job_id: jobId,
+    }
+    const { engine } = engineFor([
+      comfyV2.read({ ...succeededJob, outputs: [video] }),
+      {
+        ...comfyV2.content(),
+        bytes: writeFlatMp4({ width: 36, height: 64, seconds: 1 }),
+      },
+    ])
+    const [output] = await engine.listOutputs(jobId)
+    expect(output).toMatchObject({ kind: "video", width: 36, height: 64 })
   })
 
   it("refuses a job answer that breaks the published shape", async () => {

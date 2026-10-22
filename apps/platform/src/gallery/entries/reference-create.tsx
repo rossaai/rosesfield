@@ -12,11 +12,7 @@ import {
   ModelRowTrigger,
 } from "@rosesfield/ui/components/model-trigger"
 import { PromptBar } from "@rosesfield/ui/components/prompt-bar"
-import {
-  SegmentedTab,
-  SegmentedTabs,
-  Tabs,
-} from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import {
   DropZone,
   ReferenceTile,
@@ -38,6 +34,11 @@ import type { ReactElement } from "react"
 import { catalogApps } from "@/catalog/catalog-apps"
 import { tCatalog } from "@/copy/t"
 import { t } from "@/gallery/copy.en"
+import {
+  composerState,
+  overPhoto,
+  viewStates,
+} from "@/gallery/entries/reference-kernel"
 import demoSquare from "@/gallery/fixtures/demo-image-1-1.png"
 import demoVideo from "@/gallery/fixtures/demo-video-16-9.mp4"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
@@ -151,12 +152,8 @@ function Column(): ReactElement {
           label={t("sample.prompt.caption")}
           chips={
             <>
-              <Chip size="inline" icon={<AtSignIcon />}>
-                {t("sample.elements")}
-              </Chip>
-              <Chip size="inline" icon={<Volume2Icon />}>
-                {t("sample.sound")}
-              </Chip>
+              <Chip icon={<AtSignIcon />}>{t("sample.elements")}</Chip>
+              <Chip icon={<Volume2Icon />}>{t("sample.sound")}</Chip>
             </>
           }
         >
@@ -188,7 +185,6 @@ const sections: ModelPickerSection[] = [
         id: "sample",
         name: t("sample.model"),
         maker: t("sample.model"),
-        line: t("sample.model.line"),
         tags: [],
         mark,
         badges: [
@@ -248,14 +244,16 @@ function CanvasDemo({ hasRuns }: { hasRuns: boolean }): ReactElement {
         className="h-full"
         tabs={
           <Tabs defaultValue="how">
-            <SegmentedTabs aria-label={t("sample.canvas.label")}>
-              <SegmentedTab value="history" icon={<FolderIcon />}>
+            <TabsList aria-label={t("sample.canvas.label")}>
+              <TabsTrigger value="history">
+                <FolderIcon aria-hidden="true" />
                 {t("sample.tab.history")}
-              </SegmentedTab>
-              <SegmentedTab value="how" icon={<BookOpenIcon />}>
+              </TabsTrigger>
+              <TabsTrigger value="how">
+                <BookOpenIcon aria-hidden="true" />
                 {t("sample.tab.how")}
-              </SegmentedTab>
-            </SegmentedTabs>
+              </TabsTrigger>
+            </TabsList>
           </Tabs>
         }
         cluster={
@@ -295,7 +293,7 @@ export const referenceCreateEntries: GalleryEntry[] = [
     id: "ref-prompt-bar",
     unit: "prompt-bar",
     title: "ref.promptBar",
-    states: interactionStates(() => <Bar />),
+    states: [...interactionStates(() => <Bar />), composerState],
   },
   {
     id: "ref-input-panel",
@@ -310,6 +308,9 @@ export const referenceCreateEntries: GalleryEntry[] = [
     states: [
       ...interactionStates(() => <Picker open={false} />),
       frameState("open", "state.open", () => <Picker open />),
+      frameState("over-photo", "state.overMedia", () =>
+        overPhoto(<Picker open />)
+      ),
     ],
   },
   {
@@ -366,6 +367,7 @@ export const referenceCreateEntries: GalleryEntry[] = [
     states: [
       frameState("rest", "state.rest", () => <CanvasDemo hasRuns={false} />),
       frameState("runs", "state.withRuns", () => <CanvasDemo hasRuns />),
+      ...viewStates,
     ],
   },
 ]

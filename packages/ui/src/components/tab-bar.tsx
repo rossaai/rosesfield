@@ -2,21 +2,13 @@ import { useRender } from "@base-ui/react/use-render"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import type { AppBarPlace } from "@rosesfield/ui/contracts/app-bar.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { SparkleIcon } from "lucide-react"
 import type { ComponentProps, ReactElement, ReactNode } from "react"
 
 const place: AppBarPlace = "bottom"
 
-const press =
-  "transition-[opacity,translate] duration-(--duration-control) active:translate-y-0.5 in-data-[gallery=press]:translate-y-0.5"
-
-const linkPress = "active:opacity-60 in-data-[gallery=press]:opacity-60"
-
-const generatePress = "active:opacity-90 in-data-[gallery=press]:opacity-90"
-
-const glowRise = "[--app-bar-rise:calc(var(--spacing)*9)]"
-
-const tabBarCover = `${glowRise} [--covered-bottom:var(--app-bar-rise)] @regular:[--covered-bottom:0px]`
+const tabBarCover = "[--covered-bottom:0px]"
 
 function TabBar({
   label,
@@ -31,18 +23,12 @@ function TabBar({
       data-slot="app-bar"
       data-place={place}
       className={cn(
-        "sticky bottom-0 z-40 w-full border-t border-transparent p-1 pb-[calc(var(--spacing)+env(safe-area-inset-bottom))] @regular:hidden",
-        glowRise
+        "material sticky bottom-0 z-40 w-full p-s1 pb-[calc(var(--spacing-s1)+env(safe-area-inset-bottom))] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-hairline before:-scale-y-100 before:shadow-seam dark:before:shadow-none @regular:hidden"
       )}
     >
       <div
-        aria-hidden="true"
-        data-slot="app-bar-glow"
-        className="pointer-events-none absolute inset-x-0 -top-(--app-bar-rise) bottom-0 -z-1 bg-linear-to-b from-transparent to-canvas to-[calc(var(--spacing)*8.75)]"
-      />
-      <div
         data-slot="app-bar-tabs"
-        className="grid h-12 grid-cols-5 items-center"
+        className="grid h-header grid-cols-5 items-center"
       >
         {children}
       </div>
@@ -72,9 +58,8 @@ function TabBarLink({
       ...props,
       "aria-current": current ? "page" : undefined,
       className: cn(
-        "flex h-12 min-w-0 flex-col items-center justify-center gap-0.5 p-1.5 text-caption text-ink-muted no-underline aria-[current=page]:text-ink [&_svg]:size-5",
-        press,
-        linkPress,
+        "flex h-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-cell p-1.5 text-caption text-ink-muted no-underline hover:text-ink aria-[current=page]:text-ink [&_svg]:size-5",
+        motion.press,
         interaction.ring,
         className
       ),
@@ -104,9 +89,8 @@ function TabBarGenerate({
         aria-label={label}
         data-slot="app-bar-tabGenerate"
         className={cn(
-          "flex h-11 w-16.5 items-center justify-center rounded-card bg-ink text-canvas [&_svg]:size-6",
-          press,
-          generatePress,
+          "flex h-field w-16.5 items-center justify-center rounded-cell bg-ink text-canvas [&_svg]:glyph",
+          motion.press,
           interaction.ring,
           className
         )}

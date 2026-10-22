@@ -1,4 +1,8 @@
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover"
+import {
+  nestedLayerClass,
+  useIsInLayer,
+} from "@rosesfield/ui/components/layer-depth"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import type { ComponentProps, ReactElement } from "react"
@@ -15,22 +19,29 @@ function PopoverClose(props: PopoverPrimitive.Close.Props): ReactElement {
   return <PopoverPrimitive.Close data-slot="popover-close" {...props} />
 }
 
-type PopoverMotion = "pop" | "rise" | "none"
+type PopoverMotion = "pop" | "none"
 
-const rise =
-  "[transition:opacity_var(--popover-in-opacity),translate_var(--popover-in-transform)] data-starting-style:opacity-0 data-starting-style:translate-y-1 data-[side=right]:data-starting-style:translate-y-0 data-[side=right]:data-starting-style:-translate-x-1 data-ending-style:opacity-0"
+type PopoverMaterial = "regular" | "thick"
 
 const collisionAvoidance = { fallbackAxisSide: "none" } as const
 
 const motions = {
   pop: motion.popover,
-  rise,
   none: "",
 } satisfies Record<PopoverMotion, string>
 
+const materials = {
+  regular: "material",
+  thick: "material-thick",
+} satisfies Record<PopoverMaterial, string>
+
 type PopoverContentProps = PopoverPrimitive.Popup.Props &
-  Pick<PopoverPrimitive.Positioner.Props, "align" | "side" | "sideOffset"> & {
+  Pick<
+    PopoverPrimitive.Positioner.Props,
+    "align" | "side" | "sideOffset" | "anchor" | "collisionPadding"
+  > & {
     motion?: PopoverMotion
+    material?: PopoverMaterial
   }
 
 function PopoverContent({
@@ -38,9 +49,13 @@ function PopoverContent({
   align = "start",
   side = "bottom",
   sideOffset = 7,
+  anchor,
+  collisionPadding,
   motion: moves = "pop",
+  material = "regular",
   ...props
 }: PopoverContentProps): ReactElement {
+  const isNested = useIsInLayer()
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Positioner
@@ -48,14 +63,20 @@ function PopoverContent({
         side={side}
         sideOffset={sideOffset}
         collisionAvoidance={collisionAvoidance}
+        {...(anchor === undefined ? {} : { anchor })}
+        {...(collisionPadding === undefined ? {} : { collisionPadding })}
         className="isolate z-50"
       >
         <PopoverPrimitive.Popup
           data-slot="popover-content"
           data-ground="layer"
+          data-material={material}
+          data-depth={isNested ? "nested" : undefined}
           className={cn(
-            "material z-50 flex max-h-(--available-height) min-w-popover-min max-w-popover-max flex-col gap-s3 overflow-y-auto rounded-vessel p-s4 text-ink shadow-float outline-none",
+            "z-50 flex max-h-(--available-height) min-w-popover-min max-w-popover-max flex-col gap-s3 overflow-y-auto rounded-vessel p-s4 text-ink shadow-float outline-none",
+            materials[material],
             motions[moves],
+            isNested ? nestedLayerClass : "",
             className
           )}
           {...props}
@@ -104,7 +125,7 @@ function PopoverHeader({
   )
 }
 
-export type { PopoverMotion }
+export type { PopoverMaterial, PopoverMotion }
 export {
   Popover,
   PopoverClose,

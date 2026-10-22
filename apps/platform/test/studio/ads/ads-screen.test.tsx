@@ -1,5 +1,7 @@
 import { appListing } from "@rosesfield/contract"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, cleanup, render, renderHook } from "@testing-library/react"
+import type { ReactElement, ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { t, tCatalog } from "@/copy/t"
 import type { FieldValue, FormValues } from "@/screens/app/app-form"
@@ -7,6 +9,14 @@ import type { AppForm } from "@/screens/app/use-app-form"
 import { AdsModelSettings } from "@/studio/ads/ads-model-settings"
 import { useAdsScreen } from "@/studio/ads/use-ads-screen"
 import { app } from "../../../../../packages/catalog/src/ads/app"
+
+const queryClient = new QueryClient()
+
+function WithQuery({ children }: { children: ReactNode }): ReactElement {
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  )
+}
 
 const listing = appListing.parse(app)
 const photo = "4d2c1b0a-9e8f-4a6b-8c5d-3e2f1a0b9c8d"
@@ -34,6 +44,25 @@ vi.mock("@/screens/app/use-start-run", () => ({
       price: "",
     }
   },
+}))
+
+vi.mock("@/screens/app/hosted/use-hosted-model", () => ({
+  useHostedModel: () => ({
+    isTaskApp: false,
+    models: [],
+    isLoading: false,
+    error: null,
+    keyState: "set",
+    defaultModel: null,
+    chosen: null,
+    fields: null,
+    ranBefore: [],
+    choose: () => undefined,
+  }),
+}))
+
+vi.mock("@/screens/app/hosted/use-price-refresh", () => ({
+  usePriceRefresh: () => undefined,
 }))
 
 vi.mock("@/screens/app/app-canvas", () => ({
@@ -73,8 +102,14 @@ vi.mock("@/screens/app/use-app-form", async () => {
 
 function renderScreen(inputs: Record<string, FieldValue>) {
   pending.inputs = inputs
-  return renderHook(() =>
-    useAdsScreen(listing, { use: undefined, from: undefined })
+  const client = new QueryClient()
+  return renderHook(
+    () => useAdsScreen(listing, { use: undefined, from: undefined }),
+    {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    }
   )
 }
 
@@ -119,26 +154,24 @@ describe("the Ads Generate press", () => {
 })
 
 describe("the Ads model menu", () => {
-  it("shows each model's name, its line and Open weights, before the style", () => {
+  it("is the catalog's model row, before the style, in the Inputs settings", () => {
     const { result } = renderScreen({ product: [photo] })
     const view = render(
       <AdsModelSettings
         app={listing}
         state={result.current}
         chips={["kind", "aspectRatio", "count"]}
-      />
+      />,
+      { wrapper: WithQuery }
     )
     const text = view.container.textContent ?? ""
-    const model = listing.inputs.find((input) => input.name === "model")
-    const options = model?.type === "choice" ? model.options : []
-    expect(options.length).toBe(2)
-    for (const option of options) {
-      expect(text).toContain(tCatalog(option.labelKey))
-      expect(text).toContain(tCatalog(`${option.labelKey}.line`))
-    }
-    expect(text.split(t("field.model.open")).length - 1).toBe(2)
+    const row = view.container.querySelector(
+      `[aria-label^="${t("model.picker.title")} "]`
+    )
+    expect(row).not.toBeNull()
+    expect(view.container.querySelector("[role=radiogroup]")).toBeNull()
     const style = tCatalog("ads.input.style.label")
-    expect(text.indexOf(tCatalog("ads.input.model.label"))).toBeLessThan(
+    expect(text.indexOf(t("model.picker.title"))).toBeLessThan(
       text.indexOf(style)
     )
     expect(text).not.toContain(tCatalog("ads.input.kind.label"))

@@ -9,6 +9,7 @@ import { isWorking, runsOf, runsQuery } from "@/api/queries"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { dayKey, dayLabel } from "@/copy/format"
 import { t } from "@/copy/t"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { useNextPage } from "@/pieces/use-next-page"
 import {
   type HistoryFilterProps,
@@ -16,13 +17,19 @@ import {
   type StateChoice,
   StateTabs,
 } from "@/screens/history/history-filters"
-import { historyGridItems } from "@/screens/history/history-grid-items"
+import {
+  historyGridItems,
+  historyShownOf,
+} from "@/screens/history/history-grid-items"
 import { HistoryRow, HistoryRowSkeleton } from "@/screens/history/history-row"
+import { GridSkeleton } from "@/screens/library/library-grid"
 import { ResultGrid } from "@/screens/library/result-grid"
 import {
+  type DateChoice,
+  isWithinDate,
   tileSizes,
-  ViewCluster,
   type ViewLayout,
+  ViewMenu,
 } from "@/screens/library/view-cluster"
 import { ScreenHeader } from "@/shell/screen-header"
 
@@ -45,14 +52,17 @@ function groupRuns(runs: readonly Run[], now: Date): DayRuns[] {
 export function keepsRun(
   run: Run,
   state: StateChoice,
-  kind: string | undefined
+  kind: string | undefined,
+  date: DateChoice = "any",
+  now: Date = new Date()
 ): boolean {
   const stateOk =
     state === "all" ||
     (state === "working" ? isWorking(run) : run.status === "failed")
   return (
     stateOk &&
-    (kind === undefined || findCatalogApp(run.appId)?.output.kind === kind)
+    (kind === undefined || findCatalogApp(run.appId)?.output.kind === kind) &&
+    isWithinDate(run.createdAt, date, now)
   )
 }
 
@@ -64,6 +74,7 @@ type HistoryFilters = HistoryFilterProps & {
 function useHistoryFilters(): HistoryFilters {
   const search = useSearch({ from: "/_shell/history/" })
   const navigate = useNavigate({ from: "/history/" })
+  const [date, setDate] = useState<DateChoice>("any")
   const appId = search.app ?? null
   const state: StateChoice = search.state ?? "all"
   const kind = search.kind
@@ -83,11 +94,17 @@ function useHistoryFilters(): HistoryFilters {
     appId,
     state,
     kind,
-    isFiltered: appId !== null || state !== "all" || kind !== undefined,
+    date,
+    isFiltered:
+      appId !== null || state !== "all" || kind !== undefined || date !== "any",
     onApp: (app) => go({ appId: app, state, kind }),
     onState: (next) => go({ appId, state: next, kind }),
     onKind: (next) => go({ appId, state, kind: next }),
-    clear: () => void navigate({ search: {}, replace: true }),
+    onDate: setDate,
+    clear: () => {
+      setDate("any")
+      void navigate({ search: {}, replace: true })
+    },
   }
 }
 
@@ -144,8 +161,10 @@ function HistoryBody({
 }): ReactNode {
   const { query } = history
   if (query.isPending) {
-    return (
-      <ul>
+    return layout === "grid" ? (
+      <GridSkeleton size={size} />
+    ) : (
+      <ul data-slot="history-list">
         {[0, 1, 2, 3].map((index) => (
           <HistoryRowSkeleton key={index} />
         ))}
@@ -165,25 +184,29 @@ function HistoryBody({
       />
     )
   }
+  const now = new Date()
   const runs = history.runs.filter((run) =>
-    keepsRun(run, filters.state, filters.kind)
+    keepsRun(run, filters.state, filters.kind, filters.date, now)
   )
-  if (runs.length === 0) {
+  const shown = historyShownOf(runs, layout)
+  if (shown === "empty") {
     return <HistoryEmpty filters={filters} />
   }
   const sentinel = (
     <span ref={history.sentinel} aria-hidden="true" className="block h-s1" />
   )
-  if (layout === "grid") {
+  if (shown === "grid") {
     return (
       <ResultGrid items={historyGridItems(runs)} size={size} after={sentinel} />
     )
   }
   return (
-    <div className="flex w-full max-w-prompt-max flex-col">
-      {groupRuns(runs, new Date()).map((group) => (
+    <div data-slot="history-list" className="flex w-full flex-col">
+      {groupRuns(runs, now).map((group) => (
         <section key={group.key} className="flex flex-col">
-          <h2 className="pt-s4 text-body font-medium">{group.label}</h2>
+          <h2 className="flex h-tab items-center font-medium text-label text-ink-muted">
+            {group.label}
+          </h2>
           <ul>
             {group.runs.map((run) => (
               <HistoryRow key={run.id} run={run} />
@@ -199,8 +222,21 @@ function HistoryBody({
 export function HistoryScreen(): ReactElement {
   const filters = useHistoryFilters()
   const history = useHistoryQuery(filters.appId)
-  const [layout, setLayout] = useState<ViewLayout>("list")
+  const [layout, setLayout] = useState<ViewLayout>("grid")
   const [size, setSize] = useState<number>(tileSizes.initial)
+  const isRegular = useIsRegularWindow()
+  const hasView =
+    history.runs.length > 0 || filters.isFiltered || history.query.isPending
+  const viewMenu = hasView ? (
+    <ViewMenu
+      layout={layout}
+      onLayout={setLayout}
+      size={size}
+      onSize={setSize}
+      isLoading={history.query.isPending}
+      groups={historyFilterGroups(filters)}
+    />
+  ) : null
   return (
     <>
       <ScreenHeader title={t("history.title")} />
@@ -209,20 +245,16 @@ export function HistoryScreen(): ReactElement {
           label={t("history.title")}
           inset="page"
           tabs={
-            <div className="min-w-0">
+            <div
+              data-slot="history-tabs"
+              className="flex min-w-0 flex-1 items-center justify-between gap-s3"
+            >
               <StateTabs {...filters} />
+              {isRegular ? null : viewMenu}
             </div>
           }
-          cluster={
-            <ViewCluster
-              layout={layout}
-              onLayout={setLayout}
-              size={size}
-              onSize={setSize}
-              groups={historyFilterGroups(filters)}
-            />
-          }
-          hasRuns={history.runs.length > 0 || filters.isFiltered}
+          {...(isRegular ? { cluster: viewMenu } : {})}
+          hasRuns={isRegular && viewMenu !== null}
         >
           <HistoryBody
             filters={filters}

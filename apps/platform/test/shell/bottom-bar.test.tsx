@@ -82,12 +82,12 @@ describe("the bottom bar", () => {
     expect(image.getAttribute("href")).toBe("/apps/image")
   })
 
-  it("tints an app of the list on press and never scales it", async () => {
+  it("presses an app well of the list on the press preset and lays no light over it", async () => {
     const bar = await barAt("/")
     fireEvent.click(within(bar).getByRole("button", { name: "Generate" }))
     const sheet = await screen.findByRole("dialog")
     const image = within(sheet).getByRole("link", { name: "Image" })
-    expect(image.className.split(" ")).toContain("active:after:opacity-10")
-    expect(image.className).not.toMatch(/scale|translate/)
+    expect(image.className.split(" ")).toContain("motion-press")
+    expect(image.className).not.toMatch(/after:/)
   })
 })

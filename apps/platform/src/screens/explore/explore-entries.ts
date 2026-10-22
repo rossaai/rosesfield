@@ -1,8 +1,7 @@
 import type { Run } from "@rosesfield/contract"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { useQueries, useQuery } from "@tanstack/react-query"
-import { runQuery } from "@/api/queries"
-import { findCatalogApp } from "@/catalog/catalog-apps"
+import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { runAspect } from "@/pieces/run/run-facts"
 import {
   admissionsByRun,
@@ -10,19 +9,14 @@ import {
   exploreListQuery,
   isAdmitted,
 } from "@/screens/explore/explore-list"
-import type { ExploreEntry, ExploreKind } from "@/screens/explore/explore-tile"
+import type { ExploreEntry, VisualEntry } from "@/screens/explore/explore-tile"
 import { type SharedOutput, shareQuery } from "@/screens/explore/share-api"
+import type { ShowcaseItem } from "@/showcase/showcase"
 
 export type ExploreEntries =
   | { state: "loading" }
   | { state: "failed"; retry: () => void }
   | { state: "ready"; entries: ExploreEntry[] }
-
-const kinds: readonly string[] = ["image", "video", "audio"]
-
-function isExploreKind(kind: string | undefined): kind is ExploreKind {
-  return kind !== undefined && kinds.includes(kind)
-}
 
 function aspectOf(
   width: number | null,
@@ -51,28 +45,14 @@ export function sharedEntries(shares: readonly SharedOutput[]): ExploreEntry[] {
   })
 }
 
-export function ownEntries(runs: readonly Run[]): ExploreEntry[] {
-  return runs.flatMap((run) => {
-    const kind = findCatalogApp(run.appId)?.output.kind
-    const [assetId] = run.outputs
-    if (
-      run.status !== "done" ||
-      run.origin !== "live" ||
-      assetId === undefined ||
-      !isExploreKind(kind)
-    ) {
-      return []
-    }
-    return [
-      {
-        key: `run-${run.id}`,
-        run,
-        kind,
-        aspect: kind === "audio" ? undefined : runAspect(run),
-        source: { kind: "own", assetId },
-      },
-    ]
-  })
+export function showcaseEntries(items: readonly ShowcaseItem[]): VisualEntry[] {
+  return items.map((item) => ({
+    key: `showcase-${item.file}`,
+    run: item.run,
+    kind: item.kind,
+    aspect: { width: item.width, height: item.height },
+    source: { kind: "showcase", src: item.src },
+  }))
 }
 
 export function admittedEntries(
@@ -93,50 +73,47 @@ export function admittedEntries(
   })
 }
 
-export type ExploreReads = { runIds: string[]; shareIds: string[] }
-
-export function exploreReads(list: readonly ExploreAdmission[]): ExploreReads {
-  const runIds = [...new Set(list.map((admission) => admission.runId))]
-  const shareIds = [
+export function exploreShares(list: readonly ExploreAdmission[]): string[] {
+  return [
     ...new Set(
       list.flatMap((admission) =>
         admission.shareId === undefined ? [] : [admission.shareId]
       )
     ),
   ]
-  return { runIds, shareIds }
+}
+
+const goneStatuses: readonly number[] = [404, 410]
+
+function isGone(error: Error | null): boolean {
+  return (
+    error instanceof GatewayRefusedError && goneStatuses.includes(error.status)
+  )
 }
 
 export function useExploreEntries(): ExploreEntries {
   const list = useQuery(exploreListQuery)
-  const reads = exploreReads(list.data)
   const shares = useQueries({
-    queries: reads.shareIds.map((shareId) => shareQuery(shareId)),
+    queries: exploreShares(list.data).map((shareId) => shareQuery(shareId)),
   })
-  const runs = useQueries({
-    queries: reads.runIds.map((runId) => runQuery(runId)),
-  })
-  const all = [...shares, ...runs]
-  if (all.length > 0 && all.every((read) => read.isError)) {
+  if (shares.some((read) => read.isPending)) {
+    return { state: "loading" }
+  }
+  const isBroken = shares.some((read) => read.isError && !isGone(read.error))
+  if (isBroken && shares.every((read) => read.data === undefined)) {
     return {
       state: "failed",
       retry: () => {
-        for (const read of all) {
+        for (const read of shares) {
           void read.refetch()
         }
       },
     }
   }
-  if (all.some((read) => read.isPending)) {
-    return { state: "loading" }
-  }
   return {
     state: "ready",
     entries: admittedEntries(
-      [
-        ...sharedEntries(shares.flatMap((read) => read.data ?? [])),
-        ...ownEntries(runs.flatMap((read) => read.data?.run ?? [])),
-      ],
+      sharedEntries(shares.flatMap((read) => read.data ?? [])),
       list.data
     ),
   }

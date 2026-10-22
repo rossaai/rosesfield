@@ -87,13 +87,13 @@ One file for the whole folder that a sync writes from the entries, with the apps
 | SCAIL-2 | `recast-character-scail-2` |
 | Wan Animate 2 | `motion-wan-animate-2` |
 | InfiniteTalk | `lipsync-photo-infinitetalk`, `lipsync-clip-infinitetalk` |
-| Qwen Image Edit 2511 | `ads-qwen-image-edit-2511`, `angles-qwen-image-edit-2511`, `angles-set-qwen-image-edit-2511`, `characters-angles-qwen-image-edit-2511`, `headshots-qwen-image-edit-2511`, `layers-edit-qwen-image-edit-2511`, `relight-qwen-image-edit-2511`, `storyboard-qwen-image-edit-2511`, `storyboard-qwen-image-edit-2511-from-text`, `try-on-qwen-image-edit-2511`, `try-on-qwen-image-edit-2511-lightning` |
+| Qwen Image Edit 2511 | `ads-qwen-image-edit-2511`, `angles-qwen-image-edit-2511`, `angles-set-qwen-image-edit-2511`, `headshots-qwen-image-edit-2511`, `layers-edit-qwen-image-edit-2511`, `relight-qwen-image-edit-2511`, `storyboard-qwen-image-edit-2511`, `storyboard-qwen-image-edit-2511-from-text`, `try-on-qwen-image-edit-2511`, `try-on-qwen-image-edit-2511-lightning` |
 | Qwen Image Edit 2509 | `relight-qwen-image-edit-2509` |
-| Qwen Image 2512 | `image-qwen-image-2512`, `characters-traits-qwen-image-2512` |
+| Qwen Image 2512 | `image-qwen-image-2512` |
 | Qwen Image | `expand-format-qwen-image`, `expand-sides-qwen-image`, `layers-fill-qwen-image` |
 | Qwen Image Layered | `layers-split-qwen-image-layered` |
-| FLUX.2 Klein 4B | `characters-traits-flux-2-klein-4b`, `ads-flux-2-klein-4b`, `storyboard-flux-2-klein-4b`, `storyboard-flux-2-klein-4b-from-text`, `try-on-flux-2-klein-4b` |
-| Z-Image Turbo | `image-z-image-turbo`, `characters-traits-z-image-turbo` |
+| FLUX.2 Klein 4B | `ads-flux-2-klein-4b`, `storyboard-flux-2-klein-4b`, `storyboard-flux-2-klein-4b-from-text`, `try-on-flux-2-klein-4b` |
+| Z-Image Turbo | `image-z-image-turbo` |
 | SeedVR2 | `upscale-image-seedvr2`, `upscale-video-seedvr2` |
 | Real-ESRGAN | `upscale-image-real-esrgan`, `upscale-video-real-esrgan` |
 | BiRefNet | `background-removal-transparent`, `background-removal-solid-color`, `video-edit-background-birefnet` |

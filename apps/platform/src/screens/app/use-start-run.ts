@@ -2,7 +2,7 @@ import { type AppListing, type Run, routes } from "@rosesfield/contract"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { callRoute } from "@/api/call-route"
 import { settingsQuery } from "@/api/queries"
-import { formatNumber } from "@/copy/format"
+import { formatAmount, formatNumber } from "@/copy/format"
 import { t } from "@/copy/t"
 import { storeRun } from "@/pieces/run/run-actions"
 import { bodyOf, type StartRunBodyInput } from "@/screens/app/app-form"
@@ -34,7 +34,7 @@ function hostedBodyOf(
     : hostedBody(chosen.id, chosen.form, form.values, app.output.kind)
 }
 
-function usePrice(
+export function usePrice(
   app: AppListing,
   body: StartRunBodyInput | null,
   keyState: string
@@ -50,15 +50,20 @@ function usePrice(
     : price.credits
 }
 
+export type HostedBodyOf = (body: StartRunBodyInput) => StartRunBodyInput
+
 export function useStartRun(
   app: AppListing,
   form: AppForm,
   onStarted?: (run: Run) => void,
-  hosted?: HostedState
+  hosted?: HostedState,
+  hostedBodyFor?: HostedBodyOf
 ): StartRun {
   const client = useQueryClient()
   const settings = useQuery(settingsQuery)
-  const hostedRun = hostedBodyOf(app, form, hosted)
+  const own = hostedBodyOf(app, form, hosted)
+  const hostedRun =
+    own === null || hostedBodyFor === undefined ? own : hostedBodyFor(own)
   const isDemo = settings.data?.engine.origin === "demo"
   const credits = usePrice(
     app,
@@ -85,16 +90,27 @@ export function useStartRun(
     }
     start.mutate(crypto.randomUUID())
   }
-  const amount = credits === null ? null : formatNumber(credits)
   return {
     generate,
     isPending: start.isPending,
     error: start.error,
-    price: isDemo
-      ? t("run.price.demo")
-      : amount === null
-        ? t("run.price.unknown")
-        : "",
+    ...priceLabelsOf(credits, isDemo),
+  }
+}
+
+const smallCredits = 0.01
+
+function creditsText(credits: number): string {
+  return credits < smallCredits ? formatAmount(credits) : formatNumber(credits)
+}
+
+export function priceLabelsOf(
+  credits: number | null,
+  isDemo: boolean
+): Pick<StartRun, "price" | "priceValue" | "priceName"> {
+  const amount = credits === null || credits <= 0 ? null : creditsText(credits)
+  return {
+    price: isDemo ? t("run.price.demo") : "",
     priceValue: amount,
     priceName: amount === null ? null : t("run.generate.priced", { amount }),
   }

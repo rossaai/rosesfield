@@ -1,3 +1,4 @@
+import { Field, FieldCaption } from "@rosesfield/ui/components/field"
 import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { useState } from "react"
@@ -51,56 +52,78 @@ describe("SegmentedControl", () => {
     expect(change).toHaveBeenCalledWith("16-9")
   })
 
-  it("moves the thumb under the chosen cell", () => {
+  it("names each cell by its own label inside a field with a caption", () => {
+    const change = vi.fn()
+    render(
+      <Field>
+        <FieldCaption>Size</FieldCaption>
+        <Format onChange={change} />
+      </Field>
+    )
+    const names = screen
+      .getAllByRole("radio")
+      .map((cell) => cell.getAttribute("aria-labelledby"))
+      .map((id) => document.getElementById(id ?? "")?.textContent)
+    expect(names).toEqual(["1:1", "4:3", "16:9"])
+    fireEvent.click(screen.getByRole("radio", { name: "16:9" }))
+    expect(change).toHaveBeenCalledWith("16-9")
+  })
+
+  it("moves the thumb under the chosen cell on the travel preset", () => {
     render(<Format onChange={() => undefined} />)
     expect(thumb().style.transform).toMatch(/^translateX\(calc\(0 \* /)
+    expect(thumb().className.split(" ")).toContain("motion-travel")
+    expect(thumb().className.split(" ")).not.toContain("transition-none")
     fireEvent.click(screen.getByRole("radio", { name: "16:9" }))
     expect(thumb().style.transform).toMatch(/^translateX\(calc\(2 \* /)
   })
 
-  it("insets the composer's plate inside its cell by the control inset, and keeps the others the cell's own size", () => {
-    render(<Format onChange={() => undefined} density="composer" />)
-    const composer = thumb().style
-    expect(composer.top).toBe(
-      "calc(var(--spacing) + var(--spacing-control-inset))"
-    )
-    expect(composer.width).toContain("- 2 * var(--spacing-control-inset))")
-    expect(composer.transform).toContain(
-      "100% + 2 * var(--spacing-control-inset)"
-    )
-    cleanup()
-    render(<Format onChange={() => undefined} density="row" />)
-    const row = thumb().style
-    expect(row.top).toBe("calc(0%)")
-    expect(row.width).toContain("2 * var(--spacing)) / 3)")
-    expect(row.transform).toContain("+ var(--spacing)")
-  })
-
-  it("sets every cell at the same medium weight, so choosing one never changes a label's weight", () => {
-    for (const density of ["chrome", "composer", "row"] as const) {
+  it.each(["chrome", "composer", "row"] as const)(
+    "draws its %s density on the track colour at radius full with an ink thumb",
+    (density) => {
       render(<Format onChange={() => undefined} density={density} />)
-      for (const cell of screen.getAllByRole("radio")) {
-        const classes = cell.className.split(" ")
-        expect(classes).toContain("font-medium")
-        expect(classes).not.toContain("data-checked:font-medium")
-      }
+      const track = screen.getByRole("radiogroup", { name: "Format" })
+      expect(track.className.split(" ")).toEqual(
+        expect.arrayContaining(["bg-track", "rounded-full", "p-control-inset"])
+      )
+      expect(track.className.split(" ")).not.toContain("bg-(--well)")
+      expect(thumb().className.split(" ")).toEqual(
+        expect.arrayContaining(["bg-ink", "rounded-full"])
+      )
+      expect(
+        thumb()
+          .className.split(" ")
+          .filter((name) => /^bg-/.test(name))
+      ).toEqual(["bg-ink"])
+    }
+  )
+
+  it("stands 40 px in chrome and 26 px in the composer and a row", () => {
+    render(<Format onChange={() => undefined} density="chrome" />)
+    expect(
+      screen.getByRole("radiogroup", { name: "Format" }).className.split(" ")
+    ).toContain("h-field")
+    cleanup()
+    for (const density of ["composer", "row"] as const) {
+      render(<Format onChange={() => undefined} density={density} />)
+      expect(
+        screen.getByRole("radiogroup", { name: "Format" }).className.split(" ")
+      ).toContain("h-button-small")
       cleanup()
     }
   })
 
-  it("draws the composer's plate one tone above its well on every ground, so the sheet's plate shows", () => {
-    render(<Format onChange={() => undefined} density="composer" />)
-    const classes = thumb().className.split(" ")
-    expect(classes).toContain("bg-surface-2")
-    expect(classes).not.toContain("bg-(--tint)")
-  })
-
-  it("paints its track with the well of its ground, never the progress track", () => {
+  it("sets its labels at the 11 px legal size, Medium for the chosen cell on the canvas colour and Regular for the rest", () => {
     render(<Format onChange={() => undefined} />)
-    const classes = screen
-      .getByRole("radiogroup", { name: "Format" })
-      .className.split(" ")
-    expect(classes).toContain("bg-(--well)")
-    expect(classes).not.toContain("bg-track")
+    const cell = screen.getByRole("radio", { name: "4:3" })
+    expect(cell.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "text-legal",
+        "font-normal",
+        "data-checked:font-medium",
+        "data-checked:text-canvas",
+        "motion-tint",
+      ])
+    )
   })
 })

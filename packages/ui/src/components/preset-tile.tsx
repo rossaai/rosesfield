@@ -1,3 +1,4 @@
+import { buttonVariants } from "@rosesfield/ui/components/button"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { FeedStacks } from "@rosesfield/ui/components/media-feed"
 import {
@@ -6,14 +7,21 @@ import {
 } from "@rosesfield/ui/components/media-tile"
 import type { PresetTileForm } from "@rosesfield/ui/contracts/preset-tile.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { SparkleIcon } from "lucide-react"
-import type { ReactElement, ReactNode } from "react"
+import type { MouseEvent, ReactElement, ReactNode } from "react"
+
+type PresetTileAction = {
+  label: string
+  href: string
+  onSelect?: () => void
+}
 
 type PresetTileProps = {
   name: string
   href: string
   viewLabel: string
-  action?: { label: string; href: string }
+  action?: PresetTileAction
   clip: { src: string; poster?: string; alt: string }
   aspect: MediaAspect
   form?: PresetTileForm
@@ -36,6 +44,7 @@ function PresetTile({
       data-form={form}
       className={cn(
         "group/reveal relative w-full overflow-hidden rounded-cell bg-(--well)",
+        motion.press,
         interaction.ringHost
       )}
       style={{ aspectRatio: `${aspect.width} / ${aspect.height}` }}
@@ -108,31 +117,39 @@ function PresetReveal({
           {line}
         </span>
       )}
-      {action === undefined ? null : (
-        <PresetAction label={action.label} href={action.href} />
-      )}
+      {action === undefined ? null : <PresetAction action={action} />}
     </span>
   )
 }
 
-function PresetAction({
-  label,
-  href,
-}: {
-  label: string
-  href: string
-}): ReactElement {
+function isPlainClick(event: MouseEvent<HTMLAnchorElement>): boolean {
+  return (
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey
+  )
+}
+
+function PresetAction({ action }: { action: PresetTileAction }): ReactElement {
+  const { label, href, onSelect } = action
   return (
     <a
       data-slot="preset-tile-action"
       href={href}
+      onClick={(event) => {
+        if (onSelect !== undefined && isPlainClick(event)) {
+          event.preventDefault()
+          onSelect()
+        }
+      }}
       className={cn(
-        "material-thin pointer-events-auto relative inline-flex h-10 items-center gap-2 rounded-cell px-3 py-2 font-medium text-body text-ink no-underline",
-        interaction.light,
-        interaction.ring
+        buttonVariants({ tone: "glass" }),
+        "pointer-events-auto no-underline"
       )}
     >
-      <SparkleIcon aria-hidden="true" className="size-5" />
+      <SparkleIcon aria-hidden="true" />
       {label}
     </a>
   )
@@ -156,5 +173,5 @@ function PresetGrid({
   )
 }
 
-export type { PresetTileProps }
+export type { PresetTileAction, PresetTileProps }
 export { PresetGrid, PresetTile }

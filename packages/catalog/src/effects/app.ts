@@ -11,6 +11,8 @@ export const photoAccept = {
   minShortSide: 480,
 } as const
 
+export const runLimitSeconds = 600
+
 type AppInputs = AppInput["inputs"]
 
 function effectInput(offered: readonly EffectRecipe[]): AppInputs {
@@ -64,6 +66,7 @@ export function effectsApp(offered: readonly EffectRecipe[]): AppInput {
         options: [
           { value: "480p", labelKey: "effects.choice.resolution.p480" },
           { value: "720p", labelKey: "effects.choice.resolution.p720" },
+          { value: "1080p", labelKey: "effects.choice.resolution.p1080" },
         ],
         default: "720p",
       },
@@ -75,7 +78,7 @@ export function effectsApp(offered: readonly EffectRecipe[]): AppInput {
       aspectRatios: { options: [...effectRatios], default: "16:9" },
     },
     engine: effectsBinding(offered),
-    limits: { timeoutSeconds: 900, maxRetries: 1 },
+    limits: { timeoutSeconds: runLimitSeconds, maxRetries: 0 },
     preview: null,
     closedKey: offered.length === 0 ? "effects.closed" : null,
   })

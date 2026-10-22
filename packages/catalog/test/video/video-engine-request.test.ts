@@ -11,6 +11,7 @@ import {
   ltxStartFrameBinding,
   ltxTextBinding,
 } from "#video/comfy/video-engine"
+import { withoutVideoStills } from "../workflows/video-stills"
 import {
   asset,
   jobId,
@@ -93,7 +94,9 @@ async function submitted(
   }
   const submission = await engine.submit(request)
   const job = replay.sent.find((one) => one.url.endsWith("/api/v2/jobs"))
-  const workflow: Workflow = JSON.parse(job?.body ?? "{}").workflow
+  const workflow: Workflow = withoutVideoStills(
+    JSON.parse(job?.body ?? "{}").workflow
+  )
   const uploads = replay.sent.filter((one) =>
     one.url.endsWith("/api/v2/assets")
   )

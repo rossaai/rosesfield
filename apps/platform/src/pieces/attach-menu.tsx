@@ -7,7 +7,7 @@ import {
 } from "@rosesfield/ui/components/dropdown-menu"
 import { ReferenceTile } from "@rosesfield/ui/components/upload-zone"
 import { PaperclipIcon } from "lucide-react"
-import type { ReactElement } from "react"
+import type { ReactElement, ReactNode } from "react"
 import { t } from "@/copy/t"
 
 type AttachMenuProps = {
@@ -16,6 +16,8 @@ type AttachMenuProps = {
   onFromLibrary: () => void
   disabled?: boolean
   form?: "tile" | "menu"
+  glyph?: ReactNode
+  className?: string
 }
 
 function AttachTile(props: AttachMenuProps): ReactElement {
@@ -45,8 +47,14 @@ export function AttachMenu(props: AttachMenuProps): ReactElement {
       <DropdownMenuTrigger
         disabled={props.disabled === true}
         render={
-          <IconButton label={props.label} size="dense">
-            <PaperclipIcon aria-hidden="true" />
+          <IconButton
+            label={props.label}
+            size="dense"
+            {...(props.className === undefined
+              ? {}
+              : { className: props.className })}
+          >
+            {props.glyph ?? <PaperclipIcon aria-hidden="true" />}
           </IconButton>
         }
       />

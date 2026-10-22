@@ -1,20 +1,15 @@
 import type { AppListing } from "@rosesfield/contract"
-import { AppTile, AppTileGrid } from "@rosesfield/ui/components/app-tile"
-import { buttonVariants } from "@rosesfield/ui/components/button"
-import { HeroBanner } from "@rosesfield/ui/components/hero"
+import { HeroBanner, type HeroPortraits } from "@rosesfield/ui/components/hero"
 import { MediaFeed, ViewAll } from "@rosesfield/ui/components/media-feed"
 import { MediaTile } from "@rosesfield/ui/components/media-tile"
-import {
-  PromoCard,
-  PromoRow,
-  PromoSkeleton,
-} from "@rosesfield/ui/components/promo-card"
 import { SectionHeader } from "@rosesfield/ui/components/section-header"
+import { Skeleton, SkeletonGroup } from "@rosesfield/ui/components/skeleton"
+import { useInView } from "@rosesfield/ui/hooks/use-in-view"
+import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import { useRouter } from "@tanstack/react-router"
-import { VideoIcon } from "lucide-react"
-import type { ReactElement, ReactNode } from "react"
+import { type ReactElement, type ReactNode, useRef, useState } from "react"
 import { appLine, appName } from "@/catalog/app-facts"
-import { catalogApps, findCatalogApp } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import {
   type ExploreRow,
@@ -29,10 +24,14 @@ import {
   useEntrySrc,
   type VisualEntry,
 } from "@/screens/explore/explore-tile"
-import { appIcon, navGroups } from "@/shell/nav-rows"
+import {
+  exampleGroupOf,
+  isFeedExample,
+  type ShowcaseItem,
+  showcaseItems,
+} from "@/showcase/showcase"
 
 export const bannerAppId = "image"
-export const appTileCount = 6
 
 export type ResultActions = {
   onOpen: OpenResult
@@ -45,132 +44,123 @@ function useAppHref(): (appId: string) => string {
     router.buildLocation({ to: "/apps/$appId", params: { appId } }).href
 }
 
+export function Reveal({ children }: { children: ReactNode }): ReactElement {
+  const box = useRef<HTMLDivElement>(null)
+  const [isShown, setShown] = useState(
+    () => typeof IntersectionObserver === "undefined"
+  )
+  useInView(box, (isInView) => {
+    if (isInView) {
+      setShown(true)
+    }
+  })
+  return (
+    <div
+      ref={box}
+      data-slot="explore-reveal"
+      data-arrival={isShown ? "shown" : "waiting"}
+      className={cn("w-full", motion.enter)}
+    >
+      {children}
+    </div>
+  )
+}
+
+export function bannerPortraits(
+  items: readonly ShowcaseItem[] = showcaseItems
+): HeroPortraits {
+  const start = items.find((item) => item.banner === "start")
+  const end = items.find((item) => item.banner === "end")
+  return {
+    ...(start === undefined ? {} : { start: start.src }),
+    ...(end === undefined ? {} : { end: end.src }),
+  }
+}
+
 export function ExploreBanner(): ReactElement {
   const appHref = useAppHref()
   return (
-    <HeroBanner
-      href={appHref(bannerAppId)}
-      kicker={t("explore.banner.kicker")}
-      headline={t("explore.banner.headline")}
-      lead={t("explore.banner.lead")}
-      action={t("explore.banner.action")}
-    />
+    <Reveal>
+      <HeroBanner
+        href={appHref(bannerAppId)}
+        headline={t("explore.banner.headline")}
+        lead={t("welcome.terms.body.1")}
+        action={t("explore.banner.action")}
+        portraits={bannerPortraits()}
+      />
+    </Reveal>
   )
 }
 
-function PromoClip({ promo }: { promo: PromoEntry }): ReactNode {
+function AppMedia({ promo }: { promo: PromoEntry }): ReactElement {
   const src = useEntrySrc(promo.entry)
-  if (src === null) {
-    return null
-  }
+  const name = appName(promo.app)
   return (
-    <MediaTile kind={promo.entry.kind} src={src} alt={appName(promo.app)} />
+    <a
+      href={useAppHref()(promo.app.id)}
+      data-slot="explore-app"
+      aria-label={t("explore.promo.open", { app: name })}
+      className={cn(
+        "group/app flex min-w-0 flex-col gap-s3 rounded-cell text-ink no-underline",
+        motion.press
+      )}
+    >
+      <span className="relative block aspect-video w-full overflow-hidden rounded-cell bg-(--well) *:size-full *:object-cover">
+        {src === null ? null : (
+          <MediaTile kind={promo.entry.kind} src={src} alt={name} />
+        )}
+      </span>
+      <span className="truncate font-medium text-body">{name}</span>
+    </a>
   )
 }
 
-export const promoSkeletonCount = 4
+export const appSkeletonCount = 4
 
-export function PromoCards({
+function AppMediaSkeleton(): ReactElement {
+  return (
+    <SkeletonGroup className="flex flex-col gap-s3">
+      <Skeleton className="aspect-video w-full" />
+      <Skeleton shape="line" text="body" measure="short" />
+    </SkeletonGroup>
+  )
+}
+
+export function AppsRow({
   entries,
   isLoading,
 }: {
   entries: readonly VisualEntry[]
   isLoading: boolean
 }): ReactNode {
-  const appHref = useAppHref()
+  const router = useRouter()
   const promos = promoEntries(entries)
   if (promos.length === 0 && !isLoading) {
     return null
   }
   return (
-    <PromoRow
-      label={t("explore.promo.label")}
-      nextLabel={t("viewer.next")}
-      className="-mx-4 mt-2 @regular:mt-6"
-    >
-      {isLoading
-        ? Array.from({ length: promoSkeletonCount }, (_, index) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: a skeleton's place is its identity
-            <PromoSkeleton key={index} />
-          ))
-        : null}
-      {promos.map((promo) => (
-        <PromoCard
-          key={promo.app.id}
-          name={appName(promo.app)}
-          line={appLine(promo.app)}
-          href={appHref(promo.app.id)}
-          openLabel={t("explore.promo.open", { app: appName(promo.app) })}
-          clip={<PromoClip promo={promo} />}
-        />
-      ))}
-    </PromoRow>
-  )
-}
-
-export function tileApps(
-  apps: readonly AppListing[] = catalogApps
-): Array<{ app: AppListing; icon: ReactElement }> {
-  const areas = navGroups(apps).areas
-  const depth = Math.max(0, ...areas.map((area) => area.apps.length))
-  return Array.from({ length: depth }, (_, index) =>
-    areas.flatMap((area) => area.apps.slice(index, index + 1))
-  )
-    .flat()
-    .slice(0, appTileCount)
-    .map((app) => ({ app, icon: appIcon(app) }))
-}
-
-export function AppTiles(): ReactElement {
-  const appHref = useAppHref()
-  return (
-    <div className="mt-6 w-full @regular:mt-10 @regular:w-186.75">
-      <AppTileGrid label={t("explore.apps.label")}>
-        {tileApps().map(({ app, icon }) => (
-          <AppTile
-            key={app.id}
-            href={appHref(app.id)}
-            name={appName(app)}
-            line={appLine(app)}
-            icon={icon}
-            {...(app.output.kind === "video"
-              ? { mode: { label: t("kind.video"), icon: <VideoIcon /> } }
-              : {})}
+    <Reveal>
+      <MediaFeed
+        label={t("explore.apps.label")}
+        layout="row"
+        rowLabels={{ previous: t("viewer.previous"), next: t("viewer.next") }}
+        header={
+          <SectionHeader
+            title={t("explore.apps.label")}
+            href={router.buildLocation({ to: "/apps" }).href}
           />
-        ))}
-      </AppTileGrid>
-    </div>
-  )
-}
-
-function RowActions({ appId }: { appId: string }): ReactElement {
-  const appHref = useAppHref()
-  const router = useRouter()
-  const app = findCatalogApp(appId)
-  const howHref = router.buildLocation({
-    to: "/apps/$appId",
-    params: { appId },
-    search: { tab: "how" },
-  }).href
-  return (
-    <>
-      <a
-        href={appHref(appId)}
-        data-slot="button"
-        className={buttonVariants({ tone: "primary", size: "hero" })}
+        }
       >
-        {t("explore.promo.open", {
-          app: app === null ? appId : appName(app),
-        })}
-      </a>
-      <a
-        href={howHref}
-        data-slot="button"
-        className={buttonVariants({ size: "hero" })}
-      >
-        {t("explore.row.learnMore")}
-      </a>
-    </>
+        {promos.length === 0
+          ? Array.from({ length: appSkeletonCount }, (_, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: a skeleton's place is its identity
+              <AppMediaSkeleton key={index} />
+            ))
+          : promos.map((promo) => (
+              <AppMedia key={promo.app.id} promo={promo} />
+            ))}
+      </MediaFeed>
+    </Reveal>
   )
 }
 
@@ -181,102 +171,87 @@ type FeedProps = ResultActions & {
   name: string
   layout: "masonry" | "row"
   entries: readonly VisualEntry[]
-  actions?: ReactNode
 }
+
+const rowLabels = (): { previous: string; next: string } => ({
+  previous: t("viewer.previous"),
+  next: t("viewer.next"),
+})
 
 export function ResultFeed(props: FeedProps): ReactElement {
   return (
-    <MediaFeed
-      label={props.title}
-      layout={props.layout}
-      header={
-        <SectionHeader
-          title={props.title}
-          line={props.line}
-          href={props.href}
-          {...(props.actions === undefined ? {} : { actions: props.actions })}
-        />
-      }
-      viewAll={
-        <ViewAll href={props.href}>
-          {t("explore.viewAll", { name: props.name })}
-        </ViewAll>
-      }
-    >
-      {props.entries.map((entry) => (
-        <ResultCard
-          key={entry.key}
-          entry={entry}
-          narrow={props.layout === "masonry"}
-          onOpen={props.onOpen}
-          onMore={props.onMore}
-        />
-      ))}
-    </MediaFeed>
+    <Reveal>
+      <MediaFeed
+        label={props.title}
+        layout={props.layout}
+        rowLabels={rowLabels()}
+        header={
+          <SectionHeader
+            title={props.title}
+            line={props.line}
+            href={props.href}
+          />
+        }
+        viewAll={
+          <ViewAll href={props.href}>
+            {t("explore.viewAll", { name: props.name })}
+          </ViewAll>
+        }
+      >
+        {props.entries.map((entry) => (
+          <ResultCard
+            key={entry.key}
+            entry={entry}
+            aspect={entry.aspect}
+            onOpen={props.onOpen}
+            onMore={props.onMore}
+          />
+        ))}
+      </MediaFeed>
+    </Reveal>
   )
 }
 
 function PresetFeed({
   app,
   presets,
-  actions,
 }: {
   app: AppListing
   presets: readonly PresetEntry[]
-  actions: ReactNode
 }): ReactElement {
   const href = useAppHref()(app.id)
   const name = appName(app)
   return (
-    <MediaFeed
-      label={name}
-      layout="row"
-      content="presets"
-      header={
-        <SectionHeader
-          title={name}
-          line={appLine(app)}
-          href={href}
-          {...(actions === undefined ? {} : { actions })}
-        />
-      }
-      viewAll={<ViewAll href={href}>{t("explore.viewAll", { name })}</ViewAll>}
-    >
-      {presets.map((preset) => (
-        <ExplorePresetTile
-          key={preset.key}
-          name={preset.name}
-          entry={preset.entry}
-        />
-      ))}
-    </MediaFeed>
+    <Reveal>
+      <MediaFeed
+        label={name}
+        layout="row"
+        content="presets"
+        header={<SectionHeader title={name} href={href} />}
+        viewAll={
+          <ViewAll href={href}>{t("explore.viewAll", { name })}</ViewAll>
+        }
+      >
+        {presets.map((preset) => (
+          <ExplorePresetTile
+            key={preset.key}
+            name={preset.name}
+            entry={preset.entry}
+          />
+        ))}
+      </MediaFeed>
+    </Reveal>
   )
-}
-
-export function leadOf(row: ExploreRow): string | null {
-  switch (row.kind) {
-    case "presets":
-      return row.presets.length === 0 ? null : row.app.id
-    case "model":
-      return row.entries.length === 0 ? null : row.appId
-    case "app":
-      return row.entries.length === 0 ? null : row.app.id
-  }
 }
 
 export function ExploreRowView({
   row,
-  isLead,
   ...actions
-}: ResultActions & { row: ExploreRow; isLead: boolean }): ReactElement {
+}: ResultActions & { row: ExploreRow }): ReactElement {
   const appHref = useAppHref()
-  const lead = isLead ? leadOf(row) : null
-  const buttons = lead === null ? undefined : <RowActions appId={lead} />
   switch (row.kind) {
     case "presets":
-      return (
-        <PresetFeed app={row.app} presets={row.presets} actions={buttons} />
-      )
+      return <PresetFeed app={row.app} presets={row.presets} />
     case "model":
       return (
         <ResultFeed
@@ -287,7 +262,6 @@ export function ExploreRowView({
           name={row.model}
           layout="row"
           entries={row.entries}
-          {...(buttons === undefined ? {} : { actions: buttons })}
         />
       )
     case "app":
@@ -300,22 +274,107 @@ export function ExploreRowView({
           name={appName(row.app)}
           layout="row"
           entries={row.entries}
-          {...(buttons === undefined ? {} : { actions: buttons })}
         />
       )
   }
 }
 
+function tallness(entry: VisualEntry): number {
+  return entry.aspect.height / entry.aspect.width
+}
+
+const sourceGap = 6
+
+function groupsAround(placed: readonly VisualEntry[], at: number): Set<string> {
+  return new Set(
+    placed
+      .slice(Math.max(0, at - sourceGap + 1), at + sourceGap - 1)
+      .map((entry) => exampleGroupOf(entry.run.id))
+  )
+}
+
+function placeApart(placed: VisualEntry[], entry: VisualEntry): boolean {
+  const group = exampleGroupOf(entry.run.id)
+  for (let at = placed.length; at >= 0; at -= 1) {
+    if (!groupsAround(placed, at).has(group)) {
+      placed.splice(at, 0, entry)
+      return true
+    }
+  }
+  return false
+}
+
+function spreadSources(entries: readonly VisualEntry[]): VisualEntry[] {
+  const placed: VisualEntry[] = []
+  const deferred: VisualEntry[] = []
+  for (const entry of entries) {
+    const near = groupsAround(placed, placed.length)
+    if (near.has(exampleGroupOf(entry.run.id))) {
+      deferred.push(entry)
+    } else {
+      placed.push(entry)
+    }
+  }
+  for (const entry of deferred) {
+    if (!placeApart(placed, entry)) {
+      placed.push(entry)
+    }
+  }
+  return placed
+}
+
+export function feedExamples(entries: readonly VisualEntry[]): VisualEntry[] {
+  return spreadSources(
+    entries
+      .filter((entry) => isFeedExample(entry.run.id))
+      .sort((first, second) => tallness(second) - tallness(first))
+  )
+}
+
+export function ShowcaseFeed({
+  entries,
+  ...actions
+}: ResultActions & { entries: readonly VisualEntry[] }): ReactNode {
+  const router = useRouter()
+  const examples = feedExamples(entries)
+  if (examples.length === 0) {
+    return null
+  }
+  return (
+    <Reveal>
+      <MediaFeed
+        label={t("explore.showcase.title")}
+        isClipped={true}
+        header={
+          <SectionHeader
+            title={t("explore.showcase.title")}
+            actions={
+              <ViewAll href={router.buildLocation({ to: "/apps" }).href}>
+                {t("explore.showcase.viewAll")}
+              </ViewAll>
+            }
+          />
+        }
+      >
+        {examples.map((entry) => (
+          <ResultCard
+            key={entry.key}
+            entry={entry}
+            aspect={entry.aspect}
+            onOpen={actions.onOpen}
+            onMore={actions.onMore}
+          />
+        ))}
+      </MediaFeed>
+    </Reveal>
+  )
+}
+
 export function SharedFeed({
   entries,
-  isLead,
   ...actions
-}: ResultActions & {
-  entries: readonly VisualEntry[]
-  isLead: boolean
-}): ReactElement {
+}: ResultActions & { entries: readonly VisualEntry[] }): ReactElement {
   const router = useRouter()
-  const [first] = entries
   return (
     <ResultFeed
       {...actions}
@@ -325,11 +384,6 @@ export function SharedFeed({
       name={t("explore.shared.name")}
       layout="masonry"
       entries={entries}
-      {...(isLead && first !== undefined
-        ? {
-            actions: <RowActions appId={first.run.appId} />,
-          }
-        : {})}
     />
   )
 }

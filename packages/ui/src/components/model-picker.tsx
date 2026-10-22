@@ -1,14 +1,21 @@
-import { Badge, type BadgeKind } from "@rosesfield/ui/components/badge"
-import { interaction } from "@rosesfield/ui/components/interaction"
+import {
+  type ModelBadge,
+  type ModelPickerRow,
+  type ModelPickerTag,
+  type ModelPrice,
+  ModelRow,
+  ModelRowSkeleton,
+} from "@rosesfield/ui/components/model-row"
 import {
   Popover,
   PopoverContent,
   PopoverTitle,
   PopoverTrigger,
 } from "@rosesfield/ui/components/popover"
-import { Skeleton } from "@rosesfield/ui/components/skeleton"
+import { SkeletonGroup } from "@rosesfield/ui/components/skeleton"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { CheckIcon, SearchIcon, SparkleIcon } from "lucide-react"
+import { motion } from "@rosesfield/ui/motion"
+import { SearchIcon, SparkleIcon } from "lucide-react"
 import {
   type ReactElement,
   type ReactNode,
@@ -17,28 +24,6 @@ import {
   useRef,
   useState,
 } from "react"
-
-type ModelPickerTag = {
-  label: string
-  icon?: ReactNode
-}
-
-type ModelBadge = {
-  kind: BadgeKind
-  label: string
-  href?: string
-  mark?: ReactNode
-}
-
-type ModelPickerRow = {
-  id: string
-  name: string
-  maker: string
-  line: string | null
-  tags: readonly ModelPickerTag[]
-  mark?: ReactNode
-  badges?: readonly ModelBadge[]
-}
 
 type ModelPickerSection = {
   id: string
@@ -56,6 +41,7 @@ type ModelPickerProps = {
   chosen: string | null
   onChoose: (id: string) => void
   isLoading?: boolean
+  isPricing?: boolean
   notice?: ReactNode
   settings?: ReactNode
   side?: "top" | "right"
@@ -64,13 +50,48 @@ type ModelPickerProps = {
   onOpenChange?: (open: boolean) => void
 }
 
+const featuredId = "featured"
+
+function labOf(row: ModelPickerRow): string {
+  return row.lab ?? row.maker
+}
+
 function matches(row: ModelPickerRow, query: string): boolean {
   const needle = query.trim().toLowerCase()
   return (
     needle === "" ||
     row.name.toLowerCase().includes(needle) ||
-    row.maker.toLowerCase().includes(needle)
+    row.maker.toLowerCase().includes(needle) ||
+    labOf(row).toLowerCase().includes(needle)
   )
+}
+
+function labSectionsOf(
+  sections: readonly ModelPickerSection[]
+): ModelPickerSection[] {
+  const featured = sections.filter((section) => section.id === featuredId)
+  const seen = new Set<string>(
+    featured.flatMap((section) => section.rows.map((row) => row.id))
+  )
+  const byLab = new Map<string, ModelPickerRow[]>()
+  for (const section of sections) {
+    if (section.id === featuredId) {
+      continue
+    }
+    for (const row of section.rows) {
+      if (!seen.has(row.id)) {
+        seen.add(row.id)
+        byLab.set(labOf(row), [...(byLab.get(labOf(row)) ?? []), row])
+      }
+    }
+  }
+  const labs = [...byLab.entries()].sort(([a], [b]) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" })
+  )
+  return [
+    ...featured,
+    ...labs.map(([lab, rows]) => ({ id: `lab:${lab}`, label: lab, rows })),
+  ]
 }
 
 function filterSections(
@@ -85,137 +106,13 @@ function filterSections(
     .filter((section) => section.rows.length > 0)
 }
 
-function RowBadge({ badge }: { badge: ModelBadge }): ReactElement {
-  return (
-    <Badge
-      kind={badge.kind}
-      {...(badge.href === undefined ? {} : { href: badge.href })}
-      {...(badge.mark === undefined ? {} : { mark: badge.mark })}
-    >
-      {badge.label}
-    </Badge>
-  )
-}
-
-function RowName({ row }: { row: ModelPickerRow }): ReactElement {
-  const badges = row.badges ?? []
-  const facts = badges.filter((badge) => badge.kind !== "openWeights")
-  const weights = badges.filter((badge) => badge.kind === "openWeights")
-  return (
-    <span className="flex min-w-0 items-center">
-      <span data-slot="model-row-name" className="truncate text-body text-ink">
-        {row.name}
-      </span>
-      {facts.length === 0 ? null : (
-        <span data-slot="model-row-badges" className="flex shrink-0">
-          {facts.map((badge) => (
-            <RowBadge key={badge.kind} badge={badge} />
-          ))}
-        </span>
-      )}
-      {weights.length === 0 ? null : (
-        <span data-slot="model-row-weights" className="flex shrink-0">
-          {weights.map((badge) => (
-            <RowBadge key={badge.kind} badge={badge} />
-          ))}
-        </span>
-      )}
-    </span>
-  )
-}
-
-function RowLine({ row }: { row: ModelPickerRow }): ReactNode {
-  if (row.line === null && row.tags.length === 0) {
-    return null
-  }
-  return (
-    <span
-      data-slot="model-row-line"
-      className="flex min-w-0 flex-wrap items-center gap-x-1 overflow-hidden text-caption whitespace-nowrap text-ink-muted"
-    >
-      {row.line === null ? null : (
-        <span data-slot="model-row-words" className="max-w-full truncate">
-          {row.line}
-        </span>
-      )}
-      {row.tags.length === 0 ? null : (
-        <span
-          data-slot="model-row-tags"
-          className="flex max-w-full shrink-0 gap-1 overflow-hidden"
-        >
-          {row.tags.map((tag) => (
-            <span
-              key={tag.label}
-              className="inline-flex shrink-0 items-center gap-0.5 rounded-dense bg-(--tint) px-1 [&_svg]:size-3"
-            >
-              {tag.icon}
-              {tag.label}
-            </span>
-          ))}
-        </span>
-      )}
-    </span>
-  )
-}
-
-function ModelRow({
-  row,
-  isChosen,
-  onChoose,
-}: {
-  row: ModelPickerRow
-  isChosen: boolean
-  onChoose: (id: string) => void
-}): ReactElement {
-  return (
-    <div
-      role="none"
-      data-slot="model-row"
-      data-chosen={isChosen ? "yes" : "no"}
-      className="group/row relative mx-3 h-13 rounded-cell data-[chosen=yes]:bg-(--tint)"
-    >
-      <button
-        type="button"
-        role="option"
-        aria-selected={isChosen}
-        aria-label={row.name}
-        data-model={row.id}
-        className={cn(
-          "absolute inset-0 rounded-cell outline-none",
-          interaction.light,
-          interaction.ring
-        )}
-        onClick={() => onChoose(row.id)}
-      />
-      <span className="pointer-events-none relative flex h-full items-center ps-1.5 pe-3">
-        <span
-          data-slot="model-row-mark"
-          aria-hidden="true"
-          className="flex size-10 shrink-0 items-center justify-center rounded-dense bg-(--tint) text-ink-muted group-data-[chosen=yes]/row:text-ink [&_svg]:size-4"
-        >
-          {row.mark}
-        </span>
-        <span className="ms-2 flex min-w-0 flex-1 flex-col">
-          <RowName row={row} />
-          <RowLine row={row} />
-        </span>
-        <span data-slot="model-row-check" className="flex size-5 shrink-0">
-          {isChosen ? (
-            <CheckIcon aria-hidden="true" className="size-5" />
-          ) : null}
-        </span>
-      </span>
-    </div>
-  )
-}
-
 function LoadingRows(): ReactElement {
   return (
-    <div className="flex flex-col gap-1 px-3 py-2">
+    <SkeletonGroup className="flex flex-col gap-s1 px-s3 py-s2">
       {["first", "second", "third", "fourth"].map((key) => (
-        <Skeleton key={key} className="h-13 w-full rounded-cell" />
+        <ModelRowSkeleton key={key} />
       ))}
-    </div>
+    </SkeletonGroup>
   )
 }
 
@@ -230,8 +127,13 @@ function SectionRows(
       aria-label={props.section.label}
       className="m-0 flex min-w-0 flex-col gap-1 border-0 p-0"
     >
-      <p className="flex h-8.5 items-center gap-1.5 px-3 font-medium text-label text-ink-muted">
-        <SparkleIcon aria-hidden="true" className="size-3.5" />
+      <p
+        data-slot="model-section-heading"
+        className="flex h-button-small items-center gap-s1_5 px-s4 font-medium text-label text-ink-muted [&_svg]:glyph-small"
+      >
+        {props.section.id === featuredId ? (
+          <SparkleIcon aria-hidden="true" />
+        ) : null}
         {props.section.label}
       </p>
       {props.section.rows.map((row) => (
@@ -239,6 +141,7 @@ function SectionRows(
           key={`${props.section.id}:${row.id}`}
           row={row}
           isChosen={row.id === props.chosen}
+          isPricing={props.isPricing === true}
           onChoose={(id) => {
             props.onChoose(id)
             props.onChosen()
@@ -255,7 +158,7 @@ function ModelList(
   if (props.isLoading === true) {
     return <LoadingRows />
   }
-  const sections = filterSections(props.sections, props.query)
+  const sections = filterSections(labSectionsOf(props.sections), props.query)
   if (sections.length === 0) {
     const isRefused = props.notice !== undefined && props.notice !== null
     return isRefused && props.query === "" ? null : (
@@ -280,8 +183,10 @@ function readEnds(element: HTMLElement): Ends {
   }
 }
 
-const fadeClass =
-  "pointer-events-none absolute inset-x-0 z-10 h-9.5 from-(--ground) to-transparent transition-opacity duration-(--duration-control)"
+const fadeClass = cn(
+  "pointer-events-none absolute inset-x-0 z-10 h-s12 from-(--ground) to-transparent",
+  motion.tint
+)
 
 function ScrollRegion({ children }: { children: ReactNode }): ReactElement {
   const [ends, setEnds] = useState<Ends>({ top: false, bottom: true })
@@ -326,8 +231,8 @@ function SearchRow(props: {
   onQuery: (query: string) => void
 }): ReactElement {
   return (
-    <label className="flex h-10.5 shrink-0 items-center gap-2 border-b border-(--line) px-3">
-      <SearchIcon aria-hidden="true" className="size-6 text-ink-muted" />
+    <label className="flex h-field shrink-0 items-center gap-s2 border-b border-(--line) px-s4">
+      <SearchIcon aria-hidden="true" className="glyph text-ink-muted" />
       <input
         ref={props.search}
         type="search"
@@ -341,29 +246,85 @@ function SearchRow(props: {
   )
 }
 
+type Placement = {
+  anchor: () => Element | null
+  padding: { top: number; right: number; bottom: number; left: number }
+  origin: string
+}
+
+function insetOf(name: string): number {
+  const value = Number.parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue(name)
+  )
+  return Number.isFinite(value) ? value : 0
+}
+
+function vesselOf(trigger: HTMLElement): Element {
+  return trigger.closest("[data-slot='composer']") ?? trigger
+}
+
+function placementOf(trigger: HTMLElement | null): Placement | null {
+  if (trigger === null) {
+    return null
+  }
+  const vessel = vesselOf(trigger)
+  const inset = insetOf("--spacing-s4")
+  const bar = document
+    .querySelector("header[data-slot='app-bar']")
+    ?.getBoundingClientRect()
+  const chip = trigger.getBoundingClientRect()
+  const box = vessel.getBoundingClientRect()
+  const gap = insetOf("--spacing-s2_5")
+  const x = chip.left + chip.width / 2 - box.left
+  const y = chip.top + chip.height / 2 - box.top + gap
+  return {
+    anchor: () => vesselOf(trigger),
+    padding: {
+      top: Math.max(inset, (bar?.bottom ?? 0) + inset),
+      right: inset,
+      bottom: inset,
+      left: inset,
+    },
+    origin: `${x}px calc(100% + ${y}px)`,
+  }
+}
+
 function ModelPicker(props: ModelPickerProps): ReactElement {
   const [query, setQuery] = useState("")
   const search = useRef<HTMLInputElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
+  const [placement, setPlacement] = useState<Placement | null>(null)
   const [isOpenHere, setOpenHere] = useState(props.defaultOpen === true)
   const isOpen = props.open ?? isOpenHere
   const side = props.side ?? "top"
   const setOpen = (open: boolean): void => {
+    if (open) {
+      setPlacement(placementOf(trigger.current))
+    }
     setOpenHere(open)
     props.onOpenChange?.(open)
     if (!open) {
       setQuery("")
     }
   }
+  const isAbove = side === "top" && placement !== null
   return (
     <Popover open={isOpen} onOpenChange={setOpen}>
-      <PopoverTrigger render={props.trigger} />
+      <PopoverTrigger ref={trigger} render={props.trigger} />
       <PopoverContent
         data-slot="model-picker"
         initialFocus={search}
         side={side}
         align={side === "top" ? "start" : "end"}
-        sideOffset={side === "top" ? 4 : 8}
-        motion="rise"
+        sideOffset={insetOf("--spacing-s2_5")}
+        material="thick"
+        {...(placement === null ? {} : { collisionPadding: placement.padding })}
+        {...(isAbove
+          ? {
+              anchor: placement.anchor,
+              style: { transformOrigin: placement.origin },
+            }
+          : {})}
         className="max-h-[min(var(--available-height),calc(var(--spacing)*160.5))] w-100.5 max-w-[calc(100vw-2*var(--spacing-s4))] gap-0 overflow-hidden p-px"
       >
         <PopoverTitle className="sr-only">{props.title}</PopoverTitle>
@@ -397,5 +358,6 @@ export type {
   ModelPickerRow,
   ModelPickerSection,
   ModelPickerTag,
+  ModelPrice,
 }
-export { filterSections, ModelPicker }
+export { filterSections, labSectionsOf, ModelPicker }

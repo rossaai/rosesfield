@@ -3,7 +3,7 @@ import { Input } from "@rosesfield/ui/components/input"
 import { Switch } from "@rosesfield/ui/components/switch"
 import { Textarea } from "@rosesfield/ui/components/textarea"
 import { type ReactElement, type ReactNode, useId, useState } from "react"
-import { hasCatalogText, t, tCatalog, tCount } from "@/copy/t"
+import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import { DropWell } from "@/pieces/drop-well"
 import type { FieldValue } from "@/screens/app/app-form"
 import { ChoiceControl } from "@/screens/app/fields/choice-field"
@@ -36,11 +36,8 @@ export function isShownField(field: ModelField): boolean {
 }
 
 function limitsOf(field: ModelField): string | null {
-  if (field.kind === "number" && field.min !== null && field.max !== null) {
-    return t("field.number.range", { min: field.min, max: field.max })
-  }
-  return field.kind === "media"
-    ? tCount("field.asset.note", field.max, { max: field.max })
+  return field.kind === "number" && field.min !== null && field.max !== null
+    ? t("field.number.range", { min: field.min, max: field.max })
     : null
 }
 
@@ -164,7 +161,7 @@ function MediaControl({ field, value, form }: FieldProps): ReactElement | null {
     <FieldFrame
       caption={fieldCaption(field)}
       isOptional={!field.required}
-      note={limitsOf(field)}
+      note={null}
       problem={form.problems.get(field.name)}
       message={message}
     >

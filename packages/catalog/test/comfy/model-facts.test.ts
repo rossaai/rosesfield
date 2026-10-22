@@ -64,9 +64,57 @@ describe("the task of a model", () => {
     expect(
       tasksOfModel(hosted("a/video-upscale-v1", ["video"], ["video"]))
     ).toEqual(["video-edit", "upscale"])
+  })
+
+  it("lists a sound effects model under sound and not under speech", () => {
     expect(
       tasksOfModel(hosted("a/eleven-sfx-v2", ["text"], ["audio"]))
-    ).toEqual(["speech", "sound"])
+    ).toEqual(["sound"])
+    expect(
+      tasksOfModel(hosted("elevenlabs/eleven_sfx_v2", ["text"], ["audio"]))
+    ).toEqual(["sound"])
+    expect(
+      tasksOfModel(hosted("elevenlabs/eleven_v3", ["text"], ["audio"]))
+    ).toEqual(["speech"])
+  })
+
+  it("reads motion transfer and character swap from the name, beside the media tasks", () => {
+    const video = image("image", "image_url", true)
+    const clip: ModelField = {
+      kind: "media",
+      name: "video",
+      path: "video_url",
+      required: true,
+      media: "video",
+      min: 1,
+      max: 1,
+    }
+    expect(
+      tasksOfModel(
+        hosted(
+          "a/move-motion-transfer-v1",
+          ["image", "video"],
+          ["video"],
+          [video, clip]
+        )
+      )
+    ).toEqual(["motion-transfer"])
+    expect(
+      tasksOfModel(hosted("a/v3-motion-control", ["image", "video"], ["video"]))
+    ).toContain("motion-transfer")
+    expect(
+      tasksOfModel(
+        hosted(
+          "a/character-replace-v2",
+          ["image", "video"],
+          ["video"],
+          [video, clip]
+        )
+      )
+    ).toEqual(["character-swap"])
+    expect(
+      tasksOfModel(hosted("a/clip-edit", ["image", "video"], ["video"], [clip]))
+    ).toEqual(["video-edit"])
   })
 
   it("lists an edit model that needs an image in Edit and not in text to image", () => {
@@ -146,9 +194,7 @@ describe("the deny list", () => {
 describe("the name and maker of a model", () => {
   it("reads them from the id and the maker table", () => {
     expect(nameOf("bfl/flux-3-image")).toBe("FLUX 3 Image")
-    expect(nameOf("byteplus/seedance-1-0-pro-250528")).toBe(
-      "Seedance 1.0 Pro 250528"
-    )
+    expect(nameOf("byteplus/seedance-1-0-pro-250528")).toBe("Seedance 1.0 Pro")
     expect(nameOf("openai/gpt-image-2.5-flare")).toBe("GPT Image 2.5 Flare")
     expect(makerOf("bfl")).toBe("Black Forest Labs")
     expect(makerOf("new_studio")).toBe("New Studio")
@@ -158,6 +204,19 @@ describe("the name and maker of a model", () => {
     expect(nameOf("minimax/minimax-h3")).toBe("MiniMax H3")
     expect(nameOf("fal/bytedance-seedream")).toBe("Bytedance Seedream")
     expect(nameOf("maker/openai-mix")).toBe("OpenAI Mix")
+    expect(nameOf("deepseek/deepseek-v4-flash")).toBe("DeepSeek V4 Flash")
+    expect(nameOf("qwen/qwen3.6-flash")).toBe("Qwen3.6 Flash")
+    expect(makerOf("qwen")).toBe("Alibaba Qwen")
+  })
+
+  it("drops a build date or a build number from the end of a model's name", () => {
+    expect(nameOf("byteplus/seedream-4-0-250828")).toBe("Seedream 4.0")
+    expect(nameOf("byteplus/dreamina-seedance-2-0-fast-260128")).toBe(
+      "Dreamina Seedance 2.0 Fast"
+    )
+    expect(nameOf("veo/veo-3.1-fast-generate-001")).toBe("Veo 3.1 Fast")
+    expect(nameOf("veo/veo-3.1-generate-001")).toBe("Veo 3.1")
+    expect(nameOf("openai/gpt-5.6-luna")).toBe("GPT 5.6 Luna")
   })
 })
 
@@ -168,6 +227,7 @@ describe("the factual tags of a video model", () => {
       provider: "maker",
       takes: ["text"],
       makes: ["video"],
+      takesTools: false,
       form: {
         model: "maker/clip",
         fields: [

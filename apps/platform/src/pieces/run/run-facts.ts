@@ -2,6 +2,8 @@ import {
   creditsOfCost,
   inputRoleOf,
   isHostedModelId,
+  labOfModel,
+  makerOf,
   nameOf,
 } from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
@@ -13,7 +15,6 @@ import {
   formatAmount,
   formatDuration,
   formatTime,
-  joinParts,
   secondsBetween,
   withUnit,
 } from "@/copy/format"
@@ -126,10 +127,16 @@ function headlineInputsOf(app: AppListing): InputDefinition[] {
 }
 
 function promptText(app: AppListing, run: Run): string | null {
-  const prompt = app.inputs.find((input) => input.type === "prompt")
-  return prompt === undefined
-    ? null
-    : inputValueText(app, prompt, run.inputs[prompt.name])
+  for (const input of app.inputs) {
+    const text =
+      input.type === "prompt"
+        ? inputValueText(app, input, run.inputs[input.name])
+        : null
+    if (text !== null) {
+      return text
+    }
+  }
+  return null
 }
 
 function sourceOf(
@@ -224,11 +231,14 @@ export function runSeconds(run: Run): number | null {
     : secondsBetween(run.createdAt, run.finishedAt)
 }
 
-export function runPrice(run: Run, estimate: number | null = null): string {
+export function runPrice(
+  run: Run,
+  estimate: number | null = null
+): string | null {
   if (run.origin === "demo") {
     return t("run.price.demo")
   }
-  return priceOf(run, estimate) ?? t("run.price.unknown")
+  return priceOf(run, estimate)
 }
 
 export function historyPrice(
@@ -245,13 +255,6 @@ export function historyPrice(
   return isEnded && run.cost !== null ? priceOf(run, null) : null
 }
 
-function captionPrice(run: Run, estimate: number | null): string {
-  if (run.origin === "demo") {
-    return t("run.caption.price.demo")
-  }
-  return priceOf(run, estimate) ?? t("run.caption.price.unknown")
-}
-
 function priceOf(run: Run, estimate: number | null): string | null {
   if (run.cost !== null) {
     return t("run.price.credits", {
@@ -263,32 +266,71 @@ function priceOf(run: Run, estimate: number | null): string | null {
     : t("run.price.estimated", { amount: formatAmount(estimate) })
 }
 
-function madeCaption(run: Run, lead: string | null): string | null {
-  const seconds = runSeconds(run)
-  if (seconds === null) {
+export type RunBadge =
+  | { kind: "model"; label: string; lab: string | null }
+  | { kind: "demo"; label: string }
+  | { kind: "time"; label: string }
+  | { kind: "price"; amount: string; label: string }
+  | { kind: "note"; label: string }
+
+export function runLabOf(run: Run): string | null {
+  const chosen = run.inputs[modelInputName]
+  if (typeof chosen !== "string" || chosen === autoValue) {
     return null
   }
-  const duration = formatDuration(seconds)
-  return lead === null
-    ? t("run.made", { duration })
-    : t("run.caption.made", { duration })
+  if (isHostedModelId(chosen)) {
+    return labOfModel(chosen) ?? makerOf(chosen.split("/")[0] ?? chosen)
+  }
+  return labOfModel(`graph/${chosen}`)
 }
 
-export function runCaption(run: Run, estimate: number | null = null): string {
+function leadOf(run: Run): RunBadge | null {
+  if (run.origin === "demo") {
+    return { kind: "demo", label: t("run.demoCaption") }
+  }
   const model = runModel(run, findCatalogApp(run.appId))
+  return model === null
+    ? null
+    : { kind: "model", label: model, lab: runLabOf(run) }
+}
+
+function priceBadgeOf(run: Run, estimate: number | null): RunBadge | null {
+  if (run.cost !== null) {
+    const amount = formatAmount(creditsOfCost(run.cost))
+    return { kind: "price", amount, label: t("run.price.credits", { amount }) }
+  }
+  if (estimate === null) {
+    return null
+  }
+  const amount = formatAmount(estimate)
+  return { kind: "price", amount, label: t("run.price.estimated", { amount }) }
+}
+
+function presentBadges(badges: ReadonlyArray<RunBadge | null>): RunBadge[] {
+  return badges.filter((badge): badge is RunBadge => badge !== null)
+}
+
+export function runFacts(run: Run, estimate: number | null = null): RunBadge[] {
+  const lead = leadOf(run)
   if (run.status === "failed" || run.status === "cancelled") {
-    const charged = run.cost === null ? null : priceOf(run, null)
-    return joinParts([model, charged])
+    return presentBadges([
+      lead,
+      run.origin === "demo" ? null : priceBadgeOf(run, null),
+    ])
   }
-  const lead = run.origin === "demo" ? t("run.demoCaption") : model
   if (run.status !== "done") {
-    return lead ?? ""
+    return presentBadges([lead])
   }
-  return joinParts([
+  const seconds = runSeconds(run)
+  return presentBadges([
     lead,
-    madeCaption(run, lead),
-    captionPrice(run, estimate),
-    run.dropped === undefined ? null : tCount("run.dropped", run.dropped),
+    seconds === null
+      ? null
+      : { kind: "time", label: formatDuration(Math.round(seconds)) },
+    run.origin === "demo" ? null : priceBadgeOf(run, estimate),
+    run.dropped === undefined
+      ? null
+      : { kind: "note", label: tCount("run.dropped", run.dropped) },
   ])
 }
 

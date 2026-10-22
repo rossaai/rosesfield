@@ -1,6 +1,7 @@
 import { interaction } from "@rosesfield/ui/components/interaction"
+import { useBlockClipped } from "@rosesfield/ui/hooks/use-scroll-ends"
 import { cn } from "@rosesfield/ui/lib/cn"
-import type { ReactElement, ReactNode } from "react"
+import { type ReactElement, type ReactNode, useRef } from "react"
 
 type InputPanelProps = {
   label: string
@@ -17,6 +18,8 @@ function InputPanel({
   footer,
   className,
 }: InputPanelProps): ReactElement {
+  const parts = useRef<HTMLDivElement>(null)
+  const isClipped = useBlockClipped(parts)
   return (
     <section
       aria-label={label}
@@ -33,10 +36,13 @@ function InputPanel({
         </div>
       )}
       <div
+        ref={parts}
         data-slot="composer-prompt"
+        data-clipped={isClipped ? "yes" : "no"}
         className={cn(
           "flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2 [scrollbar-width:none]",
-          interaction.ringScroll
+          interaction.ringScroll,
+          isClipped ? interaction.fadeEnd : ""
         )}
       >
         {children}

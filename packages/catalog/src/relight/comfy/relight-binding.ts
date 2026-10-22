@@ -1,5 +1,5 @@
 import type { EngineBinding } from "@rosesfield/contract"
-import { selectBinding } from "@rosesfield/generation/bindings"
+import { selectBinding, taskBinding } from "@rosesfield/generation/bindings"
 import { z } from "zod"
 import {
   autoValue,
@@ -17,12 +17,13 @@ type Node = z.infer<typeof apiGraph>[string]
 
 export type Workflow = Record<string, Node>
 
-export const relightModels = [
-  "qwen-image-edit-2509-relight",
-  "qwen-image-edit-2511",
-] as const
+export const relightModels = ["qwen-image-edit-2509-relight"] as const
 
 export type RelightModel = (typeof relightModels)[number]
+
+export const relightTask = "relight"
+
+export const defaultRelightModel: RelightModel = "qwen-image-edit-2509-relight"
 
 export const relightQualities = ["draft", "final"] as const
 
@@ -30,7 +31,6 @@ export type RelightQuality = (typeof relightQualities)[number]
 
 export const relightWorkflows: Readonly<Record<RelightModel, string>> = {
   "qwen-image-edit-2509-relight": "relight-qwen-image-edit-2509",
-  "qwen-image-edit-2511": "relight-qwen-image-edit-2511",
 }
 
 export const relightSteps: Readonly<
@@ -164,9 +164,9 @@ function byQuality(model: RelightModel): EngineBinding {
   })
 }
 
-export const relightBinding: EngineBinding = selectBinding({
+export const relightBinding: EngineBinding = taskBinding({
+  tasks: [relightTask],
   input: "model",
-  options: Object.fromEntries(
-    relightModels.map((model) => [model, byQuality(model)])
-  ),
+  default: defaultRelightModel,
+  fallback: byQuality(defaultRelightModel),
 })

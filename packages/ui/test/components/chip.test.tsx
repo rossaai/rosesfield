@@ -24,20 +24,20 @@ describe("Chip", () => {
   })
 })
 
-describe("Chip sizes", () => {
-  it("stands 32 px tall in a bar and 26 px tall inside a prompt block", () => {
-    render(
-      <>
-        <Chip>Aspect</Chip>
-        <Chip size="inline">Sound</Chip>
-      </>
+describe("Chip size", () => {
+  it("stands as a 26 px capsule, clear at rest with its ground's tint on hover", () => {
+    render(<Chip>Aspect</Chip>)
+    const classes = screen
+      .getByRole("button", { name: "Aspect" })
+      .className.split(" ")
+    expect(classes).toEqual(
+      expect.arrayContaining([
+        "h-button-small",
+        "rounded-full",
+        "bg-transparent",
+        "hover:bg-(--tint)",
+        "motion-press",
+      ])
     )
-    const bar = screen.getByRole("button", { name: "Aspect" })
-    const inline = screen.getByRole("button", { name: "Sound" })
-    expect(bar.className.split(" ")).toContain("h-8")
-    expect(inline.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-6.5", "px-2"])
-    )
-    expect(inline.className.split(" ")).not.toContain("h-8")
   })
 })

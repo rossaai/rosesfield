@@ -7,6 +7,8 @@ import {
 import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { app } from "#characters/app"
+import { smallestSizesOf } from "#characters/comfy/traits-binding"
+import { imageModels } from "#image/image-models"
 import { readApps } from "#list-apps"
 
 type Node = { class_type: string; inputs: Record<string, unknown> }
@@ -71,7 +73,10 @@ function replay() {
   return { sent, fetch }
 }
 
-function requestFor(body: Record<string, unknown>): EngineRequest {
+function requestFor(
+  body: Record<string, unknown>,
+  photo: typeof photoId = photoId
+): EngineRequest {
   if (characters === undefined) {
     throw new Error("The characters app did not parse")
   }
@@ -80,7 +85,7 @@ function requestFor(body: Record<string, unknown>): EngineRequest {
   const hasCharacter =
     Array.isArray(inputs.character) && inputs.character.length > 0
   if (hasCharacter) {
-    inputs.character = [photoId]
+    inputs.character = [photo]
   }
   return {
     idempotencyKey: "1c2d3e4f-5a6b-4c7d-9e8f-0a1b2c3d4e5f",
@@ -89,7 +94,7 @@ function requestFor(body: Record<string, unknown>): EngineRequest {
     files: hasCharacter
       ? [
           {
-            assetId: photoId,
+            assetId: photo,
             kind: "image",
             mime: "image/png",
             bytes: new Uint8Array(8),
@@ -103,10 +108,13 @@ function requestFor(body: Record<string, unknown>): EngineRequest {
   }
 }
 
-async function submitted(body: Record<string, unknown>) {
+async function submitted(
+  body: Record<string, unknown>,
+  photo: typeof photoId = photoId
+) {
   const { sent, fetch } = replay()
   const engine = new ComfyGenerationEngine({ apiKey: "comfyui-test", fetch })
-  const submission = await engine.submit(requestFor(body))
+  const submission = await engine.submit(requestFor(body, photo))
   const job = sent.find((one) => one.url.endsWith("/api/v2/jobs"))
   const workflow: Workflow = JSON.parse(job?.body ?? "{}").workflow
   return { sent, submission, workflow }
@@ -145,8 +153,28 @@ function danglingLinks(workflow: Workflow): string[] {
   )
 }
 
+const character = ["5c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f"]
+
+const portraitNodes = {
+  "z-image-turbo": { prompt: "27", latent: "13", seed: "3" },
+  "qwen-image-2512": { prompt: "227", latent: "232", seed: "230" },
+}
+
+function sizeOf(workflow: Workflow, node: string): [number, number] {
+  const inputs = workflow[node]?.inputs
+  return [Number(inputs?.width), Number(inputs?.height)]
+}
+
+function viewWords(workflow: Workflow): string[] {
+  return [1, 2, 3, 4].map((view) => {
+    const side = workflow[`${view}120`]?.inputs
+    const distance = workflow[`${view}121`]?.inputs.string_b
+    return `${String(side?.string_a)} ${String(side?.string_b)} ${String(distance)}`
+  })
+}
+
 describe("the Characters engine binding, replayed against Comfy", () => {
-  it("builds the traits prompt and the Klein request from the inputs", async () => {
+  it("opens on the catalog's open-weights default for text to image, with the traits in its prompt", async () => {
     const { workflow, submission } = await submitted({
       inputs: {
         gender: "woman",
@@ -160,27 +188,35 @@ describe("the Characters engine binding, replayed against Comfy", () => {
       },
       aspectRatio: "9:16",
     })
-    const prompt = textOf(workflow, workflow["4"]?.inputs.text)
+    const prompt = textOf(workflow, workflow["27"]?.inputs.text)
     expect(prompt).toBe(
       "Head and shoulders portrait photograph of one person, a woman, middle-aged, in their fifties, long hair, wavy hair, red hair, in front of a plain light grey studio background, neutral expression, looking straight at the camera, front view, soft even light, sharp focus. round glasses"
     )
-    expect(workflow["6"]?.inputs).toMatchObject({
-      width: 928,
-      height: 1648,
+    expect(workflow["13"]?.inputs).toMatchObject({
+      width: 768,
+      height: 1360,
       batch_size: 3,
     })
-    expect(workflow["12"]?.inputs).toMatchObject({ width: 928, height: 1648 })
-    expect(workflow["9"]?.inputs.noise_seed).toBe(42)
-    expect(workflow["1"]?.inputs.unet_name).toBe("flux-2-klein-4b.safetensors")
-    expect(submission.models).toContain("flux-2-klein-4b.safetensors")
+    expect(workflow["3"]?.inputs.seed).toBe(42)
+    expect(workflow["28"]?.inputs.unet_name).toBe(
+      "z_image_turbo_bf16.safetensors"
+    )
+    expect(submission.models).toContain("z_image_turbo_bf16.safetensors")
     expect(danglingLinks(workflow)).toEqual([])
+  })
+
+  it("adds no words for a trait left on auto", async () => {
+    const { workflow } = await submitted({ inputs: {} })
+    expect(textOf(workflow, workflow["27"]?.inputs.text)).toBe(
+      "Half-body photograph of one person, framed from the waist up, in front of a plain light grey studio background, neutral expression, looking straight at the camera, front view, soft even light, sharp focus. "
+    )
   })
 
   it("drops the hair style and color when the hair length is bald", async () => {
     const { workflow } = await submitted({
       inputs: { hairLength: "bald", hairStyle: "curly", hairColor: "blond" },
     })
-    const prompt = textOf(workflow, workflow["4"]?.inputs.text)
+    const prompt = textOf(workflow, workflow["27"]?.inputs.text)
     expect(prompt).toContain(", a bald head")
     expect(prompt).not.toContain("curly")
     expect(prompt).not.toContain("blond")
@@ -190,15 +226,57 @@ describe("the Characters engine binding, replayed against Comfy", () => {
     const { workflow } = await submitted({
       inputs: { hairLength: "short", hairStyle: "curly", hairColor: "blond" },
     })
-    const prompt = textOf(workflow, workflow["4"]?.inputs.text)
+    const prompt = textOf(workflow, workflow["27"]?.inputs.text)
     expect(prompt).toContain(", short hair, curly hair, blond hair")
   })
 
-  it("refuses a partner model and every input of the other mode before any request", async () => {
-    const character = ["5c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f"]
+  it.each(
+    Object.entries(portraitNodes).flatMap(([model, nodes]) =>
+      ["1", "2", "3", "4"].flatMap((count) =>
+        ["3:4", "1:1", "9:16"].map((aspectRatio) => ({
+          model,
+          nodes,
+          count,
+          aspectRatio,
+        }))
+      )
+    )
+  )(
+    "makes $count portraits on $model at $aspectRatio, within 2% of the ratio",
+    async ({ model, nodes, count, aspectRatio }) => {
+      const { workflow } = await submitted({
+        inputs: { model, count },
+        aspectRatio,
+      })
+      const [width, height] = sizeOf(workflow, nodes.latent)
+      const [across, down] = aspectRatio.split(":").map(Number)
+      const wanted = Number(across) / Number(down)
+      expect(Math.abs(width / height / wanted - 1)).toBeLessThanOrEqual(0.02)
+      expect(workflow[nodes.latent]?.inputs.batch_size).toBe(Number(count))
+      expect(workflow[nodes.seed]?.inputs.seed).toBe(42)
+      expect(textOf(workflow, workflow[nodes.prompt]?.inputs.text)).toMatch(
+        /^Half-body photograph of one person/
+      )
+      expect(danglingLinks(workflow)).toEqual([])
+    }
+  )
+
+  it("sizes each portrait model at the smallest size Image lists for it", async () => {
+    const turbo = imageModels.find((one) => one.value === "z-image-turbo")
+    if (turbo === undefined) {
+      throw new Error("Image lacks Z-Image Turbo")
+    }
+    const { workflow } = await submitted({ inputs: {}, aspectRatio: "1:1" })
+    const square = smallestSizesOf(turbo)["1:1"]
+    expect(sizeOf(workflow, "13")).toEqual([square?.width, square?.height])
+    expect(sizeOf(workflow, "13")).toEqual([1024, 1024])
+  })
+
+  it("refuses a partner model, an edit model in traits and a traits model in angles, before any request", async () => {
     for (const inputs of [
       { model: "nano-banana-pro" },
-      { mode: "angles", character, angleModel: "nano-banana-pro" },
+      { model: "qwen-image-edit-2511" },
+      { mode: "angles", character, model: "z-image-turbo" },
       { mode: "angles", character, model: "flux-2-klein-4b" },
       { angleSet: "quarters" },
     ]) {
@@ -216,110 +294,87 @@ describe("the Characters engine binding, replayed against Comfy", () => {
   it("finds a link to a node the workflow lost", async () => {
     const { workflow } = await submitted({ inputs: {} })
     expect(danglingLinks(workflow)).toEqual([])
-    delete workflow["105"]
-    expect(danglingLinks(workflow)).toEqual(["106 -> 105"])
+    delete workflow["8105"]
+    expect(danglingLinks(workflow)).toEqual(["8106 -> 8105"])
   })
 
-  it("uploads the character's photo and makes 4 named views", async () => {
+  it("uploads the character's photo and makes 4 views on Edit's angles set graph", async () => {
     const { workflow, sent, submission } = await submitted({
-      inputs: {
-        mode: "angles",
-        character: ["5c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f"],
-        angleSet: "quarters",
-      },
+      inputs: { mode: "angles", character, angleSet: "quarters" },
     })
     expect(sent.map((one) => one.url)).toEqual([
       `${cloud}/api/v2/assets`,
       `${cloud}/api/v2/jobs`,
     ])
-    expect(workflow["40"]?.inputs.image).toEqual({
+    expect(workflow["41"]?.inputs.image).toEqual({
       __type: "core/ASSET",
       info: { id: uploadedId },
     })
-    expect(
-      [20, 24, 28, 32].map((id) => workflow[String(id)]?.inputs.prompt)
-    ).toEqual([
-      "<sks> front-right quarter view eye-level shot medium shot",
-      "<sks> back-right quarter view eye-level shot medium shot",
-      "<sks> back-left quarter view eye-level shot medium shot",
-      "<sks> front-left quarter view eye-level shot medium shot",
+    expect(viewWords(workflow)).toEqual([
+      "front-right quarter view eye-level shot medium shot",
+      "back-right quarter view eye-level shot medium shot",
+      "back-left quarter view eye-level shot medium shot",
+      "front-left quarter view eye-level shot medium shot",
     ])
     expect(
-      [22, 26, 30, 34].map((id) => workflow[String(id)]?.inputs.seed)
+      [1106, 2106, 3106, 4106].map((id) => workflow[String(id)]?.inputs.seed)
     ).toEqual([42, 42, 42, 42])
-    expect(workflow["4"]?.inputs.strength_model).toBe(0.9)
-    expect(workflow["50"]?.inputs.images).toEqual(["62", 0])
     expect(submission.models).toContain(
       "qwen-image-edit-2511-multiple-angles-lora.safetensors"
     )
     expect(danglingLinks(workflow)).toEqual([])
   })
 
-  it("names each height of the heights set in the view prompts", async () => {
+  it("names each height of the heights set in the view words", async () => {
     const { workflow } = await submitted({
-      inputs: {
-        mode: "angles",
-        character: ["5c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f"],
-        angleSet: "heights",
-      },
+      inputs: { mode: "angles", character, angleSet: "heights" },
     })
-    const prompts = [20, 24, 28, 32].map((id) =>
-      String(workflow[String(id)]?.inputs.prompt)
+    expect(viewWords(workflow)).toEqual([
+      "front view low-angle shot medium shot",
+      "front view eye-level shot medium shot",
+      "front view elevated shot medium shot",
+      "front view high-angle shot medium shot",
+    ])
+  })
+
+  it("names each side of the turnaround set in the view words", async () => {
+    const { workflow } = await submitted({
+      inputs: { mode: "angles", character },
+    })
+    expect(viewWords(workflow)).toEqual([
+      "front view eye-level shot medium shot",
+      "right side view eye-level shot medium shot",
+      "back view eye-level shot medium shot",
+      "left side view eye-level shot medium shot",
+    ])
+  })
+
+  it("chains 1 portrait at the smallest size into one angle set made from it", async () => {
+    const portrait = await submitted({
+      inputs: { count: "1" },
+      aspectRatio: "3:4",
+    })
+    expect(portrait.workflow["13"]?.inputs).toMatchObject({
+      width: 864,
+      height: 1152,
+      batch_size: 1,
+    })
+    const portraitId = assetIdFormat.parse(
+      "6a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c9d"
     )
-    expect(
-      prompts.map(
-        (text) => text.match(/(\w+-angle|eye-level|elevated) shot/)?.[0]
-      )
-    ).toEqual([
-      "low-angle shot",
-      "eye-level shot",
-      "elevated shot",
-      "high-angle shot",
+    const angles = await submitted(
+      { inputs: { mode: "angles", character } },
+      portraitId
+    )
+    expect(angles.sent.map((one) => one.url)).toEqual([
+      `${cloud}/api/v2/assets`,
+      `${cloud}/api/v2/jobs`,
     ])
-    expect(danglingLinks(workflow)).toEqual([])
-  })
-
-  it("names each side of the turnaround set in the view prompts", async () => {
-    const { workflow } = await submitted({
-      inputs: {
-        mode: "angles",
-        character: ["5c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f"],
-      },
+    expect(angles.workflow["41"]?.inputs.image).toEqual({
+      __type: "core/ASSET",
+      info: { id: uploadedId },
     })
-    expect(
-      [20, 24, 28, 32].map((id) => workflow[String(id)]?.inputs.prompt)
-    ).toEqual([
-      "<sks> front view eye-level shot medium shot",
-      "<sks> right side view eye-level shot medium shot",
-      "<sks> back view eye-level shot medium shot",
-      "<sks> left side view eye-level shot medium shot",
-    ])
+    expect(viewWords(angles.workflow)).toHaveLength(4)
+    expect(danglingLinks(angles.workflow)).toEqual([])
   })
-
-  it.each([
-    { model: "z-image-turbo", file: "z_image_turbo_bf16.safetensors" },
-    {
-      model: "qwen-image-2512",
-      file: "qwen_image_2512_fp8_e4m3fn.safetensors",
-    },
-  ])(
-    "submits the $model traits workflow with every link in place",
-    async ({ model, file }) => {
-      const { workflow, submission } = await submitted({
-        inputs: { model, count: "4", framing: "full-body" },
-        aspectRatio: "1:1",
-      })
-      expect(workflow["6"]?.inputs).toMatchObject({
-        width: 1232,
-        height: 1232,
-        batch_size: 4,
-      })
-      expect(workflow["7"]?.inputs.seed).toBe(42)
-      expect(textOf(workflow, workflow["4"]?.inputs.text)).toMatch(
-        /^Full-body photograph of one person/
-      )
-      expect(submission.models).toContain(file)
-      expect(danglingLinks(workflow)).toEqual([])
-    }
-  )
 })

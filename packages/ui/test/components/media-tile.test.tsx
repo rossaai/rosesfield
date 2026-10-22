@@ -1,6 +1,7 @@
 import { MediaTile } from "@rosesfield/ui/components/media-tile"
-import { act, cleanup, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { readSource } from "../read-source"
 
 type Entry = Pick<IntersectionObserverEntry, "isIntersecting" | "target">
 
@@ -96,6 +97,20 @@ describe("MediaTile with a video", () => {
     expect(video.dataset.playback).toBe("paused")
   })
 
+  it("asks a video with no poster for a frame past its start, and keeps the tile hidden over its skeleton until that frame loads", () => {
+    const video = renderVideo()
+    expect(video.getAttribute("src")).toBe("clip.mp4#t=0.1")
+    const tile = video.closest("[data-slot='media-tile']")
+    Object.defineProperty(video, "videoWidth", { value: 1080 })
+    Object.defineProperty(video, "videoHeight", { value: 1920 })
+    fireEvent.loadedMetadata(video)
+    expect(video.dataset.arrival).toBe("waiting")
+    expect(tile?.className.split(" ")).toContain("motion-pulse")
+    fireEvent.loadedData(video)
+    expect(video.dataset.arrival).toBe("loaded")
+    expect(tile?.className.split(" ")).not.toContain("motion-pulse")
+  })
+
   it("keeps the poster under reduced motion", () => {
     stubReducedMotion(true)
     const video = renderVideo()
@@ -119,8 +134,10 @@ describe("MediaTile captions", () => {
     expect(pills).toHaveLength(1)
     const [pill] = pills
     expect(pill?.textContent).toBe("Demo engine, 2 seconds")
-    expect(pill?.className).toContain("whitespace-nowrap")
-    expect(pill?.className).toContain("truncate")
+    const badge = pill?.querySelector("[data-slot='media-badge']")
+    expect(badge?.className).toContain("whitespace-nowrap")
+    expect(badge?.className).toContain("truncate")
+    expect(badge?.className.split(" ")).toContain("material-thin")
   })
 
   it("pads its pill 5 px a side, so Demo engine fits whole on a 102 px thumbnail", () => {
@@ -132,7 +149,9 @@ describe("MediaTile captions", () => {
         caption="Demo engine"
       />
     )
-    const pill = document.querySelector("[data-slot='media-tile-caption']")
+    const pill = document.querySelector(
+      "[data-slot='media-tile-caption'] [data-slot='media-badge']"
+    )
     expect(pill?.className.split(" ")).toContain("px-s1_5")
     expect(pill?.className.split(" ")).not.toContain("px-s2")
   })
@@ -149,5 +168,67 @@ describe("MediaTile captions", () => {
     const pills = document.querySelectorAll("[data-slot='media-tile-caption']")
     expect(pills).toHaveLength(1)
     expect(pills[0]?.textContent).toBe("2 seconds")
+  })
+})
+
+describe("MediaTile arrival", () => {
+  it("holds its image hidden over a breathing well until it decodes, then arrives on the enter preset", async () => {
+    let decoded: () => void = () => undefined
+    Object.defineProperty(HTMLImageElement.prototype, "decode", {
+      configurable: true,
+      value: () =>
+        new Promise<void>((resolve) => {
+          decoded = resolve
+        }),
+    })
+    render(<MediaTile kind="image" src="a.png" alt="A rose" />)
+    const picture = screen.getByAltText("A rose")
+    const tile = picture.closest("[data-slot='media-tile']")
+    expect(picture.getAttribute("data-arrival")).toBe("waiting")
+    expect(picture.className.split(" ")).toContain("motion-enter")
+    expect(tile?.className.split(" ")).toContain("motion-pulse")
+    act(() => {
+      picture.dispatchEvent(new Event("load"))
+    })
+    expect(picture.getAttribute("data-arrival")).toBe("waiting")
+    await act(async () => {
+      decoded()
+      await Promise.resolve()
+    })
+    expect(picture.getAttribute("data-arrival")).toBe("loaded")
+    expect(tile?.className.split(" ")).not.toContain("motion-pulse")
+    Reflect.deleteProperty(HTMLImageElement.prototype, "decode")
+  })
+
+  it("staggers by its place in a list, one beat each and capped at the stagger's length", () => {
+    render(
+      <>
+        <MediaTile kind="image" src="a.png" alt="First" index={0} />
+        <MediaTile kind="image" src="b.png" alt="Late" index={20} />
+      </>
+    )
+    const first = screen.getByAltText("First").closest("[data-slot]")
+    const late = screen.getByAltText("Late").closest("[data-slot]")
+    expect(first?.className.split(" ")).toContain("[--arrival-index:0]")
+    expect(late?.className.split(" ")).toContain("[--arrival-index:8]")
+    const motion = readSource("styles/motion.css")
+    expect(motion).toContain(
+      "calc(var(--arrival-index, 0) * var(--arrival-step))"
+    )
+    expect(motion).toContain("var(--duration-stagger-max)")
+    expect(motion).toMatch(/--arrival-step: 0s;/)
+  })
+
+  it("draws no light over a photo it opens", () => {
+    render(
+      <MediaTile
+        kind="image"
+        src="a.png"
+        alt="Open me"
+        onOpen={() => undefined}
+      />
+    )
+    const tile = screen.getByRole("button", { name: "Open me" })
+    expect(tile.className).not.toContain("after:")
   })
 })

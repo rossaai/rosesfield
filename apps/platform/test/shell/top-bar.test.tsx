@@ -17,6 +17,26 @@ function areaLabels(bar: HTMLElement): string[] {
   )
 }
 
+function balancePill(bar: HTMLElement): HTMLElement {
+  const pill = within(bar)
+    .getAllByRole("button", { name: "12.5 credits" })
+    .find((button) => button.textContent === "12.5 credits")
+  if (pill === undefined) {
+    throw new Error("the bar holds no balance pill")
+  }
+  return pill
+}
+
+function connectOf(bar: HTMLElement): HTMLElement {
+  const connect = within(bar)
+    .getAllByRole("button", { name: "Connect" })
+    .find((button) => button.textContent === "Connect")
+  if (connect === undefined) {
+    throw new Error("the bar holds no Connect action")
+  }
+  return connect
+}
+
 function currentOf(
   bar: HTMLElement,
   role: "link" | "button",
@@ -25,15 +45,23 @@ function currentOf(
   return within(bar).getByRole(role, { name }).getAttribute("aria-current")
 }
 
-function classesOf(bar: HTMLElement, name: string): string[] {
-  return within(bar).getByRole("link", { name }).className.split(" ")
-}
-
 describe("the top bar", () => {
   it("spans the page in full density with no sidebar", async () => {
     const bar = await barAt("/")
     expect(bar.getAttribute("data-density")).toBe("full")
     expect(document.querySelector("[data-slot='sidebar']")).toBeNull()
+  })
+
+  it("opens Explore from the logo on every page, the mark and the wordmark alike", async () => {
+    for (const path of ["/", "/apps/image", "/library", "/settings"]) {
+      const bar = await barAt(path)
+      const logos = within(bar).getAllByRole("link", { name: /^Rosesfield/ })
+      expect(logos, path).toHaveLength(2)
+      for (const logo of logos) {
+        expect(logo.getAttribute("href"), path).toBe("/")
+      }
+      cleanup()
+    }
   })
 
   it("lists Explore, the media areas, a separator, then the rest", async () => {
@@ -68,46 +96,73 @@ describe("the top bar", () => {
     expect(currentOf(bar, "button", "Video")).toBeNull()
   })
 
-  it("ends with your balance, then Connect", async () => {
+  it("ends with your balance pill, then Connect, both buttons that open a dialog, not pages", async () => {
     const bar = await barAt("/")
-    const balance = within(bar).getByRole("link", { name: "12.5 credits" })
-    const connect = within(bar).getByRole("link", { name: "Connect" })
-    expect(balance.getAttribute("href")).toBe("/settings")
-    expect(connect.getAttribute("href")).toBe("/connect")
+    const balance = balancePill(bar)
+    const connect = connectOf(bar)
+    expect(balance.getAttribute("href")).toBeNull()
+    expect(connect.getAttribute("href")).toBeNull()
+    expect(within(bar).queryByRole("link", { name: "Connect" })).toBeNull()
     const order = balance.compareDocumentPosition(connect)
     expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(classesOf(bar, "Connect")).toContain("h-9")
-    expect(classesOf(bar, "12.5 credits")).toContain("h-9")
-    expect(classesOf(bar, "12.5 credits")).not.toContain("@regular:h-6")
+    expect(connect.className.split(" ")).toContain("h-button")
+    expect(balance.className.split(" ")).toContain("h-button")
+    expect(balance.className.split(" ")).not.toContain(
+      "@regular:h-button-small"
+    )
   })
 
   it("draws the balance with its icon before the label", async () => {
     const bar = await barAt("/")
-    const balance = within(bar).getByRole("link", { name: "12.5 credits" })
+    const balance = balancePill(bar)
     expect(balance.firstElementChild?.tagName.toLowerCase()).toBe("svg")
     expect(balance.lastElementChild?.textContent).toBe("12.5 credits")
   })
 
+  it("collapses the balance to a key circle on a compact width, named by its label", async () => {
+    const bar = await barAt("/")
+    const circle = within(bar)
+      .getAllByRole("button", { name: "12.5 credits" })
+      .find((button) => button.textContent === "")
+    expect(circle?.parentElement?.className.split(" ")).toContain(
+      "@regular:hidden"
+    )
+    expect(circle?.querySelector("svg")).not.toBeNull()
+    expect(balancePill(bar).closest(".hidden")).not.toBeNull()
+  })
+
   it("shrinks the balance and Connect with the bar on an app page", async () => {
     const bar = await barAt("/apps/image")
-    for (const name of ["Connect", "12.5 credits"]) {
-      expect(classesOf(bar, name)).toEqual(
-        expect.arrayContaining([
-          "@regular:h-6",
-          "transition-[height,padding,gap]",
-        ])
-      )
+    for (const button of [connectOf(bar), balancePill(bar)]) {
+      expect(button.className.split(" ")).toContain("@regular:h-button-small")
     }
   })
 
-  it("offers to add your key in place of a balance in public mode", async () => {
+  it("holds one Connect action and no key pill when this browser holds no key", async () => {
     renderAt("/", () => <TopBar />, {
-      settings: { ...ownerSettings, mode: "public" },
+      settings: { ...ownerSettings, mode: "public", keyFrom: "settings" },
     })
     const bar = await screen.findByRole("banner", { name: "Rosesfield" })
-    const add = within(bar).getByRole("button", { name: "Add your Comfy key" })
-    expect(add.firstElementChild?.tagName.toLowerCase()).toBe("svg")
-    expect(within(bar).queryByRole("link", { name: /credits/ })).toBeNull()
+    expect(
+      within(bar).queryByRole("button", { name: "Add your Comfy key" })
+    ).toBeNull()
+    const connects = within(bar).getAllByRole("button", { name: "Connect" })
+    expect(connects.map((button) => button.textContent)).toEqual([
+      "",
+      "Connect",
+    ])
+    expect(within(bar).queryByRole("button", { name: /credits/ })).toBeNull()
+  })
+
+  it("holds a pill skeleton in the balance's place while settings load", async () => {
+    renderAt("/", () => <TopBar />, {})
+    const bar = await screen.findByRole("banner", { name: "Rosesfield" })
+    const skeleton = bar.querySelector("[data-slot='balance-skeleton']")
+    expect(skeleton).not.toBeNull()
+    expect(
+      skeleton?.compareDocumentPosition(connectOf(bar)) ??
+        Node.DOCUMENT_POSITION_PRECEDING
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
   })
 
   it("opens the Image menu with each image app, its icon and one line", async () => {

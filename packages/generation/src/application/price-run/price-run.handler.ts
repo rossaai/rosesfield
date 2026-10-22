@@ -3,6 +3,11 @@ import type {
   EngineBinding,
   RunInputs,
 } from "@rosesfield/contract"
+import {
+  InvalidArgumentError,
+  NotFoundError,
+  PreconditionFailedError,
+} from "@rosesfield/kernel"
 import type { AppCatalog } from "#domain/app-catalog.port"
 import { AppNotFoundError } from "#domain/error/app-not-found.error"
 import { isOneAtATime } from "#domain/field-role"
@@ -14,6 +19,7 @@ import {
 import type { ModelForm } from "#domain/model-form"
 import type { PriceBook } from "#domain/price-book.port"
 import { pricedRunOf } from "#domain/priced-run"
+import { ruledInputsOf } from "#domain/ruled-inputs"
 import { resolveBinding } from "#domain/select-binding"
 
 export type PriceRunInput = {
@@ -27,6 +33,15 @@ export type PriceRunOutput = {
   price: RunPrice
 }
 
+export type PriceRunsInput = {
+  appId: string
+  asks: readonly Omit<PriceRunInput, "appId">[]
+}
+
+export type PriceRunsOutput = {
+  prices: RunPrice[]
+}
+
 type PriceRunHandlerOptions = {
   apps: AppCatalog
   engines: readonly GenerationEngine[]
@@ -34,6 +49,8 @@ type PriceRunHandlerOptions = {
 }
 
 export class PriceRunHandler {
+  static readonly parallelAsks = 6
+
   private readonly apps: AppCatalog
   private readonly engines: readonly GenerationEngine[]
   private readonly prices: PriceBook | null
@@ -49,12 +66,13 @@ export class PriceRunHandler {
     if (app === null) {
       throw new AppNotFoundError({ appId: input.appId })
     }
-    const binding = resolveBinding(app.engine, input.inputs)
+    const inputs: RunInputs = ruledInputsOf(app, input.inputs)
+    const binding = resolveBinding(app.engine, inputs)
     const count = input.count ?? 1
     const runner = this.engines.find((engine) => engine.canRun(binding))
     if (runner?.origin === "demo") {
       return {
-        price: await runner.priceOf(binding, { inputs: input.inputs, count }),
+        price: await runner.priceOf(binding, { inputs, count }),
       }
     }
     for (const engine of this.engines) {
@@ -63,17 +81,48 @@ export class PriceRunHandler {
         const isPerJob = count > 1 && isJobPerOutput(app, engine, form, binding)
         const measured = await this.measured(engine, app, form, {
           ...input,
+          inputs,
           count: isPerJob ? 1 : count,
         })
         return {
           price:
             measured === null
-              ? await engine.priceOf(binding, { inputs: input.inputs, count })
+              ? await engine.priceOf(binding, { inputs, count })
               : timesOf(measured, isPerJob ? count : 1),
         }
       }
     }
     return { price: unknownPrice }
+  }
+
+  async executeAll(input: PriceRunsInput): Promise<PriceRunsOutput> {
+    if (this.apps.find(input.appId) === null) {
+      throw new AppNotFoundError({ appId: input.appId })
+    }
+    const prices: RunPrice[] = new Array(input.asks.length)
+    let next = 0
+    const lane = async (): Promise<void> => {
+      for (let at = next++; at < input.asks.length; at = next++) {
+        const ask = input.asks[at]
+        if (ask !== undefined) {
+          prices[at] = await this.priceOne({ ...ask, appId: input.appId })
+        }
+      }
+    }
+    const lanes = Math.min(PriceRunHandler.parallelAsks, input.asks.length)
+    await Promise.all(Array.from({ length: lanes }, lane))
+    return { prices }
+  }
+
+  private async priceOne(input: PriceRunInput): Promise<RunPrice> {
+    try {
+      return (await this.execute(input)).price
+    } catch (error) {
+      if (isRowRefusal(error)) {
+        return unknownPrice
+      }
+      throw error
+    }
   }
 
   private async measured(
@@ -99,6 +148,14 @@ export class PriceRunHandler {
       ? null
       : { source: "measured", credits: Math.round(credits * 100) / 100 }
   }
+}
+
+function isRowRefusal(error: unknown): boolean {
+  return (
+    error instanceof NotFoundError ||
+    error instanceof InvalidArgumentError ||
+    error instanceof PreconditionFailedError
+  )
 }
 
 function isJobPerOutput(

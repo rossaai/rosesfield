@@ -4,6 +4,7 @@ export const makerNames: Readonly<Record<string, string>> = {
   bfl: "Black Forest Labs",
   bria: "Bria",
   byteplus: "BytePlus",
+  deepseek: "DeepSeek",
   elevenlabs: "ElevenLabs",
   fal: "fal",
   freepik: "Freepik",
@@ -22,7 +23,7 @@ export const makerNames: Readonly<Record<string, string>> = {
   openrouter: "OpenRouter",
   pika: "Pika",
   pruna: "Pruna",
-  qwen: "Qwen",
+  qwen: "Alibaba Qwen",
   recraft: "Recraft",
   runware: "Runware",
   runway: "Runway",
@@ -57,8 +58,13 @@ export function makerOf(provider: string): string {
     : titleOf(provider.replace(/[_-]+/g, " "))
 }
 
+const buildSuffixes: readonly RegExp[] = [/-\d{6}$/, /-(?:generate-)?\d{3}$/]
+
 export function nameOf(id: string): string {
-  const slug = id.split("/").slice(1).join("/")
+  const slug = buildSuffixes.reduce(
+    (text, suffix) => text.replace(suffix, ""),
+    id.split("/").slice(1).join("/")
+  )
   const spaced = slug
     .replace(/(\d)-(?=\d)/g, "$1.")
     .replace(/[_-]+/g, " ")
@@ -69,7 +75,8 @@ export function nameOf(id: string): string {
 
 const makerWords: ReadonlyMap<string, string> = new Map(
   Object.values(makerNames)
-    .filter((name) => !name.includes(" ") && name !== name.toLowerCase())
+    .map((name) => name.split(" ").at(-1) ?? name)
+    .filter((name) => name !== name.toLowerCase())
     .map((name) => [name.toLowerCase(), name])
 )
 

@@ -18,6 +18,7 @@ import {
   type OutputsPerJob,
   type PriceRequest,
   type RunPrice,
+  type TokenRate,
   unknownPrice,
 } from "#domain/generation-engine.port"
 import type { ModelForm } from "#domain/model-form"
@@ -35,14 +36,18 @@ import type {
   RouterCatalog,
 } from "#infrastructure/router/router-catalog"
 import { failureOf } from "#infrastructure/router/router-errors"
-import { RouterHttp } from "#infrastructure/router/router-http"
+import { creditsUsedOf, RouterHttp } from "#infrastructure/router/router-http"
 import {
   type OutputRead,
   outputsOf,
   urlsWritten,
 } from "#infrastructure/router/router-outputs"
 import { placeholdersOf } from "#infrastructure/router/router-placeholders"
-import { priceFromRates } from "#infrastructure/router/router-rates"
+import {
+  priceFromRates,
+  tokenRateOf,
+} from "#infrastructure/router/router-rates"
+import { takesToolsOf } from "#infrastructure/router/router-schema"
 
 type ComfyRouterGenerationEngineOptions = {
   apiKey: string | null
@@ -120,6 +125,7 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
       provider: entry.facts.model.split("/")[0] ?? "",
       takes: entry.facts.takes,
       makes: entry.facts.makes,
+      takesTools: takesToolsOf(entry.facts),
       form: entry.form,
     }))
   }
@@ -146,6 +152,20 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     } catch {
       return unknownPrice
     }
+  }
+
+  override async tokenRatesOf(
+    models: readonly string[]
+  ): Promise<ReadonlyMap<string, TokenRate>> {
+    const rows = await this.catalog.rateRows(this.http).catch(() => [])
+    const rates = new Map<string, TokenRate>()
+    for (const model of models) {
+      const rate = tokenRateOf(rows, model)
+      if (rate !== null) {
+        rates.set(model, rate)
+      }
+    }
+    return rates
   }
 
   override async submit(request: EngineRequest): Promise<EngineSubmission> {
@@ -256,7 +276,7 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
       workflowHash: null,
       finished: {
         outputs,
-        cost: costOfCredits(metered ?? creditsOf(response)),
+        cost: costOfCredits(metered ?? creditsUsedOf(response)),
       },
     }
   }
@@ -328,11 +348,6 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
 
 function outputOf(entry: CatalogEntry): string {
   return entry.facts.makes[0] ?? ""
-}
-
-function creditsOf(response: Response): number | null {
-  const credits = Number(response.headers.get("x-comfy-credits-used"))
-  return Number.isFinite(credits) && credits > 0 ? credits : null
 }
 
 function refText(ref: Ref): string {

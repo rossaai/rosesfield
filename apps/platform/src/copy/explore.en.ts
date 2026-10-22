@@ -62,4 +62,6 @@ export const exploreCopy = {
   "share.page.failed.title": "This page did not load",
   "share.page.label": "Shared result",
   "explore.row.learnMore": "Learn more",
+  "explore.showcase.title": "Made with Rosesfield",
+  "explore.showcase.viewAll": "View all",
 } satisfies Record<string, string>

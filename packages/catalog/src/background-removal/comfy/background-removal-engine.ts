@@ -6,6 +6,10 @@ type Model = "birefnet" | "lucida"
 
 type FlatColor = "white" | "black"
 
+export const backgroundRemovalTasks: readonly string[] = ["background"]
+
+export const defaultModel: Model = "birefnet"
+
 export const backgroundRemovalAspectRatios = [
   "1:1",
   "4:3",

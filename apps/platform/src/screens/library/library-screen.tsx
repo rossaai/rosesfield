@@ -1,10 +1,7 @@
-import { Button, IconButton } from "@rosesfield/ui/components/button"
+import { Button } from "@rosesfield/ui/components/button"
 import { Canvas } from "@rosesfield/ui/components/canvas"
-import { MediaGrid } from "@rosesfield/ui/components/media-grid"
-import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { useNavigate, useSearch } from "@tanstack/react-router"
-import { SearchIcon, UploadIcon } from "lucide-react"
 import {
   type DragEvent,
   type ReactElement,
@@ -13,16 +10,21 @@ import {
 } from "react"
 import { t } from "@/copy/t"
 import { useDevice } from "@/device/device-context"
-import { useGridColumns } from "@/pieces/use-columns"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { type Uploads, useUploads } from "@/pieces/use-uploads"
 import {
+  KindTabs,
+  LibraryHeader,
   type LibraryKind,
   LibrarySearch,
-  libraryFilterGroups,
-  SelectionBar,
 } from "@/screens/library/library-bars"
-import { LibraryGrid, PendingTiles } from "@/screens/library/library-grid"
+import {
+  GridSkeleton,
+  PagingSkeleton,
+  PendingTiles,
+} from "@/screens/library/library-grid"
+import { LibraryRows } from "@/screens/library/library-rows"
+import { libraryLayout } from "@/screens/library/library-view"
 import { ResultGrid } from "@/screens/library/result-grid"
 import {
   type LibraryData,
@@ -30,49 +32,50 @@ import {
   useLibrary,
 } from "@/screens/library/use-library"
 import {
+  appFilterGroups,
+  type DateChoice,
+  dateFilterGroup,
+  isWithinDate,
   tileSizes,
-  ViewCluster,
   type ViewLayout,
+  ViewMenu,
 } from "@/screens/library/view-cluster"
-import { ScreenHeader } from "@/shell/screen-header"
 import { useWorkingRuns } from "@/shell/use-working-runs"
 
 const accept: readonly string[] = ["image/*", "video/*", "audio/*"]
 
+type SearchChange = {
+  kind?: LibraryKind
+  query?: string
+  appId?: string | null
+}
+
 function useLibrarySearch(): {
   kind: LibraryKind
   query: string
-  setSearch: (next: { kind?: LibraryKind; query?: string }) => void
+  appId: string | null
+  setSearch: (next: SearchChange) => void
 } {
   const search = useSearch({ from: "/_shell/library" })
   const navigate = useNavigate({ from: "/library" })
   const kind: LibraryKind =
     search.kind === "text" ? "all" : (search.kind ?? "all")
   const query = search.q ?? ""
-  const setSearch = (next: { kind?: LibraryKind; query?: string }): void => {
+  const appId = search.app ?? null
+  const setSearch = (next: SearchChange): void => {
     const k = next.kind ?? kind
     const q = next.query ?? query
+    const a = next.appId === undefined ? appId : next.appId
     void navigate({
       search: {
         ...(k === "all" ? {} : { kind: k }),
         ...(q === "" ? {} : { q }),
+        ...(a === null ? {} : { app: a }),
       },
       replace: true,
     })
   }
-  return { kind, query, setSearch }
-}
-
-function SkeletonRows(): ReactElement {
-  const [ref, columns] = useGridColumns()
-  return (
-    <MediaGrid ref={ref}>
-      {Array.from({ length: columns * 3 }, (_, index) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: a skeleton's place is its identity
-        <Skeleton key={index} />
-      ))}
-    </MediaGrid>
-  )
+  return { kind, query, appId, setSearch }
 }
 
 type BodyProps = {
@@ -83,9 +86,9 @@ type BodyProps = {
   onUpload: () => void
   onClear: () => void
   isFiltered: boolean
-  isRegular: boolean
   layout: ViewLayout
   size: number
+  date: DateChoice
 }
 
 function toggled(list: readonly string[], id: string): string[] {
@@ -118,10 +121,17 @@ function LibraryEmpty(props: BodyProps): ReactElement {
 }
 
 function LibraryBody(props: BodyProps): ReactNode {
-  const { data, uploads } = props
+  const { uploads } = props
+  const now = new Date()
+  const data = {
+    ...props.data,
+    shown: props.data.shown.filter((asset) =>
+      isWithinDate(asset.createdAt, props.date, now)
+    ),
+  }
   const working = useWorkingRuns()
   if (data.isPending) {
-    return <SkeletonRows />
+    return <GridSkeleton size={props.size} />
   }
   if (data.isError) {
     return (
@@ -136,21 +146,19 @@ function LibraryBody(props: BodyProps): ReactNode {
     data.shown.length === 0 &&
     uploads.uploads.length === 0 &&
     working.length === 0
+  if (isEmpty && data.hasMore) {
+    return (
+      <PagingSkeleton
+        size={props.size}
+        isFetching={data.isFetchingMore}
+        fetchMore={data.fetchMore}
+      />
+    )
+  }
   if (isEmpty) {
     return <LibraryEmpty {...props} />
   }
-  return (
-    <>
-      {props.selected === null ? null : (
-        <SelectionBar
-          selected={props.selected}
-          assets={data.assets}
-          onCancel={() => props.setSelected(null)}
-        />
-      )}
-      <LibraryResults {...props} working={working} />
-    </>
-  )
+  return <LibraryResults {...props} data={data} working={working} />
 }
 
 function LibraryResults(
@@ -165,37 +173,36 @@ function LibraryResults(
   const sentinel = (
     <span ref={data.sentinel} aria-hidden="true" className="block h-s1" />
   )
-  if (props.layout === "grid" && props.selected === null) {
-    return (
-      <div className="flex flex-col gap-s6">
-        <PendingTiles
-          uploads={uploads.uploads}
-          working={working}
-          uploadActions={uploadActions}
-        />
-        <ResultGrid
-          items={libraryGridItems(data)}
-          size={props.size}
-          after={sentinel}
-        />
-      </div>
-    )
-  }
+  const { shown } = data
+  const selected = props.selected
+  const onToggle = (id: string): void =>
+    props.setSelected(toggled(selected ?? [], id))
   return (
-    <>
-      <LibraryGrid
-        assets={data.shown}
-        runsById={data.runsById}
-        working={working}
+    <div className="flex flex-col gap-s6">
+      <PendingTiles
         uploads={uploads.uploads}
-        selected={props.selected}
-        onToggle={(id) => props.setSelected(toggled(props.selected ?? [], id))}
-        onStartSelect={(id) => props.setSelected([id])}
-        isTouch={!props.isRegular}
+        working={working}
         uploadActions={uploadActions}
       />
-      {sentinel}
-    </>
+      {props.layout === "grid" ? (
+        <ResultGrid
+          items={libraryGridItems({ ...data, shown })}
+          size={props.size}
+          after={sentinel}
+          {...(selected === null ? {} : { selection: { selected, onToggle } })}
+        />
+      ) : (
+        <>
+          <LibraryRows
+            assets={shown}
+            runsById={data.runsById}
+            selected={selected}
+            onToggle={onToggle}
+          />
+          {sentinel}
+        </>
+      )}
+    </div>
   )
 }
 
@@ -242,134 +249,131 @@ function useDropUpload(start: (files: readonly File[]) => unknown): {
   }
 }
 
-function LibraryHeader({
-  onSelect,
-  onUpload,
-  onSearch,
-}: {
-  onSelect: () => void
-  onUpload: () => void
-  onSearch: () => void
-}): ReactElement {
-  return (
-    <ScreenHeader
-      title={t("library.title")}
-      actions={
-        <>
-          <Button tone="quiet" onClick={onSelect}>
-            {t("library.select")}
-          </Button>
-          <Button tone="primary" onClick={onUpload}>
-            {t("library.upload")}
-          </Button>
-        </>
-      }
-      phoneAction={
-        <>
-          <IconButton
-            label={t("library.search.label")}
-            tone="quiet"
-            onClick={onSearch}
-          >
-            <SearchIcon aria-hidden="true" />
-          </IconButton>
-          <IconButton
-            label={t("library.upload")}
-            tone="quiet"
-            onClick={onUpload}
-          >
-            <UploadIcon aria-hidden="true" />
-          </IconButton>
-        </>
-      }
-    />
-  )
-}
-
 type LibraryView = {
   layout: ViewLayout
   setLayout: (layout: ViewLayout) => void
   size: number
   setSize: (size: number) => void
+  date: DateChoice
+  setDate: (date: DateChoice) => void
 }
 
 function useLibraryView(): LibraryView {
-  const [layout, setLayout] = useState<ViewLayout>("list")
+  const [layout, setLayout] = useState<ViewLayout>(libraryLayout)
   const [size, setSize] = useState<number>(tileSizes.initial)
-  return { layout, setLayout, size, setSize }
+  const [date, setDate] = useState<DateChoice>("any")
+  return { layout, setLayout, size, setSize, date, setDate }
 }
 
 type LibraryCanvasProps = {
   search: ReturnType<typeof useLibrarySearch>
   data: LibraryData
   view: LibraryView
-  isSearchOpen: boolean
   isFiltered: boolean
+  isRegular: boolean
   children: ReactNode
 }
 
 function LibraryCanvas(props: LibraryCanvasProps): ReactElement {
-  const { search, view } = props
+  const { search, view, data } = props
+  const hasRuns = data.assets.length > 0 || props.isFiltered
+  const viewMenu =
+    hasRuns || data.isPending ? (
+      <ViewMenu
+        layout={view.layout}
+        onLayout={view.setLayout}
+        size={view.size}
+        onSize={view.setSize}
+        isLoading={data.isPending}
+        groups={[
+          ...appFilterGroups(search.appId, (next) =>
+            search.setSearch({ appId: next })
+          ),
+          dateFilterGroup(view.date, view.setDate),
+        ]}
+      />
+    ) : null
   return (
     <Canvas
       label={t("library.title")}
       inset="page"
       tabs={
-        <div className="min-w-0 flex-1">
-          <LibrarySearch
-            query={search.query}
-            isSearchOpen={props.isSearchOpen || search.query !== ""}
-            onQuery={(next) => search.setSearch({ query: next })}
+        <div
+          data-slot="library-tabs"
+          className="flex min-w-0 flex-1 items-center justify-between gap-s3"
+        >
+          <KindTabs
+            kind={search.kind}
+            onKind={(next) => search.setSearch({ kind: next })}
+            isRegular={props.isRegular}
           />
+          {props.isRegular ? null : viewMenu}
         </div>
       }
-      cluster={
-        <ViewCluster
-          layout={view.layout}
-          onLayout={view.setLayout}
-          size={view.size}
-          onSize={view.setSize}
-          groups={libraryFilterGroups(search.kind, (next) =>
-            search.setSearch({ kind: next })
-          )}
-        />
-      }
-      hasRuns={props.data.assets.length > 0 || props.isFiltered}
+      {...(props.isRegular ? { cluster: viewMenu } : {})}
+      hasRuns={props.isRegular && viewMenu !== null}
     >
       {props.children}
     </Canvas>
   )
 }
 
-export function LibraryScreen(): ReactElement {
-  const search = useLibrarySearch()
-  const { kind, query, setSearch } = search
-  const data = useLibrary(kind, query)
+function useLibraryUpload(): {
+  uploads: Uploads
+  upload: () => void
+  drop: ReturnType<typeof useDropUpload>
+} {
   const uploads = useUploads()
   const device = useDevice()
+  const drop = useDropUpload(uploads.start)
+  return {
+    uploads,
+    upload: () =>
+      void device.pickFiles({ accept, multiple: true }).then(uploads.start),
+    drop,
+  }
+}
+
+export function LibraryScreen(): ReactElement {
+  const search = useLibrarySearch()
+  const { kind, query, appId, setSearch } = search
+  const data = useLibrary(kind, query, appId)
+  const { uploads, upload, drop } = useLibraryUpload()
   const view = useLibraryView()
   const [selected, setSelected] = useState<string[] | null>(null)
   const [isSearchOpen, setSearchOpen] = useState(query !== "")
   const isRegular = useIsRegularWindow()
-  const drop = useDropUpload(uploads.start)
-  const isFiltered = kind !== "all" || query !== ""
-  const upload = (): void => {
-    void device.pickFiles({ accept, multiple: true }).then(uploads.start)
-  }
+  const isFiltered = kind !== "all" || query !== "" || appId !== null
+  const searchField = (
+    <LibrarySearch
+      query={query}
+      isSearchOpen={true}
+      onQuery={(next) => setSearch({ query: next })}
+    />
+  )
   return (
     <div className="flex min-h-full flex-col" {...drop.handlers}>
       <LibraryHeader
         onSelect={() => setSelected(selected === null ? [] : null)}
         onUpload={upload}
         onSearch={() => setSearchOpen(!isSearchOpen)}
+        search={searchField}
+        selection={
+          selected && {
+            selected,
+            assets: data.assets,
+            onCancel: () => setSelected(null),
+          }
+        }
       />
-      <div className="flex flex-1 flex-col gap-s6 px-s5 pb-s12">
+      <div className="flex flex-1 flex-col gap-s3 px-s5 pb-s12">
+        {isRegular || !(isSearchOpen || query !== "") ? null : searchField}
         <LibraryCanvas
           search={search}
           data={data}
           view={view}
-          isSearchOpen={isSearchOpen}
-          isFiltered={isFiltered}
+          isFiltered={isFiltered || view.date !== "any"}
+          isRegular={isRegular}
         >
           <LibraryBody
             data={data}
@@ -377,11 +381,14 @@ export function LibraryScreen(): ReactElement {
             selected={selected}
             setSelected={setSelected}
             onUpload={upload}
-            onClear={() => setSearch({ kind: "all", query: "" })}
-            isFiltered={isFiltered}
-            isRegular={isRegular}
+            onClear={() => {
+              view.setDate("any")
+              setSearch({ kind: "all", query: "", appId: null })
+            }}
+            isFiltered={isFiltered || view.date !== "any"}
             layout={view.layout}
             size={view.size}
+            date={view.date}
           />
         </LibraryCanvas>
       </div>

@@ -1,5 +1,6 @@
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { motion } from "@rosesfield/ui/motion"
 import type { ReactElement } from "react"
 
 function ScrollArea({
@@ -37,7 +38,7 @@ function ScrollBar({
       className={cn(
         "flex touch-none p-hairline opacity-0 select-none data-hovering:opacity-100 data-scrolling:opacity-100",
         orientation === "vertical" ? "w-s2 justify-center" : "h-s2 flex-col",
-        "transition-opacity duration-(--duration-control) ease-bloom",
+        motion.tint,
         className
       )}
       {...props}

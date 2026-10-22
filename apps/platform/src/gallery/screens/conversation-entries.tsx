@@ -45,7 +45,7 @@ function proposalOf(id: string, status: Proposal["status"]): Proposal {
       aspectRatio: "16:9",
     },
     status,
-    runId: null,
+    runIds: [],
   }
 }
 
@@ -76,6 +76,7 @@ function turnOf(change: Partial<Turn>): Turn {
     parts: [],
     status: "answering",
     failureCode: null,
+    credits: null,
     shownItems: 0,
     ...change,
   }
@@ -109,7 +110,7 @@ const agentStart = screenEntry("agent", "entry.screen.agent", [
     label: "state.noKey",
     path: "/agent",
     seeds: [seeds.settingsAs(publicSettingsOf(false)), seeds.runs([])],
-    before: () => holdVisitorKey("agent", null),
+    before: () => holdVisitorKey("engine", null),
   },
   { id: "loading", label: "state.loading", path: "/agent", seeds: withModel },
   {

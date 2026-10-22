@@ -1,5 +1,15 @@
+import { taskBinding } from "@rosesfield/generation/bindings"
 import { type AppInput, defineApp } from "#define-app"
-import { motionBinding } from "#motion/comfy/motion-binding"
+import { motionEngine } from "#motion/comfy/motion-binding"
+import { graphModel, motionTasks } from "#motion/motion-models"
+
+export const motionAspectRatios: readonly string[] = [
+  "1:1",
+  "4:3",
+  "3:4",
+  "16:9",
+  "9:16",
+]
 
 export const app: AppInput = defineApp({
   id: "motion",
@@ -19,6 +29,13 @@ export const app: AppInput = defineApp({
       labelKey: "motion.input.clip.label",
       presence: "required",
       max: 1,
+    },
+    {
+      type: "choice",
+      name: "model",
+      labelKey: "motion.input.model.label",
+      options: [{ value: graphModel, labelKey: "motion.model.ltx23" }],
+      default: graphModel,
     },
     {
       type: "toggle",
@@ -48,11 +65,13 @@ export const app: AppInput = defineApp({
   output: {
     kind: "video",
     count: { default: 1, max: 1 },
-    aspectRatios: {
-      options: ["1:1", "4:3", "3:4", "16:9", "9:16"],
-      default: "9:16",
-    },
+    aspectRatios: { options: [...motionAspectRatios], default: "9:16" },
   },
-  engine: motionBinding,
+  engine: taskBinding({
+    tasks: motionTasks,
+    input: "model",
+    default: graphModel,
+    fallback: motionEngine,
+  }),
   limits: { timeoutSeconds: 1800, maxRetries: 2 },
 })

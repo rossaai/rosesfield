@@ -100,7 +100,7 @@ describe("the upscale file reading", () => {
     const reading = result.current
     expect(reading.state).toBe("read")
     const facts = reading.state === "read" ? reading.facts : null
-    expect(scaleCheckOf(sizeOf(facts), "2x")).toMatchObject({
+    expect(scaleCheckOf(sizeOf(facts), 2, 3840)).toMatchObject({
       state: "tooBig",
     })
   })

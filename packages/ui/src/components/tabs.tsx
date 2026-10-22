@@ -1,8 +1,9 @@
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs"
 import { interaction } from "@rosesfield/ui/components/interaction"
+import { edgeMaskOf, useScrollEnds } from "@rosesfield/ui/hooks/use-scroll-ends"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
-import type { ReactElement, ReactNode } from "react"
+import { type ReactElement, useRef } from "react"
 
 function Tabs({ className, ...props }: TabsPrimitive.Root.Props): ReactElement {
   return (
@@ -14,19 +15,44 @@ function Tabs({ className, ...props }: TabsPrimitive.Root.Props): ReactElement {
   )
 }
 
+const stripFade = "var(--spacing-s8)"
+
 function TabsList({
   className,
+  children,
+  style,
+  onScroll,
   ...props
 }: TabsPrimitive.List.Props): ReactElement {
+  const strip = useRef<HTMLDivElement>(null)
+  const { ends, update } = useScrollEnds(strip)
   return (
     <TabsPrimitive.List
+      ref={strip}
       data-slot="tabs-list"
+      data-scroll-start={ends.start ? "yes" : "no"}
+      data-scroll-end={ends.end ? "yes" : "no"}
+      onScroll={(event) => {
+        update()
+        onScroll?.(event)
+      }}
+      style={{ ...edgeMaskOf(ends, stripFade), ...style }}
       className={cn(
-        "flex max-w-full items-center gap-s2 overflow-x-auto",
+        "relative flex max-w-[calc(100%+var(--spacing-focus-ring)*4)] items-center gap-s1 overflow-x-auto [scrollbar-width:none]",
+        interaction.ringRoom,
         className
       )}
       {...props}
-    />
+    >
+      <TabsPrimitive.Indicator
+        data-slot="tabs-indicator"
+        className={cn(
+          "absolute top-0 left-0 z-0 h-(--active-tab-height) w-(--active-tab-width) translate-x-(--active-tab-left) translate-y-(--active-tab-top) rounded-full bg-(--tint)",
+          motion.travel
+        )}
+      />
+      {children}
+    </TabsPrimitive.List>
   )
 }
 
@@ -38,8 +64,9 @@ function TabsTrigger({
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={cn(
-        "inline-flex h-tab max-w-button-max shrink-0 items-center gap-s1 truncate rounded-full px-s3 font-medium text-body text-ink-muted select-none hover:bg-(--tint) data-active:bg-(--tint) data-active:text-ink data-disabled:opacity-(--opacity-disabled) [&_svg]:glyph",
+        "relative z-1 inline-flex h-tab max-w-button-max shrink-0 items-center gap-s1 truncate rounded-full px-s3 font-medium text-body text-ink-muted select-none hover:not-data-active:bg-(--tint) data-active:text-ink data-disabled:opacity-(--opacity-disabled) [&_svg]:glyph",
         motion.tint,
+        interaction.ring,
         className
       )}
       {...props}
@@ -60,129 +87,4 @@ function TabsContent({
   )
 }
 
-function ModeStrip({
-  className,
-  ...props
-}: TabsPrimitive.List.Props): ReactElement {
-  return (
-    <TabsPrimitive.List
-      data-slot="tabs-strip"
-      data-form="strip"
-      className={cn(
-        "flex max-w-full shrink-0 items-start gap-3 overflow-x-auto [scrollbar-width:none]",
-        interaction.ringRoom,
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-function ModeTab({
-  className,
-  children,
-  ...props
-}: TabsPrimitive.Tab.Props): ReactElement {
-  return (
-    <TabsPrimitive.Tab
-      data-slot="tabs-title"
-      className={cn(
-        "inline-flex h-9 shrink-0 items-center border-b-2 border-transparent font-medium text-body whitespace-nowrap text-ink-muted transition-none select-none data-active:border-ink data-active:text-ink data-disabled:opacity-(--opacity-disabled)",
-        interaction.ring,
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </TabsPrimitive.Tab>
-  )
-}
-
-type SegmentedForm = "canvas" | "well"
-
-const segmentedLists = {
-  canvas: "",
-  well: "h-9 rounded-dense bg-canvas p-0.5",
-} satisfies Record<SegmentedForm, string>
-
-const segmentedPlates = {
-  canvas:
-    "top-(--active-tab-top) left-(--active-tab-left) h-(--active-tab-height) w-(--active-tab-width)",
-  well: "top-[calc(var(--active-tab-top)+var(--spacing-hairline))] left-[calc(var(--active-tab-left)+var(--spacing-hairline))] h-tab w-[calc(var(--active-tab-width)-2*var(--spacing-hairline))]",
-} satisfies Record<SegmentedForm, string>
-
-type SegmentedTabsProps = TabsPrimitive.List.Props & {
-  children: ReactNode
-  form?: SegmentedForm
-}
-
-function SegmentedTabs({
-  className,
-  children,
-  form = "canvas",
-  ...props
-}: SegmentedTabsProps): ReactElement {
-  return (
-    <TabsPrimitive.List
-      data-slot="tabs-strip"
-      data-form={form === "canvas" ? "segmented" : form}
-      className={cn(
-        "relative inline-flex shrink-0 items-center gap-1",
-        segmentedLists[form],
-        className
-      )}
-      {...props}
-    >
-      <TabsPrimitive.Indicator
-        data-slot="segmented-control-thumb"
-        className={cn(
-          "absolute z-0 rounded-dense bg-(--well) transition-none",
-          segmentedPlates[form]
-        )}
-      />
-      {children}
-    </TabsPrimitive.List>
-  )
-}
-
-type SegmentedTabProps = TabsPrimitive.Tab.Props & {
-  icon?: ReactNode
-}
-
-function SegmentedTab({
-  className,
-  icon,
-  children,
-  ...props
-}: SegmentedTabProps): ReactElement {
-  return (
-    <TabsPrimitive.Tab
-      data-slot="segmented-control-cells"
-      className={cn(
-        "relative z-1 inline-flex h-8 shrink-0 items-center gap-1 rounded-dense px-2 py-1 font-medium text-label whitespace-nowrap text-ink-muted transition-none select-none data-active:text-ink data-disabled:opacity-(--opacity-disabled) [&_svg]:size-4",
-        interaction.ring,
-        className
-      )}
-      {...props}
-    >
-      {icon === undefined ? null : (
-        <span data-slot="tabs-lead" aria-hidden="true" className="flex">
-          {icon}
-        </span>
-      )}
-      {children}
-    </TabsPrimitive.Tab>
-  )
-}
-
-export type { SegmentedForm, SegmentedTabProps, SegmentedTabsProps }
-export {
-  ModeStrip,
-  ModeTab,
-  SegmentedTab,
-  SegmentedTabs,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-}
+export { Tabs, TabsContent, TabsList, TabsTrigger }

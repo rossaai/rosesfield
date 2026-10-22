@@ -93,8 +93,8 @@ async function sourceOf(seeds: Seeds): Promise<AppForm["source"]> {
 afterEach(cleanup)
 
 describe("the source of an app's opening values", () => {
-  it("stays on the defaults when the app opens with an asset to use", async () => {
-    expect(await sourceOf({ use: assetId, from: undefined })).toBe("defaults")
+  it("is placed when the app opens with an asset to use", async () => {
+    expect(await sourceOf({ use: assetId, from: undefined })).toBe("placed")
   })
 
   it("is the seed when the app reopens a run from History", async () => {

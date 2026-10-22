@@ -1,10 +1,19 @@
+import { findApp } from "@rosesfield/catalog"
+import {
+  type ChainRun,
+  graphModel,
+  SpeechChain,
+  speakThenSync,
+} from "@rosesfield/catalog/lipsync"
 import {
   type AppDefinition,
   appDefinition,
   assetResponse,
   buildPath,
   errorEnvelope,
+  type Run,
   routes,
+  runPageResponse,
   runResponse,
 } from "@rosesfield/contract"
 import { afterEach, describe, expect, it } from "vitest"
@@ -118,6 +127,7 @@ describe("a Lip sync run through the gateway on the demo engine", () => {
     expect(done.seed).toEqual(expect.any(Number))
     expect(done.inputs).toEqual({
       mode: "photo",
+      model: graphModel,
       photo: [photoId],
       audio: [audioId],
       scene: "A small kitchen in morning light",
@@ -134,29 +144,20 @@ describe("a Lip sync run through the gateway on the demo engine", () => {
     expect([...output.bytes.slice(4, 8)]).toEqual(mp4Brand)
   })
 
-  it("makes one 9:16 video from a clip and 5 seconds of audio, and keeps no photo or scene with the run", async () => {
+  it("refuses a clip run on the LTX 2.3 graph, which takes only a photo, and enqueues no job", async () => {
     open()
     const clipId = await upload(clipBytes, "video/mp4")
     const audioId = await upload(wave, "audio/wav")
-    const done = await finished(
-      await start(
-        { mode: "clip", clip: [clipId], audio: [audioId], length: 5 },
-        "lipsync-clip-1",
-        "9:16"
-      )
+    const response = await start(
+      { mode: "clip", clip: [clipId], audio: [audioId], length: 5 },
+      "lipsync-clip-1",
+      "9:16"
     )
-    expect(done.status).toBe("done")
-    expect(done.aspectRatio).toBe("9:16")
-    expect(done.inputs).toEqual({
-      mode: "clip",
-      clip: [clipId],
-      audio: [audioId],
-      length: 5,
-    })
-    expect(done.outputs).toHaveLength(1)
-    const output = await outputOf(done.outputs[0] ?? "")
-    expect(output.asset).toMatchObject({ kind: "video", mime: "video/mp4" })
-    expect(output.asset.height).toBeGreaterThan(output.asset.width ?? 0)
+    expect(response.status).toBe(412)
+    expect(errorEnvelope.parse(await response.json()).error.code).toBe(
+      "ENGINE_BINDING_INVALID"
+    )
+    expect(gateway.jobs.enqueued).toEqual([])
   })
 
   it("starts no run without audio, with audio longer than 10 seconds, or with the asset of the other mode", async () => {
@@ -205,7 +206,7 @@ describe("the control of the mode refusals", () => {
 
   afterEach(() => gateway.close())
 
-  it("starts the runs the declared modes refuse once the definition drops its mode rules", async () => {
+  it("passes the runs the declared modes refuse to the binding once the definition drops its mode rules", async () => {
     gateway = harnessFor({
       portsFor: localPorts,
       apps: [withoutModeRules(lipsync)],
@@ -257,6 +258,121 @@ describe("the control of the mode refusals", () => {
       )
       statuses.push(response.status)
     }
-    expect(statuses).toEqual(planted.map(() => 202))
+    expect(statuses).toEqual([202, 202, 412, 412, 412])
+  })
+})
+
+class GatewayChain extends SpeechChain {
+  private readonly gateway: Harness
+
+  constructor(options: { gateway: Harness }) {
+    super()
+    this.gateway = options.gateway
+  }
+
+  async start(appId: string, request: ChainRun, key: string): Promise<Run> {
+    const body =
+      request.aspectRatio === null
+        ? { inputs: request.inputs }
+        : { inputs: request.inputs, aspectRatio: request.aspectRatio }
+    const response = await this.gateway.call(
+      buildPath(routes.startRun.path, { appId }),
+      jsonInit(body, { "idempotency-key": key })
+    )
+    expect(response.status).toBe(202)
+    return runResponse.parse(await response.json()).run
+  }
+
+  async settle(run: Run): Promise<Run> {
+    await this.gateway.drive(run.id)
+    const read = await this.gateway.call(
+      buildPath(routes.getRun.path, { runId: run.id })
+    )
+    return runResponse.parse(await read.json()).run
+  }
+
+  async secondsOf(assetId: string): Promise<number | null> {
+    const read = await this.gateway.call(
+      buildPath(routes.getAsset.path, { assetId })
+    )
+    return assetResponse.parse(await read.json()).asset.durationSeconds
+  }
+}
+
+function audioApp(): AppDefinition {
+  const found = findApp("audio")
+  if (found === null) {
+    throw new Error("The catalog lists no audio app. Run bun run catalog:sync")
+  }
+  return found
+}
+
+describe("Text in Lip sync through the gateway on the demo engine", () => {
+  let gateway: Harness
+
+  afterEach(() => gateway.close())
+
+  it("makes the speech on Audio's speech default first, then the video from its audio, and lists both runs", async () => {
+    gateway = harnessFor({
+      portsFor: localPorts,
+      apps: [audioApp(), lipsync],
+    })
+    const uploaded = await gateway.call(routes.uploadAsset.path, {
+      method: "POST",
+      headers: { "content-type": "image/png" },
+      body: photo,
+    })
+    const photoId = assetResponse.parse(await uploaded.json()).asset.id
+    const chain = new GatewayChain({ gateway })
+    const outcome = await speakThenSync({
+      app: audioApp(),
+      voices: [],
+      target: { appId: "lipsync", audio: "audio", length: "length" },
+      request: {
+        inputs: {
+          mode: "photo",
+          photo: [photoId],
+          length: 10,
+          speechText: "Hello, this is the line I typed.",
+          speechModel: "",
+        },
+        aspectRatio: "1:1",
+      },
+      key: "lipsync-text-1",
+      chain,
+    })
+    if (outcome.kind !== "started") {
+      throw new Error(`The chain stopped at ${outcome.kind}`)
+    }
+    expect(outcome.speech).toMatchObject({
+      appId: "audio",
+      status: "done",
+      inputs: {
+        model: "chatterbox",
+        script: "Hello, this is the line I typed.",
+      },
+    })
+    const [spoken] = outcome.speech.outputs
+    const video = await chain.settle(outcome.video)
+    expect(video).toMatchObject({
+      appId: "lipsync",
+      status: "done",
+      aspectRatio: "1:1",
+      inputs: {
+        mode: "photo",
+        photo: [photoId],
+        audio: [spoken],
+        length: 2,
+      },
+    })
+    expect(video.inputs).not.toHaveProperty("speechText")
+    const listed = await gateway.call(routes.listRuns.path)
+    const history = runPageResponse.parse(await listed.json()).runs
+    expect(history.map((run) => [run.appId, run.id]).sort()).toEqual(
+      [
+        ["audio", outcome.speech.id],
+        ["lipsync", video.id],
+      ].sort()
+    )
   })
 })

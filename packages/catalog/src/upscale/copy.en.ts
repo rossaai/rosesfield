@@ -41,8 +41,5 @@ export const upscaleCopy: Readonly<Record<string, string>> = {
   "upscale.model.seedvr23b.line": "Restores detail in images and video.",
   "upscale.model.seedvr27b": "SeedVR2 7B",
   "upscale.model.seedvr27b.line": "The larger model. It takes more time.",
-  "upscale.model.realEsrgan4x": "Real-ESRGAN x4",
-  "upscale.model.realEsrgan4x.line":
-    "Enlarges 4 times, then resizes to your scale.",
   "upscale.input.seed.label": "Seed",
 }

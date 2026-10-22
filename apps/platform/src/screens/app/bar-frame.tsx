@@ -1,4 +1,11 @@
 import type { AppListing, Run } from "@rosesfield/contract"
+import { Chip } from "@rosesfield/ui/components/chip"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@rosesfield/ui/components/popover"
 import {
   Sheet,
   SheetBody,
@@ -7,77 +14,29 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@rosesfield/ui/components/sheet"
-import {
-  type ReactElement,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useState,
-} from "react"
+import { SlidersHorizontalIcon } from "lucide-react"
+import { type ReactElement, type ReactNode, useEffect, useState } from "react"
 import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
-import { useCanvasFit } from "@/pieces/use-canvas-fit"
+import { useAppToolsOpener } from "@/pieces/app-tools"
+import { Dock } from "@/pieces/dock"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { AppCanvas } from "@/screens/app/app-canvas"
 import { AppStage } from "@/screens/app/app-stage"
 import type { SheetControl } from "@/screens/app/column-frame"
 import { ToolsKey } from "@/screens/app/tools-key"
 
-export type BarPlace = "dock" | "sheet"
+export type BarPlace = "dock" | "sheet" | "phone"
+
+export type PhoneBar = "sheet" | "dock"
 
 type BarFrameProps = {
   app: AppListing
-  hasRuns: boolean | null
   onUseInputs: (run: Run) => void
   bar: (place: BarPlace) => ReactNode
   settings: ReactNode
   sheet: SheetControl
-}
-
-function useBottomScroll(
-  hasRuns: boolean | null
-): (node: HTMLElement | null) => void {
-  const [node, setNode] = useState<HTMLElement | null>(null)
-  useEffect(() => {
-    if (node === null || hasRuns !== true) {
-      return
-    }
-    let isPinned = true
-    const toBottom = (): void => {
-      if (isPinned) {
-        node.scrollTop = node.scrollHeight
-      }
-    }
-    const onScroll = (): void => {
-      isPinned = node.scrollHeight - node.scrollTop - node.clientHeight < 1
-    }
-    const sizes =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(toBottom)
-    const watch = (): void => {
-      for (const child of node.children) {
-        sizes?.observe(child)
-      }
-    }
-    const children =
-      typeof MutationObserver === "undefined"
-        ? null
-        : new MutationObserver(() => {
-            watch()
-            toBottom()
-          })
-    watch()
-    children?.observe(node, { childList: true })
-    toBottom()
-    node.addEventListener("scroll", onScroll, { passive: true })
-    return () => {
-      sizes?.disconnect()
-      children?.disconnect()
-      node.removeEventListener("scroll", onScroll)
-    }
-  }, [node, hasRuns])
-  return setNode
+  phone?: PhoneBar
 }
 
 function useDockCover(): {
@@ -91,12 +50,17 @@ function useDockCover(): {
       return
     }
     const cover = (): void => {
-      stage.style.setProperty("--covered-bottom", `${dock.offsetHeight}px`)
+      const covered = Math.max(
+        dock.offsetHeight,
+        stage.getBoundingClientRect().bottom - dock.getBoundingClientRect().top
+      )
+      stage.style.setProperty("--covered-bottom", `${covered}px`)
     }
     cover()
     const observer =
       typeof ResizeObserver === "undefined" ? null : new ResizeObserver(cover)
     observer?.observe(dock)
+    observer?.observe(stage)
     return () => {
       observer?.disconnect()
       stage.style.removeProperty("--covered-bottom")
@@ -105,39 +69,64 @@ function useDockCover(): {
   return { stageRef: setStage, dockRef: setDock }
 }
 
+function PhoneDock({
+  onOpen,
+  children,
+}: {
+  onOpen: () => void
+  children: ReactNode
+}): ReactElement {
+  useAppToolsOpener(onOpen)
+  return (
+    <Dock
+      isRaised
+      className="sticky bottom-0 z-40 shrink-0 px-4 pt-2 pb-[calc(var(--spacing)*2+env(safe-area-inset-bottom))]"
+    >
+      <div data-slot="prompt-dock" className="flex flex-col gap-2">
+        {children}
+      </div>
+    </Dock>
+  )
+}
+
+function PhoneBarPlace({
+  props,
+  isRegular,
+  onOpen,
+}: {
+  props: BarFrameProps
+  isRegular: boolean
+  onOpen: () => void
+}): ReactNode {
+  if (isRegular) {
+    return null
+  }
+  return props.phone === "dock" ? (
+    <PhoneDock onOpen={onOpen}>{props.bar("phone")}</PhoneDock>
+  ) : (
+    <ToolsKey onOpen={onOpen} />
+  )
+}
+
 export function BarFrame(props: BarFrameProps): ReactElement {
   const [isOpen, setOpen] = props.sheet
   const isRegular = useIsRegularWindow()
-  const fit = useCanvasFit()
-  const bottom = useBottomScroll(props.hasRuns)
+  const isDocked = props.phone === "dock"
   const cover = useDockCover()
-  const fitRef = fit.ref
-  const scrollRef = useCallback(
-    (element: HTMLElement | null) => {
-      fitRef(element)
-      bottom(element)
-    },
-    [fitRef, bottom]
-  )
   return (
     <div className="flex h-full min-h-0 flex-col">
       <h1 className="sr-only">{appName(props.app)}</h1>
       <div
         ref={cover.stageRef}
         data-slot="bar-stage"
-        className="flex min-h-0 flex-1 pb-4"
+        className="flex min-h-0 flex-1 pb-4 @regular:pb-0"
       >
         <AppStage
           app={props.app}
           kind="bar"
-          scrollRef={scrollRef}
-          scrollClassName="px-4 pb-4 @regular:pb-36"
+          scrollClassName="px-4 @regular:pb-36"
         >
-          <AppCanvas
-            app={props.app}
-            order="newest-last"
-            onUseInputs={props.onUseInputs}
-          />
+          <AppCanvas app={props.app} onUseInputs={props.onUseInputs} />
         </AppStage>
       </div>
       {isRegular ? (
@@ -149,25 +138,65 @@ export function BarFrame(props: BarFrameProps): ReactElement {
           {props.bar("dock")}
         </div>
       ) : null}
-      <ToolsKey onOpen={() => setOpen(true)} />
+      <PhoneBarPlace
+        props={props}
+        isRegular={isRegular}
+        onOpen={() => setOpen(true)}
+      />
       <Sheet open={isOpen && !isRegular} onOpenChange={setOpen}>
         <SheetContent side="bottom" closeLabel={t("viewer.close")}>
           <SheetHeader>
-            <SheetTitle>{appName(props.app)}</SheetTitle>
+            <SheetTitle>
+              {isDocked ? t("app.inputs.open") : appName(props.app)}
+            </SheetTitle>
           </SheetHeader>
           <SheetBody>{props.settings}</SheetBody>
-          <SheetFooter>{isRegular ? null : props.bar("sheet")}</SheetFooter>
+          {isDocked ? null : (
+            <SheetFooter>{isRegular ? null : props.bar("sheet")}</SheetFooter>
+          )}
         </SheetContent>
       </Sheet>
     </div>
   )
 }
 
+function FoldedChips({ chips }: { chips: ReactNode }): ReactElement {
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Chip data-slot="bar-settings" icon={<SlidersHorizontalIcon />}>
+            {t("bar.settings")}
+          </Chip>
+        }
+      />
+      <PopoverContent
+        side="top"
+        sideOffset={8}
+        aria-label={t("bar.settings")}
+        data-density="composer"
+      >
+        <PopoverTitle className="sr-only">{t("bar.settings")}</PopoverTitle>
+        <div
+          data-slot="bar-settings-chips"
+          className="flex flex-wrap items-center gap-s1"
+        >
+          {chips}
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 export function BarChips({ chips }: { chips: ReactNode }): ReactElement {
+  const isRegular = useIsRegularWindow()
+  if (!isRegular) {
+    return <FoldedChips chips={chips} />
+  }
   return (
     <span
       data-slot="bar-chips"
-      className="flex min-w-0 shrink-0 items-center gap-1 *:flex-nowrap *:gap-1"
+      className="flex min-w-0 shrink-0 items-center gap-s1 *:flex-nowrap *:gap-s1"
     >
       {chips}
     </span>

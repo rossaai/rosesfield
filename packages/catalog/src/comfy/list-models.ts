@@ -1,6 +1,7 @@
 import type { AppDefinition, InputDefinition } from "@rosesfield/contract"
 import {
   chosenModelOf,
+  graphTaskOf,
   type HostedModel,
   isHostedModelId,
   taskAdapter,
@@ -11,7 +12,7 @@ import { isDeniedModel } from "#comfy/model-deny"
 import { factsOf } from "#comfy/model-facts"
 import { makerOf, nameOf } from "#comfy/model-names"
 import { hostedTagsOf } from "#comfy/model-tags"
-import { tasksOfModel } from "#comfy/model-tasks"
+import { namedTasksOf, tasksOfModel } from "#comfy/model-tasks"
 import { isProvenFamily } from "#comfy/proven-families"
 
 export const graphMaker = "comfy-cloud"
@@ -45,7 +46,7 @@ export function modelsForApp(
     return []
   }
   const listed = hosted.flatMap((model) => {
-    const task = tasksOfModel(model).find((one) => tasks.includes(one))
+    const task = appTaskOf(model, tasks, app.output.kind)
     return task === undefined || isDeniedModel(model.id)
       ? []
       : [hostedEntry(model, task)]
@@ -58,8 +59,20 @@ export function modelsForApp(
   ]
 }
 
+function appTaskOf(
+  model: HostedModel,
+  tasks: readonly string[],
+  media: string
+): string | undefined {
+  const listed = (one: string): boolean => tasks.includes(one)
+  return (
+    namedTasksOf(model, media).find(listed) ??
+    tasksOfModel(model, media).find(listed)
+  )
+}
+
 function hostedEntry(model: HostedModel, task: string): CatalogModel {
-  const facts = factsOf(model.id, task, null)
+  const facts = factsOf(model.id, task)
   const tags: ModelTag[] = hostedTagsOf(model)
   if (facts.weights !== null) {
     tags.push({ kind: "open-weights" })
@@ -80,7 +93,7 @@ function hostedEntry(model: HostedModel, task: string): CatalogModel {
   }
 }
 
-function graphsOf(app: AppDefinition, task: string): CatalogModel[] {
+function graphsOf(app: AppDefinition, appTask: string): CatalogModel[] {
   const input = app.inputs.find(
     (one): one is Extract<InputDefinition, { type: "choice" }> =>
       one.name === modelInputName && one.type === "choice"
@@ -88,7 +101,13 @@ function graphsOf(app: AppDefinition, task: string): CatalogModel[] {
   return (input?.options ?? [])
     .filter((option) => !isHostedModelId(option.value))
     .filter((option) => !isDeniedModel(`graph/${option.value}`))
-    .map((option) => graphEntry(option.value, option.labelKey, task))
+    .map((option) =>
+      graphEntry(
+        option.value,
+        option.labelKey,
+        graphTaskOf(app.engine, option.value) ?? appTask
+      )
+    )
 }
 
 function graphEntry(
@@ -96,7 +115,7 @@ function graphEntry(
   labelKey: string,
   task: string
 ): CatalogModel {
-  const facts = factsOf(`graph/${value}`, task, `${labelKey}.line`)
+  const facts = factsOf(`graph/${value}`, task)
   return {
     id: value,
     kind: "graph",

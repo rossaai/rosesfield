@@ -1,14 +1,33 @@
 {
   "effect": "many-copies",
   "passed": false,
-  "prompt": "Copies of the person step out from behind them one after another, then more and more, until identical copies in the same clothes fill the whole scene at every distance. Each copy moves the same way as the original. The camera stays fixed.",
+  "design": {
+    "unit": "many-copies",
+    "family": "effects",
+    "setPiece": "Four to eight copies of the person, in the same outfit and in different poses, appear on the scene's own ground, and the clip fades to dark.",
+    "cuts": [],
+    "lastFrame": {
+      "shows": "A dark frame after the fade.",
+      "maxLuma": 40
+    },
+    "sound": null,
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
+  },
+  "prompt": "One shot with a slow camera. Copies of the person appear one after another around them on the same ground, until four to eight copies stand in the scene by the middle of the clip. Every copy wears the same outfit, each in a different pose. In the last second the whole frame fades to dark.",
+  "photoFrame": "first",
   "endFrame": {
     "source": "edit",
-    "prompt": "The same scene filled with many identical copies of the same person in the same clothes, standing at different distances from near to far.",
+    "prompt": "The same scene in near darkness, with the person and several copies of them in the same outfit standing on the ground in different poses.",
     "strength": 0.9
   },
+  "midFrame": null,
   "hold": null,
   "adapter": null,
-  "seconds": 5,
-  "preview": null
+  "seconds": 7,
+  "preview": null,
+  "proof": null
 }

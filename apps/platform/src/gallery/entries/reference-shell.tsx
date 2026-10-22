@@ -81,22 +81,17 @@ function Bar({
         lockup={<Lockup className="h-8" />}
         areas={<Areas {...(open === true ? { open } : {})} />}
         areaMenu={
-          <IconButton label={t("sample.nav.areas")} tone="quiet" place="bar">
+          <IconButton label={t("sample.nav.areas")} tone="quiet">
             <MenuIcon aria-hidden="true" />
           </IconButton>
         }
         balance={
-          <AppBarAction
-            icon={<CoinsIcon aria-hidden="true" />}
-            render={<a href="?settings" />}
-          >
+          <AppBarAction icon={<CoinsIcon aria-hidden="true" />}>
             {t("sample.nav.balance")}
           </AppBarAction>
         }
         connect={
-          <AppBarAction tone="primary" render={<a href="?connect" />}>
-            {t("sample.nav.connect")}
-          </AppBarAction>
+          <AppBarAction tone="primary">{t("sample.nav.connect")}</AppBarAction>
         }
       />
     </div>
@@ -161,15 +156,6 @@ function FooterDemo(): ReactElement {
             ],
           },
         ]}
-        notice={t("sample.footer.notice")}
-        legal={[
-          {
-            id: "privacy",
-            label: t("sample.footer.privacy"),
-            href: "?privacy",
-          },
-          { id: "terms", label: t("sample.footer.terms"), href: "?terms" },
-        ]}
       />
     </div>
   )
@@ -180,7 +166,6 @@ function Hero(): ReactElement {
     <div className="flex flex-col gap-12">
       <HeroBanner
         href="?app=video"
-        kicker={t("sample.banner.kicker")}
         headline={t("sample.banner.headline")}
         lead={t("sample.banner.lead")}
         action={t("sample.banner.action")}
@@ -208,10 +193,8 @@ function Header(): ReactElement {
       href="?entry=ref-gallery-grid"
       actions={
         <>
-          <Button size="hero" tone="primary">
-            {t("sample.start")}
-          </Button>
-          <Button size="hero">{t("sample.learnMore")}</Button>
+          <Button tone="primary">{t("sample.start")}</Button>
+          <Button>{t("sample.learnMore")}</Button>
         </>
       }
     />

@@ -1,48 +1,58 @@
 import type { Asset } from "@rosesfield/contract"
-import { Button } from "@rosesfield/ui/components/button"
+import { Button, IconButton } from "@rosesfield/ui/components/button"
+import { ConfirmButton } from "@rosesfield/ui/components/confirm-button"
 import { Input } from "@rosesfield/ui/components/input"
-import { cn } from "@rosesfield/ui/lib/cn"
-import { ShapesIcon } from "lucide-react"
-import { type ReactElement, useState } from "react"
-import { t, tCount } from "@/copy/t"
-import { useDownloadAsset } from "@/pieces/asset-actions"
-import { DeleteAssetDialog } from "@/pieces/delete-asset-dialog"
 import {
-  type FilterChoice,
-  type FilterGroup,
-  kindPictures,
-} from "@/screens/library/view-cluster"
+  SegmentedControl,
+  type SegmentedItem,
+} from "@rosesfield/ui/components/segmented-control"
+import { cn } from "@rosesfield/ui/lib/cn"
+import {
+  DownloadIcon,
+  ListChecksIcon,
+  SearchIcon,
+  Trash2Icon,
+  UploadIcon,
+  XIcon,
+} from "lucide-react"
+import type { ReactElement, ReactNode } from "react"
+import { t, tCount } from "@/copy/t"
+import { useDeleteAssets, useDownloadAsset } from "@/pieces/asset-actions"
+import { kindPictures } from "@/screens/library/view-cluster"
+import { ScreenHeader } from "@/shell/screen-header"
 
 export type LibraryKind = "all" | "image" | "video" | "audio"
 
-const kindChoices: readonly FilterChoice[] = (
+const kindItems: SegmentedItem<LibraryKind>[] = (
   ["all", "image", "video", "audio"] as const
 ).map((kind) => ({
   value: kind,
   label: t(`kind.${kind}`),
-  picture: kindPictures[kind],
+  icon: kindPictures[kind],
 }))
 
-function kindOf(value: string): LibraryKind {
-  return value === "image" || value === "video" || value === "audio"
-    ? value
-    : "all"
-}
-
-export function libraryFilterGroups(
-  kind: LibraryKind,
+export function KindTabs({
+  kind,
+  onKind,
+  isRegular,
+}: {
+  kind: LibraryKind
   onKind: (kind: LibraryKind) => void
-): FilterGroup[] {
-  return [
-    {
-      id: "kind",
-      name: t("library.kind.label"),
-      icon: <ShapesIcon />,
-      choices: kindChoices,
-      value: kind,
-      onChoose: (value) => onKind(kindOf(value)),
-    },
-  ]
+  isRegular: boolean
+}): ReactElement {
+  return (
+    <SegmentedControl
+      items={
+        isRegular
+          ? kindItems
+          : kindItems.map(({ value, label }) => ({ value, label }))
+      }
+      value={kind}
+      onValueChange={onKind}
+      label={t("library.kind.label")}
+      density={isRegular ? "chrome" : "row"}
+    />
+  )
 }
 
 type SearchProps = {
@@ -60,57 +70,172 @@ export function LibrarySearch(props: SearchProps): ReactElement {
       value={props.query}
       onChange={(event) => props.onQuery(event.target.value)}
       className={cn(
-        "max-w-none @regular:flex @regular:max-w-field-max",
+        "max-w-none @regular:w-field-max @regular:max-w-field-max",
         props.isSearchOpen ? "" : "hidden"
       )}
     />
   )
 }
 
-type SelectionBarProps = {
+type SelectionProps = {
   selected: readonly string[]
   assets: readonly Asset[]
   onCancel: () => void
 }
 
-export function SelectionBar({
-  selected,
-  assets,
-  onCancel,
-}: SelectionBarProps): ReactElement {
+export function useSelectionActs(props: SelectionProps): {
+  count: number
+  download: () => void
+  remove: () => void
+  isRemoving: boolean
+} {
   const download = useDownloadAsset()
-  const [isConfirming, setConfirming] = useState(false)
-  const chosen = assets.filter((asset) => selected.includes(asset.id))
-  const count = selected.length
+  const remove = useDeleteAssets()
+  const chosen = props.assets.filter((asset) =>
+    props.selected.includes(asset.id)
+  )
+  return {
+    count: props.selected.length,
+    download: () => void Promise.all(chosen.map(download)),
+    remove: () =>
+      remove.mutate(props.selected, { onSuccess: () => props.onCancel() }),
+    isRemoving: remove.isPending,
+  }
+}
+
+export function SelectionActions(props: SelectionProps): ReactElement {
+  const acts = useSelectionActs(props)
   return (
-    <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-s2 bg-canvas py-s3 @regular:static @regular:py-0">
-      <p className="min-w-0 flex-1 text-body font-medium">
-        {tCount("library.selected", count)}
-      </p>
-      <Button
-        disabled={count === 0}
-        onClick={() => void Promise.all(chosen.map(download))}
+    <>
+      <p
+        data-slot="selection-count"
+        className="min-w-0 truncate font-medium text-body"
       >
+        {tCount("library.selected", acts.count)}
+      </p>
+      <Button tone="quiet" disabled={acts.count === 0} onClick={acts.download}>
+        <DownloadIcon aria-hidden="true" />
         {t("library.selection.download")}
       </Button>
-      <Button
-        tone="danger"
-        disabled={count === 0}
-        onClick={() => setConfirming(true)}
-      >
-        {t("library.selection.delete")}
-      </Button>
-      <Button tone="quiet" onClick={onCancel}>
+      <ConfirmButton
+        icon={<Trash2Icon />}
+        label={t("library.selection.delete")}
+        disabled={acts.count === 0}
+        busy={acts.isRemoving}
+        onConfirm={acts.remove}
+      />
+      <Button tone="quiet" onClick={props.onCancel}>
         {t("library.selection.cancel")}
       </Button>
-      <DeleteAssetDialog
-        assetIds={selected}
-        open={isConfirming}
-        onOpenChange={setConfirming}
-        onDeleted={onCancel}
-        title={tCount("library.delete.title", count)}
-        body={t("library.delete.body")}
+    </>
+  )
+}
+
+export function PhoneSelectionActions(props: SelectionProps): ReactElement {
+  const acts = useSelectionActs(props)
+  return (
+    <>
+      <span
+        data-slot="selection-count"
+        className="px-s1 font-medium text-body tabular-nums"
+      >
+        {acts.count}
+      </span>
+      <IconButton
+        label={t("library.selection.download")}
+        tone="quiet"
+        disabled={acts.count === 0}
+        onClick={acts.download}
+      >
+        <DownloadIcon aria-hidden="true" />
+      </IconButton>
+      <ConfirmButton
+        icon={<Trash2Icon />}
+        label={t("library.selection.delete")}
+        disabled={acts.count === 0}
+        busy={acts.isRemoving}
+        onConfirm={acts.remove}
       />
-    </div>
+      <IconButton
+        label={t("library.selection.cancel")}
+        tone="quiet"
+        onClick={props.onCancel}
+      >
+        <XIcon aria-hidden="true" />
+      </IconButton>
+    </>
+  )
+}
+
+type HeaderProps = {
+  onSelect: () => void
+  onUpload: () => void
+  onSearch: () => void
+  search: ReactNode
+  selection: SelectionProps | null
+}
+
+function RestActions(props: HeaderProps): ReactElement {
+  return (
+    <>
+      {props.search}
+      <Button tone="quiet" onClick={props.onSelect}>
+        {t("library.select")}
+      </Button>
+      <Button tone="primary" onClick={props.onUpload}>
+        {t("library.upload")}
+      </Button>
+    </>
+  )
+}
+
+function PhoneRestActions(props: HeaderProps): ReactElement {
+  return (
+    <>
+      <IconButton
+        label={t("library.search.label")}
+        tone="quiet"
+        onClick={props.onSearch}
+      >
+        <SearchIcon aria-hidden="true" />
+      </IconButton>
+      <IconButton
+        label={t("library.select")}
+        tone="quiet"
+        onClick={props.onSelect}
+      >
+        <ListChecksIcon aria-hidden="true" />
+      </IconButton>
+      <IconButton
+        label={t("library.upload")}
+        tone="quiet"
+        onClick={props.onUpload}
+      >
+        <UploadIcon aria-hidden="true" />
+      </IconButton>
+    </>
+  )
+}
+
+export function LibraryHeader(props: HeaderProps): ReactElement {
+  const { selection } = props
+  return (
+    <ScreenHeader
+      title={t("library.title")}
+      actions={
+        selection === null ? (
+          <RestActions {...props} />
+        ) : (
+          <SelectionActions {...selection} />
+        )
+      }
+      phoneAction={
+        selection === null ? (
+          <PhoneRestActions {...props} />
+        ) : (
+          <PhoneSelectionActions {...selection} />
+        )
+      }
+    />
   )
 }

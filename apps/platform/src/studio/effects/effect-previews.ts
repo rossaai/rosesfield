@@ -1,4 +1,4 @@
-const previewFiles = import.meta.glob<string>("./previews/*.mp4", {
+const previewFiles = import.meta.glob("./previews/*.mp4", {
   eager: true,
   query: "?url",
   import: "default",

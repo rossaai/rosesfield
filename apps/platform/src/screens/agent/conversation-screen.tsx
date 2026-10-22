@@ -1,6 +1,6 @@
 import { Button } from "@rosesfield/ui/components/button"
 import { StateView } from "@rosesfield/ui/components/state-view"
-import { useQuery } from "@tanstack/react-query"
+import { type UseQueryResult, useQuery } from "@tanstack/react-query"
 import { Link, useParams, useRouterState } from "@tanstack/react-router"
 import { type ReactElement, useEffect, useRef, useState } from "react"
 import type { Transcript } from "@/api/conversation-wire"
@@ -8,16 +8,11 @@ import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { t } from "@/copy/t"
 import { ScreenState } from "@/pieces/screen-state"
 import { useDraft } from "@/pieces/use-draft"
-import { useIsRegularWindow } from "@/pieces/use-is-regular"
+import { AgentComposer } from "@/screens/agent/agent-composer"
+import { AgentFrame, ConversationsDrawer } from "@/screens/agent/agent-frame"
 import { isModelMissing, useAgentModel } from "@/screens/agent/agent-model"
+import { ComposerSlot, NoModel } from "@/screens/agent/agent-parts"
 import {
-  AgentComposer,
-  ComposerSlot,
-  NoModel,
-} from "@/screens/agent/agent-parts"
-import { ConversationsButton } from "@/screens/agent/conversation-list"
-import {
-  ConversationActions,
   type ConversationDialog,
   ConversationDialogs,
   ConversationMenu,
@@ -66,9 +61,11 @@ function useFirstMessage(
 }
 
 function PlainHeader(): ReactElement {
-  const list = <ConversationsButton />
   return (
-    <ScreenHeader title={t("agent.title")} actions={list} phoneAction={list} />
+    <ScreenHeader
+      title={t("agent.title")}
+      phoneLead={<ConversationsDrawer />}
+    />
   )
 }
 
@@ -93,31 +90,34 @@ function MissingConversation(): ReactElement {
   )
 }
 
+const autoTitleLength = 80
+
+export function shownTitleOf(transcript: Transcript): string | null {
+  const { title } = transcript.conversation
+  const first = transcript.items.find((item) => item.type === "person")
+  if (title === null || first === undefined) {
+    return title
+  }
+  const line = first.text.trim().split("\n")[0] ?? ""
+  const isCopied = title.length <= autoTitleLength && line.startsWith(title)
+  return isCopied ? null : title
+}
+
 function ConversationHeader({
   transcript,
 }: {
   transcript: Transcript
 }): ReactElement {
   const [dialog, setDialog] = useState<ConversationDialog>(null)
-  const isRegular = useIsRegularWindow()
   const { conversation } = transcript
+  const menu = <ConversationMenu onDialogChange={setDialog} />
   return (
     <>
       <ScreenHeader
-        title={conversation.title ?? t("agent.untitled")}
-        actions={
-          <>
-            <ConversationsButton />
-            <ConversationMenu onDialogChange={setDialog} />
-          </>
-        }
-        phoneAction={
-          <ConversationsButton
-            {...(isRegular
-              ? {}
-              : { foot: <ConversationActions onDialogChange={setDialog} /> })}
-          />
-        }
+        title={shownTitleOf(transcript)}
+        actions={menu}
+        phoneLead={<ConversationsDrawer />}
+        phoneAction={menu}
       />
       <ConversationDialogs
         conversation={conversation}
@@ -133,6 +133,23 @@ export function ConversationScreen(): ReactElement {
     from: "/_shell/agent/$conversationId",
   })
   const transcript = useQuery(transcriptQuery(conversationId))
+  return (
+    <AgentFrame>
+      <ConversationBody
+        conversationId={conversationId}
+        transcript={transcript}
+      />
+    </AgentFrame>
+  )
+}
+
+function ConversationBody({
+  conversationId,
+  transcript,
+}: {
+  conversationId: string
+  transcript: UseQueryResult<Transcript>
+}): ReactElement {
   if (transcript.isError && isGone(transcript.error)) {
     return <MissingConversation />
   }
@@ -198,7 +215,7 @@ function KnownConversation({
   const pending = approval.isPending ? approval.variables?.runApproval : null
   const runApproval = pending ?? data?.conversation.runApproval ?? "ask"
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <>
       {data === undefined ? (
         <PlainHeader />
       ) : (
@@ -236,6 +253,6 @@ function KnownConversation({
           />
         </ComposerSlot>
       </div>
-    </div>
+    </>
   )
 }

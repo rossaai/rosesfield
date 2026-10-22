@@ -1,7 +1,8 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectBinding } from "@rosesfield/generation/bindings"
-import { effectGraph, effectsWorkflow } from "#effects/comfy/effect-graph"
-import { ltxFrames, sizeMap } from "#effects/comfy/frame-sizes"
+import { effectGraph, hasEditPass } from "#effects/comfy/effect-graph"
+import { deliveryFrames, ltxFrames, sizeMap } from "#effects/comfy/frame-sizes"
+import { effectsWorkflow } from "#effects/comfy/graph-edit"
 import {
   type EffectRecipe,
   type ResolutionValue,
@@ -14,15 +15,32 @@ function runBindings(
   resolution: ResolutionValue
 ): WorkflowValueBinding[] {
   const sizes = ltxFrames.sizes[resolution]
+  const delivery = deliveryFrames[resolution]
   return [
     { from: "input", name: "image", index: 0, to: "photo" },
     { from: "input", name: "prompt", to: "detail" },
     { from: "seed", to: "seed" },
     { from: "aspectRatio", map: sizeMap(sizes, "width", 2), to: "width" },
     { from: "aspectRatio", map: sizeMap(sizes, "height", 2), to: "height" },
-    ...(recipe.endFrame.source === "none"
-      ? []
-      : [{ from: "seed", to: "endFrameSeed" } as const]),
+    { from: "aspectRatio", map: sizeMap(sizes, "width"), to: "fitWidth" },
+    { from: "aspectRatio", map: sizeMap(sizes, "height"), to: "fitHeight" },
+    {
+      from: "aspectRatio",
+      map: sizeMap(delivery, "width"),
+      to: "deliveryWidth",
+    },
+    {
+      from: "aspectRatio",
+      map: sizeMap(delivery, "height"),
+      to: "deliveryHeight",
+    },
+    { from: "seed", to: "grainSeed" },
+    ...(hasEditPass(recipe)
+      ? [{ from: "seed", to: "endFrameSeed" } as const]
+      : []),
+    ...(recipe.design.sound?.hits ?? []).map(
+      (_, index) => ({ from: "seed", to: `hitSeed${index + 1}` }) as const
+    ),
   ]
 }
 

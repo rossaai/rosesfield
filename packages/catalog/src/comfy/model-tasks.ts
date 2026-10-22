@@ -15,6 +15,8 @@ export type ModelTask =
   | "video-edit"
   | "lip-sync"
   | "speech"
+  | "voice-change"
+  | "music"
   | "sound"
   | "three-d"
   | "upscale"
@@ -22,6 +24,10 @@ export type ModelTask =
   | "relight"
   | "try-on"
   | "expand"
+  | "motion-transfer"
+  | "character-swap"
+  | "layer-separation"
+  | "inpaint"
   | "chat"
 
 type Slot = FieldRole | "video" | "audio" | "mask"
@@ -38,6 +44,14 @@ type MediaRule = {
 type NameRule = {
   task: ModelTask
   pattern: RegExp
+  replaces?: readonly ModelTask[]
+  media?: "kept"
+}
+
+type FieldRule = {
+  task: ModelTask
+  path: string
+  kind: ModelField["kind"]
 }
 
 export const modelTasks: readonly ModelTask[] = [
@@ -50,6 +64,8 @@ export const modelTasks: readonly ModelTask[] = [
   "video-edit",
   "lip-sync",
   "speech",
+  "voice-change",
+  "music",
   "sound",
   "three-d",
   "upscale",
@@ -57,6 +73,10 @@ export const modelTasks: readonly ModelTask[] = [
   "relight",
   "try-on",
   "expand",
+  "motion-transfer",
+  "character-swap",
+  "layer-separation",
+  "inpaint",
   "chat",
 ]
 
@@ -125,13 +145,43 @@ export const nameRules: readonly NameRule[] = [
     task: "upscale",
     pattern: /upscal|increase-resolution|seedvr|flashvsr|enhance/,
   },
-  { task: "background", pattern: /background|green-screen/ },
+  { task: "background", pattern: /background|green-screen/, media: "kept" },
   { task: "relight", pattern: /relight/ },
   { task: "try-on", pattern: /vto|try-on/ },
   { task: "expand", pattern: /expand|outpaint/ },
   { task: "lip-sync", pattern: /lip-sync|lipsync|sync-3|avatar/ },
-  { task: "sound", pattern: /sfx|sound-effect/ },
+  { task: "sound", pattern: /sfx|sound-effect/, replaces: ["speech"] },
+  { task: "motion-transfer", pattern: /motion-transfer|motion-control/ },
+  {
+    task: "character-swap",
+    pattern: /character-swap|character-replace|swap-character/,
+  },
+  { task: "layer-separation", pattern: /layer-separation|layered/ },
+  { task: "inpaint", pattern: /inpaint|-fill\b/ },
 ]
+
+const fieldRules: readonly FieldRule[] = [
+  { task: "layer-separation", path: "layer_decomposition", kind: "toggle" },
+]
+
+/** Finds the field of a model's form that switches the model to the given task, such as Seedream's layer_decomposition for layer separation. */
+export function taskFieldOf(
+  fields: readonly ModelField[],
+  task: string
+): ModelField | null {
+  const rule = fieldRules.find((one) => one.task === task)
+  return rule === undefined
+    ? null
+    : (fields.find((one) => one.path === rule.path && one.kind === rule.kind) ??
+        null)
+}
+
+function fieldTasksOf(model: HostedModel): ModelTask[] {
+  const fields = model.form?.fields ?? []
+  return fieldRules
+    .filter((rule) => taskFieldOf(fields, rule.task) !== null)
+    .map((rule) => rule.task)
+}
 
 function slotOf(field: ModelField, output: string): Slot | null {
   if (field.kind !== "media") {
@@ -175,14 +225,49 @@ function fits(model: HostedModel, rule: MediaRule): boolean {
   )
 }
 
-/** Lists the tasks a model can run, from the media it takes and makes and the inputs its form needs. */
-export function tasksOfModel(model: HostedModel): ModelTask[] {
+function keepsMedia(model: HostedModel, media: string | null): boolean {
+  const kept = media === null ? model.takes : [media]
+  return kept.some(
+    (one) => model.takes.includes(one) && model.makes.includes(one)
+  )
+}
+
+function fitsName(
+  model: HostedModel,
+  rule: NameRule,
+  media: string | null
+): boolean {
+  return (
+    rule.pattern.test(model.id) &&
+    (rule.media !== "kept" || keepsMedia(model, media))
+  )
+}
+
+export function namedTasksOf(
+  model: HostedModel,
+  media: string | null = null
+): ModelTask[] {
+  const named = [
+    ...nameRules
+      .filter((rule) => fitsName(model, rule, media))
+      .map((rule) => rule.task),
+    ...fieldTasksOf(model),
+  ]
+  return modelTasks.filter((task) => named.includes(task))
+}
+
+/** Lists the tasks a model can run, from the media it takes and makes, the inputs its form needs, the fields that switch it to a task and, for an app that makes the given media, the tasks that keep that media. A name rule can replace a task the media alone would give. */
+export function tasksOfModel(
+  model: HostedModel,
+  media: string | null = null
+): ModelTask[] {
+  const named = nameRules.filter((rule) => fitsName(model, rule, media))
+  const replaced = named.flatMap((rule) => rule.replaces ?? [])
   const fromMedia = mediaRules
     .filter((rule) => fits(model, rule))
     .map((rule) => rule.task)
-  const fromName = nameRules
-    .filter((rule) => rule.pattern.test(model.id))
-    .map((rule) => rule.task)
+    .filter((task) => !replaced.includes(task))
+  const fromName = [...named.map((rule) => rule.task), ...fieldTasksOf(model)]
   return modelTasks.filter(
     (task) => fromMedia.includes(task) || fromName.includes(task)
   )

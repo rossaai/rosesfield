@@ -34,4 +34,5 @@ export const keyCopy = {
   "key.credits": "{amount} credits",
   "key.cap.left": "{left} of {cap} credits left",
   "key.cap.spent": "This link has spent its {cap} credits",
+  "key.account.title": "Your Comfy account",
 } satisfies Record<string, string>

@@ -1,4 +1,9 @@
-import type { AppListing, Run } from "@rosesfield/contract"
+import { type Mode, viewsOf } from "@rosesfield/catalog/characters"
+import {
+  type AppListing,
+  characterPhotoLimit,
+  type Run,
+} from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
@@ -9,15 +14,13 @@ import { appEmptyTitle } from "@/catalog/app-facts"
 import { t, tCatalog } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
 import { OutputRow } from "@/pieces/run/output-row"
+import { RunCard } from "@/pieces/run/run-card"
 import { runAspect } from "@/pieces/run/run-facts"
-import { RunLine } from "@/pieces/run/run-line"
-import { RunOutputs } from "@/pieces/run/run-outputs"
+import { type RunChromeOf, RunOutputs } from "@/pieces/run/run-outputs"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import { useUpdateCharacter } from "@/screens/characters/character-actions"
-import { modeOfRun } from "@/studio/characters/mode-listing"
+import { modeOfRun, viewInput } from "@/studio/characters/mode-listing"
 import { SaveCharacterButton } from "@/studio/characters/save-character-dialog"
-import { viewsOf } from "../../../../../packages/catalog/src/characters/angle-sets"
-import type { Mode } from "../../../../../packages/catalog/src/characters/traits"
 
 type ModeCanvasProps = {
   app: AppListing
@@ -27,8 +30,6 @@ type ModeCanvasProps = {
   emptyAction: ReactNode
 }
 
-const maxReferences = 16
-
 function characterOf(run: Run): string | null {
   const value = run.inputs.character
   return Array.isArray(value) ? (value[0] ?? null) : null
@@ -37,7 +38,9 @@ function characterOf(run: Run): string | null {
 function viewCaption(run: Run, index: number): string {
   const angleSet =
     typeof run.inputs.angleSet === "string" ? run.inputs.angleSet : ""
-  const view = viewsOf(angleSet)[index]
+  const views = viewsOf(angleSet)
+  const first = views.findIndex((one) => one === run.inputs[viewInput])
+  const view = views[Math.max(first, 0) + index]
   return view === undefined ? "" : tCatalog(`characters.view.${view}`)
 }
 
@@ -59,7 +62,7 @@ function AddToCharacter({
       disabled={
         found.data === undefined ||
         isAdded ||
-        references.length >= maxReferences
+        references.length >= characterPhotoLimit
       }
       onClick={() => update.mutate({ references: [...references, assetId] })}
     >
@@ -70,11 +73,17 @@ function AddToCharacter({
   )
 }
 
-function ViewRow({ run }: { run: Run }): ReactElement {
+function ViewRow({
+  run,
+  chrome,
+}: {
+  run: Run
+  chrome: RunChromeOf
+}): ReactElement {
   const aspect = runAspect(run)
   const characterId = characterOf(run)
   return (
-    <OutputRow aspects={run.outputs.map(() => aspect)}>
+    <OutputRow aspects={run.outputs.map(() => aspect)} overlay={chrome("over")}>
       {(index) => {
         const assetId = run.outputs[index]
         if (assetId === undefined) {
@@ -86,6 +95,7 @@ function ViewRow({ run }: { run: Run }): ReactElement {
               assetId={assetId}
               aspectHint={aspect}
               isDemo={run.origin === "demo"}
+              isBare
               list={run.outputs}
             />
             <figcaption className="text-caption text-ink-muted">
@@ -111,19 +121,22 @@ function RunBlock({
   const isDone = run.status === "done"
   const mode = modeOfRun(run)
   return (
-    <article className="flex flex-col gap-s2">
-      <RunLine run={run} onUseInputs={() => onUseInputs(run)} />
-      {isDone && mode === "angles" ? (
-        <ViewRow run={run} />
-      ) : (
-        <RunOutputs run={run} />
+    <RunCard run={run} onUseInputs={() => onUseInputs(run)}>
+      {(chrome) => (
+        <>
+          {isDone && mode === "angles" ? (
+            <ViewRow run={run} chrome={chrome} />
+          ) : (
+            <RunOutputs run={run} chrome={chrome} />
+          )}
+          {isDone && mode === "traits" && run.outputs.length > 0 ? (
+            <div>
+              <SaveCharacterButton run={run} />
+            </div>
+          ) : null}
+        </>
       )}
-      {isDone && mode === "traits" && run.outputs.length > 0 ? (
-        <div>
-          <SaveCharacterButton run={run} />
-        </div>
-      ) : null}
-    </article>
+    </RunCard>
   )
 }
 

@@ -4,6 +4,7 @@ import { readSettings } from "@/api/gateway-settings"
 const ownerBody = {
   settings: {
     mode: "owner",
+    place: "bun",
     engine: {
       target: "comfy-cloud",
       address: "https://cloud.comfy.org",
@@ -40,10 +41,27 @@ describe("readSettings", () => {
         origin: "live",
       },
       lock: "token",
+      keyFrom: "server",
       agent: "set",
       agentModel: "M3",
+      place: "bun",
       retentionDays: null,
     })
+  })
+
+  it("reads where the server runs, and no place from a body that names none or another", () => {
+    const workers = { settings: { ...ownerBody.settings, place: "workers" } }
+    expect(readSettings(workers)).toMatchObject({ place: "workers" })
+    expect(readSettings(publicBody)).toMatchObject({ place: null })
+    const other = { settings: { ...ownerBody.settings, place: "lambda" } }
+    expect(readSettings(other)).toMatchObject({ place: null })
+  })
+
+  it("reads where the key comes from, and takes Settings for a public deployment that does not say", () => {
+    const pasted = { settings: { ...ownerBody.settings, keyFrom: "settings" } }
+    expect(readSettings(pasted)).toMatchObject({ keyFrom: "settings" })
+    expect(readSettings(publicBody)).toMatchObject({ keyFrom: "settings" })
+    expect(readSettings(ownerBody)).toMatchObject({ keyFrom: "server" })
   })
 
   it("reads the number of days a public demo keeps a session", () => {

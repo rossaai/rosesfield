@@ -1,3 +1,4 @@
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { type Run, routes } from "@rosesfield/contract"
 import { callRoute } from "@/api/call-route"
 import { appName } from "@/catalog/app-facts"
@@ -7,6 +8,7 @@ import type {
   ClipPart,
   ClipPlan,
 } from "@/screens/explore/share-clip"
+import { outputPromptOf } from "@/viewer/result-panel"
 
 export type ClipSources = {
   plan: ClipPlan
@@ -29,15 +31,16 @@ function firstMediaInput(run: Run): string | null {
   return null
 }
 
-function promptOf(run: Run): string {
+function promptOf(
+  run: Run,
+  outputId: string,
+  models: readonly CatalogModel[]
+): string {
   const app = findCatalogApp(run.appId)
-  const name =
-    app?.inputs.find((input) => input.type === "prompt")?.name ?? "prompt"
-  const prompt = run.inputs[name]
-  if (typeof prompt === "string" && prompt.trim() !== "") {
-    return prompt.trim()
-  }
-  return app === null ? run.appId : appName(app)
+  return (
+    outputPromptOf(run, outputId, models) ??
+    (app === null ? run.appId : appName(app))
+  )
 }
 
 function partOf(source: { url: string; kind: string }): ClipPart | null {
@@ -52,7 +55,8 @@ function partOf(source: { url: string; kind: string }): ClipPart | null {
 
 export async function clipSourcesOf(
   run: Run,
-  outputId: string
+  outputId: string,
+  models: readonly CatalogModel[]
 ): Promise<ClipSources> {
   const inputId = firstMediaInput(run)
   const [result, input] = await Promise.all([
@@ -69,7 +73,10 @@ export async function clipSourcesOf(
   const inputPart = input === null ? null : partOf(input)
   return {
     plan: {
-      input: inputPart ?? { kind: "text", text: promptOf(run) },
+      input: inputPart ?? {
+        kind: "text",
+        text: promptOf(run, outputId, models),
+      },
       result: resultPart,
     },
     release: () => {

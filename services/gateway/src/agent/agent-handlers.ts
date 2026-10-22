@@ -1,15 +1,18 @@
 import {
   AcceptProposalHandler,
   type AgentHarness,
+  ChooseAgentModelHandler,
   DeleteConversationHandler,
+  ListAgentModelsHandler,
   ListConversationsHandler,
+  PiProposalRunner,
   ReadConversationHandler,
   SendMessageHandler,
   SkipProposalHandler,
   StartConversationHandler,
   UpdateConversationHandler,
 } from "@rosesfield/agent"
-import type { StartRunHandler } from "@rosesfield/generation"
+import type { GetRunHandler, StartRunHandler } from "@rosesfield/generation"
 
 export type AgentRouteHandlers = {
   startConversation: StartConversationHandler
@@ -20,18 +23,22 @@ export type AgentRouteHandlers = {
   sendMessage: SendMessageHandler
   acceptProposal: AcceptProposalHandler
   skipProposal: SkipProposalHandler
+  listModels: ListAgentModelsHandler
+  chooseModel: ChooseAgentModelHandler
 }
 
 type AgentRouteHandlersOptions = {
   agent: AgentHarness | null
   canAnswer: boolean
   startRun: StartRunHandler
+  getRun: GetRunHandler
+  pollRun: (runId: string) => Promise<void>
 }
 
 export function agentRouteHandlers(
   options: AgentRouteHandlersOptions
 ): AgentRouteHandlers {
-  const { agent, startRun } = options
+  const { agent, startRun, getRun, pollRun } = options
   return {
     startConversation: new StartConversationHandler({ agent }),
     listConversations: new ListConversationsHandler({ agent }),
@@ -41,7 +48,15 @@ export function agentRouteHandlers(
     sendMessage: new SendMessageHandler({
       agent: options.canAnswer ? agent : null,
     }),
-    acceptProposal: new AcceptProposalHandler({ agent, startRun }),
+    acceptProposal: new AcceptProposalHandler({
+      agent,
+      runner: new PiProposalRunner({
+        handlers: { startRun, getRun },
+        poll: pollRun,
+      }),
+    }),
     skipProposal: new SkipProposalHandler({ agent }),
+    listModels: new ListAgentModelsHandler({ agent }),
+    chooseModel: new ChooseAgentModelHandler({ agent }),
   }
 }

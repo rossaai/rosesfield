@@ -7,6 +7,7 @@ type TaskConfig = {
   input: string
   default: string
   fallback: EngineBinding
+  graphTasks?: Readonly<Record<string, string>>
 }
 
 export const taskAdapter = "task"
@@ -20,7 +21,13 @@ export function isHostedModelId(value: string): boolean {
 export function taskBinding(config: TaskConfig): EngineBinding {
   return {
     adapter: taskAdapter,
-    config: { ...config, tasks: [...config.tasks] },
+    config: {
+      ...config,
+      tasks: [...config.tasks],
+      ...(config.graphTasks === undefined
+        ? {}
+        : { graphTasks: { ...config.graphTasks } }),
+    },
   }
 }
 
@@ -43,6 +50,28 @@ export function tasksOf(binding: EngineBinding): readonly string[] {
   return Array.isArray(tasks)
     ? tasks.filter((task): task is string => typeof task === "string")
     : []
+}
+
+export function taskInputOf(binding: EngineBinding): string | null {
+  const { input } = binding.config
+  return binding.adapter === taskAdapter && typeof input === "string"
+    ? input
+    : null
+}
+
+export function graphTaskOf(
+  binding: EngineBinding,
+  graph: string
+): string | null {
+  if (binding.adapter !== taskAdapter) {
+    return null
+  }
+  const { graphTasks } = binding.config
+  if (!isRecord(graphTasks) || !Object.hasOwn(graphTasks, graph)) {
+    return null
+  }
+  const task = graphTasks[graph]
+  return typeof task === "string" ? task : null
 }
 
 export function chosenModelOf(

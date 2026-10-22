@@ -7,13 +7,8 @@ import {
   SettingGroup,
   SettingGroups,
 } from "@rosesfield/ui/components/filter-chip"
-import {
-  ModeStrip,
-  ModeTab,
-  SegmentedTab,
-  SegmentedTabs,
-  Tabs,
-} from "@rosesfield/ui/components/tabs"
+import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import {
   BookOpenIcon,
   CameraIcon,
@@ -32,6 +27,10 @@ import {
 } from "lucide-react"
 import type { ReactElement } from "react"
 import { t } from "@/gallery/copy.en"
+import {
+  confirmStates,
+  inlineChipState,
+} from "@/gallery/entries/reference-kernel"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
 import { frameState, interactionStates } from "@/gallery/reference-frames"
 
@@ -61,82 +60,86 @@ function Buttons(): ReactElement {
         data-slot="hero-pair"
         className="flex gap-2 self-stretch @regular:justify-end"
       >
-        <Button size="hero" tone="primary">
-          {t("sample.start")}
-        </Button>
-        <Button size="hero">{t("sample.learnMore")}</Button>
+        <Button tone="primary">{t("sample.start")}</Button>
+        <Button>{t("sample.learnMore")}</Button>
       </div>
-      <Button size="recreate" tone="accent" className="rounded-dense">
+      <Button size="small" tone="glass">
         <CopyIcon aria-hidden="true" />
         {t("sample.recreate")}
       </Button>
-      <Button size="recreateSmall" tone="accent" className="rounded-dense">
+      <Button size="dense" tone="quiet">
         <CopyIcon aria-hidden="true" />
         {t("sample.recreate")}
       </Button>
-      <Button size="hero" disabled>
-        {t("sample.start")}
-      </Button>
+      <Button disabled>{t("sample.start")}</Button>
     </div>
   )
 }
 
 function GlyphButtons(): ReactElement {
-  const places = [
-    "barCompact",
-    "bar",
-    "close",
-    "card",
-    "cardWide",
-    "clip",
-  ] as const
+  const sizes = ["default", "dense", "small", "badge"] as const
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {places.map((place) => (
-        <IconButton key={place} label={t("sample.close")} place={place}>
+      {sizes.map((size) => (
+        <IconButton key={size} label={t("sample.close")} size={size}>
           <XIcon aria-hidden="true" />
         </IconButton>
       ))}
-      <IconButton label={t("sample.previous")} place="carousel">
+      <IconButton label={t("sample.previous")} tone="glass">
         <ChevronLeftIcon aria-hidden="true" />
       </IconButton>
-      <IconButton label={t("sample.sound")} place="clip" tone="glass">
+      <IconButton label={t("sample.sound")} size="dense" tone="glass">
         <Volume2Icon aria-hidden="true" />
       </IconButton>
     </div>
   )
 }
 
+const densities = ["chrome", "composer", "row"] as const
+
 function TabsDemo(): ReactElement {
   return (
-    <div className="flex flex-col gap-6">
-      <Tabs defaultValue="create">
-        <ModeStrip aria-label={t("sample.mode.create")}>
-          <ModeTab value="create">{t("sample.mode.create")}</ModeTab>
-          <ModeTab value="edit">{t("sample.mode.edit")}</ModeTab>
-          <ModeTab value="motion">{t("sample.mode.motion")}</ModeTab>
-        </ModeStrip>
-      </Tabs>
+    <div className="flex flex-col items-start gap-6">
+      {densities.map((density) => (
+        <SegmentedControl
+          key={density}
+          density={density}
+          label={t("sample.canvas.label")}
+          value="create"
+          onValueChange={() => undefined}
+          items={[
+            { value: "create", label: t("sample.mode.create") },
+            { value: "edit", label: t("sample.mode.edit") },
+            { value: "motion", label: t("sample.mode.motion") },
+          ]}
+        />
+      ))}
       <Tabs defaultValue="how">
-        <SegmentedTabs aria-label={t("sample.canvas.label")}>
-          <SegmentedTab value="history" icon={<FolderIcon />}>
+        <TabsList aria-label={t("sample.canvas.label")}>
+          <TabsTrigger value="history">
+            <FolderIcon aria-hidden="true" />
             {t("sample.tab.history")}
-          </SegmentedTab>
-          <SegmentedTab value="how" icon={<BookOpenIcon />}>
+          </TabsTrigger>
+          <TabsTrigger value="how">
+            <BookOpenIcon aria-hidden="true" />
             {t("sample.tab.how")}
-          </SegmentedTab>
-        </SegmentedTabs>
+          </TabsTrigger>
+        </TabsList>
       </Tabs>
-      <Tabs defaultValue="list">
-        <SegmentedTabs form="well" aria-label={t("sample.canvas.label")}>
-          <SegmentedTab value="list" icon={<ListIcon />}>
-            {t("sample.view.list")}
-          </SegmentedTab>
-          <SegmentedTab value="grid" icon={<LayoutGridIcon />}>
-            {t("sample.view.grid")}
-          </SegmentedTab>
-        </SegmentedTabs>
-      </Tabs>
+      <SegmentedControl
+        density="row"
+        label={t("sample.canvas.label")}
+        value="list"
+        onValueChange={() => undefined}
+        items={[
+          { value: "list", label: t("sample.view.list"), icon: <ListIcon /> },
+          {
+            value: "grid",
+            label: t("sample.view.grid"),
+            icon: <LayoutGridIcon />,
+          },
+        ]}
+      />
     </div>
   )
 }
@@ -232,7 +235,7 @@ export const referenceControlEntries: GalleryEntry[] = [
     id: "ref-button",
     unit: "button",
     title: "ref.button",
-    states: interactionStates(() => <Buttons />),
+    states: [...interactionStates(() => <Buttons />), ...confirmStates],
   },
   {
     id: "ref-icon-button",
@@ -259,6 +262,6 @@ export const referenceControlEntries: GalleryEntry[] = [
     id: "ref-badge",
     unit: "badge",
     title: "ref.badge",
-    states: interactionStates(() => <Badges />),
+    states: [...interactionStates(() => <Badges />), inlineChipState],
   },
 ]
