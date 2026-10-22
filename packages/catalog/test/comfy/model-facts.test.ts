@@ -194,9 +194,7 @@ describe("the deny list", () => {
 describe("the name and maker of a model", () => {
   it("reads them from the id and the maker table", () => {
     expect(nameOf("bfl/flux-3-image")).toBe("FLUX 3 Image")
-    expect(nameOf("byteplus/seedance-1-0-pro-250528")).toBe(
-      "Seedance 1.0 Pro 250528"
-    )
+    expect(nameOf("byteplus/seedance-1-0-pro-250528")).toBe("Seedance 1.0 Pro")
     expect(nameOf("openai/gpt-image-2.5-flare")).toBe("GPT Image 2.5 Flare")
     expect(makerOf("bfl")).toBe("Black Forest Labs")
     expect(makerOf("new_studio")).toBe("New Studio")
@@ -206,6 +204,19 @@ describe("the name and maker of a model", () => {
     expect(nameOf("minimax/minimax-h3")).toBe("MiniMax H3")
     expect(nameOf("fal/bytedance-seedream")).toBe("Bytedance Seedream")
     expect(nameOf("maker/openai-mix")).toBe("OpenAI Mix")
+    expect(nameOf("deepseek/deepseek-v4-flash")).toBe("DeepSeek V4 Flash")
+    expect(nameOf("qwen/qwen3.6-flash")).toBe("Qwen3.6 Flash")
+    expect(makerOf("qwen")).toBe("Alibaba Qwen")
+  })
+
+  it("drops a build date or a build number from the end of a model's name", () => {
+    expect(nameOf("byteplus/seedream-4-0-250828")).toBe("Seedream 4.0")
+    expect(nameOf("byteplus/dreamina-seedance-2-0-fast-260128")).toBe(
+      "Dreamina Seedance 2.0 Fast"
+    )
+    expect(nameOf("veo/veo-3.1-fast-generate-001")).toBe("Veo 3.1 Fast")
+    expect(nameOf("veo/veo-3.1-generate-001")).toBe("Veo 3.1")
+    expect(nameOf("openai/gpt-5.6-luna")).toBe("GPT 5.6 Luna")
   })
 })
 
