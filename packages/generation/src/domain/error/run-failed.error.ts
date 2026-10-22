@@ -9,7 +9,7 @@ export class RunFailedError extends DependencyError {
 
   constructor(options: RunFailedErrorOptions) {
     super({
-      message: "The run failed and the engine gave no reason",
+      message: "The engine reported that the run failed",
       cause: options.cause,
     })
   }

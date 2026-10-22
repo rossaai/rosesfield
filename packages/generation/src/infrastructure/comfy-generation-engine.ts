@@ -81,6 +81,9 @@ const jobSchema = z.object({
   error: z
     .object({
       code: z.string(),
+      message: z.string().nullish(),
+      node_id: z.string().nullish(),
+      class_type: z.string().nullish(),
       node_errors: z.record(z.string(), z.unknown()).optional(),
     })
     .nullish(),
@@ -205,10 +208,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
         this.meter?.dropRef(ref)
         return {
           state: "failed",
-          error: jobFailureOf(
-            job.error?.code ?? job.status,
-            job.error?.node_errors !== undefined
-          ),
+          error: jobFailureOf(job.error ?? { code: job.status }),
         }
     }
   }
