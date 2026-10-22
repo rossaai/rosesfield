@@ -108,7 +108,7 @@ function comfyMarkOf(element: Element | null): string | null | undefined {
 }
 
 describe("the viewer's actions", () => {
-  it("sets Recreate first, then Download and Use in, then Open in ComfyUI and Delete, with no More menu", async () => {
+  it("sets Recreate first, then Download, Use in and More, then Open in ComfyUI, with no bare Delete", async () => {
     renderPiece(() => (
       <ViewerActions asset={output} run={live} onDeleted={() => undefined} />
     ))
@@ -123,10 +123,12 @@ describe("the viewer's actions", () => {
       t("run.useInputs"),
       t("output.download"),
       t("output.useIn"),
+      t("viewer.more"),
       t("run.openInComfy"),
-      t("output.delete"),
     ])
-    expect(screen.queryByRole("button", { name: t("viewer.more") })).toBeNull()
+    expect(
+      screen.queryByRole("button", { name: t("output.delete") })
+    ).toBeNull()
   })
 
   it("keeps Recreate the one filled control, and Open in ComfyUI a secondary button with the Comfy mark on its ink tile", async () => {
@@ -146,7 +148,7 @@ describe("the viewer's actions", () => {
     ).toBe("mark")
   })
 
-  it("deletes on the second press of Delete, which reads Delete once armed", async () => {
+  it("deletes from the More menu only after the confirm, whose Delete is in error red", async () => {
     const deleted: string[] = []
     const fetched: string[] = []
     const real = globalThis.fetch
@@ -161,19 +163,27 @@ describe("the viewer's actions", () => {
         onDeleted={() => deleted.push("done")}
       />
     ))
-    const remove = await screen.findByRole("button", {
+    fireEvent.click(
+      await screen.findByRole("button", { name: t("viewer.more") })
+    )
+    const item = await screen.findByRole("menuitem", {
       name: t("output.delete"),
     })
-    fireEvent.click(remove)
-    expect(remove.getAttribute("data-armed")).toBe("yes")
+    expect(item.getAttribute("data-tone")).toBe("danger")
+    fireEvent.click(item)
+    const dialog = await screen.findByRole("alertdialog")
     expect(fetched.filter((call) => call.startsWith("DELETE"))).toEqual([])
-    fireEvent.click(remove)
+    const confirm = within(dialog).getByRole("button", {
+      name: t("viewer.delete.confirm"),
+    })
+    expect(confirm.className).toMatch(/bug/)
+    fireEvent.click(confirm)
     await waitFor(() => expect(deleted).toEqual(["done"]))
     expect(fetched.filter((call) => call.startsWith("DELETE"))).toHaveLength(1)
     globalThis.fetch = real
   })
 
-  it("puts Info, Recreate, Download, Use in, Open in ComfyUI and Delete on the phone bar, Recreate the one filled control", async () => {
+  it("puts Info, Recreate, Download, Use in, Open in ComfyUI and More on the phone bar, Recreate the one filled control", async () => {
     renderPiece(() => (
       <ViewerBar
         asset={output}
@@ -189,10 +199,10 @@ describe("the viewer's actions", () => {
     expect(
       comfyMarkOf(screen.getByRole("button", { name: t("run.openInComfy") }))
     ).toBe("comfy")
+    expect(screen.getByRole("button", { name: t("viewer.more") })).toBeTruthy()
     expect(
-      screen.getByRole("button", { name: t("output.delete") })
-    ).toBeTruthy()
-    expect(screen.queryByRole("button", { name: t("viewer.more") })).toBeNull()
+      screen.queryByRole("button", { name: t("output.delete") })
+    ).toBeNull()
   })
 
   it("fills no control on the phone bar of an upload, which has no Recreate", async () => {

@@ -1,9 +1,9 @@
 import type { Asset, Run } from "@rosesfield/contract"
 import { Button, IconButton } from "@rosesfield/ui/components/button"
-import { ConfirmButton } from "@rosesfield/ui/components/confirm-button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@rosesfield/ui/components/dropdown-menu"
 import {
@@ -16,6 +16,7 @@ import {
 import { useNavigate } from "@tanstack/react-router"
 import {
   DownloadIcon,
+  EllipsisIcon,
   ForwardIcon,
   InfoIcon,
   RepeatIcon,
@@ -23,7 +24,8 @@ import {
 } from "lucide-react"
 import { type ReactElement, type ReactNode, useState } from "react"
 import { t } from "@/copy/t"
-import { useDeleteAssets, useDownloadAsset } from "@/pieces/asset-actions"
+import { useDownloadAsset } from "@/pieces/asset-actions"
+import { DeleteAssetDialog } from "@/pieces/delete-asset-dialog"
 import { LabMark } from "@/pieces/lab-mark"
 import { useOpenInComfy } from "@/pieces/run/open-in-comfy"
 import { comfyMaker } from "@/pieces/run/run-menu"
@@ -79,21 +81,43 @@ function useUseInputs(run: Run | null): (() => void) | null {
         })
 }
 
-function DeleteAsset({
+function MoreMenu({
   asset,
   onDeleted,
 }: {
   asset: Asset
   onDeleted: () => void
 }): ReactElement {
-  const remove = useDeleteAssets()
+  const [isConfirmOpen, setConfirmOpen] = useState(false)
   return (
-    <ConfirmButton
-      icon={<Trash2Icon aria-hidden="true" />}
-      label={t("output.delete")}
-      busy={remove.isPending}
-      onConfirm={() => remove.mutate([asset.id], { onSuccess: onDeleted })}
-    />
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <IconButton data-slot="viewer-more" label={t("viewer.more")}>
+              <EllipsisIcon aria-hidden="true" />
+            </IconButton>
+          }
+        />
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            tone="danger"
+            lead={<Trash2Icon aria-hidden="true" />}
+            onClick={() => setConfirmOpen(true)}
+          >
+            {t("output.delete")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DeleteAssetDialog
+        assetIds={[asset.id]}
+        open={isConfirmOpen}
+        onOpenChange={setConfirmOpen}
+        onDeleted={onDeleted}
+        title={t("viewer.delete.title")}
+        body={t("viewer.delete.body")}
+      />
+    </>
   )
 }
 
@@ -109,7 +133,11 @@ function OpenInComfy({
     return null
   }
   return form === "label" ? (
-    <Button data-slot="viewer-comfy" className={wide} onClick={openInComfy}>
+    <Button
+      data-slot="viewer-comfy"
+      className="w-full max-w-none"
+      onClick={openInComfy}
+    >
       <LabMark maker={comfyMaker} />
       {t("run.openInComfy")}
     </Button>
@@ -155,11 +183,9 @@ export function ViewerActions({
           {t("output.download")}
         </Button>
         <UseInButton asset={asset} form="label" />
+        <MoreMenu asset={asset} onDeleted={onDeleted} />
       </div>
-      <div data-slot="viewer-actions-row" className="flex gap-s2">
-        <OpenInComfy run={run} form="label" />
-        <DeleteAsset asset={asset} onDeleted={onDeleted} />
-      </div>
+      <OpenInComfy run={run} form="label" />
     </div>
   )
 }
@@ -188,7 +214,7 @@ export function ViewerBar({
       </IconButton>
       <UseInButton asset={asset} form="circle" />
       <OpenInComfy run={run} form="circle" />
-      <DeleteAsset asset={asset} onDeleted={onDeleted} />
+      <MoreMenu asset={asset} onDeleted={onDeleted} />
       <Sheet open={isInfoOpen} onOpenChange={setInfoOpen}>
         <SheetContent side="bottom" closeLabel={t("viewer.close")}>
           <SheetHeader>
