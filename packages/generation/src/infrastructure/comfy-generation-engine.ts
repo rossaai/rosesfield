@@ -26,7 +26,12 @@ import {
   type Fetch,
   uploadComfyInputs,
 } from "#infrastructure/comfy/comfy-low"
-import { mediaKindOf, mimeOf } from "#infrastructure/comfy/comfy-media"
+import {
+  isGlb,
+  mediaKindOf,
+  meshMime,
+  mimeOf,
+} from "#infrastructure/comfy/comfy-media"
 import { applyBindings } from "#infrastructure/comfy/comfy-value-binding"
 import {
   addVideoStills,
@@ -103,6 +108,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
     "video",
     "audio",
     "text",
+    "3d",
   ]
 
   override readonly key = comfyWorkflowAdapter
@@ -216,9 +222,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
 
   override async listOutputs(ref: string): Promise<EngineOutput[]> {
     const job = parseJob(await callComfy(() => this.low.getJob(ref)))
-    const listed = job.outputs.filter((output) =>
-      ComfyGenerationEngine.outputKinds.includes(output.type)
-    )
+    const listed = job.outputs.filter(isKept)
     const outputs = await Promise.all(
       listed.map((output) => this.download(output))
     )
@@ -263,6 +267,9 @@ export class ComfyGenerationEngine extends GenerationEngine {
       this.low.getAssetContent(output.id, { timeoutMs: this.downloadTimeoutMs })
     )
     const bytes = new Uint8Array(await callComfy(() => response.arrayBuffer()))
+    if (isGlb(bytes)) {
+      return meshOutputOf(bytes)
+    }
     const size = mediaSizeOf(bytes)
     return {
       kind: kindOf(output.type, output.content_type),
@@ -291,6 +298,25 @@ function parseJob(value: unknown): Job {
     throw new EngineUnavailableError({ cause: result.error })
   }
   return result.data
+}
+
+function isKept(output: Job["outputs"][number]): boolean {
+  return (
+    ComfyGenerationEngine.outputKinds.includes(output.type) ||
+    mimeOf(output.content_type) === meshMime ||
+    output.name.toLowerCase().endsWith(".glb")
+  )
+}
+
+function meshOutputOf(bytes: Uint8Array): EngineOutput {
+  return {
+    kind: "mesh",
+    mime: meshMime,
+    bytes,
+    width: null,
+    height: null,
+    durationSeconds: null,
+  }
 }
 
 function kindOf(type: string, contentType: string): AssetKind {

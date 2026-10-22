@@ -7,6 +7,8 @@ describe("kindOfMime", () => {
     ["video/mp4", "video"],
     ["audio/mpeg", "audio"],
     ["text/plain", "text"],
+    ["model/gltf-binary", "mesh"],
+    ["model/obj", null],
     ["application/pdf", null],
     ["imagery/png", null],
   ])("reads %s as %s", (mime, kind) => {

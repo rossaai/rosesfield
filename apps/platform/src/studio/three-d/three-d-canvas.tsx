@@ -15,15 +15,32 @@ type ThreeDCanvasProps = {
   app: AppListing
   onUseInputs: (run: Run) => void
   emptyAction?: ReactNode
+  opened?: string | undefined
+}
+
+function isShownOpen(
+  assetId: string,
+  isLatest: boolean,
+  opened: string | undefined
+): boolean {
+  return opened === undefined ? isLatest : assetId === opened
+}
+
+function holdsOpened(runs: readonly Run[], opened: string): boolean {
+  return runs.some(
+    (one) => one.status === "done" && one.outputs.includes(opened)
+  )
 }
 
 function RunBlock({
   run,
   isLatest,
+  opened,
   onUseInputs,
 }: {
   run: Run
   isLatest: boolean
+  opened: string | undefined
   onUseInputs: (run: Run) => void
 }): ReactElement {
   return (
@@ -31,7 +48,7 @@ function RunBlock({
       <RunLine run={run} onUseInputs={onUseInputs} />
       {run.status === "done" ? (
         run.outputs.map((assetId) =>
-          isLatest ? (
+          isShownOpen(assetId, isLatest, opened) ? (
             <MeshOutput key={assetId} assetId={assetId} />
           ) : (
             <MeshOnAsk key={assetId} assetId={assetId} />
@@ -46,16 +63,26 @@ function RunBlock({
 
 export function RunStack({
   runs,
+  opened,
   onUseInputs,
 }: {
   runs: readonly Run[]
+  opened?: string | undefined
   onUseInputs: (run: Run) => void
 }): ReactElement {
   const [latest, ...earlier] = runs
   return (
     <div className="flex flex-col gap-s6">
+      {opened === undefined || holdsOpened(runs, opened) ? null : (
+        <MeshOutput assetId={opened} />
+      )}
       {latest === undefined ? null : (
-        <RunBlock run={latest} isLatest onUseInputs={onUseInputs} />
+        <RunBlock
+          run={latest}
+          isLatest
+          opened={opened}
+          onUseInputs={onUseInputs}
+        />
       )}
       {earlier.length === 0 ? null : (
         <h2 className="text-body font-medium text-ink-muted">
@@ -67,6 +94,7 @@ export function RunStack({
           key={run.id}
           run={run}
           isLatest={false}
+          opened={opened}
           onUseInputs={onUseInputs}
         />
       ))}
@@ -75,11 +103,17 @@ export function RunStack({
 }
 
 export function ThreeDCanvas(props: ThreeDCanvasProps): ReactElement {
-  const { app } = props
+  const { app, opened } = props
   const runs = useAppRuns(app)
   const view = useCanvasView()
   if (runs.isPending) {
     return <CanvasSkeleton app={app} />
+  }
+  const shown = runs.runs.filter((run) => keepsRun(run, view.state, undefined))
+  if (opened !== undefined) {
+    return (
+      <RunStack runs={shown} opened={opened} onUseInputs={props.onUseInputs} />
+    )
   }
   if (runs.runs.length === 0) {
     return (
@@ -97,7 +131,6 @@ export function ThreeDCanvas(props: ThreeDCanvasProps): ReactElement {
       />
     )
   }
-  const shown = runs.runs.filter((run) => keepsRun(run, view.state, undefined))
   if (shown.length === 0) {
     return (
       <StateView

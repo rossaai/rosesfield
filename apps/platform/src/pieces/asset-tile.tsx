@@ -187,6 +187,22 @@ function SoundTile({
   )
 }
 
+function MeshTile(props: AssetTileProps & { asset: Asset }): ReactElement {
+  const thumb = (
+    <AssetThumb
+      asset={props.asset}
+      list={props.list ?? [props.asset.id]}
+      isDemo={props.isDemo === true}
+      isStatic={props.isStatic === true}
+    />
+  )
+  return props.isStatic === true || props.hasMenu === false ? (
+    thumb
+  ) : (
+    <AssetContextMenu asset={props.asset}>{thumb}</AssetContextMenu>
+  )
+}
+
 function LoadedTile(props: AssetTileProps & { asset: Asset }): ReactElement {
   const isWordless = props.asset.kind === "audio" || props.asset.kind === "text"
   if (isWordless && props.shape === "square") {
@@ -204,6 +220,9 @@ function LoadedTile(props: AssetTileProps & { asset: Asset }): ReactElement {
       return <SoundTile asset={props.asset} isDemo={props.isDemo === true} />
     case "text":
       return <TextOutput asset={props.asset} />
+    case "mesh":
+      return <MeshTile {...props} asset={props.asset} />
+
     default:
       return props.isStatic === true || props.hasMenu === false ? (
         <VisualTile {...props} />
