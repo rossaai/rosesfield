@@ -48,7 +48,7 @@ describe("the setting tiles", () => {
 })
 
 describe("the column's mode switch", () => {
-  it("is a 48 px two-cell switch, Video chosen, with Extend sending you to the app that extends a clip", () => {
+  it("is a 26 px two-cell switch with an ink thumb on the track, Video chosen, with Extend sending you to the app that extends a clip", () => {
     const onExtend = vi.fn()
     render(<MakeSwitch onExtend={onExtend} />)
     const group = screen.getByRole("radiogroup", {
@@ -61,8 +61,11 @@ describe("the column's mode switch", () => {
     ])
     expect(cells[0]?.getAttribute("aria-checked")).toBe("true")
     expect(group.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-12", "w-full"])
+      expect.arrayContaining(["h-button-small", "bg-track", "rounded-full"])
     )
+    expect(
+      group.querySelector("[data-slot='segmented-control-thumb']")?.className
+    ).toContain("bg-ink")
     expect(document.querySelector("[data-slot='make-switch']")?.className).toBe(
       "mb-2"
     )
