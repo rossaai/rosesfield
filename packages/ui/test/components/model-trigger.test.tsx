@@ -42,6 +42,17 @@ describe("ModelChip", () => {
       chip.querySelector("[data-slot='model-row-mark']")?.className.split(" ")
     ).toContain("shrink-0")
   })
+
+  it("drops its width cap and keeps its size in a composer's chip row, which scrolls, so its name shows whole", () => {
+    render(<ModelChip name="A very long model name" mark={<svg />} />)
+    const chip = screen.getByRole("button", { name: "A very long model name" })
+    expect(chip.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "in-data-[density=composer]:max-w-none",
+        "in-data-[density=composer]:shrink-0",
+      ])
+    )
+  })
 })
 
 describe("ModelChipSkeleton", () => {

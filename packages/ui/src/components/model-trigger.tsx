@@ -15,7 +15,7 @@ type ModelTriggerProps = Omit<ButtonPrimitive.Props, "children"> & {
 const place: ModelRowPlace = "trigger"
 
 const chipClass = cn(
-  "group/model relative inline-flex h-button-small max-w-button-max min-w-0 shrink items-center gap-s1_5 rounded-full bg-(--well) ps-s2 pe-s2 font-medium text-body whitespace-nowrap text-ink select-none in-data-[density=composer]:bg-transparent data-popup-open:bg-(--tint) [&_svg]:glyph-small",
+  "group/model relative inline-flex h-button-small max-w-button-max min-w-0 shrink items-center in-data-[density=composer]:max-w-none in-data-[density=composer]:shrink-0 gap-s1_5 rounded-full bg-(--well) ps-s2 pe-s2 font-medium text-body whitespace-nowrap text-ink select-none in-data-[density=composer]:bg-transparent data-popup-open:bg-(--tint) [&_svg]:glyph-small",
   interaction.fill,
   motion.press,
   interaction.ring

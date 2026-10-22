@@ -149,6 +149,17 @@ export function chipChoiceText(
   return option === undefined ? "" : tCatalog(option.labelKey)
 }
 
+export function namedChoiceText(
+  app: AppListing,
+  input: Extract<InputDefinition, { type: "choice" }>,
+  value: string
+): string {
+  const shown = chipChoiceText(input, value)
+  return inputIconOf(app, input) === undefined
+    ? t("bar.field", { field: inputCaption(input), value: shown })
+    : shown
+}
+
 function numberText(app: AppListing, input: InputDefinition, value: number) {
   const unit = inputUnit(app, input)
   return unit === ""
@@ -173,7 +184,7 @@ function InputChip({
         <ChipSelect
           label={inputCaption(input)}
           icon={inputIconOf(app, input)}
-          display={chipChoiceText(input, textOf(value) || input.default)}
+          display={namedChoiceText(app, input, textOf(value) || input.default)}
           value={textOf(value) || input.default}
           onValueChange={set}
           options={input.options.map((option) => ({
