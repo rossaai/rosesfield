@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { creditsOfCost } from "@rosesfield/catalog/comfy"
 import { describe, expect, it } from "vitest"
+import { promptInputOf } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { runModel } from "@/pieces/run/run-facts"
 import {
@@ -105,7 +106,11 @@ describe("the showcase", () => {
         item.credits,
         6
       )
-      expect(item.run.inputs.prompt ?? null).toBe(item.prompt)
+      const prompt = app === null ? null : promptInputOf(app)
+      expect(
+        prompt === null ? null : (item.run.inputs[prompt.name] ?? null),
+        item.file
+      ).toBe(item.prompt)
     }
     const models = Object.fromEntries(
       showcaseItems.map((item) => [
