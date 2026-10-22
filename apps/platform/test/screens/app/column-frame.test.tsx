@@ -18,7 +18,7 @@ afterEach(() => {
 })
 
 describe("the column frame", () => {
-  it("puts the mode tabs in the column's tray above the scrolling parts, and keeps the reference's 120 px of vertical margin", () => {
+  it("puts the mode tabs in the column's tray above the scrolling parts, keeps the column at the reference's 780 px, and runs the canvas to the bottom with a fade at its end", () => {
     render(
       withClient(
         <ColumnFrame
@@ -39,9 +39,16 @@ describe("the column frame", () => {
     const parts = document.querySelector("[data-slot='composer-prompt']")
     expect(parts?.querySelector("[data-testid='tabs']")).toBeNull()
     expect(parts?.querySelector("[data-testid='panel']")).not.toBeNull()
-    const row = document.querySelector("aside")?.parentElement
-    expect(row?.className.split(" ")).toEqual(
-      expect.arrayContaining(["pt-2", "@regular:pb-19"])
+    const aside = document.querySelector("aside")
+    expect(aside?.className.split(" ")).toContain("@regular:pb-19")
+    const rowClasses = aside?.parentElement?.className.split(" ") ?? []
+    expect(rowClasses).toContain("pt-2")
+    expect(rowClasses.filter((name) => name.includes("pb-"))).toEqual([])
+    const scroll = document.querySelector("[data-slot='app-stage-scroll']")
+    const scrollClasses = scroll?.className.split(" ") ?? []
+    expect(scrollClasses).toContain("pb-s12")
+    expect(scrollClasses.some((name) => name.startsWith("[mask-image:"))).toBe(
+      true
     )
   })
 

@@ -158,6 +158,7 @@ export function AppStage(props: AppStageProps): ReactElement {
           "h-full overflow-y-auto",
           interaction.ringRoomTop,
           interaction.ringScroll,
+          interaction.fadeEnd,
           props.scrollClassName
         )}
       >

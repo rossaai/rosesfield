@@ -36,7 +36,8 @@ function InputPanel({
         data-slot="composer-prompt"
         className={cn(
           "flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2 [scrollbar-width:none]",
-          interaction.ringScroll
+          interaction.ringScroll,
+          interaction.fadeEnd
         )}
       >
         {children}

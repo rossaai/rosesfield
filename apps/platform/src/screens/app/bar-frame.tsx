@@ -114,12 +114,12 @@ export function BarFrame(props: BarFrameProps): ReactElement {
       <div
         ref={cover.stageRef}
         data-slot="bar-stage"
-        className="flex min-h-0 flex-1 pb-4"
+        className="flex min-h-0 flex-1 pb-4 @regular:pb-0"
       >
         <AppStage
           app={props.app}
           kind="bar"
-          scrollClassName="px-4 pb-4 @regular:pb-36"
+          scrollClassName="px-4 @regular:pb-36"
         >
           <AppCanvas app={props.app} onUseInputs={props.onUseInputs} />
         </AppStage>

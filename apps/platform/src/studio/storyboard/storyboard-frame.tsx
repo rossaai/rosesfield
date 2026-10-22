@@ -62,7 +62,7 @@ function ColumnPanel(props: StoryboardFrameProps): ReactElement {
   return (
     <aside
       onKeyDown={props.onShortcut}
-      className="hidden min-h-0 shrink-0 @regular:flex"
+      className="hidden min-h-0 shrink-0 @regular:flex @regular:pb-19"
     >
       <InputPanel
         label={appName(props.app)}
@@ -145,14 +145,14 @@ export function StoryboardFrame(props: StoryboardFrameProps): ReactElement {
       <h1 className="sr-only">{appName(props.app)}</h1>
       <div
         data-slot="column-row"
-        className="flex min-h-0 flex-1 gap-2 pt-2 pb-4 @regular:px-4 @regular:pb-19"
+        className="flex min-h-0 flex-1 gap-2 pt-2 @regular:px-4"
       >
         {isRegular ? <ColumnPanel {...props} /> : null}
         <AppStage
           app={props.app}
           kind="column"
           scrollRef={fit.ref}
-          scrollClassName="px-4 pb-4"
+          scrollClassName="px-4"
         >
           {props.canvas(openInputs)}
         </AppStage>

@@ -29,12 +29,15 @@ export function EditFrame({ state }: { state: EditToolState }): ReactElement {
       <div data-slot="edit-tools" className="shrink-0 px-4">
         <ToolRow current={state.tool.id} photo={state.photo.photo} />
       </div>
-      <div data-slot="bar-stage" className="flex min-h-0 flex-1 pb-4">
+      <div
+        data-slot="bar-stage"
+        className="flex min-h-0 flex-1 pb-4 @regular:pb-0"
+      >
         <AppStage
           app={state.app}
           kind="bar"
           hasWork={state.photo.photo !== null}
-          scrollClassName={cn("px-4 pb-4", isRegular ? "pb-36" : "")}
+          scrollClassName={cn("px-4", isRegular ? "pb-36" : "")}
         >
           <PhotoView photo={state.photo} />
           <AppCanvas app={state.app} onUseInputs={state.useInputs} />

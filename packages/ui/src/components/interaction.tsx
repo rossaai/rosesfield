@@ -32,6 +32,9 @@ const ringRoomTop =
 const ringScroll =
   "scroll-p-[calc(var(--spacing-focus-ring)*2)] scroll-pb-[calc(var(--spacing-focus-ring)*2+var(--covered-bottom,0px))]"
 
+const fadeEnd =
+  "pb-s12 [mask-image:linear-gradient(to_bottom,black_calc(100%-var(--spacing-s12)),transparent)]"
+
 const reveal = `opacity-0 group-hover/reveal:opacity-100 group-focus-within/reveal:opacity-100 in-data-[gallery=hover]:opacity-100 in-data-[gallery=focus]:opacity-100 ${motion.tint}`
 
 const revealPointer =
@@ -49,6 +52,7 @@ export const interaction = {
   ringRoomBlock,
   ringRoomTop,
   ringScroll,
+  fadeEnd,
   reveal,
   revealPointer,
 } as const
