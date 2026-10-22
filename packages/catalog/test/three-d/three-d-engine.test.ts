@@ -83,8 +83,11 @@ function classesOf(workflow: Graph): string[] {
   return Object.values(workflow).map((entry) => entry.class_type)
 }
 
-function resolved(inputs: Record<string, string>): EngineBinding {
-  return resolveBinding(threeDEngine, inputs)
+function resolved(
+  inputs: Record<string, string>,
+  defaultModel = graphModel
+): EngineBinding {
+  return resolveBinding(threeDEngine(defaultModel), inputs)
 }
 
 describe(`the Pixal3D graph against ${recordedFrom}`, () => {
@@ -192,6 +195,11 @@ describe("the 3D engine binding", () => {
 
   it("runs Meshy 7.1 on your key through the Router when it is picked", () => {
     const binding = resolved({ model: textModel, prompt: "a wooden chair" })
+    expect(hostedModelOf(binding)).toBe("meshy/meshy-7.1")
+  })
+
+  it("runs Meshy 7.1 when no model is picked and Meshy 7.1 is the default", () => {
+    const binding = resolved({ prompt: "a wooden chair" }, textModel)
     expect(hostedModelOf(binding)).toBe("meshy/meshy-7.1")
   })
 })

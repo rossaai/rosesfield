@@ -88,6 +88,40 @@ export function tokenRateOf(
   return input === null || output === null ? null : { input, output }
 }
 
+type UsageTable = {
+  source: string
+  readOn: string
+  models: readonly string[]
+  credits: number
+  surcharges: readonly Surcharge[]
+  refuses: readonly Setting[]
+}
+
+type Setting = { key: string; values: readonly string[] }
+
+type Surcharge = { credits: number; when: readonly Setting[] }
+
+const usageCredit = "usage credit"
+
+const usageTables: readonly UsageTable[] = [
+  {
+    source: "https://docs.meshy.ai/en/api/pricing",
+    readOn: "2026-10-22",
+    models: ["meshy/meshy-6", "meshy/meshy-7.1"],
+    credits: 20,
+    surcharges: [
+      {
+        credits: 5,
+        when: [
+          { key: "geometryresolution", values: ["2k", "4k"] },
+          { key: "ultramode", values: ["true"] },
+        ],
+      },
+    ],
+    refuses: [{ key: "mode", values: ["refine"] }],
+  },
+]
+
 export function priceFromRates(
   rows: readonly RateRow[],
   form: ModelForm,
@@ -95,10 +129,15 @@ export function priceFromRates(
   output: string,
   count = 1
 ): number | null {
+  const values = valuesOf(form, inputs)
+  const each = isOneAtATime(form.fields, output) ? count : 1
+  const usage = usagePriceOf(rows, form.model, values)
+  if (usage !== undefined) {
+    return usage === null ? null : Math.round(usage * each * 100) / 100
+  }
   const own = rows.filter(
     (row) => row.model === form.model && isPriced(row.unit)
   )
-  const values = valuesOf(form, inputs)
   const run: RunFacts = {
     values,
     inputs,
@@ -110,7 +149,6 @@ export function priceFromRates(
     .filter((one) => one.score !== null)
   const best = Math.max(...scored.map((one) => one.score ?? 0))
   const top = scored.filter((one) => one.score === best)
-  const each = isOneAtATime(form.fields, output) ? count : 1
   const prices = new Set(
     top.map((one) => amountOf(one.row, form, inputs, values))
   )
@@ -118,6 +156,38 @@ export function priceFromRates(
   return prices.size === 1 && only !== undefined && only !== null
     ? Math.round(only * each * 100) / 100
     : null
+}
+
+function usagePriceOf(
+  rows: readonly RateRow[],
+  model: string,
+  values: Values
+): number | null | undefined {
+  const rates = new Set(
+    rows
+      .filter((row) => row.model === model && row.unit === usageCredit)
+      .map((row) => row.credits)
+  )
+  if (rates.size === 0) {
+    return undefined
+  }
+  const [rate] = [...rates]
+  const table = usageTables.find((one) => one.models.includes(model))
+  if (rates.size > 1 || rate === undefined || table === undefined) {
+    return null
+  }
+  if (table.refuses.some((setting) => holds(setting, values))) {
+    return null
+  }
+  const extra = table.surcharges
+    .filter((surcharge) => surcharge.when.some((one) => holds(one, values)))
+    .reduce((sum, surcharge) => sum + surcharge.credits, 0)
+  return (table.credits + extra) * rate
+}
+
+function holds(setting: Setting, values: Values): boolean {
+  const held = values.get(setting.key)
+  return held !== undefined && setting.values.includes(held)
 }
 
 function isPriced(unit: string): boolean {

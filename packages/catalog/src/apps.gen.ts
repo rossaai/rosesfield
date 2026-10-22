@@ -16,6 +16,7 @@ import { app as relight } from "#relight/app"
 import { app as remake } from "#remake/app"
 import { app as shot } from "#shot/app"
 import { app as storyboard } from "#storyboard/app"
+import { app as threeD } from "#three-d/app"
 import { app as tryOn } from "#try-on/app"
 import { app as upscale } from "#upscale/app"
 import { app as video } from "#video/app"
@@ -39,6 +40,7 @@ export const apps: readonly AppEntry[] = [
   { folder: "remake", app: remake },
   { folder: "shot", app: shot },
   { folder: "storyboard", app: storyboard },
+  { folder: "three-d", app: threeD },
   { folder: "try-on", app: tryOn },
   { folder: "upscale", app: upscale },
   { folder: "video", app: video },
