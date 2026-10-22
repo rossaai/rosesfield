@@ -75,7 +75,14 @@ function uploadBody(): Record<string, unknown> {
   }
 }
 
-export function replayedComfy(state: JobState): ReplayedComfy {
+type ReplayOptions = {
+  balanceAfter?: Promise<void>
+}
+
+export function replayedComfy(
+  state: JobState,
+  options: ReplayOptions = {}
+): ReplayedComfy {
   const graphs: SentGraph[] = []
   const sent: string[] = []
   const cents = [1000, 999.5, 999.5]
@@ -84,6 +91,9 @@ export function replayedComfy(state: JobState): ReplayedComfy {
     const { host, pathname } = new URL(request.url)
     sent.push(`${request.method} ${pathname}`)
     if (host === "api.comfy.org" && pathname === "/customers/balance") {
+      if (cents.length < 3) {
+        await options.balanceAfter
+      }
       return Response.json({ amount_cents: cents.shift() ?? 999.5 })
     }
     if (request.method === "POST" && pathname === "/api/v2/assets") {

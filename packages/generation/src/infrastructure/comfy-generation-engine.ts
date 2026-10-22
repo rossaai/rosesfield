@@ -283,8 +283,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
 
   private async succeeded(job: Job): Promise<EngineStatus> {
     const meter = this.meter
-    if (meter?.holdsRef(job.id) === true) {
-      void meter.finishRef(this.balance, job.id)
+    if (meter?.deferRef(job.id) === true) {
       return { state: "succeeded" }
     }
     const metered = (await meter?.finishRef(this.balance, job.id)) ?? null

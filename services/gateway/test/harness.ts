@@ -106,6 +106,7 @@ export function harnessFor(options: HarnessOptions): Harness {
           runId: runIdFormat.parse(runId),
         })
         if (nextWakeMs === null) {
+          await handlers.advanceRun.priced(runIdFormat.parse(runId))
           return
         }
         clock.advance(nextWakeMs)

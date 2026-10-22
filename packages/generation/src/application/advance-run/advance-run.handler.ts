@@ -12,6 +12,7 @@ import {
 } from "#application/advance-run/engine-steps"
 import { jobInputsOf } from "#application/advance-run/job-inputs"
 import {
+  type Collected,
   collectJob,
   type KeepPorts,
   keepFinished,
@@ -126,6 +127,10 @@ export class AdvanceRunHandler {
       this.late.settle(input.runId)
     }
     return output
+  }
+
+  priced(runId: RunId): Promise<void> {
+    return this.late.written(runId)
   }
 
   private async step(input: AdvanceRunInput): Promise<AdvanceRunOutput> {
@@ -244,23 +249,11 @@ export class AdvanceRunHandler {
       )
     )
     keepSteps(run, polled)
-    let isCollecting = false
-    for (const one of polled) {
-      if (one.status.state === "succeeded") {
-        const collected = await collectJob(this.keepPorts(), run, one, watch)
-        if (collected === "empty") {
-          return this.end(run, watch.engine, polled, noOutput())
-        }
-        if (collected === "kept" && isCostLate(one.status)) {
-          this.late.owe(run.id, {
-            ...watch,
-            index: one.job.index,
-            ref: one.ref,
-          })
-        }
-        isCollecting ||= collected === "retry"
-      }
+    const collected = await this.collect(run, watch, polled)
+    if (collected === "empty") {
+      return this.end(run, watch.engine, polled, noOutput())
     }
+    const isCollecting = collected === "retry"
     for (const { status } of polled) {
       if (status.state === "failed" || status.state === "cancelled") {
         const ending = status.state === "failed" ? status.error : "cancelled"
@@ -282,6 +275,32 @@ export class AdvanceRunHandler {
     return run.jobs.some((job) => job.status === "pending")
       ? { nextWakeMs: pollMs }
       : { nextWakeMs: wakeMs(polled.map((one) => one.status)) }
+  }
+
+  private async collect(
+    run: Run,
+    watch: Watch,
+    polled: readonly Polled[]
+  ): Promise<Collected> {
+    let isCollecting = false
+    for (const one of polled) {
+      if (one.status.state !== "succeeded") {
+        continue
+      }
+      const collected = await collectJob(this.keepPorts(), run, one, watch)
+      if (collected === "empty") {
+        return "empty"
+      }
+      if (collected === "kept" && isCostLate(one.status, watch.engine)) {
+        this.late.owe(run.id, {
+          ...watch,
+          index: one.job.index,
+          ref: one.ref,
+        })
+      }
+      isCollecting ||= collected === "retry"
+    }
+    return isCollecting ? "retry" : "kept"
   }
 
   private async read(

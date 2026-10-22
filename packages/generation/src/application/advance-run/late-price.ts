@@ -25,8 +25,17 @@ type LatePricesOptions = {
   clock: Clock
 }
 
-export function isCostLate(status: EngineStatus): boolean {
-  return status.state === "succeeded" && status.cost === undefined
+const noCost: Cost = { amount: 0, currency: "USD" }
+
+export function isCostLate(
+  status: EngineStatus,
+  engine: GenerationEngine
+): boolean {
+  return (
+    status.state === "succeeded" &&
+    status.cost === undefined &&
+    engine.creditsOf(noCost) !== null
+  )
 }
 
 export function withCosts(run: Run, costs: readonly JobCost[]): Run | null {
@@ -111,6 +120,10 @@ export class LatePrices {
     this.owed.delete(runId)
     const writing = this.write(runId, owed).catch(() => undefined)
     keepAtMost(this.writing, runId, writing)
+  }
+
+  written(runId: RunId): Promise<void> {
+    return this.writing.get(runId) ?? Promise.resolve()
   }
 
   async *after(

@@ -35,6 +35,7 @@ export class CreditMeter {
   private readonly wait: (ms: number) => Promise<void>
   private readonly open = new Map<string, Set<MeterTicket>>()
   private readonly byRef = new Map<string, MeterTicket>()
+  private readonly deferred = new Set<string>()
   private readonly finished = new Map<string, Finished>()
 
   constructor(options: CreditMeterOptions) {
@@ -90,10 +91,15 @@ export class CreditMeter {
   dropRef(ref: string): void {
     this.drop(this.byRef.get(ref) ?? null)
     this.byRef.delete(ref)
+    this.deferred.delete(ref)
   }
 
-  holdsRef(ref: string): boolean {
-    return this.byRef.has(ref)
+  deferRef(ref: string): boolean {
+    if (!this.byRef.has(ref) || this.deferred.has(ref)) {
+      return false
+    }
+    this.deferred.add(ref)
+    return true
   }
 
   finishRef(reader: BalanceReader, ref: string): Promise<number | null> {
@@ -103,6 +109,7 @@ export class CreditMeter {
     }
     const ticket = this.byRef.get(ref) ?? null
     this.byRef.delete(ref)
+    this.deferred.delete(ref)
     const credits = this.finish(reader, ticket).catch(() => null)
     this.finished.set(ref, { credits, at: this.now() })
     return credits
@@ -172,6 +179,7 @@ export class CreditMeter {
     for (const [ref, ticket] of this.byRef) {
       if (now - ticket.startedAt >= CreditMeter.staleMs) {
         this.byRef.delete(ref)
+        this.deferred.delete(ref)
       }
     }
     for (const [ref, held] of this.finished) {
