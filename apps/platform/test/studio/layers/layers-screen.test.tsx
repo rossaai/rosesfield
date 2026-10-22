@@ -13,7 +13,6 @@ import {
   fireEvent,
   render,
   screen,
-  within,
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { GatewaySettings } from "@/api/gateway-settings"
@@ -319,9 +318,6 @@ describe("the open stack", () => {
     ).not.toBe("")
     const section = canvas.closest("section")
     expect(section?.querySelectorAll("[data-slot='run-facts']")).toHaveLength(1)
-    const headlines = within(section ?? canvas).getAllByText(
-      canvas.querySelector("[data-slot='run-prompt']")?.textContent ?? "?"
-    )
-    expect(headlines.every((headline) => canvas.contains(headline))).toBe(true)
+    expect(section?.querySelector("[data-slot='run-prompt']")).toBeNull()
   })
 })
