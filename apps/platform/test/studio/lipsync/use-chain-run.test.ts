@@ -1,5 +1,6 @@
 import {
   type ChainRun,
+  graphModel,
   type SpeechApp,
   SpeechChain,
   speechModelInput,
@@ -84,7 +85,7 @@ class FakeSpeechChain extends SpeechChain {
 
 const ask: StartRunBodyInput = {
   inputs: {
-    model: ltx.id,
+    model: graphModel,
     photo: [photoId],
     length: 10,
     [speechTextInput]: "Hello there",
@@ -96,7 +97,7 @@ const ask: StartRunBodyInput = {
 const graphTarget = chainTargetOf({
   appId: photoApp.id,
   fields: fieldsOfModel(ltx, photoApp),
-  isGraph: true,
+  chosen: ltx,
 })
 
 function pressOf(chain: SpeechChain, onStarted: (run: Run) => void) {
@@ -129,7 +130,7 @@ describe("Generate on Text", () => {
         appId: photoApp.id,
         request: {
           inputs: {
-            model: ltx.id,
+            model: graphModel,
             photo: [photoId],
             length: 4.52,
             audio: [spoken],
@@ -171,7 +172,7 @@ describe("Generate on Text", () => {
     const target = chainTargetOf({
       appId: photoApp.id,
       fields: null,
-      isGraph: false,
+      chosen: avatar,
     })
     const pressed = pressChain({ ...pressOf(chain, () => undefined), target })
     await expect(pressed).rejects.toMatchObject({ code: "RUN_INPUT_INVALID" })
@@ -191,10 +192,11 @@ describe("Generate on Text", () => {
 
 describe("the input the spoken audio goes to", () => {
   it("is the graph's audio, with its length set from the speech", () => {
-    expect(graphTarget).toEqual({
+    expect(graphTarget).toMatchObject({
       appId: photoApp.id,
       audio: "audio",
       length: "length",
+      check: { form: null },
     })
   })
 
@@ -203,8 +205,13 @@ describe("the input the spoken audio goes to", () => {
       chainTargetOf({
         appId: photoApp.id,
         fields: fieldsOfModel(avatar, photoApp),
-        isGraph: false,
+        chosen: avatar,
       })
-    ).toEqual({ appId: photoApp.id, audio: "soundFile", length: null })
+    ).toMatchObject({
+      appId: photoApp.id,
+      audio: "soundFile",
+      length: null,
+      check: { form: { model: avatar.id, fields: avatar.form } },
+    })
   })
 })

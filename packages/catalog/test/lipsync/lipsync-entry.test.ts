@@ -31,6 +31,7 @@ describe("the lip sync entry", () => {
       "speechTask",
       "speechTextInput",
       "spokenInputs",
+      "videoProblemsOf",
     ])
   })
 })

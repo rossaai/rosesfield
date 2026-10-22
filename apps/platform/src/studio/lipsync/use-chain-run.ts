@@ -44,16 +44,26 @@ const refusedStatus = 400
 export function chainTargetOf(options: {
   appId: string
   fields: LipFields | null
-  isGraph: boolean
+  chosen: CatalogModel | null
 }): ChainTarget | null {
   const audio = options.fields?.audio ?? null
-  if (audio === null) {
+  const app = findApp(options.appId)
+  if (audio === null || app === null) {
     return null
   }
+  const isGraph = options.chosen?.kind === "graph"
+  const form = isGraph ? null : (options.chosen?.form ?? null)
   return {
     appId: options.appId,
     audio: audio.name,
-    length: options.isGraph ? (options.fields?.length?.name ?? null) : null,
+    length: isGraph ? (options.fields?.length?.name ?? null) : null,
+    check: {
+      app,
+      form:
+        form === null
+          ? null
+          : { model: options.chosen?.id ?? "", fields: form },
+    },
   }
 }
 
@@ -121,7 +131,7 @@ export async function pressChain(press: ChainPress): Promise<Run> {
       onStarted: press.onStarted,
     }),
   })
-  if (outcome.kind === "unplanned") {
+  if (outcome.kind === "unplanned" || outcome.kind === "invalid") {
     throw refused(refusedCode, refusedStatus)
   }
   if (outcome.kind === "unspoken") {

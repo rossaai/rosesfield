@@ -1,3 +1,4 @@
+export { appOnlyInputsOf } from "#domain/app-only-inputs"
 export {
   type FieldRole,
   fieldOfRole,

@@ -140,11 +140,7 @@ function useChainedStart(
   const chained = useChainRun({
     form,
     voices: voices.hosted.models,
-    target: chainTargetOf({
-      appId: app.id,
-      fields,
-      isGraph: all.chosen?.kind === "graph",
-    }),
+    target: chainTargetOf({ appId: app.id, fields, chosen: all.chosen }),
     ask: parts.ask,
     onStarted: options.onStarted,
   })
