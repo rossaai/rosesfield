@@ -197,9 +197,9 @@ describe("ReadAssetPreviewHandler", () => {
   it("answers an asset with no preview as not found", async () => {
     const library = libraryFor()
     const assetId = await uploadImage(library)
-    await expect(library.readPreview.execute({ assetId })).rejects.toMatchObject(
-      { code: "ASSET_PREVIEW_NOT_FOUND", status: 404 }
-    )
+    await expect(
+      library.readPreview.execute({ assetId })
+    ).rejects.toMatchObject({ code: "ASSET_PREVIEW_NOT_FOUND", status: 404 })
     await expect(
       library.readPreview.execute({ assetId: missing })
     ).rejects.toMatchObject({ code: "ASSET_NOT_FOUND" })

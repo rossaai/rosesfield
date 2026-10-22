@@ -1,17 +1,17 @@
 import { mkdir, readdir } from "node:fs/promises"
 import { join, resolve } from "node:path"
 import { probe } from "../checks/output-files/media-tools"
-import { takesFolder } from "./demo-args"
-import { manifestName, manifestOf } from "./demo-manifest"
 import {
   type CutPlan,
   checkPlan,
   checkTake,
   cutPlan,
   type Output,
-  srtOf,
   type Step,
+  srtOf,
 } from "./cut-commands"
+import { takesFolder } from "./demo-args"
+import { manifestName, manifestOf } from "./demo-manifest"
 
 type CutOptions = { take: string | null; isDraft: boolean; isDryRun: boolean }
 
@@ -47,7 +47,9 @@ async function latestTake(): Promise<string> {
   const names = await readdir(takesFolder).catch(() => [])
   const latest = names.sort().at(-1)
   if (latest === undefined) {
-    throw new Error(`No take is in ${takesFolder}. Run bun run demo:capture first.`)
+    throw new Error(
+      `No take is in ${takesFolder}. Run bun run demo:capture first.`
+    )
   }
   return join(takesFolder, latest)
 }

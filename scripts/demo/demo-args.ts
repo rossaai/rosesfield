@@ -88,7 +88,11 @@ type Draft = Omit<CaptureOptions, "url" | "key" | "out"> & {
   out: string | null
 }
 
-function optionOf(draft: Draft, arg: string, value: string | undefined): number {
+function optionOf(
+  draft: Draft,
+  arg: string,
+  value: string | undefined
+): number {
   if (arg === "--live") {
     draft.isLive = true
     return 0

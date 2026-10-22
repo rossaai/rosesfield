@@ -114,7 +114,10 @@ describe("useTileSource", () => {
         return previewOf()
       }
       if (url.endsWith("/link")) {
-        return Response.json({ url: link, expiresAt: "2026-10-22T10:10:00.000Z" })
+        return Response.json({
+          url: link,
+          expiresAt: "2026-10-22T10:10:00.000Z",
+        })
       }
       return missing()
     })
@@ -150,7 +153,10 @@ describe("useTileSource", () => {
     expect(put?.url).toBe(`/api/assets/${assetId}/preview`)
     expect(put?.headers.get("content-type")).toBe("image/webp")
     await waitFor(() =>
-      expect(tile.result.current).toEqual({ state: "ready", src: "blob:made-1" })
+      expect(tile.result.current).toEqual({
+        state: "ready",
+        src: "blob:made-1",
+      })
     )
     expect(sent.filter((one) => one.method === "PUT")).toHaveLength(1)
   })

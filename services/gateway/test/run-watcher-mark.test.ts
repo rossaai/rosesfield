@@ -1,5 +1,8 @@
 import { buildPath, routes, runResponse } from "@rosesfield/contract"
-import { DemoGenerationEngine, type WatchMarkPort } from "@rosesfield/generation"
+import {
+  DemoGenerationEngine,
+  type WatchMarkPort,
+} from "@rosesfield/generation"
 import type { FixedClock } from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
 import { RunWatcher } from "#worker/run-watcher"

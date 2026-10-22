@@ -17,7 +17,9 @@ const extensions: Readonly<Record<string, string>> = {
 }
 
 export function isKept(run: HostRun): boolean {
-  return run.status === "done" && run.origin === "live" && run.outputs.length > 0
+  return (
+    run.status === "done" && run.origin === "live" && run.outputs.length > 0
+  )
 }
 
 export function appNameOf(appId: string): string {
@@ -87,7 +89,9 @@ async function saved(
 ): Promise<Media> {
   const kind = kindOf(asset)
   if (kind === null) {
-    throw new Error(`Asset ${asset.id} is ${asset.kind}, not an image or a video.`)
+    throw new Error(
+      `Asset ${asset.id} is ${asset.kind}, not an image or a video.`
+    )
   }
   const extension = extensions[asset.mime] ?? asset.mime.split("/")[1] ?? "bin"
   const file = join("media", `${name}.${extension}`)

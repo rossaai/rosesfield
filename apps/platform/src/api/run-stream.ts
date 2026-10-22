@@ -117,9 +117,7 @@ async function readOnce(options: RunStreamOptions): Promise<Run | null> {
   }
 }
 
-export async function watchRunStream(
-  options: RunStreamOptions
-): Promise<void> {
+export async function watchRunStream(options: RunStreamOptions): Promise<void> {
   const wait = options.wait ?? waitFor
   let failures = 0
   while (!options.signal.aborted) {

@@ -124,7 +124,10 @@ function scenePieces(scene: Scene): Piece[] {
     return [{ start: scene.windows[0]?.start ?? 0, seconds: builtLength }]
   }
   const tourScene = tourScenes.find((id) => id === scene.id)
-  return piecesOf(scene.windows, tourScene === undefined ? 0 : tourCaps[tourScene])
+  return piecesOf(
+    scene.windows,
+    tourScene === undefined ? 0 : tourCaps[tourScene]
+  )
 }
 
 function orderedScenes(manifest: Manifest): Scene[] {
@@ -139,7 +142,11 @@ function orderedScenes(manifest: Manifest): Scene[] {
 
 type Segment = { label: string; caption: Caption; step: Step; seconds: number }
 
-function sceneSegments(scene: Scene, index: number, isDraft: boolean): Segment[] {
+function sceneSegments(
+  scene: Scene,
+  index: number,
+  isDraft: boolean
+): Segment[] {
   return scenePieces(scene).map((piece, part) => {
     const label = `${String(index).padStart(2, "0")}-${scene.id}-${part}`
     const caption = {
@@ -161,7 +168,13 @@ function sceneSegments(scene: Scene, index: number, isDraft: boolean): Segment[]
 function sideBySide(
   take: AppTake,
   input: Media,
-  options: { size: Size; seconds: number; caption: Caption; out: string; isDraft: boolean }
+  options: {
+    size: Size
+    seconds: number
+    caption: Caption
+    out: string
+    isDraft: boolean
+  }
 ): string[] {
   const half = { width: options.size.width / 2, height: options.size.height }
   return [
@@ -182,7 +195,11 @@ function hookSegment(manifest: Manifest, isDraft: boolean): Segment {
     throw new Error("The take's hook has no input photo.")
   }
   const label = "00-hook"
-  const caption = { file: `cut/captions/${label}.srt`, text, seconds: hookSeconds }
+  const caption = {
+    file: `cut/captions/${label}.srt`,
+    text,
+    seconds: hookSeconds,
+  }
   const args = sideBySide(take, take.input, {
     size: wide,
     seconds: hookSeconds,
@@ -193,13 +210,22 @@ function hookSegment(manifest: Manifest, isDraft: boolean): Segment {
   return { label, caption, step: { label, args }, seconds: hookSeconds }
 }
 
-function verticalStep(manifest: Manifest, isDraft: boolean): { step: Step; caption: Caption } {
+function verticalStep(
+  manifest: Manifest,
+  isDraft: boolean
+): { step: Step; caption: Caption } {
   const { take } = manifest.hook
   if (manifest.shareUrl === null || take.input === null) {
-    throw new Error("The take has no share link, so the clip for the post has no link.")
+    throw new Error(
+      "The take has no share link, so the clip for the post has no link."
+    )
   }
   const seconds = photoSeconds + resultSeconds
-  const caption = { file: "cut/captions/vertical.srt", text: linkCaption(manifest.shareUrl), seconds }
+  const caption = {
+    file: "cut/captions/vertical.srt",
+    text: linkCaption(manifest.shareUrl),
+    seconds,
+  }
   const args = [
     ...["-y", "-v", "error"],
     ...looped(take.input, photoSeconds),
@@ -213,14 +239,23 @@ function verticalStep(manifest: Manifest, isDraft: boolean): { step: Step; capti
   return { step: { label: "vertical", args }, caption }
 }
 
-function appStep(take: AppTake, isDraft: boolean): { step: Step; caption: Caption; out: string } {
+function appStep(
+  take: AppTake,
+  isDraft: boolean
+): { step: Step; caption: Caption; out: string } {
   const out = `apps/${take.appId}.mp4`
   const caption = {
     file: `cut/captions/app-${take.appId}.srt`,
     text: clipCaption(take.appName, take.credits),
     seconds: clipSeconds,
   }
-  const options = { size: clipSize, seconds: clipSeconds, caption, out, isDraft }
+  const options = {
+    size: clipSize,
+    seconds: clipSeconds,
+    caption,
+    out,
+    isDraft,
+  }
   const args =
     take.input === null
       ? [
@@ -239,7 +274,9 @@ export function cutPlan(manifest: Manifest, isDraft: boolean): CutPlan {
   const scenes = orderedScenes(manifest)
   const segments = [
     hookSegment(manifest, isDraft),
-    ...scenes.flatMap((scene, index) => sceneSegments(scene, index + 1, isDraft)),
+    ...scenes.flatMap((scene, index) =>
+      sceneSegments(scene, index + 1, isDraft)
+    ),
   ]
   const vertical = verticalStep(manifest, isDraft)
   const apps = manifest.apps.map((take) => appStep(take, isDraft))
@@ -259,13 +296,26 @@ export function cutPlan(manifest: Manifest, isDraft: boolean): CutPlan {
     ],
   }
   return {
-    captions: [...segments.map((one) => one.caption), vertical.caption, ...apps.map((one) => one.caption)],
+    captions: [
+      ...segments.map((one) => one.caption),
+      vertical.caption,
+      ...apps.map((one) => one.caption),
+    ],
     list,
-    steps: [...segments.map((one) => one.step), joined, vertical.step, ...apps.map((one) => one.step)],
+    steps: [
+      ...segments.map((one) => one.step),
+      joined,
+      vertical.step,
+      ...apps.map((one) => one.step),
+    ],
     outputs: [
       { file: videoFile, ...wide, maxSeconds: maxVideoSeconds },
       { file: verticalFile, ...tall, maxSeconds: maxVerticalSeconds },
-      ...apps.map((one) => ({ file: one.out, ...clipSize, maxSeconds: clipSeconds + 1 })),
+      ...apps.map((one) => ({
+        file: one.out,
+        ...clipSize,
+        maxSeconds: clipSeconds + 1,
+      })),
     ],
     seconds: { video, built, vertical: photoSeconds + resultSeconds },
   }
@@ -281,12 +331,18 @@ export function checkTake(manifest: Manifest, isDraft: boolean): void {
 
 export function checkPlan(plan: CutPlan): void {
   if (plan.seconds.video >= maxVideoSeconds) {
-    throw new Error(`The video would run ${plan.seconds.video} seconds, and it must stay under ${maxVideoSeconds}.`)
+    throw new Error(
+      `The video would run ${plan.seconds.video} seconds, and it must stay under ${maxVideoSeconds}.`
+    )
   }
   if (plan.seconds.built < builtTotal) {
-    throw new Error(`The part on how it was built runs ${plan.seconds.built} seconds, and it must fill the last ${builtTotal}.`)
+    throw new Error(
+      `The part on how it was built runs ${plan.seconds.built} seconds, and it must fill the last ${builtTotal}.`
+    )
   }
   if (plan.seconds.vertical >= maxVerticalSeconds) {
-    throw new Error(`The clip would run ${plan.seconds.vertical} seconds, and it must stay under ${maxVerticalSeconds}.`)
+    throw new Error(
+      `The clip would run ${plan.seconds.vertical} seconds, and it must stay under ${maxVerticalSeconds}.`
+    )
   }
 }

@@ -36,14 +36,22 @@ const scenes = sceneOrder.map((id) => ({
   id,
   file: "screens/scene.webm",
   windows: [{ start: 0.5, end: 3 }],
-  caption: id === "graph" ? "Effects runs one LTX 2.5 graph, effects-ltx-2-5, on Comfy Cloud." : `The ${id} scene.`,
+  caption:
+    id === "graph"
+      ? "Effects runs one LTX 2.5 graph, effects-ltx-2-5, on Comfy Cloud."
+      : `The ${id} scene.`,
 }))
 
-function manifest(changes: Record<string, unknown> = {}): Record<string, unknown> {
+function manifest(
+  changes: Record<string, unknown> = {}
+): Record<string, unknown> {
   return {
     url: "https://rosesfield.com",
     recordedAt: "2026-10-22T12:00:00.000Z",
-    hook: { take, caption: "Your photo, then the video one Effects run made from it." },
+    hook: {
+      take,
+      caption: "Your photo, then the video one Effects run made from it.",
+    },
     scenes,
     shareUrl,
     apps: [take],
@@ -57,9 +65,22 @@ async function ffmpeg(cwd: string, args: string[]): Promise<void> {
   expect(await done.exited).toBe(0)
 }
 
-async function probe(file: string): Promise<{ width: number; height: number; seconds: number }> {
+async function probe(
+  file: string
+): Promise<{ width: number; height: number; seconds: number }> {
   const done = Bun.spawn(
-    ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:format=duration", "-of", "json", file],
+    [
+      "ffprobe",
+      "-v",
+      "error",
+      "-select_streams",
+      "v:0",
+      "-show_entries",
+      "stream=width,height:format=duration",
+      "-of",
+      "json",
+      file,
+    ],
     { stdout: "pipe" }
   )
   const body = JSON.parse(await new Response(done.stdout).text())
@@ -70,7 +91,10 @@ async function probe(file: string): Promise<{ width: number; height: number; sec
   }
 }
 
-async function cut(folder: string, ...args: string[]): Promise<{ code: number; out: string; error: string }> {
+async function cut(
+  folder: string,
+  ...args: string[]
+): Promise<{ code: number; out: string; error: string }> {
   const done = Bun.spawn(["bun", command, "--take", folder, ...args], {
     stdout: "pipe",
     stderr: "pipe",
@@ -83,7 +107,10 @@ async function cut(folder: string, ...args: string[]): Promise<{ code: number; o
   return { code, out, error }
 }
 
-async function writeTake(folder: string, body: Record<string, unknown>): Promise<void> {
+async function writeTake(
+  folder: string,
+  body: Record<string, unknown>
+): Promise<void> {
   await Bun.write(join(folder, "manifest.json"), JSON.stringify(body))
 }
 
@@ -94,9 +121,41 @@ beforeAll(async () => {
   await mkdir(join(folder, "screens"))
   await mkdir(join(folder, "media"))
   await Promise.all([
-    ffmpeg(folder, ["-f", "lavfi", "-i", "testsrc=size=640x360:rate=30", "-t", "3", "-c:v", "libvpx", "-b:v", "200k", "screens/scene.webm"]),
-    ffmpeg(folder, ["-f", "lavfi", "-i", "color=c=0x884422:size=480x640", "-frames:v", "1", "media/photo.png"]),
-    ffmpeg(folder, ["-f", "lavfi", "-i", "testsrc2=size=480x640:rate=30", "-t", "2", "-c:v", "libx264", "-pix_fmt", "yuv420p", "media/result.mp4"]),
+    ffmpeg(folder, [
+      "-f",
+      "lavfi",
+      "-i",
+      "testsrc=size=640x360:rate=30",
+      "-t",
+      "3",
+      "-c:v",
+      "libvpx",
+      "-b:v",
+      "200k",
+      "screens/scene.webm",
+    ]),
+    ffmpeg(folder, [
+      "-f",
+      "lavfi",
+      "-i",
+      "color=c=0x884422:size=480x640",
+      "-frames:v",
+      "1",
+      "media/photo.png",
+    ]),
+    ffmpeg(folder, [
+      "-f",
+      "lavfi",
+      "-i",
+      "testsrc2=size=480x640:rate=30",
+      "-t",
+      "2",
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "media/result.mp4",
+    ]),
   ])
   await writeTake(folder, manifest())
 }, 60_000)
@@ -121,13 +180,27 @@ describe("bun run demo:cut", () => {
     expect(plan.seconds.built).toBe(40)
     const [hook] = plan.steps
     expect(hook?.label).toBe("00-hook")
-    expect(hook?.args.indexOf("media/photo.png")).toBeLessThan(hook?.args.indexOf("media/result.mp4") ?? -1)
+    expect(hook?.args.indexOf("media/photo.png")).toBeLessThan(
+      hook?.args.indexOf("media/result.mp4") ?? -1
+    )
     expect(hook?.args.join(" ")).toContain("hstack=inputs=2")
     expect(hook?.args.join(" ")).toContain("-t 10.000")
     const segments = plan.steps.filter((step) => /^\d\d-/.test(step.label))
-    expect(segments.slice(-5).map((step) => step.label.split("-")[1])).toEqual(["router", "cloud", "catalog", "graph", "proof"])
-    expect(segments.every((step) => step.args.join(" ").includes("subtitles=cut/captions/"))).toBe(true)
-    expect(plan.captions.map((caption) => caption.text)).toContain("Effects runs one LTX 2.5 graph, effects-ltx-2-5, on Comfy Cloud.")
+    expect(segments.slice(-5).map((step) => step.label.split("-")[1])).toEqual([
+      "router",
+      "cloud",
+      "catalog",
+      "graph",
+      "proof",
+    ])
+    expect(
+      segments.every((step) =>
+        step.args.join(" ").includes("subtitles=cut/captions/")
+      )
+    ).toBe(true)
+    expect(plan.captions.map((caption) => caption.text)).toContain(
+      "Effects runs one LTX 2.5 graph, effects-ltx-2-5, on Comfy Cloud."
+    )
   })
 
   it("plans a 9:16 clip under 30 seconds that holds the effect and the share link, and one clip per app", async () => {
@@ -137,8 +210,15 @@ describe("bun run demo:cut", () => {
     const vertical = plan.steps.find((step) => step.label === "vertical")
     expect(vertical?.args.join(" ")).toContain("1080:1920")
     expect(vertical?.args).toContain("media/result.mp4")
-    expect(plan.captions.find((caption) => caption.file.endsWith("vertical.srt"))?.text).toContain(shareUrl)
-    expect(plan.steps.filter((step) => step.label.startsWith("app-")).map((step) => step.label)).toEqual(["app-effects"])
+    expect(
+      plan.captions.find((caption) => caption.file.endsWith("vertical.srt"))
+        ?.text
+    ).toContain(shareUrl)
+    expect(
+      plan.steps
+        .filter((step) => step.label.startsWith("app-"))
+        .map((step) => step.label)
+    ).toEqual(["app-effects"])
   })
 
   it("cuts the take into a 1080p video under 2 minutes, a 1080 by 1920 clip under 30 seconds and an app clip", async () => {
@@ -163,7 +243,10 @@ describe("bun run demo:cut", () => {
     const local = await mkdtemp(join(tmpdir(), "rosesfield-demo-take-"))
     await writeTake(local, manifest({ url: "http://127.0.0.1:8788" }))
 
-    const [final, draft] = await Promise.all([cut(local, "--dry-run"), cut(local, "--dry-run", "--draft")])
+    const [final, draft] = await Promise.all([
+      cut(local, "--dry-run"),
+      cut(local, "--dry-run", "--draft"),
+    ])
     await rm(local, { recursive: true })
 
     expect(final.code).toBe(1)
@@ -177,8 +260,14 @@ describe("bun run demo:cut", () => {
     await writeTake(noLink, manifest({ shareUrl: null }))
     await writeTake(noScene, manifest({ scenes: scenes.slice(0, -1) }))
 
-    const [link, scene] = await Promise.all([cut(noLink, "--dry-run"), cut(noScene, "--dry-run")])
-    await Promise.all([rm(noLink, { recursive: true }), rm(noScene, { recursive: true })])
+    const [link, scene] = await Promise.all([
+      cut(noLink, "--dry-run"),
+      cut(noScene, "--dry-run"),
+    ])
+    await Promise.all([
+      rm(noLink, { recursive: true }),
+      rm(noScene, { recursive: true }),
+    ])
 
     expect(link.code).toBe(1)
     expect(link.error).toContain("no share link")

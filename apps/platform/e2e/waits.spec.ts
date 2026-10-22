@@ -144,9 +144,7 @@ test.describe("the three waits on the demo engine", () => {
         new URL(response.url()).pathname === "/api/apps/image/runs"
     )
     await bar.locator('[data-slot="generate-button"]').click()
-    const answer: { run: { createdAt: string } } = await (
-      await started
-    ).json()
+    const answer: { run: { createdAt: string } } = await (await started).json()
     const engineDoneAt = Date.parse(answer.run.createdAt) + demoDelayMs
     const run = page.locator(stageCards).first()
     await expect(

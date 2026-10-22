@@ -95,9 +95,7 @@ describe("the model list of the composed bun gateway", () => {
     const listed = modelListResponse.parse(await response.json())
     expect(listed.models.map((one) => one.id)).toContain("maker/clip-3")
     expect(elapsedMs).toBeLessThan(coldBoundMs)
-    expect(router.calls.filter((url) => url.includes("/v2/models"))).toEqual(
-      []
-    )
+    expect(router.calls.filter((url) => url.includes("/v2/models"))).toEqual([])
   })
 })
 

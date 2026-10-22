@@ -57,11 +57,7 @@ function renderStack(
     component: () => (
       <ToastProvider>
         <TooltipProvider>
-          <RunStack
-            runs={runs}
-            opened={opened}
-            onUseInputs={() => undefined}
-          />
+          <RunStack runs={runs} opened={opened} onUseInputs={() => undefined} />
           <Outlet />
         </TooltipProvider>
       </ToastProvider>

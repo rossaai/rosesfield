@@ -1,11 +1,7 @@
 import { heldFilesOf } from "#comfy/cloud-weights"
 import { type AppInput, defineApp } from "#define-app"
 import { threeDEngine } from "#three-d/comfy/three-d-engine"
-import {
-  defaultModelOf,
-  heldGraphs,
-  textModel,
-} from "#three-d/three-d-models"
+import { defaultModelOf, heldGraphs, textModel } from "#three-d/three-d-models"
 
 type Inputs = AppInput["inputs"]
 

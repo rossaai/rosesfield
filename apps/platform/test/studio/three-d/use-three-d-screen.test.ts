@@ -6,13 +6,7 @@ import {
   tabOfModel,
   tabShown,
 } from "@/studio/three-d/use-three-d-screen"
-import {
-  graph,
-  hunyuan,
-  meshy6,
-  meshy71,
-  threeDApp,
-} from "./three-d-models"
+import { graph, hunyuan, meshy6, meshy71, threeDApp } from "./three-d-models"
 
 const app = threeDApp()
 const models = [hunyuan, meshy6, meshy71, graph]

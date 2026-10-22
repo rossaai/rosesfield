@@ -69,7 +69,9 @@ async function graphName(): Promise<string> {
   const entry = rowOf(await Bun.file(graphEntry).json())
   const { name, title } = entry
   if (typeof name !== "string" || !String(title).includes("LTX 2.5")) {
-    throw new Error("The Effects graph is not the LTX 2.5 graph this video names.")
+    throw new Error(
+      "The Effects graph is not the LTX 2.5 graph this video names."
+    )
   }
   return name
 }
@@ -84,7 +86,9 @@ async function planOf(options: CaptureOptions): Promise<Planned> {
   }
   const account = await host.account()
   if (account.key !== "valid") {
-    throw new Error(`Comfy answered ${account.key} for DEMO_KEY on ${options.url}.`)
+    throw new Error(
+      `Comfy answered ${account.key} for DEMO_KEY on ${options.url}.`
+    )
   }
   if (
     options.isLive &&
@@ -142,8 +146,11 @@ async function runScene(
   const { context, options, planned } = session
   const { effect } = planned
   if (!options.isLive) {
-    const recorded = await recordScene(context, options.out, "run", (page, at) =>
-      storedRunScene(page, at, effect.id)
+    const recorded = await recordScene(
+      context,
+      options.out,
+      "run",
+      (page, at) => storedRunScene(page, at, effect.id)
     )
     return { recorded, effect, live: [] }
   }
@@ -200,7 +207,8 @@ function builtActs(graph: string, runId: string): [BuiltScene, SceneAct][] {
     ["catalog", (page, at) => pageScene(page, at, "/apps", builtSeconds)],
     [
       "graph",
-      (page, at) => graphScene(page, at, { runId, graph, seconds: builtSeconds }),
+      (page, at) =>
+        graphScene(page, at, { runId, graph, seconds: builtSeconds }),
     ],
     ["proof", (page, at) => pageScene(page, at, "/history", builtSeconds)],
   ]

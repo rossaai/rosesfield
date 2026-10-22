@@ -44,9 +44,14 @@ export async function recordScene(
   id: SceneId,
   act: SceneAct
 ): Promise<Recorded> {
-  const { recorded } = await recordWith(context, folder, id, async (page, at) => ({
-    windows: await act(page, at),
-  }))
+  const { recorded } = await recordWith(
+    context,
+    folder,
+    id,
+    async (page, at) => ({
+      windows: await act(page, at),
+    })
+  )
   return recorded
 }
 
@@ -88,7 +93,10 @@ export async function keyScene(
   await field.fill(key)
   await hold(page, 1)
   await dialog.getByRole("button", { name: "Add key" }).click()
-  await bar.getByText(/credits$/).first().waitFor({ timeout: waitMs })
+  await bar
+    .getByText(/credits$/)
+    .first()
+    .waitFor({ timeout: waitMs })
   await hold(page, 3)
   await page.keyboard.press("Escape")
   await hold(page, 1)
@@ -182,9 +190,15 @@ export async function creditsScene(
   await shownResult(page)
   await hold(page, 1)
   const start = at()
-  await page.getByText(/credits$/).last().scrollIntoViewIfNeeded()
+  await page
+    .getByText(/credits$/)
+    .last()
+    .scrollIntoViewIfNeeded()
   await hold(page, 2.5)
-  await bar.getByText(/credits$/).first().click()
+  await bar
+    .getByText(/credits$/)
+    .first()
+    .click()
   await hold(page, 3)
   await page.keyboard.press("Escape")
   await hold(page, 0.5)

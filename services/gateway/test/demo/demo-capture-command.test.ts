@@ -44,10 +44,30 @@ function runRow(run: FakeRun): Record<string, unknown> {
 }
 
 const runs = [
-  { id: demo, status: "done", origin: "demo", createdAt: "2026-10-22T10:00:00Z" },
-  { id: failed, status: "failed", origin: "live", createdAt: "2026-10-22T09:00:00Z" },
-  { id: kept, status: "done", origin: "live", createdAt: "2026-10-22T08:00:00Z" },
-  { id: older, status: "done", origin: "live", createdAt: "2026-10-21T08:00:00Z" },
+  {
+    id: demo,
+    status: "done",
+    origin: "demo",
+    createdAt: "2026-10-22T10:00:00Z",
+  },
+  {
+    id: failed,
+    status: "failed",
+    origin: "live",
+    createdAt: "2026-10-22T09:00:00Z",
+  },
+  {
+    id: kept,
+    status: "done",
+    origin: "live",
+    createdAt: "2026-10-22T08:00:00Z",
+  },
+  {
+    id: older,
+    status: "done",
+    origin: "live",
+    createdAt: "2026-10-21T08:00:00Z",
+  },
 ].map(runRow)
 
 function hostAnswer(mode: string, request: Request): Response {
@@ -65,7 +85,12 @@ function hostAnswer(mode: string, request: Request): Response {
   }
   if (pathname === `/api/runs/${kept}/share` && request.method === "POST") {
     return Response.json(
-      { share: { id: "Zq3Ftb8mVwq1J0aXrN4u2A", path: "/share/Zq3Ftb8mVwq1J0aXrN4u2A" } },
+      {
+        share: {
+          id: "Zq3Ftb8mVwq1J0aXrN4u2A",
+          path: "/share/Zq3Ftb8mVwq1J0aXrN4u2A",
+        },
+      },
       { status: 201 }
     )
   }
@@ -77,7 +102,9 @@ function hostAnswer(mode: string, request: Request): Response {
     return Response.json({ run })
   }
   if (pathname === `/api/assets/${photoId}`) {
-    return Response.json({ asset: { id: photoId, kind: "image", mime: "image/png" } })
+    return Response.json({
+      asset: { id: photoId, kind: "image", mime: "image/png" },
+    })
   }
   return Response.json({ error: { code: "NOT_FOUND" } }, { status: 404 })
 }
@@ -146,17 +173,45 @@ describe("bun run demo:capture --plan", () => {
   })
 
   it("takes the run you name, and refuses a demo run, because every result comes from a real run", async () => {
-    const named = await capture(["--plan", "--url", publicHost.url.origin, "--run", older])
-    const refused = await capture(["--plan", "--url", publicHost.url.origin, "--run", demo])
+    const named = await capture([
+      "--plan",
+      "--url",
+      publicHost.url.origin,
+      "--run",
+      older,
+    ])
+    const refused = await capture([
+      "--plan",
+      "--url",
+      publicHost.url.origin,
+      "--run",
+      demo,
+    ])
 
     expect(planned(named.out).run).toBe(older)
     expect(refused.code).toBe(1)
-    expect(refused.error).toContain(`Run ${demo} is not a finished live effects run`)
+    expect(refused.error).toContain(
+      `Run ${demo} is not a finished live effects run`
+    )
   })
 
   it("lowers the live budget to the credits you name and refuses more than 200", async () => {
-    const lower = await capture(["--plan", "--live", "--budget", "150", "--url", publicHost.url.origin])
-    const higher = await capture(["--plan", "--live", "--budget", "201", "--url", publicHost.url.origin])
+    const lower = await capture([
+      "--plan",
+      "--live",
+      "--budget",
+      "150",
+      "--url",
+      publicHost.url.origin,
+    ])
+    const higher = await capture([
+      "--plan",
+      "--live",
+      "--budget",
+      "201",
+      "--url",
+      publicHost.url.origin,
+    ])
 
     expect(planned(lower.out)).toMatchObject({ live: true, budget: 150 })
     expect(higher.code).toBe(1)
@@ -171,7 +226,10 @@ describe("bun run demo:capture --plan", () => {
   })
 
   it("asks for DEMO_KEY and never prints the key it reads", async () => {
-    const missing = await capture(["--plan", "--url", publicHost.url.origin], {})
+    const missing = await capture(
+      ["--plan", "--url", publicHost.url.origin],
+      {}
+    )
     const wrong = await capture(["--plan", "--url", publicHost.url.origin], {
       DEMO_KEY: "comfyui-not-this-one",
     })
@@ -183,17 +241,33 @@ describe("bun run demo:capture --plan", () => {
   })
 
   it("records DEMO_URL, and rosesfield.com when none is named", async () => {
-    const fromEnv = await capture(["--plan"], { DEMO_KEY: key, DEMO_URL: publicHost.url.origin })
-    const fallback = captureOptionsOf([], { DEMO_KEY: key }, new Date("2026-10-22T12:00:00Z"))
+    const fromEnv = await capture(["--plan"], {
+      DEMO_KEY: key,
+      DEMO_URL: publicHost.url.origin,
+    })
+    const fallback = captureOptionsOf(
+      [],
+      { DEMO_KEY: key },
+      new Date("2026-10-22T12:00:00Z")
+    )
 
     expect(planned(fromEnv.out).url).toBe(publicHost.url.origin)
     expect(fallback.url).toBe("https://rosesfield.com")
   })
 
   it("prints the 2000 credits the live runs keep on the balance", async () => {
-    const done = await capture(["--plan", "--live", "--url", publicHost.url.origin])
+    const done = await capture([
+      "--plan",
+      "--live",
+      "--url",
+      publicHost.url.origin,
+    ])
 
-    expect(planned(done.out)).toMatchObject({ live: true, budget: 200, reserve: 2000 })
+    expect(planned(done.out)).toMatchObject({
+      live: true,
+      budget: 200,
+      reserve: 2000,
+    })
   })
 })
 

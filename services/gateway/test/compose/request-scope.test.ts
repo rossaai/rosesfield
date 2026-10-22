@@ -1,8 +1,5 @@
 import { buildPath, type Cost, routes, runResponse } from "@rosesfield/contract"
-import {
-  DemoGenerationEngine,
-  type EngineStatus,
-} from "@rosesfield/generation"
+import { DemoGenerationEngine, type EngineStatus } from "@rosesfield/generation"
 import { afterEach, describe, expect, it } from "vitest"
 import type { HandlerPorts } from "#build-handlers"
 import { visitorScope } from "#compose/request-scope"

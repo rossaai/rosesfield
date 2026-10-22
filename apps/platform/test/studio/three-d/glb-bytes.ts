@@ -57,9 +57,7 @@ export function triangleGlb(
     nodes: [{ mesh: 0, translation: [10, 0, 0] }],
     meshes: [
       {
-        primitives: [
-          { attributes: { POSITION: 0 }, indices: 1, material: 0 },
-        ],
+        primitives: [{ attributes: { POSITION: 0 }, indices: 1, material: 0 }],
       },
     ],
     materials: [

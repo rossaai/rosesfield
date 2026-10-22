@@ -172,8 +172,7 @@ export function manifestOf(value: unknown): Manifest {
       caption: textOf(hook.caption, "hook caption"),
     },
     scenes: listOf(row.scenes, "scenes").map(sceneOf),
-    shareUrl:
-      row.shareUrl === null ? null : textOf(row.shareUrl, "share link"),
+    shareUrl: row.shareUrl === null ? null : textOf(row.shareUrl, "share link"),
     apps: listOf(row.apps, "apps").map((one) => takeOf(one, "app")),
     credits: creditsOf(row.credits),
   }
