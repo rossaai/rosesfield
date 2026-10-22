@@ -5,9 +5,11 @@ import {
   startRunBodyFor,
 } from "@rosesfield/contract"
 import { AppNotFoundError } from "@rosesfield/generation"
+import type { Context } from "hono"
+import { type SSEStreamingApi, streamSSE } from "hono/streaming"
 import { z } from "zod"
 import { gatewayRoutes } from "#gateway.contract"
-import type { GatewayApp } from "#gateway-env"
+import type { GatewayApp, GatewayEnv } from "#gateway-env"
 import {
   jsonBodyMaxBytes,
   limitBody,
@@ -54,6 +56,63 @@ export function appRoutes(
   })
 }
 
+type RunFrame = ResponseOf<typeof routes.watchRun>
+
+const keepaliveMs = 15_000
+
+function pause(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    const done = (): void => {
+      clearTimeout(timer)
+      signal.removeEventListener("abort", done)
+      resolve()
+    }
+    const timer = setTimeout(done, ms)
+    signal.addEventListener("abort", done, { once: true })
+    if (signal.aborted) {
+      done()
+    }
+  })
+}
+
+async function writeFrame(
+  stream: SSEStreamingApi,
+  frame: RunFrame
+): Promise<void> {
+  await stream.writeSSE({ event: "run", data: JSON.stringify(frame) })
+}
+
+async function watchRun(c: Context<GatewayEnv>): Promise<Response> {
+  const stop = new AbortController()
+  c.req.raw.signal.addEventListener("abort", () => stop.abort(), {
+    once: true,
+  })
+  const frames = c.var.scope.handlers.advanceRun.watch({
+    runId: c.req.param("runId") ?? "",
+    signal: stop.signal,
+    pause,
+  })
+  const first = await frames.next()
+  return streamSSE(c, async (stream) => {
+    stream.onAbort(() => stop.abort())
+    const beat = setInterval(() => {
+      void stream.write(": keepalive\n\n")
+    }, keepaliveMs)
+    try {
+      if (!first.done) {
+        await writeFrame(stream, first.value)
+      }
+      for await (const frame of frames) {
+        await writeFrame(stream, frame)
+      }
+    } finally {
+      clearInterval(beat)
+      stop.abort()
+      await frames.return()
+    }
+  })
+}
+
 export function runRoutes(app: GatewayApp): void {
   app.post(routes.startRun.path, limitBody(jsonBodyMaxBytes), async (c) => {
     const { handlers, keyFor } = c.var.scope
@@ -89,6 +148,7 @@ export function runRoutes(app: GatewayApp): void {
       routes.getRun.status
     )
   })
+  app.get(routes.watchRun.path, watchRun)
   app.post(routes.cancelRun.path, async (c) => {
     const cancelled = await c.var.scope.handlers.cancelRun.execute({
       runId: c.req.param("runId"),

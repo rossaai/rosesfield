@@ -1,12 +1,12 @@
 import type { AppDefinition, Cost } from "@rosesfield/contract"
+import { type Clock, ProjectError, type RunId } from "@rosesfield/kernel"
 import {
-  type Clock,
-  ProjectError,
-  RateLimitedError,
-  type RunId,
-} from "@rosesfield/kernel"
+  endRun,
+  isRetryable,
+  noOutput,
+  timeOutRun,
+} from "#application/advance-run/end-run"
 import {
-  cancelAll,
   keepSteps,
   type Polled,
   reopenLost,
@@ -27,15 +27,21 @@ import {
   pollMs,
   wakeMs,
 } from "#application/advance-run/run-timing"
+import { runWatchOf } from "#application/advance-run/run-watch"
+import { WatchMarks } from "#application/advance-run/watch-marks"
+import type {
+  RunFrame,
+  WatchRunInput,
+} from "#application/watch-run/watch-run.handler"
 import type { AppCatalog } from "#domain/app-catalog.port"
 import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import { RunConflictError } from "#domain/error/run-conflict.error"
 import { RunFailedError } from "#domain/error/run-failed.error"
-import { RunTimedOutError } from "#domain/error/run-timed-out.error"
 import type {
   EngineFinished,
   EngineOutput,
   EngineRequest,
+  EngineStatus,
   GenerationEngine,
 } from "#domain/generation-engine.port"
 import type { PriceBook } from "#domain/price-book.port"
@@ -45,6 +51,8 @@ import type { RunAssets } from "#domain/run-assets.port"
 
 export type AdvanceRunInput = {
   runId: RunId
+  known?: ReadonlyMap<string, EngineStatus>
+  source?: "watcher" | "stream"
 }
 
 export type AdvanceRunOutput = {
@@ -67,25 +75,20 @@ type Watch = {
 
 type Collected = "kept" | "empty" | "retry"
 
+const unknown: ReadonlyMap<string, EngineStatus> = new Map()
+
 const stop: AdvanceRunOutput = { nextWakeMs: null }
 
-function isRetryable(error: unknown): boolean {
-  return (
-    error instanceof RateLimitedError || error instanceof EngineUnavailableError
-  )
-}
-
-function noOutput(): RunFailedError {
-  return new RunFailedError({ cause: "no output of the app's kind" })
-}
-
 export class AdvanceRunHandler {
+  static readonly watchMarkMs = WatchMarks.markMs
+
   private readonly apps: AppCatalog
   private readonly runs: RunRepository
   private readonly engines: readonly GenerationEngine[]
   private readonly assets: RunAssets
   private readonly clock: Clock
   private readonly prices: PriceBook | null
+  private readonly marks = new WatchMarks()
 
   constructor(options: AdvanceRunHandlerOptions) {
     this.apps = options.apps
@@ -96,7 +99,25 @@ export class AdvanceRunHandler {
     this.prices = options.prices ?? null
   }
 
+  watch(input: WatchRunInput): AsyncGenerator<RunFrame, void, void> {
+    return runWatchOf({
+      apps: this.apps,
+      runs: this.runs,
+      engines: this.engines,
+      clock: this.clock,
+      marks: this.marks,
+      advance: async (runId, known) =>
+        (await this.execute({ runId, known, source: "stream" })).nextWakeMs,
+    }).execute(input)
+  }
+
   async execute(input: AdvanceRunInput): Promise<AdvanceRunOutput> {
+    if (input.source !== "stream") {
+      const heldMs = this.marks.heldMs(input.runId, this.now())
+      if (heldMs !== null) {
+        return { nextWakeMs: heldMs }
+      }
+    }
     const run = await this.runs.get(input.runId)
     if (run === null || run.isFinished()) {
       return stop
@@ -130,7 +151,7 @@ export class AdvanceRunHandler {
     try {
       return isSubmitDue(run, engine)
         ? await this.submitPending(run, watch)
-        : await this.poll(run, watch)
+        : await this.poll(run, watch, input.known ?? unknown)
     } catch (error) {
       return this.recover(run.id, watch, error)
     }
@@ -226,12 +247,16 @@ export class AdvanceRunHandler {
     }).catch(() => undefined)
   }
 
-  private async poll(run: Run, watch: Watch): Promise<AdvanceRunOutput> {
+  private async poll(
+    run: Run,
+    watch: Watch,
+    known: ReadonlyMap<string, EngineStatus>
+  ): Promise<AdvanceRunOutput> {
     const polled = await Promise.all(
       run.jobs.flatMap((job) =>
         job.ref === null || job.status === "done"
           ? []
-          : [this.read(watch.engine, job, job.ref)]
+          : [this.read(watch.engine, job, job.ref, known)]
       )
     )
     keepSteps(run, polled)
@@ -299,9 +324,10 @@ export class AdvanceRunHandler {
   private async read(
     engine: GenerationEngine,
     job: RunJob,
-    ref: string
+    ref: string,
+    known: ReadonlyMap<string, EngineStatus>
   ): Promise<Polled> {
-    return { job, ref, status: await engine.read(ref) }
+    return { job, ref, status: known.get(ref) ?? (await engine.read(ref)) }
   }
 
   private async end(
@@ -310,37 +336,14 @@ export class AdvanceRunHandler {
     polled: readonly Polled[],
     ending: ProjectError | "cancelled"
   ): Promise<AdvanceRunOutput> {
-    const working = polled.flatMap((one) =>
-      one.status.state === "queued" || one.status.state === "running"
-        ? [one.ref]
-        : []
-    )
-    const refused = await cancelAll(engine, working)
-    if (ending === "cancelled") {
-      run.cancel({ now: this.now() })
-    } else {
-      run.fail({ error: ending, now: this.now() })
-    }
-    await this.runs.save(run)
-    if (refused !== null) {
-      throw refused
-    }
+    const ports = { runs: this.runs, engine, now: this.now() }
+    await endRun(ports, run, polled, ending)
     return stop
   }
 
   private async timeOut(run: Run, watch: Watch): Promise<AdvanceRunOutput> {
-    const refused = await cancelAll(watch.engine, run.liveRefs())
-    run.fail({
-      error: new RunTimedOutError({
-        runId: run.id,
-        limitSeconds: watch.app.limits.timeoutSeconds,
-      }),
-      now: this.now(),
-    })
-    await this.runs.save(run)
-    if (refused !== null) {
-      throw refused
-    }
+    const ports = { runs: this.runs, engine: watch.engine, now: this.now() }
+    await timeOutRun(ports, run, watch.app)
     return stop
   }
 

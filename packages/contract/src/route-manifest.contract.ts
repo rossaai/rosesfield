@@ -78,6 +78,15 @@ export const routes = {
     response: runResponse,
     status: 200,
   }),
+  watchRun: defineRoute({
+    method: "GET",
+    path: "/api/runs/:runId/events",
+    params: runParams,
+    query: null,
+    body: null,
+    response: runResponse,
+    status: 200,
+  }),
   cancelRun: defineRoute({
     method: "POST",
     path: "/api/runs/:runId/cancel",
