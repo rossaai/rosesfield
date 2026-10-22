@@ -86,7 +86,7 @@ test("an app in the row opens its app without reloading the page", async ({
   )
 })
 
-test("Explore shows every held still and clip once in a masonry packed into the shortest stack, with no share and no key, each clip looping muted", async ({
+test("Explore shows every held still and clip once in a masonry packed into the shortest stack, the after of a pair without its source, with no share and no key, each clip looping muted", async ({
   page,
 }, info) => {
   await openExplore(page)
@@ -94,7 +94,7 @@ test("Explore shows every held still and clip once in a masonry packed into the 
   await expect(feed).toBeVisible()
   await expect(page.getByText("No result is here yet")).toHaveCount(0)
   const tiles = feed.locator("[data-slot=media]")
-  expect(await tiles.count()).toBe(20)
+  expect(await tiles.count()).toBe(17)
   const clips = feed.locator("video")
   await expect(clips).toHaveCount(2)
   for (const clip of await clips.all()) {
