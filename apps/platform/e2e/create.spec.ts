@@ -137,7 +137,7 @@ test.describe("the prompt bar's field and model chip", () => {
 test.describe("an app with many inputs on a desktop", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("holds a 320 px column at x 16 with a 40 px Generate across its 60 px footer, the output 8 px to its right", async ({
+  test("holds a 320 px column at x 16 with a 40 px Generate across its 60 px footer, the output 8 px to its right and running to the window's bottom", async ({
     page,
   }) => {
     await page.goto("/apps/video")
@@ -157,7 +157,8 @@ test.describe("an app with many inputs on a desktop", () => {
     )
     expect(canvas.x).toBe(box.x + box.width + 8)
     expect(box.height).toBe(786)
-    expect(canvas.height).toBe(786)
+    expect(canvas.y).toBe(box.y)
+    expect(canvas.y + canvas.height).toBe(page.viewportSize()?.height)
   })
 })
 

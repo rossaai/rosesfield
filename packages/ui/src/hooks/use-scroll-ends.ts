@@ -58,3 +58,26 @@ export function useScrollEnds(row: RefObject<HTMLElement | null>): {
   }, [row, update])
   return { ends, update }
 }
+
+export function isBlockClipped(element: HTMLElement): boolean {
+  return element.scrollHeight > element.clientHeight + 1
+}
+
+export function useBlockClipped(box: RefObject<HTMLElement | null>): boolean {
+  const [isClipped, setClipped] = useState(false)
+  useEffect(() => {
+    const element = box.current
+    if (element === null || typeof ResizeObserver === "undefined") {
+      return
+    }
+    const check = (): void => setClipped(isBlockClipped(element))
+    check()
+    const sizes = new ResizeObserver(check)
+    sizes.observe(element)
+    for (const child of element.children) {
+      sizes.observe(child)
+    }
+    return () => sizes.disconnect()
+  }, [box])
+  return isClipped
+}
