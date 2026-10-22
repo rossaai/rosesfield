@@ -4,7 +4,7 @@ import { StateView } from "@rosesfield/ui/components/state-view"
 import type { ReactElement } from "react"
 import { t, tCatalog } from "@/copy/t"
 import { RunCard, RunColumns } from "@/pieces/run/run-card"
-import { RunLine } from "@/pieces/run/run-line"
+import { RunChrome } from "@/pieces/run/run-chrome"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import { DownloadMenu } from "@/studio/layers/download-menu"
@@ -30,7 +30,7 @@ function brushOf(state: LayersState): Brush | null {
   }
 }
 
-function StackHead({
+function StackDownload({
   state,
   stack,
 }: {
@@ -38,13 +38,8 @@ function StackHead({
   stack: Stack
 }): ReactElement {
   return (
-    <div className="flex min-w-0 flex-col gap-s2 @regular:flex-row @regular:items-start">
-      <div className="min-w-0 flex-1">
-        <RunLine run={stack.run} onUseInputs={state.useInputs} />
-      </div>
-      <div className="shrink-0">
-        <DownloadMenu runId={stack.run.id} rows={state.rows} />
-      </div>
+    <div className="flex shrink-0 justify-end">
+      <DownloadMenu runId={stack.run.id} rows={state.rows} />
     </div>
   )
 }
@@ -57,24 +52,28 @@ function RegularStack({
   stack: Stack
 }): ReactElement {
   return (
-    <section className="flex flex-col gap-s3">
-      <StackHead state={state} stack={stack} />
-      <div className="flex flex-row gap-s3">
-        <div className="min-w-0 flex-1">
-          <LayerCanvas
-            shown={state.shown}
-            size={state.size}
-            brush={brushOf(state)}
-            isDemo={stack.run.origin === "demo"}
-          />
-        </div>
-        <div className="w-field-max shrink-0">
-          <LayerList
-            rows={state.rows}
-            actions={state.actions}
-            size={state.size}
-          />
-        </div>
+    <section className="flex flex-row gap-s3">
+      <div className="min-w-0 flex-1">
+        <LayerCanvas
+          shown={state.shown}
+          size={state.size}
+          brush={brushOf(state)}
+          chrome={
+            <RunChrome
+              run={stack.run}
+              place="over"
+              onUseInputs={state.useInputs}
+            />
+          }
+        />
+      </div>
+      <div className="flex w-field-max shrink-0 flex-col gap-s3">
+        <StackDownload state={state} stack={stack} />
+        <LayerList
+          rows={state.rows}
+          actions={state.actions}
+          size={state.size}
+        />
       </div>
     </section>
   )
@@ -92,7 +91,6 @@ function PhoneStack({
       data-slot="layers-phone-stack"
       className="flex h-(--canvas-height) min-h-80 flex-col gap-s3"
     >
-      <StackHead state={state} stack={stack} />
       <div
         data-slot="layers-phone-canvas"
         className="flex min-h-0 flex-1 items-center justify-center"
@@ -102,10 +100,17 @@ function PhoneStack({
           shown={state.shown}
           size={state.size}
           brush={brushOf(state)}
-          isDemo={stack.run.origin === "demo"}
+          chrome={
+            <RunChrome
+              run={stack.run}
+              place="over"
+              onUseInputs={state.useInputs}
+            />
+          }
           fit="box"
         />
       </div>
+      <StackDownload state={state} stack={stack} />
       <div className="shrink-0">
         <LayerStrip
           rows={state.rows}

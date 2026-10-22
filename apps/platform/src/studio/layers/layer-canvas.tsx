@@ -3,12 +3,13 @@ import { cn } from "@rosesfield/ui/lib/cn"
 import {
   type PointerEvent,
   type ReactElement,
+  type ReactNode,
   type RefObject,
   useEffect,
   useRef,
 } from "react"
 import { useAssetSource } from "@/api/use-asset-source"
-import { t, tCatalog } from "@/copy/t"
+import { tCatalog } from "@/copy/t"
 import type { PixelSize } from "@/studio/layers/stack-images"
 
 export type Brush = {
@@ -22,7 +23,7 @@ type LayerCanvasProps = {
   shown: readonly string[]
   size: PixelSize | null
   brush: Brush | null
-  isDemo: boolean
+  chrome: ReactNode
   fit?: "width" | "box"
 }
 
@@ -122,7 +123,7 @@ export function LayerCanvas({
   shown,
   size,
   brush,
-  isDemo,
+  chrome,
   fit = "width",
 }: LayerCanvasProps): ReactElement {
   if (size === null) {
@@ -132,7 +133,7 @@ export function LayerCanvas({
     <figure
       aria-label={tCatalog("layers.canvas.label")}
       className={cn(
-        "relative mx-auto overflow-hidden rounded-cell bg-(--well)",
+        "group/reveal relative mx-auto overflow-hidden rounded-cell bg-(--well)",
         fit === "width" ? "max-h-full w-full" : "shrink-0"
       )}
       style={{
@@ -144,11 +145,7 @@ export function LayerCanvas({
         <LayerImage key={assetId} assetId={assetId} />
       ))}
       {brush === null ? null : <BrushLayer brush={brush} size={size} />}
-      {isDemo ? (
-        <span className="material pointer-events-none absolute bottom-s2 left-s2 max-w-[calc(100%-2*var(--spacing-s2))] truncate whitespace-nowrap rounded-full px-s2 py-hairline text-caption text-ink">
-          {t("run.demoCaption")}
-        </span>
-      ) : null}
+      {chrome}
     </figure>
   )
 }

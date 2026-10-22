@@ -8,7 +8,13 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router"
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { GatewaySettings } from "@/api/gateway-settings"
 import { assetQuery, runQuery, runsQuery, settingsQuery } from "@/api/queries"
@@ -58,6 +64,9 @@ function openLayers(options: {
     },
   })
   client.setQueryData(settingsQuery.queryKey, settings)
+  for (const layer of [firstLayer, secondLayer]) {
+    client.setQueryData(["layers-size", layer], { width: 1024, height: 768 })
+  }
   client.setQueryData(runsQuery(layersListing.id).queryKey, {
     pages: [{ runs: [...options.runs], next: null }],
     pageParams: [null],
@@ -287,5 +296,32 @@ describe("Layers on a phone", () => {
     expect(
       screen.getAllByRole("list", { name: tCatalog("layers.stack.title") })
     ).toHaveLength(1)
+  })
+})
+
+describe("the open stack", () => {
+  it("shows its canvas first, with the run's facts over it and no caption line above it", async () => {
+    openLayers({
+      runs: [
+        layersRun({
+          id: "7d1e2f30-4a5b-4c6d-8e7f-901a2b3c4d5e",
+          minute: 0,
+          inputs: { mode: "split" },
+          outputs: [firstLayer, secondLayer],
+        }),
+      ],
+    })
+    const canvas = await screen.findByRole("figure", {
+      name: tCatalog("layers.canvas.label"),
+    })
+    expect(
+      canvas.querySelector("[data-slot='run-facts']")?.textContent
+    ).not.toBe("")
+    const section = canvas.closest("section")
+    expect(section?.querySelectorAll("[data-slot='run-facts']")).toHaveLength(1)
+    const headlines = within(section ?? canvas).getAllByText(
+      canvas.querySelector("[data-slot='run-prompt']")?.textContent ?? "?"
+    )
+    expect(headlines.every((headline) => canvas.contains(headline))).toBe(true)
   })
 })
