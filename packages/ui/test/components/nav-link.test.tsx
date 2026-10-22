@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it } from "vitest"
 afterEach(cleanup)
 
 describe("NavLink", () => {
-  it("is text only, a 30 px capsule with 10 px sides that presses on the press preset", () => {
+  it("is text only, at the record's linkHeight and linkRadius, 26 px with the dense radius and 10 px sides, and presses on the press preset", () => {
     render(
       <nav>
         <NavLink href="/">Explore</NavLink>
@@ -21,9 +21,9 @@ describe("NavLink", () => {
     expect(link.querySelector("svg, img")).toBeNull()
     expect(link.className.split(" ")).toEqual(
       expect.arrayContaining([
-        "h-tab",
+        "h-button-small",
         "px-s3",
-        "rounded-full",
+        "rounded-dense",
         "hover:bg-(--tint)",
         "motion-press",
       ])

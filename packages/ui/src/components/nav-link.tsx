@@ -11,7 +11,7 @@ import { motion } from "@rosesfield/ui/motion"
 import type { ComponentProps, ReactElement, ReactNode } from "react"
 
 const navLinkClass = cn(
-  "inline-flex h-tab shrink-0 items-center rounded-full px-s3 font-medium text-body whitespace-nowrap text-ink-muted no-underline select-none hover:text-ink in-data-[gallery=hover]:text-ink in-data-[gallery=press]:text-ink aria-[current=page]:text-ink data-popup-open:bg-(--tint) data-popup-open:text-ink",
+  "inline-flex h-button-small shrink-0 items-center rounded-dense px-s3 font-medium text-body whitespace-nowrap text-ink-muted no-underline select-none hover:text-ink in-data-[gallery=hover]:text-ink in-data-[gallery=press]:text-ink aria-[current=page]:text-ink data-popup-open:bg-(--tint) data-popup-open:text-ink",
   interaction.fill,
   motion.press,
   interaction.ring
