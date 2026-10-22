@@ -1,5 +1,17 @@
 import { cn } from "@rosesfield/ui/lib/cn"
-import { type ReactElement, type ReactNode, useEffect, useState } from "react"
+import {
+  createContext,
+  type ReactElement,
+  type ReactNode,
+  use,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from "react"
+import { createPortal } from "react-dom"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 
 type ScreenHeaderProps = {
   title: ReactNode
@@ -9,6 +21,42 @@ type ScreenHeaderProps = {
   phoneLead?: ReactNode
   phoneAction?: ReactNode
   isScrolled?: boolean
+}
+
+type PhoneTitleSlot = {
+  node: HTMLElement | null
+  setNode: (node: HTMLElement | null) => void
+  titles: number
+  claim: () => () => void
+}
+
+const PhoneTitleContext = createContext<PhoneTitleSlot>({
+  node: null,
+  setNode: () => undefined,
+  titles: 0,
+  claim: () => () => undefined,
+})
+
+export function PhoneTitleProvider({
+  children,
+}: {
+  children: ReactNode
+}): ReactElement {
+  const [node, setNode] = useState<HTMLElement | null>(null)
+  const [titles, setTitles] = useState(0)
+  const claim = useCallback(() => {
+    setTitles((count) => count + 1)
+    return () => setTitles((count) => count - 1)
+  }, [])
+  const slot = useMemo<PhoneTitleSlot>(
+    () => ({ node, setNode, titles, claim }),
+    [node, titles, claim]
+  )
+  return <PhoneTitleContext value={slot}>{children}</PhoneTitleContext>
+}
+
+export function usePhoneTitleSlot(): PhoneTitleSlot {
+  return use(PhoneTitleContext)
 }
 
 export function useScrolledPast(): [
@@ -32,54 +80,69 @@ export function useScrolledPast(): [
   return [setNode, isPast]
 }
 
-function PhoneHeader({
+export function PhoneTitle({
   title,
   phoneLead,
   phoneAction,
-}: Pick<ScreenHeaderProps, "title" | "phoneLead" | "phoneAction">): ReactNode {
-  if (title === null && phoneLead === undefined && phoneAction === undefined) {
-    return null
-  }
+}: Pick<
+  ScreenHeaderProps,
+  "title" | "phoneLead" | "phoneAction"
+>): ReactElement {
   return (
-    <header className="flex h-header shrink-0 items-center gap-s3 px-s5 @regular:hidden">
+    <span data-slot="phone-title" className="flex min-w-0 items-center gap-s2">
       {phoneLead === undefined ? null : (
-        <div className="-ms-s2 flex shrink-0 items-center">{phoneLead}</div>
+        <span className="-ms-s2 flex shrink-0 items-center">{phoneLead}</span>
       )}
       {title === null ? null : (
-        <h1 className="min-w-0 flex-1 truncate text-body font-medium">
-          {title}
-        </h1>
+        <h1 className="min-w-0 truncate font-medium text-body">{title}</h1>
       )}
       {phoneAction === undefined ? null : (
-        <div className="ml-auto flex shrink-0 items-center gap-s2">
-          {phoneAction}
-        </div>
+        <span className="flex shrink-0 items-center gap-s1">{phoneAction}</span>
       )}
-    </header>
+    </span>
   )
 }
 
+function PhoneTitlePortal(
+  props: Pick<ScreenHeaderProps, "title" | "phoneLead" | "phoneAction">
+): ReactNode {
+  const { node, claim } = usePhoneTitleSlot()
+  const isRegular = useIsRegularWindow()
+  const isEmpty =
+    props.title === null &&
+    props.phoneLead === undefined &&
+    props.phoneAction === undefined
+  const isShown = !(isEmpty || isRegular)
+  useLayoutEffect(() => (isShown ? claim() : undefined), [isShown, claim])
+  if (!isShown || node === null) {
+    return null
+  }
+  return createPortal(<PhoneTitle {...props} />, node)
+}
+
 export function ScreenHeader(props: ScreenHeaderProps): ReactElement {
-  const [sentinel, isPast] = useScrolledPast()
-  const isScrolled = props.isScrolled ?? isPast
+  const isSticky = props.isScrolled !== undefined
   return (
     <>
-      <span ref={sentinel} aria-hidden="true" className="block h-0" />
-      <PhoneHeader
+      <PhoneTitlePortal
         title={props.phoneTitle ?? props.title}
         {...(props.phoneLead === undefined
           ? {}
           : { phoneLead: props.phoneLead })}
-        phoneAction={props.phoneAction}
+        {...(props.phoneAction === undefined
+          ? {}
+          : { phoneAction: props.phoneAction })}
       />
       <header
+        data-slot="screen-header"
         className={cn(
-          "sticky top-0 z-10 hidden h-header shrink-0 items-center gap-s3 bg-canvas px-s5 @regular:flex",
-          isScrolled ? "shadow-seam" : ""
+          "z-10 hidden min-h-header shrink-0 items-center gap-s3 bg-canvas px-s5 py-s2 @regular:flex",
+          isSticky ? "sticky top-0" : "",
+          props.isScrolled === true ? "shadow-seam" : ""
         )}
       >
         {props.title === null ? null : (
-          <h1 className="min-w-0 shrink truncate text-body font-medium">
+          <h1 className="min-w-0 shrink truncate text-display text-ink">
             {props.title}
           </h1>
         )}
