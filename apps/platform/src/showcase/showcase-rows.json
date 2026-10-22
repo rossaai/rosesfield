@@ -468,5 +468,113 @@
     "credits": 3.66,
     "seconds": 39.1,
     "madeAt": "2026-10-22T10:46:47Z"
+  },
+  {
+    "runId": "92ec5824-0922-40ca-83fe-12867131b4ac",
+    "file": "aurora-close-up.webp",
+    "input": {
+      "file": "whale-aurora-night.webp",
+      "name": "images"
+    },
+    "appId": "edit",
+    "kind": "image",
+    "width": 854,
+    "height": 1280,
+    "model": "openai/gpt-image-2.5-sunburst",
+    "prompt": "Make a vertical close-up portrait of this same woman: she now faces the camera, head and shoulders, her face lit by the green and violet aurora, a few snowflakes in her dark hair, the collar of the same red wool coat. Keep her face, her eyes and her hair exactly hers. The frozen lake and the sky soft and out of focus behind her, 35mm film grain.",
+    "inputs": {
+      "model": "openai/gpt-image-2.5-sunburst",
+      "background": "auto",
+      "moderation": "auto",
+      "quality": "auto",
+      "size": "auto"
+    },
+    "aspectRatio": null,
+    "credits": 5.29,
+    "seconds": 32.8,
+    "madeAt": "2026-10-22T18:57:06Z",
+    "from": "whale-aurora-night.webp"
+  },
+  {
+    "runId": "e5473033-6b80-4abc-ad81-0102002b77ee",
+    "file": "linen-headshot.webp",
+    "input": {
+      "file": "linen-balcony.webp",
+      "name": "image"
+    },
+    "appId": "headshots",
+    "kind": "image",
+    "width": 1024,
+    "height": 1024,
+    "model": "qwen_image_edit_2511_fp8mixed.safetensors",
+    "prompt": null,
+    "inputs": {
+      "background": "grey",
+      "clothes": "keep",
+      "framing": "standard",
+      "keepGlasses": "on"
+    },
+    "aspectRatio": "1:1",
+    "credits": 18.32,
+    "seconds": 86.2,
+    "madeAt": "2026-10-22T18:01:19Z",
+    "from": "linen-balcony.webp"
+  },
+  {
+    "runId": "c2a6e835-89ed-4430-86b1-8653d7017297",
+    "file": "cardigan-push-in.mp4",
+    "input": {
+      "file": "mustard-cardigan.webp",
+      "name": "startFrame"
+    },
+    "appId": "shot",
+    "kind": "video",
+    "width": 720,
+    "height": 412,
+    "model": "Lightricks/LTX-2.5",
+    "prompt": "Shot on 35mm film, a slow, steady dolly in on an invented man in his thirties with a dark moustache, wearing a mustard yellow cardigan, standing against a plain teal backdrop. He looks into the lens and stays still, then gives a small smile only at the very end. Standard lens at a wide aperture, his face sharp and the backdrop soft. Soft studio light. One continuous take, no cuts. SOUND: the quiet hum of a studio room and the soft click of a camera shutter.",
+    "inputs": {
+      "model": "ltx-2-5",
+      "movement": "push-in",
+      "camera": "film-35mm",
+      "lens": "standard",
+      "focus": "shallow",
+      "light": "studio",
+      "color": "auto",
+      "mood": "calm",
+      "length": "3",
+      "resolution": "720p",
+      "sound": "on"
+    },
+    "aspectRatio": "16:9",
+    "credits": 9.31,
+    "seconds": 54.2,
+    "madeAt": "2026-10-22T18:08:12Z",
+    "from": "mustard-cardigan.webp"
+  },
+  {
+    "runId": "1235b46a-0d0f-40b8-a007-3291fa2dc34a",
+    "file": "whale-breach.mp4",
+    "input": {
+      "file": "whale-dawn.webp",
+      "name": "images"
+    },
+    "appId": "video",
+    "kind": "video",
+    "width": 672,
+    "height": 448,
+    "model": "xai/grok-imagine-video-1.5",
+    "prompt": "The humpback whale rises higher out of the broken ice and crashes back down, throwing a wave of spray and ice shards across the lake. The woman in the red coat flinches, then turns her head slowly toward the camera, her coat and hair moving in the wind. Slow push-in, handheld, natural light, the sound of cracking ice and the whale's splash.",
+    "inputs": {
+      "model": "xai/grok-imagine-video-1.5",
+      "aspectRatio": "16:9",
+      "type": "image_url",
+      "duration": "8"
+    },
+    "aspectRatio": null,
+    "credits": 196.12,
+    "seconds": 45.2,
+    "madeAt": "2026-10-22T18:41:23Z",
+    "from": "whale-dawn.webp"
   }
 ]
