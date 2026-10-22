@@ -10,7 +10,12 @@ import {
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { appLine } from "@/catalog/app-facts"
-import { HowItWorks, samplesOf, stepsOf } from "@/screens/app/how-it-works"
+import {
+  HowItWorks,
+  ownExampleOf,
+  samplesOf,
+  stepsOf,
+} from "@/screens/app/how-it-works"
 import { publishedQuery, type SharedOutput } from "@/screens/explore/share-api"
 import { mediaOf, showcaseOf } from "@/showcase/showcase"
 
@@ -23,6 +28,26 @@ const video = appListing.parse(findApp("video"))
 const effects = appListing.parse(findApp("effects"))
 const image = appListing.parse(findApp("image"))
 const relight = appListing.parse(findApp("relight"))
+
+const otherId = "93e9078d-0000-4000-8000-0000000000ff"
+
+const madeVideo = run.parse({
+  id: "93e9078d-0000-4000-8000-0000000000aa",
+  appId: "video",
+  status: "done",
+  inputs: { prompt: "A field at dusk", model: "ltx-2-5" },
+  count: 1,
+  aspectRatio: "16:9",
+  seed: 4,
+  outputs: ["93e9078d-0000-4000-8000-0000000000bb"],
+  progress: 1,
+  engine: { adapter: "comfy-workflow", models: [], workflowHash: null },
+  cost: null,
+  origin: "live",
+  failure: null,
+  createdAt: "2026-10-20T10:00:00.000Z",
+  finishedAt: "2026-10-20T10:01:00.000Z",
+})
 
 function share(
   id: string,
@@ -110,12 +135,22 @@ describe("How it works", () => {
     ])
   })
 
-  it("shows no media slot for a step with no held example, never another app's still", () => {
+  it("fills every step even with no held example, and offers Recreate only on a real run", () => {
     const steps = stepsOf(video, [], [])
-    expect(steps.map((step) => step.media)).toEqual([null, null, null])
-    const effectsSteps = stepsOf(effects, samplesOf([], "effects"))
-    expect(effectsSteps[0]?.media).toBeNull()
-    expect(effectsSteps[2]?.media).not.toBeNull()
+    expect(steps.every((step) => step.media !== null)).toBe(true)
+    expect(steps.some((step) => step.action !== undefined)).toBe(false)
+    const own = stepsOf(video, [], [], madeVideo)
+    expect(own[2]?.action).toBeDefined()
+  })
+
+  it("takes your newest finished run of this app as the example, never a demo, a failure or another app's", () => {
+    const failed = { ...madeVideo, id: otherId, status: "failed" as const }
+    const demo = { ...madeVideo, id: otherId, origin: "demo" as const }
+    const other = { ...madeVideo, id: otherId, appId: "image" }
+    expect(ownExampleOf(video, [failed, demo, other, madeVideo])?.id).toBe(
+      madeVideo.id
+    )
+    expect(ownExampleOf(video, [failed, demo, other])).toBeNull()
   })
 })
 
@@ -177,14 +212,19 @@ describe("How it works, one composition for every app", () => {
     expect(steps[2]?.querySelector("img")?.getAttribute("src")).toBe(item?.src)
   })
 
-  it("plays Effects' clip muted and looping, and shows no still from another app", async () => {
+  it("shows the photo Effects' clip was made from, then plays the clip muted and looping", async () => {
     renderHow(() => <HowItWorks app={effects} />, [])
     const steps = await stepsShown(3)
-    expect(steps[0]?.querySelector("[data-slot=how-step-media]")).toBeNull()
+    const [item] = showcaseOf("effects")
+    expect(steps[0]?.querySelector("img")?.getAttribute("src")).toBe(
+      mediaOf(item?.from ?? "")
+    )
     const clip = steps[2]?.querySelector("video")
     expect(clip?.muted).toBe(true)
     expect(clip?.loop).toBe(true)
-    const others = showcaseOf("image").map((one) => one.src)
+    const others = showcaseOf("image")
+      .filter((one) => one.file !== item?.from)
+      .map((one) => one.src)
     const shown = [...document.querySelectorAll("img")].map((one) =>
       one.getAttribute("src")
     )
@@ -192,6 +232,23 @@ describe("How it works, one composition for every app", () => {
     expect(steps[2]?.querySelector("a")?.getAttribute("href")).toBe(
       "/apps/effects"
     )
+  })
+
+  it("shows what an app with no example takes, its default model and what it makes, with no picture", async () => {
+    renderHow(() => <HowItWorks app={video} />, [])
+    const steps = await stepsShown(3)
+    expect(
+      [...(steps[0]?.querySelectorAll("[data-made=no]") ?? [])].map((disc) =>
+        disc.getAttribute("data-kind")
+      )
+    ).toContain("prompt")
+    expect(steps[1]?.querySelector("[data-slot=how-model]")?.textContent).toBe(
+      "LTX 2.5"
+    )
+    expect(
+      steps[2]?.querySelector("[data-made=yes]")?.getAttribute("data-kind")
+    ).toBe("video")
+    expect(document.querySelectorAll("img, video")).toHaveLength(0)
   })
 
   it("shows Image's prompt as what you add", async () => {

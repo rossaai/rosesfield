@@ -8,27 +8,12 @@ import {
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { Link } from "@tanstack/react-router"
-import {
-  ArrowRightIcon,
-  FileAudioIcon,
-  FileTextIcon,
-  ImageIcon,
-  PlayIcon,
-  TypeIcon,
-  UserRoundIcon,
-  VideoIcon,
-} from "lucide-react"
+import { PlayIcon } from "lucide-react"
 import type { ReactElement } from "react"
-import {
-  appLine,
-  appName,
-  type OutputKind,
-  type TakenKind,
-  takenKindsOf,
-} from "@/catalog/app-facts"
-import { outputKindsOf } from "@/catalog/app-workflows"
+import { appLine, appName } from "@/catalog/app-facts"
 import { tCount } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
+import { KindFlow } from "@/pieces/kind-discs"
 import { type ShowcaseItem, showcaseOf } from "@/showcase/showcase"
 
 const frame: MediaAspect = { width: 203, height: 196 }
@@ -56,39 +41,7 @@ export function appCardFormOf(
   return hasRun || examples.length > 0 ? "media" : "compact"
 }
 
-const kindGlyphs = {
-  prompt: TypeIcon,
-  character: UserRoundIcon,
-  image: ImageIcon,
-  video: VideoIcon,
-  audio: FileAudioIcon,
-  text: FileTextIcon,
-} satisfies Record<TakenKind | OutputKind, typeof ImageIcon>
-
-function KindDisc({
-  kind,
-  isMade,
-}: {
-  kind: TakenKind | OutputKind
-  isMade: boolean
-}): ReactElement {
-  const Glyph = kindGlyphs[kind]
-  return (
-    <span
-      data-kind={kind}
-      data-made={isMade ? "yes" : "no"}
-      className={cn(
-        "flex size-10 items-center justify-center rounded-full [&_svg]:glyph",
-        isMade ? "bg-ink text-canvas" : "bg-(--ground) text-ink-muted"
-      )}
-    >
-      <Glyph />
-    </span>
-  )
-}
-
 function FlowFrame({ app }: { app: AppListing }): ReactElement {
-  const taken = takenKindsOf(app)
   return (
     <span
       aria-hidden="true"
@@ -96,21 +49,7 @@ function FlowFrame({ app }: { app: AppListing }): ReactElement {
       className="flex w-full items-center justify-center gap-s2 bg-(--well) text-ink-muted"
       style={{ aspectRatio: `${frame.width} / ${frame.height}` }}
     >
-      {taken.length === 0 ? null : (
-        <>
-          <span className="flex -space-x-2">
-            {taken.map((kind) => (
-              <KindDisc key={kind} kind={kind} isMade={false} />
-            ))}
-          </span>
-          <ArrowRightIcon className="glyph-small" />
-        </>
-      )}
-      <span className="flex -space-x-2">
-        {outputKindsOf(app).map((kind) => (
-          <KindDisc key={kind} kind={kind} isMade={true} />
-        ))}
-      </span>
+      <KindFlow app={app} />
     </span>
   )
 }
