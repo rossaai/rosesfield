@@ -31,7 +31,7 @@ describe("the prompt's chip row", () => {
       </TooltipProvider>
     )
     const chip = screen.getByRole("button", { pressed: true })
-    expect(chip.className.split(" ")).toContain("h-6.5")
+    expect(chip.className.split(" ")).toContain("h-button-small")
   })
 })
 
