@@ -113,20 +113,28 @@ async function mediaChecks(path: string, expected: Expected): Promise<Check[]> {
   return checks
 }
 
-export async function checkOutputFile(
-  path: string,
-  expected: Expected
-): Promise<Check[]> {
-  if (expected.kind !== "mesh") {
-    return mediaChecks(path, expected)
-  }
-  const faces = facesOfGlb(new Uint8Array(await Bun.file(path).arrayBuffer()))
+async function meshChecks(path: string): Promise<Check[]> {
+  const file = Bun.file(path)
+  const bytes = (await file.exists())
+    ? new Uint8Array(await file.arrayBuffer())
+    : new Uint8Array()
+  const faces = facesOfGlb(bytes)
   return [
+    check("opens", bytes.length > 0, `${bytes.length} bytes`),
     check(
-      "opens",
+      "is a GLB",
       faces !== null,
       faces === null ? "not a glTF binary" : "glTF binary"
     ),
     check("has faces", (faces ?? 0) > 0, `${faces ?? 0} faces`),
   ]
+}
+
+export async function checkOutputFile(
+  path: string,
+  expected: Expected
+): Promise<Check[]> {
+  return expected.kind === "mesh"
+    ? meshChecks(path)
+    : mediaChecks(path, expected)
 }

@@ -47,11 +47,7 @@ export function threeDApp(held: ReadonlySet<string>): AppInput {
       },
       { type: "seed", name: "seed", labelKey: "threeD.input.seed.label" },
     ],
-    output: {
-      kind: "image",
-      count: { default: 1, max: 1 },
-      aspectRatios: { options: ["1:1"], default: "1:1" },
-    },
+    output: { kind: "mesh", count: { default: 1, max: 1 } },
     engine: threeDEngine(defaultModel),
     limits: { timeoutSeconds: 600, maxRetries: 0 },
   })

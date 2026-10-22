@@ -1,6 +1,11 @@
 import type { AssetKind, RunInputs } from "@rosesfield/contract"
 import type { EngineOutput } from "#domain/generation-engine.port"
-import { mediaKindOf, mimeOf } from "#infrastructure/comfy/comfy-media"
+import {
+  isGlb,
+  mediaKindOf,
+  meshMime,
+  mimeOf,
+} from "#infrastructure/comfy/comfy-media"
 import { mediaSizeOf } from "#infrastructure/media-size"
 import { isObject } from "#infrastructure/router/router-json"
 import type {
@@ -184,6 +189,9 @@ function sniffed(bytes: Uint8Array, given: string): string {
     given !== "binary/octet-stream"
   ) {
     return given
+  }
+  if (isGlb(bytes)) {
+    return meshMime
   }
   const head = [...bytes.subarray(0, 12)]
   const ascii = String.fromCharCode(...head)

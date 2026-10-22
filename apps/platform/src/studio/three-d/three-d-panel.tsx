@@ -1,5 +1,5 @@
 import type { AppListing } from "@rosesfield/contract"
-import { ModeStrip, ModeTab, Tabs } from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import type { ReactElement } from "react"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
@@ -31,13 +31,13 @@ export function ModeTabs({
         }
       }}
     >
-      <ModeStrip aria-label={tThreeD("threeD.tabs.label")}>
+      <TabsList aria-label={tThreeD("threeD.tabs.label")}>
         {screen.tabs.map((one) => (
-          <ModeTab key={one} value={one}>
+          <TabsTrigger key={one} value={one}>
             {tThreeD(tabKeys[one])}
-          </ModeTab>
+          </TabsTrigger>
         ))}
-      </ModeStrip>
+      </TabsList>
     </Tabs>
   )
 }

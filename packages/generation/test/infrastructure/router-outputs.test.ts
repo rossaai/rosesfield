@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import { ComfyRouterGenerationEngine } from "#infrastructure/comfy-router-generation-engine"
 import { writeFlatPng } from "#infrastructure/demo/flat-png"
 import { RouterCatalog } from "#infrastructure/router/router-catalog"
+import { glbBytes } from "../glb-bytes"
 import { pngBytes, start } from "../sample"
 import {
   catalogPage,
@@ -105,6 +106,43 @@ describe("the outputs of a Router result", () => {
     ])
     const [output] = await engine.listOutputs(ref, { prompt: "a door" })
     expect(output).toMatchObject({ width: 48, height: 27 })
+  })
+
+  it.each(["model/gltf-binary", "application/octet-stream"])(
+    "keep a GLB served as %s as a mesh",
+    async (contentType) => {
+      const { engine } = engineWith([
+        resultWith({ result: { sample: outputUrl } }),
+        {
+          method: "GET",
+          url: outputUrl,
+          status: 200,
+          headers: { "Content-Type": contentType },
+          bytes: glbBytes(),
+        },
+      ])
+      const outputs = await engine.listOutputs(ref, { prompt: "a chair" })
+      expect(outputs).toHaveLength(1)
+      expect(outputs[0]).toMatchObject({
+        kind: "mesh",
+        mime: "model/gltf-binary",
+      })
+    }
+  )
+
+  it("drop a mesh file that is not a GLB", async () => {
+    const { engine } = engineWith([
+      resultWith({ result: { sample: outputUrl } }),
+      {
+        method: "GET",
+        url: outputUrl,
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+        bytes: new TextEncoder().encode("Kaydara FBX Binary  "),
+      },
+    ])
+    const outputs = await engine.listOutputs(ref, { prompt: "a chair" })
+    expect(outputs).toEqual([])
   })
 
   it("never fetch an address the visitor wrote into the run", async () => {

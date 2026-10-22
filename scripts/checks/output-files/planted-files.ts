@@ -95,6 +95,7 @@ async function writeFiles(at: (name: string) => string): Promise<void> {
   await halfOf(at("good.mp4"), at("truncated.mp4"))
   await Bun.write(at("good.glb"), glbOf(meshJson(3), 3))
   await Bun.write(at("empty.glb"), glbOf(meshJson(0), 0))
+  await Bun.write(at("not-a-glb.glb"), "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n")
 }
 
 export async function writePlanted(folder: string): Promise<Planted[]> {
@@ -120,5 +121,6 @@ export async function writePlanted(folder: string): Promise<Planted[]> {
     { file: at("silent.wav"), expected: audio, defect: "not silent" },
     { file: at("good.glb"), expected: mesh, defect: null },
     { file: at("empty.glb"), expected: mesh, defect: "has faces" },
+    { file: at("not-a-glb.glb"), expected: mesh, defect: "is a GLB" },
   ]
 }

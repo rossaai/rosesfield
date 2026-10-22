@@ -137,3 +137,13 @@ describe("3D's list of models, from the record of Comfy Cloud's weights", () => 
     expect(listed?.id).toBe("three-d")
   })
 })
+
+describe("what 3D makes", () => {
+  it("makes one mesh, so the run keeps the GLB the model returns", () => {
+    expect(appFrom(pixal3dTemplateFiles).output).toEqual({
+      kind: "mesh",
+      count: { default: 1, max: 1 },
+    })
+    expect(appFrom([]).output.kind).toBe("mesh")
+  })
+})
