@@ -11,6 +11,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { HowItWorks, samplesOf, stepsOf } from "@/screens/app/how-it-works"
 import { publishedQuery, type SharedOutput } from "@/screens/explore/share-api"
+import { showcaseOf } from "@/showcase/showcase"
 
 afterEach(() => {
   cleanup()
@@ -18,6 +19,8 @@ afterEach(() => {
 })
 
 const video = appListing.parse(findApp("video"))
+const effects = appListing.parse(findApp("effects"))
+const image = appListing.parse(findApp("image"))
 
 function share(
   id: string,
@@ -71,9 +74,27 @@ describe("How it works", () => {
       ],
       "video"
     )
-    expect(samples).toEqual([
-      { shareId: "a", kind: "video", src: "/share/a/media/0" },
-      { shareId: "d", kind: "image", src: "/share/d/media/0" },
+    expect(
+      samples.map((sample) => [sample.key, sample.kind, sample.source])
+    ).toEqual([
+      [
+        "share-a",
+        "video",
+        { kind: "share", shareId: "a", src: "/share/a/media/0" },
+      ],
+      [
+        "share-d",
+        "image",
+        { kind: "share", shareId: "d", src: "/share/d/media/0" },
+      ],
+    ])
+  })
+
+  it("puts the app's bundled examples first, before its published results", () => {
+    const samples = samplesOf([share("a", "effects", "video")], "effects")
+    expect(samples.map((sample) => sample.key)).toEqual([
+      ...showcaseOf("effects").map((item) => `showcase-${item.file}`),
+      "share-a",
     ])
   })
 
@@ -93,10 +114,76 @@ describe("How it works", () => {
     expect(steps.every((step) => step.media !== null)).toBe(true)
   })
 
-  it("leaves a frame empty rather than invent a result", () => {
-    const steps = stepsOf(video, [])
-    expect(steps.map((step) => step.media)).toEqual([null, null, null])
-    expect(steps.some((step) => step.action !== undefined)).toBe(false)
+  it("shows no step frame without a real example, rather than an empty one", () => {
+    expect(stepsOf(video, [])).toEqual([])
+  })
+
+  it("keeps the last steps for fewer examples, so one example is the result", () => {
+    const one = stepsOf(
+      video,
+      samplesOf([share("a", "video", "video")], "video")
+    )
+    expect(one.map((step) => step.id)).toEqual(["result"])
+    expect(one[0]?.media).not.toBeNull()
+    expect(one[0]?.action).toBeDefined()
+    const two = stepsOf(effects, samplesOf([], "effects"))
+    expect(two.map((step) => step.id)).toEqual(["model", "result"])
+  })
+})
+
+function renderHow(
+  node: () => ReturnType<typeof HowItWorks>,
+  shares: SharedOutput[]
+): void {
+  vi.stubGlobal("fetch", () => new Promise(() => undefined))
+  const client = new QueryClient({
+    defaultOptions: { queries: { staleTime: Number.POSITIVE_INFINITY } },
+  })
+  client.setQueryData(publishedQuery.queryKey, shares)
+  const router = createRouter({
+    routeTree: createRootRoute({ component: node }),
+    history: createMemoryHistory(),
+  })
+  render(
+    <QueryClientProvider client={client}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  )
+}
+
+describe("How it works with the bundled examples", () => {
+  it("plays Effects' two bundled clips, muted and looping, with Recreate on each", async () => {
+    renderHow(() => <HowItWorks app={effects} kind="column" />, [])
+    const steps = await waitFor(() => {
+      const found = screen.getAllByRole("listitem")
+      expect(found).toHaveLength(2)
+      return found
+    })
+    for (const step of steps) {
+      const clip = step.querySelector("video")
+      expect(clip?.muted).toBe(true)
+      expect(clip?.loop).toBe(true)
+      expect(step.querySelector("a")?.getAttribute("href")).toBe(
+        "/apps/effects"
+      )
+    }
+  })
+
+  it("fans four of Image's bundled stills over the prompt bar", async () => {
+    renderHow(() => <HowItWorks app={image} kind="bar" />, [])
+    const fan = await waitFor(() => {
+      const found = document.querySelector("[data-slot=hero-fan]")
+      expect(found).not.toBeNull()
+      return found
+    })
+    const shown = [...(fan?.querySelectorAll("img") ?? [])].map((picture) =>
+      picture.getAttribute("src")
+    )
+    expect(shown).toEqual(
+      showcaseOf("image")
+        .slice(0, 4)
+        .map((item) => item.src)
+    )
   })
 })
 

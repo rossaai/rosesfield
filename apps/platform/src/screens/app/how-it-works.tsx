@@ -5,42 +5,44 @@ import { HeroFan } from "@rosesfield/ui/components/hero"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { RepeatIcon } from "lucide-react"
-import type { ReactElement, ReactNode } from "react"
+import type { ReactElement } from "react"
 import { settingsQuery } from "@/api/queries"
 import { appLine, appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { modelNameOf } from "@/screens/app/hosted/catalog-picker"
 import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
 import { taskAppOf } from "@/screens/app/hosted/task-app"
+import {
+  sharedEntries,
+  showcaseEntries,
+} from "@/screens/explore/explore-entries"
+import { visualEntries } from "@/screens/explore/explore-rows"
+import {
+  recreateTargetOf,
+  type VisualEntry,
+} from "@/screens/explore/explore-tile"
 import { publishedQuery, type SharedOutput } from "@/screens/explore/share-api"
+import { type ShowcaseItem, showcaseItems } from "@/showcase/showcase"
 
 export type StageKind = "bar" | "column"
 
-export type AppSample = {
-  shareId: string
-  kind: "image" | "video"
-  src: string
-}
+export type AppSample = VisualEntry
 
 const fanSize = 4
 
 export function samplesOf(
   shares: readonly SharedOutput[],
-  appId: string
+  appId: string,
+  showcase: readonly ShowcaseItem[] = showcaseItems
 ): AppSample[] {
-  return shares.flatMap((share) => {
-    const media = share.media[0]
-    const src = share.sources[0]
-    if (
-      share.run.appId !== appId ||
-      media === undefined ||
-      src === undefined ||
-      media.kind === "audio"
-    ) {
-      return []
-    }
-    return [{ shareId: share.id, kind: media.kind, src }]
-  })
+  return visualEntries([
+    ...showcaseEntries(showcase),
+    ...sharedEntries(shares),
+  ]).filter((entry) => entry.run.appId === appId)
+}
+
+function srcOf(sample: AppSample): string | null {
+  return sample.source.kind === "own" ? null : sample.source.src
 }
 
 function SampleMedia({
@@ -49,13 +51,17 @@ function SampleMedia({
 }: {
   sample: AppSample
   isPlaying: boolean
-}): ReactElement {
+}): ReactElement | null {
+  const src = srcOf(sample)
+  if (src === null) {
+    return null
+  }
   if (sample.kind === "image") {
-    return <img src={sample.src} alt="" />
+    return <img src={src} alt="" />
   }
   return (
     <video
-      src={sample.src}
+      src={src}
       muted
       loop
       playsInline
@@ -72,17 +78,26 @@ function RecreateLink({
   app: AppListing
   sample: AppSample
 }): ReactElement {
+  const target = recreateTargetOf(sample)
   return (
     <Button
       tone="glass"
       size="recreate"
       nativeButton={false}
       render={
-        <Link
-          to="/apps/$appId"
-          params={{ appId: app.id }}
-          search={{ share: sample.shareId }}
-        />
+        "draft" in target ? (
+          <Link
+            to="/apps/$appId"
+            params={{ appId: app.id }}
+            state={{ draft: target.draft }}
+          />
+        ) : (
+          <Link
+            to="/apps/$appId"
+            params={{ appId: app.id }}
+            search={target.search}
+          />
+        )
       }
     >
       <RepeatIcon aria-hidden="true" />
@@ -101,22 +116,18 @@ export function stepsOf(
   app: AppListing,
   samples: readonly AppSample[]
 ): StepCard[] {
-  return stepCopy.map(([id, title, line], index) => {
+  const shown = stepCopy.slice(Math.max(0, stepCopy.length - samples.length))
+  return shown.map(([id, title, line], index) => {
     const sample = samples[index]
-    const isPlaying = index > 0
-    const media: ReactNode =
-      sample === undefined ? null : (
-        <SampleMedia
-          key={sample.shareId}
-          sample={sample}
-          isPlaying={isPlaying}
-        />
-      )
+    const isPlaying = id !== "inputs"
     return {
       id,
       title: t(title),
       line: t(line),
-      media,
+      media:
+        sample === undefined ? null : (
+          <SampleMedia key={sample.key} sample={sample} isPlaying={isPlaying} />
+        ),
       ...(sample === undefined || !isPlaying
         ? {}
         : { action: <RecreateLink app={app} sample={sample} /> }),
@@ -146,8 +157,11 @@ function PromptFan({
   const model = useModelName(app)
   const pictures = samples
     .filter((sample) => sample.kind === "image")
+    .flatMap((sample) => {
+      const src = srcOf(sample)
+      return src === null ? [] : [{ id: sample.key, src }]
+    })
     .slice(0, fanSize)
-    .map((sample) => ({ id: sample.shareId, src: sample.src }))
   return (
     <div className="flex min-h-full items-center justify-center px-4 py-6">
       <HeroFan
