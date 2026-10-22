@@ -3,7 +3,6 @@ import {
   SegmentedControl,
   type SegmentedItem,
 } from "@rosesfield/ui/components/segmented-control"
-import { Link } from "@tanstack/react-router"
 import { type ReactElement, useState } from "react"
 import { t } from "@/copy/t"
 import { EngineCard } from "@/screens/settings/engine-card"
@@ -55,11 +54,6 @@ function AboutCard(): ReactElement {
         </p>
       )}
       <ul className="flex flex-col gap-s2">
-        <li>
-          <Link to="/welcome" className={linkClass}>
-            {t("settings.about.welcome")}
-          </Link>
-        </li>
         <li>
           <a
             href={sourceLink}

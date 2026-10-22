@@ -36,6 +36,18 @@ describe("the top bar", () => {
     expect(document.querySelector("[data-slot='sidebar']")).toBeNull()
   })
 
+  it("opens Explore from the logo on every page, the mark and the wordmark alike", async () => {
+    for (const path of ["/", "/apps/image", "/library", "/settings"]) {
+      const bar = await barAt(path)
+      const logos = within(bar).getAllByRole("link", { name: /^Rosesfield/ })
+      expect(logos, path).toHaveLength(2)
+      for (const logo of logos) {
+        expect(logo.getAttribute("href"), path).toBe("/")
+      }
+      cleanup()
+    }
+  })
+
   it("lists Explore, the media areas, a separator, then the rest", async () => {
     const bar = await barAt("/")
     expect(areaLabels(bar)).toEqual([
