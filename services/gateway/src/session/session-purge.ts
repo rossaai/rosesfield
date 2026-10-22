@@ -1,4 +1,4 @@
-import { runTable } from "@rosesfield/generation"
+import { RouterCatalog, runTable } from "@rosesfield/generation"
 import { assetIdFormat, type Clock } from "@rosesfield/kernel"
 import {
   type AssetStore,
@@ -84,6 +84,7 @@ export class SessionPurge {
     )
     count.runs += await this.deleteRuns(cutoff)
     await this.forgetSessions(cutoff)
+    await RouterCatalog.forgetUnread(this.db, cutoff)
     return count
   }
 
