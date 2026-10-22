@@ -1,7 +1,11 @@
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
-import { cleanup } from "@testing-library/react"
+import { cleanup, fireEvent } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { type GridItem, ResultGrid } from "@/screens/library/result-grid"
+import {
+  type GridItem,
+  type GridSelection,
+  ResultGrid,
+} from "@/screens/library/result-grid"
 import { ViewerProvider } from "@/viewer/viewer-context"
 import { renderAt } from "../../shell/shell-router"
 
@@ -23,11 +27,19 @@ function itemsOf(count: number): GridItem[] {
   }))
 }
 
-async function columnsAt(count: number, size: number): Promise<HTMLElement[]> {
+async function columnsAt(
+  count: number,
+  size: number,
+  selection?: GridSelection
+): Promise<HTMLElement[]> {
   renderAt("/library", () => (
     <TooltipProvider>
       <ViewerProvider>
-        <ResultGrid items={itemsOf(count)} size={size} />
+        <ResultGrid
+          items={itemsOf(count)}
+          size={size}
+          {...(selection === undefined ? {} : { selection })}
+        />
       </ViewerProvider>
     </TooltipProvider>
   ))
@@ -60,8 +72,31 @@ describe("the result grid", () => {
   })
 
   it("widens a short row's tiles as the size grows", async () => {
-    const columns = await columnsAt(1, 4)
+    const columns = await columnsAt(1, 2)
     expect(columns).toHaveLength(1)
-    expect(columns[0]?.className.split(" ")).toContain("w-105")
+    expect(columns[0]?.className.split(" ")).toContain("w-116")
+  })
+
+  it("keeps its columns and their order when Select turns on, and lays a mark over every tile", async () => {
+    const shape = (columns: HTMLElement[]): string[] =>
+      columns.map((column) => `${column.className}:${column.childElementCount}`)
+    const resting = shape(await columnsAt(12, 1))
+    cleanup()
+    const onToggle = vi.fn<(assetId: string) => void>()
+    const picking = await columnsAt(12, 1, {
+      selected: [itemsOf(12)[0]?.assetId ?? ""],
+      onToggle,
+    })
+    expect(shape(picking)).toEqual(resting)
+    const marks = [
+      ...document.querySelectorAll<HTMLElement>("[data-slot='select-mark']"),
+    ]
+    expect(marks).toHaveLength(12)
+    expect(marks.filter((mark) => mark.ariaPressed === "true")).toHaveLength(1)
+    fireEvent.click(marks[1] as HTMLElement)
+    expect(onToggle).toHaveBeenCalledTimes(1)
+    expect(itemsOf(12).map((item) => item.assetId)).toContain(
+      onToggle.mock.calls[0]?.[0]
+    )
   })
 })

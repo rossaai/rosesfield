@@ -19,7 +19,7 @@ afterEach(() => {
 })
 
 describe("the app stage's cluster", () => {
-  it("holds the size slider, List and Grid and Filter on an app with a column once you have a run", () => {
+  it("holds the one View menu on an app with a column once you have a run", () => {
     render(
       withClient(
         <AppStage app={video} kind="column">
@@ -31,13 +31,9 @@ describe("the app stage's cluster", () => {
     )
     const cluster = document.querySelector("[data-slot='canvas-cluster']")
     expect(cluster?.className.split(" ")).not.toContain("invisible")
-    expect(cluster?.querySelector("[data-slot='view-pill']")).not.toBeNull()
-    expect(
-      screen.getByRole("tab", { name: t("library.view.grid") })
-    ).toBeDefined()
-    expect(
-      screen.getByRole("button", { name: t("library.filter") })
-    ).toBeDefined()
+    const view = cluster?.querySelector("[data-slot='view-menu']")
+    expect(view?.textContent).toBe(t("app.canvas.view"))
+    expect(screen.queryByRole("tab", { name: t("library.view.grid") })).toBeNull()
   })
 
   it("holds one View control with a grid glyph on a prompt app", () => {
@@ -50,16 +46,14 @@ describe("the app stage's cluster", () => {
         [doneRun(image.id)]
       )
     )
-    const view = document.querySelector("[data-slot='canvas-view']")
+    const view = document.querySelector("[data-slot='view-menu']")
     expect(view?.textContent).toBe(t("app.canvas.view"))
     expect(view?.querySelector(".lucide-layout-grid")).not.toBeNull()
-    expect(view?.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-8", "rounded-dense", "border"])
-    )
-    expect(document.querySelector("[data-slot='view-pill']")).toBeNull()
+    expect(view?.className.split(" ")).toContain("rounded-full")
+    expect(view?.className.split(" ")).not.toContain("border")
   })
 
-  it("stands the View control at the top of the 36 px cluster row, 8 px under the bar, not centred 2 px lower", () => {
+  it("stands the View control in the cluster row", () => {
     render(
       withClient(
         <AppStage app={image} kind="bar">
@@ -69,11 +63,8 @@ describe("the app stage's cluster", () => {
         [doneRun(image.id)]
       )
     )
-    const view = document.querySelector("[data-slot='canvas-view']")
-    expect(view?.parentElement?.getAttribute("data-slot")).toBe(
-      "canvas-cluster"
-    )
-    expect(view?.className.split(" ")).toContain("self-start")
+    const view = document.querySelector("[data-slot='view-menu']")
+    expect(view?.closest("[data-slot='canvas-cluster']")).not.toBeNull()
   })
 
   it("leaves the ring room above the stage's first row, so a first tile's focus ring shows whole", () => {

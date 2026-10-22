@@ -3,9 +3,8 @@ import {
   columnCount,
   columnLayout,
   packColumns,
-  squareSteps,
+  phoneColumns,
   stepOf,
-  thumbSteps,
   tileStepOf,
   tileSteps,
 } from "@/screens/library/tile-columns"
@@ -15,21 +14,28 @@ const wide = { width: 16, height: 9 }
 const tall = { width: 9, height: 16 }
 
 describe("the grid's tiles", () => {
-  it("are 228 px wide at the first size, as the reference's gallery, and 300 px on a phone", () => {
+  it("step 194, 228 and 464 px wide, the reference's measured sizes, opening at 228", () => {
+    expect(tileSteps.map((step) => step.width)).toEqual([194, 228, 464])
     expect(tileStepOf(tileSizes.initial, true).width).toBe(228)
-    expect(tileStepOf(2, false).width).toBe(300)
     expect(tileStepOf(99, true)).toBe(tileSteps.at(-1))
     expect(tileStepOf(-3, true)).toBe(tileSteps[0])
   })
 
-  it("stand in 6 columns across a 1440 px page, fewer when the window is narrow, and 1 on a phone", () => {
+  it("stand in 6 columns across a 1440 px page, fewer when the window is narrow", () => {
     const tile = tileStepOf(tileSizes.initial, true)
     expect(columnCount(1408, tile, true)).toBe(6)
     expect(columnCount(800, tile, true)).toBe(3)
     expect(columnCount(200, tile, true)).toBe(1)
-    expect(columnCount(358, tile, false)).toBe(1)
     expect(columnCount(1408, tileStepOf(0, true), true)).toBe(7)
-    expect(columnCount(1408, tileStepOf(4, true), true)).toBe(3)
+    expect(columnCount(1408, tileStepOf(2, true), true)).toBe(3)
+  })
+
+  it("open a phone at two columns, and let the size choose three, two or one", () => {
+    const tile = tileStepOf(tileSizes.initial, false)
+    expect(columnCount(358, tile, false, tileSizes.initial)).toBe(2)
+    expect(columnCount(358, tile, false, 0)).toBe(3)
+    expect(columnCount(358, tile, false, 2)).toBe(1)
+    expect(phoneColumns).toHaveLength(tileSizes.max - tileSizes.min + 1)
   })
 
   it("fill the row when the items fill it, and keep one or a few at the row's start with no empty column", () => {
@@ -46,7 +52,7 @@ describe("the grid's tiles", () => {
       count: 3,
       fills: false,
     })
-    expect(columnLayout(1, 358, tileStepOf(0, false), false)).toEqual({
+    expect(columnLayout(1, 358, tileStepOf(2, false), false, 2)).toEqual({
       count: 1,
       fills: true,
     })
@@ -55,8 +61,6 @@ describe("the grid's tiles", () => {
   it("give every view one step per slider position", () => {
     const classes: ReadonlyArray<readonly string[]> = [
       tileSteps.map((step) => step.className),
-      thumbSteps,
-      squareSteps,
     ]
     for (const steps of classes) {
       expect(steps).toHaveLength(tileSizes.max - tileSizes.min + 1)

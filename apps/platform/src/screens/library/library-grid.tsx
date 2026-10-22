@@ -1,15 +1,18 @@
 import type { Asset, Run } from "@rosesfield/contract"
 import { MediaGrid } from "@rosesfield/ui/components/media-grid"
+import { SkeletonMasonry } from "@rosesfield/ui/components/skeleton"
 import { WorkingPulse } from "@rosesfield/ui/components/working-pulse"
 import type { ReactElement, ReactNode } from "react"
 import { dayKey, dayLabel } from "@/copy/format"
 import { t } from "@/copy/t"
-import { AssetTile } from "@/pieces/asset-tile"
-import { SelectableTile } from "@/pieces/selectable-tile"
 import { UploadRow } from "@/pieces/upload-row"
-import { useLongPress } from "@/pieces/use-long-press"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import type { Upload } from "@/pieces/use-uploads"
-import { squareSteps, stepOf } from "@/screens/library/tile-columns"
+import {
+  columnCount,
+  tileStepOf,
+  useAvailableWidth,
+} from "@/screens/library/tile-columns"
 
 type DayGroup = { key: number; label: string; assets: Asset[] }
 
@@ -31,16 +34,9 @@ export function groupByDay(assets: readonly Asset[], now: Date): DayGroup[] {
   return groups
 }
 
-type LibraryGridProps = {
-  size: number
-  assets: readonly Asset[]
-  runsById: ReadonlyMap<string, Run>
+type PendingProps = {
   working: readonly Run[]
   uploads: readonly Upload[]
-  selected: readonly string[] | null
-  onToggle: (assetId: string) => void
-  onStartSelect: (assetId: string) => void
-  isTouch: boolean
   uploadActions: {
     stop: (key: string) => void
     retry: (key: string) => void
@@ -48,9 +44,7 @@ type LibraryGridProps = {
   }
 }
 
-export function PendingTiles(
-  props: Pick<LibraryGridProps, "uploads" | "working" | "uploadActions">
-): ReactNode {
+export function PendingTiles(props: PendingProps): ReactNode {
   const pending = props.uploads.filter((upload) => upload.status !== "done")
   if (pending.length === 0 && props.working.length === 0) {
     return null
@@ -83,64 +77,18 @@ export function PendingTiles(
   )
 }
 
-function PressTile({
-  onLongPress,
-  isTouch,
-  children,
-}: {
-  onLongPress: () => void
-  isTouch: boolean
-  children: ReactNode
-}): ReactElement {
-  const press = useLongPress(onLongPress)
-  return <div {...(isTouch ? press : {})}>{children}</div>
-}
-
-export function LibraryGrid(props: LibraryGridProps): ReactElement {
-  const ids = props.assets.map((asset) => asset.id)
-  const { selected } = props
+export function GridSkeleton({ size }: { size: number }): ReactElement {
+  const isRegular = useIsRegularWindow()
+  const [ref, available] = useAvailableWidth()
+  const columns = columnCount(
+    available,
+    tileStepOf(size, isRegular),
+    isRegular,
+    size
+  )
   return (
-    <div className="flex flex-col gap-s6">
-      <PendingTiles {...props} />
-      {groupByDay(props.assets, new Date()).map((group) => (
-        <section key={group.key} className="flex flex-col gap-s3">
-          <h2 className="text-body font-medium">{group.label}</h2>
-          <MediaGrid
-            data-size={props.size}
-            className={
-              props.isTouch ? squareSteps[0] : stepOf(squareSteps, props.size)
-            }
-          >
-            {group.assets.map((asset) =>
-              selected === null ? (
-                <PressTile
-                  key={asset.id}
-                  onLongPress={() => props.onStartSelect(asset.id)}
-                  isTouch={props.isTouch}
-                >
-                  <AssetTile
-                    assetId={asset.id}
-                    shape="square"
-                    list={ids}
-                    hasMenu={!props.isTouch}
-                    isDemo={
-                      asset.sourceRunId !== null &&
-                      props.runsById.get(asset.sourceRunId)?.origin === "demo"
-                    }
-                  />
-                </PressTile>
-              ) : (
-                <SelectableTile
-                  key={asset.id}
-                  assetId={asset.id}
-                  isSelected={selected.includes(asset.id)}
-                  onToggle={() => props.onToggle(asset.id)}
-                />
-              )
-            )}
-          </MediaGrid>
-        </section>
-      ))}
+    <div ref={ref} data-slot="grid-skeleton" className="w-full">
+      <SkeletonMasonry columns={columns} />
     </div>
   )
 }

@@ -1,20 +1,87 @@
+import { labOfModel } from "@rosesfield/catalog/comfy"
 import type { Run } from "@rosesfield/contract"
-import { Skeleton } from "@rosesfield/ui/components/skeleton"
+import { interaction } from "@rosesfield/ui/components/interaction"
+import { SkeletonRow } from "@rosesfield/ui/components/skeleton"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { Link } from "@tanstack/react-router"
 import { CircleAlertIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { isWorking } from "@/api/queries"
-import { formatTime, joinParts } from "@/copy/format"
+import { findCatalogApp } from "@/catalog/catalog-apps"
+import { formatTime } from "@/copy/format"
 import { t } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
-import { useRunEstimate } from "@/pieces/run/run-estimate"
-import { historyPrice, runAppName } from "@/pieces/run/run-facts"
-import { RunHeadline } from "@/pieces/run/run-headline"
+import { LabMark } from "@/pieces/lab-mark"
+import { runAppName, runHeadline } from "@/pieces/run/run-facts"
 import { RunMenu } from "@/pieces/run/run-menu"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
+import { appIcon } from "@/shell/nav-rows"
 
-function StateCaption({ run }: { run: Run }): ReactNode {
+export const rowThumb = "size-thumb"
+
+export const listRowClass =
+  "group/reveal relative flex min-w-0 items-center gap-s3 py-s3"
+
+export function runLabOf(run: Run): string | null {
+  const chosen = run.inputs.model
+  if (typeof chosen !== "string" || chosen === "") {
+    return null
+  }
+  return labOfModel(chosen) ?? labOfModel(`graph/${chosen}`)
+}
+
+export function RowLead({ run }: { run: Run }): ReactElement {
+  const lab = runLabOf(run)
+  if (lab !== null) {
+    return <LabMark maker={lab} />
+  }
+  const app = findCatalogApp(run.appId)
+  return (
+    <span
+      aria-hidden="true"
+      data-slot="row-glyph"
+      className="flex size-4 shrink-0 items-center justify-center text-ink-muted [&_svg]:size-4"
+    >
+      {app === null ? null : appIcon(app)}
+    </span>
+  )
+}
+
+export function RowWords({
+  name,
+  line,
+  time,
+}: {
+  name: string
+  line: ReactNode
+  time: string
+}): ReactElement {
+  return (
+    <>
+      <span
+        data-slot="row-name"
+        className="max-w-[40%] shrink-0 truncate font-medium text-body text-ink"
+      >
+        {name}
+      </span>
+      <span
+        data-slot="row-line"
+        className="min-w-0 max-w-prose flex-1 truncate text-body text-ink-muted"
+      >
+        {line}
+      </span>
+      <span
+        data-slot="row-time"
+        className="ms-auto shrink-0 text-body text-ink-muted tabular-nums"
+      >
+        {time}
+      </span>
+    </>
+  )
+}
+
+function StateWords({ run }: { run: Run }): ReactNode {
   if (isWorking(run)) {
     return (
       <span className={cn("text-ink", motion.pulse)}>{t("state.working")}</span>
@@ -24,110 +91,97 @@ function StateCaption({ run }: { run: Run }): ReactNode {
     return <span className="text-bug-text">{t("state.failed")}</span>
   }
   if (run.status === "cancelled") {
-    return <span>{t("state.stopped")}</span>
+    return t("state.stopped")
   }
-  return null
+  return lineOf(run)
 }
 
-function NoOutput({ run, thumb }: { run: Run; thumb: string }): ReactElement {
-  if (isWorking(run)) {
+export function lineOf(run: Run): string {
+  const headline = runHeadline(run)
+  return headline === runAppName(run) ? "" : headline
+}
+
+function Thumb({ run }: { run: Run }): ReactElement {
+  const [first] = run.outputs
+  if (first !== undefined) {
     return (
-      <span
-        aria-hidden="true"
-        className={cn(thumb, "rounded-cell bg-(--well)", motion.pulse)}
-      />
+      <span data-slot="history-thumb" className={cn("shrink-0", rowThumb)}>
+        <AssetTile
+          assetId={first}
+          shape="square"
+          isStatic={true}
+          isDemo={false}
+        />
+      </span>
     )
   }
   return (
-    <span aria-hidden="true" className={cn("flex items-center", thumb)}>
-      {run.status === "failed" ? (
-        <span className="flex size-icon items-center justify-center rounded-full bg-bug-tint text-bug-text">
-          <CircleAlertIcon className="glyph" />
-        </span>
-      ) : null}
-    </span>
-  )
-}
-
-function Thumbs({ run, thumb }: { run: Run; thumb: string }): ReactElement {
-  const shown = run.outputs.slice(0, 4)
-  return (
-    <span className="flex shrink-0 gap-s1">
-      {shown.length === 0 ? (
-        <NoOutput run={run} thumb={thumb} />
-      ) : (
-        shown.map((id, index) => (
-          <span
-            key={id}
-            data-slot="history-thumb"
-            className={cn(thumb, index === 0 ? "" : "hidden @regular:block")}
-          >
-            <AssetTile
-              assetId={id}
-              shape="square"
-              isStatic={true}
-              isDemo={false}
-            />
-          </span>
-        ))
+    <span
+      aria-hidden="true"
+      data-slot="history-thumb"
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-cell bg-(--well)",
+        rowThumb,
+        isWorking(run) ? motion.pulse : ""
       )}
+    >
+      {run.status === "failed" ? (
+        <CircleAlertIcon className="glyph text-bug-text" />
+      ) : null}
     </span>
   )
 }
 
 export function HistoryRowSkeleton(): ReactElement {
   return (
-    <li className="flex items-center gap-s3 border-b border-(--line) py-s3">
-      <Skeleton className="size-thumb shrink-0" />
-      <span className="flex min-w-0 flex-1 flex-col gap-s1">
-        <Skeleton className="h-s3 w-tile" />
-        <Skeleton className="h-s5 w-1/2" />
-        <Skeleton className="h-s3 w-tile" />
-      </span>
+    <li data-slot="history-row-skeleton">
+      <SkeletonRow />
     </li>
   )
 }
 
-export function HistoryRow({
-  run,
-  thumb = "size-thumb",
+export function RowOptions({
+  children,
 }: {
-  run: Run
-  thumb?: string
+  children: ReactNode
 }): ReactElement {
-  const isDemo = run.origin === "demo"
-  const estimate = useRunEstimate(run)
-  const price = historyPrice(run, estimate)
+  const isRegular = useIsRegularWindow()
   return (
-    <li className="flex items-center gap-s3 border-b border-(--line) py-s3">
+    <span
+      data-slot="row-options"
+      data-density="composer"
+      className={cn(
+        "flex shrink-0",
+        isRegular ? cn(interaction.reveal, interaction.revealPointer) : ""
+      )}
+    >
+      {children}
+    </span>
+  )
+}
+
+export function HistoryRow({ run }: { run: Run }): ReactElement {
+  return (
+    <li data-slot="history-row" className={listRowClass}>
       <Link
         to="/history/$runId"
         params={{ runId: run.id }}
         className={cn(
           "flex min-w-0 flex-1 items-center gap-s3 rounded-cell",
-          motion.tint
+          interaction.ring
         )}
       >
-        <Thumbs run={run} thumb={thumb} />
-        <span className="flex min-w-0 flex-1 flex-col gap-s1">
-          <span className="truncate text-label text-ink-muted">
-            {runAppName(run)}
-          </span>
-          <span className="truncate text-body">
-            <RunHeadline run={run} />
-          </span>
-          <span className="text-caption text-ink-muted">
-            {joinParts([
-              isDemo ? t("run.demoCaption") : null,
-              formatTime(run.createdAt),
-              price,
-            ])}
-            {run.status === "done" ? null : ", "}
-            <StateCaption run={run} />
-          </span>
-        </span>
+        <Thumb run={run} />
+        <RowLead run={run} />
+        <RowWords
+          name={runAppName(run)}
+          line={<StateWords run={run} />}
+          time={formatTime(run.createdAt)}
+        />
       </Link>
-      <RunMenu run={run} />
+      <RowOptions>
+        <RunMenu run={run} />
+      </RowOptions>
     </li>
   )
 }
