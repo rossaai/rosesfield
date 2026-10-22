@@ -1,4 +1,3 @@
-import { Button } from "@rosesfield/ui/components/button"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { type ReactElement, useState } from "react"
@@ -11,19 +10,15 @@ import {
 import { wordsForError } from "@/copy/error-words"
 import { t } from "@/copy/t"
 import { useDraft } from "@/pieces/use-draft"
-import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import type { Draft } from "@/router-context"
+import { AgentComposer } from "@/screens/agent/agent-composer"
+import { AgentFrame, ConversationsDrawer } from "@/screens/agent/agent-frame"
 import {
   isModelMissing,
   noteAgentModel,
   useAgentModel,
 } from "@/screens/agent/agent-model"
-import { AgentComposer, ComposerSlot } from "@/screens/agent/agent-parts"
-import {
-  ConversationRows,
-  ConversationsButton,
-  useHasConversations,
-} from "@/screens/agent/conversation-list"
+import { ComposerSlot } from "@/screens/agent/agent-parts"
 import {
   conversationsQuery,
   transcriptKey,
@@ -62,50 +57,24 @@ export function useStartConversation() {
   })
 }
 
-function Recent({ onAll }: { onAll: () => void }): ReactElement | null {
-  const hasAny = useHasConversations()
-  return (
-    <section className="flex w-full max-w-prompt-max flex-col gap-s2">
-      {hasAny ? (
-        <div className="flex items-center justify-between gap-s2">
-          <h2 className="text-title">{t("agent.recent.title")}</h2>
-          <Button tone="quiet" size="small" onClick={onAll}>
-            {t("agent.recent.all")}
-          </Button>
-        </div>
-      ) : null}
-      <ConversationRows limit={5} />
-    </section>
-  )
-}
-
 export function AgentStartScreen(): ReactElement {
   const state = useDraft()
   const start = useStartConversation()
   const model = useAgentModel()
   const [approval, setApproval] = useState<RunApproval>("ask")
-  const [isListOpen, setListOpen] = useState(false)
-  const isRegular = useIsRegularWindow()
   const send = (): void => {
     if (state.draft.prompt.trim() !== "") {
       start.mutate({ draft: state.draft, approval })
     }
   }
   const failed = start.error !== null && !isModelMissing(start.error)
-  const listFor = (isShown: boolean): ReactElement => (
-    <ConversationsButton
-      open={isListOpen && isShown}
-      onOpenChange={setListOpen}
-    />
-  )
   return (
-    <div className="flex min-h-full flex-col">
+    <AgentFrame>
       <ScreenHeader
         title={t("agent.title")}
-        actions={listFor(isRegular)}
-        phoneAction={listFor(!isRegular)}
+        phoneAction={<ConversationsDrawer />}
       />
-      <div className="flex flex-1 flex-col items-center gap-s6 px-s5 pb-s5 @regular:pt-[calc(100dvh/6)]">
+      <div className="flex min-h-0 flex-1 flex-col items-center gap-s6 overflow-y-auto px-s5 pb-s4 @regular:pt-[calc(100dvh/6)]">
         <div className="flex max-w-prompt-max flex-col items-center gap-s2 pt-s12 text-center @regular:pt-0">
           <h2 className="text-display">{t("agent.start.title")}</h2>
           <p className="text-body text-ink-muted">{t("agent.empty.body")}</p>
@@ -128,8 +97,7 @@ export function AgentStartScreen(): ReactElement {
             />
           </ComposerSlot>
         </div>
-        <Recent onAll={() => window.setTimeout(() => setListOpen(true))} />
       </div>
-    </div>
+    </AgentFrame>
   )
 }
