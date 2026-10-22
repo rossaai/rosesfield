@@ -1,5 +1,10 @@
-import { Badge, type BadgeKind } from "@rosesfield/ui/components/badge"
-import { interaction } from "@rosesfield/ui/components/interaction"
+import {
+  type ModelBadge,
+  type ModelPickerRow,
+  type ModelPickerTag,
+  type ModelPrice,
+  ModelRow,
+} from "@rosesfield/ui/components/model-row"
 import {
   Popover,
   PopoverContent,
@@ -8,7 +13,7 @@ import {
 } from "@rosesfield/ui/components/popover"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { CheckIcon, SearchIcon, SparkleIcon } from "lucide-react"
+import { SearchIcon, SparkleIcon } from "lucide-react"
 import {
   type ReactElement,
   type ReactNode,
@@ -18,32 +23,11 @@ import {
   useState,
 } from "react"
 
-type ModelPickerTag = {
-  label: string
-  icon?: ReactNode
-}
-
-type ModelBadge = {
-  kind: BadgeKind
-  label: string
-  href?: string
-  mark?: ReactNode
-}
-
-type ModelPickerRow = {
-  id: string
-  name: string
-  maker: string
-  line: string | null
-  tags: readonly ModelPickerTag[]
-  mark?: ReactNode
-  badges?: readonly ModelBadge[]
-}
-
 type ModelPickerSection = {
   id: string
   label: string
   rows: readonly ModelPickerRow[]
+  mark?: ReactNode
 }
 
 type ModelPickerProps = {
@@ -56,6 +40,7 @@ type ModelPickerProps = {
   chosen: string | null
   onChoose: (id: string) => void
   isLoading?: boolean
+  isPricing?: boolean
   notice?: ReactNode
   settings?: ReactNode
   side?: "top" | "right"
@@ -64,13 +49,50 @@ type ModelPickerProps = {
   onOpenChange?: (open: boolean) => void
 }
 
+const featuredId = "featured"
+
+function labOf(row: ModelPickerRow): string {
+  return row.lab ?? row.maker
+}
+
 function matches(row: ModelPickerRow, query: string): boolean {
   const needle = query.trim().toLowerCase()
   return (
     needle === "" ||
     row.name.toLowerCase().includes(needle) ||
-    row.maker.toLowerCase().includes(needle)
+    row.maker.toLowerCase().includes(needle) ||
+    labOf(row).toLowerCase().includes(needle)
   )
+}
+
+function labSectionsOf(
+  sections: readonly ModelPickerSection[]
+): ModelPickerSection[] {
+  const seen = new Set<string>()
+  const byLab = new Map<string, ModelPickerRow[]>()
+  for (const section of sections) {
+    if (section.id === featuredId) {
+      continue
+    }
+    for (const row of section.rows) {
+      if (!seen.has(row.id)) {
+        seen.add(row.id)
+        byLab.set(labOf(row), [...(byLab.get(labOf(row)) ?? []), row])
+      }
+    }
+  }
+  const labs = [...byLab.entries()].sort(([a], [b]) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" })
+  )
+  return [
+    ...sections.filter((section) => section.id === featuredId),
+    ...labs.map(([lab, rows]) => ({
+      id: `lab:${lab}`,
+      label: lab,
+      rows,
+      ...(rows[0]?.mark === undefined ? {} : { mark: rows[0].mark }),
+    })),
+  ]
 }
 
 function filterSections(
@@ -83,130 +105,6 @@ function filterSections(
       rows: section.rows.filter((row) => matches(row, query)),
     }))
     .filter((section) => section.rows.length > 0)
-}
-
-function RowBadge({ badge }: { badge: ModelBadge }): ReactElement {
-  return (
-    <Badge
-      kind={badge.kind}
-      {...(badge.href === undefined ? {} : { href: badge.href })}
-      {...(badge.mark === undefined ? {} : { mark: badge.mark })}
-    >
-      {badge.label}
-    </Badge>
-  )
-}
-
-function RowName({ row }: { row: ModelPickerRow }): ReactElement {
-  const badges = row.badges ?? []
-  const facts = badges.filter((badge) => badge.kind !== "openWeights")
-  const weights = badges.filter((badge) => badge.kind === "openWeights")
-  return (
-    <span className="flex min-w-0 items-center">
-      <span data-slot="model-row-name" className="truncate text-body text-ink">
-        {row.name}
-      </span>
-      {facts.length === 0 ? null : (
-        <span data-slot="model-row-badges" className="flex shrink-0">
-          {facts.map((badge) => (
-            <RowBadge key={badge.kind} badge={badge} />
-          ))}
-        </span>
-      )}
-      {weights.length === 0 ? null : (
-        <span data-slot="model-row-weights" className="flex shrink-0">
-          {weights.map((badge) => (
-            <RowBadge key={badge.kind} badge={badge} />
-          ))}
-        </span>
-      )}
-    </span>
-  )
-}
-
-function RowLine({ row }: { row: ModelPickerRow }): ReactNode {
-  if (row.line === null && row.tags.length === 0) {
-    return null
-  }
-  return (
-    <span
-      data-slot="model-row-line"
-      className="flex min-w-0 flex-wrap items-center gap-x-1 overflow-hidden text-caption whitespace-nowrap text-ink-muted"
-    >
-      {row.line === null ? null : (
-        <span data-slot="model-row-words" className="max-w-full truncate">
-          {row.line}
-        </span>
-      )}
-      {row.tags.length === 0 ? null : (
-        <span
-          data-slot="model-row-tags"
-          className="flex max-w-full shrink-0 gap-1 overflow-hidden"
-        >
-          {row.tags.map((tag) => (
-            <span
-              key={tag.label}
-              className="inline-flex shrink-0 items-center gap-0.5 rounded-dense bg-(--tint) px-1 [&_svg]:size-3"
-            >
-              {tag.icon}
-              {tag.label}
-            </span>
-          ))}
-        </span>
-      )}
-    </span>
-  )
-}
-
-function ModelRow({
-  row,
-  isChosen,
-  onChoose,
-}: {
-  row: ModelPickerRow
-  isChosen: boolean
-  onChoose: (id: string) => void
-}): ReactElement {
-  return (
-    <div
-      role="none"
-      data-slot="model-row"
-      data-chosen={isChosen ? "yes" : "no"}
-      className="group/row relative mx-3 h-13 rounded-cell data-[chosen=yes]:bg-(--tint)"
-    >
-      <button
-        type="button"
-        role="option"
-        aria-selected={isChosen}
-        aria-label={row.name}
-        data-model={row.id}
-        className={cn(
-          "absolute inset-0 rounded-cell outline-none",
-          interaction.light,
-          interaction.ring
-        )}
-        onClick={() => onChoose(row.id)}
-      />
-      <span className="pointer-events-none relative flex h-full items-center ps-1.5 pe-3">
-        <span
-          data-slot="model-row-mark"
-          aria-hidden="true"
-          className="flex size-10 shrink-0 items-center justify-center rounded-dense bg-(--tint) text-ink-muted group-data-[chosen=yes]/row:text-ink [&_svg]:size-4"
-        >
-          {row.mark}
-        </span>
-        <span className="ms-2 flex min-w-0 flex-1 flex-col">
-          <RowName row={row} />
-          <RowLine row={row} />
-        </span>
-        <span data-slot="model-row-check" className="flex size-5 shrink-0">
-          {isChosen ? (
-            <CheckIcon aria-hidden="true" className="size-5" />
-          ) : null}
-        </span>
-      </span>
-    </div>
-  )
 }
 
 function LoadingRows(): ReactElement {
@@ -230,8 +128,11 @@ function SectionRows(
       aria-label={props.section.label}
       className="m-0 flex min-w-0 flex-col gap-1 border-0 p-0"
     >
-      <p className="flex h-8.5 items-center gap-1.5 px-3 font-medium text-label text-ink-muted">
-        <SparkleIcon aria-hidden="true" className="size-3.5" />
+      <p
+        data-slot="model-section-heading"
+        className="flex h-8.5 items-center gap-1.5 px-3 font-medium text-label text-ink-muted [&_svg]:size-3.5"
+      >
+        {props.section.mark ?? <SparkleIcon aria-hidden="true" />}
         {props.section.label}
       </p>
       {props.section.rows.map((row) => (
@@ -239,6 +140,7 @@ function SectionRows(
           key={`${props.section.id}:${row.id}`}
           row={row}
           isChosen={row.id === props.chosen}
+          isPricing={props.isPricing === true}
           onChoose={(id) => {
             props.onChoose(id)
             props.onChosen()
@@ -255,7 +157,7 @@ function ModelList(
   if (props.isLoading === true) {
     return <LoadingRows />
   }
-  const sections = filterSections(props.sections, props.query)
+  const sections = filterSections(labSectionsOf(props.sections), props.query)
   if (sections.length === 0) {
     const isRefused = props.notice !== undefined && props.notice !== null
     return isRefused && props.query === "" ? null : (
@@ -397,5 +299,6 @@ export type {
   ModelPickerRow,
   ModelPickerSection,
   ModelPickerTag,
+  ModelPrice,
 }
-export { filterSections, ModelPicker }
+export { filterSections, labSectionsOf, ModelPicker }
