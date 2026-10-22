@@ -1,6 +1,7 @@
 import type { Run } from "@rosesfield/contract"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { Skeleton, SkeletonGroup } from "@rosesfield/ui/components/skeleton"
+import { cn } from "@rosesfield/ui/lib/cn"
 import {
   Children,
   type CSSProperties,
@@ -105,6 +106,8 @@ type ColumnsStyle = CSSProperties & { "--run-columns": string }
 
 export const runColumnsDefault = 2
 
+const columnWide = "@regular:[--output-row-cap:none]"
+
 const audioHeight = 0.25
 
 const chromeHeight = 0.05
@@ -155,14 +158,17 @@ export function RunColumns({
       data-slot="run-columns"
       data-columns={count}
       style={style}
-      className="grid grid-cols-1 items-start gap-x-s3 gap-y-s6 @regular:grid-cols-(--run-columns)"
+      className={cn(
+        "grid grid-cols-1 items-start gap-s2 @regular:grid-cols-(--run-columns)",
+        count > 1 ? columnWide : ""
+      )}
     >
       {Array.from({ length: count }, (_, column) => (
         <div
           // biome-ignore lint/suspicious/noArrayIndexKey: a column's place is its identity
           key={column}
           data-slot="run-column"
-          className="contents @regular:flex @regular:min-w-0 @regular:flex-col @regular:gap-y-s6"
+          className="contents @regular:flex @regular:min-w-0 @regular:flex-col @regular:gap-s2"
         >
           {items.flatMap((item, place) => {
             const placeStyle: PlaceStyle = { "--place": place }

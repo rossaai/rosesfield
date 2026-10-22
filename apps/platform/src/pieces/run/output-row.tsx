@@ -17,7 +17,7 @@ export function rowCapOf(aspects: readonly MediaAspect[]): string {
     (sum, aspect) => sum + aspect.width / aspect.height,
     0
   )
-  return `calc((${fitHeight}) * ${total})`
+  return `var(--output-row-cap, calc((${fitHeight}) * ${total}))`
 }
 
 export function OutputRow({
