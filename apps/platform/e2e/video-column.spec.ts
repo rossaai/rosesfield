@@ -48,6 +48,17 @@ test.describe("Video's sheet on a phone", () => {
     await page.locator('[data-slot="app-bar-tabGenerate"]').click()
     const sheet = page.getByRole("dialog")
     await expect(sheet).toBeVisible()
+    await sheet.evaluate((element) =>
+      Promise.all(
+        element
+          .getAnimations({ subtree: true })
+          .filter(
+            (animation) =>
+              animation.effect?.getComputedTiming().iterations !== Infinity
+          )
+          .map((animation) => animation.finished.catch(() => undefined))
+      )
+    )
     const tab = await sheet.getByRole("tab").first().boundingBox()
     const frame = await sheet
       .locator('[data-slot="composer-attachments-tiles"]')
