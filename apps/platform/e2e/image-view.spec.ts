@@ -39,9 +39,20 @@ test.describe("the View control of Image's feed", () => {
     await openWithRun(page)
     await page.setViewportSize(viewport)
     await expect(page.locator('[data-slot="view-menu"]')).toBeVisible()
+    await page.evaluate(() =>
+      Promise.all(
+        document
+          .getAnimations()
+          .filter(
+            (animation) =>
+              animation.effect?.getComputedTiming().iterations !== Infinity
+          )
+          .map((animation) => animation.finished.catch(() => undefined))
+      )
+    )
     const view = await boxOf(page, '[data-slot="view-menu"]')
     expect(viewport.width - (view.x + view.width)).toBe(16)
-    const tabs = await boxOf(page, '[data-slot="canvas-head"] [role="tablist"]')
+    const tabs = await boxOf(page, '[data-slot="canvas-head"] [role="tab"]')
     const feed = await boxOf(page, '[data-slot="app-stage-scroll"] article')
     expect(tabs.x).toBe(16)
     expect(feed.x).toBe(tabs.x)
