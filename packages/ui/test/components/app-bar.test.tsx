@@ -49,13 +49,15 @@ describe("AppBar", () => {
     )
   })
 
-  it("shrinks to 36 px and a 20 px mark on an app page, from the width switch", () => {
+  it("shrinks to 36 px and a 16 by 24 px mark on an app page, from the width switch", () => {
     const bar = renderBar("compact")
     expect(bar.className.split(" ")).toEqual(
       expect.arrayContaining(["h-13", "@regular:h-9"])
     )
     const mark = screen.getByTestId("mark").parentElement
-    expect(mark?.className.split(" ")).toContain("@regular:size-5")
+    expect(mark?.className.split(" ")).toEqual(
+      expect.arrayContaining(["@regular:h-4", "@regular:w-6"])
+    )
   })
 
   it("holds its contract's mark, areas, balance and connect, with Connect last", () => {

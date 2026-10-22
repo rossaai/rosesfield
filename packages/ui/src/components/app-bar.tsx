@@ -98,8 +98,8 @@ const bars = {
 } satisfies Record<AppBarDensity, string>
 
 const marks = {
-  full: "size-8",
-  compact: "size-8 @regular:size-5",
+  full: "h-6 w-9",
+  compact: "h-6 w-9 @regular:h-4 @regular:w-6",
 } satisfies Record<AppBarDensity, string>
 
 const actions = {

@@ -18,53 +18,53 @@
     },
     {
       "path": "apps/platform/public/icons/apple-touch-icon.png",
-      "sha256": "f78ebea6913caaec19666386067218e38dc6f0fd1996dcfe27d0f6b145af5c21",
-      "inputs": "b1cc8ae5a45c6542a1f659247098eaec67cc820bf3dc8dbe4613941ebf5676c4"
+      "sha256": "cc5ff91d854d157219ccbfe1d0161fc1a062c0e0b4bfa0eefb8a5868c26e2e81",
+      "inputs": "0df85399883749d3fda148607e4d3e0e0a4517510dfc69c7f2a4870cc6e8dc67"
     },
     {
       "path": "apps/platform/public/icons/favicon-16.png",
-      "sha256": "4e0b9c2cff9f05ca8649da34d140854236c88abd51347c937dc6c93b8030a52d",
-      "inputs": "7e059adcd1dce017eaea5d53cd3851154d8f9aeacaf22033ff2b6af41e4e665d"
+      "sha256": "9bf6e8670b2b9d85b098e3617ddf54ecdc13b000d897631d05709d8cfc082a91",
+      "inputs": "abb100d5122729c74e0fc3abc626545b5ea137f8e5abdd8516e570722e562932"
     },
     {
       "path": "apps/platform/public/icons/favicon-32.png",
-      "sha256": "b92af0ec8e78942c7c7cf994a0b539873a5c0e1a1a1485e88f24d5ce50c77e2d",
-      "inputs": "e8f10d8373272629b90e5b0185f0a1b1357338685278c73a7df01eb21212d50c"
+      "sha256": "f1c64e9c2f4d714ccbb3d5d907486cc49d29bbffe9ad8f336b4b481c8a49023d",
+      "inputs": "8c142de5ce8e3f3fcf9d0e811f47ec8beebeb226bc0b5cbf34a6a386f1f86881"
     },
     {
       "path": "apps/platform/public/icons/favicon.svg",
-      "sha256": "cdd81304743b29054115205c9776126b86512a6be38bd9e1596e3b9d1066459a"
+      "sha256": "9dec981d91bac77c6e9dabd5a5569238661d426a9450679a857b1496bdd2649f"
     },
     {
       "path": "apps/platform/public/icons/icon-any-192.png",
-      "sha256": "ec694d1a1ed65e075abd68e3b1b7a444d7c0488df8b8ac95e71d576d4b371143",
-      "inputs": "43272fcad2110dfb10ca10dfa5de3d6b8a8f293e72a8825b915125eb026d5d21"
+      "sha256": "cde6197bc5fbdf23adb66e2f05ad41100550e8e84b7a86e344affb42f6f4f9ad",
+      "inputs": "775b190953ad88f6a58d28621d416b0692b30237573053095b70ee64149e5463"
     },
     {
       "path": "apps/platform/public/icons/icon-any-512.png",
-      "sha256": "5992a266f67001d8fb205916fd24bd5e86dcf219d501a1e7bba44b995b7c2ade",
-      "inputs": "9ceaf15620f482204e51f91ce05d36ec7d32e4f81b516568d31c1a7ebf61fc5e"
+      "sha256": "ce50f39e7a9d9db9326918b3e6da8df367b4ce9fb65deec8c7563d429aa1a865",
+      "inputs": "43795b5997c07e4b2d9e40793278ed1faee7591af8f916e2ec78525163746b1d"
     },
     {
       "path": "apps/platform/public/icons/icon-maskable-512.png",
-      "sha256": "5992a266f67001d8fb205916fd24bd5e86dcf219d501a1e7bba44b995b7c2ade",
-      "inputs": "1d7d30aebccdb6540050257c95ce2add6aef3d4c2d518122f638e412fb47f026"
+      "sha256": "ce50f39e7a9d9db9326918b3e6da8df367b4ce9fb65deec8c7563d429aa1a865",
+      "inputs": "7d53f159bc010cce4f4189ad44da02cb84f487c4188ad25b5fae5929fd5642d2"
     },
     {
-      "path": "apps/platform/public/icons/rosesfield-icon-dark.svg",
-      "sha256": "6e59dc468e2d10f08b1f512ccd69c973259520376339d85f9d560c2be17e9e93"
+      "path": "apps/platform/public/icons/rosesfield-hill-dark.svg",
+      "sha256": "f63f917a2c1e2cc239a7ab50201972720a3cec5ff2e96586f6b3737b544c3575"
     },
     {
-      "path": "apps/platform/public/icons/rosesfield-icon-light.svg",
-      "sha256": "87d2524f43acecba832c5881502c95fb2a2cd0240e75f47914507a79154dc040"
+      "path": "apps/platform/public/icons/rosesfield-hill-light.svg",
+      "sha256": "7706636b8a1e29621587cfb988df7af3c95dca1e8758d10951e0c22e49e44cfd"
     },
     {
       "path": "apps/platform/public/lockup-dark.svg",
-      "sha256": "e068d8ab0c4262a80134ab94cde7003ddcc926e14eebf3bcc5427351b720337f"
+      "sha256": "0f3c5f908bdf71f275e57337e5f77584cfe071649c7b36cb26b6442764ec3782"
     },
     {
       "path": "apps/platform/public/lockup-light.svg",
-      "sha256": "9564a5ec0bd1d9e34c5d4e76644125bd42b325c6b0b97b9f9475c3abd0e80c4b"
+      "sha256": "b1423992332b9d99b9d217317d6971559df5abe02dcf3c47584dc62b7dba2e16"
     },
     {
       "path": "apps/platform/src/canvas-color.generated.ts",
