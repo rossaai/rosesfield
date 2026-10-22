@@ -156,10 +156,11 @@
   The pointer. Every pressable shows the pointer cursor and a disabled one the
   default cursor. The rule sits outside the layers, so it stands over any
   cursor a component or a screen writes, and no screen sets a cursor of its
-  own. A hidden press target, such as the viewer's backdrop, keeps the default.
+  own. The viewer's backdrop, a press target as large as the stage, keeps the
+  default.
 */
 :where(
-  button:not([aria-hidden="true"]),
+  button:not([data-slot="media-player-picture"] > *),
   a[href],
   summary,
   select,

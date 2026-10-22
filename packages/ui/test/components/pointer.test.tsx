@@ -179,15 +179,27 @@ describe("the pointer rule", () => {
     }
   })
 
-  it("keeps the default on a hidden press target and on what presses nothing", () => {
+  it("keeps the default on the viewer's backdrop and on what presses nothing, and the pointer on a hidden scroll arrow", () => {
     render(
       <>
-        <button type="button" aria-hidden="true" tabIndex={-1} />
+        <div data-slot="media-player-picture">
+          <button type="button" aria-hidden="true" tabIndex={-1} />
+        </div>
+        <button
+          type="button"
+          aria-hidden="true"
+          tabIndex={-1}
+          data-slot="chip-row-arrow"
+        />
         <span>Words</span>
       </>
     )
-    const hidden = document.querySelector("button[aria-hidden='true']")
-    expect(hidden === null ? "missing" : shows(hidden)).toBe("none")
+    const backdrop = document.querySelector(
+      "[data-slot='media-player-picture'] > button"
+    )
+    expect(backdrop === null ? "missing" : shows(backdrop)).toBe("none")
+    const arrow = document.querySelector("[data-slot='chip-row-arrow']")
+    expect(arrow === null ? "missing" : shows(arrow)).toBe("pointer")
     expect(shows(screen.getByText("Words"))).toBe("none")
   })
 })
