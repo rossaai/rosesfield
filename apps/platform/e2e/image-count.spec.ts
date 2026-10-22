@@ -37,7 +37,7 @@ test.describe("a run of 4 on Image", () => {
     }
     await expect(bar.getByRole("group", { name: "Count" })).toHaveText("4/4")
     await bar.locator('[data-slot="generate-button"]').click()
-    const run = page.locator('[data-slot="app-stage-scroll"] article').last()
+    const run = page.locator('[data-slot="app-stage-scroll"] article').first()
     const tiles = run.locator('[data-slot="working-pulse"]')
     await expect(tiles).toHaveCount(4)
     for (const ratio of await ratiosOf(tiles)) {
