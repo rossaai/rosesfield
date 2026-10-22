@@ -144,7 +144,9 @@ test("the first visit opens Explore at / with its banner", async ({
 }, info) => {
   const errors = watchErrors(page)
   await page.goto("/")
-  await expect(page.locator("[data-slot=app-tile-grid]")).toBeVisible()
+  await expect(
+    page.getByRole("region", { name: "Apps", exact: true })
+  ).toBeVisible()
   expect(new URL(page.url()).pathname).toBe("/")
   const banner = page.locator("[data-slot=hero]")
   if (info.project.name === "phone") {
@@ -156,14 +158,22 @@ test("the first visit opens Explore at / with its banner", async ({
   expect(errors).toEqual([])
 })
 
-test("/welcome opens Explore, and the logo opens Explore from every page", async ({
+test("/welcome and /explore open Explore, and the logo opens Explore from every page that shows it", async ({
   page,
 }, info) => {
   const errors = watchErrors(page)
-  await page.goto("/welcome")
-  await expect(page).toHaveURL(/\/$/)
-  await expect(page.locator("[data-slot=app-tile-grid]")).toBeVisible()
-  for (const path of ["/apps/image", "/library", "/settings"]) {
+  for (const path of ["/welcome", "/explore"]) {
+    await page.goto(path)
+    await expect(page).toHaveURL(/\/$/)
+    await expect(
+      page.getByRole("region", { name: "Apps", exact: true })
+    ).toBeVisible()
+  }
+  const paths =
+    info.project.name === "phone"
+      ? ["/apps/image"]
+      : ["/apps/image", "/library", "/history"]
+  for (const path of paths) {
     await page.goto(path)
     const bar = page.locator("header[data-slot='app-bar']")
     const logo = bar

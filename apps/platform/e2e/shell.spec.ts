@@ -104,14 +104,23 @@ test("on a short page the footer sits at the window's foot", async ({
   page,
 }) => {
   test.skip(isPhone(page), "a page shorter than the desktop window")
-  await answerOwnLists(page, new Set())
-  await open(page, "/history")
-  await expect(page.getByText("Your runs show here")).toBeVisible()
+  await open(page, "/apps?q=no-app-matches-this")
   const footer = page.locator("footer[data-slot='footer']")
   await expect(footer).toBeVisible()
   const main = await boxOf(page.locator("main"))
   const box = await boxOf(footer)
   expect(box.y + box.height).toBe(main.y + main.height)
+})
+
+test("a product page ends with no footer", async ({ page }) => {
+  await answerOwnLists(page, new Set())
+  for (const path of ["/history", "/library", "/characters"]) {
+    await open(page, path)
+    await expect(page.locator("main h1").first()).toBeAttached()
+    expect(await page.locator("footer[data-slot='footer']").count(), path).toBe(
+      0
+    )
+  }
 })
 
 test("an app page shrinks the bar to 36 px and the mark to 20 px", async ({
@@ -289,7 +298,10 @@ test("Connect opens a dialog over the page, and /connect opens it over Explore",
       })
   await connect.click()
   const dialog = page.getByRole("dialog")
-  await expect(dialog.getByRole("heading", { name: "Connect" })).toBeVisible()
+  await expect(
+    dialog.getByRole("heading", { name: "Add your Comfy key" })
+  ).toBeVisible()
+  await expect(dialog.getByRole("radio")).toHaveCount(0)
   await expect(dialog.getByRole("button", { name: "Cancel" })).toBeVisible()
   expect(new URL(page.url()).pathname).toBe("/history")
   await dialog.getByRole("button", { name: "Cancel" }).click()
