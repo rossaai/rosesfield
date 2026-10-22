@@ -15,7 +15,7 @@ import {
 import { RunInputInvalidError } from "@rosesfield/generation"
 import type { z } from "zod"
 
-export function isKeyframeChain(app: AppDefinition): boolean {
+export function isKeyframeChain(app: Pick<AppDefinition, "id">): boolean {
   return app.id === storyboardAppId
 }
 

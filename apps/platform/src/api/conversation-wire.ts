@@ -23,7 +23,7 @@ export type Proposal = {
   appId: string
   request: RunRequest
   status: ProposalStatus
-  runId: string | null
+  runIds: string[]
 }
 
 export type TranscriptItem =
@@ -74,6 +74,14 @@ export function readConversationOf(value: unknown): Conversation | null {
   return { id, title: title === "" ? null : title, runApproval, createdAt }
 }
 
+function runIdsOf(value: unknown): string[] | null {
+  if (!Array.isArray(value)) {
+    return null
+  }
+  const runIds = value.flatMap((one) => textOf(one) ?? [])
+  return runIds.length === value.length ? runIds : null
+}
+
 export function readProposal(value: unknown): Proposal | null {
   const id = textOf(fieldOf(value, "id"))
   const appId = textOf(fieldOf(value, "appId"))
@@ -83,14 +91,17 @@ export function readProposal(value: unknown): Proposal | null {
     "accepted",
     "skipped",
   ])
-  const runId = fieldOf(value, "runId")
-  if (id === null || appId === null || !request.success || status === null) {
+  const runIds = runIdsOf(fieldOf(value, "runIds"))
+  if (
+    id === null ||
+    appId === null ||
+    !request.success ||
+    status === null ||
+    runIds === null
+  ) {
     return null
   }
-  if (runId !== null && textOf(runId) === null) {
-    return null
-  }
-  return { id, appId, request: request.data, status, runId: textOf(runId) }
+  return { id, appId, request: request.data, status, runIds }
 }
 
 function readItem(value: unknown): TranscriptItem | null {
@@ -179,18 +190,18 @@ export async function deleteConversation(
   await callPath({ method: "DELETE", path })
 }
 
-function acceptedOf(body: unknown): { proposal: Proposal; run: Run } | null {
+function acceptedOf(body: unknown): { proposal: Proposal; runs: Run[] } | null {
   const proposal = readProposal(fieldOf(body, "proposal"))
-  const started = run.safeParse(fieldOf(body, "run"))
+  const started = run.array().safeParse(fieldOf(body, "runs"))
   return proposal === null || !started.success
     ? null
-    : { proposal, run: started.data }
+    : { proposal, runs: started.data }
 }
 
 export function acceptProposal(
   conversationId: string,
   proposalId: string
-): Promise<{ proposal: Proposal; run: Run }> {
+): Promise<{ proposal: Proposal; runs: Run[] }> {
   const path = buildPath(proposalPath, {
     conversationId,
     proposalId,

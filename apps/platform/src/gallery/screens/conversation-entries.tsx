@@ -45,7 +45,7 @@ function proposalOf(id: string, status: Proposal["status"]): Proposal {
       aspectRatio: "16:9",
     },
     status,
-    runId: null,
+    runIds: [],
   }
 }
 

@@ -186,7 +186,7 @@ async function propose(
     request: proposed.request,
     body: proposed.body,
     status: "proposed",
-    runId: null,
+    runIds: [],
   }
   await api.commit(async (tx) => {
     await tx.doc(proposalRecords, api.conversationId, id, record)
@@ -208,6 +208,6 @@ export function proposalOf(record: ProposalRecord): Proposal {
     appId: appIdFormat.parse(record.appId),
     request: record.request,
     status: record.status,
-    runId: record.runId === null ? null : runIdFormat.parse(record.runId),
+    runIds: record.runIds.map((runId) => runIdFormat.parse(runId)),
   }
 }

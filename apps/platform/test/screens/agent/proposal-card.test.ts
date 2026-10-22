@@ -8,7 +8,7 @@ function proposalWith(inputs: Proposal["request"]["inputs"]): Proposal {
     appId: "video",
     request: { inputs, count: 1, aspectRatio: null },
     status: "proposed",
-    runId: null,
+    runIds: [],
   }
 }
 

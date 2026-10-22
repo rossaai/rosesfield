@@ -43,7 +43,7 @@ export type AgentModelChoice = {
 }
 
 export type ProposalDecision =
-  | { status: "accepted"; runId: RunId }
+  | { status: "accepted"; runIds: RunId[] }
   | { status: "skipped" }
 
 export abstract class AgentHarness {
