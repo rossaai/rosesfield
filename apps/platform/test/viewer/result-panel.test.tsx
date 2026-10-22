@@ -82,8 +82,13 @@ describe("the result viewer's panel", () => {
 
     expect(details?.textContent).toContain("a red rose in rain")
     expect(details?.textContent).toContain("model-a")
-    expect(details?.textContent).toContain(runPrice(entry.run))
+    expect(details?.textContent).toContain(runPrice(entry.run) ?? "?")
     expect(screen.getByText(t("explore.viewer.credits"))).toBeTruthy()
+  })
+
+  it("shows no credits row when the run carries no cost", () => {
+    renderPanel(entryOf(runOf({ cost: null })))
+    expect(screen.queryByText(t("explore.viewer.credits"))).toBeNull()
   })
 
   it("shows each input asset as a tile, and none for a shared result", () => {

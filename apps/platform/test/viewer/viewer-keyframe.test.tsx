@@ -126,6 +126,13 @@ describe("the viewer's info panel for a Storyboard keyframe", () => {
     ).toBe(tCatalog("storyboard.anchor.keyframe"))
   })
 
+  it("shows no price row for a run with no known cost", async () => {
+    openDetails(storyboardRun({}), outputs[1] ?? "")
+    await screen.findByText(t("viewer.label.prompt"))
+    expect(detailOf(t("viewer.label.price"))).toBeNull()
+    expect(screen.queryByText(t("viewer.label.price"))).toBeNull()
+  })
+
   it("shows the keyframe's own scene and then the look as its prompt", async () => {
     openDetails(storyboardRun({}), outputs[1] ?? "")
     await screen.findByText(t("viewer.label.prompt"))

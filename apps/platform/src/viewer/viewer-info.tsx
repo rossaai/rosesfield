@@ -140,6 +140,7 @@ function MadeInfo({
   const model = modelAndModeOf(run)
   const keyframe = keyframeOf(run, assetId)
   const models = useRunModels(run)
+  const price = runPrice(run)
   return (
     <>
       <PanelHead run={run} line={formatDate(run.createdAt)} />
@@ -168,7 +169,9 @@ function MadeInfo({
             {t("run.made", { duration: formatDuration(seconds) })}
           </Detail>
         )}
-        <Detail label={t("viewer.label.price")}>{runPrice(run)}</Detail>
+        {price === null ? null : (
+          <Detail label={t("viewer.label.price")}>{price}</Detail>
+        )}
       </RunSection>
     </>
   )

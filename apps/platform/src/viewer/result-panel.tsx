@@ -226,6 +226,7 @@ export function ResultPanel({
   const model = modelAndModeOf(entry.run)
   const models = useRunModels(entry.run)
   const assetId = entry.source.kind === "own" ? entry.source.assetId : null
+  const price = runPrice(entry.run)
   return (
     <div
       data-slot="viewer-panel"
@@ -237,9 +238,9 @@ export function ResultPanel({
         {model === null ? null : (
           <Detail label={t("viewer.label.model")}>{model}</Detail>
         )}
-        <Detail label={t("explore.viewer.credits")}>
-          {runPrice(entry.run)}
-        </Detail>
+        {price === null ? null : (
+          <Detail label={t("explore.viewer.credits")}>{price}</Detail>
+        )}
       </RunSection>
       <span aria-hidden="true" className="flex-1" />
       <div data-slot="viewer-foot" className="flex flex-col gap-2.5">
