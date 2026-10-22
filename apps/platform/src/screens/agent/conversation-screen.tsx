@@ -99,7 +99,8 @@ export function shownTitleOf(transcript: Transcript): string | null {
     return title
   }
   const line = first.text.trim().split("\n")[0] ?? ""
-  return line.slice(0, autoTitleLength).trim() === title ? null : title
+  const isCopied = title.length <= autoTitleLength && line.startsWith(title)
+  return isCopied ? null : title
 }
 
 function ConversationHeader({
