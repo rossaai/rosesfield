@@ -95,7 +95,7 @@ export const catalogModel = z.object({
   maker: z.string().min(1).max(80),
   name: z.string().min(1).max(120),
   nameKey: z.string().max(120).nullable(),
-  task: z.string().min(1).max(40),
+  task: z.string().min(1).max(40).nullable(),
   tags: z.array(modelTag).max(8),
   form: z.array(modelField).max(64).nullable(),
   facts: modelFacts.optional(),

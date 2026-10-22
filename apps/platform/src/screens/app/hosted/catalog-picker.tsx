@@ -134,13 +134,16 @@ export function capabilitiesOf(
   ]
 }
 
-export function taskTagOf(task: string): ModelPickerTag | null {
+export function taskTagOf(task: string | null): ModelPickerTag | null {
+  if (task === null) {
+    return null
+  }
   const key = `model.task.${task.replace(/-(\w)/g, (_match: string, letter: string) => letter.toUpperCase())}`
   return hasCatalogText(key) ? { label: tCatalog(key) } : null
 }
 
 export function mainTaskOf(models: readonly CatalogModel[]): string | null {
-  const counts = new Map<string, number>()
+  const counts = new Map<string | null, number>()
   for (const model of models) {
     counts.set(model.task, (counts.get(model.task) ?? 0) + 1)
   }

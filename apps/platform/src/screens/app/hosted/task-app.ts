@@ -11,8 +11,6 @@ export function taskAppOf(appId: string): TaskApp | null {
   if (app === null) {
     return null
   }
-  const tasks = appTasksOf(app)
-  return tasks.length === 0
-    ? null
-    : { tasks, defaultModel: defaultModelOf(app) }
+  const defaultModel = defaultModelOf(app)
+  return defaultModel === null ? null : { tasks: appTasksOf(app), defaultModel }
 }

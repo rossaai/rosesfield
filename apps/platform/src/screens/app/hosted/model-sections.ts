@@ -9,7 +9,7 @@ export type SectionRow = {
   id: string
   name: string
   maker: string
-  task: string
+  task: string | null
   tags: readonly ModelTag[]
   facts: ModelFacts | undefined
 }

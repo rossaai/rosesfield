@@ -74,7 +74,9 @@ export function tabOfRun(
   }
   const id = textOf(values.inputs[modelInputName])
   const task = models.find((model) => model.id === id)?.task
-  return task !== undefined && tabs.includes(task) ? task : null
+  return task !== undefined && task !== null && tabs.includes(task)
+    ? task
+    : null
 }
 
 function chooserOf(

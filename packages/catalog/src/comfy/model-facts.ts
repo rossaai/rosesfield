@@ -123,7 +123,7 @@ export function lineKeyOf(
 
 export function factsOf(
   id: string,
-  task: string,
+  task: string | null,
   data: ModelFactsFile = modelFactsData
 ): ModelFacts {
   const row = Object.hasOwn(data.models, id) ? data.models[id] : undefined
@@ -131,8 +131,8 @@ export function factsOf(
   return {
     lab: labOfModel(id, data),
     release: row?.release ?? null,
-    rank: boardRankOf(id, task, data),
-    priceThird: row?.thirds[task] ?? null,
+    rank: task === null ? null : boardRankOf(id, task, data),
+    priceThird: task === null ? null : (row?.thirds[task] ?? null),
     weights: weights?.startsWith(weightsHost) === true ? weights : null,
     lineKey: lineKeyOf(id, data),
   }
