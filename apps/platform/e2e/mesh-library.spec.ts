@@ -3,7 +3,7 @@ import { answerOwnLists } from "./own-lists"
 
 const gatewayOrigin = "http://127.0.0.1:8797"
 
-function glb(): Uint8Array {
+function glb(): Uint8Array<ArrayBuffer> {
   const json = new TextEncoder().encode('{"asset":{"version":"2.0"}} ')
   const bytes = new Uint8Array(20 + json.length)
   const view = new DataView(bytes.buffer)

@@ -21,10 +21,10 @@ import { useDeleteAssets, useDownloadAsset } from "@/pieces/asset-actions"
 import { kindPictures } from "@/screens/library/view-cluster"
 import { ScreenHeader } from "@/shell/screen-header"
 
-export type LibraryKind = "all" | "image" | "video" | "audio"
+export type LibraryKind = "all" | "image" | "video" | "audio" | "mesh"
 
 const kindItems: SegmentedItem<LibraryKind>[] = (
-  ["all", "image", "video", "audio"] as const
+  ["all", "image", "video", "audio", "mesh"] as const
 ).map((kind) => ({
   value: kind,
   label: t(`kind.${kind}`),

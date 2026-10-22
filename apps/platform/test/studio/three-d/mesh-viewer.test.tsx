@@ -8,12 +8,12 @@ import {
 } from "@testing-library/react"
 import type { ReactElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { DeviceProvider } from "@/device/device-context"
 import {
   Device,
   type DeviceFile,
   type PickFilesOptions,
 } from "@/device/device.port"
+import { DeviceProvider } from "@/device/device-context"
 import { parseGlb } from "@/studio/three-d/glb"
 import { meshFileName, meshQuery } from "@/studio/three-d/mesh-file"
 import { MeshRenderer } from "@/studio/three-d/mesh-renderer"
@@ -141,7 +141,11 @@ describe("the 3D download", () => {
     fireEvent.click(screen.getByRole("button", { name: "Download" }))
     await waitFor(() => expect(device.saved).toHaveLength(1))
     expect(device.saved[0]?.blob.size).toBe(bytes.byteLength)
-    expect(screen.queryByRole("alert")).toBeNull()
+    const alerts = screen.getAllByRole("alert")
+    expect(alerts).toHaveLength(1)
+    expect(alerts[0]?.textContent).toContain(
+      "This model did not open in the viewer"
+    )
   })
 
   it("names every file with the .glb extension", () => {

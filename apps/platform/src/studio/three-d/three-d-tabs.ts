@@ -51,10 +51,7 @@ function takesOf(model: CatalogModel, app: AppListing): Takes | null {
   }
 }
 
-export function tabsOfModel(
-  model: CatalogModel,
-  app: AppListing
-): ThreeDTab[] {
+export function tabsOfModel(model: CatalogModel, app: AppListing): ThreeDTab[] {
   const takes = takesOf(model, app)
   if (takes === null) {
     return [...threeDTabs]

@@ -257,7 +257,16 @@ describe("the runs of an app page on desktop", () => {
 
 describe("a run stored with no shape", () => {
   it("takes its shape from the media once the media loads, and keeps it for every tile", async () => {
-    vi.stubGlobal("fetch", () => new Promise(() => undefined))
+    vi.stubGlobal("fetch", (input: string, init?: RequestInit) =>
+      input.endsWith("/preview") && (init?.method ?? "GET") === "GET"
+        ? Promise.resolve(
+            Response.json(
+              { error: { code: "ASSET_PREVIEW_NOT_FOUND", status: 404 } },
+              { status: 404 }
+            )
+          )
+        : new Promise(() => undefined)
+    )
     const client = clientWith(videoOf({ width: null, height: null }))
     renderWith(client, <RunCard run={runOf({})} />)
     const video = await vi.waitFor(() => {

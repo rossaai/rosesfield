@@ -4,11 +4,16 @@ import { StateView } from "@rosesfield/ui/components/state-view"
 import type { ReactElement, ReactNode } from "react"
 import { appEmptyTitle } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
-import { RunLine } from "@/pieces/run/run-line"
-import { RunOutputs } from "@/pieces/run/run-outputs"
+import { RunCard } from "@/pieces/run/run-card"
+import {
+  type RunChromeOf,
+  RunFrame,
+  RunOutputs,
+} from "@/pieces/run/run-outputs"
 import { CanvasSkeleton, useAppRuns } from "@/screens/app/app-canvas"
 import { useCanvasView } from "@/screens/app/canvas-view"
-import { keepsRun } from "@/screens/history/history-screen"
+import { historyGridItems } from "@/screens/history/history-grid-items"
+import { ResultGrid } from "@/screens/library/result-grid"
 import { MeshOnAsk, MeshOutput } from "@/studio/three-d/mesh-viewer"
 
 type ThreeDCanvasProps = {
@@ -28,7 +33,37 @@ function isShownOpen(
 
 function holdsOpened(runs: readonly Run[], opened: string): boolean {
   return runs.some(
-    (one) => one.status === "done" && one.outputs.includes(opened)
+    (one) =>
+      one.status === "done" && one.outputs.some((output) => output === opened)
+  )
+}
+
+function MeshOutputs({
+  run,
+  isLatest,
+  opened,
+  chrome,
+}: {
+  run: Run
+  isLatest: boolean
+  opened: string | undefined
+  chrome: RunChromeOf
+}): ReactElement {
+  if (run.status !== "done") {
+    return <RunOutputs run={run} chrome={chrome} />
+  }
+  return (
+    <RunFrame chrome={chrome} place="under">
+      <div className="flex w-full flex-col gap-s2">
+        {run.outputs.map((assetId) =>
+          isShownOpen(assetId, isLatest, opened) ? (
+            <MeshOutput key={assetId} assetId={assetId} />
+          ) : (
+            <MeshOnAsk key={assetId} assetId={assetId} />
+          )
+        )}
+      </div>
+    </RunFrame>
   )
 }
 
@@ -44,20 +79,16 @@ function RunBlock({
   onUseInputs: (run: Run) => void
 }): ReactElement {
   return (
-    <article className="flex flex-col gap-s2">
-      <RunLine run={run} onUseInputs={onUseInputs} />
-      {run.status === "done" ? (
-        run.outputs.map((assetId) =>
-          isShownOpen(assetId, isLatest, opened) ? (
-            <MeshOutput key={assetId} assetId={assetId} />
-          ) : (
-            <MeshOnAsk key={assetId} assetId={assetId} />
-          )
-        )
-      ) : (
-        <RunOutputs run={run} />
+    <RunCard run={run} onUseInputs={onUseInputs}>
+      {(chrome) => (
+        <MeshOutputs
+          run={run}
+          isLatest={isLatest}
+          opened={opened}
+          chrome={chrome}
+        />
       )}
-    </article>
+    </RunCard>
   )
 }
 
@@ -109,10 +140,13 @@ export function ThreeDCanvas(props: ThreeDCanvasProps): ReactElement {
   if (runs.isPending) {
     return <CanvasSkeleton app={app} />
   }
-  const shown = runs.runs.filter((run) => keepsRun(run, view.state, undefined))
   if (opened !== undefined) {
     return (
-      <RunStack runs={shown} opened={opened} onUseInputs={props.onUseInputs} />
+      <RunStack
+        runs={runs.runs}
+        opened={opened}
+        onUseInputs={props.onUseInputs}
+      />
     )
   }
   if (runs.runs.length === 0) {
@@ -131,18 +165,10 @@ export function ThreeDCanvas(props: ThreeDCanvasProps): ReactElement {
       />
     )
   }
-  if (shown.length === 0) {
+  if (view.layout === "grid") {
     return (
-      <StateView
-        kind="empty"
-        title={t("history.filterEmpty.title")}
-        actions={
-          <Button onClick={view.clear}>
-            {t("history.filterEmpty.action")}
-          </Button>
-        }
-      />
+      <ResultGrid items={historyGridItems(runs.runs)} size={view.gridSize} />
     )
   }
-  return <RunStack runs={shown} onUseInputs={props.onUseInputs} />
+  return <RunStack runs={runs.runs} onUseInputs={props.onUseInputs} />
 }
