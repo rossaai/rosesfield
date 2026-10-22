@@ -163,11 +163,19 @@ describe("the Lip sync column", () => {
     ).not.toBeNull()
   })
 
-  it("names the chosen model's length limit under the audio", () => {
+  it("names the chosen model's length limit in the audio well's tip", async () => {
     show(<LipsyncPanel screen={screenOf({ model: ltx, mode: "audio" })} />)
-    expect(document.body.textContent).toContain(
-      t("field.limits.length", { min: 2, max: 10 })
-    )
+    const limit = t("field.limits.length", { min: 2, max: 10 })
+    expect(document.body.textContent).not.toContain(limit)
+    const zone = screen.getByRole("button", {
+      name: t("field.asset.add.audio"),
+    })
+    fireEvent.pointerEnter(zone, { pointerType: "mouse" })
+    fireEvent.mouseEnter(zone)
+    fireEvent.focus(zone)
+    expect(
+      await screen.findByText(new RegExp(limit), {}, { timeout: 3000 })
+    ).not.toBeNull()
   })
 
   it("on Text shows a box for your line and a voice from the speech models", () => {

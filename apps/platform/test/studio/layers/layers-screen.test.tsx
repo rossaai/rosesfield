@@ -8,7 +8,13 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router"
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { GatewaySettings } from "@/api/gateway-settings"
 import { assetQuery, runQuery, runsQuery, settingsQuery } from "@/api/queries"
@@ -168,8 +174,14 @@ describe("Layers before any run", () => {
     const title = await screen.findByText(tCatalog("layers.empty.title"))
     expect(title).not.toBeNull()
     expect(screen.getByText(tCatalog("layers.empty.body"))).not.toBeNull()
+    const empty = title.closest<HTMLElement>("[data-slot='state-view']")
+    if (empty === null) {
+      throw new Error("the empty title sits in no state view")
+    }
     expect(
-      screen.getAllByRole("button", { name: tCatalog("layers.empty.action") })
+      within(empty).getAllByRole("button", {
+        name: tCatalog("layers.empty.action"),
+      })
     ).toHaveLength(1)
     expect(document.querySelector("img")).toBeNull()
   })
