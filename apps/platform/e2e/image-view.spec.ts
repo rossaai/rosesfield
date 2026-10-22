@@ -20,7 +20,7 @@ async function openWithRun(page: Page): Promise<void> {
     return
   }
   await page.setViewportSize({ width: 1440, height: 900 })
-  const bar = page.locator('[data-slot="prompt-bar"]')
+  const bar = page.locator('[data-slot="composer"][data-bar="prompt"]')
   await bar
     .getByRole("textbox", { name: "Prompt" })
     .fill("a lighthouse at dusk")
@@ -29,7 +29,7 @@ async function openWithRun(page: Page): Promise<void> {
 }
 
 test.describe("the View control of Image's feed", () => {
-  test("sits 16 px from the viewport's right edge, in the head row over a feed that starts under the tabs", async ({
+  test("sits 16 px from the viewport's right edge, centred on the tabs' row, over a feed that starts under the tabs", async ({
     page,
     isMobile,
   }) => {
@@ -38,16 +38,15 @@ test.describe("the View control of Image's feed", () => {
       : { width: 1440, height: 900 }
     await openWithRun(page)
     await page.setViewportSize(viewport)
-    await expect(page.locator('[data-slot="canvas-view"]')).toBeVisible()
-    const view = await boxOf(page, '[data-slot="canvas-view"]')
+    await expect(page.locator('[data-slot="view-menu"]')).toBeVisible()
+    const view = await boxOf(page, '[data-slot="view-menu"]')
     expect(viewport.width - (view.x + view.width)).toBe(16)
     const tabs = await boxOf(page, '[data-slot="canvas-head"] [role="tablist"]')
     const feed = await boxOf(page, '[data-slot="app-stage-scroll"] article')
     expect(tabs.x).toBe(16)
     expect(feed.x).toBe(tabs.x)
-    if (!isMobile) {
-      const bar = await boxOf(page, '[data-slot="app-bar"]')
-      expect(view.y - (bar.y + bar.height)).toBe(8)
-    }
+    const middle = (box: { y: number; height: number }): number =>
+      box.y + box.height / 2
+    expect(Math.abs(middle(view) - middle(tabs))).toBeLessThanOrEqual(1)
   })
 })

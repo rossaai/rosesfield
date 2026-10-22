@@ -63,7 +63,7 @@ describe("the sections of the model picker", () => {
     expect(sections.map((section) => section.id)).toEqual(["all"])
   })
 
-  it("gives an image row with no fact row no line, and a video row its factual tags", () => {
+  it("gives an image row its proven fact and a video row its factual tags, the hosting fact last", () => {
     const hosted: HostedState = {
       isTaskApp: true,
       models,
@@ -80,7 +80,6 @@ describe("the sections of the model picker", () => {
     const image = rows.find((row) => row.id === "alpha/one")
     const video = rows.find((row) => row.id === "beta/three")
     const graph = rows.find((row) => row.id === "open-picture")
-    expect(image).toMatchObject({ line: null })
     expect(image?.tags.map((tag) => tag.label)).toEqual(["Ran in Rosesfield"])
     expect(video?.tags.map((tag) => tag.label)).toEqual(["1080p", "5 to 10 s"])
     expect(graph?.tags.map((tag) => tag.label)).toEqual([])
@@ -147,9 +146,9 @@ describe("an open-weights row of the model picker", () => {
     ).toBe("inclusionAI")
   })
 
-  it("shows the model's own line, and no line for a model whose fact row holds none", () => {
-    expect(ming?.line).toBe("Runs 8 steps, at 1K or 2K.")
-    expect(beta?.line).toBeNull()
+  it("shows its board rank as a capability, and no rank for a model the facts do not rank", () => {
+    expect(ming?.tags.map((tag) => tag.label)).toEqual(["Rank 45 of 104"])
+    expect(beta?.tags.map((tag) => tag.label)).toEqual([])
   })
 
   it("opens the weights page the catalog's facts name", () => {

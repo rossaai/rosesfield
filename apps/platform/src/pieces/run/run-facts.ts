@@ -2,6 +2,8 @@ import {
   creditsOfCost,
   inputRoleOf,
   isHostedModelId,
+  labOfModel,
+  makerOf,
   nameOf,
 } from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
@@ -264,29 +266,71 @@ function priceOf(run: Run, estimate: number | null): string | null {
     : t("run.price.estimated", { amount: formatAmount(estimate) })
 }
 
-function present(parts: ReadonlyArray<string | null>): string[] {
-  return parts.filter((part): part is string => part !== null)
+export type RunBadge =
+  | { kind: "model"; label: string; lab: string | null }
+  | { kind: "demo"; label: string }
+  | { kind: "time"; label: string }
+  | { kind: "price"; amount: string; label: string }
+  | { kind: "note"; label: string }
+
+export function runLabOf(run: Run): string | null {
+  const chosen = run.inputs[modelInputName]
+  if (typeof chosen !== "string" || chosen === autoValue) {
+    return null
+  }
+  if (isHostedModelId(chosen)) {
+    return labOfModel(chosen) ?? makerOf(chosen.split("/")[0] ?? chosen)
+  }
+  return labOfModel(`graph/${chosen}`)
 }
 
-export function runFacts(run: Run, estimate: number | null = null): string[] {
-  const lead =
-    run.origin === "demo"
-      ? t("run.demoCaption")
-      : runModel(run, findCatalogApp(run.appId))
+function leadOf(run: Run): RunBadge | null {
+  if (run.origin === "demo") {
+    return { kind: "demo", label: t("run.demoCaption") }
+  }
+  const model = runModel(run, findCatalogApp(run.appId))
+  return model === null
+    ? null
+    : { kind: "model", label: model, lab: runLabOf(run) }
+}
+
+function priceBadgeOf(run: Run, estimate: number | null): RunBadge | null {
+  if (run.cost !== null) {
+    const amount = formatAmount(creditsOfCost(run.cost))
+    return { kind: "price", amount, label: t("run.price.credits", { amount }) }
+  }
+  if (estimate === null) {
+    return null
+  }
+  const amount = formatAmount(estimate)
+  return { kind: "price", amount, label: t("run.price.estimated", { amount }) }
+}
+
+function presentBadges(badges: ReadonlyArray<RunBadge | null>): RunBadge[] {
+  return badges.filter((badge): badge is RunBadge => badge !== null)
+}
+
+export function runFacts(run: Run, estimate: number | null = null): RunBadge[] {
+  const lead = leadOf(run)
   if (run.status === "failed" || run.status === "cancelled") {
-    return present([lead, run.cost === null ? null : priceOf(run, null)])
+    return presentBadges([
+      lead,
+      run.origin === "demo" ? null : priceBadgeOf(run, null),
+    ])
   }
   if (run.status !== "done") {
-    return present([lead])
+    return presentBadges([lead])
   }
   const seconds = runSeconds(run)
-  return present([
+  return presentBadges([
     lead,
     seconds === null
       ? null
-      : t("run.made", { duration: formatDuration(seconds) }),
-    run.origin === "demo" ? null : priceOf(run, estimate),
-    run.dropped === undefined ? null : tCount("run.dropped", run.dropped),
+      : { kind: "time", label: formatDuration(Math.round(seconds)) },
+    run.origin === "demo" ? null : priceBadgeOf(run, estimate),
+    run.dropped === undefined
+      ? null
+      : { kind: "note", label: tCount("run.dropped", run.dropped) },
   ])
 }
 

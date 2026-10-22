@@ -1,8 +1,8 @@
 import type { Run } from "@rosesfield/contract"
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t } from "@/copy/t"
-import { BarFrame, type BarPlace } from "@/screens/app/bar-frame"
+import { BarChips, BarFrame, type BarPlace } from "@/screens/app/bar-frame"
 import {
   asPhone,
   doneRun,
@@ -31,7 +31,7 @@ function renderDocked(): ReturnType<typeof render> {
         bar={() => <div data-testid="bar-dock" />}
       />,
       image,
-      []
+      null
     )
   )
 }
@@ -75,7 +75,7 @@ describe("the bar frame on a phone", () => {
           }}
         />,
         image,
-        []
+        null
       )
     )
     expect(screen.getAllByTestId("settings")).toHaveLength(1)
@@ -89,7 +89,7 @@ describe("the bar frame with its phone bar docked", () => {
   function renderPhoneDock(
     isOpen: boolean,
     places: BarPlace[],
-    runs: readonly Run[] = []
+    runs: readonly Run[] | null = null
   ): void {
     render(
       withClient(
@@ -144,7 +144,7 @@ describe("the bar frame's canvas", () => {
           bar={() => null}
         />,
         image,
-        []
+        null
       )
     )
     const stage = document.querySelector('[data-slot="bar-stage"]')
@@ -156,5 +156,40 @@ describe("the bar frame's canvas", () => {
     )
     expect(classes(feed)).toContain("px-4")
     expect(classes(feed).some((one) => one.includes(":px-"))).toBe(false)
+  })
+})
+
+describe("the bar's chips", () => {
+  function renderChips(): void {
+    render(
+      withClient(
+        <BarChips
+          chips={
+            <>
+              <button type="button">first chip</button>
+              <button type="button">second chip</button>
+            </>
+          }
+        />,
+        image,
+        null
+      )
+    )
+  }
+
+  it("stand in one row on a regular width", () => {
+    renderChips()
+    expect(screen.getByRole("button", { name: "first chip" })).toBeDefined()
+    expect(document.querySelector("[data-slot=bar-settings]")).toBeNull()
+  })
+
+  it("fold into one Settings chip on a phone, so no chip is cut at the row's edge", async () => {
+    asPhone()
+    renderChips()
+    expect(screen.queryByRole("button", { name: "first chip" })).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: t("bar.settings") }))
+    expect(
+      await screen.findByRole("button", { name: "second chip" })
+    ).toBeDefined()
   })
 })

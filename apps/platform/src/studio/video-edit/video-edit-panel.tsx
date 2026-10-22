@@ -1,5 +1,5 @@
 import type { InputDefinition } from "@rosesfield/contract"
-import { ModeStrip, ModeTab, Tabs } from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { type ReactElement, useEffect, useRef, useState } from "react"
 import { formatDuration } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
@@ -47,15 +47,15 @@ export function ModeTabs({
         }
       }}
     >
-      <ModeStrip
+      <TabsList
         aria-label={mode === undefined ? undefined : inputCaption(mode)}
       >
         {tabs.map((tab) => (
-          <ModeTab key={tab.mode} value={tab.mode}>
+          <TabsTrigger key={tab.mode} value={tab.mode}>
             {tCatalog(tab.labelKey)}
-          </ModeTab>
+          </TabsTrigger>
         ))}
-      </ModeStrip>
+      </TabsList>
     </Tabs>
   )
 }

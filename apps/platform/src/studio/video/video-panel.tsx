@@ -2,7 +2,7 @@ import { extendApp } from "@rosesfield/catalog/video"
 import type { AppListing } from "@rosesfield/contract"
 import { PromptBlock } from "@rosesfield/ui/components/input-panel"
 import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
-import { ModeStrip, ModeTab, Tabs } from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { useNavigate } from "@tanstack/react-router"
 import { type ReactElement, useMemo, useRef } from "react"
 import { t, tCatalog } from "@/copy/t"
@@ -42,13 +42,13 @@ export function ModeTabs({
         }
       }}
     >
-      <ModeStrip aria-label={tCatalog("video.tabs.label")}>
+      <TabsList aria-label={tCatalog("video.tabs.label")}>
         {videoTabs.map((one) => (
-          <ModeTab key={one} value={one}>
+          <TabsTrigger key={one} value={one}>
             {tCatalog(tabKeys[one])}
-          </ModeTab>
+          </TabsTrigger>
         ))}
-      </ModeStrip>
+      </TabsList>
     </Tabs>
   )
 }

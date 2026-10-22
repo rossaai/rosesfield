@@ -1,4 +1,4 @@
-import { ModeStrip, ModeTab, Tabs } from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { type ReactElement, useEffect, useRef, useState } from "react"
 import { tCatalog } from "@/copy/t"
 import { CollapsibleSection } from "@/pieces/collapsible-section"
@@ -48,13 +48,13 @@ export function LipsyncModeTabs({
         }
       }}
     >
-      <ModeStrip aria-label={tCatalog(tabsLabelKey)}>
+      <TabsList aria-label={tCatalog(tabsLabelKey)}>
         {lipsyncTabs.map((one) => (
-          <ModeTab key={one} value={one}>
+          <TabsTrigger key={one} value={one}>
             {tCatalog(tabKeys[one])}
-          </ModeTab>
+          </TabsTrigger>
         ))}
-      </ModeStrip>
+      </TabsList>
     </Tabs>
   )
 }

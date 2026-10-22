@@ -91,26 +91,40 @@ afterEach(() => {
 })
 
 describe("a run on an app page", () => {
-  it("shows its media first, with its facts and its prompt over the media and no caption line above it", async () => {
+  it("shows its media first, with its facts over the media, its model's lab mark first, and no prompt or caption line", async () => {
     const client = clientWith(videoOf({ width: 1080, height: 1920 }))
     renderWith(
       client,
-      <RunCard run={runOf({})} onUseInputs={() => undefined} />
+      <RunCard
+        run={runOf({
+          inputs: {
+            prompt: "a dancer turning in a narrow street",
+            model: "ltx-2-5",
+          },
+        })}
+        onUseInputs={() => undefined}
+      />
     )
     const card = await screen.findByRole("article")
     const row = card.querySelector("[data-slot=output-row]")
     expect(card.firstElementChild).toBe(row)
-    const facts = row?.querySelector("[data-slot=run-facts]")
+    const facts = row?.querySelector("[data-slot=media-chrome-facts]")
+    const badges = [
+      ...(facts?.querySelectorAll("[data-slot=media-badge]") ?? []),
+    ]
+    expect(badges.map((badge) => badge.textContent)).toEqual([
+      "LTX 2.5",
+      "3 seconds",
+    ])
     expect(
-      [...(facts?.querySelectorAll("[data-slot=media-badge]") ?? [])].map(
-        (badge) => badge.textContent
-      )
-    ).toEqual(["ltx-2.5-dev", t("run.made", { duration: "3 seconds" })])
+      badges[0]
+        ?.querySelector("[data-slot=lab-mark]")
+        ?.getAttribute("data-maker")
+    ).toBe("Lightricks")
     expect(facts?.className).toContain("group-hover/reveal:opacity-100")
     expect(facts?.className).toContain("group-focus-within/reveal:opacity-100")
-    expect(row?.querySelector("[data-slot=run-prompt]")?.textContent).toBe(
-      "a dancer turning in a narrow street"
-    )
+    expect(row?.querySelector("[data-slot=run-prompt]")).toBeNull()
+    expect(card.textContent).not.toContain("a dancer turning")
     expect(card.textContent).not.toContain("Price unknown")
     expect(card.querySelector("[data-slot=media-tile-caption]")).toBeNull()
   })
@@ -128,15 +142,37 @@ describe("a run on an app page", () => {
     expect(facts.textContent).toContain(t("run.demoCaption"))
   })
 
-  it("lays out the runs in two columns from the regular width and in one below it", () => {
+  it("lays out the runs in two columns from the regular width by default and in one below it", () => {
     render(
       <RunColumns>
         <span />
       </RunColumns>
     )
-    const columns = document.querySelector("[data-slot=run-columns]")
+    const columns = document.querySelector<HTMLElement>(
+      "[data-slot=run-columns]"
+    )
     expect(columns?.className).toContain("grid-cols-1")
-    expect(columns?.className).toContain("@regular:grid-cols-2")
+    expect(columns?.className).toContain("@regular:grid-cols-(--run-columns)")
+    expect(columns?.style.getPropertyValue("--run-columns")).toBe(
+      "repeat(2, minmax(0, 1fr))"
+    )
+  })
+
+  it("takes the column count the View size gives, from one to four", () => {
+    render(
+      <RunColumns columns={4}>
+        {["a", "b", "c", "d", "e"].map((name) => (
+          <span key={name}>{name}</span>
+        ))}
+      </RunColumns>
+    )
+    const columns = document.querySelector<HTMLElement>(
+      "[data-slot=run-columns]"
+    )
+    expect(columns?.style.getPropertyValue("--run-columns")).toBe(
+      "repeat(4, minmax(0, 1fr))"
+    )
+    expect(document.querySelectorAll("[data-slot=run-column]")).toHaveLength(4)
   })
 })
 
@@ -154,9 +190,14 @@ describe("the runs of an app page on desktop", () => {
       "firstthird",
       "secondfourth",
     ])
-    const places = [...document.querySelectorAll<HTMLElement>("[style]")].map(
-      (place) => [place.textContent, place.style.getPropertyValue("--place")]
-    )
+    const places = [
+      ...document.querySelectorAll<HTMLElement>(
+        "[data-slot=run-column] [style]"
+      ),
+    ].map((place) => [
+      place.textContent,
+      place.style.getPropertyValue("--place"),
+    ])
     expect(places).toEqual([
       ["first", "0"],
       ["third", "2"],
@@ -170,7 +211,7 @@ describe("the runs of an app page on desktop", () => {
     expect(columnsOf(3, undefined)).toEqual([0, 1, 0])
   })
 
-  it("lets a run's media fill its column, and keeps the canvas height cap on a phone", async () => {
+  it("caps a tall run's media at the canvas height on every width, keeping its shape, centred in its column", async () => {
     const client = clientWith(videoOf({ width: 1080, height: 1920 }))
     renderWith(
       client,
@@ -180,11 +221,9 @@ describe("the runs of an app page on desktop", () => {
     )
     const card = await screen.findByRole("article")
     const row = card.querySelector<HTMLElement>("[data-slot=output-row]")
-    expect(row?.className.split(" ")).toEqual(
-      expect.arrayContaining(["max-w-(--row-max)", "@regular:max-w-none"])
-    )
-    expect(row?.style.maxWidth).toBe("")
-    expect(row?.style.getPropertyValue("--row-max")).toMatch(/\* 0\.5625\)$/)
+    expect(row?.className.split(" ")).toContain("mx-auto")
+    expect(row?.className).not.toContain("max-w-none")
+    expect(row?.style.maxWidth).toMatch(/var\(--canvas-height.*\* 0\.5625\)$/)
   })
 })
 

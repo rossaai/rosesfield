@@ -9,9 +9,10 @@ import {
 } from "@tanstack/react-router"
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { appLine } from "@/catalog/app-facts"
 import { HowItWorks, samplesOf, stepsOf } from "@/screens/app/how-it-works"
 import { publishedQuery, type SharedOutput } from "@/screens/explore/share-api"
-import { showcaseOf } from "@/showcase/showcase"
+import { mediaOf, showcaseOf } from "@/showcase/showcase"
 
 afterEach(() => {
   cleanup()
@@ -21,6 +22,7 @@ afterEach(() => {
 const video = appListing.parse(findApp("video"))
 const effects = appListing.parse(findApp("effects"))
 const image = appListing.parse(findApp("image"))
+const relight = appListing.parse(findApp("relight"))
 
 function share(
   id: string,
@@ -98,36 +100,22 @@ describe("How it works", () => {
     ])
   })
 
-  it("stands three steps, and puts Recreate on the two that play", () => {
-    const samples = samplesOf(
-      [
-        share("a", "video", "image"),
-        share("b", "video", "video"),
-        share("c", "video", "video"),
-      ],
-      "video"
-    )
-    const steps = stepsOf(video, samples)
-    expect(steps.map((step) => step.id)).toEqual(["inputs", "model", "result"])
-    const withRecreate = steps.map((step) => step.action !== undefined)
-    expect(withRecreate).toEqual([false, true, true])
-    expect(steps.every((step) => step.media !== null)).toBe(true)
+  it("stands three steps, what you add, what you choose and what you get, with Recreate on the result", () => {
+    const steps = stepsOf(effects, samplesOf([], "effects"))
+    expect(steps.map((step) => step.id)).toEqual(["add", "choose", "get"])
+    expect(steps.map((step) => step.action !== undefined)).toEqual([
+      false,
+      false,
+      true,
+    ])
   })
 
-  it("shows no step frame without a real example, rather than an empty one", () => {
-    expect(stepsOf(video, [])).toEqual([])
-  })
-
-  it("keeps the last steps for fewer examples, so one example is the result", () => {
-    const one = stepsOf(
-      video,
-      samplesOf([share("a", "video", "video")], "video")
-    )
-    expect(one.map((step) => step.id)).toEqual(["result"])
-    expect(one[0]?.media).not.toBeNull()
-    expect(one[0]?.action).toBeDefined()
-    const two = stepsOf(effects, samplesOf([], "effects"))
-    expect(two.map((step) => step.id)).toEqual(["model", "result"])
+  it("shows no media slot for a step with no held example, never another app's still", () => {
+    const steps = stepsOf(video, [], [])
+    expect(steps.map((step) => step.media)).toEqual([null, null, null])
+    const effectsSteps = stepsOf(effects, samplesOf([], "effects"))
+    expect(effectsSteps[0]?.media).toBeNull()
+    expect(effectsSteps[2]?.media).not.toBeNull()
   })
 })
 
@@ -151,73 +139,67 @@ function renderHow(
   )
 }
 
-describe("How it works with the bundled examples", () => {
-  it("plays Effects' two bundled clips, muted and looping, with Recreate on each", async () => {
-    renderHow(() => <HowItWorks app={effects} kind="column" />, [])
-    const steps = await waitFor(() => {
-      const found = screen.getAllByRole("listitem")
-      expect(found).toHaveLength(2)
-      return found
-    })
-    for (const step of steps) {
-      const clip = step.querySelector("video")
-      expect(clip?.muted).toBe(true)
-      expect(clip?.loop).toBe(true)
-      expect(step.querySelector("a")?.getAttribute("href")).toBe(
-        "/apps/effects"
-      )
-    }
+async function stepsShown(count: number): Promise<HTMLElement[]> {
+  return await waitFor(() => {
+    const found = screen.getAllByRole("listitem")
+    expect(found).toHaveLength(count)
+    return found
   })
+}
 
-  it("fans four of Image's bundled stills over the prompt bar", async () => {
-    renderHow(() => <HowItWorks app={image} kind="bar" />, [])
-    const fan = await waitFor(() => {
-      const found = document.querySelector("[data-slot=hero-fan]")
-      expect(found).not.toBeNull()
-      return found
-    })
-    const shown = [...(fan?.querySelectorAll("img") ?? [])].map((picture) =>
-      picture.getAttribute("src")
-    )
-    expect(shown).toEqual(
-      showcaseOf("image")
-        .slice(0, 4)
-        .map((item) => item.src)
-    )
-  })
-})
-
-describe("How it works on Video's canvas", () => {
-  it("shows a published still and two published clips in the three step frames", async () => {
-    vi.stubGlobal("fetch", () => new Promise(() => undefined))
-    const client = new QueryClient({
-      defaultOptions: { queries: { staleTime: Number.POSITIVE_INFINITY } },
-    })
-    client.setQueryData(publishedQuery.queryKey, [
-      share("a", "video", "image"),
-      share("b", "video", "video"),
-      share("c", "video", "video"),
-    ])
-    const router = createRouter({
-      routeTree: createRootRoute({
-        component: () => <HowItWorks app={video} kind="column" />,
-      }),
-      history: createMemoryHistory(),
-    })
-    render(
-      <QueryClientProvider client={client}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
-    )
-    const steps = await waitFor(() => {
-      const found = screen.getAllByRole("listitem")
-      expect(found).toHaveLength(3)
-      return found
-    })
+describe("How it works, one composition for every app", () => {
+  it("heads the canvas with the app's line at the display size, then three cards in a three-column grid", async () => {
+    renderHow(() => <HowItWorks app={image} />, [])
+    await stepsShown(3)
+    const heading = screen.getByRole("heading", { level: 2 })
+    expect(heading.textContent).toBe(appLine(image))
+    expect(heading.className).toContain("text-display")
+    const grid = document.querySelector("[data-slot=how-it-works] ol")
+    expect(grid?.className).toContain("@regular:grid-cols-3")
+    expect(grid?.className).toContain("grid-cols-1")
+    const titles = [...document.querySelectorAll("[data-slot=how-step] h3")]
     expect(
-      steps.map((step) => step.querySelector("img, video")?.tagName ?? null)
-    ).toEqual(["IMG", "VIDEO", "VIDEO"])
-    expect(steps[1]?.querySelector("video")?.muted).toBe(true)
-    expect(steps[1]?.querySelector("video")?.loop).toBe(true)
+      titles.every((title) => title.className.includes("font-medium"))
+    ).toBe(true)
+    expect(titles.every((title) => title.className.includes("text-body"))).toBe(
+      true
+    )
+  })
+
+  it("shows Relight's input still, its settings and its result", async () => {
+    renderHow(() => <HowItWorks app={relight} />, [])
+    const steps = await stepsShown(3)
+    const [item] = showcaseOf("relight")
+    expect(steps[0]?.querySelector("img")?.getAttribute("src")).toBe(
+      mediaOf("portrait-woman.webp")
+    )
+    expect(steps[1]?.querySelector("[data-slot=how-settings]")).not.toBeNull()
+    expect(steps[2]?.querySelector("img")?.getAttribute("src")).toBe(item?.src)
+  })
+
+  it("plays Effects' clip muted and looping, and shows no still from another app", async () => {
+    renderHow(() => <HowItWorks app={effects} />, [])
+    const steps = await stepsShown(3)
+    expect(steps[0]?.querySelector("[data-slot=how-step-media]")).toBeNull()
+    const clip = steps[2]?.querySelector("video")
+    expect(clip?.muted).toBe(true)
+    expect(clip?.loop).toBe(true)
+    const others = showcaseOf("image").map((one) => one.src)
+    const shown = [...document.querySelectorAll("img")].map((one) =>
+      one.getAttribute("src")
+    )
+    expect(shown.some((src) => others.includes(src ?? ""))).toBe(false)
+    expect(steps[2]?.querySelector("a")?.getAttribute("href")).toBe(
+      "/apps/effects"
+    )
+  })
+
+  it("shows Image's prompt as what you add", async () => {
+    renderHow(() => <HowItWorks app={image} />, [])
+    const steps = await stepsShown(3)
+    const [item] = showcaseOf("image")
+    expect(steps[0]?.querySelector("[data-slot=how-prompt]")?.textContent).toBe(
+      item?.prompt
+    )
   })
 })

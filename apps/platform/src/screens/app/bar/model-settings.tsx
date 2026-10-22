@@ -1,9 +1,15 @@
-import { isHostedModelId, lineKeyOf } from "@rosesfield/catalog/comfy"
+import {
+  factsOf,
+  isHostedModelId,
+  labOfModel,
+  modelFactsData,
+} from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import {
   ModelPicker,
   type ModelPickerRow,
   type ModelPickerSection,
+  type ModelPickerTag,
 } from "@rosesfield/ui/components/model-picker"
 import type { ModelPrice } from "@rosesfield/ui/components/model-row"
 import { ModelChip } from "@rosesfield/ui/components/model-trigger"
@@ -19,8 +25,9 @@ import { textOf } from "@/screens/app/fields/field-props"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
 import {
-  modelLineOf,
   openWeightsBadge,
+  openWeightsTag,
+  rankTagOf,
   weightsLinkOf,
 } from "@/screens/app/hosted/catalog-picker"
 import type { PriceAsk } from "@/screens/app/hosted/model-catalog-query"
@@ -116,20 +123,37 @@ export function factsIdOf(value: string): string {
   return isHostedModelId(value) ? value : `graph/${value}`
 }
 
+export function choiceLabOf(value: string, name: string): string {
+  return labOfModel(factsIdOf(value)) ?? choiceMakerOf(value, name)
+}
+
+export function choiceTagsOf(
+  value: string,
+  hasWeightsBadge: boolean
+): ModelPickerTag[] {
+  const id = factsIdOf(value)
+  const facts = modelFactsData.models[id]
+  const rankTask = facts === undefined ? undefined : Object.keys(facts.ranks)[0]
+  const rank = rankTask === undefined ? null : rankTagOf(factsOf(id, rankTask))
+  return [
+    ...(isHostedModelId(value) || hasWeightsBadge ? [] : [openWeightsTag()]),
+    ...(rank === null ? [] : [rank]),
+  ]
+}
+
 function choiceRow(
   option: ChoiceInput["options"][number],
   prices: ReadonlyMap<string, ModelPrice>
 ): ModelPickerRow {
   const price = prices.get(option.value)
   const name = tCatalog(option.labelKey)
-  const maker = choiceMakerOf(option.value, name)
+  const maker = choiceLabOf(option.value, name)
   const href = weightsLinkOf(option.value)
   return {
     id: option.value,
     name,
     maker,
-    line: modelLineOf(lineKeyOf(factsIdOf(option.value)), maker),
-    tags: [],
+    tags: choiceTagsOf(option.value, href !== null),
     mark: <LabMark maker={maker} />,
     badges: href === null ? [] : [openWeightsBadge(href)],
     ...(price === undefined ? {} : { price }),
@@ -182,7 +206,7 @@ export function ChoiceModelPicker({
   })
   const chosen = model === null ? null : value || model.default
   const name = modelChipText(model, value)
-  const maker = chosen === null ? null : choiceMakerOf(chosen, name)
+  const maker = chosen === null ? null : choiceLabOf(chosen, name)
   return (
     <ModelPicker
       trigger={

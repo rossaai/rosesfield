@@ -22,6 +22,7 @@ import {
   useSourceRun,
   type ViewerCompare,
   ViewerDetails,
+  ViewerFoot,
   ViewerInfo,
 } from "@/viewer/viewer-info"
 import { ViewerMedia, ViewerMissing } from "@/viewer/viewer-media"
@@ -219,12 +220,12 @@ function ViewerLayer({
       closeLabel={t("viewer.close")}
       aside={
         record === undefined ? undefined : (
-          <ViewerInfo
-            asset={record}
-            compare={compare}
-            measured={pixels}
-            onDeleted={viewer.close}
-          />
+          <ViewerInfo asset={record} compare={compare} measured={pixels} />
+        )
+      }
+      actions={
+        record === undefined ? undefined : (
+          <ViewerFoot asset={record} onDeleted={viewer.close} />
         )
       }
       bar={

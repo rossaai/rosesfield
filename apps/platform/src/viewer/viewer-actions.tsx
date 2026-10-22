@@ -1,9 +1,9 @@
 import type { Asset, Run } from "@rosesfield/contract"
 import { Button, IconButton } from "@rosesfield/ui/components/button"
+import { ConfirmButton } from "@rosesfield/ui/components/confirm-button"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@rosesfield/ui/components/dropdown-menu"
 import {
@@ -14,13 +14,19 @@ import {
   SheetTitle,
 } from "@rosesfield/ui/components/sheet"
 import { useNavigate } from "@tanstack/react-router"
-import { CopyIcon, DownloadIcon, EllipsisIcon, Trash2Icon } from "lucide-react"
+import {
+  DownloadIcon,
+  ForwardIcon,
+  InfoIcon,
+  RepeatIcon,
+  Trash2Icon,
+} from "lucide-react"
 import { type ReactElement, type ReactNode, useState } from "react"
 import { t } from "@/copy/t"
-import { useDownloadAsset } from "@/pieces/asset-actions"
-import { DeleteAssetDialog } from "@/pieces/delete-asset-dialog"
+import { useDeleteAssets, useDownloadAsset } from "@/pieces/asset-actions"
 import { LabMark } from "@/pieces/lab-mark"
 import { useOpenInComfy } from "@/pieces/run/open-in-comfy"
+import { comfyMaker } from "@/pieces/run/run-menu"
 import { useUseInItems } from "@/pieces/use-in-menu"
 
 type ViewerActionsProps = {
@@ -29,19 +35,32 @@ type ViewerActionsProps = {
   onDeleted: () => void
 }
 
+const wide = "min-w-0 flex-1 max-w-none"
+
 function UseInButton({
   asset,
-  className,
+  form,
 }: {
   asset: Asset
-  className: string
+  form: "label" | "circle"
 }): ReactElement {
   const items = useUseInItems({ kind: asset.kind, useId: asset.id })
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         disabled={items.length === 0}
-        render={<Button className={className}>{t("output.useIn")}</Button>}
+        render={
+          form === "label" ? (
+            <Button className={wide}>
+              <ForwardIcon aria-hidden="true" />
+              {t("output.useIn")}
+            </Button>
+          ) : (
+            <IconButton label={t("output.useIn")}>
+              <ForwardIcon aria-hidden="true" />
+            </IconButton>
+          )
+        }
       />
       <DropdownMenuContent>{items}</DropdownMenuContent>
     </DropdownMenu>
@@ -62,67 +81,61 @@ function useUseInputs(run: Run | null): (() => void) | null {
 
 function DeleteAsset({
   asset,
-  open,
-  onOpenChange,
   onDeleted,
 }: {
   asset: Asset
-  open: boolean
-  onOpenChange: (open: boolean) => void
   onDeleted: () => void
 }): ReactElement {
+  const remove = useDeleteAssets()
   return (
-    <DeleteAssetDialog
-      assetIds={[asset.id]}
-      open={open}
-      onOpenChange={onOpenChange}
-      onDeleted={onDeleted}
-      title={t("viewer.delete.title")}
-      body={t("viewer.delete.body")}
+    <ConfirmButton
+      icon={<Trash2Icon aria-hidden="true" />}
+      label={t("output.delete")}
+      busy={remove.isPending}
+      onConfirm={() => remove.mutate([asset.id], { onSuccess: onDeleted })}
     />
   )
 }
 
-const wide = "w-full max-w-none"
-
-const comfyMark = "Comfy"
-
-function MoreMenu({
-  onDelete,
-  children,
+function OpenInComfy({
+  run,
+  form,
 }: {
-  onDelete: () => void
-  children?: ReactNode
-}): ReactElement {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <IconButton label={t("viewer.more")}>
-            <EllipsisIcon aria-hidden="true" />
-          </IconButton>
-        }
-      />
-      <DropdownMenuContent align="end">
-        {children}
-        <DropdownMenuItem tone="danger" onClick={onDelete}>
-          <Trash2Icon aria-hidden="true" />
-          {t("output.delete")}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-export function ViewerManage({ run }: { run: Run | null }): ReactNode {
+  run: Run | null
+  form: "label" | "circle"
+}): ReactNode {
   const openInComfy = useOpenInComfy(run)
   if (openInComfy === null) {
     return null
   }
-  return (
-    <Button data-slot="viewer-manage" width="full" onClick={openInComfy}>
-      <LabMark maker={comfyMark} />
+  return form === "label" ? (
+    <Button data-slot="viewer-comfy" className={wide} onClick={openInComfy}>
+      <LabMark maker={comfyMaker} />
       {t("run.openInComfy")}
+    </Button>
+  ) : (
+    <IconButton
+      data-slot="viewer-comfy"
+      label={t("run.openInComfy")}
+      onClick={openInComfy}
+    >
+      <LabMark maker={comfyMaker} />
+    </IconButton>
+  )
+}
+
+function Recreate({
+  run,
+  className,
+}: {
+  run: Run | null
+  className: string
+}): ReactNode {
+  const useInputs = useUseInputs(run)
+  return useInputs === null ? null : (
+    <Button tone="primary" className={className} onClick={useInputs}>
+      <RepeatIcon aria-hidden="true" />
+      {t("run.useInputs")}
     </Button>
   )
 }
@@ -133,63 +146,25 @@ export function ViewerActions({
   onDeleted,
 }: ViewerActionsProps): ReactElement {
   const download = useDownloadAsset()
-  const useInputs = useUseInputs(run)
-  const [isConfirming, setConfirming] = useState(false)
   return (
-    <div data-slot="viewer-foot" className="flex flex-col gap-2.5">
-      {useInputs === null ? null : (
-        <Button tone="accent" width="full" onClick={useInputs}>
-          <CopyIcon aria-hidden="true" />
-          {t("run.useInputs")}
-        </Button>
-      )}
-      <div
-        data-slot="viewer-foot-pair"
-        className="grid grid-cols-[1fr_1fr_auto] gap-2"
-      >
+    <div data-slot="viewer-actions" className="flex w-full flex-col gap-s2">
+      <Recreate run={run} className="w-full max-w-none" />
+      <div data-slot="viewer-actions-row" className="flex gap-s2">
         <Button className={wide} onClick={() => void download(asset)}>
           <DownloadIcon aria-hidden="true" />
           {t("output.download")}
         </Button>
-        <UseInButton asset={asset} className={wide} />
-        <MoreMenu onDelete={() => setConfirming(true)} />
+        <UseInButton asset={asset} form="label" />
       </div>
-      <DeleteAsset
-        asset={asset}
-        open={isConfirming}
-        onOpenChange={setConfirming}
-        onDeleted={onDeleted}
-      />
+      <div data-slot="viewer-actions-row" className="flex gap-s2">
+        <OpenInComfy run={run} form="label" />
+        <DeleteAsset asset={asset} onDeleted={onDeleted} />
+      </div>
     </div>
   )
 }
 
 type ViewerBarProps = ViewerActionsProps & { details: ReactNode }
-
-function BarDownload({
-  asset,
-  isLead,
-}: {
-  asset: Asset
-  isLead: boolean
-}): ReactElement {
-  const download = useDownloadAsset()
-  if (isLead) {
-    return (
-      <Button className="min-w-0 flex-1" onClick={() => void download(asset)}>
-        {t("output.download")}
-      </Button>
-    )
-  }
-  return (
-    <IconButton
-      label={t("output.download")}
-      onClick={() => void download(asset)}
-    >
-      <DownloadIcon aria-hidden="true" />
-    </IconButton>
-  )
-}
 
 export function ViewerBar({
   asset,
@@ -197,29 +172,23 @@ export function ViewerBar({
   onDeleted,
   details,
 }: ViewerBarProps): ReactElement {
-  const useInputs = useUseInputs(run)
-  const openInComfy = useOpenInComfy(run)
+  const download = useDownloadAsset()
   const [isInfoOpen, setInfoOpen] = useState(false)
-  const [isConfirming, setConfirming] = useState(false)
   return (
     <>
-      <Button onClick={() => setInfoOpen(true)}>{t("viewer.info")}</Button>
-      {useInputs === null ? null : (
-        <Button tone="accent" className="min-w-0 flex-1" onClick={useInputs}>
-          <CopyIcon aria-hidden="true" />
-          {t("run.useInputs")}
-        </Button>
-      )}
-      <BarDownload asset={asset} isLead={useInputs === null} />
-      <UseInButton asset={asset} className="" />
-      <MoreMenu onDelete={() => setConfirming(true)}>
-        {openInComfy === null ? null : (
-          <DropdownMenuItem onClick={openInComfy}>
-            <LabMark maker={comfyMark} />
-            {t("run.openInComfy")}
-          </DropdownMenuItem>
-        )}
-      </MoreMenu>
+      <IconButton label={t("viewer.info")} onClick={() => setInfoOpen(true)}>
+        <InfoIcon aria-hidden="true" />
+      </IconButton>
+      <Recreate run={run} className="min-w-0 flex-1" />
+      <IconButton
+        label={t("output.download")}
+        onClick={() => void download(asset)}
+      >
+        <DownloadIcon aria-hidden="true" />
+      </IconButton>
+      <UseInButton asset={asset} form="circle" />
+      <OpenInComfy run={run} form="circle" />
+      <DeleteAsset asset={asset} onDeleted={onDeleted} />
       <Sheet open={isInfoOpen} onOpenChange={setInfoOpen}>
         <SheetContent side="bottom" closeLabel={t("viewer.close")}>
           <SheetHeader>
@@ -228,12 +197,6 @@ export function ViewerBar({
           <SheetBody>{details}</SheetBody>
         </SheetContent>
       </Sheet>
-      <DeleteAsset
-        asset={asset}
-        open={isConfirming}
-        onOpenChange={setConfirming}
-        onDeleted={onDeleted}
-      />
     </>
   )
 }

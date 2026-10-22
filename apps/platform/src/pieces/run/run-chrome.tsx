@@ -1,12 +1,17 @@
 import type { Run } from "@rosesfield/contract"
+import { Button } from "@rosesfield/ui/components/button"
+import { CreditPrice } from "@rosesfield/ui/components/credit-price"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { MediaBadge } from "@rosesfield/ui/components/media-tile"
+import { MediaChrome } from "@rosesfield/ui/components/result-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { RepeatIcon } from "lucide-react"
 import type { ReactElement } from "react"
+import { t } from "@/copy/t"
+import { LabMark } from "@/pieces/lab-mark"
 import { useRunEstimate } from "@/pieces/run/run-estimate"
-import { runFacts } from "@/pieces/run/run-facts"
-import { RunHeadline } from "@/pieces/run/run-headline"
-import { RunMenu } from "@/pieces/run/run-menu"
+import { type RunBadge, runFacts } from "@/pieces/run/run-facts"
+import { RunMenu, useRunInputs } from "@/pieces/run/run-menu"
 import type { ChromePlace } from "@/pieces/run/run-outputs"
 
 type RunChromeProps = {
@@ -15,55 +20,65 @@ type RunChromeProps = {
   onUseInputs?: (run: Run) => void
 }
 
-const touchShown =
-  "[@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100"
+function Badge({
+  badge,
+  ground,
+}: {
+  badge: RunBadge
+  ground: "media" | "plain"
+}): ReactElement {
+  switch (badge.kind) {
+    case "model":
+      return (
+        <MediaBadge
+          ground={ground}
+          {...(badge.lab === null
+            ? {}
+            : { mark: <LabMark maker={badge.lab} /> })}
+        >
+          {badge.label}
+        </MediaBadge>
+      )
+    case "price":
+      return (
+        <MediaBadge ground={ground}>
+          <span title={badge.label}>
+            <CreditPrice amount={badge.amount} />
+          </span>
+        </MediaBadge>
+      )
+    default:
+      return <MediaBadge ground={ground}>{badge.label}</MediaBadge>
+  }
+}
 
 function Facts({
   run,
-  place,
-  className,
+  ground,
 }: {
   run: Run
-  place: ChromePlace
-  className: string
+  ground: "media" | "plain"
 }): ReactElement {
-  const facts = runFacts(run, useRunEstimate(run))
+  const badges = runFacts(run, useRunEstimate(run))
   return (
-    <span
-      data-slot="run-facts"
-      className={cn("flex flex-wrap gap-s1", interaction.reveal, className)}
-    >
-      {facts.map((fact) => (
-        <MediaBadge key={fact} ground={place === "over" ? "media" : "plain"}>
-          {fact}
-        </MediaBadge>
+    <>
+      {badges.map((badge) => (
+        <Badge key={badge.kind} badge={badge} ground={ground} />
       ))}
-    </span>
+    </>
   )
 }
 
-function Actions({
+function Recreate({
   run,
   onUseInputs,
-  className,
-}: Omit<RunChromeProps, "place"> & { className: string }): ReactElement {
+}: Omit<RunChromeProps, "place">): ReactElement {
+  const useInputs = useRunInputs(run, onUseInputs)
   return (
-    <span
-      data-slot="run-actions"
-      className={cn(
-        "flex",
-        interaction.reveal,
-        interaction.revealPointer,
-        touchShown,
-        className
-      )}
-    >
-      <RunMenu
-        run={run}
-        form="card"
-        {...(onUseInputs === undefined ? {} : { onUseInputs })}
-      />
-    </span>
+    <Button tone="glass" onClick={useInputs}>
+      <RepeatIcon aria-hidden="true" />
+      {t("run.useInputs")}
+    </Button>
   )
 }
 
@@ -76,28 +91,37 @@ export function RunChrome({
   if (place === "under") {
     return (
       <div data-slot="run-chrome" className="flex items-start gap-s2">
-        <Facts run={run} place="under" className="min-w-0 flex-1" />
-        <Actions run={run} {...shown} className="shrink-0" />
+        <span
+          data-slot="run-facts"
+          className={cn("flex min-w-0 flex-1 flex-wrap gap-s1")}
+        >
+          <Facts run={run} ground="plain" />
+        </span>
+        <span
+          data-slot="run-actions"
+          className={cn(
+            "flex shrink-0",
+            interaction.reveal,
+            interaction.revealPointer,
+            "[@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100"
+          )}
+        >
+          <RunMenu run={run} form="card" {...shown} />
+        </span>
       </div>
     )
   }
   return (
-    <>
-      <Facts
-        run={run}
-        place="over"
-        className="pointer-events-none absolute top-s2 left-s2 z-20 max-w-[calc(100%-var(--spacing)*13)]"
-      />
-      <Actions run={run} {...shown} className="absolute top-s2 right-s2 z-20" />
-      <p
-        data-slot="run-prompt"
-        className={cn(
-          "material pointer-events-none absolute inset-x-s2 bottom-s2 z-20 line-clamp-2 rounded-cell px-s2 py-s1 text-caption text-ink",
-          interaction.reveal
-        )}
-      >
-        <RunHeadline run={run} />
-      </p>
-    </>
+    <MediaChrome
+      facts={
+        <span data-slot="run-facts" className="contents">
+          <Facts run={run} ground="media" />
+        </span>
+      }
+      actions={<RunMenu run={run} form="card" {...shown} />}
+      {...(run.status === "done"
+        ? { action: <Recreate run={run} {...shown} /> }
+        : {})}
+    />
   )
 }

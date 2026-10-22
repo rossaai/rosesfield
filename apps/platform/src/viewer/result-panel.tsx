@@ -3,16 +3,8 @@ import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { keyframeOf } from "@rosesfield/catalog/storyboard"
 import type { Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
-import { interaction } from "@rosesfield/ui/components/interaction"
-import { cn } from "@rosesfield/ui/lib/cn"
-import {
-  ChevronUpIcon,
-  CopyIcon,
-  DownloadIcon,
-  ImagesIcon,
-  InfoIcon,
-} from "lucide-react"
-import { type ReactElement, type ReactNode, useState } from "react"
+import { CopyIcon, DownloadIcon, ImagesIcon } from "lucide-react"
+import type { ReactElement, ReactNode } from "react"
 import { isAssetInput, promptInputOf } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { formatDate, joinParts } from "@/copy/format"
@@ -162,36 +154,6 @@ export function PromptDetail({ prompt }: { prompt: string | null }): ReactNode {
   )
 }
 
-function Details({ children }: { children: ReactNode }): ReactElement {
-  const [isOpen, setOpen] = useState(true)
-  return (
-    <div data-slot="viewer-details-group" className="flex flex-col">
-      <button
-        type="button"
-        aria-expanded={isOpen}
-        onClick={() => setOpen(!isOpen)}
-        className={cn(
-          "relative flex h-12 items-center gap-2 rounded-cell px-2 text-label text-ink-muted [&_svg]:size-4",
-          interaction.light,
-          interaction.ring
-        )}
-      >
-        <InfoIcon aria-hidden="true" />
-        <span className="flex-1 text-start">{t("viewer.info")}</span>
-        <ChevronUpIcon
-          aria-hidden="true"
-          className={isOpen ? undefined : "rotate-180"}
-        />
-      </button>
-      {isOpen ? (
-        <dl data-slot="viewer-details" className="flex flex-col">
-          {children}
-        </dl>
-      ) : null}
-    </div>
-  )
-}
-
 export function RunSection({
   inputIds,
   children,
@@ -205,7 +167,9 @@ export function RunSection({
       className="flex flex-col rounded-card bg-(--well) px-2 pb-2.5"
     >
       <InputAssets ids={inputIds} />
-      <Details>{children}</Details>
+      <dl data-slot="viewer-details" className="flex flex-col">
+        {children}
+      </dl>
     </section>
   )
 }

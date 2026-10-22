@@ -2,6 +2,7 @@ import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
 import { Badge } from "@rosesfield/ui/components/badge"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { useQuery } from "@tanstack/react-query"
+import { CoinsIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { characterQuery } from "@/api/queries"
 import { isAssetInput } from "@/catalog/app-facts"
@@ -98,7 +99,11 @@ function outputRows(
       value: run.aspectRatio,
     })
   }
-  if (output.count.max > 1 && !shown.some((input) => input.name === "count")) {
+  if (
+    output.count.max > 1 &&
+    run.count > 1 &&
+    !shown.some((input) => input.name === "count")
+  ) {
     rows.push({
       key: "output.count",
       label: t("field.count.label"),
@@ -198,7 +203,16 @@ export function runFactsOf(app: AppListing, run: RunValues): RunFacts {
   return facts
 }
 
-export function RunFactsView({ facts }: { facts: RunFacts }): ReactElement {
+export type FactsPrice = { amount: string; label: string }
+
+export function RunFactsView({
+  facts,
+  price = null,
+}: {
+  facts: RunFacts
+  price?: FactsPrice | null
+}): ReactElement {
+  const hasPrice = price !== null
   return (
     <div data-slot="run-facts-view" className="flex flex-col gap-s3">
       {facts.prompts.map((prompt) => (
@@ -222,13 +236,24 @@ export function RunFactsView({ facts }: { facts: RunFacts }): ReactElement {
           ))}
         </span>
       )}
-      {facts.badges.length === 0 ? null : (
+      {facts.badges.length === 0 && !hasPrice ? null : (
         <span data-slot="run-fact-badges" className="flex flex-wrap gap-s1">
           {facts.badges.map((badge) => (
             <Badge key={badge.key} className="ms-0">
               {badge.text}
             </Badge>
           ))}
+          {price === null ? null : (
+            <span
+              data-slot="run-fact-price"
+              title={price.label}
+              className="contents"
+            >
+              <Badge mark={<CoinsIcon aria-hidden="true" />} className="ms-0">
+                {price.amount}
+              </Badge>
+            </span>
+          )}
         </span>
       )}
     </div>

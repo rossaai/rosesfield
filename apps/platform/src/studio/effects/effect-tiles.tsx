@@ -1,48 +1,36 @@
 import {
   type EffectRecipe,
-  type EffectRun,
   effectKeyOf,
   effectRecipes,
-  effectRuns,
 } from "@rosesfield/catalog/effects"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
-import { CreditPrice } from "@rosesfield/ui/components/credit-price"
-import { MediaTile } from "@rosesfield/ui/components/media-tile"
+import { interaction } from "@rosesfield/ui/components/interaction"
+import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { motion } from "@rosesfield/ui/motion"
 import { ImagePlusIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useEffect, useRef } from "react"
-import { formatNumber } from "@/copy/format"
-import { t, tCatalog } from "@/copy/t"
+import { tCatalog } from "@/copy/t"
+import { ChosenVeil } from "@/pieces/selectable-tile"
 import { previewOf } from "@/studio/effects/effect-previews"
-import type { EffectPrices } from "@/studio/effects/use-effect-prices"
-
-export type KeptRunPrice = {
-  credits: number
-  resolution: string
-}
 
 export type EffectTile = {
   effect: string
   label: string
   photo: string
-  look: { status: "passed"; preview: string } | { status: "draft" }
-  kept: KeptRunPrice | null
+  preview: string
+  aspect: MediaAspect
 }
 
 type EffectTilesProps = {
   app: AppListing
   value: string
-  prices: EffectPrices
   onChange: (effect: string) => void
   register: (focus: () => void) => void
   recipes?: readonly EffectRecipe[]
   previews?: (file: string) => string | null
-  runs?: readonly EffectRun[]
 }
 
-const tileAspect = { width: 3, height: 4 }
-const draftKey = "effects.draft"
+const fallbackAspect: MediaAspect = { width: 9, height: 16 }
 
 export function effectOptionsOf(app: AppListing): string[] {
   const input = app.inputs.find(
@@ -52,36 +40,25 @@ export function effectOptionsOf(app: AppListing): string[] {
   return input === undefined ? [] : input.options.map((option) => option.value)
 }
 
-function keptPriceOf(
-  recipe: EffectRecipe,
-  runs: readonly EffectRun[]
-): KeptRunPrice | null {
-  const preview = recipe.preview
-  const run =
-    preview === null
-      ? undefined
-      : runs.find((one) => one.runId === preview.runId)
-  if (run === undefined) {
-    return null
-  }
-  const credits =
-    Math.round((run.balance.before - run.balance.after) * 100) / 100
-  return credits > 0 ? { credits, resolution: run.resolution } : null
+function aspectOfRatio(ratio: string | undefined): MediaAspect {
+  const [width, height] = (ratio ?? "").split(":").map(Number)
+  return width !== undefined && height !== undefined && width > 0 && height > 0
+    ? { width, height }
+    : fallbackAspect
 }
 
 export function effectTiles(
   app: AppListing,
   recipes: readonly EffectRecipe[] = effectRecipes,
-  previews: (file: string) => string | null = previewOf,
-  runs: readonly EffectRun[] = effectRuns
+  previews: (file: string) => string | null = previewOf
 ): EffectTile[] {
   return effectOptionsOf(app).flatMap((effect) => {
     const recipe = recipes.find((one) => one.effect === effect)
-    if (recipe === undefined) {
+    if (recipe === undefined || !recipe.passed || recipe.preview === null) {
       return []
     }
-    const look = lookOf(recipe, previews)
-    if (look === null) {
+    const preview = previews(recipe.preview.file)
+    if (preview === null) {
       return []
     }
     const key = effectKeyOf(effect)
@@ -90,93 +67,20 @@ export function effectTiles(
         effect,
         label: tCatalog(`effects.choice.effect.${key}`),
         photo: tCatalog(`effects.photo.${key}`),
-        look,
-        kept: recipe.passed ? keptPriceOf(recipe, runs) : null,
+        preview,
+        aspect: aspectOfRatio(recipe.preview.aspectRatio),
       },
     ]
   })
 }
 
-function lookOf(
-  recipe: EffectRecipe,
-  previews: (file: string) => string | null
-): EffectTile["look"] | null {
-  if (!recipe.passed) {
-    return { status: "draft" }
-  }
-  const preview = recipe.preview === null ? null : previews(recipe.preview.file)
-  return preview === null ? null : { status: "passed", preview }
-}
-
-function TileLook({ tile }: { tile: EffectTile }): ReactElement {
-  if (tile.look.status === "passed") {
-    return (
-      <MediaTile
-        kind="video"
-        src={tile.look.preview}
-        alt={tile.label}
-        aspect={tileAspect}
-      />
-    )
-  }
-  return (
-    <span
-      data-slot="effect-draft"
-      className="flex w-full items-center justify-center rounded-cell bg-(--well) text-caption text-ink-muted"
-      style={{ aspectRatio: `${tileAspect.width} / ${tileAspect.height}` }}
-    >
-      {tCatalog(draftKey)}
-    </span>
-  )
-}
-
-function priceTextOf(tile: EffectTile, prices: EffectPrices): string | null {
-  const credits = prices.creditsOf(tile.effect)
-  if (credits !== null && prices.isMeasured(tile.effect)) {
-    return t("run.price.credits", { amount: formatNumber(credits) })
-  }
-  if (tile.kept !== null) {
-    return t("run.price.kept", {
-      amount: formatNumber(tile.kept.credits),
-      resolution: tile.kept.resolution,
-    })
-  }
-  return credits === null
-    ? null
-    : t("run.price.credits", { amount: formatNumber(credits) })
-}
-
-function PriceLine({
-  tile,
-  prices,
-}: {
-  tile: EffectTile
-  prices: EffectPrices
-}): ReactNode {
-  if (prices.isDemo) {
-    return (
-      <span className="px-s1 text-caption text-ink-muted">
-        {t("run.price.demo")}
-      </span>
-    )
-  }
-  const text = priceTextOf(tile, prices)
-  return text === null ? null : (
-    <span className="px-s1 text-caption text-ink-muted">
-      <CreditPrice amount={text} />
-    </span>
-  )
-}
-
 function Tile({
   tile,
-  prices,
   isChosen,
   onChoose,
   chosenRef,
 }: {
   tile: EffectTile
-  prices: EffectPrices
   isChosen: boolean
   onChoose: () => void
   chosenRef: (element: HTMLButtonElement | null) => void
@@ -188,21 +92,52 @@ function Tile({
       ref={isChosen ? chosenRef : undefined}
       onClick={onChoose}
       data-effect={tile.effect}
-      data-look={tile.look.status}
       className={cn(
-        "flex w-full min-w-0 flex-col gap-s1_5 rounded-card p-s1_5 text-left",
-        isChosen ? "bg-selection" : "hover:bg-(--tint)",
-        motion.tint
+        "group/tile flex w-full min-w-0 flex-col gap-s2 rounded-card text-left",
+        interaction.ring
       )}
     >
-      <TileLook tile={tile} />
-      <span className="px-s1 text-body">{tile.label}</span>
-      <span className="flex items-start gap-s1 px-s1 text-caption text-ink-muted">
-        <ImagePlusIcon aria-hidden="true" className="glyph-small shrink-0" />
-        <span>{tile.photo}</span>
+      <span
+        data-slot="effect-clip"
+        className="relative w-full overflow-hidden rounded-cell bg-(--well)"
+        style={{ aspectRatio: `${tile.aspect.width} / ${tile.aspect.height}` }}
+      >
+        <video
+          src={tile.preview}
+          aria-label={tile.label}
+          muted
+          loop
+          autoPlay
+          playsInline
+          preload="auto"
+          className="absolute inset-0 size-full object-cover"
+        />
+        <ChosenVeil isChosen={isChosen} />
       </span>
-      <PriceLine tile={tile} prices={prices} />
+      <span
+        className={cn(
+          "truncate px-s1 text-body",
+          isChosen ? "font-medium text-ink" : "text-ink-muted"
+        )}
+      >
+        {tile.label}
+      </span>
     </button>
+  )
+}
+
+function ChosenHint({ tile }: { tile: EffectTile | undefined }): ReactNode {
+  if (tile === undefined) {
+    return null
+  }
+  return (
+    <p
+      data-slot="effect-hint"
+      className="flex items-start gap-s1_5 text-body text-ink-muted"
+    >
+      <ImagePlusIcon aria-hidden="true" className="glyph mt-0.5 shrink-0" />
+      <span>{tile.photo}</span>
+    </p>
   )
 }
 
@@ -212,25 +147,19 @@ export function EffectTiles(props: EffectTilesProps): ReactElement {
   useEffect(() => {
     register(() => chosen.current?.focus())
   }, [register])
-  const tiles = effectTiles(
-    props.app,
-    props.recipes,
-    props.previews,
-    props.runs
-  )
+  const tiles = effectTiles(props.app, props.recipes, props.previews)
   const setChosen = (element: HTMLButtonElement | null): void => {
     chosen.current = element
   }
   const label = tCatalog("effects.input.effect.label")
   return (
     <section className="flex flex-col gap-s3">
-      <h2 className="text-label text-ink-muted">{label}</h2>
-      <ul aria-label={label} className="grid grid-cols-2 gap-s2">
+      <h2 className="text-body text-ink">{label}</h2>
+      <ul aria-label={label} className="grid grid-cols-2 items-start gap-s3">
         {tiles.map((tile) => (
           <li key={tile.effect} className="flex min-w-0">
             <Tile
               tile={tile}
-              prices={props.prices}
               isChosen={tile.effect === props.value}
               onChoose={() => props.onChange(tile.effect)}
               chosenRef={setChosen}
@@ -238,6 +167,7 @@ export function EffectTiles(props: EffectTilesProps): ReactElement {
           </li>
         ))}
       </ul>
+      <ChosenHint tile={tiles.find((tile) => tile.effect === props.value)} />
     </section>
   )
 }

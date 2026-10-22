@@ -1,4 +1,11 @@
 import type { AppListing, Run } from "@rosesfield/contract"
+import { Chip } from "@rosesfield/ui/components/chip"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@rosesfield/ui/components/popover"
 import {
   Sheet,
   SheetBody,
@@ -7,12 +14,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@rosesfield/ui/components/sheet"
+import { SlidersHorizontalIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useEffect, useState } from "react"
 import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useAppToolsOpener } from "@/pieces/app-tools"
 import { Dock } from "@/pieces/dock"
-import { useCanvasFit } from "@/pieces/use-canvas-fit"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { AppCanvas } from "@/screens/app/app-canvas"
 import { AppStage } from "@/screens/app/app-stage"
@@ -100,7 +107,6 @@ export function BarFrame(props: BarFrameProps): ReactElement {
   const [isOpen, setOpen] = props.sheet
   const isRegular = useIsRegularWindow()
   const isDocked = props.phone === "dock"
-  const fit = useCanvasFit()
   const cover = useDockCover()
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -113,7 +119,6 @@ export function BarFrame(props: BarFrameProps): ReactElement {
         <AppStage
           app={props.app}
           kind="bar"
-          scrollRef={fit.ref}
           scrollClassName="px-4 pb-4 @regular:pb-36"
         >
           <AppCanvas app={props.app} onUseInputs={props.onUseInputs} />
@@ -150,11 +155,43 @@ export function BarFrame(props: BarFrameProps): ReactElement {
   )
 }
 
+function FoldedChips({ chips }: { chips: ReactNode }): ReactElement {
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Chip data-slot="bar-settings" icon={<SlidersHorizontalIcon />}>
+            {t("bar.settings")}
+          </Chip>
+        }
+      />
+      <PopoverContent
+        side="top"
+        sideOffset={8}
+        aria-label={t("bar.settings")}
+        data-density="composer"
+      >
+        <PopoverTitle className="sr-only">{t("bar.settings")}</PopoverTitle>
+        <div
+          data-slot="bar-settings-chips"
+          className="flex flex-wrap items-center gap-s1"
+        >
+          {chips}
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 export function BarChips({ chips }: { chips: ReactNode }): ReactElement {
+  const isRegular = useIsRegularWindow()
+  if (!isRegular) {
+    return <FoldedChips chips={chips} />
+  }
   return (
     <span
       data-slot="bar-chips"
-      className="flex min-w-0 shrink-0 items-center gap-1 *:flex-nowrap *:gap-1"
+      className="flex min-w-0 shrink-0 items-center gap-s1 *:flex-nowrap *:gap-s1"
     >
       {chips}
     </span>

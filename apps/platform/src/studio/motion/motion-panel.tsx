@@ -1,6 +1,6 @@
 import type { AppListing } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
-import { ModeStrip, ModeTab, Tabs } from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { type ReactElement, useEffect, useRef, useState } from "react"
 import { formatDuration } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
@@ -34,13 +34,13 @@ export function MotionTabs({
         }
       }}
     >
-      <ModeStrip aria-label={tCatalog("motion.tabs.label")}>
+      <TabsList aria-label={tCatalog("motion.tabs.label")}>
         {motionTabs.map((one) => (
-          <ModeTab key={one} value={one}>
+          <TabsTrigger key={one} value={one}>
             {tCatalog(tabKeys[one])}
-          </ModeTab>
+          </TabsTrigger>
         ))}
-      </ModeStrip>
+      </TabsList>
     </Tabs>
   )
 }

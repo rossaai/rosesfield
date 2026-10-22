@@ -1,5 +1,5 @@
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
-import { ModeStrip, ModeTab, Tabs } from "@rosesfield/ui/components/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { type ReactElement, useEffect, useRef, useState } from "react"
 import { t, tCatalog } from "@/copy/t"
 import { assetLimitsText } from "@/pieces/asset-limits"
@@ -95,13 +95,13 @@ export function ModeTabs({
         }
       }}
     >
-      <ModeStrip aria-label={tCatalog("upscale.input.mode.label")}>
+      <TabsList aria-label={tCatalog("upscale.input.mode.label")}>
         {upscaleModes.map((one) => (
-          <ModeTab key={one} value={one}>
+          <TabsTrigger key={one} value={one}>
             {tCatalog(`upscale.choice.mode.${one}`)}
-          </ModeTab>
+          </TabsTrigger>
         ))}
-      </ModeStrip>
+      </TabsList>
     </Tabs>
   )
 }

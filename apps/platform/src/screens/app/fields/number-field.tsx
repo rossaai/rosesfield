@@ -1,8 +1,7 @@
 import type { InputDefinition } from "@rosesfield/contract"
 import { Slider } from "@rosesfield/ui/components/slider"
 import { type ReactElement, useEffect, useRef } from "react"
-import { formatNumber, withUnit } from "@/copy/format"
-import { t } from "@/copy/t"
+import { withUnit } from "@/copy/format"
 import { NumberStepper } from "@/pieces/number-stepper"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import {
@@ -61,15 +60,11 @@ export function NumberField(props: InputFieldProps<NumberInput>): ReactElement {
   useEffect(() => {
     register(() => first.current?.focus())
   }, [register])
-  const range = t("field.number.range", {
-    min: formatNumber(input.min),
-    max: withUnit(input.max, unit),
-  })
   return (
     <FieldFrame
       caption={inputCaption(input)}
       isOptional={false}
-      note={range}
+      note={null}
       problem={props.problem}
     >
       {stepCount(input) <= stepperLimit ? (

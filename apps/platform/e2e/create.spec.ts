@@ -21,7 +21,7 @@ test.describe("a prompt app on a desktop", () => {
     page,
   }) => {
     await page.goto("/apps/image")
-    const bar = page.locator('[data-slot="prompt-bar"]')
+    const bar = page.locator('[data-slot="composer"][data-bar="prompt"]')
     await expect(bar).toBeVisible()
     const viewport = page.viewportSize()
     if (viewport === null) {
@@ -46,7 +46,7 @@ test.describe("a prompt app on a desktop", () => {
 
   test("keeps the bar in place while the page scrolls", async ({ page }) => {
     await page.goto("/apps/image")
-    const bar = page.locator('[data-slot="prompt-bar"]')
+    const bar = page.locator('[data-slot="composer"][data-bar="prompt"]')
     const before = await boxOf(bar)
     await page.mouse.wheel(0, 600)
     expect(await boxOf(bar)).toEqual(before)
@@ -58,7 +58,7 @@ test.describe("a prompt app on a desktop", () => {
     const how = page.getByRole("tab", { name: "How it works" })
     await expect(how).toHaveAttribute("aria-selected", "true")
     const history = await boxOf(page.getByRole("tab", { name: "History" }))
-    expect(history.height).toBe(32)
+    expect(history.height).toBe(30)
   })
 })
 
@@ -69,7 +69,7 @@ test.describe("Image's References and Elements tile", () => {
     page,
   }) => {
     await page.goto("/apps/image")
-    const bar = page.locator('[data-slot="prompt-bar"]')
+    const bar = page.locator('[data-slot="composer"][data-bar="prompt"]')
     const chip = bar.locator(modelRow).first()
     await expect(chip).toContainText("Z-Image Turbo")
     const chooser = page.waitForEvent("filechooser")
@@ -113,7 +113,7 @@ test.describe("the prompt bar's field and model chip", () => {
   }) => {
     await page.goto("/apps/image")
     const chip = page
-      .locator('[data-slot="prompt-bar"]')
+      .locator('[data-slot="composer"][data-bar="prompt"]')
       .locator(modelRow)
       .first()
     await expect(chip).toBeVisible()
@@ -164,14 +164,14 @@ test.describe("an app with many inputs on a desktop", () => {
 test.describe("the parts of Video's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("stacks 302 px parts 8 px apart: 36 px mode tabs, a 302 by 130 start frame with Change 6 px from its corner, a 126 px prompt and a 48 px model row", async ({
+  test("stacks 302 px parts 8 px apart: 30 px mode tabs, a 302 by 130 start frame with Change 6 px from its corner, a 302 px prompt and a 36 px model row", async ({
     page,
   }) => {
     await page.goto("/apps/video")
     const column = page.locator('[data-slot="composer"]')
     await expect(column).toBeVisible()
     const tab = await boxOf(column.getByRole("tab").first())
-    expect(tab.height).toBe(36)
+    expect(tab.height).toBe(30)
     const frame = column.locator('[data-slot="composer-attachments-tiles"]')
     const frameBox = await boxOf(frame)
     expect([frameBox.width, frameBox.height]).toEqual([302, 130])
@@ -185,7 +185,7 @@ test.describe("the parts of Video's column", () => {
     )
     expect(prompt.width).toBe(302)
     const row = await boxOf(column.locator(modelRow))
-    expect([row.width, row.height]).toEqual([302, 48])
+    expect([row.width, row.height]).toEqual([302, 36])
     expect(frameBox.y).toBe(tab.y + tab.height + 8)
   })
 })
@@ -241,7 +241,7 @@ test.describe("the tray and rhythm of Video's column", () => {
 test.describe("Video's mode switch and column fit", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("puts the 302 by 48 mode switch 8 px under the start frame and 16 px over the drop zone, and ends the last row 8 px above Generate in every tab", async ({
+  test("puts the 302 by 26 mode switch 8 px under the start frame and 16 px over the drop zone, and ends the last row 8 px above Generate in every tab", async ({
     page,
   }) => {
     await page.goto("/apps/video")
@@ -251,7 +251,7 @@ test.describe("Video's mode switch and column fit", () => {
       column.locator('[data-slot="composer-attachments-tiles"]')
     )
     const toggle = await boxOf(column.getByRole("radiogroup"))
-    expect([toggle.width, toggle.height]).toEqual([302, 48])
+    expect([toggle.width, toggle.height]).toEqual([302, 26])
     expect(toggle.y).toBe(frame.y + frame.height + 8)
     const wells = await boxOf(column.locator('[data-slot="video-wells"]'))
     expect(wells.y).toBe(toggle.y + toggle.height + 16)
@@ -333,7 +333,9 @@ test.describe("an app on a phone", () => {
       await page.goto(`/apps/${appId}`)
       const region = page.getByRole("region", { name: "Your results" })
       await expect(region).toBeVisible()
-      await expect(page.locator('[data-slot="prompt-bar"]')).toHaveCount(0)
+      await expect(
+        page.locator('[data-slot="composer"][data-bar="prompt"]')
+      ).toHaveCount(0)
       await expect(page.locator('[data-slot="composer"]')).toHaveCount(0)
       const edge = await boxOf(region.getByRole("tablist").first())
       expect(edge.x).toBe(16)

@@ -1,17 +1,16 @@
 import type { AppListing } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
-import { type StepCard, StepCards } from "@rosesfield/ui/components/canvas"
-import { HeroFan } from "@rosesfield/ui/components/hero"
+import { MediaBadge } from "@rosesfield/ui/components/media-tile"
+import { cn } from "@rosesfield/ui/lib/cn"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { RepeatIcon } from "lucide-react"
-import type { ReactElement } from "react"
-import { settingsQuery } from "@/api/queries"
-import { appLine, appName } from "@/catalog/app-facts"
+import type { ReactElement, ReactNode } from "react"
+import { appLine, isAssetInput } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
-import { modelNameOf } from "@/screens/app/hosted/catalog-picker"
-import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
-import { taskAppOf } from "@/screens/app/hosted/task-app"
+import { LabMark } from "@/pieces/lab-mark"
+import { runLabOf, runModel } from "@/pieces/run/run-facts"
+import { inputRowsOf } from "@/pieces/run/run-inputs"
 import {
   sharedEntries,
   showcaseEntries,
@@ -22,13 +21,25 @@ import {
   type VisualEntry,
 } from "@/screens/explore/explore-tile"
 import { publishedQuery, type SharedOutput } from "@/screens/explore/share-api"
-import { type ShowcaseItem, showcaseItems } from "@/showcase/showcase"
+import {
+  mediaOf,
+  type ShowcaseItem,
+  showcaseItems,
+  showcaseOf,
+} from "@/showcase/showcase"
 
 export type StageKind = "bar" | "column"
 
 export type AppSample = VisualEntry
 
-const fanSize = 4
+export type HowStep = {
+  id: "add" | "choose" | "get"
+  title: string
+  line: string
+  media: ReactNode
+  form: "picture" | "words"
+  action?: ReactNode
+}
 
 export function samplesOf(
   shares: readonly SharedOutput[],
@@ -45,19 +56,13 @@ function srcOf(sample: AppSample): string | null {
   return sample.source.kind === "own" ? null : sample.source.src
 }
 
-function SampleMedia({
-  sample,
-  isPlaying,
-}: {
-  sample: AppSample
-  isPlaying: boolean
-}): ReactElement | null {
+function ResultMedia({ sample }: { sample: AppSample }): ReactNode {
   const src = srcOf(sample)
   if (src === null) {
     return null
   }
   if (sample.kind === "image") {
-    return <img src={src} alt="" />
+    return <img src={src} alt="" className="size-full object-cover" />
   }
   return (
     <video
@@ -65,8 +70,9 @@ function SampleMedia({
       muted
       loop
       playsInline
-      autoPlay={isPlaying}
-      preload="metadata"
+      autoPlay
+      preload="auto"
+      className="size-full object-cover"
     />
   )
 }
@@ -82,7 +88,7 @@ function RecreateLink({
   return (
     <Button
       tone="glass"
-      size="recreate"
+      size="small"
       nativeButton={false}
       render={
         "draft" in target ? (
@@ -106,91 +112,178 @@ function RecreateLink({
   )
 }
 
-const stepCopy = [
-  ["inputs", "app.how.inputs.title", "app.how.inputs.line"],
-  ["model", "app.how.model.title", "app.how.model.line"],
-  ["result", "app.how.result.title", "app.how.result.line"],
-] as const
-
-export function stepsOf(
-  app: AppListing,
-  samples: readonly AppSample[]
-): StepCard[] {
-  const shown = stepCopy.slice(Math.max(0, stepCopy.length - samples.length))
-  return shown.map(([id, title, line], index) => {
-    const sample = samples[index]
-    const isPlaying = id !== "inputs"
-    return {
-      id,
-      title: t(title),
-      line: t(line),
-      media:
-        sample === undefined ? null : (
-          <SampleMedia key={sample.key} sample={sample} isPlaying={isPlaying} />
-        ),
-      ...(sample === undefined || !isPlaying
-        ? {}
-        : { action: <RecreateLink app={app} sample={sample} /> }),
-    }
-  })
+function promptOf(item: ShowcaseItem): string | null {
+  return item.prompt === null || item.prompt === "" ? null : item.prompt
 }
 
-function useModelName(app: AppListing): string {
-  const taskApp = taskAppOf(app.id)
-  const settings = useQuery(settingsQuery)
-  const catalog = useQuery({
-    ...modelCatalogQuery(app.id, settings.data?.engine.key ?? "unknown"),
-    enabled: taskApp !== null,
-  })
-  const id = catalog.data?.defaultModel ?? taskApp?.defaultModel ?? null
-  const model = catalog.data?.models.find((one) => one.id === id)
-  return model === undefined ? appName(app) : modelNameOf(model)
-}
-
-function PromptFan({
-  app,
-  samples,
-}: {
-  app: AppListing
-  samples: readonly AppSample[]
-}): ReactElement {
-  const model = useModelName(app)
-  const pictures = samples
-    .filter((sample) => sample.kind === "image")
-    .flatMap((sample) => {
-      const src = srcOf(sample)
-      return src === null ? [] : [{ id: sample.key, src }]
-    })
-    .slice(0, fanSize)
+function PromptMedia({ prompt }: { prompt: string }): ReactElement {
   return (
-    <div className="flex min-h-full items-center justify-center px-4 py-6">
-      <HeroFan
-        pictures={pictures}
-        headline={t("app.fan.headline")}
-        model={model}
-        line={appLine(app)}
-      />
+    <div
+      data-slot="how-prompt"
+      className="flex size-full items-start p-s5 text-body text-ink-muted"
+    >
+      <p className="line-clamp-[8] @regular:line-clamp-[12]">{prompt}</p>
     </div>
   )
 }
 
-export function HowItWorks({
+function SettingsMedia({
   app,
-  kind,
+  item,
 }: {
   app: AppListing
-  kind: StageKind
+  item: ShowcaseItem
 }): ReactElement {
-  const published = useQuery(publishedQuery)
-  const samples = samplesOf(published.data ?? [], app.id)
-  if (kind === "bar") {
-    return <PromptFan app={app} samples={samples} />
-  }
+  const model = runModel(item.run, app)
+  const lab = runLabOf(item.run)
+  const rows = inputRowsOf(app, item.run).filter((row) => {
+    const input = app.inputs.find((one) => one.name === row.key)
+    return (
+      input === undefined ||
+      (!isAssetInput(input) &&
+        input.type !== "prompt" &&
+        input.name !== "model")
+    )
+  })
   return (
-    <StepCards
-      title={appName(app)}
-      line={appLine(app)}
-      steps={stepsOf(app, samples)}
-    />
+    <div
+      data-slot="how-settings"
+      className="flex size-full flex-col items-center justify-center gap-s2 p-s5"
+    >
+      {model === null ? null : (
+        <MediaBadge
+          ground="plain"
+          className="text-ink"
+          {...(lab === null ? {} : { mark: <LabMark maker={lab} /> })}
+        >
+          {model}
+        </MediaBadge>
+      )}
+      <dl className="flex flex-wrap justify-center gap-s1">
+        {rows.map((row) => (
+          <div
+            key={row.key}
+            className="flex items-center gap-s1 rounded-full bg-canvas px-s2_5 py-s1 text-caption"
+          >
+            <dt className="text-ink-muted">{row.label}</dt>
+            <dd className="text-ink">{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  )
+}
+
+function inputStillOf(item: ShowcaseItem | undefined): string | null {
+  return item?.input === undefined ? null : mediaOf(item.input)
+}
+
+function addMediaOf(item: ShowcaseItem | undefined): ReactNode {
+  if (item === undefined) {
+    return null
+  }
+  const input = inputStillOf(item)
+  if (input !== null) {
+    return <img src={input} alt="" className="size-full object-cover" />
+  }
+  const prompt = promptOf(item)
+  return prompt === null ? null : <PromptMedia prompt={prompt} />
+}
+
+const stepCopy = {
+  add: ["app.how.inputs.title", "app.how.inputs.line"],
+  choose: ["app.how.model.title", "app.how.model.line"],
+  get: ["app.how.result.title", "app.how.result.line"],
+} as const
+
+export function stepsOf(
+  app: AppListing,
+  samples: readonly AppSample[],
+  showcase: readonly ShowcaseItem[] = showcaseOf(app.id)
+): HowStep[] {
+  const item = showcase[0]
+  const result =
+    (item === undefined
+      ? undefined
+      : samples.find((sample) => sample.key === `showcase-${item.file}`)) ??
+    samples[0]
+  const media = {
+    add: addMediaOf(item),
+    choose: item === undefined ? null : <SettingsMedia app={app} item={item} />,
+    get: result === undefined ? null : <ResultMedia sample={result} />,
+  }
+  const forms = {
+    add: inputStillOf(item) === null ? "words" : "picture",
+    choose: "words",
+    get: "picture",
+  } as const
+  return (["add", "choose", "get"] as const).map((id) => ({
+    id,
+    title: t(stepCopy[id][0]),
+    line: t(stepCopy[id][1]),
+    media: media[id],
+    form: forms[id],
+    ...(id === "get" && result !== undefined
+      ? { action: <RecreateLink app={app} sample={result} /> }
+      : {}),
+  }))
+}
+
+function StepCard({ step }: { step: HowStep }): ReactElement {
+  const hasMedia = step.media !== null
+  return (
+    <li
+      data-slot="how-step"
+      data-step={step.id}
+      className="flex min-w-0 flex-col gap-s3 @regular:row-span-2 @regular:grid @regular:grid-rows-subgrid"
+    >
+      {hasMedia ? (
+        <div
+          data-slot="how-step-media"
+          data-form={step.form}
+          className={cn(
+            "relative w-full overflow-hidden rounded-card bg-(--well)",
+            step.form === "picture"
+              ? "aspect-4/5"
+              : "min-h-[calc(4*var(--spacing-s12))] @regular:aspect-4/5"
+          )}
+        >
+          {step.media}
+          {step.action === undefined ? null : (
+            <span className="absolute end-s3 bottom-s3 flex" data-density="row">
+              {step.action}
+            </span>
+          )}
+        </div>
+      ) : null}
+      <div className="flex flex-col gap-s1 @regular:row-start-2">
+        <h3 className="font-medium text-body text-ink">{step.title}</h3>
+        <p className="text-body text-ink-muted">{step.line}</p>
+      </div>
+    </li>
+  )
+}
+
+export function HowItWorks({ app }: { app: AppListing }): ReactElement {
+  const published = useQuery(publishedQuery)
+  const steps = stepsOf(app, samplesOf(published.data ?? [], app.id))
+  return (
+    <div
+      data-slot="how-it-works"
+      className="flex min-h-full items-center justify-center py-s8 @regular:px-s8"
+    >
+      <div className="flex w-full max-w-(--spacing-feed-window) flex-col gap-s8">
+        <h2 className="text-display text-ink">{appLine(app)}</h2>
+        <ol
+          className={cn(
+            "grid grid-cols-1 gap-s8 @regular:grid-cols-3 @regular:gap-x-s12 @regular:gap-y-s3"
+          )}
+        >
+          {steps.map((step) => (
+            <StepCard key={step.id} step={step} />
+          ))}
+        </ol>
+      </div>
+    </div>
   )
 }

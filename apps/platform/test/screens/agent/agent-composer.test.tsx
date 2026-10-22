@@ -60,12 +60,16 @@ afterEach(() => {
 })
 
 describe("the agent composer", () => {
-  it("draws one well with every button a circle of one size and the model as a pill", async () => {
+  it("is the kernel Composer, every button a 33 px circle and the model a 26 px capsule", async () => {
     renderComposer()
     await field()
-    const well = document.querySelector('[data-slot="agent-composer"]')
+    const well = document.querySelector('[data-slot="composer"]')
+    expect(well?.getAttribute("data-bar")).toBe("agent")
+    expect(well?.getAttribute("data-density")).toBe("composer")
+    expect(well?.getAttribute("data-floating")).toBe("yes")
     expect(well?.className).toContain("rounded-vessel")
     expect(well?.className).toContain("bg-surface")
+    expect(well?.className).not.toMatch(/\bborder\b|\bring-/)
     const circles = [
       t("bar.attach"),
       t("bar.mention"),
@@ -76,9 +80,19 @@ describe("the agent composer", () => {
       expect(circle.className).toContain("size-icon-dense")
       expect(circle.className).toContain("rounded-full")
     }
+    for (const name of [
+      t("bar.attach"),
+      t("bar.mention"),
+      t("agent.ask.label"),
+    ]) {
+      expect(screen.getByRole("button", { name }).className).toContain(
+        "bg-transparent"
+      )
+    }
     const chip = screen.getByRole("button", {
       name: `${t("model.picker.title")} Deepseek V4 Flash`,
     })
+    expect(chip.className).toContain("h-button-small")
     expect(chip.className).toContain("rounded-full")
     expect(chip.className).not.toContain("rounded-dense")
   })

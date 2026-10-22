@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
 import {
   badgesOf,
-  modelLineOf,
+  capabilitiesOf,
   pickerSections,
   weightsLinkOf,
 } from "@/screens/app/hosted/catalog-picker"
@@ -130,32 +130,6 @@ describe("the fact badges of a model row", () => {
   })
 })
 
-describe("the line of a model row", () => {
-  it("is the model's own line when the copy holds its key, and no line when the copy or its fact row holds none, the control", () => {
-    expect(modelLineOf("comfy.model.graphZImageTurbo.line")).toBe(
-      "Photorealistic images, with text in English and Chinese"
-    )
-    expect(modelLineOf("comfy.model.notWritten.line")).toBeNull()
-    expect(modelLineOf(null)).toBeNull()
-    expect(modelLineOf(null, "Maker Lab", wordOf)).toBeNull()
-  })
-
-  it("says the model's own line and its maker in one line, and keeps the line alone when the copy holds no pattern", () => {
-    const own = "comfy.model.makerOpen.line"
-    expect(modelLineOf(own, "Maker Lab", wordOf)).toBe(
-      "Makes pictures of open things, by Maker Lab"
-    )
-    expect(modelLineOf(own, undefined, wordOf)).toBe(
-      "Makes pictures of open things"
-    )
-    expect(
-      modelLineOf(own, "Maker Lab", (key) =>
-        key === "comfy.model.makerOpen.line" ? "Makes pictures" : null
-      )
-    ).toBe("Makes pictures")
-  })
-})
-
 function graphOf(id: string, task: string): CatalogModel {
   const facts = factsOf(`graph/${id}`, task)
   return {
@@ -186,23 +160,35 @@ function hostedOf(models: readonly CatalogModel[]): HostedState {
   }
 }
 
-describe("the line of a row in the catalog picker", () => {
-  it("shows each graph's sourced line, and no line for a graph with no fact row, the control", () => {
+describe("the capability line of a row in the catalog picker", () => {
+  it("shows a ranked graph's board rank, and no capability for a graph the facts hold nothing on, the control", () => {
     const rows = pickerSections(
       hostedOf([
         graphOf("z-image-turbo", "text-to-image"),
-        graphOf("qwen-image-edit-2511", "image-edit"),
         graphOf("flux-2-klein-4b", "image-edit"),
       ]),
       "2026-10-21"
     ).flatMap((section) => section.rows)
-    const lineOfRow = (id: string) => rows.find((row) => row.id === id)?.line
-    expect(lineOfRow("z-image-turbo")).toContain(
-      "Photorealistic images, with text in English and Chinese"
-    )
-    expect(lineOfRow("qwen-image-edit-2511")).toContain(
-      "Edits an image and keeps the people in it the same"
-    )
-    expect(lineOfRow("flux-2-klein-4b")).toBeNull()
+    const tagsOfRow = (id: string) =>
+      rows.find((row) => row.id === id)?.tags.map((tag) => tag.label)
+    expect(tagsOfRow("z-image-turbo")).toEqual(["Rank 70 of 104"])
+    expect(tagsOfRow("flux-2-klein-4b")).toEqual([])
+  })
+
+  it("puts a hosted video model's own facts before its rank and the hosting fact last", () => {
+    const tags = capabilitiesOf(
+      [
+        { kind: "hosted" },
+        { kind: "resolution", value: "1080p" },
+        { kind: "sound" },
+      ],
+      factsOf("graph/ltx-2-5", "text-to-video")
+    ).map((tag) => tag.label)
+    expect(tags).toEqual([
+      "1080p",
+      t("model.tag.sound"),
+      "Rank 23 of 29",
+      t("model.tag.hosted"),
+    ])
   })
 })

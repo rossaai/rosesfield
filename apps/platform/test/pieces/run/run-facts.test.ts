@@ -6,6 +6,7 @@ import {
   headlineSource,
   historyPrice,
   inputValueText,
+  type RunBadge,
   runAspect,
   runFacts,
   runHeadline,
@@ -126,134 +127,177 @@ describe("headlineSource", () => {
   })
 })
 
+function labelsOf(badges: readonly RunBadge[]): string[] {
+  return badges.map((badge) =>
+    badge.kind === "price" ? badge.amount : badge.label
+  )
+}
+
 describe("runFacts", () => {
   it("leads with the demo engine and names no model on a demo run", () => {
-    const caption = runFacts(
-      runOf({
-        inputs: { model: "qwen-image-edit-2511" },
-        engine: {
-          adapter: "demo",
-          models: ["qwen.safetensors"],
-          workflowHash: null,
-        },
-      })
+    const caption = labelsOf(
+      runFacts(
+        runOf({
+          inputs: { model: "qwen-image-edit-2511" },
+          engine: {
+            adapter: "demo",
+            models: ["qwen.safetensors"],
+            workflowHash: null,
+          },
+        })
+      )
     )
-    expect(caption).toEqual(["Demo engine", "Made in 3 seconds"])
+    expect(caption).toEqual(["Demo engine", "3 seconds"])
   })
 
   it("prints the resolved model, never auto, on a live run", () => {
-    const caption = runFacts(
-      runOf({
-        appId: "video",
-        origin: "live",
-        inputs: { model: "auto" },
-        engine: {
-          adapter: "comfy",
-          models: ["video/ltx-2.5-dev.safetensors"],
-          workflowHash: "abc",
-        },
-      })
+    const caption = labelsOf(
+      runFacts(
+        runOf({
+          appId: "video",
+          origin: "live",
+          inputs: { model: "auto" },
+          engine: {
+            adapter: "comfy",
+            models: ["video/ltx-2.5-dev.safetensors"],
+            workflowHash: "abc",
+          },
+        })
+      )
     )
-    expect(caption).toEqual(["ltx-2.5-dev", "Made in 3 seconds"])
+    expect(caption).toEqual(["ltx-2.5-dev", "3 seconds"])
   })
 
   it("prints the real credits of a run in Comfy credits, never in USD", () => {
-    const caption = runFacts(
-      runOf({
-        appId: "video",
-        origin: "live",
-        inputs: { model: "auto" },
-        cost: { amount: 1.188768 / 211, currency: "USD" },
-        engine: {
-          adapter: "comfy",
-          models: ["video/ltx-2.5-dev.safetensors"],
-          workflowHash: "abc",
-        },
-      })
+    const caption = labelsOf(
+      runFacts(
+        runOf({
+          appId: "video",
+          origin: "live",
+          inputs: { model: "auto" },
+          cost: { amount: 1.188768 / 211, currency: "USD" },
+          engine: {
+            adapter: "comfy",
+            models: ["video/ltx-2.5-dev.safetensors"],
+            workflowHash: "abc",
+          },
+        })
+      )
     )
-    expect(caption).toEqual([
-      "ltx-2.5-dev",
-      "Made in 3 seconds",
-      "1.1888 Comfy credits",
-    ])
+    expect(caption).toEqual(["ltx-2.5-dev", "3 seconds", "1.19"])
   })
 
   it("marks the price of a run with no measured credits as estimated", () => {
-    const caption = runFacts(
-      runOf({
-        appId: "video",
-        origin: "live",
-        inputs: { model: "auto" },
-        engine: {
-          adapter: "comfy",
-          models: ["video/ltx-2.5-dev.safetensors"],
-          workflowHash: "abc",
-        },
-      }),
-      0.57
+    const caption = labelsOf(
+      runFacts(
+        runOf({
+          appId: "video",
+          origin: "live",
+          inputs: { model: "auto" },
+          engine: {
+            adapter: "comfy",
+            models: ["video/ltx-2.5-dev.safetensors"],
+            workflowHash: "abc",
+          },
+        }),
+        0.57
+      )
     )
-    expect(caption).toEqual([
-      "ltx-2.5-dev",
-      "Made in 3 seconds",
-      "0.57 Comfy credits, estimated",
-    ])
+    expect(caption).toEqual(["ltx-2.5-dev", "3 seconds", "0.57"])
   })
 
   it("prints whole seconds", () => {
-    const caption = runFacts(runOf({ finishedAt: "2026-10-17T09:00:04.100Z" }))
-    expect(caption).toEqual(["Demo engine", "Made in 4 seconds"])
+    const caption = labelsOf(
+      runFacts(runOf({ finishedAt: "2026-10-17T09:00:04.100Z" }))
+    )
+    expect(caption).toEqual(["Demo engine", "4 seconds"])
   })
 
   it("names only the model on a failed run, because nothing was made", () => {
-    const failed = runFacts(
-      runOf({
-        appId: "video",
-        status: "failed",
-        outputs: [],
-        origin: "live",
-        inputs: { model: "auto" },
-        engine: {
-          adapter: "comfy",
-          models: ["video/ltx-2.5-dev.safetensors"],
-          workflowHash: "abc",
-        },
-        finishedAt: "2026-10-17T09:00:06.000Z",
-      })
+    const failed = labelsOf(
+      runFacts(
+        runOf({
+          appId: "video",
+          status: "failed",
+          outputs: [],
+          origin: "live",
+          inputs: { model: "auto" },
+          engine: {
+            adapter: "comfy",
+            models: ["video/ltx-2.5-dev.safetensors"],
+            workflowHash: "abc",
+          },
+          finishedAt: "2026-10-17T09:00:06.000Z",
+        })
+      )
     )
     expect(failed).toEqual(["ltx-2.5-dev"])
   })
 
   it("prints the credits Comfy charged on a failed run", () => {
-    const failed = runFacts(
-      runOf({
-        appId: "video",
-        status: "failed",
-        outputs: [],
-        origin: "live",
-        inputs: { model: "auto" },
-        cost: { amount: 1.188768 / 211, currency: "USD" },
-        engine: {
-          adapter: "comfy",
-          models: ["video/ltx-2.5-dev.safetensors"],
-          workflowHash: "abc",
-        },
-      })
+    const failed = labelsOf(
+      runFacts(
+        runOf({
+          appId: "video",
+          status: "failed",
+          outputs: [],
+          origin: "live",
+          inputs: { model: "auto" },
+          cost: { amount: 1.188768 / 211, currency: "USD" },
+          engine: {
+            adapter: "comfy",
+            models: ["video/ltx-2.5-dev.safetensors"],
+            workflowHash: "abc",
+          },
+        })
+      )
     )
-    expect(failed).toEqual(["ltx-2.5-dev", "1.1888 Comfy credits"])
+    expect(failed).toEqual(["ltx-2.5-dev", "1.19"])
   })
 
   it("marks only the demo engine on a failed demo run", () => {
-    expect(runFacts(runOf({ status: "failed", outputs: [] }))).toEqual([
-      "Demo engine",
-    ])
+    expect(
+      labelsOf(runFacts(runOf({ status: "failed", outputs: [] })))
+    ).toEqual(["Demo engine"])
   })
 
   it("says how many blank results a finished run left out", () => {
-    const one = runFacts(runOf({ status: "done", dropped: 1 }))
-    const two = runFacts(runOf({ status: "done", dropped: 2 }))
+    const one = labelsOf(runFacts(runOf({ status: "done", dropped: 1 })))
+    const two = labelsOf(runFacts(runOf({ status: "done", dropped: 2 })))
     expect(one).toContain("1 blank result was left out")
     expect(two).toContain("2 blank results were left out")
-    expect(runFacts(runOf({ status: "done" })).join()).not.toContain("blank")
+    expect(labelsOf(runFacts(runOf({ status: "done" }))).join()).not.toContain(
+      "blank"
+    )
+  })
+})
+
+describe("the lab of a run's model", () => {
+  it("is the lab the facts name for a hosted model, and the maker otherwise", () => {
+    const base = {
+      origin: "live",
+      engine: { adapter: "comfy", models: [], workflowHash: null },
+    }
+    const lead = runFacts(
+      runOf({ ...base, appId: "video", inputs: { model: "bfl/flux-2-pro" } })
+    )[0]
+    expect(lead).toMatchObject({ kind: "model", lab: "Black Forest Labs" })
+  })
+
+  it("is the graph's real lab for an open-weights model", () => {
+    const lead = runFacts(
+      runOf({
+        appId: "image",
+        origin: "live",
+        inputs: { model: "z-image-turbo" },
+        engine: {
+          adapter: "comfy",
+          models: ["z.safetensors"],
+          workflowHash: null,
+        },
+      })
+    )[0]
+    expect(lead).toMatchObject({ kind: "model", lab: "Alibaba Tongyi-MAI" })
   })
 })
 
@@ -288,7 +332,7 @@ describe("historyPrice", () => {
 
   it("prints the credits Comfy charged on a failed run", () => {
     expect(historyPrice(runOf({ ...live, status: "failed", cost }))).toBe(
-      "1.1888 Comfy credits"
+      "1.19 Comfy credits"
     )
   })
 

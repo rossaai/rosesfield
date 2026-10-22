@@ -13,7 +13,6 @@ import {
 import { CanvasSkeleton, useAppRuns } from "@/screens/app/app-canvas"
 import { useCanvasView } from "@/screens/app/canvas-view"
 import { historyGridItems } from "@/screens/history/history-grid-items"
-import { keepsRun } from "@/screens/history/history-screen"
 import { ResultGrid } from "@/screens/library/result-grid"
 import { WaveformPlayer } from "@/studio/audio/waveform-player"
 
@@ -46,13 +45,15 @@ function AudioOutputs({
 
 function AudioRuns({
   runs,
+  columns,
   onUseInputs,
 }: {
   runs: readonly Run[]
+  columns: number
   onUseInputs: (run: Run) => void
 }): ReactElement {
   return (
-    <RunColumns>
+    <RunColumns columns={columns}>
       {runs.map((run) => (
         <RunCard key={run.id} run={run} onUseInputs={onUseInputs}>
           {(chrome) => <AudioOutputs run={run} chrome={chrome} />}
@@ -70,24 +71,12 @@ function ViewedRuns({
   onUseInputs: (run: Run) => void
 }): ReactElement {
   const view = useCanvasView()
-  const kept = runs.filter((run) => keepsRun(run, view.state, undefined))
-  if (kept.length === 0) {
-    return (
-      <StateView
-        kind="empty"
-        title={t("history.filterEmpty.title")}
-        actions={
-          <Button onClick={view.clear}>
-            {t("history.filterEmpty.action")}
-          </Button>
-        }
-      />
-    )
-  }
   if (view.layout === "grid") {
-    return <ResultGrid items={historyGridItems(kept)} size={view.size} />
+    return <ResultGrid items={historyGridItems(runs)} size={view.gridSize} />
   }
-  return <AudioRuns runs={kept} onUseInputs={onUseInputs} />
+  return (
+    <AudioRuns runs={runs} columns={view.columns} onUseInputs={onUseInputs} />
+  )
 }
 
 export function AudioCanvas(props: AudioCanvasProps): ReactElement {

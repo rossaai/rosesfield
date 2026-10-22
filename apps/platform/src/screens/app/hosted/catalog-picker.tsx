@@ -3,6 +3,7 @@ import {
   type FactBadge,
   factBadgesOf,
   graphMaker,
+  labOfModel,
   type ModelFacts,
   type ModelTag,
   weightsHost,
@@ -23,6 +24,7 @@ import {
   ClockIcon,
   LockOpenIcon,
   ScanIcon,
+  TrophyIcon,
   Volume2Icon,
 } from "lucide-react"
 import { type ReactElement, type ReactNode, useState } from "react"
@@ -52,24 +54,18 @@ export function labOf(model: {
   return model.facts?.lab ?? model.maker
 }
 
+export function chosenLabOf(model: CatalogModel): string | null {
+  const lab = model.facts?.lab ?? labOfModel(model.id)
+  if (lab !== null) {
+    return lab
+  }
+  return model.maker === graphMaker ? null : model.maker
+}
+
 export function modelNameOf(model: CatalogModel): string {
   return model.nameKey !== null && hasCatalogText(model.nameKey)
     ? tCatalog(model.nameKey)
     : model.name
-}
-
-const byMakerKey = "comfy.model.lineByMaker"
-
-export function modelLineOf(
-  lineKey: string | null,
-  maker?: string,
-  words: CatalogWords = catalogWords
-): string | null {
-  const line = lineKey === null ? null : words(lineKey)
-  if (line === null || maker === undefined) {
-    return line
-  }
-  return words(byMakerKey, { line, maker }) ?? line
 }
 
 export function tagOf(tag: ModelTag): ModelPickerTag {
@@ -101,6 +97,41 @@ export function tagOf(tag: ModelTag): ModelPickerTag {
         icon: <CircleCheckIcon aria-hidden="true" />,
       }
   }
+}
+
+export function openWeightsTag(): ModelPickerTag {
+  return tagOf({ kind: "open-weights" })
+}
+
+export function rankTagOf(
+  facts: ModelFacts | undefined
+): ModelPickerTag | null {
+  const rank = facts?.rank ?? null
+  return rank === null
+    ? null
+    : {
+        label: t("model.tag.rank", {
+          position: rank.position,
+          size: rank.size,
+        }),
+        icon: <TrophyIcon aria-hidden="true" />,
+      }
+}
+
+export function capabilitiesOf(
+  tags: readonly ModelTag[],
+  facts: ModelFacts | undefined
+): ModelPickerTag[] {
+  const specific = tags.filter(
+    (tag) => tag.kind !== "open-weights" && tag.kind !== "hosted"
+  )
+  const rank = rankTagOf(facts)
+  const hosted = tags.filter((tag) => tag.kind === "hosted")
+  return [
+    ...specific.map(tagOf),
+    ...(rank === null ? [] : [rank]),
+    ...hosted.map(tagOf),
+  ]
 }
 
 const sectionLabels = {
@@ -202,8 +233,7 @@ export function pickerSections(
         name: row.name,
         maker: row.maker,
         lab: labOf(row),
-        line: modelLineOf(row.facts?.lineKey ?? null, labOf(row)),
-        tags: row.tags.filter((tag) => tag.kind !== "open-weights").map(tagOf),
+        tags: capabilitiesOf(row.tags, row.facts),
         mark: <LabMark maker={labOf(row)} />,
         badges: badgesOf(row.id, row.tags, row.facts, today),
         ...(price === undefined ? {} : { price }),
@@ -225,10 +255,8 @@ export function pickerTrigger(
 ): ReactElement {
   const chosen = hosted.chosen
   const name = chosen === null ? t("model.picker.title") : modelNameOf(chosen)
-  const mark =
-    chosen === null ? undefined : (
-      <LabMark maker={chosen.facts?.lab ?? makerNameOf(chosen)} />
-    )
+  const lab = chosen === null ? null : chosenLabOf(chosen)
+  const mark = lab === null ? undefined : <LabMark maker={lab} />
   const markProp = mark === undefined ? {} : { mark }
   return place === "row" ? (
     <ModelRowTrigger
