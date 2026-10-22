@@ -266,7 +266,7 @@
       "values.a": ["721", 0],
       "values.b": ["721", 1],
       "values.c": ["702", 0],
-      "expression": "round(a * c / min(a, b) / 32) * 32"
+      "expression": "round(a * c / min(a, b) / 64) * 64"
     },
     "_meta": {
       "title": "Width"
@@ -278,7 +278,7 @@
       "values.a": ["721", 0],
       "values.b": ["721", 1],
       "values.c": ["702", 0],
-      "expression": "round(b * c / min(a, b) / 32) * 32"
+      "expression": "round(b * c / min(a, b) / 64) * 64"
     },
     "_meta": {
       "title": "Height"
