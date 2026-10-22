@@ -106,7 +106,7 @@ type ColumnsStyle = CSSProperties & { "--run-columns": string }
 
 export const runColumnsDefault = 2
 
-const columnWide = "@regular:[--output-row-cap:none]"
+const columnStart = "@regular:[&_[data-slot=output-row]]:ms-0"
 
 const audioHeight = 0.25
 
@@ -160,7 +160,7 @@ export function RunColumns({
       style={style}
       className={cn(
         "grid grid-cols-1 items-start gap-s2 @regular:grid-cols-(--run-columns)",
-        count > 1 ? columnWide : ""
+        count > 1 ? columnStart : ""
       )}
     >
       {Array.from({ length: count }, (_, column) => (

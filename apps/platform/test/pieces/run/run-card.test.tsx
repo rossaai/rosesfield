@@ -211,7 +211,7 @@ describe("the runs of an app page on desktop", () => {
     expect(columnsOf(3, undefined)).toEqual([0, 1, 0])
   })
 
-  it("lets a run's media fill its column from the column's start when two or more columns show", async () => {
+  it("starts a run's media at its column's start when two or more columns show, capped at the canvas height so its focus ring shows whole", async () => {
     const client = clientWith(videoOf({ width: 1080, height: 1920 }))
     renderWith(
       client,
@@ -224,11 +224,11 @@ describe("the runs of an app page on desktop", () => {
       "[data-slot=run-columns]"
     )
     expect(columns?.className.split(" ")).toContain(
-      "@regular:[--output-row-cap:none]"
+      "@regular:[&_[data-slot=output-row]]:ms-0"
     )
     expect(columns?.className.split(" ")).toContain("gap-s2")
     const row = card.querySelector<HTMLElement>("[data-slot=output-row]")
-    expect(row?.style.maxWidth).toMatch(/^var\(--output-row-cap, calc\(/)
+    expect(row?.style.maxWidth).toMatch(/var\(--canvas-height.*\* 0\.5625\)$/)
   })
 
   it("caps a tall run's media at the canvas height in one column, keeping its shape, centred", async () => {
@@ -243,10 +243,10 @@ describe("the runs of an app page on desktop", () => {
     const columns = document.querySelector<HTMLElement>(
       "[data-slot=run-columns]"
     )
-    expect(columns?.className).not.toContain("--output-row-cap")
+    expect(columns?.className).not.toContain("ms-0")
     const row = card.querySelector<HTMLElement>("[data-slot=output-row]")
     expect(row?.className.split(" ")).toContain("mx-auto")
-    expect(row?.style.maxWidth).toMatch(/var\(--canvas-height.*\* 0\.5625\)\)$/)
+    expect(row?.style.maxWidth).toMatch(/var\(--canvas-height.*\* 0\.5625\)$/)
   })
 })
 
