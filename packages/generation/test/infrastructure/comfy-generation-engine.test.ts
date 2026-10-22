@@ -186,6 +186,20 @@ describe("ComfyGenerationEngine", () => {
     }
   )
 
+  it("keeps Comfy's message and the node that failed on the cause of a failed run, and leaves out the traceback", async () => {
+    const { engine } = engineFor([comfyV2.read(failedJob)])
+    const status = await engine.read(jobId)
+    if (status.state !== "failed") {
+      throw new Error("The job did not read as failed")
+    }
+    expect(status.error.cause).toEqual({
+      code: "node_execution_error",
+      message: "KSampler raised an error",
+      node_id: "3",
+      class_type: "KSampler",
+    })
+  })
+
   it("lists media outputs and leaves out latents", async () => {
     const { engine } = engineFor([
       comfyV2.read(succeededJob),
