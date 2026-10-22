@@ -1,7 +1,7 @@
 import type { AppListing } from "@rosesfield/contract"
 import { AppTile, AppTileGrid } from "@rosesfield/ui/components/app-tile"
 import { buttonVariants } from "@rosesfield/ui/components/button"
-import { HeroBanner } from "@rosesfield/ui/components/hero"
+import { HeroBanner, type HeroPortraits } from "@rosesfield/ui/components/hero"
 import { MediaFeed, ViewAll } from "@rosesfield/ui/components/media-feed"
 import { MediaTile } from "@rosesfield/ui/components/media-tile"
 import {
@@ -11,7 +11,7 @@ import {
 } from "@rosesfield/ui/components/promo-card"
 import { SectionHeader } from "@rosesfield/ui/components/section-header"
 import { useRouter } from "@tanstack/react-router"
-import { VideoIcon } from "lucide-react"
+import { CodeXmlIcon, VideoIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { appLine, appName } from "@/catalog/app-facts"
 import { catalogApps, findCatalogApp } from "@/catalog/catalog-apps"
@@ -30,6 +30,7 @@ import {
   type VisualEntry,
 } from "@/screens/explore/explore-tile"
 import { appIcon, navGroups } from "@/shell/nav-rows"
+import { type ShowcaseItem, showcaseItems } from "@/showcase/showcase"
 
 export const bannerAppId = "image"
 export const appTileCount = 6
@@ -45,15 +46,28 @@ function useAppHref(): (appId: string) => string {
     router.buildLocation({ to: "/apps/$appId", params: { appId } }).href
 }
 
+export function bannerPortraits(
+  items: readonly ShowcaseItem[] = showcaseItems
+): HeroPortraits {
+  const start = items.find((item) => item.banner === "start")
+  const end = items.find((item) => item.banner === "end")
+  return {
+    ...(start === undefined ? {} : { start: start.src }),
+    ...(end === undefined ? {} : { end: end.src }),
+  }
+}
+
 export function ExploreBanner(): ReactElement {
   const appHref = useAppHref()
   return (
     <HeroBanner
       href={appHref(bannerAppId)}
+      tag={{ label: t("welcome.footer.licence"), icon: <CodeXmlIcon /> }}
       kicker={t("explore.banner.kicker")}
       headline={t("explore.banner.headline")}
-      lead={t("explore.banner.lead")}
+      lead={t("welcome.terms.body.1")}
       action={t("explore.banner.action")}
+      portraits={bannerPortraits()}
     />
   )
 }
@@ -124,7 +138,7 @@ export function tileApps(
 export function AppTiles(): ReactElement {
   const appHref = useAppHref()
   return (
-    <div className="mt-6 w-full @regular:mt-10 @regular:w-186.75">
+    <div className="mt-6 w-full @regular:mt-10">
       <AppTileGrid label={t("explore.apps.label")}>
         {tileApps().map(({ app, icon }) => (
           <AppTile
@@ -304,6 +318,37 @@ export function ExploreRowView({
         />
       )
   }
+}
+
+export function ShowcaseFeed({
+  entries,
+  ...actions
+}: ResultActions & { entries: readonly VisualEntry[] }): ReactNode {
+  const [first] = entries
+  if (first === undefined) {
+    return null
+  }
+  return (
+    <MediaFeed
+      label={t("explore.showcase.title")}
+      header={
+        <SectionHeader
+          title={t("explore.showcase.title")}
+          actions={<RowActions appId={first.run.appId} />}
+        />
+      }
+    >
+      {entries.map((entry) => (
+        <ResultCard
+          key={entry.key}
+          entry={entry}
+          narrow={true}
+          onOpen={actions.onOpen}
+          onMore={actions.onMore}
+        />
+      ))}
+    </MediaFeed>
+  )
 }
 
 export function SharedFeed({

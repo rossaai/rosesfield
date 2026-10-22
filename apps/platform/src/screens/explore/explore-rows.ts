@@ -27,6 +27,9 @@ type ChoiceInput = Extract<InputDefinition, { type: "choice" }>
 export const rowFloor = 3
 export const rowLimit = 3
 export const promoLimit = 5
+export const promoFloor = 3
+
+const promoShape = 16 / 9
 
 const presetInputNames: readonly string[] = ["effect", "cameraMove"]
 const autoValue = "auto"
@@ -147,12 +150,26 @@ export function exploreRows(entries: readonly VisualEntry[]): ExploreRow[] {
   return [...modelRows(entries), ...appRows(entries)]
 }
 
+function promoGap(entry: VisualEntry): number {
+  const { width, height } = entry.aspect
+  return Math.abs(Math.log(width / height / promoShape))
+}
+
+function promoPick(items: readonly VisualEntry[]): VisualEntry | undefined {
+  return items.reduce<VisualEntry | undefined>(
+    (best, entry) =>
+      best === undefined || promoGap(entry) < promoGap(best) ? entry : best,
+    undefined
+  )
+}
+
 export function promoEntries(entries: readonly VisualEntry[]): PromoEntry[] {
-  return [...groupBy(entries, appIdOf).entries()]
+  const promos = [...groupBy(entries, appIdOf).entries()]
     .flatMap(([appId, items]) => {
       const app = findCatalogApp(appId)
-      const [entry] = items
+      const entry = promoPick(items)
       return app === null || entry === undefined ? [] : [{ app, entry }]
     })
     .slice(0, promoLimit)
+  return promos.length < promoFloor ? [] : promos
 }

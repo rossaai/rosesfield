@@ -18,7 +18,7 @@ async function openExplore(page: Page): Promise<void> {
   await expect(page.locator("[data-slot=app-tile-grid]")).toBeVisible()
 }
 
-test("Explore opens with one banner link over app tiles in three columns", async ({
+test("Explore opens with one banner link over six app tiles across the page", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "desktop", "the banner shows from 768 px")
@@ -30,20 +30,22 @@ test("Explore opens with one banner link over app tiles in three columns", async
   expect(Math.round(box.x)).toBe(16)
   expect(await banner.evaluate((element) => element.tagName)).toBe("A")
   expect(await banner.locator("a, button").count()).toBe(0)
+  await expect(banner.locator("[data-slot=hero-portrait]")).toHaveCount(2)
 
   const tiles = page.locator(
     "[data-slot=app-tile-grid] [data-slot=preset-tile]"
   )
   expect(await tiles.count()).toBe(6)
-  const [first, second, fourth] = await Promise.all([
+  const [first, second, last] = await Promise.all([
     boxOf(tiles.nth(0)),
     boxOf(tiles.nth(1)),
-    boxOf(tiles.nth(3)),
+    boxOf(tiles.nth(5)),
   ])
-  expect(Math.round(first.width)).toBe(241)
+  expect(Math.round(first.width)).toBe(225)
   expect(Math.round(first.height)).toBe(130)
-  expect(Math.round(second.x - first.x)).toBe(253)
-  expect(Math.round(fourth.y - first.y)).toBe(142)
+  expect(Math.round(second.x - first.x)).toBe(237)
+  expect(Math.round(last.y)).toBe(Math.round(first.y))
+  expect(Math.round(last.x + last.width)).toBe(1424)
 })
 
 test("on a phone Explore drops the banner and stands the tiles in two columns", async ({
@@ -85,15 +87,32 @@ test("an app tile opens its app without reloading the page", async ({
   )
 })
 
-test("Explore with no result says so and offers the next step", async ({
+test("Explore shows the bundled examples in a masonry with no share and no key", async ({
   page,
-}) => {
+}, info) => {
   await openExplore(page)
-  await expect(page.getByText("No result is here yet")).toBeVisible()
-  await expect(page.locator("[data-slot=media-feed]")).toHaveCount(0)
+  const feed = page.getByRole("region", { name: "Made with Rosesfield" })
+  await expect(feed).toBeVisible()
+  await expect(page.getByText("No result is here yet")).toHaveCount(0)
+  const tiles = feed.locator("[data-slot=media]")
+  expect(await tiles.count()).toBe(6)
+  await expect(feed.locator("video")).toHaveCount(2)
+  const images = feed.locator("img")
+  await expect(images.first()).toHaveJSProperty("complete", true)
+  expect(
+    await images.first().evaluate((one: HTMLImageElement) => one.naturalWidth)
+  ).toBeGreaterThan(0)
+  if (info.project.name === "desktop") {
+    const [first, second] = await Promise.all([
+      boxOf(tiles.nth(0)),
+      boxOf(tiles.nth(1)),
+    ])
+    expect(Math.round(first.width)).toBe(228)
+    expect(Math.round(second.x - first.x)).toBe(236)
+  }
 })
 
-test("the Apps page stands 237 px cards 16 px apart, and a rail of 248 px cards on a phone", async ({
+test("the Apps page fills its width with cards of 237 px or more, and a rail of 248 px cards on a phone", async ({
   page,
 }, info) => {
   await page.addInitScript(() => {
@@ -107,9 +126,12 @@ test("the Apps page stands 237 px cards 16 px apart, and a rail of 248 px cards 
     boxOf(cards.nth(1)),
   ])
   if (info.project.name === "desktop") {
-    expect(Math.round(first.width)).toBe(237)
-    expect(Math.round(second.x - first.x)).toBe(253)
-    expect(Math.round(first.x)).toBeGreaterThanOrEqual(16)
+    const fifth = await boxOf(cards.nth(4))
+    expect(Math.round(first.width)).toBeGreaterThanOrEqual(237)
+    expect(Math.round(second.x - first.x - first.width)).toBe(16)
+    expect(Math.round(first.x)).toBe(16)
+    expect(Math.round(fifth.y)).toBe(Math.round(first.y))
+    expect(Math.round(fifth.x + fifth.width)).toBe(1424)
   } else {
     expect(Math.round(first.width)).toBe(248)
     expect(Math.round(first.x)).toBe(16)

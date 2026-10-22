@@ -10,6 +10,7 @@ import { useHasVisitorKey } from "@/api/visitor-keys"
 import { t } from "@/copy/t"
 import {
   type ExploreEntries,
+  showcaseEntries,
   useExploreEntries,
 } from "@/screens/explore/explore-entries"
 import { exploreRows, visualEntries } from "@/screens/explore/explore-rows"
@@ -21,11 +22,13 @@ import {
   PromoCards,
   type ResultActions,
   SharedFeed,
+  ShowcaseFeed,
 } from "@/screens/explore/explore-sections"
 import { useRecreate, type VisualEntry } from "@/screens/explore/explore-tile"
 import { useInAppLinks } from "@/screens/explore/in-app-links"
 import { ShareDialog } from "@/screens/explore/share-dialog"
 import { useOpenKeyDialog } from "@/shell/key-dialog-context"
+import { showcaseItems } from "@/showcase/showcase"
 import { ResultViewer, useShownResult } from "@/viewer/result-viewer"
 
 const skeletonRatios: readonly string[] = ["9 / 16", "16 / 9", "4 / 5"]
@@ -79,6 +82,8 @@ function EmptyExplore(): ReactElement {
   )
 }
 
+const showcase = showcaseEntries(showcaseItems)
+
 function ExploreFeeds({
   results,
   entries,
@@ -87,6 +92,7 @@ function ExploreFeeds({
   results: ExploreEntries
   entries: readonly VisualEntry[]
 }): ReactNode {
+  const hasShowcase = showcase.length > 0
   if (results.state === "loading") {
     return <LoadingFeed />
   }
@@ -101,7 +107,7 @@ function ExploreFeeds({
     )
   }
   if (entries.length === 0) {
-    return <EmptyExplore />
+    return hasShowcase ? null : <EmptyExplore />
   }
   const rows = exploreRows(entries)
   return (
@@ -110,11 +116,15 @@ function ExploreFeeds({
         <ExploreRowView
           key={row.key}
           row={row}
-          isLead={index === 0}
+          isLead={index === 0 && !hasShowcase}
           {...actions}
         />
       ))}
-      <SharedFeed entries={entries} isLead={rows.length === 0} {...actions} />
+      <SharedFeed
+        entries={entries}
+        isLead={rows.length === 0 && !hasShowcase}
+        {...actions}
+      />
     </>
   )
 }
@@ -144,42 +154,49 @@ function ShareLayer({
 }
 
 function useMore(
-  share: (entry: VisualEntry) => void
+  share: (entry: VisualEntry) => void,
+  view: (entry: VisualEntry) => void
 ): (entry: VisualEntry) => void {
   const router = useRouter()
   return (entry) => {
     const { source } = entry
-    if (source.kind === "own") {
-      share(entry)
-      return
+    switch (source.kind) {
+      case "own":
+        share(entry)
+        return
+      case "showcase":
+        view(entry)
+        return
+      case "share":
+        router.history.push(
+          router.buildLocation({
+            to: "/share/$shareId",
+            params: { shareId: source.shareId },
+          }).href
+        )
     }
-    router.history.push(
-      router.buildLocation({
-        to: "/share/$shareId",
-        params: { shareId: source.shareId },
-      }).href
-    )
   }
 }
 
 export function ExploreScreen(): ReactElement {
   const root = useInAppLinks<HTMLDivElement>()
   const results = useExploreEntries()
-  const entries =
-    results.state === "ready" ? visualEntries(results.entries) : []
+  const shared = results.state === "ready" ? visualEntries(results.entries) : []
+  const entries = [...showcase, ...shared]
   const viewer = useShownResult()
   const recreate = useRecreate()
   const [sharing, setSharing] = useState<VisualEntry | null>(null)
-  const onMore = useMore(setSharing)
+  const onMore = useMore(setSharing, (entry) => viewer.show(entry, null))
   return (
     <div ref={root} className="flex min-h-full flex-col px-4 pb-12">
       <ExploreBanner />
       <PromoCards entries={entries} isLoading={results.state === "loading"} />
       <AppTiles />
       <div className="mt-6 flex flex-col gap-12 @regular:mt-10 @regular:gap-35">
+        <ShowcaseFeed entries={showcase} onOpen={viewer.show} onMore={onMore} />
         <ExploreFeeds
           results={results}
-          entries={entries}
+          entries={shared}
           onOpen={viewer.show}
           onMore={onMore}
         />
