@@ -4,7 +4,7 @@ import { t } from "@/copy/t"
 import { showcaseEntries } from "@/screens/explore/explore-entries"
 import {
   bannerPortraits,
-  heldStills,
+  feedExamples,
   ShowcaseFeed,
 } from "@/screens/explore/explore-sections"
 import { showcaseItems } from "@/showcase/showcase"
@@ -13,7 +13,7 @@ import { renderAt } from "../../shell/shell-router"
 afterEach(cleanup)
 
 const entries = showcaseEntries(showcaseItems)
-const stills = heldStills(entries)
+const stills = feedExamples(entries)
 
 async function renderShowcase(): Promise<HTMLElement> {
   renderAt("/", () => (
@@ -27,7 +27,7 @@ async function renderShowcase(): Promise<HTMLElement> {
 }
 
 describe("Explore's showcase", () => {
-  it("lays every held still once in the masonry at its own shape", async () => {
+  it("lays every example once in the masonry at its own shape, its clips looping", async () => {
     const feed = await renderShowcase()
     expect(feed.getAttribute("data-layout")).toBe("masonry")
     const tiles = [...feed.querySelectorAll<HTMLElement>("[data-slot=media]")]
@@ -37,7 +37,10 @@ describe("Explore's showcase", () => {
         .map((entry) => `${entry.aspect.width} / ${entry.aspect.height}`)
         .sort()
     )
-    expect(feed.querySelectorAll("video")).toHaveLength(0)
+    expect(feed.querySelectorAll("video").length).toBe(
+      stills.filter((entry) => entry.kind === "video").length
+    )
+    expect(feed.querySelectorAll("video").length).toBeGreaterThan(0)
   })
 
   it("names the app and the model as a pill with Recreate on hover, and keeps one View all in the header", async () => {

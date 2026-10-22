@@ -1,8 +1,8 @@
 import { act, cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { showcaseEntries } from "@/screens/explore/explore-entries"
-import { heldStills, Reveal } from "@/screens/explore/explore-sections"
-import { showcaseItems } from "@/showcase/showcase"
+import { feedExamples, Reveal } from "@/screens/explore/explore-sections"
+import { exampleGroupOf, showcaseItems } from "@/showcase/showcase"
 import { showcaseRows } from "@/showcase/showcase-rows"
 
 afterEach(() => {
@@ -10,27 +10,35 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe("Explore's held stills", () => {
-  it("lists every held still once and leaves out each result made from another", () => {
-    const stills = heldStills(showcaseEntries(showcaseItems))
-    const files = stills.map((entry) => entry.key)
+describe("Explore's examples", () => {
+  it("lists every example once, clips and app results included, and leaves out a clip made from another clip", () => {
+    const examples = feedExamples(showcaseEntries(showcaseItems))
+    const files = examples.map((entry) => entry.key)
     expect(new Set(files).size).toBe(files.length)
-    const derived = showcaseRows.filter((row) => row.from !== undefined)
-    expect(derived.length).toBeGreaterThan(0)
-    for (const row of derived) {
+    const fromClips = showcaseRows.filter(
+      (row) => row.from?.endsWith(".mp4") === true
+    )
+    expect(fromClips.length).toBeGreaterThan(0)
+    for (const row of fromClips) {
       expect(files).not.toContain(`showcase-${row.file}`)
     }
-    const kept = showcaseRows.filter(
-      (row) => row.from === undefined && row.kind === "image"
+    expect(examples.filter((entry) => entry.kind === "video").length).toBe(
+      showcaseRows.filter(
+        (row) => row.kind === "video" && row.from?.endsWith(".mp4") !== true
+      ).length
     )
-    expect(stills).toHaveLength(kept.length)
+    expect(examples).toHaveLength(showcaseRows.length - fromClips.length)
   })
 
-  it("orders the stills tallest first, so the shortest-stack packing ends the columns close together", () => {
-    const tallness = heldStills(showcaseEntries(showcaseItems)).map(
-      (entry) => entry.aspect.height / entry.aspect.width
+  it("keeps an example a full row away from the still it was made from, so no two neighbours show the same person", () => {
+    const examples = feedExamples(showcaseEntries(showcaseItems))
+    const groups = examples.map((entry) => exampleGroupOf(entry.run.id))
+    groups.forEach((group, at) => {
+      expect(groups.slice(Math.max(0, at - 5), at)).not.toContain(group)
+    })
+    expect(examples[0]?.aspect.height).toBeGreaterThan(
+      examples[0]?.aspect.width ?? 0
     )
-    expect(tallness).toEqual([...tallness].sort((a, b) => b - a))
   })
 })
 

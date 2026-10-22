@@ -66,13 +66,21 @@ export function showcaseOf(appId: string): ShowcaseItem[] {
   return showcaseItems.filter((item) => item.appId === appId)
 }
 
-const madeFromAnother = new Set(
-  showcaseRows.flatMap((row) => (row.from === undefined ? [] : [row.runId]))
+const isClipFile = (file: string): boolean => file.endsWith(".mp4")
+
+const madeFromClip = new Set(
+  showcaseRows.flatMap((row) =>
+    row.from !== undefined && isClipFile(row.from) ? [row.runId] : []
+  )
 )
 
-export function isHeldStill(runId: string): boolean {
+export function isFeedExample(runId: string): boolean {
   return (
-    showcaseRows.some((row) => row.runId === runId) &&
-    !madeFromAnother.has(runId)
+    showcaseRows.some((row) => row.runId === runId) && !madeFromClip.has(runId)
   )
+}
+
+export function exampleGroupOf(runId: string): string {
+  const row = showcaseRows.find((one) => one.runId === runId)
+  return row === undefined ? runId : (row.from ?? row.file)
 }

@@ -25,7 +25,8 @@ import {
   type VisualEntry,
 } from "@/screens/explore/explore-tile"
 import {
-  isHeldStill,
+  exampleGroupOf,
+  isFeedExample,
   type ShowcaseItem,
   showcaseItems,
 } from "@/showcase/showcase"
@@ -282,10 +283,52 @@ function tallness(entry: VisualEntry): number {
   return entry.aspect.height / entry.aspect.width
 }
 
-export function heldStills(entries: readonly VisualEntry[]): VisualEntry[] {
-  return entries
-    .filter((entry) => isHeldStill(entry.run.id))
-    .sort((first, second) => tallness(second) - tallness(first))
+const sourceGap = 6
+
+function groupsAround(placed: readonly VisualEntry[], at: number): Set<string> {
+  return new Set(
+    placed
+      .slice(Math.max(0, at - sourceGap + 1), at + sourceGap - 1)
+      .map((entry) => exampleGroupOf(entry.run.id))
+  )
+}
+
+function placeApart(placed: VisualEntry[], entry: VisualEntry): boolean {
+  const group = exampleGroupOf(entry.run.id)
+  for (let at = placed.length; at >= 0; at -= 1) {
+    if (!groupsAround(placed, at).has(group)) {
+      placed.splice(at, 0, entry)
+      return true
+    }
+  }
+  return false
+}
+
+function spreadSources(entries: readonly VisualEntry[]): VisualEntry[] {
+  const placed: VisualEntry[] = []
+  const deferred: VisualEntry[] = []
+  for (const entry of entries) {
+    const near = groupsAround(placed, placed.length)
+    if (near.has(exampleGroupOf(entry.run.id))) {
+      deferred.push(entry)
+    } else {
+      placed.push(entry)
+    }
+  }
+  for (const entry of deferred) {
+    if (!placeApart(placed, entry)) {
+      placed.push(entry)
+    }
+  }
+  return placed
+}
+
+export function feedExamples(entries: readonly VisualEntry[]): VisualEntry[] {
+  return spreadSources(
+    entries
+      .filter((entry) => isFeedExample(entry.run.id))
+      .sort((first, second) => tallness(second) - tallness(first))
+  )
 }
 
 export function ShowcaseFeed({
@@ -293,8 +336,8 @@ export function ShowcaseFeed({
   ...actions
 }: ResultActions & { entries: readonly VisualEntry[] }): ReactNode {
   const router = useRouter()
-  const stills = heldStills(entries)
-  if (stills.length === 0) {
+  const examples = feedExamples(entries)
+  if (examples.length === 0) {
     return null
   }
   return (
@@ -312,7 +355,7 @@ export function ShowcaseFeed({
           />
         }
       >
-        {stills.map((entry) => (
+        {examples.map((entry) => (
           <ResultCard
             key={entry.key}
             entry={entry}
