@@ -1,7 +1,10 @@
 import type { AppListing, Run } from "@rosesfield/contract"
 import { Card } from "@rosesfield/ui/components/card"
 import { interaction } from "@rosesfield/ui/components/interaction"
-import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
+import {
+  type MediaAspect,
+  MediaTile,
+} from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { Link } from "@tanstack/react-router"
 import { PlayIcon } from "lucide-react"
@@ -10,6 +13,7 @@ import { appLine, appName } from "@/catalog/app-facts"
 import { tCount } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
 import { appIcon } from "@/shell/nav-rows"
+import { type ShowcaseItem, showcaseOf } from "@/showcase/showcase"
 
 const frame: MediaAspect = { width: 203, height: 196 }
 
@@ -25,32 +29,55 @@ type AppCardProps = {
   working: number
 }
 
+function FrameMedia({
+  app,
+  newest,
+  example,
+}: Pick<AppCardProps, "app" | "newest"> & {
+  example: ShowcaseItem | undefined
+}): ReactElement {
+  const media = newest?.outputs[0]
+  if (media !== undefined && newest !== null) {
+    return (
+      <AssetTile
+        assetId={media}
+        shape="frame"
+        aspectHint={frame}
+        isDemo={newest.origin === "demo"}
+        isStatic={true}
+      />
+    )
+  }
+  if (example !== undefined) {
+    return (
+      <MediaTile
+        kind={example.kind}
+        src={example.src}
+        alt={appName(app)}
+        aspect={frame}
+      />
+    )
+  }
+  return (
+    <span
+      className="flex w-full items-center justify-center bg-(--well) text-ink-muted [&_svg]:size-6"
+      style={{ aspectRatio: `${frame.width} / ${frame.height}` }}
+    >
+      {appIcon(app)}
+    </span>
+  )
+}
+
 function CardMedia({
   app,
   newest,
 }: Pick<AppCardProps, "app" | "newest">): ReactElement {
-  const media = newest?.outputs[0]
   return (
     <span
       data-slot="app-card-media"
       className="relative block overflow-hidden rounded-cell"
     >
-      {media === undefined || newest === null ? (
-        <span
-          className="flex w-full items-center justify-center bg-(--well) text-ink-muted [&_svg]:size-6"
-          style={{ aspectRatio: `${frame.width} / ${frame.height}` }}
-        >
-          {appIcon(app)}
-        </span>
-      ) : (
-        <AssetTile
-          assetId={media}
-          shape="frame"
-          aspectHint={frame}
-          isDemo={newest.origin === "demo"}
-          isStatic={true}
-        />
-      )}
+      <FrameMedia app={app} newest={newest} example={showcaseOf(app.id)[0]} />
       <span
         aria-hidden="true"
         data-slot="app-card-play"
@@ -72,7 +99,7 @@ export function AppCard({ app, newest, working }: AppCardProps): ReactElement {
       params={{ appId: app.id }}
       data-slot="app-card"
       className={cn(
-        "group/card relative block w-62 shrink-0 snap-start rounded-card @regular:w-59.25",
+        "group/card relative block w-62 shrink-0 snap-start rounded-card @regular:w-auto",
         interaction.ring
       )}
     >

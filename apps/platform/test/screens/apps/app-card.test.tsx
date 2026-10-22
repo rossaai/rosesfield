@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { appLine, takesText } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { AppCard } from "@/screens/apps/app-card"
+import { showcaseOf } from "@/showcase/showcase"
 import { renderAt } from "../../shell/shell-router"
 
 afterEach(cleanup)
@@ -19,11 +20,39 @@ async function renderCard(): Promise<HTMLElement> {
   return card
 }
 
+async function mediaOfCard(appId: string): Promise<Element | null> {
+  const app = findCatalogApp(appId)
+  if (app === null) {
+    throw new Error(`the catalog holds no ${appId} app`)
+  }
+  renderAt("/", () => <AppCard app={app} newest={null} working={0} />)
+  const card = await screen.findByRole("link")
+  return card.querySelector(
+    "[data-slot='app-card-media'] img, [data-slot='app-card-media'] video"
+  )
+}
+
+describe("the Apps page card's media", () => {
+  it("shows a bundled still or clip of what the app makes", async () => {
+    const still = await mediaOfCard("image")
+    expect(still?.getAttribute("src")).toBe(showcaseOf("image")[0]?.src)
+    cleanup()
+    const clip = await mediaOfCard("effects")
+    expect(clip?.tagName).toBe("VIDEO")
+    expect(clip?.getAttribute("src")).toBe(showcaseOf("effects")[0]?.src)
+  })
+
+  it("shows the app's mark, and no invented picture, for an app with no example", async () => {
+    expect(showcaseOf("lipsync")).toEqual([])
+    expect(await mediaOfCard("lipsync")).toBeNull()
+  })
+})
+
 describe("the Apps page card", () => {
-  it("is 237 px wide with 16 px padding, and 248 px on a phone's rail", async () => {
+  it("takes its grid's width with 16 px padding, and 248 px on a phone's rail", async () => {
     const card = await renderCard()
     expect(card.className.split(" ")).toEqual(
-      expect.arrayContaining(["w-62", "@regular:w-59.25", "snap-start"])
+      expect.arrayContaining(["w-62", "@regular:w-auto", "snap-start"])
     )
     expect(
       card.querySelector("[data-slot='card']")?.className.split(" ")
