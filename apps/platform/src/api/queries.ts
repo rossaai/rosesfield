@@ -2,6 +2,7 @@ import { type AssetKind, type Run, routes } from "@rosesfield/contract"
 import {
   type InfiniteData,
   infiniteQueryOptions,
+  type QueryClient,
   queryOptions,
 } from "@tanstack/react-query"
 import { callRoute, type RouteOutput } from "@/api/call-route"
@@ -10,8 +11,6 @@ import { fetchSettings } from "@/api/gateway-settings"
 type RunPage = RouteOutput<typeof routes.listRuns>
 
 const firstCursor: string | null = null
-const workingPollMs = 1000
-const idlePollMs = 15_000
 
 export function isWorking(run: Run): boolean {
   return run.status === "queued" || run.status === "running"
@@ -19,6 +18,23 @@ export function isWorking(run: Run): boolean {
 
 export function runsOf(data: InfiniteData<RunPage> | undefined): Run[] {
   return data?.pages.flatMap((page) => page.runs) ?? []
+}
+
+export function keepRun(client: QueryClient, run: Run): void {
+  client.setQueryData(["run", run.id], { run })
+  client.setQueriesData<InfiniteData<RunPage>>(
+    { queryKey: ["runs"] },
+    (data) =>
+      data === undefined
+        ? data
+        : {
+            ...data,
+            pages: data.pages.map((page) => ({
+              ...page,
+              runs: page.runs.map((one) => (one.id === run.id ? run : one)),
+            })),
+          }
+  )
 }
 
 function cursorPart(cursor: string | null): { cursor?: string } {
@@ -44,8 +60,6 @@ export function runsQuery(appId: string | null) {
       }),
     initialPageParam: firstCursor,
     getNextPageParam: (page) => page.next,
-    refetchInterval: (query) =>
-      runsOf(query.state.data).some(isWorking) ? workingPollMs : idlePollMs,
   })
 }
 
@@ -54,10 +68,6 @@ export function runQuery(runId: string) {
     queryKey: ["run", runId],
     queryFn: ({ signal }) =>
       callRoute(routes.getRun, { params: { runId }, signal }),
-    refetchInterval: (query) => {
-      const run = query.state.data?.run
-      return run !== undefined && isWorking(run) ? workingPollMs : false
-    },
   })
 }
 

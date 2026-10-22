@@ -8,17 +8,21 @@ import {
   type EngineSubmission,
   GenerationEngine,
   type OutputsPerJob,
+  type Pause,
   type PriceRequest,
+  pauseOn,
   type RunPrice,
   unknownPrice,
 } from "#domain/generation-engine.port"
 import { writeFlatMp4 } from "#infrastructure/demo/flat-mp4"
 import { writeFlatPng } from "#infrastructure/demo/flat-png"
 import { writeSilentWav } from "#infrastructure/demo/silent-wav"
+import { type Timer, TimerJobRunner } from "#infrastructure/timer-job-runner"
 
 type DemoGenerationEngineOptions = {
   clock: Clock
   rates?: GenerationEngine
+  timer?: Timer
 }
 
 type DemoRun = {
@@ -31,6 +35,7 @@ type DemoRun = {
 
 export class DemoGenerationEngine extends GenerationEngine {
   static readonly delayMs = 3000
+  static readonly frameMs = 250
   static readonly imageSide = 1024
   static readonly videoSide = 640
   static readonly seconds = 2
@@ -45,11 +50,13 @@ export class DemoGenerationEngine extends GenerationEngine {
 
   private readonly clock: Clock
   private readonly rates: GenerationEngine | null
+  private readonly pause: Pause
 
   constructor(options: DemoGenerationEngineOptions) {
     super()
     this.clock = options.clock
     this.rates = options.rates ?? null
+    this.pause = pauseOn((options.timer ?? TimerJobRunner.systemTimer).after)
   }
 
   override canRun(_binding: EngineBinding): boolean {
@@ -100,6 +107,17 @@ export class DemoGenerationEngine extends GenerationEngine {
       progress: progress < 0.5 ? null : progress,
       retryAfterSeconds: 1,
     }
+  }
+
+  override watch(
+    ref: string,
+    signal: AbortSignal
+  ): AsyncGenerator<EngineStatus, void, void> {
+    return this.readEvery(ref, {
+      everyMs: DemoGenerationEngine.frameMs,
+      pause: this.pause,
+      signal,
+    })
   }
 
   override async listOutputs(ref: string): Promise<EngineOutput[]> {

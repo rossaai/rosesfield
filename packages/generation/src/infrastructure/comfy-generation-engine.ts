@@ -1,4 +1,4 @@
-import type { ComfyLow } from "@comfyorg/sdk/low"
+import type { ComfyLow, RawEvent } from "@comfyorg/sdk/low"
 import type {
   AssetKind,
   Cost,
@@ -15,6 +15,8 @@ import {
   type EngineSubmission,
   GenerationEngine,
   type OutputsPerJob,
+  type Pause,
+  pauseOn,
 } from "#domain/generation-engine.port"
 import {
   callComfy,
@@ -45,6 +47,7 @@ import {
 } from "#infrastructure/credit-meter"
 import { mediaSizeOf } from "#infrastructure/media-size"
 import { RouterHttp } from "#infrastructure/router/router-http"
+import { type Timer, TimerJobRunner } from "#infrastructure/timer-job-runner"
 
 type ComfyGenerationEngineOptions = {
   apiKey: string | null
@@ -53,7 +56,10 @@ type ComfyGenerationEngineOptions = {
   fetch?: Fetch
   requestTimeoutMs?: number
   downloadTimeoutMs?: number
+  timer?: Timer
 }
+
+type EventReading = EngineStatus | "ended" | null
 
 const jobSchema = z.object({
   id: z.string().min(1),
@@ -92,12 +98,17 @@ const jobSchema = z.object({
 
 type Job = z.infer<typeof jobSchema>
 
+const statusEvent = z.object({ status: jobSchema.shape.status })
+
+const progressEvent = z.object({ value: z.number().min(0).max(1) })
+
 export class ComfyGenerationEngine extends GenerationEngine {
   static readonly cloudUrl = "https://cloud.comfy.org"
   static readonly requestTimeoutMs = 30_000
   static readonly downloadTimeoutMs = 300_000
   static readonly unknownJobId = "00000000-0000-0000-0000-000000000000"
   static readonly gpuCreditsPerSecond = 0.266
+  static readonly statusEveryMs = 2000
   static readonly outputKinds: readonly string[] = [
     "image",
     "video",
@@ -115,6 +126,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
   private readonly isCloud: boolean
   private readonly meter: CreditMeter | null
   private readonly balance: BalanceReader
+  private readonly pause: Pause
 
   constructor(options: ComfyGenerationEngineOptions) {
     super()
@@ -138,6 +150,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
       timeoutMs: this.requestTimeoutMs,
       downloadTimeoutMs: this.downloadTimeoutMs,
     })
+    this.pause = pauseOn((options.timer ?? TimerJobRunner.systemTimer).after)
   }
 
   override canRun(binding: EngineBinding): boolean {
@@ -214,6 +227,43 @@ export class ComfyGenerationEngine extends GenerationEngine {
     }
   }
 
+  override async *watch(
+    ref: string,
+    signal: AbortSignal
+  ): AsyncGenerator<EngineStatus, void, void> {
+    const events = this.low.getJobEvents(ref, { signal })
+    let opened = false
+    let hasEnded = false
+    let progress: number | null = null
+    try {
+      for await (const event of events) {
+        opened = true
+        const reading = readingOf(event, progress)
+        if (reading === "ended") {
+          hasEnded = true
+          break
+        }
+        if (reading !== null) {
+          progress = reading.state === "running" ? reading.progress : progress
+          yield reading
+        }
+      }
+    } catch {
+      if (opened || signal.aborted) {
+        return
+      }
+      yield* this.readEvery(ref, {
+        everyMs: ComfyGenerationEngine.statusEveryMs,
+        pause: this.pause,
+        signal,
+      })
+      return
+    }
+    if (hasEnded) {
+      yield await this.read(ref)
+    }
+  }
+
   override async listOutputs(ref: string): Promise<EngineOutput[]> {
     const job = parseJob(await callComfy(() => this.low.getJob(ref)))
     const listed = job.outputs.filter((output) =>
@@ -272,6 +322,38 @@ export class ComfyGenerationEngine extends GenerationEngine {
       height: size?.height ?? null,
       durationSeconds: null,
     }
+  }
+}
+
+function readingOf(event: RawEvent, progress: number | null): EventReading {
+  if (event.event === "error") {
+    return "ended"
+  }
+  if (event.event === "progress") {
+    const progress = progressEvent.safeParse(event.data)
+    return progress.success
+      ? {
+          state: "running",
+          progress: progress.data.value,
+          retryAfterSeconds: null,
+        }
+      : null
+  }
+  if (event.event !== "status") {
+    return null
+  }
+  const status = statusEvent.safeParse(event.data)
+  if (!status.success) {
+    return null
+  }
+  switch (status.data.status) {
+    case "queued":
+      return { state: "queued", progress: null, retryAfterSeconds: null }
+    case "running":
+    case "canceling":
+      return { state: "running", progress, retryAfterSeconds: null }
+    default:
+      return "ended"
   }
 }
 

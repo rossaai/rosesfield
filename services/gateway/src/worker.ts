@@ -113,7 +113,7 @@ function composeOwner(
     throw new TypeError("composeOwner needs owner mode")
   }
   const { handlers } = buildHandlers(
-    ownerPorts(parts),
+    { ...ownerPorts(parts), watchMarks: RunWatcher.marksOf(env.WATCHERS) },
     () => new AlarmJobRunner({ watchers: env.WATCHERS })
   )
   const scope = ownerScope({
