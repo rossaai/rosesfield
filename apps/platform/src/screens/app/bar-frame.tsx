@@ -50,12 +50,17 @@ function useDockCover(): {
       return
     }
     const cover = (): void => {
-      stage.style.setProperty("--covered-bottom", `${dock.offsetHeight}px`)
+      const covered = Math.max(
+        dock.offsetHeight,
+        stage.getBoundingClientRect().bottom - dock.getBoundingClientRect().top
+      )
+      stage.style.setProperty("--covered-bottom", `${covered}px`)
     }
     cover()
     const observer =
       typeof ResizeObserver === "undefined" ? null : new ResizeObserver(cover)
     observer?.observe(dock)
+    observer?.observe(stage)
     return () => {
       observer?.disconnect()
       stage.style.removeProperty("--covered-bottom")

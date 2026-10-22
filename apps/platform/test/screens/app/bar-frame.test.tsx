@@ -49,6 +49,23 @@ describe("the bar frame's floating prompt bar", () => {
     expect(coveredBottom()).toBe("124px")
   })
 
+  it("covers from the bar's top to the stage's bottom, the bar's own inset under it included, now the stage runs to the window's bottom", () => {
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(100)
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: HTMLElement) {
+        const isStage = this.dataset.slot === "bar-stage"
+        return DOMRect.fromRect({
+          x: 0,
+          y: isStage ? 0 : 784,
+          width: 100,
+          height: isStage ? 900 : 100,
+        })
+      }
+    )
+    renderDocked()
+    expect(coveredBottom()).toBe("116px")
+  })
+
   it("leaves the covered bottom to the tab bar on a phone, where the prompt bar does not float", () => {
     asPhone()
     vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(124)
