@@ -15,11 +15,10 @@ import {
 } from "@/screens/explore/explore-entries"
 import { exploreRows, visualEntries } from "@/screens/explore/explore-rows"
 import {
-  AppTiles,
+  AppsRow,
   bannerAppId,
   ExploreBanner,
   ExploreRowView,
-  PromoCards,
   type ResultActions,
   SharedFeed,
   ShowcaseFeed,
@@ -112,19 +111,10 @@ function ExploreFeeds({
   const rows = exploreRows(entries)
   return (
     <>
-      {rows.map((row, index) => (
-        <ExploreRowView
-          key={row.key}
-          row={row}
-          isLead={index === 0 && !hasShowcase}
-          {...actions}
-        />
+      {rows.map((row) => (
+        <ExploreRowView key={row.key} row={row} {...actions} />
       ))}
-      <SharedFeed
-        entries={entries}
-        isLead={rows.length === 0 && !hasShowcase}
-        {...actions}
-      />
+      <SharedFeed entries={entries} {...actions} />
     </>
   )
 }
@@ -190,9 +180,8 @@ export function ExploreScreen(): ReactElement {
   return (
     <div ref={root} className="flex min-h-full flex-col px-4 pb-12">
       <ExploreBanner />
-      <PromoCards entries={entries} isLoading={results.state === "loading"} />
-      <AppTiles />
       <div className="mt-6 flex flex-col gap-12 @regular:mt-10 @regular:gap-35">
+        <AppsRow entries={entries} isLoading={results.state === "loading"} />
         <ShowcaseFeed entries={showcase} onOpen={viewer.show} onMore={onMore} />
         <ExploreFeeds
           results={results}

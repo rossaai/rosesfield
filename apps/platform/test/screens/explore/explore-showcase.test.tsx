@@ -4,6 +4,7 @@ import { t } from "@/copy/t"
 import { showcaseEntries } from "@/screens/explore/explore-entries"
 import {
   bannerPortraits,
+  heldStills,
   ShowcaseFeed,
 } from "@/screens/explore/explore-sections"
 import { showcaseItems } from "@/showcase/showcase"
@@ -12,6 +13,7 @@ import { renderAt } from "../../shell/shell-router"
 afterEach(cleanup)
 
 const entries = showcaseEntries(showcaseItems)
+const stills = heldStills(entries)
 
 async function renderShowcase(): Promise<HTMLElement> {
   renderAt("/", () => (
@@ -25,35 +27,35 @@ async function renderShowcase(): Promise<HTMLElement> {
 }
 
 describe("Explore's showcase", () => {
-  it("lays every bundled example in the masonry at its own shape", async () => {
+  it("lays every held still once in the masonry at its own shape", async () => {
     const feed = await renderShowcase()
     expect(feed.getAttribute("data-layout")).toBe("masonry")
     const tiles = [...feed.querySelectorAll<HTMLElement>("[data-slot=media]")]
-    expect(tiles).toHaveLength(showcaseItems.length)
+    expect(tiles).toHaveLength(stills.length)
     expect(tiles.map((tile) => tile.style.aspectRatio).sort()).toEqual(
-      showcaseItems.map((item) => `${item.width} / ${item.height}`).sort()
+      stills
+        .map((entry) => `${entry.aspect.width} / ${entry.aspect.height}`)
+        .sort()
     )
+    expect(feed.querySelectorAll("video")).toHaveLength(0)
   })
 
-  it("loops each clip muted, and names the app and the model with Recreate on hover", async () => {
+  it("names the app and the model as a pill with Recreate on hover, and keeps one View all in the header", async () => {
     const feed = await renderShowcase()
-    const clips = [...feed.querySelectorAll("video")]
-    expect(clips).toHaveLength(
-      showcaseItems.filter((item) => item.kind === "video").length
+    const pills = [...feed.querySelectorAll("[data-slot=media-badge]")].map(
+      (pill) => pill.textContent
     )
-    for (const clip of clips) {
-      expect(clip.muted).toBe(true)
-      expect(clip.loop).toBe(true)
-    }
-    const veils = [...feed.querySelectorAll("[data-slot=media-veil]")].map(
-      (veil) => veil.textContent
-    )
-    expect(veils).toContain("Image · Z-Image Turbo")
-    expect(veils).toContain("Image · Qwen Image 2512")
-    expect(veils).toContain("Effects · LTX 2.5")
+    expect(pills).toContain("Image · Z-Image Turbo")
+    expect(pills).toContain("Image · Qwen Image 2512")
     expect(
       screen.getAllByRole("button", { name: t("explore.tile.recreateName") })
-    ).toHaveLength(showcaseItems.length)
+    ).toHaveLength(stills.length)
+    const actions = feed.querySelector("[data-slot='section-heading-actions']")
+    expect(
+      [...(actions?.querySelectorAll("a") ?? [])].map(
+        (link) => link.textContent
+      )
+    ).toEqual([t("explore.showcase.viewAll")])
   })
 
   it("shows nothing when no example is bundled", async () => {

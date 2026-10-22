@@ -65,3 +65,14 @@ export const showcaseItems: readonly ShowcaseItem[] =
 export function showcaseOf(appId: string): ShowcaseItem[] {
   return showcaseItems.filter((item) => item.appId === appId)
 }
+
+const madeFromAnother = new Set(
+  showcaseRows.flatMap((row) => (row.from === undefined ? [] : [row.runId]))
+)
+
+export function isHeldStill(runId: string): boolean {
+  return (
+    showcaseRows.some((row) => row.runId === runId) &&
+    !madeFromAnother.has(runId)
+  )
+}
