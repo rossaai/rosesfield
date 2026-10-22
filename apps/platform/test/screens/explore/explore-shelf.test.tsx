@@ -13,10 +13,10 @@ import { renderAt } from "../../shell/shell-router"
 
 afterEach(cleanup)
 
-function runOf(id: string): Run {
+function runOf(id: string, appId = "image"): Run {
   return run.parse({
     id,
-    appId: "image",
+    appId,
     status: "done",
     inputs: { prompt: "a red rose" },
     count: 1,
@@ -97,7 +97,7 @@ const appEntries: VisualEntry[] = [
   "background-removal",
 ].map((appId, index) => ({
   key: `app-${appId}`,
-  run: { ...runOf(`2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5f0${index}`), appId },
+  run: runOf(`2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5f0${index}`, appId),
   kind: "image",
   aspect: { width: 16, height: 9 },
   source: { kind: "showcase", src: `/m/${appId}.webp` },

@@ -86,7 +86,9 @@ describe("settings on a desktop", () => {
       expect.arrayContaining(["bg-ink", "motion-travel"])
     )
     expect(thumb?.style.translate).toContain("4 *")
-    fireEvent.click(within(rail).getByRole("button", { name: sectionNames[1] }))
+    fireEvent.click(
+      within(rail).getByRole("button", { name: t("settings.agent.title") })
+    )
     expect(onSection).toHaveBeenCalledWith("agent")
   })
 
