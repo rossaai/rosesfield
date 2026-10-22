@@ -17,6 +17,12 @@ async function style(locator: Locator, property: string): Promise<string> {
   )
 }
 
+async function settled(locator: Locator): Promise<void> {
+  await locator.evaluate((element) =>
+    Promise.all(element.getAnimations().map((animation) => animation.finished))
+  )
+}
+
 async function open(page: Page, entry: string, state = "rest"): Promise<void> {
   await page.goto(`/gallery?entry=${entry}&state=${state}`)
   await expect(page.locator(".px-4.py-6").first()).toBeVisible()
@@ -89,7 +95,7 @@ test("a mode strip holds 36 px tabs 12 px apart, the current one underlined 2 px
   await expect(edit).toHaveAttribute("aria-selected", "true")
 })
 
-test("a segmented control holds 32 px cells 4 px apart over a plate that jumps", async ({
+test("a segmented control holds 32 px cells 4 px apart over a plate that travels", async ({
   page,
 }) => {
   await open(page, "ref-tabs")
@@ -101,6 +107,8 @@ test("a segmented control holds 32 px cells 4 px apart over a plate that jumps",
   expect(two.x - (one.x + one.width)).toBe(4)
   await history.click()
   const plate = page.locator("[data-slot='segmented-control-thumb']").first()
+  expect(await style(plate, "transition-property")).toContain("translate")
+  await settled(plate)
   expect(Math.round((await boxOf(plate)).x)).toBe(Math.round(one.x))
 })
 

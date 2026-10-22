@@ -9,6 +9,10 @@ export type MotionPreset =
   | "control"
   | "pane"
   | "pulse"
+  | "disclosure"
+  | "swap"
+  | "travel"
+  | "yield"
 
 export const motion: Record<MotionPreset, string> = {
   press: "motion-press",
@@ -21,6 +25,10 @@ export const motion: Record<MotionPreset, string> = {
   control: "motion-control",
   pane: "motion-pane",
   pulse: "motion-pulse",
+  disclosure: "motion-disclosure",
+  swap: "motion-swap",
+  travel: "motion-travel",
+  yield: "motion-yield",
 }
 
 export type MotionTiming = {

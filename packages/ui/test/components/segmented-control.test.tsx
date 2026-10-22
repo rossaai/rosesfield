@@ -69,11 +69,26 @@ describe("SegmentedControl", () => {
     expect(change).toHaveBeenCalledWith("16-9")
   })
 
-  it("moves the thumb under the chosen cell", () => {
+  it("moves the thumb under the chosen cell on the travel preset", () => {
     render(<Format onChange={() => undefined} />)
     expect(thumb().style.transform).toMatch(/^translateX\(calc\(0 \* /)
+    expect(thumb().className.split(" ")).toContain("motion-travel")
+    expect(thumb().className.split(" ")).not.toContain("transition-none")
     fireEvent.click(screen.getByRole("radio", { name: "16:9" }))
     expect(thumb().style.transform).toMatch(/^translateX\(calc\(2 \* /)
+  })
+
+  it("turns a chrome label to the thumb's ink on the thumb's own clock", () => {
+    render(<Format onChange={() => undefined} />)
+    const cell = screen.getByRole("radio", { name: "4:3" })
+    expect(cell.className.split(" ")).toContain(
+      "[transition:color_var(--travel)]"
+    )
+    cleanup()
+    render(<Format onChange={() => undefined} density="row" />)
+    expect(
+      screen.getByRole("radio", { name: "4:3" }).className.split(" ")
+    ).toContain("motion-tint")
   })
 
   it("insets the composer's plate inside its cell by the control inset, and keeps the others the cell's own size", () => {

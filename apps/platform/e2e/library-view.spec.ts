@@ -242,9 +242,11 @@ test("History's state tabs show every label whole, with the plate on the chosen 
   expect(cut).toEqual([])
   const failed = tabs.getByRole("radio", { name: "Failed" })
   await failed.click()
-  const plate = await boxOf(
-    tabs.locator("[data-slot='segmented-control-thumb']")
+  const thumb = tabs.locator("[data-slot='segmented-control-thumb']")
+  await thumb.evaluate((element) =>
+    Promise.all(element.getAnimations().map((animation) => animation.finished))
   )
+  const plate = await boxOf(thumb)
   const cell = await boxOf(failed)
   expect(Math.round(plate.x)).toBe(Math.round(cell.x))
   expect(Math.round(plate.width)).toBe(Math.round(cell.width))

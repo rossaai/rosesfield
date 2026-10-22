@@ -4,6 +4,8 @@ import {
   SegmentedTab,
   SegmentedTabs,
   Tabs,
+  TabsList,
+  TabsTrigger,
 } from "@rosesfield/ui/components/tabs"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -15,7 +17,7 @@ function classesOf(element: Element): string[] {
 }
 
 describe("ModeStrip", () => {
-  it("holds text tabs 36 px tall and 12 px apart, the current one underlined, changing at once", () => {
+  it("holds text tabs 36 px tall and 12 px apart, the current one underlined by a line that travels", () => {
     render(
       <Tabs defaultValue="video">
         <ModeStrip aria-label="Mode">
@@ -34,7 +36,18 @@ describe("ModeStrip", () => {
     )
     const edit = screen.getByRole("tab", { name: "Edit video" })
     expect(classesOf(edit)).toEqual(
-      expect.arrayContaining(["h-9", "border-b-2", "transition-none"])
+      expect.arrayContaining(["h-9", "border-b-2", "border-transparent"])
+    )
+    expect(classesOf(edit)).not.toContain("data-active:border-ink")
+    const line = strip.querySelector("[data-slot='tabs-underline']")
+    expect(line?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "h-0.5",
+        "bg-ink",
+        "w-(--active-tab-width)",
+        "translate-x-(--active-tab-left)",
+        "motion-travel",
+      ])
     )
     expect(edit.getAttribute("aria-selected")).toBe("false")
     fireEvent.click(edit)
@@ -48,7 +61,7 @@ describe("ModeStrip", () => {
 })
 
 describe("SegmentedTabs", () => {
-  it("holds 32 px cells 4 px apart over a plate of its own that jumps", () => {
+  it("holds 32 px cells 4 px apart over a plate of its own that travels", () => {
     render(
       <Tabs defaultValue="how">
         <SegmentedTabs aria-label="View">
@@ -66,7 +79,14 @@ describe("SegmentedTabs", () => {
       expect.arrayContaining(["h-8", "gap-1", "[&_svg]:size-4", "z-1"])
     )
     const plate = list.querySelector("[data-slot='segmented-control-thumb']")
-    expect(plate?.className.split(" ")).toContain("transition-none")
+    expect(plate?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "translate-x-(--active-tab-left)",
+        "w-(--active-tab-width)",
+        "motion-travel",
+      ])
+    )
+    expect(plate?.className.split(" ")).not.toContain("transition-none")
     expect(
       screen
         .getByRole("tab", { name: "How it works" })
@@ -94,13 +114,34 @@ describe("SegmentedTabs on a well", () => {
     expect(plate?.className.split(" ")).toEqual(
       expect.arrayContaining([
         "h-tab",
-        "top-[calc(var(--active-tab-top)+var(--spacing-hairline))]",
-        "transition-none",
+        "translate-y-[calc(var(--active-tab-top)+var(--spacing-hairline))]",
+        "motion-travel",
       ])
     )
     const grid = screen.getByRole("tab", { name: "Grid" })
     expect(grid.getAttribute("tabindex")).toBe("-1")
     fireEvent.click(grid)
     expect(grid.getAttribute("aria-selected")).toBe("true")
+  })
+})
+
+describe("TabsList", () => {
+  it("tints the current tab with one plate that travels, never a tint of each tab", () => {
+    render(
+      <Tabs defaultValue="all">
+        <TabsList aria-label="Kind">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="video">Video</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    )
+    const list = screen.getByRole("tablist", { name: "Kind" })
+    const plate = list.querySelector("[data-slot='tabs-indicator']")
+    expect(plate?.className.split(" ")).toEqual(
+      expect.arrayContaining(["bg-(--tint)", "rounded-full", "motion-travel"])
+    )
+    const video = screen.getByRole("tab", { name: "Video" })
+    expect(classesOf(video)).not.toContain("data-active:bg-(--tint)")
+    expect(classesOf(video)).toContain("z-1")
   })
 })

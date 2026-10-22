@@ -23,6 +23,10 @@
   --enter-out-opacity: var(--duration-press) var(--ease-fold);
   --control-change: var(--duration-snap) var(--ease-snap);
   --pane-change: var(--duration-settle) var(--ease-settle);
+  --disclosure: var(--duration-snap) var(--ease-snap);
+  --swap: var(--duration-press) var(--ease-glide);
+  --travel: var(--duration-settle) var(--ease-settle);
+  --yield: var(--duration-settle) var(--ease-settle);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -44,6 +48,10 @@
     --enter-out-opacity: var(--duration-reduced) var(--ease-bloom);
     --control-change: 0s linear;
     --pane-change: 0s linear;
+    --disclosure: 0s linear;
+    --swap: var(--duration-reduced) var(--ease-glide);
+    --travel: 0s linear;
+    --yield: 0s linear;
   }
 }
 
@@ -165,6 +173,42 @@
 
 @utility motion-pane {
   transition: transform var(--pane-change);
+}
+
+/*
+  The four presets the component contracts name beside the ones above.
+  disclosure turns a chevron or moves a part inside a control. swap crosses
+  a glyph or a label in its slot. travel moves a selection indicator between
+  positions, its offset and its measure on one spring. yield releases or
+  takes layout space, a grid row or a column, on the same spring.
+*/
+@utility motion-disclosure {
+  transition:
+    transform var(--disclosure),
+    rotate var(--disclosure),
+    translate var(--disclosure);
+}
+
+@utility motion-swap {
+  transition:
+    opacity var(--swap),
+    scale var(--swap);
+}
+
+@utility motion-travel {
+  transition:
+    transform var(--travel),
+    translate var(--travel),
+    width var(--travel),
+    height var(--travel);
+}
+
+@utility motion-yield {
+  transition:
+    grid-template-rows var(--yield),
+    grid-template-columns var(--yield),
+    width var(--yield),
+    height var(--yield);
 }
 
 @utility motion-pulse {
