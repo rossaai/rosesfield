@@ -26,6 +26,7 @@ import {
   navGroups,
   type ScreenLink,
 } from "@/shell/nav-rows"
+import { useOpenConnect } from "@/shell/shell-dialogs"
 
 function AppsSheet({
   open,
@@ -88,6 +89,7 @@ function Tab({ link }: { link: ScreenLink }): ReactElement {
 export function BottomBar(): ReactElement {
   const [isAppsOpen, setAppsOpen] = useState(false)
   const requestTools = useAppToolsKey()
+  const openConnect = useOpenConnect()
   return (
     <>
       <TabBar label={t("shell.bar.label")}>
@@ -100,7 +102,7 @@ export function BottomBar(): ReactElement {
         <Tab link={historyLink} />
         <TabBarLink
           icon={<PlugIcon aria-hidden="true" />}
-          render={<Link to="/connect" />}
+          render={<button type="button" onClick={() => openConnect()} />}
         >
           {t("shell.nav.connect")}
         </TabBarLink>

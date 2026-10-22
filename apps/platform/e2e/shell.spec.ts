@@ -50,7 +50,7 @@ test("on a desktop the mark, the area links and Connect sit in one row", async (
   const bar = await open(page, "/")
   const mark = bar.locator("[data-slot='app-bar-mark']").first()
   expect(await boxOf(mark)).toEqual({ x: 16, y: 10, width: 32, height: 32 })
-  const connect = bar.getByRole("link", { name: "Connect" })
+  const connect = bar.getByRole("button", { name: "Connect" })
   const end = await boxOf(connect)
   expect(end.x + end.width).toBe(1440 - 16)
   const links = await bar.locator("[data-slot='app-bar-areas']").all()
@@ -122,7 +122,7 @@ test("an app page shrinks the bar to 36 px and the mark to 20 px", async ({
   await expect.poll(async () => (await boxOf(bar)).height).toBe(36)
   const mark = bar.locator("[data-slot='app-bar-mark']").first()
   await expect.poll(async () => (await boxOf(mark)).width).toBe(20)
-  const connect = bar.getByRole("link", { name: "Connect" })
+  const connect = bar.getByRole("button", { name: "Connect" })
   await expect.poll(async () => (await boxOf(connect)).height).toBe(24)
   const end = await boxOf(connect)
   expect(end.x + end.width).toBe(1440 - 16)
@@ -273,4 +273,28 @@ test("on a phone the area menu sits 4 px before the balance", async ({
     const balance = await boxOf(bar.locator("[data-slot='app-bar-balance']"))
     expect(Math.round(balance.x - (menu.x + menu.width)), path).toBe(4)
   }
+})
+
+test("Connect opens a dialog over the page, and /connect opens it over Explore", async ({
+  page,
+}) => {
+  await answerOwnLists(page, new Set())
+  await open(page, "/history")
+  const connect = isPhone(page)
+    ? page.getByRole("navigation", { name: "Main" }).getByRole("button", {
+        name: "Connect",
+      })
+    : page.locator("header[data-slot='app-bar']").getByRole("button", {
+        name: "Connect",
+      })
+  await connect.click()
+  const dialog = page.getByRole("dialog")
+  await expect(dialog.getByRole("heading", { name: "Connect" })).toBeVisible()
+  await expect(dialog.getByRole("button", { name: "Cancel" })).toBeVisible()
+  expect(new URL(page.url()).pathname).toBe("/history")
+  await dialog.getByRole("button", { name: "Cancel" }).click()
+  await expect(dialog).toBeHidden()
+  await page.goto("/connect?client=api")
+  await expect(page.getByRole("dialog")).toBeVisible()
+  await expect(page).toHaveURL(/\/$/)
 })

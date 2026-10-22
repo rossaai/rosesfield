@@ -25,10 +25,6 @@ function currentOf(
   return within(bar).getByRole(role, { name }).getAttribute("aria-current")
 }
 
-function classesOf(bar: HTMLElement, name: string): string[] {
-  return within(bar).getByRole("link", { name }).className.split(" ")
-}
-
 describe("the top bar", () => {
   it("spans the page in full density with no sidebar", async () => {
     const bar = await barAt("/")
@@ -80,22 +76,23 @@ describe("the top bar", () => {
     expect(currentOf(bar, "button", "Video")).toBeNull()
   })
 
-  it("ends with your balance, then Connect", async () => {
+  it("ends with your balance, then Connect, both buttons that open a dialog, not pages", async () => {
     const bar = await barAt("/")
-    const balance = within(bar).getByRole("link", { name: "12.5 credits" })
-    const connect = within(bar).getByRole("link", { name: "Connect" })
-    expect(balance.getAttribute("href")).toBe("/settings")
-    expect(connect.getAttribute("href")).toBe("/connect")
+    const balance = within(bar).getByRole("button", { name: "12.5 credits" })
+    const connect = within(bar).getByRole("button", { name: "Connect" })
+    expect(balance.getAttribute("href")).toBeNull()
+    expect(connect.getAttribute("href")).toBeNull()
+    expect(within(bar).queryByRole("link", { name: "Connect" })).toBeNull()
     const order = balance.compareDocumentPosition(connect)
     expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(classesOf(bar, "Connect")).toContain("h-9")
-    expect(classesOf(bar, "12.5 credits")).toContain("h-9")
-    expect(classesOf(bar, "12.5 credits")).not.toContain("@regular:h-6")
+    expect(connect.className.split(" ")).toContain("h-9")
+    expect(balance.className.split(" ")).toContain("h-9")
+    expect(balance.className.split(" ")).not.toContain("@regular:h-6")
   })
 
   it("draws the balance with its icon before the label", async () => {
     const bar = await barAt("/")
-    const balance = within(bar).getByRole("link", { name: "12.5 credits" })
+    const balance = within(bar).getByRole("button", { name: "12.5 credits" })
     expect(balance.firstElementChild?.tagName.toLowerCase()).toBe("svg")
     expect(balance.lastElementChild?.textContent).toBe("12.5 credits")
   })
@@ -103,7 +100,9 @@ describe("the top bar", () => {
   it("shrinks the balance and Connect with the bar on an app page", async () => {
     const bar = await barAt("/apps/image")
     for (const name of ["Connect", "12.5 credits"]) {
-      expect(classesOf(bar, name)).toEqual(
+      expect(
+        within(bar).getByRole("button", { name }).className.split(" ")
+      ).toEqual(
         expect.arrayContaining([
           "@regular:h-6",
           "transition-[height,padding,gap]",

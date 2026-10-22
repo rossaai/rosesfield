@@ -1,6 +1,5 @@
 import { AppBarAction } from "@rosesfield/ui/components/app-bar"
 import { useQuery } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
 import { CoinsIcon, KeyRoundIcon } from "lucide-react"
 import { type ReactNode, useEffect } from "react"
 import { settingsQuery } from "@/api/queries"
@@ -9,6 +8,7 @@ import { formatNumber } from "@/copy/format"
 import { t } from "@/copy/t"
 import { type Account, accountQuery } from "@/screens/settings/account-query"
 import { useOpenKeyDialog } from "@/shell/key-dialog-context"
+import { useOpenCredits } from "@/shell/shell-dialogs"
 import { noteSpendCap } from "@/shell/spend-cap"
 
 export function creditsLabel(account: Account): string | null {
@@ -31,6 +31,7 @@ export function CreditBalance(): ReactNode {
   const hasKey = useHasVisitorKey("engine")
   const account = useQuery({ ...accountQuery, enabled: settings !== undefined })
   const openKey = useOpenKeyDialog()
+  const openCredits = useOpenCredits()
   const capCredits = account.data?.cap?.credits ?? null
   useEffect(() => noteSpendCap(capCredits), [capCredits])
   if (settings === undefined) {
@@ -54,7 +55,7 @@ export function CreditBalance(): ReactNode {
   return (
     <AppBarAction
       icon={<CoinsIcon aria-hidden="true" />}
-      render={<Link to="/settings" />}
+      onClick={openCredits}
       {...(isDemo ? { title: t("shell.demoEngine.tooltip") } : {})}
     >
       {label ?? t("shell.demoEngine.row")}

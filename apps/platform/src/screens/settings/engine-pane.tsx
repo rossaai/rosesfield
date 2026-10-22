@@ -37,7 +37,7 @@ export function targetName(target: EngineTarget): string {
   return t(`settings.target.${target}`)
 }
 
-function statusText(
+export function statusText(
   engine: GatewaySettings["engine"],
   check: KeyCheck | null
 ): string {
