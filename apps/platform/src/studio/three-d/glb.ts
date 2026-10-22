@@ -167,9 +167,7 @@ function partOf(glb: Glb, primitive: Json, world: Matrix): MeshPart | null {
         : transformNormals(normals, normalMatrixOf(world)),
     uvs: uvs !== null && uvs.length * 3 === local.length * 2 ? uvs : null,
     colors:
-      colors !== null && colors.length * 3 === local.length * 4
-        ? colors
-        : null,
+      colors !== null && colors.length * 3 === local.length * 4 ? colors : null,
     indices,
     ...materialOf(glb, primitive.material),
   }
@@ -197,16 +195,18 @@ function walk(
   index: unknown,
   parent: Matrix,
   depth: number,
+  walked: Set<Json>,
   parts: MeshPart[]
 ): void {
   const node = itemOf(glb.json, "nodes", index)
-  if (node === null || depth > maxDepth) {
+  if (node === null || depth > maxDepth || walked.has(node)) {
     return
   }
+  walked.add(node)
   const world = multiply(parent, nodeMatrix(node))
   parts.push(...partsOfMesh(glb, node.mesh, world))
   for (const child of listOf(node.children)) {
-    walk(glb, child, world, depth + 1, parts)
+    walk(glb, child, world, depth + 1, walked, parts)
   }
 }
 
@@ -257,8 +257,9 @@ export function parseGlb(bytes: ArrayBuffer): MeshScene | null {
     return null
   }
   const parts: MeshPart[] = []
+  const walked = new Set<Json>()
   for (const root of rootsOf(glb.json)) {
-    walk(glb, root, identity(), 0, parts)
+    walk(glb, root, identity(), 0, walked, parts)
   }
   return parts.length === 0 ? null : { parts, ...boundsOf(parts) }
 }

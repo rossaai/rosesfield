@@ -94,6 +94,47 @@ describe("parseGlb", () => {
     bin.set([0, 1, 9], 36)
     expect(parseGlb(glbOf(json, bin))).toBeNull()
   })
+
+  it("places a child node under its parent once", () => {
+    const scene = parseGlb(
+      triangleGlb({
+        nodes: [
+          { mesh: 0, translation: [10, 0, 0], children: [1] },
+          { mesh: 0, translation: [0, 5, 0] },
+        ],
+      })
+    )
+    expect(scene?.parts.map((part) => [...part.positions])).toEqual([
+      [10, 0, 0, 11, 0, 0, 10, 1, 0],
+      [10, 5, 0, 11, 5, 0, 10, 6, 0],
+    ])
+  })
+
+  it("opens a node that lists itself as its child once", () => {
+    const scene = parseGlb(
+      triangleGlb({
+        nodes: [{ mesh: 0, translation: [10, 0, 0], children: [0] }],
+      })
+    )
+    expect(scene?.parts.map((part) => [...part.positions])).toEqual([
+      [10, 0, 0, 11, 0, 0, 10, 1, 0],
+    ])
+  })
+
+  it("opens a child that its parent lists twice once", () => {
+    const scene = parseGlb(
+      triangleGlb({
+        nodes: [
+          { mesh: 0, translation: [10, 0, 0], children: [1, 1] },
+          { mesh: 0, translation: [0, 5, 0] },
+        ],
+      })
+    )
+    expect(scene?.parts.map((part) => [...part.positions])).toEqual([
+      [10, 0, 0, 11, 0, 0, 10, 1, 0],
+      [10, 5, 0, 11, 5, 0, 10, 6, 0],
+    ])
+  })
 })
 
 describe("normalsOf", () => {
