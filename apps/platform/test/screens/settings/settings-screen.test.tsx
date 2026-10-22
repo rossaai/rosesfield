@@ -1,8 +1,10 @@
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
-import { cleanup, screen, within } from "@testing-library/react"
+import { cleanup, fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { t } from "@/copy/t"
 import {
+  placeAfter,
+  SettingsModal,
   SettingsScreen,
   type SettingsSection,
 } from "@/screens/settings/settings-screen"
@@ -35,49 +37,125 @@ function rowsOf(root: ParentNode): HTMLElement[] {
   return [...root.querySelectorAll<HTMLElement>("[data-slot='settings-row']")]
 }
 
+function openModal(
+  section: SettingsSection,
+  onSection: (section: SettingsSection) => void = () => undefined
+): void {
+  vi.stubGlobal("__APP_VERSION__", "0.1.0")
+  renderAt("/", () => (
+    <TooltipProvider>
+      <SettingsModal
+        open={true}
+        place={{ section, arrival: "none" }}
+        onSection={onSection}
+        onOpenChange={() => undefined}
+      />
+    </TooltipProvider>
+  ))
+}
+
 describe("settings on a desktop", () => {
-  it("lists every section in a rail and marks the open one", async () => {
-    openSettings("about")
+  it("opens as a modal at the settings measure, not as a page", async () => {
+    openModal("engine")
+    const dialog = await screen.findByRole("dialog")
+    expect(dialog.getAttribute("data-slot")).toBe("settings-modal")
+    expect(dialog.className).toContain("var(--spacing-settings-modal-w)")
+    expect(dialog.className).toContain("var(--spacing-settings-modal-h)")
+    expect(document.querySelector("[data-slot='dialog-scrim']")).not.toBeNull()
+  })
+
+  it("lists every section in a rail with an ink thumb on the open one, and switches by press", async () => {
+    const onSection = vi.fn<(section: SettingsSection) => void>()
+    openModal("about", onSection)
     const rail = await screen.findByRole("navigation", {
       name: t("settings.title"),
     })
-    const links = within(rail).getAllByRole("link")
-    expect(links.map((link) => link.textContent)).toEqual(sectionNames)
-    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual([
+    const rows = within(rail).getAllByRole("button")
+    expect(rows.map((row) => row.textContent)).toEqual(sectionNames)
+    expect(rows.map((row) => row.getAttribute("aria-current"))).toEqual([
       null,
       null,
       null,
       null,
       "page",
     ])
+    const thumb = rail.querySelector<HTMLElement>(
+      "[data-slot='settings-rail-thumb']"
+    )
+    expect(thumb?.className.split(" ")).toEqual(
+      expect.arrayContaining(["bg-ink", "motion-travel"])
+    )
+    expect(thumb?.style.translate).toContain("4 *")
+    fireEvent.click(within(rail).getByRole("button", { name: sectionNames[1] }))
+    expect(onSection).toHaveBeenCalledWith("agent")
   })
 
-  it("draws each section as grouped 44 px rows with a lead glyph and no caption card", async () => {
-    openSettings("about")
+  it("draws a pane as 36 px rows in groups that each open with a heading", async () => {
+    openModal("about")
     const pane = await screen.findByRole("region", {
       name: t("settings.about.title"),
     })
-    const groups = pane.querySelectorAll("[data-slot='settings-group']")
+    const groups = [
+      ...pane.querySelectorAll<HTMLElement>("[data-slot='settings-group']"),
+    ]
     expect(groups.length).toBeGreaterThan(0)
+    for (const group of groups) {
+      const heading = group.querySelector("[data-slot='section-heading']")
+      expect(heading?.className.split(" ")).toEqual(
+        expect.arrayContaining(["h-tab", "text-label"])
+      )
+    }
     const rows = rowsOf(pane)
     expect(rows.length).toBeGreaterThan(2)
     for (const row of rows) {
-      expect(row.className.split(" ")).toContain("min-h-11")
-      expect(
-        row.querySelector("[data-slot='settings-row-lead'] svg")
-      ).not.toBeNull()
-      expect(row.closest("[data-slot='settings-group']")).not.toBeNull()
+      expect(row.className.split(" ")).toEqual(
+        expect.arrayContaining(["min-h-button", "py-0"])
+      )
+      expect(row.className.split(" ")).not.toContain("min-h-11")
     }
-    expect(pane.querySelector("[data-slot='card'], p")).toBeNull()
+    const titles = [...pane.querySelectorAll("h2")]
+    expect(titles).toHaveLength(1)
+    expect(titles[0]?.closest("header")?.className.split(" ")).toContain(
+      "sticky"
+    )
+    expect(titles[0]?.className.split(" ")).toContain("text-body")
     expect(within(pane).queryByText(t("settings.about.trademark"))).toBeNull()
-    expect(within(pane).queryByText(t("settings.about.welcome"))).toBeNull()
   })
 
-  it("opens the engine section when the address names none", async () => {
-    openSettings(undefined)
+  it("shows the scheme as one select row with its value and a menu that checks the choice", async () => {
+    openModal("appearance")
+    const pane = await screen.findByRole("region", {
+      name: t("settings.appearance.title"),
+    })
+    const row = within(pane).getByRole("button", {
+      name: new RegExp(t("settings.theme.label")),
+    })
     expect(
-      await screen.findByRole("region", { name: t("settings.engine.title") })
-    ).toBeTruthy()
+      row.querySelector("[data-slot='settings-row-value']")?.textContent
+    ).toBe(t("settings.theme.system"))
+    expect(row.lastElementChild?.tagName.toLowerCase()).toBe("svg")
+    expect(within(pane).queryAllByRole("radio")).toEqual([])
+    fireEvent.click(row)
+    const items = await screen.findAllByRole("menuitemradio")
+    expect(items.map((item) => item.textContent)).toEqual([
+      t("settings.theme.system"),
+      t("settings.theme.light"),
+      t("settings.theme.dark"),
+    ])
+    expect(items[0]?.getAttribute("aria-checked")).toBe("true")
+  })
+
+  it("brings a pane in from the side of the rail its selection moved toward", () => {
+    const start = { section: "agent" as const, arrival: "none" as const }
+    expect(placeAfter(start, "about")).toEqual({
+      section: "about",
+      arrival: "below",
+    })
+    expect(placeAfter(start, "engine")).toEqual({
+      section: "engine",
+      arrival: "above",
+    })
+    expect(placeAfter(start, "agent")).toBe(start)
   })
 })
 

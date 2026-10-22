@@ -72,6 +72,10 @@ export const settingsCopy = {
   "settings.about.trademark":
     "The Rosesfield name and logo are trademarks of ROSSA AI, LLC.",
   "settings.failed.title": "Settings did not load",
+  "settings.group.server": "Server",
+  "settings.group.help": "Help",
+  "settings.group.privacy": "Privacy and data",
+  "settings.group.general": "General",
   "unlock.title": "Enter the owner token",
   "unlock.body":
     "This server spends its owner's engine key, so it asks for a token first.",

@@ -1,11 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router"
-import type { ReactElement } from "react"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { type ReactElement, useEffect } from "react"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
+import { ExploreScreen } from "@/screens/explore/explore-screen"
 import {
   SettingsScreen,
   type SettingsSection,
   settingsSections,
 } from "@/screens/settings/settings-screen"
 import { readOneOf } from "@/shell/search"
+import { useOpenSettings } from "@/shell/shell-dialogs"
 
 type SettingsSearch = {
   section?: SettingsSection
@@ -19,6 +22,26 @@ export const Route = createFileRoute("/_shell/settings")({
   component: SettingsRoute,
 })
 
+function SettingsOverExplore({
+  section,
+}: {
+  section: SettingsSection | undefined
+}): ReactElement {
+  const openSettings = useOpenSettings()
+  const navigate = useNavigate()
+  useEffect(() => {
+    openSettings(section)
+    void navigate({ to: "/", replace: true })
+  }, [section, openSettings, navigate])
+  return <ExploreScreen />
+}
+
 function SettingsRoute(): ReactElement {
-  return <SettingsScreen section={Route.useSearch().section} />
+  const { section } = Route.useSearch()
+  const isRegular = useIsRegularWindow()
+  return isRegular ? (
+    <SettingsOverExplore section={section} />
+  ) : (
+    <SettingsScreen section={section} />
+  )
 }

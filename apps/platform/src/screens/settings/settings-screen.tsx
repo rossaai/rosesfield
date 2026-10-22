@@ -1,4 +1,9 @@
 import { IconButton } from "@rosesfield/ui/components/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@rosesfield/ui/components/dialog"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { useQuery } from "@tanstack/react-query"
@@ -15,7 +20,6 @@ import type { ReactElement } from "react"
 import { settingsQuery } from "@/api/queries"
 import { t } from "@/copy/t"
 import type { CopyKey } from "@/copy.en"
-import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { EnginePane } from "@/screens/settings/engine-pane"
 import {
   AboutPane,
@@ -85,55 +89,131 @@ function Pane({ section }: { section: SettingsSection }): ReactElement {
   )
 }
 
-function Rail({ current }: { current: SettingsSection }): ReactElement {
+export type PaneArrival = "none" | "below" | "above"
+
+export type SettingsPlace = { section: SettingsSection; arrival: PaneArrival }
+
+export function placeAfter(
+  was: SettingsPlace,
+  next: SettingsSection
+): SettingsPlace {
+  const from = settingsSections.indexOf(was.section)
+  const to = settingsSections.indexOf(next)
+  if (from === to) {
+    return was
+  }
+  return { section: next, arrival: to > from ? "below" : "above" }
+}
+
+const contentArrivals = {
+  none: "",
+  below: "starting:translate-y-s5",
+  above: "starting:-translate-y-s5",
+} satisfies Record<PaneArrival, string>
+
+const titleArrivals = {
+  none: "",
+  below: "starting:translate-y-s2_5",
+  above: "starting:-translate-y-s2_5",
+} satisfies Record<PaneArrival, string>
+
+function ModalRail({
+  current,
+  onSection,
+}: {
+  current: SettingsSection
+  onSection: (section: SettingsSection) => void
+}): ReactElement {
   const labelOf = useSectionLabel()
+  const index = Math.max(0, settingsSections.indexOf(current))
   return (
     <nav
       aria-label={t("settings.title")}
       data-slot="settings-rail"
-      className="sticky top-header flex w-60 shrink-0 flex-col gap-s1"
+      className="relative flex w-settings-rail shrink-0 flex-col gap-s1 bg-layer-well px-s3 py-s4"
     >
+      <span
+        aria-hidden="true"
+        data-slot="settings-rail-thumb"
+        className={cn(
+          "absolute inset-x-s3 top-s4 h-button rounded-full bg-ink",
+          motion.travel
+        )}
+        style={{
+          translate: `0 calc(${index} * (var(--spacing-button) + var(--spacing-s1)))`,
+        }}
+      />
       {settingsSections.map((section) => (
-        <Link
+        <button
           key={section}
-          to="/settings"
-          search={{ section }}
-          replace={true}
+          type="button"
           aria-current={section === current ? "page" : undefined}
           data-slot="settings-row"
+          onClick={() => onSection(section)}
           className={cn(
             settingsNavRowClass,
-            section === current ? "bg-(--tint)" : ""
+            "aria-[current=page]:bg-transparent aria-[current=page]:**:text-canvas"
           )}
         >
           <SettingsRowBody
             icon={specs[section].icon}
             label={labelOf(section)}
           />
-        </Link>
+        </button>
       ))}
     </nav>
   )
 }
 
-function WideSettings({ section }: { section: SettingsSection }): ReactElement {
+function ModalPane({ place }: { place: SettingsPlace }): ReactElement {
   const labelOf = useSectionLabel()
+  const { section, arrival } = place
   return (
-    <>
-      <ScreenHeader title={t("settings.title")} />
-      <div className="flex w-full items-start gap-s8 px-s5 pb-s12">
-        <Rail current={section} />
-        <section
-          aria-label={labelOf(section)}
-          className="flex min-w-0 max-w-(--container-regular) flex-1 flex-col gap-s4"
+    <section
+      aria-label={labelOf(section)}
+      data-slot="settings-modal-pane"
+      className="flex min-w-0 flex-1 flex-col overflow-y-auto"
+    >
+      <header className="sticky top-0 z-1 flex h-header shrink-0 items-center overflow-hidden bg-layer ps-[calc(var(--spacing-s4)+var(--spacing-s1)+var(--spacing-s4)+var(--spacing-glyph)+var(--spacing-s3))] pe-s12">
+        <DialogTitle
+          key={section}
+          className={cn("truncate", motion.travel, titleArrivals[arrival])}
         >
-          <h2 className="flex h-11 items-center text-title">
-            {labelOf(section)}
-          </h2>
-          <Pane section={section} />
-        </section>
+          {labelOf(section)}
+        </DialogTitle>
+      </header>
+      <div
+        key={section}
+        className={cn("px-s4 pb-s4", motion.travel, contentArrivals[arrival])}
+      >
+        <Pane section={section} />
       </div>
-    </>
+    </section>
+  )
+}
+
+export function SettingsModal({
+  open,
+  place,
+  onSection,
+  onOpenChange,
+}: {
+  open: boolean
+  place: SettingsPlace
+  onSection: (section: SettingsSection) => void
+  onOpenChange: (open: boolean) => void
+}): ReactElement {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        closeLabel={t("viewer.close")}
+        data-slot="settings-modal"
+        className="h-[min(var(--spacing-settings-modal-h),calc(100dvh-2*var(--spacing-s6)))] w-[min(var(--spacing-settings-modal-w),calc(100%-2*var(--spacing-s5)))] flex-row gap-0 overflow-hidden p-0"
+      >
+        <ModalRail current={place.section} onSection={onSection} />
+        <ModalPane place={place} />
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -202,9 +282,5 @@ export function SettingsScreen({
 }: {
   section: SettingsSection | undefined
 }): ReactElement {
-  const isRegular = useIsRegularWindow()
-  if (isRegular) {
-    return <WideSettings section={section ?? "engine"} />
-  }
   return section === undefined ? <PhoneList /> : <PhonePane section={section} />
 }
