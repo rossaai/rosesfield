@@ -46,6 +46,27 @@ function sideOf(graph: Graph, id: string, photo: number[], shortSide: number) {
   )
 }
 
+const renderPattern = /^a \+ 8 - \(a - 1\) % 8$/
+
+function renderedOf(graph: Graph, clipFrames: number): number {
+  if (!renderPattern.test(String(inputOf(graph, "716", "expression")))) {
+    throw new Error("Node 716 holds no 8 n + 1 render count")
+  }
+  return clipFrames + 8 - ((clipFrames - 1) % 8)
+}
+
+function keptFramesOf(graph: Graph, clipFrames: number): number[] {
+  const rendered = renderedOf(graph, clipFrames)
+  const first = Number(inputOf(graph, "724", "batch_index"))
+  const length =
+    JSON.stringify(inputOf(graph, "724", "length")) === '["713",2]'
+      ? clipFrames
+      : Number(inputOf(graph, "724", "length"))
+  const start = Math.min(first, rendered - 1)
+  const end = Math.min(start + length, rendered)
+  return Array.from({ length: end - start }, (_, index) => start + index)
+}
+
 function photoOf(aspect: string): number[] {
   const [across = 1, down = 1] = aspect.split(":").map(Number)
   return [across * 256, down * 256]
@@ -115,12 +136,25 @@ describe("the motion graph", () => {
     expect(inputOf(graph, "716", "values.a")).toEqual(["713", 2])
     expect(inputOf(graph, "713", "image")).toEqual(["706", 0])
     expect(inputOf(graph, "724", "image")).toEqual(["105", 0])
-    expect(inputOf(graph, "724", "batch_index")).toBe(0)
+    expect(inputOf(graph, "724", "batch_index")).toBe(1)
     expect(inputOf(graph, "724", "length")).toEqual(["713", 2])
     expect(inputOf(graph, "122", "images")).toEqual(["724", 0])
     expect(inputOf(graph, "122", "fps")).toEqual(["706", 2])
     expect(inputOf(graph, "109", "frame_rate")).toEqual(["706", 2])
     expect(inputOf(graph, "68", "format")).toBe("mp4")
+  })
+
+  it("starts the video on the first generated frame, after the photo frame, and keeps the clip's frame count, with the sound on and off", () => {
+    for (const sound of ["on", "off"] as const) {
+      const graph = boundGraph(sound)
+      expect(inputOf(graph, "198", "latent")).toEqual(["108", 0])
+      expect(inputOf(graph, "724", "image")).toEqual(["105", 0])
+      expect(inputOf(graph, "122", "images")).toEqual(["724", 0])
+      for (let clipFrames = 2; clipFrames <= 241; clipFrames += 1) {
+        const kept = keptFramesOf(graph, clipFrames)
+        expect([kept[0], kept.length]).toEqual([1, clipFrames])
+      }
+    }
   })
 
   it("gives an even latent width and height, the pixel side over 32, at every resolution and aspect, as the half-size union control IC-LoRA needs", () => {
