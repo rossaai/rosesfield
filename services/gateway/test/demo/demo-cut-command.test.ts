@@ -114,14 +114,11 @@ async function writeTake(
   await Bun.write(join(folder, "manifest.json"), JSON.stringify(body))
 }
 
-let folder = ""
-
-beforeAll(async () => {
-  folder = await mkdtemp(join(tmpdir(), "rosesfield-demo-take-"))
-  await mkdir(join(folder, "screens"))
-  await mkdir(join(folder, "media"))
+async function makeMedia(at: string): Promise<void> {
+  await mkdir(join(at, "screens"))
+  await mkdir(join(at, "media"))
   await Promise.all([
-    ffmpeg(folder, [
+    ffmpeg(at, [
       "-f",
       "lavfi",
       "-i",
@@ -134,7 +131,7 @@ beforeAll(async () => {
       "200k",
       "screens/scene.webm",
     ]),
-    ffmpeg(folder, [
+    ffmpeg(at, [
       "-f",
       "lavfi",
       "-i",
@@ -143,7 +140,7 @@ beforeAll(async () => {
       "1",
       "media/photo.png",
     ]),
-    ffmpeg(folder, [
+    ffmpeg(at, [
       "-f",
       "lavfi",
       "-i",
@@ -157,11 +154,46 @@ beforeAll(async () => {
       "media/result.mp4",
     ]),
   ])
-  await writeTake(folder, manifest())
+}
+
+const localUrl = "http://127.0.0.1:8788"
+const ownerTake = {
+  ...take,
+  model: "Flux 2 Pro",
+  screen: { file: "screens/scene.webm", windows: [{ start: 0.5, end: 3 }] },
+}
+
+function ownerManifest(
+  changes: Record<string, unknown> = {}
+): Record<string, unknown> {
+  return manifest({
+    url: localUrl,
+    mode: "owner",
+    scenes: scenes.filter((scene) => scene.id !== "key"),
+    shareUrl: `${localUrl}/share/Zq3Ftb8mVwq1J0aXrN4u2A`,
+    apps: [ownerTake],
+    ...changes,
+  })
+}
+
+let folder = ""
+let ownerFolder = ""
+
+beforeAll(async () => {
+  folder = await mkdtemp(join(tmpdir(), "rosesfield-demo-take-"))
+  ownerFolder = await mkdtemp(join(tmpdir(), "rosesfield-demo-owner-"))
+  await Promise.all([makeMedia(folder), makeMedia(ownerFolder)])
+  await Promise.all([
+    writeTake(folder, manifest()),
+    writeTake(ownerFolder, ownerManifest()),
+  ])
 }, 60_000)
 
 afterAll(async () => {
-  await rm(folder, { recursive: true, force: true })
+  await Promise.all([
+    rm(folder, { recursive: true, force: true }),
+    rm(ownerFolder, { recursive: true, force: true }),
+  ])
 })
 
 type Plan = {
@@ -274,4 +306,79 @@ describe("bun run demo:cut", () => {
     expect(scene.code).toBe(1)
     expect(scene.error).toContain("no proof scene")
   })
+})
+
+describe("bun run demo:cut --local", () => {
+  it("plans an owner take with no key scene, local names, the repository link and an app clip of the app's screen and result", async () => {
+    const done = await cut(ownerFolder, "--local", "--dry-run")
+
+    expect(done.error).toBe("")
+    const plan: Plan & { outputs: { file: string }[] } = JSON.parse(done.out)
+    const segments = plan.steps.filter((step) => /^\d\d-/.test(step.label))
+    expect(segments.map((step) => step.label.split("-")[1])).not.toContain(
+      "key"
+    )
+    expect(segments[1]?.label).toBe("01-areas-0")
+    expect(plan.seconds.video).toBeLessThan(120)
+    expect(plan.seconds.built).toBe(40)
+    expect(plan.outputs.map((output) => output.file)).toEqual([
+      "rosesfield-demo-local.mp4",
+      "rosesfield-clip-9x16-local.mp4",
+      "apps/effects-local.mp4",
+    ])
+    const vertical = plan.captions.find((one) =>
+      one.file.endsWith("vertical.srt")
+    )
+    expect(vertical?.text).toContain("https://github.com/rossaai/rosesfield")
+    expect(vertical?.text).not.toContain(localUrl)
+    const app = plan.steps.find((step) => step.label === "app-effects")
+    expect(app?.args).toContain("screens/scene.webm")
+    expect(app?.args.join(" ")).toContain("concat=n=2")
+    expect(
+      plan.captions.find((one) => one.file.endsWith("app-effects.srt"))?.text
+    ).toBe("Effects on Rosesfield, Flux 2 Pro, 37.9 credits")
+  })
+
+  it("refuses a public take and an owner take recorded off this machine", async () => {
+    const elsewhere = await mkdtemp(join(tmpdir(), "rosesfield-demo-take-"))
+    await writeTake(elsewhere, ownerManifest({ url: "https://rosesfield.com" }))
+
+    const [publicTake, offMachine, unflagged] = await Promise.all([
+      cut(folder, "--local", "--dry-run"),
+      cut(elsewhere, "--local", "--dry-run"),
+      cut(ownerFolder, "--dry-run"),
+    ])
+    await rm(elsewhere, { recursive: true })
+
+    expect(publicTake.code).toBe(1)
+    expect(publicTake.error).toContain(
+      "in public mode on https://rosesfield.com"
+    )
+    expect(offMachine.code).toBe(1)
+    expect(offMachine.error).toContain("--local cuts an owner take")
+    expect(unflagged.code).toBe(1)
+    expect(unflagged.error).toContain("with --local")
+  })
+
+  it("cuts the owner take into local files at 1080p, 1080 by 1920 and an app clip of 6 to 10 seconds", async () => {
+    const done = await cut(ownerFolder, "--local", "--draft")
+
+    expect(done.error).toBe("")
+    expect(done.code).toBe(0)
+    const [video, vertical, app] = await Promise.all([
+      probe(join(ownerFolder, "rosesfield-demo-local.mp4")),
+      probe(join(ownerFolder, "rosesfield-clip-9x16-local.mp4")),
+      probe(join(ownerFolder, "apps/effects-local.mp4")),
+    ])
+    expect(video).toMatchObject({ width: 1920, height: 1080 })
+    expect(video.seconds).toBeLessThan(120)
+    expect(vertical).toMatchObject({ width: 1080, height: 1920 })
+    expect(vertical.seconds).toBeLessThan(30)
+    expect(app).toMatchObject({ width: 1280, height: 720 })
+    expect(app.seconds).toBeGreaterThanOrEqual(6)
+    expect(app.seconds).toBeLessThanOrEqual(10)
+    expect(
+      await Bun.file(join(ownerFolder, "rosesfield-demo.mp4")).exists()
+    ).toBe(false)
+  }, 120_000)
 })

@@ -1,20 +1,26 @@
-import { siteUrl } from "./demo-args"
-import { clipCaption, linkCaption } from "./demo-captions"
+import { type AppClip, appClipOf, clipSize } from "./cut-apps"
 import {
-  type AppTake,
+  type Caption,
+  encode,
+  fixed,
+  looped,
+  type Step,
+  scaleToFit,
+  sideBySide,
+  subtitles,
+} from "./cut-filters"
+import { repositoryUrl, siteUrl } from "./demo-args"
+import { linkCaption } from "./demo-captions"
+import {
   builtScenes,
   type Manifest,
-  type Media,
   type Scene,
   type SceneId,
   type TourScene,
   tourScenes,
+  tourScenesOf,
   type Window,
 } from "./demo-manifest"
-
-export type Caption = { file: string; text: string; seconds: number }
-
-export type Step = { label: string; args: string[] }
 
 export type Output = {
   file: string
@@ -31,14 +37,18 @@ export type CutPlan = {
   seconds: { video: number; built: number; vertical: number }
 }
 
+export type CutKind = { isDraft: boolean; isLocal: boolean }
+
 type Piece = { start: number; seconds: number }
 
-type Size = { width: number; height: number }
+type Names = { video: string; vertical: string; suffix: string }
 
 export const wide = { width: 1920, height: 1080 }
 export const tall = { width: 1080, height: 1920 }
 export const videoFile = "rosesfield-demo.mp4"
 export const verticalFile = "rosesfield-clip-9x16.mp4"
+export const localVideoFile = "rosesfield-demo-local.mp4"
+export const localVerticalFile = "rosesfield-clip-9x16-local.mp4"
 
 const maxVideoSeconds = 120
 const maxVerticalSeconds = 30
@@ -47,27 +57,21 @@ const builtTotal = 40
 const builtLength = builtTotal / builtScenes.length
 const photoSeconds = 3
 const resultSeconds = 9
-const clipSize = { width: 1280, height: 720 }
-const clipSeconds = 6
-const canvas = "0x101010"
-const order: readonly SceneId[] = [...tourScenes, ...builtScenes]
+const loopbackHosts: readonly string[] = ["127.0.0.1", "[::1]", "localhost"]
 
 const tourCaps: Readonly<Record<TourScene, number>> = {
   key: 12,
   areas: 10,
   models: 10,
   run: 12,
-  share: 9,
+  share: 12,
   credits: 7,
 }
 
-const wideStyle =
-  "FontName=Helvetica Neue,FontSize=14,PrimaryColour=&H00FFFFFF,OutlineColour=&H99000000,BorderStyle=3,Outline=6,Shadow=0,MarginV=24"
-const tallStyle =
-  "FontName=Helvetica Neue,FontSize=6,PrimaryColour=&H00FFFFFF,OutlineColour=&H99000000,BorderStyle=3,Outline=6,Shadow=0,MarginV=60"
-
-function fixed(seconds: number): string {
-  return seconds.toFixed(3)
+function namesOf(isLocal: boolean): Names {
+  return isLocal
+    ? { video: localVideoFile, vertical: localVerticalFile, suffix: "-local" }
+    : { video: videoFile, vertical: verticalFile, suffix: "" }
 }
 
 function stampOf(seconds: number): string {
@@ -79,30 +83,6 @@ function stampOf(seconds: number): string {
 
 export function srtOf(caption: Caption): string {
   return `1\n${stampOf(0)} --> ${stampOf(caption.seconds)}\n${caption.text}\n`
-}
-
-function scaleToFit(size: Size): string {
-  return `scale=${size.width}:${size.height}:force_original_aspect_ratio=decrease,pad=${size.width}:${size.height}:(ow-iw)/2:(oh-ih)/2:color=${canvas},setsar=1,fps=30,format=yuv420p`
-}
-
-function subtitles(file: string, size: Size): string {
-  const style = size.height > size.width ? tallStyle : wideStyle
-  return `subtitles=${file}:force_style='${style}'`
-}
-
-function encode(isDraft: boolean): string[] {
-  return [
-    ...["-c:v", "libx264", "-preset", isDraft ? "ultrafast" : "medium"],
-    ...["-crf", isDraft ? "30" : "20", "-pix_fmt", "yuv420p", "-r", "30"],
-    ...["-an", "-movflags", "+faststart"],
-  ]
-}
-
-function looped(media: Media, seconds: number): string[] {
-  const length = ["-t", fixed(seconds), "-i", media.file]
-  return media.kind === "image"
-    ? ["-loop", "1", "-framerate", "30", ...length]
-    : ["-stream_loop", "-1", ...length]
 }
 
 export function piecesOf(windows: readonly Window[], cap: number): Piece[] {
@@ -131,6 +111,10 @@ function scenePieces(scene: Scene): Piece[] {
 }
 
 function orderedScenes(manifest: Manifest): Scene[] {
+  const order: readonly SceneId[] = [
+    ...tourScenesOf(manifest.mode),
+    ...builtScenes,
+  ]
   return order.map((id) => {
     const scene = manifest.scenes.find((one) => one.id === id)
     if (scene === undefined) {
@@ -165,30 +149,6 @@ function sceneSegments(
   })
 }
 
-function sideBySide(
-  take: AppTake,
-  input: Media,
-  options: {
-    size: Size
-    seconds: number
-    caption: Caption
-    out: string
-    isDraft: boolean
-  }
-): string[] {
-  const half = { width: options.size.width / 2, height: options.size.height }
-  return [
-    ...["-y", "-v", "error"],
-    ...looped(input, options.seconds),
-    ...looped(take.output, options.seconds),
-    "-filter_complex",
-    `[0:v]${scaleToFit(half)}[a];[1:v]${scaleToFit(half)}[b];[a][b]hstack=inputs=2,${subtitles(options.caption.file, options.size)}[v]`,
-    ...["-map", "[v]", "-t", fixed(options.seconds)],
-    ...encode(options.isDraft),
-    options.out,
-  ]
-}
-
 function hookSegment(manifest: Manifest, isDraft: boolean): Segment {
   const { take, caption: text } = manifest.hook
   if (take.input === null) {
@@ -212,7 +172,8 @@ function hookSegment(manifest: Manifest, isDraft: boolean): Segment {
 
 function verticalStep(
   manifest: Manifest,
-  isDraft: boolean
+  kind: CutKind,
+  out: string
 ): { step: Step; caption: Caption } {
   const { take } = manifest.hook
   if (manifest.shareUrl === null || take.input === null) {
@@ -223,7 +184,7 @@ function verticalStep(
   const seconds = photoSeconds + resultSeconds
   const caption = {
     file: "cut/captions/vertical.srt",
-    text: linkCaption(manifest.shareUrl),
+    text: linkCaption(kind.isLocal ? repositoryUrl : manifest.shareUrl),
     seconds,
   }
   const args = [
@@ -233,47 +194,15 @@ function verticalStep(
     "-filter_complex",
     `[0:v]${scaleToFit(tall)}[a];[1:v]${scaleToFit(tall)}[b];[a][b]concat=n=2:v=1:a=0,${subtitles(caption.file, tall)}[v]`,
     ...["-map", "[v]", "-t", fixed(seconds)],
-    ...encode(isDraft),
-    verticalFile,
+    ...encode(kind.isDraft),
+    out,
   ]
   return { step: { label: "vertical", args }, caption }
 }
 
-function appStep(
-  take: AppTake,
-  isDraft: boolean
-): { step: Step; caption: Caption; out: string } {
-  const out = `apps/${take.appId}.mp4`
-  const caption = {
-    file: `cut/captions/app-${take.appId}.srt`,
-    text: clipCaption(take.appName, take.credits),
-    seconds: clipSeconds,
-  }
-  const options = {
-    size: clipSize,
-    seconds: clipSeconds,
-    caption,
-    out,
-    isDraft,
-  }
-  const args =
-    take.input === null
-      ? [
-          ...["-y", "-v", "error"],
-          ...looped(take.output, clipSeconds),
-          ...[
-            "-vf",
-            `${scaleToFit(clipSize)},${subtitles(caption.file, clipSize)}`,
-          ],
-          ...["-t", fixed(clipSeconds)],
-          ...encode(isDraft),
-          out,
-        ]
-      : sideBySide(take, take.input, options)
-  return { step: { label: `app-${take.appId}`, args }, caption, out }
-}
-
-export function cutPlan(manifest: Manifest, isDraft: boolean): CutPlan {
+export function cutPlan(manifest: Manifest, kind: CutKind): CutPlan {
+  const { isDraft } = kind
+  const names = namesOf(kind.isLocal)
   const scenes = orderedScenes(manifest)
   const segments = [
     hookSegment(manifest, isDraft),
@@ -281,8 +210,10 @@ export function cutPlan(manifest: Manifest, isDraft: boolean): CutPlan {
       sceneSegments(scene, index + 1, isDraft)
     ),
   ]
-  const vertical = verticalStep(manifest, isDraft)
-  const apps = manifest.apps.map((take) => appStep(take, isDraft))
+  const vertical = verticalStep(manifest, kind, names.vertical)
+  const apps: AppClip[] = manifest.apps.map((take) =>
+    appClipOf(take, { isDraft, suffix: names.suffix })
+  )
   const video = segments.reduce((sum, one) => sum + one.seconds, 0)
   const built = segments
     .filter((one) => builtScenes.some((id) => one.label.includes(`-${id}-`)))
@@ -295,7 +226,7 @@ export function cutPlan(manifest: Manifest, isDraft: boolean): CutPlan {
     label: "video",
     args: [
       ...["-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", list.file],
-      ...["-c", "copy", "-movflags", "+faststart", videoFile],
+      ...["-c", "copy", "-movflags", "+faststart", names.video],
     ],
   }
   return {
@@ -312,22 +243,38 @@ export function cutPlan(manifest: Manifest, isDraft: boolean): CutPlan {
       ...apps.map((one) => one.step),
     ],
     outputs: [
-      { file: videoFile, ...wide, maxSeconds: maxVideoSeconds },
-      { file: verticalFile, ...tall, maxSeconds: maxVerticalSeconds },
+      { file: names.video, ...wide, maxSeconds: maxVideoSeconds },
+      { file: names.vertical, ...tall, maxSeconds: maxVerticalSeconds },
       ...apps.map((one) => ({
         file: one.out,
         ...clipSize,
-        maxSeconds: clipSeconds + 1,
+        maxSeconds: one.seconds + 1,
       })),
     ],
     seconds: { video, built, vertical: photoSeconds + resultSeconds },
   }
 }
 
-export function checkTake(manifest: Manifest, isDraft: boolean): void {
-  if (!isDraft && manifest.url !== siteUrl) {
+function isLoopback(address: string): boolean {
+  try {
+    return loopbackHosts.includes(new URL(address).hostname)
+  } catch {
+    return false
+  }
+}
+
+export function checkTake(manifest: Manifest, kind: CutKind): void {
+  if (kind.isLocal) {
+    if (manifest.mode !== "owner" || !isLoopback(manifest.url)) {
+      throw new Error(
+        `--local cuts an owner take recorded on this machine, and this take was recorded in ${manifest.mode} mode on ${manifest.url}. Record one with bun run demo:capture --url http://127.0.0.1:<port> --owner.`
+      )
+    }
+    return
+  }
+  if (!kind.isDraft && manifest.url !== siteUrl) {
     throw new Error(
-      `The take was recorded on ${manifest.url}. The video shows real runs on ${siteUrl}, so record the take there, or cut this one with --draft to check it.`
+      `The take was recorded on ${manifest.url}. The video shows real runs on ${siteUrl}, so record the take there, cut an owner take of this machine with --local, or cut this one with --draft to check it.`
     )
   }
 }
