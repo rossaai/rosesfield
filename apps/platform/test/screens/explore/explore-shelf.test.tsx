@@ -1,14 +1,12 @@
 import { type Run, run } from "@rosesfield/contract"
 import { cleanup, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
+import { catalogApps } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import type { ExploreRow } from "@/screens/explore/explore-rows"
-import {
-  AppsRow,
-  appSkeletonCount,
-  ExploreRowView,
-} from "@/screens/explore/explore-sections"
+import { AppsRow, ExploreRowView } from "@/screens/explore/explore-sections"
 import type { VisualEntry } from "@/screens/explore/explore-tile"
+import { navGroups } from "@/shell/nav-rows"
 import { renderAt } from "../../shell/shell-router"
 
 afterEach(cleanup)
@@ -91,57 +89,26 @@ describe("Explore's row headers", () => {
   })
 })
 
-const appEntries: VisualEntry[] = [
-  "image",
-  "relight",
-  "background-removal",
-].map((appId, index) => ({
-  key: `app-${appId}`,
-  run: runOf(`2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5f0${index}`, appId),
-  kind: "image",
-  aspect: { width: 16, height: 9 },
-  source: { kind: "showcase", src: `/m/${appId}.webp` },
-}))
-
 describe("Explore's apps row", () => {
-  it("holds skeleton tiles while the results load, and nothing once none came", async () => {
-    renderAt("/", () => <AppsRow entries={[]} isLoading={true} />)
-    const apps = await screen.findByRole("region", {
-      name: t("explore.apps.label"),
-    })
-    expect(apps.querySelectorAll("[data-slot='skeleton-group']")).toHaveLength(
-      appSkeletonCount
-    )
-    cleanup()
-    renderAt("/", () => (
-      <>
-        <span>Explore</span>
-        <AppsRow entries={[]} isLoading={false} />
-      </>
-    ))
-    await screen.findByText("Explore")
-    expect(
-      screen.queryByRole("region", { name: t("explore.apps.label") })
-    ).toBeNull()
-  })
-
-  it("shows each app once as its media and its name alone, on the kernel row with its circles", async () => {
-    renderAt("/", () => <AppsRow entries={appEntries} isLoading={false} />)
+  it("shows every app of the menu as its card with its name and its line, with View all in its header", async () => {
+    renderAt("/", () => <AppsRow />)
     const apps = await screen.findByRole("region", {
       name: t("explore.apps.label"),
     })
     expect(apps.getAttribute("data-layout")).toBe("row")
-    const tiles = [...apps.querySelectorAll("[data-slot='explore-app']")]
-    expect(tiles.map((tile) => tile.getAttribute("href"))).toEqual([
-      "/apps/image",
-      "/apps/relight",
-      "/apps/background-removal",
-    ])
-    for (const tile of tiles) {
-      expect(tile.querySelectorAll("span:not(:has(*))").length).toBe(1)
-      expect(tile.querySelector("img")).not.toBeNull()
+    const cards = [...apps.querySelectorAll("[data-slot='app-card']")]
+    const menuApps = navGroups(catalogApps).areas.flatMap((area) => area.apps)
+    expect(cards.map((card) => card.getAttribute("href"))).toEqual(
+      menuApps.map((app) => `/apps/${app.id}`)
+    )
+    for (const card of cards) {
+      expect(card.querySelector("[data-slot='app-card-line']")).not.toBeNull()
     }
-    expect(apps.querySelector("[data-slot='media-feed-next']")).not.toBeNull()
-    expect(document.querySelector("[data-slot='app-tile-grid']")).toBeNull()
+    const actions = apps.querySelector("[data-slot='section-heading-actions']")
+    expect(
+      [...(actions?.querySelectorAll("a") ?? [])].map(
+        (link) => link.textContent
+      )
+    ).toEqual([t("explore.showcase.viewAll")])
   })
 })

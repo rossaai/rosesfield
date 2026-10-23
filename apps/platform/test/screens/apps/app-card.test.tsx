@@ -44,7 +44,7 @@ describe("the Apps page card's media", () => {
     )
   })
 
-  it("draws an app with no example as what it takes and what it makes, with no invented picture", async () => {
+  it("draws an app with no example as one glyph of what it makes, with no invented picture and no arrow", async () => {
     expect(showcaseOf("lipsync")).toEqual([])
     expect(await mediaOfCard("lipsync")).toBeNull()
     const card = await screen.findByRole("link")
@@ -54,7 +54,7 @@ describe("the Apps page card's media", () => {
       [...(flow?.querySelectorAll(`[data-made='${made}']`) ?? [])].map((disc) =>
         disc.getAttribute("data-kind")
       )
-    expect(kinds("no")).toEqual(expect.arrayContaining(["image", "audio"]))
+    expect(kinds("no")).toEqual([])
     expect(kinds("yes")).toEqual(["video"])
     expect(card.querySelector("[data-slot='app-card-play']")).toBeNull()
   })

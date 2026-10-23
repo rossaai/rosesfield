@@ -55,6 +55,35 @@ function Portraits({
   })
 }
 
+function PhonePortraits({
+  portraits,
+}: {
+  portraits: HeroPortraits
+}): ReactElement {
+  return (
+    <span
+      aria-hidden="true"
+      data-slot="hero-phone-portraits"
+      className="flex w-full @regular:hidden"
+    >
+      {sides.flatMap((side) => {
+        const src = portraits[side]
+        return src === undefined
+          ? []
+          : [
+              <img
+                key={side}
+                src={src}
+                alt=""
+                data-side={side}
+                className="aspect-square min-w-0 flex-1 object-cover"
+              />,
+            ]
+      })}
+    </span>
+  )
+}
+
 function Tag({ tag }: { tag: HeroTag }): ReactElement {
   return (
     <span
@@ -78,7 +107,7 @@ function HeroBanner(props: HeroBannerProps): ReactElement {
       data-slot="hero"
       href={props.href}
       className={cn(
-        "group/hero @container/hero relative mt-s4 flex w-full overflow-hidden rounded-vessel bg-surface text-ink no-underline [--hero-portrait:min(--spacing(75),calc((100cqw_-_var(--spacing)*146)/2))] @regular:mt-s6 @regular:min-h-100",
+        "group/hero @container/hero relative mt-s4 flex w-full flex-col overflow-hidden @regular:flex-row rounded-vessel bg-surface text-ink no-underline [--hero-portrait:min(--spacing(75),calc((100cqw_-_var(--spacing)*146)/2))] @regular:mt-s6 @regular:min-h-100",
         interaction.ring
       )}
     >
@@ -92,6 +121,9 @@ function HeroBanner(props: HeroBannerProps): ReactElement {
       )}
       {props.portraits === undefined ? null : (
         <Portraits portraits={props.portraits} />
+      )}
+      {props.portraits === undefined ? null : (
+        <PhonePortraits portraits={props.portraits} />
       )}
       <span className="relative mx-auto flex w-full flex-col items-center justify-center px-s5 py-s8 text-center @regular:w-[calc(100cqw-2*var(--hero-portrait))] @regular:px-s6 @regular:py-s12">
         {props.tag === undefined ? null : <Tag tag={props.tag} />}

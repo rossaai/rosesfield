@@ -1,29 +1,25 @@
 import type { AppListing } from "@rosesfield/contract"
 import { HeroBanner, type HeroPortraits } from "@rosesfield/ui/components/hero"
 import { MediaFeed, ViewAll } from "@rosesfield/ui/components/media-feed"
-import { MediaTile } from "@rosesfield/ui/components/media-tile"
 import { SectionHeader } from "@rosesfield/ui/components/section-header"
-import { Skeleton, SkeletonGroup } from "@rosesfield/ui/components/skeleton"
 import { useInView } from "@rosesfield/ui/hooks/use-in-view"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { useRouter } from "@tanstack/react-router"
 import { type ReactElement, type ReactNode, useRef, useState } from "react"
 import { appLine, appName } from "@/catalog/app-facts"
+import { catalogApps } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
-import {
-  type ExploreRow,
-  type PresetEntry,
-  type PromoEntry,
-  promoEntries,
-} from "@/screens/explore/explore-rows"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
+import { AppCard } from "@/screens/apps/app-card"
+import type { ExploreRow, PresetEntry } from "@/screens/explore/explore-rows"
 import {
   ExplorePresetTile,
   type OpenResult,
   ResultCard,
-  useEntrySrc,
   type VisualEntry,
 } from "@/screens/explore/explore-tile"
+import { navGroups } from "@/shell/nav-rows"
 import {
   exampleGroupOf,
   isFeedExample,
@@ -92,52 +88,9 @@ export function ExploreBanner(): ReactElement {
   )
 }
 
-function AppMedia({ promo }: { promo: PromoEntry }): ReactElement {
-  const src = useEntrySrc(promo.entry)
-  const name = appName(promo.app)
-  return (
-    <a
-      href={useAppHref()(promo.app.id)}
-      data-slot="explore-app"
-      aria-label={t("explore.promo.open", { app: name })}
-      className={cn(
-        "group/app flex min-w-0 flex-col gap-s3 rounded-cell text-ink no-underline",
-        motion.press
-      )}
-    >
-      <span className="relative block aspect-video w-full overflow-hidden rounded-cell bg-(--well) *:size-full *:object-cover">
-        {src === null ? null : (
-          <MediaTile kind={promo.entry.kind} src={src} alt={name} />
-        )}
-      </span>
-      <span className="truncate font-medium text-body">{name}</span>
-    </a>
-  )
-}
-
-export const appSkeletonCount = 4
-
-function AppMediaSkeleton(): ReactElement {
-  return (
-    <SkeletonGroup className="flex flex-col gap-s3">
-      <Skeleton className="aspect-video w-full" />
-      <Skeleton shape="line" text="body" measure="short" />
-    </SkeletonGroup>
-  )
-}
-
-export function AppsRow({
-  entries,
-  isLoading,
-}: {
-  entries: readonly VisualEntry[]
-  isLoading: boolean
-}): ReactNode {
+export function AppsRow(): ReactElement {
   const router = useRouter()
-  const promos = promoEntries(entries)
-  if (promos.length === 0 && !isLoading) {
-    return null
-  }
+  const apps = navGroups(catalogApps).areas.flatMap((area) => area.apps)
   return (
     <Reveal>
       <MediaFeed
@@ -148,17 +101,17 @@ export function AppsRow({
           <SectionHeader
             title={t("explore.apps.label")}
             href={router.buildLocation({ to: "/apps" }).href}
+            actions={
+              <ViewAll href={router.buildLocation({ to: "/apps" }).href}>
+                {t("explore.showcase.viewAll")}
+              </ViewAll>
+            }
           />
         }
       >
-        {promos.length === 0
-          ? Array.from({ length: appSkeletonCount }, (_, index) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: a skeleton's place is its identity
-              <AppMediaSkeleton key={index} />
-            ))
-          : promos.map((promo) => (
-              <AppMedia key={promo.app.id} promo={promo} />
-            ))}
+        {apps.map((app) => (
+          <AppCard key={app.id} app={app} newest={null} working={0} />
+        ))}
       </MediaFeed>
     </Reveal>
   )
@@ -335,7 +288,7 @@ export function ShowcaseFeed({
   entries,
   ...actions
 }: ResultActions & { entries: readonly VisualEntry[] }): ReactNode {
-  const router = useRouter()
+  const isRegular = useIsRegularWindow()
   const examples = feedExamples(entries)
   if (examples.length === 0) {
     return null
@@ -344,17 +297,8 @@ export function ShowcaseFeed({
     <Reveal>
       <MediaFeed
         label={t("explore.showcase.title")}
-        isClipped={true}
-        header={
-          <SectionHeader
-            title={t("explore.showcase.title")}
-            actions={
-              <ViewAll href={router.buildLocation({ to: "/apps" }).href}>
-                {t("explore.showcase.viewAll")}
-              </ViewAll>
-            }
-          />
-        }
+        isClipped={isRegular}
+        header={<SectionHeader title={t("explore.showcase.title")} />}
       >
         {examples.map((entry) => (
           <ResultCard

@@ -152,7 +152,7 @@ export function ExploreScreen(): ReactElement {
     <div ref={root} className="flex min-h-full flex-col px-4 pb-12">
       <ExploreBanner />
       <div className="mt-6 flex flex-col gap-12 @regular:mt-10 @regular:gap-35">
-        <AppsRow entries={entries} isLoading={results.state === "loading"} />
+        <AppsRow />
         <ShowcaseFeed entries={showcase} onOpen={viewer.show} onMore={onMore} />
         <ExploreFeeds
           results={results}

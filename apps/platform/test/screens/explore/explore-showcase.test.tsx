@@ -53,7 +53,7 @@ describe("Explore's showcase", () => {
     expect(feed.querySelector("[data-slot=media-feed-fade]")).not.toBeNull()
   })
 
-  it("names the app and the model as a pill with Recreate on hover, and keeps one View all in the header", async () => {
+  it("names the app and the model as a pill with Recreate on hover, and leaves View all to the apps row", async () => {
     const feed = await renderShowcase()
     const pills = [...feed.querySelectorAll("[data-slot=media-badge]")].map(
       (pill) => pill.textContent
@@ -63,12 +63,9 @@ describe("Explore's showcase", () => {
     expect(
       screen.getAllByRole("button", { name: t("explore.tile.recreateName") })
     ).toHaveLength(stills.length)
-    const actions = feed.querySelector("[data-slot='section-heading-actions']")
     expect(
-      [...(actions?.querySelectorAll("a") ?? [])].map(
-        (link) => link.textContent
-      )
-    ).toEqual([t("explore.showcase.viewAll")])
+      feed.querySelector("[data-slot='section-heading-actions'] a")
+    ).toBeNull()
   })
 
   it("shows nothing when no example is bundled", async () => {

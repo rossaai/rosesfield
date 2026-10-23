@@ -1,5 +1,5 @@
 import type { Run } from "@rosesfield/contract"
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t } from "@/copy/t"
 import { BarChips, BarFrame, type BarPlace } from "@/screens/app/bar-frame"
@@ -200,13 +200,11 @@ describe("the bar's chips", () => {
     expect(document.querySelector("[data-slot=bar-settings]")).toBeNull()
   })
 
-  it("fold into one Settings chip on a phone, so no chip is cut at the row's edge", async () => {
+  it("stand in the same row on a phone, with no Settings chip that hides them", () => {
     asPhone()
     renderChips()
-    expect(screen.queryByRole("button", { name: "first chip" })).toBeNull()
-    fireEvent.click(screen.getByRole("button", { name: t("bar.settings") }))
-    expect(
-      await screen.findByRole("button", { name: "second chip" })
-    ).toBeDefined()
+    expect(screen.getByRole("button", { name: "first chip" })).toBeDefined()
+    expect(screen.getByRole("button", { name: "second chip" })).toBeDefined()
+    expect(document.querySelector("[data-slot=bar-settings]")).toBeNull()
   })
 })

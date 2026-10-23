@@ -238,14 +238,10 @@ describe("How it works, one composition for every app", () => {
     )
   })
 
-  it("shows what an app with no example takes, its default model and what it makes, with no picture", async () => {
+  it("shows one glyph for what an app with no example takes, its default model, and one glyph for what it makes, with no picture", async () => {
     renderHow(() => <HowItWorks app={motion} />, [])
     const steps = await stepsShown(3)
-    expect(
-      [...(steps[0]?.querySelectorAll("[data-made=no]") ?? [])].map((disc) =>
-        disc.getAttribute("data-kind")
-      )
-    ).toContain("image")
+    expect(steps[0]?.querySelectorAll("[data-made=no]")).toHaveLength(1)
     expect(steps[1]?.querySelector("[data-slot=how-model]")?.textContent).toBe(
       "LTX 2.3 control"
     )

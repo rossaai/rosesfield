@@ -1,7 +1,6 @@
 import type { AppListing } from "@rosesfield/contract"
 import { cn } from "@rosesfield/ui/lib/cn"
 import {
-  ArrowRightIcon,
   BoxIcon,
   FileAudioIcon,
   FileTextIcon,
@@ -43,8 +42,8 @@ export function KindDisc({
       data-kind={kind}
       data-made={isMade ? "yes" : "no"}
       className={cn(
-        "flex size-10 items-center justify-center rounded-full [&_svg]:glyph",
-        isMade ? "bg-ink text-canvas" : "bg-(--ground) text-ink-muted"
+        "flex [&_svg]:size-icon [&_svg]:stroke-(length:--stroke-icon)",
+        isMade ? "text-ink" : "text-ink-muted"
       )}
     >
       <Glyph />
@@ -53,35 +52,23 @@ export function KindDisc({
 }
 
 export function TakenDiscs({ app }: { app: AppListing }): ReactElement {
+  const [kind] = takenKindsOf(app)
   return (
-    <span className="flex -space-x-2">
-      {takenKindsOf(app).map((kind) => (
-        <KindDisc key={kind} kind={kind} isMade={false} />
-      ))}
+    <span className="flex">
+      {kind === undefined ? null : <KindDisc kind={kind} isMade={false} />}
     </span>
   )
 }
 
 export function MadeDiscs({ app }: { app: AppListing }): ReactElement {
+  const [kind] = outputKindsOf(app)
   return (
-    <span className="flex -space-x-2">
-      {outputKindsOf(app).map((kind) => (
-        <KindDisc key={kind} kind={kind} isMade={true} />
-      ))}
+    <span className="flex">
+      {kind === undefined ? null : <KindDisc kind={kind} isMade={true} />}
     </span>
   )
 }
 
 export function KindFlow({ app }: { app: AppListing }): ReactElement {
-  return (
-    <>
-      {takenKindsOf(app).length === 0 ? null : (
-        <>
-          <TakenDiscs app={app} />
-          <ArrowRightIcon className="glyph-small" />
-        </>
-      )}
-      <MadeDiscs app={app} />
-    </>
-  )
+  return <MadeDiscs app={app} />
 }
