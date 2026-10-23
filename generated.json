@@ -191,6 +191,10 @@
       "sha256": "d069587568ad740968707729ebf846fa675830a9e28968ee8baea7d0525a8080"
     },
     {
+      "path": "packages/catalog/src/music/copy.en.ts",
+      "sha256": "a6147edd75a808cbf9168f98aef36548b1ce924eea047bcbe243b5356cdc578f"
+    },
+    {
       "path": "packages/catalog/src/relight/copy.en.ts",
       "sha256": "63bbcbc3022979a5c7ecfeca4778c49eeec39528eeeac21ae3eda2ac23b45d70"
     },
@@ -201,6 +205,14 @@
     {
       "path": "packages/catalog/src/shot/copy.en.ts",
       "sha256": "ee7758e31fd06af67c02f6787c54abf74107dae41a117ccb1117214175b025f5"
+    },
+    {
+      "path": "packages/catalog/src/sound-effects/copy.en.ts",
+      "sha256": "b513ccfcc7456466ec9e0f75766ed138fe15080715ff013aad68883cdb35ed95"
+    },
+    {
+      "path": "packages/catalog/src/speech/copy.en.ts",
+      "sha256": "ca7a7a39dfe315b1095038dff730f0564cf90a0462a9da4dd62c362cf9f303f5"
     },
     {
       "path": "packages/catalog/src/storyboard/copy.en.ts",
@@ -225,6 +237,14 @@
     {
       "path": "packages/catalog/src/video/copy.en.ts",
       "sha256": "31394b4c79603c07f29717c28ed61bd9ddd4feb3d9808a33b56df9f2d7ac5a0d"
+    },
+    {
+      "path": "packages/catalog/src/voice-change/copy.en.ts",
+      "sha256": "768b198e8e2524305942b3a154eb192e6685192a42df5573135e9c97b26a48bc"
+    },
+    {
+      "path": "packages/catalog/src/voice-clone/copy.en.ts",
+      "sha256": "265870780dfa7e12c1662788ac06b0ac9319502653a995540b48035e05ee5952"
     },
     {
       "path": "packages/catalog/src/voice/copy.en.ts",

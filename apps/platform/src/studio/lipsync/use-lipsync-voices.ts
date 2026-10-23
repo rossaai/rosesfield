@@ -15,7 +15,7 @@ import type { AppForm } from "@/screens/app/use-app-form"
 import { speechTask } from "@/studio/lipsync/lipsync-tabs"
 import { speechAskOf } from "@/studio/lipsync/lipsync-words"
 
-export const voiceApps: readonly string[] = ["audio", "voice"]
+export const voiceApps: readonly string[] = ["speech", "voice-clone", "audio"]
 
 const priceDelayMs = 300
 

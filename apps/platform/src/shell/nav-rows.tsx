@@ -1,7 +1,9 @@
 import type { AppListing } from "@rosesfield/contract"
 import {
   AudioLinesIcon,
+  AudioWaveformIcon,
   BotIcon,
+  BoxIcon,
   ClapperboardIcon,
   CompassIcon,
   EraserIcon,
@@ -14,7 +16,11 @@ import {
   ImageUpscaleIcon,
   LayersIcon,
   MegaphoneIcon,
+  MessageSquareTextIcon,
+  MicIcon,
+  MusicIcon,
   PersonStandingIcon,
+  RepeatIcon,
   ReplaceIcon,
   Rotate3dIcon,
   SettingsIcon,
@@ -93,6 +99,12 @@ const appGlyphs: Readonly<Record<string, Glyph>> = {
   "try-on": ShirtIcon,
   upscale: ImageUpscaleIcon,
   "video-edit": FilmIcon,
+  speech: MessageSquareTextIcon,
+  "voice-clone": MicIcon,
+  "voice-change": RepeatIcon,
+  music: MusicIcon,
+  "sound-effects": AudioWaveformIcon,
+  "three-d": BoxIcon,
 }
 
 const glyph = (Icon: Glyph): ReactElement => <Icon aria-hidden="true" />

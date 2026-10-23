@@ -1,9 +1,11 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectBinding, taskBinding } from "@rosesfield/generation/bindings"
 import {
+  type AudioMode,
   audioTasks,
   chatterboxModel,
   graphTasks,
+  modeGraphs,
   musicModel,
   soundModel,
   voiceChangeModel,
@@ -49,18 +51,38 @@ export const soundBinding: EngineBinding = workflowBinding({
   outputsPerJob: "one",
 })
 
+const audioFallback: EngineBinding = selectBinding({
+  input: "model",
+  options: {
+    [chatterboxModel]: voiceBinding,
+    [voiceChangeModel]: voiceChangeBinding,
+    [musicModel]: musicBinding,
+    [soundModel]: soundBinding,
+  },
+})
+
 export const audioEngine: EngineBinding = taskBinding({
   tasks: audioTasks,
   input: "model",
   default: chatterboxModel,
   graphTasks,
-  fallback: selectBinding({
-    input: "model",
-    options: {
-      [chatterboxModel]: voiceBinding,
-      [voiceChangeModel]: voiceChangeBinding,
-      [musicModel]: musicBinding,
-      [soundModel]: soundBinding,
-    },
-  }),
+  fallback: audioFallback,
 })
+
+const modeTasks: Readonly<Record<AudioMode, readonly string[]>> = {
+  speech: ["speech"],
+  clone: [],
+  change: [],
+  music: [],
+  sound: ["sound"],
+}
+
+export function audioEngineOf(mode: AudioMode): EngineBinding {
+  return taskBinding({
+    tasks: modeTasks[mode],
+    input: "model",
+    default: modeGraphs[mode],
+    graphTasks,
+    fallback: audioFallback,
+  })
+}

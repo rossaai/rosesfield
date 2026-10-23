@@ -21,7 +21,7 @@ export function AudioTabs({
 }): ReactElement | null {
   const tabs = tabsOf(state.app)
   const input = modeInputOf(state.app)
-  if (input === null || tabs.length === 0) {
+  if (input === null || tabs.length < 2) {
     return null
   }
   return (

@@ -7,7 +7,7 @@ import {
   soundModel,
   voiceChangeModel,
 } from "#audio/audio-models"
-import { audioEngine } from "#audio/comfy/audio-engine"
+import { audioEngine, audioEngineOf } from "#audio/comfy/audio-engine"
 import { voiceLanguageValues } from "#audio/comfy/chatterbox-binding"
 import { type AppInput, defineApp } from "#define-app"
 
@@ -142,3 +142,81 @@ export const app: AppInput = defineApp({
   engine: audioEngine,
   limits: { timeoutSeconds: runSeconds, maxRetries: 0 },
 })
+
+type InputEntry = AppInput["inputs"][number]
+
+type Condition = { input: string; is?: readonly string[]; state?: string }
+
+function holdsFor(when: readonly Condition[], mode: AudioMode): boolean {
+  return when.every(
+    (condition) =>
+      condition.input !== "mode" ||
+      condition.is === undefined ||
+      condition.is.includes(mode)
+  )
+}
+
+function narrowed<T extends readonly Condition[]>(when: T, mode: AudioMode): T {
+  return when.map((condition) =>
+    condition.input === "mode" && condition.is !== undefined
+      ? { ...condition, is: [mode] }
+      : condition
+  ) as unknown as T
+}
+
+function forMode(input: InputEntry, mode: AudioMode): InputEntry | null {
+  if ("when" in input && input.when !== undefined) {
+    if (!holdsFor(input.when, mode)) {
+      return null
+    }
+  }
+  const one = { ...input } as InputEntry & {
+    when?: readonly Condition[]
+    bounds?: readonly { when: readonly Condition[] }[]
+  }
+  if (one.when !== undefined) {
+    one.when = narrowed(one.when, mode)
+  }
+  if (one.bounds !== undefined) {
+    one.bounds = one.bounds
+      .filter((bound) => holdsFor(bound.when, mode))
+      .map((bound) => ({ ...bound, when: narrowed(bound.when, mode) }))
+  }
+  if (
+    one.type === "choice" &&
+    one.bounds !== undefined &&
+    one.bounds.length > 0
+  ) {
+    const allowed = new Set(
+      one.bounds.flatMap((bound) =>
+        "values" in bound && Array.isArray(bound.values) ? bound.values : []
+      )
+    )
+    const options = one.options.filter((option) => allowed.has(option.value))
+    if (options.length > 0) {
+      const { bounds: _bounds, ...rest } = one
+      return { ...rest, options, default: options[0]?.value ?? one.default }
+    }
+  }
+  if (one.type === "choice" && one.name === "mode") {
+    return {
+      ...one,
+      options: one.options.filter((option) => option.value === mode),
+      default: mode,
+    }
+  }
+  return one
+}
+
+export function audioAppOf(mode: AudioMode, id: string): AppInput {
+  return defineApp({
+    ...app,
+    id,
+    nameKey: `audio.mode.${mode}`,
+    engine: audioEngineOf(mode),
+    inputs: app.inputs.flatMap((input) => {
+      const one = forMode(input, mode)
+      return one === null ? [] : [one]
+    }),
+  })
+}

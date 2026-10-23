@@ -35,14 +35,14 @@ export const Route = createFileRoute("/_shell/apps/$appId")({
       ...(open === undefined ? {} : { open }),
     }
   },
-  beforeLoad: ({ params, search }) => {
-    const moved = movedAppOf(params.appId)
+  beforeLoad: ({ params, search, location }) => {
+    const moved = movedAppOf(params.appId, location.hash)
     if (moved !== null) {
       throw redirect({
         to: "/apps/$appId",
         params: { appId: moved.appId },
         search,
-        hash: moved.hash,
+        ...(moved.hash === "" ? {} : { hash: moved.hash }),
         replace: true,
       })
     }
