@@ -88,6 +88,12 @@ describe("the top bar", () => {
     expect(currentOf(bar, "link", "Library")).toBeNull()
   })
 
+  it("opens Settings from an app page as a button over that page, never as a link that leaves it", async () => {
+    const bar = await barAt("/apps/image")
+    expect(within(bar).getByRole("button", { name: "Settings" })).toBeTruthy()
+    expect(within(bar).queryByRole("link", { name: "Settings" })).toBeNull()
+  })
+
   it("turns compact on an app page and marks the area of the open app", async () => {
     const bar = await barAt("/apps/image")
     expect(bar.getAttribute("data-density")).toBe("compact")

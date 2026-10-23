@@ -18,7 +18,6 @@ import {
 import type { ReactElement, ReactNode } from "react"
 import { t, tCount } from "@/copy/t"
 import { useDeleteAssets, useDownloadAsset } from "@/pieces/asset-actions"
-import { kindPictures } from "@/screens/library/view-cluster"
 import { ScreenHeader } from "@/shell/screen-header"
 
 export type LibraryKind = "all" | "image" | "video" | "audio" | "mesh"
@@ -28,29 +27,22 @@ const kindItems: SegmentedItem<LibraryKind>[] = (
 ).map((kind) => ({
   value: kind,
   label: t(`kind.${kind}`),
-  icon: kindPictures[kind],
 }))
 
 export function KindTabs({
   kind,
   onKind,
-  isRegular,
 }: {
   kind: LibraryKind
   onKind: (kind: LibraryKind) => void
-  isRegular: boolean
 }): ReactElement {
   return (
     <SegmentedControl
-      items={
-        isRegular
-          ? kindItems
-          : kindItems.map(({ value, label }) => ({ value, label }))
-      }
+      items={kindItems}
       value={kind}
       onValueChange={onKind}
       label={t("library.kind.label")}
-      density={isRegular ? "chrome" : "row"}
+      density="row"
     />
   )
 }

@@ -8,7 +8,6 @@ import { WorkingPulse } from "@rosesfield/ui/components/working-pulse"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { useQueries } from "@tanstack/react-query"
-import { useNavigate } from "@tanstack/react-router"
 import type { ReactElement, ReactNode } from "react"
 import { assetQuery, isWorking } from "@/api/queries"
 import { findCatalogApp } from "@/catalog/catalog-apps"
@@ -20,6 +19,7 @@ import { OutputRow } from "@/pieces/run/output-row"
 import { useCancelRun, useRepeatRun } from "@/pieces/run/run-actions"
 import { runAspect, waitingAfterMs } from "@/pieces/run/run-facts"
 import { useNow } from "@/pieces/use-now"
+import { useShowSettings } from "@/shell/shell-dialogs"
 
 export type ChromePlace = "over" | "under"
 
@@ -263,7 +263,7 @@ function DoneRun({ run, list, chrome }: RunOutputsProps): ReactElement {
 
 function FailedRun({ run }: { run: Run }): ReactElement {
   const repeat = useRepeatRun()
-  const navigate = useNavigate()
+  const showSettings = useShowSettings()
   const app = findCatalogApp(run.appId)
   const words = wordsForCode(run.failure?.code ?? "RUN_FAILED", {
     minutes: Math.round((app?.limits.timeoutSeconds ?? 0) / 60),
@@ -271,7 +271,7 @@ function FailedRun({ run }: { run: Run }): ReactElement {
   })
   const act = (): void => {
     if (words.action?.act === "settings") {
-      void navigate({ to: "/settings" })
+      showSettings()
     } else {
       repeat.mutate(run.id)
     }

@@ -21,11 +21,7 @@ export function EditFrame({ state }: { state: EditToolState }): ReactElement {
   const place: DockPlace = isRegular ? "float" : "edge"
   return (
     <div data-slot="edit-frame" className="flex h-full min-h-0 flex-col">
-      <div data-slot="edit-tools" className="shrink-0 px-4">
-        <h1 className="font-medium text-title text-ink">
-          {appName(state.app)}
-        </h1>
-      </div>
+      <h1 className="sr-only">{appName(state.app)}</h1>
       <div
         data-slot="bar-stage"
         className="flex min-h-0 flex-1 pb-4 @regular:pb-0"

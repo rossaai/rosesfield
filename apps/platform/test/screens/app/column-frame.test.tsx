@@ -18,7 +18,7 @@ afterEach(() => {
 })
 
 describe("the column frame", () => {
-  it("puts the mode tabs in the column's tray above the scrolling parts, keeps the column at the reference's 780 px, and runs the canvas to the bottom with a fade at its end", () => {
+  it("puts the mode tabs in the column's tray above the scrolling parts, runs the column to 16 px from the window's foot, and runs the canvas to the bottom with a fade at its end", () => {
     render(
       withClient(
         <ColumnFrame
@@ -40,7 +40,7 @@ describe("the column frame", () => {
     expect(parts?.querySelector("[data-testid='tabs']")).toBeNull()
     expect(parts?.querySelector("[data-testid='panel']")).not.toBeNull()
     const aside = document.querySelector("aside")
-    expect(aside?.className.split(" ")).toContain("@regular:pb-19")
+    expect(aside?.className.split(" ")).toContain("@regular:pb-4")
     const rowClasses = aside?.parentElement?.className.split(" ") ?? []
     expect(rowClasses).toContain("pt-2")
     expect(rowClasses.filter((name) => name.includes("pb-"))).toEqual([])
