@@ -7,30 +7,43 @@ import {
   checkTake,
   cutPlan,
   type Output,
-  type Step,
   srtOf,
 } from "./cut-commands"
+import type { Step } from "./cut-filters"
 import { takesFolder } from "./demo-args"
 import { manifestName, manifestOf } from "./demo-manifest"
 
-type CutOptions = { take: string | null; isDraft: boolean; isDryRun: boolean }
+type CutOptions = {
+  take: string | null
+  isDraft: boolean
+  isLocal: boolean
+  isDryRun: boolean
+}
 
 const usage = [
-  "bun run demo:cut [--take <folder>] [--draft] [--dry-run]",
+  "bun run demo:cut [--take <folder>] [--local] [--draft] [--dry-run]",
   "",
   "  Cuts a take of bun run demo:capture into the video, the 9:16 clip for the post and one clip per app.",
   "  --take     the take folder, the latest under scripts/demo/takes by default",
+  "  --local    cuts an owner take recorded on this machine into rosesfield-demo-local.mp4, rosesfield-clip-9x16-local.mp4 and apps/<app>-local.mp4",
   "  --draft    encodes fast at a lower quality, to check a take",
   "  --dry-run  prints the plan and each ffmpeg command, and runs none",
 ].join("\n")
 
 function optionsOf(args: readonly string[]): CutOptions {
-  const options: CutOptions = { take: null, isDraft: false, isDryRun: false }
+  const options: CutOptions = {
+    take: null,
+    isDraft: false,
+    isLocal: false,
+    isDryRun: false,
+  }
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index]
     const value = args[index + 1]
     if (arg === "--draft") {
       options.isDraft = true
+    } else if (arg === "--local") {
+      options.isLocal = true
     } else if (arg === "--dry-run") {
       options.isDryRun = true
     } else if (arg === "--take" && value !== undefined) {
@@ -111,8 +124,8 @@ async function main(): Promise<void> {
   const options = optionsOf(Bun.argv.slice(2))
   const take = options.take ?? (await latestTake())
   const manifest = manifestOf(await Bun.file(join(take, manifestName)).json())
-  checkTake(manifest, options.isDraft)
-  const plan = cutPlan(manifest, options.isDraft)
+  checkTake(manifest, options)
+  const plan = cutPlan(manifest, options)
   checkPlan(plan)
   if (options.isDryRun) {
     console.log(JSON.stringify(plan, null, 2))

@@ -100,10 +100,15 @@ async function saved(
   return { file, kind }
 }
 
+export type AppSeen = Pick<AppTake, "model" | "screen">
+
+export const unseen: AppSeen = { model: null, screen: null }
+
 export async function takeOf(
   host: DemoHost,
   run: HostRun,
-  folder: string
+  folder: string,
+  seen: AppSeen = unseen
 ): Promise<AppTake> {
   const [output, input] = await Promise.all([
     firstMedia(host, run.outputs, ["video", "image"]),
@@ -126,5 +131,6 @@ export async function takeOf(
     input: inputMedia,
     output: outputMedia,
     credits: run.credits,
+    ...seen,
   }
 }

@@ -70,10 +70,16 @@ export function sceneCaption(id: SceneId, facts: CaptionFacts): string {
   }
 }
 
-export function clipCaption(appName: string, credits: number | null): string {
-  return credits === null
-    ? `${appName} on Rosesfield`
-    : `${appName} on Rosesfield, ${creditsText(credits)}`
+export function clipCaption(
+  appName: string,
+  facts: { model: string | null; credits: number | null }
+): string {
+  const parts = [
+    `${appName} on Rosesfield`,
+    ...(facts.model === null ? [] : [facts.model]),
+    ...(facts.credits === null ? [] : [creditsText(facts.credits)]),
+  ]
+  return parts.join(", ")
 }
 
 export function linkCaption(shareUrl: string): string {
