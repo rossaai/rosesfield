@@ -31,6 +31,7 @@ import {
   type SendMessage,
   useSendMessage,
 } from "@/screens/agent/use-send-message"
+import { useOpenKeyDialog } from "@/shell/key-dialog-context"
 import { ScreenHeader } from "@/shell/screen-header"
 
 function isGone(error: unknown): boolean {
@@ -195,6 +196,7 @@ function KnownConversation({
   const turn = useLiveTurn(conversationId)
   const state = useDraft()
   const model = useAgentModel()
+  const openKey = useOpenKeyDialog()
   const approval = useUpdateConversation(conversationId)
   const isAnswering = turn?.status === "answering"
   useFirstMessage(
@@ -248,7 +250,7 @@ function KnownConversation({
             isAnswering={isAnswering}
             approval={runApproval}
             onApprovalChange={(next) => approval.mutate({ runApproval: next })}
-            onSend={send}
+            onSend={model === "missing" ? openKey : send}
             onStop={actions.stop}
           />
         </ComposerSlot>

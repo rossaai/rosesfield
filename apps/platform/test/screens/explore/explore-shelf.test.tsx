@@ -7,6 +7,7 @@ import type { ExploreRow } from "@/screens/explore/explore-rows"
 import { AppsRow, ExploreRowView } from "@/screens/explore/explore-sections"
 import type { VisualEntry } from "@/screens/explore/explore-tile"
 import { navGroups } from "@/shell/nav-rows"
+import { showcaseOf } from "@/showcase/showcase"
 import { renderAt } from "../../shell/shell-router"
 
 afterEach(cleanup)
@@ -90,17 +91,23 @@ describe("Explore's row headers", () => {
 })
 
 describe("Explore's apps row", () => {
-  it("shows every app of the menu as its card with its name and its line, with View all in its header", async () => {
+  it("shows each app that has an example as its card with its name and its line, with View all in its header and a title that is no link", async () => {
     renderAt("/", () => <AppsRow />)
     const apps = await screen.findByRole("region", {
       name: t("explore.apps.label"),
     })
     expect(apps.getAttribute("data-layout")).toBe("row")
     const cards = [...apps.querySelectorAll("[data-slot='app-card']")]
-    const menuApps = navGroups(catalogApps).areas.flatMap((area) => area.apps)
+    const menuApps = navGroups(catalogApps)
+      .areas.flatMap((area) => area.apps)
+      .filter((app) => showcaseOf(app.id).length > 0)
     expect(cards.map((card) => card.getAttribute("href"))).toEqual(
       menuApps.map((app) => `/apps/${app.id}`)
     )
+    expect(cards.length).toBeGreaterThan(0)
+    expect(
+      within(apps).queryByRole("link", { name: t("explore.apps.label") })
+    ).toBeNull()
     for (const card of cards) {
       expect(card.querySelector("[data-slot='app-card-line']")).not.toBeNull()
     }

@@ -50,7 +50,7 @@ export function ComposerSlot({
     case "ready":
       return children
     case "missing":
-      return <NoModel />
+      return children
     case "off":
       return <AgentOff />
     case "unknown":

@@ -1,5 +1,6 @@
 import type { AppListing, Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
+import { Canvas } from "@rosesfield/ui/components/canvas"
 import { Input } from "@rosesfield/ui/components/input"
 import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import { StateView } from "@rosesfield/ui/components/state-view"
@@ -15,6 +16,7 @@ import {
 } from "@/catalog/app-facts"
 import { catalogApps } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { AppCard, appCardFormOf } from "@/screens/apps/app-card"
 import { ScreenHeader } from "@/shell/screen-header"
 import { useRecentRuns } from "@/shell/use-working-runs"
@@ -51,7 +53,7 @@ function KindControl({
       value={value}
       onValueChange={onChange}
       label={t("apps.kind.label")}
-      density="chrome"
+      density="row"
     />
   )
 }
@@ -158,33 +160,50 @@ export function AppsScreen(): ReactElement {
   const found = catalogApps.filter(
     (app) => matches(app, query) && (kind === "all" || app.output.kind === kind)
   )
+  const isRegular = useIsRegularWindow()
+  const search = (
+    <Input
+      type="search"
+      aria-label={t("apps.search.label")}
+      placeholder={t("apps.search.placeholder")}
+      value={query}
+      onChange={(event) => setSearch({ q: event.target.value })}
+      className="max-w-none @regular:w-field-max @regular:max-w-field-max"
+    />
+  )
   return (
     <>
-      <ScreenHeader title={t("apps.title")} />
-      <div className="flex w-full flex-col gap-s8 px-s5 pb-s12 @regular:px-4">
-        <div className="flex flex-col gap-s3 @regular:flex-row @regular:items-center">
-          <Input
-            type="search"
-            aria-label={t("apps.search.label")}
-            placeholder={t("apps.search.placeholder")}
-            value={query}
-            onChange={(event) => setSearch({ q: event.target.value })}
-            className="max-w-none @regular:max-w-field-max"
-          />
-          <KindControl
-            value={kind}
-            onChange={(next) => setSearch({ kind: next })}
-          />
-        </div>
-        {found.length === 0 && query !== "" ? (
-          <StateView
-            kind="empty"
-            title={t("apps.empty.title", { query })}
-            actions={<Button onClick={clear}>{t("apps.empty.action")}</Button>}
-          />
-        ) : (
-          <AppGroups apps={found} kind={kind} />
-        )}
+      <ScreenHeader title={t("apps.title")} actions={search} />
+      <div className="flex w-full flex-1 flex-col px-s5 pb-s12">
+        <Canvas
+          label={t("apps.title")}
+          inset="page"
+          hasRuns={false}
+          tabs={
+            <div
+              data-slot="apps-tabs"
+              className="flex min-w-0 flex-1 flex-col gap-s3 @regular:flex-row @regular:items-center"
+            >
+              {isRegular ? null : search}
+              <KindControl
+                value={kind}
+                onChange={(next) => setSearch({ kind: next })}
+              />
+            </div>
+          }
+        >
+          {found.length === 0 && query !== "" ? (
+            <StateView
+              kind="empty"
+              title={t("apps.empty.title", { query })}
+              actions={
+                <Button onClick={clear}>{t("apps.empty.action")}</Button>
+              }
+            />
+          ) : (
+            <AppGroups apps={found} kind={kind} />
+          )}
+        </Canvas>
       </div>
     </>
   )

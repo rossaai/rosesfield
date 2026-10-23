@@ -144,19 +144,20 @@ describe("the top bar", () => {
     }
   })
 
-  it("holds one Connect action and no key pill when this browser holds no key", async () => {
+  it("holds Add your Comfy key beside Connect when this browser holds no key, so Connect never stands in for the key", async () => {
     renderAt("/", () => <TopBar />, {
       settings: { ...ownerSettings, mode: "public", keyFrom: "settings" },
     })
     const bar = await screen.findByRole("banner", { name: "Rosesfield" })
-    expect(
-      within(bar).queryByRole("button", { name: "Add your Comfy key" })
-    ).toBeNull()
-    const connects = within(bar).getAllByRole("button", { name: "Connect" })
-    expect(connects.map((button) => button.textContent)).toEqual([
+    const keys = within(bar).getAllByRole("button", {
+      name: "Add your Comfy key",
+    })
+    expect(keys.map((button) => button.textContent)).toEqual([
       "",
-      "Connect",
+      "Add your Comfy key",
     ])
+    const connects = within(bar).getAllByRole("button", { name: "Connect" })
+    expect(connects.map((button) => button.textContent)).toEqual(["Connect"])
     expect(within(bar).queryByRole("button", { name: /credits/ })).toBeNull()
   })
 

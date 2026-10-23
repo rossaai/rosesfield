@@ -11,7 +11,7 @@ import { appLine, appName } from "@/catalog/app-facts"
 import { catalogApps } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
-import { AppCard } from "@/screens/apps/app-card"
+import { AppCard, appCardFormOf } from "@/screens/apps/app-card"
 import type { ExploreRow, PresetEntry } from "@/screens/explore/explore-rows"
 import {
   ExplorePresetTile,
@@ -90,7 +90,9 @@ export function ExploreBanner(): ReactElement {
 
 export function AppsRow(): ReactElement {
   const router = useRouter()
-  const apps = navGroups(catalogApps).areas.flatMap((area) => area.apps)
+  const apps = navGroups(catalogApps)
+    .areas.flatMap((area) => area.apps)
+    .filter((app) => appCardFormOf(app, null) === "media")
   return (
     <Reveal>
       <MediaFeed
@@ -100,7 +102,6 @@ export function AppsRow(): ReactElement {
         header={
           <SectionHeader
             title={t("explore.apps.label")}
-            href={router.buildLocation({ to: "/apps" }).href}
             actions={
               <ViewAll href={router.buildLocation({ to: "/apps" }).href}>
                 {t("explore.showcase.viewAll")}

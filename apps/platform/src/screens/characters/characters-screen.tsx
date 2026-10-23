@@ -90,6 +90,7 @@ function CharacterList(): ReactNode {
     return (
       <StateView
         kind="empty"
+        className="flex-1"
         title={t("characters.empty.title")}
         body={t("characters.empty.body")}
         actions={
@@ -114,33 +115,39 @@ function CharacterList(): ReactNode {
 }
 
 export function CharactersScreen(): ReactElement {
+  const characters = useQuery(charactersQuery)
+  const isEmpty = characters.data?.characters.length === 0
   return (
-    <>
+    <div className="flex min-h-full flex-col">
       <ScreenHeader
         title={t("characters.title")}
         actions={
-          <Button
-            tone="primary"
-            render={<Link to="/characters/new" />}
-            nativeButton={false}
-          >
-            {t("characters.add")}
-          </Button>
+          isEmpty ? undefined : (
+            <Button
+              tone="primary"
+              render={<Link to="/characters/new" />}
+              nativeButton={false}
+            >
+              {t("characters.add")}
+            </Button>
+          )
         }
         phoneAction={
-          <IconButton
-            label={t("characters.add")}
-            tone="quiet"
-            render={<Link to="/characters/new" />}
-            nativeButton={false}
-          >
-            <PlusIcon aria-hidden="true" />
-          </IconButton>
+          isEmpty ? undefined : (
+            <IconButton
+              label={t("characters.add")}
+              tone="quiet"
+              render={<Link to="/characters/new" />}
+              nativeButton={false}
+            >
+              <PlusIcon aria-hidden="true" />
+            </IconButton>
+          )
         }
       />
-      <div className="px-s5 pb-s12">
+      <div className="flex flex-1 flex-col px-s5 pb-s12">
         <CharacterList />
       </div>
-    </>
+    </div>
   )
 }

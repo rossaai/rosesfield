@@ -9,7 +9,8 @@ import { useHasVisitorKey } from "@/api/visitor-keys"
 import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { type Account, accountQuery } from "@/screens/settings/account-query"
-import { useOpenConnect, useOpenCredits } from "@/shell/shell-dialogs"
+import { useOpenKeyDialog } from "@/shell/key-dialog-context"
+import { useOpenCredits } from "@/shell/shell-dialogs"
 import { noteSpendCap } from "@/shell/spend-cap"
 
 export function creditsLabel(account: Account): string | null {
@@ -59,7 +60,7 @@ export function CreditBalance(): ReactNode {
   const settings = useQuery(settingsQuery).data
   const hasKey = useHasVisitorKey("engine")
   const account = useQuery({ ...accountQuery, enabled: settings !== undefined })
-  const openConnect = useOpenConnect()
+  const openKey = useOpenKeyDialog()
   const openCredits = useOpenCredits()
   const capCredits = account.data?.cap?.credits ?? null
   useEffect(() => noteSpendCap(capCredits), [capCredits])
@@ -68,10 +69,17 @@ export function CreditBalance(): ReactNode {
   }
   if (settings.keyFrom === "settings" && !hasKey) {
     return (
-      <CompactKey
-        label={t("shell.nav.connect")}
-        onPress={() => openConnect()}
-      />
+      <>
+        <CompactKey label={t("key.add")} onPress={openKey} />
+        <span className="hidden @regular:flex">
+          <AppBarAction
+            icon={<KeyRoundIcon aria-hidden="true" />}
+            onClick={openKey}
+          >
+            {t("key.add")}
+          </AppBarAction>
+        </span>
+      </>
     )
   }
   const label = account.data === undefined ? null : creditsLabel(account.data)

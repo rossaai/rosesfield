@@ -23,6 +23,7 @@ import {
   conversationsQuery,
   transcriptKey,
 } from "@/screens/agent/conversation-queries"
+import { useOpenKeyDialog } from "@/shell/key-dialog-context"
 import { ScreenHeader } from "@/shell/screen-header"
 
 type StartInput = { draft: Draft; approval: RunApproval }
@@ -61,6 +62,7 @@ export function AgentStartScreen(): ReactElement {
   const state = useDraft()
   const start = useStartConversation()
   const model = useAgentModel()
+  const openKey = useOpenKeyDialog()
   const [approval, setApproval] = useState<RunApproval>("ask")
   const send = (): void => {
     if (state.draft.prompt.trim() !== "") {
@@ -92,7 +94,7 @@ export function AgentStartScreen(): ReactElement {
               isStarting={start.isPending}
               approval={approval}
               onApprovalChange={setApproval}
-              onSend={send}
+              onSend={model === "missing" ? openKey : send}
               onStop={() => undefined}
             />
           </ComposerSlot>
