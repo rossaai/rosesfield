@@ -496,85 +496,46 @@
     "from": "whale-aurora-night.webp"
   },
   {
-    "runId": "e5473033-6b80-4abc-ad81-0102002b77ee",
-    "file": "linen-headshot.webp",
-    "input": {
-      "file": "linen-balcony.webp",
-      "name": "image"
-    },
-    "appId": "headshots",
+    "runId": "69916d1c-5e0b-474d-829c-52eadf2071fb",
+    "file": "whale-dawn.webp",
+    "appId": "image",
     "kind": "image",
-    "width": 1024,
-    "height": 1024,
-    "model": "qwen_image_edit_2511_fp8mixed.safetensors",
-    "prompt": null,
+    "width": 1280,
+    "height": 854,
+    "model": "openai/gpt-image-2.5-sunburst",
+    "prompt": "Cinematic wide photograph on 35mm film: an invented young woman in a long red wool coat stands on a frozen lake at dawn and looks back over her shoulder, while behind her a humpback whale breaks up through the ice, shards of ice and spray hanging in the air. Pale pink sky, low mist on the ice, natural film grain, shallow depth of field.",
     "inputs": {
-      "background": "grey",
-      "clothes": "keep",
-      "framing": "standard",
-      "keepGlasses": "on"
-    },
-    "aspectRatio": "1:1",
-    "credits": 18.32,
-    "seconds": 86.2,
-    "madeAt": "2026-10-22T18:01:19Z",
-    "from": "linen-balcony.webp"
-  },
-  {
-    "runId": "c2a6e835-89ed-4430-86b1-8653d7017297",
-    "file": "cardigan-push-in.mp4",
-    "input": {
-      "file": "mustard-cardigan.webp",
-      "name": "startFrame"
-    },
-    "appId": "shot",
-    "kind": "video",
-    "width": 720,
-    "height": 412,
-    "model": "Lightricks/LTX-2.5",
-    "prompt": "Shot on 35mm film, a slow, steady dolly in on an invented man in his thirties with a dark moustache, wearing a mustard yellow cardigan, standing against a plain teal backdrop. He looks into the lens and stays still, then gives a small smile only at the very end. Standard lens at a wide aperture, his face sharp and the backdrop soft. Soft studio light. One continuous take, no cuts. SOUND: the quiet hum of a studio room and the soft click of a camera shutter.",
-    "inputs": {
-      "model": "ltx-2-5",
-      "movement": "push-in",
-      "camera": "film-35mm",
-      "lens": "standard",
-      "focus": "shallow",
-      "light": "studio",
-      "color": "auto",
-      "mood": "calm",
-      "length": "3",
-      "resolution": "720p",
-      "sound": "on"
-    },
-    "aspectRatio": "16:9",
-    "credits": 9.31,
-    "seconds": 54.2,
-    "madeAt": "2026-10-22T18:08:12Z",
-    "from": "mustard-cardigan.webp"
-  },
-  {
-    "runId": "1235b46a-0d0f-40b8-a007-3291fa2dc34a",
-    "file": "whale-breach.mp4",
-    "input": {
-      "file": "whale-dawn.webp",
-      "name": "images"
-    },
-    "appId": "video",
-    "kind": "video",
-    "width": 672,
-    "height": 448,
-    "model": "xai/grok-imagine-video-1.5",
-    "prompt": "The humpback whale rises higher out of the broken ice and crashes back down, throwing a wave of spray and ice shards across the lake. The woman in the red coat flinches, then turns her head slowly toward the camera, her coat and hair moving in the wind. Slow push-in, handheld, natural light, the sound of cracking ice and the whale's splash.",
-    "inputs": {
-      "model": "xai/grok-imagine-video-1.5",
-      "aspectRatio": "16:9",
-      "type": "image_url",
-      "duration": "8"
+      "model": "openai/gpt-image-2.5-sunburst",
+      "quality": "high",
+      "size": "1536x1024"
     },
     "aspectRatio": null,
-    "credits": 196.12,
-    "seconds": 45.2,
-    "madeAt": "2026-10-22T18:41:23Z",
+    "credits": 12.54,
+    "seconds": 49.5,
+    "madeAt": "2026-10-22T18:33:54Z"
+  },
+  {
+    "runId": "d6f88835-005e-41b8-b7db-daecb8ac8117",
+    "file": "whale-dawn-2x.webp",
+    "input": {
+      "file": "whale-dawn.webp",
+      "name": "image"
+    },
+    "appId": "upscale",
+    "kind": "image",
+    "width": 2048,
+    "height": 1366,
+    "model": "seedvr2_3b_int8_convrot.safetensors",
+    "prompt": null,
+    "inputs": {
+      "mode": "image",
+      "scale": "2x",
+      "model": "seedvr2-3b"
+    },
+    "aspectRatio": null,
+    "credits": 2.0,
+    "seconds": 20.2,
+    "madeAt": "2026-10-23T00:43:31Z",
     "from": "whale-dawn.webp"
   }
 ]
