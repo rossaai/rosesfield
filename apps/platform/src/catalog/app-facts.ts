@@ -54,8 +54,13 @@ export function appKeywords(app: AppListing): string {
 }
 
 export function appEmptyTitle(app: AppListing): string {
-  const key = `${app.id}.empty.title`
-  return hasCatalogText(key) ? tCatalog(key) : t("app.empty.title")
+  const family = app.nameKey.split(".")[0] ?? app.id
+  for (const key of [`${app.id}.empty.title`, `${family}.empty.title`]) {
+    if (hasCatalogText(key)) {
+      return tCatalog(key)
+    }
+  }
+  return t("app.empty.title")
 }
 
 export function promptInputOf(
