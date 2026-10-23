@@ -97,7 +97,7 @@ From 2026-10-20 to 2026-10-22, eight showroom rounds made the examples above in 
 | Edit | Qwen Image Edit 2511, GPT Image 2.5 Sunburst | 3 | 38.35 | 1 |
 | Storyboard | GPT Image 2.5 Sunburst | 6 | 28.28 | 0 |
 | Try-on | Qwen Image Edit 2511 | 1 | 25.82 | 0 |
-| Ads | Qwen Image Edit 2511, GPT Image 2.5 Sunburst | 2 | 21.03 | 0 |
+| Ads | Qwen Image Edit 2511, GPT Image 2.5 Sunburst | 2 | 21.21 | 0 |
 | Relight | Qwen Image Edit 2509 with the Relight LoRA | 1 | 17.04 | 1 |
 | Motion | LTX 2.3 with its control LoRA | 1 | 14.57 | 0 |
 | Audio | Chatterbox, MiniMax Music 3, Eleven V4 Turbo | 4 | 14.11 | 0 |
@@ -109,7 +109,7 @@ From 2026-10-20 to 2026-10-22, eight showroom rounds made the examples above in 
 | Characters | Z-Image Turbo | 1 | 1.81 | 1 |
 | Background removal | BiRefNet | 1 | 0.68 | 1 |
 
-- The 122 runs cost 919.37 credits by their rows. Rounds one to six read each run's credits from Comfy's balance before and after it. Rounds seven and eight read each run's price in History, and Comfy's balance fell by 0.19 credits more than those prices over the two rounds.
+- The 122 runs cost 919.55 credits by their rows. Rounds one to six read each run's credits from Comfy's balance before and after it. Rounds seven and eight read each run's price in History, and Comfy's balance where History holds no price: the six Storyboard keyframes and one failed Upscale run that Comfy charged. Those rows sum to 0.01 credits less than Comfy's balance fell over the two rounds.
 - Every video model given an action changed the person or failed the action, so no Video, Lip sync, Motion or Shot result was kept yet.
 - Two Motion runs failed with no charge and one Eleven V4 Turbo run was refused before any job. None of the three is counted.
 - Headshots, Remake and 3D have no run in these rounds.
