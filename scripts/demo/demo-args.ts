@@ -1,11 +1,13 @@
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
+import type { SiteMode } from "./demo-manifest"
 
 export type AppChoice = { appId: string; runId: string | null }
 
 export type CaptureOptions = {
   url: string
-  key: string
+  key: string | null
+  mode: SiteMode
   runId: string | null
   apps: AppChoice[]
   isLive: boolean
@@ -15,6 +17,8 @@ export type CaptureOptions = {
 }
 
 export const siteUrl = "https://rosesfield.com"
+
+export const repositoryUrl = "https://github.com/rossaai/rosesfield"
 
 export const defaultUrl = siteUrl
 
@@ -27,10 +31,11 @@ const uuidPattern =
 const appIdPattern = /^[a-z][a-z0-9-]{0,63}$/
 
 export const captureUsage = [
-  "bun run demo:capture [--url <address>] [--run <run id>] [--apps <app>[=<run id>],...] [--live] [--budget <credits>] [--out <folder>] [--plan]",
+  "bun run demo:capture [--url <address>] [--owner] [--run <run id>] [--apps <app>[=<run id>],...] [--live] [--budget <credits>] [--out <folder>] [--plan]",
   "",
-  `  DEMO_URL  the site to record, ${defaultUrl} by default. --url wins over it. demo:cut cuts the final video only from a take of ${siteUrl}`,
-  "  DEMO_KEY  your Comfy key. It is typed into the masked key field and sent in a header, and never printed",
+  `  DEMO_URL  the site to record, ${defaultUrl} by default. --url wins over it. demo:cut cuts the final video only from a take of ${siteUrl}, or with --local from an owner take on this machine`,
+  "  DEMO_KEY  your Comfy key for a site in public mode. It is typed into the masked key field and sent in a header, and never printed",
+  "  --owner   records a site in owner mode that holds the Comfy key on its server. No key is typed or sent, DEMO_KEY is not read, and the key scene is left out",
   "  --run     the Effects run the video opens on, the latest finished live Effects run by default",
   "  --apps    the apps that get a short clip, each with its kept run, effects by default",
   "  --live    starts one new Effects run from the inputs of --run, inside --budget",
@@ -101,6 +106,10 @@ function optionOf(
     draft.isPlanOnly = true
     return 0
   }
+  if (arg === "--owner") {
+    draft.mode = "owner"
+    return 0
+  }
   if (value === undefined) {
     throw new Error(`${arg} is not an option.\n\n${captureUsage}`)
   }
@@ -127,6 +136,7 @@ export function captureOptionsOf(
 ): CaptureOptions {
   const draft: Draft = {
     url: null,
+    mode: "public",
     runId: null,
     apps: [{ appId: "effects", runId: null }],
     isLive: false,
@@ -137,10 +147,10 @@ export function captureOptionsOf(
   for (let index = 0; index < args.length; index += 1) {
     index += optionOf(draft, args[index] ?? "", args[index + 1])
   }
-  const key = (env.DEMO_KEY ?? "").trim()
+  const key = draft.mode === "owner" ? null : (env.DEMO_KEY ?? "").trim()
   if (key === "") {
     throw new Error(
-      `Set DEMO_KEY to your Comfy key. The video shows it typed into the masked key field.\n\n${captureUsage}`
+      `Set DEMO_KEY to your Comfy key. The video shows it typed into the masked key field. A site in owner mode that holds the key on its server records with --owner and no key.\n\n${captureUsage}`
     )
   }
   const envUrl = env.DEMO_URL

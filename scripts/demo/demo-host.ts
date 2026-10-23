@@ -13,6 +13,13 @@ export type HostAsset = { id: string; kind: string; mime: string }
 
 export type HostAccount = { key: string; credits: number | null }
 
+export type HostSettings = {
+  mode: string
+  lock: string
+  keyFrom: string
+  engineKey: string
+}
+
 type Row = Record<string, unknown>
 
 export const creditsPerUsd = 211
@@ -55,23 +62,21 @@ export function runOf(value: unknown): HostRun {
 
 export class DemoHost {
   readonly url: string
-  readonly #key: string
+  readonly #key: string | null
 
-  constructor(options: { url: string; key: string }) {
+  constructor(options: { url: string; key: string | null }) {
     this.url = options.url
     this.#key = options.key
   }
 
-  async #answer(
-    path: string,
-    timeoutMs: number,
-    method = "GET"
-  ): Promise<Response> {
+  async #answer(path: string, timeoutMs: number): Promise<Response> {
     let response: Response
     try {
       response = await fetch(new URL(path, this.url), {
-        method,
-        headers: { Accept: "application/json", [keyHeader]: this.#key },
+        headers: {
+          Accept: "application/json",
+          ...(this.#key === null ? {} : { [keyHeader]: this.#key }),
+        },
         signal: AbortSignal.timeout(timeoutMs),
       })
     } catch {
@@ -90,9 +95,14 @@ export class DemoHost {
     return rowOf(await response.json())
   }
 
-  async mode(): Promise<string> {
-    const body = await this.#read("/api/settings")
-    return textOf(rowOf(body.settings).mode)
+  async settings(): Promise<HostSettings> {
+    const settings = rowOf((await this.#read("/api/settings")).settings)
+    return {
+      mode: textOf(settings.mode),
+      lock: textOf(settings.lock),
+      keyFrom: textOf(settings.keyFrom),
+      engineKey: textOf(rowOf(settings.engine).key),
+    }
   }
 
   async account(): Promise<HostAccount> {
@@ -125,19 +135,6 @@ export class DemoHost {
       kind: textOf(asset.kind),
       mime: textOf(asset.mime),
     }
-  }
-
-  async share(runId: string): Promise<string> {
-    const response = await this.#answer(
-      `/api/runs/${runId}/share`,
-      requestMs,
-      "POST"
-    )
-    const path = rowOf(rowOf(await response.json()).share).path
-    if (typeof path !== "string" || !path.startsWith("/share/")) {
-      throw new Error(`Share answered with no link for run ${runId}.`)
-    }
-    return path
   }
 
   async download(assetId: string, file: string): Promise<void> {

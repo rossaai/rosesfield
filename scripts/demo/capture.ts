@@ -2,9 +2,8 @@ import { mkdir } from "node:fs/promises"
 import { join } from "node:path"
 import { type BrowserContext, chromium } from "@playwright/test"
 import { type CaptureOptions, captureOptionsOf } from "./demo-args"
-import { type Proof, proofOf, reserveCredits } from "./demo-budget"
 import { type CaptionFacts, hookCaption, sceneCaption } from "./demo-captions"
-import { DemoHost, type HostRun, rowOf } from "./demo-host"
+import type { HostRun } from "./demo-host"
 import { liveRunScene } from "./demo-live"
 import {
   type BuiltScene,
@@ -13,7 +12,9 @@ import {
   type Manifest,
   manifestName,
 } from "./demo-manifest"
+import { effectsAppId, type Planned, planOf, printedPlan } from "./demo-plan"
 import {
+  appScreenScene,
   areasScene,
   creditsScene,
   graphScene,
@@ -21,22 +22,14 @@ import {
   modelListScene,
   pageScene,
   type Recorded,
+  recordPage,
   recordScene,
   recordWith,
   type SceneAct,
   shareScene,
   storedRunScene,
 } from "./demo-scenes"
-import { appNameOf, chooseRun, inputAssetIds, takeOf } from "./demo-takes"
-
-type Planned = {
-  host: DemoHost
-  balance: number | null
-  effect: HostRun
-  apps: HostRun[]
-  proof: Proof
-  graph: string
-}
+import { type AppSeen, appNameOf, takeOf } from "./demo-takes"
 
 type Session = {
   context: BrowserContext
@@ -51,94 +44,10 @@ type Tour = {
   shareUrl: string
 }
 
-const effectsAppId = "effects"
 const screen = { width: 1920, height: 1080 }
 const builtSeconds = 8.5
 const welcomeScript =
   "window.localStorage.setItem('rosesfield.welcome', 'seen')"
-const graphEntry = new URL(
-  "../../workflows/effects-ltx-2-5/entry.json",
-  import.meta.url
-)
-const proofRuns = new URL(
-  "../../packages/catalog/src/effects/runs.json",
-  import.meta.url
-)
-
-async function graphName(): Promise<string> {
-  const entry = rowOf(await Bun.file(graphEntry).json())
-  const { name, title } = entry
-  if (typeof name !== "string" || !String(title).includes("LTX 2.5")) {
-    throw new Error(
-      "The Effects graph is not the LTX 2.5 graph this video names."
-    )
-  }
-  return name
-}
-
-async function planOf(options: CaptureOptions): Promise<Planned> {
-  const host = new DemoHost({ url: options.url, key: options.key })
-  const mode = await host.mode()
-  if (mode !== "public") {
-    throw new Error(
-      `${options.url} runs in ${mode} mode. The key scene needs a site in public mode, such as rosesfield.com or bun run deploy --local.`
-    )
-  }
-  const account = await host.account()
-  if (account.key !== "valid") {
-    throw new Error(
-      `Comfy answered ${account.key} for DEMO_KEY on ${options.url}.`
-    )
-  }
-  if (
-    options.isLive &&
-    (account.credits === null || account.credits <= reserveCredits)
-  ) {
-    throw new Error(
-      `The Comfy balance is ${account.credits ?? "unknown"} credits, and a live run keeps it at ${reserveCredits} credits or more.`
-    )
-  }
-  const effect = await chooseRun(host, {
-    appId: effectsAppId,
-    runId: options.runId,
-  })
-  if (inputAssetIds(effect).length === 0) {
-    throw new Error(
-      `Run ${effect.id} keeps no input photo, and the video opens on the photo beside its result.`
-    )
-  }
-  const apps = await Promise.all(
-    options.apps.map((choice) =>
-      choice.appId === effectsAppId && choice.runId === null
-        ? effect
-        : chooseRun(host, choice)
-    )
-  )
-  const [proof, graph] = await Promise.all([
-    Bun.file(proofRuns).json().then(proofOf),
-    graphName(),
-  ])
-  return { host, balance: account.credits, effect, apps, proof, graph }
-}
-
-function printedPlan(options: CaptureOptions, planned: Planned): string {
-  return JSON.stringify(
-    {
-      url: options.url,
-      balance: planned.balance,
-      run: planned.effect.id,
-      apps: planned.apps.map((run) => ({ appId: run.appId, runId: run.id })),
-      live: options.isLive,
-      budget: options.budget,
-      reserve: reserveCredits,
-      proof: planned.proof,
-      graph: planned.graph,
-      out: options.out,
-    },
-    null,
-    2
-  )
-}
 
 async function runScene(
   session: Session
@@ -172,28 +81,31 @@ async function runScene(
 async function tour(session: Session): Promise<Tour> {
   const { context, options } = session
   const folder = options.out
-  const key = await recordScene(context, folder, "key", (page, at) =>
-    keyScene(page, at, options.key)
-  )
+  const { key } = options
+  const keyed =
+    key === null
+      ? []
+      : [
+          await recordScene(context, folder, "key", (page, at) =>
+            keyScene(page, at, key)
+          ),
+        ]
   const areas = await recordScene(context, folder, "areas", areasScene)
   const models = await recordScene(context, folder, "models", (page, at) =>
     modelListScene(page, at, "/apps/image", 5)
   )
   const run = await runScene(session)
   const share = await recordWith(context, folder, "share", (page, at) =>
-    shareScene(page, at, {
-      runId: run.effect.id,
-      makeLink: (runId) => session.planned.host.share(runId),
-    })
+    shareScene(page, at, { runId: run.effect.id, site: options.url })
   )
   const credits = await recordScene(context, folder, "credits", (page, at) =>
     creditsScene(page, at, run.effect.id)
   )
   return {
-    recorded: [key, areas, models, run.recorded, share.recorded, credits],
+    recorded: [...keyed, areas, models, run.recorded, share.recorded, credits],
     effect: run.effect,
     live: run.live,
-    shareUrl: new URL(share.result.path, options.url).href,
+    shareUrl: share.result.url,
   }
 }
 
@@ -224,10 +136,38 @@ async function built(session: Session, runId: string): Promise<Recorded[]> {
   return recorded
 }
 
+function chosenApps(planned: Planned, effect: HostRun): HostRun[] {
+  return planned.apps.map((run) =>
+    run.id === planned.effect.id ? effect : run
+  )
+}
+
+async function appScreens(
+  session: Session,
+  runs: readonly HostRun[]
+): Promise<Map<string, AppSeen>> {
+  const seen = new Map<string, AppSeen>()
+  for (const run of runs) {
+    const { file, result } = await recordPage(
+      session.context,
+      session.options.out,
+      `app-${run.appId}-${run.id.slice(0, 8)}`,
+      (page, at) => appScreenScene(page, at, run)
+    )
+    seen.set(run.id, {
+      model: result.model,
+      screen: { file, windows: result.windows },
+    })
+  }
+  return seen
+}
+
+type Scenes = { tour: Tour; built: Recorded[]; apps: Map<string, AppSeen> }
+
 async function scenesOf(
   options: CaptureOptions,
   planned: Planned
-): Promise<{ tour: Tour; built: Recorded[] }> {
+): Promise<Scenes> {
   const browser = await chromium.launch({ headless: true })
   try {
     const context = await browser.newContext({
@@ -240,8 +180,9 @@ async function scenesOf(
     const session = { context, options, planned }
     const walked = await tour(session)
     const outro = await built(session, walked.effect.id)
+    const apps = await appScreens(session, chosenApps(planned, walked.effect))
     await context.close()
-    return { tour: walked, built: outro }
+    return { tour: walked, built: outro, apps }
   } finally {
     await browser.close()
   }
@@ -268,13 +209,12 @@ function factsOf(
 
 async function appTakes(
   planned: Planned,
-  effect: HostRun,
+  scenes: Scenes,
   folder: string
 ): Promise<Manifest["apps"]> {
   const takes: Manifest["apps"] = []
-  for (const run of planned.apps) {
-    const chosen = run.id === planned.effect.id ? effect : run
-    takes.push(await takeOf(planned.host, chosen, folder))
+  for (const run of chosenApps(planned, scenes.tour.effect)) {
+    takes.push(await takeOf(planned.host, run, folder, scenes.apps.get(run.id)))
   }
   return takes
 }
@@ -296,6 +236,7 @@ async function record(
   const facts = factsOf(options, planned, walked, account.credits)
   return {
     url: options.url,
+    mode: options.mode,
     recordedAt: new Date().toISOString(),
     hook: { take: hook, caption: hookCaption(hook.appName) },
     scenes: [...walked.recorded, ...scenes.built].map((scene) => ({
@@ -303,7 +244,7 @@ async function record(
       caption: sceneCaption(scene.id, facts),
     })),
     shareUrl: walked.shareUrl,
-    apps: await appTakes(planned, walked.effect, options.out),
+    apps: await appTakes(planned, scenes, options.out),
     credits: {
       budget: options.budget,
       live: walked.live,
