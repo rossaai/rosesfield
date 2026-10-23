@@ -10,6 +10,7 @@ import type { ModelPrice } from "@rosesfield/ui/components/model-row"
 import { type ReactElement, type ReactNode, useState } from "react"
 import { t } from "@/copy/t"
 import {
+  pickerFilters,
   pickerSections,
   pickerTrigger,
   tagOf,
@@ -80,6 +81,8 @@ export function AdsCatalogPicker({
       onOpenChange={setOpen}
       isPricing={isPricing}
       settings={settings}
+      settingsLabel={t("bar.settings")}
+      filters={pickerFilters()}
       side="top"
       isLoading={hosted.isLoading}
       notice={

@@ -71,6 +71,7 @@ function Leading(props: BarProps): ReactElement {
   return (
     <>
       <AttachMenu
+        form="menu"
         label={t("bar.attach")}
         onUpload={picks.upload}
         onFromLibrary={() => setLibraryOpen(true)}

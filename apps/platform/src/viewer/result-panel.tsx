@@ -3,6 +3,7 @@ import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { keyframeOf } from "@rosesfield/catalog/storyboard"
 import type { Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
+import { CreditPrice } from "@rosesfield/ui/components/credit-price"
 import { CopyIcon, DownloadIcon, ImagesIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { isAssetInput, promptInputOf } from "@/catalog/app-facts"
@@ -16,6 +17,7 @@ import {
   runAppName,
   runModel,
   runPrice,
+  runPriceAmount,
 } from "@/pieces/run/run-facts"
 import type { VisualEntry } from "@/screens/explore/explore-tile"
 import { appIcon } from "@/shell/nav-rows"
@@ -191,6 +193,7 @@ export function ResultPanel({
   const models = useRunModels(entry.run)
   const assetId = entry.source.kind === "own" ? entry.source.assetId : null
   const price = runPrice(entry.run)
+  const amount = runPriceAmount(entry.run)
   return (
     <div
       data-slot="viewer-panel"
@@ -203,7 +206,9 @@ export function ResultPanel({
           <Detail label={t("viewer.label.model")}>{model}</Detail>
         )}
         {price === null ? null : (
-          <Detail label={t("explore.viewer.credits")}>{price}</Detail>
+          <Detail label={t("explore.viewer.credits")}>
+            {amount === null ? price : <CreditPrice amount={amount} />}
+          </Detail>
         )}
       </RunSection>
       <span aria-hidden="true" className="flex-1" />

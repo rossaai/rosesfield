@@ -50,9 +50,11 @@ function ScreenNav({ link }: { link: ScreenLink }): ReactElement {
 function AreaNav({
   area,
   current,
+  pathname,
 }: {
   area: MediaArea
   current: boolean
+  pathname: string
 }): ReactElement {
   const apps = area.apps.map((app) => ({
     id: app.id,
@@ -65,6 +67,7 @@ function AreaNav({
     <AreaMenu
       apps={apps}
       current={current}
+      currentId={/^\/apps\/([^/?#]+)/.exec(pathname)?.[1] ?? null}
       renderLink={(app) => (
         <Link to="/apps/$appId" params={{ appId: app.id }} />
       )}
@@ -89,6 +92,7 @@ function AreaLinks({
           key={area.id}
           area={area}
           current={isAreaCurrent(area, pathname)}
+          pathname={pathname}
         />
       ))}
       <NavSeparator />

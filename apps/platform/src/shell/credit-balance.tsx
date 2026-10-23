@@ -6,7 +6,7 @@ import { CoinsIcon, KeyRoundIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useEffect } from "react"
 import { settingsQuery } from "@/api/queries"
 import { useHasVisitorKey } from "@/api/visitor-keys"
-import { formatNumber } from "@/copy/format"
+import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { type Account, accountQuery } from "@/screens/settings/account-query"
 import { useOpenConnect, useOpenCredits } from "@/shell/shell-dialogs"
@@ -17,14 +17,14 @@ export function creditsLabel(account: Account): string | null {
   if (cap !== null) {
     return cap.left > 0
       ? t("key.cap.left", {
-          left: formatNumber(cap.left),
-          cap: formatNumber(cap.credits),
+          left: formatAmount(cap.left),
+          cap: formatAmount(cap.credits),
         })
-      : t("key.cap.spent", { cap: formatNumber(cap.credits) })
+      : t("key.cap.spent", { cap: formatAmount(cap.credits) })
   }
   return credits === null
     ? null
-    : t("key.credits", { amount: formatNumber(credits) })
+    : t("key.credits", { amount: formatAmount(credits) })
 }
 
 function BalanceSkeleton(): ReactElement {
@@ -80,6 +80,9 @@ export function CreditBalance(): ReactNode {
     return null
   }
   const words = label ?? t("shell.demoEngine.row")
+  const credits = account.data?.cap === null ? account.data.credits : null
+  const shown =
+    credits === null || credits === undefined ? words : formatAmount(credits)
   return (
     <>
       <CompactKey label={words} onPress={openCredits} />
@@ -87,9 +90,10 @@ export function CreditBalance(): ReactNode {
         <AppBarAction
           icon={<CoinsIcon aria-hidden="true" />}
           onClick={openCredits}
+          aria-label={words}
           {...(isDemo ? { title: t("shell.demoEngine.tooltip") } : {})}
         >
-          {words}
+          {shown}
         </AppBarAction>
       </span>
     </>

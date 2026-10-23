@@ -24,9 +24,19 @@ function labelled(bar: HTMLElement, name: string): HTMLElement {
   return button
 }
 
+function balanceOf(bar: HTMLElement): HTMLElement {
+  const pill = within(bar)
+    .getAllByRole("button", { name: /credits$/ })
+    .find((one) => one.querySelector("[data-slot='button-label']") !== null)
+  if (pill === undefined) {
+    throw new Error("the bar holds no balance pill")
+  }
+  return pill
+}
+
 function controlsOf(bar: HTMLElement, menu: string): Controls {
   return {
-    balance: shapeOf(labelled(bar, "12.5 credits")),
+    balance: shapeOf(balanceOf(bar)),
     connect: shapeOf(labelled(bar, "Connect")),
     menu: shapeOf(within(bar).getByRole("button", { name: menu })),
   }

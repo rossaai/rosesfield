@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@rosesfield/ui/components/dropdown-menu"
 import { ReferenceTile } from "@rosesfield/ui/components/upload-zone"
-import { PaperclipIcon } from "lucide-react"
+import { PlusIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { t } from "@/copy/t"
 
@@ -54,7 +54,7 @@ export function AttachMenu(props: AttachMenuProps): ReactElement {
               ? {}
               : { className: props.className })}
           >
-            {props.glyph ?? <PaperclipIcon aria-hidden="true" />}
+            {props.glyph ?? <PlusIcon aria-hidden="true" />}
           </IconButton>
         }
       />

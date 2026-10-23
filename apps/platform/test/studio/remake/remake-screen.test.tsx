@@ -141,7 +141,7 @@ describe("a run once its plan shows", () => {
       `${tCatalog("remake.plan.shot", { number: 3 })}2.5 seconds${tCatalog("remake.route.keep")}`,
     ])
     expect(
-      within(plan).getByText(t("run.price.credits", { amount: "12.5" }))
+      within(plan).getByText(t("run.price.credits", { amount: "13" }))
     ).toBeDefined()
     expect(
       screen.getByRole("status", {

@@ -255,6 +255,12 @@ export function historyPrice(
   return isEnded && run.cost !== null ? priceOf(run, null) : null
 }
 
+export function runPriceAmount(run: Run): string | null {
+  return run.origin === "demo" || run.cost === null
+    ? null
+    : formatAmount(creditsOfCost(run.cost))
+}
+
 function priceOf(run: Run, estimate: number | null): string | null {
   if (run.cost !== null) {
     return t("run.price.credits", {

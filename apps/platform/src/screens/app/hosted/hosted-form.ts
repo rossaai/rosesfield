@@ -34,6 +34,9 @@ function defaultOf(field: ModelField): FieldValue {
     case "number":
       return field.default ?? undefined
     case "toggle":
+      if (fieldRoleOf(field, "video") === "sound") {
+        return "on"
+      }
       return field.default === null ? undefined : field.default ? "on" : "off"
     case "media":
       return []

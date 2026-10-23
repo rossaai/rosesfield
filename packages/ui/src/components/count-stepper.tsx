@@ -49,7 +49,7 @@ function CountStepper({
       </button>
       <output aria-live="polite" className="text-body tabular-nums">
         <span className="font-medium text-ink">{value}</span>
-        <span className="text-ink-muted">{`/${max}`}</span>
+        <span className="font-medium text-ink-muted">{`/${max}`}</span>
       </output>
       <button
         type="button"

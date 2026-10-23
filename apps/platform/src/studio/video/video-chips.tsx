@@ -9,9 +9,9 @@ import { withUnit } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { aspectField } from "@/screens/app/app-form"
 import {
-  chipIconOf,
   SettingChip,
   StepperChip,
+  settingIconOf,
   withShapes,
 } from "@/screens/app/bar/setting-chip"
 import { numberOf, textOf } from "@/screens/app/fields/field-props"
@@ -41,7 +41,7 @@ function FieldChip({
   shown: (value: string | number) => string
 }): ReactElement {
   const value = form.values.inputs[field.name]
-  const icon = chipIconOf(fieldRoleOf(field, "video"))
+  const icon = settingIconOf(field.name, fieldRoleOf(field, "video"))
   if (field.kind === "number") {
     const min = field.min ?? 0
     const chosen = numberOf(value, field.default ?? min)

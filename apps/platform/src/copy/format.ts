@@ -16,10 +16,7 @@ const disjunctions = new Intl.ListFormat(choiceLocale, {
   type: "disjunction",
 })
 const prices = new Intl.NumberFormat(copyLocale, {
-  maximumFractionDigits: 2,
-})
-const smallPrices = new Intl.NumberFormat(copyLocale, {
-  maximumSignificantDigits: 2,
+  maximumFractionDigits: 0,
 })
 const seconds = new Intl.NumberFormat(copyLocale, { maximumFractionDigits: 1 })
 const durations = new Intl.NumberFormat(copyLocale, {
@@ -86,9 +83,7 @@ export function withUnit(value: number, unit: string): string {
 }
 
 export function formatAmount(amount: number): string {
-  return Math.abs(amount) >= 1
-    ? prices.format(amount)
-    : smallPrices.format(amount)
+  return amount > 0 && amount < 1 ? "<1" : prices.format(amount)
 }
 
 export function formatBytes(bytes: number): string {

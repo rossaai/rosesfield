@@ -12,10 +12,21 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@rosesfield/ui/components/popover"
+import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import { SkeletonGroup } from "@rosesfield/ui/components/skeleton"
 import { cn } from "@rosesfield/ui/lib/cn"
+import {
+  featuredId,
+  filteredSections,
+  filterSections,
+  hasFilter,
+  labSectionsOf,
+  type ModelPickerFilter,
+  type ModelPickerFilters,
+  type ModelPickerSection,
+} from "@rosesfield/ui/lib/model-sections"
 import { motion } from "@rosesfield/ui/motion"
-import { SearchIcon, SparkleIcon } from "lucide-react"
+import { SearchIcon, SlidersHorizontalIcon, SparkleIcon } from "lucide-react"
 import {
   type ReactElement,
   type ReactNode,
@@ -24,12 +35,6 @@ import {
   useRef,
   useState,
 } from "react"
-
-type ModelPickerSection = {
-  id: string
-  label: string
-  rows: readonly ModelPickerRow[]
-}
 
 type ModelPickerProps = {
   trigger: ReactElement
@@ -44,66 +49,12 @@ type ModelPickerProps = {
   isPricing?: boolean
   notice?: ReactNode
   settings?: ReactNode
+  settingsLabel?: string
+  filters?: ModelPickerFilters
   side?: "top" | "right"
   open?: boolean
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
-}
-
-const featuredId = "featured"
-
-function labOf(row: ModelPickerRow): string {
-  return row.lab ?? row.maker
-}
-
-function matches(row: ModelPickerRow, query: string): boolean {
-  const needle = query.trim().toLowerCase()
-  return (
-    needle === "" ||
-    row.name.toLowerCase().includes(needle) ||
-    row.maker.toLowerCase().includes(needle) ||
-    labOf(row).toLowerCase().includes(needle)
-  )
-}
-
-function labSectionsOf(
-  sections: readonly ModelPickerSection[]
-): ModelPickerSection[] {
-  const featured = sections.filter((section) => section.id === featuredId)
-  const seen = new Set<string>(
-    featured.flatMap((section) => section.rows.map((row) => row.id))
-  )
-  const byLab = new Map<string, ModelPickerRow[]>()
-  for (const section of sections) {
-    if (section.id === featuredId) {
-      continue
-    }
-    for (const row of section.rows) {
-      if (!seen.has(row.id)) {
-        seen.add(row.id)
-        byLab.set(labOf(row), [...(byLab.get(labOf(row)) ?? []), row])
-      }
-    }
-  }
-  const labs = [...byLab.entries()].sort(([a], [b]) =>
-    a.localeCompare(b, undefined, { sensitivity: "base" })
-  )
-  return [
-    ...featured,
-    ...labs.map(([lab, rows]) => ({ id: `lab:${lab}`, label: lab, rows })),
-  ]
-}
-
-function filterSections(
-  sections: readonly ModelPickerSection[],
-  query: string
-): ModelPickerSection[] {
-  return sections
-    .map((section) => ({
-      ...section,
-      rows: section.rows.filter((row) => matches(row, query)),
-    }))
-    .filter((section) => section.rows.length > 0)
 }
 
 function LoadingRows(): ReactElement {
@@ -153,12 +104,19 @@ function SectionRows(
 }
 
 function ModelList(
-  props: ModelPickerProps & { query: string; onChosen: () => void }
+  props: ModelPickerProps & {
+    query: string
+    filter: ModelPickerFilter
+    onChosen: () => void
+  }
 ): ReactNode {
   if (props.isLoading === true) {
     return <LoadingRows />
   }
-  const sections = filterSections(labSectionsOf(props.sections), props.query)
+  const sections = filterSections(
+    filteredSections(props.sections, props.filter, props.filters),
+    props.query
+  )
   if (sections.length === 0) {
     const isRefused = props.notice !== undefined && props.notice !== null
     return isRefused && props.query === "" ? null : (
@@ -291,6 +249,7 @@ function placementOf(trigger: HTMLElement | null): Placement | null {
 
 function ModelPicker(props: ModelPickerProps): ReactElement {
   const [query, setQuery] = useState("")
+  const [filter, setFilter] = useState<ModelPickerFilter>("featured")
   const search = useRef<HTMLInputElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
   const [placement, setPlacement] = useState<Placement | null>(null)
@@ -309,44 +268,105 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
   }
   const isAbove = side === "top" && placement !== null
   return (
-    <Popover open={isOpen} onOpenChange={setOpen}>
-      <PopoverTrigger ref={trigger} render={props.trigger} />
-      <PopoverContent
-        data-slot="model-picker"
-        initialFocus={search}
-        side={side}
-        align={side === "top" ? "start" : "end"}
-        sideOffset={insetOf("--spacing-s2_5")}
-        material="thick"
-        {...(placement === null ? {} : { collisionPadding: placement.padding })}
-        {...(isAbove
-          ? {
-              anchor: placement.anchor,
-              style: { transformOrigin: placement.origin },
-            }
-          : {})}
-        className="max-h-[min(var(--available-height),calc(var(--spacing)*160.5))] w-100.5 max-w-[calc(100vw-2*var(--spacing-s4))] gap-0 overflow-hidden p-px"
+    <>
+      <Popover open={isOpen} onOpenChange={setOpen}>
+        <PopoverTrigger ref={trigger} render={props.trigger} />
+        <PopoverContent
+          data-slot="model-picker"
+          initialFocus={search}
+          side={side}
+          align={side === "top" ? "start" : "end"}
+          sideOffset={insetOf("--spacing-s2_5")}
+          {...(placement === null
+            ? {}
+            : { collisionPadding: placement.padding })}
+          {...(isAbove
+            ? {
+                anchor: placement.anchor,
+                style: { transformOrigin: placement.origin },
+              }
+            : {})}
+          className="max-h-[min(var(--available-height),calc(var(--spacing)*160.5))] w-100.5 max-w-[calc(100vw-2*var(--spacing-s4))] gap-0 overflow-hidden p-px"
+        >
+          <PopoverTitle className="sr-only">{props.title}</PopoverTitle>
+          <SearchRow
+            search={search}
+            label={props.searchLabel}
+            placeholder={props.searchPlaceholder}
+            query={query}
+            onQuery={setQuery}
+          />
+          <FilterStrip
+            sections={props.sections}
+            filters={props.filters}
+            filter={filter}
+            onFilter={setFilter}
+          />
+          {props.notice}
+          <ScrollRegion>
+            <ModelList
+              {...props}
+              query={query}
+              filter={filter}
+              onChosen={() => setOpen(false)}
+            />
+          </ScrollRegion>
+        </PopoverContent>
+      </Popover>
+      <ModelSettings {...props} />
+    </>
+  )
+}
+
+function FilterStrip(props: {
+  sections: readonly ModelPickerSection[]
+  filters: ModelPickerFilters | undefined
+  filter: ModelPickerFilter
+  onFilter: (filter: ModelPickerFilter) => void
+}): ReactNode {
+  const { filters } = props
+  if (filters === undefined) {
+    return null
+  }
+  const items = (["featured", "top", "newest", "open"] as const)
+    .filter((filter) => hasFilter(props.sections, filter))
+    .map((filter) => ({ value: filter, label: filters[filter] }))
+  return items.length < 2 ? null : (
+    <div data-slot="model-filters" className="px-s3 pt-s2">
+      <SegmentedControl
+        items={items}
+        value={props.filter}
+        onValueChange={props.onFilter}
+        label={filters.featured}
+        density="row"
+      />
+    </div>
+  )
+}
+
+function ModelSettings(props: ModelPickerProps): ReactNode {
+  if (props.settings === undefined || props.settings === null) {
+    return null
+  }
+  const label = props.settingsLabel ?? props.title
+  return (
+    <Popover>
+      <PopoverTrigger
+        data-slot="model-settings-trigger"
+        aria-label={label}
+        className="inline-flex size-button-small shrink-0 items-center justify-center rounded-full text-ink-muted hover:bg-(--tint) hover:text-ink [&_svg]:glyph"
       >
-        <PopoverTitle className="sr-only">{props.title}</PopoverTitle>
-        <SearchRow
-          search={search}
-          label={props.searchLabel}
-          placeholder={props.searchPlaceholder}
-          query={query}
-          onQuery={setQuery}
-        />
-        {props.notice}
-        <ScrollRegion>
-          <ModelList {...props} query={query} onChosen={() => setOpen(false)} />
-        </ScrollRegion>
-        {props.settings === undefined || props.settings === null ? null : (
-          <div
-            data-slot="model-settings"
-            className="flex max-h-list-max min-h-0 flex-col gap-s4 overflow-y-auto border-t border-(--line) px-3 pt-3 pb-2"
-          >
-            {props.settings}
-          </div>
-        )}
+        <SlidersHorizontalIcon aria-hidden="true" />
+      </PopoverTrigger>
+      <PopoverContent
+        data-slot="model-settings"
+        side="top"
+        align="start"
+        sideOffset={insetOf("--spacing-s2_5")}
+        className="max-h-[min(var(--available-height),calc(var(--spacing)*160.5))] w-100.5 max-w-[calc(100vw-2*var(--spacing-s4))] gap-s4 overflow-y-auto px-3 pt-3 pb-2"
+      >
+        <PopoverTitle className="sr-only">{label}</PopoverTitle>
+        {props.settings}
       </PopoverContent>
     </Popover>
   )
@@ -354,6 +374,8 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
 
 export type {
   ModelBadge,
+  ModelPickerFilter,
+  ModelPickerFilters,
   ModelPickerProps,
   ModelPickerRow,
   ModelPickerSection,

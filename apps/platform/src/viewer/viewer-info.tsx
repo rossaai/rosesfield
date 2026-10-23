@@ -2,6 +2,7 @@ import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { type KeyframeFacts, keyframeOf } from "@rosesfield/catalog/storyboard"
 import type { Asset, Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
+import { CreditPrice } from "@rosesfield/ui/components/credit-price"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { useQuery } from "@tanstack/react-query"
@@ -17,7 +18,12 @@ import {
   joinParts,
 } from "@/copy/format"
 import { t } from "@/copy/t"
-import { idsOf, runPrice, runSeconds } from "@/pieces/run/run-facts"
+import {
+  idsOf,
+  runPrice,
+  runPriceAmount,
+  runSeconds,
+} from "@/pieces/run/run-facts"
 import { inputRowsOf } from "@/pieces/run/run-inputs"
 import { RunShotRows } from "@/studio/remake/shot-details"
 import { KeyframeAnchorDetail } from "@/studio/storyboard/keyframe-info"
@@ -141,6 +147,7 @@ function MadeInfo({
   const keyframe = keyframeOf(run, assetId)
   const models = useRunModels(run)
   const price = runPrice(run)
+  const amount = runPriceAmount(run)
   return (
     <>
       <PanelHead run={run} line={formatDate(run.createdAt)} />
@@ -170,7 +177,9 @@ function MadeInfo({
           </Detail>
         )}
         {price === null ? null : (
-          <Detail label={t("viewer.label.price")}>{price}</Detail>
+          <Detail label={t("viewer.label.price")}>
+            {amount === null ? price : <CreditPrice amount={amount} />}
+          </Detail>
         )}
       </RunSection>
     </>

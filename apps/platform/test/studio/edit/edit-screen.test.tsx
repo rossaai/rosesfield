@@ -123,14 +123,10 @@ afterEach(() => {
 })
 
 describe("Edit opened at an old address", () => {
-  it("shows the tool row with the old address's tool chosen", async () => {
+  it("titles the screen with the old address's tool, with no second row of tools", async () => {
     openEdit(undefined)
-    const relightTab = await screen.findByRole("tab", {
-      name: nameOf("relight"),
-    })
-    expect(relightTab.getAttribute("aria-selected")).toBe("true")
-    const angles = screen.getByRole("tab", { name: nameOf("angles") })
-    expect(angles.getAttribute("aria-selected")).toBe("false")
+    await screen.findByRole("heading", { level: 1, name: nameOf("relight") })
+    expect(screen.queryByRole("tab", { name: nameOf("angles") })).toBeNull()
   })
 })
 
@@ -144,23 +140,13 @@ describe("the photo on Edit's canvas", () => {
     expect(shown.getAttribute("width")).toBe("1200")
     expect(shown.getAttribute("height")).toBe("800")
   })
-
-  it("keeps the photo when you switch tools, by opening the next tool with it", async () => {
-    const history = openEdit(photo)
-    await screen.findByRole("img", { name: t("viewer.compare.yours") })
-    fireEvent.click(screen.getByRole("tab", { name: nameOf("angles") }))
-    await vi.waitFor(() => {
-      expect(history.location.pathname).toBe("/apps/angles")
-    })
-    expect(history.location.search).toContain(photo)
-  })
 })
 
 describe("the settings bar", () => {
   it("is docked at the bottom edge of a phone screen, with the prompt and Generate", async () => {
     asPhone()
     openEdit(undefined)
-    await screen.findByRole("tab", { name: nameOf("relight") })
+    await screen.findByRole("heading", { level: 1, name: nameOf("relight") })
     const dock = document.querySelector("[data-slot='prompt-dock']")
     expect(dock?.getAttribute("data-place")).toBe("edge")
     expect(dock?.className).toContain("sticky")
@@ -173,7 +159,7 @@ describe("the settings bar", () => {
 
   it("says what is missing when you press Generate without a photo", async () => {
     openEdit(undefined)
-    await screen.findByRole("tab", { name: nameOf("relight") })
+    await screen.findByRole("heading", { level: 1, name: nameOf("relight") })
     const dock = document.querySelector("[data-slot='prompt-dock']")
     const generate = [...(dock?.querySelectorAll("button") ?? [])].find(
       (button) => button.textContent?.includes(t("run.generate")) === true
@@ -187,7 +173,7 @@ describe("the settings bar", () => {
 
   it("floats over the canvas on a wide screen", async () => {
     openEdit(undefined)
-    await screen.findByRole("tab", { name: nameOf("relight") })
+    await screen.findByRole("heading", { level: 1, name: nameOf("relight") })
     const dock = document.querySelector("[data-slot='prompt-dock']")
     expect(dock?.getAttribute("data-place")).toBe("float")
   })

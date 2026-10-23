@@ -92,10 +92,10 @@ describe("the shell's dialogs", () => {
 
   it("opens the credits as a dialog with the balance, the key state and Comfy billing", async () => {
     openBar()
-    const dialog = await press("12.5 credits")
+    const dialog = await press("13 credits")
     expect(within(dialog).getByText(t("key.account.title"))).toBeTruthy()
     expect(
-      within(dialog).getByText(t("key.balance", { amount: "12.5" }))
+      within(dialog).getByText(t("key.balance", { amount: "13" }))
     ).toBeTruthy()
     expect(
       within(dialog).getByText(t("settings.engine.status.unchecked"))

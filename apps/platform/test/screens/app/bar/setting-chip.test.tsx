@@ -184,8 +184,8 @@ describe("the aspect chip's menu", () => {
   })
 })
 
-describe("a choice chip with no icon of its own", () => {
-  it("names its setting with its value, so Relight's three Auto chips read apart", () => {
+describe("a choice chip of a setting with no role", () => {
+  it("carries the icon its setting's name gives, so Relight's three Auto chips read apart", () => {
     const relight = appListing.parse(findApp("relight"))
     render(
       <TooltipProvider>
@@ -199,14 +199,10 @@ describe("a choice chip with no icon of its own", () => {
         ))}
       </TooltipProvider>
     )
-    const faces = screen
+    const icons = screen
       .getAllByRole("combobox")
-      .map(
-        (chip) => chip.querySelector("[data-slot='select-value']")?.textContent
-      )
-    expect(new Set(faces).size).toBe(3)
-    for (const face of faces) {
-      expect(face).toMatch(/^\S.*: \S/)
-    }
+      .map((chip) => chip.querySelector("svg")?.getAttribute("class"))
+    expect(icons.every((icon) => icon !== undefined)).toBe(true)
+    expect(new Set(icons).size).toBe(3)
   })
 })

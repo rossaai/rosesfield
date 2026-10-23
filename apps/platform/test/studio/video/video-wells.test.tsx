@@ -60,10 +60,10 @@ function zone(title: string): HTMLElement {
 }
 
 describe("Video's image wells", () => {
-  it("shows the References drop zone with three discs, its name and the kind it takes, with no caption or note above it", () => {
+  it("shows the References drop zone with one large glyph, its name and the kind it takes, with no caption or note above it", () => {
     show(<VideoWells slots={references} form={formOf()} />)
     const drop = zone(tCatalog("video.well.references"))
-    expect(drop.querySelectorAll("svg")).toHaveLength(3)
+    expect(drop.querySelectorAll("svg")).toHaveLength(1)
     expect(document.querySelector('[data-slot="field-caption"]')).toBeNull()
     expect(document.querySelector('[data-slot="field-note"]')).toBeNull()
   })

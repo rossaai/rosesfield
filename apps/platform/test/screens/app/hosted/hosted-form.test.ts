@@ -63,7 +63,7 @@ describe("a hosted model's form", () => {
       prompt: "a door",
       aspectRatio: "16:9",
       duration: 5,
-      generateAudio: "off",
+      generateAudio: "on",
       images: [],
     })
   })

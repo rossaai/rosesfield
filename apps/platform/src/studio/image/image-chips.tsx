@@ -8,6 +8,7 @@ import {
   chipIconOf,
   SettingChip,
   StepperChip,
+  settingIconOf,
   withShapes,
 } from "@/screens/app/bar/setting-chip"
 import { fieldCaption } from "@/screens/app/hosted/field-words"
@@ -36,7 +37,7 @@ export function FieldChoiceChip({
   return (
     <ChipSelect
       label={fieldCaption(field)}
-      icon={chipIconOf(role)}
+      icon={settingIconOf(field.name, role)}
       value={chosen}
       display={chosen === "" ? t("field.choice.notSet") : chosen}
       onValueChange={(next) =>

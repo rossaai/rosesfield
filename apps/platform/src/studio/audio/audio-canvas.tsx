@@ -15,6 +15,7 @@ import { useCanvasView } from "@/screens/app/canvas-view"
 import { historyGridItems } from "@/screens/history/history-grid-items"
 import { ResultGrid } from "@/screens/library/result-grid"
 import { WaveformPlayer } from "@/studio/audio/waveform-player"
+import { useViewer } from "@/viewer/viewer-context"
 
 type AudioCanvasProps = {
   app: AppListing
@@ -29,6 +30,7 @@ function AudioOutputs({
   run: Run
   chrome: RunChromeOf
 }): ReactElement {
+  const viewer = useViewer()
   if (run.status !== "done") {
     return <RunOutputs run={run} chrome={chrome} />
   }
@@ -36,7 +38,11 @@ function AudioOutputs({
     <RunFrame chrome={chrome} place="under">
       <div className="flex w-full flex-col gap-s2">
         {run.outputs.map((assetId) => (
-          <WaveformPlayer key={assetId} assetId={assetId} />
+          <WaveformPlayer
+            key={assetId}
+            assetId={assetId}
+            onOpen={(origin) => viewer.open(assetId, origin, run.outputs)}
+          />
         ))}
       </div>
     </RunFrame>

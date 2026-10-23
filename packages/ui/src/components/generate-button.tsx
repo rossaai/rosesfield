@@ -3,7 +3,7 @@ import { interaction } from "@rosesfield/ui/components/interaction"
 import type { GenerateButtonForm } from "@rosesfield/ui/contracts/generate-button.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
-import { SparkleIcon } from "lucide-react"
+import { CoinsIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 
 type GenerateButtonProps = Omit<ButtonPrimitive.Props, "children" | "form"> & {
@@ -24,7 +24,7 @@ function Price({ price }: { price: ReactNode }): ReactElement {
       data-slot="generate-button-price"
       className="inline-flex items-center gap-0.5 text-label tabular-nums"
     >
-      <SparkleIcon aria-hidden="true" className="glyph-small" />
+      <CoinsIcon aria-hidden="true" className="glyph-small" />
       {price}
     </span>
   )

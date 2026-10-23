@@ -19,8 +19,8 @@ function areaLabels(bar: HTMLElement): string[] {
 
 function balancePill(bar: HTMLElement): HTMLElement {
   const pill = within(bar)
-    .getAllByRole("button", { name: "12.5 credits" })
-    .find((button) => button.textContent === "12.5 credits")
+    .getAllByRole("button", { name: "13 credits" })
+    .find((button) => button.textContent === "13")
   if (pill === undefined) {
     throw new Error("the bar holds no balance pill")
   }
@@ -116,13 +116,13 @@ describe("the top bar", () => {
     const bar = await barAt("/")
     const balance = balancePill(bar)
     expect(balance.firstElementChild?.tagName.toLowerCase()).toBe("svg")
-    expect(balance.lastElementChild?.textContent).toBe("12.5 credits")
+    expect(balance.lastElementChild?.textContent).toBe("13")
   })
 
   it("collapses the balance to a key circle on a compact width, named by its label", async () => {
     const bar = await barAt("/")
     const circle = within(bar)
-      .getAllByRole("button", { name: "12.5 credits" })
+      .getAllByRole("button", { name: "13 credits" })
       .find((button) => button.textContent === "")
     expect(circle?.parentElement?.className.split(" ")).toContain(
       "@regular:hidden"

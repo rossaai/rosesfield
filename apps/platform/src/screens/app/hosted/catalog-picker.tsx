@@ -11,6 +11,7 @@ import {
 import {
   type ModelBadge,
   ModelPicker,
+  type ModelPickerFilters,
   type ModelPickerSection,
   type ModelPickerTag,
   type ModelPrice,
@@ -260,6 +261,13 @@ export function pickerSections(
         mark: <LabMark maker={labOf(row)} />,
         badges: badgesOf(row.id, row.tags, row.facts, today),
         ...(price === undefined ? {} : { price }),
+        ...(row.facts?.rank === undefined || row.facts.rank === null
+          ? {}
+          : { rank: row.facts.rank.position }),
+        ...(row.facts?.release === undefined || row.facts.release === null
+          ? {}
+          : { released: row.facts.release }),
+        isOpen: row.tags.some((tag) => tag.kind === "open-weights"),
       }
     }),
   }))
@@ -297,6 +305,15 @@ export function pickerTrigger(
   )
 }
 
+export function pickerFilters(): ModelPickerFilters {
+  return {
+    featured: t("model.picker.featured"),
+    top: catalogWords("comfy.badge.top") ?? t("model.picker.featured"),
+    newest: catalogWords("comfy.badge.new") ?? t("model.picker.featured"),
+    open: t("model.tag.openWeights"),
+  }
+}
+
 export function CatalogPicker({
   hosted,
   defaultOpen = false,
@@ -321,6 +338,8 @@ export function CatalogPicker({
       onOpenChange={setOpen}
       isPricing={isPricing}
       settings={settings}
+      settingsLabel={t("bar.settings")}
+      filters={pickerFilters()}
       side={isBeside ? "right" : "top"}
       isLoading={hosted.isLoading}
       notice={

@@ -125,9 +125,9 @@ describe("the price on Generate for a hosted model", () => {
       () => useStartRun(image, form, undefined, hosted),
       { wrapper }
     )
-    expect(result.current.priceValue).toBe("6.5")
+    expect(result.current.priceValue).toBe("7")
     expect(result.current.priceName).toBe(
-      t("run.generate.priced", { amount: "6.5" })
+      t("run.generate.priced", { amount: "7" })
     )
   })
 })

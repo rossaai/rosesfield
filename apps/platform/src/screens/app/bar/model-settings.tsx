@@ -27,6 +27,7 @@ import { AspectField, CountField } from "@/screens/app/fields/output-fields"
 import {
   openWeightsBadge,
   openWeightsTag,
+  pickerFilters,
   rankTagOf,
   weightsLinkOf,
 } from "@/screens/app/hosted/catalog-picker"
@@ -227,6 +228,8 @@ export function ChoiceModelPicker({
       onOpenChange={setOpen}
       isPricing={isPricing}
       settings={settings}
+      settingsLabel={t("bar.settings")}
+      filters={pickerFilters()}
       side="top"
     />
   )

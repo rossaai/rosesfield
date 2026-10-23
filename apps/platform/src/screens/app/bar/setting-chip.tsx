@@ -10,7 +10,23 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@rosesfield/ui/components/popover"
-import { ClockIcon, GemIcon, HashIcon, MoveIcon, ScanIcon } from "lucide-react"
+import {
+  BrushIcon,
+  CameraIcon,
+  ClockIcon,
+  CompassIcon,
+  DicesIcon,
+  GaugeIcon,
+  GemIcon,
+  HashIcon,
+  LightbulbIcon,
+  MoveIcon,
+  PaletteIcon,
+  ScanIcon,
+  SlidersHorizontalIcon,
+  SunDimIcon,
+  Volume2Icon,
+} from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { withUnit } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
@@ -55,15 +71,29 @@ export function chipIconOf(role: FieldRole | null): ReactNode {
   }
 }
 
+const namedIcons: readonly (readonly [RegExp, () => ReactNode])[] = [
+  [/move/i, () => <MoveIcon />],
+  [/camera|lens/i, () => <CameraIcon />],
+  [/direction|angle/i, () => <CompassIcon />],
+  [/soft|blur/i, () => <SunDimIcon />],
+  [/colou?r|palette|tone/i, () => <PaletteIcon />],
+  [/light/i, () => <LightbulbIcon />],
+  [/sound|audio/i, () => <Volume2Icon />],
+  [/seed/i, () => <DicesIcon />],
+  [/style|look/i, () => <BrushIcon />],
+  [/strength|scale|amount|guidance/i, () => <GaugeIcon />],
+]
+
+export function settingIconOf(name: string, role: FieldRole | null): ReactNode {
+  const named = namedIcons.find(([pattern]) => pattern.test(name))
+  return chipIconOf(role) ?? named?.[1]() ?? <SlidersHorizontalIcon />
+}
+
 export function inputIconOf(
   app: AppListing,
   input: InputDefinition
 ): ReactNode {
-  return input.name === "cameraMove" ? (
-    <MoveIcon />
-  ) : (
-    chipIconOf(inputRoleOf(input.name, app.output.kind))
-  )
+  return settingIconOf(input.name, inputRoleOf(input.name, app.output.kind))
 }
 
 export function CountChip({

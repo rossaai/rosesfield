@@ -8,6 +8,7 @@ import {
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
+import { CheckIcon } from "lucide-react"
 import type { ComponentProps, ReactElement, ReactNode } from "react"
 
 const navLinkClass = cn(
@@ -72,6 +73,7 @@ type AreaMenuProps = {
   children: string
   apps: ReadonlyArray<AreaApp>
   current?: boolean
+  currentId?: string | null
   defaultOpen?: boolean
   renderLink?: (app: AreaApp) => ReactElement
 }
@@ -80,6 +82,7 @@ function AreaMenu({
   children,
   apps,
   current = false,
+  currentId = null,
   defaultOpen = false,
   renderLink,
 }: AreaMenuProps): ReactElement {
@@ -103,7 +106,8 @@ function AreaMenu({
             render={
               renderLink?.(app) ?? ((props) => <a {...props} href={app.href} />)
             }
-            className="items-start"
+            aria-current={app.id === currentId ? "page" : undefined}
+            className="items-start aria-[current=page]:bg-(--tint)"
           >
             <span aria-hidden="true" className="mt-0.5 flex [&_svg]:size-5">
               {app.icon}
@@ -114,6 +118,12 @@ function AreaMenu({
                 {app.line}
               </span>
             </span>
+            {app.id === currentId ? (
+              <CheckIcon
+                aria-hidden="true"
+                className="ms-auto mt-0.5 shrink-0 text-ink glyph-small"
+              />
+            ) : null}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
