@@ -116,7 +116,7 @@
     },
     {
       "path": "apps/platform/src/copy/shell.en.ts",
-      "sha256": "1e02336029a3e05153cf51798f20409eb415156367722f75f4ef604d0c288a56"
+      "sha256": "da84cd7b9affc22e1734b505dd626bf7d4c984ca849fa5803526ef9e3cb8b9a2"
     },
     {
       "path": "apps/platform/src/copy/welcome.en.ts",

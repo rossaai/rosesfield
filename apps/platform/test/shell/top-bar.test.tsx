@@ -71,6 +71,7 @@ describe("the top bar", () => {
       "Image",
       "Video",
       "Audio",
+      "3D",
       "Characters",
       "Agent",
       "Library",
@@ -78,7 +79,7 @@ describe("the top bar", () => {
       "Settings",
     ])
     const separator = bar.querySelector("[data-slot='nav-separator']")
-    expect(separator?.previousElementSibling?.textContent).toBe("Audio")
+    expect(separator?.previousElementSibling?.textContent).toBe("3D")
     expect(separator?.nextElementSibling?.textContent).toBe("Characters")
   })
 
@@ -176,7 +177,9 @@ describe("the top bar", () => {
     const bar = await barAt("/")
     fireEvent.mouseDown(within(bar).getByRole("button", { name: "Image" }))
     const items = await screen.findAllByRole("menuitem")
-    const imageApps = catalogApps.filter((app) => app.category === "image")
+    const imageApps = catalogApps.filter(
+      (app) => app.category === "image" && app.output.kind === "image"
+    )
     expect(items.map((item) => item.getAttribute("href"))).toEqual(
       imageApps.map((app) => `/apps/${app.id}`)
     )

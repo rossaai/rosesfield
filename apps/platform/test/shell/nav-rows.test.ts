@@ -11,6 +11,7 @@ describe("the top bar's links", () => {
       "image",
       "video",
       "audio",
+      "mesh",
     ])
     expect(groups.rest.map((link) => link.to)).toEqual([
       "/characters",
@@ -21,24 +22,30 @@ describe("the top bar's links", () => {
     ])
   })
 
-  it("put each app under the area of its category, in the catalog's order", () => {
+  it("put each app under the area of what it makes, in the catalog's order, with 3D models in their own area", () => {
     const groups = navGroups()
     for (const area of groups.areas) {
       expect(area.apps.map((app) => app.id)).toEqual(
         catalogApps
-          .filter((app) => app.category === area.id)
+          .filter(
+            (app) => app.category !== "character" && app.output.kind === area.id
+          )
           .map((app) => app.id)
       )
     }
+    expect(
+      groups.areas.find((area) => area.id === "mesh")?.apps.map((app) => app.id)
+    ).toEqual(["three-d"])
     const listed = groups.areas.flatMap((area) => area.apps)
     expect(listed.some((app) => app.category === "character")).toBe(false)
   })
 
   it("leave out an area with no app", () => {
-    const noAudio = catalogApps.filter((app) => app.category !== "audio")
+    const noAudio = catalogApps.filter((app) => app.output.kind !== "audio")
     expect(navGroups(noAudio).areas.map((area) => area.id)).toEqual([
       "image",
       "video",
+      "mesh",
     ])
   })
 })

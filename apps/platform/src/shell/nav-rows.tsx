@@ -46,7 +46,7 @@ export type ScreenLink = {
   to: ScreenPath
 }
 
-type MediaKind = "image" | "video" | "audio"
+type MediaKind = "image" | "video" | "audio" | "mesh"
 
 export type MediaArea = {
   id: MediaKind
@@ -66,6 +66,7 @@ const areaLabels = {
   image: "shell.area.image",
   video: "shell.area.video",
   audio: "shell.area.audio",
+  mesh: "shell.area.mesh",
 } satisfies Record<MediaKind, CopyKey>
 
 const kindGlyphs = {
@@ -131,11 +132,13 @@ export const historyLink = screenLink(
 export function navGroups(
   apps: readonly AppListing[] = catalogApps
 ): NavGroups {
-  const kinds: readonly MediaKind[] = ["image", "video", "audio"]
+  const kinds: readonly MediaKind[] = ["image", "video", "audio", "mesh"]
   return {
     explore: exploreLink,
     areas: kinds.flatMap((kind) => {
-      const inArea = apps.filter((app) => app.category === kind)
+      const inArea = apps.filter(
+        (app) => app.category !== "character" && app.output.kind === kind
+      )
       return inArea.length === 0
         ? []
         : [{ id: kind, label: areaLabels[kind], apps: inArea }]

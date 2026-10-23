@@ -22,6 +22,7 @@ export const outputKinds: readonly OutputKind[] = [
   "image",
   "video",
   "audio",
+  "mesh",
   "text",
 ]
 const takenKinds: readonly TakenKind[] = [
