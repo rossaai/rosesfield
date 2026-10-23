@@ -1,7 +1,6 @@
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { type ReactElement, useEffect, useRef, useState } from "react"
 import { tCatalog } from "@/copy/t"
-import { CollapsibleSection } from "@/pieces/collapsible-section"
 import { DropWell } from "@/pieces/drop-well"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { listOf } from "@/screens/app/fields/field-props"
@@ -106,11 +105,7 @@ function Settings({ screen }: { screen: LipsyncScreen }): ReactElement | null {
   const shown = [...length, ...fields.rest]
   return (
     <>
-      {shown.length === 0 ? null : (
-        <CollapsibleSection title={tCatalog("video.settings.more")}>
-          <HostedFields fields={shown} form={form} />
-        </CollapsibleSection>
-      )}
+      {shown.length === 0 ? null : <HostedFields fields={shown} form={form} />}
       {screen.isGraph ? (
         <AdvancedFields
           app={screen.bodyApp}

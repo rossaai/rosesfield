@@ -6,7 +6,6 @@ import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { useNavigate } from "@tanstack/react-router"
 import { type ReactElement, useMemo, useRef } from "react"
 import { t, tCatalog } from "@/copy/t"
-import { CollapsibleSection } from "@/pieces/collapsible-section"
 import { CatalogPicker, modelNameOf } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
@@ -159,9 +158,7 @@ function Settings({
     <>
       <HostedFields fields={fields.required} form={state.form} />
       {fields.rest.length === 0 ? null : (
-        <CollapsibleSection title={tCatalog("video.settings.more")}>
-          <HostedFields fields={fields.rest} form={state.form} />
-        </CollapsibleSection>
+        <HostedFields fields={fields.rest} form={state.form} />
       )}
     </>
   )

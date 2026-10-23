@@ -1,7 +1,6 @@
 import type { AppListing } from "@rosesfield/contract"
 import type { ReactElement } from "react"
 import { t } from "@/copy/t"
-import { CollapsibleSection } from "@/pieces/collapsible-section"
 import { PopoverChip, settingIconOf } from "@/screens/app/bar/setting-chip"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
@@ -30,19 +29,17 @@ export function AdvancedFields({
   }
   const value = form.values.inputs[seed.name]
   return (
-    <CollapsibleSection title={t("field.advanced")}>
-      <SeedField
-        mode={form.values.seedMode}
-        value={value}
-        onMode={(mode) => {
-          form.setForm({ seedMode: mode })
-          if (mode === "fixed" && typeof value !== "number") {
-            form.setInput(seed.name, lastSeed ?? randomSeed())
-          }
-        }}
-        onChange={(next) => form.setInput(seed.name, next)}
-      />
-    </CollapsibleSection>
+    <SeedField
+      mode={form.values.seedMode}
+      value={value}
+      onMode={(mode) => {
+        form.setForm({ seedMode: mode })
+        if (mode === "fixed" && typeof value !== "number") {
+          form.setInput(seed.name, lastSeed ?? randomSeed())
+        }
+      }}
+      onChange={(next) => form.setInput(seed.name, next)}
+    />
   )
 }
 

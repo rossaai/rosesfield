@@ -93,7 +93,7 @@ function show(value: ShotScreen): HTMLElement {
 const lists = ["movement", "camera", "lens", "focus", "light", "color", "mood"]
 
 describe("Shot's input column when it opens", () => {
-  it("shows 7 shot choices, each on Auto, with Advanced closed", () => {
+  it("shows 7 shot choices, each on Auto, and the seed as a plain field with no Advanced section", () => {
     const container = show(screenOf({}))
     const choices = container.querySelector<HTMLElement>(
       "[data-slot='shot-choices']"
@@ -109,8 +109,10 @@ describe("Shot's input column when it opens", () => {
     expect(
       within(choices).getAllByText(tCatalog("choice.auto")).length
     ).toBeGreaterThanOrEqual(lists.length)
-    const advanced = screen.getByRole("button", { name: t("field.advanced") })
-    expect(advanced.getAttribute("aria-expanded")).toBe("false")
+    expect(
+      screen.queryByRole("button", { name: t("field.advanced") })
+    ).toBeNull()
+    expect(screen.getByText(t("field.seed.label"))).toBeTruthy()
   })
 
   it("shows the start frame well, and no words while the scene is empty", () => {
@@ -140,9 +142,8 @@ describe("a model whose schema takes no start frame", () => {
 })
 
 describe("after Use these inputs", () => {
-  it("opens Advanced so the run's seed shows", () => {
+  it("shows the run's seed with no section to open", () => {
     show(screenOf({ filled: 1 }))
-    const advanced = screen.getByRole("button", { name: t("field.advanced") })
-    expect(advanced.getAttribute("aria-expanded")).toBe("true")
+    expect(screen.getByText(t("field.seed.label"))).toBeTruthy()
   })
 })

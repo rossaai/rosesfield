@@ -1,6 +1,12 @@
 import { appListing } from "@rosesfield/contract"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { act, cleanup, render, renderHook } from "@testing-library/react"
+import {
+  act,
+  cleanup,
+  render,
+  renderHook,
+  within,
+} from "@testing-library/react"
 import type { ReactElement, ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { t, tCatalog } from "@/copy/t"
@@ -169,7 +175,11 @@ describe("the Ads model menu", () => {
       `[aria-label^="${t("model.picker.title")} "]`
     )
     expect(row).not.toBeNull()
-    expect(view.container.querySelector("[role=radiogroup]")).toBeNull()
+    expect(
+      within(view.container).queryByRole("radiogroup", {
+        name: t("model.picker.title"),
+      })
+    ).toBeNull()
     const style = tCatalog("ads.input.style.label")
     expect(text.indexOf(t("model.picker.title"))).toBeLessThan(
       text.indexOf(style)

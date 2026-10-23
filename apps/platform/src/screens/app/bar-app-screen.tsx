@@ -86,6 +86,12 @@ function BarModelChips({
   chips: readonly string[]
 }): ReactElement {
   const { hosted } = state
+  const formats =
+    hosted?.fields === null || hosted?.fields === undefined
+      ? chips.map((name) => (
+          <SettingChip key={name} app={app} form={state.form} name={name} />
+        ))
+      : null
   return (
     <>
       {hosted?.isTaskApp === true ? (
@@ -93,15 +99,11 @@ function BarModelChips({
           hosted={hosted}
           form={state.form}
           output={app.output.kind}
+          formats={formats}
         />
       ) : (
-        <BarModelChip app={app} state={state} chips={chips} />
+        <BarModelChip app={app} state={state} chips={chips} formats={formats} />
       )}
-      {hosted?.fields === null || hosted?.fields === undefined
-        ? chips.map((name) => (
-            <SettingChip key={name} app={app} form={state.form} name={name} />
-          ))
-        : null}
     </>
   )
 }

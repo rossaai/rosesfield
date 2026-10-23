@@ -25,6 +25,7 @@ function ChoiceInputField(props: InputFieldProps<ChoiceInput>): ReactElement {
       items={items}
       value={textOf(props.value) || props.input.default}
       onChange={props.onChange}
+      setting={props.input.name}
       note={inputNote(props.app, props.input)}
       register={props.register}
     />

@@ -2,7 +2,6 @@ import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import type { ReactElement } from "react"
 import { isAssetInput } from "@/catalog/app-facts"
 import { t, tCatalog } from "@/copy/t"
-import { CollapsibleSection } from "@/pieces/collapsible-section"
 import { ChoiceField } from "@/screens/app/fields/choice-field"
 import { textOf } from "@/screens/app/fields/field-props"
 import { inputCaption } from "@/screens/app/fields/input-copy"
@@ -123,7 +122,7 @@ function AdvancedPart(props: EffectsPanelProps): ReactElement {
   const seed = seedInput?.type === "seed" ? seedInput : null
   const seedValue = seed === null ? undefined : form.values.inputs[seed.name]
   return (
-    <CollapsibleSection title={t("field.advanced")}>
+    <>
       <ChoiceInputField
         {...props}
         name="resolution"
@@ -142,7 +141,7 @@ function AdvancedPart(props: EffectsPanelProps): ReactElement {
           onChange={(next) => form.setInput(seed.name, next)}
         />
       )}
-    </CollapsibleSection>
+    </>
   )
 }
 

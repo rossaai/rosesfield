@@ -232,7 +232,7 @@ describe("Ads on a phone", () => {
       t("field.aspect.label"),
       t("field.count.label"),
       tCatalog("ads.input.style.label"),
-      t("field.advanced"),
+      t("field.seed.label"),
     ].map((label) => text.indexOf(label))
     expect(order.every((at) => at >= 0)).toBe(true)
     expect([...order].sort((a, b) => a - b)).toEqual(order)

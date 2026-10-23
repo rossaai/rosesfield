@@ -2,8 +2,7 @@ import type { InputDefinition } from "@rosesfield/contract"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { type ReactElement, useEffect, useRef, useState } from "react"
 import { formatDuration } from "@/copy/format"
-import { t, tCatalog } from "@/copy/t"
-import { CollapsibleSection } from "@/pieces/collapsible-section"
+import { tCatalog } from "@/copy/t"
 import { DropWell } from "@/pieces/drop-well"
 import { ChoiceControl } from "@/screens/app/fields/choice-field"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
@@ -173,7 +172,7 @@ function AdvancedSection({
   const { form } = state
   const seed = form.values.inputs[seedInput]
   return (
-    <CollapsibleSection title={t("field.advanced")}>
+    <>
       {inputs.map((input) => (
         <EditField key={input.name} state={state} input={input} />
       ))}
@@ -190,7 +189,7 @@ function AdvancedSection({
           onChange={(next) => form.setInput(seedInput, next)}
         />
       ) : null}
-    </CollapsibleSection>
+    </>
   )
 }
 

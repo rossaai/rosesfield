@@ -2,11 +2,15 @@ import { fieldRoleOf, type ModelField } from "@rosesfield/catalog/comfy"
 import { Button } from "@rosesfield/ui/components/button"
 import { ChipSelect } from "@rosesfield/ui/components/chip-select"
 import type { ReactElement } from "react"
+import { bySettingOrder, settingOf } from "@/catalog/setting-registry"
 import { t } from "@/copy/t"
 import {
+  chosenIconOf,
   PopoverChip,
   StepperChip,
   settingIconOf,
+  toggleIconOf,
+  withOptionIcons,
   withShapes,
 } from "@/screens/app/bar/setting-chip"
 import { fieldCaption } from "@/screens/app/hosted/field-words"
@@ -35,7 +39,12 @@ export function FieldChoiceChip({
   return (
     <ChipSelect
       label={fieldCaption(field)}
-      icon={settingIconOf(field.name, role)}
+      icon={
+        role === "aspect"
+          ? (withShapes([{ value: chosen, label: chosen }])[0]?.icon ??
+            settingIconOf(field.name, role))
+          : chosenIconOf(field.name, role, chosen)
+      }
       value={chosen}
       display={chosen === "" ? t("field.choice.notSet") : chosen}
       onValueChange={(next) =>
@@ -44,7 +53,11 @@ export function FieldChoiceChip({
           field.options.find((one) => String(one) === next)
         )
       }
-      options={role === "aspect" ? withShapes(options) : options}
+      options={
+        role === "aspect"
+          ? withShapes(options)
+          : withOptionIcons(field.name, options)
+      }
     />
   )
 }
@@ -104,7 +117,7 @@ export function ModelFieldChip({
           aria-pressed={isOn}
           onClick={() => form.setInput(field.name, isOn ? "off" : "on")}
         >
-          {icon}
+          {toggleIconOf(field.name, isOn)}
           {label}
         </Button>
       )
@@ -129,14 +142,20 @@ export function ModelFieldChips({
 }): ReactElement {
   return (
     <>
-      {fields.map((field) => (
-        <ModelFieldChip
-          key={field.name}
-          field={field}
-          form={form}
-          output={output}
-        />
-      ))}
+      {[...fields]
+        .sort(
+          bySettingOrder((field) =>
+            settingOf(field.name, fieldRoleOf(field, output))
+          )
+        )
+        .map((field) => (
+          <ModelFieldChip
+            key={field.name}
+            field={field}
+            form={form}
+            output={output}
+          />
+        ))}
     </>
   )
 }

@@ -136,6 +136,7 @@ function ChoiceFieldControl({
         items={items}
         value={chosen}
         notSet={t("field.choice.notSet")}
+        setting={field.name}
         onChange={(next) => {
           const option = field.options.find((one) => String(one) === next)
           form.setInput(field.name, option)

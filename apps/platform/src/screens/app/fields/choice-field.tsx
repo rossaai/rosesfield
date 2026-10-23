@@ -8,15 +8,17 @@ import {
 } from "@rosesfield/ui/components/select"
 import {
   type ReactElement,
+  type ReactNode,
   type RefObject,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
 } from "react"
+import { withOptionIcons } from "@/catalog/setting-registry"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 
-export type ChoiceItem = { value: string; label: string }
+export type ChoiceItem = { value: string; label: string; icon?: ReactNode }
 
 type ChoiceControlProps = {
   label: string
@@ -25,6 +27,7 @@ type ChoiceControlProps = {
   onChange: (value: string) => void
   register?: (focus: () => void) => void
   notSet?: string
+  setting?: string
 }
 
 export const segmentLimit = 4
@@ -102,7 +105,11 @@ function SegmentsOrSelect(props: ChoiceControlProps): ReactElement {
   )
 }
 
-export function ChoiceControl(props: ChoiceControlProps): ReactElement {
+export function ChoiceControl(given: ChoiceControlProps): ReactElement {
+  const props =
+    given.setting === undefined
+      ? given
+      : { ...given, items: withOptionIcons(given.setting, given.items) }
   const isUnset = props.notSet !== undefined && props.value === ""
   if (props.items.length <= segmentLimit && !isUnset) {
     return <SegmentsOrSelect {...props} />
@@ -133,16 +140,32 @@ function ChoiceSelect(props: ChoiceControlProps): ReactElement {
         className="max-w-none"
       >
         <SelectValue>
-          {(value: unknown) =>
-            props.items.find((item) => item.value === value)?.label ??
-            props.notSet ??
-            ""
-          }
+          {(value: unknown) => {
+            const item = props.items.find((one) => one.value === value)
+            if (item === undefined) {
+              return props.notSet ?? ""
+            }
+            return item.icon === undefined ? (
+              item.label
+            ) : (
+              <span className="flex min-w-0 items-center gap-s1_5 [&_svg]:glyph-small">
+                <span aria-hidden="true" className="flex">
+                  {item.icon}
+                </span>
+                <span className="truncate">{item.label}</span>
+              </span>
+            )
+          }}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {props.items.map((item) => (
           <SelectItem key={item.value} value={item.value}>
+            {item.icon === undefined ? null : (
+              <span aria-hidden="true" className="flex [&_svg]:glyph-small">
+                {item.icon}
+              </span>
+            )}
             {item.label}
           </SelectItem>
         ))}

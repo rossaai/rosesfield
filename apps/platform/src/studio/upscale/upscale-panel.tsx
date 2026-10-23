@@ -1,9 +1,8 @@
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { type ReactElement, useEffect, useRef, useState } from "react"
-import { t, tCatalog } from "@/copy/t"
+import { tCatalog } from "@/copy/t"
 import { assetLimitsText } from "@/pieces/asset-limits"
-import { CollapsibleSection } from "@/pieces/collapsible-section"
 import { DropWell } from "@/pieces/drop-well"
 import { ChoiceControl, ChoiceField } from "@/screens/app/fields/choice-field"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
@@ -271,10 +270,10 @@ function Advanced({ state }: { state: UpscaleState }): ReactElement | null {
     return null
   }
   return (
-    <CollapsibleSection title={t("field.advanced")}>
+    <>
       <HostedFields fields={optional} form={state.form} />
       <SeedInput state={state} />
-    </CollapsibleSection>
+    </>
   )
 }
 

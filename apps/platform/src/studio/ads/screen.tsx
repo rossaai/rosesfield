@@ -110,9 +110,11 @@ function Chips({
   return (
     <BarChips
       chips={
-        <>
-          <AdsModelChip app={app} state={state} chips={chips} />
-          {chips.map((name) => (
+        <AdsModelChip
+          app={app}
+          state={state}
+          chips={chips}
+          formats={chips.map((name) => (
             <SettingChip
               key={name}
               app={state.countApp}
@@ -120,7 +122,7 @@ function Chips({
               name={name}
             />
           ))}
-        </>
+        />
       }
     />
   )

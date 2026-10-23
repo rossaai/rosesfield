@@ -1,5 +1,5 @@
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
-import type { ReactElement } from "react"
+import type { ReactElement, ReactNode } from "react"
 import { aspectField, countField } from "@/screens/app/app-form"
 import {
   ModelInputChips,
@@ -83,7 +83,9 @@ export function AdsModelSettings({
   )
 }
 
-export function AdsModelChip(props: AdsSettingsProps): ReactElement {
+export function AdsModelChip(
+  props: AdsSettingsProps & { formats?: ReactNode }
+): ReactElement {
   return (
     <>
       <AdsCatalogPicker
@@ -91,6 +93,7 @@ export function AdsModelChip(props: AdsSettingsProps): ReactElement {
         hosted={props.state.hosted}
         place="chip"
       />
+      {props.formats}
       <ModelInputChips
         app={props.app}
         form={props.state.form}

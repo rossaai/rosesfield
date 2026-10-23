@@ -39,22 +39,28 @@ function PhotoAttach({ state }: { state: EditToolState }): ReactElement {
 
 export function ToolChips({ state }: { state: EditToolState }): ReactElement {
   const { app, hosted, form } = state
-  return (
+  const formats = (
     <>
-      {hosted?.isTaskApp === true ? (
-        <HostedChips hosted={hosted} form={form} output={app.output.kind} />
-      ) : (
-        <BarModelChip
-          app={appliedApp(app, form.values.inputs)}
-          state={state}
-          chips={[...state.chips, countField, aspectField]}
-        />
-      )}
       {state.chips.map((name) => (
         <SettingChip key={name} app={app} form={form} name={name} />
       ))}
       <SettingChip app={app} form={form} name={countField} />
     </>
+  )
+  return hosted?.isTaskApp === true ? (
+    <HostedChips
+      hosted={hosted}
+      form={form}
+      output={app.output.kind}
+      formats={formats}
+    />
+  ) : (
+    <BarModelChip
+      app={appliedApp(app, form.values.inputs)}
+      state={state}
+      chips={[...state.chips, countField, aspectField]}
+      formats={formats}
+    />
   )
 }
 

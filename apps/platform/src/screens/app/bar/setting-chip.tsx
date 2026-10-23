@@ -10,27 +10,16 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@rosesfield/ui/components/popover"
-import {
-  BrushIcon,
-  CameraIcon,
-  ClockIcon,
-  CompassIcon,
-  DicesIcon,
-  GaugeIcon,
-  GemIcon,
-  HashIcon,
-  LightbulbIcon,
-  MoveIcon,
-  PaletteIcon,
-  ScanIcon,
-  SlidersHorizontalIcon,
-  SunDimIcon,
-  Volume2Icon,
-} from "lucide-react"
+import { Volume2Icon, VolumeXIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
+import {
+  optionIconOf,
+  settingOf,
+  withOptionIcons,
+  withShapes,
+} from "@/catalog/setting-registry"
 import { withUnit } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
-import { AspectShape } from "@/pieces/aspect-shape"
 import { SettingSlider } from "@/pieces/setting-slider"
 import { aspectField, countField } from "@/screens/app/app-form"
 import { numberOf, textOf } from "@/screens/app/fields/field-props"
@@ -56,37 +45,28 @@ type StepperChipProps = {
 }
 
 export function chipIconOf(role: FieldRole | null): ReactNode {
-  switch (role) {
-    case "aspect":
-      return <ScanIcon />
-    case "resolution":
-    case "quality":
-      return <GemIcon />
-    case "length":
-      return <ClockIcon />
-    case "count":
-      return <HashIcon />
-    default:
-      return undefined
-  }
+  return settingIconOf("", role)
 }
 
-const namedIcons: readonly (readonly [RegExp, () => ReactNode])[] = [
-  [/move/i, () => <MoveIcon />],
-  [/camera|lens/i, () => <CameraIcon />],
-  [/direction|angle/i, () => <CompassIcon />],
-  [/soft|blur/i, () => <SunDimIcon />],
-  [/colou?r|palette|tone/i, () => <PaletteIcon />],
-  [/light/i, () => <LightbulbIcon />],
-  [/sound|audio/i, () => <Volume2Icon />],
-  [/seed/i, () => <DicesIcon />],
-  [/style|look/i, () => <BrushIcon />],
-  [/strength|scale|amount|guidance/i, () => <GaugeIcon />],
-]
-
 export function settingIconOf(name: string, role: FieldRole | null): ReactNode {
-  const named = namedIcons.find(([pattern]) => pattern.test(name))
-  return chipIconOf(role) ?? named?.[1]() ?? <SlidersHorizontalIcon />
+  const Icon = settingOf(name, role).icon
+  return <Icon />
+}
+
+export function toggleIconOf(name: string, isOn: boolean): ReactNode {
+  if (/sound/i.test(name)) {
+    return isOn ? <Volume2Icon /> : <VolumeXIcon />
+  }
+  return settingIconOf(name, null)
+}
+
+export function chosenIconOf(
+  name: string,
+  role: FieldRole | null,
+  value: string
+): ReactNode {
+  const Icon = value === "auto" ? undefined : optionIconOf(name, value)
+  return Icon === undefined ? settingIconOf(name, role) : <Icon />
 }
 
 export function inputIconOf(
@@ -191,15 +171,6 @@ export function PopoverChip(props: {
   )
 }
 
-export function withShapes<T extends { value: string; label: string }>(
-  items: readonly T[]
-): (T & { icon: ReactNode })[] {
-  return items.map((item) => ({
-    ...item,
-    icon: <AspectShape ratio={item.value} />,
-  }))
-}
-
 export function chipChoiceText(
   input: Extract<InputDefinition, { type: "choice" }>,
   value: string
@@ -242,14 +213,21 @@ function InputChip({
       return (
         <ChipSelect
           label={inputCaption(input)}
-          icon={inputIconOf(app, input)}
+          icon={chosenIconOf(
+            input.name,
+            inputRoleOf(input.name, app.output.kind),
+            textOf(value) || input.default
+          )}
           display={namedChoiceText(app, input, textOf(value) || input.default)}
           value={textOf(value) || input.default}
           onValueChange={set}
-          options={input.options.map((option) => ({
-            value: option.value,
-            label: tCatalog(option.labelKey),
-          }))}
+          options={withOptionIcons(
+            input.name,
+            input.options.map((option) => ({
+              value: option.value,
+              label: tCatalog(option.labelKey),
+            }))
+          )}
         />
       )
     case "number":
@@ -273,6 +251,7 @@ function InputChip({
           aria-pressed={textOf(value) === "on"}
           onClick={() => set(textOf(value) === "on" ? "off" : "on")}
         >
+          {toggleIconOf(input.name, textOf(value) === "on")}
           {inputCaption(input)}
         </Button>
       )
@@ -314,3 +293,5 @@ export function SettingChip({
     <InputChip app={app} form={form} input={input} />
   )
 }
+
+export { withOptionIcons, withShapes }

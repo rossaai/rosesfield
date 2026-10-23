@@ -1,5 +1,6 @@
 import {
   factsOf,
+  inputRoleOf,
   isHostedModelId,
   labOfModel,
   modelFactsData,
@@ -14,9 +15,10 @@ import {
 import type { ModelPrice } from "@rosesfield/ui/components/model-row"
 import { ModelChip } from "@rosesfield/ui/components/model-trigger"
 import { useQuery } from "@tanstack/react-query"
-import { type ReactElement, useState } from "react"
+import { type ReactElement, type ReactNode, useState } from "react"
 import { settingsQuery } from "@/api/queries"
 import { isAssetInput } from "@/catalog/app-facts"
+import { bySettingOrder, settingOf } from "@/catalog/setting-registry"
 import { t, tCatalog } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
 import { aspectField, bodyOf, countField } from "@/screens/app/app-form"
@@ -135,10 +137,16 @@ export function ModelInputChips({
   chips: readonly string[]
   shown?: (input: InputDefinition) => InputDefinition | null
 }): ReactElement {
-  const inputs = settingsInputs(app, chips).flatMap((input) => {
-    const one = input.name === modelInputName ? null : shown(input)
-    return one === null ? [] : [one]
-  })
+  const inputs = settingsInputs(app, chips)
+    .flatMap((input) => {
+      const one = input.name === modelInputName ? null : shown(input)
+      return one === null ? [] : [one]
+    })
+    .sort(
+      bySettingOrder((input) =>
+        settingOf(input.name, inputRoleOf(input.name, app.output.kind))
+      )
+    )
   const chipApp: AppListing = {
     ...app,
     inputs: app.inputs.map(
@@ -147,6 +155,12 @@ export function ModelInputChips({
   }
   return (
     <>
+      {chips.includes(aspectField) ? null : (
+        <SettingChip app={app} form={form} name={aspectField} />
+      )}
+      {chips.includes(countField) ? null : (
+        <SettingChip app={app} form={form} name={countField} />
+      )}
       {inputs.map((input) =>
         isChipInput(input) ? (
           <SettingChip
@@ -172,12 +186,6 @@ export function ModelInputChips({
             />
           </PopoverChip>
         )
-      )}
-      {chips.includes(aspectField) ? null : (
-        <SettingChip app={app} form={form} name={aspectField} />
-      )}
-      {chips.includes(countField) ? null : (
-        <SettingChip app={app} form={form} name={countField} />
       )}
       <SeedChip app={app} form={form} lastSeed={lastSeed} />
     </>
@@ -315,7 +323,9 @@ export function ChoiceModelPicker({
   )
 }
 
-export function BarModelChip(props: ModelSettingsProps): ReactElement {
+export function BarModelChip(
+  props: ModelSettingsProps & { formats?: ReactNode }
+): ReactElement {
   const input = props.app.inputs.find((one) => one.name === modelInputName)
   const model = input?.type === "choice" ? input : null
   const { app } = props
@@ -335,6 +345,7 @@ export function BarModelChip(props: ModelSettingsProps): ReactElement {
         value={textOf(props.state.form.values.inputs[modelInputName])}
         onChoose={(next) => props.state.form.setInput(modelInputName, next)}
       />
+      {props.formats}
       <ModelInputChips
         app={props.app}
         form={props.state.form}

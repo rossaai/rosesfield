@@ -2,7 +2,6 @@ import type { AppListing } from "@rosesfield/contract"
 import { PromptBlock } from "@rosesfield/ui/components/input-panel"
 import type { ReactElement, ReactNode } from "react"
 import { t, tCatalog } from "@/copy/t"
-import { CollapsibleSection } from "@/pieces/collapsible-section"
 import { ChoiceField } from "@/screens/app/fields/choice-field"
 import { CountField } from "@/screens/app/fields/output-fields"
 import { SeedField } from "@/screens/app/fields/seed-field"
@@ -132,22 +131,18 @@ export function hasAdvanced(app: AppListing, screen: ShotScreen): boolean {
 }
 
 function Advanced({ app, screen }: PanelProps): ReactNode {
-  const { fields, state, filled } = screen
+  const { fields, state } = screen
   if (!hasAdvanced(app, screen)) {
     return null
   }
   return (
-    <CollapsibleSection
-      key={filled}
-      title={t("field.advanced")}
-      defaultOpen={filled > 0}
-    >
+    <>
       {fields === null ? (
         <GraphSeed app={app} screen={screen} />
       ) : (
         <HostedFields fields={fields.rest} form={state.form} />
       )}
-    </CollapsibleSection>
+    </>
   )
 }
 
