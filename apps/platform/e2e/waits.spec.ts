@@ -72,7 +72,7 @@ async function open(page: Page, path: string): Promise<void> {
   await page.addInitScript(() => {
     window.localStorage.setItem("rosesfield.welcome", "seen")
   })
-  await page.goto(path)
+  await page.goto(`${gatewayOrigin}${path}`)
   await page.waitForLoadState("networkidle")
 }
 
@@ -119,8 +119,7 @@ async function startDemoVideo(): Promise<string> {
 const stageCards =
   '[data-slot="app-stage-scroll"] article[data-slot="run-card"]:not([data-state="loading"])'
 
-const chipName =
-  '[data-slot="model-row"][data-place="trigger"] [data-slot="model-row-name"]'
+const chipName = 'button[aria-label^="Model "] [data-slot="model-row-name"]'
 
 async function paintResult({ page }: { page: Page }): Promise<void> {
   await open(page, "/apps/image")
@@ -195,7 +194,11 @@ async function showFirstFrame({ page }: { page: Page }): Promise<void> {
 
 async function showCatalog({ page }: { page: Page }): Promise<void> {
   await open(page, "/apps/image")
-  const imageChip = page.locator(chipName).filter({ visible: true }).first()
+  const imageChip = page
+    .getByRole("button", { name: /^Model / })
+    .filter({ visible: true })
+    .first()
+    .locator('[data-slot="model-row-name"]')
   await expect(imageChip).not.toHaveText("Model")
   const imageName = (await imageChip.textContent()) ?? ""
   await page
