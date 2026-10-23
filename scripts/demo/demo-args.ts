@@ -4,10 +4,13 @@ import type { SiteMode } from "./demo-manifest"
 
 export type AppChoice = { appId: string; runId: string | null }
 
+export type ColorScheme = "dark" | "light"
+
 export type CaptureOptions = {
   url: string
   key: string | null
   mode: SiteMode
+  scheme: ColorScheme
   runId: string | null
   apps: AppChoice[]
   isLive: boolean
@@ -31,7 +34,7 @@ const uuidPattern =
 const appIdPattern = /^[a-z][a-z0-9-]{0,63}$/
 
 export const captureUsage = [
-  "bun run demo:capture [--url <address>] [--owner] [--run <run id>] [--apps <app>[=<run id>],...] [--live] [--budget <credits>] [--out <folder>] [--plan]",
+  "bun run demo:capture [--url <address>] [--owner] [--light] [--run <run id>] [--apps <app>[=<run id>],...] [--live] [--budget <credits>] [--out <folder>] [--plan]",
   "",
   `  DEMO_URL  the site to record, ${defaultUrl} by default. --url wins over it. demo:cut cuts the final video only from a take of ${siteUrl}, or with --local from an owner take on this machine`,
   "  DEMO_KEY  your Comfy key for a site in public mode. It is typed into the masked key field and sent in a header, and never printed",
@@ -41,6 +44,7 @@ export const captureUsage = [
   "  --live    starts one new Effects run from the inputs of --run, inside --budget",
   `  --budget  the credits the live runs may spend, ${budgetCeiling} at most and by default`,
   "  --out     the take folder, scripts/demo/takes/<time> by default",
+  "  --light   records the site in its light scheme. The dark scheme is the default",
   "  --plan    reads the site, chooses the runs, prints the plan, and records nothing",
 ].join("\n")
 
@@ -110,6 +114,10 @@ function optionOf(
     draft.mode = "owner"
     return 0
   }
+  if (arg === "--light") {
+    draft.scheme = "light"
+    return 0
+  }
   if (value === undefined) {
     throw new Error(`${arg} is not an option.\n\n${captureUsage}`)
   }
@@ -137,6 +145,7 @@ export function captureOptionsOf(
   const draft: Draft = {
     url: null,
     mode: "public",
+    scheme: "dark",
     runId: null,
     apps: [{ appId: "effects", runId: null }],
     isLive: false,

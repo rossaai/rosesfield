@@ -173,6 +173,7 @@ async function scenesOf(
     const context = await browser.newContext({
       baseURL: options.url,
       viewport: screen,
+      colorScheme: options.scheme,
       deviceScaleFactor: 1,
       recordVideo: { dir: join(options.out, "raw"), size: screen },
     })

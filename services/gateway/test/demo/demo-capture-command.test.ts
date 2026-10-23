@@ -290,6 +290,15 @@ describe("bun run demo:capture --plan", () => {
     expect(fallback.url).toBe("https://rosesfield.com")
   })
 
+  it("records the dark scheme, and the light one only with --light", () => {
+    const at = new Date("2026-10-22T12:00:00Z")
+    const dark = captureOptionsOf(["--owner"], {}, at)
+    const light = captureOptionsOf(["--owner", "--light"], {}, at)
+
+    expect(dark.scheme).toBe("dark")
+    expect(light.scheme).toBe("light")
+  })
+
   it("prints the 2000 credits the live runs keep on the balance", async () => {
     const done = await capture([
       "--plan",
