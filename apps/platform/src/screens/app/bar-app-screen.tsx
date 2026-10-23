@@ -89,7 +89,11 @@ function BarModelChips({
   return (
     <>
       {hosted?.isTaskApp === true ? (
-        <HostedChips hosted={hosted} form={state.form} />
+        <HostedChips
+          hosted={hosted}
+          form={state.form}
+          output={app.output.kind}
+        />
       ) : (
         <BarModelChip app={app} state={state} chips={chips} />
       )}

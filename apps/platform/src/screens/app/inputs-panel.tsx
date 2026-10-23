@@ -2,6 +2,7 @@ import type { AppListing } from "@rosesfield/contract"
 import type { ReactElement } from "react"
 import { t } from "@/copy/t"
 import { CollapsibleSection } from "@/pieces/collapsible-section"
+import { PopoverChip, settingIconOf } from "@/screens/app/bar/setting-chip"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
 import { SeedField } from "@/screens/app/fields/seed-field"
@@ -74,5 +75,37 @@ export function InputsPanel(props: InputsPanelProps): ReactElement {
       />
       <AdvancedFields {...props} />
     </div>
+  )
+}
+
+export function SeedChip({
+  app,
+  form,
+  lastSeed,
+}: InputsPanelProps): ReactElement | null {
+  const seed = app.inputs.find((input) => input.type === "seed")
+  if (seed === undefined) {
+    return null
+  }
+  const value = form.values.inputs[seed.name]
+  const isFixed = form.values.seedMode === "fixed" && typeof value === "number"
+  return (
+    <PopoverChip
+      label={t("field.seed.label")}
+      icon={settingIconOf(seed.name, null)}
+      shown={isFixed ? String(value) : t("field.seed.random")}
+    >
+      <SeedField
+        mode={form.values.seedMode}
+        value={value}
+        onMode={(mode) => {
+          form.setForm({ seedMode: mode })
+          if (mode === "fixed" && typeof value !== "number") {
+            form.setInput(seed.name, lastSeed ?? randomSeed())
+          }
+        }}
+        onChange={(next) => form.setInput(seed.name, next)}
+      />
+    </PopoverChip>
   )
 }

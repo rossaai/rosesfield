@@ -11,10 +11,7 @@ import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
 import type { AppScreenState } from "@/screens/app/use-app-screen"
 import { countBoundsOf, type ImageFields } from "@/studio/image/image-fields"
-import {
-  graphChips,
-  ImageModelSettings,
-} from "@/studio/image/image-model-settings"
+import { ImageModelSettings } from "@/studio/image/image-model-settings"
 
 function HostedCountField({
   app,
@@ -103,32 +100,9 @@ export function GraphPanel({
 }
 
 export function ModelPopover({
-  app,
-  state,
   hosted,
-  fields,
-  isGraph,
 }: {
-  app: AppListing
-  state: AppScreenState
   hosted: HostedState
-  fields: ImageFields | null
-  isGraph: boolean
 }): ReactElement {
-  return (
-    <CatalogPicker
-      hosted={hosted}
-      settings={
-        isGraph ? (
-          <ImageModelSettings
-            app={withoutModelInput(app)}
-            state={state}
-            chips={graphChips}
-          />
-        ) : (fields?.rest ?? []).length === 0 ? null : (
-          <HostedFields fields={fields?.rest ?? []} form={state.form} />
-        )
-      }
-    />
-  )
+  return <CatalogPicker hosted={hosted} />
 }

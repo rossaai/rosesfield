@@ -162,6 +162,35 @@ export function StepperChip(props: StepperChipProps): ReactElement {
   )
 }
 
+export function PopoverChip(props: {
+  label: string
+  icon: ReactNode
+  shown: string
+  children: ReactNode
+}): ReactElement {
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Chip caption={props.label} icon={props.icon}>
+            {props.shown}
+          </Chip>
+        }
+      />
+      <PopoverContent
+        side="top"
+        align="start"
+        sideOffset={8}
+        motion="none"
+        className="w-83.5 max-w-none gap-3 px-4.25 py-4"
+      >
+        <PopoverTitle className="text-label">{props.label}</PopoverTitle>
+        {props.children}
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 export function withShapes<T extends { value: string; label: string }>(
   items: readonly T[]
 ): (T & { icon: ReactNode })[] {

@@ -1,6 +1,5 @@
-import { fieldRoleOf, type ModelField } from "@rosesfield/catalog/comfy"
+import type { ModelField } from "@rosesfield/catalog/comfy"
 import type { AppListing } from "@rosesfield/contract"
-import { ChipSelect } from "@rosesfield/ui/components/chip-select"
 import type { ReactElement } from "react"
 import { t, tCount } from "@/copy/t"
 import { aspectField, countField } from "@/screens/app/app-form"
@@ -8,48 +7,13 @@ import {
   chipIconOf,
   SettingChip,
   StepperChip,
-  settingIconOf,
-  withShapes,
 } from "@/screens/app/bar/setting-chip"
-import { fieldCaption } from "@/screens/app/hosted/field-words"
+import { FieldChoiceChip } from "@/screens/app/hosted/field-chip"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { countBoundsOf, type ImageFields } from "@/studio/image/image-fields"
 import { shownInputOf } from "@/studio/image/image-rules"
 
-type ChoiceField = Extract<ModelField, { kind: "choice" }>
 type NumberField = Extract<ModelField, { kind: "number" }>
-
-export function FieldChoiceChip({
-  field,
-  form,
-}: {
-  field: ChoiceField
-  form: AppForm
-}): ReactElement {
-  const value = form.values.inputs[field.name]
-  const chosen =
-    value === undefined ? String(field.default ?? "") : String(value)
-  const role = fieldRoleOf(field, "image")
-  const options = field.options.map((option) => ({
-    value: String(option),
-    label: String(option),
-  }))
-  return (
-    <ChipSelect
-      label={fieldCaption(field)}
-      icon={settingIconOf(field.name, role)}
-      value={chosen}
-      display={chosen === "" ? t("field.choice.notSet") : chosen}
-      onValueChange={(next) =>
-        form.setInput(
-          field.name,
-          field.options.find((one) => String(one) === next)
-        )
-      }
-      options={role === "aspect" ? withShapes(options) : options}
-    />
-  )
-}
 
 function FieldCountChip({
   field,

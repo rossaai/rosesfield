@@ -7,7 +7,7 @@ import {
   type ModelPickerSection,
 } from "@rosesfield/ui/components/model-picker"
 import type { ModelPrice } from "@rosesfield/ui/components/model-row"
-import { type ReactElement, type ReactNode, useState } from "react"
+import { type ReactElement, useState } from "react"
 import { t } from "@/copy/t"
 import {
   pickerFilters,
@@ -56,14 +56,12 @@ type AdsCatalogPickerProps = {
   app: AppListing
   hosted: HostedState
   place: "chip" | "row"
-  settings?: ReactNode
 }
 
 export function AdsCatalogPicker({
   app,
   hosted,
   place,
-  settings,
 }: AdsCatalogPickerProps): ReactElement {
   const [isOpen, setOpen] = useState(false)
   const { prices, isPricing } = useRowPrices(hosted, isOpen)
@@ -80,8 +78,6 @@ export function AdsCatalogPicker({
       open={isOpen}
       onOpenChange={setOpen}
       isPricing={isPricing}
-      settings={settings}
-      settingsLabel={t("bar.settings")}
       filters={pickerFilters()}
       side="top"
       isLoading={hosted.isLoading}

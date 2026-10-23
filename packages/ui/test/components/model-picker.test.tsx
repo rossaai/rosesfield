@@ -201,28 +201,6 @@ describe("ModelPicker", () => {
     ).not.toBeNull()
   })
 
-  it("keeps the chosen model's settings out of the list, behind their own chip", () => {
-    render(
-      <ModelPicker
-        trigger={<Chip>Picture 2</Chip>}
-        title="Model"
-        searchLabel="Search models"
-        searchPlaceholder="Search by name or maker"
-        emptyLabel="No model matches"
-        sections={sections}
-        chosen="maker/picture-2"
-        onChoose={() => undefined}
-        settings={<p>Safety tolerance</p>}
-        settingsLabel="Settings"
-        open
-      />
-    )
-    expect(screen.getByRole("listbox", { name: "Model" })).toBeTruthy()
-    expect(screen.queryByText("Safety tolerance")).toBeNull()
-    fireEvent.click(screen.getByRole("button", { name: "Settings" }))
-    expect(screen.getByText("Safety tolerance")).toBeTruthy()
-  })
-
   it("filters the rows by name and by maker", () => {
     open()
     const search = screen.getByRole("searchbox", { name: "Search models" })

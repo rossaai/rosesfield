@@ -5,10 +5,13 @@ import { promptInputOf } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { AttachMenu } from "@/pieces/attach-menu"
 import { LibraryPicker } from "@/pieces/library-picker"
+import { ModelInputChips } from "@/screens/app/bar/model-settings"
 import { BarChips, BarFrame, type BarPlace } from "@/screens/app/bar-frame"
 import { textOf } from "@/screens/app/fields/field-props"
 import { inputPlaceholder } from "@/screens/app/fields/input-copy"
 import { StartProblem, submitPriceOf } from "@/screens/app/generate-foot"
+import { ModelFieldChips } from "@/screens/app/hosted/field-chip"
+import { withoutModelInput } from "@/screens/app/hosted/task-panel"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { type AppScreenState, useAppScreen } from "@/screens/app/use-app-screen"
@@ -22,11 +25,12 @@ import {
   imageFieldsOf,
   isGraphModel,
 } from "@/studio/image/image-fields"
-import { useGraphRules } from "@/studio/image/image-model-settings"
+import { graphChips, useGraphRules } from "@/studio/image/image-model-settings"
 import {
   graphReferencesOf,
   referenceModelOf,
 } from "@/studio/image/image-references"
+import { shownInputOf } from "@/studio/image/image-rules"
 import {
   GraphPanel,
   HostedPanel,
@@ -110,17 +114,29 @@ function Chips({
   }
   return (
     <span className="flex min-w-0 flex-wrap items-center gap-s2">
-      <ModelPopover
-        app={app}
-        state={state}
-        hosted={hosted}
-        fields={fields}
-        isGraph={isGraph}
-      />
+      <ModelPopover hosted={hosted} />
       {isGraph ? (
-        <GraphSettingChips app={app} form={state.form} />
+        <>
+          <GraphSettingChips app={app} form={state.form} />
+          <ModelInputChips
+            app={withoutModelInput(app)}
+            form={state.form}
+            lastSeed={state.lastSeed}
+            chips={graphChips}
+            shown={(input) =>
+              shownInputOf(app, state.form.values.inputs, input)
+            }
+          />
+        </>
       ) : fields === null ? null : (
-        <HostedSettingChips app={app} fields={fields} form={state.form} />
+        <>
+          <HostedSettingChips app={app} fields={fields} form={state.form} />
+          <ModelFieldChips
+            fields={fields.rest}
+            form={state.form}
+            output="image"
+          />
+        </>
       )}
     </span>
   )

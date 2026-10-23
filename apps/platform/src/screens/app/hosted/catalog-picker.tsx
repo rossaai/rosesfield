@@ -28,7 +28,7 @@ import {
   TrophyIcon,
   Volume2Icon,
 } from "lucide-react"
-import { type ReactElement, type ReactNode, useState } from "react"
+import { type ReactElement, useState } from "react"
 import { type CopyValues, hasCatalogText, t, tCatalog } from "@/copy/t"
 import { LabMark, labMarkOf, weightsMaker } from "@/pieces/lab-mark"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
@@ -276,7 +276,6 @@ export function pickerSections(
 type CatalogPickerProps = {
   hosted: HostedState
   defaultOpen?: boolean
-  settings?: ReactNode
   place?: "chip" | "row"
 }
 
@@ -317,7 +316,6 @@ export function pickerFilters(): ModelPickerFilters {
 export function CatalogPicker({
   hosted,
   defaultOpen = false,
-  settings,
   place = "chip",
 }: CatalogPickerProps): ReactElement {
   const [isOpen, setOpen] = useState(defaultOpen)
@@ -337,8 +335,6 @@ export function CatalogPicker({
       open={isOpen}
       onOpenChange={setOpen}
       isPricing={isPricing}
-      settings={settings}
-      settingsLabel={t("bar.settings")}
       filters={pickerFilters()}
       side={isBeside ? "right" : "top"}
       isLoading={hosted.isLoading}

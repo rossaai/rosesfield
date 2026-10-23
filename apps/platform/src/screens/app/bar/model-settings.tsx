@@ -14,14 +14,20 @@ import {
 import type { ModelPrice } from "@rosesfield/ui/components/model-row"
 import { ModelChip } from "@rosesfield/ui/components/model-trigger"
 import { useQuery } from "@tanstack/react-query"
-import { type ReactElement, type ReactNode, useState } from "react"
+import { type ReactElement, useState } from "react"
 import { settingsQuery } from "@/api/queries"
 import { isAssetInput } from "@/catalog/app-facts"
 import { t, tCatalog } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
 import { aspectField, bodyOf, countField } from "@/screens/app/app-form"
-import { chipChoiceText } from "@/screens/app/bar/setting-chip"
+import {
+  chipChoiceText,
+  inputIconOf,
+  PopoverChip,
+  SettingChip,
+} from "@/screens/app/bar/setting-chip"
 import { textOf } from "@/screens/app/fields/field-props"
+import { inputCaption } from "@/screens/app/fields/input-copy"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
 import {
@@ -33,7 +39,8 @@ import {
 } from "@/screens/app/hosted/catalog-picker"
 import type { PriceAsk } from "@/screens/app/hosted/model-catalog-query"
 import { useAskPrices } from "@/screens/app/hosted/use-row-prices"
-import { AdvancedFields } from "@/screens/app/inputs-panel"
+import { AdvancedFields, SeedChip } from "@/screens/app/inputs-panel"
+import type { AppForm } from "@/screens/app/use-app-form"
 import type { AppScreenState } from "@/screens/app/use-app-screen"
 
 export const modelInputName = "model"
@@ -97,6 +104,83 @@ export function ModelSettings({
       )}
       <AdvancedFields app={app} form={form} lastSeed={state.lastSeed} />
     </div>
+  )
+}
+
+function isChipInput(input: InputDefinition): boolean {
+  return (
+    input.type === "choice" ||
+    input.type === "number" ||
+    input.type === "toggle"
+  )
+}
+
+function shownValueOf(value: unknown): string {
+  if (typeof value === "string" && value.trim() !== "") {
+    return value
+  }
+  return typeof value === "number" ? String(value) : t("field.choice.notSet")
+}
+
+export function ModelInputChips({
+  app,
+  form,
+  lastSeed,
+  chips,
+  shown = (input) => input,
+}: {
+  app: AppListing
+  form: AppForm
+  lastSeed: number | null
+  chips: readonly string[]
+  shown?: (input: InputDefinition) => InputDefinition | null
+}): ReactElement {
+  const inputs = settingsInputs(app, chips).flatMap((input) => {
+    const one = input.name === modelInputName ? null : shown(input)
+    return one === null ? [] : [one]
+  })
+  const chipApp: AppListing = {
+    ...app,
+    inputs: app.inputs.map(
+      (input) => inputs.find((one) => one.name === input.name) ?? input
+    ),
+  }
+  return (
+    <>
+      {inputs.map((input) =>
+        isChipInput(input) ? (
+          <SettingChip
+            key={input.name}
+            app={chipApp}
+            form={form}
+            name={input.name}
+          />
+        ) : (
+          <PopoverChip
+            key={input.name}
+            label={inputCaption(input)}
+            icon={inputIconOf(app, input)}
+            shown={shownValueOf(form.values.inputs[input.name])}
+          >
+            <InputField
+              app={app}
+              input={input}
+              value={form.values.inputs[input.name]}
+              problem={form.problems.get(input.name)}
+              onChange={(value) => form.setInput(input.name, value)}
+              register={(focus) => form.register(input.name, focus)}
+            />
+          </PopoverChip>
+        )
+      )}
+      {chips.includes(aspectField) ? null : (
+        <SettingChip app={app} form={form} name={aspectField} />
+      )}
+      {chips.includes(countField) ? null : (
+        <SettingChip app={app} form={form} name={countField} />
+      )}
+      <SeedChip app={app} form={form} lastSeed={lastSeed} />
+    </>
   )
 }
 
@@ -185,7 +269,6 @@ type ChoiceModelPickerProps = {
   model: ChoiceInput | null
   value: string
   onChoose: (value: string) => void
-  settings: ReactNode
   pricing?: ChoicePricing
 }
 
@@ -193,7 +276,6 @@ export function ChoiceModelPicker({
   model,
   value,
   onChoose,
-  settings,
   pricing,
 }: ChoiceModelPickerProps): ReactElement {
   const [isOpen, setOpen] = useState(false)
@@ -227,8 +309,6 @@ export function ChoiceModelPicker({
       open={isOpen}
       onOpenChange={setOpen}
       isPricing={isPricing}
-      settings={settings}
-      settingsLabel={t("bar.settings")}
       filters={pickerFilters()}
       side="top"
     />
@@ -241,21 +321,26 @@ export function BarModelChip(props: ModelSettingsProps): ReactElement {
   const { app } = props
   const { values } = props.state.form
   return (
-    <ChoiceModelPicker
-      model={model}
-      pricing={{
-        appId: app.id,
-        askOf: (id) =>
-          bodyOf(app, {
-            ...values,
-            inputs: { ...values.inputs, [modelInputName]: id },
-          }),
-      }}
-      value={textOf(props.state.form.values.inputs[modelInputName])}
-      onChoose={(next) => props.state.form.setInput(modelInputName, next)}
-      settings={
-        <ModelSettings {...props} chips={[...props.chips, modelInputName]} />
-      }
-    />
+    <>
+      <ChoiceModelPicker
+        model={model}
+        pricing={{
+          appId: app.id,
+          askOf: (id) =>
+            bodyOf(app, {
+              ...values,
+              inputs: { ...values.inputs, [modelInputName]: id },
+            }),
+        }}
+        value={textOf(props.state.form.values.inputs[modelInputName])}
+        onChoose={(next) => props.state.form.setInput(modelInputName, next)}
+      />
+      <ModelInputChips
+        app={props.app}
+        form={props.state.form}
+        lastSeed={props.state.lastSeed}
+        chips={[...props.chips, modelInputName]}
+      />
+    </>
   )
 }

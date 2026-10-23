@@ -2,8 +2,8 @@ import type { ModelField } from "@rosesfield/catalog/comfy"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import type { FieldValue } from "@/screens/app/app-form"
+import { FieldChoiceChip } from "@/screens/app/hosted/field-chip"
 import type { AppForm } from "@/screens/app/use-app-form"
-import { FieldChoiceChip } from "@/studio/image/image-chips"
 
 type ChoiceField = Extract<ModelField, { kind: "choice" }>
 

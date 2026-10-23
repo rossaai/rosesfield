@@ -26,7 +26,7 @@ import {
   type ModelPickerSection,
 } from "@rosesfield/ui/lib/model-sections"
 import { motion } from "@rosesfield/ui/motion"
-import { SearchIcon, SlidersHorizontalIcon, SparkleIcon } from "lucide-react"
+import { SearchIcon, SparkleIcon } from "lucide-react"
 import {
   type ReactElement,
   type ReactNode,
@@ -48,8 +48,6 @@ type ModelPickerProps = {
   isLoading?: boolean
   isPricing?: boolean
   notice?: ReactNode
-  settings?: ReactNode
-  settingsLabel?: string
   filters?: ModelPickerFilters
   side?: "top" | "right"
   open?: boolean
@@ -268,53 +266,48 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
   }
   const isAbove = side === "top" && placement !== null
   return (
-    <>
-      <Popover open={isOpen} onOpenChange={setOpen}>
-        <PopoverTrigger ref={trigger} render={props.trigger} />
-        <PopoverContent
-          data-slot="model-picker"
-          initialFocus={search}
-          side={side}
-          align={side === "top" ? "start" : "end"}
-          sideOffset={insetOf("--spacing-s2_5")}
-          {...(placement === null
-            ? {}
-            : { collisionPadding: placement.padding })}
-          {...(isAbove
-            ? {
-                anchor: placement.anchor,
-                style: { transformOrigin: placement.origin },
-              }
-            : {})}
-          className="max-h-[min(var(--available-height),calc(var(--spacing)*160.5))] w-100.5 max-w-[calc(100vw-2*var(--spacing-s4))] gap-0 overflow-hidden p-px"
-        >
-          <PopoverTitle className="sr-only">{props.title}</PopoverTitle>
-          <SearchRow
-            search={search}
-            label={props.searchLabel}
-            placeholder={props.searchPlaceholder}
+    <Popover open={isOpen} onOpenChange={setOpen}>
+      <PopoverTrigger ref={trigger} render={props.trigger} />
+      <PopoverContent
+        data-slot="model-picker"
+        initialFocus={search}
+        side={side}
+        align={side === "top" ? "start" : "end"}
+        sideOffset={insetOf("--spacing-s2_5")}
+        {...(placement === null ? {} : { collisionPadding: placement.padding })}
+        {...(isAbove
+          ? {
+              anchor: placement.anchor,
+              style: { transformOrigin: placement.origin },
+            }
+          : {})}
+        className="max-h-[min(var(--available-height),calc(var(--spacing)*160.5))] w-100.5 max-w-[calc(100vw-2*var(--spacing-s4))] gap-0 overflow-hidden p-px"
+      >
+        <PopoverTitle className="sr-only">{props.title}</PopoverTitle>
+        <SearchRow
+          search={search}
+          label={props.searchLabel}
+          placeholder={props.searchPlaceholder}
+          query={query}
+          onQuery={setQuery}
+        />
+        <FilterStrip
+          sections={props.sections}
+          filters={props.filters}
+          filter={filter}
+          onFilter={setFilter}
+        />
+        {props.notice}
+        <ScrollRegion>
+          <ModelList
+            {...props}
             query={query}
-            onQuery={setQuery}
-          />
-          <FilterStrip
-            sections={props.sections}
-            filters={props.filters}
             filter={filter}
-            onFilter={setFilter}
+            onChosen={() => setOpen(false)}
           />
-          {props.notice}
-          <ScrollRegion>
-            <ModelList
-              {...props}
-              query={query}
-              filter={filter}
-              onChosen={() => setOpen(false)}
-            />
-          </ScrollRegion>
-        </PopoverContent>
-      </Popover>
-      <ModelSettings {...props} />
-    </>
+        </ScrollRegion>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -341,34 +334,6 @@ function FilterStrip(props: {
         density="row"
       />
     </div>
-  )
-}
-
-function ModelSettings(props: ModelPickerProps): ReactNode {
-  if (props.settings === undefined || props.settings === null) {
-    return null
-  }
-  const label = props.settingsLabel ?? props.title
-  return (
-    <Popover>
-      <PopoverTrigger
-        data-slot="model-settings-trigger"
-        aria-label={label}
-        className="inline-flex size-button-small shrink-0 items-center justify-center rounded-full text-ink-muted hover:bg-(--tint) hover:text-ink [&_svg]:glyph"
-      >
-        <SlidersHorizontalIcon aria-hidden="true" />
-      </PopoverTrigger>
-      <PopoverContent
-        data-slot="model-settings"
-        side="top"
-        align="start"
-        sideOffset={insetOf("--spacing-s2_5")}
-        className="max-h-[min(var(--available-height),calc(var(--spacing)*160.5))] w-100.5 max-w-[calc(100vw-2*var(--spacing-s4))] gap-s4 overflow-y-auto px-3 pt-3 pb-2"
-      >
-        <PopoverTitle className="sr-only">{label}</PopoverTitle>
-        {props.settings}
-      </PopoverContent>
-    </Popover>
   )
 }
 

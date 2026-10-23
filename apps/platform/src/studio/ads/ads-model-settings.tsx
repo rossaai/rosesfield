@@ -1,7 +1,10 @@
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import type { ReactElement } from "react"
 import { aspectField, countField } from "@/screens/app/app-form"
-import { settingsInputs } from "@/screens/app/bar/model-settings"
+import {
+  ModelInputChips,
+  settingsInputs,
+} from "@/screens/app/bar/model-settings"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
@@ -81,15 +84,19 @@ export function AdsModelSettings({
 }
 
 export function AdsModelChip(props: AdsSettingsProps): ReactElement {
-  const settings = (
-    <AdsModelSettings {...props} chips={[...props.chips, modelInput]} />
-  )
   return (
-    <AdsCatalogPicker
-      app={props.app}
-      hosted={props.state.hosted}
-      place="chip"
-      settings={settings}
-    />
+    <>
+      <AdsCatalogPicker
+        app={props.app}
+        hosted={props.state.hosted}
+        place="chip"
+      />
+      <ModelInputChips
+        app={props.app}
+        form={props.state.form}
+        lastSeed={props.state.lastSeed}
+        chips={[...props.chips, modelInput]}
+      />
+    </>
   )
 }

@@ -353,7 +353,6 @@ describe("the bar's model picker's prices", () => {
           model={model}
           value="first"
           onChoose={() => undefined}
-          settings={null}
           pricing={{
             appId: "expand",
             askOf: (id) => ({ inputs: { model: id, prompt: "a boat" } }),

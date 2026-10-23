@@ -1,10 +1,10 @@
-import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { Button } from "@rosesfield/ui/components/button"
 import { CreditPrice } from "@rosesfield/ui/components/credit-price"
 import { MediaGrid } from "@rosesfield/ui/components/media-grid"
 import { MediaTile } from "@rosesfield/ui/components/media-tile"
 import { PromptBar } from "@rosesfield/ui/components/prompt-bar"
-import type { ReactElement, ReactNode } from "react"
+import type { ReactElement } from "react"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { type GalleryKey, t } from "@/gallery/copy.en"
 import demoSquare from "@/gallery/fixtures/demo-image-1-1.png"
@@ -12,10 +12,8 @@ import demoTall from "@/gallery/fixtures/demo-image-9-16.png"
 import demoWide from "@/gallery/fixtures/demo-image-16-9.png"
 import type { GalleryEntry, GalleryState } from "@/gallery/gallery-entry"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
-import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
-import type { AppForm } from "@/screens/app/use-app-form"
 
 function hostedModel(
   id: string,
@@ -80,61 +78,12 @@ function refused(code: string): GatewayRefusedError {
   return new GatewayRefusedError({ code, status: 412, retryAfterSeconds: null })
 }
 
-function OpenPicker({
-  hosted,
-  settings,
-}: {
-  hosted: HostedState
-  settings?: ReactNode
-}): ReactElement {
+function OpenPicker({ hosted }: { hosted: HostedState }): ReactElement {
   return (
     <div className="min-h-[calc(1.6*var(--spacing-dialog))]">
-      <CatalogPicker hosted={hosted} settings={settings} defaultOpen />
+      <CatalogPicker hosted={hosted} defaultOpen />
     </div>
   )
-}
-
-const sampleFields: ModelField[] = [
-  {
-    kind: "choice",
-    name: "promptExpansionMode",
-    path: "prompt_expansion_mode",
-    required: true,
-    options: ["balanced", "quality"],
-    default: null,
-  },
-  {
-    kind: "number",
-    name: "safetyTolerance",
-    path: "safety_tolerance",
-    required: false,
-    min: 0,
-    max: 4,
-    integer: true,
-    default: 2,
-  },
-  {
-    kind: "toggle",
-    name: "grounding",
-    path: "grounding",
-    required: false,
-    default: true,
-  },
-]
-
-const sampleForm: AppForm = {
-  values: {
-    inputs: { safetyTolerance: 2, grounding: "on" },
-    seedMode: "random",
-    count: 1,
-    aspectRatio: null,
-  },
-  problems: new Map(),
-  setInput: () => undefined,
-  setForm: () => undefined,
-  fill: () => undefined,
-  validate: () => true,
-  register: () => undefined,
 }
 
 const modelPicker: GalleryEntry = {
@@ -151,17 +100,6 @@ const modelPicker: GalleryEntry = {
       label: "state.open",
       placement: "layer",
       render: () => <OpenPicker hosted={hostedState()} />,
-    },
-    {
-      id: "with-settings",
-      label: "state.withSettings",
-      placement: "layer",
-      render: () => (
-        <OpenPicker
-          hosted={hostedState()}
-          settings={<HostedFields fields={sampleFields} form={sampleForm} />}
-        />
-      ),
     },
     {
       id: "loading",

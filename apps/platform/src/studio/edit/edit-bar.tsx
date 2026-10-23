@@ -42,7 +42,7 @@ export function ToolChips({ state }: { state: EditToolState }): ReactElement {
   return (
     <>
       {hosted?.isTaskApp === true ? (
-        <HostedChips hosted={hosted} form={form} />
+        <HostedChips hosted={hosted} form={form} output={app.output.kind} />
       ) : (
         <BarModelChip
           app={appliedApp(app, form.values.inputs)}
