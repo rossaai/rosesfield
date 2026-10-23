@@ -14,6 +14,7 @@ import {
   pictureModel,
   pictureSchema,
   queueStatus,
+  routerUrl,
   schemaRead,
   submitted,
 } from "./fixtures/comfy-router"
@@ -92,6 +93,61 @@ describe("the real credits of a run", () => {
       cost: { amount: 1.055 / 211, currency: "USD" },
     })
     expect(balanceReads(replay)).toBe(3)
+    expect(replay.unused()).toEqual([])
+  })
+
+  it("come from the credits Comfy reports on the collect route when two Router runs of one account overlap", async () => {
+    const requests = `${routerUrl}/v2/models/${pictureModel}/requests`
+    const queued = (id: string): Recording[] => [
+      {
+        method: "POST",
+        url: requests,
+        status: 201,
+        json: { request_id: id, status: "IN_QUEUE", queue_position: 0 },
+      },
+      {
+        method: "GET",
+        url: `${requests}/${id}/status`,
+        status: 200,
+        json: { request_id: id, status: "COMPLETED" },
+      },
+      {
+        method: "GET",
+        url: `${requests}/${id}/status`,
+        status: 200,
+        json: { request_id: id, status: "COMPLETED" },
+      },
+    ]
+    const collected = (id: string, credits: string): Recording => ({
+      method: "GET",
+      url: `${requests}/${id}`,
+      status: 200,
+      headers: { "X-Comfy-Credits-Used": credits },
+      json: { id, status: "Ready", result: { sample: "unused" } },
+    })
+    const { engine, replay } = routerWith([
+      catalogPage([pictureModel]),
+      schemaRead(pictureModel, pictureSchema),
+      balance(1000),
+      ...queued("req-a"),
+      ...queued("req-b"),
+      collected("req-a", "12.54"),
+      collected("req-b", "12.66"),
+    ])
+    const binding = hostedModelBinding(pictureModel)
+    const a = await engine.submit({ ...request(binding), idempotencyKey: "a" })
+    const b = await engine.submit({ ...request(binding), idempotencyKey: "b" })
+    expect(await engine.read(a.ref)).toEqual({ state: "succeeded" })
+    expect(await engine.read(b.ref)).toEqual({ state: "succeeded" })
+    expect(await engine.read(a.ref)).toEqual({
+      state: "succeeded",
+      cost: { amount: 12.54 / 211, currency: "USD" },
+    })
+    expect(await engine.read(b.ref)).toEqual({
+      state: "succeeded",
+      cost: { amount: 12.66 / 211, currency: "USD" },
+    })
+    expect(balanceReads(replay)).toBe(1)
     expect(replay.unused()).toEqual([])
   })
 

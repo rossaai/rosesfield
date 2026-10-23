@@ -226,7 +226,8 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     if (meter?.deferRef(ref) === true) {
       return { state: "succeeded" }
     }
-    const credits = (await meter?.finishRef(this.http, ref)) ?? null
+    const metered = (await meter?.finishRef(this.http, ref)) ?? null
+    const credits = metered ?? (await this.creditsReported(parsed))
     return { state: "succeeded", cost: costOfCredits(credits) }
   }
 
@@ -318,6 +319,18 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     const ref = refText({ model, requestId, isNow: false })
     this.meter?.bind(ticket, ref)
     return { ref, models: [model], workflowHash: null }
+  }
+
+  private async creditsReported(ref: Ref): Promise<number | null> {
+    const response = await this.http
+      .result(ref.model, ref.requestId)
+      .catch(() => null)
+    if (response === null) {
+      return null
+    }
+    const credits = creditsUsedOf(response)
+    await response.body?.cancel()
+    return credits
   }
 
   private readOf(

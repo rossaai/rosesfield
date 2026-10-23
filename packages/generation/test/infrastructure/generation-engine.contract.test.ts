@@ -149,6 +149,7 @@ const subjects: Subject[] = [
       queueStatus("IN_PROGRESS"),
       queueStatus("COMPLETED"),
       result(),
+      result(),
       outputFile(pngBytes()),
       cancelled(),
     ]),
