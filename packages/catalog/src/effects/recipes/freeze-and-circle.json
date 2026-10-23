@@ -2,8 +2,18 @@
   "effect": "freeze-and-circle",
   "passed": false,
   "design": {
-    "unit": "freeze-and-circle",
-    "family": "effects",
+    "unit": {
+      "id": "freeze-and-circle",
+      "title": "Unit: freeze-and-circle"
+    },
+    "family": {
+      "id": "effects",
+      "title": "Family: effects"
+    },
+    "fit": {
+      "by": "area",
+      "edges": "crop"
+    },
     "setPiece": "A roadside diner where time stops: a waitress with a coffee pot, and coffee, plates, bacon and eggs hanging in the air while the camera circles the person.",
     "cuts": [
       {

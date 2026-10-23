@@ -124,7 +124,7 @@ describe("the engine target the settings select", () => {
     expect(proxyRouter?.canRun(hosted)).toBe(false)
   })
 
-  it("meters a graph on Comfy Cloud by the balance the Router reads", async () => {
+  it("meters a graph on Comfy Cloud by the balance the Router reads after its done read", async () => {
     const jobId = "7f3d2c1b-9a8e-4d6f-b012-3c4d5e6f7a8b"
     const cents = [1000, 999.5, 999.5]
     const fetch: Fetch = async (input, init) => {
@@ -168,7 +168,10 @@ describe("the engine target the settings select", () => {
       seed: 42,
       outputKind: "image",
     })
-    expect(await graph?.read(submission?.ref ?? "")).toEqual({
+    const ref = submission?.ref ?? ""
+    expect(await graph?.read(ref)).toEqual({ state: "succeeded" })
+    expect(cents).toEqual([999.5, 999.5])
+    expect(await graph?.read(ref)).toEqual({
       state: "succeeded",
       cost: { amount: 1.055 / 211, currency: "USD" },
     })

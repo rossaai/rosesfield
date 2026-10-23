@@ -1,6 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
+import { settingsQuery } from "@/api/queries"
 import { AppRouteScreen } from "@/screens/app/app-route-screen"
 import { type StageTab, stageTabs } from "@/screens/app/app-stage"
+import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
+import { taskAppOf } from "@/screens/app/hosted/task-app"
+import { preloadStudio } from "@/screens/app/studio-screens"
 import { readOneOf, readText } from "@/shell/search"
 import { movedAppOf } from "@/studio/audio/audio-address"
 import { oldAddressOf } from "@/studio/recast/old-address"
@@ -11,6 +15,7 @@ type AppSearch = {
   share?: string
   tab?: StageTab
   mode?: string
+  open?: string
 }
 
 export const Route = createFileRoute("/_shell/apps/$appId")({
@@ -20,12 +25,14 @@ export const Route = createFileRoute("/_shell/apps/$appId")({
     const share = readText(search.share)
     const tab = readOneOf(search.tab, stageTabs)
     const mode = readText(search.mode)
+    const open = readText(search.open)
     return {
       ...(use === undefined ? {} : { use }),
       ...(from === undefined ? {} : { from }),
       ...(share === undefined ? {} : { share }),
       ...(tab === undefined ? {} : { tab }),
       ...(mode === undefined ? {} : { mode }),
+      ...(open === undefined ? {} : { open }),
     }
   },
   beforeLoad: ({ params, search }) => {
@@ -51,6 +58,15 @@ export const Route = createFileRoute("/_shell/apps/$appId")({
     ) {
       throw redirect({ to: "/characters/new", search: { mode: "traits" } })
     }
+  },
+  loader: ({ params, context }) => {
+    const settings = context.queryClient.getQueryData(settingsQuery.queryKey)
+    if (taskAppOf(params.appId) !== null && settings !== undefined) {
+      void context.queryClient.prefetchQuery(
+        modelCatalogQuery(params.appId, settings.engine.key)
+      )
+    }
+    return preloadStudio(params.appId)
   },
   component: AppRouteScreen,
 })

@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { appListing } from "#app.contract"
-import { asset, assetKind } from "#asset.contract"
+import { asset, assetKind, assetLink } from "#asset.contract"
 import {
   character,
   createCharacterBody,
@@ -78,6 +78,15 @@ export const routes = {
     response: runResponse,
     status: 200,
   }),
+  watchRun: defineRoute({
+    method: "GET",
+    path: "/api/runs/:runId/events",
+    params: runParams,
+    query: null,
+    body: null,
+    response: runResponse,
+    status: 200,
+  }),
   cancelRun: defineRoute({
     method: "POST",
     path: "/api/runs/:runId/cancel",
@@ -132,6 +141,33 @@ export const routes = {
     body: null,
     response: "bytes",
     status: 200,
+  }),
+  linkAssetContent: defineRoute({
+    method: "GET",
+    path: "/api/assets/:assetId/link",
+    params: assetParams,
+    query: null,
+    body: null,
+    response: assetLink,
+    status: 200,
+  }),
+  readAssetPreview: defineRoute({
+    method: "GET",
+    path: "/api/assets/:assetId/preview",
+    params: assetParams,
+    query: null,
+    body: null,
+    response: "bytes",
+    status: 200,
+  }),
+  putAssetPreview: defineRoute({
+    method: "PUT",
+    path: "/api/assets/:assetId/preview",
+    params: assetParams,
+    query: null,
+    body: "bytes",
+    response: null,
+    status: 204,
   }),
   deleteAsset: defineRoute({
     method: "DELETE",

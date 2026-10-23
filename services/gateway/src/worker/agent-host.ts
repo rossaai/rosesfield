@@ -123,7 +123,7 @@ export class AgentHost implements DurableObject {
   }
 
   private compose(): Composed {
-    const parts = workerParts(this.env)
+    const parts = workerParts(this.env, (work) => this.state.waitUntil(work))
     const model = parts.vars.agent
     const agent = model === null ? null : this.agentFor(parts, model)
     const app = new Hono<GatewayEnv>()

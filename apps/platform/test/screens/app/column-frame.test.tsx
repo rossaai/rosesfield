@@ -78,6 +78,27 @@ describe("the column frame", () => {
   })
 })
 
+describe("the column frame's stage with work in hand", () => {
+  it("shows the canvas, not How it works, when the screen opens with work and the app has no runs", () => {
+    render(
+      withClient(
+        <ColumnFrame
+          app={video}
+          start={start}
+          onShortcut={() => undefined}
+          sheet={[false, () => undefined]}
+          panel={<div />}
+          hasWork
+          canvas={() => <div data-testid="opened" />}
+        />,
+        video,
+        []
+      )
+    )
+    expect(document.querySelector("[data-testid='opened']")).not.toBeNull()
+  })
+})
+
 describe("the column frame's phone sheet", () => {
   it("leaves 8 px under the mode tabs before the first part, as the desktop column's tray does", () => {
     asPhone()

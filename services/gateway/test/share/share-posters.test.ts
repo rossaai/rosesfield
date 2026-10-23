@@ -32,6 +32,18 @@ class MemoryAssetStore extends AssetStore {
   override async link(id: AssetId): Promise<string> {
     return `/assets/${id}`
   }
+
+  override async putPreview(
+    id: AssetId,
+    bytes: Uint8Array,
+    mime: string
+  ): Promise<void> {
+    this.files.set(`${id}.preview`, { bytes, mime })
+  }
+
+  override async getPreview(id: AssetId): Promise<Uint8Array | null> {
+    return this.files.get(`${id}.preview`)?.bytes ?? null
+  }
 }
 
 const frame = new TextEncoder().encode("jpeg-frame")

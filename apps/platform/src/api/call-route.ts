@@ -122,6 +122,7 @@ export async function refusalOf(
     code: parsed.success ? parsed.data.error.code : "SERVER_ERROR",
     status: response.status,
     retryAfterSeconds: retryAfterOf(response),
+    inputs: parsed.success ? (parsed.data.error.inputs ?? []) : [],
   })
 }
 

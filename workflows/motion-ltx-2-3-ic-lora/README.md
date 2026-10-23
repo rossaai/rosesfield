@@ -1,6 +1,6 @@
 # Motion: move a photo with the motion of a clip on LTX 2.3
 
-Renders the person in your photo making the movements of your clip, on LTX 2.3 22B distilled with its union control IC-LoRA in 8 steps. SDPose draws the pose of one person in each frame of the clip as the guide, and your photo is the first frame, so the scene comes from your photo. The video keeps the clip's frame count and frame rate, with the clip's sound kept or left out. Built from Comfy's template video_ltx2_3_ic_lora.
+Renders the person in your photo making the movements of your clip, on LTX 2.3 22B distilled with its union control IC-LoRA in 8 steps. SDPose draws the pose of one person in each frame of the clip as the guide, and your photo sets the first frame, so the scene comes from your photo. The video starts on the first frame the model makes, after your photo, and keeps the clip's frame count and frame rate, with the clip's sound kept or left out. Built from Comfy's template video_ltx2_3_ic_lora.
 
 | | |
 |---|---|
@@ -32,9 +32,10 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 
 - **The clip.** Node 692 keeps the first 10 seconds of the clip, and node 706 splits it into its frames, its sound and its frame rate.
 - **The pose guide.** Node 709 finds one person in each frame with RT-DETR, node 711 reads their body, hands, face and feet with SDPose, and node 712 draws that pose. The template guides with a depth map of the clip, and a depth map carries the clip's room and objects. A pose carries only the person's movement, so the scene comes from your photo. The union control IC-LoRA takes pose, depth and edges, per its [model card](https://huggingface.co/Lightricks/LTX-2.3-22b-IC-LoRA-Union-Control).
-- **The length.** LTX renders 8 n + 1 frames. A clip of n frames gets the last pose repeated until the guide holds the next count of 8 n + 1 frames, nodes 714 to 719. Node 724 keeps the first n frames of the render, and node 122 writes them at the clip's frame rate, so the video lasts as long as the clip.
+- **The length.** LTX renders 8 n + 1 frames. A clip of n frames gets the last pose repeated until the guide holds the next count of 8 n + 1 frames, nodes 714 to 719. Node 724 keeps n frames of the render from frame 1 on, and node 122 writes them at the clip's frame rate, so the video lasts as long as the clip. The render holds at least n + 1 frames, so n frames remain after the photo frame.
 - **The size.** Nodes 721 to 723 set the short side of the video to the bound value and keep the photo's ratio, each side a multiple of 64. The union control IC-LoRA guides at half size, so node 115 needs each side of the latent, the pixel side over 32, to be even.
 - **The first frame.** Node 198 puts your photo in the first frame at full strength. Node 115 adds the pose guide through the IC-LoRA's parameters, node 196, and node 106 removes the guide frames after sampling.
+- **The photo frame is dropped.** Frame 0 of the render is your photo itself, and the pose guide drives every later frame, so frame 1 jumps to the clip's first pose, with a wider framing and often a changed person. Comfy's template behaves the same way. So node 724 starts at frame 1, and the video never shows the photo frame. Every frame you see is a frame the model made from the pose.
 - **The sound.** LTX 2.3 samples video and audio together, so the graph keeps its audio latent, nodes 101 and 119, and never decodes it. With Keep the clip's sound on, node 122 writes the clip's own sound, cut to the video's length. With it off, the catalog removes that link, and the video has no audio track.
 - **The prompt.** Node 900 puts a fixed sentence about following the pose before your words about the scene. The prompt enhancer of the template is left out, so the model reads your words.
 

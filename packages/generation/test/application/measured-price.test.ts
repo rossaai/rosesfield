@@ -96,7 +96,7 @@ function priceOf(
 }
 
 describe("the measured price of a model at its settings", () => {
-  it("prices the next run at the same settings from the last run's real credits", async () => {
+  it("prices the next run at the same settings from the last run's real credits, and holds the rate it disproved to it elsewhere", async () => {
     const { harness, prices } = harnessWith({
       amount: 1.188768 / 211,
       currency: "USD",
@@ -111,7 +111,7 @@ describe("the measured price of a model at its settings", () => {
     ).toEqual({ price: { source: "measured", credits: 1.19 } })
     expect(
       await priceOf(harness, { prompt: "a door", aspectRatio: "1:1" })
-    ).toEqual({ price: { source: "rates", credits: 0.57 } })
+    ).toEqual({ price: { source: "estimate", credits: 1.19 } })
   })
 
   it("keeps no price for a run whose real credits were not measured", async () => {

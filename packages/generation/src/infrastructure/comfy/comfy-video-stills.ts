@@ -1,5 +1,9 @@
 import { z } from "zod"
-import type { EngineOutput } from "#domain/generation-engine.port"
+import { isBlankOutput } from "#application/advance-run/blank-output"
+import type {
+  EngineOutput,
+  EnginePreview,
+} from "#domain/generation-engine.port"
 
 type Graph = Record<string, unknown>
 
@@ -21,6 +25,8 @@ const graphNode = z.object({
 const link = z.tuple([z.string(), z.number().int().min(0)])
 
 const stillCount = 5
+const stillMime = "image/png"
+const previewMaxBytes = 64 * 1024
 const stillMegapixels = 0.05
 const stillPrefix = "rosesfield-stills/rosesfield-still"
 const stillName = /(?:^|\/)rosesfield-still-(.+)-(\d+)_[^/]*$/
@@ -44,10 +50,10 @@ export function addVideoStills(graph: Graph): Graph {
   return { ...graph, ...added }
 }
 
-export function withVideoStills(
+export async function withVideoStills(
   listed: readonly ListedOutput[],
   outputs: readonly EngineOutput[]
-): EngineOutput[] {
+): Promise<EngineOutput[]> {
   const stills = new Map<string, Map<number, Uint8Array>>()
   const videos = new Map<string, number>()
   const kept: { output: EngineOutput; node: string }[] = []
@@ -67,16 +73,45 @@ export function withVideoStills(
     found.set(still.index, output.bytes)
     stills.set(still.video, found)
   })
-  return kept.map(({ output, node }) => {
-    const found = stills.get(node) ?? new Map<number, Uint8Array>()
-    const frames = Array.from({ length: stillCount }, (_, at) => found.get(at))
-    const whole = frames.filter((frame) => frame !== undefined)
-    const isWhole =
-      output.kind === "video" &&
-      videos.get(node) === 1 &&
-      whole.length === stillCount
-    return isWhole ? { ...output, stills: whole } : output
-  })
+  return Promise.all(
+    kept.map(async ({ output, node }) => {
+      const found = stills.get(node) ?? new Map<number, Uint8Array>()
+      const frames = Array.from({ length: stillCount }, (_, at) =>
+        found.get(at)
+      )
+      const whole = frames.filter((frame) => frame !== undefined)
+      const isWhole =
+        output.kind === "video" &&
+        videos.get(node) === 1 &&
+        whole.length === stillCount
+      if (!isWhole) {
+        return output
+      }
+      const preview = await previewOf(whole)
+      return preview === null
+        ? { ...output, stills: whole }
+        : { ...output, stills: whole, preview }
+    })
+  )
+}
+
+async function previewOf(
+  stills: readonly Uint8Array[]
+): Promise<EnginePreview | null> {
+  for (const bytes of stills) {
+    const isBlack = await isBlankOutput({
+      kind: "image",
+      mime: stillMime,
+      bytes,
+      width: null,
+      height: null,
+      durationSeconds: null,
+    })
+    if (!isBlack) {
+      return bytes.length > previewMaxBytes ? null : { mime: stillMime, bytes }
+    }
+  }
+  return null
 }
 
 function stillNodes(place: {

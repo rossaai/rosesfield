@@ -8,17 +8,23 @@ import {
   type EngineSubmission,
   GenerationEngine,
   type OutputsPerJob,
+  type Pause,
   type PriceRequest,
+  pauseOn,
   type RunPrice,
   unknownPrice,
 } from "#domain/generation-engine.port"
+import { meshMime } from "#infrastructure/comfy/comfy-media"
 import { writeFlatMp4 } from "#infrastructure/demo/flat-mp4"
 import { writeFlatPng } from "#infrastructure/demo/flat-png"
 import { writeSilentWav } from "#infrastructure/demo/silent-wav"
+import { writeTriangleGlb } from "#infrastructure/demo/triangle-glb"
+import { type Timer, TimerJobRunner } from "#infrastructure/timer-job-runner"
 
 type DemoGenerationEngineOptions = {
   clock: Clock
   rates?: GenerationEngine
+  timer?: Timer
 }
 
 type DemoRun = {
@@ -31,13 +37,14 @@ type DemoRun = {
 
 export class DemoGenerationEngine extends GenerationEngine {
   static readonly delayMs = 3000
+  static readonly frameMs = 250
   static readonly imageSide = 1024
   static readonly videoSide = 640
   static readonly seconds = 2
   static readonly sampleRate = 24_000
   static readonly gray = 128
   static readonly refPattern: RegExp =
-    /^demo:(\d+):(image|video|audio|text):(\d+)x(\d+):(\d+)$/
+    /^demo:(\d+):(image|video|audio|text|mesh):(\d+)x(\d+):(\d+)$/
 
   override readonly key = "demo"
   override readonly origin = "demo"
@@ -45,11 +52,13 @@ export class DemoGenerationEngine extends GenerationEngine {
 
   private readonly clock: Clock
   private readonly rates: GenerationEngine | null
+  private readonly pause: Pause
 
   constructor(options: DemoGenerationEngineOptions) {
     super()
     this.clock = options.clock
     this.rates = options.rates ?? null
+    this.pause = pauseOn((options.timer ?? TimerJobRunner.systemTimer).after)
   }
 
   override canRun(_binding: EngineBinding): boolean {
@@ -102,6 +111,17 @@ export class DemoGenerationEngine extends GenerationEngine {
     }
   }
 
+  override watch(
+    ref: string,
+    signal: AbortSignal
+  ): AsyncGenerator<EngineStatus, void, void> {
+    return this.readEvery(ref, {
+      everyMs: DemoGenerationEngine.frameMs,
+      pause: this.pause,
+      signal,
+    })
+  }
+
   override async listOutputs(ref: string): Promise<EngineOutput[]> {
     const run = parseRef(ref)
     const output = await outputOf(run)
@@ -128,7 +148,8 @@ function parseRef(ref: string): DemoRun {
     (kind !== "image" &&
       kind !== "video" &&
       kind !== "audio" &&
-      kind !== "text")
+      kind !== "text" &&
+      kind !== "mesh")
   ) {
     throw new RunFailedError({ cause: ref })
   }
@@ -198,6 +219,15 @@ async function outputOf(run: DemoRun): Promise<EngineOutput> {
         kind: "text",
         mime: "text/plain",
         bytes: new Uint8Array(0),
+        width: null,
+        height: null,
+        durationSeconds: null,
+      }
+    case "mesh":
+      return {
+        kind: "mesh",
+        mime: meshMime,
+        bytes: writeTriangleGlb(),
         width: null,
         height: null,
         durationSeconds: null,

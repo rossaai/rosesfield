@@ -13,7 +13,12 @@ import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { assetQuery } from "@/api/queries"
 import { t } from "@/copy/t"
-import { columnsOf, RunCard, RunColumns } from "@/pieces/run/run-card"
+import {
+  columnsOf,
+  RunCard,
+  RunColumns,
+  runHeightOf,
+} from "@/pieces/run/run-card"
 
 const assetId = "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c11"
 
@@ -252,7 +257,16 @@ describe("the runs of an app page on desktop", () => {
 
 describe("a run stored with no shape", () => {
   it("takes its shape from the media once the media loads, and keeps it for every tile", async () => {
-    vi.stubGlobal("fetch", () => new Promise(() => undefined))
+    vi.stubGlobal("fetch", (input: string, init?: RequestInit) =>
+      input.endsWith("/preview") && (init?.method ?? "GET") === "GET"
+        ? Promise.resolve(
+            Response.json(
+              { error: { code: "ASSET_PREVIEW_NOT_FOUND", status: 404 } },
+              { status: 404 }
+            )
+          )
+        : new Promise(() => undefined)
+    )
     const client = clientWith(videoOf({ width: null, height: null }))
     renderWith(client, <RunCard run={runOf({})} />)
     const video = await vi.waitFor(() => {
@@ -277,5 +291,14 @@ describe("a run stored with no shape", () => {
           .aspectRatio
       ).toBe("1080 / 1920")
     )
+  })
+})
+
+describe("a 3D run", () => {
+  it("takes a square place in the columns, whatever ratio its record holds", () => {
+    const mesh = runOf({ appId: "three-d", aspectRatio: "16:9" })
+    const video = runOf({ appId: "video", aspectRatio: "16:9" })
+    expect(runHeightOf(mesh)).toBeCloseTo(1.05)
+    expect(runHeightOf(video)).toBeCloseTo(9 / 16 + 0.05)
   })
 })

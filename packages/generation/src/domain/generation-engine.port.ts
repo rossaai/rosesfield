@@ -19,7 +19,10 @@ export type EngineFile = {
 
 export type RunPlan = NonNullable<Run["plan"]>
 
-export type EngineStepOutput = Omit<EngineOutput, "bytes" | "stills"> & {
+export type EngineStepOutput = Omit<
+  EngineOutput,
+  "bytes" | "stills" | "preview"
+> & {
   assetId: AssetId
 }
 
@@ -81,6 +84,12 @@ export type EngineOutput = {
   height: number | null
   durationSeconds: number | null
   stills?: readonly Uint8Array[]
+  preview?: EnginePreview
+}
+
+export type EnginePreview = {
+  mime: string
+  bytes: Uint8Array
 }
 
 export type OutputsPerJob = "all" | "one"
@@ -112,6 +121,42 @@ export const unknownPrice: RunPrice = { source: "unknown", credits: null }
 
 export type Idempotency = "keyed" | "none"
 
+export type Pause = (ms: number, signal: AbortSignal) => Promise<void>
+
+export type StatusReads = {
+  everyMs: number
+  pause: Pause
+  signal: AbortSignal
+}
+
+export function isWorkingStatus(
+  status: EngineStatus
+): status is Extract<EngineStatus, { state: "queued" | "running" }> {
+  return status.state === "queued" || status.state === "running"
+}
+
+export function pauseOn(
+  after: (ms: number, callback: () => void) => () => void
+): Pause {
+  return (ms, signal) =>
+    new Promise((resolve) => {
+      if (signal.aborted) {
+        resolve()
+        return
+      }
+      let cancel: () => void = () => undefined
+      const stop = (): void => {
+        cancel()
+        resolve()
+      }
+      signal.addEventListener("abort", stop, { once: true })
+      cancel = after(ms, () => {
+        signal.removeEventListener("abort", stop)
+        resolve()
+      })
+    })
+}
+
 export abstract class GenerationEngine {
   abstract readonly key: string
   abstract readonly origin: RunOrigin
@@ -133,6 +178,14 @@ export abstract class GenerationEngine {
 
   /** Reads the status of a submitted run once. */
   abstract read(ref: string): Promise<EngineStatus>
+
+  /** Yields the statuses of a submitted run as the engine reports them, and ends when the run ends, the engine stops reporting, or the signal aborts. */
+  async *watch(
+    ref: string,
+    _signal: AbortSignal
+  ): AsyncGenerator<EngineStatus, void, void> {
+    yield await this.read(ref)
+  }
 
   /** Lists the outputs of a run that succeeded, with their bytes, and never fetches an address the run's inputs name. */
   abstract listOutputs(ref: string, inputs: RunInputs): Promise<EngineOutput[]>
@@ -178,6 +231,21 @@ export abstract class GenerationEngine {
     _models: readonly string[]
   ): Promise<ReadonlyMap<string, TokenRate>> {
     return Promise.resolve(new Map())
+  }
+
+  /** Reads the status every `everyMs` and yields each one, until the run ends or the signal aborts. */
+  protected async *readEvery(
+    ref: string,
+    reads: StatusReads
+  ): AsyncGenerator<EngineStatus, void, void> {
+    while (!reads.signal.aborted) {
+      const status = await this.read(ref)
+      yield status
+      if (!isWorkingStatus(status)) {
+        return
+      }
+      await reads.pause(reads.everyMs, reads.signal)
+    }
   }
 
   /** Says what a cost this engine measured comes to in its credits, or null when it has no credits. */

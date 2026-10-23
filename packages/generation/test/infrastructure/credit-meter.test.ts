@@ -119,6 +119,46 @@ describe("CreditMeter", () => {
     expect(waits).toHaveLength(CreditMeter.settleTries - 1)
   })
 
+  it("reads the balance at most 5 times, 2 s apart, after the run", async () => {
+    const { meter, waits } = meterAt()
+    const { http, replay } = readerOf(
+      Array.from({ length: 6 }, (_, index) => balance(1000 - index))
+    )
+    const ticket = await meter.start(http)
+    expect(await meter.finish(http, ticket)).toBe(10.55)
+    expect(waits).toEqual([2000, 2000, 2000, 2000])
+    expect(replay.unused()).toEqual([])
+  })
+
+  it("defers a held run's reading once, and never a run it does not hold", async () => {
+    const { meter } = meterAt()
+    const { http } = readerOf([balance(1000), balance(999), balance(999)])
+    const ticket = await meter.start(http)
+    meter.bind(ticket, "run-1")
+    expect(meter.deferRef("run-1")).toBe(true)
+    expect(meter.deferRef("run-1")).toBe(false)
+    expect(meter.deferRef("run-2")).toBe(false)
+    expect(await meter.finishRef(http, "run-1")).toBe(2.11)
+    expect(meter.deferRef("run-1")).toBe(false)
+  })
+
+  it("shares one reading between two callers of the same run", async () => {
+    const { meter } = meterAt()
+    const { http, replay } = readerOf([
+      balance(1000),
+      balance(999),
+      balance(999),
+    ])
+    const ticket = await meter.start(http)
+    meter.bind(ticket, "run-1")
+    const [first, second] = await Promise.all([
+      meter.finishRef(http, "run-1"),
+      meter.finishRef(http, "run-1"),
+    ])
+    expect([first, second]).toEqual([2.11, 2.11])
+    expect(replay.unused()).toEqual([])
+  })
+
   it("measures nothing without a key", async () => {
     const { meter } = meterAt()
     const { http, replay } = readerOf([])

@@ -27,9 +27,14 @@ describe("Explore's examples", () => {
         (row) => row.kind === "video" && row.from?.endsWith(".mp4") !== true
       ).length
     )
+    const rowFiles = new Set(showcaseRows.map((row) => row.file))
     const sources = new Set(
       showcaseRows.flatMap((row) =>
-        row.from === undefined || row.from.endsWith(".mp4") ? [] : [row.from]
+        row.from === undefined ||
+        row.from.endsWith(".mp4") ||
+        !rowFiles.has(row.from)
+          ? []
+          : [row.from]
       )
     )
     expect(examples).toHaveLength(

@@ -1,3 +1,4 @@
+import { assetKind } from "@rosesfield/contract"
 import { z } from "zod"
 
 export const workflowId = z
@@ -16,14 +17,14 @@ export const workflowInput = z.strictObject({
 export const workflowOutput = z.strictObject({
   nodeId,
   key: z.string().min(1).max(40),
-  kind: z.enum(["image", "video", "audio", "text"]),
+  kind: assetKind,
 })
 
 export const workflowEntry = z.strictObject({
   name: workflowId,
   title: z.string().min(1).max(120).optional(),
   description: z.string().min(1).max(600).optional(),
-  mediaType: z.enum(["image", "video", "audio"]),
+  mediaType: z.enum(["image", "video", "audio", "mesh"]),
   openSource: z.literal(true),
   models: z.array(z.string().min(1).max(200)).max(16),
   requiresCustomNodes: z.array(z.string().min(1).max(200)).max(16).default([]),

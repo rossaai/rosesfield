@@ -34,11 +34,15 @@ function hostedBodyOf(
     : hostedBody(chosen.id, chosen.form, form.values, app.output.kind)
 }
 
-export function usePrice(
+export type QuoteSource = "measured" | "estimate" | "rates"
+
+export type Quote = { credits: number; source: QuoteSource }
+
+export function useQuote(
   app: AppListing,
   body: StartRunBodyInput | null,
   keyState: string
-): number | null {
+): Quote | null {
   const ask = useDebounced(body, priceDelayMs)
   const query = useQuery({
     ...priceQuery(app.id, ask ?? { inputs: {} }, keyState),
@@ -47,7 +51,15 @@ export function usePrice(
   const price = query.data?.price
   return price === undefined || price.source === "unknown"
     ? null
-    : price.credits
+    : { credits: price.credits, source: price.source }
+}
+
+export function usePrice(
+  app: AppListing,
+  body: StartRunBodyInput | null,
+  keyState: string
+): number | null {
+  return useQuote(app, body, keyState)?.credits ?? null
 }
 
 export type HostedBodyOf = (body: StartRunBodyInput) => StartRunBodyInput
@@ -65,7 +77,7 @@ export function useStartRun(
   const hostedRun =
     own === null || hostedBodyFor === undefined ? own : hostedBodyFor(own)
   const isDemo = settings.data?.engine.origin === "demo"
-  const credits = usePrice(
+  const quote = useQuote(
     app,
     hostedRun ?? bodyOf(app, form.values),
     hosted?.keyState ?? settings.data?.engine.key ?? "unknown"
@@ -83,6 +95,7 @@ export function useStartRun(
       storeRun(client, run)
       onStarted?.(run)
     },
+    onError: (error) => form.refuse?.(error),
   })
   const generate = (): void => {
     if (start.isPending || !form.validate()) {
@@ -94,7 +107,7 @@ export function useStartRun(
     generate,
     isPending: start.isPending,
     error: start.error,
-    ...priceLabelsOf(credits, isDemo),
+    ...priceLabelsOf(quote?.credits ?? null, isDemo, quote?.source),
   }
 }
 
@@ -104,14 +117,21 @@ function creditsText(credits: number): string {
   return credits < smallCredits ? formatAmount(credits) : formatNumber(credits)
 }
 
+const generateNames = {
+  measured: "run.generate.measured",
+  estimate: "run.generate.estimated",
+  rates: "run.generate.priced",
+} as const satisfies Record<QuoteSource, string>
+
 export function priceLabelsOf(
   credits: number | null,
-  isDemo: boolean
+  isDemo: boolean,
+  source: QuoteSource = "rates"
 ): Pick<StartRun, "price" | "priceValue" | "priceName"> {
   const amount = credits === null || credits <= 0 ? null : creditsText(credits)
   return {
     price: isDemo ? t("run.price.demo") : "",
     priceValue: amount,
-    priceName: amount === null ? null : t("run.generate.priced", { amount }),
+    priceName: amount === null ? null : t(generateNames[source], { amount }),
   }
 }

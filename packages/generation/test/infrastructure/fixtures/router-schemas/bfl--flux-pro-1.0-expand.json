@@ -1,0 +1,187 @@
+{
+  "x-comfy-router-model-id": "bfl/flux-pro-1.0-expand",
+  "x-comfy-router-input-modalities": ["image", "text"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/bfl/flux-pro-1.0-expand": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "image": "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAAC2klEQVR42u3TQQ0AQAgEMeTgX8W5gi8OjoROVgGhUdLhwgkEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAEgASABIAAkACQAJAAkACQAJAAkACQAJAAkACQAFjSy7SPAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8IIAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASABIAEgASABIAEgASABIAEgASABIAEgASABIAAgACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkACQAJAAkAadSRm+WukYdfewAAAABJRU5ErkJggg==",
+                  "prompt": "extend the plain white background upward",
+                  "top": 64
+                },
+                "properties": {
+                  "bottom": {
+                    "anyOf": [
+                      {
+                        "maximum": 2048,
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    ],
+                    "default": 0,
+                    "description": "Number of pixels to expand at the bottom of the image",
+                    "title": "Bottom"
+                  },
+                  "guidance": {
+                    "anyOf": [
+                      {
+                        "maximum": 100,
+                        "minimum": 1.5,
+                        "type": "number"
+                      }
+                    ],
+                    "default": 60,
+                    "description": "Guidance strength for the image generation process",
+                    "title": "Guidance"
+                  },
+                  "image": {
+                    "description": "A Base64-encoded string representing the image you wish to expand.",
+                    "title": "Image",
+                    "type": "string"
+                  },
+                  "left": {
+                    "anyOf": [
+                      {
+                        "maximum": 2048,
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    ],
+                    "default": 0,
+                    "description": "Number of pixels to expand on the left side of the image",
+                    "title": "Left"
+                  },
+                  "output_format": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/BFLOutputFormat"
+                      }
+                    ],
+                    "default": "jpeg",
+                    "description": "Output format for the generated image. Can be 'jpeg' or 'png'."
+                  },
+                  "prompt": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "default": "",
+                    "description": "The description of the changes you want to make. This text guides the expansion process, allowing you to specify features, styles, or modifications for the expanded areas.",
+                    "example": "ein fantastisches bild",
+                    "title": "Prompt"
+                  },
+                  "prompt_upsampling": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      }
+                    ],
+                    "default": false,
+                    "description": "Whether to perform upsampling on the prompt. If active, automatically modifies the prompt for more creative generation",
+                    "title": "Prompt Upsampling"
+                  },
+                  "right": {
+                    "anyOf": [
+                      {
+                        "maximum": 2048,
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    ],
+                    "default": 0,
+                    "description": "Number of pixels to expand on the right side of the image",
+                    "title": "Right"
+                  },
+                  "safety_tolerance": {
+                    "default": 2,
+                    "description": "Tolerance level for input and output moderation. Between 0 and 6, 0 being most strict, 6 being least strict.",
+                    "example": 2,
+                    "maximum": 6,
+                    "minimum": 0,
+                    "title": "Safety Tolerance",
+                    "type": "integer"
+                  },
+                  "seed": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      }
+                    ],
+                    "description": "Optional seed for reproducibility",
+                    "title": "Seed"
+                  },
+                  "steps": {
+                    "anyOf": [
+                      {
+                        "maximum": 50,
+                        "minimum": 15,
+                        "type": "integer"
+                      }
+                    ],
+                    "default": 50,
+                    "description": "Number of steps for the image generation process",
+                    "example": 50,
+                    "title": "Steps"
+                  },
+                  "top": {
+                    "anyOf": [
+                      {
+                        "maximum": 2048,
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    ],
+                    "default": 0,
+                    "description": "Number of pixels to expand at the top of the image",
+                    "title": "Top"
+                  },
+                  "webhook_secret": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "description": "Optional secret for webhook signature verification",
+                    "title": "Webhook Secret"
+                  },
+                  "webhook_url": {
+                    "anyOf": [
+                      {
+                        "format": "uri",
+                        "maxLength": 2083,
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    ],
+                    "description": "URL to receive webhook notifications",
+                    "title": "Webhook Url"
+                  }
+                },
+                "required": ["image"],
+                "title": "FluxProExpandInputs",
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BFLOutputFormat": {
+        "enum": ["jpeg", "png", "webp"],
+        "title": "OutputFormat",
+        "type": "string"
+      }
+    }
+  }
+}

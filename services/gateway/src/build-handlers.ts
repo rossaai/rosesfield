@@ -16,6 +16,7 @@ import {
   RepeatRunHandler,
   type RunRepository,
   StartRunHandler,
+  type WatchMarkPort,
 } from "@rosesfield/generation"
 import type { Clock } from "@rosesfield/kernel"
 import {
@@ -27,9 +28,12 @@ import {
   DeleteCharacterHandler,
   GetAssetHandler,
   GetCharacterHandler,
+  LinkAssetHandler,
   ListAssetsHandler,
   ListCharactersHandler,
+  PutAssetPreviewHandler,
   ReadAssetContentHandler,
+  ReadAssetPreviewHandler,
   UpdateCharacterHandler,
   UploadAssetHandler,
 } from "@rosesfield/library"
@@ -45,6 +49,7 @@ export type HandlerPorts = {
   engines: readonly GenerationEngine[]
   clock: Clock
   prices?: PriceBook
+  watchMarks?: WatchMarkPort
 }
 
 function pricesOf(ports: HandlerPorts): { prices?: PriceBook } {
@@ -56,6 +61,9 @@ export type LibraryHandlers = {
   getAsset: GetAssetHandler
   listAssets: ListAssetsHandler
   readAssetContent: ReadAssetContentHandler
+  linkAsset: LinkAssetHandler
+  readAssetPreview: ReadAssetPreviewHandler
+  putAssetPreview: PutAssetPreviewHandler
   deleteAsset: DeleteAssetHandler
   createCharacter: CreateCharacterHandler
   getCharacter: GetCharacterHandler
@@ -92,6 +100,9 @@ export function buildLibrary(ports: HandlerPorts): LibraryHandlers {
     getAsset: new GetAssetHandler({ assets }),
     listAssets: new ListAssetsHandler({ assets }),
     readAssetContent: new ReadAssetContentHandler({ assets, store }),
+    linkAsset: new LinkAssetHandler({ assets, store }),
+    readAssetPreview: new ReadAssetPreviewHandler({ assets, store }),
+    putAssetPreview: new PutAssetPreviewHandler({ assets, store }),
     deleteAsset: new DeleteAssetHandler({ assets, store, characters }),
     createCharacter: new CreateCharacterHandler({ characters, assets, clock }),
     getCharacter: new GetCharacterHandler({ characters }),
@@ -106,6 +117,7 @@ function runAssetsOf(library: LibraryHandlers): LibraryRunAssets {
     readContent: library.readAssetContent,
     getCharacter: library.getCharacter,
     upload: library.uploadAsset,
+    putPreview: library.putAssetPreview,
   })
 }
 
@@ -120,6 +132,7 @@ export function buildAdvance(
     assets: runAssetsOf(library),
     clock: ports.clock,
     ...pricesOf(ports),
+    ...(ports.watchMarks === undefined ? {} : { watchMarks: ports.watchMarks }),
   })
 }
 

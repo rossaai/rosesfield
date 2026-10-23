@@ -3,6 +3,7 @@ export type ErrorStatus = 400 | 404 | 409 | 412 | 429 | 502
 type ProjectErrorOptions = {
   message: string
   cause?: unknown
+  inputs?: readonly string[]
 }
 
 type RateLimitedErrorOptions = ProjectErrorOptions & {
@@ -13,6 +14,8 @@ export abstract class ProjectError extends Error {
   static readonly codePattern: RegExp = /^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$/
   abstract readonly code: string
   abstract readonly status: ErrorStatus
+  /** The names of the inputs a refusal names, never their values. */
+  readonly inputs: readonly string[]
 
   constructor(options: ProjectErrorOptions) {
     super(
@@ -20,6 +23,7 @@ export abstract class ProjectError extends Error {
       options.cause === undefined ? undefined : { cause: options.cause }
     )
     this.name = new.target.name
+    this.inputs = options.inputs ?? []
   }
 }
 

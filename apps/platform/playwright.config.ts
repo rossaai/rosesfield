@@ -33,7 +33,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "bun ../../services/gateway/src/main.ts",
+      command: "bunx vite build && bun ../../services/gateway/src/main.ts",
       url: `${gatewayOrigin}/api/health`,
       env: {
         COMFY_API_KEY: "",

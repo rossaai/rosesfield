@@ -112,7 +112,7 @@ export class FakeAgentHarness extends AgentHarness {
     const settled: Proposal = {
       ...proposal,
       status: decision.status,
-      runId: decision.status === "accepted" ? decision.runId : null,
+      runIds: decision.status === "accepted" ? decision.runIds : [],
     }
     this.proposals.set(ref.proposalId, { proposal: settled, body })
     return settled

@@ -5,8 +5,14 @@ import {
   type JsonObject,
   type ConversationId as PiConversationId,
 } from "@earendil-works/pi-durable"
-import type { RunInputs } from "@rosesfield/contract"
-import type { Conversation, ProposalStatus, RunApproval } from "#agent.contract"
+import { type RunInputs, runRequest } from "@rosesfield/contract"
+import { z } from "zod"
+import {
+  type Conversation,
+  type ProposalStatus,
+  proposalStatus,
+  type RunApproval,
+} from "#agent.contract"
 import { conversationIdFormat } from "#domain/conversation.id"
 import { backgroundContext } from "#infrastructure/pi-context"
 
@@ -38,7 +44,21 @@ export type ProposalRecord = {
   }
   body: JsonObject
   status: ProposalStatus
-  runId: string | null
+  runIds: string[]
+}
+
+const proposalRecordOne = z.object({
+  id: z.string(),
+  appId: z.string(),
+  request: runRequest,
+  body: z.record(z.string(), z.json()),
+  status: proposalStatus,
+  runId: z.string().nullable(),
+})
+
+function proposalRecordOf(value: JsonObject): ProposalRecord {
+  const { runId, ...record } = proposalRecordOne.parse(value)
+  return { ...record, runIds: runId === null ? [] : [runId] }
 }
 
 export const conversationList = defineDoc<ConversationList>({
@@ -66,12 +86,13 @@ export const conversationSettings = defineDoc<ConversationSettings>({
 
 export const proposalRecords = defineDocFamily<ProposalRecord, ProposalRecord>({
   kind: "rosesfield.proposal",
-  version: 1,
+  version: 2,
   scope: "conversation",
   history: "latest",
   fork: "current",
   family: true,
   initial: (seed) => ({ ...seed }),
+  migrate: proposalRecordOf,
 })
 
 export async function conversationOf(

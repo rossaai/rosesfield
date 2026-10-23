@@ -14,12 +14,40 @@ export function bodyOf(
   files: readonly EngineFile[]
 ): Slot {
   const body: Slot = {}
-  for (const field of form.fields) {
+  const fixed = form.fields.filter(isNestedFixed)
+  for (const field of form.fields.filter((one) => !isNestedFixed(one))) {
     for (const value of valuesOf(field, inputs[field.name], files)) {
       place(body, field.path.split("."), value)
     }
   }
+  for (const field of fixed) {
+    const segments = field.path.split(".")
+    if (field.required || holds(body, segments.slice(0, -1))) {
+      for (const value of valuesOf(field, inputs[field.name], files)) {
+        place(body, segments, value)
+      }
+    }
+  }
   return body
+}
+
+function isNestedFixed(field: ModelField): boolean {
+  return (
+    field.kind === "choice" &&
+    field.options.length === 1 &&
+    field.path.includes(".") &&
+    !field.path.includes("[]") &&
+    !field.path.includes("{")
+  )
+}
+
+function holds(body: Slot, segments: readonly string[]): boolean {
+  let current: unknown = body
+  for (const segment of segments.filter((one) => one !== "0")) {
+    const held = isObject(current) ? current[segment] : undefined
+    current = Array.isArray(held) ? held[0] : held
+  }
+  return isObject(current)
 }
 
 function valuesOf(
@@ -95,6 +123,11 @@ function place(target: Slot, segments: readonly string[], value: Placed): void {
     }
     if (next === undefined || next === "@inline") {
       current[segment] = isList(value) ? value.list : value
+      return
+    }
+    if (next === "[]" && index + 2 === segments.length) {
+      const held = current[segment]
+      current[segment] = [...(Array.isArray(held) ? held : []), value]
       return
     }
     current = enter(current, segment, next)

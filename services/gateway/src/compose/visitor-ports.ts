@@ -5,6 +5,7 @@ import type { Clock } from "@rosesfield/kernel"
 import type { AssetStore } from "@rosesfield/library"
 import type { AgentRequest } from "#agent/agent-access"
 import { buildHandlers } from "#build-handlers"
+import type { RuntimeDefer } from "#catalog/shared-router-catalog"
 import { type EngineOptions, visitorEngines } from "#compose/pick-engines"
 import { visitorScope } from "#compose/request-scope"
 import { visitorSettings } from "#compose/settings"
@@ -34,6 +35,7 @@ export type VisitorDeps = {
   clock: Clock
   engineOptions: EngineOptions
   agents: SessionAgentHost | null
+  defer?: RuntimeDefer
 }
 
 export async function visitorScopeFor(
@@ -75,6 +77,7 @@ export async function visitorScopeFor(
     settings: visitorSettings(deps.vars, keys, deps.place),
     agent: agents === null ? null : agents.agentOf(sessionId),
     canAnswer: modelKey !== null,
+    defer: deps.defer ?? (() => undefined),
     hold: () =>
       agents === null
         ? () => undefined

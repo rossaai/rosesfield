@@ -1,3 +1,4 @@
+import { type Clock, SystemClock } from "@rosesfield/kernel"
 import type { Context, MiddlewareHandler } from "hono"
 import {
   deleteCookie,
@@ -5,6 +6,7 @@ import {
   getSignedCookie,
 } from "hono/cookie"
 import type { GatewayEnv } from "#gateway-env"
+import { ContentLinks } from "#lock/content-links"
 import type { AccountLookups } from "#session/account-lookups"
 import type { SessionId } from "#session/session-scope"
 import type { SessionVisits } from "#session/session-visits"
@@ -18,6 +20,7 @@ export type SessionGuardOptions = {
   visits: SessionVisits
   early?: (request: Request, key: string) => void
   moveAgent?: (from: SessionId, to: SessionId) => Promise<void>
+  clock?: Clock
 }
 
 type HeldSession = {
@@ -158,7 +161,18 @@ function cookieValue(visit: Visit): string {
 export function sessionGuard(
   options: SessionGuardOptions
 ): MiddlewareHandler<GatewayEnv> {
+  const links = new ContentLinks({
+    secret: options.secret,
+    clock: options.clock ?? new SystemClock(),
+  })
   return async (c, next) => {
+    const linked = await linkedSession(links, c)
+    if (linked !== null) {
+      c.set("session", linked)
+      c.set("signContent", (url) => links.sign(url, linked))
+      await options.take(linked)
+      return next()
+    }
     const visit = await visitOf(options, c)
     const isFresh =
       visit.passing !== true &&
@@ -181,6 +195,7 @@ export function sessionGuard(
           )
         : null
     c.set("session", visit.sessionId)
+    c.set("signContent", (url) => links.sign(url, visit.sessionId))
     try {
       await options.take(visit.sessionId)
       await next()
@@ -190,4 +205,14 @@ export function sessionGuard(
       }
     }
   }
+}
+
+async function linkedSession(
+  links: ContentLinks,
+  c: Context
+): Promise<SessionId | null> {
+  const holder = await links.holderOf(c.req.raw)
+  return holder !== null && isSessionId(holder.sessionId)
+    ? holder.sessionId
+    : null
 }

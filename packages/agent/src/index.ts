@@ -97,6 +97,10 @@ export { ProposalNotFoundError } from "#domain/error/proposal-not-found.error"
 export { ProposalSettledError } from "#domain/error/proposal-settled.error"
 export { type ProposalId, proposalIdFormat } from "#domain/proposal.id"
 export {
+  ProposalRunner,
+  type ProposedRuns,
+} from "#domain/proposal-runner.port"
+export {
   PiAgentHarness,
   type PiAgentHarnessOptions,
 } from "#infrastructure/pi-agent-harness"
@@ -123,6 +127,7 @@ export {
   type PiModels,
   routerAgentModel,
 } from "#infrastructure/pi-models"
+export { PiProposalRunner } from "#infrastructure/pi-proposal-runner"
 export {
   appInputOf,
   isKeyframeChain,

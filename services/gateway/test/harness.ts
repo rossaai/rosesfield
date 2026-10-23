@@ -37,6 +37,7 @@ export type Harness = {
   handlers: Handlers
   jobs: FakeJobRunner
   clock: FixedClock
+  folder: string
   call: (path: string, init?: CallInit) => Promise<Response>
   drive: (runId: string) => Promise<void>
   close: () => void
@@ -70,6 +71,7 @@ export function ownerGateway(
       lock,
       tries: new TokenTries({ clock }),
       clientOf: () => null,
+      clock,
     },
     scopeFor: async () => scope,
     agent: { mode: "routes" },
@@ -95,6 +97,7 @@ export function harnessFor(options: HarnessOptions): Harness {
     handlers,
     jobs,
     clock,
+    folder,
     call: async (path, init = {}) =>
       app.request(path, {
         ...init,
@@ -106,6 +109,7 @@ export function harnessFor(options: HarnessOptions): Harness {
           runId: runIdFormat.parse(runId),
         })
         if (nextWakeMs === null) {
+          await handlers.advanceRun.priced(runIdFormat.parse(runId))
           return
         }
         clock.advance(nextWakeMs)

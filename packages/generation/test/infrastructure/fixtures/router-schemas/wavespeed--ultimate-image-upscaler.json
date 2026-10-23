@@ -1,0 +1,54 @@
+{
+  "x-comfy-router-model-id": "wavespeed/ultimate-image-upscaler",
+  "x-comfy-router-input-modalities": ["image"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/wavespeed/ultimate-image-upscaler": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for WavespeedAI image upscaling. One component serves both wavespeed/seedvr2 and wavespeed/ultimate-image-upscaler, which take the same request shape.",
+                "example": {
+                  "image": "https://images.pexels.com/photos/346529/pexels-photo-346529.jpeg",
+                  "target_resolution": "4k"
+                },
+                "properties": {
+                  "enable_base64_output": {
+                    "default": false,
+                    "description": "If enabled, the output will be encoded into a BASE64 string instead of a URL.",
+                    "type": "boolean"
+                  },
+                  "image": {
+                    "description": "The URL of the image to upscale.",
+                    "type": "string"
+                  },
+                  "output_format": {
+                    "default": "jpeg",
+                    "description": "The format of the output image.",
+                    "enum": ["jpeg", "png", "webp"],
+                    "type": "string"
+                  },
+                  "target_resolution": {
+                    "default": "4k",
+                    "description": "The target resolution of the output image.",
+                    "enum": ["2k", "4k", "8k"],
+                    "type": "string"
+                  }
+                },
+                "required": ["image"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

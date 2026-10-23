@@ -1,0 +1,85 @@
+{
+  "x-comfy-router-model-id": "moonvalley/text-to-video",
+  "x-comfy-router-input-modalities": ["text"],
+  "x-comfy-router-output-modalities": ["video"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/moonvalley/text-to-video": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for Moonvalley's text-to-video prompt route. Moonvalley declares no single required field here, so the only structural narrowing is that an empty body is refused.",
+                "example": {
+                  "prompt_text": "a single red maple leaf"
+                },
+                "minProperties": 1,
+                "properties": {
+                  "image_url": {
+                    "type": "string"
+                  },
+                  "inference_params": {
+                    "$ref": "#/components/schemas/MoonvalleyTextToVideoInferenceParams"
+                  },
+                  "prompt_text": {
+                    "type": "string"
+                  },
+                  "webhook_url": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "MoonvalleyTextToVideoInferenceParams": {
+        "properties": {
+          "guidance_scale": {
+            "default": 10,
+            "description": "Guidance scale for generation control",
+            "format": "float",
+            "type": "number"
+          },
+          "height": {
+            "default": 1080,
+            "description": "Height of the generated video in pixels",
+            "type": "integer"
+          },
+          "negative_prompt": {
+            "description": "Negative prompt text",
+            "type": "string"
+          },
+          "seed": {
+            "default": 9,
+            "description": "Random seed for generation (default: random)",
+            "type": "integer"
+          },
+          "steps": {
+            "default": 80,
+            "description": "Number of denoising steps",
+            "type": "integer"
+          },
+          "use_negative_prompts": {
+            "default": true,
+            "description": "Whether to use negative prompts",
+            "type": "boolean"
+          },
+          "width": {
+            "default": 1920,
+            "description": "Width of the generated video in pixels",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    }
+  }
+}

@@ -27,8 +27,10 @@ export {
 export {
   type Asset,
   type AssetKind,
+  type AssetLink,
   asset,
   assetKind,
+  assetLink,
   mimeType,
 } from "#asset.contract"
 export {
@@ -48,6 +50,7 @@ export {
   errorCode,
   errorEnvelope,
   errorEnvelopeOf,
+  inputNamesOf,
 } from "#error.contract"
 export { appId, assetId, characterId, runId } from "#id.contract"
 export {

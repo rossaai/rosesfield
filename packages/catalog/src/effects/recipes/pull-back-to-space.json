@@ -2,8 +2,18 @@
   "effect": "pull-back-to-space",
   "passed": false,
   "design": {
-    "unit": "pull-back-to-space",
-    "family": "effects",
+    "unit": {
+      "id": "pull-back-to-space",
+      "title": "Unit: pull-back-to-space"
+    },
+    "family": {
+      "id": "effects",
+      "title": "Family: effects"
+    },
+    "fit": {
+      "by": "area",
+      "edges": "crop"
+    },
     "setPiece": "One continuous aerial descent from orbit above the Earth, down through the clouds and over the city, landing on the person at street level.",
     "cuts": [],
     "lastFrame": {

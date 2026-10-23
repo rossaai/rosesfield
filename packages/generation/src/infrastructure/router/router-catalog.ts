@@ -1,6 +1,13 @@
 import type { Clock } from "@rosesfield/kernel"
 import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import type { ModelForm } from "#domain/model-form"
+import {
+  type CatalogDatabase,
+  type CatalogSource,
+  DrizzleRouterCatalogStore,
+  type KeptListing,
+  type KeptSchema,
+} from "#infrastructure/router/drizzle-router-catalog-store"
 import { fieldsOf } from "#infrastructure/router/router-fields"
 import type { RouterHttp } from "#infrastructure/router/router-http"
 import {
@@ -10,8 +17,6 @@ import {
 import { type RateRow, rateRowsOf } from "#infrastructure/router/router-rates"
 import { factsOf, type SchemaFacts } from "#infrastructure/router/router-schema"
 
-export type CatalogSource = "keyed" | "public"
-
 export type CatalogEntry = {
   facts: SchemaFacts
   form: ModelForm
@@ -19,11 +24,6 @@ export type CatalogEntry = {
   etag: string | null
   checkedAt: number
   source: CatalogSource
-}
-
-type Listing = {
-  ids: readonly string[]
-  checkedAt: number
 }
 
 type Stored = {
@@ -35,6 +35,8 @@ type RouterCatalogOptions = {
   clock: Clock
   maxAgeMs?: number
   concurrency?: number
+  db?: CatalogDatabase
+  defer?: (work: Promise<void>) => void
 }
 
 export class RouterCatalog {
@@ -47,10 +49,14 @@ export class RouterCatalog {
   private readonly clock: Clock
   private readonly maxAgeMs: number
   private readonly concurrency: number
+  private readonly kept: DrizzleRouterCatalogStore | null
+  private readonly defer: (work: Promise<void>) => void
   private readonly entries = new Map<string, CatalogEntry>()
   private readonly misses = new Map<string, number>()
-  private readonly listings = new Map<string, Listing>()
+  private readonly listings = new Map<string, KeptListing>()
   private readonly loads = new Map<string, Promise<void>>()
+  private readonly restores = new Map<string, Promise<void>>()
+  private readonly reads = new Map<string, number>()
   private readonly offEstimates = new Map<string, number>()
   private rates: Stored | null = null
 
@@ -58,13 +64,31 @@ export class RouterCatalog {
     this.clock = options.clock
     this.maxAgeMs = options.maxAgeMs ?? RouterCatalog.maxAgeMs
     this.concurrency = options.concurrency ?? RouterCatalog.concurrency
+    this.kept =
+      options.db === undefined
+        ? null
+        : new DrizzleRouterCatalogStore({ db: options.db })
+    this.defer = options.defer ?? (() => undefined)
+  }
+
+  static forgetUnread(db: CatalogDatabase, before: number): Promise<number> {
+    return new DrizzleRouterCatalogStore({ db }).forgetUnread(before)
   }
 
   async models(http: RouterHttp): Promise<CatalogEntry[]> {
     const tag = await http.keyTag()
-    if (this.needsLoad(tag)) {
-      await this.loadOnce(http, tag)
+    if (!this.listings.has(tag)) {
+      await this.restoreOnce(tag)
     }
+    if (this.needsLoad(tag)) {
+      const load = this.loadOnce(http, tag)
+      if (this.isServable(tag)) {
+        this.defer(load.catch(() => undefined))
+      } else {
+        await load
+      }
+    }
+    this.markRead(tag)
     return this.listedIds(tag).flatMap((id) => {
       const entry = this.entries.get(id)
       return entry === undefined || entry.facts.aliasOf !== null ? [] : [entry]
@@ -84,7 +108,8 @@ export class RouterCatalog {
   }
 
   async idle(): Promise<void> {
-    await Promise.allSettled([...this.loads.values()])
+    const running = [...this.restores.values(), ...this.loads.values()]
+    await Promise.allSettled(running)
   }
 
   async rateRows(http: RouterHttp): Promise<readonly RateRow[]> {
@@ -110,6 +135,65 @@ export class RouterCatalog {
     return this.listings.get(tag)?.ids ?? []
   }
 
+  private isServable(tag: string): boolean {
+    const ids = this.listings.get(tag)?.ids
+    const isHeld = (id: string): boolean => this.entries.has(id)
+    return ids !== undefined && (ids.length === 0 || ids.some(isHeld))
+  }
+
+  private restoreOnce(tag: string): Promise<void> {
+    return this.once(this.restores, tag, () =>
+      this.restore(tag).catch(() => undefined)
+    )
+  }
+
+  private async restore(tag: string): Promise<void> {
+    if (this.kept === null) {
+      return
+    }
+    const listing = await this.kept.listing(tag)
+    if (listing === null || this.listings.has(tag)) {
+      return
+    }
+    const missing = listing.ids.filter((id) => !this.entries.has(id))
+    for (const schema of await this.kept.schemas(missing)) {
+      this.restoreEntry(schema)
+    }
+    if (!this.listings.has(tag)) {
+      this.hold(this.listings, tag, listing)
+      this.reads.delete(tag)
+    }
+  }
+
+  private restoreEntry(schema: KeptSchema): void {
+    const held = this.entries.get(schema.model)
+    if (held !== undefined && held.checkedAt >= schema.checkedAt) {
+      return
+    }
+    const entry = entryOf(schema)
+    if (entry !== null) {
+      this.entries.set(schema.model, entry)
+    }
+  }
+
+  private markRead(tag: string): void {
+    const read = this.reads.get(tag)
+    if (!this.listings.has(tag) || (read !== undefined && this.isFresh(read))) {
+      return
+    }
+    const now = this.now()
+    this.remember(this.reads, tag, now, (at) => at)
+    this.defer(this.keep((kept) => kept.markRead(tag, now)))
+  }
+
+  private async keep(
+    work: (kept: DrizzleRouterCatalogStore) => Promise<void>
+  ): Promise<void> {
+    if (this.kept !== null) {
+      await work(this.kept).catch(() => undefined)
+    }
+  }
+
   private needsLoad(tag: string): boolean {
     const listing = this.listings.get(tag)
     if (listing === undefined || !this.isFresh(listing.checkedAt)) {
@@ -128,16 +212,24 @@ export class RouterCatalog {
   }
 
   private loadOnce(http: RouterHttp, tag: string): Promise<void> {
-    const running = this.loads.get(tag)
-    if (running !== undefined) {
-      return running
-    }
     const earlier = [...this.loads.values()]
-    const load = this.load(http, tag, earlier).finally(() => {
-      this.loads.delete(tag)
+    return this.once(this.loads, tag, () => this.load(http, tag, earlier))
+  }
+
+  private once(
+    running: Map<string, Promise<void>>,
+    tag: string,
+    start: () => Promise<void>
+  ): Promise<void> {
+    const held = running.get(tag)
+    if (held !== undefined) {
+      return held
+    }
+    const work = start().finally(() => {
+      running.delete(tag)
     })
-    this.loads.set(tag, load)
-    return load
+    running.set(tag, work)
+    return work
   }
 
   private async load(
@@ -174,11 +266,15 @@ export class RouterCatalog {
     }
     try {
       const ids = await this.readIds(http)
-      this.remember(this.listings, tag, { ids, checkedAt: this.now() }, at)
+      const listing = { ids, checkedAt: this.now() }
+      this.hold(this.listings, tag, listing)
+      this.remember(this.reads, tag, listing.checkedAt, (read) => read)
+      await this.keep((kept) => kept.keepListing(tag, listing))
       return ids
     } catch (error) {
       if (held === undefined || !(error instanceof EngineUnavailableError)) {
         this.listings.delete(tag)
+        await this.keep((kept) => kept.forgetListing(tag))
         throw error
       }
       const retryAt = this.now() - this.maxAgeMs + RouterCatalog.retryMs
@@ -206,40 +302,34 @@ export class RouterCatalog {
 
   private async refresh(http: RouterHttp, id: string): Promise<void> {
     if (!http.hasKey) {
-      this.store(id, await http.readPublicSchema(id), null, "public")
+      const document = await http.readPublicSchema(id)
+      await this.store({ model: id, document, etag: null, source: "public" })
       return
     }
     const held = this.entries.get(id)
     const etag = held?.source === "keyed" ? held.etag : null
     const read = await http.readSchema(id, etag)
     if (read.state === "same" && held !== undefined) {
-      this.entries.set(id, { ...held, checkedAt: this.now() })
+      const checkedAt = this.now()
+      this.entries.set(id, { ...held, checkedAt })
       this.misses.delete(id)
+      await this.keep((kept) => kept.markChecked(id, checkedAt))
     } else if (read.state === "fresh") {
-      this.store(id, read.document, read.etag, "keyed")
+      const { document, etag: next } = read
+      await this.store({ model: id, document, etag: next, source: "keyed" })
     }
   }
 
-  private store(
-    id: string,
-    document: unknown,
-    etag: string | null,
-    source: CatalogSource
-  ): void {
-    const facts = factsOf(document)
-    if (facts === null || facts.model !== id) {
-      this.misses.set(id, this.now())
+  private async store(read: Omit<KeptSchema, "checkedAt">): Promise<void> {
+    const schema = { ...read, checkedAt: this.now() }
+    const entry = entryOf(schema)
+    if (entry === null) {
+      this.misses.set(read.model, this.now())
       return
     }
-    this.misses.delete(id)
-    this.entries.set(id, {
-      facts,
-      form: { model: id, fields: fieldsOf(facts) },
-      outputs: outputPathsOf(facts.response, facts.components),
-      etag,
-      checkedAt: this.now(),
-      source,
-    })
+    this.misses.delete(read.model)
+    this.entries.set(read.model, entry)
+    await this.keep((kept) => kept.keepSchema(schema))
   }
 
   private remember<T>(
@@ -253,6 +343,10 @@ export class RouterCatalog {
         map.delete(held)
       }
     }
+    this.hold(map, tag, value)
+  }
+
+  private hold<T>(map: Map<string, T>, tag: string, value: T): void {
     map.delete(tag)
     map.set(tag, value)
     for (const held of map.keys()) {
@@ -288,6 +382,17 @@ export class RouterCatalog {
   }
 }
 
-function at(listing: Listing): number {
-  return listing.checkedAt
+function entryOf(schema: KeptSchema): CatalogEntry | null {
+  const facts = factsOf(schema.document)
+  if (facts === null || facts.model !== schema.model) {
+    return null
+  }
+  return {
+    facts,
+    form: { model: schema.model, fields: fieldsOf(facts) },
+    outputs: outputPathsOf(facts.response, facts.components),
+    etag: schema.etag,
+    checkedAt: schema.checkedAt,
+    source: schema.source,
+  }
 }

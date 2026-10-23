@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks"
 import { errorEnvelopeOf } from "@rosesfield/contract"
 import { ComfyAccount } from "@rosesfield/generation"
 import { ProjectError } from "@rosesfield/kernel"
@@ -36,6 +37,12 @@ import {
 export { AgentHost, RunWatcher }
 
 let gateway: GatewayApp | null = null
+
+const requests = new AsyncLocalStorage<ExecutionContext>()
+
+function deferToRequest(work: Promise<void>): void {
+  requests.getStore()?.waitUntil(work)
+}
 
 const pageUrl = "https://rosesfield.assets/"
 
@@ -113,7 +120,7 @@ function composeOwner(
     throw new TypeError("composeOwner needs owner mode")
   }
   const { handlers } = buildHandlers(
-    ownerPorts(parts),
+    { ...ownerPorts(parts), watchMarks: RunWatcher.marksOf(env.WATCHERS) },
     () => new AlarmJobRunner({ watchers: env.WATCHERS })
   )
   const scope = ownerScope({
@@ -150,7 +157,7 @@ function composeOwner(
 }
 
 function composeWorkerGateway(env: WorkerBindings): GatewayApp {
-  const parts = workerParts(env)
+  const parts = workerParts(env, deferToRequest)
   checkEngineSettings(parts.vars.engine)
   const agent: AgentMount = {
     mode: "forward",
@@ -195,7 +202,8 @@ export default {
     } catch (error) {
       return settingsFailure(error)
     }
-    return gateway.fetch(request, env, context)
+    const app = gateway
+    return requests.run(context, () => app.fetch(request, env, context))
   },
   scheduled(_controller, env, context) {
     context.waitUntil(purgeExpired(workerParts(env)))

@@ -56,7 +56,12 @@ function ratioOf(value: unknown): number | undefined {
 }
 
 function kindOf(kind: unknown): OutputKind | null {
-  return kind === "image" || kind === "video" || kind === "audio" ? kind : null
+  return kind === "image" ||
+    kind === "video" ||
+    kind === "audio" ||
+    kind === "mesh"
+    ? kind
+    : null
 }
 
 type Row = Record<string, unknown>

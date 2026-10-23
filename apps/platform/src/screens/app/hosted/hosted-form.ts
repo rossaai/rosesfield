@@ -1,10 +1,17 @@
-import { isOneAtATime, type ModelField } from "@rosesfield/catalog/comfy"
+import {
+  type FieldRole,
+  fieldRoleOf,
+  isOneAtATime,
+  type ModelField,
+} from "@rosesfield/catalog/comfy"
+import type { AppListing } from "@rosesfield/contract"
 import type {
   FieldProblem,
   FieldValue,
   FormValues,
   StartRunBodyInput,
 } from "@/screens/app/app-form"
+import { fieldCaption } from "@/screens/app/hosted/field-words"
 
 export const modelInputName = "model"
 
@@ -86,6 +93,112 @@ export function settingsFor(
   )
 }
 
+type MediaField = Extract<ModelField, { kind: "media" }>
+
+type MediaKind = MediaField["media"]
+
+export type HeldMedia = Readonly<Partial<Record<MediaKind, readonly string[]>>>
+
+const imageRanks: Partial<Record<FieldRole, number>> = {
+  "first-frame": 0,
+  reference: 1,
+  "last-frame": 2,
+}
+
+function rankOf(field: MediaField, output: string): number | null {
+  if (field.media !== "image") {
+    return 0
+  }
+  const role = fieldRoleOf(field, output)
+  return role === null ? null : (imageRanks[role] ?? null)
+}
+
+function placeableOf(
+  fields: readonly ModelField[],
+  output: string
+): MediaField[] {
+  return fields
+    .filter(
+      (field): field is MediaField =>
+        field.kind === "media" && rankOf(field, output) !== null
+    )
+    .sort((a, b) => (rankOf(a, output) ?? 0) - (rankOf(b, output) ?? 0))
+}
+
+function filesOf(value: FieldValue): string[] {
+  return Array.isArray(value)
+    ? value.filter((one): one is string => typeof one === "string")
+    : []
+}
+
+export function appMediaFieldsOf(app: AppListing): MediaField[] {
+  return app.inputs.flatMap((input): MediaField[] =>
+    input.type === "image" || input.type === "video" || input.type === "audio"
+      ? [
+          {
+            kind: "media",
+            name: input.name,
+            path: input.name,
+            required: input.presence === "required",
+            media: input.type,
+            min: 0,
+            max: input.max,
+          },
+        ]
+      : []
+  )
+}
+
+export function heldMediaOf(
+  fields: readonly ModelField[],
+  inputs: Readonly<Record<string, FieldValue>>,
+  held: HeldMedia,
+  output: string
+): HeldMedia {
+  const next: Partial<Record<MediaKind, readonly string[]>> = { ...held }
+  const placeable = placeableOf(fields, output)
+  for (const kind of new Set(placeable.map((field) => field.media))) {
+    next[kind] = placeable
+      .filter((field) => field.media === kind)
+      .flatMap((field) => filesOf(inputs[field.name]))
+  }
+  return next
+}
+
+export function placedMedia(
+  fields: readonly ModelField[],
+  held: HeldMedia,
+  kept: Readonly<Record<string, FieldValue>>,
+  output: string
+): Record<string, string[]> {
+  const placeable = placeableOf(fields, output)
+  const placed: Record<string, string[]> = {}
+  const used = new Set<string>()
+  for (const field of placeable) {
+    const same = filesOf(kept[field.name])
+    if (same.length > 0 && fitsField(field, same)) {
+      placed[field.name] = same
+      for (const file of same) {
+        used.add(file)
+      }
+    }
+  }
+  const queues = new Map(
+    Object.entries(held).map(([kind, files]) => [
+      kind,
+      (files ?? []).filter((file) => !used.has(file)),
+    ])
+  )
+  for (const field of placeable) {
+    if (placed[field.name] !== undefined) {
+      continue
+    }
+    const queue = queues.get(field.media) ?? []
+    placed[field.name] = queue.splice(0, field.max)
+  }
+  return placed
+}
+
 function isEmpty(value: FieldValue): boolean {
   return (
     value === undefined ||
@@ -104,7 +217,11 @@ export function hostedBody(
     [modelInputName]: model,
   }
   for (const field of fields) {
-    const value = values.inputs[field.name]
+    const given = values.inputs[field.name]
+    const value =
+      field.kind === "choice" && !isEmpty(given) && !fitsField(field, given)
+        ? (field.default ?? undefined)
+        : given
     if (value !== undefined && !isEmpty(value)) {
       inputs[field.name] = value
     }
@@ -114,24 +231,26 @@ export function hostedBody(
     : { inputs }
 }
 
-function missingKeyOf(field: ModelField): FieldProblem["key"] {
+function missingOf(field: ModelField): FieldProblem {
+  const name = field.name
   switch (field.kind) {
     case "media":
-      return "field.asset.required"
+      return { name, key: "field.asset.required", values: {} }
     case "prompt":
+      return { name, key: "field.prompt.required", values: {} }
     case "text":
-      return "field.prompt.required"
+      return { name, key: "bar.notSet", values: { field: fieldCaption(field) } }
     case "number":
-      return "field.number.required"
+      return { name, key: "field.number.required", values: {} }
     default:
-      return "field.choice.required"
+      return { name, key: "field.choice.required", values: {} }
   }
 }
 
 function problemOf(field: ModelField, value: FieldValue): FieldProblem | null {
   const name = field.name
   if (field.required && isEmpty(value)) {
-    return { name, key: missingKeyOf(field), values: {} }
+    return missingOf(field)
   }
   if (
     field.kind === "media" &&

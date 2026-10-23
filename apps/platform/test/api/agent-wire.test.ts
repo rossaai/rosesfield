@@ -81,7 +81,7 @@ describe("readAnswerEvent", () => {
       appId: "image",
       request: { inputs: { prompt: "Hi" }, count: 1, aspectRatio: null },
       status: "proposed",
-      runId: null,
+      runIds: [],
     }
     expect(readAnswerEvent({ type: "proposal", proposal })).toEqual({
       type: "proposal",
@@ -89,6 +89,12 @@ describe("readAnswerEvent", () => {
     })
     expect(
       readAnswerEvent({ type: "proposal", proposal: { ...proposal, id: 7 } })
+    ).toBeNull()
+    expect(
+      readAnswerEvent({
+        type: "proposal",
+        proposal: { ...proposal, runIds: [runId, 7] },
+      })
     ).toBeNull()
   })
 

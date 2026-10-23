@@ -4,7 +4,7 @@ import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate, useRouter } from "@tanstack/react-router"
-import { type ReactElement, type ReactNode, useState } from "react"
+import type { ReactElement, ReactNode } from "react"
 import { settingsQuery } from "@/api/queries"
 import { useHasVisitorKey } from "@/api/visitor-keys"
 import { t } from "@/copy/t"
@@ -25,7 +25,6 @@ import {
 } from "@/screens/explore/explore-sections"
 import { useRecreate, type VisualEntry } from "@/screens/explore/explore-tile"
 import { useInAppLinks } from "@/screens/explore/in-app-links"
-import { ShareDialog } from "@/screens/explore/share-dialog"
 import { useOpenKeyDialog } from "@/shell/key-dialog-context"
 import { showcaseItems } from "@/showcase/showcase"
 import { ResultViewer, useShownResult } from "@/viewer/result-viewer"
@@ -119,32 +118,7 @@ function ExploreFeeds({
   )
 }
 
-function ShareLayer({
-  entry,
-  onClose,
-}: {
-  entry: VisualEntry | null
-  onClose: () => void
-}): ReactNode {
-  if (entry === null || entry.source.kind !== "own") {
-    return null
-  }
-  return (
-    <ShareDialog
-      run={entry.run}
-      outputId={entry.source.assetId}
-      open={true}
-      onOpenChange={(open) => {
-        if (!open) {
-          onClose()
-        }
-      }}
-    />
-  )
-}
-
 function useMore(
-  share: (entry: VisualEntry) => void,
   view: (entry: VisualEntry) => void
 ): (entry: VisualEntry) => void {
   const router = useRouter()
@@ -152,8 +126,6 @@ function useMore(
     const { source } = entry
     switch (source.kind) {
       case "own":
-        share(entry)
-        return
       case "showcase":
         view(entry)
         return
@@ -175,8 +147,7 @@ export function ExploreScreen(): ReactElement {
   const entries = [...showcase, ...shared]
   const viewer = useShownResult()
   const recreate = useRecreate()
-  const [sharing, setSharing] = useState<VisualEntry | null>(null)
-  const onMore = useMore(setSharing, (entry) => viewer.show(entry, null))
+  const onMore = useMore((entry) => viewer.show(entry, null))
   return (
     <div ref={root} className="flex min-h-full flex-col px-4 pb-12">
       <ExploreBanner />
@@ -198,7 +169,6 @@ export function ExploreScreen(): ReactElement {
         onStep={viewer.step}
         onRecreate={recreate}
       />
-      <ShareLayer entry={sharing} onClose={() => setSharing(null)} />
     </div>
   )
 }

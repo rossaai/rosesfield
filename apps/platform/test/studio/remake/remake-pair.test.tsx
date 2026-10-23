@@ -54,6 +54,10 @@ vi.mock("@/api/use-asset-source", () => ({
     state: "ready",
     src: `blob:${assetId}`,
   }),
+  useTileSource: (asset: { id: string }) => ({
+    state: "ready",
+    src: `blob:${asset.id}`,
+  }),
 }))
 
 vi.mock("@/pieces/use-in-menu", () => ({ UseInSubmenu: () => null }))

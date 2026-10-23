@@ -285,7 +285,13 @@ describe("the model facts the catalog holds", () => {
       Object.entries(modelFactsData.marks)
         .filter(([, mark]) => mark.source !== undefined)
         .map(([name]) => name)
-    ).toEqual(["Comfy"])
+    ).toEqual(["Beeble", "Comfy"])
+    expect(modelFactsData.marks.Beeble).toMatchObject({
+      set: "Brand",
+      source: "https://beeble.ai/brand",
+      viewBox: "0 0 300 300",
+      accent: { hex: "00D084", hexDark: "00D084" },
+    })
     expect(modelFactsData.marks["Hugging Face"]?.hex).toBe("FFD21E")
   })
 

@@ -1,0 +1,41 @@
+{
+  "x-comfy-router-model-id": "bria/image-edit-reseason",
+  "x-comfy-router-input-modalities": ["image", "text"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/bria/image-edit-reseason": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for Bria Reseason API",
+                "example": {
+                  "image": "https://picsum.photos/id/237/960/540",
+                  "season": "winter"
+                },
+                "properties": {
+                  "image": {
+                    "description": "The image to edit. Supported input types are Base64-encoded string or URL pointing to a publicly accessible image file. Accepted formats JPEG, JPG, PNG, WEBP.",
+                    "type": "string"
+                  },
+                  "season": {
+                    "description": "The season to apply, one of \"spring\", \"summer\", \"autumn\", or \"winter\". Custom text is also accepted.",
+                    "type": "string"
+                  }
+                },
+                "required": ["image", "season"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

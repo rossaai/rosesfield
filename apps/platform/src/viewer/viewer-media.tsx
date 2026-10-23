@@ -10,6 +10,7 @@ import { useDownloadAsset } from "@/pieces/asset-actions"
 import { assetLabel, useAssetName } from "@/pieces/asset-name"
 import { AudioRow } from "@/pieces/audio-row"
 import { TextOutput } from "@/pieces/text-output"
+import { MeshOutput } from "@/studio/three-d/mesh-viewer"
 import { ViewerVideo } from "@/viewer/viewer-video"
 
 function Failed({ retry }: { retry: () => void }): ReactElement {
@@ -34,7 +35,18 @@ type ViewerMediaProps = {
   onMeasure: (aspect: MediaAspect) => void
 }
 
-export function ViewerMedia({
+export function ViewerMedia(props: ViewerMediaProps): ReactElement {
+  if (props.asset.kind === "mesh") {
+    return (
+      <div className="grid size-full place-items-center overflow-auto p-s4">
+        <MeshOutput assetId={props.asset.id} />
+      </div>
+    )
+  }
+  return <SourcedMedia {...props} />
+}
+
+function SourcedMedia({
   asset,
   aspect,
   onMeasure,
@@ -85,6 +97,8 @@ export function ViewerMedia({
       )
     case "text":
       return <TextOutput asset={asset} />
+    case "mesh":
+      return <MeshOutput assetId={asset.id} />
   }
 }
 

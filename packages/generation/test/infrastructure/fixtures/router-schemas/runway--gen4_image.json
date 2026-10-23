@@ -1,0 +1,75 @@
+{
+  "x-comfy-router-model-id": "runway/gen4_image",
+  "x-comfy-router-input-modalities": ["text", "image"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/runway/gen4_image": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "promptText": "a red circle",
+                  "ratio": "1024:1024"
+                },
+                "properties": {
+                  "model": {
+                    "description": "Model to use for generation. On the Comfy Router route `POST /v2/models/runway/{model}` this field is supplied from the path and MUST NOT be sent; on the v1 `POST /proxy/runway/text_to_image` route it is required and constrained to `gen4_image`.",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "promptText": {
+                    "description": "Text prompt for the image generation",
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "ratio": {
+                    "$ref": "#/components/schemas/RunwayTextToImageAspectRatioEnum"
+                  },
+                  "referenceImages": {
+                    "description": "Array of reference images to guide the generation",
+                    "items": {
+                      "properties": {
+                        "uri": {
+                          "description": "A HTTPS URL or data URI containing an encoded image",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["uri"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": ["promptText", "ratio"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RunwayTextToImageAspectRatioEnum": {
+        "enum": [
+          "1920:1080",
+          "1080:1920",
+          "1024:1024",
+          "1360:768",
+          "1080:1080",
+          "1168:880",
+          "1440:1080",
+          "1080:1440",
+          "1808:768",
+          "2112:912"
+        ],
+        "type": "string"
+      }
+    }
+  }
+}

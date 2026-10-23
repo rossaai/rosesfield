@@ -52,23 +52,37 @@ const markSet = z.union([
 
 const hex = z.string().regex(/^[0-9A-F]{6}$/)
 
-const labMark = z.strictObject({
-  slug: z.string().regex(/^[a-z0-9]+$/),
-  title: z.string().min(1).max(80),
-  hex,
-  hexDark: hex,
-  ground: hex.optional(),
-  fillRule: z.literal("evenodd").optional(),
-  set: z.union([markSetName, z.literal("Comfy")]),
-  path: z
-    .string()
-    .max(8000)
-    .regex(/^[Mm][-+.,\deMmLlHhVvCcSsQqTtAaZz\s]*$/),
-  source: z.url().optional(),
-})
+const markPath = z
+  .string()
+  .max(8000)
+  .regex(/^[Mm][-+.,\deMmLlHhVvCcSsQqTtAaZz\s]*$/)
+
+const viewBox = z.string().regex(/^-?\d+(\.\d+)?( -?\d+(\.\d+)?){3}$/)
+
+const labMark = z
+  .strictObject({
+    slug: z.string().regex(/^[a-z0-9]+$/),
+    title: z.string().min(1).max(80),
+    hex,
+    hexDark: hex,
+    ground: hex.optional(),
+    fillRule: z.literal("evenodd").optional(),
+    set: z.union([markSetName, z.literal("Comfy"), z.literal("Brand")]),
+    path: markPath,
+    viewBox: viewBox.optional(),
+    accent: z.strictObject({ path: markPath, hex, hexDark: hex }).optional(),
+    source: z.url().optional(),
+  })
+  .refine((mark) => mark.set !== "Brand" || mark.source !== undefined, {
+    message: "A mark taken from a lab's own brand page names that page",
+    path: ["source"],
+  })
 
 const markMissing = z.strictObject({
   searched: z.array(z.string().min(1).max(80)).min(1),
+  ground: hex,
+  ink: z.enum(["000000", "FFFFFF"]),
+  source: z.url(),
 })
 
 export const modelFactsFile = z.strictObject({
@@ -123,7 +137,7 @@ export function lineKeyOf(
 
 export function factsOf(
   id: string,
-  task: string,
+  task: string | null,
   data: ModelFactsFile = modelFactsData
 ): ModelFacts {
   const row = Object.hasOwn(data.models, id) ? data.models[id] : undefined
@@ -131,8 +145,8 @@ export function factsOf(
   return {
     lab: labOfModel(id, data),
     release: row?.release ?? null,
-    rank: boardRankOf(id, task, data),
-    priceThird: row?.thirds[task] ?? null,
+    rank: task === null ? null : boardRankOf(id, task, data),
+    priceThird: task === null ? null : (row?.thirds[task] ?? null),
     weights: weights?.startsWith(weightsHost) === true ? weights : null,
     lineKey: lineKeyOf(id, data),
   }

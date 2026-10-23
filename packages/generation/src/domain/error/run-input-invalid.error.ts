@@ -1,3 +1,4 @@
+import { inputNamesOf } from "@rosesfield/contract"
 import { InvalidArgumentError } from "@rosesfield/kernel"
 
 type RunInputInvalidErrorOptions = {
@@ -11,6 +12,7 @@ export class RunInputInvalidError extends InvalidArgumentError {
   constructor(options: RunInputInvalidErrorOptions) {
     super({
       message: `The inputs break the rules of ${options.appId}: ${options.issues.join(". ")}`,
+      inputs: inputNamesOf(options.issues),
     })
   }
 }

@@ -5,6 +5,10 @@ import { drizzle } from "drizzle-orm/d1"
 import type { HandlerPorts } from "#build-handlers"
 import { servedApps } from "#catalog/served-apps"
 import { sharedCreditMeter } from "#catalog/shared-credit-meter"
+import {
+  type RuntimeDefer,
+  sharedRouterCatalog,
+} from "#catalog/shared-router-catalog"
 import { type EngineOptions, pickEngines } from "#compose/pick-engines"
 import { readWorkerEnv, type WorkerVars } from "#env"
 import { R2AssetStore } from "#infrastructure/r2-asset-store"
@@ -39,19 +43,41 @@ export type WorkerParts = {
   store: R2AssetStore
   clock: Clock
   engineOptions: EngineOptions
+  defer: RuntimeDefer
 }
 
-export function workerParts(env: WorkerBindings): WorkerParts {
+const databases = new WeakMap<D1Database, SqliteDatabase>()
+
+function databaseOf(binding: D1Database): SqliteDatabase {
+  const held = databases.get(binding)
+  if (held !== undefined) {
+    return held
+  }
+  const db = drizzle(binding)
+  databases.set(binding, db)
+  return db
+}
+
+export function workerParts(
+  env: WorkerBindings,
+  defer?: RuntimeDefer
+): WorkerParts {
   const clock = new SystemClock()
   const vars = readWorkerEnv(env)
+  const db = databaseOf(env.DB)
   return {
     vars,
     apps: servedApps(vars, "workers"),
-    db: drizzle(env.DB),
+    db,
     store: new R2AssetStore({ bucket: env.BUCKET }),
     clock,
+    defer: defer ?? (() => undefined),
     engineOptions: {
       clock,
+      catalog: sharedRouterCatalog(
+        clock,
+        defer === undefined ? { db } : { db, defer }
+      ),
       meter: sharedCreditMeter(clock),
       fetch: (input, init) => fetch(input, init),
     },

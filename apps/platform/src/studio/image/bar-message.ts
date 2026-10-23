@@ -3,7 +3,7 @@ import type { AppListing } from "@rosesfield/contract"
 import { t, tCatalog } from "@/copy/t"
 import type { FieldProblem } from "@/screens/app/app-form"
 import { inputCaption } from "@/screens/app/fields/input-copy"
-import { fieldCaption } from "@/screens/app/hosted/hosted-fields"
+import { fieldCaption } from "@/screens/app/hosted/field-words"
 
 const promptName = "prompt"
 
@@ -12,6 +12,7 @@ const missingKeys: readonly string[] = [
   "field.asset.required",
   "field.choice.required",
   "field.number.required",
+  "bar.notSet",
 ]
 
 function captionOf(

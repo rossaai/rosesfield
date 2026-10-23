@@ -6,6 +6,7 @@ import {
 } from "@rosesfield/ui/components/view-menu"
 import {
   AudioLinesIcon,
+  BoxIcon,
   ImageIcon,
   LayoutGridIcon,
   ShapesIcon,
@@ -158,6 +159,7 @@ export const kindPictures = {
   video: <VideoIcon />,
   audio: <AudioLinesIcon />,
   text: <TypeIcon />,
+  mesh: <BoxIcon />,
 } as const satisfies Record<OutputKind | "all", ReactNode>
 
 function facetOf(group: FilterGroup): ViewFacet {

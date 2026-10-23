@@ -2,6 +2,7 @@ import type { AppListing } from "@rosesfield/contract"
 import { cn } from "@rosesfield/ui/lib/cn"
 import {
   ArrowRightIcon,
+  BoxIcon,
   FileAudioIcon,
   FileTextIcon,
   ImageIcon,
@@ -26,6 +27,7 @@ const kindGlyphs = {
   video: VideoIcon,
   audio: FileAudioIcon,
   text: FileTextIcon,
+  mesh: BoxIcon,
 } satisfies Record<DiscKind, typeof ImageIcon>
 
 export function KindDisc({

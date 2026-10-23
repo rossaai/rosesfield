@@ -3,13 +3,13 @@ import { Input } from "@rosesfield/ui/components/input"
 import { Switch } from "@rosesfield/ui/components/switch"
 import { Textarea } from "@rosesfield/ui/components/textarea"
 import { type ReactElement, type ReactNode, useId, useState } from "react"
-import { hasCatalogText, t, tCatalog } from "@/copy/t"
+import { t } from "@/copy/t"
 import { DropWell } from "@/pieces/drop-well"
 import type { FieldValue } from "@/screens/app/app-form"
 import { ChoiceControl } from "@/screens/app/fields/choice-field"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { listOf, textOf } from "@/screens/app/fields/field-props"
-import { wordsOfPath } from "@/screens/app/hosted/field-words"
+import { fieldCaption } from "@/screens/app/hosted/field-words"
 import type { AppForm } from "@/screens/app/use-app-form"
 
 type HostedFieldsProps = {
@@ -22,13 +22,6 @@ type FieldProps = {
   field: ModelField
   value: FieldValue
   form: AppForm
-}
-
-export function fieldCaption(field: ModelField): string {
-  const key = `model.field.${field.name}`
-  return hasCatalogText(key)
-    ? tCatalog(key)
-    : t("model.field.other", { name: wordsOfPath(field.path) })
 }
 
 export function isShownField(field: ModelField): boolean {

@@ -15,7 +15,7 @@ export type MeterTicket = {
 }
 
 type Finished = {
-  credits: number | null
+  credits: Promise<number | null>
   at: number
 }
 
@@ -28,13 +28,14 @@ export class CreditMeter {
   static readonly creditsPerUsd = 211
   static readonly creditsPerCent = CreditMeter.creditsPerUsd / 100
   static readonly settleMs = 2000
-  static readonly settleTries = 8
+  static readonly settleTries = 5
   static readonly staleMs = 7_200_000
 
   private readonly clock: Clock
   private readonly wait: (ms: number) => Promise<void>
   private readonly open = new Map<string, Set<MeterTicket>>()
   private readonly byRef = new Map<string, MeterTicket>()
+  private readonly deferred = new Set<string>()
   private readonly finished = new Map<string, Finished>()
 
   constructor(options: CreditMeterOptions) {
@@ -90,16 +91,26 @@ export class CreditMeter {
   dropRef(ref: string): void {
     this.drop(this.byRef.get(ref) ?? null)
     this.byRef.delete(ref)
+    this.deferred.delete(ref)
   }
 
-  async finishRef(reader: BalanceReader, ref: string): Promise<number | null> {
+  deferRef(ref: string): boolean {
+    if (!this.byRef.has(ref) || this.deferred.has(ref)) {
+      return false
+    }
+    this.deferred.add(ref)
+    return true
+  }
+
+  finishRef(reader: BalanceReader, ref: string): Promise<number | null> {
     const held = this.finished.get(ref)
     if (held !== undefined) {
       return held.credits
     }
     const ticket = this.byRef.get(ref) ?? null
     this.byRef.delete(ref)
-    const credits = await this.finish(reader, ticket)
+    this.deferred.delete(ref)
+    const credits = this.finish(reader, ticket).catch(() => null)
     this.finished.set(ref, { credits, at: this.now() })
     return credits
   }
@@ -168,6 +179,7 @@ export class CreditMeter {
     for (const [ref, ticket] of this.byRef) {
       if (now - ticket.startedAt >= CreditMeter.staleMs) {
         this.byRef.delete(ref)
+        this.deferred.delete(ref)
       }
     }
     for (const [ref, held] of this.finished) {

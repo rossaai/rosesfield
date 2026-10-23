@@ -44,6 +44,24 @@ describe("UploadAssetHandler", () => {
     expect(await library.assets.get(asset.id)).toEqual(asset)
   })
 
+  it("keeps a GLB a run made as a mesh, with no width, height or length", async () => {
+    const library = libraryFor()
+    const { asset } = await library.upload.execute({
+      bytes: png,
+      mime: "model/gltf-binary",
+      sourceRunId: runUuid,
+      width: null,
+      height: null,
+      durationSeconds: null,
+    })
+    expect(asset).toMatchObject({
+      kind: "mesh",
+      mime: "model/gltf-binary",
+      sourceRunId: runUuid,
+    })
+    expect(await library.assets.get(asset.id)).toEqual(asset)
+  })
+
   it("refuses a file the library does not keep", async () => {
     await expect(upload(libraryFor(), "application/pdf")).rejects.toMatchObject(
       {

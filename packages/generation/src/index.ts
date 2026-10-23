@@ -3,6 +3,7 @@ export {
   type AdvanceRunInput,
   type AdvanceRunOutput,
 } from "#application/advance-run/advance-run.handler"
+export type { WatchMarkPort } from "#application/advance-run/watch-marks"
 export {
   CancelRunHandler,
   type CancelRunInput,

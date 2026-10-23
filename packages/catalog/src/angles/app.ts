@@ -1,3 +1,4 @@
+import { taskBinding } from "@rosesfield/generation/bindings"
 import {
   angleSets,
   distances,
@@ -11,6 +12,7 @@ import {
 } from "#angles/angle-views"
 import { anglesBinding } from "#angles/comfy/angles-workflows"
 import { type AppInput, defineApp } from "#define-app"
+import { graphModel } from "#edit/edit-models"
 
 type Input = AppInput["inputs"][number]
 type When = NonNullable<Extract<Input, { type: "choice" }>["when"]>
@@ -77,6 +79,11 @@ export const app: AppInput = defineApp({
       default: "1:1",
     },
   },
-  engine: anglesBinding,
+  engine: taskBinding({
+    tasks: [],
+    input: "model",
+    default: graphModel,
+    fallback: anglesBinding,
+  }),
   limits: { timeoutSeconds: 900, maxRetries: 1 },
 })

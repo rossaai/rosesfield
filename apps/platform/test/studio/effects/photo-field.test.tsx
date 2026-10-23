@@ -194,7 +194,16 @@ function photoTile(): HTMLElement | null {
 }
 
 beforeEach(() => {
-  vi.stubGlobal("fetch", () => new Promise(() => undefined))
+  vi.stubGlobal("fetch", (input: string, init?: RequestInit) =>
+    input.endsWith("/preview") && (init?.method ?? "GET") === "GET"
+      ? Promise.resolve(
+          Response.json(
+            { error: { code: "ASSET_PREVIEW_NOT_FOUND", status: 404 } },
+            { status: 404 }
+          )
+        )
+      : new Promise(() => undefined)
+  )
 })
 
 afterEach(() => {

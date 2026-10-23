@@ -2,7 +2,7 @@ import { z } from "zod"
 import { assetId, runId } from "#id.contract"
 import { timestamp } from "#value.contract"
 
-export const assetKind = z.enum(["image", "video", "audio", "text"])
+export const assetKind = z.enum(["image", "video", "audio", "text", "mesh"])
 
 export const mimeType = z
   .string()
@@ -23,3 +23,10 @@ export const asset = z.object({
 
 export type AssetKind = z.infer<typeof assetKind>
 export type Asset = z.infer<typeof asset>
+
+export const assetLink = z.object({
+  url: z.string().startsWith("/api/").max(2048),
+  expiresAt: timestamp,
+})
+
+export type AssetLink = z.infer<typeof assetLink>

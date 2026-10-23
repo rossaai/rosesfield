@@ -1,0 +1,61 @@
+{
+  "x-comfy-router-model-id": "ideogram/ideogram-v4",
+  "x-comfy-router-input-modalities": ["text"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/ideogram/ideogram-v4": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Parameters for the Ideogram 4.0 (V4) text-to-image generation proxy request. Supply exactly one of text_prompt or json_prompt.",
+                "example": {
+                  "rendering_speed": "DEFAULT",
+                  "text_prompt": "A poster for a jazz festival, bold typography, warm colours"
+                },
+                "minProperties": 1,
+                "properties": {
+                  "enable_copyright_detection": {
+                    "description": "Opt into post-generation copyright detection (Hive likeness and logo checks).",
+                    "type": "boolean"
+                  },
+                  "json_prompt": {
+                    "additionalProperties": true,
+                    "description": "Structured V4 prompt. Disables Magic Prompt; consumed directly. Supply exactly one of text_prompt or json_prompt.",
+                    "type": "object"
+                  },
+                  "rendering_speed": {
+                    "$ref": "#/components/schemas/RenderingSpeed"
+                  },
+                  "resolution": {
+                    "description": "Output resolution in WIDTHxHEIGHT. Omit to let the model pick an aspect ratio. Supported 2K values: 2048x2048, 1440x2880, 2880x1440, 1664x2496, 2496x1664, 1792x2240, 2240x1792, 1440x2560, 2560x1440, 1600x2560, 2560x1600, 1728x2304, 2304x1728, 1296x3168, 3168x1296, 1152x2944, 2944x1152, 1248x3328, 3328x1248, 1280x3072, 3072x1280.",
+                    "example": "2048x2048",
+                    "type": "string"
+                  },
+                  "text_prompt": {
+                    "description": "Natural-language prompt. Enables Magic Prompt automatically. Supply exactly one of text_prompt or json_prompt.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RenderingSpeed": {
+        "default": "DEFAULT",
+        "description": "The rendering speed setting that controls the trade-off between generation speed and quality",
+        "enum": ["DEFAULT", "TURBO", "QUALITY"],
+        "type": "string"
+      }
+    }
+  }
+}

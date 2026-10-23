@@ -1,0 +1,50 @@
+{
+  "x-comfy-router-model-id": "veed/video-background-removal-green-screen",
+  "x-comfy-router-input-modalities": ["video"],
+  "x-comfy-router-output-modalities": ["video"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/veed/video-background-removal-green-screen": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for `POST /proxy/veed/v1/video-background-removal-green-screen`. The job is billed from the credits VEED charges once it completes.",
+                "example": {
+                  "output_codec": "vp9",
+                  "spill_suppression_strength": 0.8,
+                  "video_url": "https://static-assets.veed.io/api-examples/green-screen-input.mp4"
+                },
+                "properties": {
+                  "output_codec": {
+                    "default": "vp9",
+                    "description": "Output encoding: vp9 (one WebM with alpha) or h264 (the RGB video and an alpha matte).",
+                    "type": "string"
+                  },
+                  "spill_suppression_strength": {
+                    "default": 0.8,
+                    "description": "How strongly the green cast is removed from the subject.",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "video_url": {
+                    "description": "Public http(s) URL of the source video, shot against a green screen.",
+                    "type": "string"
+                  }
+                },
+                "required": ["video_url"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

@@ -22,6 +22,13 @@
       "when": 1792408962822,
       "tag": "0002_measured_prices",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792699785110,
+      "tag": "0003_router_catalog",
+      "breakpoints": true
     }
   ]
 }

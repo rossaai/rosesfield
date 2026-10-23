@@ -86,7 +86,7 @@ describe("priceFromRates", () => {
     expect(priceFromRates(rows, clip, { resolution: "720p" }, "video")).toBe(10)
   })
 
-  it("changes the price with quality and output size", () => {
+  it("changes the price with quality and output size, and names none while a size the rows name is unknown", () => {
     const picture: ModelForm = {
       model: "maker/picture-4",
       fields: [
@@ -159,7 +159,13 @@ describe("priceFromRates", () => {
         "image"
       )
     ).toBe(4.22)
-    expect(priceFromRates(rows, picture, {}, "image")).toBe(12.66)
+    expect(priceFromRates(rows, picture, {}, "image")).toBeNull()
+    expect(
+      priceFromRates(rows, picture, { quality: "high" }, "image")
+    ).toBeNull()
+    expect(
+      priceFromRates(rows, picture, { quality: "high", size: "auto" }, "image")
+    ).toBeNull()
     const sized: ModelForm = {
       ...picture,
       fields: picture.fields.map((field) =>
@@ -210,5 +216,108 @@ describe("priceFromRates", () => {
   it("prices a row with no condition", () => {
     const rows = [{ ...row(flash.model, ""), credits: 6.33 }]
     expect(priceFromRates(rows, flash, { prompt: "a" }, "image")).toBe(6.33)
+  })
+})
+
+const meshy: ModelForm = {
+  model: "meshy/meshy-7.1",
+  fields: [
+    {
+      kind: "prompt",
+      name: "prompt",
+      path: "prompt",
+      required: true,
+      maxLength: 800,
+      default: null,
+    },
+    {
+      kind: "choice",
+      name: "mode",
+      path: "mode",
+      required: true,
+      options: ["preview", "refine"],
+      default: "preview",
+    },
+    {
+      kind: "choice",
+      name: "geometryResolution",
+      path: "geometry_resolution",
+      required: false,
+      options: ["standard", "2k", "4k"],
+      default: "standard",
+    },
+    {
+      kind: "toggle",
+      name: "ultraMode",
+      path: "ultra_mode",
+      required: false,
+      default: false,
+    },
+  ],
+}
+
+const meshyRate: RateRow = {
+  model: "meshy/meshy-7.1",
+  credits: 12.0692,
+  unit: "usage credit",
+  conditions:
+    "Rate applies to the usage-credit quantity reported for the request.",
+}
+
+describe("priceFromRates on a usage-credit rate", () => {
+  const chair = { prompt: "a wooden chair" }
+
+  it("prices Meshy 7.1 at 20 Meshy credits for one mesh with no texture", () => {
+    expect(priceFromRates([meshyRate], meshy, chair, "3d")).toBe(241.38)
+    expect(
+      priceFromRates(
+        [meshyRate],
+        meshy,
+        { ...chair, geometryResolution: "standard" },
+        "3d"
+      )
+    ).toBe(241.38)
+  })
+
+  it("adds 5 Meshy credits for the 2k or 4k mesh only, once", () => {
+    for (const geometryResolution of ["2k", "4k"]) {
+      expect(
+        priceFromRates(
+          [meshyRate],
+          meshy,
+          { ...chair, geometryResolution },
+          "3d"
+        )
+      ).toBe(301.73)
+    }
+    expect(
+      priceFromRates([meshyRate], meshy, { ...chair, ultraMode: "on" }, "3d")
+    ).toBe(241.38)
+    expect(
+      priceFromRates(
+        [meshyRate],
+        meshy,
+        { ...chair, geometryResolution: "4k", ultraMode: "on" },
+        "3d"
+      )
+    ).toBe(301.73)
+  })
+
+  it("answers unknown for a refine run, a model with no usage table and two rates", () => {
+    expect(
+      priceFromRates([meshyRate], meshy, { ...chair, mode: "refine" }, "3d")
+    ).toBeNull()
+    const other = { ...meshy, model: "meshy/remesh" }
+    expect(
+      priceFromRates([{ ...meshyRate, model: other.model }], other, chair, "3d")
+    ).toBeNull()
+    expect(
+      priceFromRates(
+        [meshyRate, { ...meshyRate, credits: 13 }],
+        meshy,
+        chair,
+        "3d"
+      )
+    ).toBeNull()
   })
 })

@@ -1,7 +1,13 @@
 import { appDefinition } from "@rosesfield/contract"
 import { taskBinding } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
-import { graphMaker, isOpenWeights, modelsForApp } from "#comfy/list-models"
+import {
+  appTasksOf,
+  defaultModelOf,
+  graphMaker,
+  isOpenWeights,
+  modelsForApp,
+} from "#comfy/list-models"
 import { findApp } from "#list-apps"
 
 const app = appDefinition.parse({
@@ -202,5 +208,45 @@ describe("the order of the listing", () => {
     }
     expect(hostedIn("background-removal")).toEqual([image.id])
     expect(hostedIn("video-edit")).toEqual([video.id])
+  })
+})
+
+describe("the model list of an app that declares no task", () => {
+  const editor = {
+    id: "maker/image-editor",
+    provider: "maker",
+    takes: ["image", "text"],
+    makes: ["image"],
+    form: null,
+  }
+  const listedIn = (appId: string) => {
+    const found = findApp(appId)
+    if (found === null) {
+      throw new Error(`the catalog lacks ${appId}`)
+    }
+    return { found, models: modelsForApp(found, [editor]) }
+  }
+
+  it("lists the graph Angles and Headshots run as their one model and opens on it", () => {
+    for (const appId of ["angles", "headshots"]) {
+      const { found, models } = listedIn(appId)
+      expect(models.map((one) => [one.id, one.kind, one.task])).toEqual([
+        ["qwen-image-edit-2511", "graph", null],
+      ])
+      expect(models[0]?.maker).toBe("Alibaba Qwen")
+      expect(models[0]?.facts?.lineKey).toBe(
+        "comfy.model.graphQwenImageEdit2511.line"
+      )
+      expect(defaultModelOf(found)).toBe("qwen-image-edit-2511")
+      expect(appTasksOf(found)).toEqual([])
+    }
+  })
+
+  it("lists nothing for Remake and Effects, which run no graph as a model, the control", () => {
+    for (const appId of ["remake", "effects"]) {
+      const { found, models } = listedIn(appId)
+      expect(models).toEqual([])
+      expect(defaultModelOf(found)).toBeNull()
+    }
   })
 })

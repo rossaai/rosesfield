@@ -9,7 +9,7 @@ import {
   relink,
   remove,
 } from "#effects/comfy/graph-edit"
-import type { EffectRecipe } from "#effects/effect-recipe.contract"
+import type { EffectRecipe, PhotoFit } from "#effects/effect-recipe.contract"
 import { apiGraph } from "#workflow-entry.contract"
 
 export const editFrameNodes: readonly string[] = [
@@ -181,6 +181,14 @@ function setHold(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, "464").inputs.strength = recipe.hold
 }
 
+export const fitCrops: Readonly<Record<PhotoFit["edges"], string>> = {
+  crop: "center",
+}
+
+function setFit(graph: Graph, recipe: EffectRecipe): void {
+  nodeOf(graph, fittedPhotoNode).inputs.crop = fitCrops[recipe.design.fit.edges]
+}
+
 function setGrain(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, grainNode).inputs.strength = recipe.design.encode.grain
 }
@@ -190,6 +198,7 @@ export function effectGraph(
   recipe: EffectRecipe
 ): Record<string, unknown> {
   const graph: Graph = apiGraph.parse(workflow)
+  setFit(graph, recipe)
   setPrompts(graph, recipe)
   setLength(graph, recipe)
   addAdapter(graph, recipe)

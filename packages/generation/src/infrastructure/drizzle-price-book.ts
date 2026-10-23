@@ -1,6 +1,7 @@
 import type { Cost } from "@rosesfield/contract"
 import { and, eq } from "drizzle-orm"
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core"
+import type { KeptRun } from "#domain/kept-settings"
 import { type MeasuredPrice, PriceBook } from "#domain/price-book.port"
 import type { PricedRun } from "#domain/priced-run"
 import { priceTable } from "#infrastructure/drizzle-price-table"
@@ -31,6 +32,20 @@ export class DrizzlePriceBook extends PriceBook {
     return row === undefined
       ? null
       : { amount: row.costAmount, currency: "USD" }
+  }
+
+  override async runsOf(model: string): Promise<readonly KeptRun<Cost>[]> {
+    const rows = await this.db
+      .select({
+        settings: priceTable.settings,
+        costAmount: priceTable.costAmount,
+      })
+      .from(priceTable)
+      .where(eq(priceTable.model, model))
+    return rows.map((row) => ({
+      settings: row.settings,
+      cost: { amount: row.costAmount, currency: "USD" as const },
+    }))
   }
 
   override async keep(price: MeasuredPrice): Promise<void> {

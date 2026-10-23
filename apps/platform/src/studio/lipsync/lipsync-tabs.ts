@@ -5,6 +5,7 @@ import {
   type ModelField,
 } from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
+import type { FormValues } from "@/screens/app/app-form"
 import { modelInputName } from "@/screens/app/hosted/hosted-form"
 
 export type LipsyncTab = "photo" | "clip"
@@ -99,6 +100,18 @@ function fieldOfInput(input: InputDefinition): ModelField | null {
     default:
       return null
   }
+}
+
+/** Puts the tab at the app's own mode input, for the app's graph alone, so a hosted model's field of the same name keeps its own value. */
+export function graphValuesOf(
+  app: AppListing,
+  values: FormValues,
+  tab: LipsyncTab
+): FormValues {
+  const hasMode = app.inputs.some((input) => input.name === modeInput)
+  return hasMode
+    ? { ...values, inputs: { ...values.inputs, [modeInput]: tab } }
+    : values
 }
 
 export function graphFieldsOf(app: AppListing): ModelField[] {

@@ -109,8 +109,10 @@ export function useProposalActs(conversationId: string, proposalId: string) {
   const client = useQueryClient()
   const generate = useMutation({
     mutationFn: () => acceptProposal(conversationId, proposalId),
-    onSuccess: ({ proposal, run }) => {
-      client.setQueryData(["run", run.id], { run })
+    onSuccess: ({ proposal, runs }) => {
+      for (const run of runs) {
+        client.setQueryData(["run", run.id], { run })
+      }
       keepProposal(client, conversationId, proposal)
       void client.invalidateQueries({ queryKey: ["runs"] })
     },

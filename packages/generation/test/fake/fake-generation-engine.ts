@@ -42,6 +42,7 @@ type FakeGenerationEngineOptions = {
   creditsPerUsd?: number
   listError?: Error
   submitLimitMs?: number
+  watches?: Step[][]
 }
 
 export class FakeGenerationEngine extends GenerationEngine {
@@ -52,6 +53,7 @@ export class FakeGenerationEngine extends GenerationEngine {
   readonly submitted: EngineRequest[] = []
   readonly cancelled: string[] = []
   readonly reads: string[] = []
+  readonly watched: string[] = []
   private readonly perJob: OutputsPerJob
   private readonly keyCheck: KeyCheck
   private readonly steps: Step[]
@@ -67,6 +69,7 @@ export class FakeGenerationEngine extends GenerationEngine {
   private readonly creditsPerUsd: number | null
   private readonly listError: Error | null
   private readonly limitMs: number
+  private readonly watches: Step[][]
   readonly priced: PriceRequest[] = []
 
   constructor(options: FakeGenerationEngineOptions = {}) {
@@ -89,6 +92,7 @@ export class FakeGenerationEngine extends GenerationEngine {
     this.creditsPerUsd = options.creditsPerUsd ?? null
     this.listError = options.listError ?? null
     this.limitMs = options.submitLimitMs ?? 120_000
+    this.watches = options.watches ?? []
   }
 
   override submitLimitMs(): number {
@@ -165,6 +169,24 @@ export class FakeGenerationEngine extends GenerationEngine {
       throw step
     }
     return step
+  }
+
+  override async *watch(
+    ref: string,
+    signal: AbortSignal
+  ): AsyncGenerator<EngineStatus, void, void> {
+    this.watched.push(ref)
+    const steps = this.watches.shift()
+    if (steps === undefined) {
+      yield* super.watch(ref, signal)
+      return
+    }
+    for (const step of steps) {
+      if (step instanceof Error) {
+        throw step
+      }
+      yield step
+    }
   }
 
   override async listOutputs(_ref: string): Promise<EngineOutput[]> {

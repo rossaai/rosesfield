@@ -28,6 +28,7 @@ import {
   typeOf,
   variantsOf,
   withVariantBounds,
+  withVariantEnum,
 } from "#infrastructure/router/router-variants"
 
 type Walk = {
@@ -167,7 +168,7 @@ function walkList(walk: Walk, item: Schema, spot: Spot, depth: number): void {
     walkTagged(walk, properties, tags, { ...spot, roles })
     return
   }
-  if ("text" in properties) {
+  if ("text" in properties && isPart(item, walk.components)) {
     walkParts(walk, properties, spot)
     return
   }
@@ -179,6 +180,16 @@ function walkList(walk: Walk, item: Schema, spot: Spot, depth: number): void {
     spot.required,
     spot.isInOptional || !spot.required
   )
+}
+
+function isPart(item: Schema, components: Schema): boolean {
+  return propertiesOf(item, components).required.every(
+    (key) => key === "text" || key === "inlineData" || isMediaKey(key)
+  )
+}
+
+function isMediaKey(key: string): boolean {
+  return mediaKey.test(key) && !notMediaKey.test(key)
 }
 
 function textOptionsOf(schema: Schema): string[] {
@@ -252,7 +263,12 @@ function walkParts(walk: Walk, properties: Schema, spot: Spot): void {
       walk.fields.push(
         mediaAt(`${spot.path}.[].inlineData.@inline`, "image", 1, 4)
       )
-    } else if (key !== "text" && mediaKey.test(key) && !notMediaKey.test(key)) {
+    } else if (
+      key !== "text" &&
+      isMediaKey(key) &&
+      typeOf(resolve(properties[key], walk.components), walk.components) !==
+        "object"
+    ) {
       walk.fields.push(mediaAt(`${spot.path}.[].${key}`, key, 1, 4))
     }
   }
@@ -264,15 +280,17 @@ function leafOf(walk: Walk, schema: Schema, spot: Spot): ModelField | null {
     path: spot.path,
     required: spot.required,
   }
+  const listed = withVariantEnum(schema, walk.components)
   const field =
-    choiceOf(walk, schema, spot, false) ??
+    choiceOf(walk, listed, spot, false) ??
     mediaOf(walk, schema, spot) ??
-    choiceOf(walk, schema, spot, true) ??
+    choiceOf(walk, listed, spot, true) ??
     namedChoiceOf(schema, spot, walk.components) ??
     scalarOf(
       base,
       withVariantBounds(schema, walk.components),
-      typeOf(schema, walk.components),
+      typeOf(schema, walk.components) ??
+        (promptKeys.includes(spot.key) ? "string" : null),
       spot.key
     )
   return field !== null && spot.isInOptional ? withoutDefault(field) : field
@@ -336,7 +354,8 @@ function mediaOf(walk: Walk, schema: Schema, spot: Spot): ModelField | null {
     list === undefined ? 1 : (numberOf(fieldOf(list, "maxItems")) ?? 4)
   const min =
     list === undefined ? 1 : (numberOf(fieldOf(list, "minItems")) ?? 1)
-  return { ...mediaAt(spot.path, spot.path, min, max), required: spot.required }
+  const path = !isSingle && max === 1 ? `${spot.path}.[]` : spot.path
+  return { ...mediaAt(path, spot.path, min, max), required: spot.required }
 }
 
 function itemOf(schema: Schema, components: Schema): Schema | null {
@@ -353,7 +372,7 @@ function hasParts(schema: Schema): boolean {
   return arrayOf(fieldOf(schema, "allOf")) !== null
 }
 
-function isInternal(key: string, schema: Schema): boolean {
+export function isInternal(key: string, schema: Schema): boolean {
   const note = stringOf(fieldOf(schema, "description")) ?? ""
   return (
     internalKeys.includes(key) ||

@@ -85,3 +85,22 @@ describe("a field that switches a model to a task", () => {
     expect(taskFieldOf([layerSwitch], "image-edit")).toBeNull()
   })
 })
+
+describe("the three-d task", () => {
+  function maker(id: string, takes: string[]): HostedModel {
+    return { id, provider: "maker", takes, makes: ["3d"], form: null }
+  }
+
+  it("gives a model that makes an object from text the three-d task", () => {
+    expect(tasksOfModel(maker("meshy/meshy-7.1", ["text"]))).toEqual([
+      "three-d",
+    ])
+  })
+
+  it("gives no task to a tool that takes a 3D model, such as rigging, retopology or texturing", () => {
+    expect(tasksOfModel(maker("meshy/rigging", ["3d"]))).toEqual([])
+    expect(
+      tasksOfModel(maker("tencent/hunyuan-3d-texture-edit", ["3d", "text"]))
+    ).toEqual([])
+  })
+})

@@ -38,6 +38,7 @@ type MediaRule = {
   makes: string
   gives: readonly Slot[]
   without?: readonly string[]
+  refuses?: readonly string[]
   needs?: readonly FieldRole[]
 }
 
@@ -130,7 +131,13 @@ export const mediaRules: readonly MediaRule[] = [
     gives: ["audio"],
     without: ["video"],
   },
-  { task: "three-d", takes: [], makes: "3d", gives: imageRoles },
+  {
+    task: "three-d",
+    takes: [],
+    makes: "3d",
+    gives: imageRoles,
+    refuses: ["3d"],
+  },
   {
     task: "chat",
     takes: ["text"],
@@ -214,7 +221,8 @@ function fits(model: HostedModel, rule: MediaRule): boolean {
   if (
     !makes.includes(rule.makes) ||
     !rule.takes.every((one) => takes.includes(one)) ||
-    (rule.without ?? []).some((one) => makes.includes(one))
+    (rule.without ?? []).some((one) => makes.includes(one)) ||
+    (rule.refuses ?? []).some((one) => takes.includes(one))
   ) {
     return false
   }

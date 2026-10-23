@@ -15,10 +15,14 @@ import {
   runPageResponse,
   runResponse,
 } from "@rosesfield/contract"
+import { RouterCatalog, RouterHttp } from "@rosesfield/generation"
 import { FixedClock } from "@rosesfield/kernel"
+import { sql } from "drizzle-orm"
+import { drizzle } from "drizzle-orm/bun-sqlite"
 import { afterEach, describe, expect, it } from "vitest"
 import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
 import { readServerEnv } from "#env"
+import { fakeRouter, pictureModel } from "./catalog/router-recordings"
 import { type Seen, Visitor } from "./fixtures/visitor"
 import { imageApp, pngBytes, sessionSecret, start } from "./sample-apps"
 
@@ -214,5 +218,35 @@ describe("public mode's retention", () => {
     expect(purged?.conversations).toBe(1)
     expect(existsSync(file)).toBe(false)
     expect(existsSync(keptFile)).toBe(true)
+  })
+
+  it("deletes each key tag's kept catalog that no request read inside the retention", async () => {
+    const clock = new FixedClock({ now: start })
+    const { dataDir } = openPublic(clock)
+    const db = drizzle(join(dataDir, "rosesfield.db"))
+    const keep = async (apiKey: string): Promise<void> => {
+      const catalog = new RouterCatalog({ clock, db })
+      const router = fakeRouter({ schemas: [pictureModel] })
+      await catalog.models(
+        new RouterHttp({
+          apiKey,
+          fetch: router.fetch,
+          timeoutMs: 1000,
+          downloadTimeoutMs: 1000,
+        })
+      )
+      await catalog.idle()
+    }
+    await keep("comfyui-unread")
+    clock.advance(6 * dayMs)
+    await keep("comfyui-read")
+    clock.advance(2 * dayMs)
+
+    await gateway?.purge()
+
+    const left = db.all<{ read_at: number }>(
+      sql`select read_at from router_listings`
+    )
+    expect(left).toEqual([{ read_at: start.getTime() + 6 * dayMs }])
   })
 })

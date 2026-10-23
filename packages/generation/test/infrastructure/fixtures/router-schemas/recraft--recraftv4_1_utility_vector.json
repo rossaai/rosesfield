@@ -1,0 +1,115 @@
+{
+  "x-comfy-router-model-id": "recraft/recraftv4_1_utility_vector",
+  "x-comfy-router-input-modalities": ["text"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/recraft/recraftv4_1_utility_vector": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "The Recraft image-generation fields, shared by the v1 `POST /proxy/recraft/image_generation` request body and the Comfy Router input schema for the `recraft/*` models. See the note above this component for why the two surfaces share properties but not `required`.\n`required` here is the ROUTER-SAFE floor: `model` is absent from it because Router writes the path's model into the body after routervalidate.Guard has already validated the caller's bytes. The v1 wrapper `RecraftImageGenerationRequest` re-adds it.",
+                "example": {
+                  "n": 1,
+                  "prompt": "A single red maple leaf on a plain white background."
+                },
+                "properties": {
+                  "controls": {
+                    "description": "The controls for the generated image",
+                    "properties": {
+                      "artistic_level": {
+                        "description": "Defines artistic tone of your image. At a simple level, the person looks straight at the camera in a static and clean style. Dynamic and eccentric levels introduce movement and creativity.",
+                        "maximum": 5,
+                        "minimum": 0,
+                        "nullable": true,
+                        "type": "integer"
+                      },
+                      "background_color": {
+                        "$ref": "#/components/schemas/RGBColor"
+                      },
+                      "colors": {
+                        "description": "An array of preferable colors",
+                        "items": {
+                          "$ref": "#/components/schemas/RGBColor"
+                        },
+                        "type": "array"
+                      },
+                      "no_text": {
+                        "description": "Do not embed text layouts",
+                        "type": "boolean"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "model": {
+                    "description": "The model to use for generation (e.g., \"recraftv3\"). This field is NOT constrained to an enum: the proxy forwards whatever the caller sends. The spellings Comfy ships — the set Comfy Router addresses as `recraft/<model>` — are recraftv2, recraftv3, recraftv4, recraftv4_pro, recraftv4_1, recraftv4_1_utility, recraftv4_1_pro, recraftv4_1_utility_pro, recraftv4_styles, recraftv4_styles_pro, recraftv4_1_vector, recraftv4_1_utility_vector, recraftv4_1_pro_vector, recraftv4_1_utility_pro_vector, recraftv4_styles_vector and recraftv4_styles_pro_vector. They are written out here rather than named by reference because the RecraftGenerationModel component that declares them is `$ref`-ed by nothing and is therefore pruned from the spec served at GET /openapi, so a pointer to it would dangle in the served document. The four `recraftv4_styles*` spellings additionally require `style_id` — see that field.",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "n": {
+                    "description": "The number of images to generate. Recraft accepts 1-6.",
+                    "maximum": 6,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "prompt": {
+                    "description": "The text prompt describing the image to generate",
+                    "type": "string"
+                  },
+                  "response_format": {
+                    "$ref": "#/components/schemas/RecraftResponseFormat"
+                  },
+                  "size": {
+                    "description": "The size of the generated image (e.g., \"1024x1024\")",
+                    "type": "string"
+                  },
+                  "style": {
+                    "description": "The style to apply to the generated image (e.g., \"digital_illustration\")",
+                    "type": "string"
+                  },
+                  "style_id": {
+                    "description": "The style ID to apply to the generated image (e.g., \"123e4567-e89b-12d3-a456-426614174000\"). If style_id is provided, style should not be provided. REQUIRED by the four `recraftv4_styles*` models: Recraft rejects those without a style_id or style reference. Mint one with `POST /proxy/recraft/styles`, which this same proxy serves under the same credentials. Nothing on this route enforces the pairing — the body is forwarded to Recraft unchanged, so a `recraftv4_styles*` call without it reaches the partner and comes back 4xx.",
+                    "type": "string"
+                  }
+                },
+                "required": ["prompt"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RGBColor": {
+        "description": "RGB color values",
+        "example": {
+          "rgb": [255, 0, 0]
+        },
+        "properties": {
+          "rgb": {
+            "items": {
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+          }
+        },
+        "required": ["rgb"],
+        "type": "object"
+      },
+      "RecraftResponseFormat": {
+        "enum": ["url", "b64_json"],
+        "type": "string"
+      }
+    }
+  }
+}

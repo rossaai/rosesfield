@@ -29,4 +29,39 @@ describe("DrizzlePriceBook", () => {
     expect(await prices.find(run)).toEqual({ amount: 0.0057, currency: "USD" })
     expect(await prices.find({ ...run, settings: '[["count",2]]' })).toBeNull()
   })
+
+  it("lists every measured cost of one model, one per settings, and none of another model", async () => {
+    const prices = book()
+    await prices.keep({
+      ...run,
+      cost: { amount: 0.0057, currency: "USD" },
+      measuredAt: start,
+    })
+    await prices.keep({
+      ...run,
+      settings: '[["count",2]]',
+      cost: { amount: 0.0114, currency: "USD" },
+      measuredAt: start,
+    })
+    await prices.keep({
+      model: "maker/other-1",
+      settings: '[["count",1]]',
+      cost: { amount: 1, currency: "USD" },
+      measuredAt: start,
+    })
+    expect(await prices.runsOf(run.model)).toEqual(
+      expect.arrayContaining([
+        {
+          settings: '[["count",1]]',
+          cost: { amount: 0.0057, currency: "USD" },
+        },
+        {
+          settings: '[["count",2]]',
+          cost: { amount: 0.0114, currency: "USD" },
+        },
+      ])
+    )
+    expect(await prices.runsOf(run.model)).toHaveLength(2)
+    expect(await prices.runsOf("maker/none")).toEqual([])
+  })
 })

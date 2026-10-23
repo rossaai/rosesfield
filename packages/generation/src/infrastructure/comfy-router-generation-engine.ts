@@ -16,7 +16,9 @@ import {
   GenerationEngine,
   type HostedModel,
   type OutputsPerJob,
+  type Pause,
   type PriceRequest,
+  pauseOn,
   type RunPrice,
   type TokenRate,
   unknownPrice,
@@ -48,6 +50,7 @@ import {
   tokenRateOf,
 } from "#infrastructure/router/router-rates"
 import { takesToolsOf } from "#infrastructure/router/router-schema"
+import { type Timer, TimerJobRunner } from "#infrastructure/timer-job-runner"
 
 type ComfyRouterGenerationEngineOptions = {
   apiKey: string | null
@@ -56,6 +59,7 @@ type ComfyRouterGenerationEngineOptions = {
   fetch?: Fetch
   requestTimeoutMs?: number
   downloadTimeoutMs?: number
+  timer?: Timer
 }
 
 type Ref = { model: string; requestId: string; isNow: boolean }
@@ -65,6 +69,7 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
   static readonly creditsPerUsd = CreditMeter.creditsPerUsd
   static readonly requestTimeoutMs = 30_000
   static readonly downloadTimeoutMs = 300_000
+  static readonly statusEveryMs = 2000
 
   override readonly key = "comfy-router"
   override readonly origin = "live"
@@ -73,11 +78,13 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
   private readonly http: RouterHttp
   private readonly catalog: RouterCatalog
   private readonly meter: CreditMeter | null
+  private readonly pause: Pause
 
   constructor(options: ComfyRouterGenerationEngineOptions) {
     super()
     this.catalog = options.catalog
     this.meter = options.meter ?? null
+    this.pause = pauseOn((options.timer ?? TimerJobRunner.systemTimer).after)
     this.http = new RouterHttp({
       apiKey: options.apiKey,
       fetch: options.fetch ?? ((input, init) => fetch(input, init)),
@@ -215,8 +222,23 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     if (state.errorType !== null) {
       return { state: "failed", error: failureOf(state.errorType, 200, state) }
     }
-    const credits = (await this.meter?.finishRef(this.http, ref)) ?? null
+    const meter = this.meter
+    if (meter?.deferRef(ref) === true) {
+      return { state: "succeeded" }
+    }
+    const credits = (await meter?.finishRef(this.http, ref)) ?? null
     return { state: "succeeded", cost: costOfCredits(credits) }
+  }
+
+  override watch(
+    ref: string,
+    signal: AbortSignal
+  ): AsyncGenerator<EngineStatus, void, void> {
+    return this.readEvery(ref, {
+      everyMs: ComfyRouterGenerationEngine.statusEveryMs,
+      pause: this.pause,
+      signal,
+    })
   }
 
   override async listOutputs(

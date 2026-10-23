@@ -7,6 +7,7 @@ const outputWords: Record<AssetKind, string> = {
   video: "video",
   audio: "audio",
   text: "text",
+  mesh: "3D models",
 }
 
 const toolNames = {

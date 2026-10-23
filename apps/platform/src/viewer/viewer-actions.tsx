@@ -4,6 +4,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@rosesfield/ui/components/dropdown-menu"
 import {
@@ -20,6 +21,7 @@ import {
   ForwardIcon,
   InfoIcon,
   RepeatIcon,
+  Share2Icon,
   Trash2Icon,
 } from "lucide-react"
 import { type ReactElement, type ReactNode, useState } from "react"
@@ -30,6 +32,7 @@ import { LabMark } from "@/pieces/lab-mark"
 import { useOpenInComfy } from "@/pieces/run/open-in-comfy"
 import { comfyMaker } from "@/pieces/run/run-menu"
 import { useUseInItems } from "@/pieces/use-in-menu"
+import { ShareDialog } from "@/screens/explore/share-dialog"
 
 type ViewerActionsProps = {
   asset: Asset
@@ -83,16 +86,26 @@ function useUseInputs(run: Run | null): (() => void) | null {
 
 type MenuSide = "inline-start" | "top"
 
+function shareableRun(run: Run | null, asset: Asset): Run | null {
+  return run !== null && run.status === "done" && run.outputs.includes(asset.id)
+    ? run
+    : null
+}
+
 function MoreMenu({
   asset,
+  run,
   onDeleted,
   side,
 }: {
   asset: Asset
+  run: Run | null
   onDeleted: () => void
   side: MenuSide
 }): ReactElement {
   const [isConfirmOpen, setConfirmOpen] = useState(false)
+  const [isShareOpen, setShareOpen] = useState(false)
+  const shared = shareableRun(run, asset)
   return (
     <>
       <DropdownMenu>
@@ -104,6 +117,17 @@ function MoreMenu({
           }
         />
         <DropdownMenuContent side={side} align="end">
+          {shared === null ? null : (
+            <>
+              <DropdownMenuItem
+                lead={<Share2Icon aria-hidden="true" />}
+                onClick={() => setShareOpen(true)}
+              >
+                {t("share.title")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
           <DropdownMenuItem
             tone="danger"
             lead={<Trash2Icon aria-hidden="true" />}
@@ -121,6 +145,14 @@ function MoreMenu({
         title={t("viewer.delete.title")}
         body={t("viewer.delete.body")}
       />
+      {shared === null ? null : (
+        <ShareDialog
+          run={shared}
+          outputId={asset.id}
+          open={isShareOpen}
+          onOpenChange={setShareOpen}
+        />
+      )}
     </>
   )
 }
@@ -187,7 +219,12 @@ export function ViewerActions({
           {t("output.download")}
         </Button>
         <UseInButton asset={asset} form="label" />
-        <MoreMenu asset={asset} onDeleted={onDeleted} side="inline-start" />
+        <MoreMenu
+          asset={asset}
+          run={run}
+          onDeleted={onDeleted}
+          side="inline-start"
+        />
       </div>
       <OpenInComfy run={run} form="label" />
     </div>
@@ -218,7 +255,7 @@ export function ViewerBar({
       </IconButton>
       <UseInButton asset={asset} form="circle" />
       <OpenInComfy run={run} form="circle" />
-      <MoreMenu asset={asset} onDeleted={onDeleted} side="top" />
+      <MoreMenu asset={asset} run={run} onDeleted={onDeleted} side="top" />
       <Sheet open={isInfoOpen} onOpenChange={setInfoOpen}>
         <SheetContent side="bottom" closeLabel={t("viewer.close")}>
           <SheetHeader>

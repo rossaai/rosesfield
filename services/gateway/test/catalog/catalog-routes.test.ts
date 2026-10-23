@@ -65,7 +65,7 @@ describe("the model list of an app", () => {
     )
   })
 
-  it("lists a model Comfy adds in the app of its task after the next revalidation", async () => {
+  it("lists a model Comfy adds in the app of its task once the revalidation behind the served copy ends", async () => {
     let schemas = [pictureModel, clipModel]
     const router = fakeRouter({ schemas: [] })
     const fetch: Fetch = (input, init) =>
@@ -87,8 +87,11 @@ describe("the model list of an app", () => {
     const before = await modelsOf(gateway, "pictures")
     schemas = [pictureModel, clipModel, newPictureModel]
     gateway.clock.advance(oneHourMs)
+    const served = await modelsOf(gateway, "pictures")
+    await held.catalog?.idle()
     const after = await modelsOf(gateway, "pictures")
     expect(before.models.map((one) => one.id)).not.toContain("studio/sketch-1")
+    expect(served.models.map((one) => one.id)).not.toContain("studio/sketch-1")
     expect(after.models.map((one) => one.id)).toContain("studio/sketch-1")
     expect(
       (await modelsOf(gateway, "clips")).models.map((one) => one.id)
@@ -126,7 +129,7 @@ describe("the model list of an app", () => {
       ["open-sketch", "graph"],
     ])
   })
-  it("names the fix when the Router refuses the key's reload of a warm list", async () => {
+  it("names the fix on the next open once the Router refuses the key's reload of a warm list", async () => {
     let refuse: string | undefined
     const fetch: Fetch = (input, init) =>
       fakeRouter({
@@ -141,6 +144,8 @@ describe("the model list of an app", () => {
     expect((await modelsOf(gateway, "pictures")).refusal).toBeNull()
     refuse = "Comfy Router is not enabled for this account yet."
     gateway.clock.advance(oneHourMs)
+    expect((await modelsOf(gateway, "pictures")).refusal).toBeNull()
+    await held.catalog?.idle()
     const listed = await modelsOf(gateway, "pictures")
     expect(listed.refusal).toEqual({ code: "ENGINE_NOT_ENABLED", status: 412 })
     expect(listed.models.every((one) => one.kind === "graph")).toBe(true)

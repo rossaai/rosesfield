@@ -18,6 +18,7 @@ import type { AppForm } from "@/screens/app/use-app-form"
 import type { StartRun } from "@/screens/app/use-start-run"
 import {
   formOfModel,
+  graphValuesOf,
   type LipFields,
   type LipsyncTab,
   lipFieldsOf,
@@ -127,7 +128,7 @@ export function runPartsOf(options: {
     runChosen === null
       ? null
       : form === null
-        ? bodyOf(bodyApp, values)
+        ? bodyOf(bodyApp, graphValuesOf(bodyApp, values, tab))
         : hostedBody(runChosen.id, form, values, app.output.kind)
   return {
     bodyApp,

@@ -1,0 +1,92 @@
+{
+  "x-comfy-router-model-id": "bfl/flux-pro-1.1-ultra",
+  "x-comfy-router-input-modalities": ["text", "image"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/bfl/flux-pro-1.1-ultra": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Request body for the BFL FLUX 1.1 [pro] Ultra image generation API. Ultra selects the output size from aspect_ratio rather than explicit pixel dimensions.",
+                "example": {
+                  "aspect_ratio": "16:9",
+                  "prompt": "A lighthouse on a rocky coast at golden hour, cinematic"
+                },
+                "properties": {
+                  "aspect_ratio": {
+                    "default": "16:9",
+                    "description": "Aspect ratio of the image between 21:9 and 9:21, e.g. 16:9.",
+                    "type": "string"
+                  },
+                  "image_prompt": {
+                    "description": "Optional base64-encoded image to remix.",
+                    "type": "string"
+                  },
+                  "image_prompt_strength": {
+                    "default": 0.1,
+                    "description": "Blend between the prompt and the image prompt, from 0 (prompt only) to 1 (image prompt only).",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "output_format": {
+                    "default": "jpeg",
+                    "description": "Output image format.",
+                    "enum": ["jpeg", "png", "webp"],
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "Text prompt for image generation.",
+                    "type": "string"
+                  },
+                  "prompt_upsampling": {
+                    "default": false,
+                    "description": "Whether to upsample the prompt. If active, the prompt is automatically modified for more creative generation.",
+                    "type": "boolean"
+                  },
+                  "raw": {
+                    "default": false,
+                    "description": "Generate less processed, more natural-looking images.",
+                    "type": "boolean"
+                  },
+                  "safety_tolerance": {
+                    "default": 2,
+                    "description": "Tolerance level for input and output moderation, between 0 (most strict) and 6 (least strict).",
+                    "maximum": 6,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "seed": {
+                    "description": "Optional seed for reproducibility. A random seed is used when omitted.",
+                    "example": 42,
+                    "type": "integer"
+                  },
+                  "webhook_secret": {
+                    "description": "Optional secret for webhook signature verification.",
+                    "type": "string"
+                  },
+                  "webhook_url": {
+                    "description": "URL to receive webhook notifications.",
+                    "format": "uri",
+                    "maxLength": 2083,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["prompt"],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

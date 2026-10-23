@@ -8,6 +8,7 @@ import {
 import { runIdFormat } from "@rosesfield/kernel"
 import { agentRouteHandlers } from "#agent/agent-handlers"
 import type { Handlers } from "#build-handlers"
+import type { RuntimeDefer } from "#catalog/shared-router-catalog"
 import type { Settings } from "#gateway.contract"
 import type { RequestScope } from "#gateway-env"
 import { pollOnce } from "#session/run-polls"
@@ -21,16 +22,19 @@ type OwnerScopeOptions = {
 
 export function ownerScope(options: OwnerScopeOptions): RequestScope {
   const { handlers, agent } = options
+  const pollRun = async (): Promise<void> => undefined
   return {
     handlers,
     agent: agentRouteHandlers({
       agent,
       canAnswer: true,
       startRun: handlers.startRun,
+      getRun: handlers.getRun,
+      pollRun,
     }),
     settings: options.settings,
     keyFor: async (key) => key,
-    pollRun: async () => undefined,
+    pollRun,
     hold: () => () => undefined,
   }
 }
@@ -44,6 +48,7 @@ type VisitorScopeOptions = {
   agent: AgentHarness | null
   canAnswer: boolean
   hold: () => () => void
+  defer: RuntimeDefer
 }
 
 async function sessionKey(
@@ -71,7 +76,10 @@ async function pollRun(
     return
   }
   try {
-    await options.handlers.advanceRun.execute({ runId })
+    const { nextWakeMs } = await options.handlers.advanceRun.execute({ runId })
+    if (nextWakeMs === null) {
+      options.defer(options.handlers.advanceRun.priced(runId))
+    }
   } catch (error) {
     if (!(error instanceof RunConflictError)) {
       throw error
@@ -81,16 +89,20 @@ async function pollRun(
 
 export function visitorScope(options: VisitorScopeOptions): RequestScope {
   const { handlers, sessionId } = options
+  const poll = (runId: string): Promise<void> =>
+    pollOnce(runId, () => pollRun(options, runId))
   return {
     handlers,
     agent: agentRouteHandlers({
       agent: options.agent,
       canAnswer: options.canAnswer,
       startRun: handlers.startRun,
+      getRun: handlers.getRun,
+      pollRun: poll,
     }),
     settings: options.settings,
     keyFor: (key) => sessionKey(sessionId, key),
-    pollRun: (runId) => pollOnce(runId, () => pollRun(options, runId)),
+    pollRun: poll,
     hold: options.hold,
   }
 }

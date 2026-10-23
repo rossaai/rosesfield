@@ -1,22 +1,24 @@
-import type { AppDefinition, Cost } from "@rosesfield/contract"
+import { type Clock, ProjectError, type RunId } from "@rosesfield/kernel"
 import {
-  type Clock,
-  ProjectError,
-  RateLimitedError,
-  type RunId,
-} from "@rosesfield/kernel"
+  endRun,
+  isRetryable,
+  noOutput,
+  timeOutRun,
+} from "#application/advance-run/end-run"
 import {
-  cancelAll,
   keepSteps,
   type Polled,
   reopenLost,
 } from "#application/advance-run/engine-steps"
 import { jobInputsOf } from "#application/advance-run/job-inputs"
 import {
-  type KeptOutputs,
-  keepOutputs,
-} from "#application/advance-run/keep-outputs"
-import { recordPrice } from "#application/advance-run/record-price"
+  type Collected,
+  collectJob,
+  type KeepPorts,
+  keepFinished,
+  type Watch,
+} from "#application/advance-run/keep-job"
+import { LatePrices } from "#application/advance-run/late-price"
 import { runRequestOf } from "#application/advance-run/run-request"
 import {
   backoffMs,
@@ -27,15 +29,22 @@ import {
   pollMs,
   wakeMs,
 } from "#application/advance-run/run-timing"
+import { runWatchOf } from "#application/advance-run/run-watch"
+import {
+  type WatchMarkPort,
+  WatchMarks,
+} from "#application/advance-run/watch-marks"
+import type {
+  RunFrame,
+  WatchRunInput,
+} from "#application/watch-run/watch-run.handler"
 import type { AppCatalog } from "#domain/app-catalog.port"
 import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import { RunConflictError } from "#domain/error/run-conflict.error"
 import { RunFailedError } from "#domain/error/run-failed.error"
-import { RunTimedOutError } from "#domain/error/run-timed-out.error"
 import type {
-  EngineFinished,
-  EngineOutput,
   EngineRequest,
+  EngineStatus,
   GenerationEngine,
 } from "#domain/generation-engine.port"
 import type { PriceBook } from "#domain/price-book.port"
@@ -45,6 +54,8 @@ import type { RunAssets } from "#domain/run-assets.port"
 
 export type AdvanceRunInput = {
   runId: RunId
+  known?: ReadonlyMap<string, EngineStatus>
+  source?: "watcher" | "stream"
 }
 
 export type AdvanceRunOutput = {
@@ -58,34 +69,29 @@ type AdvanceRunHandlerOptions = {
   assets: RunAssets
   clock: Clock
   prices?: PriceBook
+  watchMarks?: WatchMarkPort
+  log?: (line: string) => void
 }
 
-type Watch = {
-  app: AppDefinition
-  engine: GenerationEngine
-}
-
-type Collected = "kept" | "empty" | "retry"
+const unknown: ReadonlyMap<string, EngineStatus> = new Map()
 
 const stop: AdvanceRunOutput = { nextWakeMs: null }
 
-function isRetryable(error: unknown): boolean {
-  return (
-    error instanceof RateLimitedError || error instanceof EngineUnavailableError
-  )
-}
-
-function noOutput(): RunFailedError {
-  return new RunFailedError({ cause: "no output of the app's kind" })
-}
+const ended: AdvanceRunOutput = { nextWakeMs: null }
 
 export class AdvanceRunHandler {
+  static readonly watchMarkMs = WatchMarks.markMs
+
   private readonly apps: AppCatalog
   private readonly runs: RunRepository
   private readonly engines: readonly GenerationEngine[]
   private readonly assets: RunAssets
   private readonly clock: Clock
   private readonly prices: PriceBook | null
+  private readonly marks = new WatchMarks()
+  private readonly watchMarks: WatchMarkPort | null
+  private readonly log: (line: string) => void
+  private readonly late: LatePrices
 
   constructor(options: AdvanceRunHandlerOptions) {
     this.apps = options.apps
@@ -94,12 +100,56 @@ export class AdvanceRunHandler {
     this.assets = options.assets
     this.clock = options.clock
     this.prices = options.prices ?? null
+    this.watchMarks = options.watchMarks ?? null
+    this.log = options.log ?? console.error
+    this.late = new LatePrices({
+      apps: this.apps,
+      runs: this.runs,
+      engines: this.engines,
+      prices: this.prices,
+      clock: this.clock,
+    })
+  }
+
+  watch(input: WatchRunInput): AsyncGenerator<RunFrame, void, void> {
+    const frames = runWatchOf({
+      apps: this.apps,
+      runs: this.runs,
+      engines: this.engines,
+      clock: this.clock,
+      marks: this.marks,
+      shared: this.watchMarks,
+      advance: async (runId, known) =>
+        (await this.execute({ runId, known, source: "stream" })).nextWakeMs,
+    }).execute(input)
+    return this.late.after(frames, input)
   }
 
   async execute(input: AdvanceRunInput): Promise<AdvanceRunOutput> {
+    const output = await this.step(input)
+    if (output.nextWakeMs !== null) {
+      return output
+    }
+    if (input.source !== "stream" || output !== ended) {
+      void this.late.settle(input.runId)
+    }
+    return stop
+  }
+
+  priced(runId: RunId): Promise<void> {
+    return this.late.written(runId)
+  }
+
+  private async step(input: AdvanceRunInput): Promise<AdvanceRunOutput> {
+    if (input.source !== "stream") {
+      const heldMs = this.marks.heldMs(input.runId, this.now())
+      if (heldMs !== null) {
+        return { nextWakeMs: heldMs }
+      }
+    }
     const run = await this.runs.get(input.runId)
     if (run === null || run.isFinished()) {
-      return stop
+      return ended
     }
     const app = this.apps.find(run.appId)
     const engine = this.engines.find(
@@ -130,7 +180,7 @@ export class AdvanceRunHandler {
     try {
       return isSubmitDue(run, engine)
         ? await this.submitPending(run, watch)
-        : await this.poll(run, watch)
+        : await this.poll(run, watch, input.known ?? unknown)
     } catch (error) {
       return this.recover(run.id, watch, error)
     }
@@ -178,7 +228,10 @@ export class AdvanceRunHandler {
       workflowHash: submission.workflowHash,
     })
     if (submission.finished !== undefined) {
-      await this.keepFinished(current, watch, index, submission.finished)
+      await keepFinished(this.keepPorts(), current, watch, {
+        index,
+        finished: submission.finished,
+      })
     }
     try {
       return await this.runs.save(current)
@@ -190,61 +243,24 @@ export class AdvanceRunHandler {
     }
   }
 
-  private async keepFinished(
+  private async poll(
     run: Run,
     watch: Watch,
-    index: number,
-    finished: EngineFinished
-  ): Promise<void> {
-    const kept = await keepOutputs(
-      run,
-      watch.app,
-      finished.outputs,
-      this.assets
-    )
-    if (kept === null) {
-      run.fail({ error: noOutput(), now: this.now() })
-      return
-    }
-    await this.keepJob(run, watch, index, kept, finished.cost)
-  }
-
-  private async keepJob(
-    run: Run,
-    watch: Watch,
-    index: number,
-    kept: KeptOutputs,
-    cost: Cost | null
-  ): Promise<void> {
-    run.keepJob({ ...kept, index, cost, now: this.now() })
-    await recordPrice(this.prices, {
-      run,
-      app: watch.app,
-      engine: watch.engine,
-      cost,
-      now: this.now(),
-    }).catch(() => undefined)
-  }
-
-  private async poll(run: Run, watch: Watch): Promise<AdvanceRunOutput> {
+    known: ReadonlyMap<string, EngineStatus>
+  ): Promise<AdvanceRunOutput> {
     const polled = await Promise.all(
       run.jobs.flatMap((job) =>
         job.ref === null || job.status === "done"
           ? []
-          : [this.read(watch.engine, job, job.ref)]
+          : [this.read(watch.engine, job, job.ref, known)]
       )
     )
     keepSteps(run, polled)
-    let isCollecting = false
-    for (const one of polled) {
-      if (one.status.state === "succeeded") {
-        const collected = await this.collect(run, one, watch)
-        if (collected === "empty") {
-          return this.end(run, watch.engine, polled, noOutput())
-        }
-        isCollecting ||= collected === "retry"
-      }
+    const collected = await this.collect(run, watch, polled)
+    if (collected === "empty") {
+      return this.end(run, watch.engine, polled, noOutput())
     }
+    const isCollecting = collected === "retry"
     for (const { status } of polled) {
       if (status.state === "failed" || status.state === "cancelled") {
         const ending = status.state === "failed" ? status.error : "cancelled"
@@ -270,38 +286,30 @@ export class AdvanceRunHandler {
 
   private async collect(
     run: Run,
-    polled: Polled,
-    watch: Watch
+    watch: Watch,
+    polled: readonly Polled[]
   ): Promise<Collected> {
-    let outputs: EngineOutput[]
-    try {
-      outputs = await watch.engine.listOutputs(
-        polled.ref,
-        run.toRecord().inputs
-      )
-    } catch (error) {
-      if (!isRetryable(error)) {
-        throw error
+    let isCollecting = false
+    for (const one of polled) {
+      if (one.status.state !== "succeeded") {
+        continue
       }
-      run.collecting({ index: polled.job.index, now: this.now() })
-      return "retry"
+      const collected = await collectJob(this.keepPorts(), run, one, watch)
+      if (collected === "empty") {
+        return "empty"
+      }
+      isCollecting ||= collected === "retry"
     }
-    const kept = await keepOutputs(run, watch.app, outputs, this.assets)
-    if (kept === null) {
-      return "empty"
-    }
-    const { status } = polled
-    const cost = status.state === "succeeded" ? (status.cost ?? null) : null
-    await this.keepJob(run, watch, polled.job.index, kept, cost)
-    return "kept"
+    return isCollecting ? "retry" : "kept"
   }
 
   private async read(
     engine: GenerationEngine,
     job: RunJob,
-    ref: string
+    ref: string,
+    known: ReadonlyMap<string, EngineStatus>
   ): Promise<Polled> {
-    return { job, ref, status: await engine.read(ref) }
+    return { job, ref, status: known.get(ref) ?? (await engine.read(ref)) }
   }
 
   private async end(
@@ -310,37 +318,14 @@ export class AdvanceRunHandler {
     polled: readonly Polled[],
     ending: ProjectError | "cancelled"
   ): Promise<AdvanceRunOutput> {
-    const working = polled.flatMap((one) =>
-      one.status.state === "queued" || one.status.state === "running"
-        ? [one.ref]
-        : []
-    )
-    const refused = await cancelAll(engine, working)
-    if (ending === "cancelled") {
-      run.cancel({ now: this.now() })
-    } else {
-      run.fail({ error: ending, now: this.now() })
-    }
-    await this.runs.save(run)
-    if (refused !== null) {
-      throw refused
-    }
+    const ports = { runs: this.runs, engine, now: this.now() }
+    await endRun(ports, run, polled, ending)
     return stop
   }
 
   private async timeOut(run: Run, watch: Watch): Promise<AdvanceRunOutput> {
-    const refused = await cancelAll(watch.engine, run.liveRefs())
-    run.fail({
-      error: new RunTimedOutError({
-        runId: run.id,
-        limitSeconds: watch.app.limits.timeoutSeconds,
-      }),
-      now: this.now(),
-    })
-    await this.runs.save(run)
-    if (refused !== null) {
-      throw refused
-    }
+    const ports = { runs: this.runs, engine: watch.engine, now: this.now() }
+    await timeOutRun(ports, run, watch.app)
     return stop
   }
 
@@ -373,6 +358,8 @@ export class AdvanceRunHandler {
       await this.runs.save(run)
       return { nextWakeMs: backoffMs(run.attempts, failure) }
     }
+    const raw = error instanceof Error ? error : new Error(String(error))
+    this.log(`Run ${run.id} failed: ${raw.name}: ${raw.message}`)
     return this.failWith(run, failure)
   }
 
@@ -383,6 +370,10 @@ export class AdvanceRunHandler {
     run.fail({ error, now: this.now() })
     await this.runs.save(run)
     return stop
+  }
+
+  private keepPorts(): KeepPorts {
+    return { assets: this.assets, prices: this.prices, now: this.now() }
   }
 
   private now(): Date {

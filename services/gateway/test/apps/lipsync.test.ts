@@ -327,7 +327,12 @@ describe("Text in Lip sync through the gateway on the demo engine", () => {
     const outcome = await speakThenSync({
       app: audioApp(),
       voices: [],
-      target: { appId: "lipsync", audio: "audio", length: "length" },
+      target: {
+        appId: "lipsync",
+        audio: "audio",
+        length: "length",
+        check: { app: lipsync, form: null },
+      },
       request: {
         inputs: {
           mode: "photo",

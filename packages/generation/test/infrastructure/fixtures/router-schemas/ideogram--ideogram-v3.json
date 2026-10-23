@@ -1,0 +1,143 @@
+{
+  "x-comfy-router-model-id": "ideogram/ideogram-v3",
+  "x-comfy-router-input-modalities": ["text"],
+  "x-comfy-router-output-modalities": ["image"],
+  "x-comfy-input-schema-authored": true,
+  "paths": {
+    "/v2/models/ideogram/ideogram-v3": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/IdeogramV3Fields"
+                  },
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": ["style_reference_images"]
+                        },
+                        {
+                          "required": ["character_reference_images"]
+                        },
+                        {
+                          "required": ["character_reference_images_mask"]
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "description": "The Ideogram 3.0 (V3) text-to-image fields Comfy Router accepts for `ideogram/ideogram-v3`, and the schema `routervalidate.Guard` validates a call against before it reaches Ideogram.\nIt composes `IdeogramV3Fields`, the same field set the v1 `POST /proxy/ideogram/ideogram-v3/generate` request body composes, so the two surfaces cannot drift into two shapes. It differs from the v1 surface by REFUSING the three reference-image members: they are file uploads and Comfy Router dispatches `application/json` only, so no Router call can supply them. Use the v1 `/proxy/` route with a `multipart/form-data` body for style or character references.",
+                "example": {
+                  "prompt": "A beautiful mountain landscape",
+                  "rendering_speed": "TURBO"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "IdeogramStyleType": {
+        "default": "GENERAL",
+        "enum": ["AUTO", "GENERAL", "REALISTIC", "DESIGN", "FICTION"],
+        "type": "string"
+      },
+      "IdeogramV3Fields": {
+        "properties": {
+          "aspect_ratio": {
+            "description": "Aspect ratio in format WxH",
+            "example": "1x3",
+            "type": "string"
+          },
+          "color_palette": {
+            "properties": {
+              "members": {
+                "description": "Explicit colors with optional weights",
+                "items": {
+                  "properties": {
+                    "color": {
+                      "description": "Hexadecimal color code",
+                      "pattern": "^#[0-9A-Fa-f]{6}$",
+                      "type": "string"
+                    },
+                    "weight": {
+                      "description": "Optional weight for the color (0-1)",
+                      "maximum": 1,
+                      "minimum": 0,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "name": {
+                "description": "Name of the color palette",
+                "example": "PASTEL",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "magic_prompt": {
+            "description": "Whether to enable magic prompt enhancement",
+            "enum": ["AUTO", "ON", "OFF"],
+            "type": "string"
+          },
+          "negative_prompt": {
+            "description": "Text prompt specifying what to avoid in the generation",
+            "type": "string"
+          },
+          "num_images": {
+            "description": "Number of images to generate",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "prompt": {
+            "description": "The text prompt for image generation",
+            "type": "string"
+          },
+          "rendering_speed": {
+            "$ref": "#/components/schemas/RenderingSpeed"
+          },
+          "resolution": {
+            "description": "Image resolution in format WxH",
+            "example": "1280x800",
+            "type": "string"
+          },
+          "seed": {
+            "description": "Seed value for reproducible generation",
+            "type": "integer"
+          },
+          "style_codes": {
+            "description": "Array of style codes in hexadecimal format",
+            "items": {
+              "pattern": "^[0-9A-Fa-f]{8}$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "style_type": {
+            "$ref": "#/components/schemas/IdeogramStyleType"
+          }
+        },
+        "required": ["prompt", "rendering_speed"],
+        "type": "object"
+      },
+      "RenderingSpeed": {
+        "default": "DEFAULT",
+        "description": "The rendering speed setting that controls the trade-off between generation speed and quality",
+        "enum": ["DEFAULT", "TURBO", "QUALITY"],
+        "type": "string"
+      }
+    }
+  }
+}

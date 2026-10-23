@@ -6,6 +6,8 @@ export {
   speechModelInput,
   speechPlanOf,
   speechTextInput,
+  type VideoCheck,
+  videoProblemsOf,
 } from "#lipsync/lipsync-chain"
 export {
   clipModel,

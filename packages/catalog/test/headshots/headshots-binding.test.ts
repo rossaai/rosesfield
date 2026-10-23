@@ -1,3 +1,4 @@
+import { resolveBinding } from "@rosesfield/generation"
 import { comfyWorkflowAdapter } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import { promptOf } from "#headshots/comfy/headshot-words"
@@ -132,8 +133,9 @@ function headshotGraphs(ids: readonly string[]): string[] {
 describe("Headshot in the catalog", () => {
   it("runs on every node of Edit's Qwen Image Edit 2511 graph", () => {
     const edit = findWorkflow(editWorkflowId)
-    const graph = headshots?.engine.config.workflow
-    expect(headshots?.engine.adapter).toBe(comfyWorkflowAdapter)
+    const engine = resolveBinding(headshots?.engine ?? headshotsBinding(), {})
+    const graph = engine.config.workflow
+    expect(engine.adapter).toBe(comfyWorkflowAdapter)
     expect(edit).not.toBeNull()
     const classes = Object.entries(apiGraph.parse(edit?.graph ?? {})).map(
       ([id, node]) => [id, { class_type: node.class_type }]
