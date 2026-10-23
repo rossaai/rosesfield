@@ -3,6 +3,7 @@ import {
   encode,
   fixed,
   looped,
+  mediaToFit,
   type Step,
   scaleToFit,
   sideBySide,
@@ -26,10 +27,10 @@ const resultSeconds = 4.5
 
 function resultFilter(take: AppTake, first: number): string {
   if (take.input === null) {
-    return `[${first}:v]${scaleToFit(clipSize)}[r]`
+    return `[${first}:v]${mediaToFit(take.output, clipSize)}[r]`
   }
   const half = { width: clipSize.width / 2, height: clipSize.height }
-  return `[${first}:v]${scaleToFit(half)}[a];[${first + 1}:v]${scaleToFit(half)}[b];[a][b]hstack=inputs=2[r]`
+  return `[${first}:v]${mediaToFit(take.input, half)}[a];[${first + 1}:v]${mediaToFit(take.output, half)}[b];[a][b]hstack=inputs=2[r]`
 }
 
 function screenArgs(
@@ -69,7 +70,7 @@ function resultArgs(
     ...looped(take.output, resultOnlySeconds),
     ...[
       "-vf",
-      `${scaleToFit(clipSize)},${subtitles(clip.caption.file, clipSize)}`,
+      `${mediaToFit(take.output, clipSize)},${subtitles(clip.caption.file, clipSize)}`,
     ],
     ...["-t", fixed(resultOnlySeconds)],
     ...encode(clip.isDraft),
