@@ -6,7 +6,9 @@ export type Step = { label: string; args: string[] }
 
 export type Size = { width: number; height: number }
 
-const canvas = "0x101010"
+const canvasLevel = 16
+
+const canvas = `0x${canvasLevel.toString(16).padStart(2, "0").repeat(3)}`
 
 const wideStyle =
   "FontName=Helvetica Neue,FontSize=14,PrimaryColour=&H00FFFFFF,OutlineColour=&H99000000,BorderStyle=3,Outline=6,Shadow=0,MarginV=24"
@@ -17,8 +19,28 @@ export function fixed(seconds: number): string {
   return seconds.toFixed(3)
 }
 
+function onCanvas(channel: "r" | "g" | "b"): string {
+  return `${channel}='${channel}(X,Y)*alpha(X,Y)/255+${canvasLevel}*(1-alpha(X,Y)/255)'`
+}
+
+const flattened = `format=rgba,geq=${onCanvas("r")}:${onCanvas("g")}:${onCanvas("b")}:a=255`
+
+function fitted(size: Size): string {
+  return `scale=${size.width}:${size.height}:force_original_aspect_ratio=decrease`
+}
+
+function padded(size: Size): string {
+  return `pad=${size.width}:${size.height}:(ow-iw)/2:(oh-ih)/2:color=${canvas},setsar=1,fps=30,format=yuv420p`
+}
+
 export function scaleToFit(size: Size): string {
-  return `scale=${size.width}:${size.height}:force_original_aspect_ratio=decrease,pad=${size.width}:${size.height}:(ow-iw)/2:(oh-ih)/2:color=${canvas},setsar=1,fps=30,format=yuv420p`
+  return `${fitted(size)},${padded(size)}`
+}
+
+export function mediaToFit(media: Media, size: Size): string {
+  return media.kind === "image"
+    ? `${fitted(size)},${flattened},${padded(size)}`
+    : scaleToFit(size)
 }
 
 export function subtitles(file: string, size: Size): string {
@@ -58,7 +80,7 @@ export function sideBySide(
     ...looped(input, options.seconds),
     ...looped(take.output, options.seconds),
     "-filter_complex",
-    `[0:v]${scaleToFit(half)}[a];[1:v]${scaleToFit(half)}[b];[a][b]hstack=inputs=2,${subtitles(options.caption.file, options.size)}[v]`,
+    `[0:v]${mediaToFit(input, half)}[a];[1:v]${mediaToFit(take.output, half)}[b];[a][b]hstack=inputs=2,${subtitles(options.caption.file, options.size)}[v]`,
     ...["-map", "[v]", "-t", fixed(options.seconds)],
     ...encode(options.isDraft),
     options.out,
