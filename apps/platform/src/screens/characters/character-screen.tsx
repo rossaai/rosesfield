@@ -8,7 +8,6 @@ import {
 } from "@rosesfield/ui/components/dropdown-menu"
 import { MediaGrid } from "@rosesfield/ui/components/media-grid"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
-import { StateView } from "@rosesfield/ui/components/state-view"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useParams } from "@tanstack/react-router"
 import { EllipsisIcon, XIcon } from "lucide-react"
@@ -175,35 +174,24 @@ function CharacterRuns({ characterId }: { characterId: string }): ReactNode {
   const demoOutputs = new Set(
     runs.filter((run) => run.origin === "demo").flatMap((run) => run.outputs)
   )
+  if (outputs.length === 0) {
+    return null
+  }
   return (
     <section className="flex flex-col gap-s3">
       <h2 className="text-body font-medium">{t("characters.detail.runs")}</h2>
-      {outputs.length === 0 ? (
-        <StateView
-          kind="empty"
-          density="compact"
-          className="p-0"
-          title={t("characters.detail.runsEmpty")}
-          actions={
-            <Button render={<Link to="/apps" />} nativeButton={false}>
-              {t("characters.detail.runsAction")}
-            </Button>
-          }
-        />
-      ) : (
-        <MediaGrid>
-          {outputs.map((id) => (
-            <div key={id}>
-              <AssetTile
-                assetId={id}
-                shape="square"
-                list={outputs}
-                isDemo={demoOutputs.has(id)}
-              />
-            </div>
-          ))}
-        </MediaGrid>
-      )}
+      <MediaGrid>
+        {outputs.map((id) => (
+          <div key={id}>
+            <AssetTile
+              assetId={id}
+              shape="square"
+              list={outputs}
+              isDemo={demoOutputs.has(id)}
+            />
+          </div>
+        ))}
+      </MediaGrid>
     </section>
   )
 }

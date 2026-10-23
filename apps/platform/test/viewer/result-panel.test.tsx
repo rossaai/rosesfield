@@ -5,7 +5,7 @@ import type { ReactElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { formatDate } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
-import { runPrice } from "@/pieces/run/run-facts"
+import { runPriceAmount } from "@/pieces/run/run-facts"
 import type { VisualEntry } from "@/screens/explore/explore-tile"
 import { modelAndModeOf, ResultPanel } from "@/viewer/result-panel"
 
@@ -82,7 +82,7 @@ describe("the result viewer's panel", () => {
 
     expect(details?.textContent).toContain("a red rose in rain")
     expect(details?.textContent).toContain("model-a")
-    expect(details?.textContent).toContain(runPrice(entry.run) ?? "?")
+    expect(details?.textContent).toContain(runPriceAmount(entry.run) ?? "?")
     expect(screen.getByText(t("explore.viewer.credits"))).toBeTruthy()
   })
 

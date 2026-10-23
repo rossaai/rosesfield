@@ -1,14 +1,11 @@
 import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement } from "react"
 import { appName } from "@/catalog/app-facts"
-import { findCatalogApp } from "@/catalog/catalog-apps"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { AppCanvas } from "@/screens/app/app-canvas"
 import { AppStage } from "@/screens/app/app-stage"
 import { EditBar } from "@/studio/edit/edit-bar"
-import { editToolId } from "@/studio/edit/edit-tools"
 import { PhotoView } from "@/studio/edit/photo-view"
-import { ToolRow } from "@/studio/edit/tool-row"
 import type { EditToolState } from "@/studio/edit/use-edit-tool"
 
 export type DockPlace = "float" | "edge"
@@ -22,12 +19,12 @@ const docks = {
 export function EditFrame({ state }: { state: EditToolState }): ReactElement {
   const isRegular = useIsRegularWindow()
   const place: DockPlace = isRegular ? "float" : "edge"
-  const edit = findCatalogApp(editToolId) ?? state.app
   return (
     <div data-slot="edit-frame" className="flex h-full min-h-0 flex-col">
-      <h1 className="sr-only">{appName(edit)}</h1>
       <div data-slot="edit-tools" className="shrink-0 px-4">
-        <ToolRow current={state.tool.id} photo={state.photo.photo} />
+        <h1 className="font-medium text-title text-ink">
+          {appName(state.app)}
+        </h1>
       </div>
       <div
         data-slot="bar-stage"

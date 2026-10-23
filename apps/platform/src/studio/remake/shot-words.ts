@@ -1,5 +1,5 @@
 import type { Run } from "@rosesfield/contract"
-import { formatNumber, formatSeconds } from "@/copy/format"
+import { formatAmount, formatSeconds } from "@/copy/format"
 import { copyLocale, t, tCatalog } from "@/copy/t"
 import {
   type PlanShot,
@@ -45,7 +45,7 @@ export function shotSpanOf(shot: PlanShot): string {
 }
 
 export function creditsText(credits: number): string {
-  return t("run.price.credits", { amount: formatNumber(credits) })
+  return t("run.price.credits", { amount: formatAmount(credits) })
 }
 
 export function planPriceOf(run: Run, plan: RemakePlan): string | null {

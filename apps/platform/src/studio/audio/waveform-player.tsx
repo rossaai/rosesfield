@@ -1,6 +1,8 @@
 import type { Asset } from "@rosesfield/contract"
+import { IconButton } from "@rosesfield/ui/components/button"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { useQuery } from "@tanstack/react-query"
+import { Maximize2Icon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { assetQuery } from "@/api/queries"
 import { useAssetSource } from "@/api/use-asset-source"
@@ -51,6 +53,7 @@ type WaveformPlayerProps = {
   isDemo?: boolean
   hasDownload?: boolean
   action?: ReactNode
+  onOpen?: (origin: HTMLElement) => void
 }
 
 function LoadedPlayer(
@@ -61,6 +64,17 @@ function LoadedPlayer(
   const assetName = useAssetName(props.asset) ?? assetLabel(props.asset)
   const name = recordingNames.nameOf(props.asset) ?? assetName
   const peaks = waveform?.peaks ?? []
+  const { onOpen } = props
+  const open =
+    onOpen === undefined ? null : (
+      <IconButton
+        label={t("library.tile.open", { name })}
+        tone="quiet"
+        onClick={(event) => onOpen(event.currentTarget)}
+      >
+        <Maximize2Icon aria-hidden="true" />
+      </IconButton>
+    )
   return (
     <AudioRow
       src={props.src}
@@ -77,7 +91,16 @@ function LoadedPlayer(
               <Bars peaks={peaks} fraction={fraction} />
             ),
           })}
-      action={props.action}
+      action={
+        open === null ? (
+          props.action
+        ) : (
+          <>
+            {open}
+            {props.action}
+          </>
+        )
+      }
     />
   )
 }

@@ -12,6 +12,7 @@ import type { AgentModelRate } from "@/api/agent-wire"
 import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
+import { pickerFilters } from "@/screens/app/hosted/catalog-picker"
 
 export function agentLabOf(model: string): string {
   return labOfModel(model) ?? makerOf(model.split("/")[0] ?? model)
@@ -82,6 +83,7 @@ export function AgentModelPicker({
   const name = nameOf(chosen)
   return (
     <ModelPicker
+      filters={pickerFilters()}
       trigger={
         <ModelChip
           name={name}

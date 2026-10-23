@@ -141,13 +141,13 @@ describe("the effect tiles", () => {
   })
 
   it("shows the credits its kept run measured on the clip, named as measured on that run's resolution, until your own run measures it", () => {
-    const kept = t("run.price.kept", { amount: "37.89", resolution: "480p" })
+    const kept = t("run.price.kept", { amount: "38", resolution: "480p" })
     renderTiles("grow-giant", noPrices, [keptRun])
     const badge = tileNamed("grow-giant").querySelector<HTMLElement>(
       "[data-slot=effect-price]"
     )
     expect(badge?.getAttribute("title")).toBe(kept)
-    expect(badge?.textContent).toContain("37.89")
+    expect(badge?.textContent).toContain("38")
     expect(badge?.textContent).toContain(kept)
     expect(badge?.closest("[data-slot=effect-clip]")).not.toBeNull()
     cleanup()
@@ -160,7 +160,7 @@ describe("the effect tiles", () => {
       "[data-slot=effect-price]"
     )
     expect(own?.getAttribute("title")).toBe(
-      t("run.price.credits", { amount: "41.2" })
+      t("run.price.credits", { amount: "41" })
     )
     expect(document.body.textContent).not.toContain(kept)
   })

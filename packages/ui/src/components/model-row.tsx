@@ -34,6 +34,9 @@ type ModelPickerRow = {
   mark?: ReactNode
   badges?: readonly ModelBadge[]
   price?: ModelPrice
+  rank?: number
+  released?: string
+  isOpen?: boolean
 }
 
 function RowBadge({ badge }: { badge: ModelBadge }): ReactElement {

@@ -17,7 +17,7 @@ import { type ReactElement, type ReactNode, useState } from "react"
 import { checkEngineKey, liveCheckOf } from "@/api/engine-checks"
 import type { EngineTarget, GatewaySettings } from "@/api/gateway-settings"
 import { forgetVisitorKey, useHasVisitorKey } from "@/api/visitor-keys"
-import { formatNumber } from "@/copy/format"
+import { formatAmount } from "@/copy/format"
 import { t, tCount } from "@/copy/t"
 import { noteAgentModel } from "@/screens/agent/agent-model"
 import { accountQuery, forgetAccount } from "@/screens/settings/account-query"
@@ -62,7 +62,7 @@ export function AccountRows(): ReactNode {
       {credits === null ? null : (
         <SettingsRow
           icon={<CoinsIcon />}
-          label={t("key.balance", { amount: formatNumber(credits) })}
+          label={t("key.balance", { amount: formatAmount(credits) })}
         />
       )}
       {cap === null ? null : (
@@ -71,10 +71,10 @@ export function AccountRows(): ReactNode {
           label={
             cap.left > 0
               ? t("key.cap.left", {
-                  left: formatNumber(cap.left),
-                  cap: formatNumber(cap.credits),
+                  left: formatAmount(cap.left),
+                  cap: formatAmount(cap.credits),
                 })
-              : t("key.cap.spent", { cap: formatNumber(cap.credits) })
+              : t("key.cap.spent", { cap: formatAmount(cap.credits) })
           }
         />
       )}

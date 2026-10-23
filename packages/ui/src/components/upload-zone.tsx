@@ -163,16 +163,11 @@ function DropZone({
       )}
       {...props}
     >
-      <span aria-hidden="true" className="flex -space-x-2">
-        {kinds.map((kind, index) => (
-          <span
-            // biome-ignore lint/suspicious/noArrayIndexKey: the discs are a fixed row of glyphs
-            key={index}
-            className="flex size-icon items-center justify-center rounded-full bg-(--ground) text-ink-muted [&_svg]:glyph"
-          >
-            {kind}
-          </span>
-        ))}
+      <span
+        aria-hidden="true"
+        className="flex text-ink-muted [&_svg]:size-icon [&_svg]:stroke-(length:--stroke-icon)"
+      >
+        {kinds[0]}
       </span>
       <span className="flex flex-col">
         <span className="font-medium text-body text-ink">{title}</span>

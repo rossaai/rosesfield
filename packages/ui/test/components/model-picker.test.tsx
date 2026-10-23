@@ -201,7 +201,7 @@ describe("ModelPicker", () => {
     ).not.toBeNull()
   })
 
-  it("holds the chosen model's settings under the list", () => {
+  it("keeps the chosen model's settings out of the list, behind their own chip", () => {
     render(
       <ModelPicker
         trigger={<Chip>Picture 2</Chip>}
@@ -213,14 +213,14 @@ describe("ModelPicker", () => {
         chosen="maker/picture-2"
         onChoose={() => undefined}
         settings={<p>Safety tolerance</p>}
+        settingsLabel="Settings"
         open
       />
     )
-    const list = screen.getByRole("listbox", { name: "Model" })
-    const setting = screen.getByText("Safety tolerance")
-    expect(
-      list.compareDocumentPosition(setting) & Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy()
+    expect(screen.getByRole("listbox", { name: "Model" })).toBeTruthy()
+    expect(screen.queryByText("Safety tolerance")).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }))
+    expect(screen.getByText("Safety tolerance")).toBeTruthy()
   })
 
   it("filters the rows by name and by maker", () => {
@@ -329,15 +329,15 @@ describe("ModelPicker's rows and motion", () => {
     ).toContain("text-ink-muted")
   })
 
-  it("opens on the popover preset over the thick material, growing from its chip", () => {
+  it("opens on the popover preset over the same material as every menu, growing from its chip", () => {
     open()
     const list = document.querySelector("[data-slot='model-picker']")
     const classes = list?.className.split(" ") ?? []
     expect(classes).toEqual(
-      expect.arrayContaining(["motion-popover", "material-thick"])
+      expect.arrayContaining(["motion-popover", "material"])
     )
     expect(classes.filter((name) => name.includes("translate-y"))).toEqual([])
-    expect(list?.getAttribute("data-material")).toBe("thick")
+    expect(list?.getAttribute("data-material")).toBe("regular")
   })
 })
 

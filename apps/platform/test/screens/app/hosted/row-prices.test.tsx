@@ -120,8 +120,8 @@ describe("the settings a row is priced at", () => {
 describe("the price a row shows", () => {
   it("is the credits with their name, and nothing for an unknown or empty price", () => {
     expect(rowPriceOf(6.33)).toEqual({
-      amount: "6.33",
-      name: "6.33 Comfy credits",
+      amount: "6",
+      name: "6 Comfy credits",
     })
     expect(rowPriceOf(null)).toBeNull()
     expect(rowPriceOf(0)).toBeNull()
@@ -141,13 +141,13 @@ describe("the price a row shows", () => {
       name: t("run.price.measured", { amount: "2" }),
     })
     expect(prices.get("alpha/one")?.name).toBe(
-      t("run.price.credits", { amount: "6.33" })
+      t("run.price.credits", { amount: "6" })
     )
     expect(
       rowPricesOf(["alpha/one"], {
         prices: [{ source: "estimate", credits: 60.35 }],
       }).get("alpha/one")?.name
-    ).toBe(t("run.price.estimated", { amount: "60.35" }))
+    ).toBe(t("run.price.estimated", { amount: "60" }))
   })
 })
 
@@ -238,7 +238,7 @@ describe("the model picker's prices", () => {
     await act(() => vi.advanceTimersByTimeAsync(400))
     await waitFor(() =>
       expect(
-        screen.getAllByRole("option", { name: "one, 6.33 Comfy credits" })
+        screen.getAllByRole("option", { name: "one, 6 Comfy credits" })
       ).toHaveLength(1)
     )
     expect(calls).toHaveLength(1)
@@ -326,7 +326,7 @@ describe("the Ads model picker's prices", () => {
     await act(() => vi.advanceTimersByTimeAsync(400))
     await waitFor(() =>
       expect(
-        screen.getAllByRole("option", { name: /^one, 6.33 Comfy credits/ })
+        screen.getAllByRole("option", { name: /^one, 6 Comfy credits/ })
       ).not.toHaveLength(0)
     )
     expect(calls).toHaveLength(1)
@@ -365,7 +365,7 @@ describe("the bar's model picker's prices", () => {
     expect(priceCalls()).toEqual([])
     fireEvent.click(screen.getByRole("button", { name: /Model/ }))
     await act(() => vi.advanceTimersByTimeAsync(400))
-    await waitFor(() => expect(document.body.textContent).toContain("6.33"))
+    await waitFor(() => expect(document.body.textContent).toContain("6"))
     expect(priceCalls()).toHaveLength(1)
     expect(priceCalls()[0]?.url).toContain("/api/apps/expand/prices")
     expect(priceCalls()[0]?.body).toEqual({

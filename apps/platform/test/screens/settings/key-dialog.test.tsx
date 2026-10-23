@@ -9,7 +9,7 @@ import {
 } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { holdVisitorKey, readVisitorKey } from "@/api/visitor-keys"
-import { formatNumber } from "@/copy/format"
+import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import type { CopyKey } from "@/copy.en"
 import {
@@ -119,7 +119,7 @@ describe("the form that adds your Comfy key", () => {
     const sent = answerAccounts()
     const { onDone } = renderForm()
     paste("  comfyui-good  ")
-    const balance = t("key.balance", { amount: formatNumber(4201.5) })
+    const balance = t("key.balance", { amount: formatAmount(4201.5) })
     expect(await screen.findByText(balance)).not.toBeNull()
     expect(screen.getByText(t("key.valid"))).not.toBeNull()
     expect(sent).toContainEqual({ url: accountPath, key: "comfyui-good" })

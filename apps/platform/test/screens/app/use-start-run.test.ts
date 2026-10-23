@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
-import { formatAmount, formatNumber } from "@/copy/format"
+import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { priceLabelsOf } from "@/screens/app/use-start-run"
 
 describe("the price Generate shows", () => {
   it("shows the credits a priced run costs", () => {
-    const amount = formatNumber(12.37)
+    const amount = formatAmount(12.37)
     expect(priceLabelsOf(12.37, false)).toEqual({
       price: "",
       priceValue: amount,
@@ -14,7 +14,7 @@ describe("the price Generate shows", () => {
   })
 
   it("names a price measured on your last run at these settings, and an estimate held to such a run, as what they are", () => {
-    const amount = formatNumber(60.35)
+    const amount = formatAmount(60.35)
     expect(priceLabelsOf(60.35, false, "measured").priceName).toBe(
       t("run.generate.measured", { amount })
     )
@@ -42,9 +42,9 @@ describe("the price Generate shows", () => {
     })
   })
 
-  it("shows a price below one hundredth of a credit with its own digits, not as 0", () => {
+  it("shows a price below one credit as <1, not as 0", () => {
     const amount = formatAmount(0.004)
-    expect(amount).not.toBe(formatNumber(0))
+    expect(amount).not.toBe(formatAmount(0))
     expect(priceLabelsOf(0.004, false)).toEqual({
       price: "",
       priceValue: amount,

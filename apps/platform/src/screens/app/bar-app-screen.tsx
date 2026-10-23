@@ -46,6 +46,7 @@ function BarLeading({
     <>
       {tray.acceptsAssets ? (
         <AttachMenu
+          form="menu"
           label={t("bar.attach")}
           onUpload={tray.upload}
           onFromLibrary={() => setLibraryOpen(true)}

@@ -16,7 +16,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react"
 import { vi } from "vitest"
 import type { GatewaySettings } from "@/api/gateway-settings"
 import { runsQuery, settingsQuery } from "@/api/queries"
-import { formatNumber } from "@/copy/format"
+import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { modelNameOf } from "@/screens/app/hosted/catalog-picker"
 import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
@@ -268,7 +268,7 @@ export async function findColumnGenerate(): Promise<HTMLElement> {
 }
 
 export function pricedName(credits: number): string {
-  return t("run.generate.priced", { amount: formatNumber(credits) })
+  return t("run.generate.priced", { amount: formatAmount(credits) })
 }
 
 export function trigger(model: CatalogModel): string {

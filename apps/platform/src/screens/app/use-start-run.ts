@@ -2,7 +2,7 @@ import { type AppListing, type Run, routes } from "@rosesfield/contract"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { callRoute } from "@/api/call-route"
 import { settingsQuery } from "@/api/queries"
-import { formatAmount, formatNumber } from "@/copy/format"
+import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { storeRun } from "@/pieces/run/run-actions"
 import { bodyOf, type StartRunBodyInput } from "@/screens/app/app-form"
@@ -111,10 +111,8 @@ export function useStartRun(
   }
 }
 
-const smallCredits = 0.01
-
 function creditsText(credits: number): string {
-  return credits < smallCredits ? formatAmount(credits) : formatNumber(credits)
+  return formatAmount(credits)
 }
 
 const generateNames = {
