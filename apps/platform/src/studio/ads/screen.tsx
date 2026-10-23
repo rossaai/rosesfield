@@ -193,6 +193,7 @@ function Bar({
         submitLabel={t("run.generate")}
         removeLabel={t("bar.attachment.remove")}
         attachments={tray.attachments}
+        slots={tray.slots}
         onRemoveAttachment={remove}
         leading={
           <Leading

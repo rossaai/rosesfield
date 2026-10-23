@@ -5,9 +5,10 @@ import {
   ComposerToolbar,
 } from "@rosesfield/ui/components/composer"
 import { GenerateButton } from "@rosesfield/ui/components/generate-button"
+import { Separator } from "@rosesfield/ui/components/separator"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
-import { XIcon } from "lucide-react"
+import { PlusIcon, XIcon } from "lucide-react"
 import {
   type KeyboardEvent,
   type ReactElement,
@@ -24,6 +25,15 @@ type PromptAttachment = {
   caption?: string
 }
 
+type PromptSlot = {
+  id: string
+  label: string
+  note?: string
+  items: ReadonlyArray<PromptAttachment>
+  addLabel: string
+  onAdd?: (() => void) | undefined
+}
+
 type PromptBarProps = {
   value: string
   onValueChange: (value: string) => void
@@ -34,6 +44,7 @@ type PromptBarProps = {
   removeLabel: string
   attachments?: ReadonlyArray<PromptAttachment>
   onRemoveAttachment?: (id: string) => void
+  slots?: ReadonlyArray<PromptSlot> | undefined
   leading?: ReactNode
   chips?: ReactNode
   tray?: ReactNode
@@ -123,6 +134,72 @@ function PromptTray({
   )
 }
 
+function SlotAdd({
+  label,
+  onAdd,
+}: {
+  label: string
+  onAdd: () => void
+}): ReactElement {
+  return (
+    <li className="flex shrink-0">
+      <IconButton
+        label={label}
+        tone="quiet"
+        className="size-thumb rounded-dense bg-(--well) hover:bg-(--tint) in-data-[density=composer]:size-thumb"
+        onClick={onAdd}
+      >
+        <PlusIcon aria-hidden="true" />
+      </IconButton>
+    </li>
+  )
+}
+
+function PromptSlots({
+  slots,
+  removeLabel,
+  onRemoveAttachment,
+}: PromptBarProps): ReactNode {
+  if (slots === undefined || slots.length === 0) {
+    return null
+  }
+  return (
+    <>
+      <div data-slot="composer-slots" className="flex flex-wrap gap-s4 px-s2">
+        {slots.map((slot) => (
+          <section
+            key={slot.id}
+            aria-label={slot.label}
+            data-slot="composer-slot"
+            className="flex min-w-0 flex-col gap-s1"
+          >
+            <span className="flex gap-s1 text-caption">
+              <span className="text-ink">{slot.label}</span>
+              {slot.note === undefined ? null : (
+                <span className="text-ink-muted">{slot.note}</span>
+              )}
+            </span>
+            <ul className="flex gap-s2 overflow-x-auto">
+              {slot.items.map((attachment) => (
+                <AttachmentThumb
+                  key={attachment.id}
+                  attachment={attachment}
+                  removeLabel={removeLabel}
+                  onRemove={onRemoveAttachment}
+                />
+              ))}
+              {slot.onAdd === undefined ? null : (
+                <SlotAdd label={slot.addLabel} onAdd={slot.onAdd} />
+              )}
+            </ul>
+          </section>
+        ))}
+      </div>
+      <Separator />
+    </>
+  )
+}
+
 function Toolbar({ leading, chips }: PromptBarProps): ReactElement {
   return (
     <ComposerToolbar>
@@ -203,7 +280,11 @@ function PromptBar(props: PromptBarProps): ReactElement {
       )}
       <div className="flex items-end gap-s3">
         <div className="flex min-w-0 flex-1 flex-col gap-s2">
-          <PromptTray {...props} />
+          {props.slots === undefined ? (
+            <PromptTray {...props} />
+          ) : (
+            <PromptSlots {...props} />
+          )}
           <PromptField props={props} onSubmit={submit} />
           {props.notices === undefined ? null : (
             <div data-slot="composer-notices">{props.notices}</div>
@@ -223,5 +304,5 @@ function PromptBar(props: PromptBarProps): ReactElement {
   )
 }
 
-export type { PromptAttachment, PromptBarProps }
+export type { PromptAttachment, PromptBarProps, PromptSlot }
 export { PromptBar }

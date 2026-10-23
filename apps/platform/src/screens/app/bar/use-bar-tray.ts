@@ -1,10 +1,15 @@
 import type { AppListing } from "@rosesfield/contract"
-import type { PromptAttachment } from "@rosesfield/ui/components/prompt-bar"
+import type {
+  PromptAttachment,
+  PromptSlot,
+} from "@rosesfield/ui/components/prompt-bar"
 import { useQueryClient } from "@tanstack/react-query"
 import { isAssetInput } from "@/catalog/app-facts"
+import type { Device } from "@/device/device.port"
 import { useDevice } from "@/device/device-context"
 import { useAssetThumbs, useCharacterThumbs } from "@/pieces/attachment-thumbs"
-import { useUploads } from "@/pieces/use-uploads"
+import { type Uploads, useUploads } from "@/pieces/use-uploads"
+import { inputSlotsOf } from "@/screens/app/bar/input-slots"
 import { listOf } from "@/screens/app/fields/field-props"
 import { inputCaption } from "@/screens/app/fields/input-copy"
 import { placeAll } from "@/screens/app/form-fill"
@@ -12,6 +17,7 @@ import type { AppForm } from "@/screens/app/use-app-form"
 
 export type BarTray = {
   attachments: PromptAttachment[]
+  slots: PromptSlot[] | undefined
   isUploading: boolean
   upload: () => void
   addAssets: (ids: readonly string[]) => void
@@ -44,6 +50,35 @@ function idsOfType(
     .flatMap((input) => listOf(form.values.inputs[input.name]))
 }
 
+type Uploader = {
+  device: Device
+  uploads: Uploads
+  app: AppListing
+  form: AppForm
+}
+
+function uploadInto(
+  { device, uploads, app, form }: Uploader,
+  name: string
+): void {
+  const input = app.inputs.find((one) => one.name === name)
+  if (input === undefined || !isAssetInput(input)) {
+    return
+  }
+  void device
+    .pickFiles({ accept: [`${input.type}/*`], multiple: input.max > 1 })
+    .then((files) => uploads.start(files))
+    .then((added) =>
+      form.setInput(
+        name,
+        [
+          ...listOf(form.values.inputs[name]),
+          ...added.map((asset) => asset.id),
+        ].slice(0, input.max)
+      )
+    )
+}
+
 export function useBarTray(app: AppListing, form: AppForm): BarTray {
   const client = useQueryClient()
   const uploads = useUploads()
@@ -63,8 +98,12 @@ export function useBarTray(app: AppListing, form: AppForm): BarTray {
   const accepts = app.inputs
     .filter(isAssetInput)
     .map((input) => `${input.type}/*`)
+  const attachments = [...assets, ...characters]
   return {
-    attachments: [...assets, ...characters],
+    attachments,
+    slots: inputSlotsOf(app, form.values.inputs, attachments, (name) =>
+      uploadInto({ device, uploads, app, form }, name)
+    ),
     isUploading: uploads.uploads.some((one) => one.status === "uploading"),
     upload: () => {
       void device

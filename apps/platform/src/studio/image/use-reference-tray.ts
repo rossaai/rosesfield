@@ -1,5 +1,8 @@
 import type { ModelField } from "@rosesfield/catalog/comfy"
-import type { PromptAttachment } from "@rosesfield/ui/components/prompt-bar"
+import type {
+  PromptAttachment,
+  PromptSlot,
+} from "@rosesfield/ui/components/prompt-bar"
 import { useRef, useState } from "react"
 import { t } from "@/copy/t"
 import { useDevice } from "@/device/device-context"
@@ -21,6 +24,7 @@ export type ReferenceTray = {
   field: MediaField | null
   target: MediaField | null
   attachments: PromptAttachment[]
+  slots: PromptSlot[] | undefined
   room: number
   message: string | null
   isUploading: boolean
@@ -49,6 +53,27 @@ type Note = {
 
 function tooMany(refused: number, max: number): string | null {
   return refused > 0 ? t("field.asset.tooMany", { max }) : null
+}
+
+function slotsOf(
+  field: MediaField | null,
+  attachments: readonly PromptAttachment[],
+  room: number,
+  upload: () => void
+): PromptSlot[] | undefined {
+  if (field === null || (attachments.length === 0 && field.min === 0)) {
+    return undefined
+  }
+  return [
+    {
+      id: field.name,
+      label: fieldCaption(field),
+      ...(field.min === 0 ? { note: t("field.optional") } : {}),
+      items: attachments.map(({ id, src, alt }) => ({ id, src, alt })),
+      addLabel: t(`field.asset.add.${field.media}`),
+      onAdd: room > 0 ? upload : undefined,
+    },
+  ]
 }
 
 function useTrayNote(field: MediaField | null): {
@@ -91,28 +116,31 @@ export function useReferenceTray(
     form.setInput(target.name, kept.ids)
     say(tooMany(refusedBefore + kept.refused, target.max))
   }
+  const room = target === null ? 0 : roomFor(target, held.length)
+  const upload = (): void => {
+    if (target === null) {
+      return
+    }
+    void device
+      .pickFiles({ accept: ["image/*"], multiple: target.max > 1 })
+      .then(async (files) => {
+        const space = roomFor(target, latest.current.length)
+        const added = await uploads.start(files.slice(0, space))
+        place(
+          added.map((asset) => asset.id),
+          Math.max(0, files.length - space)
+        )
+      })
+  }
   return {
     field,
     target,
     attachments: field === null ? [] : attachments,
-    room: target === null ? 0 : roomFor(target, held.length),
+    slots: slotsOf(field, attachments, room, upload),
+    room,
     message,
     isUploading: uploads.uploads.some((one) => one.status === "uploading"),
-    upload: () => {
-      if (target === null) {
-        return
-      }
-      void device
-        .pickFiles({ accept: ["image/*"], multiple: target.max > 1 })
-        .then(async (files) => {
-          const room = roomFor(target, latest.current.length)
-          const added = await uploads.start(files.slice(0, room))
-          place(
-            added.map((asset) => asset.id),
-            Math.max(0, files.length - room)
-          )
-        })
-    },
+    upload,
     addAssets: (ids) => place(ids, 0),
     remove: (id) => {
       if (field !== null) {

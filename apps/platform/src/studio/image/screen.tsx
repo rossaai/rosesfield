@@ -200,6 +200,7 @@ function ImageBar({
       submitLabel={t("run.generate")}
       removeLabel={t("bar.attachment.remove")}
       attachments={tray.attachments}
+      slots={tray.slots}
       onRemoveAttachment={tray.remove}
       leading={<Attach tray={tray} />}
       chips={

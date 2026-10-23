@@ -14,6 +14,7 @@ import { inputPlaceholder } from "@/screens/app/fields/input-copy"
 import { StartProblem, submitPriceOf } from "@/screens/app/generate-foot"
 import { HostedChips } from "@/screens/app/hosted/hosted-chips"
 import { appliedApp } from "@/studio/edit/edit-form"
+import { editSlotsOf } from "@/studio/edit/edit-slots"
 import type { EditToolState } from "@/studio/edit/use-edit-tool"
 
 function PhotoAttach({ state }: { state: EditToolState }): ReactElement {
@@ -120,6 +121,7 @@ export function EditBar({ state }: { state: EditToolState }): ReactElement {
         submitLabel={t("run.generate")}
         removeLabel={t("bar.attachment.remove")}
         attachments={attachments}
+        slots={editSlotsOf(state, attachments)}
         onRemoveAttachment={photo.remove}
         leading={<PhotoAttach state={state} />}
         chips={<BarChips chips={<ToolChips state={state} />} />}

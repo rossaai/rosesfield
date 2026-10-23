@@ -300,4 +300,48 @@ describe("PromptBar's chip row", () => {
     }
     expect(scrollBy).toHaveBeenCalledWith({ left: 100, behavior: "smooth" })
   })
+
+  it("draws each asset slot with its label, its thumbs and an add tile", () => {
+    const add = vi.fn()
+    const remove = vi.fn()
+    render(
+      <PromptBar
+        value=""
+        onValueChange={() => undefined}
+        onSubmit={() => undefined}
+        label="Prompt"
+        placeholder="Describe the image"
+        submitLabel="Generate"
+        removeLabel="Remove"
+        onRemoveAttachment={remove}
+        slots={[
+          {
+            id: "product",
+            label: "Product photo",
+            items: [{ id: "a1", src: "data:,", alt: "Bottle" }],
+            addLabel: "Add an image",
+          },
+          {
+            id: "second",
+            label: "Second photo",
+            note: "Optional",
+            items: [],
+            addLabel: "Add an image",
+            onAdd: add,
+          },
+        ]}
+      />
+    )
+    const product = screen.getByRole("region", { name: "Product photo" })
+    expect(product.querySelector("img")?.getAttribute("alt")).toBe("Bottle")
+    expect(
+      product.querySelector("button[aria-label='Add an image']")
+    ).toBeNull()
+    const second = screen.getByRole("region", { name: "Second photo" })
+    expect(second.textContent).toContain("Optional")
+    fireEvent.click(screen.getByRole("button", { name: "Add an image" }))
+    expect(add).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }))
+    expect(remove).toHaveBeenCalledWith("a1")
+  })
 })

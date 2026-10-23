@@ -169,6 +169,7 @@ export function BarAppScreen({
             submitLabel={t("run.generate")}
             removeLabel={t("bar.attachment.remove")}
             attachments={tray.attachments}
+            slots={tray.slots}
             onRemoveAttachment={tray.remove}
             leading={<BarLeading app={app} state={state} tray={tray} />}
             chips={
