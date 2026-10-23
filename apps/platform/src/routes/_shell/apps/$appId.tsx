@@ -1,6 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
+import { settingsQuery } from "@/api/queries"
 import { AppRouteScreen } from "@/screens/app/app-route-screen"
 import { type StageTab, stageTabs } from "@/screens/app/app-stage"
+import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
+import { taskAppOf } from "@/screens/app/hosted/task-app"
+import { preloadStudio } from "@/screens/app/studio-screens"
 import { readOneOf, readText } from "@/shell/search"
 import { movedAppOf } from "@/studio/audio/audio-address"
 import { oldAddressOf } from "@/studio/recast/old-address"
@@ -54,6 +58,17 @@ export const Route = createFileRoute("/_shell/apps/$appId")({
     ) {
       throw redirect({ to: "/characters/new", search: { mode: "traits" } })
     }
+  },
+  loader: ({ params, context }) => {
+    if (taskAppOf(params.appId) !== null) {
+      const keyState =
+        context.queryClient.getQueryData(settingsQuery.queryKey)?.engine.key ??
+        "unknown"
+      void context.queryClient.prefetchQuery(
+        modelCatalogQuery(params.appId, keyState)
+      )
+    }
+    return preloadStudio(params.appId)
   },
   component: AppRouteScreen,
 })
