@@ -60,12 +60,10 @@ export const Route = createFileRoute("/_shell/apps/$appId")({
     }
   },
   loader: ({ params, context }) => {
-    if (taskAppOf(params.appId) !== null) {
-      const keyState =
-        context.queryClient.getQueryData(settingsQuery.queryKey)?.engine.key ??
-        "unknown"
+    const settings = context.queryClient.getQueryData(settingsQuery.queryKey)
+    if (taskAppOf(params.appId) !== null && settings !== undefined) {
       void context.queryClient.prefetchQuery(
-        modelCatalogQuery(params.appId, keyState)
+        modelCatalogQuery(params.appId, settings.engine.key)
       )
     }
     return preloadStudio(params.appId)

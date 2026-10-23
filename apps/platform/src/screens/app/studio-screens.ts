@@ -58,11 +58,7 @@ export async function preloadStudio(appId: string): Promise<void> {
 export function studioScreenFor(
   appId: string
 ): StudioScreen | LazyExoticComponent<StudioScreen> | null {
-  const done = ready.get(appId)
-  if (done !== undefined) {
-    return done
-  }
-  const cached = loaded.get(appId)
+  const cached = loaded.get(appId) ?? ready.get(appId)
   if (cached !== undefined) {
     return cached
   }
