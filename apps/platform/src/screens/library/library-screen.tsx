@@ -305,7 +305,6 @@ function LibraryCanvas(props: LibraryCanvasProps): ReactElement {
           <KindTabs
             kind={search.kind}
             onKind={(next) => search.setSearch({ kind: next })}
-            isRegular={props.isRegular}
           />
           {props.isRegular ? null : viewMenu}
         </div>

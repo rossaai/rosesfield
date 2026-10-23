@@ -7,7 +7,7 @@ afterEach(cleanup)
 describe("the library's kind filter", () => {
   it("offers 3D models beside images, videos and sound, and picks mesh", () => {
     const onKind = vi.fn<(kind: LibraryKind) => void>()
-    render(<KindTabs kind="all" onKind={onKind} isRegular />)
+    render(<KindTabs kind="all" onKind={onKind} />)
     fireEvent.click(screen.getByRole("radio", { name: "3D" }))
     expect(onKind).toHaveBeenCalledWith("mesh")
   })

@@ -62,7 +62,7 @@ function ColumnPanel(props: StoryboardFrameProps): ReactElement {
   return (
     <aside
       onKeyDown={props.onShortcut}
-      className="hidden min-h-0 shrink-0 @regular:flex @regular:pb-19"
+      className="hidden min-h-0 shrink-0 @regular:flex @regular:pb-4"
     >
       <InputPanel
         label={appName(props.app)}

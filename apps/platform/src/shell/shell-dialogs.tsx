@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router"
 import {
   createContext,
   type ReactElement,
@@ -6,6 +7,7 @@ import {
   useCallback,
   useState,
 } from "react"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import type { ConnectClient } from "@/screens/connect/connect-code"
 import { ConnectDialog } from "@/screens/connect/connect-dialog"
 import {
@@ -36,6 +38,22 @@ export function useOpenCredits(): () => void {
 
 export function useOpenSettings(): OpenSettings {
   return use(OpenSettingsContext)
+}
+
+export function useShowSettings(): OpenSettings {
+  const openSettings = useOpenSettings()
+  const isRegular = useIsRegularWindow()
+  const navigate = useNavigate()
+  return (section) => {
+    if (isRegular) {
+      openSettings(section)
+      return
+    }
+    void navigate({
+      to: "/settings",
+      ...(section === undefined ? {} : { search: { section } }),
+    })
+  }
 }
 
 type ConnectState = { open: boolean; client: ConnectClient }

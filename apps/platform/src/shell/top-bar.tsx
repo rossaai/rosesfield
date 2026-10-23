@@ -30,7 +30,7 @@ import {
 } from "@/shell/nav-rows"
 import { appIdOfPath } from "@/shell/page-kind"
 import { usePhoneTitleSlot } from "@/shell/screen-header"
-import { useOpenConnect } from "@/shell/shell-dialogs"
+import { useOpenConnect, useShowSettings } from "@/shell/shell-dialogs"
 
 export function isAreaCurrent(area: MediaArea, pathname: string): boolean {
   const appId = appIdOfPath(pathname)
@@ -38,6 +38,14 @@ export function isAreaCurrent(area: MediaArea, pathname: string): boolean {
 }
 
 function ScreenNav({ link }: { link: ScreenLink }): ReactElement {
+  const showSettings = useShowSettings()
+  if (link.to === "/settings") {
+    return (
+      <NavLink render={<button type="button" onClick={() => showSettings()} />}>
+        {t(link.label)}
+      </NavLink>
+    )
+  }
   return (
     <NavLink
       render={<Link to={link.to} activeOptions={{ exact: link.to === "/" }} />}

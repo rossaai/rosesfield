@@ -98,7 +98,8 @@ function AreaMenu({
       <DropdownMenuContent
         data-slot="app-bar-areaMenu"
         sideOffset={4}
-        className="max-w-none min-w-72"
+        data-columns={apps.length > 4 ? "two" : "one"}
+        className="max-w-none min-w-72 data-[columns=two]:grid data-[columns=two]:min-w-144 data-[columns=two]:grid-cols-2 data-[columns=two]:gap-x-s2"
       >
         {apps.map((app) => (
           <DropdownMenuItem
