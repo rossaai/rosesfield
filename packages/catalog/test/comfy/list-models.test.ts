@@ -242,6 +242,15 @@ describe("the model list of an app that declares no task", () => {
     }
   })
 
+  it("names the graph of Voice change and Music by the label of their model option", () => {
+    expect(listedIn("voice-change").models.map((one) => one.nameKey)).toEqual([
+      "audio.model.chatterboxVc",
+    ])
+    expect(listedIn("music").models.map((one) => one.nameKey)).toEqual([
+      "audio.model.minimaxMusic3",
+    ])
+  })
+
   it("lists nothing for Remake and Effects, which run no graph as a model, the control", () => {
     for (const appId of ["remake", "effects"]) {
       const { found, models } = listedIn(appId)

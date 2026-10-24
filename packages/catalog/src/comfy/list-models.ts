@@ -93,21 +93,34 @@ function hostedEntry(model: HostedModel, task: string): CatalogModel {
   }
 }
 
-function ownGraphOf(app: AppDefinition): CatalogModel[] {
-  const graph = defaultModelOf(app)
-  return graph === null ||
-    isHostedModelId(graph) ||
-    isDeniedModel(`graph/${graph}`)
-    ? []
-    : [graphEntry(graph, null, null)]
-}
+type ModelOption = Extract<
+  InputDefinition,
+  { type: "choice" }
+>["options"][number]
 
-function graphsOf(app: AppDefinition, appTask: string): CatalogModel[] {
+function modelOptionsOf(app: AppDefinition): readonly ModelOption[] {
   const input = app.inputs.find(
     (one): one is Extract<InputDefinition, { type: "choice" }> =>
       one.name === modelInputName && one.type === "choice"
   )
-  return (input?.options ?? [])
+  return input?.options ?? []
+}
+
+function ownGraphOf(app: AppDefinition): CatalogModel[] {
+  const graph = defaultModelOf(app)
+  if (
+    graph === null ||
+    isHostedModelId(graph) ||
+    isDeniedModel(`graph/${graph}`)
+  ) {
+    return []
+  }
+  const option = modelOptionsOf(app).find((one) => one.value === graph)
+  return [graphEntry(graph, option?.labelKey ?? null, null)]
+}
+
+function graphsOf(app: AppDefinition, appTask: string): CatalogModel[] {
+  return modelOptionsOf(app)
     .filter((option) => !isHostedModelId(option.value))
     .filter((option) => !isDeniedModel(`graph/${option.value}`))
     .map((option) =>
