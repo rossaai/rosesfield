@@ -32,7 +32,7 @@ async function pick(
 test.describe("Shot's input column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("opens with 7 shot choices on Auto and Advanced closed, and shows the words each choice adds", async ({
+  test("opens with 7 shot choices on Auto and the seed in plain view, and shows the words each choice adds", async ({
     page,
   }) => {
     await page.goto("/apps/shot")
@@ -45,7 +45,8 @@ test.describe("Shot's input column", () => {
     }
     await expect(
       page.getByRole("button", { name: "Advanced", exact: true })
-    ).toHaveAttribute("aria-expanded", "false")
+    ).toHaveCount(0)
+    await expect(page.getByRole("radiogroup", { name: "Seed" })).toBeVisible()
     await page.getByRole("textbox", { name: "Scene" }).fill(scene)
     const words = page.getByRole("region", { name: "Words Shot sends" })
     await expect(words).toContainText(`${scene}.`)

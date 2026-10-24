@@ -109,7 +109,7 @@ test.describe("Lip sync's Text run", () => {
     const speechStart = page.waitForResponse(
       (response) =>
         response.request().method() === "POST" &&
-        /\/api\/apps\/audio\/runs$/.test(response.url())
+        /\/api\/apps\/speech\/runs$/.test(response.url())
     )
     const videoStart = page.waitForResponse(
       (response) =>
@@ -142,7 +142,7 @@ test.describe("Lip sync's Text run", () => {
         .filter((run) => run.id === speechId || run.id === videoId)
         .map((run) => run.appId)
         .sort()
-    ).toEqual(["audio", "lipsync"])
+    ).toEqual(["lipsync", "speech"])
   })
 })
 

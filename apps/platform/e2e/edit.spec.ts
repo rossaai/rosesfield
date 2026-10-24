@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs"
 import { deflateSync } from "node:zlib"
-import { expect, type Locator, type Page, test } from "@playwright/test"
+import { expect, type Page, test } from "@playwright/test"
 
 const gatewayOrigin = "http://127.0.0.1:8797"
 const photoPath = new URL(
@@ -8,15 +8,14 @@ const photoPath = new URL(
   import.meta.url
 ).pathname
 
-const toolRow = [
-  "edit",
-  "angles",
-  "relight",
-  "try-on",
-  "headshots",
-  "expand",
-  "background-removal",
-]
+const toolNames = {
+  angles: "Angles",
+  relight: "Relight",
+  "try-on": "Try-on",
+  headshots: "Headshot",
+  expand: "Expand",
+  "background-removal": "Remove background",
+}
 
 const crcTable = Array.from({ length: 256 }, (_, index) => {
   let value = index
@@ -66,10 +65,6 @@ async function open(page: Page, path: string): Promise<void> {
   await page.goto(path)
 }
 
-function tools(page: Page): Locator {
-  return page.locator("[data-slot='edit-tools']").getByRole("tab")
-}
-
 async function chooseFile(
   page: Page,
   file: string | { name: string; mimeType: string; buffer: Buffer }
@@ -82,35 +77,25 @@ async function chooseFile(
   await (await chooser).setFiles(file)
 }
 
-test("each old address opens Edit on its own tool, in the row Edit, Angles, Relight, Try-on, Headshot, Expand, Remove background", async ({
+test("each tool's address opens its own screen, named for its tool, with the settings bar", async ({
   page,
 }) => {
-  for (const [index, id] of toolRow.entries()) {
-    if (id === "edit") {
-      continue
-    }
+  for (const [id, name] of Object.entries(toolNames)) {
     await open(page, `/apps/${id}`)
-    await expect(tools(page)).toHaveCount(toolRow.length)
-    await expect(tools(page).nth(index)).toHaveAttribute(
-      "aria-selected",
-      "true"
-    )
+    await expect(
+      page.getByRole("heading", { name, level: 1, exact: true })
+    ).toBeAttached()
     await expect(page.locator("[data-slot='prompt-dock']")).toBeVisible()
   }
 })
 
-test("a photo you add shows in its own ratio and stays when you switch tools", async ({
-  page,
-}) => {
+test("a photo you add shows in its own ratio", async ({ page }) => {
   await open(page, "/apps/edit")
   await chooseFile(page, photoPath)
   const shown = page.locator("[data-slot='edit-photo'] img")
   await expect(shown).toBeVisible()
   const box = await shown.boundingBox()
   expect(box === null ? 0 : box.width / box.height).toBeCloseTo(16 / 9, 1)
-  await tools(page).nth(toolRow.indexOf("relight")).click()
-  await expect(page).toHaveURL(/\/apps\/relight\?use=/)
-  await expect(page.locator("[data-slot='edit-photo'] img")).toBeVisible()
 })
 
 test("a file that is not an image, a file over 20 MB and an image under 480 px are each refused with the reason", async ({
@@ -157,7 +142,7 @@ test("Use in Edit from the library opens Edit with that image", async ({
   await expect(page.locator("[data-slot='edit-photo'] img")).toBeVisible()
 })
 
-test("on a 390 px screen the settings bar stays at the bottom edge and the tool row scrolls across", async ({
+test("on a 390 px screen the settings bar stays at the bottom edge", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "phone", "the phone layout")
@@ -175,12 +160,4 @@ test("on a 390 px screen the settings bar stays at the bottom edge and the tool 
   })
   const after = await dock.boundingBox()
   expect(after?.y).toBe(before?.y)
-  const strip = page.locator("[data-slot='edit-tools'] [role='tablist']")
-  const sizes = await strip.evaluate((node) => ({
-    scroll: node.scrollWidth,
-    client: node.clientWidth,
-  }))
-  expect(sizes.scroll).toBeGreaterThan(sizes.client)
-  await tools(page).last().scrollIntoViewIfNeeded()
-  await expect(tools(page).last()).toBeInViewport()
 })

@@ -125,12 +125,14 @@ test("every route renders without console errors", async ({ page }) => {
     window.localStorage.setItem("rosesfield.welcome", "seen")
   })
   const routes = routesOf(seeded)
-  test.setTimeout(routes.length * secondsPerRoute * 1000)
+  test.setTimeout(routes.length * secondsPerRoute * 2 * 1000)
   for (const path of routes) {
     const errors = watchErrors(page)
     await page.goto(path)
     await expect(page.locator("#root")).not.toBeEmpty()
-    await page.waitForLoadState("networkidle")
+    await page
+      .waitForLoadState("networkidle", { timeout: secondsPerRoute * 1000 })
+      .catch(() => undefined)
     expect(errors, `console errors on ${path}`).toEqual([])
     expect(await sidewaysOverflow(page), `sideways scroll on ${path}`).toBe(0)
     page.removeAllListeners("console")

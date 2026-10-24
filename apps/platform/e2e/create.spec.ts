@@ -137,7 +137,7 @@ test.describe("the prompt bar's field and model chip", () => {
 test.describe("an app with many inputs on a desktop", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("holds a 320 px column at x 16 with a 40 px Generate across its 60 px footer, the output 8 px to its right and running to the window's bottom", async ({
+  test("holds a 320 px column at x 16 with a 40 px Generate across its 60 px footer, ending 16 px above the window's bottom, and the output 8 px to its right running to the window's bottom", async ({
     page,
   }) => {
     await page.goto("/apps/video")
@@ -156,7 +156,7 @@ test.describe("an app with many inputs on a desktop", () => {
       page.getByRole("region", { name: "Your results" })
     )
     expect(canvas.x).toBe(box.x + box.width + 8)
-    expect(box.height).toBe(786)
+    expect(box.y + box.height).toBe((page.viewportSize()?.height ?? 0) - 16)
     expect(canvas.y).toBe(box.y)
     expect(canvas.y + canvas.height).toBe(page.viewportSize()?.height)
   })
@@ -253,7 +253,7 @@ test.describe("the tray and rhythm of Video's column", () => {
 test.describe("Video's mode switch and column fit", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("puts the 302 by 26 mode switch 8 px under the start frame and 16 px over the drop zone, and ends the last row 8 px above Generate in every tab", async ({
+  test("puts the 302 by 26 mode switch 8 px under the start frame and 16 px over the drop zone, and ends the last row 8 px above Generate, or 40 px over the fade when the column scrolls, in every tab", async ({
     page,
   }) => {
     await page.goto("/apps/video")
@@ -262,7 +262,9 @@ test.describe("Video's mode switch and column fit", () => {
     const frame = await boxOf(
       column.locator('[data-slot="composer-attachments-tiles"]')
     )
-    const toggle = await boxOf(column.getByRole("radiogroup"))
+    const toggle = await boxOf(
+      column.getByRole("radiogroup", { name: "Operation" })
+    )
     expect([toggle.width, toggle.height]).toEqual([302, 26])
     expect(toggle.y).toBe(frame.y + frame.height + 8)
     const wells = await boxOf(column.locator('[data-slot="video-wells"]'))
@@ -278,16 +280,27 @@ test.describe("Video's mode switch and column fit", () => {
       await expect(column.locator(modelRow)).toContainText(model)
       await expect
         .poll(async () => {
-          const bottom = await parts.evaluate((node) =>
-            Math.max(
-              ...[...node.children].map(
-                (child) => child.getBoundingClientRect().bottom
-              )
+          const end = await parts.evaluate((node) => {
+            const scroller = node.closest<HTMLElement>(
+              "[data-slot='composer-prompt']"
             )
-          )
-          return Math.round((await boxOf(footer)).y - bottom)
+            scroller?.scrollTo({
+              top: scroller.scrollHeight,
+              behavior: "instant",
+            })
+            return {
+              bottom: Math.max(
+                ...[...node.children].map(
+                  (child) => child.getBoundingClientRect().bottom
+                )
+              ),
+              isClipped: scroller?.dataset.clipped === "yes",
+            }
+          })
+          const gap = Math.round((await boxOf(footer)).y - end.bottom)
+          return gap - (end.isClipped ? 40 : 8)
         })
-        .toBe(8)
+        .toBe(0)
     }
   })
 })
@@ -301,7 +314,7 @@ test.describe("Video's model picker and its settings", () => {
     await page.goto("/apps/video")
     const column = page.locator('[data-slot="composer"]')
     await expect(column).toBeVisible()
-    const switches = column.getByRole("radiogroup")
+    const switches = column.getByRole("radiogroup", { name: "Operation" })
     await expect(switches).toHaveCount(1)
     await expect(switches.getByRole("radio")).toHaveText(["Video", "Extend"])
     await column.locator(modelRow).click()
@@ -312,26 +325,6 @@ test.describe("Video's model picker and its settings", () => {
       .first()
     await expect(ltx).toContainText("720p")
     await expect(ltx).toContainText("2 to 5 s")
-  })
-
-  test("turns the Advanced chevron over the control timing instead of jumping", async ({
-    page,
-  }) => {
-    await page.goto("/apps/video")
-    const trigger = page.getByRole("button", { name: "Advanced" })
-    await expect(trigger).toBeVisible()
-    const chevron = trigger.locator("svg")
-    const names = await chevron.evaluate(
-      (element) => getComputedStyle(element).transitionProperty
-    )
-    expect(names.split(", ")).toContain("rotate")
-    await trigger.click()
-    await page.waitForTimeout(60)
-    const turning = await chevron.evaluate(
-      (element) => getComputedStyle(element).rotate
-    )
-    expect(turning).not.toBe("180deg")
-    await expect(chevron).toHaveCSS("rotate", "180deg")
   })
 })
 

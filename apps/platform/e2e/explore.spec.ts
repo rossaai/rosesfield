@@ -34,7 +34,7 @@ test("Explore opens with one banner link over one apps row that steps sideways",
   await expect(banner.locator("[data-slot=hero-portrait]")).toHaveCount(2)
   await expect(banner.locator("[data-slot=hero-tag]")).toHaveCount(0)
   await expect(page.locator("[data-slot=app-tile-grid]")).toHaveCount(0)
-  const tiles = apps.locator("[data-slot=explore-app]")
+  const tiles = apps.locator("[data-slot=app-card]")
   expect(await tiles.count()).toBeGreaterThanOrEqual(3)
   const [first, second] = await Promise.all([
     boxOf(tiles.nth(0)),
@@ -62,7 +62,7 @@ test("on a phone Explore shows the banner as a compact card without its portrait
     .all()) {
     await expect(portrait).toBeHidden()
   }
-  const first = await boxOf(apps.locator("[data-slot=explore-app]").first())
+  const first = await boxOf(apps.locator("[data-slot=app-card]").first())
   expect(Math.round(first.x)).toBe(16)
   const pageWidth = await page.evaluate(
     () => document.documentElement.scrollWidth
@@ -77,9 +77,9 @@ test("an app in the row opens its app without reloading the page", async ({
   await page.evaluate(() => {
     Object.assign(window, { exploreMark: "kept" })
   })
-  const tile = apps.locator("[data-slot=explore-app]").first()
+  const tile = apps.locator("[data-slot=app-card]").first()
   const href = await tile.getAttribute("href")
-  await tile.click()
+  await tile.dispatchEvent("click")
   await expect(page).toHaveURL(new RegExp(`${href ?? "/apps/"}$`))
   expect(await page.evaluate(() => Reflect.get(window, "exploreMark"))).toBe(
     "kept"

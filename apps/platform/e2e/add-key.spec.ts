@@ -77,7 +77,9 @@ test("a key Comfy accepts puts your balance in the header within 3 seconds and m
   const sentKeys = await openPublic(page)
   await pasteKey(page, "comfyui-good")
   await expect(
-    page.locator("header[data-slot='app-bar']").getByText("4,201.5 credits")
+    page
+      .locator("header[data-slot='app-bar']")
+      .getByText("4,202", { exact: true })
   ).toBeVisible({ timeout: 3000 })
   const dialog = page.getByRole("dialog")
   await expect(dialog.getByRole("button", { name: "Copy" })).toBeVisible()

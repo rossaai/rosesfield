@@ -69,8 +69,9 @@ async function addPhotos(
   page: Page,
   files: ReturnType<typeof photo>[]
 ): Promise<void> {
+  await dock(page).getByRole("button", { name: "Attach a file" }).click()
   const chooser = page.waitForEvent("filechooser")
-  await dock(page).getByRole("button", { name: "References" }).click()
+  await page.getByRole("menuitem", { name: "Upload" }).click()
   await (await chooser).setFiles(files)
 }
 
@@ -93,7 +94,7 @@ test.describe("Ads on a wide screen", () => {
       "Add a photo of your product."
     )
     await expect(
-      dock(page).getByRole("button", { name: "References" })
+      dock(page).getByRole("button", { name: "Attach a file" })
     ).toBeFocused()
   })
 
@@ -112,10 +113,9 @@ test.describe("Ads on a wide screen", () => {
     await expect(thumbs).toHaveCount(3)
     await dock(page).getByRole("button", { name: "Remove" }).nth(1).click()
     await expect(thumbs).toHaveCount(2)
-    await expect(thumbs.nth(1)).toHaveAttribute("src", third ?? "")
     await expect(
-      dock(page).locator("[data-bar='prompt'] li").nth(1)
-    ).toContainText("Second photo")
+      dock(page).getByRole("region", { name: "Second photo" }).locator("img")
+    ).toHaveAttribute("src", third ?? "")
   })
 })
 
@@ -155,7 +155,9 @@ test.describe("Ads on a phone", () => {
     await openAds(page)
     const bar = dock(page)
     await expect(bar.getByRole("textbox")).toBeVisible()
-    await expect(bar.getByRole("button", { name: "References" })).toBeVisible()
+    await expect(
+      bar.getByRole("button", { name: "Attach a file" })
+    ).toBeVisible()
     await expect(
       bar.getByRole("button", { name: "Add a character" })
     ).toBeVisible()
@@ -169,14 +171,7 @@ test.describe("Ads on a phone", () => {
     await bar.getByRole("button", { name: "Inputs" }).click()
     const sheet = page.getByRole("dialog")
     await expect(sheet).toBeVisible()
-    for (const label of [
-      "Kind",
-      "Model",
-      "Format",
-      "Count",
-      "Style",
-      "Advanced",
-    ]) {
+    for (const label of ["Kind", "Model", "Format", "Count", "Style", "Seed"]) {
       await expect(
         sheet.getByText(label, { exact: true }).first()
       ).toBeVisible()

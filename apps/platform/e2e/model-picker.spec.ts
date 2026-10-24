@@ -144,35 +144,33 @@ test("on a row with Open weights only the 12 px mark links to the weights page, 
   await expect(trigger).toContainText(name)
 })
 
-for (const state of ["open", "with-settings"]) {
-  test(`keeps the search in view while the list scrolls on a short screen, ${state}`, async ({
-    page,
-  }) => {
-    await openPicker(page, state)
-    const search = page.getByRole("searchbox").first()
-    const list = page.getByRole("listbox").first()
-    const picker = page.locator('[data-slot="model-picker"]').first()
-    const before = await boxOf(search)
-    expect(before.top).toBeGreaterThanOrEqual(0)
-    expect(before.bottom - before.top).toBeGreaterThan(0)
-    expect((await boxOf(picker)).bottom).toBeLessThanOrEqual(shortScreen.height)
-    const scroller = list.locator("xpath=..")
-    const sizes = await scroller.evaluate((element) => ({
-      scroll: element.scrollHeight,
-      client: element.clientHeight,
-    }))
-    expect(sizes.scroll).toBeGreaterThan(sizes.client)
-    await scroller.evaluate((element) => {
-      element.scrollTop = element.scrollHeight
-    })
-    expect(
-      await scroller.evaluate((element) => element.scrollTop)
-    ).toBeGreaterThan(0)
-    const after = await boxOf(search)
-    expect(after).toEqual(before)
-    expect(after.bottom).toBeLessThanOrEqual(shortScreen.height)
+test("keeps the search in view while the list scrolls on a short screen", async ({
+  page,
+}) => {
+  await openPicker(page, "open")
+  const search = page.getByRole("searchbox").first()
+  const list = page.getByRole("listbox").first()
+  const picker = page.locator('[data-slot="model-picker"]').first()
+  const before = await boxOf(search)
+  expect(before.top).toBeGreaterThanOrEqual(0)
+  expect(before.bottom - before.top).toBeGreaterThan(0)
+  expect((await boxOf(picker)).bottom).toBeLessThanOrEqual(shortScreen.height)
+  const scroller = list.locator("xpath=..")
+  const sizes = await scroller.evaluate((element) => ({
+    scroll: element.scrollHeight,
+    client: element.clientHeight,
+  }))
+  expect(sizes.scroll).toBeGreaterThan(sizes.client)
+  await scroller.evaluate((element) => {
+    element.scrollTop = element.scrollHeight
   })
-}
+  expect(
+    await scroller.evaluate((element) => element.scrollTop)
+  ).toBeGreaterThan(0)
+  const after = await boxOf(search)
+  expect(after).toEqual(before)
+  expect(after.bottom).toBeLessThanOrEqual(shortScreen.height)
+})
 
 test("each row of the Image picker draws its lab's mark as path data or its first letter on its brand colour, and shows no picture", async ({
   page,

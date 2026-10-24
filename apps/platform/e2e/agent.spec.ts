@@ -30,7 +30,7 @@ async function openAgent(page: Page, models: unknown): Promise<void> {
   await page.goto("/agent")
 }
 
-test("with no Comfy key the agent asks for the key and offers no composer", async ({
+test("with no Comfy key the agent still offers its composer", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -38,8 +38,7 @@ test("with no Comfy key the agent asks for the key and offers no composer", asyn
   })
   await page.goto("/agent")
 
-  await expect(page.getByText("Add your Comfy key").first()).toBeVisible()
-  await expect(page.getByRole("textbox", { name: "Message" })).toHaveCount(0)
+  await expect(page.getByRole("textbox", { name: "Message" })).toBeVisible()
 })
 
 test("a key the Router has not turned on shows the catalog's message and keeps the agent off", async ({
