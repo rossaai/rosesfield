@@ -92,7 +92,7 @@ function SegmentsOrSelect(props: ChoiceControlProps): ReactElement {
     <div ref={frame} className="min-w-0">
       {fits ? (
         <SegmentedControl
-          items={props.items}
+          items={props.items.map(({ value, label }) => ({ value, label }))}
           value={props.value}
           onValueChange={props.onChange}
           label={props.label}

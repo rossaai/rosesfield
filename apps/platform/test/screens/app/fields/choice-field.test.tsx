@@ -57,4 +57,23 @@ describe("ChoiceField with two to four values", () => {
     expect(screen.queryByRole("radiogroup")).toBeNull()
     expect(screen.getByRole("combobox", { name: "Clothes" })).toBeTruthy()
   })
+
+  it("draws the segments with their words only, so a setting's option icons never widen them", () => {
+    measureLabels(60, 80)
+    render(
+      <ChoiceField
+        label="Mode"
+        setting="mode"
+        items={[
+          { value: "split", label: "Split" },
+          { value: "edit", label: "Edit" },
+        ]}
+        value="split"
+        onChange={() => undefined}
+        note={null}
+      />
+    )
+    const segments = screen.getByRole("radiogroup", { name: "Mode" })
+    expect(segments.querySelector("svg")).toBeNull()
+  })
 })
