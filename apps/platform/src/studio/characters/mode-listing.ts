@@ -2,6 +2,7 @@ import { type Mode, traitNames } from "@rosesfield/catalog/characters"
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import {
   type AppListing,
+  boundedInputOf,
   fixedCountOf,
   type InputDefinition,
   type InputRule,
@@ -17,18 +18,13 @@ export const characterInput = "character"
 export const viewInput = "view"
 
 function narrowed(rule: InputRule, mode: Mode): InputDefinition {
-  const { input, allowed, fallback } = rule
+  const { input } = rule
   if (input.type !== "choice") {
     return input
   }
-  if (input.name === modeField) {
-    return { ...input, default: mode }
-  }
-  const options = input.options.filter(
-    (option) => allowed?.includes(option.value) ?? true
-  )
-  const fixed = typeof fallback === "string" ? fallback : input.default
-  return { ...input, options, default: fixed }
+  return input.name === modeField
+    ? { ...input, default: mode }
+    : boundedInputOf(rule)
 }
 
 export function listingFor(app: AppListing, mode: Mode): AppListing {

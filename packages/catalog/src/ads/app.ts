@@ -24,6 +24,7 @@ export const app = defineApp({
   id: adsAppId,
   nameKey: "ads.name",
   category: "image",
+  layout: "bar",
   inputs: [
     {
       type: "choice",

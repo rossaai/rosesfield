@@ -38,6 +38,7 @@ export const app: AppInput = defineApp({
   id: "expand",
   nameKey: "expand.name",
   category: "image",
+  layout: "bar",
   inputs: [
     {
       type: "choice",

@@ -15,6 +15,7 @@ export const app: AppInput = defineApp({
   id: "edit",
   nameKey: "edit.name",
   category: "image",
+  layout: "bar",
   inputs: [
     {
       type: "image",

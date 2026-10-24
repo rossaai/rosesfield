@@ -1,7 +1,11 @@
 import { type AppListing, fixedCountOf } from "@rosesfield/contract"
 import { useEffect, useMemo, useRef } from "react"
 import { useAppRuns } from "@/screens/app/app-canvas"
-import { heldProblemsOf, valuesFromRun } from "@/screens/app/app-form"
+import {
+  appliedApp,
+  heldProblemsOf,
+  valuesFromRun,
+} from "@/screens/app/app-form"
 import { hostedProblems } from "@/screens/app/hosted/hosted-form"
 import { useHostedModel } from "@/screens/app/hosted/use-hosted-model"
 import { usePriceRefresh } from "@/screens/app/hosted/use-price-refresh"
@@ -12,12 +16,7 @@ import {
 } from "@/screens/app/use-app-form"
 import type { AppScreenState, AppSeeds } from "@/screens/app/use-app-screen"
 import { type StartRun, useStartRun } from "@/screens/app/use-start-run"
-import {
-  appliedApp,
-  chipNamesOf,
-  imageSlotsOf,
-  ratioFor,
-} from "@/studio/edit/edit-form"
+import { chipNamesOf, imageSlotsOf, ratioFor } from "@/studio/edit/edit-form"
 import type { EditTool } from "@/studio/edit/edit-tools"
 import { type EditPhoto, useEditPhoto } from "@/studio/edit/use-edit-photo"
 

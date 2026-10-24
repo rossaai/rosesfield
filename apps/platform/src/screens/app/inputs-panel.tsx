@@ -1,6 +1,7 @@
 import type { AppListing } from "@rosesfield/contract"
 import type { ReactElement } from "react"
 import { t } from "@/copy/t"
+import { appliedApp } from "@/screens/app/app-form"
 import { PopoverChip, settingIconOf } from "@/screens/app/bar/setting-chip"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
@@ -47,8 +48,8 @@ export function InputsPanel(props: InputsPanelProps): ReactElement {
   const { app, form } = props
   return (
     <div className="flex flex-col gap-s4">
-      {app.inputs
-        .filter((input) => input.type !== "seed")
+      {appliedApp(app, form.values.inputs)
+        .inputs.filter((input) => input.type !== "seed")
         .map((input) => (
           <InputField
             key={input.name}

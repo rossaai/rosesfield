@@ -1,5 +1,6 @@
 import {
   type AppListing,
+  boundedInputOf,
   type InputDefinition,
   type InputRule,
   inputRulesOf,
@@ -23,14 +24,10 @@ export function shownInputOf(
   if (rule === undefined) {
     return null
   }
-  const { allowed } = rule
-  if (input.type !== "choice" || allowed === null) {
-    return input
+  if (input.type === "choice" && (rule.allowed?.length ?? 0) < 2) {
+    return null
   }
-  const options = input.options.filter((option) =>
-    allowed.includes(option.value)
-  )
-  return options.length < 2 ? null : { ...input, options }
+  return input.type === "choice" ? boundedInputOf(rule) : input
 }
 
 export function correctionsOf(

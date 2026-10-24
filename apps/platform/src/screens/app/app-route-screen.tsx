@@ -6,6 +6,7 @@ import { findCatalogApp } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import { ScreenState } from "@/pieces/screen-state"
 import { AskedTab } from "@/screens/app/app-stage"
+import { BarAppScreen } from "@/screens/app/bar-app-screen"
 import { ColumnAppScreen } from "@/screens/app/column-app-screen"
 import { studioScreenFor } from "@/screens/app/studio-screens"
 import { StudioSuspense } from "@/screens/app/studio-suspense"
@@ -42,7 +43,11 @@ function AppScreenFor({
 }): ReactElement {
   const Studio = studioScreenFor(app.id)
   if (Studio === null) {
-    return <ColumnAppScreen app={app} seeds={seeds} />
+    return app.layout === "bar" ? (
+      <BarAppScreen app={app} chips={[]} seeds={seeds} />
+    ) : (
+      <ColumnAppScreen app={app} seeds={seeds} />
+    )
   }
   return (
     <StudioSuspense>

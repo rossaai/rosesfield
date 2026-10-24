@@ -1,5 +1,6 @@
 import {
   type AppListing,
+  boundedInputOf,
   type InputDefinition,
   type InputRule,
   inputRulesOf,
@@ -10,29 +11,6 @@ import { modeInput, voiceCloneTab } from "@/studio/audio/audio-tabs"
 
 export const shortestCloneSeconds = 6
 export const longestCloneSeconds = 30
-
-function boundedOf(input: InputDefinition, rule: InputRule): InputDefinition {
-  if (input.type === "number" && rule.range !== null) {
-    const { min, max } = rule.range
-    return {
-      ...input,
-      min,
-      max,
-      default: Math.min(max, Math.max(min, input.default)),
-    }
-  }
-  const allowed = rule.allowed
-  if (input.type === "choice" && allowed !== null && allowed.length > 0) {
-    return {
-      ...input,
-      options: input.options.filter((one) => allowed.includes(one.value)),
-      default: allowed.includes(input.default)
-        ? input.default
-        : (allowed[0] ?? input.default),
-    }
-  }
-  return input
-}
 
 function rulesIn(app: AppListing, tab: string): ReadonlyMap<string, InputRule> {
   return new Map(
@@ -53,7 +31,7 @@ export function formAppFor(app: AppListing, tab: string): AppListing {
     ...app,
     inputs: app.inputs.map((input) => {
       const rule = rules.get(input.name)
-      return rule === undefined ? optional(input) : boundedOf(input, rule)
+      return rule === undefined ? optional(input) : boundedInputOf(rule)
     }),
   }
 }
@@ -64,7 +42,7 @@ export function bodyAppFor(app: AppListing, tab: string): AppListing {
     ...app,
     inputs: app.inputs.flatMap((input) => {
       const rule = rules.get(input.name)
-      return rule === undefined ? [] : [boundedOf(input, rule)]
+      return rule === undefined ? [] : [boundedInputOf(rule)]
     }),
   }
 }

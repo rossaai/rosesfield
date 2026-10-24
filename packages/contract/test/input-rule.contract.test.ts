@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
 import { appDefinition } from "#app.contract"
-import { inputRulesOf } from "#input-rule.contract"
+import {
+  appliedInputsOf,
+  boundedInputOf,
+  inputRulesOf,
+} from "#input-rule.contract"
 import { startRunBodyFor } from "#start-run.contract"
 import { appWith, eitherApp, modeApp, modelApp } from "./rule-apps"
 import { assetUuid, characterUuid } from "./sample"
@@ -194,5 +198,47 @@ describe("a chain of conditions", () => {
       startFrame: [assetUuid],
     }).map((rule) => rule.input.name)
     expect(names).toEqual(["model", "clip"])
+  })
+})
+
+describe("appliedInputsOf", () => {
+  it("keeps only the inputs whose conditions hold, in order", () => {
+    expect(
+      appliedInputsOf(modelApp, { model: "first-model" }).map(
+        (input) => input.name
+      )
+    ).toEqual(["model", "length", "resolution", "sound"])
+  })
+
+  it("narrows a choice to its bound values and moves the default inside", () => {
+    const resolution = appliedInputsOf(modelApp, {
+      model: "second-model",
+    }).find((input) => input.name === "resolution")
+    expect(resolution?.type === "choice" && resolution.options).toEqual([
+      expect.objectContaining({ value: "480p" }),
+    ])
+    expect(resolution?.type === "choice" && resolution.default).toBe("480p")
+  })
+
+  it("narrows a number to its bound range and clamps the default", () => {
+    const length = appliedInputsOf(modelApp, { model: "second-model" }).find(
+      (input) => input.name === "length"
+    )
+    expect(length?.type === "number" && [length.min, length.max]).toEqual([
+      5, 5,
+    ])
+    expect(length?.type === "number" && length.default).toBe(5)
+  })
+})
+
+describe("boundedInputOf", () => {
+  it("leaves a choice whole when no value fits, so the problem is reported", () => {
+    const [model] = modelApp.inputs
+    if (model === undefined) {
+      throw new Error("modelApp has no inputs")
+    }
+    expect(
+      boundedInputOf({ input: model, allowed: [], range: null, fallback: null })
+    ).toBe(model)
   })
 })

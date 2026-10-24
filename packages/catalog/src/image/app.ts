@@ -17,6 +17,7 @@ export const app = defineApp({
   id: "image",
   nameKey: "image.name",
   category: "image",
+  layout: "bar",
   inputs: [
     {
       type: "prompt",

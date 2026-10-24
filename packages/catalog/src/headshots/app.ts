@@ -34,6 +34,7 @@ export const app = defineApp({
   id: "headshots",
   nameKey: "headshots.name",
   category: "image",
+  layout: "bar",
   inputs: [
     {
       type: "image",

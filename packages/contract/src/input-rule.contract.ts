@@ -116,3 +116,33 @@ export function inputRulesOf(
   }
   return rules
 }
+
+export function boundedInputOf(rule: InputRule): InputDefinition {
+  const { input, allowed, range } = rule
+  if (input.type === "number" && range !== null && range.min <= range.max) {
+    const { min, max } = range
+    return {
+      ...input,
+      min,
+      max,
+      default: Math.min(max, Math.max(min, input.default)),
+    }
+  }
+  if (input.type === "choice" && allowed !== null && allowed.length > 0) {
+    return {
+      ...input,
+      options: input.options.filter((one) => allowed.includes(one.value)),
+      default: allowed.includes(input.default)
+        ? input.default
+        : (allowed[0] ?? input.default),
+    }
+  }
+  return input
+}
+
+export function appliedInputsOf(
+  app: { inputs: readonly InputDefinition[] },
+  values: Values
+): InputDefinition[] {
+  return inputRulesOf(app, values).map(boundedInputOf)
+}

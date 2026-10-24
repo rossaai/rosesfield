@@ -1,10 +1,6 @@
 import type { ModelField } from "@rosesfield/catalog/comfy"
-import {
-  type AppListing,
-  type InputDefinition,
-  inputRulesOf,
-} from "@rosesfield/contract"
-import type { FieldValue } from "@/screens/app/app-form"
+import type { AppListing, InputDefinition } from "@rosesfield/contract"
+import { appliedApp, type FieldValue } from "@/screens/app/app-form"
 import { settingsInputs } from "@/screens/app/bar/model-settings"
 import { listOf } from "@/screens/app/fields/field-props"
 import { modelInputName } from "@/screens/app/hosted/hosted-form"
@@ -19,16 +15,6 @@ export type SlotMove =
   | { kind: "none" }
 
 const formatInput = "aspect"
-
-export function appliedApp(app: AppListing, inputs: Inputs): AppListing {
-  const applied = new Set(
-    inputRulesOf(app, inputs).map((rule) => rule.input.name)
-  )
-  return {
-    ...app,
-    inputs: app.inputs.filter((input) => applied.has(input.name)),
-  }
-}
 
 export type ImageSlot = {
   name: string

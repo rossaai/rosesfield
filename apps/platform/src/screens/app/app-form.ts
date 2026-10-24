@@ -1,6 +1,7 @@
 import { isHostedModelId } from "@rosesfield/catalog/comfy"
 import {
   type AppListing,
+  appliedInputsOf,
   type InputDefinition,
   type Run,
   type startRunBody,
@@ -204,4 +205,11 @@ export function heldProblemsOf(
     (input) => input.type === "seed" || whenHolds(input.when, values.inputs)
   )
   return problemsOf({ ...app, inputs: held }, values)
+}
+
+export function appliedApp(
+  app: AppListing,
+  inputs: Readonly<Record<string, FieldValue>>
+): AppListing {
+  return { ...app, inputs: appliedInputsOf(app, inputs) }
 }

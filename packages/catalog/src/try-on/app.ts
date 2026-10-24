@@ -15,6 +15,7 @@ export const app: AppInput = defineApp({
   id: "try-on",
   nameKey: "tryOn.name",
   category: "image",
+  layout: "bar",
   inputs: [
     {
       type: "image",

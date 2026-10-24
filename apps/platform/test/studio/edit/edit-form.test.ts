@@ -1,8 +1,8 @@
 import type { ModelField } from "@rosesfield/catalog/comfy"
 import { type AppListing, appListing } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
+import { appliedApp } from "@/screens/app/app-form"
 import {
-  appliedApp,
   chipNamesOf,
   extraSlotOf,
   imageSlotsOf,

@@ -56,6 +56,7 @@ export const app: AppInput = defineApp({
   id: "angles",
   nameKey: "angles.name",
   category: "image",
+  layout: "bar",
   inputs: [
     mode,
     {

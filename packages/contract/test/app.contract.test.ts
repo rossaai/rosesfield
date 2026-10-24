@@ -248,3 +248,15 @@ describe("a closed app", () => {
     ])
   })
 })
+
+describe("the layout", () => {
+  it("lays an app out in a column unless it names the bar", () => {
+    expect(appDefinition.parse(sampleApp()).layout).toBe("column")
+    expect(appDefinition.parse({ ...sampleApp(), layout: "bar" }).layout).toBe(
+      "bar"
+    )
+    expect(
+      appDefinition.safeParse({ ...sampleApp(), layout: "grid" }).success
+    ).toBe(false)
+  })
+})

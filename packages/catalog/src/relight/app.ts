@@ -46,6 +46,7 @@ export const app: AppInput = defineApp({
   id: "relight",
   nameKey: "relight.name",
   category: "image",
+  layout: "bar",
   inputs: [
     {
       type: "image",

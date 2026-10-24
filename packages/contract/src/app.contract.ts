@@ -7,6 +7,8 @@ import { adapterKey, aspectRatio, copyKey } from "#value.contract"
 
 export const appCategory = z.enum(["image", "video", "audio", "character"])
 
+export const appLayout = z.enum(["bar", "column"])
+
 const outputCount = z
   .strictObject({
     default: z.number().int().min(1),
@@ -71,6 +73,7 @@ const appFields = z.strictObject({
   id: appId,
   nameKey: copyKey,
   category: appCategory,
+  layout: appLayout.default("column"),
   inputs: z.array(inputDefinition).max(32),
   output: appOutput,
   engine: engineBinding,
@@ -198,6 +201,7 @@ export const appDefinition = appFields.superRefine(checkInputs)
 export const appListing = z.object(appFields.omit({ engine: true }).shape)
 
 export type AppCategory = z.infer<typeof appCategory>
+export type AppLayout = z.infer<typeof appLayout>
 export type AppOutput = z.infer<typeof appOutput>
 export type EngineBinding = z.infer<typeof engineBinding>
 export type AppLimits = z.infer<typeof appLimits>

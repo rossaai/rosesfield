@@ -21,7 +21,12 @@ import { isAssetInput } from "@/catalog/app-facts"
 import { bySettingOrder, settingOf } from "@/catalog/setting-registry"
 import { t, tCatalog } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
-import { aspectField, bodyOf, countField } from "@/screens/app/app-form"
+import {
+  appliedApp,
+  aspectField,
+  bodyOf,
+  countField,
+} from "@/screens/app/app-form"
 import {
   chipChoiceText,
   inputIconOf,
@@ -79,17 +84,19 @@ export function ModelSettings({
   const { form } = state
   return (
     <div className="flex flex-col gap-s4">
-      {settingsInputs(app, chips).map((input) => (
-        <InputField
-          key={input.name}
-          app={app}
-          input={input}
-          value={form.values.inputs[input.name]}
-          problem={form.problems.get(input.name)}
-          onChange={(value) => form.setInput(input.name, value)}
-          register={(focus) => form.register(input.name, focus)}
-        />
-      ))}
+      {settingsInputs(appliedApp(app, form.values.inputs), chips).map(
+        (input) => (
+          <InputField
+            key={input.name}
+            app={app}
+            input={input}
+            value={form.values.inputs[input.name]}
+            problem={form.problems.get(input.name)}
+            onChange={(value) => form.setInput(input.name, value)}
+            register={(focus) => form.register(input.name, focus)}
+          />
+        )
+      )}
       {chips.includes(aspectField) ? null : (
         <AspectField
           app={app}
@@ -137,7 +144,7 @@ export function ModelInputChips({
   chips: readonly string[]
   shown?: (input: InputDefinition) => InputDefinition | null
 }): ReactElement {
-  const inputs = settingsInputs(app, chips)
+  const inputs = settingsInputs(appliedApp(app, form.values.inputs), chips)
     .flatMap((input) => {
       const one = input.name === modelInputName ? null : shown(input)
       return one === null ? [] : [one]

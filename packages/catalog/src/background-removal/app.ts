@@ -11,6 +11,7 @@ export const app: AppInput = defineApp({
   id: "background-removal",
   nameKey: "backgroundRemoval.name",
   category: "image",
+  layout: "bar",
   inputs: [
     {
       type: "image",

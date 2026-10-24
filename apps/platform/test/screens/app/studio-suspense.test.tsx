@@ -1,6 +1,7 @@
 import { cleanup, render } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { StudioShape, studioKindOf } from "@/screens/app/studio-suspense"
+import { editTools } from "@/studio/edit/edit-tools"
 
 afterEach(cleanup)
 
@@ -49,6 +50,12 @@ describe("a studio screen that is still loading", () => {
     expect(all.length).toBeGreaterThan(6)
     for (const shape of all) {
       expect(shape.className.split(" ")).not.toContain("motion-pulse")
+    }
+  })
+
+  it("reads the bar layout from every edit tool's own app", () => {
+    for (const tool of editTools) {
+      expect(studioKindOf(tool.id)).toBe("bar")
     }
   })
 

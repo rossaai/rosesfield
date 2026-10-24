@@ -11,12 +11,14 @@ export {
 export {
   type AppCategory,
   type AppDefinition,
+  type AppLayout,
   type AppLimits,
   type AppListing,
   type AppOutput,
   type AppPreview,
   appCategory,
   appDefinition,
+  appLayout,
   appLimits,
   appListing,
   appOutput,
@@ -78,6 +80,8 @@ export {
   toggleBound,
 } from "#input-condition.contract"
 export {
+  appliedInputsOf,
+  boundedInputOf,
   conditionHolds,
   describeWhen,
   type InputRule,

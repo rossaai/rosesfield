@@ -1,6 +1,7 @@
 import { Skeleton, SkeletonGroup } from "@rosesfield/ui/components/skeleton"
 import { useParams } from "@tanstack/react-router"
 import { type ReactElement, type ReactNode, Suspense } from "react"
+import { findCatalogApp } from "@/catalog/catalog-apps"
 import {
   useAppToolsLoading,
   useAppToolsScreen,
@@ -8,12 +9,9 @@ import {
 } from "@/pieces/app-tools"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import type { StageKind } from "@/screens/app/how-it-works"
-import { toolOf } from "@/studio/edit/edit-tools"
-
-const barStudios: ReadonlySet<string> = new Set(["image", "ads"])
 
 export function studioKindOf(appId: string): StageKind {
-  return barStudios.has(appId) || toolOf(appId) !== null ? "bar" : "column"
+  return findCatalogApp(appId)?.layout ?? "column"
 }
 
 function CanvasShape(): ReactElement {
