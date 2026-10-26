@@ -70,6 +70,10 @@ function CountField({ state }: { state: LayersState }): ReactElement {
   const label = tCatalog("layers.input.count.label")
   const range = countRangeOf(state.app, state.mode)
   const value = layerCountOf(state.app, state.mode, state.form.values)
+  const fallback = Math.min(
+    range.max,
+    Math.max(range.min, state.app.output.count.default)
+  )
   return (
     <FieldFrame
       caption={label}
@@ -79,6 +83,7 @@ function CountField({ state }: { state: LayersState }): ReactElement {
     >
       <NumberStepper
         value={value}
+        fallback={fallback}
         min={range.min}
         max={range.max}
         step={1}

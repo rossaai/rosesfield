@@ -353,3 +353,28 @@ describe("a hosted model's form", () => {
     ).toEqual({ duration: 5, generateAudio: "on", resolution: "480p" })
   })
 })
+
+describe("a hosted text field you leave empty", () => {
+  const voice: ModelField = {
+    kind: "text",
+    name: "voiceId",
+    path: "voice_id",
+    required: true,
+    maxLength: null,
+    default: "alloy",
+  }
+
+  it("sends its default", () => {
+    const body = hostedBody(
+      "maker/voice-1",
+      [voice],
+      valuesWith({ voiceId: "" }),
+      "audio"
+    )
+    expect(body.inputs).toEqual({ model: "maker/voice-1", voiceId: "alloy" })
+  })
+
+  it("is not missing when it has a default", () => {
+    expect(hostedProblems([voice], valuesWith({ voiceId: "" }))).toEqual([])
+  })
+})

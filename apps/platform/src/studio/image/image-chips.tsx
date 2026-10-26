@@ -26,6 +26,7 @@ function FieldCountChip({
   return (
     <StepperChip
       {...bounds}
+      fallback={countBoundsOf(field, undefined).value}
       label={t("field.count.label")}
       icon={chipIconOf("count")}
       shown={tCount("bar.count.image", bounds.value)}

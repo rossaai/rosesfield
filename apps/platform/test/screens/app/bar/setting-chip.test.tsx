@@ -7,6 +7,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
@@ -135,7 +136,9 @@ describe("a number chip's popover", () => {
     expect(popover.parentElement?.getAttribute("style")).toContain("-8px")
     expect(popover.querySelector("input[type='range']")).toBeNull()
     const stepper = screen.getByRole("group", { name: "Length" })
-    expect(stepper.querySelector("output")?.textContent).toBe("5s")
+    const typed = within(stepper).getByRole<HTMLInputElement>("spinbutton")
+    fireEvent.blur(typed)
+    expect(typed.value).toBe("5s")
     fireEvent.click(
       screen.getByRole("button", { name: t("field.number.increase") })
     )

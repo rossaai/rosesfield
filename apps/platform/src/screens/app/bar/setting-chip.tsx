@@ -34,6 +34,7 @@ type StepperChipProps = {
   shown: string
   icon?: ReactNode
   value: number
+  fallback?: number
   min: number
   max: number
   step: number
@@ -98,6 +99,7 @@ export function StepperChip(props: StepperChipProps): ReactElement {
     <PopoverChip label={props.label} icon={props.icon} shown={props.shown}>
       <NumberStepper
         value={props.value}
+        fallback={props.fallback ?? props.value}
         min={props.min}
         max={props.max}
         step={props.step}
