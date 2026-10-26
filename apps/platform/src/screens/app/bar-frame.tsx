@@ -107,7 +107,6 @@ export function BarFrame(props: BarFrameProps): ReactElement {
   const cover = useDockCover()
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <h1 className="sr-only">{appName(props.app)}</h1>
       <div
         ref={cover.stageRef}
         data-slot="bar-stage"

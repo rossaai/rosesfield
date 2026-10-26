@@ -5,7 +5,6 @@ import {
   ComposerToolbar,
 } from "@rosesfield/ui/components/composer"
 import { GenerateButton } from "@rosesfield/ui/components/generate-button"
-import { Separator } from "@rosesfield/ui/components/separator"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { PlusIcon, XIcon } from "lucide-react"
@@ -58,7 +57,7 @@ type PromptBarProps = {
 }
 
 const fieldClass = cn(
-  "mb-s1_5 block max-h-[calc(6*var(--text-body--line-height)+var(--spacing-s1_5))] w-full resize-none overflow-y-auto bg-transparent px-s2 pt-s1_5 text-body text-ink outline-none placeholder:text-ink-muted",
+  "mb-s1_5 block max-h-[calc(6*var(--text-body--line-height)+var(--spacing-s2))] w-full resize-none overflow-y-auto bg-transparent px-s2 pt-s2 text-body text-ink outline-none placeholder:text-ink-muted",
   motion.yield
 )
 
@@ -145,13 +144,51 @@ function SlotAdd({
     <li className="flex shrink-0">
       <IconButton
         label={label}
-        tone="quiet"
-        className="size-thumb rounded-dense bg-(--well) hover:bg-(--tint) in-data-[density=composer]:size-thumb"
+        tone="muted"
+        className="size-thumb rounded-dense bg-(--tint) hover:text-ink in-data-[density=composer]:size-thumb"
         onClick={onAdd}
       >
         <PlusIcon aria-hidden="true" />
       </IconButton>
     </li>
+  )
+}
+
+function SlotGroup({
+  slot,
+  removeLabel,
+  onRemoveAttachment,
+}: {
+  slot: PromptSlot
+  removeLabel: string
+  onRemoveAttachment?: ((id: string) => void) | undefined
+}): ReactElement {
+  return (
+    <section
+      aria-label={slot.label}
+      data-slot="composer-slot"
+      className="flex min-w-0 flex-col gap-s1_5 rounded-cell bg-(--well) p-s2"
+    >
+      <span className="flex min-w-0 gap-s1 text-caption">
+        <span className="truncate text-ink">{slot.label}</span>
+        {slot.note === undefined ? null : (
+          <span className="shrink-0 text-ink-muted">{slot.note}</span>
+        )}
+      </span>
+      <ul className="flex gap-s2 overflow-x-auto">
+        {slot.items.map((attachment) => (
+          <AttachmentThumb
+            key={attachment.id}
+            attachment={attachment}
+            removeLabel={removeLabel}
+            onRemove={onRemoveAttachment}
+          />
+        ))}
+        {slot.onAdd === undefined ? null : (
+          <SlotAdd label={slot.addLabel} onAdd={slot.onAdd} />
+        )}
+      </ul>
+    </section>
   )
 }
 
@@ -164,45 +201,22 @@ function PromptSlots({
     return null
   }
   return (
-    <>
-      <div data-slot="composer-slots" className="flex flex-wrap gap-s4 px-s2">
-        {slots.map((slot) => (
-          <section
-            key={slot.id}
-            aria-label={slot.label}
-            data-slot="composer-slot"
-            className="flex min-w-0 flex-col gap-s1"
-          >
-            <span className="flex gap-s1 text-caption">
-              <span className="text-ink">{slot.label}</span>
-              {slot.note === undefined ? null : (
-                <span className="text-ink-muted">{slot.note}</span>
-              )}
-            </span>
-            <ul className="flex gap-s2 overflow-x-auto">
-              {slot.items.map((attachment) => (
-                <AttachmentThumb
-                  key={attachment.id}
-                  attachment={attachment}
-                  removeLabel={removeLabel}
-                  onRemove={onRemoveAttachment}
-                />
-              ))}
-              {slot.onAdd === undefined ? null : (
-                <SlotAdd label={slot.addLabel} onAdd={slot.onAdd} />
-              )}
-            </ul>
-          </section>
-        ))}
-      </div>
-      <Separator />
-    </>
+    <div data-slot="composer-slots" className="flex flex-wrap gap-s2">
+      {slots.map((slot) => (
+        <SlotGroup
+          key={slot.id}
+          slot={slot}
+          removeLabel={removeLabel}
+          onRemoveAttachment={onRemoveAttachment}
+        />
+      ))}
+    </div>
   )
 }
 
 function Toolbar({ leading, chips }: PromptBarProps): ReactElement {
   return (
-    <ComposerToolbar>
+    <ComposerToolbar className="mt-auto">
       {leading}
       {chips === undefined ? null : <ComposerChips>{chips}</ComposerChips>}
     </ComposerToolbar>
@@ -278,7 +292,7 @@ function PromptBar(props: PromptBarProps): ReactElement {
       {props.tray === undefined ? null : (
         <div data-slot="composer-tray">{props.tray}</div>
       )}
-      <div className="flex items-end gap-s3">
+      <div className="flex gap-s3">
         <div className="flex min-w-0 flex-1 flex-col gap-s2">
           {props.slots === undefined ? (
             <PromptTray {...props} />
@@ -293,6 +307,7 @@ function PromptBar(props: PromptBarProps): ReactElement {
         </div>
         <GenerateButton
           form="tile"
+          className="self-end"
           label={props.submitLabel}
           price={props.submitValue ?? props.price}
           busy={busy}

@@ -13,6 +13,7 @@ import {
   useEffect,
   useState,
 } from "react"
+import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useCanvasFit } from "@/pieces/use-canvas-fit"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
@@ -23,6 +24,7 @@ import {
   useCanvasViewControl,
 } from "@/screens/app/canvas-view"
 import { HowItWorks, type StageKind } from "@/screens/app/how-it-works"
+import { PhoneTitlePortal, ScreenTitle } from "@/shell/screen-header"
 
 export type StageTab = "history" | "how"
 
@@ -85,16 +87,28 @@ type AppStageProps = {
   kind: StageKind
   children: ReactNode
   hasWork?: boolean
+  hasTitle?: boolean
   className?: string
   scrollRef?: (node: HTMLElement | null) => void
   scrollClassName?: string
 }
 
+function StageTitle({ app }: { app: AppListing }): ReactNode {
+  const isRegular = useIsRegularWindow()
+  return isRegular ? (
+    <ScreenTitle title={appName(app)} />
+  ) : (
+    <PhoneTitlePortal title={appName(app)} />
+  )
+}
+
 function StageTabs({
   stage,
+  title,
   view,
 }: {
   stage: ReturnType<typeof useStageTab>
+  title: ReactNode
   view: ReactNode
 }): ReactElement {
   return (
@@ -102,25 +116,31 @@ function StageTabs({
       data-slot="app-stage-tabs"
       className="flex min-w-0 flex-1 items-center justify-between gap-s2"
     >
-      <Tabs
-        value={stage.tab}
-        onValueChange={(next) => {
-          if (isStageTab(next)) {
-            stage.choose(next)
-          }
-        }}
+      <div
+        data-slot="app-stage-lead"
+        className="flex min-w-0 items-center gap-s4"
       >
-        <TabsList aria-label={t("app.canvas.label")}>
-          <TabsTrigger value="history">
-            <FolderIcon aria-hidden="true" />
-            {t("app.tab.history")}
-          </TabsTrigger>
-          <TabsTrigger value="how">
-            <BookOpenIcon aria-hidden="true" />
-            {t("app.tab.how")}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+        {title}
+        <Tabs
+          value={stage.tab}
+          onValueChange={(next) => {
+            if (isStageTab(next)) {
+              stage.choose(next)
+            }
+          }}
+        >
+          <TabsList aria-label={t("app.canvas.label")}>
+            <TabsTrigger value="history">
+              <FolderIcon aria-hidden="true" />
+              {t("app.tab.history")}
+            </TabsTrigger>
+            <TabsTrigger value="how">
+              <BookOpenIcon aria-hidden="true" />
+              {t("app.tab.how")}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
       {view}
     </div>
   )
@@ -148,7 +168,13 @@ export function AppStage(props: AppStageProps): ReactElement {
       cluster={isRegular ? menu : undefined}
       {...(props.className === undefined ? {} : { className: props.className })}
       tabs={
-        <StageTabs stage={stage} view={!isRegular && hasView ? menu : null} />
+        <StageTabs
+          stage={stage}
+          title={
+            props.hasTitle === false ? null : <StageTitle app={props.app} />
+          }
+          view={!isRegular && hasView ? menu : null}
+        />
       }
     >
       <div
