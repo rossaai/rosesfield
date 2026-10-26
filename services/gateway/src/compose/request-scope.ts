@@ -18,6 +18,7 @@ type OwnerScopeOptions = {
   handlers: Handlers
   agent: AgentHarness | null
   settings: Settings
+  hold?: () => () => void
 }
 
 export function ownerScope(options: OwnerScopeOptions): RequestScope {
@@ -35,7 +36,7 @@ export function ownerScope(options: OwnerScopeOptions): RequestScope {
     settings: options.settings,
     keyFor: async (key) => key,
     pollRun,
-    hold: () => () => undefined,
+    hold: options.hold ?? (() => () => undefined),
   }
 }
 

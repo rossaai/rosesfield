@@ -45,13 +45,17 @@ export const conversations: Conversation[] = [
   },
 ]
 
-export function renderAgent(children: () => ReactNode, path = "/agent"): void {
+export function renderAgent(
+  children: () => ReactNode,
+  path = "/agent",
+  shown: GatewaySettings = settings
+): void {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, staleTime: Number.POSITIVE_INFINITY },
     },
   })
-  client.setQueryData(settingsQuery.queryKey, settings)
+  client.setQueryData(settingsQuery.queryKey, shown)
   client.setQueryData(agentModelsQuery.queryKey, {
     models: ["deepseek/deepseek-v4-flash", "qwen/qwen3.6-flash"],
     model: "deepseek/deepseek-v4-flash",

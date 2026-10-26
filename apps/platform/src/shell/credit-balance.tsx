@@ -4,8 +4,8 @@ import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { useQuery } from "@tanstack/react-query"
 import { CoinsIcon, KeyRoundIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useEffect } from "react"
+import { useKeyReach } from "@/api/key-reach"
 import { settingsQuery } from "@/api/queries"
-import { useHasVisitorKey } from "@/api/visitor-keys"
 import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { type Account, accountQuery } from "@/screens/settings/account-query"
@@ -58,7 +58,7 @@ function CompactKey({
 
 export function CreditBalance(): ReactNode {
   const settings = useQuery(settingsQuery).data
-  const hasKey = useHasVisitorKey("engine")
+  const reach = useKeyReach()
   const account = useQuery({ ...accountQuery, enabled: settings !== undefined })
   const openKey = useOpenKeyDialog()
   const openCredits = useOpenCredits()
@@ -67,7 +67,7 @@ export function CreditBalance(): ReactNode {
   if (settings === undefined) {
     return <BalanceSkeleton />
   }
-  if (settings.keyFrom === "settings" && !hasKey) {
+  if (reach === "add") {
     return (
       <>
         <CompactKey label={t("key.add")} onPress={openKey} />

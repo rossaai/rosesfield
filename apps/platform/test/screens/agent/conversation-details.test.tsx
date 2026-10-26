@@ -6,7 +6,7 @@ import { NoModel } from "@/screens/agent/agent-parts"
 import { TranscriptItems } from "@/screens/agent/conversation-messages"
 import { shownTitleOf } from "@/screens/agent/conversation-screen"
 import { KeyDialogProvider } from "@/shell/key-dialog-context"
-import { renderAgent } from "./agent-screen-render"
+import { renderAgent, settings } from "./agent-screen-render"
 
 afterEach(() => {
   cleanup()
@@ -88,11 +88,15 @@ describe("the person's message", () => {
 describe("the no-key notice", () => {
   it("opens the key dialog from its action, named Add your Comfy key, with no route change", async () => {
     vi.stubGlobal("fetch", () => new Promise(() => undefined))
-    renderAgent(() => (
-      <KeyDialogProvider>
-        <NoModel />
-      </KeyDialogProvider>
-    ))
+    renderAgent(
+      () => (
+        <KeyDialogProvider>
+          <NoModel />
+        </KeyDialogProvider>
+      ),
+      "/agent",
+      { ...settings, keyFrom: "settings" }
+    )
     const action = await screen.findByRole("button", { name: t("key.add") })
     expect(action.closest("a")).toBeNull()
     fireEvent.click(action)

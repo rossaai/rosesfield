@@ -7,6 +7,7 @@ import {
   startConversation,
   type Transcript,
 } from "@/api/conversation-wire"
+import { useKeyReach } from "@/api/key-reach"
 import { wordsForError } from "@/copy/error-words"
 import { t } from "@/copy/t"
 import { useDraft } from "@/pieces/use-draft"
@@ -18,7 +19,7 @@ import {
   noteAgentModel,
   useAgentModel,
 } from "@/screens/agent/agent-model"
-import { ComposerSlot } from "@/screens/agent/agent-parts"
+import { asksForKey, ComposerSlot } from "@/screens/agent/agent-parts"
 import {
   conversationsQuery,
   transcriptKey,
@@ -63,6 +64,7 @@ export function AgentStartScreen(): ReactElement {
   const start = useStartConversation()
   const model = useAgentModel()
   const openKey = useOpenKeyDialog()
+  const reach = useKeyReach()
   const [approval, setApproval] = useState<RunApproval>("ask")
   const send = (): void => {
     if (state.draft.prompt.trim() !== "") {
@@ -94,7 +96,7 @@ export function AgentStartScreen(): ReactElement {
               isStarting={start.isPending}
               approval={approval}
               onApprovalChange={setApproval}
-              onSend={model === "missing" ? openKey : send}
+              onSend={asksForKey(model, reach) ? openKey : send}
               onStop={() => undefined}
             />
           </ComposerSlot>

@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { type ReactElement, useState } from "react"
 import type { GatewaySettings } from "@/api/gateway-settings"
+import { type KeyReach, useKeyReach } from "@/api/key-reach"
 import { forgetOwnerToken, readOwnerToken } from "@/api/owner-token"
 import { t } from "@/copy/t"
 import { RetentionRow, targetsLink } from "@/screens/settings/engine-pane"
@@ -36,9 +37,9 @@ const sourceLink = "https://github.com/rossaai/rosesfield"
 const licencesLink = `${sourceLink}/blob/main/docs/models.md`
 const agentLink = `${sourceLink}/blob/main/docs/stack.md#the-agents-model`
 
-function agentStatus(settings: GatewaySettings): string {
+function agentStatus(settings: GatewaySettings, reach: KeyReach): string {
   if (settings.agent !== "set") {
-    return settings.mode === "public"
+    return reach === "add"
       ? t("settings.agent.status.needsKey")
       : t("settings.agent.status.missing")
   }
@@ -46,12 +47,16 @@ function agentStatus(settings: GatewaySettings): string {
 }
 
 function AgentRows({ settings }: { settings: GatewaySettings }): ReactElement {
+  const reach = useKeyReach()
   const model = settings.agent === "set" ? settings.agentModel : null
   return (
     <>
       <SettingsGroup label={t("settings.agent.model")}>
         {model === null ? (
-          <SettingsRow icon={<BotIcon />} label={agentStatus(settings)} />
+          <SettingsRow
+            icon={<BotIcon />}
+            label={agentStatus(settings, reach)}
+          />
         ) : (
           <SettingsRow
             icon={<BotIcon />}

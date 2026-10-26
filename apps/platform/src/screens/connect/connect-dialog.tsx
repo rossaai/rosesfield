@@ -9,8 +9,8 @@ import { useQuery } from "@tanstack/react-query"
 import { CopyIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import type { GatewaySettings } from "@/api/gateway-settings"
+import { useKeyReach } from "@/api/key-reach"
 import { settingsQuery } from "@/api/queries"
-import { useHasVisitorKey } from "@/api/visitor-keys"
 import { catalogApps } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import type { CopyKey } from "@/copy.en"
@@ -229,8 +229,7 @@ function CopyStep(
 
 export function ConnectDialog(props: ConnectDialogProps): ReactElement {
   const settings = useQuery(settingsQuery).data
-  const hasKey = useHasVisitorKey("engine")
-  const needsKey = settings?.keyFrom === "settings" && !hasKey
+  const needsKey = useKeyReach() === "add"
   return (
     <DialogOrSheet
       open={props.open}
