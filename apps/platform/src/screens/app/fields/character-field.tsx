@@ -5,6 +5,7 @@ import { XIcon } from "lucide-react"
 import { type ReactElement, useEffect, useRef, useState } from "react"
 import { characterQuery } from "@/api/queries"
 import type { CharacterInput } from "@/catalog/app-facts"
+import { settingTipOf } from "@/catalog/setting-registry"
 import { t } from "@/copy/t"
 import { CharacterAvatar } from "@/pieces/character-avatar"
 import { CharacterPicker } from "@/pieces/character-picker"
@@ -54,6 +55,7 @@ export function CharacterField(
   return (
     <FieldFrame
       caption={inputCaption(input)}
+      hint={settingTipOf(input.name)}
       isOptional={isOptionalInput(input)}
       note={null}
       problem={props.problem}

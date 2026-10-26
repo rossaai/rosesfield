@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { settingTipOf } from "@/catalog/setting-registry"
 import { tCatalog } from "@/copy/t"
 import { DropWell } from "@/pieces/drop-well"
 import { aspectField } from "@/screens/app/app-form"
@@ -145,6 +146,7 @@ function FormatField({
   return (
     <FieldFrame
       caption={inputCaption(input)}
+      hint={settingTipOf(input.name)}
       isOptional={false}
       note={null}
       problem={undefined}

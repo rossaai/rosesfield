@@ -9,7 +9,8 @@ import {
   StepperChip,
   SwitchChip,
 } from "@/screens/app/bar/setting-chip"
-import { fieldCaption } from "@/screens/app/hosted/field-words"
+import { SettingHint } from "@/screens/app/fields/field-frame"
+import { fieldCaption, fieldTipOf } from "@/screens/app/hosted/field-words"
 import { HostedField } from "@/screens/app/hosted/hosted-fields"
 import {
   booleanPairOf,
@@ -71,6 +72,9 @@ export function FieldChoiceChip({
       }
       onValueChange={choose}
       options={items}
+      hint={
+        <SettingHint setting={fieldCaption(field)} text={fieldTipOf(field)} />
+      }
     />
   )
 }
@@ -128,6 +132,7 @@ export function ModelFieldChip({
       return (
         <StepperChip
           label={label}
+          hint={fieldTipOf(field)}
           icon={icon}
           shown={fieldValueText(field, chosen)}
           value={chosen}

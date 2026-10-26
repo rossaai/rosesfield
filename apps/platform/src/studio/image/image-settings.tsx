@@ -1,6 +1,6 @@
 import type { AppListing } from "@rosesfield/contract"
 import type { ReactElement } from "react"
-import { settingIconOf } from "@/catalog/setting-registry"
+import { settingIconOf, settingTipOf } from "@/catalog/setting-registry"
 import { t } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
@@ -37,6 +37,7 @@ function HostedCountField({
   return (
     <FieldFrame
       caption={t("field.count.label")}
+      hint={settingTipOf(count.name)}
       isOptional={false}
       note={null}
       problem={form.problems.get(count.name)}

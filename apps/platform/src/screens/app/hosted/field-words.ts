@@ -1,7 +1,12 @@
-import type { ModelField } from "@rosesfield/catalog/comfy"
+import { fieldRoleOf, type ModelField } from "@rosesfield/catalog/comfy"
+import { roleTipOf, settingTipOf } from "@/catalog/setting-registry"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import type { CopyKey } from "@/copy.en"
-import { fieldPlaceOf, type NormalSetting } from "@/screens/app/setting-table"
+import {
+  fieldPlaceOf,
+  isTableField,
+  type NormalSetting,
+} from "@/screens/app/setting-table"
 
 const normalCaptions: Partial<Record<NormalSetting, CopyKey>> = {
   format: "field.aspect.label",
@@ -74,4 +79,20 @@ export function fieldCaption(field: ModelField): string {
   return hasCatalogText(key)
     ? tCatalog(key)
     : t("model.field.other", { name: wordsOfPath(field.path) })
+}
+
+function ownTipOf(field: ModelField): string | null {
+  const place = fieldPlaceOf(field)
+  if (place.kind === "show" && normalCaptions[place.setting] !== undefined) {
+    return settingTipOf(place.setting)
+  }
+  return (
+    (isTableField(field) ? settingTipOf(field.name) : null) ??
+    roleTipOf(fieldRoleOf(field, ""))
+  )
+}
+
+/** Gives the words that explain a model's field: Rosesfield's own for the setting it shows as, else the description the model's form publishes, else null. */
+export function fieldTipOf(field: ModelField): string | null {
+  return ownTipOf(field) ?? field.description ?? null
 }

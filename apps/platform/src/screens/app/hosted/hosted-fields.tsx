@@ -15,7 +15,7 @@ import { listOf, textOf } from "@/screens/app/fields/field-props"
 import { promptPlaceholderOf } from "@/screens/app/fields/input-copy"
 import { AdvancedSection } from "@/screens/app/fields/setting-rows"
 import { SwitchRow } from "@/screens/app/fields/toggle-field"
-import { fieldCaption } from "@/screens/app/hosted/field-words"
+import { fieldCaption, fieldTipOf } from "@/screens/app/hosted/field-words"
 import {
   controlOf,
   fieldOptionsOf,
@@ -55,6 +55,7 @@ function Frame({
   return (
     <FieldFrame
       caption={fieldCaption(field)}
+      hint={fieldTipOf(field)}
       isOptional={false}
       note={null}
       problem={form.problems.get(field.name)}
@@ -152,6 +153,7 @@ function SwitchControl({ field, value, form }: FieldProps): ReactElement {
   return (
     <SwitchRow
       label={fieldCaption(field)}
+      hint={fieldTipOf(field)}
       checked={value === "on"}
       onCheckedChange={(checked) =>
         form.setInput(field.name, checked ? "on" : "off")
@@ -177,6 +179,7 @@ function ChoiceControlField({
       setting={field.name}
       role={fieldRoleOf(field, choiceOutput)}
       note={null}
+      hint={fieldTipOf(field)}
       problem={form.problems.get(field.name)}
       onChange={(next) => {
         const option = field.options.find((one) => String(one) === next)
@@ -194,6 +197,7 @@ function MediaControl({ field, value, form }: FieldProps): ReactElement | null {
   return (
     <FieldFrame
       caption={fieldCaption(field)}
+      hint={fieldTipOf(field)}
       isOptional={!field.required}
       note={null}
       problem={form.problems.get(field.name)}

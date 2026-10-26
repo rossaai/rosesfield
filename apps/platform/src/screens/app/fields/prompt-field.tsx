@@ -2,6 +2,7 @@ import type { InputDefinition } from "@rosesfield/contract"
 import { Textarea } from "@rosesfield/ui/components/textarea"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { type ReactElement, useEffect, useRef } from "react"
+import { settingTipOf } from "@/catalog/setting-registry"
 import { t } from "@/copy/t"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { type InputFieldProps, textOf } from "@/screens/app/fields/field-props"
@@ -30,6 +31,7 @@ export function PromptField(props: InputFieldProps<PromptInput>): ReactElement {
   return (
     <FieldFrame
       caption={inputCaption(input)}
+      hint={settingTipOf(input.name)}
       isOptional={isOptionalInput(input)}
       note={null}
       problem={props.problem}

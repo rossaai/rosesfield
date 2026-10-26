@@ -16,6 +16,7 @@ const fieldBase = {
     .max(40),
   path: z.string().min(1).max(200),
   required: z.boolean(),
+  description: z.string().min(1).max(300).exactOptional(),
 }
 
 const scalar = z.union([z.string().max(200), z.number()])
