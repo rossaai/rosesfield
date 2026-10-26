@@ -2,27 +2,41 @@ import { Accordion } from "@base-ui/react/accordion"
 import { takesPhotoAndPrompt } from "@rosesfield/catalog/characters"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { IconButton } from "@rosesfield/ui/components/button"
+import { Field as Field_, FieldNote } from "@rosesfield/ui/components/field"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { ChevronDownIcon, ShuffleIcon } from "lucide-react"
-import type { ReactElement } from "react"
+import type { ReactElement, ReactNode } from "react"
 import { t, tCatalog, tCount } from "@/copy/t"
 import type { CopyKey } from "@/copy.en"
+import { aspectField } from "@/screens/app/app-form"
+import { AppModelPicker } from "@/screens/app/bar/model-settings"
 import { ChoiceField } from "@/screens/app/fields/choice-field"
 import { textOf } from "@/screens/app/fields/field-props"
 import { inputCaption, inputNote } from "@/screens/app/fields/input-copy"
 import { InputField } from "@/screens/app/fields/input-field"
-import { AspectField, CountField } from "@/screens/app/fields/output-fields"
+import { CountField } from "@/screens/app/fields/output-fields"
+import {
+  AdvancedSection,
+  AppSettingRow,
+  settingId,
+} from "@/screens/app/fields/setting-rows"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { modelInputName } from "@/screens/app/hosted/hosted-form"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
-import { AdvancedFields } from "@/screens/app/inputs-panel"
+import {
+  type AppSetting,
+  appSettingsPlan,
+  isSettingInput,
+} from "@/screens/app/settings-plan"
 import type { AppForm } from "@/screens/app/use-app-form"
 import {
   countInput,
   isPanelInput,
   isTrait,
+  modeField,
   randomTraits,
+  viewInput,
 } from "@/studio/characters/mode-listing"
 import { imageFieldsOf } from "@/studio/image/image-fields"
 import { HostedPanel } from "@/studio/image/image-settings"
@@ -189,11 +203,73 @@ function hasCatalogPicker(hosted: HostedState | undefined): boolean {
   return hosted !== undefined && (hosted.isTaskApp || hosted.models.length > 0)
 }
 
-function isWordsInput(input: InputDefinition, hasPicker: boolean): boolean {
+function isWordsInput(input: InputDefinition): boolean {
   return (
     isPanelInput(input) &&
     !isTrait(input) &&
-    !(hasPicker && input.name === modelInputName)
+    !isSettingInput(input) &&
+    input.name !== modelInputName
+  )
+}
+
+function placedOf(app: AppListing): string[] {
+  return [modeField, viewInput, ...app.inputs.filter(isTrait).map(nameOf)]
+}
+
+const hostedOwned: readonly string[] = [aspectField, countInput, "seed"]
+
+function nameOf(input: InputDefinition): string {
+  return input.name
+}
+
+function SettingRows({
+  settings,
+  ...props
+}: PanelProps & { settings: readonly AppSetting[] }): ReactNode {
+  const { app, form } = props
+  return settings.map((setting) => {
+    if (setting.kind === "input" && setting.input.name === countInput) {
+      return null
+    }
+    return setting.kind === "count" ? (
+      <CountField
+        key={settingId(setting)}
+        app={app}
+        value={form.values.count}
+        onChange={(count) => {
+          form.setInput(countInput, String(count))
+          form.setForm({ count })
+        }}
+      />
+    ) : (
+      <AppSettingRow key={settingId(setting)} {...props} setting={setting} />
+    )
+  })
+}
+
+function GraphSettings(props: PanelProps): ReactElement {
+  const plan = appSettingsPlan(props.app, placedOf(props.app))
+  return (
+    <>
+      <SettingRows {...props} settings={plan.main} />
+      {plan.advanced.length === 0 ? null : (
+        <AdvancedSection>
+          <SettingRows {...props} settings={plan.advanced} />
+        </AdvancedSection>
+      )}
+    </>
+  )
+}
+
+function ModelChip({
+  app,
+  form,
+  hosted,
+}: PanelProps & { hosted?: HostedState | undefined }): ReactElement | null {
+  return hosted !== undefined && hasCatalogPicker(hosted) ? (
+    <CatalogPicker hosted={hosted} place="row" />
+  ) : (
+    <AppModelPicker app={app} form={form} place="row" />
   )
 }
 
@@ -202,49 +278,36 @@ export function TraitsPanel(
 ): ReactElement {
   const { app, form, hosted } = props
   const traits = app.inputs.filter(isTrait).filter(isChoice)
-  const hasPicker = hasCatalogPicker(hosted)
-  const rest = app.inputs.filter((one) => isWordsInput(one, hasPicker))
+  const words = app.inputs.filter(isWordsInput)
   const fields = hosted?.fields ?? null
   return (
     <div className="flex flex-col gap-s4">
       <TraitGroups app={app} form={form} traits={traits} />
-      {rest.map((input) => (
+      {words.map((input) => (
         <Field key={input.name} {...props} input={input} />
       ))}
-      {hosted === undefined || !hasPicker ? null : fields === null ? (
-        <CatalogPicker hosted={hosted} place="row" />
+      {hosted === undefined || fields === null ? (
+        <>
+          <ModelChip {...props} />
+          <GraphSettings {...props} />
+        </>
       ) : (
-        <HostedPanel
-          app={app}
-          hosted={hosted}
-          fields={imageFieldsOf(fields)}
-          form={form}
-        />
+        <>
+          <HostedPanel
+            app={app}
+            hosted={hosted}
+            fields={imageFieldsOf(fields)}
+            form={form}
+          />
+          <SettingRows
+            {...props}
+            settings={
+              appSettingsPlan(app, [...placedOf(app), ...hostedOwned]).main
+            }
+          />
+        </>
       )}
-      {fields === null ? <GraphOutputFields {...props} /> : null}
     </div>
-  )
-}
-
-function GraphOutputFields(props: PanelProps): ReactElement {
-  const { app, form } = props
-  return (
-    <>
-      <AspectField
-        app={app}
-        value={form.values.aspectRatio}
-        onChange={(aspectRatio) => form.setForm({ aspectRatio })}
-      />
-      <CountField
-        app={app}
-        value={form.values.count}
-        onChange={(count) => {
-          form.setInput(countInput, String(count))
-          form.setForm({ count })
-        }}
-      />
-      <AdvancedFields {...props} />
-    </>
   )
 }
 
@@ -258,28 +321,18 @@ function noPhotoNoteOf(hosted: HostedState | undefined): string | null {
 export function AnglesPanel(
   props: PanelProps & { hosted?: HostedState | undefined }
 ): ReactElement {
-  const { app, form, hosted } = props
-  const noPhoto = noPhotoNoteOf(hosted)
+  const { app } = props
+  const noPhoto = noPhotoNoteOf(props.hosted)
   return (
     <div className="flex flex-col gap-s4">
-      {app.inputs
-        .filter(isPanelInput)
-        .map((input) =>
-          noPhoto !== null &&
-          input.name === modelInputName &&
-          isChoice(input) ? (
-            <ChoiceRow
-              key={input.name}
-              app={app}
-              input={input}
-              form={form}
-              note={noPhoto}
-            />
-          ) : (
-            <Field key={input.name} {...props} input={input} />
-          )
-        )}
-      <AdvancedFields {...props} />
+      {app.inputs.filter(isWordsInput).map((input) => (
+        <Field key={input.name} {...props} input={input} />
+      ))}
+      <Field_ className="max-w-none">
+        <AppModelPicker app={app} form={props.form} place="row" />
+        {noPhoto === null ? null : <FieldNote>{noPhoto}</FieldNote>}
+      </Field_>
+      <GraphSettings {...props} />
     </div>
   )
 }
