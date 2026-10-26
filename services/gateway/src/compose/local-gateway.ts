@@ -25,7 +25,7 @@ import {
 import { type BunSQLiteDatabase, drizzle } from "drizzle-orm/bun-sqlite"
 import type { MiddlewareHandler } from "hono"
 import { getConnInfo } from "hono/bun"
-import { localAgent } from "#agent/local-agent"
+import { localAgent, pastedKeyAgent } from "#agent/local-agent"
 import { SessionAgents } from "#agent/session-agents"
 import { type Built, buildHandlers, type Handlers } from "#build-handlers"
 import { sharedCreditMeter } from "#catalog/shared-credit-meter"
@@ -208,6 +208,7 @@ function ownerKeys(parts: Parts): OwnerKeys {
     )
   const pasted = new PastedKeys({
     vars: parts.env,
+    agent: pastedKeyAgent({ ...parts, modelOptions: modelOptionsOf(parts) }),
     build: (key) =>
       ownerHandlers(
         parts,
@@ -290,8 +291,7 @@ function composeOwner(
     }),
     close: async () => {
       jobs.stop()
-      pasted?.stop()
-      await agent?.close()
+      await Promise.all([pasted?.stop(), agent?.close()])
     },
   }
 }

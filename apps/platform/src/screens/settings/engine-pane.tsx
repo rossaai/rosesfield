@@ -16,7 +16,8 @@ import {
 import { type ReactElement, type ReactNode, useState } from "react"
 import { checkEngineKey, liveCheckOf } from "@/api/engine-checks"
 import type { EngineTarget, GatewaySettings } from "@/api/gateway-settings"
-import { forgetVisitorKey, useHasVisitorKey } from "@/api/visitor-keys"
+import { useKeyReach } from "@/api/key-reach"
+import { forgetVisitorKey } from "@/api/visitor-keys"
 import { formatAmount } from "@/copy/format"
 import { t, tCount } from "@/copy/t"
 import { noteAgentModel } from "@/screens/agent/agent-model"
@@ -173,7 +174,7 @@ function ServerEngine({
 
 function VisitorKey(): ReactElement {
   const client = useQueryClient()
-  const hasKey = useHasVisitorKey("engine")
+  const hasKey = useKeyReach() === "held"
   const status = useQuery(accountQuery).data?.key ?? null
   const [isAdding, setAdding] = useState(false)
   const forget = (): void => {

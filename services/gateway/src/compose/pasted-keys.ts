@@ -1,4 +1,5 @@
 import type { TimerJobRunner } from "@rosesfield/generation"
+import type { KeyedAgent } from "#agent/keyed-agent"
 import type { Built } from "#build-handlers"
 import { ownerScope } from "#compose/request-scope"
 import { visitorSettings } from "#compose/settings"
@@ -11,6 +12,7 @@ import { readVisitorKeys } from "#session/visitor-keys"
 type PastedKeysOptions = {
   vars: WorkerVars
   build: (key: string) => Built<TimerJobRunner>
+  agent: KeyedAgent | null
 }
 
 export class PastedKeys {
@@ -22,12 +24,14 @@ export class PastedKeys {
 
   private readonly vars: WorkerVars
   private readonly build: (key: string) => Built<TimerJobRunner>
+  private readonly agent: KeyedAgent | null
   private readonly built = new Map<string, Built<TimerJobRunner>>()
   private resume: "due" | "done" = "due"
 
   constructor(options: PastedKeysOptions) {
     this.vars = options.vars
     this.build = options.build
+    this.agent = options.agent
   }
 
   scopeFor(
@@ -39,14 +43,22 @@ export class PastedKeys {
         return keyless
       }
       const { handlers } = await this.handlersOf(key)
+      const { agent } = this
       return ownerScope({
         handlers,
-        agent: null,
+        agent: agent?.agent ?? null,
         settings: visitorSettings(
-          { ...this.vars, engine: PastedKeys.engine },
+          {
+            ...this.vars,
+            engine: PastedKeys.engine,
+            agent: agent?.model ?? null,
+          },
           { engine: key },
           "bun"
         ),
+        ...(agent === null
+          ? {}
+          : { hold: () => agent.hold({ handlers, modelKey: key }) }),
       })
     }
   }
@@ -65,10 +77,11 @@ export class PastedKeys {
     return made
   }
 
-  stop(): void {
+  async stop(): Promise<void> {
     for (const { jobs } of this.built.values()) {
       jobs.stop()
     }
     this.built.clear()
+    await this.agent?.close()
   }
 }

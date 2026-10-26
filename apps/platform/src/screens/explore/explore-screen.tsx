@@ -2,11 +2,9 @@ import { Button } from "@rosesfield/ui/components/button"
 import { MediaFeed } from "@rosesfield/ui/components/media-feed"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
-import { useQuery } from "@tanstack/react-query"
 import { useNavigate, useRouter } from "@tanstack/react-router"
 import type { ReactElement, ReactNode } from "react"
-import { settingsQuery } from "@/api/queries"
-import { useHasVisitorKey } from "@/api/visitor-keys"
+import { useKeyReach } from "@/api/key-reach"
 import { t } from "@/copy/t"
 import {
   type ExploreEntries,
@@ -33,9 +31,7 @@ const skeletonRatios: readonly string[] = ["9 / 16", "16 / 9", "4 / 5"]
 const skeletonCount = 12
 
 function useNeedsKey(): boolean {
-  const settings = useQuery(settingsQuery).data
-  const hasKey = useHasVisitorKey("engine")
-  return settings?.mode === "public" && !hasKey
+  return useKeyReach() === "add"
 }
 
 function LoadingFeed(): ReactElement {

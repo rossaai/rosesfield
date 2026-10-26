@@ -121,7 +121,8 @@ A public host, such as rosesfield.com, runs in public mode. Strangers use it, so
 - The key stays in your browser and goes to the gateway with each request, in a header, never in a URL. The gateway hands it to the engine adapter for that one call and then drops it. It never writes the key to the database, a log, an error, a run record or the asset store.
 - **Your work stays 30 days after your last visit.** Each visit moves the date. Once an hour the host deletes the runs, assets, characters and conversations of every account whose last visit is older, and every shared result older than 90 days.
 - The run watcher reads the engine only inside a request, because only a request carries the key. A run moves forward while your page polls it.
-- The agent follows the same rule: it runs on the key you bring, or it is off.
+- The agent follows the same rule: it runs on the key you bring, or it is off. A key pasted in Settings on your own machine turns on the agent as well as the apps.
+- **One answer says whether this browser runs on a key.** Every screen that asks for a key reads `useKeyReach` in `apps/platform/src/api/key-reach.ts`, so no screen asks you to add a key the browser already holds. Biome refuses any other screen that reads the stored key itself.
 - The deployment refuses to start with `COMFY_API_KEY` or `OWNER_TOKEN` set, with an error that names the setting.
 - The owner lock guards the owner's key. Public mode holds none, so it runs without an owner token.
 

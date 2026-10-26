@@ -4,8 +4,8 @@ import { useQuery } from "@tanstack/react-query"
 import { CreditCardIcon, FlaskConicalIcon, KeyRoundIcon } from "lucide-react"
 import type { ReactElement } from "react"
 import type { GatewaySettings } from "@/api/gateway-settings"
+import { type KeyReach, useKeyReach } from "@/api/key-reach"
 import { settingsQuery } from "@/api/queries"
-import { useHasVisitorKey } from "@/api/visitor-keys"
 import { t } from "@/copy/t"
 import { DialogOrSheet } from "@/pieces/responsive-layer"
 import { comfyBillingPage } from "@/screens/app/hosted/model-notice"
@@ -16,18 +16,20 @@ import {
   SettingsRow,
 } from "@/screens/settings/settings-row"
 
-function keyState(settings: GatewaySettings, hasKey: boolean): string {
-  if (settings.keyFrom === "settings") {
-    return hasKey ? t("key.kept") : t("settings.engine.status.missing")
+function keyState(settings: GatewaySettings, reach: KeyReach): string {
+  switch (reach) {
+    case "held":
+      return t("key.kept")
+    case "add":
+      return t("settings.engine.status.missing")
+    default:
+      return statusText(settings.engine, null)
   }
-  return statusText(settings.engine, null)
 }
 
 function CreditRows({ settings }: { settings: GatewaySettings }): ReactElement {
-  const hasKey = useHasVisitorKey("engine")
-  const isDemo =
-    settings.engine.origin === "demo" &&
-    !(settings.keyFrom === "settings" && hasKey)
+  const reach = useKeyReach()
+  const isDemo = settings.engine.origin === "demo" && reach !== "held"
   return (
     <SettingsGroup>
       {isDemo ? (
@@ -40,7 +42,7 @@ function CreditRows({ settings }: { settings: GatewaySettings }): ReactElement {
       <SettingsRow
         icon={<KeyRoundIcon />}
         label={t("settings.engine.key")}
-        value={keyState(settings, hasKey)}
+        value={keyState(settings, reach)}
       />
       <SettingsLinkRow
         icon={<CreditCardIcon />}

@@ -6,10 +6,12 @@ import {
   type PiAgentHarness,
   type RunWait,
   routerAgentHarness,
+  routerAgentModel,
 } from "@rosesfield/agent"
 import { openSqliteFileStorage } from "@rosesfield/agent/local"
 import type { AppDefinition } from "@rosesfield/contract"
 import type { Clock } from "@rosesfield/kernel"
+import { KeyedAgent } from "#agent/keyed-agent"
 
 type LocalAgentOptions = {
   model: AgentModel | null
@@ -37,5 +39,22 @@ export function localAgent(options: LocalAgentOptions): PiAgentHarness | null {
     handlers: () => handlers,
     clock: options.clock,
     ...(options.wait === undefined ? {} : { wait: options.wait }),
+  })
+}
+
+type PastedKeyAgentOptions = {
+  env: { dataDir: string }
+  apps: readonly AppDefinition[]
+  clock: Clock
+  modelOptions: OpenPiModelsOptions
+}
+
+export function pastedKeyAgent(options: PastedKeyAgentOptions): KeyedAgent {
+  return new KeyedAgent({
+    model: routerAgentModel(null),
+    file: join(options.env.dataDir, agentFileName),
+    apps: options.apps,
+    clock: options.clock,
+    modelOptions: options.modelOptions,
   })
 }
