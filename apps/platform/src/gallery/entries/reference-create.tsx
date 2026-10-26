@@ -160,16 +160,18 @@ function Column(): ReactElement {
             className="min-h-0 flex-1 resize-none bg-transparent text-body text-ink outline-none placeholder:text-ink-muted"
           />
         </PromptBlock>
-        <ModelChip name={t("sample.model")} mark={mark} width="full" />
-        {videoApp === undefined ? null : (
-          <VideoSettings
-            app={videoApp}
-            form={sampleForm}
-            fields={null}
-            lastSeed={null}
-            placed={[]}
-          />
-        )}
+        <div className="flex flex-col gap-s4">
+          <ModelChip name={t("sample.model")} mark={mark} width="full" />
+          {videoApp === undefined ? null : (
+            <VideoSettings
+              app={videoApp}
+              form={sampleForm}
+              fields={null}
+              lastSeed={null}
+              placed={[]}
+            />
+          )}
+        </div>
       </InputPanel>
     </div>
   )

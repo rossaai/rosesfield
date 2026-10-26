@@ -1,7 +1,6 @@
 import {
   ModelChip,
   ModelChipSkeleton,
-  ModelRowTrigger,
 } from "@rosesfield/ui/components/model-trigger"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -88,20 +87,5 @@ describe("ModelChipSkeleton", () => {
       ...container.querySelectorAll("[data-slot='skeleton']"),
     ].map((one) => one.getAttribute("data-shape"))
     expect(shapes).toEqual(["circle", "line"])
-  })
-})
-
-describe("ModelRowTrigger", () => {
-  it("is one 36 px row: the label at the start and the 26 px trigger as its value", () => {
-    render(<ModelRowTrigger caption="Model" name="Clip 3" mark={<svg />} />)
-    const trigger = screen.getByRole("button", { name: /Clip 3/ })
-    const row = trigger.parentElement
-    expect(row?.getAttribute("data-slot")).toBe("model-row-field")
-    expect(row?.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-button", "justify-between"])
-    )
-    expect(row?.firstElementChild?.textContent).toBe("Model")
-    expect(trigger.className.split(" ")).toContain("h-button-small")
-    expect(trigger.textContent).toBe("Clip 3")
   })
 })

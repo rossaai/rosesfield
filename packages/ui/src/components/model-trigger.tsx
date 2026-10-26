@@ -92,20 +92,5 @@ function ModelChipSkeleton({
   )
 }
 
-function ModelRowTrigger({
-  caption,
-  ...props
-}: ModelTriggerProps & { caption: string }): ReactElement {
-  return (
-    <div
-      data-slot="model-row-field"
-      className="flex h-button min-w-0 items-center justify-between gap-s3 ps-s3 pe-s1_5"
-    >
-      <span className="shrink-0 text-body text-ink">{caption}</span>
-      <ModelChip {...props} />
-    </div>
-  )
-}
-
 export type { ModelChipWidth, ModelTriggerProps }
-export { ModelChip, ModelChipSkeleton, ModelRowTrigger }
+export { ModelChip, ModelChipSkeleton }
