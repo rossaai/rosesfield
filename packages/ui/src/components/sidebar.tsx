@@ -54,21 +54,31 @@ function useSidebar(): SidebarState {
   return useContext(SidebarContext)
 }
 
-const railInset = "px-[calc((var(--spacing-rail)-var(--spacing-icon))/2)]"
+const railInset =
+  "px-[calc((var(--spacing-rail)-var(--spacing-icon))/2)] in-data-[variant=inset]:px-4"
+
+type SidebarVariant = "flush" | "inset"
+
+type SidebarProps = ComponentProps<"aside"> & {
+  variant?: SidebarVariant
+}
 
 function Sidebar({
+  variant = "flush",
   className,
   ...props
-}: ComponentProps<"aside">): ReactElement {
+}: SidebarProps): ReactElement {
   const { width, mode } = useSidebar()
   return (
     <aside
       data-slot="sidebar"
       data-ground="surface"
       data-width={width}
+      data-variant={variant}
       className={cn(
         "flex h-full min-h-0 shrink-0 flex-col bg-surface text-ink",
         mode === "sheet" ? "w-full" : width === "rail" ? "w-rail" : "w-sidebar",
+        variant === "inset" ? "overflow-hidden rounded-card" : "",
         className
       )}
       {...props}
@@ -88,7 +98,9 @@ function SidebarHeader({
       className={cn(
         "flex h-header shrink-0 items-center gap-s2",
         railInset,
-        width === "rail" ? "justify-center" : "justify-between pl-s4",
+        width === "rail"
+          ? "justify-center"
+          : "justify-between pl-s4 in-data-[variant=inset]:pl-4",
         className
       )}
       {...props}
@@ -241,8 +253,10 @@ function SidebarItem({
 
 export type {
   SidebarItemProps,
+  SidebarProps,
   SidebarProviderProps,
   SidebarState,
+  SidebarVariant,
   SidebarWidth,
 }
 export {

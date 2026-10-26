@@ -64,7 +64,7 @@ describe("the top bar", () => {
     }
   })
 
-  it("lists Explore, the media areas, a separator, then the rest", async () => {
+  it("lists Explore, the media areas, a separator, Agent, a separator, then the rest", async () => {
     const bar = await barAt("/")
     expect(areaLabels(bar)).toEqual([
       "Explore",
@@ -72,15 +72,22 @@ describe("the top bar", () => {
       "Video",
       "Audio",
       "3D",
-      "Characters",
       "Agent",
+      "Characters",
       "Library",
       "History",
       "Settings",
     ])
-    const separator = bar.querySelector("[data-slot='nav-separator']")
-    expect(separator?.previousElementSibling?.textContent).toBe("3D")
-    expect(separator?.nextElementSibling?.textContent).toBe("Characters")
+    const separators = [
+      ...bar.querySelectorAll("[data-slot='nav-separator']"),
+    ].map((separator) => [
+      separator.previousElementSibling?.textContent,
+      separator.nextElementSibling?.textContent,
+    ])
+    expect(separators).toEqual([
+      ["3D", "Agent"],
+      ["Agent", "Characters"],
+    ])
   })
 
   it("marks Explore current on Explore", async () => {
@@ -183,6 +190,11 @@ describe("the top bar", () => {
     expect(items.map((item) => item.getAttribute("href"))).toEqual(
       imageApps.map((app) => `/apps/${app.id}`)
     )
+    expect(items.slice(0, 3).map((item) => item.getAttribute("href"))).toEqual([
+      "/apps/image",
+      "/apps/edit",
+      "/apps/upscale",
+    ])
     for (const item of items) {
       expect(item.querySelector("svg")).not.toBeNull()
       expect(item.querySelectorAll("span > span")).toHaveLength(2)
@@ -200,5 +212,24 @@ describe("the top bar", () => {
     expect(items[0]?.textContent).toBe("Explore")
     expect(items.map((item) => item.textContent)).toContain("Library")
     expect(items).toHaveLength(media.length + 6)
+    const content = items[0]?.closest("[data-slot='dropdown-menu-content']")
+    const marks = [
+      ...(content?.querySelectorAll(
+        "[role='menuitem'], [data-slot='dropdown-menu-separator']"
+      ) ?? []),
+    ].map((node) =>
+      node.getAttribute("data-slot") === "dropdown-menu-separator"
+        ? "|"
+        : (node.textContent ?? "")
+    )
+    expect(marks.slice(media.length + 1)).toEqual([
+      "|",
+      "Agent",
+      "|",
+      "Characters",
+      "Library",
+      "History",
+      "Settings",
+    ])
   })
 })

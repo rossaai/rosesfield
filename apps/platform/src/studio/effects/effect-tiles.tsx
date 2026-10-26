@@ -8,10 +8,7 @@ import {
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { CreditPrice } from "@rosesfield/ui/components/credit-price"
 import { interaction } from "@rosesfield/ui/components/interaction"
-import {
-  type MediaAspect,
-  MediaBadge,
-} from "@rosesfield/ui/components/media-tile"
+import { MediaBadge } from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { type ReactElement, type ReactNode, useEffect, useRef } from "react"
 import { formatAmount } from "@/copy/format"
@@ -30,7 +27,6 @@ export type EffectTile = {
   label: string
   photo: string
   preview: string
-  aspect: MediaAspect
   kept: KeptRunPrice | null
 }
 
@@ -50,21 +46,12 @@ type EffectTilesProps = {
   runs?: readonly EffectRun[]
 }
 
-const fallbackAspect: MediaAspect = { width: 9, height: 16 }
-
 export function effectOptionsOf(app: AppListing): string[] {
   const input = app.inputs.find(
     (one): one is Extract<InputDefinition, { type: "choice" }> =>
       one.name === "effect" && one.type === "choice"
   )
   return input === undefined ? [] : input.options.map((option) => option.value)
-}
-
-function aspectOfRatio(ratio: string | undefined): MediaAspect {
-  const [width, height] = (ratio ?? "").split(":").map(Number)
-  return width !== undefined && height !== undefined && width > 0 && height > 0
-    ? { width, height }
-    : fallbackAspect
 }
 
 export function keptPriceOf(
@@ -134,7 +121,6 @@ export function effectTiles(
         label: tCatalog(`effects.choice.effect.${key}`),
         photo: tCatalog(`effects.photo.${key}`),
         preview,
-        aspect: aspectOfRatio(recipe.preview.aspectRatio),
         kept: keptPriceOf(recipe, runs),
       },
     ]
@@ -183,8 +169,7 @@ function Tile({
     >
       <span
         data-slot="effect-clip"
-        className="relative w-full overflow-hidden rounded-cell bg-(--well)"
-        style={{ aspectRatio: `${tile.aspect.width} / ${tile.aspect.height}` }}
+        className="relative aspect-3/4 w-full overflow-hidden rounded-cell bg-(--well)"
       >
         <video
           src={tile.preview}

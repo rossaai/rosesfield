@@ -109,7 +109,6 @@ describe("the effect tiles", () => {
         label: tCatalog("effects.choice.effect.growGiant"),
         photo: tCatalog("effects.photo.growGiant"),
         preview: "/previews/grow-giant.mp4",
-        aspect: { width: 9, height: 16 },
         kept: null,
       },
     ])
@@ -192,14 +191,21 @@ describe("the effect tiles", () => {
     }
   })
 
-  it("shows each tile as its clip at the clip's shape and its name, with no count or second caption line", () => {
+  it("shows each tile as its clip in one 3:4 frame the clip covers and its name, with no count or second caption line", () => {
     renderTiles()
     const tile = tileNamed("grow-giant")
     expect(tile.textContent).toBe(tCatalog("effects.choice.effect.growGiant"))
-    expect(
-      tile.querySelector<HTMLElement>("[data-slot=effect-clip]")?.style
-        .aspectRatio
-    ).toBe("9 / 16")
+    const frames = [
+      ...document.querySelectorAll<HTMLElement>("[data-slot=effect-clip]"),
+    ]
+    expect(frames.length).toBeGreaterThan(0)
+    for (const frame of frames) {
+      expect(frame.className.split(" ")).toContain("aspect-3/4")
+      expect(frame.style.aspectRatio).toBe("")
+      expect(frame.querySelector("video")?.className.split(" ")).toContain(
+        "object-cover"
+      )
+    }
   })
 
   it("keeps the photo hint out of the grid, because the photo well names it", () => {

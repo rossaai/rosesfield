@@ -105,4 +105,53 @@ describe("AreaMenu", () => {
     expect(item.getAttribute("href")).toBe("/apps/image")
     expect(item.hasAttribute("data-router")).toBe(false)
   })
+
+  function menuOf(count: number): HTMLElement {
+    const many = Array.from({ length: count }, (_, index) => ({
+      ...apps[0],
+      id: `app-${index}`,
+      name: "Image",
+      line: "Words to a picture",
+      icon: <svg />,
+      href: `/apps/app-${index}`,
+    }))
+    render(
+      <AreaMenu apps={many} defaultOpen>
+        Image
+      </AreaMenu>
+    )
+    const menu = document.querySelector<HTMLElement>(
+      "[data-slot='app-bar-areaMenu']"
+    )
+    if (menu === null) {
+      throw new Error("the area menu did not open")
+    }
+    return menu
+  }
+
+  it("opens at one fixed width, 416 px with one column and 832 px with two, capped by the viewport and never growing with its text", () => {
+    const one = menuOf(4).className.split(" ")
+    expect(one).toEqual(
+      expect.arrayContaining([
+        "w-104",
+        "max-w-[calc(100vw-2*var(--spacing-s4))]",
+        "data-[columns=two]:w-208",
+      ])
+    )
+    expect(
+      one.some((name) => /(^|:)(min-w-(?!0$)|max-w-none)/.test(name))
+    ).toBe(false)
+    cleanup()
+    expect(menuOf(5).getAttribute("data-columns")).toBe("two")
+  })
+
+  it("cuts a long name and a long line with an ellipsis inside its column", () => {
+    const menu = menuOf(1)
+    const item = menu.querySelector("[role='menuitem']")
+    expect(item?.className.split(" ")).toContain("min-w-0")
+    const texts = [...(item?.querySelectorAll("span > span") ?? [])]
+    expect(
+      texts.map((text) => text.className.split(" ").includes("truncate"))
+    ).toEqual([true, true])
+  })
 })

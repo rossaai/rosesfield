@@ -4,7 +4,7 @@ import { navGroups } from "@/shell/nav-rows"
 import { appIdOfPath, hasFooter, hasInputs } from "@/shell/page-kind"
 
 describe("the top bar's links", () => {
-  it("list Explore, then the media areas, then the rest", () => {
+  it("list Explore, then the media areas, then Agent, then the rest", () => {
     const groups = navGroups()
     expect(groups.explore.to).toBe("/")
     expect(groups.areas.map((area) => area.id)).toEqual([
@@ -13,9 +13,9 @@ describe("the top bar's links", () => {
       "audio",
       "mesh",
     ])
+    expect(groups.agent.to).toBe("/agent")
     expect(groups.rest.map((link) => link.to)).toEqual([
       "/characters",
-      "/agent",
       "/library",
       "/history",
       "/settings",
