@@ -165,18 +165,23 @@ test("/welcome and /explore open Explore, and the logo opens Explore from every 
       page.getByRole("region", { name: "Apps", exact: true })
     ).toBeVisible()
   }
-  const paths =
-    info.project.name === "phone"
-      ? ["/apps/image"]
-      : ["/apps/image", "/library", "/history"]
-  for (const path of paths) {
+  const titled = ["/apps/image", "/library", "/history"]
+  const isPhone = info.project.name === "phone"
+  for (const path of titled) {
     await page.goto(path)
     const bar = page.locator("header[data-slot='app-bar']")
-    const logo = bar
-      .locator("[data-slot='app-bar-mark']")
-      .nth(info.project.name === "phone" ? 1 : 0)
-      .locator("a")
-    await logo.click()
+    if (isPhone) {
+      await expect(
+        bar.locator("[data-slot='app-bar-title']"),
+        `the title on ${path}`
+      ).not.toBeEmpty()
+      await expect(
+        bar.locator("[data-slot='app-bar-mark']").nth(1).locator("a"),
+        `no wordmark on ${path}`
+      ).toHaveCount(0)
+      continue
+    }
+    await bar.locator("[data-slot='app-bar-mark']").first().locator("a").click()
     await expect(page, `the logo on ${path}`).toHaveURL(/\/$/)
   }
   expect(errors).toEqual([])

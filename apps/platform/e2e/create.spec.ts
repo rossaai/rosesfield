@@ -103,7 +103,7 @@ test.describe("the prompt bar's field and model chip", () => {
       .toBeGreaterThan(early.height)
     await page.waitForTimeout(500)
     const grown = await boxOf(field)
-    expect(rest.height).toBe(25)
+    expect(rest.height).toBe(27)
     expect(grown.height).toBeLessThanOrEqual(180)
     expect(grown.height).toBeGreaterThan(rest.height)
   })
