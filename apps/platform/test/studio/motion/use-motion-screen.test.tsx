@@ -220,9 +220,10 @@ describe("Motion opens", () => {
 })
 
 describe("Motion keeps your files", () => {
-  it("across a switch of tabs, with the clip's length read", () => {
+  it("across a switch of tabs, with the clip read and in range", () => {
     const { result } = renderMotion({ clip: [clip], photo: [photo] })
-    expect(result.current.checks.clipSeconds).toBe(5)
+    expect(result.current.checks.readingInput).toBeNull()
+    expect(result.current.checks.clip).toBeNull()
     act(() => result.current.setTab("swap"))
     expect(result.current.tab).toBe("swap")
     expect(result.current.form.values.inputs.clip).toEqual([clip])
