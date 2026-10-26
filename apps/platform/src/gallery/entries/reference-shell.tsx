@@ -59,6 +59,8 @@ function Areas({ open }: { open?: boolean }): ReactElement {
       </NavLink>
       <NavLink href="?area=audio">{t("sample.nav.audio")}</NavLink>
       <NavSeparator />
+      <NavLink href="?area=agent">{t("sample.nav.agent")}</NavLink>
+      <NavSeparator />
       <NavLink href="?area=library">{t("sample.nav.library")}</NavLink>
       <NavLink href="?area=history">{t("sample.nav.history")}</NavLink>
     </>

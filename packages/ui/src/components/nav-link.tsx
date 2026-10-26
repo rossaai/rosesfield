@@ -99,7 +99,7 @@ function AreaMenu({
         data-slot="app-bar-areaMenu"
         sideOffset={4}
         data-columns={apps.length > 4 ? "two" : "one"}
-        className="max-w-none min-w-72 data-[columns=two]:grid data-[columns=two]:min-w-144 data-[columns=two]:grid-cols-2 data-[columns=two]:gap-x-s2"
+        className="w-104 max-w-[calc(100vw-2*var(--spacing-s4))] min-w-0 data-[columns=two]:grid data-[columns=two]:w-208 data-[columns=two]:grid-cols-2 data-[columns=two]:gap-x-s2"
       >
         {apps.map((app) => (
           <DropdownMenuItem
@@ -108,13 +108,15 @@ function AreaMenu({
               renderLink?.(app) ?? ((props) => <a {...props} href={app.href} />)
             }
             aria-current={app.id === currentId ? "page" : undefined}
-            className="items-start aria-[current=page]:bg-(--tint)"
+            className="min-w-0 items-start aria-[current=page]:bg-(--tint)"
           >
             <span aria-hidden="true" className="mt-0.5 flex [&_svg]:size-5">
               {app.icon}
             </span>
-            <span className="flex min-w-0 flex-col">
-              <span className="font-medium text-body text-ink">{app.name}</span>
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate font-medium text-body text-ink">
+                {app.name}
+              </span>
               <span className="truncate text-label text-ink-muted">
                 {app.line}
               </span>

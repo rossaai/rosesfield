@@ -63,6 +63,7 @@ export type MediaArea = {
 export type NavGroups = {
   explore: ScreenLink
   areas: MediaArea[]
+  agent: ScreenLink
   rest: ScreenLink[]
 }
 
@@ -155,6 +156,7 @@ export function navGroups(
         ? []
         : [{ id: kind, label: areaLabels[kind], apps: inArea }]
     }),
+    agent: screenLink("agent", "shell.nav.agent", BotIcon, "/agent"),
     rest: [
       screenLink(
         "characters",
@@ -162,7 +164,6 @@ export function navGroups(
         UsersIcon,
         "/characters"
       ),
-      screenLink("agent", "shell.nav.agent", BotIcon, "/agent"),
       libraryLink,
       historyLink,
       screenLink("settings", "shell.nav.settings", SettingsIcon, "/settings"),

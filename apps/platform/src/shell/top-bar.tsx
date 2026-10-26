@@ -104,6 +104,8 @@ function AreaLinks({
         />
       ))}
       <NavSeparator />
+      <ScreenNav link={groups.agent} />
+      <NavSeparator />
       {groups.rest.map((link) => (
         <ScreenNav key={link.id} link={link} />
       ))}
@@ -148,6 +150,8 @@ function PhoneMenu({ groups }: { groups: NavGroups }): ReactElement {
             ))}
           </DropdownMenuGroup>
         ))}
+        <DropdownMenuSeparator />
+        <MenuLink link={groups.agent} />
         <DropdownMenuSeparator />
         {groups.rest.map((link) => (
           <MenuLink key={link.id} link={link} />
