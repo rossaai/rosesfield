@@ -213,7 +213,14 @@ describe("the 3D viewer", () => {
 })
 
 describe("an earlier 3D model", () => {
-  it("fetches nothing and draws nothing until you ask to see it", async () => {
+  it("fetches nothing while it is out of view, and opens no viewer until you ask", async () => {
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        observe = (): undefined => undefined
+        disconnect = (): undefined => undefined
+      }
+    )
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false, enabled: false } },
     })
@@ -225,10 +232,45 @@ describe("an earlier 3D model", () => {
     const key = meshQuery(assetId).queryKey
     expect(container.querySelector("canvas")).toBeNull()
     expect(client.getQueryCache().find({ queryKey: key })).toBeUndefined()
+    expect(container.querySelector("img")).toBeNull()
     expect(screen.getByRole("button", { name: "Download" })).toBeTruthy()
 
     fireEvent.click(screen.getByRole("button", { name: "Show the model" }))
     expect(container.querySelector("[data-slot=mesh-output]")).toBeTruthy()
     expect(client.getQueryCache().find({ queryKey: key })).toBeDefined()
+  })
+
+  it("shows a still of an earlier model once it is in view, beside its buttons", async () => {
+    vi.stubGlobal("fetch", () =>
+      Promise.resolve(new Response(triangleGlb(), { status: 200 }))
+    )
+    const renderer = {
+      load: vi.fn(() => Promise.resolve()),
+      draw: vi.fn(),
+      release: vi.fn(),
+    }
+    vi.spyOn(MeshRenderer, "of").mockReturnValue(
+      renderer as unknown as MeshRenderer
+    )
+    vi.spyOn(HTMLCanvasElement.prototype, "toDataURL").mockReturnValue(
+      "data:image/webp;base64,UklGRg=="
+    )
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    const { container } = render(
+      <QueryClientProvider client={client}>
+        <MeshOnAsk assetId={assetId} />
+      </QueryClientProvider>
+    )
+    await waitFor(() => {
+      expect(
+        container
+          .querySelector("img[data-slot=mesh-still]")
+          ?.getAttribute("src")
+      ).toBe("data:image/webp;base64,UklGRg==")
+    })
+    expect(container.querySelector("canvas")).toBeNull()
+    expect(screen.getByRole("button", { name: "Show the model" })).toBeTruthy()
   })
 })

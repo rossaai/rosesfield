@@ -17,11 +17,14 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { meshQuery } from "@/studio/three-d/mesh-file"
 import { RunStack } from "@/studio/three-d/three-d-canvas"
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
 
 function doneRun(index: number): Run {
   return run.parse({
@@ -126,7 +129,14 @@ describe("the 3D run stack", () => {
     }
   })
 
-  it("opens the viewer for a mesh no run made, such as a GLB you uploaded", async () => {
+  it("opens the viewer for a mesh no run made, such as a GLB you uploaded, and fetches no other model out of view", async () => {
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        observe = (): undefined => undefined
+        disconnect = (): undefined => undefined
+      }
+    )
     const uploaded = "4e5f6a7b-8c9d-4e0f-9a1b-3c4d5e6f7a09"
     const runs = [doneRun(1)]
     const { client, container } = renderStack(runs, uploaded)

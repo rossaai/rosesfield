@@ -1,4 +1,5 @@
 import type { AssetKind } from "@rosesfield/contract"
+import type { EngineOutput } from "#domain/generation-engine.port"
 
 export const meshMime = "model/gltf-binary"
 
@@ -29,4 +30,21 @@ export function extensionOf(mime: string): string {
   }
   const subtype = mime.split("/")[1]?.replace(/[^a-z0-9]/g, "") ?? ""
   return subtype === "" ? "bin" : subtype
+}
+
+export function meshOutputOf(bytes: Uint8Array): EngineOutput {
+  return {
+    kind: "mesh",
+    mime: meshMime,
+    bytes,
+    width: null,
+    height: null,
+    durationSeconds: null,
+  }
+}
+
+export function outputKindOf(type: string, contentType: string): AssetKind {
+  return type === "video" || type === "audio" || type === "text"
+    ? type
+    : (mediaKindOf(mimeOf(contentType)) ?? "image")
 }

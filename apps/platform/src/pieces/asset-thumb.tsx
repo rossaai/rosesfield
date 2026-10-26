@@ -3,10 +3,11 @@ import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { useNavigate } from "@tanstack/react-router"
 import { BoxIcon, FileAudioIcon, FileTextIcon } from "lucide-react"
-import type { ReactElement } from "react"
+import { type ReactElement, useRef } from "react"
 import { joinParts } from "@/copy/format"
 import { t } from "@/copy/t"
 import { assetLabel, assetLength, useAssetName } from "@/pieces/asset-name"
+import { useMeshStill, useSeen } from "@/studio/three-d/mesh-still"
 import { useViewer } from "@/viewer/viewer-context"
 
 type AssetThumbProps = {
@@ -46,6 +47,10 @@ function useOpenAsset(
 }
 
 export function AssetThumb(props: AssetThumbProps): ReactElement {
+  const ref = useRef<HTMLButtonElement>(null)
+  const isMesh = props.asset.kind === "mesh"
+  const isSeen = useSeen(ref, isMesh)
+  const still = useMeshStill(props.asset.id, isMesh && isSeen)
   const open = useOpenAsset(props.asset, props.list)
   const Icon = glyphOf(props.asset)
   const label = useAssetName(props.asset) ?? assetLabel(props.asset)
@@ -55,23 +60,40 @@ export function AssetThumb(props: AssetThumbProps): ReactElement {
   ])
   return (
     <button
+      ref={ref}
       type="button"
       aria-label={label}
       data-kind={props.asset.kind}
       disabled={props.isStatic}
       onClick={(event) => open(event.currentTarget)}
       className={cn(
-        "relative flex aspect-square w-full min-w-0 flex-col items-center justify-center gap-s1 rounded-cell bg-(--well) p-s2",
+        "relative flex aspect-square w-full min-w-0 flex-col items-center justify-center gap-s1 overflow-hidden rounded-cell bg-(--well) p-s2",
         motion.press
       )}
     >
+      {still === null ? null : (
+        <img
+          src={still}
+          alt=""
+          aria-hidden="true"
+          data-slot="asset-thumb-still"
+          className="absolute inset-0 size-full object-contain"
+        />
+      )}
       <span
         data-slot="asset-thumb-mark"
-        className="flex size-icon items-center justify-center rounded-full bg-(--ground) [&_svg]:glyph"
+        className={cn(
+          "flex size-icon items-center justify-center rounded-full bg-(--ground) [&_svg]:glyph",
+          still === null ? null : "absolute top-s2 left-s2"
+        )}
       >
         <Icon aria-hidden="true" />
       </span>
-      {caption === "" ? null : <span className={captionClass}>{caption}</span>}
+      {caption === "" ? null : (
+        <span className={cn(captionClass, still === null ? null : "relative")}>
+          {caption}
+        </span>
+      )}
     </button>
   )
 }

@@ -123,15 +123,17 @@ export class MeshRenderer {
     return program === null ? null : new MeshRenderer({ gl, program })
   }
 
-  load(scene: MeshScene, onTexture: () => void): void {
+  load(scene: MeshScene, onTexture: () => void): Promise<void> {
     this.#clear()
+    const textures: Promise<void>[] = []
     this.#draws = scene.parts.flatMap((part) => {
       const draw = this.#upload(part)
       if (draw !== null && part.texture !== null) {
-        void this.#loadTexture(draw, part.texture, onTexture)
+        textures.push(this.#loadTexture(draw, part.texture, onTexture))
       }
       return draw === null ? [] : [draw]
     })
+    return Promise.all(textures).then(() => undefined)
   }
 
   draw(camera: Camera, width: number, height: number): void {
@@ -164,6 +166,11 @@ export class MeshRenderer {
     this.#clear()
     this.#gl.deleteProgram(this.#program)
     this.#isDisposed = true
+  }
+
+  release(): void {
+    this.dispose()
+    this.#gl.getExtension("WEBGL_lose_context")?.loseContext()
   }
 
   #clear(): void {

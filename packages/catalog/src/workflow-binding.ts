@@ -84,5 +84,8 @@ export function workflowBinding(
     bindings,
     models: [...workflow.models],
     outputsPerJob: options.outputsPerJob ?? "all",
+    ...(workflow.partnerNodes.length === 0
+      ? {}
+      : { partnerNodes: [...workflow.partnerNodes] }),
   })
 }

@@ -7,6 +7,7 @@ import { app, threeDApp } from "#three-d/app"
 import { pixal3dModels } from "#three-d/comfy/three-d-engine"
 import {
   graphModel,
+  meshyImageModel,
   pixal3dTemplateFiles,
   textModel,
 } from "#three-d/three-d-models"
@@ -109,27 +110,45 @@ describe("3D's list of models, from the record of Comfy Cloud's weights", () => 
   it("lists the Pixal3D graph first and opens on it once a record holds all seven files", () => {
     const three = appFrom(pixal3dTemplateFiles)
     const models = modelsForApp(three, [meshy])
-    expect(models[0]).toMatchObject({ id: graphModel, kind: "graph" })
-    expect(models.map((model) => model.id)).toContain(textModel)
+    expect(models.map((model) => model.id)).toEqual([
+      graphModel,
+      meshyImageModel,
+      textModel,
+    ])
+    expect(models[0]).toMatchObject({ kind: "graph" })
     expect(three.inputs.map((input) => input.type)).toContain("image")
     expect(defaultModelOf(three)).toBe(graphModel)
     expect(takesAPhoto(three)).toBe(true)
   })
 
   it.each(pixal3dTemplateFiles.map((missing) => ({ missing })))(
-    "lists no graph and takes no photo when the record lacks $missing, and opens on Meshy 7.1",
+    "lists Meshy 7.1 from a photo and from text when the record lacks $missing, and opens on Meshy 7.1 from text",
     ({ missing }) => {
       const three = appFrom(
         pixal3dTemplateFiles.filter((file) => file !== missing)
       )
       expect(modelsForApp(three, [meshy]).map((model) => model.id)).toEqual([
+        meshyImageModel,
         textModel,
       ])
-      expect(three.inputs.map((input) => input.type)).not.toContain("image")
+      expect(three.inputs.map((input) => input.type)).toContain("image")
       expect(defaultModelOf(three)).toBe(textModel)
-      expect(takesAPhoto(three)).toBe(false)
+      expect(takesAPhoto(three)).toBe(true)
     }
   )
+
+  it("marks Meshy from a photo as Meshy's and not as open weights, and Pixal3D as open weights, the control", () => {
+    const models = modelsForApp(appFrom(pixal3dTemplateFiles), [meshy])
+    const photo = models.find((model) => model.id === meshyImageModel)
+    const open = models.find((model) => model.id === graphModel)
+    expect(photo).toMatchObject({
+      kind: "graph",
+      maker: "Meshy",
+      nameKey: "threeD.model.meshy71",
+      tags: [],
+    })
+    expect(open?.tags).toEqual([{ kind: "open-weights" }])
+  })
 
   it("ships the app the catalog's own record makes, so the graph joins with no change to 3D's code", () => {
     expect(app).toEqual(threeDApp(heldFilesOf()))

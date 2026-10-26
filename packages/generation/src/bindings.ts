@@ -31,4 +31,5 @@ export {
   type ComfyWorkflowConfigInput,
   comfyWorkflow,
   comfyWorkflowAdapter,
+  partnerNodesOf,
 } from "#infrastructure/comfy/comfy-workflow-binding"

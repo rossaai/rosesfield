@@ -1,7 +1,12 @@
 import { heldFilesOf } from "#comfy/cloud-weights"
 import { type AppInput, defineApp } from "#define-app"
 import { threeDEngine } from "#three-d/comfy/three-d-engine"
-import { defaultModelOf, heldGraphs, textModel } from "#three-d/three-d-models"
+import {
+  defaultModelOf,
+  graphModel,
+  heldGraphs,
+  textModel,
+} from "#three-d/three-d-models"
 
 type Inputs = AppInput["inputs"]
 
@@ -35,7 +40,10 @@ export function threeDApp(held: ReadonlySet<string>): AppInput {
         options: [
           ...graphs.map((value) => ({
             value,
-            labelKey: "threeD.model.pixal3d",
+            labelKey:
+              value === graphModel
+                ? "threeD.model.pixal3d"
+                : "threeD.model.meshy71",
           })),
           { value: textModel, labelKey: "threeD.model.meshy71" },
         ],

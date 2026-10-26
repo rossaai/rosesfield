@@ -1,8 +1,18 @@
 import type { EngineBinding } from "@rosesfield/contract"
-import { comfyWorkflow, taskBinding } from "@rosesfield/generation/bindings"
+import {
+  comfyWorkflow,
+  selectBinding,
+  taskBinding,
+} from "@rosesfield/generation/bindings"
 import { z } from "zod"
 import { AppDefinitionInvalidError } from "#app-definition-invalid.error"
-import { threeDTasks } from "#three-d/three-d-models"
+import {
+  graphModel,
+  meshyImageModel,
+  meshyImageWorkflow,
+  threeDTasks,
+} from "#three-d/three-d-models"
+import { workflowBinding } from "#workflow-binding"
 import { apiGraph } from "#workflow-entry.contract"
 import graph from "./pixal3d-trellis-2.api.json"
 
@@ -44,11 +54,28 @@ export const pixal3dBinding: EngineBinding = comfyWorkflow({
   outputsPerJob: "one",
 })
 
+export const meshyImageBinding: EngineBinding = workflowBinding({
+  workflow: meshyImageWorkflow,
+  bindings: [
+    { from: "input", name: "image", index: 0, to: "image" },
+    { from: "seed", to: "seed" },
+  ],
+  outputsPerJob: "one",
+})
+
+export const photoGraphs: EngineBinding = selectBinding({
+  input: "model",
+  options: {
+    [graphModel]: pixal3dBinding,
+    [meshyImageModel]: meshyImageBinding,
+  },
+})
+
 export function threeDEngine(defaultModel: string): EngineBinding {
   return taskBinding({
     tasks: threeDTasks,
     input: "model",
     default: defaultModel,
-    fallback: pixal3dBinding,
+    fallback: photoGraphs,
   })
 }

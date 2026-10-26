@@ -1219,6 +1219,16 @@
         "none": "No page read describes this chat model"
       }
     },
+    "graph/meshy-7-1-image": {
+      "lab": "Meshy",
+      "release": null,
+      "weights": null,
+      "ranks": {},
+      "thirds": {},
+      "line": {
+        "none": "No page read describes Meshy 7.1 from an image"
+      }
+    },
     "graph/ltx-2-5": {
       "lab": "Lightricks",
       "release": "2026-08-11",

@@ -91,6 +91,20 @@ export const cloudNodes: Readonly<Record<string, CloudNode>> = {
     outputs: ["MOGE_GEOMETRY"],
     isOutput: false,
   },
+  MeshyImageToModelNode: {
+    required: [
+      "model",
+      "image",
+      "should_remesh",
+      "symmetry_mode",
+      "should_texture",
+      "pose_mode",
+      "seed",
+      "ultra_mode",
+    ],
+    outputs: ["STRING", "MESHY_TASK_ID", "FILE_3D_GLB", "FILE_3D_FBX"],
+    isOutput: true,
+  },
   ModelSamplingSD3: {
     required: ["model", "shift"],
     outputs: ["MODEL"],

@@ -1,6 +1,7 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { z } from "zod"
 import { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.error"
+import { isRecord } from "#domain/is-record"
 import { comfyValueBinding } from "#infrastructure/comfy/comfy-value-binding"
 
 export const comfyWorkflowAdapter = "comfy-workflow"
@@ -11,7 +12,20 @@ export const comfyWorkflowConfig = z
     bindings: z.array(comfyValueBinding).max(64),
     models: z.array(z.string().min(1).max(200)).max(16).optional(),
     outputsPerJob: z.enum(["all", "one"]).default("all"),
+    partnerNodes: z.array(z.string().min(1).max(80)).max(16).default([]),
   })
+  .refine(
+    (config) =>
+      config.partnerNodes.every((name) =>
+        Object.values(config.workflow).some(
+          (node) => isRecord(node) && node.class_type === name
+        )
+      ),
+    {
+      message: "Every partner node a workflow names is a node of its graph",
+      path: ["partnerNodes"],
+    }
+  )
   .refine(
     (config) =>
       config.outputsPerJob === "all" ||
@@ -40,6 +54,18 @@ export function parseComfyWorkflow(
     })
   }
   return result.data
+}
+
+export function runsPartnerNode(config: ComfyWorkflowConfig): boolean {
+  return config.partnerNodes.length > 0
+}
+
+export function partnerNodesOf(binding: EngineBinding): readonly string[] {
+  if (binding.adapter !== comfyWorkflowAdapter) {
+    return []
+  }
+  const result = comfyWorkflowConfig.safeParse(binding.config)
+  return result.success ? result.data.partnerNodes : []
 }
 
 export async function workflowHashOf(
