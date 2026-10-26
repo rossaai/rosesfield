@@ -1,25 +1,26 @@
-import { extendApp } from "@rosesfield/catalog/video"
 import type { AppListing } from "@rosesfield/contract"
 import { PromptBlock } from "@rosesfield/ui/components/input-panel"
-import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
-import { useNavigate } from "@tanstack/react-router"
-import { type ReactElement, useMemo, useRef } from "react"
+import { type ReactElement, useMemo } from "react"
 import { t, tCatalog } from "@/copy/t"
 import { CatalogPicker, modelNameOf } from "@/screens/app/hosted/catalog-picker"
 import { pickerModelsOf } from "@/studio/video/picker-models"
 import { PresetCard } from "@/studio/video/preset-card"
 import { shownPresets } from "@/studio/video/preset-samples"
 import type { VideoScreen } from "@/studio/video/use-video-screen"
-import { SoundChip, VideoSettings } from "@/studio/video/video-chips"
+import { VideoSettings } from "@/studio/video/video-chips"
 import {
   slotsOf,
   tabKeys,
   type VideoTab,
   videoTabs,
 } from "@/studio/video/video-tabs"
-import { ElementsChip, VideoWells } from "@/studio/video/video-wells"
-import type { VideoEditMode } from "@/studio/video-edit/video-edit-modes"
+import { VideoWells } from "@/studio/video/video-wells"
+
+const tabLabelKeys: Readonly<Record<VideoTab, string>> = {
+  ...tabKeys,
+  "text-image": "shell.area.image",
+}
 
 function isVideoTab(value: unknown): value is VideoTab {
   return videoTabs.some((tab) => tab === value)
@@ -42,7 +43,7 @@ export function ModeTabs({
       <TabsList aria-label={tCatalog("video.tabs.label")}>
         {videoTabs.map((one) => (
           <TabsTrigger key={one} value={one}>
-            {tCatalog(tabKeys[one])}
+            {tCatalog(tabLabelKeys[one])}
           </TabsTrigger>
         ))}
       </TabsList>
@@ -50,73 +51,16 @@ export function ModeTabs({
   )
 }
 
-type MakeChoice = "video" | "extend"
-
-const extendTab: VideoEditMode = "extend"
-
 const cameraMoveInput = "cameraMove"
 
-export function MakeSwitch({
-  onExtend,
-}: {
-  onExtend: () => void
-}): ReactElement {
-  const isByArrow = useRef(false)
-  return (
-    <div
-      data-slot="make-switch"
-      onKeyDownCapture={(event) => {
-        isByArrow.current = event.key.startsWith("Arrow")
-      }}
-      onClickCapture={(event) => {
-        if (!(event.target instanceof HTMLInputElement)) {
-          isByArrow.current = false
-        }
-      }}
-    >
-      <SegmentedControl<MakeChoice>
-        density="composer"
-        label={tCatalog("videoEdit.input.mode.label")}
-        value="video"
-        items={[
-          { value: "video", label: t("kind.video") },
-          { value: "extend", label: tCatalog("videoEdit.choice.mode.extend") },
-        ]}
-        onValueChange={(next) => {
-          if (next === "extend" && !isByArrow.current) {
-            onExtend()
-          }
-        }}
-      />
-    </div>
-  )
-}
-
 function PromptPart({ screen }: { screen: VideoScreen }): ReactElement {
-  const { prompt, presets, hosted, fields, state, tab } = screen
+  const { prompt, presets, state } = screen
   const words = presets.find((preset) => preset.value === prompt.move)?.words
   const problem = state.form.problems.get(prompt.name)
   const label = tCatalog("video.input.prompt.label")
   return (
     <div className="flex flex-col gap-1">
-      <PromptBlock
-        label={label}
-        chips={
-          <>
-            {hosted.chosen === null ? null : (
-              <ElementsChip slots={slotsOf(fields, tab)} form={state.form} />
-            )}
-            <SoundChip
-              form={state.form}
-              fields={fields}
-              isGraph={screen.isGraph}
-              makesSound={
-                hosted.chosen?.tags.some((one) => one.kind === "sound") === true
-              }
-            />
-          </>
-        }
-      >
+      <PromptBlock label={label}>
         <textarea
           aria-label={label}
           aria-invalid={problem === undefined ? undefined : true}
@@ -153,7 +97,6 @@ export function VideoPanel({
     [hosted, tab, app]
   )
   const presets = useMemo(() => shownPresets(screen.presets), [screen.presets])
-  const navigate = useNavigate()
   return (
     <div data-slot="video-parts" className="flex flex-1 flex-col gap-s4">
       <PresetCard
@@ -161,15 +104,6 @@ export function VideoPanel({
         move={prompt.move}
         onMove={prompt.setMove}
         line={hosted.chosen === null ? "" : modelNameOf(hosted.chosen)}
-      />
-      <MakeSwitch
-        onExtend={() =>
-          void navigate({
-            to: "/apps/$appId",
-            params: { appId: extendApp },
-            search: { mode: extendTab },
-          })
-        }
       />
       {hosted.chosen === null ? null : (
         <VideoWells slots={slotsOf(fields, tab)} form={state.form} />

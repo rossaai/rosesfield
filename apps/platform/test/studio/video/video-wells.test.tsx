@@ -3,12 +3,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, render, screen } from "@testing-library/react"
 import type { ReactElement } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { t, tCatalog } from "@/copy/t"
+import { tCatalog } from "@/copy/t"
 import type { FieldValue } from "@/screens/app/app-form"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import type { AppForm } from "@/screens/app/use-app-form"
 import type { ImageSlots } from "@/studio/video/video-tabs"
-import { ElementsChip, VideoWells } from "@/studio/video/video-wells"
+import { VideoWells } from "@/studio/video/video-wells"
 
 beforeEach(() => {
   vi.stubGlobal("fetch", () => new Promise(() => undefined))
@@ -18,8 +18,6 @@ afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
 })
-
-const assetId = "0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c01"
 
 function formOf(inputs: Record<string, FieldValue> = {}): AppForm {
   return {
@@ -73,35 +71,6 @@ describe("Video's image wells", () => {
     expect(
       zone(tCatalog("video.well.start")).querySelectorAll("svg")
     ).toHaveLength(1)
-  })
-})
-
-describe("the Elements chip in Video's prompt", () => {
-  it("offers the library for the open tab's images and stops when the slot is full", () => {
-    show(<ElementsChip slots={references} form={formOf()} />)
-    expect(
-      screen.getByRole("button", { name: t("bar.elements") })
-    ).toHaveProperty("disabled", false)
-    cleanup()
-    show(
-      <ElementsChip
-        slots={startOnly}
-        form={formOf({ firstFrame: [assetId] })}
-      />
-    )
-    expect(
-      screen.getByRole("button", { name: t("bar.elements") })
-    ).toHaveProperty("disabled", true)
-  })
-
-  it("is absent where the tab takes no image", () => {
-    show(
-      <ElementsChip
-        slots={{ start: null, references: null, last: null }}
-        form={formOf()}
-      />
-    )
-    expect(screen.queryByRole("button", { name: t("bar.elements") })).toBeNull()
   })
 })
 

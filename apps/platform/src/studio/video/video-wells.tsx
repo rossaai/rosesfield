@@ -1,10 +1,7 @@
-import { Chip } from "@rosesfield/ui/components/chip"
 import { Field, FieldMessage } from "@rosesfield/ui/components/field"
-import { AtSignIcon } from "lucide-react"
 import { type ReactElement, useState } from "react"
 import { t, tCatalog } from "@/copy/t"
 import { DropWell } from "@/pieces/drop-well"
-import { LibraryPicker } from "@/pieces/library-picker"
 import { listOf } from "@/screens/app/fields/field-props"
 import type { AppForm } from "@/screens/app/use-app-form"
 import type { ImageSlots } from "@/studio/video/video-tabs"
@@ -37,50 +34,6 @@ function Well({
       />
       {shown === null ? null : <FieldMessage>{shown}</FieldMessage>}
     </Field>
-  )
-}
-
-export function ElementsChip({
-  slots,
-  form,
-}: {
-  slots: ImageSlots
-  form: AppForm
-}): ReactElement | null {
-  const [isOpen, setOpen] = useState(false)
-  const open = [slots.references, slots.start, slots.last].filter(
-    (slot): slot is Slot => slot !== null
-  )
-  if (open.length === 0) {
-    return null
-  }
-  const heldOf = (slot: Slot): string[] => listOf(form.values.inputs[slot.name])
-  const slot =
-    open.find((one) => heldOf(one).length < one.max) ?? open[0] ?? null
-  if (slot === null) {
-    return null
-  }
-  const held = heldOf(slot)
-  return (
-    <>
-      <Chip
-        icon={<AtSignIcon aria-hidden="true" />}
-        disabled={held.length >= slot.max}
-        onClick={() => setOpen(true)}
-      >
-        {t("bar.elements")}
-      </Chip>
-      <LibraryPicker
-        open={isOpen}
-        onOpenChange={setOpen}
-        kind="image"
-        max={slot.max - held.length}
-        title={t("bar.addMenu.fromLibrary")}
-        onDone={(picked) =>
-          form.setInput(slot.name, [...held, ...picked].slice(0, slot.max))
-        }
-      />
-    </>
   )
 }
 
