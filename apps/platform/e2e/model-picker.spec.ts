@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test"
+import { expectSortMenu } from "./picker-sort-menu"
 
 const shortScreen = { width: 390, height: 420 }
 
@@ -358,51 +359,7 @@ test("the Image picker's toolbar holds the search and one filter button that ope
   )
   await expectRankOnMark(page, rows)
   await filter.click()
-  const menu = page.locator("[data-slot='view-menu-content']").first()
-  const sorts = menu.locator("[data-slot='dropdown-menu-sub-trigger']")
-  await expect(sorts).toHaveText(["Sort byRank", "OrderHigh to low"])
-  const open = menu.getByRole("menuitemcheckbox", { name: "Open weights only" })
-  const leads = [
-    sorts.nth(0).locator("[data-slot='dropdown-menu-lead']"),
-    sorts.nth(1).locator("[data-slot='dropdown-menu-lead']"),
-    open.locator("[data-slot='dropdown-menu-lead']"),
-  ]
-  const boxes = await Promise.all(leads.map((lead) => lead.boundingBox()))
-  for (const box of boxes) {
-    expect(box?.width).toBeGreaterThan(0)
-    expect(box?.x).toBe(boxes[0]?.x)
-    expect(box?.width).toBe(boxes[0]?.width)
-  }
-  await sorts.nth(0).hover()
-  const sub = page.locator("[data-slot='dropdown-menu-content']").last()
-  await expect(sub.getByRole("menuitemradio")).toHaveText(["Rank", "Price"])
-  await expect(
-    sub.getByRole("menuitemradio", { name: "Rank" })
-  ).toHaveAttribute("aria-checked", "true")
-  const order = await sorts.nth(1).boundingBox()
-  if (order === null) {
-    throw new Error("the Order row has no box")
-  }
-  await page.mouse.move(order.x + order.width / 2, order.y + order.height / 2, {
-    steps: 8,
-  })
-  await expect(sorts.nth(1)).toHaveAttribute("aria-expanded", "true")
-  const orders = page.locator("[data-slot='dropdown-menu-content']").last()
-  await expect(orders.getByRole("menuitemradio")).toHaveText([
-    "High to low",
-    "Low to high",
-  ])
-  await expect(
-    orders.getByRole("menuitemradio", { name: "High to low" })
-  ).toHaveAttribute("aria-checked", "true")
-  const sw = await open.boundingBox()
-  if (sw === null) {
-    throw new Error("the switch row has no box")
-  }
-  await page.mouse.move(sw.x + sw.width / 4, sw.y + sw.height / 2, {
-    steps: 8,
-  })
-  await expect(sorts.nth(1)).toHaveAttribute("aria-expanded", "false")
+  const open = await expectSortMenu(page)
   await open.click()
   expect(await rows.count()).toBeGreaterThan(0)
   for (const row of await rows.all()) {
