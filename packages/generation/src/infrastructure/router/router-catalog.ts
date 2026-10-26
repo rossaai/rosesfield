@@ -1,34 +1,23 @@
 import type { Clock } from "@rosesfield/kernel"
 import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
-import type { ModelForm } from "#domain/model-form"
 import {
   type CatalogDatabase,
-  type CatalogSource,
   DrizzleRouterCatalogStore,
   type KeptListing,
   type KeptSchema,
 } from "#infrastructure/router/drizzle-router-catalog-store"
-import { fieldsOf } from "#infrastructure/router/router-fields"
+import { type CatalogEntry, entryOf } from "#infrastructure/router/router-entry"
 import type { RouterHttp } from "#infrastructure/router/router-http"
-import {
-  type OutputPath,
-  outputPathsOf,
-} from "#infrastructure/router/router-output-paths"
 import { type RateRow, rateRowsOf } from "#infrastructure/router/router-rates"
-import { factsOf, type SchemaFacts } from "#infrastructure/router/router-schema"
-
-export type CatalogEntry = {
-  facts: SchemaFacts
-  form: ModelForm
-  outputs: readonly OutputPath[]
-  etag: string | null
-  checkedAt: number
-  source: CatalogSource
-}
 
 type Stored = {
   rows: readonly RateRow[]
   checkedAt: number
+}
+
+type Load = {
+  whole: Promise<void>
+  done: Promise<void>
 }
 
 type RouterCatalogOptions = {
@@ -54,7 +43,7 @@ export class RouterCatalog {
   private readonly entries = new Map<string, CatalogEntry>()
   private readonly misses = new Map<string, number>()
   private readonly listings = new Map<string, KeptListing>()
-  private readonly loads = new Map<string, Promise<void>>()
+  private readonly loads = new Map<string, Load>()
   private readonly restores = new Map<string, Promise<void>>()
   private readonly reads = new Map<string, number>()
   private readonly offEstimates = new Map<string, number>()
@@ -82,10 +71,9 @@ export class RouterCatalog {
     }
     if (this.needsLoad(tag)) {
       const load = this.loadOnce(http, tag)
-      if (this.isServable(tag)) {
-        this.defer(load.catch(() => undefined))
-      } else {
-        await load
+      this.defer(load.done.catch(() => undefined))
+      if (!this.isWhole(tag)) {
+        await load.whole
       }
     }
     this.markRead(tag)
@@ -108,7 +96,8 @@ export class RouterCatalog {
   }
 
   async idle(): Promise<void> {
-    const running = [...this.restores.values(), ...this.loads.values()]
+    const loads = [...this.loads.values()].map((load) => load.done)
+    const running = [...this.restores.values(), ...loads]
     await Promise.allSettled(running)
   }
 
@@ -135,10 +124,11 @@ export class RouterCatalog {
     return this.listings.get(tag)?.ids ?? []
   }
 
-  private isServable(tag: string): boolean {
+  private isWhole(tag: string): boolean {
     const ids = this.listings.get(tag)?.ids
-    const isHeld = (id: string): boolean => this.entries.has(id)
-    return ids !== undefined && (ids.length === 0 || ids.some(isHeld))
+    const isRead = (id: string): boolean =>
+      this.entries.has(id) || this.misses.has(id)
+    return ids?.every(isRead) ?? false
   }
 
   private restoreOnce(tag: string): Promise<void> {
@@ -211,9 +201,21 @@ export class RouterCatalog {
     return missed === undefined || this.now() - missed >= RouterCatalog.retryMs
   }
 
-  private loadOnce(http: RouterHttp, tag: string): Promise<void> {
-    const earlier = [...this.loads.values()]
-    return this.once(this.loads, tag, () => this.load(http, tag, earlier))
+  private loadOnce(http: RouterHttp, tag: string): Load {
+    const held = this.loads.get(tag)
+    if (held !== undefined) {
+      return held
+    }
+    const earlier = [...this.loads.values()].map((load) => load.done)
+    const whole = this.load(http, tag, earlier)
+    const done = whole
+      .then(() => this.revalidate(http, tag))
+      .finally(() => {
+        this.loads.delete(tag)
+      })
+    const load = { whole, done }
+    this.loads.set(tag, load)
+    return load
   }
 
   private once(
@@ -239,21 +241,21 @@ export class RouterCatalog {
   ): Promise<void> {
     const ids = await this.listingOf(http, tag)
     await Promise.allSettled(earlier)
-    const due = ids.filter((id) => this.isDue(id))
+    const unheld = ids.filter((id) => !this.entries.has(id) && this.isDue(id))
     const failures: unknown[] = []
-    await this.inBatches(due, (id) =>
-      this.refresh(http, id).catch((error: unknown) => {
-        failures.push(error)
-        this.misses.set(id, this.now())
-      })
-    )
+    await this.readEach(http, unheld, failures)
     const [first] = failures
     if (first !== undefined && ids.every((id) => !this.entries.has(id))) {
-      for (const id of due) {
+      for (const id of unheld) {
         this.misses.delete(id)
       }
       throw first
     }
+  }
+
+  private revalidate(http: RouterHttp, tag: string): Promise<void> {
+    const due = this.listedIds(tag).filter((id) => this.isDue(id))
+    return this.readEach(http, due, [])
   }
 
   private async listingOf(
@@ -357,20 +359,22 @@ export class RouterCatalog {
     }
   }
 
-  private async inBatches(
+  private async readEach(
+    http: RouterHttp,
     ids: readonly string[],
-    work: (id: string) => Promise<void>
+    failures: unknown[]
   ): Promise<void> {
     const queue = [...ids]
-    const workers = Array.from(
-      { length: Math.min(this.concurrency, queue.length) },
-      async () => {
-        for (let id = queue.shift(); id !== undefined; id = queue.shift()) {
-          await work(id)
-        }
+    const read = async (): Promise<void> => {
+      for (let id = queue.shift(); id !== undefined; id = queue.shift()) {
+        await this.refresh(http, id).catch((error: unknown) => {
+          failures.push(error)
+          this.misses.set(id, this.now())
+        })
       }
-    )
-    await Promise.all(workers)
+    }
+    const count = Math.min(this.concurrency, queue.length)
+    await Promise.all(Array.from({ length: count }, read))
   }
 
   private isFresh(checkedAt: number): boolean {
@@ -379,20 +383,5 @@ export class RouterCatalog {
 
   private now(): number {
     return this.clock.now().getTime()
-  }
-}
-
-function entryOf(schema: KeptSchema): CatalogEntry | null {
-  const facts = factsOf(schema.document)
-  if (facts === null || facts.model !== schema.model) {
-    return null
-  }
-  return {
-    facts,
-    form: { model: schema.model, fields: fieldsOf(facts) },
-    outputs: outputPathsOf(facts.response, facts.components),
-    etag: schema.etag,
-    checkedAt: schema.checkedAt,
-    source: schema.source,
   }
 }

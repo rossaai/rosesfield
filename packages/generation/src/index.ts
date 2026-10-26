@@ -165,10 +165,8 @@ export {
   toRunRow,
 } from "#infrastructure/drizzle-run-row"
 export { runTable } from "#infrastructure/drizzle-run-table"
-export {
-  type CatalogEntry,
-  RouterCatalog,
-} from "#infrastructure/router/router-catalog"
+export { RouterCatalog } from "#infrastructure/router/router-catalog"
+export type { CatalogEntry } from "#infrastructure/router/router-entry"
 export {
   creditsUsedOf,
   RouterHttp,

@@ -38,6 +38,35 @@ function httpWith(
   })
 }
 
+function heldBack(
+  replay: ReplayFetch,
+  model: string
+): { http: RouterHttp; release: () => void } {
+  let release: () => void = () => undefined
+  const released = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  const http = new RouterHttp({
+    apiKey: "key",
+    fetch: async (input, init) => {
+      if (input.toString().includes(model)) {
+        await released
+      }
+      return replay.fetch(input, init)
+    },
+    timeoutMs: 1000,
+    downloadTimeoutMs: 1000,
+  })
+  return { http, release }
+}
+
+function settled<T>(promise: Promise<T>): Promise<boolean> {
+  const later = new Promise<false>((resolve) =>
+    setTimeout(() => resolve(false), 20)
+  )
+  return Promise.race([promise.then(() => true), later])
+}
+
 function catalogAt(clock: FixedClock): RouterCatalog {
   return new RouterCatalog({ clock })
 }
@@ -263,5 +292,46 @@ describe("RouterCatalog", () => {
       )
     )
     expect(models.map((one) => one.facts.model)).toEqual([pictureModel])
+  })
+
+  it("waits for every listed schema before it serves a list read while the first load runs", async () => {
+    const catalog = catalogAt(new FixedClock({ now: start }))
+    const replay = new ReplayFetch([
+      catalogPage([pictureModel, clipModel]),
+      schemaRead(pictureModel, pictureSchema),
+      schemaRead(clipModel, clipSchema),
+    ])
+    const { http, release } = heldBack(replay, clipModel)
+    const first = catalog.models(http)
+    await settled(first)
+    const during = catalog.models(http)
+    expect(await settled(during)).toBe(false)
+    release()
+    const lists = await Promise.all([first, during])
+    for (const list of lists) {
+      expect(list.map((one) => one.facts.model)).toEqual([
+        pictureModel,
+        clipModel,
+      ])
+    }
+  })
+
+  it("serves a list read after the first load at once and whole", async () => {
+    const catalog = catalogAt(new FixedClock({ now: start }))
+    const replay = new ReplayFetch([
+      catalogPage([pictureModel, clipModel]),
+      schemaRead(pictureModel, pictureSchema),
+      schemaRead(clipModel, clipSchema),
+    ])
+    const { http, release } = heldBack(replay, clipModel)
+    const first = catalog.models(http)
+    release()
+    await first
+    const after = catalog.models(http)
+    expect(await settled(after)).toBe(true)
+    expect((await after).map((one) => one.facts.model)).toEqual([
+      pictureModel,
+      clipModel,
+    ])
   })
 })
