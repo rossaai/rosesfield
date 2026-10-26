@@ -33,6 +33,11 @@ type PromptSlot = {
   onAdd?: (() => void) | undefined
 }
 
+type PromptStop = {
+  label: string
+  onStop: () => void
+}
+
 type PromptBarProps = {
   value: string
   onValueChange: (value: string) => void
@@ -52,6 +57,7 @@ type PromptBarProps = {
   submitValue?: ReactNode
   submitName?: string | undefined
   busy?: boolean
+  stop?: PromptStop | undefined
   placement?: "inline" | "dock"
   prompt?: "shown" | "none"
   className?: string
@@ -217,7 +223,7 @@ function PromptSlots({
 
 function Toolbar({ leading, chips }: PromptBarProps): ReactElement {
   return (
-    <ComposerToolbar className="mt-auto">
+    <ComposerToolbar className="mt-auto ps-s2">
       {leading}
       {chips === undefined ? null : <ComposerChips>{chips}</ComposerChips>}
     </ComposerToolbar>
@@ -275,11 +281,43 @@ function PromptField({
   )
 }
 
+function Submit({
+  props,
+  busy,
+  onSubmit,
+}: {
+  props: PromptBarProps
+  busy: boolean
+  onSubmit: () => void
+}): ReactElement {
+  if (props.stop !== undefined) {
+    return (
+      <GenerateButton
+        form="tile"
+        className="self-end"
+        label={props.stop.label}
+        onClick={props.stop.onStop}
+      />
+    )
+  }
+  return (
+    <GenerateButton
+      form="tile"
+      className="self-end"
+      label={props.submitLabel}
+      price={props.submitValue ?? props.price}
+      busy={busy}
+      onClick={onSubmit}
+      aria-label={props.submitName}
+    />
+  )
+}
+
 function PromptBar(props: PromptBarProps): ReactElement {
   const busy = props.busy === true
   const placement = props.placement ?? "inline"
   const submit = (): void => {
-    if (!busy) {
+    if (!busy && props.stop === undefined) {
       props.onSubmit()
     }
   }
@@ -308,19 +346,11 @@ function PromptBar(props: PromptBarProps): ReactElement {
           )}
           <Toolbar {...props} />
         </div>
-        <GenerateButton
-          form="tile"
-          className="self-end"
-          label={props.submitLabel}
-          price={props.submitValue ?? props.price}
-          busy={busy}
-          onClick={submit}
-          aria-label={props.submitName}
-        />
+        <Submit props={props} busy={busy} onSubmit={submit} />
       </div>
     </Composer>
   )
 }
 
-export type { PromptAttachment, PromptBarProps, PromptSlot }
+export type { PromptAttachment, PromptBarProps, PromptSlot, PromptStop }
 export { PromptBar }
