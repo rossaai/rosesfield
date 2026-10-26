@@ -7,12 +7,9 @@ import type { AppEntry } from "#define-app"
 
 let listed: readonly AppDefinition[] | null = null
 
-export function readApps(
-  entries: readonly AppEntry[],
-  order: readonly string[] = appOrder
-): AppDefinition[] {
+export function readApps(entries: readonly AppEntry[]): AppDefinition[] {
   const seen = new Set<string>()
-  const read = entries.map((entry) => {
+  return entries.map((entry) => {
     const result = appDefinition.safeParse(entry.app)
     if (!result.success) {
       throw new AppDefinitionInvalidError({
@@ -33,16 +30,23 @@ export function readApps(
         reason: "another folder lists the same app",
       })
     }
-    if (!order.includes(app.id)) {
-      throw new AppDefinitionInvalidError({
-        folder: entry.folder,
-        reason: "the app order leaves it out",
-      })
-    }
     seen.add(app.id)
     return app
   })
-  const missing = order.find((id) => !seen.has(id))
+}
+
+export function orderApps(
+  read: readonly AppDefinition[],
+  order: readonly string[] = appOrder
+): AppDefinition[] {
+  const left = read.find((app) => !order.includes(app.id))
+  if (left !== undefined) {
+    throw new AppDefinitionInvalidError({
+      folder: left.id,
+      reason: "the app order leaves it out",
+    })
+  }
+  const missing = order.find((id) => !read.some((app) => app.id === id))
   if (missing !== undefined) {
     throw new AppDefinitionInvalidError({
       folder: missing,
@@ -53,7 +57,7 @@ export function readApps(
 }
 
 export function listApps(): readonly AppDefinition[] {
-  listed ??= readApps(apps)
+  listed ??= orderApps(readApps(apps))
   return listed
 }
 
