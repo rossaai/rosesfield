@@ -2,12 +2,12 @@ import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import type { ReactElement } from "react"
 import { isAssetInput } from "@/catalog/app-facts"
 import { t, tCatalog } from "@/copy/t"
+import { aspectField } from "@/screens/app/app-form"
 import { ChoiceField } from "@/screens/app/fields/choice-field"
 import { textOf } from "@/screens/app/fields/field-props"
-import { inputCaption } from "@/screens/app/fields/input-copy"
 import { InputField } from "@/screens/app/fields/input-field"
-import { SeedField } from "@/screens/app/fields/seed-field"
-import { randomSeed } from "@/screens/app/inputs-panel"
+import { AppSettingsSection } from "@/screens/app/fields/setting-rows"
+import { appSettingsPlan } from "@/screens/app/settings-plan"
 import type { AppForm } from "@/screens/app/use-app-form"
 import {
   EffectTiles,
@@ -18,6 +18,8 @@ import { PhotoField } from "@/studio/effects/photo-field"
 import { useEffectPrices } from "@/studio/effects/use-effect-prices"
 
 export const autoAspect = "auto"
+
+const effectInput = "effect"
 
 type EffectsPanelProps = {
   app: AppListing
@@ -72,35 +74,9 @@ function AspectChoice(props: EffectsPanelProps): ReactElement {
   )
 }
 
-function ChoiceInputField(
-  props: EffectsPanelProps & {
-    name: string
-    labelOf?: (value: string) => string
-  }
-): ReactElement | null {
-  const input = choiceOf(props.app, props.name)
-  if (input === null) {
-    return null
-  }
-  const value = textOf(props.form.values.inputs[input.name]) || input.default
-  return (
-    <ChoiceField
-      label={inputCaption(input)}
-      items={input.options.map((option) => ({
-        value: option.value,
-        label: props.labelOf?.(option.value) ?? tCatalog(option.labelKey),
-      }))}
-      value={value}
-      onChange={(next) => props.form.setInput(input.name, next)}
-      note={null}
-      register={(focus) => props.form.register(input.name, focus)}
-    />
-  )
-}
-
 function EffectPart(props: EffectsPanelProps): ReactElement | null {
   const { app, form } = props
-  const effect = choiceOf(app, "effect")
+  const effect = choiceOf(app, effectInput)
   const prices = useEffectPrices(app, effectOptionsOf(app), form.values)
   if (effect === null) {
     return null
@@ -116,37 +92,8 @@ function EffectPart(props: EffectsPanelProps): ReactElement | null {
   )
 }
 
-function AdvancedPart(props: EffectsPanelProps): ReactElement {
-  const { form } = props
-  const seedInput = findInput(props.app, "seed")
-  const seed = seedInput?.type === "seed" ? seedInput : null
-  const seedValue = seed === null ? undefined : form.values.inputs[seed.name]
-  return (
-    <>
-      <ChoiceInputField
-        {...props}
-        name="resolution"
-        labelOf={(value) => tCatalog(`choice.resolution.${value}`)}
-      />
-      {seed === null ? null : (
-        <SeedField
-          mode={form.values.seedMode}
-          value={seedValue}
-          onMode={(mode) => {
-            form.setForm({ seedMode: mode })
-            if (mode === "fixed" && typeof seedValue !== "number") {
-              form.setInput(seed.name, props.lastSeed ?? randomSeed())
-            }
-          }}
-          onChange={(next) => form.setInput(seed.name, next)}
-        />
-      )}
-    </>
-  )
-}
-
 function chosenPhotoOf(props: EffectsPanelProps): string | undefined {
-  const effect = choiceOf(props.app, "effect")
+  const effect = choiceOf(props.app, effectInput)
   const chosen =
     effect === null
       ? ""
@@ -178,7 +125,12 @@ export function EffectsPanel(props: EffectsPanelProps): ReactElement {
         />
       ))}
       <AspectChoice {...props} />
-      <AdvancedPart {...props} />
+      <AppSettingsSection
+        app={app}
+        form={props.form}
+        lastSeed={props.lastSeed}
+        plan={appSettingsPlan(app, [effectInput, aspectField])}
+      />
     </div>
   )
 }
