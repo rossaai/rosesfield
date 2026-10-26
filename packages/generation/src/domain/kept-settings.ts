@@ -93,3 +93,48 @@ export function inputsOfKept(
   }
   return inputs
 }
+
+const secondsSettings: readonly string[] = [
+  "length",
+  "duration",
+  "durationSeconds",
+  "seconds",
+]
+
+function secondsOf(settings: string): number | null {
+  for (const [name, value] of keptSettingsOf(settings)) {
+    if (secondsSettings.includes(name)) {
+      const seconds = typeof value === "number" ? value : Number(value)
+      if (Number.isFinite(seconds) && seconds > 0) {
+        return seconds
+      }
+    }
+  }
+  return null
+}
+
+/** Scales the credits a kept run cost to the asked settings by its outputs, and by its seconds when both name them. */
+export function scaledCreditsOf(
+  credits: number,
+  kept: string,
+  asked: string
+): number {
+  const outputs = keptCountOf(asked) / keptCountOf(kept)
+  const keptSeconds = secondsOf(kept)
+  const askedSeconds = secondsOf(asked)
+  const seconds =
+    keptSeconds === null || askedSeconds === null
+      ? 1
+      : askedSeconds / keptSeconds
+  return credits * outputs * seconds
+}
+
+export function medianOf(values: readonly number[]): number | null {
+  const sorted = [...values].sort((one, other) => one - other)
+  if (sorted.length === 0) {
+    return null
+  }
+  const middle = Math.floor(sorted.length / 2)
+  const high = sorted[middle] ?? 0
+  return sorted.length % 2 === 1 ? high : ((sorted[middle - 1] ?? 0) + high) / 2
+}

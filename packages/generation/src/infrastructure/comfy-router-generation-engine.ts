@@ -20,7 +20,6 @@ import {
   type PriceRequest,
   pauseOn,
   type RunPrice,
-  type TokenRate,
   unknownPrice,
 } from "#domain/generation-engine.port"
 import type { ModelForm } from "#domain/model-form"
@@ -39,6 +38,7 @@ import type {
 } from "#infrastructure/router/router-catalog"
 import { failureOf } from "#infrastructure/router/router-errors"
 import { creditsUsedOf, RouterHttp } from "#infrastructure/router/router-http"
+import { nodePriceOf } from "#infrastructure/router/router-node-prices"
 import {
   type OutputRead,
   outputsOf,
@@ -46,8 +46,8 @@ import {
 } from "#infrastructure/router/router-outputs"
 import { placeholdersOf } from "#infrastructure/router/router-placeholders"
 import {
+  knownPriceOf,
   priceFromRates,
-  tokenRateOf,
 } from "#infrastructure/router/router-rates"
 import { takesToolsOf } from "#infrastructure/router/router-schema"
 import { type Timer, TimerJobRunner } from "#infrastructure/timer-job-runner"
@@ -146,33 +146,20 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
     if (estimated !== null) {
       return estimated
     }
-    try {
-      const rows = await this.catalog.rateRows(this.http)
-      const credits = priceFromRates(
-        rows,
-        entry.form,
-        request.inputs,
-        outputOf(entry),
-        request.count
-      )
-      return credits === null ? unknownPrice : { source: "rates", credits }
-    } catch {
-      return unknownPrice
-    }
-  }
-
-  override async tokenRatesOf(
-    models: readonly string[]
-  ): Promise<ReadonlyMap<string, TokenRate>> {
+    const output = outputOf(entry)
     const rows = await this.catalog.rateRows(this.http).catch(() => [])
-    const rates = new Map<string, TokenRate>()
-    for (const model of models) {
-      const rate = tokenRateOf(rows, model)
-      if (rate !== null) {
-        rates.set(model, rate)
-      }
+    const carded = priceFromRates(
+      rows,
+      entry.form,
+      request.inputs,
+      output,
+      request.count
+    )
+    if (carded !== null) {
+      return knownPriceOf(carded, "rate-card")
     }
-    return rates
+    const node = nodePriceOf(entry.form, request.inputs, output, request.count)
+    return node === null ? unknownPrice : knownPriceOf(node, "node-price")
   }
 
   override async submit(request: EngineRequest): Promise<EngineSubmission> {
@@ -374,7 +361,14 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
         : 1
       return answer.credits === null
         ? null
-        : { source: "estimate", credits: answer.credits * each }
+        : {
+            source: "estimate",
+            credits: answer.credits * each,
+            from: "engine-estimate",
+            ...(isOneAtATime(entry.form.fields, outputOf(entry))
+              ? { perOutput: true as const }
+              : {}),
+          }
     } catch {
       return null
     }

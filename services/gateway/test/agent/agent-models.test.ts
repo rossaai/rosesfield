@@ -6,8 +6,10 @@ import {
   agentModelRoutes,
   agentModelsResponse,
   type Conversation,
+  chatRatesOf,
   conversationIdFormat,
   routerChat,
+  routerChatModels,
 } from "@rosesfield/agent"
 import { errorEnvelope } from "@rosesfield/contract"
 import { type Fetch, RouterCatalog } from "@rosesfield/generation"
@@ -113,46 +115,22 @@ describe("the agent's model list", () => {
     expect((await modelsOf(await call(app))).model).toBe("maker/chat-large")
   })
 
-  it("gives each chat model its credits per million text tokens in and out from Comfy's rate card, and none to a model the card holds no pair for", async () => {
-    const tokens = "per 1M tokens"
-    const router = fakeRouter({
-      schemas: [pictureModel, chatModel],
-      rates: {
-        rates: [
-          {
-            model_id: "maker/chat-small",
-            credits: "63.3",
-            unit: tokens,
-            conditions: "Input text tokens",
-          },
-          {
-            model_id: "maker/chat-small",
-            credits: "316.5",
-            unit: tokens,
-            conditions: "Output text tokens",
-          },
-          {
-            model_id: "maker/chat-small",
-            credits: "6.33",
-            unit: tokens,
-            conditions: "Cached input tokens",
-          },
-          {
-            model_id: "maker/chat-large",
-            credits: "633",
-            unit: tokens,
-            conditions: "Input text tokens",
-          },
-        ],
-      },
-    })
-    const app = gatewayWith(router.fetch, agent())
+  it("gives each chat model its credits per million text tokens in and out from OpenRouter's published prices, which bill the agent, and none to a model that list does not price", async () => {
+    const offered = [...routerChatModels, "maker/chat-large"]
+    class OfferedAgent extends FakeAgentHarness {
+      override readonly models = offered
+    }
+    const router = fakeRouter({ schemas: [pictureModel, chatModel] })
+    const app = gatewayWith(router.fetch, new OfferedAgent(conversation, []))
 
     const listed = await modelsOf(await call(app))
 
-    expect(listed.rates).toEqual({
-      "maker/chat-small": { input: 63.3, output: 316.5 },
-    })
+    expect(Object.keys(listed.rates ?? {}).sort()).toEqual(
+      [...routerChatModels].sort()
+    )
+    expect(listed.rates?.["anthropic/claude-sonnet-5"]).toEqual(
+      chatRatesOf(["anthropic/claude-sonnet-5"])["anthropic/claude-sonnet-5"]
+    )
   })
 
   it("shows the catalog's refusal and lists no model when the Router has not turned the key on", async () => {

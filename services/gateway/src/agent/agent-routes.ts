@@ -2,6 +2,7 @@ import {
   type AgentModelChoice,
   type AgentModels,
   agentModelRoutes,
+  chatRatesOf,
   conversationRoutes,
   routerChat,
 } from "@rosesfield/agent"
@@ -41,10 +42,7 @@ async function agentModelsOf(
   if (!hasChat) {
     return { models: [], model: null, refusal: null }
   }
-  const { rates } = await scope.handlers.readTokenRates.execute({
-    models: choice.models,
-  })
-  return { ...choice, refusal: null, rates: Object.fromEntries(rates) }
+  return { ...choice, refusal: null, rates: chatRatesOf(choice.models) }
 }
 
 function modelRoutes(app: GatewayApp): void {

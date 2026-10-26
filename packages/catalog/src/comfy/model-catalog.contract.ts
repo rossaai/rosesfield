@@ -117,6 +117,18 @@ export const runPrice = z.discriminatedUnion("source", [
   z.object({
     source: z.enum(["measured", "estimate", "rates"]),
     credits: z.number(),
+    low: z.number().optional(),
+    from: z
+      .enum([
+        "measured",
+        "engine-estimate",
+        "rate-card",
+        "node-price",
+        "model-runs",
+        "task-runs",
+      ])
+      .optional(),
+    perOutput: z.literal(true).optional(),
   }),
   z.object({ source: z.literal("unknown"), credits: z.null() }),
 ])
