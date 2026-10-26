@@ -12,6 +12,7 @@ import { t } from "@/copy/t"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { useNextPage } from "@/pieces/use-next-page"
 import { runHoldsWords } from "@/pieces/view/match-words"
+import { NoMatch } from "@/pieces/view/no-match"
 import { type PlaceView, useView } from "@/pieces/view/use-view"
 import { ViewBar, viewRowClassOf } from "@/pieces/view/view-bar"
 import {
@@ -114,19 +115,11 @@ function HistoryEmpty({
 }): ReactElement {
   if (view.words.trim() !== "") {
     return (
-      <StateView
-        kind="empty"
-        title={t("library.filterEmpty.title")}
-        actions={
-          <Button
-            onClick={() => {
-              view.setWords("")
-              filters.clear()
-            }}
-          >
-            {t("library.filterEmpty.action")}
-          </Button>
-        }
+      <NoMatch
+        onShowAll={() => {
+          view.setWords("")
+          filters.clear()
+        }}
       />
     )
   }

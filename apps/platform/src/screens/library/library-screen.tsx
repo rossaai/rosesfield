@@ -12,6 +12,7 @@ import { t } from "@/copy/t"
 import { useDevice } from "@/device/device-context"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { type Uploads, useUploads } from "@/pieces/use-uploads"
+import { NoMatch } from "@/pieces/view/no-match"
 import {
   type PlaceView,
   useView,
@@ -98,15 +99,7 @@ function toggled(list: readonly string[], id: string): string[] {
 
 function LibraryEmpty(props: BodyProps): ReactElement {
   return props.isFiltered ? (
-    <StateView
-      kind="empty"
-      title={t("library.filterEmpty.title")}
-      actions={
-        <Button onClick={props.onClear}>
-          {t("library.filterEmpty.action")}
-        </Button>
-      }
-    />
+    <NoMatch onShowAll={props.onClear} />
   ) : (
     <StateView
       kind="empty"

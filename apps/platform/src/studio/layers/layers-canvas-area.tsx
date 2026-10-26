@@ -1,12 +1,18 @@
+import type { Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { StateView } from "@rosesfield/ui/components/state-view"
-import type { ReactElement } from "react"
+import type { ReactElement, ReactNode } from "react"
 import { t, tCatalog } from "@/copy/t"
-import { RunCard, RunColumns } from "@/pieces/run/run-card"
+import { RunCard, RunColumns, runHeightOf } from "@/pieces/run/run-card"
 import { RunChrome } from "@/pieces/run/run-chrome"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
+import { runHoldsWords } from "@/pieces/view/match-words"
+import { NoMatch } from "@/pieces/view/no-match"
 import { useAppRuns } from "@/screens/app/app-canvas"
+import { runsAwaitingResults, useCanvasView } from "@/screens/app/canvas-view"
+import { historyGridItems } from "@/screens/history/history-grid-items"
+import { ResultGrid } from "@/screens/library/result-grid"
 import { DownloadMenu } from "@/studio/layers/download-menu"
 import { type Brush, LayerCanvas } from "@/studio/layers/layer-canvas"
 import { LayerList, LayerStrip } from "@/studio/layers/layer-list"
@@ -150,11 +156,67 @@ function Empty({ onAdd }: { onAdd: () => void }): ReactElement {
   )
 }
 
+function PastRuns({
+  runs,
+  columns,
+  onUseInputs,
+}: {
+  runs: readonly Run[]
+  columns: number
+  onUseInputs: (run: Run) => void
+}): ReactNode {
+  return runs.length === 0 ? null : (
+    <RunColumns heights={runs.map(runHeightOf)} columns={columns}>
+      {runs.map((run) => (
+        <RunCard key={run.id} run={run} onUseInputs={onUseInputs} />
+      ))}
+    </RunColumns>
+  )
+}
+
+type PastView = { above: readonly Run[]; below: ReactNode }
+
+function usePastView(
+  latest: Run | null,
+  earlier: readonly Run[],
+  onUseInputs: (run: Run) => void
+): PastView {
+  const view = useCanvasView()
+  const past = latest === null ? earlier : [latest, ...earlier]
+  const kept = past.filter((run) => runHoldsWords(run, view.words.trim()))
+  if (past.length > 0 && kept.length === 0) {
+    return {
+      above: [],
+      below: <NoMatch onShowAll={() => view.setWords("")} />,
+    }
+  }
+  if (view.layout === "grid") {
+    return {
+      above: runsAwaitingResults(kept),
+      below: <ResultGrid items={historyGridItems(kept)} size={view.size} />,
+    }
+  }
+  return {
+    above: kept.filter((run) => run.id === latest?.id),
+    below: (
+      <PastRuns
+        runs={kept.filter((run) => run.id !== latest?.id)}
+        columns={view.columns}
+        onUseInputs={onUseInputs}
+      />
+    ),
+  }
+}
+
 export function LayersCanvasArea({
   state,
   onAdd,
 }: CanvasAreaProps): ReactElement {
   const runs = useAppRuns(state.app)
+  const { stack } = state
+  const { latest, earlier } = canvasRunsOf(runs.runs, stack?.run.id ?? null)
+  const past = usePastView(latest, earlier, state.useInputs)
+  const view = useCanvasView()
   if (runs.isPending) {
     return <Skeleton className="aspect-square w-full max-w-field-max" />
   }
@@ -168,26 +230,18 @@ export function LayersCanvasArea({
       />
     )
   }
-  const { stack } = state
-  const { latest, earlier } = canvasRunsOf(runs.runs, stack?.run.id ?? null)
   if (stack === null && latest === null) {
     return <Empty onAdd={onAdd} />
   }
   return (
-    <div className="flex flex-col gap-s6">
-      {latest === null ? null : (
-        <RunColumns>
-          <RunCard run={latest} onUseInputs={state.useInputs} />
-        </RunColumns>
-      )}
+    <div data-slot="layers-canvas-area" className="flex flex-col gap-s6">
+      <PastRuns
+        runs={past.above}
+        columns={view.columns}
+        onUseInputs={state.useInputs}
+      />
       {stack === null ? null : <StackView state={state} stack={stack} />}
-      {earlier.length === 0 ? null : (
-        <RunColumns>
-          {earlier.map((run) => (
-            <RunCard key={run.id} run={run} onUseInputs={state.useInputs} />
-          ))}
-        </RunColumns>
-      )}
+      {past.below}
     </div>
   )
 }

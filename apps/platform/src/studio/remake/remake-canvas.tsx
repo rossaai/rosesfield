@@ -7,13 +7,14 @@ import { isWorking } from "@/api/queries"
 import { appEmptyTitle, aspectOf, defaultAspectOf } from "@/catalog/app-facts"
 import { t, tCatalog } from "@/copy/t"
 import { aspectStyle } from "@/pieces/asset-tile"
-import { RunCard } from "@/pieces/run/run-card"
+import { RunCard, RunColumns, runHeightOf } from "@/pieces/run/run-card"
 import {
   type RunChromeOf,
   RunFrame,
   RunOutputs,
 } from "@/pieces/run/run-outputs"
 import { useAppRuns } from "@/screens/app/app-canvas"
+import { RunsInView } from "@/screens/app/canvas-view"
 import { PlanView } from "@/studio/remake/plan-view"
 import { RemakePair } from "@/studio/remake/remake-pair"
 import {
@@ -113,8 +114,7 @@ export function RemakeCanvas({
   if (runs.isPending) {
     return <CanvasSkeleton app={app} />
   }
-  const [latest, ...earlier] = runs.runs
-  if (latest === undefined) {
+  if (runs.runs.length === 0) {
     return (
       <StateView
         kind={runs.isError ? "failed" : "empty"}
@@ -131,11 +131,15 @@ export function RemakeCanvas({
     )
   }
   return (
-    <div className="flex flex-col gap-s6">
-      <RemakeRun run={latest} onUseInputs={onUseInputs} />
-      {earlier.map((run) => (
-        <RemakeRun key={run.id} run={run} onUseInputs={onUseInputs} />
-      ))}
-    </div>
+    <RunsInView
+      runs={runs.runs}
+      cards={(shown, columns) => (
+        <RunColumns heights={shown.map(runHeightOf)} columns={columns}>
+          {shown.map((run) => (
+            <RemakeRun key={run.id} run={run} onUseInputs={onUseInputs} />
+          ))}
+        </RunColumns>
+      )}
+    />
   )
 }

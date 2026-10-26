@@ -14,10 +14,11 @@ import { appEmptyTitle } from "@/catalog/app-facts"
 import { t, tCatalog } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
 import { OutputRow } from "@/pieces/run/output-row"
-import { RunCard } from "@/pieces/run/run-card"
+import { RunCard, RunColumns, runHeightOf } from "@/pieces/run/run-card"
 import { runAspect } from "@/pieces/run/run-facts"
 import { type RunChromeOf, RunOutputs } from "@/pieces/run/run-outputs"
 import { useAppRuns } from "@/screens/app/app-canvas"
+import { RunsInView } from "@/screens/app/canvas-view"
 import { useUpdateCharacter } from "@/screens/characters/character-actions"
 import { modeOfRun, viewInput } from "@/studio/characters/mode-listing"
 import { SaveCharacterButton } from "@/studio/characters/save-character-dialog"
@@ -177,10 +178,15 @@ export function ModeCanvas(props: ModeCanvasProps): ReactElement {
     )
   }
   return (
-    <div className="flex flex-col gap-s6">
-      {shown.map((run) => (
-        <RunBlock key={run.id} run={run} onUseInputs={props.onUseInputs} />
-      ))}
-    </div>
+    <RunsInView
+      runs={shown}
+      cards={(kept, columns) => (
+        <RunColumns heights={kept.map(runHeightOf)} columns={columns}>
+          {kept.map((run) => (
+            <RunBlock key={run.id} run={run} onUseInputs={props.onUseInputs} />
+          ))}
+        </RunColumns>
+      )}
+    />
   )
 }

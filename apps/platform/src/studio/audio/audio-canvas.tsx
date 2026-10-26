@@ -11,13 +11,7 @@ import {
   RunOutputs,
 } from "@/pieces/run/run-outputs"
 import { CanvasSkeleton, useAppRuns } from "@/screens/app/app-canvas"
-import {
-  MatchedRuns,
-  runsAwaitingResults,
-  useCanvasView,
-} from "@/screens/app/canvas-view"
-import { historyGridItems } from "@/screens/history/history-grid-items"
-import { ResultGrid } from "@/screens/library/result-grid"
+import { RunsInView } from "@/screens/app/canvas-view"
 import { WaveformPlayer } from "@/studio/audio/waveform-player"
 import { useViewer } from "@/viewer/viewer-context"
 
@@ -73,34 +67,6 @@ function AudioRuns({
   )
 }
 
-function ViewedRuns({
-  runs,
-  onUseInputs,
-}: {
-  runs: readonly Run[]
-  onUseInputs: (run: Run) => void
-}): ReactElement {
-  const view = useCanvasView()
-  if (view.layout === "grid") {
-    const awaiting = runsAwaitingResults(runs)
-    return (
-      <div data-slot="app-grid" className="flex flex-col gap-s2">
-        {awaiting.length === 0 ? null : (
-          <AudioRuns
-            runs={awaiting}
-            columns={view.columns}
-            onUseInputs={onUseInputs}
-          />
-        )}
-        <ResultGrid items={historyGridItems(runs)} size={view.size} />
-      </div>
-    )
-  }
-  return (
-    <AudioRuns runs={runs} columns={view.columns} onUseInputs={onUseInputs} />
-  )
-}
-
 export function AudioCanvas(props: AudioCanvasProps): ReactElement {
   const runs = useAppRuns(props.app)
   if (runs.isPending) {
@@ -125,8 +91,15 @@ export function AudioCanvas(props: AudioCanvasProps): ReactElement {
     )
   }
   return (
-    <MatchedRuns runs={runs.runs}>
-      {(kept) => <ViewedRuns runs={kept} onUseInputs={props.onUseInputs} />}
-    </MatchedRuns>
+    <RunsInView
+      runs={runs.runs}
+      cards={(shown, columns) => (
+        <AudioRuns
+          runs={shown}
+          columns={columns}
+          onUseInputs={props.onUseInputs}
+        />
+      )}
+    />
   )
 }

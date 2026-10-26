@@ -150,6 +150,7 @@ export function StoryboardFrame(props: StoryboardFrameProps): ReactElement {
         <AppStage
           app={props.app}
           kind="column"
+          layouts="none"
           scrollRef={fit.ref}
           scrollClassName="px-4"
         >
