@@ -222,21 +222,6 @@ test.describe("the tray and rhythm of Video's column", () => {
       .toBe(true)
   })
 
-  test("fits every part above the footer at rest on LTX 2.5, with an Elements chip in the prompt", async ({
-    page,
-  }) => {
-    await page.goto("/apps/video")
-    const column = page.locator('[data-slot="composer"]')
-    await expect(column.locator(modelRow)).toContainText("LTX 2.5")
-    await expect(column.getByRole("button", { name: "Elements" })).toBeVisible()
-    const parts = column.locator('[data-slot="composer-prompt"]')
-    await expect
-      .poll(() =>
-        parts.evaluate((node) => node.scrollHeight <= node.clientHeight)
-      )
-      .toBe(true)
-  })
-
   test("opens the model list 8 px to the right of the model row", async ({
     page,
   }) => {
@@ -251,6 +236,30 @@ test.describe("the tray and rhythm of Video's column", () => {
       .toBe(rowBox.x + rowBox.width + 8)
     const listBox = await boxOf(list)
     expect(listBox.width).toBe(402)
+  })
+})
+
+test.describe("Video's settings in the column", () => {
+  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
+
+  test("opens on LTX 2.5 with an Elements chip in the prompt, and its length and resolution as rows below the model, with Advanced closed", async ({
+    page,
+  }) => {
+    await page.goto("/apps/video")
+    const column = page.locator('[data-slot="composer"]')
+    const chip = column.locator(modelRow)
+    await expect(chip).toContainText("LTX 2.5")
+    await expect(column.getByRole("button", { name: "Elements" })).toBeVisible()
+    const length = column.getByRole("group", { name: "Length" })
+    await expect(length).toHaveCount(1)
+    expect((await boxOf(length)).y).toBeGreaterThan((await boxOf(chip)).y)
+    await expect(
+      column.getByRole("radiogroup", { name: "Resolution" })
+    ).toHaveCount(1)
+    await expect(
+      column.getByRole("button", { name: "Advanced" })
+    ).toHaveAttribute("aria-expanded", "false")
+    await expect(column.getByText("Seed")).toHaveCount(0)
   })
 })
 
