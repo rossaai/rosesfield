@@ -46,6 +46,6 @@ describe("a choice chip on the Image bar", () => {
     render(
       <FieldChoiceChip field={quality} form={formWith({ quality: "low" })} />
     )
-    expect(shown()).toBe("low")
+    expect(shown()).toBe("Low")
   })
 })

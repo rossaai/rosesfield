@@ -291,12 +291,14 @@ function withCountSwitch(
   if (typeof value === "number" && value > 1) {
     return { ...inputs, [found.field.name]: found.many }
   }
-  return {
-    ...Object.fromEntries(
-      Object.entries(inputs).filter(([name]) => name !== count.name)
-    ),
-    [found.field.name]: found.one,
-  }
+  const single = Object.fromEntries(
+    Object.entries(inputs).filter(
+      ([name]) => name !== count.name && name !== found.field.name
+    )
+  )
+  return found.one === null
+    ? single
+    : { ...single, [found.field.name]: found.one }
 }
 
 /** Reads a model's form as the platform shows it: a count that a series switch turns on counts from one, as the switch's single result. */

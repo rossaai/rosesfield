@@ -326,6 +326,14 @@ describe("a hosted model's form", () => {
       sequentialImageGeneration: "auto",
       maxImages: 2,
     })
+    expect(
+      hostedBody(
+        "maker/image-2",
+        sequential,
+        valuesWith({ maxImages: 1, sequentialImageGeneration: "disabled" }),
+        "image"
+      ).inputs
+    ).toEqual({ model: "maker/image-2" })
   })
 
   it("writes the default of every setting the form does not hold yet, and keeps the ones it holds", () => {

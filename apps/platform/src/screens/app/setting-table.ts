@@ -298,16 +298,16 @@ export function inputSentValueOf(
 const countSwitches: readonly {
   names: readonly string[]
   many: string
-  one: string
+  one: string | null
 }[] = [
   { names: ["resultType"], many: "series", one: "single" },
-  { names: ["sequentialImageGeneration"], many: "auto", one: "disabled" },
+  { names: ["sequentialImageGeneration"], many: "auto", one: null },
 ]
 
 export type CountSwitch = {
   field: Extract<ModelField, { kind: "choice" }>
   many: string
-  one: string
+  one: string | null
 }
 
 /** Finds the choice a model needs set before its count field makes more than one result, such as a series switch. */
@@ -324,7 +324,8 @@ export function countSwitchOf(
     if (
       found !== undefined &&
       field.options.some((one) => String(one) === found.many) &&
-      field.options.some((one) => String(one) === found.one)
+      (found.one === null ||
+        field.options.some((one) => String(one) === found.one))
     ) {
       return { field, many: found.many, one: found.one }
     }
