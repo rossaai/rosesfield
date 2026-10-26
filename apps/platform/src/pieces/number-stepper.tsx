@@ -110,7 +110,8 @@ export function NumberStepper(props: NumberStepperProps): ReactElement {
     props.onChange(clamp(next, props.min, props.max))
   }
   return (
-    <fieldset
+    <div
+      role="group"
       aria-label={props.label}
       data-slot="number-stepper"
       className={cn(
@@ -143,6 +144,6 @@ export function NumberStepper(props: NumberStepperProps): ReactElement {
       >
         <PlusIcon aria-hidden="true" />
       </IconButton>
-    </fieldset>
+    </div>
   )
 }

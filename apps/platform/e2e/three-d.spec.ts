@@ -60,6 +60,38 @@ test.describe("3D's column on From an image", () => {
   })
 })
 
+test.describe("3D's Advanced settings", () => {
+  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
+
+  test("centres Target polycount's icon, number and buttons on its field's middle", async ({
+    page,
+  }) => {
+    await page.goto("/apps/three-d")
+    const column = page.locator("aside")
+    await column.getByRole("button", { name: "Advanced" }).click()
+    const field = column.getByRole("group", { name: "Target polycount" })
+    await expect(field).toBeVisible()
+    const middleOf = async (
+      part: ReturnType<typeof page.locator>
+    ): Promise<number> => {
+      const box = await part.boundingBox()
+      if (box === null) {
+        throw new Error("a part of the field is not drawn")
+      }
+      return box.y + box.height / 2
+    }
+    const middle = await middleOf(field)
+    for (const part of [
+      field.locator("[data-slot='stepper-lead'] svg"),
+      field.getByRole("spinbutton"),
+      field.getByRole("button").first(),
+      field.getByRole("button").last(),
+    ]) {
+      expect(Math.abs((await middleOf(part)) - middle)).toBeLessThan(1)
+    }
+  })
+})
+
 test.describe("3D's model picker", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
