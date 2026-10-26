@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 
-test("the Image picker opens on Z-Image Turbo, shows its capabilities under its name and no maker's line, lists no Ming row and none of the app's own words about a graph", async ({
+test("the Image picker opens on Z-Image Turbo, shows no release date, lab or Ran in Rosesfield under its name and no maker's line, lists no Ming row and none of the app's own words about a graph", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "desktop", "the desktop picker")
@@ -15,8 +15,14 @@ test("the Image picker opens on Z-Image Turbo, shows its capabilities under its 
   const rows = list.locator("[data-slot='model-row']")
   await expect(rows.first()).toBeVisible()
   const turbo = rows.filter({ hasText: "Z-Image Turbo" }).first()
+  await expect(turbo.locator("[data-slot='model-row-name']")).toHaveText(
+    "Z-Image Turbo"
+  )
+  await expect(turbo).not.toContainText("2025")
+  await expect(turbo).not.toContainText("Ran in Rosesfield")
+  await expect(turbo).not.toContainText("Tongyi")
   await expect(
-    turbo.locator("[data-slot='model-row-capability']").first()
+    list.locator("[data-slot='model-row-capability']").first()
   ).toBeVisible()
   await expect(turbo).not.toContainText(
     "Photorealistic images, with text in English and Chinese"

@@ -1,93 +1,89 @@
 import type { ModelPickerRow } from "@rosesfield/ui/components/model-row"
 
-type ModelPickerSection = {
-  id: string
-  label: string
-  rows: readonly ModelPickerRow[]
-}
-
-type ModelPickerOrder = "top" | "newest" | "price" | "lastUsed"
-
-type ModelPickerWeights = "all" | "open"
-
-type ModelPickerFilters = Record<ModelPickerOrder | "order" | "open", string>
+type ModelPickerSort = "rankBest" | "rankLast" | "priceLow" | "priceHigh"
 
 type SearchedRow = { row: ModelPickerRow; text: string }
 
-const modelPickerOrders: readonly ModelPickerOrder[] = [
-  "top",
-  "newest",
-  "price",
-  "lastUsed",
+const modelPickerSorts: readonly ModelPickerSort[] = [
+  "rankBest",
+  "rankLast",
+  "priceLow",
+  "priceHigh",
 ]
 
-function rowsOf(sections: readonly ModelPickerSection[]): ModelPickerRow[] {
-  const seen = new Set<string>()
-  return sections.flatMap((section) =>
-    section.rows.filter((row) => !seen.has(row.id) && seen.add(row.id) !== null)
-  )
+const recentLimit = 3
+
+function isModelPickerSort(value: string): value is ModelPickerSort {
+  return modelPickerSorts.some((sort) => sort === value)
 }
 
 function firstThenRest(
   rows: readonly ModelPickerRow[],
   isFirst: (row: ModelPickerRow) => boolean,
-  compare: (a: ModelPickerRow, b: ModelPickerRow) => number
+  order: (first: ModelPickerRow[]) => ModelPickerRow[]
 ): ModelPickerRow[] {
-  const first = rows.filter(isFirst).sort(compare)
-  return [...first, ...rows.filter((row) => !isFirst(row))]
+  return [
+    ...order(rows.filter(isFirst)),
+    ...rows.filter((row) => !isFirst(row)),
+  ]
 }
 
-function orderedRows(
+function creditsOf(row: ModelPickerRow): number {
+  return row.price?.credits ?? 0
+}
+
+function sortedRows(
   rows: readonly ModelPickerRow[],
-  order: ModelPickerOrder,
-  recent: readonly string[] = []
+  sort: ModelPickerSort
 ): ModelPickerRow[] {
-  switch (order) {
-    case "top":
+  switch (sort) {
+    case "rankBest":
       return [...rows]
-    case "newest":
+    case "rankLast":
       return firstThenRest(
         rows,
-        (row) => row.released !== undefined,
-        (a, b) => (b.released ?? "").localeCompare(a.released ?? "")
+        (row) => row.rank !== undefined,
+        (ranked) => ranked.reverse()
       )
-    case "price":
+    case "priceLow":
       return firstThenRest(
         rows,
-        (row) => row.cost !== undefined,
-        (a, b) => (a.cost ?? 0) - (b.cost ?? 0)
+        (row) => row.price !== undefined,
+        (priced) => priced.sort((a, b) => creditsOf(a) - creditsOf(b))
       )
-    case "lastUsed": {
-      const places = new Map(recent.map((id, index) => [id, index]))
+    case "priceHigh":
       return firstThenRest(
         rows,
-        (row) => places.has(row.id),
-        (a, b) => (places.get(a.id) ?? 0) - (places.get(b.id) ?? 0)
+        (row) => row.price !== undefined,
+        (priced) => priced.sort((a, b) => creditsOf(b) - creditsOf(a))
       )
-    }
   }
 }
 
-function hasOrder(
-  rows: readonly ModelPickerRow[],
-  order: ModelPickerOrder,
-  recent: readonly string[] = [],
-  isPricing = false
-): boolean {
-  switch (order) {
-    case "top":
-      return true
-    case "newest":
-      return rows.some((row) => row.released !== undefined)
-    case "price":
-      return isPricing || rows.some((row) => row.cost !== undefined)
-    case "lastUsed":
-      return rows.some((row) => recent.includes(row.id))
-  }
+function isOpenRow(row: ModelPickerRow): boolean {
+  return row.badges.some((badge) => badge.kind === "openWeights")
 }
 
 function hasOpenWeights(rows: readonly ModelPickerRow[]): boolean {
-  return rows.some((row) => row.isOpen === true)
+  return rows.some(isOpenRow)
+}
+
+function recentRowsOf(
+  rows: readonly ModelPickerRow[],
+  recent: readonly string[]
+): ModelPickerRow[] {
+  const byId = new Map(rows.map((row) => [row.id, row]))
+  const seen = new Set<string>()
+  return recent
+    .flatMap((id) => {
+      const row = byId.get(id)
+      if (row === undefined || seen.has(id)) {
+        return []
+      }
+      seen.add(id)
+      return [row]
+    })
+    .slice(0, recentLimit)
 }
 
 function needleOf(query: string): string {
@@ -97,7 +93,7 @@ function needleOf(query: string): string {
 function searchedRowsOf(rows: readonly ModelPickerRow[]): SearchedRow[] {
   return rows.map((row) => ({
     row,
-    text: [row.name, row.maker, row.lab ?? ""].join("\n").toLowerCase(),
+    text: [row.name, ...row.keywords].join("\n").toLowerCase(),
   }))
 }
 
@@ -105,20 +101,16 @@ function isMatch(text: string, needle: string): boolean {
   return needle === "" || text.includes(needle)
 }
 
-export type {
-  ModelPickerFilters,
-  ModelPickerOrder,
-  ModelPickerSection,
-  ModelPickerWeights,
-  SearchedRow,
-}
+export type { ModelPickerSort, SearchedRow }
 export {
   hasOpenWeights,
-  hasOrder,
   isMatch,
-  modelPickerOrders,
+  isModelPickerSort,
+  isOpenRow,
+  modelPickerSorts,
   needleOf,
-  orderedRows,
-  rowsOf,
+  recentLimit,
+  recentRowsOf,
   searchedRowsOf,
+  sortedRows,
 }

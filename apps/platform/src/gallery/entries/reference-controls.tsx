@@ -211,7 +211,6 @@ function Badges(): ReactElement {
       <span className="flex items-center text-body">
         {t("sample.model")}
         <Badge kind="new">{t("sample.badge.new")}</Badge>
-        <Badge kind="rank">{t("sample.badge.rank")}</Badge>
       </span>
       <span className="flex items-center text-body">
         {t("sample.model")}

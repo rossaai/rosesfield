@@ -48,6 +48,7 @@ import {
   conversationSettings,
   type ListedConversation,
   proposalRecords,
+  recentModelsOf,
 } from "#infrastructure/pi-conversation-docs"
 import { type PiModels, useModel } from "#infrastructure/pi-models"
 import { transcriptOf } from "#infrastructure/pi-transcript"
@@ -187,7 +188,11 @@ export class PiAgentHarness extends AgentHarness {
 
   override async listModels(): Promise<AgentModelChoice> {
     const opened = await this.open()
-    return { models: listedOf(opened), model: await chosenOf(opened) }
+    const models = listedOf(opened)
+    const settings = await opened.harness.snapshot(agentSettings, context)
+    const model = await chosenOf(opened)
+    const recent = [model, ...(settings?.recent ?? [])]
+    return { models, model, recent: recentModelsOf(recent, models) }
   }
 
   override async chooseModel(model: string): Promise<AgentModelChoice> {
@@ -198,8 +203,14 @@ export class PiAgentHarness extends AgentHarness {
         model,
       })
     }
+    const before = await chosenOf(opened)
     await opened.harness.commit(async (tx) => {
       const settings = await tx.doc(agentSettings)
+      settings.recent = recentModelsOf([
+        model,
+        before,
+        ...(settings.recent ?? []),
+      ])
       settings.model = model
     }, context)
     return this.listModels()

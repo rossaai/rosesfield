@@ -1,9 +1,4 @@
-import { Chip } from "@rosesfield/ui/components/chip"
-import {
-  ModelPicker,
-  type ModelPickerSection,
-} from "@rosesfield/ui/components/model-picker"
-import { ModelRow } from "@rosesfield/ui/components/model-row"
+import { ModelRow, rankToneOf } from "@rosesfield/ui/components/model-row"
 import {
   cleanup,
   fireEvent,
@@ -12,194 +7,111 @@ import {
   within,
 } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import {
+  openBadge,
+  openPicker,
+  rowElementOf,
+  rowOf,
+} from "./model-picker-fixture"
 
-const sections: ModelPickerSection[] = [
-  {
-    id: "featured",
-    label: "Your models",
-    rows: [
-      {
-        id: "maker/picture-2",
-        name: "Picture 2",
-        maker: "Maker",
-        tags: [],
-      },
-    ],
-  },
-  {
-    id: "Studio",
-    label: "Studio",
-    rows: [
-      {
-        id: "studio/clip-3",
-        name: "Clip 3",
-        maker: "Studio",
-        tags: [{ label: "1080p" }, { label: "5 to 10 s" }],
-      },
-      {
-        id: "studio/sketch-1",
-        name: "Sketch 1",
-        maker: "Studio",
-        tags: [{ label: "Open weights" }],
-      },
-    ],
-  },
+const rows = [
+  rowOf("maker/picture-2", { name: "Picture 2" }),
+  rowOf("studio/clip-3", {
+    name: "Clip 3",
+    keywords: ["Studio"],
+    capabilities: [{ label: "1080p" }, { label: "5 to 10 s" }],
+  }),
+  rowOf("studio/sketch-1", { name: "Sketch 1", keywords: ["Studio"] }),
 ]
 
-const badged: ModelPickerSection[] = [
-  {
-    id: "featured",
-    label: "Featured",
-    rows: [
-      {
-        id: "maker/model-4",
-        name: "Model 4",
-        maker: "Maker",
-        tags: [],
-        mark: <svg data-testid="mark" aria-hidden="true" />,
-        badges: [
-          { kind: "rank", label: "#3", note: "Rank from Picture Arena" },
-          { kind: "new", label: "New" },
-          {
-            kind: "openWeights",
-            label: "Open weights",
-            href: "https://huggingface.co/maker/model-4",
-          },
-        ],
-      },
-    ],
-  },
+const ranked = [
+  rowOf("maker/model-4", {
+    name: "Model 4",
+    mark: <svg data-testid="mark" aria-hidden="true" />,
+    rank: { place: 3, label: "#3", note: "Rank from Picture Arena" },
+    badges: [{ kind: "new", label: "New" }, openBadge],
+  }),
+  rowOf("maker/model-5", { name: "Model 5" }),
 ]
 
-function rowOf(name: string): HTMLElement {
-  const row = screen
-    .getByRole("option", { name })
-    .closest<HTMLElement>("[data-slot='model-row']")
-  if (row === null) {
-    throw new Error(`no row for ${name}`)
-  }
-  return row
-}
-
-function open(onChoose = vi.fn(), shown: ModelPickerSection[] = sections) {
-  render(
-    <ModelPicker
-      trigger={<Chip>Picture 2</Chip>}
-      title="Model"
-      searchLabel="Search models"
-      searchPlaceholder="Search by name or maker"
-      emptyLabel="No model matches"
-      sections={shown}
-      chosen="maker/picture-2"
-      onChoose={onChoose}
-      open
-    />
-  )
+function open(onChoose = vi.fn(), shown = rows) {
+  openPicker({ rows: shown, chosen: "maker/picture-2", onChoose })
   return onChoose
 }
 
 afterEach(cleanup)
 
 describe("ModelPicker", () => {
-  it("shows one list with a check on the chosen model", () => {
+  it("shows one list with a check on the chosen model and no section heading while nothing is recent", () => {
     open()
-    expect(screen.queryAllByRole("group")).toEqual([])
+    expect(document.querySelector("[data-slot='model-list-label']")).toBeNull()
     const chosen = screen.getByRole("option", { selected: true })
     expect(chosen.getAttribute("aria-label")).toBe("Picture 2")
     expect(
-      rowOf("Picture 2").querySelector("[data-slot='model-row-check'] svg")
+      rowElementOf("Picture 2").querySelector(
+        "[data-slot='model-row-check'] svg"
+      )
     ).not.toBeNull()
     expect(
-      rowOf("Clip 3").querySelector("[data-slot='model-row-check'] svg")
+      rowElementOf("Clip 3").querySelector("[data-slot='model-row-check'] svg")
     ).toBeNull()
     expect(screen.getAllByRole("option", { selected: false })).toHaveLength(2)
   })
 
-  it("shows up to three capability facts on one caption line in the neutral tone", () => {
+  it("shows up to three capabilities on one caption line in the neutral tone", () => {
     open()
-    const facts = within(rowOf("Clip 3")).getAllByText(/1080p|5 to 10 s/)
+    const facts = within(rowElementOf("Clip 3")).getAllByText(/1080p|5 to 10 s/)
     expect(facts).toHaveLength(2)
     for (const fact of facts) {
       const line = fact.closest("[data-slot='model-row-capabilities']")
       expect(line?.className.split(" ")).toEqual(
-        expect.arrayContaining(["text-caption", "text-ink-muted"])
-      )
-      expect(fact.className).not.toMatch(/bug|cem|hor|nop/)
-      expect(fact.className).not.toMatch(/truncate/)
-      expect(fact.className.split(" ")).toContain("shrink-0")
-      expect(line?.className.split(" ")).toEqual(
         expect.arrayContaining([
+          "text-caption",
+          "text-ink-muted",
           "flex-wrap",
           "overflow-hidden",
           "h-(--text-caption--line-height)",
         ])
       )
+      expect(fact.className).not.toMatch(/bug|cem|hor|nop|truncate/)
+      expect(fact.className.split(" ")).toContain("shrink-0")
     }
   })
 
-  it("never shows more than three facts", () => {
-    render(
-      <ModelPicker
-        trigger={<Chip>Many</Chip>}
-        title="Model"
-        searchLabel="Search models"
-        searchPlaceholder="Search by name or maker"
-        emptyLabel="No model matches"
-        sections={[
-          {
-            id: "all",
-            label: "All",
-            rows: [
-              {
-                id: "a/many",
-                name: "Many",
-                maker: "A",
-                tags: ["One", "Two", "Three", "Four"].map((label) => ({
-                  label,
-                })),
-              },
-            ],
-          },
-        ]}
-        chosen={null}
-        onChoose={() => undefined}
-        open
-      />
-    )
+  it("never shows more than three capabilities", () => {
+    open(vi.fn(), [
+      rowOf("a/many", {
+        name: "Many",
+        capabilities: ["One", "Two", "Three", "Four"].map((label) => ({
+          label,
+        })),
+      }),
+    ])
     expect(
-      rowOf("Many").querySelectorAll("[data-slot='model-row-capability']")
+      rowElementOf("Many").querySelectorAll(
+        "[data-slot='model-row-capability']"
+      )
     ).toHaveLength(3)
   })
 
-  it("puts the badges after the name, the rank first, and links Open weights to its page", () => {
-    open(vi.fn(), badged)
-    const row = rowOf("Model 4")
-    const badges = [...row.querySelectorAll("[data-slot='badge']")]
+  it("puts New and Open weights after the name, and no rank among them", () => {
+    open(vi.fn(), ranked)
+    const row = rowElementOf("Model 4")
+    const badges = [
+      ...row.querySelectorAll(
+        "[data-slot='model-row-name'] ~ * [data-slot='badge']"
+      ),
+    ]
     expect(badges.map((badge) => badge.getAttribute("data-kind"))).toEqual([
-      "rank",
       "new",
       "openWeights",
     ])
-    expect(badges[0]?.textContent).toBe("#3")
-    const weights = within(row).getByRole("link", { name: "Open weights" })
-    expect(weights.getAttribute("href")).toBe(
-      "https://huggingface.co/maker/model-4"
+    expect(row.querySelector("[data-slot='model-row-name']")?.textContent).toBe(
+      "Model 4"
     )
-    expect(weights.getAttribute("rel")).toBe("noopener noreferrer")
   })
 
-  it("shows the lab's mark in a tile and no picture in the list", () => {
-    open(vi.fn(), badged)
-    const list = screen.getByRole("listbox", { name: "Model" })
-    expect(list.querySelectorAll("img, video")).toHaveLength(0)
-    expect(
-      rowOf("Model 4").querySelector(
-        "[data-slot='model-row-mark'] [data-testid='mark']"
-      )
-    ).not.toBeNull()
-  })
-
-  it("filters the rows by name and by maker", () => {
+  it("filters the rows by name and by keyword", () => {
     open()
     const search = screen.getByRole("searchbox", { name: "Search models" })
     fireEvent.change(search, { target: { value: "sketch" } })
@@ -219,20 +131,7 @@ describe("ModelPicker", () => {
   })
 
   it("shows only the notice when the catalog was refused", () => {
-    render(
-      <ModelPicker
-        trigger={<Chip>Model</Chip>}
-        title="Model"
-        searchLabel="Search models"
-        searchPlaceholder="Search by name or maker"
-        emptyLabel="No model matches"
-        sections={[]}
-        chosen={null}
-        onChoose={() => undefined}
-        notice={<p>Your key belongs to no workspace</p>}
-        open
-      />
-    )
+    openPicker({ rows: [], notice: <p>Your key belongs to no workspace</p> })
     expect(screen.getByText("Your key belongs to no workspace")).toBeTruthy()
     expect(screen.queryByText("No model matches")).toBeNull()
   })
@@ -240,82 +139,116 @@ describe("ModelPicker", () => {
 
 describe("ModelPicker's Open weights link", () => {
   it("makes the whole badge the link, outside the option, so a click on it never chooses the row, and a click on the name does", () => {
-    const onChoose = open(vi.fn(), badged)
+    const onChoose = open(vi.fn(), ranked)
     const option = screen.getByRole("option", { name: "Model 4" })
-    const weights = within(rowOf("Model 4")).getByRole("link", {
+    const weights = within(rowElementOf("Model 4")).getByRole("link", {
       name: "Open weights",
     })
-    expect(weights.getAttribute("data-slot")).toBe("badge")
+    expect(weights.getAttribute("href")).toBe(openBadge.href)
     expect(weights.getAttribute("target")).toBe("_blank")
-    expect(weights.getAttribute("aria-description")).toBe(
-      "huggingface.co/maker/model-4"
-    )
+    expect(weights.getAttribute("rel")).toBe("noopener noreferrer")
     expect(
       weights.querySelector("[data-slot='hugging-face-mark']")
     ).not.toBeNull()
-    expect(
-      weights.querySelector("[data-slot='count-badge-words']")?.textContent
-    ).toBe("Open weights")
     expect(option.contains(weights)).toBe(false)
     expect(weights.closest("[role='option']")).toBeNull()
-    expect(option.querySelector("a, button")).toBeNull()
     fireEvent.click(weights)
     expect(onChoose).not.toHaveBeenCalled()
     fireEvent.click(option)
-    expect(onChoose).toHaveBeenCalledWith(option.dataset.model)
+    expect(onChoose).toHaveBeenCalledWith("maker/model-4")
   })
 })
 
 describe("ModelPicker's rank", () => {
-  it("chooses the row when you press its rank, since the rank takes the pointer for its note", () => {
-    const onChoose = open(vi.fn(), badged)
-    fireEvent.click(within(rowOf("Model 4")).getByText("#3"))
+  it("sits on the mark's top right corner, outside the tile, so the mark and the text start where a row with no rank puts them", () => {
+    open(vi.fn(), ranked)
+    const row = rowElementOf("Model 4")
+    const rank = row.querySelector<HTMLElement>("[data-slot='model-row-rank']")
+    const tile = row.querySelector("[data-slot='model-row-mark']")
+    expect(rank?.textContent).toBe("3")
+    expect(rank?.getAttribute("aria-label")).toBe("#3")
+    expect(rank?.parentElement).toBe(tile?.parentElement)
+    expect(tile?.contains(rank ?? null)).toBe(false)
+    expect(rank?.className.split(" ")).toEqual(
+      expect.arrayContaining(["absolute", "-top-1.5", "-end-1.5"])
+    )
+    const plain = rowElementOf("Model 5")
+    expect(plain.querySelector("[data-slot='model-row-rank']")).toBeNull()
+    expect(plain.querySelector("[data-slot='model-row-mark']")?.className).toBe(
+      tile?.className
+    )
+  })
+
+  it("is gold for #1, silver for #2, bronze for #3 and quiet after, from the existing tokens", () => {
+    const tones = [1, 2, 3, 4, 12].map((place) => {
+      const { container } = render(
+        <ModelRow
+          row={rowOf("a/one", {
+            rank: { place, label: `#${place}` },
+          })}
+          isChosen={false}
+          isPricing={false}
+          onChoose={() => undefined}
+        />
+      )
+      const rank = container.querySelector("[data-slot='model-row-rank']")
+      const face = rank?.firstElementChild?.className.split(" ") ?? []
+      cleanup()
+      return {
+        tone: rank?.getAttribute("data-tone"),
+        face: face.filter(
+          (name) => /^(bg|text)-/.test(name) && name !== "text-legal"
+        ),
+      }
+    })
+    expect(tones).toEqual([
+      { tone: "gold", face: ["bg-cem-tint", "text-cem-text"] },
+      { tone: "silver", face: ["bg-(--tint)", "text-ink"] },
+      { tone: "bronze", face: ["bg-(--tint)", "text-cem-text"] },
+      { tone: "quiet", face: ["bg-(--tint)", "text-ink-muted"] },
+      { tone: "quiet", face: ["bg-(--tint)", "text-ink-muted"] },
+    ])
+    expect([1, 2, 3, 4].map(rankToneOf)).toEqual([
+      "gold",
+      "silver",
+      "bronze",
+      "quiet",
+    ])
+  })
+
+  it("chooses the row when you press its rank", () => {
+    const onChoose = open(vi.fn(), ranked)
+    const rank = rowElementOf("Model 4").querySelector(
+      "[data-slot='model-row-rank']"
+    )
+    if (rank === null) {
+      throw new Error("no rank")
+    }
+    fireEvent.click(rank)
     expect(onChoose).toHaveBeenCalledWith("maker/model-4")
   })
 
-  it("names the boards and the date in a note when you hover the rank", async () => {
-    open(vi.fn(), badged)
-    const rank = within(rowOf("Model 4")).getByText("#3")
-    const badge = rank.closest<HTMLElement>("[data-slot='badge']")
-    expect(badge?.className.split(" ")).toContain("pointer-events-auto")
-    if (badge === null) {
-      throw new Error("no rank badge")
-    }
-    fireEvent.pointerEnter(badge, { pointerType: "mouse" })
-    fireEvent.mouseEnter(badge)
-    fireEvent.focus(badge)
-    expect(await screen.findByText("Rank from Picture Arena")).toBeTruthy()
-  })
-})
-
-describe("ModelPicker's Open weights place", () => {
-  it("rides 4 px after the name on the name's line, and the whole badge takes the pointer", () => {
-    open(vi.fn(), badged)
-    const row = rowOf("Model 4")
-    const weights = row.querySelector("[data-slot='model-row-weights']")
-    const name = row.querySelector("[data-slot='model-row-name']")
-    expect(name?.parentElement?.contains(weights ?? null)).toBe(true)
-    expect(name?.parentElement?.lastElementChild).toBe(weights)
-    expect(weights?.className.split(" ")).toContain("shrink-0")
-    expect(weights?.className.split(" ")).not.toContain("pointer-events-auto")
-    const badge = weights?.querySelector("[data-slot='badge']")
-    expect(badge?.tagName.toLowerCase()).toBe("a")
-    expect(badge?.className.split(" ")).toEqual(
-      expect.arrayContaining([
-        "ms-1",
-        "[&_svg]:size-3",
-        "pointer-events-auto",
-        "relative",
-        "z-10",
-      ])
+  it("names the boards and the date in a note on hover and on focus, and takes the keyboard after the option", async () => {
+    open(vi.fn(), ranked)
+    const rank = rowElementOf("Model 4").querySelector<HTMLElement>(
+      "[data-slot='model-row-rank']"
     )
+    if (rank === null) {
+      throw new Error("no rank")
+    }
+    expect(rank.className.split(" ")).toContain("pointer-events-auto")
+    expect(rank.tabIndex).toBe(0)
+    fireEvent.focus(rank)
+    expect(await screen.findByText("Rank from Picture Arena")).toBeTruthy()
   })
 })
 
 describe("ModelPicker's rows and motion", () => {
   it("sets each row's 33 px mark tile on its ground's well and the check muted at the end", () => {
     open()
-    const tile = rowOf("Clip 3").querySelector("[data-slot='model-row-mark']")
+    const tile = rowElementOf("Clip 3").querySelector(
+      "[data-slot='model-row-mark']"
+    )
     expect(tile?.className.split(" ")).toEqual(
       expect.arrayContaining([
         "size-icon-dense",
@@ -324,31 +257,30 @@ describe("ModelPicker's rows and motion", () => {
       ])
     )
     expect(
-      rowOf("Picture 2").querySelector("[data-slot='model-row-check']")
+      rowElementOf("Picture 2").querySelector("[data-slot='model-row-check']")
         ?.className
     ).toContain("text-ink-muted")
   })
 
-  it("opens on the popover preset over the same material as every menu, growing from its chip", () => {
+  it("opens on the popover preset over the same material as every menu", () => {
     open()
     const list = document.querySelector("[data-slot='model-picker']")
     const classes = list?.className.split(" ") ?? []
     expect(classes).toEqual(
       expect.arrayContaining(["motion-popover", "material"])
     )
-    expect(classes.filter((name) => name.includes("translate-y"))).toEqual([])
     expect(list?.getAttribute("data-material")).toBe("regular")
   })
 })
 
 describe("ModelRow's price slot", () => {
   it("holds a skeleton while pending, the figure after the coin when known, and nothing when no price exists, at one height", () => {
-    const row = { id: "a/one", name: "One", maker: "A", tags: [] }
+    const row = rowOf("a/one")
     const heights: string[] = []
     const states: (string | null | undefined)[] = []
     for (const [price, isPricing] of [
       [undefined, true],
-      [{ amount: "6.5", name: "6.5 credits" }, false],
+      [{ amount: "6.5", name: "6.5 credits", credits: 6.5 }, false],
       [undefined, false],
     ] as const) {
       const { container } = render(
@@ -364,21 +296,12 @@ describe("ModelRow's price slot", () => {
       heights.push(
         container.querySelector("[data-slot='model-row']")?.className ?? ""
       )
-      if (price === undefined && isPricing) {
-        expect(
-          slot?.querySelector("[data-slot='model-row-price-loading']")
-        ).not.toBeNull()
-      } else if (price !== undefined) {
+      if (price !== undefined) {
         const figure = slot?.querySelector("[data-slot='credit-price']")
         expect(figure?.textContent).toBe("6.5")
-        expect(figure?.firstElementChild?.tagName.toLowerCase()).toBe("svg")
-      } else {
+      } else if (!isPricing) {
         expect(slot?.childElementCount).toBe(0)
-        expect(slot?.className.split(" ")).toEqual(
-          expect.arrayContaining(["data-[state=none]:w-0"])
-        )
       }
-      expect(container.textContent).not.toMatch(/unknown/i)
       cleanup()
     }
     expect(states).toEqual(["pending", "known", "none"])

@@ -68,6 +68,7 @@ function ModelPill(): ReactElement | null {
     <AgentModelPicker
       models={listed.models}
       rates={listed.rates}
+      recent={listed.recent}
       chosen={(choose.isPending ? choose.variables : null) ?? listed.model}
       onChoose={(model) => choose.mutate(model)}
       disabled={choose.isPending}

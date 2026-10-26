@@ -33,5 +33,4 @@ export const comfyCopy = {
   "comfy.model.byteplusSeedream50Pro260628.line":
     "Layouts with text in many languages",
   "comfy.badge.new": "New",
-  "comfy.badge.top": "Top",
 } satisfies Record<string, string>

@@ -3,48 +3,48 @@ import type { AppListing } from "@rosesfield/contract"
 import {
   ModelPicker,
   type ModelPickerRow,
-  type ModelPickerSection,
+  type ModelPrice,
 } from "@rosesfield/ui/components/model-picker"
-import type { ModelPrice } from "@rosesfield/ui/components/model-row"
-import { type ReactElement, useState } from "react"
-import { t } from "@/copy/t"
+import { type ReactElement, useMemo, useState } from "react"
 import {
-  pickerFilters,
-  pickerSections,
+  catalogRowModel,
   pickerTrigger,
-  tagOf,
-  todayOf,
+  useRecentModels,
+  useSamePrices,
 } from "@/screens/app/hosted/catalog-picker"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
+import {
+  modelRowsOf,
+  pickerWords,
+  type RowModel,
+  todayOf,
+} from "@/screens/app/hosted/model-rows"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import { useRowPrices } from "@/screens/app/hosted/use-row-prices"
 import { modelPhotoLimitOf } from "@/studio/ads/ads-rules"
 
-function rowWithPhotos(
-  app: AppListing,
-  row: ModelPickerRow,
-  model: CatalogModel | undefined
-): ModelPickerRow {
-  const photos = tagOf({
-    kind: "references",
-    max: modelPhotoLimitOf(app, row.id, model),
-  })
+function adsRowModel(app: AppListing, model: CatalogModel): RowModel {
+  const row = catalogRowModel(model)
+  const max = modelPhotoLimitOf(app, model.id, model)
   return {
     ...row,
-    tags: [photos, ...row.tags.filter((tag) => tag.label !== photos.label)],
+    tags: [
+      { kind: "references", max },
+      ...row.tags.filter((tag) => tag.kind !== "references"),
+    ],
   }
 }
 
-export function adsPickerSections(
+export function adsRowsOf(
   app: AppListing,
-  hosted: HostedState,
-  prices: ReadonlyMap<string, ModelPrice> = new Map()
-): ModelPickerSection[] {
-  const byId = new Map(hosted.models.map((model) => [model.id, model]))
-  return pickerSections(hosted, todayOf(), prices).map((section) => ({
-    ...section,
-    rows: section.rows.map((row) => rowWithPhotos(app, row, byId.get(row.id))),
-  }))
+  hosted: Pick<HostedState, "models">,
+  prices: ReadonlyMap<string, ModelPrice> = new Map(),
+  today: string = todayOf()
+): ModelPickerRow[] {
+  return modelRowsOf(
+    hosted.models.map((model) => adsRowModel(app, model)),
+    { today, prices }
+  )
 }
 
 type AdsCatalogPickerProps = {
@@ -60,20 +60,24 @@ export function AdsCatalogPicker({
 }: AdsCatalogPickerProps): ReactElement {
   const [isOpen, setOpen] = useState(false)
   const { prices, isPricing } = useRowPrices(hosted, isOpen)
+  const samePrices = useSamePrices(prices)
+  const recent = useRecentModels(hosted.pricing?.appId ?? null)
+  const { models } = hosted
+  const rows = useMemo(
+    () => adsRowsOf(app, { models }, samePrices),
+    [app, models, samePrices]
+  )
   return (
     <ModelPicker
       trigger={pickerTrigger(hosted, place)}
-      title={t("model.picker.title")}
-      searchLabel={t("model.picker.search")}
-      searchPlaceholder={t("model.picker.searchPlaceholder")}
-      emptyLabel={t("model.picker.empty")}
-      sections={adsPickerSections(app, hosted, prices)}
+      words={pickerWords()}
+      rows={rows}
       chosen={hosted.chosen?.id ?? null}
       onChoose={hosted.choose}
       open={isOpen}
       onOpenChange={setOpen}
       isPricing={isPricing}
-      filters={pickerFilters()}
+      recent={recent}
       side="top"
       isLoading={hosted.isLoading}
       notice={

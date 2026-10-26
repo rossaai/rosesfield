@@ -2,6 +2,11 @@ import { Badge, type BadgeKind } from "@rosesfield/ui/components/badge"
 import { CreditPrice } from "@rosesfield/ui/components/credit-price"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@rosesfield/ui/components/tooltip"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { CheckIcon } from "lucide-react"
@@ -16,28 +21,105 @@ type ModelBadge = {
   kind: BadgeKind
   label: string
   href?: string
-  note?: string
-  mark?: ReactNode
   markColour?: string
+}
+
+type ModelRank = {
+  place: number
+  label: string
+  note?: string
 }
 
 type ModelPrice = {
   amount: string
   name: string
+  credits: number
 }
 
 type ModelPickerRow = {
   id: string
   name: string
-  maker: string
-  lab?: string
-  tags: readonly ModelPickerTag[]
+  keywords: readonly string[]
   mark?: ReactNode
-  badges?: readonly ModelBadge[]
+  rank?: ModelRank
+  badges: readonly ModelBadge[]
+  capabilities: readonly ModelPickerTag[]
   price?: ModelPrice
-  cost?: number
-  released?: string
-  isOpen?: boolean
+}
+
+type RankTone = "gold" | "silver" | "bronze" | "quiet"
+
+const rankTones = {
+  gold: "bg-cem-tint text-cem-text",
+  silver: "bg-(--tint) text-ink",
+  bronze: "bg-(--tint) text-cem-text",
+  quiet: "bg-(--tint) text-ink-muted",
+} satisfies Record<RankTone, string>
+
+function rankToneOf(place: number): RankTone {
+  switch (place) {
+    case 1:
+      return "gold"
+    case 2:
+      return "silver"
+    case 3:
+      return "bronze"
+    default:
+      return "quiet"
+  }
+}
+
+function RankBadge({ rank }: { rank: ModelRank }): ReactElement {
+  const tone = rankToneOf(rank.place)
+  const badge = (
+    <span
+      role="img"
+      data-slot="model-row-rank"
+      data-tone={tone}
+      aria-label={rank.label}
+      tabIndex={rank.note === undefined ? undefined : 0}
+      className={cn(
+        "pointer-events-auto absolute -end-1.5 -top-1.5 z-10 flex rounded-full bg-(--ground) outline-none",
+        interaction.ring
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-medium text-legal leading-none tabular-nums",
+          rankTones[tone]
+        )}
+      >
+        {rank.place}
+      </span>
+    </span>
+  )
+  if (rank.note === undefined) {
+    return badge
+  }
+  return (
+    <Tooltip>
+      <TooltipTrigger render={badge} />
+      <TooltipContent className="pointer-events-none h-auto py-s1 whitespace-normal">
+        {rank.note}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
+function RowMark({ row }: { row: ModelPickerRow }): ReactElement {
+  return (
+    <span className="relative flex shrink-0">
+      <span
+        data-slot="model-row-mark"
+        aria-hidden="true"
+        className="flex size-icon-dense shrink-0 items-center justify-center rounded-dense bg-(--well) text-ink-muted group-data-[chosen=yes]/row:text-ink [&_svg]:glyph-small"
+      >
+        {row.mark}
+      </span>
+      {row.rank === undefined ? null : <RankBadge rank={row.rank} />}
+    </span>
+  )
 }
 
 function RowBadge({ badge }: { badge: ModelBadge }): ReactElement {
@@ -45,8 +127,6 @@ function RowBadge({ badge }: { badge: ModelBadge }): ReactElement {
     <Badge
       kind={badge.kind}
       {...(badge.href === undefined ? {} : { href: badge.href })}
-      {...(badge.note === undefined ? {} : { note: badge.note })}
-      {...(badge.mark === undefined ? {} : { mark: badge.mark })}
       {...(badge.markColour === undefined
         ? {}
         : { markColour: badge.markColour })}
@@ -57,9 +137,8 @@ function RowBadge({ badge }: { badge: ModelBadge }): ReactElement {
 }
 
 function RowName({ row }: { row: ModelPickerRow }): ReactElement {
-  const badges = row.badges ?? []
-  const facts = badges.filter((badge) => badge.kind !== "openWeights")
-  const weights = badges.filter((badge) => badge.kind === "openWeights")
+  const facts = row.badges.filter((badge) => badge.kind !== "openWeights")
+  const weights = row.badges.filter((badge) => badge.kind === "openWeights")
   return (
     <span className="flex min-w-0 items-center">
       <span data-slot="model-row-name" className="truncate text-body text-ink">
@@ -83,11 +162,11 @@ function RowName({ row }: { row: ModelPickerRow }): ReactElement {
   )
 }
 
-const factLimit = 3
+const capabilityLimit = 3
 
-function RowFacts({ row }: { row: ModelPickerRow }): ReactNode {
-  const facts = row.tags.slice(0, factLimit)
-  if (facts.length === 0) {
+function RowCapabilities({ row }: { row: ModelPickerRow }): ReactNode {
+  const shown = row.capabilities.slice(0, capabilityLimit)
+  if (shown.length === 0) {
     return null
   }
   return (
@@ -95,14 +174,14 @@ function RowFacts({ row }: { row: ModelPickerRow }): ReactNode {
       data-slot="model-row-capabilities"
       className="flex h-(--text-caption--line-height) min-w-0 flex-wrap items-center gap-x-s2 overflow-hidden text-caption whitespace-nowrap text-ink-muted"
     >
-      {facts.map((fact) => (
+      {shown.map((capability) => (
         <span
-          key={fact.label}
+          key={capability.label}
           data-slot="model-row-capability"
           className="inline-flex h-(--text-caption--line-height) shrink-0 items-center gap-s1 [&_svg]:glyph-small"
         >
-          {fact.icon}
-          {fact.label}
+          {capability.icon}
+          {capability.label}
         </span>
       ))}
     </span>
@@ -184,16 +263,10 @@ function ModelRowView({
         }}
         className="pointer-events-none relative flex h-full items-center ps-s2 pe-s3"
       >
-        <span
-          data-slot="model-row-mark"
-          aria-hidden="true"
-          className="flex size-icon-dense shrink-0 items-center justify-center rounded-dense bg-(--well) text-ink-muted group-data-[chosen=yes]/row:text-ink [&_svg]:glyph-small"
-        >
-          {row.mark}
-        </span>
+        <RowMark row={row} />
         <span className="ms-s2 flex min-w-0 flex-1 flex-col">
           <RowName row={row} />
-          <RowFacts row={row} />
+          <RowCapabilities row={row} />
         </span>
         <RowPrice price={row.price} isPricing={isPricing} />
         <span
@@ -230,6 +303,8 @@ export type {
   ModelPickerRow,
   ModelPickerTag,
   ModelPrice,
+  ModelRank,
   ModelRowProps,
+  RankTone,
 }
-export { ModelRow, ModelRowSkeleton }
+export { ModelRow, ModelRowSkeleton, rankToneOf }

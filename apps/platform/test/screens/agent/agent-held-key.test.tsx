@@ -44,6 +44,7 @@ function devSettings(agent: GatewaySettings["agent"]): GatewaySettings {
 const listed: AgentModels = {
   models: ["deepseek/deepseek-v4-flash"],
   model: "deepseek/deepseek-v4-flash",
+  recent: [],
   refusal: null,
   rates: {},
 }
@@ -51,6 +52,7 @@ const listed: AgentModels = {
 const noChat: AgentModels = {
   models: [],
   model: null,
+  recent: [],
   refusal: null,
   rates: {},
 }

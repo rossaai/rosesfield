@@ -182,7 +182,7 @@ describe("the agent on a Comfy Router chat model", () => {
     expect(opened.replay.requests).toEqual([])
   })
 
-  it("answers with the model you choose from the Router chat models", async () => {
+  it("answers with the model you choose from the Router chat models, and lists the last three you chose, newest first", async () => {
     const opened = openRouterAgent([
       textAnswer("qwen/qwen3.6-flash", "Hi.", 0.0001),
     ])
@@ -191,13 +191,25 @@ describe("the agent on a Comfy Router chat model", () => {
     expect(await agent.listModels()).toEqual({
       models: [...routerChatModels],
       model: defaultChatModel,
+      recent: [defaultChatModel],
     })
     await expect(agent.chooseModel("maker/none")).rejects.toBeInstanceOf(
       AgentModelUnknownError
     )
     expect(await agent.chooseModel("qwen/qwen3.6-flash")).toMatchObject({
       model: "qwen/qwen3.6-flash",
+      recent: ["qwen/qwen3.6-flash", defaultChatModel],
     })
+    await agent.chooseModel("z-ai/glm-4.6")
+    await agent.chooseModel("deepseek/deepseek-v3.2")
+    await agent.chooseModel("z-ai/glm-4.6")
+    await agent.chooseModel(defaultChatModel)
+    expect((await agent.listModels()).recent).toEqual([
+      defaultChatModel,
+      "z-ai/glm-4.6",
+      "deepseek/deepseek-v3.2",
+    ])
+    await agent.chooseModel("qwen/qwen3.6-flash")
     await ask(opened, "Hi", "ask")
 
     expect(opened.replay.requests[0]?.body.model).toBe("qwen/qwen3.6-flash")

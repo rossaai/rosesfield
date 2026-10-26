@@ -7,18 +7,14 @@ import {
 import { describe, expect, it } from "vitest"
 import { formatDate } from "@/copy/format"
 import { t } from "@/copy/t"
-import {
-  capabilitiesOf,
-  costOf,
-  pickerSections,
-} from "@/screens/app/hosted/catalog-picker"
+import { catalogRowsOf } from "@/screens/app/hosted/catalog-picker"
+import { capabilitiesOf } from "@/screens/app/hosted/model-rows"
 import {
   type BadgeContext,
   badgesOf,
   rankNoteOf,
   weightsLinkOf,
 } from "@/screens/app/hosted/row-badges"
-import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 
 const openWeights = [{ kind: "open-weights" as const }]
 
@@ -116,13 +112,8 @@ const rankNote = t("model.picker.rankFrom", {
 })
 
 describe("the fact badges of a model row", () => {
-  it("shows the rank, New and Best value in that order before Open weights, each read through its copy key", () => {
+  it("shows New and Best value in that order before Open weights, each read through its copy key, and no rank, which rides the mark", () => {
     expect(badgesOf("maker/open", openWeights, facts, context)).toEqual([
-      {
-        kind: "rank",
-        label: t("model.picker.rank", { rank: 3 }),
-        note: rankNote,
-      },
       { kind: "new", label: "New" },
       { kind: "value", label: t("model.picker.bestValue") },
       {
@@ -132,7 +123,6 @@ describe("the fact badges of a model row", () => {
         markColour: huggingFaceYellow,
       },
     ])
-    expect(t("model.picker.rank", { rank: 3 })).toBe("#3")
   })
 
   it("shows a badge only while its fact holds", () => {
@@ -149,7 +139,7 @@ describe("the fact badges of a model row", () => {
       badgesOf("maker/open", [], one, { ...context, task }).map(
         (badge) => badge.kind
       )
-    expect(kinds(old)).toEqual(["rank", "value"])
+    expect(kinds(old)).toEqual(["value"])
     expect(kinds(tail)).toEqual(["new"])
     expect(kinds(facts, "image-edit")).toEqual(["new"])
   })
@@ -159,7 +149,7 @@ describe("the fact badges of a model row", () => {
       badgesOf("maker/open", [], facts, { ...context, words: () => null }).map(
         (badge) => badge.kind
       )
-    ).toEqual(["rank", "value"])
+    ).toEqual(["value"])
   })
 })
 
@@ -180,14 +170,6 @@ describe("the rank's note", () => {
   it("names the task's boards for a model ranked by its version, and nothing with no board, the control", () => {
     expect(rankNoteOf([], [board])).toBe(rankNote)
     expect(rankNoteOf([], [])).toBeNull()
-  })
-})
-
-describe("a row's price for the Price order", () => {
-  it("reads the figure a row shows, and a price under one credit as the lowest", () => {
-    expect(costOf({ amount: "1,250", name: "" })).toBe(1250)
-    expect(costOf({ amount: "<1", name: "" })).toBe(0)
-    expect(costOf(undefined)).toBeUndefined()
   })
 })
 
@@ -220,49 +202,26 @@ function hostedModelOf(id: string, task: string): CatalogModel {
   }
 }
 
-function hostedOf(models: readonly CatalogModel[]): HostedState {
-  return {
-    isTaskApp: true,
-    models,
-    isLoading: false,
-    error: null,
-    keyState: "ready",
-    defaultModel: null,
-    chosen: null,
-    fields: null,
-    choose: () => undefined,
-  }
-}
-
 function rowsOf(models: readonly CatalogModel[]) {
-  return pickerSections(hostedOf(models), "2026-10-26").flatMap(
-    (section) => section.rows
-  )
+  return catalogRowsOf(models, "2026-10-26")
 }
 
 describe("the catalog picker's Top order", () => {
-  it("orders by the rank for the app's main task, whatever order the catalog lists, and names no Featured group", () => {
-    const sections = pickerSections(
-      hostedOf([
-        graphOf("z-image-turbo", "text-to-image"),
-        hostedModelOf("openai/gpt-image-2", "text-to-image"),
-        hostedModelOf("openai/gpt-image-2.5-sunburst", "text-to-image"),
-        hostedModelOf("maker/unknown", "text-to-image"),
-      ]),
-      "2026-10-26"
-    )
-    expect(sections.map((section) => section.id)).toEqual(["all"])
-    const rows = sections.flatMap((section) => section.rows)
+  it("orders by the rank for the app's main task, whatever order the catalog lists, with the rank on the mark", () => {
+    const rows = rowsOf([
+      graphOf("z-image-turbo", "text-to-image"),
+      hostedModelOf("openai/gpt-image-2", "text-to-image"),
+      hostedModelOf("openai/gpt-image-2.5-sunburst", "text-to-image"),
+      hostedModelOf("maker/unknown", "text-to-image"),
+    ])
     expect(rows.map((row) => row.id)).toEqual([
       "openai/gpt-image-2.5-sunburst",
       "openai/gpt-image-2",
       "z-image-turbo",
       "maker/unknown",
     ])
-    const ranks = rows.map(
-      (row) => row.badges?.find((badge) => badge.kind === "rank")?.label
-    )
-    expect(ranks).toEqual(["#1", "#3", "#39", undefined])
+    expect(rows.map((row) => row.rank?.place)).toEqual([1, 3, 39, undefined])
+    expect(rows[0]?.rank?.label).toBe("#1")
   })
 
   it("orders 3D by the newest Meshy first, with its rank", () => {
@@ -278,7 +237,7 @@ describe("the catalog picker's Top order", () => {
       "meshy/meshy-7",
       "meshy/meshy-6",
     ])
-    expect(rows[0]?.badges?.[0]).toMatchObject({ kind: "rank", label: "#1" })
+    expect(rows[0]?.rank).toMatchObject({ place: 1, label: "#1" })
   })
 
   it("gives the app's default no rank when it sits after every scored model, and keeps it in its place", () => {
@@ -292,45 +251,39 @@ describe("the catalog picker's Top order", () => {
       "qwen-image-edit-2511",
       "recraft/recraftv2",
     ])
-    const ranked = rows.filter((row) =>
-      (row.badges ?? []).some((badge) => badge.kind === "rank")
-    )
+    const ranked = rows.filter((row) => row.rank !== undefined)
     expect(ranked.map((row) => row.id)).toEqual(["openai/gpt-image-2"])
   })
 })
 
 describe("the capability line of a row in the catalog picker", () => {
-  it("leads a row with what its model does when that differs from most of the picker's models, then its release date", () => {
+  it("leads a row with what its model does when that differs from most of the picker's models, and holds no release date", () => {
     const rows = rowsOf([
       graphOf("z-image-turbo", "text-to-image"),
       graphOf("qwen-image-2512", "text-to-image"),
       graphOf("flux-2-klein-4b", "image-edit"),
     ])
-    const tagsOfRow = (id: string) =>
-      rows.find((row) => row.id === id)?.tags.map((tag) => tag.label)
-    expect(tagsOfRow("z-image-turbo")).toEqual([
-      formatDate("2025-12-02T00:00:00"),
-    ])
-    expect(tagsOfRow("flux-2-klein-4b")?.[0]).toBe(t("model.task.imageEdit"))
-    expect(rows.find((row) => row.id === "z-image-turbo")?.released).toBe(
-      "2025-12-02"
-    )
+    const labelsOf = (id: string) =>
+      rows.find((row) => row.id === id)?.capabilities.map((tag) => tag.label)
+    expect(labelsOf("z-image-turbo")).toEqual([])
+    expect(labelsOf("flux-2-klein-4b")?.[0]).toBe(t("model.task.imageEdit"))
   })
 
-  it("puts Sound first on a video model that makes sound, then the release date, then its own facts and the hosting fact last", () => {
-    const tags = capabilitiesOf(
-      [
-        { kind: "hosted" },
-        { kind: "resolution", value: "1080p" },
-        { kind: "sound" },
-      ],
-      { ...facts, release: "2026-10-01" }
+  it("puts Sound first on a video model that makes sound, then its own capabilities, and no date, no hosting fact and no Ran in Rosesfield", () => {
+    const labels = capabilitiesOf(
+      {
+        task: "text-to-video",
+        tags: [
+          { kind: "hosted" },
+          { kind: "proven" },
+          { kind: "resolution", value: "1080p" },
+          { kind: "sound" },
+          { kind: "open-weights" },
+        ],
+      },
+      "text-to-video"
     ).map((tag) => tag.label)
-    expect(tags).toEqual([
-      t("model.tag.sound"),
-      formatDate("2026-10-01T00:00:00"),
-      "1080p",
-      t("model.tag.hosted"),
-    ])
+    expect(labels).toEqual([t("model.tag.sound"), "1080p"])
+    expect(labels.join(" ")).not.toContain(formatDate("2026-10-01T00:00:00"))
   })
 })

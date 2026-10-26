@@ -2,7 +2,6 @@ import {
   type FactBadge,
   factBadgesOf,
   type ModelFacts,
-  type ModelTag,
   type ScoreSource,
   weightsHost,
 } from "@rosesfield/catalog/comfy"
@@ -51,27 +50,10 @@ export function rankNoteOf(
       })
 }
 
-function rankBadgeOf(
-  rank: number,
-  sources: readonly ScoreSource[],
-  taskBoards: readonly ScoreSource[]
-): ModelBadge {
-  const note = rankNoteOf(sources, taskBoards)
-  return {
-    kind: "rank",
-    label: t("model.picker.rank", { rank }),
-    ...(note === null ? {} : { note }),
-  }
-}
-
-function factBadgeOf(
-  badge: FactBadge,
-  taskBoards: readonly ScoreSource[],
-  words: CatalogWords
-): ModelBadge[] {
+function factBadgeOf(badge: FactBadge, words: CatalogWords): ModelBadge[] {
   switch (badge.kind) {
     case "rank":
-      return [rankBadgeOf(badge.rank, badge.sources, taskBoards)]
+      return []
     case "new": {
       const label = words("comfy.badge.new")
       return label === null ? [] : [{ kind: "new", label }]
@@ -85,7 +67,7 @@ function factBadgeOf(
 
 function weightsBadgeOf(
   id: string,
-  tags: readonly ModelTag[],
+  tags: readonly { kind: string }[],
   facts: ModelFacts | undefined
 ): ModelBadge[] {
   if (!tags.some((tag) => tag.kind === "open-weights")) {
@@ -113,14 +95,14 @@ export type BadgeContext = {
 
 export function badgesOf(
   id: string,
-  tags: readonly ModelTag[],
+  tags: readonly { kind: string }[],
   facts: ModelFacts | undefined,
   context: BadgeContext
 ): ModelBadge[] {
   const words = context.words ?? catalogWords
   return [
     ...factBadgesOf(facts, context.task, context.today).flatMap((badge) =>
-      factBadgeOf(badge, context.taskBoards, words)
+      factBadgeOf(badge, words)
     ),
     ...weightsBadgeOf(id, tags, facts),
   ]

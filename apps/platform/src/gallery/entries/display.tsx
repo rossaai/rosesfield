@@ -183,7 +183,6 @@ const badge: GalleryEntry = {
       render: () => (
         <div className="flex flex-wrap items-center gap-s2">
           <Badge kind="new">{t("sample.badge.new")}</Badge>
-          <Badge kind="rank">{t("sample.badge.rank")}</Badge>
           <Badge kind="value">{t("sample.badge.value")}</Badge>
           <Badge kind="openWeights" href="https://huggingface.co/">
             {t("sample.badge.openWeights")}

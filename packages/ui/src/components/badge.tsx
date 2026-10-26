@@ -1,19 +1,14 @@
 import { HuggingFaceMark } from "@rosesfield/ui/components/hugging-face-mark"
 import { interaction } from "@rosesfield/ui/components/interaction"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@rosesfield/ui/components/tooltip"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import type { CSSProperties, ReactElement, ReactNode } from "react"
 
-type BadgeKind = "rank" | "new" | "value" | "openWeights"
+type BadgeKind = "new" | "value" | "openWeights"
 
 type BadgeTone = "nop" | "hor" | "cem" | "bug" | "quiet" | "glass"
 
-const badgeKinds: readonly BadgeKind[] = ["new", "rank", "value", "openWeights"]
+const badgeKinds: readonly BadgeKind[] = ["new", "value", "openWeights"]
 
 const badgeTones: readonly BadgeTone[] = [
   "nop",
@@ -35,7 +30,6 @@ const tones = {
 
 const kindTones = {
   new: "nop",
-  rank: "hor",
   value: "cem",
   openWeights: "cem",
 } as const satisfies Record<BadgeKind, BadgeTone>
@@ -50,7 +44,6 @@ type BadgeProps = {
   mark?: ReactNode
   markColour?: string
   href?: string
-  note?: string
   className?: string
 }
 
@@ -123,7 +116,6 @@ function Badge({
   mark,
   markColour,
   href,
-  note,
   className,
 }: BadgeProps): ReactElement {
   const shownMark =
@@ -145,26 +137,15 @@ function Badge({
       </BadgeLink>
     )
   }
-  const badge = (
+  return (
     <span
       data-slot="badge"
       data-kind={kind}
       data-tone={shownTone}
-      className={cn(look, note === undefined ? null : pressable)}
+      className={look}
     >
       {content}
     </span>
-  )
-  if (note === undefined) {
-    return badge
-  }
-  return (
-    <Tooltip>
-      <TooltipTrigger render={badge} />
-      <TooltipContent className="pointer-events-none h-auto py-s1 whitespace-normal">
-        {note}
-      </TooltipContent>
-    </Tooltip>
   )
 }
 

@@ -82,11 +82,13 @@ export const agentModelId = z.string().min(1).max(200)
 export const agentModelRate = z.object({
   input: z.number().min(0),
   output: z.number().min(0),
+  turn: z.number().min(0),
 })
 
 export const agentModelsResponse = z.object({
   models: z.array(agentModelId),
   model: agentModelId.nullable(),
+  recent: z.array(agentModelId).max(3).optional(),
   refusal: errorBody.nullable(),
   rates: z.record(agentModelId, agentModelRate).optional(),
 })

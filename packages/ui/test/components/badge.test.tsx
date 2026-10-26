@@ -7,7 +7,6 @@ afterEach(cleanup)
 describe("Badge", () => {
   it.each([
     ["new", "nop"],
-    ["rank", "hor"],
     ["value", "cem"],
     ["openWeights", "cem"],
   ] as const)(
@@ -29,7 +28,7 @@ describe("Badge", () => {
     }
   )
 
-  it("gives every kind a hue tint, and two kinds a hue only when one of them carries a mark", () => {
+  it("gives every kind a hue tint, and two kinds a hue only when one of them carries a mark, and no rank kind, since the rank rides the lab's mark", () => {
     const tones = badgeKinds.map((kind) => {
       render(<Badge kind={kind}>{kind}</Badge>)
       return (
@@ -42,7 +41,8 @@ describe("Badge", () => {
     expect(tones.every((tone) => ["nop", "hor", "cem"].includes(tone))).toBe(
       true
     )
-    expect(new Set(tones.slice(0, 3)).size).toBe(3)
+    expect(badgeKinds).toEqual(["new", "value", "openWeights"])
+    expect(new Set(tones.slice(0, 2)).size).toBe(2)
   })
 
   it("takes a tone of its own, and the quiet tint with no kind, for a fact a screen shows", () => {
@@ -120,7 +120,7 @@ describe("Badge", () => {
     expect(word?.querySelector("svg")).toBeNull()
   })
 
-  it("stays a word, not a link, for New, the rank and Best value", () => {
+  it("stays a word, not a link, for New and Best value", () => {
     render(
       <Badge kind="new" href="https://example.com">
         New

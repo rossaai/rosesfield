@@ -1,20 +1,13 @@
-import {
-  factsOf,
-  isHostedModelId,
-  labOfModel,
-  type ModelTag,
-} from "@rosesfield/catalog/comfy"
+import { factsOf, isHostedModelId, labOfModel } from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import {
   ModelPicker,
   type ModelPickerRow,
-  type ModelPickerSection,
-  type ModelPickerTag,
+  type ModelPrice,
 } from "@rosesfield/ui/components/model-picker"
-import type { ModelPrice } from "@rosesfield/ui/components/model-row"
 import { ModelChip } from "@rosesfield/ui/components/model-trigger"
 import { useQuery } from "@tanstack/react-query"
-import { type ReactElement, type ReactNode, useState } from "react"
+import { type ReactElement, type ReactNode, useMemo, useState } from "react"
 import { settingsQuery } from "@/api/queries"
 import { isAssetInput } from "@/catalog/app-facts"
 import { t, tCatalog } from "@/copy/t"
@@ -37,25 +30,17 @@ import {
   settingId,
 } from "@/screens/app/fields/setting-rows"
 import {
-  capabilitiesOf,
-  costOf,
-  openWeightsTag,
-  pickerFilters,
-  todayOf,
   useRecentModels,
+  useSamePrices,
 } from "@/screens/app/hosted/catalog-picker"
 import type { PriceAsk } from "@/screens/app/hosted/model-catalog-query"
 import {
-  mainTaskOf,
-  type RankedModel,
-  taskBoardsOf,
-  topOrderOf,
-} from "@/screens/app/hosted/model-sections"
-import {
-  type BadgeContext,
-  badgesOf,
-  weightsLinkOf,
-} from "@/screens/app/hosted/row-badges"
+  modelRowsOf,
+  pickerWords,
+  type RowModel,
+  todayOf,
+} from "@/screens/app/hosted/model-rows"
+import { weightsLinkOf } from "@/screens/app/hosted/row-badges"
 import { useAskPrices } from "@/screens/app/hosted/use-row-prices"
 import {
   type AppSetting,
@@ -206,69 +191,29 @@ export function choiceLabOf(value: string, name: string): string {
 
 type ChoiceOption = ChoiceInput["options"][number]
 
-type ChoiceModel = RankedModel & { option: ChoiceOption }
-
-function choiceModelOf(option: ChoiceOption): ChoiceModel {
+export function choiceRowModel(option: ChoiceOption): RowModel {
   const facts = factsOf(factsIdOf(option.value))
   const [task] = Object.keys(facts.scores)
-  return { id: option.value, task: task ?? null, facts, option }
-}
-
-export function choiceTagsOf(
-  value: string,
-  hasWeightsBadge: boolean
-): ModelPickerTag[] {
-  return isHostedModelId(value) || hasWeightsBadge ? [] : [openWeightsTag()]
-}
-
-function choiceRow(
-  model: ChoiceModel,
-  prices: ReadonlyMap<string, ModelPrice>,
-  context: BadgeContext
-): ModelPickerRow {
-  const { option, facts } = model
-  const price = prices.get(option.value)
-  const cost = costOf(price)
   const name = tCatalog(option.labelKey)
-  const maker = choiceLabOf(option.value, name)
-  const href = weightsLinkOf(option.value)
-  const weights: ModelTag[] = href === null ? [] : [{ kind: "open-weights" }]
   return {
     id: option.value,
     name,
-    maker,
-    tags: [
-      ...choiceTagsOf(option.value, href !== null),
-      ...capabilitiesOf([], facts),
-    ],
-    mark: <LabMark maker={maker} />,
-    badges: badgesOf(option.value, weights, facts, context),
-    ...(price === undefined ? {} : { price }),
-    ...(cost === undefined ? {} : { cost }),
-    ...(facts?.release === undefined || facts.release === null
-      ? {}
-      : { released: facts.release }),
-    isOpen: !isHostedModelId(option.value),
+    lab: choiceLabOf(option.value, name),
+    keywords: [],
+    task: task ?? null,
+    facts,
+    tags: isHostedModelId(option.value) ? [] : [{ kind: "open-weights" }],
   }
 }
 
-export function choiceSections(
+export function choiceRowsOf(
   model: ChoiceInput | null,
   prices: ReadonlyMap<string, ModelPrice> = new Map(),
   today: string = todayOf()
-): ModelPickerSection[] {
-  if (model === null) {
-    return []
-  }
-  const models = model.options.map(choiceModelOf)
-  const task = mainTaskOf(models)
-  const context = { task, today, taskBoards: taskBoardsOf(models, task) }
-  const rows = topOrderOf(models, task).map((one) =>
-    choiceRow(one, prices, context)
-  )
-  return rows.length === 0
+): ModelPickerRow[] {
+  return model === null
     ? []
-    : [{ id: "all", label: t("model.picker.all"), rows }]
+    : modelRowsOf(model.options.map(choiceRowModel), { today, prices })
 }
 
 type ChoicePricing = {
@@ -301,6 +246,11 @@ export function ChoiceModelPicker({
     isOpen,
   })
   const recent = useRecentModels(pricing?.appId ?? null)
+  const samePrices = useSamePrices(prices)
+  const rows = useMemo(
+    () => choiceRowsOf(model, samePrices),
+    [model, samePrices]
+  )
   const chosen = model === null ? null : value || model.default
   const name = modelChipText(model, value)
   const maker = chosen === null ? null : choiceLabOf(chosen, name)
@@ -314,17 +264,13 @@ export function ChoiceModelPicker({
           {...(maker === null ? {} : { mark: <LabMark maker={maker} /> })}
         />
       }
-      title={t("model.picker.title")}
-      searchLabel={t("model.picker.search")}
-      searchPlaceholder={t("model.picker.searchPlaceholder")}
-      emptyLabel={t("model.picker.empty")}
-      sections={choiceSections(model, prices)}
+      words={pickerWords()}
+      rows={rows}
       chosen={chosen}
       onChoose={onChoose}
       open={isOpen}
       onOpenChange={setOpen}
       isPricing={isPricing}
-      filters={pickerFilters()}
       recent={recent}
       side="top"
     />

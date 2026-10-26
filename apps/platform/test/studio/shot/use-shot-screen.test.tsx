@@ -5,7 +5,7 @@ import { act, cleanup, renderHook } from "@testing-library/react"
 import { useCallback, useState } from "react"
 import { afterEach, describe, expect, it } from "vitest"
 import type { FieldValue, FormValues } from "@/screens/app/app-form"
-import { pickerSections } from "@/screens/app/hosted/catalog-picker"
+import { catalogRowsOf } from "@/screens/app/hosted/catalog-picker"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { choicesOf, sceneInput, wordsOf } from "@/studio/shot/shot-prompt"
@@ -166,8 +166,7 @@ describe("picking another model", () => {
 describe("the model picker", () => {
   it("ranks the default LTX 2.5 first and keeps MiniMax H3 in the ranked three", () => {
     const picker = shotPickerOf(hostedOf([ltx, turbo, minimax]), shot)
-    const [featured] = pickerSections(picker)
-    expect(featured?.rows.map((row) => row.id)).toEqual([
+    expect(catalogRowsOf(picker.models).map((row) => row.id)).toEqual([
       "ltx-2-5",
       "fal/h3-max-turbo",
       "minimax/minimax-h3",

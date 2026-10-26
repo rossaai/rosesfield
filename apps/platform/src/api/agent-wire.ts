@@ -9,11 +9,12 @@ export type AnswerEvent =
   | { type: "done"; credits: number | null }
   | { type: "failed"; error: { code: string; status: number } }
 
-export type AgentModelRate = { input: number; output: number }
+export type AgentModelRate = { input: number; output: number; turn?: number }
 
 export type AgentModels = {
   models: string[]
   model: string | null
+  recent: string[]
   refusal: ErrorBody | null
   rates: Readonly<Record<string, AgentModelRate>>
 }
@@ -31,11 +32,21 @@ function readRates(body: unknown): Record<string, AgentModelRate> {
   for (const [model, rate] of Object.entries(held)) {
     const input = fieldOf(rate, "input")
     const output = fieldOf(rate, "output")
+    const turn = fieldOf(rate, "turn")
     if (isCredits(input) && isCredits(output)) {
-      rates[model] = { input, output }
+      rates[model] = isCredits(turn)
+        ? { input, output, turn }
+        : { input, output }
     }
   }
   return rates
+}
+
+function readRecent(body: unknown): string[] {
+  const held = fieldOf(body, "recent")
+  return Array.isArray(held)
+    ? held.filter((one): one is string => typeof one === "string")
+    : []
 }
 
 const sendPath = "/api/agent/conversations/:conversationId/messages"
@@ -54,7 +65,13 @@ export function readAgentModels(body: unknown): AgentModels | null {
   ) {
     return null
   }
-  return { models, model, refusal: refusal.data, rates: readRates(body) }
+  return {
+    models,
+    model,
+    recent: readRecent(body),
+    refusal: refusal.data,
+    rates: readRates(body),
+  }
 }
 
 export function listAgentModels(signal?: AbortSignal): Promise<AgentModels> {
