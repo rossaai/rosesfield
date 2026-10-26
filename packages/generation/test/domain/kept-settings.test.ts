@@ -1,6 +1,11 @@
 import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
-import { inputsOfKept, keptCountOf, nearestKeptOf } from "#domain/kept-settings"
+import {
+  inputsOfKept,
+  keptCountOf,
+  nearestKeptOf,
+  scaledCreditsOf,
+} from "#domain/kept-settings"
 import type { ModelForm } from "#domain/model-form"
 
 const form: ModelForm = {
@@ -108,5 +113,27 @@ describe("the measured runs a quote is held to", () => {
     ).not.toHaveProperty("images")
     expect(keptCountOf(nine)).toBe(2)
     expect(keptCountOf("not json")).toBe(1)
+  })
+})
+
+describe("scaling a measured run to the asked settings", () => {
+  const at = (pairs: [string, number][]) => JSON.stringify(pairs)
+
+  it("scales by the seconds when both runs name them", () => {
+    expect(
+      scaledCreditsOf(10, at([["length", 5]]), at([["length", 20]]))
+    ).toBe(40)
+  })
+
+  it("does not scale from a run that names no seconds to a run that does", () => {
+    expect(scaledCreditsOf(10, at([["count", 1]]), at([["length", 20]]))).toBe(
+      null
+    )
+  })
+
+  it("scales by the outputs alone when neither run names seconds", () => {
+    expect(scaledCreditsOf(10, at([["count", 1]]), at([["count", 3]]))).toBe(
+      30
+    )
   })
 })

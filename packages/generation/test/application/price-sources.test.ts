@@ -80,6 +80,31 @@ function keep(book: FakePriceBook, ask: Ask, credits: number): void {
   })
 }
 
+function keepWithoutSeconds(
+  book: FakePriceBook,
+  model: string,
+  credits: number
+): void {
+  const run = pricedRunOf({
+    app: clips,
+    inputs: { prompt: "a wave", model, length: 5 },
+    form: null,
+    count: 1,
+    aspectRatio: null,
+  })
+  const settings = JSON.stringify(
+    (JSON.parse(run.settings) as [string, unknown][]).filter(
+      ([name]) => name !== "length"
+    )
+  )
+  void book.keep({
+    ...run,
+    settings,
+    cost: { amount: credits / 211, currency: "USD" },
+    measuredAt: start,
+  })
+}
+
 function handlerWith(options: {
   book: FakePriceBook
   quote?: RunPrice
@@ -176,6 +201,19 @@ describe("the price of a graph no engine quotes", () => {
     expect(await priceOf(handler, { model: "clip-a", length: 10 })).toEqual({
       source: "estimate",
       credits: 18,
+      from: "task-runs",
+      perOutput: true,
+    })
+  })
+
+  it("skips a measured run that names no seconds and falls to the runs of the same task", async () => {
+    const book = new FakePriceBook()
+    keepWithoutSeconds(book, "clip-a", 10)
+    keep(book, { model: "clip-b", length: 5 }, 6)
+    const handler = handlerWith({ book })
+    expect(await priceOf(handler, { model: "clip-a", length: 20 })).toEqual({
+      source: "estimate",
+      credits: 24,
       from: "task-runs",
       perOutput: true,
     })

@@ -215,7 +215,8 @@ export class PriceRunHandler {
    * A graph no engine quotes is priced from what graphs cost: the nearest
    * measured run of the same graph scaled to the asked outputs and seconds,
    * or else the median of the measured runs of the app's graphs that run the
-   * same task, scaled the same way. Either is an estimate.
+   * same task, scaled the same way. A run that names no seconds is skipped
+   * when the asked run names them. Either is an estimate.
    */
   private async fromGraphRuns(
     app: AppDefinition,
@@ -232,10 +233,10 @@ export class PriceRunHandler {
       count: input.count ?? 1,
       aspectRatio: input.aspectRatio ?? null,
     })
-    const nearest = nearestKeptOf(
-      asked.settings,
-      await book.runsOf(asked.model)
+    const scalable = (await book.runsOf(asked.model)).filter(
+      (run) => this.scaledRun(run, asked) !== null
     )
+    const nearest = nearestKeptOf(asked.settings, scalable)
     const own = nearest === null ? null : this.scaledRun(nearest, asked)
     if (own !== null) {
       return estimateOf(own, "model-runs")
