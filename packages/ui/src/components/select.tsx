@@ -115,30 +115,44 @@ function SelectContent({
   )
 }
 
+type SelectItemProps = SelectPrimitive.Item.Props & {
+  icon: ReactNode
+  description?: string
+}
+
 function SelectItem({
   className,
   children,
   icon,
+  description,
   ...props
-}: SelectPrimitive.Item.Props & { icon?: ReactNode }): ReactElement {
+}: SelectItemProps): ReactElement {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(menuItemClass, "pe-s12", className)}
       {...props}
     >
-      {icon === undefined ? null : (
-        <span
-          aria-hidden="true"
-          data-slot="select-item-icon"
-          className="flex shrink-0 [&_svg]:size-5!"
-        >
-          {icon}
-        </span>
-      )}
-      <SelectPrimitive.ItemText className="min-w-0 flex-1 truncate">
-        {children}
-      </SelectPrimitive.ItemText>
+      <span
+        aria-hidden="true"
+        data-slot="select-item-icon"
+        className="flex shrink-0 [&_svg]:glyph"
+      >
+        {icon}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <SelectPrimitive.ItemText className="truncate">
+          {children}
+        </SelectPrimitive.ItemText>
+        {description === undefined ? null : (
+          <span
+            data-slot="select-item-description"
+            className="truncate text-caption text-ink-muted"
+          >
+            {description}
+          </span>
+        )}
+      </span>
       <SelectPrimitive.ItemIndicator className="absolute right-s4 flex text-ink-muted">
         <CheckIcon aria-hidden="true" />
       </SelectPrimitive.ItemIndicator>

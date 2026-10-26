@@ -8,12 +8,7 @@ import {
 } from "@rosesfield/ui/components/select"
 import { Switch } from "@rosesfield/ui/components/switch"
 import { type ReactElement, useEffect, useRef } from "react"
-import {
-  isAspectSetting,
-  settingIconOf,
-  withOptionIcons,
-  withShapes,
-} from "@/catalog/setting-registry"
+import { settingIconOf, withChoiceIcons } from "@/catalog/setting-registry"
 import type { FieldProblem } from "@/screens/app/app-form"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { SwitchRow } from "@/screens/app/fields/toggle-field"
@@ -32,23 +27,27 @@ type ChoiceControlProps = {
   notSet?: string
 }
 
-function withIcons(given: ChoiceControlProps): ChoiceControlProps {
+type IconedItem = ChoiceItem & { icon: ReactElement }
+
+type IconedProps = Omit<ChoiceControlProps, "items"> & {
+  items: readonly IconedItem[]
+}
+
+function withIcons(given: ChoiceControlProps): IconedProps {
   return {
     ...given,
-    items: isAspectSetting(given.setting, given.role ?? null)
-      ? withShapes(given.items)
-      : withOptionIcons(given.setting, given.items),
+    items: withChoiceIcons(given.setting, given.role ?? null, given.items),
   }
 }
 
-function leadIconOf(props: ChoiceControlProps): ReactElement {
-  const chosen = props.items.find((one) => one.value === props.value)
-  return chosen?.icon === undefined || chosen.value === "auto"
-    ? settingIconOf(props.setting, props.role ?? null)
-    : chosen.icon
+function leadIconOf(props: IconedProps): ReactElement {
+  return (
+    props.items.find((one) => one.value === props.value)?.icon ??
+    settingIconOf(props.setting, props.role ?? null)
+  )
 }
 
-function ChoiceSwitch(props: ChoiceControlProps): ReactElement | null {
+function ChoiceSwitch(props: IconedProps): ReactElement | null {
   const pair = booleanPairOf(props.items)
   if (pair === null) {
     return null
@@ -74,7 +73,7 @@ export function ChoiceControl(given: ChoiceControlProps): ReactElement | null {
   }
 }
 
-function ChoiceSelect(props: ChoiceControlProps): ReactElement {
+function ChoiceSelect(props: IconedProps): ReactElement {
   const trigger = useRef<HTMLButtonElement>(null)
   const { register } = props
   useEffect(() => {
@@ -107,12 +106,7 @@ function ChoiceSelect(props: ChoiceControlProps): ReactElement {
       </SelectTrigger>
       <SelectContent>
         {props.items.map((item) => (
-          <SelectItem key={item.value} value={item.value}>
-            {item.icon === undefined ? null : (
-              <span aria-hidden="true" className="flex [&_svg]:glyph-small">
-                {item.icon}
-              </span>
-            )}
+          <SelectItem key={item.value} value={item.value} icon={item.icon}>
             {item.label}
           </SelectItem>
         ))}

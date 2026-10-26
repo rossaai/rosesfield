@@ -10,6 +10,7 @@ import { AtSignIcon, PaperclipIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useState } from "react"
 import { isAssetInput } from "@/catalog/app-facts"
 import { catalogApps } from "@/catalog/catalog-apps"
+import { withChoiceIcons } from "@/catalog/setting-registry"
 import { withUnit } from "@/copy/format"
 import { tCatalog, tCount, t as tPlatform } from "@/copy/t"
 import { type GalleryKey, t } from "@/gallery/copy.en"
@@ -21,20 +22,20 @@ import { chipIconOf, inputIconOf } from "@/screens/app/bar/setting-chip"
 import { inputCaption, inputUnit } from "@/screens/app/fields/input-copy"
 import { aspectItems } from "@/screens/app/fields/output-fields"
 
-const formats = [
-  { value: "1-1", label: "1:1" },
-  { value: "4-3", label: "4:3" },
-  { value: "3-4", label: "3:4" },
-  { value: "16-9", label: "16:9" },
-  { value: "9-16", label: "9:16" },
-]
+const formats = withChoiceIcons("aspect", "aspect", [
+  { value: "1:1", label: "1:1" },
+  { value: "4:3", label: "4:3" },
+  { value: "3:4", label: "3:4" },
+  { value: "16:9", label: "16:9" },
+  { value: "9:16", label: "9:16" },
+])
 
-const counts = [
+const counts = withChoiceIcons("count", "count", [
   { value: "1", label: "1" },
   { value: "2", label: "2" },
   { value: "3", label: "3" },
   { value: "4", label: "4" },
-]
+])
 
 const sampleAttachments: PromptAttachment[] = [
   {
@@ -58,7 +59,7 @@ const sampleThumb: PromptAttachment = {
 }
 
 function Chips(): ReactElement {
-  const [format, setFormat] = useState("16-9")
+  const [format, setFormat] = useState("16:9")
   const [count, setCount] = useState("4")
   return (
     <>

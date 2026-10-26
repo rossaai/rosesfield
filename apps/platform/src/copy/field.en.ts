@@ -59,6 +59,7 @@ export const fieldCopy = {
   "field.count.label": "Count",
   "field.aspect.label": "Format",
   "choice.auto": "Auto",
+  "choice.none": "None",
   "choice.aspect.1-1": "1:1",
   "choice.aspect.4-3": "4:3",
   "choice.aspect.3-4": "3:4",

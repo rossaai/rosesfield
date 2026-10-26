@@ -19,7 +19,8 @@ import type { ReactElement, ReactNode } from "react"
 type ChipOption<T extends string> = {
   value: T
   label: string
-  icon?: ReactNode
+  icon: ReactNode
+  description?: string
 }
 
 type ChipSelectProps<T extends string> = {
@@ -86,7 +87,10 @@ function ChipSelect<T extends string>({
               key={option.value}
               value={option.value}
               icon={option.icon}
-              className="h-9 min-h-9 gap-2 px-2 py-0 data-selected:bg-(--tint)"
+              {...(option.description === undefined
+                ? {}
+                : { description: option.description })}
+              className="min-h-9 gap-2 px-2 py-0 data-selected:bg-(--tint)"
             >
               {option.label}
             </SelectItem>

@@ -38,6 +38,10 @@ test.describe("3D's column", () => {
       column.getByRole("button", { name: /Generate.*Comfy credits/ }).last()
     ).toBeVisible()
   })
+})
+
+test.describe("3D's column on From an image", () => {
+  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
   test("makes a model from a photo on From an image, with the photo input and Meshy 7.1", async ({
     page,
@@ -54,6 +58,10 @@ test.describe("3D's column", () => {
     )
     await expect(column.getByRole("textbox", { name: "Prompt" })).toHaveCount(0)
   })
+})
+
+test.describe("3D's model picker", () => {
+  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
   test("lists the catalog's 3D models from text in the picker, each with its maker", async ({
     page,

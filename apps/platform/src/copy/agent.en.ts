@@ -41,10 +41,16 @@ export const agentCopy = {
   "agent.noKey.body":
     "Add your model key in Settings. It stays in this browser.",
   "agent.list.failed": "Your conversations did not load",
-  "agent.approval.failed": "The switch did not change. Try it again.",
+  "agent.approval.failed": "The run mode did not change. Try it again.",
   "agent.failed.title": "The agent did not answer",
   "agent.loadFailed.title": "This conversation did not load",
   "agent.missing.title": "This conversation was deleted",
   "agent.missing.action": "Start a conversation",
-  "agent.model.rate": "Per 1M tokens: {input} in, {output} out",
+  "agent.model.rate.in": "{credits} per 1M in",
+  "agent.model.rate.out": "{credits} per 1M out",
+  "agent.mode.label": "Run mode",
+  "agent.mode.auto": "Auto",
+  "agent.mode.auto.description": "Ask only before a run over {credits} credits",
+  "agent.mode.manual": "Manual",
+  "agent.mode.manual.description": "Ask before each run",
 } satisfies Record<string, string>

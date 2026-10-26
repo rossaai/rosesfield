@@ -1,12 +1,7 @@
 import { fieldRoleOf, type ModelField } from "@rosesfield/catalog/comfy"
 import { ChipSelect } from "@rosesfield/ui/components/chip-select"
 import type { ReactElement } from "react"
-import {
-  chosenIconOf,
-  settingIconOf,
-  withOptionIcons,
-  withShapes,
-} from "@/catalog/setting-registry"
+import { settingIconOf, withChoiceIcons } from "@/catalog/setting-registry"
 import { t } from "@/copy/t"
 import {
   AdvancedChip,
@@ -61,25 +56,21 @@ export function FieldChoiceChip({
       />
     )
   }
+  const items = withChoiceIcons(field.name, role, options)
+  const isOption = items.some((one) => one.value === chosen)
   return (
     <ChipSelect
       label={fieldCaption(field)}
       icon={
-        role === "aspect"
-          ? (withShapes([{ value: chosen, label: chosen }])[0]?.icon ??
-            settingIconOf(field.name, role))
-          : chosenIconOf(field.name, role, chosen)
+        items.find((one) => one.value === chosen)?.icon ??
+        settingIconOf(field.name, role)
       }
       value={chosen}
       display={
-        chosen === "" ? t("field.choice.notSet") : fieldValueText(field, chosen)
+        isOption ? fieldValueText(field, chosen) : t("field.choice.notSet")
       }
       onValueChange={choose}
-      options={
-        role === "aspect"
-          ? withShapes(options)
-          : withOptionIcons(field.name, options)
-      }
+      options={items}
     />
   )
 }

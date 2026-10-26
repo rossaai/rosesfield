@@ -58,10 +58,14 @@ describe("the agent's model picker", () => {
         .getAllByRole("option")
         .find((one) => one.dataset.model === model)
         ?.closest("[data-slot='model-row']")
-    expect(rowOf("anthropic/claude-sonnet-5")?.textContent).toContain(
-      "Per 1M tokens: 603 in, 3,017 out"
+    const prices = rowOf("anthropic/claude-sonnet-5")?.querySelectorAll(
+      "[data-slot='model-row-capability']"
     )
-    expect(rowOf("z-ai/glm-4.6")?.textContent).not.toContain("Per 1M tokens")
+    expect([...(prices ?? [])].map((one) => one.textContent)).toEqual([
+      "603 per 1M in",
+      "3,017 per 1M out",
+    ])
+    expect(rowOf("z-ai/glm-4.6")?.textContent).not.toContain("per 1M")
     expect(document.body.textContent).not.toMatch(/unknown/i)
   })
 

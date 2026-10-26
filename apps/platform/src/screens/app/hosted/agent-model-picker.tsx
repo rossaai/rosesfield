@@ -29,9 +29,14 @@ function rateTagsOf(rate: AgentModelRate | undefined): ModelPickerTag[] {
     ? []
     : [
         {
-          label: t("agent.model.rate", {
-            input: creditsText(rate.input),
-            output: creditsText(rate.output),
+          label: t("agent.model.rate.in", {
+            credits: creditsText(rate.input),
+          }),
+          icon: <CoinsIcon />,
+        },
+        {
+          label: t("agent.model.rate.out", {
+            credits: creditsText(rate.output),
           }),
           icon: <CoinsIcon />,
         },
