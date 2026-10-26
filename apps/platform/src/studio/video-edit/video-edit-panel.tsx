@@ -46,10 +46,14 @@ type ChoiceInput = Extract<InputDefinition, { type: "choice" }>
 function useActiveTabInView(mode: string): RefObject<HTMLDivElement | null> {
   const holder = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    const active = holder.current?.querySelector(
-      `[data-slot='tabs-trigger'][data-value='${mode}']`
-    )
-    active?.scrollIntoView?.({ block: "nearest", inline: "nearest" })
+    const show = (): void => {
+      const active = holder.current?.querySelector(
+        `[data-slot='tabs-trigger'][data-value='${mode}']`
+      )
+      active?.scrollIntoView?.({ block: "nearest", inline: "nearest" })
+    }
+    show()
+    void document.fonts?.ready.then(show)
   }, [mode])
   return holder
 }
