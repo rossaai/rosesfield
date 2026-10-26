@@ -12,6 +12,7 @@ import {
   RunInputInvalidError,
   type StartRunHandler,
 } from "@rosesfield/generation"
+import { autoCreditsOf } from "#infrastructure/pi-auto-price"
 import {
   type RunPoll,
   type RunWait,
@@ -87,10 +88,11 @@ export async function keyframeCreditsOf(
   })
   let total = 0
   for (const price of prices) {
-    if (price.credits === null) {
+    const credits = autoCreditsOf(price)
+    if (credits === null) {
       return null
     }
-    total += price.credits
+    total += credits
   }
   return total
 }

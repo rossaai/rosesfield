@@ -21,6 +21,7 @@ import type { Proposal } from "#agent.contract"
 import { StartConversationHandler } from "#application/start-conversation/start-conversation.handler"
 import { agentCopy } from "#copy.en"
 import { proposalIdFormat } from "#domain/proposal.id"
+import { autoCreditsOf } from "#infrastructure/pi-auto-price"
 import type { PiContext } from "#infrastructure/pi-context"
 import {
   conversationSettings,
@@ -152,7 +153,7 @@ async function creditsOf(
       count: request.count,
       aspectRatio: request.aspectRatio,
     })
-    return price.credits
+    return autoCreditsOf(price)
   } catch {
     return null
   }
