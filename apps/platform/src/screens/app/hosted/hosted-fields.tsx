@@ -20,6 +20,7 @@ import {
   fieldOptionsOf,
   fieldSettingsPlan,
   fieldShapeOf,
+  fieldValueText,
   isSettingField,
 } from "@/screens/app/settings-plan"
 import type { AppForm } from "@/screens/app/use-app-form"
@@ -123,6 +124,7 @@ function StepperControl(props: FieldProps): ReactElement | null {
         max={max}
         step={field.step ?? (field.integer ? 1 : 0.1)}
         unit=""
+        shown={fieldValueText(field, shown)}
         label={fieldCaption(field)}
         onChange={(next) => form.setInput(field.name, next)}
       />

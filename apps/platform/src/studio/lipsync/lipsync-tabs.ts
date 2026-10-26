@@ -25,11 +25,6 @@ export const speechTask = "speech"
 
 export const clipDefault = "byteplus/dreamina-seedance-2-5-260628"
 
-export const nearModels: readonly string[] = [
-  "kling/videos-avatar-image2video",
-  "kling/videos-lip-sync",
-]
-
 type MediaField = Extract<ModelField, { kind: "media" }>
 type TextField = Extract<ModelField, { kind: "prompt" | "text" }>
 
@@ -257,14 +252,6 @@ export function modelForTab(
     }
   }
   return models[0]?.id ?? null
-}
-
-export function featuredOf(
-  models: readonly CatalogModel[],
-  ranBefore: readonly string[]
-): string[] {
-  const listed = new Set(models.map((model) => model.id))
-  return [...nearModels, ...ranBefore].filter((id) => listed.has(id))
 }
 
 export function tabOfInputs(

@@ -1,8 +1,11 @@
 import type { ModelField } from "@rosesfield/catalog/comfy"
 import { describe, expect, it } from "vitest"
+import { formatDuration } from "@/copy/format"
 import {
   controlOf,
+  fieldOptionsOf,
   fieldSettingsPlan,
+  fieldValueText,
   settingsPlanOf,
 } from "@/screens/app/settings-plan"
 
@@ -110,5 +113,23 @@ describe("the control rule", () => {
         options: options("As in the photo", "Plain"),
       })
     ).toBe("select")
+  })
+
+  it("shows a length as its value with its unit, and any other value as it is", () => {
+    const duration: Extract<ModelField, { kind: "choice" }> = {
+      name: "duration",
+      path: "duration",
+      required: false,
+      kind: "choice",
+      options: ["5", "10"],
+      default: null,
+    }
+    expect(fieldOptionsOf(duration).map((one) => one.label)).toEqual([
+      formatDuration(5),
+      formatDuration(10),
+    ])
+    expect(fieldValueText(number("duration"), 4)).toBe(formatDuration(4))
+    expect(fieldValueText(number("steps"), 4)).toBe("4")
+    expect(fieldValueText(choice("resolution", ["720p"]), "720p")).toBe("720p")
   })
 })

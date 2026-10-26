@@ -10,6 +10,7 @@ type NumberStepperProps = {
   max: number
   step: number
   unit: string
+  shown?: string
   label: string
   onChange: (value: number) => void
   ref?: Ref<HTMLButtonElement>
@@ -36,7 +37,7 @@ export function NumberStepper(props: NumberStepperProps): ReactElement {
         <MinusIcon aria-hidden="true" />
       </IconButton>
       <output aria-live="polite" className="min-w-s8 text-center text-body">
-        {withUnit(props.value, props.unit)}
+        {props.shown ?? withUnit(props.value, props.unit)}
       </output>
       <IconButton
         label={t("field.number.increase")}
