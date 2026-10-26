@@ -13,8 +13,8 @@ import {
 import { SlidersHorizontalIcon, Volume2Icon, VolumeXIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import {
-  optionIconOf,
-  settingOf,
+  chosenIconOf,
+  settingIconOf,
   withOptionIcons,
   withShapes,
 } from "@/catalog/setting-registry"
@@ -46,13 +46,8 @@ type StepperChipProps = {
   onChange: (value: number) => void
 }
 
-export function chipIconOf(role: FieldRole | null): ReactNode {
+export function chipIconOf(role: FieldRole | null): ReactElement {
   return settingIconOf("", role)
-}
-
-export function settingIconOf(name: string, role: FieldRole | null): ReactNode {
-  const Icon = settingOf(name, role).icon
-  return <Icon />
 }
 
 export function toggleIconOf(name: string, isOn: boolean): ReactNode {
@@ -60,15 +55,6 @@ export function toggleIconOf(name: string, isOn: boolean): ReactNode {
     return isOn ? <Volume2Icon /> : <VolumeXIcon />
   }
   return settingIconOf(name, null)
-}
-
-export function chosenIconOf(
-  name: string,
-  role: FieldRole | null,
-  value: string
-): ReactNode {
-  const Icon = value === "auto" ? undefined : optionIconOf(name, value)
-  return Icon === undefined ? settingIconOf(name, role) : <Icon />
 }
 
 export function inputIconOf(

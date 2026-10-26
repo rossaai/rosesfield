@@ -1,16 +1,18 @@
 import { fieldRoleOf, type ModelField } from "@rosesfield/catalog/comfy"
 import { ChipSelect } from "@rosesfield/ui/components/chip-select"
 import type { ReactElement } from "react"
-import { t } from "@/copy/t"
 import {
-  AdvancedChip,
   chosenIconOf,
-  PopoverChip,
-  StepperChip,
-  SwitchChip,
   settingIconOf,
   withOptionIcons,
   withShapes,
+} from "@/catalog/setting-registry"
+import { t } from "@/copy/t"
+import {
+  AdvancedChip,
+  PopoverChip,
+  StepperChip,
+  SwitchChip,
 } from "@/screens/app/bar/setting-chip"
 import { fieldCaption } from "@/screens/app/hosted/field-words"
 import { HostedField } from "@/screens/app/hosted/hosted-fields"

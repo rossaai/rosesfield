@@ -1,5 +1,7 @@
 import type { InputDefinition } from "@rosesfield/contract"
+import { fieldInset } from "@rosesfield/ui/components/input"
 import { Switch } from "@rosesfield/ui/components/switch"
+import { cn } from "@rosesfield/ui/lib/cn"
 import { type ReactElement, useId } from "react"
 import { type InputFieldProps, textOf } from "@/screens/app/fields/field-props"
 import { inputCaption } from "@/screens/app/fields/input-copy"
@@ -17,7 +19,10 @@ export function SwitchRow(props: SwitchRowProps): ReactElement {
   return (
     <div
       data-slot="switch-row"
-      className="flex min-h-button items-center justify-between gap-s3"
+      className={cn(
+        "flex min-h-button items-center justify-between gap-s3",
+        fieldInset
+      )}
     >
       <label htmlFor={id} className="text-label text-ink-muted">
         {props.label}

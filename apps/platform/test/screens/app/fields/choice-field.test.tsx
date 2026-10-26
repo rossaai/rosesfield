@@ -29,6 +29,7 @@ function renderChoice(): void {
   render(
     <ChoiceField
       label="Clothes"
+      setting="clothes"
       items={items}
       value="keep"
       onChange={() => undefined}
@@ -77,6 +78,7 @@ describe("ChoiceField under the one control rule", () => {
     render(
       <ChoiceField
         label="Clothes"
+        setting="clothes"
         items={[
           { value: "keep", label: "As in the photo" },
           { value: "shirt", label: "A collared shirt" },
@@ -96,6 +98,7 @@ describe("ChoiceField under the one control rule", () => {
     render(
       <ChoiceField
         label="Sound"
+        setting="sound"
         items={[
           { value: "true", label: "On" },
           { value: "false", label: "Off" },

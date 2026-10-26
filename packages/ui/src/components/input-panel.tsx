@@ -1,3 +1,4 @@
+import { fieldInset } from "@rosesfield/ui/components/input"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { useBlockClipped } from "@rosesfield/ui/hooks/use-scroll-ends"
 import { cn } from "@rosesfield/ui/lib/cn"
@@ -76,14 +77,29 @@ function PromptBlock({
         interaction.fieldHostRing
       )}
     >
-      <div className="relative flex h-31.5 flex-col rounded-t-cell bg-(--well) px-3 pt-9 pb-2">
-        <span className="absolute top-3 left-3 font-medium text-label text-ink-muted">
+      <div
+        className={cn(
+          "relative flex h-31.5 flex-col rounded-t-cell bg-(--well) pt-9 pb-2",
+          fieldInset
+        )}
+      >
+        <span
+          className={cn(
+            "absolute inset-x-0 top-3 font-medium text-label text-ink-muted",
+            fieldInset
+          )}
+        >
           {label}
         </span>
         {children}
       </div>
       {chips === undefined ? null : (
-        <div className="flex h-11.5 items-start gap-1 rounded-b-cell bg-(--well) px-3 pt-2">
+        <div
+          className={cn(
+            "flex h-11.5 items-start gap-1 rounded-b-cell bg-(--well) pt-2",
+            fieldInset
+          )}
+        >
           {chips}
         </div>
       )}

@@ -1,4 +1,4 @@
-import type { ModelField } from "@rosesfield/catalog/comfy"
+import { fieldRoleOf, type ModelField } from "@rosesfield/catalog/comfy"
 import type { AppListing } from "@rosesfield/contract"
 import { Input } from "@rosesfield/ui/components/input"
 import { Textarea } from "@rosesfield/ui/components/textarea"
@@ -39,6 +39,8 @@ type FieldProps = {
   form: AppForm
   placeholder?: string
 }
+
+const choiceOutput = "image"
 
 export function isShownField(field: ModelField): boolean {
   return !(field.kind === "choice" && field.options.length === 1)
@@ -160,6 +162,7 @@ function ChoiceControlField({
       value={value === undefined ? "" : String(value)}
       notSet={t("field.choice.notSet")}
       setting={field.name}
+      role={fieldRoleOf(field, choiceOutput)}
       note={null}
       problem={form.problems.get(field.name)}
       onChange={(next) => {

@@ -1,3 +1,4 @@
+import type { FieldRole } from "@rosesfield/catalog/comfy"
 import {
   Select,
   SelectContent,
@@ -6,29 +7,45 @@ import {
   SelectValue,
 } from "@rosesfield/ui/components/select"
 import { Switch } from "@rosesfield/ui/components/switch"
-import { type ReactElement, type ReactNode, useEffect, useRef } from "react"
-import { withOptionIcons } from "@/catalog/setting-registry"
+import { type ReactElement, useEffect, useRef } from "react"
+import {
+  isAspectSetting,
+  settingIconOf,
+  withOptionIcons,
+  withShapes,
+} from "@/catalog/setting-registry"
 import type { FieldProblem } from "@/screens/app/app-form"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { SwitchRow } from "@/screens/app/fields/toggle-field"
 import { booleanPairOf, controlOf } from "@/screens/app/settings-plan"
 
-export type ChoiceItem = { value: string; label: string; icon?: ReactNode }
+export type ChoiceItem = { value: string; label: string; icon?: ReactElement }
 
 type ChoiceControlProps = {
   label: string
   items: readonly ChoiceItem[]
   value: string
   onChange: (value: string) => void
+  setting: string
+  role?: FieldRole | null
   register?: (focus: () => void) => void
   notSet?: string
-  setting?: string
 }
 
 function withIcons(given: ChoiceControlProps): ChoiceControlProps {
-  return given.setting === undefined
-    ? given
-    : { ...given, items: withOptionIcons(given.setting, given.items) }
+  return {
+    ...given,
+    items: isAspectSetting(given.setting, given.role ?? null)
+      ? withShapes(given.items)
+      : withOptionIcons(given.setting, given.items),
+  }
+}
+
+function leadIconOf(props: ChoiceControlProps): ReactElement {
+  const chosen = props.items.find((one) => one.value === props.value)
+  return chosen?.icon === undefined || chosen.value === "auto"
+    ? settingIconOf(props.setting, props.role ?? null)
+    : chosen.icon
 }
 
 function ChoiceSwitch(props: ChoiceControlProps): ReactElement | null {
@@ -76,26 +93,16 @@ function ChoiceSelect(props: ChoiceControlProps): ReactElement {
     >
       <SelectTrigger
         ref={trigger}
+        icon={leadIconOf(props)}
         aria-label={props.label}
         className="max-w-none"
       >
         <SelectValue>
-          {(value: unknown) => {
-            const item = props.items.find((one) => one.value === value)
-            if (item === undefined) {
-              return props.notSet ?? ""
-            }
-            return item.icon === undefined ? (
-              item.label
-            ) : (
-              <span className="flex min-w-0 items-center gap-s1_5 [&_svg]:glyph-small">
-                <span aria-hidden="true" className="flex">
-                  {item.icon}
-                </span>
-                <span className="truncate">{item.label}</span>
-              </span>
-            )
-          }}
+          {(value: unknown) =>
+            props.items.find((one) => one.value === value)?.label ??
+            props.notSet ??
+            ""
+          }
         </SelectValue>
       </SelectTrigger>
       <SelectContent>

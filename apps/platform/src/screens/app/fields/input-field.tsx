@@ -1,3 +1,4 @@
+import { inputRoleOf } from "@rosesfield/catalog/comfy"
 import type { InputDefinition } from "@rosesfield/contract"
 import type { ReactElement } from "react"
 import { isAssetInput } from "@/catalog/app-facts"
@@ -26,6 +27,7 @@ function ChoiceInputField(props: InputFieldProps<ChoiceInput>): ReactElement {
       value={textOf(props.value) || props.input.default}
       onChange={props.onChange}
       setting={props.input.name}
+      role={inputRoleOf(props.input.name, props.app.output.kind)}
       note={null}
       problem={props.problem}
       register={props.register}

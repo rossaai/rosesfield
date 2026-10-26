@@ -1,8 +1,8 @@
 import type { AppListing } from "@rosesfield/contract"
 import type { ReactElement } from "react"
-import { withShapes } from "@/catalog/setting-registry"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
+import { aspectField } from "@/screens/app/app-form"
 import { ChoiceField, type ChoiceItem } from "@/screens/app/fields/choice-field"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 
@@ -33,8 +33,9 @@ export function AspectField({
   return (
     <ChoiceField
       label={t("field.aspect.label")}
-      items={withShapes(items)}
+      items={items}
       value={value ?? items[0]?.value ?? ""}
+      setting={aspectField}
       onChange={onChange}
       note={null}
     />

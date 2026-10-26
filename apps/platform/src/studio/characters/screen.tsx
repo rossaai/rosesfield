@@ -52,6 +52,7 @@ type ModeScreen = {
 }
 
 const allModes: readonly Mode[] = ["traits", "angles"]
+const modeSetting = "mode"
 
 const startOf: Readonly<Record<Mode, StartHook>> = {
   traits: useTraitsStart,
@@ -132,6 +133,7 @@ function ModeControl({
           onChange(chosen)
         }
       }}
+      setting={modeSetting}
       note={null}
     />
   )

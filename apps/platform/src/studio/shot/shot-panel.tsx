@@ -96,6 +96,7 @@ function ShotChoice({
       }))}
       value={screen.shot.choices[list]}
       onChange={(value) => screen.setChoice(list, value)}
+      setting={list}
       note={null}
     />
   )

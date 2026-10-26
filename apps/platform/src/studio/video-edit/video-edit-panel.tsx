@@ -157,6 +157,7 @@ function FormatField({
         items={items}
         value={textOf(state.form.values.inputs[input.name]) || input.default}
         onChange={(value) => state.form.setInput(input.name, value)}
+        setting={input.name}
         register={(focus) => state.register(input.name, focus)}
       />
     </FieldFrame>

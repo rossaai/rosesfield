@@ -6,6 +6,7 @@ import { ChoiceControl } from "@/screens/app/fields/choice-field"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 
 const maxSeed = 2_147_483_647
+const seedSetting = "seed"
 
 type SeedFieldProps = {
   mode: "random" | "fixed"
@@ -38,6 +39,7 @@ export function SeedField(props: SeedFieldProps): ReactElement {
         value={props.mode}
         onChange={(next) => props.onMode(next === "fixed" ? "fixed" : "random")}
         label={t("field.seed.label")}
+        setting={seedSetting}
       />
       {props.mode === "fixed" ? (
         <Input

@@ -39,7 +39,7 @@ describe("a choice chip on the Image bar", () => {
     expect(shown()).toBe("Not set")
     const chip = screen.getByRole("combobox")
     expect(
-      chip.querySelector("[data-slot='chip-icon'] .lucide-gem")
+      chip.querySelector("[data-slot='select-lead'] .lucide-gem")
     ).not.toBeNull()
     expect(chip.querySelector(".sr-only")?.textContent).toBe("Quality ")
     cleanup()

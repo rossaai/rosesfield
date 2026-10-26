@@ -1,4 +1,5 @@
 import { Field as FieldPrimitive } from "@base-ui/react/field"
+import { fieldInset } from "@rosesfield/ui/components/input"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { CircleAlertIcon } from "lucide-react"
 import type { ReactElement } from "react"
@@ -25,6 +26,7 @@ function FieldCaption({
       data-slot="field-caption"
       className={cn(
         "flex items-center justify-between gap-s2 text-label text-ink-muted",
+        fieldInset,
         className
       )}
       {...props}
@@ -39,7 +41,7 @@ function FieldNote({
   return (
     <FieldPrimitive.Description
       data-slot="field-note"
-      className={cn("text-label text-ink-muted", className)}
+      className={cn("text-label text-ink-muted", fieldInset, className)}
       {...props}
     />
   )
@@ -56,6 +58,7 @@ function FieldMessage({
       match={true}
       className={cn(
         "flex items-start gap-s1_5 text-label text-bug-text",
+        fieldInset,
         className
       )}
       {...props}
