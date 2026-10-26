@@ -5,7 +5,6 @@ export const agentCopy = {
   "agent.start.title": "What should the agent make?",
   "agent.prompt.label": "Message",
   "agent.prompt.placeholder": "Ask the agent",
-  "agent.ask.label": "Ask before each run",
   "agent.send": "Send",
   "agent.stop": "Stop",
   "agent.start": "Start a conversation",
