@@ -90,7 +90,7 @@ function ChipSelect<T extends string>({
               {...(option.description === undefined
                 ? {}
                 : { description: option.description })}
-              className="min-h-9 gap-2 px-2 py-0 data-selected:bg-(--tint)"
+              className="min-h-9 gap-2 px-2 py-s1_5 data-selected:bg-(--tint)"
             >
               {option.label}
             </SelectItem>

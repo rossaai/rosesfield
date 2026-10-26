@@ -1,8 +1,8 @@
-import { Button } from "@rosesfield/ui/components/button"
+import { Button, IconButton } from "@rosesfield/ui/components/button"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { PlusIcon } from "lucide-react"
+import { AtSignIcon, PlusIcon } from "lucide-react"
 import type { ReactElement } from "react"
 import { charactersQuery } from "@/api/queries"
 import { t } from "@/copy/t"
@@ -72,5 +72,20 @@ export function CharacterPicker(props: CharacterPickerProps): ReactElement {
         }}
       />
     </PopoverOrSheet>
+  )
+}
+
+export function MentionPicker(
+  props: Omit<CharacterPickerProps, "trigger">
+): ReactElement {
+  return (
+    <CharacterPicker
+      {...props}
+      trigger={
+        <IconButton label={t("bar.mention")} size="dense">
+          <AtSignIcon aria-hidden="true" />
+        </IconButton>
+      }
+    />
   )
 }

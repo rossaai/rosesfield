@@ -90,6 +90,27 @@ describe("the run mode", () => {
     expect(readRunApproval()).toBe("ask")
   })
 
+  it("keeps Manual for this tab when the browser refuses to store it", () => {
+    const refuse = (): never => {
+      throw new DOMException("storage is off", "SecurityError")
+    }
+    const reads = vi
+      .spyOn(Storage.prototype, "getItem")
+      .mockImplementation(refuse)
+    const writes = vi
+      .spyOn(Storage.prototype, "setItem")
+      .mockImplementation(refuse)
+    try {
+      keepRunApproval("ask")
+      expect(readRunApproval()).toBe("ask")
+      keepRunApproval("auto")
+      expect(readRunApproval()).toBe("auto")
+    } finally {
+      reads.mockRestore()
+      writes.mockRestore()
+    }
+  })
+
   it("has no switch in Settings under Agent", async () => {
     recordRequests()
     renderAgent(() => <AgentPane />)

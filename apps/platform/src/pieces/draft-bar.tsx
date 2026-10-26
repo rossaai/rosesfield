@@ -1,16 +1,14 @@
-import { IconButton } from "@rosesfield/ui/components/button"
 import {
   PromptBar,
   type PromptStop,
 } from "@rosesfield/ui/components/prompt-bar"
 import { useQuery } from "@tanstack/react-query"
-import { AtSignIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useState } from "react"
 import { charactersQuery } from "@/api/queries"
 import { t } from "@/copy/t"
 import { AttachMenu } from "@/pieces/attach-menu"
 import { useAssetThumbs, useCharacterThumbs } from "@/pieces/attachment-thumbs"
-import { CharacterPicker } from "@/pieces/character-picker"
+import { MentionPicker } from "@/pieces/character-picker"
 import { LibraryPicker } from "@/pieces/library-picker"
 import type { DraftState } from "@/pieces/use-draft"
 
@@ -73,15 +71,10 @@ function DraftLeading({
         onUpload={() => void state.upload()}
         onFromLibrary={openLibrary}
       />
-      <CharacterPicker
+      <MentionPicker
         open={mention.isOpen}
         onOpenChange={mention.setOpen}
         onPick={mention.onPick}
-        trigger={
-          <IconButton label={t("bar.mention")} size="dense">
-            <AtSignIcon aria-hidden="true" />
-          </IconButton>
-        }
       />
     </>
   )

@@ -1,14 +1,13 @@
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
-import { IconButton } from "@rosesfield/ui/components/button"
 import { Chip } from "@rosesfield/ui/components/chip"
 import { PromptBar } from "@rosesfield/ui/components/prompt-bar"
-import { AtSignIcon, SlidersHorizontalIcon } from "lucide-react"
+import { SlidersHorizontalIcon } from "lucide-react"
 import { type ReactElement, useState } from "react"
 import { characterInputOf, isAssetInput } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useDevice } from "@/device/device-context"
 import { AttachMenu } from "@/pieces/attach-menu"
-import { CharacterPicker } from "@/pieces/character-picker"
+import { MentionPicker } from "@/pieces/character-picker"
 import { LibraryPicker } from "@/pieces/library-picker"
 import { useUploads } from "@/pieces/use-uploads"
 import { aspectField, countField } from "@/screens/app/app-form"
@@ -77,15 +76,10 @@ function Leading(props: BarProps): ReactElement {
         onFromLibrary={() => setLibraryOpen(true)}
       />
       {character === null ? null : (
-        <CharacterPicker
+        <MentionPicker
           open={isCharacterOpen}
           onOpenChange={setCharacterOpen}
           onPick={(id) => state.form.setInput(character.name, [id])}
-          trigger={
-            <IconButton label={t("bar.mention")} size="dense">
-              <AtSignIcon aria-hidden="true" />
-            </IconButton>
-          }
         />
       )}
       <LibraryPicker

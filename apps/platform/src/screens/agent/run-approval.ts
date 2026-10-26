@@ -9,12 +9,13 @@ import { useUpdateConversation } from "@/screens/agent/conversation-queries"
 
 const storageKey = "rosesfield.agent.runApproval"
 const listeners = new Set<() => void>()
+let unstored: RunApproval | null = null
 
 export function readRunApproval(): RunApproval {
   try {
     return window.localStorage.getItem(storageKey) === "ask" ? "ask" : "auto"
   } catch {
-    return "auto"
+    return unstored ?? "auto"
   }
 }
 
@@ -22,7 +23,7 @@ export function keepRunApproval(next: RunApproval): void {
   try {
     window.localStorage.setItem(storageKey, next)
   } catch {
-    return
+    unstored = next
   }
   for (const listener of listeners) {
     listener()

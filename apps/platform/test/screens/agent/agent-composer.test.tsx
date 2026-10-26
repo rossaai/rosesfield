@@ -1,5 +1,4 @@
 import { autoRunLimitCredits } from "@rosesfield/catalog/comfy"
-import { IconButton } from "@rosesfield/ui/components/button"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import {
   cleanup,
@@ -9,12 +8,12 @@ import {
   waitFor,
   within,
 } from "@testing-library/react"
-import { AtSignIcon } from "lucide-react"
 import type { ReactElement } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { AttachMenu } from "@/pieces/attach-menu"
+import { MentionPicker } from "@/pieces/character-picker"
 import { useDraft } from "@/pieces/use-draft"
 import { AgentComposer } from "@/screens/agent/agent-composer"
 import { readRunApproval } from "@/screens/agent/run-approval"
@@ -90,9 +89,11 @@ function renderBarButtons(): HTMLElement {
         onUpload={() => undefined}
         onFromLibrary={() => undefined}
       />
-      <IconButton label={t("bar.mention")} size="dense">
-        <AtSignIcon aria-hidden="true" />
-      </IconButton>
+      <MentionPicker
+        open={false}
+        onOpenChange={() => undefined}
+        onPick={() => undefined}
+      />
     </TooltipProvider>
   )
   return container

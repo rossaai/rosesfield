@@ -147,7 +147,7 @@ function SelectItem({
         {description === undefined ? null : (
           <span
             data-slot="select-item-description"
-            className="truncate text-caption text-ink-muted"
+            className="text-caption text-ink-muted"
           >
             {description}
           </span>
