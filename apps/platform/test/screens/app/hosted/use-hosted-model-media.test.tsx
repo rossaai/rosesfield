@@ -117,7 +117,7 @@ function render(inputs: FormValues["inputs"]) {
   const view = renderHook(
     () => {
       const form = useFormAt(seed)
-      return { form, hosted: useHostedModel(video, form, []) }
+      return { form, hosted: useHostedModel(video, form) }
     },
     { wrapper }
   )

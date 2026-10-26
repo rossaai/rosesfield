@@ -7,8 +7,8 @@ import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { type InputFieldProps, textOf } from "@/screens/app/fields/field-props"
 import {
   inputCaption,
-  inputPlaceholder,
   isOptionalInput,
+  promptPlaceholderOf,
 } from "@/screens/app/fields/input-copy"
 
 type PromptInput = Extract<InputDefinition, { type: "prompt" }>
@@ -38,7 +38,7 @@ export function PromptField(props: InputFieldProps<PromptInput>): ReactElement {
         <Textarea
           ref={field}
           value={text}
-          placeholder={inputPlaceholder(app, input) ?? ""}
+          placeholder={promptPlaceholderOf(app, input)}
           onChange={(event) => props.onChange(event.target.value)}
           className={cn("max-w-none", isNearLimit ? "pb-s8" : "")}
         />

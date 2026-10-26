@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rosesfield/ui/components/select"
+import { Switch } from "@rosesfield/ui/components/switch"
 import {
   type ReactElement,
   type ReactNode,
@@ -16,7 +17,10 @@ import {
   useState,
 } from "react"
 import { withOptionIcons } from "@/catalog/setting-registry"
+import type { FieldProblem } from "@/screens/app/app-form"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
+import { SwitchRow } from "@/screens/app/fields/toggle-field"
+import { booleanPairOf, controlOf } from "@/screens/app/settings-plan"
 
 export type ChoiceItem = { value: string; label: string; icon?: ReactNode }
 
@@ -29,8 +33,6 @@ type ChoiceControlProps = {
   notSet?: string
   setting?: string
 }
-
-export const segmentLimit = 4
 
 function overflowOf(frame: HTMLElement): number {
   const labels = frame.querySelectorAll<HTMLElement>(
@@ -105,16 +107,38 @@ function SegmentsOrSelect(props: ChoiceControlProps): ReactElement {
   )
 }
 
-export function ChoiceControl(given: ChoiceControlProps): ReactElement {
-  const props =
-    given.setting === undefined
-      ? given
-      : { ...given, items: withOptionIcons(given.setting, given.items) }
-  const isUnset = props.notSet !== undefined && props.value === ""
-  if (props.items.length <= segmentLimit && !isUnset) {
-    return <SegmentsOrSelect {...props} />
+function withIcons(given: ChoiceControlProps): ChoiceControlProps {
+  return given.setting === undefined
+    ? given
+    : { ...given, items: withOptionIcons(given.setting, given.items) }
+}
+
+function ChoiceSwitch(props: ChoiceControlProps): ReactElement | null {
+  const pair = booleanPairOf(props.items)
+  if (pair === null) {
+    return null
   }
-  return <ChoiceSelect {...props} />
+  return (
+    <Switch
+      aria-label={props.label}
+      checked={props.value === pair.on}
+      onCheckedChange={(checked) =>
+        props.onChange(checked ? pair.on : pair.off)
+      }
+    />
+  )
+}
+
+export function ChoiceControl(given: ChoiceControlProps): ReactElement | null {
+  const props = withIcons(given)
+  switch (controlOf({ kind: "choice", options: props.items })) {
+    case "switch":
+      return <ChoiceSwitch {...props} />
+    case "segmented":
+      return <SegmentsOrSelect {...props} />
+    default:
+      return <ChoiceSelect {...props} />
+  }
 }
 
 function ChoiceSelect(props: ChoiceControlProps): ReactElement {
@@ -174,15 +198,30 @@ function ChoiceSelect(props: ChoiceControlProps): ReactElement {
   )
 }
 
-type ChoiceFieldProps = ChoiceControlProps & { note: string | null }
+type ChoiceFieldProps = ChoiceControlProps & {
+  note: string | null
+  problem?: FieldProblem | undefined
+}
 
 export function ChoiceField(props: ChoiceFieldProps): ReactElement {
+  const pair = booleanPairOf(props.items)
+  if (pair !== null) {
+    return (
+      <SwitchRow
+        label={props.label}
+        checked={props.value === pair.on}
+        onCheckedChange={(checked) =>
+          props.onChange(checked ? pair.on : pair.off)
+        }
+      />
+    )
+  }
   return (
     <FieldFrame
       caption={props.label}
       isOptional={false}
       note={props.note}
-      problem={undefined}
+      problem={props.problem}
     >
       <ChoiceControl {...props} />
     </FieldFrame>

@@ -155,7 +155,6 @@ function hostedOf(models: readonly CatalogModel[]): HostedState {
     defaultModel: null,
     chosen: null,
     fields: null,
-    ranBefore: [],
     choose: () => undefined,
   }
 }
@@ -169,7 +168,9 @@ describe("the capability line of a row in the catalog picker", () => {
         graphOf("flux-2-klein-4b", "image-edit"),
       ]),
       "2026-10-21"
-    ).flatMap((section) => section.rows)
+    )
+      .filter((section) => section.id === "all")
+      .flatMap((section) => section.rows)
     const tagsOfRow = (id: string) =>
       rows.find((row) => row.id === id)?.tags.map((tag) => tag.label)
     expect(tagsOfRow("z-image-turbo")).toEqual(["Rank 70 of 104"])
@@ -180,7 +181,9 @@ describe("the capability line of a row in the catalog picker", () => {
     const rows = pickerSections(
       hostedOf([graphOf("z-image-turbo", "text-to-image")]),
       "2026-10-21"
-    ).flatMap((section) => section.rows)
+    )
+      .filter((section) => section.id === "all")
+      .flatMap((section) => section.rows)
     expect(rows[0]?.tags.map((tag) => tag.label)).toEqual(["Rank 70 of 104"])
   })
 

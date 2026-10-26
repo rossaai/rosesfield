@@ -10,7 +10,7 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@rosesfield/ui/components/popover"
-import { Volume2Icon, VolumeXIcon } from "lucide-react"
+import { SlidersHorizontalIcon, Volume2Icon, VolumeXIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import {
   optionIconOf,
@@ -20,11 +20,12 @@ import {
 } from "@/catalog/setting-registry"
 import { withUnit } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
-import { SettingSlider } from "@/pieces/setting-slider"
+import { NumberStepper } from "@/pieces/number-stepper"
 import { aspectField, countField } from "@/screens/app/app-form"
 import { numberOf, textOf } from "@/screens/app/fields/field-props"
 import { inputCaption, inputUnit } from "@/screens/app/fields/input-copy"
 import { aspectItems } from "@/screens/app/fields/output-fields"
+import { booleanPairOf, controlOf } from "@/screens/app/settings-plan"
 import type { AppForm } from "@/screens/app/use-app-form"
 
 type SettingChipProps = {
@@ -41,6 +42,7 @@ type StepperChipProps = {
   min: number
   max: number
   step: number
+  unit?: string
   onChange: (value: number) => void
 }
 
@@ -112,33 +114,17 @@ export function StepperChip(props: StepperChipProps): ReactElement {
     )
   }
   return (
-    <Popover>
-      <PopoverTrigger
-        render={
-          <Chip caption={props.label} icon={props.icon}>
-            {props.shown}
-          </Chip>
-        }
+    <PopoverChip label={props.label} icon={props.icon} shown={props.shown}>
+      <NumberStepper
+        value={props.value}
+        min={props.min}
+        max={props.max}
+        step={props.step}
+        unit={props.unit ?? ""}
+        label={props.label}
+        onChange={props.onChange}
       />
-      <PopoverContent
-        side="top"
-        align="start"
-        sideOffset={8}
-        motion="none"
-        className="w-83.5 max-w-none gap-3 px-4.25 py-4"
-      >
-        <PopoverTitle className="text-label">{props.label}</PopoverTitle>
-        <SettingSlider
-          label={props.label}
-          shown={props.shown}
-          value={props.value}
-          min={props.min}
-          max={props.max}
-          step={props.step}
-          onChange={props.onChange}
-        />
-      </PopoverContent>
-    </Popover>
+    </PopoverChip>
   )
 }
 
@@ -171,6 +157,41 @@ export function PopoverChip(props: {
   )
 }
 
+export function SwitchChip(props: {
+  label: string
+  name: string
+  isOn: boolean
+  onToggle: () => void
+}): ReactElement {
+  return (
+    <Button
+      size="small"
+      tone={props.isOn ? "default" : "quiet"}
+      aria-pressed={props.isOn}
+      onClick={props.onToggle}
+    >
+      {toggleIconOf(props.name, props.isOn)}
+      {props.label}
+    </Button>
+  )
+}
+
+export function AdvancedChip({
+  children,
+}: {
+  children: ReactNode
+}): ReactElement {
+  return (
+    <PopoverChip
+      label={t("field.advanced")}
+      icon={<SlidersHorizontalIcon />}
+      shown={t("field.advanced")}
+    >
+      <div className="flex flex-col gap-s4">{children}</div>
+    </PopoverChip>
+  )
+}
+
 export function chipChoiceText(
   input: Extract<InputDefinition, { type: "choice" }>,
   value: string
@@ -197,6 +218,53 @@ function numberText(app: AppListing, input: InputDefinition, value: number) {
     : withUnit(value, unit)
 }
 
+type ChoiceInput = Extract<InputDefinition, { type: "choice" }>
+
+function ChoiceChip({
+  app,
+  form,
+  input,
+}: {
+  app: AppListing
+  form: AppForm
+  input: ChoiceInput
+}): ReactElement {
+  const set = (next: string): void => form.setInput(input.name, next)
+  const chosen = textOf(form.values.inputs[input.name]) || input.default
+  const options = input.options.map((option) => ({
+    value: option.value,
+    label: tCatalog(option.labelKey),
+  }))
+  const pair =
+    controlOf({ kind: "choice", options }) === "switch"
+      ? booleanPairOf(options)
+      : null
+  if (pair !== null) {
+    return (
+      <SwitchChip
+        label={inputCaption(input)}
+        name={input.name}
+        isOn={chosen === pair.on}
+        onToggle={() => set(chosen === pair.on ? pair.off : pair.on)}
+      />
+    )
+  }
+  return (
+    <ChipSelect
+      label={inputCaption(input)}
+      icon={chosenIconOf(
+        input.name,
+        inputRoleOf(input.name, app.output.kind),
+        chosen
+      )}
+      display={namedChoiceText(app, input, chosen)}
+      value={chosen}
+      onValueChange={set}
+      options={withOptionIcons(input.name, options)}
+    />
+  )
+}
+
 function InputChip({
   app,
   form,
@@ -210,26 +278,7 @@ function InputChip({
   const set = (next: string | number): void => form.setInput(input.name, next)
   switch (input.type) {
     case "choice":
-      return (
-        <ChipSelect
-          label={inputCaption(input)}
-          icon={chosenIconOf(
-            input.name,
-            inputRoleOf(input.name, app.output.kind),
-            textOf(value) || input.default
-          )}
-          display={namedChoiceText(app, input, textOf(value) || input.default)}
-          value={textOf(value) || input.default}
-          onValueChange={set}
-          options={withOptionIcons(
-            input.name,
-            input.options.map((option) => ({
-              value: option.value,
-              label: tCatalog(option.labelKey),
-            }))
-          )}
-        />
-      )
+      return <ChoiceChip app={app} form={form} input={input} />
     case "number":
       return (
         <StepperChip
@@ -240,21 +289,21 @@ function InputChip({
           min={input.min}
           max={input.max}
           step={input.step}
+          unit={inputUnit(app, input)}
           onChange={set}
         />
       )
-    case "toggle":
+    case "toggle": {
+      const isOn = (textOf(value) || input.default) === "on"
       return (
-        <Button
-          size="small"
-          tone={textOf(value) === "on" ? "default" : "quiet"}
-          aria-pressed={textOf(value) === "on"}
-          onClick={() => set(textOf(value) === "on" ? "off" : "on")}
-        >
-          {toggleIconOf(input.name, textOf(value) === "on")}
-          {inputCaption(input)}
-        </Button>
+        <SwitchChip
+          label={inputCaption(input)}
+          name={input.name}
+          isOn={isOn}
+          onToggle={() => set(isOn ? "off" : "on")}
+        />
       )
+    }
     default:
       return null
   }

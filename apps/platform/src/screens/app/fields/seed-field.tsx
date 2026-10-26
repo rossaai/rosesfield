@@ -33,7 +33,7 @@ export function SeedField(props: SeedFieldProps): ReactElement {
     <FieldFrame
       caption={t("field.seed.label")}
       isOptional={false}
-      note={t("field.seed.note")}
+      note={null}
       problem={undefined}
     >
       <SegmentedControl

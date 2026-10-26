@@ -37,7 +37,6 @@ import {
 import {
   defaultsOfTab,
   faceOf,
-  featuredOf,
   type LipFields,
   type LipsyncTab,
   lengthStepOf,
@@ -270,7 +269,6 @@ function tabHostedOf(
     ...all,
     models: listed,
     defaultModel: defaultsOfTab(tabs.tab, all.defaultModel)[0] ?? null,
-    ranBefore: featuredOf(listed, all.ranBefore),
     choose: tabs.choose,
   }
 }
@@ -283,7 +281,7 @@ export function useLipsyncScreen(
   const check = useRef<FormCheck | null>(null)
   const form = useAppForm(app, seeds, check)
   const runs = useAppRuns(app)
-  const all = withAppModel(app, useHostedModel(app, form, runs.runs))
+  const all = withAppModel(app, useHostedModel(app, form))
   usePriceRefresh(app.id, runs.runs)
   const tabs = useLipsyncTabs(app, all, form)
   const words = useWords(app, all, form, tabs)

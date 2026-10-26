@@ -82,7 +82,7 @@ function useAdsModels(
   form: AppForm,
   runs: readonly Run[]
 ): HostedState {
-  const hosted = useHostedModel(app, form, runs)
+  const hosted = useHostedModel(app, form)
   usePriceRefresh(app.id, runs)
   const { setInput } = form
   return { ...hosted, choose: (id) => setInput(modelInput, id) }

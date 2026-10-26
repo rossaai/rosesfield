@@ -7,23 +7,32 @@ import { motion } from "@rosesfield/ui/motion"
 import { ChevronDownIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 
+type ModelChipWidth = "fit" | "full"
+
 type ModelTriggerProps = Omit<ButtonPrimitive.Props, "children"> & {
   name: string
   mark?: ReactNode
+  width?: ModelChipWidth
 }
 
 const place: ModelRowPlace = "trigger"
 
 const chipClass = cn(
-  "group/model relative inline-flex h-button-small max-w-button-max min-w-0 shrink items-center in-data-[density=composer]:max-w-none in-data-[density=composer]:shrink-0 gap-s1_5 rounded-full bg-(--well) ps-s2 pe-s2 font-medium text-body whitespace-nowrap text-ink select-none in-data-[density=composer]:bg-transparent data-popup-open:bg-(--tint) [&_svg]:glyph-small",
+  "group/model relative inline-flex min-w-0 items-center gap-s1_5 rounded-full bg-(--well) ps-s2 pe-s2 font-medium text-body whitespace-nowrap text-ink select-none data-popup-open:bg-(--tint) [&_svg]:glyph-small",
   interaction.fill,
   motion.press,
   interaction.ring
 )
 
+const widthClass: Readonly<Record<ModelChipWidth, string>> = {
+  fit: "h-button-small max-w-button-max shrink in-data-[density=composer]:max-w-none in-data-[density=composer]:shrink-0 in-data-[density=composer]:bg-transparent",
+  full: "h-field w-full max-w-none ps-s3 pe-s4",
+}
+
 function ModelChip({
   name,
   mark,
+  width = "fit",
   className,
   ...props
 }: ModelTriggerProps): ReactElement {
@@ -31,7 +40,8 @@ function ModelChip({
     <ButtonPrimitive
       data-slot="model-row"
       data-place={place}
-      className={cn(chipClass, className)}
+      data-width={width}
+      className={cn(chipClass, widthClass[width], className)}
       {...props}
     >
       {mark === undefined ? null : (
@@ -43,7 +53,13 @@ function ModelChip({
           {mark}
         </span>
       )}
-      <span data-slot="model-row-name" className="min-w-0 truncate">
+      <span
+        data-slot="model-row-name"
+        className={cn(
+          "min-w-0 truncate",
+          width === "full" ? "flex-1 text-start" : ""
+        )}
+      >
         {name}
       </span>
       <ChevronDownIcon
@@ -91,5 +107,5 @@ function ModelRowTrigger({
   )
 }
 
-export type { ModelTriggerProps }
+export type { ModelChipWidth, ModelTriggerProps }
 export { ModelChip, ModelChipSkeleton, ModelRowTrigger }

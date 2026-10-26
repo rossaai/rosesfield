@@ -16,24 +16,26 @@ import {
   type ModelPickerTag,
   type ModelPrice,
 } from "@rosesfield/ui/components/model-picker"
-import {
-  ModelChip,
-  ModelRowTrigger,
-} from "@rosesfield/ui/components/model-trigger"
+import { ModelChip } from "@rosesfield/ui/components/model-trigger"
 import {
   CircleCheckIcon,
   ClockIcon,
+  HashIcon,
   LockOpenIcon,
   ScanIcon,
   TrophyIcon,
   Volume2Icon,
 } from "lucide-react"
 import { type ReactElement, useState } from "react"
+import { formatNumber } from "@/copy/format"
 import { type CopyValues, hasCatalogText, t, tCatalog } from "@/copy/t"
 import { LabMark, labMarkOf, weightsMaker } from "@/pieces/lab-mark"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
-import { modelSections } from "@/screens/app/hosted/model-sections"
+import {
+  modelSections,
+  rankedCatalogOf,
+} from "@/screens/app/hosted/model-sections"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import { useRowPrices } from "@/screens/app/hosted/use-row-prices"
 import { openModels } from "@/screens/welcome/open-weights"
@@ -117,6 +119,13 @@ export function rankTagOf(
         }),
         icon: <TrophyIcon aria-hidden="true" />,
       }
+}
+
+export function featuredTagOf(position: number): ModelPickerTag {
+  return {
+    label: formatNumber(position),
+    icon: <HashIcon aria-hidden="true" />,
+  }
 }
 
 export function capabilitiesOf(
@@ -233,30 +242,29 @@ export function pickerSections(
   today: string = todayOf(),
   prices: ReadonlyMap<string, ModelPrice> = new Map()
 ): ModelPickerSection[] {
-  const first = [
-    ...(hosted.defaultModel === null ? [] : [hosted.defaultModel]),
-    ...hosted.ranBefore,
-  ]
+  const ranked = rankedCatalogOf(hosted.defaultModel, hosted.models)
   const models = hosted.models.map((model) => ({
     ...model,
     maker: makerNameOf(model),
   }))
   const mainTask = mainTaskOf(hosted.models)
-  return modelSections(models, first, modelNameOf).map((section) => ({
+  return modelSections(models, ranked, modelNameOf).map((section) => ({
     id: section.id,
     label: t(sectionLabels[section.id]),
-    rows: section.rows.map((row) => {
+    rows: section.rows.map((row, index) => {
       const price = prices.get(row.id)
+      const isFeatured = section.id === "featured"
       return {
         id: row.id,
         name: row.name,
         maker: row.maker,
         lab: labOf(row),
         tags: [
+          ...(isFeatured ? [featuredTagOf(index + 1)] : []),
           ...(row.task === mainTask ? [] : [taskTagOf(row.task)]).filter(
             (tag): tag is ModelPickerTag => tag !== null
           ),
-          ...capabilitiesOf(row.tags, row.facts),
+          ...capabilitiesOf(row.tags, isFeatured ? undefined : row.facts),
         ],
         mark: <LabMark maker={labOf(row)} />,
         badges: badgesOf(row.id, row.tags, row.facts, today),
@@ -288,17 +296,11 @@ export function pickerTrigger(
   const lab = chosen === null ? null : chosenLabOf(chosen)
   const mark = lab === null ? undefined : <LabMark maker={lab} />
   const markProp = mark === undefined ? {} : { mark }
-  return place === "row" ? (
-    <ModelRowTrigger
-      caption={t("model.picker.title")}
-      name={name}
-      aria-label={`${t("model.picker.title")} ${name}`}
-      {...markProp}
-    />
-  ) : (
+  return (
     <ModelChip
       name={name}
       aria-label={`${t("model.picker.title")} ${name}`}
+      width={place === "row" ? "full" : "fit"}
       {...markProp}
     />
   )

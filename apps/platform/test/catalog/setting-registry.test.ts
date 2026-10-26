@@ -40,9 +40,30 @@ describe("the setting registry", () => {
     expect(missing).toEqual([])
   })
 
-  it("keeps the seed last and the format settings first", () => {
-    expect(settingOf("seed", null).group).toBe("last")
+  it("puts the seed and every unknown setting under Advanced and the format settings first", () => {
+    expect(settingOf("seed", null).group).toBe("advanced")
+    expect(settingOf("someNewKnob", null).group).toBe("advanced")
     expect(settingOf("aspect", null).group).toBe("format")
     expect(settingOf("movement", null).group).toBe("content")
+  })
+
+  it("ranks aspect before resolution and quality, then length, then count, then the content settings", () => {
+    const ranks = [
+      "aspect",
+      "resolution",
+      "quality",
+      "length",
+      "count",
+      "style",
+    ].map((name) => settingOf(name, null).rank)
+    expect([...ranks].sort((a, b) => a - b)).toEqual(ranks)
+    expect(new Set(ranks).size).toBe(ranks.length)
+  })
+
+  it("files service tier under Advanced in every spelling the catalog uses", () => {
+    for (const name of ["serviceTier", "service_tier", "ServiceTier"]) {
+      expect(settingOf(name, null).group, name).toBe("advanced")
+      expect(isKnownSetting(name, null), name).toBe(true)
+    }
   })
 })

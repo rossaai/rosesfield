@@ -147,7 +147,7 @@ export function useAudioScreen(
   const check = useRef<FormCheck | null>(null)
   const form = useAppForm(formApp, seeds, check)
   const runs = useAppRuns(app)
-  const hosted = useHostedModel(app, form, runs.runs)
+  const hosted = useHostedModel(app, form)
   usePriceRefresh(app.id, runs.runs)
   const lengthProblem = useLengthProblem(app, tab, form)
   const fields = hosted.fields

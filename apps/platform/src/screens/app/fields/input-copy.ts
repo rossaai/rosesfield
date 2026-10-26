@@ -1,5 +1,5 @@
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
-import { hasCatalogText, tCatalog } from "@/copy/t"
+import { hasCatalogText, t, tCatalog } from "@/copy/t"
 
 function optionalText(key: string): string | null {
   return hasCatalogText(key) ? tCatalog(key) : null
@@ -26,6 +26,16 @@ export function inputPlaceholder(
   input: InputDefinition
 ): string | null {
   return inputText(app, input, "placeholder")
+}
+
+export function promptPlaceholderOf(
+  app: AppListing | null,
+  input: InputDefinition | null
+): string {
+  return (
+    (app === null || input === null ? null : inputPlaceholder(app, input)) ??
+    t("home.prompt.placeholder")
+  )
 }
 
 export function inputNote(

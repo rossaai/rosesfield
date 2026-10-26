@@ -13,7 +13,7 @@ import { SettingChip } from "@/screens/app/bar/setting-chip"
 import { type BarTray, useBarTray } from "@/screens/app/bar/use-bar-tray"
 import { BarChips, BarFrame } from "@/screens/app/bar-frame"
 import { textOf } from "@/screens/app/fields/field-props"
-import { inputPlaceholder } from "@/screens/app/fields/input-copy"
+import { promptPlaceholderOf } from "@/screens/app/fields/input-copy"
 import { StartProblem, submitPriceOf } from "@/screens/app/generate-foot"
 import { HostedChips } from "@/screens/app/hosted/hosted-chips"
 import { TaskPanel } from "@/screens/app/hosted/task-panel"
@@ -125,8 +125,11 @@ function BarSettings({
       form={state.form}
       hosted={hosted}
       skipPrompt
-      graphPanel={(graphApp) => (
-        <ModelSettings app={graphApp} state={state} chips={[]} />
+      graphPanel={(graphApp, model) => (
+        <div className="flex flex-col gap-s4">
+          {model}
+          <ModelSettings app={graphApp} state={state} chips={[]} />
+        </div>
       )}
     />
   )
@@ -164,7 +167,7 @@ export function BarAppScreen({
             onSubmit={state.start.generate}
             label={t("home.prompt.label")}
             placeholder={
-              prompt === null ? "" : (inputPlaceholder(app, prompt) ?? "")
+              prompt === null ? "" : promptPlaceholderOf(app, prompt)
             }
             submitLabel={t("run.generate")}
             removeLabel={t("bar.attachment.remove")}

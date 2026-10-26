@@ -1,5 +1,5 @@
 import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
-import type { AppListing, Run } from "@rosesfield/contract"
+import type { AppListing } from "@rosesfield/contract"
 import { useQuery } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
@@ -20,7 +20,7 @@ import {
   modelCatalogQuery,
   type PriceAsk,
 } from "@/screens/app/hosted/model-catalog-query"
-import { ranBeforeOf } from "@/screens/app/hosted/model-sections"
+import { rankedCatalogOf } from "@/screens/app/hosted/model-sections"
 import { taskAppOf } from "@/screens/app/hosted/task-app"
 import type { AppForm } from "@/screens/app/use-app-form"
 
@@ -38,7 +38,6 @@ export type HostedState = {
   defaultModel: string | null
   chosen: CatalogModel | null
   fields: readonly ModelField[] | null
-  ranBefore: readonly string[]
   choose: (id: string) => void
   pricing?: RowPricing
 }
@@ -61,10 +60,6 @@ export function priceAskOf(
     { ...values, inputs },
     app.output.kind
   )
-}
-
-function newestFirst(runs: readonly Run[]): Run[] {
-  return [...runs].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 
 function useRowPricing(app: AppListing, values: FormValues): RowPricing {
@@ -113,11 +108,7 @@ function useChoose(
   )
 }
 
-export function useHostedModel(
-  app: AppListing,
-  form: AppForm,
-  runs: readonly Run[]
-): HostedState {
+export function useHostedModel(app: AppListing, form: AppForm): HostedState {
   const taskApp = useMemo(() => taskAppOf(app.id), [app.id])
   const settings = useQuery(settingsQuery)
   const keyState = settings.data?.engine.key ?? "unknown"
@@ -126,7 +117,8 @@ export function useHostedModel(
     enabled: taskApp !== null,
   })
   const models = query.data?.models ?? []
-  const defaultModel = query.data?.defaultModel ?? taskApp?.defaultModel ?? null
+  const declared = query.data?.defaultModel ?? taskApp?.defaultModel ?? null
+  const defaultModel = rankedCatalogOf(declared, models)[0] ?? declared
   const chosenId = textOf(form.values.inputs[modelInputName]) || defaultModel
   const chosen = models.find((model) => model.id === chosenId) ?? null
   const { values } = form
@@ -153,12 +145,6 @@ export function useHostedModel(
     defaultModel,
     chosen,
     fields: chosen?.form ?? null,
-    ranBefore: ranBeforeOf(
-      newestFirst(runs).map((run) => {
-        const model = run.inputs[modelInputName]
-        return typeof model === "string" ? model : undefined
-      })
-    ),
     choose,
     pricing,
   }

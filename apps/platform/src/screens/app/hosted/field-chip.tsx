@@ -1,20 +1,26 @@
 import { fieldRoleOf, type ModelField } from "@rosesfield/catalog/comfy"
-import { Button } from "@rosesfield/ui/components/button"
 import { ChipSelect } from "@rosesfield/ui/components/chip-select"
 import type { ReactElement } from "react"
-import { bySettingOrder, settingOf } from "@/catalog/setting-registry"
 import { t } from "@/copy/t"
 import {
+  AdvancedChip,
   chosenIconOf,
   PopoverChip,
   StepperChip,
+  SwitchChip,
   settingIconOf,
-  toggleIconOf,
   withOptionIcons,
   withShapes,
 } from "@/screens/app/bar/setting-chip"
 import { fieldCaption } from "@/screens/app/hosted/field-words"
-import { HostedFields } from "@/screens/app/hosted/hosted-fields"
+import { HostedField } from "@/screens/app/hosted/hosted-fields"
+import {
+  booleanPairOf,
+  controlOf,
+  fieldOptionsOf,
+  fieldSettingsPlan,
+  fieldShapeOf,
+} from "@/screens/app/settings-plan"
 import type { AppForm } from "@/screens/app/use-app-form"
 
 type ChoiceField = Extract<ModelField, { kind: "choice" }>
@@ -32,10 +38,26 @@ export function FieldChoiceChip({
   const chosen =
     value === undefined ? String(field.default ?? "") : String(value)
   const role = fieldRoleOf(field, output)
-  const options = field.options.map((option) => ({
-    value: String(option),
-    label: String(option),
-  }))
+  const options = fieldOptionsOf(field)
+  const pair =
+    controlOf({ kind: "choice", options }) === "switch"
+      ? booleanPairOf(options)
+      : null
+  const choose = (next: string): void =>
+    form.setInput(
+      field.name,
+      field.options.find((one) => String(one) === next)
+    )
+  if (pair !== null) {
+    return (
+      <SwitchChip
+        label={fieldCaption(field)}
+        name={field.name}
+        isOn={chosen === pair.on}
+        onToggle={() => choose(chosen === pair.on ? pair.off : pair.on)}
+      />
+    )
+  }
   return (
     <ChipSelect
       label={fieldCaption(field)}
@@ -47,12 +69,7 @@ export function FieldChoiceChip({
       }
       value={chosen}
       display={chosen === "" ? t("field.choice.notSet") : chosen}
-      onValueChange={(next) =>
-        form.setInput(
-          field.name,
-          field.options.find((one) => String(one) === next)
-        )
-      }
+      onValueChange={choose}
       options={
         role === "aspect"
           ? withShapes(options)
@@ -87,12 +104,29 @@ export function ModelFieldChip({
   const value = form.values.inputs[field.name]
   const label = fieldCaption(field)
   const icon = settingIconOf(field.name, fieldRoleOf(field, output))
-  switch (field.kind) {
-    case "prompt":
+  switch (controlOf(fieldShapeOf(field))) {
+    case "segmented":
+    case "select":
+    case "switch":
+      if (field.kind === "choice") {
+        return <FieldChoiceChip field={field} form={form} output={output} />
+      }
+      if (field.kind === "toggle") {
+        const isOn = value === "on"
+        return (
+          <SwitchChip
+            label={label}
+            name={field.name}
+            isOn={isOn}
+            onToggle={() => form.setInput(field.name, isOn ? "off" : "on")}
+          />
+        )
+      }
       return null
-    case "choice":
-      return <FieldChoiceChip field={field} form={form} output={output} />
-    case "number": {
+    case "stepper": {
+      if (field.kind !== "number") {
+        return null
+      }
       const min = field.min ?? 0
       const chosen = typeof value === "number" ? value : (field.default ?? min)
       return (
@@ -102,30 +136,16 @@ export function ModelFieldChip({
           shown={String(chosen)}
           value={chosen}
           min={min}
-          max={field.max ?? min}
-          step={1}
+          max={field.max ?? Number.POSITIVE_INFINITY}
+          step={field.step ?? (field.integer ? 1 : 0.1)}
           onChange={(next) => form.setInput(field.name, next)}
         />
       )
     }
-    case "toggle": {
-      const isOn = value === "on"
-      return (
-        <Button
-          size="small"
-          tone={isOn ? "default" : "quiet"}
-          aria-pressed={isOn}
-          onClick={() => form.setInput(field.name, isOn ? "off" : "on")}
-        >
-          {toggleIconOf(field.name, isOn)}
-          {label}
-        </Button>
-      )
-    }
     default:
-      return (
+      return field.kind === "prompt" ? null : (
         <PopoverChip label={label} icon={icon} shown={shownOf(value)}>
-          <HostedFields fields={[field]} form={form} />
+          <HostedField field={field} value={value} form={form} />
         </PopoverChip>
       )
   }
@@ -140,22 +160,29 @@ export function ModelFieldChips({
   form: AppForm
   output: string
 }): ReactElement {
+  const plan = fieldSettingsPlan(fields)
   return (
     <>
-      {[...fields]
-        .sort(
-          bySettingOrder((field) =>
-            settingOf(field.name, fieldRoleOf(field, output))
-          )
-        )
-        .map((field) => (
-          <ModelFieldChip
-            key={field.name}
-            field={field}
-            form={form}
-            output={output}
-          />
-        ))}
+      {plan.main.map((field) => (
+        <ModelFieldChip
+          key={field.name}
+          field={field}
+          form={form}
+          output={output}
+        />
+      ))}
+      {plan.advanced.length === 0 ? null : (
+        <AdvancedChip>
+          {plan.advanced.map((field) => (
+            <HostedField
+              key={field.name}
+              field={field}
+              value={form.values.inputs[field.name]}
+              form={form}
+            />
+          ))}
+        </AdvancedChip>
+      )}
     </>
   )
 }

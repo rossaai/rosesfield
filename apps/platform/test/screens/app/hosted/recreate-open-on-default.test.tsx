@@ -125,7 +125,7 @@ function openWith(seed: FormValues, source: FormSource) {
   const view = renderHook(
     () => {
       const form = useFormAt(seed, source)
-      useHostedModel(image, form, [])
+      useHostedModel(image, form)
       return form
     },
     { wrapper }

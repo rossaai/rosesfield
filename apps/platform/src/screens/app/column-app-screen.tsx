@@ -40,11 +40,12 @@ export function ColumnAppScreen({
             app={app}
             form={state.form}
             hosted={state.hosted}
-            graphPanel={(graphApp) => (
+            graphPanel={(graphApp, model) => (
               <InputsPanel
                 app={graphApp}
                 form={state.form}
                 lastSeed={state.lastSeed}
+                model={model}
               />
             )}
           />

@@ -191,7 +191,6 @@ function hostedState(withPricing: boolean): HostedState {
     defaultModel: alpha.id,
     chosen: alpha,
     fields: alpha.form,
-    ranBefore: [],
     choose: () => undefined,
     ...(withPricing
       ? {

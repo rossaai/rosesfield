@@ -62,7 +62,6 @@ function emptyHosted(): HostedState {
     defaultModel: null,
     chosen: null,
     fields: null,
-    ranBefore: [],
     choose: () => undefined,
   }
 }

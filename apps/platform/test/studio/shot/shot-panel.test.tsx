@@ -42,7 +42,6 @@ const hosted: HostedState = {
   defaultModel: "ltx-2-5",
   chosen: null,
   fields: null,
-  ranBefore: [],
   choose: () => undefined,
 }
 

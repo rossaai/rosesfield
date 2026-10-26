@@ -50,7 +50,6 @@ function hostedOf(
     defaultModel: models[0]?.id ?? null,
     chosen,
     fields: chosen?.form ?? null,
-    ranBefore: [],
     choose: () => undefined,
   }
 }

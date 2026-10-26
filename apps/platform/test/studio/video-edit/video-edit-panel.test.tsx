@@ -64,7 +64,6 @@ function hostedOf(chosen: CatalogModel | null): HostedState {
     defaultModel: dreaminaId,
     chosen,
     fields: chosen?.form ?? null,
-    ranBefore: [],
     choose: () => undefined,
   }
 }

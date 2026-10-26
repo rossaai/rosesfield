@@ -6,6 +6,7 @@ import {
   ArrowRight,
   ArrowUp,
   ArrowUpDown,
+  Ban,
   Boxes,
   Brush,
   Camera,
@@ -18,8 +19,10 @@ import {
   Feather,
   Film,
   Focus,
+  Footprints,
   Frame,
   GalleryHorizontal,
+  Gauge,
   Gem,
   Glasses,
   Hash,
@@ -38,10 +41,14 @@ import {
   Scan,
   Scissors,
   Search,
+  ShieldCheck,
   Shirt,
+  SlidersHorizontal,
   Smile,
+  Sparkles,
   Square,
   SquareSplitVertical,
+  Stamp,
   SunMedium,
   Tag,
   User,
@@ -52,114 +59,159 @@ import type { ReactNode } from "react"
 import { optionIconOf } from "@/catalog/setting-options"
 import { AspectShape } from "@/pieces/aspect-shape"
 
-export type SettingGroup = "format" | "content" | "last"
+export type SettingGroup = "format" | "content" | "advanced"
 
 export type Setting = {
   icon: LucideIcon
   group: SettingGroup
+  rank: number
 }
 
-const groupRank: Readonly<Record<SettingGroup, number>> = {
-  format: 0,
-  content: 1,
-  last: 2,
+type Entry = readonly [name: string, icon: LucideIcon]
+
+const formatEntries: readonly Entry[] = [
+  ["aspect", Scan],
+  ["aspectRatio", Scan],
+  ["framing", Frame],
+  ["resolution", Gem],
+  ["quality", Gem],
+  ["scale", Maximize2],
+  ["factor", Maximize2],
+  ["length", Clock],
+  ["seconds", Clock],
+  ["count", Hash],
+  ["sceneCount", ListOrdered],
+]
+
+const contentEntries: readonly Entry[] = [
+  ["movement", Move],
+  ["cameraMove", Move],
+  ["camera", Camera],
+  ["lens", Aperture],
+  ["focus", Focus],
+  ["light", Lightbulb],
+  ["color", Palette],
+  ["tone", Palette],
+  ["mood", Drama],
+  ["direction", Compass],
+  ["softness", Feather],
+  ["brightness", SunMedium],
+  ["kind", Boxes],
+  ["style", Brush],
+  ["mode", LayoutList],
+  ["language", Languages],
+  ["expression", Smile],
+  ["background", Image],
+  ["sound", Volume2],
+  ["keepSound", Volume2],
+  ["gender", User],
+  ["age", Hourglass],
+  ["skinTone", Droplet],
+  ["bodyType", PersonStanding],
+  ["hairLength", Scissors],
+  ["hairStyle", Scissors],
+  ["hairColor", Scissors],
+  ["eyeColor", Eye],
+  ["outfit", Shirt],
+  ["clothes", Shirt],
+  ["keepGlasses", Glasses],
+  ["plainBackground", Square],
+  ["view", Rotate3d],
+  ["side", Rotate3d],
+  ["angleSet", Rotate3d],
+  ["height", ArrowUpDown],
+  ["distance", Search],
+  ["effect", WandSparkles],
+  ["top", ArrowUp],
+  ["right", ArrowRight],
+  ["bottom", ArrowDown],
+  ["left", ArrowLeft],
+  ["otherShots", Film],
+  ["keyframe", GalleryHorizontal],
+  ["part", SquareSplitVertical],
+  ["firstFrame", Image],
+  ["lastFrame", Image],
+  ["reference", Image],
+]
+
+const advancedEntries: readonly Entry[] = [
+  ["seed", Dices],
+  ["serviceTier", Gauge],
+  ["negativePrompt", Ban],
+  ["guidance", SlidersHorizontal],
+  ["guidanceScale", SlidersHorizontal],
+  ["cfg", SlidersHorizontal],
+  ["cfgScale", SlidersHorizontal],
+  ["steps", Footprints],
+  ["numInferenceSteps", Footprints],
+  ["inferenceSteps", Footprints],
+  ["safety", ShieldCheck],
+  ["safetyChecker", ShieldCheck],
+  ["enableSafetyChecker", ShieldCheck],
+  ["safetyTolerance", ShieldCheck],
+  ["safetyFilterLevel", ShieldCheck],
+  ["promptExtend", Sparkles],
+  ["promptEnhance", Sparkles],
+  ["enhancePrompt", Sparkles],
+  ["promptOptimizer", Sparkles],
+  ["promptUpsampling", Sparkles],
+  ["promptExpansion", Sparkles],
+  ["watermark", Stamp],
+  ["addWatermark", Stamp],
+]
+
+export function settingKeyOf(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "")
 }
 
-const format = (icon: LucideIcon): Setting => ({ icon, group: "format" })
-const content = (icon: LucideIcon): Setting => ({ icon, group: "content" })
+const groups: readonly (readonly [SettingGroup, readonly Entry[]])[] = [
+  ["format", formatEntries],
+  ["content", contentEntries],
+  ["advanced", advancedEntries],
+]
 
-const byRole: Readonly<Record<FieldRole, Setting | null>> = {
+const byName: ReadonlyMap<string, Setting> = new Map(
+  groups
+    .flatMap(([group, entries]) =>
+      entries.map(([name, icon]) => ({ name, icon, group }))
+    )
+    .map(({ name, icon, group }, rank) => [
+      settingKeyOf(name),
+      { icon, group, rank },
+    ])
+)
+
+const roleNames: Readonly<Record<FieldRole, string | null>> = {
   prompt: null,
-  aspect: format(Scan),
-  resolution: format(Gem),
-  quality: format(Gem),
-  count: format(Hash),
-  length: format(Clock),
-  seed: { icon: Dices, group: "last" },
-  sound: content(Volume2),
-  "first-frame": content(Image),
-  "last-frame": content(Image),
-  reference: content(Image),
+  aspect: "aspect",
+  resolution: "resolution",
+  quality: "quality",
+  count: "count",
+  length: "length",
+  seed: "seed",
+  sound: "sound",
+  "first-frame": "firstFrame",
+  "last-frame": "lastFrame",
+  reference: "reference",
 }
 
-const byName: Readonly<Record<string, Setting>> = {
-  aspect: format(Scan),
-  aspectRatio: format(Scan),
-  resolution: format(Gem),
-  quality: format(Gem),
-  count: format(Hash),
-  sceneCount: format(ListOrdered),
-  length: format(Clock),
-  seconds: format(Clock),
-  scale: format(Maximize2),
-  factor: format(Maximize2),
-  framing: format(Frame),
-  seed: { icon: Dices, group: "last" },
-  movement: content(Move),
-  cameraMove: content(Move),
-  camera: content(Camera),
-  lens: content(Aperture),
-  focus: content(Focus),
-  light: content(Lightbulb),
-  color: content(Palette),
-  tone: content(Palette),
-  mood: content(Drama),
-  direction: content(Compass),
-  softness: content(Feather),
-  brightness: content(SunMedium),
-  kind: content(Boxes),
-  style: content(Brush),
-  mode: content(LayoutList),
-  language: content(Languages),
-  expression: content(Smile),
-  background: content(Image),
-  sound: content(Volume2),
-  keepSound: content(Volume2),
-  gender: content(User),
-  age: content(Hourglass),
-  skinTone: content(Droplet),
-  bodyType: content(PersonStanding),
-  hairLength: content(Scissors),
-  hairStyle: content(Scissors),
-  hairColor: content(Scissors),
-  eyeColor: content(Eye),
-  outfit: content(Shirt),
-  clothes: content(Shirt),
-  keepGlasses: content(Glasses),
-  plainBackground: content(Square),
-  view: content(Rotate3d),
-  side: content(Rotate3d),
-  angleSet: content(Rotate3d),
-  height: content(ArrowUpDown),
-  distance: content(Search),
-  effect: content(WandSparkles),
-  top: content(ArrowUp),
-  right: content(ArrowRight),
-  bottom: content(ArrowDown),
-  left: content(ArrowLeft),
-  otherShots: content(Film),
-  keyframe: content(GalleryHorizontal),
-  part: content(SquareSplitVertical),
+const otherSetting: Setting = {
+  icon: Tag,
+  group: "advanced",
+  rank: byName.size,
 }
-
-const otherSetting: Setting = content(Tag)
 
 export function settingOf(name: string, role: FieldRole | null): Setting {
-  const known = byName[name]
+  const known = byName.get(settingKeyOf(name))
   if (known !== undefined) {
     return known
   }
-  return (role === null ? null : byRole[role]) ?? otherSetting
+  const roleName = role === null ? null : roleNames[role]
+  return (roleName === null ? undefined : byName.get(roleName)) ?? otherSetting
 }
 
 export function isKnownSetting(name: string, role: FieldRole | null): boolean {
   return settingOf(name, role) !== otherSetting
-}
-
-export function bySettingOrder<T>(
-  of: (item: T) => Setting
-): (a: T, b: T) => number {
-  return (a, b) => groupRank[of(a).group] - groupRank[of(b).group]
 }
 
 export function withOptionIcons<T extends { value: string }>(

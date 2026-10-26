@@ -84,7 +84,6 @@ vi.mock("@/screens/app/hosted/use-hosted-model", () => ({
       defaultModel: graph.id,
       chosen: models.find((one) => one.id === id) ?? null,
       fields: null,
-      ranBefore: [],
       choose: () => undefined,
     }
   },
