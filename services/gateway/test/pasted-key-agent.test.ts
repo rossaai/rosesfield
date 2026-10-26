@@ -5,7 +5,9 @@ import { conversationRoutes } from "@rosesfield/agent"
 import { errorEnvelope } from "@rosesfield/contract"
 import { FixedClock } from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
+import { pastedKeyAgent } from "#agent/local-agent"
 import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
+import { PastedKeys } from "#compose/pasted-keys"
 import { readServerEnv } from "#env"
 import { gatewayRoutes, settingsResponse } from "#gateway.contract"
 import { keyHeaders } from "#session/visitor-keys"
@@ -43,14 +45,14 @@ function open(settings: Record<string, string>): LocalGateway {
 
 type Caller = (path: string, init?: RequestInit) => Promise<Response>
 
-function ownerCaller(gateway: LocalGateway): Caller {
+function ownerCaller(gateway: LocalGateway, held: string | null = key): Caller {
   return (path, init = {}) =>
     Promise.resolve(
       gateway.app.request(`http://127.0.0.1:8787${path}`, {
         ...init,
         headers: {
           "content-type": "application/json",
-          [keyHeaders.engine]: key,
+          ...(held === null ? {} : { [keyHeaders.engine]: held }),
         },
       })
     )
@@ -115,5 +117,42 @@ describe("a Comfy key the browser holds and sends with every request", () => {
     })
 
     expect(await agentWith(publicCaller(gateway))).toEqual(runsOnTheKey)
+  })
+
+  it("control: keeps the agent off on the same server while no key is pasted", async () => {
+    const gateway = open({})
+
+    expect(await agentWith(ownerCaller(gateway, null))).toMatchObject({
+      keyFrom: "settings",
+      engine: "demo",
+      agent: "missing",
+    })
+  })
+
+  it("gives each pasted key its own agent, so one key never pays for another key's turn", () => {
+    const dataDir = mkdtempSync(join(tmpdir(), "rosesfield-key-agents-"))
+    folders.push(dataDir)
+    const vars = readServerEnv({ DATA_DIR: dataDir })
+    const pasted = new PastedKeys({
+      vars,
+      build: () => {
+        throw new TypeError("this test builds no handlers")
+      },
+      agent: () =>
+        pastedKeyAgent({
+          env: vars,
+          apps: [imageApp()],
+          clock: new FixedClock({ now: start }),
+          modelOptions: {},
+        }),
+    })
+
+    const first = pasted.agentOf("comfyui-first-key")
+    const second = pasted.agentOf("comfyui-second-key")
+
+    expect(first).not.toBeNull()
+    expect(second).not.toBe(first)
+    expect(pasted.agentOf("comfyui-first-key")).toBe(first)
+    void pasted.stop()
   })
 })

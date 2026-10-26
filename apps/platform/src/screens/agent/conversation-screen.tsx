@@ -5,13 +5,14 @@ import { Link, useParams, useRouterState } from "@tanstack/react-router"
 import { type ReactElement, useEffect, useRef, useState } from "react"
 import type { Transcript } from "@/api/conversation-wire"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
+import { useKeyReach } from "@/api/key-reach"
 import { t } from "@/copy/t"
 import { ScreenState } from "@/pieces/screen-state"
 import { useDraft } from "@/pieces/use-draft"
 import { AgentComposer } from "@/screens/agent/agent-composer"
 import { AgentFrame, ConversationsDrawer } from "@/screens/agent/agent-frame"
 import { isModelMissing, useAgentModel } from "@/screens/agent/agent-model"
-import { ComposerSlot, NoModel } from "@/screens/agent/agent-parts"
+import { asksForKey, ComposerSlot, NoModel } from "@/screens/agent/agent-parts"
 import {
   type ConversationDialog,
   ConversationDialogs,
@@ -197,6 +198,7 @@ function KnownConversation({
   const state = useDraft()
   const model = useAgentModel()
   const openKey = useOpenKeyDialog()
+  const reach = useKeyReach()
   const approval = useUpdateConversation(conversationId)
   const isAnswering = turn?.status === "answering"
   useFirstMessage(
@@ -250,7 +252,7 @@ function KnownConversation({
             isAnswering={isAnswering}
             approval={runApproval}
             onApprovalChange={(next) => approval.mutate({ runApproval: next })}
-            onSend={model === "missing" ? openKey : send}
+            onSend={asksForKey(model, reach) ? openKey : send}
             onStop={actions.stop}
           />
         </ComposerSlot>

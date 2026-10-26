@@ -49,6 +49,12 @@ type PastedKeyAgentOptions = {
   modelOptions: OpenPiModelsOptions
 }
 
+export function pastedKeyAgents(
+  options: PastedKeyAgentOptions
+): () => KeyedAgent {
+  return () => pastedKeyAgent(options)
+}
+
 export function pastedKeyAgent(options: PastedKeyAgentOptions): KeyedAgent {
   return new KeyedAgent({
     model: routerAgentModel(null),

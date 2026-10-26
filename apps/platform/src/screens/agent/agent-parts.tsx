@@ -10,14 +10,21 @@ import {
 } from "@/screens/agent/agent-model"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
 import { useOpenKeyDialog } from "@/shell/key-dialog-context"
+import { useShowSettings } from "@/shell/shell-dialogs"
 
 function AgentHasNoModel(): ReactElement {
+  const showSettings = useShowSettings()
   return (
     <StateView
       kind="empty"
       density="compact"
       title={t("agent.noModel.title")}
       className="w-full max-w-prompt-max"
+      actions={
+        <Button onClick={() => showSettings("agent")}>
+          {t("agent.noModel.action")}
+        </Button>
+      }
     />
   )
 }
@@ -55,8 +62,12 @@ function AgentOff(): ReactElement {
   )
 }
 
+export function asksForKey(model: AgentModelState, reach: KeyReach): boolean {
+  return model === "missing" && reach === "add"
+}
+
 function composerShows(model: AgentModelState, reach: KeyReach): boolean {
-  return model === "ready" || (model === "missing" && reach === "add")
+  return model === "ready" || asksForKey(model, reach)
 }
 
 export function ComposerSlot({

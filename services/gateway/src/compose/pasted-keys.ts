@@ -12,7 +12,7 @@ import { readVisitorKeys } from "#session/visitor-keys"
 type PastedKeysOptions = {
   vars: WorkerVars
   build: (key: string) => Built<TimerJobRunner>
-  agent: KeyedAgent | null
+  agent: (() => KeyedAgent) | null
 }
 
 export class PastedKeys {
@@ -24,14 +24,15 @@ export class PastedKeys {
 
   private readonly vars: WorkerVars
   private readonly build: (key: string) => Built<TimerJobRunner>
-  private readonly agent: KeyedAgent | null
+  private readonly makeAgent: (() => KeyedAgent) | null
+  private readonly agents = new Map<string, KeyedAgent>()
   private readonly built = new Map<string, Built<TimerJobRunner>>()
   private resume: "due" | "done" = "due"
 
   constructor(options: PastedKeysOptions) {
     this.vars = options.vars
     this.build = options.build
-    this.agent = options.agent
+    this.makeAgent = options.agent
   }
 
   scopeFor(
@@ -43,7 +44,7 @@ export class PastedKeys {
         return keyless
       }
       const { handlers } = await this.handlersOf(key)
-      const { agent } = this
+      const agent = this.agentOf(key)
       return ownerScope({
         handlers,
         agent: agent?.agent ?? null,
@@ -77,11 +78,23 @@ export class PastedKeys {
     return made
   }
 
+  agentOf(key: string): KeyedAgent | null {
+    const found = this.agents.get(key)
+    if (found !== undefined || this.makeAgent === null) {
+      return found ?? null
+    }
+    const made = this.makeAgent()
+    this.agents.set(key, made)
+    return made
+  }
+
   async stop(): Promise<void> {
     for (const { jobs } of this.built.values()) {
       jobs.stop()
     }
     this.built.clear()
-    await this.agent?.close()
+    const agents = [...this.agents.values()]
+    this.agents.clear()
+    await Promise.all(agents.map((agent) => agent.close()))
   }
 }
