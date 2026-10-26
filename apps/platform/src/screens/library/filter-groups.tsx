@@ -1,37 +1,19 @@
 import type { AppListing } from "@rosesfield/contract"
-import { Button } from "@rosesfield/ui/components/button"
-import {
-  ViewMenu as KernelViewMenu,
-  type ViewFacet,
-} from "@rosesfield/ui/components/view-menu"
 import {
   AudioLinesIcon,
   BoxIcon,
   ImageIcon,
-  LayoutGridIcon,
   ShapesIcon,
   TypeIcon,
   VideoIcon,
 } from "lucide-react"
-import type { ReactElement, ReactNode } from "react"
+import type { ReactNode } from "react"
 import { appName, type OutputKind } from "@/catalog/app-facts"
 import { catalogApps } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import type { CopyKey } from "@/copy.en"
+import type { FilterGroup } from "@/pieces/view/view-bar"
 import { appIcon } from "@/shell/nav-rows"
-
-export type ViewLayout = "list" | "grid"
-
-export type FilterChoice = { value: string; label: string; picture: ReactNode }
-
-export type FilterGroup = {
-  id: string
-  name: string
-  icon: ReactNode
-  choices: readonly FilterChoice[]
-  value: string
-  onChoose: (value: string) => void
-}
 
 type AppCategory = AppListing["category"]
 
@@ -147,12 +129,6 @@ export function dateFilterGroup(
   }
 }
 
-export const tileSizes = {
-  min: 0,
-  max: 2,
-  initial: 1,
-} as const
-
 export const kindPictures = {
   all: <ShapesIcon />,
   image: <ImageIcon />,
@@ -161,68 +137,3 @@ export const kindPictures = {
   text: <TypeIcon />,
   mesh: <BoxIcon />,
 } as const satisfies Record<OutputKind | "all", ReactNode>
-
-function facetOf(group: FilterGroup): ViewFacet {
-  return {
-    id: group.id,
-    label: group.name,
-    value: group.value,
-    options: group.choices.map((choice) => ({
-      value: choice.value,
-      label: choice.label,
-      ...(choice.picture === null ? {} : { lead: choice.picture }),
-    })),
-    onValueChange: group.onChoose,
-  }
-}
-
-export type ViewClusterProps = {
-  layout: ViewLayout
-  onLayout: (layout: ViewLayout) => void
-  size: number
-  onSize: (size: number) => void
-  groups: readonly FilterGroup[]
-  hasSize?: boolean
-  isLoading?: boolean
-}
-
-function LoadingView(): ReactElement {
-  return (
-    <Button data-slot="view-menu" tone="quiet" size="dense" disabled={true}>
-      <LayoutGridIcon aria-hidden="true" />
-      {t("app.canvas.view")}
-    </Button>
-  )
-}
-
-export function ViewMenu(props: ViewClusterProps): ReactElement {
-  if (props.isLoading === true) {
-    return <LoadingView />
-  }
-  const hasSize = props.hasSize ?? props.layout === "grid"
-  return (
-    <KernelViewMenu
-      label={t("app.canvas.view")}
-      layoutLabel={t("library.view.label")}
-      listLabel={t("library.view.list")}
-      gridLabel={t("library.view.grid")}
-      layout={props.layout}
-      onLayoutChange={props.onLayout}
-      {...(hasSize
-        ? {
-            size: {
-              label: t("library.view.size"),
-              value: props.size,
-              min: tileSizes.min,
-              max: tileSizes.max,
-              onValueChange: props.onSize,
-            },
-          }
-        : {})}
-      filterLabel={t("library.filter")}
-      facets={props.groups.map(facetOf)}
-    />
-  )
-}
-
-export const ViewCluster = ViewMenu

@@ -18,13 +18,9 @@ import { AssetTile, aspectOfAsset } from "@/pieces/asset-tile"
 import { LabMark } from "@/pieces/lab-mark"
 import { runAppName, runAspect, runModel } from "@/pieces/run/run-facts"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
+import { columnClassOf, columnLayout } from "@/pieces/view/tile-scale"
 import { runLabOf } from "@/screens/history/history-row"
-import {
-  columnLayout,
-  packColumns,
-  tileStepOf,
-  useAvailableWidth,
-} from "@/screens/library/tile-columns"
+import { packColumns, useAvailableWidth } from "@/screens/library/tile-columns"
 import { useViewer } from "@/viewer/viewer-context"
 
 export type GridItem = {
@@ -280,8 +276,7 @@ export function ResultGrid({
 }): ReactElement {
   const isRegular = useIsRegularWindow()
   const [ref, available] = useAvailableWidth()
-  const step = tileStepOf(size, isRegular)
-  const layout = columnLayout(items.length, available, step, isRegular, size)
+  const layout = columnLayout(items.length, available, size, isRegular)
   const columns = packColumns(items, layout.count, (item) => item.aspect)
   const list = items.map((item) => item.assetId)
   return (
@@ -297,7 +292,9 @@ export function ResultGrid({
             data-slot="result-column"
             className={cn(
               "flex min-w-0 flex-col gap-s2",
-              layout.fills ? "flex-1" : cn("shrink-0", step.className)
+              layout.fills
+                ? "flex-1"
+                : cn("shrink-0", columnClassOf(size, isRegular))
             )}
           >
             {column.map((item) => (

@@ -1,7 +1,7 @@
 import { cleanup, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { columnCount } from "@/pieces/view/tile-scale"
 import { GridSkeleton, PagingSkeleton } from "@/screens/library/library-grid"
-import { columnCount, tileStepOf } from "@/screens/library/tile-columns"
 
 beforeEach(() => {
   vi.stubGlobal("innerWidth", 800)
@@ -17,7 +17,7 @@ describe("the grid's skeleton", () => {
     render(<GridSkeleton size={1} />)
     const masonry = document.querySelector("[data-columns]")
     expect(Number(masonry?.getAttribute("data-columns"))).toBe(
-      columnCount(800, tileStepOf(1, true), true, 1)
+      columnCount(800, 1, true)
     )
     expect(masonry?.className.split(" ")).toContain("gap-s2")
   })

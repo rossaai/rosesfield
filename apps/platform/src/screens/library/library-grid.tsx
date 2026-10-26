@@ -8,11 +8,8 @@ import { t } from "@/copy/t"
 import { UploadRow } from "@/pieces/upload-row"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import type { Upload } from "@/pieces/use-uploads"
-import {
-  columnCount,
-  tileStepOf,
-  useAvailableWidth,
-} from "@/screens/library/tile-columns"
+import { columnCount } from "@/pieces/view/tile-scale"
+import { useAvailableWidth } from "@/screens/library/tile-columns"
 
 type DayGroup = { key: number; label: string; assets: Asset[] }
 
@@ -80,12 +77,7 @@ export function PendingTiles(props: PendingProps): ReactNode {
 export function GridSkeleton({ size }: { size: number }): ReactElement {
   const isRegular = useIsRegularWindow()
   const [ref, available] = useAvailableWidth()
-  const columns = columnCount(
-    available,
-    tileStepOf(size, isRegular),
-    isRegular,
-    size
-  )
+  const columns = columnCount(available, size, isRegular)
   return (
     <div ref={ref} data-slot="grid-skeleton" className="w-full">
       <SkeletonMasonry columns={columns} />

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { catalogApps } from "@/catalog/catalog-apps"
 import { historyFilterGroups } from "@/screens/history/history-filters"
-import { type DateChoice, isWithinDate } from "@/screens/library/view-cluster"
+import { type DateChoice, isWithinDate } from "@/screens/library/filter-groups"
 
 function groupsWith(appId: string | null) {
   const onApp = vi.fn<(appId: string | null) => void>()

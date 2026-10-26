@@ -5,12 +5,12 @@ import {
 import type { ReactElement } from "react"
 import type { OutputKind } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
+import type { FilterGroup } from "@/pieces/view/view-bar"
 import {
   appFilterGroups,
   type DateChoice,
   dateFilterGroup,
-  type FilterGroup,
-} from "@/screens/library/view-cluster"
+} from "@/screens/library/filter-groups"
 
 export type StateChoice = "all" | "working" | "failed"
 
