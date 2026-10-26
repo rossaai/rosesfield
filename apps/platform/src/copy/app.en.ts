@@ -12,6 +12,7 @@ export const appCopy = {
   "app.notFound.action": "Open apps",
   "app.canvas.label": "Your results",
   "app.canvas.view": "View",
+  "app.search.label": "Search your results",
   "app.tab.history": "History",
   "app.tab.how": "How it works",
   "app.how.inputs.title": "Add your inputs",
