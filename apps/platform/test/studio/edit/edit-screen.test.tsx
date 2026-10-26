@@ -1,3 +1,4 @@
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { type AppListing, appListing, asset } from "@rosesfield/contract"
 import { ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
@@ -15,7 +16,8 @@ import type { GatewaySettings } from "@/api/gateway-settings"
 import { assetQuery, runsQuery, settingsQuery } from "@/api/queries"
 import { appName } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
-import { t } from "@/copy/t"
+import { t, tCatalog } from "@/copy/t"
+import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
 import { AppScreen } from "@/studio/edit/screen"
 import { assetIds } from "../../sample-app"
 import { asPhone, resetFrames } from "../../screens/app/frame-render"
@@ -38,20 +40,38 @@ const settings: GatewaySettings = {
   retentionDays: null,
 }
 
-function relight(): AppListing {
+const photoInput = {
+  type: "image",
+  name: "image",
+  labelKey: "relight.input.image.label",
+  presence: "required",
+  max: 1,
+}
+
+const promptInput = {
+  type: "prompt",
+  name: "prompt",
+  labelKey: "relight.input.prompt.label",
+  presence: "optional",
+  maxLength: 300,
+}
+
+const clothesInput = {
+  type: "image",
+  name: "clothes",
+  labelKey: "tryOn.input.clothes.label",
+  presence: "required",
+  max: 1,
+}
+
+function relight(
+  inputs: readonly object[] = [photoInput, promptInput]
+): AppListing {
   return appListing.parse({
     id: "relight",
     nameKey: "relight.name",
     category: "image",
-    inputs: [
-      {
-        type: "image",
-        name: "image",
-        labelKey: "relight.input.image.label",
-        presence: "required",
-        max: 1,
-      },
-    ],
+    inputs,
     output: {
       kind: "image",
       count: { default: 1, max: 4 },
@@ -62,14 +82,63 @@ function relight(): AppListing {
   })
 }
 
-function openEdit(use: string | undefined): RouterHistory {
-  const app = relight()
+const ownCount: CatalogModel = {
+  id: "kling/kling-image-o1",
+  kind: "hosted",
+  maker: "Kling",
+  name: "Kling Image O1",
+  nameKey: null,
+  task: "image-edit",
+  tags: [{ kind: "hosted" }],
+  form: [
+    {
+      kind: "prompt",
+      name: "prompt",
+      path: "prompt",
+      required: true,
+      maxLength: null,
+      default: null,
+    },
+    {
+      kind: "media",
+      name: "images",
+      path: "images",
+      required: true,
+      media: "image",
+      min: 1,
+      max: 4,
+    },
+    {
+      kind: "number",
+      name: "n",
+      path: "n",
+      required: false,
+      min: 1,
+      max: 9,
+      integer: true,
+      default: 1,
+    },
+  ],
+}
+
+function openEdit(
+  use: string | undefined,
+  app: AppListing = relight(),
+  models: readonly CatalogModel[] = []
+): RouterHistory {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, staleTime: Number.POSITIVE_INFINITY },
     },
   })
   client.setQueryData(settingsQuery.queryKey, settings)
+  if (models.length > 0) {
+    client.setQueryData(modelCatalogQuery(app.id, "set").queryKey, {
+      models: [...models],
+      defaultModel: models[0]?.id ?? null,
+      refusal: null,
+    })
+  }
   client.setQueryData(runsQuery(app.id).queryKey, {
     pages: [{ runs: [], next: null }],
     pageParams: [null],
@@ -171,6 +240,31 @@ describe("the settings bar", () => {
     }
     fireEvent.click(generate)
     expect(await screen.findByText(t("field.asset.required"))).not.toBeNull()
+  })
+
+  it("draws no prompt field when the tool's run reads no prompt", async () => {
+    openEdit(undefined, relight([photoInput]))
+    await screen.findByRole("heading", { level: 1, name: nameOf("relight") })
+    const dock = document.querySelector("[data-slot='prompt-dock']")
+    expect(dock?.textContent).toContain(t("run.generate"))
+    expect(dock?.querySelector("textarea")).toBeNull()
+  })
+
+  it("never marks a required second photo Optional", async () => {
+    openEdit(undefined, relight([photoInput, clothesInput]))
+    await screen.findByRole("heading", { level: 1, name: nameOf("relight") })
+    const dock = document.querySelector("[data-slot='prompt-dock']")
+    expect(dock?.textContent).toContain(tCatalog("tryOn.input.clothes.label"))
+    expect(dock?.textContent).not.toContain(t("field.optional"))
+  })
+
+  it("draws one count stepper on a model that brings its own count, held to four", async () => {
+    openEdit(undefined, relight(), [ownCount])
+    const steppers = await screen.findAllByRole("group", {
+      name: t("field.count.label"),
+    })
+    expect(steppers).toHaveLength(1)
+    expect(steppers[0]?.textContent).toContain("1/4")
   })
 
   it("floats over the canvas on a wide screen", async () => {

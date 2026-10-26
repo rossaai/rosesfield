@@ -5,6 +5,8 @@ export type ToolRatio = "photo" | "format"
 export type EditTool = {
   id: string
   ratio: ToolRatio
+  mode: string | null
+  folded: readonly string[]
 }
 
 export type ShownTool = {
@@ -15,14 +17,23 @@ export type ShownTool = {
 export const editToolId = "edit"
 
 export const editTools: readonly EditTool[] = [
-  { id: editToolId, ratio: "photo" },
-  { id: "angles", ratio: "photo" },
-  { id: "relight", ratio: "photo" },
-  { id: "try-on", ratio: "photo" },
-  { id: "headshots", ratio: "photo" },
-  { id: "expand", ratio: "format" },
-  { id: "background-removal", ratio: "photo" },
+  { id: editToolId, ratio: "photo", mode: null, folded: [] },
+  { id: "angles", ratio: "photo", mode: "mode", folded: [] },
+  {
+    id: "relight",
+    ratio: "photo",
+    mode: null,
+    folded: ["color", "softness", "brightness", "quality"],
+  },
+  { id: "try-on", ratio: "photo", mode: null, folded: [] },
+  { id: "headshots", ratio: "photo", mode: null, folded: [] },
+  { id: "expand", ratio: "format", mode: "mode", folded: [] },
+  { id: "background-removal", ratio: "photo", mode: null, folded: [] },
 ]
+
+export function editToolOf(appId: string): EditTool {
+  return toolOf(appId) ?? { id: appId, ratio: "photo", mode: null, folded: [] }
+}
 
 export function toolOf(appId: string): EditTool | null {
   return editTools.find((tool) => tool.id === appId) ?? null

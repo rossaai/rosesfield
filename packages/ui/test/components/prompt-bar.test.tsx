@@ -55,6 +55,25 @@ describe("PromptBar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Generate" }))
     expect(submit).toHaveBeenCalledTimes(1)
   })
+
+  it("draws no prompt field for a run that reads no prompt, and keeps Generate", () => {
+    const submit = vi.fn()
+    render(
+      <PromptBar
+        value=""
+        onValueChange={() => undefined}
+        onSubmit={submit}
+        label="Prompt"
+        placeholder=""
+        submitLabel="Generate"
+        removeLabel="Remove"
+        prompt="none"
+      />
+    )
+    expect(screen.queryByRole("textbox")).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Generate" }))
+    expect(submit).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe("PromptBar's vessel", () => {

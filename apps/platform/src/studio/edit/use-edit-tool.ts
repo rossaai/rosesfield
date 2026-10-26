@@ -16,7 +16,7 @@ import {
 } from "@/screens/app/use-app-form"
 import type { AppScreenState, AppSeeds } from "@/screens/app/use-app-screen"
 import { type StartRun, useStartRun } from "@/screens/app/use-start-run"
-import { chipNamesOf, imageSlotsOf, ratioFor } from "@/studio/edit/edit-form"
+import { imageSlotsOf, ratioFor } from "@/studio/edit/edit-form"
 import type { EditTool } from "@/studio/edit/edit-tools"
 import { type EditPhoto, useEditPhoto } from "@/studio/edit/use-edit-photo"
 
@@ -24,7 +24,6 @@ export type EditToolState = AppScreenState & {
   tool: EditTool
   app: AppListing
   photo: EditPhoto
-  chips: string[]
 }
 
 function useOutputShape(
@@ -97,7 +96,6 @@ export function useEditTool(
     start: guarded,
     hosted,
     photo,
-    chips: fields === null ? chipNamesOf(app, inputs) : [],
     lastSeed: runs.runs.find((run) => run.seed !== null)?.seed ?? null,
     hasRuns: runs.isPending ? null : runs.runs.length > 0,
     useInputs: (run) => form.fill(valuesFromRun(app, run)),

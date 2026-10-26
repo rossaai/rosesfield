@@ -53,6 +53,7 @@ type PromptBarProps = {
   submitName?: string | undefined
   busy?: boolean
   placement?: "inline" | "dock"
+  prompt?: "shown" | "none"
   className?: string
 }
 
@@ -299,7 +300,9 @@ function PromptBar(props: PromptBarProps): ReactElement {
           ) : (
             <PromptSlots {...props} />
           )}
-          <PromptField props={props} onSubmit={submit} />
+          {props.prompt === "none" ? null : (
+            <PromptField props={props} onSubmit={submit} />
+          )}
           {props.notices === undefined ? null : (
             <div data-slot="composer-notices">{props.notices}</div>
           )}
