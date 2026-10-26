@@ -162,6 +162,11 @@ function isRowOf(row: Row, field: ModelField): boolean {
   )
 }
 
+/** Tells whether the table names this field, so Rosesfield's words for its name hold for it. */
+export function isTableField(field: ModelField): boolean {
+  return rows.some((one) => isRowOf(one, field))
+}
+
 const switchWords: readonly (readonly [string, string])[] = [
   ["true", "false"],
   ["on", "off"],

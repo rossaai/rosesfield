@@ -1,7 +1,18 @@
 import { Field as FieldPrimitive } from "@base-ui/react/field"
 import { fieldInset } from "@rosesfield/ui/components/input"
+import { interaction } from "@rosesfield/ui/components/interaction"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@rosesfield/ui/components/popover"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@rosesfield/ui/components/tooltip"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { CircleAlertIcon } from "lucide-react"
+import { CircleAlertIcon, CircleHelpIcon } from "lucide-react"
 import type { ReactElement } from "react"
 
 function Field({
@@ -69,6 +80,52 @@ function FieldMessage({
   )
 }
 
+type FieldHintProps = {
+  label: string
+  text: string
+  place: "hover" | "tap"
+}
+
+const hintMark = cn(
+  "inline-flex shrink-0 items-center justify-center rounded-full text-ink-muted outline-none",
+  interaction.fieldRing
+)
+
+function FieldHint({ label, text, place }: FieldHintProps): ReactElement {
+  const mark = <CircleHelpIcon aria-hidden="true" className="glyph-small" />
+  if (place === "tap") {
+    return (
+      <Popover>
+        <PopoverTrigger
+          data-slot="field-hint"
+          aria-label={label}
+          className={hintMark}
+        >
+          {mark}
+        </PopoverTrigger>
+        <PopoverContent side="top" className="text-label">
+          {text}
+        </PopoverContent>
+      </Popover>
+    )
+  }
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        data-slot="field-hint"
+        aria-label={label}
+        className={hintMark}
+      >
+        {mark}
+      </TooltipTrigger>
+      <TooltipContent className="h-auto py-s1_5 whitespace-normal">
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
 const FieldControl = FieldPrimitive.Control
 
-export { Field, FieldCaption, FieldControl, FieldMessage, FieldNote }
+export type { FieldHintProps }
+export { Field, FieldCaption, FieldControl, FieldHint, FieldMessage, FieldNote }

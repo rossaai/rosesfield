@@ -5,6 +5,7 @@ type FieldBase = {
   name: string
   path: string
   required: boolean
+  description?: string
 }
 
 export type MediaKind = "image" | "video" | "audio"

@@ -1,6 +1,6 @@
 import type { AppListing } from "@rosesfield/contract"
 import type { ReactElement } from "react"
-import { settingIconOf } from "@/catalog/setting-registry"
+import { settingIconOf, settingTipOf } from "@/catalog/setting-registry"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
 import { aspectField } from "@/screens/app/app-form"
@@ -61,6 +61,7 @@ export function CountField({
       caption={t("field.count.label")}
       isOptional={false}
       note={null}
+      hint={settingTipOf("count")}
       problem={undefined}
     >
       <NumberStepper

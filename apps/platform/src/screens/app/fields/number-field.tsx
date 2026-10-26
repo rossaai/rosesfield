@@ -1,6 +1,6 @@
 import type { InputDefinition } from "@rosesfield/contract"
 import { type ReactElement, useEffect, useRef } from "react"
-import { settingIconOf } from "@/catalog/setting-registry"
+import { settingIconOf, settingTipOf } from "@/catalog/setting-registry"
 import { NumberStepper } from "@/pieces/number-stepper"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import {
@@ -22,6 +22,7 @@ export function NumberField(props: InputFieldProps<NumberInput>): ReactElement {
       caption={inputCaption(input)}
       isOptional={false}
       note={null}
+      hint={settingTipOf(input.name)}
       problem={props.problem}
     >
       <NumberStepper

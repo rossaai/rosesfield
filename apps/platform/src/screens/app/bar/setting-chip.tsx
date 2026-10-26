@@ -11,12 +11,17 @@ import {
   PopoverTrigger,
 } from "@rosesfield/ui/components/popover"
 import { SlidersHorizontalIcon, Volume2Icon, VolumeXIcon } from "lucide-react"
-import type { ReactElement, ReactNode } from "react"
-import { settingIconOf, withChoiceIcons } from "@/catalog/setting-registry"
+import { type ReactElement, type ReactNode, useRef } from "react"
+import {
+  settingIconOf,
+  settingTipOf,
+  withChoiceIcons,
+} from "@/catalog/setting-registry"
 import { withUnit } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
 import { aspectField, countField } from "@/screens/app/app-form"
+import { SettingHint } from "@/screens/app/fields/field-frame"
 import { numberOf, textOf } from "@/screens/app/fields/field-props"
 import { inputCaption, inputUnit } from "@/screens/app/fields/input-copy"
 import { aspectItems } from "@/screens/app/fields/output-fields"
@@ -31,6 +36,7 @@ type SettingChipProps = {
 
 type StepperChipProps = {
   label: string
+  hint?: string | null
   shown: string
   icon?: ReactNode
   value: number
@@ -96,7 +102,12 @@ export function StepperChip(props: StepperChipProps): ReactElement {
     )
   }
   return (
-    <PopoverChip label={props.label} icon={props.icon} shown={props.shown}>
+    <PopoverChip
+      label={props.label}
+      hint={props.hint}
+      icon={props.icon}
+      shown={props.shown}
+    >
       <NumberStepper
         value={props.value}
         fallback={props.fallback}
@@ -112,12 +123,17 @@ export function StepperChip(props: StepperChipProps): ReactElement {
   )
 }
 
+const firstControl =
+  "input, textarea, button:not([data-slot='field-hint']), [role='combobox']"
+
 export function PopoverChip(props: {
   label: string
+  hint?: string | null | undefined
   icon: ReactNode
   shown: string
   children: ReactNode
 }): ReactElement {
+  const popup = useRef<HTMLDivElement>(null)
   return (
     <Popover>
       <PopoverTrigger
@@ -132,9 +148,16 @@ export function PopoverChip(props: {
         align="start"
         sideOffset={8}
         motion="none"
+        ref={popup}
+        initialFocus={() =>
+          popup.current?.querySelector<HTMLElement>(firstControl) ?? true
+        }
         className="w-83.5 max-w-none gap-3 px-4.25 py-4"
       >
-        <PopoverTitle className="text-label">{props.label}</PopoverTitle>
+        <div className="flex items-center gap-s1_5">
+          <PopoverTitle className="text-label">{props.label}</PopoverTitle>
+          <SettingHint setting={props.label} text={props.hint} />
+        </div>
         {props.children}
       </PopoverContent>
     </Popover>
@@ -243,6 +266,12 @@ function ChoiceChip({
         settingIconOf(input.name, role)
       }
       display={namedChoiceText(app, input, chosen)}
+      hint={
+        <SettingHint
+          setting={inputCaption(input)}
+          text={settingTipOf(input.name)}
+        />
+      }
       value={chosen}
       onValueChange={set}
       options={items}
@@ -268,6 +297,7 @@ function InputChip({
       return (
         <StepperChip
           label={inputCaption(input)}
+          hint={settingTipOf(input.name)}
           icon={inputIconOf(app, input)}
           shown={numberText(app, input, numberOf(value, input.default))}
           value={numberOf(value, input.default)}
@@ -313,6 +343,12 @@ export function SettingChip({
         value={chosen}
         onValueChange={(aspectRatio) => form.setForm({ aspectRatio })}
         options={items}
+        hint={
+          <SettingHint
+            setting={t("field.aspect.label")}
+            text={settingTipOf(aspectField)}
+          />
+        }
       />
     )
   }

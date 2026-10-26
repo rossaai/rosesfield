@@ -31,6 +31,7 @@ type ChipSelectProps<T extends string> = {
   icon: ReactElement
   display?: string
   disabled?: boolean
+  hint?: ReactNode
 }
 
 function ChipSelect<T extends string>({
@@ -41,6 +42,7 @@ function ChipSelect<T extends string>({
   icon,
   display,
   disabled = false,
+  hint,
 }: ChipSelectProps<T>): ReactElement {
   const choose = (next: unknown): void => {
     const option = options.find((candidate) => candidate.value === next)
@@ -84,8 +86,9 @@ function ChipSelect<T extends string>({
         )}
       >
         <SelectGroup className="flex flex-col gap-0.5">
-          <SelectLabel className="flex h-8 items-center px-2 py-0">
+          <SelectLabel className="flex h-8 items-center gap-s1_5 px-2 py-0">
             {label}
+            {hint}
           </SelectLabel>
           {options.map((option) => (
             <SelectItem

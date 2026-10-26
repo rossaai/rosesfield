@@ -57,6 +57,7 @@ import {
 } from "lucide-react"
 import type { ReactElement } from "react"
 import { optionIconOf } from "@/catalog/setting-options"
+import { hasCatalogText, tCatalog } from "@/copy/t"
 import { AspectShape } from "@/pieces/aspect-shape"
 import { settingKeyOf } from "@/screens/app/setting-table"
 
@@ -190,6 +191,28 @@ export function settingOf(name: string, role: FieldRole | null): Setting {
   }
   const roleName = role === null ? null : roleNames[role]
   return (roleName === null ? undefined : byName.get(roleName)) ?? otherSetting
+}
+
+export function settingNames(): string[] {
+  return [...formatEntries, ...contentEntries, ...advancedEntries].map(
+    ([name]) => name
+  )
+}
+
+export function settingTipKeyOf(name: string): string {
+  return `setting.${settingKeyOf(name)}.tip`
+}
+
+/** Gives the words that explain what a setting changes, or null when Rosesfield has none for it. */
+export function settingTipOf(name: string): string | null {
+  const key = settingTipKeyOf(name)
+  return hasCatalogText(key) ? tCatalog(key) : null
+}
+
+/** Gives the words that explain the setting a field role stands for, such as the seed. */
+export function roleTipOf(role: FieldRole | null): string | null {
+  const name = role === null ? null : roleNames[role]
+  return name === null ? null : settingTipOf(name)
 }
 
 export function isKnownSetting(name: string, role: FieldRole | null): boolean {

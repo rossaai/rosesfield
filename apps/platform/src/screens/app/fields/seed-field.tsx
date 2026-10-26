@@ -1,5 +1,6 @@
 import { Input } from "@rosesfield/ui/components/input"
 import type { ReactElement } from "react"
+import { settingTipOf } from "@/catalog/setting-registry"
 import { t } from "@/copy/t"
 import type { FieldValue } from "@/screens/app/app-form"
 import { ChoiceControl } from "@/screens/app/fields/choice-field"
@@ -32,6 +33,7 @@ export function SeedField(props: SeedFieldProps): ReactElement {
       caption={t("field.seed.label")}
       isOptional={false}
       note={null}
+      hint={settingTipOf(seedSetting)}
       problem={undefined}
     >
       <ChoiceControl

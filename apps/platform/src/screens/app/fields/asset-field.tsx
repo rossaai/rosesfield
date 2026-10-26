@@ -1,5 +1,6 @@
 import { type ReactElement, useEffect, useRef, useState } from "react"
 import type { AssetInput } from "@/catalog/app-facts"
+import { settingTipOf } from "@/catalog/setting-registry"
 import { DropWell } from "@/pieces/drop-well"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { type InputFieldProps, listOf } from "@/screens/app/fields/field-props"
@@ -19,6 +20,7 @@ export function AssetField(props: InputFieldProps<AssetInput>): ReactElement {
   return (
     <FieldFrame
       caption={inputCaption(input)}
+      hint={settingTipOf(input.name)}
       isOptional={isOptionalInput(input)}
       note={null}
       problem={props.problem}

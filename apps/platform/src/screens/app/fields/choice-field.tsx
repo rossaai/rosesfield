@@ -8,7 +8,11 @@ import {
 } from "@rosesfield/ui/components/select"
 import { Switch } from "@rosesfield/ui/components/switch"
 import { type ReactElement, useEffect, useRef } from "react"
-import { settingIconOf, withChoiceIcons } from "@/catalog/setting-registry"
+import {
+  settingIconOf,
+  settingTipOf,
+  withChoiceIcons,
+} from "@/catalog/setting-registry"
 import type { FieldProblem } from "@/screens/app/app-form"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { SwitchRow } from "@/screens/app/fields/toggle-field"
@@ -117,15 +121,19 @@ function ChoiceSelect(props: IconedProps): ReactElement {
 
 type ChoiceFieldProps = ChoiceControlProps & {
   note: string | null
+  hint?: string | null
   problem?: FieldProblem | undefined
 }
 
 export function ChoiceField(props: ChoiceFieldProps): ReactElement {
+  const hint =
+    props.hint === undefined ? settingTipOf(props.setting) : props.hint
   const pair = booleanPairOf(props.items)
   if (pair !== null) {
     return (
       <SwitchRow
         label={props.label}
+        hint={hint}
         checked={props.value === pair.on}
         onCheckedChange={(checked) =>
           props.onChange(checked ? pair.on : pair.off)
@@ -139,6 +147,7 @@ export function ChoiceField(props: ChoiceFieldProps): ReactElement {
       isOptional={false}
       note={props.note}
       problem={props.problem}
+      hint={hint}
     >
       <ChoiceControl {...props} />
     </FieldFrame>

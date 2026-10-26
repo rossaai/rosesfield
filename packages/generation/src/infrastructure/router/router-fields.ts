@@ -293,7 +293,25 @@ function leafOf(walk: Walk, schema: Schema, spot: Spot): ModelField | null {
         (promptKeys.includes(spot.key) ? "string" : null),
       spot.key
     )
-  return field !== null && spot.isInOptional ? withoutDefault(field) : field
+  if (field === null) {
+    return null
+  }
+  return withNote(spot.isInOptional ? withoutDefault(field) : field, schema)
+}
+
+const noteMax = 300
+
+function withNote(field: ModelField, schema: Schema): ModelField {
+  const note = (stringOf(fieldOf(schema, "description")) ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+  const sentences = note
+    .split(/(?<=[.!?])\s+/)
+    .slice(0, 2)
+    .join(" ")
+  return sentences === "" || sentences.length > noteMax
+    ? field
+    : { ...field, description: sentences }
 }
 
 function choiceOf(
