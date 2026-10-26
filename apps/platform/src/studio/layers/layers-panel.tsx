@@ -238,7 +238,6 @@ function ModelFields({
 }
 
 export function LayersPanel({ state }: { state: LayersState }): ReactElement {
-  const modeField = inputNamed(state, modeInput)
   const { hosted } = state
   const model =
     hosted.models.length === 0 && !hosted.isLoading ? null : (
@@ -246,9 +245,6 @@ export function LayersPanel({ state }: { state: LayersState }): ReactElement {
     )
   return (
     <div className="flex flex-col gap-s4">
-      {modeField === undefined ? null : (
-        <PanelField state={state} input={modeField} />
-      )}
       {isGraphModel(hosted.chosen) ? (
         <GraphFields state={state} model={model} />
       ) : (
