@@ -43,6 +43,26 @@ describe("the agent's conversations", () => {
     expect(column.className).toContain("w-sidebar")
   })
 
+  it("sit in an inset panel with an input column's radius, ground and gap from the page edge", async () => {
+    renderAgent(() => <AgentFrame>{null}</AgentFrame>, "/agent")
+    const column = await sidebar()
+    expect(column.getAttribute("data-variant")).toBe("inset")
+    expect(column.className.split(" ")).toEqual(
+      expect.arrayContaining(["rounded-card", "bg-surface", "overflow-hidden"])
+    )
+    const frame = column.closest("[data-slot='agent-sidebar-frame']")
+    expect(frame?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "@regular:ps-4",
+        "@regular:pt-2",
+        "@regular:pb-4",
+      ])
+    )
+    expect(
+      column.closest("[data-slot='agent-frame']")?.className.split(" ")
+    ).toContain("@regular:gap-2")
+  })
+
   it("rename a conversation from its row", async () => {
     renderAgent(() => <AgentFrame>{null}</AgentFrame>, "/agent")
     const row = (
@@ -70,6 +90,11 @@ describe("the agent's conversations", () => {
     expect(
       await within(drawer).findByRole("link", { name: older.title ?? "" })
     ).toBeDefined()
+    expect(
+      within(drawer)
+        .getByRole("complementary", { name: t("agent.conversations") })
+        .getAttribute("data-variant")
+    ).toBe("flush")
     expect(
       within(drawer).getAllByRole("button", { name: t("agent.more") })
     ).toHaveLength(conversations.length)

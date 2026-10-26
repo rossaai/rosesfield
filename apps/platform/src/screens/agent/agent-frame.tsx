@@ -27,7 +27,11 @@ export function AgentSidebar(): ReactElement {
   const { mode, onNavigate, closeLabel } = useSidebar()
   const openId = useOpenConversationId()
   return (
-    <Sidebar data-slot="agent-sidebar" aria-label={t("agent.conversations")}>
+    <Sidebar
+      data-slot="agent-sidebar"
+      aria-label={t("agent.conversations")}
+      variant={mode === "sheet" ? "flush" : "inset"}
+    >
       <SidebarHeader>
         <SidebarName>{t("agent.conversations")}</SidebarName>
         {mode === "sheet" ? (
@@ -86,8 +90,11 @@ export function AgentFrame({
   children: ReactNode
 }): ReactElement {
   return (
-    <div data-slot="agent-frame" className="flex h-full min-h-0">
-      <div className="hidden min-h-0 @regular:flex">
+    <div data-slot="agent-frame" className="flex h-full min-h-0 @regular:gap-2">
+      <div
+        data-slot="agent-sidebar-frame"
+        className="hidden min-h-0 shrink-0 @regular:flex @regular:ps-4 @regular:pt-2 @regular:pb-4"
+      >
         <AgentSidebar />
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
