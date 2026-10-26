@@ -43,7 +43,7 @@ function isBefore(first: Element, second: Element): boolean {
 }
 
 describe("Remake on arrival", () => {
-  it("shows the two wells with their limits, then the other inputs, in order", async () => {
+  it("shows the two wells with their limits, then the other inputs, in order, with no sound switch since the reference's sound is kept", async () => {
     openRemake()
     await screen.findAllByText(tCatalog("remake.input.reference.label"))
     const keys = [
@@ -53,7 +53,6 @@ describe("Remake on arrival", () => {
       "remake.input.character.limits",
       "remake.input.instructions.label",
       "remake.input.otherShots.label",
-      "remake.input.keepSound.label",
       "remake.input.quality.label",
     ]
     const shown = keys.map((key) => screen.getAllByText(tCatalog(key))[0])
@@ -66,6 +65,10 @@ describe("Remake on arrival", () => {
         expect(isBefore(element, next)).toBe(true)
       }
     }
+    expect(
+      screen.queryByText(tCatalog("remake.input.keepSound.label"))
+    ).toBeNull()
+    expect(screen.queryByRole("switch")).toBeNull()
     const generate = screen
       .getAllByRole("button", { name: t("run.generate") })
       .filter((button) => button.dataset.slot === "generate-button")
