@@ -72,11 +72,11 @@
     },
     {
       "path": "apps/platform/src/copy/agent.en.ts",
-      "sha256": "b5e3f24778dad7280147e0e0ae13d3c0b61bef68b95c9281384b10e1cea6ac34"
+      "sha256": "2598cfad0514861eb3ff1de13b2b125688158a7f882f3fe95736282863382a21"
     },
     {
       "path": "apps/platform/src/copy/app.en.ts",
-      "sha256": "9fa150826ff907ee2e04f75dbb94be0e199ba3829dd1de22490a31fd1b18a9cc"
+      "sha256": "9f045f3b6081e0983c468748f6fb2850fd58fd4318ec7f5eccd1f8785bb74161"
     },
     {
       "path": "apps/platform/src/copy/characters.en.ts",
@@ -128,11 +128,11 @@
     },
     {
       "path": "apps/platform/src/gallery/reference-copy.en.ts",
-      "sha256": "e57f0067d3f693dfceb378df588f17b5ebeb182aca9a909f2e4e9a83355fa9c4"
+      "sha256": "4da7daf08e696d58524aab06b0aefbf6cebddfd1bcb86ba418597c3c20a34053"
     },
     {
       "path": "packages/agent/src/copy.en.ts",
-      "sha256": "df7b7c1775ce653fd5a6856e38da6d30a9d0c3187b3e3b8e76a839bd73dfa6a8"
+      "sha256": "619537cb626e2acb4bff52338e68e849edcb24811ebb47ae394f335ffd921d68"
     },
     {
       "path": "packages/catalog/src/ads/copy.en.ts",
@@ -156,7 +156,7 @@
     },
     {
       "path": "packages/catalog/src/comfy/copy.en.ts",
-      "sha256": "14623b4f36c66976d05d4e56c31ed360a9e8ac843101a05fe8db65cd0c6429fa"
+      "sha256": "b356ef99784c17e570d3c64961845f36984d55513ff8df2bc6e59076b05a9926"
     },
     {
       "path": "packages/catalog/src/edit/copy.en.ts",

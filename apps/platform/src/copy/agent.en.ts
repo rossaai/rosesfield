@@ -49,7 +49,8 @@ export const agentCopy = {
   "agent.model.rate.out": "{credits} per 1M out",
   "agent.mode.label": "Run mode",
   "agent.mode.auto": "Auto",
-  "agent.mode.auto.description": "Ask above {credits} credits or with no price",
+  "agent.mode.auto.description":
+    "Ask above {credits} credits or when the price is not certain",
   "agent.mode.manual": "Manual",
   "agent.mode.manual.description": "Ask before each run",
 } satisfies Record<string, string>

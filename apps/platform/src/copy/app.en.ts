@@ -127,7 +127,6 @@ export const appCopy = {
   "model.tag.sound": "Sound",
   "model.tag.length": "{min} to {max} s",
   "model.tag.references": "Up to {max} images",
-  "model.tag.rank": "Rank {position} of {size}",
   "model.task.textToImage": "From text",
   "model.task.imageEdit": "Edits images",
   "model.task.textToVideo": "From text",

@@ -34,5 +34,4 @@ export const comfyCopy = {
     "Layouts with text in many languages",
   "comfy.badge.new": "New",
   "comfy.badge.top": "Top",
-  "comfy.badge.premium": "Premium",
 } satisfies Record<string, string>
