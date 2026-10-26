@@ -1,5 +1,10 @@
+import { autoRunLimitCredits } from "@rosesfield/catalog/comfy"
+import { ChipSelect } from "@rosesfield/ui/components/chip-select"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { SparklesIcon, UserCheckIcon } from "lucide-react"
 import type { ReactElement } from "react"
+import type { RunApproval } from "@/api/conversation-wire"
+import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { DraftBar } from "@/pieces/draft-bar"
 import type { DraftState } from "@/pieces/use-draft"
@@ -7,7 +12,50 @@ import {
   useAgentModels,
   useChooseAgentModel,
 } from "@/screens/agent/agent-model"
+import { keepRunApproval, useRunApproval } from "@/screens/agent/run-approval"
 import { AgentModelPicker } from "@/screens/app/hosted/agent-model-picker"
+
+type RunMode = {
+  value: RunApproval
+  label: string
+  description: string
+  icon: ReactElement
+}
+
+function runModesOf(): readonly [RunMode, RunMode] {
+  return [
+    {
+      value: "auto",
+      label: t("agent.mode.auto"),
+      description: t("agent.mode.auto.description", {
+        credits: formatAmount(autoRunLimitCredits),
+      }),
+      icon: <SparklesIcon aria-hidden="true" />,
+    },
+    {
+      value: "ask",
+      label: t("agent.mode.manual"),
+      description: t("agent.mode.manual.description"),
+      icon: <UserCheckIcon aria-hidden="true" />,
+    },
+  ]
+}
+
+function RunModeChip(): ReactElement {
+  const approval = useRunApproval()
+  const modes = runModesOf()
+  const chosen = modes.find((mode) => mode.value === approval) ?? modes[0]
+  return (
+    <ChipSelect
+      label={t("agent.mode.label")}
+      icon={chosen.icon}
+      value={chosen.value}
+      display={chosen.label}
+      onValueChange={keepRunApproval}
+      options={modes}
+    />
+  )
+}
 
 function ModelPill(): ReactElement | null {
   const models = useAgentModels()
@@ -50,7 +98,12 @@ export function AgentComposer(props: AgentComposerProps): ReactElement {
       placeholder={t("agent.prompt.placeholder")}
       submitLabel={t("agent.send")}
       onSubmit={send}
-      chips={<ModelPill />}
+      chips={
+        <>
+          <ModelPill />
+          <RunModeChip />
+        </>
+      }
       busy={props.isStarting === true}
       stop={
         props.isAnswering

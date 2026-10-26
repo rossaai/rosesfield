@@ -17,7 +17,6 @@ type AttachMenuProps = {
   disabled?: boolean
   form?: "tile" | "menu"
   glyph?: ReactNode
-  tone?: "default" | "quiet"
   className?: string
 }
 
@@ -51,7 +50,6 @@ export function AttachMenu(props: AttachMenuProps): ReactElement {
           <IconButton
             label={props.label}
             size="dense"
-            tone={props.tone ?? "default"}
             {...(props.className === undefined
               ? {}
               : { className: props.className })}

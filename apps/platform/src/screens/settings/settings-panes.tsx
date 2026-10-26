@@ -1,11 +1,9 @@
-import { Switch } from "@rosesfield/ui/components/switch"
 import { useNavigate } from "@tanstack/react-router"
 import {
   BotIcon,
   CloudIcon,
   CodeIcon,
   GlobeIcon,
-  HandIcon,
   LockIcon,
   LockOpenIcon,
   LogOutIcon,
@@ -20,7 +18,6 @@ import type { GatewaySettings } from "@/api/gateway-settings"
 import { type KeyReach, useKeyReach } from "@/api/key-reach"
 import { forgetOwnerToken, readOwnerToken } from "@/api/owner-token"
 import { t } from "@/copy/t"
-import { keepRunApproval, useRunApproval } from "@/screens/agent/run-approval"
 import { RetentionRow, targetsLink } from "@/screens/settings/engine-pane"
 import { ServerPart } from "@/screens/settings/server-part"
 import {
@@ -49,27 +46,6 @@ function agentStatus(settings: GatewaySettings, reach: KeyReach): string {
   return t("settings.agent.status.set")
 }
 
-function AskRow(): ReactElement {
-  const approval = useRunApproval()
-  return (
-    <SettingsGroup label={t("settings.group.general")}>
-      <SettingsRow
-        icon={<HandIcon />}
-        label={t("agent.ask.label")}
-        control={
-          <Switch
-            aria-label={t("agent.ask.label")}
-            checked={approval === "ask"}
-            onCheckedChange={(checked) =>
-              keepRunApproval(checked ? "ask" : "auto")
-            }
-          />
-        }
-      />
-    </SettingsGroup>
-  )
-}
-
 function AgentRows({ settings }: { settings: GatewaySettings }): ReactElement {
   const reach = useKeyReach()
   const model = settings.agent === "set" ? settings.agentModel : null
@@ -89,7 +65,6 @@ function AgentRows({ settings }: { settings: GatewaySettings }): ReactElement {
           />
         )}
       </SettingsGroup>
-      <AskRow />
       {settings.mode !== "public" && settings.agent !== "set" ? (
         <SettingsGroup label={t("settings.group.help")}>
           <SettingsLinkRow

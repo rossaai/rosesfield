@@ -12,9 +12,9 @@ const listeners = new Set<() => void>()
 
 export function readRunApproval(): RunApproval {
   try {
-    return window.localStorage.getItem(storageKey) === "auto" ? "auto" : "ask"
+    return window.localStorage.getItem(storageKey) === "ask" ? "ask" : "auto"
   } catch {
-    return "ask"
+    return "auto"
   }
 }
 
