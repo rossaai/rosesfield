@@ -76,7 +76,7 @@
     },
     {
       "path": "apps/platform/src/copy/app.en.ts",
-      "sha256": "9f045f3b6081e0983c468748f6fb2850fd58fd4318ec7f5eccd1f8785bb74161"
+      "sha256": "e5b5d56212eb624026ff0c18ac83478c8d0f951b7ac92fc12c656547b5638b49"
     },
     {
       "path": "apps/platform/src/copy/characters.en.ts",
@@ -128,7 +128,7 @@
     },
     {
       "path": "apps/platform/src/gallery/reference-copy.en.ts",
-      "sha256": "4da7daf08e696d58524aab06b0aefbf6cebddfd1bcb86ba418597c3c20a34053"
+      "sha256": "0247e8e3cb831ed4cdcc640ad4f734f26b2b57a2cc875985a8e5cbde6adaec14"
     },
     {
       "path": "packages/agent/src/copy.en.ts",
@@ -156,7 +156,7 @@
     },
     {
       "path": "packages/catalog/src/comfy/copy.en.ts",
-      "sha256": "b356ef99784c17e570d3c64961845f36984d55513ff8df2bc6e59076b05a9926"
+      "sha256": "0cf660b595b24a341350c9e553747c1751094ac6854fd717bcbd55650d80dbce"
     },
     {
       "path": "packages/catalog/src/edit/copy.en.ts",
