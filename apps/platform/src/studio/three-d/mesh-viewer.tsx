@@ -12,6 +12,7 @@ import { tThreeD } from "@/studio/three-d/copy.en"
 import type { MeshScene } from "@/studio/three-d/glb"
 import { meshQuery, useDownloadMesh } from "@/studio/three-d/mesh-file"
 import { MeshRenderer } from "@/studio/three-d/mesh-renderer"
+import { useMeshStill, useSeen } from "@/studio/three-d/mesh-still"
 import {
   cameraOf,
   type Gesture,
@@ -135,7 +136,7 @@ function mountViewer(
       frame = requestAnimationFrame(paint)
     }
   }
-  renderer.load(scene, held.ask)
+  void renderer.load(scene, held.ask)
   const resize = new ResizeObserver(() => {
     sizeCanvas(canvas)
     held.ask()
@@ -287,15 +288,29 @@ export function MeshOutput({ assetId }: { assetId: string }): ReactElement {
 
 export function MeshOnAsk({ assetId }: { assetId: string }): ReactElement {
   const [isOpen, setIsOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const isSeen = useSeen(ref, !isOpen)
+  const still = useMeshStill(assetId, isSeen)
   if (isOpen) {
     return <MeshOutput assetId={assetId} />
   }
   return (
-    <div data-slot="mesh-closed" className="flex flex-wrap items-start gap-s2">
-      <Button onClick={() => setIsOpen(true)}>
-        {tThreeD("threeD.viewer.show")}
-      </Button>
-      <MeshDownload assetId={assetId} />
+    <div ref={ref} data-slot="mesh-closed" className="flex flex-col gap-s2">
+      {still === null ? null : (
+        <img
+          src={still}
+          alt=""
+          aria-hidden="true"
+          data-slot="mesh-still"
+          className={cn(frameClass, "bg-(--well) object-contain")}
+        />
+      )}
+      <div className="flex flex-wrap items-start gap-s2">
+        <Button onClick={() => setIsOpen(true)}>
+          {tThreeD("threeD.viewer.show")}
+        </Button>
+        <MeshDownload assetId={assetId} />
+      </div>
     </div>
   )
 }
