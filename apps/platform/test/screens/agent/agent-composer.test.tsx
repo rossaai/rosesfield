@@ -207,11 +207,11 @@ describe("the agent composer", () => {
     expect(classesOf(toolbar)).toContain("ps-s2")
   })
 
-  it("opens the agent's model picker from the chip, with the chosen model featured", async () => {
+  it("opens the agent's model picker from the chip, with the chosen model chosen", async () => {
     renderComposer()
     await field()
     fireEvent.click(screen.getByRole("button", { name: modelName }))
-    expect(await screen.findByText(t("model.picker.featured"))).not.toBeNull()
+    expect(await screen.findByRole("option", { selected: true })).not.toBeNull()
   })
 
   it("sends only once the field holds words, on a press and on Enter", async () => {

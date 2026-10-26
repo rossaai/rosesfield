@@ -34,7 +34,7 @@ async function openImagePicker(page: Page): Promise<Locator> {
   return trigger
 }
 
-test("a click at the centre of every row of the Image picker, or beside the weights mark that links out when it sits there, chooses that row's model", async ({
+test("a click at the centre of every row of the Image picker, or on its lab's mark when the Open weights badge that links out sits there, chooses that row's model", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "desktop", "the desktop picker")
@@ -69,7 +69,7 @@ test("a click at the centre of every row of the Image picker, or beside the weig
       middle.x >= weights.x &&
       middle.x <= weights.x + weights.width
     const centre = isOnWeights
-      ? { x: weights.x + weights.width + weights.width, y: middle.y }
+      ? { x: box.x + box.height / 2, y: middle.y }
       : middle
     const isLink = await page.evaluate(
       ({ x, y }) => document.elementFromPoint(x, y)?.closest("a") !== null,
@@ -87,15 +87,10 @@ test("a click at the centre of every row of the Image picker, or beside the weig
   expect(missed).toEqual([])
 })
 
-test("on a row with Open weights only the 12 px mark links to the weights page, and a click on the words chooses the model", async ({
-  page,
-}, info) => {
-  test.skip(info.project.name !== "desktop", "the desktop picker")
-  await page.addInitScript(() => {
-    window.localStorage.setItem("rosesfield.welcome", "seen")
-  })
-  await page.goto("/apps/image")
-  const trigger = await openImagePicker(page)
+async function otherWeightsRow(
+  page: Page,
+  trigger: Locator
+): Promise<{ name: string; row: Locator }> {
   const rows = page.locator("[role='listbox'] [data-slot='model-row']", {
     has: page.locator("[data-slot='model-row-weights']"),
   })
@@ -114,33 +109,53 @@ test("on a row with Open weights only the 12 px mark links to the weights page, 
         .getByText(name, { exact: true }),
     })
     .first()
-  const badge = row.locator(
-    "[data-slot='model-row-weights'] [data-slot='badge']"
-  )
-  const link = badge.getByRole("link")
-  const [nameBox, badgeBox, linkBox, wordsBox] = await Promise.all([
+  return { name, row }
+}
+
+test("on a row with Open weights the whole badge opens the weights page in a new tab without choosing the model, and a click on the name chooses it", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop", "the desktop picker")
+  await page.addInitScript(() => {
+    window.localStorage.setItem("rosesfield.welcome", "seen")
+  })
+  await page.goto("/apps/image")
+  const trigger = await openImagePicker(page)
+  const { name, row } = await otherWeightsRow(page, trigger)
+  await row.scrollIntoViewIfNeeded()
+  const link = row.locator("[data-slot='model-row-weights'] a")
+  await expect(link).toHaveAttribute("data-slot", "badge")
+  await expect(link).toHaveAttribute("href", /^https:\/\/huggingface\.co\//)
+  await expect(link).toHaveAttribute("target", "_blank")
+  await expect(link).toHaveAccessibleName("Open weights")
+  const [nameBox, linkBox, wordsBox] = await Promise.all([
     row.locator("[data-slot='model-row-name']").boundingBox(),
-    badge.boundingBox(),
     link.boundingBox(),
-    badge.locator("[data-slot='count-badge-words']").boundingBox(),
+    link.locator("[data-slot='count-badge-words']").boundingBox(),
   ])
-  if (
-    nameBox === null ||
-    badgeBox === null ||
-    linkBox === null ||
-    wordsBox === null
-  ) {
+  if (nameBox === null || linkBox === null || wordsBox === null) {
     throw new Error("the row has no box")
   }
-  expect(badgeBox.x - (nameBox.x + nameBox.width)).toBeCloseTo(4, 0)
-  expect(linkBox.width).toBe(12)
-  expect(linkBox.height).toBe(12)
-  await expect(link).toHaveAttribute("href", /^https:\/\/huggingface\.co\//)
-  expect(await link.getAttribute("aria-label")).toMatch(/^huggingface\.co\//)
+  const hit = await page.evaluate(
+    ({ x, y }) => document.elementFromPoint(x, y)?.closest("a")?.dataset.slot,
+    { x: wordsBox.x + wordsBox.width / 2, y: wordsBox.y + wordsBox.height / 2 }
+  )
+  expect(hit).toBe("badge")
+  await page
+    .context()
+    .route("https://huggingface.co/**", (route) =>
+      route.fulfill({ status: 200, contentType: "text/html", body: "" })
+    )
+  const popup = page.waitForEvent("popup")
   await page.mouse.click(
     wordsBox.x + wordsBox.width / 2,
     wordsBox.y + wordsBox.height / 2
   )
+  const opened = await popup
+  expect(opened.url()).toMatch(/^https:\/\/huggingface\.co\//)
+  await opened.close()
+  await expect(trigger).not.toContainText(name)
+  await page.mouse.click(nameBox.x + 4, nameBox.y + nameBox.height / 2)
   await expect(trigger).toContainText(name)
 })
 

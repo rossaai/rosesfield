@@ -211,7 +211,7 @@ export function stubGateway(): void {
 
 const servedFlux: CatalogModel = {
   ...flux,
-  facts: factsOf(flux.id, flux.task),
+  facts: factsOf(flux.id),
 }
 
 export function openCharacters(

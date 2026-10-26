@@ -22,7 +22,7 @@ describe("the agent's model picker", () => {
     expect(agentLabOf("openrouter/new-model")).toBe("OpenRouter")
   })
 
-  it("puts the chosen model under Featured, then every other model in a group of its lab, each headed by its mark", () => {
+  it("lists the chosen model first, then every other model once, each with its lab's mark", () => {
     render(
       <AgentModelPicker
         models={models}
@@ -31,13 +31,15 @@ describe("the agent's model picker", () => {
       />
     )
     fireEvent.click(screen.getByRole("button", { name: /Model/ }))
-    const groups = screen
-      .getAllByRole("group")
-      .map((group) => group.getAttribute("aria-label"))
-    expect(groups).toEqual(["Featured", "Anthropic", "OpenAI", "Z.ai"])
+    expect(screen.queryAllByRole("group")).toEqual([])
+    expect(
+      screen.getAllByRole("option").map((one) => one.dataset.model)
+    ).toEqual(models)
     const mark = screen
-      .getByRole("group", { name: "Anthropic" })
-      .querySelector("[data-slot='model-row-mark'] [data-slot='lab-mark']")
+      .getAllByRole("option")
+      .find((one) => one.dataset.model === "anthropic/claude-sonnet-5")
+      ?.closest("[data-slot='model-row']")
+      ?.querySelector("[data-slot='model-row-mark'] [data-slot='lab-mark']")
     expect(mark?.getAttribute("data-mark")).toBe("anthropic")
   })
 

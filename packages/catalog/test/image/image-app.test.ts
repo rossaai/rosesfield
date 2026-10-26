@@ -123,7 +123,7 @@ describe("the Image app", () => {
         lab: "Alibaba Tongyi-MAI",
         weights: "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo",
         lineKey: "comfy.model.graphZImageTurbo.line",
-        rank: { position: 70, size: 104 },
+        scores: { "text-to-image": { score: 30, rank: 39, of: 66 } },
       },
     })
   })

@@ -149,7 +149,7 @@ describe("the order of the listing", () => {
     ])
   })
 
-  it("gives each model the facts the catalog holds for it, with the board and the date of its rank, and no line to a graph whose fact row holds none, rather than its app's own words", () => {
+  it("gives each model the facts the catalog holds for it, with its score and rank per task, and no line to a graph whose fact row holds none, rather than its app's own words", () => {
     const models = modelsForApp(app, [
       hosted("openai/gpt-image-2"),
       hosted("maker/picture"),
@@ -160,24 +160,20 @@ describe("the order of the listing", () => {
       facts: {
         lab: "OpenAI",
         release: "2026-04-21",
-        rank: {
-          position: 3,
-          size: 104,
-          board: "Artificial Analysis Text to Image Arena",
-          readOn: "2026-10-20",
-        },
-        priceThird: 1,
         weights: null,
         lineKey: null,
+        scores: {
+          "text-to-image": { score: 98, rank: 3, of: 66 },
+          "image-edit": { score: 94, rank: 3, of: 64 },
+        },
       },
     })
     expect(byId("maker/picture")?.facts).toEqual({
       lab: null,
       release: null,
-      rank: null,
-      priceThird: null,
       weights: null,
       lineKey: null,
+      scores: {},
     })
     expect(byId("open-a")?.facts?.lineKey).toBeNull()
   })

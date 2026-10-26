@@ -58,6 +58,7 @@ const badged: ModelPickerSection[] = [
         tags: [],
         mark: <svg data-testid="mark" aria-hidden="true" />,
         badges: [
+          { kind: "rank", label: "#3", note: "Rank from Picture Arena" },
           { kind: "new", label: "New" },
           {
             kind: "openWeights",
@@ -100,12 +101,9 @@ function open(onChoose = vi.fn(), shown: ModelPickerSection[] = sections) {
 afterEach(cleanup)
 
 describe("ModelPicker", () => {
-  it("shows the first group, then each maker, with a check on the chosen model", () => {
+  it("shows one list with a check on the chosen model", () => {
     open()
-    const groups = screen
-      .getAllByRole("group")
-      .map((group) => group.getAttribute("aria-label"))
-    expect(groups).toEqual(["Your models", "Studio"])
+    expect(screen.queryAllByRole("group")).toEqual([])
     const chosen = screen.getByRole("option", { selected: true })
     expect(chosen.getAttribute("aria-label")).toBe("Picture 2")
     expect(
@@ -173,17 +171,17 @@ describe("ModelPicker", () => {
     ).toHaveLength(3)
   })
 
-  it("puts the badges after the name and links Open weights to its page", () => {
+  it("puts the badges after the name, the rank first, and links Open weights to its page", () => {
     open(vi.fn(), badged)
     const row = rowOf("Model 4")
     const badges = [...row.querySelectorAll("[data-slot='badge']")]
     expect(badges.map((badge) => badge.getAttribute("data-kind"))).toEqual([
+      "rank",
       "new",
       "openWeights",
     ])
-    const weights = within(row).getByRole("link", {
-      name: "huggingface.co/maker/model-4",
-    })
+    expect(badges[0]?.textContent).toBe("#3")
+    const weights = within(row).getByRole("link", { name: "Open weights" })
     expect(weights.getAttribute("href")).toBe(
       "https://huggingface.co/maker/model-4"
     )
@@ -241,12 +239,23 @@ describe("ModelPicker", () => {
 })
 
 describe("ModelPicker's Open weights link", () => {
-  it("sits outside the option, so a click on the mark never chooses the row, and a click on the words does", () => {
+  it("makes the whole badge the link, outside the option, so a click on it never chooses the row, and a click on the name does", () => {
     const onChoose = open(vi.fn(), badged)
     const option = screen.getByRole("option", { name: "Model 4" })
     const weights = within(rowOf("Model 4")).getByRole("link", {
-      name: "huggingface.co/maker/model-4",
+      name: "Open weights",
     })
+    expect(weights.getAttribute("data-slot")).toBe("badge")
+    expect(weights.getAttribute("target")).toBe("_blank")
+    expect(weights.getAttribute("aria-description")).toBe(
+      "huggingface.co/maker/model-4"
+    )
+    expect(
+      weights.querySelector("[data-slot='hugging-face-mark']")
+    ).not.toBeNull()
+    expect(
+      weights.querySelector("[data-slot='count-badge-words']")?.textContent
+    ).toBe("Open weights")
     expect(option.contains(weights)).toBe(false)
     expect(weights.closest("[role='option']")).toBeNull()
     expect(option.querySelector("a, button")).toBeNull()
@@ -257,36 +266,49 @@ describe("ModelPicker's Open weights link", () => {
   })
 })
 
+describe("ModelPicker's rank", () => {
+  it("chooses the row when you press its rank, since the rank takes the pointer for its note", () => {
+    const onChoose = open(vi.fn(), badged)
+    fireEvent.click(within(rowOf("Model 4")).getByText("#3"))
+    expect(onChoose).toHaveBeenCalledWith("maker/model-4")
+  })
+
+  it("names the boards and the date in a note when you hover the rank", async () => {
+    open(vi.fn(), badged)
+    const rank = within(rowOf("Model 4")).getByText("#3")
+    const badge = rank.closest<HTMLElement>("[data-slot='badge']")
+    expect(badge?.className.split(" ")).toContain("pointer-events-auto")
+    if (badge === null) {
+      throw new Error("no rank badge")
+    }
+    fireEvent.pointerEnter(badge, { pointerType: "mouse" })
+    fireEvent.mouseEnter(badge)
+    fireEvent.focus(badge)
+    expect(await screen.findByText("Rank from Picture Arena")).toBeTruthy()
+  })
+})
+
 describe("ModelPicker's Open weights place", () => {
-  it("rides 4 px after the name on the name's line, and only its 12 px mark takes the pointer", () => {
+  it("rides 4 px after the name on the name's line, and the whole badge takes the pointer", () => {
     open(vi.fn(), badged)
     const row = rowOf("Model 4")
     const weights = row.querySelector("[data-slot='model-row-weights']")
     const name = row.querySelector("[data-slot='model-row-name']")
     expect(name?.parentElement?.contains(weights ?? null)).toBe(true)
     expect(name?.parentElement?.lastElementChild).toBe(weights)
-    expect(
-      row
-        .querySelector("[data-slot='model-row-price']")
-        ?.previousElementSibling?.contains(weights ?? null)
-    ).toBe(true)
     expect(weights?.className.split(" ")).toContain("shrink-0")
     expect(weights?.className.split(" ")).not.toContain("pointer-events-auto")
     const badge = weights?.querySelector("[data-slot='badge']")
+    expect(badge?.tagName.toLowerCase()).toBe("a")
     expect(badge?.className.split(" ")).toEqual(
-      expect.arrayContaining(["ms-1", "[&_svg]:size-3"])
+      expect.arrayContaining([
+        "ms-1",
+        "[&_svg]:size-3",
+        "pointer-events-auto",
+        "relative",
+        "z-10",
+      ])
     )
-    expect(badge?.className.split(" ")).not.toContain("pointer-events-auto")
-    const link = badge?.querySelector("a")
-    expect(link?.className.split(" ")).toEqual(
-      expect.arrayContaining(["pointer-events-auto", "relative", "z-10"])
-    )
-    expect(
-      link?.querySelector("[data-slot='hugging-face-mark']")
-    ).not.toBeNull()
-    expect(
-      badge?.querySelector("[data-slot='count-badge-words']")?.closest("a")
-    ).toBeNull()
   })
 })
 

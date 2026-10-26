@@ -42,10 +42,20 @@ describe("a row in a bar app's model picker", () => {
     expect(row?.maker).toBe("Alibaba Tongyi-MAI")
   })
 
-  it("shows a ranked graph's board rank as a capability", () => {
-    expect(tagsOf(modelOf("image")).get("z-image-turbo")).toContain(
-      "Rank 70 of 104"
+  it("shows a ranked graph's rank as #N with its release date, and orders the graphs by Top", () => {
+    const rows = rowsOf(modelOf("image"))
+    const zImage = rows.find((one) => one.id === "z-image-turbo")
+    expect(zImage?.badges?.find((badge) => badge.kind === "rank")?.label).toBe(
+      "#39"
     )
+    expect(tagsOf(modelOf("image")).get("z-image-turbo")).toEqual([
+      "Dec 2, 2025",
+    ])
+    const ranks = rows.flatMap((row) => {
+      const label = row.badges?.find((badge) => badge.kind === "rank")?.label
+      return label === undefined ? [] : [Number(label.slice(1))]
+    })
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b))
   })
 
   it("shows Open weights as a capability only where no weights badge says it, and never on a hosted model", () => {

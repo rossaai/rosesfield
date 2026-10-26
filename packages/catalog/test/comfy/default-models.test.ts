@@ -99,9 +99,15 @@ describe("the model each app opens on", () => {
     const opened = modelsForApp(imageApp(), []).find(
       (one) => one.id === "z-image-turbo"
     )
-    expect(opened?.facts?.rank).toMatchObject({
-      board: "Artificial Analysis Text to Image Arena",
-      readOn: "2026-10-20",
+    expect(opened?.facts?.scores["text-to-image"]).toMatchObject({
+      rank: 39,
+      sources: [
+        {
+          board: "Artificial Analysis Text to Image Arena",
+          readOn: "2026-10-26",
+        },
+        { board: "Arena Text to Image", readOn: "2026-10-26" },
+      ],
     })
   })
 

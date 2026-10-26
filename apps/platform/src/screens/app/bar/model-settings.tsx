@@ -2,8 +2,7 @@ import {
   factsOf,
   isHostedModelId,
   labOfModel,
-  type ModelFacts,
-  modelFactsData,
+  type ModelTag,
 } from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import {
@@ -38,15 +37,25 @@ import {
   settingId,
 } from "@/screens/app/fields/setting-rows"
 import {
-  featuredTagOf,
-  openWeightsBadge,
+  capabilitiesOf,
+  costOf,
   openWeightsTag,
   pickerFilters,
-  rankTagOf,
-  weightsLinkOf,
+  todayOf,
+  useRecentModels,
 } from "@/screens/app/hosted/catalog-picker"
 import type { PriceAsk } from "@/screens/app/hosted/model-catalog-query"
-import { rankedModelsOf } from "@/screens/app/hosted/model-sections"
+import {
+  mainTaskOf,
+  type RankedModel,
+  taskBoardsOf,
+  topOrderOf,
+} from "@/screens/app/hosted/model-sections"
+import {
+  type BadgeContext,
+  badgesOf,
+  weightsLinkOf,
+} from "@/screens/app/hosted/row-badges"
 import { useAskPrices } from "@/screens/app/hosted/use-row-prices"
 import {
   type AppSetting,
@@ -195,69 +204,71 @@ export function choiceLabOf(value: string, name: string): string {
   return labOfModel(factsIdOf(value)) ?? choiceMakerOf(value, name)
 }
 
-function boardFactsOf(value: string): ModelFacts | undefined {
-  const id = factsIdOf(value)
-  const facts = modelFactsData.models[id]
-  const rankTask = facts === undefined ? undefined : Object.keys(facts.ranks)[0]
-  return rankTask === undefined ? undefined : factsOf(id, rankTask)
+type ChoiceOption = ChoiceInput["options"][number]
+
+type ChoiceModel = RankedModel & { option: ChoiceOption }
+
+function choiceModelOf(option: ChoiceOption): ChoiceModel {
+  const facts = factsOf(factsIdOf(option.value))
+  const [task] = Object.keys(facts.scores)
+  return { id: option.value, task: task ?? null, facts, option }
 }
 
 export function choiceTagsOf(
   value: string,
-  hasWeightsBadge: boolean,
-  featured: number | null = null
+  hasWeightsBadge: boolean
 ): ModelPickerTag[] {
-  const rank = featured === null ? rankTagOf(boardFactsOf(value)) : null
-  return [
-    ...(featured === null ? [] : [featuredTagOf(featured)]),
-    ...(isHostedModelId(value) || hasWeightsBadge ? [] : [openWeightsTag()]),
-    ...(rank === null ? [] : [rank]),
-  ]
+  return isHostedModelId(value) || hasWeightsBadge ? [] : [openWeightsTag()]
 }
 
 function choiceRow(
-  option: ChoiceInput["options"][number],
+  model: ChoiceModel,
   prices: ReadonlyMap<string, ModelPrice>,
-  featured: number | null = null
+  context: BadgeContext
 ): ModelPickerRow {
+  const { option, facts } = model
   const price = prices.get(option.value)
+  const cost = costOf(price)
   const name = tCatalog(option.labelKey)
   const maker = choiceLabOf(option.value, name)
   const href = weightsLinkOf(option.value)
+  const weights: ModelTag[] = href === null ? [] : [{ kind: "open-weights" }]
   return {
     id: option.value,
     name,
     maker,
-    tags: choiceTagsOf(option.value, href !== null, featured),
+    tags: [
+      ...choiceTagsOf(option.value, href !== null),
+      ...capabilitiesOf([], facts),
+    ],
     mark: <LabMark maker={maker} />,
-    badges: href === null ? [] : [openWeightsBadge(href)],
+    badges: badgesOf(option.value, weights, facts, context),
     ...(price === undefined ? {} : { price }),
+    ...(cost === undefined ? {} : { cost }),
+    ...(facts?.release === undefined || facts.release === null
+      ? {}
+      : { released: facts.release }),
+    isOpen: !isHostedModelId(option.value),
   }
 }
 
 export function choiceSections(
   model: ChoiceInput | null,
-  prices: ReadonlyMap<string, ModelPrice> = new Map()
+  prices: ReadonlyMap<string, ModelPrice> = new Map(),
+  today: string = todayOf()
 ): ModelPickerSection[] {
   if (model === null) {
     return []
   }
-  const ranked = rankedModelsOf(
-    model.default,
-    model.options.map((option) => ({
-      id: option.value,
-      rank: boardFactsOf(option.value)?.rank?.position ?? null,
-    }))
+  const models = model.options.map(choiceModelOf)
+  const task = mainTaskOf(models)
+  const context = { task, today, taskBoards: taskBoardsOf(models, task) }
+  const rows = topOrderOf(models, task).map((one) =>
+    choiceRow(one, prices, context)
   )
-  const featured = ranked.flatMap((id, index) => {
-    const option = model.options.find((one) => one.value === id)
-    return option === undefined ? [] : [choiceRow(option, prices, index + 1)]
-  })
-  const rows = model.options.map((option) => choiceRow(option, prices))
-  return [
-    { id: "featured", label: t("model.picker.featured"), rows: featured },
-    { id: "all", label: t("model.picker.all"), rows },
-  ].filter((section) => section.rows.length > 0)
+  return rows.length === 0
+    ? []
+    : [{ id: "all", label: t("model.picker.all"), rows }]
 }
 
 type ChoicePricing = {
@@ -289,6 +300,7 @@ export function ChoiceModelPicker({
     askOf: (id) => pricing?.askOf(id) ?? { inputs: {} },
     isOpen,
   })
+  const recent = useRecentModels(pricing?.appId ?? null)
   const chosen = model === null ? null : value || model.default
   const name = modelChipText(model, value)
   const maker = chosen === null ? null : choiceLabOf(chosen, name)
@@ -313,6 +325,7 @@ export function ChoiceModelPicker({
       onOpenChange={setOpen}
       isPricing={isPricing}
       filters={pickerFilters()}
+      recent={recent}
       side="top"
     />
   )

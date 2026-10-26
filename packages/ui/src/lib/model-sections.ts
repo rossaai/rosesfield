@@ -6,11 +6,20 @@ type ModelPickerSection = {
   rows: readonly ModelPickerRow[]
 }
 
-type ModelPickerFilter = "featured" | "top" | "newest" | "open"
+type ModelPickerOrder = "top" | "newest" | "price" | "lastUsed"
 
-type ModelPickerFilters = Record<ModelPickerFilter, string>
+type ModelPickerWeights = "all" | "open"
 
-export const featuredId = "featured"
+type ModelPickerFilters = Record<ModelPickerOrder | "order" | "open", string>
+
+type SearchedRow = { row: ModelPickerRow; text: string }
+
+const modelPickerOrders: readonly ModelPickerOrder[] = [
+  "top",
+  "newest",
+  "price",
+  "lastUsed",
+]
 
 function rowsOf(sections: readonly ModelPickerSection[]): ModelPickerRow[] {
   const seen = new Set<string>()
@@ -19,104 +28,97 @@ function rowsOf(sections: readonly ModelPickerSection[]): ModelPickerRow[] {
   )
 }
 
-function filteredSections(
-  sections: readonly ModelPickerSection[],
-  filter: ModelPickerFilter,
-  labels: ModelPickerFilters | undefined
-): ModelPickerSection[] {
-  if (filter === "featured" || labels === undefined) {
-    return labSectionsOf(sections)
-  }
-  const rows = rowsOf(sections)
-  if (filter === "open") {
-    return labSectionsOf([
-      {
-        id: "open",
-        label: labels.open,
-        rows: rows.filter((row) => row.isOpen),
-      },
-    ])
-  }
-  if (filter === "top") {
-    const ranked = rows.filter((row) => row.rank !== undefined)
-    ranked.sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0))
-    return [{ id: "top", label: labels.top, rows: ranked }]
-  }
-  const dated = rows.filter((row) => row.released !== undefined)
-  dated.sort((a, b) => (b.released ?? "").localeCompare(a.released ?? ""))
-  return [{ id: "newest", label: labels.newest, rows: dated }]
+function firstThenRest(
+  rows: readonly ModelPickerRow[],
+  isFirst: (row: ModelPickerRow) => boolean,
+  compare: (a: ModelPickerRow, b: ModelPickerRow) => number
+): ModelPickerRow[] {
+  const first = rows.filter(isFirst).sort(compare)
+  return [...first, ...rows.filter((row) => !isFirst(row))]
 }
 
-function hasFilter(
-  sections: readonly ModelPickerSection[],
-  filter: ModelPickerFilter
-): boolean {
-  const rows = rowsOf(sections)
-  switch (filter) {
-    case "featured":
-      return true
+function orderedRows(
+  rows: readonly ModelPickerRow[],
+  order: ModelPickerOrder,
+  recent: readonly string[] = []
+): ModelPickerRow[] {
+  switch (order) {
     case "top":
-      return rows.some((row) => row.rank !== undefined)
+      return [...rows]
+    case "newest":
+      return firstThenRest(
+        rows,
+        (row) => row.released !== undefined,
+        (a, b) => (b.released ?? "").localeCompare(a.released ?? "")
+      )
+    case "price":
+      return firstThenRest(
+        rows,
+        (row) => row.cost !== undefined,
+        (a, b) => (a.cost ?? 0) - (b.cost ?? 0)
+      )
+    case "lastUsed": {
+      const places = new Map(recent.map((id, index) => [id, index]))
+      return firstThenRest(
+        rows,
+        (row) => places.has(row.id),
+        (a, b) => (places.get(a.id) ?? 0) - (places.get(b.id) ?? 0)
+      )
+    }
+  }
+}
+
+function hasOrder(
+  rows: readonly ModelPickerRow[],
+  order: ModelPickerOrder,
+  recent: readonly string[] = [],
+  isPricing = false
+): boolean {
+  switch (order) {
+    case "top":
+      return true
     case "newest":
       return rows.some((row) => row.released !== undefined)
-    case "open":
-      return rows.some((row) => row.isOpen === true)
+    case "price":
+      return isPricing || rows.some((row) => row.cost !== undefined)
+    case "lastUsed":
+      return rows.some((row) => recent.includes(row.id))
   }
 }
 
-function labOf(row: ModelPickerRow): string {
-  return row.lab ?? row.maker
+function hasOpenWeights(rows: readonly ModelPickerRow[]): boolean {
+  return rows.some((row) => row.isOpen === true)
 }
 
-function matches(row: ModelPickerRow, query: string): boolean {
-  const needle = query.trim().toLowerCase()
-  return (
-    needle === "" ||
-    row.name.toLowerCase().includes(needle) ||
-    row.maker.toLowerCase().includes(needle) ||
-    labOf(row).toLowerCase().includes(needle)
-  )
+function needleOf(query: string): string {
+  return query.trim().toLowerCase()
 }
 
-function labSectionsOf(
-  sections: readonly ModelPickerSection[]
-): ModelPickerSection[] {
-  const featured = sections.filter((section) => section.id === featuredId)
-  const seen = new Set<string>(
-    featured.flatMap((section) => section.rows.map((row) => row.id))
-  )
-  const byLab = new Map<string, ModelPickerRow[]>()
-  for (const section of sections) {
-    if (section.id === featuredId) {
-      continue
-    }
-    for (const row of section.rows) {
-      if (!seen.has(row.id)) {
-        seen.add(row.id)
-        byLab.set(labOf(row), [...(byLab.get(labOf(row)) ?? []), row])
-      }
-    }
-  }
-  const labs = [...byLab.entries()].sort(([a], [b]) =>
-    a.localeCompare(b, undefined, { sensitivity: "base" })
-  )
-  return [
-    ...featured,
-    ...labs.map(([lab, rows]) => ({ id: `lab:${lab}`, label: lab, rows })),
-  ]
+function searchedRowsOf(rows: readonly ModelPickerRow[]): SearchedRow[] {
+  return rows.map((row) => ({
+    row,
+    text: [row.name, row.maker, row.lab ?? ""].join("\n").toLowerCase(),
+  }))
 }
 
-function filterSections(
-  sections: readonly ModelPickerSection[],
-  query: string
-): ModelPickerSection[] {
-  return sections
-    .map((section) => ({
-      ...section,
-      rows: section.rows.filter((row) => matches(row, query)),
-    }))
-    .filter((section) => section.rows.length > 0)
+function isMatch(text: string, needle: string): boolean {
+  return needle === "" || text.includes(needle)
 }
 
-export type { ModelPickerFilter, ModelPickerFilters, ModelPickerSection }
-export { filteredSections, filterSections, hasFilter, labSectionsOf }
+export type {
+  ModelPickerFilters,
+  ModelPickerOrder,
+  ModelPickerSection,
+  ModelPickerWeights,
+  SearchedRow,
+}
+export {
+  hasOpenWeights,
+  hasOrder,
+  isMatch,
+  modelPickerOrders,
+  needleOf,
+  orderedRows,
+  rowsOf,
+  searchedRowsOf,
+}

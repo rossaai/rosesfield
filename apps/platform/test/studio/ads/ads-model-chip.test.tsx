@@ -1,4 +1,3 @@
-import { adsHostedModel } from "@rosesfield/catalog/ads"
 import {
   type CatalogModel,
   factsOf,
@@ -80,7 +79,7 @@ describe("the Ads model chip", () => {
     expect(chip.querySelector("svg.lucide-chevron-down")).not.toBeNull()
   })
 
-  it("opens the 402 px list with Qwen Image Edit 2511 ranked first and FLUX 3 Image in the ranked three", () => {
+  it("opens the 402 px list by Top, each ranked row before the next by its rank, with no Featured group", () => {
     render(<AdsModelChip app={listing} state={catalogState([])} chips={[]} />, {
       wrapper: WithQuery,
     })
@@ -94,14 +93,21 @@ describe("the Ads model chip", () => {
     expect(picker?.getAttribute("data-side")).toBe("top")
     expect(picker?.getAttribute("data-align")).toBe("start")
     expect(screen.getByRole("searchbox")).toBeTruthy()
-    const featured = screen.getByRole("group", {
-      name: t("model.picker.featured"),
-    })
     expect(
-      [...featured.querySelectorAll("[data-model]")].map((row) =>
-        row.getAttribute("data-model")
-      )
-    ).toEqual([chosenByDefault, "ideogram/ideogram-4.5-edit", adsHostedModel])
+      screen.queryByRole("group", { name: t("model.picker.featured") })
+    ).toBeNull()
+    const ranks = [
+      ...document.querySelectorAll(
+        "[role=listbox] [data-slot=badge][data-kind=rank]"
+      ),
+    ].map((badge) => Number(badge.textContent?.slice(1)))
+    expect(ranks.length).toBeGreaterThan(1)
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b))
+    expect(
+      document
+        .querySelector(`[data-model="${chosenByDefault}"]`)
+        ?.getAttribute("aria-selected")
+    ).toBe("true")
   })
 
   it("names the lab by its weights' publisher", () => {
@@ -122,7 +128,7 @@ const qwen: CatalogModel = {
   task: "image-edit",
   tags: [{ kind: "open-weights" }],
   form: null,
-  facts: factsOf("graph/qwen-image-edit-2511", "image-edit"),
+  facts: factsOf("graph/qwen-image-edit-2511"),
 }
 
 const flux: CatalogModel = {
@@ -144,7 +150,7 @@ const flux: CatalogModel = {
       max: 10,
     },
   ],
-  facts: factsOf("bfl/flux-3-image", "image-edit"),
+  facts: factsOf("bfl/flux-3-image"),
 }
 
 const oneImage: CatalogModel = {
@@ -212,11 +218,8 @@ describe("the Ads model menu from the catalog", () => {
         name: `${t("model.picker.title")} ${tCatalog(qwen.nameKey ?? "")}`,
       })
     )
-    const featured = screen.getByRole("group", {
-      name: t("model.picker.featured"),
-    })
     expect(
-      featured
+      document
         .querySelector(`[data-model="${qwen.id}"]`)
         ?.getAttribute("aria-selected")
     ).toBe("true")

@@ -5,7 +5,7 @@ import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { CheckIcon } from "lucide-react"
-import type { ReactElement, ReactNode } from "react"
+import { memo, type ReactElement, type ReactNode } from "react"
 
 type ModelPickerTag = {
   label: string
@@ -16,6 +16,7 @@ type ModelBadge = {
   kind: BadgeKind
   label: string
   href?: string
+  note?: string
   mark?: ReactNode
   markColour?: string
 }
@@ -34,7 +35,7 @@ type ModelPickerRow = {
   mark?: ReactNode
   badges?: readonly ModelBadge[]
   price?: ModelPrice
-  rank?: number
+  cost?: number
   released?: string
   isOpen?: boolean
 }
@@ -44,6 +45,7 @@ function RowBadge({ badge }: { badge: ModelBadge }): ReactElement {
     <Badge
       kind={badge.kind}
       {...(badge.href === undefined ? {} : { href: badge.href })}
+      {...(badge.note === undefined ? {} : { note: badge.note })}
       {...(badge.mark === undefined ? {} : { mark: badge.mark })}
       {...(badge.markColour === undefined
         ? {}
@@ -137,17 +139,19 @@ function RowPrice({
   )
 }
 
-function ModelRow({
-  row,
-  isChosen,
-  isPricing,
-  onChoose,
-}: {
+type ModelRowProps = {
   row: ModelPickerRow
   isChosen: boolean
   isPricing: boolean
   onChoose: (id: string) => void
-}): ReactElement {
+}
+
+function ModelRowView({
+  row,
+  isChosen,
+  isPricing,
+  onChoose,
+}: ModelRowProps): ReactElement {
   return (
     <div
       role="none"
@@ -171,7 +175,15 @@ function ModelRow({
         )}
         onClick={() => onChoose(row.id)}
       />
-      <span className="pointer-events-none relative flex h-full items-center ps-s2 pe-s3">
+      <span
+        role="none"
+        onClick={(event) => {
+          if (!(event.target instanceof Element && event.target.closest("a"))) {
+            onChoose(row.id)
+          }
+        }}
+        className="pointer-events-none relative flex h-full items-center ps-s2 pe-s3"
+      >
         <span
           data-slot="model-row-mark"
           aria-hidden="true"
@@ -195,6 +207,8 @@ function ModelRow({
   )
 }
 
+const ModelRow = memo(ModelRowView)
+
 function ModelRowSkeleton(): ReactElement {
   return (
     <div
@@ -211,5 +225,11 @@ function ModelRowSkeleton(): ReactElement {
   )
 }
 
-export type { ModelBadge, ModelPickerRow, ModelPickerTag, ModelPrice }
+export type {
+  ModelBadge,
+  ModelPickerRow,
+  ModelPickerTag,
+  ModelPrice,
+  ModelRowProps,
+}
 export { ModelRow, ModelRowSkeleton }

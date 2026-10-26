@@ -1,14 +1,16 @@
-import type { BoardRank, ModelFacts } from "#comfy/model-catalog.contract"
+import type {
+  ModelFacts,
+  ScoreSource,
+  TaskScore,
+} from "#comfy/model-catalog.contract"
 
 export type FactBadge =
+  | { kind: "rank"; rank: number; sources: readonly ScoreSource[] }
   | { kind: "new"; release: string }
-  | { kind: "top"; rank: BoardRank }
-  | { kind: "premium"; rank: BoardRank }
+  | { kind: "value" }
   | { kind: "open-weights"; href: string }
 
 export const newForDays = 30
-
-export const topPositions = 5
 
 const dayMs = 86_400_000
 
@@ -25,34 +27,37 @@ export function isNewRelease(release: string, today: string): boolean {
   return days !== null && days >= 0 && days < newForDays
 }
 
-export function isTopRank(rank: BoardRank): boolean {
-  return rank.position <= topPositions
-}
-
-export function isTopHalf(rank: BoardRank): boolean {
-  return rank.position <= rank.size / 2
+export function taskScoreOf(
+  facts: ModelFacts | undefined,
+  task: string | null
+): TaskScore | null {
+  if (facts === undefined || task === null) {
+    return null
+  }
+  return Object.hasOwn(facts.scores, task) ? (facts.scores[task] ?? null) : null
 }
 
 export function factBadgesOf(
   facts: ModelFacts | undefined,
+  task: string | null,
   today: string
 ): FactBadge[] {
   if (facts === undefined) {
     return []
   }
   const badges: FactBadge[] = []
-  const { release, rank, priceThird, weights } = facts
-  if (release !== null && isNewRelease(release, today)) {
-    badges.push({ kind: "new", release })
+  const score = taskScoreOf(facts, task)
+  if (score?.rank !== null && score?.rank !== undefined) {
+    badges.push({ kind: "rank", rank: score.rank, sources: score.sources })
   }
-  if (rank !== null && isTopRank(rank)) {
-    badges.push({ kind: "top", rank })
+  if (facts.release !== null && isNewRelease(facts.release, today)) {
+    badges.push({ kind: "new", release: facts.release })
   }
-  if (rank !== null && priceThird === 3 && isTopHalf(rank)) {
-    badges.push({ kind: "premium", rank })
+  if (score?.tiers.includes("bestValue") === true) {
+    badges.push({ kind: "value" })
   }
-  if (weights !== null) {
-    badges.push({ kind: "open-weights", href: weights })
+  if (facts.weights !== null) {
+    badges.push({ kind: "open-weights", href: facts.weights })
   }
   return badges
 }

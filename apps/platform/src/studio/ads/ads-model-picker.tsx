@@ -31,7 +31,7 @@ function rowWithPhotos(
   })
   return {
     ...row,
-    tags: [...row.tags, photos],
+    tags: [photos, ...row.tags.filter((tag) => tag.label !== photos.label)],
   }
 }
 

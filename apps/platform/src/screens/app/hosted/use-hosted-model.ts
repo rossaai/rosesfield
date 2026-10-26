@@ -21,7 +21,7 @@ import {
   modelCatalogQuery,
   type PriceAsk,
 } from "@/screens/app/hosted/model-catalog-query"
-import { rankedCatalogOf } from "@/screens/app/hosted/model-sections"
+import { defaultIdOf } from "@/screens/app/hosted/model-sections"
 import { taskAppOf } from "@/screens/app/hosted/task-app"
 import type { AppForm } from "@/screens/app/use-app-form"
 
@@ -119,7 +119,7 @@ export function useHostedModel(app: AppListing, form: AppForm): HostedState {
   })
   const models = query.data?.models ?? []
   const declared = query.data?.defaultModel ?? taskApp?.defaultModel ?? null
-  const defaultModel = rankedCatalogOf(declared, models)[0] ?? declared
+  const defaultModel = defaultIdOf(declared, models)
   const chosenId = textOf(form.values.inputs[modelInputName]) || defaultModel
   const chosen = models.find((model) => model.id === chosenId) ?? null
   const { values } = form

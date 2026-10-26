@@ -70,23 +70,35 @@ export const modelTag = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("proven") }),
 ])
 
-export const boardRank = z.object({
-  position: z.number().int().min(1),
-  size: z.number().int().min(1),
+export const scoreTier = z.enum([
+  "bestQuality",
+  "bestValue",
+  "cheapest",
+  "costly",
+])
+
+export const scoreSource = z.object({
   board: z.string().min(1).max(120),
   url: z.url(),
   readOn: z.iso.date(),
+  display: z.enum(["allowed", "refused"]),
 })
 
-export const priceThird = z.union([z.literal(1), z.literal(2), z.literal(3)])
+export const taskScore = z.object({
+  score: z.number().int().min(0).max(100).nullable(),
+  rank: z.number().int().min(1).nullable(),
+  order: z.number().int().min(1),
+  of: z.number().int().min(1),
+  sources: z.array(scoreSource).max(8),
+  tiers: z.array(scoreTier).max(4),
+})
 
 export const modelFacts = z.object({
   lab: z.string().min(1).max(80).nullable(),
   release: z.iso.date().nullable(),
-  rank: boardRank.nullable(),
-  priceThird: priceThird.nullable(),
   weights: z.url().nullable(),
   lineKey: z.string().max(120).nullable(),
+  scores: z.record(z.string().min(1).max(40), taskScore),
 })
 
 export const catalogModel = z.object({
@@ -164,8 +176,9 @@ export const catalogRoutes = {
 }
 
 export type ModelTag = z.infer<typeof modelTag>
-export type BoardRank = z.infer<typeof boardRank>
-export type PriceThird = z.infer<typeof priceThird>
+export type ScoreTier = z.infer<typeof scoreTier>
+export type ScoreSource = z.infer<typeof scoreSource>
+export type TaskScore = z.infer<typeof taskScore>
 export type ModelFacts = z.infer<typeof modelFacts>
 export type CatalogModel = z.infer<typeof catalogModel>
 export type ModelListResponse = z.infer<typeof modelListResponse>
