@@ -129,7 +129,7 @@ describe("a Comfy key the browser holds and sends with every request", () => {
     })
   })
 
-  it("gives each pasted key its own agent, so one key never pays for another key's turn", () => {
+  it("gives each pasted key its own agent, so one key never pays for another key's turn", async () => {
     const dataDir = mkdtempSync(join(tmpdir(), "rosesfield-key-agents-"))
     folders.push(dataDir)
     const vars = readServerEnv({ DATA_DIR: dataDir })
@@ -153,6 +153,6 @@ describe("a Comfy key the browser holds and sends with every request", () => {
     expect(first).not.toBeNull()
     expect(second).not.toBe(first)
     expect(pasted.agentOf("comfyui-first-key")).toBe(first)
-    void pasted.stop()
+    await pasted.stop()
   })
 })
