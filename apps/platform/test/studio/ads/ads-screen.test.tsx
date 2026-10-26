@@ -1,3 +1,4 @@
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { appListing } from "@rosesfield/contract"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import {
@@ -25,6 +26,24 @@ function WithQuery({ children }: { children: ReactNode }): ReactElement {
 }
 
 const listing = appListing.parse(app)
+
+const graphEdit: CatalogModel = {
+  id: "qwen-image-edit-2511",
+  kind: "graph",
+  maker: "Qwen",
+  name: "Qwen Image Edit 2511",
+  nameKey: "ads.model.qwenImageEdit2511",
+  task: "image-edit",
+  tags: [{ kind: "open-weights" }],
+  form: null,
+}
+
+const otherEdit: CatalogModel = {
+  ...graphEdit,
+  id: "flux-2-klein-9b-edit",
+  name: "FLUX.2 Klein",
+  nameKey: null,
+}
 const photo = "4d2c1b0a-9e8f-4a6b-8c5d-3e2f1a0b9c8d"
 
 const pending = vi.hoisted(() => ({
@@ -162,10 +181,11 @@ describe("the Ads Generate press", () => {
 describe("the Ads model menu", () => {
   it("is the catalog's model row, before the style, in the Inputs settings", () => {
     const { result } = renderScreen({ product: [photo] })
+    const hosted = { ...result.current.hosted, models: [graphEdit, otherEdit] }
     const view = render(
       <AdsModelSettings
         app={listing}
-        state={result.current}
+        state={{ ...result.current, hosted }}
         chips={["kind", "aspectRatio", "count"]}
       />,
       { wrapper: WithQuery }

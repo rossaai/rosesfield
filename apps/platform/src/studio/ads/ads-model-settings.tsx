@@ -1,19 +1,21 @@
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import type { ReactElement, ReactNode } from "react"
-import { aspectField, countField } from "@/screens/app/app-form"
-import {
-  ModelInputChips,
-  settingsInputs,
-} from "@/screens/app/bar/model-settings"
+import { appliedApp, aspectField, countField } from "@/screens/app/app-form"
+import { settingsInputs } from "@/screens/app/bar/model-settings"
+import { SettingChip } from "@/screens/app/bar/setting-chip"
 import { InputField } from "@/screens/app/fields/input-field"
 import { AspectField, CountField } from "@/screens/app/fields/output-fields"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { AdsCatalogPicker } from "@/studio/ads/ads-model-picker"
-import { modelInput } from "@/studio/ads/ads-rules"
+import { kindInput, modelInput } from "@/studio/ads/ads-rules"
 import type { AdsScreenState } from "@/studio/ads/use-ads-screen"
+import { FoldedChips } from "@/studio/edit/edit-chips"
+import { foldedPlanOf, hasModelChoice } from "@/studio/edit/edit-form"
 
 const styleInput = "style"
+
+const foldedInputs: readonly string[] = [styleInput]
 
 type AdsSettingsProps = {
   app: AppListing
@@ -58,7 +60,7 @@ export function AdsModelSettings({
       {leading.map((input) => (
         <SettingField key={input.name} app={app} form={form} input={input} />
       ))}
-      {chips.includes(modelInput) ? null : (
+      {chips.includes(modelInput) || !hasModelChoice(state.hosted) ? null : (
         <AdsCatalogPicker app={app} hosted={state.hosted} place="row" />
       )}
       {chips.includes(aspectField) ? null : (
@@ -86,19 +88,24 @@ export function AdsModelSettings({
 export function AdsModelChip(
   props: AdsSettingsProps & { formats?: ReactNode }
 ): ReactElement {
+  const { app, state } = props
+  const shown = appliedApp(app, state.form.values.inputs)
   return (
     <>
-      <AdsCatalogPicker
-        app={props.app}
-        hosted={props.state.hosted}
-        place="chip"
-      />
+      <SettingChip app={app} form={state.form} name={kindInput} />
+      {hasModelChoice(state.hosted) ? (
+        <AdsCatalogPicker app={app} hosted={state.hosted} place="chip" />
+      ) : null}
       {props.formats}
-      <ModelInputChips
-        app={props.app}
-        form={props.state.form}
-        lastSeed={props.state.lastSeed}
-        chips={[...props.chips, modelInput]}
+      <FoldedChips
+        app={shown}
+        form={state.form}
+        lastSeed={state.lastSeed}
+        plan={foldedPlanOf(
+          shown,
+          [...props.chips, kindInput, modelInput],
+          foldedInputs
+        )}
       />
     </>
   )
