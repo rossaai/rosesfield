@@ -1,5 +1,6 @@
 import type { AppListing } from "@rosesfield/contract"
 import type { ReactElement } from "react"
+import { settingIconOf } from "@/catalog/setting-registry"
 import { t } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
@@ -43,6 +44,7 @@ function HostedCountField({
       <NumberStepper
         {...bounds}
         label={t("field.count.label")}
+        icon={settingIconOf(count.name, "count")}
         step={1}
         unit=""
         onChange={(value) => form.setInput(count.name, value)}

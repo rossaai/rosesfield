@@ -2,6 +2,7 @@ import type { InputDefinition } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Slider } from "@rosesfield/ui/components/slider"
 import type { ReactElement, ReactNode } from "react"
+import { settingIconOf } from "@/catalog/setting-registry"
 import { tCatalog } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
 import { aspectField } from "@/screens/app/app-form"
@@ -83,6 +84,7 @@ function CountField({ state }: { state: LayersState }): ReactElement {
         step={1}
         unit={tCatalog("layers.input.count.unit")}
         label={label}
+        icon={settingIconOf(countInput, "count")}
         onChange={(count) => state.form.setInput(countInput, String(count))}
       />
     </FieldFrame>

@@ -4,6 +4,7 @@ import { Input } from "@rosesfield/ui/components/input"
 import { Textarea } from "@rosesfield/ui/components/textarea"
 import { type ReactElement, type ReactNode, useId, useState } from "react"
 import { promptInputOf } from "@/catalog/app-facts"
+import { settingIconOf } from "@/catalog/setting-registry"
 import { t } from "@/copy/t"
 import { DropWell } from "@/pieces/drop-well"
 import { NumberStepper } from "@/pieces/number-stepper"
@@ -126,6 +127,7 @@ function StepperControl(props: FieldProps): ReactElement | null {
         unit=""
         shown={fieldValueText(field, shown)}
         label={fieldCaption(field)}
+        icon={settingIconOf(field.name, fieldRoleOf(field, ""))}
         onChange={(next) => form.setInput(field.name, next)}
       />
     </Frame>

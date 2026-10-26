@@ -1,6 +1,8 @@
 import { IconButton } from "@rosesfield/ui/components/button"
+import { wellClass } from "@rosesfield/ui/components/input"
+import { cn } from "@rosesfield/ui/lib/cn"
 import { MinusIcon, PlusIcon } from "lucide-react"
-import type { ReactElement, Ref } from "react"
+import type { ReactElement, ReactNode, Ref } from "react"
 import { withUnit } from "@/copy/format"
 import { t } from "@/copy/t"
 
@@ -12,6 +14,7 @@ type NumberStepperProps = {
   unit: string
   shown?: string
   label: string
+  icon: ReactNode
   onChange: (value: number) => void
   ref?: Ref<HTMLButtonElement>
 }
@@ -26,7 +29,27 @@ export function NumberStepper(props: NumberStepperProps): ReactElement {
     props.onChange(clamp(next, props.min, props.max))
   }
   return (
-    <fieldset aria-label={props.label} className="flex items-center gap-s2">
+    <fieldset
+      aria-label={props.label}
+      data-slot="number-stepper"
+      className={cn(
+        wellClass,
+        "flex h-field items-center gap-s1_5 rounded-full pe-s1 [&_svg]:glyph"
+      )}
+    >
+      <span
+        aria-hidden="true"
+        data-slot="stepper-lead"
+        className="flex shrink-0"
+      >
+        {props.icon}
+      </span>
+      <output
+        aria-live="polite"
+        className="min-w-0 flex-1 truncate text-start text-body"
+      >
+        {props.shown ?? withUnit(props.value, props.unit)}
+      </output>
       <IconButton
         ref={props.ref}
         label={t("field.number.decrease")}
@@ -36,9 +59,6 @@ export function NumberStepper(props: NumberStepperProps): ReactElement {
       >
         <MinusIcon aria-hidden="true" />
       </IconButton>
-      <output aria-live="polite" className="min-w-s8 text-center text-body">
-        {props.shown ?? withUnit(props.value, props.unit)}
-      </output>
       <IconButton
         label={t("field.number.increase")}
         size="dense"

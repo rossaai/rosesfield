@@ -108,6 +108,7 @@ export function StepperChip(props: StepperChipProps): ReactElement {
         step={props.step}
         unit={props.unit ?? ""}
         label={props.label}
+        icon={props.icon ?? settingIconOf("", null)}
         onChange={props.onChange}
       />
     </PopoverChip>

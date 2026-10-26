@@ -1,5 +1,6 @@
 import type { AppListing } from "@rosesfield/contract"
 import type { ReactElement } from "react"
+import { settingIconOf } from "@/catalog/setting-registry"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
 import { aspectField } from "@/screens/app/app-form"
@@ -69,6 +70,7 @@ export function CountField({
         step={1}
         unit=""
         label={t("field.count.label")}
+        icon={settingIconOf("count", "count")}
         onChange={onChange}
       />
     </FieldFrame>
