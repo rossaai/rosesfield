@@ -233,19 +233,29 @@ function fieldRows(
 export function HostedSettings({
   fields,
   form,
+  folded = [],
 }: {
   fields: readonly ModelField[]
   form: AppForm
+  folded?: readonly ModelField[]
 }): ReactNode {
   const plan = fieldSettingsPlan(fields)
+  const advanced = [...folded, ...plan.advanced]
   return (
     <>
       {fieldRows(plan.main, form)}
-      {plan.advanced.length === 0 ? null : (
-        <AdvancedSection>{fieldRows(plan.advanced, form)}</AdvancedSection>
+      {advanced.length === 0 ? null : (
+        <AdvancedSection>{fieldRows(advanced, form)}</AdvancedSection>
       )}
     </>
   )
+}
+
+export function foldedMediaOf(
+  media: readonly ModelField[]
+): readonly ModelField[] {
+  const optional = media.filter((field) => !field.required)
+  return optional.length > 1 ? optional : []
 }
 
 export function HostedFields({
@@ -259,6 +269,7 @@ export function HostedFields({
     (field) => isShownField(field) && !skip.includes(field.kind)
   )
   const media = shown.filter((field) => field.kind === "media")
+  const folded = foldedMediaOf(media)
   const prompts = shown.filter((field) => field.kind === "prompt")
   const settings = shown.filter(isSettingField)
   const placeholder = promptPlaceholderOf(
@@ -267,10 +278,13 @@ export function HostedFields({
   )
   return shown.length === 0 && model === undefined ? null : (
     <div className="flex flex-col gap-s4">
-      {fieldRows(media, form)}
+      {fieldRows(
+        media.filter((field) => !folded.includes(field)),
+        form
+      )}
       {fieldRows(prompts, form, placeholder)}
       {model}
-      <HostedSettings fields={settings} form={form} />
+      <HostedSettings fields={settings} form={form} folded={folded} />
     </div>
   )
 }
