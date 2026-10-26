@@ -7,6 +7,7 @@ import {
 import { type ModelForm, publishedModelOf } from "@rosesfield/catalog/comfy"
 import type { AppDefinition } from "@rosesfield/contract"
 import type {
+  PriceRunHandler,
   ReadModelFormsHandler,
   StartRunHandler,
 } from "@rosesfield/generation"
@@ -21,6 +22,7 @@ import {
 export type AgentToolHandlers = LibraryToolHandlers & {
   startRun: StartRunHandler
   readModelForms: ReadModelFormsHandler
+  priceRun: PriceRunHandler
 }
 
 export type AgentToolSet = {

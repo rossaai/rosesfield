@@ -1,11 +1,14 @@
 import {
   type KeyframeChain,
+  keyframeCallsOf,
   runKeyframes,
+  type StoryboardAsk,
   storyboardAskOf,
 } from "@rosesfield/catalog/storyboard"
 import type { Run, RunRequest } from "@rosesfield/contract"
 import {
   type GetRunHandler,
+  type PriceRunHandler,
   RunInputInvalidError,
   type StartRunHandler,
 } from "@rosesfield/generation"
@@ -58,10 +61,7 @@ function chainOf(options: KeyframeRunsOptions): KeyframeChain {
   }
 }
 
-export async function keyframeRunsOf(
-  options: KeyframeRunsOptions
-): Promise<(Run | null)[]> {
-  const { request } = options
+export function chainAskOf(appId: string, request: RunRequest): StoryboardAsk {
   const ask = storyboardAskOf({
     inputs: request.inputs,
     aspectRatio: request.aspectRatio,
@@ -69,9 +69,35 @@ export async function keyframeRunsOf(
   })
   if (ask === null) {
     throw new RunInputInvalidError({
-      appId: options.appId,
+      appId,
       issues: ["inputs: an asset or a character id is not one"],
     })
   }
+  return ask
+}
+
+export async function keyframeCreditsOf(
+  appId: string,
+  ask: StoryboardAsk,
+  priceRun: PriceRunHandler
+): Promise<number | null> {
+  const { prices } = await priceRun.executeAll({
+    appId,
+    asks: keyframeCallsOf(ask).map((call) => call.request),
+  })
+  let total = 0
+  for (const price of prices) {
+    if (price.credits === null) {
+      return null
+    }
+    total += price.credits
+  }
+  return total
+}
+
+export async function keyframeRunsOf(
+  options: KeyframeRunsOptions
+): Promise<(Run | null)[]> {
+  const ask = chainAskOf(options.appId, options.request)
   return runKeyframes({ ask, key: options.key, chain: chainOf(options) })
 }

@@ -5,16 +5,20 @@ import type {
   ToolExecutionResult,
   ToolRegistration,
 } from "@earendil-works/pi-durable"
-import type { ModelForm } from "@rosesfield/catalog/comfy"
+import { autoRunLimitCredits, type ModelForm } from "@rosesfield/catalog/comfy"
 import {
   type AppDefinition,
   errorEnvelopeOf,
   type RunRequest,
 } from "@rosesfield/contract"
-import { RunInputInvalidError } from "@rosesfield/generation"
+import {
+  type PriceRunHandler,
+  RunInputInvalidError,
+} from "@rosesfield/generation"
 import { appIdFormat, ProjectError, runIdFormat } from "@rosesfield/kernel"
 import { z } from "zod"
 import type { Proposal } from "#agent.contract"
+import { StartConversationHandler } from "#application/start-conversation/start-conversation.handler"
 import { agentCopy } from "#copy.en"
 import { proposalIdFormat } from "#domain/proposal.id"
 import type { PiContext } from "#infrastructure/pi-context"
@@ -24,7 +28,9 @@ import {
   proposalRecords,
 } from "#infrastructure/pi-conversation-docs"
 import {
+  chainAskOf,
   type KeyframeHandlers,
+  keyframeCreditsOf,
   keyframeRunsOf,
 } from "#infrastructure/pi-keyframe-chain"
 import { type RunWait, timerWait } from "#infrastructure/pi-library-tools"
@@ -39,11 +45,16 @@ import { jsonOutput, toolParameters } from "#infrastructure/pi-tool-io"
 
 const idempotencyMemo = "idempotencyKey"
 const proposalMemo = "proposalId"
+const priceMemo = "priceCredits"
 const jsonBody = z.record(z.string(), z.json())
+
+export type AppToolHandlers = KeyframeHandlers & {
+  priceRun: PriceRunHandler
+}
 
 type AppToolOptions = {
   app: AppDefinition
-  handlers: () => KeyframeHandlers
+  handlers: () => AppToolHandlers
   forms?: readonly ModelForm[]
   wait?: RunWait
 }
@@ -118,25 +129,83 @@ export function appTool(options: AppToolOptions): ToolRegistration {
 type AppRun = {
   app: AppDefinition
   schema: z.ZodType<unknown>
-  handlers: () => KeyframeHandlers
+  handlers: () => AppToolHandlers
   wait: RunWait
 }
 
+async function creditsOf(
+  app: AppDefinition,
+  request: RunRequest,
+  priceRun: PriceRunHandler
+): Promise<number | null> {
+  try {
+    if (isKeyframeChain(app)) {
+      return await keyframeCreditsOf(
+        app.id,
+        chainAskOf(app.id, request),
+        priceRun
+      )
+    }
+    const { price } = await priceRun.execute({
+      appId: app.id,
+      inputs: request.inputs,
+      count: request.count,
+      aspectRatio: request.aspectRatio,
+    })
+    return price.credits
+  } catch {
+    return null
+  }
+}
+
+async function heldCreditsOf(
+  run: AppRun,
+  request: RunRequest,
+  api: ToolExecutionApi,
+  context: PiContext
+): Promise<number | null> {
+  const held = await api.memo<number | null>(priceMemo, context)
+  if (held !== undefined) {
+    return held
+  }
+  const credits = await creditsOf(run.app, request, run.handlers().priceRun)
+  return api.memo(priceMemo, credits, context)
+}
+
 async function runApp(
-  { app, schema, handlers, wait }: AppRun,
+  run: AppRun,
   args: unknown,
   api: ToolExecutionApi,
   context: PiContext
 ): Promise<ToolExecutionResult> {
-  const request = parseRequest(app, schema, args)
+  const { app } = run
+  const request = parseRequest(app, run.schema, args)
   const settings = await api.snapshot(
     conversationSettings,
     api.conversationId,
     context
   )
-  if ((settings?.runApproval ?? "ask") === "ask") {
-    return propose({ app, request, body: jsonBody.parse(args) }, api, context)
+  const approval = settings?.runApproval ?? StartConversationHandler.runApproval
+  const proposed = { app, request, body: jsonBody.parse(args) }
+  if (approval === "ask") {
+    return propose(proposed, api, context)
   }
+  if (isKeyframeChain(app)) {
+    chainAskOf(app.id, request)
+  }
+  const credits = await heldCreditsOf(run, request, api, context)
+  if (credits === null || credits > autoRunLimitCredits) {
+    return propose({ ...proposed, price: { credits } }, api, context)
+  }
+  return startApp(run, { request, args }, api, context)
+}
+
+async function startApp(
+  { app, handlers, wait }: AppRun,
+  { request, args }: { request: RunRequest; args: unknown },
+  api: ToolExecutionApi,
+  context: PiContext
+): Promise<ToolExecutionResult> {
   const idempotencyKey = await api.memo(
     idempotencyMemo,
     `agent-${crypto.randomUUID()}`,
@@ -153,7 +222,7 @@ async function runApp(
     })
     return {
       output: jsonOutput({ runs }),
-      details: { runIds: runs.flatMap((run) => run?.id ?? []) },
+      details: { runIds: runs.flatMap((one) => one?.id ?? []) },
     }
   }
   const started = await handlers().startRun.execute({
@@ -172,6 +241,7 @@ type Proposed = {
   app: AppDefinition
   request: RunRequest
   body: ProposalRecord["body"]
+  price?: { credits: number | null }
 }
 
 async function propose(
@@ -196,6 +266,12 @@ async function propose(
     output: jsonOutput({
       proposal,
       note: agentCopy.tools.proposed(id, proposed.app.id),
+      ...(proposed.price === undefined
+        ? {}
+        : {
+            credits: proposed.price.credits,
+            askAboveCredits: autoRunLimitCredits,
+          }),
     }),
     details: { proposal },
     control: { terminate: true },

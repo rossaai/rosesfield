@@ -16,18 +16,22 @@ import {
   routes,
   runPageResponse,
 } from "@rosesfield/contract"
+import { PriceRunHandler } from "@rosesfield/generation"
 import { FixedClock } from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
 import { z } from "zod"
 import { localAgent } from "#agent/local-agent"
 import { buildHandlers, type Handlers } from "#build-handlers"
 import type { GatewayApp } from "#gateway-env"
+import { FakeAppCatalog } from "../../../../packages/agent/test/fake/fake-app-catalog"
+import { FakePriceEngine } from "../../../../packages/agent/test/fake/fake-price-engine"
 import {
   type RouterRequest,
   replayRouter,
   textAnswer,
   toolCallAnswer,
 } from "../../../../packages/agent/test/fixtures/router-chat-answers"
+import { pricedRun } from "../../../../packages/agent/test/harness"
 import { imageApp, motionApp } from "../../../../packages/agent/test/sample"
 import { FakeJobRunner } from "../fake/fake-job-runner"
 import { jsonInit, localHost, ownerGateway } from "../harness"
@@ -135,7 +139,13 @@ function chainGateway(): Rig {
     dataDir,
     clock,
     apps,
-    handlers,
+    handlers: {
+      ...handlers,
+      priceRun: new PriceRunHandler({
+        apps: new FakeAppCatalog(apps),
+        engines: [new FakePriceEngine({ price: pricedRun })],
+      }),
+    },
     modelOptions: { fetch: replay.fetch },
     wait: driveRuns(handlers, jobs, clock),
   })

@@ -19,12 +19,15 @@ import {
   routes,
   runPageResponse,
 } from "@rosesfield/contract"
+import { PriceRunHandler } from "@rosesfield/generation"
 import { FixedClock } from "@rosesfield/kernel"
 import { afterEach, describe, expect, it } from "vitest"
 import { z } from "zod"
 import { localAgent } from "#agent/local-agent"
 import { buildHandlers, type Handlers } from "#build-handlers"
 import type { GatewayApp } from "#gateway-env"
+import { FakeAppCatalog } from "../../../../packages/agent/test/fake/fake-app-catalog"
+import { FakePriceEngine } from "../../../../packages/agent/test/fake/fake-price-engine"
 import {
   type RouterAnswer,
   type RouterRequest,
@@ -32,6 +35,7 @@ import {
   textAnswer,
   toolCallAnswer,
 } from "../../../../packages/agent/test/fixtures/router-chat-answers"
+import { pricedRun } from "../../../../packages/agent/test/harness"
 import { adsPromptOf } from "../../../../packages/catalog/src/ads/ads-prompt"
 import { app as ads } from "../../../../packages/catalog/src/ads/app"
 import { FakeJobRunner } from "../fake/fake-job-runner"
@@ -138,7 +142,13 @@ function agentGateway(call: AdsCall): Rig {
     dataDir,
     clock,
     apps,
-    handlers,
+    handlers: {
+      ...handlers,
+      priceRun: new PriceRunHandler({
+        apps: new FakeAppCatalog(apps),
+        engines: [new FakePriceEngine({ price: pricedRun })],
+      }),
+    },
     modelOptions: { fetch: replay.fetch },
     wait: driveRuns(handlers, jobs, clock),
   })
