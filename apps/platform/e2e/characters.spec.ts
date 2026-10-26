@@ -26,9 +26,9 @@ async function openTraits(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/characters\/new\?mode=traits$/)
   await expect(
     page
-      .getByRole("radiogroup", { name: "How to make it" })
-      .getByRole("radio", { name: "From traits" })
-  ).toBeChecked()
+      .getByRole("tablist", { name: "How to make it" })
+      .getByRole("tab", { name: "From traits" })
+  ).toHaveAttribute("aria-selected", "true")
 }
 
 test("a character from 1 photo shows in Characters with its photo and its count, and starts no run", async ({

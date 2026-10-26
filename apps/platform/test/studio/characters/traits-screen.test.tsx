@@ -93,24 +93,31 @@ describe("the traits of Characters", () => {
 })
 
 describe("the traits column", () => {
-  it("shows the details, then the model once, then the format and the plain background, with the seed closed under Advanced", async () => {
+  it("shows Gender and Age, the other traits closed, the details, the model and the format, with framing, the plain background and the seed closed under Advanced", async () => {
     openCharacters()
     const model = await screen.findByRole("button", { name: trigger(zImage) })
     await screen.findByRole("button", { name: pricedName(graphCredits) })
+    const labelled = (label: string): Element | null =>
+      document.querySelector(`[aria-label="${label}"]`)
+    const gender = labelled(tCatalog("characters.input.gender.label"))
+    const age = labelled(tCatalog("characters.input.age.label"))
     const details = screen.getByRole("textbox")
-    const format = screen.getByRole("radiogroup", {
-      name: t("field.aspect.label"),
-    })
-    const plain = screen.getByRole("switch")
+    const format = labelled(t("field.aspect.label"))
     const advanced = screen.getByRole("button", { name: t("field.advanced") })
-    const after = (first: Element, second: Element): boolean =>
+    const after = (first: Element | null, second: Element | null): boolean =>
+      first !== null &&
+      second !== null &&
       (first.compareDocumentPosition(second) &
         Node.DOCUMENT_POSITION_FOLLOWING) !==
-      0
+        0
+    expect(after(gender, age)).toBe(true)
+    expect(after(age, details)).toBe(true)
     expect(after(details, model)).toBe(true)
     expect(after(model, format)).toBe(true)
-    expect(after(format, plain)).toBe(true)
-    expect(after(plain, advanced)).toBe(true)
+    expect(after(format, advanced)).toBe(true)
+    expect(labelled(tCatalog("characters.input.skinTone.label"))).toBeNull()
+    expect(labelled(tCatalog("characters.input.framing.label"))).toBeNull()
+    expect(screen.queryByRole("switch")).toBeNull()
     expect(screen.queryByText(t("field.seed.label"))).toBeNull()
   })
 })

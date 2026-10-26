@@ -38,6 +38,7 @@ import {
   randomTraits,
   viewInput,
 } from "@/studio/characters/mode-listing"
+import { foldSettings } from "@/studio/edit/edit-form"
 import { imageFieldsOf } from "@/studio/image/image-fields"
 import { HostedPanel } from "@/studio/image/image-settings"
 
@@ -70,11 +71,15 @@ export function RandomButton({ app, form }: PanelProps): ReactElement {
 
 type TraitGroupSpec = { key: string; title: CopyKey; names: string[] }
 
+const leadingTraits: readonly string[] = ["gender", "age"]
+
+const foldedSettings: readonly string[] = ["framing", "plainBackground"]
+
 const traitGroups: readonly TraitGroupSpec[] = [
   {
     key: "body",
     title: "characters.traits.body",
-    names: ["gender", "age", "skinTone", "bodyType"],
+    names: ["skinTone", "bodyType"],
   },
   {
     key: "hair",
@@ -136,13 +141,8 @@ function TraitGroups({
   traits: readonly ChoiceInput[]
 }): ReactElement {
   const groups = groupsOf(traits)
-  const [first] = groups
   return (
-    <Accordion.Root
-      multiple
-      defaultValue={first === undefined ? [] : [first.spec.key]}
-      className="flex flex-col"
-    >
+    <Accordion.Root multiple defaultValue={[]} className="flex flex-col">
       {groups.map(({ spec, inputs }) => (
         <Accordion.Item
           key={spec.key}
@@ -248,7 +248,10 @@ function SettingRows({
 }
 
 function GraphSettings(props: PanelProps): ReactElement {
-  const plan = appSettingsPlan(props.app, placedOf(props.app))
+  const plan = foldSettings(
+    appSettingsPlan(props.app, placedOf(props.app)),
+    foldedSettings
+  )
   return (
     <>
       <SettingRows {...props} settings={plan.main} />
@@ -278,11 +281,19 @@ export function TraitsPanel(
 ): ReactElement {
   const { app, form, hosted } = props
   const traits = app.inputs.filter(isTrait).filter(isChoice)
+  const leading = traits.filter((input) => leadingTraits.includes(input.name))
   const words = app.inputs.filter(isWordsInput)
   const fields = hosted?.fields ?? null
   return (
     <div className="flex flex-col gap-s4">
-      <TraitGroups app={app} form={form} traits={traits} />
+      {leading.map((input) => (
+        <ChoiceRow key={input.name} app={app} input={input} form={form} />
+      ))}
+      <TraitGroups
+        app={app}
+        form={form}
+        traits={traits.filter((input) => !leadingTraits.includes(input.name))}
+      />
       {words.map((input) => (
         <Field key={input.name} {...props} input={input} />
       ))}

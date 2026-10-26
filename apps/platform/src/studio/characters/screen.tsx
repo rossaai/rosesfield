@@ -1,9 +1,5 @@
 import type { Mode } from "@rosesfield/catalog/characters"
 import { type AppListing, fixedCountOf, type Run } from "@rosesfield/contract"
-import {
-  SegmentedControl,
-  type SegmentedItem,
-} from "@rosesfield/ui/components/segmented-control"
 import { useQuery } from "@tanstack/react-query"
 import {
   type ReactElement,
@@ -21,7 +17,7 @@ import {
   ColumnFrame,
   useSheetOpen,
 } from "@/screens/app/column-frame"
-import { FieldFrame } from "@/screens/app/fields/field-frame"
+import { ChoiceField } from "@/screens/app/fields/choice-field"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import type { AppForm } from "@/screens/app/use-app-form"
@@ -122,25 +118,22 @@ function ModeControl({
   mode: Mode
   onChange: (mode: Mode) => void
 }): ReactElement {
-  const items: SegmentedItem<Mode>[] = allModes.map((value) => ({
-    value,
-    label: tCatalog(`characters.choice.mode.${value}`),
-  }))
-  const caption = tCatalog("characters.input.mode.label")
   return (
-    <FieldFrame
-      caption={caption}
-      isOptional={false}
+    <ChoiceField
+      label={tCatalog("characters.input.mode.label")}
+      items={allModes.map((value) => ({
+        value,
+        label: tCatalog(`characters.choice.mode.${value}`),
+      }))}
+      value={mode}
+      onChange={(next) => {
+        const chosen = allModes.find((one) => one === next)
+        if (chosen !== undefined) {
+          onChange(chosen)
+        }
+      }}
       note={null}
-      problem={undefined}
-    >
-      <SegmentedControl
-        items={items}
-        value={mode}
-        onValueChange={onChange}
-        label={caption}
-      />
-    </FieldFrame>
+    />
   )
 }
 
@@ -152,6 +145,7 @@ type FrameProps = {
   control: ReactNode
   onUseInputs: (run: Run) => void
   hasHeader: boolean
+  tabs?: ReactNode
 }
 
 function ModeFrame(props: FrameProps): ReactElement {
@@ -170,6 +164,7 @@ function ModeFrame(props: FrameProps): ReactElement {
       onShortcut={screen.state.onShortcut}
       sheet={sheet}
       hasHeader={props.hasHeader}
+      tabs={props.tabs}
       panel={
         <div className="flex flex-col gap-s4">
           {props.control}
@@ -196,10 +191,12 @@ export function ModeView({
   app,
   mode,
   seeds,
+  tabs,
 }: {
   app: AppListing
   mode: Mode
   seeds: AppSeeds
+  tabs?: ReactNode
 }): ReactElement {
   const sheetClose = useRef<() => void>(() => undefined)
   const screen = useModeScreen(app, mode, seeds, () => sheetClose.current())
@@ -212,6 +209,7 @@ export function ModeView({
       control={null}
       onUseInputs={screen.state.useInputs}
       hasHeader={false}
+      tabs={tabs}
     />
   )
 }

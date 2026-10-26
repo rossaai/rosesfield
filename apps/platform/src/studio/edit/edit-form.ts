@@ -8,7 +8,11 @@ import {
 } from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
-import { type AppSetting, appSettingsPlan } from "@/screens/app/settings-plan"
+import {
+  type AppSetting,
+  appSettingsPlan,
+  type SettingsPlan,
+} from "@/screens/app/settings-plan"
 import type { EditTool } from "@/studio/edit/edit-tools"
 import { nearestRatio, type PhotoSize } from "@/studio/edit/photo-check"
 
@@ -127,18 +131,25 @@ function chipNameOf(setting: AppSetting): string {
   }
 }
 
+export function foldSettings(
+  plan: SettingsPlan<AppSetting>,
+  folded: readonly string[]
+): SettingsPlan<AppSetting> {
+  const isFolded = (setting: AppSetting): boolean =>
+    setting.kind === "input" && folded.includes(setting.input.name)
+  return {
+    main: plan.main.filter((one) => !isFolded(one)),
+    advanced: [...plan.main.filter(isFolded), ...plan.advanced],
+  }
+}
+
 export function foldedPlanOf(
   app: AppListing,
   except: readonly string[],
   folded: readonly string[]
 ): FoldedPlan {
-  const plan = appSettingsPlan(app, except)
-  const isFolded = (setting: AppSetting): boolean =>
-    setting.kind === "input" && folded.includes(setting.input.name)
-  return {
-    main: plan.main.filter((one) => !isFolded(one)).map(chipNameOf),
-    advanced: [...plan.main.filter(isFolded), ...plan.advanced],
-  }
+  const plan = foldSettings(appSettingsPlan(app, except), folded)
+  return { main: plan.main.map(chipNameOf), advanced: plan.advanced }
 }
 
 function chipAppOf(app: AppListing, inputs: Inputs): AppListing {
