@@ -68,9 +68,7 @@ function TextControl(props: FieldProps): ReactElement {
     id,
     "aria-label": fieldCaption(field),
     value: textOf(value),
-    ...(props.placeholder === undefined
-      ? {}
-      : { placeholder: props.placeholder }),
+    placeholder: props.placeholder ?? t("field.text.placeholder"),
   }
   return (
     <Frame {...props}>
