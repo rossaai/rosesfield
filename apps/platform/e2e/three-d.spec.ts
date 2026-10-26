@@ -9,20 +9,28 @@ test.beforeEach(async ({ page }) => {
 test.describe("3D's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("opens on From text with Meshy 7.1, its prompt and Generate with its price, and hides From an image while the catalog lists no model for it", async ({
+  test("opens on Meshy 7.1 with no tab row while From text is its one mode, its prompt above the model, Art style and Generate with its price", async ({
     page,
   }) => {
     await page.goto("/apps/three-d")
     const column = page.locator("aside")
-    const tabs = column.getByRole("tablist", { name: "Make a 3D model" })
-    const text = tabs.getByRole("tab", { name: "From text" })
-    await expect(text).toHaveAttribute("aria-selected", "true")
-    await expect(tabs.getByRole("tab", { name: "From an image" })).toHaveCount(
-      0
-    )
     const picker = column.getByRole("button", { name: /^Model/ })
     await expect(picker).toContainText("7.1")
-    await expect(column.getByRole("textbox").first()).toBeVisible()
+    await expect(
+      column.getByRole("tablist", { name: "Make a 3D model" })
+    ).toHaveCount(0)
+    await expect(column.getByRole("tab")).toHaveCount(0)
+    const prompt = column.getByRole("textbox", { name: "Prompt" })
+    await expect(prompt).toBeVisible()
+    const promptBox = await prompt.boundingBox()
+    const pickerBox = await picker.boundingBox()
+    if (promptBox === null || pickerBox === null) {
+      throw new Error("the column shows no prompt or no model")
+    }
+    expect(promptBox.y + promptBox.height).toBeLessThan(pickerBox.y)
+    await expect(
+      column.getByRole("combobox", { name: "Art style" })
+    ).toBeVisible()
     await expect(
       column.getByRole("button", { name: /Generate.*Comfy credits/ }).last()
     ).toBeVisible()
@@ -47,16 +55,17 @@ test.describe("3D's column", () => {
 test.describe("3D on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "the sheet is the phone's")
 
-  test("opens the inputs in a sheet with Generate at its bottom edge", async ({
+  test("opens the inputs in a sheet on the prompt and Meshy 7.1 with no tab row, and Generate at its bottom edge", async ({
     page,
   }) => {
     await page.goto("/apps/three-d")
     await page.locator('[data-slot="app-bar-tabGenerate"]').click()
     const sheet = page.getByRole("dialog")
     await expect(sheet).toBeVisible()
-    await expect(sheet.getByRole("tab", { name: "From text" })).toHaveAttribute(
-      "aria-selected",
-      "true"
+    await expect(sheet.getByRole("tab")).toHaveCount(0)
+    await expect(sheet.getByRole("textbox", { name: "Prompt" })).toBeVisible()
+    await expect(sheet.getByRole("button", { name: /^Model/ })).toContainText(
+      "7.1"
     )
     const generate = await sheet
       .getByRole("button", { name: /Generate/ })

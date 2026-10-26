@@ -1,18 +1,20 @@
 import { expect, type Locator, type Page, test } from "@playwright/test"
 
 const apps = [
-  { id: "speech", name: "Speech", model: "Chatterbox" },
-  { id: "voice-clone", name: "Voice clone", model: "Chatterbox" },
+  { id: "speech", name: "Speech", model: "chatterbox", chip: "Chatterbox" },
+  { id: "voice-clone", name: "Voice clone", model: "chatterbox", chip: null },
   {
     id: "voice-change",
     name: "Voice change",
-    model: "Chatterbox voice change",
+    model: "chatterbox-vc",
+    chip: null,
   },
-  { id: "music", name: "Music", model: "MiniMax-Music3" },
+  { id: "music", name: "Music", model: "minimax-music-3", chip: null },
   {
     id: "sound-effects",
     name: "Sound effects",
-    model: "Stable Audio 3 Medium",
+    model: "stable-audio-3-medium",
+    chip: "Stable Audio 3 Medium",
   },
 ]
 
@@ -47,6 +49,30 @@ async function upload(
   await (await chooser).setFiles(file)
 }
 
+async function expectOwnModel(
+  page: Page,
+  { id, model, chip }: (typeof apps)[number]
+): Promise<void> {
+  const priced = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      request.url().endsWith(`/api/apps/${id}/price`)
+  )
+  await page.goto(`/apps/${id}`)
+  const body: { inputs: Record<string, unknown> } = (
+    await priced
+  ).postDataJSON()
+  expect(body.inputs.model).toBe(model)
+  const column = page.locator('[data-slot="composer"]')
+  if (chip === null) {
+    await expect(column.getByRole("button", { name: /^Model / })).toHaveCount(0)
+    return
+  }
+  await expect(
+    column.getByRole("button", { name: `Model ${chip}`, exact: true })
+  ).toBeVisible()
+}
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem("rosesfield.welcome", "seen")
@@ -56,14 +82,11 @@ test.beforeEach(async ({ page }) => {
 test.describe("The audio apps' column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("opens each audio app on its own model with Generate and no mode tabs", async ({
+  test("opens each audio app on its own model with Generate and no mode tabs, and shows the model chip only where the app offers two or more models", async ({
     page,
   }) => {
-    for (const { id, model } of apps) {
-      await page.goto(`/apps/${id}`)
-      await expect(
-        page.getByRole("button", { name: `Model ${model}`, exact: true })
-      ).toBeVisible()
+    for (const app of apps) {
+      await expectOwnModel(page, app)
       await expect(
         page.getByRole("button", { name: /^Generate/ }).first()
       ).toBeVisible()

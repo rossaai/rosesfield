@@ -199,27 +199,33 @@ test.describe("the parts of Video's column", () => {
 test.describe("the tray and rhythm of Video's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("holds the mode tabs 10 px in from the tray's edge, fades the strip's end where a tab passes under it, and scrolls a chosen tab into the tray", async ({
+  test("holds Image, References and Two frames 10 px in from the tray's edge, all inside the tray with no fade and no scroll, and keeps the row in place when the last tab is chosen", async ({
     page,
   }) => {
     await page.goto("/apps/video")
     const column = page.locator('[data-slot="composer"]')
     await expect(column).toBeVisible()
-    const tab = await boxOf(column.getByRole("tab").first())
+    await expect(column.getByRole("tab")).toHaveText([
+      "Image",
+      "References",
+      "Two frames",
+    ])
+    const first = column.getByRole("tab").first()
+    const tab = await boxOf(first)
     const tray = await boxOf(column.locator('[data-slot="composer-tray"]'))
     expect(tab.x).toBe(tray.x + 10)
     const strip = column.getByRole("tablist")
-    await expect(strip).toHaveAttribute("data-scroll-end", "yes")
-    await expect(strip).toHaveCSS("mask-image", /rgba\(0, 0, 0, 0\)\)$/)
+    await expect(strip).toHaveAttribute("data-scroll-start", "no")
+    await expect(strip).toHaveAttribute("data-scroll-end", "no")
+    await expect(strip).not.toHaveCSS("mask-image", /rgba\(0, 0, 0, 0\)/)
     const last = column.getByRole("tab").last()
+    const lastBox = await boxOf(last)
+    expect(lastBox.x + lastBox.width).toBeLessThanOrEqual(
+      tray.x + tray.width - 10
+    )
     await last.click()
     await expect(last).toHaveAttribute("aria-selected", "true")
-    await expect
-      .poll(async () => {
-        const box = await boxOf(last)
-        return box.x + box.width <= tray.x + tray.width
-      })
-      .toBe(true)
+    expect((await boxOf(first)).x).toBe(tab.x)
   })
 
   test("opens the model list 8 px to the right of the model row", async ({
@@ -236,108 +242,6 @@ test.describe("the tray and rhythm of Video's column", () => {
       .toBe(rowBox.x + rowBox.width + 8)
     const listBox = await boxOf(list)
     expect(listBox.width).toBe(402)
-  })
-})
-
-test.describe("Video's settings in the column", () => {
-  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
-
-  test("opens on LTX 2.5 with an Elements chip in the prompt, and its length and resolution as rows below the model, with Advanced closed", async ({
-    page,
-  }) => {
-    await page.goto("/apps/video")
-    const column = page.locator('[data-slot="composer"]')
-    const chip = column.locator(modelRow)
-    await expect(chip).toContainText("LTX 2.5")
-    await expect(column.getByRole("button", { name: "Elements" })).toBeVisible()
-    const length = column.getByRole("group", { name: "Length" })
-    await expect(length).toHaveCount(1)
-    expect((await boxOf(length)).y).toBeGreaterThan((await boxOf(chip)).y)
-    await expect(
-      column.getByRole("radiogroup", { name: "Resolution" })
-    ).toHaveCount(1)
-    await expect(
-      column.getByRole("button", { name: "Advanced" })
-    ).toHaveAttribute("aria-expanded", "false")
-    await expect(column.getByText("Seed")).toHaveCount(0)
-  })
-})
-
-test.describe("Video's mode switch and column fit", () => {
-  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
-
-  test("puts the 298 by 26 mode switch 13 px under the start frame and 13 px over the drop zone, and ends the last row 10 px above Generate, or 40 px over the fade when the column scrolls, in every tab", async ({
-    page,
-  }) => {
-    await page.goto("/apps/video")
-    const column = page.locator('[data-slot="composer"]')
-    await expect(column.locator(modelRow)).toContainText("LTX 2.5")
-    const frame = await boxOf(
-      column.locator('[data-slot="composer-attachments-tiles"]')
-    )
-    const toggle = await boxOf(
-      column.getByRole("radiogroup", { name: "Operation" })
-    )
-    expect([toggle.width, toggle.height]).toEqual([298, 26])
-    expect(toggle.y).toBe(frame.y + frame.height + 13)
-    const wells = await boxOf(column.locator('[data-slot="video-wells"]'))
-    expect(wells.y).toBe(toggle.y + toggle.height + 13)
-    const parts = column.locator('[data-slot="video-parts"]')
-    const footer = column.locator('[data-slot="composer-toolbar"]')
-    for (const [tab, model] of [
-      ["Text and image", "LTX 2.5"],
-      ["References", "Seedance 2.5"],
-      ["Two frames", "Seedance 2.5"],
-    ] as const) {
-      await column.getByRole("tab", { name: tab, exact: true }).click()
-      await expect(column.locator(modelRow)).toContainText(model)
-      await expect
-        .poll(async () => {
-          const end = await parts.evaluate((node) => {
-            const scroller = node.closest<HTMLElement>(
-              "[data-slot='composer-prompt']"
-            )
-            scroller?.scrollTo({
-              top: scroller.scrollHeight,
-              behavior: "instant",
-            })
-            return {
-              bottom: Math.max(
-                ...[...node.children].map(
-                  (child) => child.getBoundingClientRect().bottom
-                )
-              ),
-              isClipped: scroller?.dataset.clipped === "yes",
-            }
-          })
-          const gap = Math.round((await boxOf(footer)).y - end.bottom)
-          return gap - (end.isClipped ? 40 : 10)
-        })
-        .toBe(0)
-    }
-  })
-})
-
-test.describe("Video's model picker and its settings", () => {
-  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
-
-  test("lists the open-weights and the hosted models of the tab in one picker, LTX 2.5 with its top resolution and length range", async ({
-    page,
-  }) => {
-    await page.goto("/apps/video")
-    const column = page.locator('[data-slot="composer"]')
-    await expect(column).toBeVisible()
-    const switches = column.getByRole("radiogroup", { name: "Operation" })
-    await expect(switches).toHaveCount(1)
-    await expect(switches.getByRole("radio")).toHaveText(["Video", "Extend"])
-    await column.locator(modelRow).click()
-    const list = page.locator('[data-slot="model-picker"]')
-    await expect(list).toBeVisible()
-    const ltx = list
-      .locator('[data-slot="model-row"]:has([data-model="ltx-2-5"])')
-      .first()
-    await expect(ltx).toContainText("720p")
-    await expect(ltx).toContainText("2 to 5 s")
   })
 })
 

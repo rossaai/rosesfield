@@ -35,7 +35,6 @@ const inputs = [
   "Character",
   "Instructions",
   "Shots with no person",
-  "Keep the reference's sound",
   "Quality",
 ]
 
@@ -48,9 +47,14 @@ test.beforeEach(async ({ page }) => {
 test.describe("Remake's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("holds the two wells with their limits, then the other inputs, No cost on the demo engine and Generate", async ({
+  test("holds the two wells with their limits, then the other inputs with no keep-sound switch, sends the reference's sound on, and shows No cost on the demo engine and Generate", async ({
     page,
   }) => {
+    const priced = page.waitForRequest(
+      (request) =>
+        request.method() === "POST" &&
+        request.url().endsWith("/api/apps/remake/price")
+    )
     await page.goto("/apps/remake")
     const column = page.locator('[data-slot="composer"]')
     await expect(column).toBeVisible()
@@ -62,6 +66,12 @@ test.describe("Remake's column", () => {
     const places = inputs.map((label) => text.indexOf(label))
     expect(places.every((place) => place >= 0)).toBe(true)
     expect([...places].sort((a, b) => a - b)).toEqual(places)
+    await expect(column.getByText("Keep the reference's sound")).toHaveCount(0)
+    await expect(column.getByRole("switch")).toHaveCount(0)
+    const body: { inputs: Record<string, unknown> } = (
+      await priced
+    ).postDataJSON()
+    expect(body.inputs.keepSound).toBe("on")
     await expect(column.locator('[data-slot="remake-price"]')).toHaveText(
       "No cost on the demo engine"
     )

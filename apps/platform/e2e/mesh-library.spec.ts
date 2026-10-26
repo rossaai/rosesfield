@@ -60,6 +60,9 @@ test("a GLB in the library shows as a tile with the 3D mark, and pressing it ope
     await page.getByRole("button", { name: "Generate", exact: true }).click()
   }
   await expect(
-    page.getByRole("tab", { name: "From text" }).first()
+    page.getByRole("textbox", { name: "Prompt" }).first()
   ).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: /^Model/ }).first()
+  ).toContainText("7.1")
 })
