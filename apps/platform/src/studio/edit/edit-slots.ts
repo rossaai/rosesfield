@@ -58,7 +58,7 @@ export function editSlotsOf(
     ...others.map((slot) => ({
       id: slot.name,
       label: slotLabelOf(state, slot.name),
-      note: t("field.optional"),
+      ...(slot.presence === "optional" ? { note: t("field.optional") } : {}),
       items: thumbsOf(listOf(inputs[slot.name]), thumbs),
       addLabel,
       onAdd: slot.name === open ? photo.upload : undefined,

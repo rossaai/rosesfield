@@ -16,10 +16,10 @@ import { FakeDevice } from "./fake-device"
 
 const [photo = "", other = "", third = ""] = assetIds
 
-const oneSlot: ImageSlot[] = [{ name: "image", max: 1 }]
+const oneSlot: ImageSlot[] = [{ name: "image", max: 1, presence: "required" }]
 const twoSlots: ImageSlot[] = [
-  { name: "person", max: 1 },
-  { name: "clothes", max: 1 },
+  { name: "person", max: 1, presence: "required" },
+  { name: "clothes", max: 1, presence: "required" },
 ]
 
 let opened = 0

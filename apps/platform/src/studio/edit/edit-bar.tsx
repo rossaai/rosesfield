@@ -5,14 +5,11 @@ import { t } from "@/copy/t"
 import { AttachMenu } from "@/pieces/attach-menu"
 import { useAssetThumbs } from "@/pieces/attachment-thumbs"
 import { LibraryPicker } from "@/pieces/library-picker"
-import { appliedApp, aspectField, countField } from "@/screens/app/app-form"
-import { BarModelChip } from "@/screens/app/bar/model-settings"
-import { SettingChip } from "@/screens/app/bar/setting-chip"
 import { BarChips } from "@/screens/app/bar-frame"
 import { textOf } from "@/screens/app/fields/field-props"
 import { inputPlaceholder } from "@/screens/app/fields/input-copy"
 import { StartProblem, submitPriceOf } from "@/screens/app/generate-foot"
-import { HostedChips } from "@/screens/app/hosted/hosted-chips"
+import { ToolChips } from "@/studio/edit/edit-chips"
 import { editSlotsOf } from "@/studio/edit/edit-slots"
 import type { EditToolState } from "@/studio/edit/use-edit-tool"
 
@@ -34,33 +31,6 @@ function PhotoAttach({ state }: { state: EditToolState }): ReactElement {
         onDone={state.photo.addFromLibrary}
       />
     </>
-  )
-}
-
-export function ToolChips({ state }: { state: EditToolState }): ReactElement {
-  const { app, hosted, form } = state
-  const formats = (
-    <>
-      {state.chips.map((name) => (
-        <SettingChip key={name} app={app} form={form} name={name} />
-      ))}
-      <SettingChip app={app} form={form} name={countField} />
-    </>
-  )
-  return hosted?.isTaskApp === true ? (
-    <HostedChips
-      hosted={hosted}
-      form={form}
-      output={app.output.kind}
-      formats={formats}
-    />
-  ) : (
-    <BarModelChip
-      app={appliedApp(app, form.values.inputs)}
-      state={state}
-      chips={[...state.chips, countField, aspectField]}
-      formats={formats}
-    />
   )
 }
 
@@ -117,6 +87,7 @@ export function EditBar({ state }: { state: EditToolState }): ReactElement {
         onSubmit={state.start.generate}
         label={t("home.prompt.label")}
         placeholder={placeholderOf(state)}
+        prompt={prompt === null ? "none" : "shown"}
         submitLabel={t("run.generate")}
         removeLabel={t("bar.attachment.remove")}
         attachments={attachments}

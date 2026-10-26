@@ -173,7 +173,9 @@ function ScaleField({ state }: { state: UpscaleState }): ReactElement | null {
   useEffect(() => {
     registerScale(() =>
       holder.current
-        ?.querySelector<HTMLElement>('[role="radio"][aria-checked="true"]')
+        ?.querySelector<HTMLElement>(
+          '[role="radio"][aria-checked="true"], [role="combobox"]'
+        )
         ?.focus()
     )
   }, [registerScale])

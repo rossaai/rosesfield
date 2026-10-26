@@ -6,7 +6,7 @@ import {
 } from "@/screens/app/column-frame"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { ThreeDCanvas } from "@/studio/three-d/three-d-canvas"
-import { ModeTabs, ThreeDPanel } from "@/studio/three-d/three-d-panel"
+import { ThreeDPanel, tabRowOf } from "@/studio/three-d/three-d-panel"
 import { useThreeDScreen } from "@/studio/three-d/use-three-d-screen"
 
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
@@ -22,7 +22,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       onShortcut={state.onShortcut}
       sheet={sheet}
       hasWork={seeds.open !== undefined}
-      tabs={<ModeTabs screen={screen} />}
+      tabs={tabRowOf(screen)}
       panel={<ThreeDPanel app={app} screen={screen} />}
       canvas={(openInputs) => (
         <ThreeDCanvas

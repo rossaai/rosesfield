@@ -208,7 +208,7 @@ describe("the create gallery's column", () => {
       "full",
     ])
     expect(
-      within(parts).getByRole("radiogroup", {
+      within(parts).getByRole("combobox", {
         name: tCatalog("video.input.resolution.label"),
       })
     ).toBeTruthy()

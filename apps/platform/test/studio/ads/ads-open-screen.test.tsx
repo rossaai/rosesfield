@@ -213,7 +213,7 @@ describe("Use these inputs on Ads", () => {
 describe("Ads on a phone", () => {
   it("docks the prompt, the attach button, the character button, the Inputs chip and Generate, and the Inputs sheet holds the settings", async () => {
     asPhone()
-    openAds()
+    openAds({ models: [graphEdit, hostedEdit] })
     const dock = await vi.waitFor(bar)
     expect(dock.querySelector("textarea")).not.toBeNull()
     expect(attachTile()).toBeDefined()
@@ -228,7 +228,7 @@ describe("Ads on a phone", () => {
     const text = sheet.textContent ?? ""
     const order = [
       tCatalog("ads.input.kind.label"),
-      t("model.picker.title"),
+      tCatalog("ads.model.qwenImageEdit2511"),
       t("field.aspect.label"),
       t("field.count.label"),
       tCatalog("ads.input.style.label"),
@@ -253,6 +253,17 @@ describe("Ads on a phone", () => {
 })
 
 const portrait = "8b6a5f4e-3d2c-4e0f-8a9b-7c6d5e4f3a2b"
+
+const graphEdit: CatalogModel = {
+  id: "qwen-image-edit-2511",
+  kind: "graph",
+  maker: "Qwen",
+  name: "Qwen Image Edit 2511",
+  nameKey: "ads.model.qwenImageEdit2511",
+  task: "image-edit",
+  tags: [{ kind: "open-weights" }],
+  form: null,
+}
 
 const hostedEdit: CatalogModel = {
   id: "maker/edit-two",

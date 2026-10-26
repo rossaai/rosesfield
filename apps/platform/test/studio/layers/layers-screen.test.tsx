@@ -199,23 +199,10 @@ describe("the model of each Layers mode", () => {
     ] as const
     for (const [mode, name] of modes) {
       fireEvent.click(
-        screen.getByRole("combobox", {
-          name: tCatalog("layers.input.mode.label"),
+        screen.getByRole("tab", {
+          name: tCatalog(`layers.choice.mode.${mode}`),
         })
       )
-      const option = await screen.findByRole("option", {
-        name: tCatalog(`layers.choice.mode.${mode}`),
-      })
-      fireEvent.pointerDown(option)
-      fireEvent.mouseDown(option)
-      fireEvent.pointerUp(option)
-      fireEvent.mouseUp(option)
-      fireEvent.click(option)
-      expect(
-        screen.getByRole("combobox", {
-          name: tCatalog("layers.input.mode.label"),
-        }).textContent
-      ).toBe(tCatalog(`layers.choice.mode.${mode}`))
       expect(await pickerNamed(name)).not.toBeNull()
     }
   })
@@ -228,6 +215,17 @@ describe("the model of each Layers mode", () => {
     fireEvent.click(await screen.findByRole("option", { name: seedream.name }))
     expect(await pickerNamed(seedream.name)).not.toBeNull()
     expect(screen.queryAllByText(label)).toHaveLength(0)
+  })
+})
+
+describe("the Layers mode row", () => {
+  it("is the one tab row at the column's top, and no mode segment sits in the column", async () => {
+    openLayers({ runs: [], hasCatalog: true })
+    await pickerNamed(splitGraph.name)
+    const label = tCatalog("layers.input.mode.label")
+    const tabs = screen.getByRole("tablist", { name: label })
+    expect(tabs.querySelectorAll("[role=tab]").length).toBe(4)
+    expect(screen.queryByRole("radiogroup", { name: label })).toBeNull()
   })
 })
 

@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { defaultsOf } from "@/screens/app/app-form"
-import { ModeTabs, ThreeDPanel } from "@/studio/three-d/three-d-panel"
+import { ModeTabs, ThreeDPanel, tabRowOf } from "@/studio/three-d/three-d-panel"
 import {
   advancedToggle,
   formOf,
@@ -83,15 +83,23 @@ describe("the 3D mode tabs", () => {
     expect(text.getAttribute("aria-selected")).toBe("true")
   })
 
-  it("shows no From an image tab while the screen lists only From text", () => {
-    render(
-      <ModeTabs
-        screen={{ tab: "text", tabs: ["text"], setTab: () => undefined }}
-      />
-    )
-    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
-      "From text",
-    ])
+  it("draws no tab row while the screen lists only From text", () => {
+    const one = tabRowOf({
+      tab: "text",
+      tabs: ["text"],
+      setTab: () => undefined,
+    })
+    expect(one).toBeUndefined()
+    const two = tabRowOf({
+      tab: "text",
+      tabs: ["text", "image"],
+      setTab: () => undefined,
+    })
+    if (two === undefined) {
+      throw new Error("no tab row for two modes")
+    }
+    render(two)
+    expect(screen.getAllByRole("tab")).toHaveLength(2)
   })
 
   it("moves to From an image when you press it", () => {

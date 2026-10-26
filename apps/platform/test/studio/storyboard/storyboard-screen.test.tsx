@@ -34,17 +34,31 @@ afterEach(() => {
 })
 
 describe("Storyboard before any run", () => {
-  it("shows the reference well, the character button, one numbered scene, the look field and the empty canvas", async () => {
+  it("asks for the required scene first, then one reference well that takes an image or a character, then the look", async () => {
     openStoryboard()
     expect(await emptyCanvas()).toBeDefined()
     expect(screen.getByText(t("app.empty.body"))).toBeDefined()
+    const [reference] = screen.getAllByText(
+      tCatalog("storyboard.input.reference.label")
+    )
     expect(
-      screen.getAllByText(tCatalog("storyboard.input.reference.label")).length
-    ).toBeGreaterThan(0)
+      screen.queryByText(tCatalog("storyboard.input.character.label"))
+    ).toBeNull()
     expect(
-      screen.getAllByText(tCatalog("storyboard.input.character.label")).length
-    ).toBeGreaterThan(0)
+      screen.getByRole("button", { name: t("field.character.pick") })
+    ).toBeDefined()
     expect(sceneFields()).toHaveLength(1)
+    const [scene] = sceneFields()
+    const look = screen.getByPlaceholderText(
+      tCatalog("storyboard.input.look.placeholder")
+    )
+    const follows = (first: Element | undefined, second: Element): boolean =>
+      first !== undefined &&
+      (first.compareDocumentPosition(second) &
+        Node.DOCUMENT_POSITION_FOLLOWING) !==
+        0
+    expect(follows(scene, reference ?? look)).toBe(true)
+    expect(follows(reference, look)).toBe(true)
     expect(
       screen.getByText(tCatalog("storyboard.scene.number", { number: 1 }))
     ).toBeDefined()
