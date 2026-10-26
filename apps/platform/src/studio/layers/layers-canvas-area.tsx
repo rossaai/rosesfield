@@ -10,7 +10,7 @@ import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { runHoldsWords } from "@/pieces/view/match-words"
 import { NoMatch } from "@/pieces/view/no-match"
 import { useAppRuns } from "@/screens/app/app-canvas"
-import { runsAwaitingResults, useCanvasView } from "@/screens/app/canvas-view"
+import { gridSplitOf, useCanvasView } from "@/screens/app/canvas-view"
 import { historyGridItems } from "@/screens/history/history-grid-items"
 import { ResultGrid } from "@/screens/library/result-grid"
 import { DownloadMenu } from "@/studio/layers/download-menu"
@@ -191,9 +191,12 @@ function usePastView(
     }
   }
   if (view.layout === "grid") {
+    const split = gridSplitOf(kept)
     return {
-      above: runsAwaitingResults(kept),
-      below: <ResultGrid items={historyGridItems(kept)} size={view.size} />,
+      above: split.cards,
+      below: (
+        <ResultGrid items={historyGridItems(split.results)} size={view.size} />
+      ),
     }
   }
   return {

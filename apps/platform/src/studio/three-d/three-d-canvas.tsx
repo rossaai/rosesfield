@@ -12,8 +12,8 @@ import {
 } from "@/pieces/run/run-outputs"
 import { CanvasSkeleton, useAppRuns } from "@/screens/app/app-canvas"
 import {
+  gridSplitOf,
   MatchedRuns,
-  runsAwaitingResults,
   useCanvasView,
 } from "@/screens/app/canvas-view"
 import { historyGridItems } from "@/screens/history/history-grid-items"
@@ -146,13 +146,13 @@ function ThreeDGrid({
   size: number
   onUseInputs: (run: Run) => void
 }): ReactElement {
-  const awaiting = runsAwaitingResults(runs)
+  const split = gridSplitOf(runs)
   return (
     <div data-slot="app-grid" className="flex flex-col gap-s2">
-      {awaiting.length === 0 ? null : (
-        <RunStack runs={awaiting} onUseInputs={onUseInputs} />
+      {split.cards.length === 0 ? null : (
+        <RunStack runs={split.cards} onUseInputs={onUseInputs} />
       )}
-      <ResultGrid items={historyGridItems(runs)} size={size} />
+      <ResultGrid items={historyGridItems(split.results)} size={size} />
     </div>
   )
 }

@@ -94,11 +94,11 @@ export function ViewedRuns({
   if (view.layout === "list") {
     return cards(runs, view.columns)
   }
-  const awaiting = runsAwaitingResults(runs)
+  const split = gridSplitOf(runs)
   return (
     <div data-slot="app-grid" className="flex flex-col gap-s2">
-      {awaiting.length === 0 ? null : cards(awaiting, view.columns)}
-      <ResultGrid items={historyGridItems(runs)} size={view.size} />
+      {split.cards.length === 0 ? null : cards(split.cards, view.columns)}
+      <ResultGrid items={historyGridItems(split.results)} size={view.size} />
     </div>
   )
 }
@@ -117,11 +117,16 @@ export function RunsInView({
   )
 }
 
-export function runsAwaitingResults(runs: readonly Run[]): readonly Run[] {
-  const firstResult = runs.findIndex((run) => run.outputs.length > 0)
-  const latest = firstResult === -1 ? runs.length : firstResult
-  return runs.filter(
-    (run, index) =>
-      run.outputs.length === 0 && (isWorking(run) || index < latest)
+export type GridSplit = { cards: readonly Run[]; results: readonly Run[] }
+
+export function gridSplitOf(runs: readonly Run[]): GridSplit {
+  const firstResult = runs.findIndex(
+    (run) => run.outputs.length > 0 && !isWorking(run)
   )
+  const latest = firstResult === -1 ? runs.length : firstResult
+  const cards = runs.filter(
+    (run, index) =>
+      isWorking(run) || (run.outputs.length === 0 && index < latest)
+  )
+  return { cards, results: runs.filter((run) => !cards.includes(run)) }
 }
