@@ -103,7 +103,7 @@ export function PhoneTitle({
   )
 }
 
-function PhoneTitlePortal(
+export function PhoneTitlePortal(
   props: Pick<ScreenHeaderProps, "title" | "phoneLead" | "phoneAction">
 ): ReactNode {
   const { node, claim } = usePhoneTitleSlot()
@@ -118,6 +118,12 @@ function PhoneTitlePortal(
     return null
   }
   return createPortal(<PhoneTitle {...props} />, node)
+}
+
+export function ScreenTitle({ title }: { title: ReactNode }): ReactElement {
+  return (
+    <h1 className="min-w-0 shrink truncate text-display text-ink">{title}</h1>
+  )
 }
 
 export function ScreenHeader(props: ScreenHeaderProps): ReactElement {
@@ -141,11 +147,7 @@ export function ScreenHeader(props: ScreenHeaderProps): ReactElement {
           props.isScrolled === true ? "shadow-seam" : ""
         )}
       >
-        {props.title === null ? null : (
-          <h1 className="min-w-0 shrink truncate text-display text-ink">
-            {props.title}
-          </h1>
-        )}
+        {props.title === null ? null : <ScreenTitle title={props.title} />}
         {props.line === undefined ? null : (
           <p className="min-w-0 flex-1 truncate text-body text-ink-muted">
             {props.line}

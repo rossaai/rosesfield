@@ -8,6 +8,7 @@ import {
 } from "@rosesfield/ui/components/prompt-bar"
 import { AtSignIcon, PaperclipIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useState } from "react"
+import { isAssetInput } from "@/catalog/app-facts"
 import { catalogApps } from "@/catalog/catalog-apps"
 import { withUnit } from "@/copy/format"
 import { tCatalog, tCount, t as tPlatform } from "@/copy/t"
@@ -15,6 +16,7 @@ import { type GalleryKey, t } from "@/gallery/copy.en"
 import demoSquare from "@/gallery/fixtures/demo-image-1-1.png"
 import demoWide from "@/gallery/fixtures/demo-image-16-9.png"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
+import { inputSlotsOf } from "@/screens/app/bar/input-slots"
 import { chipIconOf, inputIconOf } from "@/screens/app/bar/setting-chip"
 import { inputCaption, inputUnit } from "@/screens/app/fields/input-copy"
 import { aspectItems } from "@/screens/app/fields/output-fields"
@@ -48,6 +50,12 @@ const sampleAttachments: PromptAttachment[] = [
     caption: t("sample.attachment.caption"),
   },
 ]
+
+const sampleThumb: PromptAttachment = {
+  id: "sample",
+  src: demoSquare,
+  alt: t("sample.attachment"),
+}
 
 function Chips(): ReactElement {
   const [format, setFormat] = useState("16-9")
@@ -222,6 +230,16 @@ function LongestChipsBar({
   if (app === undefined) {
     return null
   }
+  const first = app.inputs.find(isAssetInput)
+  const slots =
+    first === undefined
+      ? undefined
+      : inputSlotsOf(
+          app,
+          { [first.name]: [sampleThumb.id] },
+          [sampleThumb],
+          () => undefined
+        )
   return (
     <PromptBar
       value={text}
@@ -231,6 +249,7 @@ function LongestChipsBar({
       placeholder={t("sample.prompt.placeholder")}
       submitLabel={t("sample.generate")}
       removeLabel={t("sample.remove")}
+      slots={slots}
       leading={<Leading />}
       chips={chips.map((spec, index) => {
         const chip = chipOf(app, spec)

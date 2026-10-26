@@ -115,9 +115,6 @@ export function ColumnFrame(props: ColumnFrameProps): ReactElement {
   const openInputs = (): void => setOpen(true)
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
-      {props.hasHeader === false ? null : (
-        <h1 className="sr-only">{appName(props.app)}</h1>
-      )}
       <div
         data-slot="column-row"
         className="flex min-h-0 flex-1 gap-2 pt-2 @regular:px-4"
@@ -128,6 +125,7 @@ export function ColumnFrame(props: ColumnFrameProps): ReactElement {
           kind="column"
           scrollClassName="px-4"
           hasWork={props.hasWork ?? false}
+          hasTitle={props.hasHeader !== false}
         >
           {props.canvas(openInputs)}
         </AppStage>
