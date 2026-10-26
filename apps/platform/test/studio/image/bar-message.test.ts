@@ -30,7 +30,7 @@ describe("the message above the Image bar", () => {
       values: {},
     })
     expect(barMessageOf(missing, listing, [kreaAspect])).toBe(
-      "Pick the aspect for this model, then press Generate."
+      "Pick the format for this model, then press Generate."
     )
     const empty = problems({
       name: "prompt",

@@ -1,5 +1,15 @@
 import type { ModelField } from "@rosesfield/catalog/comfy"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
+import type { CopyKey } from "@/copy.en"
+import { fieldPlaceOf, type NormalSetting } from "@/screens/app/setting-table"
+
+const normalCaptions: Partial<Record<NormalSetting, CopyKey>> = {
+  format: "field.aspect.label",
+  resolution: "model.field.resolution",
+  quality: "model.field.quality",
+  length: "model.field.duration",
+  count: "field.count.label",
+}
 
 const placeKeys: readonly string[] = [
   "url",
@@ -54,6 +64,12 @@ export function wordsOfPath(path: string): string {
 }
 
 export function fieldCaption(field: ModelField): string {
+  const place = fieldPlaceOf(field)
+  const normal =
+    place.kind === "show" ? normalCaptions[place.setting] : undefined
+  if (normal !== undefined) {
+    return t(normal)
+  }
   const key = `model.field.${field.name}`
   return hasCatalogText(key)
     ? tCatalog(key)

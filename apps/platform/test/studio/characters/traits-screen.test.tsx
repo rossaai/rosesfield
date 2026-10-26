@@ -70,8 +70,8 @@ describe("the traits of Characters", () => {
     )
     await pickFlux()
     expect(
-      screen.queryByRole("combobox", { name: t("field.aspect.label") })
-    ).toBeNull()
+      screen.getAllByRole("combobox", { name: t("field.aspect.label") })
+    ).toHaveLength(1)
     const aspect = flux.form?.find((field) => field.name === "aspectRatio")
     if (aspect === undefined) {
       throw new Error("FLUX 3 Image declares no aspect")

@@ -7,6 +7,7 @@ import {
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { settingOf } from "@/catalog/setting-registry"
 import { formatDuration } from "@/copy/format"
+import { t } from "@/copy/t"
 import { modelInputName } from "@/pieces/run/run-facts"
 import { aspectField, countField } from "@/screens/app/app-form"
 import {
@@ -169,10 +170,25 @@ export function controlOf(shape: ControlShape): SettingControl {
   }
 }
 
+const followValues: readonly string[] = [
+  "adaptive",
+  "auto",
+  "match",
+  "match_input",
+]
+
 export function fieldValueText(
   field: ModelField,
   value: string | number
 ): string {
+  const place = fieldPlaceOf(field)
+  if (
+    place.kind === "show" &&
+    place.setting === "format" &&
+    followValues.includes(String(value).toLowerCase())
+  ) {
+    return t("choice.auto")
+  }
   const seconds = Number(value)
   return fieldRoleOf(field, "") === "length" &&
     value !== "" &&
