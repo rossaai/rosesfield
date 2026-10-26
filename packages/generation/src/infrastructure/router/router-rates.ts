@@ -11,9 +11,12 @@ import {
 import {
   factsOf,
   filledRunsOf,
+  highestInputsOf,
   namedKeysOf,
   type RateRow,
+  type RunFacts,
   roleNumber,
+  type Score,
   scoreOf,
   type Values,
   valuesOf,
@@ -21,6 +24,7 @@ import {
 import {
   type Amounts,
   amountsOf,
+  billedInputsOf,
   isPerInput,
   isPerTime,
   isPriced,
@@ -89,8 +93,11 @@ export type RatePrice = {
  * Prices one run from the published rate card. Every setting a row names
  * that the run leaves unset with no default is read once per value it takes,
  * and the rows that still fit give the price, or the range from the lowest
- * to the highest when they disagree. A range, a converted token count or a
- * filled setting whose rows disagree is not exact.
+ * to the highest when they disagree. A row billed per input image adds its
+ * credits once per image the run carries that it bills. A range, a converted
+ * token count or a filled setting whose rows disagree is not exact. When the
+ * filled runs are cut, the highest any fitting row can bill is added as the
+ * upper end, and the price is not exact.
  */
 export function priceFromRates(
   rows: readonly RateRow[],
@@ -106,26 +113,44 @@ export function priceFromRates(
       ? null
       : priceOf([usage * each], true, isOneAtATime(form.fields, output))
   }
-  const own = rows.filter((row) => row.model === form.model && isPriced(row))
+  const card: Card = {
+    own: rows.filter((row) => row.model === form.model && isPriced(row)),
+    perInput: rows.filter(
+      (row) => row.model === form.model && isPerInput(row.unit)
+    ),
+    images: imagesOf(form, inputs),
+  }
   const keys = namedKeysOf(
     form.model,
-    own.map((row) => row.conditions)
+    [...card.own, ...card.perInput].map((row) => row.conditions)
   )
-  const needsSeconds = own.some((row) => isPerTime(row.unit))
-  const amounts = filledRunsOf(form, inputs, keys, needsSeconds).map((run) =>
-    amountsOfRun(own, form, run)
-  )
-  const read = amounts.flatMap((one) => (one === null ? [] : [one]))
+  const needsSeconds = card.own.some((row) => isPerTime(row.unit))
+  const filled = filledRunsOf(form, inputs, keys, needsSeconds)
+  const read = filled.runs.flatMap((run) => {
+    const one = amountsOfRun(card, form, run)
+    return one === null ? [] : [one]
+  })
   if (read.length === 0) {
     return null
   }
-  const credits = read.flatMap((one) =>
-    one.credits.map((value) => value * each)
+  const credits = read.flatMap((one) => one.credits)
+  if (filled.cut) {
+    const highest = highestOf(
+      card,
+      form,
+      inputs,
+      highestInputsOf(form, inputs, keys, needsSeconds)
+    )
+    if (highest === null) {
+      return null
+    }
+    credits.push(highest)
+  }
+  return priceOf(
+    credits.map((value) => value * each),
+    !filled.cut && read.every((one) => one.exact),
+    true
   )
-  const hasInputs =
-    rows.some((row) => row.model === form.model && isPerInput(row.unit)) &&
-    hasMedia(inputs)
-  return priceOf(credits, read.every((one) => one.exact) && !hasInputs, true)
 }
 
 /** Names a rate the card or a published table gave as a price: exact when it is the published price of these settings, else an estimate. */
@@ -158,39 +183,123 @@ function centsOf(credits: number): number {
   return Math.round(credits * 100) / 100
 }
 
-function hasMedia(inputs: RunInputs): boolean {
-  return Object.values(inputs).some(
-    (value) => Array.isArray(value) && value.length > 0
-  )
+type Card = {
+  own: readonly RateRow[]
+  perInput: readonly RateRow[]
+  images: number
+}
+
+/** Counts the images the run carries in the form's image inputs. */
+function imagesOf(form: ModelForm, inputs: RunInputs): number {
+  return form.fields
+    .filter((field) => field.kind === "media" && field.media === "image")
+    .reduce((sum, field) => {
+      const given = inputs[field.name]
+      return sum + (Array.isArray(given) ? given.length : 0)
+    }, 0)
+}
+
+type Scored = { row: RateRow; score: Score }
+
+function scoredOf(rows: readonly RateRow[], run: RunFacts): Scored[] {
+  return rows.flatMap((row) => {
+    const score = scoreOf(row.conditions, run)
+    return score === null ? [] : [{ row, score }]
+  })
+}
+
+/** Keeps the rows that fit the run best: every settled row with the most conditions held, and every open row that holds as many. */
+function bestOf(scored: readonly Scored[]): RateRow[] {
+  const settled = scored.filter((one) => one.score.open === 0)
+  const best = Math.max(...settled.map((one) => one.score.holds))
+  return scored
+    .filter(
+      (one) =>
+        one.score.holds === best ||
+        (one.score.open > 0 && one.score.holds >= best)
+    )
+    .map((one) => one.row)
 }
 
 function amountsOfRun(
-  own: readonly RateRow[],
+  card: Card,
   form: ModelForm,
   inputs: RunInputs
 ): Amounts | null {
   const run = factsOf(form, inputs)
-  const scored = own.flatMap((row) => {
-    const score = scoreOf(row.conditions, run)
-    return score === null ? [] : [{ row, score }]
-  })
-  const settled = scored.filter((one) => one.score.open === 0)
-  const best = Math.max(...settled.map((one) => one.score.holds))
-  const top = scored.filter(
-    (one) =>
-      one.score.holds === best ||
-      (one.score.open > 0 && one.score.holds >= best)
-  )
+  const top = bestOf(scoredOf(card.own, run))
   const count = roleNumber(form, inputs, "count") ?? 1
-  const read = top.map((one) => amountsOf(one.row, run, count))
-  if (read.length === 0 || read.some((one) => one === null)) {
+  const read = top.map((row) => amountsOf(row, run, count))
+  const charge = inputChargeOf(card, bestOf(scoredOf(card.perInput, run)))
+  if (
+    read.length === 0 ||
+    read.some((one) => one === null) ||
+    charge === null
+  ) {
     return null
   }
   const known = read.flatMap((one) => (one === null ? [] : [one]))
   return {
-    credits: known.flatMap((one) => one.credits),
-    exact: known.every((one) => one.exact),
+    credits: known.flatMap((one) =>
+      one.credits.flatMap((base) => charge.credits.map((added) => base + added))
+    ),
+    exact: charge.exact && known.every((one) => one.exact),
   }
+}
+
+/**
+ * The credits the run's images add, once per value the fitting per-input
+ * rows give. A run with no image adds nothing. A run with images whose
+ * per-input rows all fail to fit has no known charge.
+ */
+function inputChargeOf(card: Card, rows: readonly RateRow[]): Amounts | null {
+  if (card.images === 0 || card.perInput.length === 0) {
+    return { credits: [0], exact: true }
+  }
+  if (rows.length === 0) {
+    return null
+  }
+  const billed = rows.map((row) => ({
+    row,
+    ...billedInputsOf(row, card.images),
+  }))
+  return {
+    credits: billed.map((one) => one.row.credits * one.count),
+    exact: billed.every((one) => one.exact),
+  }
+}
+
+/**
+ * The most any row that fits the run could bill, read with every setting
+ * the filled runs vary left open, and with its numbers at their highest, so
+ * no combination the cut runs left out bills more. Null when a fitting row
+ * has no amount at those settings.
+ */
+function highestOf(
+  card: Card,
+  form: ModelForm,
+  inputs: RunInputs,
+  highest: RunInputs
+): number | null {
+  const open = factsOf(form, inputs)
+  const top = factsOf(form, highest)
+  const count = roleNumber(form, highest, "count") ?? 1
+  const read = scoredOf(card.own, open).map((one) =>
+    amountsOf(one.row, top, count)
+  )
+  const charge = inputChargeOf(
+    card,
+    scoredOf(card.perInput, open).map((one) => one.row)
+  )
+  if (
+    read.length === 0 ||
+    read.some((one) => one === null) ||
+    charge === null
+  ) {
+    return null
+  }
+  const known = read.flatMap((one) => (one === null ? [] : one.credits))
+  return Math.max(...known) + Math.max(...charge.credits)
 }
 
 function usagePriceOf(

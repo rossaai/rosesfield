@@ -244,32 +244,71 @@ function isUnset(field: ModelField, inputs: RunInputs): boolean {
   return chosenOf(field.name, inputs, field) === null
 }
 
+export type FilledRuns = {
+  runs: RunInputs[]
+  /** True when the runs were cut at the most a card is read for, so some combinations were not read. */
+  cut: boolean
+}
+
+function openFieldsOf(
+  form: ModelForm,
+  inputs: RunInputs,
+  keys: ReadonlySet<string>,
+  needsSeconds: boolean
+): ModelField[] {
+  const length = fieldOfRole(form.fields, "length", "video")
+  return form.fields.filter(
+    (field) =>
+      isUnset(field, inputs) &&
+      valuesToTry(field).length > 0 &&
+      (keys.has(formKeyOf(field)) || (needsSeconds && field === length))
+  )
+}
+
 /**
  * Fills every setting the card prices on that the run leaves unset and the
  * form gives no default: one run per value the setting takes, so the card's
  * rows can be read for each. A run with nothing to fill is the run itself.
+ * Past the most a card is read for, the runs are cut and marked so.
  */
 export function filledRunsOf(
   form: ModelForm,
   inputs: RunInputs,
   keys: ReadonlySet<string>,
   needsSeconds: boolean
-): RunInputs[] {
-  const length = fieldOfRole(form.fields, "length", "video")
-  const open = form.fields.filter(
-    (field) =>
-      isUnset(field, inputs) &&
-      (keys.has(formKeyOf(field)) || (needsSeconds && field === length))
-  )
+): FilledRuns {
   let runs: RunInputs[] = [inputs]
-  for (const field of open) {
-    const tried = valuesToTry(field)
-    if (tried.length === 0) {
-      continue
-    }
-    runs = runs
-      .flatMap((run) => tried.map((value) => ({ ...run, [field.name]: value })))
-      .slice(0, filledRunsMax)
+  let cut = false
+  for (const field of openFieldsOf(form, inputs, keys, needsSeconds)) {
+    const all = runs.flatMap((run) =>
+      valuesToTry(field).map((value) => ({ ...run, [field.name]: value }))
+    )
+    cut ||= all.length > filledRunsMax
+    runs = all.slice(0, filledRunsMax)
   }
-  return runs
+  return { runs, cut }
+}
+
+/**
+ * The run with every setting the filled runs would vary set to its highest
+ * number, where its values are numbers, so seconds, frame rate and count
+ * read at their largest. A setting with values that are not numbers stays
+ * unset, so every row it names still fits.
+ */
+export function highestInputsOf(
+  form: ModelForm,
+  inputs: RunInputs,
+  keys: ReadonlySet<string>,
+  needsSeconds: boolean
+): RunInputs {
+  const highest: Record<string, InputValue> = { ...inputs }
+  for (const field of openFieldsOf(form, inputs, keys, needsSeconds)) {
+    const numbers = valuesToTry(field).map((value) =>
+      typeof value === "number" ? value : Number(value)
+    )
+    if (numbers.every((value) => Number.isFinite(value))) {
+      highest[field.name] = Math.max(...numbers)
+    }
+  }
+  return highest
 }
