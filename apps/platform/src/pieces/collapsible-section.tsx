@@ -1,4 +1,5 @@
 import { Collapsible } from "@base-ui/react/collapsible"
+import { fieldInset } from "@rosesfield/ui/components/input"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { ChevronDownIcon } from "lucide-react"
@@ -22,7 +23,8 @@ export function CollapsibleSection({
     >
       <Collapsible.Trigger
         className={cn(
-          "group/collapsible flex h-button items-center justify-between gap-s2 rounded-item px-s1 text-label text-ink-muted hover:bg-(--tint) [&_svg]:glyph",
+          "group/collapsible flex h-button items-center justify-between gap-s2 rounded-item text-label text-ink-muted hover:bg-(--tint) [&_svg]:glyph",
+          fieldInset,
           motion.tint
         )}
       >
