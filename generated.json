@@ -328,7 +328,7 @@
     },
     {
       "path": "packages/ui/src/contracts/model-row.generated.ts",
-      "sha256": "a3f89e990eec310c254275d0871e1da327bcf233e57a72436764e7ff31b7f681"
+      "sha256": "7fe47c5d55a416ba53353125f61d889cc6862a07d9aea4850f749f7a1a92ee04"
     },
     {
       "path": "packages/ui/src/contracts/popover.generated.ts",

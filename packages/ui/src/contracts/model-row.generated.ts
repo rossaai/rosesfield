@@ -5,6 +5,7 @@ export const MODEL_ROW = {
   name: "ModelRow",
   slots: [
     "mark",
+    "rank",
     "name",
     "line",
     "badges",
