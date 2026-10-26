@@ -184,9 +184,12 @@ describe("the Upscale column", () => {
     showColumn(<UpscalePanel state={result.current} />)
     const well = screen.getByText(tCatalog("upscale.input.image.label"))
     const model = theModelChip()
-    const scale = screen.getByRole("radiogroup", {
-      name: tCatalog("upscale.input.scale.label"),
-    })
+    const scale = document.querySelector(
+      `[aria-label="${tCatalog("upscale.input.scale.label")}"]`
+    )
+    if (scale === null) {
+      throw new Error("no Scale control")
+    }
     expect(isBefore(well, model)).toBe(true)
     expect(isBefore(model, scale)).toBe(true)
     expect(isBefore(scale, advancedToggle())).toBe(true)
