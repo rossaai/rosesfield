@@ -72,4 +72,5 @@ export const fieldCopy = {
   "choice.resolution.1k": "1K",
   "choice.resolution.2k": "2K",
   "choice.resolution.4k": "4K",
+  "field.text.placeholder": "Write here",
 } satisfies Record<string, string>
