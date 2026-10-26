@@ -32,10 +32,8 @@ import {
   type MeterTicket,
 } from "#infrastructure/credit-meter"
 import { bodyOf } from "#infrastructure/router/router-body"
-import type {
-  CatalogEntry,
-  RouterCatalog,
-} from "#infrastructure/router/router-catalog"
+import type { RouterCatalog } from "#infrastructure/router/router-catalog"
+import type { CatalogEntry } from "#infrastructure/router/router-entry"
 import { failureOf } from "#infrastructure/router/router-errors"
 import { creditsUsedOf, RouterHttp } from "#infrastructure/router/router-http"
 import { nodePriceOf } from "#infrastructure/router/router-node-prices"
