@@ -2,21 +2,24 @@ import { expect, type Locator, type Page, test } from "@playwright/test"
 
 const scene = "A boat leaves the harbor"
 
-const selects = [
-  "Movement",
-  "Camera",
-  "Lens",
-  "Focus",
-  "Light",
-  "Color",
-  "Mood",
-]
+const looks = ["Camera", "Lens", "Focus", "Light", "Color", "Mood"]
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem("rosesfield.welcome", "seen")
   })
 })
+
+async function openLook(within: Locator): Promise<Locator> {
+  const look = within.getByRole("button", { name: "Look", exact: true })
+  const choices = within.locator('[data-slot="shot-choices"]')
+  await expect(look).toHaveAttribute("aria-expanded", "false")
+  await expect(choices).toBeHidden()
+  await look.click()
+  await expect(look).toHaveAttribute("aria-expanded", "true")
+  await expect(choices).toBeVisible()
+  return choices
+}
 
 async function pick(
   page: Page,
@@ -32,27 +35,35 @@ async function pick(
 test.describe("Shot's input column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("opens with 7 shot choices on Auto and the seed under a closed Advanced, and shows the words each choice adds", async ({
+  test("opens with Movement on Auto, the 6 other shot choices on Auto in a closed Look, and the seed under a closed Advanced, and shows the words each choice adds", async ({
     page,
   }) => {
     await page.goto("/apps/shot")
-    const choices = page.locator('[data-slot="shot-choices"]')
-    await expect(choices).toBeVisible()
-    for (const list of selects) {
+    const column = page.locator('[data-slot="composer"]')
+    const parts = column.locator('[data-slot="shot-parts"]')
+    await expect(
+      parts.getByRole("combobox", { name: "Movement", exact: true })
+    ).toHaveText("Auto")
+    const choices = await openLook(column)
+    await expect(
+      choices.getByRole("combobox", { name: "Movement", exact: true })
+    ).toHaveCount(0)
+    await expect(choices.getByRole("combobox")).toHaveCount(looks.length)
+    for (const list of looks) {
       await expect(
         choices.getByRole("combobox", { name: list, exact: true })
       ).toHaveText("Auto")
     }
     const advanced = page.getByRole("button", { name: "Advanced", exact: true })
     await expect(advanced).toBeVisible()
-    const seed = page.getByRole("radiogroup", { name: "Seed" })
+    const seed = page.getByRole("combobox", { name: "Seed" })
     await expect(seed).toBeHidden()
     await advanced.click()
-    await expect(seed).toBeVisible()
+    await expect(seed).toHaveText("Random")
     await page.getByRole("textbox", { name: "Scene" }).fill(scene)
     const words = page.getByRole("region", { name: "Words Shot sends" })
     await expect(words).toContainText(`${scene}.`)
-    await pick(page, choices, "Movement", "Push in")
+    await pick(page, parts, "Movement", "Push in")
     await pick(page, choices, "Light", "Night")
     await pick(page, choices, "Color", "Black and white")
     await expect(words).toContainText(
@@ -67,7 +78,7 @@ test.describe("Shot's input column", () => {
 test.describe("Shot's Inputs sheet on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "the sheet is the phone's")
 
-  test("holds the scene, the 7 shot choices and the words Shot sends", async ({
+  test("holds the scene, Movement, the 6 other shot choices under Look and the words Shot sends", async ({
     page,
   }) => {
     await page.goto("/apps/shot")
@@ -78,8 +89,12 @@ test.describe("Shot's Inputs sheet on a phone", () => {
     const sheet = page.getByRole("dialog")
     await expect(sheet).toBeVisible()
     await sheet.getByRole("textbox", { name: "Scene" }).fill(scene)
-    const choices = sheet.locator('[data-slot="shot-choices"]')
-    for (const list of selects) {
+    await expect(
+      sheet.getByRole("combobox", { name: "Movement", exact: true })
+    ).toHaveText("Auto")
+    const choices = await openLook(sheet)
+    await expect(choices.getByRole("combobox")).toHaveCount(looks.length)
+    for (const list of looks) {
       await expect(
         choices.getByRole("combobox", { name: list, exact: true })
       ).toHaveText("Auto")

@@ -1,4 +1,4 @@
-import { expect, type Locator, test } from "@playwright/test"
+import { expect, type Locator, type Page, test } from "@playwright/test"
 import { expectTip } from "./well-tip"
 
 async function boxOf(
@@ -17,10 +17,20 @@ test.beforeEach(async ({ page }) => {
   })
 })
 
+async function expectScales(page: Page, column: Locator): Promise<void> {
+  const scale = column.getByRole("combobox", { name: "Scale" })
+  await expect(scale).toHaveText("2x")
+  await expect(column.getByRole("radiogroup", { name: "Scale" })).toHaveCount(0)
+  await scale.click()
+  await expect(page.getByRole("option")).toHaveText(["2x", "4x"])
+  await page.keyboard.press("Escape")
+  await expect(page.getByRole("listbox")).toHaveCount(0)
+}
+
 test.describe("Upscale's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("holds the Image and Video tabs, one well with its limits, Scale with 2x and 4x, the model row and Generate", async ({
+  test("holds the Image and Video tabs, one well with its limits, Scale as a dropdown on 2x with 2x and 4x, the model row and Generate", async ({
     page,
   }) => {
     await page.goto("/apps/upscale")
@@ -33,8 +43,7 @@ test.describe("Upscale's column", () => {
     const well = column.locator('[data-slot="drop-well"]')
     await expect(well).toHaveCount(1)
     await expectTip(page, well, /PNG, JPEG,? or WebP/)
-    const scale = column.getByRole("radiogroup", { name: "Scale" })
-    await expect(scale.getByRole("radio")).toHaveText(["2x", "4x"])
+    await expectScales(page, column)
     await expect(
       column.getByText("The result is 2x as wide and as tall as your file.")
     ).toBeVisible()
@@ -46,7 +55,7 @@ test.describe("Upscale's column", () => {
     await expect(video).toHaveAttribute("aria-selected", "true")
     await expect(well).toHaveCount(1)
     await expectTip(page, well, /MP4, MOV,? or WebM/)
-    await expect(scale.getByRole("radio")).toHaveText(["2x", "4x"])
+    await expectScales(page, column)
   })
 })
 

@@ -70,7 +70,11 @@ test("Recreate on a split run in History fills the image and shows that run's st
   ).toBeVisible()
   if (!isPhone(page)) {
     await expect(sourceTile(page)).toHaveCount(1)
-    await expect(page.getByRole("radio", { name: "Split" })).toBeChecked()
+    await expect(
+      page
+        .getByRole("tablist", { name: "Mode" })
+        .getByRole("tab", { name: "Split" })
+    ).toHaveAttribute("aria-selected", "true")
   }
 })
 
@@ -84,7 +88,11 @@ test("Use in Layers from the library opens Layers in Split with that image", asy
   await expect(page).toHaveURL(new RegExp(`/apps/layers\\?use=${photo}`))
   if (!isPhone(page)) {
     await expect(sourceTile(page)).toHaveCount(1)
-    await expect(page.getByRole("radio", { name: "Split" })).toBeChecked()
+    await expect(
+      page
+        .getByRole("tablist", { name: "Mode" })
+        .getByRole("tab", { name: "Split" })
+    ).toHaveAttribute("aria-selected", "true")
   }
 })
 
