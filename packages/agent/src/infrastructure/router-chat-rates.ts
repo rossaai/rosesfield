@@ -6,11 +6,29 @@ const rates: Readonly<
   Record<string, { readonly input: number; readonly output: number }>
 > = routerChatRates.models
 
+/** The tokens of a typical agent turn: the median input and output tokens per turn, each turn summed over its model calls, across the captured scenario answers. */
+export const typicalTurn = {
+  source: "packages/agent/test/fixtures/scenario-answers/*.json",
+  readOn: "2026-10-26",
+  inputTokens: 1650,
+  outputTokens: 400,
+} as const
+
+const perMillion = 1_000_000
+
 function creditsOf(usd: number): number {
   return Math.round(usd * comfyCreditsPerUsd * 100) / 100
 }
 
-/** Reads the Comfy credits per million input and output tokens of each chat model, from the prices OpenRouter publishes, which bill every agent turn. */
+function turnUsdOf(rate: { input: number; output: number }): number {
+  return (
+    (rate.input * typicalTurn.inputTokens +
+      rate.output * typicalTurn.outputTokens) /
+    perMillion
+  )
+}
+
+/** Reads the Comfy credits per million input and output tokens of each chat model, and of its typical turn, from the prices OpenRouter publishes, which bill every agent turn. */
 export function chatRatesOf(
   models: readonly string[]
 ): Record<string, AgentModelRate> {
@@ -21,6 +39,7 @@ export function chatRatesOf(
       found[model] = {
         input: creditsOf(rate.input),
         output: creditsOf(rate.output),
+        turn: creditsOf(turnUsdOf(rate)),
       }
     }
   }

@@ -40,6 +40,7 @@ export type StoredProposal = {
 export type AgentModelChoice = {
   models: string[]
   model: string
+  recent: string[]
 }
 
 export type ProposalDecision =
@@ -71,7 +72,7 @@ export abstract class AgentHarness {
   /** Reads one run the agent proposed, with the start-run body it holds. */
   abstract readProposal(ref: ProposalRef): Promise<StoredProposal>
 
-  /** Lists the models the agent can answer with and the one it answers with now. */
+  /** Lists the models the agent can answer with, the one it answers with now, and the last ones chosen, newest first. */
   abstract listModels(): Promise<AgentModelChoice>
 
   /** Makes the agent answer every next turn with one of the models it lists. */

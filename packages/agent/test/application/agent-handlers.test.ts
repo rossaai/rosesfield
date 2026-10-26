@@ -107,8 +107,10 @@ describe("the agent's handlers", () => {
     expect(before).toEqual({
       models: ["maker/chat-small", "maker/chat-large"],
       model: "maker/chat-small",
+      recent: ["maker/chat-small"],
     })
     expect(chosen.model).toBe("maker/chat-large")
+    expect(chosen.recent).toEqual(["maker/chat-large", "maker/chat-small"])
     await expect(
       new ChooseAgentModelHandler({ agent }).execute({ model: "maker/other" })
     ).rejects.toBeInstanceOf(AgentModelUnknownError)
