@@ -1,16 +1,9 @@
 import { Chip } from "@rosesfield/ui/components/chip"
 import {
-  labSectionsOf,
   ModelPicker,
   type ModelPickerSection,
 } from "@rosesfield/ui/components/model-picker"
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  within,
-} from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 const byLab: ModelPickerSection[] = [
@@ -101,63 +94,24 @@ function open(isPricing = false, chosen: string | null = null) {
 
 afterEach(cleanup)
 
-function groupsShown(): (string | null)[] {
-  return screen
-    .getAllByRole("group")
-    .map((group) => group.getAttribute("aria-label"))
-}
-
-describe("ModelPicker's labs", () => {
-  it("keeps the featured group first and whole, then groups every other row by its lab, leaving a featured model out of its lab", () => {
+describe("ModelPicker's list", () => {
+  it("lists every model once in the order its sections give, with no group heading", () => {
     open()
-    expect(groupsShown()).toEqual(["Featured", "Alpha Lab", "Beta"])
-    const alpha = screen.getByRole("group", { name: "Alpha Lab" })
     expect(
-      within(alpha)
-        .getAllByRole("option")
-        .map((one) => one.dataset.model)
-    ).toEqual(["alpha/two", "alpha/four"])
-  })
-
-  it("heads each lab with its name alone, and the featured group with the sparkle", () => {
-    open()
-    const heading = (name: string) =>
-      screen
-        .getByRole("group", { name })
-        .querySelector("[data-slot='model-section-heading']")
-    expect(heading("Alpha Lab")?.querySelector("svg")).toBeNull()
-    expect(heading("Alpha Lab")?.textContent).toBe("Alpha Lab")
-    expect(heading("Featured")?.querySelector("svg")).not.toBeNull()
-  })
-
-  it("lists each model once, with exactly one check on the chosen row", () => {
-    open(false, "zeta/one")
-    const ids = screen.getAllByRole("option").map((one) => one.dataset.model)
-    expect(new Set(ids).size).toBe(ids.length)
-    const checks = document.querySelectorAll(
-      "[data-slot='model-row-check'] svg"
-    )
-    expect(checks).toHaveLength(1)
-    const chosen = rowOf("Zeta One, 14.48 Comfy credits")
-    expect(chosen.getAttribute("data-ground")).toBe("surface")
+      screen.getAllByRole("option").map((one) => one.dataset.model)
+    ).toEqual(["zeta/one", "alpha/two", "beta/three", "alpha/four"])
+    expect(screen.queryAllByRole("group")).toEqual([])
     expect(
-      chosen.querySelector("[data-slot='model-row-mark']")?.className
-    ).toContain("bg-(--well)")
+      document.querySelector("[data-slot='model-section-heading']")
+    ).toBeNull()
   })
 
-  it("lists a model once in its lab when two groups both hold it", () => {
-    const sections = labSectionsOf([
-      { id: "all", label: "All", rows: byLab[1]?.rows ?? [] },
-      { id: "again", label: "Again", rows: byLab[1]?.rows ?? [] },
-    ])
-    expect(sections.flatMap((one) => one.rows.map((row) => row.id))).toEqual([
-      "alpha/two",
-      "beta/three",
-      "zeta/one",
-    ])
-    const withFeatured = labSectionsOf(byLab)
-    const listed = withFeatured.flatMap((one) => one.rows.map((row) => row.id))
-    expect(listed.filter((id) => id === "zeta/one")).toHaveLength(1)
+  it("puts exactly one check on the chosen row", () => {
+    open(false, "alpha/two")
+    const checked = screen
+      .getAllByRole("option")
+      .filter((one) => one.getAttribute("aria-selected") === "true")
+    expect(checked.map((one) => one.dataset.model)).toEqual(["alpha/two"])
   })
 
   it("finds a row by its lab's name", () => {

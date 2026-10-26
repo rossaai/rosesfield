@@ -1,19 +1,19 @@
 import { HuggingFaceMark } from "@rosesfield/ui/components/hugging-face-mark"
 import { interaction } from "@rosesfield/ui/components/interaction"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@rosesfield/ui/components/tooltip"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import type { CSSProperties, ReactElement, ReactNode } from "react"
 
-type BadgeKind = "new" | "top" | "premium" | "openWeights"
+type BadgeKind = "rank" | "new" | "value" | "openWeights"
 
 type BadgeTone = "nop" | "hor" | "cem" | "bug" | "quiet" | "glass"
 
-const badgeKinds: readonly BadgeKind[] = [
-  "new",
-  "top",
-  "premium",
-  "openWeights",
-]
+const badgeKinds: readonly BadgeKind[] = ["new", "rank", "value", "openWeights"]
 
 const badgeTones: readonly BadgeTone[] = [
   "nop",
@@ -35,8 +35,8 @@ const tones = {
 
 const kindTones = {
   new: "nop",
-  top: "hor",
-  premium: "cem",
+  rank: "hor",
+  value: "cem",
   openWeights: "cem",
 } as const satisfies Record<BadgeKind, BadgeTone>
 
@@ -50,6 +50,7 @@ type BadgeProps = {
   mark?: ReactNode
   markColour?: string
   href?: string
+  note?: string
   className?: string
 }
 
@@ -68,41 +69,49 @@ function toneOf(
 function BadgeMark({
   mark,
   colour,
-  href,
 }: {
   mark: ReactNode
   colour: string | undefined
-  href: string | undefined
 }): ReactElement {
   const style: CSSProperties | undefined =
     colour === undefined ? undefined : { color: colour }
-  if (href === undefined) {
-    return (
-      <span
-        aria-hidden="true"
-        data-slot="badge-mark"
-        className="flex"
-        style={style}
-      >
-        {mark}
-      </span>
-    )
-  }
   return (
-    <a
-      data-slot="badge-link"
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={linkNameOf(href)}
-      className={cn(
-        "pointer-events-auto relative z-10 flex rounded-dense",
-        motion.press,
-        interaction.ring
-      )}
+    <span
+      aria-hidden="true"
+      data-slot="badge-mark"
+      className="flex"
       style={style}
     >
       {mark}
+    </span>
+  )
+}
+
+const pressable = "pointer-events-auto z-10"
+
+function BadgeLink({
+  href,
+  tone,
+  className,
+  children,
+}: {
+  href: string
+  tone: BadgeTone
+  className: string
+  children: ReactNode
+}): ReactElement {
+  return (
+    <a
+      data-slot="badge"
+      data-kind="openWeights"
+      data-tone={tone}
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-description={linkNameOf(href)}
+      className={cn(className, pressable, motion.press, interaction.ring)}
+    >
+      {children}
     </a>
   )
 }
@@ -114,27 +123,48 @@ function Badge({
   mark,
   markColour,
   href,
+  note,
   className,
 }: BadgeProps): ReactElement {
   const shownMark =
     mark ?? (kind === "openWeights" ? <HuggingFaceMark /> : undefined)
   const shownTone = toneOf(kind, tone)
-  return (
+  const look = cn(badgeClass, tones[shownTone], className)
+  const content = (
+    <>
+      {shownMark === undefined ? null : (
+        <BadgeMark mark={shownMark} colour={markColour} />
+      )}
+      <span data-slot="count-badge-words">{children}</span>
+    </>
+  )
+  if (kind === "openWeights" && href !== undefined) {
+    return (
+      <BadgeLink href={href} tone={shownTone} className={look}>
+        {content}
+      </BadgeLink>
+    )
+  }
+  const badge = (
     <span
       data-slot="badge"
       data-kind={kind}
       data-tone={shownTone}
-      className={cn(badgeClass, tones[shownTone], className)}
+      className={cn(look, note === undefined ? null : pressable)}
     >
-      {shownMark === undefined ? null : (
-        <BadgeMark
-          mark={shownMark}
-          colour={markColour}
-          href={kind === "openWeights" ? href : undefined}
-        />
-      )}
-      <span data-slot="count-badge-words">{children}</span>
+      {content}
     </span>
+  )
+  if (note === undefined) {
+    return badge
+  }
+  return (
+    <Tooltip>
+      <TooltipTrigger render={badge} />
+      <TooltipContent className="pointer-events-none h-auto py-s1 whitespace-normal">
+        {note}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 

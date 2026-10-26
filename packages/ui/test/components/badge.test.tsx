@@ -7,8 +7,8 @@ afterEach(cleanup)
 describe("Badge", () => {
   it.each([
     ["new", "nop"],
-    ["top", "hor"],
-    ["premium", "cem"],
+    ["rank", "hor"],
+    ["value", "cem"],
     ["openWeights", "cem"],
   ] as const)(
     "rides 4 px after its host's label, 16 px tall, %s on the %s tint with its text tone",
@@ -78,24 +78,25 @@ describe("Badge", () => {
     expect(mark instanceof HTMLElement ? mark.style.color : "").toBe("red")
   })
 
-  it("makes only the Hugging Face mark the link to the weights page, named by that page, in a new tab", () => {
+  it("makes the whole Open weights badge the link to the weights page, named by its words, in a new tab", () => {
     render(
       <Badge kind="openWeights" href="https://huggingface.co/maker/model">
         Open weights
       </Badge>
     )
-    const link = screen.getByRole("link", {
-      name: "huggingface.co/maker/model",
-    })
+    const link = screen.getByRole("link", { name: "Open weights" })
     expect(link.getAttribute("href")).toBe("https://huggingface.co/maker/model")
     expect(link.getAttribute("target")).toBe("_blank")
     expect(link.getAttribute("rel")).toBe("noopener noreferrer")
-    expect(link.className.split(" ")).toContain("pointer-events-auto")
-    expect(link.textContent).toBe("")
-    expect(screen.getByText("Open weights").closest("a")).toBeNull()
-    const badge = link.closest("[data-slot='badge']")
-    expect(badge?.tagName.toLowerCase()).toBe("span")
-    expect(badge?.className.split(" ")).toContain("ms-1")
+    expect(link.getAttribute("aria-description")).toBe(
+      "huggingface.co/maker/model"
+    )
+    expect(link.getAttribute("data-slot")).toBe("badge")
+    expect(link.getAttribute("data-kind")).toBe("openWeights")
+    expect(link.className.split(" ")).toEqual(
+      expect.arrayContaining(["pointer-events-auto", "ms-1", "bg-cem-tint"])
+    )
+    expect(link.querySelector("[data-slot='hugging-face-mark']")).not.toBeNull()
   })
 
   it("carries the Hugging Face mark as path data on Open weights, and no mark on the other kinds", () => {
@@ -107,9 +108,7 @@ describe("Badge", () => {
         <Badge kind="new">New</Badge>
       </>
     )
-    const link = screen.getByRole("link", {
-      name: "huggingface.co/maker/model",
-    })
+    const link = screen.getByRole("link", { name: "Open weights" })
     const mark = link.querySelector("[data-slot='hugging-face-mark']")
     expect(mark?.tagName.toLowerCase()).toBe("svg")
     expect(mark?.getAttribute("aria-hidden")).toBe("true")
@@ -121,7 +120,7 @@ describe("Badge", () => {
     expect(word?.querySelector("svg")).toBeNull()
   })
 
-  it("stays a word, not a link, for New, Top and Premium", () => {
+  it("stays a word, not a link, for New, the rank and Best value", () => {
     render(
       <Badge kind="new" href="https://example.com">
         New

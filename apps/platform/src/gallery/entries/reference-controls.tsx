@@ -211,11 +211,11 @@ function Badges(): ReactElement {
       <span className="flex items-center text-body">
         {t("sample.model")}
         <Badge kind="new">{t("sample.badge.new")}</Badge>
-        <Badge kind="top">{t("sample.badge.top")}</Badge>
+        <Badge kind="rank">{t("sample.badge.rank")}</Badge>
       </span>
       <span className="flex items-center text-body">
         {t("sample.model")}
-        <Badge kind="premium">{t("sample.badge.premium")}</Badge>
+        <Badge kind="value">{t("sample.badge.value")}</Badge>
         <Badge kind="openWeights" href="https://huggingface.co/">
           {t("sample.badge.openWeights")}
         </Badge>

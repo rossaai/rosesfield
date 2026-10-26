@@ -1,8 +1,9 @@
 import { z } from "zod"
-import {
-  type BoardRank,
-  type ModelFacts,
-  priceThird,
+import type {
+  ModelFacts,
+  ScoreSource,
+  ScoreTier,
+  TaskScore,
 } from "#comfy/model-catalog.contract"
 import source from "./model-facts.json"
 
@@ -12,6 +13,76 @@ const board = z.strictObject({
   size: z.number().int().min(1),
   readOn: z.iso.date(),
 })
+
+const boardRow = z
+  .strictObject({
+    board: z.string().min(1).max(120),
+    url: z.url(),
+    readOn: z.iso.date(),
+    published: z.iso.date().nullable(),
+    row: z.string().min(1).max(200),
+    position: z.number().int().min(1),
+    size: z.number().int().min(1),
+    positionScore: z.number().min(0).max(100),
+    display: z.boolean(),
+    rating: z.number().optional(),
+    licence: z.string().min(1).max(200).optional(),
+    site: z.url().optional(),
+  })
+  .refine((row) => row.position <= row.size, {
+    message: "A board's position sits within its rows",
+    path: ["position"],
+  })
+  .refine((row) => row.display === (row.licence !== undefined), {
+    message: "A board's number is shown only under the licence that grants it",
+    path: ["licence"],
+  })
+
+const fileTier = z.enum(["best quality", "best value", "cheapest", "costly"])
+
+const taskPrice = z.union([
+  z.strictObject({
+    credits: z.number().min(0),
+    unit: z.enum(["per output", "per second"]),
+  }),
+  z.strictObject({ none: z.string().min(1).max(200) }),
+])
+
+const scoreValue = z.number().int().min(0).max(100)
+
+const taskCell = z
+  .strictObject({
+    score: scoreValue.nullable(),
+    licensedScore: scoreValue.nullable(),
+    rank: z.number().int().min(1),
+    of: z.number().int().min(1),
+    placement: z.enum(["score", "version", "release", "unplaced"]),
+    placedAbove: z.string().min(1).max(200).optional(),
+    rankBeforeLineRule: z.number().int().min(1).optional(),
+    sources: z.array(boardRow).max(8),
+    tiers: z.array(fileTier).max(4),
+    price: taskPrice,
+  })
+  .refine((cell) => cell.rank <= cell.of, {
+    message: "A rank sits within the task's models",
+    path: ["rank"],
+  })
+  .refine((cell) => (cell.score === null) === (cell.sources.length === 0), {
+    message: "A score comes from the boards that hold the model, and only then",
+    path: ["score"],
+  })
+  .refine((cell) => (cell.placement === "score") === (cell.score !== null), {
+    message: "A scored model is placed by its score",
+    path: ["placement"],
+  })
+
+const releaseSource = z.union([
+  z.strictObject({
+    url: z.url(),
+    kind: z.string().min(1).max(120),
+  }),
+  z.strictObject({ none: z.string().min(1).max(200) }),
+])
 
 const describedLine = z.strictObject({
   key: z.string().regex(/^comfy\.model\.[a-z][a-zA-Z0-9]*\.line$/),
@@ -28,9 +99,24 @@ const factRow = z.strictObject({
   release: z.iso.date().nullable(),
   weights: z.url().nullable(),
   ranks: z.record(z.string(), z.number().int().min(1)),
-  thirds: z.record(z.string(), priceThird),
+  thirds: z.record(
+    z.string(),
+    z.union([z.literal(1), z.literal(2), z.literal(3)])
+  ),
   line: z.union([describedLine, undescribedLine]),
+  releaseSource: releaseSource.optional(),
+  tasks: z.record(z.string(), taskCell).optional(),
 })
+
+const sourcedRow = factRow.refine(
+  (row) =>
+    row.releaseSource === undefined ||
+    (row.release !== null) === "url" in row.releaseSource,
+  {
+    message: "A release date names the page it was read on",
+    path: ["releaseSource"],
+  }
+)
 
 const markSetName = z.enum(["Simple Icons", "LobeHub Icons"])
 
@@ -85,13 +171,51 @@ const markMissing = z.strictObject({
   source: z.url(),
 })
 
-export const modelFactsFile = z.strictObject({
-  boards: z.record(z.string(), board),
-  markSet: z.array(markSet).min(1),
-  marks: z.record(z.string(), labMark),
-  marksMissing: z.record(z.string(), markMissing),
-  models: z.record(z.string(), factRow),
-})
+type FactRow = z.infer<typeof factRow>
+
+function rowsOfTask(
+  models: Readonly<Record<string, FactRow>>
+): Map<string, number[]> {
+  const ranks = new Map<string, number[]>()
+  for (const row of Object.values(models)) {
+    for (const [task, cell] of Object.entries(row.tasks ?? {})) {
+      ranks.set(task, [...(ranks.get(task) ?? []), cell.rank])
+    }
+  }
+  return ranks
+}
+
+function isWholeOrder(ranks: readonly number[]): boolean {
+  const sorted = [...ranks].sort((a, b) => a - b)
+  return sorted.every((rank, index) => rank === index + 1)
+}
+
+export const modelFactsFile = z
+  .strictObject({
+    scoreMethod: z.string().min(1).max(2000),
+    boards: z.record(z.string(), board),
+    markSet: z.array(markSet).min(1),
+    marks: z.record(z.string(), labMark),
+    marksMissing: z.record(z.string(), markMissing),
+    models: z.record(z.string(), sourcedRow),
+  })
+  .superRefine((file, context) => {
+    for (const [task, ranks] of rowsOfTask(file.models)) {
+      const ofs = new Set(
+        Object.values(file.models).flatMap((row) => {
+          const cell = row.tasks?.[task]
+          return cell === undefined ? [] : [cell.of]
+        })
+      )
+      if (!isWholeOrder(ranks) || ofs.size !== 1 || !ofs.has(ranks.length)) {
+        context.addIssue({
+          code: "custom",
+          message: `The ranks of ${task} run once each from 1 to its count of models`,
+          path: ["models"],
+        })
+      }
+    }
+  })
 
 export type ModelFactsFile = z.infer<typeof modelFactsFile>
 
@@ -99,56 +223,107 @@ export const weightsHost = "https://huggingface.co/"
 
 export const modelFactsData: ModelFactsFile = modelFactsFile.parse(source)
 
+function rowOf(id: string, data: ModelFactsFile): FactRow | undefined {
+  return Object.hasOwn(data.models, id) ? data.models[id] : undefined
+}
+
 export function labOfModel(
   id: string,
   data: ModelFactsFile = modelFactsData
 ): string | null {
-  return Object.hasOwn(data.models, id) ? (data.models[id]?.lab ?? null) : null
-}
-
-export function boardRankOf(
-  id: string,
-  task: string,
-  data: ModelFactsFile = modelFactsData
-): BoardRank | null {
-  const row = Object.hasOwn(data.models, id) ? data.models[id] : undefined
-  const position = row?.ranks[task]
-  const read = Object.hasOwn(data.boards, task) ? data.boards[task] : undefined
-  if (position === undefined || read === undefined) {
-    return null
-  }
-  return {
-    position,
-    size: read.size,
-    board: read.name,
-    url: read.url,
-    readOn: read.readOn,
-  }
+  return rowOf(id, data)?.lab ?? null
 }
 
 export function lineKeyOf(
   id: string,
   data: ModelFactsFile = modelFactsData
 ): string | null {
-  const row = Object.hasOwn(data.models, id) ? data.models[id] : undefined
-  const line = row?.line
+  const line = rowOf(id, data)?.line
   return line !== undefined && "key" in line ? line.key : null
+}
+
+type TaskCell = z.infer<typeof taskCell>
+
+const tierNames = {
+  "best quality": "bestQuality",
+  "best value": "bestValue",
+  cheapest: "cheapest",
+  costly: "costly",
+} as const satisfies Record<z.infer<typeof fileTier>, ScoreTier>
+
+const lastScored = new WeakMap<ModelFactsFile, ReadonlyMap<string, number>>()
+
+function lastScoredOf(data: ModelFactsFile): ReadonlyMap<string, number> {
+  const held = lastScored.get(data)
+  if (held !== undefined) {
+    return held
+  }
+  const last = new Map<string, number>()
+  for (const row of Object.values(data.models)) {
+    for (const [task, cell] of Object.entries(row.tasks ?? {})) {
+      if (cell.score !== null) {
+        last.set(task, Math.max(last.get(task) ?? 0, cell.rank))
+      }
+    }
+  }
+  lastScored.set(data, last)
+  return last
+}
+
+function sourceOf(row: TaskCell["sources"][number]): ScoreSource {
+  return {
+    board: row.board,
+    url: row.url,
+    readOn: row.readOn,
+    display: row.display ? "allowed" : "refused",
+  }
+}
+
+function tiersOf(cell: TaskCell, rank: number | null): ScoreTier[] {
+  const named = cell.tiers
+    .filter((tier) => tier !== "best quality")
+    .map((tier) => tierNames[tier])
+  return rank === 1 ? ["bestQuality", ...named] : named
+}
+
+function taskScoreOf(cell: TaskCell, lastScoredRank: number): TaskScore {
+  const rank = cell.rank <= lastScoredRank ? cell.rank : null
+  return {
+    score: cell.score,
+    rank,
+    order: cell.rank,
+    of: cell.of,
+    sources: cell.sources.map(sourceOf),
+    tiers: tiersOf(cell, rank),
+  }
+}
+
+export function scoresOf(
+  id: string,
+  data: ModelFactsFile = modelFactsData
+): Record<string, TaskScore> {
+  const tasks = rowOf(id, data)?.tasks ?? {}
+  const last = lastScoredOf(data)
+  return Object.fromEntries(
+    Object.entries(tasks).map(([task, cell]) => [
+      task,
+      taskScoreOf(cell, last.get(task) ?? 0),
+    ])
+  )
 }
 
 export function factsOf(
   id: string,
-  task: string | null,
   data: ModelFactsFile = modelFactsData
 ): ModelFacts {
-  const row = Object.hasOwn(data.models, id) ? data.models[id] : undefined
+  const row = rowOf(id, data)
   const weights = row?.weights ?? null
   return {
     lab: labOfModel(id, data),
     release: row?.release ?? null,
-    rank: task === null ? null : boardRankOf(id, task, data),
-    priceThird: task === null ? null : (row?.thirds[task] ?? null),
     weights: weights?.startsWith(weightsHost) === true ? weights : null,
     lineKey: lineKeyOf(id, data),
+    scores: scoresOf(id, data),
   }
 }
 

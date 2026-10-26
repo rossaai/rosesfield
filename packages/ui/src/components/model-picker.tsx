@@ -1,3 +1,5 @@
+import { IconButton } from "@rosesfield/ui/components/button"
+import { HuggingFaceMark } from "@rosesfield/ui/components/hugging-face-mark"
 import {
   type ModelBadge,
   type ModelPickerRow,
@@ -16,22 +18,29 @@ import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import { SkeletonGroup } from "@rosesfield/ui/components/skeleton"
 import { cn } from "@rosesfield/ui/lib/cn"
 import {
-  featuredId,
-  filteredSections,
-  filterSections,
-  hasFilter,
-  labSectionsOf,
-  type ModelPickerFilter,
+  hasOpenWeights,
+  hasOrder,
+  isMatch,
   type ModelPickerFilters,
+  type ModelPickerOrder,
   type ModelPickerSection,
+  type ModelPickerWeights,
+  modelPickerOrders,
+  needleOf,
+  orderedRows,
+  rowsOf,
+  searchedRowsOf,
 } from "@rosesfield/ui/lib/model-sections"
 import { motion } from "@rosesfield/ui/motion"
-import { SearchIcon, SparkleIcon } from "lucide-react"
+import { SearchIcon } from "lucide-react"
 import {
+  memo,
   type ReactElement,
   type ReactNode,
   type RefObject,
   type UIEvent,
+  useCallback,
+  useMemo,
   useRef,
   useState,
 } from "react"
@@ -49,6 +58,7 @@ type ModelPickerProps = {
   isPricing?: boolean
   notice?: ReactNode
   filters?: ModelPickerFilters
+  recent?: readonly string[]
   side?: "top" | "right"
   open?: boolean
   defaultOpen?: boolean
@@ -65,66 +75,43 @@ function LoadingRows(): ReactElement {
   )
 }
 
-function SectionRows(
-  props: ModelPickerProps & {
-    section: ModelPickerSection
-    onChosen: () => void
-  }
-): ReactElement {
-  return (
-    <fieldset
-      aria-label={props.section.label}
-      className="m-0 flex min-w-0 flex-col gap-1 border-0 p-0"
-    >
-      <p
-        data-slot="model-section-heading"
-        className="flex h-button-small items-center gap-s1_5 px-s4 font-medium text-label text-ink-muted [&_svg]:glyph-small"
-      >
-        {props.section.id === featuredId ? (
-          <SparkleIcon aria-hidden="true" />
-        ) : null}
-        {props.section.label}
-      </p>
-      {props.section.rows.map((row) => (
-        <ModelRow
-          key={`${props.section.id}:${row.id}`}
-          row={row}
-          isChosen={row.id === props.chosen}
-          isPricing={props.isPricing === true}
-          onChoose={(id) => {
-            props.onChoose(id)
-            props.onChosen()
-          }}
-        />
-      ))}
-    </fieldset>
-  )
-}
+const noRecent: readonly string[] = []
 
-function ModelList(
-  props: ModelPickerProps & {
-    query: string
-    filter: ModelPickerFilter
-    onChosen: () => void
-  }
-): ReactNode {
-  if (props.isLoading === true) {
-    return <LoadingRows />
-  }
-  const sections = filterSections(
-    filteredSections(props.sections, props.filter, props.filters),
-    props.query
-  )
-  if (sections.length === 0) {
-    const isRefused = props.notice !== undefined && props.notice !== null
-    return isRefused && props.query === "" ? null : (
+function ModelList(props: {
+  rows: readonly ModelPickerRow[]
+  title: string
+  emptyLabel: string
+  needle: string
+  chosen: string | null
+  isPricing: boolean
+  isRefused: boolean
+  onChoose: (id: string) => void
+}): ReactNode {
+  const searched = useMemo(() => searchedRowsOf(props.rows), [props.rows])
+  const shown = searched.map(({ row, text }) => ({
+    row,
+    isShown: isMatch(text, props.needle),
+  }))
+  if (!shown.some((one) => one.isShown)) {
+    return props.isRefused && props.needle === "" ? null : (
       <p className="px-3 py-2 text-body text-ink-muted">{props.emptyLabel}</p>
     )
   }
   return (
-    <div role="listbox" aria-label={props.title} className="flex flex-col pb-1">
-      {sections.map((section) => (
-        <SectionRows key={section.id} {...props} section={section} />
+    <div
+      role="listbox"
+      aria-label={props.title}
+      className="flex flex-col gap-1 pb-1"
+    >
+      {shown.map(({ row, isShown }) => (
+        <div key={row.id} role="none" hidden={!isShown}>
+          <ModelRow
+            row={row}
+            isChosen={row.id === props.chosen}
+            isPricing={props.isPricing}
+            onChoose={props.onChoose}
+          />
+        </div>
       ))}
     </div>
   )
@@ -245,9 +232,131 @@ function placementOf(trigger: HTMLElement | null): Placement | null {
   }
 }
 
-function ModelPicker(props: ModelPickerProps): ReactElement {
+function OrderStripView(props: {
+  rows: readonly ModelPickerRow[]
+  filters: ModelPickerFilters | undefined
+  recent: readonly string[]
+  isPricing: boolean
+  order: ModelPickerOrder
+  weights: ModelPickerWeights
+  onOrder: (order: ModelPickerOrder) => void
+  onWeights: (weights: ModelPickerWeights) => void
+}): ReactNode {
+  const { filters } = props
+  if (filters === undefined) {
+    return null
+  }
+  const items = modelPickerOrders
+    .filter((order) =>
+      hasOrder(props.rows, order, props.recent, props.isPricing)
+    )
+    .map((order) => ({ value: order, label: filters[order] }))
+  const hasWeights = hasOpenWeights(props.rows)
+  if (items.length < 2 && !hasWeights) {
+    return null
+  }
+  const isOpenOnly = props.weights === "open"
+  return (
+    <div
+      data-slot="model-filters"
+      data-density="row"
+      className="flex items-center gap-s2 px-s3 pt-s2"
+    >
+      {items.length < 2 ? null : (
+        <SegmentedControl
+          items={items}
+          value={props.order}
+          onValueChange={props.onOrder}
+          label={filters.order}
+          density="row"
+          className="min-w-0 flex-1"
+        />
+      )}
+      {hasWeights ? (
+        <IconButton
+          size="small"
+          tone="quiet"
+          label={filters.open}
+          data-slot="model-filter-open"
+          aria-pressed={isOpenOnly}
+          onClick={() => props.onWeights(isOpenOnly ? "all" : "open")}
+          className="ms-auto shrink-0"
+        >
+          <HuggingFaceMark />
+        </IconButton>
+      ) : null}
+    </div>
+  )
+}
+
+const OrderStrip = memo(OrderStripView)
+
+function PickerBody(
+  props: ModelPickerProps & {
+    search: RefObject<HTMLInputElement | null>
+    onChosen: () => void
+  }
+): ReactElement {
   const [query, setQuery] = useState("")
-  const [filter, setFilter] = useState<ModelPickerFilter>("featured")
+  const [order, setOrder] = useState<ModelPickerOrder>("top")
+  const [weights, setWeights] = useState<ModelPickerWeights>("all")
+  const recent = props.recent ?? noRecent
+  const rows = useMemo(() => rowsOf(props.sections), [props.sections])
+  const isPricing = props.isPricing === true
+  const isOrdered = hasOrder(rows, order, recent, isPricing)
+  const shownRows = useMemo(() => {
+    const ordered = orderedRows(rows, isOrdered ? order : "top", recent)
+    return weights === "open"
+      ? ordered.filter((row) => row.isOpen === true)
+      : ordered
+  }, [rows, order, isOrdered, recent, weights])
+  const latest = useRef(props)
+  latest.current = props
+  const choose = useCallback((id: string) => {
+    latest.current.onChoose(id)
+    latest.current.onChosen()
+  }, [])
+  return (
+    <>
+      <SearchRow
+        search={props.search}
+        label={props.searchLabel}
+        placeholder={props.searchPlaceholder}
+        query={query}
+        onQuery={setQuery}
+      />
+      <OrderStrip
+        rows={rows}
+        filters={props.filters}
+        recent={recent}
+        isPricing={isPricing}
+        order={isOrdered ? order : "top"}
+        weights={weights}
+        onOrder={setOrder}
+        onWeights={setWeights}
+      />
+      {props.notice}
+      <ScrollRegion>
+        {props.isLoading === true ? (
+          <LoadingRows />
+        ) : (
+          <ModelList
+            rows={shownRows}
+            title={props.title}
+            emptyLabel={props.emptyLabel}
+            needle={needleOf(query)}
+            chosen={props.chosen}
+            isPricing={isPricing}
+            isRefused={props.notice !== undefined && props.notice !== null}
+            onChoose={choose}
+          />
+        )}
+      </ScrollRegion>
+    </>
+  )
+}
+
+function ModelPicker(props: ModelPickerProps): ReactElement {
   const search = useRef<HTMLInputElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
   const [placement, setPlacement] = useState<Placement | null>(null)
@@ -260,9 +369,6 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
     }
     setOpenHere(open)
     props.onOpenChange?.(open)
-    if (!open) {
-      setQuery("")
-    }
   }
   const isAbove = side === "top" && placement !== null
   return (
@@ -284,67 +390,24 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
         className="max-h-[min(var(--available-height),calc(var(--spacing)*160.5))] w-100.5 max-w-[calc(100vw-2*var(--spacing-s4))] gap-0 overflow-hidden p-px"
       >
         <PopoverTitle className="sr-only">{props.title}</PopoverTitle>
-        <SearchRow
+        <PickerBody
+          {...props}
           search={search}
-          label={props.searchLabel}
-          placeholder={props.searchPlaceholder}
-          query={query}
-          onQuery={setQuery}
+          onChosen={() => setOpen(false)}
         />
-        <FilterStrip
-          sections={props.sections}
-          filters={props.filters}
-          filter={filter}
-          onFilter={setFilter}
-        />
-        {props.notice}
-        <ScrollRegion>
-          <ModelList
-            {...props}
-            query={query}
-            filter={filter}
-            onChosen={() => setOpen(false)}
-          />
-        </ScrollRegion>
       </PopoverContent>
     </Popover>
   )
 }
 
-function FilterStrip(props: {
-  sections: readonly ModelPickerSection[]
-  filters: ModelPickerFilters | undefined
-  filter: ModelPickerFilter
-  onFilter: (filter: ModelPickerFilter) => void
-}): ReactNode {
-  const { filters } = props
-  if (filters === undefined) {
-    return null
-  }
-  const items = (["featured", "top", "newest", "open"] as const)
-    .filter((filter) => hasFilter(props.sections, filter))
-    .map((filter) => ({ value: filter, label: filters[filter] }))
-  return items.length < 2 ? null : (
-    <div data-slot="model-filters" className="px-s3 pt-s2">
-      <SegmentedControl
-        items={items}
-        value={props.filter}
-        onValueChange={props.onFilter}
-        label={filters.featured}
-        density="row"
-      />
-    </div>
-  )
-}
-
 export type {
   ModelBadge,
-  ModelPickerFilter,
   ModelPickerFilters,
+  ModelPickerOrder,
   ModelPickerProps,
   ModelPickerRow,
   ModelPickerSection,
   ModelPickerTag,
   ModelPrice,
 }
-export { filterSections, labSectionsOf, ModelPicker }
+export { ModelPicker }

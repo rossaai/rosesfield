@@ -122,23 +122,28 @@ test.describe("Ads on a wide screen", () => {
 test.describe("the Ads model menu", () => {
   test.skip(({ isMobile }) => isMobile, "the bar shows its chips from 768 px")
 
-  test("opens on Qwen Image Edit 2511 as rank 1 of the featured row, the next row rank 2, each row with the photos it takes, and Generate never reads 0", async ({
+  test("opens on Qwen Image Edit 2511, lists every model by Top with its rank and the photos it takes, and Generate never reads 0", async ({
     page,
   }) => {
     await openAds(page)
     const trigger = dock(page).getByRole("button", { name: /^Model/ })
     await expect(trigger).toContainText("Qwen Image Edit 2511")
     await trigger.click()
-    const featured = page.getByRole("group", { name: "Featured" })
-    const rows = featured.locator("[data-slot='model-row']")
-    const rankOf = (row: Locator): Locator =>
-      row.locator("[data-slot='model-row-capability']").first()
-    await expect(rows.first()).toContainText("Qwen Image Edit 2511")
-    await expect(rankOf(rows.first())).toHaveText("1")
-    await expect(rankOf(rows.nth(1))).toHaveText("2")
-    expect(await rows.count()).toBeLessThanOrEqual(3)
-    await expect(rows.first()).toContainText("Up to 3 images")
+    await expect(page.getByRole("group", { name: "Featured" })).toHaveCount(0)
     const listed = page.getByRole("listbox").locator("[data-slot='model-row']")
+    await expect(listed.first()).toBeVisible()
+    await expect(
+      listed.first().locator("[data-slot='badge'][data-kind='rank']")
+    ).toHaveText("#1")
+    const ranks = await listed
+      .locator("[data-slot='badge'][data-kind='rank']")
+      .allTextContents()
+    const numbers = ranks.map((rank) => Number(rank.slice(1)))
+    expect(numbers).toEqual([...numbers].sort((a, b) => a - b))
+    const qwen = listed.filter({ hasText: "Qwen Image Edit 2511" }).first()
+    await expect(
+      qwen.locator("[data-slot='badge'][data-kind='rank']")
+    ).toHaveText("#23")
     expect(await listed.count()).toBeGreaterThan(2)
     for (const row of await listed.all()) {
       await expect(row).toContainText(/Up to \d+ images?/)

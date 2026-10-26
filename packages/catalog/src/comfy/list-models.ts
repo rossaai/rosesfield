@@ -78,7 +78,7 @@ function appTaskOf(
 }
 
 function hostedEntry(model: HostedModel, task: string): CatalogModel {
-  const facts = factsOf(model.id, task)
+  const facts = factsOf(model.id)
   const tags: ModelTag[] = hostedTagsOf(model)
   if (facts.weights !== null) {
     tags.push({ kind: "open-weights" })
@@ -181,7 +181,7 @@ function graphEntry(
   graph: { task: string | null; isOpen: boolean }
 ): CatalogModel {
   const { task } = graph
-  const facts = factsOf(`graph/${value}`, task)
+  const facts = factsOf(`graph/${value}`)
   const tags: ModelTag[] = graph.isOpen ? [{ kind: "open-weights" }] : []
   return {
     id: value,
