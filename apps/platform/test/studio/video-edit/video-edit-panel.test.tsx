@@ -1,4 +1,5 @@
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
+import { appListing } from "@rosesfield/contract"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
@@ -22,6 +23,7 @@ import {
   VideoEditPanel,
 } from "@/studio/video-edit/video-edit-panel"
 import { clipFieldOf, modelsOfTab } from "@/studio/video-edit/video-edit-tabs"
+import { app as videoEdit } from "../../../../../packages/catalog/src/video-edit/app"
 import {
   catalog,
   dreamina,
@@ -227,5 +229,34 @@ describe("the model row of a tab", () => {
     expect(
       screen.getByText(tCatalog("videoEdit.input.color.label"))
     ).toBeTruthy()
+  })
+})
+
+describe("the Extend tab on its graph", () => {
+  it("shows the clip, the words, the model once, then the settings as rows, with the seed closed under Advanced", () => {
+    const state = stateOf("extend", graphs.extend, { mode: "extend" })
+    show(
+      <VideoEditPanel state={{ ...state, app: appListing.parse(videoEdit) }} />
+    )
+    const well = document.querySelector("[data-slot='clip-well']")
+    const words = screen.getByRole("textbox")
+    const [model, ...more] = screen.getAllByRole("button", {
+      name: new RegExp(`^${t("model.picker.title")} `),
+    })
+    const length = screen.getByRole("group", {
+      name: tCatalog("videoEdit.input.seconds.label"),
+    })
+    const advanced = screen.getByRole("button", { name: t("field.advanced") })
+    if (well === null || model === undefined) {
+      throw new Error("the panel has no clip well or no model chip")
+    }
+    expect(more).toHaveLength(0)
+    expect(isBefore(well, words)).toBe(true)
+    expect(isBefore(words, model)).toBe(true)
+    expect(isBefore(model, length)).toBe(true)
+    expect(isBefore(length, advanced)).toBe(true)
+    expect(
+      screen.queryByText(tCatalog("videoEdit.input.seed.label"))
+    ).toBeNull()
   })
 })

@@ -1,28 +1,40 @@
 import type { InputDefinition } from "@rosesfield/contract"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
-import { type ReactElement, useEffect, useRef, useState } from "react"
-import { formatDuration } from "@/copy/format"
+import {
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 import { tCatalog } from "@/copy/t"
 import { DropWell } from "@/pieces/drop-well"
+import { aspectField } from "@/screens/app/app-form"
 import { ChoiceControl } from "@/screens/app/fields/choice-field"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { listOf, textOf } from "@/screens/app/fields/field-props"
 import { inputCaption, inputNote } from "@/screens/app/fields/input-copy"
 import { InputField } from "@/screens/app/fields/input-field"
-import { SeedField } from "@/screens/app/fields/seed-field"
+import {
+  AdvancedSection,
+  AppSettingRow,
+  settingId,
+} from "@/screens/app/fields/setting-rows"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
-import { randomSeed } from "@/screens/app/inputs-panel"
+import {
+  type AppSetting,
+  appSettingsPlan,
+  isSettingInput,
+} from "@/screens/app/settings-plan"
 import { clipLimitsText } from "@/studio/video-edit/clip-limit"
 import type { VideoEditState } from "@/studio/video-edit/use-video-edit-screen"
 import {
-  advancedInputsOf,
   aspectInput,
-  hasSeed,
+  bodyAppFor,
   isVideoEditMode,
   modeInput,
-  seedInput,
   shownInputsOf,
   sourceInput,
 } from "@/studio/video-edit/video-edit-modes"
@@ -73,7 +85,7 @@ function ClipWell({ state }: { state: VideoEditState }): ReactElement | null {
   }
   const problem = form.problems.get(name) ?? state.clipProblem
   return (
-    <div data-slot="clip-well" className="flex flex-col gap-s1_5">
+    <div data-slot="clip-well">
       <FieldFrame
         caption={inputCaption(source)}
         isOptional={false}
@@ -96,11 +108,6 @@ function ClipWell({ state }: { state: VideoEditState }): ReactElement | null {
             .join(" ")}
         />
       </FieldFrame>
-      {state.clip === null || problem !== undefined ? null : (
-        <p className="text-caption text-ink-muted">
-          {formatDuration(state.clip.seconds)}
-        </p>
-      )}
     </div>
   )
 }
@@ -120,7 +127,7 @@ function FormatField({
     <FieldFrame
       caption={inputCaption(input)}
       isOptional={false}
-      note={inputNote(state.app, input)}
+      note={null}
       problem={undefined}
       message={
         state.isSameFormat ? tCatalog("video-edit.input.aspect.same") : null
@@ -137,7 +144,7 @@ function FormatField({
   )
 }
 
-function EditField({
+function InputRow({
   state,
   input,
 }: {
@@ -145,9 +152,6 @@ function EditField({
   input: InputDefinition
 }): ReactElement {
   const { form } = state
-  if (input.name === aspectInput && input.type === "choice") {
-    return <FormatField state={state} input={input} />
-  }
   return (
     <InputField
       app={state.app}
@@ -160,55 +164,78 @@ function EditField({
   )
 }
 
-function AdvancedSection({
+function SettingRows({
   state,
+  settings,
 }: {
   state: VideoEditState
-}): ReactElement | null {
-  const inputs = advancedInputsOf(state.app, state.mode)
-  if (inputs.length === 0 && !hasSeed(state.mode)) {
-    return null
-  }
-  const { form } = state
-  const seed = form.values.inputs[seedInput]
+  settings: readonly AppSetting[]
+}): ReactNode {
+  return settings.map((setting) =>
+    setting.kind === "input" &&
+    setting.input.name === aspectInput &&
+    setting.input.type === "choice" ? (
+      <FormatField
+        key={settingId(setting)}
+        state={state}
+        input={setting.input}
+      />
+    ) : (
+      <AppSettingRow
+        key={settingId(setting)}
+        app={state.app}
+        form={state.form}
+        lastSeed={state.lastSeed}
+        setting={setting}
+      />
+    )
+  )
+}
+
+function GraphSettings({ state }: { state: VideoEditState }): ReactNode {
+  const plan = appSettingsPlan(bodyAppFor(state.app, state.mode), [
+    modeInput,
+    aspectField,
+  ])
   return (
     <>
-      {inputs.map((input) => (
-        <EditField key={input.name} state={state} input={input} />
-      ))}
-      {hasSeed(state.mode) ? (
-        <SeedField
-          mode={form.values.seedMode}
-          value={seed}
-          onMode={(mode) => {
-            form.setForm({ seedMode: mode })
-            if (mode === "fixed" && typeof seed !== "number") {
-              form.setInput(seedInput, state.lastSeed ?? randomSeed())
-            }
-          }}
-          onChange={(next) => form.setInput(seedInput, next)}
-        />
-      ) : null}
+      <SettingRows state={state} settings={plan.main} />
+      {plan.advanced.length === 0 ? null : (
+        <AdvancedSection>
+          <SettingRows state={state} settings={plan.advanced} />
+        </AdvancedSection>
+      )}
     </>
   )
 }
 
-function TabInputs({ state }: { state: VideoEditState }): ReactElement {
+function TabInputs({
+  state,
+  model,
+}: {
+  state: VideoEditState
+  model: ReactNode
+}): ReactElement {
   const fields = state.hosted.fields
   if (fields !== null) {
     return (
       <HostedFields
         fields={fields.filter((field) => field.name !== state.clipField.name)}
         form={state.form}
+        app={state.app}
+        model={model}
       />
     )
   }
   return (
     <>
-      {shownInputsOf(state.app, state.mode).map((input) => (
-        <EditField key={input.name} state={state} input={input} />
-      ))}
-      <AdvancedSection state={state} />
+      {shownInputsOf(state.app, state.mode)
+        .filter((input) => !isSettingInput(input))
+        .map((input) => (
+          <InputRow key={input.name} state={state} input={input} />
+        ))}
+      {model}
+      <GraphSettings state={state} />
     </>
   )
 }
@@ -223,12 +250,6 @@ export function tabHostedOf(
   }
 }
 
-function ModelRow({ state }: { state: VideoEditState }): ReactElement | null {
-  return state.hosted.isTaskApp ? (
-    <CatalogPicker hosted={tabHostedOf(state)} place="row" />
-  ) : null
-}
-
 export function VideoEditPanel({
   state,
 }: {
@@ -237,8 +258,14 @@ export function VideoEditPanel({
   return (
     <div className="flex flex-col gap-s4">
       <ClipWell state={state} />
-      <TabInputs state={state} />
-      <ModelRow state={state} />
+      <TabInputs
+        state={state}
+        model={
+          state.hosted.isTaskApp ? (
+            <CatalogPicker hosted={tabHostedOf(state)} place="row" />
+          ) : null
+        }
+      />
     </div>
   )
 }

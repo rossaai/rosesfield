@@ -6,11 +6,18 @@ import {
   startRunBodyFor,
 } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
-import { bodyOf, defaultsOf, type FormValues } from "@/screens/app/app-form"
 import {
-  advancedInputsOf,
+  aspectField,
+  bodyOf,
+  defaultsOf,
+  type FormValues,
+} from "@/screens/app/app-form"
+import { settingId } from "@/screens/app/fields/setting-rows"
+import { appSettingsPlan, isSettingInput } from "@/screens/app/settings-plan"
+import {
   bodyAppFor,
   hasSeed,
+  modeInput,
   modeOf,
   shownInputsOf,
   type VideoEditMode,
@@ -66,29 +73,31 @@ function names(inputs: readonly { name: string }[]): string[] {
 }
 
 describe("the Video edit screen follows the contract's operation rules", () => {
-  it("shows each operation's inputs below the clip well, with resolution and the seed under Advanced in Extend and Reframe", () => {
-    expect(names(shownInputsOf(listing, "extend"))).toEqual([
-      "seconds",
-      "next",
-      "keepSound",
-    ])
-    expect(names(shownInputsOf(listing, "reframe"))).toEqual([
-      "aspect",
-      "around",
-      "keepSound",
-    ])
-    expect(names(shownInputsOf(listing, "background"))).toEqual([
-      "color",
-      "keepSound",
-    ])
-    expect(names(shownInputsOf(listing, "frame-rate"))).toEqual([
-      "factor",
-      "keepSound",
-    ])
-    expect(names(advancedInputsOf(listing, "extend"))).toEqual(["resolution"])
-    expect(names(advancedInputsOf(listing, "reframe"))).toEqual(["resolution"])
-    expect(advancedInputsOf(listing, "background")).toEqual([])
-    expect(advancedInputsOf(listing, "frame-rate")).toEqual([])
+  it("shows each operation's words below the clip well, then its settings in the plan's order, with the seed under Advanced in Extend and Reframe", () => {
+    const inputsOf = (mode: VideoEditMode): string[] =>
+      names(shownInputsOf(listing, mode).filter((one) => !isSettingInput(one)))
+    const planOf = (mode: VideoEditMode) => {
+      const plan = appSettingsPlan(bodyAppFor(listing, mode), [
+        modeInput,
+        aspectField,
+      ])
+      return {
+        main: plan.main.map(settingId),
+        advanced: plan.advanced.map(settingId),
+      }
+    }
+    expect(inputsOf("extend")).toEqual(["next"])
+    expect(inputsOf("reframe")).toEqual(["around"])
+    expect(inputsOf("background")).toEqual([])
+    expect(planOf("extend")).toEqual({
+      main: ["input:resolution", "input:seconds", "input:keepSound"],
+      advanced: ["input:seed"],
+    })
+    expect(planOf("reframe")).toEqual({
+      main: ["input:aspect", "input:resolution", "input:keepSound"],
+      advanced: ["input:seed"],
+    })
+    expect(planOf("background").advanced).toEqual([])
     expect(modes.filter(hasSeed)).toEqual(["extend", "reframe"])
   })
 
