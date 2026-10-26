@@ -179,7 +179,7 @@ describe("ModelPicker's rank", () => {
     )
   })
 
-  it("is gold for #1, silver for #2, bronze for #3 and quiet after, from the existing tokens", () => {
+  it("is gold for #1, silver for #2, bronze for #3 and quiet after, from the existing tokens, each of the first four drawn apart", () => {
     const tones = [1, 2, 3, 4, 12].map((place) => {
       const { container } = render(
         <ModelRow
@@ -197,17 +197,28 @@ describe("ModelPicker's rank", () => {
       return {
         tone: rank?.getAttribute("data-tone"),
         face: face.filter(
-          (name) => /^(bg|text)-/.test(name) && name !== "text-legal"
+          (name) =>
+            /^(bg|text|ring)-/.test(name) &&
+            name !== "text-legal" &&
+            name !== "ring-inset"
         ),
       }
     })
     expect(tones).toEqual([
-      { tone: "gold", face: ["bg-cem-tint", "text-cem-text"] },
-      { tone: "silver", face: ["bg-(--tint)", "text-ink"] },
-      { tone: "bronze", face: ["bg-(--tint)", "text-cem-text"] },
+      {
+        tone: "gold",
+        face: ["bg-cem-tint", "text-cem-text", "ring-1", "ring-cem"],
+      },
+      {
+        tone: "silver",
+        face: ["bg-(--tint)", "text-ink", "ring-1", "ring-ink-muted"],
+      },
+      { tone: "bronze", face: ["bg-cem-tint", "text-cem-text"] },
       { tone: "quiet", face: ["bg-(--tint)", "text-ink-muted"] },
       { tone: "quiet", face: ["bg-(--tint)", "text-ink-muted"] },
     ])
+    const firstFour = tones.slice(0, 4).map((one) => one.face.join(" "))
+    expect(new Set(firstFour).size).toBe(4)
     expect([1, 2, 3, 4].map(rankToneOf)).toEqual([
       "gold",
       "silver",

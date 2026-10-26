@@ -50,9 +50,9 @@ type ModelPickerRow = {
 type RankTone = "gold" | "silver" | "bronze" | "quiet"
 
 const rankTones = {
-  gold: "bg-cem-tint text-cem-text",
-  silver: "bg-(--tint) text-ink",
-  bronze: "bg-(--tint) text-cem-text",
+  gold: "bg-cem-tint text-cem-text ring-1 ring-cem ring-inset",
+  silver: "bg-(--tint) text-ink ring-1 ring-ink-muted ring-inset",
+  bronze: "bg-cem-tint text-cem-text",
   quiet: "bg-(--tint) text-ink-muted",
 } satisfies Record<RankTone, string>
 
