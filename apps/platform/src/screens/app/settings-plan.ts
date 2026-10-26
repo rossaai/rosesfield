@@ -9,8 +9,18 @@ import { settingOf } from "@/catalog/setting-registry"
 import { formatDuration } from "@/copy/format"
 import { modelInputName } from "@/pieces/run/run-facts"
 import { aspectField, countField } from "@/screens/app/app-form"
+import {
+  fieldPlaceOf,
+  inputPlaceOf,
+  type SettingPlace,
+  switchWordsOf,
+} from "@/screens/app/setting-table"
 
-export type SettingKey = { name: string; role: FieldRole | null }
+export type SettingKey = {
+  name: string
+  role: FieldRole | null
+  place: SettingPlace
+}
 
 export type SettingsPlan<T> = { main: T[]; advanced: T[] }
 
@@ -31,17 +41,17 @@ export function settingsPlanOf<T>(
   const ranked = settings
     .map((item, index) => {
       const key = keyOf(item)
-      return { item, index, setting: settingOf(key.name, key.role) }
+      return {
+        item,
+        index,
+        place: key.place,
+        setting: settingOf(key.name, key.role),
+      }
     })
     .sort((a, b) => a.setting.rank - b.setting.rank || a.index - b.index)
-  return {
-    main: ranked
-      .filter((one) => one.setting.group !== "advanced")
-      .map((one) => one.item),
-    advanced: ranked
-      .filter((one) => one.setting.group === "advanced")
-      .map((one) => one.item),
-  }
+  const placed = (place: SettingPlace): T[] =>
+    ranked.filter((one) => one.place === place).map((one) => one.item)
+  return { main: placed("show"), advanced: placed("advanced") }
 }
 
 export function isSettingInput(input: InputDefinition): input is SettingInput {
@@ -87,9 +97,9 @@ export function appSettingKeyOf(
   return (setting) => {
     switch (setting.kind) {
       case "aspect":
-        return { name: "aspect", role: "aspect" }
+        return { name: "aspect", role: "aspect", place: "show" }
       case "count":
-        return { name: "count", role: "count" }
+        return { name: "count", role: "count", place: "show" }
       case "input":
         return {
           name: setting.input.name,
@@ -97,6 +107,7 @@ export function appSettingKeyOf(
             setting.input.type === "seed"
               ? "seed"
               : inputRoleOf(setting.input.name, app.output.kind),
+          place: inputPlaceOf(setting.input.name, setting.input.type),
         }
     }
   }
@@ -122,16 +133,11 @@ export function fieldSettingsPlan(
   return settingsPlanOf(fields.filter(isSettingField), (field) => ({
     name: field.name,
     role: fieldRoleOf(field, ""),
+    place: fieldPlaceOf(field).kind,
   }))
 }
 
-export type SettingControl =
-  | "switch"
-  | "segmented"
-  | "select"
-  | "stepper"
-  | "seed"
-  | "text"
+export type SettingControl = "switch" | "select" | "stepper" | "seed" | "text"
 
 export type ChoiceOption = { value: string; label: string }
 
@@ -142,37 +148,10 @@ export type ControlShape =
   | { kind: "text" }
   | { kind: "choice"; options: readonly ChoiceOption[] }
 
-export const segmentLimit = 4
-
-export const shortLabelLimit = 12
-
-const booleanPairs: readonly (readonly [string, string])[] = [
-  ["true", "false"],
-  ["on", "off"],
-  ["yes", "no"],
-  ["enabled", "disabled"],
-]
-
-function wordsOf(option: ChoiceOption): string[] {
-  return [option.value, option.label].map((word) => word.trim().toLowerCase())
-}
-
 export function booleanPairOf(
   options: readonly ChoiceOption[]
 ): { on: string; off: string } | null {
-  const [first, second] = options
-  if (options.length !== 2 || first === undefined || second === undefined) {
-    return null
-  }
-  for (const [on, off] of booleanPairs) {
-    if (wordsOf(first).includes(on) && wordsOf(second).includes(off)) {
-      return { on: first.value, off: second.value }
-    }
-    if (wordsOf(second).includes(on) && wordsOf(first).includes(off)) {
-      return { on: second.value, off: first.value }
-    }
-  }
-  return null
+  return switchWordsOf(options.map((option) => [option.value, option.label]))
 }
 
 export function controlOf(shape: ControlShape): SettingControl {
@@ -186,13 +165,7 @@ export function controlOf(shape: ControlShape): SettingControl {
     case "text":
       return "text"
     case "choice":
-      if (booleanPairOf(shape.options) !== null) {
-        return "switch"
-      }
-      return shape.options.length <= segmentLimit &&
-        shape.options.every((option) => option.label.length <= shortLabelLimit)
-        ? "segmented"
-        : "select"
+      return booleanPairOf(shape.options) === null ? "select" : "switch"
   }
 }
 

@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t, tCatalog } from "@/copy/t"
+import { fieldCaption } from "@/screens/app/hosted/field-words"
 import {
   forgetKeptKeyframes,
   keepKeyframe,
@@ -228,8 +229,21 @@ describe("the model menu and the price", () => {
       await screen.findByRole("button", { name: pickerTriggerName(fluxImage) })
     ).toBeDefined()
     expect(sceneFields()[0]?.value).toBe("a fox")
-    expect(screen.getByText("21:9")).toBeDefined()
-    expect(screen.queryByText("9:16")).toBeNull()
+    const aspect = fluxImage.form?.find((field) => field.name === "aspectRatio")
+    if (aspect === undefined) {
+      throw new Error("FLUX 3 Image declares no aspect")
+    }
+    fireEvent.click(
+      screen.getByRole("combobox", { name: fieldCaption(aspect) })
+    )
+    const formats = (await screen.findAllByRole("option")).map(
+      (option) => option.textContent
+    )
+    expect(formats).toContain("21:9")
+    expect(formats).not.toContain("9:16")
+    fireEvent.keyDown(document.activeElement ?? document.body, {
+      key: "Escape",
+    })
     expect(
       await screen.findByRole("button", { name: pricedName(14.48) })
     ).toBeDefined()

@@ -73,7 +73,7 @@ function names(inputs: readonly { name: string }[]): string[] {
 }
 
 describe("the Video edit screen follows the contract's operation rules", () => {
-  it("shows each operation's words below the clip well, then its settings in the plan's order, with the seed under Advanced in Extend and Reframe", () => {
+  it("shows each operation's words below the clip well, then its settings in the plan's order, with the seed under Advanced in Extend and Reframe and the clip's sound kept out of sight", () => {
     const inputsOf = (mode: VideoEditMode): string[] =>
       names(shownInputsOf(listing, mode).filter((one) => !isSettingInput(one)))
     const planOf = (mode: VideoEditMode) => {
@@ -90,11 +90,11 @@ describe("the Video edit screen follows the contract's operation rules", () => {
     expect(inputsOf("reframe")).toEqual(["around"])
     expect(inputsOf("background")).toEqual([])
     expect(planOf("extend")).toEqual({
-      main: ["input:resolution", "input:seconds", "input:keepSound"],
+      main: ["input:resolution", "input:seconds"],
       advanced: ["input:seed"],
     })
     expect(planOf("reframe")).toEqual({
-      main: ["input:aspect", "input:resolution", "input:keepSound"],
+      main: ["input:aspect", "input:resolution"],
       advanced: ["input:seed"],
     })
     expect(planOf("background").advanced).toEqual([])

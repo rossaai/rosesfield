@@ -12,6 +12,7 @@ import {
   heldMediaOf,
   hostedBody,
   hostedDefaults,
+  missingDefaultsOf,
   modelInputName,
   placedMedia,
   settingsFor,
@@ -130,6 +131,7 @@ export function useHostedModel(app: AppListing, form: AppForm): HostedState {
     models,
     choose
   )
+  useOpenDefaults(chosen?.form ?? null, form)
   const refusal = query.data?.refusal ?? null
   const pricing = useRowPricing(app, values)
   return {
@@ -148,6 +150,23 @@ export function useHostedModel(app: AppListing, form: AppForm): HostedState {
     choose,
     pricing,
   }
+}
+
+function useOpenDefaults(
+  fields: readonly ModelField[] | null,
+  form: AppForm
+): void {
+  const { values, setInput } = form
+  useEffect(() => {
+    if (fields === null) {
+      return
+    }
+    for (const [name, value] of Object.entries(
+      missingDefaultsOf(fields, values.inputs)
+    )) {
+      setInput(name, value)
+    }
+  }, [fields, values.inputs, setInput])
 }
 
 type Defaults = { model: string | null; own: string | null }

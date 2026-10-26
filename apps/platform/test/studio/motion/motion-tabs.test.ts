@@ -113,7 +113,7 @@ describe("Motion's wells for each model", () => {
       photo: ["photo-1"],
       model: graphId,
       mode: "swap",
-      sound: "off",
+      sound: "on",
     })
   })
 

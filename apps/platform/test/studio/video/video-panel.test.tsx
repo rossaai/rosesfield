@@ -3,7 +3,6 @@ import { appListing } from "@rosesfield/contract"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { formatDuration } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { SoundChip, VideoSettings } from "@/studio/video/video-chips"
@@ -37,7 +36,7 @@ describe("the prompt's chip row", () => {
 })
 
 describe("the column's settings", () => {
-  it("draw a model's length, format and resolution as rows in the plan's order, the length with its unit, and a setting the plan does not know closed under Advanced", () => {
+  it("draw a model's resolution and length as dropdowns in the plan's order, the seed closed under Advanced, and a setting the table does not know nowhere", () => {
     const fields = videoFieldsOf([
       {
         kind: "choice",
@@ -62,6 +61,16 @@ describe("the column's settings", () => {
         required: false,
         default: false,
       },
+      {
+        kind: "number",
+        name: "seed",
+        path: "seed",
+        required: false,
+        min: 0,
+        max: 100,
+        integer: true,
+        default: null,
+      },
     ])
     render(
       <TooltipProvider>
@@ -74,10 +83,14 @@ describe("the column's settings", () => {
         />
       </TooltipProvider>
     )
-    const groups = screen.getAllByRole("radiogroup")
-    expect(groups.map((group) => group.textContent)).toEqual([
-      "720p1080p",
-      `${formatDuration(5)}${formatDuration(10)}`,
+    expect(screen.queryByRole("radiogroup")).toBeNull()
+    expect(
+      screen
+        .getAllByRole("combobox")
+        .map((one) => one.getAttribute("aria-label"))
+    ).toEqual([
+      tCatalog("model.field.resolution"),
+      tCatalog("model.field.duration"),
     ])
     expect(screen.queryByRole("switch")).toBeNull()
     expect(

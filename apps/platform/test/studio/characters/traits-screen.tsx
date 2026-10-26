@@ -275,11 +275,12 @@ export function trigger(model: CatalogModel): string {
   return `${t("model.picker.title")} ${modelNameOf(model)}`
 }
 
-export function aspectsIn(caption: string): string[] {
-  const group = screen.getByRole("radiogroup", { name: caption })
-  return within(group)
-    .getAllByRole("radio")
-    .map((radio) => radio.textContent ?? "")
+export async function aspectsIn(caption: string): Promise<string[]> {
+  fireEvent.click(screen.getByRole("combobox", { name: caption }))
+  const options = await screen.findAllByRole("option")
+  const labels = options.map((option) => option.textContent ?? "")
+  fireEvent.keyDown(options[0] ?? document.body, { key: "Escape" })
+  return labels
 }
 
 export async function pick(model: CatalogModel): Promise<void> {

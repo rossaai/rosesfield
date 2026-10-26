@@ -108,7 +108,6 @@ export function ModelFieldChip({
   const label = fieldCaption(field)
   const icon = settingIconOf(field.name, fieldRoleOf(field, output))
   switch (controlOf(fieldShapeOf(field))) {
-    case "segmented":
     case "select":
     case "switch":
       if (field.kind === "choice") {

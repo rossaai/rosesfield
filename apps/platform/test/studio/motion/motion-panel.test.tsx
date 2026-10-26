@@ -65,18 +65,19 @@ function graphState(): MotionState {
 }
 
 describe("the Motion column", () => {
-  it("shows the clip and the photo, then the model once, then the format and Sound as rows, with the seed closed under Advanced", () => {
+  it("shows the clip and the photo, then the model once, then the format, with the clip's sound sent on out of sight and the seed closed under Advanced", () => {
     showColumn(<MotionPanel state={graphState()} />)
     const photo = screen.getByText(tCatalog("motion.input.photo.label"))
     const model = theModelChip()
     const format = screen.getByText(t("field.aspect.label"))
-    const sound = screen.getByRole("switch", {
-      name: tCatalog("motion.input.sound.label"),
-    })
+    expect(
+      screen.queryByRole("switch", {
+        name: tCatalog("motion.input.sound.label"),
+      })
+    ).toBeNull()
     expect(isBefore(photo, model)).toBe(true)
     expect(isBefore(model, format)).toBe(true)
-    expect(isBefore(format, sound)).toBe(true)
-    expect(isBefore(sound, advancedToggle())).toBe(true)
+    expect(isBefore(format, advancedToggle())).toBe(true)
     expect(screen.queryByText(tCatalog("motion.input.seed.label"))).toBeNull()
   })
 })

@@ -6,6 +6,8 @@ import {
   hostedBody,
   hostedDefaults,
   hostedProblems,
+  missingDefaultsOf,
+  shownFormOf,
 } from "@/screens/app/hosted/hosted-form"
 
 const fields: ModelField[] = [
@@ -68,7 +70,7 @@ describe("a hosted model's form", () => {
     })
   })
 
-  it("starts a choice with no default on its auto option, so its chip shows a value", () => {
+  it("starts a shown choice with no default on its auto option, else its first option, so its chip shows a value", () => {
     const quality: ModelField = {
       kind: "choice",
       name: "quality",
@@ -77,9 +79,21 @@ describe("a hosted model's form", () => {
       options: ["auto", "low", "high"],
       default: null,
     }
-    const style: ModelField = { ...quality, name: "style", options: ["a", "b"] }
-    expect(hostedDefaults([quality, style], {})).toEqual({
+    const resolution: ModelField = {
+      ...quality,
+      name: "resolution",
+      path: "resolution",
+      options: ["720p", "1080p"],
+    }
+    const style: ModelField = {
+      ...quality,
+      name: "style",
+      path: "style",
+      options: ["a", "b"],
+    }
+    expect(hostedDefaults([quality, resolution, style], {})).toEqual({
       quality: "auto",
+      resolution: "720p",
       style: undefined,
     })
   })
@@ -120,20 +134,17 @@ describe("a hosted model's form", () => {
   })
 
   it("names a choice you have not set as missing, in words for a choice", () => {
-    const mode: ModelField = {
+    const season: ModelField = {
       kind: "choice",
-      name: "promptExpansionMode",
-      path: "prompt_expansion_mode",
+      name: "season",
+      path: "season",
       required: true,
-      options: ["balanced", "quality"],
+      options: ["spring", "winter"],
       default: null,
     }
-    const problems = hostedProblems(
-      [mode],
-      valuesWith({ promptExpansionMode: undefined })
-    )
+    const problems = hostedProblems([season], valuesWith({ season: undefined }))
     expect(problems.map((problem) => [problem.name, problem.key])).toEqual([
-      ["promptExpansionMode", "field.choice.required"],
+      ["season", "field.choice.required"],
     ])
   })
 
@@ -179,5 +190,158 @@ describe("a hosted model's form", () => {
     expect(
       hostedBody("maker/clip-3", [...fields, counted], values, "video").count
     ).toBeUndefined()
+  })
+
+  it("sends sound on, no watermark and the standard tier even when the form holds the opposite", () => {
+    const hidden: ModelField[] = [
+      {
+        kind: "toggle",
+        name: "generateAudio",
+        path: "generate_audio",
+        required: false,
+        default: false,
+      },
+      {
+        kind: "choice",
+        name: "sound",
+        path: "sound",
+        required: false,
+        options: ["on", "off"],
+        default: "off",
+      },
+      {
+        kind: "toggle",
+        name: "watermark",
+        path: "watermark",
+        required: false,
+        default: true,
+      },
+      {
+        kind: "choice",
+        name: "serviceTier",
+        path: "service_tier",
+        required: false,
+        options: ["default", "flex"],
+        default: null,
+      },
+      {
+        kind: "choice",
+        name: "fps",
+        path: "fps",
+        required: false,
+        options: [24, 25],
+        default: 25,
+      },
+    ]
+    const body = hostedBody(
+      "maker/clip-3",
+      hidden,
+      valuesWith({
+        generateAudio: "off",
+        sound: "off",
+        watermark: "on",
+        serviceTier: "flex",
+        fps: 25,
+      }),
+      "video"
+    )
+    expect(body.inputs).toEqual({
+      model: "maker/clip-3",
+      generateAudio: "on",
+      sound: "on",
+      watermark: "off",
+      serviceTier: "default",
+      fps: 25,
+    })
+    expect(
+      hostedProblems(hidden, valuesWith({ serviceTier: undefined }))
+    ).toEqual([])
+  })
+
+  it("turns a multi-image switch on only when the count asks for more than one", () => {
+    const seriesForm: ModelField[] = [
+      {
+        kind: "choice",
+        name: "resultType",
+        path: "result_type",
+        required: false,
+        options: ["single", "series"],
+        default: "single",
+      },
+      {
+        kind: "number",
+        name: "seriesAmount",
+        path: "series_amount",
+        required: false,
+        min: 2,
+        max: 9,
+        integer: true,
+        default: 4,
+      },
+    ]
+    const shown = shownFormOf(seriesForm)
+    expect(shown[1]).toMatchObject({ min: 1, default: 1 })
+    const at = (count: number) =>
+      hostedBody(
+        "maker/image-1",
+        shown,
+        valuesWith({ resultType: "single", seriesAmount: count }),
+        "image"
+      ).inputs
+    expect(at(3)).toEqual({
+      model: "maker/image-1",
+      resultType: "series",
+      seriesAmount: 3,
+    })
+    expect(at(1)).toEqual({ model: "maker/image-1", resultType: "single" })
+    const sequential: ModelField[] = [
+      {
+        kind: "choice",
+        name: "sequentialImageGeneration",
+        path: "sequential_image_generation",
+        required: false,
+        options: ["auto", "disabled"],
+        default: null,
+      },
+      {
+        kind: "number",
+        name: "maxImages",
+        path: "sequential_image_generation_options.max_images",
+        required: false,
+        min: 1,
+        max: 15,
+        integer: true,
+        default: null,
+      },
+    ]
+    expect(
+      hostedBody(
+        "maker/image-2",
+        sequential,
+        valuesWith({ maxImages: 2 }),
+        "image"
+      ).inputs
+    ).toEqual({
+      model: "maker/image-2",
+      sequentialImageGeneration: "auto",
+      maxImages: 2,
+    })
+  })
+
+  it("writes the default of every setting the form does not hold yet, and keeps the ones it holds", () => {
+    const resolution: ModelField = {
+      kind: "choice",
+      name: "resolution",
+      path: "resolution",
+      required: false,
+      options: ["480p", "720p"],
+      default: null,
+    }
+    expect(
+      missingDefaultsOf([...fields, resolution], {
+        prompt: "a door",
+        aspectRatio: "1:1",
+      })
+    ).toEqual({ duration: 5, generateAudio: "on", resolution: "480p" })
   })
 })
