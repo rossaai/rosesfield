@@ -265,7 +265,7 @@ async function propose(
   return {
     output: jsonOutput({
       proposal,
-      note: agentCopy.tools.proposed(id, proposed.app.id),
+      note: noteOf(id, proposed),
       ...(proposed.price === undefined
         ? {}
         : {
@@ -276,6 +276,20 @@ async function propose(
     details: { proposal },
     control: { terminate: true },
   }
+}
+
+function noteOf(id: string, proposed: Proposed): string {
+  const settled = { proposalId: id, appId: proposed.app.id }
+  const credits = proposed.price?.credits
+  if (credits === undefined) {
+    return agentCopy.tools.proposed(id, proposed.app.id)
+  }
+  return credits === null
+    ? agentCopy.tools.proposedUnpriced(settled)
+    : agentCopy.tools.proposedOverLimit(settled, {
+        credits,
+        limit: autoRunLimitCredits,
+      })
 }
 
 export function proposalOf(record: ProposalRecord): Proposal {

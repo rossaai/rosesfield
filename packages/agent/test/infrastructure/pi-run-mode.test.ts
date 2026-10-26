@@ -109,6 +109,9 @@ describe("the run mode an app tool follows", () => {
       credits: autoRunLimitCredits + 1,
       askAboveCredits: autoRunLimitCredits,
     })
+    expect(JSON.parse(told).note).toContain(
+      `${autoRunLimitCredits + 1} credits, more than the ${autoRunLimitCredits} credits`
+    )
   })
 
   it("under auto, proposes a run with no known price", async () => {
@@ -120,6 +123,7 @@ describe("the run mode an app tool follows", () => {
     expect(generation.runs.count).toBe(0)
     expect(hasProposal(events)).toBe(true)
     expect(JSON.parse(told)).toMatchObject({ credits: null })
+    expect(JSON.parse(told).note).toContain("its price is not known")
   })
 
   it("under auto, proposes a run whose pricing fails and never starts it", async () => {
