@@ -121,6 +121,8 @@ Voice runs Chatterbox, by Resemble AI, through the node pack `filliptm/ComfyUI_F
 
 pi, through `pi-durable`. It runs in process on bun and inside a Durable Object on Cloudflare, with no container. It brings no coding tools. Its tools are the catalog: each app becomes one tool that takes the app's published form, and the library gives the rest. A tool that starts a paid run is marked `replay: "unsafe"` and sends the engine an idempotency key, so a resumed turn never pays twice.
 
+You choose the run mode in the agent's composer, and a new conversation opens on Auto. Manual, the wire value `ask`, proposes every run, and you accept or skip it. Auto, the wire value `auto`, prices each run with the same price the Generate button shows before it starts it. It proposes the run instead when the price is not known, when pricing fails, or when the price is above one US dollar of Comfy credits, `autoRunLimitCredits` in `packages/catalog/src/comfy/comfy-credits.ts`. A Storyboard run is priced as the sum of every keyframe it makes. Pricing never starts a run, and a resumed turn reads the price it stored the first time.
+
 Catalog schemas are zod. pi tools take TypeBox. Bridge with `z.toJSONSchema()`.
 
 A value from `@earendil-works/pi-ai` is imported from the file that defines it, such as `@earendil-works/pi-ai/models` for `createModels`. A type may come from the package root. The package root is marked free of side effects, so the Worker bundle drops it, and a value read through the root is then undefined on Workers. `test/worker/worker-public.test.ts` catches it.
