@@ -3,8 +3,10 @@ import { cleanup, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { catalogApps } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
+import { useView } from "@/pieces/view/use-view"
+import { ExploreTop } from "@/screens/explore/explore-head"
 import type { ExploreRow } from "@/screens/explore/explore-rows"
-import { AppsRow, ExploreRowView } from "@/screens/explore/explore-sections"
+import { ExploreRowView, exploreApps } from "@/screens/explore/explore-sections"
 import type { VisualEntry } from "@/screens/explore/explore-tile"
 import { navGroups } from "@/shell/nav-rows"
 import { showcaseOf } from "@/showcase/showcase"
@@ -92,7 +94,16 @@ describe("Explore's row headers", () => {
 
 describe("Explore's apps row", () => {
   it("shows each app that has an example as its card with its name and its line, with View all in its header and a title that is no link", async () => {
-    renderAt("/", () => <AppsRow />)
+    function Top() {
+      return (
+        <ExploreTop
+          view={useView("explore")}
+          apps={exploreApps()}
+          cardWidth={228}
+        />
+      )
+    }
+    renderAt("/", () => <Top />)
     const apps = await screen.findByRole("region", {
       name: t("explore.apps.label"),
     })
@@ -106,12 +117,14 @@ describe("Explore's apps row", () => {
     )
     expect(cards.length).toBeGreaterThan(0)
     expect(
-      within(apps).queryByRole("link", { name: t("explore.apps.label") })
+      screen.queryByRole("link", { name: t("explore.apps.label") })
     ).toBeNull()
     for (const card of cards) {
       expect(card.querySelector("[data-slot='app-card-line']")).not.toBeNull()
     }
-    const actions = apps.querySelector("[data-slot='section-heading-actions']")
+    const actions = document.querySelector(
+      "[data-slot='explore-head'] [data-slot='section-heading-actions']"
+    )
     expect(
       [...(actions?.querySelectorAll("a") ?? [])].map(
         (link) => link.textContent
