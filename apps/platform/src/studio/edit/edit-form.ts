@@ -136,7 +136,7 @@ export function foldSettings(
   folded: readonly string[]
 ): SettingsPlan<AppSetting> {
   const isFolded = (setting: AppSetting): boolean =>
-    setting.kind === "input" && folded.includes(setting.input.name)
+    folded.includes(chipNameOf(setting))
   return {
     main: plan.main.filter((one) => !isFolded(one)),
     advanced: [...plan.main.filter(isFolded), ...plan.advanced],
