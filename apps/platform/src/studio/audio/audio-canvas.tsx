@@ -11,7 +11,11 @@ import {
   RunOutputs,
 } from "@/pieces/run/run-outputs"
 import { CanvasSkeleton, useAppRuns } from "@/screens/app/app-canvas"
-import { useCanvasView } from "@/screens/app/canvas-view"
+import {
+  MatchedRuns,
+  runsAwaitingResults,
+  useCanvasView,
+} from "@/screens/app/canvas-view"
 import { historyGridItems } from "@/screens/history/history-grid-items"
 import { ResultGrid } from "@/screens/library/result-grid"
 import { WaveformPlayer } from "@/studio/audio/waveform-player"
@@ -78,7 +82,19 @@ function ViewedRuns({
 }): ReactElement {
   const view = useCanvasView()
   if (view.layout === "grid") {
-    return <ResultGrid items={historyGridItems(runs)} size={view.gridSize} />
+    const awaiting = runsAwaitingResults(runs)
+    return (
+      <div data-slot="app-grid" className="flex flex-col gap-s2">
+        {awaiting.length === 0 ? null : (
+          <AudioRuns
+            runs={awaiting}
+            columns={view.columns}
+            onUseInputs={onUseInputs}
+          />
+        )}
+        <ResultGrid items={historyGridItems(runs)} size={view.size} />
+      </div>
+    )
   }
   return (
     <AudioRuns runs={runs} columns={view.columns} onUseInputs={onUseInputs} />
@@ -108,5 +124,9 @@ export function AudioCanvas(props: AudioCanvasProps): ReactElement {
       />
     )
   }
-  return <ViewedRuns runs={runs.runs} onUseInputs={props.onUseInputs} />
+  return (
+    <MatchedRuns runs={runs.runs}>
+      {(kept) => <ViewedRuns runs={kept} onUseInputs={props.onUseInputs} />}
+    </MatchedRuns>
+  )
 }

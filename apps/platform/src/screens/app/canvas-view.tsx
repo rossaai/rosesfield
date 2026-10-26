@@ -1,115 +1,101 @@
-import { type ViewLayout, ViewMenu } from "@rosesfield/ui/components/view-menu"
+import type { Run } from "@rosesfield/contract"
+import { Button } from "@rosesfield/ui/components/button"
+import { StateView } from "@rosesfield/ui/components/state-view"
 import {
   createContext,
   type ReactElement,
   type ReactNode,
   useContext,
   useMemo,
-  useState,
 } from "react"
+import { isWorking } from "@/api/queries"
 import { t } from "@/copy/t"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
+import { runHoldsWords } from "@/pieces/view/match-words"
+import { runCardColumnsOf, tileSizes } from "@/pieces/view/tile-scale"
+import { type PlaceView, viewStart } from "@/pieces/view/use-view"
 
-export type CanvasView = {
-  layout: ViewLayout
+export type CanvasView = Pick<
+  PlaceView,
+  "layout" | "size" | "words" | "setWords"
+> & {
   columns: number
-  gridSize: number
 }
 
-type CanvasViewControl = CanvasView & {
-  size: number
-  setLayout: (layout: ViewLayout) => void
-  setSize: (size: number) => void
+function runCardsAcross(size: number, isRegular: boolean): number {
+  return isRegular ? runCardColumnsOf(size) : 1
 }
 
-export const runSizes = {
-  min: 1,
-  max: 4,
-  initial: 3,
-} as const
-
-export function runColumnsOf(size: number, isRegular: boolean): number {
-  if (!isRegular) {
-    return 1
-  }
-  const kept = Math.min(Math.max(size, runSizes.min), runSizes.max)
-  return runSizes.max + runSizes.min - kept
+const startView: CanvasView = {
+  ...viewStart,
+  words: "",
+  setWords: () => undefined,
+  columns: runCardsAcross(tileSizes.start, true),
 }
 
-export function gridSizeOf(size: number): number {
-  return size - runSizes.min
-}
-
-const listView: CanvasView = {
-  layout: "list",
-  columns: runColumnsOf(runSizes.initial, true),
-  gridSize: gridSizeOf(runSizes.initial),
-}
-
-const CanvasViewContext = createContext<CanvasView>(listView)
+const CanvasViewContext = createContext<CanvasView>(startView)
 
 export function useCanvasView(): CanvasView {
   return useContext(CanvasViewContext)
 }
 
-export function useCanvasViewControl(): CanvasViewControl {
-  const [layout, setLayout] = useState<ViewLayout>("list")
-  const [size, setSize] = useState<number>(runSizes.initial)
-  const isRegular = useIsRegularWindow()
-  return {
-    layout,
-    size,
-    columns: runColumnsOf(size, isRegular),
-    gridSize: gridSizeOf(size),
-    setLayout,
-    setSize,
-  }
-}
-
-export function CanvasViewMenu({
-  control,
+export function CanvasViewProvider({
+  view,
+  children,
 }: {
-  control: CanvasViewControl
+  view: PlaceView
+  children: ReactNode
 }): ReactElement {
   const isRegular = useIsRegularWindow()
+  const { layout, size, words, setWords } = view
+  const shown = useMemo(
+    () => ({
+      layout,
+      size,
+      words,
+      setWords,
+      columns: runCardsAcross(size, isRegular),
+    }),
+    [layout, size, words, setWords, isRegular]
+  )
   return (
-    <ViewMenu
-      label={t("app.canvas.view")}
-      layoutLabel={t("library.view.label")}
-      listLabel={t("library.view.list")}
-      gridLabel={t("library.view.grid")}
-      layout={control.layout}
-      onLayoutChange={control.setLayout}
-      {...(isRegular
-        ? {
-            size: {
-              label: t("library.view.size"),
-              value: control.size,
-              min: runSizes.min,
-              max: runSizes.max,
-              onValueChange: control.setSize,
-            },
-          }
-        : {})}
+    <CanvasViewContext.Provider value={shown}>
+      {children}
+    </CanvasViewContext.Provider>
+  )
+}
+
+export function MatchedRuns({
+  runs,
+  children,
+}: {
+  runs: readonly Run[]
+  children: (runs: readonly Run[]) => ReactNode
+}): ReactNode {
+  const view = useCanvasView()
+  const words = view.words.trim()
+  const kept = runs.filter((run) => runHoldsWords(run, words))
+  if (kept.length > 0) {
+    return children(kept)
+  }
+  return (
+    <StateView
+      kind="empty"
+      title={t("library.filterEmpty.title")}
+      actions={
+        <Button onClick={() => view.setWords("")}>
+          {t("library.filterEmpty.action")}
+        </Button>
+      }
     />
   )
 }
 
-export function CanvasViewProvider({
-  control,
-  children,
-}: {
-  control: CanvasViewControl
-  children: ReactNode
-}): ReactElement {
-  const { layout, columns, gridSize } = control
-  const view = useMemo(
-    () => ({ layout, columns, gridSize }),
-    [layout, columns, gridSize]
-  )
-  return (
-    <CanvasViewContext.Provider value={view}>
-      {children}
-    </CanvasViewContext.Provider>
+export function runsAwaitingResults(runs: readonly Run[]): readonly Run[] {
+  const firstResult = runs.findIndex((run) => run.outputs.length > 0)
+  const latest = firstResult === -1 ? runs.length : firstResult
+  return runs.filter(
+    (run, index) =>
+      run.outputs.length === 0 && (isWorking(run) || index < latest)
   )
 }

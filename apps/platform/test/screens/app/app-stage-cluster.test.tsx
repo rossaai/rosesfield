@@ -30,6 +30,7 @@ beforeEach(stubFetch)
 afterEach(() => {
   cleanup()
   resetFrames()
+  window.localStorage.clear()
 })
 
 function RunFeed(): ReactElement {
@@ -101,7 +102,7 @@ describe("the app stage's header", () => {
     expect(view?.className.split(" ")).not.toContain("border")
   })
 
-  it("sets the run feed's column count from the View size, two at rest", async () => {
+  it("sets the run feed's column count from the View size, two at rest and three at the smallest step", async () => {
     render(
       withClient(
         <AppStage app={image} kind="bar">
@@ -124,7 +125,7 @@ describe("the app stage's header", () => {
     )
     fireEvent.keyDown(slider ?? document.body, { key: "Home" })
     await waitFor(() =>
-      expect(columnsShown()).toBe("repeat(4, minmax(0, 1fr))")
+      expect(columnsShown()).toBe("repeat(3, minmax(0, 1fr))")
     )
   })
 
