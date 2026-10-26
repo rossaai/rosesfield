@@ -26,6 +26,7 @@ export const exploreCopy = {
     "Each result opens with its app, its model and its credits",
   "explore.shared.name": "shared results",
   "explore.viewAll": "View all {name}",
+  "explore.search.label": "Search apps and examples",
   "explore.preset.view": "View {name}",
   "explore.viewer.title": "{app} result",
   "explore.viewer.credits": "Credits",
