@@ -184,7 +184,7 @@ describe("the Upscale column", () => {
     showColumn(<UpscalePanel state={result.current} />)
     const well = screen.getByText(tCatalog("upscale.input.image.label"))
     const model = theModelChip()
-    const scale = screen.getByRole("radiogroup", {
+    const scale = screen.getByRole("combobox", {
       name: tCatalog("upscale.input.scale.label"),
     })
     expect(isBefore(well, model)).toBe(true)

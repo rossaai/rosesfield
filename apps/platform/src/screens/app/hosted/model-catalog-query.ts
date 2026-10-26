@@ -1,12 +1,25 @@
 import { catalogRoutes } from "@rosesfield/catalog/comfy"
 import { queryOptions } from "@tanstack/react-query"
 import { callRoute } from "@/api/call-route"
+import { shownFormOf } from "@/screens/app/hosted/hosted-form"
 
 export function modelCatalogQuery(appId: string, keyState: string) {
   return queryOptions({
     queryKey: ["models", appId, keyState],
-    queryFn: ({ signal }) =>
-      callRoute(catalogRoutes.listModels, { params: { appId }, signal }),
+    queryFn: async ({ signal }) => {
+      const catalog = await callRoute(catalogRoutes.listModels, {
+        params: { appId },
+        signal,
+      })
+      return {
+        ...catalog,
+        models: catalog.models.map((model) =>
+          model.form === null
+            ? model
+            : { ...model, form: shownFormOf(model.form) }
+        ),
+      }
+    },
     staleTime: 60_000,
     retry: false,
   })

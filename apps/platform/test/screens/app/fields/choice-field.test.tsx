@@ -44,21 +44,14 @@ afterEach(() => {
 })
 
 describe("ChoiceField with two to four values", () => {
-  it("keeps the segmented control while every label fits its segment", () => {
+  it("draws three short options that fit as a dropdown, never a row of segments", () => {
     measureLabels(60, 80)
-    renderChoice()
-    expect(screen.getByRole("radiogroup", { name: "Clothes" })).toBeTruthy()
-    expect(screen.queryByRole("combobox")).toBeNull()
-  })
-
-  it("falls back to a select when a label overflows its segment", () => {
-    measureLabels(120, 80)
     renderChoice()
     expect(screen.queryByRole("radiogroup")).toBeNull()
     expect(screen.getByRole("combobox", { name: "Clothes" })).toBeTruthy()
   })
 
-  it("draws the segments with their words only, so a setting's option icons never widen them", () => {
+  it("draws a two-option mode that means no on or off as a dropdown", () => {
     measureLabels(60, 80)
     render(
       <ChoiceField
@@ -73,8 +66,8 @@ describe("ChoiceField with two to four values", () => {
         note={null}
       />
     )
-    const segments = screen.getByRole("radiogroup", { name: "Mode" })
-    expect(segments.querySelector("svg")).toBeNull()
+    expect(screen.queryByRole("radiogroup")).toBeNull()
+    expect(screen.getByRole("combobox", { name: "Mode" })).toBeTruthy()
   })
 })
 

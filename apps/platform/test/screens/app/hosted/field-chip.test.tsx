@@ -18,12 +18,12 @@ const fields: ModelField[] = [
     default: null,
   },
   {
-    name: "style",
-    path: "style",
+    name: "resolution",
+    path: "resolution",
     required: false,
     kind: "choice",
-    options: ["photo", "film"],
-    default: "photo",
+    options: ["1k", "2k"],
+    default: "1k",
   },
   {
     name: "guidance",
@@ -75,7 +75,7 @@ describe("the model's fields on the composer row", () => {
     )
     const style = fields[1]
     if (style === undefined) {
-      throw new Error("no style field")
+      throw new Error("no resolution field")
     }
     expect(
       screen.getAllByRole("combobox", { name: new RegExp(fieldCaption(style)) })

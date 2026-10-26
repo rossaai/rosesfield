@@ -19,7 +19,6 @@ import {
   Feather,
   Film,
   Focus,
-  Footprints,
   Frame,
   GalleryHorizontal,
   Gauge,
@@ -30,27 +29,28 @@ import {
   Image,
   Languages,
   LayoutList,
+  Leaf,
   Lightbulb,
   ListOrdered,
   type LucideIcon,
   Maximize2,
+  Mic,
   Move,
   Palette,
   PersonStanding,
+  Repeat,
   Rotate3d,
   Scan,
   Scissors,
   Search,
-  ShieldCheck,
+  Shapes,
   Shirt,
-  SlidersHorizontal,
   Smile,
-  Sparkles,
   Square,
   SquareSplitVertical,
-  Stamp,
   SunMedium,
   Tag,
+  Triangle,
   User,
   Volume2,
   WandSparkles,
@@ -58,12 +58,10 @@ import {
 import type { ReactNode } from "react"
 import { optionIconOf } from "@/catalog/setting-options"
 import { AspectShape } from "@/pieces/aspect-shape"
-
-export type SettingGroup = "format" | "content" | "advanced"
+import { settingKeyOf } from "@/screens/app/setting-table"
 
 export type Setting = {
   icon: LucideIcon
-  group: SettingGroup
   rank: number
 }
 
@@ -75,8 +73,13 @@ const formatEntries: readonly Entry[] = [
   ["framing", Frame],
   ["resolution", Gem],
   ["quality", Gem],
+  ["renderingSpeed", Gem],
   ["scale", Maximize2],
   ["factor", Maximize2],
+  ["scaleFactor", Maximize2],
+  ["upscaleFactor", Maximize2],
+  ["desiredIncrease", Maximize2],
+  ["targetResolution", Maximize2],
   ["length", Clock],
   ["seconds", Clock],
   ["count", Hash],
@@ -99,7 +102,16 @@ const contentEntries: readonly Entry[] = [
   ["kind", Boxes],
   ["style", Brush],
   ["mode", LayoutList],
+  ["voiceId", Mic],
   ["language", Languages],
+  ["languageCode", Languages],
+  ["locale", Languages],
+  ["voiceLanguage", Languages],
+  ["season", Leaf],
+  ["lightDirection", Compass],
+  ["lightType", Lightbulb],
+  ["artStyle", Brush],
+  ["backgroundColor", Image],
   ["expression", Smile],
   ["background", Image],
   ["sound", Volume2],
@@ -136,49 +148,20 @@ const contentEntries: readonly Entry[] = [
 
 const advancedEntries: readonly Entry[] = [
   ["seed", Dices],
-  ["serviceTier", Gauge],
   ["negativePrompt", Ban],
-  ["guidance", SlidersHorizontal],
-  ["guidanceScale", SlidersHorizontal],
-  ["cfg", SlidersHorizontal],
-  ["cfgScale", SlidersHorizontal],
-  ["steps", Footprints],
-  ["numInferenceSteps", Footprints],
-  ["inferenceSteps", Footprints],
-  ["safety", ShieldCheck],
-  ["safetyChecker", ShieldCheck],
-  ["enableSafetyChecker", ShieldCheck],
-  ["safetyTolerance", ShieldCheck],
-  ["safetyFilterLevel", ShieldCheck],
-  ["promptExtend", Sparkles],
-  ["promptEnhance", Sparkles],
-  ["enhancePrompt", Sparkles],
-  ["promptOptimizer", Sparkles],
-  ["promptUpsampling", Sparkles],
-  ["promptExpansion", Sparkles],
-  ["watermark", Stamp],
-  ["addWatermark", Stamp],
-]
-
-export function settingKeyOf(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, "")
-}
-
-const groups: readonly (readonly [SettingGroup, readonly Entry[]])[] = [
-  ["format", formatEntries],
-  ["content", contentEntries],
-  ["advanced", advancedEntries],
+  ["loop", Repeat],
+  ["speed", Gauge],
+  ["voiceSpeed", Gauge],
+  ["speechRate", Gauge],
+  ["topology", Triangle],
+  ["targetPolycount", Shapes],
+  ["poseMode", PersonStanding],
 ]
 
 const byName: ReadonlyMap<string, Setting> = new Map(
-  groups
-    .flatMap(([group, entries]) =>
-      entries.map(([name, icon]) => ({ name, icon, group }))
-    )
-    .map(({ name, icon, group }, rank) => [
-      settingKeyOf(name),
-      { icon, group, rank },
-    ])
+  [...formatEntries, ...contentEntries, ...advancedEntries].map(
+    ([name, icon], rank) => [settingKeyOf(name), { icon, rank }]
+  )
 )
 
 const roleNames: Readonly<Record<FieldRole, string | null>> = {
@@ -197,7 +180,6 @@ const roleNames: Readonly<Record<FieldRole, string | null>> = {
 
 const otherSetting: Setting = {
   icon: Tag,
-  group: "advanced",
   rank: byName.size,
 }
 
@@ -233,4 +215,4 @@ export function withShapes<T extends { value: string; label: string }>(
   }))
 }
 
-export { optionIconOf }
+export { optionIconOf, settingKeyOf }

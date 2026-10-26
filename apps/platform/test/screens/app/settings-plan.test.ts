@@ -33,13 +33,24 @@ function number(name: string): ModelField {
   }
 }
 
-const named = (name: string) => ({ name, role: null })
+const named = (name: string) => ({
+  name,
+  role: null,
+  place: name === "seed" ? ("advanced" as const) : ("show" as const),
+})
+
+function toggle(name: string): ModelField {
+  return { name, path: name, required: false, kind: "toggle", default: false }
+}
 
 describe("the settings plan", () => {
-  it("files a seed and a setting the registry does not know under Advanced", () => {
-    const plan = settingsPlanOf(["seed", "style", "fancyKnob"], named)
+  it("files a setting its key places under Advanced there, and leaves a hidden one out of both lists", () => {
+    const plan = settingsPlanOf(["seed", "style", "fancyKnob"], (name) => ({
+      ...named(name),
+      place: name === "fancyKnob" ? "hidden" : named(name).place,
+    }))
     expect(plan.main).toEqual(["style"])
-    expect(plan.advanced).toEqual(["seed", "fancyKnob"])
+    expect(plan.advanced).toEqual(["seed"])
   })
 
   it("orders the main settings aspect, then count, then style, whatever order the model publishes them in", () => {
@@ -47,12 +58,15 @@ describe("the settings plan", () => {
     expect(plan.main).toEqual(["aspect", "count", "style"])
   })
 
-  it("reads a model's fields by their role, so a size ranks as a resolution and a service tier sits under Advanced", () => {
+  it("reads a model's fields through the table: a size ranks as a resolution, the seed sits under Advanced, and a service tier, a watermark and a field nobody knows are never shown", () => {
     const plan = fieldSettingsPlan([
-      choice("serviceTier", ["auto", "flex"]),
+      choice("serviceTier", ["default", "flex"]),
       number("n"),
       choice("size", ["1024x1024", "2048x2048"]),
       choice("aspectRatio", ["1:1", "16:9"]),
+      toggle("watermark"),
+      number("topK"),
+      number("seed"),
       {
         name: "prompt",
         path: "prompt",
@@ -67,7 +81,7 @@ describe("the settings plan", () => {
       "size",
       "n",
     ])
-    expect(plan.advanced.map((field) => field.name)).toEqual(["serviceTier"])
+    expect(plan.advanced.map((field) => field.name)).toEqual(["seed"])
   })
 })
 
@@ -91,28 +105,16 @@ describe("the control rule", () => {
     }
   })
 
-  it("keeps a two-option quality choice that is no boolean pair segmented", () => {
-    expect(
-      controlOf({ kind: "choice", options: options("Draft", "Final") })
-    ).toBe("segmented")
-  })
-
-  it("draws up to four short options as segments and any other choice as a select", () => {
-    expect(
-      controlOf({ kind: "choice", options: options("1K", "2K", "4K", "8K") })
-    ).toBe("segmented")
-    expect(
-      controlOf({
-        kind: "choice",
-        options: options("1K", "2K", "4K", "8K", "16K"),
-      })
-    ).toBe("select")
-    expect(
-      controlOf({
-        kind: "choice",
-        options: options("As in the photo", "Plain"),
-      })
-    ).toBe("select")
+  it("draws every choice that is no on or off pair as a dropdown, at any count of options", () => {
+    for (const choices of [
+      options("Draft", "Final"),
+      options("1K", "2K", "4K"),
+      options("1K", "2K", "4K", "8K"),
+      options("1K", "2K", "4K", "8K", "16K"),
+      options("As in the photo", "Plain"),
+    ]) {
+      expect(controlOf({ kind: "choice", options: choices })).toBe("select")
+    }
   })
 
   it("shows a length as its value with its unit, and any other value as it is", () => {

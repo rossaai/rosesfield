@@ -11,6 +11,7 @@ import type { SchemaInput } from "@/api/call-route"
 import { defaultAspectOf } from "@/catalog/app-facts"
 import type { CopyKey } from "@/copy.en"
 import { modelInputName } from "@/pieces/run/run-facts"
+import { inputSentValueOf } from "@/screens/app/setting-table"
 
 export type FieldValue = string | number | string[] | undefined
 
@@ -43,8 +44,9 @@ function defaultOf(input: InputDefinition): FieldValue {
       return []
     case "choice":
     case "number":
-    case "toggle":
       return input.default
+    case "toggle":
+      return inputSentValueOf(input.name, input.type) ?? input.default
     case "seed":
       return undefined
   }

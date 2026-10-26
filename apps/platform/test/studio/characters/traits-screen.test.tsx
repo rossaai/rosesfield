@@ -65,19 +65,19 @@ describe("the traits of Characters", () => {
   it("change the ratio choices to the ones the picked model's schema declares, and the price with them", async () => {
     openCharacters()
     await screen.findByRole("button", { name: pricedName(graphCredits) })
-    expect(aspectsIn(t("field.aspect.label"))).toEqual(
+    expect(await aspectsIn(t("field.aspect.label"))).toEqual(
       aspectItems(characters).map((item) => item.label)
     )
     await pickFlux()
     expect(
-      screen.queryByRole("radiogroup", { name: t("field.aspect.label") })
+      screen.queryByRole("combobox", { name: t("field.aspect.label") })
     ).toBeNull()
     const aspect = flux.form?.find((field) => field.name === "aspectRatio")
     if (aspect === undefined) {
       throw new Error("FLUX 3 Image declares no aspect")
     }
     const caption = fieldCaption(aspect)
-    expect(aspectsIn(caption)).toEqual(["1:1", "16:9"])
+    expect(await aspectsIn(caption)).toEqual(["1:1", "16:9"])
     expect(
       await screen.findByRole("button", { name: pricedName(fluxCredits) })
     ).toBeDefined()
@@ -98,7 +98,7 @@ describe("the traits column", () => {
     const model = await screen.findByRole("button", { name: trigger(zImage) })
     await screen.findByRole("button", { name: pricedName(graphCredits) })
     const details = screen.getByRole("textbox")
-    const format = screen.getByRole("radiogroup", {
+    const format = screen.getByRole("combobox", {
       name: t("field.aspect.label"),
     })
     const plain = screen.getByRole("switch")

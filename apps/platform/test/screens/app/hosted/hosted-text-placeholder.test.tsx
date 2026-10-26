@@ -21,8 +21,8 @@ const form: AppForm = {
 
 const styleText: ModelField = {
   kind: "text",
-  name: "style",
-  path: "style",
+  name: "voiceId",
+  path: "voice_id",
   required: false,
   maxLength: null,
   default: null,

@@ -12,35 +12,73 @@ import type {
   StartRunBodyInput,
 } from "@/screens/app/app-form"
 import { fieldCaption } from "@/screens/app/hosted/field-words"
+import {
+  countSwitchOf,
+  fieldPlaceOf,
+  type SentValue,
+  sentValueOf,
+  shownDefaultOf,
+} from "@/screens/app/setting-table"
 
 export const modelInputName = "model"
 
-const automatic = "auto"
+function isInputField(field: ModelField): boolean {
+  return field.kind === "media" || field.kind === "prompt"
+}
 
-function choiceDefaultOf(options: readonly (string | number)[]): FieldValue {
-  if (options.length === 1) {
-    return options[0]
+function placedDefaultOf(field: ModelField): FieldValue {
+  const place = fieldPlaceOf(field)
+  switch (place.kind) {
+    case "show":
+      return shownDefaultOf(field, place.setting)
+    case "hidden":
+      return sentValueOf(field, place.sent)
+    case "advanced":
+      return sentValueOf(field, { kind: "model" })
   }
-  return options.includes(automatic) ? automatic : undefined
 }
 
 function defaultOf(field: ModelField): FieldValue {
   switch (field.kind) {
     case "prompt":
-    case "text":
       return field.default ?? ""
-    case "choice":
-      return field.default ?? choiceDefaultOf(field.options)
-    case "number":
-      return field.default ?? undefined
-    case "toggle":
-      if (fieldRoleOf(field, "video") === "sound") {
-        return "on"
-      }
-      return field.default === null ? undefined : field.default ? "on" : "off"
+    case "text":
+      return placedDefaultOf(field) ?? ""
     case "media":
       return []
+    default:
+      return placedDefaultOf(field)
   }
+}
+
+function forcedOf(field: ModelField): SentValue | null {
+  if (isInputField(field)) {
+    return null
+  }
+  const place = fieldPlaceOf(field)
+  return place.kind === "hidden" &&
+    place.sent.kind !== "model" &&
+    place.sent.kind !== "count"
+    ? place.sent
+    : null
+}
+
+/** Gives the defaults of the setting fields a form does not hold yet, so every shown setting opens on a value. */
+export function missingDefaultsOf(
+  fields: readonly ModelField[],
+  inputs: Readonly<Record<string, FieldValue>>
+): Record<string, FieldValue> {
+  const missing: Record<string, FieldValue> = {}
+  for (const field of fields) {
+    if (isInputField(field) || inputs[field.name] !== undefined) {
+      continue
+    }
+    const value = defaultOf(field)
+    if (value !== undefined && value !== "") {
+      missing[field.name] = value
+    }
+  }
+  return missing
 }
 
 export function hostedDefaults(
@@ -220,18 +258,57 @@ export function hostedBody(
     [modelInputName]: model,
   }
   for (const field of fields) {
+    const forced = forcedOf(field)
     const given = values.inputs[field.name]
     const value =
-      field.kind === "choice" && !isEmpty(given) && !fitsField(field, given)
-        ? (field.default ?? undefined)
-        : given
+      forced !== null
+        ? sentValueOf(field, forced)
+        : field.kind === "choice" && !isEmpty(given) && !fitsField(field, given)
+          ? (field.default ?? undefined)
+          : given
     if (value !== undefined && !isEmpty(value)) {
       inputs[field.name] = value
     }
   }
+  const sent = withCountSwitch(fields, inputs)
   return isOneAtATime(fields, output) && values.count > 1
-    ? { inputs, count: values.count }
-    : { inputs }
+    ? { inputs: sent, count: values.count }
+    : { inputs: sent }
+}
+
+type BodyInputs = Record<string, string | number | string[]>
+
+function withCountSwitch(
+  fields: readonly ModelField[],
+  inputs: BodyInputs
+): BodyInputs {
+  const found = countSwitchOf(fields)
+  const count = fields.find((field) => fieldRoleOf(field, "") === "count")
+  if (found === null || count === undefined) {
+    return inputs
+  }
+  const value = inputs[count.name]
+  if (typeof value === "number" && value > 1) {
+    return { ...inputs, [found.field.name]: found.many }
+  }
+  return {
+    ...Object.fromEntries(
+      Object.entries(inputs).filter(([name]) => name !== count.name)
+    ),
+    [found.field.name]: found.one,
+  }
+}
+
+/** Reads a model's form as the platform shows it: a count that a series switch turns on counts from one, as the switch's single result. */
+export function shownFormOf(fields: readonly ModelField[]): ModelField[] {
+  const found = countSwitchOf(fields)
+  return fields.map((field) =>
+    found !== null &&
+    field.kind === "number" &&
+    fieldRoleOf(field, "") === "count"
+      ? { ...field, min: 1, default: 1 }
+      : field
+  )
 }
 
 function missingOf(field: ModelField): FieldProblem {
@@ -293,6 +370,7 @@ export function hostedProblems(
   values: FormValues
 ): FieldProblem[] {
   return fields
+    .filter((field) => forcedOf(field) === null)
     .map((field) => problemOf(field, values.inputs[field.name]))
     .filter((problem): problem is FieldProblem => problem !== null)
 }

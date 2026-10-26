@@ -201,7 +201,6 @@ export function HostedField(props: FieldProps): ReactElement | null {
   switch (controlOf(fieldShapeOf(props.field))) {
     case "switch":
       return <SwitchControl {...props} />
-    case "segmented":
     case "select":
       return <ChoiceControlField {...props} />
     case "stepper":

@@ -56,6 +56,8 @@ const keyRules: readonly KeyRule[] = [
       "numoutputs",
       "numberofimages",
       "numberresults",
+      "maximages",
+      "seriesamount",
     ],
   },
   {
@@ -66,9 +68,22 @@ const keyRules: readonly KeyRule[] = [
   { role: "seed", kinds: ["number"], keys: ["seed"] },
   {
     role: "sound",
-    kinds: ["toggle"],
+    kinds: ["toggle", "choice"],
     keys: ["generateaudio", "saveaudio", "withaudio", "sound", "audio"],
   },
+]
+
+const resultParents: ReadonlySet<string> = new Set([
+  "input",
+  "parameters",
+  "settings",
+  "video",
+])
+
+const switchWords: readonly (readonly [string, string])[] = [
+  ["on", "off"],
+  ["true", "false"],
+  ["yes", "no"],
 ]
 
 const lastFrame = /(last|end|tail)[_ ]?(frame|image)/i
@@ -79,11 +94,43 @@ const reference = /reference|(^|[^a-z])ref([^a-z]|$)/i
 
 const mask = /mask/i
 
+function namedOf(path: string): string[] {
+  return path.split(".").filter((one) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(one))
+}
+
 function keyOf(field: ModelField): string {
-  const named = field.path
-    .split(".")
-    .filter((one) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(one))
-  return (named.at(-1) ?? field.name).toLowerCase().replace(/[^a-z0-9]/g, "")
+  return (namedOf(field.path).at(-1) ?? field.name)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+}
+
+function isResultLength(field: ModelField): boolean {
+  return namedOf(field.path)
+    .slice(0, -1)
+    .every((parent) => resultParents.has(parent.toLowerCase()))
+}
+
+function isSwitchChoice(field: ModelField): boolean {
+  if (field.kind !== "choice") {
+    return true
+  }
+  const words = field.options.map((one) => String(one).toLowerCase()).sort()
+  return switchWords.some(
+    (pair) =>
+      words.length === 2 &&
+      [...pair].sort().every((one, at) => words[at] === one)
+  )
+}
+
+function fits(rule: KeyRule, field: ModelField): boolean {
+  switch (rule.role) {
+    case "length":
+      return isResultLength(field)
+    case "sound":
+      return isSwitchChoice(field)
+    default:
+      return true
+  }
 }
 
 function imageRoleOf(path: string, output: string): FieldRole | null {
@@ -115,7 +162,10 @@ export function fieldRoleOf(
   }
   const key = keyOf(field)
   const rule = keyRules.find(
-    (one) => one.kinds.includes(field.kind) && one.keys.includes(key)
+    (one) =>
+      one.kinds.includes(field.kind) &&
+      one.keys.includes(key) &&
+      fits(one, field)
   )
   return rule?.role ?? null
 }

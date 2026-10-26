@@ -1,11 +1,8 @@
 import { Input } from "@rosesfield/ui/components/input"
-import {
-  SegmentedControl,
-  type SegmentedItem,
-} from "@rosesfield/ui/components/segmented-control"
 import type { ReactElement } from "react"
 import { t } from "@/copy/t"
 import type { FieldValue } from "@/screens/app/app-form"
+import { ChoiceControl } from "@/screens/app/fields/choice-field"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 
 const maxSeed = 2_147_483_647
@@ -25,7 +22,7 @@ function seedOf(text: string): number | undefined {
 }
 
 export function SeedField(props: SeedFieldProps): ReactElement {
-  const items: SegmentedItem<"random" | "fixed">[] = [
+  const items: { value: "random" | "fixed"; label: string }[] = [
     { value: "random", label: t("field.seed.random") },
     { value: "fixed", label: t("field.seed.fixed") },
   ]
@@ -36,12 +33,11 @@ export function SeedField(props: SeedFieldProps): ReactElement {
       note={null}
       problem={undefined}
     >
-      <SegmentedControl
+      <ChoiceControl
         items={items}
         value={props.mode}
-        onValueChange={props.onMode}
+        onChange={(next) => props.onMode(next === "fixed" ? "fixed" : "random")}
         label={t("field.seed.label")}
-        className="max-w-none"
       />
       {props.mode === "fixed" ? (
         <Input

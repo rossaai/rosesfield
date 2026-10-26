@@ -90,6 +90,44 @@ describe("fieldRoleOf", () => {
     expect(fieldRoleOf(image("mask"), "image")).toBeNull()
   })
 
+  it.each([
+    ["duration", "length"],
+    ["input.duration", "length"],
+    ["video.duration", "length"],
+    ["parameters.durationSeconds", "length"],
+    ["settings.duration", "length"],
+    ["videoMetadata.endOffset.seconds", null],
+    ["videoMetadata.startOffset.seconds", null],
+    ["keyframes.0.seconds", null],
+    ["multi_prompt.0.duration", null],
+  ])(
+    "names the number at %s as %s, a length only when it sets how long the result runs",
+    (path, role) => {
+      expect(fieldRoleOf(count(path), "video")).toBe(role)
+    }
+  )
+
+  it.each([
+    ["sequential_image_generation_options.max_images", "count"],
+    ["series_amount", "count"],
+  ])("names the multi-image count at %s as %s", (path, role) => {
+    expect(fieldRoleOf(count(path), "image")).toBe(role)
+  })
+
+  it("names an on or off sound choice a sound, and a sound choice of other words nothing", () => {
+    const sound = (options: string[]): ModelField => ({
+      kind: "choice",
+      name: "sound",
+      path: "sound",
+      required: false,
+      options,
+      default: "off",
+    })
+    expect(fieldRoleOf(sound(["on", "off"]), "video")).toBe("sound")
+    expect(fieldRoleOf(sound(["off", "on"]), "video")).toBe("sound")
+    expect(fieldRoleOf(sound(["calm", "loud"]), "video")).toBeNull()
+  })
+
   it("finds the first field of a role", () => {
     const fields = [choice("creativity"), choice("aspect_ratio"), count("n")]
     expect(fieldOfRole(fields, "aspect", "image")?.path).toBe("aspect_ratio")

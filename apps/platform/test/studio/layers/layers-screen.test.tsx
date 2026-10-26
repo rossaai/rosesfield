@@ -199,10 +199,23 @@ describe("the model of each Layers mode", () => {
     ] as const
     for (const [mode, name] of modes) {
       fireEvent.click(
-        screen.getByRole("radio", {
-          name: tCatalog(`layers.choice.mode.${mode}`),
+        screen.getByRole("combobox", {
+          name: tCatalog("layers.input.mode.label"),
         })
       )
+      const option = await screen.findByRole("option", {
+        name: tCatalog(`layers.choice.mode.${mode}`),
+      })
+      fireEvent.pointerDown(option)
+      fireEvent.mouseDown(option)
+      fireEvent.pointerUp(option)
+      fireEvent.mouseUp(option)
+      fireEvent.click(option)
+      expect(
+        screen.getByRole("combobox", {
+          name: tCatalog("layers.input.mode.label"),
+        }).textContent
+      ).toBe(tCatalog(`layers.choice.mode.${mode}`))
       expect(await pickerNamed(name)).not.toBeNull()
     }
   })
