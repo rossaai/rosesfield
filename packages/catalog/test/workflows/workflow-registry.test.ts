@@ -66,11 +66,29 @@ describe("readWorkflows", () => {
     ).toContain("sample-image.api.json")
   })
 
-  it("refuses a workflow that is not open source", () => {
+  it("refuses a workflow that is not open source and names no partner node", () => {
     const entry = { ...sampleEntry(), openSource: false }
     expect(reasonOf(() => readWorkflows([sampleFiles(entry)]))).toContain(
       "entry.json"
     )
+  })
+
+  it("refuses an open-source workflow that names a partner node", () => {
+    const entry = { ...sampleEntry(), partnerNodes: ["KSampler"] }
+    expect(reasonOf(() => readWorkflows([sampleFiles(entry)]))).toContain(
+      "partner node"
+    )
+  })
+
+  it("refuses a partner node the API file lacks, and reads one it holds", () => {
+    const closed = { ...sampleEntry(), openSource: false }
+    const absent = { ...closed, partnerNodes: ["MeshyImageToModelNode"] }
+    expect(reasonOf(() => readWorkflows([sampleFiles(absent)]))).toContain(
+      "the partner node MeshyImageToModelNode, which the API file lacks"
+    )
+    const held = { ...closed, partnerNodes: ["KSampler"] }
+    const [workflow] = readWorkflows([sampleFiles(held)])
+    expect(workflow?.partnerNodes).toEqual(["KSampler"])
   })
 
   it("refuses a name that is not its folder and a folder listed twice", () => {

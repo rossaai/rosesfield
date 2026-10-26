@@ -1,0 +1,34 @@
+{
+  "name": "three-d-meshy-image",
+  "title": "3D from a photo: a GLB with Meshy 7.1",
+  "description": "Loads your photo of one object, sends it to Meshy 7.1 through Comfy's partner node Meshy: Image to Model, and saves the textured model it returns as a GLB file. Meshy runs on its maker's service and bills your Comfy account through your Comfy key.",
+  "mediaType": "mesh",
+  "openSource": false,
+  "models": ["meshy-7.1"],
+  "requiresCustomNodes": [],
+  "partnerNodes": ["MeshyImageToModelNode"],
+  "inputBindings": {
+    "image": {
+      "nodeId": "1",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "model": {
+      "nodeId": "2",
+      "inputName": "model",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "2",
+      "inputName": "seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "3",
+      "key": "3d",
+      "kind": "mesh"
+    }
+  ]
+}

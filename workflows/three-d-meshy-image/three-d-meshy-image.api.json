@@ -1,0 +1,42 @@
+{
+  "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": ""
+    },
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "2": {
+    "class_type": "MeshyImageToModelNode",
+    "inputs": {
+      "model": "meshy-7.1",
+      "image": ["1", 0],
+      "should_remesh": "true",
+      "should_remesh.topology": "triangle",
+      "should_remesh.target_polycount": 30000,
+      "symmetry_mode": "auto",
+      "should_texture": "true",
+      "should_texture.enable_pbr": false,
+      "should_texture.texture_prompt": "",
+      "should_texture.texture_resolution": "2k",
+      "pose_mode": "",
+      "seed": 0,
+      "ultra_mode": false
+    },
+    "_meta": {
+      "title": "Meshy: Image to Model"
+    }
+  },
+  "3": {
+    "class_type": "SaveGLB",
+    "inputs": {
+      "mesh": ["2", 2],
+      "filename_prefix": "3d/three-d-meshy-image"
+    },
+    "_meta": {
+      "title": "Save 3D Model"
+    }
+  }
+}

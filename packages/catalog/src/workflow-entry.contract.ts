@@ -20,23 +20,38 @@ export const workflowOutput = z.strictObject({
   kind: assetKind,
 })
 
-export const workflowEntry = z.strictObject({
-  name: workflowId,
-  title: z.string().min(1).max(120).optional(),
-  description: z.string().min(1).max(600).optional(),
-  mediaType: z.enum(["image", "video", "audio", "mesh"]),
-  openSource: z.literal(true),
-  models: z.array(z.string().min(1).max(200)).max(16),
-  requiresCustomNodes: z.array(z.string().min(1).max(200)).max(16).default([]),
-  inputBindings: z.record(
-    z
-      .string()
-      .regex(/^[a-z][a-zA-Z0-9]*$/)
-      .max(40),
-    workflowInput
-  ),
-  outputs: z.array(workflowOutput).min(1).max(16),
-})
+const partnerNode = z
+  .string()
+  .regex(/^[A-Za-z][A-Za-z0-9_]*$/)
+  .max(80)
+
+export const workflowEntry = z
+  .strictObject({
+    name: workflowId,
+    title: z.string().min(1).max(120).optional(),
+    description: z.string().min(1).max(600).optional(),
+    mediaType: z.enum(["image", "video", "audio", "mesh"]),
+    openSource: z.boolean(),
+    models: z.array(z.string().min(1).max(200)).max(16),
+    requiresCustomNodes: z
+      .array(z.string().min(1).max(200))
+      .max(16)
+      .default([]),
+    partnerNodes: z.array(partnerNode).max(4).default([]),
+    inputBindings: z.record(
+      z
+        .string()
+        .regex(/^[a-z][a-zA-Z0-9]*$/)
+        .max(40),
+      workflowInput
+    ),
+    outputs: z.array(workflowOutput).min(1).max(16),
+  })
+  .refine((entry) => entry.openSource === (entry.partnerNodes.length === 0), {
+    message:
+      "A workflow is open source exactly when it runs no partner node, and a closed one names its partner nodes",
+    path: ["openSource"],
+  })
 
 export const apiNode = z.looseObject({
   class_type: z.string().min(1),

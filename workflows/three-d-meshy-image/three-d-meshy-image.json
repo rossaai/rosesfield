@@ -1,0 +1,174 @@
+{
+  "id": "9d310087-9714-540d-af9f-0f820466c66b",
+  "revision": 0,
+  "last_node_id": 4,
+  "last_link_id": 2,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [60, 960],
+      "size": [380, 314],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [1]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["", "image"]
+    },
+    {
+      "id": 2,
+      "type": "MeshyImageToModelNode",
+      "pos": [580, 960],
+      "size": [400, 420],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model_file",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "meshy_task_id",
+          "type": "MESHY_TASK_ID",
+          "links": null
+        },
+        {
+          "name": "GLB",
+          "type": "FILE_3D_GLB",
+          "links": [2]
+        },
+        {
+          "name": "FBX",
+          "type": "FILE_3D_FBX",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MeshyImageToModelNode",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [
+        "meshy-7.1",
+        "true",
+        "triangle",
+        30000,
+        "auto",
+        "true",
+        false,
+        "",
+        "2k",
+        "",
+        0,
+        "fixed",
+        false
+      ]
+    },
+    {
+      "id": 3,
+      "type": "SaveGLB",
+      "pos": [1120, 960],
+      "size": [380, 120],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mesh",
+          "type": "MESH,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_OBJ,FILE_3D_FBX,FILE_3D_STL,FILE_3D_USDZ,FILE_3D_PLY,FILE_3D_SPLAT,FILE_3D_SPZ,FILE_3D_KSPLAT,FILE_3D_SPLAT_ANY,FILE_3D_POINT_CLOUD_ANY,FILE_3D",
+          "link": 2
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveGLB",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["3d/three-d-meshy-image"]
+    },
+    {
+      "id": 4,
+      "type": "MarkdownNote",
+      "pos": [60, 100],
+      "size": [560, 760],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "3D from a photo: a GLB with Meshy 7.1",
+      "properties": {},
+      "widgets_values": [
+        "# 3D from a photo: a GLB with Meshy 7.1\n\nLoads your photo of one object, sends it to Meshy 7.1 through Comfy's partner node Meshy: Image to Model, and saves the textured model it returns as a GLB file.\n\n## Models\n\n- Meshy 7.1 runs on Meshy's service, under [Meshy's terms](https://www.meshy.ai/terms-of-use) and [Comfy's terms](https://www.comfy.org/terms-of-service). No weights load on your machine.\n\nMeshy bills your Comfy account in credits through your Comfy key. Sign in to Comfy, or pass your key, before you run it.\n\nPart of [Rosesfield](https://github.com/rossaai/rosesfield), MIT."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [[1, 1, 0, 2, 0, "IMAGE"], [2, 2, 2, 3, 0, "FILE_3D_GLB"]],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Inputs",
+      "bounding": [30, 880, 440, 434],
+      "color": "#b06634",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Generate",
+      "bounding": [550, 880, 460, 540],
+      "color": "#444444",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Output",
+      "bounding": [1090, 880, 440, 240],
+      "color": "#3f8a5c",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.55,
+      "offset": [0, 0]
+    },
+    "linearData": {
+      "inputs": [[1, "image"], [2, "model"]],
+      "outputs": [3]
+    }
+  },
+  "version": 0.4
+}

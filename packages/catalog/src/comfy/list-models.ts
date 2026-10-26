@@ -1,9 +1,15 @@
-import type { AppDefinition, InputDefinition } from "@rosesfield/contract"
+import type {
+  AppDefinition,
+  EngineBinding,
+  InputDefinition,
+} from "@rosesfield/contract"
 import {
   chosenModelOf,
   graphTaskOf,
   type HostedModel,
   isHostedModelId,
+  partnerNodesOf,
+  selectAdapter,
   taskAdapter,
   tasksOf,
 } from "@rosesfield/generation/bindings"
@@ -116,7 +122,45 @@ function ownGraphOf(app: AppDefinition): CatalogModel[] {
     return []
   }
   const option = modelOptionsOf(app).find((one) => one.value === graph)
-  return [graphEntry(graph, option?.labelKey ?? null, null)]
+  return [
+    graphEntry(graph, option?.labelKey ?? null, {
+      task: null,
+      isOpen: !runsPartnerNode(app, graph),
+    }),
+  ]
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function isBinding(value: unknown): value is EngineBinding {
+  return (
+    isRecord(value) &&
+    typeof value.adapter === "string" &&
+    isRecord(value.config)
+  )
+}
+
+function leavesOf(binding: EngineBinding, graph: string): EngineBinding[] {
+  const { config } = binding
+  if (binding.adapter === taskAdapter) {
+    return isBinding(config.fallback) ? leavesOf(config.fallback, graph) : []
+  }
+  if (binding.adapter !== selectAdapter) {
+    return [binding]
+  }
+  const options = isRecord(config.options) ? config.options : {}
+  const isPicked =
+    config.input === modelInputName && Object.hasOwn(options, graph)
+  const picked = isPicked ? [options[graph]] : Object.values(options)
+  return picked.flatMap((one) => (isBinding(one) ? leavesOf(one, graph) : []))
+}
+
+export function runsPartnerNode(app: AppDefinition, graph: string): boolean {
+  return leavesOf(app.engine, graph).some(
+    (leaf) => partnerNodesOf(leaf).length > 0
+  )
 }
 
 function graphsOf(app: AppDefinition, appTask: string): CatalogModel[] {
@@ -124,20 +168,21 @@ function graphsOf(app: AppDefinition, appTask: string): CatalogModel[] {
     .filter((option) => !isHostedModelId(option.value))
     .filter((option) => !isDeniedModel(`graph/${option.value}`))
     .map((option) =>
-      graphEntry(
-        option.value,
-        option.labelKey,
-        graphTaskOf(app.engine, option.value) ?? appTask
-      )
+      graphEntry(option.value, option.labelKey, {
+        task: graphTaskOf(app.engine, option.value) ?? appTask,
+        isOpen: !runsPartnerNode(app, option.value),
+      })
     )
 }
 
 function graphEntry(
   value: string,
   labelKey: string | null,
-  task: string | null
+  graph: { task: string | null; isOpen: boolean }
 ): CatalogModel {
+  const { task } = graph
   const facts = factsOf(`graph/${value}`, task)
+  const tags: ModelTag[] = graph.isOpen ? [{ kind: "open-weights" }] : []
   return {
     id: value,
     kind: "graph",
@@ -145,7 +190,7 @@ function graphEntry(
     name: nameOf(`graph/${value}`),
     nameKey: labelKey,
     task,
-    tags: [{ kind: "open-weights" }],
+    tags,
     form: null,
     facts,
   }

@@ -22,6 +22,7 @@ export type Workflow = {
   models: readonly string[]
   outputs: readonly WorkflowOutput[]
   requiresCustomNodes: readonly string[]
+  partnerNodes: readonly string[]
   files: { ui: string; api: string }
 }
 
@@ -93,6 +94,15 @@ export function readWorkflow(files: WorkflowFiles): Workflow {
   }
   const graph = parsed(folder, `${folder}.api.json`, apiGraph, files.graph)
   checkGraph(folder, graph)
+  const absent = entry.partnerNodes.find(
+    (name) => !Object.values(graph).some((node) => node.class_type === name)
+  )
+  if (absent !== undefined) {
+    throw invalid(
+      folder,
+      `it names the partner node ${absent}, which the API file lacks`
+    )
+  }
   const missing = entry.outputs.find(
     (output) => graph[output.nodeId] === undefined
   )
@@ -110,6 +120,7 @@ export function readWorkflow(files: WorkflowFiles): Workflow {
     models: entry.models,
     outputs: entry.outputs,
     requiresCustomNodes: entry.requiresCustomNodes,
+    partnerNodes: entry.partnerNodes,
     files: {
       ui: `workflows/${folder}/${folder}.json`,
       api: `workflows/${folder}/${folder}.api.json`,

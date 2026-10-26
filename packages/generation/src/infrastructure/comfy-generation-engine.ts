@@ -1,10 +1,5 @@
 import type { ComfyLow, RawEvent } from "@comfyorg/sdk/low"
-import type {
-  AssetKind,
-  Cost,
-  EngineBinding,
-  KeyCheck,
-} from "@rosesfield/contract"
+import type { Cost, EngineBinding, KeyCheck } from "@rosesfield/contract"
 import { RunFailedError } from "#domain/error/run-failed.error"
 import {
   type EngineOutput,
@@ -35,9 +30,10 @@ import {
 } from "#infrastructure/comfy/comfy-low"
 import {
   isGlb,
-  mediaKindOf,
   meshMime,
+  meshOutputOf,
   mimeOf,
+  outputKindOf,
 } from "#infrastructure/comfy/comfy-media"
 import { applyBindings } from "#infrastructure/comfy/comfy-value-binding"
 import {
@@ -47,6 +43,7 @@ import {
 import {
   comfyWorkflowAdapter,
   parseComfyWorkflow,
+  runsPartnerNode,
   workflowHashOf,
 } from "#infrastructure/comfy/comfy-workflow-binding"
 import {
@@ -71,6 +68,8 @@ type ComfyGenerationEngineOptions = {
 
 type Fetched = Map<string, Promise<EngineOutput | null>>
 
+type PartnerKey = { api_key_comfy_org: string }
+
 export class ComfyGenerationEngine extends GenerationEngine {
   static readonly cloudUrl = "https://cloud.comfy.org"
   static readonly requestTimeoutMs = 30_000
@@ -92,6 +91,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
   override readonly idempotency = "keyed"
 
   private readonly low: ComfyLow
+  private readonly partnerKey: PartnerKey | null
   private readonly requestTimeoutMs: number
   private readonly downloadTimeoutMs: number
   private readonly isCloud: boolean
@@ -100,6 +100,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
   private readonly pause: Pause
   private readonly terminal = new Map<string, Job>()
   private readonly fetched = new Map<string, Fetched>()
+  private readonly partnerRefs = new Map<string, true>()
 
   constructor(options: ComfyGenerationEngineOptions) {
     super()
@@ -114,6 +115,8 @@ export class ComfyGenerationEngine extends GenerationEngine {
       fetch: send,
       timeoutMs: this.requestTimeoutMs,
     })
+    this.partnerKey =
+      options.apiKey === null ? null : { api_key_comfy_org: options.apiKey }
     this.downloadTimeoutMs =
       options.downloadTimeoutMs ?? ComfyGenerationEngine.downloadTimeoutMs
     this.meter = this.isCloud ? (options.meter ?? null) : null
@@ -149,15 +152,22 @@ export class ComfyGenerationEngine extends GenerationEngine {
         return { __type: "core/ASSET", info: { id } }
       },
     })
+    const isPartner = runsPartnerNode(config)
     const ticket = (await this.meter?.start(this.balance)) ?? null
     let job: Job
     try {
-      job = await this.post(addVideoStills(workflow), request.idempotencyKey)
+      job = await this.post(addVideoStills(workflow), {
+        idempotencyKey: request.idempotencyKey,
+        isPartner,
+      })
     } catch (error) {
       this.meter?.drop(ticket)
       throw error
     }
     this.meter?.bind(ticket, job.id)
+    if (isPartner) {
+      keepAtMost(this.partnerRefs, job.id, true)
+    }
     return {
       ref: job.id,
       models: config.models ?? [],
@@ -293,7 +303,9 @@ export class ComfyGenerationEngine extends GenerationEngine {
       return { state: "succeeded" }
     }
     const metered = (await meter?.finishRef(this.balance, job.id)) ?? null
-    const credits = metered ?? gpuCreditsOf(this.isCloud, job)
+    const isPartner = this.partnerRefs.delete(job.id)
+    const credits =
+      metered ?? (isPartner ? null : gpuCreditsOf(this.isCloud, job))
     return { state: "succeeded", cost: costOfCredits(credits) }
   }
 
@@ -317,10 +329,19 @@ export class ComfyGenerationEngine extends GenerationEngine {
 
   private async post(
     workflow: Record<string, unknown>,
-    idempotencyKey: string
+    options: { idempotencyKey: string; isPartner: boolean }
   ): Promise<Job> {
+    const { idempotencyKey } = options
+    const extraData = options.isPartner ? this.partnerKey : null
     return parseJob(
-      await callComfy(() => this.low.postJobs(workflow, { idempotencyKey }))
+      await callComfy(() =>
+        this.low.postJobs(
+          workflow,
+          extraData === null
+            ? { idempotencyKey }
+            : { idempotencyKey, extraData }
+        )
+      )
     )
   }
 
@@ -334,7 +355,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
     }
     const size = mediaSizeOf(bytes)
     return {
-      kind: kindOf(output.type, output.content_type),
+      kind: outputKindOf(output.type, output.content_type),
       mime: mimeOf(output.content_type),
       bytes,
       width: size?.width ?? null,
@@ -371,21 +392,4 @@ function gpuCreditsOf(isCloud: boolean, job: Job): number | null {
   const credits =
     (executionMs / 1000) * ComfyGenerationEngine.gpuCreditsPerSecond
   return Math.round(credits * 1_000_000) / 1_000_000
-}
-
-function meshOutputOf(bytes: Uint8Array): EngineOutput {
-  return {
-    kind: "mesh",
-    mime: meshMime,
-    bytes,
-    width: null,
-    height: null,
-    durationSeconds: null,
-  }
-}
-
-function kindOf(type: string, contentType: string): AssetKind {
-  return type === "video" || type === "audio" || type === "text"
-    ? type
-    : (mediaKindOf(mimeOf(contentType)) ?? "image")
 }

@@ -4,6 +4,10 @@ export const graphModel = "pixal3d-trellis-2"
 
 export const textModel = "meshy/meshy-7.1"
 
+export const meshyImageModel = "meshy-7-1-image"
+
+export const meshyImageWorkflow = "three-d-meshy-image"
+
 export const threeDTasks: readonly string[] = ["three-d"]
 
 export const pixal3dTemplateFiles: readonly string[] = [
@@ -17,9 +21,11 @@ export const pixal3dTemplateFiles: readonly string[] = [
 ]
 
 export function heldGraphs(held: ReadonlySet<string>): string[] {
-  return isHeldOnCloud(pixal3dTemplateFiles, held) ? [graphModel] : []
+  return isHeldOnCloud(pixal3dTemplateFiles, held)
+    ? [graphModel, meshyImageModel]
+    : [meshyImageModel]
 }
 
 export function defaultModelOf(graphs: readonly string[]): string {
-  return graphs[0] ?? textModel
+  return graphs.includes(graphModel) ? graphModel : textModel
 }

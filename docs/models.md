@@ -10,12 +10,21 @@ An app declares the task it runs, such as text to image or image to video. Its m
 2. **One cache for every visitor.** The catalog and the forms stay in memory for one hour, then each form is read again with its `ETag`, so an unchanged form answers `304`. A second visitor's list opens from the cache.
 3. **The task of each model.** `packages/catalog/src/comfy/model-tasks.ts` reads each model's task from its form: the inputs it takes and the output it makes. `packages/catalog/src/comfy/list-models.ts` lists every model of the app's task.
 4. **The form.** A model's fields come from its schema, with the schema's defaults and limits. A field the schema marks as internal stays hidden. Every key the schema requires is a field on the form, at any depth, in the items of a list too. A key the schema lists values for is a choice. The body puts each value back at its schema path. The check is `packages/generation/test/infrastructure/router-schemas.test.ts`. It walks the recorded schema of every hosted model the catalog lists. For each one, a body built from the form validates against the schema. A model the form cannot represent fails that test by name.
-5. **The graphs.** The graphs in `workflows/` join the list of the task they run, run by Comfy Cloud through the Comfy API v2, or by your own ComfyUI behind comfy-api-proxy. Each is marked Open weights.
-6. **The deny list.** `packages/catalog/src/comfy/model-deny.ts` hides every Wan model and every model named after the product the challenge is named after. It is data, and a test replays a catalog that holds one.
-7. **The facts and the marks.** `packages/catalog/src/comfy/model-facts.json` holds each model's facts with their sources, such as its open weights. `packages/catalog/src/comfy/proven-families.ts` marks each maker whose model ran in Rosesfield, with the date.
-8. **The price.** Generate shows the price in Comfy credits before you press it: the measured price of that model at those settings once one run was made, otherwise Comfy's estimate or its published rate card, otherwise Price unknown. After the run, History shows its real credits from the balance route.
+5. **The graphs.** The graphs in `workflows/` join the list of the task they run, run by Comfy Cloud through the Comfy API v2, or by your own ComfyUI behind comfy-api-proxy. A graph that loads open weights is marked Open weights.
+6. **A graph that runs a partner node.** A Rosesfield graph in `workflows/` may run a Comfy partner node, a ComfyUI core node that calls a model on its maker's service. Comfy bills that run to your Comfy account through your key, which the engine sends with the job as `extra_data.api_key_comfy_org` and never logs or stores. The graph names each partner node it runs in `partnerNodes` of its `entry.json`, sets `openSource` to false and carries no Open weights mark. Only the graphs §Graphs that run a partner node lists run one, and `packages/catalog/test/open-weights.test.ts` refuses any other.
+7. **The deny list.** `packages/catalog/src/comfy/model-deny.ts` hides every Wan model and every model named after the product the challenge is named after. It is data, and a test replays a catalog that holds one.
+8. **The facts and the marks.** `packages/catalog/src/comfy/model-facts.json` holds each model's facts with their sources, such as its open weights. `packages/catalog/src/comfy/proven-families.ts` marks each maker whose model ran in Rosesfield, with the date.
+9. **The price.** Generate shows the price in Comfy credits before you press it: the measured price of that model at those settings once one run was made, otherwise Comfy's estimate or its published rate card, otherwise Price unknown. After the run, History shows its real credits from the balance route.
 
 Each hosted model's licence and terms are its maker's, and Comfy's terms govern every run.
+
+## Graphs that run a partner node
+
+Each row names the partner node the graph runs, the model behind it and the terms that govern each run. No weights load on your machine.
+
+| Graph | Partner node | Model | Terms |
+|---|---|---|---|
+| [`three-d-meshy-image`](../workflows/three-d-meshy-image/README.md) | `MeshyImageToModelNode` | Meshy 7.1, from a photo | [Meshy's terms](https://www.meshy.ai/terms-of-use) and [Comfy's terms](https://www.comfy.org/terms-of-service) |
 
 ## The licence of each graph
 

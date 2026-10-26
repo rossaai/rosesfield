@@ -18,7 +18,7 @@ workflows/
 ```
 
 - 46 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
-- Every graph runs open weights only. It holds no partner node and no Comfy Router call. The catalog test `open-weights.test.ts` checks every app's bindings.
+- Every graph runs open weights, except a graph that runs a Comfy partner node listed in `docs/models.md` §Graphs that run a partner node. No graph makes a Comfy Router call. The catalog test `open-weights.test.ts` checks every app's bindings.
 - `bun run catalog:sync` lists every folder in `packages/catalog/src/workflows.gen.ts`. It refuses a folder without `entry.json`, `<id>.json` and `<id>.api.json`.
 - A workflow is proven by one Generate in the running app on its app's screen, on a real input. No script runs a paid model. `bun scripts/checks/output-files/check-output-files.ts --library <gateway>` then checks each output in the library.
 - An app binds a task with `taskBinding`. Its model choice runs a hosted model from the Comfy Router catalog, or one of these workflows as the task's open-weights graphs, through the same engine port.
@@ -55,7 +55,7 @@ A script wrote every UI file from its API file with the node definitions of Comf
 
 ### `entry.json`
 
-- One entry per workflow, read by `packages/catalog/src/list-workflows.ts`. Its field names come from Comfy's template index and from the hub records on comfy.org: `name`, `title`, `description`, `mediaType`, `openSource`, `models` and `requiresCustomNodes`, then `inputBindings`, which maps each input to a `nodeId` and an `inputName` as `scalar` or `cloud-asset`, then `outputs`, each with `nodeId`, `key` and `kind`.
+- One entry per workflow, read by `packages/catalog/src/list-workflows.ts`. Its field names come from Comfy's template index and from the hub records on comfy.org: `name`, `title`, `description`, `mediaType`, `openSource`, `models` and `requiresCustomNodes`, then `partnerNodes`, the partner nodes the graph runs, then `inputBindings`, which maps each input to a `nodeId` and an `inputName` as `scalar` or `cloud-asset`, then `outputs`, each with `nodeId`, `key` and `kind`.
 - `models` lists the files the API file loads, or the model names the app's history records. A run records every model of its workflow's entry.
 
 ### `index.json`
@@ -104,7 +104,7 @@ One model often has several workflows, because the apps build different graphs o
 
 ## Rules for every workflow
 
-1. **Open weights only.** No partner node, no Router call and no closed API.
+1. **Open weights first.** No Router call and no closed API. A partner node runs only in a graph `docs/models.md` §Graphs that run a partner node lists, and its `entry.json` names it in `partnerNodes` with `openSource` false.
 2. **Core nodes first.** A workflow uses ComfyUI core nodes wherever they do the step. A custom node pack is pinned at a full commit, named in the note and the README, and listed in `requiresCustomNodes`. Two workflows load a pack: `voice-chatterbox` loads ComfyUI_Fill-ChatterBox, and `lipsync-clip-infinitetalk` loads ComfyUI-WanVideoWrapper. Comfy Cloud installs no pack of your own, per `docs/stack.md` §The Comfy API v2.
 3. **Flat.** In the API file, a subgraph renames every inner node to `<outer id>:<inner id>`, which breaks the catalog's bindings, and the registry refuses such an id. A blueprint reaches a person only through a custom node pack or their own library. Groups and a note give the same order.
 4. **Our own graphs.** Each graph follows the official template it names in its README, in Comfy-Org/workflow_templates, which is MIT. Its notice is in `NOTICE`. Lightricks' example workflows in ComfyUI-LTXVideo carry the LTX-2 Community License, so they are read for structure and never copied. ComfyUI, its frontend and comfy-cli are GPL-3.0. They are tools, and none of their code is copied here.
