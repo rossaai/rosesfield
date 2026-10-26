@@ -20,6 +20,7 @@ import {
   fieldOptionsOf,
   fieldSettingsPlan,
   fieldShapeOf,
+  fieldValueText,
 } from "@/screens/app/settings-plan"
 import type { AppForm } from "@/screens/app/use-app-form"
 
@@ -68,7 +69,9 @@ export function FieldChoiceChip({
           : chosenIconOf(field.name, role, chosen)
       }
       value={chosen}
-      display={chosen === "" ? t("field.choice.notSet") : chosen}
+      display={
+        chosen === "" ? t("field.choice.notSet") : fieldValueText(field, chosen)
+      }
       onValueChange={choose}
       options={
         role === "aspect"
@@ -133,7 +136,7 @@ export function ModelFieldChip({
         <StepperChip
           label={label}
           icon={icon}
-          shown={String(chosen)}
+          shown={fieldValueText(field, chosen)}
           value={chosen}
           min={min}
           max={field.max ?? Number.POSITIVE_INFINITY}

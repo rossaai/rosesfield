@@ -92,6 +92,29 @@ describe("the traits of Characters", () => {
   })
 })
 
+describe("the traits column", () => {
+  it("shows the details, then the model once, then the format and the plain background, with the seed closed under Advanced", async () => {
+    openCharacters()
+    const model = await screen.findByRole("button", { name: trigger(zImage) })
+    await screen.findByRole("button", { name: pricedName(graphCredits) })
+    const details = screen.getByRole("textbox")
+    const format = screen.getByRole("radiogroup", {
+      name: t("field.aspect.label"),
+    })
+    const plain = screen.getByRole("switch")
+    const advanced = screen.getByRole("button", { name: t("field.advanced") })
+    const after = (first: Element, second: Element): boolean =>
+      (first.compareDocumentPosition(second) &
+        Node.DOCUMENT_POSITION_FOLLOWING) !==
+      0
+    expect(after(details, model)).toBe(true)
+    expect(after(model, format)).toBe(true)
+    expect(after(format, plain)).toBe(true)
+    expect(after(plain, advanced)).toBe(true)
+    expect(screen.queryByText(t("field.seed.label"))).toBeNull()
+  })
+})
+
 describe("the random button", () => {
   it("fills every trait group, and Generate sends those traits as words in the picked model's prompt, with the count you chose", async () => {
     openCharacters()

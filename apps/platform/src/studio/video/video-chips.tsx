@@ -1,140 +1,88 @@
-import { fieldRoleOf } from "@rosesfield/catalog/comfy"
+import type { ModelField } from "@rosesfield/catalog/comfy"
 import type { AppListing } from "@rosesfield/contract"
 import { Chip } from "@rosesfield/ui/components/chip"
-import { ChipSelect } from "@rosesfield/ui/components/chip-select"
-import { SettingTiles } from "@rosesfield/ui/components/input-panel"
 import { Volume2Icon, VolumeOffIcon } from "lucide-react"
-import type { ReactElement } from "react"
-import { withUnit } from "@/copy/format"
-import { t, tCatalog } from "@/copy/t"
-import { aspectField } from "@/screens/app/app-form"
+import type { ReactElement, ReactNode } from "react"
+import { tCatalog } from "@/copy/t"
+import { appliedApp } from "@/screens/app/app-form"
+import { textOf } from "@/screens/app/fields/field-props"
 import {
-  SettingChip,
-  StepperChip,
-  settingIconOf,
-  withShapes,
-} from "@/screens/app/bar/setting-chip"
-import { numberOf, textOf } from "@/screens/app/fields/field-props"
+  AdvancedSection,
+  AppSettingsSection,
+} from "@/screens/app/fields/setting-rows"
+import { HostedField } from "@/screens/app/hosted/hosted-fields"
+import { appSettingsPlan, fieldSettingsPlan } from "@/screens/app/settings-plan"
 import type { AppForm } from "@/screens/app/use-app-form"
-import type { ChipField, VideoFields } from "@/studio/video/video-fields"
+import type { VideoFields } from "@/studio/video/video-fields"
 
-const graphChips: readonly string[] = ["length", aspectField, "resolution"]
+export const soundInput = "sound"
 
-const soundInput = "sound"
-
-function seconds(value: string | number): string {
-  const number = Number(value)
-  return Number.isFinite(number)
-    ? withUnit(number, tCatalog("video.input.length.unit"))
-    : String(value)
+export function settingFieldsOf(fields: VideoFields): ModelField[] {
+  return [
+    fields.length,
+    fields.aspect,
+    fields.resolution,
+    ...fields.required,
+    ...fields.rest,
+  ].flatMap((field) => (field === null ? [] : [field]))
 }
 
-function FieldChip({
-  field,
-  label,
+function FieldRows({
+  fields,
   form,
-  shown,
 }: {
-  field: ChipField
-  label: string
+  fields: readonly ModelField[]
   form: AppForm
-  shown: (value: string | number) => string
-}): ReactElement {
-  const value = form.values.inputs[field.name]
-  const icon = settingIconOf(field.name, fieldRoleOf(field, "video"))
-  if (field.kind === "number") {
-    const min = field.min ?? 0
-    const chosen = numberOf(value, field.default ?? min)
-    return (
-      <StepperChip
-        label={label}
-        shown={shown(chosen)}
-        icon={icon}
-        value={chosen}
-        min={min}
-        max={field.max ?? min}
-        step={1}
-        onChange={(next) => form.setInput(field.name, next)}
-      />
-    )
-  }
-  const current = value === undefined ? "" : String(value)
-  const options = field.options.map((option) => ({
-    value: String(option),
-    label: shown(option),
-  }))
-  return (
-    <ChipSelect
-      label={label}
-      icon={icon}
-      value={current}
-      display={current === "" ? t("field.choice.notSet") : shown(current)}
-      onValueChange={(next) =>
-        form.setInput(
-          field.name,
-          field.options.find((one) => String(one) === next)
-        )
-      }
-      options={
-        fieldRoleOf(field, "video") === "aspect" ? withShapes(options) : options
-      }
+}): ReactNode {
+  return fields.map((field) => (
+    <HostedField
+      key={field.name}
+      field={field}
+      value={form.values.inputs[field.name]}
+      form={form}
     />
-  )
+  ))
 }
 
-export function VideoChips({
+export function VideoSettings({
   app,
   form,
   fields,
+  lastSeed,
+  placed,
+  count = null,
 }: {
   app: AppListing
   form: AppForm
   fields: VideoFields | null
-}): ReactElement | null {
+  lastSeed: number | null
+  placed: readonly string[]
+  count?: ReactNode
+}): ReactNode {
   if (fields === null) {
     return (
-      <SettingTiles>
-        {graphChips.map((name) => (
-          <SettingChip key={name} app={app} form={form} name={name} />
-        ))}
-      </SettingTiles>
+      <AppSettingsSection
+        app={app}
+        form={form}
+        lastSeed={lastSeed}
+        plan={appSettingsPlan(appliedApp(app, form.values.inputs), [
+          soundInput,
+          ...placed,
+        ])}
+      />
     )
   }
-  if (
-    fields.length === null &&
-    fields.aspect === null &&
-    fields.resolution === null
-  ) {
-    return null
-  }
-  const plain = (value: string | number): string => String(value)
+  const plan = fieldSettingsPlan(settingFieldsOf(fields))
   return (
-    <SettingTiles>
-      {fields.length === null ? null : (
-        <FieldChip
-          field={fields.length}
-          label={tCatalog("video.input.length.label")}
-          form={form}
-          shown={seconds}
-        />
+    <>
+      <FieldRows fields={plan.main} form={form} />
+      {count}
+      {plan.advanced.length === 0 ? null : (
+        <AdvancedSection>
+          <FieldRows fields={plan.advanced} form={form} />
+        </AdvancedSection>
       )}
-      {fields.aspect === null ? null : (
-        <FieldChip
-          field={fields.aspect}
-          label={t("field.aspect.label")}
-          form={form}
-          shown={plain}
-        />
-      )}
-      {fields.resolution === null ? null : (
-        <FieldChip
-          field={fields.resolution}
-          label={tCatalog("video.input.resolution.label")}
-          form={form}
-          shown={plain}
-        />
-      )}
-    </SettingTiles>
+    </>
   )
 }
 

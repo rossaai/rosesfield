@@ -2,7 +2,13 @@ import { findApp } from "@rosesfield/catalog"
 import { appListing } from "@rosesfield/contract"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { cleanup, render, screen, within } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t, tCatalog } from "@/copy/t"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
@@ -10,6 +16,7 @@ import type { AppForm } from "@/screens/app/use-app-form"
 import { ShotPanel } from "@/studio/shot/shot-panel"
 import { choicesOf, wordsOf } from "@/studio/shot/shot-prompt"
 import type { ShotScreen } from "@/studio/shot/use-shot-screen"
+import { advancedToggle, isBefore, theModelChip } from "../column"
 
 beforeEach(() => {
   vi.stubGlobal("fetch", () => new Promise(() => undefined))
@@ -92,7 +99,7 @@ function show(value: ShotScreen): HTMLElement {
 const lists = ["movement", "camera", "lens", "focus", "light", "color", "mood"]
 
 describe("Shot's input column when it opens", () => {
-  it("shows 7 shot choices, each on Auto, and the seed as a plain field with no Advanced section", () => {
+  it("shows 7 shot choices, each on Auto, then the model once, then the length and the format, with the seed closed under Advanced", () => {
     const container = show(screenOf({}))
     const choices = container.querySelector<HTMLElement>(
       "[data-slot='shot-choices']"
@@ -108,10 +115,15 @@ describe("Shot's input column when it opens", () => {
     expect(
       within(choices).getAllByText(tCatalog("choice.auto")).length
     ).toBeGreaterThanOrEqual(lists.length)
-    expect(
-      screen.queryByRole("button", { name: t("field.advanced") })
-    ).toBeNull()
-    expect(screen.getByText(t("field.seed.label"))).toBeTruthy()
+    const model = theModelChip()
+    const length = screen.getByRole("group", {
+      name: tCatalog("shot.input.length.label"),
+    })
+    const advanced = advancedToggle()
+    expect(isBefore(choices, model)).toBe(true)
+    expect(isBefore(model, length)).toBe(true)
+    expect(isBefore(length, advanced)).toBe(true)
+    expect(screen.queryByText(t("field.seed.label"))).toBeNull()
   })
 
   it("shows the start frame well, and no words while the scene is empty", () => {
@@ -140,9 +152,10 @@ describe("a model whose schema takes no start frame", () => {
   })
 })
 
-describe("after Use these inputs", () => {
-  it("shows the run's seed with no section to open", () => {
+describe("the column's Advanced section", () => {
+  it("shows the seed once you open it", () => {
     show(screenOf({ filled: 1 }))
+    fireEvent.click(advancedToggle())
     expect(screen.getByText(t("field.seed.label"))).toBeTruthy()
   })
 })

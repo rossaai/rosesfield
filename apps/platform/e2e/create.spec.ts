@@ -137,7 +137,7 @@ test.describe("the prompt bar's field and model chip", () => {
 test.describe("an app with many inputs on a desktop", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("holds a 320 px column at x 16 with a 40 px Generate across its 60 px footer, ending 16 px above the window's bottom, and the output 8 px to its right running to the window's bottom", async ({
+  test("holds a 320 px column at x 16 with a 40 px Generate across its 50 px footer, 10 px in from its edges, ending 16 px above the window's bottom, and the output 8 px to its right running to the window's bottom", async ({
     page,
   }) => {
     await page.goto("/apps/video")
@@ -149,9 +149,9 @@ test.describe("an app with many inputs on a desktop", () => {
     const generate = await boxOf(
       column.locator('[data-slot="generate-button"]')
     )
-    expect([generate.width, generate.height]).toEqual([286, 40])
+    expect([generate.width, generate.height]).toEqual([298, 40])
     const footer = await boxOf(column.locator('[data-slot="composer-toolbar"]'))
-    expect(footer.height).toBe(60)
+    expect(footer.height).toBe(50)
     const canvas = await boxOf(
       page.getByRole("region", { name: "Your results" })
     )
@@ -165,7 +165,7 @@ test.describe("an app with many inputs on a desktop", () => {
 test.describe("the parts of Video's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("stacks 302 px parts 8 px apart: 30 px mode tabs, a 302 by 130 start frame with Change 7 px from its corner, a 302 px prompt and a 36 px model field holding a 26 px chip", async ({
+  test("stacks 298 px parts at the column's one 10 px inset: 30 px mode tabs, a 298 by 130 start frame with Change 7 px from its corner, a 298 px prompt and the model as one 298 by 40 chip with no caption", async ({
     page,
   }) => {
     await page.goto("/apps/video")
@@ -175,7 +175,7 @@ test.describe("the parts of Video's column", () => {
     expect(tab.height).toBe(30)
     const frame = column.locator('[data-slot="composer-attachments-tiles"]')
     const frameBox = await boxOf(frame)
-    expect([frameBox.width, frameBox.height]).toEqual([302, 130])
+    expect([frameBox.width, frameBox.height]).toEqual([298, 130])
     const change = await boxOf(
       frame.locator('[data-slot="start-frame-change"]')
     )
@@ -184,18 +184,22 @@ test.describe("the parts of Video's column", () => {
     const prompt = await boxOf(
       column.locator('[data-slot="composer-prompt-block"]')
     )
-    expect(prompt.width).toBe(302)
-    const field = await boxOf(column.locator('[data-slot="model-row-field"]'))
-    expect([field.width, field.height]).toEqual([302, 36])
-    expect((await boxOf(column.locator(modelRow))).height).toBe(26)
-    expect(frameBox.y).toBe(tab.y + tab.height + 8)
+    expect(prompt.width).toBe(298)
+    await expect(column.locator('[data-slot="model-row-field"]')).toHaveCount(0)
+    const chip = column.locator(modelRow)
+    await expect(chip).toHaveCount(1)
+    await expect(chip).toHaveAttribute("data-width", "full")
+    const chipBox = await boxOf(chip)
+    expect([chipBox.width, chipBox.height]).toEqual([298, 40])
+    expect(chipBox.y).toBeGreaterThan(prompt.y + prompt.height)
+    expect(frameBox.y).toBe(tab.y + tab.height + 10)
   })
 })
 
 test.describe("the tray and rhythm of Video's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("holds the mode tabs 16 px in from the tray's edge, fades the strip's end where a tab passes under it, and scrolls a chosen tab into the tray", async ({
+  test("holds the mode tabs 10 px in from the tray's edge, fades the strip's end where a tab passes under it, and scrolls a chosen tab into the tray", async ({
     page,
   }) => {
     await page.goto("/apps/video")
@@ -203,7 +207,7 @@ test.describe("the tray and rhythm of Video's column", () => {
     await expect(column).toBeVisible()
     const tab = await boxOf(column.getByRole("tab").first())
     const tray = await boxOf(column.locator('[data-slot="composer-tray"]'))
-    expect(tab.x).toBe(tray.x + 16)
+    expect(tab.x).toBe(tray.x + 10)
     const strip = column.getByRole("tablist")
     await expect(strip).toHaveAttribute("data-scroll-end", "yes")
     await expect(strip).toHaveCSS("mask-image", /rgba\(0, 0, 0, 0\)\)$/)
@@ -215,21 +219,6 @@ test.describe("the tray and rhythm of Video's column", () => {
         const box = await boxOf(last)
         return box.x + box.width <= tray.x + tray.width
       })
-      .toBe(true)
-  })
-
-  test("fits every part above the footer at rest on LTX 2.5, with an Elements chip in the prompt", async ({
-    page,
-  }) => {
-    await page.goto("/apps/video")
-    const column = page.locator('[data-slot="composer"]')
-    await expect(column.locator(modelRow)).toContainText("LTX 2.5")
-    await expect(column.getByRole("button", { name: "Elements" })).toBeVisible()
-    const parts = column.locator('[data-slot="composer-prompt"]')
-    await expect
-      .poll(() =>
-        parts.evaluate((node) => node.scrollHeight <= node.clientHeight)
-      )
       .toBe(true)
   })
 
@@ -250,10 +239,34 @@ test.describe("the tray and rhythm of Video's column", () => {
   })
 })
 
+test.describe("Video's settings in the column", () => {
+  test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
+
+  test("opens on LTX 2.5 with an Elements chip in the prompt, and its length and resolution as rows below the model, with Advanced closed", async ({
+    page,
+  }) => {
+    await page.goto("/apps/video")
+    const column = page.locator('[data-slot="composer"]')
+    const chip = column.locator(modelRow)
+    await expect(chip).toContainText("LTX 2.5")
+    await expect(column.getByRole("button", { name: "Elements" })).toBeVisible()
+    const length = column.getByRole("group", { name: "Length" })
+    await expect(length).toHaveCount(1)
+    expect((await boxOf(length)).y).toBeGreaterThan((await boxOf(chip)).y)
+    await expect(
+      column.getByRole("radiogroup", { name: "Resolution" })
+    ).toHaveCount(1)
+    await expect(
+      column.getByRole("button", { name: "Advanced" })
+    ).toHaveAttribute("aria-expanded", "false")
+    await expect(column.getByText("Seed")).toHaveCount(0)
+  })
+})
+
 test.describe("Video's mode switch and column fit", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("puts the 302 by 26 mode switch 8 px under the start frame and 16 px over the drop zone, and ends the last row 8 px above Generate, or 40 px over the fade when the column scrolls, in every tab", async ({
+  test("puts the 298 by 26 mode switch 13 px under the start frame and 13 px over the drop zone, and ends the last row 10 px above Generate, or 40 px over the fade when the column scrolls, in every tab", async ({
     page,
   }) => {
     await page.goto("/apps/video")
@@ -265,10 +278,10 @@ test.describe("Video's mode switch and column fit", () => {
     const toggle = await boxOf(
       column.getByRole("radiogroup", { name: "Operation" })
     )
-    expect([toggle.width, toggle.height]).toEqual([302, 26])
-    expect(toggle.y).toBe(frame.y + frame.height + 8)
+    expect([toggle.width, toggle.height]).toEqual([298, 26])
+    expect(toggle.y).toBe(frame.y + frame.height + 13)
     const wells = await boxOf(column.locator('[data-slot="video-wells"]'))
-    expect(wells.y).toBe(toggle.y + toggle.height + 16)
+    expect(wells.y).toBe(toggle.y + toggle.height + 13)
     const parts = column.locator('[data-slot="video-parts"]')
     const footer = column.locator('[data-slot="composer-toolbar"]')
     for (const [tab, model] of [
@@ -298,7 +311,7 @@ test.describe("Video's mode switch and column fit", () => {
             }
           })
           const gap = Math.round((await boxOf(footer)).y - end.bottom)
-          return gap - (end.isClipped ? 40 : 8)
+          return gap - (end.isClipped ? 40 : 10)
         })
         .toBe(0)
     }

@@ -6,6 +6,7 @@ import {
 } from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { settingOf } from "@/catalog/setting-registry"
+import { formatDuration } from "@/copy/format"
 import { modelInputName } from "@/pieces/run/run-facts"
 import { aspectField, countField } from "@/screens/app/app-form"
 
@@ -195,12 +196,24 @@ export function controlOf(shape: ControlShape): SettingControl {
   }
 }
 
+export function fieldValueText(
+  field: ModelField,
+  value: string | number
+): string {
+  const seconds = Number(value)
+  return fieldRoleOf(field, "") === "length" &&
+    value !== "" &&
+    Number.isFinite(seconds)
+    ? formatDuration(seconds)
+    : String(value)
+}
+
 export function fieldOptionsOf(
   field: Extract<ModelField, { kind: "choice" }>
 ): ChoiceOption[] {
   return field.options.map((option) => ({
     value: String(option),
-    label: String(option),
+    label: fieldValueText(field, option),
   }))
 }
 

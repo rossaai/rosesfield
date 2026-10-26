@@ -1,21 +1,33 @@
 import type { AppListing } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
-import { type ReactElement, useEffect, useRef, useState } from "react"
-import { formatDuration } from "@/copy/format"
+import {
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 import { t, tCatalog } from "@/copy/t"
 import { assetLimitsText } from "@/pieces/asset-limits"
 import { CharacterPicker } from "@/pieces/character-picker"
 import { DropWell } from "@/pieces/drop-well"
+import { appliedApp } from "@/screens/app/app-form"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { listOf } from "@/screens/app/fields/field-props"
 import { inputCaption } from "@/screens/app/fields/input-copy"
 import { InputField } from "@/screens/app/fields/input-field"
+import { AppSettingsSection } from "@/screens/app/fields/setting-rows"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
-import { AdvancedFields } from "@/screens/app/inputs-panel"
+import { appSettingsPlan, isSettingInput } from "@/screens/app/settings-plan"
 import { clipLimits, photoLimits } from "@/studio/motion/motion-checks"
-import { isMotionTab, motionTabs, tabKeys } from "@/studio/motion/motion-tabs"
+import {
+  isMotionTab,
+  modeInput,
+  motionTabs,
+  tabKeys,
+} from "@/studio/motion/motion-tabs"
 import type { MotionState } from "@/studio/motion/use-motion-screen"
 
 type WellKind = "image" | "video"
@@ -70,7 +82,6 @@ type WellProps = {
   kind: WellKind
   name: string
   limits: string
-  note: string | null
   message: string | null
   children?: ReactElement | null
 }
@@ -89,7 +100,7 @@ function Well(props: WellProps): ReactElement {
     <FieldFrame
       caption={captionOf(state.app, props.kind)}
       isOptional={false}
-      note={props.note}
+      note={null}
       problem={form.problems.get(name)}
       message={wellMessage ?? props.message}
     >
@@ -122,18 +133,12 @@ function CharacterButton({ state }: { state: MotionState }): ReactElement {
 }
 
 function ClipWell({ state }: { state: MotionState }): ReactElement {
-  const seconds = state.checks.clipSeconds
   return (
     <Well
       state={state}
       kind="video"
       name={state.names.clip}
       limits={clipLimitsOf(state)}
-      note={
-        seconds === null || state.checks.clip !== null
-          ? null
-          : formatDuration(seconds)
-      }
       message={state.clipMessage}
     />
   )
@@ -146,7 +151,6 @@ function PhotoWell({ state }: { state: MotionState }): ReactElement {
       kind="image"
       name={state.names.photo}
       limits={photoLimitsOf()}
-      note={null}
       message={state.photoMessage}
     >
       {state.tab === "swap" ? <CharacterButton state={state} /> : null}
@@ -154,25 +158,48 @@ function PhotoWell({ state }: { state: MotionState }): ReactElement {
   )
 }
 
-function RestFields({ state }: { state: MotionState }): ReactElement {
+function RestFields({
+  state,
+  model,
+}: {
+  state: MotionState
+  model: ReactNode
+}): ReactElement {
   const { form } = state
   if (!state.isGraph) {
-    return <HostedFields fields={state.restFields} form={form} />
+    return (
+      <HostedFields
+        fields={state.restFields}
+        form={form}
+        app={state.app}
+        model={model}
+      />
+    )
   }
   return (
     <>
-      {state.graphRest.map((input) => (
-        <InputField
-          key={input.name}
-          app={state.app}
-          input={input}
-          value={form.values.inputs[input.name]}
-          problem={form.problems.get(input.name)}
-          onChange={(value) => form.setInput(input.name, value)}
-          register={(focus) => form.register(input.name, focus)}
-        />
-      ))}
-      <AdvancedFields app={state.app} form={form} lastSeed={state.lastSeed} />
+      {state.graphRest
+        .filter((input) => !isSettingInput(input))
+        .map((input) => (
+          <InputField
+            key={input.name}
+            app={state.app}
+            input={input}
+            value={form.values.inputs[input.name]}
+            problem={form.problems.get(input.name)}
+            onChange={(value) => form.setInput(input.name, value)}
+            register={(focus) => form.register(input.name, focus)}
+          />
+        ))}
+      {model}
+      <AppSettingsSection
+        app={state.app}
+        form={form}
+        lastSeed={state.lastSeed}
+        plan={appSettingsPlan(appliedApp(state.app, form.values.inputs), [
+          modeInput,
+        ])}
+      />
     </>
   )
 }
@@ -182,10 +209,14 @@ export function MotionPanel({ state }: { state: MotionState }): ReactElement {
     <div className="flex flex-col gap-s4">
       <ClipWell key={`clip-${state.names.clip}`} state={state} />
       <PhotoWell key={`photo-${state.names.photo}`} state={state} />
-      {state.hosted.isTaskApp ? (
-        <CatalogPicker hosted={state.hosted} place="row" />
-      ) : null}
-      <RestFields state={state} />
+      <RestFields
+        state={state}
+        model={
+          state.hosted.isTaskApp ? (
+            <CatalogPicker hosted={state.hosted} place="row" />
+          ) : null
+        }
+      />
     </div>
   )
 }

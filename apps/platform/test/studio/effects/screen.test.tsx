@@ -208,3 +208,25 @@ describe("Effects drafts", () => {
     ).toBeNull()
   })
 })
+
+describe("the Effects column", () => {
+  it("shows the format, then the resolution as a row, with the seed closed under Advanced", async () => {
+    openEffects()
+    await openSheet()
+    const body = sheetPart("sheet-body")
+    const format = screen.getByText(tCatalog("effects.input.aspect.label"))
+    const resolution = screen.getByText(
+      tCatalog("effects.input.resolution.label")
+    )
+    const advanced = screen.getByRole("button", { name: t("field.advanced") })
+    expect(
+      format.compareDocumentPosition(resolution) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
+    expect(
+      resolution.compareDocumentPosition(advanced) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
+    expect(body.textContent).not.toContain(tCatalog("effects.input.seed.label"))
+  })
+})

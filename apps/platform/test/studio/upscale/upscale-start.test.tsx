@@ -1,8 +1,15 @@
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { act, cleanup, renderHook, waitFor } from "@testing-library/react"
+import {
+  act,
+  cleanup,
+  renderHook,
+  screen,
+  waitFor,
+} from "@testing-library/react"
 import { type ReactNode, useCallback, useState } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { t, tCatalog } from "@/copy/t"
 import { liveSettings } from "@/gallery/screens/screen-fixtures"
 import {
   defaultsOf,
@@ -12,7 +19,9 @@ import {
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
 import type { FileFacts, FileReading } from "@/studio/upscale/upscale-limits"
+import { UpscalePanel } from "@/studio/upscale/upscale-panel"
 import { useUpscaleScreen } from "@/studio/upscale/use-upscale-screen"
+import { advancedToggle, isBefore, showColumn, theModelChip } from "../column"
 import { catalog, graph, upscaleListing, waveSpeed } from "./upscale-fixtures"
 
 const listing = upscaleListing()
@@ -166,5 +175,22 @@ describe("Generate on Upscale", () => {
       inputs: { mode: "image", image: [photo], model: graph.id, scale: "2x" },
     })
     expect(posted[0]?.body).not.toHaveProperty("inputs.video")
+  })
+})
+
+describe("the Upscale column", () => {
+  it("shows the photo, then the model once with no caption, then the scale, with the seed closed under Advanced", () => {
+    const { result } = renderUpscale({ image: [photo] })
+    showColumn(<UpscalePanel state={result.current} />)
+    const well = screen.getByText(tCatalog("upscale.input.image.label"))
+    const model = theModelChip()
+    const scale = screen.getByRole("radiogroup", {
+      name: tCatalog("upscale.input.scale.label"),
+    })
+    expect(isBefore(well, model)).toBe(true)
+    expect(isBefore(model, scale)).toBe(true)
+    expect(isBefore(scale, advancedToggle())).toBe(true)
+    expect(screen.queryByText(tCatalog("upscale.input.model.label"))).toBeNull()
+    expect(screen.queryByText(t("field.seed.label"))).toBeNull()
   })
 })

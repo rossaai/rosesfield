@@ -1,6 +1,5 @@
 import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement } from "react"
-import { appName } from "@/catalog/app-facts"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { AppCanvas } from "@/screens/app/app-canvas"
 import { AppStage } from "@/screens/app/app-stage"
@@ -21,7 +20,6 @@ export function EditFrame({ state }: { state: EditToolState }): ReactElement {
   const place: DockPlace = isRegular ? "float" : "edge"
   return (
     <div data-slot="edit-frame" className="flex h-full min-h-0 flex-col">
-      <h1 className="sr-only">{appName(state.app)}</h1>
       <div
         data-slot="bar-stage"
         className="flex min-h-0 flex-1 pb-4 @regular:pb-0"

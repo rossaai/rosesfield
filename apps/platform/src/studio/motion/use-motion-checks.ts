@@ -16,7 +16,6 @@ import {
 export type MotionChecks = {
   clip: FieldProblem | null
   photo: FieldProblem | null
-  clipSeconds: number | null
   readingInput: string | null
 }
 
@@ -91,7 +90,6 @@ export function useMotionChecks(
   return {
     clip: clipCheckOf(clip, range, names.clip),
     photo: photoCheckOf(photo, names.photo),
-    clipSeconds: clip.state === "read" ? clip.facts.seconds : null,
     readingInput,
   }
 }

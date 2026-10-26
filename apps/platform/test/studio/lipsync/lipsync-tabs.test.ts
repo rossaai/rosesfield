@@ -3,13 +3,11 @@ import { lengthFor } from "@/studio/lipsync/lipsync-checks"
 import {
   clipDefault,
   defaultsOfTab,
-  featuredOf,
   formOfModel,
   lengthStepOf,
   lipFieldsOf,
   modelForTab,
   modelsOfTab,
-  nearModels,
   tabOfInputs,
 } from "@/studio/lipsync/lipsync-tabs"
 import {
@@ -57,15 +55,6 @@ describe("the lip sync tabs", () => {
     expect(modelForTab(photo, avatar.id, defaultsOfTab("photo", ltx.id))).toBe(
       avatar.id
     )
-  })
-
-  it("put Kling Avatar 2.0 and Kling Lip Sync first in the picker, one choice away, before the models you ran", () => {
-    expect(featuredOf(catalog, [seedance.id])).toEqual([
-      ...nearModels,
-      seedance.id,
-    ])
-    expect(nearModels).toEqual([avatar.id, lipSync.id])
-    expect(featuredOf([ltx], [])).toEqual([])
   })
 
   it("read each model's own inputs and length limit from its schema", () => {

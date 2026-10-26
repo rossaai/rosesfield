@@ -1,23 +1,31 @@
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
-import { type ReactElement, useEffect, useRef, useState } from "react"
+import {
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 import { tCatalog } from "@/copy/t"
 import { assetLimitsText } from "@/pieces/asset-limits"
 import { DropWell } from "@/pieces/drop-well"
-import { ChoiceControl, ChoiceField } from "@/screens/app/fields/choice-field"
+import { aspectField } from "@/screens/app/app-form"
+import { AppModelPicker } from "@/screens/app/bar/model-settings"
+import { ChoiceControl } from "@/screens/app/fields/choice-field"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
-import { listOf, textOf } from "@/screens/app/fields/field-props"
+import { listOf } from "@/screens/app/fields/field-props"
 import { inputCaption, inputNote } from "@/screens/app/fields/input-copy"
-import { SeedField } from "@/screens/app/fields/seed-field"
+import { AppSettingsSection } from "@/screens/app/fields/setting-rows"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
-import { HostedFields } from "@/screens/app/hosted/hosted-fields"
-import { randomSeed } from "@/screens/app/inputs-panel"
+import { HostedSettings } from "@/screens/app/hosted/hosted-fields"
+import { appSettingsPlan } from "@/screens/app/settings-plan"
 import {
   isUpscaleMode,
   type UpscaleMode,
 } from "@/studio/upscale/upscale-limits"
 import {
-  modelInput,
+  modeInput,
   type ScaleOption,
   scaleInput,
   upscaleModes,
@@ -204,36 +212,11 @@ function ScaleField({ state }: { state: UpscaleState }): ReactElement | null {
   )
 }
 
-function GraphModelField({
-  state,
-}: {
-  state: UpscaleState
-}): ReactElement | null {
-  const input = choiceOf(state.app, modelInput)
-  if (input === null || input.options.length < 2) {
-    return null
-  }
-  const value = textOf(state.form.values.inputs[modelInput]) || input.default
-  const option = input.options.find((one) => one.value === value)
-  return (
-    <ChoiceField
-      label={inputCaption(input)}
-      items={input.options.map((one) => ({
-        value: one.value,
-        label: tCatalog(one.labelKey),
-      }))}
-      value={value}
-      onChange={(next) => state.form.setInput(modelInput, next)}
-      note={option === undefined ? null : tCatalog(`${option.labelKey}.line`)}
-    />
-  )
-}
-
 function ModelRow({ state }: { state: UpscaleState }): ReactElement | null {
   return state.hosted.isTaskApp ? (
     <CatalogPicker hosted={state.hosted} place="row" />
   ) : (
-    <GraphModelField state={state} />
+    <AppModelPicker app={state.app} form={state.form} place="row" />
   )
 }
 
@@ -242,50 +225,28 @@ function isGraphChosen(state: UpscaleState): boolean {
   return chosen === null || chosen.form === null
 }
 
-function SeedInput({ state }: { state: UpscaleState }): ReactElement | null {
-  const seed = state.app.inputs.find((input) => input.type === "seed")
-  if (seed === undefined || !isGraphChosen(state)) {
-    return null
-  }
-  const { form } = state
-  const value = form.values.inputs[seed.name]
-  return (
-    <SeedField
-      mode={form.values.seedMode}
-      value={value}
-      onMode={(mode) => {
-        form.setForm({ seedMode: mode })
-        if (mode === "fixed" && typeof value !== "number") {
-          form.setInput(seed.name, state.lastSeed ?? randomSeed())
-        }
-      }}
-      onChange={(next) => form.setInput(seed.name, next)}
-    />
-  )
-}
+const placedInputs: readonly string[] = [modeInput, scaleInput, aspectField]
 
-function Advanced({ state }: { state: UpscaleState }): ReactElement | null {
-  const optional = state.restFields.filter((field) => !field.required)
-  if (optional.length === 0 && !isGraphChosen(state)) {
-    return null
-  }
-  return (
-    <>
-      <HostedFields fields={optional} form={state.form} />
-      <SeedInput state={state} />
-    </>
+function Settings({ state }: { state: UpscaleState }): ReactNode {
+  return isGraphChosen(state) ? (
+    <AppSettingsSection
+      app={state.app}
+      form={state.form}
+      lastSeed={state.lastSeed}
+      plan={appSettingsPlan(state.app, placedInputs)}
+    />
+  ) : (
+    <HostedSettings fields={state.restFields} form={state.form} />
   )
 }
 
 export function UpscalePanel({ state }: { state: UpscaleState }): ReactElement {
-  const required = state.restFields.filter((field) => field.required)
   return (
     <div className="flex flex-col gap-s4">
       <FileWell key={`${state.mode}-${state.well.name}`} state={state} />
-      <ScaleField state={state} />
       <ModelRow state={state} />
-      <HostedFields fields={required} form={state.form} />
-      <Advanced state={state} />
+      <ScaleField state={state} />
+      <Settings state={state} />
     </div>
   )
 }

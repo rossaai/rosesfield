@@ -169,7 +169,7 @@ describe("the create gallery", () => {
 })
 
 describe("the create gallery's column", () => {
-  it("shows the live Video column: its three mode tabs, the start frame, the Video and Extend switch and the setting tiles", () => {
+  it("shows the live Video column: its three mode tabs, the start frame, the Video and Extend switch, one full-width model chip and the settings as rows", () => {
     const entry = referenceCreateEntries.find(
       (one) => one.id === "ref-input-panel"
     )
@@ -197,8 +197,12 @@ describe("the create gallery's column", () => {
     if (!(parts instanceof HTMLElement)) {
       throw new Error("no parts")
     }
+    const makeSwitch = parts.querySelector("[data-slot='make-switch']")
+    if (!(makeSwitch instanceof HTMLElement)) {
+      throw new Error("no mode switch")
+    }
     expect(
-      within(parts)
+      within(makeSwitch)
         .getAllByRole("radio")
         .map((cell) => cell.textContent)
     ).toEqual([t("kind.video"), tCatalog("videoEdit.choice.mode.extend")])
@@ -207,7 +211,15 @@ describe("the create gallery's column", () => {
     )
     expect(frame?.textContent).toContain(tCatalog("video.preset.title"))
     expect(parts.firstElementChild?.contains(frame ?? null)).toBe(true)
-    const tiles = parts.querySelector("[data-slot='setting-tiles']")
-    expect(tiles?.childElementCount).toBeGreaterThanOrEqual(2)
+    expect(parts.querySelector("[data-slot='setting-tiles']")).toBeNull()
+    const chips = parts.querySelectorAll("[data-slot='model-row']")
+    expect([...chips].map((chip) => chip.getAttribute("data-width"))).toEqual([
+      "full",
+    ])
+    expect(
+      within(parts).getByRole("radiogroup", {
+        name: tCatalog("video.input.resolution.label"),
+      })
+    ).toBeTruthy()
   })
 })

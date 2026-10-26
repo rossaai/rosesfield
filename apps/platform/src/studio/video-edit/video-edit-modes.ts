@@ -76,15 +76,6 @@ export function shownInputsOf(
   )
 }
 
-export function advancedInputsOf(
-  app: AppListing,
-  mode: VideoEditMode
-): InputDefinition[] {
-  return bodyAppFor(app, mode).inputs.filter(
-    (input) => advanced.includes(input.name) && input.type !== "seed"
-  )
-}
-
 export function hasSeed(mode: VideoEditMode): boolean {
   return seededModes.includes(mode)
 }

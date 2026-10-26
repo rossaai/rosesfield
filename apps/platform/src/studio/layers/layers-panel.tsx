@@ -1,20 +1,31 @@
 import type { InputDefinition } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { Slider } from "@rosesfield/ui/components/slider"
-import type { ReactElement } from "react"
+import type { ReactElement, ReactNode } from "react"
 import { tCatalog } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
+import { aspectField } from "@/screens/app/app-form"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { InputField } from "@/screens/app/fields/input-field"
+import {
+  AdvancedSection,
+  AppSettingRow,
+  settingId,
+} from "@/screens/app/fields/setting-rows"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
-import { AdvancedFields } from "@/screens/app/inputs-panel"
+import {
+  type AppSetting,
+  appSettingsPlan,
+  isSettingInput,
+} from "@/screens/app/settings-plan"
 import {
   isCountShown,
   isGraphModel,
   shownFieldsOf,
 } from "@/studio/layers/layers-models"
 import {
+  bodyAppFor,
   countInput,
   countRangeOf,
   layerCountOf,
@@ -136,34 +147,91 @@ function inputNamed(
   return state.formApp.inputs.find((input) => input.name === name)
 }
 
-function GraphFields({ state }: { state: LayersState }): ReactElement {
-  return (
-    <>
-      {shownInputsOf(state.app, state.mode).map((input) => (
-        <PanelField key={input.name} state={state} input={input} />
-      ))}
-      {isCountShown(state.mode, state.hosted.chosen) ? (
-        <CountField state={state} />
-      ) : null}
-      <AdvancedFields
+const placedInputs: readonly string[] = [modeInput, aspectField]
+
+function SettingRows({
+  state,
+  settings,
+}: {
+  state: LayersState
+  settings: readonly AppSetting[]
+}): ReactNode {
+  return settings.map((setting) => {
+    if (setting.kind === "input" && setting.input.name === countInput) {
+      return null
+    }
+    if (setting.kind === "count") {
+      return isCountShown(state.mode, state.hosted.chosen) ? (
+        <CountField key={settingId(setting)} state={state} />
+      ) : null
+    }
+    return (
+      <AppSettingRow
+        key={settingId(setting)}
         app={state.formApp}
         form={state.form}
         lastSeed={state.lastSeed}
+        setting={setting}
       />
+    )
+  })
+}
+
+function GraphFields({
+  state,
+  model,
+}: {
+  state: LayersState
+  model: ReactNode
+}): ReactElement {
+  const plan = appSettingsPlan(bodyAppFor(state.app, state.mode), placedInputs)
+  return (
+    <>
+      {shownInputsOf(state.app, state.mode)
+        .filter((input) => !isSettingInput(input))
+        .map((input) => (
+          <PanelField key={input.name} state={state} input={input} />
+        ))}
+      <CanvasFields state={state} />
+      {model}
+      <SettingRows state={state} settings={plan.main} />
+      {plan.advanced.length === 0 ? null : (
+        <AdvancedSection>
+          <SettingRows state={state} settings={plan.advanced} />
+        </AdvancedSection>
+      )}
     </>
   )
 }
 
-function ModelFields({ state }: { state: LayersState }): ReactElement {
+function CanvasFields({ state }: { state: LayersState }): ReactElement {
+  return (
+    <>
+      {state.mode === "split" ? null : <LayerField state={state} />}
+      {state.mode === "fill" ? <MaskField state={state} /> : null}
+    </>
+  )
+}
+
+function ModelFields({
+  state,
+  model,
+}: {
+  state: LayersState
+  model: ReactNode
+}): ReactElement {
   const source = inputNamed(state, sourceInput)
   return (
     <>
       {state.mode === "split" && source !== undefined ? (
         <PanelField state={state} input={source} />
       ) : null}
+      <CanvasFields state={state} />
       <HostedFields
         fields={shownFieldsOf(state.hosted.chosen)}
         form={state.form}
+        app={state.app}
+        model={model}
       />
     </>
   )
@@ -172,20 +240,19 @@ function ModelFields({ state }: { state: LayersState }): ReactElement {
 export function LayersPanel({ state }: { state: LayersState }): ReactElement {
   const modeField = inputNamed(state, modeInput)
   const { hosted } = state
+  const model =
+    hosted.models.length === 0 && !hosted.isLoading ? null : (
+      <CatalogPicker hosted={hosted} place="row" />
+    )
   return (
     <div className="flex flex-col gap-s4">
       {modeField === undefined ? null : (
         <PanelField state={state} input={modeField} />
       )}
-      {hosted.models.length === 0 && !hosted.isLoading ? null : (
-        <CatalogPicker hosted={hosted} place="row" />
-      )}
-      {state.mode === "split" ? null : <LayerField state={state} />}
-      {state.mode === "fill" ? <MaskField state={state} /> : null}
       {isGraphModel(hosted.chosen) ? (
-        <GraphFields state={state} />
+        <GraphFields state={state} model={model} />
       ) : (
-        <ModelFields state={state} />
+        <ModelFields state={state} model={model} />
       )}
     </div>
   )
