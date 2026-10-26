@@ -166,6 +166,7 @@ function ModeFrame(props: FrameProps): ReactElement {
       onShortcut={screen.state.onShortcut}
       sheet={sheet}
       hasHeader={props.hasHeader}
+      layouts="list"
       tabs={props.tabs}
       panel={
         <div className="flex flex-col gap-s4">

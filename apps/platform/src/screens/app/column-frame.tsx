@@ -18,7 +18,7 @@ import {
 import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
-import { AppStage } from "@/screens/app/app-stage"
+import { AppStage, type StageLayouts } from "@/screens/app/app-stage"
 import { GenerateFoot, StartProblem } from "@/screens/app/generate-foot"
 import { ToolsKey } from "@/screens/app/tools-key"
 import type { StartRun } from "@/screens/app/use-start-run"
@@ -40,6 +40,7 @@ type ColumnFrameProps = {
   footLeading?: ReactNode
   hasHeader?: boolean
   hasWork?: boolean
+  layouts?: StageLayouts
 }
 
 export function AddInputsButton({
@@ -126,6 +127,7 @@ export function ColumnFrame(props: ColumnFrameProps): ReactElement {
           scrollClassName="px-4"
           hasWork={props.hasWork ?? false}
           hasTitle={props.hasHeader !== false}
+          {...(props.layouts === undefined ? {} : { layouts: props.layouts })}
         >
           {props.canvas(openInputs)}
         </AppStage>

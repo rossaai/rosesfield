@@ -30,6 +30,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { characterQuery, runsQuery } from "@/api/queries"
 import { t, tCatalog } from "@/copy/t"
+import { AppStage } from "@/screens/app/app-stage"
 import { ModeCanvas } from "@/studio/characters/mode-canvas"
 
 const characters = appListing.parse(findApp("characters"))
@@ -133,13 +134,15 @@ function openCanvas(
       component: () => (
         <ToastProvider>
           <TooltipProvider>
-            <ModeCanvas
-              app={characters}
-              mode={mode}
-              shows={["traits", "angles"]}
-              onUseInputs={() => undefined}
-              emptyAction={null}
-            />
+            <AppStage app={characters} kind="column" layouts="list">
+              <ModeCanvas
+                app={characters}
+                mode={mode}
+                shows={["traits", "angles"]}
+                onUseInputs={() => undefined}
+                emptyAction={null}
+              />
+            </AppStage>
           </TooltipProvider>
         </ToastProvider>
       ),

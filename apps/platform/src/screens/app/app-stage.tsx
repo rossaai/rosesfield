@@ -17,7 +17,7 @@ import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useCanvasFit } from "@/pieces/use-canvas-fit"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
-import { useView } from "@/pieces/view/use-view"
+import { type PlaceView, useView } from "@/pieces/view/use-view"
 import { ViewBar, viewRowClassOf } from "@/pieces/view/view-bar"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import { CanvasViewProvider } from "@/screens/app/canvas-view"
@@ -80,12 +80,15 @@ export function useStageTab(
   }
 }
 
+export type StageLayouts = "grid-and-list" | "list" | "none"
+
 type AppStageProps = {
   app: AppListing
   kind: StageKind
   children: ReactNode
   hasWork?: boolean
   hasTitle?: boolean
+  layouts?: StageLayouts
   className?: string
   scrollRef?: (node: HTMLElement | null) => void
   scrollClassName?: string
@@ -142,9 +145,15 @@ function StageTabs({
   )
 }
 
+function useStageView(layouts: StageLayouts): PlaceView {
+  const chosen = useView("app")
+  return layouts === "list" ? { ...chosen, layout: "list" } : chosen
+}
+
 export function AppStage(props: AppStageProps): ReactElement {
   const stage = useStageTab(props.app, props.hasWork ?? false)
-  const view = useView("app")
+  const layouts = props.layouts ?? "grid-and-list"
+  const view = useStageView(layouts)
   const fit = useCanvasFit()
   const outerRef = props.scrollRef
   const scrollRef = useCallback(
@@ -155,11 +164,13 @@ export function AppStage(props: AppStageProps): ReactElement {
     [fit.ref, outerRef]
   )
   const isRegular = useIsRegularWindow()
-  const hasView = stage.hasRuns === true && stage.tab === "history"
+  const hasView =
+    layouts !== "none" && stage.hasRuns === true && stage.tab === "history"
   const menu = (
     <ViewBar
       view={view}
       searchLabel={t("app.search.label")}
+      hasLayout={layouts === "grid-and-list"}
       hasListSize={true}
     />
   )

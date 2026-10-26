@@ -6,9 +6,10 @@ import { type ReactElement, type ReactNode, useState } from "react"
 import { appEmptyTitle, aspectOf, defaultAspectOf } from "@/catalog/app-facts"
 import { t, tCatalog } from "@/copy/t"
 import { aspectStyle } from "@/pieces/asset-tile"
-import { RunCard, RunColumns } from "@/pieces/run/run-card"
+import { RunCard, RunColumns, runHeightOf } from "@/pieces/run/run-card"
 import { RunOutputs } from "@/pieces/run/run-outputs"
 import { useAppRuns } from "@/screens/app/app-canvas"
+import { RunsInView } from "@/screens/app/canvas-view"
 import { CompareDivider } from "@/studio/video-edit/compare-divider"
 
 type VideoEditCanvasProps = {
@@ -53,6 +54,30 @@ function EditedRun({
   )
 }
 
+function EditedRuns({
+  runs,
+  columns,
+  onUseInputs,
+}: {
+  runs: readonly Run[]
+  columns: number
+  onUseInputs: (run: Run) => void
+}): ReactElement {
+  const list = runs.flatMap((run) => run.outputs)
+  return (
+    <RunColumns heights={runs.map(runHeightOf)} columns={columns}>
+      {runs.map((run) => (
+        <EditedRun
+          key={run.id}
+          run={run}
+          list={list}
+          onUseInputs={onUseInputs}
+        />
+      ))}
+    </RunColumns>
+  )
+}
+
 function CanvasSkeleton({ app }: { app: AppListing }): ReactElement {
   const aspect = aspectOf(defaultAspectOf(app))
   return (
@@ -73,8 +98,7 @@ export function VideoEditCanvas({
   if (runs.isPending) {
     return <CanvasSkeleton app={app} />
   }
-  const [latest, ...earlier] = runs.runs
-  if (latest === undefined) {
+  if (runs.runs.length === 0) {
     return (
       <StateView
         kind={runs.isError ? "failed" : "empty"}
@@ -90,17 +114,12 @@ export function VideoEditCanvas({
       />
     )
   }
-  const list = runs.runs.flatMap((run) => run.outputs)
   return (
-    <RunColumns>
-      {[latest, ...earlier].map((run) => (
-        <EditedRun
-          key={run.id}
-          run={run}
-          list={list}
-          onUseInputs={onUseInputs}
-        />
-      ))}
-    </RunColumns>
+    <RunsInView
+      runs={runs.runs}
+      cards={(shown, columns) => (
+        <EditedRuns runs={shown} columns={columns} onUseInputs={onUseInputs} />
+      )}
+    />
   )
 }
