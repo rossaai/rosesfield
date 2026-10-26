@@ -3,7 +3,9 @@ import { interaction } from "@rosesfield/ui/components/interaction"
 import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement } from "react"
 
-const wellClass = `w-full min-w-0 max-w-field-max bg-(--well) px-s5 text-body text-ink outline-none placeholder:text-ink-muted disabled:opacity-(--opacity-disabled) ${interaction.fieldRing}`
+const fieldInset = "ps-s5 pe-s5"
+
+const wellClass = `w-full min-w-0 max-w-field-max bg-(--well) ${fieldInset} text-body text-ink outline-none placeholder:text-ink-muted disabled:opacity-(--opacity-disabled) ${interaction.fieldRing}`
 
 function Input({ className, ...props }: InputPrimitive.Props): ReactElement {
   return (
@@ -15,4 +17,4 @@ function Input({ className, ...props }: InputPrimitive.Props): ReactElement {
   )
 }
 
-export { Input, wellClass }
+export { fieldInset, Input, wellClass }

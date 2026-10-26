@@ -193,6 +193,7 @@ function VoiceRow({ screen }: { screen: LipsyncScreen }): ReactElement | null {
         }))}
         value={voices.chosen?.id ?? ""}
         onChange={voices.choose}
+        setting={speechModelInput}
         note={null}
         problem={screen.form.problems.get(speechModelInput)}
       />

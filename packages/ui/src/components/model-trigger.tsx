@@ -1,4 +1,5 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
+import { fieldInset } from "@rosesfield/ui/components/input"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { Skeleton, SkeletonGroup } from "@rosesfield/ui/components/skeleton"
 import type { ModelRowPlace } from "@rosesfield/ui/contracts/model-row.generated"
@@ -26,7 +27,7 @@ const chipClass = cn(
 
 const widthClass: Readonly<Record<ModelChipWidth, string>> = {
   fit: "h-button-small max-w-button-max shrink in-data-[density=composer]:max-w-none in-data-[density=composer]:shrink-0 in-data-[density=composer]:bg-transparent",
-  full: "h-field w-full max-w-none ps-s3 pe-s4",
+  full: cn("h-field w-full max-w-none", fieldInset, "pe-s4"),
 }
 
 function ModelChip({

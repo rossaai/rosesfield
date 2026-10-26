@@ -69,6 +69,7 @@ function AspectChoice(props: EffectsPanelProps): ReactElement {
       items={items}
       value={props.aspect}
       onChange={props.onAspect}
+      setting={aspectField}
       note={null}
     />
   )

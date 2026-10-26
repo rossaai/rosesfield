@@ -152,7 +152,7 @@ describe("the aspect chip's menu", () => {
     )
     const chip = screen.getByRole("combobox")
     expect(
-      chip.querySelector("[data-slot='chip-icon'] .lucide-scan")
+      chip.querySelector("[data-slot='select-lead'] .lucide-scan")
     ).not.toBeNull()
     fireEvent.click(chip)
     const menu = await waitFor(() => {

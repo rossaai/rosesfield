@@ -11,6 +11,7 @@ describe("ChipSelect", () => {
       <TooltipProvider>
         <ChipSelect
           label="Format"
+          icon={<svg data-testid="format-icon" />}
           value="1:1"
           onValueChange={() => undefined}
           options={[

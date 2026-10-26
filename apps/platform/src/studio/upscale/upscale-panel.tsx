@@ -200,6 +200,7 @@ function ScaleField({ state }: { state: UpscaleState }): ReactElement | null {
             label: scaleLabelOf(state.app, option),
           }))}
           value={value === null ? "" : String(value)}
+          setting={spec.name}
           onChange={(next) => {
             const option = spec.options.find(
               (one) => String(one.value) === next

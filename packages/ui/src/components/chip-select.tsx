@@ -27,20 +27,9 @@ type ChipSelectProps<T extends string> = {
   value: T
   onValueChange: (value: T) => void
   options: ReadonlyArray<ChipOption<T>>
-  icon?: ReactNode
+  icon: ReactElement
   display?: string
   disabled?: boolean
-}
-
-function ChipIcon({ icon }: { icon: ReactNode }): ReactNode {
-  if (icon === undefined) {
-    return null
-  }
-  return (
-    <span aria-hidden="true" data-slot="chip-icon" className="flex shrink-0">
-      {icon}
-    </span>
-  )
 }
 
 function ChipSelect<T extends string>({
@@ -70,11 +59,11 @@ function ChipSelect<T extends string>({
           render={
             <SelectTrigger
               variant="chip"
+              icon={icon}
               aria-label={label}
               data-slot="chip-select"
               className={cn("min-w-0 shrink", motion.press)}
             >
-              <ChipIcon icon={icon} />
               <span className="sr-only">{`${label} `}</span>
               <SelectValue>{display}</SelectValue>
             </SelectTrigger>

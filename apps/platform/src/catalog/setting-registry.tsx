@@ -55,7 +55,7 @@ import {
   Volume2,
   WandSparkles,
 } from "lucide-react"
-import type { ReactNode } from "react"
+import type { ReactElement } from "react"
 import { optionIconOf } from "@/catalog/setting-options"
 import { AspectShape } from "@/pieces/aspect-shape"
 import { settingKeyOf } from "@/screens/app/setting-table"
@@ -196,10 +196,31 @@ export function isKnownSetting(name: string, role: FieldRole | null): boolean {
   return settingOf(name, role) !== otherSetting
 }
 
+export function isAspectSetting(name: string, role: FieldRole | null): boolean {
+  return role === "aspect" || settingKeyOf(name).startsWith("aspect")
+}
+
+export function settingIconOf(
+  name: string,
+  role: FieldRole | null
+): ReactElement {
+  const Icon = settingOf(name, role).icon
+  return <Icon />
+}
+
+export function chosenIconOf(
+  name: string,
+  role: FieldRole | null,
+  value: string
+): ReactElement {
+  const Icon = value === "auto" ? undefined : optionIconOf(name, value)
+  return Icon === undefined ? settingIconOf(name, role) : <Icon />
+}
+
 export function withOptionIcons<T extends { value: string }>(
   name: string,
   options: readonly T[]
-): (T & { icon?: ReactNode })[] {
+): (T & { icon?: ReactElement })[] {
   return options.map((option) => {
     const Icon = optionIconOf(name, option.value)
     return Icon === undefined ? option : { ...option, icon: <Icon /> }
@@ -208,7 +229,7 @@ export function withOptionIcons<T extends { value: string }>(
 
 export function withShapes<T extends { value: string; label: string }>(
   items: readonly T[]
-): (T & { icon: ReactNode })[] {
+): (T & { icon: ReactElement })[] {
   return items.map((item) => ({
     ...item,
     icon: <AspectShape ratio={item.value} />,

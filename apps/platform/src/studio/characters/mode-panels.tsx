@@ -125,6 +125,7 @@ function ChoiceRow({
       }))}
       value={textOf(form.values.inputs[input.name]) || input.default}
       onChange={(value) => form.setInput(input.name, value)}
+      setting={input.name}
       note={note}
       register={(focus) => form.register(input.name, focus)}
     />

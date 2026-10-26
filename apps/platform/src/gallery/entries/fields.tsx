@@ -14,6 +14,7 @@ import {
 } from "@rosesfield/ui/components/select"
 import { Textarea } from "@rosesfield/ui/components/textarea"
 import { type ReactElement, useState } from "react"
+import { settingIconOf } from "@/catalog/setting-registry"
 import { t } from "@/gallery/copy.en"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
 
@@ -25,6 +26,8 @@ const resolutions = [
   { value: "2k", label: "2K" },
   { value: "4k", label: "4K" },
 ]
+
+const resolutionSetting = "resolution"
 
 type NameFieldProps = {
   value?: string
@@ -90,7 +93,7 @@ function ResolutionField({
         disabled={disabled}
         {...(open === undefined ? {} : { defaultOpen: open })}
       >
-        <SelectTrigger>
+        <SelectTrigger icon={settingIconOf(resolutionSetting, null)}>
           <SelectValue placeholder={t("sample.resolution.placeholder")} />
         </SelectTrigger>
         <SelectContent>

@@ -20,7 +20,7 @@ const selectTriggerVariants = cva(
   {
     variants: {
       variant: {
-        field: cn(wellClass, "h-field rounded-full pr-s4"),
+        field: cn(wellClass, "h-field gap-s1_5 rounded-full pe-s4"),
         chip: cn(
           "relative h-button-small max-w-button-max justify-start gap-s1 rounded-full bg-transparent px-s3 font-medium text-body text-ink data-popup-open:bg-(--tint) [&_svg]:glyph-small [&_[data-slot=select-icon]]:hidden",
           interaction.fill,
@@ -33,11 +33,12 @@ const selectTriggerVariants = cva(
 )
 
 type SelectTriggerProps = SelectPrimitive.Trigger.Props &
-  VariantProps<typeof selectTriggerVariants>
+  VariantProps<typeof selectTriggerVariants> & { icon: ReactElement }
 
 function SelectTrigger({
   className,
   variant,
+  icon,
   children,
   ...props
 }: SelectTriggerProps): ReactElement {
@@ -47,6 +48,13 @@ function SelectTrigger({
       className={cn(selectTriggerVariants({ variant }), className)}
       {...props}
     >
+      <span
+        aria-hidden="true"
+        data-slot="select-lead"
+        className="flex shrink-0"
+      >
+        {icon}
+      </span>
       {children}
       <SelectPrimitive.Icon
         data-slot="select-icon"
