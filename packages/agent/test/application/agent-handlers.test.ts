@@ -115,15 +115,15 @@ describe("the agent's handlers", () => {
     expect((await agent.listModels()).model).toBe("maker/chat-large")
   })
 
-  it("start a conversation that asks before each run unless told otherwise", async () => {
+  it("start a conversation on auto unless told to ask before each run", async () => {
     const agent = fakeAgent()
     const handler = new StartConversationHandler({ agent })
 
-    const asking = await handler.execute({ runApproval: null })
-    const starting = await handler.execute({ runApproval: "auto" })
+    const unsaid = await handler.execute({ runApproval: null })
+    const asking = await handler.execute({ runApproval: "ask" })
 
+    expect(unsaid.conversation.runApproval).toBe("auto")
     expect(asking.conversation.runApproval).toBe("ask")
-    expect(starting.conversation.runApproval).toBe("auto")
   })
 
   it("list, read, rename and delete a conversation", async () => {

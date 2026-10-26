@@ -13,6 +13,7 @@ import {
   proposalStatus,
   type RunApproval,
 } from "#agent.contract"
+import { StartConversationHandler } from "#application/start-conversation/start-conversation.handler"
 import { conversationIdFormat } from "#domain/conversation.id"
 import { backgroundContext } from "#infrastructure/pi-context"
 
@@ -81,7 +82,7 @@ export const conversationSettings = defineDoc<ConversationSettings>({
   scope: "conversation",
   history: "latest",
   fork: "current",
-  initial: () => ({ runApproval: "ask" }),
+  initial: () => ({ runApproval: StartConversationHandler.runApproval }),
 })
 
 export const proposalRecords = defineDocFamily<ProposalRecord, ProposalRecord>({
@@ -108,7 +109,7 @@ export async function conversationOf(
   return {
     id: conversationIdFormat.parse(id),
     title: listed.title,
-    runApproval: settings?.runApproval ?? "ask",
+    runApproval: settings?.runApproval ?? StartConversationHandler.runApproval,
     createdAt: listed.createdAt,
   }
 }

@@ -11,7 +11,11 @@ export {
   type ModelForm,
 } from "@rosesfield/generation/bindings"
 export { CatalogModelPolicy } from "#comfy/catalog-model-policy"
-export { comfyCreditsPerUsd, creditsOfCost } from "#comfy/comfy-credits"
+export {
+  autoRunLimitCredits,
+  comfyCreditsPerUsd,
+  creditsOfCost,
+} from "#comfy/comfy-credits"
 export {
   appTasksOf,
   defaultModelOf,

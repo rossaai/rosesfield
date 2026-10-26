@@ -1,9 +1,23 @@
-import { cleanup, fireEvent, screen } from "@testing-library/react"
+import { autoRunLimitCredits } from "@rosesfield/catalog/comfy"
+import { IconButton } from "@rosesfield/ui/components/button"
+import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
+import { AtSignIcon } from "lucide-react"
 import type { ReactElement } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
+import { AttachMenu } from "@/pieces/attach-menu"
 import { useDraft } from "@/pieces/use-draft"
 import { AgentComposer } from "@/screens/agent/agent-composer"
+import { readRunApproval } from "@/screens/agent/run-approval"
 import { renderAgent } from "./agent-screen-render"
 
 type Calls = { sent: number; stopped: number }
@@ -55,12 +69,43 @@ function isBefore(one: Node | undefined, two: Node | undefined): boolean {
 
 const modelName = `${t("model.picker.title")} DeepSeek V4 Flash`
 
+function runMode(): HTMLElement {
+  return screen.getByRole("combobox", { name: t("agent.mode.label") })
+}
+
+function iconOf(element: Element | null | undefined): string {
+  return element?.querySelector("svg")?.getAttribute("class") ?? ""
+}
+
+function leadOf(trigger: HTMLElement): string {
+  return iconOf(trigger.querySelector("[data-slot='select-lead']"))
+}
+
+function renderBarButtons(): HTMLElement {
+  const { container } = render(
+    <TooltipProvider>
+      <AttachMenu
+        form="menu"
+        label={t("bar.attach")}
+        onUpload={() => undefined}
+        onFromLibrary={() => undefined}
+      />
+      <IconButton label={t("bar.mention")} size="dense">
+        <AtSignIcon aria-hidden="true" />
+      </IconButton>
+    </TooltipProvider>
+  )
+  return container
+}
+
 beforeEach(() => {
+  window.localStorage.clear()
   vi.stubGlobal("fetch", () => new Promise(() => undefined))
 })
 
 afterEach(() => {
   cleanup()
+  window.localStorage.clear()
   vi.unstubAllGlobals()
 })
 
@@ -83,7 +128,6 @@ describe("the agent composer", () => {
     expect(isBefore(mention, chip)).toBe(true)
     for (const circle of [attach, mention]) {
       expect(classesOf(circle)).toContain("size-icon-dense")
-      expect(classesOf(circle)).not.toContain("bg-(--well)")
     }
     const send = screen.getByRole("button", { name: t("agent.send") })
     expect(send.getAttribute("data-slot")).toBe("generate-button")
@@ -91,13 +135,67 @@ describe("the agent composer", () => {
     expect(toolbar?.contains(send)).toBe(false)
   })
 
-  it("carries no hand: Ask before each run is not a control of the composer", async () => {
+  it("draws its + and @ exactly as the same buttons in an app's bar", async () => {
     renderComposer()
     await field()
+    const toolbar = document.querySelector<HTMLElement>(
+      '[data-slot="composer-toolbar"]'
+    )
+    if (toolbar === null) {
+      throw new Error("The composer holds no toolbar")
+    }
+    const bar = within(renderBarButtons())
+    for (const name of [t("bar.attach"), t("bar.mention")]) {
+      const composed = within(toolbar).getByRole("button", { name })
+      const barred = bar.getByRole("button", { name })
+      expect(classesOf(composed).sort()).toEqual(classesOf(barred).sort())
+      expect(classesOf(composed)).toContain("bg-(--well)")
+    }
+  })
+
+  it("holds the run mode beside the model chip, opening on Auto with its sparkles", async () => {
+    renderComposer()
+    await field()
+    const toolbar = document.querySelector('[data-slot="composer-toolbar"]')
+    const model = screen.getByRole("button", { name: modelName })
+    const mode = runMode()
+    expect(toolbar?.contains(mode)).toBe(true)
+    expect(isBefore(model, mode)).toBe(true)
+    expect(mode.textContent).toContain(t("agent.mode.auto"))
+    expect(leadOf(mode)).toContain("lucide-sparkles")
+    expect(document.querySelector(".lucide-hand")).toBeNull()
+  })
+
+  it("lists Auto and Manual with their icons and descriptions, and keeps Manual as ask once you choose it", async () => {
+    renderComposer()
+    await field()
+    fireEvent.click(runMode())
+    const options = await screen.findAllByRole("option")
+    expect(options.map((option) => option.textContent)).toEqual([
+      `${t("agent.mode.auto")}${t("agent.mode.auto.description", {
+        credits: formatAmount(autoRunLimitCredits),
+      })}`,
+      `${t("agent.mode.manual")}${t("agent.mode.manual.description")}`,
+    ])
     expect(
-      screen.queryByRole("button", { name: t("agent.ask.label") })
-    ).toBeNull()
-    expect(screen.queryByText(t("agent.ask.label"))).toBeNull()
+      options.map((option) =>
+        iconOf(option.querySelector("[data-slot='select-item-icon']"))
+      )
+    ).toEqual([
+      expect.stringContaining("lucide-sparkles"),
+      expect.stringContaining("lucide-user-check"),
+    ])
+    const manual = options[1]
+    if (manual === undefined) {
+      throw new Error("The run mode lists no Manual")
+    }
+    fireEvent.pointerDown(manual, { pointerType: "mouse" })
+    fireEvent.click(manual)
+    expect(readRunApproval()).toBe("ask")
+    await waitFor(() =>
+      expect(runMode().textContent).toContain(t("agent.mode.manual"))
+    )
+    expect(leadOf(runMode())).toContain("lucide-user-check")
   })
 
   it("starts its text on the line of its first button: the toolbar takes the field's own side inset", async () => {

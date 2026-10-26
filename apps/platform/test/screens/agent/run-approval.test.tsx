@@ -68,38 +68,41 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe("the choice to run without asking", () => {
-  it("asks before each run until you change it", () => {
+async function startConversation(): Promise<Sent[]> {
+  const sent = recordRequests()
+  renderAgent(() => (
+    <KeyDialogProvider>
+      <AgentStartScreen />
+    </KeyDialogProvider>
+  ))
+  const field = await screen.findByRole("textbox", {
+    name: t("agent.prompt.label"),
+  })
+  fireEvent.change(field, { target: { value: "A red bicycle" } })
+  fireEvent.click(screen.getByRole("button", { name: t("agent.send") }))
+  return sent
+}
+
+describe("the run mode", () => {
+  it("is Auto until you choose Manual, which is kept as ask", () => {
+    expect(readRunApproval()).toBe("auto")
+    keepRunApproval("ask")
     expect(readRunApproval()).toBe("ask")
   })
 
-  it("is one switch in Settings under Agent, on while the agent asks, off once it runs without asking", async () => {
+  it("has no switch in Settings under Agent", async () => {
     recordRequests()
     renderAgent(() => <AgentPane />)
-    const toggle = await screen.findByRole("switch", {
-      name: t("agent.ask.label"),
-    })
-    expect(toggle.getAttribute("aria-checked")).toBe("true")
-    fireEvent.click(toggle)
-    expect(readRunApproval()).toBe("auto")
-    await waitFor(() =>
-      expect(toggle.getAttribute("aria-checked")).toBe("false")
-    )
+    expect(
+      await screen.findAllByText(t("settings.agent.model"))
+    ).not.toHaveLength(0)
+    expect(screen.queryByRole("switch")).toBeNull()
+    expect(screen.queryByText(t("agent.mode.manual.description"))).toBeNull()
+    expect(screen.queryByText(t("agent.mode.label"))).toBeNull()
   })
 
-  it("starts a new conversation with the choice Settings holds", async () => {
-    keepRunApproval("auto")
-    const sent = recordRequests()
-    renderAgent(() => (
-      <KeyDialogProvider>
-        <AgentStartScreen />
-      </KeyDialogProvider>
-    ))
-    const field = await screen.findByRole("textbox", {
-      name: t("agent.prompt.label"),
-    })
-    fireEvent.change(field, { target: { value: "A red bicycle" } })
-    fireEvent.click(screen.getByRole("button", { name: t("agent.send") }))
+  it("starts a new conversation on Auto when you chose nothing", async () => {
+    const sent = await startConversation()
     await waitFor(() =>
       expect(writes(sent)).toEqual([
         {
@@ -111,25 +114,39 @@ describe("the choice to run without asking", () => {
     )
   })
 
-  it("brings an open conversation to the choice Settings holds", async () => {
-    keepRunApproval("auto")
-    const sent = recordRequests()
-    renderAgent(() => <Held held="ask" />)
+  it("starts a new conversation with the run mode the composer holds", async () => {
+    keepRunApproval("ask")
+    const sent = await startConversation()
     await waitFor(() =>
       expect(writes(sent)).toEqual([
         {
-          method: "PATCH",
-          path: `/api/agent/conversations/${conversation.id}`,
-          body: { runApproval: "auto" },
+          method: "POST",
+          path: "/api/agent/conversations",
+          body: { runApproval: "ask" },
         },
       ])
     )
   })
 
-  it("control: leaves a conversation alone that already holds the choice", async () => {
-    keepRunApproval("auto")
+  it("brings an open conversation to the run mode the composer holds", async () => {
+    keepRunApproval("ask")
     const sent = recordRequests()
     renderAgent(() => <Held held="auto" />)
+    await waitFor(() =>
+      expect(writes(sent)).toEqual([
+        {
+          method: "PATCH",
+          path: `/api/agent/conversations/${conversation.id}`,
+          body: { runApproval: "ask" },
+        },
+      ])
+    )
+  })
+
+  it("control: leaves a conversation alone that already holds the run mode", async () => {
+    keepRunApproval("ask")
+    const sent = recordRequests()
+    renderAgent(() => <Held held="ask" />)
     await screen.findByText("idle")
     expect(writes(sent)).toEqual([])
   })

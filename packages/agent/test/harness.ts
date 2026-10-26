@@ -14,7 +14,9 @@ import type { AppDefinition } from "@rosesfield/contract"
 import {
   DemoGenerationEngine,
   GetRunHandler,
+  PriceRunHandler,
   ReadModelFormsHandler,
+  type RunPrice,
   StartRunHandler,
 } from "@rosesfield/generation"
 import { FixedClock } from "@rosesfield/kernel"
@@ -40,6 +42,7 @@ import { FakeAppCatalog } from "./fake/fake-app-catalog"
 import type { FakeAssetRepository } from "./fake/fake-asset-repository"
 import type { FakeCharacterRepository } from "./fake/fake-character-repository"
 import { FakeJobRunner } from "./fake/fake-job-runner"
+import { FakePriceEngine } from "./fake/fake-price-engine"
 import { FakeRunRepository } from "./fake/fake-run-repository"
 import { start } from "./sample"
 
@@ -49,7 +52,11 @@ export type Generation = {
   jobs: FakeJobRunner
   startRun: StartRunHandler
   readModelForms: ReadModelFormsHandler
+  prices: FakePriceEngine
+  priceRun: PriceRunHandler
 }
+
+export const pricedRun: RunPrice = { source: "rates", credits: 10 }
 
 export type AgentRig = {
   agent: PiAgentHarness
@@ -64,15 +71,18 @@ export function generationFor(apps: readonly AppDefinition[]): Generation {
   const runs = new FakeRunRepository()
   const jobs = new FakeJobRunner()
   const engines = [new DemoGenerationEngine({ clock })]
+  const catalog = new FakeAppCatalog(apps)
   const startRun = new StartRunHandler({
-    apps: new FakeAppCatalog(apps),
+    apps: catalog,
     runs,
     engines,
     jobs,
     clock,
   })
   const readModelForms = new ReadModelFormsHandler({ engines })
-  return { clock, runs, jobs, startRun, readModelForms }
+  const prices = new FakePriceEngine({ price: pricedRun })
+  const priceRun = new PriceRunHandler({ apps: catalog, engines: [prices] })
+  return { clock, runs, jobs, startRun, readModelForms, prices, priceRun }
 }
 
 export function appToolsFor(
@@ -85,7 +95,11 @@ export function appToolsFor(
   return apps.map((app) =>
     appTool({
       app,
-      handlers: () => ({ startRun: generation.startRun, getRun }),
+      handlers: () => ({
+        startRun: generation.startRun,
+        getRun,
+        priceRun: generation.priceRun,
+      }),
       forms,
       wait,
     })
@@ -118,6 +132,7 @@ export function toolHandlersFor(
   return {
     startRun: generation.startRun,
     readModelForms: generation.readModelForms,
+    priceRun: generation.priceRun,
     getRun: new GetRunHandler({ runs: generation.runs }),
     listAssets: new ListAssetsHandler({ assets }),
     getAsset: new GetAssetHandler({ assets }),

@@ -15,7 +15,7 @@ type StartConversationHandlerOptions = {
 }
 
 export class StartConversationHandler {
-  static readonly runApproval: RunApproval = "ask"
+  static readonly runApproval: RunApproval = "auto"
 
   private readonly agent: AgentHarness | null
 

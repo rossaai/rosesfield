@@ -134,23 +134,19 @@ async function startedAgent(): Promise<FakeAgentHarness> {
 }
 
 describe("the agent routes", () => {
-  it("start a conversation that asks before each run, or one that starts runs itself", async () => {
+  it("start a conversation on auto, or one that asks before each run", async () => {
     const { app } = gatewayFor(new FakeAgentHarness(conversation, answer))
 
-    const asking = await call(app, startPath, { method: "POST" })
-    const starting = await call(
-      app,
-      startPath,
-      jsonInit({ runApproval: "auto" })
-    )
+    const unsaid = await call(app, startPath, { method: "POST" })
+    const asking = await call(app, startPath, jsonInit({ runApproval: "ask" }))
 
-    expect(asking.status).toBe(201)
-    expect(conversationResponse.parse(await asking.json())).toEqual({
-      conversation,
+    expect(unsaid.status).toBe(201)
+    expect(conversationResponse.parse(await unsaid.json())).toEqual({
+      conversation: { ...conversation, runApproval: "auto" },
     })
     expect(
-      conversationResponse.parse(await starting.json()).conversation.runApproval
-    ).toBe("auto")
+      conversationResponse.parse(await asking.json()).conversation.runApproval
+    ).toBe("ask")
   })
 
   it("list, read, rename and delete a conversation", async () => {
@@ -332,7 +328,7 @@ describe("the agent in the gateway", () => {
 
     expect(response.status).toBe(201)
     expect(conversationResponse.parse(await response.json())).toMatchObject({
-      conversation: { createdAt: start.toISOString(), runApproval: "ask" },
+      conversation: { createdAt: start.toISOString(), runApproval: "auto" },
     })
     expect(existsSync(join(dataDir, agentFileName))).toBe(true)
     await agent?.close()

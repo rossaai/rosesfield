@@ -69,7 +69,6 @@ function DraftLeading({
     <>
       <AttachMenu
         form="menu"
-        tone="quiet"
         label={t("bar.attach")}
         onUpload={() => void state.upload()}
         onFromLibrary={openLibrary}
@@ -79,7 +78,7 @@ function DraftLeading({
         onOpenChange={mention.setOpen}
         onPick={mention.onPick}
         trigger={
-          <IconButton label={t("bar.mention")} size="dense" tone="quiet">
+          <IconButton label={t("bar.mention")} size="dense">
             <AtSignIcon aria-hidden="true" />
           </IconButton>
         }
