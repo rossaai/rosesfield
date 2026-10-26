@@ -1,11 +1,24 @@
+import type { ModelField, PriceResponse } from "@rosesfield/catalog/comfy"
 import { type AppListing, type Run, routes } from "@rosesfield/contract"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
+import { useRef } from "react"
 import { callRoute } from "@/api/call-route"
 import { settingsQuery } from "@/api/queries"
 import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { storeRun } from "@/pieces/run/run-actions"
 import { bodyOf, type StartRunBodyInput } from "@/screens/app/app-form"
+import {
+  type AnsweredQuote,
+  heldQuoteOf,
+  type Quote,
+  type QuoteSource,
+} from "@/screens/app/held-quote"
 import { hostedBody } from "@/screens/app/hosted/hosted-form"
 import { priceQuery } from "@/screens/app/hosted/model-catalog-query"
 import { useDebounced } from "@/screens/app/hosted/use-debounced"
@@ -21,7 +34,7 @@ export type StartRun = {
   priceName?: string | null
 }
 
-const priceDelayMs = 300
+const priceDelayMs = 100
 
 function hostedBodyOf(
   app: AppListing,
@@ -34,24 +47,36 @@ function hostedBodyOf(
     : hostedBody(chosen.id, chosen.form, form.values, app.output.kind)
 }
 
-export type QuoteSource = "measured" | "estimate" | "rates"
+export type { Quote, QuoteSource } from "@/screens/app/held-quote"
 
-export type Quote = { credits: number; source: QuoteSource }
+function quoteOf(price: PriceResponse["price"] | undefined): Quote | null {
+  return price === undefined || price.source === "unknown"
+    ? null
+    : {
+        credits: price.credits,
+        source: price.source,
+        ...(price.low === undefined ? {} : { low: price.low }),
+        ...(price.perOutput === true ? { perOutput: true as const } : {}),
+      }
+}
 
 export function useQuote(
   app: AppListing,
   body: StartRunBodyInput | null,
-  keyState: string
+  keyState: string,
+  fields: readonly ModelField[] = []
 ): Quote | null {
   const ask = useDebounced(body, priceDelayMs)
   const query = useQuery({
     ...priceQuery(app.id, ask ?? { inputs: {} }, keyState),
     enabled: ask !== null,
+    placeholderData: keepPreviousData,
   })
-  const price = query.data?.price
-  return price === undefined || price.source === "unknown"
-    ? null
-    : { credits: price.credits, source: price.source }
+  const answered = useRef<AnsweredQuote | null>(null)
+  if (ask !== null && query.data !== undefined && !query.isPlaceholderData) {
+    answered.current = { body: ask, quote: quoteOf(query.data.price) }
+  }
+  return heldQuoteOf(answered.current, body, fields)
 }
 
 export function usePrice(
@@ -80,7 +105,8 @@ export function useStartRun(
   const quote = useQuote(
     app,
     hostedRun ?? bodyOf(app, form.values),
-    hosted?.keyState ?? settings.data?.engine.key ?? "unknown"
+    hosted?.keyState ?? settings.data?.engine.key ?? "unknown",
+    hosted?.chosen?.form ?? []
   )
   const start = useMutation({
     mutationFn: async (key: string) => {
@@ -107,7 +133,7 @@ export function useStartRun(
     generate,
     isPending: start.isPending,
     error: start.error,
-    ...priceLabelsOf(quote?.credits ?? null, isDemo, quote?.source),
+    ...priceLabelsOf(quote?.credits ?? null, isDemo, quote?.source, quote?.low),
   }
 }
 
@@ -121,12 +147,26 @@ const generateNames = {
   rates: "run.generate.priced",
 } as const satisfies Record<QuoteSource, string>
 
+/** Writes a price as its amount, or as the range from its low to its credits. */
+export function amountOf(credits: number | null, low?: number): string | null {
+  if (credits === null || credits <= 0) {
+    return null
+  }
+  return low === undefined || low <= 0 || low >= credits
+    ? creditsText(credits)
+    : t("field.number.range", {
+        min: creditsText(low),
+        max: creditsText(credits),
+      })
+}
+
 export function priceLabelsOf(
   credits: number | null,
   isDemo: boolean,
-  source: QuoteSource = "rates"
+  source: QuoteSource = "rates",
+  low?: number
 ): Pick<StartRun, "price" | "priceValue" | "priceName"> {
-  const amount = credits === null || credits <= 0 ? null : creditsText(credits)
+  const amount = amountOf(credits, low)
   return {
     price: isDemo ? t("run.price.demo") : "",
     priceValue: amount,
