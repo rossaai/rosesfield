@@ -1,6 +1,5 @@
 import { speechModelInput } from "@rosesfield/catalog/lipsync"
 import { IconButton } from "@rosesfield/ui/components/button"
-import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { Textarea } from "@rosesfield/ui/components/textarea"
 import { XIcon } from "lucide-react"
@@ -9,14 +8,13 @@ import { useAssetSource } from "@/api/use-asset-source"
 import { t, tCatalog } from "@/copy/t"
 import { useAssetNameOf } from "@/pieces/asset-name"
 import { AudioRow } from "@/pieces/audio-row"
-import { DropWell } from "@/pieces/drop-well"
+import { DropWell, type WellAction } from "@/pieces/drop-well"
+import { ChoiceField } from "@/screens/app/fields/choice-field"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { listOf, textOf } from "@/screens/app/fields/field-props"
-import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
-import { type WordsMode, wordsLabelKey } from "@/studio/lipsync/lipsync-words"
+import { modelNameOf } from "@/screens/app/hosted/catalog-picker"
+import { wordsLabelKey } from "@/studio/lipsync/lipsync-words"
 import type { LipsyncScreen } from "@/studio/lipsync/use-lipsync-screen"
-
-const modeKeys = { audio: "kind.audio", text: "kind.text" } as const
 
 function problemOf(screen: LipsyncScreen, name: string | null) {
   return name === null
@@ -33,26 +31,10 @@ function limitNote(screen: LipsyncScreen): string | null {
   return `${t("field.limits.length", limit)} ${unit}`
 }
 
-export function WordsSwitch({
-  screen,
-}: {
-  screen: LipsyncScreen
-}): ReactElement | null {
-  if (screen.modes.length < 2) {
-    return null
-  }
-  return (
-    <SegmentedControl<WordsMode>
-      density="composer"
-      label={tCatalog(wordsLabelKey)}
-      value={screen.plan.mode}
-      items={screen.modes.map((mode) => ({
-        value: mode,
-        label: t(modeKeys[mode]),
-      }))}
-      onValueChange={screen.setWords}
-    />
-  )
+function typeAction(screen: LipsyncScreen): WellAction[] {
+  return screen.modes.includes("text")
+    ? [{ label: t("kind.text"), onSelect: () => screen.setWords("text") }]
+    : []
 }
 
 function HeldAudio({
@@ -122,7 +104,7 @@ function AudioWords({
   }
   return (
     <FieldFrame
-      caption={tCatalog("lipsync.input.audio.label")}
+      caption={tCatalog(wordsLabelKey)}
       isOptional={false}
       note={null}
       problem={problemOf(screen, name)}
@@ -137,6 +119,7 @@ function AudioWords({
           onMessage={setMessage}
           triggerRef={trigger}
           limits={limitNote(screen) ?? undefined}
+          actions={typeAction(screen)}
         />
       ) : (
         <HeldAudio
@@ -166,38 +149,54 @@ function TextWords({ screen }: { screen: LipsyncScreen }): ReactElement | null {
   const label = tCatalog("voice.input.script.label")
   return (
     <FieldFrame
-      caption={label}
+      caption={tCatalog(wordsLabelKey)}
       isOptional={false}
       note={null}
       problem={problem}
     >
-      <Textarea
-        ref={box}
-        aria-label={label}
-        aria-invalid={problem === undefined ? undefined : true}
-        placeholder={tCatalog("voice.input.script.placeholder")}
-        value={textOf(form.values.inputs[name])}
-        onChange={(event) => form.setInput(name, event.target.value)}
-      />
+      <div className="flex items-start gap-s2">
+        <Textarea
+          ref={box}
+          className="min-w-0 flex-1"
+          aria-label={label}
+          aria-invalid={problem === undefined ? undefined : true}
+          placeholder={tCatalog("voice.input.script.placeholder")}
+          value={textOf(form.values.inputs[name])}
+          onChange={(event) => form.setInput(name, event.target.value)}
+        />
+        {screen.modes.includes("audio") ? (
+          <IconButton
+            label={t("field.asset.remove")}
+            tone="quiet"
+            onClick={() => screen.setWords("audio")}
+          >
+            <XIcon aria-hidden="true" />
+          </IconButton>
+        ) : null}
+      </div>
     </FieldFrame>
   )
 }
 
 function VoiceRow({ screen }: { screen: LipsyncScreen }): ReactElement | null {
-  if (!screen.plan.isChain) {
+  const { voices } = screen
+  if (!screen.plan.isChain || voices.models.length === 0) {
     return null
   }
   return (
-    <FieldFrame
-      caption={tCatalog("voice.input.mode.label")}
-      isOptional={false}
-      note={null}
-      problem={screen.form.problems.get(speechModelInput)}
-    >
-      <div data-slot="lipsync-voice">
-        <CatalogPicker hosted={screen.voices} place="row" />
-      </div>
-    </FieldFrame>
+    <div data-slot="lipsync-voice">
+      <ChoiceField
+        label={tCatalog("voice.input.mode.label")}
+        items={voices.models.map((model) => ({
+          value: model.id,
+          label: modelNameOf(model),
+        }))}
+        value={voices.chosen?.id ?? ""}
+        onChange={voices.choose}
+        note={null}
+        problem={screen.form.problems.get(speechModelInput)}
+      />
+    </div>
   )
 }
 
@@ -208,7 +207,6 @@ export function WordsField({
 }): ReactElement {
   return (
     <div data-slot="lipsync-words" className="flex flex-col gap-s3">
-      <WordsSwitch screen={screen} />
       {screen.plan.mode === "audio" ? (
         <AudioWords screen={screen} />
       ) : (

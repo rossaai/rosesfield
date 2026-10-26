@@ -32,6 +32,8 @@ import { useUploads } from "@/pieces/use-uploads"
 
 export type WellKind = "image" | "video" | "audio"
 
+export type WellAction = { label: string; onSelect: () => void }
+
 type DropWellProps = {
   kind: WellKind
   ids: readonly string[]
@@ -42,6 +44,7 @@ type DropWellProps = {
   limits?: string | undefined
   title?: string | undefined
   fill?: boolean
+  actions?: readonly WellAction[]
 }
 
 const icons = { image: ImageIcon, video: VideoIcon, audio: FileAudioIcon }
@@ -104,6 +107,7 @@ function AddMenu({
   onLibrary,
   triggerRef,
   isTile,
+  actions,
 }: {
   kind: WellKind
   label: string
@@ -113,6 +117,7 @@ function AddMenu({
   onLibrary: () => void
   triggerRef?: Ref<HTMLButtonElement> | undefined
   isTile: boolean
+  actions: readonly WellAction[]
 }): ReactElement {
   const Icon = icons[kind]
   const kindGlyph = <Icon aria-hidden="true" />
@@ -144,6 +149,11 @@ function AddMenu({
         <DropdownMenuItem onClick={onLibrary}>
           {t("field.asset.fromLibrary")}
         </DropdownMenuItem>
+        {actions.map((action) => (
+          <DropdownMenuItem key={action.label} onClick={action.onSelect}>
+            {action.label}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -203,6 +213,7 @@ function WellFoot(
           onLibrary={props.onLibrary}
           triggerRef={props.triggerRef}
           isTile={props.ids.length > 0}
+          actions={props.actions ?? []}
         />
       )}
       {props.max > 1 && props.ids.length > 0 ? (
