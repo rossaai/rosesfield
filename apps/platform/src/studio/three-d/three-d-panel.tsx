@@ -13,15 +13,13 @@ import {
 } from "@/studio/three-d/three-d-tabs"
 import type { ThreeDScreen } from "@/studio/three-d/use-three-d-screen"
 
+type TabsView = Pick<ThreeDScreen, "tab" | "tabs" | "setTab">
+
 function isThreeDTab(value: unknown): value is ThreeDTab {
   return threeDTabs.some((tab) => tab === value)
 }
 
-export function ModeTabs({
-  screen,
-}: {
-  screen: Pick<ThreeDScreen, "tab" | "tabs" | "setTab">
-}): ReactElement {
+export function ModeTabs({ screen }: { screen: TabsView }): ReactElement {
   return (
     <Tabs
       value={screen.tab}
@@ -40,6 +38,10 @@ export function ModeTabs({
       </TabsList>
     </Tabs>
   )
+}
+
+export function tabRowOf(screen: TabsView): ReactElement | undefined {
+  return screen.tabs.length > 1 ? <ModeTabs screen={screen} /> : undefined
 }
 
 export function ThreeDPanel({
