@@ -76,7 +76,12 @@ function ChipSelect<T extends string>({
         side="top"
         align="start"
         sideOffset={4}
-        className="w-50 min-w-0 p-2"
+        className={cn(
+          "min-w-0 p-2",
+          options.some((option) => option.description !== undefined)
+            ? "w-64"
+            : "w-50"
+        )}
       >
         <SelectGroup className="flex flex-col gap-0.5">
           <SelectLabel className="flex h-8 items-center px-2 py-0">
@@ -90,7 +95,7 @@ function ChipSelect<T extends string>({
               {...(option.description === undefined
                 ? {}
                 : { description: option.description })}
-              className="min-h-9 gap-2 px-2 py-s1_5 data-selected:bg-(--tint)"
+              className="min-h-9 gap-2 ps-2 py-s1_5 data-selected:bg-(--tint)"
             >
               {option.label}
             </SelectItem>
