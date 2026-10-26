@@ -12,7 +12,7 @@ import {
   RunColumns,
   runHeightOf,
 } from "@/pieces/run/run-card"
-import { useCanvasView } from "@/screens/app/canvas-view"
+import { MatchedRuns, useCanvasView } from "@/screens/app/canvas-view"
 import { historyGridItems } from "@/screens/history/history-grid-items"
 import { ResultGrid } from "@/screens/library/result-grid"
 
@@ -76,7 +76,11 @@ export function AppCanvas(props: AppCanvasProps): ReactElement {
       />
     )
   }
-  return <ViewedRuns {...props} runs={runs.runs} />
+  return (
+    <MatchedRuns runs={runs.runs}>
+      {(kept) => <ViewedRuns {...props} runs={kept} />}
+    </MatchedRuns>
+  )
 }
 
 function ViewedRuns(
@@ -84,9 +88,7 @@ function ViewedRuns(
 ): ReactElement {
   const view = useCanvasView()
   if (view.layout === "grid") {
-    return (
-      <ResultGrid items={historyGridItems(props.runs)} size={view.gridSize} />
-    )
+    return <ResultGrid items={historyGridItems(props.runs)} size={view.size} />
   }
   return <RunStack {...props} columns={view.columns} />
 }

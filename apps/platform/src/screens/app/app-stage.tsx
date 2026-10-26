@@ -17,12 +17,10 @@ import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useCanvasFit } from "@/pieces/use-canvas-fit"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
+import { useView } from "@/pieces/view/use-view"
+import { ViewBar, viewRowClassOf } from "@/pieces/view/view-bar"
 import { useAppRuns } from "@/screens/app/app-canvas"
-import {
-  CanvasViewMenu,
-  CanvasViewProvider,
-  useCanvasViewControl,
-} from "@/screens/app/canvas-view"
+import { CanvasViewProvider } from "@/screens/app/canvas-view"
 import { HowItWorks, type StageKind } from "@/screens/app/how-it-works"
 import { PhoneTitlePortal, ScreenTitle } from "@/shell/screen-header"
 
@@ -111,11 +109,9 @@ function StageTabs({
   title: ReactNode
   view: ReactNode
 }): ReactElement {
+  const isRegular = useIsRegularWindow()
   return (
-    <div
-      data-slot="app-stage-tabs"
-      className="flex min-w-0 flex-1 items-center justify-between gap-s2"
-    >
+    <div data-slot="app-stage-tabs" className={viewRowClassOf(isRegular)}>
       <div
         data-slot="app-stage-lead"
         className="flex min-w-0 items-center gap-s4"
@@ -148,7 +144,7 @@ function StageTabs({
 
 export function AppStage(props: AppStageProps): ReactElement {
   const stage = useStageTab(props.app, props.hasWork ?? false)
-  const view = useCanvasViewControl()
+  const view = useView("app")
   const fit = useCanvasFit()
   const outerRef = props.scrollRef
   const scrollRef = useCallback(
@@ -160,7 +156,13 @@ export function AppStage(props: AppStageProps): ReactElement {
   )
   const isRegular = useIsRegularWindow()
   const hasView = stage.hasRuns === true && stage.tab === "history"
-  const menu = <CanvasViewMenu control={view} />
+  const menu = (
+    <ViewBar
+      view={view}
+      searchLabel={t("app.search.label")}
+      hasListSize={true}
+    />
+  )
   return (
     <Canvas
       label={t("app.canvas.label")}
@@ -191,9 +193,7 @@ export function AppStage(props: AppStageProps): ReactElement {
         {stage.tab === "how" ? (
           <HowItWorks app={props.app} />
         ) : (
-          <CanvasViewProvider control={view}>
-            {props.children}
-          </CanvasViewProvider>
+          <CanvasViewProvider view={view}>{props.children}</CanvasViewProvider>
         )}
       </div>
     </Canvas>

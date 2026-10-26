@@ -35,6 +35,7 @@ export type FilterGroup = {
 export type ViewMenuProps = {
   view: Pick<PlaceView, "layout" | "size" | "setLayout" | "setSize">
   hasLayout?: boolean
+  hasListSize?: boolean
   groups?: readonly FilterGroup[]
   isLoading?: boolean
 }
@@ -91,7 +92,9 @@ export function ViewMenu(props: ViewMenuProps): ReactElement {
       gridLabel={t("library.view.grid")}
       layout={view.layout}
       onLayoutChange={view.setLayout}
-      {...(view.layout === "grid" ? { size } : {})}
+      {...(view.layout === "grid" || (isRegular && props.hasListSize === true)
+        ? { size }
+        : {})}
     />
   )
 }

@@ -11,7 +11,7 @@ import {
   RunOutputs,
 } from "@/pieces/run/run-outputs"
 import { CanvasSkeleton, useAppRuns } from "@/screens/app/app-canvas"
-import { useCanvasView } from "@/screens/app/canvas-view"
+import { MatchedRuns, useCanvasView } from "@/screens/app/canvas-view"
 import { historyGridItems } from "@/screens/history/history-grid-items"
 import { ResultGrid } from "@/screens/library/result-grid"
 import { MeshOnAsk, MeshOutput } from "@/studio/three-d/mesh-viewer"
@@ -165,10 +165,15 @@ export function ThreeDCanvas(props: ThreeDCanvasProps): ReactElement {
       />
     )
   }
-  if (view.layout === "grid") {
-    return (
-      <ResultGrid items={historyGridItems(runs.runs)} size={view.gridSize} />
-    )
-  }
-  return <RunStack runs={runs.runs} onUseInputs={props.onUseInputs} />
+  return (
+    <MatchedRuns runs={runs.runs}>
+      {(kept) =>
+        view.layout === "grid" ? (
+          <ResultGrid items={historyGridItems(kept)} size={view.size} />
+        ) : (
+          <RunStack runs={kept} onUseInputs={props.onUseInputs} />
+        )
+      }
+    </MatchedRuns>
+  )
 }
