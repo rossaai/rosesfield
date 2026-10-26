@@ -65,6 +65,7 @@ export function CountField({
     >
       <NumberStepper
         value={value}
+        fallback={app.output.count.default}
         min={1}
         max={max}
         step={1}

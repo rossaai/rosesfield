@@ -43,6 +43,7 @@ function HostedCountField({
     >
       <NumberStepper
         {...bounds}
+        fallback={countBoundsOf(count, undefined).value}
         label={t("field.count.label")}
         icon={settingIconOf(count.name, "count")}
         step={1}

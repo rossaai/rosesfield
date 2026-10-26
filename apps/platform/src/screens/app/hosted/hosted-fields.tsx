@@ -64,6 +64,12 @@ function Frame({
   )
 }
 
+function textDefaultOf(field: ModelField): string | null {
+  return field.kind === "text" && field.default !== null && field.default !== ""
+    ? field.default
+    : null
+}
+
 function TextControl(props: FieldProps): ReactElement {
   const { field, value, form } = props
   const id = useId()
@@ -72,7 +78,8 @@ function TextControl(props: FieldProps): ReactElement {
     id,
     "aria-label": fieldCaption(field),
     value: textOf(value),
-    placeholder: props.placeholder ?? t("field.text.placeholder"),
+    placeholder:
+      props.placeholder ?? textDefaultOf(field) ?? t("field.text.placeholder"),
   }
   return (
     <Frame {...props}>
@@ -97,6 +104,9 @@ function SeedControl(props: FieldProps): ReactElement {
         inputMode="numeric"
         aria-label={fieldCaption(field)}
         value={typeof value === "number" ? String(value) : ""}
+        {...(field.kind === "number" && field.default !== null
+          ? { placeholder: String(field.default) }
+          : {})}
         step={1}
         onChange={(event) => {
           const next =
@@ -115,12 +125,13 @@ function StepperControl(props: FieldProps): ReactElement | null {
   }
   const min = field.min ?? Number.NEGATIVE_INFINITY
   const max = field.max ?? Number.POSITIVE_INFINITY
-  const shown =
-    typeof value === "number" ? value : (field.default ?? field.min ?? 0)
+  const fallback = field.default ?? field.min ?? 0
+  const shown = typeof value === "number" ? value : fallback
   return (
     <Frame {...props}>
       <NumberStepper
         value={shown}
+        fallback={fallback}
         min={min}
         max={max}
         step={field.step ?? (field.integer ? 1 : 0.1)}

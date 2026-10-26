@@ -248,6 +248,12 @@ function isEmpty(value: FieldValue): boolean {
   )
 }
 
+function filledOf(field: ModelField, value: FieldValue): FieldValue {
+  return field.kind === "text" && isEmpty(value) && field.default !== null
+    ? field.default
+    : value
+}
+
 export function hostedBody(
   model: string,
   fields: readonly ModelField[],
@@ -259,7 +265,7 @@ export function hostedBody(
   }
   for (const field of fields) {
     const forced = forcedOf(field)
-    const given = values.inputs[field.name]
+    const given = filledOf(field, values.inputs[field.name])
     const value =
       forced !== null
         ? sentValueOf(field, forced)
@@ -373,6 +379,8 @@ export function hostedProblems(
 ): FieldProblem[] {
   return fields
     .filter((field) => forcedOf(field) === null)
-    .map((field) => problemOf(field, values.inputs[field.name]))
+    .map((field) =>
+      problemOf(field, filledOf(field, values.inputs[field.name]))
+    )
     .filter((problem): problem is FieldProblem => problem !== null)
 }

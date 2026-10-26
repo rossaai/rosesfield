@@ -304,7 +304,7 @@ export function highestCount(): string {
     fireEvent.click(more)
     press += 1
   }
-  return group.querySelector("output")?.textContent ?? ""
+  return group.querySelector("input")?.value ?? ""
 }
 
 export function fragmentsOf(name: string): string[] {
