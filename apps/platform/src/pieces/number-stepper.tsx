@@ -110,6 +110,7 @@ export function NumberStepper(props: NumberStepperProps): ReactElement {
     props.onChange(clamp(next, props.min, props.max))
   }
   return (
+    // biome-ignore lint/a11y/useSemanticElements: a fieldset's content box ignores the fieldset's height, so its row sits above the field's middle
     <div
       role="group"
       aria-label={props.label}
