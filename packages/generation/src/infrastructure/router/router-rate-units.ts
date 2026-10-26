@@ -117,6 +117,48 @@ export function isPerInput(unit: string): boolean {
   return perInput.test(unit)
 }
 
+const numberWords: readonly string[] = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+]
+
+/**
+ * The inputs a per-input row bills of the images a run carries. A row read
+ * as "after the first" bills the images past one, and "after the first five"
+ * the images past five. A row that bills additional images and names no free
+ * count bills every image, and is not exact.
+ */
+export function billedInputsOf(
+  row: RateRow,
+  images: number
+): { count: number; exact: boolean } {
+  const after = /after the first(?:\s+(\w+))?/i.exec(row.conditions)
+  const free = after === null ? 0 : countIn(after[1] ?? "one")
+  const additional = /additional/i.test(`${row.unit} ${row.conditions}`)
+  if (free === null || (additional && after === null)) {
+    return { count: images, exact: false }
+  }
+  return { count: Math.max(0, images - free), exact: true }
+}
+
+function countIn(word: string): number | null {
+  const lower = word.toLowerCase()
+  if (/^\d+$/.test(lower)) {
+    return Number(lower)
+  }
+  const at = numberWords.indexOf(lower)
+  return at >= 0 ? at : null
+}
+
 /** Says whether a row's unit converts to credits for one run. */
 export function isPriced(row: RateRow): boolean {
   if (isPerTime(row.unit)) {

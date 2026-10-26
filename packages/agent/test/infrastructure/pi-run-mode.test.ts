@@ -126,6 +126,64 @@ describe("the run mode an app tool follows", () => {
     expect(JSON.parse(told).note).toContain("its price is not known")
   })
 
+  it("under auto, starts a run whose rate card price is at the limit", async () => {
+    const { generation, events } = await rose("auto", {
+      source: "rates",
+      credits: autoRunLimitCredits,
+      from: "rate-card",
+    })
+
+    expect(generation.runs.count).toBe(1)
+    expect(hasProposal(events)).toBe(false)
+  })
+
+  it("under auto, reads a range's upper end and proposes a run whose low end is under the limit", async () => {
+    const { generation, events } = await rose("auto", {
+      source: "estimate",
+      credits: autoRunLimitCredits + 1,
+      low: 1,
+      from: "rate-card",
+    })
+
+    expect(generation.runs.count).toBe(0)
+    expect(hasProposal(events)).toBe(true)
+  })
+
+  it.each(["model-runs", "task-runs"] as const)(
+    "under auto, proposes a run priced from %s, an estimate that can sit below the bill",
+    async (from) => {
+      const { generation, events, told } = await rose("auto", {
+        source: "estimate",
+        credits: 1,
+        from,
+      })
+
+      expect(generation.runs.count).toBe(0)
+      expect(generation.jobs.enqueued).toEqual([])
+      expect(hasProposal(events)).toBe(true)
+      expect(JSON.parse(told)).toMatchObject({ credits: null })
+      expect(JSON.parse(told).note).toContain("its price is not known")
+    }
+  )
+
+  it("under auto, proposes a Storyboard when one keyframe is priced from other runs", async () => {
+    const { generation, events } = await callApp(
+      "auto",
+      { source: "estimate", credits: 1, from: "task-runs" },
+      {
+        app: "storyboard",
+        inputs: {
+          sceneCount: "2",
+          scene1: "a fox at dusk",
+          scene2: "the fox in snow",
+        },
+      }
+    )
+
+    expect(generation.runs.count).toBe(0)
+    expect(hasProposal(events)).toBe(true)
+  })
+
   it("under auto, proposes a run whose pricing fails and never starts it", async () => {
     const { generation, events } = await rose(
       "auto",

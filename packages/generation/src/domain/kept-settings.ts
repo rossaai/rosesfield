@@ -113,15 +113,22 @@ function secondsOf(settings: string): number | null {
   return null
 }
 
-/** Scales the credits a kept run cost to the asked settings by its outputs, and by its seconds when both name them. */
+/**
+ * Scales the credits a kept run cost to the asked settings by its outputs,
+ * and by its seconds when both name them. A kept run that names no seconds
+ * cannot be scaled to an asked run that does, so it gives null.
+ */
 export function scaledCreditsOf(
   credits: number,
   kept: string,
   asked: string
-): number {
+): number | null {
   const outputs = keptCountOf(asked) / keptCountOf(kept)
   const keptSeconds = secondsOf(kept)
   const askedSeconds = secondsOf(asked)
+  if (askedSeconds !== null && keptSeconds === null) {
+    return null
+  }
   const seconds =
     keptSeconds === null || askedSeconds === null
       ? 1
