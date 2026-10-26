@@ -1,19 +1,32 @@
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { Textarea } from "@rosesfield/ui/components/textarea"
-import { type ReactElement, useEffect, useRef, useState } from "react"
-import { hasCatalogText, t, tCatalog } from "@/copy/t"
+import {
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
+import { t, tCatalog } from "@/copy/t"
 import { DropWell } from "@/pieces/drop-well"
+import { countField } from "@/screens/app/app-form"
+import { AppModelPicker } from "@/screens/app/bar/model-settings"
 import { CharacterField } from "@/screens/app/fields/character-field"
-import { ChoiceField } from "@/screens/app/fields/choice-field"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { listOf, textOf } from "@/screens/app/fields/field-props"
-import { AspectField } from "@/screens/app/fields/output-fields"
+import { AppSettingsSection } from "@/screens/app/fields/setting-rows"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
+import { HostedSettings } from "@/screens/app/hosted/hosted-fields"
 import { AdvancedFields } from "@/screens/app/inputs-panel"
+import { appSettingsPlan } from "@/screens/app/settings-plan"
 import { SceneList } from "@/studio/storyboard/scene-list"
 import { formatFieldOf } from "@/studio/storyboard/storyboard-model"
 import type { StoryboardState } from "@/studio/storyboard/use-storyboard-screen"
-import { lookMaxLength } from "../../../../../packages/catalog/src/storyboard/storyboard-inputs"
+import {
+  keyframeInput,
+  lookMaxLength,
+  sceneCountInput,
+} from "../../../../../packages/catalog/src/storyboard/storyboard-inputs"
 
 type PanelProps = {
   app: AppListing
@@ -62,11 +75,11 @@ function LookField({ state }: { state: StoryboardState }): ReactElement {
   return (
     <FieldFrame
       caption={tCatalog("storyboard.input.look.label")}
-      isOptional
+      isOptional={false}
       note={
         text.length > lookMaxLength * 0.8
           ? t("field.prompt.count", { count: text.length, max: lookMaxLength })
-          : tCatalog("storyboard.input.look.note")
+          : null
       }
       problem={undefined}
       message={state.messages.get("look") ?? null}
@@ -83,70 +96,40 @@ function LookField({ state }: { state: StoryboardState }): ReactElement {
 }
 
 function ModelField({ app, state }: PanelProps): ReactElement | null {
-  if (state.model.isTaskApp || state.model.isLoading) {
-    return <CatalogPicker hosted={state.model} place="row" />
-  }
-  const input = inputNamed(app, "model")
-  if (input?.type !== "choice") {
-    return null
-  }
-  const chosen = textOf(state.form.values.inputs.model)
-  const items = input.options.map((option) => ({
-    value: option.value,
-    label: tCatalog(option.labelKey),
-  }))
-  const value = items.some((item) => item.value === chosen)
-    ? chosen
-    : input.default
-  const picked = input.options.find((option) => option.value === value)
-  const lineKey = picked === undefined ? null : `${picked.labelKey}.line`
-  return (
-    <ChoiceField
-      label={tCatalog(input.labelKey)}
-      items={items}
-      value={value}
-      onChange={(next) => state.form.setInput("model", next)}
-      note={
-        lineKey !== null && hasCatalogText(lineKey) ? tCatalog(lineKey) : null
-      }
-      register={(focus) => state.form.register("model", focus)}
-    />
+  return state.model.isTaskApp || state.model.isLoading ? (
+    <CatalogPicker hosted={state.model} place="row" />
+  ) : (
+    <AppModelPicker app={app} form={state.form} place="row" />
   )
 }
 
-function FormatField({ app, state }: PanelProps): ReactElement | null {
+const placedInputs: readonly string[] = [
+  sceneCountInput,
+  keyframeInput,
+  countField,
+]
+
+function Settings({ app, state }: PanelProps): ReactNode {
   const fields = state.model.chosen?.form ?? null
   if (fields === null) {
     return (
-      <AspectField
+      <AppSettingsSection
         app={app}
-        value={state.form.values.aspectRatio}
-        onChange={(aspectRatio) => state.form.setForm({ aspectRatio })}
+        form={state.form}
+        lastSeed={state.lastSeed}
+        plan={appSettingsPlan(app, placedInputs)}
       />
     )
   }
-  const field = formatFieldOf(fields)
-  if (field === null) {
-    return null
-  }
-  const held = state.form.values.inputs[field.name] ?? field.default
-  const items = field.options.map((option) => ({
-    value: String(option),
-    label: String(option),
-  }))
+  const format = formatFieldOf(fields)
   return (
-    <ChoiceField
-      label={t("field.aspect.label")}
-      items={items}
-      value={held === null || held === undefined ? "" : String(held)}
-      onChange={(next) => {
-        const option = field.options.find((one) => String(one) === next)
-        if (option !== undefined) {
-          state.form.setInput(field.name, option)
-        }
-      }}
-      note={null}
-    />
+    <>
+      <HostedSettings
+        fields={format === null ? [] : [format]}
+        form={state.form}
+      />
+      <AdvancedFields app={app} form={state.form} lastSeed={state.lastSeed} />
+    </>
   )
 }
 
@@ -175,8 +158,7 @@ export function StoryboardPanel({ app, state }: PanelProps): ReactElement {
       <SceneList state={state} />
       <LookField state={state} />
       <ModelField app={app} state={state} />
-      <FormatField app={app} state={state} />
-      <AdvancedFields app={app} form={state.form} lastSeed={state.lastSeed} />
+      <Settings app={app} state={state} />
     </div>
   )
 }

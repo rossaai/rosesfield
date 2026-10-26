@@ -53,6 +53,33 @@ describe("Storyboard before any run", () => {
   })
 })
 
+describe("the Storyboard column", () => {
+  it("keeps one title, and shows the look, then the model once, then the format, with the seed closed under Advanced", async () => {
+    openStoryboard()
+    await emptyCanvas()
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1)
+    const look = screen.getByPlaceholderText(
+      tCatalog("storyboard.input.look.placeholder")
+    )
+    const model = await screen.findByRole("button", {
+      name: pickerTriggerName(qwenEdit),
+    })
+    const advanced = screen.getByRole("button", { name: t("field.advanced") })
+    const after = (first: Element, second: Element): boolean =>
+      (first.compareDocumentPosition(second) &
+        Node.DOCUMENT_POSITION_FOLLOWING) !==
+      0
+    expect(after(look, model)).toBe(true)
+    expect(after(model, advanced)).toBe(true)
+    expect(
+      screen.queryByText(tCatalog("storyboard.input.look.note"))
+    ).toBeNull()
+    expect(
+      screen.queryByText(tCatalog("storyboard.input.seed.label"))
+    ).toBeNull()
+  })
+})
+
 describe("the scene list", () => {
   it("adds scenes up to 8, then shows the limit in place of Add scene", async () => {
     openStoryboard()

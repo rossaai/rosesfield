@@ -126,6 +126,7 @@ describe("Edit opened at an old address", () => {
   it("titles the screen with the old address's tool, with no second row of tools", async () => {
     openEdit(undefined)
     await screen.findByRole("heading", { level: 1, name: nameOf("relight") })
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1)
     expect(screen.queryByRole("tab", { name: nameOf("angles") })).toBeNull()
   })
 })
@@ -146,7 +147,8 @@ describe("the settings bar", () => {
   it("is docked at the bottom edge of a phone screen, with the prompt and Generate", async () => {
     asPhone()
     openEdit(undefined)
-    await screen.findByRole("heading", { level: 1, name: nameOf("relight") })
+    await screen.findByRole("textbox")
+    expect(screen.queryAllByRole("heading", { level: 1 })).toHaveLength(0)
     const dock = document.querySelector("[data-slot='prompt-dock']")
     expect(dock?.getAttribute("data-place")).toBe("edge")
     expect(dock?.className).toContain("sticky")
