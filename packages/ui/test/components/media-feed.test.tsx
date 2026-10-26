@@ -1,4 +1,5 @@
 import {
+  feedColumnsOf,
   MediaFeed,
   packStacks,
   ViewAll,
@@ -6,9 +7,12 @@ import {
 import { ResultTile } from "@rosesfield/ui/components/result-tile"
 import { MEDIA_FEED } from "@rosesfield/ui/contracts/media-feed.generated"
 import { cleanup, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
 
 function renderFeed(
   layout: "masonry" | "row",
@@ -206,5 +210,69 @@ describe("ViewAll raise", () => {
     expect(classesOf(feed, "viewAll")).toEqual(
       expect.arrayContaining(["relative", "hover:z-1", "focus-visible:z-1"])
     )
+  })
+})
+
+describe("MediaFeed's cell width", () => {
+  function sizedFeed(layout: "masonry" | "row", count: number): HTMLElement {
+    render(
+      <MediaFeed label="Sized" layout={layout} cellWidth={228}>
+        {Array.from({ length: count }, (_, index) => `tile ${index}`).map(
+          (name) => (
+            <span key={name}>{name}</span>
+          )
+        )}
+      </MediaFeed>
+    )
+    return screen.getByRole("region", { name: "Sized" })
+  }
+
+  it("gives each row cell the caller's width in place of three and a bit across", () => {
+    const feed = sizedFeed("row", 3)
+    const cells = [
+      ...feed.querySelectorAll<HTMLElement>("[data-slot='media-feed-cell']"),
+    ]
+    expect(cells.map((cell) => cell.style.width)).toEqual([
+      "228px",
+      "228px",
+      "228px",
+    ])
+    expect(classesOf(feed, "items")).not.toContain(
+      "*:w-[calc((100%-var(--spacing-s2)*3)/3.4)]"
+    )
+  })
+
+  it("counts the masonry's columns from its own width and the cell, filling the row once the tiles fill it", () => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1408)
+    const feed = sizedFeed("masonry", 12)
+    const stacks = [
+      ...feed.querySelectorAll<HTMLElement>("[data-slot='media-feed-stack']"),
+    ]
+    expect(stacks).toHaveLength(6)
+    expect(stacks.every((stack) => stack.className.includes("flex-1"))).toBe(
+      true
+    )
+  })
+
+  it("keeps a short masonry's few columns at the cell width at the row's start", () => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1408)
+    const feed = sizedFeed("masonry", 2)
+    const stacks = [
+      ...feed.querySelectorAll<HTMLElement>("[data-slot='media-feed-stack']"),
+    ]
+    expect(stacks.map((stack) => stack.style.width)).toEqual(["228px", "228px"])
+  })
+
+  it("fits as many columns as the width holds with the gap between them", () => {
+    expect(feedColumnsOf(20, 1408, 228, 7)).toEqual({ count: 6, fills: true })
+    expect(feedColumnsOf(20, 1408, 160, 7)).toEqual({ count: 8, fills: true })
+    expect(feedColumnsOf(20, 1408, 464, 7)).toEqual({ count: 3, fills: true })
+    expect(feedColumnsOf(2, 1408, 228, 7)).toEqual({ count: 2, fills: false })
+    expect(feedColumnsOf(5, 100, 228, 7)).toEqual({ count: 1, fills: true })
+    expect(feedColumnsOf(20, 1408, 228, 50)).toEqual({ count: 5, fills: true })
+    expect(feedColumnsOf(20, 228 * 3 + 14, 228, 7)).toEqual({
+      count: 3,
+      fills: true,
+    })
   })
 })

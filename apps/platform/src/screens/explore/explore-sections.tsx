@@ -88,33 +88,50 @@ export function ExploreBanner(): ReactElement {
   )
 }
 
-export function AppsRow(): ReactElement {
-  const router = useRouter()
-  const apps = navGroups(catalogApps)
+export function exploreApps(): AppListing[] {
+  return navGroups(catalogApps)
     .areas.flatMap((area) => area.apps)
     .filter((app) => appCardFormOf(app, null) === "media")
+}
+
+export function AppsHeader(): ReactElement {
+  const router = useRouter()
   return (
-    <Reveal>
-      <MediaFeed
-        label={t("explore.apps.label")}
-        layout="row"
-        rowLabels={{ previous: t("viewer.previous"), next: t("viewer.next") }}
-        header={
-          <SectionHeader
-            title={t("explore.apps.label")}
-            actions={
-              <ViewAll href={router.buildLocation({ to: "/apps" }).href}>
-                {t("explore.showcase.viewAll")}
-              </ViewAll>
-            }
-          />
-        }
-      >
-        {apps.map((app) => (
-          <AppCard key={app.id} app={app} newest={null} working={0} />
-        ))}
-      </MediaFeed>
-    </Reveal>
+    <SectionHeader
+      title={t("explore.apps.label")}
+      actions={
+        <ViewAll href={router.buildLocation({ to: "/apps" }).href}>
+          {t("explore.showcase.viewAll")}
+        </ViewAll>
+      }
+    />
+  )
+}
+
+export function AppsRow({
+  apps,
+  cardWidth,
+}: {
+  apps: readonly AppListing[]
+  cardWidth: number
+}): ReactElement {
+  return (
+    <MediaFeed
+      label={t("explore.apps.label")}
+      layout="row"
+      rowLabels={rowLabels()}
+      cellWidth={cardWidth}
+    >
+      {apps.map((app) => (
+        <AppCard
+          key={app.id}
+          app={app}
+          newest={null}
+          working={0}
+          width={cardWidth}
+        />
+      ))}
+    </MediaFeed>
   )
 }
 
@@ -125,12 +142,12 @@ type FeedProps = ResultActions & {
   name: string
   layout: "masonry" | "row"
   entries: readonly VisualEntry[]
+  cellWidth?: number
 }
 
-const rowLabels = (): { previous: string; next: string } => ({
-  previous: t("viewer.previous"),
-  next: t("viewer.next"),
-})
+function rowLabels(): { previous: string; next: string } {
+  return { previous: t("viewer.previous"), next: t("viewer.next") }
+}
 
 export function ResultFeed(props: FeedProps): ReactElement {
   return (
@@ -139,6 +156,9 @@ export function ResultFeed(props: FeedProps): ReactElement {
         label={props.title}
         layout={props.layout}
         rowLabels={rowLabels()}
+        {...(props.cellWidth === undefined
+          ? {}
+          : { cellWidth: props.cellWidth })}
         header={
           <SectionHeader
             title={props.title}
@@ -285,10 +305,16 @@ export function feedExamples(entries: readonly VisualEntry[]): VisualEntry[] {
   )
 }
 
+type SizedFeedProps = ResultActions & {
+  entries: readonly VisualEntry[]
+  cellWidth?: number
+}
+
 export function ShowcaseFeed({
   entries,
+  cellWidth,
   ...actions
-}: ResultActions & { entries: readonly VisualEntry[] }): ReactNode {
+}: SizedFeedProps): ReactNode {
   const isRegular = useIsRegularWindow()
   const examples = feedExamples(entries)
   if (examples.length === 0) {
@@ -299,6 +325,7 @@ export function ShowcaseFeed({
       <MediaFeed
         label={t("explore.showcase.title")}
         isClipped={isRegular}
+        {...(cellWidth === undefined ? {} : { cellWidth })}
         header={<SectionHeader title={t("explore.showcase.title")} />}
       >
         {examples.map((entry) => (
@@ -317,8 +344,9 @@ export function ShowcaseFeed({
 
 export function SharedFeed({
   entries,
+  cellWidth,
   ...actions
-}: ResultActions & { entries: readonly VisualEntry[] }): ReactElement {
+}: SizedFeedProps): ReactElement {
   const router = useRouter()
   return (
     <ResultFeed
@@ -329,6 +357,7 @@ export function SharedFeed({
       name={t("explore.shared.name")}
       layout="masonry"
       entries={entries}
+      {...(cellWidth === undefined ? {} : { cellWidth })}
     />
   )
 }

@@ -1,3 +1,4 @@
+import type { AppListing } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { MediaFeed } from "@rosesfield/ui/components/media-feed"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
@@ -6,25 +7,34 @@ import { useNavigate, useRouter } from "@tanstack/react-router"
 import type { ReactElement, ReactNode } from "react"
 import { useKeyReach } from "@/api/key-reach"
 import { t } from "@/copy/t"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
+import { type PlaceView, useView } from "@/pieces/view/use-view"
 import {
   type ExploreEntries,
   showcaseEntries,
   useExploreEntries,
 } from "@/screens/explore/explore-entries"
+import { ExploreNoMatch, ExploreTop } from "@/screens/explore/explore-head"
 import { exploreRows, visualEntries } from "@/screens/explore/explore-rows"
 import {
-  AppsRow,
   bannerAppId,
   ExploreBanner,
   ExploreRowView,
+  exploreApps,
   type ResultActions,
   SharedFeed,
   ShowcaseFeed,
 } from "@/screens/explore/explore-sections"
 import { useRecreate, type VisualEntry } from "@/screens/explore/explore-tile"
+import {
+  appsHoldingWords,
+  entriesHoldingWords,
+  exploreCellsOf,
+} from "@/screens/explore/explore-view"
 import { useInAppLinks } from "@/screens/explore/in-app-links"
+import { useAvailableWidth } from "@/screens/library/tile-columns"
 import { useOpenKeyDialog } from "@/shell/key-dialog-context"
-import { showcaseItems } from "@/showcase/showcase"
+import { isFeedExample, showcaseItems } from "@/showcase/showcase"
 import { ResultViewer, useShownResult } from "@/viewer/result-viewer"
 
 const skeletonRatios: readonly string[] = ["9 / 16", "16 / 9", "4 / 5"]
@@ -34,9 +44,9 @@ function useNeedsKey(): boolean {
   return useKeyReach() === "add"
 }
 
-function LoadingFeed(): ReactElement {
+function LoadingFeed({ cellWidth }: { cellWidth: number }): ReactElement {
   return (
-    <MediaFeed label={t("explore.shared.title")}>
+    <MediaFeed label={t("explore.shared.title")} cellWidth={cellWidth}>
       {Array.from({ length: skeletonCount }, (_, index) => (
         <Skeleton
           // biome-ignore lint/suspicious/noArrayIndexKey: a skeleton's place is its identity
@@ -81,14 +91,18 @@ const showcase = showcaseEntries(showcaseItems)
 function ExploreFeeds({
   results,
   entries,
+  isSearching,
+  cellWidth,
   ...actions
 }: ResultActions & {
   results: ExploreEntries
   entries: readonly VisualEntry[]
+  isSearching: boolean
+  cellWidth: number
 }): ReactNode {
   const hasShowcase = showcase.length > 0
   if (results.state === "loading") {
-    return <LoadingFeed />
+    return <LoadingFeed cellWidth={cellWidth} />
   }
   if (results.state === "failed") {
     return (
@@ -101,7 +115,7 @@ function ExploreFeeds({
     )
   }
   if (entries.length === 0) {
-    return hasShowcase ? null : <EmptyExplore />
+    return hasShowcase || isSearching ? null : <EmptyExplore />
   }
   const rows = exploreRows(entries)
   return (
@@ -109,7 +123,7 @@ function ExploreFeeds({
       {rows.map((row) => (
         <ExploreRowView key={row.key} row={row} {...actions} />
       ))}
-      <SharedFeed entries={entries} {...actions} />
+      <SharedFeed entries={entries} cellWidth={cellWidth} {...actions} />
     </>
   )
 }
@@ -136,23 +150,64 @@ function useMore(
   }
 }
 
+type ExploreShown = {
+  apps: AppListing[]
+  showcase: VisualEntry[]
+  shared: VisualEntry[]
+  isNoMatch: boolean
+}
+
+function shownOf(
+  view: PlaceView,
+  results: ExploreEntries,
+  shared: readonly VisualEntry[]
+): ExploreShown {
+  const words = view.words.trim()
+  const apps = appsHoldingWords(exploreApps(), words)
+  const shownShowcase = entriesHoldingWords(showcase, words)
+  const shownShared = entriesHoldingWords(shared, words)
+  const isNoMatch =
+    words !== "" &&
+    results.state === "ready" &&
+    apps.length === 0 &&
+    shownShared.length === 0 &&
+    !shownShowcase.some((entry) => isFeedExample(entry.run.id))
+  return { apps, showcase: shownShowcase, shared: shownShared, isNoMatch }
+}
+
 export function ExploreScreen(): ReactElement {
   const root = useInAppLinks<HTMLDivElement>()
   const results = useExploreEntries()
+  const view = useView("explore")
+  const isRegular = useIsRegularWindow()
+  const [measure, available] = useAvailableWidth()
+  const cells = exploreCellsOf(available, view.size, isRegular)
   const shared = results.state === "ready" ? visualEntries(results.entries) : []
-  const entries = [...showcase, ...shared]
+  const shown = shownOf(view, results, shared)
+  const entries = [...shown.showcase, ...shown.shared]
   const viewer = useShownResult()
   const recreate = useRecreate()
   const onMore = useMore((entry) => viewer.show(entry, null))
   return (
     <div ref={root} className="flex min-h-full flex-col px-4 pb-12">
       <ExploreBanner />
-      <div className="mt-6 flex flex-col gap-12 @regular:mt-10 @regular:gap-35">
-        <AppsRow />
-        <ShowcaseFeed entries={showcase} onOpen={viewer.show} onMore={onMore} />
+      <div
+        ref={measure}
+        className="mt-6 flex flex-col gap-12 @regular:mt-10 @regular:gap-35"
+      >
+        <ExploreTop view={view} apps={shown.apps} cardWidth={cells.card} />
+        {shown.isNoMatch ? <ExploreNoMatch view={view} /> : null}
+        <ShowcaseFeed
+          entries={shown.showcase}
+          cellWidth={cells.feed}
+          onOpen={viewer.show}
+          onMore={onMore}
+        />
         <ExploreFeeds
           results={results}
-          entries={shared}
+          entries={shown.shared}
+          isSearching={view.words.trim() !== ""}
+          cellWidth={cells.feed}
           onOpen={viewer.show}
           onMore={onMore}
         />

@@ -128,7 +128,12 @@ function CardLine({ text }: { text: string }): ReactElement {
   )
 }
 
-export function AppCard({ app, newest, working }: AppCardProps): ReactElement {
+export function AppCard({
+  app,
+  newest,
+  working,
+  width,
+}: AppCardProps & { width?: number }): ReactElement {
   return (
     <Link
       to="/apps/$appId"
@@ -136,9 +141,11 @@ export function AppCard({ app, newest, working }: AppCardProps): ReactElement {
       data-slot="app-card"
       data-app-card={appCardFormOf(app, newest)}
       className={cn(
-        "group/card relative block w-62 shrink-0 snap-start rounded-card @regular:w-auto",
+        "group/card relative block shrink-0 snap-start rounded-card",
+        width === undefined ? "w-62 @regular:w-auto" : "",
         interaction.ring
       )}
+      style={width === undefined ? undefined : { width }}
     >
       <Card className={cn("h-full gap-0 p-4", motion.tint, tinted)}>
         <CardMedia app={app} newest={newest} working={working} />
