@@ -85,7 +85,6 @@ function hostedOf(models: readonly CatalogModel[]): HostedState {
     defaultModel: "ltx-2-5",
     chosen: models[0] ?? null,
     fields: null,
-    ranBefore: [],
     choose: () => undefined,
   }
 }
@@ -165,11 +164,12 @@ describe("picking another model", () => {
 })
 
 describe("the model picker", () => {
-  it("puts MiniMax H3 one choice from the default, right after LTX 2.5", () => {
+  it("ranks the default LTX 2.5 first and keeps MiniMax H3 in the ranked three", () => {
     const picker = shotPickerOf(hostedOf([ltx, turbo, minimax]), shot)
     const [featured] = pickerSections(picker)
     expect(featured?.rows.map((row) => row.id)).toEqual([
       "ltx-2-5",
+      "fal/h3-max-turbo",
       "minimax/minimax-h3",
     ])
   })

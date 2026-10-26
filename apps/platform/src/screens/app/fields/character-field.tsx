@@ -10,11 +10,7 @@ import { CharacterAvatar } from "@/pieces/character-avatar"
 import { CharacterPicker } from "@/pieces/character-picker"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { type InputFieldProps, listOf } from "@/screens/app/fields/field-props"
-import {
-  inputCaption,
-  inputNote,
-  isOptionalInput,
-} from "@/screens/app/fields/input-copy"
+import { inputCaption, isOptionalInput } from "@/screens/app/fields/input-copy"
 
 function PickedCharacter({
   characterId,
@@ -59,7 +55,7 @@ export function CharacterField(
     <FieldFrame
       caption={inputCaption(input)}
       isOptional={isOptionalInput(input)}
-      note={inputNote(props.app, input)}
+      note={null}
       problem={props.problem}
     >
       <div className="flex flex-col gap-s2 rounded-card bg-(--well) p-s3">

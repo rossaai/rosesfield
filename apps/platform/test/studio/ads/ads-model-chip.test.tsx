@@ -42,7 +42,6 @@ const noCatalog: HostedState = {
   defaultModel: null,
   chosen: null,
   fields: null,
-  ranBefore: [],
   choose: () => undefined,
 }
 
@@ -81,7 +80,7 @@ describe("the Ads model chip", () => {
     expect(chip.querySelector("svg.lucide-chevron-down")).not.toBeNull()
   })
 
-  it("opens the 402 px list with Qwen Image Edit 2511 first and FLUX 3 Image one choice away", () => {
+  it("opens the 402 px list with Qwen Image Edit 2511 ranked first and FLUX 3 Image in the ranked three", () => {
     render(<AdsModelChip app={listing} state={catalogState([])} chips={[]} />, {
       wrapper: WithQuery,
     })
@@ -102,7 +101,7 @@ describe("the Ads model chip", () => {
       [...featured.querySelectorAll("[data-model]")].map((row) =>
         row.getAttribute("data-model")
       )
-    ).toEqual([chosenByDefault, adsHostedModel])
+    ).toEqual([chosenByDefault, "ideogram/ideogram-4.5-edit", adsHostedModel])
   })
 
   it("names the lab by its weights' publisher", () => {

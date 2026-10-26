@@ -260,11 +260,10 @@ function shortcutOf(start: StartRun) {
 function useLayersCatalog(
   app: AppListing,
   form: AppForm,
-  check: RefObject<FormCheck | null>,
-  runs: readonly Run[]
+  check: RefObject<FormCheck | null>
 ) {
   const formMode = modeOf(form.values)
-  const models = useLayersModels(app, form, formMode, runs)
+  const models = useLayersModels(app, form, formMode)
   check.current = checkOf(models.hosted.chosen, formMode)
   return models
 }
@@ -338,7 +337,7 @@ export function useLayersScreen(
   const check = useRef<FormCheck | null>(null)
   const { mode, formApp, form } = useModeForm(app, seeds, check)
   const runs = useAppRuns(app)
-  const catalog = useLayersCatalog(app, form, check, runs.runs)
+  const catalog = useLayersCatalog(app, form, check)
   const [preferred, setPreferred] = useState<string | null>(seeds.from ?? null)
   const layers = useStackState(runs.runs, preferred)
   const brush = useBrush()

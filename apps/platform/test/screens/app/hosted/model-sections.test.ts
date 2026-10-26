@@ -2,7 +2,10 @@ import type { CatalogModel, ModelFacts } from "@rosesfield/catalog/comfy"
 import { isValidElement } from "react"
 import { describe, expect, it } from "vitest"
 import { pickerSections } from "@/screens/app/hosted/catalog-picker"
-import { modelSections } from "@/screens/app/hosted/model-sections"
+import {
+  modelSections,
+  rankedModelsOf,
+} from "@/screens/app/hosted/model-sections"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 
 function model(
@@ -44,7 +47,7 @@ const models = [
 ]
 
 describe("the sections of the model picker", () => {
-  it("puts your default and the models you ran before under Featured, then every model under All, open weights first, for the picker to group by lab", () => {
+  it("puts the ranked models under Featured in their order, then every model under All, open weights first, for the picker to group by lab", () => {
     const sections = modelSections(
       models,
       ["beta/two", "alpha/one", "beta/two", "gone/model"],
@@ -73,10 +76,11 @@ describe("the sections of the model picker", () => {
       defaultModel: "alpha/one",
       chosen: null,
       fields: null,
-      ranBefore: [],
       choose: () => undefined,
     }
-    const rows = pickerSections(hosted).flatMap((section) => section.rows)
+    const rows = pickerSections(hosted)
+      .filter((section) => section.id === "all")
+      .flatMap((section) => section.rows)
     const image = rows.find((row) => row.id === "alpha/one")
     const video = rows.find((row) => row.id === "beta/three")
     const graph = rows.find((row) => row.id === "open-picture")
@@ -132,12 +136,11 @@ describe("an open-weights row of the model picker", () => {
     defaultModel: null,
     chosen: null,
     fields: null,
-    ranBefore: [],
     choose: () => undefined,
   }
-  const rows = pickerSections(hosted, "2026-10-20").flatMap(
-    (section) => section.rows
-  )
+  const rows = pickerSections(hosted, "2026-10-20")
+    .filter((section) => section.id === "all")
+    .flatMap((section) => section.rows)
   const ming = rows.find((row) => row.id === "ming-image-0-1-design")
   const beta = rows.find((row) => row.id === "beta/two")
 
@@ -178,7 +181,6 @@ describe("the prices of the model picker's rows", () => {
     defaultModel: "alpha/one",
     chosen: null,
     fields: null,
-    ranBefore: [],
     choose: () => undefined,
   }
 
@@ -195,5 +197,82 @@ describe("the prices of the model picker's rows", () => {
     expect(rows.find((row) => row.id === "beta/two")).not.toHaveProperty(
       "price"
     )
+  })
+})
+
+function ranked(id: string, position: number | null): CatalogModel {
+  return model(id, "Lab", {
+    ...(position === null
+      ? {}
+      : {
+          facts: {
+            ...mingFacts,
+            rank: {
+              position,
+              size: 100,
+              board: "Artificial Analysis Text to Image Arena",
+              url: "https://artificialanalysis.ai/image/leaderboard/text-to-image",
+              readOn: "2026-10-20",
+            },
+          },
+        }),
+  })
+}
+
+describe("the ranked list of an app's models", () => {
+  const listed = [
+    ranked("lab/unranked", null),
+    ranked("lab/third", 30),
+    ranked("lab/first", 3),
+    ranked("lab/second", 12),
+  ]
+
+  it("leads with the app's default, then the board's order, three at most", () => {
+    const ids = rankedModelsOf(
+      "lab/unranked",
+      listed.map((one) => ({
+        id: one.id,
+        rank: one.facts?.rank?.position ?? null,
+      }))
+    )
+    expect(ids).toEqual(["lab/unranked", "lab/first", "lab/second"])
+  })
+
+  it("leads with the board's first when the default is not listed, so the app never opens on a model the picker does not show", () => {
+    const ids = rankedModelsOf("gone/model", [
+      { id: "lab/a", rank: 9 },
+      { id: "lab/b", rank: 2 },
+    ])
+    expect(ids).toEqual(["lab/b", "lab/a"])
+  })
+
+  it("shows the featured row in rank order, each tagged with its rank, and opens on rank 1", () => {
+    const hosted: HostedState = {
+      isTaskApp: true,
+      models: listed,
+      isLoading: false,
+      error: null,
+      keyState: "set",
+      defaultModel: "lab/unranked",
+      chosen: null,
+      fields: null,
+      choose: () => undefined,
+    }
+    const featured = pickerSections(hosted, "2026-10-20").find(
+      (section) => section.id === "featured"
+    )
+    expect(featured?.rows.map((row) => row.id)).toEqual([
+      "lab/unranked",
+      "lab/first",
+      "lab/second",
+    ])
+    expect(featured?.rows.map((row) => row.tags[0]?.label)).toEqual([
+      "1",
+      "2",
+      "3",
+    ])
+    expect(
+      featured?.rows.flatMap((row) => row.tags.map((tag) => tag.label))
+    ).not.toContain("Rank 3 of 100")
   })
 })

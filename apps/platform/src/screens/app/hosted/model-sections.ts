@@ -49,13 +49,48 @@ export function ranBeforeOf(models: readonly (string | undefined)[]): string[] {
   })
 }
 
+export const featuredLimit = 3
+
+export type RankCandidate = { id: string; rank: number | null }
+
+export function rankedModelsOf(
+  defaultId: string | null,
+  candidates: readonly RankCandidate[]
+): string[] {
+  const isListed = candidates.some((one) => one.id === defaultId)
+  const head = defaultId !== null && isListed ? [defaultId] : []
+  const byBoard = candidates
+    .flatMap((one) =>
+      one.rank === null || one.id === defaultId
+        ? []
+        : [{ id: one.id, rank: one.rank }]
+    )
+    .sort((a, b) => a.rank - b.rank)
+    .map((one) => one.id)
+  const rest = candidates.map((one) => one.id)
+  return ranBeforeOf([...head, ...byBoard, ...rest]).slice(0, featuredLimit)
+}
+
+export function rankedCatalogOf(
+  defaultId: string | null,
+  models: readonly CatalogModel[]
+): string[] {
+  return rankedModelsOf(
+    defaultId,
+    models.map((model) => ({
+      id: model.id,
+      rank: model.facts?.rank?.position ?? null,
+    }))
+  )
+}
+
 export function modelSections(
   models: readonly CatalogModel[],
-  firstIds: readonly string[],
+  rankedIds: readonly string[],
   nameOf: (model: CatalogModel) => string
 ): ModelSection[] {
   const byId = new Map(models.map((model) => [model.id, model]))
-  const featured = ranBeforeOf([...firstIds]).flatMap((id) => {
+  const featured = ranBeforeOf([...rankedIds]).flatMap((id) => {
     const model = byId.get(id)
     return model === undefined ? [] : [rowOf(model, nameOf(model))]
   })

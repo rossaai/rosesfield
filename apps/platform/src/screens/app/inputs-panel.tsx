@@ -1,11 +1,18 @@
-import type { AppListing } from "@rosesfield/contract"
-import type { ReactElement } from "react"
-import { t } from "@/copy/t"
+import type { AppListing, InputDefinition } from "@rosesfield/contract"
+import type { ReactElement, ReactNode } from "react"
 import { appliedApp } from "@/screens/app/app-form"
-import { PopoverChip, settingIconOf } from "@/screens/app/bar/setting-chip"
+import {
+  AppModelPicker,
+  modelInputName,
+} from "@/screens/app/bar/model-settings"
 import { InputField } from "@/screens/app/fields/input-field"
-import { AspectField, CountField } from "@/screens/app/fields/output-fields"
-import { SeedField } from "@/screens/app/fields/seed-field"
+import {
+  AdvancedSection,
+  AppSettingRows,
+  AppSettingsSection,
+  randomSeed,
+} from "@/screens/app/fields/setting-rows"
+import { appSettingsPlan, isSettingInput } from "@/screens/app/settings-plan"
 import type { AppForm } from "@/screens/app/use-app-form"
 
 type InputsPanelProps = {
@@ -14,96 +21,62 @@ type InputsPanelProps = {
   lastSeed: number | null
 }
 
-export function randomSeed(): number {
-  const [value = 0] = crypto.getRandomValues(new Uint32Array(1))
-  return value % 2_147_483_648
-}
-
 export function AdvancedFields({
   app,
   form,
   lastSeed,
 }: InputsPanelProps): ReactElement | null {
-  const seed = app.inputs.find((input) => input.type === "seed")
-  if (seed === undefined) {
-    return null
-  }
-  const value = form.values.inputs[seed.name]
-  return (
-    <SeedField
-      mode={form.values.seedMode}
-      value={value}
-      onMode={(mode) => {
-        form.setForm({ seedMode: mode })
-        if (mode === "fixed" && typeof value !== "number") {
-          form.setInput(seed.name, lastSeed ?? randomSeed())
-        }
-      }}
-      onChange={(next) => form.setInput(seed.name, next)}
-    />
+  const { advanced } = appSettingsPlan(appliedApp(app, form.values.inputs))
+  return advanced.length === 0 ? null : (
+    <AdvancedSection>
+      <AppSettingRows
+        app={app}
+        form={form}
+        lastSeed={lastSeed}
+        settings={advanced}
+      />
+    </AdvancedSection>
   )
 }
 
-export function InputsPanel(props: InputsPanelProps): ReactElement {
-  const { app, form } = props
+export function trayInputsOf(app: AppListing): InputDefinition[] {
+  const inputs = app.inputs.filter(
+    (input) => !isSettingInput(input) && input.name !== modelInputName
+  )
+  return [
+    ...inputs.filter((input) => input.type !== "prompt"),
+    ...inputs.filter((input) => input.type === "prompt"),
+  ]
+}
+
+export function InputsPanel({
+  model,
+  ...props
+}: InputsPanelProps & { model?: ReactNode }): ReactElement {
+  const { form } = props
+  const app = appliedApp(props.app, form.values.inputs)
   return (
     <div className="flex flex-col gap-s4">
-      {appliedApp(app, form.values.inputs)
-        .inputs.filter((input) => input.type !== "seed")
-        .map((input) => (
-          <InputField
-            key={input.name}
-            app={app}
-            input={input}
-            value={form.values.inputs[input.name]}
-            problem={form.problems.get(input.name)}
-            onChange={(value) => form.setInput(input.name, value)}
-            register={(focus) => form.register(input.name, focus)}
-          />
-        ))}
-      <AspectField
+      {trayInputsOf(app).map((input) => (
+        <InputField
+          key={input.name}
+          app={app}
+          input={input}
+          value={form.values.inputs[input.name]}
+          problem={form.problems.get(input.name)}
+          onChange={(value) => form.setInput(input.name, value)}
+          register={(focus) => form.register(input.name, focus)}
+        />
+      ))}
+      {model ?? <AppModelPicker app={app} form={form} place="row" />}
+      <AppSettingsSection
         app={app}
-        value={form.values.aspectRatio}
-        onChange={(aspectRatio) => form.setForm({ aspectRatio })}
+        form={form}
+        lastSeed={props.lastSeed}
+        plan={appSettingsPlan(app)}
       />
-      <CountField
-        app={app}
-        value={form.values.count}
-        onChange={(count) => form.setForm({ count })}
-      />
-      <AdvancedFields {...props} />
     </div>
   )
 }
 
-export function SeedChip({
-  app,
-  form,
-  lastSeed,
-}: InputsPanelProps): ReactElement | null {
-  const seed = app.inputs.find((input) => input.type === "seed")
-  if (seed === undefined) {
-    return null
-  }
-  const value = form.values.inputs[seed.name]
-  const isFixed = form.values.seedMode === "fixed" && typeof value === "number"
-  return (
-    <PopoverChip
-      label={t("field.seed.label")}
-      icon={settingIconOf(seed.name, null)}
-      shown={isFixed ? String(value) : t("field.seed.random")}
-    >
-      <SeedField
-        mode={form.values.seedMode}
-        value={value}
-        onMode={(mode) => {
-          form.setForm({ seedMode: mode })
-          if (mode === "fixed" && typeof value !== "number") {
-            form.setInput(seed.name, lastSeed ?? randomSeed())
-          }
-        }}
-        onChange={(next) => form.setInput(seed.name, next)}
-      />
-    </PopoverChip>
-  )
-}
+export { randomSeed }

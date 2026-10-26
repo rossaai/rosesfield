@@ -58,8 +58,7 @@ function errorOf(
 export function useLayersModels(
   app: AppListing,
   form: AppForm,
-  mode: LayersMode,
-  runs: readonly Run[]
+  mode: LayersMode
 ): LayersModels {
   const isTaskApp = useMemo(() => taskAppOf(app.id) !== null, [app.id])
   const settings = useQuery(settingsQuery)
@@ -74,7 +73,6 @@ export function useLayersModels(
   )
   const models = useMemo(() => modelsOfMode(index, mode), [index, mode])
   const fallback = useMemo(() => defaultOfMode(index, mode), [index, mode])
-  const ranBefore = useMemo(() => ranBeforeIn(runs, mode), [runs, mode])
   const id = textOf(form.values.inputs[modelInputName])
   const chosen = models.find((model) => model.id === id) ?? null
   const { values, setForm } = form
@@ -104,7 +102,6 @@ export function useLayersModels(
       defaultModel: fallbackId,
       chosen,
       fields: chosen?.form ?? null,
-      ranBefore,
       choose,
     },
   }

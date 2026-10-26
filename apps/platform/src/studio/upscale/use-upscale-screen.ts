@@ -268,7 +268,7 @@ export function useUpscaleScreen(
   const check = useRef<FormCheck | null>(null)
   const form = useAppForm(app, seeds, check)
   const runs = useAppRuns(app)
-  const hosted = useHostedModel(app, form, runs.runs)
+  const hosted = useHostedModel(app, form)
   usePriceRefresh(app.id, runs.runs)
   const mode = modeOf(form.values.inputs[modeInput])
   const chosen =

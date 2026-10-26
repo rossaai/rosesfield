@@ -1,8 +1,8 @@
 import {
   factsOf,
-  inputRoleOf,
   isHostedModelId,
   labOfModel,
+  type ModelFacts,
   modelFactsData,
 } from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
@@ -18,7 +18,6 @@ import { useQuery } from "@tanstack/react-query"
 import { type ReactElement, type ReactNode, useState } from "react"
 import { settingsQuery } from "@/api/queries"
 import { isAssetInput } from "@/catalog/app-facts"
-import { bySettingOrder, settingOf } from "@/catalog/setting-registry"
 import { t, tCatalog } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
 import {
@@ -28,16 +27,18 @@ import {
   countField,
 } from "@/screens/app/app-form"
 import {
+  AdvancedChip,
   chipChoiceText,
-  inputIconOf,
-  PopoverChip,
   SettingChip,
 } from "@/screens/app/bar/setting-chip"
 import { textOf } from "@/screens/app/fields/field-props"
-import { inputCaption } from "@/screens/app/fields/input-copy"
-import { InputField } from "@/screens/app/fields/input-field"
-import { AspectField, CountField } from "@/screens/app/fields/output-fields"
 import {
+  AppSettingRows,
+  AppSettingsSection,
+  settingId,
+} from "@/screens/app/fields/setting-rows"
+import {
+  featuredTagOf,
   openWeightsBadge,
   openWeightsTag,
   pickerFilters,
@@ -45,8 +46,13 @@ import {
   weightsLinkOf,
 } from "@/screens/app/hosted/catalog-picker"
 import type { PriceAsk } from "@/screens/app/hosted/model-catalog-query"
+import { rankedModelsOf } from "@/screens/app/hosted/model-sections"
 import { useAskPrices } from "@/screens/app/hosted/use-row-prices"
-import { AdvancedFields, SeedChip } from "@/screens/app/inputs-panel"
+import {
+  type AppSetting,
+  appSettingsPlan,
+  isSettingInput,
+} from "@/screens/app/settings-plan"
 import type { AppForm } from "@/screens/app/use-app-form"
 import type { AppScreenState } from "@/screens/app/use-app-screen"
 
@@ -82,53 +88,44 @@ export function ModelSettings({
   chips,
 }: ModelSettingsProps): ReactElement {
   const { form } = state
+  const applied = appliedApp(app, form.values.inputs)
   return (
     <div className="flex flex-col gap-s4">
-      {settingsInputs(appliedApp(app, form.values.inputs), chips).map(
-        (input) => (
-          <InputField
-            key={input.name}
-            app={app}
-            input={input}
-            value={form.values.inputs[input.name]}
-            problem={form.problems.get(input.name)}
-            onChange={(value) => form.setInput(input.name, value)}
-            register={(focus) => form.register(input.name, focus)}
-          />
-        )
-      )}
-      {chips.includes(aspectField) ? null : (
-        <AspectField
-          app={app}
-          value={form.values.aspectRatio}
-          onChange={(aspectRatio) => form.setForm({ aspectRatio })}
-        />
-      )}
-      {chips.includes(countField) ? null : (
-        <CountField
-          app={app}
-          value={form.values.count}
-          onChange={(count) => form.setForm({ count })}
-        />
-      )}
-      <AdvancedFields app={app} form={form} lastSeed={state.lastSeed} />
+      <AppSettingsSection
+        app={applied}
+        form={form}
+        lastSeed={state.lastSeed}
+        plan={appSettingsPlan(applied, chips)}
+      />
     </div>
   )
 }
 
-function isChipInput(input: InputDefinition): boolean {
-  return (
-    input.type === "choice" ||
-    input.type === "number" ||
-    input.type === "toggle"
-  )
+function shownAppOf(
+  app: AppListing,
+  shown: (input: InputDefinition) => InputDefinition | null
+): AppListing {
+  return {
+    ...app,
+    inputs: app.inputs.flatMap((input) => {
+      if (!isSettingInput(input)) {
+        return [input]
+      }
+      const one = shown(input)
+      return one === null ? [] : [one]
+    }),
+  }
 }
 
-function shownValueOf(value: unknown): string {
-  if (typeof value === "string" && value.trim() !== "") {
-    return value
+function settingChipName(setting: AppSetting): string {
+  switch (setting.kind) {
+    case "aspect":
+      return aspectField
+    case "count":
+      return countField
+    case "input":
+      return setting.input.name
   }
-  return typeof value === "number" ? String(value) : t("field.choice.notSet")
 }
 
 export function ModelInputChips({
@@ -144,57 +141,28 @@ export function ModelInputChips({
   chips: readonly string[]
   shown?: (input: InputDefinition) => InputDefinition | null
 }): ReactElement {
-  const inputs = settingsInputs(appliedApp(app, form.values.inputs), chips)
-    .flatMap((input) => {
-      const one = input.name === modelInputName ? null : shown(input)
-      return one === null ? [] : [one]
-    })
-    .sort(
-      bySettingOrder((input) =>
-        settingOf(input.name, inputRoleOf(input.name, app.output.kind))
-      )
-    )
-  const chipApp: AppListing = {
-    ...app,
-    inputs: app.inputs.map(
-      (input) => inputs.find((one) => one.name === input.name) ?? input
-    ),
-  }
+  const chipApp = shownAppOf(appliedApp(app, form.values.inputs), shown)
+  const plan = appSettingsPlan(chipApp, chips)
   return (
     <>
-      {chips.includes(aspectField) ? null : (
-        <SettingChip app={app} form={form} name={aspectField} />
-      )}
-      {chips.includes(countField) ? null : (
-        <SettingChip app={app} form={form} name={countField} />
-      )}
-      {inputs.map((input) =>
-        isChipInput(input) ? (
-          <SettingChip
-            key={input.name}
+      {plan.main.map((setting) => (
+        <SettingChip
+          key={settingId(setting)}
+          app={chipApp}
+          form={form}
+          name={settingChipName(setting)}
+        />
+      ))}
+      {plan.advanced.length === 0 ? null : (
+        <AdvancedChip>
+          <AppSettingRows
             app={chipApp}
             form={form}
-            name={input.name}
+            lastSeed={lastSeed}
+            settings={plan.advanced}
           />
-        ) : (
-          <PopoverChip
-            key={input.name}
-            label={inputCaption(input)}
-            icon={inputIconOf(app, input)}
-            shown={shownValueOf(form.values.inputs[input.name])}
-          >
-            <InputField
-              app={app}
-              input={input}
-              value={form.values.inputs[input.name]}
-              problem={form.problems.get(input.name)}
-              onChange={(value) => form.setInput(input.name, value)}
-              register={(focus) => form.register(input.name, focus)}
-            />
-          </PopoverChip>
-        )
+        </AdvancedChip>
       )}
-      <SeedChip app={app} form={form} lastSeed={lastSeed} />
     </>
   )
 }
@@ -227,15 +195,21 @@ export function choiceLabOf(value: string, name: string): string {
   return labOfModel(factsIdOf(value)) ?? choiceMakerOf(value, name)
 }
 
-export function choiceTagsOf(
-  value: string,
-  hasWeightsBadge: boolean
-): ModelPickerTag[] {
+function boardFactsOf(value: string): ModelFacts | undefined {
   const id = factsIdOf(value)
   const facts = modelFactsData.models[id]
   const rankTask = facts === undefined ? undefined : Object.keys(facts.ranks)[0]
-  const rank = rankTask === undefined ? null : rankTagOf(factsOf(id, rankTask))
+  return rankTask === undefined ? undefined : factsOf(id, rankTask)
+}
+
+export function choiceTagsOf(
+  value: string,
+  hasWeightsBadge: boolean,
+  featured: number | null = null
+): ModelPickerTag[] {
+  const rank = featured === null ? rankTagOf(boardFactsOf(value)) : null
   return [
+    ...(featured === null ? [] : [featuredTagOf(featured)]),
     ...(isHostedModelId(value) || hasWeightsBadge ? [] : [openWeightsTag()]),
     ...(rank === null ? [] : [rank]),
   ]
@@ -243,7 +217,8 @@ export function choiceTagsOf(
 
 function choiceRow(
   option: ChoiceInput["options"][number],
-  prices: ReadonlyMap<string, ModelPrice>
+  prices: ReadonlyMap<string, ModelPrice>,
+  featured: number | null = null
 ): ModelPickerRow {
   const price = prices.get(option.value)
   const name = tCatalog(option.labelKey)
@@ -253,7 +228,7 @@ function choiceRow(
     id: option.value,
     name,
     maker,
-    tags: choiceTagsOf(option.value, href !== null),
+    tags: choiceTagsOf(option.value, href !== null, featured),
     mark: <LabMark maker={maker} />,
     badges: href === null ? [] : [openWeightsBadge(href)],
     ...(price === undefined ? {} : { price }),
@@ -267,8 +242,18 @@ export function choiceSections(
   if (model === null) {
     return []
   }
+  const ranked = rankedModelsOf(
+    model.default,
+    model.options.map((option) => ({
+      id: option.value,
+      rank: boardFactsOf(option.value)?.rank?.position ?? null,
+    }))
+  )
+  const featured = ranked.flatMap((id, index) => {
+    const option = model.options.find((one) => one.value === id)
+    return option === undefined ? [] : [choiceRow(option, prices, index + 1)]
+  })
   const rows = model.options.map((option) => choiceRow(option, prices))
-  const featured = rows.filter((row) => row.id === model.default)
   return [
     { id: "featured", label: t("model.picker.featured"), rows: featured },
     { id: "all", label: t("model.picker.all"), rows },
@@ -285,6 +270,7 @@ type ChoiceModelPickerProps = {
   value: string
   onChoose: (value: string) => void
   pricing?: ChoicePricing
+  place?: "chip" | "row"
 }
 
 export function ChoiceModelPicker({
@@ -292,6 +278,7 @@ export function ChoiceModelPicker({
   value,
   onChoose,
   pricing,
+  place = "chip",
 }: ChoiceModelPickerProps): ReactElement {
   const [isOpen, setOpen] = useState(false)
   const keyState = useQuery(settingsQuery).data?.engine.key ?? "unknown"
@@ -311,6 +298,7 @@ export function ChoiceModelPicker({
         <ModelChip
           name={name}
           aria-label={`${t("model.picker.title")} ${name}`}
+          width={place === "row" ? "full" : "fit"}
           {...(maker === null ? {} : { mark: <LabMark maker={maker} /> })}
         />
       }
@@ -330,34 +318,52 @@ export function ChoiceModelPicker({
   )
 }
 
+export function modelInputOf(app: AppListing): ChoiceInput | null {
+  const input = app.inputs.find((one) => one.name === modelInputName)
+  return input?.type === "choice" ? input : null
+}
+
+export function AppModelPicker({
+  app,
+  form,
+  place,
+}: {
+  app: AppListing
+  form: AppForm
+  place: "chip" | "row"
+}): ReactElement | null {
+  const model = modelInputOf(app)
+  const { values } = form
+  return model === null ? null : (
+    <ChoiceModelPicker
+      model={model}
+      place={place}
+      pricing={{
+        appId: app.id,
+        askOf: (id) =>
+          bodyOf(app, {
+            ...values,
+            inputs: { ...values.inputs, [modelInputName]: id },
+          }),
+      }}
+      value={textOf(values.inputs[modelInputName])}
+      onChoose={(next) => form.setInput(modelInputName, next)}
+    />
+  )
+}
+
 export function BarModelChip(
   props: ModelSettingsProps & { formats?: ReactNode }
 ): ReactElement {
-  const input = props.app.inputs.find((one) => one.name === modelInputName)
-  const model = input?.type === "choice" ? input : null
-  const { app } = props
-  const { values } = props.state.form
   return (
     <>
-      <ChoiceModelPicker
-        model={model}
-        pricing={{
-          appId: app.id,
-          askOf: (id) =>
-            bodyOf(app, {
-              ...values,
-              inputs: { ...values.inputs, [modelInputName]: id },
-            }),
-        }}
-        value={textOf(props.state.form.values.inputs[modelInputName])}
-        onChoose={(next) => props.state.form.setInput(modelInputName, next)}
-      />
+      <AppModelPicker app={props.app} form={props.state.form} place="chip" />
       {props.formats}
       <ModelInputChips
         app={props.app}
         form={props.state.form}
         lastSeed={props.state.lastSeed}
-        chips={[...props.chips, modelInputName]}
+        chips={props.chips}
       />
     </>
   )

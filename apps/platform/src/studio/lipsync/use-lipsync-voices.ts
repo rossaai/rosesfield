@@ -70,7 +70,6 @@ export function useVoices(options: {
       defaultModel,
       chosen,
       fields: chosen?.form ?? null,
-      ranBefore: [],
       choose: (id) => setInput(speechModelInput, id),
     },
     sourceOf: (model) =>

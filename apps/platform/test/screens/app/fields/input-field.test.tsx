@@ -61,7 +61,7 @@ describe("the Script field", () => {
 })
 
 describe("a number field", () => {
-  it("shows no range line under the slider", () => {
+  it("draws a stepper, never a slider, with no range line under it", () => {
     const number = audio.inputs.find(
       (one): one is Extract<InputDefinition, { type: "number" }> =>
         one.type === "number"
@@ -73,5 +73,50 @@ describe("a number field", () => {
     renderField(number, number.default)
     expect(captionsUnderLabel()).toEqual([])
     expect(screen.queryByText(/\d to \d/)).toBeNull()
+    expect(screen.queryByRole("slider")).toBeNull()
+    expect(
+      screen.getByRole("button", { name: t("field.number.increase") })
+    ).toBeDefined()
+  })
+})
+
+describe("a choice field", () => {
+  it("shows its name and its control, and no note under it", () => {
+    const relight = appListing.parse(findApp("relight"))
+    const direction = relight.inputs.find((one) => one.name === "direction")
+    expect(direction).toBeDefined()
+    if (direction === undefined) {
+      return
+    }
+    render(
+      <InputField
+        app={relight}
+        input={direction}
+        value={undefined}
+        problem={undefined}
+        onChange={() => undefined}
+        register={() => undefined}
+      />
+    )
+    expect(captionsUnderLabel()).toEqual([])
+    expect(document.body.textContent).not.toContain(
+      tCatalog("relight.input.direction.note")
+    )
+  })
+})
+
+describe("a prompt field", () => {
+  it("shows the generic placeholder where the catalog names none for the app", () => {
+    const prompt: InputDefinition = {
+      type: "prompt",
+      name: "prompt",
+      labelKey: "audio.input.script.label",
+      presence: "required",
+      maxLength: 200,
+    }
+    renderField(prompt, "")
+    expect(screen.getByRole("textbox").getAttribute("placeholder")).toBe(
+      t("home.prompt.placeholder")
+    )
   })
 })

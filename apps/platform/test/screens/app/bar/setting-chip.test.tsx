@@ -103,7 +103,8 @@ describe("the count stepper at the end of the chip row", () => {
 })
 
 describe("a number chip's popover", () => {
-  it("opens a 334 px slider above its tile, 8 px clear and with no open motion: a 36 px track with the value inside and a 4 px thumb", async () => {
+  it("opens a 334 px stepper above its tile, 8 px clear and with no open motion, the control the column draws for the same number", async () => {
+    const values: number[] = []
     render(
       <TooltipProvider>
         <StepperChip
@@ -113,7 +114,8 @@ describe("a number chip's popover", () => {
           min={4}
           max={30}
           step={1}
-          onChange={() => undefined}
+          unit="s"
+          onChange={(value) => values.push(value)}
         />
       </TooltipProvider>
     )
@@ -131,18 +133,13 @@ describe("a number chip's popover", () => {
     expect(classes).toEqual(expect.arrayContaining(["w-83.5", "px-4.25"]))
     expect(classes).not.toContain("motion-popover")
     expect(popover.parentElement?.getAttribute("style")).toContain("-8px")
-    const slider = popover.querySelector("[data-slot='setting-slider']")
-    expect(slider).not.toBeNull()
-    expect(
-      popover.querySelector("[data-slot='setting-slider-value']")?.textContent
-    ).toBe("5 s")
-    const input = popover.querySelector<HTMLInputElement>("input[type='range']")
-    expect(input?.getAttribute("aria-label")).toBe("Length")
-    expect([input?.min, input?.max, input?.value]).toEqual(["4", "30", "5"])
-    const thumb = input?.parentElement
-    expect(thumb?.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-9", "w-1"])
+    expect(popover.querySelector("input[type='range']")).toBeNull()
+    const stepper = screen.getByRole("group", { name: "Length" })
+    expect(stepper.querySelector("output")?.textContent).toBe("5s")
+    fireEvent.click(
+      screen.getByRole("button", { name: t("field.number.increase") })
     )
+    expect(values).toEqual([6])
   })
 })
 

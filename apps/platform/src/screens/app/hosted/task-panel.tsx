@@ -1,5 +1,5 @@
 import type { AppListing } from "@rosesfield/contract"
-import type { ReactElement, ReactNode } from "react"
+import type { ReactNode } from "react"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import { modelInputName } from "@/screens/app/hosted/hosted-form"
@@ -10,7 +10,7 @@ type TaskPanelProps = {
   app: AppListing
   form: AppForm
   hosted: HostedState
-  graphPanel: (app: AppListing) => ReactNode
+  graphPanel: (app: AppListing, model: ReactNode) => ReactNode
   skipPrompt?: boolean
 }
 
@@ -21,20 +21,18 @@ export function withoutModelInput(app: AppListing): AppListing {
   }
 }
 
-export function TaskPanel(props: TaskPanelProps): ReactElement {
+export function TaskPanel(props: TaskPanelProps): ReactNode {
   const { hosted } = props
-  return (
-    <div className="flex flex-col gap-s4">
-      <CatalogPicker hosted={hosted} place="row" />
-      {hosted.fields === null ? (
-        props.graphPanel(withoutModelInput(props.app))
-      ) : (
-        <HostedFields
-          fields={hosted.fields}
-          form={props.form}
-          skip={props.skipPrompt === true ? ["prompt"] : []}
-        />
-      )}
-    </div>
+  const model = <CatalogPicker hosted={hosted} place="row" />
+  return hosted.fields === null ? (
+    props.graphPanel(withoutModelInput(props.app), model)
+  ) : (
+    <HostedFields
+      fields={hosted.fields}
+      form={props.form}
+      skip={props.skipPrompt === true ? ["prompt"] : []}
+      app={props.app}
+      model={model}
+    />
   )
 }

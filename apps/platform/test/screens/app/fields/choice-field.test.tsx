@@ -3,9 +3,9 @@ import { afterEach, describe, expect, it } from "vitest"
 import { ChoiceField } from "@/screens/app/fields/choice-field"
 
 const items = [
-  { value: "keep", label: "As in the photo" },
-  { value: "plain", label: "A plain top" },
-  { value: "shirt", label: "A collared shirt" },
+  { value: "keep", label: "Keep" },
+  { value: "plain", label: "Plain top" },
+  { value: "shirt", label: "Shirt" },
 ]
 
 function measureLabels(labelWidth: number, segmentWidth: number): void {
@@ -75,5 +75,46 @@ describe("ChoiceField with two to four values", () => {
     )
     const segments = screen.getByRole("radiogroup", { name: "Mode" })
     expect(segments.querySelector("svg")).toBeNull()
+  })
+})
+
+describe("ChoiceField under the one control rule", () => {
+  it("draws a choice whose labels run past the short limit as a select, before any measure", () => {
+    measureLabels(10, 80)
+    render(
+      <ChoiceField
+        label="Clothes"
+        items={[
+          { value: "keep", label: "As in the photo" },
+          { value: "shirt", label: "A collared shirt" },
+        ]}
+        value="keep"
+        onChange={() => undefined}
+        note={null}
+      />
+    )
+    expect(screen.queryByRole("radiogroup")).toBeNull()
+    expect(screen.getByRole("combobox", { name: "Clothes" })).toBeTruthy()
+  })
+
+  it("draws a choice of on and off as a switch with its name beside it, and sends the option it stands for", () => {
+    measureLabels(10, 80)
+    const sent: string[] = []
+    render(
+      <ChoiceField
+        label="Sound"
+        items={[
+          { value: "true", label: "On" },
+          { value: "false", label: "Off" },
+        ]}
+        value="false"
+        onChange={(value) => sent.push(value)}
+        note={null}
+      />
+    )
+    expect(screen.queryByRole("radiogroup")).toBeNull()
+    const toggle = screen.getByRole("switch", { name: "Sound" })
+    toggle.click()
+    expect(sent).toEqual(["true"])
   })
 })

@@ -57,7 +57,6 @@ function modelOn(chosen: HostedState["chosen"]): HostedState {
     defaultModel: qwenEdit.id,
     chosen,
     fields: chosen?.form ?? null,
-    ranBefore: [],
     choose: () => undefined,
   }
 }

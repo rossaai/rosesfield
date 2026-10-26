@@ -73,7 +73,7 @@ export function useEditTool(
   const check = useRef<FormCheck | null>(null)
   const form = useAppForm(app, seeds, check)
   const runs = useAppRuns(app)
-  const hosted = useHostedModel(app, form, runs.runs)
+  const hosted = useHostedModel(app, form)
   usePriceRefresh(app.id, runs.runs)
   const fields = hosted.fields
   const inputs = form.values.inputs

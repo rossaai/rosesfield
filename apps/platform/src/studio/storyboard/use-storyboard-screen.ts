@@ -89,7 +89,7 @@ export function useStoryboardScreen(
   const form = useAppForm(app, seeds)
   useKeptForm(form, seeds)
   const runs = useAppRuns(app)
-  const model = useStoryboardModel(app, form, runs.runs)
+  const model = useStoryboardModel(app, form)
   const [isChecked, setChecked] = useState(false)
   const focusers = useRef(new Map<string, () => void>())
   const facts = useReferenceFacts(referenceIdOf(form.values.inputs.reference))

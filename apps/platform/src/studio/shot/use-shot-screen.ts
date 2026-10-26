@@ -2,7 +2,6 @@ import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import type { AppListing, Run } from "@rosesfield/contract"
 import { useEffect, useMemo, useState } from "react"
 import { textOf } from "@/screens/app/fields/field-props"
-import { ranBeforeOf } from "@/screens/app/hosted/model-sections"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
 import {
@@ -27,7 +26,6 @@ import {
   slotsOf,
   startFrameInput,
 } from "@/studio/video/video-tabs"
-import { hostedModel } from "../../../../../packages/catalog/src/video/video-models"
 
 export type ShotScreen = {
   state: AppScreenState
@@ -55,7 +53,6 @@ function emptyHosted(): HostedState {
     defaultModel: null,
     chosen: null,
     fields: null,
-    ranBefore: [],
     choose: () => undefined,
   }
 }
@@ -82,7 +79,6 @@ export function shotPickerOf(
   return {
     ...hosted,
     models: pickerModelsOf(hosted.models, "text-image", app),
-    ranBefore: ranBeforeOf([hostedModel, ...hosted.ranBefore]),
   }
 }
 

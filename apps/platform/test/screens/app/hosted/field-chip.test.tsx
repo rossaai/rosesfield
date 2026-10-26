@@ -67,20 +67,29 @@ function formWith(inputs: Record<string, FieldValue>): AppForm {
 afterEach(cleanup)
 
 describe("the model's fields on the composer row", () => {
-  it("draws every field but the prompt as its own chip, and no settings button that hides them", () => {
+  it("draws the settings a person changes most as chips and the rest behind one Advanced chip", () => {
     render(
       <TooltipProvider>
         <ModelFieldChips fields={fields} form={formWith({})} output="image" />
       </TooltipProvider>
     )
-    for (const field of fields.slice(1)) {
-      expect(
-        screen.getAllByRole(field.kind === "choice" ? "combobox" : "button", {
-          name: new RegExp(fieldCaption(field)),
-        }).length,
-        field.name
-      ).toBeGreaterThan(0)
+    const style = fields[1]
+    if (style === undefined) {
+      throw new Error("no style field")
     }
+    expect(
+      screen.getAllByRole("combobox", { name: new RegExp(fieldCaption(style)) })
+        .length
+    ).toBeGreaterThan(0)
+    for (const field of fields.slice(2)) {
+      expect(
+        screen.queryByRole("button", { name: new RegExp(fieldCaption(field)) }),
+        field.name
+      ).toBeNull()
+    }
+    expect(
+      screen.getAllByRole("button", { name: new RegExp(t("field.advanced")) })
+    ).toHaveLength(1)
     expect(screen.queryByRole("button", { name: t("bar.settings") })).toBeNull()
     expect(screen.queryByRole("textbox")).toBeNull()
   })

@@ -296,7 +296,7 @@ export function useVideoEditScreen(
   const check = useRef<FormCheck | null>(null)
   const form = useAppForm(app, seeds, check)
   const runs = useAppRuns(app)
-  const hosted = useHostedModel(app, form, runs.runs)
+  const hosted = useHostedModel(app, form)
   usePriceRefresh(app.id, runs.runs)
   const [mode, setModeState] = useState(() => openingTabOf(app, seeds.mode))
   const bodyApp = useMemo(() => bodyAppFor(app, mode), [app, mode])

@@ -55,6 +55,27 @@ describe("ModelChip", () => {
   })
 })
 
+describe("ModelChip at full width", () => {
+  it("fills its column at the field height, the name taking the room before the chevron", () => {
+    render(<ModelChip name="Picture 2" width="full" mark={<svg />} />)
+    const chip = screen.getByRole("button", { name: "Picture 2" })
+    const classes = chip.className.split(" ")
+    expect(classes).toEqual(
+      expect.arrayContaining([
+        "w-full",
+        "h-field",
+        "max-w-none",
+        "rounded-full",
+      ])
+    )
+    expect(classes).not.toContain("max-w-button-max")
+    expect(classes).not.toContain("h-button-small")
+    expect(
+      chip.querySelector("[data-slot='model-row-name']")?.className.split(" ")
+    ).toContain("flex-1")
+  })
+})
+
 describe("ModelChipSkeleton", () => {
   it("shows a mark circle and a name line and no words while the model loads", () => {
     const { container } = render(<ModelChipSkeleton />)

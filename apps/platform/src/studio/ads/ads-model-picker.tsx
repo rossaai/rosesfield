@@ -1,4 +1,3 @@
-import { adsHostedModel } from "@rosesfield/catalog/ads"
 import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import type { AppListing } from "@rosesfield/contract"
 import {
@@ -42,11 +41,7 @@ export function adsPickerSections(
   prices: ReadonlyMap<string, ModelPrice> = new Map()
 ): ModelPickerSection[] {
   const byId = new Map(hosted.models.map((model) => [model.id, model]))
-  const featured = {
-    ...hosted,
-    ranBefore: [adsHostedModel, ...hosted.ranBefore],
-  }
-  return pickerSections(featured, todayOf(), prices).map((section) => ({
+  return pickerSections(hosted, todayOf(), prices).map((section) => ({
     ...section,
     rows: section.rows.map((row) => rowWithPhotos(app, row, byId.get(row.id))),
   }))

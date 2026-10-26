@@ -68,7 +68,6 @@ function hostedState(change: Partial<HostedState> = {}): HostedState {
     defaultModel: "maker/picture-2",
     chosen: galleryModels[1] ?? null,
     fields: [],
-    ranBefore: ["studio/clip-3"],
     choose: () => undefined,
     ...change,
   }

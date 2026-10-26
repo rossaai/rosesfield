@@ -28,7 +28,6 @@ function hostedOf(chosen: HostedState["chosen"]): HostedState {
     defaultModel: ltx.id,
     chosen,
     fields: chosen?.form ?? null,
-    ranBefore: [],
     choose: vi.fn(),
   }
 }

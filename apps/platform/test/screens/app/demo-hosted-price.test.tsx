@@ -68,7 +68,6 @@ const hosted: HostedState = {
   defaultModel: flux.id,
   chosen: flux,
   fields: flux.form,
-  ranBefore: [],
   choose: () => undefined,
 }
 

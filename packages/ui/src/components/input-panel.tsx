@@ -31,7 +31,7 @@ function InputPanel({
       )}
     >
       {tabs === undefined ? null : (
-        <div data-slot="composer-tray" className="shrink-0 px-4 pt-3">
+        <div data-slot="composer-tray" className="shrink-0 px-s3 pt-s3">
           {tabs}
         </div>
       )}
@@ -40,7 +40,7 @@ function InputPanel({
         data-slot="composer-prompt"
         data-clipped={isClipped ? "yes" : "no"}
         className={cn(
-          "flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2 [scrollbar-width:none]",
+          "flex min-h-0 flex-1 flex-col gap-s3 overflow-y-auto p-s3 [scrollbar-width:none]",
           interaction.ringScroll,
           isClipped ? interaction.fadeEnd : ""
         )}
@@ -49,7 +49,7 @@ function InputPanel({
       </div>
       <div
         data-slot="composer-toolbar"
-        className="flex h-15 shrink-0 items-start px-4"
+        className="flex shrink-0 items-start px-s3 pb-s3"
       >
         {footer}
       </div>

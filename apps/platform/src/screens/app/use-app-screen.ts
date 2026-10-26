@@ -62,7 +62,7 @@ export function useAppScreen(
   const check = useRef<FormCheck | null>(null)
   const form = useAppForm(app, seeds, check)
   const runs = useAppRuns(app)
-  const hosted = useHostedModel(app, form, runs.runs)
+  const hosted = useHostedModel(app, form)
   usePriceRefresh(app.id, runs.runs)
   const start = useStart(app, form, hosted, onStarted)
   const fields = hosted.fields

@@ -44,12 +44,28 @@ describe("InputPanel's parts", () => {
     const fits = partsAt(400, 600)
     expect(fits?.getAttribute("data-clipped")).toBe("no")
     expect(fits?.className).not.toContain("mask-image")
-    expect(fits?.className.split(" ")).toContain("p-2")
+    expect(fits?.className.split(" ")).toContain("p-s3")
   })
 })
 
 describe("InputPanel", () => {
-  it("is a 320 px column whose parts sit 8 px apart over a 60 px footer that holds Generate", () => {
+  it("insets its tabs by the same 10 px as its parts", () => {
+    render(
+      <InputPanel
+        label="Inputs"
+        tabs={<span>Tabs</span>}
+        footer={<button type="button">Generate</button>}
+      >
+        <span>Part</span>
+      </InputPanel>
+    )
+    const tray = document.querySelector("[data-slot='composer-tray']")
+    expect(tray?.className.split(" ")).toEqual(
+      expect.arrayContaining(["px-s3", "pt-s3"])
+    )
+  })
+
+  it("is a 320 px column whose tray, parts and footer share the bar composer's 10 px inset, the parts 10 px apart", () => {
     render(
       <InputPanel
         label="Inputs"
@@ -64,10 +80,12 @@ describe("InputPanel", () => {
     expect(panel.className.split(" ")).toContain("w-80")
     const parts = panel.querySelector("[data-slot='composer-prompt']")
     expect(parts?.className.split(" ")).toEqual(
-      expect.arrayContaining(["gap-2", "p-2", "overflow-y-auto"])
+      expect.arrayContaining(["gap-s3", "p-s3", "overflow-y-auto"])
     )
     const footer = panel.querySelector("[data-slot='composer-toolbar']")
-    expect(footer?.className.split(" ")).toContain("h-15")
+    expect(footer?.className.split(" ")).toEqual(
+      expect.arrayContaining(["px-s3", "pb-s3"])
+    )
     expect(footer?.textContent).toBe("Generate")
   })
 

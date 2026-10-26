@@ -7,7 +7,7 @@ import { CharacterField } from "@/screens/app/fields/character-field"
 import { ChoiceField } from "@/screens/app/fields/choice-field"
 import type { InputFieldProps } from "@/screens/app/fields/field-props"
 import { textOf } from "@/screens/app/fields/field-props"
-import { inputCaption, inputNote } from "@/screens/app/fields/input-copy"
+import { inputCaption } from "@/screens/app/fields/input-copy"
 import { NumberField } from "@/screens/app/fields/number-field"
 import { PromptField } from "@/screens/app/fields/prompt-field"
 import { ToggleField } from "@/screens/app/fields/toggle-field"
@@ -26,7 +26,8 @@ function ChoiceInputField(props: InputFieldProps<ChoiceInput>): ReactElement {
       value={textOf(props.value) || props.input.default}
       onChange={props.onChange}
       setting={props.input.name}
-      note={inputNote(props.app, props.input)}
+      note={null}
+      problem={props.problem}
       register={props.register}
     />
   )
