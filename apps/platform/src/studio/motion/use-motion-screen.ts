@@ -5,7 +5,6 @@ import {
   type KeyboardEvent,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react"
@@ -43,8 +42,6 @@ import {
   isMotionTab,
   type MotionTab,
   modeInput,
-  modelForTab,
-  modelsOfTab,
   restFieldsOf,
   tabOfModel,
   tabsOfModel,
@@ -71,7 +68,6 @@ export type MotionState = {
   restFields: readonly ModelField[]
   graphRest: readonly InputDefinition[]
   lastSeed: number | null
-  setTab: (tab: MotionTab) => void
   pickCharacter: (characterId: string) => void
   registerWell: (name: string, focus: () => void) => void
   useInputs: (run: Run) => void
@@ -116,38 +112,29 @@ export function tabOf(
   return isMotionTab(value) ? value : fallback
 }
 
-function useTabHosted(
+function useModeHosted(
   app: AppListing,
   form: AppForm,
   hosted: HostedState,
   tab: MotionTab
-): [HostedState, (tab: MotionTab) => void] {
-  const { models, chosen, defaultModel } = hosted
-  const wells = (): ReturnType<typeof heldWellsOf> =>
-    heldWellsOf(form.values.inputs, wellNamesOf(app, chosen))
+): HostedState {
+  const { models, chosen } = hosted
   const choose = (id: string): void => {
     const next = models.find((one) => one.id === id)
     if (next !== undefined) {
+      const wells = heldWellsOf(form.values.inputs, wellNamesOf(app, chosen))
       form.setForm({
-        inputs: inputsForModel(app, next, form.values.inputs, tab, wells()),
+        inputs: inputsForModel(
+          app,
+          next,
+          form.values.inputs,
+          tabOfModel(next, tab),
+          wells
+        ),
       })
     }
   }
-  const setTab = (next: MotionTab): void => {
-    const model = modelForTab(modelsOfTab(models, next), [
-      chosen?.id ?? null,
-      defaultModel,
-    ])
-    if (model === null) {
-      form.setInput(modeInput, next)
-      return
-    }
-    form.setForm({
-      inputs: inputsForModel(app, model, form.values.inputs, next, wells()),
-    })
-  }
-  const tabModels = useMemo(() => modelsOfTab(models, tab), [models, tab])
-  return [{ ...hosted, models: tabModels, choose }, setTab]
+  return { ...hosted, choose }
 }
 
 function useFocusers(): [
@@ -260,7 +247,7 @@ export function useMotionScreen(
   const names = wellNamesOf(app, chosen)
   const range = clipRangeOf(app, chosen)
   const checks = useMotionChecks(form, names, range)
-  const [tabHosted, setTab] = useTabHosted(app, form, hosted, tab)
+  const modeHosted = useModeHosted(app, form, hosted, tab)
   const [pickCharacter, hasPickFailed] = useCharacterPhoto(form, names.photo)
   const [focus, registerWell] = useFocusers()
   const base = useStartRun(app, form, onStarted, { ...hosted, chosen })
@@ -271,7 +258,7 @@ export function useMotionScreen(
     tab,
     form,
     start: { ...base, generate },
-    hosted: tabHosted,
+    hosted: modeHosted,
     isGraph: chosen === null || isGraph(chosen),
     names,
     range,
@@ -281,7 +268,6 @@ export function useMotionScreen(
     restFields: restFieldsOf(chosen),
     graphRest: graphRestOf(app),
     lastSeed: runs.runs.find((run) => run.seed !== null)?.seed ?? null,
-    setTab,
     pickCharacter,
     registerWell,
     useInputs: (run) => form.fill(valuesFromRun(app, run)),

@@ -56,7 +56,6 @@ function graphState(): MotionState {
     restFields: [],
     graphRest: graphRestOf(app),
     lastSeed: null,
-    setTab: () => undefined,
     pickCharacter: () => undefined,
     registerWell: () => undefined,
     useInputs: () => undefined,
@@ -78,5 +77,18 @@ describe("the Motion column", () => {
     expect(isBefore(format, sound)).toBe(true)
     expect(isBefore(sound, advancedToggle())).toBe(true)
     expect(screen.queryByText(tCatalog("motion.input.seed.label"))).toBeNull()
+  })
+})
+
+describe("Motion's one mode", () => {
+  it("offers Pick a character under the photo well with no tab, so you swap a character from the same column", () => {
+    showColumn(<MotionPanel state={graphState()} />)
+    const photo = screen.getByText(tCatalog("motion.input.photo.label"))
+    const pick = screen.getByRole("button", {
+      name: t("field.character.pick"),
+    })
+    expect(isBefore(photo, pick)).toBe(true)
+    expect(isBefore(pick, theModelChip())).toBe(true)
+    expect(screen.queryByRole("tablist")).toBeNull()
   })
 })

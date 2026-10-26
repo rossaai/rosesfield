@@ -196,7 +196,7 @@ function renderMotion(
 afterEach(cleanup)
 
 describe("Motion opens", () => {
-  it("on Move a photo with the graph, its Clip and Photo wells and the tab's models", () => {
+  it("on Move a photo with the graph, its Clip and Photo wells, and every model of both modes in one picker", () => {
     const { result } = renderMotion({})
     expect(result.current.tab).toBe("move")
     expect(result.current.isGraph).toBe(true)
@@ -205,6 +205,7 @@ describe("Motion opens", () => {
     expect(result.current.hosted.models.map((one) => one.id)).toEqual([
       graphId,
       mover.id,
+      swapper.id,
     ])
   })
 
@@ -214,21 +215,25 @@ describe("Motion opens", () => {
     expect(result.current.isGraph).toBe(true)
     expect(result.current.hosted.models.map((one) => one.id)).toEqual([
       graphId,
+      mover.id,
       swapper.id,
     ])
   })
 })
 
 describe("Motion keeps your files", () => {
-  it("across a switch of tabs, with the clip read and in range", () => {
+  it("when you pick a model that swaps a character, which sets the mode to swap, and when you go back to the graph", () => {
     const { result } = renderMotion({ clip: [clip], photo: [photo] })
     expect(result.current.checks.readingInput).toBeNull()
     expect(result.current.checks.clip).toBeNull()
-    act(() => result.current.setTab("swap"))
+    act(() => result.current.hosted.choose(swapper.id))
     expect(result.current.tab).toBe("swap")
-    expect(result.current.form.values.inputs.clip).toEqual([clip])
-    expect(result.current.form.values.inputs.photo).toEqual([photo])
-    act(() => result.current.setTab("move"))
+    expect(result.current.isGraph).toBe(false)
+    const names = result.current.names
+    expect(result.current.form.values.inputs[names.clip]).toEqual([clip])
+    expect(result.current.form.values.inputs[names.photo]).toEqual([photo])
+    act(() => result.current.hosted.choose(graphId))
+    expect(result.current.isGraph).toBe(true)
     expect(result.current.form.values.inputs.clip).toEqual([clip])
     expect(result.current.form.values.inputs.photo).toEqual([photo])
   })

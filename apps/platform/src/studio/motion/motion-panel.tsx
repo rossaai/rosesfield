@@ -1,6 +1,5 @@
 import type { AppListing } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
-import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import {
   type ReactElement,
   type ReactNode,
@@ -8,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react"
-import { t, tCatalog } from "@/copy/t"
+import { t } from "@/copy/t"
 import { assetLimitsText } from "@/pieces/asset-limits"
 import { CharacterPicker } from "@/pieces/character-picker"
 import { DropWell } from "@/pieces/drop-well"
@@ -22,40 +21,10 @@ import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import { appSettingsPlan, isSettingInput } from "@/screens/app/settings-plan"
 import { clipLimits, photoLimits } from "@/studio/motion/motion-checks"
-import {
-  isMotionTab,
-  modeInput,
-  motionTabs,
-  tabKeys,
-} from "@/studio/motion/motion-tabs"
+import { modeInput } from "@/studio/motion/motion-tabs"
 import type { MotionState } from "@/studio/motion/use-motion-screen"
 
 type WellKind = "image" | "video"
-
-export function MotionTabs({
-  state,
-}: {
-  state: Pick<MotionState, "tab" | "setTab">
-}): ReactElement {
-  return (
-    <Tabs
-      value={state.tab}
-      onValueChange={(next) => {
-        if (isMotionTab(next)) {
-          state.setTab(next)
-        }
-      }}
-    >
-      <TabsList aria-label={tCatalog("motion.tabs.label")}>
-        {motionTabs.map((one) => (
-          <TabsTrigger key={one} value={one}>
-            {tCatalog(tabKeys[one])}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
-  )
-}
 
 function captionOf(app: AppListing, kind: WellKind): string {
   const input = app.inputs.find((one) => one.type === kind)
@@ -153,7 +122,7 @@ function PhotoWell({ state }: { state: MotionState }): ReactElement {
       limits={photoLimitsOf()}
       message={state.photoMessage}
     >
-      {state.tab === "swap" ? <CharacterButton state={state} /> : null}
+      <CharacterButton state={state} />
     </Well>
   )
 }
