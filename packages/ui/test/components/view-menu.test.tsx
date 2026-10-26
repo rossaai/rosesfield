@@ -128,4 +128,85 @@ describe("ViewMenu", () => {
     fireEvent.click(video)
     expect(onKind).toHaveBeenCalledWith("video")
   })
+
+  it("starts the Tile size row with the scaling icon in the lead slot Layout's choices use, on the same inset", async () => {
+    render(
+      <ViewMenu
+        {...base}
+        onLayoutChange={() => undefined}
+        size={{
+          label: "Tile size",
+          value: 1,
+          min: 0,
+          max: 3,
+          onValueChange: () => undefined,
+        }}
+      />
+    )
+    fireEvent.click(screen.getByRole("button", { name: "View" }))
+    const list = await screen.findByRole("menuitemradio", { name: "List" })
+    const size = document.querySelector<HTMLElement>(
+      "[data-slot='view-menu-size']"
+    )
+    const leadOf = (row: Element | null | undefined) =>
+      row?.firstElementChild?.getAttribute("data-slot") === "dropdown-menu-lead"
+        ? row.firstElementChild
+        : null
+    expect(leadOf(list)?.querySelector(".lucide-list")).toBeTruthy()
+    expect(leadOf(size)?.querySelector(".lucide-scaling")).toBeTruthy()
+    expect(leadOf(size)?.className).toBe(leadOf(list)?.className)
+    expect(size?.className.split(" ")).toContain("ps-s4")
+    expect(size?.className).not.toMatch(/menu-lead/)
+  })
+
+  it("draws sort rows as submenus that name their choice, each with its own lead, above a switch with its lead", async () => {
+    const onBy = vi.fn()
+    render(
+      <ViewMenu
+        label="Sort and filter"
+        sorts={[
+          {
+            id: "by",
+            label: "Sort by",
+            lead: <svg data-testid="by" />,
+            value: "rank",
+            options: [
+              { value: "rank", label: "Rank" },
+              { value: "price", label: "Price" },
+            ],
+            onValueChange: onBy,
+          },
+        ]}
+        switches={[
+          {
+            id: "open",
+            label: "Open only",
+            lead: <svg data-testid="open" />,
+            checked: false,
+            onCheckedChange: () => undefined,
+          },
+        ]}
+      />
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Sort and filter" }))
+    const by = await screen.findByRole("menuitem", { name: /Sort by/ })
+    expect(by.getAttribute("data-slot")).toBe("dropdown-menu-sub-trigger")
+    expect(by.textContent).toBe("Sort byRank")
+    expect(by.firstElementChild?.getAttribute("data-slot")).toBe(
+      "dropdown-menu-lead"
+    )
+    expect(
+      by.firstElementChild?.querySelector("[data-testid='by']")
+    ).toBeTruthy()
+    const open = screen.getByRole("menuitemcheckbox", { name: "Open only" })
+    expect(open.firstElementChild?.getAttribute("data-slot")).toBe(
+      "dropdown-menu-lead"
+    )
+    expect(
+      open.compareDocumentPosition(by) & Node.DOCUMENT_POSITION_PRECEDING
+    ).toBeTruthy()
+    fireEvent.click(by)
+    fireEvent.click(await screen.findByRole("menuitemradio", { name: "Price" }))
+    expect(onBy).toHaveBeenCalledWith("price")
+  })
 })
