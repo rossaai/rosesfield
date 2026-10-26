@@ -43,7 +43,8 @@ describe("ChipSelect", () => {
               value: "auto",
               label: "Auto",
               icon: <svg />,
-              description: "Ask above 211 credits or with no price",
+              description:
+                "Ask above 211 credits or when the price is not certain",
             },
             {
               value: "ask",

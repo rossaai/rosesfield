@@ -123,7 +123,7 @@ describe("the run mode an app tool follows", () => {
     expect(generation.runs.count).toBe(0)
     expect(hasProposal(events)).toBe(true)
     expect(JSON.parse(told)).toMatchObject({ credits: null })
-    expect(JSON.parse(told).note).toContain("its price is not known")
+    expect(JSON.parse(told).note).toContain("its price is not certain")
   })
 
   it("under auto, starts a run whose rate card price is at the limit", async () => {
@@ -162,7 +162,7 @@ describe("the run mode an app tool follows", () => {
       expect(generation.jobs.enqueued).toEqual([])
       expect(hasProposal(events)).toBe(true)
       expect(JSON.parse(told)).toMatchObject({ credits: null })
-      expect(JSON.parse(told).note).toContain("its price is not known")
+      expect(JSON.parse(told).note).toContain("its price is not certain")
     }
   )
 
