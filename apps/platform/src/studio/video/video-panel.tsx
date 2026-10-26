@@ -7,13 +7,11 @@ import { useNavigate } from "@tanstack/react-router"
 import { type ReactElement, useMemo, useRef } from "react"
 import { t, tCatalog } from "@/copy/t"
 import { CatalogPicker, modelNameOf } from "@/screens/app/hosted/catalog-picker"
-import { HostedFields } from "@/screens/app/hosted/hosted-fields"
-import { AdvancedFields } from "@/screens/app/inputs-panel"
 import { pickerModelsOf } from "@/studio/video/picker-models"
 import { PresetCard } from "@/studio/video/preset-card"
 import { shownPresets } from "@/studio/video/preset-samples"
 import type { VideoScreen } from "@/studio/video/use-video-screen"
-import { SoundChip, VideoChips } from "@/studio/video/video-chips"
+import { SoundChip, VideoSettings } from "@/studio/video/video-chips"
 import {
   slotsOf,
   tabKeys,
@@ -56,6 +54,8 @@ type MakeChoice = "video" | "extend"
 
 const extendTab: VideoEditMode = "extend"
 
+const cameraMoveInput = "cameraMove"
+
 export function MakeSwitch({
   onExtend,
 }: {
@@ -65,7 +65,6 @@ export function MakeSwitch({
   return (
     <div
       data-slot="make-switch"
-      className="mb-2"
       onKeyDownCapture={(event) => {
         isByArrow.current = event.key.startsWith("Arrow")
       }}
@@ -141,29 +140,6 @@ function PromptPart({ screen }: { screen: VideoScreen }): ReactElement {
   )
 }
 
-function Settings({
-  app,
-  screen,
-}: {
-  app: AppListing
-  screen: VideoScreen
-}): ReactElement {
-  const { fields, state } = screen
-  if (fields === null) {
-    return (
-      <AdvancedFields app={app} form={state.form} lastSeed={state.lastSeed} />
-    )
-  }
-  return (
-    <>
-      <HostedFields fields={fields.required} form={state.form} />
-      {fields.rest.length === 0 ? null : (
-        <HostedFields fields={fields.rest} form={state.form} />
-      )}
-    </>
-  )
-}
-
 export function VideoPanel({
   app,
   screen,
@@ -179,7 +155,7 @@ export function VideoPanel({
   const presets = useMemo(() => shownPresets(screen.presets), [screen.presets])
   const navigate = useNavigate()
   return (
-    <div data-slot="video-parts" className="flex flex-1 flex-col gap-2">
+    <div data-slot="video-parts" className="flex flex-1 flex-col gap-s4">
       <PresetCard
         presets={presets}
         move={prompt.move}
@@ -201,10 +177,13 @@ export function VideoPanel({
       <PromptPart screen={screen} />
       <CatalogPicker hosted={tabHosted} place="row" />
       {hosted.chosen === null ? null : (
-        <>
-          <VideoChips app={app} form={state.form} fields={fields} />
-          <Settings app={app} screen={screen} />
-        </>
+        <VideoSettings
+          app={app}
+          form={state.form}
+          fields={fields}
+          lastSeed={state.lastSeed}
+          placed={[cameraMoveInput]}
+        />
       )}
     </div>
   )

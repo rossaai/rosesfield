@@ -3,9 +3,10 @@ import { appListing } from "@rosesfield/contract"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { formatDuration } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import type { AppForm } from "@/screens/app/use-app-form"
-import { SoundChip, VideoChips } from "@/studio/video/video-chips"
+import { SoundChip, VideoSettings } from "@/studio/video/video-chips"
 import { videoFieldsOf } from "@/studio/video/video-fields"
 import { MakeSwitch } from "@/studio/video/video-panel"
 
@@ -35,15 +36,54 @@ describe("the prompt's chip row", () => {
   })
 })
 
-describe("the setting tiles", () => {
-  it("draw no row when the model sets no length, format or resolution, so the column keeps one 8 px gap", () => {
-    const { container } = render(
+describe("the column's settings", () => {
+  it("draw a model's length, format and resolution as rows in the plan's order, the length with its unit, and a setting the plan does not know closed under Advanced", () => {
+    const fields = videoFieldsOf([
+      {
+        kind: "choice",
+        name: "resolution",
+        path: "resolution",
+        required: false,
+        options: ["720p", "1080p"],
+        default: "720p",
+      },
+      {
+        kind: "choice",
+        name: "duration",
+        path: "duration",
+        required: false,
+        options: [5, 10],
+        default: 5,
+      },
+      {
+        kind: "toggle",
+        name: "fancyKnob",
+        path: "fancyKnob",
+        required: false,
+        default: false,
+      },
+    ])
+    render(
       <TooltipProvider>
-        <VideoChips app={video} form={form} fields={videoFieldsOf([])} />
+        <VideoSettings
+          app={video}
+          form={form}
+          fields={fields}
+          lastSeed={null}
+          placed={[]}
+        />
       </TooltipProvider>
     )
-    expect(container.querySelector("[data-slot='setting-tiles']")).toBeNull()
-    expect(container.childElementCount).toBe(0)
+    const groups = screen.getAllByRole("radiogroup")
+    expect(groups.map((group) => group.textContent)).toEqual([
+      "720p1080p",
+      `${formatDuration(5)}${formatDuration(10)}`,
+    ])
+    expect(screen.queryByRole("switch")).toBeNull()
+    expect(
+      screen.getByRole("button", { name: t("field.advanced") })
+    ).toBeTruthy()
+    expect(document.querySelector("[data-slot='setting-tiles']")).toBeNull()
   })
 })
 
@@ -67,7 +107,7 @@ describe("the column's mode switch", () => {
       group.querySelector("[data-slot='segmented-control-thumb']")?.className
     ).toContain("bg-ink")
     expect(document.querySelector("[data-slot='make-switch']")?.className).toBe(
-      "mb-2"
+      ""
     )
     fireEvent.click(cells[1] as HTMLElement)
     expect(onExtend).toHaveBeenCalledTimes(1)

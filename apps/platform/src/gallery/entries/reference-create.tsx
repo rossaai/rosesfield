@@ -7,10 +7,7 @@ import {
   ModelPicker,
   type ModelPickerSection,
 } from "@rosesfield/ui/components/model-picker"
-import {
-  ModelChip,
-  ModelRowTrigger,
-} from "@rosesfield/ui/components/model-trigger"
+import { ModelChip } from "@rosesfield/ui/components/model-trigger"
 import { PromptBar } from "@rosesfield/ui/components/prompt-bar"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import {
@@ -45,7 +42,7 @@ import type { GalleryEntry } from "@/gallery/gallery-entry"
 import { frameState, interactionStates } from "@/gallery/reference-frames"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { tileSizes, ViewCluster } from "@/screens/library/view-cluster"
-import { VideoChips } from "@/studio/video/video-chips"
+import { VideoSettings } from "@/studio/video/video-chips"
 import { MakeSwitch, ModeTabs } from "@/studio/video/video-panel"
 
 const mark = <FlaskConicalIcon aria-hidden="true" />
@@ -163,13 +160,15 @@ function Column(): ReactElement {
             className="min-h-0 flex-1 resize-none bg-transparent text-body text-ink outline-none placeholder:text-ink-muted"
           />
         </PromptBlock>
-        <ModelRowTrigger
-          caption={t("sample.model.caption")}
-          name={t("sample.model")}
-          mark={mark}
-        />
+        <ModelChip name={t("sample.model")} mark={mark} width="full" />
         {videoApp === undefined ? null : (
-          <VideoChips app={videoApp} form={sampleForm} fields={null} />
+          <VideoSettings
+            app={videoApp}
+            form={sampleForm}
+            fields={null}
+            lastSeed={null}
+            placed={[]}
+          />
         )}
       </InputPanel>
     </div>
