@@ -1,3 +1,5 @@
+import { feedColumnsOf } from "@rosesfield/ui/components/media-feed"
+
 export type TileStep = {
   width: number
   className: string
@@ -42,10 +44,10 @@ export function columnCount(
   isRegular: boolean
 ): number {
   const step = tileStepOf(size)
-  if (!isRegular) {
-    return step.phoneColumns
-  }
-  return Math.max(1, Math.floor((available + tileGap) / (step.width + tileGap)))
+  return isRegular
+    ? feedColumnsOf(Number.POSITIVE_INFINITY, available, step.width, tileGap)
+        .count
+    : step.phoneColumns
 }
 
 export type ColumnLayout = { count: number; fills: boolean }
@@ -56,8 +58,10 @@ export function columnLayout(
   size: number,
   isRegular: boolean
 ): ColumnLayout {
-  const fit = columnCount(available, size, isRegular)
-  return { count: Math.max(1, Math.min(fit, items)), fills: items >= fit }
+  const step = tileStepOf(size)
+  return isRegular
+    ? feedColumnsOf(items, available, step.width, tileGap)
+    : feedColumnsOf(items, step.phoneColumns, 1, 0)
 }
 
 export function columnClassOf(size: number, isRegular: boolean): string {
