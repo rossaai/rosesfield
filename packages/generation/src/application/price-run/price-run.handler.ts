@@ -1,5 +1,6 @@
 import type {
   AppDefinition,
+  Cost,
   EngineBinding,
   RunInputs,
 } from "@rosesfield/contract"
@@ -13,15 +14,25 @@ import { AppNotFoundError } from "#domain/error/app-not-found.error"
 import { isOneAtATime } from "#domain/field-role"
 import {
   type GenerationEngine,
+  type KnownPrice,
+  type PriceFrom,
   type RunPrice,
   unknownPrice,
 } from "#domain/generation-engine.port"
-import { inputsOfKept, keptCountOf, nearestKeptOf } from "#domain/kept-settings"
+import {
+  inputsOfKept,
+  type KeptRun,
+  keptCountOf,
+  medianOf,
+  nearestKeptOf,
+  scaledCreditsOf,
+} from "#domain/kept-settings"
 import type { ModelForm } from "#domain/model-form"
 import type { PriceBook } from "#domain/price-book.port"
-import { pricedRunOf } from "#domain/priced-run"
+import { type PricedRun, pricedRunOf } from "#domain/priced-run"
 import { ruledInputsOf } from "#domain/ruled-inputs"
 import { resolveBinding } from "#domain/select-binding"
+import { sameTaskGraphsOf } from "#domain/task-binding"
 
 export type PriceRunInput = {
   appId: string
@@ -72,35 +83,31 @@ export class PriceRunHandler {
     const inputs: RunInputs = ruledInputsOf(app, input.inputs)
     const binding = resolveBinding(app.engine, inputs)
     const count = input.count ?? 1
-    const runner = this.engines.find((engine) => engine.canRun(binding))
-    if (runner?.origin === "demo") {
+    const found = await this.engineOf(binding)
+    if (found === null) {
+      return { price: unknownPrice }
+    }
+    const { engine, form } = found
+    const asked = { ...input, inputs, count }
+    const perOutput = isJobPerOutput(app, engine, form, binding)
+    const isPerJob = count > 1 && perOutput
+    const measured = await this.measured(app, form, {
+      ...asked,
+      count: isPerJob ? 1 : count,
+    })
+    if (measured !== null) {
+      const each = perOutput ? { perOutput: true as const } : {}
+      return { price: { ...timesOf(measured, isPerJob ? count : 1), ...each } }
+    }
+    const quoted = await engine.priceOf(binding, { inputs, count })
+    if (quoted.credits !== null) {
       return {
-        price: await runner.priceOf(binding, { inputs, count }),
+        price: await this.heldToMeasured(engine, app, form, quoted, asked),
       }
     }
-    for (const engine of this.engines) {
-      const form = await engine.formOf(binding)
-      if (form !== null || engine.canRun(binding)) {
-        const isPerJob = count > 1 && isJobPerOutput(app, engine, form, binding)
-        const measured = await this.measured(engine, app, form, {
-          ...input,
-          inputs,
-          count: isPerJob ? 1 : count,
-        })
-        if (measured !== null) {
-          return { price: timesOf(measured, isPerJob ? count : 1) }
-        }
-        const quoted = await engine.priceOf(binding, { inputs, count })
-        return {
-          price: await this.heldToMeasured(engine, app, form, quoted, {
-            ...input,
-            inputs,
-            count,
-          }),
-        }
-      }
+    return {
+      price: form === null ? await this.fromGraphRuns(app, asked) : quoted,
     }
-    return { price: unknownPrice }
   }
 
   async executeAll(input: PriceRunsInput): Promise<PriceRunsOutput> {
@@ -143,10 +150,10 @@ export class PriceRunHandler {
     engine: GenerationEngine,
     app: AppDefinition,
     form: ModelForm | null,
-    quoted: RunPrice,
+    quoted: KnownPrice,
     input: PriceRunInput
-  ): Promise<RunPrice> {
-    if (this.prices === null || form === null || quoted.credits === null) {
+  ): Promise<KnownPrice> {
+    if (this.prices === null || form === null) {
       return quoted
     }
     const asked = pricedRunOf({
@@ -160,7 +167,7 @@ export class PriceRunHandler {
       asked.settings,
       await this.prices.runsOf(asked.model)
     )
-    const measured = nearest === null ? null : engine.creditsOf(nearest.cost)
+    const measured = nearest === null ? null : this.creditsOf(nearest.cost)
     if (nearest === null || measured === null || measured <= 0) {
       return quoted
     }
@@ -178,18 +185,14 @@ export class PriceRunHandler {
     const ratio = measured / atKept.credits
     return Math.abs(ratio - 1) <= PriceRunHandler.quoteTolerance
       ? quoted
-      : {
-          source: "estimate",
-          credits: Math.round(quoted.credits * ratio * 100) / 100,
-        }
+      : { ...scaledBy(quoted, ratio), source: "estimate" }
   }
 
   private async measured(
-    engine: GenerationEngine,
     app: AppDefinition,
     form: ModelForm | null,
     input: PriceRunInput
-  ): Promise<RunPrice | null> {
+  ): Promise<KnownPrice | null> {
     if (this.prices === null) {
       return null
     }
@@ -202,10 +205,101 @@ export class PriceRunHandler {
         aspectRatio: input.aspectRatio ?? null,
       })
     )
-    const credits = cost === null ? null : engine.creditsOf(cost)
+    const credits = cost === null ? null : this.creditsOf(cost)
     return credits === null
       ? null
-      : { source: "measured", credits: Math.round(credits * 100) / 100 }
+      : { source: "measured", credits: centsOf(credits), from: "measured" }
+  }
+
+  /**
+   * A graph no engine quotes is priced from what graphs cost: the nearest
+   * measured run of the same graph scaled to the asked outputs and seconds,
+   * or else the median of the measured runs of the app's graphs that run the
+   * same task, scaled the same way. Either is an estimate.
+   */
+  private async fromGraphRuns(
+    app: AppDefinition,
+    input: PriceRunInput
+  ): Promise<RunPrice> {
+    const book = this.prices
+    if (book === null) {
+      return unknownPrice
+    }
+    const asked = pricedRunOf({
+      app,
+      inputs: input.inputs,
+      form: null,
+      count: input.count ?? 1,
+      aspectRatio: input.aspectRatio ?? null,
+    })
+    const nearest = nearestKeptOf(
+      asked.settings,
+      await book.runsOf(asked.model)
+    )
+    const own = nearest === null ? null : this.scaledRun(nearest, asked)
+    if (own !== null) {
+      return estimateOf(own, "model-runs")
+    }
+    const peers = await Promise.all(
+      sameTaskGraphsOf(app, asked.model).map((graph) => book.runsOf(graph))
+    )
+    const median = medianOf(
+      peers.flat().flatMap((run) => {
+        const scaled = this.scaledRun(run, asked)
+        return scaled === null ? [] : [scaled]
+      })
+    )
+    return median === null ? unknownPrice : estimateOf(median, "task-runs")
+  }
+
+  private scaledRun(run: KeptRun<Cost>, asked: PricedRun): number | null {
+    const credits = this.creditsOf(run.cost)
+    return credits === null || credits <= 0
+      ? null
+      : scaledCreditsOf(credits, run.settings, asked.settings)
+  }
+
+  private creditsOf(cost: Cost): number | null {
+    for (const engine of this.engines) {
+      const credits = engine.creditsOf(cost)
+      if (credits !== null) {
+        return credits
+      }
+    }
+    return null
+  }
+
+  private async engineOf(binding: EngineBinding): Promise<FoundEngine | null> {
+    for (const engine of this.engines) {
+      const form = await engine.formOf(binding)
+      if (form !== null || engine.canRun(binding)) {
+        return { engine, form }
+      }
+    }
+    return null
+  }
+}
+
+type FoundEngine = { engine: GenerationEngine; form: ModelForm | null }
+
+function centsOf(credits: number): number {
+  return Math.round(credits * 100) / 100
+}
+
+function estimateOf(credits: number, from: PriceFrom): KnownPrice {
+  return {
+    source: "estimate",
+    credits: centsOf(credits),
+    from,
+    perOutput: true,
+  }
+}
+
+function scaledBy(price: KnownPrice, ratio: number): KnownPrice {
+  return {
+    ...price,
+    credits: centsOf(price.credits * ratio),
+    ...(price.low === undefined ? {} : { low: centsOf(price.low * ratio) }),
   }
 }
 
@@ -228,8 +322,6 @@ function isJobPerOutput(
     : isOneAtATime(form.fields, app.output.kind)
 }
 
-function timesOf(price: RunPrice, times: number): RunPrice {
-  return price.credits === null
-    ? price
-    : { ...price, credits: Math.round(price.credits * times * 100) / 100 }
+function timesOf(price: KnownPrice, times: number): KnownPrice {
+  return scaledBy(price, times)
 }

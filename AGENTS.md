@@ -59,6 +59,7 @@ Run every command from the repository root with bun 1.4.3. Node 22 or 24 must al
 | `bun run test:dom` | Runs vitest on node with jsdom for `ui` and `platform`. |
 | `bun run --filter @rosesfield/platform test:e2e` | Runs the platform's Playwright specs. |
 | `bun run catalog:sync` | Writes `packages/catalog/src/apps.gen.ts` from the app folders and `packages/catalog/src/workflows.gen.ts` from `workflows/`. |
+| `bun run prices:sync` | Writes the partner node prices from ComfyUI at the commit `packages/generation/scripts/node-prices-sync.ts` pins, and the agent's chat model prices from OpenRouter's published list, per `docs/stack.md` §Prices. |
 | `bun run ui:add <component>` | Adds a shadcn component to `packages/ui/src/components`. Run `bun run format` after it. |
 | `bun run generated:check` | Refuses a file listed in `generated.json` whose bytes differ from its sha256. Those files are generated, and none is edited by hand. |
 | `bun run copy:check` | Refuses a string a person reads that is typed in a screen or a component instead of a generated copy file. Text inside `code`, `kbd`, `pre` or `samp`, a copy key, a class name and a test file pass. |

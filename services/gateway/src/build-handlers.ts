@@ -12,7 +12,6 @@ import {
   type PriceBook,
   PriceRunHandler,
   ReadModelFormsHandler,
-  ReadTokenRatesHandler,
   RepeatRunHandler,
   type RunRepository,
   StartRunHandler,
@@ -81,7 +80,6 @@ export type RunHandlers = {
   checkEngineKey: CheckEngineKeyHandler
   listModels: ListModelsHandler
   readModelForms: ReadModelFormsHandler
-  readTokenRates: ReadTokenRatesHandler
   priceRun: PriceRunHandler
 }
 
@@ -161,7 +159,6 @@ function buildRuns(
     checkEngineKey: new CheckEngineKeyHandler({ engines }),
     listModels: new ListModelsHandler({ engines }),
     readModelForms: new ReadModelFormsHandler({ engines }),
-    readTokenRates: new ReadTokenRatesHandler({ engines }),
     priceRun: new PriceRunHandler({ apps, engines, ...pricesOf(ports) }),
   }
 }

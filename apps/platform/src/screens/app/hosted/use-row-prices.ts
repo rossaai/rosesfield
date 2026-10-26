@@ -8,7 +8,7 @@ import {
 } from "@/screens/app/hosted/model-catalog-query"
 import { useDebounced } from "@/screens/app/hosted/use-debounced"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
-import { priceLabelsOf, type QuoteSource } from "@/screens/app/use-start-run"
+import { amountOf, type QuoteSource } from "@/screens/app/use-start-run"
 
 export type RowPrices = {
   prices: ReadonlyMap<string, ModelPrice>
@@ -25,9 +25,10 @@ const rowNames = {
 
 export function rowPriceOf(
   credits: number | null,
-  source: QuoteSource = "rates"
+  source: QuoteSource = "rates",
+  low?: number
 ): ModelPrice | null {
-  const amount = priceLabelsOf(credits, false).priceValue ?? null
+  const amount = amountOf(credits, low)
   return amount === null
     ? null
     : { amount, name: t(rowNames[source], { amount }) }
@@ -43,7 +44,7 @@ export function rowPricesOf(
     const price =
       answered === undefined || answered.source === "unknown"
         ? null
-        : rowPriceOf(answered.credits, answered.source)
+        : rowPriceOf(answered.credits, answered.source, answered.low)
     if (price !== null) {
       prices.set(id, price)
     }

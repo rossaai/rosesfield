@@ -176,7 +176,12 @@ describe("the price of a run", () => {
       jsonInit({ inputs: { model: "maker/picture-2", prompt: "a door" } })
     )
     expect(await response.json()).toEqual({
-      price: { source: "rates", credits: 6.33 },
+      price: {
+        source: "rates",
+        credits: 6.33,
+        from: "rate-card",
+        perOutput: true,
+      },
     })
     expect(router.calls.some((call) => call.url.endsWith("/estimate"))).toBe(
       true
@@ -207,7 +212,12 @@ describe("the price of a run", () => {
       jsonInit({ inputs: { model: "maker/picture-2", prompt: "a door" } })
     )
     expect(await response.json()).toEqual({
-      price: { source: "rates", credits: 6.33 },
+      price: {
+        source: "rates",
+        credits: 6.33,
+        from: "rate-card",
+        perOutput: true,
+      },
     })
     expect(router.calls.some((call) => call.url.endsWith("/estimate"))).toBe(
       false

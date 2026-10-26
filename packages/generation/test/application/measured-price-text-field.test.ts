@@ -186,7 +186,12 @@ describe("a measured price is kept per model and setting", () => {
     })
     await runOnce(harness, { prompt: "a fox" })
     expect(await priceOf(harness, { prompt: "another fox" })).toEqual({
-      price: { source: "measured", credits: 37.72 },
+      price: {
+        source: "measured",
+        credits: 37.72,
+        from: "measured",
+        perOutput: true,
+      },
     })
   })
 })

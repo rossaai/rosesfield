@@ -108,7 +108,14 @@ describe("the measured price of a model at its settings", () => {
     expect(prices.kept).toHaveLength(1)
     expect(
       await priceOf(harness, { prompt: "a window", aspectRatio: "16:9" })
-    ).toEqual({ price: { source: "measured", credits: 1.19 } })
+    ).toEqual({
+      price: {
+        source: "measured",
+        credits: 1.19,
+        from: "measured",
+        perOutput: true,
+      },
+    })
     expect(
       await priceOf(harness, { prompt: "a door", aspectRatio: "1:1" })
     ).toEqual({ price: { source: "estimate", credits: 1.19 } })

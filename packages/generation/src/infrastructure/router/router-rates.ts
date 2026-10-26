@@ -1,6 +1,6 @@
 import type { RunInputs } from "@rosesfield/contract"
-import { type FieldRole, fieldOfRole, isOneAtATime } from "#domain/field-role"
-import type { TokenRate } from "#domain/generation-engine.port"
+import { isOneAtATime } from "#domain/field-role"
+import type { KnownPrice, PriceFrom } from "#domain/generation-engine.port"
 import type { ModelForm } from "#domain/model-form"
 import {
   arrayOf,
@@ -8,33 +8,25 @@ import {
   numberOf,
   stringOf,
 } from "#infrastructure/router/router-json"
+import {
+  factsOf,
+  filledRunsOf,
+  namedKeysOf,
+  type RateRow,
+  roleNumber,
+  scoreOf,
+  type Values,
+  valuesOf,
+} from "#infrastructure/router/router-rate-match"
+import {
+  type Amounts,
+  amountsOf,
+  isPerInput,
+  isPerTime,
+  isPriced,
+} from "#infrastructure/router/router-rate-units"
 
-export type RateRow = {
-  model: string
-  credits: number
-  unit: string
-  conditions: string
-}
-
-type Values = Map<string, string>
-
-type Fit = "holds" | "names-output" | "open" | null
-
-type Score = { holds: number; open: number }
-
-type RunFacts = {
-  values: Values
-  inputs: RunInputs
-  seconds: number | null
-}
-
-const outputSizeKey = "outputsize"
-
-const output =
-  /^(output (image|video)( duration)?|(image|video) generation|generated image|generation|completed output duration)$/i
-
-const perOutput =
-  /^per (request|generation|image|output image|generated image|completed operation)$/
+export type { RateRow } from "#infrastructure/router/router-rate-match"
 
 export function rateRowsOf(snapshot: unknown): RateRow[] {
   return (arrayOf(fieldOf(snapshot, "rates")) ?? []).flatMap((row) => {
@@ -53,41 +45,6 @@ export function rateRowsOf(snapshot: unknown): RateRow[] {
       },
     ]
   })
-}
-
-const perMillionTokens = "per 1M tokens"
-
-const tokenSides = {
-  input: "Input text tokens",
-  output: "Output text tokens",
-} as const
-
-function tokenCreditsOf(
-  rows: readonly RateRow[],
-  model: string,
-  conditions: string
-): number | null {
-  const found = new Set(
-    rows
-      .filter(
-        (row) =>
-          row.model === model &&
-          row.unit === perMillionTokens &&
-          row.conditions === conditions
-      )
-      .map((row) => row.credits)
-  )
-  const [only] = [...found]
-  return found.size === 1 && only !== undefined ? only : null
-}
-
-export function tokenRateOf(
-  rows: readonly RateRow[],
-  model: string
-): TokenRate | null {
-  const input = tokenCreditsOf(rows, model, tokenSides.input)
-  const output = tokenCreditsOf(rows, model, tokenSides.output)
-  return input === null || output === null ? null : { input, output }
 }
 
 type UsageTable = {
@@ -121,28 +78,98 @@ const usageTables: readonly UsageTable[] = [
   },
 ]
 
+export type RatePrice = {
+  credits: number
+  low: number | null
+  exact: boolean
+  perOutput: boolean
+}
+
+/**
+ * Prices one run from the published rate card. Every setting a row names
+ * that the run leaves unset with no default is read once per value it takes,
+ * and the rows that still fit give the price, or the range from the lowest
+ * to the highest when they disagree. A range, a converted token count or a
+ * filled setting whose rows disagree is not exact.
+ */
 export function priceFromRates(
   rows: readonly RateRow[],
   form: ModelForm,
   inputs: RunInputs,
   output: string,
   count = 1
-): number | null {
-  const values = valuesOf(form, inputs)
+): RatePrice | null {
   const each = isOneAtATime(form.fields, output) ? count : 1
-  const usage = usagePriceOf(rows, form.model, values)
+  const usage = usagePriceOf(rows, form.model, valuesOf(form, inputs))
   if (usage !== undefined) {
-    return usage === null ? null : Math.round(usage * each * 100) / 100
+    return usage === null
+      ? null
+      : priceOf([usage * each], true, isOneAtATime(form.fields, output))
   }
-  const own = rows.filter(
-    (row) => row.model === form.model && isPriced(row.unit)
+  const own = rows.filter((row) => row.model === form.model && isPriced(row))
+  const keys = namedKeysOf(
+    form.model,
+    own.map((row) => row.conditions)
   )
-  const run: RunFacts = {
-    values,
-    inputs,
-    seconds:
-      roleNumber(form, inputs, "length") ?? numberIn(values, ["duration"]),
+  const needsSeconds = own.some((row) => isPerTime(row.unit))
+  const amounts = filledRunsOf(form, inputs, keys, needsSeconds).map((run) =>
+    amountsOfRun(own, form, run)
+  )
+  const read = amounts.flatMap((one) => (one === null ? [] : [one]))
+  if (read.length === 0) {
+    return null
   }
+  const credits = read.flatMap((one) =>
+    one.credits.map((value) => value * each)
+  )
+  const hasInputs =
+    rows.some((row) => row.model === form.model && isPerInput(row.unit)) &&
+    hasMedia(inputs)
+  return priceOf(credits, read.every((one) => one.exact) && !hasInputs, true)
+}
+
+/** Names a rate the card or a published table gave as a price: exact when it is the published price of these settings, else an estimate. */
+export function knownPriceOf(rate: RatePrice, from: PriceFrom): KnownPrice {
+  return {
+    source: rate.exact ? "rates" : "estimate",
+    credits: rate.credits,
+    from,
+    ...(rate.low === null ? {} : { low: rate.low }),
+    ...(rate.perOutput ? { perOutput: true as const } : {}),
+  }
+}
+
+export function priceOf(
+  credits: readonly number[],
+  exact: boolean,
+  perOutput: boolean
+): RatePrice {
+  const high = centsOf(Math.max(...credits))
+  const low = centsOf(Math.min(...credits))
+  return {
+    credits: high,
+    low: low < high ? low : null,
+    exact: exact && low === high,
+    perOutput,
+  }
+}
+
+function centsOf(credits: number): number {
+  return Math.round(credits * 100) / 100
+}
+
+function hasMedia(inputs: RunInputs): boolean {
+  return Object.values(inputs).some(
+    (value) => Array.isArray(value) && value.length > 0
+  )
+}
+
+function amountsOfRun(
+  own: readonly RateRow[],
+  form: ModelForm,
+  inputs: RunInputs
+): Amounts | null {
+  const run = factsOf(form, inputs)
   const scored = own.flatMap((row) => {
     const score = scoreOf(row.conditions, run)
     return score === null ? [] : [{ row, score }]
@@ -154,13 +181,16 @@ export function priceFromRates(
       one.score.holds === best ||
       (one.score.open > 0 && one.score.holds >= best)
   )
-  const prices = new Set(
-    top.map((one) => amountOf(one.row, form, inputs, values))
-  )
-  const [only] = [...prices]
-  return prices.size === 1 && only !== undefined && only !== null
-    ? Math.round(only * each * 100) / 100
-    : null
+  const count = roleNumber(form, inputs, "count") ?? 1
+  const read = top.map((one) => amountsOf(one.row, run, count))
+  if (read.length === 0 || read.some((one) => one === null)) {
+    return null
+  }
+  const known = read.flatMap((one) => (one === null ? [] : [one]))
+  return {
+    credits: known.flatMap((one) => one.credits),
+    exact: known.every((one) => one.exact),
+  }
 }
 
 function usagePriceOf(
@@ -193,166 +223,4 @@ function usagePriceOf(
 function holds(setting: Setting, values: Values): boolean {
   const held = values.get(setting.key)
   return held !== undefined && setting.values.includes(held)
-}
-
-function isPriced(unit: string): boolean {
-  return (
-    perOutput.test(unit) || unit === "per second" || unit === "per 5 seconds"
-  )
-}
-
-function amountOf(
-  row: RateRow,
-  form: ModelForm,
-  inputs: RunInputs,
-  values: Values
-): number | null {
-  const count = roleNumber(form, inputs, "count") ?? 1
-  if (perOutput.test(row.unit)) {
-    return row.credits * count
-  }
-  const seconds =
-    roleNumber(form, inputs, "length") ??
-    numberIn(values, ["duration"]) ??
-    secondsIn(row.conditions)
-  if (seconds === null) {
-    return null
-  }
-  const units = row.unit === "per 5 seconds" ? Math.ceil(seconds / 5) : seconds
-  return row.credits * units * count
-}
-
-function scoreOf(conditions: string, run: RunFacts): Score | null {
-  const score: Score = { holds: 0, open: 0 }
-  for (const raw of conditions.split(";")) {
-    const part = raw.trim()
-    if (part === "") {
-      continue
-    }
-    const fit = fitOf(part, run)
-    if (fit === null) {
-      return null
-    }
-    score.holds += fit === "holds" ? 1 : 0
-    score.open += fit === "open" ? 1 : 0
-  }
-  return score
-}
-
-function fitOf(part: string, run: RunFacts): Fit {
-  const { values, inputs } = run
-  if (output.test(part)) {
-    return "names-output"
-  }
-  const pair = /^([A-Za-z_ ]+)=(.+)$/.exec(part)
-  if (pair !== null) {
-    const held = values.get(keyOf(pair[1] ?? ""))
-    if (held === undefined) {
-      return "open"
-    }
-    return held === keyOf(pair[2] ?? "") ? "holds" : null
-  }
-  const seconds = /^(\d+)s$/.exec(part)
-  if (seconds !== null) {
-    return run.seconds === Number(seconds[1]) ? "holds" : null
-  }
-  if (/^\d+p$/.test(part)) {
-    return values.get("resolution") === keyOf(part) ? "holds" : null
-  }
-  const hasMedia = Object.values(inputs).some(
-    (value) => Array.isArray(value) && value.length > 0
-  )
-  if (/^(text[ -]to[ -](image|video))$/i.test(part)) {
-    return hasMedia ? null : "holds"
-  }
-  if (/^(edit|image[ -]to[ -]video)$/i.test(part)) {
-    return hasMedia ? "holds" : null
-  }
-  return null
-}
-
-function valuesOf(form: ModelForm, inputs: RunInputs): Values {
-  const values: Values = new Map()
-  for (const field of form.fields) {
-    const chosen = chosenOf(field.name, inputs, field)
-    const value =
-      field.kind === "toggle" && typeof chosen === "string"
-        ? String(chosen === "on")
-        : chosen
-    const key = keyOf(field.path.split(".").at(-1) ?? field.name)
-    if (value !== null && value !== undefined && !values.has(key)) {
-      values.set(key, keyOf(String(value)))
-    }
-  }
-  const size = outputSizeOf(form, inputs)
-  if (size !== null && !values.has(outputSizeKey)) {
-    values.set(outputSizeKey, size)
-  }
-  return values
-}
-
-function chosenOf(
-  name: string,
-  inputs: RunInputs,
-  field: ModelForm["fields"][number]
-): string | number | boolean | null {
-  const given = inputs[name]
-  if (given !== undefined && !Array.isArray(given)) {
-    return given
-  }
-  return "default" in field ? field.default : null
-}
-
-function outputSizeOf(form: ModelForm, inputs: RunInputs): string | null {
-  const field = fieldOfRole(form.fields, "resolution", "image")
-  const value = field === null ? null : chosenOf(field.name, inputs, field)
-  return value === null ? null : sizeClassOf(String(value))
-}
-
-function sizeClassOf(value: string): string | null {
-  const text = value.toLowerCase().trim()
-  if (/^\d+(\.\d+)?k$/.test(text)) {
-    return text
-  }
-  const sized = /^(\d+)\s*[x*]\s*(\d+)$/.exec(text)
-  if (sized === null) {
-    return null
-  }
-  const long = Math.max(Number(sized[1]), Number(sized[2]))
-  if (long <= 1536) {
-    return "1k"
-  }
-  return long <= 2560 ? "2k" : "4k"
-}
-
-function roleNumber(
-  form: ModelForm,
-  inputs: RunInputs,
-  role: FieldRole
-): number | null {
-  const field = fieldOfRole(form.fields, role, "video")
-  if (field === null) {
-    return null
-  }
-  const value = Number.parseFloat(String(chosenOf(field.name, inputs, field)))
-  return Number.isFinite(value) ? value : null
-}
-
-function numberIn(values: Values, keys: readonly string[]): number | null {
-  for (const key of keys) {
-    const held = Number.parseFloat(values.get(key) ?? "")
-    if (Number.isFinite(held)) {
-      return held
-    }
-  }
-  return null
-}
-
-function secondsIn(conditions: string): number | null {
-  const found = /(?:^|;\s*)(\d+)s(?:;|$)/.exec(conditions)
-  return found === null ? null : Number(found[1])
-}
-
-function keyOf(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9.]/g, "")
 }

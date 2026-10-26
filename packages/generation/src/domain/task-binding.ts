@@ -1,4 +1,8 @@
-import type { EngineBinding, RunInputs } from "@rosesfield/contract"
+import type {
+  AppDefinition,
+  EngineBinding,
+  RunInputs,
+} from "@rosesfield/contract"
 import { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.error"
 import { isRecord } from "#domain/is-record"
 
@@ -134,4 +138,27 @@ function isBinding(value: unknown): value is EngineBinding {
     typeof value.adapter === "string" &&
     isRecord(value.config)
   )
+}
+
+function graphTaskIn(app: AppDefinition, graph: string): string | null {
+  return graphTaskOf(app.engine, graph) ?? tasksOf(app.engine)[0] ?? null
+}
+
+/** Lists the app's other graphs that run the same task as this graph. */
+export function sameTaskGraphsOf(app: AppDefinition, graph: string): string[] {
+  const input = taskInputOf(app.engine)
+  const choice = app.inputs.find((one) => one.name === input)
+  if (choice?.type !== "choice" || isHostedModelId(graph)) {
+    return []
+  }
+  const task = graphTaskIn(app, graph)
+  return choice.options
+    .map((option) => option.value)
+    .filter(
+      (value) =>
+        value !== graph &&
+        !isHostedModelId(value) &&
+        task !== null &&
+        graphTaskIn(app, value) === task
+    )
 }

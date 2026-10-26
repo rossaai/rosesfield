@@ -19,6 +19,7 @@
     "test:bun": "bun --bun vitest run --project '!ui' --project '!platform'",
     "test:dom": "vitest run --project ui --project platform",
     "catalog:sync": "bun packages/catalog/scripts/catalog-sync.ts",
+    "prices:sync": "bun packages/generation/scripts/node-prices-sync.ts && bun packages/agent/scripts/router-chat-rates-sync.ts",
     "generated:check": "bun scripts/checks/generated-files/check-generated-files.ts",
     "copy:check": "bun scripts/checks/typed-copy/check-typed-copy.ts",
     "glob:check": "bun scripts/checks/glob-calls/check-glob-calls.ts",

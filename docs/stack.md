@@ -57,8 +57,18 @@ Comfy runs every model. Two adapters of the one `GenerationEngine` port reach it
 - Every call has a timeout. Every submit carries an `Idempotency-Key`, so a submit sent again never pays twice. The run watcher polls and honours `Retry-After`.
 - Each run's credits come from `GET https://api.comfy.org/customers/balance` before the submit and after the run ends, read by the credit meter in `packages/generation/src/infrastructure/credit-meter.ts`. The meter measures a run only while it is the one run of its account in flight. A Router run it cannot measure, such as one of two Storyboard keyframes that run at once, takes the `X-Comfy-Credits-Used` header of its result: the synchronous route's answer, or the queued request's collect route. A graph on Comfy Cloud with no balance reading is priced from its `execution_ms` at the GPU rate in §Prices.
 - A price that is not known shows no figure: Generate stands alone, never zero and never "Price unknown".
-- A quote never contradicts a measured run. The last run of a model at the same settings prices the next one, named as measured. With no run at those settings, the estimate or the rate card prices it, and when that source priced the model's nearest measured run more than 5 percent away from what it cost, the quote is scaled by that run's ratio and named an estimate, per `packages/generation/src/application/price-run/price-run.handler.ts`.
-- A rate card row whose condition names a setting the run leaves unknown, such as a quality or an output size, keeps every row it could match in play. When those rows disagree, the rate card gives no price.
+- One handler prices every run, `packages/generation/src/application/price-run/price-run.handler.ts`, from the first source that holds a price, and each price names its source in `from`:
+  1. `measured`: the last run of the model at the same settings, on every engine, the demo engine too.
+  2. `engine-estimate`: Comfy's estimate route, with a key that has it.
+  3. `rate-card`: Comfy's published rate card, per `packages/generation/src/infrastructure/router/router-rates.ts`.
+  4. `node-price`: the price the Comfy partner node that runs the same model publishes, read into `packages/generation/src/infrastructure/router/router-node-prices.gen.ts`.
+  5. `model-runs`, for a graph: its nearest measured run, scaled by its outputs and its seconds.
+  6. `task-runs`, for a graph with no run of its own: the median of the measured runs of the app's graphs that run the same task, scaled the same way.
+- A quote never contradicts a measured run. When the source of a quote priced the model's nearest measured run more than 5 percent away from what it cost, the quote is scaled by that run's ratio and named an estimate.
+- A price that is not a measured or published price for the exact settings is an estimate: a range, a converted token count, a node badge marked approximate, a scaled run or a median.
+- The rate card converts every unit it reads to credits: per output, per second, per 5 seconds, per minute, per 30 output frames, per 1M output image tokens through the tokens each maker publishes for one image, and per Recraft credit through Recraft's price per image. A setting the card names that the run leaves unset with no default is read once per value it takes. A setting the card names by another word is read through the card's name for it. A row whose condition is free text is read when the model's rows agree. When the rows still disagree, the price is the range from the lowest to the highest.
+- A range reaches the person as its low to its high, named an estimate. Its `credits` is the high end, so a spend limit reads the most a run can cost.
+- A price that grows with the count is marked `perOutput`. Generate multiplies it on the client the moment the count changes, asks the server 100 ms after any change, and keeps the last price while the next one loads.
 
 ### The Comfy Router
 
@@ -113,6 +123,18 @@ Then set `COMFY_BASE_URL=http://127.0.0.1:8189`. The graphs run on your ComfyUI,
 
 Read on 2026-10-17. Comfy Cloud bills a graph per second of GPU time: H100 SXM 6.23 USD, RTX PRO 6000 4.54 USD, H200 7.71 USD, B200 11.23 USD per hour, paid from credits at 211 credits per USD. Its plans cost 20, 35, 100 and 700 USD a month: Standard, Creator, Pro and Team. They allow 1, 3, 5 and 25 API runs at once. A run lasts at most 30 minutes on Standard and Creator, and up to 1 hour on Pro. A Router model bills its own rate from the same credits, per Comfy's rate card at `https://github.com/Comfy-Org/docs/blob/main/router-pricing/metronome-rates.json`.
 
+The tables that price what the card leaves out, each with its source and the day it was read:
+
+| Table | Source | Read |
+|---|---|---|
+| output tokens per image, Gemini image models | `https://ai.google.dev/gemini-api/docs/pricing` | 2026-10-26 |
+| output tokens per image, GPT Image 1 and 1.5 | `https://developers.openai.com/api/docs/guides/image-generation` | 2026-10-26 |
+| Recraft credits per image | `https://www.recraft.ai/docs/api-reference/pricing` | 2026-10-26 |
+| each partner node's price badge, `router-node-prices.gen.ts` | `comfy_api_nodes` of `https://github.com/Comfy-Org/ComfyUI`, pinned at the commit the file names | the date the file names |
+| the agent's chat model prices, `packages/agent/src/infrastructure/router-chat-rates.gen.ts` | `https://openrouter.ai/api/v1/models` | the date the file names |
+
+`bun run prices:sync` writes both generated tables again. The node table evaluates each badge's JSONata expression with `jsonata` at build time over the settings the script lists for each model, so nothing is read at run time.
+
 ## The voice model
 
 Voice runs Chatterbox, by Resemble AI, through the node pack `filliptm/ComfyUI_Fill-ChatterBox`, pinned at commit `f7d7a16187430abcaf91a3039b9c83aa9960816a`. Comfy Cloud installs the pack, and the same pack runs the same node classes on your own ComfyUI, so one workflow in `workflows/` runs on both. The code and the weights are MIT. With `resemble-perth` installed, every output carries Resemble's hidden watermark. The pack's README sets two limits: about 40 seconds of speech per run, and a reference recording of at least 5 to 6 seconds.
@@ -133,6 +155,7 @@ The agent runs on a chat model of the Comfy Router, with your Comfy key. It has 
 
 - Each model call is one `POST` to `https://api.comfy.org/v2/models/openrouter/chat-completions`, with no streaming. It carries your key in `X-API-Key`, an `Idempotency-Key` made from the request body, and a 120-second timeout, per `packages/agent/src/infrastructure/router-chat-fetch.ts`.
 - Each answer is billed on its `usage.cost`, and the turn shows its credits.
+- The model list shows each chat model's credits per 1M input and output tokens from OpenRouter's published prices at 211 credits per US dollar, read into `packages/agent/src/infrastructure/router-chat-rates.gen.ts`. `packages/agent/test/infrastructure/router-chat-rates.test.ts` refuses a chat model the table does not price.
 - The agent starts when a Comfy key reaches Comfy Cloud: yours in Settings, or `COMFY_API_KEY`. With no Comfy key, or with `COMFY_BASE_URL` at another host, it is off, and every agent route answers `AGENT_MODEL_MISSING`.
 - A key the Router has not turned on answers `403 not_enabled`. Agent shows the catalog's message, and the agent stays off.
 - You choose the model in Agent, from the Router chat models in `packages/agent/src/infrastructure/router-chat-models.ts`.

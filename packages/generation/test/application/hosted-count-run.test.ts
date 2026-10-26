@@ -157,7 +157,14 @@ describe("a count of 3 on a model that makes one image at a time", () => {
       inputs: { model, prompt: "a lighthouse" },
       count: 3,
     })
-    expect(price).toEqual({ price: { source: "measured", credits: 3 } })
+    expect(price).toEqual({
+      price: {
+        source: "measured",
+        credits: 3,
+        from: "measured",
+        perOutput: true,
+      },
+    })
   })
 
   it("runs 3 jobs on a model whose count field takes at most 1", async () => {

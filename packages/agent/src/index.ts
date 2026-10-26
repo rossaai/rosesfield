@@ -144,3 +144,4 @@ export {
   routerChat,
   routerChatModels,
 } from "#infrastructure/router-chat-models"
+export { chatRatesOf } from "#infrastructure/router-chat-rates"

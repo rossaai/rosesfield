@@ -46,7 +46,12 @@ describe("the prices of every row of a model list, in one request", () => {
     expect(pricesResponse.parse(await response.json())).toEqual({
       prices: [
         { source: "unknown", credits: null },
-        { source: "rates", credits: 6.33 },
+        {
+          source: "rates",
+          credits: 6.33,
+          from: "rate-card",
+          perOutput: true,
+        },
       ],
     })
   })
@@ -88,7 +93,12 @@ describe("the prices of every row of a model list, in one request", () => {
     expect(await response.json()).toEqual({
       prices: [
         { source: "unknown", credits: null },
-        { source: "rates", credits: 6.33 },
+        {
+          source: "rates",
+          credits: 6.33,
+          from: "rate-card",
+          perOutput: true,
+        },
       ],
     })
   })

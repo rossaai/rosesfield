@@ -231,12 +231,22 @@ describe("ComfyRouterGenerationEngine", () => {
       inputs: { prompt: "a" },
       count: 1,
     })
-    expect(price).toEqual({ source: "rates", credits: 8.44 })
+    expect(price).toEqual({
+      source: "rates",
+      credits: 8.44,
+      from: "rate-card",
+      perOutput: true,
+    })
     const again = await engine.priceOf(binding, {
       inputs: { prompt: "b" },
       count: 1,
     })
-    expect(again).toEqual({ source: "rates", credits: 8.44 })
+    expect(again).toEqual({
+      source: "rates",
+      credits: 8.44,
+      from: "rate-card",
+      perOutput: true,
+    })
     expect(replay.unused().map((one) => one.url)).toEqual([
       `${routerUrl}/v2/models/${pictureModel}/estimate`,
     ])
@@ -256,7 +266,12 @@ describe("ComfyRouterGenerationEngine", () => {
       inputs: { prompt: "a", images: [referenceId] },
       count: 1,
     })
-    expect(price).toEqual({ source: "estimate", credits: 4.2 })
+    expect(price).toEqual({
+      source: "estimate",
+      credits: 4.2,
+      from: "engine-estimate",
+      perOutput: true,
+    })
     const body = JSON.parse(replay.sent.at(-1)?.body ?? "{}")
     expect(body.images).toHaveLength(1)
     expect(body.images[0]).toMatch(/^data:image\/png;base64,/)

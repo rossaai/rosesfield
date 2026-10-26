@@ -35,7 +35,9 @@ describe("the price of a mode that bounds its model", () => {
         appId: "sample-modes",
         inputs: { mode: "views" },
       })
-    ).toEqual({ price: { source: "measured", credits: 21.1 } })
+    ).toEqual({
+      price: { source: "measured", credits: 21.1, from: "measured" },
+    })
   })
 
   it("control: prices the other mode at its rate, since no cost is kept for it", async () => {

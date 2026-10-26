@@ -51,22 +51,43 @@ const clip: ModelForm = {
   ],
 }
 
+function exactOf(...args: Parameters<typeof priceFromRates>): number | null {
+  const price = priceFromRates(...args)
+  return price === null || !price.exact ? null : price.credits
+}
+
+function rangeOf(
+  ...args: Parameters<typeof priceFromRates>
+): [number, number] | null {
+  const price = priceFromRates(...args)
+  return price === null ? null : [price.low ?? price.credits, price.credits]
+}
+
 function row(model: string, conditions: string, unit = "per generation") {
   const one: RateRow = { model, credits: 2, unit, conditions }
   return one
 }
 
 describe("priceFromRates", () => {
-  it("answers unknown for a row whose condition it cannot read", () => {
+  it("reads a row whose free-text condition it cannot match when the model's rows agree", () => {
     const rows = [
       { ...row(flash.model, "Layer decomposition"), credits: 0.5733 },
     ]
-    expect(priceFromRates(rows, flash, { prompt: "a" }, "image")).toBeNull()
+    expect(exactOf(rows, flash, { prompt: "a" }, "image")).toBe(0.57)
+  })
+
+  it("gives the range of the rows when free-text conditions leave rows that disagree", () => {
+    const rows = [
+      { ...row(flash.model, "Layer decomposition"), credits: 0.5 },
+      { ...row(flash.model, "Background removal"), credits: 2 },
+    ]
+    expect(exactOf(rows, flash, { prompt: "a" }, "image")).toBeNull()
+    expect(rangeOf(rows, flash, { prompt: "a" }, "image")).toEqual([0.5, 2])
   })
 
   it("reads a row whose condition names the output", () => {
     expect(
-      priceFromRates(
+      exactOf(
         [{ ...row(flash.model, "Image generation"), credits: 0.5733 }],
         flash,
         { prompt: "a" },
@@ -80,13 +101,11 @@ describe("priceFromRates", () => {
         credits: 4,
       },
     ]
-    expect(priceFromRates(rows, clip, { resolution: "1080p" }, "video")).toBe(
-      20
-    )
-    expect(priceFromRates(rows, clip, { resolution: "720p" }, "video")).toBe(10)
+    expect(exactOf(rows, clip, { resolution: "1080p" }, "video")).toBe(20)
+    expect(exactOf(rows, clip, { resolution: "720p" }, "video")).toBe(10)
   })
 
-  it("changes the price with quality and output size, and names none while a size the rows name is unknown", () => {
+  it("changes the price with quality and output size, and gives the range while a setting the rows name is unknown", () => {
     const picture: ModelForm = {
       model: "maker/picture-4",
       fields: [
@@ -136,51 +155,40 @@ describe("priceFromRates", () => {
       },
     ]
     expect(
-      priceFromRates(
-        rows,
-        picture,
-        { quality: "low", size: "1024x1024" },
-        "image"
-      )
+      exactOf(rows, picture, { quality: "low", size: "1024x1024" }, "image")
     ).toBe(2.11)
     expect(
-      priceFromRates(
-        rows,
-        picture,
-        { quality: "high", size: "1024x1024" },
-        "image"
-      )
+      exactOf(rows, picture, { quality: "high", size: "1024x1024" }, "image")
     ).toBe(46.42)
     expect(
-      priceFromRates(
-        rows,
-        picture,
-        { quality: "low", size: "2048x2048" },
-        "image"
-      )
+      exactOf(rows, picture, { quality: "low", size: "2048x2048" }, "image")
     ).toBe(4.22)
-    expect(priceFromRates(rows, picture, {}, "image")).toBeNull()
+    expect(exactOf(rows, picture, {}, "image")).toBeNull()
+    expect(rangeOf(rows, picture, {}, "image")).toEqual([2.11, 46.42])
+    expect(rangeOf(rows, picture, { quality: "high" }, "image")).toEqual([
+      12.66, 46.42,
+    ])
     expect(
-      priceFromRates(rows, picture, { quality: "high" }, "image")
-    ).toBeNull()
-    expect(
-      priceFromRates(rows, picture, { quality: "high", size: "auto" }, "image")
-    ).toBeNull()
+      rangeOf(rows, picture, { quality: "high", size: "auto" }, "image")
+    ).toEqual([12.66, 46.42])
     const sized: ModelForm = {
       ...picture,
       fields: picture.fields.map((field) =>
         field.kind === "text" ? { ...field, default: "2048x2048" } : field
       ),
     }
-    expect(priceFromRates(rows, sized, { quality: "low" }, "image")).toBe(4.22)
+    expect(exactOf(rows, sized, { quality: "low" }, "image")).toBe(4.22)
     expect(
-      priceFromRates(rows.slice(1), picture, { quality: "low" }, "image")
+      exactOf(rows.slice(1), picture, { quality: "low" }, "image")
     ).toBeNull()
+    expect(
+      rangeOf(rows.slice(1), picture, { quality: "low" }, "image")
+    ).toEqual([2.11, 4.22])
   })
 
   it("prices one job per output on a model that makes one at a time", () => {
     const rows = [{ ...row(flash.model, ""), credits: 0.57 }]
-    expect(priceFromRates(rows, flash, { prompt: "a" }, "image", 3)).toBe(1.71)
+    expect(exactOf(rows, flash, { prompt: "a" }, "image", 3)).toBe(1.71)
   })
 
   it("prices a row when it reads every condition and each one holds", () => {
@@ -188,7 +196,7 @@ describe("priceFromRates", () => {
       row(clip.model, "720p; 5s", "per second"),
       row(clip.model, "1080p; 5s", "per second"),
     ]
-    expect(priceFromRates(rows, clip, { duration: 5 }, "video")).toBe(10)
+    expect(exactOf(rows, clip, { duration: 5 }, "video")).toBe(10)
   })
 
   it.each(["seconds", "duration_seconds"])(
@@ -204,18 +212,18 @@ describe("priceFromRates", () => {
         row(clip.model, "720p; 5s", "per second"),
         row(clip.model, "720p; 10s", "per second"),
       ]
-      expect(priceFromRates(rows, named, { [name]: 10 }, "video")).toBe(20)
+      expect(exactOf(rows, named, { [name]: 10 }, "video")).toBe(20)
     }
   )
 
-  it("answers unknown when the run leaves a condition's setting unset", () => {
+  it("reads the one row of a model whose resolution the form does not name", () => {
     const rows = [row(flash.model, "1080p")]
-    expect(priceFromRates(rows, flash, { prompt: "a" }, "image")).toBeNull()
+    expect(exactOf(rows, flash, { prompt: "a" }, "image")).toBe(2)
   })
 
   it("prices a row with no condition", () => {
     const rows = [{ ...row(flash.model, ""), credits: 6.33 }]
-    expect(priceFromRates(rows, flash, { prompt: "a" }, "image")).toBe(6.33)
+    expect(exactOf(rows, flash, { prompt: "a" }, "image")).toBe(6.33)
   })
 })
 
@@ -268,9 +276,9 @@ describe("priceFromRates on a usage-credit rate", () => {
   const chair = { prompt: "a wooden chair" }
 
   it("prices Meshy 7.1 at 20 Meshy credits for one mesh with no texture", () => {
-    expect(priceFromRates([meshyRate], meshy, chair, "3d")).toBe(241.38)
+    expect(exactOf([meshyRate], meshy, chair, "3d")).toBe(241.38)
     expect(
-      priceFromRates(
+      exactOf(
         [meshyRate],
         meshy,
         { ...chair, geometryResolution: "standard" },
@@ -282,19 +290,14 @@ describe("priceFromRates on a usage-credit rate", () => {
   it("adds 5 Meshy credits for the 2k or 4k mesh only, once", () => {
     for (const geometryResolution of ["2k", "4k"]) {
       expect(
-        priceFromRates(
-          [meshyRate],
-          meshy,
-          { ...chair, geometryResolution },
-          "3d"
-        )
+        exactOf([meshyRate], meshy, { ...chair, geometryResolution }, "3d")
       ).toBe(301.73)
     }
     expect(
-      priceFromRates([meshyRate], meshy, { ...chair, ultraMode: "on" }, "3d")
+      exactOf([meshyRate], meshy, { ...chair, ultraMode: "on" }, "3d")
     ).toBe(241.38)
     expect(
-      priceFromRates(
+      exactOf(
         [meshyRate],
         meshy,
         { ...chair, geometryResolution: "4k", ultraMode: "on" },
@@ -305,19 +308,14 @@ describe("priceFromRates on a usage-credit rate", () => {
 
   it("answers unknown for a refine run, a model with no usage table and two rates", () => {
     expect(
-      priceFromRates([meshyRate], meshy, { ...chair, mode: "refine" }, "3d")
+      exactOf([meshyRate], meshy, { ...chair, mode: "refine" }, "3d")
     ).toBeNull()
     const other = { ...meshy, model: "meshy/remesh" }
     expect(
-      priceFromRates([{ ...meshyRate, model: other.model }], other, chair, "3d")
+      exactOf([{ ...meshyRate, model: other.model }], other, chair, "3d")
     ).toBeNull()
     expect(
-      priceFromRates(
-        [meshyRate, { ...meshyRate, credits: 13 }],
-        meshy,
-        chair,
-        "3d"
-      )
+      exactOf([meshyRate, { ...meshyRate, credits: 13 }], meshy, chair, "3d")
     ).toBeNull()
   })
 })
