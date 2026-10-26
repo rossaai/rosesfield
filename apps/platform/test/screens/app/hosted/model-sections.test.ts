@@ -6,7 +6,7 @@ import type {
 import { type Run, run } from "@rosesfield/contract"
 import { isValidElement } from "react"
 import { describe, expect, it } from "vitest"
-import { pickerSections } from "@/screens/app/hosted/catalog-picker"
+import { catalogRowsOf } from "@/screens/app/hosted/catalog-picker"
 import {
   defaultIdOf,
   mainTaskOf,
@@ -14,7 +14,6 @@ import {
   taskBoardsOf,
   topOrderOf,
 } from "@/screens/app/hosted/model-sections"
-import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 
 function model(
   id: string,
@@ -62,20 +61,6 @@ function ranked(
   task = "text-to-image"
 ): CatalogModel {
   return model(id, "Lab", { task, facts: factsWith(scores) })
-}
-
-function hostedOf(models: readonly CatalogModel[]): HostedState {
-  return {
-    isTaskApp: true,
-    models,
-    isLoading: false,
-    error: null,
-    keyState: "set",
-    defaultModel: null,
-    chosen: null,
-    fields: null,
-    choose: () => undefined,
-  }
 }
 
 describe("the Top order of an app's models", () => {
@@ -181,10 +166,8 @@ describe("the rows of the model picker", () => {
     }),
   ]
 
-  it("lists every model once in one list, an image row with its proven fact and a video row with its own facts, the hosting fact last", () => {
-    const sections = pickerSections(hostedOf(models))
-    expect(sections.map((section) => section.id)).toEqual(["all"])
-    const rows = sections.flatMap((section) => section.rows)
+  it("lists every model once, an image row with no caption and a video row with what it can do, and no hosting or proven fact", () => {
+    const rows = catalogRowsOf(models)
     expect(rows.map((row) => row.id)).toEqual([
       "open-picture",
       "alpha/one",
@@ -194,22 +177,17 @@ describe("the rows of the model picker", () => {
     const image = rows.find((row) => row.id === "alpha/one")
     const video = rows.find((row) => row.id === "beta/three")
     const graph = rows.find((row) => row.id === "open-picture")
-    expect(image?.tags.map((tag) => tag.label)).toEqual([
-      "Ran in Rosesfield",
-      "Hosted by the maker",
-    ])
-    expect(video?.tags.map((tag) => tag.label)).toEqual([
+    expect(image?.capabilities).toEqual([])
+    expect(video?.capabilities.map((tag) => tag.label)).toEqual([
       "From text",
       "1080p",
       "5 to 10 s",
-      "Hosted by the maker",
     ])
     expect(graph?.badges).toEqual([
       { kind: "openWeights", label: "Open weights", markColour: "#FFD21E" },
     ])
-    expect(graph?.isOpen).toBe(true)
     expect(image?.badges).toEqual([])
-    expect(rows.map((row) => row.lab)).toContain("Alpha")
+    expect(image?.keywords).toContain("Alpha")
   })
 
   it("names an open-weights graph's lab as its maker and in its mark, and opens the weights page its facts name", () => {
@@ -225,15 +203,12 @@ describe("the rows of the model picker", () => {
         scores: {},
       },
     })
-    const [row] = pickerSections(hostedOf([ming]), "2026-10-26").flatMap(
-      (section) => section.rows
-    )
-    expect(row?.maker).toBe("inclusionAI")
+    const [row] = catalogRowsOf([ming], "2026-10-26")
+    expect(row?.keywords).toContain("inclusionAI")
     const mark = row?.mark
     expect(
       isValidElement<{ maker: string }>(mark) ? mark.props.maker : null
     ).toBe("inclusionAI")
-    expect(row?.released).toBe("2026-10-22")
     expect(row?.badges).toEqual([
       { kind: "new", label: "New" },
       {
@@ -245,18 +220,16 @@ describe("the rows of the model picker", () => {
     ])
   })
 
-  it("gives each priced row its price and its figure for the Price order, and an unpriced row neither", () => {
-    const price = { amount: "6", name: "6 Comfy credits" }
-    const rows = pickerSections(
-      hostedOf(models),
+  it("gives each priced row its price with its credits for the Price orders, and an unpriced row none", () => {
+    const price = { amount: "6", name: "6 Comfy credits", credits: 6 }
+    const rows = catalogRowsOf(
+      models,
       "2026-10-20",
       new Map([["alpha/one", price]])
-    ).flatMap((section) => section.rows)
+    )
     const alpha = rows.find((row) => row.id === "alpha/one")
     expect(alpha?.price).toEqual(price)
-    expect(alpha?.cost).toBe(6)
     const beta = rows.find((row) => row.id === "beta/two")
     expect(beta).not.toHaveProperty("price")
-    expect(beta).not.toHaveProperty("cost")
   })
 })

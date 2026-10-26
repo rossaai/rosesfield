@@ -147,7 +147,14 @@ describe("the agent's models", () => {
   }
 
   it("reads the models, the chosen one and a refusal", () => {
-    expect(readAgentModels(listed)).toEqual({ ...listed, rates: {} })
+    expect(readAgentModels(listed)).toEqual({
+      ...listed,
+      recent: [],
+      rates: {},
+    })
+    expect(
+      readAgentModels({ ...listed, recent: ["qwen/qwen3.6-flash", 7] })?.recent
+    ).toEqual(["qwen/qwen3.6-flash"])
     expect(
       readAgentModels({
         models: [],
@@ -157,6 +164,7 @@ describe("the agent's models", () => {
     ).toEqual({
       models: [],
       model: null,
+      recent: [],
       refusal: { code: "ENGINE_NOT_ENABLED", status: 412 },
       rates: {},
     })
@@ -170,11 +178,13 @@ describe("the agent's models", () => {
         ...listed,
         rates: {
           "deepseek/deepseek-v4-flash": { input: 603.46, output: 3017.3 },
+          "anthropic/claude-sonnet-5": { input: 6, output: 30, turn: 0.02 },
           "qwen/qwen3.6-flash": { input: "cheap", output: 1 },
         },
       })?.rates
     ).toEqual({
       "deepseek/deepseek-v4-flash": { input: 603.46, output: 3017.3 },
+      "anthropic/claude-sonnet-5": { input: 6, output: 30, turn: 0.02 },
     })
   })
 
@@ -185,9 +195,14 @@ describe("the agent's models", () => {
       return Response.json(listed)
     }
 
-    expect(await listAgentModels()).toEqual({ ...listed, rates: {} })
+    expect(await listAgentModels()).toEqual({
+      ...listed,
+      recent: [],
+      rates: {},
+    })
     expect(await chooseAgentModel("qwen/qwen3.6-flash")).toEqual({
       ...listed,
+      recent: [],
       rates: {},
     })
     expect(sent.map((one) => [one.url, one.init?.method])).toEqual([

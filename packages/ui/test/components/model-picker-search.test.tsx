@@ -1,10 +1,7 @@
-import { Chip } from "@rosesfield/ui/components/chip"
-import {
-  ModelPicker,
-  type ModelPickerRow,
-} from "@rosesfield/ui/components/model-picker"
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import type { ModelPickerRow } from "@rosesfield/ui/components/model-picker"
+import { cleanup, fireEvent, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
+import { openPicker } from "./model-picker-fixture"
 
 afterEach(cleanup)
 
@@ -16,16 +13,19 @@ function rowAt(index: number): ModelPickerRow {
   return {
     id: `lab-${index % 12}/model-${index}`,
     name: `Model ${index} ${index % 3 === 0 ? "Turbo" : "Pro"}`,
-    maker: `Lab ${index % 12}`,
-    lab: `Lab ${index % 12}`,
-    tags: [{ label: "1080p" }, { label: "5 to 10 s" }, { label: "Sound" }],
+    keywords: [`Lab ${index % 12}`],
+    capabilities: [
+      { label: "1080p" },
+      { label: "5 to 10 s" },
+      { label: "Sound" },
+    ],
     mark: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M0 0h24v24H0z" />
       </svg>
     ),
+    rank: { place: index + 1, label: `#${index + 1}`, note: "Rank from A" },
     badges: [
-      { kind: "rank", label: `#${index + 1}`, note: "Rank from A and B" },
       { kind: "new", label: "New" },
       {
         kind: "openWeights",
@@ -33,10 +33,11 @@ function rowAt(index: number): ModelPickerRow {
         href: `https://huggingface.co/lab/model-${index}`,
       },
     ],
-    price: { amount: String(index + 1), name: `${index + 1} credits` },
-    cost: index + 1,
-    released: `2026-${String((index % 12) + 1).padStart(2, "0")}-01`,
-    isOpen: index % 2 === 0,
+    price: {
+      amount: String(index + 1),
+      name: `${index + 1} credits`,
+      credits: index + 1,
+    },
   }
 }
 
@@ -49,21 +50,13 @@ function median(values: readonly number[]): number {
 
 describe("ModelPicker's search", () => {
   it(`filters the ${largestApp} rows of the largest app within one frame, ${frameMs} ms, per key press`, () => {
-    render(
-      <ModelPicker
-        trigger={<Chip>Model</Chip>}
-        title="Model"
-        searchLabel="Search models"
-        searchPlaceholder="Search by name or maker"
-        emptyLabel="No model matches"
-        sections={[{ id: "all", label: "All", rows }]}
-        chosen={rows[0]?.id ?? null}
-        onChoose={() => undefined}
-        open
-      />
-    )
+    openPicker({
+      rows,
+      chosen: rows[0]?.id ?? null,
+      recent: rows.slice(0, 3).map((row) => row.id),
+    })
     const search = screen.getByRole("searchbox", { name: "Search models" })
-    expect(screen.getAllByRole("option")).toHaveLength(largestApp)
+    expect(screen.getAllByRole("option")).toHaveLength(largestApp + 3)
     const typed = [
       "t",
       "tu",
@@ -82,7 +75,7 @@ describe("ModelPicker's search", () => {
       return performance.now() - start
     })
     fireEvent.change(search, { target: { value: "turbo" } })
-    expect(screen.getAllByRole("option")).toHaveLength(32)
+    expect(screen.getAllByRole("option")).toHaveLength(32 + 1)
     const took = median(times)
     console.info(
       `search over ${largestApp} rows: median ${took.toFixed(2)} ms, slowest ${Math.max(...times).toFixed(2)} ms`

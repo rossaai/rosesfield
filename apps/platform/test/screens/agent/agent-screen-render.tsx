@@ -59,6 +59,7 @@ export function renderAgent(
   client.setQueryData(agentModelsQuery.queryKey, {
     models: ["deepseek/deepseek-v4-flash", "qwen/qwen3.6-flash"],
     model: "deepseek/deepseek-v4-flash",
+    recent: [],
     refusal: null,
     rates: {},
   })

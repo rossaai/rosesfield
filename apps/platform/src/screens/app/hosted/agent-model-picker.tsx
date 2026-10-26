@@ -1,18 +1,23 @@
-import { labOfModel, makerOf, nameOf } from "@rosesfield/catalog/comfy"
+import { factsOf, labOfModel, makerOf, nameOf } from "@rosesfield/catalog/comfy"
 import {
   ModelPicker,
   type ModelPickerRow,
-  type ModelPickerSection,
-  type ModelPickerTag,
+  type ModelPrice,
 } from "@rosesfield/ui/components/model-picker"
 import { ModelChip } from "@rosesfield/ui/components/model-trigger"
-import { CoinsIcon } from "lucide-react"
-import type { ReactElement } from "react"
+import { type ReactElement, useMemo } from "react"
 import type { AgentModelRate } from "@/api/agent-wire"
-import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
-import { pickerFilters } from "@/screens/app/hosted/catalog-picker"
+import {
+  modelRowsOf,
+  pickerWords,
+  type RowModel,
+  todayOf,
+} from "@/screens/app/hosted/model-rows"
+import { rowPriceOf } from "@/screens/app/hosted/use-row-prices"
+
+export const chatTask = "chat"
 
 export function agentLabOf(model: string): string {
   return labOfModel(model) ?? makerOf(model.split("/")[0] ?? model)
@@ -20,75 +25,82 @@ export function agentLabOf(model: string): string {
 
 export type AgentRates = Readonly<Record<string, AgentModelRate>>
 
-function creditsText(credits: number): string {
-  return formatAmount(credits >= 10 ? Math.round(credits) : credits)
+function rateOf(rates: AgentRates, model: string): AgentModelRate | undefined {
+  return Object.hasOwn(rates, model) ? rates[model] : undefined
 }
 
-function rateTagsOf(rate: AgentModelRate | undefined): ModelPickerTag[] {
-  return rate === undefined
-    ? []
-    : [
-        {
-          label: t("agent.model.rate.in", {
-            credits: creditsText(rate.input),
-          }),
-          icon: <CoinsIcon />,
-        },
-        {
-          label: t("agent.model.rate.out", {
-            credits: creditsText(rate.output),
-          }),
-          icon: <CoinsIcon />,
-        },
-      ]
-}
-
-function agentRowOf(model: string, rates: AgentRates): ModelPickerRow {
-  const lab = agentLabOf(model)
+export function chatRowModel(
+  model: string,
+  rate: AgentModelRate | undefined
+): RowModel {
   return {
     id: model,
     name: nameOf(model),
-    maker: lab,
-    lab,
-    tags: rateTagsOf(Object.hasOwn(rates, model) ? rates[model] : undefined),
-    mark: <LabMark maker={lab} />,
+    lab: agentLabOf(model),
+    keywords: [],
+    task: chatTask,
+    facts: factsOf(model),
+    tags:
+      rate === undefined
+        ? []
+        : [
+            { kind: "rate", way: "in", credits: rate.input },
+            { kind: "rate", way: "out", credits: rate.output },
+          ],
   }
 }
 
-export function agentPickerSections(
+export function turnPricesOf(
   models: readonly string[],
-  chosen: string | null,
-  rates: AgentRates = {}
-): ModelPickerSection[] {
-  const rows = models.map((model) => agentRowOf(model, rates))
-  const featured = rows.filter((row) => row.id === chosen)
-  return [
-    { id: "featured", label: t("model.picker.featured"), rows: featured },
-    { id: "all", label: t("model.picker.all"), rows },
-  ].filter((section) => section.rows.length > 0)
+  rates: AgentRates
+): Map<string, ModelPrice> {
+  const prices = new Map<string, ModelPrice>()
+  for (const model of models) {
+    const turn = rateOf(rates, model)?.turn
+    const price = turn === undefined ? null : rowPriceOf(turn, "estimate")
+    if (price !== null) {
+      prices.set(model, price)
+    }
+  }
+  return prices
+}
+
+export function agentRowsOf(
+  models: readonly string[],
+  rates: AgentRates = {},
+  today: string = todayOf()
+): ModelPickerRow[] {
+  return modelRowsOf(
+    models.map((model) => chatRowModel(model, rateOf(rates, model))),
+    { today, prices: turnPricesOf(models, rates) }
+  )
 }
 
 type AgentModelPickerProps = {
   models: readonly string[]
   rates?: AgentRates
+  recent?: readonly string[]
   chosen: string
   onChoose: (model: string) => void
   disabled?: boolean
   className?: string
 }
 
+const noRates: AgentRates = {}
+
 export function AgentModelPicker({
   models,
-  rates = {},
+  rates = noRates,
+  recent,
   chosen,
   onChoose,
   disabled = false,
   className,
 }: AgentModelPickerProps): ReactElement {
   const name = nameOf(chosen)
+  const rows = useMemo(() => agentRowsOf(models, rates), [models, rates])
   return (
     <ModelPicker
-      filters={pickerFilters()}
       trigger={
         <ModelChip
           name={name}
@@ -98,11 +110,9 @@ export function AgentModelPicker({
           {...(className === undefined ? {} : { className })}
         />
       }
-      title={t("model.picker.title")}
-      searchLabel={t("model.picker.search")}
-      searchPlaceholder={t("model.picker.searchPlaceholder")}
-      emptyLabel={t("model.picker.empty")}
-      sections={agentPickerSections(models, chosen, rates)}
+      words={pickerWords()}
+      rows={rows}
+      {...(recent === undefined ? {} : { recent })}
       chosen={chosen}
       onChoose={onChoose}
       side="top"

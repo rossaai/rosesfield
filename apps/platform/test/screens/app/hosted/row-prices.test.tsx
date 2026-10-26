@@ -118,10 +118,11 @@ describe("the settings a row is priced at", () => {
 })
 
 describe("the price a row shows", () => {
-  it("is the credits with their name, and nothing for an unknown or empty price", () => {
+  it("is the credits with their name and their figure for the price orders, and nothing for an unknown or empty price", () => {
     expect(rowPriceOf(6.33)).toEqual({
       amount: "6",
       name: "6 Comfy credits",
+      credits: 6.33,
     })
     expect(rowPriceOf(null)).toBeNull()
     expect(rowPriceOf(0)).toBeNull()
@@ -139,6 +140,7 @@ describe("the price a row shows", () => {
     expect(prices.get("open-picture")).toEqual({
       amount: "2",
       name: t("run.price.measured", { amount: "2" }),
+      credits: 2,
     })
     expect(prices.get("alpha/one")?.name).toBe(
       t("run.price.credits", { amount: "6" })

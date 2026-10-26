@@ -1,9 +1,10 @@
 import { findApp } from "@rosesfield/catalog"
+import { isHostedModelId } from "@rosesfield/catalog/comfy"
 import { appListing, type InputDefinition } from "@rosesfield/contract"
+import { isValidElement } from "react"
 import { describe, expect, it } from "vitest"
-import { t } from "@/copy/t"
 import {
-  choiceSections,
+  choiceRowsOf,
   factsIdOf,
   modelInputName,
 } from "@/screens/app/bar/model-settings"
@@ -20,57 +21,44 @@ function modelOf(id: string): ChoiceInput {
   return input
 }
 
-function tagsOf(model: ChoiceInput): Map<string, string[]> {
-  const rows = choiceSections(model).flatMap((section) => section.rows)
-  return new Map(rows.map((row) => [row.id, row.tags.map((tag) => tag.label)]))
-}
-
-function rowsOf(model: ChoiceInput) {
-  return choiceSections(model).flatMap((section) => section.rows)
-}
-
 describe("a row in a bar app's model picker", () => {
   it("reads a graph's facts from its fact row and the hosted model's from its own row", () => {
     expect(factsIdOf("z-image-turbo")).toBe("graph/z-image-turbo")
     expect(factsIdOf("minimax/minimax-h3")).toBe("minimax/minimax-h3")
   })
 
-  it("names the graph's real lab, never the weights host's account", () => {
-    const row = rowsOf(modelOf("image")).find(
+  it("names the graph's real lab in its mark, never the weights host's account", () => {
+    const row = choiceRowsOf(modelOf("image")).find(
       (one) => one.id === "z-image-turbo"
     )
-    expect(row?.maker).toBe("Alibaba Tongyi-MAI")
+    const mark = row?.mark
+    expect(
+      isValidElement<{ maker: string }>(mark) ? mark.props.maker : null
+    ).toBe("Alibaba Tongyi-MAI")
+    expect(row?.keywords).toContain("Alibaba Tongyi-MAI")
   })
 
-  it("shows a ranked graph's rank as #N with its release date, and orders the graphs by Top", () => {
-    const rows = rowsOf(modelOf("image"))
+  it("shows a ranked graph's rank on its mark, no date in its caption, and orders the graphs by rank", () => {
+    const rows = choiceRowsOf(modelOf("image"))
     const zImage = rows.find((one) => one.id === "z-image-turbo")
-    expect(zImage?.badges?.find((badge) => badge.kind === "rank")?.label).toBe(
-      "#39"
+    expect(zImage?.rank).toMatchObject({ place: 39, label: "#39" })
+    expect(zImage?.capabilities).toEqual([])
+    const ranks = rows.flatMap((row) =>
+      row.rank === undefined ? [] : [row.rank.place]
     )
-    expect(tagsOf(modelOf("image")).get("z-image-turbo")).toEqual([
-      "Dec 2, 2025",
-    ])
-    const ranks = rows.flatMap((row) => {
-      const label = row.badges?.find((badge) => badge.kind === "rank")?.label
-      return label === undefined ? [] : [Number(label.slice(1))]
-    })
+    expect(ranks.length).toBeGreaterThan(1)
     expect(ranks).toEqual([...ranks].sort((a, b) => a - b))
   })
 
-  it("shows Open weights as a capability only where no weights badge says it, and never on a hosted model", () => {
-    const rows = rowsOf(modelOf("video"))
+  it("marks every open graph with the Open weights badge and no hosted model", () => {
+    const rows = choiceRowsOf(modelOf("video"))
     for (const row of rows) {
-      const hasBadge = (row.badges ?? []).some(
-        (badge) => badge.kind === "openWeights"
+      const isOpen = row.badges.some((badge) => badge.kind === "openWeights")
+      expect(isOpen).toBe(!isHostedModelId(row.id))
+      expect(row.capabilities.map((one) => one.label)).not.toContain(
+        "Open weights"
       )
-      const hasTag = row.tags.some(
-        (tag) => tag.label === t("model.tag.openWeights")
-      )
-      expect(hasBadge && hasTag).toBe(false)
     }
-    expect(tagsOf(modelOf("video")).get("minimax/minimax-h3")).not.toContain(
-      t("model.tag.openWeights")
-    )
+    expect(rows.some((row) => isHostedModelId(row.id))).toBe(true)
   })
 })

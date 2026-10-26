@@ -79,7 +79,7 @@ describe("the Ads model chip", () => {
     expect(chip.querySelector("svg.lucide-chevron-down")).not.toBeNull()
   })
 
-  it("opens the 402 px list by Top, each ranked row before the next by its rank, with no Featured group", () => {
+  it("opens the 402 px list by rank, each ranked row before the next by its rank, with the rank on the mark", () => {
     render(<AdsModelChip app={listing} state={catalogState([])} chips={[]} />, {
       wrapper: WithQuery,
     })
@@ -94,13 +94,13 @@ describe("the Ads model chip", () => {
     expect(picker?.getAttribute("data-align")).toBe("start")
     expect(screen.getByRole("searchbox")).toBeTruthy()
     expect(
-      screen.queryByRole("group", { name: t("model.picker.featured") })
+      document.querySelector("[role=listbox] [data-slot=badge][data-kind=rank]")
     ).toBeNull()
     const ranks = [
       ...document.querySelectorAll(
-        "[role=listbox] [data-slot=badge][data-kind=rank]"
+        "[role=listbox] [data-section=all] [data-slot=model-row-rank]"
       ),
-    ].map((badge) => Number(badge.textContent?.slice(1)))
+    ].map((badge) => Number(badge.textContent))
     expect(ranks.length).toBeGreaterThan(1)
     expect(ranks).toEqual([...ranks].sort((a, b) => a - b))
     expect(

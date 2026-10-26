@@ -1,12 +1,16 @@
-import { IconButton } from "@rosesfield/ui/components/button"
-import { HuggingFaceMark } from "@rosesfield/ui/components/hugging-face-mark"
+import { Input } from "@rosesfield/ui/components/input"
 import {
-  type ModelBadge,
-  type ModelPickerRow,
-  type ModelPickerTag,
-  type ModelPrice,
-  ModelRow,
-  ModelRowSkeleton,
+  type ListSection,
+  LoadingRows,
+  ModelList,
+  ScrollRegion,
+} from "@rosesfield/ui/components/model-list"
+import type {
+  ModelBadge,
+  ModelPickerRow,
+  ModelPickerTag,
+  ModelPrice,
+  ModelRank,
 } from "@rosesfield/ui/components/model-row"
 import {
   Popover,
@@ -14,178 +18,126 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@rosesfield/ui/components/popover"
-import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
-import { SkeletonGroup } from "@rosesfield/ui/components/skeleton"
-import { cn } from "@rosesfield/ui/lib/cn"
+import { ViewMenu } from "@rosesfield/ui/components/view-menu"
 import {
   hasOpenWeights,
-  hasOrder,
-  isMatch,
-  type ModelPickerFilters,
-  type ModelPickerOrder,
-  type ModelPickerSection,
-  type ModelPickerWeights,
-  modelPickerOrders,
+  isModelPickerSort,
+  isOpenRow,
+  type ModelPickerSort,
+  modelPickerSorts,
   needleOf,
-  orderedRows,
-  rowsOf,
-  searchedRowsOf,
+  recentRowsOf,
+  sortedRows,
 } from "@rosesfield/ui/lib/model-sections"
-import { motion } from "@rosesfield/ui/motion"
-import { SearchIcon } from "lucide-react"
+import { ListFilterIcon } from "lucide-react"
 import {
-  memo,
   type ReactElement,
   type ReactNode,
   type RefObject,
-  type UIEvent,
   useCallback,
   useMemo,
   useRef,
   useState,
 } from "react"
 
+type ModelPickerWords = Record<
+  | "title"
+  | "search"
+  | "searchPlaceholder"
+  | "empty"
+  | "sort"
+  | "sortFilter"
+  | ModelPickerSort
+  | "openOnly"
+  | "recent"
+  | "all",
+  string
+>
+
 type ModelPickerProps = {
   trigger: ReactElement
-  title: string
-  searchLabel: string
-  searchPlaceholder: string
-  emptyLabel: string
-  sections: readonly ModelPickerSection[]
+  words: ModelPickerWords
+  rows: readonly ModelPickerRow[]
   chosen: string | null
   onChoose: (id: string) => void
+  recent?: readonly string[]
   isLoading?: boolean
   isPricing?: boolean
   notice?: ReactNode
-  filters?: ModelPickerFilters
-  recent?: readonly string[]
   side?: "top" | "right"
   open?: boolean
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
 }
 
-function LoadingRows(): ReactElement {
+function SortMenu(props: {
+  words: ModelPickerWords
+  sort: ModelPickerSort
+  isOpenOnly: boolean
+  hasOpen: boolean
+  onSort: (sort: ModelPickerSort) => void
+  onOpenOnly: (isOpenOnly: boolean) => void
+}): ReactElement {
+  const { words } = props
   return (
-    <SkeletonGroup className="flex flex-col gap-s1 px-s3 py-s2">
-      {["first", "second", "third", "fourth"].map((key) => (
-        <ModelRowSkeleton key={key} />
-      ))}
-    </SkeletonGroup>
+    <ViewMenu
+      label={words.sortFilter}
+      trigger="filled"
+      icon={<ListFilterIcon aria-hidden="true" />}
+      sort={{
+        id: "sort",
+        label: words.sort,
+        value: props.sort,
+        options: modelPickerSorts.map((sort) => ({
+          value: sort,
+          label: words[sort],
+        })),
+        onValueChange: (value) => {
+          if (isModelPickerSort(value)) {
+            props.onSort(value)
+          }
+        },
+      }}
+      switches={
+        props.hasOpen
+          ? [
+              {
+                id: "open",
+                label: words.openOnly,
+                checked: props.isOpenOnly,
+                onCheckedChange: props.onOpenOnly,
+              },
+            ]
+          : []
+      }
+    />
   )
 }
 
-const noRecent: readonly string[] = []
-
-function ModelList(props: {
-  rows: readonly ModelPickerRow[]
-  title: string
-  emptyLabel: string
-  needle: string
-  chosen: string | null
-  isPricing: boolean
-  isRefused: boolean
-  onChoose: (id: string) => void
-}): ReactNode {
-  const searched = useMemo(() => searchedRowsOf(props.rows), [props.rows])
-  const shown = searched.map(({ row, text }) => ({
-    row,
-    isShown: isMatch(text, props.needle),
-  }))
-  if (!shown.some((one) => one.isShown)) {
-    return props.isRefused && props.needle === "" ? null : (
-      <p className="px-3 py-2 text-body text-ink-muted">{props.emptyLabel}</p>
-    )
-  }
-  return (
-    <div
-      role="listbox"
-      aria-label={props.title}
-      className="flex flex-col gap-1 pb-1"
-    >
-      {shown.map(({ row, isShown }) => (
-        <div key={row.id} role="none" hidden={!isShown}>
-          <ModelRow
-            row={row}
-            isChosen={row.id === props.chosen}
-            isPricing={props.isPricing}
-            onChoose={props.onChoose}
-          />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-type Ends = { top: boolean; bottom: boolean }
-
-function readEnds(element: HTMLElement): Ends {
-  return {
-    top: element.scrollTop > 0,
-    bottom: element.scrollTop + element.clientHeight < element.scrollHeight,
-  }
-}
-
-const fadeClass = cn(
-  "pointer-events-none absolute inset-x-0 z-10 h-s12 from-(--ground) to-transparent",
-  motion.tint
-)
-
-function ScrollRegion({ children }: { children: ReactNode }): ReactElement {
-  const [ends, setEnds] = useState<Ends>({ top: false, bottom: true })
-  const onScroll = (event: UIEvent<HTMLDivElement>): void => {
-    setEnds(readEnds(event.currentTarget))
-  }
-  return (
-    <div className="relative flex min-h-0 flex-1 flex-col">
-      <span
-        data-slot="model-list-fade"
-        data-end="top"
-        className={cn(
-          fadeClass,
-          "top-0 bg-linear-to-b",
-          ends.top ? "opacity-100" : "opacity-0"
-        )}
-      />
-      <div
-        onScroll={onScroll}
-        className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none]"
-      >
-        {children}
-      </div>
-      <span
-        data-slot="model-list-fade"
-        data-end="bottom"
-        className={cn(
-          fadeClass,
-          "bottom-0 bg-linear-to-t",
-          ends.bottom ? "opacity-100" : "opacity-0"
-        )}
-      />
-    </div>
-  )
-}
-
-function SearchRow(props: {
+function Toolbar(props: {
   search: RefObject<HTMLInputElement | null>
-  label: string
-  placeholder: string
+  words: ModelPickerWords
   query: string
   onQuery: (query: string) => void
+  sort: ReactNode
 }): ReactElement {
   return (
-    <label className="flex h-field shrink-0 items-center gap-s2 border-b border-(--line) px-s4">
-      <SearchIcon aria-hidden="true" className="glyph text-ink-muted" />
-      <input
+    <div
+      data-slot="model-picker-toolbar"
+      className="flex shrink-0 items-center gap-s2 px-s3 py-s3"
+    >
+      <Input
         ref={props.search}
         type="search"
-        aria-label={props.label}
-        placeholder={props.placeholder}
+        data-slot="model-picker-search"
+        aria-label={props.words.search}
+        placeholder={props.words.searchPlaceholder}
         value={props.query}
         onChange={(event) => props.onQuery(event.target.value)}
-        className="h-full min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-muted"
+        className="h-button-dense max-w-none flex-1"
       />
-    </label>
+      {props.sort}
+    </div>
   )
 }
 
@@ -232,64 +184,21 @@ function placementOf(trigger: HTMLElement | null): Placement | null {
   }
 }
 
-function OrderStripView(props: {
-  rows: readonly ModelPickerRow[]
-  filters: ModelPickerFilters | undefined
-  recent: readonly string[]
-  isPricing: boolean
-  order: ModelPickerOrder
-  weights: ModelPickerWeights
-  onOrder: (order: ModelPickerOrder) => void
-  onWeights: (weights: ModelPickerWeights) => void
-}): ReactNode {
-  const { filters } = props
-  if (filters === undefined) {
-    return null
-  }
-  const items = modelPickerOrders
-    .filter((order) =>
-      hasOrder(props.rows, order, props.recent, props.isPricing)
-    )
-    .map((order) => ({ value: order, label: filters[order] }))
-  const hasWeights = hasOpenWeights(props.rows)
-  if (items.length < 2 && !hasWeights) {
-    return null
-  }
-  const isOpenOnly = props.weights === "open"
-  return (
-    <div
-      data-slot="model-filters"
-      data-density="row"
-      className="flex items-center gap-s2 px-s3 pt-s2"
-    >
-      {items.length < 2 ? null : (
-        <SegmentedControl
-          items={items}
-          value={props.order}
-          onValueChange={props.onOrder}
-          label={filters.order}
-          density="row"
-          className="min-w-0 flex-1"
-        />
-      )}
-      {hasWeights ? (
-        <IconButton
-          size="small"
-          tone="quiet"
-          label={filters.open}
-          data-slot="model-filter-open"
-          aria-pressed={isOpenOnly}
-          onClick={() => props.onWeights(isOpenOnly ? "all" : "open")}
-          className="ms-auto shrink-0"
-        >
-          <HuggingFaceMark />
-        </IconButton>
-      ) : null}
-    </div>
-  )
-}
+const noRecent: readonly string[] = []
 
-const OrderStrip = memo(OrderStripView)
+function sectionsOf(
+  rows: readonly ModelPickerRow[],
+  recent: readonly string[],
+  sort: ModelPickerSort,
+  isOpenOnly: boolean,
+  words: ModelPickerWords
+): ListSection[] {
+  const kept = isOpenOnly ? rows.filter(isOpenRow) : rows
+  return [
+    { id: "recent", label: words.recent, rows: recentRowsOf(kept, recent) },
+    { id: "all", label: words.all, rows: sortedRows(kept, sort) },
+  ]
+}
 
 function PickerBody(
   props: ModelPickerProps & {
@@ -298,18 +207,15 @@ function PickerBody(
   }
 ): ReactElement {
   const [query, setQuery] = useState("")
-  const [order, setOrder] = useState<ModelPickerOrder>("top")
-  const [weights, setWeights] = useState<ModelPickerWeights>("all")
+  const [sort, setSort] = useState<ModelPickerSort>("rankBest")
+  const [isOpenOnly, setOpenOnly] = useState(false)
   const recent = props.recent ?? noRecent
-  const rows = useMemo(() => rowsOf(props.sections), [props.sections])
-  const isPricing = props.isPricing === true
-  const isOrdered = hasOrder(rows, order, recent, isPricing)
-  const shownRows = useMemo(() => {
-    const ordered = orderedRows(rows, isOrdered ? order : "top", recent)
-    return weights === "open"
-      ? ordered.filter((row) => row.isOpen === true)
-      : ordered
-  }, [rows, order, isOrdered, recent, weights])
+  const hasOpen = useMemo(() => hasOpenWeights(props.rows), [props.rows])
+  const sections = useMemo(
+    () =>
+      sectionsOf(props.rows, recent, sort, isOpenOnly && hasOpen, props.words),
+    [props.rows, recent, sort, isOpenOnly, hasOpen, props.words]
+  )
   const latest = useRef(props)
   latest.current = props
   const choose = useCallback((id: string) => {
@@ -318,22 +224,21 @@ function PickerBody(
   }, [])
   return (
     <>
-      <SearchRow
+      <Toolbar
         search={props.search}
-        label={props.searchLabel}
-        placeholder={props.searchPlaceholder}
+        words={props.words}
         query={query}
         onQuery={setQuery}
-      />
-      <OrderStrip
-        rows={rows}
-        filters={props.filters}
-        recent={recent}
-        isPricing={isPricing}
-        order={isOrdered ? order : "top"}
-        weights={weights}
-        onOrder={setOrder}
-        onWeights={setWeights}
+        sort={
+          <SortMenu
+            words={props.words}
+            sort={sort}
+            isOpenOnly={isOpenOnly}
+            hasOpen={hasOpen}
+            onSort={setSort}
+            onOpenOnly={setOpenOnly}
+          />
+        }
       />
       {props.notice}
       <ScrollRegion>
@@ -341,12 +246,12 @@ function PickerBody(
           <LoadingRows />
         ) : (
           <ModelList
-            rows={shownRows}
-            title={props.title}
-            emptyLabel={props.emptyLabel}
+            sections={sections}
+            title={props.words.title}
+            emptyLabel={props.words.empty}
             needle={needleOf(query)}
             chosen={props.chosen}
-            isPricing={isPricing}
+            isPricing={props.isPricing === true}
             isRefused={props.notice !== undefined && props.notice !== null}
             onChoose={choose}
           />
@@ -389,7 +294,7 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
           : {})}
         className="max-h-[min(var(--available-height),calc(var(--spacing)*160.5))] w-100.5 max-w-[calc(100vw-2*var(--spacing-s4))] gap-0 overflow-hidden p-px"
       >
-        <PopoverTitle className="sr-only">{props.title}</PopoverTitle>
+        <PopoverTitle className="sr-only">{props.words.title}</PopoverTitle>
         <PickerBody
           {...props}
           search={search}
@@ -402,12 +307,12 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
 
 export type {
   ModelBadge,
-  ModelPickerFilters,
-  ModelPickerOrder,
   ModelPickerProps,
   ModelPickerRow,
-  ModelPickerSection,
+  ModelPickerSort,
   ModelPickerTag,
+  ModelPickerWords,
   ModelPrice,
+  ModelRank,
 }
 export { ModelPicker }

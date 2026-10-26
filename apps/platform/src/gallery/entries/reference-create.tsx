@@ -1,12 +1,15 @@
+import {
+  factsOf,
+  makerOf,
+  modelFactsData,
+  nameOf,
+} from "@rosesfield/catalog/comfy"
 import { Canvas, StepCards } from "@rosesfield/ui/components/canvas"
 import { Chip } from "@rosesfield/ui/components/chip"
 import { CountStepper } from "@rosesfield/ui/components/count-stepper"
 import { GenerateButton } from "@rosesfield/ui/components/generate-button"
 import { InputPanel, PromptBlock } from "@rosesfield/ui/components/input-panel"
-import {
-  ModelPicker,
-  type ModelPickerSection,
-} from "@rosesfield/ui/components/model-picker"
+import { ModelPicker } from "@rosesfield/ui/components/model-picker"
 import { ModelChip } from "@rosesfield/ui/components/model-trigger"
 import { PromptBar } from "@rosesfield/ui/components/prompt-bar"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
@@ -40,6 +43,12 @@ import type { GalleryEntry } from "@/gallery/gallery-entry"
 import { frameState, interactionStates } from "@/gallery/reference-frames"
 import { tileSizes } from "@/pieces/view/tile-scale"
 import { ViewMenu } from "@/pieces/view/view-bar"
+import {
+  modelRowsOf,
+  pickerWords,
+  type RowModel,
+  todayOf,
+} from "@/screens/app/hosted/model-rows"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { VideoSettings } from "@/studio/video/video-chips"
 import { ModeTabs } from "@/studio/video/video-panel"
@@ -167,40 +176,63 @@ function Column(): ReactElement {
   )
 }
 
-const sections: ModelPickerSection[] = [
-  {
-    id: "featured",
-    label: t("sample.models.featured"),
-    rows: [
-      {
-        id: "sample",
-        name: t("sample.model"),
-        maker: t("sample.model"),
+const sampleTask = "text-to-image"
+
+const listedLimit = 11
+
+function listedModels(): RowModel[] {
+  return Object.entries(modelFactsData.models)
+    .filter(([, row]) => row.tasks?.[sampleTask] !== undefined)
+    .slice(0, listedLimit)
+    .map(([id]) => {
+      const facts = factsOf(id)
+      return {
+        id,
+        name: nameOf(id),
+        lab: facts.lab ?? makerOf(id.split("/")[0] ?? id),
+        keywords: [],
+        task: sampleTask,
+        facts,
         tags: [],
-        mark,
-        badges: [
-          { kind: "new", label: t("sample.badge.new") },
-          {
-            kind: "openWeights",
-            label: t("sample.badge.openWeights"),
-            href: "https://huggingface.co/",
-          },
-        ],
+      }
+    })
+}
+
+function sampleModel(): RowModel {
+  return {
+    id: "sample",
+    name: t("sample.model"),
+    lab: t("sample.model"),
+    keywords: [],
+    task: sampleTask,
+    facts: {
+      lab: null,
+      release: todayOf(),
+      weights: "https://huggingface.co/",
+      lineKey: null,
+      scores: {
+        [sampleTask]: {
+          score: null,
+          rank: null,
+          order: listedLimit + 1,
+          of: listedLimit + 1,
+          sources: [],
+          tiers: ["bestValue"],
+        },
       },
-    ],
-  },
-]
+    },
+    tags: [{ kind: "open-weights" }, { kind: "references", max: 16 }],
+  }
+}
 
 function Picker({ open }: { open: boolean }): ReactElement {
   return (
     <div className="flex h-200 items-end">
       <ModelPicker
         trigger={<ModelChip name={t("sample.model")} mark={mark} />}
-        title={t("sample.model.caption")}
-        searchLabel={t("sample.models.search")}
-        searchPlaceholder={t("sample.models.placeholder")}
-        emptyLabel={t("sample.models.empty")}
-        sections={sections}
+        words={pickerWords()}
+        rows={modelRowsOf([sampleModel(), ...listedModels()])}
+        recent={["sample"]}
         chosen="sample"
         onChoose={() => undefined}
         defaultOpen={open}

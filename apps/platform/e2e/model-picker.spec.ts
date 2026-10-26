@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test"
 
-const shortScreen = { width: 390, height: 480 }
+const shortScreen = { width: 390, height: 420 }
 
 async function boxOf(
   locator: Locator
@@ -284,4 +284,91 @@ test("the Image picker's list fades in while it grows from 0.94 to its size on t
   expect(Math.min(...scales)).toBe(0.94)
   expect(scales.some((scale) => scale > 0.94 && scale < 1)).toBe(true)
   expect(frames.at(-1)).toEqual({ scale: 1, opacity: 1 })
+})
+
+async function expectToolbar(page: Page): Promise<Locator> {
+  const toolbar = page.locator("[data-slot='model-picker-toolbar']")
+  await expect(toolbar.getByRole("tab")).toHaveCount(0)
+  await expect(toolbar.getByRole("searchbox")).toHaveCount(1)
+  await expect(toolbar.getByRole("button")).toHaveCount(1)
+  const filter = toolbar.getByRole("button", { name: "Sort and filter" })
+  const [bar, search, button] = await Promise.all([
+    toolbar.boundingBox(),
+    toolbar.getByRole("searchbox").boundingBox(),
+    filter.boundingBox(),
+  ])
+  if (bar === null || search === null || button === null) {
+    throw new Error("the toolbar has no box")
+  }
+  const above = search.y - bar.y
+  const below = bar.y + bar.height - search.y - search.height
+  expect(Math.abs(above - below)).toBeLessThanOrEqual(1)
+  expect(button.height).toBe(search.height)
+  expect(button.x).toBeGreaterThan(search.x + search.width)
+  expect(
+    await toolbar.evaluate((node) => getComputedStyle(node).borderBottomWidth)
+  ).toBe("0px")
+  return filter
+}
+
+async function boxesOf(row: Locator) {
+  const rank = row.locator("[data-slot='model-row-rank']")
+  const [mark, name, rankBox] = await Promise.all([
+    row.locator("[data-slot='model-row-mark']").boundingBox(),
+    row.locator("[data-slot='model-row-name']").boundingBox(),
+    (await rank.count()) === 0 ? null : rank.boundingBox(),
+  ])
+  return { mark, name, rank: rankBox }
+}
+
+async function expectRankOnMark(page: Page, rows: Locator): Promise<void> {
+  const rank = page.locator("[data-slot='model-row-rank']")
+  const ranked = rows.filter({ has: rank })
+  const plain = rows.filter({ hasNot: rank })
+  await expect(
+    ranked.first().locator("[data-slot='model-row-rank']")
+  ).toHaveText("1")
+  const first = await boxesOf(ranked.first())
+  const last = await boxesOf(plain.last())
+  if (first.mark === null || first.name === null || first.rank === null) {
+    throw new Error("the ranked row has no box")
+  }
+  expect(first.mark.width).toBe(last.mark?.width)
+  expect(first.mark.x).toBe(last.mark?.x)
+  expect(first.name.x).toBe(last.name?.x)
+  const markEnd = first.mark.x + first.mark.width
+  expect(first.rank.x + first.rank.width).toBeGreaterThan(markEnd)
+  expect(first.rank.x).toBeLessThan(markEnd)
+  expect(first.rank.y).toBeLessThan(first.mark.y)
+  expect(first.rank.x + first.rank.width).toBeLessThanOrEqual(first.name.x)
+}
+
+test("the Image picker's toolbar holds the search and one filter button that opens the four orders and the Open weights only switch, and each rank sits on its mark's corner without moving the name", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop", "the desktop picker")
+  await page.addInitScript(() => {
+    window.localStorage.setItem("rosesfield.welcome", "seen")
+  })
+  await page.goto("/apps/image")
+  await openImagePicker(page)
+  const filter = await expectToolbar(page)
+  const rows = page.locator(
+    "[role='listbox'] [data-section='all'] [data-slot='model-row']"
+  )
+  await expectRankOnMark(page, rows)
+  await filter.click()
+  const menu = page.getByRole("menu")
+  await expect(menu.getByRole("menuitemradio")).toHaveText([
+    "Rank, best first",
+    "Rank, best last",
+    "Price, lowest first",
+    "Price, highest first",
+  ])
+  const open = menu.getByRole("menuitemcheckbox", { name: "Open weights only" })
+  await open.click()
+  expect(await rows.count()).toBeGreaterThan(0)
+  for (const row of await rows.all()) {
+    await expect(row.locator("[data-slot='model-row-weights']")).toHaveCount(1)
+  }
 })

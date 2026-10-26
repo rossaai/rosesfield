@@ -3,6 +3,7 @@ import {
   nestedLayerClass,
   useIsInLayer,
 } from "@rosesfield/ui/components/layer-depth"
+import { SwitchLook } from "@rosesfield/ui/components/switch"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { CheckIcon, ChevronRightIcon } from "lucide-react"
@@ -185,6 +186,28 @@ function DropdownMenuRadioItem({
   )
 }
 
+function DropdownMenuSwitchItem({
+  className,
+  children,
+  checked,
+  ...props
+}: Omit<MenuPrimitive.CheckboxItem.Props, "checked"> & {
+  checked: boolean
+}): ReactElement {
+  return (
+    <MenuPrimitive.CheckboxItem
+      data-slot="dropdown-menu-switch-item"
+      checked={checked}
+      closeOnClick={false}
+      className={cn(menuItemClass, className)}
+      {...props}
+    >
+      <span className="min-w-0 flex-1 truncate">{children}</span>
+      <SwitchLook checked={checked} />
+    </MenuPrimitive.CheckboxItem>
+  )
+}
+
 function DropdownMenuSeparator({
   className,
   ...props
@@ -224,6 +247,7 @@ export {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
+  DropdownMenuSwitchItem,
   DropdownMenuTrigger,
   menuItemClass,
   menuLabelClass,

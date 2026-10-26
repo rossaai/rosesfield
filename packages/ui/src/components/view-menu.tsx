@@ -1,4 +1,8 @@
-import { Button, type ButtonProps } from "@rosesfield/ui/components/button"
+import {
+  Button,
+  type ButtonProps,
+  IconButton,
+} from "@rosesfield/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +14,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
+  DropdownMenuSwitchItem,
   DropdownMenuTrigger,
 } from "@rosesfield/ui/components/dropdown-menu"
 import { Slider } from "@rosesfield/ui/components/slider"
@@ -49,11 +54,21 @@ type ViewLayoutGroup = {
   onLayoutChange: (layout: ViewLayout) => void
 }
 
-type ViewTriggerForm = "label" | "icon"
+type ViewSwitch = {
+  id: string
+  label: string
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+}
+
+type ViewTriggerForm = "label" | "icon" | "filled"
 
 type ViewMenuProps = {
   label: string
   trigger?: ViewTriggerForm
+  icon?: ReactNode
+  sort?: ViewFacet
+  switches?: ReadonlyArray<ViewSwitch>
   size?: ViewSize
   filterLabel?: string
   facets?: ReadonlyArray<ViewFacet>
@@ -128,6 +143,51 @@ function FacetMenu({ facet }: { facet: ViewFacet }): ReactElement {
   )
 }
 
+function SortGroup({ sort }: { sort: ViewFacet }): ReactElement {
+  return (
+    <DropdownMenuRadioGroup
+      aria-label={sort.label}
+      data-slot="view-menu-sort"
+      value={sort.value}
+      onValueChange={(value) => {
+        if (typeof value === "string") {
+          sort.onValueChange(value)
+        }
+      }}
+    >
+      {sort.options.map((option) => (
+        <DropdownMenuRadioItem
+          key={option.value}
+          value={option.value}
+          lead={option.lead}
+        >
+          {option.label}
+        </DropdownMenuRadioItem>
+      ))}
+    </DropdownMenuRadioGroup>
+  )
+}
+
+function SwitchRows({
+  switches,
+}: {
+  switches: ReadonlyArray<ViewSwitch>
+}): ReactElement {
+  return (
+    <DropdownMenuGroup>
+      {switches.map((one) => (
+        <DropdownMenuSwitchItem
+          key={one.id}
+          checked={one.checked}
+          onCheckedChange={one.onCheckedChange}
+        >
+          {one.label}
+        </DropdownMenuSwitchItem>
+      ))}
+    </DropdownMenuGroup>
+  )
+}
+
 function LayoutGroup(props: ViewLayoutGroup): ReactElement {
   return (
     <DropdownMenuGroup>
@@ -154,11 +214,28 @@ function LayoutGroup(props: ViewLayoutGroup): ReactElement {
 function ViewTrigger({
   label,
   trigger = "label",
+  icon,
   ...props
 }: ButtonProps & {
   label: string
   trigger?: ViewTriggerForm | undefined
+  icon?: ReactNode
 }): ReactElement {
+  const glyph = icon ?? <LayoutGridIcon aria-hidden="true" />
+  if (trigger === "filled") {
+    const { size: _size, ...rest } = props
+    return (
+      <IconButton
+        {...rest}
+        data-slot="view-menu"
+        label={label}
+        tone="default"
+        size="dense"
+      >
+        {glyph}
+      </IconButton>
+    )
+  }
   if (trigger === "icon") {
     return (
       <Button
@@ -168,13 +245,13 @@ function ViewTrigger({
         size="icon-dense"
         aria-label={label}
       >
-        <LayoutGridIcon aria-hidden="true" />
+        {glyph}
       </Button>
     )
   }
   return (
     <Button {...props} data-slot="view-menu" tone="quiet" size="dense">
-      <LayoutGridIcon aria-hidden="true" />
+      {glyph}
       {label}
     </Button>
   )
@@ -182,12 +259,26 @@ function ViewTrigger({
 
 function ViewMenu(props: ViewMenuProps): ReactElement {
   const facets = props.facets ?? []
+  const switches = props.switches ?? []
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<ViewTrigger label={props.label} trigger={props.trigger} />}
+        render={
+          <ViewTrigger
+            label={props.label}
+            trigger={props.trigger}
+            icon={props.icon}
+          />
+        }
       />
       <DropdownMenuContent align="end" data-slot="view-menu-content">
+        {props.sort === undefined ? null : <SortGroup sort={props.sort} />}
+        {switches.length === 0 ? null : (
+          <>
+            {props.sort === undefined ? null : <DropdownMenuSeparator />}
+            <SwitchRows switches={switches} />
+          </>
+        )}
         {props.layout === undefined ? null : <LayoutGroup {...props} />}
         {props.size === undefined ? null : <SizeRow size={props.size} />}
         {facets.length === 0 ? null : (
@@ -215,6 +306,7 @@ export type {
   ViewMenuProps,
   ViewOption,
   ViewSize,
+  ViewSwitch,
   ViewTriggerForm,
 }
 export { ViewMenu, ViewTrigger }

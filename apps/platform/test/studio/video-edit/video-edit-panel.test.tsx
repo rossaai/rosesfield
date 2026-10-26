@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t, tCatalog } from "@/copy/t"
 import type { FieldProblem, FieldValue } from "@/screens/app/app-form"
 import {
-  pickerSections,
+  catalogRowsOf,
   pickerTrigger,
 } from "@/screens/app/hosted/catalog-picker"
 import { fieldCaption } from "@/screens/app/hosted/field-words"
@@ -212,16 +212,14 @@ describe("the Edit tab on Dreamina Seedance 2.5", () => {
 describe("the model row of a tab", () => {
   it("lists every video edit model of the catalog with its maker and its name, and its capabilities", () => {
     const state = stateOf("edit", dreamina, {})
-    const rows = pickerSections(tabHostedOf(state)).flatMap(
-      (section) => section.rows
-    )
+    const rows = catalogRowsOf(tabHostedOf(state).models)
     expect(new Set(rows.map((row) => row.id))).toEqual(
       new Set(state.tabModels.map((model) => model.id))
     )
     for (const row of rows) {
-      expect(row.maker).not.toBe("")
+      expect(row.keywords.join("")).not.toBe("")
       expect(row.name).not.toBe("")
-      expect(row.tags.length).toBeLessThanOrEqual(4)
+      expect(row.capabilities.length).toBeLessThanOrEqual(4)
     }
     expect(rows.some((row) => row.id === graphs.background.id)).toBe(false)
   })

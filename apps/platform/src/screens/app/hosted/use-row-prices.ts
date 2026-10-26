@@ -29,9 +29,9 @@ export function rowPriceOf(
   low?: number
 ): ModelPrice | null {
   const amount = amountOf(credits, low)
-  return amount === null
+  return amount === null || credits === null
     ? null
-    : { amount, name: t(rowNames[source], { amount }) }
+    : { amount, name: t(rowNames[source], { amount }), credits }
 }
 
 export function rowPricesOf(
