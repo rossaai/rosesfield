@@ -62,11 +62,33 @@ test("on a desktop the mark, the area links and Connect sit in one row", async (
     throw new Error("the bar lists Explore and Image")
   }
   expect(image.x).toBe(explore.x + explore.width)
-  const separator = await boxOf(bar.locator("[data-slot='nav-separator']"))
-  expect({ width: separator.width, height: separator.height }).toEqual({
-    width: 1,
-    height: 12,
-  })
+  const separators = bar.locator("[data-slot='nav-separator']")
+  await expect(separators).toHaveCount(2)
+  const [before, after] = await Promise.all([
+    boxOf(separators.nth(0)),
+    boxOf(separators.nth(1)),
+  ])
+  for (const separator of [before, after]) {
+    expect({ width: separator.width, height: separator.height }).toEqual({
+      width: 1,
+      height: 12,
+    })
+  }
+  const agent = await boxOf(
+    bar.getByRole("link", { name: "Agent", exact: true })
+  )
+  const characters = await boxOf(
+    bar.getByRole("link", { name: "Characters", exact: true })
+  )
+  const last = boxes.at(-1)
+  if (last === undefined) {
+    throw new Error("the bar lists its links")
+  }
+  expect(before.x).toBeGreaterThan(boxes[4]?.x ?? Number.POSITIVE_INFINITY)
+  expect(agent.x).toBeGreaterThan(before.x)
+  expect(after.x).toBeGreaterThan(agent.x + agent.width)
+  expect(characters.x).toBeGreaterThan(after.x)
+  expect(last.x).toBeGreaterThan(characters.x)
 })
 
 test("the area links start 13 px after the mark, at the list's start", async ({
@@ -203,7 +225,10 @@ test("on a phone the bar holds the wordmark, a menu and no area link", async ({
   test.skip(!isPhone(page), "the phone bar")
   const bar = await open(page, "/")
   await expect(bar.locator("[data-slot='app-bar-areas']").first()).toBeHidden()
-  await expect(bar.locator("[data-slot='nav-separator']")).toBeHidden()
+  const separators = bar.locator("[data-slot='nav-separator']")
+  await expect(separators).toHaveCount(2)
+  await expect(separators.nth(0)).toBeHidden()
+  await expect(separators.nth(1)).toBeHidden()
   const lockup = bar.locator("[data-slot='app-bar-mark']").nth(1)
   const box = await boxOf(lockup)
   expect({ x: box.x, y: box.y, height: box.height }).toEqual({

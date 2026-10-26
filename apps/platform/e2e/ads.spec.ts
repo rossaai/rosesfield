@@ -122,7 +122,7 @@ test.describe("Ads on a wide screen", () => {
 test.describe("the Ads model menu", () => {
   test.skip(({ isMobile }) => isMobile, "the bar shows its chips from 768 px")
 
-  test("opens on Qwen Image Edit 2511 with FLUX 3 Image one choice away, each row with the photos it takes, and Generate never reads 0", async ({
+  test("opens on Qwen Image Edit 2511 as rank 1 of the featured row, the next row rank 2, each row with the photos it takes, and Generate never reads 0", async ({
     page,
   }) => {
     await openAds(page)
@@ -131,8 +131,12 @@ test.describe("the Ads model menu", () => {
     await trigger.click()
     const featured = page.getByRole("group", { name: "Featured" })
     const rows = featured.locator("[data-slot='model-row']")
+    const rankOf = (row: Locator): Locator =>
+      row.locator("[data-slot='model-row-capability']").first()
     await expect(rows.first()).toContainText("Qwen Image Edit 2511")
-    await expect(rows.nth(1)).toContainText("FLUX 3 Image")
+    await expect(rankOf(rows.first())).toHaveText("1")
+    await expect(rankOf(rows.nth(1))).toHaveText("2")
+    expect(await rows.count()).toBeLessThanOrEqual(3)
     await expect(rows.first()).toContainText("Up to 3 images")
     const listed = page.getByRole("listbox").locator("[data-slot='model-row']")
     expect(await listed.count()).toBeGreaterThan(2)
@@ -171,10 +175,17 @@ test.describe("Ads on a phone", () => {
     await bar.getByRole("button", { name: "Inputs" }).click()
     const sheet = page.getByRole("dialog")
     await expect(sheet).toBeVisible()
-    for (const label of ["Kind", "Model", "Format", "Count", "Style", "Seed"]) {
+    await expect(
+      sheet.getByRole("button", { name: /^Model/ }).first()
+    ).toContainText("Qwen Image Edit 2511")
+    await expect(sheet.getByText("Model", { exact: true })).toHaveCount(0)
+    for (const label of ["Kind", "Format", "Count", "Style"]) {
       await expect(
         sheet.getByText(label, { exact: true }).first()
       ).toBeVisible()
     }
+    await expect(
+      sheet.getByRole("button", { name: "Advanced", exact: true })
+    ).toBeVisible()
   })
 })

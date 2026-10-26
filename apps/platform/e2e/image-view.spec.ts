@@ -29,7 +29,7 @@ async function openWithRun(page: Page): Promise<void> {
 }
 
 test.describe("the View control of Image's feed", () => {
-  test("sits 16 px from the viewport's right edge, centred on the tabs' row, over a feed that starts under the tabs", async ({
+  test("sits 16 px from the viewport's right edge, centred on the tabs' row, after a head row that starts with the app's title, over a feed that starts under the title", async ({
     page,
     isMobile,
   }) => {
@@ -54,8 +54,18 @@ test.describe("the View control of Image's feed", () => {
     expect(viewport.width - (view.x + view.width)).toBe(16)
     const tabs = await boxOf(page, '[data-slot="canvas-head"] [role="tab"]')
     const feed = await boxOf(page, '[data-slot="app-stage-scroll"] article')
-    expect(tabs.x).toBe(16)
-    expect(feed.x).toBe(tabs.x)
+    if (isMobile) {
+      expect(tabs.x).toBe(16)
+      expect(feed.x).toBe(tabs.x)
+    } else {
+      const title = await boxOf(page, '[data-slot="canvas-head"] h1')
+      await expect(page.locator('[data-slot="canvas-head"] h1')).toHaveText(
+        "Image"
+      )
+      expect(title.x).toBe(16)
+      expect(feed.x).toBe(title.x)
+      expect(tabs.x).toBeGreaterThan(title.x + title.width)
+    }
     const middle = (box: { y: number; height: number }): number =>
       box.y + box.height / 2
     expect(Math.abs(middle(view) - middle(tabs))).toBeLessThanOrEqual(1)
