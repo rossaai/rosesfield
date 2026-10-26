@@ -20,44 +20,36 @@ test.beforeEach(async ({ page }) => {
 test.describe("Motion's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("holds Move a photo and Swap a character, a Clip well and a Photo well with their limits, the model row and Generate", async ({
+  test("holds one mode with no tab row: a Clip well and a Photo well with their limits, Pick a character, the model row and Generate", async ({
     page,
   }) => {
     await page.goto("/apps/motion")
     const column = page.locator('[data-slot="composer"]')
     await expect(column).toBeVisible()
-    const tabs = column.getByRole("tablist")
-    const move = tabs.getByRole("tab", { name: "Move a photo" })
-    const swap = tabs.getByRole("tab", { name: "Swap a character" })
-    await expect(move).toHaveAttribute("aria-selected", "true")
+    await expect(column.getByRole("tablist")).toHaveCount(0)
     const wells = column.locator('[data-slot="drop-well"]')
     await expect(wells).toHaveCount(2)
     await expectTip(page, wells.nth(0), /MP4, MOV,? or WebM/)
     await expectTip(page, wells.nth(1), /PNG, JPEG,? or WebP/)
     await expect(
+      column.getByRole("button", { name: "Pick a character" })
+    ).toBeVisible()
+    await expect(
       column.getByRole("button", { name: /^Model/ }).first()
     ).toBeVisible()
     await expect(column.locator('[data-slot="generate-button"]')).toBeVisible()
-    await expect(
-      column.getByRole("button", { name: "Pick a character" })
-    ).toHaveCount(0)
-    await swap.click()
-    await expect(swap).toHaveAttribute("aria-selected", "true")
-    await expect(column.locator('[data-slot="drop-well"]')).toHaveCount(2)
-    await expect(
-      column.getByRole("button", { name: "Pick a character" })
-    ).toBeVisible()
   })
 
-  test("opens on Swap a character from the old Recast address", async ({
+  test("opens on the same column from the old Recast address", async ({
     page,
   }) => {
     await page.goto("/apps/recast")
     await expect(page).toHaveURL(/\/apps\/motion#swap$/)
     const column = page.locator('[data-slot="composer"]')
+    await expect(column.getByRole("tablist")).toHaveCount(0)
     await expect(
-      column.getByRole("tab", { name: "Swap a character" })
-    ).toHaveAttribute("aria-selected", "true")
+      column.getByRole("button", { name: "Pick a character" })
+    ).toBeVisible()
   })
 })
 
@@ -78,10 +70,7 @@ test.describe("Motion on a phone", () => {
     await page.locator('[data-slot="app-bar-tabGenerate"]').click()
     const sheet = page.getByRole("dialog")
     await expect(sheet).toBeVisible()
-    await expect(sheet.getByRole("tab", { name: "Move a photo" })).toBeVisible()
-    await expect(
-      sheet.getByRole("tab", { name: "Swap a character" })
-    ).toBeVisible()
+    await expect(sheet.getByRole("tablist")).toHaveCount(0)
     await expect(sheet.locator('[data-slot="drop-well"]')).toHaveCount(2)
     const generate = await boxOf(sheet.locator('[data-slot="generate-button"]'))
     const sheetBox = await boxOf(sheet)

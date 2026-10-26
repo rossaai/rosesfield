@@ -22,6 +22,12 @@ import {
   useRemakeScreen,
 } from "@/studio/remake/use-remake-screen"
 
+const keepSoundInput = "keepSound"
+
+function isColumnInput(input: InputDefinition): boolean {
+  return input.type !== "seed" && input.name !== keepSoundInput
+}
+
 function LimitsLine({
   state,
   input,
@@ -81,11 +87,9 @@ function RemakeField({
 function RemakePanel({ state }: { state: RemakeState }): ReactElement {
   return (
     <div className="flex flex-col gap-s4">
-      {state.app.inputs
-        .filter((input) => input.type !== "seed")
-        .map((input) => (
-          <RemakeField key={input.name} state={state} input={input} />
-        ))}
+      {state.app.inputs.filter(isColumnInput).map((input) => (
+        <RemakeField key={input.name} state={state} input={input} />
+      ))}
       <AdvancedFields
         app={state.app}
         form={state.form}

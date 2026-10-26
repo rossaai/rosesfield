@@ -134,6 +134,28 @@ describe("Video edit's tabs", () => {
   })
 })
 
+describe("Video edit's one tab row", () => {
+  it("scrolls the open tab into the column when the screen opens on a tab past its edge", () => {
+    const seen: Element[] = []
+    Object.defineProperty(Element.prototype, "scrollIntoView", {
+      configurable: true,
+      value(this: Element) {
+        seen.push(this)
+      },
+    })
+    show(
+      <ModeTabs
+        state={{ app: fiveTabs, mode: "frame-rate", setMode: () => undefined }}
+      />
+    )
+    expect(seen.map((element) => element.textContent)).toEqual([
+      tCatalog("videoEdit.choice.mode.frameRate"),
+    ])
+    expect(screen.getAllByRole("tablist")).toHaveLength(1)
+    Reflect.deleteProperty(Element.prototype, "scrollIntoView")
+  })
+})
+
 describe("the Edit tab on Dreamina Seedance 2.5", () => {
   it("shows the clip well with its limits in its tip, then the model's inputs, then the model row", () => {
     show(<VideoEditPanel state={stateOf("edit", dreamina, { video: [] })} />)

@@ -150,7 +150,7 @@ describe("the controls gallery", () => {
 })
 
 describe("the create gallery", () => {
-  it("joins the column's prompt to its chip row: Elements with its at-sign, then Sound", () => {
+  it("draws the column's prompt with no chip row, since Sound is sent on and the well holds its own library", () => {
     const entry = referenceCreateEntries.find(
       (one) => one.id === "ref-input-panel"
     )
@@ -158,18 +158,17 @@ describe("the create gallery", () => {
     if (rest === undefined) {
       throw new Error("no ref-input-panel rest")
     }
-    const { container } = render(rest.render())
+    const { container } = render(
+      <TooltipProvider>{rest.render()}</TooltipProvider>
+    )
     const block = container.querySelector("[data-slot='composer-prompt-block']")
-    const chips = [
-      ...(block?.querySelectorAll("[data-slot='chip']") ?? []),
-    ].map((chip) => chip.textContent)
-    expect(chips).toEqual(["Elements", "Sound"])
-    expect(block?.querySelector(".lucide-at-sign")).not.toBeNull()
+    expect(block).not.toBeNull()
+    expect(block?.querySelectorAll("[data-slot='chip']")).toHaveLength(0)
   })
 })
 
 describe("the create gallery's column", () => {
-  it("shows the live Video column: its three mode tabs, the start frame, the Video and Extend switch, one full-width model chip and the settings as rows", () => {
+  it("shows the live Video column: its three mode tabs, the start frame, no switch to another app, one full-width model chip and the settings as rows", () => {
     const entry = referenceCreateEntries.find(
       (one) => one.id === "ref-input-panel"
     )
@@ -189,7 +188,7 @@ describe("the create gallery's column", () => {
         .getAllByRole("tab")
         .map((tab) => tab.textContent)
     ).toEqual([
-      tCatalog("video.tab.textImage"),
+      t("shell.area.image"),
       tCatalog("video.tab.references"),
       tCatalog("video.tab.firstLast"),
     ])
@@ -197,15 +196,7 @@ describe("the create gallery's column", () => {
     if (!(parts instanceof HTMLElement)) {
       throw new Error("no parts")
     }
-    const makeSwitch = parts.querySelector("[data-slot='make-switch']")
-    if (!(makeSwitch instanceof HTMLElement)) {
-      throw new Error("no mode switch")
-    }
-    expect(
-      within(makeSwitch)
-        .getAllByRole("radio")
-        .map((cell) => cell.textContent)
-    ).toEqual([t("kind.video"), tCatalog("videoEdit.choice.mode.extend")])
+    expect(parts.querySelector("[data-slot='make-switch']")).toBeNull()
     const frame = parts.querySelector(
       "[data-slot='composer-attachments-tiles']"
     )

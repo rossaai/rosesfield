@@ -7,7 +7,7 @@ import {
   useSheetOpen,
 } from "@/screens/app/column-frame"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
-import { MotionPanel, MotionTabs } from "@/studio/motion/motion-panel"
+import { MotionPanel } from "@/studio/motion/motion-panel"
 import { tabOfHash } from "@/studio/motion/motion-tabs"
 import { useMotionScreen } from "@/studio/motion/use-motion-screen"
 
@@ -28,7 +28,6 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       start={state.start}
       onShortcut={state.onShortcut}
       sheet={sheet}
-      tabs={<MotionTabs state={state} />}
       panel={<MotionPanel state={state} />}
       canvas={(openInputs) => (
         <AppCanvas

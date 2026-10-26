@@ -77,7 +77,7 @@ function FaceWell({ screen }: { screen: LipsyncScreen }): ReactElement | null {
   return (
     <FieldFrame
       caption={tCatalog(keys.label)}
-      isOptional={!face.required}
+      isOptional={false}
       note={null}
       problem={screen.wellProblems[name] ?? form.problems.get(name)}
       message={message}

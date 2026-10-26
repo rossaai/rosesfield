@@ -18,6 +18,7 @@ import {
   wordsLabelKey,
 } from "@/studio/lipsync/lipsync-words"
 import type { LipsyncScreen } from "@/studio/lipsync/use-lipsync-screen"
+import { modelChips } from "../column"
 import {
   audioId,
   avatar,
@@ -125,22 +126,24 @@ describe("the Lip sync column", () => {
     ])
   })
 
-  it("shows the Face well, the Words switch between Audio and Text and the model row", () => {
+  it("shows the Face well, one Words well with no Audio and Text switch, and one model row", () => {
     show(<LipsyncPanel screen={screenOf({ model: ltx, mode: "audio" })} />)
     expect(
       screen.getByText(tCatalog("lipsync.input.photo.label"))
     ).not.toBeNull()
-    const words = screen.getByRole("radiogroup", {
-      name: tCatalog(wordsLabelKey),
-    })
+    expect(screen.getByText(tCatalog(wordsLabelKey))).not.toBeNull()
+    expect(screen.queryByRole("radiogroup")).toBeNull()
     expect(
-      Array.from(words.querySelectorAll("[role='radio']")).map(
-        (one) => one.textContent
-      )
-    ).toEqual([t("kind.audio"), t("kind.text")])
-    expect(
-      screen.getByRole("button", { name: new RegExp(t("model.picker.title")) })
+      screen.getByRole("button", { name: t("field.asset.add.audio") })
     ).not.toBeNull()
+    expect(modelChips()).toHaveLength(1)
+  })
+
+  it("never marks the photo the mode needs as Optional, even when its input is required only in one mode", () => {
+    const one = screenOf({ model: ltx, mode: "audio" })
+    const face = one.face === null ? null : { ...one.face, required: false }
+    show(<LipsyncPanel screen={{ ...one, face }} />)
+    expect(screen.queryByText(t("field.optional"))).toBeNull()
   })
 
   it("shows the audio you added with its name, its length and a play button", () => {
@@ -177,19 +180,37 @@ describe("the Lip sync column", () => {
     ).not.toBeNull()
   })
 
-  it("on Text shows a box for your line and a voice from the speech models", () => {
+  it("on Text shows a box for your line, the voice as one Voice dropdown and one model row", () => {
     show(<LipsyncPanel screen={screenOf({ model: avatar, mode: "text" })} />)
     const label = tCatalog("voice.input.script.label")
     expect(screen.getByRole("textbox", { name: label })).not.toBeNull()
     const voice = document.querySelector("[data-slot='lipsync-voice']")
+    expect(voice?.textContent).toContain(tCatalog("voice.input.mode.label"))
     expect(voice?.textContent).toContain(speech.name)
+    expect(modelChips()).toHaveLength(1)
   })
 
-  it("switches to Text when you choose it", () => {
+  it("offers Text in the audio well's menu, which switches the words to typing", async () => {
     const setWords = vi.fn()
     const one = screenOf({ model: ltx, mode: "audio", setWords })
     show(<LipsyncPanel screen={one} />)
-    fireEvent.click(screen.getByRole("radio", { name: t("kind.text") }))
+    fireEvent.click(
+      screen.getByRole("button", { name: t("field.asset.add.audio") })
+    )
+    fireEvent.click(
+      await screen.findByRole("menuitem", { name: t("kind.text") })
+    )
     expect(setWords).toHaveBeenCalledWith("text")
+  })
+
+  it("goes back to the audio well when you remove the typed words", () => {
+    const setWords = vi.fn()
+    show(
+      <LipsyncPanel screen={screenOf({ model: ltx, mode: "text", setWords })} />
+    )
+    fireEvent.click(
+      screen.getByRole("button", { name: t("field.asset.remove") })
+    )
+    expect(setWords).toHaveBeenCalledWith("audio")
   })
 })

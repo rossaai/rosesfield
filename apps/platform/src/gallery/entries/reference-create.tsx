@@ -16,7 +16,6 @@ import {
   StartFrame,
 } from "@rosesfield/ui/components/upload-zone"
 import {
-  AtSignIcon,
   BookOpenIcon,
   FlaskConicalIcon,
   FolderIcon,
@@ -25,7 +24,6 @@ import {
   MusicIcon,
   ScanIcon,
   VideoIcon,
-  Volume2Icon,
 } from "lucide-react"
 import type { ReactElement } from "react"
 import { catalogApps } from "@/catalog/catalog-apps"
@@ -43,7 +41,7 @@ import { frameState, interactionStates } from "@/gallery/reference-frames"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { tileSizes, ViewCluster } from "@/screens/library/view-cluster"
 import { VideoSettings } from "@/studio/video/video-chips"
-import { MakeSwitch, ModeTabs } from "@/studio/video/video-panel"
+import { ModeTabs } from "@/studio/video/video-panel"
 
 const mark = <FlaskConicalIcon aria-hidden="true" />
 
@@ -135,7 +133,6 @@ function Column(): ReactElement {
           changeLabel={tCatalog("video.preset.change")}
           onChange={() => undefined}
         />
-        <MakeSwitch onExtend={() => undefined} />
         <DropZone
           title={t("sample.drop.title")}
           line={t("sample.drop.line")}
@@ -145,15 +142,7 @@ function Column(): ReactElement {
             <MusicIcon key="music" />,
           ]}
         />
-        <PromptBlock
-          label={t("sample.prompt.caption")}
-          chips={
-            <>
-              <Chip icon={<AtSignIcon />}>{t("sample.elements")}</Chip>
-              <Chip icon={<Volume2Icon />}>{t("sample.sound")}</Chip>
-            </>
-          }
-        >
+        <PromptBlock label={t("sample.prompt.caption")}>
           <textarea
             aria-label={t("sample.prompt.caption")}
             placeholder={t("sample.prompt.placeholder")}

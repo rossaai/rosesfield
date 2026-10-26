@@ -3,6 +3,7 @@ import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import {
   type ReactElement,
   type ReactNode,
+  type RefObject,
   useEffect,
   useRef,
   useState,
@@ -42,6 +43,21 @@ import { tabsOf } from "@/studio/video-edit/video-edit-tabs"
 
 type ChoiceInput = Extract<InputDefinition, { type: "choice" }>
 
+function useActiveTabInView(mode: string): RefObject<HTMLDivElement | null> {
+  const holder = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const show = (): void => {
+      const active = holder.current?.querySelector(
+        `[data-slot='tabs-trigger'][data-value='${mode}']`
+      )
+      active?.scrollIntoView?.({ block: "nearest", inline: "nearest" })
+    }
+    show()
+    void document.fonts?.ready.then(show)
+  }, [mode])
+  return holder
+}
+
 export function ModeTabs({
   state,
 }: {
@@ -49,25 +65,28 @@ export function ModeTabs({
 }): ReactElement {
   const tabs = tabsOf(state.app)
   const mode = state.app.inputs.find((input) => input.name === modeInput)
+  const holder = useActiveTabInView(state.mode)
   return (
-    <Tabs
-      value={state.mode}
-      onValueChange={(next) => {
-        if (isVideoEditMode(next)) {
-          state.setMode(next)
-        }
-      }}
-    >
-      <TabsList
-        aria-label={mode === undefined ? undefined : inputCaption(mode)}
+    <div ref={holder} data-slot="video-edit-tabs" className="min-w-0">
+      <Tabs
+        value={state.mode}
+        onValueChange={(next) => {
+          if (isVideoEditMode(next)) {
+            state.setMode(next)
+          }
+        }}
       >
-        {tabs.map((tab) => (
-          <TabsTrigger key={tab.mode} value={tab.mode}>
-            {tCatalog(tab.labelKey)}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
+        <TabsList
+          aria-label={mode === undefined ? undefined : inputCaption(mode)}
+        >
+          {tabs.map((tab) => (
+            <TabsTrigger key={tab.mode} value={tab.mode} data-value={tab.mode}>
+              {tCatalog(tab.labelKey)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+    </div>
   )
 }
 

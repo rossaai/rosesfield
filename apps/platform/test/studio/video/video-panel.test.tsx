@@ -1,16 +1,29 @@
 import { findApp } from "@rosesfield/catalog"
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { appListing } from "@rosesfield/contract"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { cleanup, render, screen } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { formatDuration } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
+import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
+import type { VideoScreen } from "@/studio/video/use-video-screen"
 import { SoundChip, VideoSettings } from "@/studio/video/video-chips"
 import { videoFieldsOf } from "@/studio/video/video-fields"
-import { MakeSwitch } from "@/studio/video/video-panel"
+import { ModeTabs, VideoPanel } from "@/studio/video/video-panel"
+import { fieldsOfModel } from "@/studio/video/video-tabs"
+import { showColumn } from "../column"
+import { seedanceFast } from "./video-forms"
 
-afterEach(cleanup)
+beforeEach(() => {
+  vi.stubGlobal("fetch", () => new Promise(() => undefined))
+})
+
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
 
 const video = appListing.parse(findApp("video"))
 
@@ -87,50 +100,91 @@ describe("the column's settings", () => {
   })
 })
 
-describe("the column's mode switch", () => {
-  it("is a 26 px two-cell switch with an ink thumb on the track, Video chosen, with Extend sending you to the app that extends a clip", () => {
-    const onExtend = vi.fn()
-    render(<MakeSwitch onExtend={onExtend} />)
-    const group = screen.getByRole("radiogroup", {
-      name: tCatalog("videoEdit.input.mode.label"),
-    })
-    const cells = screen.getAllByRole("radio")
-    expect(cells.map((cell) => cell.textContent)).toEqual([
-      t("kind.video"),
-      tCatalog("videoEdit.choice.mode.extend"),
+describe("Video's one mode row", () => {
+  it("names its tabs Image, References and Two frames, short enough to fit the column", () => {
+    render(<ModeTabs screen={{ tab: "text-image", setTab: () => undefined }} />)
+    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+      t("shell.area.image"),
+      tCatalog("video.tab.references"),
+      tCatalog("video.tab.firstLast"),
     ])
-    expect(cells[0]?.getAttribute("aria-checked")).toBe("true")
-    expect(group.className.split(" ")).toEqual(
-      expect.arrayContaining(["h-button-small", "bg-track", "rounded-full"])
-    )
-    expect(
-      group.querySelector("[data-slot='segmented-control-thumb']")?.className
-    ).toContain("bg-ink")
-    expect(document.querySelector("[data-slot='make-switch']")?.className).toBe(
-      ""
-    )
-    fireEvent.click(cells[1] as HTMLElement)
-    expect(onExtend).toHaveBeenCalledTimes(1)
-    fireEvent.click(cells[0] as HTMLElement)
-    expect(onExtend).toHaveBeenCalledTimes(1)
   })
 })
 
-describe("the column's mode switch on the keyboard", () => {
-  it("keeps you on Video when an arrow key reaches Extend, and leaves only on a click or a press", () => {
-    const onExtend = vi.fn()
-    render(<MakeSwitch onExtend={onExtend} />)
-    const [video, extend] = screen.getAllByRole("radio")
-    if (video === undefined || extend === undefined) {
-      throw new Error("the switch has no two cells")
+function screenOf(chosen: CatalogModel | null): VideoScreen {
+  const hosted: HostedState = {
+    isTaskApp: true,
+    models: chosen === null ? [] : [chosen],
+    isLoading: false,
+    error: null,
+    keyState: "set",
+    defaultModel: chosen?.id ?? null,
+    chosen,
+    fields: chosen?.form ?? null,
+    choose: () => undefined,
+  }
+  return {
+    state: {
+      form,
+      start: {
+        generate: () => undefined,
+        isPending: false,
+        error: null,
+        price: "",
+      },
+      hosted,
+      lastSeed: null,
+      hasRuns: false,
+      useInputs: () => undefined,
+      onShortcut: () => undefined,
+    },
+    hosted,
+    tab: "references",
+    setTab: () => undefined,
+    fields: fieldsOfModel(chosen),
+    isGraph: chosen === null,
+    presets: [],
+    prompt: {
+      name: "prompt",
+      typed: "",
+      move: null,
+      setTyped: () => undefined,
+      setMove: () => undefined,
+    },
+    fillFromRun: () => undefined,
+  }
+}
+
+const seedance: CatalogModel = {
+  id: "byteplus/seedance-fast",
+  kind: "hosted",
+  maker: "Maker",
+  name: "Seedance",
+  nameKey: null,
+  task: "reference-to-video",
+  tags: [{ kind: "sound" }],
+  form: [...seedanceFast],
+}
+
+describe("Video's column", () => {
+  it("holds no switch that opens Video edit and no Sound or Elements chip in the prompt, on a graph and on a hosted model with references and sound", () => {
+    for (const chosen of [null, seedance]) {
+      showColumn(<VideoPanel app={video} screen={screenOf(chosen)} />)
+      expect(document.querySelector("[data-slot='make-switch']")).toBeNull()
+      expect(
+        screen.queryByRole("radiogroup", {
+          name: tCatalog("videoEdit.input.mode.label"),
+        })
+      ).toBeNull()
+      expect(
+        screen.queryByRole("button", {
+          name: tCatalog("video.input.sound.label"),
+        })
+      ).toBeNull()
+      expect(
+        screen.queryByRole("button", { name: t("bar.elements") })
+      ).toBeNull()
+      cleanup()
     }
-    video.focus()
-    fireEvent.keyDown(video, { key: "ArrowRight" })
-    extend.focus()
-    expect(onExtend).not.toHaveBeenCalled()
-    expect(video.getAttribute("aria-checked")).toBe("true")
-    fireEvent.keyDown(extend, { key: " " })
-    fireEvent.click(extend)
-    expect(onExtend).toHaveBeenCalledTimes(1)
   })
 })

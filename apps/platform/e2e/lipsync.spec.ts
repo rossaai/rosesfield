@@ -32,7 +32,7 @@ test.beforeEach(async ({ page }) => {
 test.describe("Lip sync's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("shows From a photo and From a clip, the Face well, the Words switch between Audio and Text, the model row and Generate", async ({
+  test("shows From a photo and From a clip, the Face well, one Words well with no Audio and Text switch, the model row and Generate", async ({
     page,
   }) => {
     await page.goto("/apps/lipsync")
@@ -43,8 +43,9 @@ test.describe("Lip sync's column", () => {
     ])
     const parts = page.locator('[data-slot="lipsync-parts"]')
     await expect(parts.getByText("Photo", { exact: true })).toBeVisible()
-    const words = parts.locator('[data-slot="lipsync-words"] [role="radio"]')
-    await expect(words).toHaveText(["Audio", "Text"])
+    const words = parts.locator('[data-slot="lipsync-words"]')
+    await expect(words.getByText("Words", { exact: true })).toBeVisible()
+    await expect(words.getByRole("radio")).toHaveCount(0)
     await expect(
       parts.getByRole("button", { name: /^Model/ }).first()
     ).toBeVisible()
@@ -87,7 +88,8 @@ test.describe("Lip sync's Text choice", () => {
   test("on Text shows a box for your line", async ({ page }) => {
     await page.goto("/apps/lipsync")
     const words = page.locator('[data-slot="lipsync-words"]')
-    await words.getByRole("radio", { name: "Text" }).click()
+    await words.getByRole("button", { name: "Add audio" }).click()
+    await page.getByRole("menuitem", { name: "Text" }).click()
     await expect(words.getByRole("textbox", { name: "Script" })).toBeVisible()
   })
 })
@@ -102,7 +104,8 @@ test.describe("Lip sync's Text run", () => {
     const parts = page.locator('[data-slot="lipsync-parts"]')
     await addPhoto(page, parts)
     const words = parts.locator('[data-slot="lipsync-words"]')
-    await words.getByRole("radio", { name: "Text" }).click()
+    await words.getByRole("button", { name: "Add audio" }).click()
+    await page.getByRole("menuitem", { name: "Text" }).click()
     await words
       .getByRole("textbox", { name: "Script" })
       .fill("Hello, this is the line I typed for the photo.")
