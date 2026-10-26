@@ -59,7 +59,7 @@ describe("the Apps page card's media", () => {
     expect(card.querySelector("[data-slot='app-card-play']")).toBeNull()
   })
 
-  it("draws every catalog app as one card with the same 203 by 196 frame, held media or its flow", async () => {
+  it("draws every catalog app as one card with the same square frame, held media or its flow", async () => {
     for (const app of catalogApps) {
       renderAt("/", () => <AppCard app={app} newest={null} working={0} />)
       const card = await screen.findByRole("link")
@@ -71,7 +71,7 @@ describe("the Apps page card's media", () => {
       expect(
         slot?.querySelector("[style]")?.getAttribute("style"),
         app.id
-      ).toContain("203 / 196")
+      ).toContain("aspect-ratio: 1 / 1")
       cleanup()
     }
   })
@@ -88,10 +88,10 @@ describe("the Apps page card", () => {
     ).toContain("p-4")
   })
 
-  it("holds a 203 by 196 frame with a 32 px play circle that shows on hover on the tint preset", async () => {
+  it("holds a square frame with a 32 px play circle that shows on hover on the tint preset", async () => {
     const card = await renderCard()
     const media = card.querySelector("[data-slot='app-card-media'] [style]")
-    expect(media?.getAttribute("style")).toContain("203 / 196")
+    expect(media?.getAttribute("style")).toContain("aspect-ratio: 1 / 1")
     const play = card.querySelector("[data-slot='app-card-play']")
     expect(play?.className.split(" ")).toEqual(
       expect.arrayContaining([
@@ -118,35 +118,30 @@ describe("the Apps page card", () => {
 })
 
 describe("the Apps page card's line", () => {
-  it("clamps to two lines and shows whole, never cut mid-word on one line", async () => {
+  it("always takes exactly two body lines, cut with an ellipsis after two and held at two when shorter", async () => {
     const card = await renderCard()
     const line = card.querySelector<HTMLElement>("[data-slot='app-card-line']")
-    expect(line?.className.split(" ")).toContain("line-clamp-2")
-    expect(line?.className.split(" ")).not.toContain("truncate")
-    expect(line?.dataset.fit).toBe("whole")
+    expect(line?.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "line-clamp-2",
+        "min-h-[calc(2*var(--text-body--line-height))]",
+      ])
+    )
+    expect(line?.className).not.toMatch(/invisible|absolute|truncate/)
+    expect(line?.hasAttribute("data-fit")).toBe(false)
   })
 
-  it("leaves the title alone when the line would need a third line", async () => {
-    const heights = {
-      scrollHeight: { configurable: true, get: () => 60 },
-      clientHeight: { configurable: true, get: () => 40 },
+  it("shows the working count as a badge over the media, so the card's text keeps its height", async () => {
+    const app = findCatalogApp("image")
+    if (app === null) {
+      throw new Error("the catalog holds no image app")
     }
-    Object.defineProperties(HTMLElement.prototype, heights)
-    try {
-      const card = await renderCard()
-      const line = card.querySelector<HTMLElement>(
-        "[data-slot='app-card-line']"
-      )
-      expect(line?.dataset.fit).toBe("clipped")
-      expect(line?.className.split(" ")).toEqual(
-        expect.arrayContaining([
-          "data-[fit=clipped]:invisible",
-          "data-[fit=clipped]:absolute",
-        ])
-      )
-    } finally {
-      Reflect.deleteProperty(HTMLElement.prototype, "scrollHeight")
-      Reflect.deleteProperty(HTMLElement.prototype, "clientHeight")
-    }
+    renderAt("/", () => <AppCard app={app} newest={null} working={2} />)
+    const card = await screen.findByRole("link", { name: /Image/ })
+    const badge = card.querySelector("[data-slot='app-card-working']")
+    expect(badge?.textContent).toBe("2 runs working")
+    expect(badge?.closest("[data-slot='app-card-media']")).not.toBeNull()
+    expect(badge?.querySelector("[data-slot='media-badge']")).not.toBeNull()
+    expect(badge?.className.split(" ")).toContain("absolute")
   })
 })

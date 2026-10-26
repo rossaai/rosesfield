@@ -3,20 +3,21 @@ import { Card } from "@rosesfield/ui/components/card"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import {
   type MediaAspect,
+  MediaBadge,
   MediaTile,
 } from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { Link } from "@tanstack/react-router"
 import { PlayIcon } from "lucide-react"
-import { type ReactElement, useLayoutEffect, useRef, useState } from "react"
+import type { ReactElement } from "react"
 import { appLine, appName } from "@/catalog/app-facts"
 import { tCount } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
 import { KindFlow } from "@/pieces/kind-discs"
 import { type ShowcaseItem, showcaseOf } from "@/showcase/showcase"
 
-const frame: MediaAspect = { width: 203, height: 196 }
+const frame: MediaAspect = { width: 1, height: 1 }
 
 const tinted =
   "group-hover/card:bg-(--tint) in-data-[gallery=hover]:bg-(--tint)"
@@ -83,16 +84,22 @@ function FrameMedia({
   )
 }
 
-function CardMedia({
-  app,
-  newest,
-}: Pick<AppCardProps, "app" | "newest">): ReactElement {
+function WorkingBadge({ working }: { working: number }): ReactElement | null {
+  return working === 0 ? null : (
+    <span data-slot="app-card-working" className="absolute top-2 left-2 flex">
+      <MediaBadge>{tCount("apps.card.working", working)}</MediaBadge>
+    </span>
+  )
+}
+
+function CardMedia({ app, newest, working }: AppCardProps): ReactElement {
   return (
     <span
       data-slot="app-card-media"
       className="relative block overflow-hidden rounded-cell"
     >
       <FrameMedia app={app} newest={newest} />
+      <WorkingBadge working={working} />
       {appCardFormOf(app, newest) === "compact" ? null : (
         <span
           aria-hidden="true"
@@ -110,41 +117,11 @@ function CardMedia({
   )
 }
 
-function WorkingLine({ working }: { working: number }): ReactElement | null {
-  return working === 0 ? null : (
-    <p className="text-caption text-ink">
-      {tCount("apps.card.working", working)}
-    </p>
-  )
-}
-
-export function isClipped(element: HTMLElement): boolean {
-  return element.scrollHeight > element.clientHeight + 1
-}
-
 function CardLine({ text }: { text: string }): ReactElement {
-  const line = useRef<HTMLParagraphElement>(null)
-  const [isWhole, setWhole] = useState(true)
-  useLayoutEffect(() => {
-    const element = line.current
-    if (element === null) {
-      return
-    }
-    const check = (): void => setWhole(!isClipped(element))
-    check()
-    if (typeof ResizeObserver === "undefined") {
-      return
-    }
-    const observer = new ResizeObserver(check)
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [])
   return (
     <p
-      ref={line}
       data-slot="app-card-line"
-      data-fit={isWhole ? "whole" : "clipped"}
-      className="line-clamp-2 text-body text-ink-muted data-[fit=clipped]:invisible data-[fit=clipped]:absolute data-[fit=clipped]:inset-x-0"
+      className="line-clamp-2 min-h-[calc(2*var(--text-body--line-height))] text-body text-ink-muted"
     >
       {text}
     </p>
@@ -164,11 +141,10 @@ export function AppCard({ app, newest, working }: AppCardProps): ReactElement {
       )}
     >
       <Card className={cn("h-full gap-0 p-4", motion.tint, tinted)}>
-        <CardMedia app={app} newest={newest} />
-        <div className="relative flex flex-col gap-1 py-4">
+        <CardMedia app={app} newest={newest} working={working} />
+        <div className="flex flex-col gap-1 py-4">
           <h3 className="font-medium text-body">{appName(app)}</h3>
           <CardLine text={appLine(app)} />
-          <WorkingLine working={working} />
         </div>
       </Card>
     </Link>
