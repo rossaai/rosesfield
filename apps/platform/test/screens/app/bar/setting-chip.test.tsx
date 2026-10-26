@@ -144,16 +144,15 @@ describe("a number chip's popover", () => {
 })
 
 describe("the aspect chip's menu", () => {
-  it("is 200 px wide with a 32 px header naming the setting, and a shape beside each ratio", async () => {
+  it("is 200 px wide with a 32 px header naming the setting, a shape beside each ratio, and the chosen ratio's shape on the chip", async () => {
     render(
       <TooltipProvider>
         <SettingChip app={app} form={formAt(1, [])} name={aspectField} />
       </TooltipProvider>
     )
     const chip = screen.getByRole("combobox")
-    expect(
-      chip.querySelector("[data-slot='select-lead'] .lucide-scan")
-    ).not.toBeNull()
+    const lead = chip.querySelector("[data-slot='select-lead'] svg")
+    expect(lead?.getAttribute("data-ratio")).not.toBeNull()
     fireEvent.click(chip)
     const menu = await waitFor(() => {
       const found = document.querySelector<HTMLElement>(
@@ -173,11 +172,19 @@ describe("the aspect chip's menu", () => {
     const options = [...menu.querySelectorAll("[data-slot='select-item']")]
     expect(options.length).toBeGreaterThan(1)
     for (const option of options) {
-      expect(option.className.split(" ")).toContain("h-9")
+      expect(option.className.split(" ")).toContain("min-h-9")
       expect(
         option.querySelector("[data-slot='select-item-icon'] svg")
       ).not.toBeNull()
     }
+    const chosen = options.find((option) =>
+      option.hasAttribute("data-selected")
+    )
+    expect(
+      chosen
+        ?.querySelector("[data-slot='select-item-icon'] svg")
+        ?.getAttribute("data-ratio")
+    ).toBe(lead?.getAttribute("data-ratio"))
   })
 })
 

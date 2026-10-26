@@ -98,7 +98,11 @@ function ResolutionField({
         </SelectTrigger>
         <SelectContent>
           {resolutions.map((item) => (
-            <SelectItem key={item.value} value={item.value}>
+            <SelectItem
+              key={item.value}
+              value={item.value}
+              icon={settingIconOf(resolutionSetting, null)}
+            >
               {item.label}
             </SelectItem>
           ))}

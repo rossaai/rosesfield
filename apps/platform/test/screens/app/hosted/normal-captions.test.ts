@@ -37,4 +37,17 @@ describe("a model's format setting", () => {
     expect(fieldValueText(style, "1280x720")).toBe("1280x720")
     expect(fieldValueText(style, "480p")).toBe("480p")
   })
+
+  it("reads None for a value with no words, such as Pose mode's empty choice", () => {
+    const pose: ModelField = {
+      kind: "choice",
+      name: "poseMode",
+      path: "pose_mode",
+      required: false,
+      options: ["a-pose", "t-pose", ""],
+      default: "",
+    }
+    expect(fieldValueText(pose, "")).toBe(t("choice.none"))
+    expect(fieldValueText(pose, "a-pose")).toBe("A pose")
+  })
 })

@@ -15,8 +15,8 @@ describe("ChipSelect", () => {
           value="1:1"
           onValueChange={() => undefined}
           options={[
-            { value: "1:1", label: "1:1" },
-            { value: "16:9", label: "16:9" },
+            { value: "1:1", label: "1:1", icon: <svg /> },
+            { value: "16:9", label: "16:9", icon: <svg /> },
           ]}
         />
       </TooltipProvider>

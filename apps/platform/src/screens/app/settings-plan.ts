@@ -181,6 +181,9 @@ export function fieldValueText(
   field: ModelField,
   value: string | number
 ): string {
+  if (value === "") {
+    return t("choice.none")
+  }
   const place = fieldPlaceOf(field)
   if (
     place.kind === "show" &&

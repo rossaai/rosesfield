@@ -12,12 +12,7 @@ import {
 } from "@rosesfield/ui/components/popover"
 import { SlidersHorizontalIcon, Volume2Icon, VolumeXIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
-import {
-  chosenIconOf,
-  settingIconOf,
-  withOptionIcons,
-  withShapes,
-} from "@/catalog/setting-registry"
+import { settingIconOf, withChoiceIcons } from "@/catalog/setting-registry"
 import { withUnit } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { NumberStepper } from "@/pieces/number-stepper"
@@ -236,18 +231,19 @@ function ChoiceChip({
       />
     )
   }
+  const role = inputRoleOf(input.name, app.output.kind)
+  const items = withChoiceIcons(input.name, role, options)
   return (
     <ChipSelect
       label={inputCaption(input)}
-      icon={chosenIconOf(
-        input.name,
-        inputRoleOf(input.name, app.output.kind),
-        chosen
-      )}
+      icon={
+        items.find((one) => one.value === chosen)?.icon ??
+        settingIconOf(input.name, role)
+      }
       display={namedChoiceText(app, input, chosen)}
       value={chosen}
       onValueChange={set}
-      options={withOptionIcons(input.name, options)}
+      options={items}
     />
   )
 }
@@ -302,14 +298,18 @@ export function SettingChip({
   name,
 }: SettingChipProps): ReactElement | null {
   if (name === aspectField) {
-    const items = aspectItems(app)
+    const items = withChoiceIcons(aspectField, "aspect", aspectItems(app))
+    const chosen = form.values.aspectRatio ?? items[0]?.value ?? ""
     return items.length < 2 ? null : (
       <ChipSelect
         label={t("field.aspect.label")}
-        icon={chipIconOf("aspect")}
-        value={form.values.aspectRatio ?? items[0]?.value ?? ""}
+        icon={
+          items.find((one) => one.value === chosen)?.icon ??
+          chipIconOf("aspect")
+        }
+        value={chosen}
         onValueChange={(aspectRatio) => form.setForm({ aspectRatio })}
-        options={withShapes(items)}
+        options={items}
       />
     )
   }
@@ -329,5 +329,3 @@ export function SettingChip({
     <InputChip app={app} form={form} input={input} />
   )
 }
-
-export { withOptionIcons, withShapes }

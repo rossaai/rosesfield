@@ -217,16 +217,6 @@ export function chosenIconOf(
   return Icon === undefined ? settingIconOf(name, role) : <Icon />
 }
 
-export function withOptionIcons<T extends { value: string }>(
-  name: string,
-  options: readonly T[]
-): (T & { icon?: ReactElement })[] {
-  return options.map((option) => {
-    const Icon = optionIconOf(name, option.value)
-    return Icon === undefined ? option : { ...option, icon: <Icon /> }
-  })
-}
-
 export function withShapes<T extends { value: string; label: string }>(
   items: readonly T[]
 ): (T & { icon: ReactElement })[] {
@@ -234,6 +224,19 @@ export function withShapes<T extends { value: string; label: string }>(
     ...item,
     icon: <AspectShape ratio={item.value} />,
   }))
+}
+
+export function withChoiceIcons<T extends { value: string; label: string }>(
+  name: string,
+  role: FieldRole | null,
+  items: readonly T[]
+): (T & { icon: ReactElement })[] {
+  return isAspectSetting(name, role)
+    ? withShapes(items)
+    : items.map((item) => ({
+        ...item,
+        icon: chosenIconOf(name, role, item.value),
+      }))
 }
 
 export { optionIconOf, settingKeyOf }

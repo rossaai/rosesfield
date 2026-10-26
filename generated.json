@@ -72,7 +72,7 @@
     },
     {
       "path": "apps/platform/src/copy/agent.en.ts",
-      "sha256": "cec2077c6d93eecc1c5f1265c564e29aac6aa640dfc0523e294fd6cc248ef63c"
+      "sha256": "d9ecc0d928d9d9f4c9fb61c19fae7de9893735d589d1cbab9345c1313dc18658"
     },
     {
       "path": "apps/platform/src/copy/app.en.ts",
@@ -96,7 +96,7 @@
     },
     {
       "path": "apps/platform/src/copy/field.en.ts",
-      "sha256": "3293d282dc59993b254c2fc10ba4857ec19d424c8293f3559542c10e9048839a"
+      "sha256": "81530110b27bb6da3e9b2e430780ab329d2a6127d0dc98c52e6b1609a966e266"
     },
     {
       "path": "apps/platform/src/copy/home.en.ts",
