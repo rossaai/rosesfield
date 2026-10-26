@@ -1,16 +1,22 @@
 import type { InputDefinition } from "@rosesfield/contract"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
-import type { ReactElement } from "react"
+import type { ReactElement, ReactNode } from "react"
 import { isAssetInput } from "@/catalog/app-facts"
 import { tCatalog } from "@/copy/t"
 import type { FieldValue } from "@/screens/app/app-form"
 import { InputField } from "@/screens/app/fields/input-field"
-import { CountField } from "@/screens/app/fields/output-fields"
+import { AppSettingsSection } from "@/screens/app/fields/setting-rows"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
-import { AdvancedFields } from "@/screens/app/inputs-panel"
-import { panelInputsOf, recordingOf } from "@/studio/audio/audio-modes"
-import { modeInputOf, modelsOfTab, tabsOf } from "@/studio/audio/audio-tabs"
+import { trayInputsOf } from "@/screens/app/inputs-panel"
+import { appSettingsPlan } from "@/screens/app/settings-plan"
+import { bodyAppFor, recordingOf } from "@/studio/audio/audio-modes"
+import {
+  modeInput,
+  modeInputOf,
+  modelsOfTab,
+  tabsOf,
+} from "@/studio/audio/audio-tabs"
 import { RecordingField } from "@/studio/audio/recording-field"
 import type { AudioState } from "@/studio/audio/use-audio-screen"
 
@@ -72,21 +78,25 @@ function AudioField({
   )
 }
 
-function GraphFields({ state }: { state: AudioState }): ReactElement {
+function GraphFields({
+  state,
+  model,
+}: {
+  state: AudioState
+  model: ReactNode
+}): ReactElement {
+  const body = bodyAppFor(state.app, state.tab)
   return (
     <>
-      {panelInputsOf(state.app, state.tab).map((input) => (
+      {trayInputsOf(body).map((input) => (
         <AudioField key={input.name} state={state} input={input} />
       ))}
-      <CountField
-        app={state.app}
-        value={state.form.values.count}
-        onChange={(count) => state.form.setForm({ count })}
-      />
-      <AdvancedFields
+      {model}
+      <AppSettingsSection
         app={state.formApp}
         form={state.form}
         lastSeed={state.lastSeed}
+        plan={appSettingsPlan(body, [modeInput])}
       />
     </>
   )
@@ -99,14 +109,17 @@ export function AudioPanel({ state }: { state: AudioState }): ReactElement {
     models: modelsOfTab(hosted.models, state.tab, state.app),
     choose: state.choose,
   }
-  return (
+  const model = <CatalogPicker hosted={tabHosted} place="row" />
+  return hosted.fields === null ? (
     <div className="flex flex-col gap-s4">
-      <CatalogPicker hosted={tabHosted} place="row" />
-      {hosted.fields === null ? (
-        <GraphFields state={state} />
-      ) : (
-        <HostedFields fields={hosted.fields} form={state.form} />
-      )}
+      <GraphFields state={state} model={model} />
     </div>
+  ) : (
+    <HostedFields
+      fields={hosted.fields}
+      form={state.form}
+      app={state.app}
+      model={model}
+    />
   )
 }

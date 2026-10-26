@@ -6,7 +6,6 @@ import {
   inputRulesOf,
 } from "@rosesfield/contract"
 import type { FieldProblem } from "@/screens/app/app-form"
-import { modelInputName } from "@/screens/app/hosted/hosted-form"
 import { modeInput, voiceCloneTab } from "@/studio/audio/audio-tabs"
 
 export const shortestCloneSeconds = 6
@@ -45,15 +44,6 @@ export function bodyAppFor(app: AppListing, tab: string): AppListing {
       return rule === undefined ? [] : [boundedInputOf(rule)]
     }),
   }
-}
-
-export function panelInputsOf(app: AppListing, tab: string): InputDefinition[] {
-  return bodyAppFor(app, tab).inputs.filter(
-    (input) =>
-      input.type !== "seed" &&
-      input.name !== modeInput &&
-      input.name !== modelInputName
-  )
 }
 
 export function recordingOf(app: AppListing, tab: string): string | null {

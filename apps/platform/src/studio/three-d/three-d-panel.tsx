@@ -51,17 +51,23 @@ export function ThreeDPanel({
 }): ReactElement {
   const { hosted, state, tabModels } = screen
   const tabHosted = { ...hosted, models: tabModels }
+  const model = <CatalogPicker hosted={tabHosted} place="row" />
   return (
     <div data-slot="three-d-parts" className="flex flex-1 flex-col gap-s4">
-      <CatalogPicker hosted={tabHosted} place="row" />
       {hosted.fields === null ? (
         <InputsPanel
           app={withoutModelInput(app)}
           form={state.form}
           lastSeed={state.lastSeed}
+          model={model}
         />
       ) : (
-        <HostedFields fields={hosted.fields} form={state.form} />
+        <HostedFields
+          fields={hosted.fields}
+          form={state.form}
+          app={app}
+          model={model}
+        />
       )}
     </div>
   )

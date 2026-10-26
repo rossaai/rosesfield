@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest"
 import { bodyOf, defaultsOf, problemsOf } from "@/screens/app/app-form"
+import { trayInputsOf } from "@/screens/app/inputs-panel"
+import { type AppSetting, appSettingsPlan } from "@/screens/app/settings-plan"
 import {
   bodyAppFor,
   formAppFor,
-  panelInputsOf,
   recordingLengthProblem,
   recordingOf,
 } from "@/studio/audio/audio-modes"
+import { modeInput } from "@/studio/audio/audio-tabs"
 import { audioListing } from "./audio-app"
 
 const audio = audioListing()
@@ -15,21 +17,25 @@ function namesOf(inputs: readonly { name: string }[]): string[] {
   return inputs.map((input) => input.name)
 }
 
+function inputsOf(tab: string): string[] {
+  return namesOf(trayInputsOf(bodyAppFor(audio, tab)))
+}
+
+function settingsOf(tab: string): string[] {
+  const plan = appSettingsPlan(bodyAppFor(audio, tab), [modeInput])
+  return plan.main.map((setting: AppSetting) =>
+    setting.kind === "input" ? setting.input.name : setting.kind
+  )
+}
+
 describe("the inputs of each Audio tab", () => {
-  it("shows each tab only the inputs its mode applies, without the mode or the model", () => {
-    expect(namesOf(panelInputsOf(audio, "speech"))).toEqual(["script"])
-    expect(namesOf(panelInputsOf(audio, "clone"))).toEqual([
-      "script",
-      "recording",
-    ])
-    expect(namesOf(panelInputsOf(audio, "change"))).toEqual([
-      "source",
-      "target",
-    ])
-    expect(namesOf(panelInputsOf(audio, "music"))).toEqual([
-      "description",
-      "length",
-    ])
+  it("shows each tab only the inputs its mode applies, and its length among the settings below the model", () => {
+    expect(inputsOf("speech")).toEqual(["script"])
+    expect(inputsOf("clone")).toEqual(["recording", "script"])
+    expect(inputsOf("change")).toEqual(["source", "target"])
+    expect(inputsOf("music")).toEqual(["description"])
+    expect(settingsOf("music")).toEqual(["length", "count"])
+    expect(settingsOf("speech")).not.toContain(modeInput)
   })
 
   it("sends only the inputs of the tab, and asks for no input another tab needs", () => {
