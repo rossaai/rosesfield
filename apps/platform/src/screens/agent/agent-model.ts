@@ -34,6 +34,7 @@ export const agentModelsQuery = queryOptions({
   queryFn: ({ signal }) => listAgentModels(signal),
   staleTime: 60_000,
   retry: false,
+  retryOnMount: false,
 })
 
 export function isModelMissing(error: unknown): boolean {
