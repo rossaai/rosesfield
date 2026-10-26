@@ -194,7 +194,15 @@ export function fieldValueText(
     value !== "" &&
     Number.isFinite(seconds)
     ? formatDuration(seconds)
-    : String(value)
+    : wordsOfValue(String(value))
+}
+
+function wordsOfValue(value: string): string {
+  if (!/^[a-z]+([ _-][a-z]+)*$/.test(value)) {
+    return value
+  }
+  const words = value.replace(/[_-]/g, " ")
+  return words.charAt(0).toUpperCase() + words.slice(1)
 }
 
 export function fieldOptionsOf(

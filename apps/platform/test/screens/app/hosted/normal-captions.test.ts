@@ -22,4 +22,19 @@ describe("a model's format setting", () => {
     expect(fieldValueText(ratio, "adaptive")).toBe(t("choice.auto"))
     expect(fieldValueText(ratio, "16:9")).toBe("16:9")
   })
+
+  it("reads a model's plain-word value in sentence case, and keeps sizes and numbers as they are", () => {
+    const style: ModelField = {
+      kind: "choice",
+      name: "artStyle",
+      path: "art_style",
+      required: false,
+      options: ["realistic", "low_poly", "1280x720", "480p"],
+      default: "realistic",
+    }
+    expect(fieldValueText(style, "realistic")).toBe("Realistic")
+    expect(fieldValueText(style, "low_poly")).toBe("Low poly")
+    expect(fieldValueText(style, "1280x720")).toBe("1280x720")
+    expect(fieldValueText(style, "480p")).toBe("480p")
+  })
 })
