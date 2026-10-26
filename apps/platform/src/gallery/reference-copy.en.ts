@@ -79,6 +79,8 @@ export const referenceCopy = {
   "sample.badge.top": "Top",
   "sample.badge.premium": "Premium",
   "sample.badge.openWeights": "Open weights",
+  "sample.badge.rank": "#1",
+  "sample.badge.value": "Best value",
   "sample.model": "Sample model",
   "sample.model.line": "Best at faces in any light",
   "sample.model.caption": "Model",
