@@ -1,4 +1,7 @@
 import { expect, type Page, test } from "@playwright/test"
+import { answerOwnLists } from "./own-lists"
+
+const gatewayOrigin = "http://127.0.0.1:8797"
 
 type Box = { x: number; y: number; width: number; height: number }
 
@@ -15,7 +18,7 @@ async function openWithRun(page: Page): Promise<void> {
     window.localStorage.setItem("rosesfield.welcome", "seen")
   })
   await page.goto("/apps/image")
-  const feed = page.locator('[data-slot="app-stage-scroll"] article img')
+  const feed = page.locator('[data-slot="app-stage-scroll"] img')
   if ((await feed.count()) > 0) {
     return
   }
@@ -53,7 +56,10 @@ test.describe("the View control of Image's feed", () => {
     const view = await boxOf(page, '[data-slot="view-menu"]')
     expect(viewport.width - (view.x + view.width)).toBe(16)
     const tabs = await boxOf(page, '[data-slot="canvas-head"] [role="tab"]')
-    const feed = await boxOf(page, '[data-slot="app-stage-scroll"] article')
+    const feed = await boxOf(
+      page,
+      '[data-slot="app-stage-scroll"] [data-slot="result-column"]'
+    )
     if (isMobile) {
       expect(tabs.x).toBe(16)
       expect(feed.x).toBe(tabs.x)
@@ -69,5 +75,80 @@ test.describe("the View control of Image's feed", () => {
     const middle = (box: { y: number; height: number }): number =>
       box.y + box.height / 2
     expect(Math.abs(middle(view) - middle(tabs))).toBeLessThanOrEqual(1)
+  })
+})
+
+async function startDone(
+  appId: string,
+  body: Record<string, unknown>
+): Promise<string> {
+  const started = await fetch(`${gatewayOrigin}/api/apps/${appId}/runs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+  expect(started.ok).toBe(true)
+  const made: { run: { id: string } } = await started.json()
+  await expect
+    .poll(
+      async () => {
+        const read = await fetch(`${gatewayOrigin}/api/runs/${made.run.id}`)
+        const answer: { run: { status: string } } = await read.json()
+        return answer.run.status
+      },
+      { timeout: 30_000 }
+    )
+    .toBe("done")
+  return made.run.id
+}
+
+async function columnsOn(page: Page, path: string): Promise<number> {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("rosesfield.welcome", "seen")
+  })
+  await page.goto(path)
+  const columns = page.locator(
+    '[data-slot="app-stage-scroll"] [data-slot="result-column"]'
+  )
+  await expect(columns.first()).toBeVisible({ timeout: 20_000 })
+  await expect(
+    page.locator('[data-slot="app-stage-scroll"] [data-slot="result-grid"]')
+  ).toBeVisible()
+  return columns.count()
+}
+
+test.describe("an app page's Grid at 1440 by 900", () => {
+  test.skip(({ isMobile }) => isMobile, "the column counts of a wide window")
+
+  test("opens Image on Grid at 228 px tiles, six columns under the bar", async ({
+    page,
+  }) => {
+    const own = new Set<string>()
+    for (const prompt of ["a lighthouse at dusk", "a red rose"]) {
+      own.add(await startDone("image", { inputs: { prompt }, count: 4 }))
+    }
+    await answerOwnLists(page, own)
+    await page.setViewportSize({ width: 1440, height: 900 })
+    expect(await columnsOn(page, "/apps/image")).toBe(6)
+  })
+
+  test("opens Video on Grid at 228 px tiles, four columns beside the column", async ({
+    page,
+  }) => {
+    const own = new Set<string>()
+    for (const prompt of [
+      "a paper boat",
+      "a red kite",
+      "a tin robot",
+      "a slow river",
+      "a green field",
+    ]) {
+      own.add(
+        await startDone("video", { inputs: { model: "ltx-2-5", prompt } })
+      )
+    }
+    await answerOwnLists(page, own)
+    await page.setViewportSize({ width: 1440, height: 900 })
+    expect(await columnsOn(page, "/apps/video")).toBe(4)
   })
 })

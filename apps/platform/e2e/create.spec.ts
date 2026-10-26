@@ -283,7 +283,7 @@ test.describe("an app on a phone", () => {
 test.describe("Video's runs on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "the phone's inset")
 
-  test("starts the run's title and its tile on the line of the tabs, 16 px in", async ({
+  test("starts the first result's tile on the line of the tabs, 16 px in", async ({
     page,
   }) => {
     const started = await fetch("http://127.0.0.1:8797/api/apps/video/runs", {
@@ -299,7 +299,9 @@ test.describe("Video's runs on a phone", () => {
     await page.goto("/apps/video")
     const region = page.getByRole("region", { name: "Your results" })
     const tabs = await boxOf(region.getByRole("tab").first())
-    const run = region.locator('[data-slot="app-stage-scroll"] article').first()
+    const run = region
+      .locator('[data-slot="app-stage-scroll"] [data-slot="result-column"]')
+      .first()
     await expect(run).toBeVisible({ timeout: 20_000 })
     const tile = run.locator("video, img").first()
     await expect(tile).toBeVisible({ timeout: 20_000 })

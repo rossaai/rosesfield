@@ -116,8 +116,9 @@ async function startDemoVideo(): Promise<string> {
   return body.run.id
 }
 
-const stageCards =
-  '[data-slot="app-stage-scroll"] article[data-slot="run-card"]:not([data-state="loading"])'
+const stageResults = '[data-slot="app-stage-scroll"] [data-slot="result-grid"]'
+
+const stageWork = '[data-slot="app-stage-scroll"] [data-slot="working-pulse"]'
 
 const chipName = 'button[aria-label^="Model "] [data-slot="model-row-name"]'
 
@@ -128,7 +129,7 @@ async function paintResult({ page }: { page: Page }): Promise<void> {
     .getByRole("textbox", { name: "Prompt" })
     .fill("a paper boat on a still pond")
   const shownBefore = await page
-    .locator(`${stageCards} img`)
+    .locator(`${stageResults} img`)
     .evaluateAll((images) =>
       images.map((image) => image.getAttribute("src") ?? "")
     )
@@ -140,22 +141,23 @@ async function paintResult({ page }: { page: Page }): Promise<void> {
   await bar.locator('[data-slot="generate-button"]').click()
   const answer: { run: { createdAt: string } } = await (await started).json()
   const engineDoneAt = Date.parse(answer.run.createdAt) + demoDelayMs
-  const run = page.locator(stageCards).first()
-  await expect(run.locator('[data-slot="working-pulse"]').first()).toBeVisible()
+  await expect(page.locator(stageWork).first()).toBeVisible()
   const painted = await page.waitForFunction(
-    ({ cards, before }) => {
-      const card = document.querySelector(cards)
-      const image = card?.querySelector<HTMLImageElement>("img") ?? null
-      const src = image?.getAttribute("src") ?? ""
-      return image !== null &&
-        src !== "" &&
-        !before.includes(src) &&
-        image.complete &&
-        image.naturalWidth > 0
+    ({ results, before }) => {
+      const images = [
+        ...document.querySelectorAll<HTMLImageElement>(`${results} img`),
+      ]
+      return images.some(
+        (image) =>
+          (image.getAttribute("src") ?? "") !== "" &&
+          !before.includes(image.getAttribute("src") ?? "") &&
+          image.complete &&
+          image.naturalWidth > 0
+      )
         ? Date.now()
         : false
     },
-    { cards: stageCards, before: shownBefore },
+    { results: stageResults, before: shownBefore },
     { polling: "raf", timeout: 30_000 }
   )
   const paintedAt = Number(await painted.jsonValue())

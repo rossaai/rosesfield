@@ -5,6 +5,10 @@ const wide = 16 / 9
 async function openImage(page: Page): Promise<void> {
   await page.addInitScript(() => {
     window.localStorage.setItem("rosesfield.welcome", "seen")
+    window.localStorage.setItem(
+      "rosesfield.view.app",
+      JSON.stringify({ layout: "list", size: 1 })
+    )
   })
   await page.goto("/apps/image")
 }
