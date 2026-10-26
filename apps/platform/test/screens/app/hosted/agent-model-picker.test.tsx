@@ -106,7 +106,7 @@ describe("the agent's model picker", () => {
     ).toBe("none")
   })
 
-  it("prices the rows from the typical turn, so a cheaper turn sorts first on price, lowest first", () => {
+  it("prices the rows from the typical turn, so a cheaper turn sorts first on Price, Low to high", () => {
     const rows = agentRowsOf(models, rates)
     expect(
       rows.find((row) => row.id === "anthropic/claude-sonnet-5")?.price

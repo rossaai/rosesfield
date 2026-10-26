@@ -1,3 +1,4 @@
+import { HuggingFaceMark } from "@rosesfield/ui/components/hugging-face-mark"
 import { Input } from "@rosesfield/ui/components/input"
 import {
   type ListSection,
@@ -20,16 +21,25 @@ import {
 } from "@rosesfield/ui/components/popover"
 import { ViewMenu } from "@rosesfield/ui/components/view-menu"
 import {
+  firstSort,
   hasOpenWeights,
-  isModelPickerSort,
+  isModelPickerOrder,
+  isModelPickerSortBy,
   isOpenRow,
+  type ModelPickerOrder,
   type ModelPickerSort,
-  modelPickerSorts,
+  type ModelPickerSortBy,
+  modelPickerOrders,
+  modelPickerSortBys,
   needleOf,
   recentRowsOf,
   sortedRows,
 } from "@rosesfield/ui/lib/model-sections"
-import { ListFilterIcon } from "lucide-react"
+import {
+  ArrowDownWideNarrowIcon,
+  ArrowUpDownIcon,
+  ListFilterIcon,
+} from "lucide-react"
 import {
   type ReactElement,
   type ReactNode,
@@ -45,9 +55,13 @@ type ModelPickerWords = Record<
   | "search"
   | "searchPlaceholder"
   | "empty"
-  | "sort"
   | "sortFilter"
-  | ModelPickerSort
+  | "sortBy"
+  | "sortRank"
+  | "sortPrice"
+  | "order"
+  | "orderDown"
+  | "orderUp"
   | "openOnly"
   | "recent"
   | "all",
@@ -70,6 +84,16 @@ type ModelPickerProps = {
   onOpenChange?: (open: boolean) => void
 }
 
+const sortByWords = {
+  rank: "sortRank",
+  price: "sortPrice",
+} satisfies Record<ModelPickerSortBy, keyof ModelPickerWords>
+
+const orderWords = {
+  down: "orderDown",
+  up: "orderUp",
+} satisfies Record<ModelPickerOrder, keyof ModelPickerWords>
+
 function SortMenu(props: {
   words: ModelPickerWords
   sort: ModelPickerSort
@@ -78,32 +102,51 @@ function SortMenu(props: {
   onSort: (sort: ModelPickerSort) => void
   onOpenOnly: (isOpenOnly: boolean) => void
 }): ReactElement {
-  const { words } = props
+  const { words, sort } = props
   return (
     <ViewMenu
       label={words.sortFilter}
       trigger="filled"
       icon={<ListFilterIcon aria-hidden="true" />}
-      sort={{
-        id: "sort",
-        label: words.sort,
-        value: props.sort,
-        options: modelPickerSorts.map((sort) => ({
-          value: sort,
-          label: words[sort],
-        })),
-        onValueChange: (value) => {
-          if (isModelPickerSort(value)) {
-            props.onSort(value)
-          }
+      sorts={[
+        {
+          id: "by",
+          label: words.sortBy,
+          lead: <ArrowUpDownIcon />,
+          value: sort.by,
+          options: modelPickerSortBys.map((by) => ({
+            value: by,
+            label: words[sortByWords[by]],
+          })),
+          onValueChange: (value) => {
+            if (isModelPickerSortBy(value)) {
+              props.onSort({ ...sort, by: value })
+            }
+          },
         },
-      }}
+        {
+          id: "order",
+          label: words.order,
+          lead: <ArrowDownWideNarrowIcon />,
+          value: sort.order,
+          options: modelPickerOrders.map((order) => ({
+            value: order,
+            label: words[orderWords[order]],
+          })),
+          onValueChange: (value) => {
+            if (isModelPickerOrder(value)) {
+              props.onSort({ ...sort, order: value })
+            }
+          },
+        },
+      ]}
       switches={
         props.hasOpen
           ? [
               {
                 id: "open",
                 label: words.openOnly,
+                lead: <HuggingFaceMark />,
                 checked: props.isOpenOnly,
                 onCheckedChange: props.onOpenOnly,
               },
@@ -207,7 +250,7 @@ function PickerBody(
   }
 ): ReactElement {
   const [query, setQuery] = useState("")
-  const [sort, setSort] = useState<ModelPickerSort>("rankBest")
+  const [sort, setSort] = useState<ModelPickerSort>(firstSort)
   const [isOpenOnly, setOpenOnly] = useState(false)
   const recent = props.recent ?? noRecent
   const hasOpen = useMemo(() => hasOpenWeights(props.rows), [props.rows])
@@ -307,9 +350,11 @@ function ModelPicker(props: ModelPickerProps): ReactElement {
 
 export type {
   ModelBadge,
+  ModelPickerOrder,
   ModelPickerProps,
   ModelPickerRow,
   ModelPickerSort,
+  ModelPickerSortBy,
   ModelPickerTag,
   ModelPickerWords,
   ModelPrice,

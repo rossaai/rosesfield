@@ -83,7 +83,7 @@ function DropdownMenuLabel({
   )
 }
 
-function MenuLead({ lead }: { lead: ReactNode }): ReactNode {
+function DropdownMenuLead({ lead }: { lead: ReactNode }): ReactNode {
   if (lead === undefined || lead === null) {
     return null
   }
@@ -117,7 +117,7 @@ function DropdownMenuItem({
       className={cn(menuItemClass, className)}
       {...props}
     >
-      <MenuLead lead={lead} />
+      <DropdownMenuLead lead={lead} />
       {children}
     </MenuPrimitive.Item>
   )
@@ -139,7 +139,7 @@ function DropdownMenuSubTrigger({
       className={cn(menuItemClass, "data-popup-open:bg-(--tint)", className)}
       {...props}
     >
-      <MenuLead lead={lead} />
+      <DropdownMenuLead lead={lead} />
       {children}
       <ChevronRightIcon aria-hidden="true" className="ml-auto text-ink-muted" />
     </MenuPrimitive.SubmenuTrigger>
@@ -177,7 +177,7 @@ function DropdownMenuRadioItem({
       className={cn(menuItemClass, "pe-s12", className)}
       {...props}
     >
-      <MenuLead lead={lead} />
+      <DropdownMenuLead lead={lead} />
       {children}
       <MenuPrimitive.RadioItemIndicator className="absolute right-s4 flex text-ink-muted">
         <CheckIcon aria-hidden="true" />
@@ -190,9 +190,11 @@ function DropdownMenuSwitchItem({
   className,
   children,
   checked,
+  lead,
   ...props
 }: Omit<MenuPrimitive.CheckboxItem.Props, "checked"> & {
   checked: boolean
+  lead?: ReactNode
 }): ReactElement {
   return (
     <MenuPrimitive.CheckboxItem
@@ -202,6 +204,7 @@ function DropdownMenuSwitchItem({
       className={cn(menuItemClass, className)}
       {...props}
     >
+      <DropdownMenuLead lead={lead} />
       <span className="min-w-0 flex-1 truncate">{children}</span>
       <SwitchLook checked={checked} />
     </MenuPrimitive.CheckboxItem>
@@ -240,6 +243,7 @@ export {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuLead,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,

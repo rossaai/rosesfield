@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test"
+import { expectSortMenu } from "./picker-sort-menu"
 
 const shortScreen = { width: 390, height: 420 }
 
@@ -343,7 +344,7 @@ async function expectRankOnMark(page: Page, rows: Locator): Promise<void> {
   expect(first.rank.x + first.rank.width).toBeLessThanOrEqual(first.name.x)
 }
 
-test("the Image picker's toolbar holds the search and one filter button that opens the four orders and the Open weights only switch, and each rank sits on its mark's corner without moving the name", async ({
+test("the Image picker's toolbar holds the search and one filter button that opens Sort by, Order and the Open weights only switch, their icons on one inset, and each rank sits on its mark's corner without moving the name", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "desktop", "the desktop picker")
@@ -358,14 +359,7 @@ test("the Image picker's toolbar holds the search and one filter button that ope
   )
   await expectRankOnMark(page, rows)
   await filter.click()
-  const menu = page.getByRole("menu")
-  await expect(menu.getByRole("menuitemradio")).toHaveText([
-    "Rank, best first",
-    "Rank, best last",
-    "Price, lowest first",
-    "Price, highest first",
-  ])
-  const open = menu.getByRole("menuitemcheckbox", { name: "Open weights only" })
+  const open = await expectSortMenu(page)
   await open.click()
   expect(await rows.count()).toBeGreaterThan(0)
   for (const row of await rows.all()) {

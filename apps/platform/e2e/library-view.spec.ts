@@ -112,6 +112,36 @@ test("the head row ends in one View, whose menu holds the layout and the filters
   await expect(sub.getByRole("menuitemradio").first()).toHaveText("All apps")
 })
 
+test("the Tile size row starts with its icon on the line and inset of Layout's icons, and its words start where theirs do", async ({
+  page,
+}) => {
+  await open(page, "/history")
+  const menu = await openView(page)
+  const list = menu.getByRole("menuitemradio", { name: "List" })
+  const size = menu.locator("[data-slot='view-menu-size']")
+  const [listLead, sizeLead, listWords, sizeWords] = await Promise.all([
+    boxOf(list.locator("[data-slot='dropdown-menu-lead']")),
+    boxOf(size.locator("[data-slot='dropdown-menu-lead']")),
+    list.evaluate((node) => {
+      const range = document.createRange()
+      const text = [...node.childNodes].find(
+        (one) => one.nodeType === Node.TEXT_NODE
+      )
+      if (text === undefined) {
+        return null
+      }
+      range.selectNodeContents(text)
+      return range.getBoundingClientRect().x
+    }),
+    boxOf(size.getByText("Tile size")),
+  ])
+  expect(sizeLead.width).toBeGreaterThan(0)
+  expect(sizeLead.x).toBe(listLead.x)
+  expect(sizeLead.width).toBe(listLead.width)
+  expect(sizeWords.x).toBe(listWords)
+  await expect(size.locator("svg.lucide-scaling")).toHaveCount(1)
+})
+
 test("Library and History open on Grid at 228 px tiles, with a size slider of four steps", async ({
   page,
 }) => {

@@ -1,20 +1,27 @@
 import type { ModelPickerRow } from "@rosesfield/ui/components/model-row"
 
-type ModelPickerSort = "rankBest" | "rankLast" | "priceLow" | "priceHigh"
+type ModelPickerSortBy = "rank" | "price"
+
+type ModelPickerOrder = "down" | "up"
+
+type ModelPickerSort = { by: ModelPickerSortBy; order: ModelPickerOrder }
 
 type SearchedRow = { row: ModelPickerRow; text: string }
 
-const modelPickerSorts: readonly ModelPickerSort[] = [
-  "rankBest",
-  "rankLast",
-  "priceLow",
-  "priceHigh",
-]
+const modelPickerSortBys: readonly ModelPickerSortBy[] = ["rank", "price"]
+
+const modelPickerOrders: readonly ModelPickerOrder[] = ["down", "up"]
+
+const firstSort: ModelPickerSort = { by: "rank", order: "down" }
 
 const recentLimit = 3
 
-function isModelPickerSort(value: string): value is ModelPickerSort {
-  return modelPickerSorts.some((sort) => sort === value)
+function isModelPickerSortBy(value: string): value is ModelPickerSortBy {
+  return modelPickerSortBys.some((by) => by === value)
+}
+
+function isModelPickerOrder(value: string): value is ModelPickerOrder {
+  return modelPickerOrders.some((order) => order === value)
 }
 
 function firstThenRest(
@@ -36,28 +43,21 @@ function sortedRows(
   rows: readonly ModelPickerRow[],
   sort: ModelPickerSort
 ): ModelPickerRow[] {
-  switch (sort) {
-    case "rankBest":
-      return [...rows]
-    case "rankLast":
-      return firstThenRest(
-        rows,
-        (row) => row.rank !== undefined,
-        (ranked) => ranked.reverse()
-      )
-    case "priceLow":
-      return firstThenRest(
-        rows,
-        (row) => row.price !== undefined,
-        (priced) => priced.sort((a, b) => creditsOf(a) - creditsOf(b))
-      )
-    case "priceHigh":
-      return firstThenRest(
-        rows,
-        (row) => row.price !== undefined,
-        (priced) => priced.sort((a, b) => creditsOf(b) - creditsOf(a))
-      )
+  if (sort.by === "rank") {
+    return sort.order === "down"
+      ? [...rows]
+      : firstThenRest(
+          rows,
+          (row) => row.rank !== undefined,
+          (ranked) => ranked.reverse()
+        )
   }
+  const sign = sort.order === "up" ? 1 : -1
+  return firstThenRest(
+    rows,
+    (row) => row.price !== undefined,
+    (priced) => priced.sort((a, b) => sign * (creditsOf(a) - creditsOf(b)))
+  )
 }
 
 function isOpenRow(row: ModelPickerRow): boolean {
@@ -101,13 +101,21 @@ function isMatch(text: string, needle: string): boolean {
   return needle === "" || text.includes(needle)
 }
 
-export type { ModelPickerSort, SearchedRow }
+export type {
+  ModelPickerOrder,
+  ModelPickerSort,
+  ModelPickerSortBy,
+  SearchedRow,
+}
 export {
+  firstSort,
   hasOpenWeights,
   isMatch,
-  isModelPickerSort,
+  isModelPickerOrder,
+  isModelPickerSortBy,
   isOpenRow,
-  modelPickerSorts,
+  modelPickerOrders,
+  modelPickerSortBys,
   needleOf,
   recentLimit,
   recentRowsOf,

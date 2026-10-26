@@ -8,6 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuLabel,
+  DropdownMenuLead,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -18,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@rosesfield/ui/components/dropdown-menu"
 import { Slider } from "@rosesfield/ui/components/slider"
-import { LayoutGridIcon, ListIcon } from "lucide-react"
+import { LayoutGridIcon, ListIcon, ScalingIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useId } from "react"
 
 type ViewLayout = "list" | "grid"
@@ -32,6 +33,7 @@ type ViewOption = {
 type ViewFacet = {
   id: string
   label: string
+  lead?: ReactNode
   value: string
   options: ReadonlyArray<ViewOption>
   onValueChange: (value: string) => void
@@ -57,6 +59,7 @@ type ViewLayoutGroup = {
 type ViewSwitch = {
   id: string
   label: string
+  lead?: ReactNode
   checked: boolean
   onCheckedChange: (checked: boolean) => void
 }
@@ -67,7 +70,7 @@ type ViewMenuProps = {
   label: string
   trigger?: ViewTriggerForm
   icon?: ReactNode
-  sort?: ViewFacet
+  sorts?: ReadonlyArray<ViewFacet>
   switches?: ReadonlyArray<ViewSwitch>
   size?: ViewSize
   filterLabel?: string
@@ -83,8 +86,9 @@ function SizeRow({ size }: { size: ViewSize }): ReactElement {
   return (
     <div
       data-slot="view-menu-size"
-      className="flex min-h-button items-center gap-s3 py-s2 ps-[calc(var(--spacing-s4)+var(--menu-lead,0px))] pe-s4"
+      className="flex min-h-button items-center gap-s3 py-s2 ps-s4 pe-s4"
     >
+      <DropdownMenuLead lead={<ScalingIcon />} />
       <span id={id} className="shrink-0 text-body text-ink">
         {size.label}
       </span>
@@ -113,7 +117,7 @@ function chosenLabelOf(facet: ViewFacet): string | undefined {
 function FacetMenu({ facet }: { facet: ViewFacet }): ReactElement {
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
+      <DropdownMenuSubTrigger lead={facet.lead}>
         <span className="min-w-0 flex-1 truncate">{facet.label}</span>
         <span className="shrink-0 truncate text-ink-muted">
           {chosenLabelOf(facet)}
@@ -143,31 +147,6 @@ function FacetMenu({ facet }: { facet: ViewFacet }): ReactElement {
   )
 }
 
-function SortGroup({ sort }: { sort: ViewFacet }): ReactElement {
-  return (
-    <DropdownMenuRadioGroup
-      aria-label={sort.label}
-      data-slot="view-menu-sort"
-      value={sort.value}
-      onValueChange={(value) => {
-        if (typeof value === "string") {
-          sort.onValueChange(value)
-        }
-      }}
-    >
-      {sort.options.map((option) => (
-        <DropdownMenuRadioItem
-          key={option.value}
-          value={option.value}
-          lead={option.lead}
-        >
-          {option.label}
-        </DropdownMenuRadioItem>
-      ))}
-    </DropdownMenuRadioGroup>
-  )
-}
-
 function SwitchRows({
   switches,
 }: {
@@ -178,6 +157,7 @@ function SwitchRows({
       {switches.map((one) => (
         <DropdownMenuSwitchItem
           key={one.id}
+          lead={one.lead}
           checked={one.checked}
           onCheckedChange={one.onCheckedChange}
         >
@@ -259,6 +239,7 @@ function ViewTrigger({
 
 function ViewMenu(props: ViewMenuProps): ReactElement {
   const facets = props.facets ?? []
+  const sorts = props.sorts ?? []
   const switches = props.switches ?? []
   return (
     <DropdownMenu>
@@ -272,10 +253,16 @@ function ViewMenu(props: ViewMenuProps): ReactElement {
         }
       />
       <DropdownMenuContent align="end" data-slot="view-menu-content">
-        {props.sort === undefined ? null : <SortGroup sort={props.sort} />}
+        {sorts.length === 0 ? null : (
+          <DropdownMenuGroup data-slot="view-menu-sort">
+            {sorts.map((sort) => (
+              <FacetMenu key={sort.id} facet={sort} />
+            ))}
+          </DropdownMenuGroup>
+        )}
         {switches.length === 0 ? null : (
           <>
-            {props.sort === undefined ? null : <DropdownMenuSeparator />}
+            {sorts.length === 0 ? null : <DropdownMenuSeparator />}
             <SwitchRows switches={switches} />
           </>
         )}
