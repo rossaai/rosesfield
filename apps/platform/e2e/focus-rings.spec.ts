@@ -322,9 +322,9 @@ for (const path of ["/history", "/library", "/apps/image", "/apps/video"]) {
   })
 }
 
-test("Library's first-column tile starts on the page title's 16 px gutter, and its search field sits in the title row", async ({
+test("Library's first-column tile starts on the page title's 16 px gutter, and its search field opens in the head row beside View", async ({
   page,
-}) => {
+}, info) => {
   await open(page, "/library")
   const tile = page
     .locator("[data-slot='canvas-scroll'] [data-slot='media-tile']")
@@ -332,19 +332,20 @@ test("Library's first-column tile starts on the page title's 16 px gutter, and i
   await expect(tile).toBeVisible()
   const box = await tile.boundingBox()
   expect(box?.x).toBe(16)
-  const search = page.getByRole("searchbox", { name: "Search your library" })
-  if (await search.isVisible()) {
-    const title = await page
-      .locator("header h1")
+  if (info.project.name === "desktop") {
+    await page.getByRole("button", { name: "Search", exact: true }).click()
+    const search = page.getByRole("searchbox", { name: "Search your library" })
+    const view = await page
+      .locator("[data-slot='view-menu']")
       .filter({ visible: true })
-      .first()
       .boundingBox()
     const field = await search.boundingBox()
-    if (title === null || field === null) {
-      throw new Error("the title row holds the title and the search field")
+    if (view === null || field === null) {
+      throw new Error("the head row holds View and the search field")
     }
     const middle = (box: { y: number; height: number }): number =>
       box.y + box.height / 2
-    expect(Math.abs(middle(field) - middle(title))).toBeLessThan(1)
+    expect(Math.abs(middle(field) - middle(view))).toBeLessThan(1)
+    expect(field.x + field.width).toBeLessThan(view.x)
   }
 })

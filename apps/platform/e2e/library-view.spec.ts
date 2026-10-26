@@ -91,7 +91,7 @@ test("the head row ends in one View, whose menu holds the layout and the filters
 }) => {
   await open(page, "/history")
   const view = page.locator("[data-slot='view-menu']").filter({ visible: true })
-  await expect(view).toHaveText("View")
+  await expect(view).toHaveAccessibleName("View")
   const menu = await openView(page)
   await expect(menu.getByRole("menuitemradio")).toHaveText(["List", "Grid"])
   await expect(
@@ -110,6 +110,67 @@ test("the head row ends in one View, whose menu holds the layout and the filters
   await facets.first().hover()
   const sub = page.locator("[data-slot='dropdown-menu-content']").last()
   await expect(sub.getByRole("menuitemradio").first()).toHaveText("All apps")
+})
+
+test("Library and History open on Grid at 228 px tiles, with a size slider of four steps", async ({
+  page,
+}) => {
+  for (const path of ["/library", "/history"]) {
+    await open(page, path)
+    const menu = await openView(page)
+    await expect(
+      menu.getByRole("menuitemradio", { name: "Grid" }),
+      path
+    ).toHaveAttribute("aria-checked", "true")
+    const slider = menu.getByRole("slider", { name: "Tile size" })
+    await expect(slider, path).toHaveAttribute("min", "0")
+    await expect(slider, path).toHaveAttribute("max", "3")
+    await expect(slider, path).toHaveAttribute("value", "1")
+    await page.keyboard.press("Escape")
+  }
+})
+
+test("Library and History keep the layout and size you choose after a reload", async ({
+  page,
+}) => {
+  for (const path of ["/library", "/history"]) {
+    await open(page, path)
+    await chooseLayout(page, "List")
+    await page.reload()
+    await page.waitForLoadState("networkidle")
+    const menu = await openView(page)
+    await expect(
+      menu.getByRole("menuitemradio", { name: "List" }),
+      path
+    ).toHaveAttribute("aria-checked", "true")
+    await page.keyboard.press("Escape")
+  }
+})
+
+test("Search and View fit the head row beside the tabs on a 375 px phone", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "phone", "the phone window")
+  await page.setViewportSize({ width: 375, height: 812 })
+  for (const [path, tabs] of [
+    ["/library", "library-tabs"],
+    ["/history", "history-tabs"],
+  ] as const) {
+    await open(page, path)
+    const row = await boxOf(page.locator(`[data-slot='${tabs}']`))
+    const bar = await boxOf(
+      page.locator("[data-slot='view-bar']").filter({ visible: true })
+    )
+    expect(Math.round(bar.x + bar.width), path).toBeLessThanOrEqual(375 - 16)
+    expect(bar.y, path).toBeGreaterThanOrEqual(row.y)
+    expect(bar.y + bar.height, path).toBeLessThanOrEqual(row.y + row.height)
+    expect(row.height, path).toBeLessThan(48)
+    await page.getByRole("button", { name: "Search", exact: true }).click()
+    const field = await boxOf(page.getByRole("searchbox"))
+    expect(Math.round(field.x), path).toBe(16)
+    expect(Math.round(field.x + field.width), path).toBe(375 - 16)
+    expect(field.y, path).toBeGreaterThan(bar.y + bar.height)
+  }
 })
 
 test("History's View shows no size slider in List", async ({ page }) => {
@@ -251,11 +312,14 @@ test("the search field and the tile size slider show the focus ring after Tab", 
     "the cluster's slider shows at 1440"
   )
   await open(page, "/library")
+  const opener = page.getByRole("button", { name: "Search", exact: true })
   const search = page.getByRole("searchbox", { name: "Search your library" })
   let seen = { search: false, slider: false }
   for (let step = 0; step < 40 && !seen.search; step += 1) {
     await page.keyboard.press("Tab")
-    if (await search.evaluate((node) => node === document.activeElement)) {
+    if (await opener.evaluate((node) => node === document.activeElement)) {
+      await page.keyboard.press("Enter")
+      await expect(search).toBeFocused()
       await expect(search).toHaveCSS("outline-style", "solid")
       await expect(search).toHaveCSS("outline-offset", "2px")
       seen = { ...seen, search: true }

@@ -38,8 +38,9 @@ import demoSquare from "@/gallery/fixtures/demo-image-1-1.png"
 import demoVideo from "@/gallery/fixtures/demo-video-16-9.mp4"
 import type { GalleryEntry } from "@/gallery/gallery-entry"
 import { frameState, interactionStates } from "@/gallery/reference-frames"
+import { tileSizes } from "@/pieces/view/tile-scale"
+import { ViewMenu } from "@/pieces/view/view-bar"
 import type { AppForm } from "@/screens/app/use-app-form"
-import { tileSizes, ViewCluster } from "@/screens/library/view-cluster"
 import { VideoSettings } from "@/studio/video/video-chips"
 import { ModeTabs } from "@/studio/video/video-panel"
 
@@ -247,12 +248,13 @@ function CanvasDemo({ hasRuns }: { hasRuns: boolean }): ReactElement {
           </Tabs>
         }
         cluster={
-          <ViewCluster
-            layout="list"
-            onLayout={() => undefined}
-            size={tileSizes.initial}
-            onSize={() => undefined}
-            groups={[]}
+          <ViewMenu
+            view={{
+              layout: "list",
+              size: tileSizes.start,
+              setLayout: () => undefined,
+              setSize: () => undefined,
+            }}
           />
         }
       >

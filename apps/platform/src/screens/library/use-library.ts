@@ -2,8 +2,8 @@ import type { Asset, Run } from "@rosesfield/contract"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 import { assetsQuery, runsOf, runsQuery } from "@/api/queries"
-import { runAppName, runHeadline } from "@/pieces/run/run-facts"
 import { useNextPage } from "@/pieces/use-next-page"
+import { runHoldsWords } from "@/pieces/view/match-words"
 import type { LibraryKind } from "@/screens/library/library-bars"
 import { type GridItem, gridItemOf } from "@/screens/library/result-grid"
 
@@ -31,9 +31,7 @@ function matches(
   if (run === undefined || (appId !== null && run.appId !== appId)) {
     return false
   }
-  return `${runHeadline(run)} ${runAppName(run)}`
-    .toLowerCase()
-    .includes(query.toLowerCase())
+  return runHoldsWords(run, query)
 }
 
 function sourceRun(

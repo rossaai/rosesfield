@@ -11,6 +11,9 @@ import { dayKey, dayLabel } from "@/copy/format"
 import { t } from "@/copy/t"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { useNextPage } from "@/pieces/use-next-page"
+import { runHoldsWords } from "@/pieces/view/match-words"
+import { type PlaceView, useView } from "@/pieces/view/use-view"
+import { ViewBar, viewRowClassOf } from "@/pieces/view/view-bar"
 import {
   type HistoryFilterProps,
   historyFilterGroups,
@@ -22,15 +25,9 @@ import {
   historyShownOf,
 } from "@/screens/history/history-grid-items"
 import { HistoryRow, HistoryRowSkeleton } from "@/screens/history/history-row"
+import { type DateChoice, isWithinDate } from "@/screens/library/filter-groups"
 import { GridSkeleton } from "@/screens/library/library-grid"
 import { ResultGrid } from "@/screens/library/result-grid"
-import {
-  type DateChoice,
-  isWithinDate,
-  tileSizes,
-  type ViewLayout,
-  ViewMenu,
-} from "@/screens/library/view-cluster"
 import { ScreenHeader } from "@/shell/screen-header"
 
 type DayRuns = { key: number; label: string; runs: Run[] }
@@ -108,7 +105,31 @@ function useHistoryFilters(): HistoryFilters {
   }
 }
 
-function HistoryEmpty({ filters }: { filters: HistoryFilters }): ReactElement {
+function HistoryEmpty({
+  filters,
+  view,
+}: {
+  filters: HistoryFilters
+  view: PlaceView
+}): ReactElement {
+  if (view.words.trim() !== "") {
+    return (
+      <StateView
+        kind="empty"
+        title={t("library.filterEmpty.title")}
+        actions={
+          <Button
+            onClick={() => {
+              view.setWords("")
+              filters.clear()
+            }}
+          >
+            {t("library.filterEmpty.action")}
+          </Button>
+        }
+      />
+    )
+  }
   return filters.isFiltered ? (
     <StateView
       kind="empty"
@@ -151,15 +172,14 @@ type HistoryQuery = ReturnType<typeof useHistoryQuery>
 function HistoryBody({
   filters,
   history,
-  layout,
-  size,
+  view,
 }: {
   filters: HistoryFilters
   history: HistoryQuery
-  layout: ViewLayout
-  size: number
+  view: PlaceView
 }): ReactNode {
   const { query } = history
+  const { layout, size } = view
   if (query.isPending) {
     return layout === "grid" ? (
       <GridSkeleton size={size} />
@@ -185,12 +205,15 @@ function HistoryBody({
     )
   }
   const now = new Date()
-  const runs = history.runs.filter((run) =>
-    keepsRun(run, filters.state, filters.kind, filters.date, now)
+  const words = view.words.trim()
+  const runs = history.runs.filter(
+    (run) =>
+      keepsRun(run, filters.state, filters.kind, filters.date, now) &&
+      runHoldsWords(run, words)
   )
   const shown = historyShownOf(runs, layout)
   if (shown === "empty") {
-    return <HistoryEmpty filters={filters} />
+    return <HistoryEmpty filters={filters} view={view} />
   }
   const sentinel = (
     <span ref={history.sentinel} aria-hidden="true" className="block h-s1" />
@@ -222,17 +245,17 @@ function HistoryBody({
 export function HistoryScreen(): ReactElement {
   const filters = useHistoryFilters()
   const history = useHistoryQuery(filters.appId)
-  const [layout, setLayout] = useState<ViewLayout>("grid")
-  const [size, setSize] = useState<number>(tileSizes.initial)
+  const view = useView("history")
   const isRegular = useIsRegularWindow()
   const hasView =
-    history.runs.length > 0 || filters.isFiltered || history.query.isPending
+    history.runs.length > 0 ||
+    filters.isFiltered ||
+    view.words !== "" ||
+    history.query.isPending
   const viewMenu = hasView ? (
-    <ViewMenu
-      layout={layout}
-      onLayout={setLayout}
-      size={size}
-      onSize={setSize}
+    <ViewBar
+      view={view}
+      searchLabel={t("history.search.label")}
       isLoading={history.query.isPending}
       groups={historyFilterGroups(filters)}
     />
@@ -245,10 +268,7 @@ export function HistoryScreen(): ReactElement {
           label={t("history.title")}
           inset="page"
           tabs={
-            <div
-              data-slot="history-tabs"
-              className="flex min-w-0 flex-1 items-center justify-between gap-s3"
-            >
+            <div data-slot="history-tabs" className={viewRowClassOf(isRegular)}>
               <StateTabs {...filters} />
               {isRegular ? null : viewMenu}
             </div>
@@ -256,12 +276,7 @@ export function HistoryScreen(): ReactElement {
           {...(isRegular ? { cluster: viewMenu } : {})}
           hasRuns={isRegular && viewMenu !== null}
         >
-          <HistoryBody
-            filters={filters}
-            history={history}
-            layout={layout}
-            size={size}
-          />
+          <HistoryBody filters={filters} history={history} view={view} />
         </Canvas>
       </div>
     </>

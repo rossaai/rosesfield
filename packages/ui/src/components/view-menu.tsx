@@ -1,4 +1,4 @@
-import { Button } from "@rosesfield/ui/components/button"
+import { Button, type ButtonProps } from "@rosesfield/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,17 +41,23 @@ type ViewSize = {
   onValueChange: (value: number) => void
 }
 
-type ViewMenuProps = {
-  label: string
+type ViewLayoutGroup = {
   layoutLabel: string
   listLabel: string
   gridLabel: string
   layout: ViewLayout
   onLayoutChange: (layout: ViewLayout) => void
+}
+
+type ViewTriggerForm = "label" | "icon"
+
+type ViewMenuProps = {
+  label: string
+  trigger?: ViewTriggerForm
   size?: ViewSize
   filterLabel?: string
   facets?: ReadonlyArray<ViewFacet>
-}
+} & (ViewLayoutGroup | { layout?: undefined })
 
 function isLayout(value: unknown): value is ViewLayout {
   return value === "list" || value === "grid"
@@ -122,37 +128,67 @@ function FacetMenu({ facet }: { facet: ViewFacet }): ReactElement {
   )
 }
 
+function LayoutGroup(props: ViewLayoutGroup): ReactElement {
+  return (
+    <DropdownMenuGroup>
+      <DropdownMenuLabel>{props.layoutLabel}</DropdownMenuLabel>
+      <DropdownMenuRadioGroup
+        value={props.layout}
+        onValueChange={(value) => {
+          if (isLayout(value)) {
+            props.onLayoutChange(value)
+          }
+        }}
+      >
+        <DropdownMenuRadioItem value="list" lead={<ListIcon />}>
+          {props.listLabel}
+        </DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="grid" lead={<LayoutGridIcon />}>
+          {props.gridLabel}
+        </DropdownMenuRadioItem>
+      </DropdownMenuRadioGroup>
+    </DropdownMenuGroup>
+  )
+}
+
+function ViewTrigger({
+  label,
+  trigger = "label",
+  ...props
+}: ButtonProps & {
+  label: string
+  trigger?: ViewTriggerForm | undefined
+}): ReactElement {
+  if (trigger === "icon") {
+    return (
+      <Button
+        {...props}
+        data-slot="view-menu"
+        tone="quiet"
+        size="icon-dense"
+        aria-label={label}
+      >
+        <LayoutGridIcon aria-hidden="true" />
+      </Button>
+    )
+  }
+  return (
+    <Button {...props} data-slot="view-menu" tone="quiet" size="dense">
+      <LayoutGridIcon aria-hidden="true" />
+      {label}
+    </Button>
+  )
+}
+
 function ViewMenu(props: ViewMenuProps): ReactElement {
   const facets = props.facets ?? []
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={
-          <Button data-slot="view-menu" tone="quiet" size="dense">
-            <LayoutGridIcon aria-hidden="true" />
-            {props.label}
-          </Button>
-        }
+        render={<ViewTrigger label={props.label} trigger={props.trigger} />}
       />
       <DropdownMenuContent align="end" data-slot="view-menu-content">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{props.layoutLabel}</DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            value={props.layout}
-            onValueChange={(value) => {
-              if (isLayout(value)) {
-                props.onLayoutChange(value)
-              }
-            }}
-          >
-            <DropdownMenuRadioItem value="list" lead={<ListIcon />}>
-              {props.listLabel}
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="grid" lead={<LayoutGridIcon />}>
-              {props.gridLabel}
-            </DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
+        {props.layout === undefined ? null : <LayoutGroup {...props} />}
         {props.size === undefined ? null : <SizeRow size={props.size} />}
         {facets.length === 0 ? null : (
           <>
@@ -172,5 +208,13 @@ function ViewMenu(props: ViewMenuProps): ReactElement {
   )
 }
 
-export type { ViewFacet, ViewLayout, ViewMenuProps, ViewOption, ViewSize }
-export { ViewMenu }
+export type {
+  ViewFacet,
+  ViewLayout,
+  ViewLayoutGroup,
+  ViewMenuProps,
+  ViewOption,
+  ViewSize,
+  ViewTriggerForm,
+}
+export { ViewMenu, ViewTrigger }

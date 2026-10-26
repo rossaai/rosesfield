@@ -1,10 +1,11 @@
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
-import { cleanup, fireEvent } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   type GridItem,
   type GridSelection,
   ResultGrid,
+  SoundButton,
 } from "@/screens/library/result-grid"
 import { ViewerProvider } from "@/viewer/viewer-context"
 import { renderAt } from "../../shell/shell-router"
@@ -72,9 +73,12 @@ describe("the result grid", () => {
   })
 
   it("widens a short row's tiles as the size grows", async () => {
-    const columns = await columnsAt(1, 2)
-    expect(columns).toHaveLength(1)
-    expect(columns[0]?.className.split(" ")).toContain("w-116")
+    const third = await columnsAt(1, 2)
+    expect(third[0]?.className.split(" ")).toContain("w-80")
+    cleanup()
+    const fourth = await columnsAt(1, 3)
+    expect(fourth).toHaveLength(1)
+    expect(fourth[0]?.className.split(" ")).toContain("w-116")
   })
 
   it("keeps its columns and their order when Select turns on, and lays a mark over every tile", async () => {
@@ -98,5 +102,27 @@ describe("the result grid", () => {
     expect(itemsOf(12).map((item) => item.assetId)).toContain(
       onToggle.mock.calls[0]?.[0]
     )
+  })
+})
+
+describe("a clip's sound button", () => {
+  it("turns its clip's sound on and off", () => {
+    render(
+      <TooltipProvider>
+        <div data-slot="grid-item">
+          <video muted />
+          <SoundButton />
+        </div>
+      </TooltipProvider>
+    )
+    const video = document.querySelector("video")
+    if (video === null) {
+      throw new Error("no video")
+    }
+    video.muted = true
+    fireEvent.click(screen.getByRole("button", { name: "Turn sound on" }))
+    expect(video.muted).toBe(false)
+    fireEvent.click(screen.getByRole("button", { name: "Turn sound off" }))
+    expect(video.muted).toBe(true)
   })
 })

@@ -4,7 +4,6 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t } from "@/copy/t"
 import { LibraryRows } from "@/screens/library/library-rows"
-import { libraryLayout, libraryShownOf } from "@/screens/library/library-view"
 
 const runId = "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e01"
 
@@ -50,13 +49,6 @@ afterEach(() => {
 })
 
 describe("Library's View", () => {
-  it("opens on Grid, which shows the masonry, and List shows rows, so the chosen tab names what shows", () => {
-    expect(libraryLayout).toBe("grid")
-    expect(libraryShownOf("grid", null)).toBe("masonry")
-    expect(libraryShownOf("list", null)).toBe("rows")
-    expect(libraryShownOf("grid", [])).toBe("tiles")
-  })
-
   it("lists each item as a row with its picture, the app or Upload, and the run's prompt", () => {
     render(
       <QueryClientProvider client={new QueryClient()}>

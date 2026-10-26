@@ -52,6 +52,7 @@ export const charactersCopy = {
   "characters.delete.cancel": "Cancel",
   "characters.delete.confirm": "Delete",
   "history.title": "History",
+  "history.search.label": "Search your history",
   "history.filter.app": "App",
   "history.filter.allApps": "All apps",
   "history.filter.state": "State",

@@ -1,21 +1,18 @@
 import type { Asset } from "@rosesfield/contract"
 import { Button, IconButton } from "@rosesfield/ui/components/button"
 import { ConfirmButton } from "@rosesfield/ui/components/confirm-button"
-import { Input } from "@rosesfield/ui/components/input"
 import {
   SegmentedControl,
   type SegmentedItem,
 } from "@rosesfield/ui/components/segmented-control"
-import { cn } from "@rosesfield/ui/lib/cn"
 import {
   DownloadIcon,
   ListChecksIcon,
-  SearchIcon,
   Trash2Icon,
   UploadIcon,
   XIcon,
 } from "lucide-react"
-import type { ReactElement, ReactNode } from "react"
+import type { ReactElement } from "react"
 import { t, tCount } from "@/copy/t"
 import { useDeleteAssets, useDownloadAsset } from "@/pieces/asset-actions"
 import { ScreenHeader } from "@/shell/screen-header"
@@ -43,28 +40,6 @@ export function KindTabs({
       onValueChange={onKind}
       label={t("library.kind.label")}
       density="row"
-    />
-  )
-}
-
-type SearchProps = {
-  query: string
-  isSearchOpen: boolean
-  onQuery: (query: string) => void
-}
-
-export function LibrarySearch(props: SearchProps): ReactElement {
-  return (
-    <Input
-      type="search"
-      aria-label={t("library.search.label")}
-      placeholder={t("library.search.placeholder")}
-      value={props.query}
-      onChange={(event) => props.onQuery(event.target.value)}
-      className={cn(
-        "max-w-none @regular:w-field-max @regular:max-w-field-max",
-        props.isSearchOpen ? "" : "hidden"
-      )}
     />
   )
 }
@@ -162,15 +137,12 @@ export function PhoneSelectionActions(props: SelectionProps): ReactElement {
 type HeaderProps = {
   onSelect: () => void
   onUpload: () => void
-  onSearch: () => void
-  search: ReactNode
   selection: SelectionProps | null
 }
 
 function RestActions(props: HeaderProps): ReactElement {
   return (
     <>
-      {props.search}
       <Button tone="quiet" onClick={props.onSelect}>
         {t("library.select")}
       </Button>
@@ -184,13 +156,6 @@ function RestActions(props: HeaderProps): ReactElement {
 function PhoneRestActions(props: HeaderProps): ReactElement {
   return (
     <>
-      <IconButton
-        label={t("library.search.label")}
-        tone="quiet"
-        onClick={props.onSearch}
-      >
-        <SearchIcon aria-hidden="true" />
-      </IconButton>
       <IconButton
         label={t("library.select")}
         tone="quiet"
