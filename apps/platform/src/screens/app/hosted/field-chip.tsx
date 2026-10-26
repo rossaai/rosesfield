@@ -123,13 +123,15 @@ export function ModelFieldChip({
         return null
       }
       const min = field.min ?? 0
-      const chosen = typeof value === "number" ? value : (field.default ?? min)
+      const fallback = field.default ?? min
+      const chosen = typeof value === "number" ? value : fallback
       return (
         <StepperChip
           label={label}
           icon={icon}
           shown={fieldValueText(field, chosen)}
           value={chosen}
+          fallback={fallback}
           min={min}
           max={field.max ?? Number.POSITIVE_INFINITY}
           step={field.step ?? (field.integer ? 1 : 0.1)}
