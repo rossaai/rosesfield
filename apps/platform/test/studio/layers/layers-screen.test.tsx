@@ -218,6 +218,27 @@ describe("the model of each Layers mode", () => {
   })
 })
 
+describe("the Layers column on Split", () => {
+  it("shows the image, then the model once, then the quality and the count, with the seed closed under Advanced", async () => {
+    openLayers({ runs: [], hasCatalog: true })
+    const model = await pickerNamed(splitGraph.name)
+    const [image] = screen.getAllByText(tCatalog("layers.input.source.label"))
+    const quality = screen.getByText(tCatalog("layers.input.quality.label"))
+    const [count] = screen.getAllByText(tCatalog("layers.input.count.label"))
+    const advanced = screen.getByRole("button", { name: t("field.advanced") })
+    const after = (first: Element | undefined, second: Element): boolean =>
+      first !== undefined &&
+      (first.compareDocumentPosition(second) &
+        Node.DOCUMENT_POSITION_FOLLOWING) !==
+        0
+    expect(after(image, model)).toBe(true)
+    expect(after(model, quality)).toBe(true)
+    expect(after(quality, count ?? quality)).toBe(true)
+    expect(after(count, advanced)).toBe(true)
+    expect(screen.queryByText(tCatalog("layers.input.seed.label"))).toBeNull()
+  })
+})
+
 describe("Use these inputs on a hosted split run in History", () => {
   const hostedSplit = layersRun({
     id: "6c0d1e2f-3a4b-4c5d-8e6f-7a8b9c0d1e2f",
