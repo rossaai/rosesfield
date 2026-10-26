@@ -17,7 +17,7 @@ const modelRow =
 test.describe("a prompt app on a desktop", () => {
   test.skip(({ isMobile }) => isMobile, "the bar shows from 768 px")
 
-  test("docks the prompt bar 16 px above the bottom, 880 by 100, with Generate as its 120 by 80 tile and the 73 by 33 References tile first on a text only default", async ({
+  test("docks the prompt bar 16 px above the bottom, 880 by 100, with Generate as its 120 by 80 tile and the 73 by 33 References tile first, on the prompt text's line, on a text only default", async ({
     page,
   }) => {
     await page.goto("/apps/image")
@@ -41,7 +41,13 @@ test.describe("a prompt app on a desktop", () => {
     await expect(tile).toHaveCount(1)
     const tileBox = await boxOf(tile)
     expect([tileBox.width, tileBox.height]).toEqual([73, 33])
-    expect(tileBox.x).toBe(row.x)
+    const textStart = await bar
+      .locator('[data-slot="composer-prompt"] textarea')
+      .evaluate((field) => {
+        const box = field.getBoundingClientRect()
+        return box.x + Number.parseFloat(getComputedStyle(field).paddingLeft)
+      })
+    expect(tileBox.x).toBe(textStart)
   })
 
   test("keeps the bar in place while the page scrolls", async ({ page }) => {

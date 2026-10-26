@@ -9,17 +9,20 @@ test.beforeEach(async ({ page }) => {
 test.describe("3D's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("opens on Meshy 7.1 with no tab row while From text is its one mode, its prompt above the model, Art style and Generate with its price", async ({
+  test("opens on From text, the first of its two tabs, with Meshy 7.1, its prompt above the model, Art style and Generate with its price", async ({
     page,
   }) => {
     await page.goto("/apps/three-d")
     const column = page.locator("aside")
     const picker = column.getByRole("button", { name: /^Model/ })
     await expect(picker).toContainText("7.1")
+    await expect(column.getByRole("tab")).toHaveText([
+      "From text",
+      "From an image",
+    ])
     await expect(
-      column.getByRole("tablist", { name: "Make a 3D model" })
-    ).toHaveCount(0)
-    await expect(column.getByRole("tab")).toHaveCount(0)
+      column.getByRole("tab", { name: "From text" })
+    ).toHaveAttribute("aria-selected", "true")
     const prompt = column.getByRole("textbox", { name: "Prompt" })
     await expect(prompt).toBeVisible()
     const promptBox = await prompt.boundingBox()
@@ -36,12 +39,33 @@ test.describe("3D's column", () => {
     ).toBeVisible()
   })
 
+  test("makes a model from a photo on From an image, with the photo input and Meshy 7.1", async ({
+    page,
+  }) => {
+    await page.goto("/apps/three-d")
+    const column = page.locator("aside")
+    await column.getByRole("tab", { name: "From an image" }).click()
+    await expect(
+      column.getByRole("tab", { name: "From an image" })
+    ).toHaveAttribute("aria-selected", "true")
+    await expect(column.getByText("Add an image")).toBeVisible()
+    await expect(column.getByRole("button", { name: /^Model/ })).toContainText(
+      "7.1"
+    )
+    await expect(column.getByRole("textbox", { name: "Prompt" })).toHaveCount(0)
+  })
+
   test("lists the catalog's 3D models from text in the picker, each with its maker", async ({
     page,
   }) => {
     await page.goto("/apps/three-d")
     const column = page.locator("aside")
-    await column.getByRole("button", { name: /^Model/ }).click()
+    const picker = column.getByRole("button", { name: /^Model/ })
+    await expect(picker).toContainText("7.1")
+    await expect(
+      column.getByRole("combobox", { name: "Art style" })
+    ).toBeVisible()
+    await picker.click()
     const rows = page.locator("[role='listbox'] [data-slot='model-row']")
     await expect(rows.first()).toBeVisible()
     const names = await rows
@@ -55,14 +79,17 @@ test.describe("3D's column", () => {
 test.describe("3D on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "the sheet is the phone's")
 
-  test("opens the inputs in a sheet on the prompt and Meshy 7.1 with no tab row, and Generate at its bottom edge", async ({
+  test("opens the inputs in a sheet on From text with the prompt and Meshy 7.1, and Generate at its bottom edge", async ({
     page,
   }) => {
     await page.goto("/apps/three-d")
     await page.locator('[data-slot="app-bar-tabGenerate"]').click()
     const sheet = page.getByRole("dialog")
     await expect(sheet).toBeVisible()
-    await expect(sheet.getByRole("tab")).toHaveCount(0)
+    await expect(sheet.getByRole("tab")).toHaveText([
+      "From text",
+      "From an image",
+    ])
     await expect(sheet.getByRole("textbox", { name: "Prompt" })).toBeVisible()
     await expect(sheet.getByRole("button", { name: /^Model/ })).toContainText(
       "7.1"
