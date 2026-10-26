@@ -92,6 +92,13 @@ function Probe(): ReactElement {
   )
 }
 
+function withResult(made: Run): Run {
+  return run.parse({
+    ...made,
+    outputs: ["3d4e5f6a-7b8c-4d9e-8f0a-2b3c4d5e6f09"],
+  })
+}
+
 function keepView(layout: "list" | "grid", size: number): void {
   window.localStorage.setItem(
     "rosesfield.view.app",
@@ -219,6 +226,50 @@ describe("an app page's view", () => {
   })
 })
 
+describe("an app page's Grid", () => {
+  it("keeps a run still working, and a failure newer than your last result, as run cards above the results", async () => {
+    const working = run.parse({
+      ...promptRun(image.id, 1, "a red fox"),
+      status: "running",
+      finishedAt: null,
+    })
+    const result = run.parse({
+      ...promptRun(image.id, 2, "a blue whale"),
+      outputs: ["3d4e5f6a-7b8c-4d9e-8f0a-2b3c4d5e6f01"],
+    })
+    const olderFailure = run.parse({
+      ...promptRun(image.id, 3, "a green frog"),
+      status: "failed",
+    })
+    render(
+      withClient(
+        inRouter(
+          <AppStage app={image} kind="bar">
+            <AppCanvas app={image} onUseInputs={() => undefined} />
+          </AppStage>
+        ),
+        image,
+        [working, result, olderFailure]
+      )
+    )
+    const grid = await waitFor(() => {
+      const found = document.querySelector("[data-slot='app-grid']")
+      expect(found).not.toBeNull()
+      return found
+    })
+    const cards = grid?.querySelectorAll("[data-slot='run-card']") ?? []
+    expect(cards).toHaveLength(1)
+    expect(
+      cards[0]?.querySelector("[data-slot='working-pulse']")
+    ).not.toBeNull()
+    expect(
+      grid?.querySelectorAll(
+        "[data-slot='result-grid'] [data-slot='grid-item']"
+      )
+    ).toHaveLength(1)
+  })
+})
+
 describe("the 3D and audio canvases", () => {
   it("read the app page's layout and search", async () => {
     keepView("grid", 2)
@@ -235,7 +286,7 @@ describe("the 3D and audio canvases", () => {
           </AppStage>
         ),
         audio,
-        [promptRun(audio.id, 1, "rain on a tin roof")]
+        [withResult(promptRun(audio.id, 1, "rain on a tin roof"))]
       )
     )
     await waitFor(() =>

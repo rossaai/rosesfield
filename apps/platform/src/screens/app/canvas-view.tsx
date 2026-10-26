@@ -8,6 +8,7 @@ import {
   useContext,
   useMemo,
 } from "react"
+import { isWorking } from "@/api/queries"
 import { t } from "@/copy/t"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { runHoldsWords } from "@/pieces/view/match-words"
@@ -87,5 +88,14 @@ export function MatchedRuns({
         </Button>
       }
     />
+  )
+}
+
+export function runsAwaitingResults(runs: readonly Run[]): readonly Run[] {
+  const firstResult = runs.findIndex((run) => run.outputs.length > 0)
+  const latest = firstResult === -1 ? runs.length : firstResult
+  return runs.filter(
+    (run, index) =>
+      run.outputs.length === 0 && (isWorking(run) || index < latest)
   )
 }
