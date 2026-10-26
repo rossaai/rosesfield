@@ -1,6 +1,4 @@
 import type { Run } from "@rosesfield/contract"
-import { Button } from "@rosesfield/ui/components/button"
-import { StateView } from "@rosesfield/ui/components/state-view"
 import {
   createContext,
   type ReactElement,
@@ -9,11 +7,13 @@ import {
   useMemo,
 } from "react"
 import { isWorking } from "@/api/queries"
-import { t } from "@/copy/t"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { runHoldsWords } from "@/pieces/view/match-words"
+import { NoMatch } from "@/pieces/view/no-match"
 import { runCardColumnsOf, tileSizes } from "@/pieces/view/tile-scale"
 import { type PlaceView, viewStart } from "@/pieces/view/use-view"
+import { historyGridItems } from "@/screens/history/history-grid-items"
+import { ResultGrid } from "@/screens/library/result-grid"
 
 export type CanvasView = Pick<
   PlaceView,
@@ -78,16 +78,42 @@ export function MatchedRuns({
   if (kept.length > 0) {
     return children(kept)
   }
+  return <NoMatch onShowAll={() => view.setWords("")} />
+}
+
+export type RunCardsOf = (runs: readonly Run[], columns: number) => ReactNode
+
+export function ViewedRuns({
+  runs,
+  cards,
+}: {
+  runs: readonly Run[]
+  cards: RunCardsOf
+}): ReactNode {
+  const view = useCanvasView()
+  if (view.layout === "list") {
+    return cards(runs, view.columns)
+  }
+  const awaiting = runsAwaitingResults(runs)
   return (
-    <StateView
-      kind="empty"
-      title={t("library.filterEmpty.title")}
-      actions={
-        <Button onClick={() => view.setWords("")}>
-          {t("library.filterEmpty.action")}
-        </Button>
-      }
-    />
+    <div data-slot="app-grid" className="flex flex-col gap-s2">
+      {awaiting.length === 0 ? null : cards(awaiting, view.columns)}
+      <ResultGrid items={historyGridItems(runs)} size={view.size} />
+    </div>
+  )
+}
+
+export function RunsInView({
+  runs,
+  cards,
+}: {
+  runs: readonly Run[]
+  cards: RunCardsOf
+}): ReactNode {
+  return (
+    <MatchedRuns runs={runs}>
+      {(kept) => <ViewedRuns runs={kept} cards={cards} />}
+    </MatchedRuns>
   )
 }
 
