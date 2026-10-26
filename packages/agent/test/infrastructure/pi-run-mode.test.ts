@@ -149,22 +149,22 @@ describe("the run mode an app tool follows", () => {
     expect(hasProposal(events)).toBe(true)
   })
 
-  it.each([
-    "model-runs",
-    "task-runs",
-  ] as const)("under auto, proposes a run priced from %s, an estimate that can sit below the bill", async (from) => {
-    const { generation, events, told } = await rose("auto", {
-      source: "estimate",
-      credits: 1,
-      from,
-    })
+  it.each(["model-runs", "task-runs"] as const)(
+    "under auto, proposes a run priced from %s, an estimate that can sit below the bill",
+    async (from) => {
+      const { generation, events, told } = await rose("auto", {
+        source: "estimate",
+        credits: 1,
+        from,
+      })
 
-    expect(generation.runs.count).toBe(0)
-    expect(generation.jobs.enqueued).toEqual([])
-    expect(hasProposal(events)).toBe(true)
-    expect(JSON.parse(told)).toMatchObject({ credits: null })
-    expect(JSON.parse(told).note).toContain("its price is not known")
-  })
+      expect(generation.runs.count).toBe(0)
+      expect(generation.jobs.enqueued).toEqual([])
+      expect(hasProposal(events)).toBe(true)
+      expect(JSON.parse(told)).toMatchObject({ credits: null })
+      expect(JSON.parse(told).note).toContain("its price is not known")
+    }
+  )
 
   it("under auto, proposes a Storyboard when one keyframe is priced from other runs", async () => {
     const { generation, events } = await callApp(

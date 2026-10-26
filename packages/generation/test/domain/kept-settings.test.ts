@@ -120,9 +120,9 @@ describe("scaling a measured run to the asked settings", () => {
   const at = (pairs: [string, number][]) => JSON.stringify(pairs)
 
   it("scales by the seconds when both runs name them", () => {
-    expect(
-      scaledCreditsOf(10, at([["length", 5]]), at([["length", 20]]))
-    ).toBe(40)
+    expect(scaledCreditsOf(10, at([["length", 5]]), at([["length", 20]]))).toBe(
+      40
+    )
   })
 
   it("does not scale from a run that names no seconds to a run that does", () => {
@@ -132,8 +132,6 @@ describe("scaling a measured run to the asked settings", () => {
   })
 
   it("scales by the outputs alone when neither run names seconds", () => {
-    expect(scaledCreditsOf(10, at([["count", 1]]), at([["count", 3]]))).toBe(
-      30
-    )
+    expect(scaledCreditsOf(10, at([["count", 1]]), at([["count", 3]]))).toBe(30)
   })
 })
