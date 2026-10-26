@@ -1,5 +1,8 @@
 import { IconButton } from "@rosesfield/ui/components/button"
-import { PromptBar } from "@rosesfield/ui/components/prompt-bar"
+import {
+  PromptBar,
+  type PromptStop,
+} from "@rosesfield/ui/components/prompt-bar"
 import { useQuery } from "@tanstack/react-query"
 import { AtSignIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useState } from "react"
@@ -20,6 +23,7 @@ type DraftBarProps = {
   chips?: ReactNode
   price?: ReactNode
   busy?: boolean
+  stop?: PromptStop | undefined
   className?: string
 }
 
@@ -65,6 +69,7 @@ function DraftLeading({
     <>
       <AttachMenu
         form="menu"
+        tone="quiet"
         label={t("bar.attach")}
         onUpload={() => void state.upload()}
         onFromLibrary={openLibrary}
@@ -74,7 +79,7 @@ function DraftLeading({
         onOpenChange={mention.setOpen}
         onPick={mention.onPick}
         trigger={
-          <IconButton label={t("bar.mention")} size="dense">
+          <IconButton label={t("bar.mention")} size="dense" tone="quiet">
             <AtSignIcon aria-hidden="true" />
           </IconButton>
         }
@@ -113,6 +118,7 @@ export function DraftBar(props: DraftBarProps): ReactElement {
         chips={props.chips}
         price={props.price}
         busy={props.busy === true || state.isUploading}
+        stop={props.stop}
         {...(props.className === undefined
           ? {}
           : { className: props.className })}

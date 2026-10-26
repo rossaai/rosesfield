@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { type ReactElement, useState } from "react"
+import type { ReactElement } from "react"
 import {
   type Conversation,
   type RunApproval,
@@ -24,6 +24,7 @@ import {
   conversationsQuery,
   transcriptKey,
 } from "@/screens/agent/conversation-queries"
+import { useRunApproval } from "@/screens/agent/run-approval"
 import { useOpenKeyDialog } from "@/shell/key-dialog-context"
 import { ScreenHeader } from "@/shell/screen-header"
 
@@ -65,7 +66,7 @@ export function AgentStartScreen(): ReactElement {
   const model = useAgentModel()
   const openKey = useOpenKeyDialog()
   const reach = useKeyReach()
-  const [approval, setApproval] = useState<RunApproval>("ask")
+  const approval = useRunApproval()
   const send = (): void => {
     if (state.draft.prompt.trim() !== "") {
       start.mutate({ draft: state.draft, approval })
@@ -94,8 +95,6 @@ export function AgentStartScreen(): ReactElement {
               state={state}
               isAnswering={false}
               isStarting={start.isPending}
-              approval={approval}
-              onApprovalChange={setApproval}
               onSend={asksForKey(model, reach) ? openKey : send}
               onStop={() => undefined}
             />

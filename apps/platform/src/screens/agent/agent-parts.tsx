@@ -49,7 +49,7 @@ export function NoModel(): ReactElement {
 
 function ComposerSkeleton(): ReactElement {
   return (
-    <Skeleton className="h-[calc(2*var(--spacing-s3)+var(--spacing-s2)+2*var(--spacing-s1_5)+var(--text-body--line-height)+var(--spacing-icon-dense))] w-full max-w-prompt-max rounded-vessel" />
+    <Skeleton className="h-[calc(2*var(--spacing-s3)+var(--spacing)*20)] w-full max-w-prompt-max rounded-vessel" />
   )
 }
 
