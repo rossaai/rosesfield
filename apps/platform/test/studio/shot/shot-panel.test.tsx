@@ -96,34 +96,61 @@ function show(value: ShotScreen): HTMLElement {
   return view.container
 }
 
-const lists = ["movement", "camera", "lens", "focus", "light", "color", "mood"]
+const look = ["camera", "lens", "focus", "light", "color", "mood"]
+
+function lookToggle(): HTMLElement {
+  return screen.getByRole("button", {
+    name: tCatalog("storyboard.input.look.label"),
+  })
+}
 
 describe("Shot's input column when it opens", () => {
-  it("shows 7 shot choices, each on Auto, then the model once, then the length and the format, with the seed closed under Advanced", () => {
+  it("shows the model, then Movement, the format and the length, then a closed Look section and a closed Advanced section, with no Sound chip", () => {
+    show(screenOf({}))
+    const model = theModelChip()
+    const movement = screen.getByText(tCatalog("shot.input.movement.label"))
+    const format = screen.getByText(t("field.aspect.label"))
+    const length = screen.getByRole("group", {
+      name: tCatalog("shot.input.length.label"),
+    })
+    const toggle = lookToggle()
+    const advanced = advancedToggle()
+    expect(isBefore(model, movement)).toBe(true)
+    expect(isBefore(movement, format)).toBe(true)
+    expect(isBefore(format, length)).toBe(true)
+    expect(isBefore(length, toggle)).toBe(true)
+    expect(isBefore(toggle, advanced)).toBe(true)
+    for (const list of look) {
+      expect(
+        screen.queryByText(tCatalog(`shot.input.${list}.label`))
+      ).toBeNull()
+    }
+    expect(
+      screen.queryByRole("button", { name: tCatalog("shot.input.sound.label") })
+    ).toBeNull()
+    expect(screen.queryByText(t("field.seed.label"))).toBeNull()
+  })
+
+  it("shows the six other look choices, each on Auto, once you open Look", () => {
     const container = show(screenOf({}))
+    fireEvent.click(lookToggle())
     const choices = container.querySelector<HTMLElement>(
       "[data-slot='shot-choices']"
     )
     if (choices === null) {
-      throw new Error("the column has no shot choices")
+      throw new Error("the Look section has no shot choices")
     }
-    for (const list of lists) {
+    for (const list of look) {
       expect(
         within(choices).getByText(tCatalog(`shot.input.${list}.label`))
       ).toBeTruthy()
     }
     expect(
+      within(choices).queryByText(tCatalog("shot.input.movement.label"))
+    ).toBeNull()
+    expect(
       within(choices).getAllByText(tCatalog("choice.auto")).length
-    ).toBeGreaterThanOrEqual(lists.length)
-    const model = theModelChip()
-    const length = screen.getByRole("group", {
-      name: tCatalog("shot.input.length.label"),
-    })
-    const advanced = advancedToggle()
-    expect(isBefore(choices, model)).toBe(true)
-    expect(isBefore(model, length)).toBe(true)
-    expect(isBefore(length, advanced)).toBe(true)
-    expect(screen.queryByText(t("field.seed.label"))).toBeNull()
+    ).toBeGreaterThanOrEqual(look.length)
   })
 
   it("shows the start frame well, and no words while the scene is empty", () => {
@@ -148,7 +175,7 @@ describe("a model whose schema takes no start frame", () => {
   it("draws no start frame well", () => {
     const container = show(screenOf({ start: null }))
     expect(container.querySelector("[data-slot='video-wells']")).toBeNull()
-    expect(container.querySelector("[data-slot='shot-choices']")).not.toBeNull()
+    expect(screen.getByText(tCatalog("shot.input.movement.label"))).toBeTruthy()
   })
 })
 

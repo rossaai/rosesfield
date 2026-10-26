@@ -1,19 +1,31 @@
+import type { ModelField } from "@rosesfield/catalog/comfy"
 import type { AppListing } from "@rosesfield/contract"
 import { PromptBlock } from "@rosesfield/ui/components/input-panel"
 import type { ReactElement, ReactNode } from "react"
 import { t, tCatalog } from "@/copy/t"
+import { CollapsibleSection } from "@/pieces/collapsible-section"
+import { appliedApp } from "@/screens/app/app-form"
 import { ChoiceField } from "@/screens/app/fields/choice-field"
 import { CountField } from "@/screens/app/fields/output-fields"
+import {
+  AdvancedSection,
+  AppSettingRows,
+} from "@/screens/app/fields/setting-rows"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
+import { HostedField } from "@/screens/app/hosted/hosted-fields"
+import { appSettingsPlan, fieldSettingsPlan } from "@/screens/app/settings-plan"
+import type { AppForm } from "@/screens/app/use-app-form"
 import { choiceKeyOf, choiceValuesOf } from "@/studio/shot/shot-prompt"
 import type { ShotScreen } from "@/studio/shot/use-shot-screen"
-import {
-  SoundChip,
-  soundInput,
-  VideoSettings,
-} from "@/studio/video/video-chips"
+import { settingFieldsOf, soundInput } from "@/studio/video/video-chips"
 import { VideoWells } from "@/studio/video/video-wells"
 import { shotListOrder } from "../../../../../packages/catalog/src/shot/shot-words"
+
+const movementList = "movement"
+
+const lookLists = shotListOrder.filter((list) => list !== movementList)
+
+const lookLabelKey = "storyboard.input.look.label"
 
 type PanelProps = {
   app: AppListing
@@ -42,26 +54,13 @@ export function SentWords({ words }: { words: string }): ReactNode {
   )
 }
 
-function ScenePart({ app, screen }: PanelProps): ReactElement {
-  const { state, promptName, shot, isGraph, fields, hosted } = screen
+function ScenePart({ screen }: { screen: ShotScreen }): ReactElement {
+  const { state, promptName, shot } = screen
   const problem = state.form.problems.get(promptName)
   const label = tCatalog("shot.input.prompt.label")
-  const hasGraphSound = app.inputs.some((input) => input.name === soundInput)
   return (
     <div className="flex flex-col gap-1">
-      <PromptBlock
-        label={label}
-        chips={
-          <SoundChip
-            form={state.form}
-            fields={fields}
-            isGraph={isGraph && hasGraphSound}
-            makesSound={
-              hosted.chosen?.tags.some((one) => one.kind === "sound") === true
-            }
-          />
-        }
-      >
+      <PromptBlock label={label}>
         <textarea
           aria-label={label}
           aria-invalid={problem === undefined ? undefined : true}
@@ -81,28 +80,99 @@ function ScenePart({ app, screen }: PanelProps): ReactElement {
   )
 }
 
-function ShotChoices({ screen }: { screen: ShotScreen }): ReactElement {
+function ShotChoice({
+  screen,
+  list,
+}: {
+  screen: ShotScreen
+  list: (typeof shotListOrder)[number]
+}): ReactElement {
   return (
-    <div data-slot="shot-choices" className="grid grid-cols-2 gap-2">
-      {shotListOrder.map((list) => (
-        <ChoiceField
-          key={list}
-          label={tCatalog(`shot.input.${list}.label`)}
-          items={choiceValuesOf(list).map((value) => ({
-            value,
-            label: tCatalog(choiceKeyOf(list, value)),
-          }))}
-          value={screen.shot.choices[list]}
-          onChange={(value) => screen.setChoice(list, value)}
-          note={null}
-        />
-      ))}
-    </div>
+    <ChoiceField
+      label={tCatalog(`shot.input.${list}.label`)}
+      items={choiceValuesOf(list).map((value) => ({
+        value,
+        label: tCatalog(choiceKeyOf(list, value)),
+      }))}
+      value={screen.shot.choices[list]}
+      onChange={(value) => screen.setChoice(list, value)}
+      note={null}
+    />
+  )
+}
+
+function LookSection({ screen }: { screen: ShotScreen }): ReactElement {
+  return (
+    <CollapsibleSection title={tCatalog(lookLabelKey)}>
+      <div data-slot="shot-choices" className="grid grid-cols-2 gap-2">
+        {lookLists.map((list) => (
+          <ShotChoice key={list} screen={screen} list={list} />
+        ))}
+      </div>
+    </CollapsibleSection>
+  )
+}
+
+function FieldRows({
+  fields,
+  form,
+}: {
+  fields: readonly ModelField[]
+  form: AppForm
+}): ReactNode {
+  return fields.map((field) => (
+    <HostedField
+      key={field.name}
+      field={field}
+      value={form.values.inputs[field.name]}
+      form={form}
+    />
+  ))
+}
+
+function ShotSettings({ app, screen }: PanelProps): ReactNode {
+  const { state, fields } = screen
+  const { form, lastSeed } = state
+  const look = <LookSection screen={screen} />
+  if (fields === null) {
+    const plan = appSettingsPlan(appliedApp(app, form.values.inputs), [
+      soundInput,
+      ...shotListOrder,
+    ])
+    const rows = { app, form, lastSeed }
+    return (
+      <>
+        <AppSettingRows {...rows} settings={plan.main} />
+        {look}
+        {plan.advanced.length === 0 ? null : (
+          <AdvancedSection>
+            <AppSettingRows {...rows} settings={plan.advanced} />
+          </AdvancedSection>
+        )}
+      </>
+    )
+  }
+  const plan = fieldSettingsPlan(settingFieldsOf(fields))
+  return (
+    <>
+      <FieldRows fields={plan.main} form={form} />
+      <CountField
+        app={app}
+        value={form.values.count}
+        onChange={(count) => form.setForm({ count })}
+      />
+      {look}
+      {plan.advanced.length === 0 ? null : (
+        <AdvancedSection>
+          <FieldRows fields={plan.advanced} form={form} />
+        </AdvancedSection>
+      )}
+    </>
   )
 }
 
 export function ShotPanel({ app, screen }: PanelProps): ReactElement {
-  const { state, fields, start, picker } = screen
+  const { state, start, picker } = screen
   const { form } = state
   return (
     <div data-slot="shot-parts" className="flex flex-1 flex-col gap-s4">
@@ -112,23 +182,10 @@ export function ShotPanel({ app, screen }: PanelProps): ReactElement {
           form={form}
         />
       )}
-      <ScenePart app={app} screen={screen} />
-      <ShotChoices screen={screen} />
+      <ScenePart screen={screen} />
       <CatalogPicker hosted={picker} place="row" />
-      <VideoSettings
-        app={app}
-        form={form}
-        fields={fields}
-        lastSeed={state.lastSeed}
-        placed={shotListOrder}
-        count={
-          <CountField
-            app={app}
-            value={form.values.count}
-            onChange={(count) => form.setForm({ count })}
-          />
-        }
-      />
+      <ShotChoice screen={screen} list={movementList} />
+      <ShotSettings app={app} screen={screen} />
     </div>
   )
 }
