@@ -27,6 +27,7 @@ export const routerMedia = {
   perTurn: 4,
   turnBytes: 16 * mebibyte,
   readTimeoutMs: 15_000,
+  ledgerTurns: 32,
   image: { side: 2000, base64Bytes: 1.5 * mebibyte, readBytes: 8 * mebibyte },
   audio: { bytes: 8 * mebibyte, seconds: 300 },
   video: { bytes: 8 * mebibyte, seconds: 60 },

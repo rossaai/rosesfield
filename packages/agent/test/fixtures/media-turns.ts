@@ -3,6 +3,7 @@ import { assetIdFormat } from "@rosesfield/kernel"
 import { agentTools } from "#infrastructure/pi-agent-tools"
 import type { ImagesOf } from "#infrastructure/pi-asset-media"
 import { openPiModels, routerAgentModel } from "#infrastructure/pi-models"
+import type { MediaReads } from "#infrastructure/router-chat-media"
 import { FakeAssetRepository } from "../fake/fake-asset-repository"
 import { FakeAssetStore } from "../fake/fake-asset-store"
 import { FakeCharacterRepository } from "../fake/fake-character-repository"
@@ -114,18 +115,24 @@ type Turn = {
   requests: RouterRequest[]
 }
 
+type Steps = readonly (readonly string[])[]
+
 type TurnOptions = {
   model: string
   library: Library
   reads: readonly (readonly string[])[]
+  steps?: readonly Steps[]
   images?: ImagesOf
+  mediaReads?: () => MediaReads
 }
 
 export async function turnsWith(options: TurnOptions): Promise<Turn> {
   const generation = generationFor([imageApp()])
   const handlers = toolHandlersFor(generation, options.library)
-  const answers = options.reads.flatMap((ids) => [
-    ...(ids.length === 0 ? [] : [readCalls(options.model, ids)]),
+  const turns =
+    options.steps ?? options.reads.map((ids) => (ids.length === 0 ? [] : [ids]))
+  const answers = turns.flatMap((steps) => [
+    ...steps.map((ids) => readCalls(options.model, ids)),
     textAnswer(options.model, "Seen.", 0.0001),
   ])
   const replay = replayRouter(answers)
@@ -139,13 +146,13 @@ export async function turnsWith(options: TurnOptions): Promise<Turn> {
     () =>
       openPiModels(routerAgentModel(comfyKey), {
         fetch: replay.fetch,
-        media: () => handlers,
+        media: options.mediaReads ?? (() => handlers),
       })
   )
   rigs.push(rig)
   await rig.agent.chooseModel(options.model)
   const { id } = await rig.agent.startConversation({ runApproval: "ask" })
-  for (const _ids of options.reads) {
+  for (const _steps of turns) {
     await readAll(await rig.agent.send({ conversationId: id, text: "Look" }))
   }
   return { requests: replay.requests }

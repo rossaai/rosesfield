@@ -131,6 +131,145 @@ describe("the media one turn sends", () => {
   })
 })
 
+describe("a medium a turn reads in one step", () => {
+  it("is sent in that step's request and only noted in the next step's", async () => {
+    const stored = storedLibrary()
+    const wav = wavOf(400)
+    const sound = await stored.add(
+      { kind: "audio", mime: "audio/wav", durationSeconds: 1 },
+      wav
+    )
+    const image = await stored.add({ width: 4, height: 3 }, pngOf(4, 3))
+    const clip = await stored.add(
+      { kind: "video", mime: "video/mp4", durationSeconds: 5 },
+      Uint8Array.of(0, 0, 0, 24, 102, 116, 121, 112, 109, 112, 52, 50)
+    )
+
+    const { requests } = await turnsWith({
+      model: mediaModel,
+      library: stored.library,
+      reads: [],
+      steps: [[[sound.id, image.id], [clip.id]]],
+    })
+
+    expect(partsOf(requests[1], "input_audio")).toHaveLength(1)
+    expect(partsOf(requests[1], "image_url")).toHaveLength(1)
+    expect(partsOf(requests[2], "input_audio")).toEqual([])
+    expect(partsOf(requests[2], "image_url")).toEqual([])
+    expect(partsOf(requests[2], "video_url")).toHaveLength(1)
+    expect(JSON.stringify(requests[2]?.body)).not.toContain(base64(wav))
+    expect(JSON.stringify(requests[2]?.body)).toContain(
+      "sent in an earlier turn"
+    )
+  })
+
+  it("counts toward one limit for the whole turn, over the media first sent in it", async () => {
+    const stored = storedLibrary()
+    const ids: string[] = []
+    for (let index = 0; index <= routerMedia.perTurn; index += 1) {
+      const sound = await stored.add(
+        { kind: "audio", mime: "audio/wav", durationSeconds: 1 },
+        wavOf(500 + index)
+      )
+      ids.push(sound.id)
+    }
+
+    const { requests } = await turnsWith({
+      model: mediaModel,
+      library: stored.library,
+      reads: [],
+      steps: [[ids.slice(0, 3), ids.slice(3)]],
+    })
+
+    expect(partsOf(requests[1], "input_audio")).toHaveLength(3)
+    expect(partsOf(requests[2], "input_audio")).toHaveLength(1)
+    expect(toolTextOf(requests[2])).toContain(
+      `one turn sends at most ${routerMedia.perTurn} media`
+    )
+  })
+})
+
+describe("a medium whose read fails", () => {
+  it("becomes the unread note, and the call still goes out, when the request's library is gone", async () => {
+    const stored = storedLibrary()
+    const sound = await stored.add(
+      { kind: "audio", mime: "audio/wav", durationSeconds: 1 },
+      wavOf(300)
+    )
+
+    const { requests } = await turnsWith({
+      model: mediaModel,
+      library: stored.library,
+      reads: [[sound.id]],
+      mediaReads: () => {
+        throw new Error("The request's access is gone.")
+      },
+    })
+
+    expect(requests).toHaveLength(2)
+    expect(partsOf(requests[1], "input_audio")).toEqual([])
+    expect(toolTextOf(requests[1])).toContain("The media could not be read")
+  })
+
+  it("uses none of the turn's places", async () => {
+    const stored = storedLibrary()
+    const missing = await stored.add(
+      { kind: "audio", mime: "audio/wav", durationSeconds: 1 },
+      wavOf(250)
+    )
+    await stored.library.store.delete(missing.id)
+    const ids = [missing.id]
+    for (let index = 0; index < routerMedia.perTurn; index += 1) {
+      const sound = await stored.add(
+        { kind: "audio", mime: "audio/wav", durationSeconds: 1 },
+        wavOf(600 + index)
+      )
+      ids.push(sound.id)
+    }
+
+    const { requests } = await turnsWith({
+      model: mediaModel,
+      library: stored.library,
+      reads: [ids],
+    })
+
+    expect(partsOf(requests[1], "input_audio")).toHaveLength(
+      routerMedia.perTurn
+    )
+    expect(toolTextOf(requests[1])).toContain("The media could not be read")
+    expect(toolTextOf(requests[1])).not.toContain("one turn sends at most")
+  })
+})
+
+describe("the order a turn counts its media in", () => {
+  it("is the order the turn read them, with pi's images in their place among the audio", async () => {
+    const stored = storedLibrary()
+    const image = await stored.add({ width: 4, height: 3 }, pngOf(4, 3))
+    const ids = [image.id]
+    for (let index = 0; index < routerMedia.perTurn; index += 1) {
+      const sound = await stored.add(
+        { kind: "audio", mime: "audio/wav", durationSeconds: 1 },
+        wavOf(700 + index)
+      )
+      ids.push(sound.id)
+    }
+
+    const { requests } = await turnsWith({
+      model: mediaModel,
+      library: stored.library,
+      reads: [ids],
+    })
+
+    expect(partsOf(requests[1], "image_url")).toHaveLength(1)
+    expect(partsOf(requests[1], "input_audio")).toHaveLength(
+      routerMedia.perTurn - 1
+    )
+    expect(toolTextOf(requests[1])).toContain(
+      `one turn sends at most ${routerMedia.perTurn} media`
+    )
+  })
+})
+
 describe("the media of one library", () => {
   it("never reaches another library's turn: a read of its id answers that no asset has it", async () => {
     const mine = storedLibrary()

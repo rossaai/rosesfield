@@ -13,6 +13,7 @@ import { AgentAnswerFailedError } from "#domain/error/agent-answer-failed.error"
 import { AgentModelMissingError } from "#domain/error/agent-model-missing.error"
 import type { MediaReads } from "#infrastructure/router-chat-media"
 import { withMediaOf } from "#infrastructure/router-chat-media-body"
+import type { MediaLedger } from "#infrastructure/router-chat-media-ledger"
 import { routerChat } from "#infrastructure/router-chat-models"
 
 export type Fetch = (
@@ -29,6 +30,7 @@ type RouterChatFetchOptions = {
   fetch: Fetch
   call: RouterChatCall
   media?: () => MediaReads
+  ledger: MediaLedger
 }
 
 type Refusal = {
@@ -229,7 +231,7 @@ export function routerChatFetch(options: RouterChatFetchOptions): Fetch {
       return refusalResponse(new AgentModelMissingError())
     }
     const sent = routerBodyOf(init?.body)
-    const body = await withMediaOf(sent, options.media ?? null)
+    const body = await withMediaOf(sent, options.media ?? null, options.ledger)
     const response = await options.fetch(routerChatUrl(), {
       method: "POST",
       headers: {

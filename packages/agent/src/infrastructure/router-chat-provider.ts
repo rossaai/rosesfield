@@ -19,6 +19,10 @@ import {
 } from "#infrastructure/router-chat-fetch"
 import type { MediaReads } from "#infrastructure/router-chat-media"
 import {
+  type MediaLedger,
+  mediaLedger,
+} from "#infrastructure/router-chat-media-ledger"
+import {
   hasEffortChoice,
   type RouterChatModel,
   routerChat,
@@ -99,7 +103,8 @@ function piFetchOf(adapter: Fetch): FetchFunction {
 
 function costed(
   open: (fetch: FetchFunction) => AssistantMessageEventStream,
-  options: RouterChatProviderOptions
+  options: RouterChatProviderOptions,
+  ledger: MediaLedger
 ): AssistantMessageEventStream {
   const call: RouterChatCall = { cost: null }
   const source = open(
@@ -108,6 +113,7 @@ function costed(
         keyOf: options.keyOf,
         fetch: options.fetch,
         call,
+        ledger,
         ...(options.media === undefined ? {} : { media: options.media }),
       })
     )
@@ -130,18 +136,21 @@ export function routerChatProvider(
   options: RouterChatProviderOptions
 ): Provider {
   const completions = openAICompletionsApi()
+  const ledger = mediaLedger()
   const api: ProviderStreams = {
     stream: (model, context, streamOptions) =>
       costed(
         (fetch) =>
           completions.stream(model, context, { ...streamOptions, fetch }),
-        options
+        options,
+        ledger
       ),
     streamSimple: (model, context, streamOptions) =>
       costed(
         (fetch) =>
           completions.streamSimple(model, context, { ...streamOptions, fetch }),
-        options
+        options,
+        ledger
       ),
   }
   return createProvider({
