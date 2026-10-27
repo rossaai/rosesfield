@@ -69,7 +69,7 @@ describe("the effort a turn asks of the model", () => {
     const [chosen, opening] = opened.replay.requests
     expect(chosen?.body.model).toBe(defaultChatModel)
     expect(chosen?.body.reasoning).toEqual({ effort: "low" })
-    expect(opening?.body.reasoning).toEqual({ effort: "max" })
+    expect(opening?.body.reasoning).toEqual({ effort: "high" })
   })
 
   it("sends none as the effort none, and no reasoning for a model with no effort to choose", async () => {
@@ -108,7 +108,7 @@ describe("the effort a turn asks of the model", () => {
     const [first, second] = opened.replay.requests
     expect(first?.body.reasoning).toEqual({ effort: "none" })
     expect(second?.body.model).toBe(opus)
-    expect(second?.body.reasoning).toEqual({ effort: "max" })
+    expect(second?.body.reasoning).toEqual({ effort: "high" })
   })
 
   it("keeps the effort a conversation changes to", async () => {

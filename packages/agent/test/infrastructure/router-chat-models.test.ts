@@ -3,6 +3,7 @@ import {
   defaultChatModel,
   defaultModelOf,
   isRouterChatModel,
+  openEffortOf,
   type RouterChatModel,
   routerChatData,
   routerChatModelOf,
@@ -27,14 +28,13 @@ const priced = {
   tools: true,
   context: 131_072,
   inputs: [],
-  reasons: false,
   usdPer1M: { input: 0.1, output: 0.4 },
   score: 80,
   rank: 1,
   placement: "score",
   boards: ["Arena Text, style control"],
   efforts: [],
-  openEffort: null,
+  defaultEffort: null,
   points: [],
 }
 
@@ -64,17 +64,43 @@ describe("the agent's chat model table", () => {
     ).toBe(false)
   })
 
-  it("refuses a model that opens on an effort it does not offer, or offers efforts and opens on none", () => {
-    const tuned = { ...priced, efforts: ["high", "low"], openEffort: "high" }
-    expect(routerChatTable.safeParse(tableWith([tuned])).success).toBe(true)
+  it("opens each model on the effort OpenRouter uses by default for it, as read on the table's day", () => {
+    expect(openEffortOf(modelOf("anthropic/claude-opus-5.5"))).toBe("high")
+    expect(openEffortOf(modelOf("openai/gpt-6.1-terra"))).toBe("medium")
+    expect(openEffortOf(modelOf("anthropic/claude-sonnet-5"))).toBe("high")
+    expect(openEffortOf(modelOf(defaultChatModel))).toBe("high")
+    const opened = routerChatData.models.filter(
+      (one) =>
+        one.efforts.length > 1 &&
+        one.defaultEffort !== null &&
+        one.efforts.includes(one.defaultEffort)
+    )
+    expect(opened).toHaveLength(117)
     expect(
-      routerChatTable.safeParse(tableWith([{ ...tuned, openEffort: "max" }]))
-        .success
-    ).toBe(false)
+      opened.filter((one) => openEffortOf(one) !== one.defaultEffort)
+    ).toEqual([])
+  })
+
+  it("opens on medium where OpenRouter names no default it offers, else on the middle level, and on none for a model with one level or none", () => {
+    const tuned: Pick<RouterChatModel, "efforts"> = {
+      efforts: ["high", "medium", "low"],
+    }
+    expect(openEffortOf({ ...tuned, defaultEffort: "low" })).toBe("low")
+    expect(openEffortOf({ ...tuned, defaultEffort: null })).toBe("medium")
+    expect(openEffortOf({ ...tuned, defaultEffort: "max" })).toBe("medium")
     expect(
-      routerChatTable.safeParse(tableWith([{ ...tuned, openEffort: null }]))
-        .success
-    ).toBe(false)
+      openEffortOf({
+        efforts: ["max", "high", "low", "none"],
+        defaultEffort: null,
+      })
+    ).toBe("high")
+    expect(
+      openEffortOf({ efforts: ["xhigh", "high", "low"], defaultEffort: null })
+    ).toBe("high")
+    expect(
+      openEffortOf({ efforts: ["high"], defaultEffort: "high" })
+    ).toBeNull()
+    expect(openEffortOf({ efforts: [], defaultEffort: null })).toBeNull()
   })
 
   it("opens on the highest ranked scored model priced at or under the median", () => {
@@ -108,8 +134,8 @@ describe("the agent's chat model table", () => {
     const model = modelOf(defaultChatModel)
     expect(model.efforts).toEqual(["max", "high", "low", "none"])
     expect(turnEffortOf(defaultChatModel, "low")).toBe("low")
-    expect(turnEffortOf(defaultChatModel, undefined)).toBe("max")
-    expect(turnEffortOf(defaultChatModel, "medium")).toBe("max")
+    expect(turnEffortOf(defaultChatModel, undefined)).toBe("high")
+    expect(turnEffortOf(defaultChatModel, "medium")).toBe("high")
     const single = routerChatData.models.find((one) => one.efforts.length < 2)
     expect(turnEffortOf(single?.id ?? "", "high")).toBeNull()
     expect(turnEffortOf("maker/none", "high")).toBeNull()
