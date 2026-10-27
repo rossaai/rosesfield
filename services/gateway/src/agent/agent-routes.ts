@@ -2,7 +2,7 @@ import {
   type AgentModelChoice,
   type AgentModels,
   agentModelRoutes,
-  chatRatesOf,
+  chatDetailsOf,
   conversationRoutes,
   routerChat,
 } from "@rosesfield/agent"
@@ -42,7 +42,7 @@ async function agentModelsOf(
   if (!hasChat) {
     return { models: [], model: null, refusal: null }
   }
-  return { ...choice, refusal: null, rates: chatRatesOf(choice.models) }
+  return { ...choice, refusal: null, details: chatDetailsOf(choice.models) }
 }
 
 function modelRoutes(app: GatewayApp): void {
@@ -79,6 +79,7 @@ function conversationListRoutes(app: GatewayApp): void {
     )
     const started = await c.var.scope.agent.startConversation.execute({
       runApproval: body.runApproval ?? null,
+      effort: body.effort ?? null,
     })
     return c.json(
       started satisfies ResponseOf<typeof startConversation>,

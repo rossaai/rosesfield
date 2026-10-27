@@ -149,6 +149,32 @@ describe("the agent routes", () => {
     ).toBe("ask")
   })
 
+  it("start a conversation on the effort the composer shows, change it, and refuse an effort no model offers", async () => {
+    const { app } = gatewayFor(new FakeAgentHarness(conversation, answer))
+
+    const started = await call(
+      app,
+      startPath,
+      jsonInit({ runApproval: "ask", effort: "low" })
+    )
+    const changed = await call(app, itemPath, {
+      ...jsonInit({ effort: "high" }),
+      method: "PATCH",
+    })
+    const refused = await call(app, itemPath, {
+      ...jsonInit({ effort: "huge" }),
+      method: "PATCH",
+    })
+
+    expect(
+      conversationResponse.parse(await started.json()).conversation.effort
+    ).toBe("low")
+    expect(
+      conversationResponse.parse(await changed.json()).conversation
+    ).toMatchObject({ runApproval: "ask", effort: "high" })
+    expect(refused.status).toBe(400)
+  })
+
   it("list, read, rename and delete a conversation", async () => {
     const agent = await startedAgent()
     const { app } = gatewayFor(agent)

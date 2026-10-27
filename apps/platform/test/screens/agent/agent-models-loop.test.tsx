@@ -121,7 +121,7 @@ describe("the agent start screen requests the models over a settled render", () 
       models: ["deepseek/deepseek-v4-flash"],
       model: "deepseek/deepseek-v4-flash",
       refusal: null,
-      rates: {},
+      details: {},
     })
     renderStart()
     await settle(1500)

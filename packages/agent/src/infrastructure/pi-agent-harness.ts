@@ -28,7 +28,6 @@ import {
   type ConversationId,
   conversationIdFormat,
 } from "#domain/conversation.id"
-import { AgentModelUnknownError } from "#domain/error/agent-model-unknown.error"
 import { ConversationBusyError } from "#domain/error/conversation-busy.error"
 import { ConversationNotFoundError } from "#domain/error/conversation-not-found.error"
 import { ProposalNotFoundError } from "#domain/error/proposal-not-found.error"
@@ -42,15 +41,22 @@ import { PiAnswerStream } from "#infrastructure/pi-answer-stream"
 import { proposalOf } from "#infrastructure/pi-app-tool"
 import { backgroundContext } from "#infrastructure/pi-context"
 import {
-  agentSettings,
   conversationList,
   conversationOf,
   conversationSettings,
   type ListedConversation,
   proposalRecords,
-  recentModelsOf,
 } from "#infrastructure/pi-conversation-docs"
-import { type PiModels, useModel } from "#infrastructure/pi-models"
+import {
+  chosenOf,
+  keepModelChoice,
+  modelChoiceOf,
+} from "#infrastructure/pi-model-choice"
+import {
+  type PiModels,
+  thinkingLevelOf,
+  useModel,
+} from "#infrastructure/pi-models"
 import { transcriptOf } from "#infrastructure/pi-transcript"
 import { TurnLimit, turnLimitedModels } from "#infrastructure/pi-turn-limit"
 
@@ -121,11 +127,21 @@ export class PiAgentHarness extends AgentHarness {
           list.items[id] = { conversation, title: null, createdAt }
           const settings = await tx.doc(conversationSettings, conversation)
           settings.runApproval = options.runApproval
+          if (options.effort !== undefined) {
+            settings.effort = options.effort
+          }
         },
       },
       context
     )
-    return { id, title: null, runApproval: options.runApproval, createdAt }
+    const { runApproval, effort } = options
+    return {
+      id,
+      title: null,
+      runApproval,
+      ...(effort === undefined ? {} : { effort }),
+      createdAt,
+    }
   }
 
   override async listConversations(): Promise<Conversation[]> {
@@ -168,9 +184,13 @@ export class PiAgentHarness extends AgentHarness {
       if (item !== undefined && changes.title !== undefined) {
         item.title = changes.title
       }
-      if (changes.runApproval !== undefined) {
+      const { runApproval, effort } = changes
+      if (runApproval !== undefined || effort !== undefined) {
         const settings = await tx.doc(conversationSettings, conversation.id)
-        settings.runApproval = changes.runApproval
+        settings.runApproval = runApproval ?? settings.runApproval
+        if (effort !== undefined) {
+          settings.effort = effort
+        }
       }
     }, context)
     const { listed } = await this.find(id)
@@ -187,33 +207,13 @@ export class PiAgentHarness extends AgentHarness {
   }
 
   override async listModels(): Promise<AgentModelChoice> {
-    const opened = await this.open()
-    const models = listedOf(opened)
-    const settings = await opened.harness.snapshot(agentSettings, context)
-    const model = await chosenOf(opened)
-    const recent = [model, ...(settings?.recent ?? [])]
-    return { models, model, recent: recentModelsOf(recent, models) }
+    return modelChoiceOf(await this.open())
   }
 
   override async chooseModel(model: string): Promise<AgentModelChoice> {
     const opened = await this.open()
-    if (!listedOf(opened).includes(model)) {
-      throw new AgentModelUnknownError({
-        provider: opened.model.provider,
-        model,
-      })
-    }
-    const before = await chosenOf(opened)
-    await opened.harness.commit(async (tx) => {
-      const settings = await tx.doc(agentSettings)
-      settings.recent = recentModelsOf([
-        model,
-        before,
-        ...(settings.recent ?? []),
-      ])
-      settings.model = model
-    }, context)
-    return this.listModels()
+    await keepModelChoice(opened, model)
+    return modelChoiceOf(opened)
   }
 
   override async send(message: AgentMessage): Promise<AnswerStream> {
@@ -221,10 +221,17 @@ export class PiAgentHarness extends AgentHarness {
     const { harness, conversation } = found
     const opened = await this.open()
     await this.completeTools(opened)
-    await useModel(conversation, {
-      provider: found.model.provider,
-      modelId: await chosenOf(opened),
-    })
+    const modelId = await chosenOf(opened)
+    const settings = await harness.snapshot(
+      conversationSettings,
+      conversation.id,
+      context
+    )
+    await useModel(
+      conversation,
+      { provider: found.model.provider, modelId },
+      thinkingLevelOf(modelId, settings?.effort)
+    )
     if (found.listed.title === null) {
       await this.title(message)
     }
@@ -384,16 +391,4 @@ export class PiAgentHarness extends AgentHarness {
     }
     return { harness, model, listed, conversation }
   }
-}
-
-function listedOf(opened: Opened): string[] {
-  return opened.models.getModels(opened.model.provider).map((model) => model.id)
-}
-
-async function chosenOf(opened: Opened): Promise<string> {
-  const settings = await opened.harness.snapshot(agentSettings, context)
-  const chosen = settings?.model ?? null
-  return chosen !== null && listedOf(opened).includes(chosen)
-    ? chosen
-    : opened.model.modelId
 }

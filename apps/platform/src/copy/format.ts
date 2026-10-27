@@ -18,6 +18,15 @@ const disjunctions = new Intl.ListFormat(choiceLocale, {
 const prices = new Intl.NumberFormat(copyLocale, {
   maximumFractionDigits: 0,
 })
+const smallEstimates = new Intl.NumberFormat(copyLocale, {
+  maximumSignificantDigits: 2,
+})
+const estimates = new Intl.NumberFormat(copyLocale, {
+  maximumFractionDigits: 1,
+})
+const tokenCounts = new Intl.NumberFormat(copyLocale, {
+  maximumSignificantDigits: 3,
+})
 const seconds = new Intl.NumberFormat(copyLocale, { maximumFractionDigits: 1 })
 const durations = new Intl.NumberFormat(copyLocale, {
   style: "unit",
@@ -84,6 +93,22 @@ export function withUnit(value: number, unit: string): string {
 
 export function formatAmount(amount: number): string {
   return amount > 0 && amount < 1 ? "<1" : prices.format(amount)
+}
+
+/** Writes an estimate of credits with two significant figures under 1, one decimal under 10 and none from 10. */
+export function formatEstimate(credits: number): string {
+  if (credits < 1) {
+    return smallEstimates.format(credits)
+  }
+  return credits < 10 ? estimates.format(credits) : prices.format(credits)
+}
+
+/** Writes a count of tokens in thousands or millions, binary when the count is a power-of-two multiple, such as 256K or 1M. */
+export function formatTokenCount(tokens: number): string {
+  const base = tokens % 1024 === 0 ? 1024 : 1000
+  return tokens >= base * base
+    ? `${tokenCounts.format(tokens / (base * base))}M`
+    : `${tokenCounts.format(tokens / base)}K`
 }
 
 export function formatBytes(bytes: number): string {

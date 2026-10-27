@@ -6,6 +6,7 @@ import type {
   Model,
   Provider,
   ProviderStreams,
+  ThinkingLevelMap,
 } from "@earendil-works/pi-ai"
 import { openAICompletionsApi } from "@earendil-works/pi-ai/api/openai-completions.lazy"
 import { createProvider } from "@earendil-works/pi-ai/models"
@@ -17,8 +18,10 @@ import {
   routerChatFetch,
 } from "#infrastructure/router-chat-fetch"
 import {
+  hasEffortChoice,
+  type RouterChatModel,
   routerChat,
-  routerChatModels,
+  routerChatData,
 } from "#infrastructure/router-chat-models"
 
 export type RouterChatProviderOptions = {
@@ -36,14 +39,36 @@ const routerAuth: ApiKeyAuth = {
   }),
 }
 
-function chatModelOf(id: string): Model<"openai-completions"> {
+const thinkingLevels = [
+  "minimal",
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+  "max",
+] as const
+
+/** Maps each pi thinking level to the effort OpenRouter offers for the model, off to its none, and every level it does not offer to null, which pi never sends. */
+export function thinkingLevelMapOf(model: RouterChatModel): ThinkingLevelMap {
+  const map: ThinkingLevelMap = {
+    off: model.efforts.includes("none") ? "none" : null,
+  }
+  for (const level of thinkingLevels) {
+    map[level] = model.efforts.includes(level) ? level : null
+  }
+  return map
+}
+
+function chatModelOf(model: RouterChatModel): Model<"openai-completions"> {
+  const isTuned = hasEffortChoice(model)
   return {
-    id,
-    name: id,
+    id: model.id,
+    name: model.id,
     api: "openai-completions",
     provider: routerChat.provider,
     baseUrl: ComfyRouterGenerationEngine.routerUrl,
-    reasoning: false,
+    reasoning: isTuned,
+    ...(isTuned ? { thinkingLevelMap: thinkingLevelMapOf(model) } : {}),
     input: ["text"],
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
     contextWindow: routerChat.contextWindow,
@@ -52,6 +77,7 @@ function chatModelOf(id: string): Model<"openai-completions"> {
       supportsDeveloperRole: false,
       supportsStore: false,
       maxTokensField: "max_tokens",
+      thinkingFormat: "openrouter",
     },
   }
 }
@@ -115,7 +141,7 @@ export function routerChatProvider(
     id: routerChat.provider,
     baseUrl: ComfyRouterGenerationEngine.routerUrl,
     auth: { apiKey: routerAuth },
-    models: routerChatModels.map(chatModelOf),
+    models: routerChatData.models.map(chatModelOf),
     api,
   })
 }

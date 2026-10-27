@@ -1,3 +1,4 @@
+import { modelFacts } from "@rosesfield/catalog/comfy"
 import {
   appId,
   defineRoute,
@@ -23,12 +24,23 @@ export const proposalId = z
 
 export const runApproval = z.enum(["ask", "auto"])
 
+export const agentEffort = z.enum([
+  "max",
+  "xhigh",
+  "high",
+  "medium",
+  "low",
+  "minimal",
+  "none",
+])
+
 export const conversationTitle = z.string().trim().min(1).max(120)
 
 export const conversation = z.object({
   id: conversationId,
   title: z.string().max(120).nullable(),
   runApproval,
+  effort: agentEffort.optional(),
   createdAt: timestamp,
 })
 
@@ -40,18 +52,21 @@ export const conversationListResponse = z.object({
 
 export const startConversationBody = z.strictObject({
   runApproval: runApproval.optional(),
+  effort: agentEffort.optional(),
 })
 
 export const updateConversationBody = z
   .strictObject({
     title: conversationTitle.optional(),
     runApproval: runApproval.optional(),
+    effort: agentEffort.optional(),
   })
   .refine(
-    (body) => body.title !== undefined || body.runApproval !== undefined,
-    {
-      message: "needs a title or a runApproval",
-    }
+    (body) =>
+      body.title !== undefined ||
+      body.runApproval !== undefined ||
+      body.effort !== undefined,
+    { message: "needs a title, a runApproval or an effort" }
   )
 
 export const sendMessageBody = z.strictObject({
@@ -79,10 +94,22 @@ export const turnCredits = z.number().min(0)
 
 export const agentModelId = z.string().min(1).max(200)
 
-export const agentModelRate = z.object({
-  input: z.number().min(0),
-  output: z.number().min(0),
-  turn: z.number().min(0),
+export const agentModelInput = z.enum(["image", "video", "audio", "file"])
+
+const credits = z.number().min(0)
+
+export const agentModelDetail = z.object({
+  name: z.string().min(1).max(120),
+  lab: z.string().min(1).max(80),
+  facts: modelFacts,
+  context: z.number().int().min(1),
+  inputs: z.array(agentModelInput).max(4),
+  reasons: z.boolean(),
+  input: credits,
+  output: credits,
+  turn: credits,
+  effort: agentEffort.nullable(),
+  efforts: z.array(z.object({ effort: agentEffort, turn: credits })).max(7),
 })
 
 export const agentModelsResponse = z.object({
@@ -90,7 +117,7 @@ export const agentModelsResponse = z.object({
   model: agentModelId.nullable(),
   recent: z.array(agentModelId).max(3).optional(),
   refusal: errorBody.nullable(),
-  rates: z.record(agentModelId, agentModelRate).optional(),
+  details: z.record(agentModelId, agentModelDetail).optional(),
 })
 
 export const chooseAgentModelBody = z.strictObject({ model: agentModelId })
@@ -223,6 +250,7 @@ export const conversationRoutes = {
 }
 
 export type RunApproval = z.infer<typeof runApproval>
+export type AgentEffort = z.infer<typeof agentEffort>
 export type Conversation = z.infer<typeof conversation>
 export type SendMessageBody = z.infer<typeof sendMessageBody>
 export type UpdateConversationBody = z.infer<typeof updateConversationBody>
@@ -233,4 +261,5 @@ export type TranscriptItem = z.infer<typeof transcriptItem>
 export type Transcript = z.infer<typeof transcriptResponse>
 export type AgentModels = z.infer<typeof agentModelsResponse>
 
-export type AgentModelRate = z.infer<typeof agentModelRate>
+export type AgentModelInput = z.infer<typeof agentModelInput>
+export type AgentModelDetail = z.infer<typeof agentModelDetail>

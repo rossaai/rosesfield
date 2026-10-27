@@ -1,3 +1,7 @@
+import { z } from "zod"
+import { type AgentEffort, agentEffort, agentModelInput } from "#agent.contract"
+import source from "./router-chat-models.json"
+
 export const routerChat = {
   provider: "comfy-router",
   route: "openrouter/chat-completions",
@@ -6,19 +10,148 @@ export const routerChat = {
   maxTokens: 8192,
 }
 
-export const defaultChatModel = "deepseek/deepseek-v4-flash"
+const point = z.strictObject({
+  effort: z.union([agentEffort, z.literal("default")]),
+  score: z.number().int().min(0).max(100).nullable(),
+  costPerTaskUsd: z.number().min(0).nullable(),
+  outputTokensPerTask: z.number().int().min(1).nullable(),
+  onLine: z.boolean(),
+})
 
-export const routerChatModels: readonly string[] = [
-  defaultChatModel,
-  "qwen/qwen3.6-flash",
-  "deepseek/deepseek-v3.2",
-  "z-ai/glm-4.6",
-  "google/gemini-3.5-flash",
-  "openai/gpt-5.6-luna",
-  "anthropic/claude-haiku-4.5",
-  "anthropic/claude-sonnet-5",
-]
+const chatModel = z
+  .strictObject({
+    id: z.string().min(1).max(200),
+    name: z.string().min(1).max(120),
+    lab: z.string().min(1).max(80),
+    tools: z.literal(true),
+    context: z.number().int().min(1),
+    inputs: z.array(agentModelInput).max(4),
+    reasons: z.boolean(),
+    usdPer1M: z.strictObject({
+      input: z.number().min(0),
+      output: z.number().min(0),
+    }),
+    score: z.number().int().min(0).max(100).nullable(),
+    rank: z.number().int().min(1),
+    placement: z.enum(["score", "version", "release"]),
+    boards: z.array(z.string().min(1).max(120)).max(4),
+    efforts: z.array(agentEffort).max(7),
+    openEffort: agentEffort.nullable(),
+    points: z.array(point).max(12),
+  })
+  .refine(
+    (model) =>
+      model.openEffort === null || model.efforts.includes(model.openEffort),
+    { message: "A model opens on an effort it offers", path: ["openEffort"] }
+  )
+  .refine((model) => model.efforts.length < 2 || model.openEffort !== null, {
+    message: "A model with an effort to choose opens on one",
+    path: ["openEffort"],
+  })
+  .refine((model) => (model.score === null) === (model.boards.length === 0), {
+    message: "A score comes from the boards that hold the model, and only then",
+    path: ["score"],
+  })
+
+const readAt = z.iso.datetime()
+
+export const routerChatTable = z
+  .strictObject({
+    readOn: z.iso.date(),
+    method: z.record(z.string(), z.string().min(1).max(2000)),
+    sources: z
+      .array(z.strictObject({ name: z.string(), url: z.url(), readAt }))
+      .min(1),
+    boards: z.record(
+      z.string(),
+      z.strictObject({ url: z.url(), display: z.boolean() })
+    ),
+    models: z.array(chatModel).min(1),
+  })
+  .refine(
+    (table) => table.models.every((model, index) => model.rank === index + 1),
+    { message: "The models run in rank order from 1", path: ["models"] }
+  )
+  .refine(
+    (table) =>
+      new Set(table.models.map((model) => model.id)).size ===
+      table.models.length,
+    { message: "A model is listed once", path: ["models"] }
+  )
+
+export type RouterChatTable = z.infer<typeof routerChatTable>
+export type RouterChatModel = z.infer<typeof chatModel>
+export type ChatPoint = z.infer<typeof point>
+
+export const routerChatData: RouterChatTable = routerChatTable.parse(source)
+
+const byId: ReadonlyMap<string, RouterChatModel> = new Map(
+  routerChatData.models.map((model) => [model.id, model])
+)
+
+export const routerChatModels: readonly string[] = routerChatData.models.map(
+  (model) => model.id
+)
+
+function blendedUsdOf(model: RouterChatModel): number {
+  return (3 * model.usdPer1M.input + model.usdPer1M.output) / 4
+}
+
+function medianOf(values: readonly number[]): number {
+  const sorted = [...values].sort((a, b) => a - b)
+  const middle = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 1
+    ? (sorted[middle] ?? 0)
+    : ((sorted[middle - 1] ?? 0) + (sorted[middle] ?? 0)) / 2
+}
+
+/** The highest ranked scored model whose blended price, 3 input to 1 output, is at or under the median of every listed model. */
+export function defaultModelOf(table: RouterChatTable): string {
+  const median = medianOf(table.models.map(blendedUsdOf))
+  const found = table.models.find(
+    (model) => model.score !== null && blendedUsdOf(model) <= median
+  )
+  if (found === undefined) {
+    throw new Error("No scored chat model is priced at or under the median")
+  }
+  return found.id
+}
+
+export const defaultChatModel: string = defaultModelOf(routerChatData)
 
 export function isRouterChatModel(model: string): boolean {
-  return routerChatModels.includes(model)
+  return byId.has(model)
+}
+
+export function routerChatModelOf(model: string): RouterChatModel | undefined {
+  return byId.get(model)
+}
+
+export function hasEffortChoice(model: RouterChatModel): boolean {
+  return model.efforts.length > 1
+}
+
+/** The effort a turn sends: the chosen one when the model offers it, else the model's opening effort, and none for a model with no effort to choose. */
+export function turnEffortOf(
+  model: string,
+  chosen: AgentEffort | undefined
+): AgentEffort | null {
+  const found = byId.get(model)
+  if (found === undefined || !hasEffortChoice(found)) {
+    return null
+  }
+  return chosen !== undefined && found.efforts.includes(chosen)
+    ? chosen
+    : found.openEffort
+}
+
+export function isOnLine(model: RouterChatModel): boolean {
+  return model.points.some((one) => one.onLine)
+}
+
+export function pointOf(
+  model: RouterChatModel,
+  effort: AgentEffort | null
+): ChatPoint | undefined {
+  return model.points.find((one) => one.effort === (effort ?? "default"))
 }

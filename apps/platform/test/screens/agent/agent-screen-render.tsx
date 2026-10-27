@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router"
 import { render } from "@testing-library/react"
 import type { ReactNode } from "react"
+import type { AgentModels } from "@/api/agent-wire"
 import type { Conversation } from "@/api/conversation-wire"
 import type { GatewaySettings } from "@/api/gateway-settings"
 import { settingsQuery } from "@/api/queries"
@@ -45,24 +46,27 @@ export const conversations: Conversation[] = [
   },
 ]
 
+export const agentModels: AgentModels = {
+  models: ["deepseek/deepseek-v4-flash", "qwen/qwen3.6-flash"],
+  model: "deepseek/deepseek-v4-flash",
+  recent: [],
+  refusal: null,
+  details: {},
+}
+
 export function renderAgent(
   children: () => ReactNode,
   path = "/agent",
-  shown: GatewaySettings = settings
-): void {
+  shown: GatewaySettings = settings,
+  models: AgentModels = agentModels
+): QueryClient {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, staleTime: Number.POSITIVE_INFINITY },
     },
   })
   client.setQueryData(settingsQuery.queryKey, shown)
-  client.setQueryData(agentModelsQuery.queryKey, {
-    models: ["deepseek/deepseek-v4-flash", "qwen/qwen3.6-flash"],
-    model: "deepseek/deepseek-v4-flash",
-    recent: [],
-    refusal: null,
-    rates: {},
-  })
+  client.setQueryData(agentModelsQuery.queryKey, models)
   client.setQueryData(conversationsQuery.queryKey, conversations)
   const router = createRouter({
     routeTree: createRootRoute({
@@ -75,4 +79,5 @@ export function renderAgent(
       <RouterProvider router={router} />
     </QueryClientProvider>
   )
+  return client
 }

@@ -46,12 +46,12 @@ async function replayAll(answers: ModelAnswers): Promise<ModelResults> {
   return { model: answers.model, source: answers.source, results }
 }
 
-function defaultAnswers(): ModelAnswers {
-  const found = answerFiles.find(
-    (answers) => answers.model === defaultChatModel
-  )
+const capturedModel = "deepseek/deepseek-v4-flash"
+
+function capturedAnswers(): ModelAnswers {
+  const found = answerFiles.find((answers) => answers.model === capturedModel)
   if (found === undefined) {
-    throw new Error(`No answer file holds ${defaultChatModel}`)
+    throw new Error(`No answer file holds ${capturedModel}`)
   }
   return found
 }
@@ -214,10 +214,11 @@ describe("the agent's scenarios on Router answers", () => {
     expect(cheapestPass(models)).toBe("google/gemini-3.5-flash")
   })
 
-  it("defaults to the cheapest model whose captured answers pass every scenario", async () => {
+  it("finds the cheapest model whose captured answers pass every scenario among the models the agent lists", async () => {
     const models = await Promise.all(capturedFiles.map(replayAll))
 
-    expect(cheapestPass(models)).toBe(defaultChatModel)
+    expect(cheapestPass(models)).toBe(capturedModel)
+    expect(routerChatModels).toContain(capturedModel)
   })
 
   it("fails a chain whose image run failed while its video run ended done", () => {
@@ -245,7 +246,7 @@ describe("the agent's scenarios on Router answers", () => {
   })
 
   it("fails a chain whose video is made from the run id, not from the image", async () => {
-    const written = defaultAnswers().scenarios.chain?.exchanges ?? []
+    const written = capturedAnswers().scenarios.chain?.exchanges ?? []
     const video = written.findIndex(isVideoFromImage)
     expect(video).toBeGreaterThan(0)
     const exchanges = written.map((exchange, index) =>
@@ -260,10 +261,10 @@ describe("the agent's scenarios on Router answers", () => {
           )
         : exchange
     )
-    const replay = replayAnswers(defaultChatModel, exchanges)
+    const replay = replayAnswers(capturedModel, exchanges)
 
     const result = await runScenario(scenarioOf("chain"), {
-      model: defaultChatModel,
+      model: capturedModel,
       key: comfyKey,
       fetch: replay.fetch,
     })
@@ -274,11 +275,11 @@ describe("the agent's scenarios on Router answers", () => {
   })
 
   it("fails a turn that asks for an image when the model answers only words", async () => {
-    const words = defaultAnswers().scenarios.words
-    const replay = replayAnswers(defaultChatModel, words?.exchanges ?? [])
+    const words = capturedAnswers().scenarios.words
+    const replay = replayAnswers(capturedModel, words?.exchanges ?? [])
 
     const result = await runScenario(scenarioOf("propose"), {
-      model: defaultChatModel,
+      model: capturedModel,
       key: comfyKey,
       fetch: replay.fetch,
     })

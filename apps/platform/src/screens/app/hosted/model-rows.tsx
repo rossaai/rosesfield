@@ -10,8 +10,16 @@ import type {
   ModelPrice,
   ModelRank,
 } from "@rosesfield/ui/components/model-picker"
-import { ClockIcon, CoinsIcon, ScanIcon, Volume2Icon } from "lucide-react"
-import { formatAmount } from "@/copy/format"
+import {
+  BrainIcon,
+  ClockIcon,
+  FileTextIcon,
+  ScanIcon,
+  Volume2Icon,
+} from "lucide-react"
+import type { ReactNode } from "react"
+import type { AgentModelInput } from "@/api/agent-wire"
+import { formatTokenCount } from "@/copy/format"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
 import {
@@ -24,10 +32,13 @@ import {
   badgesOf,
   rankNoteOf,
 } from "@/screens/app/hosted/row-badges"
+import { kindPictures } from "@/screens/library/filter-groups"
 
 export type RowFact =
   | ModelTag
-  | { kind: "rate"; way: "in" | "out"; credits: number }
+  | { kind: "context"; tokens: number }
+  | { kind: "reasons" }
+  | { kind: "input"; input: AgentModelInput }
 
 export type RowModel = {
   id: string
@@ -49,9 +60,19 @@ export function todayOf(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10)
 }
 
-function rateText(credits: number): string {
-  return formatAmount(credits >= 10 ? Math.round(credits) : credits)
-}
+const inputWords = {
+  image: "shell.area.image",
+  video: "shell.area.video",
+  audio: "shell.area.audio",
+  file: "agent.model.input.file",
+} as const satisfies Record<AgentModelInput, string>
+
+const inputPictures = {
+  image: kindPictures.image,
+  video: kindPictures.video,
+  audio: kindPictures.audio,
+  file: <FileTextIcon />,
+} as const satisfies Record<AgentModelInput, ReactNode>
 
 export function capabilityOf(fact: RowFact): ModelPickerTag | null {
   switch (fact.kind) {
@@ -69,15 +90,22 @@ export function capabilityOf(fact: RowFact): ModelPickerTag | null {
       }
     case "references":
       return { label: t("model.tag.references", { max: fact.max }) }
-    case "rate":
+    case "context":
       return {
-        label: t(
-          fact.way === "in" ? "agent.model.rate.in" : "agent.model.rate.out",
-          {
-            credits: rateText(fact.credits),
-          }
-        ),
-        icon: <CoinsIcon aria-hidden="true" />,
+        label: t("agent.model.context", {
+          size: formatTokenCount(fact.tokens),
+        }),
+      }
+    case "reasons":
+      return {
+        label: t("agent.model.reasons"),
+        icon: <BrainIcon aria-hidden="true" />,
+      }
+    case "input":
+      return {
+        label: t(inputWords[fact.input]),
+        icon: inputPictures[fact.input],
+        display: "glyph",
       }
     case "open-weights":
     case "hosted":
@@ -91,7 +119,9 @@ const capabilityOrder: readonly RowFact["kind"][] = [
   "resolution",
   "length",
   "references",
-  "rate",
+  "context",
+  "reasons",
+  "input",
 ]
 
 export function taskTagOf(task: string | null): ModelPickerTag | null {

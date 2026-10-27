@@ -15,6 +15,7 @@ import { memo, type ReactElement, type ReactNode } from "react"
 type ModelPickerTag = {
   label: string
   icon?: ReactNode
+  display?: "words" | "glyph"
 }
 
 type ModelBadge = {
@@ -34,6 +35,7 @@ type ModelPrice = {
   amount: string
   name: string
   credits: number
+  note?: string
 }
 
 type ModelPickerRow = {
@@ -162,7 +164,7 @@ function RowName({ row }: { row: ModelPickerRow }): ReactElement {
   )
 }
 
-const capabilityLimit = 3
+const capabilityLimit = 6
 
 function RowCapabilities({ row }: { row: ModelPickerRow }): ReactNode {
   const shown = row.capabilities.slice(0, capabilityLimit)
@@ -174,17 +176,58 @@ function RowCapabilities({ row }: { row: ModelPickerRow }): ReactNode {
       data-slot="model-row-capabilities"
       className="flex h-(--text-caption--line-height) min-w-0 flex-wrap items-center gap-x-s2 overflow-hidden text-caption whitespace-nowrap text-ink-muted"
     >
-      {shown.map((capability) => (
-        <span
-          key={capability.label}
-          data-slot="model-row-capability"
-          className="inline-flex h-(--text-caption--line-height) shrink-0 items-center gap-s1 [&_svg]:glyph-small"
-        >
-          {capability.icon}
-          {capability.label}
-        </span>
-      ))}
+      {shown.map((capability) =>
+        capability.display === "glyph" ? (
+          <span
+            key={capability.label}
+            role="img"
+            aria-label={capability.label}
+            data-slot="model-row-capability"
+            data-display="glyph"
+            className="inline-flex h-(--text-caption--line-height) shrink-0 items-center [&_svg]:glyph-small"
+          >
+            {capability.icon}
+          </span>
+        ) : (
+          <span
+            key={capability.label}
+            data-slot="model-row-capability"
+            className="inline-flex h-(--text-caption--line-height) shrink-0 items-center gap-s1 [&_svg]:glyph-small"
+          >
+            {capability.icon}
+            {capability.label}
+          </span>
+        )
+      )}
     </span>
+  )
+}
+
+function PriceNote({
+  price,
+  note,
+}: {
+  price: ModelPrice
+  note: string
+}): ReactElement {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <span
+            role="img"
+            data-slot="model-row-price-note"
+            aria-label={`${price.name}. ${note}`}
+            className="pointer-events-auto"
+          >
+            <CreditPrice amount={price.amount} />
+          </span>
+        }
+      />
+      <TooltipContent className="pointer-events-none h-auto py-s1 whitespace-normal">
+        {note}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -198,22 +241,26 @@ function RowPrice({
   return (
     <span
       data-slot="model-row-price"
-      title={price?.name}
+      title={price?.note === undefined ? price?.name : undefined}
       data-state={
         price !== undefined ? "known" : isPricing ? "pending" : "none"
       }
       className="ms-s2 flex w-[calc(2*var(--spacing-s8))] shrink-0 items-center justify-end text-caption text-ink-muted data-[state=none]:ms-0 data-[state=none]:w-0"
     >
-      {price !== undefined ? (
+      {price === undefined ? (
+        isPricing ? (
+          <Skeleton
+            data-slot="model-row-price-loading"
+            shape="line"
+            text="caption"
+            measure="full"
+          />
+        ) : null
+      ) : price.note === undefined ? (
         <CreditPrice amount={price.amount} />
-      ) : isPricing ? (
-        <Skeleton
-          data-slot="model-row-price-loading"
-          shape="line"
-          text="caption"
-          measure="full"
-        />
-      ) : null}
+      ) : (
+        <PriceNote price={price} note={price.note} />
+      )}
     </span>
   )
 }

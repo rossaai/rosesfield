@@ -32,7 +32,7 @@ describe("agentStateOf", () => {
     model: "deepseek/deepseek-v4-flash",
     recent: [],
     refusal: null,
-    rates: {},
+    details: {},
   }
 
   it("keeps the composer while the Router lists a chat model for the key", () => {
@@ -47,7 +47,7 @@ describe("agentStateOf", () => {
         model: null,
         recent: [],
         refusal: { code: "ENGINE_NOT_ENABLED", status: 412 },
-        rates: {},
+        details: {},
       })
     ).toBe("off")
     expect(
@@ -56,7 +56,7 @@ describe("agentStateOf", () => {
         model: null,
         recent: [],
         refusal: null,
-        rates: {},
+        details: {},
       })
     ).toBe("off")
   })
