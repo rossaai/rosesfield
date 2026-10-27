@@ -29,6 +29,7 @@ const chatModel = z
     usdPer1M: z.strictObject({
       input: z.number().min(0),
       output: z.number().min(0),
+      cacheRead: z.number().min(0).nullable(),
     }),
     score: z.number().int().min(0).max(100).nullable(),
     rank: z.number().int().min(1),

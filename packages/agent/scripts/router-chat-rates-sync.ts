@@ -12,7 +12,11 @@ const listed = z.object({
   data: z.array(
     z.object({
       id: z.string(),
-      pricing: z.object({ prompt: z.string(), completion: z.string() }),
+      pricing: z.object({
+        prompt: z.string(),
+        completion: z.string(),
+        input_cache_read: z.string().optional(),
+      }),
     })
   ),
 })
@@ -41,6 +45,10 @@ async function main(): Promise<void> {
       usdPer1M: {
         input: perMillionOf(pricing.prompt),
         output: perMillionOf(pricing.completion),
+        cacheRead:
+          pricing.input_cache_read === undefined
+            ? null
+            : perMillionOf(pricing.input_cache_read),
       },
     }
   })
