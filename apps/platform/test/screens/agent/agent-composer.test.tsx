@@ -185,7 +185,7 @@ describe("the agent composer", () => {
     }
   })
 
-  it("holds the run mode beside the model chip, opening on Auto with its sparkles", async () => {
+  it("holds the run mode beside the model chip, opening on Auto with its zap", async () => {
     renderComposer()
     await field()
     const toolbar = document.querySelector('[data-slot="composer-toolbar"]')
@@ -194,7 +194,7 @@ describe("the agent composer", () => {
     expect(toolbar?.contains(mode)).toBe(true)
     expect(isBefore(model, mode)).toBe(true)
     expect(mode.textContent).toContain(t("agent.mode.auto"))
-    expect(leadOf(mode)).toContain("lucide-sparkles")
+    expect(leadOf(mode)).toContain("lucide-zap")
     expect(document.querySelector(".lucide-hand")).toBeNull()
   })
 
@@ -214,7 +214,7 @@ describe("the agent composer", () => {
         iconOf(option.querySelector("[data-slot='select-item-icon']"))
       )
     ).toEqual([
-      expect.stringContaining("lucide-sparkles"),
+      expect.stringContaining("lucide-zap"),
       expect.stringContaining("lucide-user-check"),
     ])
     const manual = options[1]
