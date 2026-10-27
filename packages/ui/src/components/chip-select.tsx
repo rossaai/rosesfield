@@ -32,7 +32,20 @@ type ChipSelectProps<T extends string> = {
   display?: string
   disabled?: boolean
   hint?: ReactNode
+  compact?: ChipSelectCompact
 }
+
+type ChipSelectCompact = "label" | "icon"
+
+const compactTrigger = {
+  label: "min-w-0 shrink",
+  icon: "min-w-0 shrink @max-regular:w-button-small @max-regular:shrink-0 @max-regular:justify-center @max-regular:px-0",
+} satisfies Record<ChipSelectCompact, string>
+
+const compactValue = {
+  label: "",
+  icon: "@max-regular:hidden",
+} satisfies Record<ChipSelectCompact, string>
 
 function ChipSelect<T extends string>({
   label,
@@ -43,6 +56,7 @@ function ChipSelect<T extends string>({
   display,
   disabled = false,
   hint,
+  compact = "label",
 }: ChipSelectProps<T>): ReactElement {
   const choose = (next: unknown): void => {
     const option = options.find((candidate) => candidate.value === next)
@@ -65,10 +79,13 @@ function ChipSelect<T extends string>({
               icon={icon}
               aria-label={label}
               data-slot="chip-select"
-              className={cn("min-w-0 shrink", motion.press)}
+              data-compact={compact}
+              className={cn(compactTrigger[compact], motion.press)}
             >
               <span className="sr-only">{`${label} `}</span>
-              <SelectValue>{display}</SelectValue>
+              <SelectValue className={compactValue[compact]}>
+                {display}
+              </SelectValue>
             </SelectTrigger>
           }
         />
@@ -109,5 +126,5 @@ function ChipSelect<T extends string>({
   )
 }
 
-export type { ChipOption, ChipSelectProps }
+export type { ChipOption, ChipSelectCompact, ChipSelectProps }
 export { ChipSelect }

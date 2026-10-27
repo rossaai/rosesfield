@@ -54,6 +54,7 @@ function RunModeChip(): ReactElement {
       display={chosen.label}
       onValueChange={keepRunApproval}
       options={modes}
+      compact="icon"
     />
   )
 }
@@ -90,6 +91,7 @@ function EffortChip(): ReactElement | null {
       display={t(effortWords[effort])}
       onValueChange={(next) => keepEffort(model, next)}
       options={options}
+      compact="icon"
     />
   )
 }

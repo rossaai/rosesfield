@@ -70,3 +70,64 @@ test("a key the Router takes opens the composer with the agent's model to choose
     page.getByRole("button", { name: "Model Deepseek V4 Flash" })
   ).toBeVisible()
 })
+
+const flash = "deepseek/deepseek-v4-flash"
+
+const flashDetail = {
+  name: "DeepSeek V4 Flash",
+  lab: "deepseek",
+  facts: {
+    lab: null,
+    release: null,
+    weights: null,
+    lineKey: null,
+    scores: {},
+  },
+  context: 131_072,
+  inputs: [],
+  reasons: true,
+  input: 21.1,
+  output: 84.4,
+  turn: 0.07,
+  effort: "high",
+  efforts: [
+    { effort: "high", turn: 0.07 },
+    { effort: "low", turn: 0.03 },
+  ],
+}
+
+test("on a phone the Effort and run mode chips sit inside the composer's visible box", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "phone", "the phone layout")
+  await openAgent(page, {
+    models: [flash, "qwen/qwen3.6-flash"],
+    model: flash,
+    refusal: null,
+    details: { [flash]: flashDetail },
+  })
+  const row = page.locator("[data-bar='prompt'] [data-slot='chip-row']")
+  const chips = [
+    page.getByRole("combobox", { name: "Effort" }),
+    page.getByRole("combobox", { name: "Run mode" }),
+    page.getByRole("button", { name: /^Model Deepseek V4 Flash$/i }),
+  ]
+  for (const chip of chips) {
+    await expect(chip).toBeVisible()
+  }
+  const shown = await row.evaluate((element) => {
+    const box = element.getBoundingClientRect()
+    return {
+      left: box.left,
+      right: box.right,
+      overflow: element.scrollWidth - element.clientWidth,
+    }
+  })
+  expect(shown.overflow).toBe(0)
+  for (const chip of chips) {
+    const box = await chip.boundingBox()
+    expect(box).not.toBeNull()
+    expect(box?.x ?? -1).toBeGreaterThanOrEqual(shown.left)
+    expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(shown.right)
+  }
+})
