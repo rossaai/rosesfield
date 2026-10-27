@@ -4,8 +4,8 @@ import type { FormValues } from "@/screens/app/app-form"
 export type LastUsed = {
   model: string
   settings: Readonly<Record<string, string | number>>
-  count: number
-  aspectRatio: string | null
+  count?: number
+  aspectRatio?: string | null
 }
 
 const storageKey = "rosesfield.app.last-used"
@@ -26,8 +26,10 @@ function isLastUsed(value: unknown): value is LastUsed {
   return (
     isRecord(value) &&
     typeof value.model === "string" &&
-    typeof value.count === "number" &&
-    (value.aspectRatio === null || typeof value.aspectRatio === "string") &&
+    (value.count === undefined || typeof value.count === "number") &&
+    (value.aspectRatio === undefined ||
+      value.aspectRatio === null ||
+      typeof value.aspectRatio === "string") &&
     isRecord(value.settings) &&
     Object.values(value.settings).every(
       (one) => typeof one === "string" || typeof one === "number"

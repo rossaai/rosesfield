@@ -1,4 +1,16 @@
 import { expect, type Locator, type Page, test } from "@playwright/test"
+import { keepDeclaredModels } from "./last-used"
+
+test.beforeEach(async ({ page }) => {
+  await keepDeclaredModels(page, [
+    "speech",
+    "music",
+    "sound-effects",
+    "voice-clone",
+    "voice-change",
+    "audio",
+  ])
+})
 
 const apps = [
   { id: "speech", name: "Speech", model: "chatterbox", chip: "Chatterbox" },

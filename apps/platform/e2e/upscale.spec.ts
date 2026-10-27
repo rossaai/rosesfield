@@ -1,5 +1,10 @@
 import { expect, type Locator, type Page, test } from "@playwright/test"
+import { keepDeclaredModels } from "./last-used"
 import { expectTip } from "./well-tip"
+
+test.beforeEach(async ({ page }) => {
+  await keepDeclaredModels(page, ["upscale"])
+})
 
 async function boxOf(
   locator: Locator

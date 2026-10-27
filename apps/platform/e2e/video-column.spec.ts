@@ -1,4 +1,9 @@
 import { expect, type Locator, test } from "@playwright/test"
+import { keepDeclaredModels } from "./last-used"
+
+test.beforeEach(async ({ page }) => {
+  await keepDeclaredModels(page, ["video"])
+})
 
 type Box = { x: number; y: number; width: number; height: number }
 

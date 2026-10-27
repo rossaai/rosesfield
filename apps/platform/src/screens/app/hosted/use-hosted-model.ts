@@ -117,9 +117,10 @@ function useChoose(
       )
       setForm({
         inputs: { ...inputs, ...placed, [modelInputName]: id },
-        ...(used === null
+        ...(used?.count === undefined ? {} : { count: used.count }),
+        ...(used?.aspectRatio === undefined
           ? {}
-          : { count: used.count, aspectRatio: used.aspectRatio }),
+          : { aspectRatio: used.aspectRatio }),
       })
     },
     [app, chosen, models, values.inputs, setForm]

@@ -1,4 +1,9 @@
 import { expect, type Locator, type Page, test } from "@playwright/test"
+import { keepDeclaredModels } from "./last-used"
+
+test.beforeEach(async ({ page }) => {
+  await keepDeclaredModels(page, ["lipsync", "speech"])
+})
 
 const photo = new URL(
   "../src/gallery/fixtures/demo-image-1-1.png",
