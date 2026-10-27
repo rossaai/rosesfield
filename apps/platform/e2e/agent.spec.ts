@@ -184,7 +184,7 @@ test("an agent row ends with one message's whole credits at the chosen effort, n
     row.first().locator("[data-slot='model-row-price-note']")
   ).toHaveAttribute(
     "aria-label",
-    "2 Comfy credits per message, estimated. 21 per 1M in, 84 per 1M out"
+    "2 Comfy credits per message, estimated. 22 per 1M in, 85 per 1M out"
   )
   await page.keyboard.press("Escape")
 
