@@ -6,6 +6,7 @@ import {
   type AgentToolHandlers,
   publishedAgentTools,
 } from "#infrastructure/pi-agent-tools"
+import type { ImagesOf } from "#infrastructure/pi-asset-media"
 import type { RunWait } from "#infrastructure/pi-library-tools"
 import {
   type AgentModel,
@@ -21,6 +22,7 @@ export type RouterAgentHarnessOptions = {
   handlers: () => AgentToolHandlers
   clock: Clock
   wait?: RunWait
+  images?: ImagesOf
 }
 
 export function routerAgentHarness(
@@ -28,12 +30,17 @@ export function routerAgentHarness(
 ): PiAgentHarness {
   const { model, modelOptions } = options
   return new PiAgentHarness({
-    models: () => openPiModels(model, modelOptions),
+    models: () =>
+      openPiModels(model, {
+        ...modelOptions,
+        media: () => options.handlers(),
+      }),
     storage: options.storage,
     tools: publishedAgentTools({
       apps: options.apps,
       handlers: options.handlers,
       ...(options.wait === undefined ? {} : { wait: options.wait }),
+      ...(options.images === undefined ? {} : { images: options.images }),
     }),
     clock: options.clock,
   })

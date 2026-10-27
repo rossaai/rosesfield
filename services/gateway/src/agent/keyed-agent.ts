@@ -5,6 +5,7 @@ import {
   routerAgentHarness,
 } from "@rosesfield/agent"
 import { openSqliteFileStorage } from "@rosesfield/agent/local"
+import { photonImages } from "@rosesfield/agent/local-images"
 import type { AppDefinition } from "@rosesfield/contract"
 import type { Clock } from "@rosesfield/kernel"
 import { AgentAccess, type AgentRequest } from "#agent/agent-access"
@@ -35,6 +36,7 @@ export class KeyedAgent {
       apps: options.apps,
       handlers: () => access.handlers(),
       clock: options.clock,
+      images: photonImages,
     })
   }
 

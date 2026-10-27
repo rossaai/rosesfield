@@ -9,6 +9,7 @@ import { assetIdFormat, characterIdFormat } from "@rosesfield/kernel"
 import { Character } from "@rosesfield/library"
 import { afterEach, describe, expect, it } from "vitest"
 import { type RunWait, runWait } from "#infrastructure/pi-library-tools"
+import { unseenNoteOf } from "#infrastructure/router-chat-media"
 import { FakeAssetRepository } from "../fake/fake-asset-repository"
 import { FakeCharacterRepository } from "../fake/fake-character-repository"
 import {
@@ -144,7 +145,9 @@ describe("the library and run tools", () => {
       ])
     )
 
-    expect(found).toBe(`ok: ${JSON.stringify({ asset: image })}`)
+    expect(found).toBe(
+      `ok: ${JSON.stringify({ asset: image, run: null, note: unseenNoteOf("image") })}`
+    )
     expect(missing.startsWith("error: ")).toBe(true)
     expect(missing).toContain("No asset has the id")
   })

@@ -9,6 +9,7 @@ import {
   routerAgentModel,
 } from "@rosesfield/agent"
 import { openSqliteFileStorage } from "@rosesfield/agent/local"
+import { photonImages } from "@rosesfield/agent/local-images"
 import type { AppDefinition } from "@rosesfield/contract"
 import type { Clock } from "@rosesfield/kernel"
 import { KeyedAgent } from "#agent/keyed-agent"
@@ -38,6 +39,7 @@ export function localAgent(options: LocalAgentOptions): PiAgentHarness | null {
     apps: options.apps,
     handlers: () => handlers,
     clock: options.clock,
+    images: photonImages,
     ...(options.wait === undefined ? {} : { wait: options.wait }),
   })
 }

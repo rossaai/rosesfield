@@ -13,6 +13,7 @@ import type {
 } from "@rosesfield/generation"
 import { agentCopy } from "#copy.en"
 import { appTool } from "#infrastructure/pi-app-tool"
+import type { ImagesOf } from "#infrastructure/pi-asset-media"
 import {
   type LibraryToolHandlers,
   libraryTools,
@@ -39,6 +40,7 @@ type AgentToolsOptions = {
   handlers: () => AgentToolHandlers
   forms?: readonly ModelForm[]
   wait?: RunWait
+  images?: ImagesOf
 }
 
 function openApps(apps: readonly AppDefinition[]): AppDefinition[] {
@@ -57,7 +59,7 @@ export function agentTools(options: AgentToolsOptions): ToolRegistration[] {
         ...(options.wait === undefined ? {} : { wait: options.wait }),
       })
     ),
-    ...libraryTools(handlers, options.wait),
+    ...libraryTools(handlers, options.wait, options.images),
   ]
 }
 

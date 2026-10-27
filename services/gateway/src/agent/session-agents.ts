@@ -14,6 +14,7 @@ import {
   routerAgentHarness,
 } from "@rosesfield/agent"
 import { openSqliteFileStorage } from "@rosesfield/agent/local"
+import { photonImages } from "@rosesfield/agent/local-images"
 import type { AppDefinition } from "@rosesfield/contract"
 import type { Clock } from "@rosesfield/kernel"
 import { AgentAccess, type AgentRequest } from "#agent/agent-access"
@@ -136,6 +137,7 @@ export class SessionAgents {
       apps: this.apps,
       handlers: () => access.handlers(),
       clock: this.clock,
+      images: photonImages,
     })
     const entry: OpenAgent = { agent, access, idle: null }
     this.open.set(sessionId, entry)

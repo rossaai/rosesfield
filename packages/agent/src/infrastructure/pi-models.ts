@@ -8,6 +8,7 @@ import type { AgentEffort } from "#agent.contract"
 import { AgentModelUnknownError } from "#domain/error/agent-model-unknown.error"
 import { backgroundContext } from "#infrastructure/pi-context"
 import type { Fetch } from "#infrastructure/router-chat-fetch"
+import type { MediaReads } from "#infrastructure/router-chat-media"
 import {
   defaultChatModel,
   routerChat,
@@ -29,6 +30,7 @@ export type PiModels = {
 export type OpenPiModelsOptions = {
   keyOf?: () => string | null
   fetch?: Fetch
+  media?: () => MediaReads
 }
 
 export function routerAgentModel(apiKey: string | null): AgentModel {
@@ -44,6 +46,7 @@ export async function openPiModels(
     routerChatProvider({
       keyOf: () => options.keyOf?.() ?? model.apiKey,
       fetch: options.fetch ?? ((input, init) => fetch(input, init)),
+      ...(options.media === undefined ? {} : { media: options.media }),
     })
   )
   if (models.getModel(model.provider, model.model) === undefined) {
