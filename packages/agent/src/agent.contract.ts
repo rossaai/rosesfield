@@ -107,7 +107,7 @@ export const agentModelDetail = z.object({
   input: credits,
   output: credits,
   effort: agentEffort.nullable(),
-  efforts: z.array(z.object({ effort: agentEffort, turn: credits })).max(7),
+  efforts: z.array(agentEffort).max(7),
 })
 
 export const agentModelsResponse = z.object({

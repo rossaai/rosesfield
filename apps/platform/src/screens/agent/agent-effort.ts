@@ -91,8 +91,7 @@ export function effortOf(
     return null
   }
   const chosen = Object.hasOwn(kept, model) ? kept[model] : undefined
-  return chosen !== undefined &&
-    detail.efforts.some((one) => one.effort === chosen)
+  return chosen !== undefined && detail.efforts.includes(chosen)
     ? chosen
     : detail.effort
 }

@@ -9,7 +9,7 @@ import {
 } from "lucide-react"
 import type { ReactElement } from "react"
 import type { AgentEffort, RunApproval } from "@/api/conversation-wire"
-import { formatAmount, formatEstimate } from "@/copy/format"
+import { formatAmount } from "@/copy/format"
 import { t } from "@/copy/t"
 import { DraftBar } from "@/pieces/draft-bar"
 import type { DraftState } from "@/pieces/use-draft"
@@ -80,12 +80,9 @@ function EffortChip(): ReactElement | null {
   }
   const { model, detail, effort } = shown
   const options = detail.efforts.map((one) => ({
-    value: one.effort,
-    label: t(effortWords[one.effort]),
+    value: one,
+    label: t(effortWords[one]),
     icon: null,
-    description: t("run.price.estimated", {
-      amount: formatEstimate(one.turn),
-    }),
   }))
   return (
     <ChipSelect

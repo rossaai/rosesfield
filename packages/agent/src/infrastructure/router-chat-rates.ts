@@ -1,68 +1,18 @@
 import { comfyCreditsPerUsd, type ModelFacts } from "@rosesfield/catalog/comfy"
-import type { AgentEffort, AgentModelDetail } from "#agent.contract"
+import type { AgentModelDetail } from "#agent.contract"
 import {
-  defaultChatModel,
   isOnLine,
   openEffortOf,
-  pointOf,
   type RouterChatModel,
   type RouterChatTable,
   routerChatData,
   routerChatModelOf,
 } from "#infrastructure/router-chat-models"
 
-/** The tokens of a typical agent turn: the median input and output tokens per turn, each turn summed over its model calls, across the captured scenario answers. */
-export const typicalTurn = {
-  source: "packages/agent/test/fixtures/scenario-answers/*.json",
-  readOn: "2026-10-26",
-  inputTokens: 1650,
-  outputTokens: 400,
-} as const
-
 export const chatTask = "chat"
-
-const perMillion = 1_000_000
 
 function creditsOf(usd: number): number {
   return Math.round(usd * comfyCreditsPerUsd * 10_000) / 10_000
-}
-
-function referenceTokensOf(): number | null {
-  const base = routerChatModelOf(defaultChatModel)
-  if (base === undefined) {
-    return null
-  }
-  const measured = (one: { outputTokensPerTask: number | null } | undefined) =>
-    one?.outputTokensPerTask ?? null
-  return (
-    measured(pointOf(base, openEffortOf(base))) ??
-    measured(base.points.find((one) => one.outputTokensPerTask !== null))
-  )
-}
-
-const referenceTokens = referenceTokensOf()
-
-function outputTokensOf(
-  model: RouterChatModel,
-  effort: AgentEffort | null,
-  reference: number | null = referenceTokens
-): number {
-  const own = pointOf(model, effort)?.outputTokensPerTask ?? null
-  return own === null || reference === null
-    ? typicalTurn.outputTokens
-    : (typicalTurn.outputTokens * own) / reference
-}
-
-/** The Comfy credits of a typical turn of a chat model at one effort: the typical turn's input and output tokens times its rates, with the output scaled by that effort's output tokens per task over the default model's at its opening effort, or at its first measured effort, where the table holds both. */
-export function turnCreditsOf(
-  model: RouterChatModel,
-  effort: AgentEffort | null
-): number {
-  const usd =
-    (model.usdPer1M.input * typicalTurn.inputTokens +
-      model.usdPer1M.output * outputTokensOf(model, effort)) /
-    perMillion
-  return creditsOf(usd)
 }
 
 function lastScoredOf(table: RouterChatTable): number {
@@ -122,14 +72,11 @@ export function chatDetailOf(
     input: creditsOf(model.usdPer1M.input),
     output: creditsOf(model.usdPer1M.output),
     effort: openEffortOf(model),
-    efforts: model.efforts.map((effort) => ({
-      effort,
-      turn: turnCreditsOf(model, effort),
-    })),
+    efforts: model.efforts,
   }
 }
 
-/** Reads each listed chat model's row: its rank, what it can do, its credits per million input and output tokens, the effort it opens on and a typical turn's credits at each effort it offers. */
+/** Reads each listed chat model's row: its rank, what it can do, its credits per million input and output tokens, the effort it opens on and the efforts it offers. */
 export function chatDetailsOf(
   models: readonly string[]
 ): Record<string, AgentModelDetail> {

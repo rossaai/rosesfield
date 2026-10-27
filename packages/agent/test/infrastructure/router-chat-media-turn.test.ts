@@ -127,7 +127,9 @@ describe("the media one turn sends", () => {
       "that media adds to the cost of the turn"
     )
     expect(partsOf(requests[2], "input_audio")).toEqual([])
-    expect(toolTextOf(requests[2])).toContain("sent in an earlier turn")
+    expect(toolTextOf(requests[2])).toContain(
+      "received this media in an earlier request"
+    )
   })
 })
 
@@ -159,7 +161,7 @@ describe("a medium a turn reads in one step", () => {
     expect(partsOf(requests[2], "video_url")).toHaveLength(1)
     expect(JSON.stringify(requests[2]?.body)).not.toContain(base64(wav))
     expect(JSON.stringify(requests[2]?.body)).toContain(
-      "sent in an earlier turn"
+      "received this media in an earlier request"
     )
   })
 

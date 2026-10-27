@@ -34,26 +34,17 @@ const listed: AgentModels = {
     [tuned]: agentDetailOf({
       name: "DeepSeek V4.1 Flash 1017",
       effort: "high",
-      efforts: [
-        { effort: "max", turn: 0.1 },
-        { effort: "high", turn: 0.09 },
-        { effort: "low", turn: 0.07 },
-        { effort: "none", turn: 0.06 },
-      ],
+      efforts: ["max", "high", "low", "none"],
     }),
     [other]: agentDetailOf({
       name: "Claude Opus 5.5",
       effort: "xhigh",
-      efforts: [
-        { effort: "max", turn: 12 },
-        { effort: "xhigh", turn: 8 },
-        { effort: "medium", turn: 4 },
-      ],
+      efforts: ["max", "xhigh", "medium"],
     }),
     [fixed]: agentDetailOf({
       name: "GPT-5.2 Chat",
       effort: "high",
-      efforts: [{ effort: "high", turn: 2 }],
+      efforts: ["high"],
     }),
     [plain]: agentDetailOf({ name: "GLM-5.3", effort: null, efforts: [] }),
   },
@@ -140,7 +131,7 @@ describe("the agent composer's Effort", () => {
     )
   })
 
-  it("lists the levels the model offers and keeps the one you choose for that model", async () => {
+  it("lists the levels the model offers by their words alone, with no number, and keeps the one you choose for that model", async () => {
     renderAgent(() => <Composer />, "/agent", undefined, listed)
     const chip = await waitFor(() => {
       const found = effortChip()
@@ -152,11 +143,14 @@ describe("the agent composer's Effort", () => {
     fireEvent.click(chip)
     const options = await screen.findAllByRole("option")
     expect(options.map((one) => one.textContent)).toEqual([
-      `${t("agent.effort.max")}${t("run.price.estimated", { amount: "0.1" })}`,
-      `${t("agent.effort.high")}${t("run.price.estimated", { amount: "0.09" })}`,
-      `${t("agent.effort.low")}${t("run.price.estimated", { amount: "0.07" })}`,
-      `${t("agent.effort.none")}${t("run.price.estimated", { amount: "0.06" })}`,
+      t("agent.effort.max"),
+      t("agent.effort.high"),
+      t("agent.effort.low"),
+      t("agent.effort.none"),
     ])
+    for (const option of options) {
+      expect(option.textContent).not.toMatch(/\d/)
+    }
     const low = options[2]
     if (low === undefined) {
       throw new Error("The effort lists no Low")

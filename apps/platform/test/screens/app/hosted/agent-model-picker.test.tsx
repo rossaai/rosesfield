@@ -39,10 +39,7 @@ const details: AgentDetails = {
     input: 844,
     output: 4220,
     effort: "max",
-    efforts: [
-      { effort: "max", turn: 12.3 },
-      { effort: "low", turn: 1.43 },
-    ],
+    efforts: ["max", "low"],
   }),
   "moonshotai/kimi-k3.1-pro": agentDetailOf({
     name: "Kimi K3.1 Pro",
