@@ -1,5 +1,5 @@
 import { type Asset, buildPath, routes } from "@rosesfield/contract"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
 import { callRoute } from "@/api/call-route"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
@@ -87,11 +87,10 @@ export function useAssetSource(assetId: string): AssetSource {
   return { state: "loading" }
 }
 
-function useAssetPreview(asset: Asset): PreviewSource {
-  const assetId = asset.id
-  const preview = useQuery({
+export function previewQuery(assetId: string) {
+  return queryOptions({
     queryKey: assetPreviewKey(assetId),
-    queryFn: async ({ signal }) => {
+    queryFn: async ({ signal }): Promise<string | null> => {
       try {
         const bytes = await callRoute(routes.readAssetPreview, {
           params: { assetId },
@@ -105,9 +104,15 @@ function useAssetPreview(asset: Asset): PreviewSource {
         throw error
       }
     },
-    enabled: isVisual(asset),
     staleTime: Number.POSITIVE_INFINITY,
     gcTime: blobKeepMs,
+  })
+}
+
+function useAssetPreview(asset: Asset): PreviewSource {
+  const preview = useQuery({
+    ...previewQuery(asset.id),
+    enabled: isVisual(asset),
   })
   if (!isVisual(asset) || preview.isError || preview.data === null) {
     return { state: "none" }

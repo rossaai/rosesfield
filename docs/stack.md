@@ -189,7 +189,7 @@ The agent runs on a chat model of the Comfy Router, with your Comfy key. It has 
 - One turn sends at most 4 media and 16 MiB of them, in the order the turn read them. A later one is left out with a note. Media read in an earlier turn is not sent again, so the model reads an asset again to see it.
 - Each read of the library's bytes has a 15-second timeout. No media and no key is logged.
 - When the model does not take the asset's kind, the note names the three highest ranked models of the table that do. The agent's instructions say that media it reads adds to the cost of the turn.
-- A 3D model's still is drawn only in the browser today, and the preview route accepts a picture only for an image or a video, so no still reaches the server. A still reaches the model once the platform uploads the picture `useMeshStill` paints through the preview route and `PutAssetPreviewHandler` accepts it for a 3D model.
+- A 3D model's still is drawn in the browser by `useMeshStill`. When the server holds no preview for the model, the platform sends that still once through the preview route, under the same WebP or JPEG type and 64 KiB cap as an image's or a video's preview, and `read_asset` sends the stored still. The route writes only into the library of the request, so in public mode a visitor keeps a still only for that visitor's own model. Until a tile of the model has been drawn in a browser, the model receives the facts and a note that it has no still.
 
 ## MCP
 
