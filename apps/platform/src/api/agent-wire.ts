@@ -31,6 +31,10 @@ const agentModelDetail = z.object({
   output: credits,
   effort: effort.nullable(),
   efforts: z.array(effort).max(7),
+  messages: z
+    .array(z.object({ effort: effort.nullable(), credits }))
+    .min(1)
+    .max(7),
 })
 
 export type AgentModelInput = (typeof agentModelInputs)[number]

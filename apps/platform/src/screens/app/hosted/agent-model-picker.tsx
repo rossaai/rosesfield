@@ -7,9 +7,15 @@ import {
 import { ModelChip } from "@rosesfield/ui/components/model-trigger"
 import { type ReactElement, useMemo } from "react"
 import type { AgentModelDetail } from "@/api/agent-wire"
+import type { AgentEffort } from "@/api/conversation-wire"
 import { formatWholeCredits, joinParts } from "@/copy/format"
 import { t } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
+import {
+  effortOf,
+  type KeptEfforts,
+  useKeptEfforts,
+} from "@/screens/agent/agent-effort"
 import {
   modelRowsOf,
   pickerWords,
@@ -56,21 +62,34 @@ export function chatRowModel(
   }
 }
 
-/** The credits of 1M tokens of the model, 3 input to 1 output. */
-export function blendedCreditsOf(detail: AgentModelDetail): number {
-  return (3 * detail.input + detail.output) / 4
+/** The credits of one message at an effort, rounded up to a whole credit, so never under 1, or null for a model that bills nothing. */
+export function messageCreditsOf(
+  detail: AgentModelDetail,
+  effort: AgentEffort | null
+): number | null {
+  const found =
+    detail.messages.find((one) => one.effort === effort) ??
+    detail.messages.find((one) => one.effort === detail.effort) ??
+    detail.messages[0]
+  if (found === undefined || found.credits <= 0) {
+    return null
+  }
+  return Math.ceil(found.credits)
 }
 
-/** A row's price: the model's credits per 1M tokens as a whole number, with its credits per 1M in and out on hover. */
-export function ratePriceOf(detail: AgentModelDetail): ModelPrice | null {
-  const credits = blendedCreditsOf(detail)
-  if (credits <= 0) {
+/** A row's price: one message at the effort the composer holds for the model, in whole credits, with its credits per 1M in and out on hover. */
+export function messagePriceOf(
+  detail: AgentModelDetail,
+  effort: AgentEffort | null
+): ModelPrice | null {
+  const credits = messageCreditsOf(detail, effort)
+  if (credits === null) {
     return null
   }
   const amount = formatWholeCredits(credits)
   return {
     amount,
-    name: t("agent.model.rate", { credits: amount }),
+    name: t("agent.model.message", { credits: amount }),
     credits,
     note: joinParts([
       t("agent.model.rate.in", { credits: formatWholeCredits(detail.input) }),
@@ -81,14 +100,18 @@ export function ratePriceOf(detail: AgentModelDetail): ModelPrice | null {
   }
 }
 
-export function ratePricesOf(
+export function messagePricesOf(
   models: readonly string[],
-  details: AgentDetails
+  details: AgentDetails,
+  kept: KeptEfforts
 ): Map<string, ModelPrice> {
   const prices = new Map<string, ModelPrice>()
   for (const model of models) {
     const detail = detailOf(details, model)
-    const price = detail === undefined ? null : ratePriceOf(detail)
+    const price =
+      detail === undefined
+        ? null
+        : messagePriceOf(detail, effortOf(model, detail, kept))
     if (price !== null) {
       prices.set(model, price)
     }
@@ -99,11 +122,12 @@ export function ratePricesOf(
 export function agentRowsOf(
   models: readonly string[],
   details: AgentDetails = {},
+  kept: KeptEfforts = {},
   today: string = todayOf()
 ): ModelPickerRow[] {
   return modelRowsOf(
     models.map((model) => chatRowModel(model, detailOf(details, model))),
-    { today, prices: ratePricesOf(models, details) }
+    { today, prices: messagePricesOf(models, details, kept) }
   )
 }
 
@@ -130,7 +154,11 @@ export function AgentModelPicker({
 }: AgentModelPickerProps): ReactElement {
   const detail = detailOf(details, chosen)
   const name = detail?.name ?? nameOf(chosen)
-  const rows = useMemo(() => agentRowsOf(models, details), [models, details])
+  const kept = useKeptEfforts()
+  const rows = useMemo(
+    () => agentRowsOf(models, details, kept),
+    [models, details, kept]
+  )
   return (
     <ModelPicker
       trigger={

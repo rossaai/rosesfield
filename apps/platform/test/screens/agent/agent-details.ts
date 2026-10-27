@@ -16,6 +16,11 @@ const board = {
 /** A chat model's row as the gateway lists it, from a few of its fields. */
 export function agentDetailOf(change: DetailChange = {}): AgentModelDetail {
   const { rank = 1, order = 1, bestValue = false, ...rest } = change
+  const efforts = rest.efforts ?? []
+  const messages =
+    efforts.length > 1
+      ? efforts.map((effort) => ({ effort, credits: 2 }))
+      : [{ effort: null, credits: 2 }]
   return {
     name: "Chat Small",
     lab: "maker",
@@ -41,6 +46,7 @@ export function agentDetailOf(change: DetailChange = {}): AgentModelDetail {
     output: 84.4,
     effort: null,
     efforts: [],
+    messages,
     ...rest,
   }
 }
