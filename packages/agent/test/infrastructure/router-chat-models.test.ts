@@ -28,7 +28,7 @@ const priced = {
   tools: true,
   context: 131_072,
   inputs: [],
-  usdPer1M: { input: 0.1, output: 0.4, cacheRead: null },
+  usdPer1M: { input: 0.1, output: 0.4, cacheRead: null, cacheWrite: null },
   score: 80,
   rank: 1,
   placement: "score",
@@ -109,7 +109,7 @@ describe("the agent's chat model table", () => {
     const dear = {
       ...priced,
       id: "maker/dear",
-      usdPer1M: { input: 9, output: 9, cacheRead: null },
+      usdPer1M: { input: 9, output: 9, cacheRead: null, cacheWrite: null },
       rank: 1,
     }
     const unscored = {

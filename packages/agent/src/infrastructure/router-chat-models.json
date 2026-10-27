@@ -20,7 +20,7 @@
     {
       "name": "OpenRouter models",
       "url": "https://openrouter.ai/api/v1/models",
-      "readAt": "2026-10-27T01:19:44Z"
+      "readAt": "2026-10-27T02:50:07Z"
     },
     {
       "name": "Artificial Analysis Intelligence Index",
@@ -54,7 +54,8 @@
       "usdPer1M": {
         "input": 4,
         "output": 20,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": 5
       },
       "score": 100,
       "rank": 1,
@@ -113,7 +114,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 10,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": null
       },
       "score": 99,
       "rank": 2,
@@ -141,7 +143,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 10,
-        "cacheRead": 0.1
+        "cacheRead": 0.1,
+        "cacheWrite": 0.1875
       },
       "score": 99,
       "rank": 3,
@@ -172,7 +175,8 @@
       "usdPer1M": {
         "input": 10,
         "output": 50,
-        "cacheRead": 0.25
+        "cacheRead": 0.25,
+        "cacheWrite": 12.5
       },
       "score": 99,
       "rank": 4,
@@ -231,7 +235,8 @@
       "usdPer1M": {
         "input": 4,
         "output": 20,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": null
       },
       "score": 99,
       "rank": 5,
@@ -262,7 +267,8 @@
       "usdPer1M": {
         "input": 10,
         "output": 50,
-        "cacheRead": 1
+        "cacheRead": 1,
+        "cacheWrite": 12.5
       },
       "score": 98,
       "rank": 6,
@@ -293,7 +299,8 @@
       "usdPer1M": {
         "input": 5,
         "output": 25,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": 6.25
       },
       "score": 97,
       "rank": 7,
@@ -352,7 +359,8 @@
       "usdPer1M": {
         "input": 1.25,
         "output": 4.25,
-        "cacheRead": 0.15
+        "cacheRead": 0.15,
+        "cacheWrite": null
       },
       "score": 97,
       "rank": 8,
@@ -390,7 +398,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 10,
-        "cacheRead": 0.1
+        "cacheRead": 0.1,
+        "cacheWrite": 2.5
       },
       "score": 97,
       "rank": 9,
@@ -449,7 +458,8 @@
       "usdPer1M": {
         "input": 1,
         "output": 5,
-        "cacheRead": 0.05
+        "cacheRead": 0.05,
+        "cacheWrite": 1.25
       },
       "score": 96,
       "rank": 10,
@@ -512,7 +522,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 10,
-        "cacheRead": 0.1
+        "cacheRead": 0.1,
+        "cacheWrite": 2.5
       },
       "score": 96,
       "rank": 11,
@@ -571,7 +582,8 @@
       "usdPer1M": {
         "input": 10,
         "output": 50,
-        "cacheRead": 1
+        "cacheRead": 1,
+        "cacheWrite": 12.5
       },
       "score": 96,
       "rank": 12,
@@ -630,7 +642,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 10,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": 2.5
       },
       "score": 91,
       "rank": 13,
@@ -696,7 +709,8 @@
       "usdPer1M": {
         "input": 4,
         "output": 20,
-        "cacheRead": 0.4
+        "cacheRead": 0.4,
+        "cacheWrite": 5
       },
       "score": 96,
       "rank": 14,
@@ -762,7 +776,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 6,
-        "cacheRead": 0.25
+        "cacheRead": 0.25,
+        "cacheWrite": null
       },
       "score": 95,
       "rank": 15,
@@ -790,7 +805,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 1.2,
-        "cacheRead": 0.006
+        "cacheRead": 0.006,
+        "cacheWrite": null
       },
       "score": 95,
       "rank": 16,
@@ -818,7 +834,8 @@
       "usdPer1M": {
         "input": 5,
         "output": 25,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": 6.25
       },
       "score": 93,
       "rank": 17,
@@ -849,7 +866,8 @@
       "usdPer1M": {
         "input": 5,
         "output": 25,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": 6.25
       },
       "score": 95,
       "rank": 18,
@@ -887,7 +905,8 @@
       "usdPer1M": {
         "input": 0.825,
         "output": 4.125,
-        "cacheRead": 0.0825
+        "cacheRead": 0.0825,
+        "cacheWrite": 0.041667
       },
       "score": 94,
       "rank": 19,
@@ -930,9 +949,10 @@
       "context": 1048576,
       "inputs": ["image", "video"],
       "usdPer1M": {
-        "input": 0.169,
+        "input": 0.2,
         "output": 20,
-        "cacheRead": 0.159
+        "cacheRead": 0.19,
+        "cacheWrite": null
       },
       "score": 94,
       "rank": 20,
@@ -970,7 +990,8 @@
       "usdPer1M": {
         "input": 0.435,
         "output": 0.87,
-        "cacheRead": 0.0036
+        "cacheRead": 0.0036,
+        "cacheWrite": null
       },
       "score": 94,
       "rank": 21,
@@ -999,9 +1020,10 @@
       "context": 1048576,
       "inputs": [],
       "usdPer1M": {
-        "input": 0.0699,
+        "input": 0.0769,
         "output": 1.4,
-        "cacheRead": 0.0689
+        "cacheRead": 0.0689,
+        "cacheWrite": null
       },
       "score": 94,
       "rank": 22,
@@ -1039,7 +1061,8 @@
       "usdPer1M": {
         "input": 1.25,
         "output": 4.25,
-        "cacheRead": 0.15
+        "cacheRead": 0.15,
+        "cacheWrite": null
       },
       "score": 93,
       "rank": 23,
@@ -1070,7 +1093,8 @@
       "usdPer1M": {
         "input": 0.75,
         "output": 3.75,
-        "cacheRead": 0.075
+        "cacheRead": 0.075,
+        "cacheWrite": 0.041667
       },
       "score": 93,
       "rank": 24,
@@ -1115,7 +1139,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6,
-        "cacheRead": 0.015
+        "cacheRead": 0.015,
+        "cacheWrite": null
       },
       "score": 93,
       "rank": 25,
@@ -1143,7 +1168,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 0.5,
-        "cacheRead": 0.03
+        "cacheRead": 0.03,
+        "cacheWrite": null
       },
       "score": 92,
       "rank": 26,
@@ -1174,7 +1200,8 @@
       "usdPer1M": {
         "input": 1.75,
         "output": 14,
-        "cacheRead": 0.175
+        "cacheRead": 0.175,
+        "cacheWrite": null
       },
       "score": 92,
       "rank": 27,
@@ -1194,7 +1221,8 @@
       "usdPer1M": {
         "input": 5,
         "output": 30,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": null
       },
       "score": 91,
       "rank": 28,
@@ -1253,7 +1281,8 @@
       "usdPer1M": {
         "input": 0.075,
         "output": 0.225,
-        "cacheRead": 0.015
+        "cacheRead": 0.015,
+        "cacheWrite": null
       },
       "score": 91,
       "rank": 29,
@@ -1281,7 +1310,8 @@
       "usdPer1M": {
         "input": 5,
         "output": 25,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": 6.25
       },
       "score": 91,
       "rank": 30,
@@ -1319,7 +1349,8 @@
       "usdPer1M": {
         "input": 0.14,
         "output": 0.42,
-        "cacheRead": 0.0042
+        "cacheRead": 0.0042,
+        "cacheWrite": null
       },
       "score": 91,
       "rank": 31,
@@ -1357,7 +1388,8 @@
       "usdPer1M": {
         "input": 1.25,
         "output": 4.25,
-        "cacheRead": 0.15
+        "cacheRead": 0.15,
+        "cacheWrite": null
       },
       "score": 91,
       "rank": 32,
@@ -1388,7 +1420,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 6,
-        "cacheRead": 0.25
+        "cacheRead": 0.25,
+        "cacheWrite": null
       },
       "score": 90,
       "rank": 33,
@@ -1416,7 +1449,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 12,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": 2.5
       },
       "score": 90,
       "rank": 34,
@@ -1482,7 +1516,8 @@
       "usdPer1M": {
         "input": 2.5,
         "output": 15,
-        "cacheRead": 0.25
+        "cacheRead": 0.25,
+        "cacheWrite": null
       },
       "score": 90,
       "rank": 35,
@@ -1527,7 +1562,8 @@
       "usdPer1M": {
         "input": 0.75,
         "output": 3.75,
-        "cacheRead": 0.075
+        "cacheRead": 0.075,
+        "cacheWrite": 0.041667
       },
       "score": 90,
       "rank": 36,
@@ -1558,7 +1594,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 6,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": null
       },
       "score": 86,
       "rank": 37,
@@ -1603,7 +1640,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 6,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": null
       },
       "score": 89,
       "rank": 38,
@@ -1655,7 +1693,8 @@
       "usdPer1M": {
         "input": 1.25,
         "output": 4.25,
-        "cacheRead": 0.15
+        "cacheRead": 0.15,
+        "cacheWrite": null
       },
       "score": 89,
       "rank": 39,
@@ -1683,7 +1722,8 @@
       "usdPer1M": {
         "input": 1.5,
         "output": 9,
-        "cacheRead": 0.15
+        "cacheRead": 0.15,
+        "cacheWrite": 0.083333
       },
       "score": 89,
       "rank": 40,
@@ -1728,7 +1768,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 12,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": 0.375
       },
       "score": 88,
       "rank": 41,
@@ -1759,7 +1800,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 6,
-        "cacheRead": 0.3
+        "cacheRead": 0.3,
+        "cacheWrite": null
       },
       "score": 88,
       "rank": 42,
@@ -1790,7 +1832,8 @@
       "usdPer1M": {
         "input": 0.0341,
         "output": 7,
-        "cacheRead": 0.033
+        "cacheRead": 0.033,
+        "cacheWrite": null
       },
       "score": 88,
       "rank": 43,
@@ -1828,7 +1871,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 10,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": 2.5
       },
       "score": 87,
       "rank": 44,
@@ -1894,7 +1938,8 @@
       "usdPer1M": {
         "input": 1.32,
         "output": 3.96,
-        "cacheRead": 0.044
+        "cacheRead": 0.044,
+        "cacheWrite": null
       },
       "score": 87,
       "rank": 45,
@@ -1932,7 +1977,8 @@
       "usdPer1M": {
         "input": 1,
         "output": 2.7,
-        "cacheRead": 0.1
+        "cacheRead": 0.1,
+        "cacheWrite": null
       },
       "score": 87,
       "rank": 46,
@@ -1963,7 +2009,8 @@
       "usdPer1M": {
         "input": 0.2156,
         "output": 0.6468,
-        "cacheRead": 0.00686
+        "cacheRead": 0.00686,
+        "cacheWrite": null
       },
       "score": 86,
       "rank": 47,
@@ -1991,7 +2038,8 @@
       "usdPer1M": {
         "input": 0.44,
         "output": 1.32,
-        "cacheRead": 0.014
+        "cacheRead": 0.014,
+        "cacheWrite": null
       },
       "score": 86,
       "rank": 48,
@@ -2019,7 +2067,8 @@
       "usdPer1M": {
         "input": 3,
         "output": 15,
-        "cacheRead": 0.3
+        "cacheRead": 0.3,
+        "cacheWrite": 3.75
       },
       "score": 85,
       "rank": 49,
@@ -2064,7 +2113,8 @@
       "usdPer1M": {
         "input": 5,
         "output": 25,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": 6.25
       },
       "score": 85,
       "rank": 50,
@@ -2102,7 +2152,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.5,
-        "cacheRead": 0.01
+        "cacheRead": 0.01,
+        "cacheWrite": 0.125
       },
       "score": 83,
       "rank": 51,
@@ -2168,7 +2219,8 @@
       "usdPer1M": {
         "input": 0.2,
         "output": 1.2,
-        "cacheRead": 0.02
+        "cacheRead": 0.02,
+        "cacheWrite": 0.25
       },
       "score": 85,
       "rank": 52,
@@ -2234,7 +2286,8 @@
       "usdPer1M": {
         "input": 0.14,
         "output": 0.28,
-        "cacheRead": 0.0028
+        "cacheRead": 0.0028,
+        "cacheWrite": null
       },
       "score": 84,
       "rank": 53,
@@ -2265,7 +2318,8 @@
       "usdPer1M": {
         "input": 0.95526,
         "output": 1.91052,
-        "cacheRead": 0.079605
+        "cacheRead": 0.079605,
+        "cacheWrite": null
       },
       "score": 83,
       "rank": 54,
@@ -2310,7 +2364,8 @@
       "usdPer1M": {
         "input": 0.5,
         "output": 3,
-        "cacheRead": 0.05
+        "cacheRead": 0.05,
+        "cacheWrite": 0.083333
       },
       "score": 83,
       "rank": 55,
@@ -2348,7 +2403,8 @@
       "usdPer1M": {
         "input": 1.75,
         "output": 14,
-        "cacheRead": 0.175
+        "cacheRead": 0.175,
+        "cacheWrite": null
       },
       "score": 83,
       "rank": 56,
@@ -2376,7 +2432,8 @@
       "usdPer1M": {
         "input": 0.48,
         "output": 1.8,
-        "cacheRead": 0.096
+        "cacheRead": 0.096,
+        "cacheWrite": null
       },
       "score": 82,
       "rank": 57,
@@ -2414,7 +2471,8 @@
       "usdPer1M": {
         "input": 0.966,
         "output": 3.036,
-        "cacheRead": 0.1794
+        "cacheRead": 0.1794,
+        "cacheWrite": null
       },
       "score": 82,
       "rank": 58,
@@ -2452,7 +2510,8 @@
       "usdPer1M": {
         "input": 0.65,
         "output": 3.41,
-        "cacheRead": 0.15
+        "cacheRead": 0.15,
+        "cacheWrite": null
       },
       "score": 82,
       "rank": 59,
@@ -2490,7 +2549,8 @@
       "usdPer1M": {
         "input": 1,
         "output": 3.2,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": null
       },
       "score": 82,
       "rank": 60,
@@ -2528,7 +2588,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.5,
-        "cacheRead": 0.01
+        "cacheRead": 0.01,
+        "cacheWrite": 0.125
       },
       "score": 81,
       "rank": 61,
@@ -2587,7 +2648,8 @@
       "usdPer1M": {
         "input": 1.36,
         "output": 4.18,
-        "cacheRead": 0.14
+        "cacheRead": 0.14,
+        "cacheWrite": null
       },
       "score": 81,
       "rank": 62,
@@ -2618,7 +2680,8 @@
       "usdPer1M": {
         "input": 1.475,
         "output": 4.425,
-        "cacheRead": 0.295
+        "cacheRead": 0.295,
+        "cacheWrite": 1.84375
       },
       "score": 81,
       "rank": 63,
@@ -2646,7 +2709,8 @@
       "usdPer1M": {
         "input": 0.039,
         "output": 1.25,
-        "cacheRead": 0.0039
+        "cacheRead": 0.0039,
+        "cacheWrite": null
       },
       "score": 80,
       "rank": 64,
@@ -2698,7 +2762,8 @@
       "usdPer1M": {
         "input": 1.75,
         "output": 14,
-        "cacheRead": 0.175
+        "cacheRead": 0.175,
+        "cacheWrite": null
       },
       "score": 80,
       "rank": 65,
@@ -2726,7 +2791,8 @@
       "usdPer1M": {
         "input": 0.32,
         "output": 1.28,
-        "cacheRead": 0.064
+        "cacheRead": 0.064,
+        "cacheWrite": 0.4
       },
       "score": 79,
       "rank": 66,
@@ -2757,7 +2823,8 @@
       "usdPer1M": {
         "input": 0.834,
         "output": 2.501,
-        "cacheRead": 0.042
+        "cacheRead": 0.042,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 67,
@@ -2777,7 +2844,8 @@
       "usdPer1M": {
         "input": 0.132,
         "output": 0.528,
-        "cacheRead": 0.033
+        "cacheRead": 0.033,
+        "cacheWrite": null
       },
       "score": 79,
       "rank": 68,
@@ -2808,7 +2876,8 @@
       "usdPer1M": {
         "input": 1.75,
         "output": 14,
-        "cacheRead": 0.175
+        "cacheRead": 0.175,
+        "cacheWrite": null
       },
       "score": 79,
       "rank": 69,
@@ -2853,7 +2922,8 @@
       "usdPer1M": {
         "input": 1.25,
         "output": 10,
-        "cacheRead": 0.125
+        "cacheRead": 0.125,
+        "cacheWrite": null
       },
       "score": 79,
       "rank": 70,
@@ -2891,7 +2961,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 1.2,
-        "cacheRead": 0.06
+        "cacheRead": 0.06,
+        "cacheWrite": null
       },
       "score": 79,
       "rank": 71,
@@ -2922,7 +2993,8 @@
       "usdPer1M": {
         "input": 0.325,
         "output": 1.95,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": 0.40625
       },
       "score": 78,
       "rank": 72,
@@ -2953,7 +3025,8 @@
       "usdPer1M": {
         "input": 0.25,
         "output": 1,
-        "cacheRead": 0.05
+        "cacheRead": 0.05,
+        "cacheWrite": null
       },
       "score": 78,
       "rank": 73,
@@ -2984,7 +3057,8 @@
       "usdPer1M": {
         "input": 1,
         "output": 2,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": null
       },
       "score": 78,
       "rank": 74,
@@ -3012,7 +3086,8 @@
       "usdPer1M": {
         "input": 1.2,
         "output": 4,
-        "cacheRead": 0.24
+        "cacheRead": 0.24,
+        "cacheWrite": null
       },
       "score": 78,
       "rank": 75,
@@ -3040,7 +3115,8 @@
       "usdPer1M": {
         "input": 0.5,
         "output": 2.5,
-        "cacheRead": 0.15
+        "cacheRead": 0.15,
+        "cacheWrite": null
       },
       "score": 77,
       "rank": 76,
@@ -3078,7 +3154,8 @@
       "usdPer1M": {
         "input": 0.75,
         "output": 4.5,
-        "cacheRead": 0.075
+        "cacheRead": 0.075,
+        "cacheWrite": null
       },
       "score": 76,
       "rank": 77,
@@ -3123,7 +3200,8 @@
       "usdPer1M": {
         "input": 1,
         "output": 4.05,
-        "cacheRead": 0.17
+        "cacheRead": 0.17,
+        "cacheWrite": null
       },
       "score": 76,
       "rank": 78,
@@ -3154,7 +3232,8 @@
       "usdPer1M": {
         "input": 1.25,
         "output": 2.5,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": null
       },
       "score": 76,
       "rank": 79,
@@ -3206,7 +3285,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 2.5,
-        "cacheRead": 0.03
+        "cacheRead": 0.03,
+        "cacheWrite": 0.083333
       },
       "score": 76,
       "rank": 80,
@@ -3237,7 +3317,8 @@
       "usdPer1M": {
         "input": 0.56,
         "output": 3.1,
-        "cacheRead": 0.15
+        "cacheRead": 0.15,
+        "cacheWrite": null
       },
       "score": 76,
       "rank": 81,
@@ -3265,7 +3346,8 @@
       "usdPer1M": {
         "input": 15,
         "output": 75,
-        "cacheRead": 1.5
+        "cacheRead": 1.5,
+        "cacheWrite": 18.75
       },
       "score": 76,
       "rank": 82,
@@ -3303,7 +3385,8 @@
       "usdPer1M": {
         "input": 1.25,
         "output": 2.5,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": null
       },
       "score": 76,
       "rank": 83,
@@ -3338,7 +3421,8 @@
       "usdPer1M": {
         "input": 3,
         "output": 15,
-        "cacheRead": 0.3
+        "cacheRead": 0.3,
+        "cacheWrite": 3.75
       },
       "score": 75,
       "rank": 84,
@@ -3376,7 +3460,8 @@
       "usdPer1M": {
         "input": 0.14,
         "output": 0.28,
-        "cacheRead": 0.028
+        "cacheRead": 0.028,
+        "cacheWrite": null
       },
       "score": 74,
       "rank": 85,
@@ -3421,7 +3506,8 @@
       "usdPer1M": {
         "input": 0.06,
         "output": 0.18,
-        "cacheRead": 0.012
+        "cacheRead": 0.012,
+        "cacheWrite": null
       },
       "score": 74,
       "rank": 86,
@@ -3449,7 +3535,8 @@
       "usdPer1M": {
         "input": 0.54,
         "output": 1.98,
-        "cacheRead": 0.099
+        "cacheRead": 0.099,
+        "cacheWrite": null
       },
       "score": 73,
       "rank": 87,
@@ -3487,7 +3574,8 @@
       "usdPer1M": {
         "input": 0.5,
         "output": 3.6,
-        "cacheRead": 0.3
+        "cacheRead": 0.3,
+        "cacheWrite": null
       },
       "score": 73,
       "rank": 88,
@@ -3525,7 +3613,8 @@
       "usdPer1M": {
         "input": 1.25,
         "output": 10,
-        "cacheRead": 0.125
+        "cacheRead": 0.125,
+        "cacheWrite": null
       },
       "score": 73,
       "rank": 89,
@@ -3577,7 +3666,8 @@
       "usdPer1M": {
         "input": 1.2,
         "output": 4,
-        "cacheRead": 0.24
+        "cacheRead": 0.24,
+        "cacheWrite": null
       },
       "score": 73,
       "rank": 90,
@@ -3608,7 +3698,8 @@
       "usdPer1M": {
         "input": 0.05,
         "output": 0.2,
-        "cacheRead": 0.005
+        "cacheRead": 0.005,
+        "cacheWrite": null
       },
       "score": 73,
       "rank": 91,
@@ -3636,7 +3727,8 @@
       "usdPer1M": {
         "input": 1.25,
         "output": 10,
-        "cacheRead": 0.13
+        "cacheRead": 0.13,
+        "cacheWrite": null
       },
       "score": 72,
       "rank": 92,
@@ -3664,7 +3756,8 @@
       "usdPer1M": {
         "input": 0.4,
         "output": 2,
-        "cacheRead": 0.08
+        "cacheRead": 0.08,
+        "cacheWrite": null
       },
       "score": 71,
       "rank": 93,
@@ -3695,7 +3788,8 @@
       "usdPer1M": {
         "input": 0.6,
         "output": 2.4,
-        "cacheRead": 0.12
+        "cacheRead": 0.12,
+        "cacheWrite": null
       },
       "score": 71,
       "rank": 94,
@@ -3726,7 +3820,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 0.5,
-        "cacheRead": 0.02
+        "cacheRead": 0.02,
+        "cacheWrite": null
       },
       "score": 71,
       "rank": 95,
@@ -3757,7 +3852,8 @@
       "usdPer1M": {
         "input": 0.28,
         "output": 0.42,
-        "cacheRead": 0.028
+        "cacheRead": 0.028,
+        "cacheWrite": null
       },
       "score": 69,
       "rank": 96,
@@ -3795,7 +3891,8 @@
       "usdPer1M": {
         "input": 0.45,
         "output": 1.2,
-        "cacheRead": 0.1
+        "cacheRead": 0.1,
+        "cacheWrite": null
       },
       "score": 69,
       "rank": 97,
@@ -3826,7 +3923,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 8,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": null
       },
       "score": 69,
       "rank": 98,
@@ -3857,7 +3955,8 @@
       "usdPer1M": {
         "input": 1.25,
         "output": 10,
-        "cacheRead": 0.125
+        "cacheRead": 0.125,
+        "cacheWrite": 0.375
       },
       "score": 69,
       "rank": 99,
@@ -3888,7 +3987,8 @@
       "usdPer1M": {
         "input": 0.6,
         "output": 2.5,
-        "cacheRead": 0.15
+        "cacheRead": 0.15,
+        "cacheWrite": null
       },
       "score": 69,
       "rank": 100,
@@ -3916,7 +4016,8 @@
       "usdPer1M": {
         "input": 0.2,
         "output": 0.4,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 69,
       "rank": 101,
@@ -3954,7 +4055,8 @@
       "usdPer1M": {
         "input": 20,
         "output": 80,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 69,
       "rank": 102,
@@ -3982,7 +4084,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 1.2,
-        "cacheRead": 0.06
+        "cacheRead": 0.06,
+        "cacheWrite": null
       },
       "score": 68,
       "rank": 103,
@@ -4013,7 +4116,8 @@
       "usdPer1M": {
         "input": 0.0765,
         "output": 0.255,
-        "cacheRead": 0.0425
+        "cacheRead": 0.0425,
+        "cacheWrite": null
       },
       "score": 68,
       "rank": 104,
@@ -4051,7 +4155,8 @@
       "usdPer1M": {
         "input": 0.32,
         "output": 3.2,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 67,
       "rank": 105,
@@ -4086,7 +4191,8 @@
       "usdPer1M": {
         "input": 0.26,
         "output": 2.6,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 67,
       "rank": 106,
@@ -4124,7 +4230,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6,
-        "cacheRead": 0.03
+        "cacheRead": 0.03,
+        "cacheWrite": null
       },
       "score": 67,
       "rank": 107,
@@ -4155,7 +4262,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 1.2,
-        "cacheRead": 0.03
+        "cacheRead": 0.03,
+        "cacheWrite": null
       },
       "score": 64,
       "rank": 108,
@@ -4186,7 +4294,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 1.2,
-        "cacheRead": 0.03
+        "cacheRead": 0.03,
+        "cacheWrite": null
       },
       "score": 67,
       "rank": 109,
@@ -4214,7 +4323,8 @@
       "usdPer1M": {
         "input": 0.55,
         "output": 2.2,
-        "cacheRead": 0.11
+        "cacheRead": 0.11,
+        "cacheWrite": null
       },
       "score": 66,
       "rank": 110,
@@ -4252,7 +4362,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 1.2,
-        "cacheRead": 0.04
+        "cacheRead": 0.04,
+        "cacheWrite": null
       },
       "score": 66,
       "rank": 111,
@@ -4283,7 +4394,8 @@
       "usdPer1M": {
         "input": 0.25,
         "output": 2,
-        "cacheRead": 0.03
+        "cacheRead": 0.03,
+        "cacheWrite": null
       },
       "score": 65,
       "rank": 112,
@@ -4311,7 +4423,8 @@
       "usdPer1M": {
         "input": 0.27,
         "output": 0.41,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 65,
       "rank": 113,
@@ -4349,7 +4462,8 @@
       "usdPer1M": {
         "input": 0.021,
         "output": 0.063,
-        "cacheRead": 0.0042
+        "cacheRead": 0.0042,
+        "cacheWrite": null
       },
       "score": 65,
       "rank": 114,
@@ -4377,7 +4491,8 @@
       "usdPer1M": {
         "input": 0.26,
         "output": 2.08,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 64,
       "rank": 115,
@@ -4415,7 +4530,8 @@
       "usdPer1M": {
         "input": 0.2,
         "output": 1.15,
-        "cacheRead": 0.04
+        "cacheRead": 0.04,
+        "cacheWrite": null
       },
       "score": 64,
       "rank": 116,
@@ -4443,7 +4559,8 @@
       "usdPer1M": {
         "input": 0.2,
         "output": 1.25,
-        "cacheRead": 0.02
+        "cacheRead": 0.02,
+        "cacheWrite": null
       },
       "score": 64,
       "rank": 117,
@@ -4488,7 +4605,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 1.2,
-        "cacheRead": 0.006
+        "cacheRead": 0.006,
+        "cacheWrite": null
       },
       "score": 63,
       "rank": 118,
@@ -4516,7 +4634,8 @@
       "usdPer1M": {
         "input": 1.5,
         "output": 7.5,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 63,
       "rank": 119,
@@ -4547,7 +4666,8 @@
       "usdPer1M": {
         "input": 1,
         "output": 5,
-        "cacheRead": 0.1
+        "cacheRead": 0.1,
+        "cacheWrite": 1.25
       },
       "score": 63,
       "rank": 120,
@@ -4585,7 +4705,8 @@
       "usdPer1M": {
         "input": 0.6,
         "output": 2.5,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 63,
       "rank": 121,
@@ -4616,7 +4737,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.95,
-        "cacheRead": 0.05
+        "cacheRead": 0.05,
+        "cacheWrite": null
       },
       "score": 62,
       "rank": 122,
@@ -4651,7 +4773,8 @@
       "usdPer1M": {
         "input": 0.25,
         "output": 2,
-        "cacheRead": 0.025
+        "cacheRead": 0.025,
+        "cacheWrite": null
       },
       "score": 62,
       "rank": 123,
@@ -4696,7 +4819,8 @@
       "usdPer1M": {
         "input": 0.27,
         "output": 1,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 61,
       "rank": 124,
@@ -4734,7 +4858,8 @@
       "usdPer1M": {
         "input": 0.14,
         "output": 1,
-        "cacheRead": 0.05
+        "cacheRead": 0.05,
+        "cacheWrite": null
       },
       "score": 61,
       "rank": 125,
@@ -4772,7 +4897,8 @@
       "usdPer1M": {
         "input": 0.25,
         "output": 0.95,
-        "cacheRead": 0.13
+        "cacheRead": 0.13,
+        "cacheWrite": null
       },
       "score": 60,
       "rank": 126,
@@ -4810,7 +4936,8 @@
       "usdPer1M": {
         "input": 0.5,
         "output": 2.15,
-        "cacheRead": 0.35
+        "cacheRead": 0.35,
+        "cacheWrite": null
       },
       "score": 60,
       "rank": 127,
@@ -4841,7 +4968,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 0.47,
-        "cacheRead": 0.016
+        "cacheRead": 0.016,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 128,
@@ -4861,7 +4989,8 @@
       "usdPer1M": {
         "input": 0.03,
         "output": 0.13,
-        "cacheRead": 0.006
+        "cacheRead": 0.006,
+        "cacheWrite": 0.038
       },
       "score": null,
       "rank": 129,
@@ -4881,7 +5010,8 @@
       "usdPer1M": {
         "input": 0.1875,
         "output": 1.125,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": 0.234375
       },
       "score": null,
       "rank": 130,
@@ -4901,7 +5031,8 @@
       "usdPer1M": {
         "input": 0.065,
         "output": 0.26,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 60,
       "rank": 131,
@@ -4921,7 +5052,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.3,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 59,
       "rank": 132,
@@ -4952,7 +5084,8 @@
       "usdPer1M": {
         "input": 15,
         "output": 60,
-        "cacheRead": 7.5
+        "cacheRead": 7.5,
+        "cacheWrite": null
       },
       "score": 59,
       "rank": 133,
@@ -4983,7 +5116,8 @@
       "usdPer1M": {
         "input": 0.57,
         "output": 2.3,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 59,
       "rank": 134,
@@ -5014,7 +5148,8 @@
       "usdPer1M": {
         "input": 1.1,
         "output": 4.4,
-        "cacheRead": 0.275
+        "cacheRead": 0.275,
+        "cacheWrite": null
       },
       "score": 59,
       "rank": 135,
@@ -5045,7 +5180,8 @@
       "usdPer1M": {
         "input": 1.1,
         "output": 4.4,
-        "cacheRead": 0.275
+        "cacheRead": 0.275,
+        "cacheWrite": null
       },
       "score": 59,
       "rank": 136,
@@ -5076,7 +5212,8 @@
       "usdPer1M": {
         "input": 0.09,
         "output": 0.55,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 59,
       "rank": 137,
@@ -5107,7 +5244,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 8,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": null
       },
       "score": 58,
       "rank": 138,
@@ -5138,7 +5276,8 @@
       "usdPer1M": {
         "input": 0.25,
         "output": 1.5,
-        "cacheRead": 0.025
+        "cacheRead": 0.025,
+        "cacheWrite": 0.083333
       },
       "score": 57,
       "rank": 139,
@@ -5166,7 +5305,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 2.5,
-        "cacheRead": 0.03
+        "cacheRead": 0.03,
+        "cacheWrite": 0.083333
       },
       "score": 57,
       "rank": 140,
@@ -5204,7 +5344,8 @@
       "usdPer1M": {
         "input": 0.45,
         "output": 3.5,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 56,
       "rank": 141,
@@ -5235,7 +5376,8 @@
       "usdPer1M": {
         "input": 0.255,
         "output": 1.02,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 54,
       "rank": 142,
@@ -5266,7 +5408,8 @@
       "usdPer1M": {
         "input": 0.0605,
         "output": 0.4,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 54,
       "rank": 143,
@@ -5304,7 +5447,8 @@
       "usdPer1M": {
         "input": 0.21,
         "output": 1.9,
-        "cacheRead": 0.1
+        "cacheRead": 0.1,
+        "cacheWrite": null
       },
       "score": 53,
       "rank": 144,
@@ -5335,7 +5479,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 1,
-        "cacheRead": 0.1
+        "cacheRead": 0.1,
+        "cacheWrite": null
       },
       "score": 52,
       "rank": 145,
@@ -5366,7 +5511,8 @@
       "usdPer1M": {
         "input": 0.17,
         "output": 0.25,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 52,
       "rank": 146,
@@ -5401,7 +5547,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 1.5,
-        "cacheRead": 0.15
+        "cacheRead": 0.15,
+        "cacheWrite": null
       },
       "score": 52,
       "rank": 147,
@@ -5429,7 +5576,8 @@
       "usdPer1M": {
         "input": 0.5,
         "output": 1.5,
-        "cacheRead": 0.05
+        "cacheRead": 0.05,
+        "cacheWrite": null
       },
       "score": 52,
       "rank": 148,
@@ -5460,7 +5608,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 2.4,
-        "cacheRead": 0.15
+        "cacheRead": 0.15,
+        "cacheWrite": null
       },
       "score": 51,
       "rank": 149,
@@ -5491,7 +5640,8 @@
       "usdPer1M": {
         "input": 0.4,
         "output": 2,
-        "cacheRead": 0.04
+        "cacheRead": 0.04,
+        "cacheWrite": null
       },
       "score": 50,
       "rank": 150,
@@ -5522,7 +5672,8 @@
       "usdPer1M": {
         "input": 0.09,
         "output": 1.1,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 50,
       "rank": 151,
@@ -5553,7 +5704,8 @@
       "usdPer1M": {
         "input": 0.29,
         "output": 1.14,
-        "cacheRead": 0.11
+        "cacheRead": 0.11,
+        "cacheWrite": null
       },
       "score": 50,
       "rank": 152,
@@ -5584,7 +5736,8 @@
       "usdPer1M": {
         "input": 1.1,
         "output": 4.4,
-        "cacheRead": 0.55
+        "cacheRead": 0.55,
+        "cacheWrite": null
       },
       "score": 50,
       "rank": 153,
@@ -5622,7 +5775,8 @@
       "usdPer1M": {
         "input": 1.1,
         "output": 4.4,
-        "cacheRead": 0.55
+        "cacheRead": 0.55,
+        "cacheWrite": null
       },
       "score": 50,
       "rank": 154,
@@ -5660,7 +5814,8 @@
       "usdPer1M": {
         "input": 0.07,
         "output": 0.2,
-        "cacheRead": 0.04
+        "cacheRead": 0.04,
+        "cacheWrite": null
       },
       "score": 50,
       "rank": 155,
@@ -5691,7 +5846,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 0.9,
-        "cacheRead": 0.05
+        "cacheRead": 0.05,
+        "cacheWrite": null
       },
       "score": 50,
       "rank": 156,
@@ -5729,7 +5885,8 @@
       "usdPer1M": {
         "input": 0.55,
         "output": 2.2,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 49,
       "rank": 157,
@@ -5767,7 +5924,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.35,
-        "cacheRead": 0.01
+        "cacheRead": 0.01,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 158,
@@ -5787,7 +5945,8 @@
       "usdPer1M": {
         "input": 0.04,
         "output": 0.15,
-        "cacheRead": 0.004
+        "cacheRead": 0.004,
+        "cacheWrite": null
       },
       "score": 49,
       "rank": 159,
@@ -5815,7 +5974,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 1.2,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 49,
       "rank": 160,
@@ -5846,7 +6006,8 @@
       "usdPer1M": {
         "input": 0.13,
         "output": 0.85,
-        "cacheRead": 0.025
+        "cacheRead": 0.025,
+        "cacheWrite": null
       },
       "score": 49,
       "rank": 161,
@@ -5877,7 +6038,8 @@
       "usdPer1M": {
         "input": 0.4,
         "output": 1.6,
-        "cacheRead": 0.1
+        "cacheRead": 0.1,
+        "cacheWrite": null
       },
       "score": 48,
       "rank": 162,
@@ -5908,7 +6070,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6,
-        "cacheRead": 0.075
+        "cacheRead": 0.075,
+        "cacheWrite": null
       },
       "score": 47,
       "rank": 163,
@@ -5946,7 +6109,8 @@
       "usdPer1M": {
         "input": 0.05,
         "output": 0.4,
-        "cacheRead": 0.005
+        "cacheRead": 0.005,
+        "cacheWrite": null
       },
       "score": 47,
       "rank": 164,
@@ -5991,7 +6155,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 2.5,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 47,
       "rank": 165,
@@ -6043,7 +6208,8 @@
       "usdPer1M": {
         "input": 0.4,
         "output": 2,
-        "cacheRead": 0.04
+        "cacheRead": 0.04,
+        "cacheWrite": null
       },
       "score": 47,
       "rank": 166,
@@ -6074,7 +6240,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6,
-        "cacheRead": 0.015
+        "cacheRead": 0.015,
+        "cacheWrite": null
       },
       "score": 46,
       "rank": 167,
@@ -6109,7 +6276,8 @@
       "usdPer1M": {
         "input": 0.25,
         "output": 0.75,
-        "cacheRead": 0.025
+        "cacheRead": 0.025,
+        "cacheWrite": null
       },
       "score": 44,
       "rank": 168,
@@ -6140,7 +6308,8 @@
       "usdPer1M": {
         "input": 0.2574,
         "output": 1.0287,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 42,
       "rank": 169,
@@ -6171,7 +6340,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.3,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 41,
       "rank": 170,
@@ -6202,7 +6372,8 @@
       "usdPer1M": {
         "input": 0.07,
         "output": 0.28,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 40,
       "rank": 171,
@@ -6230,7 +6401,8 @@
       "usdPer1M": {
         "input": 0.1875,
         "output": 0.6525,
-        "cacheRead": 0.05
+        "cacheRead": 0.05,
+        "cacheWrite": null
       },
       "score": 39,
       "rank": 172,
@@ -6261,7 +6433,8 @@
       "usdPer1M": {
         "input": 0.29,
         "output": 1,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 39,
       "rank": 173,
@@ -6289,7 +6462,8 @@
       "usdPer1M": {
         "input": 0.018,
         "output": 0.09,
-        "cacheRead": 0.009
+        "cacheRead": 0.009,
+        "cacheWrite": null
       },
       "score": 39,
       "rank": 174,
@@ -6327,7 +6501,8 @@
       "usdPer1M": {
         "input": 0.12,
         "output": 0.8,
-        "cacheRead": 0.07
+        "cacheRead": 0.07,
+        "cacheWrite": null
       },
       "score": 38,
       "rank": 175,
@@ -6355,7 +6530,8 @@
       "usdPer1M": {
         "input": 2.5,
         "output": 12.5,
-        "cacheRead": 0.625
+        "cacheRead": 0.625,
+        "cacheWrite": null
       },
       "score": 38,
       "rank": 176,
@@ -6383,7 +6559,8 @@
       "usdPer1M": {
         "input": 0.06,
         "output": 0.25,
-        "cacheRead": 0.015
+        "cacheRead": 0.015,
+        "cacheWrite": null
       },
       "score": 37,
       "rank": 177,
@@ -6414,7 +6591,8 @@
       "usdPer1M": {
         "input": 0.08,
         "output": 0.28,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 36,
       "rank": 178,
@@ -6452,7 +6630,8 @@
       "usdPer1M": {
         "input": 0.075,
         "output": 0.2,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 36,
       "rank": 179,
@@ -6483,7 +6662,8 @@
       "usdPer1M": {
         "input": 2.5,
         "output": 10,
-        "cacheRead": 1.25
+        "cacheRead": 1.25,
+        "cacheWrite": null
       },
       "score": 33,
       "rank": 180,
@@ -6511,7 +6691,8 @@
       "usdPer1M": {
         "input": 2.5,
         "output": 10,
-        "cacheRead": 1.25
+        "cacheRead": 1.25,
+        "cacheWrite": null
       },
       "score": 36,
       "rank": 181,
@@ -6542,7 +6723,8 @@
       "usdPer1M": {
         "input": 5,
         "output": 15,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 36,
       "rank": 182,
@@ -6573,7 +6755,8 @@
       "usdPer1M": {
         "input": 0.06,
         "output": 0.24,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 35,
       "rank": 183,
@@ -6611,7 +6794,8 @@
       "usdPer1M": {
         "input": 0.12,
         "output": 0.5,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 34,
       "rank": 184,
@@ -6649,7 +6833,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.4,
-        "cacheRead": 0.03
+        "cacheRead": 0.03,
+        "cacheWrite": null
       },
       "score": 34,
       "rank": 185,
@@ -6680,7 +6865,8 @@
       "usdPer1M": {
         "input": 0.4,
         "output": 2,
-        "cacheRead": 0.04
+        "cacheRead": 0.04,
+        "cacheWrite": null
       },
       "score": 34,
       "rank": 186,
@@ -6708,7 +6894,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.4,
-        "cacheRead": 0.01
+        "cacheRead": 0.01,
+        "cacheWrite": 0.083333
       },
       "score": 33,
       "rank": 187,
@@ -6743,7 +6930,8 @@
       "usdPer1M": {
         "input": 2.5,
         "output": 10,
-        "cacheRead": 1.25
+        "cacheRead": 1.25,
+        "cacheWrite": null
       },
       "score": 33,
       "rank": 188,
@@ -6771,7 +6959,8 @@
       "usdPer1M": {
         "input": 0.35,
         "output": 0.5,
-        "cacheRead": 0.04
+        "cacheRead": 0.04,
+        "cacheWrite": null
       },
       "score": 33,
       "rank": 189,
@@ -6799,7 +6988,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.32,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 33,
       "rank": 190,
@@ -6830,7 +7020,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 31,
       "rank": 191,
@@ -6858,7 +7049,8 @@
       "usdPer1M": {
         "input": 10,
         "output": 30,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 31,
       "rank": 192,
@@ -6889,7 +7081,8 @@
       "usdPer1M": {
         "input": 0.36,
         "output": 0.4,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 30,
       "rank": 193,
@@ -6920,7 +7113,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 6,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": null
       },
       "score": 28,
       "rank": 194,
@@ -6951,7 +7145,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6,
-        "cacheRead": 0.075
+        "cacheRead": 0.075,
+        "cacheWrite": null
       },
       "score": 28,
       "rank": 195,
@@ -6982,7 +7177,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6,
-        "cacheRead": 0.075
+        "cacheRead": 0.075,
+        "cacheWrite": null
       },
       "score": 28,
       "rank": 196,
@@ -7013,7 +7209,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.3,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 27,
       "rank": 197,
@@ -7044,7 +7241,8 @@
       "usdPer1M": {
         "input": 0.351,
         "output": 0.555,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 27,
       "rank": 198,
@@ -7075,7 +7273,8 @@
       "usdPer1M": {
         "input": 0.08,
         "output": 0.35,
-        "cacheRead": 0.04
+        "cacheRead": 0.04,
+        "cacheWrite": null
       },
       "score": 27,
       "rank": 199,
@@ -7106,7 +7305,8 @@
       "usdPer1M": {
         "input": 2.5,
         "output": 10,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 26,
       "rank": 200,
@@ -7126,7 +7326,8 @@
       "usdPer1M": {
         "input": 0.8,
         "output": 3.2,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 26,
       "rank": 201,
@@ -7157,7 +7358,8 @@
       "usdPer1M": {
         "input": 0.25,
         "output": 0.75,
-        "cacheRead": 0.12
+        "cacheRead": 0.12,
+        "cacheWrite": null
       },
       "score": 25,
       "rank": 202,
@@ -7185,7 +7387,8 @@
       "usdPer1M": {
         "input": 0.4,
         "output": 0.4,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 25,
       "rank": 203,
@@ -7216,7 +7419,8 @@
       "usdPer1M": {
         "input": 30,
         "output": 60,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 23,
       "rank": 204,
@@ -7247,7 +7451,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 23,
       "rank": 205,
@@ -7267,7 +7472,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 6,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": null
       },
       "score": 22,
       "rank": 206,
@@ -7298,7 +7504,8 @@
       "usdPer1M": {
         "input": 0.05,
         "output": 0.15,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 22,
       "rank": 207,
@@ -7329,7 +7536,8 @@
       "usdPer1M": {
         "input": 0.06,
         "output": 0.24,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 22,
       "rank": 208,
@@ -7360,7 +7568,8 @@
       "usdPer1M": {
         "input": 0.12,
         "output": 0.24,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 20,
       "rank": 209,
@@ -7395,7 +7604,8 @@
       "usdPer1M": {
         "input": 0.05,
         "output": 0.08,
-        "cacheRead": 0.025
+        "cacheRead": 0.025,
+        "cacheWrite": null
       },
       "score": 20,
       "rank": 210,
@@ -7426,7 +7636,8 @@
       "usdPer1M": {
         "input": 0.2,
         "output": 0.6,
-        "cacheRead": 0.02
+        "cacheRead": 0.02,
+        "cacheWrite": null
       },
       "score": 18,
       "rank": 211,
@@ -7454,7 +7665,8 @@
       "usdPer1M": {
         "input": 0.035,
         "output": 0.14,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": 18,
       "rank": 212,
@@ -7485,7 +7697,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 6,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": null
       },
       "score": 16,
       "rank": 213,
@@ -7516,7 +7729,8 @@
       "usdPer1M": {
         "input": 0.2,
         "output": 0.2,
-        "cacheRead": 0.02
+        "cacheRead": 0.02,
+        "cacheWrite": null
       },
       "score": 15,
       "rank": 214,
@@ -7544,7 +7758,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 0.15,
-        "cacheRead": 0.015
+        "cacheRead": 0.015,
+        "cacheWrite": null
       },
       "score": 9,
       "rank": 215,
@@ -7572,7 +7787,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.1,
-        "cacheRead": 0.01
+        "cacheRead": 0.01,
+        "cacheWrite": null
       },
       "score": 2,
       "rank": 216,
@@ -7600,7 +7816,8 @@
       "usdPer1M": {
         "input": 0.6,
         "output": 3,
-        "cacheRead": 0.06
+        "cacheRead": 0.06,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 217,
@@ -7620,7 +7837,8 @@
       "usdPer1M": {
         "input": 0.8,
         "output": 3.2,
-        "cacheRead": 0.03
+        "cacheRead": 0.03,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 218,
@@ -7640,7 +7858,8 @@
       "usdPer1M": {
         "input": 2.5,
         "output": 7.5,
-        "cacheRead": 0.25
+        "cacheRead": 0.25,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 219,
@@ -7660,7 +7879,8 @@
       "usdPer1M": {
         "input": 0.05,
         "output": 0.7,
-        "cacheRead": 0.025
+        "cacheRead": 0.025,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 220,
@@ -7680,7 +7900,8 @@
       "usdPer1M": {
         "input": 1.5,
         "output": 7.5,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 221,
@@ -7700,7 +7921,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 10,
-        "cacheRead": 0.1
+        "cacheRead": 0.1,
+        "cacheWrite": 2.5
       },
       "score": null,
       "rank": 222,
@@ -7720,7 +7942,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 1.5,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 223,
@@ -7740,7 +7963,8 @@
       "usdPer1M": {
         "input": 3,
         "output": 15,
-        "cacheRead": 0.3
+        "cacheRead": 0.3,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 224,
@@ -7760,7 +7984,8 @@
       "usdPer1M": {
         "input": 2.8,
         "output": 8.8,
-        "cacheRead": 0.56
+        "cacheRead": 0.56,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 225,
@@ -7780,7 +8005,8 @@
       "usdPer1M": {
         "input": 4,
         "output": 12,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 226,
@@ -7800,7 +8026,8 @@
       "usdPer1M": {
         "input": 0.7,
         "output": 1.4,
-        "cacheRead": 0.18
+        "cacheRead": 0.18,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 227,
@@ -7820,7 +8047,8 @@
       "usdPer1M": {
         "input": 3,
         "output": 6,
-        "cacheRead": 0.75
+        "cacheRead": 0.75,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 228,
@@ -7840,7 +8068,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.5,
-        "cacheRead": 0.01
+        "cacheRead": 0.01,
+        "cacheWrite": 0.125
       },
       "score": null,
       "rank": 229,
@@ -7860,7 +8089,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 10,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": 2.5
       },
       "score": null,
       "rank": 230,
@@ -7880,7 +8110,8 @@
       "usdPer1M": {
         "input": 4.35,
         "output": 8.7,
-        "cacheRead": 0.036
+        "cacheRead": 0.036,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 231,
@@ -7900,7 +8131,8 @@
       "usdPer1M": {
         "input": 0.15,
         "output": 0.47,
-        "cacheRead": 0.016
+        "cacheRead": 0.016,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 232,
@@ -7920,7 +8152,8 @@
       "usdPer1M": {
         "input": 0.075,
         "output": 0.5,
-        "cacheRead": 0.0375
+        "cacheRead": 0.0375,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 233,
@@ -7940,7 +8173,8 @@
       "usdPer1M": {
         "input": 0.37,
         "output": 1.25,
-        "cacheRead": 0.09
+        "cacheRead": 0.09,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 234,
@@ -7960,7 +8194,8 @@
       "usdPer1M": {
         "input": 5,
         "output": 30,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 235,
@@ -7980,7 +8215,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 6,
-        "cacheRead": 0.25
+        "cacheRead": 0.25,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 236,
@@ -8000,7 +8236,8 @@
       "usdPer1M": {
         "input": 0.075,
         "output": 0.25,
-        "cacheRead": 0.015
+        "cacheRead": 0.015,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 237,
@@ -8020,7 +8257,8 @@
       "usdPer1M": {
         "input": 10,
         "output": 50,
-        "cacheRead": 1
+        "cacheRead": 1,
+        "cacheWrite": 12.5
       },
       "score": null,
       "rank": 238,
@@ -8040,7 +8278,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.2,
-        "cacheRead": 0.002
+        "cacheRead": 0.002,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 239,
@@ -8060,7 +8299,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.2,
-        "cacheRead": 0.002
+        "cacheRead": 0.002,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 240,
@@ -8080,7 +8320,8 @@
       "usdPer1M": {
         "input": 0.5,
         "output": 2.5,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 241,
@@ -8100,7 +8341,8 @@
       "usdPer1M": {
         "input": 0.95,
         "output": 4,
-        "cacheRead": 0.15
+        "cacheRead": 0.15,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 242,
@@ -8120,7 +8362,8 @@
       "usdPer1M": {
         "input": 0.2,
         "output": 1.2,
-        "cacheRead": 0.02
+        "cacheRead": 0.02,
+        "cacheWrite": 0.25
       },
       "score": null,
       "rank": 243,
@@ -8140,7 +8383,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 12,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": 2.5
       },
       "score": null,
       "rank": 244,
@@ -8160,7 +8404,8 @@
       "usdPer1M": {
         "input": 4,
         "output": 20,
-        "cacheRead": 0.4
+        "cacheRead": 0.4,
+        "cacheWrite": 5
       },
       "score": null,
       "rank": 245,
@@ -8180,7 +8425,8 @@
       "usdPer1M": {
         "input": 0.7,
         "output": 1.4,
-        "cacheRead": 0.18
+        "cacheRead": 0.18,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 246,
@@ -8200,7 +8446,8 @@
       "usdPer1M": {
         "input": 3,
         "output": 6,
-        "cacheRead": 0.75
+        "cacheRead": 0.75,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 247,
@@ -8220,7 +8467,8 @@
       "usdPer1M": {
         "input": 5,
         "output": 30,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 248,
@@ -8240,7 +8488,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 12,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": 0.375
       },
       "score": null,
       "rank": 249,
@@ -8260,7 +8509,8 @@
       "usdPer1M": {
         "input": 5,
         "output": 30,
-        "cacheRead": 0.5
+        "cacheRead": 0.5,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 250,
@@ -8280,7 +8530,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 1.8,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": 0.375
       },
       "score": null,
       "rank": 251,
@@ -8300,7 +8551,8 @@
       "usdPer1M": {
         "input": 30,
         "output": 180,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 252,
@@ -8320,7 +8572,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.1,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 253,
@@ -8340,7 +8593,8 @@
       "usdPer1M": {
         "input": 0.25,
         "output": 2,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 254,
@@ -8360,7 +8614,8 @@
       "usdPer1M": {
         "input": 30,
         "output": 180,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 255,
@@ -8380,7 +8635,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.4,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 256,
@@ -8400,7 +8656,8 @@
       "usdPer1M": {
         "input": 2,
         "output": 12,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": 0.375
       },
       "score": null,
       "rank": 257,
@@ -8420,7 +8677,8 @@
       "usdPer1M": {
         "input": 0.8,
         "output": 1.6,
-        "cacheRead": 0.2
+        "cacheRead": 0.2,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 258,
@@ -8440,7 +8698,8 @@
       "usdPer1M": {
         "input": 0.26,
         "output": 1.56,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 259,
@@ -8460,7 +8719,8 @@
       "usdPer1M": {
         "input": 2.5,
         "output": 10,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 260,
@@ -8480,7 +8740,8 @@
       "usdPer1M": {
         "input": 0.6,
         "output": 2.4,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 261,
@@ -8500,7 +8761,8 @@
       "usdPer1M": {
         "input": 21,
         "output": 168,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 262,
@@ -8520,7 +8782,8 @@
       "usdPer1M": {
         "input": 1,
         "output": 3,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 263,
@@ -8540,7 +8803,8 @@
       "usdPer1M": {
         "input": 1.25,
         "output": 10,
-        "cacheRead": 0.125
+        "cacheRead": 0.125,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 264,
@@ -8560,7 +8824,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.3,
-        "cacheRead": 0.01
+        "cacheRead": 0.01,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 265,
@@ -8580,7 +8845,8 @@
       "usdPer1M": {
         "input": 0.075,
         "output": 0.3,
-        "cacheRead": 0.0375
+        "cacheRead": 0.0375,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 266,
@@ -8600,7 +8866,8 @@
       "usdPer1M": {
         "input": 15,
         "output": 120,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 267,
@@ -8620,7 +8887,8 @@
       "usdPer1M": {
         "input": 0.195,
         "output": 0.975,
-        "cacheRead": 0.039
+        "cacheRead": 0.039,
+        "cacheWrite": 0.24375
       },
       "score": null,
       "rank": 268,
@@ -8640,7 +8908,8 @@
       "usdPer1M": {
         "input": 0.3,
         "output": 0.9,
-        "cacheRead": 0.03
+        "cacheRead": 0.03,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 269,
@@ -8660,7 +8929,8 @@
       "usdPer1M": {
         "input": 0.26,
         "output": 0.78,
-        "cacheRead": 0.052
+        "cacheRead": 0.052,
+        "cacheWrite": 0.325
       },
       "score": null,
       "rank": 270,
@@ -8680,7 +8950,8 @@
       "usdPer1M": {
         "input": 0.1,
         "output": 0.2,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 271,
@@ -8700,7 +8971,8 @@
       "usdPer1M": {
         "input": 0.029,
         "output": 0.03,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 272,
@@ -8720,7 +8992,8 @@
       "usdPer1M": {
         "input": 1,
         "output": 2,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 273,
@@ -8740,7 +9013,8 @@
       "usdPer1M": {
         "input": 3,
         "output": 4,
-        "cacheRead": null
+        "cacheRead": null,
+        "cacheWrite": null
       },
       "score": null,
       "rank": 274,

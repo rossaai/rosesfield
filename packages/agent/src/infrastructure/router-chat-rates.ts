@@ -44,15 +44,41 @@ export const implicitCacheLabs: readonly string[] = [
   "moonshotai",
 ]
 
-/** The labs whose models OpenRouter caches only when the request marks what to cache with `cache_control`, per the same guide: Anthropic and Alibaba Qwen. */
-export const markedCacheLabs: readonly string[] = ["anthropic", "qwen"]
-
-/** Whether the agent marks its instructions and tools for caching on a model: only on a model of a lab that caches with a marker alone. */
-export function marksCache(model: Pick<RouterChatModel, "lab">): boolean {
-  return markedCacheLabs.includes(model.lab)
+/** The Qwen models OpenRouter's caching guide names for Alibaba's explicit caching. The guide says snapshot endpoints "do not support explicit caching", so every other Qwen model gets no marker and no cache read price. */
+export const explicitCacheQwen: {
+  readonly source: string
+  readonly readOn: string
+  readonly models: readonly string[]
+} = {
+  source: "https://openrouter.ai/docs/guides/best-practices/prompt-caching",
+  readOn: "2026-10-26",
+  models: [
+    "qwen/qwen3-max",
+    "qwen/qwen-plus",
+    "qwen/qwen3.6-plus",
+    "qwen/qwen3-coder-plus",
+    "qwen/qwen3-coder-flash",
+  ],
 }
 
-function cachesOf(model: Pick<RouterChatModel, "lab">): boolean {
+/** The labs whose models OpenRouter caches only when the request marks what to cache with `cache_control`, per the same guide, with the factor of the input rate each bills a 5-minute cache write at: "charged at 1.25x the price of the original input pricing" for Anthropic and for Alibaba's explicit caching. */
+export const markedCacheLabs: ReadonlyMap<string, { writeFactor: number }> =
+  new Map([
+    ["anthropic", { writeFactor: 1.25 }],
+    ["qwen", { writeFactor: 1.25 }],
+  ])
+
+/** Whether the agent marks its instructions and tools for caching on a model: on every Anthropic model, and on a Qwen model the guide names for explicit caching. */
+export function marksCache(
+  model: Pick<RouterChatModel, "id" | "lab">
+): boolean {
+  if (model.lab === "qwen") {
+    return explicitCacheQwen.models.includes(model.id)
+  }
+  return markedCacheLabs.has(model.lab)
+}
+
+function cachesOf(model: Pick<RouterChatModel, "id" | "lab">): boolean {
   return implicitCacheLabs.includes(model.lab) || marksCache(model)
 }
 
@@ -76,23 +102,33 @@ export function reasoningTokensOf(effort: AgentEffort | null): number {
   )
 }
 
-/** The rate per 1M tokens of the part each request repeats: the cache read rate OpenRouter publishes for a model whose lab caches, with or without the agent's marker, else the input rate. The first request's cache write is not priced. */
-export function repeatedRateOf(
-  model: Pick<RouterChatModel, "usdPer1M" | "lab">
-): number {
+type PricedModel = Pick<RouterChatModel, "id" | "usdPer1M" | "lab">
+
+/** The rate per 1M tokens of the part each request repeats: the cache read rate OpenRouter publishes for a model that caches, with or without the agent's marker, else the input rate. The first request's cache write is not priced. */
+export function repeatedRateOf(model: PricedModel): number {
   const { input, cacheRead } = model.usdPer1M
   return cacheRead !== null && cachesOf(model) ? cacheRead : input
 }
 
-/** The Comfy credits of one agent message at one effort: each request bills the instructions and the tools at the repeated rate, the conversation at the input rate, and the visible answer and the effort's reasoning budget at the output rate, times the requests of a message. */
+/** The rate per 1M tokens of the conversation: on a marked model pi-ai marks the newest message, so every request writes the conversation to the cache, at the cache write rate OpenRouter publishes, else at the input rate times the lab's write factor. An unmarked model bills it at the input rate. */
+export function conversationRateOf(model: PricedModel): number {
+  const { input, cacheWrite } = model.usdPer1M
+  const lab = markedCacheLabs.get(model.lab)
+  if (lab === undefined || !marksCache(model)) {
+    return input
+  }
+  return cacheWrite ?? input * lab.writeFactor
+}
+
+/** The Comfy credits of one agent message at one effort: each request bills the instructions and the tools at the repeated rate, the conversation at the conversation rate, and the visible answer and the effort's reasoning budget at the output rate, times the requests of a message. */
 export function messageCreditsOf(
-  model: Pick<RouterChatModel, "usdPer1M" | "lab">,
+  model: PricedModel,
   effort: AgentEffort | null
 ): number {
-  const { input, output } = model.usdPer1M
+  const { output } = model.usdPer1M
   const request =
     agentMessage.repeatedTokens * repeatedRateOf(model) +
-    agentMessage.conversationTokens * input +
+    agentMessage.conversationTokens * conversationRateOf(model) +
     (agentMessage.outputTokens + reasoningTokensOf(effort)) * output
   return creditsOf((request * agentMessage.requests) / perMillion)
 }
