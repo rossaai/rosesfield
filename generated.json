@@ -132,7 +132,7 @@
     },
     {
       "path": "packages/agent/src/copy.en.ts",
-      "sha256": "fda506e8106411680f621772fc6dbaa6a5b7fb4658078701d3cb2b9db8f67f10"
+      "sha256": "4fe17b44f1f19edaf0d391d2a807cd2a1dbb10ea2651f73ca27e1d3793706f64"
     },
     {
       "path": "packages/catalog/src/ads/copy.en.ts",

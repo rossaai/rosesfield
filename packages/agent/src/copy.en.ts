@@ -77,7 +77,7 @@ export const agentCopy = {
     imageUnfit:
       "This image is larger than one read sends and has no preview, so you see its facts only.",
     earlier:
-      "This media was sent in an earlier turn. Read the asset again to see it.",
+      "You already received this media in an earlier request. Read the asset again to see it.",
     over: (count: number, megabytes: number): string =>
       `Not sent, because one turn sends at most ${count} media and ${megabytes} MB. Read the asset again in the next turn to see it.`,
     unread: "The media could not be read, so you see the asset's facts only.",
