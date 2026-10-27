@@ -6,7 +6,8 @@ import { cleanup, fireEvent, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { characterQuery, runQuery } from "@/api/queries"
 import { t, tCatalog } from "@/copy/t"
-import { qwenEdit } from "../image/image-screen"
+import { readLastUsed } from "@/screens/app/hosted/last-used"
+import { qwenEdit, zImage } from "../image/image-screen"
 import {
   anglesEdit,
   anglesRunId,
@@ -248,5 +249,6 @@ describe("a fresh Characters screen", () => {
       expect(anglesPriceModels().length).toBeGreaterThan(0)
     )
     expect(new Set(anglesPriceModels())).toEqual(new Set([qwenEdit.id]))
+    expect(readLastUsed(characters.id)?.model).toBe(zImage.id)
   })
 })

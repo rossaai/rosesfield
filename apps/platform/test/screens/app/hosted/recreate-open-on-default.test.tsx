@@ -133,7 +133,7 @@ function useFormAt(seed: FormValues, source: FormSource): AppForm {
   }
 }
 
-function openWith(seed: FormValues, source: FormSource) {
+function openHosted(seed: FormValues, source: FormSource) {
   const client = new QueryClient()
   client.setQueryData(["settings"], { engine: { key: "set" } })
   const wrapper = ({ children }: { children: ReactNode }) => (
@@ -142,8 +142,8 @@ function openWith(seed: FormValues, source: FormSource) {
   const view = renderHook(
     () => {
       const form = useFormAt(seed, source)
-      useHostedModel(image, form)
-      return form
+      const hosted = useHostedModel(image, form)
+      return { form, hosted }
     },
     { wrapper }
   )
@@ -151,7 +151,11 @@ function openWith(seed: FormValues, source: FormSource) {
     client.setQueryData(["models", "image", "set"], list)
   })
   view.rerender()
-  return view.result.current.values
+  return view
+}
+
+function openWith(seed: FormValues, source: FormSource): FormValues {
+  return openHosted(seed, source).result.current.form.values
 }
 
 describe("the model a form opens on when the model list arrives", () => {
@@ -218,25 +222,44 @@ describe("the model and settings you last used in an app", () => {
     expect(values.inputs.prompt).not.toBe("kept words")
   })
 
-  it("keeps the model and the settings the form holds, for the next visit", () => {
+  it("keeps nothing on opening, so a new #1 still reaches a person who chose nothing", () => {
     openWith(defaultsOf(image), "defaults")
+    expect(kept()).toBeNull()
+  })
+
+  it("keeps the model you choose and its settings, for the next visit", () => {
+    const view = openHosted(defaultsOf(image), "defaults")
+    act(() => {
+      view.result.current.hosted.choose("qwen-image-2512")
+    })
+    view.rerender()
     expect(kept()).toEqual({
-      model: "bfl/flux-3-image",
-      settings: { aspectRatio: "auto" },
+      model: "qwen-image-2512",
+      settings: {},
       count: defaultsOf(image).count,
       aspectRatio: defaultsOf(image).aspectRatio,
     })
+    act(() => {
+      view.result.current.hosted.choose("bfl/flux-3-image")
+    })
+    view.rerender()
+    expect(kept()).toMatchObject({
+      model: "bfl/flux-3-image",
+      settings: { aspectRatio: "auto" },
+    })
   })
 
-  it("lets a Recreate of a run fill the form its own way", () => {
-    keep({
+  it("lets a Recreate of a run fill the form its own way, and keeps nothing until you change it", () => {
+    const record = {
       model: "qwen-image-2512",
       settings: {},
       count: 3,
       aspectRatio: null,
-    })
+    }
+    keep(record)
     const seeded = valuesFromRun(image, runOf("z-image-turbo"))
     expect(openWith(seeded, "seed")).toEqual(seeded)
+    expect(kept()).toEqual(record)
   })
 
   it("drops a kept model the catalog no longer lists, and opens on the #1", () => {
