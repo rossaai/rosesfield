@@ -88,9 +88,10 @@ const flashDetail = {
   input: 21.1,
   output: 84.4,
   effort: "high",
-  efforts: [
-    { effort: "high", turn: 0.07 },
-    { effort: "low", turn: 0.03 },
+  efforts: ["high", "low"],
+  messages: [
+    { effort: "high", credits: 1.7147 },
+    { effort: "low", credits: 0.4702 },
   ],
 }
 
@@ -158,7 +159,7 @@ test("on a phone the composer reads as a phone composer: the field across the to
   }
 })
 
-test("an agent row ends with the model's whole credits per 1M tokens and its caption starts with text", async ({
+test("an agent row ends with one message's whole credits at the chosen effort, never under 1, and its caption starts with text", async ({
   page,
 }) => {
   await openAgent(page, {
@@ -167,17 +168,34 @@ test("an agent row ends with the model's whole credits per 1M tokens and its cap
     refusal: null,
     details: { [flash]: flashDetail },
   })
-  await page.getByRole("button", { name: /^Model Deepseek V4 Flash$/i }).click()
+  const bar = page.locator("[data-bar='prompt']")
+  const model = bar.getByRole("button", { name: /^Model Deepseek V4 Flash$/i })
   const row = page.locator("[data-slot='model-row']").filter({
     has: page.locator(`[data-model='${flash}']`),
   })
-  await expect(row.first().locator("[data-slot='credit-price']")).toHaveText(
-    "37"
-  )
+  const price = row.first().locator("[data-slot='credit-price']")
+  await model.click()
+  await expect(price).toHaveText("2")
   await expect(row.first()).not.toContainText("Reasons")
   await expect(
     row.first().locator("[data-slot='model-row-capability'] svg").first()
   ).toHaveClass(/lucide-type/)
+  await expect(
+    row.first().locator("[data-slot='model-row-price-note']")
+  ).toHaveAttribute(
+    "aria-label",
+    "2 Comfy credits per message, estimated. 21 per 1M in, 84 per 1M out"
+  )
+  await page.keyboard.press("Escape")
+
+  const effort = bar.getByRole("combobox", { name: "Effort" })
+  await effort.scrollIntoViewIfNeeded()
+  await effort.click()
+  await page.getByRole("option", { name: "Low" }).click()
+  await expect(effort).toContainText("Low")
+  await model.scrollIntoViewIfNeeded()
+  await model.click()
+  await expect(price).toHaveText("1")
 })
 
 test("on a phone the empty agent screen centers its heading in the space between the header and the composer", async ({

@@ -1,18 +1,99 @@
 import { comfyCreditsPerUsd, type ModelFacts } from "@rosesfield/catalog/comfy"
-import type { AgentModelDetail } from "#agent.contract"
+import type { AgentEffort, AgentModelDetail } from "#agent.contract"
 import {
+  hasEffortChoice,
   isOnLine,
   openEffortOf,
   type RouterChatModel,
   type RouterChatTable,
+  routerChat,
   routerChatData,
   routerChatModelOf,
 } from "#infrastructure/router-chat-models"
 
 export const chatTask = "chat"
 
+/** The tokens of one agent message, measured from the request body the agent builds for every app of the catalog and from the captured scenario answers, at one token per 3 bytes of the body's messages and tools. */
+export const agentMessage = {
+  source: "packages/agent/test/fixtures/scenario-answers/*.json",
+  readOn: "2026-10-26",
+  bytesPerToken: 3,
+  repeatedTokens: 13_184,
+  conversationTokens: 341,
+  outputTokens: 67,
+  requests: 1,
+} as const
+
+/** The share of an answer's cap OpenRouter gives to reasoning at each effort, per https://openrouter.ai/docs/guides/best-practices/reasoning-tokens. */
+export const reasoningShare = {
+  max: 0.95,
+  xhigh: 0.95,
+  high: 0.8,
+  medium: 0.5,
+  low: 0.2,
+  minimal: 0.1,
+  none: 0,
+} as const satisfies Record<AgentEffort, number>
+
+/** The labs whose models OpenRouter caches with no cache marker in the request, per https://openrouter.ai/docs/guides/best-practices/prompt-caching. The agent sends no marker, so every other lab's model bills the repeated part at its input rate. */
+export const implicitCacheLabs: readonly string[] = [
+  "openai",
+  "deepseek",
+  "z-ai",
+  "x-ai",
+  "moonshotai",
+]
+
+const reasoningBounds = { least: 1024, most: 128_000 }
+
+const perMillion = 1_000_000
+
 function creditsOf(usd: number): number {
   return Math.round(usd * comfyCreditsPerUsd * 10_000) / 10_000
+}
+
+/** The reasoning tokens OpenRouter allows a request at one effort: max(min(max_tokens times the effort's share, 128,000), 1,024), and none at the effort none or with no effort. */
+export function reasoningTokensOf(effort: AgentEffort | null): number {
+  const share = effort === null ? 0 : reasoningShare[effort]
+  if (share === 0) {
+    return 0
+  }
+  return Math.max(
+    Math.min(Math.ceil(routerChat.maxTokens * share), reasoningBounds.most),
+    reasoningBounds.least
+  )
+}
+
+/** The rate per 1M tokens of the part each request repeats: the cache read rate OpenRouter publishes for a model it caches with no marker, else the input rate. */
+export function repeatedRateOf(
+  model: Pick<RouterChatModel, "usdPer1M" | "lab">
+): number {
+  const { input, cacheRead } = model.usdPer1M
+  return cacheRead !== null && implicitCacheLabs.includes(model.lab)
+    ? cacheRead
+    : input
+}
+
+/** The Comfy credits of one agent message at one effort: each request bills the instructions and the tools at the repeated rate, the conversation at the input rate, and the visible answer and the effort's reasoning budget at the output rate, times the requests of a message. */
+export function messageCreditsOf(
+  model: Pick<RouterChatModel, "usdPer1M" | "lab">,
+  effort: AgentEffort | null
+): number {
+  const { input, output } = model.usdPer1M
+  const request =
+    agentMessage.repeatedTokens * repeatedRateOf(model) +
+    agentMessage.conversationTokens * input +
+    (agentMessage.outputTokens + reasoningTokensOf(effort)) * output
+  return creditsOf((request * agentMessage.requests) / perMillion)
+}
+
+function messagesOf(model: RouterChatModel): AgentModelDetail["messages"] {
+  return hasEffortChoice(model)
+    ? model.efforts.map((effort) => ({
+        effort,
+        credits: messageCreditsOf(model, effort),
+      }))
+    : [{ effort: null, credits: messageCreditsOf(model, null) }]
 }
 
 function lastScoredOf(table: RouterChatTable): number {
@@ -73,10 +154,11 @@ export function chatDetailOf(
     output: creditsOf(model.usdPer1M.output),
     effort: openEffortOf(model),
     efforts: model.efforts,
+    messages: messagesOf(model),
   }
 }
 
-/** Reads each listed chat model's row: its rank, what it can do, its credits per million input and output tokens, the effort it opens on and the efforts it offers. */
+/** Reads each listed chat model's row: its rank, what it can do, its credits per million input and output tokens, the effort it opens on, the efforts it offers and the credits of one message at each. */
 export function chatDetailsOf(
   models: readonly string[]
 ): Record<string, AgentModelDetail> {

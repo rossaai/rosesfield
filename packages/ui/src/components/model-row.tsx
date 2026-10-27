@@ -224,8 +224,11 @@ function PriceNote({
           </span>
         }
       />
-      <TooltipContent className="pointer-events-none h-auto py-s1 whitespace-normal">
-        {note}
+      <TooltipContent className="pointer-events-none flex h-auto flex-col items-start gap-0 py-s1 whitespace-normal">
+        <span data-slot="model-row-price-name" className="whitespace-nowrap">
+          {price.name}
+        </span>
+        <span>{note}</span>
       </TooltipContent>
     </Tooltip>
   )

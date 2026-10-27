@@ -9,7 +9,7 @@ import {
   AgentModelPicker,
   agentLabOf,
   agentRowsOf,
-  ratePriceOf,
+  messageCreditsOf,
 } from "@/screens/app/hosted/agent-model-picker"
 import { agentDetailOf } from "../../agent/agent-details"
 
@@ -40,6 +40,10 @@ const details: AgentDetails = {
     output: 4220,
     effort: "max",
     efforts: ["max", "low"],
+    messages: [
+      { effort: "max", credits: 44.5421 },
+      { effort: "low", credits: 18.6144 },
+    ],
   }),
   "moonshotai/kimi-k3.1-pro": agentDetailOf({
     name: "Kimi K3.1 Pro",
@@ -50,6 +54,7 @@ const details: AgentDetails = {
     inputs: ["image", "video"],
     input: 126.6,
     output: 633,
+    messages: [{ effort: null, credits: 17.2638 }],
   }),
   "deepseek/deepseek-v4.1-flash-1017": agentDetailOf({
     name: "DeepSeek V4.1 Flash 1017",
@@ -59,6 +64,7 @@ const details: AgentDetails = {
     context: 1_048_576,
     input: 31.65,
     output: 126.6,
+    messages: [{ effort: null, credits: 1.7147 }],
   }),
   "maker/tiny": agentDetailOf({
     name: "Tiny 0.5",
@@ -67,6 +73,7 @@ const details: AgentDetails = {
     order: 4,
     input: 0.2,
     output: 1.6,
+    messages: [{ effort: null, credits: 0.0552 }],
   }),
   "z-ai/glm-5.3": agentDetailOf({
     name: "GLM-5.3",
@@ -76,6 +83,7 @@ const details: AgentDetails = {
     context: 262_144,
     input: 0,
     output: 0,
+    messages: [{ effort: null, credits: 0 }],
   }),
 }
 
@@ -189,13 +197,13 @@ describe("the agent's model picker", () => {
     expect(badge("moonshotai/kimi-k3.1-pro")).toBeUndefined()
   })
 
-  it("ends each row with the model's credits per 1M tokens, 3 input to 1 output, as a whole number, and names the credits per 1M in and out on hover", () => {
+  it("ends each row with one message's credits at the model's opening effort, rounded up to a whole credit and never under 1, and names the credits per 1M in and out on hover", () => {
     open()
     const priceOf = (model: string): string | null | undefined =>
       rowOf(model)?.querySelector("[data-slot='credit-price']")?.textContent
-    expect(priceOf("anthropic/claude-opus-5.5")).toBe("1,688")
-    expect(priceOf("moonshotai/kimi-k3.1-pro")).toBe("253")
-    expect(priceOf("deepseek/deepseek-v4.1-flash-1017")).toBe("55")
+    expect(priceOf("anthropic/claude-opus-5.5")).toBe("45")
+    expect(priceOf("moonshotai/kimi-k3.1-pro")).toBe("18")
+    expect(priceOf("deepseek/deepseek-v4.1-flash-1017")).toBe("2")
     expect(priceOf("maker/tiny")).toBe("1")
     const note = rowOf("anthropic/claude-opus-5.5")?.querySelector(
       "[data-slot='model-row-price-note']"
@@ -205,14 +213,14 @@ describe("the agent's model picker", () => {
       { credits: "4,220" }
     )}`
     expect(note?.getAttribute("aria-label")).toBe(
-      `${t("agent.model.rate", { credits: "1,688" })}. ${hover}`
+      `${t("agent.model.message", { credits: "45" })}. ${hover}`
     )
     expect(
       rowOf("maker/tiny")
         ?.querySelector("[data-slot='model-row-price-note']")
         ?.getAttribute("aria-label")
     ).toBe(
-      `${t("agent.model.rate", { credits: "1" })}. ${t("agent.model.rate.in", { credits: "1" })}, ${t("agent.model.rate.out", { credits: "2" })}`
+      `${t("agent.model.message", { credits: "1" })}. ${t("agent.model.rate.in", { credits: "1" })}, ${t("agent.model.rate.out", { credits: "2" })}`
     )
     expect(
       rowOf("z-ai/glm-5.3")
@@ -221,25 +229,34 @@ describe("the agent's model picker", () => {
     ).toBe("none")
   })
 
-  it("writes credits as a whole number with the thousands separator, and a blend under 1 as 1", () => {
-    expect(formatWholeCredits(0.02)).toBe("1")
-    expect(formatWholeCredits(0.99)).toBe("1")
-    expect(formatWholeCredits(55.39)).toBe("55")
+  it("rounds a message's credits up to a whole credit and never under 1, and gives no price to a model that bills nothing", () => {
+    const priced = (credits: number): number | null =>
+      messageCreditsOf(
+        agentDetailOf({ messages: [{ effort: null, credits }] }),
+        null
+      )
+    expect(priced(0.0001)).toBe(1)
+    expect(priced(0.99)).toBe(1)
+    expect(priced(1)).toBe(1)
+    expect(priced(1.0001)).toBe(2)
+    expect(priced(1.7147)).toBe(2)
+    expect(priced(44.5421)).toBe(45)
+    expect(priced(0)).toBeNull()
     expect(formatWholeCredits(1688)).toBe("1,688")
-    const opus = details["anthropic/claude-opus-5.5"]
-    if (opus === undefined) {
-      throw new Error("The details hold no Opus")
-    }
-    expect(ratePriceOf(opus)).toMatchObject({ amount: "1,688", credits: 1688 })
   })
 
-  it("writes no decimal in any agent row's price or hover, whatever the rates", () => {
-    const rates = [0, 0.0105, 0.211, 0.5, 0.99, 1.4999, 3.6, 12.66, 211.42]
+  it("writes no decimal in any agent row's price or hover, whatever the credits and rates", () => {
+    const amounts = [0, 0.0105, 0.211, 0.5, 0.99, 1.4999, 3.6, 12.66, 211.42]
     const manyDetails: AgentDetails = Object.fromEntries(
-      rates.flatMap((input, index) =>
-        rates.map((output, other) => [
+      amounts.flatMap((credits, index) =>
+        amounts.map((rate, other) => [
           `maker/rate-${index}-${other}`,
-          agentDetailOf({ name: `Rate ${index} ${other}`, input, output }),
+          agentDetailOf({
+            name: `Rate ${index} ${other}`,
+            input: rate,
+            output: rate * 5,
+            messages: [{ effort: null, credits }],
+          }),
         ])
       )
     )
@@ -247,26 +264,31 @@ describe("the agent's model picker", () => {
     const prices = agentRowsOf(many, manyDetails).flatMap((row) =>
       row.price === undefined ? [] : [row.price]
     )
-    expect(prices).toHaveLength(rates.length * rates.length - 1)
+    expect(prices).toHaveLength((amounts.length - 1) * amounts.length)
     for (const price of prices) {
       expect(price.amount).toMatch(/^\d{1,3}(,\d{3})*$/)
       expect(`${price.name} ${price.note ?? ""}`).not.toMatch(/\d[.]\d/)
     }
   })
 
-  it("prices a row the same at every effort you keep for its model", () => {
+  it("prices a row at the effort you keep for its model, and at its opening effort until you keep one", () => {
     const before = agentRowsOf(models, details)
     expect(
       before.find((row) => row.id === "anthropic/claude-opus-5.5")?.price
         ?.amount
-    ).toBe("1,688")
+    ).toBe("45")
     keepEffort("anthropic/claude-opus-5.5", "low")
     open()
     expect(
       rowOf("anthropic/claude-opus-5.5")?.querySelector(
         "[data-slot='credit-price']"
       )?.textContent
-    ).toBe("1,688")
+    ).toBe("19")
+    expect(
+      rowOf("deepseek/deepseek-v4.1-flash-1017")?.querySelector(
+        "[data-slot='credit-price']"
+      )?.textContent
+    ).toBe("2")
   })
 
   it("lists your recent models on top in the order given, and every model below", () => {

@@ -45,7 +45,7 @@ export const agentCopy = {
   "agent.loadFailed.title": "This conversation did not load",
   "agent.missing.title": "This conversation was deleted",
   "agent.missing.action": "Start a conversation",
-  "agent.model.rate": "{credits} Comfy credits per 1M tokens",
+  "agent.model.message": "{credits} Comfy credits per message, estimated",
   "agent.model.rate.in": "{credits} per 1M in",
   "agent.model.rate.out": "{credits} per 1M out",
   "agent.model.context": "{size} context",
