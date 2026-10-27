@@ -106,6 +106,37 @@ describe("the agent composer's Effort", () => {
     expect(order).toEqual([...order].sort((a, b) => a - b))
   })
 
+  it("on a phone shows Effort and the run mode as their icons alone, named by their labels, and gives the model chip the room left", async () => {
+    renderAgent(() => <Composer />, "/agent", undefined, listed)
+    const effort = await waitFor(() => {
+      const found = effortChip()
+      if (found === null) {
+        throw new Error("No Effort chip")
+      }
+      return found
+    })
+    const mode = screen.getByRole("combobox", { name: t("agent.mode.label") })
+    const row = document.querySelector("[data-slot='chip-row']")
+    for (const chip of [effort, mode]) {
+      expect(row?.contains(chip)).toBe(true)
+      expect(chip.getAttribute("data-compact")).toBe("icon")
+      expect(
+        chip.querySelector("[data-slot='select-value']")?.className.split(" ")
+      ).toContain("@max-regular:hidden")
+    }
+    const chips = row?.querySelectorAll("[data-slot='chip-select']") ?? []
+    expect([...chips].map((chip) => chip.getAttribute("data-compact"))).toEqual(
+      ["icon", "icon"]
+    )
+    const model = screen.getByRole("button", {
+      name: `${t("model.picker.title")} DeepSeek V4.1 Flash 1017`,
+    })
+    expect(row?.contains(model)).toBe(true)
+    expect(model.className.split(" ")).toContain(
+      "@max-regular:in-data-[density=composer]:shrink"
+    )
+  })
+
   it("lists the levels the model offers and keeps the one you choose for that model", async () => {
     renderAgent(() => <Composer />, "/agent", undefined, listed)
     const chip = await waitFor(() => {

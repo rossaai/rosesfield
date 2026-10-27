@@ -52,6 +52,17 @@ describe("ModelChip", () => {
       ])
     )
   })
+
+  it("takes the room a composer's chip row leaves on a phone, cutting its name at its end", () => {
+    render(<ModelChip name="A very long model name" mark={<svg />} />)
+    const chip = screen.getByRole("button", { name: "A very long model name" })
+    expect(chip.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "min-w-0",
+        "@max-regular:in-data-[density=composer]:shrink",
+      ])
+    )
+  })
 })
 
 describe("ModelChip at full width", () => {

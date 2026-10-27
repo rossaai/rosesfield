@@ -73,4 +73,67 @@ describe("ChipSelect", () => {
       expect(classes).not.toContain("px-2")
     }
   })
+
+  it("in its icon form shows its icon alone on a phone, square and never shrinking, named and tipped by its label", async () => {
+    render(
+      <TooltipProvider>
+        <ChipSelect
+          label="Effort"
+          icon={<svg data-testid="effort-icon" />}
+          value="high"
+          display="High"
+          compact="icon"
+          onValueChange={() => undefined}
+          options={[
+            { value: "high", label: "High", icon: null },
+            { value: "low", label: "Low", icon: null },
+          ]}
+        />
+      </TooltipProvider>
+    )
+    const chip = screen.getByRole("combobox", { name: "Effort" })
+    expect(chip.getAttribute("data-compact")).toBe("icon")
+    expect(chip.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "@max-regular:w-button-small",
+        "@max-regular:shrink-0",
+        "@max-regular:px-0",
+        "@max-regular:justify-center",
+      ])
+    )
+    const value = chip.querySelector("[data-slot='select-value']")
+    expect(value?.textContent).toBe("High")
+    expect(value?.className.split(" ")).toContain("@max-regular:hidden")
+    expect(
+      chip.querySelector("[data-slot='select-lead']")?.className.split(" ")
+    ).not.toContain("@max-regular:hidden")
+    fireEvent.focus(chip)
+    fireEvent.pointerEnter(chip)
+    fireEvent.mouseEnter(chip)
+    await waitFor(() =>
+      expect(
+        document.querySelector("[data-slot='tooltip-content']")?.textContent
+      ).toBe("Effort")
+    )
+  })
+
+  it("keeps its value shown at every size in its label form", () => {
+    render(
+      <TooltipProvider>
+        <ChipSelect
+          label="Format"
+          icon={<svg />}
+          value="1:1"
+          onValueChange={() => undefined}
+          options={[{ value: "1:1", label: "1:1", icon: <svg /> }]}
+        />
+      </TooltipProvider>
+    )
+    const chip = screen.getByRole("combobox", { name: "Format" })
+    expect(chip.getAttribute("data-compact")).toBe("label")
+    expect(chip.className).not.toContain("@max-regular:")
+    expect(
+      chip.querySelector("[data-slot='select-value']")?.className
+    ).not.toContain("@max-regular:hidden")
+  })
 })

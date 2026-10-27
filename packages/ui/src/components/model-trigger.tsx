@@ -26,7 +26,7 @@ const chipClass = cn(
 )
 
 const widthClass: Readonly<Record<ModelChipWidth, string>> = {
-  fit: "h-button-small max-w-button-max shrink in-data-[density=composer]:max-w-none in-data-[density=composer]:shrink-0 in-data-[density=composer]:bg-transparent",
+  fit: "h-button-small max-w-button-max shrink in-data-[density=composer]:max-w-none in-data-[density=composer]:shrink-0 in-data-[density=composer]:bg-transparent @max-regular:in-data-[density=composer]:shrink",
   full: cn("h-field w-full max-w-none", fieldInset, "pe-s4"),
 }
 
