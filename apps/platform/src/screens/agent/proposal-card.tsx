@@ -8,7 +8,7 @@ import { settingsQuery } from "@/api/queries"
 import { appName } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { wordsForError } from "@/copy/error-words"
-import { formatAmount, formatNumber } from "@/copy/format"
+import { formatNumber, formatWholeCredits } from "@/copy/format"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import { idsOf } from "@/pieces/run/run-facts"
 import {
@@ -57,7 +57,7 @@ function useProposalPrice(proposal: Proposal): ProposalPrice | null {
   if (found === undefined || found.source === "unknown") {
     return null
   }
-  const amount = formatAmount(found.credits)
+  const amount = formatWholeCredits(found.credits)
   return {
     kind: "credits",
     amount,

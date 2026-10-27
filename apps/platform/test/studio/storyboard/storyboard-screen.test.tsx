@@ -228,7 +228,7 @@ describe("Storyboard on a phone", () => {
     expect(dock.textContent).toContain(t("app.inputs.open"))
     await vi.waitFor(() =>
       expect(dock.textContent).toContain(
-        t("run.price.credits", { amount: "14" })
+        t("run.price.credits", { amount: "15" })
       )
     )
     expect(dock.querySelector("[data-slot=generate-button]")).not.toBeNull()

@@ -9,7 +9,7 @@ import {
 import { useRef } from "react"
 import { callRoute } from "@/api/call-route"
 import { settingsQuery } from "@/api/queries"
-import { formatAmount } from "@/copy/format"
+import { formatWholeCredits } from "@/copy/format"
 import { t } from "@/copy/t"
 import { storeRun } from "@/pieces/run/run-actions"
 import { bodyOf, type StartRunBodyInput } from "@/screens/app/app-form"
@@ -137,27 +137,23 @@ export function useStartRun(
   }
 }
 
-function creditsText(credits: number): string {
-  return formatAmount(credits)
-}
-
 const generateNames = {
   measured: "run.generate.measured",
   estimate: "run.generate.estimated",
   rates: "run.generate.priced",
 } as const satisfies Record<QuoteSource, string>
 
-/** Writes a price as its amount, or as the range from its low to its credits. */
+/** Writes a price in whole credits, or as the range from its low to its credits when the two ends differ. */
 export function amountOf(credits: number | null, low?: number): string | null {
   if (credits === null || credits <= 0) {
     return null
   }
-  return low === undefined || low <= 0 || low >= credits
-    ? creditsText(credits)
-    : t("field.number.range", {
-        min: creditsText(low),
-        max: creditsText(credits),
-      })
+  const max = formatWholeCredits(credits)
+  const min =
+    low === undefined || low <= 0 || low >= credits
+      ? max
+      : formatWholeCredits(low)
+  return min === max ? max : t("field.number.range", { min, max })
 }
 
 export function priceLabelsOf(

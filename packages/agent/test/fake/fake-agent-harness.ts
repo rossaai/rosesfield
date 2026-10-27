@@ -27,7 +27,6 @@ export class FakeAgentHarness extends AgentHarness {
   readonly proposals = new Map<string, StoredProposal>()
   readonly models = ["maker/chat-small", "maker/chat-large"]
   private model = "maker/chat-small"
-  private chosen: string[] = []
   private readonly next: Conversation
   private readonly answer: readonly AnswerEvent[]
 
@@ -92,7 +91,6 @@ export class FakeAgentHarness extends AgentHarness {
     return {
       models: [...this.models],
       model: this.model,
-      recent: [...new Set([this.model, ...this.chosen])].slice(0, 3),
     }
   }
 
@@ -100,7 +98,6 @@ export class FakeAgentHarness extends AgentHarness {
     if (!this.models.includes(model)) {
       throw new AgentModelUnknownError({ provider: "maker", model })
     }
-    this.chosen = [...new Set([model, this.model, ...this.chosen])]
     this.model = model
     return this.listModels()
   }

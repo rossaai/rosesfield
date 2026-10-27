@@ -6,7 +6,7 @@ import { CoinsIcon, KeyRoundIcon } from "lucide-react"
 import { type ReactElement, type ReactNode, useEffect } from "react"
 import { useKeyReach } from "@/api/key-reach"
 import { settingsQuery } from "@/api/queries"
-import { formatAmount } from "@/copy/format"
+import { formatBalance } from "@/copy/format"
 import { t } from "@/copy/t"
 import { type Account, accountQuery } from "@/screens/settings/account-query"
 import { useOpenKeyDialog } from "@/shell/key-dialog-context"
@@ -18,14 +18,14 @@ export function creditsLabel(account: Account): string | null {
   if (cap !== null) {
     return cap.left > 0
       ? t("key.cap.left", {
-          left: formatAmount(cap.left),
-          cap: formatAmount(cap.credits),
+          left: formatBalance(cap.left),
+          cap: formatBalance(cap.credits),
         })
-      : t("key.cap.spent", { cap: formatAmount(cap.credits) })
+      : t("key.cap.spent", { cap: formatBalance(cap.credits) })
   }
   return credits === null
     ? null
-    : t("key.credits", { amount: formatAmount(credits) })
+    : t("key.credits", { amount: formatBalance(credits) })
 }
 
 function BalanceSkeleton(): ReactElement {
@@ -90,7 +90,7 @@ export function CreditBalance(): ReactNode {
   const words = label ?? t("shell.demoEngine.row")
   const credits = account.data?.cap === null ? account.data.credits : null
   const shown =
-    credits === null || credits === undefined ? words : formatAmount(credits)
+    credits === null || credits === undefined ? words : formatBalance(credits)
   return (
     <>
       <CompactKey label={words} onPress={openCredits} />

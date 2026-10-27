@@ -43,7 +43,6 @@ export type StoredProposal = {
 export type AgentModelChoice = {
   models: string[]
   model: string
-  recent: string[]
 }
 
 export type ProposalDecision =

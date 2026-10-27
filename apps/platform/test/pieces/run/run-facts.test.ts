@@ -184,7 +184,7 @@ describe("runFacts", () => {
         })
       )
     )
-    expect(caption).toEqual(["ltx-2.5-dev", "3 seconds", "1"])
+    expect(caption).toEqual(["ltx-2.5-dev", "3 seconds", "2"])
   })
 
   it("marks the price of a run with no measured credits as estimated", () => {
@@ -203,7 +203,7 @@ describe("runFacts", () => {
         0.57
       )
     )
-    expect(caption).toEqual(["ltx-2.5-dev", "3 seconds", "<1"])
+    expect(caption).toEqual(["ltx-2.5-dev", "3 seconds", "1"])
   })
 
   it("prints whole seconds", () => {
@@ -252,7 +252,7 @@ describe("runFacts", () => {
         })
       )
     )
-    expect(failed).toEqual(["ltx-2.5-dev", "1"])
+    expect(failed).toEqual(["ltx-2.5-dev", "2"])
   })
 
   it("marks only the demo engine on a failed demo run", () => {
@@ -313,7 +313,7 @@ describe("runPrice", () => {
       },
     })
     expect(runPrice(unpriced)).toBeNull()
-    expect(runPrice(unpriced, 0.57)).toBe("<1 Comfy credits, estimated")
+    expect(runPrice(unpriced, 0.57)).toBe("1 Comfy credits, estimated")
   })
 })
 
@@ -332,7 +332,7 @@ describe("historyPrice", () => {
 
   it("prints the credits Comfy charged on a failed run", () => {
     expect(historyPrice(runOf({ ...live, status: "failed", cost }))).toBe(
-      "1 Comfy credits"
+      "2 Comfy credits"
     )
   })
 

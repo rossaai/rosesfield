@@ -18,12 +18,6 @@ const disjunctions = new Intl.ListFormat(choiceLocale, {
 const prices = new Intl.NumberFormat(copyLocale, {
   maximumFractionDigits: 0,
 })
-const smallEstimates = new Intl.NumberFormat(copyLocale, {
-  maximumSignificantDigits: 2,
-})
-const estimates = new Intl.NumberFormat(copyLocale, {
-  maximumFractionDigits: 1,
-})
 const tokenCounts = new Intl.NumberFormat(copyLocale, {
   maximumSignificantDigits: 3,
 })
@@ -91,21 +85,18 @@ export function withUnit(value: number, unit: string): string {
   return /^\p{L}{2,}/u.test(unit) ? `${number} ${unit}` : `${number}${unit}`
 }
 
-export function formatAmount(amount: number): string {
-  return amount > 0 && amount < 1 ? "<1" : prices.format(amount)
+/** Writes a balance of credits as a whole number, and a balance over 0 and under 1 as <1. */
+export function formatBalance(credits: number): string {
+  return credits > 0 && credits < 1 ? "<1" : prices.format(credits)
 }
 
-/** Writes credits as a whole number with the locale's thousands separator, and an amount over 0 and under 1 as 1. */
+const wholeSlack = 1e-9
+
+/** Writes a price in credits rounded up to a whole credit, never under 1, with the locale's thousands separator. */
 export function formatWholeCredits(credits: number): string {
-  return prices.format(credits > 0 && credits < 1 ? 1 : credits)
-}
-
-/** Writes an estimate of credits with two significant figures under 1, one decimal under 10 and none from 10. */
-export function formatEstimate(credits: number): string {
-  if (credits < 1) {
-    return smallEstimates.format(credits)
-  }
-  return credits < 10 ? estimates.format(credits) : prices.format(credits)
+  return prices.format(
+    credits > 0 ? Math.max(1, Math.ceil(credits - wholeSlack)) : credits
+  )
 }
 
 /** Writes a count of tokens in thousands or millions, binary when the count is a power-of-two multiple, such as 256K or 1M. */

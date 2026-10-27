@@ -14,7 +14,7 @@ import { fireEvent, render, screen } from "@testing-library/react"
 import { vi } from "vitest"
 import type { GatewaySettings } from "@/api/gateway-settings"
 import { runsQuery, settingsQuery } from "@/api/queries"
-import { formatAmount } from "@/copy/format"
+import { formatWholeCredits } from "@/copy/format"
 import { t } from "@/copy/t"
 import { inputCaption } from "@/screens/app/fields/input-copy"
 import {
@@ -204,7 +204,7 @@ export function openImage(
 }
 
 export function pricedName(credits: number): string {
-  return t("run.generate.priced", { amount: formatAmount(credits) })
+  return t("run.generate.priced", { amount: formatWholeCredits(credits) })
 }
 
 export function startedRuns(): Call[] {

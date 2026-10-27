@@ -3,10 +3,7 @@ import type { Harness, ModelRef } from "@earendil-works/pi-durable"
 import type { AgentModelChoice } from "#domain/agent-harness.port"
 import { AgentModelUnknownError } from "#domain/error/agent-model-unknown.error"
 import { backgroundContext } from "#infrastructure/pi-context"
-import {
-  agentSettings,
-  recentModelsOf,
-} from "#infrastructure/pi-conversation-docs"
+import { agentSettings } from "#infrastructure/pi-conversation-docs"
 
 export type ModelSource = {
   harness: Harness
@@ -31,11 +28,7 @@ export async function chosenOf(opened: ModelSource): Promise<string> {
 export async function modelChoiceOf(
   opened: ModelSource
 ): Promise<AgentModelChoice> {
-  const models = listedOf(opened)
-  const settings = await opened.harness.snapshot(agentSettings, context)
-  const model = await chosenOf(opened)
-  const recent = [model, ...(settings?.recent ?? [])]
-  return { models, model, recent: recentModelsOf(recent, models) }
+  return { models: listedOf(opened), model: await chosenOf(opened) }
 }
 
 export async function keepModelChoice(
@@ -48,14 +41,8 @@ export async function keepModelChoice(
       model,
     })
   }
-  const before = await chosenOf(opened)
   await opened.harness.commit(async (tx) => {
     const settings = await tx.doc(agentSettings)
-    settings.recent = recentModelsOf([
-      model,
-      before,
-      ...(settings.recent ?? []),
-    ])
     settings.model = model
   }, context)
 }

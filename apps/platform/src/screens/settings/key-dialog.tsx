@@ -18,7 +18,7 @@ import {
   useState,
 } from "react"
 import { keepVisitorKey, problemOfKey } from "@/api/visitor-keys"
-import { formatAmount } from "@/copy/format"
+import { formatBalance } from "@/copy/format"
 import { t, tCount } from "@/copy/t"
 import type { CopyKey } from "@/copy.en"
 import { DialogOrSheet } from "@/pieces/responsive-layer"
@@ -122,7 +122,7 @@ export function Balance({ credits }: { credits: number }): ReactElement {
   return (
     <p className="flex items-center gap-s1_5 text-body">
       <CreditPrice
-        amount={t("key.balance", { amount: formatAmount(credits) })}
+        amount={t("key.balance", { amount: formatBalance(credits) })}
       />
     </p>
   )

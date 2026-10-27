@@ -18,7 +18,7 @@ import { fireEvent, render, screen } from "@testing-library/react"
 import { vi } from "vitest"
 import type { GatewaySettings } from "@/api/gateway-settings"
 import { runsQuery, settingsQuery } from "@/api/queries"
-import { formatAmount } from "@/copy/format"
+import { formatWholeCredits } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { defaultsOf, type FormValues } from "@/screens/app/app-form"
 import {
@@ -289,7 +289,7 @@ export async function emptyCanvas(): Promise<HTMLElement> {
 }
 
 export function pricedName(credits: number): string {
-  return t("run.generate.priced", { amount: formatAmount(credits) })
+  return t("run.generate.priced", { amount: formatWholeCredits(credits) })
 }
 
 export function sceneFields(): HTMLTextAreaElement[] {
