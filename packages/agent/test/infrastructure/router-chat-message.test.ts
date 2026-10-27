@@ -7,11 +7,15 @@ import {
   defaultChatModel,
   type RouterChatModel,
   routerChat,
+  routerChatData,
   routerChatModelOf,
 } from "#infrastructure/router-chat-models"
 import {
   agentMessage,
   chatDetailsOf,
+  conversationRateOf,
+  explicitCacheQwen,
+  marksCache,
   messageCreditsOf,
   reasoningTokensOf,
   repeatedRateOf,
@@ -207,7 +211,7 @@ describe("one agent message's credits", () => {
     })
   })
 
-  it("bills the repeated part at the published cache read rate of a model whose lab caches, with or without the agent's marker, and at the input rate otherwise", () => {
+  it("bills the repeated part at the published cache read rate of a model that caches, with or without the agent's marker, and at the input rate otherwise", () => {
     const flash = modelOf(defaultChatModel)
     expect(flash.lab).toBe("deepseek")
     expect(flash.usdPer1M.cacheRead).not.toBeNull()
@@ -222,27 +226,75 @@ describe("one agent message's credits", () => {
     expect(gemini.usdPer1M.cacheRead).not.toBeNull()
     expect(repeatedRateOf(gemini)).toBe(gemini.usdPer1M.input)
     const unpublished = {
+      id: "anthropic/claude-unpublished",
       lab: "anthropic",
-      usdPer1M: { input: 1, output: 2, cacheRead: null },
+      usdPer1M: { input: 1, output: 2, cacheRead: null, cacheWrite: null },
     }
     expect(repeatedRateOf(unpublished)).toBe(1)
   })
 
-  it("prices one message of Claude Opus 5.5 and Claude Sonnet 5.5 at their opening effort with the instructions and the tools read from the cache", () => {
+  it("marks and prices from the cache only the Qwen models OpenRouter's guide names for explicit caching, and every Anthropic model", () => {
+    const qwens = routerChatData.models.filter((one) => one.lab === "qwen")
+    const named = qwens.filter((one) => marksCache(one)).map((one) => one.id)
+    expect(named.sort()).toEqual(
+      ["qwen/qwen-plus", "qwen/qwen3-coder-flash", "qwen/qwen3.6-plus"].sort()
+    )
+    expect(named.every((id) => explicitCacheQwen.models.includes(id))).toBe(
+      true
+    )
+    for (const one of qwens.filter((model) => !marksCache(model))) {
+      expect(repeatedRateOf(one)).toBe(one.usdPer1M.input)
+      expect(conversationRateOf(one)).toBe(one.usdPer1M.input)
+    }
+    const snapshot = modelOf("qwen/qwen3.8-max-0902")
+    expect(snapshot.usdPer1M.cacheRead).toBeLessThan(snapshot.usdPer1M.input)
+    expect(marksCache(snapshot)).toBe(false)
+    expect(repeatedRateOf(snapshot)).toBe(snapshot.usdPer1M.input)
+    const anthropic = routerChatData.models.filter(
+      (one) => one.lab === "anthropic"
+    )
+    expect(anthropic.length).toBeGreaterThan(0)
+    expect(anthropic.every((one) => marksCache(one))).toBe(true)
+  })
+
+  it("bills the conversation at the published cache write rate of a marked model, at the input rate times 1.25 where none is published, and at the input rate on an unmarked model", () => {
+    const claude = modelOf(opus)
+    expect(claude.usdPer1M.cacheWrite).toBe(5)
+    expect(conversationRateOf(claude)).toBe(5)
+    const qwen = modelOf("qwen/qwen-plus")
+    expect(qwen.usdPer1M.cacheWrite).not.toBeNull()
+    expect(conversationRateOf(qwen)).toBe(qwen.usdPer1M.cacheWrite)
+    expect(
+      conversationRateOf({
+        id: "anthropic/claude-unpublished",
+        lab: "anthropic",
+        usdPer1M: { input: 4, output: 20, cacheRead: null, cacheWrite: null },
+      })
+    ).toBe(5)
+    const flash = modelOf(defaultChatModel)
+    expect(conversationRateOf(flash)).toBe(flash.usdPer1M.input)
+  })
+
+  it("prices one message of Claude Opus 5.5, Claude Sonnet 5.5 and a snapshot Qwen model at their opening effort", () => {
     const sonnet = "anthropic/claude-sonnet-5.5"
-    const opened = chatDetailsOf([opus, sonnet])
-    const highOf = (id: string): number | undefined =>
-      opened[id]?.messages.find((one) => one.effort === "high")?.credits
+    const snapshot = "qwen/qwen3.8-max-0902"
+    const opened = chatDetailsOf([opus, sonnet, snapshot])
+    const openOf = (id: string): number | undefined =>
+      opened[id]?.messages.find((one) => one.effort === opened[id]?.effort)
+        ?.credits
     expect(opened[opus]?.effort).toBe("high")
     expect(opened[sonnet]?.effort).toBe("high")
-    expect(Math.ceil(highOf(opus) ?? 0)).toBe(29)
-    expect(Math.ceil(highOf(sonnet) ?? 0)).toBe(15)
+    expect(opened[snapshot]?.effort).toBe("xhigh")
+    expect(Math.ceil(openOf(opus) ?? 0)).toBe(29)
+    expect(Math.ceil(openOf(sonnet) ?? 0)).toBe(15)
+    expect(Math.ceil(openOf(snapshot) ?? 0)).toBe(16)
   })
 
   it("prices each request from the tokens times the model's rates, times the requests of a message", () => {
     const rates = {
+      id: "openai/priced",
       lab: "openai",
-      usdPer1M: { input: 2, output: 10, cacheRead: 0.5 },
+      usdPer1M: { input: 2, output: 10, cacheRead: 0.5, cacheWrite: null },
     }
     const request =
       agentMessage.repeatedTokens * 0.5 +

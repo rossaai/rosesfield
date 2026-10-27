@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest"
 import { routerMedia } from "#infrastructure/router-chat-media"
 import { defaultChatModel } from "#infrastructure/router-chat-models"
-import { pngOf, wavOf } from "../fixtures/media-files"
+import { pngOf } from "../fixtures/media-files"
 import {
   base64,
   closeRigs,
@@ -19,8 +19,8 @@ afterEach(closeRigs)
 
 const ephemeral = { type: "ephemeral" }
 const qwen = "qwen/qwen-plus"
-const omni = "qwen/qwen3.8-omni-flash"
-const breakpointLimit = 4
+const qwenVideo = "qwen/qwen3.6-plus"
+const snapshotQwen = "qwen/qwen3.8-max-0902"
 
 async function oneMessageOn(model: string): Promise<RouterRequest | undefined> {
   const { requests } = await turnsWith({
@@ -47,8 +47,30 @@ function lastToolResultOf(request: RouterRequest | undefined): unknown {
     .at(-1)?.content
 }
 
-function mp4(): Uint8Array {
-  return Uint8Array.of(0, 0, 0, 24, 102, 116, 121, 112, 109, 112, 52, 50)
+function mp4(seed = 0): Uint8Array {
+  return Uint8Array.of(0, 0, 0, 24, 102, 116, 121, 112, 109, 112, 52, 50, seed)
+}
+
+function markersIn(value: unknown): number {
+  return JSON.stringify(value ?? null).split('"cache_control"').length - 1
+}
+
+function placesOf(request: RouterRequest | undefined): {
+  system: number
+  lastTool: number
+  newest: number
+  rest: number
+} {
+  const messages = messagesOf(request)
+  const system = markersIn(systemOf(request))
+  const lastTool = markersIn(lastToolOf(request))
+  const newest = markersIn(messages.at(-1)?.content)
+  return {
+    system,
+    lastTool,
+    newest,
+    rest: markersOf(request) - system - lastTool - newest,
+  }
 }
 
 describe("the cache marker on the instructions and the tools", () => {
@@ -72,64 +94,57 @@ describe("the cache marker on the instructions and the tools", () => {
     expect(typeof systemOf(request)).toBe("string")
   })
 
-  it("stays within the four breakpoints Anthropic and Alibaba allow, in every request of a turn that reads many media", async () => {
-    const stored = storedLibrary()
-    const image = await stored.add({ width: 4, height: 3 }, pngOf(4, 3))
-    const ids: string[] = [image.id]
-    for (let index = 0; index < 2; index += 1) {
-      const sound = await stored.add(
-        { kind: "audio", mime: "audio/wav", durationSeconds: 1 },
-        wavOf(400 + index)
-      )
-      ids.push(sound.id)
+  it.each([snapshotQwen, "qwen/qwen3.7-max", "qwen/qwen3-coder"])(
+    "control: is nowhere in a %s request, a Qwen model the guide does not name for explicit caching",
+    async (model) => {
+      const request = await oneMessageOn(model)
+
+      expect(request?.body.model).toBe(model)
+      expect(markersOf(request)).toBe(0)
+      expect(typeof systemOf(request)).toBe("string")
     }
-    const clip = await stored.add(
-      { kind: "video", mime: "video/mp4", durationSeconds: 5 },
-      mp4()
-    )
+  )
+
+  it("is exactly on the system message, the last tool and the newest message of every request of a Claude turn that reads media, so one marker covers the conversation", async () => {
+    const stored = storedLibrary()
+    const first = await stored.add({ width: 4, height: 3 }, pngOf(4, 3))
+    const second = await stored.add({ width: 5, height: 3 }, pngOf(5, 3))
 
     const { requests } = await turnsWith({
-      model: omni,
+      model: imageModel,
       library: stored.library,
       reads: [],
-      steps: [[[...ids, clip.id], [image.id]], []],
+      steps: [[[first.id], [second.id]], []],
     })
 
     expect(requests.length).toBeGreaterThanOrEqual(3)
     for (const request of requests) {
-      expect(markersOf(request)).toBeGreaterThan(0)
-      expect(markersOf(request)).toBeLessThanOrEqual(breakpointLimit)
+      expect(placesOf(request)).toEqual({
+        system: 1,
+        lastTool: 1,
+        newest: 1,
+        rest: 0,
+      })
     }
   })
 })
 
 describe("the media a marked request carries", () => {
-  it("reaches a Qwen request as input_audio and video_url parts from a tool result whose text is an array, which keeps its marker", async () => {
+  it("reaches a marked Qwen request as a video_url part from a tool result whose text is an array, which keeps its marker", async () => {
     const stored = storedLibrary()
-    const wav = wavOf(16_000)
-    const sound = await stored.add(
-      { kind: "audio", mime: "audio/wav", durationSeconds: 1 },
-      wav
-    )
     const clip = await stored.add(
       { kind: "video", mime: "video/mp4", durationSeconds: 5 },
       mp4()
     )
 
     const { requests } = await turnsWith({
-      model: omni,
+      model: qwenVideo,
       library: stored.library,
-      reads: [[sound.id, clip.id]],
+      reads: [[clip.id]],
     })
 
     expect(lastToolResultOf(requests[1])).toEqual([
       expect.objectContaining({ type: "text", cache_control: ephemeral }),
-    ])
-    expect(partsOf(requests[1], "input_audio")).toEqual([
-      {
-        type: "input_audio",
-        input_audio: { data: base64(wav), format: "wav" },
-      },
     ])
     expect(partsOf(requests[1], "video_url")).toEqual([
       {
@@ -164,15 +179,15 @@ describe("the media a marked request carries", () => {
     const stored = storedLibrary()
     const ids: string[] = []
     for (let index = 0; index <= routerMedia.perTurn; index += 1) {
-      const sound = await stored.add(
-        { kind: "audio", mime: "audio/wav", durationSeconds: 1 },
-        wavOf(800 + index)
+      const clip = await stored.add(
+        { kind: "video", mime: "video/mp4", durationSeconds: 5 },
+        mp4(index)
       )
-      ids.push(sound.id)
+      ids.push(clip.id)
     }
 
     const { requests } = await turnsWith({
-      model: omni,
+      model: qwenVideo,
       library: stored.library,
       reads: [ids, []],
     })
@@ -180,11 +195,12 @@ describe("the media a marked request carries", () => {
     expect(JSON.stringify(lastToolResultOf(requests[1]))).toContain(
       `one turn sends at most ${routerMedia.perTurn} media`
     )
-    expect(partsOf(requests[1], "input_audio")).toHaveLength(
-      routerMedia.perTurn
-    )
+    expect(lastToolResultOf(requests[1])).toEqual([
+      expect.objectContaining({ type: "text", cache_control: ephemeral }),
+    ])
+    expect(partsOf(requests[1], "video_url")).toHaveLength(routerMedia.perTurn)
     expect(toolTextOf(requests[1])).not.toContain(routerMedia.markPrefix)
-    expect(partsOf(requests[2], "input_audio")).toEqual([])
+    expect(partsOf(requests[2], "video_url")).toEqual([])
     expect(toolTextOf(requests[2])).toContain(
       "received this media in an earlier request"
     )

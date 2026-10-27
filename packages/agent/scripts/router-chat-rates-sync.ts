@@ -16,6 +16,7 @@ const listed = z.object({
         prompt: z.string(),
         completion: z.string(),
         input_cache_read: z.string().optional(),
+        input_cache_write: z.string().optional(),
       }),
     })
   ),
@@ -49,6 +50,10 @@ async function main(): Promise<void> {
           pricing.input_cache_read === undefined
             ? null
             : perMillionOf(pricing.input_cache_read),
+        cacheWrite:
+          pricing.input_cache_write === undefined
+            ? null
+            : perMillionOf(pricing.input_cache_write),
       },
     }
   })
