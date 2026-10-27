@@ -7,7 +7,6 @@ import type {
 export type FactBadge =
   | { kind: "rank"; rank: number; sources: readonly ScoreSource[] }
   | { kind: "new"; release: string }
-  | { kind: "value" }
   | { kind: "open-weights"; href: string }
 
 export const newForDays = 30
@@ -52,9 +51,6 @@ export function factBadgesOf(
   }
   if (facts.release !== null && isNewRelease(facts.release, today)) {
     badges.push({ kind: "new", release: facts.release })
-  }
-  if (score?.tiers.includes("bestValue") === true) {
-    badges.push({ kind: "value" })
   }
   if (facts.weights !== null) {
     badges.push({ kind: "open-weights", href: facts.weights })

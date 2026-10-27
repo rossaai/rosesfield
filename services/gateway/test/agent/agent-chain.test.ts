@@ -23,6 +23,7 @@ import { z } from "zod"
 import { localAgent } from "#agent/local-agent"
 import { buildHandlers, type Handlers } from "#build-handlers"
 import type { GatewayApp } from "#gateway-env"
+import { textsOf } from "../../../../packages/agent/src/infrastructure/router-chat-tool-text"
 import { FakeAppCatalog } from "../../../../packages/agent/test/fake/fake-app-catalog"
 import { FakePriceEngine } from "../../../../packages/agent/test/fake/fake-price-engine"
 import {
@@ -58,7 +59,8 @@ afterEach(async () => {
 function lastRunOf(request: RouterRequest): z.infer<typeof toolRun>["run"] {
   const messages = sentMessages.parse(request.body.messages)
   const result = messages.findLast((message) => message.role === "tool")
-  return toolRun.parse(JSON.parse(String(result?.content ?? "{}"))).run
+  const text = result === undefined ? null : textsOf(result)?.join("")
+  return toolRun.parse(JSON.parse(text ?? "{}")).run
 }
 
 function driveRuns(

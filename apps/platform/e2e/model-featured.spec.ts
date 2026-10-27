@@ -20,7 +20,7 @@ async function sortBy(page: Page, row: number, option: string): Promise<void> {
   await page.getByRole("menuitemradio", { name: option }).click()
 }
 
-test("the Image picker shows Featured, the #1 and then the Best value models in rank order, above All models, and keeps that order on a price sort", async ({
+test("the Image picker shows Featured, the Best value line from the best ranked down, each cheaper than the one above it, above All models, and keeps that order on a price sort", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "desktop", "the desktop picker")
@@ -40,17 +40,18 @@ test("the Image picker shows Featured, the #1 and then the Best value models in 
   )
   const featured = await idsIn(page, "featured")
   expect(featured.length).toBeGreaterThan(0)
-  expect(featured.length).toBeLessThanOrEqual(3)
   expect(new Set(featured).size).toBe(featured.length)
   const rows = listbox.locator(
     "[data-section='featured'] [data-slot='model-row']"
   )
-  await expect(rows.first().locator("[data-slot='model-row-rank']")).toHaveText(
-    "1"
-  )
-  for (const row of (await rows.all()).slice(1)) {
+  const credits: number[] = []
+  for (const row of await rows.all()) {
     await expect(row.locator("[data-kind='value']")).toHaveCount(1)
+    const price = await row.locator("[data-slot='credit-price']").textContent()
+    credits.push(Number((price ?? "").replace(/\D/g, "")))
   }
+  expect(credits).toEqual(credits.toSorted((a, b) => b - a))
+  expect(new Set(credits).size).toBe(credits.length)
   const ranked = await idsIn(page, "all")
   expect(featured.map((id) => ranked.indexOf(id))).toEqual(
     featured.map((id) => ranked.indexOf(id)).toSorted((a, b) => a - b)

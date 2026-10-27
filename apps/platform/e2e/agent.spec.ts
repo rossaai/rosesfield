@@ -232,14 +232,14 @@ test("on a phone the empty agent screen centers its heading in the space between
 function chatDetailOf(
   name: string,
   rank: number | null,
-  tiers: readonly string[]
+  credits: number
 ): unknown {
   return {
     ...flashDetail,
     name,
     effort: null,
     efforts: [],
-    messages: [{ effort: null, credits: 1 }],
+    messages: [{ effort: null, credits }],
     facts: {
       ...flashDetail.facts,
       scores: {
@@ -249,27 +249,32 @@ function chatDetailOf(
           order: rank ?? 9,
           of: 274,
           sources: [],
-          tiers,
+          tiers: [],
         },
       },
     },
   }
 }
 
-test("the agent's picker shows Featured, the #1 and then the Best value models, above All models, and Auto shows the zap", async ({
+test("the agent's picker shows Featured, the Pareto line of the top quarter from the #1 down, above All models, and Auto shows the zap", async ({
   page,
 }) => {
-  const listed = ["lab/top", "lab/second", "lab/value", "lab/later-value"]
+  const credits = [30, 31, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  const listed = credits.map((_, index) => `lab/m${index + 1}`)
   await openAgent(page, {
     models: listed,
-    model: "lab/second",
+    model: "lab/m2",
     refusal: null,
-    details: {
-      "lab/top": chatDetailOf("Top", 1, []),
-      "lab/second": chatDetailOf("Second", 2, []),
-      "lab/value": chatDetailOf("Value", 3, ["bestValue"]),
-      "lab/later-value": chatDetailOf("Later Value", 4, ["bestValue"]),
-    },
+    details: Object.fromEntries(
+      listed.map((model, index) => [
+        model,
+        chatDetailOf(
+          index === 1 ? "Second" : model,
+          index + 1,
+          credits[index] ?? 1
+        ),
+      ])
+    ),
   })
   const bar = page.locator("[data-bar='prompt']")
   const mode = bar.getByRole("combobox", { name: "Run mode" })
@@ -288,10 +293,9 @@ test("the agent's picker shows Featured, the #1 and then the Best value models, 
       .evaluateAll((rows) =>
         rows.map((row) => row.getAttribute("data-model") ?? "")
       )
-  expect(await idsOf("featured")).toEqual([
-    "lab/top",
-    "lab/value",
-    "lab/later-value",
-  ])
+  expect(await idsOf("featured")).toEqual(["lab/m1", "lab/m3"])
+  await expect(
+    listbox.locator("[data-section='featured'] [data-kind='value']")
+  ).toHaveCount(2)
   expect(await idsOf("all")).toEqual(listed)
 })

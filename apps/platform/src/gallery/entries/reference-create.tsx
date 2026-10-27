@@ -217,7 +217,7 @@ function sampleModel(): RowModel {
           order: listedLimit + 1,
           of: listedLimit + 1,
           sources: [],
-          tiers: ["bestValue"],
+          tiers: [],
         },
       },
     },

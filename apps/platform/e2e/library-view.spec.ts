@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs"
 import { expect, type Locator, type Page, test } from "@playwright/test"
 import { answerOwnLists } from "./own-lists"
+import { settled } from "./settled"
 
 const gatewayOrigin = "http://127.0.0.1:8797"
 const png = readFileSync(
@@ -117,6 +118,7 @@ test("the Tile size row starts with its icon on the line and inset of Layout's i
 }) => {
   await open(page, "/history")
   const menu = await openView(page)
+  await settled(menu)
   const list = menu.getByRole("menuitemradio", { name: "List" })
   const size = menu.locator("[data-slot='view-menu-size']")
   const [listLead, sizeLead, listWords, sizeWords] = await Promise.all([
@@ -291,9 +293,7 @@ test("History's state tabs show every label whole, with the plate on the chosen 
   const failed = tabs.getByRole("radio", { name: "Failed" })
   await failed.click()
   const thumb = tabs.locator("[data-slot='segmented-control-thumb']")
-  await thumb.evaluate((element) =>
-    Promise.all(element.getAnimations().map((animation) => animation.finished))
-  )
+  await settled(thumb)
   const plate = await boxOf(thumb)
   const cell = await boxOf(failed)
   expect(Math.round(plate.x)).toBe(Math.round(cell.x))

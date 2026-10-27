@@ -14,7 +14,7 @@ const modelPickerOrders: readonly ModelPickerOrder[] = ["down", "up"]
 
 const firstSort: ModelPickerSort = { by: "rank", order: "down" }
 
-const featuredLimit = 3
+const wholeSlack = 1e-9
 
 function isModelPickerSortBy(value: string): value is ModelPickerSortBy {
   return modelPickerSortBys.some((by) => by === value)
@@ -68,17 +68,31 @@ function hasOpenWeights(rows: readonly ModelPickerRow[]): boolean {
   return rows.some(isOpenRow)
 }
 
-function isBestValue(row: ModelPickerRow): boolean {
-  return row.badges.some((badge) => badge.kind === "value")
+/** Rounds a price up to a whole credit and never under 1, the rule every price a person reads follows. */
+function wholeCreditsOf(credits: number): number {
+  return credits > 0 ? Math.max(1, Math.ceil(credits - wholeSlack)) : credits
 }
 
-function featuredRowsOf(rows: readonly ModelPickerRow[]): ModelPickerRow[] {
-  const first = rows.find((row) => row.rank !== undefined)
-  const values = rows.filter((row) => row !== first && isBestValue(row))
-  return [...(first === undefined ? [] : [first]), ...values].slice(
-    0,
-    featuredLimit
-  )
+function placeOf(row: ModelPickerRow): number {
+  return row.rank?.place ?? Number.POSITIVE_INFINITY
+}
+
+/** The Best value rows, best ranked first: the Pareto line of rank against whole credits among the rows ranked in the top quarter of the ranked rows, each priced lower than every row ranked above it. */
+function valueRowsOf(rows: readonly ModelPickerRow[]): ModelPickerRow[] {
+  const ranked = rows
+    .filter((row) => row.rank !== undefined)
+    .sort((a, b) => placeOf(a) - placeOf(b))
+  const line: ModelPickerRow[] = []
+  let cheapest = Number.POSITIVE_INFINITY
+  for (const row of ranked.slice(0, Math.ceil(ranked.length / 4))) {
+    const whole =
+      row.price === undefined ? null : wholeCreditsOf(row.price.credits)
+    if (whole !== null && whole < cheapest) {
+      line.push(row)
+      cheapest = whole
+    }
+  }
+  return line
 }
 
 function needleOf(query: string): string {
@@ -103,8 +117,6 @@ export type {
   SearchedRow,
 }
 export {
-  featuredLimit,
-  featuredRowsOf,
   firstSort,
   hasOpenWeights,
   isMatch,
@@ -116,4 +128,6 @@ export {
   needleOf,
   searchedRowsOf,
   sortedRows,
+  valueRowsOf,
+  wholeCreditsOf,
 }

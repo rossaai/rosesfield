@@ -71,12 +71,7 @@ export const modelTag = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("proven") }),
 ])
 
-export const scoreTier = z.enum([
-  "bestQuality",
-  "bestValue",
-  "cheapest",
-  "costly",
-])
+export const scoreTier = z.enum(["bestQuality", "cheapest", "costly"])
 
 export const scoreSource = z.object({
   board: z.string().min(1).max(120),

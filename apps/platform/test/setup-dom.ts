@@ -1,3 +1,8 @@
 import { configure } from "@testing-library/react"
+import { afterEach } from "vitest"
 
 configure({ asyncUtilTimeout: 5_000 })
+
+afterEach(() => {
+  window.localStorage.clear()
+})

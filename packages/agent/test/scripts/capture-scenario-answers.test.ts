@@ -167,7 +167,7 @@ describe("the capture of Router answers", () => {
   })
 
   it("names the answer file the replay reads for a model", () => {
-    expect(basename(answersFileOf(defaultChatModel))).toBe(
+    expect(basename(answersFileOf("deepseek/deepseek-v4.1-flash-1017"))).toBe(
       "deepseek-deepseek-v4-1-flash-1017.json"
     )
   })

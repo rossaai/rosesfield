@@ -58,8 +58,6 @@ function factBadgeOf(badge: FactBadge, words: CatalogWords): ModelBadge[] {
       const label = words("comfy.badge.new")
       return label === null ? [] : [{ kind: "new", label }]
     }
-    case "value":
-      return [{ kind: "value", label: t("model.picker.bestValue") }]
     case "open-weights":
       return []
   }

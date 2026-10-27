@@ -22,6 +22,7 @@ export const words: ModelPickerWords = {
   openOnly: "Open weights only",
   featured: "Featured",
   all: "All models",
+  bestValue: "Best value",
 }
 
 export function rowOf(

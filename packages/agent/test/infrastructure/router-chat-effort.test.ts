@@ -20,6 +20,7 @@ import { imageApp } from "../sample"
 
 const comfyKey = "comfyui-rosesfield-test"
 const opus = "anthropic/claude-opus-5.5"
+const flash = "deepseek/deepseek-v4.1-flash-1017"
 const fixed = "openai/gpt-5.2-chat"
 
 let rig: AgentRig | null = null
@@ -74,6 +75,7 @@ describe("the effort a turn asks of the model", () => {
 
   it("sends none as the effort none, and no reasoning for a model with no effort to choose", async () => {
     const opened = openAgent(2)
+    await opened.rig.agent.chooseModel(flash)
     await turn(opened.rig.agent, "none")
     await opened.rig.agent.chooseModel(fixed)
     await turn(opened.rig.agent, "high")
@@ -87,6 +89,7 @@ describe("the effort a turn asks of the model", () => {
   it("resets the effort to the new model's opening effort when the conversation's model changes and the new model does not offer it", async () => {
     const opened = openAgent(2)
     const { agent } = opened.rig
+    await agent.chooseModel(flash)
     const { id } = await agent.startConversation({
       runApproval: "ask",
       effort: "none",

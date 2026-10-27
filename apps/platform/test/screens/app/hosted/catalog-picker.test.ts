@@ -86,7 +86,7 @@ const facts: ModelFacts = {
       order: 3,
       of: 40,
       sources: [board],
-      tiers: ["bestValue"],
+      tiers: ["cheapest"],
     },
   },
 }
@@ -112,10 +112,9 @@ const rankNote = t("model.picker.rankFrom", {
 })
 
 describe("the fact badges of a model row", () => {
-  it("shows New and Best value in that order before Open weights, each read through its copy key, and no rank, which rides the mark", () => {
+  it("shows New before Open weights, read through its copy key, and no rank, which rides the mark, and no Best value, which the picker computes", () => {
     expect(badgesOf("maker/open", openWeights, facts, context)).toEqual([
       { kind: "new", label: "New" },
-      { kind: "value", label: t("model.picker.bestValue") },
       {
         kind: "openWeights",
         label: t("model.tag.openWeights"),
@@ -139,7 +138,7 @@ describe("the fact badges of a model row", () => {
       badgesOf("maker/open", [], one, { ...context, task }).map(
         (badge) => badge.kind
       )
-    expect(kinds(old)).toEqual(["value"])
+    expect(kinds(old)).toEqual([])
     expect(kinds(tail)).toEqual(["new"])
     expect(kinds(facts, "image-edit")).toEqual(["new"])
   })
@@ -149,7 +148,7 @@ describe("the fact badges of a model row", () => {
       badgesOf("maker/open", [], facts, { ...context, words: () => null }).map(
         (badge) => badge.kind
       )
-    ).toEqual(["value"])
+    ).toEqual([])
   })
 })
 

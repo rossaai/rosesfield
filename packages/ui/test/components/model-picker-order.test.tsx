@@ -185,18 +185,22 @@ describe("ModelPicker's Sort menu", () => {
 
 const value = { kind: "value", label: "Best value" } as const
 
+const fillers = [7, 8, 9, 10, 11, 12].map((place) =>
+  rowOf(`f${place}`, { rank: rank(place) })
+)
+
 const featuring = [
   rowOf("top", { rank: rank(1), price: priceOf(30) }),
-  rowOf("v2", { rank: rank(2), price: priceOf(5), badges: [value, openBadge] }),
-  rowOf("r3", { rank: rank(3), price: priceOf(2) }),
-  rowOf("v4", {
-    rank: rank(4),
-    price: priceOf(50),
-    badges: [value, openBadge],
-  }),
-  rowOf("v5", { price: priceOf(1), badges: [value, openBadge] }),
-  rowOf("e"),
+  rowOf("same", { rank: rank(2), price: priceOf(29.5), badges: [value] }),
+  rowOf("mid", { rank: rank(3), price: priceOf(5), badges: [openBadge] }),
+  rowOf("low", { rank: rank(4), price: priceOf(1) }),
+  rowOf("o5", { rank: rank(5), price: priceOf(2), badges: [openBadge] }),
+  rowOf("o6", { rank: rank(6), price: priceOf(1), badges: [openBadge] }),
+  ...fillers,
+  rowOf("u", { price: priceOf(0.5) }),
 ]
+
+const featuringIds = featuring.map((row) => row.id)
 
 function labels(): (string | null)[] {
   return [...document.querySelectorAll("[data-slot='model-list-label']")].map(
@@ -204,60 +208,74 @@ function labels(): (string | null)[] {
   )
 }
 
+function valued(section: string): string[] {
+  return [
+    ...document.querySelectorAll<HTMLElement>(
+      `[data-section='${section}'] [data-slot='model-row']`
+    ),
+  ]
+    .filter((row) => row.textContent?.includes("Best value") === true)
+    .map(
+      (row) =>
+        row.querySelector<HTMLElement>("[data-model]")?.dataset.model ?? ""
+    )
+}
+
 describe("ModelPicker's Featured", () => {
-  it("holds the #1, then the Best value models in rank order, at most three, above All models, which still lists them, and no other section", () => {
+  it("holds the Pareto line of the top quarter, best ranked first and each cheaper than every model above it, above All models, which still lists them, and no other section", () => {
     openPicker({ rows: featuring })
-    expect(shownIds("featured")).toEqual(["top", "v2", "v4"])
-    expect(shownIds("all")).toEqual(["top", "v2", "r3", "v4", "v5", "e"])
+    expect(shownIds("featured")).toEqual(["top", "mid"])
+    expect(shownIds("all")).toEqual(featuringIds)
     expect(labels()).toEqual(["Featured", "All models"])
     expect(sectionIds()).toEqual(["featured", "all"])
   })
 
-  it("shows the #1 once when it is also a Best value model", () => {
-    openPicker({
-      rows: [
-        rowOf("top", { rank: rank(1), badges: [value] }),
-        rowOf("v2", { rank: rank(2), badges: [value] }),
-        rowOf("r3", { rank: rank(3) }),
-      ],
-    })
-    expect(shownIds("featured")).toEqual(["top", "v2"])
+  it("leaves out a model at the same whole price as a better ranked one, and a cheaper model below the top quarter", () => {
+    openPicker({ rows: featuring })
+    expect(shownIds("featured")).not.toContain("same")
+    expect(shownIds("featured")).not.toContain("low")
+    expect(shownIds("featured")).not.toContain("u")
+  })
+
+  it("marks Best value on the line's models in both sections and on no other, whatever badge a row brings", () => {
+    openPicker({ rows: featuring })
+    expect(valued("featured")).toEqual(["top", "mid"])
+    expect(valued("all")).toEqual(["top", "mid"])
   })
 
   it("keeps its rank order whatever Sort holds, while All models follows the chosen order", async () => {
     openPicker({ rows: featuring })
     await choose("Sort by", "Price")
     await choose("Order", "Low to high")
-    expect(shownIds("featured")).toEqual(["top", "v2", "v4"])
-    expect(shownIds("all")).toEqual(["v5", "r3", "v2", "top", "v4", "e"])
+    expect(shownIds("featured")).toEqual(["top", "mid"])
+    expect(shownIds("all").slice(0, 3)).toEqual(["u", "low", "o6"])
   })
 
   it("obeys the search, and hides with its heading when nothing in it matches", () => {
     openPicker({ rows: featuring })
     const search = screen.getByRole("searchbox", { name: "Search models" })
-    fireEvent.change(search, { target: { value: "v4" } })
-    expect(shownIds("featured")).toEqual(["v4"])
-    expect(shownIds("all")).toEqual(["v4"])
-    fireEvent.change(search, { target: { value: "r3" } })
+    fireEvent.change(search, { target: { value: "mid" } })
+    expect(shownIds("featured")).toEqual(["mid"])
+    expect(shownIds("all")).toEqual(["mid"])
+    fireEvent.change(search, { target: { value: "low" } })
     expect(shownIds("featured")).toEqual([])
-    expect(shownIds("all")).toEqual(["r3"])
+    expect(shownIds("all")).toEqual(["low"])
     expect(labels()).toEqual([])
   })
 
-  it("obeys the Open weights only switch", async () => {
+  it("computes the line over the open models alone under Open weights only", async () => {
     openPicker({ rows: featuring })
     const menu = await openSort()
     fireEvent.click(
       within(menu).getByRole("menuitemcheckbox", { name: "Open weights only" })
     )
-    expect(shownIds("featured")).toEqual(["v2", "v4"])
-    expect(shownIds("all")).toEqual(["v2", "v4", "v5"])
+    expect(shownIds("featured")).toEqual(["mid"])
+    expect(shownIds("all")).toEqual(["mid", "o5", "o6"])
   })
 
-  it("hides when no model is ranked or marked Best value", () => {
-    openPicker({ rows: [rowOf("a"), rowOf("b")] })
+  it("hides when no model is ranked and priced", () => {
+    openPicker({ rows: [rowOf("a", { rank: rank(1) }), rowOf("b")] })
     expect(sectionIds()).toEqual(["all"])
     expect(labels()).toEqual([])
-    expect(shownIds("all")).toEqual(["a", "b"])
   })
 })

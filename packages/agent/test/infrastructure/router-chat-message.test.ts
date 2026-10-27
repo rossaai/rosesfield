@@ -212,7 +212,7 @@ describe("one agent message's credits", () => {
   })
 
   it("bills the repeated part at the published cache read rate of a model that caches, with or without the agent's marker, and at the input rate otherwise", () => {
-    const flash = modelOf(defaultChatModel)
+    const flash = modelOf("deepseek/deepseek-v4.1-flash-1017")
     expect(flash.lab).toBe("deepseek")
     expect(flash.usdPer1M.cacheRead).not.toBeNull()
     expect(repeatedRateOf(flash)).toBe(flash.usdPer1M.cacheRead)
@@ -271,7 +271,7 @@ describe("one agent message's credits", () => {
         usdPer1M: { input: 4, output: 20, cacheRead: null, cacheWrite: null },
       })
     ).toBe(5)
-    const flash = modelOf(defaultChatModel)
+    const flash = modelOf("deepseek/deepseek-v4.1-flash-1017")
     expect(conversationRateOf(flash)).toBe(flash.usdPer1M.input)
   })
 

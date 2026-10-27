@@ -3,7 +3,6 @@ import type { AgentModelDetail } from "@/api/agent-wire"
 type DetailChange = Partial<Omit<AgentModelDetail, "facts">> & {
   rank?: number | null
   order?: number
-  bestValue?: boolean
 }
 
 const board = {
@@ -15,7 +14,7 @@ const board = {
 
 /** A chat model's row as the gateway lists it, from a few of its fields. */
 export function agentDetailOf(change: DetailChange = {}): AgentModelDetail {
-  const { rank = 1, order = 1, bestValue = false, ...rest } = change
+  const { rank = 1, order = 1, ...rest } = change
   const efforts = rest.efforts ?? []
   const messages =
     efforts.length > 1
@@ -36,7 +35,7 @@ export function agentDetailOf(change: DetailChange = {}): AgentModelDetail {
           order,
           of: 274,
           sources: rank === null ? [] : [board],
-          tiers: bestValue ? ["bestValue"] : [],
+          tiers: [],
         },
       },
     },

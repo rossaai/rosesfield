@@ -20,6 +20,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  window.localStorage.clear()
 })
 
 const listed = appListing.parse(findApp("image"))
@@ -59,6 +60,22 @@ const flux: CatalogModel = {
       default: "auto",
     },
   ],
+  facts: {
+    lab: null,
+    release: null,
+    weights: null,
+    lineKey: null,
+    scores: {
+      "text-to-image": {
+        score: 89,
+        rank: 1,
+        order: 1,
+        of: 3,
+        sources: [],
+        tiers: [],
+      },
+    },
+  },
 }
 
 function graph(id: string): CatalogModel {
@@ -116,7 +133,7 @@ function useFormAt(seed: FormValues, source: FormSource): AppForm {
   }
 }
 
-function openWith(seed: FormValues, source: FormSource) {
+function openHosted(seed: FormValues, source: FormSource, app = image) {
   const client = new QueryClient()
   client.setQueryData(["settings"], { engine: { key: "set" } })
   const wrapper = ({ children }: { children: ReactNode }) => (
@@ -125,8 +142,8 @@ function openWith(seed: FormValues, source: FormSource) {
   const view = renderHook(
     () => {
       const form = useFormAt(seed, source)
-      useHostedModel(image, form)
-      return form
+      const hosted = useHostedModel(app, form)
+      return { form, hosted }
     },
     { wrapper }
   )
@@ -134,7 +151,15 @@ function openWith(seed: FormValues, source: FormSource) {
     client.setQueryData(["models", "image", "set"], list)
   })
   view.rerender()
-  return view.result.current.values
+  return view
+}
+
+function openWith(
+  seed: FormValues,
+  source: FormSource,
+  app = image
+): FormValues {
+  return openHosted(seed, source, app).result.current.form.values
 }
 
 describe("the model a form opens on when the model list arrives", () => {
@@ -157,8 +182,119 @@ describe("the model a form opens on when the model list arrives", () => {
     expect(openWith(placed, "placed")).toEqual(placed)
   })
 
-  it("moves an untouched form to the task's default model", () => {
+  it("moves an untouched form to the #1 by rank when nothing is kept", () => {
     const values = openWith(defaultsOf(image), "defaults")
     expect(values.inputs.model).toBe("bfl/flux-3-image")
+  })
+})
+
+const lastUsedKey = "rosesfield.app.last-used"
+
+function keep(record: unknown): void {
+  window.localStorage.setItem(lastUsedKey, JSON.stringify({ image: record }))
+}
+
+function kept(): unknown {
+  const raw = window.localStorage.getItem(lastUsedKey)
+  return raw === null ? null : JSON.parse(raw).image
+}
+
+describe("the model and settings you last used in an app", () => {
+  it("opens an untouched form on the model, its settings, the count and the format you last used", () => {
+    keep({
+      model: "qwen-image-2512",
+      settings: {},
+      count: 3,
+      aspectRatio: "16:9",
+    })
+    const values = openWith(defaultsOf(image), "defaults")
+    expect(values.inputs.model).toBe("qwen-image-2512")
+    expect(values.count).toBe(3)
+    expect(values.aspectRatio).toBe("16:9")
+  })
+
+  it("restores a hosted model's own setting, and keeps the prompt out", () => {
+    keep({
+      model: "bfl/flux-3-image",
+      settings: { aspectRatio: "16:9", prompt: "kept words" },
+      count: 1,
+      aspectRatio: null,
+    })
+    const values = openWith(defaultsOf(image), "defaults")
+    expect(values.inputs.model).toBe("bfl/flux-3-image")
+    expect(values.inputs.aspectRatio).toBe("16:9")
+    expect(values.inputs.prompt).not.toBe("kept words")
+  })
+
+  it("keeps nothing on opening, so a new #1 still reaches a person who chose nothing", () => {
+    openWith(defaultsOf(image), "defaults")
+    expect(kept()).toBeNull()
+  })
+
+  it("keeps the model you choose and its settings, for the next visit", () => {
+    const view = openHosted(defaultsOf(image), "defaults")
+    act(() => {
+      view.result.current.hosted.choose("qwen-image-2512")
+    })
+    view.rerender()
+    expect(kept()).toEqual({
+      model: "qwen-image-2512",
+      settings: {},
+      count: defaultsOf(image).count,
+      aspectRatio: defaultsOf(image).aspectRatio,
+    })
+    act(() => {
+      view.result.current.hosted.choose("bfl/flux-3-image")
+    })
+    view.rerender()
+    expect(kept()).toMatchObject({
+      model: "bfl/flux-3-image",
+      settings: { aspectRatio: "auto" },
+    })
+  })
+
+  it("lets a Recreate of a run fill the form its own way, and keeps nothing until you change it", () => {
+    const record = {
+      model: "qwen-image-2512",
+      settings: {},
+      count: 3,
+      aspectRatio: null,
+    }
+    keep(record)
+    const seeded = valuesFromRun(image, runOf("z-image-turbo"))
+    expect(openWith(seeded, "seed")).toEqual(seeded)
+    expect(kept()).toEqual(record)
+  })
+
+  it("keeps a mode with a model default of its own on that default, and reads and keeps nothing for it", () => {
+    const mode = appListing.parse({
+      ...listed,
+      inputs: listed.inputs.map((input) =>
+        input.name === "model" && input.type === "choice"
+          ? { ...input, default: "qwen-image-2512" }
+          : input
+      ),
+    })
+    const record = {
+      model: "bfl/flux-3-image",
+      settings: {},
+      count: 3,
+      aspectRatio: null,
+    }
+    keep(record)
+    const view = openHosted(defaultsOf(mode), "defaults", mode)
+    expect(view.result.current.form.values.inputs.model).toBe("qwen-image-2512")
+    act(() => {
+      view.result.current.hosted.choose("z-image-turbo")
+    })
+    view.rerender()
+    expect(kept()).toEqual(record)
+  })
+
+  it("drops a kept model the catalog no longer lists, and opens on the #1", () => {
+    keep({ model: "gone/model", settings: {}, count: 3, aspectRatio: null })
+    const values = openWith(defaultsOf(image), "defaults")
+    expect(values.inputs.model).toBe("bfl/flux-3-image")
+    expect(values.count).toBe(defaultsOf(image).count)
   })
 })

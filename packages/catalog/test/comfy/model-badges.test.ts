@@ -61,13 +61,8 @@ describe("the badges a model's facts allow", () => {
     expect(kindsOf(factsWith({ scores: { [task]: tail } }))).toEqual([])
   })
 
-  it("marks Best value only where the table names that tier for the task", () => {
-    const value = scoreWith({ tiers: ["bestValue"] })
-    const costly = scoreWith({ tiers: ["costly", "bestQuality"] })
-    expect(kindsOf(factsWith({ scores: { [task]: value } }))).toEqual([
-      "rank",
-      "value",
-    ])
+  it("marks no Best value from the table's tiers, because the model picker computes it from the prices its rows show", () => {
+    const costly = scoreWith({ tiers: ["costly", "bestQuality", "cheapest"] })
     expect(kindsOf(factsWith({ scores: { [task]: costly } }))).toEqual(["rank"])
   })
 
@@ -88,16 +83,16 @@ describe("the badges a model's facts allow", () => {
     expect(kindsOf(factsWith({}))).toEqual([])
   })
 
-  it("orders the rank, New, Best value and Open weights when a model holds every fact", () => {
+  it("orders the rank, New and Open weights when a model holds every fact", () => {
     expect(
       kindsOf(
         factsWith({
           release: "2026-10-10",
-          scores: { [task]: scoreWith({ rank: 1, tiers: ["bestValue"] }) },
+          scores: { [task]: scoreWith({ rank: 1, tiers: ["cheapest"] }) },
           weights: "https://huggingface.co/maker/open",
         })
       )
-    ).toEqual(["rank", "new", "value", "open-weights"])
+    ).toEqual(["rank", "new", "open-weights"])
   })
 
   it("reads a task's score only from the model's own scores, not from a name an object inherits", () => {

@@ -52,14 +52,9 @@ export function topOrderOf<T extends RankedModel>(
     .map((one) => one.model)
 }
 
-export function defaultIdOf(
-  declared: string | null,
-  models: readonly RankedModel[]
-): string | null {
-  if (declared !== null && models.some((model) => model.id === declared)) {
-    return declared
-  }
-  return topOrderOf(models, mainTaskOf(models))[0]?.id ?? declared
+/** The model an app opens on when you have used none in it: its #1 by rank, the first Featured model whenever the #1 shows a price. */
+export function defaultIdOf(models: readonly RankedModel[]): string | null {
+  return topOrderOf(models, mainTaskOf(models))[0]?.id ?? null
 }
 
 export function taskBoardsOf(
