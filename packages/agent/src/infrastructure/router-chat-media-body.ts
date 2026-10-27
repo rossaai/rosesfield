@@ -22,6 +22,7 @@ import {
   turnOf,
 } from "#infrastructure/router-chat-media-ledger"
 import { routerChatModelOf } from "#infrastructure/router-chat-models"
+import { textsOf, withTexts } from "#infrastructure/router-chat-tool-text"
 
 type Message = Record<string, unknown>
 
@@ -168,11 +169,12 @@ async function expandedOf(
 
 /** Whether a tool result is one whose image pi attaches: `read_asset`'s facts of an image or a 3D model that came with its picture. */
 function ownsImage(message: Message): boolean {
-  if (typeof message.content !== "string") {
+  const text = textsOf(message)?.[0]
+  if (text === undefined) {
     return false
   }
   try {
-    const facts: unknown = JSON.parse(message.content.split("\n")[0] ?? "")
+    const facts: unknown = JSON.parse(text.split("\n")[0] ?? "")
     const asset = isRecord(facts) ? facts.asset : undefined
     const kind = isRecord(asset) ? asset.kind : undefined
     const note = isRecord(facts) ? facts.note : undefined
@@ -209,16 +211,16 @@ function sizeOf(batch: Batch): number {
   return batch.tools.length + (batch.attachment === null ? 0 : 1)
 }
 
+function earlierTextOf(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => (markLine.test(line) ? agentCopy.media.earlier : line))
+    .join("\n")
+}
+
 function earlierToolOf(message: Message): Message {
-  return typeof message.content === "string"
-    ? {
-        ...message,
-        content: message.content
-          .split("\n")
-          .map((line) => (markLine.test(line) ? agentCopy.media.earlier : line))
-          .join("\n"),
-      }
-    : message
+  const texts = textsOf(message)
+  return texts === null ? message : withTexts(message, texts.map(earlierTextOf))
 }
 
 function earlierAttachmentOf(message: Message): Message {
@@ -269,6 +271,31 @@ function imageOf(part: Part, key: string, rewrite: Rewrite): Part {
   return part
 }
 
+/** A tool result's text with each mark line replaced by its note, and each medium it reads added to `attached` in order. */
+async function expandedTextOf(
+  text: string,
+  at: number,
+  rewrite: Rewrite,
+  attached: Part[]
+): Promise<string> {
+  const lines: string[] = []
+  for (const line of text.split("\n")) {
+    const assetId = markLine.exec(line)?.[1]
+    if (assetId === undefined) {
+      lines.push(line)
+    } else {
+      const expanded = await expandedOf(assetId, `${at}:${assetId}`, rewrite)
+      if (expanded.note !== null) {
+        lines.push(expanded.note)
+      }
+      if (expanded.part !== null) {
+        attached.push(expanded.part)
+      }
+    }
+  }
+  return lines.join("\n")
+}
+
 /** One step's tool results and pi's attachment of their images, with each medium counted in the order the step read it. */
 async function newBatchOf(batch: Batch, rewrite: Rewrite): Promise<Message[]> {
   const parts =
@@ -289,29 +316,15 @@ async function newBatchOf(batch: Batch, rewrite: Rewrite): Promise<Message[]> {
   const attached: Part[] = []
   const tools: Message[] = []
   for (const { at, message } of batch.tools) {
-    if (typeof message.content !== "string") {
+    const texts = textsOf(message)
+    if (texts === null) {
       tools.push(message)
     } else {
-      const lines: string[] = []
-      for (const line of message.content.split("\n")) {
-        const assetId = markLine.exec(line)?.[1]
-        if (assetId === undefined) {
-          lines.push(line)
-        } else {
-          const expanded = await expandedOf(
-            assetId,
-            `${at}:${assetId}`,
-            rewrite
-          )
-          if (expanded.note !== null) {
-            lines.push(expanded.note)
-          }
-          if (expanded.part !== null) {
-            attached.push(expanded.part)
-          }
-        }
+      const sent: string[] = []
+      for (const text of texts) {
+        sent.push(await expandedTextOf(text, at, rewrite, attached))
       }
-      tools.push({ ...message, content: lines.join("\n") })
+      tools.push(withTexts(message, sent))
     }
     keepImages(at)
   }

@@ -28,6 +28,7 @@ import {
   routerChat,
   routerChatData,
 } from "#infrastructure/router-chat-models"
+import { marksCache } from "#infrastructure/router-chat-rates"
 
 export type RouterChatProviderOptions = {
   keyOf: () => string | null
@@ -84,6 +85,8 @@ function chatModelOf(model: RouterChatModel): Model<"openai-completions"> {
       supportsStore: false,
       maxTokensField: "max_tokens",
       thinkingFormat: "openrouter",
+      supportsLongCacheRetention: false,
+      ...(marksCache(model) ? { cacheControlFormat: "anthropic" } : {}),
     },
   }
 }
