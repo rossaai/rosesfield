@@ -1,7 +1,12 @@
 import { autoRunLimitCredits } from "@rosesfield/catalog/comfy"
 import { ChipSelect } from "@rosesfield/ui/components/chip-select"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { GaugeIcon, SparklesIcon, UserCheckIcon } from "lucide-react"
+import {
+  ArrowUpIcon,
+  GaugeIcon,
+  SparklesIcon,
+  UserCheckIcon,
+} from "lucide-react"
 import type { ReactElement } from "react"
 import type { AgentEffort, RunApproval } from "@/api/conversation-wire"
 import { formatAmount, formatEstimate } from "@/copy/format"
@@ -54,7 +59,6 @@ function RunModeChip(): ReactElement {
       display={chosen.label}
       onValueChange={keepRunApproval}
       options={modes}
-      compact="icon"
     />
   )
 }
@@ -91,7 +95,6 @@ function EffortChip(): ReactElement | null {
       display={t(effortWords[effort])}
       onValueChange={(next) => keepEffort(model, next)}
       options={options}
-      compact="icon"
     />
   )
 }
@@ -137,6 +140,7 @@ export function AgentComposer(props: AgentComposerProps): ReactElement {
       label={t("agent.prompt.label")}
       placeholder={t("agent.prompt.placeholder")}
       submitLabel={t("agent.send")}
+      submitIcon={<ArrowUpIcon aria-hidden="true" />}
       onSubmit={send}
       chips={
         <>

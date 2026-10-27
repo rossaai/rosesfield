@@ -106,7 +106,7 @@ describe("the agent composer's Effort", () => {
     expect(order).toEqual([...order].sort((a, b) => a - b))
   })
 
-  it("on a phone shows Effort and the run mode as their icons alone, named by their labels, and gives the model chip the room left", async () => {
+  it("on a phone keeps the words of Effort, the run mode and the model in the sideways chip row, none of them shrinking", async () => {
     renderAgent(() => <Composer />, "/agent", undefined, listed)
     const effort = await waitFor(() => {
       const found = effortChip()
@@ -117,23 +117,24 @@ describe("the agent composer's Effort", () => {
     })
     const mode = screen.getByRole("combobox", { name: t("agent.mode.label") })
     const row = document.querySelector("[data-slot='chip-row']")
+    expect(row?.className.split(" ")).toContain("*:shrink-0")
     for (const chip of [effort, mode]) {
       expect(row?.contains(chip)).toBe(true)
-      expect(chip.getAttribute("data-compact")).toBe("icon")
-      expect(
-        chip.querySelector("[data-slot='select-value']")?.className.split(" ")
-      ).toContain("@max-regular:hidden")
+      const value = chip.querySelector("[data-slot='select-value']")
+      expect(value?.textContent).not.toBe("")
+      expect(chip.className).not.toContain("@max-regular:")
+      expect(value?.className ?? "").not.toContain("hidden")
     }
-    const chips = row?.querySelectorAll("[data-slot='chip-select']") ?? []
-    expect([...chips].map((chip) => chip.getAttribute("data-compact"))).toEqual(
-      ["icon", "icon"]
-    )
+    expect(
+      effort.querySelector("[data-slot='select-value']")?.textContent
+    ).toBe(t("agent.effort.high"))
     const model = screen.getByRole("button", {
       name: `${t("model.picker.title")} DeepSeek V4.1 Flash 1017`,
     })
     expect(row?.contains(model)).toBe(true)
+    expect(model.className).not.toContain("@max-regular:")
     expect(model.className.split(" ")).toContain(
-      "@max-regular:in-data-[density=composer]:shrink"
+      "in-data-[density=composer]:shrink-0"
     )
   })
 

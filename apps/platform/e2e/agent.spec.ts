@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test"
+import { expect, type Locator, type Page, test } from "@playwright/test"
 
 const ownerSettings = {
   settings: {
@@ -96,7 +96,17 @@ const flashDetail = {
   ],
 }
 
-test("on a phone the Effort and run mode chips sit inside the composer's visible box", async ({
+type Box = { x: number; y: number; width: number; height: number }
+
+async function boxOf(locator: Locator): Promise<Box> {
+  const box = await locator.boundingBox()
+  if (box === null) {
+    throw new Error("The element has no box")
+  }
+  return box
+}
+
+test("on a phone the composer reads as a phone composer: the field across the top, then the chips with their words and Send in one row", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "phone", "the phone layout")
@@ -106,28 +116,77 @@ test("on a phone the Effort and run mode chips sit inside the composer's visible
     refusal: null,
     details: { [flash]: flashDetail },
   })
-  const row = page.locator("[data-bar='prompt'] [data-slot='chip-row']")
+  const bar = page.locator("[data-bar='prompt']")
+  const field = bar.getByRole("textbox", { name: "Message" })
+  await expect(field).toBeVisible()
+  const composer = await boxOf(bar)
+  const fieldBox = await boxOf(field)
+  expect(fieldBox.width).toBeGreaterThanOrEqual(composer.width - 26)
+
+  const row = bar.locator("[data-slot='chip-row']")
+  const toolbar = await boxOf(bar.locator("[data-slot='composer-toolbar']"))
+  expect(toolbar.y).toBeGreaterThan(fieldBox.y)
+  const send = bar.getByRole("button", { name: "Send", exact: true })
+  await expect(send).toBeVisible()
+  const sendBox = await boxOf(send)
+  expect(sendBox.width).toBe(sendBox.height)
+  expect(sendBox.x + sendBox.width).toBeLessThanOrEqual(
+    composer.x + composer.width
+  )
+  const sendMiddle = sendBox.y + sendBox.height / 2
+  expect(sendMiddle).toBeGreaterThan(toolbar.y)
+  expect(sendMiddle).toBeLessThan(toolbar.y + toolbar.height)
+  expect(sendBox.x).toBeGreaterThanOrEqual(toolbar.x + toolbar.width)
+
+  const gutter = await row.evaluate(
+    (element: HTMLElement) => element.offsetHeight - element.clientHeight
+  )
+  expect(gutter).toBe(0)
   const chips = [
-    page.getByRole("combobox", { name: "Effort" }),
-    page.getByRole("combobox", { name: "Run mode" }),
-    page.getByRole("button", { name: /^Model Deepseek V4 Flash$/i }),
+    { chip: bar.getByRole("combobox", { name: "Effort" }), words: "High" },
+    { chip: bar.getByRole("combobox", { name: "Run mode" }), words: "Auto" },
+    {
+      chip: bar.getByRole("button", { name: /^Model Deepseek V4 Flash$/i }),
+      words: "DeepSeek V4 Flash",
+    },
   ]
-  for (const chip of chips) {
-    await expect(chip).toBeVisible()
+  for (const { chip, words } of chips) {
+    await chip.scrollIntoViewIfNeeded()
+    await expect(chip.getByText(words, { exact: true })).toBeVisible()
+    const shown = await boxOf(row)
+    const box = await boxOf(chip)
+    expect(box.x).toBeGreaterThanOrEqual(shown.x - 1)
+    expect(box.x + box.width).toBeLessThanOrEqual(shown.x + shown.width + 1)
   }
-  const shown = await row.evaluate((element) => {
-    const box = element.getBoundingClientRect()
-    return {
-      left: box.left,
-      right: box.right,
-      overflow: element.scrollWidth - element.clientWidth,
-    }
+})
+
+test("on a phone the empty agent screen centers its heading in the space between the header and the composer", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "phone", "the phone layout")
+  await openAgent(page, {
+    models: [flash, "qwen/qwen3.6-flash"],
+    model: flash,
+    refusal: null,
+    details: { [flash]: flashDetail },
   })
-  expect(shown.overflow).toBe(0)
-  for (const chip of chips) {
-    const box = await chip.boundingBox()
-    expect(box).not.toBeNull()
-    expect(box?.x ?? -1).toBeGreaterThanOrEqual(shown.left)
-    expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(shown.right)
-  }
+  const bar = page.locator("[data-bar='prompt']")
+  await expect(bar.getByRole("textbox", { name: "Message" })).toBeVisible()
+  const block = page.locator("[data-slot='agent-start-heading']")
+  await expect(
+    block.getByRole("heading", { name: "What should the agent make?" })
+  ).toBeVisible()
+  const space = await block.evaluate((element) => {
+    const parent = element.parentElement
+    if (parent === null) {
+      throw new Error("The heading has no space")
+    }
+    const box = parent.getBoundingClientRect()
+    return { top: box.top, bottom: box.bottom }
+  })
+  const composer = await boxOf(bar)
+  expect(space.bottom - (composer.y + composer.height)).toBeLessThanOrEqual(24)
+  const heading = await boxOf(block)
+  const free = (space.top + composer.y) / 2
+  expect(Math.abs(heading.y + heading.height / 2 - free)).toBeLessThanOrEqual(8)
 })

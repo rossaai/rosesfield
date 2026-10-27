@@ -17,6 +17,7 @@ type DraftBarProps = {
   label: string
   placeholder: string
   submitLabel: string
+  submitIcon?: ReactNode
   onSubmit: () => void
   chips?: ReactNode
   price?: ReactNode
@@ -97,6 +98,7 @@ export function DraftBar(props: DraftBarProps): ReactElement {
         label={props.label}
         placeholder={props.placeholder}
         submitLabel={props.submitLabel}
+        submitIcon={props.submitIcon}
         removeLabel={t("bar.attachment.remove")}
         attachments={attachments}
         onRemoveAttachment={state.removeAttachment}

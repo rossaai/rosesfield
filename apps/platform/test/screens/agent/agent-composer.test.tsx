@@ -136,6 +136,37 @@ describe("the agent composer", () => {
     expect(toolbar?.contains(send)).toBe(false)
   })
 
+  it("on a phone puts Send at the end of the toolbar row as a round ArrowUp named Send, after the chips", async () => {
+    renderComposer()
+    await field()
+    const send = screen.getByRole("button", { name: t("agent.send") })
+    const glyph = send.querySelector("[data-slot='generate-button-glyph']")
+    expect(glyph?.querySelector("svg")?.getAttribute("class")).toContain(
+      "lucide-arrow-up"
+    )
+    expect(classesOf(glyph)).toContain("@regular:hidden")
+    expect(
+      classesOf(send.querySelector("[data-slot='generate-button-label']"))
+    ).toEqual(expect.arrayContaining(["sr-only", "@regular:not-sr-only"]))
+    expect(classesOf(send)).toEqual(
+      expect.arrayContaining([
+        "rounded-full",
+        "w-button-dense",
+        "h-button-dense",
+        "[grid-area:send]",
+      ])
+    )
+    const body = document.querySelector("[data-slot='prompt-body']")
+    expect(body?.className).toContain(
+      "[grid-template-areas:'content_content'_'tools_send']"
+    )
+    const toolbar = document.querySelector('[data-slot="composer-toolbar"]')
+    expect(classesOf(toolbar)).toContain("[grid-area:tools]")
+    expect(toolbar?.parentElement).toBe(body)
+    expect(send.parentElement).toBe(body)
+    expect(isBefore(toolbar ?? undefined, send)).toBe(true)
+  })
+
   it("draws its + and @ exactly as the same buttons in an app's bar", async () => {
     renderComposer()
     await field()
