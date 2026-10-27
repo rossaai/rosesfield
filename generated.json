@@ -72,7 +72,7 @@
     },
     {
       "path": "apps/platform/src/copy/agent.en.ts",
-      "sha256": "2f1958537309e7ca10fad3b89b3d4164d9b6b213d9d4df9e7da6532ce9d8b58b"
+      "sha256": "f4393244a326488726d9a2120504d6704495e6c38b39df256ba8fb94ccc89089"
     },
     {
       "path": "apps/platform/src/copy/app.en.ts",
@@ -132,7 +132,7 @@
     },
     {
       "path": "packages/agent/src/copy.en.ts",
-      "sha256": "619537cb626e2acb4bff52338e68e849edcb24811ebb47ae394f335ffd921d68"
+      "sha256": "fda506e8106411680f621772fc6dbaa6a5b7fb4658078701d3cb2b9db8f67f10"
     },
     {
       "path": "packages/catalog/src/ads/copy.en.ts",
