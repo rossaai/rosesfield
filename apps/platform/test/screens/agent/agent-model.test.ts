@@ -30,7 +30,6 @@ describe("agentStateOf", () => {
   const listed = {
     models: ["deepseek/deepseek-v4-flash"],
     model: "deepseek/deepseek-v4-flash",
-    recent: [],
     refusal: null,
     details: {},
   }
@@ -45,7 +44,6 @@ describe("agentStateOf", () => {
       agentStateOf("ready", {
         models: [],
         model: null,
-        recent: [],
         refusal: { code: "ENGINE_NOT_ENABLED", status: 412 },
         details: {},
       })
@@ -54,7 +52,6 @@ describe("agentStateOf", () => {
       agentStateOf("ready", {
         models: [],
         model: null,
-        recent: [],
         refusal: null,
         details: {},
       })

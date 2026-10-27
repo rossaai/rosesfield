@@ -20,7 +20,7 @@ export const words: ModelPickerWords = {
   orderDown: "High to low",
   orderUp: "Low to high",
   openOnly: "Open weights only",
-  recent: "Recent",
+  featured: "Featured",
   all: "All models",
 }
 
@@ -63,19 +63,24 @@ export function openPicker(
   )
 }
 
-export function shownIds(section?: "recent" | "all"): string[] {
-  const options =
-    section === undefined
-      ? screen.getAllByRole("option")
-      : screen
-          .getAllByRole("option")
-          .filter(
-            (one) =>
-              one
-                .closest("[data-slot='model-list-section']")
-                ?.getAttribute("data-section") === section
-          )
-  return options.map((row) => row.dataset.model ?? "")
+export function shownIds(section: "featured" | "all" = "all"): string[] {
+  return screen
+    .queryAllByRole("option")
+    .filter(
+      (one) =>
+        one
+          .closest("[data-slot='model-list-section']")
+          ?.getAttribute("data-section") === section
+    )
+    .map((row) => row.dataset.model ?? "")
+}
+
+export function sectionIds(): string[] {
+  return [
+    ...document.querySelectorAll<HTMLElement>(
+      "[data-slot='model-list-section']"
+    ),
+  ].map((one) => one.dataset.section ?? "")
 }
 
 export function rowElementOf(name: string, section = "all"): HTMLElement {

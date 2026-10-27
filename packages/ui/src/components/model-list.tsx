@@ -28,7 +28,7 @@ function LoadingRows(): ReactElement {
 }
 
 type ListSection = {
-  id: "recent" | "all"
+  id: "featured" | "all"
   label: string
   rows: readonly ModelPickerRow[]
 }
@@ -101,7 +101,7 @@ function ModelList(props: {
   isRefused: boolean
   onChoose: (id: string) => void
 }): ReactNode {
-  const [recent, all] = props.sections
+  const [featured, all] = props.sections
   const hasAll = all !== undefined && hasShownRow(all.rows, props.needle)
   if (!hasAll) {
     return props.isRefused && props.needle === "" ? null : (
@@ -109,9 +109,9 @@ function ModelList(props: {
     )
   }
   const hasLabel =
-    recent !== undefined &&
-    recent.rows.length > 0 &&
-    hasShownRow(recent.rows, props.needle)
+    featured !== undefined &&
+    featured.rows.length > 0 &&
+    hasShownRow(featured.rows, props.needle)
   return (
     <div
       role="listbox"

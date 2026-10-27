@@ -3,14 +3,12 @@ import type {
   ModelFacts,
   TaskScore,
 } from "@rosesfield/catalog/comfy"
-import { type Run, run } from "@rosesfield/contract"
 import { isValidElement } from "react"
 import { describe, expect, it } from "vitest"
 import { catalogRowsOf } from "@/screens/app/hosted/catalog-picker"
 import {
   defaultIdOf,
   mainTaskOf,
-  recentModelsOf,
   taskBoardsOf,
   topOrderOf,
 } from "@/screens/app/hosted/model-sections"
@@ -109,39 +107,6 @@ describe("the Top order of an app's models", () => {
       taskBoardsOf(models, "text-to-image").map((one) => one.board)
     ).toEqual(["Picture Arena", "Second Arena"])
     expect(taskBoardsOf(models, null)).toEqual([])
-  })
-})
-
-function runOf(createdAt: string, model: string | number | undefined): Run {
-  return run.parse({
-    id: "7c2e4a6c-8e0a-4c2e-8a4c-6e8a0c2e4a03",
-    appId: "image",
-    status: "done",
-    inputs: model === undefined ? {} : { model, prompt: "a fox" },
-    count: 1,
-    aspectRatio: null,
-    seed: null,
-    outputs: [],
-    progress: null,
-    engine: { adapter: "comfy-router", models: [], workflowHash: null },
-    cost: null,
-    origin: "live",
-    failure: null,
-    createdAt,
-    finishedAt: null,
-  })
-}
-
-describe("the models of your recent runs", () => {
-  it("lists each model your runs used once, newest run first, and skips a run with no model", () => {
-    const runs = [
-      runOf("2026-10-20T10:00:00.000Z", "lab/old"),
-      runOf("2026-10-26T10:00:00.000Z", "lab/new"),
-      runOf("2026-10-25T10:00:00.000Z", "lab/old"),
-      runOf("2026-10-26T11:00:00.000Z", undefined),
-      runOf("2026-10-24T10:00:00.000Z", 3),
-    ]
-    expect(recentModelsOf(runs)).toEqual(["lab/new", "lab/old"])
   })
 })
 

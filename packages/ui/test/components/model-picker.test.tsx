@@ -42,7 +42,7 @@ function open(onChoose = vi.fn(), shown = rows) {
 afterEach(cleanup)
 
 describe("ModelPicker", () => {
-  it("shows one list with a check on the chosen model and no section heading while nothing is recent", () => {
+  it("shows one list with a check on the chosen model and no section heading while nothing is featured", () => {
     open()
     expect(document.querySelector("[data-slot='model-list-label']")).toBeNull()
     const chosen = screen.getByRole("option", { selected: true })
@@ -170,8 +170,9 @@ describe("ModelPicker", () => {
 describe("ModelPicker's Open weights link", () => {
   it("makes the whole badge the link, outside the option, so a click on it never chooses the row, and a click on the name does", () => {
     const onChoose = open(vi.fn(), ranked)
-    const option = screen.getByRole("option", { name: "Model 4" })
-    const weights = within(rowElementOf("Model 4")).getByRole("link", {
+    const row = rowElementOf("Model 4")
+    const option = within(row).getByRole("option", { name: "Model 4" })
+    const weights = within(row).getByRole("link", {
       name: "Open weights",
     })
     expect(weights.getAttribute("href")).toBe(openBadge.href)

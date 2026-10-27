@@ -49,7 +49,6 @@ export const conversations: Conversation[] = [
 export const agentModels: AgentModels = {
   models: ["deepseek/deepseek-v4-flash", "qwen/qwen3.6-flash"],
   model: "deepseek/deepseek-v4-flash",
-  recent: [],
   refusal: null,
   details: {},
 }

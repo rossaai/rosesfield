@@ -285,9 +285,17 @@ export async function aspectsIn(caption: string): Promise<string[]> {
 
 export async function pick(model: CatalogModel): Promise<void> {
   fireEvent.click(await screen.findByRole("button", { name: trigger(zImage) }))
-  fireEvent.click(
-    await screen.findByRole("option", { name: modelNameOf(model) })
+  const rows = await screen.findAllByRole("option", {
+    name: modelNameOf(model),
+  })
+  const row = rows.find(
+    (one) =>
+      one.closest("[data-section]")?.getAttribute("data-section") === "all"
   )
+  if (row === undefined) {
+    throw new Error(`All models lists no ${modelNameOf(model)}`)
+  }
+  fireEvent.click(row)
   await screen.findByRole("button", { name: trigger(model) })
 }
 

@@ -14,7 +14,7 @@ const modelPickerOrders: readonly ModelPickerOrder[] = ["down", "up"]
 
 const firstSort: ModelPickerSort = { by: "rank", order: "down" }
 
-const recentLimit = 3
+const featuredLimit = 3
 
 function isModelPickerSortBy(value: string): value is ModelPickerSortBy {
   return modelPickerSortBys.some((by) => by === value)
@@ -68,22 +68,17 @@ function hasOpenWeights(rows: readonly ModelPickerRow[]): boolean {
   return rows.some(isOpenRow)
 }
 
-function recentRowsOf(
-  rows: readonly ModelPickerRow[],
-  recent: readonly string[]
-): ModelPickerRow[] {
-  const byId = new Map(rows.map((row) => [row.id, row]))
-  const seen = new Set<string>()
-  return recent
-    .flatMap((id) => {
-      const row = byId.get(id)
-      if (row === undefined || seen.has(id)) {
-        return []
-      }
-      seen.add(id)
-      return [row]
-    })
-    .slice(0, recentLimit)
+function isBestValue(row: ModelPickerRow): boolean {
+  return row.badges.some((badge) => badge.kind === "value")
+}
+
+function featuredRowsOf(rows: readonly ModelPickerRow[]): ModelPickerRow[] {
+  const first = rows.find((row) => row.rank !== undefined)
+  const values = rows.filter((row) => row !== first && isBestValue(row))
+  return [...(first === undefined ? [] : [first]), ...values].slice(
+    0,
+    featuredLimit
+  )
 }
 
 function needleOf(query: string): string {
@@ -108,6 +103,8 @@ export type {
   SearchedRow,
 }
 export {
+  featuredLimit,
+  featuredRowsOf,
   firstSort,
   hasOpenWeights,
   isMatch,
@@ -117,8 +114,6 @@ export {
   modelPickerOrders,
   modelPickerSortBys,
   needleOf,
-  recentLimit,
-  recentRowsOf,
   searchedRowsOf,
   sortedRows,
 }

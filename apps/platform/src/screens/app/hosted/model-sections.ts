@@ -4,7 +4,6 @@ import {
   type TaskScore,
   taskScoreOf,
 } from "@rosesfield/catalog/comfy"
-import type { Run } from "@rosesfield/contract"
 
 export type RankedModel = {
   id: string
@@ -74,18 +73,4 @@ export function taskBoardsOf(
     }
   }
   return [...boards.values()]
-}
-
-const modelInputName = "model"
-
-export function recentModelsOf(runs: readonly Run[]): string[] {
-  const newestFirst = [...runs].sort((a, b) =>
-    b.createdAt.localeCompare(a.createdAt)
-  )
-  return ranBeforeOf(
-    newestFirst.map((run) => {
-      const model = run.inputs[modelInputName]
-      return typeof model === "string" && model !== "" ? model : undefined
-    })
-  )
 }
