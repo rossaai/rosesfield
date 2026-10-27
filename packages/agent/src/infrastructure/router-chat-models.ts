@@ -26,7 +26,6 @@ const chatModel = z
     tools: z.literal(true),
     context: z.number().int().min(1),
     inputs: z.array(agentModelInput).max(4),
-    reasons: z.boolean(),
     usdPer1M: z.strictObject({
       input: z.number().min(0),
       output: z.number().min(0),
@@ -36,17 +35,8 @@ const chatModel = z
     placement: z.enum(["score", "version", "release"]),
     boards: z.array(z.string().min(1).max(120)).max(4),
     efforts: z.array(agentEffort).max(7),
-    openEffort: agentEffort.nullable(),
+    defaultEffort: agentEffort.nullable(),
     points: z.array(point).max(12),
-  })
-  .refine(
-    (model) =>
-      model.openEffort === null || model.efforts.includes(model.openEffort),
-    { message: "A model opens on an effort it offers", path: ["openEffort"] }
-  )
-  .refine((model) => model.efforts.length < 2 || model.openEffort !== null, {
-    message: "A model with an effort to choose opens on one",
-    path: ["openEffort"],
   })
   .refine((model) => (model.score === null) === (model.boards.length === 0), {
     message: "A score comes from the boards that hold the model, and only then",
@@ -131,6 +121,22 @@ export function hasEffortChoice(model: RouterChatModel): boolean {
   return model.efforts.length > 1
 }
 
+/** The effort a model opens on: OpenRouter's default effort for it when it offers it, else medium when it offers medium, else the middle level of its efforts, and none for a model with no effort to choose. */
+export function openEffortOf(
+  model: Pick<RouterChatModel, "efforts" | "defaultEffort">
+): AgentEffort | null {
+  const { efforts, defaultEffort } = model
+  if (efforts.length < 2) {
+    return null
+  }
+  if (defaultEffort !== null && efforts.includes(defaultEffort)) {
+    return defaultEffort
+  }
+  return efforts.includes("medium")
+    ? "medium"
+    : (efforts[Math.floor((efforts.length - 1) / 2)] ?? null)
+}
+
 /** The effort a turn sends: the chosen one when the model offers it, else the model's opening effort, and none for a model with no effort to choose. */
 export function turnEffortOf(
   model: string,
@@ -142,7 +148,7 @@ export function turnEffortOf(
   }
   return chosen !== undefined && found.efforts.includes(chosen)
     ? chosen
-    : found.openEffort
+    : openEffortOf(found)
 }
 
 export function isOnLine(model: RouterChatModel): boolean {

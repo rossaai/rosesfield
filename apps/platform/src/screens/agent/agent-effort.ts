@@ -97,13 +97,6 @@ export function effortOf(
     : detail.effort
 }
 
-export function readEffortOf(
-  model: string,
-  detail: AgentModelDetail
-): AgentEffort | null {
-  return effortOf(model, detail, readKeptEfforts())
-}
-
 export type ShownEffort = {
   model: string
   detail: AgentModelDetail

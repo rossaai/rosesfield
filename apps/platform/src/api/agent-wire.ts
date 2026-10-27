@@ -27,10 +27,8 @@ const agentModelDetail = z.object({
   facts: modelFacts,
   context: z.number().int().min(1),
   inputs: z.array(z.enum(agentModelInputs)).max(4),
-  reasons: z.boolean(),
   input: credits,
   output: credits,
-  turn: credits,
   effort: effort.nullable(),
   efforts: z.array(z.object({ effort, turn: credits })).max(7),
 })

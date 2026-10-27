@@ -174,13 +174,13 @@ describe("the agent's models", () => {
   })
 
   it("reads each model's row and drops one it cannot read", () => {
-    const row = agentDetailOf({ name: "Claude Opus 5.5", turn: 12.3 })
+    const row = agentDetailOf({ name: "Claude Opus 5.5", input: 844 })
     expect(
       readAgentModels({
         ...listed,
         details: {
           "anthropic/claude-opus-5.5": row,
-          "qwen/qwen3.6-flash": { ...row, turn: "cheap" },
+          "qwen/qwen3.6-flash": { ...row, input: "cheap" },
           "z-ai/glm-5.3": { ...row, effort: "huge" },
         },
       })?.details

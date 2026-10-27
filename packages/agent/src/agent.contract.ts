@@ -104,10 +104,8 @@ export const agentModelDetail = z.object({
   facts: modelFacts,
   context: z.number().int().min(1),
   inputs: z.array(agentModelInput).max(4),
-  reasons: z.boolean(),
   input: credits,
   output: credits,
-  turn: credits,
   effort: agentEffort.nullable(),
   efforts: z.array(z.object({ effort: agentEffort, turn: credits })).max(7),
 })

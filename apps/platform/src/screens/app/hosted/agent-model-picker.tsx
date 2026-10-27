@@ -7,15 +7,9 @@ import {
 import { ModelChip } from "@rosesfield/ui/components/model-trigger"
 import { type ReactElement, useMemo } from "react"
 import type { AgentModelDetail } from "@/api/agent-wire"
-import type { AgentEffort } from "@/api/conversation-wire"
-import { formatEstimate, joinParts } from "@/copy/format"
+import { formatWholeCredits, joinParts } from "@/copy/format"
 import { t } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
-import {
-  effortOf,
-  readEffortOf,
-  useKeptEfforts,
-} from "@/screens/agent/agent-effort"
 import {
   modelRowsOf,
   pickerWords,
@@ -42,7 +36,7 @@ function detailOf(
 function factsOfDetail(detail: AgentModelDetail): RowFact[] {
   return [
     { kind: "context", tokens: detail.context },
-    ...(detail.reasons ? [{ kind: "reasons" } as const] : []),
+    { kind: "input", input: "text" },
     ...detail.inputs.map((input) => ({ kind: "input", input }) as const),
   ]
 }
@@ -62,46 +56,39 @@ export function chatRowModel(
   }
 }
 
-/** The credits of one typical turn of the model at an effort, or at the effort it opens on. */
-export function turnCreditsOf(
-  detail: AgentModelDetail,
-  effort: AgentEffort | null
-): number {
-  return (
-    detail.efforts.find((one) => one.effort === effort)?.turn ?? detail.turn
-  )
+/** The credits of 1M tokens of the model, 3 input to 1 output. */
+export function blendedCreditsOf(detail: AgentModelDetail): number {
+  return (3 * detail.input + detail.output) / 4
 }
 
-export function turnPriceOf(
-  detail: AgentModelDetail,
-  effort: AgentEffort | null
-): ModelPrice | null {
-  const credits = turnCreditsOf(detail, effort)
+/** A row's price: the model's credits per 1M tokens as a whole number, with its credits per 1M in and out on hover. */
+export function ratePriceOf(detail: AgentModelDetail): ModelPrice | null {
+  const credits = blendedCreditsOf(detail)
   if (credits <= 0) {
     return null
   }
-  const amount = formatEstimate(credits)
+  const amount = formatWholeCredits(credits)
   return {
     amount,
-    name: t("run.price.estimated", { amount }),
+    name: t("agent.model.rate", { credits: amount }),
     credits,
     note: joinParts([
-      t("agent.model.rate.in", { credits: formatEstimate(detail.input) }),
-      t("agent.model.rate.out", { credits: formatEstimate(detail.output) }),
+      t("agent.model.rate.in", { credits: formatWholeCredits(detail.input) }),
+      t("agent.model.rate.out", {
+        credits: formatWholeCredits(detail.output),
+      }),
     ]),
   }
 }
 
-export function turnPricesOf(
+export function ratePricesOf(
   models: readonly string[],
-  details: AgentDetails,
-  effortOf: (model: string, detail: AgentModelDetail) => AgentEffort | null
+  details: AgentDetails
 ): Map<string, ModelPrice> {
   const prices = new Map<string, ModelPrice>()
   for (const model of models) {
     const detail = detailOf(details, model)
-    const price =
-      detail === undefined ? null : turnPriceOf(detail, effortOf(model, detail))
+    const price = detail === undefined ? null : ratePriceOf(detail)
     if (price !== null) {
       prices.set(model, price)
     }
@@ -112,15 +99,11 @@ export function turnPricesOf(
 export function agentRowsOf(
   models: readonly string[],
   details: AgentDetails = {},
-  today: string = todayOf(),
-  effortOf: (
-    model: string,
-    detail: AgentModelDetail
-  ) => AgentEffort | null = readEffortOf
+  today: string = todayOf()
 ): ModelPickerRow[] {
   return modelRowsOf(
     models.map((model) => chatRowModel(model, detailOf(details, model))),
-    { today, prices: turnPricesOf(models, details, effortOf) }
+    { today, prices: ratePricesOf(models, details) }
   )
 }
 
@@ -147,14 +130,7 @@ export function AgentModelPicker({
 }: AgentModelPickerProps): ReactElement {
   const detail = detailOf(details, chosen)
   const name = detail?.name ?? nameOf(chosen)
-  const kept = useKeptEfforts()
-  const rows = useMemo(
-    () =>
-      agentRowsOf(models, details, todayOf(), (model, one) =>
-        effortOf(model, one, kept)
-      ),
-    [models, details, kept]
-  )
+  const rows = useMemo(() => agentRowsOf(models, details), [models, details])
   return (
     <ModelPicker
       trigger={

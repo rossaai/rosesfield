@@ -3,6 +3,7 @@ import type { AgentEffort, AgentModelDetail } from "#agent.contract"
 import {
   defaultChatModel,
   isOnLine,
+  openEffortOf,
   pointOf,
   type RouterChatModel,
   type RouterChatTable,
@@ -28,9 +29,15 @@ function creditsOf(usd: number): number {
 
 function referenceTokensOf(): number | null {
   const base = routerChatModelOf(defaultChatModel)
-  return base === undefined
-    ? null
-    : (pointOf(base, base.openEffort)?.outputTokensPerTask ?? null)
+  if (base === undefined) {
+    return null
+  }
+  const measured = (one: { outputTokensPerTask: number | null } | undefined) =>
+    one?.outputTokensPerTask ?? null
+  return (
+    measured(pointOf(base, openEffortOf(base))) ??
+    measured(base.points.find((one) => one.outputTokensPerTask !== null))
+  )
 }
 
 const referenceTokens = referenceTokensOf()
@@ -46,7 +53,7 @@ function outputTokensOf(
     : (typicalTurn.outputTokens * own) / reference
 }
 
-/** The Comfy credits of a typical turn of a chat model at one effort: the typical turn's input and output tokens times its rates, with the output scaled by that effort's output tokens per task over the default model's where the table holds both. */
+/** The Comfy credits of a typical turn of a chat model at one effort: the typical turn's input and output tokens times its rates, with the output scaled by that effort's output tokens per task over the default model's at its opening effort, or at its first measured effort, where the table holds both. */
 export function turnCreditsOf(
   model: RouterChatModel,
   effort: AgentEffort | null
@@ -112,11 +119,9 @@ export function chatDetailOf(
     facts: factsOf(model, table, lastScored),
     context: model.context,
     inputs: model.inputs,
-    reasons: model.reasons,
     input: creditsOf(model.usdPer1M.input),
     output: creditsOf(model.usdPer1M.output),
-    turn: turnCreditsOf(model, model.openEffort),
-    effort: model.openEffort,
+    effort: openEffortOf(model),
     efforts: model.efforts.map((effort) => ({
       effort,
       turn: turnCreditsOf(model, effort),
@@ -124,7 +129,7 @@ export function chatDetailOf(
   }
 }
 
-/** Reads each listed chat model's row: its rank, what it can do, its credits per million input and output tokens and per typical turn at each effort it offers. */
+/** Reads each listed chat model's row: its rank, what it can do, its credits per million input and output tokens, the effort it opens on and a typical turn's credits at each effort it offers. */
 export function chatDetailsOf(
   models: readonly string[]
 ): Record<string, AgentModelDetail> {

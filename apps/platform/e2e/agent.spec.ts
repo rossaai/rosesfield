@@ -85,10 +85,8 @@ const flashDetail = {
   },
   context: 131_072,
   inputs: [],
-  reasons: true,
   input: 21.1,
   output: 84.4,
-  turn: 0.07,
   effort: "high",
   efforts: [
     { effort: "high", turn: 0.07 },
@@ -130,4 +128,26 @@ test("on a phone the Effort and run mode chips sit inside the composer's visible
     expect(box?.x ?? -1).toBeGreaterThanOrEqual(shown.left)
     expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(shown.right)
   }
+})
+
+test("an agent row ends with the model's whole credits per 1M tokens and its caption starts with text", async ({
+  page,
+}) => {
+  await openAgent(page, {
+    models: [flash],
+    model: flash,
+    refusal: null,
+    details: { [flash]: flashDetail },
+  })
+  await page.getByRole("button", { name: /^Model Deepseek V4 Flash$/i }).click()
+  const row = page.locator("[data-slot='model-row']").filter({
+    has: page.locator(`[data-model='${flash}']`),
+  })
+  await expect(row.first().locator("[data-slot='credit-price']")).toHaveText(
+    "37"
+  )
+  await expect(row.first()).not.toContainText("Reasons")
+  await expect(
+    row.first().locator("[data-slot='model-row-capability'] svg").first()
+  ).toHaveClass(/lucide-type/)
 })

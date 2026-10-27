@@ -4,7 +4,7 @@
     "list": "Every model OpenRouter lists that names tools in its supported parameters, less free variants, colon variants of a listed model, tilde aliases, routers with no fixed price, preview ids whose stable id is listed, and models OpenRouter schedules for removal. Comfy's openrouter/chat-completions route forwards any OpenRouter model id unchanged.",
     "score": "Score: the mean over the boards that hold the model of 100 * (N - p) / (N - 1), p the best position of any row of the model and N the board's rows, rounded half up. Boards: the Artificial Analysis Intelligence Index across every model its model page holds, deprecated ones too, and Arena text with style control. Rank by the unrounded mean, ties to more boards then newer. A model no board holds goes above its line's newest scored version when it is newer, else after the scored models, newest first. A newer version of a model line never ranks below an older one.",
     "points": "Each Artificial Analysis effort row of a model is a point, scored by the same blend over the boards holding that effort, with Artificial Analysis's published cost per task of its Intelligence Index at OpenRouter's price, and its output tokens per task. A point's onLine says whether it sits on the Pareto line of score against cost per task across every model.",
-    "openEffort": "Among the efforts OpenRouter offers for the model: the highest-scoring point on the all-models line, else on its lab's line, else OpenRouter's default effort, else the model's first offered effort."
+    "defaultEffort": "OpenRouter's reasoning.default_effort for the model, as its models list read on the readOn day gives it, or null where it gives none. A model with more than one effort opens on it when it offers it, else on medium when it offers medium, else on the middle level of its efforts."
   },
   "sources": [
     {
@@ -51,7 +51,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 4,
         "output": 20
@@ -64,7 +63,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low"],
-      "openEffort": "max",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -110,7 +109,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 10
@@ -120,7 +118,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["max", "high", "low", "none"],
-      "openEffort": "max",
+      "defaultEffort": "max",
       "points": [
         {
           "effort": "max",
@@ -138,7 +136,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 10
@@ -151,7 +148,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low"],
-      "openEffort": "high",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "high",
@@ -169,7 +166,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 10,
         "output": 50
@@ -182,7 +178,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -228,7 +224,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 4,
         "output": 20
@@ -241,7 +236,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low", "minimal"],
-      "openEffort": "max",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "max",
@@ -259,7 +254,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 10,
         "output": 50
@@ -272,7 +266,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low"],
-      "openEffort": "max",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -290,7 +284,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 5,
         "output": 25
@@ -303,7 +296,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -349,7 +342,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.25,
         "output": 4.25
@@ -362,7 +354,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low", "minimal"],
-      "openEffort": "max",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "max",
@@ -387,7 +379,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 10
@@ -400,7 +391,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low"],
-      "openEffort": "max",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -446,7 +437,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1,
         "output": 5
@@ -456,7 +446,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "xhigh",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "max",
@@ -509,7 +499,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 10
@@ -522,7 +511,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low"],
-      "openEffort": "xhigh",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "xhigh",
@@ -568,7 +557,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 10,
         "output": 50
@@ -581,7 +569,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low"],
-      "openEffort": "xhigh",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "xhigh",
@@ -627,7 +615,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 10
@@ -640,7 +627,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "xhigh",
@@ -693,7 +680,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 4,
         "output": 20
@@ -706,7 +692,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "max",
@@ -759,7 +745,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 6
@@ -769,7 +754,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["xhigh", "high", "medium", "low", "minimal"],
-      "openEffort": "xhigh",
+      "defaultEffort": "xhigh",
       "points": [
         {
           "effort": "xhigh",
@@ -787,7 +772,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6
@@ -797,7 +781,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["max", "high", "low", "none"],
-      "openEffort": "max",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -815,7 +799,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 5,
         "output": 25
@@ -828,7 +811,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "max",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -846,7 +829,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 5,
         "output": 25
@@ -859,7 +841,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -884,7 +866,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.8250000000000001,
         "output": 4.125
@@ -897,7 +878,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "high",
@@ -929,7 +910,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.19999999999999998,
         "output": 20
@@ -942,7 +922,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "high", "low", "none"],
-      "openEffort": "max",
+      "defaultEffort": "max",
       "points": [
         {
           "effort": "max",
@@ -967,7 +947,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "video", "audio"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.435,
         "output": 0.87
@@ -980,7 +959,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -998,7 +977,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.0699,
         "output": 1.4
@@ -1011,7 +989,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "high", "low"],
-      "openEffort": "max",
+      "defaultEffort": "max",
       "points": [
         {
           "effort": "max",
@@ -1036,7 +1014,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.25,
         "output": 4.25
@@ -1049,7 +1026,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "high", "medium", "low", "minimal"],
-      "openEffort": "xhigh",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "xhigh",
@@ -1067,7 +1044,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.75,
         "output": 3.75
@@ -1080,7 +1056,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "high",
@@ -1112,7 +1088,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6
@@ -1122,7 +1097,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["max", "xhigh", "high", "medium", "low"],
-      "openEffort": "max",
+      "defaultEffort": "max",
       "points": [
         {
           "effort": "max",
@@ -1140,7 +1115,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.5
@@ -1153,7 +1127,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "high", "low"],
-      "openEffort": "max",
+      "defaultEffort": "max",
       "points": [
         {
           "effort": "max",
@@ -1171,7 +1145,6 @@
       "tools": true,
       "context": 128000,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 1.75,
         "output": 14
@@ -1181,7 +1154,7 @@
       "placement": "score",
       "boards": ["Arena Text, style control"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -1191,7 +1164,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 5,
         "output": 30
@@ -1204,7 +1176,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "high",
@@ -1250,7 +1222,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.075,
         "output": 0.22499999999999998
@@ -1260,7 +1231,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -1278,7 +1249,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 5,
         "output": 25
@@ -1291,7 +1261,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "high", "medium", "low", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "high",
@@ -1316,7 +1286,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.0477,
         "output": 0.1908
@@ -1329,7 +1298,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "high", "low", "none"],
-      "openEffort": "max",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -1354,7 +1323,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.25,
         "output": 4.25
@@ -1367,7 +1335,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "high", "medium", "low", "minimal"],
-      "openEffort": "xhigh",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "xhigh",
@@ -1385,7 +1353,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 6
@@ -1395,7 +1362,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["xhigh", "medium", "low"],
-      "openEffort": "xhigh",
+      "defaultEffort": "xhigh",
       "points": [
         {
           "effort": "xhigh",
@@ -1413,7 +1380,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 12
@@ -1426,7 +1392,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "max",
@@ -1479,7 +1445,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2.5,
         "output": 15
@@ -1492,7 +1457,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "high", "medium", "low", "none"],
-      "openEffort": "xhigh",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "xhigh",
@@ -1524,7 +1489,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.75,
         "output": 3.75
@@ -1537,7 +1501,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low", "minimal"],
-      "openEffort": "high",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "high",
@@ -1555,7 +1519,6 @@
       "tools": true,
       "context": 500000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 6
@@ -1568,7 +1531,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "high", "medium", "low"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "high",
@@ -1600,7 +1563,6 @@
       "tools": true,
       "context": 500000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 6
@@ -1613,7 +1575,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "high", "medium", "low"],
-      "openEffort": "xhigh",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "xhigh",
@@ -1652,7 +1614,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.25,
         "output": 4.25
@@ -1662,7 +1623,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["xhigh", "high", "medium", "low"],
-      "openEffort": "xhigh",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "xhigh",
@@ -1680,7 +1641,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.5,
         "output": 9
@@ -1693,7 +1653,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low", "minimal"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "medium",
@@ -1725,7 +1685,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 12
@@ -1738,7 +1697,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "medium",
@@ -1756,7 +1715,6 @@
       "tools": true,
       "context": 500000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 6
@@ -1769,7 +1727,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "high",
@@ -1787,7 +1745,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.0341,
         "output": 7
@@ -1800,7 +1757,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "high", "none"],
-      "openEffort": "none",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -1825,7 +1782,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 10
@@ -1838,7 +1794,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -1891,7 +1847,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.66,
         "output": 1.9800000000000002
@@ -1904,7 +1859,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "high", "low", "none"],
-      "openEffort": "max",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -1929,7 +1884,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1,
         "output": 2.7
@@ -1942,7 +1896,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "medium",
@@ -1960,7 +1914,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.21559999999999999,
         "output": 0.6468
@@ -1970,7 +1923,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["max", "high", "low", "none"],
-      "openEffort": "max",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -1988,7 +1941,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.04444,
         "output": 0.13332
@@ -1998,7 +1950,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["max", "high", "low", "none"],
-      "openEffort": "max",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -2016,7 +1968,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 3,
         "output": 15
@@ -2029,7 +1980,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "high", "medium", "low", "none"],
-      "openEffort": "max",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "max",
@@ -2061,7 +2012,6 @@
       "tools": true,
       "context": 200000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 5,
         "output": 25
@@ -2074,7 +2024,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -2099,7 +2049,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.5
@@ -2112,7 +2061,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "xhigh",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "xhigh",
@@ -2165,7 +2114,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.19999999999999998,
         "output": 1.2
@@ -2178,7 +2126,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "max",
@@ -2231,7 +2179,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "video", "audio"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.14,
         "output": 0.28
@@ -2244,7 +2191,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -2262,7 +2209,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.713052,
         "output": 1.426104
@@ -2275,7 +2221,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "high", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "max",
@@ -2307,7 +2253,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.5,
         "output": 3
@@ -2320,7 +2265,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low", "minimal", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "medium",
@@ -2345,7 +2290,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.75,
         "output": 14
@@ -2355,7 +2299,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["xhigh", "high", "medium", "low", "none"],
-      "openEffort": "xhigh",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "xhigh",
@@ -2373,7 +2317,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3045,
         "output": 0.609
@@ -2386,7 +2329,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -2411,7 +2354,6 @@
       "tools": true,
       "context": 204800,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.4,
         "output": 4.4
@@ -2424,7 +2366,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -2449,7 +2391,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.65,
         "output": 3.41
@@ -2462,7 +2403,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -2487,7 +2428,6 @@
       "tools": true,
       "context": 204800,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 1,
         "output": 3.1999999999999997
@@ -2500,7 +2440,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -2525,7 +2465,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.5
@@ -2538,7 +2477,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "max",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "max",
@@ -2584,7 +2523,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.3599999999999999,
         "output": 4.18
@@ -2597,7 +2535,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "high",
@@ -2615,7 +2553,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.475,
         "output": 4.425
@@ -2625,7 +2562,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -2643,7 +2580,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.19999999999999998,
         "output": 2.5
@@ -2656,7 +2592,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "medium", "low", "none"],
-      "openEffort": "xhigh",
+      "defaultEffort": "xhigh",
       "points": [
         {
           "effort": "xhigh",
@@ -2695,7 +2631,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.75,
         "output": 14
@@ -2705,7 +2640,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["xhigh", "high", "medium", "low"],
-      "openEffort": "xhigh",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "xhigh",
@@ -2723,7 +2658,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.32,
         "output": 1.28
@@ -2736,7 +2670,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -2754,7 +2688,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.7505999999999999,
         "output": 2.2509
@@ -2764,7 +2697,7 @@
       "placement": "version",
       "boards": [],
       "efforts": ["high", "low", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": []
     },
     {
@@ -2774,7 +2707,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.0825,
         "output": 0.33
@@ -2787,7 +2719,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "low", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "high",
@@ -2805,7 +2737,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.75,
         "output": 14
@@ -2818,7 +2749,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "xhigh",
@@ -2850,7 +2781,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.25,
         "output": 10
@@ -2863,7 +2793,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low", "none"],
-      "openEffort": "high",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "high",
@@ -2888,7 +2818,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3,
         "output": 1.2
@@ -2901,7 +2830,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -2919,7 +2848,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.325,
         "output": 1.95
@@ -2932,7 +2860,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -2950,7 +2878,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.25,
         "output": 1
@@ -2963,7 +2890,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low"],
-      "openEffort": "max",
+      "defaultEffort": "max",
       "points": [
         {
           "effort": "max",
@@ -2981,7 +2908,6 @@
       "tools": true,
       "context": 256000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1,
         "output": 2
@@ -2991,7 +2917,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3009,7 +2935,6 @@
       "tools": true,
       "context": 202752,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.2,
         "output": 4
@@ -3019,7 +2944,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3037,7 +2962,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.5,
         "output": 2.5
@@ -3050,7 +2974,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3075,7 +2999,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.75,
         "output": 4.5
@@ -3088,7 +3011,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "xhigh",
@@ -3120,7 +3043,6 @@
       "tools": true,
       "context": 524288,
       "inputs": ["image", "audio"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1,
         "output": 4.05
@@ -3133,7 +3055,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "high", "medium", "low", "minimal", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "xhigh",
@@ -3151,7 +3073,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.25,
         "output": 2.5
@@ -3164,7 +3085,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low", "none"],
-      "openEffort": "high",
+      "defaultEffort": "low",
       "points": [
         {
           "effort": "high",
@@ -3203,7 +3124,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3,
         "output": 2.5
@@ -3216,7 +3136,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low", "minimal"],
-      "openEffort": "high",
+      "defaultEffort": "minimal",
       "points": [
         {
           "effort": "high",
@@ -3234,7 +3154,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.56,
         "output": 3.1
@@ -3244,7 +3163,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3262,7 +3181,6 @@
       "tools": true,
       "context": 200000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 15,
         "output": 75
@@ -3275,7 +3193,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3300,7 +3218,6 @@
       "tools": true,
       "context": 2000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.25,
         "output": 2.5
@@ -3310,7 +3227,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3335,7 +3252,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 3,
         "output": 15
@@ -3348,7 +3264,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3373,7 +3289,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.091,
         "output": 0.182
@@ -3386,7 +3301,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "high", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "high",
@@ -3418,7 +3333,6 @@
       "tools": true,
       "context": 131072,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.06,
         "output": 0.18
@@ -3428,7 +3342,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3446,7 +3360,6 @@
       "tools": true,
       "context": 204800,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.54,
         "output": 1.9800000000000002
@@ -3459,7 +3372,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3484,7 +3397,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.5,
         "output": 3.5999999999999996
@@ -3497,7 +3409,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "none",
@@ -3522,7 +3434,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.25,
         "output": 10
@@ -3535,7 +3446,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low", "minimal"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "high",
@@ -3574,7 +3485,6 @@
       "tools": true,
       "context": 202752,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.2,
         "output": 4
@@ -3587,7 +3497,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3605,7 +3515,6 @@
       "tools": true,
       "context": 524288,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.049999999999999996,
         "output": 0.19999999999999998
@@ -3615,7 +3524,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["max", "xhigh", "high", "medium", "low", "minimal", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "medium",
@@ -3633,7 +3542,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.25,
         "output": 10
@@ -3643,7 +3551,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["high", "medium", "low"],
-      "openEffort": "high",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "high",
@@ -3661,7 +3569,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "video", "audio"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.119,
         "output": 0.238
@@ -3674,7 +3581,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3692,7 +3599,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.6,
         "output": 2.4
@@ -3705,7 +3611,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "high",
@@ -3723,7 +3629,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.5
@@ -3736,7 +3641,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3754,7 +3659,6 @@
       "tools": true,
       "context": 163840,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.28,
         "output": 0.42
@@ -3767,7 +3671,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3792,7 +3696,6 @@
       "tools": true,
       "context": 524288,
       "inputs": ["image", "audio"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.44999999999999996,
         "output": 1.2
@@ -3805,7 +3708,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "high", "medium", "low", "minimal", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "high",
@@ -3823,7 +3726,6 @@
       "tools": true,
       "context": 200000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 8
@@ -3836,7 +3738,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3854,7 +3756,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.25,
         "output": 10
@@ -3867,7 +3768,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3885,7 +3786,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.6,
         "output": 2.5
@@ -3895,7 +3795,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3913,7 +3813,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.19999999999999998,
         "output": 0.39999999999999997
@@ -3926,7 +3825,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3951,7 +3850,6 @@
       "tools": true,
       "context": 200000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 20,
         "output": 80
@@ -3961,7 +3859,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -3979,7 +3877,6 @@
       "tools": true,
       "context": 204800,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3,
         "output": 1.2
@@ -3992,7 +3889,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4010,7 +3907,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.0765,
         "output": 0.255
@@ -4023,7 +3919,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4048,7 +3944,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.32,
         "output": 3.1999999999999997
@@ -4058,7 +3953,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4083,7 +3978,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.27,
         "output": 2.16
@@ -4096,7 +3990,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4121,7 +4015,6 @@
       "tools": true,
       "context": 524288,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6
@@ -4134,7 +4027,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["max", "xhigh", "high", "medium", "low", "minimal", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "medium",
@@ -4152,7 +4045,6 @@
       "tools": true,
       "context": 204800,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3,
         "output": 1.2
@@ -4165,7 +4057,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4183,7 +4075,6 @@
       "tools": true,
       "context": 204800,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3,
         "output": 1.2
@@ -4193,7 +4084,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4211,7 +4102,6 @@
       "tools": true,
       "context": 204800,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.55,
         "output": 2.2
@@ -4224,7 +4114,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4249,7 +4139,6 @@
       "tools": true,
       "context": 131072,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3,
         "output": 1.2
@@ -4262,7 +4151,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "high", "medium", "low"],
-      "openEffort": "high",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "high",
@@ -4280,7 +4169,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.25,
         "output": 2
@@ -4290,7 +4178,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["high", "medium", "low"],
-      "openEffort": "high",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "high",
@@ -4308,7 +4196,6 @@
       "tools": true,
       "context": 163840,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.27,
         "output": 0.41
@@ -4321,7 +4208,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4346,7 +4233,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.020999999999999998,
         "output": 0.063
@@ -4356,7 +4242,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4374,7 +4260,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.26,
         "output": 2.08
@@ -4387,7 +4272,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "none",
@@ -4412,7 +4297,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.19999999999999998,
         "output": 1.15
@@ -4422,7 +4306,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["high", "medium", "low"],
-      "openEffort": "high",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "high",
@@ -4440,7 +4324,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.19999999999999998,
         "output": 1.25
@@ -4453,7 +4336,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["xhigh", "high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "xhigh",
@@ -4485,7 +4368,6 @@
       "tools": true,
       "context": 1048756,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3,
         "output": 1.2
@@ -4495,7 +4377,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4513,7 +4395,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.5,
         "output": 7.5
@@ -4526,7 +4407,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "high",
@@ -4544,7 +4425,6 @@
       "tools": true,
       "context": 200000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1,
         "output": 5
@@ -4557,7 +4437,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4582,7 +4462,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.6,
         "output": 2.5
@@ -4595,7 +4474,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4613,7 +4492,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.8999999999999999
@@ -4623,7 +4501,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4648,7 +4526,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.25,
         "output": 2
@@ -4661,7 +4538,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low", "minimal"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "medium",
@@ -4693,7 +4570,6 @@
       "tools": true,
       "context": 163840,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.27,
         "output": 1
@@ -4706,7 +4582,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4731,7 +4607,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.14,
         "output": 1
@@ -4744,7 +4619,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4769,7 +4644,6 @@
       "tools": true,
       "context": 163840,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.25,
         "output": 0.95
@@ -4782,7 +4656,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4807,7 +4681,6 @@
       "tools": true,
       "context": 163840,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.5,
         "output": 2.1500000000000004
@@ -4820,7 +4693,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4838,7 +4711,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.47
@@ -4848,7 +4720,7 @@
       "placement": "version",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -4858,7 +4730,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.03,
         "output": 0.13
@@ -4868,7 +4739,7 @@
       "placement": "version",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -4878,7 +4749,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.1875,
         "output": 1.125
@@ -4888,7 +4758,7 @@
       "placement": "version",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -4898,7 +4768,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.065,
         "output": 0.26
@@ -4908,7 +4777,7 @@
       "placement": "score",
       "boards": ["Arena Text, style control"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -4918,7 +4787,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.3
@@ -4931,7 +4799,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4949,7 +4817,6 @@
       "tools": true,
       "context": 200000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 15,
         "output": 60
@@ -4962,7 +4829,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -4980,7 +4847,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.5700000000000001,
         "output": 2.3
@@ -4993,7 +4859,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5011,7 +4877,6 @@
       "tools": true,
       "context": 200000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.1,
         "output": 4.4
@@ -5024,7 +4889,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "high",
@@ -5042,7 +4907,6 @@
       "tools": true,
       "context": 200000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.1,
         "output": 4.4
@@ -5055,7 +4919,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "high",
@@ -5073,7 +4937,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.09,
         "output": 0.55
@@ -5086,7 +4949,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5104,7 +4967,6 @@
       "tools": true,
       "context": 1047576,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 2,
         "output": 8
@@ -5117,7 +4979,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5135,7 +4997,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.25,
         "output": 1.5
@@ -5145,7 +5006,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["high", "medium", "low", "minimal", "none"],
-      "openEffort": "high",
+      "defaultEffort": "minimal",
       "points": [
         {
           "effort": "high",
@@ -5163,7 +5024,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3,
         "output": 2.5
@@ -5176,7 +5036,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5201,7 +5061,6 @@
       "tools": true,
       "context": 128000,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.44999999999999996,
         "output": 3.5
@@ -5214,7 +5073,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5232,7 +5091,6 @@
       "tools": true,
       "context": 204800,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.255,
         "output": 1.02
@@ -5245,7 +5103,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5263,7 +5121,6 @@
       "tools": true,
       "context": 200000,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.060500000000000005,
         "output": 0.39999999999999997
@@ -5276,7 +5133,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5301,7 +5158,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.21,
         "output": 1.9
@@ -5314,7 +5170,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5332,7 +5188,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.3,
         "output": 1
@@ -5345,7 +5200,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5363,7 +5218,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.16999999999999998,
         "output": 0.25
@@ -5373,7 +5227,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "none",
@@ -5398,7 +5252,6 @@
       "tools": true,
       "context": 192000,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3,
         "output": 1.5
@@ -5408,7 +5261,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5426,7 +5279,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.5,
         "output": 1.5
@@ -5439,7 +5291,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5457,7 +5309,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3,
         "output": 2.4
@@ -5470,7 +5321,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "medium",
@@ -5488,7 +5339,6 @@
       "tools": true,
       "context": 131072,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.39999999999999997,
         "output": 2
@@ -5501,7 +5351,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5519,7 +5369,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.09,
         "output": 1.1
@@ -5532,7 +5381,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5550,7 +5399,6 @@
       "tools": true,
       "context": 163840,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.29,
         "output": 1.1400000000000001
@@ -5563,7 +5411,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5581,7 +5429,6 @@
       "tools": true,
       "context": 200000,
       "inputs": ["file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.1,
         "output": 4.4
@@ -5594,7 +5441,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "default",
@@ -5619,7 +5466,6 @@
       "tools": true,
       "context": 200000,
       "inputs": ["file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.1,
         "output": 4.4
@@ -5632,7 +5478,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5657,7 +5503,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.07,
         "output": 0.19999999999999998
@@ -5670,7 +5515,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5688,7 +5533,6 @@
       "tools": true,
       "context": 131072,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3,
         "output": 0.8999999999999999
@@ -5701,7 +5545,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5726,7 +5570,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.55,
         "output": 2.2
@@ -5739,7 +5582,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5764,7 +5607,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.35
@@ -5774,7 +5616,7 @@
       "placement": "version",
       "boards": [],
       "efforts": ["high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -5784,7 +5626,6 @@
       "tools": true,
       "context": 260000,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.04,
         "output": 0.15
@@ -5794,7 +5635,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "medium",
@@ -5812,7 +5653,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.15,
         "output": 1.2
@@ -5825,7 +5665,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5843,7 +5683,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.13,
         "output": 0.85
@@ -5856,7 +5695,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5874,7 +5713,6 @@
       "tools": true,
       "context": 1047576,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.39999999999999997,
         "output": 1.5999999999999999
@@ -5887,7 +5725,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -5905,7 +5743,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6
@@ -5918,7 +5755,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low"],
-      "openEffort": "high",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "high",
@@ -5943,7 +5780,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.049999999999999996,
         "output": 0.39999999999999997
@@ -5956,7 +5792,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low", "minimal"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "medium",
@@ -5988,7 +5824,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "video", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3,
         "output": 2.5
@@ -6001,7 +5836,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "high",
@@ -6040,7 +5875,6 @@
       "tools": true,
       "context": 131072,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.39999999999999997,
         "output": 2
@@ -6053,7 +5887,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6071,7 +5905,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6
@@ -6081,7 +5914,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": ["high", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "high",
@@ -6106,7 +5939,6 @@
       "tools": true,
       "context": 128000,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.25,
         "output": 0.75
@@ -6119,7 +5951,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low", "none"],
-      "openEffort": "high",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "high",
@@ -6137,7 +5969,6 @@
       "tools": true,
       "context": 163840,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.2574,
         "output": 1.0287
@@ -6150,7 +5981,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6168,7 +5999,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.3
@@ -6181,7 +6011,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6199,7 +6029,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.07,
         "output": 0.28
@@ -6209,7 +6038,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6227,7 +6056,6 @@
       "tools": true,
       "context": 524288,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.1875,
         "output": 0.6525
@@ -6240,7 +6068,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6258,7 +6086,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.29,
         "output": 1
@@ -6268,7 +6095,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6286,7 +6113,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.018,
         "output": 0.09
@@ -6299,7 +6125,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "medium", "low"],
-      "openEffort": "low",
+      "defaultEffort": "medium",
       "points": [
         {
           "effort": "low",
@@ -6324,7 +6150,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.12,
         "output": 0.7999999999999999
@@ -6334,7 +6159,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6352,7 +6177,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 2.5,
         "output": 12.5
@@ -6362,7 +6186,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6380,7 +6204,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.06,
         "output": 0.25
@@ -6393,7 +6216,7 @@
         "Arena Text, style control"
       ],
       "efforts": ["high", "low", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": [
         {
           "effort": "high",
@@ -6411,7 +6234,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.08,
         "output": 0.28
@@ -6424,7 +6246,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "none",
@@ -6449,7 +6271,6 @@
       "tools": true,
       "context": 256000,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.075,
         "output": 0.19999999999999998
@@ -6462,7 +6283,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6480,7 +6301,6 @@
       "tools": true,
       "context": 128000,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 2.5,
         "output": 10
@@ -6490,7 +6310,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6508,7 +6328,6 @@
       "tools": true,
       "context": 128000,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 2.5,
         "output": 10
@@ -6521,7 +6340,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6539,7 +6358,6 @@
       "tools": true,
       "context": 128000,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 5,
         "output": 15
@@ -6552,7 +6370,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6570,7 +6388,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.06,
         "output": 0.24
@@ -6583,7 +6400,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6608,7 +6425,6 @@
       "tools": true,
       "context": 40960,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.12,
         "output": 0.5
@@ -6621,7 +6437,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6646,7 +6462,6 @@
       "tools": true,
       "context": 1047576,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.39999999999999997
@@ -6659,7 +6474,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6677,7 +6492,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.39999999999999997,
         "output": 2
@@ -6687,7 +6501,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6705,7 +6519,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.39999999999999997
@@ -6715,7 +6528,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6740,7 +6553,6 @@
       "tools": true,
       "context": 128000,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 2.5,
         "output": 10
@@ -6750,7 +6562,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6768,7 +6580,6 @@
       "tools": true,
       "context": 128000,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.35,
         "output": 0.5
@@ -6778,7 +6589,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6796,7 +6607,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.32
@@ -6809,7 +6619,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6827,7 +6637,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6
@@ -6837,7 +6646,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6855,7 +6664,6 @@
       "tools": true,
       "context": 128000,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 10,
         "output": 30
@@ -6868,7 +6676,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6886,7 +6694,6 @@
       "tools": true,
       "context": 32768,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.36,
         "output": 0.39999999999999997
@@ -6899,7 +6706,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6917,7 +6724,6 @@
       "tools": true,
       "context": 131072,
       "inputs": ["file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 2,
         "output": 6
@@ -6930,7 +6736,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6948,7 +6754,6 @@
       "tools": true,
       "context": 128000,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6
@@ -6961,7 +6766,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -6979,7 +6784,6 @@
       "tools": true,
       "context": 128000,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6
@@ -6992,7 +6796,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7010,7 +6814,6 @@
       "tools": true,
       "context": 1310720,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.3
@@ -7023,7 +6826,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7041,7 +6844,6 @@
       "tools": true,
       "context": 128000,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.351,
         "output": 0.5549999999999999
@@ -7054,7 +6856,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7072,7 +6874,6 @@
       "tools": true,
       "context": 131072,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.08,
         "output": 0.35
@@ -7085,7 +6886,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7103,7 +6904,6 @@
       "tools": true,
       "context": 128000,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 2.5,
         "output": 10
@@ -7113,7 +6913,7 @@
       "placement": "score",
       "boards": ["Arena Text, style control"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -7123,7 +6923,6 @@
       "tools": true,
       "context": 300000,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.7999999999999999,
         "output": 3.1999999999999997
@@ -7136,7 +6935,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7154,7 +6953,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.25,
         "output": 0.75
@@ -7164,7 +6962,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7182,7 +6980,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.39999999999999997,
         "output": 0.39999999999999997
@@ -7195,7 +6992,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7213,7 +7010,6 @@
       "tools": true,
       "context": 8191,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 30,
         "output": 60
@@ -7226,7 +7022,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7244,7 +7040,6 @@
       "tools": true,
       "context": 128000,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.6
@@ -7254,7 +7049,7 @@
       "placement": "score",
       "boards": ["Arena Text, style control"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -7264,7 +7059,6 @@
       "tools": true,
       "context": 128000,
       "inputs": ["file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 2,
         "output": 6
@@ -7277,7 +7071,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7295,7 +7089,6 @@
       "tools": true,
       "context": 131072,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.049999999999999996,
         "output": 0.15
@@ -7308,7 +7101,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7326,7 +7119,6 @@
       "tools": true,
       "context": 300000,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.06,
         "output": 0.24
@@ -7339,7 +7131,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7357,7 +7149,6 @@
       "tools": true,
       "context": 40960,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.12,
         "output": 0.24
@@ -7367,7 +7158,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "none",
@@ -7392,7 +7183,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.049999999999999996,
         "output": 0.08
@@ -7405,7 +7195,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7423,7 +7213,6 @@
       "tools": true,
       "context": 32768,
       "inputs": ["file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.19999999999999998,
         "output": 0.6
@@ -7433,7 +7222,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7451,7 +7240,6 @@
       "tools": true,
       "context": 128000,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.035,
         "output": 0.14
@@ -7464,7 +7252,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7482,7 +7270,6 @@
       "tools": true,
       "context": 65536,
       "inputs": ["file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 2,
         "output": 6
@@ -7495,7 +7282,7 @@
         "Arena Text, style control"
       ],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7513,7 +7300,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.19999999999999998,
         "output": 0.19999999999999998
@@ -7523,7 +7309,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7541,7 +7327,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.15
@@ -7551,7 +7336,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7569,7 +7354,6 @@
       "tools": true,
       "context": 131072,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.09999999999999999
@@ -7579,7 +7363,7 @@
       "placement": "score",
       "boards": ["Artificial Analysis Intelligence Index"],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": [
         {
           "effort": "default",
@@ -7597,7 +7381,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.6,
         "output": 3
@@ -7607,7 +7390,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -7617,7 +7400,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.7999999999999999,
         "output": 3.1999999999999997
@@ -7627,7 +7409,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -7637,7 +7419,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image"],
-      "reasons": false,
       "usdPer1M": {
         "input": 2.5,
         "output": 7.5
@@ -7647,7 +7428,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -7657,7 +7438,6 @@
       "tools": true,
       "context": 128000,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.049999999999999996,
         "output": 0.7
@@ -7667,7 +7447,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -7677,7 +7457,6 @@
       "tools": true,
       "context": 65536,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.5,
         "output": 7.5
@@ -7687,7 +7466,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["high", "minimal", "none"],
-      "openEffort": "minimal",
+      "defaultEffort": "minimal",
       "points": []
     },
     {
@@ -7697,7 +7476,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 10
@@ -7707,7 +7485,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "xhigh", "high", "medium", "low"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -7717,7 +7495,6 @@
       "tools": true,
       "context": 36864,
       "inputs": ["image", "video", "audio"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.15,
         "output": 1.5
@@ -7727,7 +7504,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["high", "medium", "low", "minimal", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": []
     },
     {
@@ -7737,7 +7514,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 3,
         "output": 15
@@ -7747,7 +7523,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "high", "low", "none"],
-      "openEffort": "max",
+      "defaultEffort": "max",
       "points": []
     },
     {
@@ -7757,7 +7533,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 2.8,
         "output": 8.8
@@ -7767,7 +7542,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "high", "low"],
-      "openEffort": "max",
+      "defaultEffort": "max",
       "points": []
     },
     {
@@ -7777,7 +7552,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 4,
         "output": 12
@@ -7787,7 +7561,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["xhigh", "high", "medium", "low", "minimal"],
-      "openEffort": "xhigh",
+      "defaultEffort": "xhigh",
       "points": []
     },
     {
@@ -7797,7 +7571,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.7,
         "output": 1.4
@@ -7807,7 +7580,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "high", "low"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": []
     },
     {
@@ -7817,7 +7590,6 @@
       "tools": true,
       "context": 262144,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 3,
         "output": 6
@@ -7827,7 +7599,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "high", "low"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": []
     },
     {
@@ -7837,7 +7609,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.5
@@ -7847,7 +7618,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -7857,7 +7628,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 10
@@ -7867,7 +7637,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -7877,7 +7647,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio"],
-      "reasons": true,
       "usdPer1M": {
         "input": 4.35,
         "output": 8.7
@@ -7887,7 +7656,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -7897,7 +7666,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "video", "audio"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.15,
         "output": 0.47
@@ -7907,7 +7675,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -7917,7 +7685,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.075,
         "output": 0.5
@@ -7927,7 +7694,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["xhigh", "medium", "none"],
-      "openEffort": "xhigh",
+      "defaultEffort": "xhigh",
       "points": []
     },
     {
@@ -7937,7 +7704,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.37,
         "output": 1.25
@@ -7947,7 +7713,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "high", "low"],
-      "openEffort": "max",
+      "defaultEffort": "max",
       "points": []
     },
     {
@@ -7957,7 +7723,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 5,
         "output": 30
@@ -7967,7 +7732,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "xhigh", "high"],
-      "openEffort": "xhigh",
+      "defaultEffort": "xhigh",
       "points": []
     },
     {
@@ -7977,7 +7742,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 6
@@ -7987,7 +7751,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "xhigh", "high"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": []
     },
     {
@@ -7997,7 +7761,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.075,
         "output": 0.25
@@ -8007,7 +7770,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["high", "medium", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": []
     },
     {
@@ -8017,7 +7780,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 10,
         "output": 50
@@ -8027,7 +7789,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "xhigh", "high", "medium", "low"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -8037,7 +7799,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.19999999999999998
@@ -8047,7 +7808,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "xhigh", "high", "medium", "low", "minimal"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -8057,7 +7818,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.19999999999999998
@@ -8067,7 +7827,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["xhigh", "high", "medium", "low", "minimal"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -8077,7 +7837,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.5,
         "output": 2.5
@@ -8087,7 +7846,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8097,7 +7856,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.95,
         "output": 4
@@ -8107,7 +7865,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["high", "none"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": []
     },
     {
@@ -8117,7 +7875,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.19999999999999998,
         "output": 1.2
@@ -8127,7 +7884,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -8137,7 +7894,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 12
@@ -8147,7 +7903,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -8157,7 +7913,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 4,
         "output": 20
@@ -8167,7 +7922,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "xhigh", "high", "medium", "low", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -8177,7 +7932,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.7,
         "output": 1.4
@@ -8187,7 +7941,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8197,7 +7951,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 3,
         "output": 6
@@ -8207,7 +7960,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8217,7 +7970,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 5,
         "output": 30
@@ -8227,7 +7979,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["max", "xhigh", "high"],
-      "openEffort": "xhigh",
+      "defaultEffort": "xhigh",
       "points": []
     },
     {
@@ -8237,7 +7989,6 @@
       "tools": true,
       "context": 131072,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 12
@@ -8247,7 +7998,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8257,7 +8008,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 5,
         "output": 30
@@ -8267,7 +8017,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8277,7 +8027,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.3,
         "output": 1.7999999999999998
@@ -8287,7 +8036,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8297,7 +8046,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 30,
         "output": 180
@@ -8307,7 +8055,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["xhigh", "high", "medium"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -8317,7 +8065,6 @@
       "tools": true,
       "context": 16384,
       "inputs": ["image", "video"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.09999999999999999
@@ -8327,7 +8074,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8337,7 +8084,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.25,
         "output": 2
@@ -8347,7 +8093,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["high", "medium", "low", "minimal", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -8357,7 +8103,6 @@
       "tools": true,
       "context": 1050000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 30,
         "output": 180
@@ -8367,7 +8112,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["xhigh", "high", "medium"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -8377,7 +8122,6 @@
       "tools": true,
       "context": 262144,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.39999999999999997
@@ -8387,7 +8131,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["high", "medium", "low", "minimal", "none"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -8397,7 +8141,6 @@
       "tools": true,
       "context": 1048576,
       "inputs": ["image", "video", "audio", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 2,
         "output": 12
@@ -8407,7 +8150,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["high", "medium", "low"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -8417,7 +8160,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.7999999999999999,
         "output": 1.5999999999999999
@@ -8427,7 +8169,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8437,7 +8179,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": ["image", "video"],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.26,
         "output": 1.56
@@ -8447,7 +8188,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8457,7 +8198,6 @@
       "tools": true,
       "context": 128000,
       "inputs": ["audio"],
-      "reasons": false,
       "usdPer1M": {
         "input": 2.5,
         "output": 10
@@ -8467,7 +8207,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8477,7 +8217,6 @@
       "tools": true,
       "context": 128000,
       "inputs": ["audio"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.6,
         "output": 2.4
@@ -8487,7 +8226,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8497,7 +8236,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 21,
         "output": 168
@@ -8507,7 +8245,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["xhigh", "high", "medium"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -8517,7 +8255,6 @@
       "tools": true,
       "context": 256000,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 1,
         "output": 3
@@ -8527,7 +8264,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8537,7 +8274,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image"],
-      "reasons": true,
       "usdPer1M": {
         "input": 1.25,
         "output": 10
@@ -8547,7 +8283,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["xhigh", "high", "medium", "low"],
-      "openEffort": "medium",
+      "defaultEffort": "medium",
       "points": []
     },
     {
@@ -8557,7 +8293,6 @@
       "tools": true,
       "context": 32768,
       "inputs": ["audio", "file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.3
@@ -8567,7 +8302,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8577,7 +8312,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": true,
       "usdPer1M": {
         "input": 0.075,
         "output": 0.3
@@ -8587,7 +8321,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8597,7 +8331,6 @@
       "tools": true,
       "context": 400000,
       "inputs": ["image", "file"],
-      "reasons": true,
       "usdPer1M": {
         "input": 15,
         "output": 120
@@ -8607,7 +8340,7 @@
       "placement": "release",
       "boards": [],
       "efforts": ["high"],
-      "openEffort": "high",
+      "defaultEffort": "high",
       "points": []
     },
     {
@@ -8617,7 +8350,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.195,
         "output": 0.975
@@ -8627,7 +8359,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8637,7 +8369,6 @@
       "tools": true,
       "context": 256000,
       "inputs": ["file"],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.3,
         "output": 0.8999999999999999
@@ -8647,7 +8378,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8657,7 +8388,6 @@
       "tools": true,
       "context": 1000000,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.26,
         "output": 0.78
@@ -8667,7 +8397,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8677,7 +8407,6 @@
       "tools": true,
       "context": 32768,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.09999999999999999,
         "output": 0.19999999999999998
@@ -8687,7 +8416,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8697,7 +8426,6 @@
       "tools": true,
       "context": 131072,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 0.029,
         "output": 0.03
@@ -8707,7 +8435,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8717,7 +8445,6 @@
       "tools": true,
       "context": 4095,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 1,
         "output": 2
@@ -8727,7 +8454,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     },
     {
@@ -8737,7 +8464,6 @@
       "tools": true,
       "context": 16385,
       "inputs": [],
-      "reasons": false,
       "usdPer1M": {
         "input": 3,
         "output": 4
@@ -8747,7 +8473,7 @@
       "placement": "release",
       "boards": [],
       "efforts": [],
-      "openEffort": null,
+      "defaultEffort": null,
       "points": []
     }
   ]

@@ -10,13 +10,7 @@ import type {
   ModelPrice,
   ModelRank,
 } from "@rosesfield/ui/components/model-picker"
-import {
-  BrainIcon,
-  ClockIcon,
-  FileTextIcon,
-  ScanIcon,
-  Volume2Icon,
-} from "lucide-react"
+import { ClockIcon, FileTextIcon, ScanIcon, Volume2Icon } from "lucide-react"
 import type { ReactNode } from "react"
 import type { AgentModelInput } from "@/api/agent-wire"
 import { formatTokenCount } from "@/copy/format"
@@ -37,8 +31,7 @@ import { kindPictures } from "@/screens/library/filter-groups"
 export type RowFact =
   | ModelTag
   | { kind: "context"; tokens: number }
-  | { kind: "reasons" }
-  | { kind: "input"; input: AgentModelInput }
+  | { kind: "input"; input: RowInput }
 
 export type RowModel = {
   id: string
@@ -60,19 +53,23 @@ export function todayOf(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10)
 }
 
+type RowInput = AgentModelInput | "text"
+
 const inputWords = {
+  text: "kind.text",
   image: "shell.area.image",
   video: "shell.area.video",
   audio: "shell.area.audio",
   file: "agent.model.input.file",
-} as const satisfies Record<AgentModelInput, string>
+} as const satisfies Record<RowInput, string>
 
 const inputPictures = {
+  text: kindPictures.text,
   image: kindPictures.image,
   video: kindPictures.video,
   audio: kindPictures.audio,
   file: <FileTextIcon />,
-} as const satisfies Record<AgentModelInput, ReactNode>
+} as const satisfies Record<RowInput, ReactNode>
 
 export function capabilityOf(fact: RowFact): ModelPickerTag | null {
   switch (fact.kind) {
@@ -96,11 +93,6 @@ export function capabilityOf(fact: RowFact): ModelPickerTag | null {
           size: formatTokenCount(fact.tokens),
         }),
       }
-    case "reasons":
-      return {
-        label: t("agent.model.reasons"),
-        icon: <BrainIcon aria-hidden="true" />,
-      }
     case "input":
       return {
         label: t(inputWords[fact.input]),
@@ -120,7 +112,6 @@ const capabilityOrder: readonly RowFact["kind"][] = [
   "length",
   "references",
   "context",
-  "reasons",
   "input",
 ]
 

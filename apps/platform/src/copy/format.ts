@@ -95,6 +95,11 @@ export function formatAmount(amount: number): string {
   return amount > 0 && amount < 1 ? "<1" : prices.format(amount)
 }
 
+/** Writes credits as a whole number with the locale's thousands separator, and an amount over 0 and under 1 as 1. */
+export function formatWholeCredits(credits: number): string {
+  return prices.format(credits > 0 && credits < 1 ? 1 : credits)
+}
+
 /** Writes an estimate of credits with two significant figures under 1, one decimal under 10 and none from 10. */
 export function formatEstimate(credits: number): string {
   if (credits < 1) {

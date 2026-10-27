@@ -74,7 +74,7 @@ function modelOf(id: string): RouterChatModel {
 }
 
 describe("the agent's chat model rows", () => {
-  it("prices a turn of the default model at its opening effort from the typical turn's tokens", () => {
+  it("prices a turn of the default model at its measured effort from the typical turn's tokens", () => {
     const usd = (0.15 * 1650 + 0.6 * 400) / 1_000_000
     expect(turnCreditsOf(modelOf(defaultChatModel), "max")).toBeCloseTo(
       usd * 211,
@@ -96,7 +96,7 @@ describe("the agent's chat model rows", () => {
     )
   })
 
-  it("lists each model's rank, inputs, reasoning, rates per 1M and turn at every effort it offers", () => {
+  it("lists each model's rank, inputs, rates per 1M, the effort it opens on and a turn at every effort it offers", () => {
     const details = chatDetailsOf(routerChatModels)
     expect(Object.keys(details)).toHaveLength(274)
     const opus = details["anthropic/claude-opus-5.5"]
@@ -104,11 +104,12 @@ describe("the agent's chat model rows", () => {
       name: "Claude Opus 5.5",
       context: 1_000_000,
       inputs: ["image", "file"],
-      reasons: true,
       input: 844,
       output: 4220,
-      effort: "max",
+      effort: "high",
     })
+    expect(opus).not.toHaveProperty("reasons")
+    expect(opus).not.toHaveProperty("turn")
     expect(opus?.facts.scores.chat).toMatchObject({
       rank: 1,
       order: 1,
@@ -122,9 +123,7 @@ describe("the agent's chat model rows", () => {
       "medium",
       "low",
     ])
-    expect(opus?.efforts.find((one) => one.effort === "max")?.turn).toBe(
-      opus?.turn
-    )
+    expect(details[defaultChatModel]?.effort).toBe("high")
     expect(details["moonshotai/kimi-k3.1-pro"]?.inputs).toContain("video")
     expect(details["z-ai/glm-5.3"]?.inputs).toEqual([])
     expect(chatDetailsOf(["maker/not-offered"])).toEqual({})
