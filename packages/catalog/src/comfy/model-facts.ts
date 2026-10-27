@@ -246,10 +246,10 @@ type TaskCell = z.infer<typeof taskCell>
 
 const tierNames = {
   "best quality": "bestQuality",
-  "best value": "bestValue",
+  "best value": null,
   cheapest: "cheapest",
   costly: "costly",
-} as const satisfies Record<z.infer<typeof fileTier>, ScoreTier>
+} as const satisfies Record<z.infer<typeof fileTier>, ScoreTier | null>
 
 const lastScored = new WeakMap<ModelFactsFile, ReadonlyMap<string, number>>()
 
@@ -282,7 +282,10 @@ function sourceOf(row: TaskCell["sources"][number]): ScoreSource {
 function tiersOf(cell: TaskCell, rank: number | null): ScoreTier[] {
   const named = cell.tiers
     .filter((tier) => tier !== "best quality")
-    .map((tier) => tierNames[tier])
+    .flatMap((tier) => {
+      const name = tierNames[tier]
+      return name === null ? [] : [name]
+    })
   return rank === 1 ? ["bestQuality", ...named] : named
 }
 

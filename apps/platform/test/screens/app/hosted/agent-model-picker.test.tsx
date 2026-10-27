@@ -33,7 +33,6 @@ const details: AgentDetails = {
     lab: "anthropic",
     rank: 1,
     order: 1,
-    bestValue: true,
     context: 1_000_000,
     inputs: ["image", "file"],
     input: 844,
@@ -299,29 +298,39 @@ describe("the agent's model picker", () => {
     ).toBe("2")
   })
 
-  it("shows Featured, the #1 and then the Best value models in rank order, above All models, and no Recent", () => {
+  it("shows Featured, the Pareto line of the top quarter from the #1 down to the cheapest, above All models, and no Recent", () => {
+    const credits = [28.86, 28.98, 14.49, 14.43, 7.3, 4.6, 1.71, 0.9, 0.5]
+    const listed = credits.map((_, index) => `lab/model-${index + 1}`)
+    const tail = Array.from({ length: 27 }, (_, index) => `lab/tail-${index}`)
+    const ranked = [...listed, ...tail]
     open({
-      details: {
-        ...details,
-        "deepseek/deepseek-v4.1-flash-1017": agentDetailOf({
-          name: "DeepSeek V4.1 Flash 1017",
-          lab: "deepseek",
-          rank: 16,
-          order: 3,
-          bestValue: true,
-          messages: [{ effort: null, credits: 1.7147 }],
-        }),
-      },
+      models: ranked,
+      chosen: "lab/model-1",
+      details: Object.fromEntries(
+        ranked.map((model, index) => [
+          model,
+          agentDetailOf({
+            name: model,
+            rank: index + 1,
+            order: index + 1,
+            messages: [{ effort: null, credits: credits[index] ?? 0.1 }],
+          }),
+        ])
+      ),
     })
     const sections = [
       ...document.querySelectorAll<HTMLElement>("[data-section]"),
     ].map((one) => one.dataset.section)
     expect(sections).toEqual(["featured", "all"])
     expect(sectionModels("featured")).toEqual([
-      "anthropic/claude-opus-5.5",
-      "deepseek/deepseek-v4.1-flash-1017",
+      "lab/model-1",
+      "lab/model-3",
+      "lab/model-5",
+      "lab/model-6",
+      "lab/model-7",
+      "lab/model-8",
     ])
-    expect(sectionModels("all")).toEqual(models)
+    expect(sectionModels("all")).toEqual(ranked)
     expect(
       [...document.querySelectorAll("[data-slot='model-list-label']")].map(
         (one) => one.textContent

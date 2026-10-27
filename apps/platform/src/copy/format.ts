@@ -1,3 +1,4 @@
+import { wholeCreditsOf } from "@rosesfield/ui/lib/model-sections"
 import { copyLocale, t } from "@/copy/t"
 
 const dates = new Intl.DateTimeFormat(copyLocale, { dateStyle: "medium" })
@@ -90,13 +91,9 @@ export function formatBalance(credits: number): string {
   return credits > 0 && credits < 1 ? "<1" : prices.format(credits)
 }
 
-const wholeSlack = 1e-9
-
 /** Writes a price in credits rounded up to a whole credit, never under 1, with the locale's thousands separator. */
 export function formatWholeCredits(credits: number): string {
-  return prices.format(
-    credits > 0 ? Math.max(1, Math.ceil(credits - wholeSlack)) : credits
-  )
+  return prices.format(wholeCreditsOf(credits))
 }
 
 /** Writes a count of tokens in thousands or millions, binary when the count is a power-of-two multiple, such as 256K or 1M. */

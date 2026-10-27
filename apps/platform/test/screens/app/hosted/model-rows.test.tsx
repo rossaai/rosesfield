@@ -67,7 +67,7 @@ const facts: ModelFacts = {
           display: "allowed",
         },
       ],
-      tiers: ["bestValue"],
+      tiers: ["cheapest"],
     },
   },
 }
@@ -107,7 +107,7 @@ describe("a model row", () => {
     expect(text).not.toContain("Hosted")
   })
 
-  it("carries the rank for the picker's main task with its boards' note, New, Best value and Open weights with its page", () => {
+  it("carries the rank for the picker's main task with its boards' note, New and Open weights with its page, and no Best value, which the picker computes", () => {
     const [row] = modelRowsOf([modelOf("maker/one")], { today: "2026-10-26" })
     expect(row?.rank).toEqual({
       place: 2,
@@ -119,7 +119,6 @@ describe("a model row", () => {
     })
     expect(row?.badges.map((badge) => badge.kind)).toEqual([
       "new",
-      "value",
       "openWeights",
     ])
     expect(row?.badges.at(-1)?.href).toBe("https://huggingface.co/maker/one")

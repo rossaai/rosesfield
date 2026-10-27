@@ -2,7 +2,6 @@ import { comfyCreditsPerUsd, type ModelFacts } from "@rosesfield/catalog/comfy"
 import type { AgentEffort, AgentModelDetail } from "#agent.contract"
 import {
   hasEffortChoice,
-  isOnLine,
   openEffortOf,
   type RouterChatModel,
   type RouterChatTable,
@@ -179,7 +178,7 @@ function factsOf(
                 },
               ]
         }),
-        tiers: isOnLine(model) ? ["bestValue"] : [],
+        tiers: [],
       },
     },
   }

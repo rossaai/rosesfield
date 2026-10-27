@@ -85,26 +85,13 @@ export const routerChatModels: readonly string[] = routerChatData.models.map(
   (model) => model.id
 )
 
-function blendedUsdOf(model: RouterChatModel): number {
-  return (3 * model.usdPer1M.input + model.usdPer1M.output) / 4
-}
-
-function medianOf(values: readonly number[]): number {
-  const sorted = [...values].sort((a, b) => a - b)
-  const middle = Math.floor(sorted.length / 2)
-  return sorted.length % 2 === 1
-    ? (sorted[middle] ?? 0)
-    : ((sorted[middle - 1] ?? 0) + (sorted[middle] ?? 0)) / 2
-}
-
-/** The highest ranked scored model whose blended price, 3 input to 1 output, is at or under the median of every listed model. */
+/** The highest ranked scored model, the first one Featured holds, which the agent opens on until you choose another. */
 export function defaultModelOf(table: RouterChatTable): string {
-  const median = medianOf(table.models.map(blendedUsdOf))
-  const found = table.models.find(
-    (model) => model.score !== null && blendedUsdOf(model) <= median
-  )
+  const found = table.models
+    .filter((model) => model.score !== null)
+    .sort((a, b) => a.rank - b.rank)[0]
   if (found === undefined) {
-    throw new Error("No scored chat model is priced at or under the median")
+    throw new Error("No chat model is scored")
   }
   return found.id
 }
@@ -151,10 +138,6 @@ export function turnEffortOf(
   return chosen !== undefined && found.efforts.includes(chosen)
     ? chosen
     : openEffortOf(found)
-}
-
-export function isOnLine(model: RouterChatModel): boolean {
-  return model.points.some((one) => one.onLine)
 }
 
 export function pointOf(

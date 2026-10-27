@@ -26,6 +26,7 @@ import { z } from "zod"
 import { localAgent } from "#agent/local-agent"
 import { buildHandlers, type Handlers } from "#build-handlers"
 import type { GatewayApp } from "#gateway-env"
+import { textsOf } from "../../../../packages/agent/src/infrastructure/router-chat-tool-text"
 import { FakeAppCatalog } from "../../../../packages/agent/test/fake/fake-app-catalog"
 import { FakePriceEngine } from "../../../../packages/agent/test/fake/fake-price-engine"
 import {
@@ -72,9 +73,7 @@ function adsApp(): AppDefinition {
 function lastToolTextOf(request: RouterRequest): string {
   const messages = sentMessages.parse(request.body.messages)
   const result = messages.findLast((message) => message.role === "tool")
-  return typeof result?.content === "string"
-    ? result.content
-    : JSON.stringify(result?.content ?? "")
+  return result === undefined ? "" : (textsOf(result)?.join("") ?? "")
 }
 
 function startedRunOf(text: string): string | null {

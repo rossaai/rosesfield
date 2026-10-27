@@ -57,7 +57,7 @@ describe("ModelPicker's search", () => {
       chosen: rows[0]?.id ?? null,
     })
     const search = screen.getByRole("searchbox", { name: "Search models" })
-    expect(screen.getAllByRole("option")).toHaveLength(largestApp + 3)
+    expect(screen.getAllByRole("option")).toHaveLength(largestApp + 1)
     const typed = [
       "t",
       "tu",

@@ -21,7 +21,6 @@ import {
 } from "@rosesfield/ui/components/popover"
 import { ViewMenu } from "@rosesfield/ui/components/view-menu"
 import {
-  featuredRowsOf,
   firstSort,
   hasOpenWeights,
   isModelPickerOrder,
@@ -34,6 +33,7 @@ import {
   modelPickerSortBys,
   needleOf,
   sortedRows,
+  valueRowsOf,
 } from "@rosesfield/ui/lib/model-sections"
 import {
   ArrowDownWideNarrowIcon,
@@ -64,7 +64,8 @@ type ModelPickerWords = Record<
   | "orderUp"
   | "openOnly"
   | "featured"
-  | "all",
+  | "all"
+  | "bestValue",
   string
 >
 
@@ -233,14 +234,16 @@ function sectionsOf(
   words: ModelPickerWords
 ): ListSection[] {
   const kept = isOpenOnly ? rows.filter(isOpenRow) : rows
-  const featured = featuredRowsOf(rows)
+  const value: ModelBadge = { kind: "value", label: words.bestValue }
+  const line = valueRowsOf(kept)
+  const onLine = new Set(line.map((row) => row.id))
+  const markOf = (row: ModelPickerRow): ModelPickerRow => {
+    const badges = row.badges.filter((badge) => badge.kind !== "value")
+    return { ...row, badges: onLine.has(row.id) ? [...badges, value] : badges }
+  }
   return [
-    {
-      id: "featured",
-      label: words.featured,
-      rows: isOpenOnly ? featured.filter(isOpenRow) : featured,
-    },
-    { id: "all", label: words.all, rows: sortedRows(kept, sort) },
+    { id: "featured", label: words.featured, rows: line.map(markOf) },
+    { id: "all", label: words.all, rows: sortedRows(kept, sort).map(markOf) },
   ]
 }
 

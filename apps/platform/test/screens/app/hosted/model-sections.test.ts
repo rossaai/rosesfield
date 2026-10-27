@@ -82,16 +82,14 @@ describe("the Top order of an app's models", () => {
     ])
   })
 
-  it("opens on the app's declared default when the picker lists it, and on the Top first otherwise", () => {
+  it("opens on the #1 by rank, and on nothing when the list is empty", () => {
     const models = [
       ranked("lab/second", { "text-to-image": scored(2) }),
       ranked("lab/first", { "text-to-image": scored(1) }),
       ranked("lab/tail", { "text-to-image": scored(9, null) }),
     ]
-    expect(defaultIdOf("lab/tail", models)).toBe("lab/tail")
-    expect(defaultIdOf("gone/model", models)).toBe("lab/first")
-    expect(defaultIdOf(null, models)).toBe("lab/first")
-    expect(defaultIdOf("gone/model", [])).toBe("gone/model")
+    expect(defaultIdOf(models)).toBe("lab/first")
+    expect(defaultIdOf([])).toBeNull()
   })
 
   it("names each board of a task once, from every model that holds the task", () => {

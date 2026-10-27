@@ -20,6 +20,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  window.localStorage.clear()
 })
 
 const listed = appListing.parse(findApp("image"))
@@ -59,6 +60,22 @@ const flux: CatalogModel = {
       default: "auto",
     },
   ],
+  facts: {
+    lab: null,
+    release: null,
+    weights: null,
+    lineKey: null,
+    scores: {
+      "text-to-image": {
+        score: 89,
+        rank: 1,
+        order: 1,
+        of: 3,
+        sources: [],
+        tiers: [],
+      },
+    },
+  },
 }
 
 function graph(id: string): CatalogModel {
@@ -157,8 +174,75 @@ describe("the model a form opens on when the model list arrives", () => {
     expect(openWith(placed, "placed")).toEqual(placed)
   })
 
-  it("moves an untouched form to the task's default model", () => {
+  it("moves an untouched form to the #1 by rank when nothing is kept", () => {
     const values = openWith(defaultsOf(image), "defaults")
     expect(values.inputs.model).toBe("bfl/flux-3-image")
+  })
+})
+
+const lastUsedKey = "rosesfield.app.last-used"
+
+function keep(record: unknown): void {
+  window.localStorage.setItem(lastUsedKey, JSON.stringify({ image: record }))
+}
+
+function kept(): unknown {
+  const raw = window.localStorage.getItem(lastUsedKey)
+  return raw === null ? null : JSON.parse(raw).image
+}
+
+describe("the model and settings you last used in an app", () => {
+  it("opens an untouched form on the model, its settings, the count and the format you last used", () => {
+    keep({
+      model: "qwen-image-2512",
+      settings: {},
+      count: 3,
+      aspectRatio: "16:9",
+    })
+    const values = openWith(defaultsOf(image), "defaults")
+    expect(values.inputs.model).toBe("qwen-image-2512")
+    expect(values.count).toBe(3)
+    expect(values.aspectRatio).toBe("16:9")
+  })
+
+  it("restores a hosted model's own setting, and keeps the prompt out", () => {
+    keep({
+      model: "bfl/flux-3-image",
+      settings: { aspectRatio: "16:9", prompt: "kept words" },
+      count: 1,
+      aspectRatio: null,
+    })
+    const values = openWith(defaultsOf(image), "defaults")
+    expect(values.inputs.model).toBe("bfl/flux-3-image")
+    expect(values.inputs.aspectRatio).toBe("16:9")
+    expect(values.inputs.prompt).not.toBe("kept words")
+  })
+
+  it("keeps the model and the settings the form holds, for the next visit", () => {
+    openWith(defaultsOf(image), "defaults")
+    expect(kept()).toEqual({
+      model: "bfl/flux-3-image",
+      settings: { aspectRatio: "auto" },
+      count: defaultsOf(image).count,
+      aspectRatio: defaultsOf(image).aspectRatio,
+    })
+  })
+
+  it("lets a Recreate of a run fill the form its own way", () => {
+    keep({
+      model: "qwen-image-2512",
+      settings: {},
+      count: 3,
+      aspectRatio: null,
+    })
+    const seeded = valuesFromRun(image, runOf("z-image-turbo"))
+    expect(openWith(seeded, "seed")).toEqual(seeded)
+  })
+
+  it("drops a kept model the catalog no longer lists, and opens on the #1", () => {
+    keep({ model: "gone/model", settings: {}, count: 3, aspectRatio: null })
+    const values = openWith(defaultsOf(image), "defaults")
+    expect(values.inputs.model).toBe("bfl/flux-3-image")
+    expect(values.count).toBe(defaultsOf(image).count)
   })
 })

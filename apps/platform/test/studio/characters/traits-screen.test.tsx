@@ -5,6 +5,7 @@ import { t, tCatalog } from "@/copy/t"
 import { aspectItems } from "@/screens/app/fields/output-fields"
 import { modelNameOf } from "@/screens/app/hosted/catalog-picker"
 import { fieldCaption } from "@/screens/app/hosted/field-words"
+import { noSeeds } from "@/screens/app/use-app-screen"
 import { flux, qwen, zImage } from "../image/image-screen"
 import {
   aspectsIn,
@@ -34,13 +35,20 @@ afterEach(() => {
 })
 
 describe("the traits of Characters", () => {
-  it("open on the catalog's open-weights default for text to image, with its price in Comfy credits on Generate", async () => {
+  it("open on the model you last used in Characters, with its price in Comfy credits on Generate", async () => {
     openCharacters()
     expect(
       await screen.findByRole("button", { name: trigger(zImage) })
     ).toBeDefined()
     expect(
       await screen.findByRole("button", { name: pricedName(graphCredits) })
+    ).toBeDefined()
+  })
+
+  it("open on the #1 by rank when you have used no model in Characters", async () => {
+    openCharacters(noSeeds, () => undefined, null)
+    expect(
+      await screen.findByRole("button", { name: trigger(flux) })
     ).toBeDefined()
   })
 

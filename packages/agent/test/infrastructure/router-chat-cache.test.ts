@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest"
 import { routerMedia } from "#infrastructure/router-chat-media"
-import { defaultChatModel } from "#infrastructure/router-chat-models"
 import { pngOf } from "../fixtures/media-files"
 import {
   base64,
@@ -18,6 +17,7 @@ import type { RouterRequest } from "../fixtures/router-chat-answers"
 afterEach(closeRigs)
 
 const ephemeral = { type: "ephemeral" }
+const flash = "deepseek/deepseek-v4.1-flash-1017"
 const qwen = "qwen/qwen-plus"
 const qwenVideo = "qwen/qwen3.6-plus"
 const snapshotQwen = "qwen/qwen3.8-max-0902"
@@ -87,9 +87,9 @@ describe("the cache marker on the instructions and the tools", () => {
   )
 
   it("control: is nowhere in a DeepSeek request, whose lab caches with no marker", async () => {
-    const request = await oneMessageOn(defaultChatModel)
+    const request = await oneMessageOn(flash)
 
-    expect(request?.body.model).toBe(defaultChatModel)
+    expect(request?.body.model).toBe(flash)
     expect(markersOf(request)).toBe(0)
     expect(typeof systemOf(request)).toBe("string")
   })

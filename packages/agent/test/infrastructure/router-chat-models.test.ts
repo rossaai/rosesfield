@@ -103,8 +103,8 @@ describe("the agent's chat model table", () => {
     expect(openEffortOf({ efforts: [], defaultEffort: null })).toBeNull()
   })
 
-  it("opens on the highest ranked scored model priced at or under the median", () => {
-    expect(defaultChatModel).toBe("deepseek/deepseek-v4.1-flash-1017")
+  it("opens on the highest ranked scored model, whatever its price", () => {
+    expect(defaultChatModel).toBe("anthropic/claude-opus-5.5")
     const cheap = { ...priced, id: "maker/cheap", rank: 2 }
     const dear = {
       ...priced,
@@ -121,7 +121,7 @@ describe("the agent's chat model table", () => {
     }
     expect(
       defaultModelOf(routerChatTable.parse(tableWith([dear, cheap, unscored])))
-    ).toBe("maker/cheap")
+    ).toBe("maker/dear")
   })
 
   it("refuses a chosen model the table does not list", () => {
@@ -131,11 +131,11 @@ describe("the agent's chat model table", () => {
   })
 
   it("sends the chosen effort when the model offers it, else the model's opening effort, and none for a model without a choice", () => {
-    const model = modelOf(defaultChatModel)
-    expect(model.efforts).toEqual(["max", "high", "low", "none"])
-    expect(turnEffortOf(defaultChatModel, "low")).toBe("low")
-    expect(turnEffortOf(defaultChatModel, undefined)).toBe("high")
-    expect(turnEffortOf(defaultChatModel, "medium")).toBe("high")
+    const flash = "deepseek/deepseek-v4.1-flash-1017"
+    expect(modelOf(flash).efforts).toEqual(["max", "high", "low", "none"])
+    expect(turnEffortOf(flash, "low")).toBe("low")
+    expect(turnEffortOf(flash, undefined)).toBe("high")
+    expect(turnEffortOf(flash, "medium")).toBe("high")
     const single = routerChatData.models.find((one) => one.efforts.length < 2)
     expect(turnEffortOf(single?.id ?? "", "high")).toBeNull()
     expect(turnEffortOf("maker/none", "high")).toBeNull()

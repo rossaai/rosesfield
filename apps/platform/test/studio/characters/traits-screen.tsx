@@ -18,7 +18,9 @@ import type { GatewaySettings } from "@/api/gateway-settings"
 import { runsQuery, settingsQuery } from "@/api/queries"
 import { formatWholeCredits } from "@/copy/format"
 import { t } from "@/copy/t"
+import { defaultsOf } from "@/screens/app/app-form"
 import { modelNameOf } from "@/screens/app/hosted/catalog-picker"
+import { keepLastUsed } from "@/screens/app/hosted/last-used"
 import { modelCatalogQuery } from "@/screens/app/hosted/model-catalog-query"
 import { type AppSeeds, noSeeds } from "@/screens/app/use-app-screen"
 import { AppScreen } from "@/studio/characters/screen"
@@ -214,10 +216,21 @@ const servedFlux: CatalogModel = {
   facts: factsOf(flux.id),
 }
 
+/** Opens Characters for a person who last used Z-Image Turbo in it, or for one who used nothing when `lastUsed` is null. */
 export function openCharacters(
   seeds: AppSeeds = noSeeds,
-  prime: (client: QueryClient) => void = () => undefined
+  prime: (client: QueryClient) => void = () => undefined,
+  lastUsed: CatalogModel | null = zImage
 ): QueryClient {
+  if (lastUsed !== null) {
+    const { count, aspectRatio } = defaultsOf(characters)
+    keepLastUsed(characters.id, {
+      model: lastUsed.id,
+      settings: {},
+      count,
+      aspectRatio,
+    })
+  }
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, staleTime: Number.POSITIVE_INFINITY },

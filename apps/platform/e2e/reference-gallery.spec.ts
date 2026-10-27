@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test"
+import { settled } from "./settled"
 
 type Box = { x: number; y: number; width: number; height: number }
 
@@ -14,12 +15,6 @@ async function style(locator: Locator, property: string): Promise<string> {
   return locator.evaluate(
     (element, name) => getComputedStyle(element).getPropertyValue(name),
     property
-  )
-}
-
-async function settled(locator: Locator): Promise<void> {
-  await locator.evaluate((element) =>
-    Promise.all(element.getAnimations().map((animation) => animation.finished))
   )
 }
 

@@ -204,5 +204,6 @@ export function pickerWords(): ModelPickerWords {
     openOnly: t("model.picker.openOnly"),
     featured: t("model.picker.featured"),
     all: t("model.picker.all"),
+    bestValue: t("model.picker.bestValue"),
   }
 }

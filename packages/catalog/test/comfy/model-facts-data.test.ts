@@ -153,7 +153,7 @@ describe("the model facts the catalog holds", () => {
               display: "allowed",
             },
           ],
-          tiers: ["bestQuality", "bestValue"],
+          tiers: ["bestQuality"],
         },
       },
     })
@@ -215,7 +215,7 @@ describe("the model facts the catalog holds", () => {
       "xai/grok-imagine-image-2.0",
       "vertexai/gemini-nano-banana-2.1",
     ])
-    expect(image[0]?.cell.tiers).toEqual(["bestQuality", "bestValue"])
+    expect(image[0]?.cell.tiers).toEqual(["bestQuality"])
     expect(scoresOf("graph/z-image-turbo")["text-to-image"]).toMatchObject({
       score: 30,
       rank: 39,
