@@ -82,7 +82,7 @@ describe("PromptBar's slot groups", () => {
 })
 
 describe("PromptBar's top inset", () => {
-  it("starts the prompt's first line as far from the bar's top as from its left, with the toolbar and Generate held at the foot", () => {
+  it("starts the prompt's first line as far from the bar's top as from its left, with the toolbar and, from the regular size, Generate held at the foot", () => {
     renderBar()
     const field = screen.getByRole("textbox", { name: "Prompt" })
     const classes = field.className.split(" ")
@@ -94,6 +94,6 @@ describe("PromptBar's top inset", () => {
     const toolbar = document.querySelector("[data-slot='composer-toolbar']")
     expect(toolbar?.className.split(" ")).toContain("mt-auto")
     const generate = screen.getByRole("button", { name: "Generate" })
-    expect(generate.className.split(" ")).toContain("self-end")
+    expect(generate.className.split(" ")).toContain("@regular:self-end")
   })
 })

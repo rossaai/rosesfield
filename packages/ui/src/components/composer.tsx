@@ -101,7 +101,7 @@ function ComposerChips({ children }: { children: ReactNode }): ReactElement {
         onScroll={update}
         style={edgeMaskOf(ends, chipFade)}
         className={cn(
-          "flex min-w-0 flex-1 items-center gap-s1 overflow-x-auto [scrollbar-width:none]",
+          "flex min-w-0 flex-1 items-center gap-s1 overflow-x-auto [scrollbar-width:none] *:shrink-0 [&::-webkit-scrollbar]:hidden",
           interaction.ringRoom
         )}
       >

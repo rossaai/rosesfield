@@ -86,12 +86,15 @@ export function AgentStartScreen(): ReactElement {
         title={t("agent.title")}
         phoneLead={<ConversationsDrawer />}
       />
-      <div className="flex min-h-0 flex-1 flex-col items-center gap-s6 overflow-y-auto px-s5 pb-s4 @regular:pt-[calc(100dvh/6)]">
-        <div className="flex max-w-prompt-max flex-col items-center gap-s2 pt-s12 text-center @regular:pt-0">
+      <div className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-s5 pt-s3 pb-s4 @regular:gap-s6 @regular:pt-[calc(100dvh/6)]">
+        <div
+          data-slot="agent-start-heading"
+          className="my-auto flex max-w-prompt-max flex-col items-center gap-s2 text-center @regular:my-0"
+        >
           <h2 className="text-display">{t("agent.start.title")}</h2>
           <p className="text-body text-ink-muted">{t("agent.empty.body")}</p>
         </div>
-        <div className="sticky bottom-0 order-last mt-auto flex w-full flex-col items-center gap-s2 bg-canvas pt-s3 @regular:static @regular:order-none @regular:mt-0">
+        <div className="sticky bottom-0 order-last flex w-full flex-col items-center gap-s2 bg-canvas pt-s3 @regular:static @regular:order-none">
           {failed ? (
             <p role="alert" className="text-label text-bug-text">
               {wordsForError(start.error, { thing: "conversation" }).title}

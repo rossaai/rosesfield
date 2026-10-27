@@ -7,7 +7,7 @@ import {
 import { GenerateButton } from "@rosesfield/ui/components/generate-button"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
-import { PlusIcon, XIcon } from "lucide-react"
+import { PlusIcon, SquareIcon, XIcon } from "lucide-react"
 import {
   type KeyboardEvent,
   type ReactElement,
@@ -56,6 +56,7 @@ type PromptBarProps = {
   price?: ReactNode
   submitValue?: ReactNode
   submitName?: string | undefined
+  submitIcon?: ReactNode
   busy?: boolean
   stop?: PromptStop | undefined
   placement?: "inline" | "dock"
@@ -67,6 +68,9 @@ const fieldClass = cn(
   "mb-s1_5 block max-h-[calc(6*var(--text-body--line-height)+var(--spacing-s2))] w-full resize-none overflow-y-auto bg-transparent px-s2 pt-s2 text-body text-ink outline-none placeholder:text-ink-muted",
   motion.yield
 )
+
+const bodyClass =
+  "grid grid-cols-[minmax(0,1fr)_auto] gap-x-s3 gap-y-s2 [grid-template-areas:'content_content'_'tools_send'] @regular:[grid-template-areas:'content_send'_'tools_send']"
 
 const placements = {
   inline: "max-w-220",
@@ -223,7 +227,7 @@ function PromptSlots({
 
 function Toolbar({ leading, chips }: PromptBarProps): ReactElement {
   return (
-    <ComposerToolbar className="mt-auto ps-s2">
+    <ComposerToolbar className="mt-auto ps-s2 [grid-area:tools]">
       {leading}
       {chips === undefined ? null : <ComposerChips>{chips}</ComposerChips>}
     </ComposerToolbar>
@@ -281,6 +285,8 @@ function PromptField({
   )
 }
 
+const submitPlace = "self-center [grid-area:send] @regular:self-end"
+
 function Submit({
   props,
   busy,
@@ -294,8 +300,9 @@ function Submit({
     return (
       <GenerateButton
         form="tile"
-        className="self-end"
+        className={submitPlace}
         label={props.stop.label}
+        icon={<SquareIcon aria-hidden="true" className="fill-current" />}
         onClick={props.stop.onStop}
       />
     )
@@ -303,9 +310,11 @@ function Submit({
   return (
     <GenerateButton
       form="tile"
-      className="self-end"
+      className={submitPlace}
       label={props.submitLabel}
+      icon={props.submitIcon}
       price={props.submitValue ?? props.price}
+      priceKind={props.submitValue === undefined ? "note" : "figure"}
       busy={busy}
       onClick={onSubmit}
       aria-label={props.submitName}
@@ -331,8 +340,8 @@ function PromptBar(props: PromptBarProps): ReactElement {
       {props.tray === undefined ? null : (
         <div data-slot="composer-tray">{props.tray}</div>
       )}
-      <div className="flex gap-s3">
-        <div className="flex min-w-0 flex-1 flex-col gap-s2">
+      <div data-slot="prompt-body" className={bodyClass}>
+        <div className="flex min-w-0 flex-col gap-s2 [grid-area:content]">
           {props.slots === undefined ? (
             <PromptTray {...props} />
           ) : (
@@ -344,8 +353,8 @@ function PromptBar(props: PromptBarProps): ReactElement {
           {props.notices === undefined ? null : (
             <div data-slot="composer-notices">{props.notices}</div>
           )}
-          <Toolbar {...props} />
         </div>
+        <Toolbar {...props} />
         <Submit props={props} busy={busy} onSubmit={submit} />
       </div>
     </Composer>

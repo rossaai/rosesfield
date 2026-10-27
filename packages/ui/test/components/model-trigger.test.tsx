@@ -53,15 +53,13 @@ describe("ModelChip", () => {
     )
   })
 
-  it("takes the room a composer's chip row leaves on a phone, cutting its name at its end", () => {
+  it("keeps its whole name in a composer's chip row at every size, never shrinking", () => {
     render(<ModelChip name="A very long model name" mark={<svg />} />)
     const chip = screen.getByRole("button", { name: "A very long model name" })
-    expect(chip.className.split(" ")).toEqual(
-      expect.arrayContaining([
-        "min-w-0",
-        "@max-regular:in-data-[density=composer]:shrink",
-      ])
+    expect(chip.className.split(" ")).toContain(
+      "in-data-[density=composer]:shrink-0"
     )
+    expect(chip.className).not.toContain("@max-regular:")
   })
 })
 
