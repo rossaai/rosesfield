@@ -103,5 +103,6 @@ A package exists when two apps import it or when it is published. Code one app u
 | no `any`, no `interface`, no `enum`, size limits, no floating promises | Biome |
 | strict compiler flags | `tsconfig.base.json` |
 | an `import.meta.glob` call with a type argument | `bun run glob:check` |
+| a doc link to a path that is not in the tree, a graph in `workflows/README.md` §The workflows by model with no folder | `bun run docs:check` |
 | env validated at start | zod in `env.ts` |
 | everything else | a reviewer |

@@ -32,7 +32,6 @@ Each row names the licences of the weights the graph loads, and each custom node
 
 | Graph | Weights | Custom node packs |
 |---|---|---|
-| [`ads-flux-2-klein-4b`](../workflows/ads-flux-2-klein-4b/README.md) | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | none |
 | [`ads-qwen-image-edit-2511`](../workflows/ads-qwen-image-edit-2511/README.md) | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | none |
 | [`angles-qwen-image-edit-2511`](../workflows/angles-qwen-image-edit-2511/README.md) | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | none |
 | [`angles-set-qwen-image-edit-2511`](../workflows/angles-set-qwen-image-edit-2511/README.md) | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | none |
@@ -41,10 +40,6 @@ Each row names the licences of the weights the graph loads, and each custom node
 | [`audio-voice-change-chatterbox`](../workflows/audio-voice-change-chatterbox/README.md) | [MIT](https://opensource.org/license/mit) | ComfyUI_Fill-ChatterBox, MIT per its README |
 | [`background-removal-solid-color`](../workflows/background-removal-solid-color/README.md) | [MIT](https://opensource.org/license/mit) | none |
 | [`background-removal-transparent`](../workflows/background-removal-transparent/README.md) | [MIT](https://opensource.org/license/mit) | none |
-| [`characters-angles-qwen-image-edit-2511`](../workflows/characters-angles-qwen-image-edit-2511/README.md) | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | none |
-| [`characters-traits-flux-2-klein-4b`](../workflows/characters-traits-flux-2-klein-4b/README.md) | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | none |
-| [`characters-traits-qwen-image-2512`](../workflows/characters-traits-qwen-image-2512/README.md) | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | none |
-| [`characters-traits-z-image-turbo`](../workflows/characters-traits-z-image-turbo/README.md) | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | none |
 | [`edit-qwen-image-edit-2511`](../workflows/edit-qwen-image-edit-2511/README.md) | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | none |
 | [`effects-ltx-2-5`](../workflows/effects-ltx-2-5/README.md) | [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x) for LTX 2.5 and its text encoder, [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) for Qwen Image Edit 2511, [MIT](https://opensource.org/license/mit) for BiRefNet | ComfyUI-WanVideoWrapper, Apache-2.0. ComfyUI_AudioTools, MIT |
 | [`expand-format-qwen-image`](../workflows/expand-format-qwen-image/README.md) | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | none |
@@ -68,6 +63,8 @@ Each row names the licences of the weights the graph loads, and each custom node
 | [`video-ltx-2-5-start-frame`](../workflows/video-ltx-2-5-start-frame/README.md) | [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x) | none |
 | [`video-ltx-2-5-text`](../workflows/video-ltx-2-5-text/README.md) | [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x) | none |
 | [`voice-chatterbox`](../workflows/voice-chatterbox/README.md) | [MIT](https://opensource.org/license/mit) | ComfyUI_Fill-ChatterBox, MIT per its README |
+
+Two apps also run graphs another app ships, under the licences of those graphs' rows. Characters runs `angles-set-qwen-image-edit-2511` for its angle set, and the text to image graphs of Image for its traits. Image runs `ads-qwen-image-edit-2511` for its edit model.
 
 The graphs themselves are MIT, like the rest of the repository. Each follows an official template in Comfy-Org/workflow_templates, which is MIT, and its notice is in `workflows/NOTICE`.
 

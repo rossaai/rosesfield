@@ -17,7 +17,7 @@ workflows/
     <id>-1.webp           a thumbnail from a real run, absent until one exists
 ```
 
-- 46 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
+- 32 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
 - Every graph runs open weights, except a graph that runs a Comfy partner node listed in `docs/models.md` §Graphs that run a partner node. No graph makes a Comfy Router call. The catalog test `open-weights.test.ts` checks every app's bindings.
 - `bun run catalog:sync` lists every folder in `packages/catalog/src/workflows.gen.ts`. It refuses a folder without `entry.json`, `<id>.json` and `<id>.api.json`.
 - A workflow is proven by one Generate in the running app on its app's screen, on a real input. No script runs a paid model. `bun scripts/checks/output-files/check-output-files.ts --library <gateway>` then checks each output in the library.
@@ -81,31 +81,29 @@ One file for the whole folder that a sync writes from the entries, with the apps
 
 | Core model | Workflows |
 |---|---|
-| LTX 2.5 | `effects-ltx-2-5`, `video-ltx-2-5-text`, `video-ltx-2-5-start-frame`, `shot-ltx-2-5` |
-| Wan 2.2 14B | `shot-wan-2-2-fun-camera`, `video-edit-extend-wan-2-2` |
-| Wan 2.1 VACE 14B | `recast-object-wan-vace`, `video-edit-reframe-wan-vace` |
-| SCAIL-2 | `recast-character-scail-2` |
-| Wan Animate 2 | `motion-wan-animate-2` |
-| InfiniteTalk | `lipsync-photo-infinitetalk`, `lipsync-clip-infinitetalk` |
-| Qwen Image Edit 2511 | `ads-qwen-image-edit-2511`, `angles-qwen-image-edit-2511`, `angles-set-qwen-image-edit-2511`, `headshots-qwen-image-edit-2511`, `layers-edit-qwen-image-edit-2511`, `relight-qwen-image-edit-2511`, `storyboard-qwen-image-edit-2511`, `storyboard-qwen-image-edit-2511-from-text`, `try-on-qwen-image-edit-2511`, `try-on-qwen-image-edit-2511-lightning` |
+| LTX 2.5 | `effects-ltx-2-5`, `video-ltx-2-5-text`, `video-ltx-2-5-start-frame` |
+| LTX 2.3 | `lipsync-photo-ltx-2-3`, `motion-ltx-2-3-ic-lora`, `video-edit-reframe-ltx-2-3` |
+| Qwen Image Edit 2511 | `ads-qwen-image-edit-2511`, `angles-qwen-image-edit-2511`, `angles-set-qwen-image-edit-2511`, `edit-qwen-image-edit-2511`, `layers-edit-qwen-image-edit-2511`, `storyboard-qwen-image-edit-2511`, `try-on-qwen-image-edit-2511` |
 | Qwen Image Edit 2509 | `relight-qwen-image-edit-2509` |
 | Qwen Image 2512 | `image-qwen-image-2512` |
 | Qwen Image | `expand-format-qwen-image`, `expand-sides-qwen-image`, `layers-fill-qwen-image` |
 | Qwen Image Layered | `layers-split-qwen-image-layered` |
-| FLUX.2 Klein 4B | `ads-flux-2-klein-4b`, `storyboard-flux-2-klein-4b`, `storyboard-flux-2-klein-4b-from-text`, `try-on-flux-2-klein-4b` |
 | Z-Image Turbo | `image-z-image-turbo` |
+| Ming Image 0.1 Design | `image-ming-image-0-1-design` |
 | SeedVR2 | `upscale-image-seedvr2`, `upscale-video-seedvr2` |
-| Real-ESRGAN | `upscale-image-real-esrgan`, `upscale-video-real-esrgan` |
 | BiRefNet | `background-removal-transparent`, `background-removal-solid-color`, `video-edit-background-birefnet` |
 | FILM | `video-edit-frame-rate-film` |
-| Chatterbox | `voice-chatterbox` |
+| Chatterbox | `voice-chatterbox`, `audio-voice-change-chatterbox` |
+| MiniMax-Music3 | `audio-music-minimax-music-3` |
+| Stable Audio 3 Medium | `audio-sound-stable-audio-3` |
+| Meshy 7.1, through a partner node | `three-d-meshy-image` |
 
 One model often has several workflows, because the apps build different graphs on it: one branch per view or per scene, a prompt written from choices, a mask or a second reference. Variants of one graph, such as sound off, a lighter LoRA or a quality preset, share one workflow and differ by a patch or a bound value.
 
 ## Rules for every workflow
 
 1. **Open weights first.** No Router call and no closed API. A partner node runs only in a graph `docs/models.md` §Graphs that run a partner node lists, and its `entry.json` names it in `partnerNodes` with `openSource` false.
-2. **Core nodes first.** A workflow uses ComfyUI core nodes wherever they do the step. A custom node pack is pinned at a full commit, named in the note and the README, and listed in `requiresCustomNodes`. Two workflows load a pack: `voice-chatterbox` loads ComfyUI_Fill-ChatterBox, and `lipsync-clip-infinitetalk` loads ComfyUI-WanVideoWrapper. Comfy Cloud installs no pack of your own, per `docs/stack.md` §The Comfy API v2.
+2. **Core nodes first.** A workflow uses ComfyUI core nodes wherever they do the step. A custom node pack is pinned at a full commit, named in the note and the README, and listed in `requiresCustomNodes`. Four workflows load a pack: `voice-chatterbox` and `audio-voice-change-chatterbox` load ComfyUI_Fill-ChatterBox, `effects-ltx-2-5` loads ComfyUI-WanVideoWrapper and ComfyUI_AudioTools, and `video-edit-reframe-ltx-2-3` loads ComfyUI-LTXVideo. Comfy Cloud installs no pack of your own, per `docs/stack.md` §The Comfy API v2.
 3. **Flat.** In the API file, a subgraph renames every inner node to `<outer id>:<inner id>`, which breaks the catalog's bindings, and the registry refuses such an id. A blueprint reaches a person only through a custom node pack or their own library. Groups and a note give the same order.
 4. **Our own graphs.** Each graph follows the official template it names in its README, in Comfy-Org/workflow_templates, which is MIT. Its notice is in `NOTICE`. Lightricks' example workflows in ComfyUI-LTXVideo carry the LTX-2 Community License, so they are read for structure and never copied. ComfyUI, its frontend and comfy-cli are GPL-3.0. They are tools, and none of their code is copied here.
 5. **No weights.** A workflow links each model and never ships one.
