@@ -24,10 +24,11 @@ import { agentModels, conversations, renderAgent } from "./agent-screen-render"
 const tuned = "deepseek/deepseek-v4.1-flash-1017"
 const other = "anthropic/claude-opus-5.5"
 const fixed = "openai/gpt-5.2-chat"
+const plain = "z-ai/glm-5.3"
 
 const listed: AgentModels = {
   ...agentModels,
-  models: [tuned, other, fixed],
+  models: [tuned, other, fixed, plain],
   model: tuned,
   details: {
     [tuned]: agentDetailOf({
@@ -54,6 +55,7 @@ const listed: AgentModels = {
       effort: "high",
       efforts: [{ effort: "high", turn: 2 }],
     }),
+    [plain]: agentDetailOf({ name: "GLM-5.3", effort: null, efforts: [] }),
   },
 }
 
@@ -167,12 +169,15 @@ describe("the agent composer's Effort", () => {
   })
 
   it("shows no Effort for a model that offers one level or none", async () => {
-    renderAgent(() => <Composer />, "/agent", undefined, {
-      ...listed,
-      model: fixed,
-    })
-    await screen.findByRole("combobox", { name: t("agent.mode.label") })
-    expect(effortChip()).toBeNull()
+    for (const model of [fixed, plain]) {
+      renderAgent(() => <Composer />, "/agent", undefined, {
+        ...listed,
+        model,
+      })
+      await screen.findByRole("combobox", { name: t("agent.mode.label") })
+      expect(effortChip()).toBeNull()
+      cleanup()
+    }
   })
 
   it("resets to the new model's opening effort when the model changes, and keeps each model's own choice", async () => {
