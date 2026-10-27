@@ -21,6 +21,7 @@ import {
 } from "@rosesfield/ui/components/popover"
 import { ViewMenu } from "@rosesfield/ui/components/view-menu"
 import {
+  featuredRowsOf,
   firstSort,
   hasOpenWeights,
   isModelPickerOrder,
@@ -32,7 +33,6 @@ import {
   modelPickerOrders,
   modelPickerSortBys,
   needleOf,
-  recentRowsOf,
   sortedRows,
 } from "@rosesfield/ui/lib/model-sections"
 import {
@@ -63,7 +63,7 @@ type ModelPickerWords = Record<
   | "orderDown"
   | "orderUp"
   | "openOnly"
-  | "recent"
+  | "featured"
   | "all",
   string
 >
@@ -74,7 +74,6 @@ type ModelPickerProps = {
   rows: readonly ModelPickerRow[]
   chosen: string | null
   onChoose: (id: string) => void
-  recent?: readonly string[]
   isLoading?: boolean
   isPricing?: boolean
   notice?: ReactNode
@@ -227,18 +226,20 @@ function placementOf(trigger: HTMLElement | null): Placement | null {
   }
 }
 
-const noRecent: readonly string[] = []
-
 function sectionsOf(
   rows: readonly ModelPickerRow[],
-  recent: readonly string[],
   sort: ModelPickerSort,
   isOpenOnly: boolean,
   words: ModelPickerWords
 ): ListSection[] {
   const kept = isOpenOnly ? rows.filter(isOpenRow) : rows
+  const featured = featuredRowsOf(rows)
   return [
-    { id: "recent", label: words.recent, rows: recentRowsOf(kept, recent) },
+    {
+      id: "featured",
+      label: words.featured,
+      rows: isOpenOnly ? featured.filter(isOpenRow) : featured,
+    },
     { id: "all", label: words.all, rows: sortedRows(kept, sort) },
   ]
 }
@@ -252,12 +253,10 @@ function PickerBody(
   const [query, setQuery] = useState("")
   const [sort, setSort] = useState<ModelPickerSort>(firstSort)
   const [isOpenOnly, setOpenOnly] = useState(false)
-  const recent = props.recent ?? noRecent
   const hasOpen = useMemo(() => hasOpenWeights(props.rows), [props.rows])
   const sections = useMemo(
-    () =>
-      sectionsOf(props.rows, recent, sort, isOpenOnly && hasOpen, props.words),
-    [props.rows, recent, sort, isOpenOnly, hasOpen, props.words]
+    () => sectionsOf(props.rows, sort, isOpenOnly && hasOpen, props.words),
+    [props.rows, sort, isOpenOnly, hasOpen, props.words]
   )
   const latest = useRef(props)
   latest.current = props

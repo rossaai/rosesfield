@@ -202,7 +202,7 @@ export function pickerWords(): ModelPickerWords {
     orderDown: t("model.picker.order.down"),
     orderUp: t("model.picker.order.up"),
     openOnly: t("model.picker.openOnly"),
-    recent: t("model.picker.recent"),
+    featured: t("model.picker.featured"),
     all: t("model.picker.all"),
   }
 }

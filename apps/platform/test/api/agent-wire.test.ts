@@ -148,14 +148,10 @@ describe("the agent's models", () => {
   }
 
   it("reads the models, the chosen one and a refusal", () => {
-    expect(readAgentModels(listed)).toEqual({
-      ...listed,
-      recent: [],
-      details: {},
-    })
+    expect(readAgentModels(listed)).toEqual({ ...listed, details: {} })
     expect(
-      readAgentModels({ ...listed, recent: ["qwen/qwen3.6-flash", 7] })?.recent
-    ).toEqual(["qwen/qwen3.6-flash"])
+      readAgentModels({ ...listed, recent: ["qwen/qwen3.6-flash"] })
+    ).toEqual({ ...listed, details: {} })
     expect(
       readAgentModels({
         models: [],
@@ -165,7 +161,6 @@ describe("the agent's models", () => {
     ).toEqual({
       models: [],
       model: null,
-      recent: [],
       refusal: { code: "ENGINE_NOT_ENABLED", status: 412 },
       details: {},
     })
@@ -196,12 +191,10 @@ describe("the agent's models", () => {
 
     expect(await listAgentModels()).toEqual({
       ...listed,
-      recent: [],
       details: {},
     })
     expect(await chooseAgentModel("qwen/qwen3.6-flash")).toEqual({
       ...listed,
-      recent: [],
       details: {},
     })
     expect(sent.map((one) => [one.url, one.init?.method])).toEqual([

@@ -29,10 +29,7 @@ import {
   AppSettingsSection,
   settingId,
 } from "@/screens/app/fields/setting-rows"
-import {
-  useRecentModels,
-  useSamePrices,
-} from "@/screens/app/hosted/catalog-picker"
+import { useSamePrices } from "@/screens/app/hosted/catalog-picker"
 import type { PriceAsk } from "@/screens/app/hosted/model-catalog-query"
 import {
   modelRowsOf,
@@ -245,7 +242,6 @@ export function ChoiceModelPicker({
     askOf: (id) => pricing?.askOf(id) ?? { inputs: {} },
     isOpen,
   })
-  const recent = useRecentModels(pricing?.appId ?? null)
   const samePrices = useSamePrices(prices)
   const rows = useMemo(
     () => choiceRowsOf(model, samePrices),
@@ -271,7 +267,6 @@ export function ChoiceModelPicker({
       open={isOpen}
       onOpenChange={setOpen}
       isPricing={isPricing}
-      recent={recent}
       side="top"
     />
   )

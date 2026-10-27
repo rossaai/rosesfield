@@ -10,9 +10,7 @@ import {
   type ModelPrice,
 } from "@rosesfield/ui/components/model-picker"
 import { ModelChip } from "@rosesfield/ui/components/model-trigger"
-import { useInfiniteQuery } from "@tanstack/react-query"
 import { type ReactElement, useMemo, useRef, useState } from "react"
-import { runsOf, runsQuery } from "@/api/queries"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
@@ -23,7 +21,6 @@ import {
   type RowModel,
   todayOf,
 } from "@/screens/app/hosted/model-rows"
-import { recentModelsOf } from "@/screens/app/hosted/model-sections"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import { useRowPrices } from "@/screens/app/hosted/use-row-prices"
 
@@ -124,12 +121,6 @@ export function useCatalogRows(
   )
 }
 
-export function useRecentModels(appId: string | null): readonly string[] {
-  const query = useInfiniteQuery({ ...runsQuery(appId ?? ""), enabled: false })
-  const runs = runsOf(query.data)
-  return useMemo(() => recentModelsOf(runs), [runs])
-}
-
 export function CatalogPicker({
   hosted,
   defaultOpen = false,
@@ -137,7 +128,6 @@ export function CatalogPicker({
 }: CatalogPickerProps): ReactElement {
   const [isOpen, setOpen] = useState(defaultOpen)
   const { prices, isPricing } = useRowPrices(hosted, isOpen)
-  const recent = useRecentModels(hosted.pricing?.appId ?? null)
   const rows = useCatalogRows(hosted.models, prices)
   const isRegular = useIsRegularWindow()
   const isBeside = place === "row" && isRegular
@@ -151,7 +141,6 @@ export function CatalogPicker({
       open={isOpen}
       onOpenChange={setOpen}
       isPricing={isPricing}
-      recent={recent}
       side={isBeside ? "right" : "top"}
       isLoading={hosted.isLoading}
       notice={

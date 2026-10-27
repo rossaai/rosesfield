@@ -134,7 +134,6 @@ export function agentRowsOf(
 type AgentModelPickerProps = {
   models: readonly string[]
   details?: AgentDetails
-  recent?: readonly string[]
   chosen: string
   onChoose: (model: string) => void
   disabled?: boolean
@@ -146,7 +145,6 @@ const noDetails: AgentDetails = {}
 export function AgentModelPicker({
   models,
   details = noDetails,
-  recent,
   chosen,
   onChoose,
   disabled = false,
@@ -172,7 +170,6 @@ export function AgentModelPicker({
       }
       words={pickerWords()}
       rows={rows}
-      {...(recent === undefined ? {} : { recent })}
       chosen={chosen}
       onChoose={onChoose}
       side="top"

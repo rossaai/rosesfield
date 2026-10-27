@@ -113,6 +113,16 @@ function rowOf(model: string, section = "all"): Element | null | undefined {
     ?.closest("[data-slot='model-row']")
 }
 
+function sectionModels(section: string): (string | undefined)[] {
+  return screen
+    .getAllByRole("option")
+    .filter(
+      (one) =>
+        one.closest("[data-section]")?.getAttribute("data-section") === section
+    )
+    .map((one) => one.dataset.model)
+}
+
 function captionOf(row: Element | null | undefined): (string | null)[] {
   return [
     ...(row?.querySelectorAll("[data-slot='model-row-capability']") ?? []),
@@ -135,9 +145,7 @@ describe("the agent's model picker", () => {
 
   it("orders the models by the table's rank by intelligence and shows the rank on each lab's mark", () => {
     open({ models: [...models].reverse() })
-    expect(
-      screen.getAllByRole("option").map((one) => one.dataset.model)
-    ).toEqual(models)
+    expect(sectionModels("all")).toEqual(models)
     const opus = rowOf("anthropic/claude-opus-5.5")
     expect(
       opus?.querySelector("[data-slot='model-row-rank']")?.textContent
@@ -291,18 +299,34 @@ describe("the agent's model picker", () => {
     ).toBe("2")
   })
 
-  it("lists your recent models on top in the order given, and every model below", () => {
-    open({ recent: ["z-ai/glm-5.3", "anthropic/claude-opus-5.5"] })
-    const recent = screen
-      .getAllByRole("option")
-      .filter(
-        (one) =>
-          one.closest("[data-section]")?.getAttribute("data-section") ===
-          "recent"
+  it("shows Featured, the #1 and then the Best value models in rank order, above All models, and no Recent", () => {
+    open({
+      details: {
+        ...details,
+        "deepseek/deepseek-v4.1-flash-1017": agentDetailOf({
+          name: "DeepSeek V4.1 Flash 1017",
+          lab: "deepseek",
+          rank: 16,
+          order: 3,
+          bestValue: true,
+          messages: [{ effort: null, credits: 1.7147 }],
+        }),
+      },
+    })
+    const sections = [
+      ...document.querySelectorAll<HTMLElement>("[data-section]"),
+    ].map((one) => one.dataset.section)
+    expect(sections).toEqual(["featured", "all"])
+    expect(sectionModels("featured")).toEqual([
+      "anthropic/claude-opus-5.5",
+      "deepseek/deepseek-v4.1-flash-1017",
+    ])
+    expect(sectionModels("all")).toEqual(models)
+    expect(
+      [...document.querySelectorAll("[data-slot='model-list-label']")].map(
+        (one) => one.textContent
       )
-      .map((one) => one.dataset.model)
-    expect(recent).toEqual(["z-ai/glm-5.3", "anthropic/claude-opus-5.5"])
-    expect(screen.getAllByRole("option")).toHaveLength(7)
+    ).toEqual([t("model.picker.featured"), t("model.picker.all")])
   })
 
   it("chooses the model you press, the control", () => {

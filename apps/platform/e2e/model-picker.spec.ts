@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test"
+import { openImagePicker } from "./image-picker"
 import { expectSortMenu } from "./picker-sort-menu"
 
 const shortScreen = { width: 390, height: 420 }
@@ -17,22 +18,6 @@ async function openPicker(page: Page, state: string): Promise<void> {
   await page.setViewportSize(shortScreen)
   await page.goto(`/gallery?entry=model-picker&state=${state}`)
   await expect(page.getByRole("searchbox").first()).toBeVisible()
-}
-
-async function openImagePicker(page: Page): Promise<Locator> {
-  const trigger = page.getByRole("button", { name: /^Model/ }).first()
-  await trigger.click()
-  await expect(
-    page.locator("[role='listbox'] [data-slot='model-row']").first()
-  ).toBeVisible()
-  await page
-    .locator("[data-slot='model-picker']")
-    .evaluate((element) =>
-      Promise.all(
-        element.getAnimations().map((animation) => animation.finished)
-      )
-    )
-  return trigger
 }
 
 test("a click at the centre of every row of the Image picker, or on its lab's mark when the Open weights badge that links out sits there, chooses that row's model", async ({

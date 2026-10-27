@@ -9,7 +9,6 @@ import { type ReactElement, useMemo, useState } from "react"
 import {
   catalogRowModel,
   pickerTrigger,
-  useRecentModels,
   useSamePrices,
 } from "@/screens/app/hosted/catalog-picker"
 import { ModelNotice } from "@/screens/app/hosted/model-notice"
@@ -61,7 +60,6 @@ export function AdsCatalogPicker({
   const [isOpen, setOpen] = useState(false)
   const { prices, isPricing } = useRowPrices(hosted, isOpen)
   const samePrices = useSamePrices(prices)
-  const recent = useRecentModels(hosted.pricing?.appId ?? null)
   const { models } = hosted
   const rows = useMemo(
     () => adsRowsOf(app, { models }, samePrices),
@@ -77,7 +75,6 @@ export function AdsCatalogPicker({
       open={isOpen}
       onOpenChange={setOpen}
       isPricing={isPricing}
-      recent={recent}
       side="top"
       isLoading={hosted.isLoading}
       notice={

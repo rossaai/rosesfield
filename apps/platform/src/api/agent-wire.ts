@@ -44,7 +44,6 @@ export type AgentModelDetail = z.infer<typeof agentModelDetail>
 export type AgentModels = {
   models: string[]
   model: string | null
-  recent: string[]
   refusal: ErrorBody | null
   details: Readonly<Record<string, AgentModelDetail>>
 }
@@ -62,13 +61,6 @@ function readDetails(body: unknown): Record<string, AgentModelDetail> {
     }
   }
   return details
-}
-
-function readRecent(body: unknown): string[] {
-  const held = fieldOf(body, "recent")
-  return Array.isArray(held)
-    ? held.filter((one): one is string => typeof one === "string")
-    : []
 }
 
 const sendPath = "/api/agent/conversations/:conversationId/messages"
@@ -90,7 +82,6 @@ export function readAgentModels(body: unknown): AgentModels | null {
   return {
     models,
     model,
-    recent: readRecent(body),
     refusal: refusal.data,
     details: readDetails(body),
   }

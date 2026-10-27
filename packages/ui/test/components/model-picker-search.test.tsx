@@ -26,7 +26,9 @@ function rowAt(index: number): ModelPickerRow {
     ),
     rank: { place: index + 1, label: `#${index + 1}`, note: "Rank from A" },
     badges: [
-      { kind: "new", label: "New" },
+      index === 1 || index === 2
+        ? { kind: "value", label: "Best value" }
+        : { kind: "new", label: "New" },
       {
         kind: "openWeights",
         label: "Open weights",
@@ -53,7 +55,6 @@ describe("ModelPicker's search", () => {
     openPicker({
       rows,
       chosen: rows[0]?.id ?? null,
-      recent: rows.slice(0, 3).map((row) => row.id),
     })
     const search = screen.getByRole("searchbox", { name: "Search models" })
     expect(screen.getAllByRole("option")).toHaveLength(largestApp + 3)

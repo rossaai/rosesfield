@@ -5,6 +5,7 @@ import {
   openPicker,
   priceOf,
   rowOf,
+  sectionIds,
   shownIds,
 } from "./model-picker-fixture"
 
@@ -182,41 +183,81 @@ describe("ModelPicker's Sort menu", () => {
   })
 })
 
-describe("ModelPicker's Recent", () => {
-  it("lists the three models you used last above All models, which still lists them", () => {
-    openPicker({ rows, recent: ["d", "gone", "b", "e", "a"] })
-    expect(shownIds("recent")).toEqual(["d", "b", "e"])
-    expect(shownIds("all")).toEqual(["a", "b", "c", "d", "e"])
-    const labels = [
-      ...document.querySelectorAll("[data-slot='model-list-label']"),
-    ].map((one) => one.textContent)
-    expect(labels).toEqual(["Recent", "All models"])
+const value = { kind: "value", label: "Best value" } as const
+
+const featuring = [
+  rowOf("top", { rank: rank(1), price: priceOf(30) }),
+  rowOf("v2", { rank: rank(2), price: priceOf(5), badges: [value, openBadge] }),
+  rowOf("r3", { rank: rank(3), price: priceOf(2) }),
+  rowOf("v4", {
+    rank: rank(4),
+    price: priceOf(50),
+    badges: [value, openBadge],
+  }),
+  rowOf("v5", { price: priceOf(1), badges: [value, openBadge] }),
+  rowOf("e"),
+]
+
+function labels(): (string | null)[] {
+  return [...document.querySelectorAll("[data-slot='model-list-label']")].map(
+    (one) => one.textContent
+  )
+}
+
+describe("ModelPicker's Featured", () => {
+  it("holds the #1, then the Best value models in rank order, at most three, above All models, which still lists them, and no other section", () => {
+    openPicker({ rows: featuring })
+    expect(shownIds("featured")).toEqual(["top", "v2", "v4"])
+    expect(shownIds("all")).toEqual(["top", "v2", "r3", "v4", "v5", "e"])
+    expect(labels()).toEqual(["Featured", "All models"])
+    expect(sectionIds()).toEqual(["featured", "all"])
+  })
+
+  it("shows the #1 once when it is also a Best value model", () => {
+    openPicker({
+      rows: [
+        rowOf("top", { rank: rank(1), badges: [value] }),
+        rowOf("v2", { rank: rank(2), badges: [value] }),
+        rowOf("r3", { rank: rank(3) }),
+      ],
+    })
+    expect(shownIds("featured")).toEqual(["top", "v2"])
+  })
+
+  it("keeps its rank order whatever Sort holds, while All models follows the chosen order", async () => {
+    openPicker({ rows: featuring })
+    await choose("Sort by", "Price")
+    await choose("Order", "Low to high")
+    expect(shownIds("featured")).toEqual(["top", "v2", "v4"])
+    expect(shownIds("all")).toEqual(["v5", "r3", "v2", "top", "v4", "e"])
   })
 
   it("obeys the search, and hides with its heading when nothing in it matches", () => {
-    openPicker({ rows, recent: ["d", "b", "e"] })
+    openPicker({ rows: featuring })
     const search = screen.getByRole("searchbox", { name: "Search models" })
-    fireEvent.change(search, { target: { value: "b" } })
-    expect(shownIds("recent")).toEqual(["b"])
-    expect(shownIds("all")).toEqual(["b"])
-    fireEvent.change(search, { target: { value: "c" } })
-    expect(shownIds("recent")).toEqual([])
-    expect(shownIds("all")).toEqual(["c"])
-    expect(document.querySelector("[data-slot='model-list-label']")).toBeNull()
+    fireEvent.change(search, { target: { value: "v4" } })
+    expect(shownIds("featured")).toEqual(["v4"])
+    expect(shownIds("all")).toEqual(["v4"])
+    fireEvent.change(search, { target: { value: "r3" } })
+    expect(shownIds("featured")).toEqual([])
+    expect(shownIds("all")).toEqual(["r3"])
+    expect(labels()).toEqual([])
   })
 
-  it("obeys the switch", async () => {
-    openPicker({ rows, recent: ["e", "d", "c", "b"] })
+  it("obeys the Open weights only switch", async () => {
+    openPicker({ rows: featuring })
     const menu = await openSort()
     fireEvent.click(
       within(menu).getByRole("menuitemcheckbox", { name: "Open weights only" })
     )
-    expect(shownIds("recent")).toEqual(["d", "b"])
+    expect(shownIds("featured")).toEqual(["v2", "v4"])
+    expect(shownIds("all")).toEqual(["v2", "v4", "v5"])
   })
 
-  it("hides when no model you used is listed", () => {
-    openPicker({ rows, recent: ["gone"] })
-    expect(document.querySelector("[data-section='recent']")).toBeNull()
-    expect(shownIds("all")).toEqual(["a", "b", "c", "d", "e"])
+  it("hides when no model is ranked or marked Best value", () => {
+    openPicker({ rows: [rowOf("a"), rowOf("b")] })
+    expect(sectionIds()).toEqual(["all"])
+    expect(labels()).toEqual([])
+    expect(shownIds("all")).toEqual(["a", "b"])
   })
 })

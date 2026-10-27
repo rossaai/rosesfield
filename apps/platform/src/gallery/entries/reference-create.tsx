@@ -232,7 +232,6 @@ function Picker({ open }: { open: boolean }): ReactElement {
         trigger={<ModelChip name={t("sample.model")} mark={mark} />}
         words={pickerWords()}
         rows={modelRowsOf([sampleModel(), ...listedModels()])}
-        recent={["sample"]}
         chosen="sample"
         onChoose={() => undefined}
         defaultOpen={open}

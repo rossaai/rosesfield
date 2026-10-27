@@ -1,12 +1,7 @@
 import { autoRunLimitCredits } from "@rosesfield/catalog/comfy"
 import { ChipSelect } from "@rosesfield/ui/components/chip-select"
 import { cn } from "@rosesfield/ui/lib/cn"
-import {
-  ArrowUpIcon,
-  GaugeIcon,
-  SparklesIcon,
-  UserCheckIcon,
-} from "lucide-react"
+import { ArrowUpIcon, GaugeIcon, UserCheckIcon, ZapIcon } from "lucide-react"
 import type { ReactElement } from "react"
 import type { AgentEffort, RunApproval } from "@/api/conversation-wire"
 import { formatAmount } from "@/copy/format"
@@ -36,7 +31,7 @@ function runModesOf(): readonly [RunMode, RunMode] {
       description: t("agent.mode.auto.description", {
         credits: formatAmount(autoRunLimitCredits),
       }),
-      icon: <SparklesIcon aria-hidden="true" />,
+      icon: <ZapIcon aria-hidden="true" />,
     },
     {
       value: "ask",
@@ -107,7 +102,6 @@ function ModelPill(): ReactElement | null {
     <AgentModelPicker
       models={listed.models}
       details={listed.details}
-      recent={listed.recent}
       chosen={(choose.isPending ? choose.variables : null) ?? listed.model}
       onChoose={(model) => choose.mutate(model)}
       disabled={choose.isPending}
