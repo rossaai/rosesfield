@@ -294,6 +294,40 @@ describe("the asset preview routes", () => {
     }
   })
 
+  it("keep a 3D model's still for its visitor alone, and refuse it to another visitor", async () => {
+    const opened = openGateway()
+    try {
+      const owner = opened.visitor({ [keyHeaders.engine]: "comfyui-owner" })
+      const glb = Uint8Array.of(0x67, 0x6c, 0x54, 0x46, 2, 0, 0, 0)
+      const uploadedMesh = await owner.call(routes.uploadAsset.path, {
+        method: "POST",
+        headers: { "content-type": "model/gltf-binary" },
+        body: glb,
+      })
+      const mesh = assetResponse.parse(await uploadedMesh.json()).asset
+      expect(mesh.kind).toBe("mesh")
+      const stranger = opened.visitor({ [keyHeaders.engine]: "comfyui-other" })
+      const strangers = await stranger.call(previewPath(mesh.id), {
+        method: "PUT",
+        headers: { "content-type": "image/webp" },
+        body: webp,
+      })
+      expect(strangers.status).toBe(404)
+      expect((await owner.call(previewPath(mesh.id))).status).toBe(404)
+      const kept = await owner.call(previewPath(mesh.id), {
+        method: "PUT",
+        headers: { "content-type": "image/webp" },
+        body: webp,
+      })
+      expect(kept.status).toBe(204)
+      const read = await owner.call(previewPath(mesh.id))
+      expect(new Uint8Array(await read.arrayBuffer())).toEqual(webp)
+      expect((await stranger.call(previewPath(mesh.id))).status).toBe(404)
+    } finally {
+      await opened.close()
+    }
+  })
+
   it("is deleted with its asset", async () => {
     const gateway = open("local")
     const assetId = await uploaded(gateway, video, "video/mp4")

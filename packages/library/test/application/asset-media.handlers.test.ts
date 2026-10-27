@@ -139,6 +139,37 @@ describe("PutAssetPreviewHandler", () => {
     })
   })
 
+  it("keeps a 3D model's still under the same type and size caps", async () => {
+    const library = libraryFor()
+    const mesh = await uploadOf(library, "model/gltf-binary", sixBytes)
+    const oversize = new Uint8Array(64 * 1024 + 1)
+    oversize.set(webp)
+    await expect(
+      library.putPreview.execute({
+        assetId: mesh,
+        bytes: oversize,
+        mime: "image/webp",
+      })
+    ).rejects.toMatchObject({ code: "ASSET_TOO_LARGE" })
+    await expect(
+      library.putPreview.execute({
+        assetId: mesh,
+        bytes: jpeg,
+        mime: "image/webp",
+      })
+    ).rejects.toMatchObject({ code: "ASSET_PREVIEW_INVALID" })
+    expect(library.store.previews.size).toBe(0)
+    await library.putPreview.execute({
+      assetId: mesh,
+      bytes: webp,
+      mime: "image/webp",
+    })
+    expect(await library.readPreview.execute({ assetId: mesh })).toEqual({
+      bytes: webp,
+      mime: "image/webp",
+    })
+  })
+
   it("refuses bytes that are not the type they are sent as", async () => {
     const library = libraryFor()
     const assetId = await uploadImage(library)
