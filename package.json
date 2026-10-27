@@ -26,9 +26,7 @@
     "motion:check": "bun scripts/checks/motion-presets/check-motion-presets.ts",
     "ui:add": "cd apps/platform && shadcn add",
     "gate": "bun run catalog:sync && bun run generated:check && bun run copy:check && bun run glob:check && bun run motion:check && bun run typecheck && bun run lint && bun run test",
-    "deploy": "bun scripts/deploy/deploy.ts",
-    "demo:capture": "bun scripts/demo/capture.ts",
-    "demo:cut": "bun scripts/demo/cut.ts"
+    "deploy": "bun scripts/deploy/deploy.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
