@@ -1,4 +1,5 @@
 import { createNodePhotonImages } from "@earendil-works/pi-durable/images/node"
+import { PutAssetPreviewHandler } from "@rosesfield/library"
 import { afterEach, describe, expect, it } from "vitest"
 import { agentTools } from "#infrastructure/pi-agent-tools"
 import type { ImagesOf } from "#infrastructure/pi-asset-media"
@@ -115,14 +116,21 @@ describe("an image the agent reads", () => {
 })
 
 describe("a 3D model the agent reads", () => {
-  it("sends its still picture to a model that takes images", async () => {
+  it("sends the still the platform stored through the preview route to a model that takes images", async () => {
     const stored = storedLibrary()
     const mesh = await stored.add(
       { kind: "mesh", mime: "model/gltf-binary" },
       Uint8Array.of(103, 108, 84, 70)
     )
-    const still = pngOf(8, 8)
-    await stored.library.store.putPreview(mesh.id, still, "image/png")
+    const still = Uint8Array.of(
+      ...[0x52, 0x49, 0x46, 0x46, 0x0c, 0, 0, 0],
+      ...[0x57, 0x45, 0x42, 0x50, 0x56, 0x50, 0x38, 0x20]
+    )
+    await new PutAssetPreviewHandler(stored.library).execute({
+      assetId: mesh.id,
+      bytes: still,
+      mime: "image/webp",
+    })
 
     const { requests } = await turnsWith({
       model: imageModel,
@@ -133,9 +141,10 @@ describe("a 3D model the agent reads", () => {
     expect(partsOf(requests[1], "image_url")).toEqual([
       {
         type: "image_url",
-        image_url: { url: `data:image/png;base64,${base64(still)}` },
+        image_url: { url: `data:image/webp;base64,${base64(still)}` },
       },
     ])
+    expect(toolTextOf(requests[1])).not.toContain("has no still picture")
   })
 
   it("control: says it has no still when the server holds none", async () => {

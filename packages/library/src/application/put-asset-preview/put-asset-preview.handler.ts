@@ -1,3 +1,4 @@
+import type { AssetKind } from "@rosesfield/contract"
 import { assetIdFormat } from "@rosesfield/kernel"
 import type { AssetRepository } from "#domain/asset.repository"
 import type { AssetStore } from "#domain/asset-store.port"
@@ -19,6 +20,11 @@ type PutAssetPreviewHandlerOptions = {
 
 export class PutAssetPreviewHandler {
   static readonly maxBytes = 64 * 1024
+  static readonly pictured: ReadonlySet<AssetKind> = new Set([
+    "image",
+    "video",
+    "mesh",
+  ])
 
   private readonly assets: AssetRepository
   private readonly store: AssetStore
@@ -34,7 +40,7 @@ export class PutAssetPreviewHandler {
     if (asset === null) {
       throw new AssetNotFoundError({ assetId: input.assetId })
     }
-    if (asset.kind !== "image" && asset.kind !== "video") {
+    if (!PutAssetPreviewHandler.pictured.has(asset.kind)) {
       throw new AssetPreviewInvalidError({
         reason: `a ${asset.kind} asset shows no picture`,
       })

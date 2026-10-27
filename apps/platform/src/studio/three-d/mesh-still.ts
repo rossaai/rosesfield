@@ -1,5 +1,13 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { routes } from "@rosesfield/contract"
+import {
+  type QueryClient,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import { type RefObject, useEffect, useState } from "react"
+import { callRoute } from "@/api/call-route"
+import { makePreview } from "@/api/make-preview"
+import { assetPreviewKey, previewQuery } from "@/api/use-asset-source"
 import type { MeshScene } from "@/studio/three-d/glb"
 import { meshQuery } from "@/studio/three-d/mesh-file"
 import { MeshRenderer } from "@/studio/three-d/mesh-renderer"
@@ -23,6 +31,28 @@ class StillLine {
 }
 
 const stillLine = new StillLine()
+const keptStills = new Set<string>()
+
+async function keepStill(
+  client: QueryClient,
+  assetId: string,
+  still: string
+): Promise<void> {
+  if (keptStills.has(assetId)) {
+    return
+  }
+  keptStills.add(assetId)
+  const stored = await client.fetchQuery(previewQuery(assetId))
+  if (stored !== null) {
+    return
+  }
+  const made = await makePreview(still, "image")
+  if (made === null) {
+    return
+  }
+  await callRoute(routes.putAssetPreview, { params: { assetId }, body: made })
+  client.setQueryData(assetPreviewKey(assetId), URL.createObjectURL(made))
+}
 
 export async function paintStill(scene: MeshScene): Promise<string | null> {
   const size = StillLine.size
@@ -54,7 +84,12 @@ export function useMeshStill(assetId: string, isSeen: boolean): string | null {
     queryKey: meshStillKey(assetId),
     queryFn: async (): Promise<string | null> => {
       const file = await client.fetchQuery(meshQuery(assetId))
-      return file.scene === null ? null : stillLine.paint(file.scene)
+      const still =
+        file.scene === null ? null : await stillLine.paint(file.scene)
+      if (still !== null) {
+        void keepStill(client, assetId, still).catch(() => undefined)
+      }
+      return still
     },
     enabled: isSeen,
     staleTime: Number.POSITIVE_INFINITY,
