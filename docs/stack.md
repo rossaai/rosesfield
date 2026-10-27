@@ -171,6 +171,26 @@ The agent runs on a chat model of the Comfy Router, with your Comfy key. It has 
 - The context window is fixed at 65,536 tokens, because pi-durable compacts against it. An answer holds at most 8,192 tokens.
 - `COMFY_API_KEY=<key> bun packages/agent/scripts/capture-scenario-answers.ts --model <id>` runs the agent's three scenarios live on one Router chat model and writes `packages/agent/test/fixtures/scenario-answers/<model>.json` as captured. Only the chat turns are live: each app run is answered by the same fakes the replay uses. It makes at most 12 Router calls, each with a 90-second timeout and no retry, drops every header that carries a key or a cookie, writes changing ids as `{{result:n}}` and `{{seen:n}}`, and prints each turn's `usage.cost` and the total. The scenario tests then replay the file and find the cheapest model whose captured answers pass every scenario.
 
+### The media the agent reads
+
+`read_asset` returns the asset's facts: its kind, type, size, length and the run that made it with its inputs. When the conversation's model lists the asset's kind in its `inputs`, the model also receives the media itself, through the same `openrouter/chat-completions` route. The bounds are `routerMedia` in `packages/agent/src/infrastructure/router-chat-media.ts`, beside the fetch.
+
+| Kind | What the model receives | Bound |
+|---|---|---|
+| image | pi-ai's image content, which its completions provider writes as an `image_url` part with a base64 data URL | at most 2000 pixels a side and 1.5 MiB of base64, so the tool result fits one 2 MB Durable Object row |
+| audio | OpenRouter's `input_audio` part, `{ data, format }`, raw base64 with one of the formats OpenRouter lists: wav, mp3, aiff, aac, ogg, flac, m4a | 8 MiB and 300 seconds |
+| video | OpenRouter's `video_url` part with a `data:video/<type>;base64,` URL, for mp4, mpeg, mov and webm | 8 MiB and 60 seconds |
+| 3D model | its still picture, as an image, when the server stores one | the still is a preview of at most 64 KiB |
+
+- OpenRouter's image page publishes no pixel or byte limit for chat completions: it says the number of images a request can carry "varies per provider and per model". The image bound comes from the Durable Object's 2 MB value limit and pi's 2000 pixel default. The audio and video seconds are the limits OpenRouter publishes for its one documented audio and video model, Clef Omni, and the bytes are the most one ranged read of the library returns, `ReadAssetContentHandler.maxRangeBytes`.
+- An image within the bound is sent as it is. A larger one is scaled with Photon, through pi-durable's image processor, on bun only. On Workers, and when scaling fails, the model receives the library's preview of the image, and with no preview it receives the facts alone.
+- pi-ai has no audio or video content, so the tool result carries a line `rosesfield-media:<asset id>`, and Rosesfield's router fetch replaces it before the request leaves. The fetch reads the asset through the request's own library, so a visitor's agent reads only that visitor's assets, and the media goes only with that visitor's key.
+- A longer or larger WAV or MP3 sends its first part within the bound, and the tool result says how many seconds reach the model. Cutting any other audio, or any video, needs ffmpeg, which Workers cannot run, so such an asset is sent only when it already fits, and otherwise the model receives its facts and a note naming the bound.
+- One turn sends at most 4 media and 16 MiB of them, in the order the turn read them. A later one is left out with a note. Media read in an earlier turn is not sent again, so the model reads an asset again to see it.
+- Each read of the library's bytes has a 15-second timeout. No media and no key is logged.
+- When the model does not take the asset's kind, the note names the three highest ranked models of the table that do. The agent's instructions say that media it reads adds to the cost of the turn.
+- A 3D model's still is drawn only in the browser today, and the preview route accepts a picture only for an image or a video, so no still reaches the server. A still reaches the model once the platform uploads the picture `useMeshStill` paints through the preview route and `PutAssetPreviewHandler` accepts it for a 3D model.
+
 ## MCP
 
 The server serves `/mcp` with the official SDK v2 and its Hono adapter, stateless. Set the `nodejs_compat` flag on Workers. Requests carry the owner token, checked before the transport, per `docs/architecture.md` §The owner lock. On your machine, `localhostHostValidation()` guards against DNS rebinding.
