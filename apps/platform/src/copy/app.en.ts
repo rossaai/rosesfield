@@ -117,7 +117,7 @@ export const appCopy = {
   "model.picker.order.down": "High to low",
   "model.picker.order.up": "Low to high",
   "model.picker.openOnly": "Open weights only",
-  "model.picker.recent": "Recent",
+  "model.picker.featured": "Featured",
   "model.picker.all": "All models",
   "model.picker.rank": "#{rank}",
   "model.picker.rankFrom": "Rank from {boards}, read on {date}",
