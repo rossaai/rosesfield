@@ -5,7 +5,7 @@ import {
 } from "@rosesfield/catalog/comfy"
 import { speechModelInput, speechTextInput } from "@rosesfield/catalog/lipsync"
 import type { AppListing } from "@rosesfield/contract"
-import { formatAmount } from "@/copy/format"
+import { formatWholeCredits } from "@/copy/format"
 import { t } from "@/copy/t"
 import {
   bodyOf,
@@ -148,7 +148,7 @@ export function pricedStart(
     return started
   }
   const total = totalOf(lip, speech)
-  const amount = total === null ? null : formatAmount(total)
+  const amount = total === null ? null : formatWholeCredits(total)
   return {
     ...started,
     price: "",

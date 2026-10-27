@@ -133,8 +133,8 @@ describe("the run a Text choice starts", () => {
 describe("the price on Generate", () => {
   it("adds the speech run to the lip sync run on Text", () => {
     const priced = pricedStart(started, 59.1, 1.25, true)
-    expect(priced.priceValue).toBe("60")
-    expect(priced.priceName).toBe(t("run.generate.priced", { amount: "60" }))
+    expect(priced.priceValue).toBe("61")
+    expect(priced.priceName).toBe(t("run.generate.priced", { amount: "61" }))
   })
 
   it("shows Generate alone when the speech run has no price", () => {

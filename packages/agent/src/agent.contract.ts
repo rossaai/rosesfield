@@ -117,7 +117,6 @@ export const agentModelDetail = z.object({
 export const agentModelsResponse = z.object({
   models: z.array(agentModelId),
   model: agentModelId.nullable(),
-  recent: z.array(agentModelId).max(3).optional(),
   refusal: errorBody.nullable(),
   details: z.record(agentModelId, agentModelDetail).optional(),
 })

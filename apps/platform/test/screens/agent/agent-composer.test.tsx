@@ -10,7 +10,7 @@ import {
 } from "@testing-library/react"
 import type { ReactElement } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { formatAmount } from "@/copy/format"
+import { formatWholeCredits } from "@/copy/format"
 import { t } from "@/copy/t"
 import { AttachMenu } from "@/pieces/attach-menu"
 import { MentionPicker } from "@/pieces/character-picker"
@@ -205,7 +205,7 @@ describe("the agent composer", () => {
     const options = await screen.findAllByRole("option")
     expect(options.map((option) => option.textContent)).toEqual([
       `${t("agent.mode.auto")}${t("agent.mode.auto.description", {
-        credits: formatAmount(autoRunLimitCredits),
+        credits: formatWholeCredits(autoRunLimitCredits),
       })}`,
       `${t("agent.mode.manual")}${t("agent.mode.manual.description")}`,
     ])

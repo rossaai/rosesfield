@@ -14,7 +14,7 @@ import {
 } from "@tanstack/react-query"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { characterQuery, settingsQuery } from "@/api/queries"
-import { formatAmount } from "@/copy/format"
+import { formatWholeCredits } from "@/copy/format"
 import { t } from "@/copy/t"
 import { storeRun } from "@/pieces/run/run-actions"
 import type { FormValues } from "@/screens/app/app-form"
@@ -192,7 +192,7 @@ export function useStoryboardStart(
         onStarted,
       }),
   })
-  const amount = isDemo || credits === null ? null : formatAmount(credits)
+  const amount = isDemo || credits === null ? null : formatWholeCredits(credits)
   return {
     generate: () => {
       if (!start.isPending) {

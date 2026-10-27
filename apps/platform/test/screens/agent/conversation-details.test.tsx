@@ -80,7 +80,7 @@ describe("the person's message", () => {
       }
       return found
     })
-    expect(credits.textContent).toBe("<1")
+    expect(credits.textContent).toBe("1")
     expect(credits.querySelector("[data-slot=credit-price]")).not.toBeNull()
   })
 })

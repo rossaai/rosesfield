@@ -4,7 +4,7 @@ import { cn } from "@rosesfield/ui/lib/cn"
 import { ArrowUpIcon, GaugeIcon, UserCheckIcon, ZapIcon } from "lucide-react"
 import type { ReactElement } from "react"
 import type { AgentEffort, RunApproval } from "@/api/conversation-wire"
-import { formatAmount } from "@/copy/format"
+import { formatWholeCredits } from "@/copy/format"
 import { t } from "@/copy/t"
 import { DraftBar } from "@/pieces/draft-bar"
 import type { DraftState } from "@/pieces/use-draft"
@@ -29,7 +29,7 @@ function runModesOf(): readonly [RunMode, RunMode] {
       value: "auto",
       label: t("agent.mode.auto"),
       description: t("agent.mode.auto.description", {
-        credits: formatAmount(autoRunLimitCredits),
+        credits: formatWholeCredits(autoRunLimitCredits),
       }),
       icon: <ZapIcon aria-hidden="true" />,
     },

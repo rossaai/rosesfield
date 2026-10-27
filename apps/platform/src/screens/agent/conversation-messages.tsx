@@ -7,7 +7,7 @@ import { motion } from "@rosesfield/ui/motion"
 import type { ReactElement, ReactNode } from "react"
 import type { TranscriptItem } from "@/api/conversation-wire"
 import { wordsForCode } from "@/copy/error-words"
-import { formatAmount } from "@/copy/format"
+import { formatWholeCredits } from "@/copy/format"
 import { t } from "@/copy/t"
 import { useAssetThumbs } from "@/pieces/attachment-thumbs"
 import type { AnswerPart, Turn } from "@/screens/agent/conversation-store"
@@ -69,7 +69,7 @@ function AgentText({
 }
 
 function TurnCredits({ credits }: { credits: number }): ReactElement {
-  const amount = formatAmount(credits)
+  const amount = formatWholeCredits(credits)
   return (
     <p
       data-slot="turn-credits"

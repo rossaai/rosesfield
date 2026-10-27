@@ -12,9 +12,9 @@ import { appName, aspectOf, isAssetInput } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { isModeInput } from "@/catalog/mode-input"
 import {
-  formatAmount,
   formatDuration,
   formatTime,
+  formatWholeCredits,
   secondsBetween,
   withUnit,
 } from "@/copy/format"
@@ -258,18 +258,18 @@ export function historyPrice(
 export function runPriceAmount(run: Run): string | null {
   return run.origin === "demo" || run.cost === null
     ? null
-    : formatAmount(creditsOfCost(run.cost))
+    : formatWholeCredits(creditsOfCost(run.cost))
 }
 
 function priceOf(run: Run, estimate: number | null): string | null {
   if (run.cost !== null) {
     return t("run.price.credits", {
-      amount: formatAmount(creditsOfCost(run.cost)),
+      amount: formatWholeCredits(creditsOfCost(run.cost)),
     })
   }
   return estimate === null
     ? null
-    : t("run.price.estimated", { amount: formatAmount(estimate) })
+    : t("run.price.estimated", { amount: formatWholeCredits(estimate) })
 }
 
 export type RunBadge =
@@ -302,13 +302,13 @@ function leadOf(run: Run): RunBadge | null {
 
 function priceBadgeOf(run: Run, estimate: number | null): RunBadge | null {
   if (run.cost !== null) {
-    const amount = formatAmount(creditsOfCost(run.cost))
+    const amount = formatWholeCredits(creditsOfCost(run.cost))
     return { kind: "price", amount, label: t("run.price.credits", { amount }) }
   }
   if (estimate === null) {
     return null
   }
-  const amount = formatAmount(estimate)
+  const amount = formatWholeCredits(estimate)
   return { kind: "price", amount, label: t("run.price.estimated", { amount }) }
 }
 

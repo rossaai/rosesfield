@@ -108,12 +108,10 @@ describe("the agent's model list", () => {
     expect(listed).toEqual({
       models: ["maker/chat-small", "maker/chat-large"],
       model: "maker/chat-small",
-      recent: ["maker/chat-small"],
       refusal: null,
       details: {},
     })
     expect(chosen.model).toBe("maker/chat-large")
-    expect(chosen.recent).toEqual(["maker/chat-large", "maker/chat-small"])
     expect((await modelsOf(await call(app))).model).toBe("maker/chat-large")
   })
 

@@ -159,7 +159,7 @@ describe("the effect tiles", () => {
       "[data-slot=effect-price]"
     )
     expect(own?.getAttribute("title")).toBe(
-      t("run.price.credits", { amount: "41" })
+      t("run.price.credits", { amount: "42" })
     )
     expect(document.body.textContent).not.toContain(kept)
   })

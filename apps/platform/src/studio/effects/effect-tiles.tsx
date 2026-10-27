@@ -11,7 +11,7 @@ import { interaction } from "@rosesfield/ui/components/interaction"
 import { MediaBadge } from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { type ReactElement, type ReactNode, useEffect, useRef } from "react"
-import { formatAmount } from "@/copy/format"
+import { formatWholeCredits } from "@/copy/format"
 import { t, tCatalog } from "@/copy/t"
 import { ChosenVeil } from "@/pieces/selectable-tile"
 import { previewOf } from "@/studio/effects/effect-previews"
@@ -79,11 +79,11 @@ export function tilePriceOf(
 ): TilePrice | null {
   const credits = prices.creditsOf(tile.effect)
   if (credits !== null && prices.isMeasured(tile.effect)) {
-    const amount = formatAmount(credits)
+    const amount = formatWholeCredits(credits)
     return { amount, words: t("run.price.credits", { amount }) }
   }
   if (tile.kept !== null) {
-    const amount = formatAmount(tile.kept.credits)
+    const amount = formatWholeCredits(tile.kept.credits)
     return {
       amount,
       words: t("run.price.kept", {
@@ -95,7 +95,7 @@ export function tilePriceOf(
   if (credits === null) {
     return null
   }
-  const amount = formatAmount(credits)
+  const amount = formatWholeCredits(credits)
   return { amount, words: t("run.price.credits", { amount }) }
 }
 

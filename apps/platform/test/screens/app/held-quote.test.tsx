@@ -7,7 +7,7 @@ import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { GatewaySettings } from "@/api/gateway-settings"
 import { settingsQuery } from "@/api/queries"
-import { formatAmount } from "@/copy/format"
+import { formatWholeCredits } from "@/copy/format"
 import { t } from "@/copy/t"
 import { heldQuoteOf, type Quote } from "@/screens/app/held-quote"
 import { priceQuery } from "@/screens/app/hosted/model-catalog-query"
@@ -172,9 +172,9 @@ describe("Generate's price across a count change", () => {
       ({ form }) => useStartRun(image, form, undefined, hosted),
       { wrapper, initialProps: { form: formWith(1) } }
     )
-    expect(result.current.priceValue).toBe(formatAmount(6.5))
+    expect(result.current.priceValue).toBe(formatWholeCredits(6.5))
     rerender({ form: formWith(3) })
-    const tripled = formatAmount(19.5)
+    const tripled = formatWholeCredits(19.5)
     expect(result.current.priceValue).toBe(tripled)
     act(() => vi.advanceTimersByTime(99))
     expect(asked.filter((url) => url.includes("/price"))).toHaveLength(0)

@@ -30,7 +30,6 @@ export type ConversationList = {
 
 export type AgentSettings = {
   model: string | null
-  recent?: string[]
 }
 
 export type ConversationSettings = {
@@ -71,17 +70,6 @@ export const conversationList = defineDoc<ConversationList>({
   scope: "session",
   initial: () => ({ items: {} }),
 })
-
-const recentLimit = 3
-
-export function recentModelsOf(
-  newestFirst: readonly string[],
-  listed: readonly string[] | null = null
-): string[] {
-  return [...new Set(newestFirst)]
-    .filter((model) => listed === null || listed.includes(model))
-    .slice(0, recentLimit)
-}
 
 export const agentSettings = defineDoc<AgentSettings>({
   kind: "rosesfield.agent-settings",
