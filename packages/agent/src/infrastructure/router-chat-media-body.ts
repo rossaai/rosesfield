@@ -14,25 +14,28 @@ import {
   wavPrefixOf,
   withinTime,
 } from "#infrastructure/router-chat-media"
+import {
+  charge,
+  fits,
+  type MediaLedger,
+  type TurnCount,
+  turnOf,
+} from "#infrastructure/router-chat-media-ledger"
 import { routerChatModelOf } from "#infrastructure/router-chat-models"
 
 type Message = Record<string, unknown>
 
 type Part = Record<string, unknown>
 
-type Budget = {
-  count: number
-  bytes: number
-}
-
 type Rewrite = {
   inputs: ReadonlySet<string>
   reads: (() => MediaReads) | null
-  turnStart: number
-  budget: Budget
+  sentBefore: number
+  turn: TurnCount
 }
 
 const mediaParts: readonly string[] = ["image_url", "input_audio", "video_url"]
+const ownedImageKinds: readonly string[] = ["image", "mesh"]
 const markLine = new RegExp(
   `^${routerMedia.markPrefix}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$`
 )
@@ -49,6 +52,14 @@ function isMediaPart(part: Part): boolean {
   return typeof part.type === "string" && mediaParts.includes(part.type)
 }
 
+function isAttachment(message: Message | undefined): boolean {
+  return (
+    message !== undefined &&
+    message.role === "user" &&
+    partsOf(message).some(isMediaPart)
+  )
+}
+
 function textPart(text: string): Part {
   return { type: "text", text }
 }
@@ -56,38 +67,25 @@ function textPart(text: string): Part {
 /** The index of the person's last message: a user message that carries no media, which pi's attachment of tool images does. */
 function turnStartOf(messages: readonly Message[]): number {
   return messages.findLastIndex(
-    (message) => message.role === "user" && !partsOf(message).some(isMediaPart)
+    (message) => message.role === "user" && !isAttachment(message)
   )
 }
 
-function takes(budget: Budget, bytes: number): boolean {
-  if (
-    budget.count >= routerMedia.perTurn ||
-    budget.bytes + bytes > routerMedia.turnBytes
-  ) {
-    return false
-  }
-  budget.count += 1
-  budget.bytes += bytes
-  return true
+/**
+ * The index of the last answer. Every tool result before it was carried by an earlier request, which the model answered.
+ * An assistant line pi writes between tool results and their images is no answer.
+ */
+function lastAnswerOf(messages: readonly Message[]): number {
+  return messages.findLastIndex(
+    (message, at) =>
+      message.role === "assistant" && !isAttachment(messages[at + 1])
+  )
 }
 
 function imageBytesOf(part: Part): number {
   const url = isRecord(part.image_url) ? part.image_url.url : undefined
   const data = typeof url === "string" ? url.slice(url.indexOf(",") + 1) : ""
   return Math.floor((data.length * 3) / 4)
-}
-
-function keptPart(part: Part, at: number, rewrite: Rewrite): Part {
-  if (part.type !== "image_url") {
-    return part
-  }
-  if (at < rewrite.turnStart) {
-    return textPart(agentCopy.media.earlier)
-  }
-  return takes(rewrite.budget, imageBytesOf(part))
-    ? part
-    : textPart(overNoteOf())
 }
 
 function mediaPartOf(asset: Asset, bytes: Uint8Array): Part | null {
@@ -114,13 +112,23 @@ type Expanded = {
   part: Part | null
 }
 
+const unread: Expanded = { note: agentCopy.media.unread, part: null }
+
+function readsOf(rewrite: Rewrite): MediaReads | null {
+  try {
+    return rewrite.reads?.() ?? null
+  } catch {
+    return null
+  }
+}
+
 async function expandedOf(
   assetId: string,
+  key: string,
   rewrite: Rewrite
 ): Promise<Expanded> {
-  const reads = rewrite.reads?.()
-  const unread = { note: agentCopy.media.unread, part: null }
-  if (reads === undefined) {
+  const reads = readsOf(rewrite)
+  if (reads === null) {
     return unread
   }
   const read = reads.getAsset.execute({ assetId }).catch(() => null)
@@ -136,7 +144,7 @@ async function expandedOf(
   if (plan.send === "none") {
     return { note: planNoteOf(asset, plan), part: null }
   }
-  if (!takes(rewrite.budget, plan.bytes)) {
+  if (!fits(rewrite.turn, key, plan.bytes)) {
     return { note: overNoteOf(), part: null }
   }
   const bytes = await readFirstBytes(
@@ -151,64 +159,75 @@ async function expandedOf(
       ? wavPrefixOf(bytes)
       : bytes
   const part = sent === null ? null : mediaPartOf(asset, sent)
-  return part === null ? unread : { note: null, part }
+  if (sent === null || part === null) {
+    return unread
+  }
+  charge(rewrite.turn, key, sent.length)
+  return { note: null, part }
 }
 
-async function toolMessageOf(
-  message: Message,
-  at: number,
-  rewrite: Rewrite,
-  attached: Part[]
-): Promise<Message> {
+/** Whether a tool result is one whose image pi attaches: `read_asset`'s facts of an image or a 3D model that came with its picture. */
+function ownsImage(message: Message): boolean {
   if (typeof message.content !== "string") {
-    return message
+    return false
   }
-  const lines: string[] = []
-  for (const line of message.content.split("\n")) {
-    const assetId = markLine.exec(line)?.[1]
-    if (assetId === undefined) {
-      lines.push(line)
-    } else if (at < rewrite.turnStart) {
-      lines.push(agentCopy.media.earlier)
-    } else {
-      const expanded = await expandedOf(assetId, rewrite)
-      if (expanded.note !== null) {
-        lines.push(expanded.note)
-      }
-      if (expanded.part !== null) {
-        attached.push(expanded.part)
-      }
-    }
+  try {
+    const facts: unknown = JSON.parse(message.content.split("\n")[0] ?? "")
+    const asset = isRecord(facts) ? facts.asset : undefined
+    const kind = isRecord(asset) ? asset.kind : undefined
+    const note = isRecord(facts) ? facts.note : undefined
+    return (
+      typeof kind === "string" &&
+      ownedImageKinds.includes(kind) &&
+      (note === undefined || note === agentCopy.media.preview)
+    )
+  } catch {
+    return false
   }
-  return { ...message, content: lines.join("\n") }
 }
 
-async function messagesOf(
-  messages: readonly Message[],
-  rewrite: Rewrite
-): Promise<Message[]> {
-  const sent: Message[] = []
-  let attached: Part[] = []
-  for (const [at, message] of messages.entries()) {
-    if (message.role === "tool") {
-      sent.push(await toolMessageOf(message, at, rewrite, attached))
-    } else {
-      sent.push(...attachmentOf(attached))
-      attached = []
-      sent.push(
-        message.role === "user" && Array.isArray(message.content)
-          ? {
-              ...message,
-              content: partsOf(message).map((part) =>
-                keptPart(part, at, rewrite)
-              ),
-            }
-          : message
-      )
-    }
+type Batch = {
+  tools: readonly { at: number; message: Message }[]
+  attachment: { at: number; message: Message } | null
+}
+
+function batchAt(messages: readonly Message[], from: number): Batch {
+  const tools: { at: number; message: Message }[] = []
+  let at = from
+  for (; messages[at]?.role === "tool"; at += 1) {
+    tools.push({ at, message: messages[at] as Message })
   }
-  sent.push(...attachmentOf(attached))
-  return sent
+  const next = messages[at]
+  return {
+    tools,
+    attachment:
+      next !== undefined && isAttachment(next) ? { at, message: next } : null,
+  }
+}
+
+function sizeOf(batch: Batch): number {
+  return batch.tools.length + (batch.attachment === null ? 0 : 1)
+}
+
+function earlierToolOf(message: Message): Message {
+  return typeof message.content === "string"
+    ? {
+        ...message,
+        content: message.content
+          .split("\n")
+          .map((line) => (markLine.test(line) ? agentCopy.media.earlier : line))
+          .join("\n"),
+      }
+    : message
+}
+
+function earlierAttachmentOf(message: Message): Message {
+  return {
+    ...message,
+    content: partsOf(message).map((part) =>
+      isMediaPart(part) ? textPart(agentCopy.media.earlier) : part
+    ),
+  }
 }
 
 function attachmentOf(parts: readonly Part[]): Message[] {
@@ -222,30 +241,145 @@ function attachmentOf(parts: readonly Part[]): Message[] {
       ]
 }
 
+function earlierBatchOf(batch: Batch): Message[] {
+  return [
+    ...batch.tools.map(({ message }) => earlierToolOf(message)),
+    ...(batch.attachment === null
+      ? []
+      : [earlierAttachmentOf(batch.attachment.message)]),
+  ]
+}
+
+/** Which tool result each attached image belongs to, in pi's order. Images it cannot place count after the batch's tool results. */
+function ownersOf(batch: Batch, images: number): (number | null)[] {
+  const owners = batch.tools
+    .filter(({ message }) => ownsImage(message))
+    .map(({ at }) => at)
+  return owners.length === images
+    ? owners
+    : Array.from({ length: images }, () => null)
+}
+
+function imageOf(part: Part, key: string, rewrite: Rewrite): Part {
+  const bytes = imageBytesOf(part)
+  if (!fits(rewrite.turn, key, bytes)) {
+    return textPart(overNoteOf())
+  }
+  charge(rewrite.turn, key, bytes)
+  return part
+}
+
+/** One step's tool results and pi's attachment of their images, with each medium counted in the order the step read it. */
+async function newBatchOf(batch: Batch, rewrite: Rewrite): Promise<Message[]> {
+  const parts =
+    batch.attachment === null ? [] : partsOf(batch.attachment.message)
+  const imageAts = parts.flatMap((part, index) =>
+    part.type === "image_url" ? [index] : []
+  )
+  const owners = ownersOf(batch, imageAts.length)
+  const kept = new Map<number, Part>()
+  const keepImages = (owner: number | null): void => {
+    for (const [order, index] of imageAts.entries()) {
+      if (owners[order] === owner && batch.attachment !== null) {
+        const key = `${batch.attachment.at}:image:${index}`
+        kept.set(index, imageOf(parts[index] as Part, key, rewrite))
+      }
+    }
+  }
+  const attached: Part[] = []
+  const tools: Message[] = []
+  for (const { at, message } of batch.tools) {
+    if (typeof message.content !== "string") {
+      tools.push(message)
+    } else {
+      const lines: string[] = []
+      for (const line of message.content.split("\n")) {
+        const assetId = markLine.exec(line)?.[1]
+        if (assetId === undefined) {
+          lines.push(line)
+        } else {
+          const expanded = await expandedOf(
+            assetId,
+            `${at}:${assetId}`,
+            rewrite
+          )
+          if (expanded.note !== null) {
+            lines.push(expanded.note)
+          }
+          if (expanded.part !== null) {
+            attached.push(expanded.part)
+          }
+        }
+      }
+      tools.push({ ...message, content: lines.join("\n") })
+    }
+    keepImages(at)
+  }
+  keepImages(null)
+  return [
+    ...tools,
+    ...attachmentOf(attached),
+    ...(batch.attachment === null
+      ? []
+      : [
+          {
+            ...batch.attachment.message,
+            content: parts.map((part, index) => kept.get(index) ?? part),
+          },
+        ]),
+  ]
+}
+
+async function messagesOf(
+  messages: readonly Message[],
+  rewrite: Rewrite
+): Promise<Message[]> {
+  const sent: Message[] = []
+  for (let at = 0; at < messages.length; ) {
+    const message = messages[at] as Message
+    const batch = batchAt(messages, at)
+    if (sizeOf(batch) === 0) {
+      sent.push(message)
+      at += 1
+    } else {
+      sent.push(
+        ...(at < rewrite.sentBefore
+          ? earlierBatchOf(batch)
+          : await newBatchOf(batch, rewrite))
+      )
+      at += sizeOf(batch)
+    }
+  }
+  return sent
+}
+
 function inputsOf(model: unknown): ReadonlySet<string> {
   const found = typeof model === "string" ? routerChatModelOf(model) : undefined
   return new Set(found?.inputs ?? [])
 }
 
 /**
- * The Router body with each media mark of the turn's tool results replaced by OpenRouter's audio or video part, read
- * through the request's own library, and with every media part past the turn's limit, or from an earlier turn, left out
- * with a note.
+ * The Router body with each medium sent once: in the first request that carries its tool result, which is the step's
+ * results after the body's last answer. A mark there becomes OpenRouter's audio or video part, read through the request's
+ * own library. Every medium of an earlier request, of this turn or an earlier one, becomes a note, and so does every
+ * medium past the turn's limit, which the ledger counts across the turn's requests.
  */
 export async function withMediaOf(
   body: string,
-  reads: (() => MediaReads) | null
+  reads: (() => MediaReads) | null,
+  ledger: MediaLedger
 ): Promise<string> {
   const parsed: unknown = JSON.parse(body)
   if (!isRecord(parsed) || !Array.isArray(parsed.messages)) {
     return body
   }
   const messages = parsed.messages.filter(isRecord)
+  const turnStart = turnStartOf(messages)
   const rewrite: Rewrite = {
     inputs: inputsOf(parsed.model),
     reads,
-    turnStart: turnStartOf(messages),
-    budget: { count: 0, bytes: 0 },
+    sentBefore: Math.max(turnStart, lastAnswerOf(messages)),
+    turn: turnOf(ledger, messages, turnStart),
   }
   return JSON.stringify({
     ...parsed,
