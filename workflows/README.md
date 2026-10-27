@@ -130,6 +130,6 @@ Open the UI file, not the API file. ComfyUI loads an API file with no positions,
 
 On Comfy Cloud the UI file opens the same way. A workflow that needs a pack Comfy Cloud does not install runs on your own ComfyUI or on a Comfy deployment, per `docs/stack.md` §Engine targets.
 
-## Not checked
+## What was checked
 
-No workflow was loaded, exported or run in ComfyUI on the machine that wrote this folder, and none ran on a live engine. Every API file was checked against the node definitions of ComfyUI v0.41.0, ComfyUI_Fill-ChatterBox at `f7d7a16187430abcaf91a3039b9c83aa9960816a` and ComfyUI-WanVideoWrapper at `088128b224242e110d3906c6750e9a3a348a659b`, read from source: each class name, input name, required input, link slot, link type and fixed value. The load, export and flatten behavior comes from reading ComfyUI's frontend source at main `a8e134a`, after release v1.58.0.
+No workflow was loaded or exported in ComfyUI on the machine that wrote this folder. Workflows ran on Comfy Cloud from their apps' screens, and the README counts those runs by app and model in [What was proven live](../README.md#what-was-proven-live). A workflow whose model no row there names has not run on a live engine. Every API file was checked against the node definitions of ComfyUI v0.41.0, ComfyUI_Fill-ChatterBox at `f7d7a16187430abcaf91a3039b9c83aa9960816a` and ComfyUI-WanVideoWrapper at `088128b224242e110d3906c6750e9a3a348a659b`, read from source: each class name, input name, required input, link slot, link type and fixed value. The load, export and flatten behavior comes from reading ComfyUI's frontend source at main `a8e134a`, after release v1.58.0.

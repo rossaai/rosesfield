@@ -6,67 +6,153 @@
   </picture>
 </p>
 
-# Rosesfield
+<h1 align="center">Open-source Higgsfield alternative, built with ComfyUI</h1>
 
-Make images and video in one place. Every app shares one library and runs on your key.
+<p align="center">27 apps that run on your own Comfy key.</p>
 
-Rosesfield is an entry to the [Comfy open-source app challenge](https://comfy.org/open-source-higgsfield), #OpenSourceHiggsfield.
+<p align="center">
+  <a href="https://rosesfield.com"><b>Open rosesfield.com</b></a>&emsp;
+  <a href="#start">Run it on your machine</a>&emsp;
+  <a href="#rosesfield-and-higgsfield-app-by-app">Compare it with Higgsfield</a>
+</p>
 
-<a href="docs/media/rosesfield-demo.mp4"><img alt="The Rosesfield demo video. It opens on a photo beside the video one Effects run made from it." src="docs/media/rosesfield-demo.webp" width="720"></a>
+<p align="center">
+  <a href="https://github.com/rossaai/rosesfield/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/rossaai/rosesfield?style=social"></a>
+</p>
 
-The demo video, 87 seconds. It shows the areas, a model list, a finished run, Share, the credits, and how each run reaches Comfy. It was recorded on 2026-10-22 on a Rosesfield server on one machine, in owner mode, where the Comfy key stays on the server. Every result in it is a stored run, and the recording started no new run.
+> [!NOTE]
+> Rosesfield is an entry to Comfy's [Open Source Higgsfield challenge](https://comfy.org/open-source-higgsfield), #OpenSourceHiggsfield. It is not made by, affiliated with or endorsed by Higgsfield.
 
-A [9:16 clip](docs/media/rosesfield-clip-9x16.mp4) of the Effects run is ready for a post.
+<p align="center">
+  <a href="docs/media/rosesfield-demo.mp4"><img alt="The Rosesfield demo video. It opens on a photo beside the video one Effects run made from it." src="docs/media/rosesfield-demo.webp" width="720"></a>
+</p>
 
-**Try it at [rosesfield.com](https://rosesfield.com).**
+<p align="center">The demo, 87 seconds. Every result in it is a real run on Comfy.</p>
 
-[![GitHub stars](https://img.shields.io/github/stars/rossaai/rosesfield?style=social)](https://github.com/rossaai/rosesfield/stargazers)
+## Start
 
-## What each app made
+1. Make a key on [Comfy's key page](https://platform.comfy.org/profile/api-keys).
+2. Open [rosesfield.com](https://rosesfield.com) and paste it in Settings.
 
-Each clip shows the app's screen, then the result of one paid run on Comfy. Press a picture to play its clip. The Video run was made on 2026-10-19, the Effects run on 2026-10-21, and the others on 2026-10-22.
+Your Comfy key is the only sign-in, and each run spends credits from your own Comfy account.
 
-| Clip | The run |
-|---|---|
-| <a href="docs/media/apps/effects.mp4"><img alt="A photo of a woman in a camel coat, then the video Effects made from it" src="docs/media/apps/effects.webp" width="320"></a> | **Effects**, Still in a busy street. A photo becomes a video where she stands still and the street moves around her. The LTX 2.5 graph on Comfy Cloud, 1080p, 19.24 credits, made in 101 seconds. |
-| <a href="docs/media/apps/image.mp4"><img alt="A woman in a red coat on a frozen lake at dawn while a whale breaks through the ice" src="docs/media/apps/image.webp" width="320"></a> | **Image**. One prompt: a woman in a red coat on a frozen lake at dawn, while a humpback whale breaks through the ice. GPT Image 2.5 Sunburst, high quality, 1536 by 1024, 12.54 credits, made in 49 seconds. |
-| <a href="docs/media/apps/edit.mp4"><img alt="The frozen lake at night under the aurora, then a close-up of the same woman" src="docs/media/apps/edit.webp" width="320"></a> | **Edit**. A night version of the Image result becomes a close-up of the same woman facing the camera. GPT Image 2.5 Sunburst, 5.29 credits, made in 33 seconds. |
-| <a href="docs/media/apps/upscale.mp4"><img alt="The Image result beside its upscaled copy" src="docs/media/apps/upscale.webp" width="320"></a> | **Upscale**. The Image result at twice its size, 3072 by 2048. The SeedVR2 3B graph, 2.00 credits, made in 20 seconds. |
-| <a href="docs/media/apps/characters.mp4"><img alt="A half-body portrait of an older man in round gold glasses and a green velvet blazer" src="docs/media/apps/characters.webp" width="320"></a> | **Characters**. A character made from traits: an older man with short grey coily hair, round gold glasses and a green velvet blazer. The Z-Image Turbo graph, 1.81 credits, made in 44 seconds. |
-| <a href="docs/media/apps/expand.mp4"><img alt="A tall street photo, then the same street widened to 16:9" src="docs/media/apps/expand.webp" width="320"></a> | **Expand**. A tall street photo widened to 16:9, with the street continued on both sides. The Qwen Image Inpaint graph, 3.66 credits, made in 37 seconds. |
-| <a href="docs/media/apps/relight.mp4"><img alt="A portrait, then the same portrait lit by warm light from the left" src="docs/media/apps/relight.webp" width="320"></a> | **Relight**. A portrait relit with soft warm light from the left. Qwen Image Edit 2509 with the Relight LoRA, 17.03 credits, made in 88 seconds. |
-| <a href="docs/media/apps/background-removal.mp4"><img alt="A sneaker on a stone block, then the sneaker alone on a transparent background" src="docs/media/apps/background-removal.webp" width="320"></a> | **Background removal**. A sneaker cut out onto a transparent background. The BiRefNet graph, 0.68 credits, made in 33 seconds. |
-| <a href="docs/media/apps/video-edit.mp4"><img alt="A close-up clip of a woman's face at twice its frame rate" src="docs/media/apps/video-edit.webp" width="320"></a> | **Video edit**, frame rate. A clip at twice its frame rate, 48 frames a second, with its sound kept. The FILM graph, 3.31 credits, made in 28 seconds. |
-| <a href="docs/media/video-seedance-kite.mp4"><img alt="A red kite over a green hill at dawn" src="docs/media/video-seedance-kite.webp" width="320"></a> | **Video**. A red kite over a green hill at dawn, from a start image. Seedance 1.0 Pro Fast, 480p, 5 seconds, 10.34 credits. |
-
-## Start in three steps
-
-1. Make a Comfy key on [Comfy's key page](https://platform.comfy.org/profile/api-keys). Every run spends credits from your own Comfy account.
-2. Open [rosesfield.com](https://rosesfield.com), or run it on your machine.
-3. Paste your key in Settings.
-
-## Run it on your machine
-
-You need [bun](https://bun.sh) 1.4.3 and Node 22 or 24.
+Or run it on your machine with [bun](https://bun.sh):
 
 ```sh
-git clone https://github.com/rossaai/rosesfield.git
-cd rosesfield
+git clone https://github.com/rossaai/rosesfield.git && cd rosesfield
 bun install
 bun run start
 ```
 
-Open `http://127.0.0.1:8787` and paste your Comfy key in Settings. It needs no setting.
+Open `http://127.0.0.1:8787` and paste your key in Settings.
 
-You can set three optional settings in a `.env` file, as `.env.example` shows:
+## Made with Rosesfield
 
-| Setting | What it sets |
+<table>
+  <tr>
+    <td align="center"><a href="docs/media/apps/effects.mp4"><img alt="A photo of a woman in a camel coat, then the video Effects made from it" src="docs/media/apps/effects.webp" width="260"></a><br><b>Effects</b></td>
+    <td align="center"><a href="docs/media/video-seedance-kite.mp4"><img alt="A red kite over a green hill at dawn" src="docs/media/video-seedance-kite.webp" width="260"></a><br><b>Video</b></td>
+    <td align="center"><a href="docs/media/apps/image.mp4"><img alt="A woman in a red coat on a frozen lake at dawn while a whale breaks through the ice" src="docs/media/apps/image.webp" width="260"></a><br><b>Image</b></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/media/apps/edit.mp4"><img alt="The frozen lake at night under the aurora, then a close-up of the same woman" src="docs/media/apps/edit.webp" width="260"></a><br><b>Edit</b></td>
+    <td align="center"><a href="docs/media/apps/upscale.mp4"><img alt="The Image result beside its upscaled copy" src="docs/media/apps/upscale.webp" width="260"></a><br><b>Upscale</b></td>
+    <td align="center"><a href="docs/media/apps/relight.mp4"><img alt="A portrait, then the same portrait lit by warm light from the left" src="docs/media/apps/relight.webp" width="260"></a><br><b>Relight</b></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/media/apps/expand.mp4"><img alt="A tall street photo, then the same street widened to 16:9" src="docs/media/apps/expand.webp" width="260"></a><br><b>Expand</b></td>
+    <td align="center"><a href="docs/media/apps/characters.mp4"><img alt="A half-body portrait of an older man in round gold glasses and a green velvet blazer" src="docs/media/apps/characters.webp" width="260"></a><br><b>Characters</b></td>
+    <td align="center"><a href="docs/media/apps/video-edit.mp4"><img alt="A close-up clip of a woman's face at twice its frame rate" src="docs/media/apps/video-edit.webp" width="260"></a><br><b>Video edit</b></td>
+  </tr>
+</table>
+
+Press a picture to play its clip. Each one is a paid run in the running app, made from 2026-10-19 to 2026-10-22.
+
+24 of Higgsfield's 35 products have a Rosesfield app that does the same job, and Rosesfield adds Music, Sound effects and 3D. [See them side by side](#rosesfield-and-higgsfield-app-by-app).
+
+---
+
+## In detail
+
+This part is for reviewers and AI agents: the facts, the comparison, how Rosesfield is built with ComfyUI, and what was proven.
+
+| | |
 |---|---|
-| `COMFY_API_KEY` | Your Comfy key, so you do not paste it in Settings. |
-| `COMFY_BASE_URL` | The address of comfy-api-proxy in front of your own ComfyUI, per [docs/stack.md](docs/stack.md). |
-| `PORT` | The port the server listens on. The default is 8787. |
+| Apps | 27, for images, video, audio, characters and 3D |
+| ComfyUI workflows | 32 graphs. 31 load open weights, and one runs Comfy's Meshy partner node. Each is an API file the app runs and a UI file that opens in ComfyUI and in App Mode |
+| Hosted models | every Comfy Router model of each app's task, read live from Comfy |
+| Where a run happens | Comfy Router, Comfy Cloud, or your own ComfyUI through comfy-api-proxy |
+| Sign-in | one Comfy key, with no account |
+| Ways in | the web app, installable on a phone, an MCP server with one tool per app, an HTTP API with one route per app, and an agent that runs the apps for you |
+| Hosts | your machine with bun, or Cloudflare Workers |
+| Price | Comfy credits, shown on Generate when the price is known, and the real cost in History after each run |
+| Proof | 114 proof runs and 122 showroom runs on Comfy, counted in [What was proven live](#what-was-proven-live) |
+| Higgsfield products with a Rosesfield app | 24 of 35 |
+| Licence | MIT |
 
-Every other value has a default in code.
+## Rosesfield and Higgsfield, app by app
+
+Higgsfield's products as higgsfield.ai listed them on 2026-10-17, beside the Rosesfield app that does the same job. Rosesfield runs open-weights models and the models Comfy hosts. It does not run Higgsfield's own models.
+
+| Higgsfield | Rosesfield | What you do in Rosesfield |
+|---|---|---|
+| Image | Image | Describe an image and get up to 4. |
+| Video | Video | Turn a prompt or your images into a video. |
+| Genjutsu | Motion, Swap a character | Put the person in your photo in place of the person in a clip, at the same moments. The scene comes from your photo. |
+| Motion Control | Motion, Move a photo | Move a photo with the motion of a clip. |
+| Katana | Remake | Rebuild an edit with your character and the same cuts. |
+| Effects | Effects | Pick an effect, add a photo, and get a short clip. |
+| Cinema Studio | Shot | Write a scene and choose how the camera shoots it. |
+| Lipsync Studio | Lip sync | Add a face and a voice track, and get a talking video. |
+| Popcorn storyboard | Storyboard | Write up to 8 scenes and get one keyframe for each. |
+| Video edit tools | Video edit | Extend a clip, reframe it, remove its background or raise its frame rate. |
+| Upscale | Upscale | Make your image or video 2 or 4 times larger. |
+| Audio | Speech, Voice clone, Voice change | Turn text into a voice, speak in the voice of a short recording, or make one recording speak in another voice. |
+| AI Influencer, Soul ID | Characters | Make a character from photos or traits, then use it in any app. A character is a set of photos, and no model is trained. |
+| Ads Studio, Marketing Studio | Ads | Add photos of a product and get product shots or ads. |
+| Higgsfield Layers | Layers, Edit | Split an image into layers and edit one, or change a photo by saying what should change. |
+| Apps catalog | Angles, Expand, Relight, Try-on, Remove background, Headshot | See a subject from other sides, extend a photo, change its light, put on the clothes from another photo, cut out the subject, or make a headshot. |
+| Supercomputer | Agent | Ask in chat, and the agent runs the apps for you. It can ask before each run. |
+| MCP, ChatGPT plugin | MCP server | Every app is a tool at `/mcp`. Connect has the steps for Claude, ChatGPT and other clients. |
+| API | HTTP API | Every app is a route, `POST /api/apps/<app-id>/runs`. |
+| Web app, Mobile app | The web app | One app for a computer and a phone, installable from the browser. |
+
+Rosesfield also has three apps the list above does not: Music makes a track from a description, with your lyrics if you have them. Sound effects makes a sound from a description. 3D makes a GLB model from a description or a photo. Rosesfield runs on your own ComfyUI or your own host too, and every graph is a workflow you can open and change.
+
+Not in Rosesfield: the course, contests, the community feed, plugins for desktop editors, the node canvas, series and films, the app builder, team chat, games, motion graphics for desktop editors, the browser extension, speech translation, and Higgsfield's own models, such as Soul. For a node canvas, open any workflow in `workflows/` in ComfyUI.
+
+## Built with ComfyUI
+
+Every run reaches Comfy through the Comfy SDK, `@comfyorg/sdk` 0.5.0, on one Comfy key.
+
+| What runs | Where it runs | How Rosesfield calls it |
+|---|---|---|
+| Hosted models, every model Comfy publishes for the app's task | Comfy Router, `api.comfy.org` | the model's queued route |
+| The 32 workflows in [`workflows/`](workflows/README.md) | Comfy Cloud, `cloud.comfy.org` | the Comfy API v2 |
+| The open-weights workflows on your GPU | your own ComfyUI | comfy-api-proxy, set in Settings or by `COMFY_BASE_URL` |
+
+- Each workflow ships as two files: the API file the app sends, and the UI file you open in ComfyUI. The UI file holds its App Mode setup, so it opens in App Mode with the inputs the app shows.
+- Effects runs one LTX 2.5 graph, [`effects-ltx-2-5`](workflows/effects-ltx-2-5/README.md), and LTX 2.5 is its only video model.
+- [docs/stack.md](docs/stack.md) lists every package and each call Rosesfield makes to Comfy.
+
+## What each run made
+
+The clips in [Made with Rosesfield](#made-with-rosesfield), with their models and costs, and one more. The Video run was made on 2026-10-19, the Effects run on 2026-10-21, and the others on 2026-10-22.
+
+| App | The run |
+|---|---|
+| Effects | Still in a busy street. A photo becomes a video where she stands still and the street moves around her. The LTX 2.5 graph on Comfy Cloud, 1080p, 19.24 credits, made in 101 seconds. |
+| Image | One prompt: a woman in a red coat on a frozen lake at dawn, while a humpback whale breaks through the ice. GPT Image 2.5 Sunburst, high quality, 1536 by 1024, 12.54 credits, made in 49 seconds. |
+| Edit | A night version of the Image result becomes a close-up of the same woman facing the camera. GPT Image 2.5 Sunburst, 5.29 credits, made in 33 seconds. |
+| Upscale | The Image result at twice its size, 3072 by 2048. The SeedVR2 3B graph, 2.00 credits, made in 20 seconds. |
+| Characters | A character made from traits: an older man with short grey coily hair, round gold glasses and a green velvet blazer. The Z-Image Turbo graph, 1.81 credits, made in 44 seconds. |
+| Expand | A tall street photo widened to 16:9, with the street continued on both sides. The Qwen Image Inpaint graph, 3.66 credits, made in 37 seconds. |
+| Relight | A portrait relit with soft warm light from the left. Qwen Image Edit 2509 with the Relight LoRA, 17.03 credits, made in 88 seconds. |
+| Remove background | A sneaker cut out onto a transparent background, [the clip](docs/media/apps/background-removal.mp4). The BiRefNet graph, 0.68 credits, made in 33 seconds. |
+| Video edit | A clip at twice its frame rate, 48 frames a second, with its sound kept. The FILM graph, 3.31 credits, made in 28 seconds. |
+| Video | A red kite over a green hill at dawn, from a start image. Seedance 1.0 Pro Fast, 480p, 5 seconds, 10.34 credits. |
+
+The demo video shows the areas, a model list, a finished run, Share, the credits, and how each run reaches Comfy. It was recorded on 2026-10-22 on a Rosesfield server on one machine, in owner mode, where the Comfy key stays on the server. Every result in it is a stored run, and the recording started no new run. A [9:16 clip](docs/media/rosesfield-clip-9x16.mp4) of the Effects run is ready for a post.
 
 ## What was proven live
 
@@ -114,13 +200,17 @@ From 2026-10-20 to 2026-10-22, eight showroom rounds made the examples above in 
 - Two Motion runs failed with no charge and one Eleven V4 Turbo run was refused before any job. None of the three is counted.
 - Headshots, Remake and 3D have no run in these rounds.
 
-## Docs
+## Settings
 
-- [docs/models.md](docs/models.md) says how each app's model list is read from Comfy, and lists the licence of each graph Rosesfield ships.
-- [docs/self-host.md](docs/self-host.md) puts Rosesfield on a host other people reach, such as Cloudflare, with its settings.
-- [docs/architecture.md](docs/architecture.md) says where the code goes and how a run moves.
-- [docs/stack.md](docs/stack.md) lists the packages, the Comfy Router, the Comfy API v2 and the agent's model.
-- [workflows/README.md](workflows/README.md) describes the ComfyUI graphs and how to open them in ComfyUI.
+You need [bun](https://bun.sh) 1.4.3 and Node 22 or 24 to run Rosesfield on your machine. It needs no setting. You can set three optional settings in a `.env` file, as `.env.example` shows:
+
+| Setting | What it sets |
+|---|---|
+| `COMFY_API_KEY` | Your Comfy key, so you do not paste it in Settings. |
+| `COMFY_BASE_URL` | The address of comfy-api-proxy in front of your own ComfyUI, per [docs/stack.md](docs/stack.md). |
+| `PORT` | The port the server listens on. The default is 8787. |
+
+Every other value has a default in code.
 
 ## Use it from Claude or your own code
 
@@ -135,17 +225,27 @@ curl -X POST http://127.0.0.1:8787/api/apps/image/runs \
 
 The command starts a run and answers with its id. `GET /api/runs` lists your runs.
 
+## Docs
+
+- [docs/models.md](docs/models.md) says how each app's model list is read from Comfy, and lists the licence of each graph Rosesfield ships.
+- [docs/self-host.md](docs/self-host.md) puts Rosesfield on a host other people reach, such as Cloudflare, with its settings.
+- [docs/architecture.md](docs/architecture.md) says where the code goes and how a run moves.
+- [docs/stack.md](docs/stack.md) lists the packages, the Comfy Router, the Comfy API v2 and the agent's model.
+- [workflows/README.md](workflows/README.md) describes the ComfyUI graphs and how to open them in ComfyUI.
+
 ## Check a change
 
 ```sh
 bun run gate
 ```
 
-The gate runs `catalog:sync`, `generated:check`, `copy:check`, `typecheck`, `lint` and `test`.
+The gate runs `catalog:sync`, `generated:check`, `copy:check`, `glob:check`, `motion:check`, `docs:check`, `typecheck`, `lint` and `test`.
 
 ## Licence
 
 The code, the docs and the design tokens are under the [MIT licence](LICENSE). Each model's licence decides what you may do with what it makes, per [docs/models.md](docs/models.md). The Rosesfield name and logo are trademarks of ROSSA AI, LLC. [TRADEMARKS.md](TRADEMARKS.md) says how you can use them.
+
+Higgsfield and the names of its products belong to their owner. Rosesfield names them only to compare, and it is not affiliated with or endorsed by Higgsfield.
 
 Every deployment serves a Privacy page at `/privacy` and a Terms page at `/terms`.
 
