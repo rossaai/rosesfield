@@ -133,7 +133,7 @@ function useFormAt(seed: FormValues, source: FormSource): AppForm {
   }
 }
 
-function openHosted(seed: FormValues, source: FormSource) {
+function openHosted(seed: FormValues, source: FormSource, app = image) {
   const client = new QueryClient()
   client.setQueryData(["settings"], { engine: { key: "set" } })
   const wrapper = ({ children }: { children: ReactNode }) => (
@@ -142,7 +142,7 @@ function openHosted(seed: FormValues, source: FormSource) {
   const view = renderHook(
     () => {
       const form = useFormAt(seed, source)
-      const hosted = useHostedModel(image, form)
+      const hosted = useHostedModel(app, form)
       return { form, hosted }
     },
     { wrapper }
@@ -154,8 +154,12 @@ function openHosted(seed: FormValues, source: FormSource) {
   return view
 }
 
-function openWith(seed: FormValues, source: FormSource): FormValues {
-  return openHosted(seed, source).result.current.form.values
+function openWith(
+  seed: FormValues,
+  source: FormSource,
+  app = image
+): FormValues {
+  return openHosted(seed, source, app).result.current.form.values
 }
 
 describe("the model a form opens on when the model list arrives", () => {
@@ -259,6 +263,31 @@ describe("the model and settings you last used in an app", () => {
     keep(record)
     const seeded = valuesFromRun(image, runOf("z-image-turbo"))
     expect(openWith(seeded, "seed")).toEqual(seeded)
+    expect(kept()).toEqual(record)
+  })
+
+  it("keeps a mode with a model default of its own on that default, and reads and keeps nothing for it", () => {
+    const mode = appListing.parse({
+      ...listed,
+      inputs: listed.inputs.map((input) =>
+        input.name === "model" && input.type === "choice"
+          ? { ...input, default: "qwen-image-2512" }
+          : input
+      ),
+    })
+    const record = {
+      model: "bfl/flux-3-image",
+      settings: {},
+      count: 3,
+      aspectRatio: null,
+    }
+    keep(record)
+    const view = openHosted(defaultsOf(mode), "defaults", mode)
+    expect(view.result.current.form.values.inputs.model).toBe("qwen-image-2512")
+    act(() => {
+      view.result.current.hosted.choose("z-image-turbo")
+    })
+    view.rerender()
     expect(kept()).toEqual(record)
   })
 
