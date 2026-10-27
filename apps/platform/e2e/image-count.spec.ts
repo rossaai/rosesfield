@@ -1,4 +1,9 @@
 import { expect, type Locator, type Page, test } from "@playwright/test"
+import { keepDeclaredModels } from "./last-used"
+
+test.beforeEach(async ({ page }) => {
+  await keepDeclaredModels(page, ["image"])
+})
 
 const wide = 16 / 9
 

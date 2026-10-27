@@ -1,5 +1,10 @@
 import { expect, type Locator, test } from "@playwright/test"
+import { keepDeclaredModels } from "./last-used"
 import { answerOwnLists } from "./own-lists"
+
+test.beforeEach(async ({ page }) => {
+  await keepDeclaredModels(page, ["image"])
+})
 
 type Box = { x: number; y: number; width: number; height: number }
 

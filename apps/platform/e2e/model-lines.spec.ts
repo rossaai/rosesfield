@@ -1,4 +1,9 @@
 import { expect, test } from "@playwright/test"
+import { keepDeclaredModels } from "./last-used"
+
+test.beforeEach(async ({ page }) => {
+  await keepDeclaredModels(page, ["image"])
+})
 
 test("the Image picker opens on Z-Image Turbo, shows no release date, lab or Ran in Rosesfield under its name and no maker's line, lists no Ming row and none of the app's own words about a graph", async ({
   page,

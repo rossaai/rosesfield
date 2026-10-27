@@ -1,5 +1,10 @@
 import { deflateSync } from "node:zlib"
 import { expect, type Locator, type Page, test } from "@playwright/test"
+import { keepDeclaredModels } from "./last-used"
+
+test.beforeEach(async ({ page }) => {
+  await keepDeclaredModels(page, ["ads"])
+})
 
 const crcTable = Array.from({ length: 256 }, (_, index) => {
   let value = index

@@ -1,5 +1,10 @@
 import { readFileSync } from "node:fs"
 import { expect, type Page, test } from "@playwright/test"
+import { keepDeclaredModels } from "./last-used"
+
+test.beforeEach(async ({ page }) => {
+  await keepDeclaredModels(page, ["image", "video"])
+})
 
 const gatewayOrigin = "http://127.0.0.1:8797"
 const png = readFileSync(
