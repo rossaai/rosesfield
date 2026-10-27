@@ -35,7 +35,7 @@ export const reasoningShare = {
   none: 0,
 } as const satisfies Record<AgentEffort, number>
 
-/** The labs whose models OpenRouter caches with no cache marker in the request, per https://openrouter.ai/docs/guides/best-practices/prompt-caching. The agent sends no marker, so every other lab's model bills the repeated part at its input rate. */
+/** The labs whose models OpenRouter caches with no cache marker in the request, per https://openrouter.ai/docs/guides/best-practices/prompt-caching. */
 export const implicitCacheLabs: readonly string[] = [
   "openai",
   "deepseek",
@@ -43,6 +43,18 @@ export const implicitCacheLabs: readonly string[] = [
   "x-ai",
   "moonshotai",
 ]
+
+/** The labs whose models OpenRouter caches only when the request marks what to cache with `cache_control`, per the same guide: Anthropic and Alibaba Qwen. */
+export const markedCacheLabs: readonly string[] = ["anthropic", "qwen"]
+
+/** Whether the agent marks its instructions and tools for caching on a model: only on a model of a lab that caches with a marker alone. */
+export function marksCache(model: Pick<RouterChatModel, "lab">): boolean {
+  return markedCacheLabs.includes(model.lab)
+}
+
+function cachesOf(model: Pick<RouterChatModel, "lab">): boolean {
+  return implicitCacheLabs.includes(model.lab) || marksCache(model)
+}
 
 const reasoningBounds = { least: 1024, most: 128_000 }
 
@@ -64,14 +76,12 @@ export function reasoningTokensOf(effort: AgentEffort | null): number {
   )
 }
 
-/** The rate per 1M tokens of the part each request repeats: the cache read rate OpenRouter publishes for a model it caches with no marker, else the input rate. */
+/** The rate per 1M tokens of the part each request repeats: the cache read rate OpenRouter publishes for a model whose lab caches, with or without the agent's marker, else the input rate. The first request's cache write is not priced. */
 export function repeatedRateOf(
   model: Pick<RouterChatModel, "usdPer1M" | "lab">
 ): number {
   const { input, cacheRead } = model.usdPer1M
-  return cacheRead !== null && implicitCacheLabs.includes(model.lab)
-    ? cacheRead
-    : input
+  return cacheRead !== null && cachesOf(model) ? cacheRead : input
 }
 
 /** The Comfy credits of one agent message at one effort: each request bills the instructions and the tools at the repeated rate, the conversation at the input rate, and the visible answer and the effort's reasoning budget at the output rate, times the requests of a message. */

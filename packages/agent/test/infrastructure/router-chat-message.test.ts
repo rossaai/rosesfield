@@ -207,19 +207,36 @@ describe("one agent message's credits", () => {
     })
   })
 
-  it("bills the repeated part at the published cache read rate of a model OpenRouter caches with no marker, and at the input rate otherwise", () => {
+  it("bills the repeated part at the published cache read rate of a model whose lab caches, with or without the agent's marker, and at the input rate otherwise", () => {
     const flash = modelOf(defaultChatModel)
     expect(flash.lab).toBe("deepseek")
     expect(flash.usdPer1M.cacheRead).not.toBeNull()
     expect(repeatedRateOf(flash)).toBe(flash.usdPer1M.cacheRead)
     const claude = modelOf(opus)
-    expect(claude.usdPer1M.cacheRead).not.toBeNull()
-    expect(repeatedRateOf(claude)).toBe(claude.usdPer1M.input)
+    expect(claude.usdPer1M.cacheRead).toBeLessThan(claude.usdPer1M.input)
+    expect(repeatedRateOf(claude)).toBe(claude.usdPer1M.cacheRead)
+    const qwen = modelOf("qwen/qwen-plus")
+    expect(qwen.usdPer1M.cacheRead).not.toBeNull()
+    expect(repeatedRateOf(qwen)).toBe(qwen.usdPer1M.cacheRead)
+    const gemini = modelOf("google/gemini-4-argon")
+    expect(gemini.usdPer1M.cacheRead).not.toBeNull()
+    expect(repeatedRateOf(gemini)).toBe(gemini.usdPer1M.input)
     const unpublished = {
-      lab: "deepseek",
+      lab: "anthropic",
       usdPer1M: { input: 1, output: 2, cacheRead: null },
     }
     expect(repeatedRateOf(unpublished)).toBe(1)
+  })
+
+  it("prices one message of Claude Opus 5.5 and Claude Sonnet 5.5 at their opening effort with the instructions and the tools read from the cache", () => {
+    const sonnet = "anthropic/claude-sonnet-5.5"
+    const opened = chatDetailsOf([opus, sonnet])
+    const highOf = (id: string): number | undefined =>
+      opened[id]?.messages.find((one) => one.effort === "high")?.credits
+    expect(opened[opus]?.effort).toBe("high")
+    expect(opened[sonnet]?.effort).toBe("high")
+    expect(Math.ceil(highOf(opus) ?? 0)).toBe(29)
+    expect(Math.ceil(highOf(sonnet) ?? 0)).toBe(15)
   })
 
   it("prices each request from the tokens times the model's rates, times the requests of a message", () => {

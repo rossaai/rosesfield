@@ -179,11 +179,26 @@ export function partsOf(
   )
 }
 
+function textOf(content: unknown): string {
+  if (!Array.isArray(content)) {
+    return String(content)
+  }
+  return content
+    .map((part: { text?: unknown }) =>
+      typeof part.text === "string" ? part.text : ""
+    )
+    .join("\n")
+}
+
 export function toolTextOf(request: RouterRequest | undefined): string {
   return messagesOf(request)
     .filter((message) => message.role === "tool")
-    .map((message) => String(message.content))
+    .map((message) => textOf(message.content))
     .join("\n")
+}
+
+export function markersOf(request: RouterRequest | undefined): number {
+  return JSON.stringify(request?.body ?? {}).split('"cache_control"').length - 1
 }
 
 export function base64(bytes: Uint8Array): string {
