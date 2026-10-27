@@ -292,7 +292,7 @@
     },
     {
       "path": "packages/ui/src/contracts/generate-button.generated.ts",
-      "sha256": "bca401181d8806ff034a7d315780c084c4e16715ec9697d445890e8c1d705ce2"
+      "sha256": "c7b8f473170eaea7bf37f999d279c8711c050aabce357701c91361f4473a73e7"
     },
     {
       "path": "packages/ui/src/contracts/icon-button.generated.ts",

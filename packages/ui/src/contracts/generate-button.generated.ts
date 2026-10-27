@@ -3,7 +3,7 @@
 export const GENERATE_BUTTON = {
   id: "generate-button",
   name: "GenerateButton",
-  slots: ["label", "price"],
+  slots: ["label", "price", "glyph"],
   variants: {
     form: {
       values: ["tile", "bar"],
@@ -27,12 +27,12 @@ export const GENERATE_BUTTON = {
       desktop: "control.btn",
     },
     tileWidth: {
-      phone: "component.generate.tileWidth",
+      phone: "control.hitDense",
       tablet: "component.generate.tileWidth",
       desktop: "component.generate.tileWidth",
     },
     tileHeight: {
-      phone: "component.generate.tileHeight",
+      phone: "control.hitDense",
       tablet: "component.generate.tileHeight",
       desktop: "component.generate.tileHeight",
     },
@@ -66,6 +66,11 @@ export const GENERATE_BUTTON = {
       tablet: "radius.r4",
       desktop: "radius.r4",
     },
+    tileRadius: {
+      phone: "radius.full",
+      tablet: "radius.r4",
+      desktop: "radius.r4",
+    },
     disabledAlpha: {
       phone: "alpha.disabled",
       tablet: "alpha.disabled",
@@ -77,8 +82,10 @@ export const GENERATE_BUTTON = {
     "component.generate.tileHeight": [],
     "component.generate.tileWidth": [],
     "control.btn": ["--spacing-field"],
+    "control.hitDense": ["--spacing-button-dense", "--spacing-icon-dense"],
     "icon.smSize": ["--spacing-glyph-small"],
     "icon.uiSize": ["--spacing-glyph"],
+    "radius.full": ["--radius-full"],
     "radius.r4": ["--radius-cell"],
     "type.bodyLine": ["--text-body--line-height", "--text-code--line-height"],
     "type.bodySize": [
