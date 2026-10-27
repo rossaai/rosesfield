@@ -17,6 +17,7 @@ import {
   type RouterChatCall,
   routerChatFetch,
 } from "#infrastructure/router-chat-fetch"
+import type { MediaReads } from "#infrastructure/router-chat-media"
 import {
   hasEffortChoice,
   type RouterChatModel,
@@ -27,6 +28,7 @@ import {
 export type RouterChatProviderOptions = {
   keyOf: () => string | null
   fetch: Fetch
+  media?: () => MediaReads
 }
 
 const keylessKey = "comfy-key"
@@ -69,7 +71,7 @@ function chatModelOf(model: RouterChatModel): Model<"openai-completions"> {
     baseUrl: ComfyRouterGenerationEngine.routerUrl,
     reasoning: isTuned,
     ...(isTuned ? { thinkingLevelMap: thinkingLevelMapOf(model) } : {}),
-    input: ["text"],
+    input: model.inputs.includes("image") ? ["text", "image"] : ["text"],
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
     contextWindow: routerChat.contextWindow,
     maxTokens: routerChat.maxTokens,
@@ -102,7 +104,12 @@ function costed(
   const call: RouterChatCall = { cost: null }
   const source = open(
     piFetchOf(
-      routerChatFetch({ keyOf: options.keyOf, fetch: options.fetch, call })
+      routerChatFetch({
+        keyOf: options.keyOf,
+        fetch: options.fetch,
+        call,
+        ...(options.media === undefined ? {} : { media: options.media }),
+      })
     )
   )
   const answer = createAssistantMessageEventStream()

@@ -113,6 +113,7 @@ export {
   agentTools,
   publishedAgentTools,
 } from "#infrastructure/pi-agent-tools"
+export type { ImagesOf } from "#infrastructure/pi-asset-media"
 export {
   type KeyframeHandlers,
   keyframeRunsOf,
@@ -140,6 +141,7 @@ export {
   routerAgentHarness,
 } from "#infrastructure/router-agent-harness"
 export type { Fetch } from "#infrastructure/router-chat-fetch"
+export { routerMedia } from "#infrastructure/router-chat-media"
 export {
   defaultChatModel,
   isRouterChatModel,

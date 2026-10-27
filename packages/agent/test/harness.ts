@@ -25,6 +25,8 @@ import {
   GetCharacterHandler,
   ListAssetsHandler,
   ListCharactersHandler,
+  ReadAssetContentHandler,
+  ReadAssetPreviewHandler,
 } from "@rosesfield/library"
 import type { AnswerEvent } from "#agent.contract"
 import type { AnswerStream } from "#domain/agent-harness.port"
@@ -40,6 +42,7 @@ import { PiProposalRunner } from "#infrastructure/pi-proposal-runner"
 import { openSqliteFileStorage } from "#infrastructure/sqlite-file-storage"
 import { FakeAppCatalog } from "./fake/fake-app-catalog"
 import type { FakeAssetRepository } from "./fake/fake-asset-repository"
+import { FakeAssetStore } from "./fake/fake-asset-store"
 import type { FakeCharacterRepository } from "./fake/fake-character-repository"
 import { FakeJobRunner } from "./fake/fake-job-runner"
 import { FakePriceEngine } from "./fake/fake-price-engine"
@@ -122,6 +125,7 @@ export function proposalRunnerFor(
 export type Library = {
   assets: FakeAssetRepository
   characters: FakeCharacterRepository
+  store?: FakeAssetStore
 }
 
 export function toolHandlersFor(
@@ -129,6 +133,7 @@ export function toolHandlersFor(
   library: Library
 ): AgentToolHandlers {
   const { assets, characters } = library
+  const store = library.store ?? new FakeAssetStore()
   return {
     startRun: generation.startRun,
     readModelForms: generation.readModelForms,
@@ -136,6 +141,8 @@ export function toolHandlersFor(
     getRun: new GetRunHandler({ runs: generation.runs }),
     listAssets: new ListAssetsHandler({ assets }),
     getAsset: new GetAssetHandler({ assets }),
+    readAssetContent: new ReadAssetContentHandler({ assets, store }),
+    readAssetPreview: new ReadAssetPreviewHandler({ assets, store }),
     listCharacters: new ListCharactersHandler({ characters }),
     getCharacter: new GetCharacterHandler({ characters }),
   }

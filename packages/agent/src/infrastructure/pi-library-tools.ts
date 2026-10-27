@@ -10,14 +10,19 @@ import type {
   GetCharacterHandler,
   ListAssetsHandler,
   ListCharactersHandler,
+  ReadAssetContentHandler,
+  ReadAssetPreviewHandler,
 } from "@rosesfield/library"
 import { z } from "zod"
 import { agentCopy } from "#copy.en"
+import { type ImagesOf, readAssetTool } from "#infrastructure/pi-asset-media"
 import { jsonOutput, toolParameters } from "#infrastructure/pi-tool-io"
 
 export type LibraryToolHandlers = {
   listAssets: ListAssetsHandler
   getAsset: GetAssetHandler
+  readAssetContent: ReadAssetContentHandler
+  readAssetPreview: ReadAssetPreviewHandler
   listCharacters: ListCharactersHandler
   getCharacter: GetCharacterHandler
   getRun: GetRunHandler
@@ -90,7 +95,8 @@ export async function readRunToEnd(
 
 export function libraryTools(
   handlersOf: () => LibraryToolHandlers,
-  wait: RunWait = timerWait
+  wait: RunWait = timerWait,
+  images?: ImagesOf
 ): ToolRegistration[] {
   const copy = agentCopy.tools
   return [
@@ -104,11 +110,9 @@ export function libraryTools(
           cursor: query.cursor ?? null,
         }),
     }),
-    readTool({
-      name: "read_asset",
-      description: copy.readAsset,
-      schema: routes.getAsset.params,
-      read: (params) => handlersOf().getAsset.execute(params),
+    readAssetTool({
+      handlersOf,
+      ...(images === undefined ? {} : { images }),
     }),
     readTool({
       name: "list_characters",
