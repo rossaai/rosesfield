@@ -1,9 +1,10 @@
-import type { Conversation, RunApproval } from "#agent.contract"
+import type { AgentEffort, Conversation, RunApproval } from "#agent.contract"
 import type { AgentHarness } from "#domain/agent-harness.port"
 import { AgentModelMissingError } from "#domain/error/agent-model-missing.error"
 
 export type StartConversationInput = {
   runApproval: RunApproval | null
+  effort?: AgentEffort | null
 }
 
 export type StartConversationOutput = {
@@ -31,6 +32,12 @@ export class StartConversationHandler {
     }
     const runApproval =
       input.runApproval ?? StartConversationHandler.runApproval
-    return { conversation: await this.agent.startConversation({ runApproval }) }
+    const effort = input.effort ?? undefined
+    return {
+      conversation: await this.agent.startConversation({
+        runApproval,
+        ...(effort === undefined ? {} : { effort }),
+      }),
+    }
   }
 }

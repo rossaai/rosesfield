@@ -9,10 +9,23 @@ import { callPath, callPathFor, fieldOf, oneOf } from "@/api/call-path"
 
 export type RunApproval = "ask" | "auto"
 
+export const agentEfforts = [
+  "max",
+  "xhigh",
+  "high",
+  "medium",
+  "low",
+  "minimal",
+  "none",
+] as const
+
+export type AgentEffort = (typeof agentEfforts)[number]
+
 export type Conversation = {
   id: string
   title: string | null
   runApproval: RunApproval
+  effort?: AgentEffort
   createdAt: string
 }
 
@@ -41,6 +54,7 @@ export type Transcript = {
 export type ConversationChanges = {
   title?: string
   runApproval?: RunApproval
+  effort?: AgentEffort
 }
 
 const listPath = "/api/agent/conversations"
@@ -63,6 +77,7 @@ export function readConversationOf(value: unknown): Conversation | null {
   const title = fieldOf(value, "title")
   const runApproval = oneOf(fieldOf(value, "runApproval"), ["ask", "auto"])
   const createdAt = textOf(fieldOf(value, "createdAt"))
+  const effort = oneOf(fieldOf(value, "effort"), agentEfforts)
   if (
     id === null ||
     runApproval === null ||
@@ -71,7 +86,13 @@ export function readConversationOf(value: unknown): Conversation | null {
   ) {
     return null
   }
-  return { id, title: title === "" ? null : title, runApproval, createdAt }
+  return {
+    id,
+    title: title === "" ? null : title,
+    runApproval,
+    ...(effort === null ? {} : { effort }),
+    createdAt,
+  }
 }
 
 function runIdsOf(value: unknown): string[] | null {
@@ -159,10 +180,15 @@ export function listConversations(
 }
 
 export function startConversation(
-  runApproval: RunApproval
+  runApproval: RunApproval,
+  effort: AgentEffort | null = null
 ): Promise<Conversation> {
   return callPathFor(
-    { method: "POST", path: listPath, body: { runApproval } },
+    {
+      method: "POST",
+      path: listPath,
+      body: effort === null ? { runApproval } : { runApproval, effort },
+    },
     conversationIn
   )
 }

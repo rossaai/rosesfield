@@ -1,8 +1,10 @@
 export {
-  type AgentModelRate,
+  type AgentEffort,
+  type AgentModelDetail,
   type AgentModels,
   type AnswerEvent,
   acceptedProposalResponse,
+  agentEffort,
   agentModelRoutes,
   agentModelsResponse,
   answerEvent,
@@ -144,4 +146,4 @@ export {
   routerChat,
   routerChatModels,
 } from "#infrastructure/router-chat-models"
-export { chatRatesOf } from "#infrastructure/router-chat-rates"
+export { chatDetailsOf } from "#infrastructure/router-chat-rates"

@@ -1,6 +1,13 @@
+import { modelFacts } from "@rosesfield/catalog/comfy"
 import { buildPath, type ErrorBody, errorBody } from "@rosesfield/contract"
+import { z } from "zod"
 import { callPath, callPathFor, fieldOf } from "@/api/call-path"
-import { creditsOf, type Proposal, readProposal } from "@/api/conversation-wire"
+import {
+  agentEfforts,
+  creditsOf,
+  type Proposal,
+  readProposal,
+} from "@/api/conversation-wire"
 
 export type AnswerEvent =
   | { type: "message"; index: number; text: string }
@@ -9,37 +16,50 @@ export type AnswerEvent =
   | { type: "done"; credits: number | null }
   | { type: "failed"; error: { code: string; status: number } }
 
-export type AgentModelRate = { input: number; output: number; turn?: number }
+const credits = z.number().min(0)
+const effort = z.enum(agentEfforts)
+
+export const agentModelInputs = ["image", "video", "audio", "file"] as const
+
+const agentModelDetail = z.object({
+  name: z.string().min(1).max(120),
+  lab: z.string().min(1).max(80),
+  facts: modelFacts,
+  context: z.number().int().min(1),
+  inputs: z.array(z.enum(agentModelInputs)).max(4),
+  reasons: z.boolean(),
+  input: credits,
+  output: credits,
+  turn: credits,
+  effort: effort.nullable(),
+  efforts: z.array(z.object({ effort, turn: credits })).max(7),
+})
+
+export type AgentModelInput = (typeof agentModelInputs)[number]
+
+export type AgentModelDetail = z.infer<typeof agentModelDetail>
 
 export type AgentModels = {
   models: string[]
   model: string | null
   recent: string[]
   refusal: ErrorBody | null
-  rates: Readonly<Record<string, AgentModelRate>>
+  details: Readonly<Record<string, AgentModelDetail>>
 }
 
-function isCredits(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0
-}
-
-function readRates(body: unknown): Record<string, AgentModelRate> {
-  const held = fieldOf(body, "rates")
+function readDetails(body: unknown): Record<string, AgentModelDetail> {
+  const held = fieldOf(body, "details")
   if (typeof held !== "object" || held === null) {
     return {}
   }
-  const rates: Record<string, AgentModelRate> = {}
-  for (const [model, rate] of Object.entries(held)) {
-    const input = fieldOf(rate, "input")
-    const output = fieldOf(rate, "output")
-    const turn = fieldOf(rate, "turn")
-    if (isCredits(input) && isCredits(output)) {
-      rates[model] = isCredits(turn)
-        ? { input, output, turn }
-        : { input, output }
+  const details: Record<string, AgentModelDetail> = {}
+  for (const [model, detail] of Object.entries(held)) {
+    const parsed = agentModelDetail.safeParse(detail)
+    if (parsed.success) {
+      details[model] = parsed.data
     }
   }
-  return rates
+  return details
 }
 
 function readRecent(body: unknown): string[] {
@@ -70,7 +90,7 @@ export function readAgentModels(body: unknown): AgentModels | null {
     model,
     recent: readRecent(body),
     refusal: refusal.data,
-    rates: readRates(body),
+    details: readDetails(body),
   }
 }
 

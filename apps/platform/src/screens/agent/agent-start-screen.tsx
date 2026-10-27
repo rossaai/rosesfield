@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import type { ReactElement } from "react"
 import {
+  type AgentEffort,
   type Conversation,
   type RunApproval,
   startConversation,
@@ -13,6 +14,7 @@ import { t } from "@/copy/t"
 import { useDraft } from "@/pieces/use-draft"
 import type { Draft } from "@/router-context"
 import { AgentComposer } from "@/screens/agent/agent-composer"
+import { useShownEffort } from "@/screens/agent/agent-effort"
 import { AgentFrame, ConversationsDrawer } from "@/screens/agent/agent-frame"
 import {
   isModelMissing,
@@ -28,14 +30,18 @@ import { useRunApproval } from "@/screens/agent/run-approval"
 import { useOpenKeyDialog } from "@/shell/key-dialog-context"
 import { ScreenHeader } from "@/shell/screen-header"
 
-type StartInput = { draft: Draft; approval: RunApproval }
+type StartInput = {
+  draft: Draft
+  approval: RunApproval
+  effort: AgentEffort | null
+}
 
 export function useStartConversation() {
   const navigate = useNavigate()
   const client = useQueryClient()
   return useMutation({
-    mutationFn: async ({ draft, approval }: StartInput) => ({
-      conversation: await startConversation(approval),
+    mutationFn: async ({ draft, approval, effort }: StartInput) => ({
+      conversation: await startConversation(approval, effort),
       draft,
     }),
     onSuccess: ({ conversation, draft }) => {
@@ -67,9 +73,10 @@ export function AgentStartScreen(): ReactElement {
   const openKey = useOpenKeyDialog()
   const reach = useKeyReach()
   const approval = useRunApproval()
+  const effort = useShownEffort()?.effort ?? null
   const send = (): void => {
     if (state.draft.prompt.trim() !== "") {
-      start.mutate({ draft: state.draft, approval })
+      start.mutate({ draft: state.draft, approval, effort })
     }
   }
   const failed = start.error !== null && !isModelMissing(start.error)

@@ -1,10 +1,17 @@
 import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
-import { comfyCreditsPerUsd } from "@rosesfield/catalog/comfy"
 import { describe, expect, it } from "vitest"
-import { routerChatModels } from "#infrastructure/router-chat-models"
-import { chatRatesOf, typicalTurn } from "#infrastructure/router-chat-rates"
-import { routerChatRates } from "#infrastructure/router-chat-rates.gen"
+import {
+  defaultChatModel,
+  type RouterChatModel,
+  routerChatModelOf,
+  routerChatModels,
+} from "#infrastructure/router-chat-models"
+import {
+  chatDetailsOf,
+  turnCreditsOf,
+  typicalTurn,
+} from "#infrastructure/router-chat-rates"
 
 const answers = join(import.meta.dirname, "../fixtures/scenario-answers")
 
@@ -58,28 +65,93 @@ function medianOf(values: readonly number[]): number {
     : ((sorted[middle - 1] ?? 0) + (sorted[middle] ?? 0)) / 2
 }
 
-function creditsOf(usd: number): number {
-  return Math.round(usd * comfyCreditsPerUsd * 100) / 100
+function modelOf(id: string): RouterChatModel {
+  const found = routerChatModelOf(id)
+  if (found === undefined) {
+    throw new Error(`The table lists no ${id}`)
+  }
+  return found
 }
 
-describe("the agent's chat model prices", () => {
-  it("prices every chat model the agent offers, from OpenRouter's published list with its date", () => {
-    expect(routerChatRates.source).toBe("https://openrouter.ai/api/v1/models")
-    expect(routerChatRates.readOn).toMatch(/^\d{4}-\d{2}-\d{2}$/)
-    const rates = chatRatesOf(routerChatModels)
-    expect(Object.keys(rates).sort()).toEqual([...routerChatModels].sort())
-    expect(routerChatModels).toHaveLength(8)
+describe("the agent's chat model rows", () => {
+  it("prices a turn of the default model at its opening effort from the typical turn's tokens", () => {
+    const usd = (0.15 * 1650 + 0.6 * 400) / 1_000_000
+    expect(turnCreditsOf(modelOf(defaultChatModel), "max")).toBeCloseTo(
+      usd * 211,
+      4
+    )
   })
 
-  it("converts each dollar price per million tokens to Comfy credits, and prices a typical turn from its medians", () => {
-    const model = "anthropic/claude-sonnet-5"
-    const listed = routerChatRates.models[model]
-    expect(chatRatesOf([model])[model]).toEqual({
-      input: creditsOf(listed.input),
-      output: creditsOf(listed.output),
-      turn: creditsOf((listed.input * 1650 + listed.output * 400) / 1_000_000),
+  it("scales a turn's output by the effort's output tokens per task over the default model's, and keeps 400 where the table holds none", () => {
+    const opus = modelOf("anthropic/claude-opus-5.5")
+    const low = (4 * 1650 + 20 * 400 * (10_151 / 89_495)) / 1_000_000
+    const max = (4 * 1650 + 20 * 400 * (119_166 / 89_495)) / 1_000_000
+    expect(turnCreditsOf(opus, "low")).toBeCloseTo(low * 211, 4)
+    expect(turnCreditsOf(opus, "max")).toBeCloseTo(max * 211, 4)
+    const unmeasured = modelOf("openai/gpt-5.2-chat")
+    expect(unmeasured.points).toEqual([])
+    expect(turnCreditsOf(unmeasured, null)).toBeCloseTo(
+      ((1.75 * 1650 + 14 * 400) / 1_000_000) * 211,
+      4
+    )
+  })
+
+  it("lists each model's rank, inputs, reasoning, rates per 1M and turn at every effort it offers", () => {
+    const details = chatDetailsOf(routerChatModels)
+    expect(Object.keys(details)).toHaveLength(274)
+    const opus = details["anthropic/claude-opus-5.5"]
+    expect(opus).toMatchObject({
+      name: "Claude Opus 5.5",
+      context: 1_000_000,
+      inputs: ["image", "file"],
+      reasons: true,
+      input: 844,
+      output: 4220,
+      effort: "max",
     })
-    expect(chatRatesOf(["maker/not-offered"])).toEqual({})
+    expect(opus?.facts.scores.chat).toMatchObject({
+      rank: 1,
+      order: 1,
+      of: 274,
+      tiers: ["bestValue"],
+    })
+    expect(opus?.efforts.map((one) => one.effort)).toEqual([
+      "max",
+      "xhigh",
+      "high",
+      "medium",
+      "low",
+    ])
+    expect(opus?.efforts.find((one) => one.effort === "max")?.turn).toBe(
+      opus?.turn
+    )
+    expect(details["moonshotai/kimi-k3.1-pro"]?.inputs).toContain("video")
+    expect(details["z-ai/glm-5.3"]?.inputs).toEqual([])
+    expect(chatDetailsOf(["maker/not-offered"])).toEqual({})
+  })
+
+  it("marks Best value only on a model with a point on the Pareto line of intelligence against cost per task", () => {
+    const details = chatDetailsOf(routerChatModels)
+    const valued = Object.entries(details)
+      .filter(([, one]) => one.facts.scores.chat?.tiers.includes("bestValue"))
+      .map(([id]) => id)
+    expect(valued.sort()).toEqual([
+      "anthropic/claude-opus-5.5",
+      "anthropic/claude-sonnet-5.5",
+      "google/gemini-4-argon",
+      "openai/gpt-5.6-luna",
+      "openai/gpt-6-luna",
+      "openai/gpt-6.1-sol",
+      "openai/gpt-6.1-terra",
+      "xiaomi/mimo-v2.6-pro",
+    ])
+  })
+
+  it("shows no rank on a model placed after the last scored one", () => {
+    const details = chatDetailsOf(routerChatModels)
+    const last = details[routerChatModels.at(-1) ?? ""]
+    expect(last?.facts.scores.chat?.rank).toBeNull()
+    expect(last?.facts.scores.chat?.order).toBe(274)
   })
 
   it("holds the median input and output tokens per turn of the captured scenario answers, each turn summed over its calls", () => {

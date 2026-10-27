@@ -46,7 +46,7 @@ const listed: AgentModels = {
   model: "deepseek/deepseek-v4-flash",
   recent: [],
   refusal: null,
-  rates: {},
+  details: {},
 }
 
 const noChat: AgentModels = {
@@ -54,7 +54,7 @@ const noChat: AgentModels = {
   model: null,
   recent: [],
   refusal: null,
-  rates: {},
+  details: {},
 }
 
 function renderStart(settings: GatewaySettings, models: AgentModels): void {

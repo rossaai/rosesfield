@@ -6,7 +6,7 @@ import {
   agentModelRoutes,
   agentModelsResponse,
   type Conversation,
-  chatRatesOf,
+  chatDetailsOf,
   conversationIdFormat,
   routerChat,
   routerChatModels,
@@ -110,14 +110,14 @@ describe("the agent's model list", () => {
       model: "maker/chat-small",
       recent: ["maker/chat-small"],
       refusal: null,
-      rates: {},
+      details: {},
     })
     expect(chosen.model).toBe("maker/chat-large")
     expect(chosen.recent).toEqual(["maker/chat-large", "maker/chat-small"])
     expect((await modelsOf(await call(app))).model).toBe("maker/chat-large")
   })
 
-  it("gives each chat model its credits per million text tokens in and out from OpenRouter's published prices, which bill the agent, and none to a model that list does not price", async () => {
+  it("gives each chat model of the table its row: rank, inputs, reasoning, credits per million tokens in and out and a turn at each effort, and none to a model the table does not list", async () => {
     const offered = [...routerChatModels, "maker/chat-large"]
     class OfferedAgent extends FakeAgentHarness {
       override readonly models = offered
@@ -127,11 +127,11 @@ describe("the agent's model list", () => {
 
     const listed = await modelsOf(await call(app))
 
-    expect(Object.keys(listed.rates ?? {}).sort()).toEqual(
+    expect(Object.keys(listed.details ?? {}).sort()).toEqual(
       [...routerChatModels].sort()
     )
-    expect(listed.rates?.["anthropic/claude-sonnet-5"]).toEqual(
-      chatRatesOf(["anthropic/claude-sonnet-5"])["anthropic/claude-sonnet-5"]
+    expect(listed.details?.["anthropic/claude-sonnet-5"]).toEqual(
+      chatDetailsOf(["anthropic/claude-sonnet-5"])["anthropic/claude-sonnet-5"]
     )
   })
 

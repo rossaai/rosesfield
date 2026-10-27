@@ -1,13 +1,14 @@
 import { autoRunLimitCredits } from "@rosesfield/catalog/comfy"
 import { ChipSelect } from "@rosesfield/ui/components/chip-select"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { SparklesIcon, UserCheckIcon } from "lucide-react"
+import { GaugeIcon, SparklesIcon, UserCheckIcon } from "lucide-react"
 import type { ReactElement } from "react"
-import type { RunApproval } from "@/api/conversation-wire"
-import { formatAmount } from "@/copy/format"
+import type { AgentEffort, RunApproval } from "@/api/conversation-wire"
+import { formatAmount, formatEstimate } from "@/copy/format"
 import { t } from "@/copy/t"
 import { DraftBar } from "@/pieces/draft-bar"
 import type { DraftState } from "@/pieces/use-draft"
+import { keepEffort, useShownEffort } from "@/screens/agent/agent-effort"
 import {
   useAgentModels,
   useChooseAgentModel,
@@ -57,6 +58,42 @@ function RunModeChip(): ReactElement {
   )
 }
 
+const effortWords = {
+  max: "agent.effort.max",
+  xhigh: "agent.effort.xhigh",
+  high: "agent.effort.high",
+  medium: "agent.effort.medium",
+  low: "agent.effort.low",
+  minimal: "agent.effort.minimal",
+  none: "agent.effort.none",
+} as const satisfies Record<AgentEffort, string>
+
+function EffortChip(): ReactElement | null {
+  const shown = useShownEffort()
+  if (shown === null) {
+    return null
+  }
+  const { model, detail, effort } = shown
+  const options = detail.efforts.map((one) => ({
+    value: one.effort,
+    label: t(effortWords[one.effort]),
+    icon: null,
+    description: t("run.price.estimated", {
+      amount: formatEstimate(one.turn),
+    }),
+  }))
+  return (
+    <ChipSelect
+      label={t("agent.effort.label")}
+      icon={<GaugeIcon aria-hidden="true" />}
+      value={effort}
+      display={t(effortWords[effort])}
+      onValueChange={(next) => keepEffort(model, next)}
+      options={options}
+    />
+  )
+}
+
 function ModelPill(): ReactElement | null {
   const models = useAgentModels()
   const choose = useChooseAgentModel()
@@ -67,7 +104,7 @@ function ModelPill(): ReactElement | null {
   return (
     <AgentModelPicker
       models={listed.models}
-      rates={listed.rates}
+      details={listed.details}
       recent={listed.recent}
       chosen={(choose.isPending ? choose.variables : null) ?? listed.model}
       onChoose={(model) => choose.mutate(model)}
@@ -102,6 +139,7 @@ export function AgentComposer(props: AgentComposerProps): ReactElement {
       chips={
         <>
           <ModelPill />
+          <EffortChip />
           <RunModeChip />
         </>
       }

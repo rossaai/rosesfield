@@ -8,6 +8,7 @@ import {
   sendMessage,
 } from "@/api/agent-wire"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
+import { agentDetailOf } from "../screens/agent/agent-details"
 
 const conversationId = "2a3b4c5d-6e7f-4a8b-9c0d-1e2f3a4b5c6d"
 const runId = "3b4c5d6e-7f80-4a9b-8c1d-2e3f4a5b6c7d"
@@ -150,7 +151,7 @@ describe("the agent's models", () => {
     expect(readAgentModels(listed)).toEqual({
       ...listed,
       recent: [],
-      rates: {},
+      details: {},
     })
     expect(
       readAgentModels({ ...listed, recent: ["qwen/qwen3.6-flash", 7] })?.recent
@@ -166,26 +167,24 @@ describe("the agent's models", () => {
       model: null,
       recent: [],
       refusal: { code: "ENGINE_NOT_ENABLED", status: 412 },
-      rates: {},
+      details: {},
     })
     expect(readAgentModels({ ...listed, models: [7] })).toBeNull()
     expect(readAgentModels({ ...listed, refusal: { code: 1 } })).toBeNull()
   })
 
-  it("reads each model's credits per million tokens and drops a rate it cannot read", () => {
+  it("reads each model's row and drops one it cannot read", () => {
+    const row = agentDetailOf({ name: "Claude Opus 5.5", turn: 12.3 })
     expect(
       readAgentModels({
         ...listed,
-        rates: {
-          "deepseek/deepseek-v4-flash": { input: 603.46, output: 3017.3 },
-          "anthropic/claude-sonnet-5": { input: 6, output: 30, turn: 0.02 },
-          "qwen/qwen3.6-flash": { input: "cheap", output: 1 },
+        details: {
+          "anthropic/claude-opus-5.5": row,
+          "qwen/qwen3.6-flash": { ...row, turn: "cheap" },
+          "z-ai/glm-5.3": { ...row, effort: "huge" },
         },
-      })?.rates
-    ).toEqual({
-      "deepseek/deepseek-v4-flash": { input: 603.46, output: 3017.3 },
-      "anthropic/claude-sonnet-5": { input: 6, output: 30, turn: 0.02 },
-    })
+      })?.details
+    ).toEqual({ "anthropic/claude-opus-5.5": row })
   })
 
   it("reads the list and sends a choice as a PATCH", async () => {
@@ -198,12 +197,12 @@ describe("the agent's models", () => {
     expect(await listAgentModels()).toEqual({
       ...listed,
       recent: [],
-      rates: {},
+      details: {},
     })
     expect(await chooseAgentModel("qwen/qwen3.6-flash")).toEqual({
       ...listed,
       recent: [],
-      rates: {},
+      details: {},
     })
     expect(sent.map((one) => [one.url, one.init?.method])).toEqual([
       ["/api/agent/models", "GET"],

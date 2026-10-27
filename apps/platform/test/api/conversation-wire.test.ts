@@ -3,6 +3,7 @@ import {
   acceptProposal,
   readConversationList,
   readTranscript,
+  startConversation,
   updateConversation,
 } from "@/api/conversation-wire"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
@@ -136,6 +137,22 @@ describe("the conversation calls", () => {
     expect(sent[0]?.url).toBe(`/api/agent/conversations/${conversationId}`)
     expect(sent[0]?.init?.method).toBe("PATCH")
     expect(sent[0]?.init?.body).toBe(JSON.stringify({ title: "Bicycles" }))
+  })
+
+  it("starts a conversation on the composer's effort and reads the effort it keeps", async () => {
+    const sent = answerWith(
+      Response.json({ conversation: { ...conversation, effort: "low" } })
+    )
+    const started = await startConversation("ask", "low")
+    expect(started.effort).toBe("low")
+    expect(sent[0]?.init?.body).toBe(
+      JSON.stringify({ runApproval: "ask", effort: "low" })
+    )
+    expect(
+      readConversationList({
+        conversations: [{ ...conversation, effort: "huge" }],
+      })
+    ).toEqual([conversation])
   })
 
   it("accepts a proposal and reads the runs it started", async () => {

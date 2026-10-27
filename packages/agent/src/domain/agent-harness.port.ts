@@ -1,5 +1,6 @@
 import type { RunId } from "@rosesfield/kernel"
 import type {
+  AgentEffort,
   AnswerEvent,
   Conversation,
   Proposal,
@@ -20,11 +21,13 @@ export type AnswerStream = AsyncIterable<AnswerEvent> & {
 
 export type NewConversation = {
   runApproval: RunApproval
+  effort?: AgentEffort | undefined
 }
 
 export type ConversationChanges = {
   title?: string | undefined
   runApproval?: RunApproval | undefined
+  effort?: AgentEffort | undefined
 }
 
 export type ProposalRef = {
@@ -57,7 +60,7 @@ export abstract class AgentHarness {
   /** Reads one conversation with its messages, runs and proposals. */
   abstract readConversation(id: ConversationId): Promise<Transcript>
 
-  /** Renames a conversation or changes whether it asks before each run. */
+  /** Renames a conversation, changes whether it asks before each run, or changes the effort its turns ask of the model. */
   abstract updateConversation(
     id: ConversationId,
     changes: ConversationChanges

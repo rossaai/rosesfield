@@ -58,7 +58,7 @@ describe("ModelPicker", () => {
     expect(screen.getAllByRole("option", { selected: false })).toHaveLength(2)
   })
 
-  it("shows up to three capabilities on one caption line in the neutral tone", () => {
+  it("shows up to six capabilities on one caption line in the neutral tone", () => {
     open()
     const facts = within(rowElementOf("Clip 3")).getAllByText(/1080p|5 to 10 s/)
     expect(facts).toHaveLength(2)
@@ -78,11 +78,19 @@ describe("ModelPicker", () => {
     }
   })
 
-  it("never shows more than three capabilities", () => {
+  it("never shows more than six capabilities: a chat model's context, its reasoning and its four inputs", () => {
     open(vi.fn(), [
       rowOf("a/many", {
         name: "Many",
-        capabilities: ["One", "Two", "Three", "Four"].map((label) => ({
+        capabilities: [
+          "One",
+          "Two",
+          "Three",
+          "Four",
+          "Five",
+          "Six",
+          "Seven",
+        ].map((label) => ({
           label,
         })),
       }),
@@ -91,7 +99,29 @@ describe("ModelPicker", () => {
       rowElementOf("Many").querySelectorAll(
         "[data-slot='model-row-capability']"
       )
-    ).toHaveLength(3)
+    ).toHaveLength(6)
+  })
+
+  it("draws a glyph capability as its icon alone, named by its label", () => {
+    open(vi.fn(), [
+      rowOf("a/inputs", {
+        name: "Inputs",
+        capabilities: [
+          { label: "1M context" },
+          {
+            label: "Video",
+            icon: <svg data-testid="video-glyph" />,
+            display: "glyph",
+          },
+        ],
+      }),
+    ])
+    const facts = rowElementOf("Inputs").querySelectorAll(
+      "[data-slot='model-row-capability']"
+    )
+    expect([...facts].map((one) => one.textContent)).toEqual(["1M context", ""])
+    expect(screen.getByRole("img", { name: "Video" })).toBe(facts[1])
+    expect(screen.getByTestId("video-glyph")).toBeTruthy()
   })
 
   it("puts New and Open weights after the name, and no rank among them", () => {

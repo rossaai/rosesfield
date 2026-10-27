@@ -8,6 +8,7 @@ import {
 import { type RunInputs, runRequest } from "@rosesfield/contract"
 import { z } from "zod"
 import {
+  type AgentEffort,
   type Conversation,
   type ProposalStatus,
   proposalStatus,
@@ -34,6 +35,7 @@ export type AgentSettings = {
 
 export type ConversationSettings = {
   runApproval: RunApproval
+  effort?: AgentEffort
 }
 
 export type ProposalRecord = {
@@ -122,6 +124,7 @@ export async function conversationOf(
     id: conversationIdFormat.parse(id),
     title: listed.title,
     runApproval: settings?.runApproval ?? StartConversationHandler.runApproval,
+    ...(settings?.effort === undefined ? {} : { effort: settings.effort }),
     createdAt: listed.createdAt,
   }
 }

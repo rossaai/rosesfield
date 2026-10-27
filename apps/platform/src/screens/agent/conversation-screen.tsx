@@ -10,6 +10,7 @@ import { t } from "@/copy/t"
 import { ScreenState } from "@/pieces/screen-state"
 import { type DraftState, useDraft } from "@/pieces/use-draft"
 import { AgentComposer } from "@/screens/agent/agent-composer"
+import { useEffortOf } from "@/screens/agent/agent-effort"
 import { AgentFrame, ConversationsDrawer } from "@/screens/agent/agent-frame"
 import { isModelMissing, useAgentModel } from "@/screens/agent/agent-model"
 import { asksForKey, ComposerSlot, NoModel } from "@/screens/agent/agent-parts"
@@ -232,6 +233,7 @@ function KnownConversation({
     conversationId,
     data?.conversation.runApproval
   )
+  useEffortOf(conversationId, data?.conversation.effort, data !== undefined)
   const isAnswering = turn?.status === "answering"
   useFirstMessage(
     conversationId,

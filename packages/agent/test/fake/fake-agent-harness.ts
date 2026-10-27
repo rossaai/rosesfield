@@ -40,7 +40,11 @@ export class FakeAgentHarness extends AgentHarness {
   override async startConversation(
     options: NewConversation
   ): Promise<Conversation> {
-    const started = { ...this.next, runApproval: options.runApproval }
+    const started = {
+      ...this.next,
+      runApproval: options.runApproval,
+      ...(options.effort === undefined ? {} : { effort: options.effort }),
+    }
     this.conversations.set(started.id, started)
     return started
   }
@@ -62,6 +66,7 @@ export class FakeAgentHarness extends AgentHarness {
       ...current,
       title: changes.title ?? current.title,
       runApproval: changes.runApproval ?? current.runApproval,
+      ...(changes.effort === undefined ? {} : { effort: changes.effort }),
     }
     this.conversations.set(id, updated)
     return updated
