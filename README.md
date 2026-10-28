@@ -24,10 +24,10 @@
 > Rosesfield is an entry to Comfy's [Open Source Higgsfield challenge](https://comfy.org/open-source-higgsfield), #OpenSourceHiggsfield. It is not made by, affiliated with or endorsed by Higgsfield.
 
 <p align="center">
-  <a href="docs/media/rosesfield-demo.mp4"><img alt="The Rosesfield demo video. It opens on a photo beside the video one Effects run made from it." src="docs/media/rosesfield-demo.webp" width="720"></a>
+  <a href="docs/media/rosesfield-film.mp4"><img alt="The Rosesfield launch film. A red rose growing through ice, open in the Image app's viewer, over a field of roses." src="docs/media/rosesfield-film.webp" width="720"></a>
 </p>
 
-<p align="center">The demo, 87 seconds. Every result in it is a real run on Comfy.</p>
+<p align="center">The launch film, 38 seconds. Every result in it is a real run on Comfy.</p>
 
 ## Start
 
@@ -64,9 +64,12 @@ Open `http://127.0.0.1:8787` and paste your key in Settings.
     <td align="center"><a href="docs/media/apps/characters.mp4"><img alt="A half-body portrait of an older man in round gold glasses and a green velvet blazer" src="docs/media/apps/characters.webp" width="260"></a><br><b>Characters</b></td>
     <td align="center"><a href="docs/media/apps/video-edit.mp4"><img alt="A close-up clip of a woman's face at twice its frame rate" src="docs/media/apps/video-edit.webp" width="260"></a><br><b>Video edit</b></td>
   </tr>
+  <tr>
+    <td align="center" colspan="3"><a href="docs/media/apps/three-d.mp4"><img alt="A red rose with two leaves on a round base, turning in the 3D app's viewer" src="docs/media/apps/three-d.webp" width="260"></a><br><b>3D</b></td>
+  </tr>
 </table>
 
-Press a picture to play its clip. Each one is a paid run in the running app, made from 2026-10-19 to 2026-10-22.
+Press a picture to play its clip. Each one is a paid run in the running app, made from 2026-10-19 to 2026-10-28.
 
 24 of Higgsfield's 35 products have a Rosesfield app that does the same job, and Rosesfield adds Music, Sound effects and 3D. [See them side by side](#rosesfield-and-higgsfield-app-by-app).
 
@@ -137,7 +140,7 @@ Every run reaches Comfy through the Comfy SDK, `@comfyorg/sdk` 0.5.0, on one Com
 
 ## What each run made
 
-The clips in [Made with Rosesfield](#made-with-rosesfield), with their models and costs, and one more. The Video run was made on 2026-10-19, the Effects run on 2026-10-21, and the others on 2026-10-22.
+The clips in [Made with Rosesfield](#made-with-rosesfield), with their models and costs, and one more. The Video run was made on 2026-10-19, the Effects run on 2026-10-21, the 3D run on 2026-10-28, and the others on 2026-10-22.
 
 | App | The run |
 |---|---|
@@ -151,8 +154,11 @@ The clips in [Made with Rosesfield](#made-with-rosesfield), with their models an
 | Remove background | A sneaker cut out onto a transparent background, [the clip](docs/media/apps/background-removal.mp4). The BiRefNet graph, 0.68 credits, made in 33 seconds. |
 | Video edit | A clip at twice its frame rate, 48 frames a second, with its sound kept. The FILM graph, 3.31 credits, made in 28 seconds. |
 | Video | A red kite over a green hill at dawn, from a start image. Seedance 1.0 Pro Fast, 480p, 5 seconds, 10.34 credits. |
+| 3D | A sculpture of one open rose on a short stem with two leaves, from a description. Meshy 7.1, Art style Sculpture, 241.38 credits, made in 64 seconds. Rosesfield runs Meshy's preview mode, which makes the shape only, so the model came out white. Its colour was added after the run by a script that runs no model. |
 
-The demo video shows the areas, a model list, a finished run, Share, the credits, and how each run reaches Comfy. It was recorded on 2026-10-22 on a Rosesfield server on one machine, in owner mode, where the Comfy key stays on the server. Every result in it is a stored run, and the recording started no new run. A [9:16 clip](docs/media/rosesfield-clip-9x16.mp4) of the Effects run is ready for a post.
+The launch film shows a prompt in the Image app, the model picker, five results in their own viewers, the 27 apps, and how a Comfy key reaches Settings. It is edited from the app's own screens. Every result in it is a stored run, and its 3D rose is the coloured model above. Comfy's key page in it is redrawn, and no key appears.
+
+The [87-second walkthrough](docs/media/rosesfield-demo.mp4) shows the areas, a model list, a finished run, Share, the credits, and how each run reaches Comfy. It was recorded on 2026-10-22 on a Rosesfield server on one machine, in owner mode, where the Comfy key stays on the server. Every result in it is a stored run, and the recording started no new run. A [9:16 clip](docs/media/rosesfield-clip-9x16.mp4) of the Effects run is ready for a post.
 
 ## What was proven live
 
