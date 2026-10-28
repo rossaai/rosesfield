@@ -57,7 +57,7 @@ import {
   type PublicAccountParts,
   publicAccountParts,
 } from "#session/public-account"
-import { SessionLimiter } from "#session/session-limiter"
+import { publicLimits } from "#session/session-limiter"
 import { type PurgeCount, SessionPurge } from "#session/session-purge"
 import { SessionVisits } from "#session/session-visits"
 import { readVisitorKeys } from "#session/visitor-keys"
@@ -294,19 +294,11 @@ function publicGuard(
   agents: SessionAgents | null
 ): GatewayGuard {
   const { db, clock } = parts
-  const { requestsPerMinute, newSessionsPerMinute } = access
-  const limiter = new SessionLimiter({ db, clock, requestsPerMinute })
-  const opens = new SessionLimiter({
-    db,
-    clock,
-    requestsPerMinute: newSessionsPerMinute,
-  })
   return {
     mode: "public",
     secret: access.sessionSecret,
     retentionDays: access.retentionDays,
-    take: (sessionId) => limiter.take(sessionId),
-    open: (client) => opens.take(client),
+    ...publicLimits({ db, clock, ...access }),
     clientOf: clientOfEnv(parts.env),
     accounts: parts.publicAccount.accounts,
     early: parts.publicAccount.early,

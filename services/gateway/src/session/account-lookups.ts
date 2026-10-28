@@ -23,6 +23,14 @@ export class AccountLookups {
     this.clock = options.clock
   }
 
+  async holds(key: string): Promise<boolean> {
+    const held = this.held.get(await digestOf(key))
+    return (
+      held !== undefined &&
+      this.clock.now().getTime() - held.at < AccountLookups.keepMs
+    )
+  }
+
   async answerFor(key: string): Promise<AccountAnswer> {
     const tag = await digestOf(key)
     const now = this.clock.now().getTime()

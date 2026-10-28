@@ -1,5 +1,5 @@
 import type { Clock } from "@rosesfield/kernel"
-import { sql } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { SessionRateLimitedError } from "#error/session-rate-limited.error"
 import type { SqliteDatabase } from "#infrastructure/sqlite-database"
 import type { SessionId } from "#session/session-scope"
@@ -24,6 +24,22 @@ export class SessionLimiter {
     this.limit = options.requestsPerMinute
   }
 
+  async check(sessionId: SessionId): Promise<void> {
+    const now = this.clock.now().getTime()
+    const windowStart = now - (now % SessionLimiter.windowMs)
+    const rows = await this.db
+      .select({
+        count: sessionLimitTable.count,
+        windowStart: sessionLimitTable.windowStart,
+      })
+      .from(sessionLimitTable)
+      .where(eq(sessionLimitTable.sessionId, sessionId))
+    const row = rows[0]
+    if (row?.windowStart === windowStart && row.count >= this.limit) {
+      throw this.refusal(now, windowStart)
+    }
+  }
+
   async take(sessionId: SessionId): Promise<void> {
     const now = this.clock.now().getTime()
     const windowStart = now - (now % SessionLimiter.windowMs)
@@ -40,12 +56,44 @@ export class SessionLimiter {
       .returning({ count: sessionLimitTable.count })
     const count = rows[0]?.count ?? 0
     if (count > this.limit) {
-      throw new SessionRateLimitedError({
-        limit: this.limit,
-        retryAfterSeconds: Math.ceil(
-          (windowStart + SessionLimiter.windowMs - now) / 1000
-        ),
-      })
+      throw this.refusal(now, windowStart)
     }
+  }
+
+  private refusal(now: number, windowStart: number): SessionRateLimitedError {
+    return new SessionRateLimitedError({
+      limit: this.limit,
+      retryAfterSeconds: Math.ceil(
+        (windowStart + SessionLimiter.windowMs - now) / 1000
+      ),
+    })
+  }
+}
+
+export type PublicLimits = {
+  take: (sessionId: SessionId) => Promise<void>
+  open: (client: string) => Promise<void>
+  canOpen: (client: string) => Promise<void>
+  address: (client: string) => Promise<void>
+}
+
+export function publicLimits(options: {
+  db: SqliteDatabase
+  clock: Clock
+  requestsPerMinute: number
+  newSessionsPerMinute: number
+  addressRequestsPerMinute: number
+}): PublicLimits {
+  const { db, clock } = options
+  const limiterOf = (requestsPerMinute: number) =>
+    new SessionLimiter({ db, clock, requestsPerMinute })
+  const sessions = limiterOf(options.requestsPerMinute)
+  const opens = limiterOf(options.newSessionsPerMinute)
+  const addresses = limiterOf(options.addressRequestsPerMinute)
+  return {
+    take: (sessionId) => sessions.take(sessionId),
+    open: (client) => opens.take(client),
+    canOpen: (client) => opens.check(client),
+    address: (client) => addresses.take(client),
   }
 }

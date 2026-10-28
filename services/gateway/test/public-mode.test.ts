@@ -112,6 +112,7 @@ describe("the settings of public mode", () => {
       retentionDays: 30,
       requestsPerMinute: 600,
       newSessionsPerMinute: 30,
+      addressRequestsPerMinute: 6000,
     })
     expect(
       readServerEnv({ ...base, RUNPOD_API_KEY: "a-key" }).access.mode

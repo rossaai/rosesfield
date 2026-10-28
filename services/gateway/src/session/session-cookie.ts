@@ -18,6 +18,8 @@ export type SessionGuardOptions = {
   retentionDays: number
   take: (sessionId: SessionId) => Promise<void>
   open: (client: string) => Promise<void>
+  canOpen: (client: string) => Promise<void>
+  address: (client: string) => Promise<void>
   clientOf: (c: Context) => string | null
   accounts: AccountLookups
   visits: SessionVisits
@@ -127,6 +129,7 @@ function anonymousVisit(held: HeldSession | null): Visit {
 
 type Slots = {
   open: () => Promise<void>
+  canOpen: () => Promise<void>
   take: (sessionId: SessionId) => Promise<void>
 }
 
@@ -138,9 +141,10 @@ function slotsOf(options: SessionGuardOptions, c: Context): Slots {
       await take(key)
     }
   }
+  const opens = `opens:${clientSlotOf(options.clientOf(c))}`
   return {
-    open: () =>
-      once(`opens:${clientSlotOf(options.clientOf(c))}`, options.open),
+    open: () => once(opens, options.open),
+    canOpen: () => options.canOpen(opens),
     take: (sessionId) => once(sessionId, options.take),
   }
 }
@@ -165,7 +169,10 @@ async function visitWithKey(
     return takeVisit(slots, { ...held, isNew: false })
   }
   if (held === null) {
-    await slots.open()
+    await slots.take(`key:${tag}`)
+    if (!(await options.accounts.holds(key))) {
+      await slots.canOpen()
+    }
   } else {
     await slots.take(held.sessionId)
   }
@@ -219,6 +226,7 @@ export function sessionGuard(
     clock: options.clock ?? new SystemClock(),
   })
   return async (c, next) => {
+    await options.address(`address:${clientSlotOf(options.clientOf(c))}`)
     const linked = await linkedSession(links, c)
     if (linked !== null) {
       c.set("session", linked)

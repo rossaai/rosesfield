@@ -14,7 +14,7 @@ import { ownerAccount, visitorAccount } from "#session/account-routes"
 import { headerClientOf } from "#session/client-slot"
 import { KeyProbe } from "#session/key-probe"
 import { publicAccountParts } from "#session/public-account"
-import { SessionLimiter } from "#session/session-limiter"
+import { publicLimits } from "#session/session-limiter"
 import { SessionPurge } from "#session/session-purge"
 import { SessionVisits } from "#session/session-visits"
 import { sharePostersOf } from "#share/media-share-posters"
@@ -84,24 +84,13 @@ function composePublic(
     throw new TypeError("composePublic needs public mode")
   }
   const account = publicAccountParts(new ComfyAccount(), parts.clock)
-  const limiter = new SessionLimiter({
-    db: parts.db,
-    clock: parts.clock,
-    requestsPerMinute: access.requestsPerMinute,
-  })
-  const opens = new SessionLimiter({
-    db: parts.db,
-    clock: parts.clock,
-    requestsPerMinute: access.newSessionsPerMinute,
-  })
   return createGateway({
     apps: parts.apps,
     guard: {
       mode: "public",
       secret: access.sessionSecret,
       retentionDays: access.retentionDays,
-      take: (sessionId) => limiter.take(sessionId),
-      open: (client) => opens.take(client),
+      ...publicLimits({ db: parts.db, clock: parts.clock, ...access }),
       clientOf: cloudflareClientOf,
       accounts: account.accounts,
       early: account.early,

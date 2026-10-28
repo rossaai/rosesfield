@@ -16,6 +16,7 @@ export type PublicAccess = {
   retentionDays: number
   requestsPerMinute: number
   newSessionsPerMinute: number
+  addressRequestsPerMinute: number
 }
 
 export type Access = { mode: "owner"; lock: OwnerLock } | PublicAccess
@@ -88,6 +89,7 @@ const sharedFields = {
   RETENTION_DAYS: whole(1, 365, 30),
   SESSION_REQUESTS_PER_MINUTE: whole(1, 10_000, 600),
   NEW_SESSIONS_PER_MINUTE: whole(1, 10_000, 30),
+  ADDRESS_REQUESTS_PER_MINUTE: whole(1, 100_000, 6000),
   SPEND_UNKNOWN_RUN_CREDITS: whole(1, 100_000, 100),
   SPEND_CAP_CREDITS: z.preprocess(
     blankAsMissing,
@@ -177,6 +179,7 @@ function publicAccess(env: SharedEnv): PublicAccess {
     retentionDays: env.RETENTION_DAYS,
     requestsPerMinute: env.SESSION_REQUESTS_PER_MINUTE,
     newSessionsPerMinute: env.NEW_SESSIONS_PER_MINUTE,
+    addressRequestsPerMinute: env.ADDRESS_REQUESTS_PER_MINUTE,
   }
 }
 
