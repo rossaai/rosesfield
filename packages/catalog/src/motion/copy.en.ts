@@ -36,9 +36,9 @@ export const motionCopy = {
   "motion.input.model.label": "Model",
   "motion.model.ltx23": "LTX 2.3 control",
   "motion.model.ltx23Guide": "LTX 2.3 depth guide",
-  "motion.tab.clip": "Copy a clip",
-  "motion.tab.guide": "Follow a guide",
   "motion.input.guide.label": "Guide video",
   "motion.input.guide.note":
     "A depth video that sets the camera and the movement, such as a Blender render. Its first frame matches your photo.",
+  "motion.price.fromControl":
+    "Generate, {amount} Comfy credits, estimated from your runs of LTX 2.3 control",
 } as const

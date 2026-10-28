@@ -1,6 +1,5 @@
 import type { AppListing } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
-import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import {
   type ReactElement,
   type ReactNode,
@@ -22,13 +21,7 @@ import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import { appSettingsPlan, isSettingInput } from "@/screens/app/settings-plan"
 import { clipLimits, photoLimits } from "@/studio/motion/motion-checks"
-import {
-  isMotionMode,
-  modeInput,
-  modeKeys,
-  motionModes,
-  soundInput,
-} from "@/studio/motion/motion-tabs"
+import { modeInput, soundInput } from "@/studio/motion/motion-tabs"
 import type { MotionState } from "@/studio/motion/use-motion-screen"
 
 type WellKind = "image" | "video"
@@ -130,31 +123,6 @@ function ClipWell({ state }: { state: MotionState }): ReactElement {
   )
 }
 
-export function ModeTabs({
-  state,
-}: {
-  state: Pick<MotionState, "mode" | "setMode">
-}): ReactElement {
-  return (
-    <Tabs
-      value={state.mode}
-      onValueChange={(next) => {
-        if (isMotionMode(next)) {
-          state.setMode(next)
-        }
-      }}
-    >
-      <TabsList aria-label={tCatalog("motion.tabs.label")}>
-        {motionModes.map((one) => (
-          <TabsTrigger key={one} value={one}>
-            {tCatalog(modeKeys[one])}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
-  )
-}
-
 function PhotoWell({ state }: { state: MotionState }): ReactElement {
   return (
     <Well
@@ -219,7 +187,6 @@ function RestFields({
 export function MotionPanel({ state }: { state: MotionState }): ReactElement {
   return (
     <div className="flex flex-col gap-s4">
-      <ModeTabs state={state} />
       <ClipWell key={`clip-${state.names.clip}`} state={state} />
       <PhotoWell key={`photo-${state.names.photo}`} state={state} />
       <RestFields

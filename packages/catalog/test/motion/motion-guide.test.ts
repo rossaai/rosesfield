@@ -1,5 +1,6 @@
 import { ComfyGenerationEngine, resolveBinding } from "@rosesfield/generation"
 import { describe, expect, it } from "vitest"
+import { heldFilesOf, isHeldOnCloud } from "#comfy/cloud-weights"
 import { modelsForApp } from "#comfy/list-models"
 import { findWorkflow } from "#list-workflows"
 import {
@@ -116,6 +117,20 @@ describe("the depth guide graph", () => {
       "ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors",
       "gemma_3_12B_it_fp4_mixed.safetensors",
     ])
+  })
+
+  it("loads only files Comfy Cloud's object_info lists, its checkpoint and its IC-LoRA among them", () => {
+    const held = heldFilesOf()
+    const files = findWorkflow(guideWorkflowId)?.models ?? []
+    expect(files).toHaveLength(3)
+    expect(isHeldOnCloud(files, held)).toBe(true)
+    expect(held.has("ltx-2.3-22b-distilled-fp8.safetensors")).toBe(true)
+    expect(
+      held.has("ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors")
+    ).toBe(true)
+    expect(
+      isHeldOnCloud([...files, "ltx-2.3-22b-ic-lora-pose-v0.safetensors"], held)
+    ).toBe(false)
   })
 
   it("is the graph Motion binds when you pick the depth guide model, with the sound left out either way", () => {

@@ -19,13 +19,6 @@ export const motionTabs: readonly MotionTab[] = [...clipTabs, "guide"]
 
 export type MotionMode = "clip" | "guide"
 
-export const motionModes: readonly MotionMode[] = ["clip", "guide"]
-
-export const modeKeys: Readonly<Record<MotionMode, string>> = {
-  clip: "motion.tab.clip",
-  guide: "motion.tab.guide",
-}
-
 export const tabTasks: Readonly<Record<ClipTab, string>> = {
   move: "motion-transfer",
   swap: "character-swap",
@@ -66,10 +59,6 @@ export function modeOfTab(tab: MotionTab): MotionMode {
   return tab === "guide" ? "guide" : "clip"
 }
 
-export function isMotionMode(value: unknown): value is MotionMode {
-  return motionModes.some((mode) => mode === value)
-}
-
 export function tabsOfModel(model: CatalogModel): MotionTab[] {
   if (isGuideModel(model)) {
     return ["guide"]
@@ -78,13 +67,6 @@ export function tabsOfModel(model: CatalogModel): MotionTab[] {
     return [...clipTabs]
   }
   return clipTabs.filter((tab) => tabTasks[tab] === model.task)
-}
-
-export function modelsOfMode(
-  models: readonly CatalogModel[],
-  mode: MotionMode
-): CatalogModel[] {
-  return models.filter((model) => (mode === "guide") === isGuideModel(model))
 }
 
 export function modelsOfTab(

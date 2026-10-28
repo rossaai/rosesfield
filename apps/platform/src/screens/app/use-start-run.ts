@@ -17,6 +17,7 @@ import {
   type AnsweredQuote,
   heldQuoteOf,
   type Quote,
+  type QuoteFrom,
   type QuoteSource,
 } from "@/screens/app/held-quote"
 import { hostedBody } from "@/screens/app/hosted/hosted-form"
@@ -32,6 +33,7 @@ export type StartRun = {
   price: string
   priceValue?: string | null
   priceName?: string | null
+  priceFrom?: QuoteFrom | null
 }
 
 const priceDelayMs = 100
@@ -57,6 +59,7 @@ function quoteOf(price: PriceResponse["price"] | undefined): Quote | null {
         source: price.source,
         ...(price.low === undefined ? {} : { low: price.low }),
         ...(price.perOutput === true ? { perOutput: true as const } : {}),
+        ...(price.from === undefined ? {} : { from: price.from }),
       }
 }
 
@@ -134,6 +137,7 @@ export function useStartRun(
     isPending: start.isPending,
     error: start.error,
     ...priceLabelsOf(quote?.credits ?? null, isDemo, quote?.source, quote?.low),
+    priceFrom: quote?.from ?? null,
   }
 }
 

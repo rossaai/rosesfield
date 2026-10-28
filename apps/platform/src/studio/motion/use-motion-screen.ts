@@ -1,5 +1,4 @@
 import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
-import { guideModel } from "@rosesfield/catalog/motion"
 import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
 import { useQueryClient } from "@tanstack/react-query"
 import {
@@ -14,7 +13,6 @@ import { appName } from "@/catalog/app-facts"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import {
-  defaultsOf,
   type FieldProblem,
   heldProblemsOf,
   valuesFromRun,
@@ -45,8 +43,6 @@ import {
   type MotionMode,
   type MotionTab,
   modeInput,
-  modelInput,
-  modelsOfMode,
   modeOfTab,
   restFieldsOf,
   soundInput,
@@ -65,7 +61,6 @@ export type MotionState = {
   app: AppListing
   tab: MotionTab
   mode: MotionMode
-  setMode: (mode: MotionMode) => void
   form: AppForm
   start: StartRun
   hosted: HostedState
@@ -146,36 +141,7 @@ function useModeHosted(
       })
     }
   }
-  return { ...hosted, models: modelsOfMode(models, mode), choose }
-}
-
-function modeSetterOf(
-  app: AppListing,
-  form: AppForm,
-  hosted: HostedState,
-  mode: MotionMode
-): (next: MotionMode) => void {
-  return (next) => {
-    if (next === mode) {
-      return
-    }
-    const served = modelsOfMode(hosted.models, next)
-    const target =
-      served.find((one) => one.id === hosted.defaultModel) ?? served[0]
-    if (target !== undefined) {
-      hosted.choose(target.id)
-      return
-    }
-    const base = defaultsOf(app).inputs
-    form.setForm({
-      inputs: {
-        ...form.values.inputs,
-        [soundInput]: next === "guide" ? soundOff : base[soundInput],
-        [modelInput]: next === "guide" ? guideModel : base[modelInput],
-        [modeInput]: next === "guide" ? "guide" : "move",
-      },
-    })
-  }
+  return { ...hosted, choose }
 }
 
 function useFocusers(): [
@@ -269,6 +235,17 @@ function guardedOf(
   }
 }
 
+export function guidePriceOf(start: StartRun, mode: MotionMode): StartRun {
+  const amount = start.priceValue ?? null
+  if (mode !== "guide" || start.priceFrom !== "task-runs" || amount === null) {
+    return start
+  }
+  return {
+    ...start,
+    priceName: tCatalog("motion.price.fromControl", { amount }),
+  }
+}
+
 function shortcutOf(
   generate: () => void
 ): (event: KeyboardEvent<HTMLElement>) => void {
@@ -310,14 +287,8 @@ export function useMotionScreen(
     app,
     tab,
     mode,
-    setMode: modeSetterOf(
-      app,
-      form,
-      { ...modeHosted, models: hosted.models },
-      mode
-    ),
     form,
-    start: { ...base, generate },
+    start: guidePriceOf({ ...base, generate }, mode),
     hosted: modeHosted,
     isGraph: chosen === null || isGraph(chosen),
     names,

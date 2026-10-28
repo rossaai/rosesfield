@@ -105,18 +105,32 @@ describe("the motion checks", () => {
   })
 
   it.each([
-    { seconds: 10.04, said: null },
-    { seconds: 1.96, said: null },
+    { seconds: 10, said: null },
+    { seconds: 240 / 24, said: null },
+    { seconds: 2, said: null },
+    { seconds: 48 / 24, said: null },
+    {
+      seconds: 241 / 24,
+      said: "This clip runs 10.04 seconds. Pick one of 10 seconds or less.",
+    },
+    {
+      seconds: 10.04,
+      said: "This clip runs 10.04 seconds. Pick one of 10 seconds or less.",
+    },
+    {
+      seconds: 1.96,
+      said: "This clip runs 1.96 seconds. Pick one of 2 seconds or more.",
+    },
     {
       seconds: 10.06,
       said: "This clip runs 10.1 seconds. Pick one of 10 seconds or less.",
     },
     {
-      seconds: 1.94,
-      said: "This clip runs 1.9 seconds. Pick one of 2 seconds or more.",
+      seconds: 12.3,
+      said: "This clip runs 12.3 seconds. Pick one of 10 seconds or less.",
     },
   ])(
-    "judges a clip of $seconds seconds by the length it shows",
+    "judges a clip of $seconds seconds by its exact length, because the graph keeps only its first 10 seconds",
     ({ seconds, said }) => {
       expect(words(clipProblem(clip({ seconds })))).toBe(said)
     }

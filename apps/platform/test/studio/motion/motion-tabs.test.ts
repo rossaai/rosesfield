@@ -6,7 +6,6 @@ import {
   heldWellsOf,
   inputsForModel,
   modelForTab,
-  modelsOfMode,
   modelsOfTab,
   restFieldsOf,
   tabOfHash,
@@ -70,12 +69,6 @@ describe("Follow a guide", () => {
     expect(tabsOfModel(guide)).toEqual(["guide"])
     expect(tabOfModel(guide, "move")).toBe("guide")
     expect(tabOfModel(graph, "guide")).toBe("move")
-    expect(modelsOfMode(catalog, "guide")).toEqual([guide])
-    expect(modelsOfMode(catalog, "clip").map((one) => one.id)).toEqual([
-      graphId,
-      mover.id,
-      swapper.id,
-    ])
     expect(modelsOfTab(catalog, "move").map((one) => one.id)).not.toContain(
       guide.id
     )

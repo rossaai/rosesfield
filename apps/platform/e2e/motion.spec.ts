@@ -1,4 +1,5 @@
 import { expect, type Locator, test } from "@playwright/test"
+import { openImagePicker } from "./image-picker"
 import { expectTip } from "./well-tip"
 
 async function boxOf(
@@ -20,19 +21,13 @@ test.beforeEach(async ({ page }) => {
 test.describe("Motion's column", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("opens on Copy a clip: a Clip well and a Photo well with their limits, Pick a character, the model row and Generate", async ({
+  test("holds one mode with no tab row: a Clip well and a Photo well with their limits, Pick a character, the model row and Generate", async ({
     page,
   }) => {
     await page.goto("/apps/motion")
     const column = page.locator('[data-slot="composer"]')
     await expect(column).toBeVisible()
-    await expect(column.getByRole("tab")).toHaveText([
-      "Copy a clip",
-      "Follow a guide",
-    ])
-    await expect(
-      column.getByRole("tab", { name: "Copy a clip" })
-    ).toHaveAttribute("aria-selected", "true")
+    await expect(column.getByRole("tablist")).toHaveCount(0)
     const wells = column.locator('[data-slot="drop-well"]')
     await expect(wells).toHaveCount(2)
     await expectTip(page, wells.nth(0), /MP4, MOV,? or WebM/)
@@ -52,9 +47,7 @@ test.describe("Motion's column", () => {
     await page.goto("/apps/recast")
     await expect(page).toHaveURL(/\/apps\/motion#swap$/)
     const column = page.locator('[data-slot="composer"]')
-    await expect(
-      column.getByRole("tab", { name: "Copy a clip" })
-    ).toHaveAttribute("aria-selected", "true")
+    await expect(column.getByRole("tablist")).toHaveCount(0)
     await expect(
       column.getByRole("button", { name: "Pick a character" })
     ).toBeVisible()
@@ -64,24 +57,27 @@ test.describe("Motion's column", () => {
 test.describe("Follow a guide", () => {
   test.skip(({ isMobile }) => isMobile, "the column shows from 768 px")
 
-  test("names the video well Guide video, runs the depth guide graph and leaves the clip's sound out", async ({
+  test("is the LTX 2.3 depth guide row of the one model list: picking it names the video well Guide video with its note, and picking the control graph names it Clip again", async ({
     page,
   }) => {
     await page.goto("/apps/motion")
     const column = page.locator('[data-slot="composer"]')
-    await column.getByRole("tab", { name: "Follow a guide" }).click()
-    await expect(
-      column.getByRole("tab", { name: "Follow a guide" })
-    ).toHaveAttribute("aria-selected", "true")
+    await expect(column.getByRole("tablist")).toHaveCount(0)
+    await openImagePicker(page)
+    await page
+      .getByRole("listbox")
+      .locator("[data-slot='model-row']", { hasText: "LTX 2.3 depth guide" })
+      .click()
     await expect(column.getByText("Guide video")).toBeVisible()
-    await expect(column.locator('[data-slot="drop-well"]')).toHaveCount(2)
     await expect(
-      column.getByRole("button", { name: /LTX 2\.3 depth guide/ }).first()
+      column.getByText(/A depth video that sets the camera/)
     ).toBeVisible()
-    await expect(
-      column.getByRole("switch", { name: "Keep the clip's sound" })
-    ).toHaveCount(0)
-    await column.getByRole("tab", { name: "Copy a clip" }).click()
+    await expect(column.locator('[data-slot="drop-well"]')).toHaveCount(2)
+    await openImagePicker(page)
+    await page
+      .getByRole("listbox")
+      .locator("[data-slot='model-row']", { hasText: "LTX 2.3 control" })
+      .click()
     await expect(column.getByText("Guide video")).toHaveCount(0)
   })
 })
@@ -103,7 +99,7 @@ test.describe("Motion on a phone", () => {
     await page.locator('[data-slot="app-bar-tabGenerate"]').click()
     const sheet = page.getByRole("dialog")
     await expect(sheet).toBeVisible()
-    await expect(sheet.getByRole("tablist")).toHaveCount(1)
+    await expect(sheet.getByRole("tablist")).toHaveCount(0)
     await expect(sheet.locator('[data-slot="drop-well"]')).toHaveCount(2)
     const generate = await boxOf(sheet.locator('[data-slot="generate-button"]'))
     const sheetBox = await boxOf(sheet)

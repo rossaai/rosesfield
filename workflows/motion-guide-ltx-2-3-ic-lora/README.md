@@ -60,4 +60,4 @@ The graph of [`motion-ltx-2-3-ic-lora`](../motion-ltx-2-3-ic-lora/README.md), wh
 
 ## Not checked
 
-No run of this workflow on a live engine exists. Every node class it runs, and each of its three files, was listed by Comfy Cloud's `GET /api/object_info` read on 2026-10-19, and the IC-LoRA again on 2026-10-28. Its class names, input names and links are the Motion graph's, checked against the node definitions of ComfyUI v0.41.0.
+No run of this workflow on a live engine exists. Every node class it runs is listed by Comfy Cloud's `GET /api/object_info`, read on 2026-10-28, and `packages/catalog/src/comfy/cloud-weights.json` records each of its three files from that read: the checkpoint under `CheckpointLoaderSimple`, the IC-LoRA under `LoraLoaderModelOnly` and the text encoder under `CLIPLoader`. Its class names, input names and links are the Motion graph's, checked against the node definitions of ComfyUI v0.41.0.

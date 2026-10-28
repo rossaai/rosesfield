@@ -1,5 +1,5 @@
 import { isGuideFit, renderSizeOf } from "@rosesfield/catalog/motion"
-import { formatBytes, formatSeconds } from "@/copy/format"
+import { formatBytes, formatHundredths, formatSeconds } from "@/copy/format"
 import { tCatalog } from "@/copy/t"
 import { clipMimes } from "@/pieces/use-clip-facts"
 import type { FieldProblem } from "@/screens/app/app-form"
@@ -102,6 +102,14 @@ export function photoProblem(
   return null
 }
 
+const lengthTolerance = 0.001
+
+function shownSeconds(exact: number, limit: number): string {
+  return Math.round(exact * 10) / 10 === limit
+    ? formatHundredths(exact)
+    : formatSeconds(exact)
+}
+
 export function clipProblem(
   facts: MediaFacts,
   range: ClipRange | null = graphClipRange,
@@ -117,20 +125,19 @@ export function clipProblem(
   if (range === null) {
     return null
   }
-  const shown = Math.round(facts.seconds * 10) / 10
-  const seconds = formatSeconds(shown)
-  if (shown > range.max) {
+  const exact = facts.seconds
+  if (exact > range.max + lengthTolerance) {
     return {
       name,
       key: "field.asset.tooLong",
-      values: { seconds, max: range.max },
+      values: { seconds: shownSeconds(exact, range.max), max: range.max },
     }
   }
-  if (shown < range.min) {
+  if (exact < range.min - lengthTolerance) {
     return {
       name,
       key: "field.asset.tooShort",
-      values: { seconds, min: range.min },
+      values: { seconds: shownSeconds(exact, range.min), min: range.min },
     }
   }
   return null

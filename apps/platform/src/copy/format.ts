@@ -23,6 +23,9 @@ const tokenCounts = new Intl.NumberFormat(copyLocale, {
   maximumSignificantDigits: 3,
 })
 const seconds = new Intl.NumberFormat(copyLocale, { maximumFractionDigits: 1 })
+const hundredths = new Intl.NumberFormat(copyLocale, {
+  maximumFractionDigits: 2,
+})
 const durations = new Intl.NumberFormat(copyLocale, {
   style: "unit",
   unit: "second",
@@ -64,6 +67,10 @@ export function formatChoices(items: readonly string[]): string {
 
 export function formatSeconds(value: number): string {
   return seconds.format(value)
+}
+
+export function formatHundredths(value: number): string {
+  return hundredths.format(value)
 }
 
 export function formatDuration(seconds: number): string {

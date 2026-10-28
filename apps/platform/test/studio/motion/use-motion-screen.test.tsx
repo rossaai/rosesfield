@@ -13,7 +13,10 @@ import type { AppForm } from "@/screens/app/use-app-form"
 import type { MediaFacts } from "@/studio/motion/motion-checks"
 import type { MotionTab } from "@/studio/motion/motion-tabs"
 import type { MediaReading } from "@/studio/motion/use-media-facts"
-import { useMotionScreen } from "@/studio/motion/use-motion-screen"
+import {
+  guidePriceOf,
+  useMotionScreen,
+} from "@/studio/motion/use-motion-screen"
 import {
   catalog,
   graph,
@@ -32,7 +35,6 @@ const world = vi.hoisted(() => {
     first,
     files: new Map<string, MediaFacts>(),
     started: 0,
-    isListing: false,
     references: ["ref-front", "ref-side"],
   }
 })
@@ -111,7 +113,7 @@ vi.mock("@/screens/app/hosted/use-price-refresh", () => ({
 vi.mock("@/screens/app/hosted/use-hosted-model", () => ({
   useHostedModel: (_app: unknown, form: AppForm): HostedState => {
     const id = form.values.inputs.model
-    const models: readonly CatalogModel[] = world.isListing ? [] : catalog
+    const models: readonly CatalogModel[] = catalog
     return {
       isTaskApp: true,
       models,
@@ -136,6 +138,7 @@ vi.mock("@/screens/app/use-start-run", () => ({
     price: "",
     priceValue: "40",
     priceName: null,
+    priceFrom: "task-runs",
   }),
 }))
 
@@ -170,7 +173,6 @@ function renderMotion(
 ) {
   world.first = first
   world.started = 0
-  world.isListing = false
   world.files.set(photo, {
     mime: "image/jpeg",
     bytes: 3_000_000,
@@ -211,6 +213,7 @@ describe("Motion opens", () => {
     expect(result.current.range).toEqual({ min: 2, max: 10 })
     expect(result.current.hosted.models.map((one) => one.id)).toEqual([
       graphId,
+      guide.id,
       mover.id,
       swapper.id,
     ])
@@ -222,6 +225,7 @@ describe("Motion opens", () => {
     expect(result.current.isGraph).toBe(true)
     expect(result.current.hosted.models.map((one) => one.id)).toEqual([
       graphId,
+      guide.id,
       mover.id,
       swapper.id,
     ])
@@ -292,44 +296,22 @@ describe("Swap a character", () => {
 })
 
 describe("Follow a guide", () => {
-  it("picks the depth guide graph, keeps your photo and video, lists only that graph and leaves the clip's sound out", () => {
+  it("is the depth guide row of the one model list: choosing it keeps your photo and video and leaves the clip's sound out, and choosing the graph again restores it", () => {
     const { result } = renderMotion({ clip: [depthGuide], photo: [photo] })
     expect(result.current.mode).toBe("clip")
-    act(() => result.current.setMode("guide"))
+    act(() => result.current.hosted.choose(guide.id))
     expect(result.current.mode).toBe("guide")
     expect(result.current.tab).toBe("guide")
     expect(result.current.isGraph).toBe(true)
     expect(result.current.form.values.inputs.model).toBe(guide.id)
     expect(result.current.form.values.inputs.clip).toEqual([depthGuide])
     expect(result.current.form.values.inputs.photo).toEqual([photo])
-    expect(result.current.hosted.models.map((one) => one.id)).toEqual([
-      guide.id,
-    ])
+    expect(result.current.form.values.inputs.sound).toBe("off")
+    expect(result.current.hosted.models.map((one) => one.id)).toContain(graphId)
     expect(result.current.graphRest.map((input) => input.name)).toEqual([])
-    expect(result.current.form.values.inputs.sound).toBe("off")
-    act(() => result.current.setMode("clip"))
+    act(() => result.current.hosted.choose(graphId))
     expect(result.current.mode).toBe("clip")
-    expect(result.current.form.values.inputs.model).toBe(graphId)
-    expect(result.current.form.values.inputs.sound).toBe("on")
     expect(result.current.form.values.inputs.clip).toEqual([depthGuide])
-  })
-
-  it("switches before the model list has loaded, and lands on the depth guide graph once it has", () => {
-    const { result, rerender } = renderMotion({ clip: [depthGuide] })
-    world.isListing = true
-    rerender()
-    act(() => result.current.setMode("guide"))
-    expect(result.current.form.values.inputs.model).toBe(guide.id)
-    expect(result.current.form.values.inputs.sound).toBe("off")
-    world.isListing = false
-    rerender()
-    expect(result.current.mode).toBe("guide")
-    expect(result.current.hosted.chosen?.id).toBe(guide.id)
-    world.isListing = true
-    rerender()
-    act(() => result.current.setMode("clip"))
-    expect(result.current.mode).toBe("clip")
-    expect(result.current.form.values.inputs.model).toBe(graphId)
     expect(result.current.form.values.inputs.sound).toBe("on")
   })
 
@@ -342,6 +324,9 @@ describe("Follow a guide", () => {
     })
     expect(result.current.mode).toBe("guide")
     expect(result.current.form.values.inputs.sound).toBe("off")
+    expect(result.current.start.priceName).toBe(
+      "Generate, 40 Comfy credits, estimated from your runs of LTX 2.3 control"
+    )
     expect(result.current.checks.clip).toBeNull()
     act(() => result.current.start.generate())
     expect(world.started).toBe(1)
@@ -375,5 +360,33 @@ describe("Follow a guide", () => {
     )
     act(() => result.current.start.generate())
     expect(world.started).toBe(0)
+  })
+})
+
+describe("the price Generate names in Follow a guide", () => {
+  const base = {
+    generate: () => undefined,
+    isPending: false,
+    error: null,
+    price: "",
+    priceValue: "12",
+    priceName: "Generate, 12 Comfy credits, estimated",
+  }
+
+  it("names the Motion graph's runs when the estimate comes from them", () => {
+    expect(
+      guidePriceOf({ ...base, priceFrom: "task-runs" }, "guide").priceName
+    ).toBe(
+      "Generate, 12 Comfy credits, estimated from your runs of LTX 2.3 control"
+    )
+  })
+
+  it("keeps the price's own name for a measured guide run and in Copy a clip, the control", () => {
+    expect(
+      guidePriceOf({ ...base, priceFrom: "measured" }, "guide").priceName
+    ).toBe(base.priceName)
+    expect(
+      guidePriceOf({ ...base, priceFrom: "task-runs" }, "clip").priceName
+    ).toBe(base.priceName)
   })
 })

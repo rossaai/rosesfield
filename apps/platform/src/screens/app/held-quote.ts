@@ -1,14 +1,23 @@
-import { fieldRoleOf, type ModelField } from "@rosesfield/catalog/comfy"
+import {
+  fieldRoleOf,
+  type ModelField,
+  type PriceResponse,
+} from "@rosesfield/catalog/comfy"
 import type { StartRunBodyInput } from "@/screens/app/app-form"
 import { countSwitchOf } from "@/screens/app/setting-table"
 
 export type QuoteSource = "measured" | "estimate" | "rates"
+
+export type QuoteFrom = NonNullable<
+  Extract<PriceResponse["price"], { credits: number }>["from"]
+>
 
 export type Quote = {
   credits: number
   source: QuoteSource
   low?: number
   perOutput?: true
+  from?: QuoteFrom
 }
 
 export type AnsweredQuote = {
