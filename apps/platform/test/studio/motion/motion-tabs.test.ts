@@ -6,6 +6,7 @@ import {
   heldWellsOf,
   inputsForModel,
   modelForTab,
+  modelsOfMode,
   modelsOfTab,
   restFieldsOf,
   tabOfHash,
@@ -17,6 +18,7 @@ import {
   catalog,
   graph,
   graphId,
+  guide,
   motionListing,
   mover,
   swapper,
@@ -60,6 +62,46 @@ describe("Motion's tabs", () => {
     expect(tabOfHash("swap")).toBe("swap")
     expect(tabOfHash("#swap")).toBe("swap")
     expect(tabOfHash("")).toBe("move")
+  })
+})
+
+describe("Follow a guide", () => {
+  it("is the one tab of the depth guide graph, which no other mode lists", () => {
+    expect(tabsOfModel(guide)).toEqual(["guide"])
+    expect(tabOfModel(guide, "move")).toBe("guide")
+    expect(tabOfModel(graph, "guide")).toBe("move")
+    expect(modelsOfMode(catalog, "guide")).toEqual([guide])
+    expect(modelsOfMode(catalog, "clip").map((one) => one.id)).toEqual([
+      graphId,
+      mover.id,
+      swapper.id,
+    ])
+    expect(modelsOfTab(catalog, "move").map((one) => one.id)).not.toContain(
+      guide.id
+    )
+  })
+
+  it("keeps the photo and the video in the same wells, and leaves the clip's sound out", () => {
+    expect(wellNamesOf(listing, guide)).toEqual({
+      clip: "clip",
+      photo: "photo",
+    })
+    expect(clipRangeOf(listing, guide)).toEqual(graphClipRange)
+    expect(graphRestOf(listing, "guide")).toEqual([])
+  })
+
+  it("records the clip's sound as off on a guide run, because the guide graph writes no sound", () => {
+    const wells = { clip: ["guide-1"], photo: ["photo-1"] }
+    const kept = { sound: "on" }
+    expect(inputsForModel(listing, guide, kept, "guide", wells)).toMatchObject({
+      sound: "off",
+      model: guide.id,
+      mode: "guide",
+      clip: ["guide-1"],
+    })
+    expect(inputsForModel(listing, graph, kept, "move", wells)).toMatchObject({
+      sound: "on",
+    })
   })
 })
 

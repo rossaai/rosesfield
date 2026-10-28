@@ -1,9 +1,12 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { selectBinding } from "@rosesfield/generation/bindings"
+import { graphModel, guideModel } from "#motion/motion-models"
 import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 import { apiGraph } from "#workflow-entry.contract"
 
 export const motionWorkflow = "motion-ltx-2-3-ic-lora"
+
+export const guideWorkflow = "motion-guide-ltx-2-3-ic-lora"
 
 export const videoNode = "122"
 
@@ -31,7 +34,7 @@ export function withoutSound(
   return graph
 }
 
-export const motionEngine: EngineBinding = selectBinding({
+const poseEngine: EngineBinding = selectBinding({
   input: "sound",
   options: {
     off: workflowBinding({
@@ -41,4 +44,14 @@ export const motionEngine: EngineBinding = selectBinding({
     }),
     on: workflowBinding({ workflow: motionWorkflow, bindings: motionBindings }),
   },
+})
+
+const guideEngine: EngineBinding = workflowBinding({
+  workflow: guideWorkflow,
+  bindings: motionBindings,
+})
+
+export const motionEngine: EngineBinding = selectBinding({
+  input: "model",
+  options: { [graphModel]: poseEngine, [guideModel]: guideEngine },
 })

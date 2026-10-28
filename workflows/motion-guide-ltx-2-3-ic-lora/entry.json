@@ -1,0 +1,47 @@
+{
+  "name": "motion-guide-ltx-2-3-ic-lora",
+  "title": "Motion: move a photo along a depth guide on LTX 2.3",
+  "description": "Renders the person in your photo moving along your guide video, on LTX 2.3 22B distilled with its union control IC-LoRA in 8 steps. The guide is a depth video you made, and its frames go straight to the IC-LoRA, so it sets the camera path, the blocking and the timing. Your photo sets the first frame. The video starts on the first frame the model makes, after your photo, and keeps the guide's frame count and frame rate, with no sound. Built from Comfy's template video_ltx2_3_ic_lora.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": [
+    "ltx-2.3-22b-distilled-fp8.safetensors",
+    "ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors",
+    "gemma_3_12B_it_fp4_mixed.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "photo": {
+      "nodeId": "200",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "clip": {
+      "nodeId": "199",
+      "inputName": "file",
+      "type": "cloud-asset"
+    },
+    "scene": {
+      "nodeId": "900",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "shortSide": {
+      "nodeId": "702",
+      "inputName": "value",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "704",
+      "inputName": "seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "68",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}

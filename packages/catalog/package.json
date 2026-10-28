@@ -11,6 +11,7 @@
     "./workflows": "./src/workflow-registry.ts",
     "./comfy": "./src/comfy/index.ts",
     "./video": "./src/video/index.ts",
+    "./motion": "./src/motion/index.ts",
     "./effects": "./src/effects/index.ts",
     "./lipsync": "./src/lipsync/index.ts",
     "./storyboard": "./src/storyboard/index.ts",

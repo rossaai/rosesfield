@@ -1,4 +1,4 @@
-import { cleanup, screen } from "@testing-library/react"
+import { cleanup, fireEvent, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t, tCatalog } from "@/copy/t"
 import { defaultsOf } from "@/screens/app/app-form"
@@ -12,7 +12,7 @@ import {
   showColumn,
   theModelChip,
 } from "../column"
-import { catalog, graph, motionListing } from "./motion-fixtures"
+import { catalog, graph, guide, motionListing } from "./motion-fixtures"
 
 const app = motionListing()
 
@@ -29,6 +29,8 @@ function graphState(): MotionState {
   return {
     app,
     tab: "move",
+    mode: "clip",
+    setMode: () => undefined,
     form: formOf(defaultsOf(app)),
     start: {
       generate: () => undefined,
@@ -81,8 +83,8 @@ describe("the Motion column", () => {
   })
 })
 
-describe("Motion's one mode", () => {
-  it("offers Pick a character under the photo well with no tab, so you swap a character from the same column", () => {
+describe("Motion's two modes", () => {
+  it("offers Pick a character under the photo well in Copy a clip, so you swap a character from the same column with no tab of its own", () => {
     showColumn(<MotionPanel state={graphState()} />)
     const photo = screen.getByText(tCatalog("motion.input.photo.label"))
     const pick = screen.getByRole("button", {
@@ -90,6 +92,56 @@ describe("Motion's one mode", () => {
     })
     expect(isBefore(photo, pick)).toBe(true)
     expect(isBefore(pick, theModelChip())).toBe(true)
-    expect(screen.queryByRole("tablist")).toBeNull()
+    const tabs = screen.getAllByRole("tab").map((tab) => tab.textContent)
+    expect(tabs).toEqual([
+      tCatalog("motion.tab.clip"),
+      tCatalog("motion.tab.guide"),
+    ])
+    expect(
+      screen
+        .getByRole("tab", { name: tCatalog("motion.tab.clip") })
+        .getAttribute("aria-selected")
+    ).toBe("true")
+  })
+
+  it("switches to Follow a guide from its tab", () => {
+    const picked: string[] = []
+    const state = {
+      ...graphState(),
+      setMode: (mode: string) => picked.push(mode),
+    }
+    showColumn(<MotionPanel state={state} />)
+    const tab = screen.getByRole("tab", { name: tCatalog("motion.tab.guide") })
+    fireEvent.mouseDown(tab)
+    fireEvent.click(tab)
+    expect(picked).toContain("guide")
+  })
+
+  it("names the video well Guide video with its note in Follow a guide, and leaves the clip's sound out", () => {
+    const state: MotionState = {
+      ...graphState(),
+      tab: "guide",
+      mode: "guide",
+      graphRest: graphRestOf(app, "guide"),
+    }
+    state.hosted = { ...state.hosted, models: [guide], chosen: guide }
+    showColumn(<MotionPanel state={state} />)
+    expect(
+      screen.getByText(tCatalog("motion.input.guide.label")).isConnected
+    ).toBe(true)
+    expect(
+      screen.getByText(tCatalog("motion.input.guide.note")).isConnected
+    ).toBe(true)
+    expect(screen.queryByText(tCatalog("motion.input.clip.label"))).toBeNull()
+    expect(
+      screen.queryByRole("switch", {
+        name: tCatalog("motion.input.sound.label"),
+      })
+    ).toBeNull()
+    expect(
+      screen
+        .getByRole("tab", { name: tCatalog("motion.tab.guide") })
+        .getAttribute("aria-selected")
+    ).toBe("true")
   })
 })

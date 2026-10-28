@@ -3,21 +3,30 @@ import {
   lengthOf,
   type ModelField,
 } from "@rosesfield/catalog/comfy"
+import { guideModel } from "@rosesfield/catalog/motion"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { defaultsOf, type FieldValue } from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
 import { hostedDefaults } from "@/screens/app/hosted/hosted-form"
 
-export type MotionTab = "move" | "swap"
+export type MotionTab = "move" | "swap" | "guide"
 
-export const motionTabs: readonly MotionTab[] = ["move", "swap"]
+export type ClipTab = Exclude<MotionTab, "guide">
 
-export const tabKeys: Readonly<Record<MotionTab, string>> = {
-  move: "motion.tab.move",
-  swap: "motion.tab.swap",
+export const clipTabs: readonly ClipTab[] = ["move", "swap"]
+
+export const motionTabs: readonly MotionTab[] = [...clipTabs, "guide"]
+
+export type MotionMode = "clip" | "guide"
+
+export const motionModes: readonly MotionMode[] = ["clip", "guide"]
+
+export const modeKeys: Readonly<Record<MotionMode, string>> = {
+  clip: "motion.tab.clip",
+  guide: "motion.tab.guide",
 }
 
-export const tabTasks: Readonly<Record<MotionTab, string>> = {
+export const tabTasks: Readonly<Record<ClipTab, string>> = {
   move: "motion-transfer",
   swap: "character-swap",
 }
@@ -49,11 +58,33 @@ export function isGraph(model: CatalogModel): boolean {
   return model.kind === "graph"
 }
 
+export function isGuideModel(model: CatalogModel): boolean {
+  return isGraph(model) && model.id === guideModel
+}
+
+export function modeOfTab(tab: MotionTab): MotionMode {
+  return tab === "guide" ? "guide" : "clip"
+}
+
+export function isMotionMode(value: unknown): value is MotionMode {
+  return motionModes.some((mode) => mode === value)
+}
+
 export function tabsOfModel(model: CatalogModel): MotionTab[] {
-  if (isGraph(model)) {
-    return [...motionTabs]
+  if (isGuideModel(model)) {
+    return ["guide"]
   }
-  return motionTabs.filter((tab) => tabTasks[tab] === model.task)
+  if (isGraph(model)) {
+    return [...clipTabs]
+  }
+  return clipTabs.filter((tab) => tabTasks[tab] === model.task)
+}
+
+export function modelsOfMode(
+  models: readonly CatalogModel[],
+  mode: MotionMode
+): CatalogModel[] {
+  return models.filter((model) => (mode === "guide") === isGuideModel(model))
 }
 
 export function modelsOfTab(
@@ -138,7 +169,14 @@ export function restFieldsOf(model: CatalogModel | null): ModelField[] {
   )
 }
 
-export function graphRestOf(app: AppListing): InputDefinition[] {
+export const soundInput = "sound"
+
+export const soundOff = "off"
+
+export function graphRestOf(
+  app: AppListing,
+  tab: MotionTab = "move"
+): InputDefinition[] {
   const wells = [appInputOf(app, "video"), appInputOf(app, "image")]
   return app.inputs.filter(
     (input) =>
@@ -146,7 +184,8 @@ export function graphRestOf(app: AppListing): InputDefinition[] {
       input.type !== "seed" &&
       input.type !== "character" &&
       input.name !== modelInput &&
-      input.name !== modeInput
+      input.name !== modeInput &&
+      !(tab === "guide" && input.name === soundInput)
   )
 }
 
@@ -175,9 +214,11 @@ export function inputsForModel(
         kept[input.name] ?? base[input.name],
       ])
     )
+    const silent = isGuideModel(model) ? { [soundInput]: soundOff } : {}
     return {
       ...base,
       ...shared,
+      ...silent,
       [modeInput]: tab,
       [names.clip]: [...wells.clip],
       [names.photo]: [...wells.photo],

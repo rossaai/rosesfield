@@ -4701,6 +4701,21 @@
         }
       }
     },
+    "graph/ltx-2-3-guide": {
+      "lab": "Lightricks",
+      "release": "2026-03-04",
+      "weights": null,
+      "ranks": {},
+      "thirds": {},
+      "line": {
+        "none": "No page read describes this graph's model"
+      },
+      "releaseSource": {
+        "url": "https://huggingface.co/Lightricks/LTX-2.3",
+        "kind": "Hugging Face repository createdAt"
+      },
+      "tasks": {}
+    },
     "graph/ltx-2-3-outpaint": {
       "lab": "Lightricks",
       "release": "2026-03-04",

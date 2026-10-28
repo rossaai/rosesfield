@@ -4,6 +4,7 @@ import { listOf } from "@/screens/app/fields/field-props"
 import type { AppForm } from "@/screens/app/use-app-form"
 import {
   clipProblem,
+  guideShapeProblem,
   nearestRatio,
   photoProblem,
 } from "@/studio/motion/motion-checks"
@@ -18,6 +19,8 @@ export type MotionChecks = {
   photo: FieldProblem | null
   readingInput: string | null
 }
+
+const resolutionInput = "resolution"
 
 function missingProblem(name: string): FieldProblem {
   return { name, key: "field.asset.required", values: {} }
@@ -37,6 +40,30 @@ export function clipCheckOf(
     case "read":
       return clipProblem(reading.facts, range, name)
   }
+}
+
+export type GuideCheck = { photo: MediaReading; resolution: string }
+
+export function guideCheckOf(
+  reading: MediaReading,
+  guide: GuideCheck,
+  range: ClipRange | null,
+  name: string
+): FieldProblem | null {
+  const problem = clipCheckOf(reading, range, name)
+  if (
+    problem !== null ||
+    reading.state !== "read" ||
+    guide.photo.state !== "read"
+  ) {
+    return problem
+  }
+  return guideShapeProblem(
+    reading.facts,
+    guide.photo.facts,
+    guide.resolution,
+    name
+  )
 }
 
 export function photoCheckOf(
@@ -74,7 +101,8 @@ function useRatioFromPhoto(form: AppForm, reading: MediaReading): void {
 export function useMotionChecks(
   form: AppForm,
   names: WellNames,
-  range: ClipRange | null
+  range: ClipRange | null,
+  isGuide = false
 ): MotionChecks {
   const [photoId = null] = listOf(form.values.inputs[names.photo])
   const [clipId = null] = listOf(form.values.inputs[names.clip])
@@ -87,8 +115,19 @@ export function useMotionChecks(
       : clip.state === "reading"
         ? names.clip
         : null
+  const resolution = form.values.inputs[resolutionInput]
   return {
-    clip: clipCheckOf(clip, range, names.clip),
+    clip: isGuide
+      ? guideCheckOf(
+          clip,
+          {
+            photo,
+            resolution: typeof resolution === "string" ? resolution : "",
+          },
+          range,
+          names.clip
+        )
+      : clipCheckOf(clip, range, names.clip),
     photo: photoCheckOf(photo, names.photo),
     readingInput,
   }

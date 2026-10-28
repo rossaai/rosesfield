@@ -147,6 +147,35 @@ describe("the motion app through the gateway on the demo engine", () => {
     expect(done.outputs).toHaveLength(1)
   })
 
+  it("runs a photo and a depth guide on the guide graph and keeps the model on the run", async () => {
+    const gateway = openGateway()
+    const photo = await upload(gateway, "image/png", pngBytes)
+    const guide = await upload(gateway, "video/mp4", mp4Bytes)
+    const response = await start(gateway, {
+      inputs: {
+        photo: [photo],
+        clip: [guide],
+        model: "ltx-2-3-guide",
+        resolution: "480p",
+      },
+      aspectRatio: "9:16",
+    })
+    expect(response.status).toBe(202)
+    const { run } = runResponse.parse(await response.json())
+    await gateway.drive(run.id)
+    const read = await gateway.call(
+      buildPath(routes.getRun.path, { runId: run.id })
+    )
+    const done = runResponse.parse(await read.json()).run
+    expect(done.status).toBe("done")
+    expect(done.inputs).toMatchObject({
+      clip: [guide],
+      model: "ltx-2-3-guide",
+      resolution: "480p",
+    })
+    expect(done.outputs).toHaveLength(1)
+  })
+
   it("refuses a run without a clip, with two photos, at 1080p, with two outputs or in a ratio it does not offer before it starts", async () => {
     const gateway = openGateway()
     const photo = await upload(gateway, "image/png", pngBytes)

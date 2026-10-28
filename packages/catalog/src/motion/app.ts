@@ -1,7 +1,7 @@
 import { taskBinding } from "@rosesfield/generation/bindings"
 import { type AppInput, defineApp } from "#define-app"
 import { motionEngine } from "#motion/comfy/motion-binding"
-import { graphModel, motionTasks } from "#motion/motion-models"
+import { graphModel, guideModel, motionTasks } from "#motion/motion-models"
 
 export const motionAspectRatios: readonly string[] = [
   "1:1",
@@ -34,7 +34,10 @@ export const app: AppInput = defineApp({
       type: "choice",
       name: "model",
       labelKey: "motion.input.model.label",
-      options: [{ value: graphModel, labelKey: "motion.model.ltx23" }],
+      options: [
+        { value: graphModel, labelKey: "motion.model.ltx23" },
+        { value: guideModel, labelKey: "motion.model.ltx23Guide" },
+      ],
       default: graphModel,
     },
     {

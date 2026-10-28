@@ -79,7 +79,7 @@ This part is for reviewers and AI agents: the facts, the comparison, how Rosesfi
 | | |
 |---|---|
 | Apps | 27, for images, video, audio, characters and 3D |
-| ComfyUI workflows | 32 graphs. 31 load open weights, and one runs Comfy's Meshy partner node. Each is an API file the app runs and a UI file that opens in ComfyUI and in App Mode |
+| ComfyUI workflows | 33 graphs. 32 load open weights, and one runs Comfy's Meshy partner node. Each is an API file the app runs and a UI file that opens in ComfyUI and in App Mode |
 | Hosted models | every Comfy Router model of each app's task, read live from Comfy |
 | Where a run happens | Comfy Router, Comfy Cloud, or your own ComfyUI through comfy-api-proxy |
 | Sign-in | one Comfy key, with no account |
@@ -128,7 +128,7 @@ Every run reaches Comfy through the Comfy SDK, `@comfyorg/sdk` 0.5.0, on one Com
 | What runs | Where it runs | How Rosesfield calls it |
 |---|---|---|
 | Hosted models, every model Comfy publishes for the app's task | Comfy Router, `api.comfy.org` | the model's queued route |
-| The 32 workflows in [`workflows/`](workflows/README.md) | Comfy Cloud, `cloud.comfy.org` | the Comfy API v2 |
+| The 33 workflows in [`workflows/`](workflows/README.md) | Comfy Cloud, `cloud.comfy.org` | the Comfy API v2 |
 | The open-weights workflows on your GPU | your own ComfyUI | comfy-api-proxy, set in Settings or by `COMFY_BASE_URL` |
 
 - Each workflow ships as two files: the API file the app sends, and the UI file you open in ComfyUI. The UI file holds its App Mode setup, so it opens in App Mode with the inputs the app shows.

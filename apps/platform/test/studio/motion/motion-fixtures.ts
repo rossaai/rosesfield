@@ -3,6 +3,8 @@ import { type AppListing, appListing } from "@rosesfield/contract"
 
 export const graphId = "ltx-2-3-control"
 
+export const guideId = "ltx-2-3-guide"
+
 export function motionListing(): AppListing {
   return appListing.parse({
     id: "motion",
@@ -27,7 +29,10 @@ export function motionListing(): AppListing {
         type: "choice",
         name: "model",
         labelKey: "motion.input.model.label",
-        options: [{ value: graphId, labelKey: "motion.model.ltx23" }],
+        options: [
+          { value: graphId, labelKey: "motion.model.ltx23" },
+          { value: guideId, labelKey: "motion.model.ltx23Guide" },
+        ],
         default: graphId,
       },
       {
@@ -83,6 +88,8 @@ function model(
 
 export const graph = model(graphId, "comfy-cloud", "motion-transfer", null)
 
+export const guide = model(guideId, "comfy-cloud", "motion-transfer", null)
+
 export const mover = model("lab/move-v1", "Lab", "motion-transfer", [
   media("referenceVideo", "video"),
   media("characterImage", "image"),
@@ -111,4 +118,4 @@ export const swapper = model("lab/swap-v1", "Lab", "character-swap", [
   media("image", "image"),
 ])
 
-export const catalog: readonly CatalogModel[] = [graph, mover, swapper]
+export const catalog: readonly CatalogModel[] = [graph, guide, mover, swapper]

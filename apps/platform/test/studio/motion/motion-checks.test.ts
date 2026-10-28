@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
 import {
   clipProblem,
+  guideShapeProblem,
   isLengthProblem,
   type MediaFacts,
   nearestRatio,
@@ -145,5 +146,49 @@ describe("the motion checks", () => {
     expect(
       photoProblem(photo({ bytes: 21_000_000, width: null, height: null }))?.key
     ).toBe("field.asset.tooLarge")
+  })
+})
+
+describe("the guide's shape beside the photo", () => {
+  const portrait = photo({ width: 1080, height: 1920 })
+  const guide = (width: number, height: number): MediaFacts =>
+    clip({ width, height, seconds: 8.54 })
+
+  it.each([
+    { name: "flip, draft", size: [448, 768], at: "480p" },
+    { name: "flip, final", size: [704, 1280], at: "720p" },
+    { name: "grab and run, draft", size: [448, 768], at: "480p" },
+  ])("takes the $name depth video beside a 9:16 photo", ({ size, at }) => {
+    const [width = 0, height = 0] = size
+    expect(guideShapeProblem(guide(width, height), portrait, at)).toBeNull()
+  })
+
+  it("takes the ticket wipe depth video beside a 15:11 photo at both resolutions", () => {
+    const wide = photo({ width: 1920, height: 1408 })
+    for (const at of ["480p", "720p"]) {
+      expect(guideShapeProblem(guide(960, 704), wide, at)).toBeNull()
+    }
+  })
+
+  it("refuses a wide guide beside a tall photo, naming both sizes, the control", () => {
+    const problem = guideShapeProblem(guide(1280, 704), portrait, "720p")
+    expect(problem).toEqual({
+      name: "clip",
+      key: "field.asset.wrongShape",
+      values: {
+        width: "1280",
+        height: "704",
+        fitWidth: "704",
+        fitHeight: "1280",
+      },
+    })
+    expect(words(problem)).toBe(
+      "This video is 1280 by 704, and your photo makes a video of 704 by 1280. Give both the same shape."
+    )
+  })
+
+  it("waits for a size it can read", () => {
+    const unread = clip({ width: null, height: null })
+    expect(guideShapeProblem(unread, portrait, "720p")).toBeNull()
   })
 })

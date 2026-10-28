@@ -1,5 +1,6 @@
 import type { AppListing } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
+import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import {
   type ReactElement,
   type ReactNode,
@@ -7,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react"
-import { t } from "@/copy/t"
+import { t, tCatalog } from "@/copy/t"
 import { assetLimitsText } from "@/pieces/asset-limits"
 import { CharacterPicker } from "@/pieces/character-picker"
 import { DropWell } from "@/pieces/drop-well"
@@ -21,7 +22,13 @@ import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import { appSettingsPlan, isSettingInput } from "@/screens/app/settings-plan"
 import { clipLimits, photoLimits } from "@/studio/motion/motion-checks"
-import { modeInput } from "@/studio/motion/motion-tabs"
+import {
+  isMotionMode,
+  modeInput,
+  modeKeys,
+  motionModes,
+  soundInput,
+} from "@/studio/motion/motion-tabs"
 import type { MotionState } from "@/studio/motion/use-motion-screen"
 
 type WellKind = "image" | "video"
@@ -52,6 +59,8 @@ type WellProps = {
   name: string
   limits: string
   message: string | null
+  caption?: string
+  note?: string | null
   children?: ReactElement | null
 }
 
@@ -67,9 +76,9 @@ function Well(props: WellProps): ReactElement {
   }, [form, name, registerWell])
   return (
     <FieldFrame
-      caption={captionOf(state.app, props.kind)}
+      caption={props.caption ?? captionOf(state.app, props.kind)}
       isOptional={false}
-      note={null}
+      note={props.note ?? null}
       problem={form.problems.get(name)}
       message={wellMessage ?? props.message}
     >
@@ -102,6 +111,13 @@ function CharacterButton({ state }: { state: MotionState }): ReactElement {
 }
 
 function ClipWell({ state }: { state: MotionState }): ReactElement {
+  const guide =
+    state.mode === "guide"
+      ? {
+          caption: tCatalog("motion.input.guide.label"),
+          note: tCatalog("motion.input.guide.note"),
+        }
+      : {}
   return (
     <Well
       state={state}
@@ -109,7 +125,33 @@ function ClipWell({ state }: { state: MotionState }): ReactElement {
       name={state.names.clip}
       limits={clipLimitsOf(state)}
       message={state.clipMessage}
+      {...guide}
     />
+  )
+}
+
+export function ModeTabs({
+  state,
+}: {
+  state: Pick<MotionState, "mode" | "setMode">
+}): ReactElement {
+  return (
+    <Tabs
+      value={state.mode}
+      onValueChange={(next) => {
+        if (isMotionMode(next)) {
+          state.setMode(next)
+        }
+      }}
+    >
+      <TabsList aria-label={tCatalog("motion.tabs.label")}>
+        {motionModes.map((one) => (
+          <TabsTrigger key={one} value={one}>
+            {tCatalog(modeKeys[one])}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
   )
 }
 
@@ -165,9 +207,10 @@ function RestFields({
         app={state.app}
         form={form}
         lastSeed={state.lastSeed}
-        plan={appSettingsPlan(appliedApp(state.app, form.values.inputs), [
-          modeInput,
-        ])}
+        plan={appSettingsPlan(
+          appliedApp(state.app, form.values.inputs),
+          state.mode === "guide" ? [modeInput, soundInput] : [modeInput]
+        )}
       />
     </>
   )
@@ -176,6 +219,7 @@ function RestFields({
 export function MotionPanel({ state }: { state: MotionState }): ReactElement {
   return (
     <div className="flex flex-col gap-s4">
+      <ModeTabs state={state} />
       <ClipWell key={`clip-${state.names.clip}`} state={state} />
       <PhotoWell key={`photo-${state.names.photo}`} state={state} />
       <RestFields

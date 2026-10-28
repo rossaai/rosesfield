@@ -36,6 +36,8 @@ export const fieldCopy = {
     "This clip runs {seconds} seconds. Pick one of {max} seconds or less.",
   "field.asset.tooShort":
     "This clip runs {seconds} seconds. Pick one of {min} seconds or more.",
+  "field.asset.wrongShape":
+    "This video is {width} by {height}, and your photo makes a video of {fitWidth} by {fitHeight}. Give both the same shape.",
   "field.asset.tooMany":
     "This input takes up to {max}. Remove one to add another.",
   "field.asset.note.one": "Up to {max} file",

@@ -1,3 +1,4 @@
+import { isGuideFit, renderSizeOf } from "@rosesfield/catalog/motion"
 import { formatBytes, formatSeconds } from "@/copy/format"
 import { tCatalog } from "@/copy/t"
 import { clipMimes } from "@/pieces/use-clip-facts"
@@ -140,4 +141,38 @@ export function isLengthProblem(problem: FieldProblem): boolean {
     problem.key === "field.asset.tooLong" ||
     problem.key === "field.asset.tooShort"
   )
+}
+
+export function guideShapeProblem(
+  guide: MediaFacts,
+  photo: MediaFacts,
+  resolution: string,
+  name: string = clipInput
+): FieldProblem | null {
+  const { width, height } = guide
+  if (
+    width === null ||
+    height === null ||
+    photo.width === null ||
+    photo.height === null
+  ) {
+    return null
+  }
+  const render = renderSizeOf(
+    { width: photo.width, height: photo.height },
+    resolution
+  )
+  if (render === null || isGuideFit({ width, height }, render)) {
+    return null
+  }
+  return {
+    name,
+    key: "field.asset.wrongShape",
+    values: {
+      width: String(width),
+      height: String(height),
+      fitWidth: String(render.width),
+      fitHeight: String(render.height),
+    },
+  }
 }

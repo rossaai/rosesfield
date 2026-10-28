@@ -1,4 +1,5 @@
 import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
+import { guideModel } from "@rosesfield/catalog/motion"
 import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
 import { useQueryClient } from "@tanstack/react-query"
 import {
@@ -13,6 +14,7 @@ import { appName } from "@/catalog/app-facts"
 import { hasCatalogText, t, tCatalog } from "@/copy/t"
 import { useAppRuns } from "@/screens/app/app-canvas"
 import {
+  defaultsOf,
   type FieldProblem,
   heldProblemsOf,
   valuesFromRun,
@@ -40,9 +42,15 @@ import {
   inputsForModel,
   isGraph,
   isMotionTab,
+  type MotionMode,
   type MotionTab,
   modeInput,
+  modelInput,
+  modelsOfMode,
+  modeOfTab,
   restFieldsOf,
+  soundInput,
+  soundOff,
   tabOfModel,
   tabsOfModel,
   type WellNames,
@@ -56,6 +64,8 @@ import {
 export type MotionState = {
   app: AppListing
   tab: MotionTab
+  mode: MotionMode
+  setMode: (mode: MotionMode) => void
   form: AppForm
   start: StartRun
   hosted: HostedState
@@ -119,22 +129,53 @@ function useModeHosted(
   tab: MotionTab
 ): HostedState {
   const { models, chosen } = hosted
+  const mode = modeOfTab(tab)
   const choose = (id: string): void => {
     const next = models.find((one) => one.id === id)
     if (next !== undefined) {
       const wells = heldWellsOf(form.values.inputs, wellNamesOf(app, chosen))
+      const { [soundInput]: _sound, ...unsounded } = form.values.inputs
       form.setForm({
         inputs: inputsForModel(
           app,
           next,
-          form.values.inputs,
+          mode === "guide" ? unsounded : form.values.inputs,
           tabOfModel(next, tab),
           wells
         ),
       })
     }
   }
-  return { ...hosted, choose }
+  return { ...hosted, models: modelsOfMode(models, mode), choose }
+}
+
+function modeSetterOf(
+  app: AppListing,
+  form: AppForm,
+  hosted: HostedState,
+  mode: MotionMode
+): (next: MotionMode) => void {
+  return (next) => {
+    if (next === mode) {
+      return
+    }
+    const served = modelsOfMode(hosted.models, next)
+    const target =
+      served.find((one) => one.id === hosted.defaultModel) ?? served[0]
+    if (target !== undefined) {
+      hosted.choose(target.id)
+      return
+    }
+    const base = defaultsOf(app).inputs
+    form.setForm({
+      inputs: {
+        ...form.values.inputs,
+        [soundInput]: next === "guide" ? soundOff : base[soundInput],
+        [modelInput]: next === "guide" ? guideModel : base[modelInput],
+        [modeInput]: next === "guide" ? "guide" : "move",
+      },
+    })
+  }
 }
 
 function useFocusers(): [
@@ -182,6 +223,16 @@ function useTabOfModel(
       setInput(modeInput, served)
     }
   }, [served, tab, setInput])
+}
+
+function useSilentGuide(form: AppForm, mode: MotionMode): void {
+  const { setInput } = form
+  const sound = form.values.inputs[soundInput]
+  useEffect(() => {
+    if (mode === "guide" && sound !== undefined && sound !== soundOff) {
+      setInput(soundInput, soundOff)
+    }
+  }, [mode, sound, setInput])
 }
 
 function chosenFor(hosted: HostedState, tab: MotionTab): CatalogModel | null {
@@ -246,7 +297,9 @@ export function useMotionScreen(
   check.current = checkFor(app, chosen)
   const names = wellNamesOf(app, chosen)
   const range = clipRangeOf(app, chosen)
-  const checks = useMotionChecks(form, names, range)
+  const mode = modeOfTab(tab)
+  useSilentGuide(form, mode)
+  const checks = useMotionChecks(form, names, range, mode === "guide")
   const modeHosted = useModeHosted(app, form, hosted, tab)
   const [pickCharacter, hasPickFailed] = useCharacterPhoto(form, names.photo)
   const [focus, registerWell] = useFocusers()
@@ -256,6 +309,13 @@ export function useMotionScreen(
   return {
     app,
     tab,
+    mode,
+    setMode: modeSetterOf(
+      app,
+      form,
+      { ...modeHosted, models: hosted.models },
+      mode
+    ),
     form,
     start: { ...base, generate },
     hosted: modeHosted,
@@ -266,7 +326,7 @@ export function useMotionScreen(
     clipMessage: clipMessageOf(checks.clip, range, model),
     photoMessage: photoMessageOf(checks.photo, hasPickFailed),
     restFields: restFieldsOf(chosen),
-    graphRest: graphRestOf(app),
+    graphRest: graphRestOf(app, tab),
     lastSeed: runs.runs.find((run) => run.seed !== null)?.seed ?? null,
     pickCharacter,
     registerWell,

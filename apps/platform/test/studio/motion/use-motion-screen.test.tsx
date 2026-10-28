@@ -18,6 +18,7 @@ import {
   catalog,
   graph,
   graphId,
+  guide,
   motionListing,
   mover,
   swapper,
@@ -31,6 +32,7 @@ const world = vi.hoisted(() => {
     first,
     files: new Map<string, MediaFacts>(),
     started: 0,
+    isListing: false,
     references: ["ref-front", "ref-side"],
   }
 })
@@ -109,7 +111,7 @@ vi.mock("@/screens/app/hosted/use-price-refresh", () => ({
 vi.mock("@/screens/app/hosted/use-hosted-model", () => ({
   useHostedModel: (_app: unknown, form: AppForm): HostedState => {
     const id = form.values.inputs.model
-    const models: readonly CatalogModel[] = catalog
+    const models: readonly CatalogModel[] = world.isListing ? [] : catalog
     return {
       isTaskApp: true,
       models,
@@ -149,6 +151,8 @@ vi.mock("@/studio/motion/use-media-facts", () => ({
 const photo = "photo-1"
 const clip = "clip-5s"
 const longClip = "clip-12s"
+const depthGuide = "guide-704x1280"
+const wideGuide = "guide-1280x704"
 
 function video(seconds: number): MediaFacts {
   return {
@@ -166,6 +170,7 @@ function renderMotion(
 ) {
   world.first = first
   world.started = 0
+  world.isListing = false
   world.files.set(photo, {
     mime: "image/jpeg",
     bytes: 3_000_000,
@@ -175,6 +180,8 @@ function renderMotion(
   })
   world.files.set(clip, video(5))
   world.files.set(longClip, video(12))
+  world.files.set(depthGuide, { ...video(8.54), width: 704, height: 1280 })
+  world.files.set(wideGuide, { ...video(8.54), width: 1280, height: 704 })
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
@@ -281,5 +288,92 @@ describe("Swap a character", () => {
     await waitFor(() =>
       expect(result.current.form.values.inputs.photo).toEqual(["ref-front"])
     )
+  })
+})
+
+describe("Follow a guide", () => {
+  it("picks the depth guide graph, keeps your photo and video, lists only that graph and leaves the clip's sound out", () => {
+    const { result } = renderMotion({ clip: [depthGuide], photo: [photo] })
+    expect(result.current.mode).toBe("clip")
+    act(() => result.current.setMode("guide"))
+    expect(result.current.mode).toBe("guide")
+    expect(result.current.tab).toBe("guide")
+    expect(result.current.isGraph).toBe(true)
+    expect(result.current.form.values.inputs.model).toBe(guide.id)
+    expect(result.current.form.values.inputs.clip).toEqual([depthGuide])
+    expect(result.current.form.values.inputs.photo).toEqual([photo])
+    expect(result.current.hosted.models.map((one) => one.id)).toEqual([
+      guide.id,
+    ])
+    expect(result.current.graphRest.map((input) => input.name)).toEqual([])
+    expect(result.current.form.values.inputs.sound).toBe("off")
+    act(() => result.current.setMode("clip"))
+    expect(result.current.mode).toBe("clip")
+    expect(result.current.form.values.inputs.model).toBe(graphId)
+    expect(result.current.form.values.inputs.sound).toBe("on")
+    expect(result.current.form.values.inputs.clip).toEqual([depthGuide])
+  })
+
+  it("switches before the model list has loaded, and lands on the depth guide graph once it has", () => {
+    const { result, rerender } = renderMotion({ clip: [depthGuide] })
+    world.isListing = true
+    rerender()
+    act(() => result.current.setMode("guide"))
+    expect(result.current.form.values.inputs.model).toBe(guide.id)
+    expect(result.current.form.values.inputs.sound).toBe("off")
+    world.isListing = false
+    rerender()
+    expect(result.current.mode).toBe("guide")
+    expect(result.current.hosted.chosen?.id).toBe(guide.id)
+    world.isListing = true
+    rerender()
+    act(() => result.current.setMode("clip"))
+    expect(result.current.mode).toBe("clip")
+    expect(result.current.form.values.inputs.model).toBe(graphId)
+    expect(result.current.form.values.inputs.sound).toBe("on")
+  })
+
+  it("starts a run with a guide in your photo's shape", () => {
+    const { result } = renderMotion({
+      clip: [depthGuide],
+      photo: [photo],
+      model: guide.id,
+      resolution: "720p",
+    })
+    expect(result.current.mode).toBe("guide")
+    expect(result.current.form.values.inputs.sound).toBe("off")
+    expect(result.current.checks.clip).toBeNull()
+    act(() => result.current.start.generate())
+    expect(world.started).toBe(1)
+  })
+
+  it("refuses a guide in another shape than your photo with both sizes, starts no run and keeps your files", () => {
+    const { result } = renderMotion({
+      clip: [wideGuide],
+      photo: [photo],
+      model: guide.id,
+      resolution: "720p",
+    })
+    expect(result.current.clipMessage).toBe(
+      "This video is 1280 by 704, and your photo makes a video of 704 by 1280. Give both the same shape."
+    )
+    act(() => result.current.start.generate())
+    expect(world.started).toBe(0)
+    expect(result.current.form.values.inputs.clip).toEqual([wideGuide])
+    expect(result.current.form.values.inputs.photo).toEqual([photo])
+  })
+
+  it("refuses a guide longer than the graph takes, the control", () => {
+    const { result } = renderMotion({
+      clip: [longClip],
+      photo: [photo],
+      model: guide.id,
+      resolution: "720p",
+    })
+    expect(result.current.clipMessage).toBe(
+      `${guide.id} takes clips of 2 to 10 seconds. This one runs 12 seconds.`
+    )
+    act(() => result.current.start.generate())
+    expect(world.started).toBe(0)
   })
 })
