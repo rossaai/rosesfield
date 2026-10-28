@@ -40,7 +40,7 @@ export type HarnessDeps = {
   sleep?: (ms: number) => Promise<void>
   loginFails?: boolean
   logoutFails?: boolean
-  answer?: string
+  answer?: (question: string) => string
   signal?: AbortSignal
 }
 
@@ -114,7 +114,9 @@ export async function runHarness(
     print: (line) => write(`${line}\n`),
     ask: async (question) => {
       harness.questions.push(question)
-      return deps.answer ?? "yes"
+      return (
+        deps.answer?.(question) ?? (question.includes("Type yes") ? "yes" : "")
+      )
     },
     build: deps.build ?? (() => Promise.resolve()),
     localComfyKey: harness.typedKey,

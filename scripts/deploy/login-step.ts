@@ -71,10 +71,7 @@ export function probesOf(
     ]
   }
   if (token === undefined) {
-    return [
-      { path: "/", status: 200 },
-      { path: "/api/runs", status: 401 },
-    ]
+    throw new Error("The owner link has no token to check.")
   }
   return [
     { path: "/", status: 200 },

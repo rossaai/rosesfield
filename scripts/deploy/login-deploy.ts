@@ -123,6 +123,6 @@ function printResult(
   deps.print(
     session?.ownerLink === "shown"
       ? "The owner link was printed above, right after OWNER_TOKEN was set."
-      : `The owner link is ${judgeAddress}/#token=<the OWNER_TOKEN set before>. This run kept that token.`
+      : "The owner link you pasted still opens. This run kept its token."
   )
 }

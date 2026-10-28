@@ -7,6 +7,7 @@ import {
   type LoginStep,
   printOwnerLink,
   probesOf,
+  type StepTools,
   tokenHolder,
 } from "./login-step"
 import { probeText, smokeCheck } from "./smoke-check"
@@ -71,28 +72,64 @@ function secretStep(target: DeployTarget): LoginStep {
   const env = `--env=${target.env}`
   const shown =
     target.kind === "judge"
-      ? ", and the owner link is printed once, right away"
+      ? ". When OWNER_TOKEN is set, you paste the owner link you kept, or press Enter for a new token. The owner link is printed once, right after a new token is put"
       : ""
   return {
     text: `wrangler secret list ${env}, and when ${target.secret} is missing, 32 random bytes go to wrangler secret put ${target.secret} ${env} on its stdin${shown}`,
     run: async (session, tools) => {
       if ((await secretsOf(session, target)).includes(target.secret)) {
-        tools.print(`${target.secret}: it is set, kept`)
-        if (target.kind === "judge") {
-          session.ownerLink = "kept"
+        tools.print(`${target.secret}: it is set`)
+        if (target.kind === "public") {
+          return
         }
-        return
+        const kept = await keptToken(tools)
+        if (kept !== null) {
+          session.secrets.set(target.secret, kept)
+          session.ownerLink = "kept"
+          return
+        }
       }
-      const secret = tools.makeSecret()
-      await session.run(["secret", "put", target.secret, env], {
-        stdin: secret,
-      })
-      session.secrets.set(target.secret, secret)
-      if (target.kind === "judge") {
-        printOwnerLink(session, tools, secret)
-      }
+      await putSecret(session, tools, target)
     },
   }
+}
+
+async function keptToken(tools: StepTools): Promise<string | null> {
+  const answer = await tools.ask(
+    "OWNER_TOKEN is set. Paste the owner link you kept to check it, or press Enter to make a new token and a new link: "
+  )
+  const pasted = answer.trim()
+  if (pasted === "") {
+    return null
+  }
+  return pasted.includes("#token=")
+    ? (pasted.split("#token=").at(-1) ?? "")
+    : pasted
+}
+
+async function putSecret(
+  session: WranglerSession,
+  tools: StepTools,
+  target: DeployTarget
+): Promise<void> {
+  const secret = tools.makeSecret()
+  const isPut = await session.run(
+    ["secret", "put", target.secret, `--env=${target.env}`],
+    { stdin: secret, mayFail: true }
+  )
+  if (target.kind === "judge") {
+    if (!isPut) {
+      tools.print(
+        "\nwrangler secret put OWNER_TOKEN failed, and it may have stored the token anyway. The link below holds that token. If it does not open, run again and press Enter for a new token."
+      )
+    }
+    session.secrets.set(target.secret, secret)
+    printOwnerLink(session, tools, secret)
+  }
+  if (!isPut) {
+    throw new Error(`wrangler secret put ${target.secret} failed.`)
+  }
+  session.secrets.set(target.secret, secret)
 }
 
 function comfyKeyStep(target: DeployTarget): LoginStep {

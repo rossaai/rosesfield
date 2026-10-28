@@ -23,6 +23,7 @@ export type FakeSetup = Omit<HarnessDeps, "wrangler" | "fetch"> & {
   failOn?: string
   existing?: string
   fetch?: HarnessDeps["fetch"]
+  ownerToken?: string
 }
 
 export type FakeRun = {
@@ -62,14 +63,19 @@ export function capGivenTo(calls: readonly Called[]): number | null {
   return variable === undefined ? null : Number(variable.split(":")[1])
 }
 
-export function workerFetch(harness: Harness, journal: string) {
+export function workerFetch(
+  harness: Harness,
+  journal: string,
+  ownerToken?: string
+) {
   return async (url: string, init: RequestInit): Promise<Response> => {
     const { hostname, pathname } = new URL(url)
     if (!hostname.startsWith("rosesfield-judge.")) {
       return new Response(null, { status: 200 })
     }
     const auth = new Headers(init.headers).get("authorization")
-    const isOwner = auth === `Bearer ${harness.secrets[1]}`
+    const token = ownerToken ?? harness.secrets.at(-1)
+    const isOwner = auth === `Bearer ${token}`
     if (pathname === "/api/runs") {
       return new Response(null, { status: isOwner ? 200 : 401 })
     }
@@ -94,11 +100,11 @@ export async function deployWith(
   writeFileSync(journal, "")
   let error: unknown = null
   try {
-    const { failOn, existing, fetch, ...deps } = setup
+    const { failOn, existing, fetch, ownerToken, ...deps } = setup
     await runHarness(harness, args, {
       ...deps,
       wrangler: ["bun", fakeWrangler, journal, failOn ?? "", existing ?? ""],
-      fetch: fetch ?? workerFetch(harness, journal),
+      fetch: fetch ?? workerFetch(harness, journal, ownerToken),
     })
   } catch (caught) {
     error = caught

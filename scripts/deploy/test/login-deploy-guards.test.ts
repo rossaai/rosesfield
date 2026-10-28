@@ -56,7 +56,7 @@ describe("the session of bun run deploy --login", () => {
 describe("the account check of bun run deploy --login", () => {
   it("asks once with the account name and id, and creates nothing without yes", async () => {
     const { harness, calls, error } = await deployWith(production, {
-      answer: "y",
+      answer: () => "y",
     })
     expect(error).toBeInstanceOf(Error)
     expect(harness.output.join("")).toContain(

@@ -58,19 +58,62 @@ describe("bun run deploy --login", () => {
     )
   })
 
-  it("skips the bucket, the database and the secrets that exist", async () => {
+  it("skips the bucket, the database and the secrets that exist, and checks the owner link you paste", async () => {
+    const kept =
+      "kept0000000000000000000000000000000000000000000000000000000000"
+    const run = await deployWith(production, {
+      existing: "r2,d1,secrets",
+      answer: (question) =>
+        question.includes("Type yes")
+          ? "yes"
+          : `https://rosesfield-judge.fake-account.workers.dev/#token=${kept}`,
+      ownerToken: kept,
+    })
+    expect(run.error).toBeNull()
+    const made = run.calls.filter((call) =>
+      /^(r2 bucket create|d1 create|secret put)/.test(call.args.join(" "))
+    )
+    expect(made).toEqual([])
+    expect(run.harness.secrets).toEqual([])
+    const output = run.harness.output.join("")
+    expect(output).toContain("/api/runs with the owner token answers 200: yes")
+    expect(output).toContain(
+      "/api/account with the owner token answers 200 with a cap of 100 credits: yes"
+    )
+    expect(countIn(output, kept)).toBe(0)
+  })
+
+  it("stops when the pasted owner link does not open", async () => {
+    const { error } = await deployWith(production, {
+      existing: "r2,d1,secrets",
+      answer: (question) =>
+        question.includes("Type yes") ? "yes" : "#token=not-the-kept-token",
+      ownerToken: "the-kept-token",
+    })
+    expect(String(error)).toContain("/api/runs answered 401")
+  })
+
+  it("makes a new owner token and prints its link when you press Enter", async () => {
     const { harness, calls, error } = await deployWith(production, {
       existing: "r2,d1,secrets",
     })
     expect(error).toBeNull()
-    const made = calls.filter((call) =>
-      /^(r2 bucket create|d1 create|secret put)/.test(call.args.join(" "))
-    )
-    expect(made).toEqual([])
-    expect(harness.secrets).toEqual([])
-    expect(harness.output.join("")).toContain(
-      "#token=<the OWNER_TOKEN set before>"
-    )
+    const [ownerToken = ""] = harness.secrets
+    const put = calls.find((call) => call.args[2] === "OWNER_TOKEN")
+    expect(put?.stdinHash).toBe(sha256(ownerToken))
+    expect(countIn(harness.output.join(""), ownerToken)).toBe(1)
+  })
+
+  it("prints the owner link when wrangler secret put OWNER_TOKEN fails, since it may have stored the token", async () => {
+    const { harness, error } = await deployWith(production, {
+      failOn: "secret put OWNER_TOKEN",
+    })
+    expect(String(error)).toContain("secret put OWNER_TOKEN failed")
+    const output = harness.output.join("")
+    const [, ownerToken = ""] = harness.secrets
+    expect(output).toContain("may have stored the token anyway")
+    expect(countIn(output, ownerToken)).toBe(1)
+    expect(existsSync(harness.folders[0] ?? "")).toBe(false)
   })
 
   it("hands each secret to wrangler on stdin and never prints or stores it", async () => {
