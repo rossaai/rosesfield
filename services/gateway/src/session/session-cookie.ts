@@ -18,7 +18,6 @@ export type SessionGuardOptions = {
   retentionDays: number
   take: (sessionId: SessionId) => Promise<void>
   open: (client: string) => Promise<void>
-  canOpen: (client: string) => Promise<void>
   address: (client: string) => Promise<void>
   clientOf: (c: Context) => string | null
   accounts: AccountLookups
@@ -129,7 +128,6 @@ function anonymousVisit(held: HeldSession | null): Visit {
 
 type Slots = {
   open: () => Promise<void>
-  canOpen: () => Promise<void>
   lookup: (sessionId: SessionId) => Promise<void>
   take: (sessionId: SessionId) => Promise<void>
 }
@@ -145,7 +143,6 @@ function slotsOf(options: SessionGuardOptions, c: Context): Slots {
   const opens = `opens:${clientSlotOf(options.clientOf(c))}`
   return {
     open: () => once(opens, options.open),
-    canOpen: () => options.canOpen(opens),
     lookup: (sessionId) => once(`lookups:${sessionId}`, options.open),
     take: (sessionId) => once(sessionId, options.take),
   }
@@ -173,7 +170,7 @@ async function visitWithKey(
   if (held === null) {
     await slots.take(`key:${tag}`)
     if (!(await options.accounts.holds(key))) {
-      await slots.canOpen()
+      await slots.open()
     }
   } else {
     await slots.take(held.sessionId)

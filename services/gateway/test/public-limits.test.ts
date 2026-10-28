@@ -253,6 +253,28 @@ describe("the limits of a public deployment", () => {
     ).toHaveLength(3)
   })
 
+  it("takes the new-session slot before the Comfy key lookup, so parallel new keys cannot all pass the limit", async () => {
+    const { visitor, comfy } = openPublic({
+      NEW_SESSIONS_PER_MINUTE: "3",
+      CLIENT_ADDRESS_HEADER: "cf-connecting-ip",
+    })
+
+    const answers = await Promise.all(
+      Array.from({ length: 20 }, (_, request) =>
+        visitor({
+          [keyHeaders.engine]: `comfyui-refused-${request}`,
+        }).call(gatewayRoutes.getHealth.path, {
+          headers: { "cf-connecting-ip": "203.0.113.7" },
+        })
+      )
+    )
+
+    expect(answers.filter((answer) => answer.status === 200)).toHaveLength(3)
+    expect(
+      comfy.calls.filter((call) => call.path === accountPath)
+    ).toHaveLength(3)
+  })
+
   it("serves an API client that sends its key with no cookie past the new-session limit, asking Comfy once", async () => {
     const { visitor, comfy } = openPublic({
       CLIENT_ADDRESS_HEADER: "cf-connecting-ip",
