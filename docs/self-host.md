@@ -9,7 +9,7 @@
 | public | anyone with the address | each visitor's own, pasted in Settings | `MODE=public` and `SESSION_SECRET` |
 | owner | you, and whoever holds your owner token | yours, from `COMFY_API_KEY` | `OWNER_TOKEN`, and `COMFY_API_KEY` |
 
-Public mode is how rosesfield.com runs, per `docs/architecture.md` §Public mode. Owner mode is how the server runs on your machine, per `docs/architecture.md` §The owner lock.
+Public mode is how a host for strangers runs, per `docs/architecture.md` §Public mode. Owner mode is how the server runs on your machine, per `docs/architecture.md` §The owner lock.
 
 ## The settings of a host
 
@@ -43,9 +43,9 @@ bun run deploy
 
 The Worker keeps rows in D1 and bytes in the R2 bucket `rosesfield-assets`, and an hourly cron deletes what public mode no longer keeps.
 
-### The judge link
+### A private owner link
 
-`bun run deploy --judge` deploys the Worker's `judge` environment: owner mode on one Comfy key, with a cap of 800 credits. Set its bucket and secrets first.
+`bun run deploy --judge` deploys the Worker's `judge` environment: owner mode on one Comfy key, with a spend cap of 800 credits set by its `SPEND_CAP_CREDITS`. Use it to let a few people you choose run Rosesfield on your key. Set its bucket and secrets first.
 
 ```sh
 bunx wrangler r2 bucket create rosesfield-judge-assets --cwd services/gateway
@@ -53,7 +53,7 @@ bunx wrangler secret put OWNER_TOKEN --env judge --cwd services/gateway
 bunx wrangler secret put COMFY_API_KEY --env judge --cwd services/gateway
 ```
 
-The link opens with its token in the address and shows what is left of its cap.
+The link opens with its owner token in the address and shows what is left of its cap. Change `SPEND_CAP_CREDITS` in `services/gateway/wrangler.jsonc` to set another cap.
 
 ## On a server that runs bun
 

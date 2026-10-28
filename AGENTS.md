@@ -6,11 +6,11 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 
 - Its tokens, typefaces, marks, component contracts and copy are generated files, each listed in `generated.json`.
 - MIT for the code, the docs and the design tokens. The name and the logo are trademarks of ROSSA AI, LLC, and the logo files in `apps/platform/public/` are all rights reserved, per `TRADEMARKS.md`.
-- You bring your own Comfy key and run it on rosesfield.com, on your machine or on your own host. No accounts, no payments, no credits of its own.
+- You bring your own Comfy key and run it on your machine or on your own host. No accounts, no payments, no credits of its own.
 
 ## Hard lines
 
-1. **Generated files stay generated.** The tokens, typefaces, marks, component contracts and copy are the generated files `generated.json` lists, and none is edited by hand.
+1. **A generated file is never edited by hand.** The tokens, typefaces, marks, component contracts and copy are the generated files `generated.json` lists, and `bun run generated:check` refuses one whose bytes changed.
 2. **The engine stays behind a port.** No provider, lab or model name appears in `domain` or `application` code. An app declares its task, and its model list is the catalog Comfy publishes for that task, per `docs/models.md`.
 3. **Proof is real or absent.** No mock output, no invented timing, no placeholder demo in the README or the UI.
 4. **A paid call carries a bound.** Every engine call has a timeout, a retry maximum and an idempotency key, per `docs/stack.md` §The one engine.
@@ -36,7 +36,7 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 | any `.ts` or `.tsx` file: naming, TypeScript, the single contract law, the simplicity ladder, tests | `docs/standards.md` |
 | a package, a version, the Comfy Router, the Comfy API v2, the one engine, prices, the agent harness, the agent's model, MCP | `docs/stack.md` |
 | how the model list is read from Comfy, the licence of each graph | `docs/models.md` |
-| a public host: Cloudflare, its settings, the judge link | `docs/self-host.md` |
+| a public host: Cloudflare, its settings, a private owner link | `docs/self-host.md` |
 | how long you wait on Rosesfield: a result painted, a video's first frame, an app's catalog, their bounds and `apps/platform/e2e/waits.spec.ts` | `docs/waits.md` |
 | a ComfyUI workflow, the `workflows/` folder and its format | `workflows/README.md` |
 | any screen, component, token, motion, mark or string a person reads | `generated.json` and the generated files it lists |
@@ -65,7 +65,7 @@ Run every command from the repository root with bun 1.4.3. Node 22 or 24 must al
 | `bun run copy:check` | Refuses a string a person reads that is typed in a screen or a component instead of a generated copy file. Text inside `code`, `kbd`, `pre` or `samp`, a copy key, a class name and a test file pass. |
 | `bun run glob:check` | Refuses an `import.meta.glob` call that is not followed by `(`, such as a typed call, because Vitest caches the transform of such a file and a file added later stays out of its list, per `docs/standards.md` §TypeScript. |
 | `bun run docs:check` | Refuses a relative link in a tracked `.md` file whose target is not in the tree, and a graph name in the table of `workflows/README.md` §The workflows by model that names no folder under `workflows/`. |
-| `bun run gate` | Runs `catalog:sync`, `generated:check`, `copy:check`, `glob:check`, `docs:check`, `typecheck`, `lint` and `test`. It must pass before every commit. |
+| `bun run gate` | Runs `catalog:sync`, `generated:check`, `copy:check`, `glob:check`, `motion:check`, `docs:check`, `typecheck`, `lint` and `test`. It must pass before every commit. |
 | `bun run deploy` | Puts the platform on Cloudflare in public mode, per `docs/self-host.md`. |
 
 For one workspace: `bun run --filter @rosesfield/<workspace> typecheck` and `bun run --filter @rosesfield/<workspace> test`.

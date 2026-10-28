@@ -114,7 +114,7 @@ Rosesfield has no accounts. It has one owner, and every paid call spends the own
 
 ## Public mode
 
-A public host, such as rosesfield.com, runs in public mode. Strangers use it, so it holds no key of its own and spends none. Its settings are in `docs/self-host.md`.
+A public host runs in public mode. Strangers use it, so it holds no key of its own and spends none. Its settings are in `docs/self-host.md`.
 
 - **Your Comfy key is the login.** You paste it in Settings. Rosesfield has no accounts and no passwords of its own.
 - The gateway asks Comfy whose key it is, through `GET https://cloud.comfy.org/api/user`, and keeps your work under a sha256 hash of that Comfy account id. The same key on another device opens the same work, and a new key on the same Comfy account still opens it.

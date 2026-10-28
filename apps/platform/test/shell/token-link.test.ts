@@ -3,7 +3,7 @@ import { tokenOfHash } from "@/shell/token-link"
 
 const token = "rosesfield-judge-token-0123456789abcdef"
 
-describe("the judge link's token", () => {
+describe("the owner link's token", () => {
   it("reads the token from the link's hash", () => {
     expect(tokenOfHash(`#token=${token}`)).toBe(token)
     expect(tokenOfHash(`#token=${token}%21`)).toBe(`${token}!`)

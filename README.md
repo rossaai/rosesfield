@@ -11,8 +11,7 @@
 <p align="center">27 apps that run on your own Comfy key.</p>
 
 <p align="center">
-  <a href="https://rosesfield.com"><b>Open rosesfield.com</b></a>&emsp;
-  <a href="#start">Run it on your machine</a>&emsp;
+  <a href="#start"><b>Run it on your machine</b></a>&emsp;
   <a href="#rosesfield-and-higgsfield-app-by-app">Compare it with Higgsfield</a>
 </p>
 
@@ -32,11 +31,7 @@
 ## Start
 
 1. Make a key on [Comfy's key page](https://platform.comfy.org/profile/api-keys).
-2. Open [rosesfield.com](https://rosesfield.com) and paste it in Settings.
-
-Your Comfy key is the only sign-in, and each run spends credits from your own Comfy account.
-
-Or run it on your machine with [bun](https://bun.sh):
+2. Run Rosesfield on your machine with [bun](https://bun.sh):
 
 ```sh
 git clone https://github.com/rossaai/rosesfield.git && cd rosesfield
@@ -45,6 +40,8 @@ bun run start
 ```
 
 Open `http://127.0.0.1:8787` and paste your key in Settings.
+
+Your Comfy key is the only sign-in, and each run spends credits from your own Comfy account.
 
 ## Made with Rosesfield
 
@@ -71,7 +68,7 @@ Open `http://127.0.0.1:8787` and paste your key in Settings.
 
 Press a picture to play its clip. Each one is a paid run in the running app, made from 2026-10-19 to 2026-10-28.
 
-24 of Higgsfield's 35 products have a Rosesfield app that does the same job, and Rosesfield adds Music, Sound effects and 3D. [See them side by side](#rosesfield-and-higgsfield-app-by-app).
+Of the 36 Higgsfield products this README lists, 24 have a Rosesfield app that does the same job, and Rosesfield adds Music, Sound effects and 3D. [See them side by side](#rosesfield-and-higgsfield-app-by-app).
 
 ---
 
@@ -90,7 +87,7 @@ This part is for reviewers and AI agents: the facts, the comparison, how Rosesfi
 | Hosts | your machine with bun, or Cloudflare Workers |
 | Price | Comfy credits, shown on Generate when the price is known, and the real cost in History after each run |
 | Proof | 114 proof runs and 122 showroom runs on Comfy, counted in [What was proven live](#what-was-proven-live) |
-| Higgsfield products with a Rosesfield app | 24 of 35 |
+| Higgsfield products with a Rosesfield app | 24 of the 36 listed below |
 | Licence | MIT |
 
 ## Rosesfield and Higgsfield, app by app
@@ -150,7 +147,7 @@ The clips in [Made with Rosesfield](#made-with-rosesfield), with their models an
 | Upscale | The Image result at twice its size, 3072 by 2048. The SeedVR2 3B graph, 2.00 credits, made in 20 seconds. |
 | Characters | A character made from traits: an older man with short grey coily hair, round gold glasses and a green velvet blazer. The Z-Image Turbo graph, 1.81 credits, made in 44 seconds. |
 | Expand | A tall street photo widened to 16:9, with the street continued on both sides. The Qwen Image Inpaint graph, 3.66 credits, made in 37 seconds. |
-| Relight | A portrait relit with soft warm light from the left. Qwen Image Edit 2509 with the Relight LoRA, 17.03 credits, made in 88 seconds. |
+| Relight | A portrait relit with soft warm light from the left. Qwen Image Edit 2509 with the Relight LoRA, 17.04 credits, made in 88 seconds. |
 | Remove background | A sneaker cut out onto a transparent background, [the clip](docs/media/apps/background-removal.mp4). The BiRefNet graph, 0.68 credits, made in 33 seconds. |
 | Video edit | A clip at twice its frame rate, 48 frames a second, with its sound kept. The FILM graph, 3.31 credits, made in 28 seconds. |
 | Video | A red kite over a green hill at dawn, from a start image. Seedance 1.0 Pro Fast, 480p, 5 seconds, 10.34 credits. |
@@ -158,15 +155,15 @@ The clips in [Made with Rosesfield](#made-with-rosesfield), with their models an
 
 The launch film shows a prompt in the Image app, the model picker, five results in their own viewers, the 27 apps, and how a Comfy key reaches Settings. It is edited from the app's own screens. Every result in it is a stored run, and its 3D rose is the coloured model above. Comfy's key page in it is redrawn, and no key appears.
 
-The [87-second walkthrough](docs/media/rosesfield-demo.mp4) shows the areas, a model list, a finished run, Share, the credits, and how each run reaches Comfy. It was recorded on 2026-10-22 on a Rosesfield server on one machine, in owner mode, where the Comfy key stays on the server. Every result in it is a stored run, and the recording started no new run. A [9:16 clip](docs/media/rosesfield-clip-9x16.mp4) of the Effects run is ready for a post.
+A [9:16 clip](docs/media/rosesfield-clip-9x16.mp4) shows the Effects run in the shape of a phone screen.
 
 ## What was proven live
 
-Each row counts the paid runs of one area in the running app on Comfy, from the credit ledger of the proof runs. The credits are Comfy credits, read from Comfy's balance before and after each run.
+Each row counts the paid runs of one area in the running app on Comfy. The counts and credits come from the maintainers' run ledger, which is not in this repository. The credits are Comfy credits, read from Comfy's balance before and after each run. What you can check here is each clip in `docs/media` and the two Effects runs in [`packages/catalog/src/effects/runs.json`](packages/catalog/src/effects/runs.json), with their Comfy balance before and after.
 
 | Area | Proven models | Date | Runs | Credits |
 |---|---|---|---|---|
-| Image | Luma Photon Flash 1, FLUX 3 Image, GPT Image 2.5 Flare, Krea 2 Medium Turbo, Grok Imagine Image, Kling Image O1, Seedream 5.0 Flash, and the graphs Z-Image Turbo, FLUX.2 Klein 4B and Qwen Image 2512 | 2026-10-19 | 32 | about 117 |
+| Image | Luma Photon Flash 1, FLUX 3 Image, GPT Image 2.5 Flare, Krea 2 Medium Turbo, Grok Imagine Image, Seedream 5.0 Flash, and the graphs Z-Image Turbo, FLUX.2 Klein 4B and Qwen Image 2512 | 2026-10-19 | 32 | about 117 |
 | Video | H3 Max Turbo, Seedance 1.0 Pro Fast, and the LTX 2.5 graphs from text and from a start frame | 2026-10-19 | 7 | about 74 |
 | Effects | the Effects graph on LTX 2.5, with its last frame from Qwen Image Edit 2511 or FLUX.2 Klein 4B | 2026-10-19 and 2026-10-21 | 70 | 517 |
 | Background removal | the BiRefNet graph | 2026-10-19 | 1 | 6.73 |
@@ -174,11 +171,12 @@ Each row counts the paid runs of one area in the running app on Comfy, from the 
 | Video edit | the BiRefNet background, FILM frame rate and LTX 2.3 reframe graphs | 2026-10-21 | 3 | 12.56 |
 
 - Six of those runs left no output in Rosesfield. Comfy refused two Image runs at submit, before any charge. Three runs failed in Rosesfield after Comfy made the output, and each cause is fixed. One Effects run failed in Comfy, which charged nothing.
-- Three ledger rows hold an estimate instead of a reading: one Image run of FLUX.2 Klein 4B and one of Kling Image O1, whose balance readings held another run, and one Video run of LTX 2.5 that failed before its reading. So Image and Video show about.
+- Three runs hold an estimate instead of a reading: two Image runs, one of FLUX.2 Klein 4B and one of Kling Image O1, whose balance readings held another run, and one Video run of LTX 2.5 that failed before its reading. So Image and Video show about.
+- Kling Image O1 ran on 2026-10-19 and is counted in the 32. It is not in the list, because the Image app now refuses every Kling Image O1 run with "These inputs do not fit this app." That defect is not fixed yet.
 - Every Effects run of 2026-10-21 made a video, and none of the 15 met every criterion of its effect yet.
-- The agent has no live turn on the ledger yet.
+- The agent has no live turn in these counts yet.
 
-From 2026-10-20 to 2026-10-22, eight showroom rounds made the examples above in the running app. Each row counts the paid runs of one app in those rounds. Kept counts the results that a judge who wrote none of the prompts kept. A run made outside the rounds, such as a builder's live check, is not counted.
+From 2026-10-20 to 2026-10-22, eight showroom rounds made the examples above in the running app. Each row counts the paid runs of one app in those rounds, from the same ledger. Kept counts the results that a judge who wrote none of the prompts kept. A run made outside the rounds, such as a builder's live check, is not counted.
 
 | App | Models | Runs | Credits | Kept |
 |---|---|---|---|---|
@@ -262,5 +260,3 @@ The official repository is https://github.com/rossaai/rosesfield. A copy with a 
 ## Who makes it
 
 Rosesfield is made and owned by ROSSA AI, LLC.
-
-If your company wants to sponsor Rosesfield, write to partner@rosesfield.com.
