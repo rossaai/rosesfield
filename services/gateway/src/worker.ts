@@ -93,6 +93,7 @@ function composePublic(
       secret: access.sessionSecret,
       retentionDays: access.retentionDays,
       take: (sessionId) => limiter.take(sessionId),
+      clientOf: (c) => c.req.header("cf-connecting-ip") ?? null,
       accounts: account.accounts,
       early: account.early,
       visits: new SessionVisits({ db: parts.db, clock: parts.clock }),

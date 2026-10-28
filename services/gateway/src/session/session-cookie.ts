@@ -16,6 +16,7 @@ export type SessionGuardOptions = {
   secret: string
   retentionDays: number
   take: (sessionId: SessionId) => Promise<void>
+  clientOf: (c: Context) => string | null
   accounts: AccountLookups
   visits: SessionVisits
   early?: (request: Request, key: string) => void
@@ -31,6 +32,8 @@ type HeldSession = {
 type Visit = HeldSession & {
   isNew: boolean
   passing?: true
+  minted?: true
+  held?: SessionId
 }
 
 const uuidPattern =
@@ -101,10 +104,21 @@ function heldOf(value: unknown): HeldSession | null {
 
 function anonymousVisit(held: HeldSession | null): Visit {
   if (held === null) {
-    return { sessionId: crypto.randomUUID(), tag: null, isNew: true }
+    return {
+      sessionId: crypto.randomUUID(),
+      tag: null,
+      isNew: true,
+      minted: true,
+    }
   }
   return isAccountSession(held.sessionId)
-    ? { sessionId: crypto.randomUUID(), tag: null, isNew: false, passing: true }
+    ? {
+        sessionId: crypto.randomUUID(),
+        tag: null,
+        isNew: false,
+        passing: true,
+        held: held.sessionId,
+      }
     : { ...held, isNew: false }
 }
 
@@ -152,6 +166,17 @@ export async function forgetSession(c: Context): Promise<Response> {
   return c.body(null, 204)
 }
 
+async function takeVisit(
+  options: SessionGuardOptions,
+  c: Context,
+  visit: Visit
+): Promise<void> {
+  if (visit.minted === true) {
+    await options.take(`client:${options.clientOf(c) ?? "unknown"}`)
+  }
+  await options.take(visit.held ?? visit.sessionId)
+}
+
 function cookieValue(visit: Visit): string {
   return visit.tag === null
     ? visit.sessionId
@@ -197,7 +222,7 @@ export function sessionGuard(
     c.set("session", visit.sessionId)
     c.set("signContent", (url) => links.sign(url, visit.sessionId))
     try {
-      await options.take(visit.sessionId)
+      await takeVisit(options, c, visit)
       await next()
     } finally {
       if (cookie !== null) {

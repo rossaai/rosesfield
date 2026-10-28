@@ -302,16 +302,14 @@ function publicGuard(
   agents: SessionAgents | null
 ): GatewayGuard {
   const { db, clock } = parts
-  const limiter = new SessionLimiter({
-    db,
-    clock,
-    requestsPerMinute: access.requestsPerMinute,
-  })
+  const { requestsPerMinute } = access
+  const limiter = new SessionLimiter({ db, clock, requestsPerMinute })
   return {
     mode: "public",
     secret: access.sessionSecret,
     retentionDays: access.retentionDays,
     take: (sessionId) => limiter.take(sessionId),
+    clientOf,
     accounts: parts.publicAccount.accounts,
     early: parts.publicAccount.early,
     visits: new SessionVisits({ db, clock }),

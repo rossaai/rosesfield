@@ -322,4 +322,35 @@ describe("a public deployment", () => {
     expect(other.status).toBe(200)
     expect(later.status).toBe(200)
   })
+
+  it("limits a client that drops its session cookie by its address", async () => {
+    const { visitor } = openPublic({
+      settings: { SESSION_REQUESTS_PER_MINUTE: "3" },
+    })
+
+    const answers = []
+    for (let request = 0; request < 4; request += 1) {
+      answers.push(await visitor().call(gatewayRoutes.getHealth.path))
+    }
+
+    expect(answers.map((answer) => answer.status)).toEqual([200, 200, 200, 429])
+    expect(await codeOf(answers[3] ?? fail())).toBe("SESSION_RATE_LIMITED")
+  })
+
+  it("limits a client that sends its account cookie without its key by that account", async () => {
+    const { visitor } = openPublic({
+      settings: { SESSION_REQUESTS_PER_MINUTE: "3" },
+    })
+    const keyed = visitor({ [keyHeaders.engine]: "comfyui-visitor-key" })
+
+    const first = await keyed.call(gatewayRoutes.getHealth.path)
+    const keyless = keyed.withoutKeys()
+    const answers = [first]
+    for (let request = 0; request < 3; request += 1) {
+      answers.push(await keyless.call(gatewayRoutes.getHealth.path))
+    }
+
+    expect(keyed.cookie).toMatch(/^a-[0-9a-f]{64}~/)
+    expect(answers.map((answer) => answer.status)).toEqual([200, 200, 200, 429])
+  })
 })
