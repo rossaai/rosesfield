@@ -66,6 +66,19 @@ describe("isBlankOutput", () => {
     expect(await isBlank({ ...indexed, pixel: () => [1] })).toBe(false)
   })
 
+  it("judges a cut-out on a transparent ground by its opaque pixels", async () => {
+    const size = { width: 100, height: 100, colorType: 6 } as const
+    const cutout = (subject: number[], ground: number[]): PlantedPng => ({
+      ...size,
+      pixel: (column, row) => (column < 10 && row < 10 ? subject : ground),
+    })
+    const clear = [0, 0, 0, 0]
+    expect(await isBlank(cutout([200, 40, 60, 255], clear))).toBe(false)
+    expect(await isBlank(cutout([0, 0, 0, 255], clear))).toBe(true)
+    expect(await isBlank(cutout([200, 40, 60, 255], [0, 0, 0, 255]))).toBe(true)
+    expect(await isBlank(cutout(clear, clear))).toBe(true)
+  })
+
   it("finds an image or a video with no bytes empty", async () => {
     const empty = new Uint8Array(0)
     expect(await isBlankOutput(outputOf("image", empty))).toBe(true)

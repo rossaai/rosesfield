@@ -200,9 +200,13 @@ function rgbaAt(png: Png, row: Uint8Array, column: number): Rgba {
   }
 }
 
-function isBlack([red, green, blue, alpha]: Rgba): boolean {
+function isBlack([red, green, blue]: Rgba): boolean {
   const luma = 16 + (65.481 * red + 128.553 * green + 24.966 * blue) / 255
-  return alpha === 0 || luma < blackLuma
+  return luma < blackLuma
+}
+
+function isClear([, , , alpha]: Rgba): boolean {
+  return alpha === 0
 }
 
 class BlackRows {
@@ -215,6 +219,7 @@ class BlackRows {
   private filled = 0
   private rows = 0
   private lit = 0
+  private opaque = 0
 
   constructor(png: Png) {
     this.png = png
@@ -227,6 +232,11 @@ class BlackRows {
 
   isWhole(): boolean {
     return this.rows === this.png.height
+  }
+
+  isBlack(): boolean {
+    const allowed = this.opaque - Math.ceil(this.opaque * blackShare)
+    return this.isWhole() && this.lit <= allowed
   }
 
   isLitAfter(chunk: Uint8Array): boolean {
@@ -254,7 +264,11 @@ class BlackRows {
       return true
     }
     for (let column = 0; column < this.png.width; column += 1) {
-      this.lit += isBlack(rgbaAt(this.png, this.current, column)) ? 0 : 1
+      const pixel = rgbaAt(this.png, this.current, column)
+      if (!isClear(pixel)) {
+        this.opaque += 1
+        this.lit += isBlack(pixel) ? 0 : 1
+      }
     }
     const done = this.current
     this.current = this.previous
@@ -282,7 +296,7 @@ async function isBlackPng(png: Png): Promise<boolean> {
         return false
       }
     }
-    return rows.isWhole()
+    return rows.isBlack()
   } catch {
     return false
   } finally {
