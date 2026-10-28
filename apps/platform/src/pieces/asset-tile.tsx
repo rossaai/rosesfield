@@ -12,7 +12,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { RotateCcwIcon } from "lucide-react"
-import type { CSSProperties, ReactElement } from "react"
+import { type CSSProperties, type ReactElement, useState } from "react"
 import { assetQuery } from "@/api/queries"
 import { useAssetSource, useTileSource } from "@/api/use-asset-source"
 import { t } from "@/copy/t"
@@ -105,13 +105,38 @@ function FailedTile({
   )
 }
 
+function useTileShape(
+  props: AssetTileProps & { asset: Asset },
+  isPreview: boolean
+): {
+  aspect: MediaAspect | undefined
+  onShape: ((shape: MediaAspect) => void) | undefined
+} {
+  const { asset } = props
+  const client = useQueryClient()
+  const [drawn, setDrawn] = useState<MediaAspect | undefined>(undefined)
+  const aspect = shapedAspect(
+    props,
+    drawn === undefined ? asset : { ...asset, ...drawn }
+  )
+  if (asset.width !== null && asset.height !== null) {
+    return { aspect, onShape: undefined }
+  }
+  return {
+    aspect,
+    onShape: (shape) =>
+      isPreview ? setDrawn(shape) : keepShape(client, asset, shape),
+  }
+}
+
 function VisualTile(props: AssetTileProps & { asset: Asset }): ReactElement {
   const { asset } = props
   const source = useTileSource(asset)
   const viewer = useViewer()
-  const client = useQueryClient()
-  const aspect = shapedAspect(props, asset)
-  const isShapeless = asset.width === null || asset.height === null
+  const { aspect, onShape } = useTileShape(
+    props,
+    source.state === "ready" && source.isPreview === true
+  )
   const name = useAssetName(asset) ?? assetLabel(asset)
   if (source.state === "loading") {
     return (
@@ -149,9 +174,7 @@ function VisualTile(props: AssetTileProps & { asset: Asset }): ReactElement {
           ? assetLength(asset)
           : undefined
       }
-      {...(isShapeless
-        ? { onShape: (shape: MediaAspect) => keepShape(client, asset, shape) }
-        : {})}
+      {...(onShape === undefined ? {} : { onShape })}
       {...(props.isStatic === true
         ? {}
         : {

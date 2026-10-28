@@ -98,7 +98,11 @@ describe("useTileSource", () => {
     )
     const tile = sourceOf(assetOf(assetId, "image"))
     await waitFor(() => expect(tile.result.current.state).toBe("ready"))
-    expect(tile.result.current).toEqual({ state: "ready", src: "blob:made-1" })
+    expect(tile.result.current).toEqual({
+      state: "ready",
+      src: "blob:made-1",
+      isPreview: true,
+    })
     expect(sent.map((one) => one.url)).toEqual([
       `/api/assets/${assetId}/preview`,
     ])
@@ -156,6 +160,7 @@ describe("useTileSource", () => {
       expect(tile.result.current).toEqual({
         state: "ready",
         src: "blob:made-1",
+        isPreview: true,
       })
     )
     expect(sent.filter((one) => one.method === "PUT")).toHaveLength(1)

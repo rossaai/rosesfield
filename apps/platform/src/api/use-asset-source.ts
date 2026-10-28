@@ -15,7 +15,7 @@ export type AssetSource =
 
 export type TileSource =
   | { state: "loading" }
-  | { state: "ready"; src: string; poster?: string }
+  | { state: "ready"; src: string; poster?: string; isPreview?: true }
   | { state: "failed"; retry: () => void }
 
 type PreviewSource =
@@ -160,7 +160,7 @@ export function useTileSource(asset: Asset): TileSource {
     return { state: "loading" }
   }
   if (hasPicture) {
-    return { state: "ready", src: preview.src }
+    return { state: "ready", src: preview.src, isPreview: true }
   }
   if (full.state !== "ready") {
     return full
