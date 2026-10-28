@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto"
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { createInterface } from "node:readline/promises"
 import { type DeployOptions, deployOptionsOf } from "./deploy-options"
 import { gatewayRoot, repositoryRoot } from "./deploy-targets"
 import { type Account, loginDeploy, wranglerAccount } from "./login-deploy"
@@ -102,13 +103,38 @@ const noAccount: Account = {
   },
 }
 
-async function deployWithLogin(options: DeployOptions): Promise<void> {
+const stopSignals: NodeJS.Signals[] = ["SIGINT", "SIGTERM", "SIGHUP"]
+
+function stopOnSignals(): AbortSignal {
   const stop = new AbortController()
-  const onStop = (): void => stop.abort()
-  process.on("SIGINT", onStop)
-  process.on("SIGTERM", onStop)
+  for (const name of stopSignals) {
+    process.on(name, () => stop.abort())
+  }
+  process.stdout.on("error", () => undefined)
+  process.stderr.on("error", () => undefined)
+  return stop.signal
+}
+
+async function askOperator(
+  question: string,
+  signal: AbortSignal
+): Promise<string> {
+  const reader = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  })
+  try {
+    return await reader.question(question, { signal })
+  } finally {
+    reader.close()
+  }
+}
+
+async function deployWithLogin(options: DeployOptions): Promise<void> {
+  const signal = stopOnSignals()
   const shell = new ProcessShell({
     write: (text) => process.stdout.write(text),
+    signal,
   })
   await loginDeploy(options, {
     shell,
@@ -120,6 +146,7 @@ async function deployWithLogin(options: DeployOptions): Promise<void> {
     fetch: (url, init) => fetch(url, init),
     sleep: (ms) => new Promise((done) => setTimeout(done, ms)),
     print: (line) => console.log(line),
+    ask: (question) => askOperator(question, signal),
     build: async () => {
       const built = await shell.run({
         command: "bun",
@@ -132,7 +159,7 @@ async function deployWithLogin(options: DeployOptions): Promise<void> {
       }
     },
     localComfyKey: "stand-in-key-for-the-local-runtime",
-    signal: stop.signal,
+    signal,
   })
 }
 

@@ -1,10 +1,11 @@
-import { existsSync } from "node:fs"
+import { spawn } from "node:child_process"
+import { existsSync, readdirSync, rmSync } from "node:fs"
 import { createServer } from "node:net"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { gatewayRoot, repositoryRoot } from "../deploy-targets"
 import { ProcessShell } from "../process-shell"
-import { countIn, newHarness, runHarness } from "./login-harness"
+import { countIn, newHarness, runHarness, testFolder } from "./login-harness"
 
 const wrangler = join(gatewayRoot, "node_modules", ".bin", "wrangler")
 
@@ -64,4 +65,48 @@ describe("bun run deploy --login --local", () => {
     expect(harness.leaks).toEqual([])
     expect(existsSync(harness.folders[0] ?? "")).toBe(false)
   }, 240_000)
+
+  for (const signal of ["SIGHUP", "SIGTERM"] as const) {
+    it(`signs out and deletes the folder when ${signal} comes mid-run`, async () => {
+      const temporary = testFolder()
+      const port = await freePort()
+      const run = spawn(
+        "bun",
+        [
+          join(repositoryRoot, "scripts", "deploy", "deploy.ts"),
+          "--login",
+          "--local",
+          "--port",
+          `${port}`,
+        ],
+        { env: { ...process.env, TMPDIR: temporary }, stdio: "pipe" }
+      )
+      let output = ""
+      const exited = new Promise<number | null>((done) => {
+        run.once("close", done)
+      })
+      await new Promise<void>((done) => {
+        run.stdout.on("data", (chunk: Buffer) => {
+          output += chunk.toString("utf8")
+          if (output.includes("wrangler d1 migrations apply")) {
+            done()
+          }
+        })
+      })
+      const held = readdirSync(temporary).filter((name) =>
+        name.startsWith("rosesfield-deploy-")
+      )
+      run.kill(signal)
+      const status = await exited
+      const left = readdirSync(temporary).filter((name) =>
+        name.startsWith("rosesfield-deploy-")
+      )
+      rmSync(temporary, { recursive: true, force: true })
+      expect(held).toHaveLength(1)
+      expect(status).toBe(1)
+      expect(output).toContain("sign out, then delete the temporary folder")
+      expect(output).toContain("The local runtime holds no sign-in.")
+      expect(left).toEqual([])
+    }, 240_000)
+  }
 })

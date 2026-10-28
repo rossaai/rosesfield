@@ -45,6 +45,7 @@ export class WranglerSession {
   readonly folder: string
   readonly secrets = new Map<string, string>()
   readonly addresses = new Map<string, string>()
+  ownerLink: "shown" | "kept" | "none" = "none"
   readonly #wrangler: readonly string[]
   readonly #shell: ProcessShell
   readonly #options: DeployOptions

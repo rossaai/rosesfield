@@ -1,7 +1,8 @@
 import type { DeployOptions } from "./deploy-options"
-import { deployTargets } from "./deploy-targets"
-import { type LoginStep, loginStepsOf, type StepTools } from "./login-steps"
+import type { LoginStep, StepTools } from "./login-step"
+import { loginStepsOf } from "./login-steps"
 import type { ProcessShell } from "./process-shell"
+import { throwIfStopped } from "./smoke-check"
 import { WranglerSession } from "./wrangler-session"
 
 export type Account = {
@@ -15,7 +16,6 @@ export type LoginDeployDeps = Omit<StepTools, "login"> & {
   wrangler: readonly string[]
   makeFolder: () => string
   removeFolder: (folder: string) => void
-  signal: AbortSignal
 }
 
 export const wranglerAccount: Account = {
@@ -72,9 +72,7 @@ async function runSteps(
     login: (current) => deps.account.login(current),
   }
   for (const [index, step] of steps.entries()) {
-    if (deps.signal.aborted) {
-      throw new Error("Stopped before the next step.")
-    }
+    throwIfStopped(deps.signal)
     deps.print(`\n${index + 1}/${steps.length}. ${step.text}`)
     await step.run(session, tools)
   }
@@ -91,12 +89,22 @@ async function close(
       await deps.account.logout(session)
     }
   } catch (error) {
-    deps.print(
-      `wrangler logout failed: ${error instanceof Error ? error.message : error}. The folder that held the sign-in is deleted next.`
-    )
+    deps.print(signOutFailure(error))
   } finally {
     deps.removeFolder(folder)
   }
+}
+
+export const revokePage = "https://dash.cloudflare.com/profile"
+
+function signOutFailure(error: unknown): string {
+  const reason = error instanceof Error ? error.message : `${error}`
+  return [
+    `\nSIGN-OUT FAILED: ${reason}.`,
+    "The sign-in token of this run may still work at Cloudflare.",
+    "This machine keeps no copy of it, because the temporary folder that held it is deleted now.",
+    `To revoke it, open ${revokePage}, find the wrangler sign-in, and revoke it.`,
+  ].join("\n")
 }
 
 function printResult(
@@ -112,10 +120,9 @@ function printResult(
   if (!options.isJudge || judgeAddress === undefined) {
     return
   }
-  const token = session?.secrets.get(deployTargets.judge.secret)
   deps.print(
-    token === undefined
-      ? `The owner link is ${judgeAddress}/#token=<the OWNER_TOKEN set before>. This run kept that token.`
-      : `The owner link, printed once: ${judgeAddress}/#token=${token}`
+    session?.ownerLink === "shown"
+      ? "The owner link was printed above, right after OWNER_TOKEN was set."
+      : `The owner link is ${judgeAddress}/#token=<the OWNER_TOKEN set before>. This run kept that token.`
   )
 }

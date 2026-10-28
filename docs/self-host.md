@@ -43,18 +43,19 @@ bun run deploy --login --domain rosesfield.com --judge --cap <credits>
 It runs these steps, and `--dry-run` prints them and runs none:
 
 1. Builds the platform.
-2. Runs wrangler with its config in a new temporary folder, through `HOME` and `XDG_CONFIG_HOME`, so a wrangler sign-in already on your machine is never read or changed. It also passes no `CLOUDFLARE_` variable and reads no `.env` file of yours.
+2. Runs wrangler with its config in a new temporary folder, through `HOME` and `XDG_CONFIG_HOME`, so a wrangler sign-in already on your machine is never read or changed. It passes no `CLOUDFLARE_`, `CF_` or `WRANGLER_` variable of yours, except `CLOUDFLARE_ACCOUNT_ID` from `--account`, and reads no `.env` file of yours.
 3. Runs `wrangler login`. Your browser opens, and you sign in to the account you deploy to.
-4. Creates what is missing and skips what exists: the R2 bucket `rosesfield-assets`, the D1 database `rosesfield`, its migrations, and `SESSION_SECRET`. The secret is 32 random bytes from a cryptographic source, handed to `wrangler secret put` on its stdin. It is never printed and never written to a file. Wrangler 4 finds the database by its name, so no database id is written into `services/gateway/wrangler.jsonc`.
-5. Deploys public mode on `--domain`. Its workers.dev address keeps answering.
-6. With `--judge`, does the same for the owner link: the bucket `rosesfield-judge-assets`, the database `rosesfield-judge` and an `OWNER_TOKEN` made like `SESSION_SECRET`. When `COMFY_API_KEY` is not set yet, wrangler asks you for it, and you paste your Comfy key at its prompt. `--cap <credits>` sets `SPEND_CAP_CREDITS`, and `--login --judge` refuses to run without it.
-7. Checks the live address: `/`, `/api/runs` and `/privacy` answer 200. The owner link's `/api/runs` answers 401 without its token and 200 with it. A new domain can take a few minutes to answer, so each check tries for 3 minutes.
-8. Signs out with `wrangler logout` and deletes the temporary folder, even when a step fails or you press Ctrl-C.
-9. Prints the owner link once, at the end: `https://rosesfield-judge.<your subdomain>.workers.dev/#token=<OWNER_TOKEN>`. Keep it. A later run finds `OWNER_TOKEN` set, keeps it, and prints the link without it.
+4. Runs `wrangler whoami --json` and prints the account name and id. You type `yes` to deploy there, and any other answer stops the run before anything is created. With `--account <id>`, the run asks nothing when the sign-in reaches that account, and stops when it does not. When the sign-in reaches more than one account, `--account` is needed.
+5. Creates what is missing and skips what exists: the R2 bucket `rosesfield-assets`, the D1 database `rosesfield` and its migrations. Wrangler 4 finds the database by its name, so no database id is written into `services/gateway/wrangler.jsonc`.
+6. Deploys public mode on `--domain`. Its workers.dev address keeps answering.
+7. Sets `SESSION_SECRET` when `wrangler secret list` does not show it. The secret is 32 random bytes from a cryptographic source, handed to `wrangler secret put` on its stdin. It is never printed and never written to a file. When `wrangler secret list` fails, the run stops rather than replace a secret that may exist.
+8. With `--judge`, does the same for the owner link: the bucket `rosesfield-judge-assets`, the database `rosesfield-judge`, a deploy with `SPEND_CAP_CREDITS` set to `--cap <credits>`, and an `OWNER_TOKEN` made like `SESSION_SECRET`. The owner link, `https://rosesfield-judge.<your subdomain>.workers.dev/#token=<OWNER_TOKEN>`, is printed once, right after the token is set, so a later failure loses no token. Keep it. When `COMFY_API_KEY` is not set yet, wrangler asks you for it, and you paste your Comfy key at its prompt. `--login --judge` refuses to run without `--cap`.
+9. Checks the live address: `/`, `/api/runs` and `/privacy` answer 200. The owner link's `/api/runs` answers 401 without its token and 200 with it, and its `/api/account` reports the cap you chose. A new domain can take a few minutes to answer, so each check tries for 3 minutes.
+10. Signs out with `wrangler logout` and deletes the temporary folder, even when a step fails, and when Ctrl-C, a closed terminal or a stop signal ends the run, through SIGINT, SIGHUP or SIGTERM. If the sign-out fails, the run says so in capitals and names https://dash.cloudflare.com/profile, where you revoke the wrangler sign-in.
 
-The prompts are wrangler's own: the browser sign-in, and the Comfy key when the owner link has none. When your sign-in reaches more than one account, add `--account <account id>`. Without `--judge` and `--cap`, the command deploys public mode only. Without `--domain`, it answers on workers.dev only.
+The prompts are wrangler's and the run's own: the browser sign-in, the `yes` for the account, and the Comfy key when the owner link has none. A later run finds `OWNER_TOKEN` set, keeps it, and prints the link without it. Without `--judge` and `--cap`, the command deploys public mode only. Without `--domain`, it answers on workers.dev only.
 
-`bun run deploy --login --local` runs the same steps in wrangler's local runtime, on `--port`, with no sign-in. It starts each Worker, checks it, stops it and deletes its folder. A stand-in takes the place of the Comfy key.
+`bun run deploy --login --local` runs the same steps in wrangler's local runtime, on `--port`, with no sign-in. It starts each Worker, checks it, stops it and deletes its folder. A stand-in takes the place of the Comfy key, with an engine address that refuses every call.
 
 ### With a sign-in you already have
 

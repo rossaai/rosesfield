@@ -29,6 +29,7 @@ export type Harness = {
   leaks: string[]
   logins: number
   logouts: number
+  questions: string[]
   typedKey: string
 }
 
@@ -38,13 +39,20 @@ export type HarnessDeps = {
   build?: () => Promise<void>
   sleep?: (ms: number) => Promise<void>
   loginFails?: boolean
+  logoutFails?: boolean
+  answer?: string
+  signal?: AbortSignal
 }
 
 export class TypedShell extends ProcessShell {
   readonly #typed: string
 
-  constructor(options: { write: (text: string) => void; typed: string }) {
-    super({ write: options.write })
+  constructor(options: {
+    write: (text: string) => void
+    typed: string
+    signal: AbortSignal
+  }) {
+    super({ write: options.write, signal: options.signal })
     this.#typed = options.typed
   }
 
@@ -65,6 +73,7 @@ export function newHarness(): Harness {
     leaks: [],
     logins: 0,
     logouts: 0,
+    questions: [],
     typedKey: `typed-${randomBytes(16).toString("hex")}`,
   }
 }
@@ -81,9 +90,10 @@ export async function runHarness(
   const write = (text: string): void => {
     harness.output.push(text)
   }
+  const signal = deps.signal ?? new AbortController().signal
   await loginDeploy(deployOptionsOf(args), {
-    shell: new TypedShell({ write, typed: harness.typedKey }),
-    account: accountDouble(harness, deps.loginFails === true),
+    shell: new TypedShell({ write, typed: harness.typedKey, signal }),
+    account: accountDouble(harness, deps),
     wrangler: deps.wrangler,
     makeFolder: () => {
       const folder = testFolder()
@@ -102,25 +112,32 @@ export async function runHarness(
     fetch: deps.fetch,
     sleep: deps.sleep ?? (() => Promise.resolve()),
     print: (line) => write(`${line}\n`),
+    ask: async (question) => {
+      harness.questions.push(question)
+      return deps.answer ?? "yes"
+    },
     build: deps.build ?? (() => Promise.resolve()),
     localComfyKey: harness.typedKey,
-    signal: new AbortController().signal,
+    signal,
   })
 }
 
-function accountDouble(harness: Harness, loginFails: boolean): Account {
+function accountDouble(harness: Harness, deps: HarnessDeps): Account {
   return {
     async login(session) {
       harness.logins += 1
       const config = join(session.folder, "config", ".wrangler", "config")
       mkdirSync(config, { recursive: true })
       writeFileSync(join(config, "default.toml"), 'oauth_token = "double"\n')
-      if (loginFails) {
+      if (deps.loginFails === true) {
         throw new Error("the sign-in was refused")
       }
     },
     async logout() {
       harness.logouts += 1
+      if (deps.logoutFails === true) {
+        throw new Error("wrangler logout stopped with 1")
+      }
     },
   }
 }
