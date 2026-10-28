@@ -190,6 +190,69 @@ describe("the limits of a public deployment", () => {
     ).toHaveLength(2)
   })
 
+  it("counts each new key a held cookie sends against the new-session limit before it asks Comfy", async () => {
+    const { visitor, comfy } = openPublic({
+      NEW_SESSIONS_PER_MINUTE: "3",
+      CLIENT_ADDRESS_HEADER: "cf-connecting-ip",
+    })
+    const from = { headers: { "cf-connecting-ip": "203.0.113.7" } }
+    const first = visitor()
+    await first.call(gatewayRoutes.getHealth.path, from)
+
+    const statuses = []
+    for (let request = 0; request < 10; request += 1) {
+      const holder = visitor({
+        [keyHeaders.engine]: `comfyui-held-${request}`,
+      })
+      holder.cookie = first.cookie
+      statuses.push(
+        (await holder.call(gatewayRoutes.getHealth.path, from)).status
+      )
+    }
+    const known = visitor({ [keyHeaders.engine]: "comfyui-held-0" })
+    known.cookie = first.cookie
+    const again = await known.call(gatewayRoutes.getHealth.path, {
+      headers: { "cf-connecting-ip": "198.51.100.4" },
+    })
+
+    expect(statuses).toEqual([200, 200, 429, 429, 429, 429, 429, 429, 429, 429])
+    expect(
+      comfy.calls.filter((call) => call.path === accountPath)
+    ).toHaveLength(2)
+    expect(again.status).toBe(200)
+  })
+
+  it("limits the Comfy key lookups of one held cookie across addresses", async () => {
+    const { visitor, comfy } = openPublic({
+      NEW_SESSIONS_PER_MINUTE: "3",
+      CLIENT_ADDRESS_HEADER: "cf-connecting-ip",
+    })
+    const first = visitor()
+    await first.call(gatewayRoutes.getHealth.path, {
+      headers: { "cf-connecting-ip": "203.0.113.7" },
+    })
+
+    const statuses = []
+    for (let request = 0; request < 6; request += 1) {
+      const holder = visitor({
+        [keyHeaders.engine]: `comfyui-refused-${request}`,
+      })
+      holder.cookie = first.cookie
+      statuses.push(
+        (
+          await holder.call(gatewayRoutes.getHealth.path, {
+            headers: { "cf-connecting-ip": `198.51.100.${request + 1}` },
+          })
+        ).status
+      )
+    }
+
+    expect(statuses).toEqual([200, 200, 200, 429, 429, 429])
+    expect(
+      comfy.calls.filter((call) => call.path === accountPath)
+    ).toHaveLength(3)
+  })
+
   it("serves an API client that sends its key with no cookie past the new-session limit, asking Comfy once", async () => {
     const { visitor, comfy } = openPublic({
       CLIENT_ADDRESS_HEADER: "cf-connecting-ip",

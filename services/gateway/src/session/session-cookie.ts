@@ -130,6 +130,7 @@ function anonymousVisit(held: HeldSession | null): Visit {
 type Slots = {
   open: () => Promise<void>
   canOpen: () => Promise<void>
+  lookup: (sessionId: SessionId) => Promise<void>
   take: (sessionId: SessionId) => Promise<void>
 }
 
@@ -145,6 +146,7 @@ function slotsOf(options: SessionGuardOptions, c: Context): Slots {
   return {
     open: () => once(opens, options.open),
     canOpen: () => options.canOpen(opens),
+    lookup: (sessionId) => once(`lookups:${sessionId}`, options.open),
     take: (sessionId) => once(sessionId, options.take),
   }
 }
@@ -175,6 +177,10 @@ async function visitWithKey(
     }
   } else {
     await slots.take(held.sessionId)
+    if (!(await options.accounts.holds(key))) {
+      await slots.open()
+      await slots.lookup(held.sessionId)
+    }
   }
   options.early?.(c.req.raw, key)
   const answer = await options.accounts.answerFor(key)
