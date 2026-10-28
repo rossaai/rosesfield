@@ -11,6 +11,7 @@ import {
   queueStatus,
   ratesUrl,
   refused,
+  requestId,
   routerSchema,
   routerUrl,
   schemaRead,
@@ -147,13 +148,32 @@ describe("ComfyRouterGenerationEngine", () => {
     }
   )
 
-  it("reads a finished request that failed as a failure with its reason", async () => {
+  it("reads a finished request that failed as a failure with the reason its result read gives", async () => {
+    const { engine } = engineWith([
+      queueStatus("COMPLETED", "invalid_input"),
+      refused(
+        "GET",
+        `/v2/models/${pictureModel}/requests/${requestId}`,
+        400,
+        "invalid_input",
+        "image: the provider could not read this file."
+      ),
+    ])
+    const status = await engine.read(`${pictureModel}|queued|${requestId}`)
+    expect(status).toMatchObject({
+      state: "failed",
+      error: {
+        code: "RUN_INPUT_REFUSED",
+        cause: { detail: "image: the provider could not read this file." },
+      },
+    })
+  })
+
+  it("reads a finished request that failed as a failure when its result read gives no reason", async () => {
     const { engine } = engineWith([
       queueStatus("COMPLETED", "content_policy_violation"),
     ])
-    const status = await engine.read(
-      `${pictureModel}|queued|6f1a1a6e-6a53-4a5f-9d3a-2b3b0a1f9c21`
-    )
+    const status = await engine.read(`${pictureModel}|queued|${requestId}`)
     expect(status).toMatchObject({
       state: "failed",
       error: { code: "RUN_INPUT_REFUSED" },

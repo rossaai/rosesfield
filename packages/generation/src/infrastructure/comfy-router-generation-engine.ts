@@ -205,7 +205,9 @@ export class ComfyRouterGenerationEngine extends GenerationEngine {
       return { state: "cancelled" }
     }
     if (state.errorType !== null) {
-      return { state: "failed", error: failureOf(state.errorType, 200, state) }
+      const refusal = await this.http.refusal(parsed.model, parsed.requestId)
+      const error = failureOf(state.errorType, 200, refusal ?? state)
+      return { state: "failed", error }
     }
     const meter = this.meter
     if (meter?.deferRef(ref) === true) {

@@ -2,6 +2,7 @@ import { EngineKeyInvalidError } from "#domain/error/engine-key-invalid.error"
 import { EngineUnavailableError } from "#domain/error/engine-unavailable.error"
 import type { Fetch } from "#infrastructure/comfy/comfy-low"
 import {
+  type RouterRefusal,
   refusalOf,
   retryAfterOf,
   routerErrorOf,
@@ -201,6 +202,20 @@ export class RouterHttp {
       { timeoutMs: this.options.downloadTimeoutMs }
     )
     return response.status === 202 ? null : response
+  }
+
+  async refusal(
+    model: string,
+    requestId: string
+  ): Promise<RouterRefusal | null> {
+    const response = await this.raw("GET", requestPath(model, requestId)).catch(
+      () => null
+    )
+    if (response === null || response.ok) {
+      await response?.body?.cancel()
+      return null
+    }
+    return refusalOf(response, model)
   }
 
   async cancel(model: string, requestId: string): Promise<void> {
