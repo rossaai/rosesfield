@@ -1,15 +1,12 @@
 import { spawnSync } from "node:child_process"
-import { resolve } from "node:path"
-import { fileURLToPath } from "node:url"
-
-type Plan = {
-  isJudge: boolean
-  isLocal: boolean
-  isDryRun: boolean
-  port: string
-  envFiles: string[]
-  domain: string | null
-}
+import { randomBytes } from "node:crypto"
+import { mkdtempSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { type DeployOptions, deployOptionsOf } from "./deploy-options"
+import { gatewayRoot, repositoryRoot } from "./deploy-targets"
+import { type Account, loginDeploy, wranglerAccount } from "./login-deploy"
+import { ProcessShell } from "./process-shell"
 
 type Step = {
   command: string
@@ -18,81 +15,21 @@ type Step = {
   orElse?: Step
 }
 
-const root = fileURLToPath(new URL("../..", import.meta.url))
-const gateway = fileURLToPath(
-  new URL("../../services/gateway", import.meta.url)
-)
-
-const hostnamePattern =
-  /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/
-
-const usage = [
-  "bun run deploy [--judge] [--dry-run] [--domain <host>] [--local [--port <port>] [--env-file <file>]...]",
-  "",
-  "  --judge     a private owner link: owner mode on one Comfy key, with the spend cap of its environment",
-  "  --domain    a domain of your Cloudflare account the deployment also answers on, such as rosesfield.com. Its workers.dev address keeps answering",
-  "  --local     builds and runs the deployment in wrangler's local runtime instead of Cloudflare",
-  "  --dry-run   prints each step in order and runs none",
-  "  --port      the local port, 8788 by default",
-  "  --env-file  a file of settings for the local runtime, such as SESSION_SECRET, OWNER_TOKEN or COMFY_API_KEY",
-].join("\n")
-
-function planOf(args: readonly string[]): Plan {
-  const plan: Plan = {
-    isJudge: false,
-    isLocal: false,
-    isDryRun: false,
-    port: "8788",
-    envFiles: [],
-    domain: null,
-  }
-  for (let index = 0; index < args.length; index += 1) {
-    const arg = args[index]
-    const value = args[index + 1]
-    if (arg === "--judge") {
-      plan.isJudge = true
-    } else if (arg === "--local") {
-      plan.isLocal = true
-    } else if (arg === "--dry-run") {
-      plan.isDryRun = true
-    } else if (arg === "--port" && value !== undefined) {
-      plan.port = value
-      index += 1
-    } else if (arg === "--env-file" && value !== undefined) {
-      plan.envFiles.push(resolve(value))
-      index += 1
-    } else if (arg === "--domain" && value !== undefined) {
-      plan.domain = domainOf(value)
-      index += 1
-    } else {
-      throw new Error(`${arg} is not an option.\n\n${usage}`)
-    }
-  }
-  if (plan.isLocal && plan.domain !== null) {
-    throw new Error(
-      `--domain puts a Cloudflare deployment on a domain, and --local runs none.\n\n${usage}`
-    )
-  }
-  return plan
-}
-
-function domainOf(value: string): string {
-  const domain = value.toLowerCase()
-  if (!hostnamePattern.test(domain)) {
-    throw new Error(`${value} is not a domain.\n\n${usage}`)
-  }
-  return domain
-}
-
 function wrangler(args: readonly string[]): Step {
-  return { command: "bunx", args: ["wrangler", ...args], cwd: gateway }
+  return { command: "bunx", args: ["wrangler", ...args], cwd: gatewayRoot }
 }
 
-function stepsOf(plan: Plan): Step[] {
-  const env = `--env=${plan.isJudge ? "judge" : ""}`
-  const database = plan.isJudge ? "rosesfield-judge" : "rosesfield"
-  const build: Step = { command: "bun", args: ["run", "build"], cwd: root }
-  if (plan.isLocal) {
+function stepsOf(options: DeployOptions): Step[] {
+  const env = `--env=${options.isJudge ? "judge" : ""}`
+  const database = options.isJudge ? "rosesfield-judge" : "rosesfield"
+  const cap =
+    options.cap === null ? [] : ["--var", `SPEND_CAP_CREDITS:${options.cap}`]
+  const build: Step = {
+    command: "bun",
+    args: ["run", "build"],
+    cwd: repositoryRoot,
+  }
+  if (options.isLocal) {
     return [
       build,
       wrangler(["d1", "migrations", "apply", database, "--local", env]),
@@ -100,8 +37,9 @@ function stepsOf(plan: Plan): Step[] {
         "dev",
         env,
         "--port",
-        plan.port,
-        ...plan.envFiles.flatMap((file) => ["--env-file", file]),
+        options.port,
+        ...cap,
+        ...options.envFiles.flatMap((file) => ["--env-file", file]),
       ]),
     ]
   }
@@ -115,7 +53,8 @@ function stepsOf(plan: Plan): Step[] {
     wrangler([
       "deploy",
       env,
-      ...(plan.domain === null ? [] : ["--domain", plan.domain]),
+      ...(options.domain === null ? [] : ["--domain", options.domain]),
+      ...cap,
     ]),
   ]
 }
@@ -140,9 +79,9 @@ function run(step: Step): void {
   throw new Error(`${textOf(step)} stopped with ${done.status}`)
 }
 
-function deploy(plan: Plan): void {
-  for (const step of stepsOf(plan)) {
-    if (plan.isDryRun) {
+function deploy(options: DeployOptions): void {
+  for (const step of stepsOf(options)) {
+    if (options.isDryRun) {
       console.log(
         step.orElse === undefined
           ? textOf(step)
@@ -154,8 +93,56 @@ function deploy(plan: Plan): void {
   }
 }
 
+const noAccount: Account = {
+  async login() {
+    console.log("The local runtime needs no sign-in.")
+  },
+  async logout() {
+    console.log("The local runtime holds no sign-in.")
+  },
+}
+
+async function deployWithLogin(options: DeployOptions): Promise<void> {
+  const stop = new AbortController()
+  const onStop = (): void => stop.abort()
+  process.on("SIGINT", onStop)
+  process.on("SIGTERM", onStop)
+  const shell = new ProcessShell({
+    write: (text) => process.stdout.write(text),
+  })
+  await loginDeploy(options, {
+    shell,
+    account: options.isLocal ? noAccount : wranglerAccount,
+    wrangler: [join(gatewayRoot, "node_modules", ".bin", "wrangler")],
+    makeFolder: () => mkdtempSync(join(tmpdir(), "rosesfield-deploy-")),
+    removeFolder: (folder) => rmSync(folder, { recursive: true, force: true }),
+    makeSecret: () => randomBytes(32).toString("hex"),
+    fetch: (url, init) => fetch(url, init),
+    sleep: (ms) => new Promise((done) => setTimeout(done, ms)),
+    print: (line) => console.log(line),
+    build: async () => {
+      const built = await shell.run({
+        command: "bun",
+        args: ["run", "build"],
+        cwd: repositoryRoot,
+        env: { ...process.env },
+      })
+      if (built.status !== 0) {
+        throw new Error(`bun run build stopped with ${built.status}`)
+      }
+    },
+    localComfyKey: "stand-in-key-for-the-local-runtime",
+    signal: stop.signal,
+  })
+}
+
 try {
-  deploy(planOf(process.argv.slice(2)))
+  const options = deployOptionsOf(process.argv.slice(2))
+  if (options.isLogin) {
+    await deployWithLogin(options)
+  } else {
+    deploy(options)
+  }
 } catch (error) {
   console.error(error instanceof Error ? error.message : error)
   process.exit(1)

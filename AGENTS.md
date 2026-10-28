@@ -66,7 +66,7 @@ Run every command from the repository root with bun 1.4.3. Node 22 or 24 must al
 | `bun run glob:check` | Refuses an `import.meta.glob` call that is not followed by `(`, such as a typed call, because Vitest caches the transform of such a file and a file added later stays out of its list, per `docs/standards.md` §TypeScript. |
 | `bun run docs:check` | Refuses a relative link in a tracked `.md` file whose target is not in the tree, and a graph name in the table of `workflows/README.md` §The workflows by model that names no folder under `workflows/`. |
 | `bun run gate` | Runs `catalog:sync`, `generated:check`, `copy:check`, `glob:check`, `motion:check`, `docs:check`, `typecheck`, `lint` and `test`. It must pass before every commit. |
-| `bun run deploy` | Puts the platform on Cloudflare in public mode, per `docs/self-host.md`. |
+| `bun run deploy` | Puts the platform on Cloudflare in public mode, per `docs/self-host.md`. `--login` signs in to the account in a session of its own, creates what is missing, deploys, checks the live address and signs out. |
 
 For one workspace: `bun run --filter @rosesfield/<workspace> typecheck` and `bun run --filter @rosesfield/<workspace> test`.
 
