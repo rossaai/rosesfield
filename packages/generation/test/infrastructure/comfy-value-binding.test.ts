@@ -81,6 +81,29 @@ describe("applyBindings", () => {
     })
   })
 
+  it("bounds a value by the length of a text input at the rate another input picks", () => {
+    const lengthOf = (
+      rate: Record<string, number>,
+      max = 40,
+      name = "prompt"
+    ): ComfyValueBinding => ({
+      from: "inputLength",
+      name,
+      path: ["length"],
+      rate: { input: "quality", map: rate },
+      plus: 2,
+      max,
+    })
+    expect(fill([lengthOf({ final: 0.12 })])).toEqual({ length: 3.2 })
+    expect(fill([lengthOf({ final: 0.3 }, 4)])).toEqual({ length: 4 })
+    expect(
+      fill([lengthOf({ final: 0.3 }, 40, "absent")], { length: 40 })
+    ).toEqual({ length: 40 })
+    expect(() => fill([lengthOf({ draft: 0.3 })])).toThrow(
+      expect.objectContaining({ code: "ENGINE_BINDING_INVALID" })
+    )
+  })
+
   it("writes into a list at a numbered path", () => {
     const filled = fill([{ from: "seed", path: ["seeds", 1] }], {
       seeds: [0, 0],

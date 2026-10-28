@@ -25,10 +25,15 @@
   "3": {
     "class_type": "SaveAudioMP3",
     "inputs": {
-      "audio": ["1", 0],
+      "audio": ["5", 0],
       "filename_prefix": "audio/rosesfield-voice",
       "quality": "V0"
     },
     "_meta": { "title": "Audio" }
+  },
+  "5": {
+    "class_type": "TrimAudioDuration",
+    "inputs": { "audio": ["1", 0], "start_index": 0, "duration": 40 },
+    "_meta": { "title": "Speech at the script's length" }
   }
 }

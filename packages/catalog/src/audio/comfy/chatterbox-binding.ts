@@ -63,6 +63,27 @@ export const voiceLanguageValues: readonly VoiceLanguage[] = [
   "zh",
 ]
 
+const scriptSeconds = { plus: 2, max: 40 } as const
+
+const logographicLanguages: readonly VoiceLanguage[] = ["ja", "zh"]
+
+const syllabicLanguages: readonly VoiceLanguage[] = ["ko"]
+
+function secondsPerCharacter(language: VoiceLanguage): number {
+  if (logographicLanguages.includes(language)) {
+    return 0.3
+  }
+  return syllabicLanguages.includes(language) ? 0.2 : 0.12
+}
+
+export const voiceSecondsPerCharacter: Readonly<Record<string, number>> =
+  Object.fromEntries(
+    voiceLanguageValues.map((language) => [
+      language,
+      secondsPerCharacter(language),
+    ])
+  )
+
 const speechNode = "1"
 const recordingNode = "2"
 
@@ -76,6 +97,13 @@ const shared: readonly WorkflowValueBinding[] = [
   },
   { from: "input", name: "expression", to: "expression" },
   { from: "seed", to: "seed" },
+  {
+    from: "inputLength",
+    name: "script",
+    rate: { input: "language", map: voiceSecondsPerCharacter },
+    ...scriptSeconds,
+    to: "length",
+  },
 ]
 
 export function withoutRecording(

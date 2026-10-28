@@ -21,6 +21,7 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 | `expression` | 1 `FL_ChatterboxMultilingualTTS`, Speech | `exaggeration` | a value |
 | `seed` | 1 `FL_ChatterboxMultilingualTTS`, Speech | `seed` | a value |
 | `voice` | 2 `LoadAudio`, Voice to clone | `audio` | an uploaded audio |
+| `length` | 5 `TrimAudioDuration`, Speech at the script's length | `duration` | a value |
 
 ## Outputs
 
@@ -46,7 +47,7 @@ Rosesfield ships no weights. Each file goes into the model folder its row names.
 
 The pack also holds `FL_ChatterboxTTS` for English and `FL_ChatterboxTurboTTS` for English with tags such as `[laugh]`. This workflow does not use them. The Turbo weights come from `ResembleAI/chatterbox-turbo` at revision `749d1c1a46eb10492095d68fbcf55691ccf137cd`.
 
-The pack downloads any missing weight file into `models/chatterbox/chatterbox_multilingual/` on its first run. It also reads `grapheme_mtl_merged_expanded_v1.json` and `Cangjie5_TC.json` from the same revision, which Hugging Face stores without a digest. Each run makes about 40 seconds of speech at most, per the pack's README. With `resemble-perth` installed, every output carries Resemble's hidden watermark.
+The pack downloads any missing weight file into `models/chatterbox/chatterbox_multilingual/` on its first run. It also reads `grapheme_mtl_merged_expanded_v1.json` and `Cangjie5_TC.json` from the same revision, which Hugging Face stores without a digest. Each run makes about 40 seconds of speech at most, per the pack's README. The speech node takes no length input, so a short script can come back with up to 40 seconds of speech. The core node `TrimAudioDuration` keeps the first part of the speech, up to 2 seconds plus a length per character of the script: 0.3 seconds for Chinese and Japanese, 0.2 for Korean and 0.12 for every other language, never more than 40 seconds. The catalog writes that length into node 5 for each run. With `resemble-perth` installed, every output carries Resemble's hidden watermark.
 
 Never use the other speech pack on Comfy Cloud, `ComfyUI-Qwen-TTS` by mailzwj. It calls Alibaba's DashScope API with a key, a closed API.
 

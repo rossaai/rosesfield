@@ -15,7 +15,8 @@
       "type": "scalar"
     },
     "seed": { "nodeId": "1", "inputName": "seed", "type": "scalar" },
-    "voice": { "nodeId": "2", "inputName": "audio", "type": "cloud-asset" }
+    "voice": { "nodeId": "2", "inputName": "audio", "type": "cloud-asset" },
+    "length": { "nodeId": "5", "inputName": "duration", "type": "scalar" }
   },
   "outputs": [{ "nodeId": "3", "key": "audio", "kind": "audio" }]
 }

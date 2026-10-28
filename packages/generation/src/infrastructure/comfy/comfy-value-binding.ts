@@ -13,6 +13,8 @@ const path = z
 
 const valueMap = z.record(z.string(), z.json())
 
+const rateMap = z.record(z.string(), z.number().positive())
+
 export const comfyValueBinding = z.discriminatedUnion("from", [
   z.strictObject({
     from: z.literal("input"),
@@ -20,6 +22,14 @@ export const comfyValueBinding = z.discriminatedUnion("from", [
     path,
     map: valueMap.optional(),
     index: z.number().int().min(0).max(15).optional(),
+  }),
+  z.strictObject({
+    from: z.literal("inputLength"),
+    name: inputName,
+    path,
+    rate: z.strictObject({ input: inputName, map: rateMap }),
+    plus: z.number().min(0),
+    max: z.number().positive(),
   }),
   z.strictObject({ from: z.literal("seed"), path }),
   z.strictObject({ from: z.literal("count"), path, map: valueMap.optional() }),
@@ -70,7 +80,31 @@ function boundValue(
         : mapped(binding, request.aspectRatio, context)
     case "input":
       return inputValue(binding, context)
+    case "inputLength":
+      return lengthValue(binding, context)
   }
+}
+
+function lengthValue(
+  binding: Extract<ComfyValueBinding, { from: "inputLength" }>,
+  context: BindingContext
+): number | undefined {
+  const { inputs } = context.request
+  const text = inputs[binding.name]
+  const picked = inputs[binding.rate.input]
+  if (typeof text !== "string" || typeof picked !== "string") {
+    return undefined
+  }
+  const rate = mapped(
+    { path: binding.path, map: binding.rate.map },
+    picked,
+    context
+  )
+  if (typeof rate !== "number") {
+    return undefined
+  }
+  const value = binding.plus + [...text].length * rate
+  return Math.min(binding.max, Math.ceil(value * 100) / 100)
 }
 
 function inputValue(

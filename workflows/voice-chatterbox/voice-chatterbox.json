@@ -1,8 +1,8 @@
 {
   "id": "cccee6a8-9c23-5b54-8950-c0b784a4dc51",
   "revision": 0,
-  "last_node_id": 4,
-  "last_link_id": 2,
+  "last_node_id": 5,
+  "last_link_id": 3,
   "nodes": [
     {
       "id": 1,
@@ -81,13 +81,13 @@
       "pos": [1770, 100],
       "size": [380, 122],
       "flags": {},
-      "order": 2,
+      "order": 3,
       "mode": 0,
       "inputs": [
         {
           "name": "audio",
           "type": "AUDIO",
-          "link": 2
+          "link": 3
         }
       ],
       "outputs": [
@@ -106,12 +106,42 @@
       "title": "Audio"
     },
     {
+      "id": 5,
+      "type": "TrimAudioDuration",
+      "pos": [1250, 560],
+      "size": [380, 152],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [3]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TrimAudioDuration",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0, 40],
+      "title": "Speech at the script's length"
+    },
+    {
       "id": 4,
       "type": "MarkdownNote",
       "pos": [60, 100],
       "size": [560, 760],
       "flags": {},
-      "order": 3,
+      "order": 4,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -124,7 +154,11 @@
       "bgcolor": "#653"
     }
   ],
-  "links": [[1, 2, 0, 1, 0, "AUDIO"], [2, 1, 0, 3, 0, "AUDIO"]],
+  "links": [
+    [1, 2, 0, 1, 0, "AUDIO"],
+    [2, 1, 0, 5, 0, "AUDIO"],
+    [3, 5, 0, 3, 0, "AUDIO"]
+  ],
   "groups": [
     {
       "id": 1,
@@ -137,7 +171,7 @@
     {
       "id": 2,
       "title": "Generate",
-      "bounding": [1220, 20, 440, 574],
+      "bounding": [1220, 20, 440, 712],
       "color": "#444444",
       "font_size": 24,
       "flags": {}

@@ -119,8 +119,31 @@ describe("the Chatterbox binding of Speech and Voice clone", () => {
         class_type: "LoadAudio",
         inputs: { audio: { __type: "core/ASSET", info: { id: uploadedId } } },
       },
-      "3": { class_type: "SaveAudioMP3", inputs: { audio: ["1", 0] } },
+      "3": { class_type: "SaveAudioMP3", inputs: { audio: ["5", 0] } },
+      "5": {
+        class_type: "TrimAudioDuration",
+        inputs: { audio: ["1", 0], start_index: 0 },
+      },
     })
+  })
+
+  it("cuts the speech at a length its script and language can need", async () => {
+    const durationOf = async (inputs: Record<string, unknown>) => {
+      const { workflow } = await sent(requestFor(inputs), [submitJob])
+      return workflow["5"]?.inputs.duration
+    }
+    expect(script).toHaveLength(59)
+    expect(await durationOf({ mode: "speech", script })).toBe(9.08)
+    expect(
+      await durationOf({ mode: "speech", script: "早上好", language: "zh" })
+    ).toBe(2.9)
+    expect(
+      await durationOf({
+        mode: "speech",
+        script: "很".repeat(500),
+        language: "ja",
+      })
+    ).toBe(40)
   })
 
   it("reads the script in the model's own voice at the default expression", async () => {
