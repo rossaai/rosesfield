@@ -24,6 +24,8 @@ Every setting below has a default in code, or is needed only in the mode it name
 | `DATA_DIR` | The folder of a server on bun for its SQLite file and your assets, relative to `services/gateway`. | `./data` |
 | `RETENTION_DAYS` | Public mode only. The days a visitor's work stays after their last visit, 1 to 365. | `30` |
 | `SESSION_REQUESTS_PER_MINUTE` | Public mode only. The most requests one session may send each minute, 1 to 10000. | `600` |
+| `NEW_SESSIONS_PER_MINUTE` | Public mode only. The most new sessions one client address may open each minute, 1 to 10000. A request that opens a session, or sends a key the host has not checked, counts. Only a request the limits allow gets a session cookie. An IPv6 address counts by its /64. The default covers the few parallel requests of a first page load and several people behind one shared address, and holds one address to 30 new sessions a minute. | `30` |
+| `CLIENT_ADDRESS_HEADER` | A server on bun only. The header a proxy in front of the server writes the client's address into, such as `X-Real-IP`, so the address limits count each visitor and not the proxy. The proxy must overwrite that header, because the server trusts it. When the header holds a list, the server reads its last address. Empty, the server reads the address of the connection. | none |
 | `SPEND_CAP_CREDITS` | Owner mode only. The most Comfy credits the host may spend from `COMFY_API_KEY`. A run past it is refused with a message that names the cap. | no cap |
 | `SPEND_UNKNOWN_RUN_CREDITS` | Owner mode with a cap. The credits the cap counts for each output of a run whose cost is not read yet, 1 to 100000. | `100` |
 
@@ -63,7 +65,7 @@ bun run build
 MODE=public SESSION_SECRET=<32 characters or more> HOST=0.0.0.0 bun run --filter @rosesfield/gateway start
 ```
 
-The server serves the built platform and the API from one address, and prints its mode when it starts. Put it behind a proxy that serves HTTPS.
+The server serves the built platform and the API from one address, and prints its mode when it starts. Put it behind a proxy that serves HTTPS. Behind a proxy, the address limits see the proxy's address and count every visitor in one slot, unless `CLIENT_ADDRESS_HEADER` names the header the proxy writes the client's address into.
 
 ## Explore
 

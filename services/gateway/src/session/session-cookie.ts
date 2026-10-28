@@ -8,6 +8,7 @@ import {
 import type { GatewayEnv } from "#gateway-env"
 import { ContentLinks } from "#lock/content-links"
 import type { AccountLookups } from "#session/account-lookups"
+import { clientSlotOf } from "#session/client-slot"
 import type { SessionId } from "#session/session-scope"
 import type { SessionVisits } from "#session/session-visits"
 import { readVisitorKeys } from "#session/visitor-keys"
@@ -16,6 +17,7 @@ export type SessionGuardOptions = {
   secret: string
   retentionDays: number
   take: (sessionId: SessionId) => Promise<void>
+  open: (client: string) => Promise<void>
   clientOf: (c: Context) => string | null
   accounts: AccountLookups
   visits: SessionVisits
@@ -40,6 +42,7 @@ const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 const accountPattern = /^a-[0-9a-f]{64}$/
 const tagPattern = /^[0-9a-f]{16}$/
+const tooManyRequests = 429
 
 export const sessionCookie = {
   name: "rosesfield_session",
@@ -122,22 +125,57 @@ function anonymousVisit(held: HeldSession | null): Visit {
     : { ...held, isNew: false }
 }
 
+type Slots = {
+  open: () => Promise<void>
+  take: (sessionId: SessionId) => Promise<void>
+}
+
+function slotsOf(options: SessionGuardOptions, c: Context): Slots {
+  const taken = new Set<string>()
+  const once = async (key: string, take: (key: string) => Promise<void>) => {
+    if (!taken.has(key)) {
+      taken.add(key)
+      await take(key)
+    }
+  }
+  return {
+    open: () =>
+      once(`opens:${clientSlotOf(options.clientOf(c))}`, options.open),
+    take: (sessionId) => once(sessionId, options.take),
+  }
+}
+
+async function takeVisit(slots: Slots, visit: Visit): Promise<Visit> {
+  if (visit.minted === true) {
+    await slots.open()
+  }
+  await slots.take(visit.held ?? visit.sessionId)
+  return visit
+}
+
 async function visitWithKey(
   options: SessionGuardOptions,
   c: Context,
+  slots: Slots,
   held: HeldSession | null,
   key: string
 ): Promise<Visit> {
   const tag = await keyTagOf(options.secret, key)
   if (held !== null && held.tag === tag) {
-    return { ...held, isNew: false }
+    return takeVisit(slots, { ...held, isNew: false })
+  }
+  if (held === null) {
+    await slots.open()
+  } else {
+    await slots.take(held.sessionId)
   }
   options.early?.(c.req.raw, key)
   const answer = await options.accounts.answerFor(key)
   if (answer.state !== "found") {
-    return anonymousVisit(held)
+    return takeVisit(slots, anonymousVisit(held))
   }
   const sessionId = await accountSessionOf(answer.id)
+  await slots.take(sessionId)
   if (held !== null && !isAccountSession(held.sessionId)) {
     await options.visits.move(held.sessionId, sessionId)
     await options.moveAgent?.(held.sessionId, sessionId)
@@ -152,10 +190,11 @@ async function visitOf(
   const signed = await getSignedCookie(c, options.secret, sessionCookie.name)
   const held = heldOf(signed)
   const key = readVisitorKeys(c).engine
+  const slots = slotsOf(options, c)
   if (key !== null) {
-    return visitWithKey(options, c, held, key)
+    return visitWithKey(options, c, slots, held, key)
   }
-  return anonymousVisit(held)
+  return takeVisit(slots, anonymousVisit(held))
 }
 
 export async function forgetSession(c: Context): Promise<Response> {
@@ -164,17 +203,6 @@ export async function forgetSession(c: Context): Promise<Response> {
     secure: new URL(c.req.url).protocol === "https:",
   })
   return c.body(null, 204)
-}
-
-async function takeVisit(
-  options: SessionGuardOptions,
-  c: Context,
-  visit: Visit
-): Promise<void> {
-  if (visit.minted === true) {
-    await options.take(`client:${options.clientOf(c) ?? "unknown"}`)
-  }
-  await options.take(visit.held ?? visit.sessionId)
 }
 
 function cookieValue(visit: Visit): string {
@@ -204,30 +232,30 @@ export function sessionGuard(
       (isAccountSession(visit.sessionId) || !visit.isNew)
         ? await options.visits.touch(visit.sessionId)
         : false
-    const cookie =
-      visit.passing !== true && (visit.isNew || isFresh)
-        ? await generateSignedCookie(
-            sessionCookie.name,
-            cookieValue(visit),
-            options.secret,
-            {
-              path: "/",
-              httpOnly: true,
-              sameSite: "Lax",
-              secure: new URL(c.req.url).protocol === "https:",
-              maxAge: options.retentionDays * sessionCookie.daySeconds,
-            }
-          )
-        : null
     c.set("session", visit.sessionId)
     c.set("signContent", (url) => links.sign(url, visit.sessionId))
-    try {
-      await takeVisit(options, c, visit)
-      await next()
-    } finally {
-      if (cookie !== null) {
-        c.header("set-cookie", cookie, { append: true })
-      }
+    await next()
+    if (
+      visit.passing !== true &&
+      (visit.isNew || isFresh) &&
+      c.res.status !== tooManyRequests
+    ) {
+      c.header(
+        "set-cookie",
+        await generateSignedCookie(
+          sessionCookie.name,
+          cookieValue(visit),
+          options.secret,
+          {
+            path: "/",
+            httpOnly: true,
+            sameSite: "Lax",
+            secure: new URL(c.req.url).protocol === "https:",
+            maxAge: options.retentionDays * sessionCookie.daySeconds,
+          }
+        ),
+        { append: true }
+      )
     }
   }
 }

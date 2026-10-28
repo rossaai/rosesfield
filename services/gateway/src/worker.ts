@@ -11,6 +11,7 @@ import { type AgentMount, createGateway } from "#gateway"
 import type { GatewayApp } from "#gateway-env"
 import { TokenTries } from "#lock/token-tries"
 import { ownerAccount, visitorAccount } from "#session/account-routes"
+import { headerClientOf } from "#session/client-slot"
 import { KeyProbe } from "#session/key-probe"
 import { publicAccountParts } from "#session/public-account"
 import { SessionLimiter } from "#session/session-limiter"
@@ -33,6 +34,8 @@ import {
   type WorkerParts,
   workerParts,
 } from "#worker/worker-ports"
+
+const cloudflareClientOf = headerClientOf("cf-connecting-ip")
 
 export { AgentHost, RunWatcher }
 
@@ -61,7 +64,7 @@ function shareMount(
     limit: shareLimit({
       db: parts.db,
       clock: parts.clock,
-      clientOf: (c) => c.req.header("cf-connecting-ip") ?? null,
+      clientOf: cloudflareClientOf,
     }),
     needsKey,
     page: async () => {
@@ -86,6 +89,11 @@ function composePublic(
     clock: parts.clock,
     requestsPerMinute: access.requestsPerMinute,
   })
+  const opens = new SessionLimiter({
+    db: parts.db,
+    clock: parts.clock,
+    requestsPerMinute: access.newSessionsPerMinute,
+  })
   return createGateway({
     apps: parts.apps,
     guard: {
@@ -93,7 +101,8 @@ function composePublic(
       secret: access.sessionSecret,
       retentionDays: access.retentionDays,
       take: (sessionId) => limiter.take(sessionId),
-      clientOf: (c) => c.req.header("cf-connecting-ip") ?? null,
+      open: (client) => opens.take(client),
+      clientOf: cloudflareClientOf,
       accounts: account.accounts,
       early: account.early,
       visits: new SessionVisits({ db: parts.db, clock: parts.clock }),
@@ -142,7 +151,7 @@ function composeOwner(
       mode: "owner",
       lock: vars.access.lock,
       tries: new TokenTries({ clock: parts.clock }),
-      clientOf: (c) => c.req.header("cf-connecting-ip") ?? null,
+      clientOf: cloudflareClientOf,
     },
     scopeFor: async () => scope,
     agent,

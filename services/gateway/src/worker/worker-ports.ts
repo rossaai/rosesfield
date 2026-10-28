@@ -33,6 +33,7 @@ export type WorkerBindings = {
   SESSION_SECRET?: string
   RETENTION_DAYS?: string
   SESSION_REQUESTS_PER_MINUTE?: string
+  NEW_SESSIONS_PER_MINUTE?: string
   SPEND_CAP_CREDITS?: string
 }
 

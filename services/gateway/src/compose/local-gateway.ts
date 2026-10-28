@@ -24,12 +24,12 @@ import {
 } from "@rosesfield/library"
 import { type BunSQLiteDatabase, drizzle } from "drizzle-orm/bun-sqlite"
 import type { MiddlewareHandler } from "hono"
-import { getConnInfo } from "hono/bun"
 import { localAgent, pastedKeyAgents } from "#agent/local-agent"
 import { SessionAgents } from "#agent/session-agents"
 import { type Built, buildHandlers, type Handlers } from "#build-handlers"
 import { sharedCreditMeter } from "#catalog/shared-credit-meter"
 import { sharedRouterCatalog } from "#catalog/shared-router-catalog"
+import { clientOfEnv } from "#compose/client-address"
 import { PastedKeys } from "#compose/pasted-keys"
 import {
   type EngineOptions,
@@ -103,14 +103,6 @@ const platformDist = fileURLToPath(
   new URL("../../../../apps/platform/dist", import.meta.url)
 )
 
-function clientOf(c: GatewayContext): string | null {
-  try {
-    return getConnInfo(c).remote.address ?? null
-  } catch {
-    return null
-  }
-}
-
 export function composeLocalGateway(
   options: LocalGatewayOptions
 ): LocalGateway {
@@ -152,7 +144,7 @@ export function composeLocalGateway(
       clock,
       page: root === null ? null : () => pageOf(root),
       files: filesystemShareFiles(join(env.dataDir, "assets")),
-      limit: shareLimit({ db, clock, clientOf }),
+      limit: shareLimit({ db, clock, clientOf: clientOfEnv(env) }),
       needsKey: env.access.mode === "public",
     },
   }
@@ -260,7 +252,7 @@ function composeOwner(
     mode: "owner",
     lock,
     tries: new TokenTries({ clock: parts.clock }),
-    clientOf,
+    clientOf: clientOfEnv(env),
   }
   const spend = ownerSpend({
     settings: env.spend,
@@ -302,14 +294,20 @@ function publicGuard(
   agents: SessionAgents | null
 ): GatewayGuard {
   const { db, clock } = parts
-  const { requestsPerMinute } = access
+  const { requestsPerMinute, newSessionsPerMinute } = access
   const limiter = new SessionLimiter({ db, clock, requestsPerMinute })
+  const opens = new SessionLimiter({
+    db,
+    clock,
+    requestsPerMinute: newSessionsPerMinute,
+  })
   return {
     mode: "public",
     secret: access.sessionSecret,
     retentionDays: access.retentionDays,
     take: (sessionId) => limiter.take(sessionId),
-    clientOf,
+    open: (client) => opens.take(client),
+    clientOf: clientOfEnv(parts.env),
     accounts: parts.publicAccount.accounts,
     early: parts.publicAccount.early,
     visits: new SessionVisits({ db, clock }),

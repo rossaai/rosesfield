@@ -15,6 +15,7 @@ export type PublicAccess = {
   sessionSecret: string
   retentionDays: number
   requestsPerMinute: number
+  newSessionsPerMinute: number
 }
 
 export type Access = { mode: "owner"; lock: OwnerLock } | PublicAccess
@@ -35,6 +36,7 @@ export type ServerEnv = WorkerVars & {
   host: string
   port: number
   dataDir: string
+  clientAddressHeader?: string
 }
 
 const loopbackHosts: readonly string[] = ["127.0.0.1", "::1", "localhost"]
@@ -85,6 +87,7 @@ const sharedFields = {
   SESSION_SECRET: secret,
   RETENTION_DAYS: whole(1, 365, 30),
   SESSION_REQUESTS_PER_MINUTE: whole(1, 10_000, 600),
+  NEW_SESSIONS_PER_MINUTE: whole(1, 10_000, 30),
   SPEND_UNKNOWN_RUN_CREDITS: whole(1, 100_000, 100),
   SPEND_CAP_CREDITS: z.preprocess(
     blankAsMissing,
@@ -100,6 +103,14 @@ const serverSchema = z.object({
   HOST: z.preprocess(blankAsMissing, z.string().default("127.0.0.1")),
   PORT: whole(1, 65_535, 8787),
   DATA_DIR: z.preprocess(blankAsMissing, z.string().default("./data")),
+  CLIENT_ADDRESS_HEADER: z.preprocess(
+    blankAsMissing,
+    z
+      .string()
+      .regex(/^[A-Za-z0-9-]+$/, "needs a header name")
+      .transform((name) => name.toLowerCase())
+      .optional()
+  ),
 })
 
 const workerSchema = z.object(sharedFields)
@@ -165,6 +176,7 @@ function publicAccess(env: SharedEnv): PublicAccess {
     sessionSecret: env.SESSION_SECRET,
     retentionDays: env.RETENTION_DAYS,
     requestsPerMinute: env.SESSION_REQUESTS_PER_MINUTE,
+    newSessionsPerMinute: env.NEW_SESSIONS_PER_MINUTE,
   }
 }
 
@@ -214,7 +226,15 @@ export function readServerEnv(
     }
     return { mode: "local" }
   })
-  return { ...vars, host: env.HOST, port: env.PORT, dataDir: env.DATA_DIR }
+  return {
+    ...vars,
+    host: env.HOST,
+    port: env.PORT,
+    dataDir: env.DATA_DIR,
+    ...(env.CLIENT_ADDRESS_HEADER === undefined
+      ? {}
+      : { clientAddressHeader: env.CLIENT_ADDRESS_HEADER }),
+  }
 }
 
 export function readWorkerEnv(

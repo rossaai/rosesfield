@@ -123,6 +123,7 @@ A public host runs in public mode. Strangers use it, so it holds no key of its o
 - The run watcher reads the engine only inside a request, because only a request carries the key. A run moves forward while your page polls it.
 - The agent follows the same rule: it runs on the key you bring, or it is off. A key pasted in Settings on your own machine turns on the agent as well as the apps. Each pasted key runs its own agent, so a turn always spends the key that started it, and every key on that machine shares its one library, history and conversations, as owner mode does.
 - **One answer says whether this browser runs on a key.** Every screen that asks for a key reads `useKeyReach` in `apps/platform/src/api/key-reach.ts`, so no screen asks you to add a key the browser already holds. Biome refuses any other screen that reads the stored key itself.
+- **Two limits hold a visitor.** A session sends at most `SESSION_REQUESTS_PER_MINUTE` requests a minute, and one client address opens at most `NEW_SESSIONS_PER_MINUTE` new sessions a minute, an IPv6 address counted by its /64. A request with a key the host has not checked counts against them before the host asks Comfy whose key it is. Only a request the limits allow gets a session cookie.
 - The deployment refuses to start with `COMFY_API_KEY` or `OWNER_TOKEN` set, with an error that names the setting.
 - The owner lock guards the owner's key. Public mode holds none, so it runs without an owner token.
 
