@@ -1,7 +1,7 @@
 import { catalogRoutes } from "@rosesfield/catalog/comfy"
 import { queryOptions } from "@tanstack/react-query"
 import { callRoute } from "@/api/call-route"
-import { shownFormOf } from "@/screens/app/hosted/hosted-form"
+import { shownFormOf } from "@/screens/app/hosted/series-count"
 
 export function modelCatalogQuery(appId: string, keyState: string) {
   return queryOptions({

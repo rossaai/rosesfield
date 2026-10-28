@@ -12,8 +12,8 @@ import type {
   StartRunBodyInput,
 } from "@/screens/app/app-form"
 import { fieldCaption } from "@/screens/app/hosted/field-words"
+import { withCountSwitch } from "@/screens/app/hosted/series-count"
 import {
-  countSwitchOf,
   fieldPlaceOf,
   type SentValue,
   sentValueOf,
@@ -280,43 +280,6 @@ export function hostedBody(
   return isOneAtATime(fields, output) && values.count > 1
     ? { inputs: sent, count: values.count }
     : { inputs: sent }
-}
-
-type BodyInputs = Record<string, string | number | string[]>
-
-function withCountSwitch(
-  fields: readonly ModelField[],
-  inputs: BodyInputs
-): BodyInputs {
-  const found = countSwitchOf(fields)
-  const count = fields.find((field) => fieldRoleOf(field, "") === "count")
-  if (found === null || count === undefined) {
-    return inputs
-  }
-  const value = inputs[count.name]
-  if (typeof value === "number" && value > 1) {
-    return { ...inputs, [found.field.name]: found.many }
-  }
-  const single = Object.fromEntries(
-    Object.entries(inputs).filter(
-      ([name]) => name !== count.name && name !== found.field.name
-    )
-  )
-  return found.one === null
-    ? single
-    : { ...single, [found.field.name]: found.one }
-}
-
-/** Reads a model's form as the platform shows it: a count that a series switch turns on counts from one, as the switch's single result. */
-export function shownFormOf(fields: readonly ModelField[]): ModelField[] {
-  const found = countSwitchOf(fields)
-  return fields.map((field) =>
-    found !== null &&
-    field.kind === "number" &&
-    fieldRoleOf(field, "") === "count"
-      ? { ...field, min: 1, default: 1 }
-      : field
-  )
 }
 
 function missingOf(field: ModelField): FieldProblem {

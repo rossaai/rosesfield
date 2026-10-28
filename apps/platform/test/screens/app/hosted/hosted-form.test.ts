@@ -7,8 +7,8 @@ import {
   hostedDefaults,
   hostedProblems,
   missingDefaultsOf,
-  shownFormOf,
 } from "@/screens/app/hosted/hosted-form"
+import { shownFormOf } from "@/screens/app/hosted/series-count"
 
 const fields: ModelField[] = [
   {
