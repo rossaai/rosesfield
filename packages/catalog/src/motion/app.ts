@@ -191,7 +191,7 @@ function motionInputs(offered: readonly LibraryExample[]): AppInputs {
       name: "sound",
       labelKey: "motion.input.sound.label",
       default: "off",
-      when: [whenExampleIs([ownVideo])],
+      when: [whenExampleIs([ownVideo]), { input: "model", is: twoPassModels }],
     },
     {
       type: "prompt",

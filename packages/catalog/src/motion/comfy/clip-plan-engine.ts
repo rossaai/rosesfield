@@ -17,6 +17,7 @@ import {
 } from "@rosesfield/generation"
 import { creditsOfCost } from "#comfy/comfy-credits"
 import { base64Of } from "#media-base64"
+import { ClipPhotoUnreadableError } from "#motion/clip-photo-unreadable.error"
 import { ClipPlanUnreadableError } from "#motion/clip-plan-unreadable.error"
 import {
   clipPlanAdapter,
@@ -37,8 +38,9 @@ export type ClipPlanTurn = {
   ask(input: ClipPlanInput, key: string): Promise<ClipPlanAnswer>
 }
 
-/** Reads the 4 frames the plan sees from the clip, where this server has a tool that opens a video. */
+/** Reads the length of a video and the 4 frames the plan sees from it, where this server has a tool that opens a video. */
 export type ClipFrames = {
+  secondsOf(clip: EngineFile): Promise<number>
   framesOf(clip: EngineFile): Promise<PlanImage[]>
 }
 
@@ -70,11 +72,21 @@ function filesOf(request: EngineRequest, name: string): EngineFile[] {
   })
 }
 
-function imageOf(file: EngineFile): PlanImage {
+function frameOf(file: EngineFile): PlanImage {
   if (!isPlanMime(file.mime)) {
-    throw new ClipPlanUnreadableError({ cause: `a ${file.mime} image` })
+    throw new ClipPlanUnreadableError({ cause: `a ${file.mime} frame` })
   }
   return { mime: file.mime, base64: base64Of(file.bytes) }
+}
+
+/** Your photos as the plan reads them. A photo that is not a PNG, JPEG or WebP file is refused as a photo. */
+function photosOf(files: readonly EngineFile[]): PlanImage[] {
+  return files.map((file, at) => {
+    if (!isPlanMime(file.mime)) {
+      throw new ClipPhotoUnreadableError({ number: at + 1 })
+    }
+    return frameOf(file)
+  })
 }
 
 function outputOf(answer: ClipPlanAnswer): EngineOutput {
@@ -153,11 +165,24 @@ export class ClipPlanGenerationEngine extends GenerationEngine {
     return "valid"
   }
 
+  /** Says whether this server has a tool that opens a video, so a plan can read the clip's frames itself. */
+  readsClips(): boolean {
+    return this.frames !== null
+  }
+
+  /** Reads a video's length in seconds, where this server has a tool that opens a video. */
+  async clipSecondsOf(clip: EngineFile): Promise<number> {
+    if (this.frames === null) {
+      throw new ClipPlanUnreadableError({ cause: "no tool opens a video" })
+    }
+    return this.frames.secondsOf(clip)
+  }
+
   private async inputOf(request: EngineRequest): Promise<ClipPlanInput> {
     const sentence = request.inputs[clipPlanInputs.sentence]
     return {
       frames: await this.framesOf(request),
-      photos: filesOf(request, clipPlanInputs.photos).map(imageOf),
+      photos: photosOf(filesOf(request, clipPlanInputs.photos)),
       sentence: typeof sentence === "string" ? sentence : "",
     }
   }
@@ -165,7 +190,7 @@ export class ClipPlanGenerationEngine extends GenerationEngine {
   private async framesOf(request: EngineRequest): Promise<PlanImage[]> {
     const given = filesOf(request, clipPlanInputs.frames)
     if (given.length > 0) {
-      return given.map(imageOf)
+      return given.map(frameOf)
     }
     const [clip] = filesOf(request, clipPlanInputs.clip)
     if (clip === undefined || this.frames === null) {

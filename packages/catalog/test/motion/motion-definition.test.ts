@@ -111,6 +111,9 @@ describe("the motion definition", () => {
     expect(body.parse({ inputs: draft }).inputs.model).toBe("ltx-2-5-guide")
     expect(isRefused({ inputs: { ...draft, photo: [photoId] } })).toBe(true)
     expect(isRefused({ inputs: { ...draft, clip: [clipId] } })).toBe(true)
+    expect(body.parse({ inputs: draft }).inputs).not.toHaveProperty("sound")
+    expect(isRefused({ inputs: { ...draft, sound: "on" } })).toBe(true)
+    expect(body.parse({ inputs: both }).inputs.sound).toBe("off")
   })
 
   it("plans your video with 1 to 15 photos and its 4 frames, and refuses a 16th photo or a 5th frame", () => {

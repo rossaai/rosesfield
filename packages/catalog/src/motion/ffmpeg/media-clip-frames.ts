@@ -78,14 +78,18 @@ export class MediaClipFrames implements ClipFrames {
     this.tool = options.tool
   }
 
-  async framesOf(clip: EngineFile): Promise<PlanImage[]> {
-    const input = { name: clipName, bytes: clip.bytes }
+  async secondsOf(clip: EngineFile): Promise<number> {
     const probe = await this.tool.run({
       args: durationArgsOf(clipName),
-      inputs: [input],
+      inputs: [{ name: clipName, bytes: clip.bytes }],
       outputs: [],
     })
-    const times = planFrameTimesOf(durationOf(probe.stdout))
+    return durationOf(probe.stdout)
+  }
+
+  async framesOf(clip: EngineFile): Promise<PlanImage[]> {
+    const input = { name: clipName, bytes: clip.bytes }
+    const times = planFrameTimesOf(await this.secondsOf(clip))
     const names = times.map((_, index) => frameNameOf(index))
     const made = await this.tool.run({
       args: frameArgsOf(clipName, times),

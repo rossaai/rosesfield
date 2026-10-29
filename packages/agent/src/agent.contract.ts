@@ -81,6 +81,8 @@ export const proposal = z.object({
   request: runRequest,
   status: proposalStatus,
   runIds: z.array(runId),
+  /** The credits a chain's final costs, priced by the agent, since one run's price is not the chain's. */
+  credits: z.number().min(0).nullable().default(null),
 })
 
 export const proposalResponse = z.object({ proposal })

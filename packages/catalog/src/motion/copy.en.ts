@@ -97,4 +97,6 @@ export const motionCopy = {
     "Photos {photos} match nothing in your video, so the draft leaves them out.",
   "motion.agent.ownVideo":
     "Changes your own video in one call: the video in inputs.clip, 1 to 15 photos of people, products or clothes in inputs.photo, and an optional sentence in inputs.scene. The call makes a 480p draft and answers with it, the credits of the final and the photos that matched nothing. Show the person the draft and that price. Only after they say yes, make the final with a second call that names the draft run id in inputs.draft, with the same photos and the resolution they chose.",
+  "motion.chain.price.unread":
+    "{amount} Comfy credits, measured on a {seconds}-second {resolution} run, plus reading your video, which no run has measured yet",
 } as const

@@ -48,20 +48,34 @@ export type ProposalRecord = {
   body: JsonObject
   status: ProposalStatus
   runIds: string[]
+  /** The credits a chain's final costs, priced by the agent, or null when one run's price is the proposal's. */
+  credits: number | null
 }
 
-const proposalRecordOne = z.object({
+const proposalRecordBase = z.object({
   id: z.string(),
   appId: z.string(),
   request: runRequest,
   body: z.record(z.string(), z.json()),
   status: proposalStatus,
+})
+
+const proposalRecordOne = proposalRecordBase.extend({
   runId: z.string().nullable(),
 })
 
+const proposalRecordTwo = proposalRecordBase.extend({
+  runIds: z.array(z.string()),
+})
+
+/** Reads a proposal kept before it held the credits of a final: the first kept one run id, the second its run ids. */
 function proposalRecordOf(value: JsonObject): ProposalRecord {
+  const two = proposalRecordTwo.safeParse(value)
+  if (two.success) {
+    return { ...two.data, credits: null }
+  }
   const { runId, ...record } = proposalRecordOne.parse(value)
-  return { ...record, runIds: runId === null ? [] : [runId] }
+  return { ...record, runIds: runId === null ? [] : [runId], credits: null }
 }
 
 export const conversationList = defineDoc<ConversationList>({
@@ -89,7 +103,7 @@ export const conversationSettings = defineDoc<ConversationSettings>({
 
 export const proposalRecords = defineDocFamily<ProposalRecord, ProposalRecord>({
   kind: "rosesfield.proposal",
-  version: 2,
+  version: 3,
   scope: "conversation",
   history: "latest",
   fork: "current",

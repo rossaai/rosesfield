@@ -41,11 +41,13 @@ import {
 } from "#infrastructure/pi-keyframe-chain"
 import { type RunWait, timerWait } from "#infrastructure/pi-library-tools"
 import {
+  checkOwnVideo,
   isOwnVideoRun,
   namedDraftOf,
   type OwnVideoHandlers,
   ownVideoCreditsOf,
   ownVideoDraftOf,
+  ownVideoFinalCreditsOf,
 } from "#infrastructure/pi-own-video-chain"
 import {
   appInputOf,
@@ -211,6 +213,16 @@ async function runApp(
   )
   const approval = settings?.runApproval ?? StartConversationHandler.runApproval
   const proposed = { app, request, body: jsonBody.parse(args) }
+  const draft = isOwnVideoRun(app.id, request.inputs)
+    ? namedDraftOf(request.inputs)
+    : null
+  if (draft !== null) {
+    const credits = await ownVideoFinalCreditsOf(run.handlers(), request, draft)
+    return propose({ ...proposed, final: { credits } }, api, context)
+  }
+  if (isOwnVideoRun(app.id, request.inputs)) {
+    await checkOwnVideo(run.handlers(), request)
+  }
   if (approval === "ask" || isFinalOf(app, request)) {
     return propose(proposed, api, context)
   }
@@ -224,13 +236,9 @@ async function runApp(
   return startApp(run, { request, args }, api, context)
 }
 
-/** A final always waits for the person's yes: an example above 480p, and the final a call names a draft for. */
+/** A final always waits for the person's yes: an example above 480p here, and above it the final a call names a draft for, with its own price. */
 function isFinalOf(app: AppDefinition, request: RunRequest): boolean {
-  return (
-    isFinalRun(app.id, request.inputs) ||
-    (isOwnVideoRun(app.id, request.inputs) &&
-      namedDraftOf(request.inputs) !== null)
-  )
+  return isFinalRun(app.id, request.inputs)
 }
 
 async function startOwnVideo(
@@ -302,6 +310,8 @@ type Proposed = {
   request: RunRequest
   body: ProposalRecord["body"]
   price?: { credits: number | null }
+  /** The credits of a final, which waits for a yes whatever it costs. */
+  final?: { credits: number | null }
 }
 
 async function propose(
@@ -310,6 +320,7 @@ async function propose(
   context: PiContext
 ): Promise<ToolExecutionResult> {
   const id = await api.memo(proposalMemo, crypto.randomUUID(), context)
+  const finalCredits = proposed.final?.credits ?? null
   const record: ProposalRecord = {
     id,
     appId: proposed.app.id,
@@ -317,6 +328,7 @@ async function propose(
     body: proposed.body,
     status: "proposed",
     runIds: [],
+    credits: finalCredits,
   }
   await api.commit(async (tx) => {
     await tx.doc(proposalRecords, api.conversationId, id, record)
@@ -326,6 +338,7 @@ async function propose(
     output: jsonOutput({
       proposal,
       note: noteOf(id, proposed),
+      ...(finalCredits === null ? {} : { credits: finalCredits }),
       ...(proposed.price === undefined
         ? {}
         : {
@@ -359,5 +372,6 @@ export function proposalOf(record: ProposalRecord): Proposal {
     request: record.request,
     status: record.status,
     runIds: record.runIds.map((runId) => runIdFormat.parse(runId)),
+    credits: record.credits,
   }
 }

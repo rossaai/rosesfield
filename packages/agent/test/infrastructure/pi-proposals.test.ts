@@ -166,9 +166,27 @@ describe("a conversation that asks before each run", () => {
       body: {},
       status: "accepted",
       runIds: [stored.runId],
+      credits: null,
     })
     expect(
       migrate?.({ ...stored, status: "proposed", runId: null }, 1)
     ).toMatchObject({ status: "proposed", runIds: [] })
+  })
+
+  it("reads a proposal stored with its run ids before it held the credits of a final, with no credits", () => {
+    const { runId, ...stored } = {
+      id: "3a4b5c6d-7e8f-4a1b-8c2d-3e4f5a6b7c8d",
+      appId: "sample-image",
+      request: { inputs: { prompt: "a rose" }, count: 1, aspectRatio: null },
+      body: {},
+      status: "accepted" as const,
+      runId: "1c2d3e4f-5a6b-4c7d-9e8f-0a1b2c3d4e5f",
+    }
+    const migrate = proposalRecords.definition.migrate
+    expect(migrate?.({ ...stored, runIds: [runId] }, 2)).toEqual({
+      ...stored,
+      runIds: [runId],
+      credits: null,
+    })
   })
 })

@@ -1,18 +1,27 @@
 import {
+  type AskedPrice,
   type ChainRun,
+  ClipLengthRefusedError,
+  type ClipReader,
   type EditModelBinding,
   EndKeyLoopHandler,
+  type EndKeySteps,
   exampleInput,
   finalAt,
+  finalPartsOf,
+  isClipLengthFit,
+  knownCreditsOf,
   ltx25GuideModel,
   motionAppId,
   motionEndKeySteps,
+  OwnVideoInAppError,
   OwnVideoLead,
   ownVideo,
   photoInput,
 } from "@rosesfield/catalog/motion"
 import type { Run, RunInputs, RunRequest } from "@rosesfield/contract"
 import type { PriceRunHandler } from "@rosesfield/generation"
+import type { StepRun } from "@rosesfield/generation/bindings"
 import { AspectRatio, type AssetId, assetIdFormat } from "@rosesfield/kernel"
 import type {
   GetAssetHandler,
@@ -40,6 +49,8 @@ export type OwnVideoHandlers = KeyframeHandlers & {
   priceRun: PriceRunHandler
   getAsset: GetAssetHandler
   readAssetContent: ReadAssetContentHandler
+  /** Reads your video's length on the server, or is null on a host with no tool that opens a video. */
+  clips?: ClipReader | null
 }
 
 export type OwnVideoRuns = {
@@ -124,13 +135,33 @@ function resolutionOf(inputs: RunInputs): string {
   return textOf(inputs[resolutionInput]) ?? finalResolution
 }
 
-function leadOf(runs: OwnVideoRuns): OwnVideoLead {
-  const { inputs } = runs.request
-  const { handlers } = runs
-  const [clip] = idsOf(inputs[clipInput])
+function clipOf(request: RunRequest): AssetId {
+  const [clip] = idsOf(request.inputs[clipInput])
   if (clip === undefined) {
     throw new Error("The call names no video")
   }
+  return clip
+}
+
+/** Refuses your own video before any step starts: on a host that cannot read a video, and for a video under 2 or over 10 seconds. */
+export async function checkOwnVideo(
+  handlers: OwnVideoHandlers,
+  request: RunRequest
+): Promise<void> {
+  const clips = handlers.clips ?? null
+  if (clips === null) {
+    throw new OwnVideoInAppError()
+  }
+  const seconds = await clips.secondsOf(clipOf(request))
+  if (!isClipLengthFit(seconds)) {
+    throw new ClipLengthRefusedError({ seconds })
+  }
+}
+
+function leadOf(runs: OwnVideoRuns): OwnVideoLead {
+  const { inputs } = runs.request
+  const { handlers } = runs
+  const clip = clipOf(runs.request)
   return new OwnVideoLead({
     ask: {
       clip,
@@ -175,6 +206,7 @@ export async function ownVideoCreditsOf(
 export async function ownVideoDraftOf(
   runs: OwnVideoRuns
 ): Promise<OwnVideoAnswer> {
+  await checkOwnVideo(runs.handlers, runs.request)
   const loop = loopOf(runs)
   const lead = leadOf(runs)
   const led = await loop.lead({ lead, key: runs.key })
@@ -185,12 +217,14 @@ export async function ownVideoDraftOf(
   if (made.frame === null) {
     return { run: made.draft }
   }
-  const price = await loop
-    .priceMakeFinal(led.steps, made.draft)
-    .catch(() => ({ credits: null }))
   return {
     run: made.draft,
-    finalCredits: price.credits,
+    finalCredits: await finalCreditsOf(
+      runs.handlers,
+      led.steps,
+      made.draft,
+      resolutionOf(runs.request.inputs)
+    ),
     leftOutPhotos: lead.plan?.unusedPhotos ?? [],
   }
 }
@@ -198,6 +232,74 @@ export async function ownVideoDraftOf(
 function frameOfShape(shape: string | null): { width: number; height: number } {
   const ratio = AspectRatio.parse(shape ?? "1:1")
   return { width: ratio.width, height: ratio.height }
+}
+
+function finalStepsOf(
+  draft: Run,
+  request: RunRequest,
+  editor: EditModelBinding | undefined
+): EndKeySteps {
+  return finalAt(
+    motionEndKeySteps(
+      {
+        inputs: draft.inputs,
+        photos: idsOf(request.inputs[photoInput]),
+        aspectRatio: draft.aspectRatio,
+        frameSize: frameOfShape(draft.aspectRatio),
+      },
+      editor
+    ),
+    resolutionOf(request.inputs)
+  )
+}
+
+async function askedOf(
+  handlers: OwnVideoHandlers,
+  step: StepRun
+): Promise<AskedPrice> {
+  try {
+    const { price } = await handlers.priceRun.execute({
+      appId: step.appId,
+      inputs: step.request.inputs,
+      aspectRatio: step.request.aspectRatio,
+    })
+    return price
+  } catch {
+    return { credits: null, source: "unknown" }
+  }
+}
+
+/** The restore and the final at a resolution: your own measured runs first, then the runs measured on a 4-second clip. */
+async function finalCreditsOf(
+  handlers: OwnVideoHandlers,
+  steps: EndKeySteps,
+  draft: Run,
+  resolution: string
+): Promise<number | null> {
+  const frame = steps.frameOf(draft)
+  if (frame === null) {
+    return null
+  }
+  const [restore, final] = await Promise.all([
+    askedOf(handlers, steps.restore(frame)),
+    askedOf(handlers, steps.final(draft, frame)),
+  ])
+  return knownCreditsOf(finalPartsOf(restore, final, resolution))
+}
+
+/** The credits the yes to the final of a named draft shows: its restore and its final at the resolution asked. */
+export async function ownVideoFinalCreditsOf(
+  handlers: OwnVideoHandlers,
+  request: RunRequest,
+  draftId: string
+): Promise<number | null> {
+  const { run: draft } = await handlers.getRun.execute({ runId: draftId })
+  return finalCreditsOf(
+    handlers,
+    finalStepsOf(draft, request, undefined),
+    draft,
+    resolutionOf(request.inputs)
+  )
 }
 
 /** Restores the named draft's last frame with your photos, held, then renders the final at your resolution with the draft's seed. No read and no plan runs again. */
@@ -209,18 +311,7 @@ export async function ownVideoFinalOf(
   const { run: draft } = await runs.handlers.getRun.execute({
     runId: draftId,
   })
-  const steps = finalAt(
-    motionEndKeySteps(
-      {
-        inputs: draft.inputs,
-        photos: idsOf(runs.request.inputs[photoInput]),
-        aspectRatio: draft.aspectRatio,
-        frameSize: frameOfShape(draft.aspectRatio),
-      },
-      runs.editor
-    ),
-    resolutionOf(runs.request.inputs)
-  )
+  const steps = finalStepsOf(draft, runs.request, runs.editor)
   const restored = await loop.restore({
     steps,
     key: runs.key,

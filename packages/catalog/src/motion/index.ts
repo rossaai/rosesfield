@@ -11,6 +11,10 @@ export {
 } from "@rosesfield/generation/bindings"
 export { motionApp } from "#motion/app"
 export {
+  ClipLengthRefusedError,
+  isClipLengthFit,
+} from "#motion/clip-length-refused.error"
+export {
   type ClipPlan,
   clipPlanLimits,
   keptPlanOf,
@@ -19,6 +23,7 @@ export {
 } from "#motion/clip-plan"
 export { ClipPlanNoTargetError } from "#motion/clip-plan-no-target.error"
 export type { PlanImage } from "#motion/comfy/clip-plan-turn"
+export type { ClipReader } from "#motion/comfy/clip-reader"
 export {
   endKeyEditor,
   finalAt,
@@ -51,6 +56,18 @@ export {
   type OwnVideoStage,
   ownVideoStages,
 } from "#motion/comfy/own-video-lead"
+export {
+  type AskedPrice,
+  finalPartsOf,
+  knownCreditsOf,
+  type PartPrice,
+  type PartSource,
+  partPriceOf,
+  recordedDraftParts,
+  recordedFinals,
+  recordedSeconds,
+  recordedSteps,
+} from "#motion/comfy/own-video-prices"
 export { readClipRequestOf } from "#motion/comfy/read-clip-binding"
 export { readClipOf, renderHandOffOf } from "#motion/comfy/render-hand-off"
 export {
@@ -100,3 +117,4 @@ export {
   planModel,
   readClipModel,
 } from "#motion/motion-models"
+export { OwnVideoInAppError } from "#motion/own-video-in-app.error"

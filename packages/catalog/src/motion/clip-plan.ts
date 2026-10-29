@@ -24,6 +24,8 @@ export const clipPlanLimits = {
   longestEditPrompt: 1500,
   longestScene: 2000,
   longestSentence: 500,
+  shortestSeconds: 2,
+  longestSeconds: 10,
 } as const
 
 /** The long side of a frame the plan reads, in pixels. */

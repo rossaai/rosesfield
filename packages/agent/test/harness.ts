@@ -104,9 +104,10 @@ export function appToolsFor(
   apps: readonly AppDefinition[],
   generation: Generation,
   forms: readonly ModelForm[] = [],
-  wait: RunWait = noWait
+  wait: RunWait = noWait,
+  reads: { getRun?: GetRunHandler } = {}
 ): ToolRegistration[] {
-  const getRun = new GetRunHandler({ runs: generation.runs })
+  const getRun = reads.getRun ?? new GetRunHandler({ runs: generation.runs })
   return apps.map((app) =>
     appTool({
       app,

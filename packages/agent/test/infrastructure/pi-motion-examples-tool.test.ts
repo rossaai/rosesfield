@@ -1,10 +1,12 @@
 import { fauxAssistantMessage, fauxToolCall } from "@earendil-works/pi-ai"
 import { findApp, readApps } from "@rosesfield/catalog"
 import { approvedExamples, motionApp } from "@rosesfield/catalog/motion"
-import type { AppDefinition } from "@rosesfield/contract"
+import { type AppDefinition, type Run, run } from "@rosesfield/contract"
 import {
   DemoGenerationEngine,
   type EngineFile,
+  GetRunHandler,
+  type GetRunOutput,
   RunAssets,
   StartRunHandler,
 } from "@rosesfield/generation"
@@ -73,13 +75,54 @@ function effects(): AppDefinition {
 }
 
 /** Motion and the Image app its edit and restore run on, every step priced at 10 credits, under the limit a run may cost without asking. */
+const draftId = "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f"
+
+/** Your own video's 480p draft, done, holding its last frame. */
+const doneDraft: Run = run.parse({
+  id: draftId,
+  appId: "motion",
+  status: "done",
+  inputs: {
+    example: "own",
+    model: "ltx-2-5-guide",
+    firstFrame: [photo],
+    guide: [photo],
+    mask: [photo],
+    plannedScene: "A man walks down a street.",
+    resolution: "480p",
+    seed: 9,
+  },
+  count: 1,
+  aspectRatio: "9:16",
+  seed: 9,
+  outputs: [photo],
+  held: [{ nodeId: "1011", assetId: photo, kind: "image" }],
+  progress: 1,
+  engine: { adapter: "demo", models: [], workflowHash: null },
+  cost: null,
+  origin: "demo",
+  failure: null,
+  createdAt: "2026-10-29T10:00:00.000Z",
+  finishedAt: "2026-10-29T10:01:00.000Z",
+})
+
+class OneDraft extends GetRunHandler {
+  override async execute(): Promise<GetRunOutput> {
+    return { run: doneDraft }
+  }
+}
+
 async function callMotion(inputs: Record<string, string | string[]>) {
   const image = findApp("image")
   if (image === null) {
     throw new Error("The catalog lacks Image")
   }
   const made = generationFor([effects(), image])
-  rig = agentFor(appToolsFor([effects()], made))
+  rig = agentFor(
+    appToolsFor([effects()], made, [], undefined, {
+      getRun: new OneDraft({ runs: made.runs }),
+    })
+  )
   const results: string[] = []
   rig.faux.setResponses([
     fauxAssistantMessage([fauxToolCall("motion", { inputs })], {
@@ -98,6 +141,9 @@ async function callMotion(inputs: Record<string, string | string[]>) {
     generation: made,
     result: results[0] ?? "",
     proposals: events.filter((event) => event.type === "proposal").length,
+    credits: events.flatMap((event) =>
+      event.type === "proposal" ? [event.proposal.credits] : []
+    ),
   }
 }
 
@@ -174,15 +220,17 @@ describe("the agent's call of a Library example", () => {
   })
 
   it("holds the final of your own video, which names its draft, for the person's yes, even when runs start on their own", async () => {
-    const { generation, proposals, result } = await callMotion({
+    const { generation, proposals, result, credits } = await callMotion({
       clip: [photo],
       photo: [photo],
-      draft: "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+      draft: draftId,
       resolution: "720p",
     })
     expect(generation.runs.count).toBe(0)
     expect(proposals).toBe(1)
     expect(result).toBe("")
+    expect(credits).toHaveLength(1)
+    expect(credits[0]).toBeCloseTo(10.86 + 6.76, 6)
   })
 
   it("tells the model how to change your own video in one call and make its final in a second that names the draft, only after a yes", () => {

@@ -118,6 +118,7 @@ describe("the plan engine", () => {
   it("reads the frames from the clip where the server opens a video, and refuses the plan where it cannot", async () => {
     const grabbed: EngineFile[] = []
     const grab: ClipFrames = {
+      secondsOf: async () => 4,
       framesOf: async (file) => {
         grabbed.push(file)
         return Array.from(
@@ -161,5 +162,22 @@ describe("the plan engine", () => {
     expect(five.cost).toBeNull()
     expect((await asked(1)).plan.unusedPhotos).toEqual([])
     await expect(asked(0)).rejects.toBeInstanceOf(ClipPlanNoTargetError)
+  })
+
+  it("refuses a photo that is not a PNG, JPEG or WebP file as a photo, naming its place, and asks the planner nothing", async () => {
+    const replay = new PlanReplay([])
+    const request = requestOf(true)
+    const gif = fileOf(7, "image/gif")
+    const files = request.files.map((one) =>
+      one.assetId === gif.assetId ? gif : one
+    )
+    await expect(
+      liveOn(replay).submit({ ...request, files })
+    ).rejects.toMatchObject({
+      code: "MOTION_PHOTO_UNREADABLE",
+      inputs: ["photo"],
+      message: "Photo 2 is not a PNG, JPEG or WebP file. Pick another photo.",
+    })
+    expect(replay.sent).toHaveLength(0)
   })
 })

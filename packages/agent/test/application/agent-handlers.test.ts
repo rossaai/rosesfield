@@ -49,6 +49,7 @@ async function agentWithProposal(): Promise<FakeAgentHarness> {
       request: { inputs: { prompt: "a rose" }, count: 1, aspectRatio: "1:1" },
       status: "proposed",
       runIds: [],
+      credits: null,
     },
     body: { inputs: { prompt: "a rose" } },
   })
