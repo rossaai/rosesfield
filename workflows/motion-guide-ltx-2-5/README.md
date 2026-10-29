@@ -21,10 +21,9 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 | `mask` | 950 `LoadVideo`, People mask | `file` | an uploaded video: white on the people, black on the set, the guide's size and frame count |
 | `endKey` | 1002 `LoadImage`, End key | `image` | an uploaded image: the last frame |
 | `scene` | 900 `StringConcatenate`, Scene | `string_b` | a value |
-| `shortSide` | 702 `PrimitiveInt`, Short side | `value` | a value: 512 for 480p, or 768 for 720p |
 | `seed` | 980 `RandomNoise`, Seed | `noise_seed` | a value |
 
-The catalog sets the short side from a run's `resolution`, 480p or 720p, or from its `shortSide`, 512 or 768. It removes nodes 950 to 969 and the guide's `attention_mask` when a run has no mask, so the guide holds every pixel at full attention. It removes the end-key nodes 1001 to 1005 when a run has no end key, and the last-frame nodes 1010 and 1011 when it has one.
+The catalog sets the short side, node 702, from a run's `resolution`: 512 for 480p and 768 for 720p. It names node 68, the video, as the run's one result, so the last frame of node 1011 is held out of the library for the end key. It removes nodes 950 to 969 and the guide's `attention_mask` when a run has no mask, so the guide holds every pixel at full attention. It removes the end-key nodes 1001 to 1005 when a run has no end key, and the last-frame nodes 1010 and 1011 when it has one.
 
 ## Outputs
 

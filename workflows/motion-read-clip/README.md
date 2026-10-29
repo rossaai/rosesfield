@@ -29,6 +29,8 @@ SAM 3.1's text encoder splits the text at each comma and finds at most one thing
 | 28 `SaveVideo` | `images` | video | the matte of the targets, white on them and black elsewhere, with hard edges, at the clip's frame rate |
 | 31 `SaveImage` | `images` | image | the clip's first frame, at the size of the depth and the mask |
 
+Motion runs the read held and its binding names no result node, so all three are held out of the library, History and Explore, and the run lists each under the node that saved it.
+
 The three outputs share one size: the clip's frames scaled so the short side is at most 768 px, then to even sides. 768 is the short side of the 720p final, so the 480p draft and the final read the same files.
 
 ## How it reads the clip
