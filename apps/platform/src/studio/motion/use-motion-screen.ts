@@ -1,6 +1,7 @@
 import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
 import {
   exampleInput,
+  graphModel,
   type LibraryExample,
   libraryExamples,
   ownVideo,
@@ -50,6 +51,7 @@ import {
   type MotionMode,
   type MotionTab,
   modeInput,
+  modelInput,
   modeOfTab,
   restFieldsOf,
   soundInput,
@@ -60,6 +62,10 @@ import {
   wellNamesOf,
 } from "@/studio/motion/motion-tabs"
 import {
+  type ExampleChain,
+  useExampleChain,
+} from "@/studio/motion/use-example-chain"
+import {
   type MotionChecks,
   useMotionChecks,
 } from "@/studio/motion/use-motion-checks"
@@ -67,6 +73,7 @@ import {
 export type MotionState = {
   app: AppListing
   example: LibraryExample | null
+  chain: ExampleChain | null
   useOwnVideo: () => void
   tab: MotionTab
   mode: MotionMode
@@ -320,15 +327,24 @@ export function useMotionScreen(
   const held = { ...form, values: heldValuesOf(app, form.values) }
   const base = useStartRun(app, held, onStarted, { ...hosted, chosen })
   const generate = guardedOf(base, checks, focus)
+  const chain = useExampleChain(example, form)
   const model = chosen === null ? appName(app) : modelNameOf(chosen)
   return {
     app,
     example,
-    useOwnVideo: () => form.setInput(exampleInput, ownVideo),
+    chain,
+    useOwnVideo: () =>
+      form.setForm({
+        inputs: {
+          ...form.values.inputs,
+          [exampleInput]: ownVideo,
+          [modelInput]: graphModel,
+        },
+      }),
     tab,
     mode,
     form,
-    start: guidePriceOf({ ...base, generate }, mode),
+    start: chain?.start ?? guidePriceOf({ ...base, generate }, mode),
     hosted: modeHosted,
     isGraph: chosen === null || isGraph(chosen),
     names,

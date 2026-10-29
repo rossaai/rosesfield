@@ -54,7 +54,7 @@ export function GenerateFoot({
       {leading}
       <GenerateButton
         form="bar"
-        label={t("run.generate")}
+        label={start.label ?? t("run.generate")}
         price={start.priceValue ?? undefined}
         busy={start.isPending}
         onClick={start.generate}

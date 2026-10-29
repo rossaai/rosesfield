@@ -78,4 +78,7 @@ export const motionCopy = {
   "motion.input.photo.tall": "a tall photo, taken with the phone upright",
   "motion.input.photo.wide": "a wide photo, taken with the phone sideways",
   "motion.choice.resolution.p1080": "1080p",
+  "motion.chain.makeFinal": "Make final",
+  "motion.chain.renderFinal": "Render the final at {resolution}",
+  "motion.chain.startOver": "Start over",
 } as const

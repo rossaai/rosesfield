@@ -1,6 +1,7 @@
 import {
   appDefinition,
   type InputDefinition,
+  run,
   startRunBodyFor,
 } from "@rosesfield/contract"
 import { parseComfyWorkflow, resolveBinding } from "@rosesfield/generation"
@@ -9,6 +10,7 @@ import { describe, expect, it } from "vitest"
 import { listApps } from "#list-apps"
 import { app, motionApp } from "#motion/app"
 import { exampleAgentNotes, isFinalRun } from "#motion/examples/example-agent"
+import { exampleEndKeySteps } from "#motion/examples/example-steps"
 import {
   approvedExamples,
   exampleOf,
@@ -68,7 +70,7 @@ describe("Motion's one mode with its Library", () => {
     ).toBe(false)
   })
 
-  it("offers a guided example at 480p and 720p only", () => {
+  it("refuses 1080p for an example left on the LTX 2.3 graph", () => {
     expect(
       body.safeParse({
         inputs: {
@@ -80,27 +82,65 @@ describe("Motion's one mode with its Library", () => {
     ).toBe(false)
   })
 
-  it("runs an example from an image only, with its guide as a file the engine holds and never as an input of the run", () => {
+  it("renders a guided example on the LTX 2.5 guide graph from your photo alone, with its guide and its people matte as files the engine holds", () => {
     const bound = parseComfyWorkflow(
       resolveBinding(motion.engine, {
         example: "grab-and-run",
-        model: "ltx-2-3-control",
+        model: "ltx-2-5-guide",
         photo: [photo],
-        resolution: "720p",
+        resolution: "480p",
       })
     )
-    expect(bound.bindings).toContainEqual({
-      from: "file",
-      name: "grab-and-run.mp4",
-      path: ["199", "inputs", "file"],
-    })
+    const files = bound.bindings.flatMap((one) =>
+      one.from === "file" ? [one.name] : []
+    )
+    expect(files).toEqual(["grab-and-run.mp4", "grab-and-run-matte.mp4"])
     const scene = bound.bindings.find(
       (one) => one.from === "input" && one.name === "example"
     )
     expect(scene?.from === "input" && scene.map?.["grab-and-run"]).toBe(
       exampleOf("grab-and-run").prompt
     )
+    expect(bound.workflow["1011"]).toBeDefined()
     expect(motion.inputs.map((input) => input.name)).not.toContain("guide")
+  })
+
+  it("renders the final with the end key and no last frame, at a short side of 1152 for 1080p", () => {
+    const bound = parseComfyWorkflow(
+      resolveBinding(motion.engine, {
+        example: "grab-and-run",
+        model: "ltx-2-5-guide",
+        photo: [photo],
+        endKey: [photo],
+        resolution: "1080p",
+      })
+    )
+    expect(bound.bindings).toContainEqual(
+      expect.objectContaining({ from: "input", name: "endKey", index: 0 })
+    )
+    expect(bound.workflow["1011"]).toBeUndefined()
+    const side = bound.bindings.find(
+      (one) => one.from === "input" && one.name === "resolution"
+    )
+    expect(side?.from === "input" && side.map?.["1080p"]).toBe(1152)
+  })
+
+  it("offers 1080p only off the two LTX 2.3 graphs, the control", () => {
+    expect(
+      body.safeParse({
+        inputs: {
+          example: "grab-and-run",
+          model: "ltx-2-5-guide",
+          photo: [photo],
+          resolution: "1080p",
+        },
+      }).success
+    ).toBe(true)
+    expect(
+      body.safeParse({
+        inputs: { photo: [photo], clip: [clip], resolution: "1080p" },
+      }).success
+    ).toBe(false)
   })
 
   it("runs Push into the eye on the first-and-last-frame graph once it is offered", () => {
@@ -173,5 +213,69 @@ describe("the agent's draft and final of an example", () => {
     const notes = exampleAgentNotes(motion)
     expect(notes).toContain("grab-and-run: ")
     expect(notes).not.toMatch(/guide|depth|adapter|preset|sha256|graph/i)
+  })
+})
+
+describe("the chain of a guided example", () => {
+  const steps = exampleEndKeySteps({
+    example: exampleOf("grab-and-run"),
+    photo,
+    resolution: "1080p",
+  })
+
+  it("drafts at 480p in the example's own 2:3 shape on the guided render", () => {
+    expect(steps?.draft.request).toMatchObject({
+      inputs: {
+        example: "grab-and-run",
+        model: "ltx-2-5-guide",
+        photo: [photo],
+        resolution: "480p",
+      },
+      aspectRatio: "2:3",
+    })
+  })
+
+  it("restores the draft's last frame with your photo, held, at the draft's 512 by 768", () => {
+    const frame = assetIdFormat.parse("2d3e4f5a-6b7c-4d8e-9f0a-1b2c3d4e5f6a")
+    const restore = steps?.restore(frame)
+    expect(restore?.request.place).toBe("held")
+    expect(JSON.stringify(restore?.request.inputs)).toContain(frame)
+    expect(JSON.stringify(restore?.request.inputs)).toContain(photo)
+  })
+
+  it("renders the final at the resolution you chose, with the end key and the draft's seed", () => {
+    const endKey = assetIdFormat.parse("3d3e4f5a-6b7c-4d8e-9f0a-1b2c3d4e5f6a")
+    const draft = run.parse({
+      id: "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      appId: "motion",
+      status: "done",
+      inputs: {},
+      count: 1,
+      aspectRatio: "2:3",
+      seed: 9,
+      outputs: [],
+      progress: 1,
+      engine: { adapter: "demo", models: [], workflowHash: null },
+      cost: null,
+      origin: "demo",
+      failure: null,
+      createdAt: "2026-10-29T10:00:00.000Z",
+      finishedAt: "2026-10-29T10:01:00.000Z",
+    })
+    expect(steps?.final(draft, endKey).request.inputs).toMatchObject({
+      resolution: "1080p",
+      endKey: [endKey],
+      seed: 9,
+    })
+  })
+
+  it("has no chain for an example with no guide, the control", () => {
+    expect(
+      exampleEndKeySteps({
+        example: exampleOf("push-into-eye"),
+        photo,
+        resolution: "720p",
+      })
+    ).toBeNull()
   })
 })

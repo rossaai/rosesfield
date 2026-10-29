@@ -2,6 +2,7 @@ import type { AssetKind } from "@rosesfield/contract"
 import { FixedClock } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import type { EngineRequest } from "#domain/generation-engine.port"
+import { comfyWorkflow } from "#infrastructure/comfy/comfy-workflow-binding"
 import { crc32 } from "#infrastructure/demo/flat-png"
 import { DemoGenerationEngine } from "#infrastructure/demo-generation-engine"
 import { fakeBinding, start } from "../sample"
@@ -205,5 +206,49 @@ describe("DemoGenerationEngine", () => {
     await expect(engine.read("job-1")).rejects.toMatchObject({
       code: "RUN_FAILED",
     })
+  })
+})
+
+describe("the demo engine's held images", () => {
+  const graph = {
+    "68": { class_type: "SaveVideo", inputs: {} },
+    "1011": { class_type: "SaveImage", inputs: {} },
+  }
+
+  async function outputsFor(results: readonly string[] | undefined) {
+    const { clock, engine } = setup()
+    const binding = comfyWorkflow({
+      workflow: graph,
+      bindings: [],
+      models: [],
+      ...(results === undefined ? {} : { results: [...results] }),
+    })
+    const { ref } = await engine.submit({ ...request("video", "2:3"), binding })
+    clock.advance(DemoGenerationEngine.delayMs)
+    return engine.listOutputs(ref)
+  }
+
+  it("saves an image for each save node a binding does not name as a result, under that node", async () => {
+    const outputs = await outputsFor(["68"])
+    expect(outputs.map((one) => [one.kind, one.nodeId])).toEqual([
+      ["video", undefined],
+      ["image", "1011"],
+    ])
+    const { engine } = setup()
+    expect(
+      engine.resultNodesOf(
+        comfyWorkflow({
+          workflow: graph,
+          bindings: [],
+          models: [],
+          results: ["68"],
+        })
+      )
+    ).toEqual(["68"])
+  })
+
+  it("saves no held image for a binding that names no results, the control", async () => {
+    const outputs = await outputsFor(undefined)
+    expect(outputs.map((one) => one.kind)).toEqual(["video"])
   })
 })

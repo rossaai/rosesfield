@@ -28,6 +28,7 @@ import type { AppForm } from "@/screens/app/use-app-form"
 
 export type StartRun = {
   generate: () => void
+  label?: string
   isPending: boolean
   error: Error | null
   price: string

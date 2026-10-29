@@ -39,10 +39,15 @@ export {
   isFinalRun,
 } from "#motion/examples/example-agent"
 export { exampleInput, ownVideo } from "#motion/examples/example-binding"
+export {
+  type ExampleChainAsk,
+  exampleEndKeySteps,
+} from "#motion/examples/example-steps"
 export { type FirstFrame, firstFrameOf } from "#motion/examples/first-frame"
 export type {
   ExampleGuide,
   ExampleRun,
+  HeldFile,
   LibraryExample,
   ResolutionValue,
 } from "#motion/examples/library-example.contract"
@@ -64,6 +69,7 @@ export {
   withOfferedExamples,
 } from "#motion/examples/offered-examples"
 export {
+  graphModel,
   guideModel,
   ltx25GuideModel,
   motionAppId,

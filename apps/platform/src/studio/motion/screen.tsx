@@ -1,5 +1,7 @@
+import { Button } from "@rosesfield/ui/components/button"
 import { useRouterState } from "@tanstack/react-router"
 import { type ReactElement, useRef } from "react"
+import { tCatalog } from "@/copy/t"
 import { AppCanvas } from "@/screens/app/app-canvas"
 import {
   AddInputsButton,
@@ -9,7 +11,22 @@ import {
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { MotionPanel } from "@/studio/motion/motion-panel"
 import { tabOfHash } from "@/studio/motion/motion-tabs"
-import { useMotionScreen } from "@/studio/motion/use-motion-screen"
+import {
+  type MotionState,
+  useMotionScreen,
+} from "@/studio/motion/use-motion-screen"
+
+function StartOver({ state }: { state: MotionState }): ReactElement | null {
+  const stage = state.chain?.stage.stage
+  if (stage !== "makeFinal" && stage !== "renderFinal") {
+    return null
+  }
+  return (
+    <Button onClick={state.chain?.startOver}>
+      {tCatalog("motion.chain.startOver")}
+    </Button>
+  )
+}
 
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   const hash = useRouterState({ select: (state) => state.location.hash })
@@ -29,6 +46,7 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       onShortcut={state.onShortcut}
       sheet={sheet}
       panel={<MotionPanel state={state} />}
+      footLeading={<StartOver state={state} />}
       canvas={(openInputs) => (
         <AppCanvas
           app={app}

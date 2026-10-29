@@ -31,6 +31,7 @@ function graphState(): MotionState {
   return {
     app,
     example: null,
+    chain: null,
     useOwnVideo: () => undefined,
     tab: "move",
     mode: "clip",

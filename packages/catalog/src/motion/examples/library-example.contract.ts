@@ -213,10 +213,17 @@ export const exampleApproval = z.strictObject({
 
 export const guideResolutionValues = ["480p", "720p"] as const
 
+export const heldFile = z.strictObject({
+  file: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*\.mp4$/),
+  sha256: digest,
+  bytes: z.number().int().min(1).max(2_000_000),
+})
+
 export const exampleGuide = z.strictObject({
   file: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*\.mp4$/),
   sha256: digest,
   bytes: z.number().int().min(1).max(2_000_000),
+  matte: heldFile.nullable().default(null),
   width: z.number().int().min(64),
   height: z.number().int().min(64),
   frames: z.number().int().min(48).max(240),
@@ -364,5 +371,6 @@ export type ExampleProof = z.infer<typeof exampleProof>
 export type ExampleRun = z.infer<typeof exampleRun>
 export type LibraryExample = z.infer<typeof libraryExample>
 export type ExampleGuide = z.infer<typeof exampleGuide>
+export type HeldFile = z.infer<typeof heldFile>
 export type SoundBed = z.infer<typeof soundBed>
 export type ResolutionValue = (typeof resolutionValues)[number]

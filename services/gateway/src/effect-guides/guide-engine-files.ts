@@ -1,4 +1,4 @@
-import { type ExampleGuide, libraryExamples } from "@rosesfield/catalog/motion"
+import { type HeldFile, libraryExamples } from "@rosesfield/catalog/motion"
 import type { EngineFiles } from "@rosesfield/generation"
 import type { GuideFiles } from "#effect-guides/guide-files"
 
@@ -11,17 +11,21 @@ export async function sha256Of(bytes: Uint8Array): Promise<string> {
   ).join("")
 }
 
-function recordedGuides(): ReadonlyMap<string, ExampleGuide> {
+function recordedGuides(): ReadonlyMap<string, HeldFile> {
   return new Map(
-    libraryExamples.flatMap((example) =>
-      example.guide === null ? [] : [[example.guide.file, example.guide]]
+    libraryExamples.flatMap(({ guide }) =>
+      guide === null
+        ? []
+        : [guide, ...(guide.matte === null ? [] : [guide.matte])].map(
+            (held): [string, HeldFile] => [held.file, held]
+          )
     )
   )
 }
 
 export function guideEngineFiles(
   files: GuideFiles,
-  guides: ReadonlyMap<string, ExampleGuide> = recordedGuides()
+  guides: ReadonlyMap<string, HeldFile> = recordedGuides()
 ): EngineFiles {
   return {
     read: async (name) => {

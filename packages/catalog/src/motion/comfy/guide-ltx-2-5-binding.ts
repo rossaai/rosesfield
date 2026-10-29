@@ -20,6 +20,7 @@ export const ltx25GuideInputs = {
 export const ltx25ShortSides: Readonly<Record<string, number>> = {
   "480p": 512,
   "720p": 768,
+  "1080p": 1152,
 }
 
 export type RenderQuality = "draft" | "final"

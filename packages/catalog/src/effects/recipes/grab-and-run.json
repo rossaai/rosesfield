@@ -66,6 +66,11 @@
     "width": 240,
     "height": 360,
     "frames": 96,
-    "fps": 24
+    "fps": 24,
+    "matte": {
+      "file": "grab-and-run-matte.mp4",
+      "sha256": "f6727f0eaf231ddecda98b119a4f2a0f4af4f7f090e6bb0b1ed72cab9e613770",
+      "bytes": 136940
+    }
   }
 }

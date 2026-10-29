@@ -14,7 +14,12 @@ import {
   type RunPrice,
   unknownPrice,
 } from "#domain/generation-engine.port"
+import { isRecord } from "#domain/is-record"
 import { meshMime } from "#infrastructure/comfy/comfy-media"
+import {
+  parseComfyWorkflow,
+  resultNodesOf,
+} from "#infrastructure/comfy/comfy-workflow-binding"
 import { writeFlatMp4 } from "#infrastructure/demo/flat-mp4"
 import { writeFlatPng } from "#infrastructure/demo/flat-png"
 import { writeSilentWav } from "#infrastructure/demo/silent-wav"
@@ -33,6 +38,7 @@ type DemoRun = {
   width: number
   height: number
   count: number
+  held: readonly string[]
 }
 
 export class DemoGenerationEngine extends GenerationEngine {
@@ -44,7 +50,7 @@ export class DemoGenerationEngine extends GenerationEngine {
   static readonly sampleRate = 24_000
   static readonly gray = 128
   static readonly refPattern: RegExp =
-    /^demo:(\d+):(image|video|audio|text|mesh):(\d+)x(\d+):(\d+)$/
+    /^demo:(\d+):(image|video|audio|text|mesh):(\d+)x(\d+):(\d+)(?::held=([0-9,]+))?$/
 
   override readonly key = "demo"
   override readonly origin = "demo"
@@ -63,6 +69,10 @@ export class DemoGenerationEngine extends GenerationEngine {
 
   override canRun(_binding: EngineBinding): boolean {
     return true
+  }
+
+  override resultNodesOf(binding: EngineBinding): readonly string[] | null {
+    return resultNodesOf(binding)
   }
 
   override outputsPerJob(_binding: EngineBinding): OutputsPerJob {
@@ -90,8 +100,10 @@ export class DemoGenerationEngine extends GenerationEngine {
         : DemoGenerationEngine.imageSide
     const { width, height } = sizeOf(request.aspectRatio, side)
     const now = this.clock.now().getTime()
+    const held = heldImagesOf(request.binding)
+    const heldPart = held.length === 0 ? "" : `:held=${held.join(",")}`
     return {
-      ref: `demo:${now}:${request.outputKind}:${width}x${height}:${request.count}`,
+      ref: `demo:${now}:${request.outputKind}:${width}x${height}:${request.count}${heldPart}`,
       models: [],
       workflowHash: null,
     }
@@ -125,10 +137,19 @@ export class DemoGenerationEngine extends GenerationEngine {
   override async listOutputs(ref: string): Promise<EngineOutput[]> {
     const run = parseRef(ref)
     const output = await outputOf(run)
-    return Array.from({ length: run.count }, () => ({
+    const made = Array.from({ length: run.count }, () => ({
       ...output,
       bytes: new Uint8Array(output.bytes),
     }))
+    const held = await Promise.all(
+      run.held.map(
+        async (nodeId): Promise<EngineOutput> => ({
+          ...(await outputOf({ ...run, kind: "image" })),
+          nodeId,
+        })
+      )
+    )
+    return [...made, ...held]
   }
 
   override async cancel(ref: string): Promise<void> {
@@ -159,7 +180,24 @@ function parseRef(ref: string): DemoRun {
     width: Number(match[3]),
     height: Number(match[4]),
     count: Number(match[5]),
+    held: match[6] === undefined ? [] : match[6].split(","),
   }
+}
+
+function heldImagesOf(binding: EngineBinding): string[] {
+  const results = resultNodesOf(binding)
+  if (results === null) {
+    return []
+  }
+  const { workflow } = parseComfyWorkflow(binding)
+  return Object.entries(workflow)
+    .filter(
+      ([id, node]) =>
+        isRecord(node) &&
+        node.class_type === "SaveImage" &&
+        !results.includes(id)
+    )
+    .map(([id]) => id)
 }
 
 function sizeOf(
