@@ -100,6 +100,8 @@ export default defineConfig({
         icons: [icon(192, "any"), icon(512, "any"), icon(512, "maskable")],
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ["**/*.{js,css,html,woff2,png,webmanifest}"],
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/api\//, /^\/mcp/, sharedFiles],
