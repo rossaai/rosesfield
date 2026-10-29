@@ -22,6 +22,12 @@
 > [!NOTE]
 > Rosesfield is an entry to Comfy's [Open Source Higgsfield challenge](https://comfy.org/open-source-higgsfield), #OpenSourceHiggsfield. It is not made by, affiliated with or endorsed by Higgsfield.
 
+<p align="center">
+  <a href="docs/media/film/rosesfield-film.mp4"><img alt="The Rosesfield launch film. A white goose in a red cape on a throne, open in the Image app's viewer beside the prompt that made it." src="docs/media/film/rosesfield-film.webp" width="720"></a>
+</p>
+
+<p align="center">The launch film, 38 seconds. Every result in it is a real run on Comfy.</p>
+
 ## Start
 
 1. Make a key on [Comfy's key page](https://platform.comfy.org/profile/api-keys).
@@ -153,6 +159,8 @@ The runs in [Made with Rosesfield](#made-with-rosesfield), with their models and
 | Video edit | A close-up clip at twice its frame rate, 48 frames a second. The FILM graph, 3.31 credits, made in 30 seconds. |
 
 The clips of Edit, Relight, Expand, Upscale, Remove background and Image, then Edit show the input and then the result. They were put together with ffmpeg from the runs' own files, and the Upscale clip shows one detail of each at the same size.
+
+The launch film types the goose's prompt into the Image app, then shows the name and the challenge's hashtag. It opens the model picker, then plays five previews in their apps' own viewers: the goose in Image, the bee in Shot, a Music track, a Speech line and a 3D rose. It counts 25+ apps, makes a key on Comfy and pastes it in Settings, and closes on the name and rosesfield.com. It is edited from the app's own screens, and every result in it is a stored run. The 3D rose came out white from Meshy's preview mode, and its colour was added after the run by a script that runs no model. Comfy's key page in it is redrawn, and no key appears.
 
 ## What was proven live
 
