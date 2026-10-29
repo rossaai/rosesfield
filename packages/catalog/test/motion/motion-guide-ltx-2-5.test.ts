@@ -33,6 +33,23 @@ function fileOf(id: string): Graph {
   return graphSchema.parse(structuredClone(workflow.graph))
 }
 
+function valueOf(
+  expression: string,
+  values: Readonly<Record<string, number>>
+): number {
+  const names = Object.keys(values)
+  const evaluate = new Function(
+    ...names,
+    "max",
+    "min",
+    "round",
+    `return ${expression}`
+  )
+  return Number(
+    evaluate(...names.map((name) => values[name]), Math.max, Math.min, Math.round)
+  )
+}
+
 function boundGraph(extra: RunInputs = {}): Graph {
   const binding = resolveBinding(motionEngine, {
     model: ltx25GuideModel,
@@ -171,9 +188,16 @@ describe("the LTX 2.5 depth guide graph", () => {
     })
     expect(Object.keys(pathsOf())).not.toContain("mask")
     expect(Object.keys(pathsOf())).not.toContain("endKey")
-    expect(inputOf(graph, "956", "image")).toEqual(["955", 0])
+    expect(inputOf(graph, "956", "image")).toEqual(["967", 0])
+    expect(inputOf(graph, "967", "image")).toEqual(["955", 0])
+    expect(inputOf(graph, "967", "length")).toEqual(["716", 1])
     expect(inputOf(graph, "957", "mask")).toEqual(["956", 0])
-    expect(inputOf(graph, "957", "expand")).toBe(6)
+    expect(inputOf(graph, "957", "expand")).toEqual(["969", 1])
+    expect(inputOf(graph, "968", "image")).toEqual(["952", 0])
+    const grow = String(inputOf(graph, "969", "expression"))
+    expect(valueOf(grow, { a: 240, b: 360 })).toBe(6)
+    expect(valueOf(grow, { a: 512, b: 768 })).toBe(13)
+    expect(valueOf(grow, { a: 1152, b: 768 })).toBe(19)
     expect(inputOf(graph, "959", "sigma")).toBe(4)
     expect(inputOf(graph, "955", "image1")).toEqual(["952", 0])
     expect(inputOf(graph, "953", "batch_index")).toEqual(["714", 1])
@@ -184,10 +208,24 @@ describe("the LTX 2.5 depth guide graph", () => {
     const graph = boundGraph()
     expect(graph["115"]?.inputs).not.toHaveProperty("attention_mask")
     const left = Object.keys(graph).filter(
-      (id) => Number(id) >= 950 && Number(id) <= 966
+      (id) => Number(id) >= 950 && Number(id) <= 969
     )
     expect(left).toEqual([])
-    expect(inputOf(graph, "115", "image")).toEqual(["719", 0])
+    expect(inputOf(graph, "115", "image")).toEqual(["725", 0])
+  })
+
+  it("renders exactly the guide's frames when they count 8 n + 1, and pads the rest up to the next 8 n + 1", () => {
+    const graph = boundGraph({ mask: [mask] })
+    const frames = String(inputOf(graph, "716", "expression"))
+    expect(valueOf(frames, { a: 97 })).toBe(97)
+    expect(valueOf(frames, { a: 121 })).toBe(121)
+    expect(valueOf(frames, { a: 100 })).toBe(105)
+    expect(valueOf(frames, { a: 98 })).toBe(105)
+    expect(inputOf(graph, "725", "image")).toEqual(["719", 0])
+    expect(inputOf(graph, "725", "batch_index")).toBe(0)
+    expect(inputOf(graph, "725", "length")).toEqual(["716", 1])
+    expect(inputOf(graph, "108", "length")).toEqual(["716", 1])
+    expect(inputOf(graph, "101", "frames_number")).toEqual(["716", 1])
   })
 
   it("renders LTX 2.5 in two stages: half size with the guide, the guide frames cropped, the latent doubled, the photo locked again and refined", () => {

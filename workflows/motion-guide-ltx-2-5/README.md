@@ -24,7 +24,7 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 | `shortSide` | 702 `PrimitiveInt`, Short side | `value` | a value: 512 for 480p, or 768 for 720p |
 | `seed` | 980 `RandomNoise`, Seed | `noise_seed` | a value |
 
-The catalog sets the short side from a run's `resolution`, 480p or 720p, or from its `shortSide`, 512 or 768. It removes nodes 950 to 966 and the guide's `attention_mask` when a run has no mask, so the guide holds every pixel at full attention. It removes the end-key nodes 1001 to 1005 when a run has no end key, and the last-frame nodes 1010 and 1011 when it has one.
+The catalog sets the short side from a run's `resolution`, 480p or 720p, or from its `shortSide`, 512 or 768. It removes nodes 950 to 969 and the guide's `attention_mask` when a run has no mask, so the guide holds every pixel at full attention. It removes the end-key nodes 1001 to 1005 when a run has no end key, and the last-frame nodes 1010 and 1011 when it has one.
 
 ## Outputs
 
@@ -37,8 +37,8 @@ The catalog sets the short side from a run's `resolution`, 480p or 720p, or from
 
 It is the graph of [`motion-guide-ltx-2-3-ic-lora`](../motion-guide-ltx-2-3-ic-lora/README.md), moved to LTX 2.5 in two stages, with a people mask, an end key and sound.
 
-1. **The guide.** Nodes 692 and 706 to 719 keep the first 10 seconds of the guide and repeat its last frame up to 8 n + 1 frames, as the LTX 2.3 graph does.
-2. **The people mask.** Nodes 950 to 956 read the mask as the guide is read, from its red channel. Node 957 grows it by 6 px, and nodes 958 to 960 blur it with a Gaussian of sigma 4 px. Nodes 961 to 966 turn it into the guide's attention: `1 - 0.8 * mask`, so 1.0 on the set and 0.2 on the people. Node 115, `LTXVAddGuide`, takes it as its `attention_mask`.
+1. **The guide.** Nodes 692 and 706 to 719 keep the first 10 seconds of the guide and repeat its last frame, and node 725 keeps the frames node 716 counts: the guide's own frames when they count 8 n + 1, else the next 8 n + 1. So a guide of 97 frames renders 97, and no frame is rendered to be thrown away.
+2. **The people mask.** Nodes 950 to 956 and 967 read the mask as the guide is read, from its red channel, to the same frame count. Node 957 grows it by 6 px for every 240 px of its short side, which nodes 968 and 969 compute, so a mask read at 768 px grows 19 px as the recipe's 240 by 360 mask grew 6 px, and nodes 958 to 960 blur it with a Gaussian of sigma 4 px. Nodes 961 to 966 turn it into the guide's attention: `1 - 0.8 * mask`, so 1.0 on the set and 0.2 on the people. Node 115, `LTXVAddGuide`, takes it as its `attention_mask`.
 3. **The size.** Nodes 990 and 991 set stage 1 to half the output size, each side a multiple of 64, so the half-size IC-LoRA guide halves evenly. A 2:3 photo at the short side 512 renders 256 by 384 in stage 1 and 512 by 768 out.
 4. **Stage 1.** Node 198 locks your photo at frame 0. Node 115 adds the depth guide through the IC-LoRA at strength 1.0. Node 1001 adds the end key at the last frame at 0.9, preprocessed at 18 by node 1005. Node 704 samples Lightricks' 8 distilled sigmas with `euler_ancestral` at CFG 1.
 5. **Stage 2.** Node 106 crops the guide frames. Node 993 doubles the latent with the LTX 2.5 latent upscaler. Node 994 locks the photo again at 1.0, node 1003 adds the end key again at 0.9, and node 999 refines with the sigmas 0.909375, 0.725, 0.421875 and 0.0. Node 1004 crops the guide frames before the decode.
@@ -75,4 +75,4 @@ The graph of [`motion-guide-ltx-2-3-ic-lora`](../motion-guide-ltx-2-3-ic-lora/RE
 
 ## What was checked
 
-Every node class, input name, required input, link type and choice value of the API file was checked against Comfy Cloud's `GET /api/object_info`, read on 2026-10-29, and every file it loads is listed there under its loader. Its render, the guide, the attention mask, the two stages, the end key and the sound decode, ran on Comfy Cloud at 480p and 720p as a test graph with the same nodes, with a mask video that already held the attention values. This graph adds the mask preparation, nodes 957 to 966, the loudness chain, nodes 359 to 361, and the last-frame output, nodes 1010 and 1011, and as written it has no run on a live engine.
+Every node class, input name, required input, link type and choice value of the API file was checked against Comfy Cloud's `GET /api/object_info`, read on 2026-10-29, and every file it loads is listed there under its loader. Its render, the guide, the attention mask, the two stages, the end key and the sound decode, ran on Comfy Cloud at 480p and 720p as a test graph with the same nodes, with a mask video that already held the attention values. This graph adds the mask preparation, nodes 957 to 969, the loudness chain, nodes 359 to 361, and the last-frame output, nodes 1010 and 1011, and as written it has no run on a live engine.

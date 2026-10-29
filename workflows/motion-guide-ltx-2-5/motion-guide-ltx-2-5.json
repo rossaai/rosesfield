@@ -2,7 +2,7 @@
   "id": "b3174e92-dcc3-5c7b-899f-eeddd63b16f5",
   "revision": 0,
   "last_node_id": 1100,
-  "last_link_id": 127,
+  "last_link_id": 135,
   "nodes": [
     {
       "id": 68,
@@ -1246,7 +1246,7 @@
         {
           "name": "INT",
           "type": "INT",
-          "links": [3, 12]
+          "links": [3, 12, 129, 131]
         },
         {
           "name": "BOOL",
@@ -1259,7 +1259,7 @@
         "cnr_id": "comfy-core",
         "ver": "0.41.0"
       },
-      "widgets_values": ["a + 8 - (a - 1) % 8"],
+      "widgets_values": ["a + (8 - (a - 1) % 8) % 8"],
       "title": "Frames to render, 8 n + 1"
     },
     {
@@ -1361,7 +1361,7 @@
         {
           "name": "IMAGE",
           "type": "IMAGE",
-          "links": [21]
+          "links": [128]
         }
       ],
       "properties": {
@@ -1550,7 +1550,7 @@
         {
           "name": "images",
           "type": "IMAGE",
-          "links": [64, 68]
+          "links": [64, 68, 132]
         },
         {
           "name": "audio",
@@ -1678,7 +1678,7 @@
         {
           "name": "IMAGE",
           "type": "IMAGE",
-          "links": [70]
+          "links": [130]
         }
       ],
       "properties": {
@@ -1731,6 +1731,14 @@
           "name": "mask",
           "type": "MASK",
           "link": 71
+        },
+        {
+          "name": "expand",
+          "type": "INT",
+          "link": 135,
+          "widget": {
+            "name": "expand"
+          }
         }
       ],
       "outputs": [
@@ -1746,7 +1754,7 @@
         "ver": "0.41.0"
       },
       "widgets_values": [6, true],
-      "title": "Grow 6 px"
+      "title": "Grow, in proportion to the mask"
     },
     {
       "id": 958,
@@ -2914,6 +2922,174 @@
       "widgets_values": [
         "# Motion: move a photo along a depth guide on LTX 2.5\n\nRenders the person in your photo moving along your guide video, on LTX 2.5 22B distilled with the LTX 2.3 union control IC-LoRA, in two stages. The guide is a depth video. A people mask, a second video, lets the guide hold the set and the camera at full attention while the people move at 0.2. An end key, an optional image, guides the last frame at 0.9 in both stages. Your photo is frame 0. The video keeps the guide's frame count and frame rate and carries LTX's own sound, levelled to -23 LUFS under a -4 dBFS ceiling. The graph also saves the last frame as an image.\n\n## Models\n\n- [ltx-2.5-22b-distilled-transformer-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/diffusion_models/ltx-2.5-22b-distilled-transformer-bf16.safetensors): LTX 2.5 22B distilled, bf16, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-video-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-video-vae-bf16.safetensors) and [ltx-2.5-audio-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-audio-vae-bf16.safetensors): the LTX 2.5 VAEs, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [gemma4-12b-with-proj-ltx-2.5-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/text_encoders/gemma4-12b-with-proj-ltx-2.5-bf16.safetensors): Gemma 4 12B with the LTX 2.5 projections, under the licence of the LTX 2.5 repository.\n- [ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors): the LTX 2.5 latent upscaler, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors](https://huggingface.co/Lightricks/LTX-2.3-22b-IC-LoRA-Union-Control/resolve/main/ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors): the LTX 2.3 union control IC-LoRA, [LTX-2 Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2).\n\nThe LTX 2.5 files are gated on Hugging Face. Accept their licence there before you download them.\n\n## Inputs\n\n- Photo, node 200: frame 0.\n- Guide video, node 199: the depth guide.\n- People mask, node 950: white on the people, black on the set. An all-black mask holds every pixel at full attention, as Rosesfield does when you add no mask.\n- End key, node 1002: the image of the last frame. For a draft, bypass nodes 1001 and 1003, as Rosesfield removes them when you add no end key.\n- Scene, node 900: your words after a fixed sentence that keeps the person the same.\n- Short side, node 702: 512 for 480p, 768 for 720p.\n- Seed, node 980.\n"
       ]
+    },
+    {
+      "id": 725,
+      "type": "ImageFromBatch",
+      "pos": [1850, 1940],
+      "size": [420, 150],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 128
+        },
+        {
+          "name": "length",
+          "type": "INT",
+          "link": 129,
+          "widget": {
+            "name": "length"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [21]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageFromBatch",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0, 1],
+      "title": "Depth guide, the frames to render"
+    },
+    {
+      "id": 967,
+      "type": "ImageFromBatch",
+      "pos": [2410, 2950],
+      "size": [420, 150],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 130
+        },
+        {
+          "name": "length",
+          "type": "INT",
+          "link": 131,
+          "widget": {
+            "name": "length"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [70]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageFromBatch",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0, 1],
+      "title": "People mask, the frames to render"
+    },
+    {
+      "id": 968,
+      "type": "GetImageSize",
+      "pos": [2410, 3110],
+      "size": [420, 150],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 132
+        }
+      ],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [133]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [134]
+        },
+        {
+          "name": "batch_size",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetImageSize",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [],
+      "title": "People mask size"
+    },
+    {
+      "id": 969,
+      "type": "ComfyMathExpression",
+      "pos": [2410, 3300],
+      "size": [420, 150],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "values.a",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 133
+        },
+        {
+          "name": "values.b",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 134,
+          "shape": 7
+        },
+        {
+          "name": "values.c",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [135]
+        },
+        {
+          "name": "BOOL",
+          "type": "BOOLEAN",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfyMathExpression",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["max(1, round(6 * min(a, b) / 240))"],
+      "title": "Grow, 6 px per 240 px of the short side"
     }
   ],
   "links": [
@@ -2937,7 +3113,7 @@
     [18, 109, 1, 115, 1, "CONDITIONING"],
     [19, 385, 0, 115, 2, "VAE"],
     [20, 198, 0, 115, 3, "LATENT"],
-    [21, 719, 0, 115, 4, "IMAGE"],
+    [21, 725, 0, 115, 4, "IMAGE"],
     [22, 196, 0, 115, 6, "IC_LORA_PARAMETERS"],
     [23, 966, 0, 115, 5, "MASK"],
     [24, 1001, 2, 119, 0, "LATENT"],
@@ -2986,7 +3162,7 @@
     [67, 715, 1, 954, 1, "INT"],
     [68, 952, 0, 955, 0, "IMAGE"],
     [69, 954, 0, 955, 1, "IMAGE"],
-    [70, 955, 0, 956, 0, "IMAGE"],
+    [70, 967, 0, 956, 0, "IMAGE"],
     [71, 956, 0, 957, 0, "MASK"],
     [72, 957, 0, 958, 0, "MASK"],
     [73, 958, 0, 959, 0, "IMAGE"],
@@ -3043,7 +3219,15 @@
     [124, 1002, 0, 1005, 0, "IMAGE"],
     [125, 724, 0, 1010, 0, "IMAGE"],
     [126, 714, 1, 1010, 1, "INT"],
-    [127, 1010, 0, 1011, 0, "IMAGE"]
+    [127, 1010, 0, 1011, 0, "IMAGE"],
+    [128, 719, 0, 725, 0, "IMAGE"],
+    [129, 716, 1, 725, 1, "INT"],
+    [130, 955, 0, 967, 0, "IMAGE"],
+    [131, 716, 1, 967, 1, "INT"],
+    [132, 952, 0, 968, 0, "IMAGE"],
+    [133, 968, 0, 969, 0, "INT"],
+    [134, 968, 1, 969, 1, "INT"],
+    [135, 969, 1, 957, 1, "INT"]
   ],
   "groups": [
     {
@@ -3073,7 +3257,7 @@
     {
       "id": 4,
       "title": "People mask",
-      "bounding": [2380, 20, 480, 2886],
+      "bounding": [2380, 20, 480, 3480],
       "color": "#88a",
       "font_size": 24,
       "flags": {}

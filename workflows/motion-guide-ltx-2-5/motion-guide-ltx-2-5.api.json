@@ -88,7 +88,7 @@
       "negative": ["109", 1],
       "vae": ["385", 0],
       "latent": ["198", 0],
-      "image": ["719", 0],
+      "image": ["725", 0],
       "iclora_parameters": ["196", 0],
       "frame_idx": 0,
       "strength": 1,
@@ -346,7 +346,7 @@
     "class_type": "ComfyMathExpression",
     "inputs": {
       "values.a": ["713", 2],
-      "expression": "a + 8 - (a - 1) % 8"
+      "expression": "a + (8 - (a - 1) % 8) % 8"
     },
     "_meta": {
       "title": "Frames to render, 8 n + 1"
@@ -478,7 +478,7 @@
   "956": {
     "class_type": "ImageToMask",
     "inputs": {
-      "image": ["955", 0],
+      "image": ["967", 0],
       "channel": "red"
     },
     "_meta": {
@@ -489,11 +489,11 @@
     "class_type": "GrowMask",
     "inputs": {
       "mask": ["956", 0],
-      "expand": 6,
+      "expand": ["969", 1],
       "tapered_corners": true
     },
     "_meta": {
-      "title": "Grow 6 px"
+      "title": "Grow, in proportion to the mask"
     }
   },
   "958": {
@@ -820,6 +820,48 @@
     },
     "_meta": {
       "title": "SaveImage"
+    }
+  },
+  "725": {
+    "class_type": "ImageFromBatch",
+    "inputs": {
+      "image": ["719", 0],
+      "batch_index": 0,
+      "length": ["716", 1]
+    },
+    "_meta": {
+      "title": "Depth guide, the frames to render"
+    }
+  },
+  "967": {
+    "class_type": "ImageFromBatch",
+    "inputs": {
+      "image": ["955", 0],
+      "batch_index": 0,
+      "length": ["716", 1]
+    },
+    "_meta": {
+      "title": "People mask, the frames to render"
+    }
+  },
+  "968": {
+    "class_type": "GetImageSize",
+    "inputs": {
+      "image": ["952", 0]
+    },
+    "_meta": {
+      "title": "People mask size"
+    }
+  },
+  "969": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "values.a": ["968", 0],
+      "values.b": ["968", 1],
+      "expression": "max(1, round(6 * min(a, b) / 240))"
+    },
+    "_meta": {
+      "title": "Grow, 6 px per 240 px of the short side"
     }
   }
 }

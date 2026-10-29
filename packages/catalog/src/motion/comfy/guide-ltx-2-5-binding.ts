@@ -28,7 +28,7 @@ const shortSideValues: Readonly<Record<string, number>> = Object.fromEntries(
 export const attentionNode = "115"
 
 export const maskNodes: readonly string[] = Array.from(
-  { length: 17 },
+  { length: 20 },
   (_, index) => String(950 + index)
 )
 
