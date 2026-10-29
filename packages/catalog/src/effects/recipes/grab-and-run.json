@@ -4,11 +4,11 @@
   "design": {
     "unit": {
       "id": "grab-and-run",
-      "title": "Unit: grab-and-run"
+      "title": "Grab and run v2: prepared for its LTX run"
     },
     "family": {
       "id": "effects",
-      "title": "Family: effects"
+      "title": "The proposed effects"
     },
     "fit": {
       "by": "area",

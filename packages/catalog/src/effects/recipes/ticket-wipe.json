@@ -4,11 +4,11 @@
   "design": {
     "unit": {
       "id": "ticket-wipe",
-      "title": "Unit: ticket-wipe"
+      "title": "Ticket wipe: a proposal for the LTX VFX bonus"
     },
     "family": {
       "id": "effects",
-      "title": "Family: effects"
+      "title": "The proposed effects"
     },
     "fit": {
       "by": "area",

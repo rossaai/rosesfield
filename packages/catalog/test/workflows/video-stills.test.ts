@@ -54,7 +54,6 @@ const videoWorkflows = workflows.filter((workflow) =>
 describe("the stills every video workflow sends", () => {
   it("covers every workflow that saves a video", () => {
     expect(videoWorkflows.map((one) => one.id).sort()).toEqual([
-      "effects-clip-ltx-2-3-ic-lora",
       "effects-ltx-2-5",
       "lipsync-photo-ltx-2-3",
       "motion-guide-ltx-2-3-ic-lora",

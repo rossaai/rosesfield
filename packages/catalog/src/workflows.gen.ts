@@ -17,8 +17,6 @@ import wBackgroundRemovalTransparentApi from "../../../workflows/background-remo
 import wBackgroundRemovalTransparentEntry from "../../../workflows/background-removal-transparent/entry.json"
 import wEditQwenImageEdit2511Api from "../../../workflows/edit-qwen-image-edit-2511/edit-qwen-image-edit-2511.api.json"
 import wEditQwenImageEdit2511Entry from "../../../workflows/edit-qwen-image-edit-2511/entry.json"
-import wEffectsClipLtx23IcLoraApi from "../../../workflows/effects-clip-ltx-2-3-ic-lora/effects-clip-ltx-2-3-ic-lora.api.json"
-import wEffectsClipLtx23IcLoraEntry from "../../../workflows/effects-clip-ltx-2-3-ic-lora/entry.json"
 import wEffectsLtx25Api from "../../../workflows/effects-ltx-2-5/effects-ltx-2-5.api.json"
 import wEffectsLtx25Entry from "../../../workflows/effects-ltx-2-5/entry.json"
 import wExpandFormatQwenImageApi from "../../../workflows/expand-format-qwen-image/expand-format-qwen-image.api.json"
@@ -78,7 +76,6 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "background-removal-solid-color", entry: wBackgroundRemovalSolidColorEntry, graph: wBackgroundRemovalSolidColorApi },
   { folder: "background-removal-transparent", entry: wBackgroundRemovalTransparentEntry, graph: wBackgroundRemovalTransparentApi },
   { folder: "edit-qwen-image-edit-2511", entry: wEditQwenImageEdit2511Entry, graph: wEditQwenImageEdit2511Api },
-  { folder: "effects-clip-ltx-2-3-ic-lora", entry: wEffectsClipLtx23IcLoraEntry, graph: wEffectsClipLtx23IcLoraApi },
   { folder: "effects-ltx-2-5", entry: wEffectsLtx25Entry, graph: wEffectsLtx25Api },
   { folder: "expand-format-qwen-image", entry: wExpandFormatQwenImageEntry, graph: wExpandFormatQwenImageApi },
   { folder: "expand-sides-qwen-image", entry: wExpandSidesQwenImageEntry, graph: wExpandSidesQwenImageApi },

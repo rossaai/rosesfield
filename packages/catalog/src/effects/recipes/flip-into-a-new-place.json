@@ -4,11 +4,11 @@
   "design": {
     "unit": {
       "id": "flip-into-a-new-place",
-      "title": "Unit: flip-into-a-new-place"
+      "title": "The proposed effects"
     },
     "family": {
       "id": "effects",
-      "title": "Family: effects"
+      "title": "The proposed effects"
     },
     "fit": {
       "by": "area",
