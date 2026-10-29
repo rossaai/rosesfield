@@ -6,6 +6,7 @@ import { referenceInput } from "#image/comfy/open-weights"
 import { referenceModel } from "#image/image-models"
 import type { ClipPlan } from "#motion/clip-plan"
 import type { FrameSize } from "#motion/comfy/guide-fit"
+import { FrameShapeUnfitError } from "#motion/frame-shape-unfit.error"
 
 export type FrameEditModel = "open" | "hosted"
 
@@ -71,6 +72,38 @@ export const frameEditModels: Readonly<
 
 export const defaultFrameEditModel: FrameEditModel = "open"
 
+/** The frame shapes GPT Image 2.5 makes, across over down: 1:1, 2:3 and 3:2. */
+export const hostedEditShapes: readonly number[] = [1, 2 / 3, 3 / 2]
+
+export const hostedShapeTolerance = 0.01
+
+/** Says whether the hosted editor makes this frame's own shape, so its edit needs no crop. */
+export function isHostedEditFit(size: FrameSize): boolean {
+  const ratio = size.width / size.height
+  return hostedEditShapes.some(
+    (shape) => Math.abs(ratio / shape - 1) <= hostedShapeTolerance
+  )
+}
+
+/** The editors Motion offers for a frame: the hosted one only when it keeps the frame's shape. */
+export function frameEditModelsFor(size: FrameSize): FrameEditModel[] {
+  return isHostedEditFit(size) ? ["open", "hosted"] : ["open"]
+}
+
+/** The editor a frame is edited with: the one asked for, or the default when none is. A hosted ask on a shape it would crop is refused. */
+export function frameEditModelOf(
+  size: FrameSize,
+  asked: FrameEditModel | null
+): FrameEditModel {
+  if (asked === null) {
+    return defaultFrameEditModel
+  }
+  if (!frameEditModelsFor(size).includes(asked)) {
+    throw new FrameShapeUnfitError()
+  }
+  return asked
+}
+
 /** Picks the photos in turn from each target, so each target keeps one when the editor takes few. */
 export function editPhotosOf(plan: ClipPlan, most: number): number[] {
   const picked: number[] = []
@@ -102,10 +135,11 @@ export function frameEditRequestOf(input: {
   frameSize: FrameSize
   photos: readonly AssetId[]
   plan: ClipPlan
-  model: FrameEditModel
+  model: FrameEditModel | null
   seed: number
 }): StepRun {
-  const editor = frameEditModels[input.model]
+  const model = frameEditModelOf(input.frameSize, input.model)
+  const editor = frameEditModels[model]
   const photos = editPhotosOf(input.plan, editor.mostImages - 1).flatMap(
     (at) => {
       const photo = input.photos[at]
@@ -121,8 +155,7 @@ export function frameEditRequestOf(input: {
         size: input.frameSize,
         seed: input.seed,
       }),
-      aspectRatio:
-        input.model === "open" ? aspectRatioOf(input.frameSize) : null,
+      aspectRatio: model === "open" ? aspectRatioOf(input.frameSize) : null,
       place: "held",
     },
   }

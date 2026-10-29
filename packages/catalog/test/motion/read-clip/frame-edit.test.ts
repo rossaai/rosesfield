@@ -12,8 +12,10 @@ import {
   defaultFrameEditModel,
   editPhotosOf,
   type FrameEditModel,
+  frameEditModelsFor,
   frameEditRequestOf,
 } from "#motion/comfy/frame-edit"
+import { FrameShapeUnfitError } from "#motion/frame-shape-unfit.error"
 import { twoTargetPlan } from "./clip-plan-answers"
 
 function idOf(n: number): AssetId {
@@ -31,10 +33,18 @@ function parsedImageApp(): AppDefinition {
   return parsed
 }
 
-function requestWith(model: FrameEditModel, plan = twoTargetPlan) {
+const tall = { width: 432, height: 768 }
+
+const twoByThree = { width: 512, height: 768 }
+
+function requestWith(
+  model: FrameEditModel | null,
+  plan = twoTargetPlan,
+  frameSize = tall
+) {
   return frameEditRequestOf({
     firstFrame,
-    frameSize: { width: 432, height: 768 },
+    frameSize,
     photos,
     plan: planClip(plan, photos.length),
     model,
@@ -77,7 +87,7 @@ describe("the edit of the clip's first frame", () => {
   })
 
   it("runs GPT Image 2.5 Sunburst on the Router as the other choice, with every photo and the frame's orientation", () => {
-    const { request } = requestWith("hosted")
+    const { request } = requestWith("hosted", twoTargetPlan, twoByThree)
     expect(request.inputs).toMatchObject({
       model: "openai/gpt-image-2.5-sunburst",
       images: [firstFrame, photos[0], photos[2]],
@@ -88,6 +98,56 @@ describe("the edit of the clip's first frame", () => {
     expect(request.aspectRatio).toBeNull()
     const binding = resolveBinding(imageApp.engine, request.inputs)
     expect(hostedModelOf(binding)).toBe("openai/gpt-image-2.5-sunburst")
+  })
+
+  it("offers GPT Image 2.5 on a 2:3, 3:2 or square clip, within 1 percent, and only Qwen Image Edit 2511 on a 9:16 or 16:9 clip", () => {
+    expect(frameEditModelsFor(twoByThree)).toEqual(["open", "hosted"])
+    expect(frameEditModelsFor({ width: 768, height: 512 })).toEqual([
+      "open",
+      "hosted",
+    ])
+    expect(frameEditModelsFor({ width: 640, height: 640 })).toEqual([
+      "open",
+      "hosted",
+    ])
+    expect(frameEditModelsFor({ width: 515, height: 768 })).toEqual([
+      "open",
+      "hosted",
+    ])
+    expect(frameEditModelsFor(tall)).toEqual(["open"])
+    expect(frameEditModelsFor({ width: 768, height: 432 })).toEqual(["open"])
+    expect(frameEditModelsFor({ width: 525, height: 768 })).toEqual(["open"])
+  })
+
+  it("edits a 9:16 clip with no editor asked on Qwen Image Edit 2511", () => {
+    const { request } = requestWith(null)
+    expect(request.inputs.model).toBe("qwen-image-edit-2511")
+    expect(request.aspectRatio).toBe("9:16")
+  })
+
+  it("refuses GPT Image 2.5 asked for a 9:16 clip with one sentence about the video's shape, and crops nothing", () => {
+    const refusal = (() => {
+      try {
+        return requestWith("hosted")
+      } catch (error) {
+        return error
+      }
+    })()
+    expect(refusal).toBeInstanceOf(FrameShapeUnfitError)
+    expect(refusal).toMatchObject({
+      code: "MOTION_EDITOR_SHAPE_UNFIT",
+      status: 400,
+      message:
+        "This editor edits only a square, 2:3 or 3:2 video, and this video has another shape",
+    })
+  })
+
+  it("accepts GPT Image 2.5 asked for a 2:3 clip, at the editor's own 2:3 size", () => {
+    const { request } = requestWith("hosted", twoTargetPlan, twoByThree)
+    expect(request.inputs).toMatchObject({
+      model: "openai/gpt-image-2.5-sunburst",
+      size: "1024x1536",
+    })
   })
 
   it("takes one photo of each target first when the editor takes fewer than the plan uses", () => {
