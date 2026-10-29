@@ -47,26 +47,24 @@ Your Comfy key is the only sign-in, and each run spends credits from your own Co
 
 <table>
   <tr>
-    <td align="center" colspan="3"><img alt="A woman waters a garden with a hose, then the same photo where the water is a stream of orange and magenta petals" src="docs/media/examples/hose.webp" width="520"><br><b>Image, then Edit</b></td>
+    <td align="center"><img alt="A woman waters a garden with a hose, then the same photo where the water is a stream of orange and magenta petals" src="docs/media/examples/hose.webp" height="300"><br><b>Image, then Edit</b></td>
+    <td align="center"><img alt="A man in a bucket hat runs toward the camera down a cobbled street, with two police officers behind him" src="docs/media/examples/motion.webp" height="300"><br><b>Motion</b></td>
+    <td align="center"><img alt="A close-up of a brown eye, from a clip at twice its frame rate" src="docs/media/examples/video-edit.webp" height="300"><br><b>Video edit</b></td>
   </tr>
   <tr>
     <td align="center"><img alt="A white goose in a red velvet cape on a golden throne, in a candlelit hall where courtiers stand along a red carpet" src="docs/media/examples/video.webp" width="260"><br><b>Video</b></td>
-    <td align="center"><img alt="A green and cream camper van, then the same van made as a cake with a wedge cut from its side" src="docs/media/examples/edit.webp" width="260"><br><b>Edit</b></td>
-    <td align="center"><img alt="A honeybee on a red poppy, seen close" src="docs/media/examples/shot.webp" width="260"><br><b>Shot</b></td>
-  </tr>
-  <tr>
-    <td align="center"><img alt="A man in a bucket hat runs toward the camera down a cobbled street, with two police officers behind him" src="docs/media/examples/motion.webp" width="260"><br><b>Motion</b></td>
-    <td align="center"><img alt="A cream ceramic jaguar head in flat grey light, then the same head lit orange from the left and magenta from the right" src="docs/media/examples/relight.webp" width="260"><br><b>Relight</b></td>
     <td align="center"><img alt="A pink flamingo standing alone under a bus stop shelter at night, lit by a phone flash" src="docs/media/examples/image.webp" width="260"><br><b>Image</b></td>
+    <td align="center"><img alt="A green and cream camper van, then the same van made as a cake with a wedge cut from its side" src="docs/media/examples/edit.webp" width="260"><br><b>Edit</b></td>
   </tr>
   <tr>
+    <td align="center"><img alt="A honeybee on a red poppy, seen close" src="docs/media/examples/shot.webp" width="260"><br><b>Shot</b></td>
+    <td align="center"><img alt="A cream ceramic jaguar head in flat grey light, then the same head lit orange from the left and magenta from the right" src="docs/media/examples/relight.webp" width="260"><br><b>Relight</b></td>
     <td align="center"><img alt="A man with the head of a brown hare, in an oatmeal cardigan, holding a basket of towels in a laundromat" src="docs/media/examples/characters.webp" width="260"><br><b>Characters</b></td>
+  </tr>
+  <tr>
     <td align="center"><img alt="A sunflower field where one flower faces the camera and the others face away, widened to 16:9" src="docs/media/examples/expand.webp" width="260"><br><b>Expand</b></td>
     <td align="center"><img alt="A detail of a chameleon's eye, from the 768 pixel photo beside the same detail from its copy at 1536 pixels" src="docs/media/examples/upscale.webp" width="260"><br><b>Upscale</b></td>
-  </tr>
-  <tr>
     <td align="center"><img alt="A glass perfume bottle among red and pink roses, then the same bottle alone on a transparent background" src="docs/media/examples/background-removal.webp" width="260"><br><b>Remove background</b></td>
-    <td align="center"><img alt="A close-up of a brown eye, from a clip at twice its frame rate" src="docs/media/examples/video-edit.webp" width="260"><br><b>Video edit</b></td>
   </tr>
 </table>
 
