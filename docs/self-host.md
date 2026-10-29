@@ -71,6 +71,8 @@ bun run deploy
 
 The Worker keeps rows in D1 and bytes in the R2 bucket `rosesfield-assets`, and an hourly cron deletes what public mode no longer keeps.
 
+Every response the server answers carries the security headers of `services/gateway/src/routes/security-headers.ts`: HSTS, `nosniff`, `X-Frame-Options: SAMEORIGIN`, a referrer policy and a permissions policy with no camera, microphone, location or payment. Cloudflare serves the platform's static files without the Worker, so `apps/platform/public/_headers` gives them the same headers, and a test fails when the two differ. Turn on Always Use HTTPS for your zone, so a person never sends a key over plain HTTP.
+
 ### A private owner link
 
 `bun run deploy --judge` deploys the Worker's `judge` environment: owner mode on one Comfy key, with a spend cap of 800 credits set by its `SPEND_CAP_CREDITS`, or the cap `--cap <credits>` names. Use it to let a few people you choose run Rosesfield on your key. Set its bucket and secrets first, or let `--login --judge` set them.

@@ -15,6 +15,7 @@ import { assetRoutes } from "#routes/asset-routes"
 import { characterRoutes } from "#routes/character-routes"
 import { errorResponse, routeNotFound } from "#routes/error-response"
 import { appRoutes, runRoutes } from "#routes/run-routes"
+import { withSecurityHeaders } from "#routes/security-headers"
 import { settingsRoutes } from "#routes/settings-routes"
 import { type AccountReader, accountRoute } from "#session/account-routes"
 import {
@@ -87,6 +88,7 @@ export function scopeMiddleware(
 
 export function createGateway(options: GatewayOptions): GatewayApp {
   const app = new Hono<GatewayEnv>()
+  app.use("*", withSecurityHeaders)
   app.onError(errorResponse)
   app.notFound(routeNotFound)
   const guard = guardOf(options.guard)
