@@ -42,14 +42,16 @@ function BalanceSkeleton(): ReactElement {
 
 function CompactKey({
   label,
+  tone,
   onPress,
 }: {
   label: string
+  tone: "accent" | "quiet"
   onPress: () => void
 }): ReactElement {
   return (
     <span className="flex @regular:hidden">
-      <IconButton label={label} tone="quiet" onClick={onPress}>
+      <IconButton label={label} tone={tone} onClick={onPress}>
         <KeyRoundIcon aria-hidden="true" />
       </IconButton>
     </span>
@@ -70,9 +72,10 @@ export function CreditBalance(): ReactNode {
   if (reach === "add") {
     return (
       <>
-        <CompactKey label={t("key.add")} onPress={openKey} />
+        <CompactKey label={t("key.add")} tone="accent" onPress={openKey} />
         <span className="hidden @regular:flex">
           <AppBarAction
+            tone="primary"
             icon={<KeyRoundIcon aria-hidden="true" />}
             onClick={openKey}
           >
@@ -93,7 +96,7 @@ export function CreditBalance(): ReactNode {
     credits === null || credits === undefined ? words : formatBalance(credits)
   return (
     <>
-      <CompactKey label={words} onPress={openCredits} />
+      <CompactKey label={words} tone="quiet" onPress={openCredits} />
       <span className="hidden @regular:flex">
         <AppBarAction
           icon={<CoinsIcon aria-hidden="true" />}

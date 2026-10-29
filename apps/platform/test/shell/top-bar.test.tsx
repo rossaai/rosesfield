@@ -224,6 +224,39 @@ describe("the top bar", () => {
     expect(within(bar).queryByRole("button", { name: /credits/ })).toBeNull()
   })
 
+  it("draws Add your Comfy key in ink as the bar's one primary button when this browser holds no key", async () => {
+    renderAt("/", () => <TopBar />, {
+      settings: { ...ownerSettings, mode: "public", keyFrom: "settings" },
+    })
+    const bar = await screen.findByRole("banner", { name: "Rosesfield" })
+    const keys = within(bar).getAllByRole("button", {
+      name: "Add your Comfy key",
+    })
+    for (const key of keys) {
+      expect(key.className.split(" ")).toEqual(
+        expect.arrayContaining(["bg-ink", "text-canvas"])
+      )
+    }
+    const inked = [...bar.querySelectorAll("button")].filter((button) =>
+      button.className.split(" ").includes("bg-ink")
+    )
+    expect(inked).toEqual(keys)
+  })
+
+  it("draws the balance in the quiet register with no primary button once a key is saved", async () => {
+    const bar = await barAt("/")
+    const circle = within(bar)
+      .getAllByRole("button", { name: "13 credits" })
+      .find((button) => button.textContent === "")
+    expect(circle?.className.split(" ")).toContain("bg-transparent")
+    expect(balancePill(bar).className.split(" ")).toContain("bg-(--well)")
+    expect(
+      [...bar.querySelectorAll("button")].some((button) =>
+        button.className.split(" ").includes("bg-ink")
+      )
+    ).toBe(false)
+  })
+
   it("holds a pill skeleton in the balance's place while settings load", async () => {
     renderAt("/", () => <TopBar />, {})
     const bar = await screen.findByRole("banner", { name: "Rosesfield" })
