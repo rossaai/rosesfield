@@ -1,4 +1,8 @@
-import { type Asset, asset as assetSchema } from "@rosesfield/contract"
+import {
+  type Asset,
+  type AssetPlace,
+  asset as assetSchema,
+} from "@rosesfield/contract"
 import type { AssetId } from "@rosesfield/kernel"
 import { and, desc, eq, lt, or, type SQL } from "drizzle-orm"
 import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite"
@@ -23,7 +27,10 @@ export class DrizzleAssetRepository extends AssetRepository {
     this.db = options.db
   }
 
-  override async add(asset: Asset): Promise<void> {
+  override async add(
+    asset: Asset,
+    place: AssetPlace = "library"
+  ): Promise<void> {
     await this.db.insert(assetTable).values({
       id: asset.id,
       kind: asset.kind,
@@ -33,6 +40,7 @@ export class DrizzleAssetRepository extends AssetRepository {
       height: asset.height,
       durationSeconds: asset.durationSeconds,
       sourceRunId: asset.sourceRunId,
+      place,
       createdAt: Date.parse(asset.createdAt),
     })
   }
@@ -47,7 +55,7 @@ export class DrizzleAssetRepository extends AssetRepository {
   }
 
   override async list(page: AssetPage): Promise<Asset[]> {
-    const conditions: SQL[] = []
+    const conditions: SQL[] = [eq(assetTable.place, "library")]
     if (page.kind !== null) {
       conditions.push(eq(assetTable.kind, page.kind))
     }
@@ -80,7 +88,7 @@ function before(cursor: AssetCursor): SQL {
   return condition
 }
 
-function fromRow(row: AssetRow): Asset {
+function fromRow({ place: _place, ...row }: AssetRow): Asset {
   return assetSchema.parse({
     ...row,
     createdAt: new Date(row.createdAt).toISOString(),

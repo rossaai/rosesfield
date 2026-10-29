@@ -79,7 +79,7 @@ export class SqliteRunRepository extends RunRepository {
   }
 
   override async list(page: RunPage): Promise<Run[]> {
-    const conditions: SQL[] = []
+    const conditions: SQL[] = [eq(runTable.place, "library")]
     if (page.appId !== null) {
       conditions.push(eq(runTable.appId, page.appId))
     }

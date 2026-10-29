@@ -4,6 +4,8 @@ import { timestamp } from "#value.contract"
 
 export const assetKind = z.enum(["image", "video", "audio", "text", "mesh"])
 
+export const assetPlace = z.enum(["library", "held"])
+
 export const mimeType = z
   .string()
   .regex(/^[a-z]+\/[a-z0-9][a-z0-9.+-]*$/)
@@ -22,6 +24,7 @@ export const asset = z.object({
 })
 
 export type AssetKind = z.infer<typeof assetKind>
+export type AssetPlace = z.infer<typeof assetPlace>
 export type Asset = z.infer<typeof asset>
 
 export const assetLink = z.object({

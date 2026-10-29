@@ -1,5 +1,7 @@
 import {
   type AppDefinition,
+  type AssetPlace,
+  assetPlace,
   type EngineBinding,
   type RunInputs,
   type Run as RunRecord,
@@ -125,6 +127,7 @@ export class StartRunHandler {
       idempotencyKey: input.idempotencyKey,
       now: this.clock.now(),
       outputsPerJob: prepared.outputsPerJob ?? engine.outputsPerJob(binding),
+      place: placeOf(input.body),
     })
     const stored = await this.runs.add(run)
     await this.jobs.enqueue(stored.id)
@@ -317,6 +320,9 @@ function hostedRequestOf(
   if (body.aspectRatio !== undefined && body.aspectRatio !== null) {
     issues.push("aspectRatio: a hosted model sets its own aspect in its inputs")
   }
+  if (body.place !== undefined && !assetPlace.safeParse(body.place).success) {
+    issues.push("place: library or held")
+  }
   if (checked.kind === "invalid" || issues.length > 0) {
     throw new RunInputInvalidError({ appId: app.id, issues })
   }
@@ -325,6 +331,10 @@ function hostedRequestOf(
     count,
     aspectRatio: null,
   }
+}
+
+function placeOf(body: unknown): AssetPlace {
+  return isRecord(body) && body.place === "held" ? "held" : "library"
 }
 
 function countOf(

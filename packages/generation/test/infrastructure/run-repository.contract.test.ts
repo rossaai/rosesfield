@@ -25,7 +25,12 @@ const subjects: { name: string; create: () => RunRepository }[] = [
 
 function runAt(
   seconds: number,
-  options: { appId?: string; key?: string | null; id?: string } = {}
+  options: {
+    appId?: string
+    key?: string | null
+    id?: string
+    place?: "held"
+  } = {}
 ): Run {
   return Run.queue({
     id: runIdFormat.parse(options.id ?? crypto.randomUUID()),
@@ -35,6 +40,7 @@ function runAt(
       count: 1,
       aspectRatio: "1:1",
     },
+    ...(options.place === undefined ? {} : { place: options.place }),
     seed: 42,
     adapter: "fake-engine",
     origin: "demo",
@@ -270,6 +276,30 @@ describe.each(subjects)("RunRepository contract: $name", ({ create }) => {
       limit: 10,
     })
     expect(older.map((run) => run.id)).toEqual([ids[1], ids[0]])
+  })
+
+  it("keeps a held run and its held outputs, lists it as unfinished and never in the runs a person started", async () => {
+    const runs = create()
+    const shown = await runs.add(runAt(0))
+    const held = await runs.add(runAt(1, { place: "held" }))
+    const open = await runs.listUnfinished()
+    expect(open.map((run) => run.id)).toEqual([shown.id, held.id])
+    held.keepJob({
+      index: 0,
+      outputs: [],
+      held: [{ nodeId: "13", assetId: portraitId, kind: "video" }],
+      now: start,
+    })
+    await runs.save(held)
+    const read = await runs.get(held.id)
+    expect(read?.toRecord()).toMatchObject({
+      status: "done",
+      place: "held",
+      outputs: [],
+      held: [{ nodeId: "13", assetId: portraitId, kind: "video" }],
+    })
+    const listed = await runs.list({ appId: null, before: null, limit: 10 })
+    expect(listed.map((run) => run.id)).toEqual([shown.id])
   })
 
   it("lists the runs that have not finished, oldest first", async () => {

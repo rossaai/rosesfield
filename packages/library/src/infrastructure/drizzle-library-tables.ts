@@ -17,6 +17,7 @@ export const assetTable = sqliteTable(
     height: integer("height"),
     durationSeconds: real("duration_seconds"),
     sourceRunId: text("source_run_id"),
+    place: text("place").notNull().default("library"),
     createdAt: integer("created_at").notNull(),
   },
   (table) => [

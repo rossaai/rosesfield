@@ -1,4 +1,8 @@
-import { type Asset, asset as assetSchema } from "@rosesfield/contract"
+import {
+  type Asset,
+  type AssetPlace,
+  asset as assetSchema,
+} from "@rosesfield/contract"
 import type { AssetId } from "@rosesfield/kernel"
 import {
   type AssetCursor,
@@ -27,7 +31,10 @@ export class SqliteAssetRepository extends AssetRepository {
     this.scope = options.scope
   }
 
-  override async add(asset: Asset): Promise<void> {
+  override async add(
+    asset: Asset,
+    place: AssetPlace = "library"
+  ): Promise<void> {
     const createdAt = Date.parse(asset.createdAt)
     await this.scope?.claim("asset", asset.id, createdAt)
     await this.db.insert(assetTable).values({
@@ -39,6 +46,7 @@ export class SqliteAssetRepository extends AssetRepository {
       height: asset.height,
       durationSeconds: asset.durationSeconds,
       sourceRunId: asset.sourceRunId,
+      place,
       createdAt,
     })
   }
@@ -53,7 +61,7 @@ export class SqliteAssetRepository extends AssetRepository {
   }
 
   override async list(page: AssetPage): Promise<Asset[]> {
-    const conditions: SQL[] = []
+    const conditions: SQL[] = [eq(assetTable.place, "library")]
     if (page.kind !== null) {
       conditions.push(eq(assetTable.kind, page.kind))
     }
@@ -91,7 +99,7 @@ function before(cursor: AssetCursor): SQL {
   return condition
 }
 
-export function assetOfRow(row: AssetRow): Asset {
+export function assetOfRow({ place: _place, ...row }: AssetRow): Asset {
   return assetSchema.parse({
     ...row,
     createdAt: new Date(row.createdAt).toISOString(),

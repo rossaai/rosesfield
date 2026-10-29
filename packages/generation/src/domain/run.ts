@@ -1,6 +1,8 @@
 import {
+  type AssetPlace,
   type Cost,
   errorEnvelopeOf,
+  type HeldOutput,
   type RunOrigin,
   type Run as RunRecord,
   type RunRequest,
@@ -9,28 +11,9 @@ import {
 import type { AppId, AssetId, ProjectError, RunId } from "@rosesfield/kernel"
 import { RunFinishedError } from "#domain/error/run-finished.error"
 import type { EngineSteps, OutputsPerJob } from "#domain/generation-engine.port"
+import type { RunJob } from "#domain/run-job"
 
-export type RunJobStatus =
-  | "pending"
-  | "submitting"
-  | "queued"
-  | "running"
-  | "collecting"
-  | "done"
-
-export type RunJob = {
-  index: number
-  seed: number | null
-  ref: string | null
-  status: RunJobStatus
-  progress: number | null
-  outputs: AssetId[]
-  dropped?: number
-  cost?: Cost
-  collectingSince?: string
-  submittingSince?: string
-  steps?: EngineSteps
-}
+export type { RunJob, RunJobStatus } from "#domain/run-job"
 
 export type RunState = {
   record: RunRecord
@@ -50,6 +33,7 @@ type QueueRunOptions = {
   idempotencyKey: string | null
   now: Date
   outputsPerJob?: OutputsPerJob
+  place?: AssetPlace
 }
 
 type SubmittedOptions = {
@@ -68,6 +52,7 @@ type ObserveOptions = {
 type KeepJobOptions = {
   index: number
   outputs: readonly AssetId[]
+  held?: readonly HeldOutput[]
   dropped?: number
   cost?: Cost | null
   now: Date
@@ -120,6 +105,7 @@ export class Run {
         failure: null,
         createdAt: options.now.toISOString(),
         finishedAt: null,
+        ...(options.place === "held" ? { place: "held" as const } : {}),
       },
       jobs: Array.from({ length: jobCount }, (_, index) => ({
         index,
@@ -282,6 +268,11 @@ export class Run {
     job.status = "done"
     job.progress = 1
     job.outputs = [...options.outputs]
+    if (options.held === undefined || options.held.length === 0) {
+      delete job.held
+    } else {
+      job.held = [...options.held]
+    }
     this.state.attempts = 0
     if (options.cost === undefined || options.cost === null) {
       delete job.cost
@@ -369,6 +360,12 @@ export class Run {
     )
     record.status = hasStarted ? "running" : "queued"
     record.outputs = jobs.flatMap((job) => job.outputs)
+    const held = jobs.flatMap((job) => job.held ?? [])
+    if (held.length === 0) {
+      delete record.held
+    } else {
+      record.held = held
+    }
     const dropped = jobs.reduce((sum, job) => sum + (job.dropped ?? 0), 0)
     if (dropped === 0) {
       delete record.dropped

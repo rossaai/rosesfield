@@ -28,6 +28,7 @@ export const runTable = sqliteTable(
     failureCode: text("failure_code"),
     failureStatus: integer("failure_status"),
     idempotencyKey: text("idempotency_key").unique(),
+    place: text("place").notNull().default("library"),
     attempts: integer("attempts").notNull(),
     version: integer("version").notNull(),
     createdAt: integer("created_at").notNull(),

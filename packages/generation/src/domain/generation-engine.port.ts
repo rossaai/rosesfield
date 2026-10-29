@@ -87,6 +87,8 @@ export type EngineStatus =
   | { state: "cancelled" }
 
 export type EngineOutput = {
+  /** The graph node that saved the output, when the engine runs a graph. */
+  nodeId?: string
   kind: AssetKind
   mime: string
   bytes: Uint8Array
@@ -206,6 +208,11 @@ export abstract class GenerationEngine {
     _signal: AbortSignal
   ): AsyncGenerator<EngineStatus, void, void> {
     yield await this.read(ref)
+  }
+
+  /** Names the nodes whose outputs are a run's result, or null when every output is. Every other output is held out of the library for the run chain. */
+  resultNodesOf(_binding: EngineBinding): readonly string[] | null {
+    return null
   }
 
   /** Lists the outputs of a run that succeeded, with their bytes, and never fetches an address the run's inputs name. */

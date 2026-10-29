@@ -30,9 +30,11 @@ export {
   type Asset,
   type AssetKind,
   type AssetLink,
+  type AssetPlace,
   asset,
   assetKind,
   assetLink,
+  assetPlace,
   mimeType,
 } from "#asset.contract"
 export {
@@ -113,6 +115,8 @@ export { givenRuleIssuesOf } from "#ruled-inputs.contract"
 export {
   type Cost,
   cost,
+  type HeldOutput,
+  heldOutput,
   type Run,
   type RunEngine,
   type RunOrigin,

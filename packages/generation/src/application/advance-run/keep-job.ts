@@ -15,6 +15,7 @@ import type {
 import type { PriceBook } from "#domain/price-book.port"
 import type { Run } from "#domain/run"
 import type { RunAssets } from "#domain/run-assets.port"
+import { resolveBinding } from "#domain/select-binding"
 
 export type Watch = {
   app: AppDefinition
@@ -28,6 +29,15 @@ export type KeepPorts = {
 }
 
 export type Collected = "kept" | "empty" | "retry"
+
+function resultsOf(run: Run, watch: Watch): readonly string[] | null {
+  if (run.toRecord().place === "held") {
+    return []
+  }
+  return watch.engine.resultNodesOf(
+    resolveBinding(watch.app.engine, run.toRecord().inputs)
+  )
+}
 
 export async function keepJob(
   ports: KeepPorts,
@@ -53,7 +63,13 @@ export async function keepFinished(
   job: { index: number; finished: EngineFinished }
 ): Promise<void> {
   const { outputs, cost } = job.finished
-  const kept = await keepOutputs(run, watch.app, outputs, ports.assets)
+  const kept = await keepOutputs(
+    run,
+    watch.app,
+    outputs,
+    ports.assets,
+    resultsOf(run, watch)
+  )
   if (kept === null) {
     run.fail({ error: noOutput(), now: ports.now })
     return
@@ -80,7 +96,13 @@ export async function collectJob(
   }
   let kept: KeptOutputs | null
   try {
-    kept = await keepOutputs(run, watch.app, outputs, ports.assets)
+    kept = await keepOutputs(
+      run,
+      watch.app,
+      outputs,
+      ports.assets,
+      resultsOf(run, watch)
+    )
   } catch (error) {
     if (!mayKeepLater(run, watch.app, error, ports.now)) {
       throw error

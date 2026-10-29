@@ -1,0 +1,1 @@
+ALTER TABLE `runs` ADD `place` text DEFAULT 'library' NOT NULL;

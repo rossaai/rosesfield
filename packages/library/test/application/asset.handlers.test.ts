@@ -127,6 +127,27 @@ describe("ListAssetsHandler", () => {
     expect(all.assets[0]?.kind).toBe("audio")
   })
 
+  it("lists no asset held out of the library for a run chain, and still reads it by its id", async () => {
+    const library = libraryFor()
+    const shown = await upload(library, "image/png")
+    const { asset: held } = await library.upload.execute({
+      bytes: png,
+      mime: "image/png",
+      sourceRunId: runUuid,
+      width: null,
+      height: null,
+      durationSeconds: null,
+      place: "held",
+    })
+    const { assets } = await library.listAssets.execute({
+      kind: null,
+      cursor: null,
+    })
+    expect(assets.map((one) => one.id)).toEqual([shown.asset.id])
+    const read = await library.readContent.execute({ assetId: held.id })
+    expect(read.asset.id).toBe(held.id)
+  })
+
   it("refuses a cursor it did not return", async () => {
     await expect(
       libraryFor().listAssets.execute({ kind: null, cursor: "next-page" })

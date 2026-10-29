@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { AppDefinition, AppOutput } from "#app.contract"
+import { assetPlace } from "#asset.contract"
 import { assetId, characterId } from "#id.contract"
 import {
   type InputDefinition,
@@ -18,6 +19,7 @@ export const startRunBody = z.strictObject({
   inputs: runInputs,
   count: runCount.optional(),
   aspectRatio: aspectRatio.nullable().optional(),
+  place: assetPlace.optional(),
 })
 
 export type StartRunBody = z.infer<typeof startRunBody>
@@ -136,7 +138,12 @@ function bodyOf(app: AppDefinition, count: z.ZodType) {
       ])
     )
   )
-  return z.strictObject({ inputs, count, ...aspectRatioFor(app.output) })
+  return z.strictObject({
+    inputs,
+    count,
+    ...aspectRatioFor(app.output),
+    place: assetPlace.optional(),
+  })
 }
 
 export function appOnlyInputsFor(app: AppDefinition): z.ZodType<RunInputs> {

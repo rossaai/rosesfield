@@ -200,6 +200,7 @@ describe("the /mcp route", () => {
       "inputs",
       "count",
       "aspectRatio",
+      "place",
       "idempotencyKey",
     ])
     expect(JSON.stringify(image?.inputSchema)).toContain('"prompt"')

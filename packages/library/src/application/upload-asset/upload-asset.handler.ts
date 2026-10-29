@@ -1,4 +1,8 @@
-import { type Asset, asset as assetSchema } from "@rosesfield/contract"
+import {
+  type Asset,
+  type AssetPlace,
+  asset as assetSchema,
+} from "@rosesfield/contract"
 import { assetIdFormat, type Clock } from "@rosesfield/kernel"
 import type { AssetRepository } from "#domain/asset.repository"
 import { kindOfMime } from "#domain/asset-kind"
@@ -14,6 +18,7 @@ export type UploadAssetInput = {
   width: number | null
   height: number | null
   durationSeconds: number | null
+  place?: AssetPlace
 }
 
 export type UploadAssetOutput = {
@@ -75,7 +80,7 @@ export class UploadAssetHandler {
     const asset = parsed.data
     await this.store.put(asset.id, input.bytes, asset.mime)
     try {
-      await this.assets.add(asset)
+      await this.assets.add(asset, input.place ?? "library")
     } catch (error) {
       await this.store.delete(asset.id)
       throw error

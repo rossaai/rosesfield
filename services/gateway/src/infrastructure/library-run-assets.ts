@@ -56,6 +56,7 @@ export class LibraryRunAssets extends RunAssets {
       width: output.width,
       height: output.height,
       durationSeconds: output.durationSeconds,
+      place: output.place,
     })
     const { preview } = output
     if (preview !== undefined) {

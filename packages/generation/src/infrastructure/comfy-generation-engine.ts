@@ -40,6 +40,7 @@ import {
 import {
   comfyWorkflowAdapter,
   parseComfyWorkflow,
+  resultNodesOf,
   runsPartnerNode,
   workflowHashOf,
 } from "#infrastructure/comfy/comfy-workflow-binding"
@@ -135,6 +136,10 @@ export class ComfyGenerationEngine extends GenerationEngine {
 
   override outputsPerJob(binding: EngineBinding): OutputsPerJob {
     return parseComfyWorkflow(binding).outputsPerJob
+  }
+
+  override resultNodesOf(binding: EngineBinding): readonly string[] | null {
+    return resultNodesOf(binding)
   }
 
   override async submit(request: EngineRequest): Promise<EngineSubmission> {
@@ -348,6 +353,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
     }
     const size = mediaSizeOf(bytes)
     return {
+      nodeId: output.node_id,
       kind: outputKindOf(output.type, output.content_type),
       mime: mimeOf(output.content_type),
       bytes,

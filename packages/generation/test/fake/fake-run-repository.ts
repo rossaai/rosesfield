@@ -45,6 +45,7 @@ export class FakeRunRepository extends RunRepository {
   override async list(page: RunPage): Promise<Run[]> {
     const { appId, before } = page
     return [...this.stored.values()]
+      .filter((run) => run.toRecord().place !== "held")
       .filter((run) => appId === null || run.appId === appId)
       .filter(
         (run) =>

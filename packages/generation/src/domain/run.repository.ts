@@ -25,7 +25,7 @@ export abstract class RunRepository {
   /** Returns the run started with this idempotency key, or null. */
   abstract findByIdempotencyKey(key: string): Promise<Run | null>
 
-  /** Lists runs newest first, before the cursor when one is given. */
+  /** Lists the runs a person started newest first, before the cursor when one is given. A run held for a run chain is never listed. */
   abstract list(page: RunPage): Promise<Run[]>
 
   /** Lists every run that has not finished, oldest first. */

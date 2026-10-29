@@ -13,6 +13,7 @@ export const comfyWorkflowConfig = z
     models: z.array(z.string().min(1).max(200)).max(16).optional(),
     outputsPerJob: z.enum(["all", "one"]).default("all"),
     partnerNodes: z.array(z.string().min(1).max(80)).max(16).default([]),
+    results: z.array(z.string().min(1).max(32)).max(16).optional(),
   })
   .refine(
     (config) =>
@@ -54,6 +55,16 @@ export function parseComfyWorkflow(
     })
   }
   return result.data
+}
+
+export function resultNodesOf(
+  binding: EngineBinding
+): readonly string[] | null {
+  if (binding.adapter !== comfyWorkflowAdapter) {
+    return null
+  }
+  const result = comfyWorkflowConfig.safeParse(binding.config)
+  return result.success ? (result.data.results ?? null) : null
 }
 
 export function runsPartnerNode(config: ComfyWorkflowConfig): boolean {

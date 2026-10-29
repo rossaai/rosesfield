@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { assetKind, assetPlace } from "#asset.contract"
 import { errorBody } from "#error.contract"
 import { appId, assetId, runId } from "#id.contract"
 import { runInputs } from "#input.contract"
@@ -51,6 +52,12 @@ const runPlan = z.object({
   shots: z.array(planShot).min(1).max(16),
 })
 
+export const heldOutput = z.object({
+  nodeId: z.string().min(1).max(32),
+  assetId,
+  kind: assetKind,
+})
+
 export const run = z.object({
   id: runId,
   appId,
@@ -60,6 +67,8 @@ export const run = z.object({
   aspectRatio: aspectRatio.nullable(),
   seed: seed.nullable(),
   outputs: z.array(assetId),
+  held: z.array(heldOutput).max(64).optional(),
+  place: assetPlace.optional(),
   dropped: z.number().int().min(1).max(1000).optional(),
   progress: z.number().min(0).max(1).nullable(),
   engine: runEngine,
@@ -76,4 +85,5 @@ export type RunOrigin = z.infer<typeof runOrigin>
 export type Cost = z.infer<typeof cost>
 export type RunEngine = z.infer<typeof runEngine>
 export type RunRequest = z.infer<typeof runRequest>
+export type HeldOutput = z.infer<typeof heldOutput>
 export type Run = z.infer<typeof run>

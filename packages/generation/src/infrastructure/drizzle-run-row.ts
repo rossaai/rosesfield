@@ -2,6 +2,7 @@ import {
   assetId,
   assetKind,
   cost,
+  heldOutput,
   mimeType,
   run as runSchema,
 } from "@rosesfield/contract"
@@ -74,6 +75,7 @@ const jobRow = z.object({
   ]),
   progress: z.number().min(0).max(1).nullable(),
   outputs: z.array(assetId),
+  held: z.array(heldOutput).optional(),
   dropped: z.number().int().min(1).optional(),
   cost: cost.optional(),
   collectingSince: z.iso.datetime().optional(),
@@ -82,9 +84,25 @@ const jobRow = z.object({
 })
 
 function jobOf(row: z.infer<typeof jobRow>): RunJob {
-  const { collectingSince, submittingSince, cost, dropped, steps, ...job } = row
+  const {
+    collectingSince,
+    submittingSince,
+    cost,
+    dropped,
+    steps,
+    held,
+    ...job
+  } = row
   return {
     ...job,
+    ...(held === undefined
+      ? {}
+      : {
+          held: held.map((one) => ({
+            ...one,
+            assetId: assetIdFormat.parse(one.assetId),
+          })),
+        }),
     ...(cost === undefined ? {} : { cost }),
     ...(dropped === undefined ? {} : { dropped }),
     outputs: job.outputs.map((id) => assetIdFormat.parse(id)),
@@ -119,6 +137,7 @@ export function toRunRow(run: Run): RunRow {
     failureCode: record.failure === null ? null : record.failure.code,
     failureStatus: record.failure === null ? null : record.failure.status,
     idempotencyKey,
+    place: record.place ?? "library",
     attempts,
     version,
     createdAt: Date.parse(record.createdAt),
@@ -131,6 +150,7 @@ export function fromRunRow(row: RunRow): Run {
   const jobs = jobsOf(row.jobs)
   const dropped = jobs.reduce((sum, job) => sum + (job.dropped ?? 0), 0)
   const plan = jobs.find((job) => job.steps !== undefined)?.steps?.plan
+  const held = jobs.flatMap((job) => job.held ?? [])
   const record = runSchema.parse({
     id: row.id,
     appId: row.appId,
@@ -140,6 +160,8 @@ export function fromRunRow(row: RunRow): Run {
     aspectRatio: row.aspectRatio,
     seed: row.seed,
     outputs: row.outputs,
+    ...(held.length === 0 ? {} : { held }),
+    ...(row.place === "held" ? { place: "held" } : {}),
     ...(dropped === 0 ? {} : { dropped }),
     ...(plan === undefined ? {} : { plan }),
     progress: row.progress,
