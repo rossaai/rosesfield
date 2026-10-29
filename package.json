@@ -24,9 +24,10 @@
     "copy:check": "bun scripts/checks/typed-copy/check-typed-copy.ts",
     "glob:check": "bun scripts/checks/glob-calls/check-glob-calls.ts",
     "motion:check": "bun scripts/checks/motion-presets/check-motion-presets.ts",
+    "cloud:check": "bun scripts/checks/cloud-graphs/check-cloud-graphs.ts",
     "docs:check": "bun scripts/checks/doc-links/check-doc-links.ts",
     "ui:add": "cd apps/platform && shadcn add",
-    "gate": "bun run catalog:sync && bun run generated:check && bun run copy:check && bun run glob:check && bun run motion:check && bun run docs:check && bun run typecheck && bun run lint && bun run test",
+    "gate": "bun run catalog:sync && bun run generated:check && bun run copy:check && bun run glob:check && bun run motion:check && bun run cloud:check && bun run docs:check && bun run typecheck && bun run lint && bun run test",
     "deploy": "bun scripts/deploy/deploy.ts"
   },
   "devDependencies": {
