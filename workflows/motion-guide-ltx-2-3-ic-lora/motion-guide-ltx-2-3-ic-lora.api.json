@@ -78,7 +78,7 @@
   "900": {
     "class_type": "StringConcatenate",
     "inputs": {
-      "string_a": "The camera and the person from the first frame move exactly as the depth guide moves, keeping the face, the hair, the body, the clothes and the light of the first frame.",
+      "string_a": "The same person from the opening frame keeps the same face, hair, clothes and skin in every shot.",
       "string_b": "",
       "delimiter": " "
     },

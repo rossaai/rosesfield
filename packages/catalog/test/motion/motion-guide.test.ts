@@ -27,8 +27,8 @@ const guideWorkflowId = "motion-guide-ltx-2-3-ic-lora"
 
 const poseNodes = ["707", "708", "709", "710", "711", "712"]
 
-const depthSentence =
-  "The camera and the person from the first frame move exactly as the depth guide moves, keeping the face, the hair, the body, the clothes and the light of the first frame."
+const identitySentence =
+  "The same person from the opening frame keeps the same face, hair, clothes and skin in every shot."
 
 const cloudUrl = "https://cloud.comfy.org"
 const jobId = "6e5d4c3b-2a1f-4e0d-9c8b-7a6f5e4d3c2b"
@@ -58,7 +58,7 @@ function recipeGraph(): Graph {
   }
   set(graph, "717", "image", ["706", 0])
   set(graph, "719", "image1", ["706", 0])
-  set(graph, "900", "string_a", depthSentence)
+  set(graph, "900", "string_a", identitySentence)
   set(graph, "68", "filename_prefix", "video/rosesfield-motion-guide")
   delete graph["122"]?.inputs.audio
   return graph

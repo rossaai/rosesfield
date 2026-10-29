@@ -33,7 +33,7 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 It is the graph of [`motion-ltx-2-3-ic-lora`](../motion-ltx-2-3-ic-lora/README.md) with three changes.
 
 - **The guide goes straight in.** The person detector and SDPose, nodes 707 to 712, are gone. Nodes 717 and 719 take the guide's own frames from node 706, so the IC-LoRA reads your depth video frame by frame. The union control IC-LoRA takes pose, depth and edges, per its [model card](https://huggingface.co/Lightricks/LTX-2.3-22b-IC-LoRA-Union-Control). A depth guide carries the camera, the room and the bodies, so it sets the camera path as well as the movement.
-- **The prompt.** Node 900 puts a fixed sentence about following the depth guide before your words about the scene.
+- **The prompt.** Node 900 puts a fixed sentence before your words about the scene, which keeps the person from your photo the same in every shot. It names no control and no motion, because the guide carries the motion.
 - **No sound.** Node 122 takes no audio, because a depth guide carries none, and the video has no audio track.
 
 Everything else is the Motion graph's own. Node 692 keeps the first 10 seconds of the guide. LTX renders 8 n + 1 frames, and the last guide frame is repeated up to that count, nodes 714 to 719. Node 724 keeps the guide's n frames from render frame 1 on, so output frame k follows guide frame k + 1, and frame 0, your photo, is not shown. Nodes 721 to 723 set the short side to the bound value and keep the photo's ratio, each side a multiple of 64. Node 115 fits the guide to that size with a centre crop, so a guide in another shape than your photo loses its edges, and the Motion screen refuses such a guide.
