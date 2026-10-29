@@ -23,10 +23,10 @@
 > Rosesfield is an entry to Comfy's [Open Source Higgsfield challenge](https://comfy.org/open-source-higgsfield), #OpenSourceHiggsfield. It is not made by, affiliated with or endorsed by Higgsfield.
 
 <p align="center">
-  <a href="docs/media/film/rosesfield-film.mp4"><img alt="The Rosesfield launch film. A white goose in a red cape on a throne, open in the Image app's viewer beside the prompt that made it." src="docs/media/film/rosesfield-film.webp" width="720"></a>
+  <img alt="The Rosesfield launch film, playing without sound. A prompt types into the Image app, a white goose in a red cape appears on a throne, and real results stream past the name." src="docs/media/film/rosesfield-film.webp" width="720">
 </p>
 
-<p align="center">The launch film, 38 seconds. Every result in it is a real run on Comfy.</p>
+<p align="center">The launch film, 38 seconds. Every result in it is a real run on Comfy. <a href="docs/media/film/rosesfield-film.mp4">Watch it with sound</a>.</p>
 
 ## Start
 
@@ -47,30 +47,30 @@ Your Comfy key is the only sign-in, and each run spends credits from your own Co
 
 <table>
   <tr>
-    <td align="center" colspan="3"><a href="docs/media/examples/hose.mp4"><img alt="A woman waters a garden with a hose, then the same photo where the water is a stream of orange and magenta petals" src="docs/media/examples/hose.webp" width="520"></a><br><b>Image, then Edit</b></td>
+    <td align="center" colspan="3"><img alt="A woman waters a garden with a hose, then the same photo where the water is a stream of orange and magenta petals" src="docs/media/examples/hose.webp" width="520"><br><b>Image, then Edit</b></td>
   </tr>
   <tr>
-    <td align="center"><a href="docs/media/examples/video.mp4"><img alt="A white goose in a red velvet cape on a golden throne, in a candlelit hall where courtiers stand along a red carpet" src="docs/media/examples/video.webp" width="260"></a><br><b>Video</b></td>
-    <td align="center"><a href="docs/media/examples/edit.mp4"><img alt="A green and cream camper van, then the same van made as a cake with a wedge cut from its side" src="docs/media/examples/edit.webp" width="260"></a><br><b>Edit</b></td>
-    <td align="center"><a href="docs/media/examples/shot.mp4"><img alt="A honeybee on a red poppy, seen close" src="docs/media/examples/shot.webp" width="260"></a><br><b>Shot</b></td>
+    <td align="center"><img alt="A white goose in a red velvet cape on a golden throne, in a candlelit hall where courtiers stand along a red carpet" src="docs/media/examples/video.webp" width="260"><br><b>Video</b></td>
+    <td align="center"><img alt="A green and cream camper van, then the same van made as a cake with a wedge cut from its side" src="docs/media/examples/edit.webp" width="260"><br><b>Edit</b></td>
+    <td align="center"><img alt="A honeybee on a red poppy, seen close" src="docs/media/examples/shot.webp" width="260"><br><b>Shot</b></td>
   </tr>
   <tr>
-    <td align="center"><a href="docs/media/examples/motion.mp4"><img alt="A man in a bucket hat runs toward the camera down a cobbled street, with two police officers behind him" src="docs/media/examples/motion.webp" width="260"></a><br><b>Motion</b></td>
-    <td align="center"><a href="docs/media/examples/relight.mp4"><img alt="A cream ceramic jaguar head in flat grey light, then the same head lit orange from the left and magenta from the right" src="docs/media/examples/relight.webp" width="260"></a><br><b>Relight</b></td>
+    <td align="center"><img alt="A man in a bucket hat runs toward the camera down a cobbled street, with two police officers behind him" src="docs/media/examples/motion.webp" width="260"><br><b>Motion</b></td>
+    <td align="center"><img alt="A cream ceramic jaguar head in flat grey light, then the same head lit orange from the left and magenta from the right" src="docs/media/examples/relight.webp" width="260"><br><b>Relight</b></td>
     <td align="center"><img alt="A pink flamingo standing alone under a bus stop shelter at night, lit by a phone flash" src="docs/media/examples/image.webp" width="260"><br><b>Image</b></td>
   </tr>
   <tr>
     <td align="center"><img alt="A man with the head of a brown hare, in an oatmeal cardigan, holding a basket of towels in a laundromat" src="docs/media/examples/characters.webp" width="260"><br><b>Characters</b></td>
-    <td align="center"><a href="docs/media/examples/expand.mp4"><img alt="A sunflower field where one flower faces the camera and the others face away, widened to 16:9" src="docs/media/examples/expand.webp" width="260"></a><br><b>Expand</b></td>
-    <td align="center"><a href="docs/media/examples/upscale.mp4"><img alt="A detail of a chameleon's eye, from the 768 pixel photo beside the same detail from its copy at 1536 pixels" src="docs/media/examples/upscale.webp" width="260"></a><br><b>Upscale</b></td>
+    <td align="center"><img alt="A sunflower field where one flower faces the camera and the others face away, widened to 16:9" src="docs/media/examples/expand.webp" width="260"><br><b>Expand</b></td>
+    <td align="center"><img alt="A detail of a chameleon's eye, from the 768 pixel photo beside the same detail from its copy at 1536 pixels" src="docs/media/examples/upscale.webp" width="260"><br><b>Upscale</b></td>
   </tr>
   <tr>
-    <td align="center"><a href="docs/media/examples/background-removal.mp4"><img alt="A glass perfume bottle among red and pink roses, then the same bottle alone on a transparent background" src="docs/media/examples/background-removal.webp" width="260"></a><br><b>Remove background</b></td>
-    <td align="center"><a href="docs/media/examples/video-edit.mp4"><img alt="A close-up of a brown eye, from a clip at twice its frame rate" src="docs/media/examples/video-edit.webp" width="260"></a><br><b>Video edit</b></td>
+    <td align="center"><img alt="A glass perfume bottle among red and pink roses, then the same bottle alone on a transparent background" src="docs/media/examples/background-removal.webp" width="260"><br><b>Remove background</b></td>
+    <td align="center"><img alt="A close-up of a brown eye, from a clip at twice its frame rate" src="docs/media/examples/video-edit.webp" width="260"><br><b>Video edit</b></td>
   </tr>
 </table>
 
-Press a picture to play its clip, where it has one. Each one is a paid run in the running app, made from 2026-10-22 to 2026-10-29.
+Each clip plays on its own, without its sound. Each one is a paid run in the running app, made from 2026-10-22 to 2026-10-29.
 
 Of the 36 Higgsfield products this README lists, 24 have a Rosesfield app that does the same job, and Rosesfield adds Music, Sound effects and 3D. [See them side by side](#rosesfield-and-higgsfield-app-by-app).
 
