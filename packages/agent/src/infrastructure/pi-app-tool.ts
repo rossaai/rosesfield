@@ -6,6 +6,7 @@ import type {
   ToolRegistration,
 } from "@earendil-works/pi-durable"
 import { autoRunLimitCredits, type ModelForm } from "@rosesfield/catalog/comfy"
+import { isFinalRun, vfxAgentNotes, vfxAppId } from "@rosesfield/catalog/vfx"
 import {
   type AppDefinition,
   errorEnvelopeOf,
@@ -93,6 +94,11 @@ function checkedArguments(
   }
 }
 
+export function appToolDescription(app: AppDefinition): string {
+  const general = agentCopy.tools.app(app)
+  return app.id === vfxAppId ? `${general}\n${vfxAgentNotes()}` : general
+}
+
 function refusalOf(error: ProjectError): ToolExecutionResult {
   return {
     output: [{ type: "text", text: refusalTextOf(error) }],
@@ -106,7 +112,7 @@ export function appTool(options: AppToolOptions): ToolRegistration {
   const wait = options.wait ?? timerWait
   const tool: Tool = {
     name: app.id,
-    description: agentCopy.tools.app(app),
+    description: appToolDescription(app),
     parameters: toolParameters(schema),
   }
   return {
@@ -188,7 +194,7 @@ async function runApp(
   )
   const approval = settings?.runApproval ?? StartConversationHandler.runApproval
   const proposed = { app, request, body: jsonBody.parse(args) }
-  if (approval === "ask") {
+  if (approval === "ask" || isFinalRun(app.id, request.inputs)) {
     return propose(proposed, api, context)
   }
   if (isKeyframeChain(app)) {

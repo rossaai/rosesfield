@@ -38,6 +38,8 @@ import {
 } from "@rosesfield/library"
 import { LibraryRunAssets } from "#infrastructure/library-run-assets"
 import { ListedAppCatalog } from "#infrastructure/listed-app-catalog"
+import type { GuideFiles } from "#vfx/guide-files"
+import { GuidedStartRunHandler } from "#vfx/guided-start-run"
 
 export type HandlerPorts = {
   apps: readonly AppDefinition[]
@@ -49,6 +51,7 @@ export type HandlerPorts = {
   clock: Clock
   prices?: PriceBook
   watchMarks?: WatchMarkPort
+  guides?: GuideFiles
 }
 
 function pricesOf(ports: HandlerPorts): { prices?: PriceBook } {
@@ -141,7 +144,7 @@ function buildRuns(
 ): RunHandlers {
   const { runs, engines, clock } = ports
   const apps = new ListedAppCatalog({ apps: ports.apps })
-  const startRun = new StartRunHandler({
+  const start = {
     apps,
     runs,
     engines,
@@ -149,7 +152,11 @@ function buildRuns(
     clock,
     policy: new CatalogModelPolicy(),
     assets: runAssetsOf(library),
-  })
+  }
+  const startRun =
+    ports.guides === undefined
+      ? new StartRunHandler(start)
+      : new GuidedStartRunHandler({ ...start, guides: ports.guides, library })
   return {
     startRun,
     getRun: new GetRunHandler({ runs }),

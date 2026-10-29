@@ -19,29 +19,6 @@
     "banner": "start"
   },
   {
-    "runId": "cb3281e7-8764-475f-848b-8cc386311bae",
-    "file": "still-in-the-street.mp4",
-    "input": {
-      "file": "street-golden-hour.webp",
-      "name": "image"
-    },
-    "appId": "effects",
-    "kind": "video",
-    "width": 540,
-    "height": 960,
-    "model": "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
-    "prompt": null,
-    "inputs": {
-      "effect": "still-in-the-street",
-      "resolution": "1080p"
-    },
-    "aspectRatio": "9:16",
-    "credits": 19.24,
-    "seconds": 102.2,
-    "madeAt": "2026-10-21T22:04:40Z",
-    "from": "street-golden-hour.webp"
-  },
-  {
     "runId": "58bdf412-f014-462f-99e7-7308cee99c2a",
     "file": "sneaker.webp",
     "appId": "image",

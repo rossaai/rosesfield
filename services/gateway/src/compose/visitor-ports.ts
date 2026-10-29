@@ -20,6 +20,7 @@ import { SqliteRunRepository } from "#infrastructure/sqlite-run-repository"
 import { PolledJobRunner } from "#session/polled-job-runner"
 import { type SessionId, SessionScope } from "#session/session-scope"
 import { readVisitorKeys } from "#session/visitor-keys"
+import type { GuideFiles } from "#vfx/guide-files"
 
 export type SessionAgentHost = {
   agentOf: (sessionId: SessionId) => AgentHarness
@@ -36,6 +37,7 @@ export type VisitorDeps = {
   engineOptions: EngineOptions
   agents: SessionAgentHost | null
   defer?: RuntimeDefer
+  guides?: GuideFiles
 }
 
 export async function visitorScopeFor(
@@ -66,6 +68,7 @@ export async function visitorScopeFor(
       engines,
       clock: deps.clock,
       prices: new DrizzlePriceBook({ db }),
+      ...(deps.guides === undefined ? {} : { guides: deps.guides }),
     },
     () => new PolledJobRunner()
   )

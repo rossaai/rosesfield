@@ -59,6 +59,7 @@ describe("the stills every video workflow sends", () => {
       "motion-guide-ltx-2-3-ic-lora",
       "motion-ltx-2-3-ic-lora",
       "upscale-video-seedvr2",
+      "vfx-clip-ltx-2-3-ic-lora",
       "video-edit-background-birefnet",
       "video-edit-frame-rate-film",
       "video-edit-reframe-ltx-2-3",

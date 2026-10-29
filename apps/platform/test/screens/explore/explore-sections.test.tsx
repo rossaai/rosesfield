@@ -30,11 +30,11 @@ describe("Explore's examples", () => {
     const rowFiles = new Set(showcaseRows.map((row) => row.file))
     const sources = new Set(
       showcaseRows.flatMap((row) =>
-        row.from === undefined ||
-        row.from.endsWith(".mp4") ||
-        !rowFiles.has(row.from)
+        row.from?.endsWith(".mp4") === true
           ? []
-          : [row.from]
+          : [row.from, row.input?.file].filter(
+              (file): file is string => file !== undefined && rowFiles.has(file)
+            )
       )
     )
     expect(examples).toHaveLength(
@@ -56,7 +56,7 @@ describe("Explore's examples", () => {
     for (const after of [
       "relight-portrait.webp",
       "sneaker-cutout.webp",
-      "still-in-the-street.mp4",
+      "push-into-eye.mp4",
     ]) {
       expect(files).toContain(`showcase-${after}`)
     }

@@ -8,6 +8,7 @@ export const shellCopy = {
   "shell.area.video": "Video",
   "shell.area.audio": "Audio",
   "shell.area.mesh": "3D",
+  "shell.area.vfx": "VFX",
   "shell.bar.label": "Main",
   "shell.create.title": "Create",
   "shell.nav.apps": "Apps",

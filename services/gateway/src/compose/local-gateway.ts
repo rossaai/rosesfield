@@ -67,6 +67,8 @@ import { SharePurge } from "#share/share-purge"
 import type { ShareMount } from "#share/share-routes"
 import { SqliteShareRepository } from "#share/sqlite-share-repository"
 import { ownerSpend } from "#spend/owner-spend"
+import { folderGuideFiles } from "#vfx/folder-guide-files"
+import type { GuideFiles } from "#vfx/guide-files"
 
 export type LocalGateway = {
   app: GatewayApp
@@ -97,10 +99,15 @@ type Parts = {
   account: ComfyAccount
   publicAccount: PublicAccountParts
   shares: ShareMount
+  guides: GuideFiles
 }
 
 const platformDist = fileURLToPath(
   new URL("../../../../apps/platform/dist", import.meta.url)
+)
+
+const presetGuides = fileURLToPath(
+  new URL("../../../../apps/platform/public/vfx/guides", import.meta.url)
 )
 
 export function composeLocalGateway(
@@ -147,6 +154,7 @@ export function composeLocalGateway(
       limit: shareLimit({ db, clock, clientOf: clientOfEnv(env) }),
       needsKey: env.access.mode === "public",
     },
+    guides: folderGuideFiles(presetGuides),
   }
   const platform = root === null ? [] : platformFiles(root)
   return env.access.mode === "public"
@@ -178,6 +186,7 @@ function ownerHandlers(
       engines,
       clock: parts.clock,
       prices: parts.prices,
+      guides: parts.guides,
     },
     (advance) => new TimerJobRunner({ advance, runs: resumed })
   )
@@ -350,6 +359,7 @@ function composePublic(
       clock,
       engineOptions: parts.engineOptions,
       agents,
+      guides: parts.guides,
     })
   const app = createGateway({
     apps: parts.apps,

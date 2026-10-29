@@ -53,6 +53,8 @@ import wUpscaleImageSeedvr2Api from "../../../workflows/upscale-image-seedvr2/up
 import wUpscaleImageSeedvr2Entry from "../../../workflows/upscale-image-seedvr2/entry.json"
 import wUpscaleVideoSeedvr2Api from "../../../workflows/upscale-video-seedvr2/upscale-video-seedvr2.api.json"
 import wUpscaleVideoSeedvr2Entry from "../../../workflows/upscale-video-seedvr2/entry.json"
+import wVfxClipLtx23IcLoraApi from "../../../workflows/vfx-clip-ltx-2-3-ic-lora/vfx-clip-ltx-2-3-ic-lora.api.json"
+import wVfxClipLtx23IcLoraEntry from "../../../workflows/vfx-clip-ltx-2-3-ic-lora/entry.json"
 import wVideoEditBackgroundBirefnetApi from "../../../workflows/video-edit-background-birefnet/video-edit-background-birefnet.api.json"
 import wVideoEditBackgroundBirefnetEntry from "../../../workflows/video-edit-background-birefnet/entry.json"
 import wVideoEditFrameRateFilmApi from "../../../workflows/video-edit-frame-rate-film/video-edit-frame-rate-film.api.json"
@@ -94,6 +96,7 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "try-on-qwen-image-edit-2511", entry: wTryOnQwenImageEdit2511Entry, graph: wTryOnQwenImageEdit2511Api },
   { folder: "upscale-image-seedvr2", entry: wUpscaleImageSeedvr2Entry, graph: wUpscaleImageSeedvr2Api },
   { folder: "upscale-video-seedvr2", entry: wUpscaleVideoSeedvr2Entry, graph: wUpscaleVideoSeedvr2Api },
+  { folder: "vfx-clip-ltx-2-3-ic-lora", entry: wVfxClipLtx23IcLoraEntry, graph: wVfxClipLtx23IcLoraApi },
   { folder: "video-edit-background-birefnet", entry: wVideoEditBackgroundBirefnetEntry, graph: wVideoEditBackgroundBirefnetApi },
   { folder: "video-edit-frame-rate-film", entry: wVideoEditFrameRateFilmEntry, graph: wVideoEditFrameRateFilmApi },
   { folder: "video-edit-reframe-ltx-2-3", entry: wVideoEditReframeLtx23Entry, graph: wVideoEditReframeLtx23Api },

@@ -16,6 +16,8 @@ import { SqliteAssetRepository } from "#infrastructure/sqlite-asset-repository"
 import { SqliteCharacterRepository } from "#infrastructure/sqlite-character-repository"
 import type { SqliteDatabase } from "#infrastructure/sqlite-database"
 import { SqliteRunRepository } from "#infrastructure/sqlite-run-repository"
+import { assetsGuideFiles } from "#vfx/assets-guide-files"
+import type { GuideFiles } from "#vfx/guide-files"
 
 export type WorkerBindings = {
   DB: D1Database
@@ -46,6 +48,7 @@ export type WorkerParts = {
   clock: Clock
   engineOptions: EngineOptions
   defer: RuntimeDefer
+  guides: GuideFiles
 }
 
 const databases = new WeakMap<D1Database, SqliteDatabase>()
@@ -74,6 +77,7 @@ export function workerParts(
     store: new R2AssetStore({ bucket: env.BUCKET }),
     clock,
     defer: defer ?? (() => undefined),
+    guides: assetsGuideFiles(env.ASSETS),
     engineOptions: {
       clock,
       catalog: sharedRouterCatalog(
@@ -97,5 +101,6 @@ export function ownerPorts(parts: WorkerParts): HandlerPorts {
     engines: pickEngines(parts.vars.engine, parts.engineOptions),
     clock: parts.clock,
     prices: new DrizzlePriceBook({ db }),
+    guides: parts.guides,
   }
 }

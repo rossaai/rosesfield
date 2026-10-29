@@ -88,7 +88,7 @@
     },
     {
       "path": "apps/platform/src/copy/error.en.ts",
-      "sha256": "623e51c6d196099bf753d304f21b7029002ac824a07cc36199f9b5ee014b7f26"
+      "sha256": "3ea566337e3903e5e39be6d34c28a2ef5aa8c1454f41e8499bc25933bd833800"
     },
     {
       "path": "apps/platform/src/copy/explore.en.ts",
@@ -96,7 +96,7 @@
     },
     {
       "path": "apps/platform/src/copy/field.en.ts",
-      "sha256": "f509055b4af5266db1e3815437809987631fc188aa0f2df6c02e98958507204a"
+      "sha256": "821bcbf562d05c70e16be8d98006e7819fae63dcf160ad554a21a5b9187b9321"
     },
     {
       "path": "apps/platform/src/copy/home.en.ts",
@@ -116,7 +116,7 @@
     },
     {
       "path": "apps/platform/src/copy/shell.en.ts",
-      "sha256": "da84cd7b9affc22e1734b505dd626bf7d4c984ca849fa5803526ef9e3cb8b9a2"
+      "sha256": "843e65ca3967c91a7f425df0d5d4d35156885dfba1b6da5dab43dadcbb1dc167"
     },
     {
       "path": "apps/platform/src/copy/welcome.en.ts",
@@ -229,6 +229,10 @@
     {
       "path": "packages/catalog/src/upscale/copy.en.ts",
       "sha256": "836f31ac53a325b4ffb51b4082c92a89a66e345d851413a241dd8a91ae1971c2"
+    },
+    {
+      "path": "packages/catalog/src/vfx/copy.en.ts",
+      "sha256": "91a1b2fb379af0c19d623c47797a8eb706474a096fd3f1513176132af7102d7d"
     },
     {
       "path": "packages/catalog/src/video-edit/copy.en.ts",

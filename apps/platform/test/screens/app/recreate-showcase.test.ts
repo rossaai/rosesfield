@@ -55,10 +55,10 @@ async function recreated(
 
 describe("Recreate on a showcase example", () => {
   it("opens Effects with that clip's effect and resolution chosen", async () => {
-    const values = await recreated("cb3281e7-8764-475f-848b-8cc386311bae")
-    expect(values.inputs.effect).toBe("still-in-the-street")
+    const values = await recreated("1e77db70-4ebe-4050-97e4-84f118438aeb")
+    expect(values.inputs.effect).toBe("push-into-eye")
     expect(values.inputs.resolution).toBe("1080p")
-    expect(values.aspectRatio).toBe("9:16")
+    expect(values.aspectRatio).toBe("3:4")
   })
 
   it("uploads the photo the Effects clip started from into the library and sets it on the photo input", async () => {
@@ -72,11 +72,11 @@ describe("Recreate on a showcase example", () => {
     const client = new QueryClient()
     const sent: Blob[] = []
     const values = await recreated(
-      "cb3281e7-8764-475f-848b-8cc386311bae",
+      "1e77db70-4ebe-4050-97e4-84f118438aeb",
       client,
       sent
     )
-    expect(asked).toEqual([mediaOf("street-golden-hour.webp")])
+    expect(asked).toEqual([mediaOf("portrait-woman.webp")])
     expect(sent).toHaveLength(1)
     expect(values.inputs.image).toEqual([uploadedId])
     expect(client.getQueryData(assetQuery(uploadedId).queryKey)).toEqual({

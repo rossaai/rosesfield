@@ -15,6 +15,7 @@ export const appOrder = [
   "shot",
   "effects",
   "motion",
+  "vfx",
   "lipsync",
   "video-edit",
   "remake",

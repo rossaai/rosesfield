@@ -64,7 +64,7 @@ describe("the top bar", () => {
     }
   })
 
-  it("lists Explore, the media areas, a separator, Agent, a separator, then the rest", async () => {
+  it("lists Explore, the media areas, VFX, a separator, Agent, a separator, then the rest", async () => {
     const bar = await barAt("/")
     expect(areaLabels(bar)).toEqual([
       "Explore",
@@ -72,6 +72,7 @@ describe("the top bar", () => {
       "Video",
       "Audio",
       "3D",
+      "VFX",
       "Agent",
       "Characters",
       "Library",
@@ -85,7 +86,7 @@ describe("the top bar", () => {
       separator.nextElementSibling?.textContent,
     ])
     expect(separators).toEqual([
-      ["3D", "Agent"],
+      ["VFX", "Agent"],
       ["Agent", "Characters"],
     ])
   })

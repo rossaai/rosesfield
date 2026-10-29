@@ -125,7 +125,6 @@ describe("the showcase", () => {
 
   it("gives each app only its own examples", () => {
     expect(showcaseOf("effects").map((item) => item.file)).toEqual([
-      "still-in-the-street.mp4",
       "push-into-eye.mp4",
     ])
     expect(showcaseOf("lipsync")).toEqual([])

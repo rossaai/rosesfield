@@ -25,6 +25,7 @@ import {
   Rotate3dIcon,
   SettingsIcon,
   ShirtIcon,
+  SparklesIcon,
   SpeechIcon,
   SquareUserIcon,
   SunIcon,
@@ -54,8 +55,10 @@ export type ScreenLink = {
 
 type MediaKind = "image" | "video" | "audio" | "mesh"
 
+type AreaId = MediaKind | "vfx"
+
 export type MediaArea = {
-  id: MediaKind
+  id: AreaId
   label: CopyKey
   apps: AppListing[]
 }
@@ -74,7 +77,10 @@ const areaLabels = {
   video: "shell.area.video",
   audio: "shell.area.audio",
   mesh: "shell.area.mesh",
-} satisfies Record<MediaKind, CopyKey>
+  vfx: "shell.area.vfx",
+} satisfies Record<AreaId, CopyKey>
+
+export const vfxAreaApps: readonly string[] = ["vfx", "effects"]
 
 const kindGlyphs = {
   image: ImageIcon,
@@ -106,6 +112,7 @@ const appGlyphs: Readonly<Record<string, Glyph>> = {
   music: MusicIcon,
   "sound-effects": AudioWaveformIcon,
   "three-d": BoxIcon,
+  vfx: SparklesIcon,
 }
 
 const glyph = (Icon: Glyph): ReactElement => <Icon aria-hidden="true" />
@@ -146,16 +153,26 @@ export function navGroups(
   apps: readonly AppListing[] = catalogApps
 ): NavGroups {
   const kinds: readonly MediaKind[] = ["image", "video", "audio", "mesh"]
+  const vfxArea: MediaArea = {
+    id: "vfx",
+    label: areaLabels.vfx,
+    apps: vfxAreaApps.flatMap((id) => apps.find((app) => app.id === id) ?? []),
+  }
+  const media = kinds.map(
+    (kind): MediaArea => ({
+      id: kind,
+      label: areaLabels[kind],
+      apps: apps.filter(
+        (app) =>
+          app.category !== "character" &&
+          app.output.kind === kind &&
+          !vfxAreaApps.includes(app.id)
+      ),
+    })
+  )
   return {
     explore: exploreLink,
-    areas: kinds.flatMap((kind) => {
-      const inArea = apps.filter(
-        (app) => app.category !== "character" && app.output.kind === kind
-      )
-      return inArea.length === 0
-        ? []
-        : [{ id: kind, label: areaLabels[kind], apps: inArea }]
-    }),
+    areas: [...media, vfxArea].filter((area) => area.apps.length > 0),
     agent: screenLink("agent", "shell.nav.agent", BotIcon, "/agent"),
     rest: [
       screenLink(

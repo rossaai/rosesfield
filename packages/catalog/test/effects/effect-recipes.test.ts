@@ -23,7 +23,7 @@ const looks = [
   "still-in-the-street",
 ]
 
-const passedLooks = ["push-into-eye", "still-in-the-street"]
+const passedLooks = ["push-into-eye"]
 
 const endFrameSources: Readonly<Record<string, string>> = {
   "push-into-eye": "dark",

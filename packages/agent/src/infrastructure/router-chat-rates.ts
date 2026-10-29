@@ -15,9 +15,9 @@ export const chatTask = "chat"
 /** The tokens of one agent message, measured from the request body the agent builds for every app of the catalog and from the captured scenario answers, at one token per 3 bytes of the body's messages and tools. */
 export const agentMessage = {
   source: "packages/agent/test/fixtures/scenario-answers/*.json",
-  readOn: "2026-10-26",
+  readOn: "2026-10-28",
   bytesPerToken: 3,
-  repeatedTokens: 13_184,
+  repeatedTokens: 13_967,
   conversationTokens: 341,
   outputTokens: 67,
   requests: 1,

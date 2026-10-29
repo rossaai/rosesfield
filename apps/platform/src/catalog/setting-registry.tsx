@@ -135,6 +135,7 @@ const contentEntries: readonly Entry[] = [
   ["height", ArrowUpDown],
   ["distance", Search],
   ["effect", WandSparkles],
+  ["preset", WandSparkles],
   ["top", ArrowUp],
   ["right", ArrowRight],
   ["bottom", ArrowDown],

@@ -1,0 +1,53 @@
+{
+  "name": "vfx-clip-ltx-2-3-ic-lora",
+  "title": "VFX: change your clip with an LTX 2.3 IC-LoRA",
+  "description": "Changes your own clip with one LTX 2.3 IC-LoRA that a VFX preset picks, such as day to night, clean plate or water, at your clip's shape, length and frame rate, with your clip's sound. The preset sets the adapter, its strength and both prompts. Built from Rosesfield's reframe graph, which follows Comfy's template template_ltx2_3_lora_video_outpainting.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": ["Lightricks/LTX-2.3"],
+  "requiresCustomNodes": ["comfyui-ltxvideo"],
+  "inputBindings": {
+    "clip": {
+      "nodeId": "1",
+      "inputName": "file",
+      "type": "cloud-asset"
+    },
+    "shortSide": {
+      "nodeId": "702",
+      "inputName": "value",
+      "type": "scalar"
+    },
+    "adapter": {
+      "nodeId": "5146",
+      "inputName": "lora_name",
+      "type": "scalar"
+    },
+    "strength": {
+      "nodeId": "5146",
+      "inputName": "strength_model",
+      "type": "scalar"
+    },
+    "prompt": {
+      "nodeId": "5138",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "negative": {
+      "nodeId": "5131",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "5117",
+      "inputName": "noise_seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "44",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}
