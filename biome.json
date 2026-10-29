@@ -6,8 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/*.gen.ts", "!**/dist", "!**/.wrangler"],
-    "maxSize": 2097152
+    "includes": ["**", "!**/*.gen.ts", "!**/dist", "!**/.wrangler"]
   },
   "formatter": {
     "enabled": true,

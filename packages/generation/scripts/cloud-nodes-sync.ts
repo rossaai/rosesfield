@@ -22,7 +22,7 @@ const output = fileURLToPath(
 )
 const weightFile = /\.(safetensors|sft|ckpt|pt|pth|bin|gguf|onnx)$/i
 const recipe =
-  "For each node class object_info lists, every input it takes, required or optional, with its type. A dynamic combo adds each option's inputs as <input>.<name>, and an autogrow input adds one <input>.<name> per name its template allows. A combo whose options name a weight file is a file list, written as @<id> and kept once under lists as <class>.<input>"
+  "For each node class object_info lists, the name of every input it takes, required or optional. A dynamic combo adds each option's inputs as <input>.<name>, and an autogrow input adds one <input>.<name> per name its template allows. A combo whose options name a weight file is a file list: fileInputs maps <class>.<input> to its list, and lists keeps each list once"
 
 function optionsOf(spec: Spec): readonly unknown[] | null {
   const [type, config] = spec
@@ -104,17 +104,24 @@ function readInput(name: string, spec: Spec, at: Reading): void {
 
 export function snapshotOf(objectInfo: ObjectInfo, readOn: string): unknown {
   const lists = new Map<string, readonly string[]>()
-  const nodes: Record<string, Record<string, string>> = {}
+  const nodes: Record<string, readonly string[]> = {}
+  const fileInputs: Record<string, string> = {}
   for (const node of Object.keys(objectInfo).sort()) {
     const at: Reading = { node, lists, into: {} }
     readSection("", objectInfo[node]?.input ?? {}, at)
-    nodes[node] = at.into
+    nodes[node] = Object.keys(at.into).sort()
+    for (const [input, type] of Object.entries(at.into)) {
+      if (type.startsWith("@")) {
+        fileInputs[`${node}.${input}`] = type.slice(1)
+      }
+    }
   }
   return {
     source: "GET /api/object_info on Comfy Cloud",
     readOn,
     recipe,
     nodes,
+    fileInputs,
     lists: Object.fromEntries(lists),
   }
 }
