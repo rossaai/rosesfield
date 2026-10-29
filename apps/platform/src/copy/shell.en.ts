@@ -15,6 +15,7 @@ export const shellCopy = {
   "shell.nav.characters": "Characters",
   "shell.nav.history": "History",
   "shell.nav.agent": "Agent",
+  "shell.nav.featured": "Featured",
   "shell.nav.connect": "Connect",
   "shell.nav.settings": "Settings",
   "shell.menu.open": "Open the menu",

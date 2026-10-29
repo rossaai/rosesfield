@@ -1,5 +1,4 @@
 import type { AppListing } from "@rosesfield/contract"
-import { Badge } from "@rosesfield/ui/components/badge"
 import { Canvas } from "@rosesfield/ui/components/canvas"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
@@ -15,7 +14,7 @@ import {
   useState,
 } from "react"
 import { type AppExample, examplesOf } from "@/catalog/app-examples"
-import { appBadge, appName } from "@/catalog/app-facts"
+import { appName, isFeaturedApp } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useCanvasFit } from "@/pieces/use-canvas-fit"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
@@ -25,6 +24,7 @@ import { useAppRuns } from "@/screens/app/app-canvas"
 import { AppLibrary } from "@/screens/app/app-library"
 import { CanvasViewProvider } from "@/screens/app/canvas-view"
 import { HowItWorks, type StageKind } from "@/screens/app/how-it-works"
+import { FeaturedBadge } from "@/shell/nav-rows"
 import { PhoneTitlePortal, ScreenTitle } from "@/shell/screen-header"
 
 export type StageTab = "history" | "library" | "how"
@@ -112,14 +112,13 @@ type AppStageProps = {
 }
 
 function AppTitle({ app }: { app: AppListing }): ReactNode {
-  const badge = appBadge(app)
-  return badge === null ? (
-    appName(app)
-  ) : (
+  return isFeaturedApp(app) ? (
     <span data-slot="app-title" className="inline-flex items-center gap-s2">
       {appName(app)}
-      <Badge kind="featured">{badge}</Badge>
+      <FeaturedBadge />
     </span>
+  ) : (
+    appName(app)
   )
 }
 

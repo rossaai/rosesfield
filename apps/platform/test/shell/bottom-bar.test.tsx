@@ -82,6 +82,27 @@ describe("the bottom bar", () => {
     expect(image.getAttribute("href")).toBe("/apps/image")
   })
 
+  it("leads the list of apps with the featured pair, the Agent then Motion, each with its Featured badge, and keeps Motion in Video", async () => {
+    const bar = await barAt("/")
+    fireEvent.click(within(bar).getByRole("button", { name: "Generate" }))
+    const sheet = await screen.findByRole("dialog")
+    const pair = sheet.querySelector("[data-slot='featured-pair']")
+    const links = [...(pair?.querySelectorAll("a") ?? [])]
+    expect(links.map((link) => link.getAttribute("href"))).toEqual([
+      "/agent",
+      "/apps/motion",
+    ])
+    for (const link of links) {
+      expect(link.querySelector("[data-slot='badge']")?.textContent).toBe(
+        "Featured"
+      )
+    }
+    const motions = within(sheet).getAllByRole("link", { name: /^Motion/ })
+    expect(motions).toHaveLength(2)
+    const badges = sheet.querySelectorAll("[data-slot='badge']")
+    expect(badges).toHaveLength(3)
+  })
+
   it("presses an app well of the list on the press preset and lays no light over it", async () => {
     const bar = await barAt("/")
     fireEvent.click(within(bar).getByRole("button", { name: "Generate" }))

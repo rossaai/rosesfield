@@ -33,8 +33,9 @@ import {
   VideoIcon,
 } from "lucide-react"
 import type { ReactElement } from "react"
-import { appBadge } from "@/catalog/app-facts"
+import { isFeaturedApp } from "@/catalog/app-facts"
 import { catalogApps } from "@/catalog/catalog-apps"
+import { t } from "@/copy/t"
 import type { CopyKey } from "@/copy.en"
 
 export type ScreenPath =
@@ -61,10 +62,15 @@ export type MediaArea = {
   apps: AppListing[]
 }
 
+export type FeaturedPair = {
+  agent: ScreenLink
+  apps: AppListing[]
+}
+
 export type NavGroups = {
   explore: ScreenLink
   areas: MediaArea[]
-  agent: ScreenLink
+  featured: FeaturedPair
   rest: ScreenLink[]
 }
 
@@ -142,13 +148,16 @@ export const historyLink = screenLink(
   "/history"
 )
 
+export function FeaturedBadge(): ReactElement {
+  return <Badge kind="featured">{t("shell.nav.featured")}</Badge>
+}
+
 export function AppNameBadge({
   app,
 }: {
   app: AppListing
 }): ReactElement | null {
-  const badge = appBadge(app)
-  return badge === null ? null : <Badge kind="featured">{badge}</Badge>
+  return isFeaturedApp(app) ? <FeaturedBadge /> : null
 }
 
 export function navGroups(
@@ -165,7 +174,10 @@ export function navGroups(
         ? []
         : [{ id: kind, label: areaLabels[kind], apps: inArea }]
     }),
-    agent: screenLink("agent", "shell.nav.agent", BotIcon, "/agent"),
+    featured: {
+      agent: screenLink("agent", "shell.nav.agent", BotIcon, "/agent"),
+      apps: apps.filter(isFeaturedApp),
+    },
     rest: [
       screenLink(
         "characters",

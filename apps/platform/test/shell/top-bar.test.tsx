@@ -40,7 +40,7 @@ function connectOf(bar: HTMLElement): HTMLElement {
 function currentOf(
   bar: HTMLElement,
   role: "link" | "button",
-  name: string
+  name: string | RegExp
 ): string | null {
   return within(bar).getByRole(role, { name }).getAttribute("aria-current")
 }
@@ -64,7 +64,7 @@ describe("the top bar", () => {
     }
   })
 
-  it("lists Explore, the media areas, a separator, Agent, a separator, then the rest", async () => {
+  it("lists Explore, the media areas, a separator, the featured pair, a separator, then the rest", async () => {
     const bar = await barAt("/")
     expect(areaLabels(bar)).toEqual([
       "Explore",
@@ -72,7 +72,8 @@ describe("the top bar", () => {
       "Video",
       "Audio",
       "3D",
-      "Agent",
+      "AgentFeatured",
+      "MotionFeatured",
       "Characters",
       "Library",
       "History",
@@ -85,14 +86,34 @@ describe("the top bar", () => {
       separator.nextElementSibling?.textContent,
     ])
     expect(separators).toEqual([
-      ["3D", "Agent"],
-      ["Agent", "Characters"],
+      ["3D", "AgentFeatured"],
+      ["MotionFeatured", "Characters"],
     ])
   })
 
-  it("lists Motion in the Video menu right after Video, with its Featured badge drawn as the model picker's, and never in the bar itself", async () => {
+  it("stands the Agent and Motion side by side, the Agent first, each with the one Featured badge", async () => {
     const bar = await barAt("/")
-    expect(within(bar).queryByRole("link", { name: /^Motion/ })).toBeNull()
+    const agent = within(bar).getByRole("link", { name: /^Agent/ })
+    const motion = within(bar).getByRole("link", { name: /^Motion/ })
+    expect(agent.getAttribute("href")).toBe("/agent")
+    expect(motion.getAttribute("href")).toBe("/apps/motion")
+    expect(agent.nextElementSibling).toBe(motion)
+    for (const entry of [agent, motion]) {
+      const badge = entry.querySelector("[data-slot='badge']")
+      expect(badge?.getAttribute("data-kind")).toBe("featured")
+      expect(badge?.getAttribute("data-tone")).toBe("bug")
+      expect(badge?.textContent).toBe("Featured")
+    }
+    const badged = [
+      ...bar.querySelectorAll(
+        "[data-slot='app-bar-areas'] [data-slot='badge']"
+      ),
+    ]
+    expect(badged).toHaveLength(2)
+  })
+
+  it("lists Motion in the Video menu right after Video as well, with its Featured badge drawn as the model picker's", async () => {
+    const bar = await barAt("/")
     fireEvent.click(within(bar).getByRole("button", { name: "Video" }))
     const menu = await screen.findByRole("menu")
     const rows = within(menu).getAllByRole("menuitem")
@@ -107,10 +128,18 @@ describe("the top bar", () => {
     expect(rows[0]?.querySelector("[data-slot='badge']")).toBeNull()
   })
 
-  it("marks Video as the current area on Motion's page", async () => {
+  it("lights Motion in the pair on Motion's page, and no area beside it", async () => {
     const bar = await barAt("/apps/motion")
-    expect(currentOf(bar, "button", "Video")).toBe("page")
+    expect(currentOf(bar, "link", /^Motion/)).toBe("page")
+    expect(currentOf(bar, "link", /^Agent/)).toBeNull()
+    expect(currentOf(bar, "button", "Video")).toBeNull()
     expect(currentOf(bar, "button", "Image")).toBeNull()
+  })
+
+  it("lights the Agent in the pair on the Agent's page", async () => {
+    const bar = await barAt("/agent")
+    expect(currentOf(bar, "link", /^Agent/)).toBe("page")
+    expect(currentOf(bar, "link", /^Motion/)).toBeNull()
   })
 
   it("marks Explore current on Explore", async () => {
@@ -234,7 +263,7 @@ describe("the top bar", () => {
     const media = catalogApps.filter((app) => app.category !== "character")
     expect(items[0]?.textContent).toBe("Explore")
     expect(items.map((item) => item.textContent)).toContain("Library")
-    expect(items).toHaveLength(media.length + 6)
+    expect(items).toHaveLength(media.length + 7)
     const content = items[0]?.closest("[data-slot='dropdown-menu-content']")
     const marks = [
       ...(content?.querySelectorAll(
@@ -247,7 +276,8 @@ describe("the top bar", () => {
     )
     expect(marks.slice(media.length + 1)).toEqual([
       "|",
-      "Agent",
+      "AgentFeatured",
+      "MotionFeatured",
       "|",
       "Characters",
       "Library",

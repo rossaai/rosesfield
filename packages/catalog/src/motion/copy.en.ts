@@ -42,7 +42,6 @@ export const motionCopy = {
     "A depth video that sets the camera and the movement, such as a Blender render. Its first frame matches your photo.",
   "motion.price.fromControl":
     "Generate, {amount} Comfy credits, estimated from your runs of LTX 2.3 control",
-  "motion.badge": "Featured",
   "motion.example.own": "Your video",
   "motion.example.change": "Use your own video",
   "motion.example.buildingsRipple.name": "Buildings ripple",

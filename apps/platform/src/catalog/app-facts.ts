@@ -49,9 +49,10 @@ export function appLine(app: AppListing): string {
   return tCatalog(`${app.id}.line`)
 }
 
-export function appBadge(app: AppListing): string | null {
-  const key = `${app.id}.badge`
-  return hasCatalogText(key) ? tCatalog(key) : null
+const featuredAppIds: readonly string[] = [motionAppId]
+
+export function isFeaturedApp(app: AppListing): boolean {
+  return featuredAppIds.includes(app.id)
 }
 
 export function appKeywords(app: AppListing): string {

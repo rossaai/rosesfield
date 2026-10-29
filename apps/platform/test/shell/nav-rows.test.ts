@@ -4,7 +4,7 @@ import { navGroups } from "@/shell/nav-rows"
 import { appIdOfPath, hasFooter, hasInputs } from "@/shell/page-kind"
 
 describe("the top bar's links", () => {
-  it("list Explore, then the media areas, then Agent, then the rest", () => {
+  it("list Explore, then the media areas, then the featured pair, then the rest", () => {
     const groups = navGroups()
     expect(groups.explore.to).toBe("/")
     expect(groups.areas.map((area) => area.id)).toEqual([
@@ -13,7 +13,7 @@ describe("the top bar's links", () => {
       "audio",
       "mesh",
     ])
-    expect(groups.agent.to).toBe("/agent")
+    expect(groups.featured.agent.to).toBe("/agent")
     expect(groups.rest.map((link) => link.to)).toEqual([
       "/characters",
       "/library",
@@ -40,17 +40,29 @@ describe("the top bar's links", () => {
     expect(listed.some((app) => app.category === "character")).toBe(false)
   })
 
-  it("give Motion one entry, in the Video area right after Video", () => {
+  it("pair the Agent with Motion, the Agent first, and keep Motion's row in the Video area right after Video", () => {
     const groups = navGroups()
+    expect(groups.featured.agent.id).toBe("agent")
+    expect(groups.featured.apps.map((app) => app.id)).toEqual(["motion"])
     const video = groups.areas.find((area) => area.id === "video")
     expect(video?.apps.slice(0, 2).map((app) => app.id)).toEqual([
       "video",
       "motion",
     ])
-    const entries = groups.areas
+    const rows = groups.areas
       .flatMap((area) => area.apps)
       .filter((app) => app.id === "motion")
-    expect(entries).toHaveLength(1)
+    expect(rows).toHaveLength(1)
+  })
+
+  it("give no app but the featured one a second entry", () => {
+    const groups = navGroups()
+    const entries = [
+      ...groups.areas.flatMap((area) => area.apps),
+      ...groups.featured.apps,
+    ].map((app) => app.id)
+    const twice = entries.filter((id, index) => entries.indexOf(id) !== index)
+    expect(twice).toEqual(["motion"])
   })
 
   it("leave out an area with no app", () => {

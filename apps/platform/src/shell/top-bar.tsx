@@ -1,3 +1,4 @@
+import type { AppListing } from "@rosesfield/contract"
 import { AppBar, AppBarAction } from "@rosesfield/ui/components/app-bar"
 import { IconButton } from "@rosesfield/ui/components/button"
 import {
@@ -17,13 +18,15 @@ import {
 import { Link, useRouterState } from "@tanstack/react-router"
 import { MenuIcon } from "lucide-react"
 import type { ReactElement } from "react"
-import { appBadge, appLine, appName } from "@/catalog/app-facts"
+import { appLine, appName, isFeaturedApp } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { FieldMark, Lockup } from "@/shell/brand-mark"
 import { CreditBalance } from "@/shell/credit-balance"
 import {
   AppNameBadge,
   appIcon,
+  FeaturedBadge,
+  type FeaturedPair,
   type MediaArea,
   type NavGroups,
   navGroups,
@@ -33,12 +36,26 @@ import { appIdOfPath } from "@/shell/page-kind"
 import { usePhoneTitleSlot } from "@/shell/screen-header"
 import { useOpenConnect, useShowSettings } from "@/shell/shell-dialogs"
 
-export function isAreaCurrent(area: MediaArea, pathname: string): boolean {
+export function isAreaCurrent(
+  area: MediaArea,
+  pathname: string,
+  featured: readonly AppListing[] = []
+): boolean {
   const appId = appIdOfPath(pathname)
-  return appId !== null && area.apps.some((app) => app.id === appId)
+  return (
+    appId !== null &&
+    area.apps.some((app) => app.id === appId) &&
+    !featured.some((app) => app.id === appId)
+  )
 }
 
-function ScreenNav({ link }: { link: ScreenLink }): ReactElement {
+function ScreenNav({
+  link,
+  badge,
+}: {
+  link: ScreenLink
+  badge?: ReactElement
+}): ReactElement {
   const showSettings = useShowSettings()
   if (link.to === "/settings") {
     return (
@@ -49,10 +66,35 @@ function ScreenNav({ link }: { link: ScreenLink }): ReactElement {
   }
   return (
     <NavLink
+      badge={badge}
       render={<Link to={link.to} activeOptions={{ exact: link.to === "/" }} />}
     >
       {t(link.label)}
     </NavLink>
+  )
+}
+
+function FeaturedNav({
+  pair,
+  pathname,
+}: {
+  pair: FeaturedPair
+  pathname: string
+}): ReactElement {
+  return (
+    <>
+      <ScreenNav link={pair.agent} badge={<FeaturedBadge />} />
+      {pair.apps.map((app) => (
+        <NavLink
+          key={app.id}
+          current={appIdOfPath(pathname) === app.id}
+          badge={<FeaturedBadge />}
+          render={<Link to="/apps/$appId" params={{ appId: app.id }} />}
+        >
+          {appName(app)}
+        </NavLink>
+      ))}
+    </>
   )
 }
 
@@ -71,7 +113,7 @@ function AreaNav({
     line: appLine(app),
     icon: appIcon(app),
     href: `/apps/${app.id}`,
-    ...(appBadge(app) === null ? {} : { badge: <AppNameBadge app={app} /> }),
+    ...(isFeaturedApp(app) ? { badge: <FeaturedBadge /> } : {}),
   }))
   return (
     <AreaMenu
@@ -101,12 +143,12 @@ function AreaLinks({
         <AreaNav
           key={area.id}
           area={area}
-          current={isAreaCurrent(area, pathname)}
+          current={isAreaCurrent(area, pathname, groups.featured.apps)}
           pathname={pathname}
         />
       ))}
       <NavSeparator />
-      <ScreenNav link={groups.agent} />
+      <FeaturedNav pair={groups.featured} pathname={pathname} />
       <NavSeparator />
       {groups.rest.map((link) => (
         <ScreenNav key={link.id} link={link} />
@@ -115,13 +157,32 @@ function AreaLinks({
   )
 }
 
-function MenuLink({ link }: { link: ScreenLink }): ReactElement {
+function MenuLink({
+  link,
+  badge,
+}: {
+  link: ScreenLink
+  badge?: ReactElement
+}): ReactElement {
   return (
     <DropdownMenuItem
       render={<Link to={link.to} activeOptions={{ exact: link.to === "/" }} />}
     >
       {link.icon}
       {t(link.label)}
+      {badge}
+    </DropdownMenuItem>
+  )
+}
+
+function MenuApp({ app }: { app: AppListing }): ReactElement {
+  return (
+    <DropdownMenuItem
+      render={<Link to="/apps/$appId" params={{ appId: app.id }} />}
+    >
+      {appIcon(app)}
+      {appName(app)}
+      <AppNameBadge app={app} />
     </DropdownMenuItem>
   )
 }
@@ -142,19 +203,15 @@ function PhoneMenu({ groups }: { groups: NavGroups }): ReactElement {
           <DropdownMenuGroup key={area.id}>
             <DropdownMenuLabel>{t(area.label)}</DropdownMenuLabel>
             {area.apps.map((app) => (
-              <DropdownMenuItem
-                key={app.id}
-                render={<Link to="/apps/$appId" params={{ appId: app.id }} />}
-              >
-                {appIcon(app)}
-                {appName(app)}
-                <AppNameBadge app={app} />
-              </DropdownMenuItem>
+              <MenuApp key={app.id} app={app} />
             ))}
           </DropdownMenuGroup>
         ))}
         <DropdownMenuSeparator />
-        <MenuLink link={groups.agent} />
+        <MenuLink link={groups.featured.agent} badge={<FeaturedBadge />} />
+        {groups.featured.apps.map((app) => (
+          <MenuApp key={app.id} app={app} />
+        ))}
         <DropdownMenuSeparator />
         {groups.rest.map((link) => (
           <MenuLink key={link.id} link={link} />
