@@ -10,7 +10,7 @@ import {
 } from "@/showcase/showcase"
 import { showcaseRows as listedRows } from "@/showcase/showcase-rows"
 
-const showcaseRows = [...listedRows, ...exampleRowsOf(approvedExamples)]
+const showcaseRows = [...exampleRowsOf(approvedExamples), ...listedRows]
 
 afterEach(() => {
   cleanup()
@@ -44,8 +44,11 @@ describe("Explore's examples", () => {
             )
       )
     )
+    const banners = showcaseRows.filter(
+      (row) => row.banner !== undefined && !sources.has(row.file)
+    )
     expect(examples).toHaveLength(
-      showcaseRows.length - fromClips.length - sources.size
+      showcaseRows.length - fromClips.length - sources.size - banners.length
     )
   })
 
@@ -54,15 +57,16 @@ describe("Explore's examples", () => {
       (entry) => entry.key
     )
     for (const source of [
-      "portrait-woman.webp",
-      "sneaker.webp",
-      "street-golden-hour.webp",
+      "perfume-roses.webp",
+      "camper-van.webp",
+      "goose-throne.webp",
+      "hose-garden.webp",
     ]) {
       expect(files).not.toContain(`showcase-${source}`)
     }
     for (const after of [
-      "relight-portrait.webp",
-      "sneaker-cutout.webp",
+      "jaguar-relit.webp",
+      "perfume-cutout.webp",
       "grab-and-run.mp4",
     ]) {
       expect(files).toContain(`showcase-${after}`)
@@ -75,9 +79,31 @@ describe("Explore's examples", () => {
     groups.forEach((group, at) => {
       expect(groups.slice(Math.max(0, at - 5), at)).not.toContain(group)
     })
-    expect(examples[0]?.aspect.height).toBeGreaterThan(
-      examples[0]?.aspect.width ?? 0
+  })
+
+  it("leaves the banner's pair to the banner, so no subject shows twice", () => {
+    const files = feedExamples(showcaseEntries(showcaseItems)).map(
+      (entry) => entry.key
     )
+    expect(files).not.toContain("showcase-hose-flowers.webp")
+  })
+
+  it("alternates an example that stops a visitor with one a person wants to make, from Grab and run on", () => {
+    const files = feedExamples(showcaseEntries(showcaseItems)).map((entry) =>
+      entry.key.replace(/^showcase-/, "")
+    )
+    expect(files).toEqual([
+      "grab-and-run.mp4",
+      "perfume-cutout.webp",
+      "goose-throne.mp4",
+      "sunflower-wide.webp",
+      "flamingo-bus-stop.webp",
+      "jaguar-relit.webp",
+      "hare-laundromat.webp",
+      "chameleon-1536.webp",
+      "camper-van-cake.webp",
+      "bee-poppy.mp4",
+    ])
   })
 })
 

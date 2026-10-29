@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { creditsOfCost } from "@rosesfield/catalog/comfy"
 import { approvedExamples } from "@rosesfield/catalog/motion"
@@ -66,8 +66,8 @@ function sizeOf(row: ShowcaseRow): Size {
 describe("the showcase", () => {
   it("bundles every row's file with the app, so a visitor sees it with no share and no key", () => {
     expect(showcaseItems.map((item) => item.file)).toEqual([
-      ...showcaseRows.map((row) => row.file),
       ...exampleRowsOf(approvedExamples).map((row) => row.file),
+      ...showcaseRows.map((row) => row.file),
     ])
     for (const item of showcaseItems) {
       expect(item.src).toMatch(/^\/src\//)
@@ -96,6 +96,39 @@ describe("the showcase", () => {
     }
   })
 
+  it("bundles every input a pair names, and no file that no row or input names", () => {
+    const named = new Set([
+      ...showcaseRows.flatMap((row) =>
+        row.input === undefined ? [row.file] : [row.file, row.input.file]
+      ),
+      ...exampleRowsOf(approvedExamples).map((row) => row.file),
+    ])
+    const bundled = readdirSync(folders[0] ?? "")
+    expect(bundled.sort()).toEqual([...named].sort())
+  })
+
+  it("makes every example with a model in the top ten of its task, except the input of a pair and an app's own graph", () => {
+    const inputs = new Set(showcaseRows.flatMap((row) => [row.input?.file]))
+    const hosted = showcaseRows.filter(
+      (row) => !inputs.has(row.file) && row.model.includes("/")
+    )
+    expect(hosted.map((row) => row.model)).not.toContain(
+      "byteplus/seedream-5-0-flash-260915"
+    )
+    expect(
+      showcaseRows.some((row) => row.model.startsWith("z_image_turbo"))
+    ).toBe(false)
+  })
+
+  it("lands the banner's end on the app that made it, and holds both faces from the top", () => {
+    const start = showcaseRows.find((row) => row.banner === "start")
+    const end = showcaseRows.find((row) => row.banner === "end")
+    expect(start?.file).toBe("hose-garden.webp")
+    expect(end?.appId).toBe("edit")
+    expect(end?.input?.file).toBe(start?.file)
+    expect([start?.focus, end?.focus]).toEqual(["top", "top"])
+  })
+
   it("keeps each run's app, model, prompt and measured credits", () => {
     for (const item of showcaseItems) {
       const app = findCatalogApp(item.appId)
@@ -118,14 +151,19 @@ describe("the showcase", () => {
         runModel(item.run, findCatalogApp(item.appId)),
       ])
     )
-    expect(models["portrait-man.webp"]).toBe("Qwen Image 2512")
-    expect(models["portrait-woman.webp"]).toBe("Z-Image Turbo")
+    expect(models["flamingo-bus-stop.webp"]).toBe("GPT Image 2.5 Sunburst")
+    expect(models["sunflower-field.webp"]).toBe("Seedream 5.0 Pro")
     expect(models["grab-and-run.mp4"]).toBe("LTX 2.5")
   })
 
   it("gives each app only its own examples", () => {
     expect(showcaseOf("motion").map((item) => item.file)).toEqual([
       "grab-and-run.mp4",
+    ])
+    expect(showcaseOf("image")[0]?.file).toBe("flamingo-bus-stop.webp")
+    expect(showcaseOf("edit").map((item) => item.file)).toEqual([
+      "camper-van-cake.webp",
+      "hose-flowers.webp",
     ])
     expect(showcaseOf("lipsync")).toEqual([])
   })

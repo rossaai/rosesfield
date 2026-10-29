@@ -18,7 +18,7 @@ export const exploreCopy = {
   "explore.banner.kicker": "Rosesfield",
   "explore.banner.headline": "Make images and video on your own key",
   "explore.banner.lead": "Every app shares one library and one history",
-  "explore.banner.action": "Open Image",
+  "explore.banner.action": "Open {app}",
   "explore.promo.label": "Apps with results",
   "explore.promo.open": "Open {app}",
   "explore.apps.label": "Apps",

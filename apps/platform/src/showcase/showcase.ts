@@ -96,8 +96,8 @@ export function showcaseItemsOf(
 }
 
 const shownRows: readonly ShowcaseRow[] = [
-  ...showcaseRows,
   ...exampleRowsOf(approvedExamples),
+  ...showcaseRows,
 ]
 
 export const showcaseItems: readonly ShowcaseItem[] = showcaseItemsOf(shownRows)
@@ -127,7 +127,10 @@ const shownSources = new Set(
 export function isFeedExample(runId: string): boolean {
   const row = shownRows.find((one) => one.runId === runId)
   return (
-    row !== undefined && !madeFromClip.has(runId) && !shownSources.has(row.file)
+    row !== undefined &&
+    row.banner === undefined &&
+    !madeFromClip.has(runId) &&
+    !shownSources.has(row.file)
   )
 }
 

@@ -177,7 +177,7 @@ describe("Explore's view", () => {
     for (const name of names) {
       expect(name.toLowerCase()).toContain(appName(first).toLowerCase())
     }
-    search("portrait woman")
+    search("flamingo shelter")
     await vi.waitFor(() => expect(regionOf(t("explore.apps.label"))).toBeNull())
     const stills = showcase().querySelectorAll("[data-slot='media']").length
     expect(stills).toBeGreaterThan(0)

@@ -43,7 +43,8 @@ test("Explore opens with one banner link over one apps row of 228 px cards that 
   expect(Math.round(first.width)).toBe(228)
   expect(Math.round(second.x - first.x)).toBe(235)
   await expect(apps.locator("[data-slot=media-feed-next]")).toBeVisible()
-  await expect(page.getByText("Open Image", { exact: true })).toHaveCount(1)
+  await expect(page.getByText("Open Edit", { exact: true })).toHaveCount(1)
+  expect(await banner.getAttribute("href")).toBe("/apps/edit")
 })
 
 test("on a phone Explore shows the banner as a compact card without its portraits, over the one apps row", async ({

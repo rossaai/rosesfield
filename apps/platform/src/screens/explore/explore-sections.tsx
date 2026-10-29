@@ -1,5 +1,9 @@
 import type { AppListing } from "@rosesfield/contract"
-import { HeroBanner, type HeroPortraits } from "@rosesfield/ui/components/hero"
+import {
+  HeroBanner,
+  type HeroPortrait,
+  type HeroPortraits,
+} from "@rosesfield/ui/components/hero"
 import { MediaFeed, ViewAll } from "@rosesfield/ui/components/media-feed"
 import { SectionHeader } from "@rosesfield/ui/components/section-header"
 import { useInView } from "@rosesfield/ui/hooks/use-in-view"
@@ -8,7 +12,7 @@ import { motion } from "@rosesfield/ui/motion"
 import { useRouter } from "@tanstack/react-router"
 import { type ReactElement, type ReactNode, useRef, useState } from "react"
 import { appLine, appName } from "@/catalog/app-facts"
-import { catalogApps } from "@/catalog/catalog-apps"
+import { catalogApps, findCatalogApp } from "@/catalog/catalog-apps"
 import { t } from "@/copy/t"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { AppCard, appCardFormOf } from "@/screens/apps/app-card"
@@ -27,7 +31,20 @@ import {
   showcaseItems,
 } from "@/showcase/showcase"
 
-export const bannerAppId = "image"
+export function bannerAppIdOf(
+  items: readonly ShowcaseItem[] = showcaseItems
+): string {
+  return items.find((item) => item.banner === "end")?.appId ?? "image"
+}
+
+export const bannerAppId = bannerAppIdOf()
+
+function bannerActionOf(appId: string): string {
+  const app = findCatalogApp(appId)
+  return t("explore.banner.action", {
+    app: app === null ? appId : appName(app),
+  })
+}
 
 export type ResultActions = {
   onOpen: OpenResult
@@ -62,14 +79,20 @@ export function Reveal({ children }: { children: ReactNode }): ReactElement {
   )
 }
 
+function portraitOf(item: ShowcaseItem): HeroPortrait {
+  return item.focus === undefined
+    ? { src: item.src }
+    : { src: item.src, focus: item.focus }
+}
+
 export function bannerPortraits(
   items: readonly ShowcaseItem[] = showcaseItems
 ): HeroPortraits {
   const start = items.find((item) => item.banner === "start")
   const end = items.find((item) => item.banner === "end")
   return {
-    ...(start === undefined ? {} : { start: start.src }),
-    ...(end === undefined ? {} : { end: end.src }),
+    ...(start === undefined ? {} : { start: portraitOf(start) }),
+    ...(end === undefined ? {} : { end: portraitOf(end) }),
   }
 }
 
@@ -81,7 +104,7 @@ export function ExploreBanner(): ReactElement {
         href={appHref(bannerAppId)}
         headline={t("explore.banner.headline")}
         lead={t("welcome.terms.body.1")}
-        action={t("explore.banner.action")}
+        action={bannerActionOf(bannerAppId)}
         portraits={bannerPortraits()}
       />
     </Reveal>
@@ -253,10 +276,6 @@ export function ExploreRowView({
   }
 }
 
-function tallness(entry: VisualEntry): number {
-  return entry.aspect.height / entry.aspect.width
-}
-
 const sourceGap = 6
 
 function groupsAround(placed: readonly VisualEntry[], at: number): Set<string> {
@@ -298,11 +317,7 @@ function spreadSources(entries: readonly VisualEntry[]): VisualEntry[] {
 }
 
 export function feedExamples(entries: readonly VisualEntry[]): VisualEntry[] {
-  return spreadSources(
-    entries
-      .filter((entry) => isFeedExample(entry.run.id))
-      .sort((first, second) => tallness(second) - tallness(first))
-  )
+  return spreadSources(entries.filter((entry) => isFeedExample(entry.run.id)))
 }
 
 type SizedFeedProps = ResultActions & {

@@ -17,7 +17,6 @@ import {
 import { ExploreNoMatch, ExploreTop } from "@/screens/explore/explore-head"
 import { exploreRows, visualEntries } from "@/screens/explore/explore-rows"
 import {
-  bannerAppId,
   ExploreBanner,
   ExploreRowView,
   exploreApps,
@@ -59,12 +58,14 @@ function LoadingFeed({ cellWidth }: { cellWidth: number }): ReactElement {
   )
 }
 
+const emptyAppId = "image"
+
 function EmptyExplore(): ReactElement {
   const needsKey = useNeedsKey()
   const openKey = useOpenKeyDialog()
   const navigate = useNavigate()
   const openImage = (): void =>
-    void navigate({ to: "/apps/$appId", params: { appId: bannerAppId } })
+    void navigate({ to: "/apps/$appId", params: { appId: emptyAppId } })
   return (
     <StateView
       kind="empty"

@@ -80,6 +80,7 @@ function FrameMedia({
       src={example.src}
       alt={appName(app)}
       aspect={frame}
+      {...(example.focus === undefined ? {} : { focus: example.focus })}
     />
   )
 }

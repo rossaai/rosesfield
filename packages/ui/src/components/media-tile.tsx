@@ -28,6 +28,7 @@ type MediaTileProps = {
   poster?: string
   aspect?: MediaAspect
   fit?: "cover" | "contain"
+  focus?: MediaFocus
   caption?: ReactNode
   length?: ReactNode
   index?: number
@@ -36,6 +37,12 @@ type MediaTileProps = {
   ref?: Ref<HTMLElement>
   className?: string
 }
+
+type MediaFocus = "top"
+
+const focusClass = {
+  top: "object-top",
+} satisfies Record<MediaFocus, string>
 
 type Arrival = "waiting" | "loaded"
 
@@ -253,6 +260,7 @@ function TileBody(
   const mediaClass = cn(
     "size-full",
     fit === "cover" ? "object-cover" : "object-contain",
+    props.focus === undefined ? "" : focusClass[props.focus],
     motion.enter
   )
   return (
@@ -339,5 +347,5 @@ function MediaTile(props: MediaTileProps): ReactElement {
   )
 }
 
-export type { MediaAspect, MediaTileProps }
-export { ArrivalIndex, framedSource, MediaBadge, MediaTile }
+export type { MediaAspect, MediaFocus, MediaTileProps }
+export { ArrivalIndex, focusClass, framedSource, MediaBadge, MediaTile }

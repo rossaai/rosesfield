@@ -58,8 +58,8 @@ describe("Explore's showcase", () => {
     const pills = [...feed.querySelectorAll("[data-slot=media-badge]")].map(
       (pill) => pill.textContent
     )
-    expect(pills).toContain("Image · Z-Image Turbo")
-    expect(pills).toContain("Image · Qwen Image 2512")
+    expect(pills).toContain("Image · GPT Image 2.5 Sunburst")
+    expect(pills).toContain("Characters · GPT Image 2.5 Sunburst")
     const remixes = screen.getAllByRole("button", {
       name: t("explore.tile.remixName"),
     })
@@ -91,7 +91,10 @@ describe("Explore's showcase", () => {
     const portraits = bannerPortraits()
     const start = showcaseItems.find((item) => item.banner === "start")
     const end = showcaseItems.find((item) => item.banner === "end")
-    expect(portraits).toEqual({ start: start?.src, end: end?.src })
+    expect(portraits).toEqual({
+      start: { src: start?.src, focus: "top" },
+      end: { src: end?.src, focus: "top" },
+    })
     expect(bannerPortraits([])).toEqual({})
   })
 })

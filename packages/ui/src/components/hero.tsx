@@ -1,5 +1,9 @@
 import { buttonVariants } from "@rosesfield/ui/components/button"
 import { interaction } from "@rosesfield/ui/components/interaction"
+import {
+  focusClass,
+  type MediaFocus,
+} from "@rosesfield/ui/components/media-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
 import type { ReactElement, ReactNode } from "react"
 
@@ -8,9 +12,14 @@ type HeroTag = {
   icon: ReactNode
 }
 
+type HeroPortrait = {
+  src: string
+  focus?: MediaFocus
+}
+
 type HeroPortraits = {
-  start?: string
-  end?: string
+  start?: HeroPortrait
+  end?: HeroPortrait
 }
 
 type HeroBannerProps = {
@@ -36,19 +45,20 @@ function Portraits({
   portraits: HeroPortraits
 }): ReactElement[] {
   return sides.flatMap((side) => {
-    const src = portraits[side]
-    return src === undefined
+    const portrait = portraits[side]
+    return portrait === undefined
       ? []
       : [
           <img
             key={side}
-            src={src}
+            src={portrait.src}
             alt=""
             data-slot="hero-portrait"
             data-side={side}
             className={cn(
               "absolute bottom-0 hidden h-full w-(--hero-portrait) object-cover @regular:block",
-              portraitSides[side]
+              portraitSides[side],
+              portrait.focus === undefined ? "" : focusClass[portrait.focus]
             )}
           />,
         ]
@@ -67,16 +77,19 @@ function PhonePortraits({
       className="flex w-full @regular:hidden"
     >
       {sides.flatMap((side) => {
-        const src = portraits[side]
-        return src === undefined
+        const portrait = portraits[side]
+        return portrait === undefined
           ? []
           : [
               <img
                 key={side}
-                src={src}
+                src={portrait.src}
                 alt=""
                 data-side={side}
-                className="aspect-square min-w-0 flex-1 object-cover"
+                className={cn(
+                  "aspect-square min-w-0 flex-1 object-cover",
+                  portrait.focus === undefined ? "" : focusClass[portrait.focus]
+                )}
               />,
             ]
       })}
@@ -189,5 +202,11 @@ function HeroFan({
   )
 }
 
-export type { FanPicture, HeroBannerProps, HeroPortraits, HeroTag }
+export type {
+  FanPicture,
+  HeroBannerProps,
+  HeroPortrait,
+  HeroPortraits,
+  HeroTag,
+}
 export { HeroBanner, HeroFan }

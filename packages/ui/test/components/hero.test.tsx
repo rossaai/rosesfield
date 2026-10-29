@@ -113,7 +113,7 @@ describe("HeroBanner's tag and portraits", () => {
         headline="Make images and video"
         lead="Every app works with your key"
         action="Open Image"
-        portraits={{ start: "a.webp", end: "b.webp" }}
+        portraits={{ start: { src: "a.webp" }, end: { src: "b.webp" } }}
       />
     )
     const banner = screen.getByRole("link")
@@ -145,6 +145,36 @@ describe("HeroBanner's tag and portraits", () => {
     expect(portraits[1]?.className.split(" ")).toEqual(
       expect.arrayContaining(["bottom-0", "right-0"])
     )
+  })
+
+  it("holds the top of a portrait with a top focus, on the wide corners and in the phone's squares, and the centre otherwise", () => {
+    render(
+      <HeroBanner
+        href="/apps/edit"
+        headline="Make images and video"
+        lead="Every app works with your key"
+        action="Open Edit"
+        portraits={{
+          start: { src: "a.webp", focus: "top" },
+          end: { src: "b.webp" },
+        }}
+      />
+    )
+    const wide = [
+      ...document.querySelectorAll<HTMLImageElement>(
+        "[data-slot='hero-portrait']"
+      ),
+    ]
+    const phone = [
+      ...document.querySelectorAll<HTMLImageElement>(
+        "[data-slot='hero-phone-portraits'] img"
+      ),
+    ]
+    for (const pair of [wide, phone]) {
+      expect(pair[0]?.className.split(" ")).toContain("object-top")
+      expect(pair[1]?.className.split(" ")).not.toContain("object-top")
+      expect(pair[1]?.className.split(" ")).toContain("object-cover")
+    }
   })
 
   it("draws no portrait and no tag when none is given", () => {

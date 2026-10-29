@@ -211,7 +211,7 @@ describe("How it works, one composition for every app", () => {
     const steps = await stepsShown(3)
     const [item] = showcaseOf("relight")
     expect(steps[0]?.querySelector("img")?.getAttribute("src")).toBe(
-      mediaOf("portrait-woman.webp")
+      mediaOf("jaguar-ceramic.webp")
     )
     expect(steps[1]?.querySelector("[data-slot=how-settings]")).not.toBeNull()
     expect(steps[2]?.querySelector("img")?.getAttribute("src")).toBe(item?.src)
@@ -266,7 +266,10 @@ describe("How it works, one composition for every app", () => {
     const labels = [
       ...(steps[1]?.querySelectorAll("[data-slot=how-settings] dt") ?? []),
     ].map((label) => label.textContent)
-    expect(labels.length).toBeGreaterThan(0)
+    expect(labels.some((label) => /seed/i.test(label ?? ""))).toBe(false)
+    expect(
+      steps[1]?.querySelector("[data-slot=how-settings]")?.textContent
+    ).toContain("GPT Image 2.5 Sunburst")
   })
 
   it("lists an example's settings with no seed row", () => {

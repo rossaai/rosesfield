@@ -65,11 +65,11 @@ describe("Recreate on a showcase example", () => {
     const client = new QueryClient()
     const sent: Blob[] = []
     const values = await recreated(
-      "e1fffadc-7f6f-478f-8c5f-7a423a1aa106",
+      "1f0cd820-8302-4eb6-b2b0-4b32d6386a5c",
       client,
       sent
     )
-    expect(asked).toEqual([mediaOf("portrait-woman.webp")])
+    expect(asked).toEqual([mediaOf("jaguar-ceramic.webp")])
     expect(sent).toHaveLength(1)
     expect(values.inputs.image).toEqual([uploadedId])
     expect(client.getQueryData(assetQuery(uploadedId).queryKey)).toEqual({
@@ -81,21 +81,22 @@ describe("Recreate on a showcase example", () => {
     vi.stubGlobal("fetch", () =>
       Promise.resolve(new Response(new Blob(["webp"])))
     )
-    const relit = await recreated("e1fffadc-7f6f-478f-8c5f-7a423a1aa106")
+    const relit = await recreated("1f0cd820-8302-4eb6-b2b0-4b32d6386a5c")
     expect(relit.inputs.image).toEqual([uploadedId])
-    const cut = await recreated("d4958c06-57e2-40e6-8a3a-fd9278f5df6a")
+    const cut = await recreated("c909099b-e85a-47b0-b3f1-75455895e6d4")
     expect(cut.inputs.image).toEqual([uploadedId])
     vi.stubGlobal("fetch", () =>
       Promise.resolve(new Response(null, { status: 404 }))
     )
-    const missing = await recreated("e1fffadc-7f6f-478f-8c5f-7a423a1aa106")
+    const missing = await recreated("1f0cd820-8302-4eb6-b2b0-4b32d6386a5c")
     expect(missing.inputs.image ?? []).toEqual([])
   })
 
   it("opens Image with the example's prompt and its model", async () => {
-    const values = await recreated("70b933ac-d049-47aa-a6aa-cc89f09dc456")
-    expect(values.inputs.model).toBe("z-image-turbo")
-    expect(String(values.inputs.prompt)).toMatch(/^A straight-on/)
-    expect(values.aspectRatio).toBe("3:4")
+    const values = await recreated("34c4f7b5-e27e-4515-aa5f-49435b050031")
+    expect(values.inputs.model).toBe("openai/gpt-image-2.5-sunburst")
+    expect(String(values.inputs.prompt)).toMatch(
+      /^An ordinary smartphone photo taken at night/
+    )
   })
 })

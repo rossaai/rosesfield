@@ -1,349 +1,226 @@
 [
   {
-    "runId": "70b933ac-d049-47aa-a6aa-cc89f09dc456",
-    "file": "portrait-woman.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 864,
-    "height": 1152,
-    "model": "z_image_turbo_bf16.safetensors",
-    "prompt": "A straight-on head-and-shoulders portrait captures an invented woman in her early thirties with warm brown skin, short natural black curls and dark brown eyes, looking directly into the camera with a calm, relaxed expression and closed lips. She wears a plain rust-coloured crew-neck knit sweater with a fine ribbed texture. Her face is centred in the frame, both eyes sharp and level, with clear catchlights in the irises and visible skin pores. The setting is a plain studio backdrop in warm grey, softly out of focus. The photograph is taken on an 85mm portrait lens at f/2.8, eye level, framed from the top of the head to the upper chest. Soft light falls from outside the frame on the left of the picture, so the cheek on the left of the picture is the brightest part of the face and the cheek on the right of the picture sits in a gentle shadow. No lamp, softbox or light fixture is visible, and the backdrop is plain and empty. The palette is warm terracotta, umber and soft grey. The finish is a natural, sharp editorial photograph with true skin tones, fine detail, no text, no logo and no watermark.",
-    "inputs": {
-      "model": "z-image-turbo",
-      "resolution": "1k"
-    },
-    "aspectRatio": "3:4",
-    "credits": 0.66,
-    "seconds": 21,
-    "madeAt": "2026-10-20T22:59:58Z",
-    "banner": "start"
-  },
-  {
-    "runId": "58bdf412-f014-462f-99e7-7308cee99c2a",
-    "file": "sneaker.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 1280,
-    "height": 960,
-    "model": "z_image_turbo_bf16.safetensors",
-    "prompt": "A side-profile product shot at the height of the shoe captures a single invented low-top running sneaker, pointing to the left, resting on a block of pale travertine stone. The sneaker has an upper of off-white knit mesh, a smooth suede heel panel in sage green, round white laces, and a thick sculpted foam sole in cream with a thin gum rubber outsole. It carries no logo, no stripes, no lettering and no brand mark of any kind. The background is a seamless sweep of warm sand colour, plain and empty. The photograph is taken on a 100mm macro lens at f/11, the whole shoe in sharp focus, showing the knit texture and the stitching. Lighting is a large soft light from above the shoe with a white fill from the front, giving a soft shadow under the sole on the stone. The palette is off-white, sage green, cream and warm sand. The finish is a clean, crisp commercial product photograph with fine detail, no text and no watermark.",
-    "inputs": {
-      "model": "z-image-turbo",
-      "resolution": "2k"
-    },
-    "aspectRatio": "4:3",
-    "credits": 1.91,
-    "seconds": 15,
-    "madeAt": "2026-10-20T23:16:08Z"
-  },
-  {
-    "runId": "70ab1a97-f67a-4ab2-a1b9-c69c3fcbba95",
-    "file": "portrait-man.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 960,
-    "height": 1280,
-    "model": "qwen_image_2512_fp8_e4m3fn.safetensors",
-    "prompt": "Head-and-shoulders photograph of an invented man about seventy years old, facing the camera at eye level, centred in the frame. Deep wrinkles, short white beard, thin grey hair, light brown eyes, calm face, lips closed. Plain navy jacket over a white shirt. Plain warm beige studio backdrop. Soft, even daylight on the face. Sharp, natural portrait photograph.",
-    "inputs": {
-      "model": "qwen-image-2512",
-      "resolution": "1k"
-    },
-    "aspectRatio": "3:4",
-    "credits": 14.95,
-    "seconds": 87,
-    "madeAt": "2026-10-20T23:33:58Z",
-    "banner": "end"
-  },
-  {
-    "runId": "f9933ba3-f7e5-4318-a6f2-70e86ef5f040",
-    "file": "street-golden-hour.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 720,
-    "height": 1280,
-    "model": "z_image_turbo_bf16.safetensors",
-    "prompt": "Full-body photograph of an invented woman with pale freckled skin and shoulder-length copper red hair, standing still in the middle of a wide stone-paved pedestrian street at golden hour, facing the camera, hands at her sides. Long camel wool coat, black turtleneck, charcoal trousers, brown leather ankle boots. She is whole from head to shoes, with open paving around her and above her head. Red brick buildings with tall windows and young trees on both sides. Warm low golden sunlight and long shadows on the paving. Sharp natural photograph.",
-    "inputs": {
-      "model": "z-image-turbo",
-      "resolution": "2k"
-    },
-    "aspectRatio": "9:16",
-    "credits": 2.35,
-    "seconds": 15,
-    "madeAt": "2026-10-20T23:40:33Z"
-  },
-  {
-    "runId": "d9c63e7c-9089-4887-850c-0b5c0a4c52d6",
-    "file": "desert-elder.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 720,
-    "height": 1280,
-    "model": "z_image_turbo_bf16.safetensors",
-    "prompt": "Medium photograph of an invented old man with a long grey beard and deep brown skin, standing at the edge of an empty desert road at dusk, facing the camera with his hands folded at his chest. Dark brown wool robe with a woven gold border, green patterned head wrap. The sky behind him fades from orange at the horizon to pale blue. Warm low sunlight from the right of the picture. The road behind him is softly out of focus. Sharp cinematic photograph, no text, no logo.",
-    "inputs": {
-      "model": "z-image-turbo",
-      "resolution": "2k"
-    },
-    "aspectRatio": "9:16",
-    "credits": 1.33,
-    "seconds": 21,
-    "madeAt": "2026-10-22T00:46:11Z"
-  },
-  {
-    "runId": "b3736ee9-49c8-4306-99be-8f648676a503",
-    "file": "red-curls.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 960,
-    "height": 1280,
-    "model": "z_image_turbo_bf16.safetensors",
-    "prompt": "Portrait photograph of an invented young woman with freckles and red curly hair, wearing a cream wool turtleneck, against a plain olive green backdrop. Soft light. Sharp editorial photograph, no text, no logo.",
-    "inputs": {
-      "model": "z-image-turbo",
-      "resolution": "2k"
-    },
-    "aspectRatio": "3:4",
-    "credits": 1.91,
-    "seconds": 24,
-    "madeAt": "2026-10-22T01:16:52Z"
-  },
-  {
-    "runId": "d4958c06-57e2-40e6-8a3a-fd9278f5df6a",
-    "file": "sneaker-cutout.webp",
+    "runId": "c909099b-e85a-47b0-b3f1-75455895e6d4",
+    "file": "perfume-cutout.webp",
     "input": {
-      "file": "sneaker.webp",
+      "file": "perfume-roses.webp",
       "name": "image"
     },
     "appId": "background-removal",
     "kind": "image",
-    "width": 1280,
-    "height": 960,
+    "width": 1024,
+    "height": 1024,
     "model": "birefnet.safetensors",
     "prompt": null,
     "inputs": {
       "background": "transparent",
       "model": "birefnet"
     },
-    "aspectRatio": null,
-    "credits": 0.68,
-    "seconds": 36.3,
-    "madeAt": "2026-10-22T01:10:42Z",
-    "from": "sneaker.webp"
+    "aspectRatio": "1:1",
+    "credits": 0.25,
+    "seconds": 8.5,
+    "madeAt": "2026-10-29T08:05:32.502Z",
+    "from": "perfume-roses.webp"
   },
   {
-    "runId": "6b73aad7-3c3b-4316-9930-79cbfb37f311",
-    "file": "balcony-man.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 960,
-    "height": 1280,
-    "model": "z_image_turbo_bf16.safetensors",
-    "prompt": "Portrait photograph of an invented man in his fifties with a short grey beard, wearing a navy linen shirt, on a sunny balcony by the sea that is softly out of focus behind him. Sharp natural photograph, no text, no logo.",
-    "inputs": {
-      "model": "z-image-turbo",
-      "resolution": "2k"
-    },
-    "aspectRatio": "3:4",
-    "credits": 1.87,
-    "seconds": 27,
-    "madeAt": "2026-10-22T01:17:42Z"
-  },
-  {
-    "runId": "01065df0-4fbf-49a9-94f9-f57dadef9847",
-    "file": "gold-hoops.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 960,
-    "height": 1280,
-    "model": "z_image_turbo_bf16.safetensors",
-    "prompt": "Portrait photograph of an invented young woman with dark skin and a shaved head, wearing large gold hoop earrings and a white shirt, against a plain warm terracotta backdrop. Soft light. Sharp editorial photograph, no text, no logo.",
-    "inputs": {
-      "model": "z-image-turbo",
-      "resolution": "2k"
-    },
-    "aspectRatio": "3:4",
-    "credits": 1.89,
-    "seconds": 27,
-    "madeAt": "2026-10-22T01:18:31Z"
-  },
-  {
-    "runId": "e1fffadc-7f6f-478f-8c5f-7a423a1aa106",
-    "file": "relight-portrait.webp",
+    "runId": "cba41fa6-bd1c-4992-9abb-b9d91ed6a998",
+    "file": "goose-throne.mp4",
     "input": {
-      "file": "portrait-woman.webp",
+      "file": "goose-throne.webp",
+      "name": "startFrame"
+    },
+    "appId": "video",
+    "kind": "video",
+    "width": 1344,
+    "height": 768,
+    "model": "Lightricks/LTX-2.5",
+    "prompt": "The courtiers bow slowly and deeply toward the goose on the throne, and the goose turns its head to look down at them. The candle flames flicker. Slow push in toward the throne.",
+    "inputs": {
+      "model": "ltx-2-5",
+      "length": "5",
+      "cameraMove": "push-in",
+      "resolution": "720p",
+      "sound": "on"
+    },
+    "aspectRatio": "16:9",
+    "credits": 6.52,
+    "seconds": 33.1,
+    "madeAt": "2026-10-29T09:11:45.849Z",
+    "from": "goose-throne.webp"
+  },
+  {
+    "runId": "bd952e65-aaf0-41f2-80eb-1f7a3b6f0eb9",
+    "file": "sunflower-wide.webp",
+    "input": {
+      "file": "sunflower-field.webp",
+      "name": "photo"
+    },
+    "appId": "expand",
+    "kind": "image",
+    "width": 1280,
+    "height": 720,
+    "model": "qwen_image_fp8_e4m3fn.safetensors",
+    "prompt": "The same sunflower field continues to both sides, and every other sunflower faces away from the camera, showing the green backs of their heads, under the same clear sky.",
+    "inputs": {
+      "model": "qwen-image-inpaint",
+      "mode": "format",
+      "aspect": "16-9"
+    },
+    "aspectRatio": "16:9",
+    "credits": 4.03,
+    "seconds": 23.2,
+    "madeAt": "2026-10-29T09:09:26.005Z",
+    "from": "sunflower-field.webp"
+  },
+  {
+    "runId": "34c4f7b5-e27e-4515-aa5f-49435b050031",
+    "file": "flamingo-bus-stop.webp",
+    "appId": "image",
+    "kind": "image",
+    "width": 853,
+    "height": 1280,
+    "model": "openai/gpt-image-2.5-sunburst",
+    "prompt": "An ordinary smartphone photo taken at night with the flash on: a pink flamingo stands alone under a city bus stop shelter, waiting on the wet pavement as if for the next bus, its reflection in the shelter's glass. Nobody else is there. Harsh direct flash, a dark street behind with a few blurred car lights, slight grain, ordinary phone photo quality. The flamingo stands in the centre of the frame, its head at about a third of the height from the top and its feet at about four fifths. The shelter's panels are plain and carry no words. No text, no logo.",
+    "inputs": {
+      "model": "openai/gpt-image-2.5-sunburst",
+      "quality": "high",
+      "size": "1024x1536",
+      "n": "1"
+    },
+    "aspectRatio": null,
+    "credits": 12.62,
+    "seconds": 45.0,
+    "madeAt": "2026-10-29T09:04:56.768Z"
+  },
+  {
+    "runId": "1f0cd820-8302-4eb6-b2b0-4b32d6386a5c",
+    "file": "jaguar-relit.webp",
+    "input": {
+      "file": "jaguar-ceramic.webp",
       "name": "image"
     },
     "appId": "relight",
     "kind": "image",
-    "width": 880,
-    "height": 1184,
+    "width": 1024,
+    "height": 1024,
     "model": "qwen_image_edit_2509_fp8_e4m3fn.safetensors",
-    "prompt": null,
+    "prompt": "Low sunset light in deep marigold orange from the left and a bougainvillea magenta neon glow from the right.",
     "inputs": {
       "direction": "left",
-      "softness": "soft",
+      "softness": "hard",
       "color": "warm",
       "brightness": "0",
       "quality": "final",
       "model": "qwen-image-edit-2509-relight"
     },
-    "aspectRatio": null,
-    "credits": 17.04,
-    "seconds": 90.2,
-    "madeAt": "2026-10-22T01:06:32Z",
-    "from": "portrait-woman.webp"
+    "aspectRatio": "1:1",
+    "credits": 14.07,
+    "seconds": 61.6,
+    "madeAt": "2026-10-29T08:06:45.600Z",
+    "from": "jaguar-ceramic.webp"
   },
   {
-    "runId": "6d80b2b7-9f99-4ebf-a693-afb6838d192a",
-    "file": "orange-puffer.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 960,
-    "height": 1280,
-    "model": "z_image_turbo_bf16.safetensors",
-    "prompt": "Fashion photograph of an invented young man in a plain oversized orange puffer jacket in front of a plain pale blue wall. Sharp editorial photograph, no text, no logo.",
-    "inputs": {
-      "model": "z-image-turbo",
-      "resolution": "2k"
-    },
-    "aspectRatio": "3:4",
-    "credits": 1.93,
-    "seconds": 24,
-    "madeAt": "2026-10-22T01:19:21Z"
-  },
-  {
-    "runId": "671f0a95-31e2-436d-bd30-2ee525c857bf",
-    "file": "laughing-grandmother.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 960,
-    "height": 1280,
-    "model": "z_image_turbo_bf16.safetensors",
-    "prompt": "Portrait photograph of an invented elderly woman with short silver hair laughing, wearing a green cardigan, in a sunlit kitchen that is softly out of focus behind her. Sharp natural photograph, no text, no logo.",
-    "inputs": {
-      "model": "z-image-turbo",
-      "resolution": "2k"
-    },
-    "aspectRatio": "3:4",
-    "credits": 1.86,
-    "seconds": 30.1,
-    "madeAt": "2026-10-22T01:04:26Z"
-  },
-  {
-    "runId": "d158cff5-bfd6-4c51-831b-435d0efcf123",
-    "file": "teal-wide.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 1280,
-    "height": 720,
-    "model": "z_image_turbo_bf16.safetensors",
-    "prompt": "Wide portrait photograph of an invented man in his thirties with a dark moustache, wearing a mustard yellow cardigan, against a plain teal backdrop with empty space around him. Soft light. Sharp editorial photograph, no text, no logo.",
-    "inputs": {
-      "model": "z-image-turbo",
-      "resolution": "2k"
-    },
-    "aspectRatio": "16:9",
-    "credits": 1.37,
-    "seconds": 24.1,
-    "madeAt": "2026-10-22T02:41:29Z"
-  },
-  {
-    "runId": "ad653a63-dada-418f-b188-563fe65c9a7a",
-    "file": "lilac-square.webp",
-    "appId": "image",
+    "runId": "777a15e6-58b7-4c96-b7a4-94bca8acb8a9",
+    "file": "hare-laundromat.webp",
+    "appId": "characters",
     "kind": "image",
     "width": 1024,
     "height": 1024,
-    "model": "z_image_turbo_bf16.safetensors",
-    "prompt": "Square portrait photograph of an invented young woman with straight black hair in a blunt bob, wearing a plain lilac knit top, against a plain pale pink backdrop. Soft light. Sharp editorial photograph, no text, no logo.",
+    "model": "openai/gpt-image-2.5-sunburst",
+    "prompt": "He has the head of a brown hare, with long upright ears, whiskers and amber eyes, on an ordinary man's body. He wears an oatmeal knitted cardigan and stands in a laundromat, holding a basket of folded towels.",
     "inputs": {
-      "model": "z-image-turbo",
-      "resolution": "2k"
+      "model": "openai/gpt-image-2.5-sunburst",
+      "quality": "high",
+      "size": "1024x1024",
+      "n": "1",
+      "mode": "traits",
+      "count": "1",
+      "gender": "man",
+      "age": "adult",
+      "outfit": "casual",
+      "framing": "half-body",
+      "plainBackground": "off"
+    },
+    "aspectRatio": null,
+    "credits": 16.05,
+    "seconds": 66.0,
+    "madeAt": "2026-10-29T09:06:02.109Z"
+  },
+  {
+    "runId": "8064ddca-5fbe-4096-a78d-010792c1bc48",
+    "file": "chameleon-1536.webp",
+    "input": {
+      "file": "chameleon-768.webp",
+      "name": "image"
+    },
+    "appId": "upscale",
+    "kind": "image",
+    "width": 1536,
+    "height": 1536,
+    "model": "seedvr2_3b_int8_convrot.safetensors",
+    "prompt": null,
+    "inputs": {
+      "mode": "image",
+      "scale": "2x",
+      "model": "seedvr2-3b"
     },
     "aspectRatio": "1:1",
-    "credits": 4.67,
-    "seconds": 36.2,
-    "madeAt": "2026-10-22T02:42:16Z"
+    "credits": 1.28,
+    "seconds": 13.8,
+    "madeAt": "2026-10-29T07:56:55.766Z",
+    "from": "chameleon-768.webp"
   },
   {
-    "runId": "07adf91b-e14b-4be4-bf26-efdac9ed1d45",
-    "file": "white-shirt-tall.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 720,
-    "height": 1280,
-    "model": "z_image_turbo_bf16.safetensors",
-    "prompt": "Full-body fashion photograph of an invented man with a shaved head in a plain loose white linen suit and white sneakers, standing against a plain sage green backdrop. Sharp editorial photograph, no text, no logo.",
-    "inputs": {
-      "model": "z-image-turbo",
-      "resolution": "2k"
+    "runId": "7415a8e8-29be-4a47-9b89-40895064c5c3",
+    "file": "camper-van-cake.webp",
+    "input": {
+      "file": "camper-van.webp",
+      "name": "image"
     },
-    "aspectRatio": "9:16",
-    "credits": 1.37,
-    "seconds": 21,
-    "madeAt": "2026-10-22T02:44:05Z"
-  },
-  {
-    "runId": "c110630a-1b2b-4dff-9047-64c9b0635cc6",
-    "file": "skateboard-grandmother.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 960,
-    "height": 1280,
-    "model": "byteplus/seedream-5-0-flash-260915",
-    "prompt": "Photograph of an invented grandmother in her seventies with short white hair, wearing a silver puffer jacket and white sneakers, skateboarding down a sunny hillside street, arms out for balance, laughing. Shot from a low angle, motion blur on the pavement. Natural skin texture, real photograph, no text, no logo.",
-    "inputs": {
-      "model": "byteplus/seedream-5-0-flash-260915",
-      "watermark": "off",
-      "outputFormat": "png",
-      "size": "1728x2304"
-    },
-    "aspectRatio": null,
-    "credits": 5.44,
-    "seconds": 66.2,
-    "madeAt": "2026-10-22T04:06:14Z"
-  },
-  {
-    "runId": "681c8616-b451-48d4-893f-3ae9d761dc01",
-    "file": "dog-convertible.webp",
-    "appId": "image",
-    "kind": "image",
-    "width": 1280,
-    "height": 960,
-    "model": "byteplus/seedream-5-0-flash-260915",
-    "prompt": "Photograph of a golden retriever wearing aviator sunglasses, sitting in the passenger seat of a cream vintage convertible with no badges, driving along a coastal road on a sunny day, its ears blowing in the wind. Cinematic photograph, no text, no logo.",
-    "inputs": {
-      "model": "byteplus/seedream-5-0-flash-260915",
-      "watermark": "off",
-      "outputFormat": "png",
-      "size": "2304x1728"
-    },
-    "aspectRatio": null,
-    "credits": 5.43,
-    "seconds": 48.1,
-    "madeAt": "2026-10-22T04:08:55Z"
-  },
-  {
-    "runId": "a5bb7aad-c9c5-4522-bc12-3f0d2b948794",
-    "file": "knitted-strawberry.webp",
-    "appId": "image",
+    "appId": "edit",
     "kind": "image",
     "width": 1024,
     "height": 1024,
-    "model": "byteplus/seedream-5-0-flash-260915",
-    "prompt": "Macro photograph of a tiny knitted strawberry with a smiling face sitting on a green leaf covered in morning dew drops, soft sunlight, shallow depth of field. Real photograph, no text, no logo.",
+    "model": "openai/gpt-image-2.5-sunburst",
+    "prompt": "Turn this camper van into a cake of the same shape, size and angle, in the same two colours. The body is sponge cake under smooth fondant in the same green and cream, the bumpers and headlights are silver sugar, the wheels are dark chocolate and the windows are clear glazed sugar. A wedge is cut from the side, showing layers of vanilla sponge and orange cream. It stands on a round cake board on the same floor, with the same light and backdrop. No text, no logo.",
     "inputs": {
-      "model": "byteplus/seedream-5-0-flash-260915",
-      "watermark": "off",
-      "outputFormat": "png",
-      "size": "2048x2048"
+      "model": "openai/gpt-image-2.5-sunburst",
+      "quality": "high",
+      "size": "1024x1024",
+      "n": "1"
     },
     "aspectRatio": null,
-    "credits": 5.43,
-    "seconds": 42.1,
-    "madeAt": "2026-10-22T04:11:13Z"
+    "credits": 18.55,
+    "seconds": 54.6,
+    "madeAt": "2026-10-29T08:01:38.116Z",
+    "from": "camper-van.webp"
+  },
+  {
+    "runId": "953884ef-1f2a-4b47-bb92-f71a02c09418",
+    "file": "bee-poppy.mp4",
+    "appId": "shot",
+    "kind": "video",
+    "width": 1344,
+    "height": 768,
+    "model": "Lightricks/LTX-2.5",
+    "prompt": "One unbroken shot. It opens wide on a vast field of red poppies under a clear morning sky, then the camera crash zooms fast down into the field and stops close on one honeybee on one poppy, its wings and the yellow pollen on its legs sharp.",
+    "inputs": {
+      "model": "ltx-2-5",
+      "movement": "push-in",
+      "camera": "auto",
+      "lens": "auto",
+      "focus": "auto",
+      "light": "daylight",
+      "color": "vivid",
+      "mood": "auto",
+      "length": "5",
+      "resolution": "720p",
+      "sound": "on"
+    },
+    "aspectRatio": "16:9",
+    "credits": 6.57,
+    "seconds": 31.4,
+    "madeAt": "2026-10-29T09:13:14.381Z"
   },
   {
     "runId": "a0b0265f-8c88-4d39-88a0-3fc1a68f7872",
@@ -371,125 +248,153 @@
     "from": "push-into-eye.mp4"
   },
   {
-    "runId": "de5a27ca-698f-4197-9304-5fa8a0e16f74",
-    "file": "character-velvet.webp",
-    "appId": "characters",
-    "kind": "image",
-    "width": 864,
-    "height": 1152,
-    "model": "z_image_turbo_bf16.safetensors",
-    "prompt": "a round pair of gold glasses and a deep green velvet blazer",
-    "inputs": {
-      "mode": "traits",
-      "count": "1",
-      "gender": "man",
-      "age": "older",
-      "skinTone": "dark",
-      "bodyType": "average",
-      "hairLength": "short",
-      "hairStyle": "coily",
-      "hairColor": "grey",
-      "eyeColor": "brown",
-      "outfit": "formal",
-      "framing": "half-body",
-      "plainBackground": "on",
-      "model": "z-image-turbo"
-    },
-    "aspectRatio": null,
-    "credits": 1.81,
-    "seconds": 45.2,
-    "madeAt": "2026-10-22T10:45:04Z"
-  },
-  {
-    "runId": "d197b21e-03c5-4b62-975a-b7707d081d7d",
-    "file": "expand-street.webp",
-    "input": {
-      "file": "street-golden-hour.webp",
-      "name": "photo"
-    },
-    "appId": "expand",
-    "kind": "image",
-    "width": 1280,
-    "height": 720,
-    "model": "qwen_image_fp8_e4m3fn.safetensors",
-    "prompt": "The same stone-paved pedestrian street at golden hour continues to both sides, red brick buildings with tall windows and young trees, empty paving.",
-    "inputs": {
-      "model": "qwen-image-inpaint",
-      "mode": "format",
-      "aspect": "16-9"
-    },
-    "aspectRatio": null,
-    "credits": 3.66,
-    "seconds": 39.1,
-    "madeAt": "2026-10-22T10:46:47Z"
-  },
-  {
-    "runId": "92ec5824-0922-40ca-83fe-12867131b4ac",
-    "file": "aurora-close-up.webp",
-    "input": {
-      "file": "whale-aurora-night.webp",
-      "name": "images"
-    },
-    "appId": "edit",
-    "kind": "image",
-    "width": 854,
-    "height": 1280,
-    "model": "openai/gpt-image-2.5-sunburst",
-    "prompt": "Make a vertical close-up portrait of this same woman: she now faces the camera, head and shoulders, her face lit by the green and violet aurora, a few snowflakes in her dark hair, the collar of the same red wool coat. Keep her face, her eyes and her hair exactly hers. The frozen lake and the sky soft and out of focus behind her, 35mm film grain.",
-    "inputs": {
-      "model": "openai/gpt-image-2.5-sunburst",
-      "background": "auto",
-      "moderation": "auto",
-      "quality": "auto",
-      "size": "auto"
-    },
-    "aspectRatio": null,
-    "credits": 5.29,
-    "seconds": 32.8,
-    "madeAt": "2026-10-22T18:57:06Z",
-    "from": "whale-aurora-night.webp"
-  },
-  {
-    "runId": "69916d1c-5e0b-474d-829c-52eadf2071fb",
-    "file": "whale-dawn.webp",
+    "runId": "78913fc6-0089-4427-8eaa-8c30ad194298",
+    "file": "hose-garden.webp",
     "appId": "image",
     "kind": "image",
-    "width": 1280,
-    "height": 854,
+    "width": 853,
+    "height": 1280,
     "model": "openai/gpt-image-2.5-sunburst",
-    "prompt": "Cinematic wide photograph on 35mm film: an invented young woman in a long red wool coat stands on a frozen lake at dawn and looks back over her shoulder, while behind her a humpback whale breaks up through the ice, shards of ice and spray hanging in the air. Pale pink sky, low mist on the ice, natural film grain, shallow depth of field.",
+    "prompt": "An ordinary smartphone photo, taken from a few metres away in bright afternoon sun, of an invented woman in her late twenties with a short blond bob and a faded denim shirt, watering a small backyard garden with a green garden hose. A clear arc of water leaves the nozzle and falls on a bed of leafy plants. Slightly overexposed daylight, ordinary phone photo quality, a plain wooden fence behind her. She is seen from the head to the knees, standing a little left of centre, with her face between 30 and 45 percent of the frame's height from the top, and the arc of water crosses the middle of the frame to the plants on the right. No text, no logo.",
     "inputs": {
       "model": "openai/gpt-image-2.5-sunburst",
       "quality": "high",
-      "size": "1536x1024"
+      "size": "1024x1536",
+      "n": "1"
     },
     "aspectRatio": null,
-    "credits": 12.54,
-    "seconds": 49.5,
-    "madeAt": "2026-10-22T18:33:54Z"
+    "credits": 12.64,
+    "seconds": 55.3,
+    "madeAt": "2026-10-29T09:02:06.646Z",
+    "banner": "start",
+    "focus": "top"
   },
   {
-    "runId": "d6f88835-005e-41b8-b7db-daecb8ac8117",
-    "file": "whale-dawn-2x.webp",
+    "runId": "13fd91ef-a425-4d7a-9d52-ee77cc8aa795",
+    "file": "hose-flowers.webp",
     "input": {
-      "file": "whale-dawn.webp",
+      "file": "hose-garden.webp",
       "name": "image"
     },
-    "appId": "upscale",
+    "appId": "edit",
     "kind": "image",
-    "width": 2048,
-    "height": 1366,
-    "model": "seedvr2_3b_int8_convrot.safetensors",
-    "prompt": null,
+    "width": 853,
+    "height": 1280,
+    "model": "openai/gpt-image-2.5-sunburst",
+    "prompt": "Keep this photo exactly the same: the same woman, face, pose, hose, garden, light and framing. Change only the water. The arc leaving the hose is now a stream of flower petals in marigold orange and magenta, flying in the same arc and landing on the plants, with a few petals resting on the leaves. No water remains. No text.",
     "inputs": {
-      "mode": "image",
-      "scale": "2x",
-      "model": "seedvr2-3b"
+      "model": "openai/gpt-image-2.5-sunburst",
+      "quality": "high",
+      "size": "1024x1536",
+      "n": "1"
     },
     "aspectRatio": null,
-    "credits": 2.0,
-    "seconds": 20.2,
-    "madeAt": "2026-10-23T00:43:31Z",
-    "from": "whale-dawn.webp"
+    "credits": 16.26,
+    "seconds": 44.3,
+    "madeAt": "2026-10-29T09:03:43.336Z",
+    "banner": "end",
+    "focus": "top",
+    "from": "hose-garden.webp"
+  },
+  {
+    "runId": "23ebe2d5-bf7f-4ba9-826f-01e06e6105b5",
+    "file": "goose-throne.webp",
+    "appId": "image",
+    "kind": "image",
+    "width": 1280,
+    "height": 853,
+    "model": "openai/gpt-image-2.5-sunburst",
+    "prompt": "A wide film still from a lavish period drama: a candlelit palace throne hall decorated with banks of flowers in marigold orange and magenta. A white goose wearing a small deep red velvet cape sits upright on the golden throne at the centre. Courtiers in silk and brocade gowns and coats stand in two rows along a red carpet and bow low toward it, played completely straight. Warm candle light, soft haze, 35mm film, shallow depth of field. The goose and the throne sit in the centre of the frame. No text.",
+    "inputs": {
+      "model": "openai/gpt-image-2.5-sunburst",
+      "quality": "high",
+      "size": "1536x1024",
+      "n": "1"
+    },
+    "aspectRatio": null,
+    "credits": 12.59,
+    "seconds": 55.2,
+    "madeAt": "2026-10-29T09:10:25.770Z"
+  },
+  {
+    "runId": "494054ae-aa76-4999-b625-18ef5b6213d2",
+    "file": "camper-van.webp",
+    "appId": "image",
+    "kind": "image",
+    "width": 1024,
+    "height": 1024,
+    "model": "krea/krea-2-medium-turbo",
+    "prompt": "Studio photograph of a single vintage 1960s camper van with a split windscreen, painted in two tones, cactus green below and cream above, with chrome bumpers and round headlights, parked at a three-quarter front angle on a polished concrete floor. Warm paper-coloured seamless backdrop, one large soft key light from the left and a warm rim light from behind, a soft reflection under the van. The van fills the centre of the square frame. No people, no text, no badges, no logo, no number plate.",
+    "inputs": {
+      "model": "krea/krea-2-medium-turbo",
+      "aspectRatio": "1:1",
+      "creativity": "medium",
+      "resolution": "1K"
+    },
+    "aspectRatio": null,
+    "credits": 3.16,
+    "seconds": 13.1,
+    "madeAt": "2026-10-29T08:01:06.059Z"
+  },
+  {
+    "runId": "a7fcb5e4-caf4-4405-aef2-bd54d0be8f18",
+    "file": "sunflower-field.webp",
+    "appId": "image",
+    "kind": "image",
+    "width": 1280,
+    "height": 1280,
+    "model": "byteplus/seedream-5-0-pro-260628",
+    "prompt": "Square photograph in a sunflower field on a summer afternoon. One sunflower in the centre of the frame turns its face fully toward the camera, its bright yellow petals and dark centre sharp. Around it, at the edges of the frame, the other sunflowers all face away from the camera, showing the green backs of their heads and their stems. A clear pale blue sky fills the top third of the frame, in soft warm sunlight. No text.",
+    "inputs": {
+      "model": "byteplus/seedream-5-0-pro-260628",
+      "outputFormat": "jpeg",
+      "layerDecomposition": "off",
+      "watermark": "off"
+    },
+    "aspectRatio": null,
+    "credits": 18.99,
+    "seconds": 76.8,
+    "madeAt": "2026-10-29T09:07:41.943Z"
+  },
+  {
+    "runId": "08c995bc-4b6b-45e0-988b-d70b96ef0c13",
+    "file": "jaguar-ceramic.webp",
+    "appId": "image",
+    "kind": "image",
+    "width": 1024,
+    "height": 1024,
+    "model": "krea/krea-2-medium-turbo",
+    "prompt": "Studio photograph of a glazed ceramic sculpture of a jaguar head, life size, in pale cream glaze with fine black painted rosettes and gold leaf eyes, standing on a plain white plinth. Flat, even, overcast light from the front with no strong shadows, plain light grey backdrop. The head fills the centre of the square frame, seen from the front at eye level. No text.",
+    "inputs": {
+      "model": "krea/krea-2-medium-turbo",
+      "aspectRatio": "1:1",
+      "creativity": "medium",
+      "resolution": "1K"
+    },
+    "aspectRatio": null,
+    "credits": 3.17,
+    "seconds": 12.7,
+    "madeAt": "2026-10-29T08:06:14.071Z"
+  },
+  {
+    "runId": "851cf3a7-20ec-4955-a2cb-2b31e3af23b4",
+    "file": "perfume-roses.webp",
+    "appId": "image",
+    "kind": "image",
+    "width": 1024,
+    "height": 1024,
+    "model": "xai/grok-imagine-image",
+    "prompt": "Product photograph of a single faceted glass perfume bottle filled with magenta liquid, with a gold cap shaped like a closed flower bud, standing upright among dense red and pink garden roses that crowd around it and behind it. Warm side light from the left, the glass catching bright highlights and a small orange glow. The bottle stands in the centre of the square frame and fills about half its height. No text, no label, no logo.",
+    "inputs": {
+      "model": "xai/grok-imagine-image",
+      "aspectRatio": "1:1",
+      "quality": "high",
+      "resolution": "1k",
+      "n": "1"
+    },
+    "aspectRatio": null,
+    "credits": 4.22,
+    "seconds": 13.2,
+    "madeAt": "2026-10-29T08:05:02.475Z"
   }
 ]

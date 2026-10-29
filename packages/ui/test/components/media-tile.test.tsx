@@ -119,6 +119,22 @@ describe("MediaTile with a video", () => {
   })
 })
 
+describe("MediaTile focus", () => {
+  it("crops from the top with a top focus, and from the centre with none", () => {
+    render(
+      <>
+        <MediaTile kind="image" src="top.png" alt="Top" focus="top" />
+        <MediaTile kind="image" src="centre.png" alt="Centre" />
+      </>
+    )
+    const [top, centre] = [...document.querySelectorAll("img")]
+    expect(top?.className.split(" ")).toEqual(
+      expect.arrayContaining(["object-cover", "object-top"])
+    )
+    expect(centre?.className.split(" ")).not.toContain("object-top")
+  })
+})
+
 describe("MediaTile captions", () => {
   it("joins the note and the length in one one-line pill", () => {
     render(

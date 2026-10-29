@@ -22,6 +22,7 @@ const showcaseRow = z.strictObject({
   seconds: z.number().nonnegative(),
   madeAt: z.iso.datetime(),
   banner: z.enum(["start", "end"]).optional(),
+  focus: z.enum(["top"]).optional(),
   from: z.string().min(1).optional(),
 })
 
