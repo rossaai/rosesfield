@@ -67,9 +67,9 @@ export const shellCopy = {
   "legal.privacy.cookie.title": "One cookie",
   "legal.privacy.cookie.body":
     "Rosesfield sets one session cookie. It keeps your work with you between visits.",
-  "legal.privacy.logs.title": "Request logs",
+  "legal.privacy.logs.title": "Logs and page views",
   "legal.privacy.logs.body":
-    "Cloudflare keeps a log of the requests Rosesfield serves.",
+    "Cloudflare keeps a log of the requests Rosesfield serves. Cloudflare Web Analytics counts page views without a cookie and without fingerprinting you.",
   "legal.privacy.ask.title": "Ask about your data",
   "legal.privacy.ask.body":
     "To ask what Rosesfield keeps about you, open an issue on GitHub.",
