@@ -8,7 +8,7 @@
 
 <h1 align="center">Open-source Higgsfield alternative, built with ComfyUI</h1>
 
-<p align="center">27 apps that run on your own Comfy key.</p>
+<p align="center">25+ apps that run on your own Comfy key.</p>
 
 <p align="center">
   <a href="#start"><b>Run it on your machine</b></a>&emsp;
@@ -21,12 +21,6 @@
 
 > [!NOTE]
 > Rosesfield is an entry to Comfy's [Open Source Higgsfield challenge](https://comfy.org/open-source-higgsfield), #OpenSourceHiggsfield. It is not made by, affiliated with or endorsed by Higgsfield.
-
-<p align="center">
-  <a href="docs/media/rosesfield-film.mp4"><img alt="The Rosesfield launch film. A red rose growing through ice, open in the Image app's viewer, over a field of roses." src="docs/media/rosesfield-film.webp" width="720"></a>
-</p>
-
-<p align="center">The launch film, 38 seconds. Every result in it is a real run on Comfy.</p>
 
 ## Start
 
@@ -47,26 +41,30 @@ Your Comfy key is the only sign-in, and each run spends credits from your own Co
 
 <table>
   <tr>
-    <td align="center"><a href="docs/media/apps/effects.mp4"><img alt="A photo of a woman in a camel coat, then the video Effects made from it" src="docs/media/apps/effects.webp" width="260"></a><br><b>Effects</b></td>
-    <td align="center"><a href="docs/media/video-seedance-kite.mp4"><img alt="A red kite over a green hill at dawn" src="docs/media/video-seedance-kite.webp" width="260"></a><br><b>Video</b></td>
-    <td align="center"><a href="docs/media/apps/image.mp4"><img alt="A woman in a red coat on a frozen lake at dawn while a whale breaks through the ice" src="docs/media/apps/image.webp" width="260"></a><br><b>Image</b></td>
+    <td align="center" colspan="3"><a href="docs/media/examples/hose.mp4"><img alt="A woman waters a garden with a hose, then the same photo where the water is a stream of orange and magenta petals" src="docs/media/examples/hose.webp" width="520"></a><br><b>Image, then Edit</b></td>
   </tr>
   <tr>
-    <td align="center"><a href="docs/media/apps/edit.mp4"><img alt="The frozen lake at night under the aurora, then a close-up of the same woman" src="docs/media/apps/edit.webp" width="260"></a><br><b>Edit</b></td>
-    <td align="center"><a href="docs/media/apps/upscale.mp4"><img alt="The Image result beside its upscaled copy" src="docs/media/apps/upscale.webp" width="260"></a><br><b>Upscale</b></td>
-    <td align="center"><a href="docs/media/apps/relight.mp4"><img alt="A portrait, then the same portrait lit by warm light from the left" src="docs/media/apps/relight.webp" width="260"></a><br><b>Relight</b></td>
+    <td align="center"><a href="docs/media/examples/video.mp4"><img alt="A white goose in a red velvet cape on a golden throne, in a candlelit hall where courtiers stand along a red carpet" src="docs/media/examples/video.webp" width="260"></a><br><b>Video</b></td>
+    <td align="center"><a href="docs/media/examples/edit.mp4"><img alt="A green and cream camper van, then the same van made as a cake with a wedge cut from its side" src="docs/media/examples/edit.webp" width="260"></a><br><b>Edit</b></td>
+    <td align="center"><a href="docs/media/examples/shot.mp4"><img alt="A honeybee on a red poppy, seen close" src="docs/media/examples/shot.webp" width="260"></a><br><b>Shot</b></td>
   </tr>
   <tr>
-    <td align="center"><a href="docs/media/apps/expand.mp4"><img alt="A tall street photo, then the same street widened to 16:9" src="docs/media/apps/expand.webp" width="260"></a><br><b>Expand</b></td>
-    <td align="center"><a href="docs/media/apps/characters.mp4"><img alt="A half-body portrait of an older man in round gold glasses and a green velvet blazer" src="docs/media/apps/characters.webp" width="260"></a><br><b>Characters</b></td>
-    <td align="center"><a href="docs/media/apps/video-edit.mp4"><img alt="A close-up clip of a woman's face at twice its frame rate" src="docs/media/apps/video-edit.webp" width="260"></a><br><b>Video edit</b></td>
+    <td align="center"><a href="docs/media/examples/motion.mp4"><img alt="A man in a bucket hat runs toward the camera down a cobbled street, with two police officers behind him" src="docs/media/examples/motion.webp" width="260"></a><br><b>Motion</b></td>
+    <td align="center"><a href="docs/media/examples/relight.mp4"><img alt="A cream ceramic jaguar head in flat grey light, then the same head lit orange from the left and magenta from the right" src="docs/media/examples/relight.webp" width="260"></a><br><b>Relight</b></td>
+    <td align="center"><img alt="A pink flamingo standing alone under a bus stop shelter at night, lit by a phone flash" src="docs/media/examples/image.webp" width="260"><br><b>Image</b></td>
   </tr>
   <tr>
-    <td align="center" colspan="3"><a href="docs/media/apps/three-d.mp4"><img alt="A red rose with two leaves on a round base, turning in the 3D app's viewer" src="docs/media/apps/three-d.webp" width="260"></a><br><b>3D</b></td>
+    <td align="center"><img alt="A man with the head of a brown hare, in an oatmeal cardigan, holding a basket of towels in a laundromat" src="docs/media/examples/characters.webp" width="260"><br><b>Characters</b></td>
+    <td align="center"><a href="docs/media/examples/expand.mp4"><img alt="A sunflower field where one flower faces the camera and the others face away, widened to 16:9" src="docs/media/examples/expand.webp" width="260"></a><br><b>Expand</b></td>
+    <td align="center"><a href="docs/media/examples/upscale.mp4"><img alt="A detail of a chameleon's eye, from the 768 pixel photo beside the same detail from its copy at 1536 pixels" src="docs/media/examples/upscale.webp" width="260"></a><br><b>Upscale</b></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/media/examples/background-removal.mp4"><img alt="A glass perfume bottle among red and pink roses, then the same bottle alone on a transparent background" src="docs/media/examples/background-removal.webp" width="260"></a><br><b>Remove background</b></td>
+    <td align="center"><a href="docs/media/examples/video-edit.mp4"><img alt="A close-up of a brown eye, from a clip at twice its frame rate" src="docs/media/examples/video-edit.webp" width="260"></a><br><b>Video edit</b></td>
   </tr>
 </table>
 
-Press a picture to play its clip. Each one is a paid run in the running app, made from 2026-10-19 to 2026-10-28.
+Press a picture to play its clip, where it has one. Each one is a paid run in the running app, made from 2026-10-22 to 2026-10-29.
 
 Of the 36 Higgsfield products this README lists, 24 have a Rosesfield app that does the same job, and Rosesfield adds Music, Sound effects and 3D. [See them side by side](#rosesfield-and-higgsfield-app-by-app).
 
@@ -78,8 +76,8 @@ This part is for reviewers and AI agents: the facts, the comparison, how Rosesfi
 
 | | |
 |---|---|
-| Apps | 27, for images, video, audio, characters and 3D |
-| ComfyUI workflows | 33 graphs. 32 load open weights, and one runs Comfy's Meshy partner node. Each is an API file the app runs and a UI file that opens in ComfyUI and in App Mode |
+| Apps | 25+, for images, video, audio, characters and 3D |
+| ComfyUI workflows | 30+ graphs. All but one load open weights, and one runs Comfy's Meshy partner node. Each is an API file the app runs and a UI file that opens in ComfyUI and in App Mode |
 | Hosted models | every Comfy Router model of each app's task, read live from Comfy |
 | Where a run happens | Comfy Router, Comfy Cloud, or your own ComfyUI through comfy-api-proxy |
 | Sign-in | one Comfy key, with no account |
@@ -128,7 +126,7 @@ Every run reaches Comfy through the Comfy SDK, `@comfyorg/sdk` 0.5.0, on one Com
 | What runs | Where it runs | How Rosesfield calls it |
 |---|---|---|
 | Hosted models, every model Comfy publishes for the app's task | Comfy Router, `api.comfy.org` | the model's queued route |
-| The 33 workflows in [`workflows/`](workflows/README.md) | Comfy Cloud, `cloud.comfy.org` | the Comfy API v2 |
+| The workflows in [`workflows/`](workflows/README.md) | Comfy Cloud, `cloud.comfy.org` | the Comfy API v2 |
 | The open-weights workflows on your GPU | your own ComfyUI | comfy-api-proxy, set in Settings or by `COMFY_BASE_URL` |
 
 - Each workflow ships as two files: the API file the app sends, and the UI file you open in ComfyUI. The UI file holds its App Mode setup, so it opens in App Mode with the inputs the app shows.
@@ -137,29 +135,28 @@ Every run reaches Comfy through the Comfy SDK, `@comfyorg/sdk` 0.5.0, on one Com
 
 ## What each run made
 
-The clips in [Made with Rosesfield](#made-with-rosesfield), with their models and costs, and one more. The Video run was made on 2026-10-19, the Effects run on 2026-10-21, the 3D run on 2026-10-28, and the others on 2026-10-22.
+The runs in [Made with Rosesfield](#made-with-rosesfield), with their models and costs. The Video edit run was made on 2026-10-22, and the others on 2026-10-29. Where a result was made from a picture, the row names the run that made that picture first.
 
 | App | The run |
 |---|---|
-| Effects | Still in a busy street. A photo becomes a video where she stands still and the street moves around her. The LTX 2.5 graph on Comfy Cloud, 1080p, 19.24 credits, made in 101 seconds. |
-| Image | One prompt: a woman in a red coat on a frozen lake at dawn, while a humpback whale breaks through the ice. GPT Image 2.5 Sunburst, high quality, 1536 by 1024, 12.54 credits, made in 49 seconds. |
-| Edit | A night version of the Image result becomes a close-up of the same woman facing the camera. GPT Image 2.5 Sunburst, 5.29 credits, made in 33 seconds. |
-| Upscale | The Image result at twice its size, 3072 by 2048. The SeedVR2 3B graph, 2.00 credits, made in 20 seconds. |
-| Characters | A character made from traits: an older man with short grey coily hair, round gold glasses and a green velvet blazer. The Z-Image Turbo graph, 1.81 credits, made in 44 seconds. |
-| Expand | A tall street photo widened to 16:9, with the street continued on both sides. The Qwen Image Inpaint graph, 3.66 credits, made in 37 seconds. |
-| Relight | A portrait relit with soft warm light from the left. Qwen Image Edit 2509 with the Relight LoRA, 17.04 credits, made in 88 seconds. |
-| Remove background | A sneaker cut out onto a transparent background, [the clip](docs/media/apps/background-removal.mp4). The BiRefNet graph, 0.68 credits, made in 33 seconds. |
-| Video edit | A clip at twice its frame rate, 48 frames a second, with its sound kept. The FILM graph, 3.31 credits, made in 28 seconds. |
-| Video | A red kite over a green hill at dawn, from a start image. Seedance 1.0 Pro Fast, 480p, 5 seconds, 10.34 credits. |
-| 3D | A sculpture of one open rose on a short stem with two leaves, from a description. Meshy 7.1, Art style Sculpture, 241.38 credits, made in 64 seconds. Rosesfield runs Meshy's preview mode, which makes the shape only, so the model came out white. Its colour was added after the run by a script that runs no model. |
+| Image, then Edit | A photo of a woman watering a garden with a hose, from GPT Image 2.5 Sunburst, high quality, 1024 by 1536, 12.64 credits, made in 55 seconds. Edit turns the water into a stream of orange and magenta petals and keeps the rest of the photo. GPT Image 2.5 Sunburst, 16.26 credits, made in 44 seconds. |
+| Video | A goose in a red cape on a throne, from a start frame GPT Image 2.5 Sunburst made for 12.59 credits. The courtiers move and the camera pushes in. LTX 2.5, 720p, 5 seconds with sound, 6.52 credits, made in 33 seconds. |
+| Edit | A camper van becomes a cake of the same shape, with a wedge cut from its side. The van is from Krea 2 Medium Turbo, 3.16 credits. The cake is from GPT Image 2.5 Sunburst, 18.55 credits, made in 55 seconds. |
+| Shot | One shot from a wide field of red poppies down to one honeybee on one poppy. LTX 2.5, push in, 720p, 5 seconds with sound, 6.57 credits, made in 31 seconds. |
+| Motion | Grab and run, an example in Motion's Library: a man runs toward the camera down a cobbled street with a bottle, and police run behind him. Motion's guide graph on LTX 2.5, 1080p, 4 seconds with sound, 16.79 credits, made in 71 seconds. |
+| Relight | A ceramic jaguar head relit with orange light from the left and magenta light from the right. The head is from Krea 2 Medium Turbo, 3.17 credits. Qwen Image Edit 2509 with the Relight LoRA, 14.07 credits, made in 62 seconds. |
+| Image | A flamingo under a bus stop shelter at night. GPT Image 2.5 Sunburst, high quality, 1024 by 1536, 12.62 credits, made in 45 seconds. |
+| Characters | A character made from traits: a man with the head of a brown hare, in a laundromat. GPT Image 2.5 Sunburst, 16.05 credits, made in 66 seconds. |
+| Expand | A square sunflower field widened to 16:9, 1536 by 864, with more flowers facing away on both sides. The field is from Seedream 5.0 Pro, 18.99 credits. The Qwen Image Inpaint graph, 4.03 credits, made in 23 seconds. |
+| Upscale | A chameleon at twice its size, from 768 by 768 to 1536 by 1536. The photo is from Photon Flash 1, 0.67 credits, scaled to 768 by 768 with ffmpeg. The SeedVR2 3B graph, 1.28 credits, made in 14 seconds. |
+| Remove background | A perfume bottle cut out from the roses around it onto a transparent background. The photo is from Grok Imagine Image, 4.22 credits. The BiRefNet graph, 0.25 credits, made in 9 seconds. |
+| Video edit | A close-up clip at twice its frame rate, 48 frames a second. The FILM graph, 3.31 credits, made in 30 seconds. |
 
-The launch film shows a prompt in the Image app, the model picker, five results in their own viewers, the 27 apps, and how a Comfy key reaches Settings. It is edited from the app's own screens. Every result in it is a stored run, and its 3D rose is the coloured model above. Comfy's key page in it is redrawn, and no key appears.
-
-A [9:16 clip](docs/media/rosesfield-clip-9x16.mp4) shows the Effects run in the shape of a phone screen.
+The clips of Edit, Relight, Expand, Upscale, Remove background and Image, then Edit show the input and then the result. They were put together with ffmpeg from the runs' own files, and the Upscale clip shows one detail of each at the same size.
 
 ## What was proven live
 
-Each row counts the paid runs of one area in the running app on Comfy. The counts and credits come from the maintainers' run ledger, which is not in this repository. The credits are Comfy credits, read from Comfy's balance before and after each run. What you can check here is each clip in `docs/media` and the two Effects runs in [`packages/catalog/src/effects/runs.json`](packages/catalog/src/effects/runs.json), with their Comfy balance before and after.
+Each row counts the paid runs of one area in the running app on Comfy. The counts and credits come from the maintainers' run ledger, which is not in this repository. The credits are Comfy credits, read from Comfy's balance before and after each run. What you can check here is each example in `docs/media/examples` and the two Effects runs in [`packages/catalog/src/effects/runs.json`](packages/catalog/src/effects/runs.json), with their Comfy balance before and after.
 
 | Area | Proven models | Date | Runs | Credits |
 |---|---|---|---|---|
@@ -243,7 +240,7 @@ The command starts a run and answers with its id. `GET /api/runs` lists your run
 bun run gate
 ```
 
-The gate runs `catalog:sync`, `generated:check`, `copy:check`, `glob:check`, `motion:check`, `docs:check`, `typecheck`, `lint` and `test`.
+The gate runs `catalog:sync`, `generated:check`, `copy:check`, `glob:check`, `motion:check`, `cloud:check`, `docs:check`, `typecheck`, `lint` and `test`.
 
 ## Licence
 
