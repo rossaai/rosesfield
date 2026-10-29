@@ -63,7 +63,14 @@ export class FakeRunChain extends RunChain {
   }
 
   async settle(run: Run): Promise<Run> {
-    const stage = run.appId === "edit-app" ? "restore" : stageOf(run)
+    const lead = this.started.find((one) => idOfKey(one.key) === run.id)
+    const named = lead === undefined ? null : leadStageOf(lead.key)
+    const stage =
+      named !== null && this.endings.has(named)
+        ? named
+        : run.appId === "edit-app"
+          ? "restore"
+          : stageOf(run)
     const ending = this.endings.get(stage)
     if (ending === undefined) {
       throw new Error(`no ending for ${stage}`)
@@ -77,20 +84,35 @@ export class FakeRunChain extends RunChain {
   }
 }
 
+function leadStageOf(key: string): string | null {
+  const suffix = Object.keys(leadRunIds).find((one) => key.endsWith(one))
+  return suffix === undefined ? null : suffix.slice(1)
+}
+
 function stageOf(run: Run): string {
   return run.inputs.resolution === "final-size" ? "final" : "render"
 }
 
+const leadRunIds: Readonly<Record<string, string>> = {
+  "-plan": "2c9d0e1f-2a3b-4c4d-8e5f-6a7b8c9d0e1f",
+  "-read": "3d0e1f2a-3b4c-4d5e-9f6a-7b8c9d0e1f2a",
+}
+
 const runIds: Readonly<Record<string, string>> = {
+  ...leadRunIds,
   "-draft": "8e5f6a7b-8c9d-4e0f-8a1b-2c3d4e5f6a7b",
   "-restore": "9f6a7b8c-9d0e-4f1a-9b2c-3d4e5f6a7b8c",
   "-final": "0a7b8c9d-0e1f-4a2b-8c3d-4e5f6a7b8c9d",
 }
 
-function runOf(app: string, key: string, request: ChainRun): Run {
+function idOfKey(key: string): string {
   const suffix = Object.keys(runIds).find((one) => key.endsWith(one)) ?? ""
+  return runId.parse(runIds[suffix])
+}
+
+function runOf(app: string, key: string, request: ChainRun): Run {
   return {
-    id: runId.parse(runIds[suffix]),
+    id: runId.parse(idOfKey(key)),
     appId: appId.parse(app),
     status: "queued",
     inputs: request.inputs,

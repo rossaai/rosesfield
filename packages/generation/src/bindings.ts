@@ -4,6 +4,8 @@ export {
   type EndKeyDraftOutput,
   type EndKeyFinalInput,
   type EndKeyFinalOutput,
+  type EndKeyLeadInput,
+  type EndKeyLeadOutput,
   EndKeyLoopHandler,
   type EndKeyRestoreInput,
   type EndKeyRestoreOutput,
@@ -11,7 +13,13 @@ export {
   type StepPricer,
 } from "#application/end-key-loop/end-key-loop.handler"
 export { appOnlyInputsOf } from "#domain/app-only-inputs"
-export type { EndKeySteps, OutputId, StepRun } from "#domain/end-key-steps"
+export type {
+  ChainLead,
+  EndKeySteps,
+  LeadStep,
+  OutputId,
+  StepRun,
+} from "#domain/end-key-steps"
 export { DraftNotReadyError } from "#domain/error/draft-not-ready.error"
 export {
   type FieldRole,

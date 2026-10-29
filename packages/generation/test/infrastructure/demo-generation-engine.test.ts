@@ -251,4 +251,30 @@ describe("the demo engine's held images", () => {
     const outputs = await outputsFor(undefined)
     expect(outputs.map((one) => one.kind)).toEqual(["video"])
   })
+
+  it("saves a video for each video save a held read names, under that node, as a read of a clip saves its depth and its matte", async () => {
+    const { clock, engine } = setup()
+    const binding = comfyWorkflow({
+      workflow: {
+        "13": { class_type: "SaveVideo", inputs: {} },
+        "28": { class_type: "SaveVideo", inputs: {} },
+        "31": { class_type: "SaveImage", inputs: {} },
+      },
+      bindings: [],
+      models: [],
+      results: [],
+    })
+    const { ref } = await engine.submit({
+      ...request("video", "9:16"),
+      binding,
+    })
+    clock.advance(DemoGenerationEngine.delayMs)
+    const outputs = await engine.listOutputs(ref)
+    expect(outputs.map((one) => [one.kind, one.nodeId, one.mime])).toEqual([
+      ["video", undefined, "video/mp4"],
+      ["video", "13", "video/mp4"],
+      ["video", "28", "video/mp4"],
+      ["image", "31", "image/png"],
+    ])
+  })
 })

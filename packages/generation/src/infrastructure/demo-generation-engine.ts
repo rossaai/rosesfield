@@ -32,14 +32,18 @@ type DemoGenerationEngineOptions = {
   timer?: Timer
 }
 
+type HeldNode = { nodeId: string; kind: "image" | "video" }
+
 type DemoRun = {
   submittedAt: number
   kind: AssetKind
   width: number
   height: number
   count: number
-  held: readonly string[]
+  held: readonly HeldNode[]
 }
+
+const videoMark = "v"
 
 export class DemoGenerationEngine extends GenerationEngine {
   static readonly delayMs = 3000
@@ -50,7 +54,7 @@ export class DemoGenerationEngine extends GenerationEngine {
   static readonly sampleRate = 24_000
   static readonly gray = 128
   static readonly refPattern: RegExp =
-    /^demo:(\d+):(image|video|audio|text|mesh):(\d+)x(\d+):(\d+)(?::held=([0-9,]+))?$/
+    /^demo:(\d+):(image|video|audio|text|mesh):(\d+)x(\d+):(\d+)(?::held=([0-9v,]+))?$/
 
   override readonly key = "demo"
   override readonly origin = "demo"
@@ -100,7 +104,9 @@ export class DemoGenerationEngine extends GenerationEngine {
         : DemoGenerationEngine.imageSide
     const { width, height } = sizeOf(request.aspectRatio, side)
     const now = this.clock.now().getTime()
-    const held = heldImagesOf(request.binding)
+    const held = heldNodesOf(request.binding).map(
+      (node) => `${node.nodeId}${node.kind === "video" ? videoMark : ""}`
+    )
     const heldPart = held.length === 0 ? "" : `:held=${held.join(",")}`
     return {
       ref: `demo:${now}:${request.outputKind}:${width}x${height}:${request.count}${heldPart}`,
@@ -143,9 +149,9 @@ export class DemoGenerationEngine extends GenerationEngine {
     }))
     const held = await Promise.all(
       run.held.map(
-        async (nodeId): Promise<EngineOutput> => ({
-          ...(await outputOf({ ...run, kind: "image" })),
-          nodeId,
+        async (node): Promise<EngineOutput> => ({
+          ...(await outputOf({ ...run, kind: node.kind })),
+          nodeId: node.nodeId,
         })
       )
     )
@@ -180,24 +186,36 @@ function parseRef(ref: string): DemoRun {
     width: Number(match[3]),
     height: Number(match[4]),
     count: Number(match[5]),
-    held: match[6] === undefined ? [] : match[6].split(","),
+    held: match[6] === undefined ? [] : match[6].split(",").map(heldNodeOf),
   }
 }
 
-function heldImagesOf(binding: EngineBinding): string[] {
+function heldNodeOf(entry: string): HeldNode {
+  return entry.endsWith(videoMark)
+    ? { nodeId: entry.slice(0, -videoMark.length), kind: "video" }
+    : { nodeId: entry, kind: "image" }
+}
+
+const savedKinds: Readonly<Record<string, HeldNode["kind"]>> = {
+  SaveImage: "image",
+  SaveVideo: "video",
+}
+
+/** The image and video saves of a graph that names its results, other than those results: the outputs a run chain holds out of the library. */
+function heldNodesOf(binding: EngineBinding): HeldNode[] {
   const results = resultNodesOf(binding)
   if (results === null) {
     return []
   }
   const { workflow } = parseComfyWorkflow(binding)
-  return Object.entries(workflow)
-    .filter(
-      ([id, node]) =>
-        isRecord(node) &&
-        node.class_type === "SaveImage" &&
-        !results.includes(id)
-    )
-    .map(([id]) => id)
+  return Object.entries(workflow).flatMap(([id, node]): HeldNode[] => {
+    const kind = isRecord(node)
+      ? savedKinds[String(node.class_type)]
+      : undefined
+    return kind === undefined || results.includes(id)
+      ? []
+      : [{ nodeId: id, kind }]
+  })
 }
 
 function sizeOf(

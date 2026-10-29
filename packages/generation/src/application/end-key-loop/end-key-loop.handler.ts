@@ -3,7 +3,12 @@ import type {
   PriceRunInput,
   PriceRunOutput,
 } from "#application/price-run/price-run.handler"
-import type { EndKeySteps, OutputId, StepRun } from "#domain/end-key-steps"
+import type {
+  ChainLead,
+  EndKeySteps,
+  OutputId,
+  StepRun,
+} from "#domain/end-key-steps"
 import { DraftNotReadyError } from "#domain/error/draft-not-ready.error"
 import { type RunPrice, unknownPrice } from "#domain/generation-engine.port"
 import { type RunChain, stepKeyOf } from "#domain/run-chain.port"
@@ -15,6 +20,15 @@ export type EndKeyAnswer = "yes" | "not-yet"
 export type StepPricer = {
   execute(input: PriceRunInput): Promise<PriceRunOutput>
 }
+
+export type EndKeyLeadInput = {
+  lead: ChainLead
+  key: string
+}
+
+export type EndKeyLeadOutput =
+  | { status: "stopped"; at: string; run: Run }
+  | { status: "led"; steps: EndKeySteps }
 
 export type EndKeyDraftInput = {
   steps: EndKeySteps
@@ -51,7 +65,7 @@ type EndKeyLoopHandlerOptions = {
   prices: StepPricer
 }
 
-/** Runs a draft, and after each yes the restore of its last frame, then the final with that end key. The restore runs held, so its key never reaches the library. */
+/** Runs a draft, and after each yes the restore of its last frame, then the final with that end key. The steps of a lead run held before the draft, and the restore runs held, so none of them reaches the library. */
 export class EndKeyLoopHandler {
   private readonly chain: RunChain
   private readonly prices: StepPricer
@@ -59,6 +73,20 @@ export class EndKeyLoopHandler {
   constructor(options: EndKeyLoopHandlerOptions) {
     this.chain = options.chain
     this.prices = options.prices
+  }
+
+  /** Runs each step of the lead in turn under its own key, and stops at the first that ends with no result. */
+  async lead(input: EndKeyLeadInput): Promise<EndKeyLeadOutput> {
+    const made: Run[] = []
+    for (const one of input.lead.steps) {
+      const step = await one.stepOf(made)
+      const run = await this.run(step, input.key, one.stage)
+      if (run.status !== "done") {
+        return { status: "stopped", at: one.stage, run }
+      }
+      made.push(run)
+    }
+    return { status: "led", steps: await input.lead.endKeyStepsOf(made) }
   }
 
   async draft(input: EndKeyDraftInput): Promise<EndKeyDraftOutput> {
@@ -103,6 +131,13 @@ export class EndKeyLoopHandler {
     return this.priceOf(steps.draft)
   }
 
+  /** The price Generate shows before a lead: every step of the lead and the draft as one sum. */
+  async priceLead(lead: ChainLead): Promise<RunPrice> {
+    return sumOf(
+      await Promise.all(lead.priced.map((step) => this.priceOf(step)))
+    )
+  }
+
   /** The price Make final shows: the restore and the final render as one sum. */
   async priceMakeFinal(steps: EndKeySteps, draft: Run): Promise<RunPrice> {
     const frame = readyFrameOf(steps, draft)
@@ -122,11 +157,7 @@ export class EndKeyLoopHandler {
     return this.priceOf(steps.final(draft, endKey))
   }
 
-  private async run(
-    step: StepRun,
-    key: string,
-    stage: EndKeyStage
-  ): Promise<Run> {
+  private async run(step: StepRun, key: string, stage: string): Promise<Run> {
     const started = await this.chain.start(
       step.appId,
       step.request,

@@ -1,5 +1,7 @@
+import { assetId } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import { EndKeyLoopHandler } from "#application/end-key-loop/end-key-loop.handler"
+import type { ChainLead } from "#domain/end-key-steps"
 import { DraftNotReadyError } from "#domain/error/draft-not-ready.error"
 import {
   draftVideo,
@@ -208,5 +210,108 @@ describe("the prices the loop shows", () => {
     expect(await loopWith(chain, unknown).priceMakeFinal(steps, draft)).toEqual(
       { source: "unknown", credits: null }
     )
+  })
+})
+
+const planned = assetId.parse("2a3b4c5d-6e7f-4a8b-9c0d-1e2f3a4b5c6d")
+const depth = assetId.parse("3b4c5d6e-7f8a-4b9c-8d1e-2f3a4b5c6d7e")
+
+const lead: ChainLead = {
+  steps: [
+    {
+      stage: "plan",
+      stepOf: async () => ({
+        appId: "plan-app",
+        request: {
+          inputs: { photo: [photo] },
+          aspectRatio: null,
+          place: "held",
+        },
+      }),
+    },
+    {
+      stage: "read",
+      stepOf: async (made) => ({
+        appId: "read-app",
+        request: {
+          inputs: { plan: made.flatMap((one) => one.outputs) },
+          aspectRatio: null,
+          place: "held",
+        },
+      }),
+    },
+  ],
+  priced: [
+    { appId: "plan-app", request: { inputs: {}, aspectRatio: null } },
+    steps.draft,
+  ],
+  endKeyStepsOf: async (made) => ({
+    ...steps,
+    draft: {
+      ...steps.draft,
+      request: {
+        ...steps.draft.request,
+        inputs: {
+          ...steps.draft.request.inputs,
+          clip: made.flatMap((one) => one.outputs),
+        },
+      },
+    },
+  }),
+}
+
+const leadEndings = {
+  plan: { status: "done" as const, outputs: [planned] },
+  read: { status: "done" as const, outputs: [depth] },
+}
+
+describe("the lead before a draft", () => {
+  it("runs each held step in turn under its own key, each from the runs before it, then makes the draft's steps from them all", async () => {
+    const chain = new FakeRunChain(leadEndings)
+    const led = await loopWith(chain).lead({ lead, key })
+    expect(chain.started.map((one) => [one.appId, one.key])).toEqual([
+      ["plan-app", "motion-press-1-plan"],
+      ["read-app", "motion-press-1-read"],
+    ])
+    expect(chain.started.map((one) => one.request.place)).toEqual([
+      "held",
+      "held",
+    ])
+    expect(chain.started[1]?.request.inputs.plan).toEqual([planned])
+    if (led.status !== "led") {
+      throw new Error(`the lead ended ${led.status}`)
+    }
+    const made = await loopWith(chain).draft({ steps: led.steps, key })
+    expect(chain.started[2]?.request.inputs.clip).toEqual([planned, depth])
+    expect(made.frame).toBe(lastFrame)
+  })
+
+  it("stops at the first step that ends with no result, and starts nothing after it", async () => {
+    const chain = new FakeRunChain({
+      ...leadEndings,
+      plan: { status: "failed", outputs: [] },
+    })
+    const led = await loopWith(chain).lead({ lead, key })
+    expect(led).toMatchObject({ status: "stopped", at: "plan" })
+    expect(chain.started).toHaveLength(1)
+  })
+
+  it("prices the lead and the draft as one sum before any of them runs", async () => {
+    const prices = new FakeStepPricer({
+      undefined: { source: "measured", credits: 0.09 },
+      "draft-size": { source: "measured", credits: 3.36 },
+    })
+    const chain = new FakeRunChain()
+    const price = await loopWith(chain, prices).priceLead(lead)
+    expect(price.credits).toBeCloseTo(3.45, 6)
+    expect(price.source).toBe("measured")
+    expect(chain.started).toHaveLength(0)
+    const unpriced = new FakeStepPricer({
+      "draft-size": { source: "measured", credits: 3.36 },
+    })
+    expect(await loopWith(chain, unpriced).priceLead(lead)).toEqual({
+      source: "unknown",
+      credits: null,
+    })
   })
 })
