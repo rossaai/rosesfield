@@ -2,7 +2,6 @@ import { appId, assetId, type Run, runId } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import { listApps } from "#list-apps"
 import {
-  editSizeOf,
   endKeyEditor,
   type MotionEndKeyAsk,
   motionEndKeySteps,
@@ -28,6 +27,7 @@ const ask: MotionEndKeyAsk = {
   },
   photos: [photo, jacket],
   aspectRatio: "2:3",
+  frameSize: { width: 512, height: 768 },
 }
 
 function draftRun(seed: number | null): Run {
@@ -39,7 +39,8 @@ function draftRun(seed: number | null): Run {
     count: 1,
     aspectRatio: "2:3",
     seed,
-    outputs: [guide, frame],
+    outputs: [guide],
+    held: [{ nodeId: "1011", assetId: frame, kind: "image" }],
     progress: null,
     engine: { adapter: "demo", models: [], workflowHash: null },
     cost: null,
@@ -68,24 +69,35 @@ describe("Motion's end-key steps", () => {
     })
   })
 
+  it("finds the draft's last frame among the outputs it holds, by node 1011", () => {
+    expect(steps.frameOf(draftRun(1))).toBe(frame)
+    expect(steps.frameOf({ ...draftRun(1), held: [] })).toBeNull()
+    expect(
+      steps.frameOf({
+        ...draftRun(1),
+        held: [{ nodeId: "1010", assetId: frame, kind: "image" }],
+      })
+    ).toBeNull()
+  })
+
   it("restores the draft's last frame on the editor the binding names, with the frame first and then your photos", () => {
     const restore = steps.restore(frame)
     expect(restore.appId).toBe(endKeyEditor.appId)
     expect(restore.request.inputs).toEqual({
       quality: "medium",
-      n: 1,
       model: endKeyEditor.model,
       prompt: restorePrompt,
       size: "1024x1536",
       images: [frame, photo, jacket],
     })
+    expect(restore.request.place).toBe("held")
     expect(listApps().map((one) => one.id)).toContain(endKeyEditor.appId)
     const many = motionEndKeySteps({
       ...ask,
       photos: Array.from({ length: 20 }, () => jacket),
     }).restore(frame).request.inputs.images
     expect(Array.isArray(many) ? [many.length, many[0]] : []).toEqual([
-      endKeyEditor.maxImages,
+      endKeyEditor.mostImages,
       frame,
     ])
   })
@@ -106,16 +118,17 @@ describe("Motion's end-key steps", () => {
     )
   })
 
-  it("asks the editor for the draft's shape", () => {
-    expect(
-      ["2:3", "9:16", "16:9", "1:1", null, "x"].map((one) => editSizeOf(one))
-    ).toEqual([
-      "1024x1536",
-      "1024x1536",
-      "1536x1024",
-      "1024x1024",
-      "auto",
-      "auto",
-    ])
+  it("asks the editor for the frame's shape", () => {
+    const sizes = [
+      { width: 512, height: 768 },
+      { width: 432, height: 768 },
+      { width: 768, height: 432 },
+      { width: 512, height: 512 },
+    ].map(
+      (frameSize) =>
+        motionEndKeySteps({ ...ask, frameSize }).restore(frame).request.inputs
+          .size
+    )
+    expect(sizes).toEqual(["1024x1536", "1024x1536", "1536x1024", "1024x1024"])
   })
 })

@@ -1,6 +1,8 @@
-import type { EngineBinding, RunInputs } from "@rosesfield/contract"
+import type { EngineBinding } from "@rosesfield/contract"
+import type { StepRun } from "@rosesfield/generation/bindings"
 import type { AssetId } from "@rosesfield/kernel"
 import { type ClipPlan, trackTextOf } from "#motion/clip-plan"
+import { motionAppId, readClipModel } from "#motion/motion-models"
 import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 
 export const readClipWorkflow = "motion-read-clip"
@@ -13,45 +15,38 @@ export const readClipOutputNodes = {
 
 export type ReadClipOutput = keyof typeof readClipOutputNodes
 
-export type MotionStep = "read" | "edit"
-
-export type MotionStepRequest = {
-  step: MotionStep
-  app: "motion" | "image"
-  idempotencyKey: string
-  binding: EngineBinding
-  inputs: RunInputs
-  aspectRatio: string | null
-  seed: number
-}
+export const readClipInputs = {
+  model: "model",
+  clip: "clip",
+  targets: "targets",
+} as const
 
 const bindings: readonly WorkflowValueBinding[] = [
-  { from: "input", name: "clip", index: 0, to: "clip" },
-  { from: "input", name: "targets", to: "targets" },
+  { from: "input", name: readClipInputs.clip, index: 0, to: "clip" },
+  { from: "input", name: readClipInputs.targets, to: "targets" },
 ]
 
+/** The read names no result node: its depth, its mask and its first frame are all held out of the library. */
 export const readClipBinding: EngineBinding = workflowBinding({
   workflow: readClipWorkflow,
   bindings,
+  results: [],
 })
 
-export function stepKeyOf(runId: string, step: MotionStep): string {
-  return `${runId}-${step}`
-}
-
 export function readClipRequestOf(input: {
-  runId: string
   clip: AssetId
   plan: ClipPlan
-  seed: number
-}): MotionStepRequest {
+}): StepRun {
   return {
-    step: "read",
-    app: "motion",
-    idempotencyKey: stepKeyOf(input.runId, "read"),
-    binding: readClipBinding,
-    inputs: { clip: [input.clip], targets: trackTextOf(input.plan) },
-    aspectRatio: null,
-    seed: input.seed,
+    appId: motionAppId,
+    request: {
+      inputs: {
+        [readClipInputs.model]: readClipModel,
+        [readClipInputs.clip]: [input.clip],
+        [readClipInputs.targets]: trackTextOf(input.plan),
+      },
+      aspectRatio: null,
+      place: "held",
+    },
   }
 }

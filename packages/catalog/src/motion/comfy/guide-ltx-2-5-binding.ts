@@ -7,13 +7,14 @@ import { apiGraph } from "#workflow-entry.contract"
 export const ltx25GuideWorkflow = "motion-guide-ltx-2-5"
 
 export const ltx25GuideInputs = {
+  model: "model",
   photo: "photo",
   guide: "clip",
   mask: "mask",
   endKey: "endKey",
   scene: "scene",
   resolution: "resolution",
-  shortSide: "shortSide",
+  seed: "seed",
 } as const
 
 export const ltx25ShortSides: Readonly<Record<string, number>> = {
@@ -21,9 +22,17 @@ export const ltx25ShortSides: Readonly<Record<string, number>> = {
   "720p": 768,
 }
 
-const shortSideValues: Readonly<Record<string, number>> = Object.fromEntries(
-  Object.values(ltx25ShortSides).map((side) => [String(side), side])
-)
+export type RenderQuality = "draft" | "final"
+
+/** The one render size of each pass: the draft at 480p, the final at 720p. */
+export const renderResolutions: Readonly<Record<RenderQuality, string>> = {
+  draft: "480p",
+  final: "720p",
+}
+
+export const resultNode = "68"
+
+export const lastFrameNode = "1011"
 
 export const attentionNode = "115"
 
@@ -36,7 +45,7 @@ export const endKeyGuides: readonly string[] = ["1001", "1003", "1004"]
 
 export const endKeyImageNodes: readonly string[] = ["1002", "1005"]
 
-export const lastFrameNodes: readonly string[] = ["1010", "1011"]
+export const lastFrameNodes: readonly string[] = ["1010", lastFrameNode]
 
 const guideBindings: readonly WorkflowValueBinding[] = [
   { from: "input", name: ltx25GuideInputs.photo, index: 0, to: "photo" },
@@ -46,12 +55,6 @@ const guideBindings: readonly WorkflowValueBinding[] = [
     from: "input",
     name: ltx25GuideInputs.resolution,
     map: ltx25ShortSides,
-    to: "shortSide",
-  },
-  {
-    from: "input",
-    name: ltx25GuideInputs.shortSide,
-    map: shortSideValues,
     to: "shortSide",
   },
   { from: "seed", to: "seed" },
@@ -115,6 +118,7 @@ function variantBinding(variant: Variant): EngineBinding {
       ...(variant.mask ? [maskBinding] : []),
       ...(variant.endKey ? [endKeyBinding] : []),
     ],
+    results: [resultNode],
     patch: variantGraph(variant),
   })
 }

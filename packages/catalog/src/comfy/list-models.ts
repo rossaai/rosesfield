@@ -3,6 +3,7 @@ import type {
   EngineBinding,
   InputDefinition,
 } from "@rosesfield/contract"
+import { isChainFilled } from "@rosesfield/contract"
 import {
   chosenModelOf,
   graphTaskOf,
@@ -165,6 +166,7 @@ export function runsPartnerNode(app: AppDefinition, graph: string): boolean {
 
 function graphsOf(app: AppDefinition, appTask: string): CatalogModel[] {
   return modelOptionsOf(app)
+    .filter((option) => !isChainFilled(option))
     .filter((option) => !isHostedModelId(option.value))
     .filter((option) => !isDeniedModel(`graph/${option.value}`))
     .map((option) =>

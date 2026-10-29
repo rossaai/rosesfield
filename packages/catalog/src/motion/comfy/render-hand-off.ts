@@ -1,40 +1,20 @@
-import type { AssetKind, RunInputs } from "@rosesfield/contract"
+import type { AssetKind, HeldOutput, RunInputs } from "@rosesfield/contract"
 import type { AssetId } from "@rosesfield/kernel"
 import type { ClipPlan } from "#motion/clip-plan"
 import { ClipPlanNoTargetError } from "#motion/clip-plan-no-target.error"
 import { ClipPlanUnreadableError } from "#motion/clip-plan-unreadable.error"
 import {
+  ltx25GuideInputs,
+  type RenderQuality,
+  renderResolutions,
+} from "#motion/comfy/guide-ltx-2-5-binding"
+import {
   type ReadClipOutput,
   readClipOutputNodes,
 } from "#motion/comfy/read-clip-binding"
-
-export type MadeOutput = {
-  nodeId: string
-  assetId: AssetId
-  kind: AssetKind
-}
+import { ltx25GuideModel } from "#motion/motion-models"
 
 export type ReadClip = Record<ReadClipOutput, AssetId>
-
-export type RenderQuality = "draft" | "final"
-
-export const renderCoreModel = "ltx-2-5-guide"
-
-/** The input names the guided render binds: the first frame is its photo and the depth is its guide clip. */
-export const renderCoreInputs = {
-  model: "model",
-  firstFrame: "photo",
-  guide: "clip",
-  mask: "mask",
-  endKey: "endKey",
-  scene: "scene",
-  shortSide: "shortSide",
-} as const
-
-export const renderShortSides: Readonly<Record<RenderQuality, number>> = {
-  draft: 512,
-  final: 768,
-}
 
 const outputKinds: Readonly<Record<ReadClipOutput, AssetKind>> = {
   depth: "video",
@@ -42,10 +22,10 @@ const outputKinds: Readonly<Record<ReadClipOutput, AssetKind>> = {
   firstFrame: "image",
 }
 
-/** Names the read's outputs by the node that saved each. A mask the engine dropped as black means no target was found. */
-export function readClipOf(made: readonly MadeOutput[]): ReadClip {
+/** Names the read's held outputs by the node that saved each. A mask the engine dropped as black means no target was found. */
+export function readClipOf(held: readonly HeldOutput[]): ReadClip {
   const find = (name: ReadClipOutput): AssetId | null =>
-    made.find(
+    held.find(
       (one) =>
         one.nodeId === readClipOutputNodes[name] &&
         one.kind === outputKinds[name]
@@ -62,12 +42,7 @@ export function readClipOf(made: readonly MadeOutput[]): ReadClip {
   return { depth, mask, firstFrame }
 }
 
-export type RenderHandOff = {
-  inputs: RunInputs
-  seed: number
-}
-
-/** Maps the read, the edited first frame and the plan to the inputs of the guided render. */
+/** Maps the read, the edited first frame and the plan to the inputs of the guided render, with the seed the draft and the final share. */
 export function renderHandOffOf(input: {
   read: ReadClip
   editedFrame: AssetId
@@ -75,18 +50,16 @@ export function renderHandOffOf(input: {
   plan: ClipPlan
   quality: RenderQuality
   seed: number
-}): RenderHandOff {
-  const names = renderCoreInputs
+}): RunInputs {
+  const names = ltx25GuideInputs
   return {
-    inputs: {
-      [names.model]: renderCoreModel,
-      [names.firstFrame]: [input.editedFrame],
-      [names.guide]: [input.read.depth],
-      [names.mask]: [input.read.mask],
-      ...(input.endKey === null ? {} : { [names.endKey]: [input.endKey] }),
-      [names.scene]: input.plan.scene,
-      [names.shortSide]: renderShortSides[input.quality],
-    },
-    seed: input.seed,
+    [names.model]: ltx25GuideModel,
+    [names.photo]: [input.editedFrame],
+    [names.guide]: [input.read.depth],
+    [names.mask]: [input.read.mask],
+    ...(input.endKey === null ? {} : { [names.endKey]: [input.endKey] }),
+    [names.scene]: input.plan.scene,
+    [names.resolution]: renderResolutions[input.quality],
+    [names.seed]: input.seed,
   }
 }

@@ -1,3 +1,4 @@
+import { isChainFilled } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import { app } from "#motion/app"
 import { motionCopy } from "#motion/copy.en"
@@ -16,10 +17,14 @@ function keysOfApp(): string[] {
     "motion.input.scene.note",
     "motion.input.resolution.note",
   ]
-  for (const input of app.inputs) {
+  for (const input of app.inputs.filter((one) => !isChainFilled(one))) {
     keys.push(input.labelKey)
     if (input.type === "choice") {
-      keys.push(...input.options.map((option) => option.labelKey))
+      keys.push(
+        ...input.options
+          .filter((option) => !isChainFilled(option))
+          .map((option) => option.labelKey)
+      )
     }
     if (input.type === "image" || input.type === "video") {
       keys.push(`motion.input.${input.name}.note`)

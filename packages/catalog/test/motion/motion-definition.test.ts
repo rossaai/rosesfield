@@ -22,13 +22,21 @@ describe("the motion definition", () => {
     })
   })
 
-  it("declares no mode and no dependent bound, so no input applies only with another", () => {
+  it("declares no mode and no dependent bound: only the photo and the inputs a run chain fills apply with one model", () => {
     const ruled = motion.inputs.filter(
       (input) =>
         (input.type !== "seed" && input.when !== undefined) ||
         ("bounds" in input && input.bounds !== undefined)
     )
-    expect(ruled).toEqual([])
+    expect(ruled.map((input) => input.name)).toEqual([
+      "photo",
+      "mask",
+      "endKey",
+      "targets",
+    ])
+    expect(
+      ruled.filter((input) => input.type !== "seed" && input.fill !== "chain")
+    ).toEqual([motion.inputs.find((input) => input.name === "photo")])
   })
 
   it.each([

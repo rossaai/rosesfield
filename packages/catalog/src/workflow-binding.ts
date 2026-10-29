@@ -18,6 +18,7 @@ type WorkflowBindingOptions = {
   workflow: string
   bindings: readonly WorkflowValueBinding[]
   outputsPerJob?: "all" | "one"
+  results?: readonly string[]
   patch?: (graph: Graph) => Graph
   find?: (id: string) => Workflow | null
 }
@@ -87,8 +88,18 @@ export function workflowBinding(
       reason: `the patch removed node ${lost.path[0]}, which a binding uses`,
     })
   }
+  const missing = (options.results ?? []).find(
+    (node) => !Object.hasOwn(graph, node)
+  )
+  if (missing !== undefined) {
+    throw new WorkflowInvalidError({
+      folder: workflow.id,
+      reason: `its result node ${missing} is not in the graph`,
+    })
+  }
   return comfyWorkflow({
     workflow: graph,
+    ...(options.results === undefined ? {} : { results: [...options.results] }),
     bindings,
     models: [...workflow.models],
     outputsPerJob: options.outputsPerJob ?? "all",

@@ -1,37 +1,40 @@
 import {
-  type AssetKind,
   appId,
   assetId,
+  type HeldOutput,
   type Run,
   runId,
 } from "@rosesfield/contract"
-import { EndKeyChain } from "#domain/end-key-chain.port"
+import type {
+  PriceRunInput,
+  PriceRunOutput,
+} from "#application/price-run/price-run.handler"
 import type { EndKeySteps } from "#domain/end-key-steps"
 import type { RunPrice } from "#domain/generation-engine.port"
-import type { ChainRun } from "#domain/run-chain.port"
+import { type ChainRun, RunChain } from "#domain/run-chain.port"
 
 export const draftVideo = assetId.parse("4a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c3d")
 export const lastFrame = assetId.parse("5b2c3d4e-5f6a-4b7c-9d8e-9f0a1b2c3d4e")
 export const restoredKey = assetId.parse("6c3d4e5f-6a7b-4c8d-ae9f-0a1b2c3d4e5f")
 export const finalVideo = assetId.parse("7d4e5f6a-7b8c-4d9e-bf0a-1b2c3d4e5f6a")
 
-const kinds: ReadonlyMap<string, AssetKind> = new Map([
-  [draftVideo, "video"],
-  [lastFrame, "image"],
-  [restoredKey, "image"],
-  [finalVideo, "video"],
-])
+export const lastFrameNode = "1011"
 
 export type Started = { appId: string; request: ChainRun; key: string }
 
-type Ending = { status: Run["status"]; outputs: readonly string[] }
+type Ending = {
+  status: Run["status"]
+  outputs: readonly string[]
+  held?: readonly HeldOutput[]
+}
 
 export const fullDraft: Ending = {
   status: "done",
-  outputs: [draftVideo, lastFrame],
+  outputs: [draftVideo],
+  held: [{ nodeId: lastFrameNode, assetId: lastFrame, kind: "image" }],
 }
 
-export class FakeEndKeyChain extends EndKeyChain {
+export class FakeRunChain extends RunChain {
   readonly started: Started[] = []
   private readonly endings: ReadonlyMap<string, Ending>
 
@@ -39,7 +42,11 @@ export class FakeEndKeyChain extends EndKeyChain {
     super()
     const all: Partial<Record<string, Ending>> = {
       render: fullDraft,
-      restore: { status: "done", outputs: [restoredKey] },
+      restore: {
+        status: "done",
+        outputs: [],
+        held: [{ nodeId: "0", assetId: restoredKey, kind: "image" }],
+      },
       final: { status: "done", outputs: [finalVideo] },
       ...endings,
     }
@@ -65,11 +72,8 @@ export class FakeEndKeyChain extends EndKeyChain {
       ...run,
       status: ending.status,
       outputs: ending.outputs.map((one) => assetId.parse(one)),
+      ...(ending.held === undefined ? {} : { held: [...ending.held] }),
     }
-  }
-
-  async kindOf(id: string): Promise<AssetKind | null> {
-    return kinds.get(id) ?? null
   }
 }
 
@@ -114,9 +118,15 @@ export const steps: EndKeySteps = {
       aspectRatio: "2:3",
     },
   },
+  frameOf: (draft) =>
+    draft.held?.find((one) => one.nodeId === lastFrameNode)?.assetId ?? null,
   restore: (frame) => ({
     appId: "edit-app",
-    request: { inputs: { images: [frame, photo] }, aspectRatio: null },
+    request: {
+      inputs: { images: [frame, photo] },
+      aspectRatio: null,
+      place: "held",
+    },
   }),
   final: (draft, endKey) => ({
     appId: "render-app",
@@ -140,10 +150,7 @@ export class FakeStepPricer {
     this.prices = new Map(Object.entries(prices))
   }
 
-  async execute(input: {
-    appId: string
-    inputs: ChainRun["inputs"]
-  }): Promise<{ price: RunPrice }> {
+  async execute(input: PriceRunInput): Promise<PriceRunOutput> {
     this.asked.push({ appId: input.appId, inputs: input.inputs })
     const name =
       input.appId === "edit-app" ? "restore" : String(input.inputs.resolution)

@@ -1,9 +1,10 @@
-import { ComfyGenerationEngine } from "@rosesfield/generation"
+import { ComfyGenerationEngine, resolveBinding } from "@rosesfield/generation"
 import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { cloudWeights, heldFilesOf, isHeldOnCloud } from "#comfy/cloud-weights"
 import { findWorkflow } from "#list-workflows"
 import { planClip } from "#motion/clip-plan"
+import { motionEngine } from "#motion/comfy/motion-binding"
 import {
   readClipOutputNodes,
   readClipRequestOf,
@@ -32,11 +33,9 @@ function fileGraph(): Graph {
 }
 
 async function sentGraph(): Promise<{ graph: Graph; replay: ReplayFetch }> {
-  const request = readClipRequestOf({
-    runId: "run-1",
+  const { request } = readClipRequestOf({
     clip: clipId,
     plan: planClip(twoTargetPlan, 3),
-    seed: 41,
   })
   const replay = new ReplayFetch([
     {
@@ -57,8 +56,8 @@ async function sentGraph(): Promise<{ graph: Graph; replay: ReplayFetch }> {
     fetch: replay.fetch,
   })
   await engine.submit({
-    idempotencyKey: request.idempotencyKey,
-    binding: request.binding,
+    idempotencyKey: "press-1-read",
+    binding: resolveBinding(motionEngine, request.inputs),
     inputs: request.inputs,
     files: [
       {
@@ -70,7 +69,7 @@ async function sentGraph(): Promise<{ graph: Graph; replay: ReplayFetch }> {
     ],
     count: 1,
     aspectRatio: null,
-    seed: request.seed,
+    seed: 41,
     outputKind: "video",
   })
   const body = replay.sent.find((one) => one.url.endsWith("/jobs"))?.body
@@ -96,7 +95,7 @@ describe("the graph that reads a clip", () => {
       "the man in the grey coat, the bottle in his right hand"
     )
     const job = replay.sent.find((one) => one.url.endsWith("/jobs"))
-    expect(job?.headers.get("Idempotency-Key")).toBe("run-1-read")
+    expect(job?.headers.get("Idempotency-Key")).toBe("press-1-read")
     expect(linksToMissingNodes(graph)).toEqual([])
   })
 
@@ -152,6 +151,18 @@ describe("the graph that reads a clip", () => {
     const classes = Object.values(graph).map((node) => node.class_type)
     expect(classes).not.toContain("GrowMask")
     expect(classes).not.toContain("ImageBlur")
+  })
+
+  it("names no result node and starts held, so the engine keeps the depth, the mask and the first frame out of the library", () => {
+    const { appId, request } = readClipRequestOf({
+      clip: clipId,
+      plan: planClip(twoTargetPlan, 3),
+    })
+    expect(appId).toBe("motion")
+    expect(request.place).toBe("held")
+    const engine = new ComfyGenerationEngine({ apiKey: "comfyui-test" })
+    const binding = resolveBinding(motionEngine, request.inputs)
+    expect(engine.resultNodesOf(binding)).toEqual([])
   })
 
   it("lists its model files and its one node pack in its entry", () => {

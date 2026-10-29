@@ -33,7 +33,6 @@ function parsedImageApp(): AppDefinition {
 
 function requestWith(model: FrameEditModel, plan = twoTargetPlan) {
   return frameEditRequestOf({
-    runId: "run-2",
     firstFrame,
     frameSize: { width: 432, height: 768 },
     photos,
@@ -46,14 +45,15 @@ function requestWith(model: FrameEditModel, plan = twoTargetPlan) {
 describe("the edit of the clip's first frame", () => {
   it("opens on the open model, Qwen Image Edit 2511, per the open-weights ruling", () => {
     expect(defaultFrameEditModel).toBe("open")
-    const request = requestWith("open")
+    const { appId, request } = requestWith("open")
     expect(request.inputs.model).toBe("qwen-image-edit-2511")
-    expect(request.app).toBe("image")
-    expect(request.idempotencyKey).toBe("run-2-edit")
+    expect(request.inputs.seed).toBe(5)
+    expect(appId).toBe("image")
+    expect(request.place).toBe("held")
   })
 
   it("sends the first frame first, then the photos the plan uses, and the plan's edit prompt", () => {
-    const request = requestWith("open")
+    const { request } = requestWith("open")
     expect(request.inputs.references).toEqual([
       firstFrame,
       photos[0],
@@ -64,11 +64,12 @@ describe("the edit of the clip's first frame", () => {
   })
 
   it("passes the image app's own schema and resolves to its 3-reference Qwen graph", () => {
-    const request = requestWith("open")
+    const { request } = requestWith("open")
     const body = startRunBodyFor(parsedImageApp()).parse({
       inputs: request.inputs,
+      place: request.place,
     })
-    const binding = resolveBinding(request.binding, body.inputs)
+    const binding = resolveBinding(imageApp.engine, body.inputs)
     expect(binding.adapter).toBe("comfy-workflow")
     expect(binding.config.models).toEqual(
       findWorkflow("ads-qwen-image-edit-2511")?.models
@@ -76,14 +77,16 @@ describe("the edit of the clip's first frame", () => {
   })
 
   it("runs GPT Image 2.5 Sunburst on the Router as the other choice, with every photo and the frame's orientation", () => {
-    const request = requestWith("hosted")
+    const { request } = requestWith("hosted")
     expect(request.inputs).toMatchObject({
       model: "openai/gpt-image-2.5-sunburst",
       images: [firstFrame, photos[0], photos[2]],
       quality: "medium",
       size: "1024x1536",
     })
-    const binding = resolveBinding(request.binding, request.inputs)
+    expect(request.inputs).not.toHaveProperty("seed")
+    expect(request.aspectRatio).toBeNull()
+    const binding = resolveBinding(imageApp.engine, request.inputs)
     expect(hostedModelOf(binding)).toBe("openai/gpt-image-2.5-sunburst")
   })
 

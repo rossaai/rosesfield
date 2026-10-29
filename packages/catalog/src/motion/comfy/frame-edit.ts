@@ -1,23 +1,34 @@
 import type { RunInputs } from "@rosesfield/contract"
+import type { StepRun } from "@rosesfield/generation/bindings"
 import type { AssetId } from "@rosesfield/kernel"
 import { app as imageApp } from "#image/app"
 import { referenceInput } from "#image/comfy/open-weights"
 import { referenceModel } from "#image/image-models"
 import type { ClipPlan } from "#motion/clip-plan"
-import {
-  type MotionStepRequest,
-  stepKeyOf,
-} from "#motion/comfy/read-clip-binding"
+import type { FrameSize } from "#motion/comfy/guide-fit"
 
 export type FrameEditModel = "open" | "hosted"
 
-export type FrameSize = { width: number; height: number }
+type Ids = Extract<RunInputs[string], readonly unknown[]>
 
-type EditModelBinding = {
+export type EditAsk = {
+  images: Ids
+  prompt: string
+  size: FrameSize
+  seed: number | null
+}
+
+/** The one contract of an editor Motion edits a frame with: the first frame and the end key alike. */
+export type EditModelBinding = {
+  appId: string
   model: string
   mostImages: number
-  inputsOf: (images: AssetId[], prompt: string, size: FrameSize) => RunInputs
+  inputsOf: (ask: EditAsk) => RunInputs
 }
+
+export const editAppId = imageApp.id
+
+export const seedInput = "seed"
 
 const squareSpread = 1.1
 
@@ -33,24 +44,27 @@ export const frameEditModels: Readonly<
   Record<FrameEditModel, EditModelBinding>
 > = {
   open: {
+    appId: editAppId,
     model: referenceModel,
     mostImages: 3,
-    inputsOf: (images, prompt) => ({
+    inputsOf: (ask) => ({
       model: referenceModel,
-      prompt,
-      [referenceInput]: images,
+      prompt: ask.prompt,
+      [referenceInput]: ask.images,
       resolution: "1k",
+      ...(ask.seed === null ? {} : { [seedInput]: ask.seed }),
     }),
   },
   hosted: {
+    appId: editAppId,
     model: "openai/gpt-image-2.5-sunburst",
     mostImages: 16,
-    inputsOf: (images, prompt, size) => ({
+    inputsOf: (ask) => ({
       model: "openai/gpt-image-2.5-sunburst",
-      prompt,
-      images,
+      prompt: ask.prompt,
+      images: ask.images,
       quality: "medium",
-      size: hostedSizeOf(size),
+      size: hostedSizeOf(ask.size),
     }),
   },
 }
@@ -84,14 +98,13 @@ export function aspectRatioOf(size: FrameSize): string {
 }
 
 export function frameEditRequestOf(input: {
-  runId: string
   firstFrame: AssetId
   frameSize: FrameSize
   photos: readonly AssetId[]
   plan: ClipPlan
   model: FrameEditModel
   seed: number
-}): MotionStepRequest {
+}): StepRun {
   const editor = frameEditModels[input.model]
   const photos = editPhotosOf(input.plan, editor.mostImages - 1).flatMap(
     (at) => {
@@ -100,16 +113,17 @@ export function frameEditRequestOf(input: {
     }
   )
   return {
-    step: "edit",
-    app: "image",
-    idempotencyKey: stepKeyOf(input.runId, "edit"),
-    binding: imageApp.engine,
-    inputs: editor.inputsOf(
-      [input.firstFrame, ...photos],
-      input.plan.editPrompt,
-      input.frameSize
-    ),
-    aspectRatio: aspectRatioOf(input.frameSize),
-    seed: input.seed,
+    appId: editor.appId,
+    request: {
+      inputs: editor.inputsOf({
+        images: [input.firstFrame, ...photos],
+        prompt: input.plan.editPrompt,
+        size: input.frameSize,
+        seed: input.seed,
+      }),
+      aspectRatio:
+        input.model === "open" ? aspectRatioOf(input.frameSize) : null,
+      place: "held",
+    },
   }
 }

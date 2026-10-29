@@ -1,19 +1,19 @@
 import type { Run } from "@rosesfield/contract"
-import type { EndKeyChain } from "#domain/end-key-chain.port"
+import type {
+  PriceRunInput,
+  PriceRunOutput,
+} from "#application/price-run/price-run.handler"
 import type { EndKeySteps, OutputId, StepRun } from "#domain/end-key-steps"
 import { DraftNotReadyError } from "#domain/error/draft-not-ready.error"
 import { type RunPrice, unknownPrice } from "#domain/generation-engine.port"
+import { type RunChain, stepKeyOf } from "#domain/run-chain.port"
 
 export type EndKeyStage = "draft" | "restore" | "final"
 
 export type EndKeyAnswer = "yes" | "not-yet"
 
 export type StepPricer = {
-  execute(input: {
-    appId: string
-    inputs: StepRun["request"]["inputs"]
-    aspectRatio?: string | null
-  }): Promise<{ price: RunPrice }>
+  execute(input: PriceRunInput): Promise<PriceRunOutput>
 }
 
 export type EndKeyDraftInput = {
@@ -27,31 +27,33 @@ export type EndKeyDraftOutput = {
   awaits: "yes" | null
 }
 
-export type EndKeyFinalInput = {
-  steps: EndKeySteps
-  key: string
+export type EndKeyRestoreInput = EndKeyDraftInput & {
   draft: Run
   answer: EndKeyAnswer
 }
 
+export type EndKeyRestoreOutput =
+  | { status: "waiting" }
+  | { status: "stopped"; at: "restore"; run: Run }
+  | { status: "restored"; restore: Run; endKey: OutputId; awaits: "yes" }
+
+export type EndKeyFinalInput = EndKeyRestoreInput & {
+  endKey: OutputId
+}
+
 export type EndKeyFinalOutput =
   | { status: "waiting" }
-  | { status: "stopped"; at: "restore" | "final"; run: Run }
-  | { status: "done"; restore: Run; final: Run }
+  | { status: "stopped"; at: "final"; run: Run }
+  | { status: "done"; final: Run }
 
 type EndKeyLoopHandlerOptions = {
-  chain: EndKeyChain
+  chain: RunChain
   prices: StepPricer
 }
 
+/** Runs a draft, and after each yes the restore of its last frame, then the final with that end key. The restore runs held, so its key never reaches the library. */
 export class EndKeyLoopHandler {
-  static readonly stepSuffix: Readonly<Record<EndKeyStage, string>> = {
-    draft: "-draft",
-    restore: "-restore",
-    final: "-final",
-  }
-
-  private readonly chain: EndKeyChain
+  private readonly chain: RunChain
   private readonly prices: StepPricer
 
   constructor(options: EndKeyLoopHandlerOptions) {
@@ -59,37 +61,41 @@ export class EndKeyLoopHandler {
     this.prices = options.prices
   }
 
-  static keyOf(key: string, stage: EndKeyStage): string {
-    return `${key}${EndKeyLoopHandler.stepSuffix[stage]}`
-  }
-
   async draft(input: EndKeyDraftInput): Promise<EndKeyDraftOutput> {
     const draft = await this.run(input.steps.draft, input.key, "draft")
-    const frame = await this.frameOf(draft)
+    const frame = frameOf(input.steps, draft)
     return { draft, frame, awaits: frame === null ? null : "yes" }
+  }
+
+  async restore(input: EndKeyRestoreInput): Promise<EndKeyRestoreOutput> {
+    if (input.answer !== "yes") {
+      return { status: "waiting" }
+    }
+    const frame = readyFrameOf(input.steps, input.draft)
+    const restore = await this.run(
+      input.steps.restore(frame),
+      input.key,
+      "restore"
+    )
+    const endKey = restore.held?.[0]?.assetId ?? restore.outputs[0]
+    if (restore.status !== "done" || endKey === undefined) {
+      return { status: "stopped", at: "restore", run: restore }
+    }
+    return { status: "restored", restore, endKey, awaits: "yes" }
   }
 
   async final(input: EndKeyFinalInput): Promise<EndKeyFinalOutput> {
     if (input.answer !== "yes") {
       return { status: "waiting" }
     }
-    const frame = await this.readyFrameOf(input.draft)
-    const restore = await this.run(
-      input.steps.restore(frame),
-      input.key,
-      "restore"
-    )
-    const [endKey] = restore.outputs
-    if (restore.status !== "done" || endKey === undefined) {
-      return { status: "stopped", at: "restore", run: restore }
-    }
+    readyFrameOf(input.steps, input.draft)
     const final = await this.run(
-      input.steps.final(input.draft, endKey),
+      input.steps.final(input.draft, input.endKey),
       input.key,
       "final"
     )
     return final.status === "done"
-      ? { status: "done", restore, final }
+      ? { status: "done", final }
       : { status: "stopped", at: "final", run: final }
   }
 
@@ -97,13 +103,23 @@ export class EndKeyLoopHandler {
     return this.priceOf(steps.draft)
   }
 
-  async priceFinal(steps: EndKeySteps, draft: Run): Promise<RunPrice> {
-    const frame = await this.readyFrameOf(draft)
+  /** The price Make final shows: the restore and the final render as one sum. */
+  async priceMakeFinal(steps: EndKeySteps, draft: Run): Promise<RunPrice> {
+    const frame = readyFrameOf(steps, draft)
     const prices = await Promise.all([
       this.priceOf(steps.restore(frame)),
       this.priceOf(steps.final(draft, frame)),
     ])
     return sumOf(prices)
+  }
+
+  /** The price of the final render alone, shown before the second yes. */
+  async priceFinal(
+    steps: EndKeySteps,
+    draft: Run,
+    endKey: OutputId
+  ): Promise<RunPrice> {
+    return this.priceOf(steps.final(draft, endKey))
   }
 
   private async run(
@@ -114,7 +130,7 @@ export class EndKeyLoopHandler {
     const started = await this.chain.start(
       step.appId,
       step.request,
-      EndKeyLoopHandler.keyOf(key, stage)
+      stepKeyOf(key, stage)
     )
     return this.chain.settle(started)
   }
@@ -127,25 +143,18 @@ export class EndKeyLoopHandler {
     })
     return price
   }
+}
 
-  private async frameOf(draft: Run): Promise<OutputId | null> {
-    if (draft.status !== "done") {
-      return null
-    }
-    const kinds = await Promise.all(
-      draft.outputs.map((id) => this.chain.kindOf(id))
-    )
-    const at = kinds.indexOf("image")
-    return at === -1 ? null : (draft.outputs[at] ?? null)
-  }
+function frameOf(steps: EndKeySteps, draft: Run): OutputId | null {
+  return draft.status === "done" ? steps.frameOf(draft) : null
+}
 
-  private async readyFrameOf(draft: Run): Promise<OutputId> {
-    const frame = await this.frameOf(draft)
-    if (frame === null) {
-      throw new DraftNotReadyError({ runId: draft.id })
-    }
-    return frame
+function readyFrameOf(steps: EndKeySteps, draft: Run): OutputId {
+  const frame = frameOf(steps, draft)
+  if (frame === null) {
+    throw new DraftNotReadyError({ runId: draft.id })
   }
+  return frame
 }
 
 function sumOf(prices: readonly RunPrice[]): RunPrice {

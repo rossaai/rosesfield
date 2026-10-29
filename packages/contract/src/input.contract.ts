@@ -10,11 +10,14 @@ import { choiceValue, copyKey, inputName, toggleValue } from "#value.contract"
 
 const presence = z.enum(["required", "optional"])
 
+const chainFill = z.literal("chain")
+
 const named = {
   name: inputName,
   labelKey: copyKey,
   when: inputWhen.optional(),
   scope: z.literal("app").optional(),
+  fill: chainFill.optional(),
 }
 
 const promptInput = z.strictObject({
@@ -54,6 +57,7 @@ const choiceOption = z.strictObject({
   value: choiceValue,
   labelKey: copyKey,
   count: z.number().int().min(1).max(16).optional(),
+  fill: chainFill.optional(),
 })
 
 const choiceInput = z
@@ -165,6 +169,11 @@ export type InputDefinition = z.infer<typeof inputDefinition>
 export type ImageAccept = z.infer<typeof imageAccept>
 export type InputValue = z.infer<typeof inputValue>
 export type RunInputs = z.infer<typeof runInputs>
+
+/** Says whether a run chain fills this input or picks this option, so no surface shows it to a person. */
+export function isChainFilled(one: object): boolean {
+  return "fill" in one && one.fill === "chain"
+}
 
 export function isAppOnly(input: InputDefinition): boolean {
   return input.type !== "seed" && input.scope === "app"

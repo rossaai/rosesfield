@@ -1,5 +1,5 @@
 import type { RunInputs } from "@rosesfield/contract"
-import { resolveBinding } from "@rosesfield/generation"
+import { ComfyGenerationEngine, resolveBinding } from "@rosesfield/generation"
 import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { heldFilesOf, isHeldOnCloud } from "#comfy/cloud-weights"
@@ -33,7 +33,7 @@ function fileOf(id: string): Graph {
   return graphSchema.parse(structuredClone(workflow.graph))
 }
 
-function valueOf(
+function evaluated(
   expression: string,
   values: Readonly<Record<string, number>>
 ): number {
@@ -46,7 +46,12 @@ function valueOf(
     `return ${expression}`
   )
   return Number(
-    evaluate(...names.map((name) => values[name]), Math.max, Math.min, Math.round)
+    evaluate(
+      ...names.map((name) => values[name]),
+      Math.max,
+      Math.min,
+      Math.round
+    )
   )
 }
 
@@ -195,9 +200,9 @@ describe("the LTX 2.5 depth guide graph", () => {
     expect(inputOf(graph, "957", "expand")).toEqual(["969", 1])
     expect(inputOf(graph, "968", "image")).toEqual(["952", 0])
     const grow = String(inputOf(graph, "969", "expression"))
-    expect(valueOf(grow, { a: 240, b: 360 })).toBe(6)
-    expect(valueOf(grow, { a: 512, b: 768 })).toBe(13)
-    expect(valueOf(grow, { a: 1152, b: 768 })).toBe(19)
+    expect(evaluated(grow, { a: 240, b: 360 })).toBe(6)
+    expect(evaluated(grow, { a: 512, b: 768 })).toBe(13)
+    expect(evaluated(grow, { a: 1152, b: 768 })).toBe(19)
     expect(inputOf(graph, "959", "sigma")).toBe(4)
     expect(inputOf(graph, "955", "image1")).toEqual(["952", 0])
     expect(inputOf(graph, "953", "batch_index")).toEqual(["714", 1])
@@ -214,13 +219,28 @@ describe("the LTX 2.5 depth guide graph", () => {
     expect(inputOf(graph, "115", "image")).toEqual(["725", 0])
   })
 
+  it("names the video, node 68, as its one result in every variant, so the last frame, node 1011, stays held out of the library", () => {
+    const engine = new ComfyGenerationEngine({ apiKey: "comfyui-test" })
+    for (const extra of [{}, { mask: [mask] }, { endKey: [endKey] }]) {
+      const binding = resolveBinding(motionEngine, {
+        model: ltx25GuideModel,
+        photo: [photo],
+        clip: [guide],
+        resolution: "480p",
+        ...extra,
+      })
+      expect(engine.resultNodesOf(binding)).toEqual(["68"])
+    }
+    expect(boundGraph()["1011"]?.class_type).toBe("SaveImage")
+  })
+
   it("renders exactly the guide's frames when they count 8 n + 1, and pads the rest up to the next 8 n + 1", () => {
     const graph = boundGraph({ mask: [mask] })
     const frames = String(inputOf(graph, "716", "expression"))
-    expect(valueOf(frames, { a: 97 })).toBe(97)
-    expect(valueOf(frames, { a: 121 })).toBe(121)
-    expect(valueOf(frames, { a: 100 })).toBe(105)
-    expect(valueOf(frames, { a: 98 })).toBe(105)
+    expect(evaluated(frames, { a: 97 })).toBe(97)
+    expect(evaluated(frames, { a: 121 })).toBe(121)
+    expect(evaluated(frames, { a: 100 })).toBe(105)
+    expect(evaluated(frames, { a: 98 })).toBe(105)
     expect(inputOf(graph, "725", "image")).toEqual(["719", 0])
     expect(inputOf(graph, "725", "batch_index")).toBe(0)
     expect(inputOf(graph, "725", "length")).toEqual(["716", 1])
@@ -250,7 +270,7 @@ describe("the LTX 2.5 depth guide graph", () => {
     expect(inputOf(graph, "108", "height")).toEqual(["991", 1])
     for (const [resolution, short] of Object.entries(ltx25ShortSides)) {
       expect(shortSideMap("resolution")[resolution]).toBe(short)
-      expect(shortSideMap("shortSide")[String(short)]).toBe(short)
+      expect(shortSideMap("shortSide")).toEqual({})
       for (const aspect of motionAspectRatios) {
         const [across = 1, down = 1] = aspect.split(":").map(Number)
         const shortSide = Math.min(across, down) * 256

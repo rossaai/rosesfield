@@ -66,6 +66,7 @@ export {
   inputDefinition,
   inputValue,
   isAppOnly,
+  isChainFilled,
   type RunInputs,
   runInputs,
 } from "#input.contract"
