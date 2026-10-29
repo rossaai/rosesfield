@@ -50,7 +50,7 @@ export const clipPlanReply = z.strictObject({
 export type ClipPlanReply = z.infer<typeof clipPlanReply>
 
 const controlTerms =
-  /\b(depth|depth map|mask|matte|guide video|control video|controlnet|ic-lora|lora|pose skeleton|attention|segmentation)\b/i
+  /\b(depth|masks?|masked|masking|mattes?|guides?|guided|guiding|guidance|controls?|controlled|controlling|controlnet|techniques?|ic-lora|loras?|pose skeleton|attention|segmentation|segmented)\b/i
 
 export function isContentOnly(text: string): boolean {
   return !controlTerms.test(text)

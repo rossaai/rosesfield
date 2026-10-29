@@ -74,6 +74,22 @@ describe("the plan of a clip", () => {
       "a scene that names the control",
       { ...twoTargetPlan, scene: "Follow the depth map of the clip." },
     ],
+    [
+      "a scene that names the control by that word",
+      { ...twoTargetPlan, scene: "The control keeps the camera steady." },
+    ],
+    [
+      "a scene that says the guide leads the camera",
+      { ...twoTargetPlan, scene: "The camera follows the guide." },
+    ],
+    [
+      "a scene that names a technique",
+      { ...twoTargetPlan, scene: "A swap technique puts her in the coat." },
+    ],
+    [
+      "a scene that says the move is guided",
+      { ...twoTargetPlan, scene: "A guided dolly move to the left." },
+    ],
     ["an empty edit prompt", { ...twoTargetPlan, editPrompt: " " }],
     ["a field the schema lacks", { ...twoTargetPlan, camera: "static" }],
     ["no JSON", null],
