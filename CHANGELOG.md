@@ -2,6 +2,11 @@
 
 Each release is a tag `v<version>` on `main` and a GitHub release with the same notes. Versions follow [Semantic Versioning](https://semver.org). Publishing a release deploys it, per [docs/self-host.md](docs/self-host.md).
 
+## 0.1.1, 2026-10-29
+
+- Every response carries security headers: HSTS, `nosniff`, `X-Frame-Options: SAMEORIGIN`, a referrer policy and a permissions policy with no camera, microphone, location or payment. The static files Cloudflare serves carry the same set from `apps/platform/public/_headers`, per [docs/self-host.md](docs/self-host.md).
+- The privacy page names Cloudflare Web Analytics, which counts page views without a cookie and without fingerprinting you.
+
 ## 0.1.0, 2026-10-29
 
 The first public release.
