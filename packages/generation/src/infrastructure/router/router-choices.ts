@@ -109,10 +109,33 @@ export function uniqueOptions(options: readonly Option[]): Option[] {
   })
 }
 
+const unread = /\bno (?:admitted )?models? (?:reads?|accepts?|takes?)\b/i
+
+const quoted = /`([^`]+)`/g
+
+/** Reads the values a description says no model reads, from the clause that says so. */
+export function unreadOptions(description: string): Set<string> {
+  const clauses = description.replace(/\s+/g, " ").split(sentenceEnd)
+  return new Set(
+    clauses
+      .filter((clause) => unread.test(clause))
+      .flatMap((clause) =>
+        [...clause.matchAll(quoted)].map((match) =>
+          (match[1] ?? "").toLowerCase()
+        )
+      )
+  )
+}
+
 /** Reads the values a property takes, from its enum or else from its description. */
 export function optionsOf(schema: Schema): Option[] {
+  const unreadKeys = unreadOptions(
+    stringOf(fieldOf(schema, "description")) ?? ""
+  )
   const enumerated = (arrayOf(fieldOf(schema, "enum")) ?? []).filter(
-    (one): one is Option => typeof one === "string" || typeof one === "number"
+    (one): one is Option =>
+      (typeof one === "string" || typeof one === "number") &&
+      !unreadKeys.has(String(one).toLowerCase())
   )
   if (enumerated.length > 0) {
     return uniqueOptions(enumerated)
