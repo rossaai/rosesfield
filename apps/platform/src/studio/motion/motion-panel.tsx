@@ -1,5 +1,9 @@
-import { exampleInput, exampleKeyOf } from "@rosesfield/catalog/motion"
-import type { AppListing } from "@rosesfield/contract"
+import {
+  clipPlanLimits,
+  exampleInput,
+  exampleKeyOf,
+} from "@rosesfield/catalog/motion"
+import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { MediaTile } from "@rosesfield/ui/components/media-tile"
 import {
@@ -58,6 +62,7 @@ type WellProps = {
   message: string | null
   caption?: string
   note?: string | null
+  max?: number
   children?: ReactElement | null
 }
 
@@ -82,7 +87,7 @@ function Well(props: WellProps): ReactElement {
       <DropWell
         kind={props.kind}
         ids={listOf(form.values.inputs[name])}
-        max={1}
+        max={props.max ?? 1}
         onChange={(ids) => form.setInput(name, ids)}
         onMessage={setWellMessage}
         triggerRef={trigger}
@@ -167,6 +172,17 @@ function ExampleWell({
   )
 }
 
+/** Your own video takes 1 to 15 photos of people, products or clothes, and every other path takes one. */
+function photosOf(state: MotionState): Partial<WellProps> {
+  return state.isOwnChain
+    ? {
+        caption: tCatalog("motion.input.photos.label"),
+        note: tCatalog("motion.input.photos.note"),
+        max: clipPlanLimits.mostPhotos,
+      }
+    : {}
+}
+
 function PhotoWell({ state }: { state: MotionState }): ReactElement {
   return (
     <Well
@@ -175,10 +191,23 @@ function PhotoWell({ state }: { state: MotionState }): ReactElement {
       name={state.names.photo}
       limits={photoLimitsOf()}
       message={state.photoMessage}
+      {...photosOf(state)}
     >
       <CharacterButton state={state} />
     </Well>
   )
+}
+
+const changeInput = "change"
+
+/** On your own video the prompt says what to change, so it shows under its own words. */
+function shownInputOf(
+  state: MotionState,
+  input: InputDefinition
+): InputDefinition {
+  return state.isOwnChain && input.name === "scene"
+    ? { ...input, name: changeInput, labelKey: "motion.input.change.label" }
+    : input
 }
 
 function RestFields({
@@ -210,7 +239,7 @@ function RestFields({
           <InputField
             key={input.name}
             app={state.app}
-            input={input}
+            input={shownInputOf(state, input)}
             value={form.values.inputs[input.name]}
             problem={form.problems.get(input.name)}
             onChange={(value) => form.setInput(input.name, value)}

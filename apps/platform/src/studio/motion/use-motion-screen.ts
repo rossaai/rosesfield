@@ -1,9 +1,9 @@
 import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
 import {
   exampleInput,
-  graphModel,
   type LibraryExample,
   libraryExamples,
+  ltx25GuideModel,
   ownVideo,
 } from "@rosesfield/catalog/motion"
 import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
@@ -62,9 +62,10 @@ import {
   wellNamesOf,
 } from "@/studio/motion/motion-tabs"
 import {
-  type ExampleChain,
-  useExampleChain,
-} from "@/studio/motion/use-example-chain"
+  isOwnChain,
+  type MotionChain,
+  useMotionChain,
+} from "@/studio/motion/use-motion-chain"
 import {
   type MotionChecks,
   useMotionChecks,
@@ -73,7 +74,8 @@ import {
 export type MotionState = {
   app: AppListing
   example: LibraryExample | null
-  chain: ExampleChain | null
+  chain: MotionChain | null
+  isOwnChain: boolean
   useOwnVideo: () => void
   tab: MotionTab
   mode: MotionMode
@@ -105,16 +107,22 @@ export function checkFor(
     : (values) => hostedProblems(fields, values)
 }
 
+/** The clip's refusal: with a model's name for a model you picked, and in plain words of your video alone, with no model named, when the chain runs it. */
 export function clipMessageOf(
   problem: FieldProblem | null,
   range: ClipRange | null,
-  model: string
+  model: string | null
 ): string | null {
   if (problem === null) {
     return null
   }
   const key = "motion.input.clip.range"
-  if (isLengthProblem(problem) && range !== null && hasCatalogText(key)) {
+  if (
+    model !== null &&
+    isLengthProblem(problem) &&
+    range !== null &&
+    hasCatalogText(key)
+  ) {
     return tCatalog(key, {
       model,
       min: range.min,
@@ -242,13 +250,15 @@ function photoMessageOf(
   return problem === null ? null : t(problem.key, problem.values)
 }
 
-function blockedOf(checks: MotionChecks): string | null {
+function blockedOf(
+  checks: Pick<MotionChecks, "readingInput" | "clip" | "photo">
+): string | null {
   return checks.readingInput ?? checks.clip?.name ?? checks.photo?.name ?? null
 }
 
-function guardedOf(
-  base: StartRun,
-  checks: MotionChecks,
+export function guardedOf(
+  base: Pick<StartRun, "generate">,
+  checks: Pick<MotionChecks, "readingInput" | "clip" | "photo">,
   focus: (name: string) => void
 ): () => void {
   return () => {
@@ -301,6 +311,30 @@ function useExampleChecks(
   return [example, checks]
 }
 
+/** Generate runs the chain when one holds this form, and the one run otherwise, each only once your files are read and fit. */
+function startOf(
+  chain: MotionChain | null,
+  base: StartRun,
+  checks: MotionChecks,
+  focus: (name: string) => void,
+  mode: MotionMode
+): StartRun {
+  return chain === null
+    ? guidePriceOf({ ...base, generate: guardedOf(base, checks, focus) }, mode)
+    : { ...chain.start, generate: guardedOf(chain.start, checks, focus) }
+}
+
+function ownVideoOf(form: AppForm): () => void {
+  return () =>
+    form.setForm({
+      inputs: {
+        ...form.values.inputs,
+        [exampleInput]: ownVideo,
+        [modelInput]: ltx25GuideModel,
+      },
+    })
+}
+
 export function useMotionScreen(
   app: AppListing,
   seeds: StudioScreenProps["seeds"],
@@ -326,31 +360,26 @@ export function useMotionScreen(
   const [focus, registerWell] = useFocusers()
   const held = { ...form, values: heldValuesOf(app, form.values) }
   const base = useStartRun(app, held, onStarted, { ...hosted, chosen })
-  const generate = guardedOf(base, checks, focus)
-  const chain = useExampleChain(example, form)
+  const chain = useMotionChain({ example, form, clipSize: checks.clipSize })
+  const start = startOf(chain, base, checks, focus, mode)
+  const isOwn = isOwnChain(example, form)
   const model = chosen === null ? appName(app) : modelNameOf(chosen)
   return {
     app,
     example,
     chain,
-    useOwnVideo: () =>
-      form.setForm({
-        inputs: {
-          ...form.values.inputs,
-          [exampleInput]: ownVideo,
-          [modelInput]: graphModel,
-        },
-      }),
+    isOwnChain: isOwn,
+    useOwnVideo: ownVideoOf(form),
     tab,
     mode,
     form,
-    start: chain?.start ?? guidePriceOf({ ...base, generate }, mode),
+    start,
     hosted: modeHosted,
     isGraph: chosen === null || isGraph(chosen),
     names,
     range,
     checks,
-    clipMessage: clipMessageOf(checks.clip, range, model),
+    clipMessage: clipMessageOf(checks.clip, range, isOwn ? null : model),
     photoMessage: photoMessageOf(checks.photo, hasPickFailed),
     restFields: restFieldsOf(chosen),
     graphRest: graphRestOf(app, tab),
@@ -358,6 +387,6 @@ export function useMotionScreen(
     pickCharacter,
     registerWell,
     useInputs: (run) => form.fill(valuesFromRun(app, run)),
-    onShortcut: shortcutOf(generate),
+    onShortcut: shortcutOf(start.generate),
   }
 }

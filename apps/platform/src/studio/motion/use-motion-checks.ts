@@ -14,11 +14,13 @@ import {
   type MediaReading,
   useMediaFacts,
 } from "@/studio/motion/use-media-facts"
+import { usePhotosReading } from "@/studio/motion/use-photos-reading"
 
 export type MotionChecks = {
   clip: FieldProblem | null
   photo: FieldProblem | null
   readingInput: string | null
+  clipSize: { width: number; height: number } | null
 }
 
 const resolutionInput = "resolution"
@@ -126,6 +128,27 @@ function useShapeOfResult(
   }, [shape, ratio])
 }
 
+function clipSizeOf(reading: MediaReading): MotionChecks["clipSize"] {
+  if (reading.state !== "read") {
+    return null
+  }
+  const { width, height } = reading.facts
+  return width === null || height === null ? null : { width, height }
+}
+
+function laterPhotoProblem(
+  readings: readonly MediaReading[],
+  name: string
+): FieldProblem | null {
+  for (const reading of readings) {
+    const problem = photoCheckOf(reading, name)
+    if (problem !== null) {
+      return problem
+    }
+  }
+  return null
+}
+
 export function useMotionChecks(
   form: AppForm,
   names: WellNames,
@@ -134,13 +157,14 @@ export function useMotionChecks(
   exampleGuide: ExampleShape["guide"] | null = null,
   exampleShape: string | null = null
 ): MotionChecks {
-  const [photoId = null] = listOf(form.values.inputs[names.photo])
+  const photoIds = listOf(form.values.inputs[names.photo])
   const [clipId = null] = listOf(form.values.inputs[names.clip])
-  const photo = useMediaFacts(photoId, "image")
+  const photos = usePhotosReading(photoIds.slice(1))
+  const photo = useMediaFacts(photoIds[0] ?? null, "image")
   const clip = useMediaFacts(clipId, "video")
   useShapeOfResult(form, photo, exampleShape)
   const readingInput =
-    photo.state === "reading"
+    photo.state === "reading" || photos.some((one) => one.state === "reading")
       ? names.photo
       : clip.state === "reading"
         ? names.clip
@@ -159,13 +183,15 @@ export function useMotionChecks(
           names.clip
         )
       : clipCheckOf(clip, range, names.clip),
-    photo: photoCheckOf(
-      photo,
-      names.photo,
-      exampleGuide === null
-        ? null
-        : { guide: exampleGuide, resolution: resolutionText }
-    ),
+    photo:
+      photoCheckOf(
+        photo,
+        names.photo,
+        exampleGuide === null
+          ? null
+          : { guide: exampleGuide, resolution: resolutionText }
+      ) ?? laterPhotoProblem(photos, names.photo),
     readingInput,
+    clipSize: clipSizeOf(clip),
   }
 }

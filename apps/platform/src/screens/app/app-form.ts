@@ -3,6 +3,7 @@ import {
   type AppListing,
   appliedInputsOf,
   type InputDefinition,
+  isChainFilled,
   type Run,
   type startRunBody,
   whenHolds,
@@ -199,12 +200,15 @@ export function problemsOf(
     .filter((problem): problem is FieldProblem => problem !== null)
 }
 
+/** The problems of the inputs a person fills: a run chain fills its own inputs, so none of them is a person's problem. */
 export function heldProblemsOf(
   app: AppListing,
   values: FormValues
 ): FieldProblem[] {
   const held = app.inputs.filter(
-    (input) => input.type === "seed" || whenHolds(input.when, values.inputs)
+    (input) =>
+      !isChainFilled(input) &&
+      (input.type === "seed" || whenHolds(input.when, values.inputs))
   )
   return problemsOf({ ...app, inputs: held }, values)
 }

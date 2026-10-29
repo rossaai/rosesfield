@@ -5,8 +5,8 @@ import { act, renderHook, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, describe, expect, it } from "vitest"
 import type { AppForm } from "@/screens/app/use-app-form"
-import { finalPriceOf, priceNoteOf } from "@/studio/motion/example-chain-price"
-import { useExampleChain } from "@/studio/motion/use-example-chain"
+import { finalPriceOf, priceNoteOf } from "@/studio/motion/chain-price"
+import { useMotionChain } from "@/studio/motion/use-motion-chain"
 
 const realFetch = globalThis.fetch
 
@@ -111,7 +111,12 @@ describe("a guided example's chain in Motion", () => {
     const sent = gateway()
     const example = exampleOf("grab-and-run")
     const { result } = renderHook(
-      () => useExampleChain(example, formWith("1080p")),
+      () =>
+        useMotionChain({
+          example: example,
+          form: formWith("1080p"),
+          clipSize: null,
+        }),
       { wrapper }
     )
     act(() => result.current?.start.generate())
@@ -140,7 +145,12 @@ describe("a guided example's chain in Motion", () => {
   it("starts nothing past the draft until you press Make final, the control", async () => {
     const sent = gateway()
     const { result } = renderHook(
-      () => useExampleChain(exampleOf("grab-and-run"), formWith("720p")),
+      () =>
+        useMotionChain({
+          example: exampleOf("grab-and-run"),
+          form: formWith("720p"),
+          clipSize: null,
+        }),
       { wrapper }
     )
     act(() => result.current?.start.generate())
@@ -151,7 +161,12 @@ describe("a guided example's chain in Motion", () => {
 
   it("has no chain for an example with no guide", () => {
     const { result } = renderHook(
-      () => useExampleChain(exampleOf("push-into-eye"), formWith("720p")),
+      () =>
+        useMotionChain({
+          example: exampleOf("push-into-eye"),
+          form: formWith("720p"),
+          clipSize: null,
+        }),
       { wrapper }
     )
     expect(result.current).toBeNull()
@@ -162,7 +177,12 @@ describe("a failure or Start over in the chain", () => {
   it("starts a new draft under a new key after a failed draft, and offers Start over", async () => {
     const sent = gateway({ failDraft: true })
     const { result } = renderHook(
-      () => useExampleChain(exampleOf("grab-and-run"), formWith("1080p")),
+      () =>
+        useMotionChain({
+          example: exampleOf("grab-and-run"),
+          form: formWith("1080p"),
+          clipSize: null,
+        }),
       { wrapper }
     )
     act(() => result.current?.start.generate())
@@ -180,7 +200,12 @@ describe("a failure or Start over in the chain", () => {
   it("drops the chain on Start over, so the next Generate drafts again under a new key", async () => {
     const sent = gateway()
     const { result } = renderHook(
-      () => useExampleChain(exampleOf("grab-and-run"), formWith("1080p")),
+      () =>
+        useMotionChain({
+          example: exampleOf("grab-and-run"),
+          form: formWith("1080p"),
+          clipSize: null,
+        }),
       { wrapper }
     )
     act(() => result.current?.start.generate())
@@ -201,7 +226,12 @@ describe("a failure or Start over in the chain", () => {
   it("keeps the same key while the chain moves on without a failure, the control", async () => {
     const sent = gateway()
     const { result } = renderHook(
-      () => useExampleChain(exampleOf("grab-and-run"), formWith("1080p")),
+      () =>
+        useMotionChain({
+          example: exampleOf("grab-and-run"),
+          form: formWith("1080p"),
+          clipSize: null,
+        }),
       { wrapper }
     )
     act(() => result.current?.start.generate())
@@ -219,7 +249,12 @@ describe("the final's price and the words under the button", () => {
   it("shows 16.79 credits measured on a 4-second 1080p run, in visible words, before the second yes", async () => {
     gateway({ price: { source: "estimate", credits: 20 } })
     const { result } = renderHook(
-      () => useExampleChain(example, formWith("1080p")),
+      () =>
+        useMotionChain({
+          example: example,
+          form: formWith("1080p"),
+          clipSize: null,
+        }),
       { wrapper }
     )
     act(() => result.current?.start.generate())

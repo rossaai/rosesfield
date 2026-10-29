@@ -113,6 +113,24 @@ describe("problemsOf", () => {
     ).toHaveLength(1)
   })
 
+  it("leaves out the inputs a run chain fills, which are never a person's to fill", () => {
+    const base = imageApp()
+    const app = {
+      ...base,
+      inputs: base.inputs.map((input) =>
+        input.name === "character"
+          ? { ...input, presence: "required" as const, fill: "chain" as const }
+          : input
+      ),
+    }
+    expect(
+      heldProblemsOf(app, filled({ character: [] })).map((one) => one.name)
+    ).not.toContain("character")
+    expect(
+      problemsOf(app, filled({ character: [] })).map((one) => one.name)
+    ).toContain("character")
+  })
+
   it("names a number outside its bounds", () => {
     const problems = problemsOf(imageApp(), filled({ steps: 51 }))
     expect(problems).toEqual([

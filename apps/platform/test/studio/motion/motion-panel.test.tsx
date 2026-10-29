@@ -54,9 +54,10 @@ function graphState(): MotionState {
       choose: () => undefined,
     },
     isGraph: true,
+    isOwnChain: false,
     names: { clip: "clip", photo: "photo" },
     range: null,
-    checks: { clip: null, photo: null, readingInput: null },
+    checks: { clip: null, photo: null, readingInput: null, clipSize: null },
     clipMessage: null,
     photoMessage: null,
     restFields: [],
@@ -175,6 +176,7 @@ describe("the price words under Generate in an example's chain", () => {
         priceNote: "16.79 Comfy credits, measured on a 4-second 1080p run",
         canStartOver: true,
         startOver: () => undefined,
+        leftOut: null,
       },
     }
     showColumn(<MotionPanel state={state} />)

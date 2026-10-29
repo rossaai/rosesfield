@@ -124,4 +124,31 @@ describe("the column frame's phone sheet", () => {
     expect(tray?.className.split(" ")).toContain("mb-2")
     expect(tray?.nextElementSibling?.getAttribute("data-testid")).toBe("panel")
   })
+
+  it("on a phone holds the start button at the bottom edge, outside the sheet, while a step waits for your yes, and the key that opens the inputs otherwise, the control", () => {
+    asPhone()
+    const frame = (holdsPress: boolean) => (
+      <ColumnFrame
+        app={video}
+        start={{ ...start, label: "Make final" }}
+        onShortcut={() => undefined}
+        sheet={[false, () => undefined]}
+        panel={<div data-testid="panel" />}
+        canvas={() => null}
+        holdsPress={holdsPress}
+      />
+    )
+    const { unmount } = render(withClient(frame(true), video, null))
+    const press = document.querySelector("[data-slot='app-press-key']")
+    expect(press?.className.split(" ")).toEqual(
+      expect.arrayContaining(["sticky", "bottom-0"])
+    )
+    expect(press?.textContent).toContain("Make final")
+    expect(document.querySelector("[data-slot='app-tools-key']")).toBeNull()
+    expect(document.querySelector("[data-testid='panel']")).toBeNull()
+    unmount()
+    render(withClient(frame(false), video, null))
+    expect(document.querySelector("[data-slot='app-press-key']")).toBeNull()
+    expect(document.querySelector("[data-slot='app-tools-key']")).not.toBeNull()
+  })
 })

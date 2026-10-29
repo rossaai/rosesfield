@@ -1,4 +1,9 @@
-import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
+import {
+  type AppListing,
+  type InputDefinition,
+  isChainFilled,
+  type Run,
+} from "@rosesfield/contract"
 import { Badge } from "@rosesfield/ui/components/badge"
 import { Skeleton } from "@rosesfield/ui/components/skeleton"
 import { useQuery } from "@tanstack/react-query"
@@ -61,8 +66,9 @@ function runValueOf(input: InputDefinition, run: RunValues): unknown {
   return input.type === "seed" ? run.seed : run.inputs[input.name]
 }
 
+/** A run chain fills a run's held inputs, such as a depth, a mask or an end key, so History shows none of them. */
 function isShown(app: AppListing, input: InputDefinition, value: unknown) {
-  if (isEmptyValue(value)) {
+  if (isEmptyValue(value) || isChainFilled(input)) {
     return false
   }
   return (

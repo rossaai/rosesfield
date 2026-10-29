@@ -2,34 +2,14 @@ import { useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import { assetQuery } from "@/api/queries"
 import { useAssetSource } from "@/api/use-asset-source"
+import {
+  type Measured,
+  measureImage,
+  readLimitMs,
+} from "@/studio/motion/media-measure"
 import type { MediaFacts } from "@/studio/motion/motion-checks"
 
-export const readLimitMs = 20_000
-
-type Measured = {
-  assetId: string
-  width: number | null
-  height: number | null
-  seconds: number | null
-}
-
-function measureImage(src: string, done: (measured: Measured) => void) {
-  const image = new Image()
-  image.onload = () =>
-    done({
-      assetId: "",
-      width: image.naturalWidth,
-      height: image.naturalHeight,
-      seconds: null,
-    })
-  image.onerror = () =>
-    done({ assetId: "", width: null, height: null, seconds: null })
-  image.src = src
-  return () => {
-    image.onload = null
-    image.onerror = null
-  }
-}
+export { readLimitMs } from "@/studio/motion/media-measure"
 
 function measureVideo(src: string, done: (measured: Measured) => void) {
   const video = document.createElement("video")

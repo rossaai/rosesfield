@@ -1,4 +1,5 @@
 import { type Run, run } from "@rosesfield/contract"
+import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { inputRowsOf, shownInputsOf } from "@/pieces/run/run-inputs"
@@ -81,5 +82,42 @@ describe("inputRowsOf", () => {
       "16:9"
     )
     expect(rows.find((row) => row.key === "output.count")?.value).toBe("2")
+  })
+})
+
+describe("the inputs a run chain fills", () => {
+  it("never shows your own video's depth, matte, first frame or end key in History, and shows your prompt and resolution", () => {
+    const motion = findCatalogApp("motion")
+    if (motion === null) {
+      throw new Error("Motion is not in the catalog")
+    }
+    const id = (n: number) =>
+      assetIdFormat.parse(`${n}c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f`)
+    const final = runOf(
+      "motion",
+      {
+        example: "own",
+        model: "ltx-2-5-guide",
+        firstFrame: [id(1)],
+        guide: [id(2)],
+        mask: [id(3)],
+        endKey: [id(4)],
+        plannedScene: "A man walks down a street.",
+        scene: "replace the man",
+        resolution: "1080p",
+      },
+      {}
+    )
+    const shown = shownInputsOf(motion, final).map((input) => input.name)
+    expect(shown).toEqual(expect.arrayContaining(["scene", "resolution"]))
+    for (const held of [
+      "firstFrame",
+      "guide",
+      "mask",
+      "endKey",
+      "plannedScene",
+    ]) {
+      expect(shown).not.toContain(held)
+    }
   })
 })

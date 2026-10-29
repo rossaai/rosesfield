@@ -38,6 +38,8 @@ type ColumnFrameProps = {
   panel: ReactNode
   canvas: (openInputs: () => void) => ReactNode
   footLeading?: ReactNode
+  /** Holds the start button at the bottom edge on a narrow screen, in place of the key that opens the inputs, while a step waits for your yes. */
+  holdsPress?: boolean
   hasHeader?: boolean
   hasWork?: boolean
   layouts?: StageLayouts
@@ -52,6 +54,17 @@ export function AddInputsButton({
     <Button className="@regular:hidden" onClick={onClick}>
       {t("app.empty.action")}
     </Button>
+  )
+}
+
+function PressKey(props: ColumnFrameProps): ReactElement {
+  return (
+    <div
+      data-slot="app-press-key"
+      className="sticky bottom-0 z-40 shrink-0 bg-canvas p-2 pb-[calc(var(--spacing)*2+env(safe-area-inset-bottom))] @regular:hidden"
+    >
+      <GenerateFoot start={props.start} leading={props.footLeading} />
+    </div>
   )
 }
 
@@ -132,7 +145,11 @@ export function ColumnFrame(props: ColumnFrameProps): ReactElement {
           {props.canvas(openInputs)}
         </AppStage>
       </div>
-      <ToolsKey onOpen={openInputs} />
+      {props.holdsPress === true && !isRegular ? (
+        <PressKey {...props} />
+      ) : (
+        <ToolsKey onOpen={openInputs} />
+      )}
       <ColumnSheet {...props} isRegular={isRegular} />
     </div>
   )
