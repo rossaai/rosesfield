@@ -93,7 +93,7 @@ describe("Explore's showcase", () => {
     const end = showcaseItems.find((item) => item.banner === "end")
     expect(portraits).toEqual({
       start: { src: start?.src, focus: "top" },
-      end: { src: end?.src, focus: "top" },
+      end: { src: end?.src, focus: "upper", mirror: true },
     })
     expect(bannerPortraits([])).toEqual({})
   })

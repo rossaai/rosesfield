@@ -15,6 +15,7 @@ type HeroTag = {
 type HeroPortrait = {
   src: string
   focus?: MediaFocus
+  mirror?: boolean
 }
 
 type HeroPortraits = {
@@ -35,9 +36,32 @@ type HeroBannerProps = {
 const sides: ReadonlyArray<keyof HeroPortraits> = ["start", "end"]
 
 const portraitSides = {
-  start: "left-0 mask-r-from-60%",
-  end: "right-0 mask-l-from-60%",
+  start: "left-0",
+  end: "right-0",
 } satisfies Record<keyof HeroPortraits, string>
+
+const innerFades = {
+  start: "mask-r-from-60%",
+  end: "mask-l-from-60%",
+} satisfies Record<keyof HeroPortraits, string>
+
+const opposite = {
+  start: "end",
+  end: "start",
+} satisfies Record<keyof HeroPortraits, keyof HeroPortraits>
+
+const mirrored = "-scale-x-100"
+
+function innerFade(side: keyof HeroPortraits, portrait: HeroPortrait): string {
+  return innerFades[portrait.mirror === true ? opposite[side] : side]
+}
+
+function framing(portrait: HeroPortrait): string {
+  return cn(
+    portrait.focus === undefined ? "" : focusClass[portrait.focus],
+    portrait.mirror === true ? mirrored : ""
+  )
+}
 
 function Portraits({
   portraits,
@@ -58,7 +82,8 @@ function Portraits({
             className={cn(
               "absolute bottom-0 hidden h-full w-(--hero-portrait) object-cover @regular:block",
               portraitSides[side],
-              portrait.focus === undefined ? "" : focusClass[portrait.focus]
+              innerFade(side, portrait),
+              framing(portrait)
             )}
           />,
         ]
@@ -88,7 +113,7 @@ function PhonePortraits({
                 data-side={side}
                 className={cn(
                   "aspect-square min-w-0 flex-1 object-cover",
-                  portrait.focus === undefined ? "" : focusClass[portrait.focus]
+                  framing(portrait)
                 )}
               />,
             ]

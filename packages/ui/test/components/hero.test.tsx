@@ -177,6 +177,74 @@ describe("HeroBanner's tag and portraits", () => {
     }
   })
 
+  it("holds a portrait a little below its top with an upper focus, so more of what is under the face shows", () => {
+    render(
+      <HeroBanner
+        href="/apps/edit"
+        headline="Make images and video"
+        lead="Every app works with your key"
+        action="Open Edit"
+        portraits={{ end: { src: "b.webp", focus: "upper" } }}
+      />
+    )
+    for (const image of document.querySelectorAll<HTMLImageElement>(
+      "[data-side='end']"
+    )) {
+      expect(image.className.split(" ")).toContain("object-[50%_20%]")
+      expect(image.className.split(" ")).not.toContain("object-top")
+    }
+  })
+
+  it("flips a mirrored portrait on the wide corners and in the phone's squares, and keeps its fade on the side facing the text", () => {
+    render(
+      <HeroBanner
+        href="/apps/edit"
+        headline="Make images and video"
+        lead="Every app works with your key"
+        action="Open Edit"
+        portraits={{
+          start: { src: "a.webp" },
+          end: { src: "b.webp", mirror: true },
+        }}
+      />
+    )
+    const wide = [
+      ...document.querySelectorAll<HTMLImageElement>(
+        "[data-slot='hero-portrait']"
+      ),
+    ]
+    const phone = [
+      ...document.querySelectorAll<HTMLImageElement>(
+        "[data-slot='hero-phone-portraits'] img"
+      ),
+    ]
+    for (const pair of [wide, phone]) {
+      expect(pair[0]?.className.split(" ")).not.toContain("-scale-x-100")
+      expect(pair[1]?.className.split(" ")).toContain("-scale-x-100")
+      expect(pair[1]?.getAttribute("src")).toBe("b.webp")
+    }
+    expect(wide[0]?.className.split(" ")).toContain("mask-r-from-60%")
+    expect(wide[1]?.className.split(" ")).toEqual(
+      expect.arrayContaining(["right-0", "mask-r-from-60%"])
+    )
+    expect(wide[1]?.className.split(" ")).not.toContain("mask-l-from-60%")
+  })
+
+  it("fades an unmirrored end portrait from its left edge", () => {
+    render(
+      <HeroBanner
+        href="/apps/edit"
+        headline="Make images and video"
+        lead="Every app works with your key"
+        action="Open Edit"
+        portraits={{ end: { src: "b.webp" } }}
+      />
+    )
+    const end = document.querySelector("[data-slot='hero-portrait']")
+    expect(end?.className.split(" ")).toContain("mask-l-from-60%")
+    expect(end?.className.split(" ")).not.toContain("-scale-x-100")
+  })
+
   it("draws no portrait and no tag when none is given", () => {
     render(
       <HeroBanner

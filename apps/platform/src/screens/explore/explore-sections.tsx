@@ -80,9 +80,11 @@ export function Reveal({ children }: { children: ReactNode }): ReactElement {
 }
 
 function portraitOf(item: ShowcaseItem): HeroPortrait {
-  return item.focus === undefined
-    ? { src: item.src }
-    : { src: item.src, focus: item.focus }
+  return {
+    src: item.src,
+    ...(item.focus === undefined ? {} : { focus: item.focus }),
+    ...(item.mirror === undefined ? {} : { mirror: item.mirror }),
+  }
 }
 
 export function bannerPortraits(

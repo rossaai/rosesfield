@@ -293,7 +293,8 @@
     "seconds": 44.3,
     "madeAt": "2026-10-29T09:03:43.336Z",
     "banner": "end",
-    "focus": "top",
+    "focus": "upper",
+    "mirror": true,
     "from": "hose-garden.webp"
   },
   {

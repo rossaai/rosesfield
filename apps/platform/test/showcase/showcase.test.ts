@@ -120,13 +120,15 @@ describe("the showcase", () => {
     ).toBe(false)
   })
 
-  it("lands the banner's end on the app that made it, and holds both faces from the top", () => {
+  it("lands the banner's end on the app that made it, holds the start from the top and the end a little lower, and mirrors only the end", () => {
     const start = showcaseRows.find((row) => row.banner === "start")
     const end = showcaseRows.find((row) => row.banner === "end")
     expect(start?.file).toBe("hose-garden.webp")
     expect(end?.appId).toBe("edit")
     expect(end?.input?.file).toBe(start?.file)
-    expect([start?.focus, end?.focus]).toEqual(["top", "top"])
+    expect([start?.focus, end?.focus]).toEqual(["top", "upper"])
+    expect([start?.mirror, end?.mirror]).toEqual([undefined, true])
+    expect(showcaseRows.filter((row) => row.mirror === true)).toEqual([end])
   })
 
   it("keeps each run's app, model, prompt and measured credits", () => {

@@ -38,10 +38,11 @@ type MediaTileProps = {
   className?: string
 }
 
-type MediaFocus = "top"
+type MediaFocus = "top" | "upper"
 
 const focusClass = {
   top: "object-top",
+  upper: "object-[50%_20%]",
 } satisfies Record<MediaFocus, string>
 
 type Arrival = "waiting" | "loaded"
