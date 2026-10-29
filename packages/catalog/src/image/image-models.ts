@@ -1,6 +1,5 @@
 import type { EngineBinding } from "@rosesfield/contract"
 import { qwenWorkflow } from "#ads/comfy/qwen-edit-workflow"
-import { heldFilesOf, isHeldOnCloud } from "#comfy/cloud-weights"
 import { type ModelFactsFile, modelFactsData } from "#comfy/model-facts"
 import {
   qwenSizes,
@@ -61,14 +60,10 @@ export const imageGraphs: readonly ImageModel[] = [
 
 const imageTask = "text-to-image"
 
-export function heldImageModels(
-  models: readonly ImageModel[],
-  held: ReadonlySet<string>
-): ImageModel[] {
-  return models.filter((model) => {
-    const workflow = findWorkflow(model.workflow)
-    return workflow !== null && isHeldOnCloud(workflow.models, held)
-  })
+export function cloudImageModels(models: readonly ImageModel[]): ImageModel[] {
+  return models.filter(
+    (model) => findWorkflow(model.workflow)?.runsOn === "cloud-and-local"
+  )
 }
 
 function openRankOf(model: ImageModel, data: ModelFactsFile): number | null {
@@ -95,10 +90,7 @@ export function openDefaultOf(
   return ranked[0]?.value ?? models[0]?.value ?? firstModel
 }
 
-export const imageModels: readonly ImageModel[] = heldImageModels(
-  imageGraphs,
-  heldFilesOf()
-)
+export const imageModels: readonly ImageModel[] = cloudImageModels(imageGraphs)
 
 export const referenceModel = "qwen-image-edit-2511"
 

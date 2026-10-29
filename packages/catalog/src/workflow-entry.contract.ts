@@ -38,6 +38,9 @@ export const workflowEntry = z
       .max(16)
       .default([]),
     partnerNodes: z.array(partnerNode).max(4).default([]),
+    runsOn: z
+      .enum(["cloud-and-local", "local-only"])
+      .default("cloud-and-local"),
     inputBindings: z.record(
       z
         .string()

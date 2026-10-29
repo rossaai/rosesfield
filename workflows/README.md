@@ -55,7 +55,7 @@ A script wrote every UI file from its API file with the node definitions of Comf
 
 ### `entry.json`
 
-- One entry per workflow, read by `packages/catalog/src/list-workflows.ts`. Its field names come from Comfy's template index and from the hub records on comfy.org: `name`, `title`, `description`, `mediaType`, `openSource`, `models` and `requiresCustomNodes`, then `partnerNodes`, the partner nodes the graph runs, then `inputBindings`, which maps each input to a `nodeId` and an `inputName` as `scalar` or `cloud-asset`, then `outputs`, each with `nodeId`, `key` and `kind`.
+- One entry per workflow, read by `packages/catalog/src/list-workflows.ts`. Its field names come from Comfy's template index and from the hub records on comfy.org: `name`, `title`, `description`, `mediaType`, `openSource`, `models` and `requiresCustomNodes`, then `partnerNodes`, the partner nodes the graph runs, then `runsOn`, `cloud-and-local` by default or `local-only` for a graph whose weight files Comfy Cloud does not hold, then `inputBindings`, which maps each input to a `nodeId` and an `inputName` as `scalar` or `cloud-asset`, then `outputs`, each with `nodeId`, `key` and `kind`.
 - `models` lists the files the API file loads, or the model names the app's history records. A run records every model of its workflow's entry.
 
 ### `index.json`

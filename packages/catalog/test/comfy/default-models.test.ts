@@ -9,7 +9,7 @@ import {
 } from "#comfy/list-models"
 import { modelFactsData } from "#comfy/model-facts"
 import {
-  heldImageModels,
+  cloudImageModels,
   imageGraphs,
   openDefaultOf,
 } from "#image/image-models"
@@ -123,29 +123,19 @@ describe("the model each app opens on", () => {
     expect(listed).toContain("z-image-turbo")
   })
 
-  it("lists Ming-Image-0.1-Design and opens Image on it once Comfy Cloud's object_info holds its three weight files, and keeps its graph in the tree meanwhile", () => {
+  it("leaves out Ming-Image-0.1-Design because its entry declares it local-only, keeps its graph in the tree, and opens Image on it once it is listed", () => {
     const ming = findWorkflow("image-ming-image-0-1-design")
     expect(ming?.models).toHaveLength(3)
-    const today = heldImageModels(imageGraphs, heldFiles)
+    expect(ming?.runsOn).toBe("local-only")
+    const today = cloudImageModels(imageGraphs)
     expect(today.map((one) => one.value)).not.toContain("ming-image-0-1-design")
+    expect(today.length).toBe(imageGraphs.length - 1)
     expect(openDefaultOf(today)).toBe("z-image-turbo")
-    const later = heldImageModels(
-      imageGraphs,
-      new Set([...heldFiles, ...(ming?.models ?? [])])
-    )
-    expect(later[0]?.value).toBe("ming-image-0-1-design")
-    expect(openDefaultOf(later)).toBe("ming-image-0-1-design")
-    const partly = heldImageModels(
-      imageGraphs,
-      new Set([...heldFiles, ...(ming?.models.slice(0, 2) ?? [])])
-    )
-    expect(partly.map((one) => one.value)).not.toContain(
-      "ming-image-0-1-design"
-    )
+    expect(openDefaultOf(imageGraphs)).toBe("ming-image-0-1-design")
   })
 
   it("opens on the open-weights graph the board ranks highest, not on the first one listed, and on the first one listed when the board ranks none", () => {
-    const today = heldImageModels(imageGraphs, heldFiles)
+    const today = cloudImageModels(imageGraphs)
     const unranked = today
       .filter((one) => one.value !== "z-image-turbo")
       .reverse()

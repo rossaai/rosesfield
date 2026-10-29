@@ -1,0 +1,11 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "planted_weights_cloud_lacks.safetensors",
+      "weight_dtype": "default",
+      "planted_input": 1
+    },
+    "_meta": { "title": "A local-only loader of a file Comfy Cloud lacks" }
+  }
+}

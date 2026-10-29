@@ -2,6 +2,10 @@ import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { Glob } from "bun"
+import {
+  type WorkflowEntry,
+  workflowEntry,
+} from "../../../packages/catalog/src/workflow-entry.contract"
 
 const here = fileURLToPath(new URL(".", import.meta.url))
 const root = fileURLToPath(new URL("../../../", import.meta.url))
@@ -10,7 +14,8 @@ const weightFile = /\.(safetensors|sft|ckpt|pt|pth|bin|gguf|onnx)$/i
 
 export type Snapshot = {
   readonly readOn: string
-  readonly nodes: Readonly<Record<string, Readonly<Record<string, string>>>>
+  readonly nodes: Readonly<Record<string, readonly string[]>>
+  readonly fileInputs: Readonly<Record<string, string>>
   readonly lists: Readonly<Record<string, readonly string[]>>
 }
 export type Weights = {
@@ -20,6 +25,12 @@ export type Weights = {
       { readonly input: string; readonly files: readonly string[] }
     >
   >
+}
+export type Cloud = { readonly snapshot: Snapshot; readonly weights: Weights }
+export type Graph = {
+  readonly path: string
+  readonly graph: unknown
+  readonly runsOn: WorkflowEntry["runsOn"]
 }
 type ApiNode = { class_type: string; inputs: Record<string, unknown> }
 
@@ -48,22 +59,21 @@ function isHeldWeight(
 }
 
 function fileRefusalOf(
-  type: string,
   value: unknown,
-  at: { node: string; input: string; snapshot: Snapshot; weights: Weights }
+  at: { node: string; input: string; cloud: Cloud }
 ): string | null {
+  const { snapshot, weights } = at.cloud
+  const list = snapshot.fileInputs[`${at.node}.${at.input}`]
   if (typeof value !== "string") {
     return null
   }
-  const listed = type.startsWith("@")
-    ? (at.snapshot.lists[type.slice(1)] ?? [])
-    : []
-  if (!type.startsWith("@") && !weightFile.test(value)) {
+  if (list === undefined && !weightFile.test(value)) {
     return null
   }
+  const listed = list === undefined ? [] : (snapshot.lists[list] ?? [])
   if (
     listed.includes(value) ||
-    isHeldWeight(at.node, at.input, value, at.weights)
+    isHeldWeight(at.node, at.input, value, weights)
   ) {
     return null
   }
@@ -71,9 +81,8 @@ function fileRefusalOf(
 }
 
 export function refusalsOf(
-  graph: unknown,
-  snapshot: Snapshot,
-  weights: Weights
+  { graph, runsOn }: Graph,
+  cloud: Cloud
 ): readonly Refusal[] {
   if (!isRecord(graph) || !Object.values(graph).every(isApiNode)) {
     return [{ node: "-", reason: "the file is not an API graph" }]
@@ -81,17 +90,17 @@ export function refusalsOf(
   const found: Refusal[] = []
   for (const [id, value] of Object.entries(graph)) {
     const { class_type: node, inputs } = value as ApiNode
-    const held = snapshot.nodes[node]
+    const held = cloud.snapshot.nodes[node]
     if (held === undefined) {
       found.push({ node: id, reason: `Comfy Cloud has no node ${node}` })
       continue
     }
     for (const [input, value] of Object.entries(inputs)) {
-      const type = held[input]
-      const reason =
-        type === undefined
-          ? `${node} takes no input ${input}`
-          : fileRefusalOf(type, value, { node, input, snapshot, weights })
+      const reason = !held.includes(input)
+        ? `${node} takes no input ${input}`
+        : runsOn === "local-only"
+          ? null
+          : fileRefusalOf(value, { node, input, cloud })
       if (reason !== null) {
         found.push({ node: id, reason })
       }
@@ -110,9 +119,15 @@ export async function readWeights(): Promise<Weights> {
   return JSON.parse(text)
 }
 
-export async function graphsUnder(
-  cwd: string
-): Promise<ReadonlyArray<{ path: string; graph: unknown }>> {
+async function runsOnOf(folder: string): Promise<WorkflowEntry["runsOn"]> {
+  const entry = Bun.file(join(folder, "entry.json"))
+  if (!(await entry.exists())) {
+    return "cloud-and-local"
+  }
+  return workflowEntry.parse(await entry.json()).runsOn
+}
+
+export async function graphsUnder(cwd: string): Promise<readonly Graph[]> {
   const paths: string[] = []
   for await (const path of new Glob("*/*.api.json").scan({ cwd })) {
     paths.push(path)
@@ -121,37 +136,35 @@ export async function graphsUnder(
     paths.sort().map(async (path) => ({
       path,
       graph: JSON.parse(await readFile(join(cwd, path), "utf8")),
+      runsOn: await runsOnOf(join(cwd, path, "..")),
     }))
   )
 }
 
-async function controlHolds(
-  snapshot: Snapshot,
-  weights: Weights
-): Promise<boolean> {
+async function controlHolds(cloud: Cloud): Promise<boolean> {
   const planted = await graphsUnder(join(here, "planted"))
   return (
-    planted.length === 3 &&
-    planted.every(
-      ({ graph }) => refusalsOf(graph, snapshot, weights).length === 1
-    )
+    planted.length === 4 &&
+    planted.every((graph) => refusalsOf(graph, cloud).length === 1)
   )
 }
 
 if (import.meta.main) {
   const [snapshot, weights] = await Promise.all([readSnapshot(), readWeights()])
+  const cloud = { snapshot, weights }
   const graphs = await graphsUnder(join(root, "workflows"))
   let failed = 0
-  for (const { path, graph } of graphs) {
-    const refusals = refusalsOf(graph, snapshot, weights)
+  for (const graph of graphs) {
+    const refusals = refusalsOf(graph, cloud)
     failed += refusals.length > 0 ? 1 : 0
     for (const { node, reason } of refusals) {
-      console.error(`workflows/${path}: node ${node}: ${reason}.`)
+      console.error(`workflows/${graph.path}: node ${node}: ${reason}.`)
     }
   }
-  const control = await controlHolds(snapshot, weights)
+  const local = graphs.filter((graph) => graph.runsOn === "local-only").length
+  const control = await controlHolds(cloud)
   console.log(
-    `${graphs.length - failed} of ${graphs.length} graphs load on Comfy Cloud, per its object_info read on ${snapshot.readOn}. The planted graphs were ${control ? "each refused" : "not each refused"}.`
+    `${graphs.length - failed} of ${graphs.length} graphs load on Comfy Cloud, per its object_info read on ${snapshot.readOn}, ${local} of them local-only, whose weight files Comfy Cloud need not hold. The planted graphs were ${control ? "each refused once" : "not each refused once"}.`
   )
   process.exit(failed === 0 && control ? 0 : 1)
 }

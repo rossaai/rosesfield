@@ -1,0 +1,9 @@
+{
+  "name": "unknown-file",
+  "mediaType": "image",
+  "openSource": true,
+  "models": ["planted_weights_cloud_lacks.safetensors"],
+  "runsOn": "cloud-and-local",
+  "inputBindings": {},
+  "outputs": [{ "nodeId": "1", "key": "image", "kind": "image" }]
+}

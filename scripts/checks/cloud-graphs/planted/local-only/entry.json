@@ -1,0 +1,9 @@
+{
+  "name": "local-only",
+  "mediaType": "image",
+  "openSource": true,
+  "models": ["planted_weights_cloud_lacks.safetensors"],
+  "runsOn": "local-only",
+  "inputBindings": {},
+  "outputs": [{ "nodeId": "1", "key": "image", "kind": "image" }]
+}

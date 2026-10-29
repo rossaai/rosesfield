@@ -10,6 +10,7 @@
     "ming_image_vae_bf16.safetensors"
   ],
   "requiresCustomNodes": [],
+  "runsOn": "local-only",
   "inputBindings": {
     "prompt": {
       "nodeId": "40",

@@ -23,6 +23,7 @@ export type Workflow = {
   outputs: readonly WorkflowOutput[]
   requiresCustomNodes: readonly string[]
   partnerNodes: readonly string[]
+  runsOn: WorkflowEntry["runsOn"]
   files: { ui: string; api: string }
 }
 
@@ -121,6 +122,7 @@ export function readWorkflow(files: WorkflowFiles): Workflow {
     outputs: entry.outputs,
     requiresCustomNodes: entry.requiresCustomNodes,
     partnerNodes: entry.partnerNodes,
+    runsOn: entry.runsOn,
     files: {
       ui: `workflows/${folder}/${folder}.json`,
       api: `workflows/${folder}/${folder}.api.json`,

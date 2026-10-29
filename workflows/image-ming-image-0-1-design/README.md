@@ -60,4 +60,4 @@ Its nodes follow Comfy's template `image_ming_image_01_design_t2i` in [Comfy-Org
 
 No run of this workflow on a live engine exists. Its class names, input names, links and fixed values were read from the template, which Comfy Cloud runs with no custom nodes.
 
-Comfy Cloud's object_info, read on 2026-10-21 into [`cloud-weights.json`](../../packages/catalog/src/comfy/cloud-weights.json), lists none of the three model files. The Image app lists this graph, and opens on it as the open model the text to image board ranks highest, once a new reading of that file lists all three.
+Comfy Cloud's object_info, read on 2026-10-29 into [`cloud-nodes.json`](../../scripts/checks/cloud-graphs/cloud-nodes.json), lists none of the three model files, so its `entry.json` declares `runsOn` `local-only`. It runs on your own ComfyUI. The Image app leaves it out, and `bun run cloud:check` skips its file test. Once a new reading lists all three files, set `runsOn` to `cloud-and-local`, and the Image app lists it and opens on it as the open model the text to image board ranks highest.
