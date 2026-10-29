@@ -1,0 +1,858 @@
+{
+  "id": "edaf8942-510d-54a2-a608-5a01b398496a",
+  "revision": 0,
+  "last_node_id": 99,
+  "last_link_id": 24,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadVideo",
+      "pos": [1220, 100],
+      "size": [420, 180],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [1]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["clip.mp4"],
+      "title": "Your clip"
+    },
+    {
+      "id": 2,
+      "type": "Video Slice",
+      "pos": [1740, 100],
+      "size": [420, 180],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [2]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Video Slice",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0, 10, false],
+      "title": "The first 10 seconds"
+    },
+    {
+      "id": 3,
+      "type": "GetVideoComponents",
+      "pos": [1740, 340],
+      "size": [420, 180],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [3, 6]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": [12, 21]
+        },
+        {
+          "name": "bit_depth",
+          "type": "COMBO",
+          "links": null
+        },
+        {
+          "name": "color_space",
+          "type": "COMBO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetVideoComponents",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 4,
+      "type": "GetImageSize",
+      "pos": [1740, 580],
+      "size": [420, 180],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [4]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [5]
+        },
+        {
+          "name": "batch_size",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetImageSize",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 5,
+      "type": "ComfyMathExpression",
+      "pos": [1740, 820],
+      "size": [420, 180],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "values.a",
+          "type": "INT",
+          "link": 4,
+          "shape": 7
+        },
+        {
+          "name": "values.b",
+          "type": "INT",
+          "link": 5,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [7]
+        },
+        {
+          "name": "BOOL",
+          "type": "BOOLEAN",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfyMathExpression",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["min(768, min(a, b))"],
+      "title": "Short side, at most 768"
+    },
+    {
+      "id": 6,
+      "type": "ResizeImageMaskNode",
+      "pos": [1740, 1060],
+      "size": [420, 180],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "input",
+          "type": "IMAGE",
+          "link": 6
+        },
+        {
+          "name": "resize_type.shorter_size",
+          "type": "INT",
+          "link": 7,
+          "widget": {
+            "name": "resize_type.shorter_size"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "resized",
+          "type": "COMFY_MATCHTYPE_V3",
+          "links": [8]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ResizeImageMaskNode",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["scale shorter dimension", ["5", 1], "area"],
+      "title": "Frames at the short side"
+    },
+    {
+      "id": 7,
+      "type": "ResizeImageMaskNode",
+      "pos": [1740, 1300],
+      "size": [420, 180],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "input",
+          "type": "COMFY_MATCHTYPE_V3",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "resized",
+          "type": "COMFY_MATCHTYPE_V3",
+          "links": [10, 15, 23]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ResizeImageMaskNode",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["scale to multiple", 2, "area"],
+      "title": "Even sides"
+    },
+    {
+      "id": 10,
+      "type": "DownloadAndLoadDepthAnythingV3Model",
+      "pos": [700, 100],
+      "size": [420, 180],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "da3_model",
+          "type": "DA3MODEL",
+          "links": [9]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DownloadAndLoadDepthAnythingV3Model",
+        "cnr_id": "comfyui-depthanythingv3",
+        "aux_id": "PozzettiAndrea/ComfyUI-DepthAnythingV3",
+        "ver": "20ef6c8ccf8d57a0ad6f6fa7031739eb8489f2a4",
+        "models": [
+          {
+            "name": "da3mono_large.safetensors",
+            "url": "https://huggingface.co/depth-anything/DA3MONO-LARGE/resolve/main/model.safetensors",
+            "hash": "7a799a7f95eb8d4c404c2ca8be3dc3276b350a417ddc4420db72ba850cc0e960",
+            "hash_type": "sha256",
+            "directory": "depthanything3"
+          }
+        ]
+      },
+      "widgets_values": ["da3mono_large.safetensors", "auto", "auto"],
+      "title": "Depth Anything 3 Mono-Large"
+    },
+    {
+      "id": 11,
+      "type": "DepthAnything_V3",
+      "pos": [2260, 100],
+      "size": [420, 180],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "da3_model",
+          "type": "DA3MODEL",
+          "link": 9
+        },
+        {
+          "name": "images",
+          "type": "COMFY_MATCHTYPE_V3",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "depth",
+          "type": "IMAGE",
+          "links": [11]
+        },
+        {
+          "name": "confidence",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "resized_rgb_image",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "ray_origin",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "ray_direction",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "extrinsics_json",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "intrinsics_json",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "sky_mask",
+          "type": "MASK",
+          "links": null
+        },
+        {
+          "name": "extrinsics",
+          "type": "EXTRINSICS",
+          "links": null
+        },
+        {
+          "name": "intrinsics",
+          "type": "INTRINSICS",
+          "links": null
+        },
+        {
+          "name": "gaussian_ply_path",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DepthAnything_V3",
+        "cnr_id": "comfyui-depthanythingv3",
+        "aux_id": "PozzettiAndrea/ComfyUI-DepthAnythingV3",
+        "ver": "20ef6c8ccf8d57a0ad6f6fa7031739eb8489f2a4"
+      },
+      "widgets_values": ["V2-Style", "resize", false, false],
+      "title": "Depth of every frame, near is white"
+    },
+    {
+      "id": 12,
+      "type": "CreateVideo",
+      "pos": [2260, 340],
+      "size": [420, 180],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 11
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "link": 12,
+          "widget": {
+            "name": "fps"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [13]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [["3", 2]]
+    },
+    {
+      "id": 13,
+      "type": "SaveVideo",
+      "pos": [3300, 100],
+      "size": [420, 180],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["motion-read-clip/depth", "mp4", "h264"],
+      "title": "Depth video"
+    },
+    {
+      "id": 20,
+      "type": "CheckpointLoaderSimple",
+      "pos": [700, 340],
+      "size": [420, 180],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [16]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [14]
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0",
+        "models": [
+          {
+            "name": "sam3.1_multiplex_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/sam3.1/resolve/main/checkpoints/sam3.1_multiplex_fp16.safetensors",
+            "hash": "9ba99c92703c2e8b4f47de2d34a539bb8e18923049e238b780d70dbe6368eb03",
+            "hash_type": "sha256",
+            "directory": "checkpoints"
+          }
+        ]
+      },
+      "widgets_values": ["sam3.1_multiplex_fp16.safetensors"],
+      "title": "SAM 3.1"
+    },
+    {
+      "id": 21,
+      "type": "CLIPTextEncode",
+      "pos": [1220, 340],
+      "size": [420, 180],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [17]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["the person"],
+      "title": "What to find, one per comma"
+    },
+    {
+      "id": 22,
+      "type": "SAM3_VideoTrack",
+      "pos": [2780, 100],
+      "size": [420, 180],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "COMFY_MATCHTYPE_V3",
+          "link": 15
+        },
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 16
+        },
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 17,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "track_data",
+          "type": "SAM3_TRACK_DATA",
+          "links": [18]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SAM3_VideoTrack",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0.5, 3, 1],
+      "title": "Track each target"
+    },
+    {
+      "id": 23,
+      "type": "SAM3_TrackToMask",
+      "pos": [2780, 340],
+      "size": [420, 180],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "track_data",
+          "type": "SAM3_TRACK_DATA",
+          "link": 18
+        }
+      ],
+      "outputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [19]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SAM3_TrackToMask",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [""],
+      "title": "Every target in one mask"
+    },
+    {
+      "id": 25,
+      "type": "MaskToImage",
+      "pos": [2780, 580],
+      "size": [420, 180],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [20]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaskToImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 27,
+      "type": "CreateVideo",
+      "pos": [2780, 820],
+      "size": [420, 180],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 20
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "link": 21,
+          "widget": {
+            "name": "fps"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [22]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [["3", 2]]
+    },
+    {
+      "id": 28,
+      "type": "SaveVideo",
+      "pos": [3300, 340],
+      "size": [420, 180],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["motion-read-clip/mask", "mp4", "h264"],
+      "title": "Mask video, targets white"
+    },
+    {
+      "id": 30,
+      "type": "ImageFromBatch",
+      "pos": [1740, 1540],
+      "size": [420, 180],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "COMFY_MATCHTYPE_V3",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [24]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageFromBatch",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [0, 1],
+      "title": "First frame"
+    },
+    {
+      "id": 31,
+      "type": "SaveImage",
+      "pos": [3300, 580],
+      "size": [420, 180],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 24
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["motion-read-clip/first-frame"],
+      "title": "First frame"
+    },
+    {
+      "id": 99,
+      "type": "MarkdownNote",
+      "pos": [60, 100],
+      "size": [560, 900],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Motion: read a clip into its depth, its targets' mask and its first frame",
+      "properties": {},
+      "widgets_values": [
+        "# Motion: read a clip into its depth, its targets' mask and its first frame\n\nReads up to 10 seconds of a clip at a short side of at most 768 px. Depth Anything 3 Mono-Large makes its depth video, SAM 3.1 tracks up to 3 things named by text into one mask video, and the first frame is saved. The three guide the LTX 2.5 render of Motion's Change a clip.\n\n## Inputs\n\n- Your clip, node 1. The first 10 seconds are read.\n- What to find, node 21: up to 3 short descriptions of things in the clip, separated by commas, such as `the man in the grey coat, the bottle in his hand`. Each finds one thing.\n\n## Outputs\n\n- The depth video, node 13: Depth Anything 3 Mono-Large reads each frame, near is white and far is black.\n- The mask video, node 28: SAM 3.1 tracks each thing you named through the clip. The mask is white on them and black elsewhere, with hard edges. The render grows and feathers it.\n- The first frame, node 31.\n\nAll three keep the clip's frame rate, with the short side at most 768 px.\n\n## Models\n\n- [da3mono_large.safetensors](https://huggingface.co/depth-anything/DA3MONO-LARGE): Depth Anything 3 Mono-Large, by ByteDance Seed, [Apache 2.0](https://huggingface.co/depth-anything/DA3MONO-LARGE). It loads through [ComfyUI-DepthAnythingV3](https://github.com/PozzettiAndrea/ComfyUI-DepthAnythingV3), MIT, at commit `20ef6c8ccf8d57a0ad6f6fa7031739eb8489f2a4`.\n- [sam3.1_multiplex_fp16.safetensors](https://huggingface.co/Comfy-Org/sam3.1): SAM 3.1, by Meta, under the SAM License in `sam-license.txt`. Its nodes are ComfyUI core.\n\nRosesfield ships no weights. Each loader lists its file with a download link.\n\nPart of [Rosesfield](https://github.com/rossaai/rosesfield), MIT."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [1, 1, 0, 2, 0, "VIDEO"],
+    [2, 2, 0, 3, 0, "VIDEO"],
+    [3, 3, 0, 4, 0, "IMAGE"],
+    [4, 4, 0, 5, 0, "INT"],
+    [5, 4, 1, 5, 1, "INT"],
+    [6, 3, 0, 6, 0, "IMAGE"],
+    [7, 5, 1, 6, 1, "INT"],
+    [8, 6, 0, 7, 0, "COMFY_MATCHTYPE_V3"],
+    [9, 10, 0, 11, 0, "DA3MODEL"],
+    [10, 7, 0, 11, 1, "COMFY_MATCHTYPE_V3"],
+    [11, 11, 0, 12, 0, "IMAGE"],
+    [12, 3, 2, 12, 1, "FLOAT"],
+    [13, 12, 0, 13, 0, "VIDEO"],
+    [14, 20, 1, 21, 0, "CLIP"],
+    [15, 7, 0, 22, 0, "COMFY_MATCHTYPE_V3"],
+    [16, 20, 0, 22, 1, "MODEL"],
+    [17, 21, 0, 22, 2, "CONDITIONING"],
+    [18, 22, 0, 23, 0, "SAM3_TRACK_DATA"],
+    [19, 23, 0, 25, 0, "MASK"],
+    [20, 25, 0, 27, 0, "IMAGE"],
+    [21, 3, 2, 27, 1, "FLOAT"],
+    [22, 27, 0, 28, 0, "VIDEO"],
+    [23, 7, 0, 30, 0, "COMFY_MATCHTYPE_V3"],
+    [24, 30, 0, 31, 0, "IMAGE"]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Models",
+      "bounding": [670, 20, 480, 560],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Inputs",
+      "bounding": [1190, 20, 480, 560],
+      "color": "#b06634",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Read the clip",
+      "bounding": [1710, 20, 480, 1760],
+      "color": "#444444",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Depth",
+      "bounding": [2230, 20, 480, 560],
+      "color": "#444444",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Mask",
+      "bounding": [2750, 20, 480, 1040],
+      "color": "#444444",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "Output",
+      "bounding": [3270, 20, 480, 800],
+      "color": "#3f8a5c",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.55,
+      "offset": [0, 0]
+    },
+    "linearData": {
+      "inputs": [[1, "file"], [21, "text"]],
+      "outputs": [13, 28, 31]
+    }
+  },
+  "version": 0.4
+}
