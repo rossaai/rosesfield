@@ -1,0 +1,56 @@
+{
+  "effect": "flip-into-a-new-place",
+  "passed": false,
+  "design": {
+    "unit": {
+      "id": "flip-into-a-new-place",
+      "title": "Unit: flip-into-a-new-place"
+    },
+    "family": {
+      "id": "effects",
+      "title": "Family: effects"
+    },
+    "fit": {
+      "by": "area",
+      "edges": "crop"
+    },
+    "setPiece": "The camera flips over a tall dark chair and lands in a dim card room, where the same person sits at the table.",
+    "cuts": [
+      {
+        "min": 4.6,
+        "max": 4.8,
+        "kind": "may"
+      }
+    ],
+    "lastFrame": {
+      "shows": "The same person leans over a green felt card table in a dim room as the camera drifts back.",
+      "maxLuma": null
+    },
+    "sound": null,
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
+  },
+  "prompt": "A pale stone hall with tall arched windows high on the far wall and a hanging iron chandelier. The person from the first frame sits on a tall dark carved wooden throne on a low platform at the end of a table draped in deep red cloth, leaning back, forearms on the armrests, legs stretched along the table between loaves of bread and a brass bowl. The camera cranes up and tilts down toward them, pauses, then sweeps over their head, looks straight down on them, flips over the top of the throne and dives behind its dark carved back until the wood fills the frame. Out of that darkness the camera rises over the black padded rail of a green felt card table in a dim room lined with shelves of bottles and warm lamps, where the same person, in the same clothes, leans over the table with cards and stacks of chips, and the camera settles and drifts slowly back.",
+  "photoFrame": "first",
+  "endFrame": {
+    "source": "none"
+  },
+  "midFrame": null,
+  "hold": null,
+  "adapter": null,
+  "seconds": 9,
+  "preview": null,
+  "proof": null,
+  "guide": {
+    "file": "flip-into-a-new-place.mp4",
+    "sha256": "0d4dac65d6b5acf59e6c626463453b1c57b066727bfdc3f0f70091ea64d90a43",
+    "bytes": 172490,
+    "width": 352,
+    "height": 640,
+    "frames": 205,
+    "fps": 24
+  }
+}

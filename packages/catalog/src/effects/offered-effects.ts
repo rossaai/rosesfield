@@ -1,8 +1,6 @@
 import type { AppDefinition } from "@rosesfield/contract"
 import { AppDefinitionInvalidError } from "#app-definition-invalid.error"
 import { effectsApp } from "#effects/app"
-import type { EffectPreset } from "#effects/effect-preset.contract"
-import { heldEffectPresets, keptPresets } from "#effects/effect-presets"
 import type { EffectRecipe } from "#effects/effect-recipe.contract"
 import { effectRecipes } from "#effects/effect-recipes"
 import { readApps } from "#list-apps"
@@ -23,35 +21,26 @@ export function offeredRecipes(
   reach: ServerReach
 ): readonly EffectRecipe[] {
   const passed = recipes.filter((recipe) => recipe.passed)
-  return canTryDrafts(reach)
-    ? [...passed, ...recipes.filter((recipe) => !recipe.passed)]
-    : passed
-}
-
-export function offeredPresets(
-  presets: readonly EffectPreset[],
-  reach: ServerReach
-): readonly EffectPreset[] {
-  return canTryDrafts(reach) ? presets : keptPresets(presets)
+  const drafts = recipes.filter(
+    (recipe) => !recipe.passed && recipe.guide === null
+  )
+  return canTryDrafts(reach) ? [...passed, ...drafts] : passed
 }
 
 export function offeredEffectsApp(
   recipes: readonly EffectRecipe[],
-  reach: ServerReach,
-  presets: readonly EffectPreset[] = heldEffectPresets
+  reach: ServerReach
 ): AppDefinition {
-  const app = effectsApp(
-    offeredRecipes(recipes, reach),
-    offeredPresets(presets, reach)
-  )
-  const [read] = readApps([{ folder: effectsFolder, app }])
-  if (read === undefined) {
+  const [app] = readApps([
+    { folder: effectsFolder, app: effectsApp(offeredRecipes(recipes, reach)) },
+  ])
+  if (app === undefined) {
     throw new AppDefinitionInvalidError({
       folder: effectsFolder,
       reason: "the offered effects did not make an app",
     })
   }
-  return read
+  return app
 }
 
 export function withOfferedEffects(

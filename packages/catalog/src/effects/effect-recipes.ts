@@ -7,7 +7,9 @@ import {
 } from "#effects/effect-recipe.contract"
 import { readingFailures } from "#effects/reading-failures"
 import buildingsRipple from "./recipes/buildings-ripple.json"
+import flipIntoANewPlace from "./recipes/flip-into-a-new-place.json"
 import freezeAndCircle from "./recipes/freeze-and-circle.json"
+import grabAndRun from "./recipes/grab-and-run.json"
 import growGiant from "./recipes/grow-giant.json"
 import manyCopies from "./recipes/many-copies.json"
 import meltAway from "./recipes/melt-away.json"
@@ -15,11 +17,14 @@ import pullBackToSpace from "./recipes/pull-back-to-space.json"
 import pushIntoEye from "./recipes/push-into-eye.json"
 import scatterPetals from "./recipes/scatter-petals.json"
 import stillInTheStreet from "./recipes/still-in-the-street.json"
+import ticketWipe from "./recipes/ticket-wipe.json"
 import runs from "./runs.json"
 
 const files: Readonly<Record<string, unknown>> = {
   "buildings-ripple": buildingsRipple,
+  "flip-into-a-new-place": flipIntoANewPlace,
   "freeze-and-circle": freezeAndCircle,
+  "grab-and-run": grabAndRun,
   "grow-giant": growGiant,
   "many-copies": manyCopies,
   "melt-away": meltAway,
@@ -27,6 +32,7 @@ const files: Readonly<Record<string, unknown>> = {
   "push-into-eye": pushIntoEye,
   "scatter-petals": scatterPetals,
   "still-in-the-street": stillInTheStreet,
+  "ticket-wipe": ticketWipe,
 }
 
 type Preview = NonNullable<EffectRecipe["preview"]>
@@ -122,6 +128,13 @@ export const passedRecipes: readonly EffectRecipe[] = effectRecipes.filter(
   (recipe) => recipe.passed
 )
 
+export function guideOf(
+  effect: string,
+  recipes: readonly EffectRecipe[] = effectRecipes
+) {
+  return recipes.find((recipe) => recipe.effect === effect)?.guide ?? null
+}
+
 export function recipeOf(effect: string): EffectRecipe {
   const found = effectRecipes.find((recipe) => recipe.effect === effect)
   if (found === undefined) {
@@ -140,6 +153,7 @@ export function effectKeyOf(effect: string): string {
 }
 
 export type {
+  EffectGuide,
   EffectRecipe,
   EffectRun,
   ResolutionValue,

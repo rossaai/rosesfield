@@ -5,7 +5,7 @@ Changes your own clip with one LTX 2.3 IC-LoRA that an effect picks, such as day
 | | |
 |---|---|
 | Workflow id | `effects-clip-ltx-2-3-ic-lora` |
-| Run by | [`effects`](../../packages/catalog/src/effects/), the effects on your clip |
+| Run by | no app yet. An effect on your clip binds it once one comes from a measured reference |
 | Core model | LTX 2.3 22B dev, fp8, with the distilled LoRA and the effect's IC-LoRA |
 | Custom node packs | [ComfyUI-LTXVideo](https://github.com/Lightricks/ComfyUI-LTXVideo) at commit `82bd963cdeb66d023bed8c99324a307020907ef8`, LTX-2 Community License. It gives `LTXAddVideoICLoRAGuide`. Comfy Cloud installs it. |
 | GPU memory | Not measured. |

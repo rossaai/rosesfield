@@ -9,7 +9,7 @@ import type {
   ResolutionValue,
   VideoReading,
 } from "#effects/effect-recipe.contract"
-import { recipeOf } from "#effects/effect-recipes"
+import { effectRecipes, recipeOf } from "#effects/effect-recipes"
 
 export const passedRun = {
   runId: "5b1d2c3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e",
@@ -76,3 +76,7 @@ export function keptRun(effect: string): EffectRun {
     failed: [],
   }
 }
+
+export const graphLooks = effectRecipes.filter(
+  (recipe) => recipe.guide === null
+)

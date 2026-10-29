@@ -31,6 +31,11 @@ export const comfyValueBinding = z.discriminatedUnion("from", [
     plus: z.number().min(0),
     max: z.number().positive(),
   }),
+  z.strictObject({
+    from: z.literal("file"),
+    name: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*\.[a-z0-9]+$/),
+    path,
+  }),
   z.strictObject({ from: z.literal("seed"), path }),
   z.strictObject({ from: z.literal("count"), path, map: valueMap.optional() }),
   z.strictObject({
@@ -46,6 +51,7 @@ type BindingContext = {
   adapter: string
   request: EngineRequest
   assetValue: (assetId: string) => unknown
+  fileValue?: (name: string) => unknown
   createMissing: boolean
 }
 
@@ -82,7 +88,17 @@ function boundValue(
       return inputValue(binding, context)
     case "inputLength":
       return lengthValue(binding, context)
+    case "file":
+      return fileValue(binding.name, context)
   }
+}
+
+function fileValue(name: string, context: BindingContext): unknown {
+  const value = context.fileValue?.(name)
+  if (value === undefined) {
+    throw invalid(context, `the engine holds no file ${name}`)
+  }
+  return value
 }
 
 function lengthValue(

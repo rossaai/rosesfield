@@ -125,12 +125,12 @@ describe("the agent's effect call", () => {
     expect(proposals).toBe(1)
   })
 
-  it("tells the model to check the input against each effect's need, draft first and leave the guide to Rosesfield", () => {
+  it("tells the model to check the photo against each effect's need and draft first, in words with no engine term", () => {
     const description = appToolDescription(effects())
     for (const recipe of passedRecipes) {
       expect(description).toContain(`${recipe.effect}: `)
     }
-    expect(description).toMatch(/Leave guide out/)
+    expect(description).not.toMatch(/guide|depth|adapter|preset|sha256/i)
     expect(description).toMatch(/only after the person says yes/)
   })
 })

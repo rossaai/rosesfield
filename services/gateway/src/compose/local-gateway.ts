@@ -41,7 +41,7 @@ import { ownerScope } from "#compose/request-scope"
 import { canPasteKey, ownerSettings } from "#compose/settings"
 import { visitorScopeFor } from "#compose/visitor-ports"
 import { folderGuideFiles } from "#effect-guides/folder-guide-files"
-import type { GuideFiles } from "#effect-guides/guide-files"
+import { guideEngineFiles } from "#effect-guides/guide-engine-files"
 import type { OwnerLock, PublicAccess, ServerEnv } from "#env"
 import { createGateway, type GatewayContext, type GatewayGuard } from "#gateway"
 import type { GatewayApp, RequestScope } from "#gateway-env"
@@ -99,7 +99,6 @@ type Parts = {
   account: ComfyAccount
   publicAccount: PublicAccountParts
   shares: ShareMount
-  guides: GuideFiles
 }
 
 const platformDist = fileURLToPath(
@@ -140,6 +139,7 @@ export function composeLocalGateway(
       media: options.media ?? new BunMediaTool(),
       store,
       prices,
+      files: guideEngineFiles(folderGuideFiles(presetGuides)),
       ...fetchPart,
       ...(options.warmCatalog === true ? { warmCatalog: true } : {}),
     },
@@ -154,7 +154,6 @@ export function composeLocalGateway(
       limit: shareLimit({ db, clock, clientOf: clientOfEnv(env) }),
       needsKey: env.access.mode === "public",
     },
-    guides: folderGuideFiles(presetGuides),
   }
   const platform = root === null ? [] : platformFiles(root)
   return env.access.mode === "public"
@@ -186,7 +185,6 @@ function ownerHandlers(
       engines,
       clock: parts.clock,
       prices: parts.prices,
-      guides: parts.guides,
     },
     (advance) => new TimerJobRunner({ advance, runs: resumed })
   )
@@ -359,7 +357,6 @@ function composePublic(
       clock,
       engineOptions: parts.engineOptions,
       agents,
-      guides: parts.guides,
     })
   const app = createGateway({
     apps: parts.apps,

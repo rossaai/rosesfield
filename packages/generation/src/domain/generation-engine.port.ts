@@ -17,6 +17,16 @@ export type EngineFile = {
   bytes: Uint8Array
 }
 
+export type HeldFile = {
+  mime: string
+  bytes: Uint8Array
+}
+
+/** Reads a file the engine holds for a graph, such as a motion an effect follows, by its name. Null when it holds none. */
+export type EngineFiles = {
+  read: (name: string) => Promise<HeldFile | null>
+}
+
 export type RunPlan = NonNullable<Run["plan"]>
 
 export type EngineStepOutput = Omit<

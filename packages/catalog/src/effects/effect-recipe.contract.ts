@@ -203,6 +203,18 @@ export const effectLedger = z
     { message: "Each run is one row of the ledger" }
   )
 
+export const guideResolutionValues = ["480p", "720p"] as const
+
+export const effectGuide = z.strictObject({
+  file: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*\.mp4$/),
+  sha256: digest,
+  bytes: z.number().int().min(1).max(2_000_000),
+  width: z.number().int().min(64),
+  height: z.number().int().min(64),
+  frames: z.number().int().min(48).max(240),
+  fps: z.literal(24),
+})
+
 const preview = z.strictObject({
   file: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*\.mp4$/),
   runId: z.uuid(),
@@ -226,6 +238,7 @@ export const effectRecipe = z
     seconds: z.number().int().min(5).max(15),
     preview: preview.nullable(),
     proof: effectProof.nullable(),
+    guide: effectGuide.nullable().default(null),
   })
   .refine(
     (recipe) =>
@@ -278,6 +291,29 @@ export const effectRecipe = z
     message: "A passed effect carries the proof of its run, and only it",
     path: ["proof"],
   })
+  .refine(
+    (recipe) =>
+      recipe.guide === null ||
+      (recipe.photoFrame === "first" &&
+        recipe.endFrame.source === "none" &&
+        recipe.midFrame === null &&
+        recipe.hold === null &&
+        recipe.adapter === null),
+    {
+      message:
+        "A look that follows a guide starts on the photo and its guide sets every frame after it",
+      path: ["guide"],
+    }
+  )
+  .refine(
+    (recipe) =>
+      recipe.guide === null ||
+      Math.round(recipe.guide.frames / recipe.guide.fps) === recipe.seconds,
+    {
+      message: "A look that follows a guide lasts as long as its guide",
+      path: ["seconds"],
+    }
+  )
 
 export type EndFrame = z.infer<typeof endFrame>
 export type MidFrame = z.infer<typeof midFrame>
@@ -289,5 +325,6 @@ export type VideoReading = z.infer<typeof videoReading>
 export type EffectProof = z.infer<typeof effectProof>
 export type EffectRun = z.infer<typeof effectRun>
 export type EffectRecipe = z.infer<typeof effectRecipe>
+export type EffectGuide = z.infer<typeof effectGuide>
 export type SoundBed = z.infer<typeof soundBed>
 export type ResolutionValue = (typeof resolutionValues)[number]

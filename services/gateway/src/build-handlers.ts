@@ -36,8 +36,6 @@ import {
   UpdateCharacterHandler,
   UploadAssetHandler,
 } from "@rosesfield/library"
-import type { GuideFiles } from "#effect-guides/guide-files"
-import { GuidedStartRunHandler } from "#effect-guides/guided-start-run"
 import { LibraryRunAssets } from "#infrastructure/library-run-assets"
 import { ListedAppCatalog } from "#infrastructure/listed-app-catalog"
 
@@ -51,7 +49,6 @@ export type HandlerPorts = {
   clock: Clock
   prices?: PriceBook
   watchMarks?: WatchMarkPort
-  guides?: GuideFiles
 }
 
 function pricesOf(ports: HandlerPorts): { prices?: PriceBook } {
@@ -144,7 +141,7 @@ function buildRuns(
 ): RunHandlers {
   const { runs, engines, clock } = ports
   const apps = new ListedAppCatalog({ apps: ports.apps })
-  const start = {
+  const startRun = new StartRunHandler({
     apps,
     runs,
     engines,
@@ -152,11 +149,7 @@ function buildRuns(
     clock,
     policy: new CatalogModelPolicy(),
     assets: runAssetsOf(library),
-  }
-  const startRun =
-    ports.guides === undefined
-      ? new StartRunHandler(start)
-      : new GuidedStartRunHandler({ ...start, guides: ports.guides, library })
+  })
   return {
     startRun,
     getRun: new GetRunHandler({ runs }),

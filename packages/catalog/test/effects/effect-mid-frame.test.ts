@@ -15,9 +15,15 @@ import {
   type MidFrame,
   resolutionValues,
 } from "#effects/effect-recipe.contract"
-import { effectRecipes, readRecipes, recipeOf } from "#effects/effect-recipes"
+import {
+  effectRecipes as everyRecipe,
+  readRecipes,
+  recipeOf,
+} from "#effects/effect-recipes"
 import { brokenLinks, fileGraph, workflowOf } from "./effects-replay"
 import { keptRun } from "./passed-recipe"
+
+const effectRecipes = everyRecipe.filter((recipe) => recipe.guide === null)
 
 const ledger = [keptRun("many-copies")]
 

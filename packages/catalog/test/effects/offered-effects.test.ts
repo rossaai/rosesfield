@@ -1,6 +1,5 @@
 import { type InputDefinition, startRunBodyFor } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
-import { heldEffectPresets } from "#effects/effect-presets"
 import { effectRecipes, passedRecipes, recipeOf } from "#effects/effect-recipes"
 import {
   canTryDrafts,
@@ -58,14 +57,24 @@ describe("the effects a server offers", () => {
     ])
   })
 
-  it("opens the app with the passed looks first and starts a draft on the local lock, the unkept guide effects last", () => {
+  it("opens the app with the passed looks first and starts a draft on the local lock", () => {
     const app = offeredEffectsApp(effectRecipes, local)
     expect(app.closedKey).toBeNull()
     expect(effectsOf(app.inputs)?.options.map((one) => one.value)).toEqual([
       ...passedRecipes.map((one) => one.effect),
-      ...effectRecipes.filter((one) => !one.passed).map((one) => one.effect),
-      ...heldEffectPresets.map((one) => one.id),
+      ...effectRecipes
+        .filter((one) => !one.passed && one.guide === null)
+        .map((one) => one.effect),
     ])
+    for (const guided of [
+      "flip-into-a-new-place",
+      "ticket-wipe",
+      "grab-and-run",
+    ]) {
+      expect(
+        effectsOf(app.inputs)?.options.map((one) => one.value)
+      ).not.toContain(guided)
+    }
     const body = startRunBodyFor(app)
     expect(
       body.safeParse({

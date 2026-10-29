@@ -1,0 +1,50 @@
+{
+  "effect": "ticket-wipe",
+  "passed": false,
+  "design": {
+    "unit": {
+      "id": "ticket-wipe",
+      "title": "Unit: ticket-wipe"
+    },
+    "family": {
+      "id": "effects",
+      "title": "Family: effects"
+    },
+    "fit": {
+      "by": "area",
+      "edges": "crop"
+    },
+    "setPiece": "The person walks across a plain warm studio, shades their eyes, turns to the camera and waves.",
+    "cuts": [],
+    "lastFrame": {
+      "shows": "The person faces the camera with feet apart after one wave.",
+      "maxLuma": null
+    },
+    "sound": null,
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
+  },
+  "prompt": "A full-body side view of the person walking at an even pace from left to right across a seamless warm paper studio, with the camera tracking beside them at hip height. They look down at the phone in their right hand, then raise their left hand to shade their eyes and look ahead, lower it, turn to face the camera, stop with their feet apart and wave once with their right hand at shoulder height. Soft even front light. The paper backdrop stays plain and empty, with no shadow on it.",
+  "photoFrame": "first",
+  "endFrame": {
+    "source": "none"
+  },
+  "midFrame": null,
+  "hold": null,
+  "adapter": null,
+  "seconds": 9,
+  "preview": null,
+  "proof": null,
+  "guide": {
+    "file": "ticket-wipe.mp4",
+    "sha256": "74d250f0c11a0f26b3b3993e52e81868b75ed27d3e8094460ff6a12e190f96cf",
+    "bytes": 87178,
+    "width": 480,
+    "height": 352,
+    "frames": 217,
+    "fps": 24
+  }
+}

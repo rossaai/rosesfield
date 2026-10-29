@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest"
 import { effectGraph } from "#effects/comfy/effect-graph"
 import { audioFramesOf, framesOf, ltxFrames } from "#effects/comfy/frame-sizes"
-import { effectRecipes } from "#effects/effect-recipes"
+import { effectRecipes as everyRecipe } from "#effects/effect-recipes"
 import { fileGraph, workflowOf } from "./effects-replay"
+
+const effectRecipes = everyRecipe.filter((recipe) => recipe.guide === null)
 
 const audioVae = {
   sampleRate: 16000,

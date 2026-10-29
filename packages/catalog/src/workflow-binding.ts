@@ -34,6 +34,10 @@ function pathed(binding: WorkflowValueBinding, path: Path): ComfyValueBinding {
       const { to: _, ...rest } = binding
       return { ...rest, path }
     }
+    case "file": {
+      const { to: _, ...rest } = binding
+      return { ...rest, path }
+    }
     case "seed": {
       const { to: _, ...rest } = binding
       return { ...rest, path }

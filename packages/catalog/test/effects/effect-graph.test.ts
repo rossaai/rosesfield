@@ -29,7 +29,7 @@ import {
   loadedModels,
 } from "#effects/comfy/effects-binding"
 import { resolutionValues } from "#effects/effect-recipe.contract"
-import { effectRecipes, recipeOf } from "#effects/effect-recipes"
+import { effectRecipes as everyRecipe, recipeOf } from "#effects/effect-recipes"
 import {
   brokenLinks,
   fileGraph,
@@ -37,6 +37,8 @@ import {
   type Workflow,
   workflowOf,
 } from "./effects-replay"
+
+const effectRecipes = everyRecipe.filter((recipe) => recipe.guide === null)
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)

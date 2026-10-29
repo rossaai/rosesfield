@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest"
 import { type EffectRecipe, maxHits } from "#effects/effect-recipe.contract"
 import {
-  effectRecipes,
   passedRecipes,
   readLedger,
   readRecipes,
   recipeOf,
 } from "#effects/effect-recipes"
-import { keptRun, passedRecipe } from "./passed-recipe"
+import { graphLooks, keptRun, passedRecipe } from "./passed-recipe"
 
 const ledger = [keptRun("many-copies")]
 
@@ -47,7 +46,7 @@ function cutsOf(recipe: EffectRecipe): number {
 describe("the effect recipes kept as data", () => {
   it("reads the nine looks, with Push into eye and Still in the street the ones passed and none with an adapter", () => {
     expect(
-      effectRecipes.map(({ effect, passed, adapter }) => ({
+      graphLooks.map(({ effect, passed, adapter }) => ({
         effect,
         passed,
         adapter,
@@ -63,7 +62,7 @@ describe("the effect recipes kept as data", () => {
   })
 
   it("names for each look the unit page and the family page it is designed from by id and title, with its whole chain", () => {
-    for (const recipe of effectRecipes) {
+    for (const recipe of graphLooks) {
       const { design } = recipe
       expect({ effect: recipe.effect, unit: design.unit }).toEqual({
         effect: recipe.effect,
@@ -92,7 +91,7 @@ describe("the effect recipes kept as data", () => {
 
   it("keeps the fixed lengths, the cut plans and the sound beds of the reference looks", () => {
     const plans = Object.fromEntries(
-      effectRecipes.map((recipe) => [
+      graphLooks.map((recipe) => [
         recipe.effect,
         {
           seconds: recipe.seconds,
@@ -117,7 +116,7 @@ describe("the effect recipes kept as data", () => {
   it("opens Earth Zoom in orbit and lands on the photo, as its unit page reads, and opens every other look on the photo", () => {
     expect(
       Object.fromEntries(
-        effectRecipes.map((recipe) => [recipe.effect, recipe.photoFrame])
+        graphLooks.map((recipe) => [recipe.effect, recipe.photoFrame])
       )
     ).toEqual(
       Object.fromEntries(

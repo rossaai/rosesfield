@@ -13,10 +13,12 @@ import {
   type EffectRecipe,
   resolutionValues,
 } from "#effects/effect-recipe.contract"
-import { effectRecipes } from "#effects/effect-recipes"
+import { effectRecipes as everyRecipe } from "#effects/effect-recipes"
 import { findWorkflow } from "#list-workflows"
 import uiFile from "../../../../workflows/effects-ltx-2-5/effects-ltx-2-5.json"
 import { workflowOf } from "./effects-replay"
+
+const effectRecipes = everyRecipe.filter((recipe) => recipe.guide === null)
 
 const coreNodeClasses: readonly string[] = [
   "AudioAdjustVolume",

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { effectRecipes, readRecipes, recipeOf } from "#effects/effect-recipes"
+import {
+  effectRecipes as everyRecipe,
+  readRecipes,
+  recipeOf,
+} from "#effects/effect-recipes"
 import { keptRun } from "./passed-recipe"
+
+const effectRecipes = everyRecipe.filter((recipe) => recipe.guide === null)
 
 const ledger = [keptRun("many-copies")]
 

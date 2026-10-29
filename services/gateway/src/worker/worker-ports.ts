@@ -11,7 +11,7 @@ import {
 } from "#catalog/shared-router-catalog"
 import { type EngineOptions, pickEngines } from "#compose/pick-engines"
 import { assetsGuideFiles } from "#effect-guides/assets-guide-files"
-import type { GuideFiles } from "#effect-guides/guide-files"
+import { guideEngineFiles } from "#effect-guides/guide-engine-files"
 import { readWorkerEnv, type WorkerVars } from "#env"
 import { R2AssetStore } from "#infrastructure/r2-asset-store"
 import { SqliteAssetRepository } from "#infrastructure/sqlite-asset-repository"
@@ -48,7 +48,6 @@ export type WorkerParts = {
   clock: Clock
   engineOptions: EngineOptions
   defer: RuntimeDefer
-  guides: GuideFiles
 }
 
 const databases = new WeakMap<D1Database, SqliteDatabase>()
@@ -77,7 +76,6 @@ export function workerParts(
     store: new R2AssetStore({ bucket: env.BUCKET }),
     clock,
     defer: defer ?? (() => undefined),
-    guides: assetsGuideFiles(env.ASSETS),
     engineOptions: {
       clock,
       catalog: sharedRouterCatalog(
@@ -86,6 +84,7 @@ export function workerParts(
       ),
       meter: sharedCreditMeter(clock),
       fetch: (input, init) => fetch(input, init),
+      files: guideEngineFiles(assetsGuideFiles(env.ASSETS)),
     },
   }
 }
@@ -101,6 +100,5 @@ export function ownerPorts(parts: WorkerParts): HandlerPorts {
     engines: pickEngines(parts.vars.engine, parts.engineOptions),
     clock: parts.clock,
     prices: new DrizzlePriceBook({ db }),
-    guides: parts.guides,
   }
 }

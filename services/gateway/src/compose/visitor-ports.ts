@@ -9,7 +9,6 @@ import type { RuntimeDefer } from "#catalog/shared-router-catalog"
 import { type EngineOptions, visitorEngines } from "#compose/pick-engines"
 import { visitorScope } from "#compose/request-scope"
 import { visitorSettings } from "#compose/settings"
-import type { GuideFiles } from "#effect-guides/guide-files"
 import type { WorkerVars } from "#env"
 import type { GatewayContext } from "#gateway"
 import type { ServedPlace } from "#gateway.contract"
@@ -37,7 +36,6 @@ export type VisitorDeps = {
   engineOptions: EngineOptions
   agents: SessionAgentHost | null
   defer?: RuntimeDefer
-  guides?: GuideFiles
 }
 
 export async function visitorScopeFor(
@@ -68,7 +66,6 @@ export async function visitorScopeFor(
       engines,
       clock: deps.clock,
       prices: new DrizzlePriceBook({ db }),
-      ...(deps.guides === undefined ? {} : { guides: deps.guides }),
     },
     () => new PolledJobRunner()
   )

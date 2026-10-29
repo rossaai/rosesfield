@@ -8,6 +8,7 @@ import {
   ComfyRouterGenerationEngine,
   type CreditMeter,
   DemoGenerationEngine,
+  type EngineFiles,
   type Fetch,
   type GenerationEngine,
   type PriceBook,
@@ -33,6 +34,7 @@ export type EngineOptions = {
   media?: MediaTool
   store?: AssetStore
   prices?: PriceBook
+  files?: EngineFiles
 }
 
 function meterOf(options: EngineOptions): { meter?: CreditMeter } {
@@ -74,6 +76,7 @@ export function liveEngineOf(
         baseUrl: engine.baseUrl,
         ...meterOf(options),
         ...fetchOf(options),
+        ...(options.files === undefined ? {} : { files: options.files }),
       })
   }
 }

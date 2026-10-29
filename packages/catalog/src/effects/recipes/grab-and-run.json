@@ -1,0 +1,56 @@
+{
+  "effect": "grab-and-run",
+  "passed": false,
+  "design": {
+    "unit": {
+      "id": "grab-and-run",
+      "title": "Unit: grab-and-run"
+    },
+    "family": {
+      "id": "effects",
+      "title": "Family: effects"
+    },
+    "fit": {
+      "by": "area",
+      "edges": "crop"
+    },
+    "setPiece": "A window smashed from outside a parked car, a bottle taken through the hole, and a run down a street with police behind.",
+    "cuts": [
+      {
+        "min": 5.79,
+        "max": 5.96,
+        "kind": "cut"
+      }
+    ],
+    "lastFrame": {
+      "shows": "The same person runs toward the camera on a cobbled street and looks back over their shoulder.",
+      "maxLuma": null
+    },
+    "sound": null,
+    "encode": {
+      "container": "mp4",
+      "codec": "h264",
+      "bitDepth": 8
+    }
+  },
+  "prompt": "A medium shot from inside a parked car at golden hour looks across the worn back seat to the rear door window, a glass bottle leaning on the seat, and the camera remains static. Outside, the person from the first frame leans to the glass and presses both palms flat on it. Initially they glance left down the street, then duck below the sill. A moment later they rise with a rock in their right hand and strike the window. The tempered glass crazes white and falls inward in small cubes that scatter across the seat. They reach through the hole, grip the bottle by the neck and pull it out as the camera pushes in on their hand. A hard cut transitions to a low wide shot on a cobbled street in the same warm evening light. The same person in the same clothes sprints toward the lens with the bottle in their fist while the camera tracks backward ahead of them and turns with them around a corner. Two police officers run behind them and a patrol car's lights flash far back. Near the end they look back over their shoulder. Natural motion blur, film-grade color, crisp detail. A sharp glass crash, then running footsteps and distant sirens.",
+  "photoFrame": "first",
+  "endFrame": {
+    "source": "none"
+  },
+  "midFrame": null,
+  "hold": null,
+  "adapter": null,
+  "seconds": 10,
+  "preview": null,
+  "proof": null,
+  "guide": {
+    "file": "grab-and-run.mp4",
+    "sha256": "58ce895ccf0c7472d4307fa0719cb3cfe3d3c64c0cf2c805cd69c944d1b31d7e",
+    "bytes": 308586,
+    "width": 352,
+    "height": 640,
+    "frames": 240,
+    "fps": 24
+  }
+}

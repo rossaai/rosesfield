@@ -103,7 +103,7 @@ function chosenPhotoOf(props: EffectsPanelProps): string | undefined {
   return effectTiles(props.app).find((tile) => tile.effect === chosen)?.photo
 }
 
-const fieldInputs: readonly string[] = ["prompt", "clip"]
+const fieldInputs: readonly string[] = ["prompt"]
 
 export function EffectsPanel(props: EffectsPanelProps): ReactElement {
   const { app } = props

@@ -3,13 +3,13 @@ import { selectBinding } from "@rosesfield/generation/bindings"
 import { effectGraph, hasEditPass } from "#effects/comfy/effect-graph"
 import { deliveryFrames, ltxFrames, sizeMap } from "#effects/comfy/frame-sizes"
 import { effectsWorkflow } from "#effects/comfy/graph-edit"
-import { presetOptions } from "#effects/comfy/preset-binding"
-import type { EffectPreset } from "#effects/effect-preset.contract"
 import {
+  type EffectGuide,
   type EffectRecipe,
   type ResolutionValue,
   resolutionValues,
 } from "#effects/effect-recipe.contract"
+import { guideWorkflow, shortSides } from "#motion/comfy/motion-binding"
 import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 
 function runBindings(
@@ -129,17 +129,36 @@ function byResolution(recipe: EffectRecipe): EngineBinding {
   })
 }
 
+function guideBinding(recipe: EffectRecipe, guide: EffectGuide): EngineBinding {
+  return workflowBinding({
+    workflow: guideWorkflow,
+    bindings: [
+      { from: "input", name: "image", index: 0, to: "photo" },
+      { from: "file", name: guide.file, to: "clip" },
+      {
+        from: "input",
+        name: "effect",
+        map: { [recipe.effect]: recipe.prompt },
+        to: "scene",
+      },
+      { from: "input", name: "resolution", map: shortSides, to: "shortSide" },
+      { from: "seed", to: "seed" },
+    ],
+  })
+}
+
 export function effectsBinding(
-  offered: readonly EffectRecipe[],
-  presets: readonly EffectPreset[] = []
+  offered: readonly EffectRecipe[]
 ): EngineBinding {
   return selectBinding({
     input: "effect",
-    options: {
-      ...Object.fromEntries(
-        offered.map((recipe) => [recipe.effect, byResolution(recipe)])
-      ),
-      ...presetOptions(presets),
-    },
+    options: Object.fromEntries(
+      offered.map((recipe) => [
+        recipe.effect,
+        recipe.guide === null
+          ? byResolution(recipe)
+          : guideBinding(recipe, recipe.guide),
+      ])
+    ),
   })
 }

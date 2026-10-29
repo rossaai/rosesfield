@@ -10,7 +10,7 @@ import {
   type EffectRecipe,
   resolutionValues,
 } from "#effects/effect-recipe.contract"
-import { effectRecipes } from "#effects/effect-recipes"
+import { effectRecipes as everyRecipe } from "#effects/effect-recipes"
 import {
   brokenLinks,
   cloudUrl,
@@ -21,6 +21,8 @@ import {
   requestFor,
   submitted,
 } from "./effects-replay"
+
+const effectRecipes = everyRecipe.filter((recipe) => recipe.guide === null)
 
 const videoModel = "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
 

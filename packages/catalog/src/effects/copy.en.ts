@@ -22,8 +22,6 @@ export const effectsCopy = {
     "This effect needs a tall photo, taken with the phone upright.",
   "effects.input.image.wide":
     "This effect needs a wide photo, taken with the phone sideways.",
-  "effects.input.clip.label": "Clip",
-  "effects.input.guide.label": "The effect's motion",
   "effects.input.prompt.label": "Detail",
   "effects.input.prompt.placeholder": "Add one detail to the effect",
   "effects.input.prompt.note": "Your detail adds to the effect.",
@@ -68,6 +66,6 @@ export const effectsCopy = {
   "effects.choice.resolution.p1080": "1080p",
   "effects.draft": "Draft",
   "effects.agent.howTo":
-    "Runs an effect on a photo or a clip in one call. Before the call, read the photo or the clip and hold it against the effect's need below. Ask one question only when it fails the need. Leave guide out, because Rosesfield adds it. Run at 480p first and show the draft with the price of the final. Run 720p or 1080p only after the person says yes.",
+    "Runs an effect on a photo in one call. Before the call, read the photo and hold it against the effect's need below. Ask one question only when it fails the need. Run at 480p first and show the draft with the price of the final. Run 720p or 1080p only after the person says yes.",
   "effects.agent.need": "{effect}: {need}",
 } satisfies Record<string, string>

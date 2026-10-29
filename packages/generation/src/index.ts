@@ -84,6 +84,7 @@ export {
 } from "#domain/field-role"
 export {
   type EngineFile,
+  type EngineFiles,
   type EngineOutput,
   type EngineRequest,
   type EngineStatus,
@@ -92,6 +93,7 @@ export {
   type EngineSteps,
   type EngineSubmission,
   GenerationEngine,
+  type HeldFile,
   type HostedModel,
   type Idempotency,
   type KnownPrice,

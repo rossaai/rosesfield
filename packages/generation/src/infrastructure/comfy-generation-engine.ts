@@ -1,7 +1,7 @@
 import type { ComfyLow, RawEvent } from "@comfyorg/sdk/low"
 import type { Cost, EngineBinding, KeyCheck } from "@rosesfield/contract"
-import { RunFailedError } from "#domain/error/run-failed.error"
 import {
+  type EngineFiles,
   type EngineOutput,
   type EngineRequest,
   type EngineStatus,
@@ -16,6 +16,7 @@ import {
   jobFailureOf,
   keyCheckOf,
 } from "#infrastructure/comfy/comfy-errors"
+import { uploadedValuesOf } from "#infrastructure/comfy/comfy-held-files"
 import {
   type Job,
   type JobOutput,
@@ -23,11 +24,7 @@ import {
   parseJob,
   readingOf,
 } from "#infrastructure/comfy/comfy-job"
-import {
-  createComfyLow,
-  type Fetch,
-  uploadComfyInputs,
-} from "#infrastructure/comfy/comfy-low"
+import { createComfyLow, type Fetch } from "#infrastructure/comfy/comfy-low"
 import {
   isGlb,
   meshMime,
@@ -64,6 +61,7 @@ type ComfyGenerationEngineOptions = {
   requestTimeoutMs?: number
   downloadTimeoutMs?: number
   timer?: Timer
+  files?: EngineFiles
 }
 
 type Fetched = Map<string, Promise<EngineOutput | null>>
@@ -98,6 +96,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
   private readonly meter: CreditMeter | null
   private readonly balance: BalanceReader
   private readonly pause: Pause
+  private readonly files: EngineFiles | null
   private readonly terminal = new Map<string, Job>()
   private readonly fetched = new Map<string, Fetched>()
   private readonly partnerRefs = new Map<string, true>()
@@ -127,6 +126,7 @@ export class ComfyGenerationEngine extends GenerationEngine {
       downloadTimeoutMs: this.downloadTimeoutMs,
     })
     this.pause = pauseOn((options.timer ?? TimerJobRunner.systemTimer).after)
+    this.files = options.files ?? null
   }
 
   override canRun(binding: EngineBinding): boolean {
@@ -139,18 +139,11 @@ export class ComfyGenerationEngine extends GenerationEngine {
 
   override async submit(request: EngineRequest): Promise<EngineSubmission> {
     const config = parseComfyWorkflow(request.binding)
-    const uploaded = await uploadComfyInputs(this.low, request.files)
     const workflow = applyBindings(config.workflow, config.bindings, {
       adapter: this.key,
       request,
       createMissing: false,
-      assetValue: (assetId) => {
-        const id = uploaded.get(assetId)
-        if (id === undefined) {
-          throw new RunFailedError({ cause: assetId })
-        }
-        return { __type: "core/ASSET", info: { id } }
-      },
+      ...(await uploadedValuesOf(this.low, this.files, request, config)),
     })
     const isPartner = runsPartnerNode(config)
     const ticket = (await this.meter?.start(this.balance)) ?? null

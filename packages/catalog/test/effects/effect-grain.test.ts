@@ -6,8 +6,14 @@ import {
   maxGrain,
   resolutionValues,
 } from "#effects/effect-recipe.contract"
-import { effectRecipes, readRecipes, recipeOf } from "#effects/effect-recipes"
+import {
+  effectRecipes as everyRecipe,
+  readRecipes,
+  recipeOf,
+} from "#effects/effect-recipes"
 import { fileGraph, isLink, workflowOf } from "./effects-replay"
+
+const effectRecipes = everyRecipe.filter((recipe) => recipe.guide === null)
 
 const blackFloor = 17.5
 

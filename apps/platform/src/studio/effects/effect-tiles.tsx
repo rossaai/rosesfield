@@ -1,11 +1,9 @@
 import {
-  type EffectPreset,
   type EffectRecipe,
   type EffectRun,
   effectKeyOf,
   effectRecipes,
   effectRuns,
-  heldEffectPresets,
 } from "@rosesfield/catalog/effects"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { CreditPrice } from "@rosesfield/ui/components/credit-price"
@@ -46,7 +44,6 @@ type EffectTilesProps = {
   recipes?: readonly EffectRecipe[]
   previews?: (file: string) => string | null
   runs?: readonly EffectRun[]
-  presets?: readonly EffectPreset[]
 }
 
 export function effectOptionsOf(app: AppListing): string[] {
@@ -102,49 +99,31 @@ export function tilePriceOf(
   return { amount, words: t("run.price.credits", { amount }) }
 }
 
-function tileOf(
-  effect: string,
-  file: string,
-  previews: (file: string) => string | null,
-  kept: KeptRunPrice | null
-): EffectTile[] {
-  const preview = previews(file)
-  if (preview === null) {
-    return []
-  }
-  const key = effectKeyOf(effect)
-  return [
-    {
-      effect,
-      label: tCatalog(`effects.choice.effect.${key}`),
-      photo: tCatalog(`effects.photo.${key}`),
-      preview,
-      kept,
-    },
-  ]
-}
-
 export function effectTiles(
   app: AppListing,
   recipes: readonly EffectRecipe[] = effectRecipes,
   previews: (file: string) => string | null = previewOf,
-  runs: readonly EffectRun[] = effectRuns,
-  presets: readonly EffectPreset[] = heldEffectPresets
+  runs: readonly EffectRun[] = effectRuns
 ): EffectTile[] {
   return effectOptionsOf(app).flatMap((effect) => {
     const recipe = recipes.find((one) => one.effect === effect)
-    if (recipe !== undefined) {
-      return recipe.passed && recipe.preview !== null
-        ? tileOf(
-            effect,
-            recipe.preview.file,
-            previews,
-            keptPriceOf(recipe, runs)
-          )
-        : []
+    if (recipe === undefined || !recipe.passed || recipe.preview === null) {
+      return []
     }
-    const result = presets.find((one) => one.id === effect)?.result ?? null
-    return result === null ? [] : tileOf(effect, result.file, previews, null)
+    const preview = previews(recipe.preview.file)
+    if (preview === null) {
+      return []
+    }
+    const key = effectKeyOf(effect)
+    return [
+      {
+        effect,
+        label: tCatalog(`effects.choice.effect.${key}`),
+        photo: tCatalog(`effects.photo.${key}`),
+        preview,
+        kept: keptPriceOf(recipe, runs),
+      },
+    ]
   })
 }
 
@@ -227,8 +206,7 @@ export function EffectTiles(props: EffectTilesProps): ReactElement {
     props.app,
     props.recipes,
     props.previews,
-    props.runs,
-    props.presets
+    props.runs
   )
   const setChosen = (element: HTMLButtonElement | null): void => {
     chosen.current = element
