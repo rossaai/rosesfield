@@ -27,6 +27,7 @@ Rosesfield is an open-source creative platform: one place to make images, video 
 | `workflows/` | every ComfyUI graph Rosesfield ships, a UI file and an API file each, per `workflows/README.md` |
 | `docs/` | one doc per subject, routed in §Doc routing |
 | `scripts/` | the dependency-cruiser aliases, the checks in `scripts/checks/`, and `deploy/`, which puts the platform on Cloudflare, per `docs/self-host.md` |
+| `.github/` | `workflows/check.yml`, which runs `bun run gate` on every push to main and every pull request, and `workflows/deploy.yml`, which deploys to Cloudflare on a published release, per `docs/self-host.md` §From GitHub Actions |
 
 ## Doc routing
 
