@@ -16,6 +16,7 @@ export {
 } from "#domain/model-form"
 export { ModelPolicy } from "#domain/model-policy.port"
 export { refusedAdapter, refusedBinding } from "#domain/refused-binding"
+export { type ChainRun, RunChain } from "#domain/run-chain.port"
 export { selectAdapter, selectBinding } from "#domain/select-binding"
 export {
   chosenModelOf,

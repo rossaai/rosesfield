@@ -16,6 +16,16 @@ export {
   type EngineKeyCheck,
 } from "#application/check-engine-key/check-engine-key.handler"
 export {
+  type EndKeyAnswer,
+  type EndKeyDraftInput,
+  type EndKeyDraftOutput,
+  type EndKeyFinalInput,
+  type EndKeyFinalOutput,
+  EndKeyLoopHandler,
+  type EndKeyStage,
+  type StepPricer,
+} from "#application/end-key-loop/end-key-loop.handler"
+export {
   GetRunHandler,
   type GetRunInput,
   type GetRunOutput,
@@ -53,8 +63,15 @@ export {
   type StartRunOutput,
 } from "#application/start-run/start-run.handler"
 export { AppCatalog } from "#domain/app-catalog.port"
+export { EndKeyChain } from "#domain/end-key-chain.port"
+export type {
+  EndKeySteps,
+  OutputId,
+  StepRun,
+} from "#domain/end-key-steps"
 export { AppClosedError } from "#domain/error/app-closed.error"
 export { AppNotFoundError } from "#domain/error/app-not-found.error"
+export { DraftNotReadyError } from "#domain/error/draft-not-ready.error"
 export { EngineBindingInvalidError } from "#domain/error/engine-binding-invalid.error"
 export { EngineKeyInvalidError } from "#domain/error/engine-key-invalid.error"
 export { EngineKeyOutsideWorkspaceError } from "#domain/error/engine-key-outside-workspace.error"
@@ -124,6 +141,7 @@ export {
   RunRepository,
 } from "#domain/run.repository"
 export { RunAssets, type RunOutput } from "#domain/run-assets.port"
+export { type ChainRun, RunChain } from "#domain/run-chain.port"
 export {
   resolveBinding,
   selectAdapter,
