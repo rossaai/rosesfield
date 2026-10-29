@@ -358,7 +358,7 @@ describe("the Expand engine request", () => {
         },
       },
       "28": { inputs: { expand: 20 } },
-      "50": { inputs: { blur_radius: 31 } },
+      "50": { inputs: { blur_radius: 19 } },
       "9": { inputs: { value: 1536 } },
     })
   })

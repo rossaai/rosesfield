@@ -403,7 +403,7 @@
     "class_type": "ImageBlur",
     "inputs": {
       "image": ["29", 0],
-      "blur_radius": 31,
+      "blur_radius": 19,
       "sigma": 1
     }
   },

@@ -1,7 +1,7 @@
 {
   "name": "expand-sides-qwen-image",
   "title": "Expand: chosen sides of a photo with Qwen Image and the InstantX inpainting ControlNet",
-  "description": "Pads your photo by a share of its size on each side you choose and fills the new area with Qwen Image, the InstantX inpainting ControlNet and the Lightning LoRA in 4 steps. The photo keeps its pixels.",
+  "description": "Pads your photo by a share of its size on each side you choose and fills the new area with Qwen Image, the InstantX inpainting ControlNet and the Lightning LoRA in 4 steps. The photo keeps its pixels past 40 px from each join. Within those 40 px the new area blends into the photo, so the join shows no edge.",
   "mediaType": "image",
   "openSource": true,
   "models": [

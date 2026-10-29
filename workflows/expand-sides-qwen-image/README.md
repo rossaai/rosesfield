@@ -1,6 +1,6 @@
 # Expand: chosen sides of a photo with Qwen Image and the InstantX inpainting ControlNet
 
-Pads your photo by a share of its size on each side you choose and fills the new area with Qwen Image, the InstantX inpainting ControlNet and the Lightning LoRA in 4 steps. The photo keeps its pixels.
+Pads your photo by a share of its size on each side you choose and fills the new area with Qwen Image, the InstantX inpainting ControlNet and the Lightning LoRA in 4 steps. The photo keeps its pixels past 40 px from each join. Within those 40 px the new area blends into the photo, so the join shows no edge.
 
 | | |
 |---|---|
@@ -50,9 +50,13 @@ Rosesfield ships no weights. Each file goes into the model folder its row names.
 - [`expand-sides-qwen-image.json`](expand-sides-qwen-image.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script wrote it from the API file with the node definitions of ComfyUI v0.41.0. No ComfyUI loaded or saved it yet.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
+## The join
+
+Node 48 `ImageCompositeMasked` lays the fill over the padded photo, node 47, whose new area is flat gray. Its mask grows 20 px into the photo at node 28 `GrowMask` and blurs at node 50 `ImageBlur` with a radius of 19 px. ComfyUI sets the blur's sigma as a share of its radius, so sigma 1 spreads the blur across the whole radius. The radius stays one pixel less than the grow, so the mask is 1 over all of the new area at every working size, and no gray reaches the result. Inside the photo the mask falls from 1 at the join to 0 before 40 px. A radius larger than the grow lets the gray show at the join as a hard step. [`expand-join.test.ts`](../../packages/catalog/test/expand/expand-join.test.ts) checks the mask of both Expand graphs on sample photos in every format and on chosen sides.
+
 ## Source
 
-Its nodes follow Comfy's blueprint `image_outpainting_qwen_image` in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT, read on 2026-10-17, with its three subgraphs opened.
+Its nodes follow Comfy's blueprint `image_outpainting_qwen_image` in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT, read on 2026-10-17, with its three subgraphs opened. The blueprint blurs the mask with a radius of 31, and this graph uses 19, per §The join.
 
 ## Not checked
 
