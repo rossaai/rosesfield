@@ -1,7 +1,7 @@
 import { findApp } from "@rosesfield/catalog"
 import { type AppListing, appListing } from "@rosesfield/contract"
-import { act, renderHook } from "@testing-library/react"
-import { describe, expect, it, vi } from "vitest"
+import { act, cleanup, renderHook } from "@testing-library/react"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
 import { fieldsOfModel, runPartsOf } from "@/studio/lipsync/lipsync-run"
@@ -17,6 +17,8 @@ import {
 } from "./lipsync-models"
 
 const app: AppListing = appListing.parse(findApp("lipsync"))
+
+afterEach(cleanup)
 
 function hostedOf(chosen: HostedState["chosen"]): HostedState {
   return {

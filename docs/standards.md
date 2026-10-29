@@ -88,6 +88,7 @@ A package exists when two apps import it or when it is published. Code one app u
 - One contract test per port runs against every adapter and the fake. It is what proves Rosesfield engine-agnostic.
 - Comfy HTTP in tests is replayed from recorded responses. The replay helper throws on any request it has no recording for.
 - Time in tests comes from a fixed clock. No real sleep.
+- A DOM test file that renders through Testing Library calls `cleanup` in an `afterEach`. Vitest runs here without globals, so Testing Library registers no cleanup itself, and a tree left mounted keeps its query retries and timers after vitest removes the file's `window`.
 - Every new test has a control: break the code it covers, watch it fail, restore it, and name the break in the commit body.
 - Refused: a constant asserted equal to itself, an export asserted to be a function, a fake tested against itself, an assertion that passes when its element is missing, a mock that answers `200 {}` to everything.
 
@@ -104,5 +105,6 @@ A package exists when two apps import it or when it is published. Code one app u
 | strict compiler flags | `tsconfig.base.json` |
 | an `import.meta.glob` call with a type argument | `bun run glob:check` |
 | a doc link to a path that is not in the tree, a graph in `workflows/README.md` §The workflows by model with no folder | `bun run docs:check` |
+| a platform test file that renders and calls no `cleanup` in an `afterEach` | `apps/platform/test/dom-cleanup.test.ts` |
 | env validated at start | zod in `env.ts` |
 | everything else | a reviewer |

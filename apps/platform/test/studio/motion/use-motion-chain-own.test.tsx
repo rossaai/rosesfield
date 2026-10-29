@@ -1,6 +1,6 @@
 import { type Run, run } from "@rosesfield/contract"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { act, renderHook, waitFor } from "@testing-library/react"
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, describe, expect, it } from "vitest"
 import type { AppForm } from "@/screens/app/use-app-form"
@@ -15,13 +15,18 @@ type Sent = { url: string; key: string | null; body: unknown }
 
 function wrapper({ children }: { children: ReactNode }) {
   return (
-    <QueryClientProvider client={new QueryClient()}>
+    <QueryClientProvider
+      client={
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      }
+    >
       {children}
     </QueryClientProvider>
   )
 }
 
 afterEach(() => {
+  cleanup()
   globalThis.fetch = realFetch
 })
 
