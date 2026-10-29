@@ -28,7 +28,7 @@ const rows: Array<{ key: GalleryKey; icon: ReactElement }> = [
   { key: "sample.nav.characters", icon: <UsersIcon aria-hidden="true" /> },
   { key: "sample.nav.history", icon: <HistoryIcon aria-hidden="true" /> },
   { key: "sample.nav.agent", icon: <BotIcon aria-hidden="true" /> },
-  { key: "sample.nav.connect", icon: <PlugIcon aria-hidden="true" /> },
+  { key: "sample.nav.mcp", icon: <PlugIcon aria-hidden="true" /> },
 ]
 
 export function NavSidebar(): ReactElement {

@@ -58,6 +58,7 @@ function Areas({ open }: { open?: boolean }): ReactElement {
         {t("sample.nav.video")}
       </NavLink>
       <NavLink href="?area=audio">{t("sample.nav.audio")}</NavLink>
+      <NavLink href="?area=mcp">{t("sample.nav.mcp")}</NavLink>
       <NavSeparator />
       <NavLink href="?area=agent">{t("sample.nav.agent")}</NavLink>
       <NavSeparator />
@@ -92,9 +93,6 @@ function Bar({
             {t("sample.nav.balance")}
           </AppBarAction>
         }
-        connect={
-          <AppBarAction tone="primary">{t("sample.nav.connect")}</AppBarAction>
-        }
       />
     </div>
   )
@@ -114,8 +112,8 @@ function Tabs(): ReactElement {
         <TabBarLink href="?tab=history" icon={<HistoryIcon />}>
           {t("sample.nav.history")}
         </TabBarLink>
-        <TabBarLink href="?tab=connect" icon={<PlugIcon />}>
-          {t("sample.nav.connect")}
+        <TabBarLink href="?tab=mcp" icon={<PlugIcon />}>
+          {t("sample.nav.mcp")}
         </TabBarLink>
       </TabBar>
     </div>

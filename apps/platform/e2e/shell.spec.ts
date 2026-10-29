@@ -43,15 +43,15 @@ test("the top bar spans the viewport at the header height, 53 px, with no sideba
   expect(await page.locator("[data-slot='sidebar']").count()).toBe(0)
 })
 
-test("on a desktop the mark, the area links and Connect sit in one row", async ({
+test("on a desktop the mark, the area links and the balance sit in one row, with no Connect", async ({
   page,
 }) => {
   test.skip(isPhone(page), "the desktop row")
   const bar = await open(page, "/")
   const mark = bar.locator("[data-slot='app-bar-mark']").first()
   expect(await boxOf(mark)).toEqual({ x: 16, y: 14.5, width: 36, height: 24 })
-  const connect = bar.getByRole("button", { name: "Connect" })
-  const end = await boxOf(connect)
+  await expect(bar.getByRole("button", { name: "Connect" })).toHaveCount(0)
+  const end = await boxOf(bar.locator("[data-slot='app-bar-balance']"))
   expect(end.x + end.width).toBe(1440 - 16)
   const links = await bar.locator("[data-slot='app-bar-areas']").all()
   const boxes = await Promise.all(links.map(boxOf))
@@ -84,7 +84,11 @@ test("on a desktop the mark, the area links and Connect sit in one row", async (
   if (last === undefined) {
     throw new Error("the bar lists its links")
   }
-  expect(before.x).toBeGreaterThan(boxes[4]?.x ?? Number.POSITIVE_INFINITY)
+  const mcp = await boxOf(bar.getByRole("button", { name: "MCP", exact: true }))
+  expect(mcp.x).toBe(
+    (boxes[4]?.x ?? Number.POSITIVE_INFINITY) + (boxes[4]?.width ?? 0)
+  )
+  expect(before.x).toBeGreaterThan(mcp.x)
   expect(agent.x).toBeGreaterThan(before.x)
   expect(after.x).toBeGreaterThan(agent.x + agent.width)
   expect(characters.x).toBeGreaterThan(after.x)
@@ -153,11 +157,11 @@ test("an app page shrinks the bar to 30 px and the mark to 24 px on the yield pr
   await expect.poll(async () => (await boxOf(bar)).height).toBe(30)
   const mark = bar.locator("[data-slot='app-bar-mark']").first()
   await expect.poll(async () => (await boxOf(mark)).width).toBe(24)
-  const connect = bar.getByRole("button", { name: "Connect" })
-  await expect.poll(async () => (await boxOf(connect)).height).toBe(26)
-  const end = await boxOf(connect)
+  const balance = bar.locator("[data-slot='app-bar-balance'] button:visible")
+  await expect.poll(async () => (await boxOf(balance)).height).toBe(26)
+  const end = await boxOf(balance)
   expect(end.x + end.width).toBe(1440 - 16)
-  expect(await style(connect, "padding-left")).toBe("10px")
+  expect(await style(balance, "padding-left")).toBe("10px")
   const row = bar.locator("[data-slot='app-bar-row']")
   expect(await style(row, "transition-property")).toContain("height")
   expect(await style(mark, "transition-property")).toContain("width")
@@ -325,17 +329,17 @@ test("on a phone the area menu sits 4 px before the balance", async ({
   }
 })
 
-test("Connect opens a dialog over the page, and /connect opens it over Explore", async ({
+test("MCP opens its dialog over the page, and /connect opens it over Explore", async ({
   page,
 }) => {
   await answerOwnLists(page, new Set())
   await open(page, "/history")
   const connect = isPhone(page)
     ? page.getByRole("navigation", { name: "Main" }).getByRole("button", {
-        name: "Connect",
+        name: "MCP",
       })
     : page.locator("header[data-slot='app-bar']").getByRole("button", {
-        name: "Connect",
+        name: "MCP",
       })
   await connect.click()
   const dialog = page.getByRole("dialog")

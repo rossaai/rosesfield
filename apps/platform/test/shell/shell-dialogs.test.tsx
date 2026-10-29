@@ -39,9 +39,10 @@ async function press(name: string): Promise<HTMLElement> {
 }
 
 describe("the shell's dialogs", () => {
-  it("opens Connect over the page with the command to copy, Cancel and Copy", async () => {
+  it("opens the MCP dialog from MCP over the page, titled as the tab, with the command to copy, Cancel and Copy", async () => {
     openBar()
-    const dialog = await press("Connect")
+    const dialog = await press("MCP")
+    expect(t("connect.title")).toBe(t("shell.nav.mcp"))
     expect(
       within(dialog).getByRole("heading", { name: t("connect.title") })
     ).toBeTruthy()
@@ -61,7 +62,7 @@ describe("the shell's dialogs", () => {
     expect(actions).toEqual(
       expect.arrayContaining([t("connect.cancel"), t("connect.copy")])
     )
-    expect(actions).not.toContain(t("shell.nav.connect"))
+    expect(actions).not.toContain("Connect")
     fireEvent.click(
       within(dialog).getByRole("radio", { name: t("connect.tab.chatgpt") })
     )
@@ -72,12 +73,12 @@ describe("the shell's dialogs", () => {
     expect(screen.queryByText(t("connect.claude.step.1"))).toBeNull()
   })
 
-  it("asks only for your key in Connect when this browser holds none, with no client tabs", async () => {
+  it("asks only for your key in the MCP dialog when this browser holds none, with no client tabs", async () => {
     openBar({
       settings: { ...ownerSettings, keyFrom: "settings" },
       account: { ...account, key: "missing", credits: null },
     })
-    const dialog = await press("Connect")
+    const dialog = await press("MCP")
     expect(within(dialog).getByText(t("key.field"))).toBeTruthy()
     expect(dialog.querySelector("pre")).toBeNull()
     expect(within(dialog).queryAllByRole("radio")).toEqual([])
@@ -88,6 +89,29 @@ describe("the shell's dialogs", () => {
     expect(
       within(dialog).getByRole("button", { name: t("key.save") })
     ).toHaveProperty("type", "submit")
+  })
+
+  it("opens the MCP dialog from MCP in the phone menu, right after the 3D apps, with no route change", async () => {
+    openBar()
+    const bar = await screen.findByRole("banner", { name: "Rosesfield" })
+    fireEvent.mouseDown(
+      within(bar).getByRole("button", { name: t("shell.menu.open") })
+    )
+    const items = await screen.findAllByRole("menuitem")
+    const mcp = items.find((item) => item.textContent === "MCP")
+    if (mcp === undefined) {
+      throw new Error("the phone menu holds no MCP")
+    }
+    expect(mcp.getAttribute("href")).toBeNull()
+    expect(items[items.indexOf(mcp) - 1]?.getAttribute("href")).toBe(
+      "/apps/three-d"
+    )
+    fireEvent.click(mcp)
+    const dialog = await screen.findByRole("dialog")
+    expect(
+      within(dialog).getByRole("heading", { name: t("connect.title") })
+    ).toBeTruthy()
+    expect(within(dialog).getByText(t("connect.claude.step.1"))).toBeTruthy()
   })
 
   it("opens the credits as a dialog with the balance, the key state and Comfy billing", async () => {

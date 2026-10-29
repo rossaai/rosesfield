@@ -21,6 +21,7 @@ import {
   MicIcon,
   MusicIcon,
   PersonStandingIcon,
+  PlugIcon,
   RepeatIcon,
   ReplaceIcon,
   Rotate3dIcon,
@@ -70,6 +71,7 @@ export type FeaturedPair = {
 export type NavGroups = {
   explore: ScreenLink
   areas: MediaArea[]
+  mcp: ScreenLink
   featured: FeaturedPair
   rest: ScreenLink[]
 }
@@ -148,6 +150,8 @@ export const historyLink = screenLink(
   "/history"
 )
 
+export const mcpLink = screenLink("mcp", "shell.nav.mcp", PlugIcon, "/connect")
+
 export function FeaturedBadge(): ReactElement {
   return <Badge kind="featured">{t("shell.nav.featured")}</Badge>
 }
@@ -174,6 +178,7 @@ export function navGroups(
         ? []
         : [{ id: kind, label: areaLabels[kind], apps: inArea }]
     }),
+    mcp: mcpLink,
     featured: {
       agent: screenLink("agent", "shell.nav.agent", BotIcon, "/agent"),
       apps: apps.filter(isFeaturedApp),

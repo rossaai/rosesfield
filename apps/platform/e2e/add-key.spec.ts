@@ -59,8 +59,7 @@ async function openPublic(page: Page): Promise<string[]> {
 async function pasteKey(page: Page, key: string): Promise<void> {
   await page
     .locator("[data-slot='app-bar']")
-    .getByRole("button", { name: "Connect", exact: true })
-    .filter({ hasText: "Connect" })
+    .getByRole("button", { name: "MCP", exact: true })
     .click()
   const dialog = page.getByRole("dialog")
   await expect(
@@ -70,7 +69,7 @@ async function pasteKey(page: Page, key: string): Promise<void> {
   await dialog.getByRole("button", { name: "Add key" }).click()
 }
 
-test("a key Comfy accepts puts your balance in the header within 3 seconds and moves Connect on to the command", async ({
+test("a key Comfy accepts puts your balance in the header within 3 seconds and moves the MCP dialog on to the command", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "desktop", "the top bar names the action")

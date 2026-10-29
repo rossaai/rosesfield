@@ -27,14 +27,14 @@ function balancePill(bar: HTMLElement): HTMLElement {
   return pill
 }
 
-function connectOf(bar: HTMLElement): HTMLElement {
-  const connect = within(bar)
-    .getAllByRole("button", { name: "Connect" })
-    .find((button) => button.textContent === "Connect")
-  if (connect === undefined) {
-    throw new Error("the bar holds no Connect action")
+function endOf(bar: HTMLElement): HTMLElement {
+  const end = bar.querySelector<HTMLElement>(
+    "[data-slot='app-bar-balance']"
+  )?.parentElement
+  if (end === null || end === undefined) {
+    throw new Error("the bar holds no top right")
   }
-  return connect
+  return end
 }
 
 function currentOf(
@@ -64,7 +64,7 @@ describe("the top bar", () => {
     }
   })
 
-  it("lists Explore, the media areas, a separator, the featured pair, a separator, then the rest", async () => {
+  it("lists Explore, the media areas, MCP, a separator, the featured pair, a separator, then the rest", async () => {
     const bar = await barAt("/")
     expect(areaLabels(bar)).toEqual([
       "Explore",
@@ -72,6 +72,7 @@ describe("the top bar", () => {
       "Video",
       "Audio",
       "3D",
+      "MCP",
       "AgentFeatured",
       "MotionFeatured",
       "Characters",
@@ -86,7 +87,7 @@ describe("the top bar", () => {
       separator.nextElementSibling?.textContent,
     ])
     expect(separators).toEqual([
-      ["3D", "AgentFeatured"],
+      ["MCP", "AgentFeatured"],
       ["MotionFeatured", "Characters"],
     ])
   })
@@ -104,6 +105,8 @@ describe("the top bar", () => {
       expect(badge?.getAttribute("data-tone")).toBe("bug")
       expect(badge?.textContent).toBe("Featured")
     }
+    const mcp = within(bar).getByRole("button", { name: "MCP" })
+    expect(mcp.querySelector("[data-slot='badge']")).toBeNull()
     const badged = [
       ...bar.querySelectorAll(
         "[data-slot='app-bar-areas'] [data-slot='badge']"
@@ -162,16 +165,16 @@ describe("the top bar", () => {
     expect(currentOf(bar, "button", "Video")).toBeNull()
   })
 
-  it("ends with your balance pill, then Connect, both buttons that open a dialog, not pages", async () => {
+  it("ends with your balance pill, a button that opens a dialog, and no Connect at the top right", async () => {
     const bar = await barAt("/")
     const balance = balancePill(bar)
-    const connect = connectOf(bar)
     expect(balance.getAttribute("href")).toBeNull()
-    expect(connect.getAttribute("href")).toBeNull()
+    expect(within(bar).queryByRole("button", { name: "Connect" })).toBeNull()
     expect(within(bar).queryByRole("link", { name: "Connect" })).toBeNull()
-    const order = balance.compareDocumentPosition(connect)
-    expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(connect.className.split(" ")).toContain("h-button")
+    expect(bar.querySelector("[data-slot='app-bar-connect']")).toBeNull()
+    const end = endOf(bar)
+    expect(end.contains(balance)).toBe(true)
+    expect(within(end).queryByRole("button", { name: "MCP" })).toBeNull()
     expect(balance.className.split(" ")).toContain("h-button")
     expect(balance.className.split(" ")).not.toContain(
       "@regular:h-button-small"
@@ -197,14 +200,14 @@ describe("the top bar", () => {
     expect(balancePill(bar).closest(".hidden")).not.toBeNull()
   })
 
-  it("shrinks the balance and Connect with the bar on an app page", async () => {
+  it("shrinks the balance with the bar on an app page", async () => {
     const bar = await barAt("/apps/image")
-    for (const button of [connectOf(bar), balancePill(bar)]) {
-      expect(button.className.split(" ")).toContain("@regular:h-button-small")
-    }
+    expect(balancePill(bar).className.split(" ")).toContain(
+      "@regular:h-button-small"
+    )
   })
 
-  it("holds Add your Comfy key beside Connect when this browser holds no key, so Connect never stands in for the key", async () => {
+  it("holds Add your Comfy key alone at the top right when this browser holds no key, with no Connect beside it", async () => {
     renderAt("/", () => <TopBar />, {
       settings: { ...ownerSettings, mode: "public", keyFrom: "settings" },
     })
@@ -216,8 +219,8 @@ describe("the top bar", () => {
       "",
       "Add your Comfy key",
     ])
-    const connects = within(bar).getAllByRole("button", { name: "Connect" })
-    expect(connects.map((button) => button.textContent)).toEqual(["Connect"])
+    expect(within(bar).queryByRole("button", { name: "Connect" })).toBeNull()
+    expect(endOf(bar).contains(keys[1] ?? null)).toBe(true)
     expect(within(bar).queryByRole("button", { name: /credits/ })).toBeNull()
   })
 
@@ -226,10 +229,7 @@ describe("the top bar", () => {
     const bar = await screen.findByRole("banner", { name: "Rosesfield" })
     const skeleton = bar.querySelector("[data-slot='balance-skeleton']")
     expect(skeleton).not.toBeNull()
-    expect(
-      skeleton?.compareDocumentPosition(connectOf(bar)) ??
-        Node.DOCUMENT_POSITION_PRECEDING
-    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(endOf(bar).contains(skeleton)).toBe(true)
   })
 
   it("opens the Image menu with each image app, its icon and one line", async () => {
@@ -263,7 +263,7 @@ describe("the top bar", () => {
     const media = catalogApps.filter((app) => app.category !== "character")
     expect(items[0]?.textContent).toBe("Explore")
     expect(items.map((item) => item.textContent)).toContain("Library")
-    expect(items).toHaveLength(media.length + 7)
+    expect(items).toHaveLength(media.length + 8)
     const content = items[0]?.closest("[data-slot='dropdown-menu-content']")
     const marks = [
       ...(content?.querySelectorAll(
@@ -275,6 +275,7 @@ describe("the top bar", () => {
         : (node.textContent ?? "")
     )
     expect(marks.slice(media.length + 1)).toEqual([
+      "MCP",
       "|",
       "AgentFeatured",
       "MotionFeatured",

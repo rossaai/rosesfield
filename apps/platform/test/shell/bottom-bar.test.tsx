@@ -1,8 +1,12 @@
+import { ToastProvider } from "@rosesfield/ui/components/toast"
+import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { cleanup, fireEvent, screen, within } from "@testing-library/react"
 import type { ReactElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { t } from "@/copy/t"
 import { ToolsKey } from "@/screens/app/tools-key"
 import { BottomBar } from "@/shell/bottom-bar"
+import { ShellDialogsProvider } from "@/shell/shell-dialogs"
 import { renderAt } from "./shell-router"
 
 afterEach(cleanup)
@@ -11,10 +15,14 @@ const openTools = vi.fn()
 
 function barWith(tools: boolean): () => ReactElement {
   return () => (
-    <>
-      <BottomBar />
-      {tools ? <ToolsKey onOpen={openTools} /> : null}
-    </>
+    <ToastProvider>
+      <TooltipProvider>
+        <ShellDialogsProvider>
+          <BottomBar />
+          {tools ? <ToolsKey onOpen={openTools} /> : null}
+        </ShellDialogsProvider>
+      </TooltipProvider>
+    </ToastProvider>
   )
 }
 
@@ -31,15 +39,10 @@ function cellsOf(bar: HTMLElement): string[] {
 }
 
 describe("the bottom bar", () => {
-  it("holds Explore, Library, Generate, History and Connect in five cells", async () => {
+  it("holds Explore, Library, Generate, History and MCP in five cells, with no Connect", async () => {
     const bar = await barAt("/")
-    expect(cellsOf(bar)).toEqual([
-      "Explore",
-      "Library",
-      "",
-      "History",
-      "Connect",
-    ])
+    expect(cellsOf(bar)).toEqual(["Explore", "Library", "", "History", "MCP"])
+    expect(within(bar).queryByRole("button", { name: "Connect" })).toBeNull()
     const generate = within(bar).getByRole("button", { name: "Generate" })
     expect(generate.textContent).toBe("")
   })
@@ -101,6 +104,38 @@ describe("the bottom bar", () => {
     expect(motions).toHaveLength(2)
     const badges = sheet.querySelectorAll("[data-slot='badge']")
     expect(badges).toHaveLength(3)
+  })
+
+  it("opens the MCP dialog from MCP in the bar, with no route change", async () => {
+    const bar = await barAt("/library")
+    const mcp = within(bar).getByRole("button", { name: "MCP" })
+    expect(mcp.getAttribute("href")).toBeNull()
+    fireEvent.click(mcp)
+    const dialog = await screen.findByRole("dialog")
+    expect(
+      within(dialog).getByRole("heading", { name: t("connect.title") })
+    ).toBeTruthy()
+    expect(
+      bar.querySelector("a[href='/library']")?.getAttribute("aria-current")
+    ).toBe("page")
+  })
+
+  it("lists MCP in the list of apps right after the 3D apps, and opens its dialog in place of the list", async () => {
+    const bar = await barAt("/")
+    fireEvent.click(within(bar).getByRole("button", { name: "Generate" }))
+    const sheet = await screen.findByRole("dialog")
+    const rows = [...sheet.querySelectorAll("li > a, li > button")]
+    const last = rows.at(-1)
+    expect(last?.textContent).toBe("MCP")
+    expect(rows.at(-2)?.getAttribute("href")).toBe("/apps/three-d")
+    if (!(last instanceof HTMLElement)) {
+      throw new Error("the list holds no MCP")
+    }
+    fireEvent.click(last)
+    const dialog = await screen.findByRole("dialog", {
+      name: t("connect.title"),
+    })
+    expect(within(dialog).getByText(t("connect.claude.step.1"))).toBeTruthy()
   })
 
   it("presses an app well of the list on the press preset and lays no light over it", async () => {

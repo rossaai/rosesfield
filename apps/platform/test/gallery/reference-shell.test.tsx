@@ -6,22 +6,13 @@ import { renderAt } from "../shell/shell-router"
 
 afterEach(cleanup)
 
-type Controls = { balance: string[]; connect: string[]; menu: string[] }
+type Controls = { balance: string[]; menu: string[] }
 
 function shapeOf(element: HTMLElement): string[] {
   return [
     element.className,
     ...[...element.children].map((child) => child.tagName.toLowerCase()),
   ]
-}
-
-function labelled(bar: HTMLElement, name: string): HTMLElement {
-  const buttons = within(bar).getAllByRole("button", { name })
-  const button = buttons.find((one) => one.textContent === name)
-  if (button === undefined) {
-    throw new Error(`the bar holds no labelled ${name}`)
-  }
-  return button
 }
 
 function balanceOf(bar: HTMLElement): HTMLElement {
@@ -37,7 +28,6 @@ function balanceOf(bar: HTMLElement): HTMLElement {
 function controlsOf(bar: HTMLElement, menu: string): Controls {
   return {
     balance: shapeOf(balanceOf(bar)),
-    connect: shapeOf(labelled(bar, "Connect")),
     menu: shapeOf(within(bar).getByRole("button", { name: menu })),
   }
 }
@@ -97,7 +87,7 @@ describe("the gallery's top bar", () => {
     ["rest", "/"],
     ["compact", "/apps/image"],
   ])(
-    "draws its balance, Connect and menu as the live bar does, %s",
+    "draws its balance and menu as the live bar does, %s",
     async (state, path) => {
       const gallery = galleryBar(state)
       expect(gallery).toEqual(await liveBar(path))

@@ -15,7 +15,6 @@ import {
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import { Link } from "@tanstack/react-router"
-import { PlugIcon } from "lucide-react"
 import { type ReactElement, useState } from "react"
 import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
@@ -27,6 +26,7 @@ import {
   FeaturedBadge,
   historyLink,
   libraryLink,
+  mcpLink,
   navGroups,
   type ScreenLink,
 } from "@/shell/nav-rows"
@@ -68,7 +68,8 @@ function AppsSheet({
   open: boolean
   onOpenChange: (open: boolean) => void
 }): ReactElement {
-  const { areas, featured } = navGroups()
+  const { areas, featured, mcp } = navGroups()
+  const openConnect = useOpenConnect()
   const close = (): void => onOpenChange(false)
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -108,6 +109,21 @@ function AppsSheet({
               </ul>
             </section>
           ))}
+          <ul className="grid grid-cols-2 gap-s2 pb-s5">
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  close()
+                  openConnect()
+                }}
+                className={sheetRowClass}
+              >
+                {mcp.icon}
+                <span className="truncate">{t(mcp.label)}</span>
+              </button>
+            </li>
+          </ul>
         </SheetBody>
       </SheetContent>
     </Sheet>
@@ -140,10 +156,10 @@ export function BottomBar(): ReactElement {
         />
         <Tab link={historyLink} />
         <TabBarLink
-          icon={<PlugIcon aria-hidden="true" />}
+          icon={mcpLink.icon}
           render={<button type="button" onClick={() => openConnect()} />}
         >
-          {t("shell.nav.connect")}
+          {t(mcpLink.label)}
         </TabBarLink>
       </TabBar>
       <AppsSheet open={isAppsOpen} onOpenChange={setAppsOpen} />

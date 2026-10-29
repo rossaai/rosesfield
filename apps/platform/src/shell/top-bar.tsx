@@ -1,5 +1,5 @@
 import type { AppListing } from "@rosesfield/contract"
-import { AppBar, AppBarAction } from "@rosesfield/ui/components/app-bar"
+import { AppBar } from "@rosesfield/ui/components/app-bar"
 import { IconButton } from "@rosesfield/ui/components/button"
 import {
   DropdownMenu,
@@ -57,6 +57,14 @@ function ScreenNav({
   badge?: ReactElement
 }): ReactElement {
   const showSettings = useShowSettings()
+  const openConnect = useOpenConnect()
+  if (link.to === "/connect") {
+    return (
+      <NavLink render={<button type="button" onClick={() => openConnect()} />}>
+        {t(link.label)}
+      </NavLink>
+    )
+  }
   if (link.to === "/settings") {
     return (
       <NavLink render={<button type="button" onClick={() => showSettings()} />}>
@@ -147,6 +155,7 @@ function AreaLinks({
           pathname={pathname}
         />
       ))}
+      <ScreenNav link={groups.mcp} />
       <NavSeparator />
       <FeaturedNav pair={groups.featured} pathname={pathname} />
       <NavSeparator />
@@ -164,6 +173,15 @@ function MenuLink({
   link: ScreenLink
   badge?: ReactElement
 }): ReactElement {
+  const openConnect = useOpenConnect()
+  if (link.to === "/connect") {
+    return (
+      <DropdownMenuItem onClick={() => openConnect()}>
+        {link.icon}
+        {t(link.label)}
+      </DropdownMenuItem>
+    )
+  }
   return (
     <DropdownMenuItem
       render={<Link to={link.to} activeOptions={{ exact: link.to === "/" }} />}
@@ -207,6 +225,7 @@ function PhoneMenu({ groups }: { groups: NavGroups }): ReactElement {
             ))}
           </DropdownMenuGroup>
         ))}
+        <MenuLink link={groups.mcp} />
         <DropdownMenuSeparator />
         <MenuLink link={groups.featured.agent} badge={<FeaturedBadge />} />
         {groups.featured.apps.map((app) => (
@@ -245,7 +264,6 @@ export function TopBar(): ReactElement {
   })
   const isAppPage = appIdOfPath(pathname) !== null
   const groups = navGroups()
-  const openConnect = useOpenConnect()
   return (
     <AppBar
       label={t("shell.name")}
@@ -259,11 +277,6 @@ export function TopBar(): ReactElement {
       areas={<AreaLinks groups={groups} pathname={pathname} />}
       areaMenu={<PhoneMenu groups={groups} />}
       balance={<CreditBalance />}
-      connect={
-        <AppBarAction tone="primary" onClick={() => openConnect()}>
-          {t("shell.nav.connect")}
-        </AppBarAction>
-      }
     />
   )
 }
