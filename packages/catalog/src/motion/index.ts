@@ -14,6 +14,8 @@ export {
   type ClipPlan,
   clipPlanLimits,
   keptPlanOf,
+  planFrameSide,
+  planFrameTimesOf,
 } from "#motion/clip-plan"
 export { ClipPlanNoTargetError } from "#motion/clip-plan-no-target.error"
 export type { PlanImage } from "#motion/comfy/clip-plan-turn"
@@ -42,6 +44,7 @@ export {
   renderResolutions,
 } from "#motion/comfy/guide-ltx-2-5-binding"
 export {
+  type HeldSize,
   type HeldText,
   type OwnVideoAsk,
   OwnVideoLead,

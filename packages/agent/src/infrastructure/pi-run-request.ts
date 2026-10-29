@@ -3,14 +3,18 @@ import {
   publishedInputOf,
   publishedModelOf,
 } from "@rosesfield/catalog/comfy"
+import { motionAppId } from "@rosesfield/catalog/motion"
 import {
   storyboardAppId,
   storyboardBodyFor,
 } from "@rosesfield/catalog/storyboard"
 import {
   type AppDefinition,
+  type InputDefinition,
+  isChainFilled,
   type RunRequest,
   runRequest,
+  startRunBodyFor,
 } from "@rosesfield/contract"
 import { RunInputInvalidError } from "@rosesfield/generation"
 import type { z } from "zod"
@@ -19,12 +23,35 @@ export function isKeyframeChain(app: Pick<AppDefinition, "id">): boolean {
   return app.id === storyboardAppId
 }
 
+/** The input of Motion's tool that names the draft a final is made from, a run id. */
+const draftInputOf = (app: AppDefinition): InputDefinition => ({
+  type: "prompt",
+  name: "draft",
+  labelKey: app.nameKey,
+  presence: "optional",
+  maxLength: 36,
+})
+
+/** Motion's tool takes your own inputs and the draft a final names, and never an input a run chain fills. */
+function motionBodyFor(app: AppDefinition): z.ZodType<unknown> {
+  return startRunBodyFor({
+    ...app,
+    inputs: [
+      ...app.inputs.filter((input) => !isChainFilled(input)),
+      draftInputOf(app),
+    ],
+  })
+}
+
 export function appInputOf(
   app: AppDefinition,
   forms: readonly ModelForm[]
 ): z.ZodType<unknown> {
-  return isKeyframeChain(app)
-    ? storyboardBodyFor(app)
+  if (isKeyframeChain(app)) {
+    return storyboardBodyFor(app)
+  }
+  return app.id === motionAppId
+    ? motionBodyFor(app)
     : publishedInputOf(app, forms)
 }
 

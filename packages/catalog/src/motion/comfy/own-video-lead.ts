@@ -5,7 +5,7 @@ import type {
   LeadStep,
   StepRun,
 } from "@rosesfield/generation/bindings"
-import type { AssetId } from "@rosesfield/kernel"
+import { AspectRatio, type AssetId } from "@rosesfield/kernel"
 import { type ClipPlan, keptPlanOf } from "#motion/clip-plan"
 import { ClipPlanUnreadableError } from "#motion/clip-plan-unreadable.error"
 import { clipPlanInputs } from "#motion/comfy/clip-plan-binding"
@@ -21,6 +21,7 @@ import {
   readClipOf,
   renderHandOffOf,
 } from "#motion/comfy/render-hand-off"
+import { exampleInput, ownVideo } from "#motion/examples/example-binding"
 import { motionAppId, planModel } from "#motion/motion-models"
 
 /** Your own video, your photos and your prompt, as Generate takes them. */
@@ -29,7 +30,7 @@ export type OwnVideoAsk = {
   frames: readonly AssetId[]
   photos: readonly AssetId[]
   sentence: string
-  frameSize: FrameSize
+  frameSize: FrameSize | null
   aspectRatio: string | null
   resolution: string
   seed: number
@@ -38,6 +39,11 @@ export type OwnVideoAsk = {
 
 /** Reads the text of a file a step held. */
 export type HeldText = (assetId: AssetId) => Promise<string>
+
+/** Reads the size of an image a step held, or null when it is not known. */
+export type HeldSize = (assetId: AssetId) => Promise<FrameSize | null>
+
+const squareFrame: FrameSize = { width: 1, height: 1 }
 
 export const ownVideoStages = ["plan", "read", "edit"] as const
 
@@ -50,11 +56,23 @@ function sentenceOf(ask: OwnVideoAsk): RunInputs {
   return words === "" ? {} : { [clipPlanInputs.sentence]: words }
 }
 
+/** A Motion step on your own video names it, so its price is read as its run is. */
+function ownStep(step: StepRun): StepRun {
+  return {
+    ...step,
+    request: {
+      ...step.request,
+      inputs: { [exampleInput]: ownVideo, ...step.request.inputs },
+    },
+  }
+}
+
 function planStep(ask: OwnVideoAsk): StepRun {
   return {
     appId: motionAppId,
     request: {
       inputs: {
+        [exampleInput]: ownVideo,
         model: planModel,
         [clipPlanInputs.clip]: [ask.clip],
         [clipPlanInputs.photos]: [...ask.photos],
@@ -101,11 +119,19 @@ export class OwnVideoLead implements ChainLead {
 
   private readonly ask: OwnVideoAsk
   private readonly heldText: HeldText
+  private readonly heldSize: HeldSize | null
   private kept: ClipPlan | null = null
+  private size: FrameSize | null
 
-  constructor(options: { ask: OwnVideoAsk; heldText: HeldText }) {
+  constructor(options: {
+    ask: OwnVideoAsk
+    heldText: HeldText
+    heldSize?: HeldSize
+  }) {
     this.ask = options.ask
     this.heldText = options.heldText
+    this.heldSize = options.heldSize ?? null
+    this.size = options.ask.frameSize
     this.steps = [
       { stage: "plan", stepOf: async () => planStep(this.ask) },
       { stage: "read", stepOf: (made) => this.readStep(made) },
@@ -137,7 +163,7 @@ export class OwnVideoLead implements ChainLead {
       throw new ClipPlanUnreadableError({ cause: "the lead ran no plan" })
     }
     this.kept = keptPlanOf(await this.heldText(heldOf(planned)))
-    return readClipRequestOf({ clip: this.ask.clip, plan: this.kept })
+    return ownStep(readClipRequestOf({ clip: this.ask.clip, plan: this.kept }))
   }
 
   private async editStep(made: readonly Run[]): Promise<StepRun> {
@@ -145,14 +171,26 @@ export class OwnVideoLead implements ChainLead {
     if (read === undefined) {
       throw new ClipPlanUnreadableError({ cause: "the lead ran no read" })
     }
-    return this.editOf(readClipOf(read.held ?? []).firstFrame, this.planOf())
+    const { firstFrame } = readClipOf(read.held ?? [])
+    if (this.size === null) {
+      this.size = (await this.heldSize?.(firstFrame)) ?? null
+    }
+    if (this.size === null) {
+      throw new ClipPlanUnreadableError({ cause: "the first frame's size" })
+    }
+    return this.editOf(firstFrame, this.planOf())
+  }
+
+  /** The frame's size: your video's own, else the first frame's the read made. A step priced before the read uses a square. */
+  private frameSize(): FrameSize {
+    return this.size ?? squareFrame
   }
 
   private editOf(firstFrame: AssetId, plan: ClipPlan): StepRun {
     const { ask } = this
     return frameEditRequestOf({
       firstFrame,
-      frameSize: ask.frameSize,
+      frameSize: this.frameSize(),
       photos: ask.photos,
       plan,
       model: ask.editor ?? null,
@@ -174,11 +212,15 @@ export class OwnVideoLead implements ChainLead {
       quality: "draft",
       seed: ask.seed,
     })
+    const size = this.frameSize()
     const steps = motionEndKeySteps({
-      inputs: { ...inputs, ...sentenceOf(ask) },
+      inputs: { [exampleInput]: ownVideo, ...inputs, ...sentenceOf(ask) },
       photos: [...ask.photos],
-      aspectRatio: ask.aspectRatio,
-      frameSize: ask.frameSize,
+      aspectRatio:
+        ask.aspectRatio ??
+        AspectRatio.ofSize(size.width, size.height)?.toString() ??
+        null,
+      frameSize: size,
     })
     return finalAt(steps, ask.resolution)
   }
@@ -196,7 +238,7 @@ export class OwnVideoLead implements ChainLead {
     const read: ReadClip = { depth: clip, mask: clip, firstFrame: clip }
     return [
       planStep(this.ask),
-      readClipRequestOf({ clip, plan }),
+      ownStep(readClipRequestOf({ clip, plan })),
       this.editOf(clip, plan),
       this.stepsOf(read, clip, plan).draft,
     ]

@@ -37,7 +37,7 @@ export function exampleAgentNotes(app: AppDefinition): string {
           wordsOf(`motion.example.${exampleKeyOf(option.value)}.photo`)
         )
     )
-  return needs.length === 0
-    ? ""
-    : [wordsOf("motion.agent.howTo"), ...needs].join("\n")
+  const examples =
+    needs.length === 0 ? [] : [wordsOf("motion.agent.howTo"), ...needs]
+  return [wordsOf("motion.agent.ownVideo"), ...examples].join("\n")
 }

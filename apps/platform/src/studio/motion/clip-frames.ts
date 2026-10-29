@@ -1,4 +1,4 @@
-import { clipPlanLimits } from "@rosesfield/catalog/motion"
+import { planFrameSide, planFrameTimesOf } from "@rosesfield/catalog/motion"
 import { routes } from "@rosesfield/contract"
 import { callRoute } from "@/api/call-route"
 import { uploadAsset } from "@/api/upload-asset"
@@ -13,20 +13,9 @@ export type ClipFramesOf = (clip: string) => Promise<string[]>
 /** Reads the text of a file a step held. */
 export type HeldTextOf = (assetId: string) => Promise<string>
 
-export const planFrameSide = 512
-
 const frameQuality = 0.9
 
-const lastFrameMargin = 0.05
-
 const seekLimitMs = 20_000
-
-/** The first frame, two in the middle and the last, in seconds. */
-export function frameTimesOf(seconds: number): number[] {
-  const last = Math.max(0, seconds - lastFrameMargin)
-  const count = clipPlanLimits.frames
-  return Array.from({ length: count }, (_, at) => (last * at) / (count - 1))
-}
 
 /** The size of a frame the plan reads: the video's own shape, its long side at most 512 px. */
 export function planFrameSizeOf(video: FrameSize): FrameSize {
@@ -102,7 +91,7 @@ export const browserClipFrames: ClipFramesOf = async (clip) => {
     height: video.videoHeight,
   })
   const blobs: Blob[] = []
-  for (const time of frameTimesOf(video.duration)) {
+  for (const time of planFrameTimesOf(video.duration)) {
     const seeked = settled(video, "seeked")
     video.currentTime = time
     await seeked

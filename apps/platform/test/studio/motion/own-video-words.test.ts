@@ -1,6 +1,7 @@
+import { planFrameTimesOf } from "@rosesfield/catalog/motion"
 import { describe, expect, it } from "vitest"
 import { wordsForCode } from "@/copy/error-words"
-import { frameTimesOf, planFrameSizeOf } from "@/studio/motion/clip-frames"
+import { planFrameSizeOf } from "@/studio/motion/clip-frames"
 import { leftOutText } from "@/studio/motion/left-out"
 import { clipMessageOf } from "@/studio/motion/use-motion-screen"
 
@@ -17,7 +18,7 @@ describe("the photos left out of a draft", () => {
 
 describe("the frames the plan reads", () => {
   it("are the first, two in the middle and the last, just before the clip ends", () => {
-    expect(frameTimesOf(4.05)).toEqual([0, 4 / 3, 8 / 3, 4])
+    expect(planFrameTimesOf(4.05)).toEqual([0, 4 / 3, 8 / 3, 4])
   })
 
   it("keep the video's shape with the long side at 512 px, and never grow a small video", () => {

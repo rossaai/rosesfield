@@ -1,11 +1,14 @@
+import { ownVideoDraftOf, ownVideoFinalOf } from "@rosesfield/agent"
 import { readApps } from "@rosesfield/catalog"
 import {
   type ChainRun,
   EndKeyLoopHandler,
+  frameEditModels,
   OwnVideoLead,
   RunChain,
 } from "@rosesfield/catalog/motion"
 import {
+  type ClipFrames,
   ClipPlanGenerationEngine,
   DemoClipPlanTurn,
 } from "@rosesfield/catalog/motion/engine"
@@ -17,6 +20,7 @@ import {
   type Run,
   routes,
   runPageResponse,
+  runRequest,
   runResponse,
 } from "@rosesfield/contract"
 import { DemoGenerationEngine } from "@rosesfield/generation"
@@ -50,6 +54,15 @@ function parsed(): AppDefinition[] {
   ])
 }
 
+/** The frames a server that runs ffmpeg reads from your video, as 4 small images. */
+const serverFrames: ClipFrames = {
+  framesOf: async () =>
+    Array.from({ length: 4 }, () => ({
+      mime: "image/png" as const,
+      base64: btoa(String.fromCharCode(...pngBytes)),
+    })),
+}
+
 const demoPorts: PortsFor = (clock, folder) => {
   const ports = localPorts(clock, folder)
   return {
@@ -58,6 +71,7 @@ const demoPorts: PortsFor = (clock, folder) => {
       new ClipPlanGenerationEngine({
         turn: new DemoClipPlanTurn(),
         origin: "demo",
+        frames: serverFrames,
       }),
       new DemoGenerationEngine({ clock }),
     ],
@@ -137,24 +151,6 @@ describe("your own video through the gateway on the demo engine", () => {
     const photos = await Promise.all(
       [0, 1, 2, 3].map(() => upload(gateway, "image/png", pngBytes))
     )
-    const lead = new OwnVideoLead({
-      ask: {
-        clip,
-        frames: [],
-        photos,
-        sentence: "replace the man",
-        frameSize: { width: 720, height: 1280 },
-        aspectRatio: "9:16",
-        resolution: "1080p",
-        seed: 7,
-      },
-      heldText: async (assetId) => {
-        const content = await gateway.call(
-          buildPath(routes.readAssetContent.path, { assetId })
-        )
-        return content.text()
-      },
-    })
     const chain = new HarnessChain(gateway)
     const loop = new EndKeyLoopHandler({
       chain,
@@ -162,11 +158,8 @@ describe("your own video through the gateway on the demo engine", () => {
         execute: async () => ({ price: { source: "unknown", credits: null } }),
       },
     })
-    const key = "press-1"
     const before = await gateway.call(routes.listAssets.path)
     const uploaded = assetPageResponse.parse(await before.json()).assets.length
-    const ledWithoutFrames = await loop.lead({ lead, key })
-    expect(ledWithoutFrames).toMatchObject({ status: "stopped", at: "plan" })
     const frames = await Promise.all(
       [0, 1, 2, 3].map(() =>
         upload(gateway, "image/png", pngBytes, "?place=held")
@@ -217,5 +210,77 @@ describe("your own video through the gateway on the demo engine", () => {
     expect(made.map((one) => one.sourceRunId)).toEqual([drafted.draft.id])
     expect(library.assets.length - made.length).toBe(uploaded)
     expect(library.assets.map((one) => one.id)).not.toContain(frames[0])
+  })
+
+  it("changes your own video for the agent and MCP in one call that makes the 480p draft with the final's credits, then makes the final in a second call that names the draft, reading the clip and the plan only once", async () => {
+    const gateway = harnessFor({ portsFor: demoPorts, apps: parsed() })
+    open.push(gateway)
+    const clip = await upload(gateway, "video/mp4", mp4Bytes)
+    const photos = await Promise.all(
+      [0, 1, 2, 3].map(() => upload(gateway, "image/png", pngBytes))
+    )
+    const { handlers } = gateway
+    const started: string[] = []
+    const runs = (inputs: Record<string, unknown>, key: string) => ({
+      handlers: {
+        ...handlers,
+        startRun: {
+          execute: async (
+            input: Parameters<typeof handlers.startRun.execute>[0]
+          ) => {
+            started.push(input.idempotencyKey ?? "")
+            return handlers.startRun.execute(input)
+          },
+        } as typeof handlers.startRun,
+      },
+      request: runRequest.parse({ inputs, count: 1 }),
+      key,
+      wait: async () => undefined,
+      signal: undefined,
+      poll: (runId: string) => gateway.drive(runId),
+      editor: frameEditModels.open,
+    })
+    const drafted = await ownVideoDraftOf(
+      runs({ clip: [clip], photo: photos, scene: "replace the man" }, "mcp-1")
+    )
+    expect(drafted.run).toMatchObject({ status: "done" })
+    expect(drafted.run.inputs).toMatchObject({ resolution: "480p" })
+    expect(drafted.leftOutPhotos).toEqual([3])
+    expect(drafted).toHaveProperty("finalCredits")
+    expect(started.map((key) => key.replace("mcp-1-", ""))).toEqual([
+      "plan",
+      "read",
+      "edit",
+      "draft",
+    ])
+    const ended = await ownVideoFinalOf(
+      runs(
+        {
+          clip: [clip],
+          photo: photos,
+          resolution: "1080p",
+          draft: drafted.run.id,
+        },
+        "mcp-2"
+      ),
+      drafted.run.id
+    )
+    expect(ended.run).toMatchObject({ status: "done" })
+    expect(ended.run.inputs).toMatchObject({
+      resolution: "1080p",
+      guide: drafted.run.inputs.guide,
+      seed: drafted.run.inputs.seed,
+    })
+    expect(ended.run.inputs.endKey).toHaveLength(1)
+    expect(started.slice(4).map((key) => key.replace("mcp-2-", ""))).toEqual([
+      "restore",
+      "final",
+    ])
+    const history = runPageResponse.parse(
+      await (await gateway.call(routes.listRuns.path)).json()
+    )
+    expect(history.runs.map((one) => one.id).sort()).toEqual(
+      [drafted.run.id, ended.run.id].sort()
+    )
   })
 })

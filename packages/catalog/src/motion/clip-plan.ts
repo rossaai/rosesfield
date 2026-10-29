@@ -26,6 +26,18 @@ export const clipPlanLimits = {
   longestSentence: 500,
 } as const
 
+/** The long side of a frame the plan reads, in pixels. */
+export const planFrameSide = 512
+
+const lastFrameMargin = 0.05
+
+/** The times of the frames the plan reads: the first, two in the middle and the last, just before the clip ends. */
+export function planFrameTimesOf(seconds: number): number[] {
+  const last = Math.max(0, seconds - lastFrameMargin)
+  const count = clipPlanLimits.frames
+  return Array.from({ length: count }, (_, at) => (last * at) / (count - 1))
+}
+
 const findText = z
   .string()
   .trim()

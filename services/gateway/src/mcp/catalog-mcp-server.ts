@@ -2,7 +2,11 @@ import { type CallToolResult, McpServer } from "@modelcontextprotocol/server"
 import {
   appInputOf,
   isKeyframeChain,
+  isOwnVideoRun,
   keyframeRunsOf,
+  namedDraftOf,
+  ownVideoDraftOf,
+  ownVideoFinalOf,
   parseRequest,
   timerWait,
 } from "@rosesfield/agent"
@@ -36,6 +40,19 @@ const keyPrefix = "mcp-"
 
 const keyframeRunsResponse = z.object({ runs: z.array(run.nullable()) })
 
+/** A Motion call answers with its run, and on your own video's draft with the final's credits and the photos the plan left out, counted from 0. */
+const motionResponse = runResponse.extend({
+  finalCredits: z.number().nullable().optional(),
+  leftOutPhotos: z.array(z.number().int().min(0)).optional(),
+})
+
+function outputOf(app: AppDefinition) {
+  if (isKeyframeChain(app)) {
+    return keyframeRunsResponse
+  }
+  return app.id === "motion" ? motionResponse : runResponse
+}
+
 const readOnly = {
   readOnlyHint: true,
   destructiveHint: false,
@@ -58,7 +75,7 @@ export function catalogMcpServer(options: CatalogServerOptions): McpServer {
       {
         description: gatewayCopy.mcp.toolDescription(app.id, app.output.kind),
         inputSchema: startRunInputOf(app, options.forms),
-        outputSchema: isKeyframeChain(app) ? keyframeRunsResponse : runResponse,
+        outputSchema: outputOf(app),
         annotations: {
           readOnlyHint: false,
           destructiveHint: false,
@@ -67,11 +84,17 @@ export function catalogMcpServer(options: CatalogServerOptions): McpServer {
         },
       },
       (args, extra) =>
-        answer(() =>
-          isKeyframeChain(app)
-            ? startKeyframes(options.scope, app, args, extra.mcpReq.signal)
+        answer(() => {
+          if (isKeyframeChain(app)) {
+            return startKeyframes(options.scope, app, args, extra.mcpReq.signal)
+          }
+          return isOwnVideoRun(
+            app.id,
+            inputsOf(splitStartRunArguments(args).body)
+          )
+            ? startOwnVideo(options.scope, app, args, extra.mcpReq.signal)
             : startRun(options.scope, app, args)
-        )
+        })
     )
   }
   libraryTools(server, options.scope)
@@ -99,6 +122,28 @@ async function startRun(
 function inputsOf(body: unknown): RunInputs {
   const parsed = startRunBody.safeParse(body)
   return parsed.success ? parsed.data.inputs : {}
+}
+
+/** Your own video in one call: the plan, the read, the edit and the 480p draft, with the final's credits. A second call that names the draft makes the final. */
+async function startOwnVideo(
+  scope: RequestScope,
+  app: AppDefinition,
+  args: unknown,
+  signal: AbortSignal
+): Promise<unknown> {
+  const { body, idempotencyKey } = splitStartRunArguments(args)
+  const key = idempotencyKey ?? `${keyPrefix}${crypto.randomUUID()}`
+  const request = parseRequest(app, appInputOf(app, []), body)
+  const runs = {
+    handlers: scope.handlers,
+    request,
+    key: (await scope.keyFor(key)) ?? key,
+    wait: timerWait,
+    signal,
+    poll: scope.pollRun,
+  }
+  const draft = namedDraftOf(request.inputs)
+  return draft === null ? ownVideoDraftOf(runs) : ownVideoFinalOf(runs, draft)
 }
 
 async function startKeyframes(

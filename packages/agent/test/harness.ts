@@ -41,7 +41,7 @@ import type { PiModels } from "#infrastructure/pi-models"
 import { PiProposalRunner } from "#infrastructure/pi-proposal-runner"
 import { openSqliteFileStorage } from "#infrastructure/sqlite-file-storage"
 import { FakeAppCatalog } from "./fake/fake-app-catalog"
-import type { FakeAssetRepository } from "./fake/fake-asset-repository"
+import { FakeAssetRepository } from "./fake/fake-asset-repository"
 import { FakeAssetStore } from "./fake/fake-asset-store"
 import type { FakeCharacterRepository } from "./fake/fake-character-repository"
 import { FakeJobRunner } from "./fake/fake-job-runner"
@@ -88,6 +88,18 @@ export function generationFor(apps: readonly AppDefinition[]): Generation {
   return { clock, runs, jobs, startRun, readModelForms, prices, priceRun }
 }
 
+/** The library reads a tool makes on its own, over an empty library. */
+function libraryReads() {
+  const assets = new FakeAssetRepository()
+  return {
+    getAsset: new GetAssetHandler({ assets }),
+    readAssetContent: new ReadAssetContentHandler({
+      assets,
+      store: new FakeAssetStore(),
+    }),
+  }
+}
+
 export function appToolsFor(
   apps: readonly AppDefinition[],
   generation: Generation,
@@ -102,6 +114,7 @@ export function appToolsFor(
         startRun: generation.startRun,
         getRun,
         priceRun: generation.priceRun,
+        ...libraryReads(),
       }),
       forms,
       wait,
@@ -117,6 +130,8 @@ export function proposalRunnerFor(
     handlers: {
       startRun: generation.startRun,
       getRun: new GetRunHandler({ runs: generation.runs }),
+      priceRun: generation.priceRun,
+      ...libraryReads(),
     },
     wait,
   })

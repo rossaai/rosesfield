@@ -12,7 +12,15 @@ import {
   StartConversationHandler,
   UpdateConversationHandler,
 } from "@rosesfield/agent"
-import type { GetRunHandler, StartRunHandler } from "@rosesfield/generation"
+import type {
+  GetRunHandler,
+  PriceRunHandler,
+  StartRunHandler,
+} from "@rosesfield/generation"
+import type {
+  GetAssetHandler,
+  ReadAssetContentHandler,
+} from "@rosesfield/library"
 
 export type AgentRouteHandlers = {
   startConversation: StartConversationHandler
@@ -32,13 +40,16 @@ type AgentRouteHandlersOptions = {
   canAnswer: boolean
   startRun: StartRunHandler
   getRun: GetRunHandler
+  priceRun: PriceRunHandler
+  getAsset: GetAssetHandler
+  readAssetContent: ReadAssetContentHandler
   pollRun: (runId: string) => Promise<void>
 }
 
 export function agentRouteHandlers(
   options: AgentRouteHandlersOptions
 ): AgentRouteHandlers {
-  const { agent, startRun, getRun, pollRun } = options
+  const { agent, pollRun } = options
   return {
     startConversation: new StartConversationHandler({ agent }),
     listConversations: new ListConversationsHandler({ agent }),
@@ -51,7 +62,13 @@ export function agentRouteHandlers(
     acceptProposal: new AcceptProposalHandler({
       agent,
       runner: new PiProposalRunner({
-        handlers: { startRun, getRun },
+        handlers: {
+          startRun: options.startRun,
+          getRun: options.getRun,
+          priceRun: options.priceRun,
+          getAsset: options.getAsset,
+          readAssetContent: options.readAssetContent,
+        },
         poll: pollRun,
       }),
     }),

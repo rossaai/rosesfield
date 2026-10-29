@@ -206,6 +206,7 @@ describe("your own video's lead before the draft", () => {
     const draftStep = chain.started[3]
     expect(draftStep?.request).toEqual({
       inputs: {
+        example: "own",
         model: "ltx-2-5-guide",
         firstFrame: [made.edited],
         guide: [made.depth],

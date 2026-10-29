@@ -1,5 +1,5 @@
 import { fauxAssistantMessage, fauxToolCall } from "@earendil-works/pi-ai"
-import { readApps } from "@rosesfield/catalog"
+import { findApp, readApps } from "@rosesfield/catalog"
 import { approvedExamples, motionApp } from "@rosesfield/catalog/motion"
 import type { AppDefinition } from "@rosesfield/contract"
 import {
@@ -72,6 +72,35 @@ function effects(): AppDefinition {
   return one
 }
 
+/** Motion and the Image app its edit and restore run on, every step priced at 10 credits, under the limit a run may cost without asking. */
+async function callMotion(inputs: Record<string, string | string[]>) {
+  const image = findApp("image")
+  if (image === null) {
+    throw new Error("The catalog lacks Image")
+  }
+  const made = generationFor([effects(), image])
+  rig = agentFor(appToolsFor([effects()], made))
+  const results: string[] = []
+  rig.faux.setResponses([
+    fauxAssistantMessage([fauxToolCall("motion", { inputs })], {
+      stopReason: "toolUse",
+    }),
+    (context) => {
+      results.push(textOf(lastToolResultOf(context)))
+      return fauxAssistantMessage("ok")
+    },
+  ])
+  const { id } = await rig.agent.startConversation({ runApproval: "auto" })
+  const events = await readAll(
+    await rig.agent.send({ conversationId: id, text: "Make the final" })
+  )
+  return {
+    generation: made,
+    result: results[0] ?? "",
+    proposals: events.filter((event) => event.type === "proposal").length,
+  }
+}
+
 async function callPreset(resolution: string | null) {
   const made = generationFor([effects()])
   const generation = {
@@ -142,5 +171,24 @@ describe("the agent's call of a Library example", () => {
     }
     expect(description).not.toMatch(/guide|depth|adapter|preset|sha256/i)
     expect(description).toMatch(/only after the person says yes/)
+  })
+
+  it("holds the final of your own video, which names its draft, for the person's yes, even when runs start on their own", async () => {
+    const { generation, proposals, result } = await callMotion({
+      clip: [photo],
+      photo: [photo],
+      draft: "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+      resolution: "720p",
+    })
+    expect(generation.runs.count).toBe(0)
+    expect(proposals).toBe(1)
+    expect(result).toBe("")
+  })
+
+  it("tells the model how to change your own video in one call and make its final in a second that names the draft, only after a yes", () => {
+    const description = appToolDescription(effects())
+    expect(description).toContain("inputs.draft")
+    expect(description).toMatch(/Only after they say yes/)
+    expect(description).not.toMatch(/guide|depth|mask|matte|plan\b|ffmpeg/i)
   })
 })

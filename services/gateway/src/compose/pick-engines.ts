@@ -1,6 +1,7 @@
 import {
   ClipPlanGenerationEngine,
   DemoClipPlanTurn,
+  MediaClipFrames,
   RouterClipPlanTurn,
 } from "@rosesfield/catalog/motion/engine"
 import {
@@ -86,20 +87,26 @@ export function liveEngineOf(
   }
 }
 
-/** The plan of a Motion clip: on the Router with the key, or the demo engine's own plan with none. */
+/** The plan of a Motion clip: on the Router with the key, or the demo engine's own plan with none, reading the clip's frames with ffmpeg where this server runs it. */
 function clipPlanOf(
   key: string | null,
   live: GenerationEngine | null,
   options: EngineOptions
 ): GenerationEngine {
+  const frames =
+    options.media === undefined
+      ? null
+      : new MediaClipFrames({ tool: options.media })
   return live === null
     ? new ClipPlanGenerationEngine({
         turn: new DemoClipPlanTurn(),
         origin: "demo",
+        frames,
       })
     : new ClipPlanGenerationEngine({
         turn: new RouterClipPlanTurn({ apiKey: key, ...fetchOf(options) }),
         origin: "live",
+        frames,
       })
 }
 

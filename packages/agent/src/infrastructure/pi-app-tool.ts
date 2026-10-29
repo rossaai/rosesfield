@@ -41,6 +41,13 @@ import {
 } from "#infrastructure/pi-keyframe-chain"
 import { type RunWait, timerWait } from "#infrastructure/pi-library-tools"
 import {
+  isOwnVideoRun,
+  namedDraftOf,
+  type OwnVideoHandlers,
+  ownVideoCreditsOf,
+  ownVideoDraftOf,
+} from "#infrastructure/pi-own-video-chain"
+import {
   appInputOf,
   isKeyframeChain,
   isRecord,
@@ -54,9 +61,10 @@ const proposalMemo = "proposalId"
 const priceMemo = "priceCredits"
 const jsonBody = z.record(z.string(), z.json())
 
-export type AppToolHandlers = KeyframeHandlers & {
-  priceRun: PriceRunHandler
-}
+export type AppToolHandlers = KeyframeHandlers &
+  OwnVideoHandlers & {
+    priceRun: PriceRunHandler
+  }
 
 type AppToolOptions = {
   app: AppDefinition
@@ -148,9 +156,13 @@ type AppRun = {
 async function creditsOf(
   app: AppDefinition,
   request: RunRequest,
-  priceRun: PriceRunHandler
+  handlers: AppToolHandlers
 ): Promise<number | null> {
+  const { priceRun } = handlers
   try {
+    if (isOwnVideoRun(app.id, request.inputs)) {
+      return await ownVideoCreditsOf(handlers, request)
+    }
     if (isKeyframeChain(app)) {
       return await keyframeCreditsOf(
         app.id,
@@ -180,7 +192,7 @@ async function heldCreditsOf(
   if (held !== undefined) {
     return held
   }
-  const credits = await creditsOf(run.app, request, run.handlers().priceRun)
+  const credits = await creditsOf(run.app, request, run.handlers())
   return api.memo(priceMemo, credits, context)
 }
 
@@ -199,7 +211,7 @@ async function runApp(
   )
   const approval = settings?.runApproval ?? StartConversationHandler.runApproval
   const proposed = { app, request, body: jsonBody.parse(args) }
-  if (approval === "ask" || isFinalRun(app.id, request.inputs)) {
+  if (approval === "ask" || isFinalOf(app, request)) {
     return propose(proposed, api, context)
   }
   if (isKeyframeChain(app)) {
@@ -210,6 +222,34 @@ async function runApp(
     return propose({ ...proposed, price: { credits } }, api, context)
   }
   return startApp(run, { request, args }, api, context)
+}
+
+/** A final always waits for the person's yes: an example above 480p, and the final a call names a draft for. */
+function isFinalOf(app: AppDefinition, request: RunRequest): boolean {
+  return (
+    isFinalRun(app.id, request.inputs) ||
+    (isOwnVideoRun(app.id, request.inputs) &&
+      namedDraftOf(request.inputs) !== null)
+  )
+}
+
+async function startOwnVideo(
+  { handlers, wait }: AppRun,
+  request: RunRequest,
+  key: string,
+  signal: AbortSignal | undefined
+): Promise<ToolExecutionResult> {
+  const answer = await ownVideoDraftOf({
+    handlers: handlers(),
+    request,
+    key,
+    wait,
+    signal,
+  })
+  return {
+    output: jsonOutput(answer),
+    details: { runId: answer.run.id },
+  }
 }
 
 async function startApp(
@@ -223,6 +263,14 @@ async function startApp(
     `agent-${crypto.randomUUID()}`,
     context
   )
+  if (isOwnVideoRun(app.id, request.inputs)) {
+    return startOwnVideo(
+      { app, handlers, wait, schema: z.unknown() },
+      request,
+      idempotencyKey,
+      context.abortSignal
+    )
+  }
   if (isKeyframeChain(app)) {
     const runs = await keyframeRunsOf({
       appId: app.id,
