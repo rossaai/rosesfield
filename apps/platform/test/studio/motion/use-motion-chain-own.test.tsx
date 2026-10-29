@@ -93,14 +93,19 @@ function ownRunOf(stage: string, body: unknown, failAt: string | null): Run {
   })
 }
 
-function ownGateway(failAt: string | null = null): Sent[] {
+const unpriced = { source: "unknown", credits: null }
+
+function ownGateway(
+  failAt: string | null = null,
+  price: { source: string; credits: number | null } = unpriced
+): Sent[] {
   const sent: Sent[] = []
   globalThis.fetch = async (input, init) => {
     const url = String(input)
     const body = init?.body === undefined ? null : JSON.parse(String(init.body))
     const key = new Headers(init?.headers).get("Idempotency-Key")
     if (url.endsWith("/price")) {
-      return Response.json({ price: { source: "unknown", credits: null } })
+      return Response.json({ price })
     }
     if (init?.method === "POST") {
       sent.push({ url, key, body })
@@ -137,8 +142,11 @@ function ownForm(): AppForm {
   }
 }
 
-function renderOwn(failAt: string | null = null) {
-  const sent = ownGateway(failAt)
+function renderOwn(
+  failAt: string | null = null,
+  price: { source: string; credits: number | null } = unpriced
+) {
+  const sent = ownGateway(failAt, price)
   const grabbed: string[] = []
   const hook = renderHook(
     () =>
@@ -253,5 +261,17 @@ describe("your own video's chain in Motion", () => {
       { wrapper }
     )
     expect(result.current).toBeNull()
+  })
+
+  it("shows on Generate the plan, the read, the edit and the draft as one price, and none while one of them is unpriced, the control", async () => {
+    const priced = renderOwn(null, { source: "measured", credits: 2.5 })
+    await waitFor(() =>
+      expect(priced.result.current?.start.priceValue).not.toBeNull()
+    )
+    expect(priced.result.current?.start.priceName).toContain("10")
+    priced.unmount()
+    const unknown = renderOwn()
+    await new Promise((done) => setTimeout(done, 50))
+    expect(unknown.result.current?.start.priceValue ?? null).toBeNull()
   })
 })
