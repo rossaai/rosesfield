@@ -1,5 +1,7 @@
 {
-  "effect": "ticket-wipe",
+  "id": "ticket-wipe",
+  "approved": false,
+  "approval": null,
   "passed": false,
   "design": {
     "unit": {

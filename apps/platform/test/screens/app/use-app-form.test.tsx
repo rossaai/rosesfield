@@ -156,3 +156,46 @@ describe("a refusal that names inputs", () => {
     expect(form().problems.size).toBe(0)
   })
 })
+
+async function motionFormWith(example: string | undefined): Promise<AppForm> {
+  const motion = findCatalogApp("motion")
+  if (motion === null) {
+    throw new Error("no Motion app")
+  }
+  const opened = motion
+  const seen: AppForm[] = []
+  function Probe(): ReactElement | null {
+    seen.push(useAppForm(opened, { use: undefined, from: undefined, example }))
+    return null
+  }
+  const router = createRouter({
+    routeTree: createRootRoute({ component: Probe }),
+    history: createMemoryHistory(),
+  })
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  )
+  await waitFor(() => expect(seen.length).toBeGreaterThan(1))
+  const last = seen.at(-1)
+  if (last === undefined) {
+    throw new Error("no form")
+  }
+  return last
+}
+
+describe("Remix from the Library", () => {
+  it("opens Motion on the example at its 1080p on the guided render, so you add only your photo", async () => {
+    const form = await motionFormWith("grab-and-run")
+    expect(form.values.inputs.example).toBe("grab-and-run")
+    expect(form.values.inputs.model).toBe("ltx-2-5-guide")
+    expect(form.values.inputs.resolution).toBe("1080p")
+    expect(form.values.inputs.photo).toEqual([])
+  })
+
+  it("opens Motion on your own video for an example the Library does not hold, the control", async () => {
+    const form = await motionFormWith("ticket-wipe")
+    expect(form.values.inputs.example).toBe("own")
+  })
+})

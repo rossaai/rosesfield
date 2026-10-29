@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest"
-import { type EffectRecipe, maxHits } from "#effects/effect-recipe.contract"
 import {
-  passedRecipes,
+  type LibraryExample,
+  maxHits,
+} from "#motion/examples/library-example.contract"
+import {
+  exampleOf,
+  libraryExamples,
+  readExamples,
   readLedger,
-  readRecipes,
-  recipeOf,
-} from "#effects/effect-recipes"
+} from "#motion/examples/library-examples"
 import { graphLooks, keptRun, passedRecipe } from "./passed-recipe"
 
 const ledger = [keptRun("many-copies")]
@@ -30,43 +33,38 @@ const endFrameSources: Readonly<Record<string, string>> = {
 }
 
 function variant(change: Record<string, unknown>): Record<string, unknown> {
-  return { ...recipeOf("many-copies"), ...change }
+  return { ...exampleOf("many-copies"), ...change }
 }
 
 function passedVariant(
-  change: (recipe: EffectRecipe) => unknown
+  change: (recipe: LibraryExample) => unknown
 ): Record<string, unknown> {
   return { "many-copies": change(passedRecipe("many-copies")) }
 }
 
-function cutsOf(recipe: EffectRecipe): number {
+function cutsOf(recipe: LibraryExample): number {
   return recipe.design.cuts.filter((window) => window.kind === "cut").length
 }
 
 describe("the effect recipes kept as data", () => {
   it("reads the nine looks, with Push into eye and Still in the street the ones passed and none with an adapter", () => {
-    expect(
-      graphLooks.map(({ effect, passed, adapter }) => ({
-        effect,
-        passed,
-        adapter,
-      }))
-    ).toEqual(
-      looks.map((effect) => ({
-        effect,
-        passed: passedLooks.includes(effect),
-        adapter: null,
-      }))
-    )
-    expect(passedRecipes.map((one) => one.effect)).toEqual(passedLooks)
+    const read = graphLooks.map(({ id, passed, adapter }) => [
+      id,
+      passed,
+      adapter,
+    ])
+    const named = looks.map((id) => [id, passedLooks.includes(id), null])
+    expect(read).toEqual(named)
+    const passed = libraryExamples.filter((one) => one.passed)
+    expect(passed.map((one) => one.id)).toEqual(passedLooks)
   })
 
   it("names for each look the unit page and the family page it is designed from by id and title, with its whole chain", () => {
     for (const recipe of graphLooks) {
       const { design } = recipe
-      expect({ effect: recipe.effect, unit: design.unit }).toEqual({
-        effect: recipe.effect,
-        unit: { id: recipe.effect, title: `Unit: ${recipe.effect}` },
+      expect({ effect: recipe.id, unit: design.unit }).toEqual({
+        effect: recipe.id,
+        unit: { id: recipe.id, title: `Unit: ${recipe.id}` },
       })
       expect(design.family).toEqual({ id: "effects", title: "Family: effects" })
       expect(design.fit).toEqual({ by: "area", edges: "crop" })
@@ -83,8 +81,8 @@ describe("the effect recipes kept as data", () => {
       for (const window of design.cuts) {
         expect(window.max).toBeLessThanOrEqual(recipe.seconds + 0.05)
       }
-      expect(recipe.endFrame.source, recipe.effect).toBe(
-        endFrameSources[recipe.effect] ?? "edit"
+      expect(recipe.endFrame.source, recipe.id).toBe(
+        endFrameSources[recipe.id] ?? "edit"
       )
     }
   })
@@ -92,7 +90,7 @@ describe("the effect recipes kept as data", () => {
   it("keeps the fixed lengths, the cut plans and the sound beds of the reference looks", () => {
     const plans = Object.fromEntries(
       graphLooks.map((recipe) => [
-        recipe.effect,
+        recipe.id,
         {
           seconds: recipe.seconds,
           cuts: cutsOf(recipe),
@@ -116,7 +114,7 @@ describe("the effect recipes kept as data", () => {
   it("opens Earth Zoom in orbit and lands on the photo, as its unit page reads, and opens every other look on the photo", () => {
     expect(
       Object.fromEntries(
-        graphLooks.map((recipe) => [recipe.effect, recipe.photoFrame])
+        graphLooks.map((recipe) => [recipe.id, recipe.photoFrame])
       )
     ).toEqual(
       Object.fromEntries(
@@ -126,7 +124,7 @@ describe("the effect recipes kept as data", () => {
         ])
       )
     )
-    const earthZoom = recipeOf("pull-back-to-space")
+    const earthZoom = exampleOf("pull-back-to-space")
     expect(earthZoom.prompt).toMatch(/The camera starts in orbit/)
     expect(earthZoom.prompt).toMatch(/lands at ground level on them/)
     expect(earthZoom.design.lastFrame.shows).toMatch(
@@ -135,9 +133,9 @@ describe("the effect recipes kept as data", () => {
   })
 
   it("refuses a look that lands on the photo with no edited frame to open on, or with a held subject", () => {
-    const landing = recipeOf("pull-back-to-space")
+    const landing = exampleOf("pull-back-to-space")
     expect(() =>
-      readRecipes(
+      readExamples(
         {
           "pull-back-to-space": {
             ...landing,
@@ -148,15 +146,15 @@ describe("the effect recipes kept as data", () => {
       )
     ).toThrow(/pull-back-to-space\.json is invalid: endFrame/)
     expect(() =>
-      readRecipes({ "pull-back-to-space": { ...landing, hold: 0.5 } }, ledger)
+      readExamples({ "pull-back-to-space": { ...landing, hold: 0.5 } }, ledger)
     ).toThrow(/pull-back-to-space\.json is invalid: hold/)
     expect(() =>
-      readRecipes({ "many-copies": variant({ photoFrame: "middle" }) }, ledger)
+      readExamples({ "many-copies": variant({ photoFrame: "middle" }) }, ledger)
     ).toThrow(/many-copies\.json is invalid: photoFrame/)
   })
 
   it("ends Push into eye on a dark frame under its last-frame luma, after a light guide toward a photographic copper iris, with a calm face, a pupil that grows with a sharp edge, one impact hit and a fade to silence", () => {
-    const eye = recipeOf("push-into-eye")
+    const eye = exampleOf("push-into-eye")
     expect(eye.endFrame).toEqual({ source: "dark", luma: 1, strength: 0.9 })
     expect(eye.midFrame).toMatchObject({
       source: "edit",
@@ -210,26 +208,26 @@ describe("the effect recipes kept as data", () => {
   it("refuses a dark end frame on a look that lands on the photo, and reads one on a look that opens on it", () => {
     const dark = { source: "dark", luma: 8, strength: 0.9 }
     expect(() =>
-      readRecipes(
+      readExamples(
         {
           "pull-back-to-space": {
-            ...recipeOf("pull-back-to-space"),
+            ...exampleOf("pull-back-to-space"),
             endFrame: dark,
           },
         },
         ledger
       )
     ).toThrow(
-      /pull-back-to-space\.json is invalid: endFrame A look that lands on the photo guides its last frame with the photo, so it takes no dark end frame/
+      /pull-back-to-space\.json is invalid: endFrame An example that lands on the photo guides its last frame with the photo, so it takes no dark end frame/
     )
-    const [read] = readRecipes(
+    const [read] = readExamples(
       { "many-copies": variant({ endFrame: dark }) },
       ledger
     )
     expect(read?.endFrame).toEqual(dark)
     for (const luma of [-1, 41, 8.5]) {
       expect(() =>
-        readRecipes(
+        readExamples(
           { "many-copies": variant({ endFrame: { ...dark, luma } }) },
           ledger
         )
@@ -238,7 +236,7 @@ describe("the effect recipes kept as data", () => {
   })
 
   it("reads a passed recipe that carries its run and the proof of that run", () => {
-    const [read] = readRecipes(
+    const [read] = readExamples(
       { "many-copies": passedRecipe("many-copies") },
       ledger
     )
@@ -257,14 +255,14 @@ describe("the effect recipes kept as data", () => {
         reading: { ...recipe.proof.reading, lastFrameLuma: 90, cuts: [3] },
       },
     }))
-    expect(() => readRecipes(sources, ledger)).toThrow(
+    expect(() => readExamples(sources, ledger)).toThrow(
       /many-copies\.json passed on a run outside its criteria: cut: one at 3 s, outside every window, last frame: luma 90, against at most 40/
     )
   })
 
   it("refuses a passed recipe whose run is not a row of the run ledger", () => {
     const sources = { "many-copies": passedRecipe("many-copies") }
-    expect(() => readRecipes(sources, [])).toThrow(
+    expect(() => readExamples(sources, [])).toThrow(
       /many-copies\.json passed on a run the ledger does not keep: the run 5b1d2c3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e is not a row of the run ledger/
     )
   })
@@ -272,13 +270,13 @@ describe("the effect recipes kept as data", () => {
   it("refuses a passed recipe whose ledger row holds another input, or the judge's refusal", () => {
     const sources = { "many-copies": passedRecipe("many-copies") }
     expect(() =>
-      readRecipes(sources, [{ ...keptRun("many-copies"), seed: 8 }])
+      readExamples(sources, [{ ...keptRun("many-copies"), seed: 8 }])
     ).toThrow(/with another recipe or input/)
-    expect(() => readRecipes(sources, [keptRun("melt-away")])).toThrow(
+    expect(() => readExamples(sources, [keptRun("melt-away")])).toThrow(
       /with another recipe or input/
     )
     expect(() =>
-      readRecipes(sources, [
+      readExamples(sources, [
         {
           ...keptRun("many-copies"),
           verdict: "refused",
@@ -338,7 +336,7 @@ describe("the effect recipes kept as data", () => {
         judge: { criteria: 13, failed: ["Dark end"], verdict: "held" },
       },
     }))
-    expect(() => readRecipes(failed, ledger)).toThrow(
+    expect(() => readExamples(failed, ledger)).toThrow(
       /many-copies\.json is invalid: proof\.judge\.failed/
     )
     const planted = passedVariant((recipe) => ({
@@ -348,14 +346,14 @@ describe("the effect recipes kept as data", () => {
         gate: { positives: 1, planted: "held", verdict: "held" },
       },
     }))
-    expect(() => readRecipes(planted, ledger)).toThrow(
+    expect(() => readExamples(planted, ledger)).toThrow(
       /many-copies\.json is invalid: proof\.gate\.planted/
     )
   })
 
   it("refuses a passed recipe with no proof, and a proof on a recipe not passed", () => {
     const unproven = passedVariant((recipe) => ({ ...recipe, proof: null }))
-    expect(() => readRecipes(unproven, ledger)).toThrow(
+    expect(() => readExamples(unproven, ledger)).toThrow(
       /many-copies\.json is invalid: proof/
     )
     const unpassed = passedVariant((recipe) => ({
@@ -363,37 +361,37 @@ describe("the effect recipes kept as data", () => {
       passed: false,
       preview: null,
     }))
-    expect(() => readRecipes(unpassed, ledger)).toThrow(
+    expect(() => readExamples(unpassed, ledger)).toThrow(
       /many-copies\.json is invalid: proof/
     )
   })
 
   it("refuses an empty effect prompt, a length past 15 seconds and a look with no unit", () => {
     expect(() =>
-      readRecipes({ "many-copies": variant({ prompt: "" }) }, ledger)
+      readExamples({ "many-copies": variant({ prompt: "" }) }, ledger)
     ).toThrow(/many-copies\.json is invalid: prompt/)
     expect(() =>
-      readRecipes({ "many-copies": variant({ seconds: 16 }) }, ledger)
+      readExamples({ "many-copies": variant({ seconds: 16 }) }, ledger)
     ).toThrow(/many-copies\.json is invalid: seconds/)
-    const { unit: _, ...design } = recipeOf("many-copies").design
+    const { unit: _, ...design } = exampleOf("many-copies").design
     expect(() =>
-      readRecipes({ "many-copies": variant({ design }) }, ledger)
+      readExamples({ "many-copies": variant({ design }) }, ledger)
     ).toThrow(/many-copies\.json is invalid: design\.unit/)
   })
 
   it("refuses a passed recipe with no run, and a run on a recipe not passed", () => {
     expect(() =>
-      readRecipes({ "many-copies": variant({ passed: true }) }, ledger)
+      readExamples({ "many-copies": variant({ passed: true }) }, ledger)
     ).toThrow(/many-copies\.json is invalid: preview/)
     const preview = passedRecipe("many-copies").preview
     expect(() =>
-      readRecipes({ "many-copies": variant({ preview }) }, ledger)
+      readExamples({ "many-copies": variant({ preview }) }, ledger)
     ).toThrow(/many-copies\.json is invalid: preview/)
   })
 
   it("refuses a file that names another effect", () => {
-    expect(() => readRecipes({ "melt-away": variant({}) }, ledger)).toThrow(
-      /melt-away\.json names the effect many-copies/
+    expect(() => readExamples({ "melt-away": variant({}) }, ledger)).toThrow(
+      /melt-away\.json names the example many-copies/
     )
   })
 })

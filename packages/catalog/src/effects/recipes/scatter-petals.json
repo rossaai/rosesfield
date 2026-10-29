@@ -1,5 +1,7 @@
 {
-  "effect": "scatter-petals",
+  "id": "scatter-petals",
+  "approved": false,
+  "approval": null,
   "passed": false,
   "design": {
     "unit": {

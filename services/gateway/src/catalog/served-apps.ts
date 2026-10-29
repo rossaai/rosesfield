@@ -1,5 +1,5 @@
 import { listApps } from "@rosesfield/catalog"
-import { withOfferedEffects } from "@rosesfield/catalog/effects"
+import { withOfferedExamples } from "@rosesfield/catalog/motion"
 import { closeRemake, isRemakeOpen } from "@rosesfield/catalog/remake"
 import type { AppDefinition } from "@rosesfield/contract"
 import { serverReach } from "#compose/settings"
@@ -11,7 +11,7 @@ export function servedApps(
   place: ServedPlace,
   apps: readonly AppDefinition[] = listApps()
 ): readonly AppDefinition[] {
-  const offered = withOfferedEffects(apps, serverReach(vars))
+  const offered = withOfferedExamples(apps, serverReach(vars))
   return isRemakeOpen({ mode: vars.access.mode, place })
     ? offered
     : closeRemake(offered)

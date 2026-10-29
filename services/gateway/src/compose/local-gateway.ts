@@ -106,7 +106,7 @@ const platformDist = fileURLToPath(
 )
 
 const presetGuides = fileURLToPath(
-  new URL("../../../../apps/platform/public/effects/guides", import.meta.url)
+  new URL("../effect-guides/files", import.meta.url)
 )
 
 export function composeLocalGateway(

@@ -90,7 +90,7 @@ function outputRows(
   const rows: InputRow[] = []
   if (
     (output.kind === "image" || output.kind === "video") &&
-    output.aspectRatios.options.length > 1 &&
+    (output.aspectRatios?.options.length ?? 0) > 1 &&
     run.aspectRatio !== null
   ) {
     rows.push({

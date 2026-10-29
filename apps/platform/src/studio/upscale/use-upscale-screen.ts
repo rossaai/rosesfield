@@ -219,7 +219,7 @@ function useFocuser(): [() => void, (focus: () => void) => void] {
 
 function ratioOptionsOf(app: AppListing): readonly string[] {
   return app.output.kind === "image" || app.output.kind === "video"
-    ? app.output.aspectRatios.options
+    ? (app.output.aspectRatios?.options ?? [])
     : []
 }
 

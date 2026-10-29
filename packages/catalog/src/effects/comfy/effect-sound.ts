@@ -6,10 +6,10 @@ import {
   remove,
 } from "#effects/comfy/graph-edit"
 import {
-  type EffectRecipe,
+  type LibraryExample,
   maxHits,
   type SoundBed,
-} from "#effects/effect-recipe.contract"
+} from "#motion/examples/library-example.contract"
 
 export const soundNode = "358"
 
@@ -79,7 +79,7 @@ export const peakMargin = 1
 
 const maxCeilingGain = 24
 
-export function setSound(graph: Graph, recipe: EffectRecipe): void {
+export function setSound(graph: Graph, recipe: LibraryExample): void {
   const sound = recipe.design.sound
   if (sound === null) {
     remove(graph, [soundNode, loudnessNode, ...ceilingNodes])
@@ -89,7 +89,7 @@ export function setSound(graph: Graph, recipe: EffectRecipe): void {
   const ceiling = sound.truePeakMax - peakMargin
   if (-ceiling > maxCeilingGain) {
     throw invalid(
-      `the peak ceiling ${ceiling} dB of ${recipe.effect} is under -${maxCeilingGain} dB`
+      `the peak ceiling ${ceiling} dB of ${recipe.id} is under -${maxCeilingGain} dB`
     )
   }
   const [up, down] = ceilingNodes
@@ -156,7 +156,7 @@ function shapeBed(graph: Graph, sound: SoundBed): Link {
   return bed
 }
 
-export function setHits(graph: Graph, recipe: EffectRecipe): void {
+export function setHits(graph: Graph, recipe: LibraryExample): void {
   const sound = recipe.design.sound
   const hits = sound?.hits ?? []
   for (const slot of hitSlots.slice(hits.length)) {
@@ -172,7 +172,7 @@ export function setHits(graph: Graph, recipe: EffectRecipe): void {
   hits.forEach((hit, index) => {
     const slot = hitSlots[index]
     if (slot === undefined) {
-      throw invalid(`${recipe.effect} has more than ${maxHits} hits`)
+      throw invalid(`${recipe.id} has more than ${maxHits} hits`)
     }
     nodeOf(graph, slot.prompt).inputs.text = hit.prompt
     nodeOf(graph, slot.length).inputs.seconds = hit.seconds

@@ -23,7 +23,7 @@ import {
   withClient,
 } from "./frame-render"
 
-const motion = appListing.parse(findApp("motion"))
+const lipsync = appListing.parse(findApp("lipsync"))
 
 beforeEach(stubFetch)
 
@@ -173,12 +173,12 @@ describe("the app stage's header", () => {
     render(
       withClient(
         <AskedTab tab="how">
-          <AppStage app={motion} kind="column">
+          <AppStage app={lipsync} kind="column">
             <div />
           </AppStage>
         </AskedTab>,
-        motion,
-        [doneRun(motion.id)]
+        lipsync,
+        [doneRun(lipsync.id)]
       )
     )
     expect(
@@ -189,11 +189,11 @@ describe("the app stage's header", () => {
     cleanup()
     render(
       withClient(
-        <AppStage app={motion} kind="column">
+        <AppStage app={lipsync} kind="column">
           <div />
         </AppStage>,
-        motion,
-        [doneRun(motion.id)]
+        lipsync,
+        [doneRun(lipsync.id)]
       )
     )
     expect(

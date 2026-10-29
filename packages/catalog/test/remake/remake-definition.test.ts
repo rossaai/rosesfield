@@ -64,10 +64,13 @@ function loosened(app: AppDefinition): AppDefinition {
         ? {
             ...app.output,
             count: { default: 1, max: 4 },
-            aspectRatios: {
-              ...app.output.aspectRatios,
-              options: [...app.output.aspectRatios.options, "21:9"],
-            },
+            aspectRatios:
+              app.output.aspectRatios === null
+                ? null
+                : {
+                    ...app.output.aspectRatios,
+                    options: [...app.output.aspectRatios.options, "21:9"],
+                  },
           }
         : app.output,
     inputs: [

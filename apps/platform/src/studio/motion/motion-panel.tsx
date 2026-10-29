@@ -1,5 +1,7 @@
+import { exampleInput, exampleKeyOf } from "@rosesfield/catalog/motion"
 import type { AppListing } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
+import { MediaTile } from "@rosesfield/ui/components/media-tile"
 import {
   type ReactElement,
   type ReactNode,
@@ -20,6 +22,7 @@ import { AppSettingsSection } from "@/screens/app/fields/setting-rows"
 import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { HostedFields } from "@/screens/app/hosted/hosted-fields"
 import { appSettingsPlan, isSettingInput } from "@/screens/app/settings-plan"
+import { mediaOf } from "@/showcase/showcase"
 import { clipLimits, photoLimits } from "@/studio/motion/motion-checks"
 import { modeInput, soundInput } from "@/studio/motion/motion-tabs"
 import type { MotionState } from "@/studio/motion/use-motion-screen"
@@ -123,6 +126,46 @@ function ClipWell({ state }: { state: MotionState }): ReactElement {
   )
 }
 
+function ExampleWell({
+  state,
+  example,
+}: {
+  state: MotionState
+  example: NonNullable<MotionState["example"]>
+}): ReactElement {
+  const key = exampleKeyOf(example.id)
+  const name = tCatalog(`motion.example.${key}.name`)
+  const { preview } = example
+  const src = preview === null ? null : mediaOf(preview.file)
+  return (
+    <FieldFrame
+      caption={tCatalog("motion.input.clip.label")}
+      isOptional={false}
+      note={tCatalog(`motion.example.${key}.photo`)}
+      problem={undefined}
+      message={null}
+    >
+      <div data-slot="motion-example" className="flex items-center gap-s3">
+        {preview === null || src === null ? null : (
+          <MediaTile
+            kind="video"
+            src={src}
+            alt={name}
+            aspect={{ width: preview.width, height: preview.height }}
+            className="w-thumb shrink-0"
+          />
+        )}
+        <span className="min-w-0 truncate font-medium text-body text-ink">
+          {name}
+        </span>
+      </div>
+      <Button className="self-start" onClick={state.useOwnVideo}>
+        {tCatalog("motion.example.change")}
+      </Button>
+    </FieldFrame>
+  )
+}
+
 function PhotoWell({ state }: { state: MotionState }): ReactElement {
   return (
     <Well
@@ -145,6 +188,9 @@ function RestFields({
   model: ReactNode
 }): ReactElement {
   const { form } = state
+  const applied = appliedApp(state.app, form.values.inputs)
+  const applies = (name: string): boolean =>
+    applied.inputs.some((input) => input.name === name)
   if (!state.isGraph) {
     return (
       <HostedFields
@@ -158,7 +204,7 @@ function RestFields({
   return (
     <>
       {state.graphRest
-        .filter((input) => !isSettingInput(input))
+        .filter((input) => !isSettingInput(input) && applies(input.name))
         .map((input) => (
           <InputField
             key={input.name}
@@ -176,8 +222,10 @@ function RestFields({
         form={form}
         lastSeed={state.lastSeed}
         plan={appSettingsPlan(
-          appliedApp(state.app, form.values.inputs),
-          state.mode === "guide" ? [modeInput, soundInput] : [modeInput]
+          applied,
+          state.mode === "guide"
+            ? [modeInput, exampleInput, soundInput]
+            : [modeInput, exampleInput]
         )}
       />
     </>
@@ -187,12 +235,16 @@ function RestFields({
 export function MotionPanel({ state }: { state: MotionState }): ReactElement {
   return (
     <div className="flex flex-col gap-s4">
-      <ClipWell key={`clip-${state.names.clip}`} state={state} />
+      {state.example === null ? (
+        <ClipWell key={`clip-${state.names.clip}`} state={state} />
+      ) : (
+        <ExampleWell state={state} example={state.example} />
+      )}
       <PhotoWell key={`photo-${state.names.photo}`} state={state} />
       <RestFields
         state={state}
         model={
-          state.hosted.isTaskApp ? (
+          state.hosted.isTaskApp && state.example === null ? (
             <CatalogPicker hosted={state.hosted} place="row" />
           ) : null
         }

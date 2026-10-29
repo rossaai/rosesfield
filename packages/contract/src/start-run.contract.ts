@@ -119,14 +119,13 @@ export function fixedCountOf(
 }
 
 function aspectRatioFor(output: AppOutput) {
-  if (output.kind === "image" || output.kind === "video") {
-    return {
-      aspectRatio: z
-        .enum(output.aspectRatios.options)
-        .default(output.aspectRatios.default),
-    }
+  if (output.kind !== "image" && output.kind !== "video") {
+    return {}
   }
-  return {}
+  const choice = output.aspectRatios
+  return choice === null
+    ? { aspectRatio: aspectRatio.nullable().default(null) }
+    : { aspectRatio: z.enum(choice.options).default(choice.default) }
 }
 
 function bodyOf(app: AppDefinition, count: z.ZodType) {

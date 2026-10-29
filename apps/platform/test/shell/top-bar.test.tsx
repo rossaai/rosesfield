@@ -90,6 +90,29 @@ describe("the top bar", () => {
     ])
   })
 
+  it("lists Motion in the Video menu right after Video, with its Featured badge drawn as the model picker's, and never in the bar itself", async () => {
+    const bar = await barAt("/")
+    expect(within(bar).queryByRole("link", { name: /^Motion/ })).toBeNull()
+    fireEvent.click(within(bar).getByRole("button", { name: "Video" }))
+    const menu = await screen.findByRole("menu")
+    const rows = within(menu).getAllByRole("menuitem")
+    expect(rows.slice(0, 2).map((row) => row.getAttribute("href"))).toEqual([
+      "/apps/video",
+      "/apps/motion",
+    ])
+    const badge = rows[1]?.querySelector("[data-slot='badge']")
+    expect(badge?.getAttribute("data-kind")).toBe("featured")
+    expect(badge?.getAttribute("data-tone")).toBe("bug")
+    expect(badge?.textContent).toBe("Featured")
+    expect(rows[0]?.querySelector("[data-slot='badge']")).toBeNull()
+  })
+
+  it("marks Video as the current area on Motion's page", async () => {
+    const bar = await barAt("/apps/motion")
+    expect(currentOf(bar, "button", "Video")).toBe("page")
+    expect(currentOf(bar, "button", "Image")).toBeNull()
+  })
+
   it("marks Explore current on Explore", async () => {
     const bar = await barAt("/")
     expect(currentOf(bar, "link", "Explore")).toBe("page")

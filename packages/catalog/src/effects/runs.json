@@ -1,7 +1,7 @@
 [
   {
     "runId": "1e77db70-4ebe-4050-97e4-84f118438aeb",
-    "effect": "push-into-eye",
+    "example": "push-into-eye",
     "workflowHash": "2221d4e0373d184319a67f1d6bccd2c3e96095a82a443400320aac0be8662f36",
     "photo": "4878911303dc844df9d1380ef667e54c3bbc27d0a634396496d961404542b221",
     "seed": 1028487189,
@@ -16,7 +16,7 @@
   },
   {
     "runId": "cb3281e7-8764-475f-848b-8cc386311bae",
-    "effect": "still-in-the-street",
+    "example": "still-in-the-street",
     "workflowHash": "d09eeab0439ddd83720b48abff95052823f5c717e76b5e7324097ebfa436d98f",
     "photo": "e2a26592ec17f00140bcbb3facfb72304572a741639ffa1807f33be7f7de151f",
     "seed": 107086447,

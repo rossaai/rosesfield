@@ -7,6 +7,8 @@ export const exploreCopy = {
   "explore.empty.action": "Open Image",
   "explore.failed.title": "Explore did not load",
   "explore.tile.recreate": "Recreate",
+  "explore.tile.remix": "Remix",
+  "explore.tile.remixName": "Remix this example",
   "explore.tile.label": "{app} result",
   "explore.tile.open": "Open this {app} result",
   "explore.tile.expand": "Expand this {app} result",

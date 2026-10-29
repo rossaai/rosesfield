@@ -7,17 +7,21 @@ import {
   timerWait,
 } from "@rosesfield/agent"
 import type { ModelForm } from "@rosesfield/catalog/comfy"
+import { isFinalRun } from "@rosesfield/catalog/motion"
 import {
   type AppDefinition,
   buildPath,
   errorEnvelopeOf,
+  type RunInputs,
   routes,
   run,
   runResponse,
+  startRunBody,
 } from "@rosesfield/contract"
 import { ProjectError } from "@rosesfield/kernel"
 import { z } from "zod"
 import { gatewayCopy } from "#copy.en"
+import { RunNeedsYesError } from "#error/run-needs-yes.error"
 import type { RequestScope } from "#gateway-env"
 import { splitStartRunArguments, startRunInputOf } from "#mcp/start-run-input"
 import gatewayPackage from "../../package.json" with { type: "json" }
@@ -80,6 +84,9 @@ async function startRun(
   args: unknown
 ): Promise<unknown> {
   const { body, idempotencyKey } = splitStartRunArguments(args)
+  if (isFinalRun(app.id, inputsOf(body))) {
+    throw new RunNeedsYesError({ appId: app.id })
+  }
   const key = idempotencyKey ?? `${keyPrefix}${crypto.randomUUID()}`
   return scope.handlers.startRun.execute({
     appId: app.id,
@@ -87,6 +94,11 @@ async function startRun(
     idempotencyKey: await scope.keyFor(key),
     seed: null,
   })
+}
+
+function inputsOf(body: unknown): RunInputs {
+  const parsed = startRunBody.safeParse(body)
+  return parsed.success ? parsed.data.inputs : {}
 }
 
 async function startKeyframes(

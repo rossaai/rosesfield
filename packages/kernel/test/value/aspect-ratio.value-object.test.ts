@@ -25,3 +25,19 @@ describe("AspectRatio", () => {
     }
   )
 })
+
+describe("the ratio of a size", () => {
+  it.each([
+    { width: 768, height: 1152, ratio: "2:3" },
+    { width: 1080, height: 1920, ratio: "9:16" },
+    { width: 1080, height: 1350, ratio: "4:5" },
+    { width: 1000, height: 1001, ratio: "1:1" },
+  ])("reads $ratio from $width by $height", ({ width, height, ratio }) => {
+    expect(AspectRatio.ofSize(width, height)?.toString()).toBe(ratio)
+  })
+
+  it("reads no ratio from an empty size, the control", () => {
+    expect(AspectRatio.ofSize(0, 1080)).toBeNull()
+    expect(AspectRatio.ofSize(Number.NaN, 1080)).toBeNull()
+  })
+})

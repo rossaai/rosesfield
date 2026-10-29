@@ -11,6 +11,7 @@ import {
   useState,
 } from "react"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
+import { exampleDraftOf } from "@/catalog/app-examples"
 import type { Draft } from "@/router-context"
 import {
   defaultsOf,
@@ -44,6 +45,7 @@ type FormSeeds = {
   use: string | undefined
   from: string | undefined
   share?: string | undefined
+  example?: string | undefined
 }
 
 function hasPlaced(draft: Draft | undefined): boolean {
@@ -77,6 +79,10 @@ function useSeededValues(
             : await fillFromShare(client, app, seeds.share)
           : await fillFromRun(client, app, seeds.from)
       let next = fromRun ?? base
+      const example = exampleDraftOf(app.id, seeds.example)
+      if (example !== null) {
+        next = await fillFromDraft(client, app, next, example)
+      }
       if (draft !== undefined) {
         next = await fillFromDraft(client, app, next, draft)
       }
@@ -91,7 +97,7 @@ function useSeededValues(
       }
     }
     void fill()
-  }, [app, client, draft, seeds.from, seeds.use, seeds.share])
+  }, [app, client, draft, seeds.from, seeds.use, seeds.share, seeds.example])
   return [values, setValues, source]
 }
 

@@ -4,12 +4,12 @@ import {
   framesOf,
 } from "#effects/comfy/frame-sizes"
 import type {
-  EffectRecipe,
-  EffectRun,
+  ExampleRun,
+  LibraryExample,
   ResolutionValue,
   VideoReading,
-} from "#effects/effect-recipe.contract"
-import { effectRecipes, recipeOf } from "#effects/effect-recipes"
+} from "#motion/examples/library-example.contract"
+import { exampleOf, libraryExamples } from "#motion/examples/library-examples"
 
 export const passedRun = {
   runId: "5b1d2c3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e",
@@ -21,7 +21,7 @@ export const passedRun = {
 } as const
 
 function loudnessFor(
-  sound: EffectRecipe["design"]["sound"]
+  sound: LibraryExample["design"]["sound"]
 ): VideoReading["loudness"] {
   if (sound === null) {
     return null
@@ -33,7 +33,7 @@ function loudnessFor(
 }
 
 export function readingFor(
-  recipe: EffectRecipe,
+  recipe: LibraryExample,
   resolution: ResolutionValue,
   ratio: EffectRatio
 ): VideoReading {
@@ -52,12 +52,24 @@ export function readingFor(
   }
 }
 
-export function passedRecipe(effect: string): EffectRecipe {
-  const recipe = recipeOf(effect)
+export function passedRecipe(effect: string): LibraryExample {
+  const recipe = exampleOf(effect)
   return {
     ...recipe,
     passed: true,
-    preview: { file: `${effect}.mp4`, ...passedRun },
+    preview: {
+      file: `${effect}.mp4`,
+      sha256:
+        "9f2cc139be5593dd24f85253cf99cc14191afb31900ccf658e840a80a5977787",
+      bytes: 600_000,
+      width: 554,
+      height: 984,
+      ...passedRun,
+      model: "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+      credits: 8.18,
+      seconds: 74,
+      madeAt: "2026-10-21T21:02:43Z",
+    },
     proof: {
       gate: { positives: 1, planted: "refused", verdict: "held" },
       judge: { criteria: 14, failed: [], verdict: "held" },
@@ -66,10 +78,10 @@ export function passedRecipe(effect: string): EffectRecipe {
   }
 }
 
-export function keptRun(effect: string): EffectRun {
+export function keptRun(effect: string): ExampleRun {
   return {
     ...passedRun,
-    effect,
+    example: effect,
     photo: "3f1c9a7e0b2d4c6e8f0a1b3c5d7e9f1a2b4c6d8e0f1a3b5c7d9e1f2a4b6c8d0e",
     balance: { before: 3662.6, after: 3601.4 },
     verdict: "kept",
@@ -77,6 +89,6 @@ export function keptRun(effect: string): EffectRun {
   }
 }
 
-export const graphLooks = effectRecipes.filter(
+export const graphLooks = libraryExamples.filter(
   (recipe) => recipe.guide === null
 )

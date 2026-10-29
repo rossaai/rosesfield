@@ -247,8 +247,8 @@ describe("the model list of an app that declares no task", () => {
     ])
   })
 
-  it("lists nothing for Remake and Effects, which run no graph as a model, the control", () => {
-    for (const appId of ["remake", "effects"]) {
+  it("lists nothing for Remake, which runs no graph as a model, the control", () => {
+    for (const appId of ["remake"]) {
       const { found, models } = listedIn(appId)
       expect(models).toEqual([])
       expect(defaultModelOf(found)).toBeNull()

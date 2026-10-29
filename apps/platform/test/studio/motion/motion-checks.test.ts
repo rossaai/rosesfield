@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest"
+import { ratioOfSize } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import {
   clipProblem,
   guideShapeProblem,
   isLengthProblem,
   type MediaFacts,
-  nearestRatio,
   photoProblem,
 } from "@/studio/motion/motion-checks"
+import { shapeOf } from "@/studio/motion/use-motion-checks"
 
 const clip = (change: Partial<MediaFacts>): MediaFacts => ({
   mime: "video/mp4",
@@ -35,18 +36,21 @@ describe("the motion checks", () => {
   it.each([
     { width: 1080, height: 1920, ratio: "9:16" },
     { width: 3024, height: 4032, ratio: "3:4" },
-    { width: 1000, height: 1100, ratio: "1:1" },
-    { width: 4032, height: 3024, ratio: "4:3" },
+    { width: 720, height: 1080, ratio: "2:3" },
+    { width: 768, height: 1152, ratio: "2:3" },
+    { width: 1080, height: 1350, ratio: "4:5" },
     { width: 1920, height: 1080, ratio: "16:9" },
-    { width: 3000, height: 1000, ratio: "16:9" },
-    { width: 650, height: 1000, ratio: "3:4" },
-    { width: 649, height: 1000, ratio: "9:16" },
+    { width: 1000, height: 1001, ratio: "1:1" },
   ])(
-    "picks $ratio for a photo of $width by $height",
+    "records $ratio, the real shape of a photo of $width by $height",
     ({ width, height, ratio }) => {
-      expect(nearestRatio(width, height)).toBe(ratio)
+      expect(ratioOfSize(width, height)).toBe(ratio)
     }
   )
+
+  it("records no shape for a photo with no size, the control", () => {
+    expect(ratioOfSize(0, 1080)).toBeNull()
+  })
 
   it("passes a clip of 5 seconds and names a clip of 14 seconds in the app's words", () => {
     expect(clipProblem(clip({}))).toBeNull()
@@ -138,7 +142,7 @@ describe("the motion checks", () => {
 
   it("refuses a clip the browser cannot read, so no run starts on an unknown length", () => {
     const said =
-      "This input takes an MP4, MOV or WebM clip this browser can open. Pick another file."
+      "This input takes an MP4, MOV or WebM video this browser can open. Pick another file."
     expect(words(clipProblem(clip({ seconds: null })))).toBe(said)
     expect(words(clipProblem(clip({ width: null, height: null })))).toBe(said)
     expect(
@@ -204,5 +208,22 @@ describe("the guide's shape beside the photo", () => {
   it("waits for a size it can read", () => {
     const unread = clip({ width: null, height: null })
     expect(guideShapeProblem(unread, portrait, "720p")).toBeNull()
+  })
+})
+
+describe("the shape Motion records", () => {
+  const read = {
+    state: "read",
+    facts: photo({ width: 1080, height: 1920 }),
+  } as const
+
+  it("is the example's own shape after a Remix, 2:3 for Grab and run", () => {
+    expect(shapeOf(read, "2:3")).toBe("2:3")
+    expect(shapeOf({ state: "none" }, "2:3")).toBe("2:3")
+  })
+
+  it("is the photo's real shape with your own video, and none before the photo is read, the control", () => {
+    expect(shapeOf(read, null)).toBe("9:16")
+    expect(shapeOf({ state: "reading" }, null)).toBeNull()
   })
 })

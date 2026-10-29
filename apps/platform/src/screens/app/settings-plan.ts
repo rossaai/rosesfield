@@ -69,7 +69,7 @@ function hasAspectChoice(app: AppListing): boolean {
   const { output } = app
   return (
     (output.kind === "image" || output.kind === "video") &&
-    output.aspectRatios.options.length > 1
+    (output.aspectRatios?.options.length ?? 0) > 1
   )
 }
 

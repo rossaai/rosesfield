@@ -8,27 +8,27 @@ import {
   midFrameNodes,
   midGuideNodes,
 } from "#effects/comfy/effect-graph"
-import { effectBinding } from "#effects/comfy/effects-binding"
 import { frameAt } from "#effects/comfy/frame-sizes"
+import { effectBinding } from "#motion/examples/example-binding"
 import {
-  type EffectRecipe,
+  type LibraryExample,
   type MidFrame,
   resolutionValues,
-} from "#effects/effect-recipe.contract"
+} from "#motion/examples/library-example.contract"
 import {
-  effectRecipes as everyRecipe,
-  readRecipes,
-  recipeOf,
-} from "#effects/effect-recipes"
+  libraryExamples as everyRecipe,
+  exampleOf,
+  readExamples,
+} from "#motion/examples/library-examples"
 import { brokenLinks, fileGraph, workflowOf } from "./effects-replay"
 import { keptRun } from "./passed-recipe"
 
-const effectRecipes = everyRecipe.filter((recipe) => recipe.guide === null)
+const libraryExamples = everyRecipe.filter((recipe) => recipe.guide === null)
 
 const ledger = [keptRun("many-copies")]
 
 function variant(change: Record<string, unknown>): Record<string, unknown> {
-  return { ...recipeOf("many-copies"), ...change }
+  return { ...exampleOf("many-copies"), ...change }
 }
 
 const eyeEdit: MidFrame = {
@@ -39,10 +39,10 @@ const eyeEdit: MidFrame = {
 }
 
 function withMidFrame(
-  endFrame: EffectRecipe["endFrame"],
+  endFrame: LibraryExample["endFrame"],
   midFrame: MidFrame = eyeEdit
-): EffectRecipe {
-  return { ...recipeOf("melt-away"), endFrame, midFrame }
+): LibraryExample {
+  return { ...exampleOf("melt-away"), endFrame, midFrame }
 }
 
 const darkEnd = { source: "dark", luma: 1, strength: 0.9 } as const
@@ -154,18 +154,20 @@ describe("a designed frame inside the clip", () => {
   })
 
   it("removes the mid-frame nodes and links the end-frame guides to what they read before, for a look with none", () => {
-    for (const recipe of effectRecipes.filter((one) => one.midFrame === null)) {
+    for (const recipe of libraryExamples.filter(
+      (one) => one.midFrame === null
+    )) {
       const workflow = workflowOf(effectGraph(fileGraph(), recipe))
       const mid = [...midFrameNodes, ...midGuideNodes].filter(
         (id) => workflow[id] !== undefined
       )
-      expect({ effect: recipe.effect, mid }).toEqual({
-        effect: recipe.effect,
+      expect({ effect: recipe.id, mid }).toEqual({
+        effect: recipe.id,
         mid: [],
       })
       if (recipe.endFrame.source !== "none") {
-        expect({ effect: recipe.effect, chain: workflow }).toMatchObject({
-          effect: recipe.effect,
+        expect({ effect: recipe.id, chain: workflow }).toMatchObject({
+          effect: recipe.id,
           chain: {
             "460": {
               inputs: {
@@ -212,21 +214,21 @@ describe("a designed frame inside the clip", () => {
     }
     const dark = { source: "dark", luma: 1, strength: 0.9 }
     for (const endFrame of [dark, { source: "none" }]) {
-      const [read] = readRecipes(
+      const [read] = readExamples(
         { "many-copies": variant({ endFrame, midFrame }) },
         ledger
       )
       expect(read?.midFrame).toEqual(midFrame)
     }
-    expect(recipeOf("many-copies").endFrame.source).toBe("edit")
+    expect(exampleOf("many-copies").endFrame.source).toBe("edit")
     expect(() =>
-      readRecipes({ "many-copies": variant({ midFrame }) }, ledger)
+      readExamples({ "many-copies": variant({ midFrame }) }, ledger)
     ).toThrow(
-      /many-copies\.json is invalid: midFrame The graph has one image edit pass, so a look edits its mid frame or its end frame, not both/
+      /many-copies\.json is invalid: midFrame The graph has one image edit pass, so an example edits its mid frame or its end frame, not both/
     )
     for (const time of [0, 7, 9.5]) {
       expect(() =>
-        readRecipes(
+        readExamples(
           {
             "many-copies": variant({
               endFrame: dark,
@@ -238,7 +240,7 @@ describe("a designed frame inside the clip", () => {
       ).toThrow(/many-copies\.json is invalid: midFrame/)
     }
     expect(() =>
-      readRecipes(
+      readExamples(
         {
           "many-copies": variant({
             endFrame: dark,

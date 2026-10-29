@@ -106,7 +106,7 @@ function useClip(
   const bytes = first === null ? null : (asset.data?.asset.bytes ?? null)
   const format = ratioOfFormat(form.values.inputs[aspectInput])
   const options =
-    app.output.kind === "video" ? app.output.aspectRatios.options : []
+    app.output.kind === "video" ? (app.output.aspectRatios?.options ?? []) : []
   const ratio =
     mode === "reframe"
       ? format

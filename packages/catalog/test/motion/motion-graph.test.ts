@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest"
 import { appTasksOf, defaultModelOf, modelsForApp } from "#comfy/list-models"
 import { listApps } from "#list-apps"
 import { findWorkflow, listWorkflows } from "#list-workflows"
-import { motionAspectRatios } from "#motion/app"
 import { shortSides } from "#motion/comfy/motion-binding"
 import {
   both,
@@ -164,7 +163,7 @@ describe("the motion graph", () => {
     expect(inputOf(graph, "108", "width")).toEqual(["722", 1])
     expect(inputOf(graph, "108", "height")).toEqual(["723", 1])
     for (const shortSide of Object.values(shortSides)) {
-      for (const aspect of motionAspectRatios) {
+      for (const aspect of ["1:1", "4:3", "3:4", "16:9", "9:16", "2:3"]) {
         const photo = photoOf(aspect)
         const width = sideOf(graph, "722", photo, shortSide)
         const height = sideOf(graph, "723", photo, shortSide)

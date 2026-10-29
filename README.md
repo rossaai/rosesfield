@@ -98,10 +98,10 @@ Higgsfield's products as higgsfield.ai listed them on 2026-10-17, beside the Ros
 |---|---|---|
 | Image | Image | Describe an image and get up to 4. |
 | Video | Video | Turn a prompt or your images into a video. |
-| Genjutsu | Motion, Swap a character | Put the person in your photo in place of the person in a clip, at the same moments. The scene comes from your photo. |
-| Motion Control | Motion, Move a photo | Move a photo with the motion of a clip. |
+| Genjutsu | Motion | Put the person in your photo in place of the person in a clip, at the same moments. The scene comes from your photo. |
+| Motion Control | Motion | Move a photo with the motion of a clip. |
 | Katana | Remake | Rebuild an edit with your character and the same cuts. |
-| Effects | Effects | Pick an effect, add a photo, and get a short clip. |
+| Effects | Motion, Library | Remix an example from the Library with your photo, and get a short clip. |
 | Cinema Studio | Shot | Write a scene and choose how the camera shoots it. |
 | Lipsync Studio | Lip sync | Add a face and a voice track, and get a talking video. |
 | Popcorn storyboard | Storyboard | Write up to 8 scenes and get one keyframe for each. |
@@ -132,7 +132,7 @@ Every run reaches Comfy through the Comfy SDK, `@comfyorg/sdk` 0.5.0, on one Com
 | The open-weights workflows on your GPU | your own ComfyUI | comfy-api-proxy, set in Settings or by `COMFY_BASE_URL` |
 
 - Each workflow ships as two files: the API file the app sends, and the UI file you open in ComfyUI. The UI file holds its App Mode setup, so it opens in App Mode with the inputs the app shows.
-- Effects runs one LTX 2.5 graph, [`effects-ltx-2-5`](workflows/effects-ltx-2-5/README.md), and LTX 2.5 is its only video model.
+- An example in Motion's Library runs on the first-and-last-frame graph [`effects-ltx-2-5`](workflows/effects-ltx-2-5/README.md), on LTX 2.5, or on Motion's guide graph with a guide the engine holds.
 - [docs/stack.md](docs/stack.md) lists every package and each call Rosesfield makes to Comfy.
 
 ## What each run made

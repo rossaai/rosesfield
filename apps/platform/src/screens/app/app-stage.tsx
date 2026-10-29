@@ -4,7 +4,7 @@ import { Canvas } from "@rosesfield/ui/components/canvas"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { BookOpenIcon, FolderIcon } from "lucide-react"
+import { BookOpenIcon, FolderIcon, LibraryIcon } from "lucide-react"
 import {
   createContext,
   type ReactElement,
@@ -14,6 +14,7 @@ import {
   useEffect,
   useState,
 } from "react"
+import { type AppExample, examplesOf } from "@/catalog/app-examples"
 import { appBadge, appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useCanvasFit } from "@/pieces/use-canvas-fit"
@@ -21,13 +22,14 @@ import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { type PlaceView, useView } from "@/pieces/view/use-view"
 import { ViewBar, viewRowClassOf } from "@/pieces/view/view-bar"
 import { useAppRuns } from "@/screens/app/app-canvas"
+import { AppLibrary } from "@/screens/app/app-library"
 import { CanvasViewProvider } from "@/screens/app/canvas-view"
 import { HowItWorks, type StageKind } from "@/screens/app/how-it-works"
 import { PhoneTitlePortal, ScreenTitle } from "@/shell/screen-header"
 
-export type StageTab = "history" | "how"
+export type StageTab = "history" | "library" | "how"
 
-export const stageTabs: readonly StageTab[] = ["history", "how"]
+export const stageTabs: readonly StageTab[] = ["history", "library", "how"]
 
 function isStageTab(value: unknown): value is StageTab {
   return stageTabs.some((tab) => tab === value)
@@ -49,14 +51,25 @@ export function AskedTab({
 
 export function shownTab(
   chosen: StageTab | null,
-  hasRuns: boolean | null
+  hasRuns: boolean | null,
+  hasLibrary = false
 ): StageTab {
-  return chosen ?? (hasRuns === false ? "how" : "history")
+  if (chosen === "library" && !hasLibrary) {
+    return hasRuns === false ? "how" : "history"
+  }
+  if (chosen !== null) {
+    return chosen
+  }
+  if (hasRuns !== false) {
+    return "history"
+  }
+  return hasLibrary ? "library" : "how"
 }
 
 export function useStageTab(
   app: AppListing,
-  hasWork: boolean
+  hasWork: boolean,
+  hasLibrary = false
 ): {
   tab: StageTab
   hasRuns: boolean | null
@@ -67,15 +80,18 @@ export function useStageTab(
   const hasRuns = runs.isPending ? null : count > 0
   const asked = useContext(AskedTabContext)
   const [chosen, setChosen] = useState<StageTab | null>(asked)
-  const [seen, setSeen] = useState(count)
+  const [seen, setSeen] = useState<number | null>(runs.isPending ? null : count)
   useEffect(() => {
-    if (count > seen) {
+    if (runs.isPending) {
+      return
+    }
+    if (seen !== null && count > seen) {
       setChosen(null)
     }
     setSeen(count)
-  }, [count, seen])
+  }, [count, seen, runs.isPending])
   return {
-    tab: shownTab(chosen, hasWork ? true : hasRuns),
+    tab: shownTab(chosen, hasWork ? true : hasRuns, hasLibrary),
     hasRuns,
     choose: setChosen,
   }
@@ -102,7 +118,7 @@ function AppTitle({ app }: { app: AppListing }): ReactNode {
   ) : (
     <span data-slot="app-title" className="inline-flex items-center gap-s2">
       {appName(app)}
-      <Badge tone="quiet">{badge}</Badge>
+      <Badge kind="featured">{badge}</Badge>
     </span>
   )
 }
@@ -120,12 +136,15 @@ function StageTabs({
   stage,
   title,
   view,
+  hasLibrary,
 }: {
   stage: ReturnType<typeof useStageTab>
   title: ReactNode
   view: ReactNode
+  hasLibrary: boolean
 }): ReactElement {
   const isRegular = useIsRegularWindow()
+  const hasIcons = isRegular || !hasLibrary
   return (
     <div data-slot="app-stage-tabs" className={viewRowClassOf(isRegular)}>
       <div
@@ -143,11 +162,17 @@ function StageTabs({
         >
           <TabsList aria-label={t("app.canvas.label")}>
             <TabsTrigger value="history">
-              <FolderIcon aria-hidden="true" />
+              {hasIcons ? <FolderIcon aria-hidden="true" /> : null}
               {t("app.tab.history")}
             </TabsTrigger>
+            {hasLibrary ? (
+              <TabsTrigger value="library">
+                {hasIcons ? <LibraryIcon aria-hidden="true" /> : null}
+                {t("app.tab.library")}
+              </TabsTrigger>
+            ) : null}
             <TabsTrigger value="how">
-              <BookOpenIcon aria-hidden="true" />
+              {hasIcons ? <BookOpenIcon aria-hidden="true" /> : null}
               {t("app.tab.how")}
             </TabsTrigger>
           </TabsList>
@@ -163,8 +188,31 @@ function useStageView(layouts: StageLayouts): PlaceView {
   return layouts === "list" ? { ...chosen, layout: "list" } : chosen
 }
 
+function StageBody({
+  app,
+  tab,
+  examples,
+  children,
+}: {
+  app: AppListing
+  tab: StageTab
+  examples: readonly AppExample[]
+  children: ReactNode
+}): ReactNode {
+  switch (tab) {
+    case "how":
+      return <HowItWorks app={app} />
+    case "library":
+      return <AppLibrary app={app} examples={examples} />
+    case "history":
+      return children
+  }
+}
+
 export function AppStage(props: AppStageProps): ReactElement {
-  const stage = useStageTab(props.app, props.hasWork ?? false)
+  const examples = examplesOf(props.app.id)
+  const hasLibrary = examples.length > 0
+  const stage = useStageTab(props.app, props.hasWork ?? false, hasLibrary)
   const layouts = props.layouts ?? "grid-and-list"
   const view = useStageView(layouts)
   const fit = useCanvasFit()
@@ -200,6 +248,7 @@ export function AppStage(props: AppStageProps): ReactElement {
             props.hasTitle === false ? null : <StageTitle app={props.app} />
           }
           view={!isRegular && hasView ? menu : null}
+          hasLibrary={hasLibrary}
         />
       }
     >
@@ -214,11 +263,9 @@ export function AppStage(props: AppStageProps): ReactElement {
           props.scrollClassName
         )}
       >
-        {stage.tab === "how" ? (
-          <HowItWorks app={props.app} />
-        ) : (
+        <StageBody app={props.app} tab={stage.tab} examples={examples}>
           <CanvasViewProvider view={view}>{props.children}</CanvasViewProvider>
-        )}
+        </StageBody>
       </div>
     </Canvas>
   )

@@ -1,9 +1,16 @@
+import { approvedExamples } from "@rosesfield/catalog/motion"
 import { act, cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { showcaseEntries } from "@/screens/explore/explore-entries"
 import { feedExamples, Reveal } from "@/screens/explore/explore-sections"
-import { exampleGroupOf, showcaseItems } from "@/showcase/showcase"
-import { showcaseRows } from "@/showcase/showcase-rows"
+import {
+  exampleGroupOf,
+  exampleRowsOf,
+  showcaseItems,
+} from "@/showcase/showcase"
+import { showcaseRows as listedRows } from "@/showcase/showcase-rows"
+
+const showcaseRows = [...listedRows, ...exampleRowsOf(approvedExamples)]
 
 afterEach(() => {
   cleanup()
@@ -56,7 +63,7 @@ describe("Explore's examples", () => {
     for (const after of [
       "relight-portrait.webp",
       "sneaker-cutout.webp",
-      "push-into-eye.mp4",
+      "grab-and-run.mp4",
     ]) {
       expect(files).toContain(`showcase-${after}`)
     }

@@ -18,25 +18,28 @@ describe("the motion definition", () => {
         resolution: "720p",
       },
       count: 1,
-      aspectRatio: "9:16",
+      aspectRatio: null,
     })
   })
 
-  it("declares no mode and no dependent bound: only the photo and the inputs a run chain fills apply with one model", () => {
-    const ruled = motion.inputs.filter(
-      (input) =>
-        (input.type !== "seed" && input.when !== undefined) ||
-        ("bounds" in input && input.bounds !== undefined)
-    )
-    expect(ruled.map((input) => input.name)).toEqual([
+  it("asks for the clip and its sound only with your own video, a sentence only where the engine reads one, the photo with a render model, 1080p only on the guided render, and the chain's inputs only with the model a chain fills", () => {
+    const ruled = motion.inputs
+      .filter(
+        (input) =>
+          (input.type !== "seed" && input.when !== undefined) ||
+          ("bounds" in input && input.bounds !== undefined)
+      )
+      .map((input) => input.name)
+    expect(ruled).toEqual([
       "photo",
+      "clip",
       "mask",
       "endKey",
       "targets",
+      "sound",
+      "scene",
+      "resolution",
     ])
-    expect(
-      ruled.filter((input) => input.type !== "seed" && input.fill !== "chain")
-    ).toEqual([motion.inputs.find((input) => input.name === "photo")])
   })
 
   it.each([
@@ -67,20 +70,19 @@ describe("the motion definition", () => {
       given: { inputs: { ...both, model: "x" } },
     },
     { case: "two outputs", given: { inputs: both, count: 2 } },
-    {
-      case: "a ratio it does not offer",
-      given: { inputs: both, aspectRatio: "21:9" },
-    },
   ])("refuses a run with $case", ({ given }) => {
     expect(isRefused(given)).toBe(true)
   })
 
-  it("passes a scene of 2000 characters and each of the five ratios", () => {
+  it("passes a scene of 2000 characters and records the shape of the input that sets the first frame, whatever it is", () => {
     expect(isRefused({ inputs: { ...both, scene: "a".repeat(2000) } })).toBe(
       false
     )
-    for (const aspectRatio of ["1:1", "4:3", "3:4", "16:9", "9:16"]) {
-      expect(isRefused({ inputs: both, aspectRatio })).toBe(false)
+    for (const aspectRatio of ["2:3", "4:5", "9:16", "21:9"]) {
+      expect(body.parse({ inputs: both, aspectRatio }).aspectRatio).toBe(
+        aspectRatio
+      )
     }
+    expect(isRefused({ inputs: both, aspectRatio: "a:b" })).toBe(true)
   })
 })

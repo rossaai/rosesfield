@@ -1,5 +1,7 @@
 {
-  "effect": "buildings-ripple",
+  "id": "buildings-ripple",
+  "approved": false,
+  "approval": null,
   "passed": false,
   "design": {
     "unit": {

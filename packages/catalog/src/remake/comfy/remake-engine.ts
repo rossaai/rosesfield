@@ -1,6 +1,7 @@
 import type { EngineBinding, RunInputs } from "@rosesfield/contract"
 import type { AssetId } from "@rosesfield/kernel"
-import { app as motionApp, motionAspectRatios } from "#motion/app"
+import { app as motionApp } from "#motion/app"
+import { ownVideo } from "#motion/examples/example-binding"
 import { graphModel as swapModel } from "#motion/motion-models"
 import { planModel, planTask } from "#remake/comfy/remake-plan-turn"
 import {
@@ -47,7 +48,13 @@ type Routed = {
 
 export const remakeShotsAdapter = "remake-shots"
 
-export const remakeAspectRatios: readonly string[] = [...motionAspectRatios]
+export const remakeAspectRatios: readonly string[] = [
+  "1:1",
+  "4:3",
+  "3:4",
+  "16:9",
+  "9:16",
+]
 
 const seedSpan = 2_147_483_648
 
@@ -103,6 +110,7 @@ function replaced(input: ShotRequestInput): Routed | null {
     app: "motion",
     binding: motionApp.engine,
     inputs: {
+      example: ownVideo,
       model: swapModel,
       photo: [input.photo],
       clip: [input.clip],

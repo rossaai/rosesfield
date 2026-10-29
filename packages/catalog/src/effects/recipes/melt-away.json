@@ -1,5 +1,7 @@
 {
-  "effect": "melt-away",
+  "id": "melt-away",
+  "approved": false,
+  "approval": null,
   "passed": false,
   "design": {
     "unit": {

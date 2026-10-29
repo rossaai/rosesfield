@@ -42,7 +42,7 @@ export const appOutput = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.literal("video"),
     count: outputCount,
-    aspectRatios: aspectRatioChoice,
+    aspectRatios: aspectRatioChoice.nullable(),
   }),
   z.strictObject({ kind: z.literal("audio"), count: outputCount }),
   z.strictObject({ kind: z.literal("text"), count: outputCount }),

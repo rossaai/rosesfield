@@ -58,7 +58,7 @@ describe("the open-weights list", () => {
     const rows = modelRowsOf(catalogApps, appWorkflows)
     const ltx = rows.find((row) => row.model.id === "ltx-2-5")
     expect(ltx?.apps.map((app) => app.id)).toEqual(
-      expect.arrayContaining(["video", "effects"])
+      expect.arrayContaining(["video"])
     )
   })
 })

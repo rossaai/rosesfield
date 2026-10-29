@@ -5,6 +5,16 @@ import { ltx25GuideInputs } from "#motion/comfy/guide-ltx-2-5-binding"
 import { motionEngine } from "#motion/comfy/motion-binding"
 import { readClipInputs } from "#motion/comfy/read-clip-binding"
 import {
+  exampleInput,
+  examplesBinding,
+  ownVideo,
+} from "#motion/examples/example-binding"
+import type { LibraryExample } from "#motion/examples/library-example.contract"
+import {
+  approvedExamples,
+  exampleKeyOf,
+} from "#motion/examples/library-examples"
+import {
   graphModel,
   guideModel,
   ltx25GuideModel,
@@ -17,19 +27,36 @@ const chainLabel = "motion.name"
 
 const renderModels = [graphModel, guideModel, ltx25GuideModel]
 
-export const motionAspectRatios: readonly string[] = [
-  "1:1",
-  "4:3",
-  "3:4",
-  "16:9",
-  "9:16",
-]
+const twoPassModels = [graphModel, guideModel]
 
-export const app: AppInput = defineApp({
-  id: "motion",
-  nameKey: "motion.name",
-  category: "video",
-  inputs: [
+type AppInputs = AppInput["inputs"]
+
+type Condition = { input: string; is: string[] }
+
+function whenExampleIs(values: readonly string[]): Condition {
+  return { input: exampleInput, is: [...values] }
+}
+
+function exampleChoice(offered: readonly LibraryExample[]): AppInputs {
+  return [
+    {
+      type: "choice",
+      name: exampleInput,
+      labelKey: "motion.input.clip.label",
+      options: [
+        { value: ownVideo, labelKey: "motion.example.own" },
+        ...offered.map((example) => ({
+          value: example.id,
+          labelKey: `motion.example.${exampleKeyOf(example.id)}.name`,
+        })),
+      ],
+      default: ownVideo,
+    },
+  ]
+}
+
+function modelChoice(): AppInputs {
+  return [
     {
       type: "choice",
       name: "model",
@@ -42,21 +69,11 @@ export const app: AppInput = defineApp({
       ],
       default: graphModel,
     },
-    {
-      type: "image",
-      name: "photo",
-      labelKey: "motion.input.photo.label",
-      presence: "required",
-      max: 1,
-      when: [{ input: "model", is: renderModels }],
-    },
-    {
-      type: "video",
-      name: "clip",
-      labelKey: "motion.input.clip.label",
-      presence: "required",
-      max: 1,
-    },
+  ]
+}
+
+function chainInputs(): AppInputs {
+  return [
     {
       type: "video",
       name: ltx25GuideInputs.mask,
@@ -84,11 +101,39 @@ export const app: AppInput = defineApp({
       fill: "chain",
       when: [{ input: "model", is: [readClipModel] }],
     },
+  ]
+}
+
+function motionInputs(offered: readonly LibraryExample[]): AppInputs {
+  const unguided = offered
+    .filter((example) => example.guide === null)
+    .map((example) => example.id)
+  return [
+    ...exampleChoice(offered),
+    ...modelChoice(),
+    {
+      type: "image",
+      name: "photo",
+      labelKey: "motion.input.photo.label",
+      presence: "required",
+      max: 1,
+      when: [{ input: "model", is: renderModels }],
+    },
+    {
+      type: "video",
+      name: "clip",
+      labelKey: "motion.input.clip.label",
+      presence: "required",
+      max: 1,
+      when: [whenExampleIs([ownVideo])],
+    },
+    ...chainInputs(),
     {
       type: "toggle",
       name: "sound",
       labelKey: "motion.input.sound.label",
       default: "off",
+      when: [whenExampleIs([ownVideo])],
     },
     {
       type: "prompt",
@@ -96,6 +141,7 @@ export const app: AppInput = defineApp({
       labelKey: "motion.input.scene.label",
       presence: "optional",
       maxLength: 2000,
+      when: [whenExampleIs([ownVideo, ...unguided])],
     },
     {
       type: "choice",
@@ -104,21 +150,39 @@ export const app: AppInput = defineApp({
       options: [
         { value: "480p", labelKey: "motion.choice.resolution.p480" },
         { value: "720p", labelKey: "motion.choice.resolution.p720" },
+        { value: "1080p", labelKey: "motion.choice.resolution.p1080" },
       ],
       default: "720p",
+      bounds: [
+        {
+          when: [{ input: "model", is: twoPassModels }],
+          values: ["480p", "720p"],
+        },
+      ],
     },
     { type: "seed", name: "seed", labelKey: "motion.input.seed.label" },
-  ],
-  output: {
-    kind: "video",
-    count: { default: 1, max: 1 },
-    aspectRatios: { options: [...motionAspectRatios], default: "9:16" },
-  },
-  engine: taskBinding({
-    tasks: motionTasks,
-    input: "model",
-    default: graphModel,
-    fallback: motionEngine,
-  }),
-  limits: { timeoutSeconds: 1800, maxRetries: 2 },
-})
+  ]
+}
+
+export function motionApp(offered: readonly LibraryExample[]): AppInput {
+  return defineApp({
+    id: "motion",
+    nameKey: "motion.name",
+    category: "video",
+    inputs: motionInputs(offered),
+    output: {
+      kind: "video",
+      count: { default: 1, max: 1 },
+      aspectRatios: null,
+    },
+    engine: taskBinding({
+      tasks: motionTasks,
+      input: "model",
+      default: graphModel,
+      fallback: examplesBinding(offered, motionEngine),
+    }),
+    limits: { timeoutSeconds: 1800, maxRetries: 2 },
+  })
+}
+
+export const app: AppInput = motionApp(approvedExamples)

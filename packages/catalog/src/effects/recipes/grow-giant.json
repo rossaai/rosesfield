@@ -1,5 +1,7 @@
 {
-  "effect": "grow-giant",
+  "id": "grow-giant",
+  "approved": false,
+  "approval": null,
   "passed": false,
   "design": {
     "unit": {

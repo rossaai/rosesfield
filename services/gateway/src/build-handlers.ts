@@ -14,7 +14,7 @@ import {
   ReadModelFormsHandler,
   RepeatRunHandler,
   type RunRepository,
-  StartRunHandler,
+  type StartRunHandler,
   type WatchMarkPort,
 } from "@rosesfield/generation"
 import type { Clock } from "@rosesfield/kernel"
@@ -38,6 +38,7 @@ import {
 } from "@rosesfield/library"
 import { LibraryRunAssets } from "#infrastructure/library-run-assets"
 import { ListedAppCatalog } from "#infrastructure/listed-app-catalog"
+import { ShapedStartRunHandler } from "#run/shaped-start-run.handler"
 
 export type HandlerPorts = {
   apps: readonly AppDefinition[]
@@ -141,7 +142,7 @@ function buildRuns(
 ): RunHandlers {
   const { runs, engines, clock } = ports
   const apps = new ListedAppCatalog({ apps: ports.apps })
-  const startRun = new StartRunHandler({
+  const startRun = new ShapedStartRunHandler({
     apps,
     runs,
     engines,

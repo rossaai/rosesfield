@@ -40,6 +40,19 @@ describe("the top bar's links", () => {
     expect(listed.some((app) => app.category === "character")).toBe(false)
   })
 
+  it("give Motion one entry, in the Video area right after Video", () => {
+    const groups = navGroups()
+    const video = groups.areas.find((area) => area.id === "video")
+    expect(video?.apps.slice(0, 2).map((app) => app.id)).toEqual([
+      "video",
+      "motion",
+    ])
+    const entries = groups.areas
+      .flatMap((area) => area.apps)
+      .filter((app) => app.id === "motion")
+    expect(entries).toHaveLength(1)
+  })
+
   it("leave out an area with no app", () => {
     const noAudio = catalogApps.filter((app) => app.output.kind !== "audio")
     expect(navGroups(noAudio).areas.map((area) => area.id)).toEqual([

@@ -10,7 +10,7 @@ import {
   sharedRouterCatalog,
 } from "#catalog/shared-router-catalog"
 import { type EngineOptions, pickEngines } from "#compose/pick-engines"
-import { assetsGuideFiles } from "#effect-guides/assets-guide-files"
+import { bundledGuideFiles } from "#effect-guides/bundled-guide-files"
 import { guideEngineFiles } from "#effect-guides/guide-engine-files"
 import { readWorkerEnv, type WorkerVars } from "#env"
 import { R2AssetStore } from "#infrastructure/r2-asset-store"
@@ -84,7 +84,7 @@ export function workerParts(
       ),
       meter: sharedCreditMeter(clock),
       fetch: (input, init) => fetch(input, init),
-      files: guideEngineFiles(assetsGuideFiles(env.ASSETS)),
+      files: guideEngineFiles(bundledGuideFiles()),
     },
   }
 }

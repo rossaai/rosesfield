@@ -1,4 +1,4 @@
-import { passedRecipes } from "@rosesfield/catalog/effects"
+import { approvedExamples } from "@rosesfield/catalog/motion"
 import { describe, expect, it } from "vitest"
 import { outputKindsOf, workflowFor } from "@/catalog/app-workflows"
 import { findCatalogApp } from "@/catalog/catalog-apps"
@@ -20,16 +20,16 @@ describe("workflowFor", () => {
     expect(video?.id).toMatch(/^upscale-video-/)
   })
 
-  it("finds the Effects graph for each passed effect, and none for a draft", () => {
-    expect(findCatalogApp("effects")?.closedKey).toBeNull()
-    expect(passedRecipes.length).toBeGreaterThan(0)
-    for (const { effect } of passedRecipes) {
+  it("finds Motion's graph for each approved example and your own video, and none for an example not offered", () => {
+    expect(approvedExamples.length).toBeGreaterThan(0)
+    for (const { id } of approvedExamples) {
       expect({
-        effect,
-        workflow: workflowFor("effects", { effect })?.id,
-      }).toEqual({ effect, workflow: "effects-ltx-2-5" })
+        id,
+        workflow: workflowFor("motion", { example: id })?.id,
+      }).toEqual({ id, workflow: "motion-guide-ltx-2-3-ic-lora" })
     }
-    expect(workflowFor("effects", { effect: "melt-away" })).toBeNull()
+    expect(workflowFor("motion", {})?.id).toBe("motion-ltx-2-3-ic-lora")
+    expect(workflowFor("motion", { example: "melt-away" })).toBeNull()
   })
 
   it("follows a Video run with a start frame through every nested choice to the start frame graph", () => {

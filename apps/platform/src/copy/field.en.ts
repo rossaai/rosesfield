@@ -184,7 +184,8 @@ export const fieldCopy = {
     "Sets how high the camera is, from low to high above the subject.",
   "setting.distance.tip":
     "Sets how close the camera is, from a close-up to a wide shot.",
-  "setting.effect.tip": "Picks the effect your photo gets.",
+  "setting.example.tip":
+    "Picks the example from the Library your photo goes into.",
   "setting.top.tip":
     "Sets how much space to add above your picture, in percent of its size.",
   "setting.right.tip":

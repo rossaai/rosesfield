@@ -4,7 +4,6 @@ import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { heldFilesOf, isHeldOnCloud } from "#comfy/cloud-weights"
 import { findWorkflow } from "#list-workflows"
-import { motionAspectRatios } from "#motion/app"
 import {
   ltx25GuideWorkflow,
   ltx25ShortSides,
@@ -271,7 +270,7 @@ describe("the LTX 2.5 depth guide graph", () => {
     for (const [resolution, short] of Object.entries(ltx25ShortSides)) {
       expect(shortSideMap("resolution")[resolution]).toBe(short)
       expect(shortSideMap("shortSide")).toEqual({})
-      for (const aspect of motionAspectRatios) {
+      for (const aspect of ["1:1", "4:3", "3:4", "16:9", "9:16", "2:3"]) {
         const [across = 1, down = 1] = aspect.split(":").map(Number)
         const shortSide = Math.min(across, down) * 256
         const half = [

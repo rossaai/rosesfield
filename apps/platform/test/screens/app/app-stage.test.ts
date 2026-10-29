@@ -13,3 +13,17 @@ describe("the canvas's tab", () => {
     expect(shownTab("how", true)).toBe("how")
   })
 })
+
+describe("the Library tab", () => {
+  it("opens on the Library while you have no output in an app with examples", () => {
+    expect(shownTab(null, false, true)).toBe("library")
+    expect(shownTab(null, true, true)).toBe("history")
+    expect(shownTab("library", true, true)).toBe("library")
+  })
+
+  it("never opens the Library in an app with no examples, even when the address asks for it, the control", () => {
+    expect(shownTab("library", false, false)).toBe("how")
+    expect(shownTab("library", true, false)).toBe("history")
+    expect(shownTab(null, false, false)).toBe("how")
+  })
+})

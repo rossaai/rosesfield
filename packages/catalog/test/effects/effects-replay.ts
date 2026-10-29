@@ -6,9 +6,9 @@ import {
 } from "@rosesfield/generation"
 import { assetIdFormat } from "@rosesfield/kernel"
 import { z } from "zod"
-import { effectsApp } from "#effects/app"
-import { effectRecipes } from "#effects/effect-recipes"
 import { findWorkflow } from "#list-workflows"
+import { motionApp } from "#motion/app"
+import { libraryExamples } from "#motion/examples/library-examples"
 import { withoutVideoStills } from "../workflows/video-stills"
 
 type Recording = {
@@ -188,7 +188,7 @@ export function promptText(workflow: Workflow, encoderId: string): string {
   return textAt(workflow, workflow[encoderId]?.inputs.text)
 }
 
-export const definition = appDefinition.parse(effectsApp(effectRecipes))
+export const definition = appDefinition.parse(motionApp(libraryExamples))
 export const photoId = assetIdFormat.parse(
   "4d2c1b0a-9e8f-4a6b-8c5d-3e2f1a0b9c8d"
 )

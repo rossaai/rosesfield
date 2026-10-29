@@ -34,3 +34,14 @@ describe("the old Recast address", () => {
     expect(oldAddressOf("video-edit", { use: "clip-5s" })).toBeNull()
   })
 })
+
+describe("the old Effects address", () => {
+  it("opens Motion on its Library, where the effects are examples", () => {
+    expect(oldAddressOf("effects", { use: "photo-1" })).toEqual({
+      to: "/apps/$appId",
+      params: { appId: "motion" },
+      hash: "",
+      search: { tab: "library" },
+    })
+  })
+})

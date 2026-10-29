@@ -1,5 +1,7 @@
 {
-  "effect": "pull-back-to-space",
+  "id": "pull-back-to-space",
+  "approved": false,
+  "approval": null,
   "passed": false,
   "design": {
     "unit": {

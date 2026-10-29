@@ -1,3 +1,4 @@
+import { exampleInput, ownVideo } from "@rosesfield/catalog/motion"
 import type { Run } from "@rosesfield/contract"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { PresetTile } from "@rosesfield/ui/components/preset-tile"
@@ -37,9 +38,24 @@ export type VisualEntry = ExploreEntry & {
 export type RecreateTarget =
   | { search: { share: string } }
   | { search: { from: string } }
+  | { search: { example: string } }
   | { draft: Draft }
 
 export type OpenResult = (entry: VisualEntry, origin: HTMLElement) => void
+
+export function isRemix(run: Run): boolean {
+  const example = run.inputs[exampleInput]
+  return typeof example === "string" && example !== ownVideo
+}
+
+function actionWords(run: Run): { label: string; name: string } {
+  return isRemix(run)
+    ? { label: t("explore.tile.remix"), name: t("explore.tile.remixName") }
+    : {
+        label: t("explore.tile.recreate"),
+        name: t("explore.tile.recreateName"),
+      }
+}
 
 export function exploreCaption(run: Run, estimate: number | null): string {
   return joinParts([
@@ -67,6 +83,10 @@ export function recreateTargetOf(entry: ExploreEntry): RecreateTarget {
     case "own":
       return { search: { from: entry.run.id } }
     case "showcase": {
+      const example = entry.run.inputs[exampleInput]
+      if (typeof example === "string" && example !== ownVideo) {
+        return { search: { example } }
+      }
       const input = exampleInputOf(entry.run.id)
       return {
         draft: {
@@ -162,6 +182,7 @@ export function ResultCard({
     return <EntrySkeleton aspect={aspect} />
   }
   const app = runAppName(entry.run)
+  const words = actionWords(entry.run)
   return (
     <ResultTile
       kind={entry.kind}
@@ -173,8 +194,8 @@ export function ResultCard({
       openLabel={t("explore.tile.open", { app })}
       expandLabel={t("explore.tile.expand", { app })}
       moreLabel={t("explore.tile.more", { app })}
-      recreateLabel={t("explore.tile.recreate")}
-      recreateName={t("explore.tile.recreateName")}
+      recreateLabel={words.label}
+      recreateName={words.name}
       onOpen={(origin) => onOpen(entry, origin)}
       onRecreate={() => recreate(entry)}
       onMore={() => onMore(entry)}
@@ -202,7 +223,7 @@ export function ExplorePresetTile({
       href={viewHref}
       viewLabel={t("explore.preset.view", { name })}
       action={{
-        label: t("explore.tile.recreate"),
+        label: actionWords(entry.run).label,
         href: actionHref,
         onSelect: () => recreate(entry),
       }}

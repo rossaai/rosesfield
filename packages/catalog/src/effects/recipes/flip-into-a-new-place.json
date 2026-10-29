@@ -1,5 +1,7 @@
 {
-  "effect": "flip-into-a-new-place",
+  "id": "flip-into-a-new-place",
+  "approved": false,
+  "approval": null,
   "passed": false,
   "design": {
     "unit": {

@@ -1,5 +1,7 @@
 {
-  "effect": "push-into-eye",
+  "id": "push-into-eye",
+  "approved": false,
+  "approval": null,
   "passed": true,
   "design": {
     "unit": {
@@ -97,11 +99,19 @@
   "seconds": 7,
   "preview": {
     "file": "push-into-eye.mp4",
+    "sha256": "4e3025102b4f44bf0503137f5dc422fcc462f034635a0d9abcba756d352bda33",
+    "bytes": 625588,
+    "width": 540,
+    "height": 720,
     "runId": "1e77db70-4ebe-4050-97e4-84f118438aeb",
     "seed": 1028487189,
     "resolution": "1080p",
     "aspectRatio": "3:4",
-    "workflowHash": "2221d4e0373d184319a67f1d6bccd2c3e96095a82a443400320aac0be8662f36"
+    "workflowHash": "2221d4e0373d184319a67f1d6bccd2c3e96095a82a443400320aac0be8662f36",
+    "model": "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+    "credits": 37.89,
+    "seconds": 162.3,
+    "madeAt": "2026-10-21T21:02:43Z"
   },
   "proof": {
     "gate": {

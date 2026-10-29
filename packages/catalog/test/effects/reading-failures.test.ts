@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest"
-import type { VideoReading } from "#effects/effect-recipe.contract"
-import { recipeOf } from "#effects/effect-recipes"
-import { readingFailures } from "#effects/reading-failures"
+import type { VideoReading } from "#motion/examples/library-example.contract"
+import { exampleOf } from "#motion/examples/library-examples"
+import { readingFailures } from "#motion/examples/reading-failures"
 import { readingFor } from "./passed-recipe"
 
 const at720 = { resolution: "720p", aspectRatio: "3:4" } as const
 
 function failuresOf(effect: string, change: Partial<VideoReading>): string[] {
-  const recipe = recipeOf(effect)
+  const recipe = exampleOf(effect)
   const reading = { ...readingFor(recipe, "720p", "3:4"), ...change }
   return readingFailures(recipe, reading, at720)
 }
@@ -28,7 +28,7 @@ describe("a run's video reading held against its look's criteria", () => {
   })
 
   it("names a frame that keeps the 720p height but not the pixel area of its shape", () => {
-    const recipe = recipeOf("push-into-eye")
+    const recipe = exampleOf("push-into-eye")
     const reading = {
       ...readingFor(recipe, "720p", "16:9"),
       width: 1280,

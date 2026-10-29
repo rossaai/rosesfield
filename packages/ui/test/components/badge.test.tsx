@@ -38,11 +38,28 @@ describe("Badge", () => {
           ?.getAttribute("data-tone") ?? ""
       )
     })
-    expect(tones.every((tone) => ["nop", "hor", "cem"].includes(tone))).toBe(
-      true
-    )
-    expect(badgeKinds).toEqual(["new", "value", "openWeights"])
+    expect(
+      tones.every((tone) => ["nop", "hor", "cem", "bug"].includes(tone))
+    ).toBe(true)
+    expect(badgeKinds).toEqual(["new", "value", "openWeights", "featured"])
     expect(new Set(tones.slice(0, 2)).size).toBe(2)
+  })
+
+  it("draws Featured in bugambilia, a tone no other kind shares, so it never reads as New or Best value", () => {
+    const toneOf = (kind: (typeof badgeKinds)[number]): string => {
+      render(<Badge kind={kind}>{kind}</Badge>)
+      return (
+        screen
+          .getByText(kind)
+          .closest("[data-slot='badge']")
+          ?.getAttribute("data-tone") ?? ""
+      )
+    }
+    const featured = toneOf("featured")
+    expect(featured).toBe("bug")
+    for (const kind of badgeKinds.filter((one) => one !== "featured")) {
+      expect({ kind, tone: toneOf(kind) }).not.toEqual({ kind, tone: featured })
+    }
   })
 
   it("takes a tone of its own, and the quiet tint with no kind, for a fact a screen shows", () => {

@@ -209,6 +209,18 @@ export function heldProblemsOf(
   return problemsOf({ ...app, inputs: held }, values)
 }
 
+export function heldValuesOf(app: AppListing, values: FormValues): FormValues {
+  const held = app.inputs.filter(
+    (input) => input.type === "seed" || whenHolds(input.when, values.inputs)
+  )
+  return {
+    ...values,
+    inputs: Object.fromEntries(
+      held.map((input) => [input.name, values.inputs[input.name]])
+    ),
+  }
+}
+
 export function appliedApp(
   app: AppListing,
   inputs: Readonly<Record<string, FieldValue>>

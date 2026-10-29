@@ -46,7 +46,7 @@ vi.mock("@/catalog/catalog-copy", async (original) => {
     catalogCopy: {
       ...actual.catalogCopy,
       "motion.input.clip.range":
-        "{model} takes clips of {min} to {max} seconds. This one runs {seconds} seconds.",
+        "{model} takes videos of {min} to {max} seconds. This one runs {seconds} seconds.",
     },
   }
 })
@@ -269,7 +269,7 @@ describe("Motion keeps your files", () => {
   it("names the model's range for a clip it does not take, starts no run and keeps your photo", () => {
     const { result } = renderMotion({ clip: [longClip], photo: [photo] })
     expect(result.current.clipMessage).toBe(
-      `${graphId} takes clips of 2 to 10 seconds. This one runs 12 seconds.`
+      `${graphId} takes videos of 2 to 10 seconds. This one runs 12 seconds.`
     )
     act(() => result.current.start.generate())
     expect(world.started).toBe(0)
@@ -356,7 +356,7 @@ describe("Follow a guide", () => {
       resolution: "720p",
     })
     expect(result.current.clipMessage).toBe(
-      `${guide.id} takes clips of 2 to 10 seconds. This one runs 12 seconds.`
+      `${guide.id} takes videos of 2 to 10 seconds. This one runs 12 seconds.`
     )
     act(() => result.current.start.generate())
     expect(world.started).toBe(0)

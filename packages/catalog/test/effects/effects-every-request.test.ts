@@ -7,10 +7,10 @@ import {
   ltxFrames,
 } from "#effects/comfy/frame-sizes"
 import {
-  type EffectRecipe,
+  type LibraryExample,
   resolutionValues,
-} from "#effects/effect-recipe.contract"
-import { effectRecipes as everyRecipe } from "#effects/effect-recipes"
+} from "#motion/examples/library-example.contract"
+import { libraryExamples as everyRecipe } from "#motion/examples/library-examples"
 import {
   brokenLinks,
   cloudUrl,
@@ -22,7 +22,7 @@ import {
   submitted,
 } from "./effects-replay"
 
-const effectRecipes = everyRecipe.filter((recipe) => recipe.guide === null)
+const libraryExamples = everyRecipe.filter((recipe) => recipe.guide === null)
 
 const videoModel = "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
 
@@ -59,25 +59,29 @@ const effects = [
 ]
 
 type Case = {
-  recipe: EffectRecipe
+  recipe: LibraryExample
   resolution: (typeof resolutionValues)[number]
   ratio: (typeof effectRatios)[number]
 }
 
+const offeredResolutions = resolutionValues.filter(
+  (resolution) => resolution !== "1080p"
+)
+
 function cases(): Case[] {
-  return effectRecipes.flatMap((recipe) =>
-    resolutionValues.map((resolution, index) => ({
+  return libraryExamples.flatMap((recipe) =>
+    offeredResolutions.map((resolution, index) => ({
       recipe,
       resolution,
       ratio:
         effectRatios[
-          (effectRecipes.indexOf(recipe) * 2 + index) % effectRatios.length
+          (libraryExamples.indexOf(recipe) * 2 + index) % effectRatios.length
         ] ?? "16:9",
     }))
   )
 }
 
-function expectedModels(recipe: EffectRecipe): string[] {
+function expectedModels(recipe: LibraryExample): string[] {
   return [
     videoModel,
     ...[
@@ -91,7 +95,7 @@ function expectedModels(recipe: EffectRecipe): string[] {
   ]
 }
 
-function expectedPrompt(recipe: EffectRecipe): string {
+function expectedPrompt(recipe: LibraryExample): string {
   const parts = [recipe.prompt, detail, recipe.design.sound?.prompt ?? ""]
   return parts.filter((part) => part !== "").join(" ")
 }
@@ -99,28 +103,24 @@ function expectedPrompt(recipe: EffectRecipe): string {
 describe("every effects engine request against the recorded v2 routes", () => {
   const all = cases()
 
-  it("covers each of the nine effects at each resolution", () => {
-    expect(all.map((one) => `${one.recipe.effect} ${one.resolution}`)).toEqual(
-      effects.flatMap((effect) => [
-        `${effect} 480p`,
-        `${effect} 720p`,
-        `${effect} 1080p`,
-      ])
+  it("covers each of the nine effects at each resolution Motion offers, 480p and 720p", () => {
+    expect(all.map((one) => `${one.recipe.id} ${one.resolution}`)).toEqual(
+      effects.flatMap((effect) => [`${effect} 480p`, `${effect} 720p`])
     )
   })
 
   it.each(
     all.map((one) => ({
-      name: `${one.recipe.effect} ${one.resolution} ${one.ratio}`,
+      name: `${one.recipe.id} ${one.resolution} ${one.ratio}`,
       one,
     }))
   )("$name", async ({ one }) => {
     const { recipe } = one
     const request = requestFor(
       {
-        effect: recipe.effect,
-        image: [photoId],
-        prompt: detail,
+        example: recipe.id,
+        photo: [photoId],
+        scene: detail,
         resolution: one.resolution,
       },
       one.ratio

@@ -1,3 +1,4 @@
+import { exampleInput, ownVideo } from "@rosesfield/catalog/motion"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { inputValueText } from "@/pieces/run/run-facts"
@@ -31,8 +32,8 @@ export const promoFloor = 3
 
 const promoShape = 16 / 9
 
-const presetInputNames: readonly string[] = ["effect", "cameraMove"]
-const autoValue = "auto"
+const presetInputNames: readonly string[] = [exampleInput, "cameraMove"]
+const unsetValues: readonly string[] = ["auto", ownVideo]
 
 export function isVisualEntry(entry: ExploreEntry): entry is VisualEntry {
   return entry.kind !== "audio" && entry.aspect !== undefined
@@ -109,7 +110,7 @@ export function presetsOf(
     const value = entry.run.inputs[input.name]
     return entry.kind === "video" &&
       typeof value === "string" &&
-      value !== autoValue
+      !unsetValues.includes(value)
       ? value
       : null
   }

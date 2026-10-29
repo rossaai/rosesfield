@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest"
 import { effectGraph } from "#effects/comfy/effect-graph"
 import { audioFramesOf, framesOf, ltxFrames } from "#effects/comfy/frame-sizes"
-import { effectRecipes as everyRecipe } from "#effects/effect-recipes"
+import { libraryExamples as everyRecipe } from "#motion/examples/library-examples"
 import { fileGraph, workflowOf } from "./effects-replay"
 
-const effectRecipes = everyRecipe.filter((recipe) => recipe.guide === null)
+const libraryExamples = everyRecipe.filter((recipe) => recipe.guide === null)
 
 const audioVae = {
   sampleRate: 16000,
@@ -47,13 +47,13 @@ describe("the sound of an effect", () => {
   })
 
   it("sizes the empty audio latent of every look from its length, so its sound runs to the last frame", () => {
-    for (const recipe of effectRecipes) {
+    for (const recipe of libraryExamples) {
       const workflow = workflowOf(effectGraph(fileGraph(), recipe))
       expect({
-        effect: recipe.effect,
+        effect: recipe.id,
         frames: workflow["366"]?.inputs.frames_number,
       }).toEqual({
-        effect: recipe.effect,
+        effect: recipe.id,
         frames: audioFramesOf(recipe.seconds),
       })
     }

@@ -1,9 +1,13 @@
 import { comfyCreditsPerUsd } from "@rosesfield/catalog/comfy"
+import {
+  approvedExamples,
+  exampleInput,
+  type LibraryExample,
+} from "@rosesfield/catalog/motion"
 import { type Run, run } from "@rosesfield/contract"
 import { promptInputOf } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { type ShowcaseRow, showcaseRows } from "@/showcase/showcase-rows"
-import { previewOf } from "@/studio/effects/effect-previews"
 
 export type ShowcaseItem = ShowcaseRow & { src: string; run: Run }
 
@@ -15,8 +19,40 @@ const mediaFiles = import.meta.glob("./media/*", {
 
 const adapter = "comfy-workflow"
 
+const motionAppId = "motion"
+
 export function mediaOf(file: string): string | null {
-  return mediaFiles[`./media/${file}`] ?? previewOf(file)
+  return mediaFiles[`./media/${file}`] ?? null
+}
+
+export function exampleRowsOf(
+  examples: readonly LibraryExample[]
+): ShowcaseRow[] {
+  return examples.flatMap((example) => {
+    const { preview } = example
+    return preview === null
+      ? []
+      : [
+          {
+            runId: preview.runId,
+            file: preview.file,
+            appId: motionAppId,
+            kind: "video",
+            width: preview.width,
+            height: preview.height,
+            model: preview.model,
+            prompt: null,
+            inputs: {
+              [exampleInput]: example.id,
+              resolution: preview.resolution,
+            },
+            aspectRatio: preview.aspectRatio,
+            credits: preview.credits,
+            seconds: preview.seconds,
+            madeAt: preview.madeAt,
+          },
+        ]
+  })
 }
 
 function inputsOf(row: ShowcaseRow): Record<string, string> {
@@ -59,8 +95,12 @@ export function showcaseItemsOf(
   })
 }
 
-export const showcaseItems: readonly ShowcaseItem[] =
-  showcaseItemsOf(showcaseRows)
+const shownRows: readonly ShowcaseRow[] = [
+  ...showcaseRows,
+  ...exampleRowsOf(approvedExamples),
+]
+
+export const showcaseItems: readonly ShowcaseItem[] = showcaseItemsOf(shownRows)
 
 export function showcaseOf(appId: string): ShowcaseItem[] {
   return showcaseItems.filter((item) => item.appId === appId)
@@ -69,13 +109,13 @@ export function showcaseOf(appId: string): ShowcaseItem[] {
 const isClipFile = (file: string): boolean => file.endsWith(".mp4")
 
 const madeFromClip = new Set(
-  showcaseRows.flatMap((row) =>
+  shownRows.flatMap((row) =>
     row.from !== undefined && isClipFile(row.from) ? [row.runId] : []
   )
 )
 
 const shownSources = new Set(
-  showcaseRows.flatMap((row) =>
+  shownRows.flatMap((row) =>
     madeFromClip.has(row.runId)
       ? []
       : [row.from, row.input?.file].filter(
@@ -85,14 +125,14 @@ const shownSources = new Set(
 )
 
 export function isFeedExample(runId: string): boolean {
-  const row = showcaseRows.find((one) => one.runId === runId)
+  const row = shownRows.find((one) => one.runId === runId)
   return (
     row !== undefined && !madeFromClip.has(runId) && !shownSources.has(row.file)
   )
 }
 
 export function exampleGroupOf(runId: string): string {
-  const row = showcaseRows.find((one) => one.runId === runId)
+  const row = shownRows.find((one) => one.runId === runId)
   return row === undefined ? runId : (row.from ?? row.file)
 }
 
@@ -105,7 +145,7 @@ export function exampleInputOf(
   runId: string,
   media: (file: string) => string | null = mediaOf
 ): ExampleSource | null {
-  const input = showcaseRows.find((row) => row.runId === runId)?.input
+  const input = shownRows.find((row) => row.runId === runId)?.input
   const src = input === undefined ? null : media(input.file)
   return input === undefined || src === null ? null : { src, name: input.name }
 }

@@ -106,6 +106,7 @@ export {
   type RunPrice,
   unknownPrice,
 } from "#domain/generation-engine.port"
+export { type ImageSize, imageSizeOf } from "#domain/image-size"
 export { JobRunner } from "#domain/job-runner.port"
 export {
   type CheckedInputs,

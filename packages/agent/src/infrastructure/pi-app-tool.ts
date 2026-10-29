@@ -7,10 +7,10 @@ import type {
 } from "@earendil-works/pi-durable"
 import { autoRunLimitCredits, type ModelForm } from "@rosesfield/catalog/comfy"
 import {
-  effectAgentNotes,
-  effectsAppId,
+  exampleAgentNotes,
   isFinalRun,
-} from "@rosesfield/catalog/effects"
+  motionAppId,
+} from "@rosesfield/catalog/motion"
 import {
   type AppDefinition,
   errorEnvelopeOf,
@@ -100,9 +100,8 @@ function checkedArguments(
 
 export function appToolDescription(app: AppDefinition): string {
   const general = agentCopy.tools.app(app)
-  return app.id === effectsAppId
-    ? `${general}\n${effectAgentNotes(app)}`
-    : general
+  const notes = app.id === motionAppId ? exampleAgentNotes(app) : ""
+  return notes === "" ? general : `${general}\n${notes}`
 }
 
 function refusalOf(error: ProjectError): ToolExecutionResult {

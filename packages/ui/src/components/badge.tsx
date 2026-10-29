@@ -4,11 +4,16 @@ import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import type { CSSProperties, ReactElement, ReactNode } from "react"
 
-type BadgeKind = "new" | "value" | "openWeights"
+type BadgeKind = "new" | "value" | "openWeights" | "featured"
 
 type BadgeTone = "nop" | "hor" | "cem" | "bug" | "quiet" | "glass"
 
-const badgeKinds: readonly BadgeKind[] = ["new", "value", "openWeights"]
+const badgeKinds: readonly BadgeKind[] = [
+  "new",
+  "value",
+  "openWeights",
+  "featured",
+]
 
 const badgeTones: readonly BadgeTone[] = [
   "nop",
@@ -32,6 +37,7 @@ const kindTones = {
   new: "nop",
   value: "cem",
   openWeights: "cem",
+  featured: "bug",
 } as const satisfies Record<BadgeKind, BadgeTone>
 
 const badgeClass =

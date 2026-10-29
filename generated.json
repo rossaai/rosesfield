@@ -76,7 +76,7 @@
     },
     {
       "path": "apps/platform/src/copy/app.en.ts",
-      "sha256": "db9b88271278cef911959ef6f33c25c56815da8ec49c4cc0341c1a1bb2281081"
+      "sha256": "c39c88d9b73c3281927ffd6ec67ce6c62a2606a3763d57cc2c17b40bca56551b"
     },
     {
       "path": "apps/platform/src/copy/characters.en.ts",
@@ -92,11 +92,11 @@
     },
     {
       "path": "apps/platform/src/copy/explore.en.ts",
-      "sha256": "ccbfc43cac482d728f1abf62eddeb3debea4ffd831a3209a7fd80fd498d5e557"
+      "sha256": "012267066ceef4f5b79178a34f8e5bb50289b2a22bdd32efe876be23e1c71334"
     },
     {
       "path": "apps/platform/src/copy/field.en.ts",
-      "sha256": "f509055b4af5266db1e3815437809987631fc188aa0f2df6c02e98958507204a"
+      "sha256": "5ead21e3bfb2eae9076f1546cd0f587c03beec24529c9c6f5e17999d1845fd59"
     },
     {
       "path": "apps/platform/src/copy/home.en.ts",
@@ -124,11 +124,11 @@
     },
     {
       "path": "apps/platform/src/gallery/copy.en.ts",
-      "sha256": "5f8815ab5b915c299d51a55c1832d086cea931e8af99f63dae5979292633eeab"
+      "sha256": "6123e61182286eba2db13caf55b36cf107c59c74aa308d3406a0856c81036977"
     },
     {
       "path": "apps/platform/src/gallery/reference-copy.en.ts",
-      "sha256": "0247e8e3cb831ed4cdcc640ad4f734f26b2b57a2cc875985a8e5cbde6adaec14"
+      "sha256": "5a481c1f9ab954e73a8bb7b51dd84bf803fbe9e823d1cc0eb3cf41c3a3c67928"
     },
     {
       "path": "packages/agent/src/copy.en.ts",
@@ -163,10 +163,6 @@
       "sha256": "9b9b097c8a53c6922e35b113b556231a02d58824b588e2335bd1e7203ddcf3e0"
     },
     {
-      "path": "packages/catalog/src/effects/copy.en.ts",
-      "sha256": "5ec50dc053f09e171d21c1a35b1fcf838810a8a1be71ba7f43f50ddd9d351cf2"
-    },
-    {
       "path": "packages/catalog/src/expand/copy.en.ts",
       "sha256": "880897e270491550e8bc6c96a5389fe4f3f5df70619c162c0cf092cd99fdc695"
     },
@@ -188,7 +184,7 @@
     },
     {
       "path": "packages/catalog/src/motion/copy.en.ts",
-      "sha256": "206b5412273e72f595950074ea85d78b83cba337c2b2e4332cab5a12e52e63c1"
+      "sha256": "4e00768e84ccf7a16dd4f338eb222d36641eb13065df765d0e6e1aca4f54b1c1"
     },
     {
       "path": "packages/catalog/src/music/copy.en.ts",

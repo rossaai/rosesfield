@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest"
-import { effectRuns, passedRecipes } from "#effects/effect-recipes"
+import { exampleRuns, libraryExamples } from "#motion/examples/library-examples"
+
+const passedExamples = libraryExamples.filter((example) => example.passed)
 
 describe("the looks that passed", () => {
   it("keeps the run each passed look passed with as a kept row of the run ledger", () => {
-    expect(passedRecipes.length).toBeGreaterThan(0)
-    expect(effectRuns).toEqual(
+    expect(passedExamples.length).toBeGreaterThan(0)
+    expect(exampleRuns).toEqual(
       expect.arrayContaining(
-        passedRecipes.map(({ effect, preview }) =>
+        passedExamples.map(({ id, preview }) =>
           expect.objectContaining({
             runId: preview?.runId,
-            effect,
+            example: id,
             workflowHash: preview?.workflowHash,
             seed: preview?.seed,
             resolution: preview?.resolution,

@@ -1,4 +1,5 @@
 import type { AppListing } from "@rosesfield/contract"
+import { Badge } from "@rosesfield/ui/components/badge"
 import {
   AudioLinesIcon,
   AudioWaveformIcon,
@@ -30,9 +31,9 @@ import {
   SunIcon,
   UsersIcon,
   VideoIcon,
-  WandIcon,
 } from "lucide-react"
 import type { ReactElement } from "react"
+import { appBadge } from "@/catalog/app-facts"
 import { catalogApps } from "@/catalog/catalog-apps"
 import type { CopyKey } from "@/copy.en"
 
@@ -87,7 +88,6 @@ const appGlyphs: Readonly<Record<string, Glyph>> = {
   ads: MegaphoneIcon,
   angles: Rotate3dIcon,
   "background-removal": EraserIcon,
-  effects: WandIcon,
   expand: ExpandIcon,
   headshots: SquareUserIcon,
   layers: LayersIcon,
@@ -141,6 +141,15 @@ export const historyLink = screenLink(
   HistoryIcon,
   "/history"
 )
+
+export function AppNameBadge({
+  app,
+}: {
+  app: AppListing
+}): ReactElement | null {
+  const badge = appBadge(app)
+  return badge === null ? null : <Badge kind="featured">{badge}</Badge>
+}
 
 export function navGroups(
   apps: readonly AppListing[] = catalogApps

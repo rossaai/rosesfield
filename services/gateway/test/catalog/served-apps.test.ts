@@ -3,10 +3,10 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { listApps, readApps } from "@rosesfield/catalog"
 import {
-  effectRecipes,
-  effectsApp,
-  passedRecipes,
-} from "@rosesfield/catalog/effects"
+  approvedExamples,
+  libraryExamples,
+  motionApp,
+} from "@rosesfield/catalog/motion"
 import { isRemakeOpen } from "@rosesfield/catalog/remake"
 import {
   type AppDefinition,
@@ -24,8 +24,7 @@ import { servedApps } from "#catalog/served-apps"
 import { composeLocalGateway, type LocalGateway } from "#compose/local-gateway"
 import { readServerEnv, readWorkerEnv, type WorkerVars } from "#env"
 import { gatewayRoutes, settingsResponse } from "#gateway.contract"
-import { passedRecipe } from "../../../../packages/catalog/test/effects/passed-recipe"
-import { pngOf } from "../fixtures/effects-gateway"
+import { pngOf } from "../fixtures/examples-gateway"
 import { Visitor } from "../fixtures/visitor"
 import { ownerToken, sessionSecret, start } from "../sample-apps"
 
@@ -50,10 +49,10 @@ function folder(): string {
   return made
 }
 
-function effectsOf(apps: readonly AppDefinition[]): AppDefinition {
-  const found = apps.find((app) => app.id === "effects")
+function motionOf(apps: readonly AppDefinition[]): AppDefinition {
+  const found = apps.find((app) => app.id === "motion")
   if (found === undefined) {
-    throw new Error("The served apps hold no effects app")
+    throw new Error("The served apps hold no Motion app")
   }
   return found
 }
@@ -61,15 +60,15 @@ function effectsOf(apps: readonly AppDefinition[]): AppDefinition {
 function optionsOf(app: AppDefinition): string[] {
   const input = app.inputs.find(
     (one): one is Extract<InputDefinition, { type: "choice" }> =>
-      one.name === "effect" && one.type === "choice"
+      one.name === "example" && one.type === "choice"
   )
-  return input === undefined ? [] : input.options.map((one) => one.value)
+  return input === undefined
+    ? []
+    : input.options.map((one) => one.value).filter((one) => one !== "own")
 }
 
-function onePassed(): AppDefinition[] {
-  return readApps([
-    { folder: "effects", app: effectsApp([passedRecipe("push-into-eye")]) },
-  ])
+function oneApproved(): AppDefinition[] {
+  return readApps([{ folder: "motion", app: motionApp(approvedExamples) }])
 }
 
 const localVars = (): WorkerVars =>
@@ -88,58 +87,32 @@ const publicVars = (): WorkerVars =>
 const judgeVars = (): WorkerVars => readWorkerEnv({ OWNER_TOKEN: ownerToken })
 
 describe("the apps a server serves", () => {
-  it("offers every effect, drafts after the passed ones, on a server that answers only on this computer, and no look that follows a guide before a run of it passes", () => {
-    const served = effectsOf(servedApps(localVars(), "bun", onePassed()))
-    expect(served.closedKey).toBeNull()
+  it("offers every example, the ones not yet approved after the approved ones, on a server that answers only on this computer", () => {
+    const served = motionOf(servedApps(localVars(), "bun", oneApproved()))
     expect(optionsOf(served)).toEqual([
-      ...passedRecipes.map((one) => one.effect),
-      ...effectRecipes
-        .filter((one) => !one.passed && one.guide === null)
-        .map((one) => one.effect),
+      ...approvedExamples.map((one) => one.id),
+      ...libraryExamples.filter((one) => !one.approved).map((one) => one.id),
     ])
     expect(optionsOf(served)).toContain(draft)
-    expect(optionsOf(served)).not.toContain("grab-and-run")
   })
 
   it.each([
     ["an owner token", tokenVars],
     ["public mode", publicVars],
     ["the judge deployment", judgeVars],
-  ])("offers only the passed effects behind %s", (_, varsOf) => {
-    const apps = onePassed()
+  ])("offers only the approved examples behind %s", (_, varsOf) => {
+    const apps = oneApproved()
     expect(servedApps(varsOf(), "bun", apps)).toBe(apps)
-    expect(optionsOf(effectsOf(servedApps(varsOf(), "bun", apps)))).toEqual([
-      "push-into-eye",
-    ])
-    const shipped = effectsOf(servedApps(varsOf(), "bun"))
-    expect(shipped.closedKey).toBeNull()
-    expect(optionsOf(shipped)).toEqual(passedRecipes.map((one) => one.effect))
+    const shipped = motionOf(servedApps(varsOf(), "bun"))
+    expect(optionsOf(shipped)).toEqual(approvedExamples.map((one) => one.id))
+    expect(optionsOf(shipped)).not.toContain(draft)
   })
-
-  it.each([
-    ["an owner token", tokenVars],
-    ["public mode", publicVars],
-    ["the judge deployment", judgeVars],
-  ])(
-    "keeps the app closed with its note behind %s while no effect has passed",
-    (_, varsOf) => {
-      const closed = effectsOf(
-        servedApps(
-          varsOf(),
-          "bun",
-          readApps([{ folder: "effects", app: effectsApp([]) }])
-        )
-      )
-      expect(closed.closedKey).toBe("effects.closed")
-      expect(optionsOf(closed)).toEqual([])
-    }
-  )
 
   it("keeps every other app as the catalog lists it", () => {
     const served = servedApps(localVars(), "bun")
     const listed = listApps()
     expect(served.map((app) => app.id)).toEqual(listed.map((app) => app.id))
-    for (const app of served.filter((one) => one.id !== "effects")) {
+    for (const app of served.filter((one) => one.id !== "motion")) {
       expect(app).toBe(listed.find((one) => one.id === app.id))
     }
   })
@@ -186,7 +159,7 @@ describe("where Remake runs", () => {
   })
 
   it("control: a Workers server with no Remake in its list returns the list as it is", () => {
-    const apps = onePassed()
+    const apps = oneApproved()
     expect(servedApps(judgeVars(), "workers", apps)).toBe(apps)
   })
 })
@@ -199,7 +172,7 @@ type StartInit = {
 
 type Send = (path: string, init: StartInit) => Response | Promise<Response>
 
-describe("a draft effect run", () => {
+describe("a run of an example not yet approved", () => {
   function local(): LocalGateway {
     const env = readServerEnv({ HOST: "127.0.0.1", DATA_DIR: folder() })
     open = composeLocalGateway({
@@ -229,14 +202,14 @@ describe("a draft effect run", () => {
   }
 
   async function startDraft(send: Send, photo: string): Promise<Response> {
-    return await send(buildPath(routes.startRun.path, { appId: "effects" }), {
+    return await send(buildPath(routes.startRun.path, { appId: "motion" }), {
       method: "POST",
       headers: {
         "content-type": "application/json",
         "idempotency-key": crypto.randomUUID(),
       },
       body: JSON.stringify({
-        inputs: { effect: draft, image: [photo] },
+        inputs: { example: draft, photo: [photo] },
         aspectRatio: "9:16",
       }),
     })
@@ -275,9 +248,9 @@ describe("a draft effect run", () => {
     expect(runs).toHaveLength(1)
     expect(runs[0]).toMatchObject({
       id: run.id,
-      appId: "effects",
+      appId: "motion",
       status: "done",
-      inputs: { effect: draft },
+      inputs: { example: draft },
       seed: run.seed,
     })
     const asset = await call(
@@ -327,7 +300,7 @@ describe("a draft effect run", () => {
     })
     open = composeLocalGateway({
       env,
-      apps: servedApps(env, "bun", onePassed()),
+      apps: servedApps(env, "bun", oneApproved()),
       platformRoot: null,
     })
     const visitor = new Visitor({ app: open.app, seen: [] })

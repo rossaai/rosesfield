@@ -5,7 +5,6 @@ import { app as audio } from "#audio/app"
 import { app as backgroundRemoval } from "#background-removal/app"
 import { app as characters } from "#characters/app"
 import { app as edit } from "#edit/app"
-import { app as effects } from "#effects/app"
 import { app as expand } from "#expand/app"
 import { app as headshots } from "#headshots/app"
 import { app as image } from "#image/app"
@@ -34,7 +33,6 @@ export const apps: readonly AppEntry[] = [
   { folder: "background-removal", app: backgroundRemoval },
   { folder: "characters", app: characters },
   { folder: "edit", app: edit },
-  { folder: "effects", app: effects },
   { folder: "expand", app: expand },
   { folder: "headshots", app: headshots },
   { folder: "image", app: image },

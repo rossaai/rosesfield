@@ -122,7 +122,8 @@ export function editPhotosOf(plan: ClipPlan, most: number): number[] {
 export function aspectRatioOf(size: FrameSize): string {
   const ratio = size.width / size.height
   const { output } = imageApp
-  const options = "aspectRatios" in output ? output.aspectRatios.options : []
+  const options =
+    "aspectRatios" in output ? (output.aspectRatios?.options ?? []) : []
   const distance = (option: string): number => {
     const [wide = 1, high = 1] = option.split(":").map(Number)
     return Math.abs(Math.log(ratio / (wide / high)))

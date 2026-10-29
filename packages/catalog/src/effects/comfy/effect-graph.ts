@@ -9,7 +9,10 @@ import {
   relink,
   remove,
 } from "#effects/comfy/graph-edit"
-import type { EffectRecipe, PhotoFit } from "#effects/effect-recipe.contract"
+import type {
+  LibraryExample,
+  PhotoFit,
+} from "#motion/examples/library-example.contract"
 import { apiGraph } from "#workflow-entry.contract"
 
 export const editFrameNodes: readonly string[] = [
@@ -64,17 +67,17 @@ function passThrough(graph: Graph, id: string): void {
   })
 }
 
-function setPrompts(graph: Graph, recipe: EffectRecipe): void {
+function setPrompts(graph: Graph, recipe: LibraryExample): void {
   nodeOf(graph, "501").inputs.string_a = recipe.prompt
   nodeOf(graph, "503").inputs.string_b = recipe.design.sound?.prompt ?? ""
 }
 
-function setLength(graph: Graph, recipe: EffectRecipe): void {
+function setLength(graph: Graph, recipe: LibraryExample): void {
   nodeOf(graph, "356").inputs.length = framesOf(recipe.seconds)
   nodeOf(graph, "366").inputs.frames_number = audioFramesOf(recipe.seconds)
 }
 
-function addAdapter(graph: Graph, recipe: EffectRecipe): void {
+function addAdapter(graph: Graph, recipe: LibraryExample): void {
   if (recipe.adapter === null) {
     return
   }
@@ -96,11 +99,11 @@ export const midFrameNodes: readonly string[] = ["470", "471"]
 
 export const midGuideNodes: readonly string[] = ["472", "473"]
 
-export function hasEditPass(recipe: EffectRecipe): boolean {
+export function hasEditPass(recipe: LibraryExample): boolean {
   return recipe.endFrame.source === "edit" || recipe.midFrame !== null
 }
 
-function setEditPass(graph: Graph, recipe: EffectRecipe): void {
+function setEditPass(graph: Graph, recipe: LibraryExample): void {
   const end = recipe.endFrame
   const prompt = end.source === "edit" ? end.prompt : recipe.midFrame?.prompt
   if (end.source !== "dark") {
@@ -116,7 +119,7 @@ function setEditPass(graph: Graph, recipe: EffectRecipe): void {
   nodeOf(graph, endFramePromptNode).inputs.prompt = prompt
 }
 
-function setEndFrame(graph: Graph, recipe: EffectRecipe): void {
+function setEndFrame(graph: Graph, recipe: LibraryExample): void {
   const end = recipe.endFrame
   if (end.source === "none") {
     passThrough(graph, "460")
@@ -134,7 +137,7 @@ function setEndFrame(graph: Graph, recipe: EffectRecipe): void {
   }
 }
 
-function setMidFrame(graph: Graph, recipe: EffectRecipe): void {
+function setMidFrame(graph: Graph, recipe: LibraryExample): void {
   const mid = recipe.midFrame
   if (mid === null) {
     for (const id of midGuideNodes) {
@@ -160,7 +163,7 @@ const editedFrame: Link = ["627", 0]
 
 const openingResizeNode = "351"
 
-function setPhotoFrame(graph: Graph, recipe: EffectRecipe): void {
+function setPhotoFrame(graph: Graph, recipe: LibraryExample): void {
   if (recipe.photoFrame === "first") {
     return
   }
@@ -170,7 +173,7 @@ function setPhotoFrame(graph: Graph, recipe: EffectRecipe): void {
   }
 }
 
-function setHold(graph: Graph, recipe: EffectRecipe): void {
+function setHold(graph: Graph, recipe: LibraryExample): void {
   if (recipe.hold === null) {
     passThrough(graph, "461")
     passThrough(graph, "464")
@@ -185,17 +188,17 @@ export const fitCrops: Readonly<Record<PhotoFit["edges"], string>> = {
   crop: "center",
 }
 
-function setFit(graph: Graph, recipe: EffectRecipe): void {
+function setFit(graph: Graph, recipe: LibraryExample): void {
   nodeOf(graph, fittedPhotoNode).inputs.crop = fitCrops[recipe.design.fit.edges]
 }
 
-function setGrain(graph: Graph, recipe: EffectRecipe): void {
+function setGrain(graph: Graph, recipe: LibraryExample): void {
   nodeOf(graph, grainNode).inputs.strength = recipe.design.encode.grain
 }
 
 export function effectGraph(
   workflow: Record<string, unknown>,
-  recipe: EffectRecipe
+  recipe: LibraryExample
 ): Record<string, unknown> {
   const graph: Graph = apiGraph.parse(workflow)
   setFit(graph, recipe)

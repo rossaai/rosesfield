@@ -14,6 +14,7 @@ export const appCopy = {
   "app.canvas.view": "View",
   "app.search.label": "Search your results",
   "app.tab.history": "History",
+  "app.tab.library": "Library",
   "app.tab.how": "How it works",
   "app.how.inputs.title": "Add your inputs",
   "app.how.inputs.line":
@@ -177,4 +178,7 @@ export const appCopy = {
     "Make a key in your Comfy workspace, then paste it in Settings.",
   "run.price.kept":
     "{amount} Comfy credits, measured on the {resolution} example",
+  "app.library.remix": "Remix",
+  "app.library.remixName": "Remix {name}",
+  "app.library.label": "Library",
 } satisfies Record<string, string>

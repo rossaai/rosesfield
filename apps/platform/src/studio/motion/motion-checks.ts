@@ -37,24 +37,6 @@ export const clipLimits: Limits = {
   unreadableKey: "motion.input.clip.unreadable",
 }
 
-export function nearestRatio(width: number, height: number): string {
-  const wide = width * width
-  const tall = height * height
-  if (64 * wide < 27 * tall) {
-    return "9:16"
-  }
-  if (4 * wide < 3 * tall) {
-    return "3:4"
-  }
-  if (3 * wide < 4 * tall) {
-    return "1:1"
-  }
-  if (27 * wide < 64 * tall) {
-    return "4:3"
-  }
-  return "16:9"
-}
-
 function fileProblem(
   facts: MediaFacts,
   limits: Limits,
@@ -148,6 +130,35 @@ export function isLengthProblem(problem: FieldProblem): boolean {
     problem.key === "field.asset.tooLong" ||
     problem.key === "field.asset.tooShort"
   )
+}
+
+export function examplePhotoProblem(
+  guide: { width: number; height: number },
+  photo: MediaFacts,
+  resolution: string,
+  name: string = photoInput
+): FieldProblem | null {
+  if (photo.width === null || photo.height === null) {
+    return null
+  }
+  const render = renderSizeOf(
+    { width: photo.width, height: photo.height },
+    resolution
+  )
+  if (render === null || isGuideFit(guide, render)) {
+    return null
+  }
+  return {
+    name,
+    key: "field.asset.wrongKind",
+    values: {
+      kinds: tCatalog(
+        guide.height > guide.width
+          ? "motion.input.photo.tall"
+          : "motion.input.photo.wide"
+      ),
+    },
+  }
 }
 
 export function guideShapeProblem(

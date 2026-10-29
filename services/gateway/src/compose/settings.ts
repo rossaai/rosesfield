@@ -1,5 +1,5 @@
 import type { AgentModel } from "@rosesfield/agent"
-import type { ServerReach } from "@rosesfield/catalog/effects"
+import type { ServerReach } from "@rosesfield/catalog/motion"
 import { type EngineSettings, engineAddressOf } from "#engine/engine-target"
 import type { WorkerVars } from "#env"
 import type { EngineStatus, ServedPlace, Settings } from "#gateway.contract"

@@ -96,6 +96,7 @@ describe("the motion app through the gateway on the demo engine", () => {
     const done = runResponse.parse(await read.json()).run
     expect(done.status).toBe("done")
     expect(done.inputs).toEqual({
+      example: "own",
       photo: [photo],
       clip: [clip],
       model: "ltx-2-3-control",
@@ -176,7 +177,7 @@ describe("the motion app through the gateway on the demo engine", () => {
     expect(done.outputs).toHaveLength(1)
   })
 
-  it("refuses a run without a clip, with two photos, at 1080p, with two outputs or in a ratio it does not offer before it starts", async () => {
+  it("refuses a run without a clip, with two photos, at 1080p or with two outputs before it starts", async () => {
     const gateway = openGateway()
     const photo = await upload(gateway, "image/png", pngBytes)
     const other = await upload(gateway, "image/png", pngBytes)
@@ -186,7 +187,6 @@ describe("the motion app through the gateway on the demo engine", () => {
       { inputs: { photo: [photo, other], clip: [clip] } },
       { inputs: { photo: [photo], clip: [clip], resolution: "1080p" } },
       { inputs: { photo: [photo], clip: [clip] }, count: 2 },
-      { inputs: { photo: [photo], clip: [clip] }, aspectRatio: "21:9" },
     ]
     for (const body of bodies) {
       const response = await start(gateway, body)

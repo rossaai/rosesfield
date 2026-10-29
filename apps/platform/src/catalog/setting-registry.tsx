@@ -134,7 +134,7 @@ const contentEntries: readonly Entry[] = [
   ["angleSet", Rotate3d],
   ["height", ArrowUpDown],
   ["distance", Search],
-  ["effect", WandSparkles],
+  ["example", WandSparkles],
   ["top", ArrowUp],
   ["right", ArrowRight],
   ["bottom", ArrowDown],

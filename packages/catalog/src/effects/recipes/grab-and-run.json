@@ -1,5 +1,11 @@
 {
-  "effect": "grab-and-run",
+  "id": "grab-and-run",
+  "approved": true,
+  "approval": {
+    "question": "Make the 1080p run, row 66, the Library example of Grab and run, and offer 1080p in Motion?",
+    "words": "Yes to 1080p",
+    "date": "2026-10-29"
+  },
   "passed": false,
   "design": {
     "unit": {
@@ -14,16 +20,10 @@
       "by": "area",
       "edges": "crop"
     },
-    "setPiece": "A window smashed from outside a parked car, a bottle taken through the hole, and a run down a street with police behind.",
-    "cuts": [
-      {
-        "min": 5.79,
-        "max": 5.96,
-        "kind": "cut"
-      }
-    ],
+    "setPiece": "A run toward the camera down a cobbled street with a bottle, and police behind.",
+    "cuts": [],
     "lastFrame": {
-      "shows": "The same person runs toward the camera on a cobbled street and looks back over their shoulder.",
+      "shows": "The same person runs toward the camera on a cobbled street with the bottle in one hand.",
       "maxLuma": null
     },
     "sound": null,
@@ -33,7 +33,7 @@
       "bitDepth": 8
     }
   },
-  "prompt": "A medium shot from inside a parked car at golden hour looks across the worn back seat to the rear door window, a glass bottle leaning on the seat, and the camera remains static. Outside, the person from the first frame leans to the glass and presses both palms flat on it. Initially they glance left down the street, then duck below the sill. A moment later they rise with a rock in their right hand and strike the window. The tempered glass crazes white and falls inward in small cubes that scatter across the seat. They reach through the hole, grip the bottle by the neck and pull it out as the camera pushes in on their hand. A hard cut transitions to a low wide shot on a cobbled street in the same warm evening light. The same person in the same clothes sprints toward the lens with the bottle in their fist while the camera tracks backward ahead of them and turns with them around a corner. Two police officers run behind them and a patrol car's lights flash far back. Near the end they look back over their shoulder. Natural motion blur, film-grade color, crisp detail. A sharp glass crash, then running footsteps and distant sirens.",
+  "prompt": "A low medium shot on a narrow cobbled street at golden hour. A man in his late twenties with short dark curls, a short beard and round tortoiseshell glasses, in a rust-orange corduroy bucket hat and a cream and burgundy windbreaker over a white tee, sprints toward the lens with an amber glass bottle gripped by the neck in his right hand. He runs hard and loose: his knees drive up, his heels kick back, his shoulders and head rock with each stride, both arms pump at his sides with loose fists, and the open windbreaker stays on his shoulders and swings with his arms. His mouth is open as he breathes fast. The camera tracks backward low ahead of him, keeping him large in the frame, and turns slightly with him as the street bends. Behind him two police officers in dark uniforms run after him, and a plain white patrol car with flashing blue lights stands far back across the street. Warm low sunlight rakes across the stone facades, natural motion blur on his legs and arms, film-grade color, crisp detail. Fast footsteps slap the cobbles, his breath is ragged, and sirens wail in the distance.",
   "photoFrame": "first",
   "endFrame": {
     "source": "none"
@@ -41,16 +41,31 @@
   "midFrame": null,
   "hold": null,
   "adapter": null,
-  "seconds": 10,
-  "preview": null,
+  "seconds": 4,
+  "preview": {
+    "file": "grab-and-run.mp4",
+    "sha256": "8f49565df3d7a601482ce9db2eeb54a96a91936fba3b30802127fb4cb5e09a4c",
+    "bytes": 6418347,
+    "width": 1152,
+    "height": 1792,
+    "runId": "d60abc74-1b34-446d-b5ad-1fca89448692",
+    "seed": 20261028,
+    "resolution": "1080p",
+    "aspectRatio": "2:3",
+    "workflowHash": "ccacb368ba9bac66c813418f63509a0a53ed9e7fe80813e6a1a7ebfecdaf529a",
+    "model": "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+    "credits": 16.79,
+    "seconds": 70.6,
+    "madeAt": "2026-10-29T04:37:00Z"
+  },
   "proof": null,
   "guide": {
     "file": "grab-and-run.mp4",
-    "sha256": "58ce895ccf0c7472d4307fa0719cb3cfe3d3c64c0cf2c805cd69c944d1b31d7e",
-    "bytes": 308586,
-    "width": 352,
-    "height": 640,
-    "frames": 240,
+    "sha256": "e7adc7e19dabb1a708b1503af0444f12ab5b7c916c697596b5323b4569094a1a",
+    "bytes": 451467,
+    "width": 240,
+    "height": 360,
+    "frames": 96,
     "fps": 24
   }
 }

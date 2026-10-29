@@ -67,6 +67,7 @@ type AreaApp = {
   line: string
   icon: ReactNode
   href: string
+  badge?: ReactNode
 }
 
 type AreaMenuProps = {
@@ -114,9 +115,18 @@ function AreaMenu({
               {app.icon}
             </span>
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="truncate font-medium text-body text-ink">
-                {app.name}
-              </span>
+              {app.badge === undefined ? (
+                <span className="truncate font-medium text-body text-ink">
+                  {app.name}
+                </span>
+              ) : (
+                <span className="flex min-w-0 items-center">
+                  <span className="truncate font-medium text-body text-ink">
+                    {app.name}
+                  </span>
+                  {app.badge}
+                </span>
+              )}
               <span className="truncate text-label text-ink-muted">
                 {app.line}
               </span>

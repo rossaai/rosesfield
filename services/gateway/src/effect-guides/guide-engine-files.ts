@@ -1,4 +1,4 @@
-import { type EffectGuide, effectRecipes } from "@rosesfield/catalog/effects"
+import { type ExampleGuide, libraryExamples } from "@rosesfield/catalog/motion"
 import type { EngineFiles } from "@rosesfield/generation"
 import type { GuideFiles } from "#effect-guides/guide-files"
 
@@ -11,17 +11,17 @@ export async function sha256Of(bytes: Uint8Array): Promise<string> {
   ).join("")
 }
 
-function recordedGuides(): ReadonlyMap<string, EffectGuide> {
+function recordedGuides(): ReadonlyMap<string, ExampleGuide> {
   return new Map(
-    effectRecipes.flatMap((recipe) =>
-      recipe.guide === null ? [] : [[recipe.guide.file, recipe.guide]]
+    libraryExamples.flatMap((example) =>
+      example.guide === null ? [] : [[example.guide.file, example.guide]]
     )
   )
 }
 
 export function guideEngineFiles(
   files: GuideFiles,
-  guides: ReadonlyMap<string, EffectGuide> = recordedGuides()
+  guides: ReadonlyMap<string, ExampleGuide> = recordedGuides()
 ): EngineFiles {
   return {
     read: async (name) => {

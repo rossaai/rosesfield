@@ -80,7 +80,7 @@ export function slotMoveOf(photo: string | null, held: FieldValue): SlotMove {
 
 function aspectOptionsOf(app: AppListing): readonly string[] {
   return app.output.kind === "image" || app.output.kind === "video"
-    ? app.output.aspectRatios.options
+    ? (app.output.aspectRatios?.options ?? [])
     : []
 }
 

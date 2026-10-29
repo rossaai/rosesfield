@@ -17,11 +17,12 @@ import {
 import { Link, useRouterState } from "@tanstack/react-router"
 import { MenuIcon } from "lucide-react"
 import type { ReactElement } from "react"
-import { appLine, appName } from "@/catalog/app-facts"
+import { appBadge, appLine, appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { FieldMark, Lockup } from "@/shell/brand-mark"
 import { CreditBalance } from "@/shell/credit-balance"
 import {
+  AppNameBadge,
   appIcon,
   type MediaArea,
   type NavGroups,
@@ -70,6 +71,7 @@ function AreaNav({
     line: appLine(app),
     icon: appIcon(app),
     href: `/apps/${app.id}`,
+    ...(appBadge(app) === null ? {} : { badge: <AppNameBadge app={app} /> }),
   }))
   return (
     <AreaMenu
@@ -146,6 +148,7 @@ function PhoneMenu({ groups }: { groups: NavGroups }): ReactElement {
               >
                 {appIcon(app)}
                 {appName(app)}
+                <AppNameBadge app={app} />
               </DropdownMenuItem>
             ))}
           </DropdownMenuGroup>

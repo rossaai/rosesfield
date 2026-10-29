@@ -184,8 +184,12 @@ export function aspectOf(ratio: string | null): MediaAspect {
 export function defaultAspectOf(app: AppListing): string | null {
   const output = app.output
   return output.kind === "image" || output.kind === "video"
-    ? output.aspectRatios.default
+    ? (output.aspectRatios?.default ?? null)
     : null
+}
+
+export function ratioOfSize(width: number, height: number): string | null {
+  return AspectRatio.ofSize(width, height)?.toString() ?? null
 }
 
 export function appsTaking(

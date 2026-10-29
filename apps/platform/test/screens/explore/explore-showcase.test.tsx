@@ -53,16 +53,20 @@ describe("Explore's showcase", () => {
     expect(feed.querySelector("[data-slot=media-feed-fade]")).not.toBeNull()
   })
 
-  it("names the app and the model as a pill with Recreate on hover, and leaves View all to the apps row", async () => {
+  it("names the app and the model as a pill with Recreate on hover, Remix on the Library example, and leaves View all to the apps row", async () => {
     const feed = await renderShowcase()
     const pills = [...feed.querySelectorAll("[data-slot=media-badge]")].map(
       (pill) => pill.textContent
     )
     expect(pills).toContain("Image · Z-Image Turbo")
     expect(pills).toContain("Image · Qwen Image 2512")
+    const remixes = screen.getAllByRole("button", {
+      name: t("explore.tile.remixName"),
+    })
+    expect(remixes).toHaveLength(1)
     expect(
       screen.getAllByRole("button", { name: t("explore.tile.recreateName") })
-    ).toHaveLength(stills.length)
+    ).toHaveLength(stills.length - remixes.length)
     expect(
       feed.querySelector("[data-slot='section-heading-actions'] a")
     ).toBeNull()

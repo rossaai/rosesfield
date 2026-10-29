@@ -1,4 +1,5 @@
-import { cleanup, screen } from "@testing-library/react"
+import { exampleOf } from "@rosesfield/catalog/motion"
+import { cleanup, fireEvent, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { t, tCatalog } from "@/copy/t"
 import { defaultsOf } from "@/screens/app/app-form"
@@ -9,6 +10,7 @@ import {
   advancedToggle,
   formOf,
   isBefore,
+  modelChips,
   showColumn,
   theModelChip,
 } from "../column"
@@ -28,6 +30,8 @@ afterEach(() => {
 function graphState(): MotionState {
   return {
     app,
+    example: null,
+    useOwnVideo: () => undefined,
     tab: "move",
     mode: "clip",
     form: formOf(defaultsOf(app)),
@@ -116,5 +120,45 @@ describe("Motion's one mode", () => {
         name: tCatalog("motion.input.sound.label"),
       })
     ).toBeNull()
+  })
+})
+
+describe("Motion with an example from its Library", () => {
+  it("shows the example's result and its need in place of the video well, asks for your image, and hides the model", () => {
+    const grab = exampleOf("grab-and-run")
+    let ownVideo = 0
+    const state: MotionState = {
+      ...graphState(),
+      example: grab,
+      useOwnVideo: () => {
+        ownVideo += 1
+      },
+    }
+    showColumn(<MotionPanel state={state} />)
+    const name = screen.getByText(tCatalog("motion.example.grabAndRun.name"))
+    expect(
+      screen.getByText(tCatalog("motion.example.grabAndRun.photo")).isConnected
+    ).toBe(true)
+    expect(
+      screen.getByText(tCatalog("motion.input.photo.label")).isConnected
+    ).toBe(true)
+    expect(
+      document.querySelector("[data-slot='motion-example'] video")
+    ).not.toBeNull()
+    expect(screen.queryByText(tCatalog("motion.input.clip.note"))).toBeNull()
+    expect(modelChips()).toHaveLength(0)
+    fireEvent.click(
+      screen.getByRole("button", { name: tCatalog("motion.example.change") })
+    )
+    expect(ownVideo).toBe(1)
+    expect(name.isConnected).toBe(true)
+  })
+
+  it("shows your own video well and the model with no example, the control", () => {
+    showColumn(<MotionPanel state={graphState()} />)
+    expect(
+      screen.queryByText(tCatalog("motion.example.grabAndRun.name"))
+    ).toBeNull()
+    expect(theModelChip().isConnected).toBe(true)
   })
 })

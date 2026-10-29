@@ -47,7 +47,8 @@ export const referenceCopy = {
   "state.unpriced": "No price yet",
   "state.minimum": "At its minimum",
   "state.withRuns": "With runs",
-  "state.badgeKinds": "The new, rank, best value and open weights badges",
+  "state.badgeKinds":
+    "The new, rank, best value, open weights and featured badges",
   "state.tile": "A tile on the bar",
   "state.bar": "A bar in a column",
   "sample.start": "Start",
@@ -78,6 +79,7 @@ export const referenceCopy = {
   "sample.badge.new": "New",
   "sample.badge.openWeights": "Open weights",
   "sample.badge.value": "Best value",
+  "sample.badge.featured": "Featured",
   "sample.model": "Sample model",
   "sample.model.line": "Best at faces in any light",
   "sample.setting.aspect": "Aspect ratio",

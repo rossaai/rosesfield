@@ -1,11 +1,13 @@
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { creditsOfCost } from "@rosesfield/catalog/comfy"
+import { approvedExamples } from "@rosesfield/catalog/motion"
 import { describe, expect, it } from "vitest"
 import { promptInputOf } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { runModel } from "@/pieces/run/run-facts"
 import {
+  exampleRowsOf,
   mediaOf,
   showcaseItems,
   showcaseItemsOf,
@@ -13,10 +15,7 @@ import {
 } from "@/showcase/showcase"
 import { type ShowcaseRow, showcaseRows } from "@/showcase/showcase-rows"
 
-const folders = [
-  join(import.meta.dirname, "../../src/showcase/media"),
-  join(import.meta.dirname, "../../src/studio/effects/previews"),
-]
+const folders = [join(import.meta.dirname, "../../src/showcase/media")]
 
 function bytesOf(file: string): Buffer {
   const path = folders
@@ -66,9 +65,10 @@ function sizeOf(row: ShowcaseRow): Size {
 
 describe("the showcase", () => {
   it("bundles every row's file with the app, so a visitor sees it with no share and no key", () => {
-    expect(showcaseItems.map((item) => item.file)).toEqual(
-      showcaseRows.map((row) => row.file)
-    )
+    expect(showcaseItems.map((item) => item.file)).toEqual([
+      ...showcaseRows.map((row) => row.file),
+      ...exampleRowsOf(approvedExamples).map((row) => row.file),
+    ])
     for (const item of showcaseItems) {
       expect(item.src).toMatch(/^\/src\//)
       expect(item.src).toContain(item.file)
@@ -120,12 +120,12 @@ describe("the showcase", () => {
     )
     expect(models["portrait-man.webp"]).toBe("Qwen Image 2512")
     expect(models["portrait-woman.webp"]).toBe("Z-Image Turbo")
-    expect(models["push-into-eye.mp4"]).toBe("LTX 2.5")
+    expect(models["grab-and-run.mp4"]).toBe("LTX 2.5")
   })
 
   it("gives each app only its own examples", () => {
-    expect(showcaseOf("effects").map((item) => item.file)).toEqual([
-      "push-into-eye.mp4",
+    expect(showcaseOf("motion").map((item) => item.file)).toEqual([
+      "grab-and-run.mp4",
     ])
     expect(showcaseOf("lipsync")).toEqual([])
   })

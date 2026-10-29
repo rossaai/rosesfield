@@ -20,6 +20,7 @@ import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useAppToolsKey } from "@/pieces/app-tools"
 import {
+  AppNameBadge,
   appIcon,
   exploreLink,
   historyLink,
@@ -64,6 +65,7 @@ function AppsSheet({
                     >
                       {appIcon(app)}
                       <span className="truncate">{appName(app)}</span>
+                      <AppNameBadge app={app} />
                     </Link>
                   </li>
                 ))}

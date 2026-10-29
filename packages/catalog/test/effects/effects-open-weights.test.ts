@@ -8,17 +8,20 @@ import {
   hitLevelOf,
   hitSlots,
 } from "#effects/comfy/effect-sound"
-import { effectBinding, effectsBinding } from "#effects/comfy/effects-binding"
-import {
-  type EffectRecipe,
-  resolutionValues,
-} from "#effects/effect-recipe.contract"
-import { effectRecipes as everyRecipe } from "#effects/effect-recipes"
 import { findWorkflow } from "#list-workflows"
+import {
+  effectBinding,
+  examplesBinding,
+} from "#motion/examples/example-binding"
+import {
+  type LibraryExample,
+  resolutionValues,
+} from "#motion/examples/library-example.contract"
+import { libraryExamples as everyRecipe } from "#motion/examples/library-examples"
 import uiFile from "../../../../workflows/effects-ltx-2-5/effects-ltx-2-5.json"
 import { workflowOf } from "./effects-replay"
 
-const effectRecipes = everyRecipe.filter((recipe) => recipe.guide === null)
+const libraryExamples = everyRecipe.filter((recipe) => recipe.guide === null)
 
 const coreNodeClasses: readonly string[] = [
   "AudioAdjustVolume",
@@ -93,7 +96,7 @@ const packCommits: Readonly<Record<string, string>> = {
   AudioParametricEQ: "c816d0a1629c05a0f463ddb77ea96ada69875d32",
 }
 
-function packNodesOf(recipe: EffectRecipe): string[] {
+function packNodesOf(recipe: LibraryExample): string[] {
   const sound = recipe.design.sound
   if (sound === null) {
     return []
@@ -205,8 +208,8 @@ describe("Effects holds only ComfyUI core nodes, and the pinned loudness nodes o
     expect(workflow?.requiresCustomNodes).toEqual(
       [...new Set(Object.values(loudnessPacks))].sort()
     )
-    for (const recipe of effectRecipes) {
-      const [path, graph] = leavesOf(effectsBinding([recipe]))[0] ?? []
+    for (const recipe of libraryExamples) {
+      const [path, graph] = leavesOf(examplesBinding([recipe]))[0] ?? []
       expect({ path, pack: graph ? packNodes(graph) : null }).toEqual({
         path,
         pack: packNodesOf(recipe),
@@ -224,9 +227,11 @@ describe("Effects holds only ComfyUI core nodes, and the pinned loudness nodes o
   })
 
   it("sends from every leaf only core node classes", () => {
-    const leaves = leavesOf(effectsBinding(effectRecipes))
-    expect(leaves).toHaveLength(effectRecipes.length * resolutionValues.length)
-    expect(effectRecipes).toHaveLength(9)
+    const leaves = leavesOf(examplesBinding(libraryExamples))
+    expect(leaves).toHaveLength(
+      libraryExamples.length * resolutionValues.length
+    )
+    expect(libraryExamples).toHaveLength(9)
     for (const [path, graph] of leaves) {
       expect({ path, notCore: notCore(classesOf(graph)) }).toEqual({
         path,
@@ -243,7 +248,7 @@ describe("Effects holds only ComfyUI core nodes, and the pinned loudness nodes o
   })
 
   it("names a partner node planted in a leaf or in the UI file", () => {
-    for (const [path, graph] of leavesOf(effectsBinding(effectRecipes))) {
+    for (const [path, graph] of leavesOf(examplesBinding(libraryExamples))) {
       const planted = {
         ...graph,
         "75": { ...graph["75"], class_type: partnerNode },
@@ -298,12 +303,12 @@ describe("Effects loads the bf16 LTX 2.5 transformer and text encoder", () => {
   })
 
   it("sends the bf16 files from every leaf and records the bf16 transformer first", () => {
-    for (const recipe of effectRecipes) {
+    for (const recipe of libraryExamples) {
       for (const resolution of resolutionValues) {
         const binding = effectBinding(recipe, resolution)
         const graph = workflowOf(binding.config.workflow)
         const models = binding.config.models
-        const path = `${recipe.effect} ${resolution}`
+        const path = `${recipe.id} ${resolution}`
         expect({
           path,
           sent: bf16Loaders.map((one) => graph[one.id]?.inputs[one.input]),

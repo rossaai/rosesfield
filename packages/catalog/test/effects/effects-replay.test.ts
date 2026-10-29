@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { hitShared, hitSlots } from "#effects/comfy/effect-sound"
 import { ratioOf } from "#effects/comfy/frame-sizes"
-import { recipeOf } from "#effects/effect-recipes"
+import { exampleOf } from "#motion/examples/library-examples"
 import {
   brokenLinks,
   cloudUrl,
@@ -20,7 +20,7 @@ function idsOf(workflow: Readonly<Record<string, unknown>>): string[] {
 }
 
 function endPrompt(effect: string): string {
-  const end = recipeOf(effect).endFrame
+  const end = exampleOf(effect).endFrame
   return end.source === "edit" ? end.prompt : ""
 }
 
@@ -28,14 +28,14 @@ describe("the effects engine request", () => {
   it("scales the photo, makes the orbit view it opens on and descends to the photo with its sound", async () => {
     const request = requestFor(
       {
-        effect: "pull-back-to-space",
-        image: [photoId],
-        prompt: "a red scarf",
+        example: "pull-back-to-space",
+        photo: [photoId],
+        scene: "a red scarf",
       },
       "9:16"
     )
     const { workflow, replay, ref } = await submitted(request)
-    const recipe = recipeOf("pull-back-to-space")
+    const recipe = exampleOf("pull-back-to-space")
     expect(ref).toBe(jobId)
     expect(replay.sent.map((sent) => sent.url)).toEqual([
       `${cloudUrl}/api/v2/assets`,
@@ -78,7 +78,7 @@ describe("the effects engine request", () => {
 
   it("holds the person whole through the matte while the building bends, with no sound", async () => {
     const request = requestFor(
-      { effect: "buildings-ripple", image: [photoId], resolution: "480p" },
+      { example: "buildings-ripple", photo: [photoId], resolution: "480p" },
       "3:4"
     )
     const { workflow } = await submitted(request)
@@ -112,14 +112,14 @@ describe("the effects engine request", () => {
     expect(workflow["370"]?.inputs).not.toHaveProperty("audio")
     expect(workflow["503"]?.inputs.string_b).toBe("")
     expect(promptText(workflow, "364").trim()).toBe(
-      recipeOf("buildings-ripple").prompt
+      exampleOf("buildings-ripple").prompt
     )
     expect(brokenLinks(workflow)).toEqual([])
   })
 
   it("renders the 15 seconds of the diner look at the 720p area of a square frame", async () => {
     const request = requestFor(
-      { effect: "freeze-and-circle", image: [photoId] },
+      { example: "freeze-and-circle", photo: [photoId] },
       "1:1"
     )
     const { workflow } = await submitted(request)
@@ -136,7 +136,7 @@ describe("the effects engine request", () => {
     "gives a 9:16 photo a 9:16 frame at every stage at %s, the photo's own pixels with no redraw",
     async (resolution) => {
       const request = requestFor(
-        { effect: "melt-away", image: [photoId], resolution },
+        { example: "melt-away", photo: [photoId], resolution },
         "9:16"
       )
       const { workflow } = await submitted(request)

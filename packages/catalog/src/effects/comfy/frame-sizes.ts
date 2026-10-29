@@ -1,4 +1,4 @@
-import type { ResolutionValue } from "#effects/effect-recipe.contract"
+import type { ResolutionValue } from "#motion/examples/library-example.contract"
 
 export const effectRatios = ["1:1", "4:3", "3:4", "16:9", "9:16"] as const
 

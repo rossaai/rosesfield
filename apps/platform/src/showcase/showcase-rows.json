@@ -37,29 +37,6 @@
     "madeAt": "2026-10-20T23:16:08Z"
   },
   {
-    "runId": "1e77db70-4ebe-4050-97e4-84f118438aeb",
-    "file": "push-into-eye.mp4",
-    "input": {
-      "file": "portrait-woman.webp",
-      "name": "image"
-    },
-    "appId": "effects",
-    "kind": "video",
-    "width": 540,
-    "height": 720,
-    "model": "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
-    "prompt": null,
-    "inputs": {
-      "effect": "push-into-eye",
-      "resolution": "1080p"
-    },
-    "aspectRatio": "3:4",
-    "credits": 37.89,
-    "seconds": 162.3,
-    "madeAt": "2026-10-21T21:02:43Z",
-    "from": "portrait-woman.webp"
-  },
-  {
     "runId": "70ab1a97-f67a-4ab2-a1b9-c69c3fcbba95",
     "file": "portrait-man.webp",
     "appId": "image",

@@ -16,6 +16,7 @@ type AppSearch = {
   tab?: StageTab
   mode?: string
   open?: string
+  example?: string
 }
 
 export const Route = createFileRoute("/_shell/apps/$appId")({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/_shell/apps/$appId")({
     const tab = readOneOf(search.tab, stageTabs)
     const mode = readText(search.mode)
     const open = readText(search.open)
+    const example = readText(search.example)
     return {
       ...(use === undefined ? {} : { use }),
       ...(from === undefined ? {} : { from }),
@@ -33,6 +35,7 @@ export const Route = createFileRoute("/_shell/apps/$appId")({
       ...(tab === undefined ? {} : { tab }),
       ...(mode === undefined ? {} : { mode }),
       ...(open === undefined ? {} : { open }),
+      ...(example === undefined ? {} : { example }),
     }
   },
   beforeLoad: ({ params, search, location }) => {

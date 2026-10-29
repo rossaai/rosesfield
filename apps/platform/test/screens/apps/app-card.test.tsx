@@ -37,10 +37,10 @@ describe("the Apps page card's media", () => {
     const still = await mediaOfCard("image")
     expect(still?.getAttribute("src")).toBe(showcaseOf("image")[0]?.src)
     cleanup()
-    const clip = await mediaOfCard("effects")
+    const clip = await mediaOfCard("motion")
     expect(clip?.tagName).toBe("VIDEO")
     expect(clip?.getAttribute("src")).toBe(
-      `${showcaseOf("effects")[0]?.src}#t=0.1`
+      `${showcaseOf("motion")[0]?.src}#t=0.1`
     )
   })
 

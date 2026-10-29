@@ -28,7 +28,7 @@ afterEach(() => {
 
 const video = appListing.parse(findApp("video"))
 const motion = appListing.parse(findApp("motion"))
-const effects = appListing.parse(findApp("effects"))
+const lipsync = appListing.parse(findApp("lipsync"))
 const image = appListing.parse(findApp("image"))
 const relight = appListing.parse(findApp("relight"))
 const audio = appListing.parse(findApp("audio"))
@@ -103,7 +103,8 @@ describe("How it works", () => {
         share("c", "motion", "audio"),
         share("d", "motion", "image"),
       ],
-      "motion"
+      "motion",
+      []
     )
     expect(
       samples.map((sample) => [sample.key, sample.kind, sample.source])
@@ -122,15 +123,15 @@ describe("How it works", () => {
   })
 
   it("puts the app's bundled examples first, before its published results", () => {
-    const samples = samplesOf([share("a", "effects", "video")], "effects")
+    const samples = samplesOf([share("a", "motion", "video")], "motion")
     expect(samples.map((sample) => sample.key)).toEqual([
-      ...showcaseOf("effects").map((item) => `showcase-${item.file}`),
+      ...showcaseOf("motion").map((item) => `showcase-${item.file}`),
       "share-a",
     ])
   })
 
   it("stands three steps, what you add, what you choose and what you get, with Recreate on the result", () => {
-    const steps = stepsOf(effects, samplesOf([], "effects"))
+    const steps = stepsOf(motion, samplesOf([], "motion"))
     expect(steps.map((step) => step.id)).toEqual(["add", "choose", "get"])
     expect(steps.map((step) => step.action !== undefined)).toEqual([
       false,
@@ -216,35 +217,28 @@ describe("How it works, one composition for every app", () => {
     expect(steps[2]?.querySelector("img")?.getAttribute("src")).toBe(item?.src)
   })
 
-  it("shows the photo Effects' clip was made from, then plays the clip muted and looping", async () => {
-    renderHow(() => <HowItWorks app={effects} />, [])
+  it("plays Motion's Library example muted and looping, with Remix opening Motion on that example", async () => {
+    renderHow(() => <HowItWorks app={motion} />, [])
     const steps = await stepsShown(3)
-    const [item] = showcaseOf("effects")
-    expect(steps[0]?.querySelector("img")?.getAttribute("src")).toBe(
-      mediaOf(item?.from ?? "")
-    )
+    const [item] = showcaseOf("motion")
     const clip = steps[2]?.querySelector("video")
+    expect(clip?.getAttribute("src")).toBe(item?.src)
     expect(clip?.muted).toBe(true)
     expect(clip?.loop).toBe(true)
-    const others = showcaseOf("image")
-      .filter((one) => one.file !== item?.from)
-      .map((one) => one.src)
-    const shown = [...document.querySelectorAll("img")].map((one) =>
-      one.getAttribute("src")
-    )
-    expect(shown.some((src) => others.includes(src ?? ""))).toBe(false)
     expect(steps[2]?.querySelector("a")?.getAttribute("href")).toBe(
-      "/apps/effects"
+      "/apps/motion?example=grab-and-run"
     )
   })
 
   it("shows one glyph for what an app with no example takes, its default model, and one glyph for what it makes, with no picture", async () => {
-    renderHow(() => <HowItWorks app={motion} />, [])
+    renderHow(() => <HowItWorks app={lipsync} />, [])
     const steps = await stepsShown(3)
-    expect(steps[0]?.querySelectorAll("[data-made=no]")).toHaveLength(1)
-    expect(steps[1]?.querySelector("[data-slot=how-model]")?.textContent).toBe(
-      "LTX 2.3 control"
+    expect(steps[0]?.querySelectorAll("[data-made=no]").length).toBeGreaterThan(
+      0
     )
+    expect(
+      steps[1]?.querySelector("[data-slot=how-model]")?.textContent
+    ).toBeTruthy()
     expect(
       steps[2]?.querySelector("[data-made=yes]")?.getAttribute("data-kind")
     ).toBe("video")

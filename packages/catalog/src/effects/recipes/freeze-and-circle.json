@@ -1,5 +1,7 @@
 {
-  "effect": "freeze-and-circle",
+  "id": "freeze-and-circle",
+  "approved": false,
+  "approval": null,
   "passed": false,
   "design": {
     "unit": {

@@ -12,7 +12,7 @@ export function aspectItems(app: AppListing): ChoiceItem[] {
   if (output.kind !== "image" && output.kind !== "video") {
     return []
   }
-  return output.aspectRatios.options.map((ratio) => {
+  return (output.aspectRatios?.options ?? []).map((ratio) => {
     const key = `choice.aspect.${ratio.replace(":", "-")}`
     return { value: ratio, label: hasCatalogText(key) ? tCatalog(key) : ratio }
   })

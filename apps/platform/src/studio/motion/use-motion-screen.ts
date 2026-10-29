@@ -1,4 +1,10 @@
 import type { CatalogModel, ModelField } from "@rosesfield/catalog/comfy"
+import {
+  exampleInput,
+  type LibraryExample,
+  libraryExamples,
+  ownVideo,
+} from "@rosesfield/catalog/motion"
 import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
 import { useQueryClient } from "@tanstack/react-query"
 import {
@@ -15,6 +21,7 @@ import { useAppRuns } from "@/screens/app/app-canvas"
 import {
   type FieldProblem,
   heldProblemsOf,
+  heldValuesOf,
   valuesFromRun,
 } from "@/screens/app/app-form"
 import { modelNameOf } from "@/screens/app/hosted/catalog-picker"
@@ -59,6 +66,8 @@ import {
 
 export type MotionState = {
   app: AppListing
+  example: LibraryExample | null
+  useOwnVideo: () => void
   tab: MotionTab
   mode: MotionMode
   form: AppForm
@@ -107,6 +116,16 @@ export function clipMessageOf(
     })
   }
   return t(problem.key, problem.values)
+}
+
+export function exampleOfForm(
+  form: Pick<AppForm, "values">,
+  examples: readonly LibraryExample[] = libraryExamples
+): LibraryExample | null {
+  const value = form.values.inputs[exampleInput]
+  return typeof value !== "string" || value === ownVideo
+    ? null
+    : (examples.find((example) => example.id === value) ?? null)
 }
 
 export function tabOf(
@@ -257,6 +276,24 @@ function shortcutOf(
   }
 }
 
+function useExampleChecks(
+  form: AppForm,
+  names: WellNames,
+  range: ClipRange | null,
+  mode: MotionMode
+): [LibraryExample | null, MotionChecks] {
+  const example = exampleOfForm(form)
+  const checks = useMotionChecks(
+    form,
+    names,
+    range,
+    example === null && mode === "guide",
+    example?.guide ?? null,
+    example?.preview?.aspectRatio ?? null
+  )
+  return [example, checks]
+}
+
 export function useMotionScreen(
   app: AppListing,
   seeds: StudioScreenProps["seeds"],
@@ -276,15 +313,18 @@ export function useMotionScreen(
   const range = clipRangeOf(app, chosen)
   const mode = modeOfTab(tab)
   useSilentGuide(form, mode)
-  const checks = useMotionChecks(form, names, range, mode === "guide")
+  const [example, checks] = useExampleChecks(form, names, range, mode)
   const modeHosted = useModeHosted(app, form, hosted, tab)
   const [pickCharacter, hasPickFailed] = useCharacterPhoto(form, names.photo)
   const [focus, registerWell] = useFocusers()
-  const base = useStartRun(app, form, onStarted, { ...hosted, chosen })
+  const held = { ...form, values: heldValuesOf(app, form.values) }
+  const base = useStartRun(app, held, onStarted, { ...hosted, chosen })
   const generate = guardedOf(base, checks, focus)
   const model = chosen === null ? appName(app) : modelNameOf(chosen)
   return {
     app,
+    example,
+    useOwnVideo: () => form.setInput(exampleInput, ownVideo),
     tab,
     mode,
     form,

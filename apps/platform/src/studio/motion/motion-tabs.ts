@@ -3,7 +3,7 @@ import {
   lengthOf,
   type ModelField,
 } from "@rosesfield/catalog/comfy"
-import { guideModel } from "@rosesfield/catalog/motion"
+import { exampleInput, guideModel } from "@rosesfield/catalog/motion"
 import {
   type AppListing,
   type InputDefinition,
@@ -172,6 +172,7 @@ export function graphRestOf(
       input.type !== "character" &&
       input.name !== modelInput &&
       input.name !== modeInput &&
+      input.name !== exampleInput &&
       !(tab === "guide" && input.name === soundInput)
   )
 }

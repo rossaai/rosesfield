@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest"
 import { effectGraph, grainNode } from "#effects/comfy/effect-graph"
-import { effectBinding } from "#effects/comfy/effects-binding"
+import { effectBinding } from "#motion/examples/example-binding"
 import {
-  type EffectRecipe,
+  type LibraryExample,
   maxGrain,
   resolutionValues,
-} from "#effects/effect-recipe.contract"
+} from "#motion/examples/library-example.contract"
 import {
-  effectRecipes as everyRecipe,
-  readRecipes,
-  recipeOf,
-} from "#effects/effect-recipes"
+  libraryExamples as everyRecipe,
+  exampleOf,
+  readExamples,
+} from "#motion/examples/library-examples"
 import { fileGraph, isLink, workflowOf } from "./effects-replay"
 
-const effectRecipes = everyRecipe.filter((recipe) => recipe.guide === null)
+const libraryExamples = everyRecipe.filter((recipe) => recipe.guide === null)
 
 const blackFloor = 17.5
 
@@ -76,11 +76,11 @@ function repeats(frames: readonly Uint8Array[]): number {
   }).length
 }
 
-function strengthOf(recipe: EffectRecipe): number {
+function strengthOf(recipe: LibraryExample): number {
   const strength = workflowOf(effectGraph(fileGraph(), recipe))[grainNode]
     ?.inputs.strength
   if (typeof strength !== "number") {
-    throw new Error(`${recipe.effect} sets no grain strength`)
+    throw new Error(`${recipe.id} sets no grain strength`)
   }
   return strength
 }
@@ -91,17 +91,17 @@ function grained(strength: number): Uint8Array[] {
 
 describe("the grain on a black frame, by ImageAddNoise's math in ComfyUI v0.41.0: clip(image + strength * randn, 0, 1)", () => {
   it("keeps a black frame of every look under the black floor, about 0.4 levels at strength 0.004", () => {
-    for (const recipe of effectRecipes) {
+    for (const recipe of libraryExamples) {
       const strength = strengthOf(recipe)
       const lumas = grained(strength).map(meanLuma)
       const mean = lumas.reduce((sum, luma) => sum + luma, 0) / lumas.length
-      expect({ effect: recipe.effect, under: mean < blackFloor }).toEqual({
-        effect: recipe.effect,
+      expect({ effect: recipe.id, under: mean < blackFloor }).toEqual({
+        effect: recipe.id,
         under: true,
       })
       expect(mean).toBeCloseTo((strength * 255) / Math.sqrt(2 * Math.PI), 1)
     }
-    const eye = strengthOf(recipeOf("push-into-eye"))
+    const eye = strengthOf(exampleOf("push-into-eye"))
     expect(eye).toBe(0.004)
     expect(Math.max(...grained(maxGrain).map(meanLuma))).toBeLessThan(
       blackFloor
@@ -109,22 +109,22 @@ describe("the grain on a black frame, by ImageAddNoise's math in ComfyUI v0.41.0
   })
 
   it("makes no two frames of the same black input equal once the grain is added, and every frame repeats without it", () => {
-    const strength = strengthOf(recipeOf("push-into-eye"))
+    const strength = strengthOf(exampleOf("push-into-eye"))
     expect(repeats(grained(strength))).toBe(0)
     expect(repeats(grained(0))).toBe(frameCount - 1)
   })
 })
 
 function withEncode(encode: Record<string, unknown>): Record<string, unknown> {
-  const recipe = recipeOf("many-copies")
+  const recipe = exampleOf("many-copies")
   return { ...recipe, design: { ...recipe.design, encode } }
 }
 
 describe("the grain node of every effects graph", () => {
   it("adds the recipe's grain to every delivered frame after the last resize and before the video is written, for every look and resolution", () => {
-    for (const recipe of effectRecipes) {
+    for (const recipe of libraryExamples) {
       for (const resolution of resolutionValues) {
-        const path = `${recipe.effect} ${resolution}`
+        const path = `${recipe.id} ${resolution}`
         const workflow = workflowOf(
           effectBinding(recipe, resolution).config.workflow
         )
@@ -158,7 +158,7 @@ describe("the grain node of every effects graph", () => {
   })
 
   it("sets the grain's strength from the recipe's encode", () => {
-    const recipe = recipeOf("melt-away")
+    const recipe = exampleOf("melt-away")
     const grained = {
       ...recipe,
       design: {
@@ -175,9 +175,10 @@ describe("the grain node of every effects graph", () => {
   })
 
   it("reads the grain of a look's encode, 0.004 when it names none, and refuses one outside 0 to 0.02", () => {
-    const { grain: _grain, ...authored } = recipeOf("many-copies").design.encode
+    const { grain: _grain, ...authored } =
+      exampleOf("many-copies").design.encode
     const read = (encode: Record<string, unknown>): number | undefined =>
-      readRecipes({ "many-copies": withEncode(encode) }, [])[0]?.design.encode
+      readExamples({ "many-copies": withEncode(encode) }, [])[0]?.design.encode
         .grain
     expect(read(authored)).toBe(0.004)
     for (const grain of [0, 0.01, 0.02]) {

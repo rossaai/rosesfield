@@ -2,6 +2,7 @@ import { Toaster, ToastProvider } from "@rosesfield/ui/components/toast"
 import { TooltipProvider } from "@rosesfield/ui/components/tooltip"
 import { type ReactElement, useEffect } from "react"
 import { t } from "@/gallery/copy.en"
+import { appLibraryEntry } from "@/gallery/entries/app-library"
 import { catalogEntries } from "@/gallery/entries/catalog"
 import { controlEntries } from "@/gallery/entries/controls"
 import { displayEntries } from "@/gallery/entries/display"
@@ -21,7 +22,6 @@ import type { GalleryEntry, GalleryState } from "@/gallery/gallery-entry"
 import { ReferenceFrames } from "@/gallery/reference-frames"
 import { type Scheme, SchemePair, schemes } from "@/gallery/scheme-pair"
 import { screenEntries } from "@/gallery/screens/screen-entries"
-import { effectTilesEntry } from "@/studio/effects/effect-tiles-gallery"
 
 export const galleryEntries: GalleryEntry[] = [
   ...referenceControlEntries,
@@ -35,7 +35,7 @@ export const galleryEntries: GalleryEntry[] = [
   ...pieceEntries,
   ...mediaEntries,
   ...catalogEntries,
-  effectTilesEntry,
+  appLibraryEntry,
   ...shellEntries,
   ...layerEntries,
   ...platformEntries,

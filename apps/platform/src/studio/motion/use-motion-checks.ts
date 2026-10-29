@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react"
+import { ratioOfSize } from "@/catalog/app-facts"
 import type { FieldProblem } from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
 import type { AppForm } from "@/screens/app/use-app-form"
 import {
   clipProblem,
+  examplePhotoProblem,
   guideShapeProblem,
-  nearestRatio,
   photoProblem,
 } from "@/studio/motion/motion-checks"
 import type { ClipRange, WellNames } from "@/studio/motion/motion-tabs"
@@ -66,9 +67,15 @@ export function guideCheckOf(
   )
 }
 
+export type ExampleShape = {
+  guide: { width: number; height: number }
+  resolution: string
+}
+
 export function photoCheckOf(
   reading: MediaReading,
-  name: string
+  name: string,
+  shape: ExampleShape | null = null
 ): FieldProblem | null {
   switch (reading.state) {
     case "none":
@@ -77,38 +84,61 @@ export function photoCheckOf(
     case "failed":
       return missingProblem(name)
     case "read":
-      return photoProblem(reading.facts, name)
+      return (
+        photoProblem(reading.facts, name) ??
+        (shape === null
+          ? null
+          : examplePhotoProblem(
+              shape.guide,
+              reading.facts,
+              shape.resolution,
+              name
+            ))
+      )
   }
 }
 
-function useRatioFromPhoto(form: AppForm, reading: MediaReading): void {
-  const width = reading.state === "read" ? reading.facts.width : null
-  const height = reading.state === "read" ? reading.facts.height : null
+export function shapeOf(
+  reading: MediaReading,
+  exampleShape: string | null
+): string | null {
+  if (exampleShape !== null) {
+    return exampleShape
+  }
+  const { width = null, height = null } =
+    reading.state === "read" ? reading.facts : {}
+  return width === null || height === null ? null : ratioOfSize(width, height)
+}
+
+function useShapeOfResult(
+  form: AppForm,
+  reading: MediaReading,
+  exampleShape: string | null
+): void {
   const setForm = useRef(form.setForm)
   setForm.current = form.setForm
   const ratio = form.values.aspectRatio
+  const shape = shapeOf(reading, exampleShape)
   useEffect(() => {
-    if (width === null || height === null || ratio === null) {
-      return
+    if (shape !== ratio) {
+      setForm.current({ aspectRatio: shape })
     }
-    const nearest = nearestRatio(width, height)
-    if (nearest !== ratio) {
-      setForm.current({ aspectRatio: nearest })
-    }
-  }, [width, height, ratio])
+  }, [shape, ratio])
 }
 
 export function useMotionChecks(
   form: AppForm,
   names: WellNames,
   range: ClipRange | null,
-  isGuide = false
+  isGuide = false,
+  exampleGuide: ExampleShape["guide"] | null = null,
+  exampleShape: string | null = null
 ): MotionChecks {
   const [photoId = null] = listOf(form.values.inputs[names.photo])
   const [clipId = null] = listOf(form.values.inputs[names.clip])
   const photo = useMediaFacts(photoId, "image")
   const clip = useMediaFacts(clipId, "video")
-  useRatioFromPhoto(form, photo)
+  useShapeOfResult(form, photo, exampleShape)
   const readingInput =
     photo.state === "reading"
       ? names.photo
@@ -116,19 +146,26 @@ export function useMotionChecks(
         ? names.clip
         : null
   const resolution = form.values.inputs[resolutionInput]
+  const resolutionText = typeof resolution === "string" ? resolution : ""
   return {
     clip: isGuide
       ? guideCheckOf(
           clip,
           {
             photo,
-            resolution: typeof resolution === "string" ? resolution : "",
+            resolution: resolutionText,
           },
           range,
           names.clip
         )
       : clipCheckOf(clip, range, names.clip),
-    photo: photoCheckOf(photo, names.photo),
+    photo: photoCheckOf(
+      photo,
+      names.photo,
+      exampleGuide === null
+        ? null
+        : { guide: exampleGuide, resolution: resolutionText }
+    ),
     readingInput,
   }
 }

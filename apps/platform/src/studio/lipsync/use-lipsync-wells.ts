@@ -96,7 +96,7 @@ function useShape(
   const output = app.output
   const offered =
     output.kind === "video" || output.kind === "image"
-      ? output.aspectRatios.options
+      ? (output.aspectRatios?.options ?? [])
       : []
   const width = face?.width ?? null
   const height = face?.height ?? null

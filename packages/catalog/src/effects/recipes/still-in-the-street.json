@@ -1,5 +1,7 @@
 {
-  "effect": "still-in-the-street",
+  "id": "still-in-the-street",
+  "approved": false,
+  "approval": null,
   "passed": false,
   "design": {
     "unit": {

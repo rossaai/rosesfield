@@ -90,7 +90,7 @@ function useReference(form: AppForm, app: AppListing) {
   const bytes = first === null ? null : (asset.data?.asset.bytes ?? null)
   const { setForm } = form
   const options =
-    app.output.kind === "video" ? app.output.aspectRatios.options : []
+    app.output.kind === "video" ? (app.output.aspectRatios?.options ?? []) : []
   const ratio = reference === null ? null : nearestRatio(reference, options)
   const current = form.values.aspectRatio
   useEffect(() => {

@@ -4,6 +4,9 @@
   "main": "../../src/worker.ts",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
+  // The guides of the Library examples ship inside the Worker as data, never as
+  // public assets, so only the engine reads them.
+  "rules": [{ "type": "Data", "globs": ["**/*.mp4"], "fallthrough": true }],
   "define": { "import.meta.url": "\"file:///bundle/worker.js\"" },
   "d1_databases": [
     {
