@@ -204,6 +204,51 @@ describe("the guide's shape", () => {
   })
 
   it.each([
+    {
+      shape: "2:3",
+      photo: { width: 1080, height: 1620 },
+      at: "480p",
+      render: [448, 640],
+    },
+    {
+      shape: "2:3",
+      photo: { width: 1080, height: 1620 },
+      at: "720p",
+      render: [704, 1024],
+    },
+    {
+      shape: "3:2",
+      photo: { width: 1620, height: 1080 },
+      at: "480p",
+      render: [640, 448],
+    },
+    {
+      shape: "3:2",
+      photo: { width: 1620, height: 1080 },
+      at: "720p",
+      render: [1024, 704],
+    },
+    {
+      shape: "3:4",
+      photo: { width: 1080, height: 1440 },
+      at: "480p",
+      render: [448, 576],
+    },
+    {
+      shape: "3:4",
+      photo: { width: 1080, height: 1440 },
+      at: "720p",
+      render: [704, 960],
+    },
+  ])(
+    "rounds a $shape photo's side at $at to the even step, as the graph's round does",
+    ({ photo, at, render }) => {
+      const [width, height] = render
+      expect(renderSizeOf(photo, at)).toEqual({ width, height })
+    }
+  )
+
+  it.each([
     { piece: "flip, draft", guide: [448, 768], photo: portrait, at: "480p" },
     { piece: "flip, final", guide: [704, 1280], photo: portrait, at: "720p" },
     { piece: "ticket wipe", guide: [960, 704], photo: wide, at: "480p" },

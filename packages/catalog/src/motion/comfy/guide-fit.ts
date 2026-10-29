@@ -6,6 +6,11 @@ export const guideCropLimit = 0.1
 
 const sideStep = 64
 
+function roundHalfToEven(value: number): number {
+  const nearest = Math.round(value)
+  return nearest - value === 0.5 && nearest % 2 !== 0 ? nearest - 1 : nearest
+}
+
 export function renderSizeOf(
   photo: FrameSize,
   resolution: string
@@ -16,7 +21,7 @@ export function renderSizeOf(
     return null
   }
   const sideOf = (side: number): number =>
-    Math.round((side * shortSide) / short / sideStep) * sideStep
+    roundHalfToEven((side * shortSide) / short / sideStep) * sideStep
   return { width: sideOf(photo.width), height: sideOf(photo.height) }
 }
 
