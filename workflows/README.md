@@ -17,7 +17,7 @@ workflows/
     <id>-1.webp           a thumbnail from a real run, absent until one exists
 ```
 
-- 33 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
+- 34 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
 - Every graph runs open weights, except a graph that runs a Comfy partner node listed in `docs/models.md` §Graphs that run a partner node. No graph makes a Comfy Router call. The catalog test `open-weights.test.ts` checks every app's bindings.
 - `bun run catalog:sync` lists every folder in `packages/catalog/src/workflows.gen.ts`. It refuses a folder without `entry.json`, `<id>.json` and `<id>.api.json`.
 - A workflow is proven by one Generate in the running app on its app's screen, on a real input. No script runs a paid model. `bun scripts/checks/output-files/check-output-files.ts --library <gateway>` then checks each output in the library.
@@ -91,6 +91,7 @@ One file for the whole folder that a sync writes from the entries, with the apps
 | Z-Image Turbo | `image-z-image-turbo` |
 | Ming Image 0.1 Design | `image-ming-image-0-1-design` |
 | SeedVR2 | `upscale-image-seedvr2`, `upscale-video-seedvr2` |
+| Depth Anything 3 and SAM 3.1 | `motion-read-clip` |
 | BiRefNet | `background-removal-transparent`, `background-removal-solid-color`, `video-edit-background-birefnet` |
 | FILM | `video-edit-frame-rate-film` |
 | Chatterbox | `voice-chatterbox`, `audio-voice-change-chatterbox` |
@@ -103,7 +104,7 @@ One model often has several workflows, because the apps build different graphs o
 ## Rules for every workflow
 
 1. **Open weights first.** No Router call and no closed API. A partner node runs only in a graph `docs/models.md` §Graphs that run a partner node lists, and its `entry.json` names it in `partnerNodes` with `openSource` false.
-2. **Core nodes first.** A workflow uses ComfyUI core nodes wherever they do the step. A custom node pack is pinned at a full commit, named in the note and the README, and listed in `requiresCustomNodes`. Four workflows load a pack: `voice-chatterbox` and `audio-voice-change-chatterbox` load ComfyUI_Fill-ChatterBox, `effects-ltx-2-5` loads ComfyUI-WanVideoWrapper and ComfyUI_AudioTools, and `video-edit-reframe-ltx-2-3` loads ComfyUI-LTXVideo. Comfy Cloud installs no pack of your own, per `docs/stack.md` §The Comfy API v2.
+2. **Core nodes first.** A workflow uses ComfyUI core nodes wherever they do the step. A custom node pack is pinned at a full commit, named in the note and the README, and listed in `requiresCustomNodes`. Five workflows load a pack: `voice-chatterbox` and `audio-voice-change-chatterbox` load ComfyUI_Fill-ChatterBox, `effects-ltx-2-5` loads ComfyUI-WanVideoWrapper and ComfyUI_AudioTools, `video-edit-reframe-ltx-2-3` loads ComfyUI-LTXVideo, and `motion-read-clip` loads ComfyUI-DepthAnythingV3. Comfy Cloud installs no pack of your own, per `docs/stack.md` §The Comfy API v2.
 3. **Flat.** In the API file, a subgraph renames every inner node to `<outer id>:<inner id>`, which breaks the catalog's bindings, and the registry refuses such an id. A blueprint reaches a person only through a custom node pack or their own library. Groups and a note give the same order.
 4. **Our own graphs.** Each graph follows the official template it names in its README, in Comfy-Org/workflow_templates, which is MIT. Its notice is in `NOTICE`. Lightricks' example workflows in ComfyUI-LTXVideo carry the LTX-2 Community License, so they are read for structure and never copied. ComfyUI, its frontend and comfy-cli are GPL-3.0. They are tools, and none of their code is copied here.
 5. **No weights.** A workflow links each model and never ships one.

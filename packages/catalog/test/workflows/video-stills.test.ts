@@ -58,6 +58,7 @@ describe("the stills every video workflow sends", () => {
       "lipsync-photo-ltx-2-3",
       "motion-guide-ltx-2-3-ic-lora",
       "motion-ltx-2-3-ic-lora",
+      "motion-read-clip",
       "upscale-video-seedvr2",
       "video-edit-background-birefnet",
       "video-edit-frame-rate-film",
@@ -71,17 +72,17 @@ describe("the stills every video workflow sends", () => {
     "samples five frames of the batch $id makes its video from",
     async ({ graph }) => {
       const sent = await sentGraphOf(graph)
-      const [frames] = framesOf(sent)
-      expect(frames).toBeDefined()
+      const videos = framesOf(sent)
+      expect(videos.length).toBeGreaterThan(0)
       const saves = stillSavesOf(sent)
-      expect(saves).toHaveLength(5)
+      expect(saves).toHaveLength(5 * videos.length)
       const picks = Object.values(sent).filter(
         (node) =>
           node.class_type === "ImageFromBatch" &&
           !JSON.stringify(graph).includes(JSON.stringify(node))
       )
       expect(picks.map((node) => node.inputs.image)).toEqual(
-        Array(5).fill(frames)
+        videos.flatMap((frames) => Array(5).fill(frames))
       )
       expect(brokenLinksOf(sent)).toEqual([])
       expect(withoutVideoStills(sent)).toEqual(graph)

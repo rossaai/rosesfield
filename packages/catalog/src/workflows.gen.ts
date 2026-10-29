@@ -41,6 +41,8 @@ import wMotionGuideLtx23IcLoraApi from "../../../workflows/motion-guide-ltx-2-3-
 import wMotionGuideLtx23IcLoraEntry from "../../../workflows/motion-guide-ltx-2-3-ic-lora/entry.json"
 import wMotionLtx23IcLoraApi from "../../../workflows/motion-ltx-2-3-ic-lora/motion-ltx-2-3-ic-lora.api.json"
 import wMotionLtx23IcLoraEntry from "../../../workflows/motion-ltx-2-3-ic-lora/entry.json"
+import wMotionReadClipApi from "../../../workflows/motion-read-clip/motion-read-clip.api.json"
+import wMotionReadClipEntry from "../../../workflows/motion-read-clip/entry.json"
 import wRelightQwenImageEdit2509Api from "../../../workflows/relight-qwen-image-edit-2509/relight-qwen-image-edit-2509.api.json"
 import wRelightQwenImageEdit2509Entry from "../../../workflows/relight-qwen-image-edit-2509/entry.json"
 import wStoryboardQwenImageEdit2511Api from "../../../workflows/storyboard-qwen-image-edit-2511/storyboard-qwen-image-edit-2511.api.json"
@@ -88,6 +90,7 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "lipsync-photo-ltx-2-3", entry: wLipsyncPhotoLtx23Entry, graph: wLipsyncPhotoLtx23Api },
   { folder: "motion-guide-ltx-2-3-ic-lora", entry: wMotionGuideLtx23IcLoraEntry, graph: wMotionGuideLtx23IcLoraApi },
   { folder: "motion-ltx-2-3-ic-lora", entry: wMotionLtx23IcLoraEntry, graph: wMotionLtx23IcLoraApi },
+  { folder: "motion-read-clip", entry: wMotionReadClipEntry, graph: wMotionReadClipApi },
   { folder: "relight-qwen-image-edit-2509", entry: wRelightQwenImageEdit2509Entry, graph: wRelightQwenImageEdit2509Api },
   { folder: "storyboard-qwen-image-edit-2511", entry: wStoryboardQwenImageEdit2511Entry, graph: wStoryboardQwenImageEdit2511Api },
   { folder: "three-d-meshy-image", entry: wThreeDMeshyImageEntry, graph: wThreeDMeshyImageApi },
