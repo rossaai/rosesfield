@@ -75,7 +75,7 @@ test("on a desktop the mark, the area links and the balance sit in one row, with
     })
   }
   const agent = await boxOf(
-    bar.getByRole("link", { name: "Agent", exact: true })
+    bar.getByRole("link", { name: "Agent Featured", exact: true })
   )
   const characters = await boxOf(
     bar.getByRole("link", { name: "Characters", exact: true })

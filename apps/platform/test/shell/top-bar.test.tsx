@@ -80,16 +80,23 @@ describe("the top bar", () => {
       "History",
       "Settings",
     ])
-    const separators = [
-      ...bar.querySelectorAll("[data-slot='nav-separator']"),
-    ].map((separator) => [
-      separator.previousElementSibling?.textContent,
-      separator.nextElementSibling?.textContent,
+    const order = [
+      ...bar.querySelectorAll(
+        "[data-slot='app-bar-areas'], [data-slot='nav-separator']"
+      ),
+    ].map((node) =>
+      node.getAttribute("data-slot") === "nav-separator"
+        ? "|"
+        : (node.textContent ?? "")
+    )
+    expect(order.slice(5, 10)).toEqual([
+      "MCP",
+      "|",
+      "AgentFeatured",
+      "MotionFeatured",
+      "|",
     ])
-    expect(separators).toEqual([
-      ["MCP", "AgentFeatured"],
-      ["MotionFeatured", "Characters"],
-    ])
+    expect(order[10]).toBe("Characters")
   })
 
   it("stands the Agent and Motion side by side, the Agent first, each with the one Featured badge", async () => {
@@ -290,7 +297,12 @@ describe("the top bar", () => {
     const bar = await barAt("/")
     const names = within(bar).getAllByRole("img", { name: "Rosesfield" })
     expect(names).toHaveLength(2)
-    const menu = within(bar).getByRole("button", { name: "Open the menu" })
+    const menu = within(bar)
+      .getAllByRole("button", { name: "Open the menu" })
+      .find((button) => !button.closest("[data-slot='app-bar-overflow']"))
+    if (menu === undefined) {
+      throw new Error("the bar holds no phone menu")
+    }
     fireEvent.mouseDown(menu)
     const items = await screen.findAllByRole("menuitem")
     const media = catalogApps.filter((app) => app.category !== "character")

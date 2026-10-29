@@ -2,7 +2,6 @@ import { useRender } from "@base-ui/react/use-render"
 import { buttonVariants } from "@rosesfield/ui/components/button"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import type { AppBarDensity } from "@rosesfield/ui/contracts/app-bar.generated"
-import { edgeMaskOf, useScrollEnds } from "@rosesfield/ui/hooks/use-scroll-ends"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
 import {
@@ -13,6 +12,7 @@ import {
   type RefObject,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react"
@@ -22,7 +22,7 @@ type AppBarProps = {
   mark: ReactNode
   lockup: ReactNode
   areas: ReactNode
-  areaMenu?: ReactNode
+  areaMenu?: ReactNode | ((folded: number | null) => ReactNode)
   balance?: ReactNode
   connect?: ReactNode
   density?: AppBarDensity
@@ -30,24 +30,139 @@ type AppBarProps = {
   className?: string
 }
 
-const fade = "var(--spacing-s12)"
+type FoldMeasure = {
+  full: number
+  widths: readonly number[]
+  more: number
+  room: number
+}
 
-function AreaLinks({ children }: { children: ReactNode }): ReactElement {
+function foldCount({ full, widths, more, room }: FoldMeasure): number {
+  if (full <= room) {
+    return 0
+  }
+  let width = full + more
+  for (const [index, unit] of widths.entries()) {
+    width -= unit
+    if (width <= room) {
+      return index + 1
+    }
+  }
+  return widths.length
+}
+
+const FoldContext = createContext(0)
+
+function AppBarFold({
+  rank,
+  children,
+}: {
+  rank: number
+  children: ReactNode
+}): ReactElement {
+  const folded = useContext(FoldContext)
+  return (
+    <span
+      data-fold-rank={rank}
+      hidden={rank <= folded}
+      className="flex shrink-0 items-center"
+    >
+      {children}
+    </span>
+  )
+}
+
+function widthOf(element: Element): number {
+  return element.getBoundingClientRect().width
+}
+
+function measureFold(row: HTMLElement): number {
+  const list = row.firstElementChild
+  if (list === null) {
+    return 0
+  }
+  const units = [...list.querySelectorAll<HTMLElement>("[data-fold-rank]")]
+    .map((element) => ({
+      element,
+      rank: Number(element.dataset.foldRank),
+    }))
+    .sort((one, other) => one.rank - other.rank)
+  const more = list.querySelector<HTMLElement>("[data-fold-more]")
+  const folding = [
+    ...units.map((unit) => unit.element),
+    ...(more === null ? [] : [more]),
+  ].filter((element) => element.hidden)
+  for (const element of folding) {
+    element.hidden = false
+  }
+  const moreWidth = more === null ? 0 : widthOf(more)
+  const full = widthOf(list) - moreWidth
+  const widths = units.map((unit) => widthOf(unit.element))
+  for (const element of folding) {
+    element.hidden = true
+  }
+  const style = getComputedStyle(row)
+  const room =
+    row.clientWidth -
+    (Number.parseFloat(style.paddingLeft) || 0) -
+    (Number.parseFloat(style.paddingRight) || 0)
+  return foldCount({ full, widths, more: moreWidth, room })
+}
+
+function useFold(row: RefObject<HTMLElement | null>): number {
+  const [folded, setFolded] = useState(0)
+  useLayoutEffect(() => {
+    const element = row.current
+    if (element === null) {
+      return
+    }
+    const update = (): void => setFolded(measureFold(element))
+    update()
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", update)
+      return () => window.removeEventListener("resize", update)
+    }
+    const sizes = new ResizeObserver(update)
+    sizes.observe(element)
+    if (element.firstElementChild !== null) {
+      sizes.observe(element.firstElementChild)
+    }
+    return () => sizes.disconnect()
+  }, [row])
+  return folded
+}
+
+function AreaLinks({
+  children,
+  more,
+}: {
+  children: ReactNode
+  more: ((folded: number) => ReactNode) | null
+}): ReactElement {
   const box = useRef<HTMLDivElement>(null)
-  const { ends, update } = useScrollEnds(box)
+  const folded = useFold(box)
   return (
     <div
       ref={box}
-      onScroll={update}
-      data-scroll-start={ends.start ? undefined : ""}
       data-slot="app-bar-overflow"
-      style={edgeMaskOf(ends, fade)}
+      data-overflow={folded > 0 ? "" : undefined}
       className={cn(
-        "hidden h-button min-w-0 flex-1 items-center overflow-x-auto [scrollbar-width:none] @regular:flex",
+        "hidden h-button min-w-0 flex-1 items-center overflow-hidden @regular:flex",
         interaction.ringRoom
       )}
     >
-      <div className="flex shrink-0 items-center">{children}</div>
+      <div className="flex shrink-0 items-center">
+        <FoldContext value={folded}>{children}</FoldContext>
+        {more === null ? null : (
+          <span
+            data-fold-more=""
+            hidden={folded === 0}
+            className="ml-1 flex shrink-0"
+          >
+            {more(folded)}
+          </span>
+        )}
+      </div>
     </div>
   )
 }
@@ -160,10 +275,11 @@ function BarEnd({
   balance,
   connect,
 }: Pick<AppBarProps, "areaMenu" | "balance" | "connect">): ReactElement {
+  const phoneMenu = typeof areaMenu === "function" ? areaMenu(null) : areaMenu
   return (
     <span className="flex shrink-0 items-center gap-1">
-      {areaMenu === undefined ? null : (
-        <span className="flex shrink-0 @regular:hidden">{areaMenu}</span>
+      {phoneMenu === undefined ? null : (
+        <span className="flex shrink-0 @regular:hidden">{phoneMenu}</span>
       )}
       {balance === undefined ? null : (
         <span data-slot="app-bar-balance" className="flex">
@@ -234,7 +350,15 @@ function AppBar({
           {lockup}
         </span>
         <nav aria-label={label} className="contents">
-          <AreaLinks>{areas}</AreaLinks>
+          <AreaLinks
+            more={
+              typeof areaMenu === "function"
+                ? (folded) => areaMenu(folded)
+                : null
+            }
+          >
+            {areas}
+          </AreaLinks>
         </nav>
         <span className="flex-1 @regular:hidden" />
         <DensityContext value={density}>
@@ -246,4 +370,4 @@ function AppBar({
 }
 
 export type { AppBarActionProps, AppBarProps }
-export { AppBar, AppBarAction }
+export { AppBar, AppBarAction, AppBarFold, foldCount }

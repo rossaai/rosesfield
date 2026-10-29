@@ -1,5 +1,5 @@
 import type { AppListing } from "@rosesfield/contract"
-import { AppBar } from "@rosesfield/ui/components/app-bar"
+import { AppBar, AppBarFold } from "@rosesfield/ui/components/app-bar"
 import { IconButton } from "@rosesfield/ui/components/button"
 import {
   DropdownMenu,
@@ -17,7 +17,7 @@ import {
 } from "@rosesfield/ui/components/nav-link"
 import { Link, useRouterState } from "@tanstack/react-router"
 import { MenuIcon } from "lucide-react"
-import type { ReactElement } from "react"
+import { Fragment, type ReactElement } from "react"
 import { appLine, appName, isFeaturedApp } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { FieldMark, Lockup } from "@/shell/brand-mark"
@@ -137,6 +137,20 @@ function AreaNav({
   )
 }
 
+const restRanks = [4, 3, 2, 1] as const
+const mcpRank = 5
+const featuredRank = 6
+const areaRanks = [10, 9, 8, 7] as const
+const exploreRank = 11
+
+function restRank(index: number): number {
+  return restRanks[index] ?? 1
+}
+
+function areaRank(index: number): number {
+  return areaRanks[index] ?? featuredRank + 1
+}
+
 function AreaLinks({
   groups,
   pathname,
@@ -146,21 +160,30 @@ function AreaLinks({
 }): ReactElement {
   return (
     <>
-      <ScreenNav link={groups.explore} />
-      {groups.areas.map((area) => (
-        <AreaNav
-          key={area.id}
-          area={area}
-          current={isAreaCurrent(area, pathname, groups.featured.apps)}
-          pathname={pathname}
-        />
+      <AppBarFold rank={exploreRank}>
+        <ScreenNav link={groups.explore} />
+      </AppBarFold>
+      {groups.areas.map((area, index) => (
+        <AppBarFold key={area.id} rank={areaRank(index)}>
+          <AreaNav
+            area={area}
+            current={isAreaCurrent(area, pathname, groups.featured.apps)}
+            pathname={pathname}
+          />
+        </AppBarFold>
       ))}
-      <ScreenNav link={groups.mcp} />
-      <NavSeparator />
-      <FeaturedNav pair={groups.featured} pathname={pathname} />
-      <NavSeparator />
-      {groups.rest.map((link) => (
-        <ScreenNav key={link.id} link={link} />
+      <AppBarFold rank={mcpRank}>
+        <ScreenNav link={groups.mcp} />
+      </AppBarFold>
+      <AppBarFold rank={featuredRank}>
+        <NavSeparator />
+        <FeaturedNav pair={groups.featured} pathname={pathname} />
+      </AppBarFold>
+      {groups.rest.map((link, index) => (
+        <AppBarFold key={link.id} rank={restRank(index)}>
+          {index === 0 ? <NavSeparator /> : null}
+          <ScreenNav link={link} />
+        </AppBarFold>
       ))}
     </>
   )
@@ -205,7 +228,67 @@ function MenuApp({ app }: { app: AppListing }): ReactElement {
   )
 }
 
-function PhoneMenu({ groups }: { groups: NavGroups }): ReactElement {
+function MenuSections({
+  sections,
+}: {
+  sections: readonly ReactElement[][]
+}): ReactElement {
+  const shown = sections.filter((section) => section.length > 0)
+  return (
+    <>
+      {shown.map((section, index) => (
+        <Fragment key={section[0]?.key ?? index}>
+          {index === 0 ? null : <DropdownMenuSeparator />}
+          {section}
+        </Fragment>
+      ))}
+    </>
+  )
+}
+
+function PhoneMenu({
+  groups,
+  folded,
+}: {
+  groups: NavGroups
+  folded: number | null
+}): ReactElement {
+  const isFolded = (rank: number): boolean => folded === null || rank <= folded
+  const lead = [
+    ...(isFolded(exploreRank)
+      ? [<MenuLink key="explore" link={groups.explore} />]
+      : []),
+    ...groups.areas.flatMap((area, index) =>
+      isFolded(areaRank(index))
+        ? [
+            <DropdownMenuGroup key={area.id}>
+              <DropdownMenuLabel>{t(area.label)}</DropdownMenuLabel>
+              {area.apps.map((app) => (
+                <MenuApp key={app.id} app={app} />
+              ))}
+            </DropdownMenuGroup>,
+          ]
+        : []
+    ),
+  ]
+  const mcp = isFolded(mcpRank)
+    ? [<MenuLink key="mcp" link={groups.mcp} />]
+    : []
+  const featured = isFolded(featuredRank)
+    ? [
+        <MenuLink
+          key="agent"
+          link={groups.featured.agent}
+          badge={<FeaturedBadge />}
+        />,
+        ...groups.featured.apps.map((app) => (
+          <MenuApp key={app.id} app={app} />
+        )),
+      ]
+    : []
+  const rest = groups.rest.flatMap((link, index) =>
+    isFolded(restRank(index)) ? [<MenuLink key={link.id} link={link} />] : []
+  )
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -216,26 +299,7 @@ function PhoneMenu({ groups }: { groups: NavGroups }): ReactElement {
         }
       />
       <DropdownMenuContent align="end" sideOffset={4}>
-        <MenuLink link={groups.explore} />
-        {groups.areas.map((area) => (
-          <DropdownMenuGroup key={area.id}>
-            <DropdownMenuLabel>{t(area.label)}</DropdownMenuLabel>
-            {area.apps.map((app) => (
-              <MenuApp key={app.id} app={app} />
-            ))}
-          </DropdownMenuGroup>
-        ))}
-        <DropdownMenuSeparator />
-        <MenuLink link={groups.mcp} />
-        <DropdownMenuSeparator />
-        <MenuLink link={groups.featured.agent} badge={<FeaturedBadge />} />
-        {groups.featured.apps.map((app) => (
-          <MenuApp key={app.id} app={app} />
-        ))}
-        <DropdownMenuSeparator />
-        {groups.rest.map((link) => (
-          <MenuLink key={link.id} link={link} />
-        ))}
+        <MenuSections sections={[lead, mcp, featured, rest]} />
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -276,7 +340,7 @@ export function TopBar(): ReactElement {
       }
       lockup={<PhoneLead />}
       areas={<AreaLinks groups={groups} pathname={pathname} />}
-      areaMenu={<PhoneMenu groups={groups} />}
+      areaMenu={(folded) => <PhoneMenu groups={groups} folded={folded} />}
       balance={<CreditBalance />}
     />
   )
