@@ -321,7 +321,8 @@ export const libraryExample = z
     path: ["proof"],
   })
   .refine((example) => example.approved === (example.approval !== null), {
-    message: "An approved example carries the maintainer's approval, and only it",
+    message:
+      "An approved example carries the maintainer's approval, and only it",
     path: ["approval"],
   })
   .refine((example) => !example.approved || example.preview !== null, {
