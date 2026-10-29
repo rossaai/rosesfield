@@ -17,7 +17,7 @@ workflows/
     <id>-1.webp           a thumbnail from a real run, absent until one exists
 ```
 
-- 34 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
+- 35 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
 - Every graph runs open weights, except a graph that runs a Comfy partner node listed in `docs/models.md` §Graphs that run a partner node. No graph makes a Comfy Router call. The catalog test `open-weights.test.ts` checks every app's bindings.
 - `bun run catalog:sync` lists every folder in `packages/catalog/src/workflows.gen.ts`. It refuses a folder without `entry.json`, `<id>.json` and `<id>.api.json`.
 - A workflow is proven by one Generate in the running app on its app's screen, on a real input. No script runs a paid model. `bun scripts/checks/output-files/check-output-files.ts --library <gateway>` then checks each output in the library.

@@ -1,7 +1,7 @@
 {
   "source": "GET /api/object_info on Comfy Cloud",
   "readOn": "2026-10-29",
-  "recipe": "For each loader below, the options of its weight input, input.required.<input>[0], as object_info returned them",
+  "recipe": "For each loader below, the options of its weight input, input.required.<input>[0], as object_info returned them, each once. A loader of a custom node pack names the pack and the commit the graph that loads it pins",
   "loaders": {
     "UNETLoader": {
       "input": "unet_name",
@@ -1278,6 +1278,17 @@
         "ltx-2.5-latent-temporal-upscaler-x2-bf16-1.0.safetensors",
         "minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors",
         "minimax_h3_latent_upscaler_3d_conv_v1_bf16.safetensors"
+      ]
+    },
+    "DownloadAndLoadDepthAnythingV3Model": {
+      "input": "model",
+      "pack": "ComfyUI-DepthAnythingV3 at 20ef6c8ccf8d57a0ad6f6fa7031739eb8489f2a4",
+      "files": [
+        "da3_small.safetensors",
+        "da3_base.safetensors",
+        "da3_large.safetensors",
+        "da3mono_large.safetensors",
+        "da3metric_large.safetensors"
       ]
     }
   }

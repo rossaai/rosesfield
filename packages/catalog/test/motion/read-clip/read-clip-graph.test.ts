@@ -1,6 +1,7 @@
 import { ComfyGenerationEngine } from "@rosesfield/generation"
 import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
+import { cloudWeights, heldFilesOf, isHeldOnCloud } from "#comfy/cloud-weights"
 import { findWorkflow } from "#list-workflows"
 import { planClip } from "#motion/clip-plan"
 import {
@@ -160,5 +161,17 @@ describe("the graph that reads a clip", () => {
       "sam3.1_multiplex_fp16.safetensors",
     ])
     expect(workflow?.partnerNodes).toEqual([])
+  })
+
+  it("loads only weights Comfy Cloud holds, the depth one through the node pack the graph pins", () => {
+    const workflow = findWorkflow(readClipWorkflow)
+    expect(isHeldOnCloud(workflow?.models ?? ["none"], heldFilesOf())).toBe(
+      true
+    )
+    const loader = cloudWeights.loaders.DownloadAndLoadDepthAnythingV3Model
+    expect(loader?.files).toContain("da3mono_large.safetensors")
+    expect(loader?.pack).toBe(
+      "ComfyUI-DepthAnythingV3 at 20ef6c8ccf8d57a0ad6f6fa7031739eb8489f2a4"
+    )
   })
 })

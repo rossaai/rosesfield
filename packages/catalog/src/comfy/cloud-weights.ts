@@ -3,6 +3,7 @@ import source from "./cloud-weights.json"
 
 const loader = z.strictObject({
   input: z.string().min(1),
+  pack: z.string().min(1).optional(),
   files: z.array(z.string().min(1)),
 })
 
