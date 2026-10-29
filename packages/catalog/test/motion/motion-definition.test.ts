@@ -1,6 +1,16 @@
 import { startRunBodyFor } from "@rosesfield/contract"
+import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { both, clipId, motion, photoId } from "./motion-replay"
+
+function idOf(n: number): string {
+  return assetIdFormat.parse(
+    `${n.toString(16).padStart(2, "0")}a2b3c4-5d6e-4f7a-8b9c-0d1e2f3a4b5c`
+  )
+}
+
+const photos = (count: number): string[] =>
+  Array.from({ length: count }, (_, at) => idOf(at + 10))
 
 const body = startRunBodyFor(motion)
 
@@ -31,8 +41,12 @@ describe("the motion definition", () => {
       )
       .map((input) => input.name)
     expect(ruled).toEqual([
+      "firstFrame",
+      "guide",
+      "plannedScene",
       "photo",
       "clip",
+      "frames",
       "mask",
       "endKey",
       "targets",
@@ -50,11 +64,7 @@ describe("the motion definition", () => {
       given: { inputs: { photo: [photoId], clip: [clipId, clipId] } },
     },
     {
-      case: "two photos",
-      given: { inputs: { photo: [photoId, photoId], clip: [clipId] } },
-    },
-    {
-      case: "a resolution of 1080p",
+      case: "a resolution of 1080p on LTX 2.3 control",
       given: { inputs: { ...both, resolution: "1080p" } },
     },
     {
@@ -84,5 +94,40 @@ describe("the motion definition", () => {
       )
     }
     expect(isRefused({ inputs: both, aspectRatio: "a:b" })).toBe(true)
+  })
+
+  it("opens on the LTX 2.5 guided render, which takes your video only through the chain, never in one run", () => {
+    expect(isRefused({ inputs: { photo: [photoId], clip: [clipId] } })).toBe(
+      true
+    )
+    const draft = {
+      firstFrame: [idOf(1)],
+      guide: [idOf(2)],
+      mask: [idOf(3)],
+      plannedScene: "A man walks down a street.",
+      scene: "replace the man on the left",
+      resolution: "480p",
+    }
+    expect(body.parse({ inputs: draft }).inputs.model).toBe("ltx-2-5-guide")
+    expect(isRefused({ inputs: { ...draft, photo: [photoId] } })).toBe(true)
+    expect(isRefused({ inputs: { ...draft, clip: [clipId] } })).toBe(true)
+  })
+
+  it("plans your video with 1 to 15 photos and its 4 frames, and refuses a 16th photo or a 5th frame", () => {
+    const plan = (photoCount: number, frameCount: number) => ({
+      inputs: {
+        model: "motion-plan",
+        clip: [clipId],
+        photo: photos(photoCount),
+        frames: photos(frameCount),
+        scene: "replace the man on the left",
+      },
+      place: "held",
+    })
+    expect(isRefused(plan(1, 4))).toBe(false)
+    expect(isRefused(plan(15, 4))).toBe(false)
+    expect(isRefused(plan(16, 4))).toBe(true)
+    expect(isRefused(plan(3, 5))).toBe(true)
+    expect(isRefused(plan(0, 4))).toBe(true)
   })
 })

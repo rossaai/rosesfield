@@ -6,13 +6,14 @@ import { apiGraph } from "#workflow-entry.contract"
 
 export const ltx25GuideWorkflow = "motion-guide-ltx-2-5"
 
+/** The inputs of the guided render when your own video runs through the chain: each one the chain fills, so your own photos, video and prompt keep their names. */
 export const ltx25GuideInputs = {
   model: "model",
-  photo: "photo",
-  guide: "clip",
+  photo: "firstFrame",
+  guide: "guide",
   mask: "mask",
   endKey: "endKey",
-  scene: "scene",
+  scene: "plannedScene",
   resolution: "resolution",
   seed: "seed",
 } as const

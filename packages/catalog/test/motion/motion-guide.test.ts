@@ -9,7 +9,7 @@ import {
   isGuideFit,
   renderSizeOf,
 } from "#motion/comfy/guide-fit"
-import { graphModel, guideModel } from "#motion/motion-models"
+import { graphModel, guideModel, ltx25GuideModel } from "#motion/motion-models"
 import { withoutVideoStills } from "../workflows/video-stills"
 import {
   both,
@@ -151,6 +151,7 @@ describe("the depth guide graph", () => {
   it("lists the guide under the Motion graph's task, so its price is read from the Motion graph's runs until a run of its own is measured", () => {
     const graphs = modelsForApp(motion, []).map((one) => [one.id, one.task])
     expect(graphs).toEqual([
+      [ltx25GuideModel, "motion-transfer"],
       [graphModel, "motion-transfer"],
       [guideModel, "motion-transfer"],
     ])

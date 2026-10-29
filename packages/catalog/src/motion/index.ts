@@ -1,7 +1,9 @@
 export {
+  type ChainLead,
   type ChainRun,
   DraftNotReadyError,
   type EndKeyAnswer,
+  type EndKeyLeadOutput,
   EndKeyLoopHandler,
   type EndKeySteps,
   RunChain,
@@ -9,7 +11,15 @@ export {
 } from "@rosesfield/generation/bindings"
 export { motionApp } from "#motion/app"
 export {
+  type ClipPlan,
+  clipPlanLimits,
+  keptPlanOf,
+} from "#motion/clip-plan"
+export { ClipPlanNoTargetError } from "#motion/clip-plan-no-target.error"
+export type { PlanImage } from "#motion/comfy/clip-plan-turn"
+export {
   endKeyEditor,
+  finalAt,
   type MotionEndKeyAsk,
   motionEndKeySteps,
 } from "#motion/comfy/end-key-steps"
@@ -31,6 +41,13 @@ export {
   type RenderQuality,
   renderResolutions,
 } from "#motion/comfy/guide-ltx-2-5-binding"
+export {
+  type HeldText,
+  type OwnVideoAsk,
+  OwnVideoLead,
+  type OwnVideoStage,
+  ownVideoStages,
+} from "#motion/comfy/own-video-lead"
 export { readClipRequestOf } from "#motion/comfy/read-clip-binding"
 export { readClipOf, renderHandOffOf } from "#motion/comfy/render-hand-off"
 export {
@@ -38,7 +55,11 @@ export {
   exampleAgentNotes,
   isFinalRun,
 } from "#motion/examples/example-agent"
-export { exampleInput, ownVideo } from "#motion/examples/example-binding"
+export {
+  exampleInput,
+  ownVideo,
+  photoInput,
+} from "#motion/examples/example-binding"
 export {
   type ExampleChainAsk,
   exampleEndKeySteps,
@@ -73,5 +94,6 @@ export {
   guideModel,
   ltx25GuideModel,
   motionAppId,
+  planModel,
   readClipModel,
 } from "#motion/motion-models"

@@ -85,4 +85,11 @@ export const errorCopy = {
   "error.AGENT_TURN_LIMIT.body":
     "It reached its limit of model calls for one turn. Your runs keep going. Send a message to go on.",
   "error.AGENT_TURN_LIMIT.action": "Try again",
+  "error.MOTION_NOTHING_TO_CHANGE.title":
+    "Nothing in your video matches your photos",
+  "error.MOTION_NOTHING_TO_CHANGE.body":
+    "Add a photo of a person or a thing your video shows, or say what to change. Your inputs are kept.",
+  "error.MOTION_PLAN_UNREADABLE.title": "Rosesfield could not read your video",
+  "error.MOTION_PLAN_UNREADABLE.body": "Try again. Your inputs are kept.",
+  "error.MOTION_PLAN_UNREADABLE.action": "Try again",
 } satisfies Record<string, string>

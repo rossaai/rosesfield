@@ -104,13 +104,15 @@ describe("the shape a Motion run records through /mcp", () => {
     expect(JSON.stringify(result)).toContain('"aspectRatio":"2:3"')
   })
 
-  it("is the photo's own shape with your own video, 9:16 for a 1080 by 1920 photo, the control", async () => {
+  it("is the photo's own shape with your own video on LTX 2.3 control, 9:16 for a 1080 by 1920 photo, the control", async () => {
     const gateway = openGateway()
     const photo = await upload(gateway, pngOf(1080, 1920))
     const clip = await upload(gateway, Uint8Array.of(0, 0, 0, 24), "video/mp4")
     const result = await mcp(gateway, "tools/call", {
       name: "motion",
-      arguments: { inputs: { photo: [photo], clip: [clip] } },
+      arguments: {
+        inputs: { model: "ltx-2-3-control", photo: [photo], clip: [clip] },
+      },
     })
     expect(JSON.stringify(result)).toContain('"aspectRatio":"9:16"')
   })

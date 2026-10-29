@@ -125,6 +125,7 @@ export function assetRoutes(app: GatewayApp): void {
     routes.uploadAsset.path,
     limitBody(UploadAssetHandler.maxBytes),
     async (c) => {
+      const { place } = readQuery(c, routes.uploadAsset.query)
       const uploaded = await c.var.scope.handlers.uploadAsset.execute({
         bytes: new Uint8Array(await c.req.arrayBuffer()),
         mime: c.req.header("content-type") ?? "",
@@ -132,6 +133,7 @@ export function assetRoutes(app: GatewayApp): void {
         width: null,
         height: null,
         durationSeconds: null,
+        ...(place === undefined ? {} : { place }),
       })
       return c.json(
         uploaded satisfies ResponseOf<typeof routes.uploadAsset>,

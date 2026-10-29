@@ -47,6 +47,26 @@ function renderStep(inputs: RunInputs, ask: MotionEndKeyAsk): StepRun {
   }
 }
 
+/** The same steps with the final rendered at the resolution the person chose. */
+export function finalAt(steps: EndKeySteps, resolution: string): EndKeySteps {
+  return {
+    ...steps,
+    final: (draft, endKey) => {
+      const step = steps.final(draft, endKey)
+      return {
+        ...step,
+        request: {
+          ...step.request,
+          inputs: {
+            ...step.request.inputs,
+            [ltx25GuideInputs.resolution]: resolution,
+          },
+        },
+      }
+    },
+  }
+}
+
 export function motionEndKeySteps(
   ask: MotionEndKeyAsk,
   editor: EditModelBinding = endKeyEditor

@@ -19,6 +19,12 @@ const admittedPartnerNodes: Readonly<Record<string, readonly string[]>> = {
   "three-d": ["MeshyImageToModelNode"],
 }
 
+/** Motion's plan is one chat call of GLM 5.3 Flash, an open-weights model, on the Router, and runs no graph. Remake runs Motion's engine for a replaced shot. */
+const admittedPlanners: Readonly<Record<string, readonly string[]>> = {
+  motion: ["motion-plan"],
+  remake: ["motion-plan"],
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
@@ -68,7 +74,10 @@ describe("the build runs open weights, and only the partner nodes docs/models.md
   it.each(listApps().map((app) => ({ id: app.id, app })))(
     "$id binds only ComfyUI workflows, and declares each partner node it runs",
     ({ app }) => {
-      const leaves = leavesOf(app.engine)
+      const planners = admittedPlanners[app.id] ?? []
+      const leaves = leavesOf(app.engine).filter(
+        (leaf) => !planners.includes(leaf.adapter)
+      )
       expect(leaves.map((leaf) => leaf.adapter)).toEqual(
         leaves.map(() => comfyWorkflowAdapter)
       )

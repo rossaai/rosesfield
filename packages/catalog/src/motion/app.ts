@@ -1,6 +1,7 @@
 import { taskBinding } from "@rosesfield/generation/bindings"
 import { type AppInput, defineApp } from "#define-app"
 import { clipPlanLimits } from "#motion/clip-plan"
+import { clipPlanInputs } from "#motion/comfy/clip-plan-binding"
 import { ltx25GuideInputs } from "#motion/comfy/guide-ltx-2-5-binding"
 import { motionEngine } from "#motion/comfy/motion-binding"
 import { readClipInputs } from "#motion/comfy/read-clip-binding"
@@ -19,6 +20,7 @@ import {
   guideModel,
   ltx25GuideModel,
   motionTasks,
+  planModel,
   readClipModel,
 } from "#motion/motion-models"
 
@@ -26,6 +28,8 @@ import {
 const chainLabel = "motion.name"
 
 const renderModels = [graphModel, guideModel, ltx25GuideModel]
+
+const photoModels = [...renderModels, planModel]
 
 const twoPassModels = [graphModel, guideModel]
 
@@ -36,6 +40,11 @@ type Condition = { input: string; is: string[] }
 function whenExampleIs(values: readonly string[]): Condition {
   return { input: exampleInput, is: [...values] }
 }
+
+const ownRender: Condition[] = [
+  { input: "model", is: [ltx25GuideModel] },
+  whenExampleIs([ownVideo]),
+]
 
 function exampleChoice(offered: readonly LibraryExample[]): AppInputs {
   return [
@@ -62,18 +71,60 @@ function modelChoice(): AppInputs {
       name: "model",
       labelKey: "motion.input.model.label",
       options: [
+        { value: ltx25GuideModel, labelKey: "motion.model.ltx25" },
         { value: graphModel, labelKey: "motion.model.ltx23" },
         { value: guideModel, labelKey: "motion.model.ltx23Guide" },
-        { value: ltx25GuideModel, labelKey: chainLabel, fill: "chain" },
         { value: readClipModel, labelKey: chainLabel, fill: "chain" },
+        { value: planModel, labelKey: chainLabel, fill: "chain" },
       ],
-      default: graphModel,
+      default: ltx25GuideModel,
+    },
+  ]
+}
+
+function renderChainInputs(): AppInputs {
+  return [
+    {
+      type: "image",
+      name: ltx25GuideInputs.photo,
+      labelKey: chainLabel,
+      presence: "required",
+      max: 1,
+      fill: "chain",
+      when: ownRender,
+    },
+    {
+      type: "video",
+      name: ltx25GuideInputs.guide,
+      labelKey: chainLabel,
+      presence: "required",
+      max: 1,
+      fill: "chain",
+      when: ownRender,
+    },
+    {
+      type: "prompt",
+      name: ltx25GuideInputs.scene,
+      labelKey: chainLabel,
+      presence: "required",
+      maxLength: clipPlanLimits.longestScene,
+      fill: "chain",
+      when: ownRender,
     },
   ]
 }
 
 function chainInputs(): AppInputs {
   return [
+    {
+      type: "image",
+      name: clipPlanInputs.frames,
+      labelKey: chainLabel,
+      presence: "optional",
+      max: clipPlanLimits.frames,
+      fill: "chain",
+      when: [{ input: "model", is: [planModel] }],
+    },
     {
       type: "video",
       name: ltx25GuideInputs.mask,
@@ -111,13 +162,17 @@ function motionInputs(offered: readonly LibraryExample[]): AppInputs {
   return [
     ...exampleChoice(offered),
     ...modelChoice(),
+    ...renderChainInputs(),
     {
       type: "image",
       name: "photo",
       labelKey: "motion.input.photo.label",
       presence: "required",
-      max: 1,
-      when: [{ input: "model", is: renderModels }],
+      max: clipPlanLimits.mostPhotos,
+      when: [
+        { input: "model", is: photoModels },
+        { input: ltx25GuideInputs.photo, state: "empty" },
+      ],
     },
     {
       type: "video",
@@ -125,7 +180,10 @@ function motionInputs(offered: readonly LibraryExample[]): AppInputs {
       labelKey: "motion.input.clip.label",
       presence: "required",
       max: 1,
-      when: [whenExampleIs([ownVideo])],
+      when: [
+        whenExampleIs([ownVideo]),
+        { input: ltx25GuideInputs.guide, state: "empty" },
+      ],
     },
     ...chainInputs(),
     {
@@ -178,7 +236,7 @@ export function motionApp(offered: readonly LibraryExample[]): AppInput {
     engine: taskBinding({
       tasks: motionTasks,
       input: "model",
-      default: graphModel,
+      default: ltx25GuideModel,
       fallback: examplesBinding(offered, motionEngine),
     }),
     limits: { timeoutSeconds: 1800, maxRetries: 2 },

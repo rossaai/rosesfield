@@ -77,16 +77,16 @@ function boundGraph(sound: "on" | "off"): Graph {
 }
 
 describe("the motion graph", () => {
-  it("declares the motion transfer and character swap tasks and opens on the LTX 2.3 control graph", () => {
+  it("declares the motion transfer and character swap tasks, opens on the LTX 2.5 guided render your own video runs through the chain, and keeps the LTX 2.3 control graph one choice away", () => {
     expect(appTasksOf(motion)).toEqual(["motion-transfer", "character-swap"])
-    expect(defaultModelOf(motion)).toBe("ltx-2-3-control")
+    expect(defaultModelOf(motion)).toBe("ltx-2-5-guide")
     const binding = resolveBinding(motion.engine, { ...both, sound: "off" })
     expect(binding.config.models).toEqual(
       findWorkflow(motionWorkflowId)?.models
     )
   })
 
-  it("lists the LTX 2.3 control graph first, then its depth guide graph, then each Router model named for a task, and no Wan, reference or other video model", () => {
+  it("lists the LTX 2.5 guided render first, then the LTX 2.3 control graph and its depth guide graph, then each Router model named for a task, and no Wan, reference or other video model", () => {
     const listed = modelsForApp(motion, [
       hosted("wan/wan2.2-animate", ["image", "video"]),
       hosted("higgsfield/higgsfield-genjutsu-motion-transfer-v1.0", [
@@ -98,13 +98,17 @@ describe("the motion graph", () => {
       hosted("ltx/ltx-2-3-pro", ["image"]),
     ])
     expect(listed.map((one) => [one.id, one.kind, one.task])).toEqual([
+      ["ltx-2-5-guide", "graph", "motion-transfer"],
       ["ltx-2-3-control", "graph", "motion-transfer"],
       ["ltx-2-3-guide", "graph", "motion-transfer"],
       ["kling/kling-v3-motion-control", "hosted", "motion-transfer"],
       ["lab/lab-character-swap-v1", "hosted", "character-swap"],
     ])
-    expect(listed[0]?.nameKey).toBe("motion.model.ltx23")
-    expect(listed[1]?.nameKey).toBe("motion.model.ltx23Guide")
+    expect(listed.slice(0, 3).map((one) => one.nameKey)).toEqual([
+      "motion.model.ltx25",
+      "motion.model.ltx23",
+      "motion.model.ltx23Guide",
+    ])
   })
 
   it("loads no Wan file, and the Wan Animate 2, SCAIL-2 and Wan VACE graphs and the Recast app are gone", () => {

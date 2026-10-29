@@ -1,4 +1,9 @@
 import {
+  ClipPlanGenerationEngine,
+  DemoClipPlanTurn,
+  RouterClipPlanTurn,
+} from "@rosesfield/catalog/motion/engine"
+import {
   type MediaTool,
   RemakeGenerationEngine,
   RouterPlanTurn,
@@ -81,6 +86,23 @@ export function liveEngineOf(
   }
 }
 
+/** The plan of a Motion clip: on the Router with the key, or the demo engine's own plan with none. */
+function clipPlanOf(
+  key: string | null,
+  live: GenerationEngine | null,
+  options: EngineOptions
+): GenerationEngine {
+  return live === null
+    ? new ClipPlanGenerationEngine({
+        turn: new DemoClipPlanTurn(),
+        origin: "demo",
+      })
+    : new ClipPlanGenerationEngine({
+        turn: new RouterClipPlanTurn({ apiKey: key, ...fetchOf(options) }),
+        origin: "live",
+      })
+}
+
 function hostedKeyOf(engine: EngineSettings): string | null {
   if (engine.target === "demo" || engine.target === "runpod-serverless") {
     return null
@@ -114,13 +136,16 @@ export function pickEngines(
 ): readonly GenerationEngine[] {
   checkEngineSettings(engine)
   const live = liveEngineOf(engine, options)
-  const router = routerOf(hostedKeyOf(engine), options)
+  const key = hostedKeyOf(engine)
+  const router = routerOf(key, options)
+  const plan = clipPlanOf(key, live, options)
   return live === null
     ? [
         router,
+        plan,
         new DemoGenerationEngine({ clock: options.clock, rates: router }),
       ]
-    : withRemake([live, router], hostedKeyOf(engine), options)
+    : [...withRemake([live, router], key, options), plan]
 }
 
 type KeyedEngines = {
@@ -148,8 +173,9 @@ export function visitorEngines(
   key: string | null,
   options: EngineOptions
 ): readonly GenerationEngine[] {
-  const { live, router, demo } = keyedEngines(engine, key, options)
-  return live === null ? [router, demo] : [live, router, demo]
+  const { live, router, demo, hostedKey } = keyedEngines(engine, key, options)
+  const plan = clipPlanOf(hostedKey, live, options)
+  return live === null ? [router, plan, demo] : [live, router, plan, demo]
 }
 
 export function pastedKeyEngines(
@@ -158,7 +184,8 @@ export function pastedKeyEngines(
   options: EngineOptions
 ): readonly GenerationEngine[] {
   const { live, router, demo, hostedKey } = keyedEngines(engine, key, options)
+  const plan = clipPlanOf(hostedKey, live, options)
   return live === null
-    ? [router, demo]
-    : [...withRemake([live, router], hostedKey, options), demo]
+    ? [router, plan, demo]
+    : [...withRemake([live, router], hostedKey, options), plan, demo]
 }

@@ -1,4 +1,4 @@
-import { ltx25GuideInputs, motionAppId } from "@rosesfield/catalog/motion"
+import { motionAppId, photoInput } from "@rosesfield/catalog/motion"
 import type {
   AppListing,
   AssetKind,
@@ -221,7 +221,7 @@ export function referenceImageInputsOf(app: AppListing): ImageInput[] {
 
 /** Motion puts your character into a video, so its one photo takes the character's first photo. */
 const characterPhotoInputs: Readonly<Record<string, string>> = {
-  [motionAppId]: ltx25GuideInputs.photo,
+  [motionAppId]: photoInput,
 }
 
 /** The one photo of an app that takes a character as that photo, or null. */

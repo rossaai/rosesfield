@@ -114,7 +114,12 @@ export const clipId = assetIdFormat.parse(
   "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e"
 )
 
-export const both = { example: "own", photo: [photoId], clip: [clipId] }
+export const both = {
+  example: "own",
+  model: "ltx-2-3-control",
+  photo: [photoId],
+  clip: [clipId],
+}
 
 export function filesWith(clipBytes: Uint8Array): EngineFile[] {
   return [

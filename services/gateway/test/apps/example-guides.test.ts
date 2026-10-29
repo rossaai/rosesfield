@@ -109,11 +109,15 @@ describe("an example that follows a guide, through the gateway", () => {
       photo: [photo],
     })
     expect(Object.keys(run.inputs).sort()).toEqual([
+      "endKey",
       "example",
+      "mask",
       "model",
       "photo",
       "resolution",
     ])
+    expect(run.inputs).toMatchObject({ endKey: [], mask: [] })
+    expect(run.inputs).not.toHaveProperty("guide")
     expect(await videosIn(gateway)).toBe(0)
     await gateway.drive(run.id)
     expect((await readRun(gateway, run.id)).status).toBe("done")

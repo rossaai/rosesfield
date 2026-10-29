@@ -72,12 +72,17 @@ describe("the motion app through the gateway on the demo engine", () => {
     )
   }
 
-  it("runs a photo and a clip to one MP4 output in the ratio the run asked for", async () => {
+  it("runs a photo and a clip on LTX 2.3 control to one MP4 output in the ratio the run asked for", async () => {
     const gateway = openGateway()
     const photo = await upload(gateway, "image/png", pngBytes)
     const clip = await upload(gateway, "video/mp4", mp4Bytes)
     const response = await start(gateway, {
-      inputs: { photo: [photo], clip: [clip], scene: "A rooftop at noon" },
+      inputs: {
+        model: "ltx-2-3-control",
+        photo: [photo],
+        clip: [clip],
+        scene: "A rooftop at noon",
+      },
       aspectRatio: "9:16",
     })
     expect(response.status).toBe(202)
@@ -128,6 +133,7 @@ describe("the motion app through the gateway on the demo engine", () => {
     const clip = await upload(gateway, "video/mp4", mp4Bytes)
     const response = await start(gateway, {
       inputs: {
+        model: "ltx-2-3-control",
         photo: [photo],
         clip: [clip],
         sound: "on",
@@ -177,16 +183,16 @@ describe("the motion app through the gateway on the demo engine", () => {
     expect(done.outputs).toHaveLength(1)
   })
 
-  it("refuses a run without a clip, with two photos, at 1080p or with two outputs before it starts", async () => {
+  it("refuses a run without a clip, at 1080p on LTX 2.3 control, with two outputs, or your own video on LTX 2.5 in one run, before it starts", async () => {
     const gateway = openGateway()
     const photo = await upload(gateway, "image/png", pngBytes)
-    const other = await upload(gateway, "image/png", pngBytes)
     const clip = await upload(gateway, "video/mp4", mp4Bytes)
+    const ltx23 = { model: "ltx-2-3-control", photo: [photo], clip: [clip] }
     const bodies = [
-      { inputs: { photo: [photo] } },
-      { inputs: { photo: [photo, other], clip: [clip] } },
-      { inputs: { photo: [photo], clip: [clip], resolution: "1080p" } },
-      { inputs: { photo: [photo], clip: [clip] }, count: 2 },
+      { inputs: { model: "ltx-2-3-control", photo: [photo] } },
+      { inputs: { ...ltx23, resolution: "1080p" } },
+      { inputs: ltx23, count: 2 },
+      { inputs: { photo: [photo], clip: [clip] } },
     ]
     for (const body of bodies) {
       const response = await start(gateway, body)

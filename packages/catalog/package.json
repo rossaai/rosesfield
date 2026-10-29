@@ -12,6 +12,7 @@
     "./comfy": "./src/comfy/index.ts",
     "./video": "./src/video/index.ts",
     "./motion": "./src/motion/index.ts",
+    "./motion/engine": "./src/motion/engine.ts",
     "./lipsync": "./src/lipsync/index.ts",
     "./storyboard": "./src/storyboard/index.ts",
     "./characters": "./src/characters/index.ts",

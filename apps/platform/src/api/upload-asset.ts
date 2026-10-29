@@ -1,4 +1,9 @@
-import { type Asset, errorEnvelope, routes } from "@rosesfield/contract"
+import {
+  type Asset,
+  type AssetPlace,
+  errorEnvelope,
+  routes,
+} from "@rosesfield/contract"
 import { credentialHeaders } from "@/api/call-route"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { GatewayUnreachableError } from "@/api/gateway-unreachable.error"
@@ -7,6 +12,7 @@ type UploadOptions = {
   file: Blob
   onProgress: (fraction: number) => void
   signal?: AbortSignal
+  place?: AssetPlace
 }
 
 function safeJson(text: string): unknown {
@@ -44,7 +50,11 @@ function settle(request: XMLHttpRequest): Asset {
 export function uploadAsset(options: UploadOptions): Promise<Asset> {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest()
-    request.open(routes.uploadAsset.method, routes.uploadAsset.path)
+    const path =
+      options.place === undefined
+        ? routes.uploadAsset.path
+        : `${routes.uploadAsset.path}?${new URLSearchParams({ place: options.place })}`
+    request.open(routes.uploadAsset.method, path)
     for (const [name, value] of Object.entries(credentialHeaders())) {
       request.setRequestHeader(name, value)
     }

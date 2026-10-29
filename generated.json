@@ -88,7 +88,7 @@
     },
     {
       "path": "apps/platform/src/copy/error.en.ts",
-      "sha256": "623e51c6d196099bf753d304f21b7029002ac824a07cc36199f9b5ee014b7f26"
+      "sha256": "b326a35178eece7133b68e39f6d3a786e267b74a0a49afdbbdf253eb74c0c997"
     },
     {
       "path": "apps/platform/src/copy/explore.en.ts",
@@ -184,7 +184,7 @@
     },
     {
       "path": "packages/catalog/src/motion/copy.en.ts",
-      "sha256": "dd8aeb13624343f573a33cb483bd760bb06bd975c42d339ae5a9d769d41e317c"
+      "sha256": "a5af11a9ccc89eac8eeebbd1e7496083dfe10bc265c6af4593ef7fd8e798c11a"
     },
     {
       "path": "packages/catalog/src/music/copy.en.ts",

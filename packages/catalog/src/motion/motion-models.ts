@@ -6,6 +6,8 @@ export const ltx25GuideModel = "ltx-2-5-guide"
 
 export const readClipModel = "motion-read-clip"
 
+export const planModel = "motion-plan"
+
 export const motionAppId = "motion"
 
 export const motionTasks: readonly string[] = [

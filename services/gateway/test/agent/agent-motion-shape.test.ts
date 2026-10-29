@@ -133,8 +133,9 @@ describe("the shape of a Motion run the agent starts", () => {
     expect(shape).toBe("2:3")
   })
 
-  it("is the photo's own shape with your own video, 9:16, the control", async () => {
+  it("is the photo's own shape with your own video on LTX 2.3 control, 9:16, the control", async () => {
     const shape = await shapeOfAgentRun((photo, clip) => ({
+      model: "ltx-2-3-control",
       photo: [photo],
       clip: [clip],
     }))

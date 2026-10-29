@@ -82,4 +82,17 @@ export const motionCopy = {
   "motion.chain.startOver": "Start over",
   "motion.chain.price.example":
     "{amount} Comfy credits, measured on a {seconds}-second {resolution} run",
+  "motion.model.ltx25": "LTX 2.5",
+  "motion.input.photos.label": "Photos",
+  "motion.input.photos.note":
+    "1 to 15 photos of people, products or clothes your video should show.",
+  "motion.input.change.label": "Prompt",
+  "motion.input.change.placeholder":
+    "Replace the man on the left, not the woman",
+  "motion.input.change.note":
+    "Say what to change and how it looks. Your video keeps its camera and its timing.",
+  "motion.chain.leftOut.one":
+    "Photo {photos} matches nothing in your video, so the draft leaves it out.",
+  "motion.chain.leftOut.other":
+    "Photos {photos} match nothing in your video, so the draft leaves them out.",
 } as const

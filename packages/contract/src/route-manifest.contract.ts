@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { appListing } from "#app.contract"
-import { asset, assetKind, assetLink } from "#asset.contract"
+import { asset, assetKind, assetLink, assetPlace } from "#asset.contract"
 import {
   character,
   createCharacterBody,
@@ -119,7 +119,7 @@ export const routes = {
     method: "POST",
     path: "/api/assets",
     params: null,
-    query: null,
+    query: z.object({ place: assetPlace.optional() }),
     body: "bytes",
     response: assetResponse,
     status: 201,

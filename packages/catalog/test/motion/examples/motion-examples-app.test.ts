@@ -45,7 +45,9 @@ describe("Motion's one mode with its Library", () => {
   it("takes your own video by default, or an approved example, and no other", () => {
     expect(choiceOf(motion.inputs, "example")).toEqual(["own", "grab-and-run"])
     expect(
-      body.parse({ inputs: { photo: [photo], clip: [clip] } }).inputs.example
+      body.parse({
+        inputs: { model: "ltx-2-3-control", photo: [photo], clip: [clip] },
+      }).inputs.example
     ).toBe("own")
     expect(
       body.safeParse({
@@ -75,6 +77,7 @@ describe("Motion's one mode with its Library", () => {
       body.safeParse({
         inputs: {
           example: "grab-and-run",
+          model: "ltx-2-3-control",
           photo: [photo],
           resolution: "1080p",
         },
@@ -102,7 +105,15 @@ describe("Motion's one mode with its Library", () => {
       exampleOf("grab-and-run").prompt
     )
     expect(bound.workflow["1011"]).toBeDefined()
-    expect(motion.inputs.map((input) => input.name)).not.toContain("guide")
+    expect(motion.inputs.find((input) => input.name === "guide")).toMatchObject(
+      {
+        fill: "chain",
+        when: [
+          { input: "model", is: ["ltx-2-5-guide"] },
+          { input: "example", is: ["own"] },
+        ],
+      }
+    )
   })
 
   it("renders the final with the end key and no last frame, at a short side of 1152 for 1080p", () => {

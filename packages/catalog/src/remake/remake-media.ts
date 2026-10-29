@@ -3,6 +3,7 @@ import {
   type EngineOutput,
   RunFailedError,
 } from "@rosesfield/generation"
+import { base64Of } from "#media-base64"
 import type { PlanFrame } from "#remake/comfy/remake-plan-turn"
 import { shotsOf } from "#remake/cut-finder"
 import { EditRefusedError } from "#remake/edit-refused.error"
@@ -46,15 +47,6 @@ function outputOf(
     throw new RunFailedError({ cause: `ffmpeg wrote no ${name}` })
   }
   return bytes
-}
-
-function base64Of(bytes: Uint8Array): string {
-  const chunk = 0x8000
-  let text = ""
-  for (let start = 0; start < bytes.length; start += chunk) {
-    text += String.fromCharCode(...bytes.subarray(start, start + chunk))
-  }
-  return btoa(text)
 }
 
 export class RemakeMedia {

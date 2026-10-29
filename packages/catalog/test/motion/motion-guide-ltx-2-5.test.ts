@@ -185,8 +185,8 @@ describe("the LTX 2.5 depth guide graph", () => {
     expect(attentionOn(graph, 0)).toBeCloseTo(1, 6)
     expect(attentionOn(graph, 1)).toBeCloseTo(0.2, 6)
     expect(pathsOf({ mask: [mask], endKey: [endKey] })).toMatchObject({
-      photo: ["200", "inputs", "image"],
-      clip: ["199", "inputs", "file"],
+      firstFrame: ["200", "inputs", "image"],
+      guide: ["199", "inputs", "file"],
       mask: ["950", "inputs", "file"],
       endKey: ["1002", "inputs", "image"],
     })

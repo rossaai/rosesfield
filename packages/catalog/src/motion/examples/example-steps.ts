@@ -1,9 +1,8 @@
 import type { RunInputs } from "@rosesfield/contract"
 import type { EndKeySteps } from "@rosesfield/generation/bindings"
 import { AspectRatio, type AssetId } from "@rosesfield/kernel"
-import { motionEndKeySteps } from "#motion/comfy/end-key-steps"
+import { finalAt, motionEndKeySteps } from "#motion/comfy/end-key-steps"
 import {
-  ltx25GuideInputs,
   ltx25ShortSides,
   renderResolutions,
 } from "#motion/comfy/guide-ltx-2-5-binding"
@@ -42,20 +41,5 @@ export function exampleEndKeySteps(ask: ExampleChainAsk): EndKeySteps | null {
     aspectRatio: shape,
     frameSize: draftFrameOf(shape),
   })
-  return {
-    ...base,
-    final: (draft, endKey) => {
-      const step = base.final(draft, endKey)
-      return {
-        ...step,
-        request: {
-          ...step.request,
-          inputs: {
-            ...step.request.inputs,
-            [ltx25GuideInputs.resolution]: ask.resolution,
-          },
-        },
-      }
-    },
-  }
+  return finalAt(base, ask.resolution)
 }

@@ -125,14 +125,14 @@ describe("the hand-off to the guided render", () => {
     expect(() => readClipOf(swapped)).toThrow(ProjectError)
   })
 
-  it("gives the render the edited frame, the depth as its guide, the mask, the scene, the draft's resolution and the seed, as inputs Motion takes", () => {
+  it("gives the render the edited frame, the depth as its guide, the mask, the scene, the draft's resolution and the seed, as inputs Motion takes under names the chain fills, so your own photos, video and prompt keep theirs", () => {
     const inputs = handOff("draft", null)
     expect(inputs).toEqual({
       model: ltx25GuideModel,
-      photo: [edited],
-      clip: [depth],
+      firstFrame: [edited],
+      guide: [depth],
       mask: [mask],
-      scene: twoTargetPlan.scene,
+      plannedScene: twoTargetPlan.scene,
       resolution: "480p",
       seed: 77,
     })

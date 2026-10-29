@@ -78,6 +78,7 @@ describe("the engine target the settings select", () => {
     expect(engines.map((engine) => [engine.key, engine.origin])).toEqual([
       [comfyWorkflowAdapter, "live"],
       ["comfy-router", "live"],
+      ["motion-plan", "live"],
     ])
     expect(engines[1]?.canRun(hostedModelBinding("maker/model"))).toBe(false)
   })
@@ -103,10 +104,10 @@ describe("the engine target the settings select", () => {
     expect(() => pickEngines(runpod, { clock })).toThrow(/comfy-api-proxy/)
     expect(
       visitorEngines(runpod, "comfyui-visitor", { clock }).map((one) => one.key)
-    ).toEqual(["comfy-router", "demo"])
+    ).toEqual(["comfy-router", "motion-plan", "demo"])
     expect(
       pickEngines({ target: "demo" }, { clock }).map((one) => one.origin)
-    ).toEqual(["live", "demo"])
+    ).toEqual(["live", "demo", "demo"])
   })
 
   it("runs hosted models with a Comfy key and never with a proxy token", () => {
@@ -181,10 +182,10 @@ describe("the engine target the settings select", () => {
     const target = comfyCloud("ignored")
     expect(
       visitorEngines(target, null, { clock }).map((one) => one.key)
-    ).toEqual(["comfy-router", "demo"])
+    ).toEqual(["comfy-router", "motion-plan", "demo"])
     expect(
       visitorEngines(target, "comfyui-visitor", { clock }).map((one) => one.key)
-    ).toEqual([comfyWorkflowAdapter, "comfy-router", "demo"])
+    ).toEqual([comfyWorkflowAdapter, "comfy-router", "motion-plan", "demo"])
   })
 
   it("starts a run on the Comfy adapter its app binds when a key is set", async () => {
@@ -215,13 +216,14 @@ describe("the engine target the settings select", () => {
       "remake-shots",
       comfyWorkflowAdapter,
       "comfy-router",
+      "motion-plan",
     ])
     expect(engines.find((one) => one.canRun(remake))?.key).toBe("remake-shots")
     expect(
       pickEngines({ target: "demo" }, { clock, media, store }).map(
         (one) => one.key
       )
-    ).toEqual(["comfy-router", "demo"])
+    ).toEqual(["comfy-router", "motion-plan", "demo"])
   })
 
   it("puts Remake's runner before a pasted key's live engines when the server runs ffmpeg", () => {
@@ -233,12 +235,18 @@ describe("the engine target the settings select", () => {
         media,
         store,
       }).map((one) => one.key)
-    ).toEqual(["remake-shots", comfyWorkflowAdapter, "comfy-router", "demo"])
+    ).toEqual([
+      "remake-shots",
+      comfyWorkflowAdapter,
+      "comfy-router",
+      "motion-plan",
+      "demo",
+    ])
     expect(
       pastedKeyEngines(target, null, { clock, media, store }).map(
         (one) => one.key
       )
-    ).toEqual(["comfy-router", "demo"])
+    ).toEqual(["comfy-router", "motion-plan", "demo"])
   })
 
   it("builds no Remake runner for a public visitor, where Remake is closed, even when the server runs ffmpeg", () => {
@@ -248,12 +256,23 @@ describe("the engine target the settings select", () => {
       visitorEngines(target, "comfyui-visitor", { clock, media, store }).map(
         (one) => one.key
       )
-    ).toEqual([comfyWorkflowAdapter, "comfy-router", "demo"])
+    ).toEqual([comfyWorkflowAdapter, "comfy-router", "motion-plan", "demo"])
   })
 
   it("control: a server that runs no ffmpeg lists no Remake runner", () => {
     expect(
       pickEngines(comfyCloud("comfyui-k"), { clock }).map((one) => one.key)
-    ).toEqual([comfyWorkflowAdapter, "comfy-router"])
+    ).toEqual([comfyWorkflowAdapter, "comfy-router", "motion-plan"])
+  })
+
+  it("plans a Motion clip on the Router with the key, and on the demo engine's own plan with none, always before the demo engine", () => {
+    const plan = { adapter: "motion-plan", config: {} }
+    const live = pickEngines(comfyCloud("comfyui-k"), { clock })
+    expect(live.find((one) => one.canRun(plan))?.origin).toBe("live")
+    const demo = pickEngines({ target: "demo" }, { clock })
+    expect(demo.find((one) => one.canRun(plan))?.key).toBe("motion-plan")
+    expect(demo.find((one) => one.canRun(plan))?.origin).toBe("demo")
+    const visitor = visitorEngines(comfyCloud("ignored"), null, { clock })
+    expect(visitor.find((one) => one.canRun(plan))?.key).toBe("motion-plan")
   })
 })
