@@ -85,20 +85,17 @@ The link opens with its owner token in the address and shows what is left of its
 
 ### From GitHub Actions
 
-`.github/workflows/deploy.yml` deploys from GitHub, so no sign-in to Cloudflare ever runs on your machine. Publishing a release deploys public mode. **Run workflow** on the Deploy workflow deploys public mode or the owner link, chosen by its `target`. The job runs only in a repository that sets the variable `CLOUDFLARE_ACCOUNT_ID`, so a fork deploys nothing until it sets its own.
+`.github/workflows/deploy.yml` deploys public mode from GitHub, so no sign-in to Cloudflare runs on your machine and no Comfy key is stored anywhere, because each visitor brings their own. Publishing a release deploys it, and **Run workflow** on the Deploy workflow deploys `main` again. The job runs only in a repository that sets the variable `CLOUDFLARE_ACCOUNT_ID`, so a fork deploys nothing until it sets its own.
 
-Set these once in the repository's settings:
+Set these once in the repository's settings, under Secrets and variables, Actions:
 
-| Where | Name | Value |
+| Kind | Name | Value |
 |---|---|---|
-| Secrets and variables, Actions, Secrets | `CLOUDFLARE_API_TOKEN` | a Cloudflare API token from the template Edit Cloudflare Workers, with Account D1 Edit added, and Zone DNS Edit on the zone of your domain |
-| Secrets and variables, Actions, Variables | `CLOUDFLARE_ACCOUNT_ID` | the id of the account you deploy to |
-| Environments, `production`, Variables | `DOMAIN` | the domain public mode answers on, such as rosesfield.com. Leave it out for workers.dev only |
-| Environments, `judge`, Secrets | `OWNER_TOKEN` | 32 random bytes as hex, such as the output of `openssl rand -hex 32`. Keep it, because the owner link is `https://rosesfield-judge.<your subdomain>.workers.dev/#token=<OWNER_TOKEN>` |
-| Environments, `judge`, Secrets | `COMFY_API_KEY` | the Comfy key the owner link spends |
-| Environments, `judge`, Variables | `SPEND_CAP_CREDITS` | the owner link's spend cap in Comfy credits. Leave it out for the 800 of `wrangler.jsonc` |
+| Secret | `CLOUDFLARE_API_TOKEN` | a Cloudflare API token from the template Edit Cloudflare Workers, with Account D1 Edit added, and Zone DNS Edit on the zone of your domain |
+| Variable | `CLOUDFLARE_ACCOUNT_ID` | the id of the account you deploy to |
+| Variable | `DOMAIN` | the domain public mode answers on, such as rosesfield.com. Leave it out for workers.dev only |
 
-Each run builds the platform, creates the bucket and the database when they are missing, applies the migrations and deploys. Public mode then sets `SESSION_SECRET` when `wrangler secret list` does not show it, made like the one `--login` makes, and checks that `/`, `/api/runs` and `/privacy` on `DOMAIN` answer 200. The owner link puts `OWNER_TOKEN` and `COMFY_API_KEY` on every run, so a secret you change in GitHub reaches the Worker on the next run. A required reviewer on an environment makes each deploy wait for your approval.
+Each run builds the platform, creates the bucket `rosesfield-assets` and the database `rosesfield` when they are missing, applies the migrations and deploys. It then sets `SESSION_SECRET` when `wrangler secret list` does not show it, made like the one `--login` makes, and checks that `/`, `/api/runs` and `/privacy` on `DOMAIN` answer 200. The job runs in the environment `production`, so a required reviewer on it makes each deploy wait for your approval.
 
 ## On a server that runs bun
 

@@ -1,43 +1,33 @@
-# Puts Rosesfield on Cloudflare from GitHub, per docs/self-host.md §From GitHub
-# Actions. A published release deploys public mode. Run workflow deploys public
-# mode or the private owner link, chosen by `target`. The job runs only in a
-# repository that sets the variable CLOUDFLARE_ACCOUNT_ID, so a fork deploys
-# nothing until it sets its own.
+# Puts Rosesfield on Cloudflare in public mode from GitHub, per
+# docs/self-host.md §From GitHub Actions. A published release deploys, and Run
+# workflow deploys main again. Public mode holds no Comfy key: each visitor
+# brings their own. The job runs only in a repository that sets the variable
+# CLOUDFLARE_ACCOUNT_ID, so a fork deploys nothing until it sets its own.
 name: Deploy
 
 on:
   release:
     types: [published]
   workflow_dispatch:
-    inputs:
-      target:
-        description: The deployment to put on Cloudflare
-        type: choice
-        options:
-          - public
-          - judge
-        default: public
 
 permissions:
   contents: read
 
 concurrency:
-  group: deploy-${{ inputs.target || 'public' }}
+  group: deploy
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Deploy ${{ inputs.target || 'public' }}
+    name: Deploy
     if: vars.CLOUDFLARE_ACCOUNT_ID != ''
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment: ${{ inputs.target == 'judge' && 'judge' || 'production' }}
+    environment: production
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-      TARGET: ${{ inputs.target || 'public' }}
       DOMAIN: ${{ vars.DOMAIN }}
-      SPEND_CAP_CREDITS: ${{ vars.SPEND_CAP_CREDITS }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -51,64 +41,34 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run build
 
-      - name: Name the deployment
-        run: |
-          if [ "$TARGET" = judge ]; then
-            echo "WRANGLER_ENV=judge" >> "$GITHUB_ENV"
-            echo "DATABASE=rosesfield-judge" >> "$GITHUB_ENV"
-            echo "BUCKET=rosesfield-judge-assets" >> "$GITHUB_ENV"
-          else
-            echo "WRANGLER_ENV=" >> "$GITHUB_ENV"
-            echo "DATABASE=rosesfield" >> "$GITHUB_ENV"
-            echo "BUCKET=rosesfield-assets" >> "$GITHUB_ENV"
-          fi
-
       - name: Create the bucket and the database when missing
         working-directory: services/gateway
         run: |
-          bunx wrangler r2 bucket info "$BUCKET" > /dev/null 2>&1 \
-            || bunx wrangler r2 bucket create "$BUCKET" --update-config=false
-          bunx wrangler d1 info "$DATABASE" --env="$WRANGLER_ENV" > /dev/null 2>&1 \
-            || bunx wrangler d1 create "$DATABASE" --update-config=false
-          bunx wrangler d1 migrations apply "$DATABASE" --remote --env="$WRANGLER_ENV"
+          bunx wrangler r2 bucket info rosesfield-assets > /dev/null 2>&1 \
+            || bunx wrangler r2 bucket create rosesfield-assets --update-config=false
+          bunx wrangler d1 info rosesfield > /dev/null 2>&1 \
+            || bunx wrangler d1 create rosesfield --update-config=false
+          bunx wrangler d1 migrations apply rosesfield --remote
 
       - name: Deploy the Worker
         working-directory: services/gateway
         run: |
-          args=(deploy --env="$WRANGLER_ENV")
-          if [ "$TARGET" = public ] && [ -n "$DOMAIN" ]; then
-            args+=(--domain "$DOMAIN")
+          if [ -n "$DOMAIN" ]; then
+            bunx wrangler deploy --domain "$DOMAIN"
+          else
+            bunx wrangler deploy
           fi
-          if [ "$TARGET" = judge ] && [ -n "$SPEND_CAP_CREDITS" ]; then
-            args+=(--var "SPEND_CAP_CREDITS:$SPEND_CAP_CREDITS")
-          fi
-          bunx wrangler "${args[@]}"
 
       - name: Set the session secret when missing
-        if: env.TARGET == 'public'
         working-directory: services/gateway
         run: |
-          listed="$(bunx wrangler secret list --env= --format json)"
+          listed="$(bunx wrangler secret list --format json)"
           if ! printf '%s' "${listed#"${listed%%[*}"}" | jq -e 'any(.[]; .name == "SESSION_SECRET")' > /dev/null; then
-            openssl rand -hex 32 | bunx wrangler secret put SESSION_SECRET --env=
+            openssl rand -hex 32 | bunx wrangler secret put SESSION_SECRET
           fi
-
-      - name: Set the owner token and the Comfy key
-        if: env.TARGET == 'judge'
-        working-directory: services/gateway
-        env:
-          OWNER_TOKEN: ${{ secrets.OWNER_TOKEN }}
-          COMFY_API_KEY: ${{ secrets.COMFY_API_KEY }}
-        run: |
-          if [ -z "$OWNER_TOKEN" ] || [ -z "$COMFY_API_KEY" ]; then
-            echo "The judge environment needs the secrets OWNER_TOKEN and COMFY_API_KEY." >&2
-            exit 1
-          fi
-          printf '%s' "$OWNER_TOKEN" | bunx wrangler secret put OWNER_TOKEN --env=judge
-          printf '%s' "$COMFY_API_KEY" | bunx wrangler secret put COMFY_API_KEY --env=judge
 
       - name: Check the live address
-        if: env.TARGET == 'public' && env.DOMAIN != ''
+        if: env.DOMAIN != ''
         run: |
           for path in / /api/runs /privacy; do
             curl --silent --show-error --fail --retry 12 --retry-delay 5 --retry-all-errors \
