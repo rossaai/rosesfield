@@ -4690,8 +4690,8 @@
         "motion-transfer": {
           "score": null,
           "licensedScore": null,
-          "rank": 1,
-          "of": 1,
+          "rank": 2,
+          "of": 2,
           "placement": "release",
           "sources": [],
           "tiers": [],
@@ -4792,6 +4792,34 @@
           "licensedScore": null,
           "rank": 14,
           "of": 32,
+          "placement": "release",
+          "sources": [],
+          "tiers": [],
+          "price": {
+            "none": "a graph runs on Comfy Cloud GPU time, which the rate card does not price"
+          }
+        }
+      }
+    },
+    "graph/ltx-2-5-guide": {
+      "lab": "Lightricks",
+      "release": "2026-08-11",
+      "weights": "https://huggingface.co/Lightricks/LTX-2.5",
+      "ranks": {},
+      "thirds": {},
+      "line": {
+        "none": "No page read describes this graph's model"
+      },
+      "releaseSource": {
+        "url": "https://artificialanalysis.ai/video/leaderboard/image-to-video",
+        "kind": "Artificial Analysis row releaseDate"
+      },
+      "tasks": {
+        "motion-transfer": {
+          "score": null,
+          "licensedScore": null,
+          "rank": 1,
+          "of": 2,
           "placement": "release",
           "sources": [],
           "tiers": [],

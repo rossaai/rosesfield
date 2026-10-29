@@ -6,7 +6,12 @@ import {
   makerOf,
   nameOf,
 } from "@rosesfield/catalog/comfy"
-import type { AppListing, InputDefinition, Run } from "@rosesfield/contract"
+import {
+  type AppListing,
+  type InputDefinition,
+  isChainFilled,
+  type Run,
+} from "@rosesfield/contract"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
 import { appName, aspectOf, isAssetInput } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
@@ -129,7 +134,7 @@ function headlineInputsOf(app: AppListing): InputDefinition[] {
 function promptText(app: AppListing, run: Run): string | null {
   for (const input of app.inputs) {
     const text =
-      input.type === "prompt"
+      input.type === "prompt" && !isChainFilled(input)
         ? inputValueText(app, input, run.inputs[input.name])
         : null
     if (text !== null) {

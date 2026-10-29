@@ -3,7 +3,11 @@ import {
   exampleInput,
   exampleKeyOf,
 } from "@rosesfield/catalog/motion"
-import type { AppListing, InputDefinition } from "@rosesfield/contract"
+import {
+  type AppListing,
+  type InputDefinition,
+  isChainFilled,
+} from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { MediaTile } from "@rosesfield/ui/components/media-tile"
 import {
@@ -35,7 +39,9 @@ import type { MotionState } from "@/studio/motion/use-motion-screen"
 type WellKind = "image" | "video"
 
 function captionOf(app: AppListing, kind: WellKind): string {
-  const input = app.inputs.find((one) => one.type === kind)
+  const input = app.inputs.find(
+    (one) => one.type === kind && !isChainFilled(one)
+  )
   return input === undefined ? t(`kind.${kind}`) : inputCaption(input)
 }
 

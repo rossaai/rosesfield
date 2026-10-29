@@ -93,11 +93,14 @@ export function modelForTab(
   return models[0] ?? null
 }
 
+/** Your own photo or video input of the app: the first of its kind that no run chain fills. */
 function appInputOf(
   app: AppListing,
   type: "image" | "video"
 ): InputDefinition | undefined {
-  return app.inputs.find((input) => input.type === type)
+  return app.inputs.find(
+    (input) => input.type === type && !isChainFilled(input)
+  )
 }
 
 function mediaOf(

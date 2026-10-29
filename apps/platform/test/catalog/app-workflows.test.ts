@@ -28,7 +28,10 @@ describe("workflowFor", () => {
         workflow: workflowFor("motion", { example: id })?.id,
       }).toEqual({ id, workflow: "motion-guide-ltx-2-5" })
     }
-    expect(workflowFor("motion", {})?.id).toBe("motion-ltx-2-3-ic-lora")
+    expect(workflowFor("motion", {})?.id).toBe("motion-guide-ltx-2-5")
+    expect(workflowFor("motion", { model: "ltx-2-3-control" })?.id).toBe(
+      "motion-ltx-2-3-ic-lora"
+    )
     expect(workflowFor("motion", { example: "melt-away" })).toBeNull()
   })
 

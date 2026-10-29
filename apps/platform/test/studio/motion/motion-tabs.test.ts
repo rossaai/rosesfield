@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { findCatalogApp } from "@/catalog/catalog-apps"
 import {
   clipRangeOf,
   graphClipRange,
@@ -159,5 +160,21 @@ describe("Motion's wells for each model", () => {
     ])
     expect(restFieldsOf(graph)).toEqual([])
     expect(graphRestOf(listing).map((input) => input.name)).toEqual(["sound"])
+  })
+})
+
+describe("Motion's own wells", () => {
+  it("are your video and your photos, never an input a run chain fills, though the chain's first frame and guide come first in the app", () => {
+    const motion = findCatalogApp("motion")
+    if (motion === null) {
+      throw new Error("Motion is not in the catalog")
+    }
+    const names = motion.inputs.map((input) => input.name)
+    expect(names.indexOf("firstFrame")).toBeLessThan(names.indexOf("photo"))
+    expect(wellNamesOf(motion, null)).toEqual({ clip: "clip", photo: "photo" })
+    const rest = graphRestOf(motion).map((input) => input.name)
+    for (const chained of ["firstFrame", "guide", "plannedScene", "frames"]) {
+      expect(rest).not.toContain(chained)
+    }
   })
 })

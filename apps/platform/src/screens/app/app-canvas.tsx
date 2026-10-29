@@ -19,6 +19,8 @@ type AppCanvasProps = {
   onUseInputs: (run: Run) => void
   emptyAction?: ReactNode
   afterRun?: (run: Run) => ReactNode
+  /** One line about the newest run, shown beside it at the head of the runs in every layout. */
+  note?: ReactNode
 }
 
 type AppRuns = {
@@ -74,13 +76,21 @@ export function AppCanvas(props: AppCanvasProps): ReactElement {
       />
     )
   }
-  return (
+  const view = (
     <RunsInView
       runs={runs.runs}
       cards={(shown, columns) => (
         <RunStack {...props} runs={shown} columns={columns} />
       )}
     />
+  )
+  return props.note === undefined || props.note === null ? (
+    view
+  ) : (
+    <div className="flex flex-col gap-s2">
+      {props.note}
+      {view}
+    </div>
   )
 }
 

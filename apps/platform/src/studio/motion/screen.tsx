@@ -1,9 +1,11 @@
 import type { Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { useRouterState } from "@tanstack/react-router"
-import { type ReactElement, useRef } from "react"
+import { type ReactElement, useEffect, useRef } from "react"
 import { tCatalog } from "@/copy/t"
 import { PriceCaption } from "@/pieces/price-caption"
+import { RunCard } from "@/pieces/run/run-card"
+import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { AppCanvas } from "@/screens/app/app-canvas"
 import {
   AddInputsButton,
@@ -37,15 +39,10 @@ const pressStages: readonly string[] = [
   "finishing",
 ]
 
-function LeftOutNote({
-  state,
-  run,
-}: {
-  state: MotionState
-  run: Run
-}): ReactElement | null {
+/** The sentence that names the photos your draft left out, beside the draft at the head of your runs. */
+function LeftOutNote({ state }: { state: MotionState }): ReactElement | null {
   const left = state.chain?.leftOut ?? null
-  if (left === null || left.draftId !== run.id) {
+  if (left === null) {
     return null
   }
   return (
@@ -55,6 +52,40 @@ function LeftOutNote({
       wraps
     />
   )
+}
+
+/** The draft a step of the chain waits on for your yes, or null. */
+function waitingDraftOf(state: MotionState): Run | null {
+  const stage = state.chain?.stage
+  return stage !== undefined && "draft" in stage ? stage.draft : null
+}
+
+/** On a phone the draft that waits for your yes takes the full width, with the sentence about its photos. */
+function DraftFocus({
+  state,
+  draft,
+}: {
+  state: MotionState
+  draft: Run
+}): ReactElement {
+  return (
+    <div data-slot="motion-draft" className="flex w-full flex-col gap-s2">
+      <LeftOutNote state={state} />
+      <RunCard run={draft} onUseInputs={state.useInputs} />
+    </div>
+  )
+}
+
+/** Closes the inputs' sheet once Generate starts the chain, so the draft shows as it arrives. */
+function useSheetClosedOnStart(state: MotionState, close: () => void): void {
+  const stage = state.chain?.stage.stage ?? "idle"
+  const closeRef = useRef(close)
+  closeRef.current = close
+  useEffect(() => {
+    if (stage === "drafting") {
+      closeRef.current()
+    }
+  }, [stage])
 }
 
 export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
@@ -68,6 +99,9 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
   )
   const sheet = useSheetOpen()
   sheetClose.current = () => sheet[1](false)
+  useSheetClosedOnStart(state, () => sheet[1](false))
+  const isRegular = useIsRegularWindow()
+  const draft = isRegular ? null : waitingDraftOf(state)
   return (
     <ColumnFrame
       app={app}
@@ -77,14 +111,18 @@ export function AppScreen({ app, seeds }: StudioScreenProps): ReactElement {
       panel={<MotionPanel state={state} />}
       footLeading={<StartOver state={state} />}
       holdsPress={pressStages.includes(state.chain?.stage.stage ?? "idle")}
-      canvas={(openInputs) => (
-        <AppCanvas
-          app={app}
-          onUseInputs={state.useInputs}
-          emptyAction={<AddInputsButton onClick={openInputs} />}
-          afterRun={(run) => <LeftOutNote state={state} run={run} />}
-        />
-      )}
+      canvas={(openInputs) =>
+        draft === null ? (
+          <AppCanvas
+            app={app}
+            onUseInputs={state.useInputs}
+            emptyAction={<AddInputsButton onClick={openInputs} />}
+            note={<LeftOutNote state={state} />}
+          />
+        ) : (
+          <DraftFocus state={state} draft={draft} />
+        )
+      }
     />
   )
 }

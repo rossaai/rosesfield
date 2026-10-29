@@ -59,7 +59,15 @@ describe("appsTakingCharacter", () => {
       throw new Error("no app motion")
     }
     expect(characterPhotoInputOf(motion)?.name).toBe("photo")
-    const unnamed = { ...motion, id: appIdFormat.parse("motion-copy") }
+    const unnamed = {
+      ...motion,
+      id: appIdFormat.parse("motion-copy"),
+      inputs: motion.inputs.map((input) =>
+        input.name === "photo" && input.type === "image"
+          ? { ...input, max: 1 }
+          : input
+      ),
+    }
     expect(appsTakingCharacter([unnamed])).toEqual([])
   })
 })

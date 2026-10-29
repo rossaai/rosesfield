@@ -190,7 +190,7 @@ describe("the model facts the catalog holds", () => {
     const cells = Object.keys(modelFactsData.models).flatMap((id) =>
       Object.entries(scoresOf(id)).map(([task, cell]) => ({ id, task, cell }))
     )
-    expect(cells).toHaveLength(328)
+    expect(cells).toHaveLength(329)
     for (const { id, task, cell } of cells) {
       expect(cell.order <= cell.of, `${id} ${task}`).toBe(true)
       expect(cell.score === null || cell.sources.length > 0, id).toBe(true)

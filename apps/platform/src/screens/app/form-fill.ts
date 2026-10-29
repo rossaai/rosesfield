@@ -1,9 +1,19 @@
 import { isHostedModelId } from "@rosesfield/catalog/comfy"
-import type { AppListing, Asset, AssetKind, Run } from "@rosesfield/contract"
+import {
+  type AppListing,
+  type Asset,
+  type AssetKind,
+  isChainFilled,
+  type Run,
+} from "@rosesfield/contract"
 import type { QueryClient } from "@tanstack/react-query"
 import { assetQuery, characterQuery, runQuery } from "@/api/queries"
 import { uploadAsset } from "@/api/upload-asset"
-import { characterPhotoInputOf, isAssetInput } from "@/catalog/app-facts"
+import {
+  characterPhotoInputOf,
+  isAssetInput,
+  promptInputOf,
+} from "@/catalog/app-facts"
 import type { Draft } from "@/router-context"
 import {
   type FieldValue,
@@ -29,7 +39,9 @@ function withPlaced(
     const takes =
       placement.kind === "character"
         ? input.type === "character"
-        : isAssetInput(input) && input.type === placement.kind
+        : isAssetInput(input) &&
+          input.type === placement.kind &&
+          !isChainFilled(input)
     return (
       takes &&
       "max" in input &&
@@ -53,8 +65,8 @@ export function withPrompt(
   values: FormValues,
   prompt: string
 ): FormValues {
-  const input = app.inputs.find((one) => one.type === "prompt")
-  if (input === undefined || prompt === "") {
+  const input = promptInputOf(app)
+  if (input === null || prompt === "") {
     return values
   }
   return { ...values, inputs: { ...values.inputs, [input.name]: prompt } }

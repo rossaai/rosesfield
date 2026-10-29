@@ -1,8 +1,9 @@
 import { motionAppId, photoInput } from "@rosesfield/catalog/motion"
-import type {
-  AppListing,
-  AssetKind,
-  InputDefinition,
+import {
+  type AppListing,
+  type AssetKind,
+  type InputDefinition,
+  isChainFilled,
 } from "@rosesfield/contract"
 import { AspectRatio } from "@rosesfield/kernel"
 import type { MediaAspect } from "@rosesfield/ui/components/media-tile"
@@ -70,10 +71,16 @@ export function appEmptyTitle(app: AppListing): string {
   return t("app.empty.title")
 }
 
+/** The app's own prompt: the first prompt a person writes, never one a run chain fills. */
 export function promptInputOf(
   app: AppListing
 ): Extract<InputDefinition, { type: "prompt" }> | null {
-  return app.inputs.find((input) => input.type === "prompt") ?? null
+  return (
+    app.inputs.find(
+      (input): input is Extract<InputDefinition, { type: "prompt" }> =>
+        input.type === "prompt" && !isChainFilled(input)
+    ) ?? null
+  )
 }
 
 export function assetInputFor(
@@ -81,7 +88,7 @@ export function assetInputFor(
   kind: AssetKind
 ): AssetInput | null {
   for (const input of app.inputs) {
-    if (isAssetInput(input) && input.type === kind) {
+    if (isAssetInput(input) && input.type === kind && !isChainFilled(input)) {
       return input
     }
   }
@@ -215,7 +222,9 @@ export function modelsTakingInput(input: InputDefinition): readonly string[] {
 export function referenceImageInputsOf(app: AppListing): ImageInput[] {
   return app.inputs.filter(
     (input): input is ImageInput =>
-      input.type === "image" && modelsTakingInput(input).length > 0
+      input.type === "image" &&
+      !isChainFilled(input) &&
+      modelsTakingInput(input).length > 0
   )
 }
 
