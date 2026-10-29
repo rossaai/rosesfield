@@ -3,7 +3,7 @@ import type { AppListing, Asset, AssetKind, Run } from "@rosesfield/contract"
 import type { QueryClient } from "@tanstack/react-query"
 import { assetQuery, characterQuery, runQuery } from "@/api/queries"
 import { uploadAsset } from "@/api/upload-asset"
-import { isAssetInput } from "@/catalog/app-facts"
+import { characterPhotoInputOf, isAssetInput } from "@/catalog/app-facts"
 import type { Draft } from "@/router-context"
 import {
   type FieldValue,
@@ -12,7 +12,7 @@ import {
 } from "@/screens/app/app-form"
 import { shareQuery } from "@/screens/explore/share-api"
 
-type Placement = { kind: AssetKind | "character"; id: string }
+type Placement = { kind: AssetKind | "character"; id: string; input?: string }
 
 function withPlaced(
   app: AppListing,
@@ -21,6 +21,9 @@ function withPlaced(
 ): FormValues {
   const inputs: Record<string, FieldValue> = { ...values.inputs }
   const target = app.inputs.find((input) => {
+    if (placement.input !== undefined && input.name !== placement.input) {
+      return false
+    }
     const current = inputs[input.name]
     const list = Array.isArray(current) ? current : []
     const takes =
@@ -74,13 +77,37 @@ async function placementOf(
   }
 }
 
+/** Places a character in an app with no character input as its first photo, in the input that takes it, such as Motion's photo. */
+async function placedForApp(
+  client: QueryClient,
+  app: AppListing,
+  placement: Placement | null
+): Promise<Placement | null> {
+  const photo = characterPhotoInputOf(app)
+  const takesCharacter = app.inputs.some((input) => input.type === "character")
+  if (placement?.kind !== "character" || photo === null || takesCharacter) {
+    return placement
+  }
+  const found = await client
+    .fetchQuery(characterQuery(placement.id))
+    .catch(() => null)
+  const [first] = found?.character.references ?? []
+  return first === undefined
+    ? null
+    : { kind: "image", id: first, input: photo.name }
+}
+
 export async function placeAll(
   client: QueryClient,
   app: AppListing,
   values: FormValues,
   ids: readonly string[]
 ): Promise<FormValues> {
-  const placements = await Promise.all(ids.map((id) => placementOf(client, id)))
+  const placements = await Promise.all(
+    ids.map(async (id) =>
+      placedForApp(client, app, await placementOf(client, id))
+    )
+  )
   return placements.reduce(
     (current, placement) =>
       placement === null ? current : withPlaced(app, current, placement),

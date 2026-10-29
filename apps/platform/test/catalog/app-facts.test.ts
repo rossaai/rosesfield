@@ -1,5 +1,10 @@
+import { appIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
-import { appsTakingCharacter, takesText } from "@/catalog/app-facts"
+import {
+  appsTakingCharacter,
+  characterPhotoInputOf,
+  takesText,
+} from "@/catalog/app-facts"
 import { catalogApps, findCatalogApp } from "@/catalog/catalog-apps"
 import { imageApp } from "../sample-app"
 
@@ -34,14 +39,27 @@ describe("takesText", () => {
 })
 
 describe("appsTakingCharacter", () => {
-  it("lists every app with a character input and Image, whose reference images take the character's photos", () => {
+  it("lists every app with a character input, Image, whose reference images take the character's photos, and Motion, whose photo takes the character's first photo", () => {
     const ids = appsTakingCharacter(catalogApps).map((app) => app.id)
     const withCharacter = catalogApps
       .filter((app) => app.inputs.some((input) => input.type === "character"))
       .map((app) => app.id)
     expect(withCharacter.length).toBeGreaterThan(0)
-    expect(ids).toEqual(expect.arrayContaining([...withCharacter, "image"]))
-    expect(ids).toHaveLength(withCharacter.length + 1)
+    expect(withCharacter).not.toContain("motion")
+    expect(ids).toEqual(
+      expect.arrayContaining([...withCharacter, "image", "motion"])
+    )
+    expect(ids).toHaveLength(withCharacter.length + 2)
     expect(ids).not.toContain("edit")
+  })
+
+  it("lists Motion by its character photo, not by the model its photo applies to, the control", () => {
+    const motion = findCatalogApp("motion")
+    if (motion === null) {
+      throw new Error("no app motion")
+    }
+    expect(characterPhotoInputOf(motion)?.name).toBe("photo")
+    const unnamed = { ...motion, id: appIdFormat.parse("motion-copy") }
+    expect(appsTakingCharacter([unnamed])).toEqual([])
   })
 })

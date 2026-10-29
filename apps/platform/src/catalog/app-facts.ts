@@ -1,3 +1,4 @@
+import { ltx25GuideInputs, motionAppId } from "@rosesfield/catalog/motion"
 import type {
   AppListing,
   AssetKind,
@@ -213,11 +214,35 @@ export function referenceImageInputsOf(app: AppListing): ImageInput[] {
   )
 }
 
+/** Motion puts your character into a video, so its one photo takes the character's first photo. */
+const characterPhotoInputs: Readonly<Record<string, string>> = {
+  [motionAppId]: ltx25GuideInputs.photo,
+}
+
+/** The one photo of an app that takes a character as that photo, or null. */
+export function characterPhotoInputOf(app: AppListing): ImageInput | null {
+  const name = Object.hasOwn(characterPhotoInputs, app.id)
+    ? characterPhotoInputs[app.id]
+    : undefined
+  return (
+    app.inputs.find(
+      (input): input is ImageInput =>
+        input.type === "image" && input.name === name
+    ) ?? null
+  )
+}
+
+function takesReferencePhotos(app: AppListing): boolean {
+  return referenceImageInputsOf(app).some((input) => input.max > 1)
+}
+
+/** An app takes a character when it has a character input, when its reference images take the character's photos, as Image's do, or when its one photo takes the character's first photo, as Motion's does. */
 export function appsTakingCharacter(apps: readonly AppListing[]): AppListing[] {
   return apps.filter(
     (app) =>
       app.inputs.some((input) => input.type === "character") ||
-      referenceImageInputsOf(app).length > 0
+      takesReferencePhotos(app) ||
+      characterPhotoInputOf(app) !== null
   )
 }
 

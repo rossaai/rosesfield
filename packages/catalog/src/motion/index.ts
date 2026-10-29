@@ -35,5 +35,6 @@ export { readClipOf, renderHandOffOf } from "#motion/comfy/render-hand-off"
 export {
   guideModel,
   ltx25GuideModel,
+  motionAppId,
   readClipModel,
 } from "#motion/motion-models"
