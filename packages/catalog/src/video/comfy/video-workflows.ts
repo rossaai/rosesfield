@@ -3,7 +3,7 @@ import { WorkflowInvalidError } from "#workflow-invalid.error"
 
 export type VideoWorkflowName = "ltx-2-5-text" | "ltx-2-5-start-frame"
 
-type Graph = Record<
+export type Graph = Record<
   string,
   { class_type: string; inputs: Record<string, unknown> }
 >
@@ -50,11 +50,11 @@ function isLink(value: unknown): value is Link {
   )
 }
 
-function invalid(reason: string): WorkflowInvalidError {
-  return new WorkflowInvalidError({
-    folder: videoWorkflows["ltx-2-5-start-frame"],
-    reason,
-  })
+function invalid(
+  reason: string,
+  folder: string = videoWorkflows["ltx-2-5-start-frame"]
+): WorkflowInvalidError {
+  return new WorkflowInvalidError({ folder, reason })
 }
 
 function relink(graph: Graph, from: Link, to: Link): void {
@@ -67,16 +67,16 @@ function relink(graph: Graph, from: Link, to: Link): void {
   }
 }
 
-function passThrough(graph: Graph, id: string): void {
+export function passThrough(graph: Graph, id: string, folder?: string): void {
   const node = graph[id]
   if (node === undefined) {
-    throw invalid(`it has no node ${id}`)
+    throw invalid(`it has no node ${id}`, folder)
   }
   delete graph[id]
   guideOutputs.forEach((name, slot) => {
     const source = node.inputs[name]
     if (!isLink(source)) {
-      throw invalid(`node ${id} passes no link through ${name}`)
+      throw invalid(`node ${id} passes no link through ${name}`, folder)
     }
     relink(graph, [id, slot], source)
   })

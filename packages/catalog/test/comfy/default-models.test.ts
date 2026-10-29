@@ -95,7 +95,7 @@ describe("the model each app opens on", () => {
     const held = imageGraphsByRank().filter(isHeldOnCloud)
     expect(held[0]?.model).toBe(defaultModelOf(imageApp()))
     expect(defaultModelOf(imageApp())).toBe("z-image-turbo")
-    expect(cloudWeights.readOn).toBe("2026-10-28")
+    expect(cloudWeights.readOn).toBe("2026-10-29")
     const opened = modelsForApp(imageApp(), []).find(
       (one) => one.id === "z-image-turbo"
     )

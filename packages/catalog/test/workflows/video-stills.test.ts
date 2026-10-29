@@ -57,6 +57,7 @@ describe("the stills every video workflow sends", () => {
       "effects-ltx-2-5",
       "lipsync-photo-ltx-2-3",
       "motion-guide-ltx-2-3-ic-lora",
+      "motion-guide-ltx-2-5",
       "motion-ltx-2-3-ic-lora",
       "upscale-video-seedvr2",
       "video-edit-background-birefnet",

@@ -1,6 +1,6 @@
 {
   "source": "GET /api/object_info on Comfy Cloud",
-  "readOn": "2026-10-28",
+  "readOn": "2026-10-29",
   "recipe": "For each loader below, the options of its weight input, input.required.<input>[0], as object_info returned them",
   "loaders": {
     "UNETLoader": {
@@ -1263,6 +1263,21 @@
         "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
         "minimax_h3_fl2v_lightx2v_turbo_4step_v0.1_comfy_resized_avg_rank_21_bf16.safetensors",
         "ltx-2.5-22b-distilled-lora-450-bf16.safetensors"
+      ]
+    },
+    "LatentUpscaleModelLoader": {
+      "input": "model_name",
+      "files": [
+        "hunyuanvideo15_latent_upsampler_1080p.safetensors",
+        "hunyuanvideo15_latent_upsampler_720p.safetensors",
+        "ltx-2-spatial-upscaler-x2-1.0.safetensors",
+        "ltx-2-temporal-upscaler-x2-1.0.safetensors",
+        "ltx-2.3-spatial-upscaler-x2-1.0.safetensors",
+        "ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+        "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
+        "ltx-2.5-latent-temporal-upscaler-x2-bf16-1.0.safetensors",
+        "minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors",
+        "minimax_h3_latent_upscaler_3d_conv_v1_bf16.safetensors"
       ]
     }
   }

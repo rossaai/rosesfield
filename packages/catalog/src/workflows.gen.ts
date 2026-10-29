@@ -39,6 +39,8 @@ import wLipsyncPhotoLtx23Api from "../../../workflows/lipsync-photo-ltx-2-3/lips
 import wLipsyncPhotoLtx23Entry from "../../../workflows/lipsync-photo-ltx-2-3/entry.json"
 import wMotionGuideLtx23IcLoraApi from "../../../workflows/motion-guide-ltx-2-3-ic-lora/motion-guide-ltx-2-3-ic-lora.api.json"
 import wMotionGuideLtx23IcLoraEntry from "../../../workflows/motion-guide-ltx-2-3-ic-lora/entry.json"
+import wMotionGuideLtx25Api from "../../../workflows/motion-guide-ltx-2-5/motion-guide-ltx-2-5.api.json"
+import wMotionGuideLtx25Entry from "../../../workflows/motion-guide-ltx-2-5/entry.json"
 import wMotionLtx23IcLoraApi from "../../../workflows/motion-ltx-2-3-ic-lora/motion-ltx-2-3-ic-lora.api.json"
 import wMotionLtx23IcLoraEntry from "../../../workflows/motion-ltx-2-3-ic-lora/entry.json"
 import wRelightQwenImageEdit2509Api from "../../../workflows/relight-qwen-image-edit-2509/relight-qwen-image-edit-2509.api.json"
@@ -87,6 +89,7 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "layers-split-qwen-image-layered", entry: wLayersSplitQwenImageLayeredEntry, graph: wLayersSplitQwenImageLayeredApi },
   { folder: "lipsync-photo-ltx-2-3", entry: wLipsyncPhotoLtx23Entry, graph: wLipsyncPhotoLtx23Api },
   { folder: "motion-guide-ltx-2-3-ic-lora", entry: wMotionGuideLtx23IcLoraEntry, graph: wMotionGuideLtx23IcLoraApi },
+  { folder: "motion-guide-ltx-2-5", entry: wMotionGuideLtx25Entry, graph: wMotionGuideLtx25Api },
   { folder: "motion-ltx-2-3-ic-lora", entry: wMotionLtx23IcLoraEntry, graph: wMotionLtx23IcLoraApi },
   { folder: "relight-qwen-image-edit-2509", entry: wRelightQwenImageEdit2509Entry, graph: wRelightQwenImageEdit2509Api },
   { folder: "storyboard-qwen-image-edit-2511", entry: wStoryboardQwenImageEdit2511Entry, graph: wStoryboardQwenImageEdit2511Api },

@@ -19,7 +19,7 @@ const sample = cloudWeightsFile.parse({
 describe("the weights Comfy Cloud holds", () => {
   it("reads the files of every loader object_info listed, with the day it was read", () => {
     expect(cloudWeights.source).toBe("GET /api/object_info on Comfy Cloud")
-    expect(cloudWeights.readOn).toBe("2026-10-28")
+    expect(cloudWeights.readOn).toBe("2026-10-29")
     expect([...heldFilesOf(sample)].sort()).toEqual([
       "a.safetensors",
       "b.safetensors",

@@ -17,7 +17,7 @@ workflows/
     <id>-1.webp           a thumbnail from a real run, absent until one exists
 ```
 
-- 33 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
+- 34 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
 - Every graph runs open weights, except a graph that runs a Comfy partner node listed in `docs/models.md` §Graphs that run a partner node. No graph makes a Comfy Router call. The catalog test `open-weights.test.ts` checks every app's bindings.
 - `bun run catalog:sync` lists every folder in `packages/catalog/src/workflows.gen.ts`. It refuses a folder without `entry.json`, `<id>.json` and `<id>.api.json`.
 - A workflow is proven by one Generate in the running app on its app's screen, on a real input. No script runs a paid model. `bun scripts/checks/output-files/check-output-files.ts --library <gateway>` then checks each output in the library.
@@ -81,7 +81,7 @@ One file for the whole folder that a sync writes from the entries, with the apps
 
 | Core model | Workflows |
 |---|---|
-| LTX 2.5 | `effects-ltx-2-5`, `video-ltx-2-5-text`, `video-ltx-2-5-start-frame` |
+| LTX 2.5 | `effects-ltx-2-5`, `motion-guide-ltx-2-5`, `video-ltx-2-5-text`, `video-ltx-2-5-start-frame` |
 | LTX 2.3 | `lipsync-photo-ltx-2-3`, `motion-ltx-2-3-ic-lora`, `motion-guide-ltx-2-3-ic-lora`, `video-edit-reframe-ltx-2-3` |
 | Qwen Image Edit 2511 | `ads-qwen-image-edit-2511`, `angles-qwen-image-edit-2511`, `angles-set-qwen-image-edit-2511`, `edit-qwen-image-edit-2511`, `layers-edit-qwen-image-edit-2511`, `storyboard-qwen-image-edit-2511`, `try-on-qwen-image-edit-2511` |
 | Qwen Image Edit 2509 | `relight-qwen-image-edit-2509` |
