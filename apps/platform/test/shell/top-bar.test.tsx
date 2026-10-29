@@ -275,6 +275,7 @@ describe("the top bar", () => {
         : (node.textContent ?? "")
     )
     expect(marks.slice(media.length + 1)).toEqual([
+      "|",
       "MCP",
       "|",
       "AgentFeatured",

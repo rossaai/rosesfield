@@ -225,6 +225,7 @@ function PhoneMenu({ groups }: { groups: NavGroups }): ReactElement {
             ))}
           </DropdownMenuGroup>
         ))}
+        <DropdownMenuSeparator />
         <MenuLink link={groups.mcp} />
         <DropdownMenuSeparator />
         <MenuLink link={groups.featured.agent} badge={<FeaturedBadge />} />
