@@ -3,6 +3,7 @@ import type { InputDefinition } from "@rosesfield/contract"
 import { type ReactElement, useRef, useState } from "react"
 import { formatDuration } from "@/copy/format"
 import { tCatalog } from "@/copy/t"
+import { PriceCaption } from "@/pieces/price-caption"
 import { ScreenState } from "@/pieces/screen-state"
 import {
   AddInputsButton,
@@ -99,17 +100,6 @@ function RemakePanel({ state }: { state: RemakeState }): ReactElement {
   )
 }
 
-function PriceCaption({ price }: { price: string }): ReactElement | null {
-  return price === "" ? null : (
-    <p
-      data-slot="remake-price"
-      className="min-w-0 truncate text-caption text-ink-muted tabular-nums"
-    >
-      {price}
-    </p>
-  )
-}
-
 function ClosedScreen({
   app,
 }: {
@@ -151,7 +141,9 @@ function OpenScreen({
       onShortcut={state.onShortcut}
       sheet={sheet}
       panel={<RemakePanel state={state} />}
-      footLeading={<PriceCaption price={state.start.price} />}
+      footLeading={
+        <PriceCaption text={state.start.price} slot="remake-price" />
+      }
       canvas={(openInputs) => (
         <RemakeCanvas
           app={app}

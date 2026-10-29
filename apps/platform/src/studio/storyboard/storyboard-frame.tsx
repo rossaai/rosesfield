@@ -16,6 +16,7 @@ import { appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useAppToolsOpener } from "@/pieces/app-tools"
 import { Dock } from "@/pieces/dock"
+import { PriceCaption } from "@/pieces/price-caption"
 import { useCanvasFit } from "@/pieces/use-canvas-fit"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { AppStage } from "@/screens/app/app-stage"
@@ -33,25 +34,13 @@ type StoryboardFrameProps = {
   canvas: (openInputs: () => void) => ReactNode
 }
 
-function PriceCaption({ start }: { start: StartRun }): ReactElement | null {
-  const caption = priceCaptionOf(start)
-  return caption === "" ? null : (
-    <p
-      data-slot="storyboard-price"
-      className="min-w-0 truncate text-caption text-ink-muted tabular-nums"
-    >
-      {caption}
-    </p>
-  )
-}
-
 function Foot({ start }: { start: StartRun }): ReactElement {
   return (
     <GenerateFoot
       start={start}
       leading={
         (start.priceValue ?? null) === null ? (
-          <PriceCaption start={start} />
+          <PriceCaption text={priceCaptionOf(start)} slot="storyboard-price" />
         ) : null
       }
     />
@@ -93,7 +82,7 @@ function PhoneDock({
           {t("app.inputs.open")}
         </Button>
         <div className="min-w-0 flex-1">
-          <PriceCaption start={start} />
+          <PriceCaption text={priceCaptionOf(start)} slot="storyboard-price" />
         </div>
         <GenerateButton
           form="bar"

@@ -1,5 +1,6 @@
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { GatewayUnreachableError } from "@/api/gateway-unreachable.error"
+import { RunStoppedError } from "@/api/run-stopped.error"
 import { type CopyValues, t, tCatalog } from "@/copy/t"
 import { type CopyKey, copy } from "@/copy.en"
 import { readSpendCap } from "@/shell/spend-cap"
@@ -35,6 +36,9 @@ export function codeOf(error: unknown): string {
     return error.code
   }
   if (error instanceof GatewayUnreachableError) {
+    return error.code
+  }
+  if (error instanceof RunStoppedError) {
     return error.code
   }
   return "unknown"

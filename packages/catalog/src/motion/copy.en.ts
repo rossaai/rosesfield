@@ -81,4 +81,6 @@ export const motionCopy = {
   "motion.chain.makeFinal": "Make final",
   "motion.chain.renderFinal": "Render the final at {resolution}",
   "motion.chain.startOver": "Start over",
+  "motion.chain.price.example":
+    "{amount} Comfy credits, measured on a {seconds}-second {resolution} run",
 } as const

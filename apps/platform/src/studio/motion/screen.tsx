@@ -17,8 +17,7 @@ import {
 } from "@/studio/motion/use-motion-screen"
 
 function StartOver({ state }: { state: MotionState }): ReactElement | null {
-  const stage = state.chain?.stage.stage
-  if (stage !== "makeFinal" && stage !== "renderFinal") {
+  if (state.chain?.canStartOver !== true) {
     return null
   }
   return (

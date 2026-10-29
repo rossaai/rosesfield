@@ -5,10 +5,8 @@ import { act, renderHook, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, describe, expect, it } from "vitest"
 import type { AppForm } from "@/screens/app/use-app-form"
-import {
-  finalPriceOf,
-  useExampleChain,
-} from "@/studio/motion/use-example-chain"
+import { finalPriceOf, priceNoteOf } from "@/studio/motion/example-chain-price"
+import { useExampleChain } from "@/studio/motion/use-example-chain"
 
 const realFetch = globalThis.fetch
 
@@ -18,7 +16,13 @@ const endKey = "3d3e4f5a-6b7c-4d8e-9f0a-1b2c3d4e5f6a"
 
 type Sent = { url: string; key: string | null; body: unknown }
 
-function runOf(stage: string, body: unknown): Run {
+type Fakes = {
+  failDraft?: boolean
+  price?: { source: string; credits: number | null }
+}
+
+function runOf(stage: string, body: unknown, fakes: Fakes = {}): Run {
+  const isFailed = stage === "draft" && fakes.failDraft === true
   const inputs =
     typeof body === "object" && body !== null && "inputs" in body
       ? body.inputs
@@ -26,14 +30,15 @@ function runOf(stage: string, body: unknown): Run {
   return run.parse({
     id: `${stage === "draft" ? 1 : stage === "restore" ? 2 : 3}a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d`,
     appId: stage === "restore" ? "image" : "motion",
-    status: "done",
+    status: isFailed ? "failed" : "done",
     inputs,
     count: 1,
     aspectRatio: "2:3",
     seed: 9,
     outputs: [],
-    held:
-      stage === "draft"
+    held: isFailed
+      ? []
+      : stage === "draft"
         ? [{ nodeId: "1011", assetId: lastFrame, kind: "image" }]
         : stage === "restore"
           ? [{ nodeId: "0", assetId: endKey, kind: "image" }]
@@ -42,20 +47,22 @@ function runOf(stage: string, body: unknown): Run {
     engine: { adapter: "demo", models: [], workflowHash: null },
     cost: null,
     origin: "demo",
-    failure: null,
+    failure: isFailed ? { code: "RUN_FAILED", status: 502 } : null,
     createdAt: "2026-10-29T10:00:00.000Z",
     finishedAt: "2026-10-29T10:01:00.000Z",
   })
 }
 
-function gateway(): Sent[] {
+function gateway(fakes: Fakes = {}): Sent[] {
   const sent: Sent[] = []
   globalThis.fetch = async (input, init) => {
     const url = String(input)
     const body = init?.body === undefined ? null : JSON.parse(String(init.body))
     const key = new Headers(init?.headers).get("Idempotency-Key")
     if (url.endsWith("/price")) {
-      return Response.json({ price: { source: "unknown", credits: null } })
+      return Response.json({
+        price: fakes.price ?? { source: "unknown", credits: null },
+      })
     }
     if (init?.method === "POST") {
       sent.push({ url, key, body })
@@ -65,7 +72,7 @@ function gateway(): Sent[] {
     )
     return stage === undefined
       ? new Response(null, { status: 404 })
-      : Response.json({ run: runOf(stage, body) }, { status: 202 })
+      : Response.json({ run: runOf(stage, body, fakes) }, { status: 202 })
   }
   return sent
 }
@@ -151,24 +158,99 @@ describe("a guided example's chain in Motion", () => {
   })
 })
 
-describe("the final's price", () => {
-  const example = exampleOf("grab-and-run")
-
-  it("names the example's measured 16.79 credits at 1080p until your own run measures it", () => {
-    expect(finalPriceOf(null, example, "1080p")).toEqual({
-      credits: 16.79,
-      kept: true,
-    })
-    expect(finalPriceOf(12, example, "1080p")).toEqual({
-      credits: 12,
-      kept: false,
-    })
+describe("a failure or Start over in the chain", () => {
+  it("starts a new draft under a new key after a failed draft, and offers Start over", async () => {
+    const sent = gateway({ failDraft: true })
+    const { result } = renderHook(
+      () => useExampleChain(exampleOf("grab-and-run"), formWith("1080p")),
+      { wrapper }
+    )
+    act(() => result.current?.start.generate())
+    await waitFor(() => expect(result.current?.start.error).not.toBeNull())
+    expect(result.current?.stage.stage).toBe("idle")
+    expect(result.current?.canStartOver).toBe(true)
+    act(() => result.current?.start.generate())
+    await waitFor(() => expect(sent).toHaveLength(2))
+    const [first, second] = sent.map((one) => one.key)
+    expect(first).toMatch(/-draft$/)
+    expect(second).toMatch(/-draft$/)
+    expect(second).not.toBe(first)
   })
 
-  it("names no price at a resolution the example has no run of, the control", () => {
-    expect(finalPriceOf(null, example, "720p")).toEqual({
-      credits: null,
-      kept: false,
-    })
+  it("drops the chain on Start over, so the next Generate drafts again under a new key", async () => {
+    const sent = gateway()
+    const { result } = renderHook(
+      () => useExampleChain(exampleOf("grab-and-run"), formWith("1080p")),
+      { wrapper }
+    )
+    act(() => result.current?.start.generate())
+    await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
+    expect(result.current?.canStartOver).toBe(true)
+    act(() => result.current?.startOver())
+    expect(result.current?.stage.stage).toBe("idle")
+    expect(result.current?.canStartOver).toBe(false)
+    act(() => result.current?.start.generate())
+    await waitFor(() => expect(sent).toHaveLength(2))
+    expect(sent.map((one) => one.url)).toEqual([
+      "/api/apps/motion/runs",
+      "/api/apps/motion/runs",
+    ])
+    expect(sent[1]?.key).not.toBe(sent[0]?.key)
+  })
+
+  it("keeps the same key while the chain moves on without a failure, the control", async () => {
+    const sent = gateway()
+    const { result } = renderHook(
+      () => useExampleChain(exampleOf("grab-and-run"), formWith("1080p")),
+      { wrapper }
+    )
+    act(() => result.current?.start.generate())
+    await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
+    act(() => result.current?.start.generate())
+    await waitFor(() => expect(result.current?.stage.stage).toBe("renderFinal"))
+    const keys = sent.map((one) => one.key?.replace(/-(draft|restore)$/, ""))
+    expect(new Set(keys).size).toBe(1)
+  })
+})
+
+describe("the final's price and the words under the button", () => {
+  const example = exampleOf("grab-and-run")
+
+  it("shows 16.79 credits measured on a 4-second 1080p run, in visible words, before the second yes", async () => {
+    gateway({ price: { source: "estimate", credits: 20 } })
+    const { result } = renderHook(
+      () => useExampleChain(example, formWith("1080p")),
+      { wrapper }
+    )
+    act(() => result.current?.start.generate())
+    await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
+    act(() => result.current?.start.generate())
+    await waitFor(() => expect(result.current?.stage.stage).toBe("renderFinal"))
+    await waitFor(() =>
+      expect(result.current?.priceNote).toBe(
+        "16.79 Comfy credits, measured on a 4-second 1080p run"
+      )
+    )
+  })
+
+  it("keeps the example's measured 16.79 over an estimate, and your own measured run over both", () => {
+    expect(
+      finalPriceOf({ source: "estimate", credits: 20 }, example, "1080p")
+    ).toEqual({ credits: 16.79, source: "example" })
+    expect(
+      finalPriceOf({ source: "measured", credits: 12 }, example, "1080p")
+    ).toEqual({ credits: 12, source: "measured" })
+  })
+
+  it("names an estimate as one at a resolution the example has no run of, the control", () => {
+    const price = finalPriceOf(
+      { source: "estimate", credits: 9 },
+      example,
+      "720p"
+    )
+    expect(price).toEqual({ credits: 9, source: "estimate" })
+    expect(priceNoteOf(price, example, "720p")).toBe(
+      "9 Comfy credits, estimated"
+    )
   })
 })

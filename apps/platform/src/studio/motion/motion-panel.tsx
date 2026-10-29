@@ -13,6 +13,7 @@ import { t, tCatalog } from "@/copy/t"
 import { assetLimitsText } from "@/pieces/asset-limits"
 import { CharacterPicker } from "@/pieces/character-picker"
 import { DropWell } from "@/pieces/drop-well"
+import { PriceCaption } from "@/pieces/price-caption"
 import { appliedApp } from "@/screens/app/app-form"
 import { FieldFrame } from "@/screens/app/fields/field-frame"
 import { listOf } from "@/screens/app/fields/field-props"
@@ -248,6 +249,11 @@ export function MotionPanel({ state }: { state: MotionState }): ReactElement {
             <CatalogPicker hosted={state.hosted} place="row" />
           ) : null
         }
+      />
+      <PriceCaption
+        text={state.chain?.priceNote ?? null}
+        slot="motion-price"
+        wraps={true}
       />
     </div>
   )

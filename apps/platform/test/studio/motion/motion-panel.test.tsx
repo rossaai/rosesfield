@@ -163,3 +163,30 @@ describe("Motion with an example from its Library", () => {
     expect(theModelChip().isConnected).toBe(true)
   })
 })
+
+describe("the price words under Generate in an example's chain", () => {
+  it("shows where the final's credits come from as visible text, not only in a label", () => {
+    const state: MotionState = {
+      ...graphState(),
+      example: exampleOf("grab-and-run"),
+      chain: {
+        stage: { stage: "idle" },
+        start: graphState().start,
+        priceNote: "16.79 Comfy credits, measured on a 4-second 1080p run",
+        canStartOver: true,
+        startOver: () => undefined,
+      },
+    }
+    showColumn(<MotionPanel state={state} />)
+    const note = screen.getByText(
+      "16.79 Comfy credits, measured on a 4-second 1080p run"
+    )
+    expect(note.closest("[data-slot='motion-price']")).not.toBeNull()
+    expect(note.getAttribute("aria-hidden")).toBeNull()
+  })
+
+  it("shows no price words with no chain, the control", () => {
+    showColumn(<MotionPanel state={graphState()} />)
+    expect(document.querySelector("[data-slot='motion-price']")).toBeNull()
+  })
+})
