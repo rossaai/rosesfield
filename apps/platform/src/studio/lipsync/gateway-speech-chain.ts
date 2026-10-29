@@ -1,7 +1,7 @@
 import { type ChainRun, SpeechChain } from "@rosesfield/catalog/lipsync"
 import { type Run, routes } from "@rosesfield/contract"
 import { callRoute } from "@/api/call-route"
-import { isWorking } from "@/api/queries"
+import { GatewayRunChain } from "@/api/gateway-run-chain"
 
 type GatewaySpeechChainOptions = {
   wait: (ms: number) => Promise<void>
@@ -9,46 +9,23 @@ type GatewaySpeechChainOptions = {
 }
 
 export class GatewaySpeechChain extends SpeechChain {
-  static readonly pollMs = 1000
+  static readonly pollMs = GatewayRunChain.pollMs
 
-  static readonly maxPolls = 900
+  static readonly maxPolls = GatewayRunChain.maxPolls
 
-  private readonly wait: (ms: number) => Promise<void>
-  private readonly onRun: (run: Run) => void
+  private readonly runs: GatewayRunChain
 
   constructor(options: GatewaySpeechChainOptions) {
     super()
-    this.wait = options.wait
-    this.onRun = options.onRun
+    this.runs = new GatewayRunChain(options)
   }
 
-  async start(appId: string, request: ChainRun, key: string): Promise<Run> {
-    const answer = await callRoute(routes.startRun, {
-      params: { appId },
-      body:
-        request.aspectRatio === null
-          ? { inputs: request.inputs }
-          : { inputs: request.inputs, aspectRatio: request.aspectRatio },
-      idempotencyKey: key,
-    })
-    this.onRun(answer.run)
-    return answer.run
+  start(appId: string, request: ChainRun, key: string): Promise<Run> {
+    return this.runs.start(appId, request, key)
   }
 
-  async settle(run: Run): Promise<Run> {
-    let current = run
-    for (
-      let polls = 0;
-      isWorking(current) && polls < GatewaySpeechChain.maxPolls;
-      polls += 1
-    ) {
-      await this.wait(GatewaySpeechChain.pollMs)
-      const answer = await callRoute(routes.getRun, {
-        params: { runId: current.id },
-      })
-      current = answer.run
-    }
-    return current
+  settle(run: Run): Promise<Run> {
+    return this.runs.settle(run)
   }
 
   async secondsOf(assetId: string): Promise<number | null> {

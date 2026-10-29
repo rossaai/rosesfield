@@ -1,4 +1,8 @@
-import type { AppListing, InputDefinition } from "@rosesfield/contract"
+import {
+  type AppListing,
+  type InputDefinition,
+  isChainFilled,
+} from "@rosesfield/contract"
 import type { ReactElement, ReactNode } from "react"
 import { appliedApp } from "@/screens/app/app-form"
 import {
@@ -41,7 +45,10 @@ export function AdvancedFields({
 
 export function trayInputsOf(app: AppListing): InputDefinition[] {
   const inputs = app.inputs.filter(
-    (input) => !isSettingInput(input) && input.name !== modelInputName
+    (input) =>
+      !isSettingInput(input) &&
+      !isChainFilled(input) &&
+      input.name !== modelInputName
   )
   return [
     ...inputs.filter((input) => input.type !== "prompt"),

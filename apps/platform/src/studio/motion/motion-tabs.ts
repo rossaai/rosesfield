@@ -4,7 +4,11 @@ import {
   type ModelField,
 } from "@rosesfield/catalog/comfy"
 import { guideModel } from "@rosesfield/catalog/motion"
-import type { AppListing, InputDefinition } from "@rosesfield/contract"
+import {
+  type AppListing,
+  type InputDefinition,
+  isChainFilled,
+} from "@rosesfield/contract"
 import { defaultsOf, type FieldValue } from "@/screens/app/app-form"
 import { listOf } from "@/screens/app/fields/field-props"
 import { hostedDefaults } from "@/screens/app/hosted/hosted-form"
@@ -163,6 +167,7 @@ export function graphRestOf(
   return app.inputs.filter(
     (input) =>
       !wells.includes(input) &&
+      !isChainFilled(input) &&
       input.type !== "seed" &&
       input.type !== "character" &&
       input.name !== modelInput &&
