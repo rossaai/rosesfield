@@ -1,5 +1,5 @@
 import { join } from "node:path"
-import type { GuideFiles } from "#vfx/guide-files"
+import type { GuideFiles } from "#effect-guides/guide-files"
 
 export function folderGuideFiles(root: string): GuideFiles {
   return {

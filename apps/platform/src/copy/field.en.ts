@@ -185,8 +185,6 @@ export const fieldCopy = {
   "setting.distance.tip":
     "Sets how close the camera is, from a close-up to a wide shot.",
   "setting.effect.tip": "Picks the effect your photo gets.",
-  "setting.preset.tip":
-    "Picks the preset your photo or your clip goes through.",
   "setting.top.tip":
     "Sets how much space to add above your picture, in percent of its size.",
   "setting.right.tip":

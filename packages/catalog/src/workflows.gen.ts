@@ -17,6 +17,8 @@ import wBackgroundRemovalTransparentApi from "../../../workflows/background-remo
 import wBackgroundRemovalTransparentEntry from "../../../workflows/background-removal-transparent/entry.json"
 import wEditQwenImageEdit2511Api from "../../../workflows/edit-qwen-image-edit-2511/edit-qwen-image-edit-2511.api.json"
 import wEditQwenImageEdit2511Entry from "../../../workflows/edit-qwen-image-edit-2511/entry.json"
+import wEffectsClipLtx23IcLoraApi from "../../../workflows/effects-clip-ltx-2-3-ic-lora/effects-clip-ltx-2-3-ic-lora.api.json"
+import wEffectsClipLtx23IcLoraEntry from "../../../workflows/effects-clip-ltx-2-3-ic-lora/entry.json"
 import wEffectsLtx25Api from "../../../workflows/effects-ltx-2-5/effects-ltx-2-5.api.json"
 import wEffectsLtx25Entry from "../../../workflows/effects-ltx-2-5/entry.json"
 import wExpandFormatQwenImageApi from "../../../workflows/expand-format-qwen-image/expand-format-qwen-image.api.json"
@@ -53,8 +55,6 @@ import wUpscaleImageSeedvr2Api from "../../../workflows/upscale-image-seedvr2/up
 import wUpscaleImageSeedvr2Entry from "../../../workflows/upscale-image-seedvr2/entry.json"
 import wUpscaleVideoSeedvr2Api from "../../../workflows/upscale-video-seedvr2/upscale-video-seedvr2.api.json"
 import wUpscaleVideoSeedvr2Entry from "../../../workflows/upscale-video-seedvr2/entry.json"
-import wVfxClipLtx23IcLoraApi from "../../../workflows/vfx-clip-ltx-2-3-ic-lora/vfx-clip-ltx-2-3-ic-lora.api.json"
-import wVfxClipLtx23IcLoraEntry from "../../../workflows/vfx-clip-ltx-2-3-ic-lora/entry.json"
 import wVideoEditBackgroundBirefnetApi from "../../../workflows/video-edit-background-birefnet/video-edit-background-birefnet.api.json"
 import wVideoEditBackgroundBirefnetEntry from "../../../workflows/video-edit-background-birefnet/entry.json"
 import wVideoEditFrameRateFilmApi from "../../../workflows/video-edit-frame-rate-film/video-edit-frame-rate-film.api.json"
@@ -78,6 +78,7 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "background-removal-solid-color", entry: wBackgroundRemovalSolidColorEntry, graph: wBackgroundRemovalSolidColorApi },
   { folder: "background-removal-transparent", entry: wBackgroundRemovalTransparentEntry, graph: wBackgroundRemovalTransparentApi },
   { folder: "edit-qwen-image-edit-2511", entry: wEditQwenImageEdit2511Entry, graph: wEditQwenImageEdit2511Api },
+  { folder: "effects-clip-ltx-2-3-ic-lora", entry: wEffectsClipLtx23IcLoraEntry, graph: wEffectsClipLtx23IcLoraApi },
   { folder: "effects-ltx-2-5", entry: wEffectsLtx25Entry, graph: wEffectsLtx25Api },
   { folder: "expand-format-qwen-image", entry: wExpandFormatQwenImageEntry, graph: wExpandFormatQwenImageApi },
   { folder: "expand-sides-qwen-image", entry: wExpandSidesQwenImageEntry, graph: wExpandSidesQwenImageApi },
@@ -96,7 +97,6 @@ export const workflowFiles: readonly WorkflowFiles[] = [
   { folder: "try-on-qwen-image-edit-2511", entry: wTryOnQwenImageEdit2511Entry, graph: wTryOnQwenImageEdit2511Api },
   { folder: "upscale-image-seedvr2", entry: wUpscaleImageSeedvr2Entry, graph: wUpscaleImageSeedvr2Api },
   { folder: "upscale-video-seedvr2", entry: wUpscaleVideoSeedvr2Entry, graph: wUpscaleVideoSeedvr2Api },
-  { folder: "vfx-clip-ltx-2-3-ic-lora", entry: wVfxClipLtx23IcLoraEntry, graph: wVfxClipLtx23IcLoraApi },
   { folder: "video-edit-background-birefnet", entry: wVideoEditBackgroundBirefnetEntry, graph: wVideoEditBackgroundBirefnetApi },
   { folder: "video-edit-frame-rate-film", entry: wVideoEditFrameRateFilmEntry, graph: wVideoEditFrameRateFilmApi },
   { folder: "video-edit-reframe-ltx-2-3", entry: wVideoEditReframeLtx23Entry, graph: wVideoEditReframeLtx23Api },

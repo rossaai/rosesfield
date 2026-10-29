@@ -22,7 +22,6 @@ import { app as storyboard } from "#storyboard/app"
 import { app as threeD } from "#three-d/app"
 import { app as tryOn } from "#try-on/app"
 import { app as upscale } from "#upscale/app"
-import { app as vfx } from "#vfx/app"
 import { app as video } from "#video/app"
 import { app as videoEdit } from "#video-edit/app"
 import { app as voiceChange } from "#voice-change/app"
@@ -52,7 +51,6 @@ export const apps: readonly AppEntry[] = [
   { folder: "three-d", app: threeD },
   { folder: "try-on", app: tryOn },
   { folder: "upscale", app: upscale },
-  { folder: "vfx", app: vfx },
   { folder: "video", app: video },
   { folder: "video-edit", app: videoEdit },
   { folder: "voice-change", app: voiceChange },

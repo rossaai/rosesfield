@@ -48,6 +48,11 @@ export function appLine(app: AppListing): string {
   return tCatalog(`${app.id}.line`)
 }
 
+export function appBadge(app: AppListing): string | null {
+  const key = `${app.id}.badge`
+  return hasCatalogText(key) ? tCatalog(key) : null
+}
+
 export function appKeywords(app: AppListing): string {
   const key = `${app.id}.keywords`
   return hasCatalogText(key) ? tCatalog(key) : ""

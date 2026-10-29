@@ -6,7 +6,11 @@ import type {
   ToolRegistration,
 } from "@earendil-works/pi-durable"
 import { autoRunLimitCredits, type ModelForm } from "@rosesfield/catalog/comfy"
-import { isFinalRun, vfxAgentNotes, vfxAppId } from "@rosesfield/catalog/vfx"
+import {
+  effectAgentNotes,
+  effectsAppId,
+  isFinalRun,
+} from "@rosesfield/catalog/effects"
 import {
   type AppDefinition,
   errorEnvelopeOf,
@@ -96,7 +100,9 @@ function checkedArguments(
 
 export function appToolDescription(app: AppDefinition): string {
   const general = agentCopy.tools.app(app)
-  return app.id === vfxAppId ? `${general}\n${vfxAgentNotes()}` : general
+  return app.id === effectsAppId
+    ? `${general}\n${effectAgentNotes(app)}`
+    : general
 }
 
 function refusalOf(error: ProjectError): ToolExecutionResult {

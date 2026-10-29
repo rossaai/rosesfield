@@ -1,5 +1,6 @@
 import { type InputDefinition, startRunBodyFor } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
+import { heldEffectPresets } from "#effects/effect-presets"
 import { effectRecipes, passedRecipes, recipeOf } from "#effects/effect-recipes"
 import {
   canTryDrafts,
@@ -57,12 +58,13 @@ describe("the effects a server offers", () => {
     ])
   })
 
-  it("opens the app with the passed looks first and starts a draft on the local lock", () => {
+  it("opens the app with the passed looks first and starts a draft on the local lock, the unkept guide effects last", () => {
     const app = offeredEffectsApp(effectRecipes, local)
     expect(app.closedKey).toBeNull()
     expect(effectsOf(app.inputs)?.options.map((one) => one.value)).toEqual([
       ...passedRecipes.map((one) => one.effect),
       ...effectRecipes.filter((one) => !one.passed).map((one) => one.effect),
+      ...heldEffectPresets.map((one) => one.id),
     ])
     const body = startRunBodyFor(app)
     expect(

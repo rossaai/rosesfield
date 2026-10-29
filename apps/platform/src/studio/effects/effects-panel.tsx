@@ -2,7 +2,7 @@ import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import type { ReactElement } from "react"
 import { isAssetInput } from "@/catalog/app-facts"
 import { t, tCatalog } from "@/copy/t"
-import { aspectField } from "@/screens/app/app-form"
+import { appliedApp, aspectField } from "@/screens/app/app-form"
 import { ChoiceField } from "@/screens/app/fields/choice-field"
 import { textOf } from "@/screens/app/fields/field-props"
 import { InputField } from "@/screens/app/fields/input-field"
@@ -29,6 +29,7 @@ type EffectsPanelProps = {
   aspects: readonly string[]
   onAspect: (aspect: string) => void
   photoMessage: string | null
+  shapeMessage: string | null
   onPhotoMessage: (message: string | null) => void
 }
 
@@ -102,10 +103,15 @@ function chosenPhotoOf(props: EffectsPanelProps): string | undefined {
   return effectTiles(props.app).find((tile) => tile.effect === chosen)?.photo
 }
 
+const fieldInputs: readonly string[] = ["prompt", "clip"]
+
 export function EffectsPanel(props: EffectsPanelProps): ReactElement {
   const { app } = props
-  const photo = app.inputs.find((input) => input.name === "image")
-  const columnInputs = app.inputs.filter((input) => input.name === "prompt")
+  const applied = appliedApp(app, props.form.values.inputs)
+  const photo = applied.inputs.find((input) => input.name === "image")
+  const columnInputs = applied.inputs.filter((input) =>
+    fieldInputs.includes(input.name)
+  )
   return (
     <div className="flex flex-col gap-s4">
       <EffectPart {...props} />
@@ -114,7 +120,7 @@ export function EffectsPanel(props: EffectsPanelProps): ReactElement {
           {...fieldProps(props, photo)}
           input={photo}
           title={chosenPhotoOf(props)}
-          message={props.photoMessage}
+          message={props.photoMessage ?? props.shapeMessage}
           onMessage={props.onPhotoMessage}
         />
       ) : null}
@@ -130,7 +136,7 @@ export function EffectsPanel(props: EffectsPanelProps): ReactElement {
         app={app}
         form={props.form}
         lastSeed={props.lastSeed}
-        plan={appSettingsPlan(app, [effectInput, aspectField])}
+        plan={appSettingsPlan(applied, [effectInput, aspectField])}
       />
     </div>
   )

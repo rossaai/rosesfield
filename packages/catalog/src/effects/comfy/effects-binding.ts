@@ -3,6 +3,8 @@ import { selectBinding } from "@rosesfield/generation/bindings"
 import { effectGraph, hasEditPass } from "#effects/comfy/effect-graph"
 import { deliveryFrames, ltxFrames, sizeMap } from "#effects/comfy/frame-sizes"
 import { effectsWorkflow } from "#effects/comfy/graph-edit"
+import { presetOptions } from "#effects/comfy/preset-binding"
+import type { EffectPreset } from "#effects/effect-preset.contract"
 import {
   type EffectRecipe,
   type ResolutionValue,
@@ -128,12 +130,16 @@ function byResolution(recipe: EffectRecipe): EngineBinding {
 }
 
 export function effectsBinding(
-  offered: readonly EffectRecipe[]
+  offered: readonly EffectRecipe[],
+  presets: readonly EffectPreset[] = []
 ): EngineBinding {
   return selectBinding({
     input: "effect",
-    options: Object.fromEntries(
-      offered.map((recipe) => [recipe.effect, byResolution(recipe)])
-    ),
+    options: {
+      ...Object.fromEntries(
+        offered.map((recipe) => [recipe.effect, byResolution(recipe)])
+      ),
+      ...presetOptions(presets),
+    },
   })
 }

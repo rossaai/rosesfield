@@ -9,6 +9,7 @@ import type { RuntimeDefer } from "#catalog/shared-router-catalog"
 import { type EngineOptions, visitorEngines } from "#compose/pick-engines"
 import { visitorScope } from "#compose/request-scope"
 import { visitorSettings } from "#compose/settings"
+import type { GuideFiles } from "#effect-guides/guide-files"
 import type { WorkerVars } from "#env"
 import type { GatewayContext } from "#gateway"
 import type { ServedPlace } from "#gateway.contract"
@@ -20,7 +21,6 @@ import { SqliteRunRepository } from "#infrastructure/sqlite-run-repository"
 import { PolledJobRunner } from "#session/polled-job-runner"
 import { type SessionId, SessionScope } from "#session/session-scope"
 import { readVisitorKeys } from "#session/visitor-keys"
-import type { GuideFiles } from "#vfx/guide-files"
 
 export type SessionAgentHost = {
   agentOf: (sessionId: SessionId) => AgentHarness

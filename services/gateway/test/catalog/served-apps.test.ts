@@ -5,6 +5,7 @@ import { listApps, readApps } from "@rosesfield/catalog"
 import {
   effectRecipes,
   effectsApp,
+  heldEffectPresets,
   passedRecipes,
 } from "@rosesfield/catalog/effects"
 import { isRemakeOpen } from "@rosesfield/catalog/remake"
@@ -88,12 +89,13 @@ const publicVars = (): WorkerVars =>
 const judgeVars = (): WorkerVars => readWorkerEnv({ OWNER_TOKEN: ownerToken })
 
 describe("the apps a server serves", () => {
-  it("offers every effect, drafts after the passed ones, on a server that answers only on this computer", () => {
+  it("offers every effect, drafts and the unkept guide effects after the passed ones, on a server that answers only on this computer", () => {
     const served = effectsOf(servedApps(localVars(), "bun", onePassed()))
     expect(served.closedKey).toBeNull()
     expect(optionsOf(served)).toEqual([
       ...passedRecipes.map((one) => one.effect),
       ...effectRecipes.filter((one) => !one.passed).map((one) => one.effect),
+      ...heldEffectPresets.map((one) => one.id),
     ])
     expect(optionsOf(served)).toContain(draft)
   })

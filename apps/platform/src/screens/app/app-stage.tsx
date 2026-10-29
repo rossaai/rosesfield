@@ -1,4 +1,5 @@
 import type { AppListing } from "@rosesfield/contract"
+import { Badge } from "@rosesfield/ui/components/badge"
 import { Canvas } from "@rosesfield/ui/components/canvas"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
@@ -13,7 +14,7 @@ import {
   useEffect,
   useState,
 } from "react"
-import { appName } from "@/catalog/app-facts"
+import { appBadge, appName } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
 import { useCanvasFit } from "@/pieces/use-canvas-fit"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
@@ -94,12 +95,24 @@ type AppStageProps = {
   scrollClassName?: string
 }
 
+function AppTitle({ app }: { app: AppListing }): ReactNode {
+  const badge = appBadge(app)
+  return badge === null ? (
+    appName(app)
+  ) : (
+    <span data-slot="app-title" className="inline-flex items-center gap-s2">
+      {appName(app)}
+      <Badge tone="quiet">{badge}</Badge>
+    </span>
+  )
+}
+
 function StageTitle({ app }: { app: AppListing }): ReactNode {
   const isRegular = useIsRegularWindow()
   return isRegular ? (
-    <ScreenTitle title={appName(app)} />
+    <ScreenTitle title={<AppTitle app={app} />} />
   ) : (
-    <PhoneTitlePortal title={appName(app)} />
+    <PhoneTitlePortal title={<AppTitle app={app} />} />
   )
 }
 

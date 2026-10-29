@@ -299,7 +299,7 @@
     "class_type": "SaveVideo",
     "inputs": {
       "video": ["43", 0],
-      "filename_prefix": "vfx/clip",
+      "filename_prefix": "effects/clip",
       "format": "mp4",
       "format.codec": "h264"
     }

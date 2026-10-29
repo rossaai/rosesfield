@@ -6,7 +6,7 @@ type GuideUnreadableErrorOptions = {
 }
 
 export class GuideUnreadableError extends DependencyError {
-  override readonly code = "VFX_GUIDE_UNREADABLE"
+  override readonly code = "EFFECT_GUIDE_UNREADABLE"
 
   constructor(options: GuideUnreadableErrorOptions) {
     super({

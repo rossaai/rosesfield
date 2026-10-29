@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest"
 import { catalogApps } from "@/catalog/catalog-apps"
-import { navGroups, vfxAreaApps } from "@/shell/nav-rows"
+import { navGroups } from "@/shell/nav-rows"
 import { appIdOfPath, hasFooter, hasInputs } from "@/shell/page-kind"
 
 describe("the top bar's links", () => {
-  it("list Explore, then the media areas, then VFX between 3D and Agent, then the rest", () => {
+  it("list Explore, then the media areas, then Agent, then the rest", () => {
     const groups = navGroups()
     expect(groups.explore.to).toBe("/")
     expect(groups.areas.map((area) => area.id)).toEqual([
@@ -12,9 +12,7 @@ describe("the top bar's links", () => {
       "video",
       "audio",
       "mesh",
-      "vfx",
     ])
-    expect(groups.areas.at(-1)?.label).toBe("shell.area.vfx")
     expect(groups.agent.to).toBe("/agent")
     expect(groups.rest.map((link) => link.to)).toEqual([
       "/characters",
@@ -26,14 +24,11 @@ describe("the top bar's links", () => {
 
   it("put each app under the area of what it makes, in the catalog's order, with 3D models in their own area", () => {
     const groups = navGroups()
-    for (const area of groups.areas.filter((one) => one.id !== "vfx")) {
+    for (const area of groups.areas) {
       expect(area.apps.map((app) => app.id)).toEqual(
         catalogApps
           .filter(
-            (app) =>
-              app.category !== "character" &&
-              app.output.kind === area.id &&
-              !vfxAreaApps.includes(app.id)
+            (app) => app.category !== "character" && app.output.kind === area.id
           )
           .map((app) => app.id)
       )
@@ -45,26 +40,13 @@ describe("the top bar's links", () => {
     expect(listed.some((app) => app.category === "character")).toBe(false)
   })
 
-  it("move the VFX presets and Effects out of Video into VFX", () => {
-    const groups = navGroups()
-    const idsOf = (id: string) =>
-      groups.areas.find((area) => area.id === id)?.apps.map((app) => app.id)
-    expect(idsOf("vfx")).toEqual(["vfx", "effects"])
-    expect(idsOf("video")).not.toContain("effects")
-    expect(idsOf("video")).not.toContain("vfx")
-    expect(idsOf("video")).toContain("motion")
-  })
-
   it("leave out an area with no app", () => {
     const noAudio = catalogApps.filter((app) => app.output.kind !== "audio")
     expect(navGroups(noAudio).areas.map((area) => area.id)).toEqual([
       "image",
       "video",
       "mesh",
-      "vfx",
     ])
-    const noVfx = catalogApps.filter((app) => !vfxAreaApps.includes(app.id))
-    expect(navGroups(noVfx).areas.map((area) => area.id)).not.toContain("vfx")
   })
 })
 

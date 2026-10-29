@@ -1,4 +1,8 @@
-import { type PresetGuide, presetOf, vfxAppId } from "@rosesfield/catalog/vfx"
+import {
+  effectsAppId,
+  type PresetGuide,
+  presetOf,
+} from "@rosesfield/catalog/effects"
 import {
   StartRunHandler,
   type StartRunInput,
@@ -9,8 +13,8 @@ import type {
   ReadAssetContentHandler,
   UploadAssetHandler,
 } from "@rosesfield/library"
-import type { GuideFiles } from "#vfx/guide-files"
-import { GuideUnreadableError } from "#vfx/guide-unreadable.error"
+import type { GuideFiles } from "#effect-guides/guide-files"
+import { GuideUnreadableError } from "#effect-guides/guide-unreadable.error"
 
 export type GuideLibrary = {
   listAssets: ListAssetsHandler
@@ -56,12 +60,12 @@ export class GuidedStartRunHandler extends StartRunHandler {
   }
 
   private async withGuide(input: StartRunInput): Promise<StartRunInput> {
-    if (input.appId !== vfxAppId || !isBody(input.body)) {
+    if (input.appId !== effectsAppId || !isBody(input.body)) {
       return input
     }
     const inputs = isBody(input.body.inputs) ? input.body.inputs : {}
     const preset =
-      typeof inputs.preset === "string" ? presetOf(inputs.preset) : null
+      typeof inputs.effect === "string" ? presetOf(inputs.effect) : null
     if (preset === null || preset.kind !== "photo") {
       return input
     }

@@ -44,10 +44,13 @@ export const clipPreset = z.strictObject({
   result: presetResult.nullable(),
 })
 
-export const vfxPreset = z.discriminatedUnion("kind", [photoPreset, clipPreset])
+export const effectPreset = z.discriminatedUnion("kind", [
+  photoPreset,
+  clipPreset,
+])
 
-export const vfxPresets = z
-  .array(vfxPreset)
+export const effectPresets = z
+  .array(effectPreset)
   .min(1)
   .refine(
     (presets) => new Set(presets.map((one) => one.id)).size === presets.length,
@@ -57,5 +60,5 @@ export const vfxPresets = z
 export type PresetGuide = z.infer<typeof presetGuide>
 export type PhotoPreset = z.infer<typeof photoPreset>
 export type ClipPreset = z.infer<typeof clipPreset>
-export type VfxPreset = z.infer<typeof vfxPreset>
+export type EffectPreset = z.infer<typeof effectPreset>
 export type PresetKind = (typeof presetKindValues)[number]

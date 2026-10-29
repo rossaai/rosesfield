@@ -36,10 +36,10 @@ import {
   UpdateCharacterHandler,
   UploadAssetHandler,
 } from "@rosesfield/library"
+import type { GuideFiles } from "#effect-guides/guide-files"
+import { GuidedStartRunHandler } from "#effect-guides/guided-start-run"
 import { LibraryRunAssets } from "#infrastructure/library-run-assets"
 import { ListedAppCatalog } from "#infrastructure/listed-app-catalog"
-import type { GuideFiles } from "#vfx/guide-files"
-import { GuidedStartRunHandler } from "#vfx/guided-start-run"
 
 export type HandlerPorts = {
   apps: readonly AppDefinition[]

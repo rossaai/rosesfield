@@ -1,16 +1,15 @@
 import type { EngineBinding } from "@rosesfield/contract"
-import { selectBinding } from "@rosesfield/generation/bindings"
-import { guideWorkflow, shortSides } from "#motion/comfy/motion-binding"
 import type {
   ClipPreset,
+  EffectPreset,
   PhotoPreset,
-  VfxPreset,
-} from "#vfx/vfx-preset.contract"
+} from "#effects/effect-preset.contract"
+import { guideWorkflow, shortSides } from "#motion/comfy/motion-binding"
 import { workflowBinding } from "#workflow-binding"
 
-export const clipWorkflow = "vfx-clip-ltx-2-3-ic-lora"
+export const clipWorkflow = "effects-clip-ltx-2-3-ic-lora"
 
-function valuesOf<Preset extends VfxPreset>(
+function valuesOf<Preset extends EffectPreset>(
   presets: readonly Preset[],
   pick: (preset: Preset) => string | number
 ): Record<string, string | number> {
@@ -21,11 +20,11 @@ function photoBinding(presets: readonly PhotoPreset[]): EngineBinding {
   return workflowBinding({
     workflow: guideWorkflow,
     bindings: [
-      { from: "input", name: "photo", index: 0, to: "photo" },
+      { from: "input", name: "image", index: 0, to: "photo" },
       { from: "input", name: "guide", index: 0, to: "clip" },
       {
         from: "input",
-        name: "preset",
+        name: "effect",
         map: valuesOf(presets, (preset) => preset.prompt),
         to: "scene",
       },
@@ -38,7 +37,7 @@ function photoBinding(presets: readonly PhotoPreset[]): EngineBinding {
 function clipBinding(presets: readonly ClipPreset[]): EngineBinding {
   const mapped = (pick: (preset: ClipPreset) => string | number) => ({
     from: "input" as const,
-    name: "preset",
+    name: "effect",
     map: valuesOf(presets, pick),
   })
   return workflowBinding({
@@ -55,7 +54,9 @@ function clipBinding(presets: readonly ClipPreset[]): EngineBinding {
   })
 }
 
-export function vfxBinding(presets: readonly VfxPreset[]): EngineBinding {
+export function presetOptions(
+  presets: readonly EffectPreset[]
+): Record<string, EngineBinding> {
   const photos = presets.filter(
     (preset): preset is PhotoPreset => preset.kind === "photo"
   )
@@ -64,13 +65,10 @@ export function vfxBinding(presets: readonly VfxPreset[]): EngineBinding {
   )
   const photo = photos.length === 0 ? null : photoBinding(photos)
   const clip = clips.length === 0 ? null : clipBinding(clips)
-  return selectBinding({
-    input: "preset",
-    options: Object.fromEntries(
-      presets.flatMap((preset) => {
-        const binding = preset.kind === "photo" ? photo : clip
-        return binding === null ? [] : [[preset.id, binding]]
-      })
-    ),
-  })
+  return Object.fromEntries(
+    presets.flatMap((preset) => {
+      const binding = preset.kind === "photo" ? photo : clip
+      return binding === null ? [] : [[preset.id, binding]]
+    })
+  )
 }

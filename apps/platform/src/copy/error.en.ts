@@ -36,10 +36,10 @@ export const errorCopy = {
   "error.RUN_WATCHER_UNAVAILABLE.title": "The server stopped watching this run",
   "error.RUN_WATCHER_UNAVAILABLE.body": "Your inputs are kept.",
   "error.RUN_WATCHER_UNAVAILABLE.action": "Try again",
-  "error.VFX_GUIDE_UNREADABLE.title": "This preset's guide did not load",
-  "error.VFX_GUIDE_UNREADABLE.body":
-    "The server could not read the guide this preset follows. Your inputs are kept.",
-  "error.VFX_GUIDE_UNREADABLE.action": "Try again",
+  "error.EFFECT_GUIDE_UNREADABLE.title": "This effect did not start",
+  "error.EFFECT_GUIDE_UNREADABLE.body":
+    "The server could not read a file this effect needs. Your inputs are kept.",
+  "error.EFFECT_GUIDE_UNREADABLE.action": "Try again",
   "error.RUN_FINISHED.title": "This run has already ended",
   "error.RUN_FINISHED.body": "Its results and its record stay in History.",
   "error.ENGINE_BINDING_INVALID.title":

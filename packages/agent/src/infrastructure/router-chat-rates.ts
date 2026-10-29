@@ -17,7 +17,7 @@ export const agentMessage = {
   source: "packages/agent/test/fixtures/scenario-answers/*.json",
   readOn: "2026-10-28",
   bytesPerToken: 3,
-  repeatedTokens: 13_967,
+  repeatedTokens: 13_345,
   conversationTokens: 341,
   outputTokens: 67,
   requests: 1,

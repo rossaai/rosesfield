@@ -10,14 +10,14 @@ import {
   sharedRouterCatalog,
 } from "#catalog/shared-router-catalog"
 import { type EngineOptions, pickEngines } from "#compose/pick-engines"
+import { assetsGuideFiles } from "#effect-guides/assets-guide-files"
+import type { GuideFiles } from "#effect-guides/guide-files"
 import { readWorkerEnv, type WorkerVars } from "#env"
 import { R2AssetStore } from "#infrastructure/r2-asset-store"
 import { SqliteAssetRepository } from "#infrastructure/sqlite-asset-repository"
 import { SqliteCharacterRepository } from "#infrastructure/sqlite-character-repository"
 import type { SqliteDatabase } from "#infrastructure/sqlite-database"
 import { SqliteRunRepository } from "#infrastructure/sqlite-run-repository"
-import { assetsGuideFiles } from "#vfx/assets-guide-files"
-import type { GuideFiles } from "#vfx/guide-files"
 
 export type WorkerBindings = {
   DB: D1Database

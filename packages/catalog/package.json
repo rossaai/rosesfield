@@ -13,7 +13,6 @@
     "./video": "./src/video/index.ts",
     "./motion": "./src/motion/index.ts",
     "./effects": "./src/effects/index.ts",
-    "./vfx": "./src/vfx/index.ts",
     "./lipsync": "./src/lipsync/index.ts",
     "./storyboard": "./src/storyboard/index.ts",
     "./characters": "./src/characters/index.ts",

@@ -1,4 +1,4 @@
-import { type GuideFiles, guidePath } from "#vfx/guide-files"
+import { type GuideFiles, guidePath } from "#effect-guides/guide-files"
 
 const assetsOrigin = "https://assets.local"
 

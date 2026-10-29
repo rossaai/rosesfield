@@ -16,7 +16,7 @@ import {
   ColumnFrame,
   useSheetOpen,
 } from "@/screens/app/column-frame"
-import { listOf } from "@/screens/app/fields/field-props"
+import { listOf, textOf } from "@/screens/app/fields/field-props"
 import type { StudioScreenProps } from "@/screens/app/studio-screens"
 import { type AppScreenState, useAppScreen } from "@/screens/app/use-app-screen"
 import type { StartRun } from "@/screens/app/use-start-run"
@@ -24,6 +24,7 @@ import { ScreenHeader } from "@/shell/screen-header"
 import { EffectAgain } from "@/studio/effects/effect-again"
 import { autoAspect, EffectsPanel } from "@/studio/effects/effects-panel"
 import { nearestRatio } from "@/studio/effects/nearest-ratio"
+import { photoShapeMessage } from "@/studio/effects/photo-shape"
 import { useCheckedStart } from "@/studio/effects/use-checked-start"
 import { useEffectAgain } from "@/studio/effects/use-effect-again"
 import { useOfferedApp } from "@/studio/effects/use-offered-app"
@@ -36,6 +37,8 @@ import {
 
 const followRun = ""
 const photoInput = "image"
+const effectInput = "effect"
+const resolutionInput = "resolution"
 
 type EffectsState = {
   screen: AppScreenState
@@ -45,6 +48,7 @@ type EffectsState = {
     aspects: readonly string[]
     onAspect: (aspect: string) => void
     photoMessage: string | null
+    shapeMessage: string | null
     onPhotoMessage: (message: string | null) => void
   }
   onUseInputs: (run: Run) => void
@@ -112,12 +116,29 @@ function useEffectsState(
     props.seeds.from !== undefined,
     photos.sizeOf
   )
-  const start = useCheckedStart(
+  const values = screen.form.values.inputs
+  const photoId = listOf(values[photoInput])[0]
+  const shapeMessage = photoShapeMessage(
+    textOf(values[effectInput]),
+    photoId === undefined ? undefined : photos.sizeOf(photoId),
+    textOf(values[resolutionInput])
+  )
+  const checked = useCheckedStart(
     screen.start,
     screen.form,
     photos.isClear && aspect.isSettled,
     events.onRefused
   )
+  const start: StartRun = {
+    ...checked,
+    generate: () => {
+      if (shapeMessage !== null) {
+        events.onRefused()
+        return
+      }
+      checked.generate()
+    },
+  }
   const { useInputs: fillForm } = screen
   return {
     screen,
@@ -127,6 +148,7 @@ function useEffectsState(
       aspects: aspectsOf(app),
       onAspect: aspect.setChoice,
       photoMessage: photos.message,
+      shapeMessage,
       onPhotoMessage: photos.setMessage,
     },
     onUseInputs: (run) => {

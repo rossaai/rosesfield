@@ -1,7 +1,7 @@
 {
-  "name": "vfx-clip-ltx-2-3-ic-lora",
-  "title": "VFX: change your clip with an LTX 2.3 IC-LoRA",
-  "description": "Changes your own clip with one LTX 2.3 IC-LoRA that a VFX preset picks, such as day to night, clean plate or water, at your clip's shape, length and frame rate, with your clip's sound. The preset sets the adapter, its strength and both prompts. Built from Rosesfield's reframe graph, which follows Comfy's template template_ltx2_3_lora_video_outpainting.",
+  "name": "effects-clip-ltx-2-3-ic-lora",
+  "title": "Effects: change your clip with an LTX 2.3 IC-LoRA",
+  "description": "Changes your own clip with one LTX 2.3 IC-LoRA that an effect picks, such as day to night, clean plate or water, at your clip's shape, length and frame rate, with your clip's sound. The effect sets the adapter, its strength and both prompts. Built from Rosesfield's reframe graph, which follows Comfy's template template_ltx2_3_lora_video_outpainting.",
   "mediaType": "video",
   "openSource": true,
   "models": ["Lightricks/LTX-2.3"],

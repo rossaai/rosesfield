@@ -3,6 +3,7 @@
 export const effectsCopy = {
   "effects.name": "Effects",
   "effects.line": "Pick an effect, add a photo, and get a short clip.",
+  "effects.badge": "Runs on LTX",
   "effects.keywords":
     "effect, photo to video, space, eye, giant, wings, petals, liquid metal, copies",
   "effects.empty.title": "Your effect videos show here",
@@ -17,6 +18,12 @@ export const effectsCopy = {
   "effects.input.image.tooSmall":
     "This photo is {side} pixels on its short side. Pick one of {min} pixels or more.",
   "effects.input.image.unread": "This photo did not load. Add it again.",
+  "effects.input.image.tall":
+    "This effect needs a tall photo, taken with the phone upright.",
+  "effects.input.image.wide":
+    "This effect needs a wide photo, taken with the phone sideways.",
+  "effects.input.clip.label": "Clip",
+  "effects.input.guide.label": "The effect's motion",
   "effects.input.prompt.label": "Detail",
   "effects.input.prompt.placeholder": "Add one detail to the effect",
   "effects.input.prompt.note": "Your detail adds to the effect.",
@@ -37,6 +44,9 @@ export const effectsCopy = {
   "effects.choice.effect.pushIntoEye": "Push into the eye",
   "effects.choice.effect.scatterPetals": "Scatter into petals",
   "effects.choice.effect.stillInTheStreet": "Still in a busy street",
+  "effects.choice.effect.flipIntoANewPlace": "Flip into a new place",
+  "effects.choice.effect.grabAndRun": "Grab and run",
+  "effects.choice.effect.ticketWipe": "Ticket wipe",
   "effects.photo.buildingsRipple": "A person in front of buildings",
   "effects.photo.freezeAndCircle": "A person in motion",
   "effects.photo.growGiant": "A person on a street",
@@ -48,8 +58,16 @@ export const effectsCopy = {
   "effects.photo.pushIntoEye": "A close photo of one face",
   "effects.photo.scatterPetals": "A person, head to toe",
   "effects.photo.stillInTheStreet": "A person on a busy street",
+  "effects.photo.flipIntoANewPlace":
+    "You seated on a tall chair, seen from low down, phone upright",
+  "effects.photo.grabAndRun":
+    "You outside a car window, seen from inside the car, phone upright",
+  "effects.photo.ticketWipe": "You whole, side on, mid-step, phone sideways",
   "effects.choice.resolution.p480": "480p",
   "effects.choice.resolution.p720": "720p",
   "effects.choice.resolution.p1080": "1080p",
   "effects.draft": "Draft",
+  "effects.agent.howTo":
+    "Runs an effect on a photo or a clip in one call. Before the call, read the photo or the clip and hold it against the effect's need below. Ask one question only when it fails the need. Leave guide out, because Rosesfield adds it. Run at 480p first and show the draft with the price of the final. Run 720p or 1080p only after the person says yes.",
+  "effects.agent.need": "{effect}: {need}",
 } satisfies Record<string, string>

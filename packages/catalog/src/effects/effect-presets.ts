@@ -1,11 +1,10 @@
 import { AppDefinitionInvalidError } from "#app-definition-invalid.error"
 import { heldFilesOf } from "#comfy/cloud-weights"
 import {
-  type ClipPreset,
+  type EffectPreset,
+  effectPresets,
   type PhotoPreset,
-  type VfxPreset,
-  vfxPresets,
-} from "#vfx/vfx-preset.contract"
+} from "#effects/effect-preset.contract"
 
 const flipIntoANewPlace: PhotoPreset = {
   id: "flip-into-a-new-place",
@@ -58,59 +57,17 @@ const grabAndRun: PhotoPreset = {
   result: null,
 }
 
-const floodTheStreet: ClipPreset = {
-  id: "flood-the-street",
-  kind: "clip",
-  adapter: {
-    file: "ltx-2.3-22b-ic-lora-water-simulation-0.9.safetensors",
-    strength: 1.25,
-  },
-  prompt:
-    "Reference shows the dry scene. Edited shows the same scene with water added.\nADD WATER Murky floodwater covers the whole ground, rippling and catching the light, splashing around every person and car that moves through it.",
-  negative: "",
-  result: null,
-}
-
-const dayToNight: ClipPreset = {
-  id: "day-to-night",
-  kind: "clip",
-  adapter: {
-    file: "ltx-2.3-22b-ic-lora-day-to-night-0.9.safetensors",
-    strength: 1,
-  },
-  prompt:
-    "A realistic nighttime scene of the same place, the same people and the same camera move, lit by photorealistic moonlight and the warm light of street lamps and windows, with deep natural shadows. Only the lighting changes.",
-  negative: "pitch black, underexposed, daylight, blue sky",
-  result: null,
-}
-
-const vanish: ClipPreset = {
-  id: "vanish",
-  kind: "clip",
-  adapter: {
-    file: "ltx-2.3-22b-ic-lora-clean-plate-1.0.safetensors",
-    strength: 1,
-  },
-  prompt:
-    "An empty clean plate of the exact same location: identical background, identical light and identical camera move, with no people, no figures and no vehicles.",
-  negative: "people, person, figures, crowd, pedestrians, cars, vehicles",
-  result: null,
-}
-
-export const presetOrder: readonly VfxPreset[] = [
+export const presetOrder: readonly EffectPreset[] = [
   flipIntoANewPlace,
   ticketWipe,
   grabAndRun,
-  floodTheStreet,
-  dayToNight,
-  vanish,
 ]
 
-export function readPresets(source: readonly unknown[]): VfxPreset[] {
-  const parsed = vfxPresets.safeParse(source)
+export function readPresets(source: readonly unknown[]): EffectPreset[] {
+  const parsed = effectPresets.safeParse(source)
   if (!parsed.success) {
     throw new AppDefinitionInvalidError({
-      folder: "vfx",
+      folder: "effects",
       reason: parsed.error.issues
         .map((issue) => `${issue.path.join(".")} ${issue.message}`)
         .join(", "),
@@ -120,34 +77,37 @@ export function readPresets(source: readonly unknown[]): VfxPreset[] {
 }
 
 export function heldPresets(
-  presets: readonly VfxPreset[],
+  presets: readonly EffectPreset[],
   held: ReadonlySet<string>
-): VfxPreset[] {
+): EffectPreset[] {
   return presets.filter(
     (preset) => preset.kind === "photo" || held.has(preset.adapter.file)
   )
 }
 
-export const offeredPresets: readonly VfxPreset[] = heldPresets(
+export const heldEffectPresets: readonly EffectPreset[] = heldPresets(
   readPresets(presetOrder),
   heldFilesOf()
 )
 
-export function presetKeyOf(id: string): string {
-  return id.replace(/-([a-z0-9])/g, (_, letter: string) => letter.toUpperCase())
+export function keptPresets(presets: readonly EffectPreset[]): EffectPreset[] {
+  return presets.filter((preset) => preset.result !== null)
 }
+
+export const shownPresets: readonly EffectPreset[] =
+  keptPresets(heldEffectPresets)
 
 export function presetOf(
   id: string,
-  presets: readonly VfxPreset[] = offeredPresets
-): VfxPreset | null {
+  presets: readonly EffectPreset[] = heldEffectPresets
+): EffectPreset | null {
   return presets.find((preset) => preset.id === id) ?? null
 }
 
-export function photoPresetIds(presets: readonly VfxPreset[]): string[] {
+export function photoPresetIds(presets: readonly EffectPreset[]): string[] {
   return presets.filter((one) => one.kind === "photo").map((one) => one.id)
 }
 
-export function clipPresetIds(presets: readonly VfxPreset[]): string[] {
+export function clipPresetIds(presets: readonly EffectPreset[]): string[] {
   return presets.filter((one) => one.kind === "clip").map((one) => one.id)
 }

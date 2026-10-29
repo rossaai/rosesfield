@@ -40,6 +40,8 @@ import { pageOf, platformFiles } from "#compose/platform-files"
 import { ownerScope } from "#compose/request-scope"
 import { canPasteKey, ownerSettings } from "#compose/settings"
 import { visitorScopeFor } from "#compose/visitor-ports"
+import { folderGuideFiles } from "#effect-guides/folder-guide-files"
+import type { GuideFiles } from "#effect-guides/guide-files"
 import type { OwnerLock, PublicAccess, ServerEnv } from "#env"
 import { createGateway, type GatewayContext, type GatewayGuard } from "#gateway"
 import type { GatewayApp, RequestScope } from "#gateway-env"
@@ -67,8 +69,6 @@ import { SharePurge } from "#share/share-purge"
 import type { ShareMount } from "#share/share-routes"
 import { SqliteShareRepository } from "#share/sqlite-share-repository"
 import { ownerSpend } from "#spend/owner-spend"
-import { folderGuideFiles } from "#vfx/folder-guide-files"
-import type { GuideFiles } from "#vfx/guide-files"
 
 export type LocalGateway = {
   app: GatewayApp
@@ -107,7 +107,7 @@ const platformDist = fileURLToPath(
 )
 
 const presetGuides = fileURLToPath(
-  new URL("../../../../apps/platform/public/vfx/guides", import.meta.url)
+  new URL("../../../../apps/platform/public/effects/guides", import.meta.url)
 )
 
 export function composeLocalGateway(

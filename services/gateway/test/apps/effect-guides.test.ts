@@ -1,6 +1,10 @@
 import { fileURLToPath } from "node:url"
 import { readApps } from "@rosesfield/catalog"
-import { offeredPresets, vfxApp } from "@rosesfield/catalog/vfx"
+import {
+  type EffectPreset,
+  effectsApp,
+  heldEffectPresets,
+} from "@rosesfield/catalog/effects"
 import {
   type AppDefinition,
   assetPageResponse,
@@ -11,23 +15,47 @@ import {
   runResponse,
 } from "@rosesfield/contract"
 import { afterEach, describe, expect, it } from "vitest"
-import { folderGuideFiles } from "#vfx/folder-guide-files"
-import type { GuideFiles } from "#vfx/guide-files"
-import { sha256Of } from "#vfx/guided-start-run"
+import { folderGuideFiles } from "#effect-guides/folder-guide-files"
+import type { GuideFiles } from "#effect-guides/guide-files"
+import { sha256Of } from "#effect-guides/guided-start-run"
 import { pngOf, readRun, upload } from "../fixtures/effects-gateway"
 import { type Harness, harnessFor, jsonInit } from "../harness"
 import { localPorts } from "../local-ports"
 
 const guideFolder = fileURLToPath(
-  new URL("../../../../apps/platform/public/vfx/guides", import.meta.url)
+  new URL("../../../../apps/platform/public/effects/guides", import.meta.url)
 )
 
 const shippedGuides = folderGuideFiles(guideFolder)
 
-function parsedVfx(): AppDefinition {
-  const [one] = readApps([{ folder: "vfx", app: vfxApp(offeredPresets) }])
+const runId = "5b1d2c3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e"
+
+const clipEffect: EffectPreset = {
+  id: "clip-fixture",
+  kind: "clip",
+  adapter: {
+    file: "ltx-2.3-22b-ic-lora-day-to-night-0.9.safetensors",
+    strength: 1,
+  },
+  prompt: "A realistic nighttime scene of the same place.",
+  negative: "pitch black",
+  result: { runId, file: "clip-fixture.mp4" },
+}
+
+const keptEffects: readonly EffectPreset[] = [
+  ...heldEffectPresets.map((preset) => ({
+    ...preset,
+    result: { runId, file: `${preset.id}.mp4` },
+  })),
+  clipEffect,
+]
+
+function parsedEffects(): AppDefinition {
+  const [one] = readApps([
+    { folder: "effects", app: effectsApp([], keptEffects) },
+  ])
   if (one === undefined) {
-    throw new Error("The vfx app did not parse")
+    throw new Error("The effects app did not parse")
   }
   return one
 }
@@ -42,7 +70,7 @@ afterEach(() => {
 
 function gatewayWith(guides: GuideFiles): Harness {
   const harness = harnessFor({
-    apps: [parsedVfx()],
+    apps: [parsedEffects()],
     portsFor: (clock, folder) => ({ ...localPorts(clock, folder), guides }),
   })
   open.push(harness)
@@ -51,7 +79,7 @@ function gatewayWith(guides: GuideFiles): Harness {
 
 function start(gateway: Harness, inputs: Record<string, unknown>) {
   return gateway.call(
-    buildPath(routes.startRun.path, { appId: "vfx" }),
+    buildPath(routes.startRun.path, { appId: "effects" }),
     jsonInit(
       { inputs, aspectRatio: "9:16" },
       { "Idempotency-Key": crypto.randomUUID() }
@@ -73,22 +101,21 @@ async function videosIn(gateway: Harness): Promise<number> {
   return assetPageResponse.parse(await response.json()).assets.length
 }
 
-describe("a VFX photo preset through the gateway", () => {
-  it("adds the preset's guide to the run once, and the run follows it on the demo engine", async () => {
+describe("an effect on a guide through the gateway", () => {
+  it("adds the effect's guide to the run once, and the run follows it on the demo engine", async () => {
     const gateway = gatewayWith(shippedGuides)
     const photo = await upload(gateway, pngOf(1080, 1920))
     const first = await started(gateway, {
-      preset: "grab-and-run",
-      photo: [photo],
+      effect: "grab-and-run",
+      image: [photo],
     })
     const second = await started(gateway, {
-      preset: "grab-and-run",
-      photo: [photo],
+      effect: "grab-and-run",
+      image: [photo],
     })
     expect(first.inputs).toMatchObject({
-      preset: "grab-and-run",
-      photo: [photo],
-      resolution: "480p",
+      effect: "grab-and-run",
+      image: [photo],
     })
     expect(first.inputs.guide).toHaveLength(1)
     expect(second.inputs.guide).toEqual(first.inputs.guide)
@@ -97,28 +124,28 @@ describe("a VFX photo preset through the gateway", () => {
     expect((await readRun(gateway, first.id)).status).toBe("done")
   })
 
-  it("sets the preset's own guide over a guide the caller gave", async () => {
+  it("sets the effect's own guide over a guide the caller gave", async () => {
     const gateway = gatewayWith(shippedGuides)
     const photo = await upload(gateway, pngOf(1080, 1920))
     const other = await upload(gateway, new Uint8Array(64), "video/mp4")
     const run = await started(gateway, {
-      preset: "flip-into-a-new-place",
-      photo: [photo],
+      effect: "flip-into-a-new-place",
+      image: [photo],
       guide: [other],
     })
     expect(run.inputs.guide).not.toEqual([other])
   })
 
-  it("refuses a guide whose bytes differ from the preset's sha256", async () => {
+  it("refuses a guide whose bytes differ from the effect's sha256", async () => {
     const gateway = gatewayWith({ read: async () => new Uint8Array(172_490) })
     const photo = await upload(gateway, pngOf(1080, 1920))
     const response = await start(gateway, {
-      preset: "flip-into-a-new-place",
-      photo: [photo],
+      effect: "flip-into-a-new-place",
+      image: [photo],
     })
     expect(response.status).toBe(502)
     expect(errorEnvelope.parse(await response.json()).error.code).toBe(
-      "VFX_GUIDE_UNREADABLE"
+      "EFFECT_GUIDE_UNREADABLE"
     )
     expect(gateway.jobs.enqueued).toEqual([])
   })
@@ -127,31 +154,31 @@ describe("a VFX photo preset through the gateway", () => {
     const gateway = gatewayWith({ read: async () => null })
     const photo = await upload(gateway, pngOf(1080, 1920))
     const response = await start(gateway, {
-      preset: "ticket-wipe",
-      photo: [photo],
+      effect: "ticket-wipe",
+      image: [photo],
     })
     expect(errorEnvelope.parse(await response.json()).error.code).toBe(
-      "VFX_GUIDE_UNREADABLE"
+      "EFFECT_GUIDE_UNREADABLE"
     )
   })
 })
 
-describe("a VFX clip preset through the gateway", () => {
+describe("an effect on your clip through the gateway", () => {
   it("runs on your clip with no guide", async () => {
     const gateway = gatewayWith({ read: async () => null })
     const clip = await upload(gateway, new Uint8Array(64), "video/mp4")
-    const run = await started(gateway, { preset: "vanish", clip: [clip] })
+    const run = await started(gateway, { effect: "clip-fixture", clip: [clip] })
     expect(run.inputs).toEqual({
-      preset: "vanish",
+      effect: "clip-fixture",
       clip: [clip],
-      resolution: "480p",
+      resolution: "720p",
     })
   })
 })
 
 describe("the shipped guides", () => {
   it.each(
-    offeredPresets.flatMap((preset) =>
+    heldEffectPresets.flatMap((preset) =>
       preset.kind === "photo" ? [preset.guide] : []
     )
   )("$file matches its recorded size and sha256", async (guide) => {
