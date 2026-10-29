@@ -16,7 +16,7 @@ export const shellCopy = {
   "shell.nav.history": "History",
   "shell.nav.agent": "Agent",
   "shell.nav.featured": "Featured",
-  "shell.nav.connect": "Connect",
+  "shell.nav.mcp": "MCP",
   "shell.nav.settings": "Settings",
   "shell.menu.open": "Open the menu",
   "shell.menu.close": "Close the menu",

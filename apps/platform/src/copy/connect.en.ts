@@ -1,7 +1,7 @@
 // Generated. Do not edit.
 
 export const connectCopy = {
-  "connect.title": "Connect",
+  "connect.title": "MCP",
   "connect.client.label": "Client",
   "connect.tab.claude": "Claude",
   "connect.tab.chatgpt": "ChatGPT",

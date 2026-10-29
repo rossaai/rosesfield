@@ -84,7 +84,7 @@
     },
     {
       "path": "apps/platform/src/copy/connect.en.ts",
-      "sha256": "7de6265f67d779756714b8f3b7a0ef03caf96b9b57397d17d42fc7c3cb874374"
+      "sha256": "88fc394ae5e7dec5d3e004e58b3aae03e0f736f641930b1802a1e9e24a77b2d2"
     },
     {
       "path": "apps/platform/src/copy/error.en.ts",
@@ -116,7 +116,7 @@
     },
     {
       "path": "apps/platform/src/copy/shell.en.ts",
-      "sha256": "68314844bed29a10292bbe72b3ea266d5308de204da28129b1e4f1cded0ec350"
+      "sha256": "43c2df5e2f2d705cacabf8a1d8a8f134601eadc339ba432e136333b714d577f3"
     },
     {
       "path": "apps/platform/src/copy/welcome.en.ts",
@@ -124,7 +124,7 @@
     },
     {
       "path": "apps/platform/src/gallery/copy.en.ts",
-      "sha256": "6123e61182286eba2db13caf55b36cf107c59c74aa308d3406a0856c81036977"
+      "sha256": "8e7f6071575a1edc1a2edaa9aae00af4340ada0c9c2213838664dac48ed9adbc"
     },
     {
       "path": "apps/platform/src/gallery/reference-copy.en.ts",

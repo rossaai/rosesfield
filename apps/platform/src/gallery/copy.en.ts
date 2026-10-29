@@ -271,7 +271,7 @@ const galleryCopy = {
   "sample.nav.characters": "Characters",
   "sample.nav.history": "History",
   "sample.nav.agent": "Agent",
-  "sample.nav.connect": "Connect",
+  "sample.nav.mcp": "MCP",
   "sample.nav.settings": "Settings",
   "sample.demoEngine": "Demo engine",
   "sample.collapse": "Collapse the sidebar",
