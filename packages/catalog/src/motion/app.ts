@@ -51,7 +51,7 @@ export const app: AppInput = defineApp({
       name: "scene",
       labelKey: "motion.input.scene.label",
       presence: "optional",
-      maxLength: 500,
+      maxLength: 2000,
     },
     {
       type: "choice",

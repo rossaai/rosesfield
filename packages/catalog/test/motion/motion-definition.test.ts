@@ -51,8 +51,8 @@ describe("the motion definition", () => {
       given: { inputs: { ...both, sound: "loud" } },
     },
     {
-      case: "a scene of 501 characters",
-      given: { inputs: { ...both, scene: "a".repeat(501) } },
+      case: "a scene of 2001 characters",
+      given: { inputs: { ...both, scene: "a".repeat(2001) } },
     },
     {
       case: "an input it does not declare",
@@ -67,8 +67,8 @@ describe("the motion definition", () => {
     expect(isRefused(given)).toBe(true)
   })
 
-  it("passes a scene of 500 characters and each of the five ratios", () => {
-    expect(isRefused({ inputs: { ...both, scene: "a".repeat(500) } })).toBe(
+  it("passes a scene of 2000 characters and each of the five ratios", () => {
+    expect(isRefused({ inputs: { ...both, scene: "a".repeat(2000) } })).toBe(
       false
     )
     for (const aspectRatio of ["1:1", "4:3", "3:4", "16:9", "9:16"]) {
