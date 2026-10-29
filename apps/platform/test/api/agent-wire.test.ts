@@ -83,11 +83,18 @@ describe("readAnswerEvent", () => {
       request: { inputs: { prompt: "Hi" }, count: 1, aspectRatio: null },
       status: "proposed",
       runIds: [],
+      credits: null,
     }
     expect(readAnswerEvent({ type: "proposal", proposal })).toEqual({
       type: "proposal",
       proposal,
     })
+    expect(
+      readAnswerEvent({
+        type: "proposal",
+        proposal: { ...proposal, credits: 17.62 },
+      })
+    ).toEqual({ type: "proposal", proposal: { ...proposal, credits: 17.62 } })
     expect(
       readAnswerEvent({ type: "proposal", proposal: { ...proposal, id: 7 } })
     ).toBeNull()

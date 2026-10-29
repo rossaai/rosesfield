@@ -27,6 +27,7 @@ const proposal = {
   request: { inputs: { prompt: "A red bicycle" }, count: 2, aspectRatio: null },
   status: "proposed",
   runIds: [],
+  credits: null,
 }
 
 const run = {

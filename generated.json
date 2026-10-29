@@ -228,7 +228,7 @@
     },
     {
       "path": "packages/catalog/src/video-edit/copy.en.ts",
-      "sha256": "67fb60331f097d43f206de7dae7332be875a8c4bc18d9811c59dfd7e1a03d474"
+      "sha256": "d5c520931adb159494a09651435ccab05977e01e778862f7e3e82d9dca397674"
     },
     {
       "path": "packages/catalog/src/video/copy.en.ts",
