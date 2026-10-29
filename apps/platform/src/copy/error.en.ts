@@ -92,4 +92,8 @@ export const errorCopy = {
   "error.MOTION_PLAN_UNREADABLE.title": "Rosesfield could not read your video",
   "error.MOTION_PLAN_UNREADABLE.body": "Try again. Your inputs are kept.",
   "error.MOTION_PLAN_UNREADABLE.action": "Try again",
+  "error.MOTION_PHOTO_UNREADABLE.title":
+    "One of your photos is not a PNG, JPEG or WebP file",
+  "error.MOTION_PHOTO_UNREADABLE.body":
+    "Pick a photo in one of those kinds. Your inputs are kept.",
 } satisfies Record<string, string>

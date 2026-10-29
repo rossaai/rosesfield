@@ -1,8 +1,10 @@
 import { planFrameTimesOf } from "@rosesfield/catalog/motion"
 import { describe, expect, it } from "vitest"
 import { wordsForCode } from "@/copy/error-words"
+import { t } from "@/copy/t"
 import { planFrameSizeOf } from "@/studio/motion/clip-frames"
 import { leftOutText } from "@/studio/motion/left-out"
+import { laterPhotoProblem } from "@/studio/motion/use-motion-checks"
 import { clipMessageOf } from "@/studio/motion/use-motion-screen"
 
 describe("the photos left out of a draft", () => {
@@ -68,5 +70,47 @@ describe("your own video's refusals", () => {
     expect(wordsForCode("ENGINE_KEY_INVALID").title).toBe(
       "Comfy refused your key"
     )
+  })
+})
+
+describe("a photo after the first that cannot be opened", () => {
+  const photo = {
+    mime: "image/png",
+    bytes: 3_000_000,
+    width: 1080,
+    height: 1920,
+    seconds: null,
+  }
+
+  it("is named by its place in the well, whether its file is gone or this browser cannot open it", () => {
+    const failed = laterPhotoProblem(
+      [{ state: "read", facts: photo }, { state: "failed" }],
+      "photo"
+    )
+    expect(failed).toEqual({
+      name: "photo",
+      key: "field.asset.unopened",
+      values: { number: 3 },
+    })
+    const unread = laterPhotoProblem(
+      [{ state: "read", facts: { ...photo, width: null, height: null } }],
+      "photo"
+    )
+    expect(unread?.values).toEqual({ number: 2 })
+    expect(t("field.asset.unopened", { number: 2 })).toBe(
+      "Photo 2 cannot be opened in this browser. Remove it or pick a PNG, JPEG or WebP photo."
+    )
+  })
+
+  it("says nothing of photos that open, and keeps the size limit's own words, the control", () => {
+    expect(
+      laterPhotoProblem([{ state: "read", facts: photo }], "photo")
+    ).toBeNull()
+    expect(
+      laterPhotoProblem(
+        [{ state: "read", facts: { ...photo, bytes: 30_000_000 } }],
+        "photo"
+      )?.key
+    ).toBe("field.asset.tooLarge")
   })
 })

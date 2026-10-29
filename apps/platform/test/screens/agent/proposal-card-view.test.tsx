@@ -18,6 +18,7 @@ const proposal: Proposal = {
   },
   status: "proposed",
   runIds: [],
+  credits: null,
 }
 
 let asked = 0
@@ -88,5 +89,36 @@ describe("a proposal card for an app's own inputs", () => {
     expect(badges).toContain("16:9")
     expect(badges.some((badge) => badge.includes("2"))).toBe(true)
     expect(card.querySelector("dl")).toBeNull()
+  })
+})
+
+describe("a proposal for a chain's final", () => {
+  it("shows the credits the agent priced for the restore and the final, and asks the price route nothing", async () => {
+    renderAgent(() => (
+      <ProposalCard
+        conversationId="c3cfa88a-1688-41ae-a38f-b931f134c3d9"
+        proposal={{
+          ...proposal,
+          appId: "motion",
+          request: {
+            inputs: { draft: "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f" },
+            count: 1,
+            aspectRatio: null,
+          },
+          credits: 17.62,
+        }}
+      />
+    ))
+    await vi.waitFor(() =>
+      expect(
+        document.querySelector("[data-slot='run-fact-price']")?.textContent
+      ).toContain("18")
+    )
+    expect(
+      document
+        .querySelector("[data-slot='run-fact-price']")
+        ?.getAttribute("title")
+    ).toContain("Comfy credits")
+    expect(asked).toBe(0)
   })
 })

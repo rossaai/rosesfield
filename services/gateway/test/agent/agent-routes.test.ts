@@ -44,6 +44,7 @@ const proposal: Proposal = {
   request: { inputs: { prompt: "a rose" }, count: 1, aspectRatio: "1:1" },
   status: "proposed",
   runIds: [],
+  credits: null,
 }
 
 const routes = conversationRoutes

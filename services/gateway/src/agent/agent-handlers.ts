@@ -12,6 +12,7 @@ import {
   StartConversationHandler,
   UpdateConversationHandler,
 } from "@rosesfield/agent"
+import type { ClipReader } from "@rosesfield/catalog/motion"
 import type {
   GetRunHandler,
   PriceRunHandler,
@@ -43,6 +44,7 @@ type AgentRouteHandlersOptions = {
   priceRun: PriceRunHandler
   getAsset: GetAssetHandler
   readAssetContent: ReadAssetContentHandler
+  clips: ClipReader | null
   pollRun: (runId: string) => Promise<void>
 }
 
@@ -68,6 +70,7 @@ export function agentRouteHandlers(
           priceRun: options.priceRun,
           getAsset: options.getAsset,
           readAssetContent: options.readAssetContent,
+          clips: options.clips,
         },
         poll: pollRun,
       }),

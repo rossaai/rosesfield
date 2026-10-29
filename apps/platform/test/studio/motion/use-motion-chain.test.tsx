@@ -271,7 +271,12 @@ describe("the final's price and the words under the button", () => {
   it("keeps the example's measured 16.79 over an estimate, and your own measured run over both", () => {
     expect(
       finalPriceOf({ source: "estimate", credits: 20 }, example, "1080p")
-    ).toEqual({ credits: 16.79, source: "example" })
+    ).toEqual({
+      credits: 16.79,
+      source: "example",
+      seconds: 4,
+      resolution: "1080p",
+    })
     expect(
       finalPriceOf({ source: "measured", credits: 12 }, example, "1080p")
     ).toEqual({ credits: 12, source: "measured" })
@@ -284,8 +289,27 @@ describe("the final's price and the words under the button", () => {
       "720p"
     )
     expect(price).toEqual({ credits: 9, source: "estimate" })
-    expect(priceNoteOf(price, example, "720p")).toBe(
-      "9 Comfy credits, estimated"
+    expect(priceNoteOf(price)).toBe("9 Comfy credits, estimated")
+  })
+
+  it("shows Make final as the restore measured at 10.86 and the final measured at 16.79 for 4 seconds at 1080p when no run of yours prices them", async () => {
+    gateway({ price: { source: "unknown", credits: null } })
+    const { result } = renderHook(
+      () =>
+        useMotionChain({
+          example,
+          form: formWith("1080p"),
+          clipSize: null,
+        }),
+      { wrapper }
     )
+    act(() => result.current?.start.generate())
+    await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
+    await waitFor(() =>
+      expect(result.current?.priceNote).toBe(
+        "27.65 Comfy credits, measured on a 4-second 1080p run"
+      )
+    )
+    expect(result.current?.start.priceValue).not.toBeNull()
   })
 })

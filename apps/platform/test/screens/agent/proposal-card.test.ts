@@ -9,6 +9,7 @@ function proposalWith(inputs: Proposal["request"]["inputs"]): Proposal {
     request: { inputs, count: 1, aspectRatio: null },
     status: "proposed",
     runIds: [],
+    credits: null,
   }
 }
 

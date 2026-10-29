@@ -48,11 +48,20 @@ function useProposalPrice(proposal: Proposal): ProposalPrice | null {
       },
       settings.data?.engine.key ?? "unknown"
     ),
-    enabled: !isDemo && proposal.status === "proposed",
+    enabled:
+      !isDemo && proposal.status === "proposed" && proposal.credits === null,
   })
   const found = price.data?.price
   if (isDemo) {
     return { kind: "demo", label: t("run.price.demo") }
+  }
+  if (proposal.credits !== null) {
+    const amount = formatWholeCredits(proposal.credits)
+    return {
+      kind: "credits",
+      amount,
+      label: t("run.price.credits", { amount }),
+    }
   }
   if (found === undefined || found.source === "unknown") {
     return null

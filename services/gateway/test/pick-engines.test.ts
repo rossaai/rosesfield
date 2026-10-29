@@ -1,3 +1,4 @@
+import { clipReaderOf } from "@rosesfield/catalog/motion/engine"
 import { type MediaResult, MediaTool } from "@rosesfield/catalog/remake"
 import { buildPath, routes, runResponse } from "@rosesfield/contract"
 import {
@@ -274,5 +275,24 @@ describe("the engine target the settings select", () => {
     expect(demo.find((one) => one.canRun(plan))?.origin).toBe("demo")
     const visitor = visitorEngines(comfyCloud("ignored"), null, { clock })
     expect(visitor.find((one) => one.canRun(plan))?.key).toBe("motion-plan")
+  })
+
+  it("reads your own video's length for the agent and MCP only where the server runs ffmpeg, and on a host with no media tool reads none, so the agent refuses before it starts", () => {
+    const read = async () => {
+      throw new Error("no file is read")
+    }
+    expect(
+      clipReaderOf(pickEngines({ target: "demo" }, { clock }), read)
+    ).toBeNull()
+    expect(
+      clipReaderOf(pickEngines(comfyCloud("comfyui-k"), { clock }), read)
+    ).toBeNull()
+    const media = new RefusingMediaTool()
+    expect(
+      clipReaderOf(
+        pickEngines(comfyCloud("comfyui-k"), { clock, media, store }),
+        read
+      )
+    ).not.toBeNull()
   })
 })

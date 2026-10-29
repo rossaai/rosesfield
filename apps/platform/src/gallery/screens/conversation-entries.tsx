@@ -46,6 +46,7 @@ function proposalOf(id: string, status: Proposal["status"]): Proposal {
     },
     status,
     runIds: [],
+    credits: null,
   }
 }
 

@@ -274,4 +274,23 @@ describe("your own video's chain in Motion", () => {
     await new Promise((done) => setTimeout(done, 50))
     expect(unknown.result.current?.start.priceValue ?? null).toBeNull()
   })
+
+  it("shows the recorded runs' price before each yes when none of yours is measured: the edit and the draft with the reading of your video named as unmeasured, then the restore and the final at your resolution", async () => {
+    const { result } = renderOwn()
+    await waitFor(() =>
+      expect(result.current?.priceNote).toBe(
+        "15.71 Comfy credits, measured on a 4-second 480p run, plus reading your video, which no run has measured yet"
+      )
+    )
+    expect(result.current?.start.priceValue).toBeNull()
+    act(() => result.current?.start.generate())
+    await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
+    await waitFor(() =>
+      expect(result.current?.priceNote).toBe(
+        "27.65 Comfy credits, measured on a 4-second 1080p run"
+      )
+    )
+    expect(result.current?.start.priceValue).not.toBeNull()
+    expect(result.current?.start.priceName).toContain("Make final")
+  })
 })

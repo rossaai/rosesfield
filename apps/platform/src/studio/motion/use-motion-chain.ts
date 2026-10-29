@@ -312,7 +312,7 @@ export function useMotionChain(input: MotionChainInput): MotionChain | null {
     parts.setLed(null)
   }
   const label = labelOf(chain, resolution)
-  const note = priceNoteOf(price, example, resolution)
+  const note = priceNoteOf(price)
   return {
     stage: chain,
     start: {
@@ -323,7 +323,7 @@ export function useMotionChain(input: MotionChainInput): MotionChain | null {
       label,
       ...priceWordsOf(label, note, price),
     },
-    priceNote: chain.stage === "idle" ? null : note,
+    priceNote: note,
     canStartOver: chain.stage !== "idle" || error !== null,
     startOver: () => {
       parts.setError(null)

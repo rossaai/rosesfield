@@ -219,4 +219,6 @@ export const fieldCopy = {
   "setting.posemode.tip":
     "Stands a character in an A pose or a T pose, ready to rig. None asks for no set pose.",
   "field.tip.label": "About {setting}",
+  "field.asset.unopened":
+    "Photo {number} cannot be opened in this browser. Remove it or pick a PNG, JPEG or WebP photo.",
 } satisfies Record<string, string>

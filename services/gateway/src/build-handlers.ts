@@ -1,4 +1,8 @@
 import { CatalogModelPolicy } from "@rosesfield/catalog/comfy"
+import {
+  type ClipReader,
+  clipReaderOf,
+} from "@rosesfield/catalog/motion/engine"
 import type { AppDefinition } from "@rosesfield/contract"
 import {
   AdvanceRunHandler,
@@ -85,7 +89,11 @@ export type RunHandlers = {
 }
 
 export type Handlers = LibraryHandlers &
-  RunHandlers & { advanceRun: AdvanceRunHandler }
+  RunHandlers & {
+    advanceRun: AdvanceRunHandler
+    /** Reads your own video's length for the agent and MCP, or is null on a host with no tool that opens a video. */
+    clips: ClipReader | null
+  }
 
 export type Built<Jobs extends JobRunner> = {
   handlers: Handlers
@@ -171,8 +179,19 @@ export function buildHandlers<Jobs extends JobRunner>(
   const library = buildLibrary(ports)
   const advanceRun = buildAdvance(ports, library)
   const jobs = jobsFor(advanceRun)
+  const clips = clipReaderOf(ports.engines, async (assetId) => {
+    const { asset, bytes } = await library.readAssetContent.execute({
+      assetId,
+    })
+    return { assetId, kind: asset.kind, mime: asset.mime, bytes }
+  })
   return {
-    handlers: { ...library, ...buildRuns(ports, library, jobs), advanceRun },
+    handlers: {
+      ...library,
+      ...buildRuns(ports, library, jobs),
+      advanceRun,
+      clips,
+    },
     jobs,
   }
 }

@@ -37,6 +37,8 @@ export type Proposal = {
   request: RunRequest
   status: ProposalStatus
   runIds: string[]
+  /** The credits of a chain's final, priced by the agent, or null when the run's own price is the proposal's. */
+  credits: number | null
 }
 
 export type TranscriptItem =
@@ -122,7 +124,15 @@ export function readProposal(value: unknown): Proposal | null {
   ) {
     return null
   }
-  return { id, appId, request: request.data, status, runIds }
+  const credits = fieldOf(value, "credits")
+  return {
+    id,
+    appId,
+    request: request.data,
+    status,
+    runIds,
+    credits: typeof credits === "number" && credits >= 0 ? credits : null,
+  }
 }
 
 function readItem(value: unknown): TranscriptItem | null {

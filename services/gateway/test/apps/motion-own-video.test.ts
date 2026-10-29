@@ -1,4 +1,8 @@
-import { ownVideoDraftOf, ownVideoFinalOf } from "@rosesfield/agent"
+import {
+  ownVideoDraftOf,
+  ownVideoFinalCreditsOf,
+  ownVideoFinalOf,
+} from "@rosesfield/agent"
 import { readApps } from "@rosesfield/catalog"
 import {
   type ChainRun,
@@ -56,6 +60,7 @@ function parsed(): AppDefinition[] {
 
 /** The frames a server that runs ffmpeg reads from your video, as 4 small images. */
 const serverFrames: ClipFrames = {
+  secondsOf: async () => 4,
   framesOf: async () =>
     Array.from({ length: 4 }, () => ({
       mime: "image/png" as const,
@@ -63,20 +68,21 @@ const serverFrames: ClipFrames = {
     })),
 }
 
-const demoPorts: PortsFor = (clock, folder) => {
-  const ports = localPorts(clock, folder)
-  return {
-    ...ports,
+function portsWith(frames: ClipFrames | null): PortsFor {
+  return (clock, folder) => ({
+    ...localPorts(clock, folder),
     engines: [
       new ClipPlanGenerationEngine({
         turn: new DemoClipPlanTurn(),
         origin: "demo",
-        frames: serverFrames,
+        frames,
       }),
       new DemoGenerationEngine({ clock }),
     ],
-  }
+  })
 }
+
+const demoPorts: PortsFor = portsWith(serverFrames)
 
 class HarnessChain extends RunChain {
   readonly keys: string[] = []
@@ -245,8 +251,19 @@ describe("your own video through the gateway on the demo engine", () => {
     )
     expect(drafted.run).toMatchObject({ status: "done" })
     expect(drafted.run.inputs).toMatchObject({ resolution: "480p" })
+    expect(drafted.run.inputs).not.toHaveProperty("sound")
     expect(drafted.leftOutPhotos).toEqual([3])
-    expect(drafted).toHaveProperty("finalCredits")
+    expect(drafted.finalCredits).toBeCloseTo(10.86 + 6.76, 6)
+    expect(
+      await ownVideoFinalCreditsOf(
+        handlers,
+        runRequest.parse({
+          inputs: { photo: photos, resolution: "1080p", draft: drafted.run.id },
+          count: 1,
+        }),
+        drafted.run.id
+      )
+    ).toBeCloseTo(10.86 + 16.79, 6)
     expect(started.map((key) => key.replace("mcp-1-", ""))).toEqual([
       "plan",
       "read",
@@ -282,5 +299,52 @@ describe("your own video through the gateway on the demo engine", () => {
     expect(history.runs.map((one) => one.id).sort()).toEqual(
       [drafted.run.id, ended.run.id].sort()
     )
+  })
+
+  async function refusalOf(
+    frames: ClipFrames | null
+  ): Promise<{ error: unknown; started: number }> {
+    const gateway = harnessFor({ portsFor: portsWith(frames), apps: parsed() })
+    open.push(gateway)
+    const clip = await upload(gateway, "video/mp4", mp4Bytes)
+    const photo = await upload(gateway, "image/png", pngBytes)
+    const error = await ownVideoDraftOf({
+      handlers: gateway.handlers,
+      request: runRequest.parse({
+        inputs: { clip: [clip], photo: [photo] },
+        count: 1,
+      }),
+      key: "mcp-3",
+      wait: async () => undefined,
+      signal: undefined,
+      poll: (runId: string) => gateway.drive(runId),
+    }).catch((caught: unknown) => caught)
+    return { error, started: gateway.jobs.enqueued.length }
+  }
+
+  it("refuses your own video for the agent and MCP, before any step starts, on a host with no tool that opens a video, in one true sentence", async () => {
+    const { error, started } = await refusalOf(null)
+    expect(error).toMatchObject({
+      code: "MOTION_OWN_VIDEO_IN_APP",
+      message:
+        "This host cannot read a video for the agent. Open Motion in the app to use your own video.",
+    })
+    expect(started).toBe(0)
+  })
+
+  it("refuses a video over 10 or under 2 seconds before any step starts, in the words the screen uses, and lets 4 seconds through, the control", async () => {
+    const framesOf = serverFrames.framesOf
+    const long = await refusalOf({ secondsOf: async () => 12, framesOf })
+    expect(long.error).toMatchObject({
+      code: "MOTION_CLIP_LENGTH",
+      message: "This clip runs 12 seconds. Pick one of 10 seconds or less.",
+    })
+    expect(long.started).toBe(0)
+    const short = await refusalOf({ secondsOf: async () => 1.5, framesOf })
+    expect(short.error).toMatchObject({
+      message: "This clip runs 1.5 seconds. Pick one of 2 seconds or more.",
+    })
+    const fit = await refusalOf(serverFrames)
+    expect(fit.error).toMatchObject({ run: { status: "done" } })
   })
 })

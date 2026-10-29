@@ -16,6 +16,7 @@ const proposal: Proposal = {
   request: { inputs: { prompt: "A red bicycle" }, count: 1, aspectRatio: null },
   status: "proposed",
   runIds: [],
+  credits: null,
 }
 
 function turnOf(key: string): Turn {

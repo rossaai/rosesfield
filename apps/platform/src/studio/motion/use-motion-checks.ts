@@ -136,14 +136,18 @@ function clipSizeOf(reading: MediaReading): MotionChecks["clipSize"] {
   return width === null || height === null ? null : { width, height }
 }
 
-function laterPhotoProblem(
+/** The problem of the photos after the first, naming the photo by its place in the well: one this browser cannot open or that is not a photo of a kind it takes. A file over the limit says so as the field does. */
+export function laterPhotoProblem(
   readings: readonly MediaReading[],
   name: string
 ): FieldProblem | null {
-  for (const reading of readings) {
-    const problem = photoCheckOf(reading, name)
-    if (problem !== null) {
-      return problem
+  for (const [at, reading] of readings.entries()) {
+    const problem =
+      reading.state === "failed" ? null : photoCheckOf(reading, name)
+    if (reading.state === "failed" || problem !== null) {
+      return problem?.key === "field.asset.tooLarge"
+        ? problem
+        : { name, key: "field.asset.unopened", values: { number: at + 2 } }
     }
   }
   return null
