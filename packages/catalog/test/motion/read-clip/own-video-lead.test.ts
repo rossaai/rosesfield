@@ -172,6 +172,7 @@ describe("your own video's lead before the draft", () => {
         model: "motion-read-clip",
         clip: [clip],
         targets: "the man in the grey coat, the bottle in his right hand",
+        objects: "2",
       },
       place: "held",
     })

@@ -19,11 +19,18 @@ export const readClipInputs = {
   model: "model",
   clip: "clip",
   targets: "targets",
+  objects: "objects",
 } as const
 
 const bindings: readonly WorkflowValueBinding[] = [
   { from: "input", name: readClipInputs.clip, index: 0, to: "clip" },
   { from: "input", name: readClipInputs.targets, to: "targets" },
+  {
+    from: "input",
+    name: readClipInputs.objects,
+    to: "objects",
+    map: { "1": 1, "2": 2, "3": 3 },
+  },
 ]
 
 /** The read names no result node: its depth, its mask and its first frame are all held out of the library. */
@@ -44,6 +51,7 @@ export function readClipRequestOf(input: {
         [readClipInputs.model]: readClipModel,
         [readClipInputs.clip]: [input.clip],
         [readClipInputs.targets]: trackTextOf(input.plan),
+        [readClipInputs.objects]: String(input.plan.targets.length),
       },
       aspectRatio: null,
       place: "held",

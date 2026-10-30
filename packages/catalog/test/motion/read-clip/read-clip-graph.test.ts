@@ -3,7 +3,7 @@ import { assetIdFormat } from "@rosesfield/kernel"
 import { describe, expect, it } from "vitest"
 import { cloudWeights, heldFilesOf, isHeldOnCloud } from "#comfy/cloud-weights"
 import { findWorkflow } from "#list-workflows"
-import { planClip } from "#motion/clip-plan"
+import { type ClipPlan, planClip } from "#motion/clip-plan"
 import { motionEngine } from "#motion/comfy/motion-binding"
 import {
   readClipOutputNodes,
@@ -32,11 +32,16 @@ function fileGraph(): Graph {
   return graphSchema.parse(structuredClone(workflow.graph))
 }
 
-async function sentGraph(): Promise<{ graph: Graph; replay: ReplayFetch }> {
-  const { request } = readClipRequestOf({
-    clip: clipId,
-    plan: planClip(twoTargetPlan, 3),
-  })
+const twoTargets = planClip(twoTargetPlan, 3)
+
+function oneTargetOf(plan: ClipPlan): ClipPlan {
+  return { ...plan, targets: plan.targets.slice(0, 1) }
+}
+
+async function sentGraph(
+  plan: ClipPlan = twoTargets
+): Promise<{ graph: Graph; replay: ReplayFetch }> {
+  const { request } = readClipRequestOf({ clip: clipId, plan })
   const replay = new ReplayFetch([
     {
       method: "POST",
@@ -99,14 +104,33 @@ describe("the graph that reads a clip", () => {
     expect(linksToMissingNodes(graph)).toEqual([])
   })
 
-  it("control: every other node leaves the file as it is", async () => {
+  it("tracks at most one object per target, so a person SAM 3.1 finds beside a single target stays out of the mask and keeps their own pixels", async () => {
+    const one = oneTargetOf(twoTargets)
+    expect(one.targets).toHaveLength(1)
+    const { request } = readClipRequestOf({ clip: clipId, plan: one })
+    expect(request.inputs.objects).toBe("1")
+    const { graph } = await sentGraph(one)
+    expect(graph["22"]?.inputs.max_objects).toBe(1)
+  })
+
+  it("tracks two objects for a plan with two targets", async () => {
+    const { request } = readClipRequestOf({ clip: clipId, plan: twoTargets })
+    expect(request.inputs.objects).toBe("2")
+    const { graph } = await sentGraph()
+    expect(graph["22"]?.inputs.max_objects).toBe(2)
+  })
+
+  it("control: every other node and every other tracker input leaves the file as it is", async () => {
     const { graph } = await sentGraph()
     const file = fileGraph()
     for (const [id, node] of Object.entries(graph)) {
-      if (id !== "1" && id !== "21") {
+      if (id !== "1" && id !== "21" && id !== "22") {
         expect(node).toEqual(file[id])
       }
     }
+    expect({ ...graph["22"]?.inputs, max_objects: 3 }).toEqual(
+      file["22"]?.inputs
+    )
     expect(Object.keys(graph).sort()).toEqual(Object.keys(file).sort())
   })
 

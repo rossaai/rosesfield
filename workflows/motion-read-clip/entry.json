@@ -1,7 +1,7 @@
 {
   "name": "motion-read-clip",
   "title": "Motion: read a clip into its depth, its targets' mask and its first frame",
-  "description": "Reads up to 10 seconds of a clip at a short side of at most 768 px. Depth Anything 3 Mono-Large makes its depth video, SAM 3.1 tracks up to 3 things named by text into one mask video, and the first frame is saved. The three guide the LTX 2.5 render of Motion's Change a clip.",
+  "description": "Reads up to 10 seconds of a clip at a short side of at most 768 px. Depth Anything 3 Mono-Large makes its depth video, SAM 3.1 tracks one object for each of up to 3 things named by text into one mask video, and the first frame is saved. The three guide the LTX 2.5 render of Motion's Change a clip.",
   "mediaType": "video",
   "openSource": true,
   "models": ["da3mono_large.safetensors", "sam3.1_multiplex_fp16.safetensors"],
@@ -15,6 +15,11 @@
     "targets": {
       "nodeId": "21",
       "inputName": "text",
+      "type": "scalar"
+    },
+    "objects": {
+      "nodeId": "22",
+      "inputName": "max_objects",
       "type": "scalar"
     }
   },

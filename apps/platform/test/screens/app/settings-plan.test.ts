@@ -1,4 +1,5 @@
 import type { ModelField } from "@rosesfield/catalog/comfy"
+import type { InputDefinition } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import { formatDuration } from "@/copy/format"
 import {
@@ -6,6 +7,7 @@ import {
   fieldOptionsOf,
   fieldSettingsPlan,
   fieldValueText,
+  isSettingInput,
   settingsPlanOf,
 } from "@/screens/app/settings-plan"
 
@@ -87,6 +89,21 @@ describe("the settings plan", () => {
 
 const options = (...labels: string[]) =>
   labels.map((label) => ({ value: label.toLowerCase(), label }))
+
+describe("a setting a run chain fills", () => {
+  it("is never a setting a person sets, such as the most objects Motion's read tracks", () => {
+    const objects: InputDefinition = {
+      type: "choice",
+      name: "objects",
+      labelKey: "motion.name",
+      options: [{ value: "1", labelKey: "motion.name" }],
+      default: "1",
+      fill: "chain",
+    }
+    expect(isSettingInput(objects)).toBe(false)
+    expect(isSettingInput({ ...objects, fill: undefined })).toBe(true)
+  })
+})
 
 describe("the control rule", () => {
   it("draws a toggle as a switch and a number as a stepper", () => {

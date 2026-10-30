@@ -4,7 +4,11 @@ import {
   inputRoleOf,
   type ModelField,
 } from "@rosesfield/catalog/comfy"
-import type { AppListing, InputDefinition } from "@rosesfield/contract"
+import {
+  type AppListing,
+  type InputDefinition,
+  isChainFilled,
+} from "@rosesfield/contract"
 import { settingOf } from "@/catalog/setting-registry"
 import { formatDuration } from "@/copy/format"
 import { t } from "@/copy/t"
@@ -58,6 +62,7 @@ export function settingsPlanOf<T>(
 export function isSettingInput(input: InputDefinition): input is SettingInput {
   return (
     input.name !== modelInputName &&
+    !isChainFilled(input) &&
     (input.type === "choice" ||
       input.type === "number" ||
       input.type === "toggle" ||

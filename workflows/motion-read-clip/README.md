@@ -1,6 +1,6 @@
 # Motion: read a clip into its depth, its targets' mask and its first frame
 
-Reads up to 10 seconds of a clip at a short side of at most 768 px. Depth Anything 3 Mono-Large makes its depth video, SAM 3.1 tracks up to 3 things named by text into one mask video, and the first frame is saved. The three guide the LTX 2.5 render of Motion's Change a clip.
+Reads up to 10 seconds of a clip at a short side of at most 768 px. Depth Anything 3 Mono-Large makes its depth video, SAM 3.1 tracks one object for each of up to 3 things named by text into one mask video, and the first frame is saved. The three guide the LTX 2.5 render of Motion's Change a clip.
 
 | | |
 |---|---|
@@ -18,6 +18,7 @@ The catalog binds these names in [`entry.json`](entry.json). The UI file lists t
 |---|---|---|---|
 | `clip` | 1 `LoadVideo` | `file` | an uploaded video |
 | `targets` | 21 `CLIPTextEncode` | `text` | up to 3 short descriptions, separated by commas |
+| `objects` | 22 `SAM3_VideoTrack` | `max_objects` | the most objects SAM 3.1 tracks, 1, 2 or 3. The catalog sets it to the number of targets. The graph's own value is 3 |
 
 SAM 3.1's text encoder splits the text at each comma and finds at most one thing for each part, so `the man in the grey coat, the bottle in his hand` tracks two things. A part that ends in `:` and a number finds that many, so the catalog removes commas, colons and parentheses from each description before it joins them.
 
@@ -37,7 +38,7 @@ The three outputs share one size: the clip's frames scaled so the short side is 
 
 1. Node 2 keeps the first 10 seconds. Nodes 4 to 7 scale every frame so its short side is at most 768 px, with even sides.
 2. Node 11 reads each frame alone with Depth Anything 3 Mono-Large and its `V2-Style` normalization, which turns depth into disparity, so near is white, as the depth guides of `motion-guide-ltx-2-3-ic-lora` are. Each frame is normalized alone, so the depth can change in brightness from frame to frame. Whether that moves the render's camera is the first open question of the Motion outcome.
-3. Node 22 tracks every target the text names through the frames with SAM 3.1, at a detection threshold of 0.5, at most 3 objects, detecting on every frame. Node 23 joins every tracked object into one mask, and node 25 makes it a video. The mask stays a hard matte, because the guided render grows it, feathers it and turns it into the guide's attention, 1.0 on the set and 0.2 on the targets, as it does for an effect's people matte.
+3. Node 22 tracks every target the text names through the frames with SAM 3.1, at a detection threshold of 0.5, detecting on every frame. It tracks at most one object per target: the catalog sets `max_objects` to the number of targets the plan names, so a person SAM 3.1 detects beside a target on a later frame stays out of the mask and keeps their own pixels in the render. Node 23 joins every tracked object into one mask, and node 25 makes it a video. The mask stays a hard matte, because the guided render grows it, feathers it and turns it into the guide's attention, 1.0 on the set and 0.2 on the targets, as it does for an effect's people matte.
 4. A mask with no target is all black. The Comfy engine drops a video whose five stills are all black, so a run that finds none of the targets returns no mask video, and the hand-off refuses it.
 
 ## Models

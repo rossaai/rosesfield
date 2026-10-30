@@ -1,5 +1,6 @@
 import { listApps } from "@rosesfield/catalog"
 import { inputRoleOf } from "@rosesfield/catalog/comfy"
+import { isChainFilled } from "@rosesfield/contract"
 import { describe, expect, it } from "vitest"
 import {
   isKnownSetting,
@@ -11,7 +12,12 @@ const settingTypes = new Set(["choice", "number", "toggle", "seed"])
 
 const inputs = listApps().flatMap((app) =>
   app.inputs
-    .filter((input) => settingTypes.has(input.type) && input.name !== "model")
+    .filter(
+      (input) =>
+        settingTypes.has(input.type) &&
+        input.name !== "model" &&
+        !isChainFilled(input)
+    )
     .map((input) => ({ app, input }))
 )
 

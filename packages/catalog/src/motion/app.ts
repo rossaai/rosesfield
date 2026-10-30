@@ -152,6 +152,18 @@ function chainInputs(): AppInputs {
       fill: "chain",
       when: [{ input: "model", is: [readClipModel] }],
     },
+    {
+      type: "choice",
+      name: readClipInputs.objects,
+      labelKey: chainLabel,
+      options: ["1", "2", "3"].map((value) => ({
+        value,
+        labelKey: chainLabel,
+      })),
+      default: "3",
+      fill: "chain",
+      when: [{ input: "model", is: [readClipModel] }],
+    },
   ]
 }
 

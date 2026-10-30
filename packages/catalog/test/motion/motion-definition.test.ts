@@ -50,10 +50,25 @@ describe("the motion definition", () => {
       "mask",
       "endKey",
       "targets",
+      "objects",
       "sound",
       "scene",
       "resolution",
     ])
+  })
+
+  it("reads a clip with the most objects the chain sends, and with 3 when a run sends none", () => {
+    const read = {
+      model: "motion-read-clip",
+      clip: [clipId],
+      targets: "the man in the black t-shirt",
+    }
+    expect(
+      body.parse({ inputs: { ...read, objects: "1" } }).inputs.objects
+    ).toBe("1")
+    expect(body.parse({ inputs: read }).inputs.objects).toBe("3")
+    expect(isRefused({ inputs: { ...read, objects: "4" } })).toBe(true)
+    expect(body.parse({ inputs: both }).inputs).not.toHaveProperty("objects")
   })
 
   it.each([
