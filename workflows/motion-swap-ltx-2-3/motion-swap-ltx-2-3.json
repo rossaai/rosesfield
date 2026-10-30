@@ -2,7 +2,7 @@
   "id": "647b616c-3dd3-5e45-b0e0-0b6dfc002c85",
   "revision": 0,
   "last_node_id": 999,
-  "last_link_id": 143,
+  "last_link_id": 134,
   "nodes": [
     {
       "id": 100,
@@ -496,7 +496,7 @@
         {
           "name": "audio",
           "type": "AUDIO",
-          "links": [141]
+          "links": [132]
         },
         {
           "name": "fps",
@@ -581,7 +581,7 @@
         {
           "name": "FLOAT",
           "type": "FLOAT",
-          "links": [9, 73, 83, 142]
+          "links": [9, 73, 83, 133]
         },
         {
           "name": "INT",
@@ -636,7 +636,7 @@
         {
           "name": "INT",
           "type": "INT",
-          "links": [12, 14, 15, 16, 132]
+          "links": [12, 14, 15, 16, 123]
         },
         {
           "name": "BOOL",
@@ -1025,12 +1025,12 @@
         {
           "name": "width",
           "type": "INT",
-          "links": [26, 29, 133, 135]
+          "links": [26, 29, 124, 126]
         },
         {
           "name": "height",
           "type": "INT",
-          "links": [27, 30, 134, 136]
+          "links": [27, 30, 125, 127]
         },
         {
           "name": "batch_size",
@@ -1075,7 +1075,7 @@
         {
           "name": "INT",
           "type": "INT",
-          "links": [28, 33, 49, 122, 126]
+          "links": [28, 33, 49]
         },
         {
           "name": "BOOL",
@@ -1165,7 +1165,7 @@
         {
           "name": "INT",
           "type": "INT",
-          "links": [34, 50, 123, 124]
+          "links": [34, 50]
         },
         {
           "name": "BOOL",
@@ -2835,7 +2835,7 @@
         {
           "name": "IMAGE",
           "type": "IMAGE",
-          "links": [127]
+          "links": [122]
         }
       ],
       "properties": {
@@ -2846,8 +2846,8 @@
       "widgets_values": [768, 64, 4096, 4]
     },
     {
-      "id": 92,
-      "type": "ComfyMathExpression",
+      "id": 99,
+      "type": "ImageFromBatch",
       "pos": [4340, 100],
       "size": [420, 180],
       "flags": {},
@@ -2855,43 +2855,36 @@
       "mode": 0,
       "inputs": [
         {
-          "name": "values.a",
-          "type": "INT",
+          "name": "image",
+          "type": "IMAGE",
           "link": 122
         },
         {
-          "name": "values.b",
+          "name": "length",
           "type": "INT",
-          "link": 123
+          "link": 123,
+          "widget": {
+            "name": "length"
+          }
         }
       ],
       "outputs": [
         {
-          "name": "FLOAT",
-          "type": "FLOAT",
-          "links": null
-        },
-        {
-          "name": "INT",
-          "type": "INT",
-          "links": [125, 129]
-        },
-        {
-          "name": "BOOL",
-          "type": "BOOLEAN",
-          "links": null
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [128]
         }
       ],
       "properties": {
-        "Node name for S&R": "ComfyMathExpression",
+        "Node name for S&R": "ImageFromBatch",
         "cnr_id": "comfy-core",
         "ver": "0.41.0"
       },
-      "widgets_values": ["round(b * ((a - 256) / a))"],
-      "title": "Height of your frames in the render"
+      "widgets_values": [0, ["14", 1]],
+      "title": "Your clip's length"
     },
     {
-      "id": 93,
+      "id": 96,
       "type": "ComfyMathExpression",
       "pos": [4340, 340],
       "size": [420, 180],
@@ -2919,184 +2912,7 @@
         {
           "name": "INT",
           "type": "INT",
-          "links": [130]
-        },
-        {
-          "name": "BOOL",
-          "type": "BOOLEAN",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ComfyMathExpression",
-        "cnr_id": "comfy-core",
-        "ver": "0.41.0"
-      },
-      "widgets_values": ["floor((a - b) / 2)"],
-      "title": "Top of your frames in the render"
-    },
-    {
-      "id": 94,
-      "type": "ComfyMathExpression",
-      "pos": [4340, 580],
-      "size": [420, 180],
-      "flags": {},
-      "order": 75,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "values.a",
-          "type": "INT",
-          "link": 126
-        }
-      ],
-      "outputs": [
-        {
-          "name": "FLOAT",
-          "type": "FLOAT",
-          "links": null
-        },
-        {
-          "name": "INT",
-          "type": "INT",
-          "links": [128]
-        },
-        {
-          "name": "BOOL",
-          "type": "BOOLEAN",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ComfyMathExpression",
-        "cnr_id": "comfy-core",
-        "ver": "0.41.0"
-      },
-      "widgets_values": ["a - 256"],
-      "title": "Width of your frames in the render"
-    },
-    {
-      "id": 95,
-      "type": "ImageCrop",
-      "pos": [4340, 820],
-      "size": [420, 180],
-      "flags": {},
-      "order": 76,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 127
-        },
-        {
-          "name": "width",
-          "type": "INT",
-          "link": 128,
-          "widget": {
-            "name": "width"
-          }
-        },
-        {
-          "name": "height",
-          "type": "INT",
-          "link": 129,
-          "widget": {
-            "name": "height"
-          }
-        },
-        {
-          "name": "y",
-          "type": "INT",
-          "link": 130,
-          "widget": {
-            "name": "y"
-          }
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [131]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ImageCrop",
-        "cnr_id": "comfy-core",
-        "ver": "0.41.0"
-      },
-      "widgets_values": [["94", 1], ["92", 1], 256, ["93", 1]],
-      "title": "Your framing, without the reference panel"
-    },
-    {
-      "id": 99,
-      "type": "ImageFromBatch",
-      "pos": [4340, 1060],
-      "size": [420, 180],
-      "flags": {},
-      "order": 77,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 131
-        },
-        {
-          "name": "length",
-          "type": "INT",
-          "link": 132,
-          "widget": {
-            "name": "length"
-          }
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [137]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ImageFromBatch",
-        "cnr_id": "comfy-core",
-        "ver": "0.41.0"
-      },
-      "widgets_values": [0, ["14", 1]],
-      "title": "Your clip's length"
-    },
-    {
-      "id": 96,
-      "type": "ComfyMathExpression",
-      "pos": [4340, 1300],
-      "size": [420, 180],
-      "flags": {},
-      "order": 78,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "values.a",
-          "type": "INT",
-          "link": 133
-        },
-        {
-          "name": "values.b",
-          "type": "INT",
-          "link": 134
-        }
-      ],
-      "outputs": [
-        {
-          "name": "FLOAT",
-          "type": "FLOAT",
-          "links": null
-        },
-        {
-          "name": "INT",
-          "type": "INT",
-          "links": [138]
+          "links": [129]
         },
         {
           "name": "BOOL",
@@ -3115,21 +2931,21 @@
     {
       "id": 97,
       "type": "ComfyMathExpression",
-      "pos": [4340, 1540],
+      "pos": [4340, 580],
       "size": [420, 180],
       "flags": {},
-      "order": 79,
+      "order": 75,
       "mode": 0,
       "inputs": [
         {
           "name": "values.a",
           "type": "INT",
-          "link": 135
+          "link": 126
         },
         {
           "name": "values.b",
           "type": "INT",
-          "link": 136
+          "link": 127
         }
       ],
       "outputs": [
@@ -3141,7 +2957,7 @@
         {
           "name": "INT",
           "type": "INT",
-          "links": [139]
+          "links": [130]
         },
         {
           "name": "BOOL",
@@ -3160,21 +2976,21 @@
     {
       "id": 98,
       "type": "ResizeImageMaskNode",
-      "pos": [4340, 1780],
+      "pos": [4340, 820],
       "size": [420, 180],
       "flags": {},
-      "order": 80,
+      "order": 76,
       "mode": 0,
       "inputs": [
         {
           "name": "input",
           "type": "IMAGE",
-          "link": 137
+          "link": 128
         },
         {
           "name": "resize_type.width",
           "type": "INT",
-          "link": 138,
+          "link": 129,
           "widget": {
             "name": "resize_type.width"
           }
@@ -3182,7 +2998,7 @@
         {
           "name": "resize_type.height",
           "type": "INT",
-          "link": 139,
+          "link": 130,
           "widget": {
             "name": "resize_type.height"
           }
@@ -3192,7 +3008,7 @@
         {
           "name": "resized",
           "type": "COMFY_MATCHTYPE_V3",
-          "links": [140]
+          "links": [131]
         }
       ],
       "properties": {
@@ -3212,26 +3028,26 @@
     {
       "id": 120,
       "type": "CreateVideo",
-      "pos": [4340, 2020],
+      "pos": [4340, 1060],
       "size": [420, 180],
       "flags": {},
-      "order": 81,
+      "order": 77,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 140
+          "link": 131
         },
         {
           "name": "audio",
           "type": "AUDIO",
-          "link": 141
+          "link": 132
         },
         {
           "name": "fps",
           "type": "FLOAT",
-          "link": 142,
+          "link": 133,
           "widget": {
             "name": "fps"
           }
@@ -3241,7 +3057,7 @@
         {
           "name": "VIDEO",
           "type": "VIDEO",
-          "links": [143]
+          "links": [134]
         }
       ],
       "properties": {
@@ -3255,16 +3071,16 @@
     {
       "id": 121,
       "type": "SaveVideo",
-      "pos": [4340, 2260],
+      "pos": [4340, 1300],
       "size": [420, 180],
       "flags": {},
-      "order": 82,
+      "order": 78,
       "mode": 0,
       "inputs": [
         {
           "name": "video",
           "type": "VIDEO",
-          "link": 143
+          "link": 134
         }
       ],
       "outputs": [],
@@ -3282,14 +3098,14 @@
       "pos": [60, 100],
       "size": [560, 1100],
       "flags": {},
-      "order": 83,
+      "order": 79,
       "mode": 0,
       "inputs": [],
       "outputs": [],
       "title": "Motion: swap the person in your clip for your reference on LTX 2.3",
       "properties": {},
       "widgets_values": [
-        "# Motion: swap the person in your clip for your reference on LTX 2.3\n\nRegenerates only the person you name in your clip, as the subject of your reference image and your prompt, and keeps the camera, the motion and every other pixel of the frame. LTX 2.3 22B distilled with the masked reference inpaint LoRA by Alissonerdx renders it in two passes. The video carries your clip's own sound when it has one.\n\n## Inputs\n\n- Your clip, node 1. The first 5 seconds are read at 24 frames a second, or at the clip's own rate when it is lower. The video's long side is 960 px.\n- Your reference, node 2: one image of the new subject. BiRefNet places it on white.\n- Who to replace, node 3: a short description SAM 3.1 tracks, such as `the person`. It tracks one.\n- Your prompt, node 4: the scene with the new subject in it, described in detail. The result depends on it most.\n- The seed, node 5.\n\n## How it works\n\nThe person is painted magenta, 255 0 255, in blocks of 8 px in the half-size guide and 32 px in the full-size guide. Your reference sits in a 256 px chroma green panel, 0 255 0, beside your frames. LTXVAddGuideMulti gives that guide to the LoRA. Pass 1 renders at half size, and pass 2 refines at full size. The panel is cut off, so the video keeps your clip's framing.\n\n## Models\n\n- [ltx-2.3-22b-distilled_transformer_only_fp8_input_scaled_v3.safetensors](https://huggingface.co/Kijai/LTX2.3_comfy), [LTX-2 Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2).\n- [ltx23_inpaint_masked_r2v_rank32_v1_3000steps.safetensors](https://huggingface.co/Alissonerdx/LTX-LoRAs), by Alissonerdx, [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0).\n- [gemma_3_12B_it_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/ltx-2), [Gemma Terms of Use](https://ai.google.dev/gemma/terms), with [ltx-2.3_text_projection_bf16.safetensors](https://huggingface.co/Kijai/LTX2.3_comfy).\n- [LTX23_video_vae_bf16.safetensors and LTX23_audio_vae_bf16.safetensors](https://huggingface.co/Kijai/LTX2.3_comfy), and [ltx-2.3-spatial-upscaler-x2-1.0.safetensors](https://huggingface.co/Lightricks/LTX-2.3), LTX-2 Community License.\n- [sam3.1_multiplex_fp16.safetensors](https://huggingface.co/Comfy-Org/sam3.1), under the SAM License in `sam-license.txt`.\n- [birefnet.safetensors](https://huggingface.co/Comfy-Org/BiRefNet), [MIT](https://huggingface.co/ZhengPeng7/BiRefNet).\n\nTwo packs: ComfyUI-KJNodes at `ab72eda7ffad6280422d71ab7d54d3fb87c0ba18`, GPL-3.0, and ComfyUI-BFSNodes at `1e76045b19a99882f1331c9d322a26fac60ae9b8`, GPL-3.0.\n\nAdapted from Alissonerdx's workflow `masked_ref_inpaint_v1`. Part of [Rosesfield](https://github.com/rossaai/rosesfield), MIT.\n"
+        "# Motion: swap the person in your clip for your reference on LTX 2.3\n\nRegenerates only the person you name in your clip, as the subject of your reference image and your prompt, and keeps the camera, the motion and every other pixel of the frame. LTX 2.3 22B distilled with the masked reference inpaint LoRA by Alissonerdx renders it in two passes. The video carries your clip's own sound when it has one.\n\n## Inputs\n\n- Your clip, node 1. The first 5 seconds are read at 24 frames a second, or at the clip's own rate when it is lower. The video's long side is 960 px.\n- Your reference, node 2: one image of the new subject. BiRefNet places it on white.\n- Who to replace, node 3: a short description SAM 3.1 tracks, such as `the person`. It tracks one.\n- Your prompt, node 4: the scene with the new subject in it, described in detail. The result depends on it most.\n- The seed, node 5.\n\n## How it works\n\nThe person is painted magenta, 255 0 255, in blocks of 8 px in the half-size guide and 32 px in the full-size guide. Your reference sits in a 256 px chroma green panel, 0 255 0, beside your frames. LTXVAddGuideMulti gives that guide to the LoRA. Pass 1 renders at half size, and pass 2 refines at full size. LTX returns the whole render as your clip, with no panel and no bands, so the graph scales it to your clip's shape and keeps your framing.\n\n## Models\n\n- [ltx-2.3-22b-distilled_transformer_only_fp8_input_scaled_v3.safetensors](https://huggingface.co/Kijai/LTX2.3_comfy), [LTX-2 Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2).\n- [ltx23_inpaint_masked_r2v_rank32_v1_3000steps.safetensors](https://huggingface.co/Alissonerdx/LTX-LoRAs), by Alissonerdx, [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0).\n- [gemma_3_12B_it_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/ltx-2), [Gemma Terms of Use](https://ai.google.dev/gemma/terms), with [ltx-2.3_text_projection_bf16.safetensors](https://huggingface.co/Kijai/LTX2.3_comfy).\n- [LTX23_video_vae_bf16.safetensors and LTX23_audio_vae_bf16.safetensors](https://huggingface.co/Kijai/LTX2.3_comfy), and [ltx-2.3-spatial-upscaler-x2-1.0.safetensors](https://huggingface.co/Lightricks/LTX-2.3), LTX-2 Community License.\n- [sam3.1_multiplex_fp16.safetensors](https://huggingface.co/Comfy-Org/sam3.1), under the SAM License in `sam-license.txt`.\n- [birefnet.safetensors](https://huggingface.co/Comfy-Org/BiRefNet), [MIT](https://huggingface.co/ZhengPeng7/BiRefNet).\n\nTwo packs: ComfyUI-KJNodes at `ab72eda7ffad6280422d71ab7d54d3fb87c0ba18`, GPL-3.0, and ComfyUI-BFSNodes at `1e76045b19a99882f1331c9d322a26fac60ae9b8`, GPL-3.0.\n\nAdapted from Alissonerdx's workflow `masked_ref_inpaint_v1`. Part of [Rosesfield](https://github.com/rossaai/rosesfield), MIT.\n"
       ]
     }
   ],
@@ -3415,28 +3231,19 @@
     [119, 89, 0, 90, 2, "LATENT"],
     [120, 90, 2, 91, 0, "LATENT"],
     [121, 103, 0, 91, 1, "VAE"],
-    [122, 25, 1, 92, 0, "INT"],
-    [123, 27, 1, 92, 1, "INT"],
-    [124, 27, 1, 93, 0, "INT"],
-    [125, 92, 1, 93, 1, "INT"],
-    [126, 25, 1, 94, 0, "INT"],
-    [127, 91, 0, 95, 0, "IMAGE"],
-    [128, 94, 1, 95, 1, "INT"],
-    [129, 92, 1, 95, 2, "INT"],
-    [130, 93, 1, 95, 3, "INT"],
-    [131, 95, 0, 99, 0, "IMAGE"],
-    [132, 14, 1, 99, 1, "INT"],
-    [133, 24, 0, 96, 0, "INT"],
-    [134, 24, 1, 96, 1, "INT"],
-    [135, 24, 0, 97, 0, "INT"],
-    [136, 24, 1, 97, 1, "INT"],
-    [137, 99, 0, 98, 0, "IMAGE"],
-    [138, 96, 1, 98, 1, "INT"],
-    [139, 97, 1, 98, 2, "INT"],
-    [140, 98, 0, 120, 0, "COMFY_MATCHTYPE_V3"],
-    [141, 11, 1, 120, 1, "AUDIO"],
-    [142, 13, 0, 120, 2, "FLOAT"],
-    [143, 120, 0, 121, 0, "VIDEO"]
+    [122, 91, 0, 99, 0, "IMAGE"],
+    [123, 14, 1, 99, 1, "INT"],
+    [124, 24, 0, 96, 0, "INT"],
+    [125, 24, 1, 96, 1, "INT"],
+    [126, 24, 0, 97, 0, "INT"],
+    [127, 24, 1, 97, 1, "INT"],
+    [128, 99, 0, 98, 0, "IMAGE"],
+    [129, 96, 1, 98, 1, "INT"],
+    [130, 97, 1, 98, 2, "INT"],
+    [131, 98, 0, 120, 0, "COMFY_MATCHTYPE_V3"],
+    [132, 11, 1, 120, 1, "AUDIO"],
+    [133, 13, 0, 120, 2, "FLOAT"],
+    [134, 120, 0, 121, 0, "VIDEO"]
   ],
   "groups": [
     {
@@ -3498,7 +3305,7 @@
     {
       "id": 8,
       "title": "Output",
-      "bounding": [4310, 20, 480, 2480],
+      "bounding": [4310, 20, 480, 1520],
       "color": "#3f8a5c",
       "font_size": 24,
       "flags": {}

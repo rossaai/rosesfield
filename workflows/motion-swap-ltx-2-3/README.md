@@ -36,7 +36,7 @@ The result depends most on the prompt and on the size of the mask. Describe the 
 3. Node 30 tracks one object that the target names with SAM 3.1. Node 32 grows its mask by 10 px of the guide, and nodes 33 and 34 turn it into blocks, so the new subject is free of the old one's outline: 8 px in the half-size guide of pass 1, the size the LoRA's author trained on, and 32 px in the full-size guide of pass 2. Nodes 46 to 48 scale those sizes by how much the composer shrinks your frames.
 4. Node 38 cuts the reference out with BiRefNet and node 42 places it on white, as the author's workflow does.
 5. `LTXVAddGuideMulti` adds the guide at frame 0 at strength 1. Pass 1 renders at half size with the LoRA, 8 distilled steps and `euler_ancestral_cfg_pp` at CFG 1. `LTXVCropGuides` drops the guide frames, `LTXVLatentUpsampler` doubles the size, and pass 2 refines from sigma 0.85 with `euler_cfg_pp` and the full-size guide.
-6. Node 95 cuts off the panel and the black bands the composer leaves above and below your frames, and node 98 scales the result to your clip's shape with its long side at 960 px. Node 120 joins it with your clip's sound at 24 fps. A clip with no sound makes a video with no sound.
+6. LTX returns the whole render as your clip, with no panel and no bands: on a 1080 by 1920 clip the render's 832 by 1408 frames hold your whole frame. Node 98 scales them to your clip's shape with its long side at 960 px, so the video keeps your framing. Node 120 joins it with your clip's sound at 24 fps. A clip with no sound makes a video with no sound.
 
 ## Models
 

@@ -814,55 +814,10 @@
       "title": "VAEDecodeTiled"
     }
   },
-  "92": {
-    "class_type": "ComfyMathExpression",
-    "inputs": {
-      "expression": "round(b * ((a - 256) / a))",
-      "values.a": ["25", 1],
-      "values.b": ["27", 1]
-    },
-    "_meta": {
-      "title": "Height of your frames in the render"
-    }
-  },
-  "93": {
-    "class_type": "ComfyMathExpression",
-    "inputs": {
-      "expression": "floor((a - b) / 2)",
-      "values.a": ["27", 1],
-      "values.b": ["92", 1]
-    },
-    "_meta": {
-      "title": "Top of your frames in the render"
-    }
-  },
-  "94": {
-    "class_type": "ComfyMathExpression",
-    "inputs": {
-      "expression": "a - 256",
-      "values.a": ["25", 1]
-    },
-    "_meta": {
-      "title": "Width of your frames in the render"
-    }
-  },
-  "95": {
-    "class_type": "ImageCrop",
-    "inputs": {
-      "image": ["91", 0],
-      "width": ["94", 1],
-      "height": ["92", 1],
-      "x": 256,
-      "y": ["93", 1]
-    },
-    "_meta": {
-      "title": "Your framing, without the reference panel"
-    }
-  },
   "99": {
     "class_type": "ImageFromBatch",
     "inputs": {
-      "image": ["95", 0],
+      "image": ["91", 0],
       "batch_index": 0,
       "length": ["14", 1]
     },

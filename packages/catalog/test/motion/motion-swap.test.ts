@@ -103,7 +103,7 @@ describe("Motion's LTX 2.3 swap", () => {
     expect(linkOf(graph, "121", "video")).toBe("120")
   })
 
-  it("reads the clip at 24 frames a second and crops the reference panel off before it saves", () => {
+  it("reads the clip at 24 frames a second and keeps the whole render, which LTX returns as the clip without the panel", () => {
     const { graph } = boundOf(swapRun)
     expect(graph["13"]?.inputs.expression).toBe("min(24, a)")
     expect(classOf(graph, "15")).toBe("VideoFrameSample")
@@ -116,8 +116,10 @@ describe("Motion's LTX 2.3 swap", () => {
     ] as const) {
       expect(linkOf(graph, node, input)).toBe("13")
     }
-    expect(classOf(graph, linkOf(graph, "99", "image"))).toBe("ImageCrop")
-    expect(graph["95"]?.inputs.x).toBe(256)
+    expect(classOf(graph, linkOf(graph, "99", "image"))).toBe("VAEDecodeTiled")
+    expect(
+      Object.values(graph).some((node) => node.class_type === "ImageCrop")
+    ).toBe(false)
     expect(linkOf(graph, "98", "input")).toBe("99")
     expect(linkOf(graph, "99", "length")).toBe("14")
   })
