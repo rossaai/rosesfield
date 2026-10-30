@@ -102,6 +102,7 @@ const galleryCopy = {
   "state.empty": "Empty",
   "state.libraryExamples": "Approved examples",
   "state.libraryPhone": "Approved examples, phone width",
+  "state.libraryStills": "Templates as stills",
   "state.effectsClosed": "No effect has passed",
   "state.filled": "Filled",
   "state.invalid": "Invalid",

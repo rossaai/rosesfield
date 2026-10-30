@@ -210,6 +210,11 @@ export const aiInfluencerCopy = {
   "aiInfluencer.group.style": "Style",
   "aiInfluencer.studio.shuffle": "Shuffle",
   "aiInfluencer.studio.useInMotion": "Use in Motion",
+  "aiInfluencer.template.capybara.name": "Flat-top capybara",
+  "aiInfluencer.template.absurdMan.name": "Soft-serve man",
+  "aiInfluencer.template.frog.name": "Gold grill frog",
+  "aiInfluencer.template.mantis.name": "Red beehive mantis",
+  "aiInfluencer.template.madeWith": "Made with {model}",
   "setting.charactertype.tip":
     "Sets who the character is: a person, or a real animal head on a human body. Any leaves it to the model.",
   "setting.build.tip":

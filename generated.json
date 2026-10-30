@@ -124,7 +124,7 @@
     },
     {
       "path": "apps/platform/src/gallery/copy.en.ts",
-      "sha256": "8e7f6071575a1edc1a2edaa9aae00af4340ada0c9c2213838664dac48ed9adbc"
+      "sha256": "c789aa1adeb8cd419821c6509a45915cced7c9267773777c6f1f5df080ecdd48"
     },
     {
       "path": "apps/platform/src/gallery/reference-copy.en.ts",
@@ -140,7 +140,7 @@
     },
     {
       "path": "packages/catalog/src/ai-influencer/copy.en.ts",
-      "sha256": "e891c250bfb48b94e88df6bdbc58d563a1d7c13c88696fdac1b0a2d48b81fd79"
+      "sha256": "7fe975be3514282460328523f27383739e249f5e0e4613107bd9a9139199f502"
     },
     {
       "path": "packages/catalog/src/angles/copy.en.ts",
