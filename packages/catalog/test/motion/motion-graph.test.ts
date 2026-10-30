@@ -101,6 +101,7 @@ describe("the motion graph", () => {
       ["ltx-2-5-guide", "graph", "motion-transfer"],
       ["ltx-2-3-control", "graph", "motion-transfer"],
       ["ltx-2-3-guide", "graph", "motion-transfer"],
+      ["ltx-2-3-swap", "graph", "character-swap"],
       ["kling/kling-v3-motion-control", "hosted", "motion-transfer"],
       ["lab/lab-character-swap-v1", "hosted", "character-swap"],
     ])

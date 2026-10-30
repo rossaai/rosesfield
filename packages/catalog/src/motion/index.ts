@@ -71,6 +71,10 @@ export {
 export { readClipRequestOf } from "#motion/comfy/read-clip-binding"
 export { readClipOf, renderHandOffOf } from "#motion/comfy/render-hand-off"
 export {
+  swapInputs,
+  swapWorkflow,
+} from "#motion/comfy/swap-ltx-2-3-binding"
+export {
   draftResolution,
   exampleAgentNotes,
   isFinalRun,
@@ -116,5 +120,6 @@ export {
   motionAppId,
   planModel,
   readClipModel,
+  swapModel,
 } from "#motion/motion-models"
 export { OwnVideoInAppError } from "#motion/own-video-in-app.error"

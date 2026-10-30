@@ -17,7 +17,7 @@ workflows/
     <id>-1.webp           a thumbnail from a real run, optional
 ```
 
-- 35 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
+- 36 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
 - Every graph runs open weights, except a graph that runs a Comfy partner node listed in `docs/models.md` §Graphs that run a partner node. No graph makes a Comfy Router call. The catalog test `open-weights.test.ts` checks every app's bindings.
 - `bun run catalog:sync` lists every folder in `packages/catalog/src/workflows.gen.ts`. It refuses a folder without `entry.json`, `<id>.json` and `<id>.api.json`.
 - A workflow is proven by one Generate in the running app on its app's screen, on a real input. No script runs a paid model. `bun scripts/checks/output-files/check-output-files.ts --library <gateway>` then checks each output in the library.
@@ -78,7 +78,7 @@ A script writes every UI file from its API file with the node definitions of Com
 | Core model | Workflows |
 |---|---|
 | LTX 2.5 | `effects-ltx-2-5`, `motion-guide-ltx-2-5`, `video-ltx-2-5-text`, `video-ltx-2-5-start-frame` |
-| LTX 2.3 | `lipsync-photo-ltx-2-3`, `motion-ltx-2-3-ic-lora`, `motion-guide-ltx-2-3-ic-lora`, `video-edit-reframe-ltx-2-3` |
+| LTX 2.3 | `lipsync-photo-ltx-2-3`, `motion-ltx-2-3-ic-lora`, `motion-guide-ltx-2-3-ic-lora`, `motion-swap-ltx-2-3`, `video-edit-reframe-ltx-2-3` |
 | Qwen Image Edit 2511 | `ads-qwen-image-edit-2511`, `angles-qwen-image-edit-2511`, `angles-set-qwen-image-edit-2511`, `edit-qwen-image-edit-2511`, `layers-edit-qwen-image-edit-2511`, `storyboard-qwen-image-edit-2511`, `try-on-qwen-image-edit-2511` |
 | Qwen Image Edit 2509 | `relight-qwen-image-edit-2509` |
 | Qwen Image 2512 | `image-qwen-image-2512` |
@@ -100,7 +100,7 @@ One model often has several workflows, because the apps build different graphs o
 ## Rules for every workflow
 
 1. **Open weights first.** No Router call and no closed API. A partner node runs only in a graph `docs/models.md` §Graphs that run a partner node lists, and its `entry.json` names it in `partnerNodes` with `openSource` false.
-2. **Core nodes first.** A workflow uses ComfyUI core nodes wherever they do the step. A custom node pack is pinned at a full commit, named in the note and the README, and listed in `requiresCustomNodes`. Five workflows load a pack: `voice-chatterbox` and `audio-voice-change-chatterbox` load ComfyUI_Fill-ChatterBox, `effects-ltx-2-5` loads ComfyUI-WanVideoWrapper and ComfyUI_AudioTools, `video-edit-reframe-ltx-2-3` loads ComfyUI-LTXVideo, and `motion-read-clip` loads ComfyUI-DepthAnythingV3. Comfy Cloud installs no pack of your own, per `docs/stack.md` §The Comfy API v2.
+2. **Core nodes first.** A workflow uses ComfyUI core nodes wherever they do the step. A custom node pack is pinned at a full commit, named in the note and the README, and listed in `requiresCustomNodes`. Six workflows load a pack: `voice-chatterbox` and `audio-voice-change-chatterbox` load ComfyUI_Fill-ChatterBox, `effects-ltx-2-5` loads ComfyUI-WanVideoWrapper and ComfyUI_AudioTools, `video-edit-reframe-ltx-2-3` loads ComfyUI-LTXVideo, `motion-read-clip` loads ComfyUI-DepthAnythingV3, and `motion-swap-ltx-2-3` loads ComfyUI-KJNodes and ComfyUI-BFSNodes. Comfy Cloud installs no pack of your own, per `docs/stack.md` §The Comfy API v2.
 3. **Flat.** In the API file, a subgraph renames every inner node to `<outer id>:<inner id>`, which breaks the catalog's bindings, and the registry refuses such an id. A blueprint reaches a person only through a custom node pack or their own library. Groups and a note give the same order.
 4. **Our own graphs.** Each graph follows the official template it names in its README, in Comfy-Org/workflow_templates, which is MIT. Its notice is in `NOTICE`. Lightricks' example workflows in ComfyUI-LTXVideo carry the LTX-2 Community License, so they are read for structure and never copied. ComfyUI, its frontend and comfy-cli are GPL-3.0. They are tools, and none of their code is copied here.
 5. **No weights.** A workflow links each model and never ships one.

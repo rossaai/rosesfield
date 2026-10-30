@@ -5,6 +5,7 @@ import { clipPlanInputs } from "#motion/comfy/clip-plan-binding"
 import { ltx25GuideInputs } from "#motion/comfy/guide-ltx-2-5-binding"
 import { motionEngine } from "#motion/comfy/motion-binding"
 import { readClipInputs } from "#motion/comfy/read-clip-binding"
+import { swapInputs } from "#motion/comfy/swap-ltx-2-3-binding"
 import {
   exampleInput,
   examplesBinding,
@@ -22,6 +23,7 @@ import {
   motionTasks,
   planModel,
   readClipModel,
+  swapModel,
 } from "#motion/motion-models"
 
 /** The label of an input or option a run chain fills. No surface shows it, so it names the app. */
@@ -29,7 +31,7 @@ const chainLabel = "motion.name"
 
 const renderModels = [graphModel, guideModel, ltx25GuideModel]
 
-const photoModels = [...renderModels, planModel]
+const photoModels = [...renderModels, swapModel, planModel]
 
 const twoPassModels = [graphModel, guideModel]
 
@@ -74,6 +76,7 @@ function modelChoice(): AppInputs {
         { value: ltx25GuideModel, labelKey: "motion.model.ltx25" },
         { value: graphModel, labelKey: "motion.model.ltx23" },
         { value: guideModel, labelKey: "motion.model.ltx23Guide" },
+        { value: swapModel, labelKey: "motion.tab.swap" },
         { value: readClipModel, labelKey: chainLabel, fill: "chain" },
         { value: planModel, labelKey: chainLabel, fill: "chain" },
       ],
@@ -167,6 +170,19 @@ function chainInputs(): AppInputs {
   ]
 }
 
+function swapTargetInput(): AppInputs {
+  return [
+    {
+      type: "prompt",
+      name: swapInputs.target,
+      labelKey: "motion.tab.swap",
+      presence: "optional",
+      maxLength: 200,
+      when: [{ input: "model", is: [swapModel] }],
+    },
+  ]
+}
+
 function motionInputs(offered: readonly LibraryExample[]): AppInputs {
   const unguided = offered
     .filter((example) => example.guide === null)
@@ -213,6 +229,7 @@ function motionInputs(offered: readonly LibraryExample[]): AppInputs {
       maxLength: 2000,
       when: [whenExampleIs([ownVideo, ...unguided])],
     },
+    ...swapTargetInput(),
     {
       type: "choice",
       name: "resolution",
@@ -247,6 +264,7 @@ export function motionApp(offered: readonly LibraryExample[]): AppInput {
     },
     engine: taskBinding({
       tasks: motionTasks,
+      graphTasks: { [swapModel]: "character-swap" },
       input: "model",
       default: ltx25GuideModel,
       fallback: examplesBinding(offered, motionEngine),

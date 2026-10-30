@@ -53,6 +53,7 @@ describe("the motion definition", () => {
       "objects",
       "sound",
       "scene",
+      "target",
       "resolution",
     ])
   })

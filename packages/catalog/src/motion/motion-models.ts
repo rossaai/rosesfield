@@ -4,6 +4,8 @@ export const guideModel = "ltx-2-3-guide"
 
 export const ltx25GuideModel = "ltx-2-5-guide"
 
+export const swapModel = "ltx-2-3-swap"
+
 export const readClipModel = "motion-read-clip"
 
 export const planModel = "motion-plan"

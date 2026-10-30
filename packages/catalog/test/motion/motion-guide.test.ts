@@ -9,7 +9,12 @@ import {
   isGuideFit,
   renderSizeOf,
 } from "#motion/comfy/guide-fit"
-import { graphModel, guideModel, ltx25GuideModel } from "#motion/motion-models"
+import {
+  graphModel,
+  guideModel,
+  ltx25GuideModel,
+  swapModel,
+} from "#motion/motion-models"
 import { withoutVideoStills } from "../workflows/video-stills"
 import {
   both,
@@ -154,6 +159,7 @@ describe("the depth guide graph", () => {
       [ltx25GuideModel, "motion-transfer"],
       [graphModel, "motion-transfer"],
       [guideModel, "motion-transfer"],
+      [swapModel, "character-swap"],
     ])
   })
 })

@@ -3,12 +3,14 @@ import { selectBinding } from "@rosesfield/generation/bindings"
 import { clipPlanBinding } from "#motion/comfy/clip-plan-binding"
 import { ltx25GuideEngine } from "#motion/comfy/guide-ltx-2-5-binding"
 import { readClipBinding } from "#motion/comfy/read-clip-binding"
+import { swapEngine } from "#motion/comfy/swap-ltx-2-3-binding"
 import {
   graphModel,
   guideModel,
   ltx25GuideModel,
   planModel,
   readClipModel,
+  swapModel,
 } from "#motion/motion-models"
 import { type WorkflowValueBinding, workflowBinding } from "#workflow-binding"
 import { apiGraph } from "#workflow-entry.contract"
@@ -66,6 +68,7 @@ export const motionEngine: EngineBinding = selectBinding({
     [graphModel]: poseEngine,
     [guideModel]: guideEngine,
     [ltx25GuideModel]: ltx25GuideEngine,
+    [swapModel]: swapEngine,
     [readClipModel]: readClipBinding,
     [planModel]: clipPlanBinding,
   },

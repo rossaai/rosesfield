@@ -1,0 +1,53 @@
+{
+  "name": "motion-swap-ltx-2-3",
+  "title": "Motion: swap the person in your clip for your reference on LTX 2.3",
+  "description": "Regenerates only the person SAM 3.1 tracks in up to 5 seconds of your clip, as the subject of your reference image and your prompt, on LTX 2.3 22B distilled with Alissonerdx's masked reference inpaint LoRA, in two passes. The camera, the motion and every other pixel of the frame stay. The video runs at 24 fps, or at the clip's own rate when it is lower, with the long side at 960 px, and carries your clip's own sound when it has one.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": [
+    "ltx-2.3-22b-distilled_transformer_only_fp8_input_scaled_v3.safetensors",
+    "ltx23_inpaint_masked_r2v_rank32_v1_3000steps.safetensors",
+    "gemma_3_12B_it_fp8_scaled.safetensors",
+    "ltx-2.3_text_projection_bf16.safetensors",
+    "LTX23_video_vae_bf16.safetensors",
+    "LTX23_audio_vae_bf16.safetensors",
+    "ltx-2.3-spatial-upscaler-x2-1.0.safetensors",
+    "sam3.1_multiplex_fp16.safetensors",
+    "birefnet.safetensors"
+  ],
+  "requiresCustomNodes": ["comfyui-kjnodes", "comfyui-bfsnodes"],
+  "inputBindings": {
+    "clip": {
+      "nodeId": "1",
+      "inputName": "file",
+      "type": "cloud-asset"
+    },
+    "reference": {
+      "nodeId": "2",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "target": {
+      "nodeId": "3",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "prompt": {
+      "nodeId": "4",
+      "inputName": "text",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "5",
+      "inputName": "noise_seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "121",
+      "key": "images",
+      "kind": "video"
+    }
+  ]
+}
