@@ -139,6 +139,10 @@
       "sha256": "f37f56eaccfee4887678476ab4a4df7bd1c21744973dd82b9fd47b7c9e4f3b56"
     },
     {
+      "path": "packages/catalog/src/ai-influencer/copy.en.ts",
+      "sha256": "e891c250bfb48b94e88df6bdbc58d563a1d7c13c88696fdac1b0a2d48b81fd79"
+    },
+    {
       "path": "packages/catalog/src/angles/copy.en.ts",
       "sha256": "f83b980929d20ea1f591784b2c7adffed794cabfcd8bc212c064924ab0f75c96"
     },
