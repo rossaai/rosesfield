@@ -59,7 +59,7 @@ Your Comfy key is the only sign-in, and each run spends credits from your own Co
   <tr>
     <td align="center"><img alt="A honeybee on a red poppy, seen close" src="docs/media/examples/shot.webp" width="260"><br><b>Shot</b></td>
     <td align="center"><img alt="A cream ceramic jaguar head in flat grey light, then the same head lit orange from the left and magenta from the right" src="docs/media/examples/relight.webp" width="260"><br><b>Relight</b></td>
-    <td align="center"><img alt="A man with the head of a brown hare, in an oatmeal cardigan, holding a basket of towels in a laundromat" src="docs/media/examples/characters.webp" width="260"><br><b>Characters</b></td>
+    <td align="center"><img alt="A character sheet on white: a man with a real capybara head and a black flat-top haircut in a brown 1970s suit, as a portrait and as a whole body" src="docs/media/examples/ai-influencer.webp" width="260"><br><b>AI Influencer</b></td>
   </tr>
   <tr>
     <td align="center"><img alt="A sunflower field where one flower faces the camera and the others face away, widened to 16:9" src="docs/media/examples/expand.webp" width="260"><br><b>Expand</b></td>
@@ -155,6 +155,13 @@ Motion puts the person in your photo in place of the person in your clip, at the
 - Each step is its own run, with its own price in History, and you can open each graph in ComfyUI.
 - An example in Motion's Library runs the same graph on a depth video built in Blender.
 
+Motion's second model, LTX 2.3 swap, redraws only the person and keeps the rest of your clip, in one run:
+
+- SAM 3.1 tracks the person you name, and the graph paints them magenta, in blocks, in each frame.
+- Your photo sits in a green panel beside the frames, the layout of Alissonerdx's masked reference inpaint LoRA for LTX 2.3.
+- LTX 2.3 with that LoRA redraws the person as your photo in two passes, so the camera, the set, the people around them and their timing stay as filmed.
+- It holds best on upright motion, such as a walk, a turn or a dance on your feet. [`motion-swap-ltx-2-3`](workflows/motion-swap-ltx-2-3/README.md) holds the graph.
+
 ## How the examples were made
 
 Each example in [Made with Rosesfield](#made-with-rosesfield) is one run in the app. Where a result starts from a picture, the picture is a run too.
@@ -168,7 +175,7 @@ Each example in [Made with Rosesfield](#made-with-rosesfield) is one run in the 
 | Edit | Krea 2 Medium Turbo makes the van, and GPT Image 2.5 Sunburst makes the cake |
 | Relight | Qwen Image Edit 2509 with the Relight LoRA, on a head by Krea 2 Medium Turbo |
 | Image | GPT Image 2.5 Sunburst |
-| Characters | GPT Image 2.5 Sunburst, from traits |
+| AI Influencer | Z-Image Turbo, from traits: a capybara head, a black flat-top and a retro suit |
 | Expand | the Qwen Image Inpaint graph, on a field by Seedream 5.0 Pro |
 | Upscale | the SeedVR2 3B graph, from 768 to 1536 pixels |
 | Remove background | the BiRefNet graph |

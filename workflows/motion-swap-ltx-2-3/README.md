@@ -1,6 +1,6 @@
 # Motion: swap the person in your clip for your reference on LTX 2.3
 
-Regenerates only the person SAM 3.1 tracks in up to 5 seconds of your clip, as the subject of your reference image and your prompt, and keeps the camera, the motion and every other pixel of the frame. LTX 2.3 22B distilled with Alissonerdx's masked reference inpaint LoRA renders it in two passes. The video carries your clip's own sound when it has one.
+Regenerates only the person SAM 3.1 tracks in up to 5 seconds of your clip, as the subject of your reference image and your prompt, and keeps the camera, the motion and the rest of the frame. LTX 2.3 22B distilled with Alissonerdx's masked reference inpaint LoRA renders it in two passes. The video carries your clip's own sound when it has one.
 
 | | |
 |---|---|

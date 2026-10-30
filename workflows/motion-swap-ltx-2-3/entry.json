@@ -1,7 +1,7 @@
 {
   "name": "motion-swap-ltx-2-3",
   "title": "Motion: swap the person in your clip for your reference on LTX 2.3",
-  "description": "Regenerates only the person SAM 3.1 tracks in up to 5 seconds of your clip, as the subject of your reference image and your prompt, on LTX 2.3 22B distilled with Alissonerdx's masked reference inpaint LoRA, in two passes. The camera, the motion and every other pixel of the frame stay. The video runs at 24 fps, or at the clip's own rate when it is lower, with the long side at 960 px, and carries your clip's own sound when it has one.",
+  "description": "Regenerates only the person SAM 3.1 tracks in up to 5 seconds of your clip, as the subject of your reference image and your prompt, on LTX 2.3 22B distilled with Alissonerdx's masked reference inpaint LoRA, in two passes. The camera, the motion and the rest of the frame stay. The video runs at 24 fps, or at the clip's own rate when it is lower, with the long side at 960 px, and carries your clip's own sound when it has one.",
   "mediaType": "video",
   "openSource": true,
   "models": [
