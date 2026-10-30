@@ -24,100 +24,63 @@ function isPhone(page: Page): boolean {
   return (page.viewportSize()?.width ?? 0) < 768
 }
 
-const fits = [
-  {
-    width: 800,
-    shown: ["Explore", "Image", "Video", "Audio", "3D"],
-    menu: [
-      "MCP",
-      "Agent",
-      "Motion",
-      "Characters",
-      "Library",
-      "History",
-      "Settings",
-    ],
-  },
-  {
-    width: 1024,
-    shown: [
-      "Explore",
-      "Image",
-      "Video",
-      "Audio",
-      "3D",
-      "MCP",
-      "AgentFeatured",
-      "MotionFeatured",
-    ],
-    menu: ["Characters", "Library", "History", "Settings"],
-  },
-  {
-    width: 1280,
-    shown: [
-      "Explore",
-      "Image",
-      "Video",
-      "Audio",
-      "3D",
-      "MCP",
-      "AgentFeatured",
-      "MotionFeatured",
-      "Characters",
-      "Library",
-      "History",
-      "Settings",
-    ],
-    menu: [],
-  },
+const everyLink = [
+  "Explore",
+  "Image",
+  "Video",
+  "Audio",
+  "3D",
+  "MCP",
+  "AgentFeatured",
+  "MotionFeatured",
+  "AI InfluencerFeatured",
+  "Characters",
+  "Library",
+  "History",
+  "Settings",
 ]
 
-for (const fit of fits) {
-  test(`at ${fit.width} px the bar fits whole, never scrolls sideways, and folds what does not fit into one menu`, async ({
+for (const width of [800, 1024, 1440]) {
+  test(`at ${width} px the bar holds every link in one row that scrolls sideways, with no menu`, async ({
     page,
   }) => {
     test.skip(isPhone(page), "the desktop row")
-    await page.setViewportSize({ width: fit.width, height: 800 })
+    await page.setViewportSize({ width, height: 800 })
     const bar = await open(page, "/")
-    await expect(
-      bar.getByRole("button", { name: "Add your Comfy key" }).last()
-    ).toBeVisible()
     const row = bar.locator("[data-slot='app-bar-overflow']")
-    await expect
-      .poll(() =>
-        row
-          .locator("[data-slot='app-bar-areas']:visible")
-          .evaluateAll((links) => links.map((link) => link.textContent))
-      )
-      .toEqual(fit.shown)
-    const {
-      scroll,
-      client,
-      page: pageWidth,
-    } = await row.evaluate((element) => ({
-      scroll: element.scrollWidth,
-      client: element.clientWidth,
-      page: document.documentElement.scrollWidth,
-    }))
-    expect(scroll).toBeLessThanOrEqual(client)
-    expect(pageWidth).toBe(fit.width)
+    await expect(row).toBeVisible()
+    await expect(row.locator("[data-slot='app-bar-areas']")).toHaveText(
+      everyLink.map((name) => new RegExp(`^${name}$`))
+    )
+    await expect(row.locator("[hidden]")).toHaveCount(0)
+    await expect(
+      bar.getByRole("button", { name: "Open the menu" })
+    ).toBeHidden()
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth)
+    ).toBe(width)
     const end = await boxOf(bar.locator("[data-slot='app-bar-balance']"))
-    const visible = await row
-      .locator("[data-slot='app-bar-areas']:visible, [data-fold-more]:visible")
-      .all()
-    for (const item of visible) {
-      const box = await boxOf(item)
-      expect(box.x + box.width).toBeLessThanOrEqual(end.x)
-    }
-    const more = row.locator("[data-fold-more]")
-    if (fit.menu.length === 0) {
-      await expect(more).toBeHidden()
+    const clip = await boxOf(row)
+    expect(clip.x + clip.width).toBeLessThanOrEqual(end.x)
+    const fits = await row.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth
+    )
+    if (fits) {
       return
     }
-    await more.getByRole("button", { name: "Open the menu" }).click()
-    const items = page.getByRole("menuitem")
-    await expect(items).toHaveText(
-      fit.menu.map((name) => new RegExp(`^${name}`))
+    await row.hover()
+    await page.mouse.wheel(0, 4000)
+    await expect
+      .poll(() =>
+        row.evaluate(
+          (element) =>
+            element.scrollLeft + element.clientWidth >= element.scrollWidth - 1
+        )
+      )
+      .toBe(true)
+    const settings = await boxOf(
+      row.locator("[data-slot='app-bar-areas']").last()
     )
+    expect(settings.x + settings.width).toBeLessThanOrEqual(clip.x + clip.width)
   })
 }

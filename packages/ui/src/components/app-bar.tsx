@@ -2,8 +2,9 @@ import { useRender } from "@base-ui/react/use-render"
 import { buttonVariants } from "@rosesfield/ui/components/button"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import type { AppBarDensity } from "@rosesfield/ui/contracts/app-bar.generated"
+import { edgeMaskOf, useScrollEnds } from "@rosesfield/ui/hooks/use-scroll-ends"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { motion } from "@rosesfield/ui/motion"
+import { motion, prefersReducedMotion } from "@rosesfield/ui/motion"
 import {
   type ComponentProps,
   createContext,
@@ -12,7 +13,6 @@ import {
   type RefObject,
   useContext,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react"
@@ -22,7 +22,7 @@ type AppBarProps = {
   mark: ReactNode
   lockup: ReactNode
   areas: ReactNode
-  areaMenu?: ReactNode | ((folded: number | null) => ReactNode)
+  areaMenu?: ReactNode
   balance?: ReactNode
   connect?: ReactNode
   density?: AppBarDensity
@@ -30,139 +30,108 @@ type AppBarProps = {
   className?: string
 }
 
-type FoldMeasure = {
-  full: number
-  widths: readonly number[]
-  more: number
-  room: number
+const rowFade = "var(--spacing-s8)"
+
+const wheelLine = 16
+
+type Wheel = Pick<WheelEvent, "deltaX" | "deltaY" | "deltaMode">
+
+type Scroller = Pick<HTMLElement, "scrollLeft" | "clientWidth" | "scrollWidth">
+
+function wheeledLeft(wheel: Wheel, row: Scroller): number | null {
+  if (Math.abs(wheel.deltaX) >= Math.abs(wheel.deltaY)) {
+    return null
+  }
+  const unit =
+    wheel.deltaMode === 1
+      ? wheelLine
+      : wheel.deltaMode === 2
+        ? row.clientWidth
+        : 1
+  const end = Math.max(0, row.scrollWidth - row.clientWidth)
+  const left = Math.min(end, Math.max(0, row.scrollLeft + wheel.deltaY * unit))
+  return left === row.scrollLeft ? null : left
 }
 
-function foldCount({ full, widths, more, room }: FoldMeasure): number {
-  if (full <= room) {
-    return 0
-  }
-  let width = full + more
-  for (const [index, unit] of widths.entries()) {
-    width -= unit
-    if (width <= room) {
-      return index + 1
-    }
-  }
-  return widths.length
+function revealLink(link: Element, behavior: ScrollBehavior): void {
+  link.scrollIntoView?.({ block: "nearest", inline: "nearest", behavior })
 }
 
-const FoldContext = createContext(0)
-
-function AppBarFold({
-  rank,
-  children,
-}: {
-  rank: number
-  children: ReactNode
-}): ReactElement {
-  const folded = useContext(FoldContext)
-  return (
-    <span
-      data-fold-rank={rank}
-      hidden={rank <= folded}
-      className="flex shrink-0 items-center"
-    >
-      {children}
-    </span>
-  )
-}
-
-function widthOf(element: Element): number {
-  return element.getBoundingClientRect().width
-}
-
-function measureFold(row: HTMLElement): number {
-  const list = row.firstElementChild
-  if (list === null) {
-    return 0
-  }
-  const units = [...list.querySelectorAll<HTMLElement>("[data-fold-rank]")]
-    .map((element) => ({
-      element,
-      rank: Number(element.dataset.foldRank),
-    }))
-    .sort((one, other) => one.rank - other.rank)
-  const more = list.querySelector<HTMLElement>("[data-fold-more]")
-  const folding = [
-    ...units.map((unit) => unit.element),
-    ...(more === null ? [] : [more]),
-  ].filter((element) => element.hidden)
-  for (const element of folding) {
-    element.hidden = false
-  }
-  const moreWidth = more === null ? 0 : widthOf(more)
-  const full = widthOf(list) - moreWidth
-  const widths = units.map((unit) => widthOf(unit.element))
-  for (const element of folding) {
-    element.hidden = true
-  }
-  const style = getComputedStyle(row)
-  const room =
-    row.clientWidth -
-    (Number.parseFloat(style.paddingLeft) || 0) -
-    (Number.parseFloat(style.paddingRight) || 0)
-  return foldCount({ full, widths, more: moreWidth, room })
-}
-
-function useFold(row: RefObject<HTMLElement | null>): number {
-  const [folded, setFolded] = useState(0)
-  useLayoutEffect(() => {
+function useRowInput(row: RefObject<HTMLElement | null>): void {
+  useEffect(() => {
     const element = row.current
     if (element === null) {
       return
     }
-    const update = (): void => setFolded(measureFold(element))
-    update()
-    if (typeof ResizeObserver === "undefined") {
-      window.addEventListener("resize", update)
-      return () => window.removeEventListener("resize", update)
+    const turn = (event: WheelEvent): void => {
+      const left = wheeledLeft(event, element)
+      if (left === null) {
+        return
+      }
+      event.preventDefault()
+      element.scrollLeft = left
     }
-    const sizes = new ResizeObserver(update)
-    sizes.observe(element)
-    if (element.firstElementChild !== null) {
-      sizes.observe(element.firstElementChild)
+    const follow = (event: FocusEvent): void => {
+      if (event.target instanceof Element) {
+        revealLink(event.target, "auto")
+      }
     }
-    return () => sizes.disconnect()
+    element.addEventListener("wheel", turn, { passive: false })
+    element.addEventListener("focusin", follow)
+    return () => {
+      element.removeEventListener("wheel", turn)
+      element.removeEventListener("focusin", follow)
+    }
   }, [row])
-  return folded
 }
 
-function AreaLinks({
-  children,
-  more,
-}: {
-  children: ReactNode
-  more: ((folded: number) => ReactNode) | null
-}): ReactElement {
-  const box = useRef<HTMLDivElement>(null)
-  const folded = useFold(box)
+function useRevealCurrent(row: RefObject<HTMLElement | null>): void {
+  useEffect(() => {
+    const element = row.current
+    if (element === null) {
+      return
+    }
+    let shown: Element | null = null
+    const reveal = (behavior: ScrollBehavior): void => {
+      const current = element.querySelector("[aria-current='page']")
+      if (current !== null && current !== shown) {
+        revealLink(current, behavior)
+      }
+      shown = current
+    }
+    reveal("auto")
+    const changes = new MutationObserver(() =>
+      reveal(prefersReducedMotion() ? "auto" : "smooth")
+    )
+    changes.observe(element, {
+      subtree: true,
+      childList: true,
+      attributeFilter: ["aria-current"],
+    })
+    return () => changes.disconnect()
+  }, [row])
+}
+
+function AreaLinks({ children }: { children: ReactNode }): ReactElement {
+  const row = useRef<HTMLDivElement>(null)
+  const { ends, update } = useScrollEnds(row)
+  useRowInput(row)
+  useRevealCurrent(row)
   return (
     <div
-      ref={box}
+      ref={row}
       data-slot="app-bar-overflow"
-      data-overflow={folded > 0 ? "" : undefined}
+      data-overflow={ends.start || ends.end ? "" : undefined}
+      data-scroll-start={ends.start ? "yes" : "no"}
+      data-scroll-end={ends.end ? "yes" : "no"}
+      onScroll={update}
+      style={edgeMaskOf(ends, rowFade)}
       className={cn(
-        "hidden h-button min-w-0 flex-1 items-center overflow-hidden @regular:flex",
+        "hidden h-button min-w-0 flex-1 scroll-px-s8 items-center overflow-x-auto overscroll-x-contain [scrollbar-width:none] @regular:flex",
         interaction.ringRoom
       )}
     >
-      <div className="flex shrink-0 items-center">
-        <FoldContext value={folded}>{children}</FoldContext>
-        {more === null ? null : (
-          <span
-            data-fold-more=""
-            hidden={folded === 0}
-            className="ml-1 flex shrink-0"
-          >
-            {more(folded)}
-          </span>
-        )}
-      </div>
+      <div className="flex shrink-0 items-center">{children}</div>
     </div>
   )
 }
@@ -275,11 +244,10 @@ function BarEnd({
   balance,
   connect,
 }: Pick<AppBarProps, "areaMenu" | "balance" | "connect">): ReactElement {
-  const phoneMenu = typeof areaMenu === "function" ? areaMenu(null) : areaMenu
   return (
     <span className="flex shrink-0 items-center gap-1">
-      {phoneMenu === undefined ? null : (
-        <span className="flex shrink-0 @regular:hidden">{phoneMenu}</span>
+      {areaMenu === undefined ? null : (
+        <span className="flex shrink-0 @regular:hidden">{areaMenu}</span>
       )}
       {balance === undefined ? null : (
         <span data-slot="app-bar-balance" className="flex">
@@ -350,15 +318,7 @@ function AppBar({
           {lockup}
         </span>
         <nav aria-label={label} className="contents">
-          <AreaLinks
-            more={
-              typeof areaMenu === "function"
-                ? (folded) => areaMenu(folded)
-                : null
-            }
-          >
-            {areas}
-          </AreaLinks>
+          <AreaLinks>{areas}</AreaLinks>
         </nav>
         <span className="flex-1 @regular:hidden" />
         <DensityContext value={density}>
@@ -370,4 +330,4 @@ function AppBar({
 }
 
 export type { AppBarActionProps, AppBarProps }
-export { AppBar, AppBarAction, AppBarFold, foldCount }
+export { AppBar, AppBarAction }

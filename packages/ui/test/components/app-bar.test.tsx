@@ -1,12 +1,13 @@
-import {
-  AppBar,
-  AppBarAction,
-  AppBarFold,
-  foldCount,
-} from "@rosesfield/ui/components/app-bar"
+import { AppBar, AppBarAction } from "@rosesfield/ui/components/app-bar"
 import { NavLink } from "@rosesfield/ui/components/nav-link"
-import { act, cleanup, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react"
+import { afterEach, describe, expect, it } from "vitest"
 
 afterEach(cleanup)
 
@@ -122,22 +123,26 @@ describe("AppBar", () => {
     expect(menu.parentElement?.nextElementSibling).toBe(balance)
   })
 
-  it("clips the links to their box and never scrolls them sideways", () => {
+  it("scrolls the links sideways with no scrollbar, and folds none of them into a menu", () => {
     const bar = renderBar("full")
     const overflow = bar.querySelector("[data-slot='app-bar-overflow']")
-    expect(overflow?.hasAttribute("data-overflow")).toBe(false)
     const classes = overflow?.className.split(" ") ?? []
     expect(classes).toEqual(
       expect.arrayContaining([
         "h-button",
-        "overflow-hidden",
+        "overflow-x-auto",
+        "[scrollbar-width:none]",
         "hidden",
         "@regular:flex",
         "-m-[calc(var(--spacing-focus-ring)*2)]",
         "p-[calc(var(--spacing-focus-ring)*2)]",
       ])
     )
-    expect(classes).not.toContain("overflow-x-auto")
+    expect(classes).not.toContain("overflow-hidden")
+    expect(overflow?.querySelector("[hidden]")).toBeNull()
+    const menus = screen.getAllByRole("button", { name: "Areas" })
+    expect(menus).toHaveLength(1)
+    expect(overflow?.contains(menus[0] ?? null)).toBe(false)
   })
 
   it("starts the area links at the list's start, 12 px after the mark, never centred", () => {
@@ -206,155 +211,107 @@ describe("AppBarAction", () => {
   })
 })
 
-describe("foldCount", () => {
-  it("folds nothing when the links fit their room", () => {
-    expect(
-      foldCount({ full: 500, widths: [100, 100], more: 40, room: 500 })
-    ).toBe(0)
-  })
-
-  it("folds the fewest units, first rank first, that make the links and the menu fit", () => {
-    expect(
-      foldCount({ full: 500, widths: [100, 100], more: 40, room: 450 })
-    ).toBe(1)
-    expect(
-      foldCount({ full: 500, widths: [100, 100], more: 40, room: 440 })
-    ).toBe(1)
-    expect(
-      foldCount({ full: 500, widths: [100, 100], more: 40, room: 439 })
-    ).toBe(2)
-  })
-
-  it("folds every unit when even that leaves no room", () => {
-    expect(
-      foldCount({ full: 500, widths: [100, 100], more: 40, room: 100 })
-    ).toBe(2)
-  })
-})
-
-function stubWidths(units: Record<string, number>, more: number) {
-  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
-    function (this: Element) {
-      const width = (element: Element): number => {
-        if (element instanceof HTMLElement && element.hidden) {
-          return 0
-        }
-        const rank = element.getAttribute("data-fold-rank")
-        if (rank !== null) {
-          return units[rank] ?? 0
-        }
-        if (element.hasAttribute("data-fold-more")) {
-          return more
-        }
-        return [...element.children].reduce(
-          (sum, child) => sum + width(child),
-          0
-        )
-      }
-      return { width: width(this) } as DOMRect
-    }
+function scrollRow(): HTMLElement {
+  const overflow = renderBar("full").querySelector<HTMLElement>(
+    "[data-slot='app-bar-overflow']"
   )
-}
-
-function renderFolding(): {
-  overflow: HTMLElement
-  resize: () => void
-  menus: number[]
-} {
-  let resized: () => void = () => undefined
-  vi.stubGlobal(
-    "ResizeObserver",
-    class {
-      constructor(callback: () => void) {
-        resized = callback
-      }
-      observe = vi.fn()
-      unobserve = vi.fn()
-      disconnect = vi.fn()
-    }
-  )
-  const menus: number[] = []
-  render(
-    <AppBar
-      label="Rosesfield"
-      mark={null}
-      lockup={null}
-      areas={
-        <>
-          <AppBarFold rank={3}>
-            <NavLink href="/">Explore</NavLink>
-          </AppBarFold>
-          <AppBarFold rank={2}>
-            <NavLink href="/library">Library</NavLink>
-          </AppBarFold>
-          <AppBarFold rank={1}>
-            <NavLink href="/settings">Settings</NavLink>
-          </AppBarFold>
-        </>
-      }
-      areaMenu={(folded) => {
-        if (folded !== null) {
-          menus.push(folded)
-        }
-        return <button type="button">Menu</button>
-      }}
-    />
-  )
-  const overflow = screen
-    .getByRole("banner", { name: "Rosesfield" })
-    .querySelector<HTMLElement>("[data-slot='app-bar-overflow']")
   if (overflow === null) {
-    throw new Error("no overflow")
+    throw new Error("the bar holds no links")
   }
-  return { overflow, resize: () => act(() => resized()), menus }
+  Object.defineProperty(overflow, "clientWidth", { value: 300 })
+  Object.defineProperty(overflow, "scrollWidth", { value: 500 })
+  return overflow
 }
 
-function foldedRanks(overflow: HTMLElement): string[] {
-  return [...overflow.querySelectorAll("[data-fold-rank][hidden]")].map(
-    (element) => element.getAttribute("data-fold-rank") ?? ""
-  )
-}
-
-describe("AppBar's area links on resize", () => {
+describe("AppBar's scrolling links", () => {
   afterEach(() => {
-    vi.restoreAllMocks()
-    vi.unstubAllGlobals()
+    Reflect.deleteProperty(Element.prototype, "scrollIntoView")
   })
 
-  it("shows every link and no menu while they fit", () => {
-    stubWidths({ "1": 100, "2": 100, "3": 100 }, 40)
-    const { overflow, resize } = renderFolding()
+  it("turns a vertical wheel over the row into a sideways scroll, until the row's end", () => {
+    const row = scrollRow()
+    expect(fireEvent.wheel(row, { deltaY: 120 })).toBe(false)
+    expect(row.scrollLeft).toBe(120)
+    expect(fireEvent.wheel(row, { deltaY: 400 })).toBe(false)
+    expect(row.scrollLeft).toBe(200)
+    expect(fireEvent.wheel(row, { deltaY: 40 })).toBe(true)
+    expect(row.scrollLeft).toBe(200)
+    expect(fireEvent.wheel(row, { deltaY: -500 })).toBe(false)
+    expect(row.scrollLeft).toBe(0)
+  })
+
+  it("leaves a sideways wheel, such as a trackpad's, to the browser", () => {
+    const row = scrollRow()
+    expect(fireEvent.wheel(row, { deltaX: 80, deltaY: 10 })).toBe(true)
+    expect(row.scrollLeft).toBe(0)
+  })
+
+  it("leaves the wheel to the page while every link fits", () => {
+    const overflow = renderBar("full").querySelector<HTMLElement>(
+      "[data-slot='app-bar-overflow']"
+    )
+    if (overflow === null) {
+      throw new Error("the bar holds no links")
+    }
     Object.defineProperty(overflow, "clientWidth", { value: 300 })
-    resize()
-    expect(foldedRanks(overflow)).toEqual([])
-    expect(
-      overflow.querySelector("[data-fold-more]")?.hasAttribute("hidden")
-    ).toBe(true)
-    expect(overflow.hasAttribute("data-overflow")).toBe(false)
+    Object.defineProperty(overflow, "scrollWidth", { value: 300 })
+    expect(fireEvent.wheel(overflow, { deltaY: 120 })).toBe(true)
   })
 
-  it("folds the first rank into the menu once the bar narrows, and hands the menu the count", () => {
-    stubWidths({ "1": 100, "2": 100, "3": 100 }, 40)
-    const { overflow, resize, menus } = renderFolding()
-    Object.defineProperty(overflow, "clientWidth", { value: 299 })
-    resize()
-    expect(foldedRanks(overflow)).toEqual(["1"])
-    expect(
-      overflow.querySelector("[data-fold-more]")?.hasAttribute("hidden")
-    ).toBe(false)
-    expect(overflow.hasAttribute("data-overflow")).toBe(true)
-    expect(menus.at(-1)).toBe(1)
+  it("fades the edge that has more links past it", () => {
+    const row = scrollRow()
+    fireEvent.scroll(row)
+    expect(row.getAttribute("data-scroll-start")).toBe("no")
+    expect(row.getAttribute("data-scroll-end")).toBe("yes")
+    expect(row.hasAttribute("data-overflow")).toBe(true)
+    expect(row.style.maskImage).toContain("transparent")
+    row.scrollLeft = 200
+    fireEvent.scroll(row)
+    expect(row.getAttribute("data-scroll-start")).toBe("yes")
+    expect(row.getAttribute("data-scroll-end")).toBe("no")
   })
 
-  it("measures every link again, the folded ones included, when the bar widens", () => {
-    stubWidths({ "1": 100, "2": 100, "3": 100 }, 40)
-    const { overflow, resize } = renderFolding()
-    let room = 150
-    Object.defineProperty(overflow, "clientWidth", { get: () => room })
-    resize()
-    expect(foldedRanks(overflow)).toEqual(["2", "1"])
-    room = 300
-    resize()
-    expect(foldedRanks(overflow)).toEqual([])
+  it("scrolls the current link into view, and again when another becomes current", async () => {
+    const shown: string[] = []
+    Object.defineProperty(Element.prototype, "scrollIntoView", {
+      configurable: true,
+      value: function (this: Element) {
+        shown.push(this.textContent ?? "")
+      },
+    })
+    const bar = (current: "Explore" | "Image") => (
+      <AppBar
+        label="Rosesfield"
+        mark={null}
+        lockup={null}
+        areas={
+          <>
+            <NavLink href="/" current={current === "Explore"}>
+              Explore
+            </NavLink>
+            <NavLink href="/apps/image" current={current === "Image"}>
+              Image
+            </NavLink>
+          </>
+        }
+      />
+    )
+    const { rerender } = render(bar("Explore"))
+    await waitFor(() => expect(shown).toEqual(["Explore"]))
+    rerender(bar("Image"))
+    await waitFor(() => expect(shown).toEqual(["Explore", "Image"]))
+  })
+
+  it("keeps the focused link in view as the keyboard moves along the row", () => {
+    const shown: string[] = []
+    Object.defineProperty(Element.prototype, "scrollIntoView", {
+      configurable: true,
+      value: function (this: Element) {
+        shown.push(this.textContent ?? "")
+      },
+    })
+    renderBar("full")
+    screen.getByRole("link", { name: "Image" }).focus()
+    expect(shown.at(-1)).toBe("Image")
   })
 })
