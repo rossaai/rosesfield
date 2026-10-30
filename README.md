@@ -181,6 +181,8 @@ Each example in [Made with Rosesfield](#made-with-rosesfield) is one run in the 
 | Remove background | the BiRefNet graph |
 | Video edit | the FILM graph, from 24 to 48 frames a second |
 
+AI Influencer's Library holds four templates made in the app: the capybara, the soft-serve man and the frog on Z-Image Turbo, and the mantis on GPT Image 2.5 Sunburst at medium quality.
+
 The clips that show an input and then its result are joined with ffmpeg from the runs' own files. The Upscale clip shows one detail of each at the same size.
 
 The launch film is edited from the app's own screens, and every result in it is a stored run. The 3D rose's colour is painted after its run by a script that runs no model. Comfy's key page in the film is redrawn, so no key appears.
