@@ -1,7 +1,7 @@
 import { appDefinition, isAppOnly, startRunBodyFor } from "@rosesfield/contract"
 import type { ModelField } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
-import { app, photoModel, sheetModel } from "#ai-influencer/app"
+import { app, photoModel } from "#ai-influencer/app"
 import { sheetPrompt } from "#ai-influencer/sheet-prompt"
 import {
   sheetHostedInputs,
@@ -10,6 +10,9 @@ import {
 } from "#ai-influencer/sheet-run"
 import { traitInputNames, traitSections } from "#ai-influencer/traits"
 import { appOrder } from "#app-order"
+import { defaultModelOf } from "#comfy/list-models"
+import { app as imageApp } from "#image/app"
+import { defaultModel } from "#image/image-models"
 import { listApps } from "#list-apps"
 
 const definition = appDefinition.parse(app)
@@ -33,19 +36,24 @@ describe("the AI Influencer app", () => {
     )
   })
 
-  it("asks one 16:9 image and opens on the model the bar was made on", () => {
+  it("asks one 16:9 image and keeps Image's own model as its default, so the catalog's #1 opens it as in every task app", () => {
     expect(definition.output).toMatchObject({
       kind: "image",
       count: { default: 1, max: 1 },
       aspectRatios: { options: ["16:9"], default: "16:9" },
     })
     const model = definition.inputs.find((input) => input.name === "model")
-    expect(model?.type === "choice" ? model.default : null).toBe(sheetModel)
-    expect(sheetModel).toBe("z-image-turbo")
+    expect(model?.type === "choice" ? model.default : null).toBe(defaultModel)
+    expect(defaultModelOf(definition)).toBe(
+      defaultModelOf(appDefinition.parse(imageApp))
+    )
     expect(definition.engine.config).toMatchObject({
       tasks: ["text-to-image", "image-edit"],
-      default: sheetModel,
-      graphTasks: { [sheetModel]: "text-to-image", [photoModel]: "image-edit" },
+      default: defaultModel,
+      graphTasks: {
+        [defaultModel]: "text-to-image",
+        [photoModel]: "image-edit",
+      },
     })
   })
 
@@ -79,7 +87,7 @@ describe("the AI Influencer app", () => {
 describe("a run of AI Influencer", () => {
   it("takes the traits and the prompt they compose", () => {
     const sent = {
-      inputs: withSheetPrompt({ ...capybara, model: sheetModel }),
+      inputs: withSheetPrompt({ ...capybara, model: defaultModel }),
       aspectRatio: "16:9",
     }
     const parsed = body.parse(sent)

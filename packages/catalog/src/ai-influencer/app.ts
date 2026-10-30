@@ -16,6 +16,7 @@ import { type AppInput, defineApp } from "#define-app"
 import { photoAccept } from "#edit/edit-models"
 import { imageBinding } from "#image/comfy/image-binding"
 import {
+  defaultModel,
   firstModel,
   imageModels,
   referenceModel,
@@ -25,9 +26,6 @@ import {
 } from "#image/image-models"
 
 type Input = AppInput["inputs"][number]
-
-/** The model the four characters the operator chose as the bar were made on, so the app opens on it. */
-export const sheetModel = "z-image-turbo"
 
 /** The model a run with a photo of you takes: Image's edit graph, the image-edit task Edit runs. */
 export const photoModel = referenceModel
@@ -81,7 +79,7 @@ export const app = defineApp({
         })),
         { value: firstModel, labelKey: "image.model.flux3Image" },
       ],
-      default: sheetModel,
+      default: defaultModel,
     },
     {
       type: "image",
@@ -127,7 +125,7 @@ export const app = defineApp({
   engine: taskBinding({
     tasks: [textTask, editTask],
     input: "model",
-    default: sheetModel,
+    default: defaultModel,
     fallback: imageBinding,
     graphTasks: Object.fromEntries(
       imageModels.map((model) => [

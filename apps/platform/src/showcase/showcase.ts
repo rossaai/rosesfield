@@ -1,3 +1,9 @@
+import {
+  promptInput,
+  type SheetTemplate,
+  sheetPrompt,
+  templates,
+} from "@rosesfield/catalog/ai-influencer"
 import { comfyCreditsPerUsd } from "@rosesfield/catalog/comfy"
 import {
   approvedExamples,
@@ -20,6 +26,8 @@ const mediaFiles = import.meta.glob("./media/*", {
 const adapter = "comfy-workflow"
 
 const motionAppId = "motion"
+
+const aiInfluencerAppId = "ai-influencer"
 
 export function mediaOf(file: string): string | null {
   return mediaFiles[`./media/${file}`] ?? null
@@ -53,6 +61,31 @@ export function exampleRowsOf(
           },
         ]
   })
+}
+
+/** The rows of AI Influencer's templates: each preview is the run it was made in, with the traits, model, settings and composed prompt that run used, and Remix opens the app on the template. */
+export function templateRowsOf(list: readonly SheetTemplate[]): ShowcaseRow[] {
+  return list.map(({ id, traits, preview }) => ({
+    runId: preview.runId,
+    file: preview.file,
+    appId: aiInfluencerAppId,
+    kind: "image",
+    width: preview.width,
+    height: preview.height,
+    model: preview.engine,
+    prompt: null,
+    inputs: {
+      ...traits,
+      model: preview.model,
+      ...preview.settings,
+      [promptInput]: sheetPrompt(traits),
+      [exampleInput]: id,
+    },
+    aspectRatio: preview.aspectRatio,
+    credits: preview.credits,
+    seconds: preview.seconds,
+    madeAt: preview.madeAt,
+  }))
 }
 
 function inputsOf(row: ShowcaseRow): Record<string, string> {
@@ -98,6 +131,7 @@ export function showcaseItemsOf(
 const shownRows: readonly ShowcaseRow[] = [
   ...exampleRowsOf(approvedExamples),
   ...showcaseRows,
+  ...templateRowsOf(templates),
 ]
 
 export const showcaseItems: readonly ShowcaseItem[] = showcaseItemsOf(shownRows)

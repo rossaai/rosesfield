@@ -1,3 +1,4 @@
+import { templates } from "@rosesfield/catalog/ai-influencer"
 import { approvedExamples } from "@rosesfield/catalog/motion"
 import { act, cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -7,10 +8,15 @@ import {
   exampleGroupOf,
   exampleRowsOf,
   showcaseItems,
+  templateRowsOf,
 } from "@/showcase/showcase"
 import { showcaseRows as listedRows } from "@/showcase/showcase-rows"
 
-const showcaseRows = [...exampleRowsOf(approvedExamples), ...listedRows]
+const showcaseRows = [
+  ...exampleRowsOf(approvedExamples),
+  ...listedRows,
+  ...templateRowsOf(templates),
+]
 
 afterEach(() => {
   cleanup()
@@ -88,7 +94,7 @@ describe("Explore's examples", () => {
     expect(files).not.toContain("showcase-hose-flowers.webp")
   })
 
-  it("alternates an example that stops a visitor with one a person wants to make, from Grab and run on", () => {
+  it("alternates an example that stops a visitor with one a person wants to make, from Grab and run on, and ends on AI Influencer's four characters", () => {
     const files = feedExamples(showcaseEntries(showcaseItems)).map((entry) =>
       entry.key.replace(/^showcase-/, "")
     )
@@ -103,6 +109,10 @@ describe("Explore's examples", () => {
       "chameleon-1536.webp",
       "camper-van-cake.webp",
       "bee-poppy.mp4",
+      "ai-influencer-capybara.webp",
+      "ai-influencer-absurd-man.webp",
+      "ai-influencer-frog.webp",
+      "ai-influencer-mantis.webp",
     ])
   })
 })

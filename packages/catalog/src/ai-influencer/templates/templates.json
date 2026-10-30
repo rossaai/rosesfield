@@ -1,0 +1,106 @@
+[
+  {
+    "id": "capybara",
+    "traits": {
+      "characterType": "capybara",
+      "gender": "man",
+      "hairstyle": "flat-top",
+      "hairColor": "black",
+      "outfit": "retro"
+    },
+    "preview": {
+      "file": "ai-influencer-capybara.webp",
+      "sha256": "4926f537db239bbcf8e4253e260d32cea904457b698a2da18188b69e33ce0e66",
+      "width": 1280,
+      "height": 723,
+      "runId": "0b89632b-f408-4f85-8e3d-a6b0c5afb679",
+      "model": "z-image-turbo",
+      "engine": "z_image_turbo_bf16.safetensors",
+      "settings": { "resolution": "1k" },
+      "aspectRatio": "16:9",
+      "credits": 0.64,
+      "seconds": 8.8,
+      "madeAt": "2026-10-30T08:49:14.230Z"
+    }
+  },
+  {
+    "id": "absurd-man",
+    "traits": {
+      "characterType": "absurd",
+      "gender": "man",
+      "headShape": "mega-jaw",
+      "features1": "unibrow",
+      "accessory": "glasses",
+      "facialHair": "pencil",
+      "hairstyle": "soft-serve",
+      "hairColor": "pastel-pink",
+      "proportions1": "egg-body",
+      "proportions2": "short-legs",
+      "outfit": "sporty"
+    },
+    "preview": {
+      "file": "ai-influencer-absurd-man.webp",
+      "sha256": "20b66febd27af77dccda211d0ee65f47c938d5bb57cc4ce90865f55f8cbeba32",
+      "width": 1280,
+      "height": 723,
+      "runId": "f77cb7f1-565c-490c-a9c5-d245c0942d0b",
+      "model": "z-image-turbo",
+      "engine": "z_image_turbo_bf16.safetensors",
+      "settings": { "resolution": "1k" },
+      "aspectRatio": "16:9",
+      "credits": 0.64,
+      "seconds": 8.7,
+      "madeAt": "2026-10-30T08:49:36.267Z"
+    }
+  },
+  {
+    "id": "frog",
+    "traits": {
+      "characterType": "frog",
+      "gender": "man",
+      "hairstyle": "mullet",
+      "hairColor": "bleached-blond",
+      "marks1": "gold-grill",
+      "outfit": "y2k"
+    },
+    "preview": {
+      "file": "ai-influencer-frog.webp",
+      "sha256": "514af52a053223d774acaa297b432e1d6c26b5adc61940b8d31471db8d21fec8",
+      "width": 1280,
+      "height": 723,
+      "runId": "d1ab7f0f-1ced-4a49-bffe-4fb1c71ebd54",
+      "model": "z-image-turbo",
+      "engine": "z_image_turbo_bf16.safetensors",
+      "settings": { "resolution": "1k" },
+      "aspectRatio": "16:9",
+      "credits": 0.63,
+      "seconds": 6.6,
+      "madeAt": "2026-10-30T08:49:58.038Z"
+    }
+  },
+  {
+    "id": "mantis",
+    "traits": {
+      "characterType": "mantis",
+      "gender": "woman",
+      "hairstyle": "beehive",
+      "hairColor": "red",
+      "accessory": "earrings",
+      "outfit": "stage"
+    },
+    "preview": {
+      "file": "ai-influencer-mantis.webp",
+      "sha256": "661009fc47574f205b5de37c535abf7ca71d3f296951e64269f1e69c4a5fd7e4",
+      "width": 1280,
+      "height": 854,
+      "runId": "83e73357-ac96-4a77-a50d-4df91f3867ef",
+      "model": "openai/gpt-image-2.5-sunburst",
+      "engine": "openai/gpt-image-2.5-sunburst",
+      "settings": { "quality": "medium", "size": "1536x1024" },
+      "aspectRatio": null,
+      "credits": 3.33,
+      "seconds": 21.4,
+      "madeAt": "2026-10-30T09:00:21.658Z"
+    }
+  }
+]

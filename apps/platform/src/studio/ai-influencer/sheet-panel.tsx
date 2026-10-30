@@ -4,7 +4,6 @@ import {
   optionKeyOf,
   photoInput,
   photoModel,
-  sheetModel,
   type TraitSection,
   traitInputNames,
 } from "@rosesfield/catalog/ai-influencer"
@@ -16,7 +15,7 @@ import { motion } from "@rosesfield/ui/motion"
 import { ChevronDownIcon, ShuffleIcon } from "lucide-react"
 import type { ReactElement } from "react"
 import { tCatalog } from "@/copy/t"
-import type { FieldValue } from "@/screens/app/app-form"
+import { defaultsOf, type FieldValue } from "@/screens/app/app-form"
 import { AppModelPicker } from "@/screens/app/bar/model-settings"
 import { ChoiceField } from "@/screens/app/fields/choice-field"
 import { textOf } from "@/screens/app/fields/field-props"
@@ -189,7 +188,19 @@ function photoFieldOf(app: AppListing): InputDefinition | undefined {
     : undefined
 }
 
-function PhotoField({ app, form }: PanelProps): ReactElement | null {
+/** The model the app opens on: the catalog's #1, else the app's own default. */
+function openingModelOf(
+  app: AppListing,
+  hosted: HostedState | undefined
+): string {
+  return hosted?.defaultModel ?? textOf(defaultsOf(app).inputs[modelInputName])
+}
+
+function PhotoField({
+  app,
+  form,
+  hosted,
+}: PanelProps & { hosted: HostedState | undefined }): ReactElement | null {
   const input = photoFieldOf(app)
   if (input === undefined) {
     return null
@@ -208,7 +219,7 @@ function PhotoField({ app, form }: PanelProps): ReactElement | null {
           form.setInput(modelInputName, photoModel)
         }
         if (!isGiven && model === photoModel) {
-          form.setInput(modelInputName, sheetModel)
+          form.setInput(modelInputName, openingModelOf(app, hosted))
         }
       }}
       register={(focus) => form.register(photoInput, focus)}

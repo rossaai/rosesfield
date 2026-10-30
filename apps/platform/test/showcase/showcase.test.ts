@@ -1,5 +1,7 @@
+import { createHash } from "node:crypto"
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
+import { templates } from "@rosesfield/catalog/ai-influencer"
 import { creditsOfCost } from "@rosesfield/catalog/comfy"
 import { approvedExamples } from "@rosesfield/catalog/motion"
 import { describe, expect, it } from "vitest"
@@ -12,6 +14,7 @@ import {
   showcaseItems,
   showcaseItemsOf,
   showcaseOf,
+  templateRowsOf,
 } from "@/showcase/showcase"
 import { type ShowcaseRow, showcaseRows } from "@/showcase/showcase-rows"
 
@@ -68,6 +71,7 @@ describe("the showcase", () => {
     expect(showcaseItems.map((item) => item.file)).toEqual([
       ...exampleRowsOf(approvedExamples).map((row) => row.file),
       ...showcaseRows.map((row) => row.file),
+      ...templateRowsOf(templates).map((row) => row.file),
     ])
     for (const item of showcaseItems) {
       expect(item.src).toMatch(/^\/src\//)
@@ -88,7 +92,7 @@ describe("the showcase", () => {
   })
 
   it("names each file's own width and height", () => {
-    for (const row of showcaseRows) {
+    for (const row of [...templateRowsOf(templates), ...showcaseRows]) {
       expect(sizeOf(row), row.file).toEqual({
         width: row.width,
         height: row.height,
@@ -102,6 +106,7 @@ describe("the showcase", () => {
         row.input === undefined ? [row.file] : [row.file, row.input.file]
       ),
       ...exampleRowsOf(approvedExamples).map((row) => row.file),
+      ...templateRowsOf(templates).map((row) => row.file),
     ])
     const bundled = readdirSync(folders[0] ?? "")
     expect(bundled.sort()).toEqual([...named].sort())
@@ -156,6 +161,28 @@ describe("the showcase", () => {
     expect(models["flamingo-bus-stop.webp"]).toBe("GPT Image 2.5 Sunburst")
     expect(models["sunflower-field.webp"]).toBe("Seedream 5.0 Pro")
     expect(models["grab-and-run.mp4"]).toBe("LTX 2.5")
+  })
+
+  it("shows each AI Influencer template as the run that made its preview, with its bytes, its model and its settings", () => {
+    for (const template of templates) {
+      expect(
+        createHash("sha256")
+          .update(bytesOf(template.preview.file))
+          .digest("hex"),
+        template.id
+      ).toBe(template.preview.sha256)
+    }
+    const models = showcaseOf("ai-influencer").map((item) => [
+      item.file,
+      runModel(item.run, findCatalogApp(item.appId)),
+      item.run.inputs.quality ?? null,
+    ])
+    expect(models).toEqual([
+      ["ai-influencer-capybara.webp", "Z-Image Turbo", null],
+      ["ai-influencer-absurd-man.webp", "Z-Image Turbo", null],
+      ["ai-influencer-frog.webp", "Z-Image Turbo", null],
+      ["ai-influencer-mantis.webp", "GPT Image 2.5 Sunburst", "medium"],
+    ])
   })
 
   it("gives each app only its own examples", () => {

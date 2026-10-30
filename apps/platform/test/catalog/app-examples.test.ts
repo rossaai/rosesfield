@@ -1,3 +1,4 @@
+import { templates } from "@rosesfield/catalog/ai-influencer"
 import { exampleOf } from "@rosesfield/catalog/motion"
 import { describe, expect, it } from "vitest"
 import {
@@ -5,6 +6,7 @@ import {
   draftOf,
   exampleDraftOf,
   examplesOf,
+  templateExamplesOf,
 } from "@/catalog/app-examples"
 import { mediaOf } from "@/showcase/showcase"
 
@@ -45,5 +47,31 @@ describe("the examples an app's Library shows", () => {
     expect(exampleDraftOf("motion", "ticket-wipe")).toBeNull()
     expect(exampleDraftOf("video", "grab-and-run")).toBeNull()
     expect(examplesOf("video")).toEqual([])
+  })
+})
+
+describe("AI Influencer's Library", () => {
+  it("shows the four templates as stills from the runs that made them, each named and with the model that made it", () => {
+    const shown = examplesOf("ai-influencer")
+    expect(
+      shown.map((example) => [example.id, example.name, example.line])
+    ).toEqual([
+      ["capybara", "Flat-top capybara", "Made with Z-Image Turbo"],
+      ["absurd-man", "Soft-serve man", "Made with Z-Image Turbo"],
+      ["frog", "Gold grill frog", "Made with Z-Image Turbo"],
+      ["mantis", "Red beehive mantis", "Made with GPT Image 2.5 Sunburst"],
+    ])
+    for (const [index, example] of shown.entries()) {
+      expect(example.kind).toBe("image")
+      expect(example.src).toBe(mediaOf(templates[index]?.preview.file ?? ""))
+    }
+  })
+
+  it("leaves out a template with no run this build shows, the control", () => {
+    expect(templateExamplesOf(templates, [])).toEqual([])
+  })
+
+  it("leaves the template to the screen, so the form opens its model before the traits", () => {
+    expect(exampleDraftOf("ai-influencer", "mantis")).toBeNull()
   })
 })

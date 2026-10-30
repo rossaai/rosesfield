@@ -27,11 +27,11 @@ function ExampleTile({
   return (
     <PresetTile
       name={example.name}
-      line={example.need}
+      {...(example.line === null ? {} : { line: example.line })}
       href={href}
       viewLabel={t("app.library.remixName", { name: example.name })}
       action={{ label: t("app.library.remix"), href, onSelect: remix }}
-      clip={{ src: example.src, alt: example.name }}
+      clip={{ src: example.src, alt: example.name, kind: example.kind }}
       aspect={example.aspect}
     />
   )

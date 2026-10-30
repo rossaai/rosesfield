@@ -22,15 +22,15 @@ import { AppLibrary } from "@/screens/app/app-library"
 
 afterEach(cleanup)
 
-function showLibrary() {
-  const app = findCatalogApp("motion")
+function showLibrary(appId = "motion") {
+  const app = findCatalogApp(appId)
   if (app === null) {
-    throw new Error("no Motion app")
+    throw new Error(`no ${appId} app`)
   }
   const root = createRootRoute({
     component: () => (
       <>
-        <AppLibrary app={app} examples={examplesOf("motion")} />
+        <AppLibrary app={app} examples={examplesOf(appId)} />
         <Outlet />
       </>
     ),
@@ -42,7 +42,7 @@ function showLibrary() {
   })
   const router = createRouter({
     routeTree: root.addChildren([page]),
-    history: createMemoryHistory({ initialEntries: ["/apps/motion"] }),
+    history: createMemoryHistory({ initialEntries: [`/apps/${appId}`] }),
   })
   render(
     <QueryClientProvider client={new QueryClient()}>
@@ -74,6 +74,45 @@ describe("Motion's Library", () => {
       expect(router.state.location.search).toEqual({
         example: "grab-and-run",
       })
+    )
+  })
+})
+
+describe("AI Influencer's Library", () => {
+  it("shows each template as its still, with its name, the model that made it and Remix", async () => {
+    showLibrary("ai-influencer")
+    const list = await screen.findByRole("list", { name: "Library" })
+    expect(within(list).getAllByRole("listitem")).toHaveLength(4)
+    expect(list.querySelectorAll("img")).toHaveLength(4)
+    expect(list.querySelector("video")).toBeNull()
+    expect(
+      within(list).getAllByText("Red beehive mantis").length
+    ).toBeGreaterThan(0)
+    expect(
+      within(list).getAllByText("Made with GPT Image 2.5 Sunburst")
+    ).toHaveLength(1)
+    expect(
+      within(list)
+        .getAllByRole("link", { name: /Remix$/ })
+        .map((link) => link.getAttribute("href"))
+    ).toEqual([
+      "/apps/ai-influencer?example=capybara",
+      "/apps/ai-influencer?example=absurd-man",
+      "/apps/ai-influencer?example=frog",
+      "/apps/ai-influencer?example=mantis",
+    ])
+  })
+
+  it("opens AI Influencer on the template when you press Remix", async () => {
+    const router = showLibrary("ai-influencer")
+    const list = await screen.findByRole("list", { name: "Library" })
+    const [, absurd] = within(list).getAllByRole("link", { name: /Remix$/ })
+    if (absurd === undefined) {
+      throw new Error("no second Remix")
+    }
+    fireEvent.click(absurd)
+    await waitFor(() =>
+      expect(router.state.location.search).toEqual({ example: "absurd-man" })
     )
   })
 })

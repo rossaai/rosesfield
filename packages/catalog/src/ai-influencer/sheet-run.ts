@@ -14,6 +14,9 @@ export const detailsInput = "details"
 
 export const sheetAspect = "16:9"
 
+/** The quality a hosted model's sheet opens at: GPT Image 2.5 drew the mantis right in both views at medium. */
+export const sheetQuality = "medium"
+
 const output = "image"
 
 const ownNames: readonly string[] = [...traitInputNames, detailsInput]

@@ -1,7 +1,7 @@
 import { exampleKeyOf } from "@rosesfield/catalog/motion"
-import { appListing } from "@rosesfield/contract"
+import { type AppListing, appListing } from "@rosesfield/contract"
 import type { ReactElement } from "react"
-import type { AppExample } from "@/catalog/app-examples"
+import { type AppExample, examplesOf } from "@/catalog/app-examples"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { tCatalog } from "@/copy/t"
 import demoVideo from "@/gallery/fixtures/demo-video-16-9.mp4"
@@ -10,13 +10,16 @@ import { AppLibrary } from "@/screens/app/app-library"
 
 const app = appListing.parse(findCatalogApp("motion"))
 
+const influencer = appListing.parse(findCatalogApp("ai-influencer"))
+
 function exampleOf(id: string): AppExample {
   const key = exampleKeyOf(id)
   return {
     id,
     name: tCatalog(`motion.example.${key}.name`),
-    need: tCatalog(`motion.example.${key}.photo`),
+    line: tCatalog(`motion.example.${key}.photo`),
     src: demoVideo,
+    kind: "video",
     aspect: { width: 16, height: 9 },
     draft: { prompt: "", assetIds: [], characterIds: [] },
   }
@@ -28,10 +31,18 @@ const shown: readonly AppExample[] = [
   exampleOf("ticket-wipe"),
 ]
 
-function Library({ width }: { width: number }): ReactElement {
+function Library({
+  width,
+  of = app,
+  examples = shown,
+}: {
+  width: number
+  of?: AppListing
+  examples?: readonly AppExample[]
+}): ReactElement {
   return (
     <div style={{ width }} className="max-w-full bg-canvas p-s4">
-      <AppLibrary app={app} examples={shown} />
+      <AppLibrary app={of} examples={examples} />
     </div>
   )
 }
@@ -51,6 +62,18 @@ export const appLibraryEntry: GalleryEntry = {
       label: "state.libraryPhone",
       width: "full",
       render: () => <Library width={358} />,
+    },
+    {
+      id: "stills",
+      label: "state.libraryStills",
+      width: "full",
+      render: () => (
+        <Library
+          width={760}
+          of={influencer}
+          examples={examplesOf(influencer.id)}
+        />
+      ),
     },
   ],
 }

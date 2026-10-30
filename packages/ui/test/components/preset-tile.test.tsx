@@ -56,6 +56,37 @@ describe("PresetTile", () => {
       screen.getByRole("link", { name: "Try it" }).getAttribute("href")
     ).toBe("/apps/effects?preset=melt")
   })
+
+  it("shows a still as an image and a clip as a video", () => {
+    render(
+      <>
+        <PresetTile
+          name="Capybara"
+          href="/apps/ai-influencer"
+          viewLabel="View Capybara"
+          clip={{ src: "capybara.webp", alt: "Capybara", kind: "image" }}
+          aspect={{ width: 16, height: 9 }}
+        />
+        <PresetTile
+          name="Melt"
+          href="/explore/melt"
+          viewLabel="View Melt"
+          clip={{ src: "melt.mp4", alt: "Melt" }}
+          aspect={{ width: 9, height: 16 }}
+        />
+      </>
+    )
+    const [still, clip] = document.querySelectorAll(
+      "[data-slot='preset-tile-clip']"
+    )
+    expect(still?.querySelector("img")?.getAttribute("src")).toBe(
+      "capybara.webp"
+    )
+    expect(still?.querySelector("video")).toBeNull()
+    expect(clip?.querySelector("video")?.getAttribute("src")).toMatch(
+      /^melt\.mp4/
+    )
+  })
 })
 
 describe("the preset tile over its clip", () => {

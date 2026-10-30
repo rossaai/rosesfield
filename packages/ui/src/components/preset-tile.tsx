@@ -22,7 +22,7 @@ type PresetTileProps = {
   href: string
   viewLabel: string
   action?: PresetTileAction
-  clip: { src: string; poster?: string; alt: string }
+  clip: { src: string; poster?: string; alt: string; kind?: "image" | "video" }
   aspect: MediaAspect
   form?: PresetTileForm
   line?: string
@@ -51,7 +51,7 @@ function PresetTile({
     >
       <span data-slot="preset-tile-clip" className="absolute inset-0">
         <MediaTile
-          kind="video"
+          kind={clip.kind ?? "video"}
           src={clip.src}
           alt={clip.alt}
           {...(clip.poster === undefined ? {} : { poster: clip.poster })}
