@@ -3,10 +3,13 @@ import { findWorkflow } from "#list-workflows"
 import {
   lastFrameGuideNodes,
   lastFrameImageNodes,
+  type VideoWorkflowName,
   videoWorkflows,
   withoutLastFrame,
 } from "#video/comfy/video-workflows"
 import { apiGraph } from "#workflow-entry.contract"
+import startFrameUi from "../../../../workflows/video-ltx-2-5-start-frame/video-ltx-2-5-start-frame.json"
+import textUi from "../../../../workflows/video-ltx-2-5-text/video-ltx-2-5-text.json"
 
 type Graph = ReturnType<typeof apiGraph.parse>
 
@@ -16,6 +19,24 @@ function startFrameGraph(): Graph {
     throw new Error("The start-frame workflow is not listed")
   }
   return apiGraph.parse(structuredClone(workflow.graph))
+}
+
+const bf16Video = "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
+
+const bf16Text = "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors"
+
+const uiFiles: Readonly<Record<VideoWorkflowName, readonly { id: number }[]>> =
+  {
+    "ltx-2-5-text": textUi.nodes,
+    "ltx-2-5-start-frame": startFrameUi.nodes,
+  }
+
+function uiNodeOf(name: VideoWorkflowName, id: number): unknown {
+  const node = uiFiles[name].find((one) => one.id === id)
+  if (node === undefined) {
+    throw new Error(`the UI file of ${name} has no node ${id}`)
+  }
+  return node
 }
 
 function linksOf(graph: Graph): string[] {
@@ -61,4 +82,42 @@ describe("the start-frame graph with no last frame", () => {
       expect.objectContaining({ code: "WORKFLOW_INVALID" })
     )
   })
+})
+
+describe("the Video graphs' LTX 2.5 files", () => {
+  for (const name of Object.keys(videoWorkflows) as VideoWorkflowName[]) {
+    it(`${name} loads the bf16 transformer and text encoder in the API file, the UI file and the entry`, () => {
+      const workflow = findWorkflow(videoWorkflows[name])
+      if (workflow === null) {
+        throw new Error(`${name} is not listed`)
+      }
+      expect(workflow.graph).toMatchObject({
+        "384": { class_type: "UNETLoader", inputs: { unet_name: bf16Video } },
+        "387": { class_type: "CLIPLoader", inputs: { clip_name: bf16Text } },
+      })
+      for (const [id, file, folder] of [
+        [384, bf16Video, "diffusion_models"],
+        [387, bf16Text, "text_encoders"],
+      ] as const) {
+        expect(uiNodeOf(name, id)).toMatchObject({
+          widgets_values: expect.arrayContaining([file]),
+          properties: {
+            models: [
+              {
+                name: file,
+                url: `https://huggingface.co/Lightricks/LTX-2.5/resolve/main/${folder}/${file}`,
+                directory: folder,
+              },
+            ],
+          },
+        })
+      }
+      expect(workflow.models).toEqual(
+        expect.arrayContaining([bf16Video, bf16Text])
+      )
+      expect(JSON.stringify([workflow.graph, uiFiles[name]])).not.toContain(
+        "int8"
+      )
+    })
+  }
 })

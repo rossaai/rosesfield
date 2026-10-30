@@ -216,9 +216,7 @@ const viewerEntry: VisualEntry = {
     },
     engine: {
       adapter: "comfy-workflow",
-      models: [
-        "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
-      ],
+      models: ["ltx-2.5-22b-distilled-transformer-bf16.safetensors"],
       workflowHash: null,
     },
     cost: { amount: 0.021, currency: "USD" },

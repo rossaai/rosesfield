@@ -4,7 +4,13 @@
   "description": "Makes a clip of 2 to 5 seconds from a prompt and an optional camera sentence with LTX 2.5, in two stages with a 2 times latent upscale, and makes its sound. A run with sound off drops the audio track. Built from Comfy's template video_ltx2_5_t2v.",
   "mediaType": "video",
   "openSource": true,
-  "models": ["Lightricks/LTX-2.5"],
+  "models": [
+    "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+    "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
+    "ltx-2.5-video-vae-bf16.safetensors",
+    "ltx-2.5-audio-vae-bf16.safetensors",
+    "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors"
+  ],
   "requiresCustomNodes": [],
   "inputBindings": {
     "prompt": {

@@ -7,7 +7,7 @@ export type Expected = Readonly<
 export type EngineCase = {
   name: string
   inputs: Record<string, unknown>
-  model: string
+  models: readonly string[]
   expected: Expected
   plant: { node: string; input: string; value: unknown }
 }
@@ -118,7 +118,13 @@ export function extendCase(
       keepSound: sound,
       next: "the dog runs to the gate",
     },
-    model: "Lightricks/LTX-2.5",
+    models: [
+      "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+      "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
+      "ltx-2.5-video-vae-bf16.safetensors",
+      "ltx-2.5-audio-vae-bf16.safetensors",
+      "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
+    ],
     expected: {
       "1001": { file: clipAsset },
       "1004": {
@@ -151,7 +157,7 @@ export function reframeCase(
       resolution,
       around: "a brick wall and a street lamp",
     },
-    model: "Lightricks/LTX-2.3",
+    models: ["Lightricks/LTX-2.3"],
     expected: {
       "1": { file: clipAsset },
       "12": { value: width },
@@ -175,7 +181,7 @@ export function backgroundCase(color: string): EngineCase {
   return {
     name: `Background puts the subject on ${color}`,
     inputs: { mode: "background", model: "birefnet", color },
-    model: "ZhengPeng7/BiRefNet",
+    models: ["ZhengPeng7/BiRefNet"],
     expected: {
       "1": { file: clipAsset },
       "8": { bg_removal_name: "birefnet.safetensors" },
@@ -195,7 +201,7 @@ export function frameRateCase(factor: "2x" | "4x"): EngineCase {
   return {
     name: `Frame rate raises the rate ${times} times`,
     inputs: { mode: "frame-rate", model: "film", factor },
-    model: "google-research/frame-interpolation",
+    models: ["google-research/frame-interpolation"],
     expected: {
       "1": { file: clipAsset },
       "8": { model_name: "film_net_fp16.safetensors" },

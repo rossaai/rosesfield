@@ -126,7 +126,13 @@ describe("the Video engine request", () => {
       { prompt, cameraMove: "push-in", length: 5 }
     )
     expect(submission.ref).toBe(jobId)
-    expect(submission.models).toEqual(["Lightricks/LTX-2.5"])
+    expect(submission.models).toEqual([
+      "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+      "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
+      "ltx-2.5-video-vae-bf16.safetensors",
+      "ltx-2.5-audio-vae-bf16.safetensors",
+      "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
+    ])
     expect(submission.workflowHash).toMatch(/^[0-9a-f]{64}$/)
     expect(workflow["900"]?.inputs).toEqual({
       string_a: prompt,

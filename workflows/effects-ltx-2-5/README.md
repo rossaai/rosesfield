@@ -61,7 +61,7 @@ Only a look with a hit loads the two Stable Audio 3 files. The Community License
 
 Lightricks' LTX 2.5 files are gated on Hugging Face, so their SHA256 digests are not in the UI file. Accept the LTX 2.5 licence on Hugging Face before you download them.
 
-Effects loads the bf16 transformer and the bf16 text encoder, where `video-ltx-2-5-text` and `video-ltx-2-5-start-frame` load the int8 files. On Push into eye, the bf16 files give a photo-real iris, natural skin and the person's own eye colour, where the int8 files give an iris that reads as drawn and skin like cracked clay. The bf16 files take more GPU time per run. Both files sit in the same Hugging Face repository under the same LTX-2.x Community License as the int8 files.
+Effects loads the bf16 transformer and the bf16 text encoder, as `motion-guide-ltx-2-5`, `video-ltx-2-5-text` and `video-ltx-2-5-start-frame` do. On Push into eye, the bf16 files give a photo-real iris, natural skin and the person's own eye colour, where the int8 files of the same repository give an iris that reads as drawn and skin like cracked clay. The bf16 files take more GPU time per run. Both files sit in the same Hugging Face repository under the same LTX-2.x Community License as the int8 files.
 
 ## The effects
 

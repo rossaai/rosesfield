@@ -104,9 +104,9 @@ async function submitOnce(inputs: Record<string, unknown>) {
 describe("the engine requests Video edit sends to Comfy", () => {
   it.each(engineCases.map((one) => ({ ...one, label: one.name })))(
     "$label",
-    async ({ inputs, model, expected, plant }) => {
+    async ({ inputs, models, expected, plant }) => {
       const { submission, workflow } = await submitOnce(inputs)
-      expect(submission.models).toEqual([model])
+      expect(submission.models).toEqual(models)
       const packs = inputs.mode === "reframe" ? ltxPackNodes : new Set<string>()
       expect(graphProblemsOf(workflow, packs)).toEqual([])
       expect(valueProblemsOf(workflow, expected)).toEqual([])
