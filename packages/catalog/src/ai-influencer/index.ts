@@ -4,6 +4,7 @@ export {
   promptInput,
   sheetAspect,
   sheetHostedInputs,
+  sheetShapeOf,
   withSheetPrompt,
 } from "#ai-influencer/sheet-run"
 export {

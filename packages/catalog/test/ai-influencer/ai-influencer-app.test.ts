@@ -3,7 +3,11 @@ import type { ModelField } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
 import { app, photoModel, sheetModel } from "#ai-influencer/app"
 import { sheetPrompt } from "#ai-influencer/sheet-prompt"
-import { sheetHostedInputs, withSheetPrompt } from "#ai-influencer/sheet-run"
+import {
+  sheetHostedInputs,
+  sheetShapeOf,
+  withSheetPrompt,
+} from "#ai-influencer/sheet-run"
 import { traitInputNames, traitSections } from "#ai-influencer/traits"
 import { appOrder } from "#app-order"
 import { listApps } from "#list-apps"
@@ -130,5 +134,14 @@ describe("a run of AI Influencer on a hosted model", () => {
       prompt: sheetPrompt(capybara),
       aspect_ratio: "16:9",
     })
+  })
+
+  it("asks a model with sizes and no 16:9 for its size closest to 16:9, and never a square or a portrait", () => {
+    expect(sheetShapeOf(["1024x1024", "1536x1024", "1024x1536", "auto"])).toBe(
+      "1536x1024"
+    )
+    expect(sheetShapeOf(["1:1", "16:9", "9:16"])).toBe("16:9")
+    expect(sheetShapeOf(["1024x1024", "1024x1536"])).toBeNull()
+    expect(sheetShapeOf(["1K", "2K"])).toBeNull()
   })
 })
