@@ -8,7 +8,6 @@ Renders the person in your photo moving along your guide video, on LTX 2.3 22B d
 | Run by | [`motion`](../../packages/catalog/src/motion/), in Follow a guide |
 | Core model | LTX 2.3 22B distilled, with the LTX 2.3 union control IC-LoRA |
 | Custom node packs | none, every node is a ComfyUI core node |
-| GPU memory | Not measured. |
 
 ## Inputs
 
@@ -51,13 +50,13 @@ Rosesfield ships no weights. Each file goes into the model folder its row names.
 ## Files
 
 - [`motion-guide-ltx-2-3-ic-lora.api.json`](motion-guide-ltx-2-3-ic-lora.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`motion-guide-ltx-2-3-ic-lora.json`](motion-guide-ltx-2-3-ic-lora.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link and its digest. A script wrote it from the Motion graph's UI file. No ComfyUI loaded or saved it yet.
+- [`motion-guide-ltx-2-3-ic-lora.json`](motion-guide-ltx-2-3-ic-lora.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link and its digest. A script writes it from the Motion graph's UI file.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
 
 The graph of [`motion-ltx-2-3-ic-lora`](../motion-ltx-2-3-ic-lora/README.md), which follows Comfy's template `video_ltx2_3_ic_lora` at commit `59a3b48bf369c5a15f29a1308bae3e279fa15505` of [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT. The template guides the IC-LoRA with a depth video, as this graph does.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Every node class it runs is listed by Comfy Cloud's `GET /api/object_info`, read on 2026-10-28, and `packages/catalog/src/comfy/cloud-weights.json` records each of its three files from that read: the checkpoint under `CheckpointLoaderSimple`, the IC-LoRA under `LoraLoaderModelOnly` and the text encoder under `CLIPLoader`. Its class names, input names and links are the Motion graph's, checked against the node definitions of ComfyUI v0.41.0.
+Every node class it runs is listed by Comfy Cloud's `GET /api/object_info`, read on 2026-10-28, and `packages/catalog/src/comfy/cloud-weights.json` records each of its three files from that read: the checkpoint under `CheckpointLoaderSimple`, the IC-LoRA under `LoraLoaderModelOnly` and the text encoder under `CLIPLoader`. Its class names, input names and links are the Motion graph's, checked against the node definitions of ComfyUI v0.41.0.

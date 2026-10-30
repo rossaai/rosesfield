@@ -27,7 +27,7 @@ workflows/                every ComfyUI graph Rosesfield ships, a UI file and an
 docs/
 ```
 
-`apps/` is what reaches your device. `services/` is what runs on a server. `packages/` is code two of them share. A folder name is a suggestion until the scaffold lands. The rules below are not.
+`apps/` is what reaches your device. `services/` is what runs on a server. `packages/` is code two of them share.
 
 ## One codebase, every platform
 
@@ -56,7 +56,7 @@ Every ComfyUI workflow lives in `workflows/` at the repository root. Each one is
 - A graph is flat, with no subgraph, so a node id is the same in both files, in the bindings and in App Mode.
 - Comfy Cloud and your own ComfyUI behind comfy-api-proxy run the same API file, per `docs/stack.md` §The one engine.
 
-Until a graph moves, it sits in `packages/catalog/src/<app-id>/comfy/`.
+A graph outside `workflows/` sits in its app's `packages/catalog/src/<app-id>/comfy/`, such as `packages/catalog/src/three-d/comfy/pixal3d-trellis-2.api.json`.
 
 ## Contexts and layers
 

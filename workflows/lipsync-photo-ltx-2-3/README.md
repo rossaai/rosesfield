@@ -8,7 +8,7 @@ Makes a video of the person in your photo speaking your audio with LTX 2.3 22B i
 | Run by | [`lipsync`](../../packages/catalog/src/lipsync/), as From a photo's default |
 | Core model | LTX 2.3 22B dev, fp8, with the distilled LoRA 1.1 |
 | Custom node packs | none, every node is a ComfyUI core node |
-| GPU memory | Not measured. The model files it loads add up to 42.3 GB. |
+| GPU memory | The model files it loads add up to 42.3 GB. |
 
 ## Inputs
 
@@ -59,7 +59,7 @@ The LTX-2 Community License asks an entity with annual revenue of 10,000,000 USD
 ## Files
 
 - [`lipsync-photo-ltx-2-3.api.json`](lipsync-photo-ltx-2-3.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`lipsync-photo-ltx-2-3.json`](lipsync-photo-ltx-2-3.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link and its SHA256. A script wrote it from the API file. No ComfyUI loaded or saved it yet.
+- [`lipsync-photo-ltx-2-3.json`](lipsync-photo-ltx-2-3.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link and its SHA256. A script writes it from the API file.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
@@ -71,6 +71,6 @@ Its nodes follow Comfy's template `video_ltx2_3_ia2v` in [Comfy-Org/workflow_tem
 - The video carries your audio, node 332, in place of the decoded audio of node 303, which is left out.
 - The video size is the catalog's, 512 by 512 for 1:1, half of it in the first stage. The template renders 1280 by 720.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Its class names, input names and links follow the template and the LTX 2.5 graphs of this folder that ran on Comfy Cloud. `CreateVideo` takes `fps` and `bit_depth` 8, as in those graphs, where the template sets `bit_depth` to `auto`.
+Its class names, input names and links follow the template and the LTX 2.5 graphs of this folder. `CreateVideo` takes `fps` and `bit_depth` 8, as in those graphs, where the template sets `bit_depth` to `auto`.

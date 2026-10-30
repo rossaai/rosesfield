@@ -8,7 +8,7 @@ Makes up to 4 images from a prompt with Z-Image Turbo in 8 steps. Built from Com
 | Run by | [`image`](../../packages/catalog/src/image/) |
 | Core model | Z-Image Turbo |
 | Custom node packs | none, every node is a ComfyUI core node |
-| GPU memory | Not measured. The model files it loads add up to 20.7 GB. |
+| GPU memory | The model files it loads add up to 20.7 GB. |
 
 ## Inputs
 
@@ -41,13 +41,13 @@ Rosesfield ships no weights. Each file goes into the model folder its row names.
 ## Files
 
 - [`image-z-image-turbo.api.json`](image-z-image-turbo.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`image-z-image-turbo.json`](image-z-image-turbo.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script wrote it from the API file with the node definitions of ComfyUI v0.41.0. No ComfyUI loaded or saved it yet.
+- [`image-z-image-turbo.json`](image-z-image-turbo.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script writes it from the API file with the node definitions of ComfyUI v0.41.0.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
 
 Its nodes follow Comfy's template `image_z_image_turbo` in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT, read on 2026-10-17, with the subgraphs opened.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source.
+Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source.

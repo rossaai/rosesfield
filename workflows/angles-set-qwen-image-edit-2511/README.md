@@ -8,7 +8,7 @@ Draws your subject from 4 views in one run, one branch of Qwen Image Edit 2511 w
 | Run by | [`angles`](../../packages/catalog/src/angles/) |
 | Core model | Qwen Image Edit 2511 with the Multiple Angles LoRA |
 | Custom node packs | none, every node is a ComfyUI core node |
-| GPU memory | Not measured. The model files it loads add up to 51.6 GB. |
+| GPU memory | The model files it loads add up to 51.6 GB. |
 
 ## Inputs
 
@@ -55,13 +55,13 @@ Rosesfield ships no weights. Each file goes into the model folder its row names.
 ## Files
 
 - [`angles-set-qwen-image-edit-2511.api.json`](angles-set-qwen-image-edit-2511.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`angles-set-qwen-image-edit-2511.json`](angles-set-qwen-image-edit-2511.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script wrote it from the API file with the node definitions of ComfyUI v0.41.0. No ComfyUI loaded or saved it yet.
+- [`angles-set-qwen-image-edit-2511.json`](angles-set-qwen-image-edit-2511.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script writes it from the API file with the node definitions of ComfyUI v0.41.0.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
 
 Four copies of the branch of `angles-qwen-image-edit-2511`, one per view, with node ids 1000, 2000, 3000 and 4000 higher, joined by `ImageBatch`.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source.
+Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source.

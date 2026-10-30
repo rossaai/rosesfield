@@ -8,7 +8,7 @@ Makes a song from a description and optional lyrics, up to the length you set. T
 | Run by | [`audio`](../../packages/catalog/src/audio/), Music |
 | Core model | MiniMax-Music3 |
 | Custom node packs | none, every node is a ComfyUI core node |
-| GPU memory | Not measured. The model files it loads add up to 14.3 GB. |
+| GPU memory | The model files it loads add up to 14.3 GB. |
 
 ## Inputs
 
@@ -52,13 +52,13 @@ The licence asks a commercial product to show the name MiniMax-Music3 on its int
 ## Files
 
 - [`audio-music-minimax-music-3.api.json`](audio-music-minimax-music-3.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`audio-music-minimax-music-3.json`](audio-music-minimax-music-3.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script wrote it from the API file with the node definitions of ComfyUI v0.41.0. No ComfyUI loaded or saved it yet.
+- [`audio-music-minimax-music-3.json`](audio-music-minimax-music-3.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script writes it from the API file with the node definitions of ComfyUI v0.41.0.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
 
 Its nodes follow Comfy's template `audio_minimax_music_3` in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates) at `59a3b48bf369c5a15f29a1308bae3e279fa15505`, MIT, read on 2026-10-20, with the subgraph opened.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source.
+Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source.

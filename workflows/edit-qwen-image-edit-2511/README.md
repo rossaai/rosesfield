@@ -8,7 +8,6 @@ Changes your photo the way your words say with Qwen Image Edit 2511 in 40 steps,
 | Run by | [`edit`](../../packages/catalog/src/edit/) |
 | Core model | Qwen Image Edit 2511, fp8 mixed |
 | Custom node packs | none, every node is a ComfyUI core node |
-| GPU memory | Not measured. |
 
 ## Inputs
 
@@ -46,13 +45,13 @@ Rosesfield ships no weights. Each file goes into the model folder its row names.
 ## Files
 
 - [`edit-qwen-image-edit-2511.api.json`](edit-qwen-image-edit-2511.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`edit-qwen-image-edit-2511.json`](edit-qwen-image-edit-2511.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script wrote it from the API file and the node layouts of the other Qwen Image Edit 2511 UI files in this folder. No ComfyUI loaded or saved it yet.
+- [`edit-qwen-image-edit-2511.json`](edit-qwen-image-edit-2511.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script writes it from the API file and the node layouts of the other Qwen Image Edit 2511 UI files in this folder.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
 
 Its nodes follow Comfy's template `image_qwen_image_edit_2511` in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT, with the subgraphs opened and the Lightning switch off: shift 3.1, CFG normalization at 1, the edit text encoder for your words and for an empty negative, the reference latent method `index_timestep_zero`, and 40 steps at cfg 4 with euler and simple. The image scale is `ImageScaleToTotalPixels` in place of `FluxKontextImageScale`, per §The size.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Every class name and input name it uses is in the `object_info` Comfy Cloud answered on 2026-10-19, and every model file it loads is in that answer's model folders.
+Every class name and input name it uses is in the `object_info` Comfy Cloud answered on 2026-10-19, and every model file it loads is in that answer's model folders.

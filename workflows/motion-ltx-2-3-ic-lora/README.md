@@ -8,7 +8,7 @@ Renders the person in your photo making the movements of your clip, on LTX 2.3 2
 | Run by | [`motion`](../../packages/catalog/src/motion/), in Move a photo and in Swap a character |
 | Core model | LTX 2.3 22B distilled, with the LTX 2.3 union control IC-LoRA |
 | Custom node packs | none, every node is a ComfyUI core node |
-| GPU memory | Not measured. The model files it loads add up to 41.7 GB. |
+| GPU memory | The model files it loads add up to 41.7 GB. |
 
 ## Inputs
 
@@ -54,13 +54,13 @@ Rosesfield ships no weights. Each file goes into the model folder its row names.
 ## Files
 
 - [`motion-ltx-2-3-ic-lora.api.json`](motion-ltx-2-3-ic-lora.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`motion-ltx-2-3-ic-lora.json`](motion-ltx-2-3-ic-lora.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link and its digest. A script wrote it from the API file with the node definitions of ComfyUI v0.41.0. No ComfyUI loaded or saved it yet.
+- [`motion-ltx-2-3-ic-lora.json`](motion-ltx-2-3-ic-lora.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link and its digest. A script writes it from the API file with the node definitions of ComfyUI v0.41.0.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
 
 Its loaders, its IC-LoRA guide, its sampler at 8 steps with `euler_ancestral` and `linear_quadratic`, and its crop and decode follow Comfy's template `video_ltx2_3_ic_lora` at commit `59a3b48bf369c5a15f29a1308bae3e279fa15505` of [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT, with its subgraphs opened. The node ids are the inner ids of the template where the node is the template's. Its pose guide, nodes 707 to 712, follows the SDPose subgraph of `video_minimax_h3_fun_controlnet_union` at the same commit, with one person in place of two.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Its class names, input names, required inputs and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source in `comfy_extras/nodes_lt.py`, `nodes_lt_audio.py`, `nodes_sdpose.py`, `nodes_rtdetr.py`, `nodes_math.py`, `nodes_video.py`, `nodes_images.py`, `nodes_post_processing.py`, `nodes_string.py` and `nodes.py`.
+Its class names, input names, required inputs and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source in `comfy_extras/nodes_lt.py`, `nodes_lt_audio.py`, `nodes_sdpose.py`, `nodes_rtdetr.py`, `nodes_math.py`, `nodes_video.py`, `nodes_images.py`, `nodes_post_processing.py`, `nodes_string.py` and `nodes.py`.

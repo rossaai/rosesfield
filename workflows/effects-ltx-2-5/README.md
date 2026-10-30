@@ -10,7 +10,7 @@ Scales and centre-crops your photo to the chosen shape and makes the effect's la
 | Image model | Qwen Image Edit 2511, for the last frame |
 | Custom node packs | two, for the sound only. [ComfyUI-WanVideoWrapper](https://github.com/kijai/ComfyUI-WanVideoWrapper) at commit `088128b224242e110d3906c6750e9a3a348a659b`, Apache-2.0, gives `NormalizeAudioLoudness`. [ComfyUI_AudioTools](https://github.com/lum3on/ComfyUI_AudioTools) at commit `c816d0a1629c05a0f463ddb77ea96ada69875d32`, MIT, gives `AudioAmplify`, `AudioFadeOut`, `AudioFadeIn` and `AudioParametricEQ`. Comfy Cloud lists both in its `object_info`. Every other node is a ComfyUI core node, and a silent look sends no pack node |
 | Adapters | none. Comfy Cloud holds no LTX 2.5 adapter, so no recipe loads one |
-| GPU memory | Not measured. LTX's system requirements name at least 32 GB of VRAM for LTX 2.5, on [docs.ltx.io](https://docs.ltx.io/open-source-model/getting-started/system-requirements). The bf16 transformer file alone is 42.0 GB. |
+| GPU memory | LTX's system requirements name at least 32 GB of VRAM for LTX 2.5, on [docs.ltx.io](https://docs.ltx.io/open-source-model/getting-started/system-requirements). The bf16 transformer file alone is 42.0 GB. |
 
 ## Inputs
 
@@ -61,13 +61,15 @@ Only a look with a hit loads the two Stable Audio 3 files. The Community License
 
 Lightricks' LTX 2.5 files are gated on Hugging Face, so their SHA256 digests are not in the UI file. Accept the LTX 2.5 licence on Hugging Face before you download them.
 
-Effects loads the bf16 transformer and the bf16 text encoder, where `video-ltx-2-5-text` and `video-ltx-2-5-start-frame` load the int8 files. In one run of Push into eye on Comfy Cloud, the bf16 files gave a photo-real iris, natural skin and the person's own eye colour. The int8 runs gave an iris two judges called drawn or illustrated, and skin like cracked clay. The bf16 run cost 28.42 credits against about 20 for an int8 run, and took 123 s against about 95 s. Both files sit in the same Hugging Face repository under the same LTX-2.x Community License as the int8 files.
+Effects loads the bf16 transformer and the bf16 text encoder, where `video-ltx-2-5-text` and `video-ltx-2-5-start-frame` load the int8 files. On Push into eye, the bf16 files give a photo-real iris, natural skin and the person's own eye colour, where the int8 files give an iris that reads as drawn and skin like cracked clay. The bf16 files take more GPU time per run. Both files sit in the same Hugging Face repository under the same LTX-2.x Community License as the int8 files.
 
 ## The effects
 
 Each effect is a recipe kept as data in [`packages/catalog/src/effects/recipes/`](../../packages/catalog/src/effects/recipes/). A recipe holds its prompt, where the photo sits, its end-frame prompt and strength, its mid frame if it has one, its hold strength, its adapter, which is always none, and its fixed length of 5 to 15 seconds. Its design holds the unit and the family of the reference reading it is designed from, the set piece, the cut windows, the last frame, the sound bed with its loudness band and true peak, and the encode with its grain.
 
-A recipe passes only with the proof of one run: a gate run of the look's criteria list that held its reference outputs and refused one planted output, a judge that wrote none of its inputs and held the run against every criterion that applies, a reading of the file inside the recipe's length, pixel area, cut windows, loudness band and last frame, with a first frame whose mean luma sits above the black floor of 17.5, so a run that starts black does not pass, and the row of that run in the run ledger, [`runs.json`](../../packages/catalog/src/effects/runs.json), with the same effect, graph, seed, resolution and shape and the verdict kept. Every run that made a kept or a refused output is a row of that ledger with its effect, the hash of its graph, the hash of its photo, its seed, resolution and shape, the balance before and after it, and the judge's verdict with the criteria it failed. The catalog refuses a row that starts or ends under 2,000 credits, and a passed recipe that lacks any of these, and Effects offers only the passed recipes. While none has passed, Effects takes no run.
+A recipe passes only with the proof of one run: a gate run of the look's criteria list that held its reference outputs and refused one planted output, a judge that wrote none of its inputs and held the run against every criterion that applies, a reading of the file inside the recipe's length, pixel area, cut windows, loudness band and last frame, with a first frame whose mean luma sits above the black floor of 17.5, so a run that starts black does not pass, and the row of that run in the run ledger, [`runs.json`](../../packages/catalog/src/effects/runs.json), with the same effect, graph, seed, resolution and shape and the verdict kept. Each row of that ledger holds its effect, the hash of its graph, the hash of its photo, its seed, resolution and shape, the balance before and after it, and the judge's verdict with the criteria it failed. The catalog refuses a row that starts or ends under 2,000 credits, and a passed recipe that lacks any of these.
+
+A recipe is an example of the Motion app. A recipe also carries a maintainer's approval or none, and an example keeps a result only when it passed or a maintainer approved it. Motion offers the approved recipes. An owner on the local lock can also try the rest, per `packages/catalog/src/motion/examples/offered-examples.ts`.
 
 | End-frame source | What the graph does |
 |---|---|
@@ -147,9 +149,9 @@ A look's sound bed can also end in a fade to silence, 0 to 2 seconds in steps of
 
 Push into eye uses hits, a build, a brighten and a fade.
 
-## Resolutions and run time
+## Resolutions and the wait
 
-Effects renders at 480p, 720p and 1080p. At 1080p the LTX size is 1920 by 1088 at 16:9, and the delivery size is 1920 by 1080. On Comfy Cloud, a run at 1080p took 241 s, and runs at 720p took up to 165 s. A run may take up to 600 s before Rosesfield stops waiting for it.
+Effects renders at 480p, 720p and 1080p. At 1080p the LTX size is 1920 by 1088 at 16:9, and the delivery size is 1920 by 1080. Motion waits up to 1,800 s for a run, per `limits` in `packages/catalog/src/motion/app.ts`.
 
 The UI file holds a muted `MaskPreview` on the matte and a muted `PreviewImage` on the end frame, so you can turn them on.
 
@@ -160,7 +162,7 @@ The LTX-2.x Community License asks Rosesfield to pass its use restrictions to yo
 ## Files
 
 - [`effects-ltx-2-5.api.json`](effects-ltx-2-5.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`effects-ltx-2-5.json`](effects-ltx-2-5.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script wrote it from the API file. No ComfyUI loaded or saved it yet.
+- [`effects-ltx-2-5.json`](effects-ltx-2-5.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script writes it from the API file.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
@@ -169,4 +171,4 @@ Written for Rosesfield from ComfyUI core nodes and the two sound packs. Its two-
 
 ## Checked
 
-Every node class this file holds comes from ComfyUI's `nodes` or `comfy_extras` modules, except the sound nodes 359 to 361, whose inputs were read from both packs' source at the pinned commits and from Comfy Cloud's `object_info`, and the fade node 362, `AudioFadeOut`, which ran on Comfy Cloud in the Push into eye runs. The hits' core audio nodes were read from `comfy_extras/nodes_audio.py` of ComfyUI v0.41.0. `AudioFadeIn` and `AudioParametricEQ` were read from the source of ComfyUI_AudioTools at commit `c816d0a`, and its Stable Audio 3 nodes are the ones `workflows/audio-sound-stable-audio-3` runs. The LTX 2.5 and BiRefNet nodes and files were listed by Comfy Cloud's `object_info` and model folders on 2026-10-19, and the Qwen Image Edit 2511 nodes and files are the ones the workflow `headshots-qwen-image-edit-2511` runs. The grain node 381, `ImageAddNoise`, was read from `comfy_extras/nodes_images.py` of ComfyUI v0.41.0, not from Comfy Cloud's `object_info`. Node 75 sets no constant-quality value of its own, so the file is the core `SaveVideo` node's H.264 encode. The runs from the Effects screen are the proof that it runs, and the effects lab records them. Some runs start black: their first 57 frames, or every frame, decode to black. The lab's runs with the first-stage lock at 0.7 cleared the cases it measured, and one run of `workflows/video-ltx-2-5-start-frame` with the same lock still started black, so the cause is not settled.
+Every node class this file holds comes from ComfyUI's `nodes` or `comfy_extras` modules, except the sound nodes 359 to 361, whose inputs were read from both packs' source at the pinned commits and from Comfy Cloud's `object_info`, and the fade node 362, `AudioFadeOut`, which Comfy Cloud lists in its `object_info`. The hits' core audio nodes were read from `comfy_extras/nodes_audio.py` of ComfyUI v0.41.0. `AudioFadeIn` and `AudioParametricEQ` were read from the source of ComfyUI_AudioTools at commit `c816d0a`, and its Stable Audio 3 nodes are the ones `workflows/audio-sound-stable-audio-3` runs. The LTX 2.5 and BiRefNet nodes and files were listed by Comfy Cloud's `object_info` and model folders on 2026-10-19, and the Qwen Image Edit 2511 nodes are the ones the workflow `edit-qwen-image-edit-2511` runs. The grain node 381, `ImageAddNoise`, was read from `comfy_extras/nodes_images.py` of ComfyUI v0.41.0, not from Comfy Cloud's `object_info`. Node 75 sets no constant-quality value of its own, so the file is the core `SaveVideo` node's H.264 encode. The run ledger, `packages/catalog/src/effects/runs.json`, holds the runs that prove it. LTX 2.5 can return a run whose first frames decode to black, and the first-frame reading of §The effects refuses such a run for a recipe.

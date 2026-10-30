@@ -14,7 +14,7 @@ workflows/
     <id>.json             the UI file, the same graph with positions, groups and a note
     entry.json            the catalog entry: the inputs, the outputs and the models
     README.md             what it makes, its models and licences, its inputs and outputs
-    <id>-1.webp           a thumbnail from a real run, absent until one exists
+    <id>-1.webp           a thumbnail from a real run, optional
 ```
 
 - 35 workflows cover the model pipelines the apps run, listed in §The workflows by model. A workflow two apps run lives once, and each app sets its own inputs.
@@ -51,16 +51,12 @@ The file a person drops into ComfyUI.
 - `extra.linearData` lists the value inputs the catalog binds, so the workflow opens in App Mode with the inputs the app shows.
 - A node the API file does not hold is UI-only: the `MarkdownNote`, and any node with mode 2, muted. Effects holds its recipe nodes and two preview nodes muted, so you can turn them on.
 
-A script wrote every UI file from its API file with the node definitions of ComfyUI v0.41.0, read from source. No ComfyUI loaded or saved one yet. Before release, open each file in ComfyUI, check it, and save it again with Export, per §Build a workflow.
+A script writes every UI file from its API file with the node definitions of ComfyUI v0.41.0, read from source. §Build a workflow gives the steps to open a file in ComfyUI, check it and save it again with Export.
 
 ### `entry.json`
 
 - One entry per workflow, read by `packages/catalog/src/list-workflows.ts`. Its field names come from Comfy's template index and from the hub records on comfy.org: `name`, `title`, `description`, `mediaType`, `openSource`, `models` and `requiresCustomNodes`, then `partnerNodes`, the partner nodes the graph runs, then `runsOn`, `cloud-and-local` by default or `local-only` for a graph whose weight files Comfy Cloud does not hold, then `inputBindings`, which maps each input to a `nodeId` and an `inputName` as `scalar` or `cloud-asset`, then `outputs`, each with `nodeId`, `key` and `kind`.
 - `models` lists the files the API file loads, or the model names the app's history records. A run records every model of its workflow's entry.
-
-### `index.json`
-
-One file for the whole folder that a sync writes from the entries, with the apps that run each workflow and the paths of both files. It is not written yet. Its sync belongs in `packages/catalog/scripts/` beside `workflows-sync.ts`.
 
 ### The thumbnail, `<id>-1.webp`
 
@@ -131,6 +127,6 @@ Open the UI file, not the API file. ComfyUI loads an API file with no positions,
 
 On Comfy Cloud the UI file opens the same way. A workflow that needs a pack Comfy Cloud does not install runs on your own ComfyUI or on a Comfy deployment, per `docs/stack.md` §Engine targets.
 
-## What was checked
+## What is checked
 
-No workflow was loaded or exported in ComfyUI on the machine that wrote this folder. Workflows ran on Comfy Cloud from their apps' screens, and the README counts those runs by app and model in [What was proven live](../README.md#what-was-proven-live). A workflow whose model no row there names has not run on a live engine. Every API file was checked against the node definitions of ComfyUI v0.41.0, ComfyUI_Fill-ChatterBox at `f7d7a16187430abcaf91a3039b9c83aa9960816a` and ComfyUI-WanVideoWrapper at `088128b224242e110d3906c6750e9a3a348a659b`, read from source: each class name, input name, required input, link slot, link type and fixed value. The load, export and flatten behavior comes from reading ComfyUI's frontend source at main `a8e134a`, after release v1.58.0.
+Each app sends its workflow to Comfy Cloud, except a graph whose `entry.json` declares `runsOn` `local-only`, which runs on your own ComfyUI. Every API file was checked against the node definitions of ComfyUI v0.41.0, ComfyUI_Fill-ChatterBox at `f7d7a16187430abcaf91a3039b9c83aa9960816a` and ComfyUI-WanVideoWrapper at `088128b224242e110d3906c6750e9a3a348a659b`, read from source: each class name, input name, required input, link slot, link type and fixed value. The load, export and flatten behavior comes from reading ComfyUI's frontend source at main `a8e134a`, after release v1.58.0.

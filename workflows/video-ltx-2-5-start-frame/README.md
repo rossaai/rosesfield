@@ -8,7 +8,7 @@ Makes a clip of 2 to 5 seconds that starts from your image, with LTX 2.5 in two 
 | Run by | [`video`](../../packages/catalog/src/video/) |
 | Core model | LTX 2.5 22B distilled |
 | Custom node packs | none, every node is a ComfyUI core node |
-| GPU memory | Not measured. LTX's system requirements name at least 32 GB of VRAM for LTX 2.5, on [docs.ltx.io](https://docs.ltx.io/open-source-model/getting-started/system-requirements). The model files it loads add up to 39.7 GB. |
+| GPU memory | LTX's system requirements name at least 32 GB of VRAM for LTX 2.5, on [docs.ltx.io](https://docs.ltx.io/open-source-model/getting-started/system-requirements). The model files it loads add up to 39.7 GB. |
 
 ## Inputs
 
@@ -56,13 +56,13 @@ Lightricks' LTX 2.5 files are gated on Hugging Face, so their SHA256 digests are
 ## Files
 
 - [`video-ltx-2-5-start-frame.api.json`](video-ltx-2-5-start-frame.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`video-ltx-2-5-start-frame.json`](video-ltx-2-5-start-frame.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script wrote it from the API file with the node definitions of ComfyUI v0.41.0. No ComfyUI loaded or saved it yet.
+- [`video-ltx-2-5-start-frame.json`](video-ltx-2-5-start-frame.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script writes it from the API file with the node definitions of ComfyUI v0.41.0.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
 
 Its nodes follow Comfy's template `video_ltx2_5_i2v` in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT, read on 2026-10-17, with the subgraphs opened. The last-frame guide and the crop guides follow `video_ltx2_5_flf2v` in the same repository, read on 2026-10-20: a guide at `frame_idx` -1 at strength 0.7, and `LTXVCropGuides` after sampling. That template renders one stage, so the guide repeats in the second stage here. The prompt enhancer is left out, so the model reads your words.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source.
+Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source.

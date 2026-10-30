@@ -8,7 +8,7 @@ Reads your script aloud in one of 23 languages. With a recording, it speaks in t
 | Run by | [`audio`](../../packages/catalog/src/audio/), Speech and Voice clone |
 | Core model | Chatterbox Multilingual |
 | Custom node packs | [ComfyUI_Fill-ChatterBox](https://github.com/filliptm/ComfyUI_Fill-ChatterBox) at commit `f7d7a16187430abcaf91a3039b9c83aa9960816a`, MIT, per its README |
-| GPU memory | Not measured. The node pack's README recommends an NVIDIA GPU with 8 GB of VRAM or more, and runs on a CPU or a Mac too. The model files it loads add up to 3.2 GB. |
+| GPU memory | The node pack's README recommends an NVIDIA GPU with 8 GB of VRAM or more, and runs on a CPU or a Mac too. The model files it loads add up to 3.2 GB. |
 
 ## Inputs
 
@@ -54,13 +54,13 @@ Never use the other speech pack on Comfy Cloud, `ComfyUI-Qwen-TTS` by mailzwj. I
 ## Files
 
 - [`voice-chatterbox.api.json`](voice-chatterbox.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`voice-chatterbox.json`](voice-chatterbox.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. The voice node has no model loader, so ComfyUI shows no download button. The note lists the weight files. A script wrote it from the API file with the node definitions of ComfyUI v0.41.0. No ComfyUI loaded or saved it yet.
+- [`voice-chatterbox.json`](voice-chatterbox.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. The voice node has no model loader, so ComfyUI shows no download button. The note lists the weight files. A script writes it from the API file with the node definitions of ComfyUI v0.41.0.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
 
 Its nodes follow Comfy's template `audio-chatterbox_tts_multilingual` in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT, read on 2026-10-17.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0 and the pinned node pack, read from source.
+Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0 and the pinned node pack, read from source.

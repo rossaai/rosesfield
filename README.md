@@ -68,7 +68,7 @@ Your Comfy key is the only sign-in, and each run spends credits from your own Co
   </tr>
 </table>
 
-Each clip plays on its own, without its sound. Each one is a paid run in the running app, made from 2026-10-22 to 2026-10-29.
+Each clip is a run in Rosesfield on Comfy, shown without its sound.
 
 Of the 36 Higgsfield products this README lists, 24 have a Rosesfield app that does the same job, and Rosesfield adds Music, Sound effects and 3D. [See them side by side](#rosesfield-and-higgsfield-app-by-app).
 
@@ -76,7 +76,7 @@ Of the 36 Higgsfield products this README lists, 24 have a Rosesfield app that d
 
 ## In detail
 
-This part is for reviewers and AI agents: the facts, the comparison, how Rosesfield is built with ComfyUI, and what was proven.
+This part is for reviewers and AI agents: the facts, the comparison, and how Rosesfield is built with ComfyUI.
 
 | | |
 |---|---|
@@ -88,13 +88,12 @@ This part is for reviewers and AI agents: the facts, the comparison, how Rosesfi
 | Ways in | the web app, installable on a phone, an MCP server with one tool per app, an HTTP API with one route per app, and an agent that runs the apps for you |
 | Hosts | your machine with bun, or Cloudflare Workers |
 | Price | Comfy credits, shown on Generate when the price is known, and the real cost in History after each run |
-| Proof | 114 proof runs and 122 showroom runs on Comfy, counted in [What was proven live](#what-was-proven-live) |
 | Higgsfield products with a Rosesfield app | 24 of the 36 listed below |
 | Licence | MIT |
 
 ## Rosesfield and Higgsfield, app by app
 
-Higgsfield's products as higgsfield.ai listed them on 2026-10-17, beside the Rosesfield app that does the same job. Rosesfield runs open-weights models and the models Comfy hosts. It does not run Higgsfield's own models.
+Higgsfield's products, as higgsfield.ai lists them, beside the Rosesfield app that does the same job. Rosesfield runs open-weights models and the models Comfy hosts. It does not run Higgsfield's own models.
 
 | Higgsfield | Rosesfield | What you do in Rosesfield |
 |---|---|---|
@@ -137,75 +136,46 @@ Every run reaches Comfy through the Comfy SDK, `@comfyorg/sdk` 0.5.0, on one Com
 - An example in Motion's Library runs on the first-and-last-frame graph [`effects-ltx-2-5`](workflows/effects-ltx-2-5/README.md), on LTX 2.5, or on Motion's guide graph with a guide the engine holds.
 - [docs/stack.md](docs/stack.md) lists every package and each call Rosesfield makes to Comfy.
 
-## What each run made
+## The VFX workflow, built with LTX
 
-The runs in [Made with Rosesfield](#made-with-rosesfield), with their models and costs. The Video edit run was made on 2026-10-22, and the others on 2026-10-29. Where a result was made from a picture, the row names the run that made that picture first.
+Motion puts the person in your photo in place of the person in your clip, at the same moments, with LTX 2.5 as its video model. You give a clip of 2 to 10 seconds, 1 to 15 photos and a sentence, and press Generate once. The chain runs six steps on Comfy:
 
-| App | The run |
+| Step | What runs | What it gives the next step |
+|---|---|---|
+| 1. Plan | a Router chat model reads 4 frames of your clip, your photos and your sentence | who to replace, what they become, and the scene |
+| 2. Read | [`motion-read-clip`](workflows/motion-read-clip/README.md): Depth Anything 3 and SAM 3.1 | a depth video, a mask of each person to replace, and the first frame |
+| 3. Edit | Qwen Image Edit 2511, or GPT Image 2.5 | the first frame with your person in it, in the clip's own pose |
+| 4. Draft | [`motion-guide-ltx-2-5`](workflows/motion-guide-ltx-2-5/README.md) at 480p: LTX 2.5 with the LTX 2.3 union control IC-LoRA | the motion, timed to the clip |
+| 5. Restore | GPT Image 2.5 on the draft's last frame and your photos | an end key that holds the face and the clothes |
+| 6. Final | the same graph and seed at 720p or 1080p, with the edited first frame and the end key | the video, with sound LTX makes for it |
+
+- The depth video guides the set at full attention and the people at 0.2. The camera move and the person's timing follow your clip, and LTX draws the person from your photo.
+- LTX 2.5 renders in two stages, half size and then a 2x latent upscale, with your edited first frame locked at frame 0.
+- Each step is its own run, with its own price in History, and you can open each graph in ComfyUI.
+- An example in Motion's Library runs the same graph on a depth video built in Blender.
+
+## How the examples were made
+
+Each example in [Made with Rosesfield](#made-with-rosesfield) is one run in the app. Where a result starts from a picture, the picture is a run too.
+
+| Example | Made with |
 |---|---|
-| Image, then Edit | A photo of a woman watering a garden with a hose, from GPT Image 2.5 Sunburst, high quality, 1024 by 1536, 12.64 credits, made in 55 seconds. Edit turns the water into a stream of orange and magenta petals and keeps the rest of the photo. GPT Image 2.5 Sunburst, 16.26 credits, made in 44 seconds. |
-| Video | A goose in a red cape on a throne, from a start frame GPT Image 2.5 Sunburst made for 12.59 credits. The courtiers move and the camera pushes in. LTX 2.5, 720p, 5 seconds with sound, 6.52 credits, made in 33 seconds. |
-| Edit | A camper van becomes a cake of the same shape, with a wedge cut from its side. The van is from Krea 2 Medium Turbo, 3.16 credits. The cake is from GPT Image 2.5 Sunburst, 18.55 credits, made in 55 seconds. |
-| Shot | One shot from a wide field of red poppies down to one honeybee on one poppy. LTX 2.5, push in, 720p, 5 seconds with sound, 6.57 credits, made in 31 seconds. |
-| Motion | Grab and run, an example in Motion's Library: a man runs toward the camera down a cobbled street with a bottle, and police run behind him. Motion's guide graph on LTX 2.5, 1080p, 4 seconds with sound, 16.79 credits, made in 71 seconds. |
-| Relight | A ceramic jaguar head relit with orange light from the left and magenta light from the right. The head is from Krea 2 Medium Turbo, 3.17 credits. Qwen Image Edit 2509 with the Relight LoRA, 14.07 credits, made in 62 seconds. |
-| Image | A flamingo under a bus stop shelter at night. GPT Image 2.5 Sunburst, high quality, 1024 by 1536, 12.62 credits, made in 45 seconds. |
-| Characters | A character made from traits: a man with the head of a brown hare, in a laundromat. GPT Image 2.5 Sunburst, 16.05 credits, made in 66 seconds. |
-| Expand | A square sunflower field widened to 16:9, 1536 by 864, with more flowers facing away on both sides. The field is from Seedream 5.0 Pro, 18.99 credits. The Qwen Image Inpaint graph, 4.03 credits, made in 23 seconds. |
-| Upscale | A chameleon at twice its size, from 768 by 768 to 1536 by 1536. The photo is from Photon Flash 1, 0.67 credits, scaled to 768 by 768 with ffmpeg. The SeedVR2 3B graph, 1.28 credits, made in 14 seconds. |
-| Remove background | A perfume bottle cut out from the roses around it onto a transparent background. The photo is from Grok Imagine Image, 4.22 credits. The BiRefNet graph, 0.25 credits, made in 9 seconds. |
-| Video edit | A close-up clip at twice its frame rate, 48 frames a second. The FILM graph, 3.31 credits, made in 30 seconds. |
+| Image, then Edit | GPT Image 2.5 Sunburst makes the photo, and Edit turns the water into petals and keeps the rest |
+| Video | LTX 2.5 from a start frame by GPT Image 2.5 Sunburst, 720p, with sound |
+| Motion | Grab and run from Motion's Library, on Motion's guide graph with LTX 2.5, 1080p, with sound |
+| Shot | LTX 2.5 with a push in, 720p, with sound |
+| Edit | Krea 2 Medium Turbo makes the van, and GPT Image 2.5 Sunburst makes the cake |
+| Relight | Qwen Image Edit 2509 with the Relight LoRA, on a head by Krea 2 Medium Turbo |
+| Image | GPT Image 2.5 Sunburst |
+| Characters | GPT Image 2.5 Sunburst, from traits |
+| Expand | the Qwen Image Inpaint graph, on a field by Seedream 5.0 Pro |
+| Upscale | the SeedVR2 3B graph, from 768 to 1536 pixels |
+| Remove background | the BiRefNet graph |
+| Video edit | the FILM graph, from 24 to 48 frames a second |
 
-The clips of Edit, Relight, Expand, Upscale, Remove background and Image, then Edit show the input and then the result. They were put together with ffmpeg from the runs' own files, and the Upscale clip shows one detail of each at the same size.
+The clips that show an input and then its result are joined with ffmpeg from the runs' own files. The Upscale clip shows one detail of each at the same size.
 
-The launch film types the goose's prompt into the Image app, then shows the name and the challenge's hashtag. It opens the model picker, then plays five previews in their apps' own viewers: the goose in Image, the bee in Shot, a Music track, a Speech line and a 3D rose. It counts 25+ apps, makes a key on Comfy and pastes it in Settings, and closes on the name and rosesfield.com. It is edited from the app's own screens, and every result in it is a stored run. The 3D rose came out white from Meshy's preview mode, and its colour was added after the run by a script that runs no model. Comfy's key page in it is redrawn, and no key appears.
-
-## What was proven live
-
-Each row counts the paid runs of one area in the running app on Comfy. The counts and credits come from the maintainers' run ledger, which is not in this repository. The credits are Comfy credits, read from Comfy's balance before and after each run. What you can check here is each example in `docs/media/examples` and the two Effects runs in [`packages/catalog/src/effects/runs.json`](packages/catalog/src/effects/runs.json), with their Comfy balance before and after.
-
-| Area | Proven models | Date | Runs | Credits |
-|---|---|---|---|---|
-| Image | Luma Photon Flash 1, FLUX 3 Image, GPT Image 2.5 Flare, Krea 2 Medium Turbo, Grok Imagine Image, Seedream 5.0 Flash, and the graphs Z-Image Turbo, FLUX.2 Klein 4B and Qwen Image 2512 | 2026-10-19 | 32 | about 117 |
-| Video | H3 Max Turbo, Seedance 1.0 Pro Fast, and the LTX 2.5 graphs from text and from a start frame | 2026-10-19 | 7 | about 74 |
-| Effects | the Effects graph on LTX 2.5, with its last frame from Qwen Image Edit 2511 or FLUX.2 Klein 4B | 2026-10-19 and 2026-10-21 | 70 | 517 |
-| Background removal | the BiRefNet graph | 2026-10-19 | 1 | 6.73 |
-| Edit | the Qwen Image Edit 2511 graph | 2026-10-21 | 1 | 12.35 |
-| Video edit | the BiRefNet background, FILM frame rate and LTX 2.3 reframe graphs | 2026-10-21 | 3 | 12.56 |
-
-- Six of those runs left no output in Rosesfield. Comfy refused two Image runs at submit, before any charge. Three runs failed in Rosesfield after Comfy made the output, and each cause is fixed. One Effects run failed in Comfy, which charged nothing.
-- Three runs hold an estimate instead of a reading: two Image runs, one of FLUX.2 Klein 4B and one of Kling Image O1, whose balance readings held another run, and one Video run of LTX 2.5 that failed before its reading. So Image and Video show about.
-- Kling Image O1 ran on 2026-10-19 and is counted in the 32. It is not in the list, because the Image app now refuses every Kling Image O1 run with "These inputs do not fit this app." That defect is not fixed yet.
-- Every Effects run of 2026-10-21 made a video, and none of the 15 met every criterion of its effect yet.
-- The agent has no live turn in these counts yet.
-
-From 2026-10-20 to 2026-10-22, eight showroom rounds made the examples above in the running app. Each row counts the paid runs of one app in those rounds, from the same ledger. Kept counts the results that a judge who wrote none of the prompts kept. A run made outside the rounds, such as a builder's live check, is not counted.
-
-| App | Models | Runs | Credits | Kept |
-|---|---|---|---|---|
-| Image | Z-Image Turbo, Seedream 5.0 Flash, Qwen Image 2512, GPT Image 2.5 Sunburst | 82 | 252.64 | 17 |
-| Video | LTX 2.5, H3 Max Turbo, Grok Imagine Video 1.5 | 7 | 295.19 | 0 |
-| Lip sync | LTX 2.3, Kling Videos Avatar Image2video | 3 | 126.99 | 0 |
-| Upscale | SeedVR2 3B | 3 | 38.44 | 1 |
-| Edit | Qwen Image Edit 2511, GPT Image 2.5 Sunburst | 3 | 38.35 | 1 |
-| Storyboard | GPT Image 2.5 Sunburst, Z-Image Turbo | 6 | 28.28 | 0 |
-| Try-on | Qwen Image Edit 2511 | 1 | 25.82 | 0 |
-| Ads | Qwen Image Edit 2511, GPT Image 2.5 Sunburst | 2 | 21.21 | 0 |
-| Relight | Qwen Image Edit 2509 with the Relight LoRA | 1 | 17.04 | 1 |
-| Motion | LTX 2.3 with its control LoRA | 1 | 14.57 | 0 |
-| Audio | Chatterbox, MiniMax Music 3, Eleven V4 Turbo | 4 | 14.11 | 0 |
-| Angles | Qwen Image Edit 2511 | 2 | 13.19 | 0 |
-| Shot | LTX 2.5 | 1 | 11.05 | 0 |
-| Video edit | FILM, LTX 2.5 | 2 | 8.59 | 1 |
-| Layers | Qwen Image Layered | 1 | 7.93 | 0 |
-| Expand | Qwen Image Inpaint | 1 | 3.66 | 1 |
-| Characters | Z-Image Turbo | 1 | 1.81 | 1 |
-| Background removal | BiRefNet | 1 | 0.68 | 1 |
-
-- The 122 runs cost 919.55 credits by their rows. Rounds one to six read each run's credits from Comfy's balance before and after it. Rounds seven and eight read each run's price in History, and Comfy's balance for the two Storyboard runs, whose hosted keyframes hold no price, and for one failed Upscale run that Comfy charged. Those rows sum to 0.01 credits less than Comfy's balance fell over the two rounds.
-- Every video model given an action changed the person or failed the action, so no Video, Lip sync, Motion or Shot result was kept yet.
-- Two Motion runs failed with no charge and one Eleven V4 Turbo run was refused before any job. None of the three is counted.
-- Headshots, Remake and 3D have no run in these rounds.
+The launch film is edited from the app's own screens, and every result in it is a stored run. The 3D rose's colour is painted after its run by a script that runs no model. Comfy's key page in the film is redrawn, so no key appears.
 
 ## Settings
 

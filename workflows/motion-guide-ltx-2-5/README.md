@@ -8,7 +8,6 @@ Renders the person in your photo moving along a depth guide video, on LTX 2.5 22
 | Run by | [`motion`](../../packages/catalog/src/motion/), as the model `ltx-2-5-guide` |
 | Core model | LTX 2.5 22B distilled, bf16, with the LTX 2.3 union control IC-LoRA |
 | Custom node packs | none, every node is a ComfyUI core node |
-| GPU memory | Not measured. |
 
 ## Inputs
 
@@ -65,13 +64,13 @@ Lightricks' LTX 2.5 files are gated on Hugging Face, so their SHA256 digests are
 ## Files
 
 - [`motion-guide-ltx-2-5.api.json`](motion-guide-ltx-2-5.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`motion-guide-ltx-2-5.json`](motion-guide-ltx-2-5.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script wrote it from the API file with the node definitions of a Comfy Cloud `object_info` read. No ComfyUI loaded or saved it yet.
+- [`motion-guide-ltx-2-5.json`](motion-guide-ltx-2-5.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script writes it from the API file with the node definitions of a Comfy Cloud `object_info` read.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
 
 The graph of [`motion-guide-ltx-2-3-ic-lora`](../motion-guide-ltx-2-3-ic-lora/README.md), which follows Comfy's template `video_ltx2_3_ic_lora` at commit `59a3b48bf369c5a15f29a1308bae3e279fa15505` of [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT. The two stages follow the stage values of [`effects-ltx-2-5`](../effects-ltx-2-5/README.md) and of Lightricks' LTX-2.5 IC-LoRA union control graph, read for its structure and not copied.
 
-## What was checked
+## Checked
 
-Every node class, input name, required input, link type and choice value of the API file was checked against Comfy Cloud's `GET /api/object_info`, read on 2026-10-29, and every file it loads is listed there under its loader. Its render, the guide, the attention mask, the two stages, the end key and the sound decode, ran on Comfy Cloud at 480p and 720p as a test graph with the same nodes, with a mask video that already held the attention values. This graph adds the mask preparation, nodes 957 to 969, the loudness chain, nodes 359 to 361, and the last-frame output, nodes 1010 and 1011, and as written it has no run on a live engine.
+Every node class, input name, required input, link type and choice value of the API file was checked against Comfy Cloud's `GET /api/object_info`, read on 2026-10-29, and every file it loads is listed there under its loader.

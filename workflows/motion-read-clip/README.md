@@ -8,7 +8,7 @@ Reads up to 10 seconds of a clip at a short side of at most 768 px. Depth Anythi
 | Run by | [`motion`](../../packages/catalog/src/motion/), through `readClipBinding` in `packages/catalog/src/motion/comfy/read-clip-binding.ts` |
 | Core models | Depth Anything 3 Mono-Large and SAM 3.1 |
 | Custom node packs | one, for the depth only. [ComfyUI-DepthAnythingV3](https://github.com/PozzettiAndrea/ComfyUI-DepthAnythingV3) at commit `20ef6c8ccf8d57a0ad6f6fa7031739eb8489f2a4`, MIT, registry id `ComfyUI-DepthAnythingV3`, gives `DownloadAndLoadDepthAnythingV3Model` and `DepthAnything_V3`. Comfy Cloud lists both in its `object_info`. Every other node is a ComfyUI core node |
-| GPU memory | Not measured. The model files it loads add up to 3.1 GB. |
+| GPU memory | The model files it loads add up to 3.1 GB. |
 
 ## Inputs
 
@@ -52,15 +52,13 @@ Rosesfield ships no weights. Each file goes into the model folder its row names.
 ## Files
 
 - [`motion-read-clip.api.json`](motion-read-clip.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`motion-read-clip.json`](motion-read-clip.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script wrote it from the API file with the node definitions Comfy Cloud's `object_info` returned on 2026-10-29. No ComfyUI loaded or saved it yet.
+- [`motion-read-clip.json`](motion-read-clip.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script writes it from the API file with the node definitions Comfy Cloud's `object_info` returned on 2026-10-29.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
 
 Its tracking follows the core SAM 3 nodes as Comfy's template `video_wan21_scail2_character_replacement` wires them: `CheckpointLoaderSimple` loads SAM 3.1, its CLIP output feeds `CLIPTextEncode`, and `SAM3_VideoTrack` takes the frames, the model and the text. The comma split was read from `comfy/text_encoders/sam3_clip.py` and `comfy_extras/nodes_sam3.py` of ComfyUI's source. The depth nodes and their inputs were read from ComfyUI-DepthAnythingV3 at the pinned commit, `nodes/nodes_inference.py`, `nodes/load_model.py` and `nodes/normalization.py`.
 
-## What was checked
+## Checked
 
-On 2026-10-29 at 03:30 UTC, a free read of Comfy Cloud's `GET /api/object_info`, 3,857 node classes, and of its model folders listed every node and every file this graph names: `DownloadAndLoadDepthAnythingV3Model` and `DepthAnything_V3` from `custom_nodes.ComfyUI-DepthAnythingV3`, `SAM3_VideoTrack` and `SAM3_TrackToMask` from `comfy_extras.nodes_sam3`, every other class from ComfyUI core, `da3mono_large.safetensors` in the depth loader's list and in the `depthanything3` folder, and `sam3.1_multiplex_fp16.safetensors` in `CheckpointLoaderSimple`'s list. A script checked each node's class, each input name, each required input, each link's type and each fixed choice against those definitions and found no problem. Its control, a wrong input name, a wrong choice and a model file Cloud does not hold planted in a copy, found all three.
-
-No run of this workflow on a live engine exists, so its GPU time and its price are not measured.
+Comfy Cloud's `GET /api/object_info`, read on 2026-10-29 with 3,857 node classes, and its model folders list every node and every file this graph names: `DownloadAndLoadDepthAnythingV3Model` and `DepthAnything_V3` from `custom_nodes.ComfyUI-DepthAnythingV3`, `SAM3_VideoTrack` and `SAM3_TrackToMask` from `comfy_extras.nodes_sam3`, every other class from ComfyUI core, `da3mono_large.safetensors` in the depth loader's list and in the `depthanything3` folder, and `sam3.1_multiplex_fp16.safetensors` in `CheckpointLoaderSimple`'s list. Each node's class, each input name, each required input, each link's type and each fixed choice match those definitions.

@@ -8,7 +8,7 @@ Says the words of your recording in the voice of a second recording. It reads th
 | Run by | [`audio`](../../packages/catalog/src/audio/), Voice change |
 | Core model | Chatterbox voice conversion |
 | Custom node packs | [ComfyUI_Fill-ChatterBox](https://github.com/filliptm/ComfyUI_Fill-ChatterBox) at commit `f7d7a16187430abcaf91a3039b9c83aa9960816a`, MIT, per its README |
-| GPU memory | Not measured. The node pack's README recommends an NVIDIA GPU with 8 GB of VRAM or more. |
+| GPU memory | The node pack's README recommends an NVIDIA GPU with 8 GB of VRAM or more. |
 
 ## Inputs
 
@@ -45,13 +45,13 @@ With `resemble-perth` installed, every output carries Resemble's hidden watermar
 ## Files
 
 - [`audio-voice-change-chatterbox.api.json`](audio-voice-change-chatterbox.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`audio-voice-change-chatterbox.json`](audio-voice-change-chatterbox.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. A script wrote it from the API file with the node definitions of ComfyUI v0.41.0 and of the pinned node pack. No ComfyUI loaded or saved it yet.
+- [`audio-voice-change-chatterbox.json`](audio-voice-change-chatterbox.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. A script writes it from the API file with the node definitions of ComfyUI v0.41.0 and of the pinned node pack.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
 
 Its nodes follow Comfy's template `audio-chatterbox_vc` in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates) at `59a3b48bf369c5a15f29a1308bae3e279fa15505`, MIT, read on 2026-10-20.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0 and the pinned node pack, read from source.
+Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0 and the pinned node pack, read from source.

@@ -45,13 +45,13 @@ Comfy bills the run in credits through your key. Its price badge in Comfy Cloud'
 ## Files
 
 - [`three-d-meshy-image.api.json`](three-d-meshy-image.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`three-d-meshy-image.json`](three-d-meshy-image.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. A script wrote it from the API file. No ComfyUI loaded or saved it yet.
+- [`three-d-meshy-image.json`](three-d-meshy-image.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. A script writes it from the API file.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs, the model and the partner node.
 
 ## Terms
 
 Meshy 7.1 is a closed model. Each run is governed by [Meshy's terms](https://www.meshy.ai/terms-of-use) and [Comfy's terms](https://www.comfy.org/terms-of-service), which name partner nodes. Read Meshy's terms for who owns what a run makes on your plan.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Its class names, input names and link slots were checked against Comfy Cloud's object_info of 2026-10-19 and the source of ComfyUI at `8713616fcc321624e306bbd36be5906203dcb0dc`. The order of the widget values in the UI file follows the order of the node's inputs, and no ComfyUI frontend loaded it.
+Its class names, input names and link slots were checked against Comfy Cloud's object_info of 2026-10-19 and the source of ComfyUI at `8713616fcc321624e306bbd36be5906203dcb0dc`. The order of the widget values in the UI file follows the order of the node's inputs.

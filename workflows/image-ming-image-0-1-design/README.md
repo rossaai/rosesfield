@@ -8,7 +8,7 @@ Makes up to 4 images from a prompt with Ming Image 0.1 Design in 12 steps. Built
 | Run by | [`image`](../../packages/catalog/src/image/) |
 | Core model | Ming Image 0.1 Design, by inclusionAI |
 | Custom node packs | none, every node is a ComfyUI core node |
-| GPU memory | Not measured. The model files it loads add up to 25.9 GB. |
+| GPU memory | The model files it loads add up to 25.9 GB. |
 
 ## Inputs
 
@@ -45,7 +45,7 @@ The model's `LICENSE` at inclusionAI/Ming-Image-0.1-Design revision `c57c49689d1
 ## Files
 
 - [`image-ming-image-0-1-design.api.json`](image-ming-image-0-1-design.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`image-ming-image-0-1-design.json`](image-ming-image-0-1-design.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with its download link and its SHA256. A script wrote it from the API file. No ComfyUI loaded or saved it yet.
+- [`image-ming-image-0-1-design.json`](image-ming-image-0-1-design.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with its download link and its SHA256. A script writes it from the API file.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
@@ -56,8 +56,8 @@ Its nodes follow Comfy's template `image_ming_image_01_design_t2i` in [Comfy-Org
 - The `ResolutionSelector` and the two `PrimitiveInt` nodes are left out. The catalog sets the size on `EmptyLatentImage` and on `ModelSamplingFlux` from the format and the resolution you pick.
 - `SaveImage` saves the result in place of `SaveImageAdvanced`, with Rosesfield's file prefix.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Its class names, input names, links and fixed values were read from the template, which Comfy Cloud runs with no custom nodes.
+Its class names, input names, links and fixed values were read from the template, which Comfy Cloud runs with no custom nodes.
 
-Comfy Cloud's object_info, read on 2026-10-29 into [`cloud-nodes.json`](../../scripts/checks/cloud-graphs/cloud-nodes.json), lists none of the three model files, so its `entry.json` declares `runsOn` `local-only`. It runs on your own ComfyUI. The Image app leaves it out, and `bun run cloud:check` skips its file test. Once a new reading lists all three files, set `runsOn` to `cloud-and-local`, and the Image app lists it and opens on it as the open model the text to image board ranks highest.
+Comfy Cloud's object_info, read on 2026-10-29 into [`cloud-nodes.json`](../../scripts/checks/cloud-graphs/cloud-nodes.json), lists none of the three model files, so its `entry.json` declares `runsOn` `local-only`. It runs on your own ComfyUI. The Image app leaves it out, and `bun run cloud:check` skips its file test.

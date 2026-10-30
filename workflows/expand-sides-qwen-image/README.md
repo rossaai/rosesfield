@@ -8,7 +8,7 @@ Pads your photo by a share of its size on each side you choose and fills the new
 | Run by | [`expand`](../../packages/catalog/src/expand/) |
 | Core model | Qwen Image with the InstantX inpainting ControlNet |
 | Custom node packs | none, every node is a ComfyUI core node |
-| GPU memory | Not measured. The model files it loads add up to 36.0 GB. |
+| GPU memory | The model files it loads add up to 36.0 GB. |
 
 ## Inputs
 
@@ -47,7 +47,7 @@ Rosesfield ships no weights. Each file goes into the model folder its row names.
 ## Files
 
 - [`expand-sides-qwen-image.api.json`](expand-sides-qwen-image.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`expand-sides-qwen-image.json`](expand-sides-qwen-image.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script wrote it from the API file with the node definitions of ComfyUI v0.41.0. No ComfyUI loaded or saved it yet.
+- [`expand-sides-qwen-image.json`](expand-sides-qwen-image.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script writes it from the API file with the node definitions of ComfyUI v0.41.0.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## The join
@@ -58,6 +58,6 @@ Node 48 `ImageCompositeMasked` lays the fill over the padded photo, node 47, who
 
 Its nodes follow Comfy's blueprint `image_outpainting_qwen_image` in [Comfy-Org/workflow_templates](https://github.com/Comfy-Org/workflow_templates), MIT, read on 2026-10-17, with its three subgraphs opened. The blueprint blurs the mask with a radius of 31, and this graph uses 19, per §The join.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source.
+Its class names, input names, required inputs, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source.

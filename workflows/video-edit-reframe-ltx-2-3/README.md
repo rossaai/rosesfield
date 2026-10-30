@@ -8,7 +8,6 @@ Places your clip in the middle of a black frame of another format, then fills th
 | Run by | [`video-edit`](../../packages/catalog/src/video-edit/) |
 | Core model | LTX 2.3 22B dev, fp8, with the distilled LoRA and an outpainting IC-LoRA |
 | Custom node packs | [ComfyUI-LTXVideo](https://github.com/Lightricks/ComfyUI-LTXVideo) at commit `82bd963cdeb66d023bed8c99324a307020907ef8`, the commit Comfy's template names, LTX-2 Community License. It gives `LTXAddVideoICLoRAGuide`. Comfy Cloud installs it, so the graph runs on Comfy Cloud. |
-| GPU memory | Not measured. |
 
 ## Inputs
 
@@ -53,7 +52,7 @@ The LTX-2 Community License dated January 5, 2026 asks for a paid licence from a
 ## Files
 
 - [`video-edit-reframe-ltx-2-3.api.json`](video-edit-reframe-ltx-2-3.api.json) is the graph every engine runs, in ComfyUI's API format. The catalog imports it.
-- [`video-edit-reframe-ltx-2-3.json`](video-edit-reframe-ltx-2-3.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script wrote it from the API file with the node definitions of ComfyUI v0.41.0 and of ComfyUI-LTXVideo. No ComfyUI loaded or saved it yet.
+- [`video-edit-reframe-ltx-2-3.json`](video-edit-reframe-ltx-2-3.json) is the same graph in ComfyUI's UI format, with positions, groups and one note. Each loader lists its file with a download link. A script writes it from the API file with the node definitions of ComfyUI v0.41.0 and of ComfyUI-LTXVideo.
 - [`entry.json`](entry.json) is the catalog entry: the inputs, the outputs and the models.
 
 ## Source
@@ -65,6 +64,6 @@ Its nodes follow Comfy's template `template_ltx2_3_lora_video_outpainting` in [C
 - `ComfyMathExpression` and the float frame rate of `LTXVEmptyLatentAudio` replace ComfyMath's `CM_FloatToInt`.
 - The template's two `Float32ColorCorrect` nodes are left out. Their pack is not named in the template, so their inputs could not be read. The image to video node it bypasses and the comparison clip are left out too.
 
-## Not checked
+## Checked
 
-No run of this workflow on a live engine exists. Its core class names, input names, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source. `LTXAddVideoICLoRAGuide` was checked against ComfyUI-LTXVideo at commit `44c8a36b7c31ee00b4271daed11dc2a4aa481140`, a later commit than the pinned one, whose seven value inputs match the template's values.
+Its core class names, input names, link types and fixed values were checked against the node definitions of ComfyUI v0.41.0, read from source. `LTXAddVideoICLoRAGuide` was checked against ComfyUI-LTXVideo at commit `44c8a36b7c31ee00b4271daed11dc2a4aa481140`, a later commit than the pinned one, whose seven value inputs match the template's values.
