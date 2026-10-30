@@ -4,9 +4,11 @@ import {
   optionKeyOf,
   photoInput,
   photoModel,
+  sheetShapeOf,
   type TraitSection,
   traitInputNames,
 } from "@rosesfield/catalog/ai-influencer"
+import type { ModelField } from "@rosesfield/catalog/comfy"
 import type { AppListing, InputDefinition } from "@rosesfield/contract"
 import { IconButton } from "@rosesfield/ui/components/button"
 import { Checkbox } from "@rosesfield/ui/components/checkbox"
@@ -21,7 +23,6 @@ import { ChoiceField } from "@/screens/app/fields/choice-field"
 import { textOf } from "@/screens/app/fields/field-props"
 import { inputNote } from "@/screens/app/fields/input-copy"
 import { InputField } from "@/screens/app/fields/input-field"
-import { CatalogPicker } from "@/screens/app/hosted/catalog-picker"
 import { modelInputName } from "@/screens/app/hosted/hosted-form"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
@@ -33,7 +34,7 @@ import {
   togglePick,
   traitGroups,
 } from "@/studio/ai-influencer/sheet-traits"
-import { imageFieldsOf } from "@/studio/image/image-fields"
+import { type ImageFields, imageFieldsOf } from "@/studio/image/image-fields"
 import { HostedPanel } from "@/studio/image/image-settings"
 
 type PanelProps = { app: AppListing; form: AppForm }
@@ -241,6 +242,22 @@ function DetailsField({ app, form }: PanelProps): ReactElement | null {
   )
 }
 
+type ChoiceSetting = ImageFields["aspect"]
+
+function isSheetShape(field: ChoiceSetting): boolean {
+  return field !== null && sheetShapeOf(field.options) !== null
+}
+
+/** A hosted model's settings in AI Influencer: every one but the shape, which the run sets to 16:9 or the size closest to it. */
+function sheetFieldsOf(fields: readonly ModelField[]): ImageFields {
+  const shown = imageFieldsOf(fields)
+  return {
+    ...shown,
+    aspect: isSheetShape(shown.aspect) ? null : shown.aspect,
+    resolution: isSheetShape(shown.resolution) ? null : shown.resolution,
+  }
+}
+
 function ModelRow({
   app,
   form,
@@ -264,17 +281,12 @@ function ModelRow({
     },
   }
   return (
-    <>
-      <CatalogPicker hosted={kept} place="row" />
-      {fields === null ? null : (
-        <HostedPanel
-          app={app}
-          hosted={kept}
-          fields={imageFieldsOf(fields)}
-          form={form}
-        />
-      )}
-    </>
+    <HostedPanel
+      app={app}
+      hosted={kept}
+      fields={fields === null ? null : sheetFieldsOf(fields)}
+      form={form}
+    />
   )
 }
 

@@ -214,6 +214,16 @@ describe("AI Influencer opens", () => {
     })
   })
 
+  it("with one model picker, its quality, and no shape setting, since the run sets the shape", async () => {
+    openInfluencer()
+    expect(await shownTriggers(gptImage)).toHaveLength(1)
+    expect(
+      screen.getAllByRole("combobox").map((one) => one.textContent ?? "")
+    ).toEqual(expect.arrayContaining([expect.stringContaining("Medium")]))
+    expect(screen.queryByText("1024x1024")).toBeNull()
+    expect(screen.queryByText("1536x1024")).toBeNull()
+  })
+
   it("on the model and settings you used before, as you left them", async () => {
     keepLastUsed(app.id, {
       model: gptImage.id,
