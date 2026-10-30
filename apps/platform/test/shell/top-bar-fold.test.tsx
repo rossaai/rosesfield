@@ -87,7 +87,7 @@ describe("the top bar's fold", () => {
       ["Audio", 8],
       ["3D", 7],
       ["MCP", 5],
-      ["AgentFeaturedMotionFeatured", 6],
+      ["AgentFeaturedMotionFeaturedAI InfluencerFeatured", 6],
       ["Characters", 4],
       ["Library", 3],
       ["History", 2],

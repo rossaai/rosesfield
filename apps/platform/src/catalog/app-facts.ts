@@ -50,7 +50,9 @@ export function appLine(app: AppListing): string {
   return tCatalog(`${app.id}.line`)
 }
 
-const featuredAppIds: readonly string[] = [motionAppId]
+const aiInfluencerAppId = "ai-influencer"
+
+const featuredAppIds: readonly string[] = [motionAppId, aiInfluencerAppId]
 
 export function isFeaturedApp(app: AppListing): boolean {
   return featuredAppIds.includes(app.id)

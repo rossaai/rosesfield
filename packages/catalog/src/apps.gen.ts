@@ -1,5 +1,6 @@
 import type { AppEntry } from "#define-app"
 import { app as ads } from "#ads/app"
+import { app as aiInfluencer } from "#ai-influencer/app"
 import { app as angles } from "#angles/app"
 import { app as audio } from "#audio/app"
 import { app as backgroundRemoval } from "#background-removal/app"
@@ -28,6 +29,7 @@ import { app as voiceClone } from "#voice-clone/app"
 
 export const apps: readonly AppEntry[] = [
   { folder: "ads", app: ads },
+  { folder: "ai-influencer", app: aiInfluencer },
   { folder: "angles", app: angles },
   { folder: "audio", app: audio },
   { folder: "background-removal", app: backgroundRemoval },

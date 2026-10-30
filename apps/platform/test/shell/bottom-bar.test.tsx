@@ -85,7 +85,7 @@ describe("the bottom bar", () => {
     expect(image.getAttribute("href")).toBe("/apps/image")
   })
 
-  it("leads the list of apps with the featured pair, the Agent then Motion, each with its Featured badge, and keeps Motion in Video", async () => {
+  it("leads the list of apps with the featured row, the Agent, Motion then AI Influencer, each with its Featured badge, and keeps Motion in Video", async () => {
     const bar = await barAt("/")
     fireEvent.click(within(bar).getByRole("button", { name: "Generate" }))
     const sheet = await screen.findByRole("dialog")
@@ -94,6 +94,7 @@ describe("the bottom bar", () => {
     expect(links.map((link) => link.getAttribute("href"))).toEqual([
       "/agent",
       "/apps/motion",
+      "/apps/ai-influencer",
     ])
     for (const link of links) {
       expect(link.querySelector("[data-slot='badge']")?.textContent).toBe(
@@ -103,7 +104,7 @@ describe("the bottom bar", () => {
     const motions = within(sheet).getAllByRole("link", { name: /^Motion/ })
     expect(motions).toHaveLength(2)
     const badges = sheet.querySelectorAll("[data-slot='badge']")
-    expect(badges).toHaveLength(3)
+    expect(badges).toHaveLength(4)
   })
 
   it("opens the MCP dialog from MCP in the bar, with no route change", async () => {

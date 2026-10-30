@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { catalogApps } from "@/catalog/catalog-apps"
-import { navGroups } from "@/shell/nav-rows"
+import { appIcon, navGroups } from "@/shell/nav-rows"
 import { appIdOfPath, hasFooter, hasInputs } from "@/shell/page-kind"
 
 describe("the top bar's links", () => {
@@ -45,7 +45,10 @@ describe("the top bar's links", () => {
   it("pair the Agent with Motion, the Agent first, and keep Motion's row in the Video area right after Video", () => {
     const groups = navGroups()
     expect(groups.featured.agent.id).toBe("agent")
-    expect(groups.featured.apps.map((app) => app.id)).toEqual(["motion"])
+    expect(groups.featured.apps.map((app) => app.id)).toEqual([
+      "motion",
+      "ai-influencer",
+    ])
     const video = groups.areas.find((area) => area.id === "video")
     expect(video?.apps.slice(0, 2).map((app) => app.id)).toEqual([
       "video",
@@ -55,6 +58,22 @@ describe("the top bar's links", () => {
       .flatMap((area) => area.apps)
       .filter((app) => app.id === "motion")
     expect(rows).toHaveLength(1)
+  })
+
+  it("feature AI Influencer beside Motion, with its own icon and no row in a media area", () => {
+    const groups = navGroups()
+    const featured = groups.featured.apps.find(
+      (app) => app.id === "ai-influencer"
+    )
+    expect(featured?.category).toBe("character")
+    expect(
+      groups.areas.flatMap((area) => area.apps).map((app) => app.id)
+    ).not.toContain("ai-influencer")
+    const characters = catalogApps.find((app) => app.id === "characters")
+    expect(featured === undefined || characters === undefined).toBe(false)
+    if (featured !== undefined && characters !== undefined) {
+      expect(appIcon(featured).type).not.toBe(appIcon(characters).type)
+    }
   })
 
   it("give no app but the featured one a second entry", () => {

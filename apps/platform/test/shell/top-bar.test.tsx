@@ -75,6 +75,7 @@ describe("the top bar", () => {
       "MCP",
       "AgentFeatured",
       "MotionFeatured",
+      "AI InfluencerFeatured",
       "Characters",
       "Library",
       "History",
@@ -89,24 +90,28 @@ describe("the top bar", () => {
         ? "|"
         : (node.textContent ?? "")
     )
-    expect(order.slice(5, 10)).toEqual([
+    expect(order.slice(5, 11)).toEqual([
       "MCP",
       "|",
       "AgentFeatured",
       "MotionFeatured",
+      "AI InfluencerFeatured",
       "|",
     ])
-    expect(order[10]).toBe("Characters")
+    expect(order[11]).toBe("Characters")
   })
 
-  it("stands the Agent and Motion side by side, the Agent first, each with the one Featured badge", async () => {
+  it("stands the Agent, Motion and AI Influencer side by side, the Agent first, each with the one Featured badge", async () => {
     const bar = await barAt("/")
     const agent = within(bar).getByRole("link", { name: /^Agent/ })
     const motion = within(bar).getByRole("link", { name: /^Motion/ })
     expect(agent.getAttribute("href")).toBe("/agent")
     expect(motion.getAttribute("href")).toBe("/apps/motion")
+    const influencer = within(bar).getByRole("link", { name: /^AI Influencer/ })
+    expect(influencer.getAttribute("href")).toBe("/apps/ai-influencer")
     expect(agent.nextElementSibling).toBe(motion)
-    for (const entry of [agent, motion]) {
+    expect(motion.nextElementSibling).toBe(influencer)
+    for (const entry of [agent, motion, influencer]) {
       const badge = entry.querySelector("[data-slot='badge']")
       expect(badge?.getAttribute("data-kind")).toBe("featured")
       expect(badge?.getAttribute("data-tone")).toBe("bug")
@@ -119,7 +124,7 @@ describe("the top bar", () => {
         "[data-slot='app-bar-areas'] [data-slot='badge']"
       ),
     ]
-    expect(badged).toHaveLength(2)
+    expect(badged).toHaveLength(3)
   })
 
   it("lists Motion in the Video menu right after Video as well, with its Featured badge drawn as the model picker's", async () => {
@@ -308,7 +313,7 @@ describe("the top bar", () => {
     const media = catalogApps.filter((app) => app.category !== "character")
     expect(items[0]?.textContent).toBe("Explore")
     expect(items.map((item) => item.textContent)).toContain("Library")
-    expect(items).toHaveLength(media.length + 8)
+    expect(items).toHaveLength(media.length + 9)
     const content = items[0]?.closest("[data-slot='dropdown-menu-content']")
     const marks = [
       ...(content?.querySelectorAll(
@@ -325,6 +330,7 @@ describe("the top bar", () => {
       "|",
       "AgentFeatured",
       "MotionFeatured",
+      "AI InfluencerFeatured",
       "|",
       "Characters",
       "Library",

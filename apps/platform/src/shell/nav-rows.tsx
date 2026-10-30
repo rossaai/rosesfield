@@ -30,6 +30,7 @@ import {
   SpeechIcon,
   SquareUserIcon,
   SunIcon,
+  UserStarIcon,
   UsersIcon,
   VideoIcon,
 } from "lucide-react"
@@ -94,6 +95,7 @@ const kindGlyphs = {
 
 const appGlyphs: Readonly<Record<string, Glyph>> = {
   ads: MegaphoneIcon,
+  "ai-influencer": UserStarIcon,
   angles: Rotate3dIcon,
   "background-removal": EraserIcon,
   expand: ExpandIcon,

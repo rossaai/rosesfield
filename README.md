@@ -109,7 +109,8 @@ Higgsfield's products, as higgsfield.ai lists them, beside the Rosesfield app th
 | Video edit tools | Video edit | Extend a clip, reframe it, remove its background or raise its frame rate. |
 | Upscale | Upscale | Make your image or video 2 or 4 times larger. |
 | Audio | Speech, Voice clone, Voice change | Turn text into a voice, speak in the voice of a short recording, or make one recording speak in another voice. |
-| AI Influencer, Soul ID | Characters | Make a character from photos or traits, then use it in any app. A character is a set of photos, and no model is trained. |
+| AI Influencer | AI Influencer | Pick traits, many of them absurd, and get one character sheet on white: a portrait beside the same character whole body. Use it in Motion. |
+| Soul ID | Characters | Make a character from photos or traits, then use it in any app. A character is a set of photos, and no model is trained. |
 | Ads Studio, Marketing Studio | Ads | Add photos of a product and get product shots or ads. |
 | Higgsfield Layers | Layers, Edit | Split an image into layers and edit one, or change a photo by saying what should change. |
 | Apps catalog | Angles, Expand, Relight, Try-on, Remove background, Headshot | See a subject from other sides, extend a photo, change its light, put on the clothes from another photo, cut out the subject, or make a headshot. |

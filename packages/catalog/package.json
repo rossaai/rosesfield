@@ -16,6 +16,7 @@
     "./lipsync": "./src/lipsync/index.ts",
     "./storyboard": "./src/storyboard/index.ts",
     "./characters": "./src/characters/index.ts",
+    "./ai-influencer": "./src/ai-influencer/index.ts",
     "./ads": "./src/ads/index.ts",
     "./remake": "./src/remake/index.ts",
     "./remake/reach": "./src/remake/close-remake.ts",

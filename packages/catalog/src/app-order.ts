@@ -24,5 +24,6 @@ export const appOrder = [
   "voice-change",
   "three-d",
   "characters",
+  "ai-influencer",
   "audio",
 ] as const

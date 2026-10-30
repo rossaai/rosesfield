@@ -287,7 +287,7 @@ describe("one agent message's credits", () => {
     expect(opened[snapshot]?.effort).toBe("xhigh")
     expect(Math.ceil(openOf(opus) ?? 0)).toBe(29)
     expect(Math.ceil(openOf(sonnet) ?? 0)).toBe(15)
-    expect(Math.ceil(openOf(snapshot) ?? 0)).toBe(16)
+    expect(Math.ceil(openOf(snapshot) ?? 0)).toBe(17)
   })
 
   it("prices each request from the tokens times the model's rates, times the requests of a message", () => {
