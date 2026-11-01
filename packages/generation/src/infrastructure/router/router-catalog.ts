@@ -42,6 +42,7 @@ export class RouterCatalog {
   private readonly defer: (work: Promise<void>) => void
   private readonly entries = new Map<string, CatalogEntry>()
   private readonly misses = new Map<string, number>()
+  private readonly unkept = new Set<string>()
   private readonly listings = new Map<string, KeptListing>()
   private readonly loads = new Map<string, Load>()
   private readonly restores = new Map<string, Promise<void>>()
@@ -85,8 +86,12 @@ export class RouterCatalog {
 
   async entry(http: RouterHttp, model: string): Promise<CatalogEntry | null> {
     await this.models(http)
-    if (!this.listedIds(await http.keyTag()).includes(model)) {
+    const tag = await http.keyTag()
+    if (!this.listedIds(tag).includes(model)) {
       return null
+    }
+    if (!this.entries.has(model)) {
+      await this.loads.get(tag)?.whole
     }
     const held = this.entries.get(model)
     if (held?.source === "public" && http.hasKey) {
@@ -127,7 +132,7 @@ export class RouterCatalog {
   private isWhole(tag: string): boolean {
     const ids = this.listings.get(tag)?.ids
     const isRead = (id: string): boolean =>
-      this.entries.has(id) || this.misses.has(id)
+      this.entries.has(id) || this.misses.has(id) || this.unkept.has(id)
     return ids?.every(isRead) ?? false
   }
 
@@ -152,6 +157,12 @@ export class RouterCatalog {
     if (!this.listings.has(tag)) {
       this.hold(this.listings, tag, listing)
       this.reads.delete(tag)
+      const unkept = listing.ids.filter((id) => !this.entries.has(id))
+      if (unkept.length < listing.ids.length) {
+        for (const id of unkept) {
+          this.unkept.add(id)
+        }
+      }
     }
   }
 
