@@ -1,5 +1,6 @@
 import type { HostedModel, ModelField } from "@rosesfield/generation/bindings"
 import { describe, expect, it } from "vitest"
+import { modelTag } from "#comfy/model-catalog.contract"
 import { isDeniedModel } from "#comfy/model-deny"
 import { makerOf, nameOf } from "#comfy/model-names"
 import { hostedTagsOf, topResolutionOf } from "#comfy/model-tags"
@@ -263,6 +264,34 @@ describe("the factual tags of a video model", () => {
       { kind: "length", min: 2, max: 10 },
       { kind: "sound" },
     ])
+  })
+
+  it("read the length range from the timed values of a duration choice that also offers -1 for auto, as Seedance's does, so the tag stays inside the wire contract", () => {
+    const tags = hostedTagsOf({
+      id: "byteplus/dreamina-seedance-2-0-260128",
+      provider: "byteplus",
+      takes: ["text"],
+      makes: ["video"],
+      takesTools: false,
+      form: {
+        model: "byteplus/dreamina-seedance-2-0-260128",
+        fields: [
+          {
+            kind: "choice",
+            name: "duration",
+            path: "duration",
+            required: false,
+            options: [-1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+            default: null,
+          },
+        ],
+      },
+    })
+    expect(tags).toEqual([
+      { kind: "hosted" },
+      { kind: "length", min: 4, max: 15 },
+    ])
+    expect(tags.every((tag) => modelTag.safeParse(tag).success)).toBe(true)
   })
 
   it("reads 4K from a resolution choice", () => {

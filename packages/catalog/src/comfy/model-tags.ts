@@ -63,7 +63,7 @@ export function lengthOf(
   if (field?.kind === "choice") {
     const values = field.options
       .map((option) => Number.parseFloat(String(option)))
-      .filter(Number.isFinite)
+      .filter((value) => Number.isFinite(value) && value > 0)
     return values.length === 0
       ? null
       : { min: Math.min(...values), max: Math.max(...values) }
