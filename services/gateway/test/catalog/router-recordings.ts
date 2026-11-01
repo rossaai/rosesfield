@@ -77,6 +77,19 @@ export const autoLengthClipModel = schemaOf({
   },
 })
 
+export const crowdedChoiceClipModel = schemaOf({
+  model: "maker/clip-crowded-5",
+  takes: ["text"],
+  makes: ["video"],
+  properties: {
+    prompt: { type: "string" },
+    camera: {
+      type: "string",
+      enum: Array.from({ length: 201 }, (_, at) => `move-${at}`),
+    },
+  },
+})
+
 export const newPictureModel = schemaOf({
   model: "studio/sketch-1",
   takes: ["text"],
