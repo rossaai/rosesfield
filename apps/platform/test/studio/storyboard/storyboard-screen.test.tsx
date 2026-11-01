@@ -177,7 +177,7 @@ describe("Use these inputs", () => {
       await screen.findByRole("button", { name: t("run.menu") })
     )
     fireEvent.click(
-      await screen.findByRole("menuitem", { name: t("run.useInputs") })
+      await screen.findByRole("menuitem", { name: t("run.recreate") })
     )
     await vi.waitFor(() =>
       expect(sceneFields().map((field) => field.value)).toEqual([

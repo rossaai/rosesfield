@@ -3,10 +3,10 @@ import { Button } from "@rosesfield/ui/components/button"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { RepeatIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { appLine, promptInputOf } from "@/catalog/app-facts"
 import { t } from "@/copy/t"
+import { RecreateWords } from "@/pieces/run/recreate"
 import {
   AssetMedia,
   DefaultSettings,
@@ -101,8 +101,7 @@ function OwnRecreate({
         />
       }
     >
-      <RepeatIcon aria-hidden="true" />
-      {t("run.useInputs")}
+      <RecreateWords />
     </Button>
   )
 }
@@ -136,8 +135,7 @@ function RecreateLink({
         )
       }
     >
-      <RepeatIcon aria-hidden="true" />
-      {t("run.useInputs")}
+      <RecreateWords />
     </Button>
   )
 }

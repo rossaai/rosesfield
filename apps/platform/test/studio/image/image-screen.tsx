@@ -250,6 +250,6 @@ export async function recreate(): Promise<void> {
     await screen.findByRole("button", { name: t("run.menu") })
   )
   fireEvent.click(
-    await screen.findByRole("menuitem", { name: t("run.useInputs") })
+    await screen.findByRole("menuitem", { name: t("run.recreate") })
   )
 }

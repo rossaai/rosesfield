@@ -41,7 +41,7 @@ export function useOpenAtSheetQuality(
   }, [chosen, fields, opening, setInput, source])
 }
 
-/** Fills the traits of the template the address names once the model has opened, so Remix leaves the model as it opens. */
+/** Fills the traits of the template the address names once the model has opened, so Recreate leaves the model as it opens. */
 export function useTemplate(
   form: AppForm,
   hosted: HostedState | undefined,

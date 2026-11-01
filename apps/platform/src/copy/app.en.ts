@@ -47,7 +47,7 @@ export const appCopy = {
   "run.demoCaption": "Demo engine",
   "run.menu": "Run options",
   "menu.more": "More",
-  "run.useInputs": "Recreate",
+  "run.recreate": "Recreate",
   "run.repeat": "Run again",
   "run.openInComfy": "Open in ComfyUI",
   "run.openInComfy.failed": "The workflow file did not download. Try again.",
@@ -178,7 +178,5 @@ export const appCopy = {
     "Make a key in your Comfy workspace, then paste it in Settings.",
   "run.price.kept":
     "{amount} Comfy credits, measured on the {resolution} example",
-  "app.library.remix": "Remix",
-  "app.library.remixName": "Remix {name}",
   "app.library.label": "Library",
 } satisfies Record<string, string>

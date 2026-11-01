@@ -217,7 +217,7 @@ describe("How it works, one composition for every app", () => {
     expect(steps[2]?.querySelector("img")?.getAttribute("src")).toBe(item?.src)
   })
 
-  it("plays Motion's Library example muted and looping, with Remix opening Motion on that example", async () => {
+  it("plays Motion's Library example muted and looping, with Recreate opening Motion on that example", async () => {
     renderHow(() => <HowItWorks app={motion} />, [])
     const steps = await stepsShown(3)
     const [item] = showcaseOf("motion")

@@ -156,7 +156,7 @@ describe("the result viewer's panel", () => {
   it("puts Recreate above Download, each calling its own act", () => {
     const { onRecreate, onDownload } = renderPanel(entryOf(runOf({})))
     const recreate = screen.getByRole("button", {
-      name: t("explore.viewer.recreate"),
+      name: t("run.recreate"),
     })
     const download = screen.getByRole("button", {
       name: t("output.download"),

@@ -16,6 +16,7 @@ import { AssetContextMenu } from "@/pieces/asset-context-menu"
 import { assetLabel, useAssetName } from "@/pieces/asset-name"
 import { AssetTile, aspectOfAsset } from "@/pieces/asset-tile"
 import { LabMark } from "@/pieces/lab-mark"
+import { recreateLabel } from "@/pieces/run/recreate"
 import { runAppName, runAspect, runModel } from "@/pieces/run/run-facts"
 import { useIsRegularWindow } from "@/pieces/use-is-regular"
 import { columnClassOf, columnLayout } from "@/pieces/view/tile-scale"
@@ -115,7 +116,7 @@ function RunResult({
           openLabel={t("library.tile.open", { name })}
           expandLabel={t("library.tile.expand")}
           moreLabel={t("viewer.more")}
-          recreateLabel={t("run.useInputs")}
+          recreateLabel={recreateLabel()}
           recreateName={t("library.tile.recreateName", { name })}
           onOpen={(origin) => viewer.open(asset.id, origin, list)}
           onRecreate={() =>

@@ -8,6 +8,7 @@ import type { ReactElement, ReactNode } from "react"
 import { GatewayRefusedError } from "@/api/gateway-refused.error"
 import { t } from "@/copy/t"
 import { AudioRow } from "@/pieces/audio-row"
+import { RecreateWords } from "@/pieces/run/recreate"
 import { sharedEntries } from "@/screens/explore/explore-entries"
 import { exploreCaption } from "@/screens/explore/explore-tile"
 import { type SharedOutput, shareQuery } from "@/screens/explore/share-api"
@@ -62,7 +63,7 @@ function SharedOutputView({ share }: { share: SharedOutput }): ReactElement {
             />
           }
         >
-          {t("share.page.recreate")}
+          <RecreateWords />
         </Button>
         <Button tone="quiet" nativeButton={false} render={<Link to="/" />}>
           {t("share.page.open")}

@@ -5,14 +5,9 @@ import {
   MediaBadge,
   MediaTile,
 } from "@rosesfield/ui/components/media-tile"
+import { RecreateGlyph } from "@rosesfield/ui/components/recreate-glyph"
 import { cn } from "@rosesfield/ui/lib/cn"
-import {
-  CopyIcon,
-  EllipsisIcon,
-  ImageIcon,
-  MaximizeIcon,
-  VideoIcon,
-} from "lucide-react"
+import { EllipsisIcon, ImageIcon, MaximizeIcon, VideoIcon } from "lucide-react"
 import type { CSSProperties, ReactElement, ReactNode } from "react"
 
 type MediaChromeForm = "card" | "library"
@@ -197,7 +192,7 @@ function ResultTile(props: ResultTileProps): ReactElement {
             aria-label={props.recreateName}
             onClick={props.onRecreate}
           >
-            <CopyIcon aria-hidden="true" />
+            <RecreateGlyph />
             {props.recreateLabel}
           </Button>
         }

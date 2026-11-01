@@ -53,7 +53,7 @@ function showLibrary(appId = "motion") {
 }
 
 describe("Motion's Library", () => {
-  it("shows each approved example playing its result, with its name, its need and Remix", async () => {
+  it("shows each approved example playing its result, with its name, its need and Recreate", async () => {
     showLibrary()
     const list = await screen.findByRole("list", { name: "Library" })
     const items = within(list).getAllByRole("listitem")
@@ -62,14 +62,14 @@ describe("Motion's Library", () => {
     expect(list.querySelector("video")?.getAttribute("src")).not.toMatch(
       /guides/
     )
-    const remix = within(list).getByRole("link", { name: /Remix$/ })
+    const remix = within(list).getByRole("link", { name: /^Recreate$/ })
     expect(remix.getAttribute("href")).toBe("/apps/motion?example=grab-and-run")
   })
 
-  it("opens Motion on the example when you press Remix", async () => {
+  it("opens Motion on the example when you press Recreate", async () => {
     const router = showLibrary()
     const list = await screen.findByRole("list", { name: "Library" })
-    fireEvent.click(within(list).getByRole("link", { name: /Remix$/ }))
+    fireEvent.click(within(list).getByRole("link", { name: /^Recreate$/ }))
     await waitFor(() =>
       expect(router.state.location.search).toEqual({
         example: "grab-and-run",
@@ -79,7 +79,7 @@ describe("Motion's Library", () => {
 })
 
 describe("AI Influencer's Library", () => {
-  it("shows each template as its still, with its name, the model that made it and Remix", async () => {
+  it("shows each template as its still, with its name, the model that made it and Recreate", async () => {
     showLibrary("ai-influencer")
     const list = await screen.findByRole("list", { name: "Library" })
     expect(within(list).getAllByRole("listitem")).toHaveLength(4)
@@ -93,7 +93,7 @@ describe("AI Influencer's Library", () => {
     ).toHaveLength(1)
     expect(
       within(list)
-        .getAllByRole("link", { name: /Remix$/ })
+        .getAllByRole("link", { name: /^Recreate$/ })
         .map((link) => link.getAttribute("href"))
     ).toEqual([
       "/apps/ai-influencer?example=capybara",
@@ -103,12 +103,12 @@ describe("AI Influencer's Library", () => {
     ])
   })
 
-  it("opens AI Influencer on the template when you press Remix", async () => {
+  it("opens AI Influencer on the template when you press Recreate", async () => {
     const router = showLibrary("ai-influencer")
     const list = await screen.findByRole("list", { name: "Library" })
-    const [, absurd] = within(list).getAllByRole("link", { name: /Remix$/ })
+    const [, absurd] = within(list).getAllByRole("link", { name: /^Recreate$/ })
     if (absurd === undefined) {
-      throw new Error("no second Remix")
+      throw new Error("no second Recreate")
     }
     fireEvent.click(absurd)
     await waitFor(() =>

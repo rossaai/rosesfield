@@ -4,6 +4,7 @@ import { useNavigate, useRouter } from "@tanstack/react-router"
 import type { ReactElement } from "react"
 import type { AppExample } from "@/catalog/app-examples"
 import { t } from "@/copy/t"
+import { recreateLabel } from "@/pieces/run/recreate"
 import { useInAppLinks } from "@/screens/explore/in-app-links"
 
 function ExampleTile({
@@ -21,7 +22,7 @@ function ExampleTile({
     search: { example: example.id },
   } as const
   const href = router.buildLocation(target).href
-  const remix = (): void => {
+  const recreate = (): void => {
     void navigate(target)
   }
   return (
@@ -29,8 +30,8 @@ function ExampleTile({
       name={example.name}
       {...(example.line === null ? {} : { line: example.line })}
       href={href}
-      viewLabel={t("app.library.remixName", { name: example.name })}
-      action={{ label: t("app.library.remix"), href, onSelect: remix }}
+      viewLabel={t("library.tile.recreateName", { name: example.name })}
+      action={{ label: recreateLabel(), href, onSelect: recreate }}
       clip={{ src: example.src, alt: example.name, kind: example.kind }}
       aspect={example.aspect}
     />

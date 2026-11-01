@@ -76,7 +76,7 @@
     },
     {
       "path": "apps/platform/src/copy/app.en.ts",
-      "sha256": "c39c88d9b73c3281927ffd6ec67ce6c62a2606a3763d57cc2c17b40bca56551b"
+      "sha256": "1ffc177cb2f639171f9af9a654a3be2609b29a370bc2b8e129f703becb2b42a5"
     },
     {
       "path": "apps/platform/src/copy/characters.en.ts",
@@ -92,7 +92,7 @@
     },
     {
       "path": "apps/platform/src/copy/explore.en.ts",
-      "sha256": "fde7186ee9e3ed718f9f1e753e21541a4daca191fd65ff140723bbf9e41824b9"
+      "sha256": "9949312751a64c192b84e7de2ff316793ffab067035baec30f5328a4dac9b048"
     },
     {
       "path": "apps/platform/src/copy/field.en.ts",

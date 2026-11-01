@@ -11,6 +11,7 @@ import { promptInputOf } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { joinParts } from "@/copy/format"
 import { t } from "@/copy/t"
+import { recreateLabel } from "@/pieces/run/recreate"
 import { runAppName, runModel, runPrice } from "@/pieces/run/run-facts"
 import type { Draft } from "@/router-context"
 import { exampleInputOf } from "@/showcase/showcase"
@@ -42,20 +43,6 @@ export type RecreateTarget =
   | { draft: Draft }
 
 export type OpenResult = (entry: VisualEntry, origin: HTMLElement) => void
-
-export function isRemix(run: Run): boolean {
-  const example = run.inputs[exampleInput]
-  return typeof example === "string" && example !== ownVideo
-}
-
-function actionWords(run: Run): { label: string; name: string } {
-  return isRemix(run)
-    ? { label: t("explore.tile.remix"), name: t("explore.tile.remixName") }
-    : {
-        label: t("explore.tile.recreate"),
-        name: t("explore.tile.recreateName"),
-      }
-}
 
 export function exploreCaption(run: Run, estimate: number | null): string {
   return joinParts([
@@ -182,7 +169,6 @@ export function ResultCard({
     return <EntrySkeleton aspect={aspect} />
   }
   const app = runAppName(entry.run)
-  const words = actionWords(entry.run)
   return (
     <ResultTile
       kind={entry.kind}
@@ -194,8 +180,8 @@ export function ResultCard({
       openLabel={t("explore.tile.open", { app })}
       expandLabel={t("explore.tile.expand", { app })}
       moreLabel={t("explore.tile.more", { app })}
-      recreateLabel={words.label}
-      recreateName={words.name}
+      recreateLabel={recreateLabel()}
+      recreateName={t("explore.tile.recreateName")}
       onOpen={(origin) => onOpen(entry, origin)}
       onRecreate={() => recreate(entry)}
       onMore={() => onMore(entry)}
@@ -223,7 +209,7 @@ export function ExplorePresetTile({
       href={viewHref}
       viewLabel={t("explore.preset.view", { name })}
       action={{
-        label: actionWords(entry.run).label,
+        label: recreateLabel(),
         href: actionHref,
         onSelect: () => recreate(entry),
       }}

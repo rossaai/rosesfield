@@ -7,6 +7,7 @@ import {
   SettingGroup,
   SettingGroups,
 } from "@rosesfield/ui/components/filter-chip"
+import { RecreateGlyph } from "@rosesfield/ui/components/recreate-glyph"
 import { SegmentedControl } from "@rosesfield/ui/components/segmented-control"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
 import {
@@ -14,7 +15,6 @@ import {
   CameraIcon,
   ChevronLeftIcon,
   CloudRainIcon,
-  CopyIcon,
   DropletIcon,
   FolderIcon,
   LayoutGridIcon,
@@ -64,11 +64,11 @@ function Buttons(): ReactElement {
         <Button>{t("sample.learnMore")}</Button>
       </div>
       <Button size="small" tone="glass">
-        <CopyIcon aria-hidden="true" />
+        <RecreateGlyph />
         {t("sample.recreate")}
       </Button>
       <Button size="dense" tone="quiet">
-        <CopyIcon aria-hidden="true" />
+        <RecreateGlyph />
         {t("sample.recreate")}
       </Button>
       <Button disabled>{t("sample.start")}</Button>

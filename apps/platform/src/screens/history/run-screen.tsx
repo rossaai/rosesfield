@@ -22,6 +22,7 @@ import { t } from "@/copy/t"
 import { useDevice } from "@/device/device-context"
 import { ContentEndMark, Dock, useContentEnd } from "@/pieces/dock"
 import { useOpenInComfy } from "@/pieces/run/open-in-comfy"
+import { RecreateWords } from "@/pieces/run/recreate"
 import { useCancelRun } from "@/pieces/run/run-actions"
 import { useRunEstimate } from "@/pieces/run/run-estimate"
 import {
@@ -50,7 +51,7 @@ function UseInputs({ run }: { run: Run }): ReactElement {
       }
       nativeButton={false}
     >
-      {t("run.useInputs")}
+      <RecreateWords />
     </Button>
   )
 }

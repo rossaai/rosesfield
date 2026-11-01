@@ -4,13 +4,14 @@ import { keyframeOf } from "@rosesfield/catalog/storyboard"
 import type { Run } from "@rosesfield/contract"
 import { Button } from "@rosesfield/ui/components/button"
 import { CreditPrice } from "@rosesfield/ui/components/credit-price"
-import { CopyIcon, DownloadIcon, ImagesIcon } from "lucide-react"
+import { DownloadIcon, ImagesIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { isAssetInput, promptInputOf } from "@/catalog/app-facts"
 import { findCatalogApp } from "@/catalog/catalog-apps"
 import { formatDate, joinParts } from "@/copy/format"
 import { t } from "@/copy/t"
 import { AssetTile } from "@/pieces/asset-tile"
+import { RecreateWords } from "@/pieces/run/recreate"
 import {
   idsOf,
   inputValueText,
@@ -214,8 +215,7 @@ export function ResultPanel({
       <span aria-hidden="true" className="flex-1" />
       <div data-slot="viewer-foot" className="flex flex-col gap-2.5">
         <Button tone="accent" width="full" onClick={onRecreate}>
-          <CopyIcon aria-hidden="true" />
-          {t("explore.viewer.recreate")}
+          <RecreateWords />
         </Button>
         <Button width="full" busy={isDownloading} onClick={onDownload}>
           <DownloadIcon aria-hidden="true" />
