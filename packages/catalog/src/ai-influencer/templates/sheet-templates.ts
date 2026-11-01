@@ -67,13 +67,17 @@ export function findTemplate(
   return from.find((template) => template.id === id) ?? null
 }
 
-/** Every trait input a template sets: its own picks, and any in every other. */
+/** Every input a template sets: its own trait picks, any in every other trait, and the model and settings its preview was made with. */
 export function templateInputsOf(
   template: SheetTemplate
 ): Record<string, string> {
-  return Object.fromEntries(
-    traitInputNames.map((name) => [name, template.traits[name] ?? anyValue])
-  )
+  return {
+    ...Object.fromEntries(
+      traitInputNames.map((name) => [name, template.traits[name] ?? anyValue])
+    ),
+    ...template.preview.settings,
+    model: template.preview.model,
+  }
 }
 
 /** The copy key of a template's name. */

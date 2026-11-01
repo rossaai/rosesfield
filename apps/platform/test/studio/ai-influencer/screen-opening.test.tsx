@@ -277,8 +277,26 @@ describe("AI Influencer opens", () => {
   })
 })
 
-describe("Remix of a template", () => {
-  it("fills the template's traits and leaves the model as it opens, at medium", async () => {
+const capybara = {
+  characterType: "capybara",
+  gender: "man",
+  hairstyle: "flat-top",
+  hairColor: "black",
+  outfit: "retro",
+}
+
+describe("Recreate of a template", () => {
+  it("opens the model the capybara tile says it was made with, Z-Image Turbo, with its traits", async () => {
+    openInfluencer({ seeds: { ...noSeeds, example: "capybara" } })
+    const inputs = await generate()
+    expect(inputs).toMatchObject({
+      ...capybara,
+      model: zImage.id,
+      prompt: sheetPrompt(capybara),
+    })
+  })
+
+  it("fills the template's traits on the model it was made with, GPT Image 2.5 at medium, the control", async () => {
     openInfluencer({ seeds: { ...noSeeds, example: "mantis" } })
     const inputs = await generate()
     expect(inputs).toMatchObject({
@@ -306,12 +324,15 @@ describe("Remix of a template", () => {
     expect(await generate()).toMatchObject({ ...mantis, model: gptImage.id })
   })
 
-  it("keeps the model you used before", async () => {
+  it("opens the template's model over the model you used before", async () => {
     keepLastUsed(app.id, { model: zImage.id, settings: {} })
     openInfluencer({ seeds: { ...noSeeds, example: "mantis" } })
-    expect(await shownTriggers(zImage)).not.toHaveLength(0)
+    expect(await shownTriggers(gptImage)).not.toHaveLength(0)
     const inputs = await generate()
-    expect(inputs).toMatchObject({ ...mantis, model: zImage.id })
-    expect(inputs.quality).toBeUndefined()
+    expect(inputs).toMatchObject({
+      ...mantis,
+      model: gptImage.id,
+      quality: "medium",
+    })
   })
 })

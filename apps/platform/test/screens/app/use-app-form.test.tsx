@@ -185,7 +185,7 @@ async function motionFormWith(example: string | undefined): Promise<AppForm> {
   return last
 }
 
-describe("Remix from the Library", () => {
+describe("Recreate from the Library", () => {
   it("opens Motion on the example at its 1080p on the guided render, so you add only your photo", async () => {
     const form = await motionFormWith("grab-and-run")
     expect(form.values.inputs.example).toBe("grab-and-run")
