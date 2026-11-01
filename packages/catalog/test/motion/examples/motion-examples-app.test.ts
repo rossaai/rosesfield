@@ -232,6 +232,7 @@ describe("the chain of a guided example", () => {
     example: exampleOf("grab-and-run"),
     photo,
     resolution: "1080p",
+    seed: null,
   })
 
   it("drafts at 480p in the example's own 2:3 shape on the guided render", () => {
@@ -244,6 +245,17 @@ describe("the chain of a guided example", () => {
       },
       aspectRatio: "2:3",
     })
+  })
+
+  it("drafts on the seed you set, and leaves the seed to the run when you set none", () => {
+    const seeded = exampleEndKeySteps({
+      example: exampleOf("grab-and-run"),
+      photo,
+      resolution: "1080p",
+      seed: 20261028,
+    })
+    expect(seeded?.draft.request.inputs).toMatchObject({ seed: 20261028 })
+    expect(steps?.draft.request.inputs).not.toHaveProperty("seed")
   })
 
   it("restores the draft's last frame with your photo, held, at the draft's 512 by 768", () => {
@@ -286,6 +298,7 @@ describe("the chain of a guided example", () => {
         example: exampleOf("push-into-eye"),
         photo,
         resolution: "720p",
+        seed: null,
       })
     ).toBeNull()
   })

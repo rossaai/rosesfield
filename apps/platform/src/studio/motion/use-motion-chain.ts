@@ -80,12 +80,18 @@ function resolutionOf(form: AppForm): string {
   return typeof chosen === "string" ? chosen : "720p"
 }
 
-function seedOf(form: AppForm): number {
+function fixedSeedOf(form: AppForm): number | null {
   const value = form.values.inputs.seed
-  if (form.values.seedMode === "fixed" && typeof value === "number") {
-    return value
-  }
-  return (crypto.getRandomValues(new Uint32Array(1))[0] ?? 0) % seedSpan
+  return form.values.seedMode === "fixed" && typeof value === "number"
+    ? value
+    : null
+}
+
+function seedOf(form: AppForm): number {
+  return (
+    fixedSeedOf(form) ??
+    (crypto.getRandomValues(new Uint32Array(1))[0] ?? 0) % seedSpan
+  )
 }
 
 function useExampleSteps(
@@ -94,12 +100,13 @@ function useExampleSteps(
 ): EndKeySteps | null {
   const [photo] = listOf(form.values.inputs.photo)
   const resolution = resolutionOf(form)
+  const seed = fixedSeedOf(form)
   return useMemo(
     () =>
       example === null || photo === undefined || !assetIdFormat.is(photo)
         ? null
-        : exampleEndKeySteps({ example, photo, resolution }),
-    [example, photo, resolution]
+        : exampleEndKeySteps({ example, photo, resolution, seed }),
+    [example, photo, resolution, seed]
   )
 }
 
