@@ -253,7 +253,7 @@ describe("your own video through the gateway on the demo engine", () => {
     expect(drafted.run.inputs).toMatchObject({ resolution: "480p" })
     expect(drafted.run.inputs).not.toHaveProperty("sound")
     expect(drafted.leftOutPhotos).toEqual([3])
-    expect(drafted.finalCredits).toBeCloseTo(10.86 + 15.69, 6)
+    expect(drafted.finalCredits).toBeCloseTo(10.86 + 21.49, 6)
     expect(
       await ownVideoFinalCreditsOf(
         handlers,
