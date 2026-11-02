@@ -151,7 +151,7 @@ Motion puts the person in your photo in place of the person in your clip, at the
 | 6. Final | the same graph and seed at 720p or 1080p, with the edited first frame and the end key | the video, with sound LTX makes for it |
 
 - The depth video guides the set at full attention and the people at 0.2. The camera move and the person's timing follow your clip, and LTX draws the person from your photo.
-- LTX 2.5 renders in two stages, half size and then a 2x latent upscale, with your edited first frame locked at frame 0.
+- LTX 2.5 renders in two stages, half size and then a 2x latent upscale, with your edited first frame locked at frame 0. Stage 2 runs at 4 times the frame rate on a latent the LTX 2.5 temporal upscaler made 4 times longer, and the graph keeps every fourth frame, so a face that moves fast keeps its shape.
 - Each step is its own run, with its own price in History, and you can open each graph in ComfyUI.
 - An example in Motion's Library runs the same graph on a depth video built in Blender.
 

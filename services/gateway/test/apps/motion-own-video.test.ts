@@ -253,7 +253,7 @@ describe("your own video through the gateway on the demo engine", () => {
     expect(drafted.run.inputs).toMatchObject({ resolution: "480p" })
     expect(drafted.run.inputs).not.toHaveProperty("sound")
     expect(drafted.leftOutPhotos).toEqual([3])
-    expect(drafted.finalCredits).toBeCloseTo(10.86 + 6.76, 6)
+    expect(drafted.finalCredits).toBeCloseTo(10.86 + 15.69, 6)
     expect(
       await ownVideoFinalCreditsOf(
         handlers,
@@ -263,7 +263,7 @@ describe("your own video through the gateway on the demo engine", () => {
         }),
         drafted.run.id
       )
-    ).toBeCloseTo(10.86 + 16.79, 6)
+    ).toBeNull()
     expect(started.map((key) => key.replace("mcp-1-", ""))).toEqual([
       "plan",
       "read",

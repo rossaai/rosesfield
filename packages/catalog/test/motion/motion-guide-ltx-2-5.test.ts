@@ -258,7 +258,8 @@ describe("the LTX 2.5 depth guide graph", () => {
     expect(inputOf(graph, "704", "latent_image")).toEqual(["119", 0])
     expect(inputOf(graph, "106", "latent")).toEqual(["121", 0])
     expect(inputOf(graph, "993", "samples")).toEqual(["106", 2])
-    expect(inputOf(graph, "994", "latent")).toEqual(["993", 0])
+    expect(inputOf(graph, "1081", "samples")).toEqual(["993", 0])
+    expect(inputOf(graph, "994", "latent")).toEqual(["1085", 0])
     expect(inputOf(graph, "999", "latent_image")).toEqual(["995", 0])
     expect(inputOf(graph, "999", "sigmas")).toEqual(["997", 0])
     expect(inputOf(graph, "997", "sigmas")).toBe(
@@ -326,7 +327,7 @@ describe("the LTX 2.5 depth guide graph", () => {
     expect(inputOf(draft, "119", "video_latent")).toEqual(["115", 2])
     expect(inputOf(draft, "983", "positive")).toEqual(["115", 0])
     expect(inputOf(draft, "995", "video_latent")).toEqual(["994", 0])
-    expect(inputOf(draft, "998", "positive")).toEqual(["106", 0])
+    expect(inputOf(draft, "998", "positive")).toEqual(["1082", 0])
     expect(inputOf(draft, "105", "samples")).toEqual(["1000", 0])
     expect(draft["1011"]?.class_type).toBe("SaveImage")
     expect(inputOf(draft, "1011", "images")).toEqual(["1010", 0])

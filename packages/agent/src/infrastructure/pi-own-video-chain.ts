@@ -6,11 +6,11 @@ import {
   type EditModelBinding,
   EndKeyLoopHandler,
   type EndKeySteps,
+  everyPartCreditsOf,
   exampleInput,
   finalAt,
   finalPartsOf,
   isClipLengthFit,
-  knownCreditsOf,
   ltx25GuideModel,
   motionAppId,
   motionEndKeySteps,
@@ -269,7 +269,7 @@ async function askedOf(
   }
 }
 
-/** The restore and the final at a resolution: your own measured runs first, then the runs measured on a 4-second clip. */
+/** The restore and the final at a resolution: your own measured runs first, then the runs measured on a 4-second clip, or null when either holds no price. */
 async function finalCreditsOf(
   handlers: OwnVideoHandlers,
   steps: EndKeySteps,
@@ -284,7 +284,7 @@ async function finalCreditsOf(
     askedOf(handlers, steps.restore(frame)),
     askedOf(handlers, steps.final(draft, frame)),
   ])
-  return knownCreditsOf(finalPartsOf(restore, final, resolution))
+  return everyPartCreditsOf(finalPartsOf(restore, final, resolution))
 }
 
 /** The credits the yes to the final of a named draft shows: its restore and its final at the resolution asked. */

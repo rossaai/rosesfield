@@ -58,6 +58,7 @@ export {
 } from "#motion/comfy/own-video-lead"
 export {
   type AskedPrice,
+  everyPartCreditsOf,
   finalPartsOf,
   knownCreditsOf,
   type PartPrice,
