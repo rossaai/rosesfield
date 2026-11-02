@@ -332,6 +332,24 @@ describe("the final's price and the words under the button", () => {
     expect(result.current?.start.priceValue).not.toBeNull()
   })
 
+  it("names Make final at 1080p an estimate when the route estimates the final, never a run measured at 1080p", async () => {
+    gateway({ price: { source: "estimate", credits: 20 } })
+    const { result } = renderHook(
+      () =>
+        useMotionChain({
+          example,
+          form: formWith("1080p"),
+          clipSize: null,
+        }),
+      { wrapper }
+    )
+    act(() => result.current?.start.generate())
+    await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
+    await waitFor(() =>
+      expect(result.current?.priceNote).toBe("30.86 Comfy credits, estimated")
+    )
+  })
+
   it("shows no price on Make final at 1080p, which no run of the graph measured, rather than the restore alone", async () => {
     gateway({ price: { source: "unknown", credits: null } })
     const { result } = renderHook(

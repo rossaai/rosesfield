@@ -6,6 +6,7 @@ import {
   type EditModelBinding,
   EndKeyLoopHandler,
   type EndKeySteps,
+  everyPartCreditsOf,
   exampleInput,
   finalAt,
   finalPartsOf,
@@ -17,7 +18,6 @@ import {
   OwnVideoLead,
   ownVideo,
   photoInput,
-  wholeCreditsOf,
 } from "@rosesfield/catalog/motion"
 import type { Run, RunInputs, RunRequest } from "@rosesfield/contract"
 import type { PriceRunHandler } from "@rosesfield/generation"
@@ -284,7 +284,7 @@ async function finalCreditsOf(
     askedOf(handlers, steps.restore(frame)),
     askedOf(handlers, steps.final(draft, frame)),
   ])
-  return wholeCreditsOf(finalPartsOf(restore, final, resolution))
+  return everyPartCreditsOf(finalPartsOf(restore, final, resolution))
 }
 
 /** The credits the yes to the final of a named draft shows: its restore and its final at the resolution asked. */

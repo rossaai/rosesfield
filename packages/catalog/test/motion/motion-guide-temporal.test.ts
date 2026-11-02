@@ -102,7 +102,7 @@ describe("the temporal pass of the LTX 2.5 depth guide graph", () => {
     }
   })
 
-  it("finds a stage 2 on the latent stage 1 left, and a pass that keeps every second frame of a latent 4 times longer, the control", () => {
+  it("finds a stage 2 on the latent stage 1 left, a pass that keeps every second frame of a latent 4 times longer, and a stage 2 at twice the frame rate, the control", () => {
     const plain = ownGraph()
     const lock = plain["994"]
     if (lock === undefined) {
@@ -117,5 +117,12 @@ describe("the temporal pass of the LTX 2.5 depth guide graph", () => {
     }
     kept.inputs.select_every_nth = 2
     expect(keptEveryOf(halved)).not.toBe(framesTimesOf(halved))
+    const slowed = ownGraph()
+    const rate = slowed["1086"]
+    if (rate === undefined) {
+      throw new Error("the graph has no node 1086")
+    }
+    rate.inputs.expression = "a * 2"
+    expect(stageTwoRateOf(slowed)).toBe(2)
   })
 })

@@ -64,7 +64,7 @@ export function finalPartsOf(
 }
 
 /** The sum of every part, or null when one part holds no price, so a final is never priced as its restore alone. */
-export function wholeCreditsOf(parts: readonly PartPrice[]): number | null {
+export function everyPartCreditsOf(parts: readonly PartPrice[]): number | null {
   return parts.some((part) => part.credits === null)
     ? null
     : knownCreditsOf(parts)

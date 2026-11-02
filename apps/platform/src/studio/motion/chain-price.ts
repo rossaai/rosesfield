@@ -3,6 +3,7 @@ import {
   type ChainLead,
   draftResolution,
   type EndKeySteps,
+  everyPartCreditsOf,
   finalPartsOf,
   knownCreditsOf,
   type LibraryExample,
@@ -12,7 +13,6 @@ import {
   recordedFinals,
   recordedSeconds,
   recordedSteps,
-  wholeCreditsOf,
 } from "@rosesfield/catalog/motion"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
@@ -66,7 +66,7 @@ const askNothing: Ask = async () => unasked
 
 const noPrice: StepPrice = { credits: null, source: "unknown" }
 
-/** The price of parts of a chain: recorded runs name their clip and resolution, and an unread lead keeps its known part. */
+/** The price of parts of a chain: recorded runs name their clip and resolution, an unread lead keeps its known part, and a price with an estimated part is an estimate. */
 export function partsPriceOf(
   parts: readonly PartPrice[],
   recorded: { seconds: number; resolution: string }
@@ -76,7 +76,9 @@ export function partsPriceOf(
     return noPrice
   }
   const isUnread = parts.some((part) => part.source === "unknown")
-  if (isUnread || parts.some((part) => part.source === "recorded")) {
+  const isEstimated = parts.some((part) => part.source === "estimate")
+  const isRecorded = parts.some((part) => part.source === "recorded")
+  if (isUnread || (isRecorded && !isEstimated)) {
     return {
       credits,
       source: "example",
@@ -114,7 +116,7 @@ async function finalStagePriceOf(
         ask(steps.final(chain.draft, chain.frame)),
       ])
       const parts = finalPartsOf(restore, final, resolution)
-      return wholeCreditsOf(parts) === null
+      return everyPartCreditsOf(parts) === null
         ? noPrice
         : partsPriceOf(parts, { seconds: recordedSeconds, resolution })
     }
