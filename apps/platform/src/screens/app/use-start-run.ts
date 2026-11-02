@@ -106,9 +106,10 @@ export function useStartRun(
   const hostedRun =
     own === null || hostedBodyFor === undefined ? own : hostedBodyFor(own)
   const isDemo = settings.data?.engine.origin === "demo"
+  const isOpening = hosted?.isLoading === true
   const quote = useQuote(
     app,
-    hostedRun ?? bodyOf(app, form.values),
+    isOpening ? null : (hostedRun ?? bodyOf(app, form.values)),
     hosted?.keyState ?? settings.data?.engine.key ?? "unknown",
     hosted?.chosen?.form ?? []
   )
@@ -128,14 +129,14 @@ export function useStartRun(
     onError: (error) => form.refuse?.(error),
   })
   const generate = (): void => {
-    if (start.isPending || !form.validate()) {
+    if (start.isPending || isOpening || !form.validate()) {
       return
     }
     start.mutate(crypto.randomUUID())
   }
   return {
     generate,
-    isPending: start.isPending,
+    isPending: start.isPending || isOpening,
     error: start.error,
     ...priceLabelsOf(quote?.credits ?? null, isDemo, quote?.source, quote?.low),
     priceFrom: quote?.from ?? null,

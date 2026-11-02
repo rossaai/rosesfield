@@ -132,13 +132,11 @@ function openEdit(
     },
   })
   client.setQueryData(settingsQuery.queryKey, settings)
-  if (models.length > 0) {
-    client.setQueryData(modelCatalogQuery(app.id, "set").queryKey, {
-      models: [...models],
-      defaultModel: models[0]?.id ?? null,
-      refusal: null,
-    })
-  }
+  client.setQueryData(modelCatalogQuery(app.id, "set").queryKey, {
+    models: [...models],
+    defaultModel: models[0]?.id ?? null,
+    refusal: null,
+  })
   client.setQueryData(runsQuery(app.id).queryKey, {
     pages: [{ runs: [], next: null }],
     pageParams: [null],
