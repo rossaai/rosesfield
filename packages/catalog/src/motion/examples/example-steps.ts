@@ -3,6 +3,7 @@ import type { EndKeySteps } from "@rosesfield/generation/bindings"
 import { AspectRatio, type AssetId } from "@rosesfield/kernel"
 import { finalAt, motionEndKeySteps } from "#motion/comfy/end-key-steps"
 import {
+  ltx25GuideInputs,
   ltx25ShortSides,
   renderResolutions,
 } from "#motion/comfy/guide-ltx-2-5-binding"
@@ -15,6 +16,7 @@ export type ExampleChainAsk = {
   example: LibraryExample
   photo: AssetId
   resolution: string
+  seed: number | null
 }
 
 const draftSide = ltx25ShortSides[renderResolutions.draft] ?? 512
@@ -36,7 +38,11 @@ export function exampleEndKeySteps(ask: ExampleChainAsk): EndKeySteps | null {
   }
   const photos: Ids = [ask.photo]
   const base = motionEndKeySteps({
-    inputs: { [exampleInput]: ask.example.id, [photoInput]: photos },
+    inputs: {
+      [exampleInput]: ask.example.id,
+      [photoInput]: photos,
+      ...(ask.seed === null ? {} : { [ltx25GuideInputs.seed]: ask.seed }),
+    },
     photos,
     aspectRatio: shape,
     frameSize: draftFrameOf(shape),

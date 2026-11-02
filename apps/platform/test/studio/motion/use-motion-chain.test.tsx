@@ -77,11 +77,14 @@ function gateway(fakes: Fakes = {}): Sent[] {
   return sent
 }
 
-function formWith(resolution: string): AppForm {
+function formWith(resolution: string, seed: number | null = null): AppForm {
   return {
     values: {
-      inputs: { photo: [photo], resolution },
-      seedMode: "random",
+      inputs:
+        seed === null
+          ? { photo: [photo], resolution }
+          : { photo: [photo], resolution, seed },
+      seedMode: seed === null ? "random" : "fixed",
       count: 1,
       aspectRatio: null,
     },
@@ -144,6 +147,24 @@ describe("a guided example's chain in Motion", () => {
     expect(sent[1]?.body).toMatchObject({ place: "held" })
     expect(sent[2]?.body).toMatchObject({
       inputs: { resolution: "1080p", endKey: [endKey], seed: 9 },
+    })
+  })
+
+  it("drafts on the seed you set", async () => {
+    const sent = gateway()
+    const { result } = renderHook(
+      () =>
+        useMotionChain({
+          example: exampleOf("grab-and-run"),
+          form: formWith("1080p", 20261028),
+          clipSize: null,
+        }),
+      { wrapper }
+    )
+    act(() => result.current?.start.generate())
+    await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
+    expect(sent[0]?.body).toMatchObject({
+      inputs: { example: "grab-and-run", resolution: "480p", seed: 20261028 },
     })
   })
 
