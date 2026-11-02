@@ -729,8 +729,9 @@
       ],
       "properties": {
         "Node name for S&R": "NormalizeAudioLoudness",
-        "cnr_id": "comfy-core",
-        "ver": "0.41.0"
+        "cnr_id": "comfyui-wanvideowrapper",
+        "aux_id": "kijai/ComfyUI-WanVideoWrapper",
+        "ver": "088128b224242e110d3906c6750e9a3a348a659b"
       },
       "widgets_values": [-23.0],
       "title": "Loudness"
@@ -759,8 +760,9 @@
       ],
       "properties": {
         "Node name for S&R": "AudioAmplify",
-        "cnr_id": "comfy-core",
-        "ver": "0.41.0"
+        "cnr_id": "comfyui_audiotools",
+        "aux_id": "lum3on/ComfyUI_AudioTools",
+        "ver": "c816d0a1629c05a0f463ddb77ea96ada69875d32"
       },
       "widgets_values": [4.0],
       "title": "Peak ceiling"
@@ -789,8 +791,9 @@
       ],
       "properties": {
         "Node name for S&R": "AudioAmplify",
-        "cnr_id": "comfy-core",
-        "ver": "0.41.0"
+        "cnr_id": "comfyui_audiotools",
+        "aux_id": "lum3on/ComfyUI_AudioTools",
+        "ver": "c816d0a1629c05a0f463ddb77ea96ada69875d32"
       },
       "widgets_values": [-4.0],
       "title": "Back from the peak ceiling"

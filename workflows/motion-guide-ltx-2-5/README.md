@@ -7,7 +7,7 @@ Renders the person in your photo moving along a depth guide video, on LTX 2.5 22
 | Workflow id | `motion-guide-ltx-2-5` |
 | Run by | [`motion`](../../packages/catalog/src/motion/), as the model `ltx-2-5-guide` |
 | Core model | LTX 2.5 22B distilled, bf16, with the LTX 2.3 union control IC-LoRA |
-| Custom node packs | none, every node is a ComfyUI core node |
+| Custom node packs | two, for the sound only, the packs and commits of [`effects-ltx-2-5`](../effects-ltx-2-5/README.md). [ComfyUI-WanVideoWrapper](https://github.com/kijai/ComfyUI-WanVideoWrapper) at commit `088128b224242e110d3906c6750e9a3a348a659b`, Apache-2.0, registry id `comfyui-wanvideowrapper`, gives `NormalizeAudioLoudness`, node 359. [ComfyUI_AudioTools](https://github.com/lum3on/ComfyUI_AudioTools) at commit `c816d0a1629c05a0f463ddb77ea96ada69875d32`, MIT, registry id `comfyui_audiotools`, gives `AudioAmplify`, nodes 360 and 361. Comfy Cloud lists both in its `object_info`. Every other node is a ComfyUI core node |
 
 ## Inputs
 
