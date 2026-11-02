@@ -9,18 +9,19 @@ export type PartPrice = { credits: number | null; source: PartSource }
 /** The seconds of the clip the recorded runs were measured on. */
 export const recordedSeconds = 4
 
-/** The credits each step of your own video's chain cost on one run measured on Comfy Cloud for a 4-second clip. The plan and the read hold null, since no run measured them. The draft renders with no end key on the graph with the temporal pass. */
+/** The credits each step of your own video's chain cost on one run measured on Comfy Cloud for a 4-second clip. The plan and the read hold null, since no run measured them. The draft renders with no end key on the graph with the temporal pass at 60 fps, and its recorded run is the costliest of that graph at 480p. */
 export const recordedSteps = {
   plan: null,
   read: null,
   edit: 12.35,
-  draft: 7.55,
+  draft: 13.3,
   restore: 10.86,
 } as const satisfies Readonly<Record<string, number | null>>
 
-/** The credits of the final, measured for a 4-second clip on the graph with the temporal pass and the end key every final renders with. Only 720p has such a run, so 480p and 1080p hold no row and take the route's price. */
+/** The credits of the final, measured for a 4-second clip on the graph with the temporal pass and the end key every final renders with. No such run was made at 480p, so 480p holds no row and takes the route's price. */
 export const recordedFinals: Readonly<Record<string, number>> = {
   "720p": 21.49,
+  "1080p": 51.66,
 }
 
 /** The recorded credits of the lead and the draft, in the order the lead prices them. */

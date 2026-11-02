@@ -250,7 +250,7 @@ describe("a failure or Start over in the chain", () => {
 describe("the final's price and the words under the button", () => {
   const example = exampleOf("grab-and-run")
 
-  it("shows Generate on the example as its draft measured at 7.55 credits on a 4-second 480p run when no run of yours prices it", async () => {
+  it("shows Generate on the example as its draft measured at 13.3 credits on a 4-second 480p run when no run of yours prices it", async () => {
     gateway({ price: { source: "unknown", credits: null } })
     const { result } = renderHook(
       () =>
@@ -263,7 +263,7 @@ describe("the final's price and the words under the button", () => {
     )
     await waitFor(() =>
       expect(result.current?.priceNote).toBe(
-        "7.55 Comfy credits, measured on a 4-second 480p run"
+        "13.3 Comfy credits, measured on a 4-second 480p run"
       )
     )
     expect(result.current?.start.priceValue).not.toBeNull()
@@ -312,7 +312,7 @@ describe("the final's price and the words under the button", () => {
     expect(result.current?.start.priceValue).not.toBeNull()
   })
 
-  it("names Make final at 1080p an estimate when the route estimates the final, never a run measured at 1080p", async () => {
+  it("shows Make final at 1080p as the restore at 10.86 and the final measured at 51.66 with its end key, over the route's estimate", async () => {
     gateway({ price: { source: "estimate", credits: 20 } })
     const { result } = renderHook(
       () =>
@@ -326,7 +326,9 @@ describe("the final's price and the words under the button", () => {
     act(() => result.current?.start.generate())
     await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
     await waitFor(() =>
-      expect(result.current?.priceNote).toBe("30.86 Comfy credits, estimated")
+      expect(result.current?.priceNote).toBe(
+        "62.52 Comfy credits, measured on a 4-second 1080p run"
+      )
     )
   })
 
@@ -348,13 +350,13 @@ describe("the final's price and the words under the button", () => {
     )
   })
 
-  it("shows no price on Make final at 1080p, which no run of the graph measured, rather than the restore alone", async () => {
+  it("shows no price on Make final at 480p, which no final with its end key measured, rather than the restore alone", async () => {
     gateway({ price: { source: "unknown", credits: null } })
     const { result } = renderHook(
       () =>
         useMotionChain({
           example,
-          form: formWith("1080p"),
+          form: formWith("480p"),
           clipSize: null,
         }),
       { wrapper }

@@ -1,7 +1,7 @@
 {
   "name": "motion-guide-ltx-2-5",
   "title": "Motion: move a photo along a depth guide on LTX 2.5",
-  "description": "Renders the person in your photo moving along a depth guide video, on LTX 2.5 22B distilled bf16 with the LTX 2.3 union control IC-LoRA, in two stages, with stage 2 refined on a latent the LTX 2.5 temporal upscaler made 4 times longer, at 4 times the frame rate, keeping every fourth frame. An optional people mask keeps the guide at full attention on the set and at 0.2 on the people. An optional end key guides the last frame. The video carries LTX's own sound, levelled as Effects levels it, and the graph saves the last frame as an image.",
+  "description": "Renders the person in your photo moving along a depth guide video, on LTX 2.5 22B distilled bf16 with the LTX 2.3 union control IC-LoRA, in two stages, with stage 2 refined on a latent the LTX 2.5 temporal upscaler made 4 times longer, at 4 times the frame rate and at most 60 fps, keeping every fourth frame. An optional people mask keeps the guide at full attention on the set and at 0.2 on the people. An optional end key guides the last frame. The video carries LTX's own sound, levelled as Effects levels it, and the graph saves the last frame as an image.",
   "mediaType": "video",
   "openSource": true,
   "models": [

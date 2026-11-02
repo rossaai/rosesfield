@@ -285,7 +285,7 @@ describe("your own video's chain in Motion", () => {
     const { result } = renderOwn(null, unpriced, "720p")
     await waitFor(() =>
       expect(result.current?.priceNote).toBe(
-        "19.9 Comfy credits, measured on a 4-second 480p run, plus reading your video, which no run has measured yet"
+        "25.65 Comfy credits, measured on a 4-second 480p run, plus reading your video, which no run has measured yet"
       )
     )
     expect(result.current?.start.priceValue).toBeNull()
@@ -300,8 +300,8 @@ describe("your own video's chain in Motion", () => {
     expect(result.current?.start.priceName).toContain("Make final")
   })
 
-  it("shows no price on Make final at 1080p, which no run of the graph measured, rather than the restore alone under the reading's words", async () => {
-    const { result } = renderOwn()
+  it("shows no price on Make final at 480p, which no final with its end key measured, rather than the restore alone under the reading's words", async () => {
+    const { result } = renderOwn(null, unpriced, "480p")
     act(() => result.current?.start.generate())
     await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
     await new Promise((done) => setTimeout(done, 50))
