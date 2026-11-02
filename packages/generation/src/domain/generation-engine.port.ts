@@ -215,6 +215,11 @@ export abstract class GenerationEngine {
     return null
   }
 
+  /** Returns the workflow hash a submit of this binding records, or null when the binding runs no graph. */
+  workflowHashOf(_binding: EngineBinding): Promise<string | null> {
+    return Promise.resolve(null)
+  }
+
   /** Lists the outputs of a run that succeeded, with their bytes, and never fetches an address the run's inputs name. */
   abstract listOutputs(ref: string, inputs: RunInputs): Promise<EngineOutput[]>
 

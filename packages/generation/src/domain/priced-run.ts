@@ -5,6 +5,7 @@ import type {
   RunInputs,
 } from "@rosesfield/contract"
 import { type FieldRole, fieldRoleOf } from "#domain/field-role"
+import { workflowHashSetting } from "#domain/kept-settings"
 import type { ModelField, ModelForm } from "#domain/model-form"
 import { resolveBinding } from "#domain/select-binding"
 import { chosenModelOf, hostedModelOf } from "#domain/task-binding"
@@ -20,6 +21,7 @@ export type PricedRunOptions = {
   form: ModelForm | null
   count: number
   aspectRatio: string | null
+  workflowHash: string | null
 }
 
 type Setting = string | number | boolean | null
@@ -40,9 +42,14 @@ export function pricedRunOf(options: PricedRunOptions): PricedRun {
     chosen ??
     hostedModelOf(resolveBinding(app.engine, inputs)) ??
     `app:${app.id}`
+  const graph: [string, Setting][] =
+    options.workflowHash === null
+      ? []
+      : [[workflowHashSetting, options.workflowHash]]
   const settings: [string, Setting][] = [
     ["count", options.count],
     ["aspectRatio", options.aspectRatio],
+    ...graph,
     ...(form === null
       ? app.inputs.flatMap((input) => appSettingOf(input, inputs))
       : form.fields.flatMap((field) =>

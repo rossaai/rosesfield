@@ -10,6 +10,7 @@ function keyOf(inputs: Record<string, string>) {
     form: null,
     count: 1,
     aspectRatio: null,
+    workflowHash: null,
   })
 }
 
@@ -34,6 +35,7 @@ function photoKeyOf(
     form: null,
     count: 1,
     aspectRatio: null,
+    workflowHash: null,
   })
 }
 
@@ -58,5 +60,29 @@ describe("the measured price key of a photo input", () => {
     expect(photoKeyOf(imageApp(), [])).not.toEqual(
       photoKeyOf(imageApp(), [referenceId])
     )
+  })
+})
+
+function graphKeyOf(workflowHash: string | null) {
+  return pricedRunOf({
+    app: imageApp(),
+    inputs: { prompt: "a door" },
+    form: null,
+    count: 1,
+    aspectRatio: null,
+    workflowHash,
+  })
+}
+
+describe("the measured price key of a graph", () => {
+  it("keys two graphs apart at the same settings, so a run of one never prices the other", () => {
+    expect(graphKeyOf("graph-before")).not.toEqual(graphKeyOf("graph-after"))
+    expect(graphKeyOf("graph-before").model).toBe(
+      graphKeyOf("graph-after").model
+    )
+  })
+
+  it("adds nothing to the key of a run that names no graph, so a hosted model keeps its measured runs", () => {
+    expect(graphKeyOf(null).settings).not.toContain("workflowHash")
   })
 })

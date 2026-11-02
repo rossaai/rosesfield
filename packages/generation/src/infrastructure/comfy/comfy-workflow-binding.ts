@@ -90,3 +90,12 @@ export async function workflowHashOf(
     byte.toString(16).padStart(2, "0")
   ).join("")
 }
+
+/** Returns the workflow hash a submit of this binding records, or null when the binding is not a Comfy workflow. */
+export async function workflowHashOfBinding(
+  binding: EngineBinding
+): Promise<string | null> {
+  return binding.adapter === comfyWorkflowAdapter
+    ? await workflowHashOf(parseComfyWorkflow(binding).workflow)
+    : null
+}

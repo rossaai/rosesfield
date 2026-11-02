@@ -71,6 +71,7 @@ function keyOf(inputs: Record<string, string>) {
     form,
     count: 1,
     aspectRatio: null,
+    workflowHash: null,
   })
 }
 

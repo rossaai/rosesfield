@@ -110,6 +110,15 @@ export class FakeGenerationEngine extends GenerationEngine {
     )
   }
 
+  override async workflowHashOf(
+    binding: EngineBinding
+  ): Promise<string | null> {
+    const { graph } = binding.config
+    return binding.adapter === this.key && typeof graph === "string"
+      ? graph
+      : null
+  }
+
   override async formOf(binding: EngineBinding): Promise<ModelForm | null> {
     const model = hostedModelOf(binding)
     return this.forms.find((form) => form.model === model) ?? null
@@ -152,7 +161,7 @@ export class FakeGenerationEngine extends GenerationEngine {
         ? `fake-${request.idempotencyKey}`
         : `fake-${this.submitted.length}`,
       models: ["fake-model"],
-      workflowHash: null,
+      workflowHash: await this.workflowHashOf(request.binding),
       ...(this.finished === null ? {} : { finished: this.finished }),
     }
   }

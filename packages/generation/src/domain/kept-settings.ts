@@ -55,6 +55,20 @@ export function nearestKeptOf<Cost>(
   return nearest
 }
 
+export const workflowHashSetting = "workflowHash"
+
+function workflowHashIn(settings: string): string | null {
+  const hash = keptSettingsOf(settings).find(
+    ([name]) => name === workflowHashSetting
+  )?.[1]
+  return typeof hash === "string" ? hash : null
+}
+
+/** Says whether a kept run ran the graph the asked run names, so a run of an earlier graph never prices the graph that replaced it. */
+export function isSameWorkflow(asked: string, kept: string): boolean {
+  return workflowHashIn(asked) === workflowHashIn(kept)
+}
+
 export function keptCountOf(settings: string): number {
   const count = keptSettingsOf(settings).find(([name]) => name === "count")?.[1]
   return typeof count === "number" && count > 0 ? count : 1

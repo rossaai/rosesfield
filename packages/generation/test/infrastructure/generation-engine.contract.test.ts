@@ -214,6 +214,12 @@ describe.each(subjects)("GenerationEngine contract: $name", (subject) => {
     expect(replay?.unused() ?? []).toEqual([])
   })
 
+  it("names a binding by the workflow hash its submit records, so a measured price keys the graph that ran", async () => {
+    const { engine, binding } = subject.create()
+    const submission = await engine.submit(requestFor(binding))
+    expect(await engine.workflowHashOf(binding)).toBe(submission.workflowHash)
+  })
+
   it("names its origin as live or demo", () => {
     const { engine } = subject.create()
     expect(["live", "demo"]).toContain(engine.origin)

@@ -21,11 +21,12 @@ export async function recordPrice(
   if (prices === null || cost === null) {
     return
   }
-  const { inputs, aspectRatio } = run.toRecord()
+  const { inputs, aspectRatio, engine: ran } = run.toRecord()
   const count = run.jobs.length > 1 ? 1 : run.toRecord().count
   const form = await engine.formOf(resolveBinding(app.engine, inputs))
+  const { workflowHash } = ran
   await prices.keep({
-    ...pricedRunOf({ app, inputs, form, count, aspectRatio }),
+    ...pricedRunOf({ app, inputs, form, count, aspectRatio, workflowHash }),
     cost,
     measuredAt: record.now,
   })
