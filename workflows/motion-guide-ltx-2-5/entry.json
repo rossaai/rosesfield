@@ -13,7 +13,11 @@
     "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
     "ltx-2.5-latent-temporal-upscaler-x2-bf16-1.0.safetensors"
   ],
-  "requiresCustomNodes": ["comfyui-videohelpersuite"],
+  "requiresCustomNodes": [
+    "comfyui-wanvideowrapper",
+    "comfyui_audiotools",
+    "comfyui-videohelpersuite"
+  ],
   "inputBindings": {
     "photo": {
       "nodeId": "200",

@@ -7,7 +7,7 @@ Renders the person in your photo moving along a depth guide video, on LTX 2.5 22
 | Workflow id | `motion-guide-ltx-2-5` |
 | Run by | [`motion`](../../packages/catalog/src/motion/), as the model `ltx-2-5-guide` |
 | Core model | LTX 2.5 22B distilled, bf16, with the LTX 2.3 union control IC-LoRA |
-| Custom node packs | one, for the frames kept. [ComfyUI-VideoHelperSuite](https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite) at commit `4d907bee61e92c2e65af3bd6383a4e4d356126d1`, GPL-3.0, registry id `comfyui-videohelpersuite`, gives `VHS_SelectEveryNthImage`. No core node keeps every fourth frame of a batch. Comfy Cloud lists it in its `object_info` |
+| Custom node packs | three. Two for the sound, the packs and commits of [`effects-ltx-2-5`](../effects-ltx-2-5/README.md). [ComfyUI-WanVideoWrapper](https://github.com/kijai/ComfyUI-WanVideoWrapper) at commit `088128b224242e110d3906c6750e9a3a348a659b`, Apache-2.0, registry id `comfyui-wanvideowrapper`, gives `NormalizeAudioLoudness`, node 359. [ComfyUI_AudioTools](https://github.com/lum3on/ComfyUI_AudioTools) at commit `c816d0a1629c05a0f463ddb77ea96ada69875d32`, MIT, registry id `comfyui_audiotools`, gives `AudioAmplify`, nodes 360 and 361. One for the frames kept. [ComfyUI-VideoHelperSuite](https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite) at commit `4d907bee61e92c2e65af3bd6383a4e4d356126d1`, GPL-3.0, registry id `comfyui-videohelpersuite`, gives `VHS_SelectEveryNthImage`. No core node keeps every fourth frame of a batch. Comfy Cloud lists all three in its `object_info`. Every other node is a ComfyUI core node |
 
 ## Inputs
 

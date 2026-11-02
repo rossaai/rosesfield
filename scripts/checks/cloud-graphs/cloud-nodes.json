@@ -1,6 +1,6 @@
 {
   "source": "GET /api/object_info on Comfy Cloud",
-  "readOn": "2026-10-29",
+  "readOn": "2026-11-02",
   "recipe": "For each node class object_info lists, the name of every input it takes, required or optional. A dynamic combo adds each option's inputs as <input>.<name>, and an autogrow input adds one <input>.<name> per name its template allows. A combo whose options name a weight file is a file list: fileInputs maps <class>.<input> to its list, and lists keeps each list once",
   "nodes": {
     "ACES2OutputTransform": [
@@ -7900,6 +7900,16 @@
       "upscale_factor",
       "video"
     ],
+    "FluxVideoUpscaleNodeV2": [
+      "auto_downscale",
+      "mode",
+      "prompt",
+      "safety_tolerance",
+      "seed",
+      "target_resolution",
+      "target_resolution.upscale_factor",
+      "video"
+    ],
     "Frame Select": ["frames", "select"],
     "Frame Select Latent": ["frames", "select"],
     "Frame Select Latent Raw": ["frames", "select"],
@@ -9230,6 +9240,9 @@
     ],
     "IdeogramPreciseEditApi": [
       "model",
+      "model.context_window",
+      "model.context_window_bboxes",
+      "model.context_window_mask",
       "model.images.image_1",
       "model.images.image_2",
       "model.images.image_3",
