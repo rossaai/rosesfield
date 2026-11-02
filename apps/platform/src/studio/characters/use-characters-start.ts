@@ -166,7 +166,12 @@ function useCharactersStart(
     bodyOf(app, form.values),
   ]
   const [first] = bodies
-  const credits = usePrice(app, first ?? null, hosted.keyState)
+  const isOpening = hosted.isLoading
+  const credits = usePrice(
+    app,
+    isOpening ? null : (first ?? null),
+    hosted.keyState
+  )
   const pressed = useRef<Press | null>(null)
   const start = useStartRuns(app, pressed, onStarted)
   const pressOf = (sent: readonly StartRunBodyInput[]): Press => {
@@ -177,7 +182,7 @@ function useCharactersStart(
     return pressed.current
   }
   const generate = (): void => {
-    if (start.isPending || isLoading) {
+    if (start.isPending || isLoading || isOpening) {
       return
     }
     if (fields === null || runs === null) {
@@ -197,7 +202,7 @@ function useCharactersStart(
   return {
     ...priceLabelsOf(total, settings.data?.engine.origin === "demo"),
     generate,
-    isPending: start.isPending || isLoading,
+    isPending: start.isPending || isLoading || isOpening,
     error: start.error,
     check: checkOf(app, of),
   }

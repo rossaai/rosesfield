@@ -175,7 +175,11 @@ export function useStoryboardStart(
     chosen: model.chosen,
     photos: [],
   })
-  const credits = useCallsPrice(app, ask, model.keyState)
+  const credits = useCallsPrice(
+    app,
+    model.isLoading ? null : ask,
+    model.keyState
+  )
   const start = useMutation({
     mutationFn: (key: string) =>
       pressKeyframes({
@@ -195,11 +199,11 @@ export function useStoryboardStart(
   const amount = isDemo || credits === null ? null : formatWholeCredits(credits)
   return {
     generate: () => {
-      if (!start.isPending) {
+      if (!start.isPending && !model.isLoading) {
         start.mutate(crypto.randomUUID())
       }
     },
-    isPending: start.isPending,
+    isPending: start.isPending || model.isLoading,
     error: start.error,
     price: isDemo ? t("run.price.demo") : "",
     priceValue: amount,

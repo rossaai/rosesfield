@@ -141,13 +141,11 @@ export function openAds({
     pages: [{ runs: [...runs], next: null }],
     pageParams: [null],
   })
-  if (models.length > 0) {
-    client.setQueryData(modelCatalogQuery(ads.id, keyState).queryKey, {
-      models: [...models],
-      defaultModel: null,
-      refusal: null,
-    })
-  }
+  client.setQueryData(modelCatalogQuery(ads.id, keyState).queryKey, {
+    models: [...models],
+    defaultModel: null,
+    refusal: null,
+  })
   for (const [values, credits] of prices) {
     client.setQueryData(
       priceQuery(ads.id, priceAskOf(values), keyState).queryKey,

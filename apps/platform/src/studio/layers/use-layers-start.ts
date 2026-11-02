@@ -25,6 +25,7 @@ type LayersStartOptions = {
   mode: LayersMode
   form: AppForm
   chosen: CatalogModel | null
+  isLoading: boolean
   keyState: string
   mask: () => { canvas: HTMLCanvasElement; size: PixelSize } | null
   check: () => boolean
@@ -65,7 +66,9 @@ export function useLayersStart(options: LayersStartOptions): StartRun {
   const settings = useQuery(settingsQuery)
   const credits = usePrice(
     app,
-    layersRunBody({ app, mode, values: form.values, chosen, mask: [] }),
+    options.isLoading
+      ? null
+      : layersRunBody({ app, mode, values: form.values, chosen, mask: [] }),
     options.keyState
   )
   const start = useMutation({
@@ -84,7 +87,7 @@ export function useLayersStart(options: LayersStartOptions): StartRun {
     },
   })
   const generate = (): void => {
-    if (start.isPending) {
+    if (start.isPending || options.isLoading) {
       return
     }
     const isFormValid = form.validate()
@@ -95,7 +98,7 @@ export function useLayersStart(options: LayersStartOptions): StartRun {
   }
   return {
     generate,
-    isPending: start.isPending,
+    isPending: start.isPending || options.isLoading,
     error: start.error,
     ...priceLabelsOf(credits, settings.data?.engine.origin === "demo"),
   }
