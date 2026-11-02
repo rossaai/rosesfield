@@ -2,7 +2,7 @@
   "id": "b3174e92-dcc3-5c7b-899f-eeddd63b16f5",
   "revision": 0,
   "last_node_id": 1100,
-  "last_link_id": 135,
+  "last_link_id": 150,
   "nodes": [
     {
       "id": 68,
@@ -99,7 +99,7 @@
         {
           "name": "IMAGE",
           "type": "IMAGE",
-          "links": [60]
+          "links": [146]
         }
       ],
       "properties": {
@@ -138,12 +138,12 @@
         {
           "name": "positive",
           "type": "CONDITIONING",
-          "links": [116]
+          "links": [143]
         },
         {
           "name": "negative",
           "type": "CONDITIONING",
-          "links": [117]
+          "links": [144]
         },
         {
           "name": "latent",
@@ -842,7 +842,7 @@
         {
           "name": "VAE",
           "type": "VAE",
-          "links": [6, 19, 34, 96, 97, 113, 118]
+          "links": [6, 19, 34, 96, 97, 113, 118, 138, 141]
         }
       ],
       "properties": {
@@ -1064,7 +1064,7 @@
         {
           "name": "fps",
           "type": "FLOAT",
-          "links": [4, 15, 28]
+          "links": [4, 15, 28, 142]
         },
         {
           "name": "bit_depth",
@@ -1424,7 +1424,7 @@
         {
           "name": "image",
           "type": "IMAGE",
-          "link": 60
+          "link": 150
         },
         {
           "name": "length",
@@ -2353,7 +2353,7 @@
         {
           "name": "LATENT",
           "type": "LATENT",
-          "links": [99]
+          "links": [136]
         }
       ],
       "properties": {
@@ -2385,7 +2385,7 @@
         {
           "name": "latent",
           "type": "LATENT",
-          "link": 99
+          "link": 147
         }
       ],
       "outputs": [
@@ -2701,12 +2701,12 @@
         {
           "name": "positive",
           "type": "CONDITIONING",
-          "link": 116
+          "link": 148
         },
         {
           "name": "negative",
           "type": "CONDITIONING",
-          "link": 117
+          "link": 149
         },
         {
           "name": "vae",
@@ -2920,7 +2920,7 @@
       "title": "Motion: move a photo along a depth guide on LTX 2.5",
       "properties": {},
       "widgets_values": [
-        "# Motion: move a photo along a depth guide on LTX 2.5\n\nRenders the person in your photo moving along your guide video, on LTX 2.5 22B distilled with the LTX 2.3 union control IC-LoRA, in two stages. The guide is a depth video. A people mask, a second video, lets the guide hold the set and the camera at full attention while the people move at 0.2. An end key, an optional image, guides the last frame at 0.9 in both stages. Your photo is frame 0. The video keeps the guide's frame count and frame rate and carries LTX's own sound, levelled to -23 LUFS under a -4 dBFS ceiling. The graph also saves the last frame as an image.\n\n## Models\n\n- [ltx-2.5-22b-distilled-transformer-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/diffusion_models/ltx-2.5-22b-distilled-transformer-bf16.safetensors): LTX 2.5 22B distilled, bf16, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-video-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-video-vae-bf16.safetensors) and [ltx-2.5-audio-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-audio-vae-bf16.safetensors): the LTX 2.5 VAEs, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [gemma4-12b-with-proj-ltx-2.5-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/text_encoders/gemma4-12b-with-proj-ltx-2.5-bf16.safetensors): Gemma 4 12B with the LTX 2.5 projections, under the licence of the LTX 2.5 repository.\n- [ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors): the LTX 2.5 latent upscaler, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors](https://huggingface.co/Lightricks/LTX-2.3-22b-IC-LoRA-Union-Control/resolve/main/ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors): the LTX 2.3 union control IC-LoRA, [LTX-2 Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2).\n\nThe LTX 2.5 files are gated on Hugging Face. Accept their licence there before you download them.\n\n## Inputs\n\n- Photo, node 200: frame 0.\n- Guide video, node 199: the depth guide.\n- People mask, node 950: white on the people, black on the set. An all-black mask holds every pixel at full attention, as Rosesfield does when you add no mask.\n- End key, node 1002: the image of the last frame. For a draft, bypass nodes 1001 and 1003, as Rosesfield removes them when you add no end key.\n- Scene, node 900: your words after a fixed sentence that keeps the person the same.\n- Short side, node 702: 512 for 480p, 768 for 720p.\n- Seed, node 980.\n"
+        "# Motion: move a photo along a depth guide on LTX 2.5\n\nRenders the person in your photo moving along your guide video, on LTX 2.5 22B distilled with the LTX 2.3 union control IC-LoRA, in two stages. Stage 2 refines a latent the LTX 2.5 temporal upscaler made 4 times longer, at 4 times the frame rate, and the graph keeps every fourth frame, so a face that moves fast keeps its shape. The guide is a depth video. A people mask, a second video, lets the guide hold the set and the camera at full attention while the people move at 0.2. An end key, an optional image, guides the last frame at 0.9 in both stages. Your photo is frame 0. The video keeps the guide's frame count and frame rate and carries LTX's own sound, levelled to -23 LUFS under a -4 dBFS ceiling. The graph also saves the last frame as an image.\n\n## Models\n\n- [ltx-2.5-22b-distilled-transformer-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/diffusion_models/ltx-2.5-22b-distilled-transformer-bf16.safetensors): LTX 2.5 22B distilled, bf16, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-video-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-video-vae-bf16.safetensors) and [ltx-2.5-audio-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-audio-vae-bf16.safetensors): the LTX 2.5 VAEs, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [gemma4-12b-with-proj-ltx-2.5-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/text_encoders/gemma4-12b-with-proj-ltx-2.5-bf16.safetensors): Gemma 4 12B with the LTX 2.5 projections, under the licence of the LTX 2.5 repository.\n- [ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors): the LTX 2.5 latent upscaler, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.5-latent-temporal-upscaler-x2-bf16-1.0.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/latent_upscale_models/ltx-2.5-latent-temporal-upscaler-x2-bf16-1.0.safetensors): the LTX 2.5 temporal upscaler, run twice, [LTX-2.x Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x).\n- [ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors](https://huggingface.co/Lightricks/LTX-2.3-22b-IC-LoRA-Union-Control/resolve/main/ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors): the LTX 2.3 union control IC-LoRA, [LTX-2 Community License](https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2).\n\nThe LTX 2.5 files are gated on Hugging Face. Accept their licence there before you download them.\n\n## Custom node pack\n\n- [ComfyUI-VideoHelperSuite](https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite) at commit 4d907bee61e92c2e65af3bd6383a4e4d356126d1, GPL-3.0, for VHS_SelectEveryNthImage, node 1084, which keeps every fourth frame. Comfy Cloud installs it.\n\n## Inputs\n\n- Photo, node 200: frame 0.\n- Guide video, node 199: the depth guide.\n- People mask, node 950: white on the people, black on the set. An all-black mask holds every pixel at full attention, as Rosesfield does when you add no mask.\n- End key, node 1002: the image of the last frame. For a draft, bypass nodes 1001 and 1003, as Rosesfield removes them when you add no end key.\n- Scene, node 900: your words after a fixed sentence that keeps the person the same.\n- Short side, node 702: 512 for 480p, 768 for 720p.\n- Seed, node 980.\n"
       ]
     },
     {
@@ -3090,6 +3090,249 @@
       },
       "widgets_values": ["max(1, round(6 * min(a, b) / 240))"],
       "title": "Grow, 6 px per 240 px of the short side"
+    },
+    {
+      "id": 1080,
+      "type": "LatentUpscaleModelLoader",
+      "pos": [730, 1252],
+      "size": [380, 92],
+      "flags": {},
+      "order": 78,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT_UPSCALE_MODEL",
+          "type": "LATENT_UPSCALE_MODEL",
+          "links": [137, 140]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LatentUpscaleModelLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0",
+        "models": [
+          {
+            "name": "ltx-2.5-latent-temporal-upscaler-x2-bf16-1.0.safetensors",
+            "url": "https://huggingface.co/Lightricks/LTX-2.5/resolve/main/latent_upscale_models/ltx-2.5-latent-temporal-upscaler-x2-bf16-1.0.safetensors",
+            "directory": "latent_upscale_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "ltx-2.5-latent-temporal-upscaler-x2-bf16-1.0.safetensors"
+      ],
+      "title": "LTX 2.5 temporal upscaler"
+    },
+    {
+      "id": 1081,
+      "type": "LTXVLatentUpsampler",
+      "pos": [4090, 1872],
+      "size": [380, 106],
+      "flags": {},
+      "order": 79,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 136
+        },
+        {
+          "name": "upscale_model",
+          "type": "LATENT_UPSCALE_MODEL",
+          "link": 137
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 138
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [139]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LTXVLatentUpsampler",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [],
+      "title": "Twice the frames"
+    },
+    {
+      "id": 1085,
+      "type": "LTXVLatentUpsampler",
+      "pos": [4090, 1998],
+      "size": [380, 106],
+      "flags": {},
+      "order": 80,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 139
+        },
+        {
+          "name": "upscale_model",
+          "type": "LATENT_UPSCALE_MODEL",
+          "link": 140
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 141
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [147]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LTXVLatentUpsampler",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [],
+      "title": "Four times the frames"
+    },
+    {
+      "id": 1086,
+      "type": "ComfyMathExpression",
+      "pos": [4090, 2138],
+      "size": [420, 176],
+      "flags": {},
+      "order": 81,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "values.a",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 142
+        },
+        {
+          "name": "values.b",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": [145]
+        },
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "BOOL",
+          "type": "BOOLEAN",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfyMathExpression",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": ["a * 4"],
+      "title": "Four times the frame rate"
+    },
+    {
+      "id": 1082,
+      "type": "LTXVConditioning",
+      "pos": [4090, 2354],
+      "size": [420, 176],
+      "flags": {},
+      "order": 82,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 143
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 144
+        },
+        {
+          "name": "frame_rate",
+          "type": "FLOAT",
+          "link": 145,
+          "widget": {
+            "name": "frame_rate"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [148]
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [149]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LTXVConditioning",
+        "cnr_id": "comfy-core",
+        "ver": "0.41.0"
+      },
+      "widgets_values": [25],
+      "title": "Stage 2 at four times the frame rate"
+    },
+    {
+      "id": 1084,
+      "type": "VHS_SelectEveryNthImage",
+      "pos": [4650, 1912],
+      "size": [420, 130],
+      "flags": {},
+      "order": 83,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 146
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [150]
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VHS_SelectEveryNthImage",
+        "cnr_id": "comfyui-videohelpersuite",
+        "aux_id": "Kosinkadink/ComfyUI-VideoHelperSuite",
+        "ver": "4d907bee61e92c2e65af3bd6383a4e4d356126d1"
+      },
+      "widgets_values": [4, 0],
+      "title": "Every fourth frame"
     }
   ],
   "links": [
@@ -3152,7 +3395,6 @@
     [57, 706, 0, 719, 0, "IMAGE"],
     [58, 718, 0, 719, 1, "IMAGE"],
     [59, 200, 0, 721, 0, "IMAGE"],
-    [60, 105, 0, 724, 0, "IMAGE"],
     [61, 713, 2, 724, 1, "INT"],
     [62, 950, 0, 951, 0, "VIDEO"],
     [63, 951, 0, 952, 0, "VIDEO"],
@@ -3191,7 +3433,6 @@
     [96, 385, 0, 993, 2, "VAE"],
     [97, 385, 0, 994, 0, "VAE"],
     [98, 200, 0, 994, 1, "IMAGE"],
-    [99, 993, 0, 994, 2, "LATENT"],
     [100, 1003, 2, 995, 0, "LATENT"],
     [101, 121, 1, 995, 1, "LATENT"],
     [102, 195, 0, 998, 0, "MODEL"],
@@ -3208,8 +3449,6 @@
     [113, 385, 0, 1001, 2, "VAE"],
     [114, 115, 2, 1001, 3, "LATENT"],
     [115, 1005, 0, 1001, 4, "IMAGE"],
-    [116, 106, 0, 1003, 0, "CONDITIONING"],
-    [117, 106, 1, 1003, 1, "CONDITIONING"],
     [118, 385, 0, 1003, 2, "VAE"],
     [119, 994, 0, 1003, 3, "LATENT"],
     [120, 1005, 0, 1003, 4, "IMAGE"],
@@ -3227,13 +3466,28 @@
     [132, 952, 0, 968, 0, "IMAGE"],
     [133, 968, 0, 969, 0, "INT"],
     [134, 968, 1, 969, 1, "INT"],
-    [135, 969, 1, 957, 1, "INT"]
+    [135, 969, 1, 957, 1, "INT"],
+    [136, 993, 0, 1081, 0, "LATENT"],
+    [137, 1080, 0, 1081, 1, "LATENT_UPSCALE_MODEL"],
+    [138, 385, 0, 1081, 2, "VAE"],
+    [139, 1081, 0, 1085, 0, "LATENT"],
+    [140, 1080, 0, 1085, 1, "LATENT_UPSCALE_MODEL"],
+    [141, 385, 0, 1085, 2, "VAE"],
+    [142, 706, 2, 1086, 0, "FLOAT"],
+    [143, 106, 0, 1082, 0, "CONDITIONING"],
+    [144, 106, 1, 1082, 1, "CONDITIONING"],
+    [145, 1086, 0, 1082, 2, "FLOAT"],
+    [146, 105, 0, 1084, 0, "IMAGE"],
+    [147, 1085, 0, 994, 2, "LATENT"],
+    [148, 1082, 0, 1003, 0, "CONDITIONING"],
+    [149, 1082, 1, 1003, 1, "CONDITIONING"],
+    [150, 1084, 0, 724, 0, "IMAGE"]
   ],
   "groups": [
     {
       "id": 1,
       "title": "Models",
-      "bounding": [700, 20, 480, 1232],
+      "bounding": [700, 20, 480, 1364],
       "color": "#3f789e",
       "font_size": 24,
       "flags": {}
@@ -3281,7 +3535,7 @@
     {
       "id": 7,
       "title": "Stage 2",
-      "bounding": [4060, 20, 480, 1852],
+      "bounding": [4060, 20, 480, 2550],
       "color": "#444444",
       "font_size": 24,
       "flags": {}
@@ -3289,7 +3543,7 @@
     {
       "id": 8,
       "title": "Output and sound",
-      "bounding": [4620, 20, 480, 1892],
+      "bounding": [4620, 20, 480, 2062],
       "color": "#3f789e",
       "font_size": 24,
       "flags": {}

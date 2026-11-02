@@ -395,7 +395,7 @@
   "724": {
     "class_type": "ImageFromBatch",
     "inputs": {
-      "image": ["105", 0],
+      "image": ["1084", 0],
       "batch_index": 1,
       "length": ["713", 2]
     },
@@ -680,7 +680,7 @@
     "inputs": {
       "vae": ["385", 0],
       "image": ["200", 0],
-      "latent": ["993", 0],
+      "latent": ["1085", 0],
       "strength": 1,
       "bypass": false
     },
@@ -768,8 +768,8 @@
   "1003": {
     "class_type": "LTXVAddGuide",
     "inputs": {
-      "positive": ["106", 0],
-      "negative": ["106", 1],
+      "positive": ["1082", 0],
+      "negative": ["1082", 1],
       "vae": ["385", 0],
       "latent": ["994", 0],
       "image": ["1005", 0],
@@ -862,6 +862,69 @@
     },
     "_meta": {
       "title": "Grow, 6 px per 240 px of the short side"
+    }
+  },
+  "1080": {
+    "class_type": "LatentUpscaleModelLoader",
+    "inputs": {
+      "model_name": "ltx-2.5-latent-temporal-upscaler-x2-bf16-1.0.safetensors"
+    },
+    "_meta": {
+      "title": "LTX 2.5 temporal upscaler"
+    }
+  },
+  "1081": {
+    "class_type": "LTXVLatentUpsampler",
+    "inputs": {
+      "samples": ["993", 0],
+      "upscale_model": ["1080", 0],
+      "vae": ["385", 0]
+    },
+    "_meta": {
+      "title": "Twice the frames"
+    }
+  },
+  "1085": {
+    "class_type": "LTXVLatentUpsampler",
+    "inputs": {
+      "samples": ["1081", 0],
+      "upscale_model": ["1080", 0],
+      "vae": ["385", 0]
+    },
+    "_meta": {
+      "title": "Four times the frames"
+    }
+  },
+  "1086": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "values.a": ["706", 2],
+      "expression": "a * 4"
+    },
+    "_meta": {
+      "title": "Four times the frame rate"
+    }
+  },
+  "1082": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+      "positive": ["106", 0],
+      "negative": ["106", 1],
+      "frame_rate": ["1086", 0]
+    },
+    "_meta": {
+      "title": "Stage 2 at four times the frame rate"
+    }
+  },
+  "1084": {
+    "class_type": "VHS_SelectEveryNthImage",
+    "inputs": {
+      "images": ["105", 0],
+      "select_every_nth": 4,
+      "skip_first_images": 0
+    },
+    "_meta": {
+      "title": "Every fourth frame"
     }
   }
 }
