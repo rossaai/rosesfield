@@ -12,6 +12,7 @@ import {
   recordedFinals,
   recordedSeconds,
   recordedSteps,
+  wholeCreditsOf,
 } from "@rosesfield/catalog/motion"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
@@ -65,16 +66,6 @@ const askNothing: Ask = async () => unasked
 
 const noPrice: StepPrice = { credits: null, source: "unknown" }
 
-function stepPriceOf(asked: AskedPrice): StepPrice {
-  if (asked.credits === null) {
-    return noPrice
-  }
-  return {
-    credits: asked.credits,
-    source: asked.source === "measured" ? "measured" : "estimate",
-  }
-}
-
 /** The price of parts of a chain: recorded runs name their clip and resolution, and an unread lead keeps its known part. */
 export function partsPriceOf(
   parts: readonly PartPrice[],
@@ -101,69 +92,35 @@ export function partsPriceOf(
   }
 }
 
-/** The final's price: the person's own measured run, else the example's own measured run at the same resolution, else an estimate. */
-export function finalPriceOf(
-  asked: AskedPrice,
-  example: LibraryExample | null,
-  resolution: string
-): StepPrice {
-  if (asked.source === "measured" && asked.credits !== null) {
-    return { credits: asked.credits, source: "measured" }
-  }
-  const preview = example?.preview ?? null
-  if (preview !== null && preview.resolution === resolution) {
-    return {
-      credits: preview.credits,
-      source: "example",
-      seconds: example?.seconds ?? recordedSeconds,
-      resolution,
-    }
-  }
-  return stepPriceOf(asked)
-}
-
-/** A final's price as a part: your own measured run, the example's measured run at this resolution, or an estimate. */
-function examplePartOf(
-  asked: AskedPrice,
-  example: LibraryExample | null,
-  resolution: string
-): PartPrice {
-  const preview = example?.preview ?? null
-  return partPriceOf(
-    asked,
-    preview !== null && preview.resolution === resolution
-      ? preview.credits
-      : null
+/** The final's price: the person's own measured run, else the guided render's run measured on a 4-second clip at the same resolution, else an estimate. */
+export function finalPriceOf(asked: AskedPrice, resolution: string): StepPrice {
+  return partsPriceOf(
+    [partPriceOf(asked, recordedFinals[resolution] ?? null)],
+    { seconds: recordedSeconds, resolution }
   )
 }
 
-async function examplePriceOf(
+/** The restore and the final on Make final, or the final alone on Render, at your resolution. A final whose render holds no price shows none, never its restore alone. */
+async function finalStagePriceOf(
   chain: ChainStage,
   steps: EndKeySteps,
-  pricing: ChainPricing,
+  resolution: string,
   ask: Ask
 ): Promise<StepPrice> {
-  const { example, resolution } = pricing
   switch (chain.stage) {
-    case "idle":
-      return stepPriceOf(await ask(steps.draft))
     case "makeFinal": {
       const [restore, final] = await Promise.all([
         ask(steps.restore(chain.frame)),
         ask(steps.final(chain.draft, chain.frame)),
       ])
-      return partsPriceOf(
-        [
-          partPriceOf(restore, recordedSteps.restore),
-          examplePartOf(final, example, resolution),
-        ],
-        { seconds: example?.seconds ?? recordedSeconds, resolution }
-      )
+      const parts = finalPartsOf(restore, final, resolution)
+      return wholeCreditsOf(parts) === null
+        ? noPrice
+        : partsPriceOf(parts, { seconds: recordedSeconds, resolution })
     }
     case "renderFinal":
       return finalPriceOf(
         await ask(steps.final(chain.draft, chain.endKey)),
-        example,
         resolution
       )
     default:
@@ -171,58 +128,43 @@ async function examplePriceOf(
   }
 }
 
-/** Your own video's price before each yes: the lead and the draft on Generate, the restore and the final on Make final, the final on Render. */
-async function ownPriceOf(
-  chain: ChainStage,
+/** Generate's price before the first yes: your own video's lead and draft, or an example's draft at 480p. */
+async function draftPriceOf(
   pricing: ChainPricing,
   ask: Ask
 ): Promise<StepPrice> {
-  const { steps, lead, resolution } = pricing
-  const at = { seconds: recordedSeconds, resolution }
-  if (chain.stage === "idle") {
-    if (lead === null) {
-      return noPrice
-    }
-    const asked = await Promise.all(lead.priced.map(ask))
-    const parts = asked.map((one, index) =>
-      partPriceOf(one, recordedDraftParts[index] ?? null)
-    )
-    return partsPriceOf(parts, { ...at, resolution: draftResolution })
+  const at = { seconds: recordedSeconds, resolution: draftResolution }
+  const { steps, lead, example } = pricing
+  if (example !== null) {
+    return steps === null
+      ? noPrice
+      : partsPriceOf(
+          [partPriceOf(await ask(steps.draft), recordedSteps.draft)],
+          at
+        )
   }
-  if (steps === null) {
+  if (lead === null) {
     return noPrice
   }
-  switch (chain.stage) {
-    case "makeFinal": {
-      const [restore, final] = await Promise.all([
-        ask(steps.restore(chain.frame)),
-        ask(steps.final(chain.draft, chain.frame)),
-      ])
-      return partsPriceOf(finalPartsOf(restore, final, resolution), at)
-    }
-    case "renderFinal": {
-      const final = await ask(steps.final(chain.draft, chain.endKey))
-      return partsPriceOf(
-        [partPriceOf(final, recordedFinals[resolution] ?? null)],
-        at
-      )
-    }
-    default:
-      return noPrice
-  }
+  const asked = await Promise.all(lead.priced.map(ask))
+  const parts = asked.map((one, index) =>
+    partPriceOf(one, recordedDraftParts[index] ?? null)
+  )
+  return partsPriceOf(parts, at)
 }
 
-async function stagePriceOf(
+/** The price before each yes: the draft on Generate, the restore and the final on Make final, the final on Render. */
+function stagePriceOf(
   chain: ChainStage,
   pricing: ChainPricing,
   ask: Ask
 ): Promise<StepPrice> {
-  if (pricing.example === null) {
-    return ownPriceOf(chain, pricing, ask)
+  if (chain.stage === "idle") {
+    return draftPriceOf(pricing, ask)
   }
   return pricing.steps === null
-    ? noPrice
-    : examplePriceOf(chain, pricing.steps, pricing, ask)
+    ? Promise.resolve(noPrice)
+    : finalStagePriceOf(chain, pricing.steps, pricing.resolution, ask)
 }
 
 /** The words that say what a price is and where it comes from, shown under Generate before each yes. */

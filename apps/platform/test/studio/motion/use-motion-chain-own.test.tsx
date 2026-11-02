@@ -123,7 +123,7 @@ function ownGateway(
   return sent
 }
 
-function ownForm(): AppForm {
+function ownForm(resolution = "1080p"): AppForm {
   return {
     problems: new Map(),
     setInput: () => undefined,
@@ -138,7 +138,7 @@ function ownForm(): AppForm {
         clip: [clip],
         photo: photos,
         scene: "replace the man",
-        resolution: "1080p",
+        resolution,
       },
       seedMode: "random",
       count: 1,
@@ -149,7 +149,8 @@ function ownForm(): AppForm {
 
 function renderOwn(
   failAt: string | null = null,
-  price: { source: string; credits: number | null } = unpriced
+  price: { source: string; credits: number | null } = unpriced,
+  resolution = "1080p"
 ) {
   const sent = ownGateway(failAt, price)
   const grabbed: string[] = []
@@ -157,7 +158,7 @@ function renderOwn(
     () =>
       useMotionChain({
         example: null,
-        form: ownForm(),
+        form: ownForm(resolution),
         clipSize: { width: 720, height: 1280 },
         frames: async (one) => {
           grabbed.push(one)
@@ -281,10 +282,10 @@ describe("your own video's chain in Motion", () => {
   })
 
   it("shows the recorded runs' price before each yes when none of yours is measured: the edit and the draft with the reading of your video named as unmeasured, then the restore and the final at your resolution", async () => {
-    const { result } = renderOwn()
+    const { result } = renderOwn(null, unpriced, "720p")
     await waitFor(() =>
       expect(result.current?.priceNote).toBe(
-        "15.71 Comfy credits, measured on a 4-second 480p run, plus reading your video, which no run has measured yet"
+        "19.9 Comfy credits, measured on a 4-second 480p run, plus reading your video, which no run has measured yet"
       )
     )
     expect(result.current?.start.priceValue).toBeNull()
@@ -292,10 +293,19 @@ describe("your own video's chain in Motion", () => {
     await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
     await waitFor(() =>
       expect(result.current?.priceNote).toBe(
-        "27.65 Comfy credits, measured on a 4-second 1080p run"
+        "26.55 Comfy credits, measured on a 4-second 720p run"
       )
     )
     expect(result.current?.start.priceValue).not.toBeNull()
     expect(result.current?.start.priceName).toContain("Make final")
+  })
+
+  it("shows no price on Make final at 1080p, which no run of the graph measured, rather than the restore alone under the reading's words", async () => {
+    const { result } = renderOwn()
+    act(() => result.current?.start.generate())
+    await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
+    await new Promise((done) => setTimeout(done, 50))
+    expect(result.current?.priceNote).toBeNull()
+    expect(result.current?.start.priceValue ?? null).toBeNull()
   })
 })

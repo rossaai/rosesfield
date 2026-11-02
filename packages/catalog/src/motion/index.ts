@@ -67,6 +67,7 @@ export {
   recordedFinals,
   recordedSeconds,
   recordedSteps,
+  wholeCreditsOf,
 } from "#motion/comfy/own-video-prices"
 export { readClipRequestOf } from "#motion/comfy/read-clip-binding"
 export { readClipOf, renderHandOffOf } from "#motion/comfy/render-hand-off"

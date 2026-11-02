@@ -9,20 +9,22 @@ export type PartPrice = { credits: number | null; source: PartSource }
 /** The seconds of the clip the recorded runs were measured on. */
 export const recordedSeconds = 4
 
+/** The credits of one guided render at 480p, the draft's size, measured on Comfy Cloud for a 4-second clip on the graph with the temporal pass. */
+const guidedDraft = 7.55
+
 /** The credits each step of your own video's chain cost on one run measured on Comfy Cloud for a 4-second clip. The plan and the read hold null, since no run measured them. */
 export const recordedSteps = {
   plan: null,
   read: null,
   edit: 12.35,
-  draft: 3.36,
+  draft: guidedDraft,
   restore: 10.86,
 } as const satisfies Readonly<Record<string, number | null>>
 
-/** The credits of the final on the guided render, measured for a 4-second clip at each resolution. */
+/** The credits of the guided render, measured for a 4-second clip at each resolution on the graph with the temporal pass. No run of that graph measured 1080p, so it holds no row. */
 export const recordedFinals: Readonly<Record<string, number>> = {
-  "480p": 3.36,
-  "720p": 6.76,
-  "1080p": 16.79,
+  "480p": guidedDraft,
+  "720p": 15.69,
 }
 
 /** The recorded credits of the lead and the draft, in the order the lead prices them. */
@@ -59,6 +61,13 @@ export function finalPartsOf(
     partPriceOf(restore, recordedSteps.restore),
     partPriceOf(final, recordedFinals[resolution] ?? null),
   ]
+}
+
+/** The sum of every part, or null when one part holds no price, so a final is never priced as its restore alone. */
+export function wholeCreditsOf(parts: readonly PartPrice[]): number | null {
+  return parts.some((part) => part.credits === null)
+    ? null
+    : knownCreditsOf(parts)
 }
 
 /** The sum of the parts that hold a price, or null when none does. */
