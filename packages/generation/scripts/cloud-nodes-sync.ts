@@ -7,7 +7,7 @@ type Section = {
   required?: Record<string, Spec>
   optional?: Record<string, Spec>
 }
-type ObjectInfo = Record<string, { input: Section }>
+type ObjectInfo = Record<string, { input: Section; python_module?: string }>
 type Reading = {
   node: string
   lists: Map<string, readonly string[]>
@@ -17,6 +17,12 @@ type Reading = {
 const output = fileURLToPath(
   new URL(
     "../../../scripts/checks/cloud-graphs/cloud-nodes.json",
+    import.meta.url
+  )
+)
+const packsOutput = fileURLToPath(
+  new URL(
+    "../../../scripts/checks/workflow-packs/cloud-packs.json",
     import.meta.url
   )
 )
@@ -126,6 +132,23 @@ export function snapshotOf(objectInfo: ObjectInfo, readOn: string): unknown {
   }
 }
 
+export function packsOf(objectInfo: ObjectInfo, readOn: string): unknown {
+  const packs: Record<string, string> = {}
+  for (const node of Object.keys(objectInfo).sort()) {
+    const [where, folder] = (objectInfo[node]?.python_module ?? "").split(".")
+    if (where === "custom_nodes" && folder !== undefined) {
+      packs[node] = folder
+    }
+  }
+  return {
+    source: "GET /api/object_info on Comfy Cloud",
+    readOn,
+    recipe:
+      "For each node class a custom node pack gives, the folder of its python_module under custom_nodes. A class whose python_module starts elsewhere, such as nodes, comfy_extras or comfy_api_nodes, is a ComfyUI core node and is not listed",
+    packs,
+  }
+}
+
 if (import.meta.main) {
   const key = process.env.COMFY_API_KEY
   if (!key) {
@@ -148,8 +171,12 @@ if (import.meta.main) {
   const readOn = new Date().toISOString().slice(0, 10)
   const snapshot = snapshotOf(objectInfo, readOn)
   writeFileSync(output, `${JSON.stringify(snapshot, null, 2)}\n`)
-  Bun.spawnSync(["bunx", "biome", "format", "--write", output])
+  writeFileSync(
+    packsOutput,
+    `${JSON.stringify(packsOf(objectInfo, readOn), null, 2)}\n`
+  )
+  Bun.spawnSync(["bunx", "biome", "format", "--write", output, packsOutput])
   console.log(
-    `${Object.keys(objectInfo).length} node classes written to ${output}.`
+    `${Object.keys(objectInfo).length} node classes written to ${output} and ${packsOutput}.`
   )
 }

@@ -1,0 +1,65 @@
+{
+  "name": "motion-guide-ltx-2-5",
+  "title": "Motion: move a photo along a depth guide on LTX 2.5",
+  "description": "Renders the person in your photo moving along a depth guide video, on LTX 2.5 22B distilled bf16 with the LTX 2.3 union control IC-LoRA, in two stages. An optional people mask keeps the guide at full attention on the set and at 0.2 on the people. An optional end key guides the last frame. The video carries LTX's own sound, levelled as Effects levels it, and the graph saves the last frame as an image.",
+  "mediaType": "video",
+  "openSource": true,
+  "models": [
+    "ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+    "ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors",
+    "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
+    "ltx-2.5-video-vae-bf16.safetensors",
+    "ltx-2.5-audio-vae-bf16.safetensors",
+    "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors"
+  ],
+  "requiresCustomNodes": [],
+  "inputBindings": {
+    "photo": {
+      "nodeId": "200",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "clip": {
+      "nodeId": "199",
+      "inputName": "file",
+      "type": "cloud-asset"
+    },
+    "mask": {
+      "nodeId": "950",
+      "inputName": "file",
+      "type": "cloud-asset"
+    },
+    "endKey": {
+      "nodeId": "1002",
+      "inputName": "image",
+      "type": "cloud-asset"
+    },
+    "scene": {
+      "nodeId": "900",
+      "inputName": "string_b",
+      "type": "scalar"
+    },
+    "shortSide": {
+      "nodeId": "702",
+      "inputName": "value",
+      "type": "scalar"
+    },
+    "seed": {
+      "nodeId": "980",
+      "inputName": "noise_seed",
+      "type": "scalar"
+    }
+  },
+  "outputs": [
+    {
+      "nodeId": "68",
+      "key": "images",
+      "kind": "video"
+    },
+    {
+      "nodeId": "1011",
+      "key": "images",
+      "kind": "image"
+    }
+  ]
+}
