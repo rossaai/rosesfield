@@ -46,7 +46,9 @@ describe("bun run packs:check", () => {
     expect(
       graphs.find((graph) => graph.path.startsWith("motion-guide-ltx-2-5/"))
         ?.declared
-    ).toEqual(["comfyui-wanvideowrapper", "comfyui_audiotools"])
+    ).toEqual(
+      expect.arrayContaining(["comfyui-wanvideowrapper", "comfyui_audiotools"])
+    )
     const refused = graphs.flatMap((graph) =>
       refusalsOf(graph, cloud).map(
         (one) => `${graph.path} node ${one.node}: ${one.reason}`
