@@ -227,6 +227,7 @@ function useStartFor(options: StartFor): StartRun {
     mode,
     form: options.form,
     chosen: options.hosted.chosen,
+    isLoading: options.hosted.isLoading,
     keyState: options.hosted.keyState,
     mask: () =>
       brush.brushCanvas.current === null || size === null
