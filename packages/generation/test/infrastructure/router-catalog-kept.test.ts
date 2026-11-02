@@ -19,7 +19,8 @@ import {
   schemaRead,
   schemaSame,
 } from "./fixtures/comfy-router"
-import { ReplayFetch } from "./replay-fetch"
+import { heldBack, settled } from "./held-back"
+import { type Recording, ReplayFetch } from "./replay-fetch"
 
 const oneHourMs = 3_600_000
 const oneMinuteMs = 60_000
@@ -79,6 +80,26 @@ async function keepPicture(
       apiKey
     )
   )
+  await Promise.all(deferred)
+}
+
+function schemaFailed(model: string): Recording {
+  return refused(
+    "GET",
+    `/v2/models/${model}/openapi.json`,
+    500,
+    "internal_error",
+    "The schema could not be read"
+  )
+}
+
+async function keepAfterFailedReads(
+  db: BunSQLiteDatabase,
+  clock: FixedClock,
+  recordings: readonly Recording[]
+): Promise<void> {
+  const { catalog, deferred } = coldCatalog(db, clock)
+  await catalog.models(httpWith(new ReplayFetch(recordings))).catch(() => [])
   await Promise.all(deferred)
 }
 
@@ -166,6 +187,67 @@ describe("RouterCatalog with a kept copy", () => {
       )
     )
     expect(idsOf(models)).toEqual([pictureModel])
+  })
+
+  it("answers a cold catalog from the kept copy at once when an earlier read of one listed schema failed, and lists that model once its own read lands", async () => {
+    const db = keptDb()
+    const clock = new FixedClock({ now: start })
+    await keepAfterFailedReads(db, clock, [
+      catalogPage([pictureModel, clipModel]),
+      schemaRead(pictureModel, pictureSchema),
+      schemaFailed(clipModel),
+    ])
+    const cold = coldCatalog(db, clock)
+    const { http, release } = heldBack(
+      new ReplayFetch([schemaRead(clipModel, clipSchema)]),
+      clipModel
+    )
+    const served = cold.catalog.models(http)
+    expect(await settled(served)).toBe(true)
+    expect(idsOf(await served)).toEqual([pictureModel])
+    release()
+    await Promise.all(cold.deferred)
+    expect(idsOf(await cold.catalog.models(http))).toEqual([
+      pictureModel,
+      clipModel,
+    ])
+  })
+
+  it("waits for the read of a listed schema the kept copy lacks before it answers that model's entry", async () => {
+    const db = keptDb()
+    const clock = new FixedClock({ now: start })
+    await keepAfterFailedReads(db, clock, [
+      catalogPage([pictureModel, clipModel]),
+      schemaRead(pictureModel, pictureSchema),
+      schemaFailed(clipModel),
+    ])
+    const cold = coldCatalog(db, clock)
+    const { http, release } = heldBack(
+      new ReplayFetch([schemaRead(clipModel, clipSchema)]),
+      clipModel
+    )
+    const entry = cold.catalog.entry(http, clipModel)
+    expect(await settled(entry)).toBe(false)
+    release()
+    expect((await entry)?.facts.model).toBe(clipModel)
+  })
+
+  it("waits for the load of a kept listing that keeps none of its schemas", async () => {
+    const db = keptDb()
+    const clock = new FixedClock({ now: start })
+    await keepAfterFailedReads(db, clock, [
+      catalogPage([pictureModel]),
+      schemaFailed(pictureModel),
+    ])
+    const cold = coldCatalog(db, clock)
+    const { http, release } = heldBack(
+      new ReplayFetch([schemaRead(pictureModel, pictureSchema)]),
+      pictureModel
+    )
+    const served = cold.catalog.models(http)
+    expect(await settled(served)).toBe(false)
+    release()
+    expect(idsOf(await served)).toEqual([pictureModel])
   })
 
   it("forgets the kept listing when the Router refuses its reload, so the next open names the refusal", async () => {
