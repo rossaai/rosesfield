@@ -1,4 +1,5 @@
 import { findApp } from "@rosesfield/catalog"
+import type { CatalogModel } from "@rosesfield/catalog/comfy"
 import { appListing, run } from "@rosesfield/contract"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import {
@@ -159,15 +160,37 @@ describe("How it works", () => {
   })
 })
 
+const lipsyncModels: readonly CatalogModel[] = [
+  {
+    id: "ltx-2-3",
+    kind: "graph",
+    maker: "Lightricks",
+    name: "LTX 2.3",
+    nameKey: null,
+    task: "lip-sync",
+    tags: [],
+    form: null,
+  },
+]
+
 function renderHow(
   node: () => ReturnType<typeof HowItWorks>,
-  shares: SharedOutput[]
+  shares: SharedOutput[],
+  list?: { appId: string; models: readonly CatalogModel[] }
 ): void {
   vi.stubGlobal("fetch", () => new Promise(() => undefined))
   const client = new QueryClient({
     defaultOptions: { queries: { staleTime: Number.POSITIVE_INFINITY } },
   })
   client.setQueryData(publishedQuery.queryKey, shares)
+  if (list !== undefined) {
+    client.setQueryData(["settings"], { engine: { key: "set" } })
+    client.setQueryData(["models", list.appId, "set"], {
+      models: [...list.models],
+      defaultModel: null,
+      refusal: null,
+    })
+  }
   const router = createRouter({
     routeTree: createRootRoute({ component: node }),
     history: createMemoryHistory(),
@@ -231,14 +254,17 @@ describe("How it works, one composition for every app", () => {
   })
 
   it("shows one glyph for what an app with no example takes, its default model, and one glyph for what it makes, with no picture", async () => {
-    renderHow(() => <HowItWorks app={lipsync} />, [])
+    renderHow(() => <HowItWorks app={lipsync} />, [], {
+      appId: lipsync.id,
+      models: lipsyncModels,
+    })
     const steps = await stepsShown(3)
     expect(steps[0]?.querySelectorAll("[data-made=no]").length).toBeGreaterThan(
       0
     )
-    expect(
-      steps[1]?.querySelector("[data-slot=how-model]")?.textContent
-    ).toBeTruthy()
+    expect(steps[1]?.querySelector("[data-slot=how-model]")?.textContent).toBe(
+      "LTX 2.3"
+    )
     expect(
       steps[2]?.querySelector("[data-made=yes]")?.getAttribute("data-kind")
     ).toBe("video")

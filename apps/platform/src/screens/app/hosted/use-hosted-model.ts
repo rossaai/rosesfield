@@ -127,7 +127,7 @@ function useChoose(
   )
 }
 
-export function useHostedModel(app: AppListing, form: AppForm): HostedState {
+function useAppCatalog(app: AppListing) {
   const taskApp = useMemo(() => taskAppOf(app.id), [app.id])
   const settings = useQuery(settingsQuery)
   const keyState = settings.data?.engine.key ?? "unknown"
@@ -135,7 +135,49 @@ export function useHostedModel(app: AppListing, form: AppForm): HostedState {
     ...modelCatalogQuery(app.id, keyState),
     enabled: taskApp !== null,
   })
-  const models = query.data?.models ?? []
+  return { taskApp, keyState, query, models: query.data?.models ?? [] }
+}
+
+export type OpeningModel = { id: string; kept: LastUsed | null }
+
+export function openingModelOf(
+  app: AppListing,
+  own: string | null,
+  models: readonly CatalogModel[],
+  last: LastUsed | null
+): OpeningModel | null {
+  const top = defaultIdOf(models)
+  if (top === null) {
+    return null
+  }
+  const listed = textOf(defaultsOf(app).inputs[modelInputName])
+  if (listed !== own) {
+    return { id: listed || top, kept: null }
+  }
+  const kept = models.some((model) => model.id === last?.model) ? last : null
+  return { id: kept?.model ?? top, kept }
+}
+
+export function useOpeningModel(app: AppListing): {
+  isTaskApp: boolean
+  model: CatalogModel | null
+} {
+  const { taskApp, models } = useAppCatalog(app)
+  const last = useMemo(() => readLastUsed(app.id), [app.id])
+  const opening = openingModelOf(
+    app,
+    taskApp?.defaultModel ?? null,
+    models,
+    last
+  )
+  return {
+    isTaskApp: taskApp !== null,
+    model: models.find((model) => model.id === opening?.id) ?? null,
+  }
+}
+
+export function useHostedModel(app: AppListing, form: AppForm): HostedState {
+  const { taskApp, keyState, query, models } = useAppCatalog(app)
   const defaultModel = defaultIdOf(models)
   const chosenId = textOf(form.values.inputs[modelInputName]) || defaultModel
   const chosen = models.find((model) => model.id === chosenId) ?? null
@@ -220,16 +262,13 @@ function useOpenOnLastUsed(
     if (appDefault !== own || source !== "defaults" || value !== appDefault) {
       return
     }
-    const last = kept.current
-    const target = models.some((model) => model.id === last?.model)
-      ? last
-      : null
-    const id = target?.model ?? defaultModel
-    if (target !== null || value !== id) {
+    const opening = openingModelOf(app, own, models, kept.current)
+    if (opening !== null && (opening.kept !== null || value !== opening.id)) {
       moving.current = values
-      chooseWith(id, target)
+      chooseWith(opening.id, opening.kept)
     }
   }, [
+    app,
     defaultModel,
     own,
     models,
