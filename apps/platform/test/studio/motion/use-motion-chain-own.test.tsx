@@ -293,7 +293,7 @@ describe("your own video's chain in Motion", () => {
     await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
     await waitFor(() =>
       expect(result.current?.priceNote).toBe(
-        "26.55 Comfy credits, measured on a 4-second 720p run"
+        "32.35 Comfy credits, measured on a 4-second 720p run"
       )
     )
     expect(result.current?.start.priceValue).not.toBeNull()

@@ -230,7 +230,7 @@ describe("the agent's call of a Library example", () => {
     expect(proposals).toBe(1)
     expect(result).toBe("")
     expect(credits).toHaveLength(1)
-    expect(credits[0]).toBeCloseTo(10.86 + 15.69, 6)
+    expect(credits[0]).toBeCloseTo(10.86 + 21.49, 6)
   })
 
   it("tells the model how to change your own video in one call and make its final in a second that names the draft, only after a yes", () => {
