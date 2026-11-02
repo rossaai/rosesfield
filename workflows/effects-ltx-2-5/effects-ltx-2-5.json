@@ -2499,6 +2499,7 @@
       ],
       "properties": {
         "Node name for S&R": "AudioAmplify",
+        "cnr_id": "comfyui_audiotools",
         "aux_id": "lum3on/ComfyUI_AudioTools",
         "ver": "c816d0a1629c05a0f463ddb77ea96ada69875d32"
       },
@@ -2529,6 +2530,7 @@
       ],
       "properties": {
         "Node name for S&R": "AudioAmplify",
+        "cnr_id": "comfyui_audiotools",
         "aux_id": "lum3on/ComfyUI_AudioTools",
         "ver": "c816d0a1629c05a0f463ddb77ea96ada69875d32"
       },
@@ -3039,6 +3041,7 @@
       ],
       "properties": {
         "Node name for S&R": "AudioFadeOut",
+        "cnr_id": "comfyui_audiotools",
         "aux_id": "lum3on/ComfyUI_AudioTools",
         "ver": "c816d0a1629c05a0f463ddb77ea96ada69875d32"
       },
@@ -3329,6 +3332,7 @@
       ],
       "properties": {
         "Node name for S&R": "AudioFadeOut",
+        "cnr_id": "comfyui_audiotools",
         "aux_id": "lum3on/ComfyUI_AudioTools",
         "ver": "c816d0a1629c05a0f463ddb77ea96ada69875d32"
       },
@@ -3619,6 +3623,7 @@
       ],
       "properties": {
         "Node name for S&R": "AudioFadeOut",
+        "cnr_id": "comfyui_audiotools",
         "aux_id": "lum3on/ComfyUI_AudioTools",
         "ver": "c816d0a1629c05a0f463ddb77ea96ada69875d32"
       },
@@ -3909,6 +3914,7 @@
       ],
       "properties": {
         "Node name for S&R": "AudioFadeOut",
+        "cnr_id": "comfyui_audiotools",
         "aux_id": "lum3on/ComfyUI_AudioTools",
         "ver": "c816d0a1629c05a0f463ddb77ea96ada69875d32"
       },
@@ -4293,6 +4299,7 @@
       ],
       "properties": {
         "Node name for S&R": "AudioFadeOut",
+        "cnr_id": "comfyui_audiotools",
         "aux_id": "lum3on/ComfyUI_AudioTools",
         "ver": "c816d0a1629c05a0f463ddb77ea96ada69875d32"
       },
@@ -4583,6 +4590,7 @@
       ],
       "properties": {
         "Node name for S&R": "AudioFadeOut",
+        "cnr_id": "comfyui_audiotools",
         "aux_id": "lum3on/ComfyUI_AudioTools",
         "ver": "c816d0a1629c05a0f463ddb77ea96ada69875d32"
       },
