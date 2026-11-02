@@ -263,6 +263,16 @@ describe("your own video through the gateway on the demo engine", () => {
         }),
         drafted.run.id
       )
+    ).toBeCloseTo(10.86 + 51.66, 6)
+    expect(
+      await ownVideoFinalCreditsOf(
+        handlers,
+        runRequest.parse({
+          inputs: { photo: photos, resolution: "480p", draft: drafted.run.id },
+          count: 1,
+        }),
+        drafted.run.id
+      )
     ).toBeNull()
     expect(started.map((key) => key.replace("mcp-1-", ""))).toEqual([
       "plan",

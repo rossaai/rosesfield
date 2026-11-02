@@ -53,8 +53,25 @@ function framesTimesOf(graph: Graph): number {
   return times
 }
 
-/** How many times the guide's frame rate stage 2 is conditioned at, read through the end key's guide when the run has one. */
-function stageTwoRateOf(graph: Graph): number {
+/** The highest frame rate the model was trained on: Lightricks' temporal pipeline snaps every rate above 30 to 60. */
+const modelRate = 60
+
+/** Guide frame rates a clip arrives at, 30 or more of which 4 times would pass 120. */
+const guideRates: readonly number[] = [24, 25, 30, 50, 60]
+
+function evaluated(expression: string, a: number): number {
+  const evaluate = new Function(
+    "a",
+    "max",
+    "min",
+    "round",
+    `return ${expression}`
+  )
+  return Number(evaluate(a, Math.max, Math.min, Math.round))
+}
+
+/** The frame rate stage 2 is conditioned at for a guide at this rate, read through the end key's guide when the run has one. */
+function stageTwoRateOf(graph: Graph, guideRate: number): number {
   let at = linked(graph, "998", "positive")
   if (graph[at]?.class_type === "LTXVAddGuide") {
     at = linked(graph, at, "positive")
@@ -62,12 +79,12 @@ function stageTwoRateOf(graph: Graph): number {
   expect(graph[at]?.class_type).toBe("LTXVConditioning")
   const rate = linked(graph, at, "frame_rate")
   expect(inputOf(graph, rate, "values.a")).toEqual(["706", 2])
-  const expression = String(inputOf(graph, rate, "expression"))
-  const found = /^a \* (\d+)$/.exec(expression)
-  if (found === null) {
-    throw new Error(`no frame rate multiple in ${expression}`)
-  }
-  return Number(found[1])
+  return evaluated(String(inputOf(graph, rate, "expression")), guideRate)
+}
+
+/** The guide rates at which stage 2 is told a rate above the model's. */
+function overRatesOf(graph: Graph): number[] {
+  return guideRates.filter((rate) => stageTwoRateOf(graph, rate) > modelRate)
 }
 
 /** Every how many decoded frames the video keeps one. */
@@ -80,7 +97,7 @@ function keptEveryOf(graph: Graph): number {
 }
 
 describe("the temporal pass of the LTX 2.5 depth guide graph", () => {
-  it("refines stage 2 on a latent 4 times longer, at 4 times the guide's frame rate, and keeps every fourth frame, in every variant and in the Library example, so a fast face is not drawn at the clip's own rate", () => {
+  it("refines stage 2 on a latent 4 times longer, at 4 times the guide's frame rate up to 60, and keeps every fourth frame, in every variant and in the Library example, so a fast face is not drawn at the clip's own rate", () => {
     const graphs = [
       ownGraph(),
       ownGraph({ mask: [mask] }),
@@ -96,7 +113,8 @@ describe("the temporal pass of the LTX 2.5 depth guide graph", () => {
     for (const graph of graphs) {
       expect(inputOf(graph, "1080", "model_name")).toBe(temporalUpscaler)
       expect(framesTimesOf(graph)).toBe(4)
-      expect(stageTwoRateOf(graph)).toBe(4)
+      expect(stageTwoRateOf(graph, 24)).toBe(modelRate)
+      expect(stageTwoRateOf(graph, 12)).toBe(48)
       expect(keptEveryOf(graph)).toBe(4)
       expect(inputOf(graph, "109", "frame_rate")).toEqual(["706", 2])
     }
@@ -122,7 +140,32 @@ describe("the temporal pass of the LTX 2.5 depth guide graph", () => {
     if (rate === undefined) {
       throw new Error("the graph has no node 1086")
     }
-    rate.inputs.expression = "a * 2"
-    expect(stageTwoRateOf(slowed)).toBe(2)
+    rate.inputs.expression = "min(a * 2, 60)"
+    expect(stageTwoRateOf(slowed, 24)).toBe(48)
+  })
+
+  it("never tells stage 2 a rate above 60 fps, which decodes as a jump in motion at each latent's first frame, for a guide at 24 fps or at 30 fps or more", () => {
+    for (const graph of [
+      ownGraph(),
+      graphOf({
+        example: "grab-and-run",
+        resolution: "720p",
+        endKey: [endKey],
+      }),
+    ]) {
+      expect(overRatesOf(graph)).toEqual([])
+    }
+  })
+
+  it("finds 96 fps for a 24 fps guide and 120 for a 30 fps guide in a stage 2 told 4 times the rate with no cap, the control", () => {
+    const uncapped = ownGraph()
+    const rate = uncapped["1086"]
+    if (rate === undefined) {
+      throw new Error("the graph has no node 1086")
+    }
+    rate.inputs.expression = "a * 4"
+    expect(stageTwoRateOf(uncapped, 24)).toBe(96)
+    expect(stageTwoRateOf(uncapped, 30)).toBe(120)
+    expect(overRatesOf(uncapped)).toEqual(guideRates)
   })
 })

@@ -16,7 +16,7 @@ describe("the final's price before its yes", () => {
   })
 
   it("names an estimate as one at a resolution no run of the graph measured, the control", () => {
-    const price = finalPriceOf({ source: "estimate", credits: 9 }, "1080p")
+    const price = finalPriceOf({ source: "estimate", credits: 9 }, "480p")
     expect(price).toEqual({ credits: 9, source: "estimate" })
     expect(priceNoteOf(price)).toBe("9 Comfy credits, estimated")
   })

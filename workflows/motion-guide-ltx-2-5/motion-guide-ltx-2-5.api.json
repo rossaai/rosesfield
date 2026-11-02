@@ -899,10 +899,10 @@
     "class_type": "ComfyMathExpression",
     "inputs": {
       "values.a": ["706", 2],
-      "expression": "a * 4"
+      "expression": "min(a * 4, 60)"
     },
     "_meta": {
-      "title": "Four times the frame rate"
+      "title": "Four times the frame rate, at most 60"
     }
   },
   "1082": {
