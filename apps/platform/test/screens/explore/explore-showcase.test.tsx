@@ -1,4 +1,3 @@
-import { templates } from "@rosesfield/catalog/ai-influencer"
 import { cleanup, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { t } from "@/copy/t"
@@ -54,22 +53,18 @@ describe("Explore's showcase", () => {
     expect(feed.querySelector("[data-slot=media-feed-fade]")).not.toBeNull()
   })
 
-  it("names the app and the model as a pill with Recreate on hover, Remix on each Library example, and leaves View all to the apps row", async () => {
+  it("names the app and the model as a pill with Recreate on hover on every result and Library example, and leaves View all to the apps row", async () => {
     const feed = await renderShowcase()
     const pills = [...feed.querySelectorAll("[data-slot=media-badge]")].map(
       (pill) => pill.textContent
     )
     expect(pills).toContain("Image · GPT Image 2.5 Sunburst")
     expect(pills).toContain("Characters · GPT Image 2.5 Sunburst")
-    const remixes = screen.getAllByRole("button", {
-      name: t("explore.tile.remixName"),
-    })
-    expect(remixes).toHaveLength(1 + templates.length)
     expect(pills).toContain("AI Influencer · Z-Image Turbo")
     expect(pills).toContain("AI Influencer · GPT Image 2.5 Sunburst")
     expect(
       screen.getAllByRole("button", { name: t("explore.tile.recreateName") })
-    ).toHaveLength(stills.length - remixes.length)
+    ).toHaveLength(stills.length)
     expect(
       feed.querySelector("[data-slot='section-heading-actions'] a")
     ).toBeNull()

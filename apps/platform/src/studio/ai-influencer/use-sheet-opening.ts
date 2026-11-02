@@ -5,6 +5,7 @@ import {
 } from "@rosesfield/catalog/ai-influencer"
 import type { AppListing } from "@rosesfield/contract"
 import { useEffect, useRef } from "react"
+import { modelInputName } from "@/screens/app/hosted/hosted-form"
 import { readLastUsed } from "@/screens/app/hosted/last-used"
 import type { HostedState } from "@/screens/app/hosted/use-hosted-model"
 import type { AppForm } from "@/screens/app/use-app-form"
@@ -41,7 +42,7 @@ export function useOpenAtSheetQuality(
   }, [chosen, fields, opening, setInput, source])
 }
 
-/** Fills the traits of the template the address names once the model has opened, so Remix leaves the model as it opens. */
+/** Opens the model the template was made with, with the settings that run used, then fills its traits, so Recreate makes what the tile shows. */
 export function useTemplate(
   form: AppForm,
   hosted: HostedState | undefined,
@@ -50,14 +51,28 @@ export function useTemplate(
   const isDone = useRef(false)
   const template = findTemplate(example)
   const isOpening = hosted?.isLoading ?? false
-  const { setInput } = form
+  const { setInput, setForm } = form
+  const models = hosted?.models ?? null
+  const choose = hosted?.choose ?? null
   useEffect(() => {
     if (isDone.current || template === null || isOpening) {
       return
     }
     isDone.current = true
-    for (const [name, value] of Object.entries(templateInputsOf(template))) {
-      setInput(name, value)
+    const { [modelInputName]: id, ...rest } = templateInputsOf(template)
+    const model = models?.find((one) => one.id === id) ?? null
+    const { settings, aspectRatio } = template.preview
+    if (model !== null && choose !== null) {
+      choose(model.id)
+      if (aspectRatio !== null) {
+        setForm({ aspectRatio })
+      }
     }
-  }, [template, isOpening, setInput])
+    const fieldNames = new Set(model?.form?.map((field) => field.name) ?? [])
+    for (const [name, value] of Object.entries(rest)) {
+      if (!(name in settings) || fieldNames.has(name)) {
+        setInput(name, value)
+      }
+    }
+  }, [template, isOpening, models, choose, setInput, setForm])
 }

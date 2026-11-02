@@ -1,19 +1,18 @@
 import { describe, expect, it } from "vitest"
 import { showcaseEntries } from "@/screens/explore/explore-entries"
-import { isRemix, recreateTargetOf } from "@/screens/explore/explore-tile"
+import { recreateTargetOf } from "@/screens/explore/explore-tile"
 import { isFeedExample, showcaseItems } from "@/showcase/showcase"
 
 const entries = showcaseEntries(showcaseItems)
 
 describe("Explore's examples from Motion's Library", () => {
-  it("shows the approved example as a Motion result in color that Remix opens in Motion with the example", () => {
+  it("shows the approved example as a Motion result in color that Recreate opens in Motion with the example", () => {
     const grab = entries.find(
       (entry) => entry.run.inputs.example === "grab-and-run"
     )
     expect(grab?.run.appId).toBe("motion")
     expect(grab?.kind).toBe("video")
     expect(grab?.source).toMatchObject({ kind: "showcase" })
-    expect(grab === undefined ? false : isRemix(grab.run)).toBe(true)
     expect(grab === undefined ? null : recreateTargetOf(grab)).toEqual({
       search: { example: "grab-and-run" },
     })
@@ -31,7 +30,6 @@ describe("Explore's examples from Motion's Library", () => {
 
   it("keeps Recreate with its draft on every other result, the control", () => {
     const image = entries.find((entry) => entry.run.appId === "image")
-    expect(image === undefined ? true : isRemix(image.run)).toBe(false)
     expect(image === undefined ? {} : recreateTargetOf(image)).toHaveProperty(
       "draft"
     )
@@ -39,7 +37,7 @@ describe("Explore's examples from Motion's Library", () => {
 })
 
 describe("Explore's examples from AI Influencer's Library", () => {
-  it("shows the four character sheets as AI Influencer results that Remix opens in AI Influencer with their template", () => {
+  it("shows the four character sheets as AI Influencer results that Recreate opens in AI Influencer with their template", () => {
     const sheets = entries.filter(
       (entry) => entry.run.appId === "ai-influencer"
     )
@@ -52,7 +50,6 @@ describe("Explore's examples from AI Influencer's Library", () => {
     for (const sheet of sheets) {
       expect(sheet.kind).toBe("image")
       expect(sheet.source).toMatchObject({ kind: "showcase" })
-      expect(isRemix(sheet.run)).toBe(true)
       expect(isFeedExample(sheet.run.id)).toBe(true)
     }
   })

@@ -102,7 +102,7 @@ Higgsfield's products, as higgsfield.ai lists them, beside the Rosesfield app th
 | Genjutsu | Motion | Put the person in your photo in place of the person in a clip, at the same moments. The scene comes from your photo. |
 | Motion Control | Motion | Move a photo with the motion of a clip. |
 | Katana | Remake | Rebuild an edit with your character and the same cuts. |
-| Effects | Motion, Library | Remix an example from the Library with your photo, and get a short clip. |
+| Effects | Motion, Library | Recreate an example from the Library with your photo, and get a short clip. |
 | Cinema Studio | Shot | Write a scene and choose how the camera shoots it. |
 | Lipsync Studio | Lip sync | Add a face and a voice track, and get a talking video. |
 | Popcorn storyboard | Storyboard | Write up to 8 scenes and get one keyframe for each. |

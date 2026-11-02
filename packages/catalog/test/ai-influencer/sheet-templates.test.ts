@@ -96,11 +96,19 @@ describe("the templates of AI Influencer's Library", () => {
     expect(names.every((name) => typeof name === "string")).toBe(true)
   })
 
-  it("fill every trait: the template's own picks, and any in every other", () => {
+  it("fill every trait, the template's own picks and any in every other, and the model and settings its preview was made with", () => {
     const template = findTemplate("frog")
     const inputs = template === null ? {} : templateInputsOf(template)
-    expect(Object.keys(inputs)).toEqual(traitInputNames)
-    expect(inputs).toMatchObject(frog)
+    expect(Object.keys(inputs)).toEqual([
+      ...traitInputNames,
+      "resolution",
+      "model",
+    ])
+    expect(inputs).toMatchObject({
+      ...frog,
+      model: "z-image-turbo",
+      resolution: "1k",
+    })
     expect(inputs.age).toBe("any")
     expect(inputs.marks2).toBe("any")
     expect(findTemplate("dragon")).toBeNull()

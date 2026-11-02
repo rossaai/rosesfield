@@ -7,17 +7,13 @@ import {
   DropdownMenuTrigger,
 } from "@rosesfield/ui/components/dropdown-menu"
 import { useNavigate } from "@tanstack/react-router"
-import {
-  EllipsisIcon,
-  RepeatIcon,
-  RotateCwIcon,
-  SquareIcon,
-} from "lucide-react"
+import { EllipsisIcon, RotateCwIcon, SquareIcon } from "lucide-react"
 import type { ReactElement, ReactNode } from "react"
 import { isWorking } from "@/api/queries"
 import { t } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
 import { useOpenInComfy } from "@/pieces/run/open-in-comfy"
+import { RecreateMenuItem } from "@/pieces/run/recreate"
 import { useCancelRun, useRepeatRun } from "@/pieces/run/run-actions"
 
 type RunMenuProps = {
@@ -70,12 +66,7 @@ export function RunMenu({
         }
       />
       <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          lead={<RepeatIcon aria-hidden="true" />}
-          onClick={useInputs}
-        >
-          {t("run.useInputs")}
-        </DropdownMenuItem>
+        <RecreateMenuItem onClick={useInputs} />
         {openInComfy === null ? null : (
           <DropdownMenuItem
             lead={<LabMark maker={comfyMaker} />}

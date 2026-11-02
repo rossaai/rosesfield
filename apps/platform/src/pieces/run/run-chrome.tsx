@@ -5,10 +5,9 @@ import { interaction } from "@rosesfield/ui/components/interaction"
 import { MediaBadge } from "@rosesfield/ui/components/media-tile"
 import { MediaChrome } from "@rosesfield/ui/components/result-tile"
 import { cn } from "@rosesfield/ui/lib/cn"
-import { RepeatIcon } from "lucide-react"
 import type { ReactElement } from "react"
-import { t } from "@/copy/t"
 import { LabMark } from "@/pieces/lab-mark"
+import { RecreateWords } from "@/pieces/run/recreate"
 import { useRunEstimate } from "@/pieces/run/run-estimate"
 import { type RunBadge, runFacts } from "@/pieces/run/run-facts"
 import { RunMenu, useRunInputs } from "@/pieces/run/run-menu"
@@ -76,8 +75,7 @@ function Recreate({
   const useInputs = useRunInputs(run, onUseInputs)
   return (
     <Button tone="glass" onClick={useInputs}>
-      <RepeatIcon aria-hidden="true" />
-      {t("run.useInputs")}
+      <RecreateWords />
     </Button>
   )
 }

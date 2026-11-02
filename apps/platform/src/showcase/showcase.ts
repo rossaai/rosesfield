@@ -63,7 +63,7 @@ export function exampleRowsOf(
   })
 }
 
-/** The rows of AI Influencer's templates: each preview is the run it was made in, with the traits, model, settings and composed prompt that run used, and Remix opens the app on the template. */
+/** The rows of AI Influencer's templates: each preview is the run it was made in, with the traits, model, settings and composed prompt that run used, and Recreate opens the app on the template. */
 export function templateRowsOf(list: readonly SheetTemplate[]): ShowcaseRow[] {
   return list.map(({ id, traits, preview }) => ({
     runId: preview.runId,

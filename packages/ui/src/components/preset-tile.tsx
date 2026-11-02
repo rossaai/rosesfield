@@ -5,10 +5,10 @@ import {
   type MediaAspect,
   MediaTile,
 } from "@rosesfield/ui/components/media-tile"
+import { RecreateGlyph } from "@rosesfield/ui/components/recreate-glyph"
 import type { PresetTileForm } from "@rosesfield/ui/contracts/preset-tile.generated"
 import { cn } from "@rosesfield/ui/lib/cn"
 import { motion } from "@rosesfield/ui/motion"
-import { SparkleIcon } from "lucide-react"
 import type { MouseEvent, ReactElement, ReactNode } from "react"
 
 type PresetTileAction = {
@@ -149,7 +149,7 @@ function PresetAction({ action }: { action: PresetTileAction }): ReactElement {
         "pointer-events-auto no-underline"
       )}
     >
-      <SparkleIcon aria-hidden="true" />
+      <RecreateGlyph />
       {label}
     </a>
   )

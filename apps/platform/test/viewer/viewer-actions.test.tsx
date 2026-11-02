@@ -113,14 +113,14 @@ describe("the viewer's actions", () => {
       <ViewerActions asset={output} run={live} onDeleted={() => undefined} />
     ))
     const recreate = await screen.findByRole("button", {
-      name: t("run.useInputs"),
+      name: t("run.recreate"),
     })
     const actions = recreate.closest("[data-slot=viewer-actions]")
     const names = within(actions as HTMLElement)
       .getAllByRole("button")
       .map((button) => button.getAttribute("aria-label") ?? button.textContent)
     expect(names).toEqual([
-      t("run.useInputs"),
+      t("run.recreate"),
       t("output.download"),
       t("output.useIn"),
       t("viewer.more"),
@@ -135,11 +135,11 @@ describe("the viewer's actions", () => {
     renderPiece(() => (
       <ViewerActions asset={output} run={live} onDeleted={() => undefined} />
     ))
-    await screen.findByRole("button", { name: t("run.useInputs") })
+    await screen.findByRole("button", { name: t("run.recreate") })
     const filled = screen.getAllByRole("button").filter(isFilled)
     const comfy = screen.getByRole("button", { name: t("run.openInComfy") })
     expect(filled.map((button) => button.textContent)).toEqual([
-      t("run.useInputs"),
+      t("run.recreate"),
     ])
     expect(comfy.className.split(" ")).toContain("bg-(--well)")
     expect(comfyMarkOf(comfy)).toBe("comfy")
@@ -195,7 +195,7 @@ describe("the viewer's actions", () => {
       />
     ))
     const recreate = await screen.findByRole("button", {
-      name: t("run.useInputs"),
+      name: t("run.recreate"),
     })
     expect(screen.getAllByRole("button").filter(isFilled)).toEqual([recreate])
     expect(
@@ -218,9 +218,7 @@ describe("the viewer's actions", () => {
     ))
     await screen.findByRole("button", { name: t("output.download") })
     expect(screen.getAllByRole("button").filter(isFilled)).toEqual([])
-    expect(
-      screen.queryByRole("button", { name: t("run.useInputs") })
-    ).toBeNull()
+    expect(screen.queryByRole("button", { name: t("run.recreate") })).toBeNull()
   })
 
   it("gives the demo caption muted ink, not a warning colour", async () => {

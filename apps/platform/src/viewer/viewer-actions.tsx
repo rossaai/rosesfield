@@ -20,7 +20,6 @@ import {
   EllipsisIcon,
   ForwardIcon,
   InfoIcon,
-  RepeatIcon,
   Share2Icon,
   Trash2Icon,
 } from "lucide-react"
@@ -30,6 +29,7 @@ import { useDownloadAsset } from "@/pieces/asset-actions"
 import { DeleteAssetDialog } from "@/pieces/delete-asset-dialog"
 import { LabMark } from "@/pieces/lab-mark"
 import { useOpenInComfy } from "@/pieces/run/open-in-comfy"
+import { RecreateWords } from "@/pieces/run/recreate"
 import { comfyMaker } from "@/pieces/run/run-menu"
 import { useUseInItems } from "@/pieces/use-in-menu"
 import { ShareDialog } from "@/screens/explore/share-dialog"
@@ -198,8 +198,7 @@ function Recreate({
   const useInputs = useUseInputs(run)
   return useInputs === null ? null : (
     <Button tone="primary" className={className} onClick={useInputs}>
-      <RepeatIcon aria-hidden="true" />
-      {t("run.useInputs")}
+      <RecreateWords />
     </Button>
   )
 }
