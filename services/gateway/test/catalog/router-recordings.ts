@@ -63,6 +63,33 @@ export const clipModel = schemaOf({
   },
 })
 
+export const autoLengthClipModel = schemaOf({
+  model: "maker/clip-auto-4",
+  takes: ["text"],
+  makes: ["video"],
+  properties: {
+    prompt: { type: "string" },
+    duration: {
+      type: "integer",
+      enum: [-1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+      description: "Video duration in seconds: [4,15] or -1 (auto).",
+    },
+  },
+})
+
+export const crowdedChoiceClipModel = schemaOf({
+  model: "maker/clip-crowded-5",
+  takes: ["text"],
+  makes: ["video"],
+  properties: {
+    prompt: { type: "string" },
+    camera: {
+      type: "string",
+      enum: Array.from({ length: 201 }, (_, at) => `move-${at}`),
+    },
+  },
+})
+
 export const newPictureModel = schemaOf({
   model: "studio/sketch-1",
   takes: ["text"],

@@ -6,7 +6,9 @@ import { type Harness, jsonInit } from "../harness"
 import { demoEngine } from "../server-env"
 import { closeGateways, gatewayWith } from "./catalog-gateway"
 import {
+  autoLengthClipModel,
   clipModel,
+  crowdedChoiceClipModel,
   fakeRouter,
   hostedWanModel,
   newPictureModel,
@@ -96,6 +98,32 @@ describe("the model list of an app", () => {
     expect(
       (await modelsOf(gateway, "clips")).models.map((one) => one.id)
     ).not.toContain("studio/sketch-1")
+  })
+
+  it("keeps the whole video list when a model's duration choice also offers -1 for auto, and tags that model with its timed range", async () => {
+    const router = fakeRouter({ schemas: [clipModel, autoLengthClipModel] })
+    const gateway = gatewayWith(
+      router.fetch,
+      (clock) => new RouterCatalog({ clock })
+    )
+    const clips = await modelsOf(gateway, "clips")
+    expect(clips.models.map((one) => one.id)).toContain("maker/clip-3")
+    expect(
+      clips.models.find((one) => one.id === "maker/clip-auto-4")
+    ).toMatchObject({
+      tags: [{ kind: "hosted" }, { kind: "length", min: 4, max: 15 }],
+    })
+  })
+
+  it("leaves out a model whose row breaks the wire contract, and lists every other model of the app", async () => {
+    const router = fakeRouter({ schemas: [clipModel, crowdedChoiceClipModel] })
+    const gateway = gatewayWith(
+      router.fetch,
+      (clock) => new RouterCatalog({ clock })
+    )
+    const ids = (await modelsOf(gateway, "clips")).models.map((one) => one.id)
+    expect(ids).toContain("maker/clip-3")
+    expect(ids).not.toContain("maker/clip-crowded-5")
   })
 
   it("hides every Wan model through the deny list", async () => {

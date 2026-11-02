@@ -1,4 +1,6 @@
 import {
+  type CatalogModel,
+  catalogModel,
   catalogRoutes,
   defaultModelOf,
   modelsForApp,
@@ -24,6 +26,14 @@ function appOf(apps: readonly AppDefinition[], appId: string): AppDefinition {
   return found
 }
 
+function isWithinContract(model: CatalogModel): boolean {
+  const checked = catalogModel.safeParse(model)
+  if (!checked.success) {
+    console.error(model.id, checked.error)
+  }
+  return checked.success
+}
+
 export function modelRoutes(
   app: GatewayApp,
   apps: readonly AppDefinition[]
@@ -34,7 +44,7 @@ export function modelRoutes(
       {}
     )
     const body: ResponseOf<typeof catalogRoutes.listModels> = {
-      models: modelsForApp(listed, models),
+      models: modelsForApp(listed, models).filter(isWithinContract),
       defaultModel: defaultModelOf(listed),
       refusal: refusal === null ? null : errorEnvelopeOf(refusal).error,
     }
