@@ -21,6 +21,7 @@ import {
 } from "#domain/generation-engine.port"
 import {
   inputsOfKept,
+  isSameWorkflow,
   type KeptRun,
   keptCountOf,
   medianOf,
@@ -40,6 +41,9 @@ export type PriceRunInput = {
   count?: number
   aspectRatio?: string | null
 }
+
+/** A price ask with the workflow hash of the graph it would run, so a measured run of another graph never prices it. */
+type GraphAsk = PriceRunInput & { workflowHash: string | null }
 
 export type PriceRunOutput = {
   price: RunPrice
@@ -88,7 +92,8 @@ export class PriceRunHandler {
       return { price: unknownPrice }
     }
     const { engine, form } = found
-    const asked = { ...input, inputs, count }
+    const workflowHash = await engine.workflowHashOf(binding)
+    const asked = { ...input, inputs, count, workflowHash }
     const perOutput = isJobPerOutput(app, engine, form, binding)
     const isPerJob = count > 1 && perOutput
     const measured = await this.measured(app, form, {
@@ -151,7 +156,7 @@ export class PriceRunHandler {
     app: AppDefinition,
     form: ModelForm | null,
     quoted: KnownPrice,
-    input: PriceRunInput
+    input: GraphAsk
   ): Promise<KnownPrice> {
     if (this.prices === null || form === null) {
       return quoted
@@ -162,6 +167,7 @@ export class PriceRunHandler {
       form,
       count: input.count ?? 1,
       aspectRatio: input.aspectRatio ?? null,
+      workflowHash: input.workflowHash,
     })
     const nearest = nearestKeptOf(
       asked.settings,
@@ -191,7 +197,7 @@ export class PriceRunHandler {
   private async measured(
     app: AppDefinition,
     form: ModelForm | null,
-    input: PriceRunInput
+    input: GraphAsk
   ): Promise<KnownPrice | null> {
     if (this.prices === null) {
       return null
@@ -203,6 +209,7 @@ export class PriceRunHandler {
         form,
         count: input.count ?? 1,
         aspectRatio: input.aspectRatio ?? null,
+        workflowHash: input.workflowHash,
       })
     )
     const credits = cost === null ? null : this.creditsOf(cost)
@@ -220,7 +227,7 @@ export class PriceRunHandler {
    */
   private async fromGraphRuns(
     app: AppDefinition,
-    input: PriceRunInput
+    input: GraphAsk
   ): Promise<RunPrice> {
     const book = this.prices
     if (book === null) {
@@ -232,9 +239,12 @@ export class PriceRunHandler {
       form: null,
       count: input.count ?? 1,
       aspectRatio: input.aspectRatio ?? null,
+      workflowHash: input.workflowHash,
     })
     const scalable = (await book.runsOf(asked.model)).filter(
-      (run) => this.scaledRun(run, asked) !== null
+      (run) =>
+        isSameWorkflow(asked.settings, run.settings) &&
+        this.scaledRun(run, asked) !== null
     )
     const nearest = nearestKeptOf(asked.settings, scalable)
     const own = nearest === null ? null : this.scaledRun(nearest, asked)

@@ -16,6 +16,7 @@ function harnessWithViewsCost() {
       form: null,
       count: 1,
       aspectRatio: null,
+      workflowHash: null,
     }),
     cost: viewsCost,
     measuredAt: start,

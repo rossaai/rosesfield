@@ -58,11 +58,11 @@ Comfy runs every model. Two adapters of the one `GenerationEngine` port reach it
 - Each run's credits come from `GET https://api.comfy.org/customers/balance` before the submit and after the run ends, read by the credit meter in `packages/generation/src/infrastructure/credit-meter.ts`. The meter measures a run only while it is the one run of its account in flight. A Router run it cannot measure, such as one of two Storyboard keyframes that run at once, takes the `X-Comfy-Credits-Used` header of its result: the synchronous route's answer, or the queued request's collect route. A graph on Comfy Cloud with no balance reading is priced from its `execution_ms` at the GPU rate in §Prices.
 - A price that is not known shows no figure: Generate stands alone, never zero and never "Price unknown".
 - One handler prices every run, `packages/generation/src/application/price-run/price-run.handler.ts`, from the first source that holds a price, and each price names its source in `from`:
-  1. `measured`: the last run of the model at the same settings, on every engine, the demo engine too.
+  1. `measured`: the last run of the model at the same settings, on every engine, the demo engine too. A graph's run is keyed by the workflow hash its submit records, the sha256 of the graph, so a run of a graph that has since changed never prices the graph that replaced it.
   2. `engine-estimate`: Comfy's estimate route, with a key that has it.
   3. `rate-card`: Comfy's published rate card, per `packages/generation/src/infrastructure/router/router-rates.ts`.
   4. `node-price`: the price the Comfy partner node that runs the same model publishes, read into `packages/generation/src/infrastructure/router/router-node-prices.gen.ts`.
-  5. `model-runs`, for a graph: its nearest measured run, scaled by its outputs and its seconds.
+  5. `model-runs`, for a graph: its nearest measured run on the same workflow hash, scaled by its outputs and its seconds.
   6. `task-runs`, for a graph with no run of its own: the median of the measured runs of the app's graphs that run the same task, scaled the same way.
 - A quote never contradicts a measured run. When the source of a quote priced the model's nearest measured run more than 5 percent away from what it cost, the quote is scaled by that run's ratio and named an estimate.
 - A price that is not a measured or published price for the exact settings is an estimate: a range, a converted token count, a node badge marked approximate, a scaled run or a median.

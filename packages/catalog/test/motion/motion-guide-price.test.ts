@@ -7,6 +7,7 @@ import {
   type PricedRun,
   PriceRunHandler,
   pricedRunOf,
+  resolveBinding,
 } from "@rosesfield/generation"
 import { describe, expect, it } from "vitest"
 import { graphModel, guideModel } from "#motion/motion-models"
@@ -63,12 +64,17 @@ async function priceOf(handler: PriceRunHandler, model: string) {
 describe("the price Generate shows for Follow a guide", () => {
   it("is the Motion graph's measured run at the same settings, named an estimate, until the guide graph has a run of its own", async () => {
     const prices = new KeptPrices()
+    const ran = { ...settings, model: graphModel }
+    const engine = new ComfyGenerationEngine({ apiKey: "comfyui-test" })
     const run = pricedRunOf({
       app: motion,
-      inputs: { ...settings, model: graphModel },
+      inputs: ran,
       form: null,
       count: 1,
       aspectRatio: "9:16",
+      workflowHash: await engine.workflowHashOf(
+        resolveBinding(motion.engine, ran)
+      ),
     })
     await prices.keep({
       ...run,

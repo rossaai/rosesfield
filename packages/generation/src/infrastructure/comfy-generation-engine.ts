@@ -43,6 +43,7 @@ import {
   resultNodesOf,
   runsPartnerNode,
   workflowHashOf,
+  workflowHashOfBinding,
 } from "#infrastructure/comfy/comfy-workflow-binding"
 import {
   type BalanceReader,
@@ -140,6 +141,10 @@ export class ComfyGenerationEngine extends GenerationEngine {
 
   override resultNodesOf(binding: EngineBinding): readonly string[] | null {
     return resultNodesOf(binding)
+  }
+
+  override workflowHashOf(binding: EngineBinding): Promise<string | null> {
+    return workflowHashOfBinding(binding)
   }
 
   override async submit(request: EngineRequest): Promise<EngineSubmission> {

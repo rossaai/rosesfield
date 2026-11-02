@@ -72,6 +72,7 @@ function keep(book: FakePriceBook, ask: Ask, credits: number): void {
     form: null,
     count: ask.count ?? 1,
     aspectRatio: null,
+    workflowHash: null,
   })
   void book.keep({
     ...run,
@@ -91,6 +92,7 @@ function keepWithoutSeconds(
     form: null,
     count: 1,
     aspectRatio: null,
+    workflowHash: null,
   })
   const settings = JSON.stringify(
     (JSON.parse(run.settings) as [string, unknown][]).filter(
