@@ -2,6 +2,20 @@
 
 Each release is a tag `v<version>` on `main` and a GitHub release with the same notes. Versions follow [Semantic Versioning](https://semver.org). Publishing a release deploys it, per [docs/self-host.md](docs/self-host.md).
 
+## 0.2.2, 2026-11-03
+
+- Motion has two tabs, Move and Swap. Its model picker lists models, LTX 2.5 and LTX 2.3, and the technique each one runs is the app's choice.
+- Motion takes a clip longer than its model does: it uses the first 10 seconds, 5 on Swap, and says so in one sentence. Swap no longer admits 10 seconds while its graph keeps 5.
+- A Library example takes a photo of any shape and fits it to its guide. The notes on how many photos to bring and how to frame them are gone.
+- Motion's Library shows Grab and run made on the 60 fps temporal pass, and a second example, Catch the truck, whose Recreate opens your own video path with its clip, so any photo of a character or a person works.
+- Video no longer has a Camera move card. A move is words you write in the prompt. Remake still puts its planned move in the prompt.
+- How it works names the model the picker opens on, and the result says which model made it.
+- A model or app name cut on one line shows whole in a tooltip, and the Featured badge beside an app's name stays whole.
+- The photo count shows only when the well is full.
+- Generate on your own video shows the price of the graphs the first-frame edit and the draft run, so it never shows less than the run costs.
+- A run's measured cost never takes the charge of a run before it that posted late, so a price measured on your last run is that run's own.
+- Recreate refills an app that is already open, and a run made on a model the app no longer offers opens on the app's default.
+
 ## 0.2.1, 2026-11-02
 
 - Motion holds faces and legs through fast motion. Its LTX 2.5 guide graph now refines a latent that LTX 2.5's temporal upscaler makes 4 times longer, conditioned at 4 times the guide's frame rate up to 60 fps, the cap Lightricks' own temporal pipeline sets, and keeps every fourth frame, per [workflows/motion-guide-ltx-2-5](workflows/motion-guide-ltx-2-5/README.md). A run costs about twice what it did, and Generate shows its measured price.
