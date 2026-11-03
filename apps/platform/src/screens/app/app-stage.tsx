@@ -2,7 +2,13 @@ import type { AppListing } from "@rosesfield/contract"
 import { Canvas } from "@rosesfield/ui/components/canvas"
 import { interaction } from "@rosesfield/ui/components/interaction"
 import { Tabs, TabsList, TabsTrigger } from "@rosesfield/ui/components/tabs"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@rosesfield/ui/components/tooltip"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { isCut } from "@rosesfield/ui/lib/is-cut"
 import { BookOpenIcon, FolderIcon, LibraryIcon } from "lucide-react"
 import {
   createContext,
@@ -11,6 +17,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react"
 import { type AppExample, examplesOf } from "@/catalog/app-examples"
@@ -111,14 +118,31 @@ type AppStageProps = {
   scrollClassName?: string
 }
 
-function AppTitle({ app }: { app: AppListing }): ReactNode {
-  return isFeaturedApp(app) ? (
-    <span data-slot="app-title" className="inline-flex items-center gap-s2">
-      {appName(app)}
-      <FeaturedBadge />
+function AppTitle({ app }: { app: AppListing }): ReactElement {
+  const name = useRef<HTMLSpanElement>(null)
+  const [isNameShown, setNameShown] = useState(false)
+  const words = appName(app)
+  return (
+    <span data-slot="app-title" className="flex min-w-0 items-center gap-s2">
+      <Tooltip
+        open={isNameShown}
+        onOpenChange={(open) => setNameShown(open && isCut(name.current))}
+      >
+        <TooltipTrigger
+          render={
+            <span
+              ref={name}
+              data-slot="app-title-name"
+              className="min-w-0 cursor-default truncate"
+            />
+          }
+        >
+          {words}
+        </TooltipTrigger>
+        <TooltipContent align="start">{words}</TooltipContent>
+      </Tooltip>
+      {isFeaturedApp(app) ? <FeaturedBadge /> : null}
     </span>
-  ) : (
-    appName(app)
   )
 }
 

@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from "@rosesfield/ui/components/tooltip"
 import { cn } from "@rosesfield/ui/lib/cn"
+import { isCut } from "@rosesfield/ui/lib/is-cut"
 import { motion } from "@rosesfield/ui/motion"
 import { CheckIcon } from "lucide-react"
 import {
@@ -290,10 +291,6 @@ type ModelRowProps = {
   isChosen: boolean
   isPricing: boolean
   onChoose: (id: string) => void
-}
-
-function isCut(element: HTMLElement | null): boolean {
-  return element !== null && element.scrollWidth > element.clientWidth
 }
 
 type RowOptionProps = {
