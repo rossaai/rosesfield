@@ -81,7 +81,7 @@ export const motionCopy = {
   "motion.chain.renderFinal": "Render the final at {resolution}",
   "motion.chain.startOver": "Start over",
   "motion.chain.price.example":
-    "{amount} Comfy credits, measured on a {seconds}-second {resolution} run",
+    "{amount} Comfy credits, what measured runs cost for a {seconds}-second clip at {resolution}",
   "motion.model.ltx25": "LTX 2.5",
   "motion.input.photos.label": "Photos",
   "motion.input.photos.note":
@@ -98,5 +98,5 @@ export const motionCopy = {
   "motion.agent.ownVideo":
     "Changes your own video in one call: the video in inputs.clip, 1 to 15 photos of people, products or clothes in inputs.photo, and an optional sentence in inputs.scene. The call makes a 480p draft and answers with it, the credits of the final and the photos that matched nothing. Show the person the draft and that price. Only after they say yes, make the final with a second call that names the draft run id in inputs.draft, with the same photos and the resolution they chose.",
   "motion.chain.price.unread":
-    "{amount} Comfy credits, measured on a {seconds}-second {resolution} run, plus reading your video, which no run has measured yet",
+    "{amount} Comfy credits, what measured runs cost for a {seconds}-second clip at {resolution}, plus reading your video, which no run has measured yet",
 } as const

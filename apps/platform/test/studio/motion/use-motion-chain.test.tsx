@@ -271,7 +271,7 @@ describe("a failure or Start over in the chain", () => {
 describe("the final's price and the words under the button", () => {
   const example = exampleOf("grab-and-run")
 
-  it("shows Generate on the example as its draft measured at 13.3 credits on a 4-second 480p run when no run of yours prices it", async () => {
+  it("shows Generate on the example as its draft at 19.89 credits, the costliest measured run of its graph for a 4-second clip at 480p, when no run of yours prices it", async () => {
     gateway({ price: { source: "unknown", credits: null } })
     const { result } = renderHook(
       () =>
@@ -284,13 +284,13 @@ describe("the final's price and the words under the button", () => {
     )
     await waitFor(() =>
       expect(result.current?.priceNote).toBe(
-        "13.3 Comfy credits, measured on a 4-second 480p run"
+        "19.89 Comfy credits, what measured runs cost for a 4-second clip at 480p"
       )
     )
     expect(result.current?.start.priceValue).not.toBeNull()
   })
 
-  it("shows 21.49 credits measured on a 4-second 720p run, in visible words, before the second yes", async () => {
+  it("shows 21.49 credits measured for a 4-second clip at 720p, in visible words, before the second yes", async () => {
     gateway({ price: { source: "estimate", credits: 20 } })
     const { result } = renderHook(
       () =>
@@ -307,7 +307,7 @@ describe("the final's price and the words under the button", () => {
     await waitFor(() => expect(result.current?.stage.stage).toBe("renderFinal"))
     await waitFor(() =>
       expect(result.current?.priceNote).toBe(
-        "21.49 Comfy credits, measured on a 4-second 720p run"
+        "21.49 Comfy credits, what measured runs cost for a 4-second clip at 720p"
       )
     )
   })
@@ -327,7 +327,7 @@ describe("the final's price and the words under the button", () => {
     await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
     await waitFor(() =>
       expect(result.current?.priceNote).toBe(
-        "32.35 Comfy credits, measured on a 4-second 720p run"
+        "32.35 Comfy credits, what measured runs cost for a 4-second clip at 720p"
       )
     )
     expect(result.current?.start.priceValue).not.toBeNull()
@@ -348,7 +348,7 @@ describe("the final's price and the words under the button", () => {
     await waitFor(() => expect(result.current?.stage.stage).toBe("makeFinal"))
     await waitFor(() =>
       expect(result.current?.priceNote).toBe(
-        "62.52 Comfy credits, measured on a 4-second 1080p run"
+        "62.52 Comfy credits, what measured runs cost for a 4-second clip at 1080p"
       )
     )
   })

@@ -1,20 +1,20 @@
 /** A step's price as the price route answers it. */
 export type AskedPrice = { credits: number | null; source: string }
 
-/** Where a part of a chain's price comes from: your own measured run, a run measured on a 4-second clip, an estimate, or nothing. */
+/** Where a part of a chain's price comes from: your own measured run, a recorded run of what the step runs, an estimate, or nothing. */
 export type PartSource = "yours" | "recorded" | "estimate" | "unknown"
 
 export type PartPrice = { credits: number | null; source: PartSource }
 
-/** The seconds of the clip the recorded runs were measured on. */
+/** The seconds of the clip the recorded prices are for. */
 export const recordedSeconds = 4
 
-/** The credits each step of your own video's chain cost on one run measured on Comfy Cloud for a 4-second clip. The plan and the read hold null, since no run measured them. The draft renders with no end key on the graph with the temporal pass at 60 fps, and its recorded run is the costliest of that graph at 480p. */
+/** The credits each step of your own video's chain cost on Comfy for a 4-second clip, each the costliest bill measured for what the step runs, rounded up to the cent. The plan and the read hold null, since no run measured them. The edit runs Qwen Image Edit 2511 at 1k on the first frame and one photo, and the draft renders at 480p with no end key on the graph with the temporal pass at 60 fps. */
 export const recordedSteps = {
   plan: null,
   read: null,
-  edit: 12.35,
-  draft: 13.3,
+  edit: 25.16,
+  draft: 19.89,
   restore: 10.86,
 } as const satisfies Readonly<Record<string, number | null>>
 
